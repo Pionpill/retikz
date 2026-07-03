@@ -1,9 +1,8 @@
 import type { z, ZodType } from 'zod';
 
-import type { Position } from '../../geometry/point';
-import type { ScenePrimitive } from '../../primitive';
-import type { PathCommand } from '../../primitive/path';
 import type { IRJsonObject, IRPathBase, IRPosition } from '../../schemas';
+import type { Position } from '../../shared';
+import type { PathCommand, ScenePrimitive } from '../scene';
 
 /**
  * generate 拿到的运行时上下文
@@ -107,10 +106,3 @@ export type PathKindDefinition<TOptions = IRJsonObject> = {
   /** 把该 path kind 编译成 Scene primitive；返回 null 表示该 path 不产生输出。 */
   compile: (context: PathKindCompileContext<TOptions>) => PathKindCompileResult | null;
 };
-
-/**
- * path kind 作者侧输入形态
- * @description 当前与 `PathKindDefinition` 相同；保留独立别名是为了对齐其它 define-registry API，
- *   也方便未来在定义点增加默认值归一或泛型收敛。
- */
-export type PathKindDefinitionInput<TOptions = IRJsonObject> = PathKindDefinition<TOptions>;

@@ -17,7 +17,7 @@ import type {
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { CURRENT_IR_VERSION, normalizeAtDirection, normalizeSide, parseTargetSugar } from '@retikz/core';
+import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { EdgeLabelProps } from '../sugar/EdgeLabel';
@@ -190,12 +190,6 @@ const readNodeText = (props: NodeProps): IRNode['text'] => {
 };
 
 const normalizePositionInput = (position: NodeProps['position'] | CoordinateProps['position']): IRNode['position'] => {
-  if (!Array.isArray(position) && typeof position === 'object' && 'direction' in position) {
-    return {
-      ...position,
-      direction: normalizeAtDirection(position.direction) ?? position.direction,
-    } as IRNode['position'];
-  }
   return position;
 };
 
@@ -204,13 +198,10 @@ const normalizeNodeLabelPositionInput = (
 ): IRNodeLabel['position'] | undefined => {
   if (position === undefined) return undefined;
   if (typeof position !== 'string') {
-    if (typeof position === 'object') {
-      return { ...position, boundary: normalizeSide(position.boundary) ?? position.boundary } as IRNodeLabel['position'];
-    }
     return position;
   }
   if (position === 'center') return position;
-  return (normalizeAtDirection(position) ?? position) as IRNodeLabel['position'];
+  return position;
 };
 
 const normalizeNodeLabelInput = (label: IRNodeLabelInput): IRNodeLabel => {
@@ -229,17 +220,11 @@ const normalizeNodeLabelsInput = (label: NodeProps['label']): IRNode['label'] =>
 const normalizeStepLabelInput = (label: IRStepLabelInput): IRStepLabel => {
   const { side: rawSide, ...rest } = label;
   const out: IRStepLabel = { ...rest, text: label.text };
-  if (rawSide !== undefined) out.side = (normalizeSide(rawSide) ?? rawSide) as IRStepLabel['side'];
+  if (rawSide !== undefined) out.side = rawSide;
   return out;
 };
 
 const normalizeTransformInput = (transform: IRTransformInput): IRTransform => {
-  if (transform.kind === 'at-translate') {
-    return {
-      ...transform,
-      direction: normalizeAtDirection(transform.direction) ?? transform.direction,
-    } as IRTransform;
-  }
   return transform;
 };
 
@@ -330,9 +315,7 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
       }
       const out: IRStepLabel = { text: props.children };
       if (props.position !== undefined) out.position = props.position;
-      if (props.side !== undefined) {
-        out.side = (normalizeSide(props.side) ?? props.side) as IRStepLabel['side'];
-      }
+      if (props.side !== undefined) out.side = props.side;
       if (props.sloped !== undefined) out.sloped = props.sloped;
       result = out;
     });

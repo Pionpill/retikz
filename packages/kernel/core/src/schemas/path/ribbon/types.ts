@@ -1,7 +1,15 @@
 import type { z } from 'zod';
 
-import type { PolarPosition, ValueOf, Vector2 } from '../../../shared';
-import type { RibbonAlignment, RibbonArcCapSweep, RibbonCap, RibbonMode } from './constants';
+import type { ValueOf, Vector2 } from '../../../shared';
+import type { PolarPosition } from '../../position';
+import type {
+  RibbonAlignment,
+  RibbonArcCapSweep,
+  RibbonCap,
+  RibbonMode,
+  RibbonTaperInterpolation,
+  RibbonWidthInterpolation,
+} from './constants';
 import type {
   PathRibbonOptionsSchema,
   RibbonArcCapSchema,
@@ -35,3 +43,9 @@ export type RibbonAlignmentValue = ValueOf<typeof RibbonAlignment>;
 export type RibbonCapValue = ValueOf<typeof RibbonCap>;
 
 export type RibbonArcCapSweepValue = ValueOf<typeof RibbonArcCapSweep>;
+
+/** ribbon 多 stop 宽度插值方式取值 */
+export type RibbonWidthInterpolationValue = ValueOf<typeof RibbonWidthInterpolation>;
+
+/** ribbon 起止宽度渐变插值方式取值 */
+export type RibbonTaperInterpolationValue = ValueOf<typeof RibbonTaperInterpolation>;

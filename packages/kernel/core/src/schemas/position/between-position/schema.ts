@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 import type { IRAbsoluteTarget, IRBetweenPosition } from './types';
 
-import { NodeTargetSchema } from '../../path/target';
 import { NormalizedFractionSchema } from '../../scalar';
+import { NodeTargetSchema } from '../node-target';
 import { OffsetPositionSchema } from '../offset-position';
 import { PolarPositionSchema } from '../polar-position';
 import { PositionSchema } from '../position';
@@ -18,7 +18,7 @@ export const BetweenPositionSchema: z.ZodType<IRBetweenPosition> = z.lazy(() =>
       between: z
         .tuple([AbsoluteTargetSchema, AbsoluteTargetSchema])
         .describe('Two endpoints (AbsoluteTarget each; path-relative excluded)'),
-      t: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
+      fraction: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
     })
     .describe(
       'Proportional point between two endpoints, resolved at compile time. Allowed in node, coordinate, and path endpoint positions.',

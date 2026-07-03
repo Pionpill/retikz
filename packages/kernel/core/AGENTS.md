@@ -13,15 +13,12 @@
 ## 目录分层
 
 ```text
-shared/      无业务依赖的常量、类型、纯工具
+shared/      无业务依赖的常量、类型、纯工具、跨层纯几何 helper
 schemas/     Zod schema 与 IR 类型真源
-contract/    第三方作者实现的 Definition、defineXxx、能力无关 helper
+contract/    第三方作者实现的 Definition、defineXxx、Scene 输出契约、能力无关 helper
 providers/   内置 definition、BUILTIN_*、registry resolver
 compile/     IR 到 Scene 的编排、layout、lowering、registry 消费
-geometry/    core 侧几何封装；优先复用 @retikz/math
-parsers/     字符串 / DSL parser，输出 IR 节点
-primitive/   Scene primitive 类型
-presets/     内置 preset
+parsers/     字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 ```
 
 改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-*` skill 分流。
@@ -64,7 +61,8 @@ presets/     内置 preset
 ## 公开 API
 
 - 只通过 `src/index.ts` 暴露公开 API；adapter 不 import core 内部子路径。
-- 顶层 `src/index.ts` 用显式 named re-export，作为公共契约面；内部子 barrel 可用 `export *`。
+- 顶层 `src/index.ts` 默认只从 owner barrel `export *`；owner barrel 负责定义稳定公共面。
+- 新增或调整顶层 `export *` 前必须跑类型检查，确认不存在同名 / 重复导出冲突。只有存在无法通过 owner barrel 消除的冲突时，顶层才允许最小 named re-export，并在代码注释说明原因。
 
 ## 测试
 

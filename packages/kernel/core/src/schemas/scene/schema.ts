@@ -30,9 +30,7 @@ export const ViewBoxSchema = z
     width: z.number().positive().describe('ViewBox width in user units.'),
     height: z.number().positive().describe('ViewBox height in user units.'),
   })
-  .describe(
-    'Explicit viewBox overriding the auto-computed layout range (fixed size / clipping / multi-figure alignment). When set, Scene.layout uses it directly and padding is ignored.',
-  );
+  .describe('Explicit viewBox overriding auto-computed layout bounds.');
 
 export const SceneSchema = z
   .object({
@@ -41,9 +39,7 @@ export const SceneSchema = z
     children: z
       .array(ChildSchema)
       .describe('Top-level children of the scene; nodes register ids that paths can reference'),
-    viewBox: ViewBoxSchema.optional().describe(
-      'Optional explicit viewBox; when set, Scene.layout uses it (ignoring padding) instead of the auto-computed bounding box. Omitted = automatic AABB + padding.',
-    ),
+    viewBox: ViewBoxSchema.optional().describe('Explicit viewBox. Omitted fields use automatic bounds plus padding.'),
     animations: z
       .array(AnimationTrackSchema)
       .optional()

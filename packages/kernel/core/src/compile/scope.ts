@@ -1,9 +1,8 @@
 import { minimalEnclosingCircle } from '@retikz/math';
 
-import type { BoundaryDefinition } from '../contract/boundary';
-import type { ShapeDefinition } from '../contract/shape';
-import type { Rect } from '../geometry/rect';
-import type { Transform } from '../primitive';
+import type { BoundaryDefinition } from '../contract';
+import type { Transform } from '../contract';
+import type { ShapeDefinition } from '../contract';
 import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAtPosition,
@@ -13,15 +12,16 @@ import type {
   IRTransform,
   PolarPosition,
 } from '../schemas';
+import type { Rect } from '../shared/geometry';
 import type { NameStack } from './name-stack';
 import type { NodeLayout } from './node';
 import type { ResolveBetweenGlobal } from './position';
 
-import { rect as rectOps } from '../geometry/rect';
 import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
-import { WebAnchor } from '../shared';
+import { Anchor } from '../shared';
+import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
@@ -80,7 +80,7 @@ export const lowerScopeTransforms = (
         break;
       }
       case 'between-translate': {
-        const between: IRBetweenPosition = { between: t.between, t: t.t };
+        const between: IRBetweenPosition = { between: t.between, fraction: t.fraction };
         const resolved = resolvePosition(between, nameStack, nodeDistance, [], resolveBetweenGlobal);
         if (!resolved) {
           onUnresolved?.(t);
@@ -239,10 +239,10 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
   for (const layout of layouts) {
     const outerRect = outerRectOf(layout);
     points.push(
-      rectOps.anchor(outerRect, WebAnchor.TopLeft),
-      rectOps.anchor(outerRect, WebAnchor.TopRight),
-      rectOps.anchor(outerRect, WebAnchor.BottomLeft),
-      rectOps.anchor(outerRect, WebAnchor.BottomRight),
+      rectOps.anchor(outerRect, Anchor.TopLeft),
+      rectOps.anchor(outerRect, Anchor.TopRight),
+      rectOps.anchor(outerRect, Anchor.BottomLeft),
+      rectOps.anchor(outerRect, Anchor.BottomRight),
     );
   }
   return points;
@@ -254,7 +254,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
  *   取每个 layout 的 rotate-aware `top-left` / `top-right` / `bottom-left` / `bottom-right`
  *   4 角点（rect.anchor 已含 layout.rect.rotate 处理）并求 AABB；
  *   layout 是 0×0（coordinate / 空 scope 占位）时退化为单点也合法；
- *   空 layouts 数组返回 null（调用方按"empty scope + fallback origin"退化为 0×0 占位）
+ *   空 layouts 数组返回 null（调用方按"空 scope + 兜底原点"退化为 0×0 占位）
  */
 export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): ScopeBoundingBox | null => {
   if (layouts.length === 0) return null;

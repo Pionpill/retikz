@@ -1,10 +1,3 @@
-/**
- * IR meta provenance 透传：compile 沿 alpha.3 id-stamp 同款通路把 IR 元素 `meta` 原样 stamp 进 Scene 图元
- * @description 覆盖：Node / Path / Scope 三载体各自 stamp 落点（纯几何 Node 平铺图元、文本 Node 的 GroupPrim、
- *   Path 的 PathPrim、Scope 的 GroupPrim）；省略 meta 等价现状（无 meta 键）；meta 不进 every-X 默认；
- *   仅带 meta 的空 scope 照常 prune；非 JSON meta 被 schema 拒；id + meta 共存；layout-neutral；round-trip 自描述。
- *   Coordinate 不加 meta（产 0 图元，schema 不含该字段）。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IR, ScenePrimitive } from '../../src';

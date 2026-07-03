@@ -29,7 +29,7 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 ## 输入
 
 - 目标范围：一个包、一个模块、一个 TODO、一个 ADR、一个 bug 线索，或整个 `packages/`。
-- 现有实现：`packages/kernel/core/src/**`、`packages/kernel/render/src/**`、`packages/kernel/react/src/**`、`packages/kernel/vanilla/src/**`、`packages/graph/*/src/**`。
+- 现有实现：`packages/kernel/core/src/**`、`packages/kernel/render/src/**`、`packages/kernel/react/src/**`、`packages/kernel/vanilla/src/**`、`packages/viz/*/src/**`。
 - 现有测试：`packages/*/*/tests/**`。
 - 可选上下文：`packages/kernel/_notes/decisions/**`、`packages/kernel/_notes/decisions/**`、`apps/docs/**`。
 

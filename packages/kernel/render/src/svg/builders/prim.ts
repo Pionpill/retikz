@@ -1,4 +1,4 @@
-import type { ArrowEndSpec, BlendModeValue, IRDropShadow, PaintValue, ScenePrimitive } from '@retikz/core';
+import type { BlendModeValue, IRDropShadow, PaintValue, ResolvedArrowEndSpec, ScenePrimitive } from '@retikz/core';
 
 import type { SvgNode, SvgStyle } from '../types';
 
@@ -16,7 +16,7 @@ type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'al
  */
 export type BuildContext = {
   /** 按 arrow 端点 spec 查 `<marker id>` id 的回调（按 detail hash 区分起末异形 / 异色） */
-  arrowMarkerIdFor?: (spec: ArrowEndSpec) => string;
+  arrowMarkerIdFor?: (spec: ResolvedArrowEndSpec) => string;
   /** paint 资源 id → `url(#...)` 引用（加实例前缀避免跨实例撞）；缺省 `url(#id)` */
   paintRefUrl?: (id: string) => string;
   /** clip 资源 id → `url(#...)` 引用（GroupPrim.clipRef 物化用）；缺省 `url(#id)` */

@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { PatternDefinition, PatternEmitContext } from '../../src/contract/pattern';
+import type { PatternDefinition, PatternEmitContext } from '../../src/contract';
 import type {
   MarkerEllipsePrim,
   MarkerPathPrim,
@@ -9,24 +9,13 @@ import type {
   PaintResource,
   ResolvedPatternTile,
   SceneResource,
-} from '../../src/primitive';
+} from '../../src/contract';
 import type { IR, IRPaintSpec } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { definePattern } from '../../src/contract/pattern';
+import { definePattern } from '../../src/contract';
 import { BUILTIN_PATTERNS } from '../../src/providers/pattern';
 import { PaintSpecSchema } from '../../src/schemas';
-
-/**
- * Pattern Registry core 侧测试（emit-in-compile 契约）
- * @description 断言落点全在 compile 输出 `Scene.resources` 的 pattern 资源 `tile`（已解析 motif 几何）：
- *   - tile motif 几何（`tile.motif: MarkerPrimitive[]`，PatternDefinition.emit 产物）内置 3 等价旧 SVG switch
- *   - tile wrapper 参数（size / background / rotation）
- *   - 注册面（自定义 PatternDefinition、shape 开放 string、dedup、未注册 throw、override warn）
- *   - motif 窄子集运行时栅栏（emit 含 text 被拒，复用 marker 窄子集校验）
- *   - renderer-agnostic（tile 纯 JSON 数据无函数，Scene round-trip 等价）
- *   PatternDefinition 含函数、不进 IR：round-trip 只针对 IR（pattern.shape 字符串）与 Scene（tile 纯数据）。
- */
 
 /** 含一个 pattern fill node 的 IR 工厂 */
 const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IR => ({

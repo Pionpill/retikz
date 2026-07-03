@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ResolvedShapeStyle, ShapeDefinition } from '../../src/contract/shape';
-import type { Rect } from '../../src/geometry/rect';
-import type { PathCommand, ScenePrimitive } from '../../src/primitive';
+import type { PathCommand, ScenePrimitive } from '../../src/contract';
+import type { ResolvedShapeStyle, ShapeDefinition } from '../../src/contract';
+import type { Rect } from '../../src/shared/geometry/rect';
 
-import { defineShape } from '../../src/contract/shape';
-import { localToWorld, worldToLocal } from '../../src/geometry/transform';
+import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
 
 const SQRT2 = Math.SQRT2;
 const id = (n: number): number => n;
 /** 无参形状（rectangle）忽略 params；调用点传空对象满足新签名 */
 const NO_PARAMS = {} as const;
-/** circle 已收为 ellipse 等轴 preset（无独立注册项）；其几何由 ellipse + 此 params 等价提供 */
+/** circle 是内置 shape preset；compile 解析后由 ellipse + 此 params 提供几何 */
 const EQUAL_PARAMS = { circumscribe: 'equal' } as const;
-/** diamond 已收为 polygon 4 边形 preset（无独立注册项）；其几何由 polygon + 此 params 等价提供 */
+/** diamond 是内置 shape preset；compile 解析后由 polygon + 此 params 提供几何 */
 const DIAMOND_PARAMS = { sides: 4, rotate: 0 } as const;
 
 describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
@@ -40,7 +40,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   });
 });
 
-describe('BUILTIN_SHAPES.anchor returns web canonical anchors, undefined otherwise', () => {
+describe('BUILTIN_SHAPES.anchor returns canonical anchors, undefined otherwise', () => {
   const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   it('rectangle named anchors', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toBeUndefined();
@@ -48,9 +48,9 @@ describe('BUILTIN_SHAPES.anchor returns web canonical anchors, undefined otherwi
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
-  it('compass anchor aliases remain accepted by built-in providers', () => {
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'north', NO_PARAMS)).toEqual([0, -5]);
-    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'south-west', NO_PARAMS)).toEqual([-10, 5]);
+  it('canonical directional anchors remain accepted by built-in providers', () => {
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
+    expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
   it('unknown anchor name → undefined (caller throws clear error)', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'foobar', NO_PARAMS)).toBeUndefined();
@@ -148,7 +148,7 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
   const r: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
   it('直边 / 周长类 shape（rectangle / ellipse）实现 edgePoint', () => {
-    // circle 已并入 ellipse；diamond 已收为 polygon（正多边形无 4 named side 语义、edgePoint 为可选不实现）。
+    // circle preset 复用 ellipse edgePoint；diamond preset 复用 polygon（正多边形无 4 named side 语义、edgePoint 为可选不实现）。
     expect(typeof BUILTIN_SHAPES.rectangle.edgePoint).toBe('function');
     expect(typeof BUILTIN_SHAPES.ellipse.edgePoint).toBe('function');
   });

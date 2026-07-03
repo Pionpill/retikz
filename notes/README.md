@@ -14,14 +14,14 @@
 | 目录 | 内容 |
 | --- | --- |
 | [`../packages/kernel/_notes/`](../packages/kernel/_notes) | kernel 发布组（`@retikz/math/core/render/react/vanilla/tex`）的 roadmap、ADR、分析。 |
-| [`../packages/graph/_notes/`](../packages/graph/_notes) | `@retikz/plot` 发布组的架构、roadmap、ADR、分析。 |
+| [`../packages/viz/_notes/`](../packages/viz/_notes) | `@retikz/plot` 发布组的架构、roadmap、ADR、分析。 |
 | [`../apps/eval/_notes/`](../apps/eval/_notes) | eval 应用的评测设计、语料与 runner 方案。 |
 
 ## 写到哪里
 
 1. 跨包长期架构原则：写进 `notes/architecture/`。
 2. kernel 发布组的版本路线、ADR、执行记录：写进 `packages/kernel/_notes/decisions/`。
-3. plot 发布组的版本路线、ADR、执行记录：写进 `packages/graph/_notes/decisions/`。
+3. plot 发布组的版本路线、ADR、执行记录：写进 `packages/viz/_notes/decisions/`。
 4. 单包一次性分析：写进该包或发布组的 `_notes/analysis/`。
 5. 全仓审计报告：写进 `notes/reports/`；这是本地临时目录，不提交。
 
@@ -43,12 +43,12 @@
 
 ### plot 发布组
 
-- [`plot notes`](../packages/graph/_notes/README.md)：plot 发布组内部文档入口。
-- [`plot-design.md`](../packages/graph/_notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
-- [`plot v0 roadmap`](../packages/graph/_notes/decisions/v0/roadmap.md)：plot v0 总路线。
-- [`plot v0.1 roadmap`](../packages/graph/_notes/decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
-- [`plot compare analysis`](../packages/graph/_notes/analysis/plot-compare-analysis.md)：plot 横向对比。
-- [`plot rendering performance`](../packages/graph/_notes/analysis/plot-rendering-performance.md)：plot 渲染性能分析。
+- [`plot notes`](../packages/viz/_notes/README.md)：plot 发布组内部文档入口。
+- [`plot-design.md`](../packages/viz/_notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
+- [`plot v0 roadmap`](../packages/viz/_notes/decisions/v0/roadmap.md)：plot v0 总路线。
+- [`plot v0.1 roadmap`](../packages/viz/_notes/decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
+- [`plot compare analysis`](../packages/viz/_notes/analysis/plot-compare-analysis.md)：plot 横向对比。
+- [`plot rendering performance`](../packages/viz/_notes/analysis/plot-rendering-performance.md)：plot 渲染性能分析。
 
 ## 打包约束
 

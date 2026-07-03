@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 
-import type { CompassSideValue, TikzSideValue, WebSideValue } from '../../../shared';
+import type { SideValue } from '../../../shared';
 import type { ValueOf } from '../../../shared';
-import type { FoldStepVia, GeometryLabelPlacement } from './constants';
+import type { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 import type {
   ArcStepSchema,
   BendStepSchema,
@@ -25,11 +25,9 @@ import type {
 /** Shared path-like geometry label IR type. */
 export type IRGeometryLabel = z.infer<typeof GeometryLabelSchema>;
 
-export type GeometryLabelSideValue = WebSideValue;
+export type GeometryLabelSideValue = SideValue;
 
-export type GeometryLabelSideAliasValue = CompassSideValue | TikzSideValue;
-
-export type GeometryLabelSideInput = GeometryLabelSideValue | GeometryLabelSideAliasValue;
+export type GeometryLabelSideInput = GeometryLabelSideValue;
 
 export type IRGeometryLabelInput = Omit<IRGeometryLabel, 'side'> & {
   side?: GeometryLabelSideInput;
@@ -90,4 +88,13 @@ export type IRStep = z.infer<typeof StepSchema>;
 
 export type GeometryLabelPlacementValue = ValueOf<typeof GeometryLabelPlacement>;
 
+/** path-like 几何标签沿段的位置关键字取值 */
+export type GeometryLabelPositionValue = ValueOf<typeof GeometryLabelPosition>;
+
 export type FoldStepViaValue = ValueOf<typeof FoldStepVia>;
+
+/** bend step 弯曲侧取值 */
+export type BendDirectionValue = ValueOf<typeof BendDirection>;
+
+/** 圆 / 椭圆 path 局部弧段闭合方式取值 */
+export type PathCloseModeValue = ValueOf<typeof PathCloseMode>;

@@ -1,14 +1,14 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { BoundaryDefinition } from '../../src/contract/boundary';
-import type { ScenePrimitive } from '../../src/primitive';
+import type { BoundaryDefinition } from '../../src/contract';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR, IRBoundary } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { defineBoundary } from '../../src/contract/boundary';
-import { defineShape } from '../../src/contract/shape';
+import { defineBoundary } from '../../src/contract';
+import { defineShape } from '../../src/contract';
 import { BoundarySchema } from '../../src/schemas/boundary';
 import { flattenPrims } from '../helpers/flatten';
 

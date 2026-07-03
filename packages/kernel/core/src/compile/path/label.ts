@@ -1,12 +1,11 @@
-import type { SegmentSample } from '../../geometry/segment';
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../primitive';
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
+import type { SegmentSample } from '../../shared/geometry';
 import type { CompileWarningCodeValue } from '../constant';
 import type { LowerTex } from '../lower-tex';
 import type { LineLayoutContext } from '../text-layout';
 import type { FontSpec, TextMeasurer } from '../text-metrics';
 
-import { normalizeSide } from '../../shared';
 import { CompileWarningCode } from '../constant';
 import { toAlphabeticBaselineY } from '../text-baseline';
 import { layoutInlineLine, resolveLineRuns } from '../text-layout';
@@ -30,9 +29,10 @@ export type LabelTexContext = {
   warn: (code: CompileWarningCodeValue, message: string) => void;
 };
 
+/** step label 放置时额外需要的宿主几何信息。 */
 export type LabelPlacementContext = {
   /**
-   * Area-like host half extent from centerline to boundary at the sampled point.
+   * 面状宿主在采样点处从中心线到边界的半宽。
    * @default 0
    */
   boundaryOffset?: number;
@@ -88,7 +88,7 @@ export const emitLabelPrimitive = (
       ? label.sloped === true || label.placement === 'inside'
         ? 'center'
         : 'top'
-      : ((normalizeSide(label.side) ?? label.side));
+      : label.side;
   const sloped = label.sloped === true;
   const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
@@ -134,7 +134,7 @@ export const emitLabelPrimitive = (
       originX = ax - laid.width / 2;
       baselineY = ay + (laid.ascent - laid.descent) / 2;
     } else {
-      // top: horizontal center, placed above the sampled point with side offset.
+      // top：水平居中，按 sideOffset 放到采样点上方。
       originX = ax - laid.width / 2;
       baselineY = ay - sideOffset - laid.descent;
     }

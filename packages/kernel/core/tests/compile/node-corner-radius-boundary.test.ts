@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ContourSegment } from '../../src/geometry/contour';
 import type { IRNode } from '../../src/schemas/node';
+import type { ContourSegment } from '../../src/shared/geometry/path';
 
 import { NameStack } from '../../src/compile/name-stack';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
-import { filletContour } from '../../src/geometry/contour';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { filletContour } from '../../src/shared/geometry/path';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
   width: 10,

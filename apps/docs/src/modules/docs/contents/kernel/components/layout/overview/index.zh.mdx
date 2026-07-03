@@ -1,0 +1,168 @@
+---
+title: Layout
+description: 顶层容器：接收组件树或 IR，编译 Scene，并输出渲染结果。
+---
+
+`<Layout>` 是 retikz 唯一必需的顶层包装，所有 Kernel / Sugar 组件都必须放在它里面。
+
+它是 DSL 与渲染器之间的入口：传 children 时把组件树转成 IR，传 `ir` 时直接采用这份 IR；随后把 IR 编译为 Scene，交给当前渲染器输出。
+
+`width` / `height` 只决定渲染结果在页面上的显示尺寸；内部坐标仍用 retikz 用户单位，可见范围由编译阶段按布局边界自动算。
+
+## 用法
+
+```tsx
+import { Layout } from '@retikz/react';
+```
+
+```tsx
+<Layout width={300} height={80}>
+  {/* Kernel / Sugar children */}
+</Layout>
+```
+
+## 组合
+
+`<Layout>` 是容器；children 是任意 Kernel / Sugar 组件树：
+
+```tsx
+<Layout>
+  <Node id="..." position={...}>label</Node>
+  <Path>
+    <Step kind="move" to="..." />
+    <Step kind="line" to="..." />
+  </Path>
+  <Draw way={[...]} />
+</Layout>
+```
+
+## 例子
+
+### 基础
+
+<ComponentPreview name="layout-basic" size="xs" />
+
+### 全图默认样式
+
+`<Layout>` 直接接受 [`<Scope>`](/kernel/components/layout/scope) 的级联样式子集（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`）。设了任一样式 prop，Layout 会把 children 包进一个**隐式根 `<Scope>`**，省掉每张图都套一层根 `<Scope>` 的样板。内层 `<Scope>` 与图元显式属性照常级联覆盖。
+
+<ComponentPreview name="layout-scope-style" size="sm" />
+
+```tsx
+// 给整张图设默认样式：不用再手写嵌套 <Scope>
+<Layout stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white', dashed: true }} pathDefault={{ lineCap: 'round' }}>
+  <Node id="A" position={[0, 0]}>A</Node>
+  <Draw way={['A', 'B']} arrow="->" />
+</Layout>
+
+// 等价于手写一层根 <Scope>
+<Layout>
+  <Scope stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white', dashed: true }} pathDefault={{ lineCap: 'round' }}>
+    {/* ... */}
+  </Scope>
+</Layout>
+```
+
+包裹的具体条件、以及与 `ir` prop 并用时的取舍见下方「技术原理」。
+
+### 从 IR 渲染
+
+`<Layout>` 接受 `ir` prop——直接把一段已持久化的 IR JSON 渲染成图，**不写一行 JSX children**。来源不限：LLM 生成、JSON 编辑器、URL 反序列化、数据库存档都可以。
+
+<ComponentPreview name="layout-from-ir" size="xs" />
+
+需要在 DSL 与 IR 之间互转时，配 `convertReactNodeToIR` / `convertIRToReactNode` 做双向桥：
+
+```tsx
+import { Layout, Node, convertReactNodeToIR } from '@retikz/react';
+
+const ir = convertReactNodeToIR(
+  <Node id="a" position={[0, 0]}>
+    A
+  </Node>,
+);
+// 序列化、传 LLM、存数据库……
+<Layout ir={ir} width={200} height={80} />;
+```
+
+`ir` 与 `children` 互斥；同时传时优先 `ir`。
+
+### 自定义 viewBox
+
+默认 `viewBox` 由内容自动算（AABB + padding）。传 `viewBox={{ x, y, width, height }}` 显式定死视框——固定尺寸、故意裁剪、多图对齐、排除溢出都靠它。有 viewBox 则覆盖自动算、忽略 padding；`width` / `height` 必须 > 0。
+
+<ComponentPreview name="layout-viewbox" size="md" />
+
+### 渲染后端（SVG / Canvas）
+
+`renderer` 选择输出后端：默认 `'svg'`，设 `'canvas'` 则用同一份 Scene 画到 `<canvas>`。
+
+缺省 `renderer` prop 时，`<Layout>` 回退读取最近的 `RendererModeProvider`。这适合「外层想统一切换一棵无法逐个改 `renderer` 的子树」的场景，比如把一个交互式（含 hooks / 异步）子树整体在 svg / canvas 间切——你改不到它内部的 `<Layout renderer>`，但用 Provider 一包就行：
+
+```tsx
+import { Layout, RendererModeProvider } from '@retikz/react';
+
+// 子树内未写 renderer 的 <Layout> 随 Provider 切换；写了 renderer 的不受影响
+<RendererModeProvider mode="canvas">
+  <SomeInteractiveChart />
+</RendererModeProvider>;
+```
+
+## 技术原理
+
+> 上手阶段可跳过本节；遇到边界 case 或想理解 `<Layout>` 在样式 / viewBox / 后端上的取舍时再回来读。
+
+### 隐式根 Scope 的包裹规则
+
+仅当至少一个样式 prop 真正携带样式指令时，才把 children 包进隐式根 `<Scope>`；无样式 prop（或只传空对象 default 如 `nodeDefault={{}}`）时 IR 形态保持不变、不引入空 scope。与 `ir` prop 并用时样式 props 被忽略（dev 模式发 console 警告）——`ir` 已是完整 IR，根样式请写进 IR 里的根 `<Scope>` 节点。
+
+### viewBox 覆盖与 padding
+
+有 `viewBox` 则覆盖自动算的范围、忽略 padding，并注入构造出的 IR 根（`ir.viewBox`）。直接传 `ir` prop 且 IR 自带 viewBox 时，prop 优先、prop 缺省才用 IR 内置值。viewBox 与 `width` / `height`（渲染尺寸）正交。
+
+### 渲染后端回退优先级
+
+缺省 `renderer` prop 时按 **显式 `renderer` prop > context > `'svg'`** 回退，context 取自最近的 `RendererModeProvider`。写了 `renderer` 的 `<Layout>` 不受 Provider 影响。
+
+### 视框被裁 / 留白排查
+
+图形看起来被裁掉或留白过多时，先看 **View Code → IR** 里的节点坐标和 path bounds：通常是内部坐标离可见图元太远、只定义了不可见 coordinate，或用了显式坐标但没有对应的可见边界。
+
+## API 参考
+
+| 属性                                                                                    | 类型                                            | 默认值  | 描述                                                                                                                                                                              |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`                                                                                 | `number \| string`                              | —       | 渲染结果宽度                                                                                                                                                                      |
+| `height`                                                                                | `number \| string`                              | —       | 渲染结果高度                                                                                                                                                                      |
+| `viewBox`                                                                               | `{ x, y, width, height }`                       | —       | 显式视框，覆盖自动算的范围（忽略 padding）；注入 IR 根、prop 优先于 IR 内置                                                                                                       |
+| `children`                                                                              | `ReactNode`                                     | —       | Kernel / Sugar 组件树（与 `ir` 二选一）                                                                                                                                           |
+| `ir`                                                                                    | `IR`                                            | —       | 已构造好的 IR JSON（与 `children` 二选一）                                                                                                                                        |
+| `className`                                                                             | `string`                                        | —       | 透传到渲染根元素                                                                                                                                                                  |
+| `style`                                                                                 | `CSSProperties`                                 | —       | 透传到渲染根元素                                                                                                                                                                  |
+| `idPrefix`                                                                              | `string`                                        | —       | 覆盖 `<defs>` 资源 id 前缀；SSR 输出和客户端 `<Layout>` 传同一值时可保持引用 id 一致                                                                                              |
+| `renderer`                                                                              | `'svg' \| 'canvas'`                             | `'svg'` | 渲染后端；缺省时回退最近 `RendererModeProvider` 的 context 值（prop > context > svg）                                                                                             |
+| `nodeDistance`                                                                          | `number`                                        | `1`     | 节点相对定位（`position = { direction, of }`）的默认距离，节点自带 `distance` 优先                                                                                                |
+| `shapes`                                                                                | `ReadonlyArray<ShapeDefinition>`               | —       | 自定义形状 definition 数组；透传到 `CompileOptions.shapes`。常见用法见 [自定义形状](/kernel/components/extend/shape-registry)                 |
+| `boundaries`                                                                            | `ReadonlyArray<BoundaryDefinition>`            | —       | 自定义连接面 definition 数组；透传到 `CompileOptions.boundaries`。常见用法见 [自定义连接面](/kernel/components/extend/boundary-registry)       |
+| `clips`                                                                                 | `ReadonlyArray<ClipDefinition>`                | —       | 自定义裁剪区 definition 数组；透传到 `CompileOptions.clips`。常见用法见 [自定义裁剪区](/kernel/components/extend/clip-registry)                |
+| `arrows`                                                                                | `ReadonlyArray<ArrowDefinition>`               | —       | 自定义箭头 definition 数组；透传到 `CompileOptions.arrows`。常见用法见 [自定义箭头](/kernel/components/extend/custom-arrow)                     |
+| `patterns`                                                                              | `ReadonlyArray<PatternDefinition>`             | —       | 自定义 pattern motif definition 数组；透传到 `CompileOptions.patterns`。常见用法见 [自定义图案](/kernel/components/extend/custom-pattern)       |
+| `pathGenerators`                                                                        | `ReadonlyArray<PathGeneratorDefinition>`       | —       | 自定义 path generator definition 数组；透传到 `CompileOptions.pathGenerators`，core 不内置具体曲线生成器。常见用法见 [路径生成器](/kernel/components/extend/path-generator) |
+| `composites`                                                                            | `ReadonlyArray<CompositeDefinition>`            | —       | 运行时注入的 Tier 2 composite 展开逻辑（透传 `CompileOptions.composites`）；compile 第一步展开成 Tier 1，未注册 namespace/type 警告并跳过                                         |
+| `embeddables`                                                                           | `Array<EmbeddableTier2Adapter>`                 | —       | 可选逃生舱：显式注入可嵌入 Tier 2 adapter；主路径是组件静态标记，按 displayName 匹配并覆盖标记。见 [复合](/kernel/concepts/design/composite#可嵌入-tier2把-tier2-组件写进-layout) |
+| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | 同 [`<Scope>`](/kernel/components/layout/scope) | —       | 全图级联 graphic state；设值则把 children 包进隐式根 `<Scope>`                                                                                                                    |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                         | 同 [`<Scope>`](/kernel/components/layout/scope) | —       | 全图 every-X 默认样式（四通道）；同上挂隐式根 scope                                                                                                                               |
+| `animate`                                                                               | `boolean`                                       | `true`  | 是否播放动画；`false` 渲染 base 静态图（不 emit CSS/WAAPI、canvas 不起 rAF）。见 [动画](/kernel/components/effects/animation)                                                     |
+| `snapshotAt`                                                                            | `number`                                        | —       | 静态截帧时刻（毫秒）：定格在该时刻的一帧、不播放，覆盖 `animate`；SSR 海报帧 / 缩略图                                                                                             |
+| `animations`                                                                            | `Array<AnimationTrack>`                         | —       | scene 根（镜头）动画 tracks（`viewBox` 通道），配 [`cameraTo()`](/kernel/components/effects/animation)                                                                            |
+| `animationRef`                                                                          | `Ref<AnimationControls \| null>`                | —       | 命令式动画句柄出口：挂载后写入 `play` / `pause` / `seek`（svg=WAAPI、canvas=rAF 时钟），无动画为 `null`                                                                           |
+| `easings`                                                                               | `EasingRegistry`                                | —       | 自定义缓动注册表（名 → cubic-bezier 四元组 / 函数）。见 [自定义动画](/kernel/components/extend/custom-animation)                                                                  |
+| `animationProperties`                                                                   | `AnimationPropertyRegistry`                     | —       | 自定义动画属性通道插值器（如 `blur`）；当前仅 Canvas。见 [自定义动画](/kernel/components/extend/custom-animation)                                                                 |
+| `handlers`                                                                              | `HydrationHandlers`                             | —       | `ir` 模式按 id 提供的水合 handler 注册表（JSX 模式用组件 `on<Event>` props）。见 [水合](/kernel/packages/render/hydration)                                                        |
+
+## 相关
+
+- [Node](/kernel/components/node/overview)：最常用的 Kernel 节点
+- [Draw](/kernel/components/draw/overview)：日常连线 Sugar
+- [Path](/kernel/components/draw/path)：底层路径容器
+- [Scope](/kernel/components/layout/scope)：局部样式 / 变换 / 命名空间

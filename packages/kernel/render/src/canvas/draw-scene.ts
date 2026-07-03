@@ -1,5 +1,4 @@
 import type {
-  ArrowEndSpec,
   BlendModeValue,
   IRDropShadow,
   IRPaintSpec,
@@ -7,6 +6,7 @@ import type {
   MarkerPrimitive,
   PaintValue,
   PathCommand,
+  ResolvedArrowEndSpec,
   ResolvedPatternTile,
   Scene,
   ScenePrimitive,
@@ -651,7 +651,7 @@ const buildPattern = (
  */
 const drawArrowMarker = (
   ctx: CanvasRenderingContext2D,
-  spec: ArrowEndSpec,
+  spec: ResolvedArrowEndSpec,
   vertex: Point,
   angle: number,
   strokeWidth: number,

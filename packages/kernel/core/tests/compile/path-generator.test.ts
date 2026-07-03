@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { PathCommand, ScenePrimitive } from '../../src/primitive';
+import type { PathCommand, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { definePathGenerator } from '../../src/contract/path';
+import { definePathGenerator } from '../../src/contract';
 import { JsonObjectSchema, PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

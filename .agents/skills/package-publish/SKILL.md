@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: "发布或准备发布 retikz npm 包时使用。覆盖版本号 bump、结构化 changelog、roadmap 状态、验证、dry-run、tag / npm publish / push 授权、发布后 ADR 压缩与预 bump。当前发布组：kernel 组 6 包，graph plot 组 3 包。"
+description: "发布或准备发布 retikz npm 包时使用。覆盖版本号 bump、结构化 changelog、roadmap 状态、验证、dry-run、tag / npm publish / push 授权、发布后 ADR 压缩与预 bump。当前发布组：kernel 组 6 包，viz plot 组 3 包。"
 ---
 
 # 发布 retikz 包
@@ -22,17 +22,17 @@ description: "发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 | 组 | 包 | 发布顺序 | tag |
 | --- | --- | --- | --- |
 | kernel | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/vanilla`, `@retikz/react`, `@retikz/tex` | math -> core -> render -> vanilla -> react -> tex | `v<version>` |
-| graph | `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react` | plot -> plot-vanilla -> plot-react | `plot-v<version>` |
+| viz | `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react` | plot -> plot-vanilla -> plot-react | `plot-v<version>` |
 
 不发布：`@retikz/docs`、`@retikz/eval` 是 private app。
 
-同组 lockstep：同组所有 publishable package 必须写同一个 version 并同次发布。kernel 与 graph 版本线独立。
+同组 lockstep：同组所有 publishable package 必须写同一个 version 并同次发布。kernel 与 viz 版本线独立。
 
 ## 输入确认
 
 改文件前先向用户确认：
 
-- 发布组：`kernel` / `graph`；
+- 发布组：`kernel` / `viz`；
 - 目标版本、npm dist-tag、git tag；
 - 包列表与每个包的 `old -> target`；
 - `apps/docs/src/data/changelog.ts` 的 release note 范围；
@@ -126,7 +126,7 @@ rg --files packages | rg 'packages/.*/src/.*\.(d\.ts|d\.ts\.map|js)$'
 2. 按根 AGENTS 的 commit 格式提交，常用 `🔖 <scope>: 发布 <version>` 或 `🔖 <scope>: 准备发布 <version>`。
 3. 确认 HEAD 中发布组每个包都是目标版本。
 4. 确认 `git status --short` 没有意外发布文件改动。
-5. 创建 tag：kernel 用 `v<version>`，graph 用 `plot-v<version>`。
+5. 创建 tag：kernel 用 `v<version>`，viz 用 `plot-v<version>`。
 6. 确认 npm 登录：`npm whoami --registry=https://registry.npmjs.org/`。
 7. 按组内顺序发布：
 

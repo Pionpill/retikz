@@ -1,8 +1,3 @@
-/**
- * ScopeSchema / TransformSchema 校验测试
- * @description 覆盖 scope schema 合法 / 嵌套 / 字段拒绝、6 个 transform 变体的必填字段拒绝；
- *   localNamespace 隔离、duplicate id warn、scope.id bbox、scope 下相对 position 等行为属于 schema 之外的运行时语义，留待后续实现
- */
 import { describe, expect, it } from 'vitest';
 
 import { ChildSchema, ScopeSchema, TransformSchema } from '../../src/schemas';
@@ -241,17 +236,19 @@ describe('TransformSchema 各变体合法形态', () => {
     expect(parsed.success).toBe(true);
   });
 
-  it('at-translate direction 别名归一到 Web canonical', () => {
-    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'north-west', of: 'A' })).toEqual({
+  it('at-translate direction 只接受 canonical 方位', () => {
+    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'top-left', of: 'A' })).toEqual({
       kind: 'at-translate',
       direction: 'top-left',
       of: 'A',
     });
-    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'below', of: 'A' })).toEqual({
+    expect(TransformSchema.parse({ kind: 'at-translate', direction: 'bottom', of: 'A' })).toEqual({
       kind: 'at-translate',
       direction: 'bottom',
       of: 'A',
     });
+    expect(() => TransformSchema.parse({ kind: 'at-translate', direction: 'north-west', of: 'A' })).toThrow();
+    expect(() => TransformSchema.parse({ kind: 'at-translate', direction: 'below', of: 'A' })).toThrow();
   });
 
   it('offset-translate of=string 含 offset', () => {
@@ -275,7 +272,7 @@ describe('TransformSchema 各变体合法形态', () => {
     const parsed = TransformSchema.safeParse({
       kind: 'between-translate',
       between: [[0, 0], { id: 'B' }],
-      t: 0.5,
+      fraction: 0.5,
     });
     expect(parsed.success).toBe(true);
   });
@@ -388,7 +385,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
         [0, 0],
         [10, 0],
       ],
-      t: 1.5,
+      fraction: 1.5,
     });
     expect(parsed.success).toBe(false);
   });

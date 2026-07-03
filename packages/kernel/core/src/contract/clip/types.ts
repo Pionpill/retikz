@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
-import type { ClipShape } from '../../primitive';
-import type { IRClipSpec } from '../../schemas/clip';
+import type { IRClipSpec } from '../../schemas';
+import type { ClipShape } from '../scene';
 
 /** clip spec 的最小判别形态。 */
 export type ClipSpecLike = {

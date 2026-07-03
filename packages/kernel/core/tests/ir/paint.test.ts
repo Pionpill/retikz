@@ -1,8 +1,3 @@
-/**
- * Paint schema 单元测试（alpha.7 ADR-01）
- * @description PaintSpecSchema（linear / radial gradient）+ GradientStopSchema；
- *   stops 最少 2、offset/opacity 0..1、angle/radius finite；纯 JSON 可序列化。
- */
 import { describe, expect, it } from 'vitest';
 
 import { NodeSchema, PaintSpecSchema, PathSchema, ScopeSchema } from '../../src/schemas';

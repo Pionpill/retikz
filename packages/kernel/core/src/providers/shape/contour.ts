@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
-import type { ContourSegment } from '../../geometry/contour';
-import type { Position } from '../../geometry/point';
-import type { Rect } from '../../geometry/rect';
-import type { ScenePrimitive } from '../../primitive';
+import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
+import type { Position } from '../../shared/geometry';
+import type { Rect } from '../../shared/geometry';
+import type { ContourSegment } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape/define';
-import { boundaryFromContour, contourCommands } from '../../geometry/contour';
-import { point } from '../../geometry/point';
-import { localToWorld } from '../../geometry/transform';
+import { defineShape } from '../../contract';
+import { point } from '../../shared/geometry';
+import { localToWorld } from '../../shared/geometry';
+import { boundaryFromContour, contourCommands } from '../../shared/geometry';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
@@ -73,7 +73,7 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
  * contour 注册项：吃任意闭合顶点环的几何驱动 shape（可圆角、可连接 Node）
  * @description per-instance params 给一圈局部系顶点（任意原点）+ 可选 cornerRadius；core 按顶点 AABB 中心
  *   自动归一化（每顶点减 AABB 中心再 localToWorld），Node position = 轮廓几何中心，circumscribeOffset 维持 [0,0]。
- *   emit / boundaryPoint / 圆角全部委托现有 geometry/contour.ts + shapes/contour.ts helper（与 polygon 同一条
+ *   emit / boundaryPoint / 圆角全部委托 shared/geometry contour helper + shapes/contour.ts helper（与 polygon 同一条
  *   实现路径，仅顶点来源不同：polygon 由 rect+sides 推导，contour 直接取 params.points）。命名 anchor 返回
  *   undefined → compile 回退外接 AABB rect；boundaryPoint（指向式）精确命中轮廓。scaleParams：points 是长度
  *   按轴各向异性缩，cornerRadius 是长度按几何均值因子缩（同 polygon）。
@@ -114,7 +114,7 @@ export const contour = defineShape({
     return hit ?? center;
   },
   // 标准方位名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
-  anchor: (rect: Rect, name: string, params: ContourParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params: ContourParams): Position | undefined => {
     void rect;
     void name;
     void params;

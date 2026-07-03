@@ -1,89 +1,49 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../src/geometry/rect';
+import type { Rect } from '../../src/shared/geometry/rect';
 
-import { rect } from '../../src/geometry/rect';
 import {
+  Anchor,
   CenterAnchor,
-  CompassAnchor,
-  CompassAnchorToWebAnchor,
-  CompassCorner,
-  CompassSide,
-  normalizeAnchor,
-  normalizeSide,
-  TikzAnchor,
-  TikzAnchorToWebAnchor,
-  TikzCorner,
-  TikzSide,
-  WebAnchor,
+  Corner,
+  isAnchor,
+  isDirectionalAnchor,
+  isSide,
+  Side,
 } from '../../src/shared';
+import { rect } from '../../src/shared/geometry/rect';
 
 const r10x6: Rect = { x: 0, y: 0, width: 10, height: 6 };
 
 describe('anchor vocabularies', () => {
-  it('keeps compass side and corner aliases', () => {
-    expect(CompassSide).toEqual({
-      North: 'north',
-      South: 'south',
-      East: 'east',
-      West: 'west',
-    });
-    expect(CompassCorner).toEqual({
-      NorthEast: 'north-east',
-      NorthWest: 'north-west',
-      SouthEast: 'south-east',
-      SouthWest: 'south-west',
-    });
-    expect(CompassAnchor).toEqual({
-      North: 'north',
-      South: 'south',
-      East: 'east',
-      West: 'west',
-      NorthEast: 'north-east',
-      NorthWest: 'north-west',
-      SouthEast: 'south-east',
-      SouthWest: 'south-west',
-    });
-  });
-
-  it('keeps TikZ positioning side and corner aliases', () => {
-    expect(TikzSide).toEqual({
-      Above: 'above',
-      Below: 'below',
-      Right: 'right',
-      Left: 'left',
-    });
-    expect(TikzCorner).toEqual({
-      AboveRight: 'above-right',
-      AboveLeft: 'above-left',
-      BelowRight: 'below-right',
-      BelowLeft: 'below-left',
-    });
-    expect(TikzAnchor).toEqual({
-      Above: 'above',
-      Below: 'below',
-      Right: 'right',
-      Left: 'left',
-      AboveRight: 'above-right',
-      AboveLeft: 'above-left',
-      BelowRight: 'below-right',
-      BelowLeft: 'below-left',
-    });
-  });
-
-  it('normalizes compass and TikZ aliases to Web canonical names', () => {
+  it('keeps only canonical anchor and side names in shared', () => {
     expect(CenterAnchor).toEqual({ Center: 'center' });
-    expect(CompassAnchorToWebAnchor[CompassAnchor.North]).toBe(WebAnchor.Top);
-    expect(CompassAnchorToWebAnchor[CompassAnchor.NorthWest]).toBe(WebAnchor.TopLeft);
-    expect(TikzAnchorToWebAnchor[TikzAnchor.Above]).toBe(WebAnchor.Top);
-    expect(TikzAnchorToWebAnchor[TikzAnchor.BelowRight]).toBe(WebAnchor.BottomRight);
-    expect(normalizeAnchor(CenterAnchor.Center)).toBe(CenterAnchor.Center);
-    expect(normalizeAnchor(CompassAnchor.North)).toBe(WebAnchor.Top);
-    expect(normalizeAnchor(TikzAnchor.AboveLeft)).toBe(WebAnchor.TopLeft);
-    expect(normalizeAnchor(WebAnchor.BottomRight)).toBe(WebAnchor.BottomRight);
-    expect(normalizeSide('north')).toBe('top');
-    expect(normalizeSide('above')).toBe('top');
-    expect(normalizeSide('left')).toBe('left');
+    expect(Side).toEqual({
+      Top: 'top',
+      Right: 'right',
+      Bottom: 'bottom',
+      Left: 'left',
+    });
+    expect(Corner).toEqual({
+      TopRight: 'top-right',
+      TopLeft: 'top-left',
+      BottomRight: 'bottom-right',
+      BottomLeft: 'bottom-left',
+    });
+    expect(Anchor).toEqual({
+      ...Side,
+      ...Corner,
+    });
+  });
+
+  it('recognizes canonical names without accepting aliases', () => {
+    expect(isAnchor(CenterAnchor.Center)).toBe(true);
+    expect(isAnchor(Anchor.BottomRight)).toBe(true);
+    expect(isDirectionalAnchor(Anchor.TopLeft)).toBe(true);
+    expect(isDirectionalAnchor(CenterAnchor.Center)).toBe(false);
+    expect(isSide(Side.Top)).toBe(true);
+    expect(isAnchor('north')).toBe(false);
+    expect(isSide('above')).toBe(false);
   });
 });
 
@@ -136,42 +96,42 @@ describe('rect.contains with rotation', () => {
 });
 
 describe('rect.anchor', () => {
-  it('returns the 8 Web directional anchors without rotation', () => {
-    expect(rect.anchor(r10x6, WebAnchor.Top)).toEqual([0, -3]);
-    expect(rect.anchor(r10x6, WebAnchor.Bottom)).toEqual([0, 3]);
-    expect(rect.anchor(r10x6, WebAnchor.Right)).toEqual([5, 0]);
-    expect(rect.anchor(r10x6, WebAnchor.Left)).toEqual([-5, 0]);
-    expect(rect.anchor(r10x6, WebAnchor.TopRight)).toEqual([5, -3]);
-    expect(rect.anchor(r10x6, WebAnchor.TopLeft)).toEqual([-5, -3]);
-    expect(rect.anchor(r10x6, WebAnchor.BottomRight)).toEqual([5, 3]);
-    expect(rect.anchor(r10x6, WebAnchor.BottomLeft)).toEqual([-5, 3]);
+  it('returns the 8 directional anchors without rotation', () => {
+    expect(rect.anchor(r10x6, Anchor.Top)).toEqual([0, -3]);
+    expect(rect.anchor(r10x6, Anchor.Bottom)).toEqual([0, 3]);
+    expect(rect.anchor(r10x6, Anchor.Right)).toEqual([5, 0]);
+    expect(rect.anchor(r10x6, Anchor.Left)).toEqual([-5, 0]);
+    expect(rect.anchor(r10x6, Anchor.TopRight)).toEqual([5, -3]);
+    expect(rect.anchor(r10x6, Anchor.TopLeft)).toEqual([-5, -3]);
+    expect(rect.anchor(r10x6, Anchor.BottomRight)).toEqual([5, 3]);
+    expect(rect.anchor(r10x6, Anchor.BottomLeft)).toEqual([-5, 3]);
   });
 
-  it('accepts WebAnchor constants', () => {
-    expect(rect.anchor(r10x6, WebAnchor.TopRight)).toEqual(rect.anchor(r10x6, WebAnchor.TopRight));
+  it('accepts Anchor constants', () => {
+    expect(rect.anchor(r10x6, Anchor.TopRight)).toEqual(rect.anchor(r10x6, Anchor.TopRight));
   });
 
   it('offsets anchors by rectangle center', () => {
     const r: Rect = { x: 100, y: 50, width: 10, height: 6 };
     expect(rect.center(r)).toEqual([100, 50]);
-    expect(rect.anchor(r, WebAnchor.TopRight)).toEqual([105, 47]);
+    expect(rect.anchor(r, Anchor.TopRight)).toEqual([105, 47]);
   });
 
   it('rotates top and right anchors with the rectangle', () => {
     const r: Rect = { ...r10x6, rotate: Math.PI / 2 };
-    const [topX, topY] = rect.anchor(r, WebAnchor.Top);
+    const [topX, topY] = rect.anchor(r, Anchor.Top);
     expect(topX).toBeCloseTo(3);
     expect(topY).toBeCloseTo(0);
 
-    const [rightX, rightY] = rect.anchor(r, WebAnchor.Right);
+    const [rightX, rightY] = rect.anchor(r, Anchor.Right);
     expect(rightX).toBeCloseTo(0);
     expect(rightY).toBeCloseTo(5);
   });
 
   it('maps top under 180 degree rotation to the unrotated bottom anchor', () => {
     const rRot: Rect = { ...r10x6, rotate: Math.PI };
-    const [x, y] = rect.anchor(rRot, WebAnchor.Top);
-    const [sx, sy] = rect.anchor(r10x6, WebAnchor.Bottom);
+    const [x, y] = rect.anchor(rRot, Anchor.Top);
+    const [sx, sy] = rect.anchor(r10x6, Anchor.Bottom);
     expect(x).toBeCloseTo(sx);
     expect(y).toBeCloseTo(sy);
   });

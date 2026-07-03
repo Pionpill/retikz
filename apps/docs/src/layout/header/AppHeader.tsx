@@ -1,16 +1,16 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { useEffect, useRef, useState } from 'react';
 
-import { DocsSearch } from '@/components/shared/docs-search';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { cn } from '@/lib/utils';
+import { AiChatTrigger } from '@/modules/docs/ai-chat';
+import { DocsSearch } from '@/modules/docs/components/docs-search';
 import { useLayoutStore } from '@/store/use-layout-store';
 
-import { AiChatTrigger } from '../ai-chat';
-import { MobileNav } from '../mobile/MobileNav';
 import { BrandLink } from './BrandLink';
 import { HeaderActions } from './HeaderActions';
+import { MobileNav } from './MobileNav';
 import { ModuleNav } from './ModuleNav';
 import { HeaderCompactContext } from './use-header-compact';
 

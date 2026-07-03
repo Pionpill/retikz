@@ -1,4 +1,4 @@
-import type { MarkerFill, MarkerPrimitive } from '../../primitive/marker';
+import type { MarkerFill, MarkerPrimitive } from '../scene';
 
 /**
  * emit 拿到的运行时上下文

@@ -1,12 +1,6 @@
-/**
- * compile：bend out/in 角 + self-loop 行为测试
- * @description 断言实现完成后的语义：out/in 角 → cubic 控制点沿指定方向；looseness 调控制点距离；
- *   from==to 退化为自环（非退化直线）；out/in 与 bendDirection 同给时 out/in 优先。
- *   编译实现尚未消费这些新字段，故本组用例当前应失败（待实现 Agent 落地编译）。
- */
 import { describe, expect, it } from 'vitest';
 
-import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

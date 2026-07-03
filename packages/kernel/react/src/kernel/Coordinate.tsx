@@ -16,7 +16,7 @@ export type CoordinateProps = {
   id: string;
   /**
    * 占位点位置；与 `<Node position>` 形态完全一致
-   * @description 笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], t }`
+   * @description 笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }`
    */
   position: IRPosition | PolarPosition | IRAtPosition | IRAtPositionInput | IROffsetPosition | IRBetweenPosition;
 };

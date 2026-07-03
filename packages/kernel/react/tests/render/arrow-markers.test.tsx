@@ -1,4 +1,4 @@
-import type { ArrowEndSpec, MarkerPathCommand, MarkerPrimitive } from '@retikz/core';
+﻿import type { MarkerPrimitive, PathCommand,ResolvedArrowEndSpec } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -9,15 +9,15 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 /**
  * ArrowMarker 物化测试（emit-in-compile 契约）
- * @description ArrowMarker 不再 switch shape / 算几何——只**物化**已解析的 `ArrowEndSpec`：
+ * @description ArrowMarker 不再 switch shape / 算几何——只**物化**已解析的 `ResolvedArrowEndSpec`：
  *   wrapper 参数（viewBox `0 0 baseSize baseSize` / refX / refY=baseSize/2 / markerWidth / markerHeight）来自
  *   spec，内部元素来自 `spec.marker`（`MarkerPrimitive[]`，core 已产）。内置 8 的 d-string 回归改成：给定
  *   resolved marker 几何 → 物化的 path d 等价旧值。
  *   ArrowMarker 是 FC——直接调函数拿 ReactElement 检查。
  */
 
-/** 构造一个已解析 ArrowEndSpec（wrapper 参数 + marker 几何） */
-const spec = (overrides: Partial<ArrowEndSpec> = {}): ArrowEndSpec => ({
+/** 构造一个已解析 ResolvedArrowEndSpec（wrapper 参数 + marker 几何） */
+const spec = (overrides: Partial<ResolvedArrowEndSpec> = {}): ResolvedArrowEndSpec => ({
   shape: 'custom',
   baseSize: 10,
   refX: 0,
@@ -27,7 +27,7 @@ const spec = (overrides: Partial<ArrowEndSpec> = {}): ArrowEndSpec => ({
   ...overrides,
 });
 
-const render = (s: ArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as unknown as AnyEl;
+const render = (s: ResolvedArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as unknown as AnyEl;
 
 /** 取物化 marker 的 children（数组形态） */
 const innerEls = (el: AnyEl): Array<AnyEl> => {
@@ -133,8 +133,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
  *   参数等价旧 switch。几何已在 compile，react 只翻成 SVG。
  */
 describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）', () => {
-  const pathMarker = (commands: Array<MarkerPathCommand>): ArrowEndSpec =>
-    spec({ marker: [{ type: 'path', commands }] });
+  const pathMarker = (commands: Array<PathCommand>): ResolvedArrowEndSpec => spec({ marker: [{ type: 'path', commands }] });
 
   it('normal: 实心三角 d="M 0 0 L 10 5 L 0 10 Z"', () => {
     const inner = innerEls(

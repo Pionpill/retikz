@@ -8,7 +8,7 @@ import { compileToScene } from '../../src/compile/compile';
  * Shape Registry 重构的「逐字节」回归网
  * @description 捕获一张覆盖内置 shape 全路径（circumscribe / emit / boundaryPoint /
  *   命名 anchor / 数字角度 / rotate / margin）的 Scene 快照，作为编译输出回归网。
- *   diamond 已收为 polygon 4 边形 preset（几何由正多边形定义、顶点位于坐标轴上），其相关字节随之更新；
+ *   diamond 是内置 shape preset（几何由正多边形定义、顶点位于坐标轴上），其相关字节随之更新；
  *   rectangle / circle / ellipse 路径仍须逐字节稳定。
  */
 const richIR: IR = {
@@ -52,12 +52,12 @@ const richIR: IR = {
         { type: 'step', kind: 'line', to: { id: 'c' } },
       ],
     },
-    // 命名 anchor：d.north → e.south
+    // 命名 anchor：d.top → e.bottom
     {
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: { id: 'd', anchor: 'north' } },
-        { type: 'step', kind: 'line', to: { id: 'e', anchor: 'south' } },
+        { type: 'step', kind: 'move', to: { id: 'd', anchor: 'top' } },
+        { type: 'step', kind: 'line', to: { id: 'e', anchor: 'bottom' } },
       ],
     },
     // 数字角度：c.30

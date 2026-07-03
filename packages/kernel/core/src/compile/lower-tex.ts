@@ -1,4 +1,4 @@
-import type { PathCommand } from '../primitive';
+﻿import type { PathCommand } from '../contract';
 import type { IRTexContent } from '../schemas';
 
 export type LoweredTex = {

@@ -1,9 +1,3 @@
-/**
- * ViewBoxSchema / SceneSchema.viewBox 校验测试
- * @description 覆盖 ViewBoxSchema 合法接受、退化拒绝（width/height ≤ 0、非 finite、缺字段、类型错），
- *   以及 SceneSchema 带 / 不带 viewBox 都能 parse、SceneSchema 内嵌的 viewBox 退化时被整体拒绝。
- *   viewBox 有值时覆盖自动算 layout、忽略 padding 等属于编译期运行时语义，见 compile 测试。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IRViewBox } from '../../src';

@@ -1,0 +1,57 @@
+---
+title: 自定义图元
+description: 自定义图元把下沉函数留在运行时：IR 只保存自定义 type 与 JSON 配置，字段收集与 lower 由 defineMark 提供，经 markDefinitions 注入。
+---
+
+内置图元之外，可以用 `defineMark` 注册自己的图元。它和坐标系的 `defineCoordinate`、比例尺的 `defineScale`、变换的 `defineTransform` 同一套范式：写进 spec 的仍然只是 JSON operation，例如 `{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }`；真正的字段收集和下沉函数放在 runtime definition 里，再通过 `<Plot markDefinitions={[...]}>` 注入。
+
+自定义图元的 `type` 是任意非内置判别串；`encoding` 复用和内置图元同一套通道。常见坐标系用 `x` / `y` / `color`，自定义坐标系也可以声明自己的位置 role。位置通道会参与 scale 推断，它和内置图元共享同一坐标系和比例尺。
+
+自定义图元也能在 operation 上写 `transform`。这条 mark-local 管线会在 plot 级 transform 之后执行，`lower(mark, rows, ...)` 收到的就是当前图元自己的变换后 rows；自定义图元不需要在 definition 里重复调用 `applyTransforms`。
+
+如果某种创作写法需要“自动”准备数据，也不要把数据变换藏进 `lower`。React DSL 可以通过 `markTransformShortcuts` 把高级写法展开成普通 transform；`<Transform>`、`dataTransforms`、mark-local `transform` 和这些 shortcut 最终都进入同一条 transform 管线。图元 definition 只消费已经准备好的 rows。
+
+## 菱形 glyph
+
+下面的 `diamond` 图元把每行投影成一个菱形。它在 `markDefinitions` 里注册；自定义图元**没有专属 React 组件**，所以用 `<Plot spec={...}>` 入口创作——`marks` 数组里直接写 `{ type: 'diamond', ... }`。
+
+<ComponentPreview name="mark-custom" sourceFiles={['mark-custom.data.ts']} />
+
+`lower` 拿到的第三个参数是坐标系 `frame`。它把每行的 `x` / `y` 经 `frame.projectRoles` 投成屏幕点，再装配 core `Node`（`shape: 'diamond'`）。`frame` 屏蔽了笛卡尔 / 极坐标的差异：图元只管要投影点，坐标系怎么解释 `x` / `y` 由 coordinate 层决定。
+
+## 定义契约
+
+| 字段            | 必填 | 作用                                                                                                      |
+| --------------- | ---- | --------------------------------------------------------------------------------------------------------- |
+| `type`          | 必填 | 注册键 = IR 判别串；必须是非内置标识符（不能撞 `point` / `path` / `interval` / `reference` / `relation`） |
+| `lower`         | 必填 | 把当前图元 + 数据行 + `frame` + 通道 resolver 下沉成 core IR；无可绘制内容返回 `null`                     |
+| `collectFields` | 可选 | 登记这个图元读取的源字段；strict model 据此校验，避免把字段误判为缺失                                     |
+| `buildCell`     | 可选 | 区间类图元的 per-row cell 构造入口（内置 `interval` 走这条；普通 glyph 不需要）                           |
+
+用 `defineMark<MyMark>` 显式给出自己的 operation 类型，`lower` / `collectFields` 里就能拿到精确的图元形态（不写则默认内置 `Mark`）。
+
+## 三层边界
+
+一个图元跨三层协作，边界和内置图元完全一致：
+
+| 层       | 放什么                                                               | 进 IR | 职责                                            |
+| -------- | -------------------------------------------------------------------- | ----- | ----------------------------------------------- |
+| schema   | `type`、`encoding`、`transform` 等可序列化字段                       | 是    | 校验、持久化、AI 生成、跨端传输                 |
+| 创作层   | 内置走 React 组件；自定义走 spec 入口；shortcut 展开成普通 transform | 否    | 把用户写法装配成 JSON-safe 图元 IR 和 transform |
+| registry | `lower(mark, rows, frame, channels)` 行为                            | 否    | 编译时下沉成 core IR                            |
+
+内置与自定义经同一 `resolveMarkRegistry` 分派：内置图元走精确判别 union、自定义走 `type` passthrough，lowering 通过 mark definition contract 把内置专属几何、relation target 和通用位置通道分开。
+
+## 当前边界
+
+<ComponentAlert
+  type="tip"
+  title="自定义图元经 spec 入口创作"
+  description="v0.1 没有通用 <Mark type=...> 组件，自定义图元通过 <Plot spec={...} markDefinitions={[...]}> 写进 marks 数组。位置域经 active coordinate 的 roles 贡献；写了当前坐标系不支持的 encoding key 会 fail-loud。需要自定义 bounds / 特殊域贡献（如自定义区间类图元）的场景留待后续。"
+/>
+
+## 相关
+
+- [坐标系](/viz/grammar/coordinate) —— `frame.projectRoles` / `frame.projectCell` 如何解释位置角色
+- [比例尺](/viz/grammar/scale) —— 字段通道如何先解析成 scale，再交给图元 lowering
+- [自定义变换](/viz/grammar/extend/transform) —— 同款 `defineXxx` + `options` 注入范式

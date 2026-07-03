@@ -298,7 +298,7 @@ Tier 2 解决了"高层 chart schema 简洁 vs Kernel 表达精确"的矛盾：
 |---|---|
 | Kernel 组件 | `packages/react/src/kernel/` |
 | Sugar 组件 + 解析器 | `packages/react/src/sugar/`（React DSL） + `packages/kernel/core/src/parsers/`（共享 pure 解析） |
-| Tier 2 IR + 下沉 + 组件 | 独立包（`packages/graph/`、`packages/graph/` 等），**不进 core** |
+| Tier 2 IR + 下沉 + 组件 | 独立包（`packages/viz/`、`packages/flow/` 等），**不进 core** |
 
 ### 4.4 IR Schema
 
@@ -670,7 +670,7 @@ text DSL 采用 TikZ 原生语法（§4.2 / §1.3）对 AI 而言是**白送的�
 - 验证 meta 扩展点设计
 - plot 涉及数据绑定 / scale / 数十种 mark / 动画 / 交互——是另一个重量级项目
 
-`@retikz/plot` 的底层语义预研见 [`plot-design.md`](../../packages/graph/_notes/architecture/plot-design.md)：plot 以坐标系为底座，chart type 只是 coordinate / scale / encoding / mark / guide 的 preset 组合，不作为核心抽象。
+`@retikz/plot` 的底层语义预研见 [`plot-design.md`](../../packages/viz/_notes/architecture/plot-design.md)：plot 以坐标系为底座，chart type 只是 coordinate / scale / encoding / mark / guide 的 preset 组合，不作为核心抽象。
 
 ### 8.3 框架无关性
 

@@ -1,9 +1,3 @@
-/**
- * scope.id synthetic bounding-box layout 注册测试
- * @description scope.id 设值时 Pass 1 子树结束后算 axis-aligned 全局 bbox，注册为 synthetic rectangle NodeLayout 到父 namespace frame。
- *   外部 path 用 `'g'` / `'g.<anchor>'` / `'g.<deg>'` 引用走与普通 rectangle node 完全一致的 anchor 路径；
- *   scope.id 作为 polar / at / offset referent 取 bbox 中心。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
@@ -126,7 +120,7 @@ describe('scope.id bbox happy path', () => {
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
-    // g bbox 中心 ≈ (40, 30)（A、B、C 4 角 AABB 的中心：x 范围含 A.west~B.east、y 范围含 A.north~C.south）；
+    // g bbox 中心 ≈ (40, 30)（A、B、C 4 角 AABB 的中心：x 范围含 A.left~B.right、y 范围含 A.top~C.bottom）；
     // orbit = (40 + 200, 30) = (240, 30)；end 经 boundary clip 后 x 接近 240
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -134,7 +128,7 @@ describe('scope.id bbox happy path', () => {
     expect(Math.abs(end![1] - 30)).toBeLessThan(30);
   });
 
-  it('scope_id_north_anchor：path to="g.north" → bbox 顶边中点', () => {
+  it('scope_id_top_anchor：path to="g.top" → bbox 顶边中点', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -148,19 +142,19 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [40, 200] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'north' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'top' } },
         ],
       },
     ]);
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // bbox.north = (40, top) — top 来自 A 的 north-most 边（y 较小一侧）
+    // bbox.top = (40, top) — top 来自 A 的 top-most 边（y 较小一侧）
     expect(Math.abs(end![0] - 40)).toBeLessThan(20);
     expect(end![1]).toBeLessThan(50);
   });
 
-  it('scope_id_east_anchor：path to="g.east" → bbox 右边中点', () => {
+  it('scope_id_right_anchor：path to="g.right" → bbox 右边中点', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -174,14 +168,14 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 25] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // east 的 x 应大于 100（B 中心），y ≈ 25（垂直中点）
+    // right 的 x 应大于 100（B 中心），y ≈ 25（垂直中点）
     expect(end![0]).toBeGreaterThan(100);
     expect(Math.abs(end![1] - 25)).toBeLessThan(20);
   });
@@ -457,14 +451,14 @@ describe('scope.id bbox 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [100, 200] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // bbox 含 (200, 0) coordinate 点 → east 的 x 应接近 200
+    // bbox 含 (200, 0) coordinate 点 → right 的 x 应接近 200
     expect(Math.abs(end![0] - 200)).toBeLessThan(20);
   });
 });
@@ -641,33 +635,33 @@ describe('scope.id bbox 交互', () => {
           },
         ],
       },
-      // 外层 path 引用 outer.east（应反映 inner C 在 (150, 0) 的全局位置）
+      // 外层 path 引用 outer.right（应反映 inner C 在 (150, 0) 的全局位置）
       {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: { id: 'outer', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'outer', anchor: 'right' } },
         ],
       },
-      // 外层 path 引用 inner.east（应只反映 B、C，east x 接近 C 的 (150, 0) east 边）
+      // 外层 path 引用 inner.right（应只反映 B、C，right x 接近 C 的 (150, 0) right 边）
       {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: { id: 'inner', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'inner', anchor: 'right' } },
         ],
       },
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
-    // outer.east 与 inner.east 都应有 x 接近 150（C 全局位置）
+    // outer.right 与 inner.right 都应有 x 接近 150（C 全局位置）
     const paths = compiled.primitives.filter(p => p.type === 'path');
     expect(paths.length).toBeGreaterThanOrEqual(2);
     for (const p of paths) {
       const e = lineTo(p);
       expect(e).toBeDefined();
-      // 两条 path 的 east x 都应 >= 100（至少包含 inner B 全局位置 100；outer 还要包 A 在 0）
+      // 两条 path 的 right x 都应 >= 100（至少包含 inner B 全局位置 100；outer 还要包 A 在 0）
       expect(e![0]).toBeGreaterThanOrEqual(100);
     }
   });
@@ -744,7 +738,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
@@ -758,7 +752,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
         ],
       },
     ]);
@@ -767,13 +761,13 @@ describe('scope.id bbox 交互', () => {
     expect(eBase).toBeDefined();
     expect(eRot).toBeDefined();
     // 旋转 30 后 A 的 4 角点投到全局后 AABB 应比未旋转更大（rotate 让 4 角点偏离主轴）
-    // 量化断言：rotate 版本 east x 应显著大于 base 版本（同一中心、旋转后的 AABB 半宽 > 原矩形半宽）
+    // 量化断言：rotate 版本 right x 应显著大于 base 版本（同一中心、旋转后的 AABB 半宽 > 原矩形半宽）
     expect(eRot![0]).toBeGreaterThan(eBase![0] + 1);
   });
 
   it('scope_id_self_reference_in_inner_path：scope 内 path 端点用本 scope.id 取真 bbox（不是 placeholder 0×0 中心）', () => {
     // 回归测试：bug 修复前，scope 内 path 引用本 scope.id 时 lookup 命中 placeholder（0×0 落在 chain 原点），
-    // 端点 ≈ 原点；修复后端点应取真 bbox（A、B 横跨 [0, 100] → east x 应 ≥ 100）
+    // 端点 ≈ 原点；修复后端点应取真 bbox（A、B 横跨 [0, 100] → right x 应 ≥ 100）
     const ir = scene([
       {
         type: 'scope',
@@ -785,7 +779,7 @@ describe('scope.id bbox 交互', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [0, 200] },
-              { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+              { type: 'step', kind: 'line', to: { id: 'g', anchor: 'right' } },
             ],
           },
         ],
@@ -796,7 +790,7 @@ describe('scope.id bbox 交互', () => {
     const group = compiled.primitives.find(p => p.type === 'group');
     const end = lineTo(group?.type === 'group' ? topPath(group.children) : undefined);
     expect(end).toBeDefined();
-    // 真 bbox.east x ≥ B 中心 100；placeholder 0×0 east x ≈ 0；断 > 80 足以区分两种实现
+    // 真 bbox.right x ≥ B 中心 100；placeholder 0×0 right x ≈ 0；断 > 80 足以区分两种实现
     expect(end![0]).toBeGreaterThan(80);
   });
 });

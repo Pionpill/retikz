@@ -9,10 +9,10 @@ import { findPathPrim } from './helpers';
 describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo）', () => {
   it('A → B → C → A：B 出口端点不同于 B 入口端点，路径在 B 处可见地断开', () => {
     // A=(0,0)、B=(120,0)、C=(60,60)，无文本默认 16x16
-    // 段 A→B：A.east(8,0) → B.west(112,0)
-    // 段 B→C：B.center=(120,0) 朝 C.center=(60,60)，方向 (-60,60) 等比例 → 角点 → B.south-west=(112,8)；
-    //         C.center=(60,60) 朝 B.center，方向 (60,-60) → C.north-east=(68,52)
-    // 段 C→A：C 朝 A 方向 (-60,-60) → C.south-west=(52,52)；A 朝 C 方向 (60,60) → A.north-east=(8,8)
+    // 段 A→B：A.right(8,0) → B.left(112,0)
+    // 段 B→C：B.center=(120,0) 朝 C.center=(60,60)，方向 (-60,60) 等比例 → 角点 → B.bottom-left=(112,8)；
+    //         C.center=(60,60) 朝 B.center，方向 (60,-60) → C.top-right=(68,52)
+    // 段 C→A：C 朝 A 方向 (-60,-60) → C.bottom-left=(52,52)；A 朝 C 方向 (60,60) → A.top-right=(8,8)
     const ir: IR = {
       version: 1,
       type: 'scene',

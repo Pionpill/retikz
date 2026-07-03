@@ -1,12 +1,12 @@
-import type { Transform } from '../../primitive';
+﻿import type { Transform } from '../../contract';
 import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../schemas';
 import type { IRBoundary } from '../../schemas';
 import type { NameStack } from '../name-stack';
 import type { NodeLayout } from '../node';
 
-import { lerpPoint } from '../../geometry/edge';
-import { point } from '../../geometry/point';
 import { FoldStepVia } from '../../schemas';
+import { lerpPoint } from '../../shared/geometry';
+import { point } from '../../shared/geometry';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import { boundaryPointOf } from '../node';
 import { resolvePosition } from '../position';
@@ -18,10 +18,10 @@ const isNodeTarget = (t: IRTarget): t is IRNodeTarget => typeof t === 'object' &
 export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
   isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
 
-/** target 是否 between 比例点（`{ between, t }`）；独有 `between` 字段 */
+/** target 是否 between 比例点（`{ between, fraction }`）；独有 `between` 字段 */
 const isBetween = (t: IRTarget): t is IRBetweenPosition => typeof t === 'object' && !Array.isArray(t) && 'between' in t;
 
-/** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor（可选连接面），`{ side, t }` 恒走视觉形状（不传 boundary） */
+/** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor（可选连接面），`{ side, fraction }` 恒走视觉形状（不传 boundary） */
 const resolveAnchorRef = (
   node: NodeLayout,
   anchor: NonNullable<IRNodeTarget['anchor']>,
@@ -29,7 +29,7 @@ const resolveAnchorRef = (
 ): IRPosition => {
   if (typeof anchor === 'number') return resolveAnchor(node, String(anchor), boundary);
   if (typeof anchor === 'string') return resolveAnchor(node, anchor, boundary);
-  return resolveEdgePoint(node, anchor.side, anchor.t);
+  return resolveEdgePoint(node, anchor.side, anchor.fraction);
 };
 
 /** anchor/边点解析后叠加世界系 offset（不随节点 rotate 旋转） */
@@ -64,7 +64,7 @@ export const refPointOfTarget = (
     const a = refPointOfTarget(target.between[0], nameStack, scopeChain);
     const b = refPointOfTarget(target.between[1], nameStack, scopeChain);
     if (!a || !b) return null;
-    const mid = lerpPoint(a, b, target.t);
+    const mid = lerpPoint(a, b, target.fraction);
     // finite 守卫：端点（极坐标 radius=Infinity / offset NaN 等）或手搓 t=NaN 会产非 finite 中点；
     // 返回 null 走"端点未解析"路径（Step.to → warn / Node·Coordinate → throw），不让非 finite 进 Scene
     if (!Number.isFinite(mid[0]) || !Number.isFinite(mid[1])) return null;

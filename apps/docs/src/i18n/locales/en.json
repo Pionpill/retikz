@@ -105,8 +105,8 @@
     "refComposites": "Composite",
     "refPlot": "Plotting"
   },
-  "graph": {
-    "label": "Graph",
+  "viz": {
+    "label": "Visualization",
     "introduction": "Introduction",
     "getStart": "Get Started",
     "releases": "Releases",

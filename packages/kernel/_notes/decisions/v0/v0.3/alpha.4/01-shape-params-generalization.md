@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · [v0.3 roadmap §Alpha 切分](../roadmap.md) · [core-design.md §7 AI 友好](../../../../../../../notes/architecture/core-design.md) · **范式参照**：[v0.3-alpha.2 ADR-01 Tier 2 支撑](../alpha.2/01-tier2-support.md)（passthrough + 注册表）、core path generator（`pathGenerators/types.ts` + `pathGenerators/define.ts` + `compile/path/index.ts` 双护栏，与本 ADR 同构问题的现成范式）· 消费方：[ADR-02 circle/ellipse](./02-circle-ellipse.md) · [ADR-03 arc/sector](./03-arc-sector.md) · [ADR-04 rectangle/polygon](./04-rectangle-polygon.md) · [ADR-05 star](./05-star.md) · 下游：[plot v0.1-alpha.4](../../../../../../graph/_notes/decisions/v0/v0.1/roadmap.md)
+- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · [v0.3 roadmap §Alpha 切分](../roadmap.md) · [core-design.md §7 AI 友好](../../../../../../../notes/architecture/core-design.md) · **范式参照**：[v0.3-alpha.2 ADR-01 Tier 2 支撑](../alpha.2/01-tier2-support.md)（passthrough + 注册表）、core path generator（`pathGenerators/types.ts` + `pathGenerators/define.ts` + `compile/path/index.ts` 双护栏，与本 ADR 同构问题的现成范式）· 消费方：[ADR-02 circle/ellipse](./02-circle-ellipse.md) · [ADR-03 arc/sector](./03-arc-sector.md) · [ADR-04 rectangle/polygon](./04-rectangle-polygon.md) · [ADR-05 star](./05-star.md) · 下游：[plot v0.1-alpha.4](../../../../../../viz/_notes/decisions/v0/v0.1/roadmap.md)
 
 ## 背景
 

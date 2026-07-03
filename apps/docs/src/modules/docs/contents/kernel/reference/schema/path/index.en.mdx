@@ -1,0 +1,145 @@
+---
+title: Path
+description: A drawn path container, its step actions, and step targets
+---
+
+A `path` is the outer container for a drawn line. Its `children` field is an ordered array of `Step` actions; the renderer walks them sequentially to produce SVG path commands. Each step's destination is a `Target`.
+
+## Path
+
+<ZodSchema name="PathSchema" />
+
+## DrawableStyle
+
+`DrawableStyleSchema` is the shared geometry-style field set for Path kinds. The default `stroke` kind maps `color` to stroke; the built-in `ribbon` kind maps `color` to fill. `pathDefault` also uses this subset when it styles path-like drawables.
+
+<ZodSchema name="DrawableStyleSchema" />
+
+## DrawableInstance
+
+`DrawableInstanceSchema` groups shared identity, provenance, animation, and stacking fields for Path. `id` / `meta` / `animations` are instance metadata and do not enter `pathDefault`; `zIndex` participates in sibling ordering but is not inherited as a default style.
+
+<ZodSchema name="DrawableInstanceSchema" />
+
+## PathRibbonOptions
+
+`PathRibbonOptionsSchema` configures the built-in `kind: 'ribbon'` path provider. Centerline mode reads normal Path children; boundary mode reads `upper` / `lower` step arrays from this object and does not use `children`.
+
+<ZodSchema name="PathRibbonOptionsSchema" />
+
+## Step
+
+`StepSchema` is a discriminated union — `Path.children` is an array of these. The `kind` field picks the variant:
+
+<ZodSchema name="StepSchema" />
+
+### Move
+
+<ZodSchema name="MoveStepSchema" />
+
+### Line
+
+<ZodSchema name="LineStepSchema" />
+
+### Fold
+
+<ZodSchema name="FoldStepSchema" />
+
+### Cycle
+
+<ZodSchema name="CycleStepSchema" />
+
+### Curve
+
+<ZodSchema name="CurveStepSchema" />
+
+### Cubic
+
+<ZodSchema name="CubicStepSchema" />
+
+### Bend
+
+<ZodSchema name="BendStepSchema" />
+
+### Arc
+
+<ZodSchema name="ArcStepSchema" />
+
+### CirclePath
+
+<ZodSchema name="CirclePathStepSchema" />
+
+### EllipsePath
+
+<ZodSchema name="EllipsePathStepSchema" />
+
+### Rectangle
+
+<ZodSchema name="RectangleStepSchema" />
+
+### Generator
+
+<ZodSchema name="GeneratorStepSchema" />
+
+## GeometryLabel
+
+`GeometryLabelSchema` is the shared label contract for path-like hosts. `StepLabelSchema` is an alias of this schema; drawn steps and centerline ribbon labels reuse the same fields.
+It describes label text, normalized position along the host segment or centerline, and tangent / normal-side placement.
+
+<ZodSchema name="GeometryLabelSchema" />
+
+## ControlPoint
+
+`ControlPointSchema` is the alias for Bezier control points. It currently resolves to Cartesian `[x, y]`.
+
+<ZodSchema name="ControlPointSchema" />
+
+## Target
+
+`TargetSchema` is the union for path endpoints: Cartesian / polar / node target object `{ id, anchor?, offset?, boundary? }` / offset placement `{ of, offset }` / proportional placement `{ between, fraction }` / relative offsets (relative / relativeAccumulate). In the node target object, `boundary?` overrides the connection surface this single endpoint clips to (defaults to the node's own `boundary`, i.e. `shape`); `anchor?` auto-clips to the boundary when omitted. Node id strings are React DSL shorthand and are parsed into objects before reaching the IR:
+
+<ZodSchema name="TargetSchema" />
+
+For the endpoint rules of proportional placement, see [Placement](/kernel/reference/schema/placement#betweenposition): `between` endpoints must be self-contained and do not accept path-relative targets.
+
+### Relative
+
+<ZodSchema name="RelativeTargetSchema" />
+
+### RelativeAccumulate
+
+<ZodSchema name="RelativeAccumulateTargetSchema" />
+
+<Comparison target="tikz" title="Path / Step field mapping">
+
+| IR field                                     | TikZ equivalent                                        |
+| -------------------------------------------- | ------------------------------------------------------ |
+| `lineCap` / `lineJoin`                       | `line cap` / `line join`                               |
+| `thickness`                                  | `ultra thin` … `ultra thick`                           |
+| `drawOpacity`                                | `draw opacity`                                         |
+| `kind: 'fold'`                               | `-\|` / `\|-`                                          |
+| `kind: 'cycle'`                              | `cycle`                                                |
+| `kind: 'bend'`                               | `to[bend left=N]` / `to[bend right=N]`                 |
+| `kind: 'arc'`                                | `arc[start angle=…, end angle=…, radius=…]`            |
+| `kind: 'circlePath'` / `kind: 'ellipsePath'` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
+| `relative` / `relativeAccumulate`            | `(+x, +y)` / `(++x, ++y)`                              |
+
+</Comparison>
+
+## ArrowMark
+
+`ArrowMarkSchema` is the core IR arrow marker used inside `Path.marks`. Endpoint arrows are represented as marks at `pos: 0` or `pos: 1`; React `arrow` / `arrowDetail` sugar expands to this shape before it reaches core IR.
+
+<ZodSchema name="ArrowMarkSchema" />
+
+## ArrowDetail
+
+`ArrowDetailSchema` is the visual configuration used by React `arrowDetail` sugar and `arrowDefault`. Core Path IR no longer stores `arrow` / `arrowDetail`; endpoint arrows are `ArrowMark` entries in `marks`.
+
+<ZodSchema name="ArrowDetailSchema" />
+
+### ArrowEndDetail
+
+The schema for `start` / `end` sub-objects — same field set as `ArrowDetail` minus the `start` / `end` fields themselves (no recursion):
+
+<ZodSchema name="ArrowEndDetailSchema" />

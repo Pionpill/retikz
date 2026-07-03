@@ -1,12 +1,6 @@
-/**
- * StepLabel 样式 compile 测试（alpha.2 ADR-02）
- * @description textColor 继承顺序（label 显式 > scope.labelDefault > 宿主 path 主色 color > currentColor）；
- *   font 逐字段回退；opacity 元素内与 path opacity 相乘（跨 scope 不复合）；零破坏既有 currentColor 行为。
- *   跟随的是宿主 path 主色 color（不是 stroke）——与 TikZ `color=` 一致。
- */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

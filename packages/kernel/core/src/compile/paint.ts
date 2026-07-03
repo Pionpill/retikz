@@ -1,5 +1,5 @@
-import type { PatternDefinition, PatternEmitContext } from '../contract/pattern';
-import type { MarkerPrimitive, PaintValue, ResolvedPatternTile, SceneResource } from '../primitive';
+﻿import type { PatternDefinition, PatternEmitContext } from '../contract';
+import type { MarkerPrimitive, PaintValue, ResolvedPatternTile, SceneResource } from '../contract';
 import type { IRPaintSpec } from '../schemas';
 
 import { providerDefinitionOf } from '../providers/registry';
@@ -20,10 +20,6 @@ const FALLBACK_PATTERN_SIZE = 8;
 /** motif 缺省主色：CSS `currentColor`（继承 svg color，主题反应天然） */
 const DEFAULT_MOTIF_COLOR = 'currentColor';
 
-/**
- * 查有效 pattern 表取 def；未注册名编译期 throw（消息含字母序可用名列表）
- * @description 仿 arrow / shape 的未注册 throw 风格——错误带可用名便于第三方 / LLM 自修。
- */
 /**
  * 对一个 pattern spec 查表 + 调 `def.emit` 产已解析 tile
  * @description 构 `PatternEmitContext`（size = spec.size ?? def.defaultSize ?? 8；color = spec.color ??

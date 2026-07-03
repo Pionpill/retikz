@@ -1,12 +1,13 @@
 import type { z } from 'zod';
 
-import type { WebSideInput } from '../../shared';
+import type { SideInput } from '../../shared';
 import type { ValueOf } from '../../shared';
 import type { AtDirectionInput } from '../position';
 import type {
   BuiltinShape,
   NodeLabelPlacement,
   NodeLabelPosition,
+  NodeLabelRotateMode,
   NodeTextAlign,
 } from './constants';
 import type { NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } from './schema';
@@ -14,7 +15,7 @@ import type { NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } fro
 export type IRNodeLabelBoundaryPosition = z.infer<typeof NodeLabelBoundaryPositionSchema>;
 
 export type IRNodeLabelBoundaryPositionInput = Omit<IRNodeLabelBoundaryPosition, 'boundary'> & {
-  boundary: WebSideInput;
+  boundary: SideInput;
 };
 
 /** Node label IR 类型 */
@@ -51,3 +52,6 @@ export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
 export type NodeLabelPositionValue = ValueOf<typeof NodeLabelPosition>;
 
 export type NodeLabelPlacementValue = ValueOf<typeof NodeLabelPlacement>;
+
+/** 节点标签自身旋转模式取值 */
+export type NodeLabelRotateModeValue = ValueOf<typeof NodeLabelRotateMode>;

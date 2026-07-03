@@ -1,6 +1,6 @@
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 
-import type { Position } from '../../geometry/point';
+import type { Position } from '../../shared/geometry';
 import type { AngularRange } from './angle';
 
 import { normalizeAngularRange } from './angle';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { alignSweep } from '../../src/geometry/contour';
+import { alignSweep } from '../../src/shared/geometry/path';
 
 /*
  * alignSweep 把 (start, end) 调整成沿给定扫描方向（ccw=true 递减 / 否则递增）表达，

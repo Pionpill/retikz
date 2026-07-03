@@ -8,7 +8,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - Monorepo：pnpm workspace，glob 为 `packages/*/*` + `apps/*`
 - Kernel 组：`packages/kernel/{math,core,render,react,vanilla,tex}`，其中 `math` 是零依赖计算底座，`tex` 是可选 LaTeX 公式接入包
-- Graph 组：`packages/graph/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
+- Viz 组：`packages/viz/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
 - Apps：`apps/docs` 文档站，`apps/eval` 评测工具
 - 架构背景：`notes/architecture/core-design.md`
 
@@ -84,8 +84,8 @@ pnpm --filter <pkg> exec vitest run [test-file]
 - AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在当前对话拿到用户明确授权；push / tag / publish 始终单独授权。
 - 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
-- 派子 agent / 外部模型评审前必须征求用户确认。长任务执行前同时询问：plan 写完是否评审、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要子 agent review。
-- 用户批准批量执行并授权 LLM 自行 commit 时，每次 commit 前必须派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。
+- 派子 agent / 外部模型评审前必须征求用户确认。长任务执行前同时询问：plan 写完是否评审、代码写完是否评审。非明确功能类代码完工并提交或准备提交后，也询问是否需要子 agent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。
+- 用户批准批量执行并授权 LLM 自行 commit 时，每次 commit 前必须派子 agent review 单个 commit，重点查文件结构、命名规范、barrel 是否默认用 `export *` 而非 `export { ... }`、JSDoc 完备性和中文注释。用户明确认可的小任务单次 commit 不触发该要求；改动面大或核心功能不适用该豁免。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
 Commit message：
@@ -107,15 +107,17 @@ Control: <human-directed|llm-autonomous>
 
 - `main`：稳定发布线，只接正式发布、hotfix、发布后文档补丁。
 - `next`：下版本集成真源，release 只从这里切。
-- `next-kernel` / `next-graph`：方向集成分支；功能改动先合 `next`，不直接进 `main`。
+- `next-kernel` / `next-viz`：方向集成分支；功能改动先合 `next`，不直接进 `main`。
 - `feature/*`、`release/*`、`hotfix/*` 按任务需要创建；创建 / 切换 / 合并 / 删除分支前确认确实需要。
-- 分支同步由 GitHub Actions 自动开 PR：`main -> next`，`next -> next-kernel`，`next -> next-graph`。冲突和 CI 在 PR 中处理，不静默强推目标分支。
+- 分支同步由 GitHub Actions 自动开 PR：`main -> next`，`next -> next-kernel`，`next -> next-viz`。冲突和 CI 在 PR 中处理，不静默强推目标分支。
 
 ## 代码风格
 
 - TypeScript ESM；组件 PascalCase、hook `useXxx`、其余 camelCase。
 - 组件 / 类文件可 PascalCase；其他文件和目录用 kebab-case；目录通常用只 re-export 的 `index.ts`。
 - barrel 默认 `export * from './xxx'`，不要用 `export { ... } from './xxx'` 聚合；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
+- 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
+- 尽量避免 import / export `as` 重命名；命名冲突优先在定义源头改成准确名称，或由 owner barrel 调整公共面。
 - 数组类型写 `Array<T>`，不用 `T[]`；函数优先箭头形式，确需 hoisting / class 方法时例外。
 - enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；value object 用单数 PascalCase，成员 key 用大驼峰，派生类型加 `Value` 后缀。
 - JSDoc 默认必须写：导出类型、接口、函数、组件、重要内部 helper、public props 和复杂对象字段都要注释；纯推断 / 重命名别名（如 `ValueOf`、`z.infer`、re-export 收窄）可省略。
@@ -138,6 +140,6 @@ Control: <human-directed|llm-autonomous>
 - `packages/kernel/AGENTS.md`：kernel 组 lockstep、包职责和发布分组。
 - `packages/kernel/core/AGENTS.md`：IR、Scene 编译、几何、schema、registry。
 - `packages/kernel/react/AGENTS.md`：React adapter、Kernel / Sugar、renderer、hydration。
-- `packages/graph/AGENTS.md`：graph 组分层和 plot adapter 边界。
-- `packages/graph/plot/AGENTS.md`：plot IR、provider / contract / pipeline。
+- `packages/viz/AGENTS.md`：viz 组分层和 plot adapter 边界。
+- `packages/viz/plot/AGENTS.md`：plot IR、provider / contract / pipeline。
 - `apps/docs/AGENTS.md`：文档站结构、路由、MDX / demo / i18n 协作。

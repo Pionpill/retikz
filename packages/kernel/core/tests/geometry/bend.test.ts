@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { bendControlPoints } from '../../src/geometry/bend';
+import { bendControlPoints } from '../../src/shared/geometry/path';
 
 describe('bendControlPoints', () => {
   it("水平 chord，bend left 30° → 控制点 y 在 chord 上方（SVG y 向下，'上方' 即 y<0）", () => {
@@ -62,7 +62,7 @@ describe('bendControlPoints', () => {
 
   it('apex 偏移等于圆弧 sagitta：cubic t=0.5 处离弦 =（chord/2）× tan(bendAngle/2)', () => {
     // 弦切角为 bendAngle 的圆弧，矢高 sagitta =（chord/2）× tan(bendAngle/2)；
-    // cubic 在 t=0.5 的法向偏移 = (3·c1 + 3·c2)/8 应精确命中该 apex（TikZ bend 语义）
+    // cubic 在 t=0.5 的法向偏移 = (3·c1 + 3·c2)/8 应精确命中该 apex（parser sugar bend 语义）
     const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 60);
     const midY = (3 * c1[1] + 3 * c2[1]) / 8;
     const sagitta = 5 * Math.tan((30 * Math.PI) / 180);

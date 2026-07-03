@@ -1,8 +1,7 @@
-import type { PathGeneratorDefinition } from '../../contract/path';
+import type { PathGeneratorDefinition } from '../../contract';
 
 import { resolveProviderRegistry } from '../registry';
-
-export const BUILTIN_PATH_GENERATORS: ReadonlyArray<PathGeneratorDefinition> = [];
+import { BUILTIN_PATH_GENERATORS } from './definitions';
 
 export const resolvePathGeneratorRegistry = (
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>,
@@ -12,5 +11,4 @@ export const resolvePathGeneratorRegistry = (
     builtins: BUILTIN_PATH_GENERATORS,
     custom: pathGenerators,
     keyOf: definition => definition.name,
-    optionName: 'pathGenerators',
   });

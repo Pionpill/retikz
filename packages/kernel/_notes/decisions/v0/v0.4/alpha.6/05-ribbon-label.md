@@ -3,7 +3,7 @@
 - 状态：被 ADR-07 收敛
 - 决策日期：2026-06-26
 - Owner：core
-- 关联：[kernel v0.4-alpha.6 roadmap](./roadmap.md) · [ADR-07](./07-path-kind-registry.md) · [graph alpha.13 ADR-07](../../../../../../graph/_notes/decisions/v0/v0.1/alpha.13/07-mark-label-surface.md)
+- 关联：[kernel v0.4-alpha.6 roadmap](./roadmap.md) · [ADR-07](./07-path-kind-registry.md) · [plot alpha.13 ADR-07](../../../../../../viz/_notes/decisions/v0/v0.1/alpha.13/07-mark-label-surface.md)
 
 ## 背景
 
@@ -18,7 +18,7 @@ ribbon 作为关系图元，需要能承载沿中心线或带状区域放置的�
 - path-like label 属于 geometry host，而不是 sibling text primitive。
 - ribbon label 沿 path-like 几何投递，复用 `position`、`side`、`sloped`、`placement` 等 geometry label 字段。
 - ribbon boundary 专用 label 不进入 alpha.6 第一版；如果后续需要按 upper/lower boundary 单独放置，应另开 ADR。
-- plot relation ribbon label 通过 graph alpha.13 的 mark label surface 投递到最终 core `IRPath.label`。
+- plot relation ribbon label 通过 plot alpha.13 的 mark label surface 投递到最终 core `IRPath.label`。
 
 ## 被否决方案
 
@@ -30,6 +30,6 @@ ribbon 作为关系图元，需要能承载沿中心线或带状区域放置的�
 
 - 最终公开契约见 [ADR-07](./07-path-kind-registry.md)：`Path.label` 由 stroke path 与 ribbon path kind 共享。
 - 发布版本：kernel group `v0.4.0-alpha.6`。
-- 验收范围：core geometry label schema、ribbon path 编译，以及 graph relation ribbon label 投递。
+- 验收范围：core geometry label schema、ribbon path 编译，以及 plot relation ribbon label 投递。
 
 > 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/kernel/v0/v0.4/alpha.6/05-ribbon-label.md`（封板全文）。

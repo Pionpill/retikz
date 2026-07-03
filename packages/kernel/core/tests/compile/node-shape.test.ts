@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/primitive';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR, IRNode } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -84,8 +84,8 @@ describe('Node shape multimorphism', () => {
 });
 
 describe('Target 字符串锚点扩展', () => {
-  it("`'A.east'` → 端点固定在 east anchor，不受 toward 影响", () => {
-    // 矩形 A=(0,0)，无文本，padding=8 → 16x16；east = (8, 0)
+  it("`'A.right'` → 端点固定在 right anchor，不受 toward 影响", () => {
+    // 矩形 A=(0,0)，无文本，padding=8 → 16x16；right = (8, 0)
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -94,7 +94,7 @@ describe('Target 字符串锚点扩展', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'east' } },
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'right' } },
             { type: 'step', kind: 'line', to: [100, 50] },
           ],
         },
@@ -102,7 +102,7 @@ describe('Target 字符串锚点扩展', () => {
     };
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
-      // move(8, 0)：固定 east
+      // move(8, 0)：固定 right
       expect(linePath.commands[0]).toEqual(move([8, 0]));
     }
   });
@@ -131,8 +131,8 @@ describe('Target 字符串锚点扩展', () => {
     }
   });
 
-  it("不同 shape 的 'A.north' anchor 都在最高点", () => {
-    // rectangle / circle / ellipse / diamond 4 shape，A.north 都应在节点 north
+  it("不同 shape 的 'A.top' anchor 都在最高点", () => {
+    // rectangle / circle / ellipse / diamond 4 shape，A.top 都应在节点 top
     for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
       const ir: IR = {
         version: 1,
@@ -142,7 +142,7 @@ describe('Target 字符串锚点扩展', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: { id: 'A', anchor: 'north' } },
+              { type: 'step', kind: 'move', to: { id: 'A', anchor: 'top' } },
               { type: 'step', kind: 'line', to: [0, -100] },
             ],
           },
@@ -153,7 +153,7 @@ describe('Target 字符串锚点扩展', () => {
           p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
       );
       if (linePath?.type === 'path') {
-        // north 的 x = 0（中心 x），y < 0（节点上方）
+        // top 的 x = 0（中心 x），y < 0（节点上方）
         const first = linePath.commands[0];
         expect(first.kind).toBe('move');
         if (first.kind === 'move') {
@@ -219,11 +219,9 @@ describe('ellipse nested params IR round-trip', () => {
   });
 });
 
-describe('circle 收为 ellipse equal preset 别名', () => {
-  // 以下 case 依赖实现 Agent 的 circle 规范化（compile/node.ts 把裸 'circle' →
-  // { type: 'ellipse', params: { circumscribe: 'equal' } }，并删 circle.ts 独立几何）。
-  // 规范化未落地前此刻 fail —— 预期。
-  it("circle_normalizes_to_ellipse_equal：shape:'circle' 编译等价显式 ellipse equal", () => {
+describe('circle 内置 shape preset 解析到 ellipse equal', () => {
+  // circle 是 core IR 内置 shape preset；compile 期解析为显式 ellipse-equal provider 形态。
+  it("circle_resolves_to_ellipse_equal：shape:'circle' 编译等价显式 ellipse equal", () => {
     const bareIr: IR = {
       version: 1,
       type: 'scene',
@@ -245,7 +243,7 @@ describe('circle 收为 ellipse equal preset 别名', () => {
     expect(compileToScene(bareIr).primitives).toEqual(compileToScene(explicitIr).primitives);
   });
 
-  it('circle_emit_equivalent：circle 规范化后 emit EllipsePrim 且 rx == ry（等轴）', () => {
+  it('circle_emit_equivalent：circle 解析后 emit EllipsePrim 且 rx == ry（等轴）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -274,7 +272,7 @@ describe('circle 收为 ellipse equal preset 别名', () => {
     expect(() => compileToScene(ir)).toThrow();
   });
 
-  it('circle_with_scale：circle 规范化后 × scale → 尺寸协同放大、仍正圆（rx == ry）', () => {
+  it('circle_with_scale：circle 解析后 × scale → 尺寸协同放大、仍正圆（rx == ry）', () => {
     const base = compileToScene({
       version: 1,
       type: 'scene',
@@ -297,14 +295,14 @@ describe('circle 收为 ellipse equal preset 别名', () => {
     // circle 与显式 ellipse-equal 在所有命名 anchor 落点一致（回归：收敛不改 anchor 几何）
     for (const anchor of [
       'center',
-      'north',
-      'south',
-      'east',
-      'west',
-      'north-east',
-      'north-west',
-      'south-east',
-      'south-west',
+      'top',
+      'bottom',
+      'right',
+      'left',
+      'top-right',
+      'top-left',
+      'bottom-right',
+      'bottom-left',
     ] as const) {
       const mk = (shape: IRNode['shape']): IR => ({
         version: 1,
@@ -332,11 +330,9 @@ describe('circle 收为 ellipse equal preset 别名', () => {
   });
 });
 
-describe('diamond 收为 polygon preset 别名（ADR-04）', () => {
-  // 以下 case 依赖实现 Agent 的 diamond 规范化（compile/node.ts 把裸 'diamond' →
-  // { type: 'polygon', params: { sides: 4, rotate: 0 } }，并删 diamond.ts 独立几何）。
-  // 规范化 + polygon 真实几何（anchor / boundaryPoint）未落地前以下 case fail —— 预期。
-  it("diamond_normalizes_to_polygon：shape:'diamond' 编译等价显式 polygon 4/0", () => {
+describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
+  // diamond 是 core IR 内置 shape preset；compile 期解析为显式 polygon 4/0 provider 形态。
+  it("diamond_resolves_to_polygon：shape:'diamond' 编译等价显式 polygon 4/0", () => {
     const bareIr: IR = {
       version: 1,
       type: 'scene',
@@ -358,7 +354,7 @@ describe('diamond 收为 polygon preset 别名（ADR-04）', () => {
     expect(compileToScene(bareIr).primitives).toEqual(compileToScene(explicitIr).primitives);
   });
 
-  it('diamond_emit_topology：diamond（规范化）emit 闭合 path（4 顶点 + close）', () => {
+  it('diamond_emit_topology：diamond preset 解析后 emit 闭合 path（4 顶点 + close）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -370,19 +366,19 @@ describe('diamond 收为 polygon preset 别名（ADR-04）', () => {
     expect(p!.commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
   });
 
-  it('diamond_anchor_matches_legacy：diamond（规范化）命名 anchor 与旧 diamond 一致', () => {
-    // diamond 规范化为 polygon 4/0 后，各命名 anchor 落点须与显式 polygon preset 一致。
+  it('diamond_anchor_matches_legacy：diamond preset 解析后命名 anchor 与旧 diamond 一致', () => {
+    // diamond 解析为 polygon 4/0 后，各命名 anchor 落点须与显式 polygon preset 一致。
     // 用 path 连接 'A.<anchor>' 比对两种 shape 写法的首端点（move 落点）。
     for (const anchor of [
       'center',
-      'north',
-      'south',
-      'east',
-      'west',
-      'north-east',
-      'north-west',
-      'south-east',
-      'south-west',
+      'top',
+      'bottom',
+      'right',
+      'left',
+      'top-right',
+      'top-left',
+      'bottom-right',
+      'bottom-left',
     ] as const) {
       const mk = (shape: IRNode['shape']): IR => ({
         version: 1,

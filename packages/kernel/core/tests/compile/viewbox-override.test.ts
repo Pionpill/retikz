@@ -1,9 +1,3 @@
-/**
- * 自定义视框覆盖编译测试
- * @description IR 根带 viewBox 时 Scene.layout 严格等于它（按 precision round）、忽略 padding、不被内容撑大；
- *   无 viewBox 时回退既有 computeLayout（AABB + padding，回归断言）；手搓非 finite / 退化 viewBox 经
- *   compileToScene 抛清晰错（不泄漏 Infinity / 0 宽进 Scene）。所有 IR 手搓 `{version,type,children,viewBox}`。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IR, IRChild } from '../../src';

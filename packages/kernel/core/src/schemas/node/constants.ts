@@ -26,3 +26,13 @@ export const NodeLabelPlacement = {
   Outside: 'outside',
   Inside: 'inside',
 } as const;
+
+/** 节点标签自身旋转模式 */
+export const NodeLabelRotateMode = {
+  /** 保持文字正立，不随标签位置旋转 */
+  None: 'none',
+  /** 沿节点中心到标签中心的径向方向旋转 */
+  Radial: 'radial',
+  /** 沿径向方向的切线方向旋转 */
+  Tangent: 'tangent',
+} as const;

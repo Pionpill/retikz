@@ -1,10 +1,3 @@
-/**
- * clip 裁切对抗测试（破坏视角）
- * @description 构造让实现挂的对抗输入：手搓 IR 绕过 zod 喂非 finite 坐标、字段顺序错位、退化几何、
- *   大量资源混合、嵌套 / 复合 scope。核心目标——非 finite 绝不进 Scene（守 JSON round-trip），
- *   dedup 不误并 / 不漏并，资源 id 命名空间稳定不撞，复合 scope 仍正确挂 clipRef。
- *   只补对抗 case，不重复 clip.test.ts 的正向覆盖。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, IR, IRPaintSpec, ScenePrimitive, SceneResource } from '../../src';

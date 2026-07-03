@@ -1,0 +1,165 @@
+---
+title: Processing
+description: Get real-world data in and trusted — use fieldMap for renamed fields, format or resolveField for custom parsing, and validateData / invalid for dirty data.
+---
+
+[Data Model](/viz/grammar/data/model) declares what the fields **are**; this page is about getting real-world data **in** — swapping sources, parsing, and validating. `fieldMap` and declarative `format` rely on a model for the logical field contract; `resolveField`, `validateData`, and `invalid` can also work with inferred fields. In practice, declare a model when you want one config to stay reusable across several data sources.
+
+## Swapping data sources
+
+Data stays out of the config (the IR), so one `<Plot>` config can run against different sources. If all field names match, you can draft without a model; for long-lived reuse across APIs or files, a model gives the config an explicit logical field contract. There are three ways to bind a new source:
+
+### Same names, same types
+
+The lightest source swap is to keep the same field contract: both datasets expose `month` / `revenue`, and `month` is still temporal while `revenue` is still continuous. Marks, axes, scales, colors, ordering, and validation all stay the same; only `<Plot data>` changes.
+
+This fits stable API shapes where you only switch filters, time windows, or environments. For example, the same sales chart can show actuals or forecasts. As long as the field contract stays intact, the chart config is reused.
+
+<ComponentPreview name="processing-same" sourceFiles={['processing-same.data.ts']} />
+
+If the field names changed, use `fieldMap` in the next section. If the names stayed the same but storage formats changed (for example ISO dates became `YYYY/MM/DD`), use the parsing section below.
+
+### Different names: `fieldMap`
+
+When the data's field names don't line up with the config's logical names, supply a `fieldMap` (logical name → the actual path in the data); the config is untouched:
+
+```tsx
+// the data calls them period / amount, the config still says month / revenue
+<Plot
+  data={rows}
+  model={[
+    { name: 'month', type: 'temporal' },
+    { name: 'revenue', type: 'continuous' },
+  ]}
+  fieldMap={{ month: 'period', revenue: 'amount' }}
+>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`fieldMap` only renames (it doesn't transform values — computation belongs to transforms); it must be used with a model — without one there are no "logical fields" to map. The right-hand side can be a nested path such as `pricing.amount`. Plot reads from that physical path, then writes the parsed value back under the logical name such as `revenue`, so later transforms / scales / marks still reference only logical fields.
+
+Both charts below use the same logical config. The left data already has `month` / `revenue`; the right data comes from another feed where the fields are `period` / `amount`, so `fieldMap` binds it back to the same model.
+
+<ComponentPreview name="processing-source" sourceFiles={['processing-source.data.ts']} />
+
+### Different storage formats, same type
+
+A single `temporal` field reads correctly whether the data stores it as a `Date`, an ISO string, or an epoch-millisecond number; a `continuous` field accepts numbers, safe-integer bigints, or strict numeric strings (`"120"`). No extra config. Non-default storage formats (`'2024/01/01'`, epoch seconds, `'50%'`, numeric strings with thousands commas) go through the parsing below.
+
+The right-hand chart below deliberately mixes `Date`, epoch milliseconds, ISO strings, and numbers / numeric strings. Because the field types are still `temporal` + `continuous`, the same model normalizes them.
+
+<ComponentPreview name="processing-storage" sourceFiles={['processing-storage.data.ts']} />
+
+## Parsing formats
+
+Built-in parsing only accepts fixed shapes: `temporal` takes `Date` / epoch-ms / strict ISO, `continuous` takes numbers / strict numeric strings. Formats outside that table need you to spell out how to parse them — use a declarative `format` for common shapes, and `resolveField` for truly arbitrary logic.
+
+| Case                       | Write                                     | Enters IR                 |
+| -------------------------- | ----------------------------------------- | ------------------------- |
+| Default formats            | declare `type`, or omit parsing           | Yes                       |
+| Common non-default formats | add a built-in `format` on a model field  | Yes                       |
+| Reusable custom format     | `defineFieldFormat` + `formatDefinitions` | Yes, only the format name |
+| Arbitrary runtime logic    | `resolveField`                            | No, runtime function only |
+
+### format
+
+For common non-default formats like `'2024/01/01'`, epoch seconds, or `'50%'`, you don't need a function — give the field a declarative `format`, which **enters the IR, is serializable, and an LLM can generate it**:
+
+```tsx
+<Plot
+  data={rows}
+  model={[
+    { name: 'createdAt', type: 'temporal', format: 'slashDate' }, // '2024/01/01' → time
+    { name: 'ts', type: 'temporal', format: 'epochSeconds' }, // 1700000000 → ms
+    { name: 'ratio', type: 'continuous', format: 'percent' }, // '50%' → 0.5
+  ]}
+>
+  {/* … */}
+</Plot>
+```
+
+In the right-hand chart below, the same business fields come from report-shaped data: dates use `YYYY/MM/DD`, and ratios are percent strings. `format` normalizes both before they reach the time and linear axes.
+
+<ComponentPreview name="processing-format" sourceFiles={['processing-format.data.ts']} />
+
+Available `format` values (each binds to one type):
+
+| `format`       | Type       | Parsing                                                       |
+| -------------- | ---------- | ------------------------------------------------------------- |
+| `iso`          | temporal   | strict ISO (same as omitting)                                 |
+| `epochSeconds` | temporal   | epoch seconds → ms                                            |
+| `epochMillis`  | temporal   | epoch milliseconds                                            |
+| `slashDate`    | temporal   | strict `YYYY/MM/DD` (at UTC midnight)                         |
+| `numberString` | continuous | lenient numeric string (allows whitespace / thousands commas) |
+| `percent`      | continuous | percent string `'50%'` → 0.5                                  |
+
+Rules:
+
+- **`format` implies `type`**: with a `format` you can omit `type` — `{ name: 'ratio', format: 'percent' }` is continuous automatically, never inferred as categorical.
+- **Must be compatible with `type`**: if the format's bound type conflicts with the `type` you wrote (e.g. `{ type: 'continuous', format: 'slashDate' }`), retikz **throws a clear error** rather than going silent.
+- `slashDate` accepts only strict `YYYY/MM/DD`; ambiguous layouts like `DD/MM/YYYY` / `MM/DD/YYYY` are not accepted (so the same string can't parse to different dates in different environments).
+- Parsing priority: `resolveField`'s `parse` > declarative `format` (built-in or custom) > built-in default.
+
+### Custom Parsing
+
+Beyond the built-in `format` vocabulary, common reusable formats can be registered with `defineFieldFormat`; one-off parsing or data-source branching goes through `resolveField`. See [Custom Data](/viz/grammar/extend/data) for the full contracts, examples, and choosing guide.
+
+Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and custom parsing only affect preparation; the mark still says `y="revenue"`.
+
+## Validating dirty data
+
+Document / heterogeneous data often has missing fields or mixed types across rows. retikz's policy is **skip, never fabricate, never silently draw wrong**:
+
+In the right-hand chart below, `Feb` is an unparseable string, `Mar` is missing, and `May` is `null`. The default `invalid="skip"` skips those bars; in development or data intake, enable validation to turn the same rows into errors.
+
+<ComponentPreview name="processing-invalid" sourceFiles={['processing-invalid.data.ts']} />
+
+| Situation                                          | Behavior                                                                                     |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| A row is missing the field                         | that datum is skipped (normal for heterogeneous data, no error)                              |
+| The leaf is an object / array (non-scalar)         | that datum is skipped (objects never enter the chart)                                        |
+| Same type, different storage format                | converted automatically (see "Swapping data sources" above)                                  |
+| The field is a `bigint` (e.g. a database int64)    | converted to a number automatically (safe integers only; out-of-range is treated as invalid) |
+| The path passes through an array (needs unwinding) | not auto-unwound yet — flatten in the data layer first                                       |
+
+Choose validation by how strict you want the chart to be:
+
+| Option                     | Check                                | Good for                                           |
+| -------------------------- | ------------------------------------ | -------------------------------------------------- |
+| Default / `invalid="skip"` | no error; invalid points are skipped | production charts that tolerate a few dirty values |
+| `validateData`             | sample-checks bound fields           | debugging blank charts / bad field maps            |
+| `invalid="error"`          | full check of participating fields   | data intake, tests, fail-loud charts               |
+
+Validation happens after parsing / normalization and only checks fields used by the current plot. The default "skip" can leave you staring at a blank chart. Turn on `validateData` to have retikz **sample-check** the binding and throw on problems, pointing at **which field and how many invalid / missing** (e.g. `field "x": 3/100 invalid`), turning "why is it empty" into a clear message:
+
+```tsx
+<Plot data={rows} model={[...]} validateData>
+  {/* missing field / nothing convertible → compile-time error instead of a blank chart */}
+</Plot>
+```
+
+For a stricter **full** check, pass `invalid="error"` — any invalid value (a missing field, an unconvertible value, an out-of-range bigint) in a field the chart actually uses throws immediately and names the field, rather than sampling:
+
+```tsx
+<Plot data={rows} model={[...]} invalid="error">
+  {/* any participating field with an invalid value → error that names the field */}
+</Plot>
+```
+
+`invalid` defaults to `'skip'` (the table's "skip" behavior): invalid points are dropped but the **whole row is kept**, still participating in stacking / sorting transforms; `'error'` only checks the fields the chart references, leaving other dirty columns alone.
+
+## How It Works
+
+Data processing runs before mark lowering. Its job is to turn external rows from different sources and storage formats into one canonical row shape. Later transforms, scales, marks, and locators all read that result.
+
+| Order | Processing                                                                                                                                                |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Collect fields referenced by the current config, producing the field set that actually needs work                                                         |
+| 2     | Use `fieldMap` to align logical fields with physical data paths; without a mapping, the physical path is the logical field name                           |
+| 3     | Resolve field types: `resolveField.type` first, then model / format / inference                                                                           |
+| 4     | Parse field values: `resolveField.parse` first, then declarative `format` (built-in or custom registered via `formatDefinitions`), then built-in coercion |
+| 5     | Write parsed values back into the canonical row under logical field names                                                                                 |
+| 6     | Use `validateData` / `invalid` to sample-check or fully check participating fields                                                                        |
+
+`model` and `format` enter the PlotSpec and are suitable for persistence with the chart config. `fieldMap` is a serializable mapping, but it is a lowering option injected by dataset reference and is not written into the PlotSpec; `resolveField` is a function and participates only at runtime. To reuse `resolveField` logic, reuse the same resolver in application code rather than expecting it to be written into IR.

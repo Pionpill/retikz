@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
-import type { ContourSegment } from '../../geometry/contour';
-import type { Position } from '../../geometry/point';
-import type { Rect } from '../../geometry/rect';
-import type { ScenePrimitive } from '../../primitive';
+import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
+import type { Position } from '../../shared/geometry';
+import type { Rect } from '../../shared/geometry';
+import type { ContourSegment } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape/define';
-import { boundaryFromContour, contourCommands } from '../../geometry/contour';
-import { localToWorld } from '../../geometry/transform';
+import { defineShape } from '../../contract';
+import { localToWorld } from '../../shared/geometry';
+import { boundaryFromContour, contourCommands } from '../../shared/geometry';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
@@ -155,7 +155,7 @@ export const star = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  anchor: (rect: Rect, name: string, params: StarParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params: StarParams): Position | undefined => {
     const geo = starGeometry(params);
     // tip-N → 顶点 2N（尖角）；notch-N → 顶点 2N+1（凹角）。范围越界返回 undefined。
     const tip = /^tip-(\d+)$/.exec(name);

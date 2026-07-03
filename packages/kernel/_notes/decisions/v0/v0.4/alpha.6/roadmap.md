@@ -2,7 +2,7 @@
 
 ## 目标
 
-alpha.6 聚焦来自 plot / graph 的关系图底座需求：可变宽度带状关系路径、端面与边界增强、两类标签能力，以及关系路径的共享样式契约。
+alpha.6 聚焦来自 plot / viz 的关系图底座需求：可变宽度带状关系路径、端面与边界增强、两类标签能力，以及关系路径的共享样式契约。
 
 - 最终公开形态由 [ADR-07](./07-path-kind-registry.md) 收敛：不新增独立 `type: "ribbon"` IR；ribbon 是 `type: "path", kind: "ribbon"`。
 - `Path.kind` 是一等 provider contract，内置 `stroke` / `ribbon` 与自定义 kind 走同一注册、解析和 lowering 机制。
@@ -10,7 +10,7 @@ alpha.6 聚焦来自 plot / graph 的关系图底座需求：可变宽度带状�
 - 节点 / 区块名称仍属于 `Node.label`；bar / block 的内侧标签通过 node label 的 `placement` 与 `{ boundary, fraction }` position 表达。
 - flow / route / amount 等属于带状流本身的文字，通过 `Path.label` 表达。
 - `Path.label` 的 `position`、`side`、文字样式等属性与 Path step label 共用同一套 `GeometryLabelSchema` 和类型，不另起 ribbon 专用 label API。
-- graph 的 `RelationMark.style` 只映射到 core 显式声明的 shared drawable 子集，stroke-only、ribbon-only 与自定义 kind 参数继续分离。
+- plot 的 `RelationMark.style` 只映射到 core 显式声明的 shared drawable 子集，stroke-only、ribbon-only 与自定义 kind 参数继续分离。
 
 ## 决策列表
 

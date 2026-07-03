@@ -331,7 +331,7 @@ SSR / 静态先渲染出图，客户端把用户 handler 绑回图元——函�
 - 不把函数、closure、framework ref 写进 IR。
 - 不做完整应用框架式 hydration，只做 retikz 图元到 handler 的绑定。
 - 不在 core 中实现 plot 本体或 chart type。
-- 不启动 flow / graph domain 包。
+- 不启动 flow / graph 等后续 domain 包。
 - 不做可视化编辑器。
 
 ## 待决策

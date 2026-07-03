@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR } from '../../src';
-import type { GroupPrim, ScenePrimitive } from '../../src/primitive';
+import type { GroupPrim, ScenePrimitive } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
 

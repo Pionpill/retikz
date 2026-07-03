@@ -1,0 +1,95 @@
+import type { IRAnimationTrack } from '../../schemas';
+import type { IRFont, IRGraphicStyle, IRTextRun } from '../../schemas';
+import type { IRJsonObject } from '../../schemas';
+
+type SceneFontWeight = NonNullable<IRFont['weight']> | (string & {});
+
+/** 行级字段（每行可独立指定），未填走块级 TextPrim 默认 */
+export type TextLine = {
+  /** 行文字内容 */
+  text: string;
+  /**
+   * 行级字号覆盖（user units）；缺省走块级 TextPrim.fontSize
+   * @default `TextPrim.fontSize`
+   */
+  fontSize?: IRFont['size'];
+  /**
+   * 行级字体族覆盖（CSS font-family）；缺省走块级
+   * @default `TextPrim.fontFamily`
+   */
+  fontFamily?: IRFont['family'];
+  /**
+   * 行级字重覆盖（CSS font-weight）；缺省走块级
+   * @default `TextPrim.fontWeight`
+   */
+  fontWeight?: SceneFontWeight;
+  /**
+   * 行级字形覆盖；缺省走块级
+   * @default `TextPrim.fontStyle`
+   */
+  fontStyle?: IRFont['style'];
+  /**
+   * 行级文字颜色覆盖；缺省走块级 TextPrim.fill
+   * @default `TextPrim.fill`
+   */
+  fill?: IRTextRun['fill'];
+  /**
+   * 行级透明度 0..1 覆盖；缺省走块级
+   * @default `TextPrim.opacity`
+   */
+  opacity?: IRTextRun['opacity'];
+};
+
+/**
+ * 文本原语（measuredWidth/Height 由 Scene 编译阶段算好）
+ * @description 多行 lines 至少 1 行；renderer 按 lineHeight 堆叠每行、按 baseline 在 (x,y) 锚点上下对齐。顶层属性是块级默认，单行 TextLine 可覆盖
+ */
+export type TextPrim = {
+  type: 'text';
+  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
+  id?: string;
+  /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
+  meta?: IRJsonObject;
+  /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
+  animations?: Array<IRAnimationTrack>;
+  /** 锚点横坐标（具体含义由 align 决定） */
+  x: number;
+  /** 锚点纵坐标（具体含义由 baseline 决定） */
+  y: number;
+  /** 至少 1 行；单行节点也用 `[{ text: 'Hello' }]` */
+  lines: Array<TextLine>;
+  fontSize: NonNullable<IRFont['size']>;
+  /**
+   * 块级字体族。
+   * @default 'sans-serif'
+   */
+  fontFamily?: IRFont['family'];
+  /**
+   * 块级字重。
+   * @default 'normal'
+   */
+  fontWeight?: SceneFontWeight;
+  /**
+   * 块级字形。
+   * @default 'normal'
+   */
+  fontStyle?: IRFont['style'];
+  align: 'start' | 'middle' | 'end';
+  baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
+  /** 行高，多行下相邻行的垂直距离 */
+  lineHeight: number;
+  /** 编译期算好的整块文字宽度 = max line width */
+  measuredWidth: number;
+  /** 编译期算好的整块文字高度 ≈ lines × lineHeight */
+  measuredHeight: number;
+  /**
+   * 块级文字颜色。
+   * @default 'currentColor'
+   */
+  fill?: IRTextRun['fill'];
+  /**
+   * 整体透明度 0~1
+   * @default 1
+   */
+  opacity?: IRGraphicStyle['opacity'];
+};

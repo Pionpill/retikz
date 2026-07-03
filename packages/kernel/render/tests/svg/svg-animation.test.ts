@@ -200,7 +200,7 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
     ],
     duration: 400,
     easing: 'linear',
-    origin: 'south',
+    origin: 'bottom',
   };
 
   it('opacity 线性 at=200/400 → rect.opacity=0.5，且无 <style> / 无 data-retikz-anim', () => {
@@ -216,11 +216,11 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
     expect(findTag(out, 'rect')!.attrs.opacity).toBe(1);
   });
 
-  it('transform 通道（scaleY 线性 + origin south）at=200 → wrapper <g> 静态 transform + transform-origin', () => {
+  it('transform 通道（scaleY 线性 + origin bottom）at=200 → wrapper <g> 静态 transform + transform-origin', () => {
     const out = buildSvgFragment(scene([rect({ animations: [LINEAR_GROW] })]), { idPrefix: 't', snapshotAt: 200 });
     const g = findTag(out, 'g')!;
     expect(g.style?.transform).toBe('scale(1, 0.5)');
-    expect(g.style?.['transform-origin']).toBe('5px 10px'); // rect 10×10 south = (5,10)
+    expect(g.style?.['transform-origin']).toBe('5px 10px'); // rect 10×10 bottom = (5,10)
     expect(findTag([g], 'rect')).toBeDefined();
   });
 

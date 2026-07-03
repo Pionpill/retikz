@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { normalizeAtDirection, normalizeSide, WebSide } from '../../shared';
+import { Side } from '../../shared';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
 import { FontSchema } from '../font';
@@ -16,13 +16,13 @@ import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 import { ShapeRefSchema } from '../shape';
 import { CssColorSchema, GraphicStyleSchema } from '../style';
 import { createLabelVisualStyleShape, LabelTextContentSchema, TextBlockSchema } from '../text';
-import { NodeLabelPlacement, NodeLabelPosition, NodeTextAlign } from './constants';
+import { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode, NodeTextAlign } from './constants';
 
 export const NodeLabelBoundaryPositionSchema = z
   .object({
     boundary: z
-      .preprocess(value => (typeof value === 'string' ? normalizeSide(value) ?? value : value), z.enum(WebSide))
-      .describe('Box-like node boundary side used as the label attachment line. Web sides are canonical; compass and TikZ side names are accepted aliases.'),
+      .enum(Side)
+      .describe('Canonical box-like node boundary side used as the label attachment line.'),
     fraction: NormalizedFractionSchema
       .optional()
       .describe('Normalized position along the selected boundary. Defaults to 0.5.'),
@@ -47,13 +47,10 @@ export const NodeLabelSchema = z
     }),
     text: LabelTextContentSchema,
     position: z
-      .preprocess(
-        value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value),
-        z.union([z.enum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema]),
-      )
+      .union([z.enum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema])
       .optional()
       .describe(
-        'Label attachment point on the node border. Accepts Web directions (top, top-left, ...), compass aliases (north, north-west, ...), TikZ aliases (above, below-left, ...), center, a numeric polar angle in degrees (0=right, 90=bottom in y-down coordinates), or `{ boundary, fraction }` for a proportional point on a box-like side. Omitted fields use top.',
+        'Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.',
       ),
     placement: z
       .enum(NodeLabelPlacement)
@@ -65,10 +62,10 @@ export const NodeLabelSchema = z
       .optional()
       .describe('Gap between the node border and the label center, in user units. Default 12.'),
     rotate: z
-      .union([z.enum(['none', 'radial', 'tangent']), AngleDegreesSchema])
+      .union([z.enum(NodeLabelRotateMode), AngleDegreesSchema])
       .optional()
       .describe(
-        'Label text self-rotation around its own center. `none` keeps text upright; `radial` points along node center to label center; `tangent` is radial + 90 degrees; a number is an explicit angle in degrees. Only changes orientation, not placement.',
+        'Label self-rotation: none, radial, tangent, or an explicit angle in degrees.',
       ),
     keepUpright: z
       .boolean()
@@ -80,7 +77,7 @@ export const NodeLabelSchema = z
       .union([z.boolean(), NodeLabelPinSchema])
       .optional()
       .describe(
-        'Outside-label leader line from the node border attachment point to the label box. `true` uses the default line; an object provides line style overrides; omitted or `false` disables the leader. Rejected when placement is inside.',
+        'Outside-label leader line. Use true for defaults or an object for style overrides.',
       ),
   })
   .superRefine((label, ctx) => {

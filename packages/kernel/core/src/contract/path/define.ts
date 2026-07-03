@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '../../schemas';
-import type { PathGeneratorDefinition, PathKindDefinition, PathKindDefinitionInput } from './types';
+import type { PathGeneratorDefinition, PathKindDefinition } from './types';
 
 /**
  * 定义 path generator 注册项，并做轻量形态校验。
@@ -32,7 +32,7 @@ export const definePathGenerator = (def: PathGeneratorDefinition): PathGenerator
  * @throws 当 schema.shape.kind 不是非空 literal 字符串时。
  */
 export const definePathKind = <TOptions = IRJsonObject>(
-  definition: PathKindDefinitionInput<TOptions>,
+  definition: PathKindDefinition<TOptions>,
 ): PathKindDefinition<TOptions> & PathKindDefinition => {
   const kind = definition.schema.shape.kind.value;
   if (typeof kind !== 'string' || kind.trim().length === 0) {

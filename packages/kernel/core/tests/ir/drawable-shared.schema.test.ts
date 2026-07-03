@@ -114,13 +114,11 @@ describe('Drawable shared schema', () => {
     expect(StepLabelSchema).toBe(GeometryLabelSchema);
   });
 
-  it('keeps edge label web sides canonical while accepting compass and TikZ aliases', () => {
+  it('keeps edge label sides canonical and rejects parser sugar aliases', () => {
     expect(GeometryLabelSchema.parse({ text: 'x', side: 'top' })).toMatchObject({ side: 'top' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'north' })).toMatchObject({ side: 'top' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'above' })).toMatchObject({ side: 'top' });
     expect(GeometryLabelSchema.parse({ text: 'x', side: 'bottom' })).toMatchObject({ side: 'bottom' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'south' })).toMatchObject({ side: 'bottom' });
-    expect(GeometryLabelSchema.parse({ text: 'x', side: 'below' })).toMatchObject({ side: 'bottom' });
+    expect(() => GeometryLabelSchema.parse({ text: 'x', side: 'north' })).toThrow();
+    expect(() => GeometryLabelSchema.parse({ text: 'x', side: 'above' })).toThrow();
   });
 
   it('rejects path-only fields inside ribbon options', () => {

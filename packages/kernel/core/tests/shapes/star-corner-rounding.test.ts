@@ -1,21 +1,7 @@
-/**
- * star cornerRadius（统一圆角）—— params + emit fillet 弧（含凹角 notch）+ boundary 感知 + r=0 等价 + scaleParams
- * @description 覆盖：
- *   - paramsSchema：cornerRadius 可选 nonnegative finite，负值 / 非有限 reject；
- *   - emit：cornerRadius>0 path 含 fillet arc 命令（凸尖 + 凹角各一段）；
- *   - 凹角专测（notch）：notch 处 fillet arc 的 sweep 方向与相邻 tip 相反；boundaryPoint 朝 notch 方向落
- *     fillet 弧上（≠ 凹角顶点）；circumscribe 不随 cornerRadius 变；
- *   - boundary-aware：朝 tip 方向 r>0 落 fillet 弧上（≠ 尖角顶点）；r=0 = 尖角顶点；
- *   - r=0 等价：省略 cornerRadius → emit / boundaryPoint 逐字段同现状（直接对照原始尖角轮廓数学）；
- *   - scaleParams：scale=2 → cornerRadius×2、inner/outerRadius×2、points/rotate 不变。
- *
- *   角度约定（SVG y-down）：顶点 k 角 = (rotate ?? 0) + k·(180/points) − 90，偶 k 取 outerRadius（尖角 tip）、
- *   奇 k 取 innerRadius（凹角 notch）；0°=+x、90°=+y(屏幕下)、−90 基准使默认第一尖角朝上（−y）。
- */
 import { describe, expect, it } from 'vitest';
 
-import type { Position } from '../../src/geometry/point';
-import type { Rect } from '../../src/geometry/rect';
+import type { Position } from '../../src/shared/geometry/point';
+import type { Rect } from '../../src/shared/geometry/rect';
 
 import { star } from '../../src/providers/shape';
 

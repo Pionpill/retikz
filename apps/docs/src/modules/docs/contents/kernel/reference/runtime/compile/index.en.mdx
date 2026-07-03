@@ -1,0 +1,90 @@
+---
+title: Compile
+description: The IR-to-Scene compile entry point, layout options, text measuring, and warning contract
+---
+
+The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Scene`. The React renderer, future SSR / Canvas adapters, and custom export pipelines should integrate at this boundary.
+
+## Functions
+
+| API                | Signature                                     | Purpose                                                                                         |
+| ------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `compileToScene`   | `(ir: IR, options?: CompileOptions) => Scene` | Main compile entry point; handles nodes, coordinates, paths, and returns primitives plus layout |
+| `computeLayout`    | `(points, padding, round) => Layout`          | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene`    |
+| `fallbackMeasurer` | `(text, font) => TextMetrics`                 | Default text measurer; approximate but runnable, useful as a no-DOM fallback                    |
+
+`compileToScene` runs in two passes: first it lays out nodes / coordinates and registers ids, then it emits primitives in the original child order. Paths can resolve registered nodes / coordinates, while final rendering order still follows the order written by the user.
+
+## CompileOptions
+
+| Option              | Type                                      | Default                                     | Notes                                                                                                                                                                                     |
+| ------------------- | ----------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `measureText`       | `TextMeasurer`                            | `fallbackMeasurer`                          | Injects text measurement; React can use browser APIs, SSR can use fontkit / opentype                                                                                                      |
+| `padding`           | `number`                                  | `10`                                        | Extra layout padding in user units                                                                                                                                                        |
+| `precision`         | `number`                                  | `2`                                         | Decimal precision for output Scene primitives / path d / layout; internal geometry keeps double precision                                                                                 |
+| `nodeDistance`      | `number`                                  | `1`                                         | Default distance for `AtPosition` when `distance` is omitted                                                                                                                              |
+| `onWarn`            | `(warning) => void`                       | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings                                                                                                                                                |
+| `shapes`            | `ReadonlyArray<ShapeDefinition>`         | `—`                                         | Inject custom node shapes at runtime; each definition carries `name`, and built-in name collisions fail registration. See [Custom Shapes](/kernel/components/extend/shape-registry)                                |
+| `boundaries`        | `ReadonlyArray<BoundaryDefinition>`      | `—`                                         | Inject custom connection surfaces at runtime; `boundary` checks this registry before falling back to the shape registry. See [Custom Boundaries](/kernel/components/extend/boundary-registry)                   |
+| `clips`             | `ReadonlyArray<ClipDefinition>`          | `—`                                         | Inject custom clipping regions at runtime; `clip.kind` checks this registry, and built-in kind collisions fail registration. See [Custom Clips](/kernel/components/extend/clip-registry)                      |
+| `arrows`            | `ReadonlyArray<ArrowDefinition>`         | `—`                                         | Inject custom arrows at runtime; each definition carries `name`, and built-in name collisions fail registration. See [Custom Arrows](/kernel/components/extend/custom-arrow)                                       |
+| `patterns`          | `ReadonlyArray<PatternDefinition>`       | `—`                                         | Inject custom fill pattern motifs at runtime; each definition carries `name`, and built-in name collisions fail registration. See [Custom Patterns](/kernel/components/extend/custom-pattern)                    |
+| `pathGenerators`    | `ReadonlyArray<PathGeneratorDefinition>` | `—`                                         | Inject custom curve generators at runtime; a generator step looks up by `name`, unregistered names throw at compile time. See [Path Generators](/kernel/components/extend/path-generator) |
+| `composites`        | `ReadonlyArray<CompositeDefinition>`      | `—`                                         | Inject Tier 2 composite expansion logic at runtime; the first compile pass expands composite nodes into Tier 1. Unregistered ones emit `COMPOSITE_NOT_REGISTERED` and the node is skipped |
+| `maxCompositeDepth` | `number`                                  | `32`                                        | Max depth for nested composite expansion (cycle / runaway-recursion guard); exceeding it or a cycle throws                                                                                |
+
+## Text Measuring
+
+`TextMeasurer` is the only compile-layer hook that needs help from the host environment:
+
+```ts
+type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
+```
+
+| Type          | Fields                                      | Notes                                                 |
+| ------------- | ------------------------------------------- | ----------------------------------------------------- |
+| `FontSpec`    | `family?` / `size` / `weight?` / `style?`   | Font input passed to the measurer; `size` is required |
+| `TextMetrics` | `width` / `height` / `ascent?` / `descent?` | Text box metrics; ascent / descent are optional       |
+
+When `measureText` is omitted, `fallbackMeasurer` estimates width as `text.length * size * 0.55` and height as `size * 1.2`. It keeps compilation runnable, but it is not meant for precise typography.
+
+## Warnings
+
+`CompileWarning` is a synchronous, machine-readable warning:
+
+| Field     | Type   | Notes                                                 |
+| --------- | ------ | ----------------------------------------------------- |
+| `code`    | string | Warning code                                          |
+| `message` | string | Human-readable English message                        |
+| `path`    | string | IR locator, such as `children[3].path.children[1].to` |
+
+Current built-in codes (the machine-readable `CompileWarningCode` constant is publicly exported, so you can reference these as enum members instead of hardcoding strings):
+
+| Code                            | Meaning                                                                                                                       |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `UNRESOLVED_NODE_REFERENCE`     | A path or position references a missing node / coordinate                                                                     |
+| `PATH_TOO_SHORT`                | A path has fewer than 2 steps / lacks a previous endpoint, so it cannot form a valid drawn segment; the whole path is skipped |
+| `OFFSET_BASE_UNRESOLVED`        | `OffsetPosition`'s base `of` cannot be resolved                                                                               |
+| `POLAR_ORIGIN_UNRESOLVED`       | `PolarPosition.origin` cannot be resolved                                                                                     |
+| `AT_TARGET_UNRESOLVED`          | `AtPosition.of` cannot be resolved                                                                                            |
+| `DUPLICATE_NODE_ID`             | A duplicate id within the same namespace frame; the later definition overrides the earlier (last-wins)                        |
+| `COMPOSITE_NOT_REGISTERED`      | A composite node's `namespace.type` is not registered; the node is skipped                                                    |
+| `ANIMATION_INVALID_PROPERTY`    | An animation track has an invalid property (e.g. a non-viewBox property at scene root); the track is dropped                  |
+| `ARC_MISSING_RADIUS`            | An arc step lacks `radius` (circular) or both `radiusX` + `radiusY` (elliptical); the whole path is skipped                   |
+| `PARTIAL_ARC_NEEDS_BOTH_ANGLES` | `circlePath` / `ellipsePath` partial arcs need both `startAngle` and `endAngle`, otherwise treated as a full circle / ellipse |
+| `PARTIAL_ARC_CLOSED_INVALID`    | A partial circle / ellipse (with angles) cannot use `closed:'closed'`; falls back to `'chord'`                                |
+
+Most warnings do not stop compilation. But when a coordinate's / node's own position cannot be resolved, compile **throws directly without emitting a warning** (deliberately: warning then throwing would leave the collector with a dead warning for a Scene that never gets produced), because it is a "position-defining" entity that breaks the contract for later references.
+
+## Output
+
+`compileToScene` returns:
+
+| Field         | Type                      | Notes                                                                                                                                                   |
+| ------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `primitives`  | `Array<ScenePrimitive>`   | Laid-out primitives, in render order                                                                                                                    |
+| `layout`      | `Layout`                  | Scene bounds `{ x, y, width, height }`                                                                                                                  |
+| `resources?`  | `Array<SceneResource>`    | Renderer-agnostic resource table (gradient / pattern / clip paint servers); the adapter materializes them (SVG → `<defs>`). Omitted when there are none |
+| `animations?` | `Array<IRAnimationTrack>` | Scene-root (camera) timeline tracks (viewBox property), passed through from the IR root `animations`; omitted when there are none                       |
+
+A custom renderer must consume `resources` and `animations`, otherwise gradients / clipping / camera animations are lost. If there are no bbox candidate points, `computeLayout` returns a `100×100` fallback layout.

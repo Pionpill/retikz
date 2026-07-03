@@ -5,30 +5,30 @@ import { AngleDegreesSchema } from '../scalar';
 const PointSchema = z.tuple([z.number(), z.number()]);
 
 export const MovePathCommandSchema = z.object({
-  kind: z.literal('move'),
+  kind: z.literal('move').describe('Discriminator for move path commands.'),
   to: PointSchema.describe('Move target point.'),
 });
 
 export const LinePathCommandSchema = z.object({
-  kind: z.literal('line'),
+  kind: z.literal('line').describe('Discriminator for line path commands.'),
   to: PointSchema.describe('Line target point.'),
 });
 
 export const QuadPathCommandSchema = z.object({
-  kind: z.literal('quad'),
+  kind: z.literal('quad').describe('Discriminator for quadratic Bezier path commands.'),
   control: PointSchema.describe('Quadratic Bezier control point.'),
   to: PointSchema.describe('Quadratic Bezier target point.'),
 });
 
 export const CubicPathCommandSchema = z.object({
-  kind: z.literal('cubic'),
+  kind: z.literal('cubic').describe('Discriminator for cubic Bezier path commands.'),
   control1: PointSchema.describe('First cubic Bezier control point.'),
   control2: PointSchema.describe('Second cubic Bezier control point.'),
   to: PointSchema.describe('Cubic Bezier target point.'),
 });
 
 export const ArcPathCommandSchema = z.object({
-  kind: z.literal('arc'),
+  kind: z.literal('arc').describe('Discriminator for circular arc path commands.'),
   center: PointSchema.describe('Arc center point.'),
   radius: z.number().positive().describe('Arc radius in user units.'),
   startAngle: AngleDegreesSchema.describe('Arc start angle in degrees.'),
@@ -37,7 +37,7 @@ export const ArcPathCommandSchema = z.object({
 });
 
 export const EllipseArcPathCommandSchema = z.object({
-  kind: z.literal('ellipseArc'),
+  kind: z.literal('ellipseArc').describe('Discriminator for elliptical arc path commands.'),
   center: PointSchema.describe('Ellipse arc center point.'),
   radiusX: z.number().positive().describe('Ellipse arc x radius in user units.'),
   radiusY: z.number().positive().describe('Ellipse arc y radius in user units.'),
@@ -48,7 +48,7 @@ export const EllipseArcPathCommandSchema = z.object({
 });
 
 export const ClosePathCommandSchema = z.object({
-  kind: z.literal('close'),
+  kind: z.literal('close').describe('Discriminator for close-path commands.'),
 });
 
 export const PathCommandSchema = z

@@ -1,8 +1,8 @@
 import type { AtDirectionValue } from '../schemas';
-import type { WebAnchorValue } from '../shared';
+import type { AnchorValue } from '../shared';
 
 import { AtDirection } from '../schemas';
-import { WebAnchor } from '../shared';
+import { Anchor } from '../shared';
 
 export type DirectionVector = readonly [number, number];
 
@@ -23,12 +23,12 @@ export const DirectionVectorByAtDirection = {
 
 /** 8 方向 label position 对应的节点边界 anchor。 */
 export const LabelAnchorByAtDirection = {
-  [AtDirection.Top]: WebAnchor.Top,
-  [AtDirection.Bottom]: WebAnchor.Bottom,
-  [AtDirection.Left]: WebAnchor.Left,
-  [AtDirection.Right]: WebAnchor.Right,
-  [AtDirection.TopLeft]: WebAnchor.TopLeft,
-  [AtDirection.TopRight]: WebAnchor.TopRight,
-  [AtDirection.BottomLeft]: WebAnchor.BottomLeft,
-  [AtDirection.BottomRight]: WebAnchor.BottomRight,
-} as const satisfies Record<AtDirectionValue, WebAnchorValue>;
+  [AtDirection.Top]: Anchor.Top,
+  [AtDirection.Bottom]: Anchor.Bottom,
+  [AtDirection.Left]: Anchor.Left,
+  [AtDirection.Right]: Anchor.Right,
+  [AtDirection.TopLeft]: Anchor.TopLeft,
+  [AtDirection.TopRight]: Anchor.TopRight,
+  [AtDirection.BottomLeft]: Anchor.BottomLeft,
+  [AtDirection.BottomRight]: Anchor.BottomRight,
+} as const satisfies Record<AtDirectionValue, AnchorValue>;

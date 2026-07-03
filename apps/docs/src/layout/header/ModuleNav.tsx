@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -9,7 +9,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
-import { modules } from '@/data/module';
+import { modules } from '@/modules/docs/data/module';
 
 /**
  * 顶栏水平模块切换：core / flow / plot

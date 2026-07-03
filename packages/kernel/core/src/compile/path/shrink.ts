@@ -1,7 +1,7 @@
-import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
+﻿import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
 
-import type { ArrowDefinition, ArrowEmitContext } from '../../contract/arrow';
-import type { MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEndSpec } from '../../primitive';
+import type { ArrowDefinition, ArrowEmitContext } from '../../contract';
+import type { MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEndSpec } from '../../contract';
 import type { IRArrowMark, IRPosition } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
@@ -143,7 +143,7 @@ type ResolvedArrowGeometry = {
   resolvedLength: number;
   /** 已解析尖宽 = (width ?? defaultWidth) × scale */
   resolvedWidth: number;
-  /** Extra inset for node-boundary endpoints, in pre-stroke user units. */
+  /** 节点边界端点需要额外内缩的距离，单位为描边前的 user units。 */
   boundaryOuterInset: number;
 };
 
@@ -229,8 +229,11 @@ const materializeArrowEndSpec = (
  *   未注册 shape 名在此 throw（lookupArrowDef）。
  */
 export type ResolvedEndpointArrowMark = {
+  /** 已物化的 Scene 端点箭头描述。 */
   spec: ResolvedArrowEndSpec;
+  /** path 本体需要向内收缩的距离（未乘 strokeWidth）。 */
   shrink: number;
+  /** auto boundary 端点为了避开空心箭头外缘需要额外内缩的距离。 */
   boundaryOuterInset: number;
 };
 

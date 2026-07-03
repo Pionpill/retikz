@@ -1,15 +1,6 @@
-/**
- * ADR-03 contour shape —— 任意闭合顶点环作可连接 Node 形状
- * @description 覆盖测试象限（ADR § 实现契约 测试象限）：
- *   - Happy：矩形轮廓 / 旗帜形轮廓 emit、cornerRadius fillet、未居中点集自动居中等价；
- *   - 边界：恰好 3 顶点、cornerRadius 远大于边长逐角夹紧；
- *   - 错误：points<3 / 非有限顶点 schema 拒绝、params 偷渡函数编译期拦；
- *   - 交互：Node rotate / 各向异性 scale / boundaryPoint 连接 / compass anchor 回退 AABB；
- *   - JSON round-trip：{type:'contour', params} 经 NodeSchema 序列化往返等价。
- */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/primitive';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -242,7 +233,7 @@ describe('contour — 交互', () => {
     expect(end.to[1]).toBeCloseTo(0, 3);
   });
 
-  it('contour-anchor-fallback：compass 名（north）→ anchor 返回 undefined、compile 回退外接 AABB、不抛错', () => {
+  it('contour-anchor-fallback：canonical 名（top）→ anchor 返回 undefined、compile 回退外接 AABB、不抛错', () => {
     expect(() =>
       compileToScene(
         scene([
@@ -251,7 +242,7 @@ describe('contour — 交互', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [200, 0] },
-              { type: 'step', kind: 'line', to: { id: 'c', anchor: 'north' } },
+              { type: 'step', kind: 'line', to: { id: 'c', anchor: 'top' } },
             ],
           },
         ] as IR['children']),

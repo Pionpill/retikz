@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { point } from '../../src/geometry/point';
+import { point } from '../../src/shared/geometry/point';
 
 describe('point 基础向量运算', () => {
   it('add 向量相加', () => {

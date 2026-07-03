@@ -12,7 +12,7 @@ alpha.7 聚焦 kernel 扩展面的机制收敛。此前 shape / arrow / pattern 
 - runtime definition 可以包含函数、schema 与 helper，但不进 IR；IR 只保存 JSON-safe 的字符串引用或 operation object。
 - 允许破坏性改动，不为 0.x 旧 provider 输入形态保留兼容桥。
 
-## plot / graph 参考结论
+## plot / viz 参考结论
 
 本轮设计参考 `@retikz/plot` 在 v0.1-alpha.12 的 registry 收敛经验:
 
@@ -54,12 +54,12 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 
 | ADR | 状态 | 主题 | 说明 |
 | --- | --- | --- | --- |
-| [ADR-01](./01-provider-registry-contract.md) | Accepted（2026-06-29 人工签字，待实现） | Provider registry contract | 统一 array 输入、Map resolve、builtin-first、duplicate throw、unknown 诊断、测试矩阵与错误消息格式 |
-| [ADR-02](./02-provider-key-contract.md) | Accepted（2026-06-29 人工签字，待实现） | Provider key contract | 区分 string reference provider 与 operation provider；明确 `name`、schema literal、`namespace.type` 三种 key 来源 |
-| [ADR-03](./03-capability-provider-migration.md) | Accepted（2026-06-29 人工签字，待实现） | Capability migration | 迁移 shape / arrow / pattern / path generator / path kind / ribbon width profile / composite 到统一 provider 模型 |
-| [ADR-04](./04-adapter-surface-and-docs.md) | Accepted（2026-06-29 人工签字，待实现） | Adapter surface and docs | React / Vanilla provider 透传改成数组定义；文档新增 provider authoring 总览与扩展示例 |
-| [ADR-05](./05-boundary-provider-contract.md) | Accepted（2026-06-29 人工签字，待实现） | Boundary provider contract | 新增一等 BoundaryDefinition / CompileOptions.boundaries；lookup 先 boundary provider，后 shape fallback，并保留默认 `shape` 语义 |
-| [ADR-06](./06-clip-provider-contract.md) | Proposed | Clip provider contract | `Scope.clip.kind` 成为一等 ClipDefinition registry key；内置与 custom clip 同机制解析，并补齐 path / compound resolved clip |
+| [ADR-01](./01-provider-registry-contract.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Provider registry contract | 统一 array 输入、Map resolve、builtin-first、duplicate throw、unknown 诊断、测试矩阵与错误消息格式 |
+| [ADR-02](./02-provider-key-contract.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Provider key contract | 区分 string reference provider 与 operation provider；明确 `name`、schema literal、`namespace.type` 三种 key 来源 |
+| [ADR-03](./03-capability-provider-migration.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Capability migration | 迁移 shape / arrow / pattern / path generator / path kind / ribbon width profile / composite 到统一 provider 模型 |
+| [ADR-04](./04-adapter-surface-and-docs.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Adapter surface and docs | React / Vanilla provider 透传改成数组定义；文档新增 provider authoring 总览与扩展示例 |
+| [ADR-05](./05-boundary-provider-contract.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Boundary provider contract | 新增一等 BoundaryDefinition / CompileOptions.boundaries；lookup 先 boundary provider，后 shape fallback，并保留默认 `shape` 语义 |
+| [ADR-06](./06-clip-provider-contract.md) | Accepted（2026-07-03 收尾确认，已实现） | Clip provider contract | `Scope.clip.kind` 成为一等 ClipDefinition registry key；内置与 custom clip 同机制解析，并补齐 path / compound resolved clip |
 
 ## 设计约束
 
@@ -99,19 +99,19 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 
 ## 验收清单
 
-- [ ] `CompileOptions` 中 provider 注入形态统一为 definition 数组。
-- [ ] `BUILTIN_SHAPES` / `BUILTIN_BOUNDARIES` / `BUILTIN_CLIPS` / `BUILTIN_ARROWS` / `BUILTIN_PATTERNS` / `BUILTIN_PATH_GENERATORS` / `BUILTIN_PATH_KINDS` / `BUILTIN_RIBBON_WIDTH_PROFILES` / `BUILTIN_COMPOSITES` 公开形态一致。
-- [ ] 所有 provider registry 都先注册 builtin，再注册 custom，并对重复 key throw。
-- [ ] custom 不能覆盖 builtin；同一 custom 数组内重复 key 也必须 throw。
-- [ ] unknown provider 引用的报错列出 capability、失败 key、可用 key 与注入 options 名称。
-- [ ] string reference provider 全部由 `Definition.name` 提供 key。
-- [ ] boundary provider 优先于 shape fallback；shape fallback 保留现有借用 shape 作为连接面的能力。
-- [ ] clip provider 由 `Scope.clip.kind` 直接命中 registry；内置和 custom clip 是同一套 definition 机制，custom kind 不得覆盖 builtin。
-- [ ] operation provider 全部由 schema literal 或 `namespace.type` 提供 key，且有显式 key 提取 helper。
-- [ ] compile 中不存在面向内置 provider 的特殊白名单分支。
-- [ ] React / Vanilla 的 provider props 与 core `CompileOptions` 命名和形态一致。
-- [ ] docs 说明 runtime definition 不进 IR、IR 只保存 JSON-safe 引用或 operation。
-- [ ] provider authoring 示例覆盖至少 shape、path kind、composite 三类代表性能力。
+- [x] `CompileOptions` 中 provider 注入形态统一为 definition 数组。
+- [x] `BUILTIN_SHAPES` / `BUILTIN_BOUNDARIES` / `BUILTIN_CLIPS` / `BUILTIN_ARROWS` / `BUILTIN_PATTERNS` / `BUILTIN_PATH_GENERATORS` / `BUILTIN_PATH_KINDS` / `BUILTIN_RIBBON_WIDTH_PROFILES` / `BUILTIN_COMPOSITES` 公开形态一致。
+- [x] 所有 provider registry 都先注册 builtin，再注册 custom，并对重复 key throw。
+- [x] custom 不能覆盖 builtin；同一 custom 数组内重复 key 也必须 throw。
+- [x] unknown provider 引用的报错列出 capability、失败 key、可用 key 与注入 options 名称。
+- [x] string reference provider 全部由 `Definition.name` 提供 key。
+- [x] boundary provider 优先于 shape fallback；shape fallback 保留现有借用 shape 作为连接面的能力。
+- [x] clip provider 由 `Scope.clip.kind` 直接命中 registry；内置和 custom clip 是同一套 definition 机制，custom kind 不得覆盖 builtin。
+- [x] operation provider 全部由 schema literal 或 `namespace.type` 提供 key，且有显式 key 提取 helper。
+- [x] compile 中不存在面向内置 provider 的特殊白名单分支。
+- [x] React / Vanilla 的 provider props 与 core `CompileOptions` 命名和形态一致。
+- [x] docs 说明 runtime definition 不进 IR、IR 只保存 JSON-safe 引用或 operation。
+- [x] provider authoring 示例覆盖至少 shape、path kind、composite 三类代表性能力。
 
 ## 测试设计
 

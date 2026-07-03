@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Circle } from '../../src/geometry/circle';
+import type { Circle } from '../../src/shared/geometry/circle';
 
-import { circle } from '../../src/geometry/circle';
-import { WebAnchor } from '../../src/shared';
+import { Anchor } from '../../src/shared';
+import { circle } from '../../src/shared/geometry/circle';
 
 const c10: Circle = { x: 0, y: 0, radius: 10 };
 
@@ -33,14 +33,14 @@ describe('circle.contains', () => {
 describe('circle.anchor', () => {
   it('N / S / E / W', () => {
     expect(circle.center(c10)).toEqual([0, 0]);
-    expect(circle.anchor(c10, WebAnchor.Top)).toEqual([0, -10]);
-    expect(circle.anchor(c10, WebAnchor.Bottom)).toEqual([0, 10]);
-    expect(circle.anchor(c10, WebAnchor.Right)).toEqual([10, 0]);
-    expect(circle.anchor(c10, WebAnchor.Left)).toEqual([-10, 0]);
+    expect(circle.anchor(c10, Anchor.Top)).toEqual([0, -10]);
+    expect(circle.anchor(c10, Anchor.Bottom)).toEqual([0, 10]);
+    expect(circle.anchor(c10, Anchor.Right)).toEqual([10, 0]);
+    expect(circle.anchor(c10, Anchor.Left)).toEqual([-10, 0]);
   });
 
   it('对角 anchor 在 45° 处（圆周等距分布）', () => {
-    const ne = circle.anchor(c10, WebAnchor.TopRight);
+    const ne = circle.anchor(c10, Anchor.TopRight);
     expect(ne[0]).toBeCloseTo(10 * Math.SQRT1_2);
     expect(ne[1]).toBeCloseTo(-10 * Math.SQRT1_2);
   });

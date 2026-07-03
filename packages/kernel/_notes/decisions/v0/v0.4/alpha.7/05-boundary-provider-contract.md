@@ -1,8 +1,9 @@
 # ADR-05：Boundary provider contract
 
-- 状态：Accepted（2026-06-29 人工签字，待实现）
+- 状态：Accepted（2026-06-29 人工签字，2026-07-03 已实现）
 - 决策日期：2026-06-29
 - 关联：[alpha.7 roadmap](./roadmap.md) · [ADR-01](./01-provider-registry-contract.md) · [ADR-02](./02-provider-key-contract.md) · [ADR-03](./03-capability-provider-migration.md) · [ADR-04](./04-adapter-surface-and-docs.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md)
+- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/kernel/_notes/decisions/v0/v0.4/alpha.7/05-boundary-provider-contract.md`
 
 ## 背景
 
@@ -54,12 +55,6 @@ export type CompileOptions = {
 2. 保留 shape fallback 能兼容现有 `boundary: "star"` / `boundary: { type: "polygon", params }` 的表达力。
 3. lookup 优先级明确后，用户可以用同名 boundary 覆盖连接面语义，而不影响同名视觉 shape 的绘制与布局。
 
-## 待决策点
-
-- **builtin boundary 清单**：本 ADR 固定首批 builtin 为 `circle`、`rectangle`、`ellipse`；`shape` 是保留语义，不是 provider。
-- **错误消息格式**：倾向 `compileToScene: unknown connection surface provider "<key>"; registered boundaries: <names>; registered shapes: <names>; pass boundary definitions via options.boundaries or shape definitions via options.shapes`。
-- **anchor fallback**：倾向 boundary provider 自己没有 `anchor` 或返回 `undefined` 时，对 compass anchor 回退到 rectangle AABB；非 compass 专属 anchor 仍只由视觉 shape 自身处理。
-- **Shape fallback 生命周期**：本 ADR 保留 shape fallback，不设弃用计划。后续如果发现 fallback 与一等 boundary provider 造成长期歧义，再单独 ADR 讨论。
 
 ## DSL 表面
 
@@ -109,7 +104,6 @@ IR 仍保持 JSON-safe：
 
 `packages/kernel/core/tests/boundaries/` 与现有 shape / compile 测试覆盖 boundary provider 独立注册、shape fallback、priority、错误诊断和 adapter 透传。
 
-具体 case 拆分见下面"实现契约 § 测试象限"。
 
 ## 影响
 
@@ -126,83 +120,3 @@ IR 仍保持 JSON-safe：
 - 不为 boundary provider 设计覆盖 builtin 的逃生口；沿用 ADR-01 的 duplicate throw。
 - 不删除 shape fallback。
 - 不把 `boundaryPoint` 从 `ShapeDefinition` 中移除；视觉 shape 仍需要声明自己的默认连接面。
-
----
-
-## 实现契约（必填）
-
-### Level
-
-`red`
-
-自评 level：`red`。本 ADR 新增 public provider capability，修改 `packages/kernel/core/src/compile/**`、`packages/kernel/core/src/contract/**`、`packages/kernel/core/src/providers/**`、`packages/*/*/src/index.ts` 与 React / Vanilla provider surface。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `packages/kernel/core/src/schemas/boundary/schema.ts` | 改 | `BoundarySchema` | `z.union([z.string().min(1), ShapeRefSchema])`（类型不变） | `undefined` 等价 `"shape"` | 连接面引用优先查 `CompileOptions.boundaries`，查不到再借用 `CompileOptions.shapes` 中的 shape |
-| `packages/kernel/core/src/compile/compile.ts` | 加 | `CompileOptions.boundaries` | `ReadonlyArray<BoundaryDefinition>` | `undefined` | 运行时注入 boundary definitions，不进 IR |
-
-### 文件 scope
-
-本 ADR 实现允许触碰的文件白名单：
-
-- `packages/kernel/core/src/contract/boundary/**`（新建）
-- `packages/kernel/core/src/providers/boundary/**`（新建）
-- `packages/kernel/core/src/providers/index.ts`
-- `packages/kernel/core/src/compile/boundary.ts`
-- `packages/kernel/core/src/compile/compile.ts`
-- `packages/kernel/core/src/compile/node.ts`
-- `packages/kernel/core/src/compile/anchor-cache.ts`
-- `packages/kernel/core/src/compile/scope.ts`
-- `packages/kernel/core/src/schemas/boundary/**`
-- `packages/kernel/core/src/index.ts`
-- `packages/kernel/core/tests/boundaries/**`（新建）
-- `packages/kernel/core/tests/shapes/boundary.test.ts`
-- `packages/kernel/core/tests/compile/shape-registry.test.ts`
-- `packages/kernel/react/src/kernel/Layout.tsx`
-- `packages/kernel/react/src/index.ts`
-- `packages/kernel/react/tests/kernel/**`
-- `packages/kernel/vanilla/src/**`
-- `packages/kernel/vanilla/tests/**`
-- `apps/docs/src/contents/kernel/**`
-- `apps/docs/src/data/**`
-- `apps/docs/src/i18n/**`
-
-偏离白名单的改动需要更新本 ADR 或新开 ADR。
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `boundary_provider_custom_point`：注册 `boundaries: [pillBoundary]`，节点 `boundary="pill"` → path endpoint 使用 custom `boundaryPoint`。
-- `boundary_provider_custom_params`：节点 `boundary={{ type: 'pill', params: { radius: 8 } }}` → params 经 `paramsSchema.parse` 后传入 provider。
-- `builtin_boundaries_registry`：`circle` / `rectangle` / `ellipse` 都来自 `BUILTIN_BOUNDARIES`，行为与旧硬编码一致。
-
-**边界（≥ 2）**：
-
-- `boundary_default_shape_unchanged`：未写 `boundary` 与显式 `"shape"` → 结果等价。
-- `boundary_empty_custom_keeps_builtins`：`boundaries: []` → builtin boundary 仍可用。
-- `boundary_shape_fallback_kept`：未注册 boundary，但注册 custom shape `soft-box`，`boundary="soft-box"` → 借用 shape boundary 生效。
-
-**错误路径（≥ 2）**：
-
-- `boundary_duplicate_builtin_rejected`：custom boundary 叫 `"circle"` 或 `"rectangle"` → duplicate / reserved key throw。
-- `boundary_unknown_lists_boundaries_and_shapes`：`boundary="missing"` → 错误列出 registered boundaries、registered shapes，并提示 `options.boundaries` / `options.shapes`。
-- `boundary_params_schema_rejects`：`boundary={{ type:'pill', params:{ radius:-1 } }}` → provider params schema 抛错并定位到 boundary。
-
-**交互（≥ 2）**：
-
-- `boundary_provider_priority_over_shape_fallback`：同时注册 boundary `foo` 与 shape `foo`，`boundary="foo"` → 使用 boundary provider。
-- `boundary_provider_with_visual_shape`：节点 `shape="star"` + `boundary="pill"` → 视觉 emit 仍是 star，连接端点使用 pill boundary。
-- `react_layout_boundaries_passthrough`：`<Layout boundaries={[pillBoundary]}>` → core compile 收到并生效。
-- `vanilla_boundaries_passthrough`：vanilla render / builder options `boundaries` → core compile 收到并生效。
-
-### 依赖的现有元素
-
-- `BoundarySchema`（`packages/kernel/core/src/schemas/boundary/schema.ts`）——修改 describe，保持 IR 字段形态。
-- `resolveBoundary`（`packages/kernel/core/src/compile/boundary.ts`）——修改为消费 boundary registry，并保留 shape fallback。
-- `ShapeDefinition.boundaryPoint` / `ShapeDefinition.anchor`（`packages/kernel/core/src/contract/shape/types.ts`）——作为 default `"shape"` 与 shape fallback 的来源。
-- `resolveProviderRegistry` / `providerDefinitionOf`（`packages/kernel/core/src/providers/registry.ts`）——复用 ADR-01 的统一 registry helper。
-- React `<Layout>` provider props 与 Vanilla compile options——扩展 `boundaries` 透传。

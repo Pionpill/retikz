@@ -1,4 +1,4 @@
-import type { PathCommand, PathPrim, ResolvedArrowEndSpec, ScenePrimitive } from '../../primitive';
+﻿import type { PathCommand, PathPrim, ResolvedArrowEndSpec, ScenePrimitive } from '../../contract';
 
 /** baseProps：除 commands / endpoint arrows 外 PathPrim 公共属性集合（多 sub-path 复用） */
 export type PathBaseProps = Omit<PathPrim, 'type' | 'commands' | 'arrowStart' | 'arrowEnd'>;

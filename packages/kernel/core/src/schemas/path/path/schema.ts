@@ -7,7 +7,7 @@ import { ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema } from '../step';
 import { StepSchema } from '../step';
-import { PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
+import { PathFillRule, PathKind, PathLineCap, PathLineJoin, PathThickness } from './constants';
 
 export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');
 
@@ -39,9 +39,7 @@ export const PathScaleSchema = z
 export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
   kind: z
     .literal('arrow')
-    .describe(
-      'Discriminator marking this mark as an arrow tip. Only `arrow` is supported in the first batch; other kinds are rejected by schema.',
-    ),
+    .describe('Discriminator marking this mark as an arrow tip.'),
 }).describe(
   'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
 );
@@ -111,7 +109,7 @@ export const PathBaseSchema = z
       .array(PathMarkPlacementSchema)
       .optional()
       .describe(
-        'Marks placed along the path at normalized positions; each is rendered at its position with its direction taken from the path tangent there. First batch supports arrow marks only.',
+        'Marks placed along the path at normalized positions; direction follows the path tangent.',
       ),
     children: z
       .array(StepSchema)
@@ -123,8 +121,8 @@ export const PathBaseSchema = z
   .describe('Base fields for a path-like relation before kind-specific structural refinement.');
 
 export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
-  const kind = path.kind ?? 'stroke';
-  if (kind === 'stroke') {
+  const kind = path.kind ?? PathKind.Stroke;
+  if (kind === PathKind.Stroke) {
     if (path.children === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -148,7 +146,7 @@ export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
     }
     return;
   }
-  if (kind === 'ribbon') {
+  if (kind === PathKind.Ribbon) {
     if (path.ribbon === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

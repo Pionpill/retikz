@@ -7,7 +7,7 @@
 
 ## 背景
 
-普通 path 与 ribbon 都是 path-like drawable host：它们共享 style、meta、label、provenance 与图层语义，但几何参数不同。若分别维护两套字段，内置能力和扩展能力会在 schema、renderer 与 graph relation 消费上分叉。
+普通 path 与 ribbon 都是 path-like drawable host：它们共享 style、meta、label、provenance 与图层语义，但几何参数不同。若分别维护两套字段，内置能力和扩展能力会在 schema、renderer 与 plot relation 消费上分叉。
 
 ## 决策记录
 
@@ -31,6 +31,6 @@
 
 - 最终公开契约见 [ADR-07](./07-path-kind-registry.md)。
 - 发布版本：kernel group `v0.4.0-alpha.6`。
-- 验收范围：core schema registry、Path default 继承、graph relation ribbon 对共享 style/meta 的消费。
+- 验收范围：core schema registry、Path default 继承、plot relation ribbon 对共享 style/meta 的消费。
 
 > 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/kernel/v0/v0.4/alpha.6/06-path-ribbon-shared-contract.md`（封板全文）。

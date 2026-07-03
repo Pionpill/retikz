@@ -6,7 +6,14 @@ import { JsonObjectSchema } from '../../json';
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from '../../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { StepSchema } from '../step';
-import { RibbonAlignment, RibbonArcCapSweep, RibbonCap, RibbonMode } from './constants';
+import {
+  RibbonAlignment,
+  RibbonArcCapSweep,
+  RibbonCap,
+  RibbonMode,
+  RibbonTaperInterpolation,
+  RibbonWidthInterpolation,
+} from './constants';
 
 export const RibbonArcCapSchema = z
   .object({
@@ -49,7 +56,7 @@ export const RibbonWidthStopsSchema = z
       .min(2)
       .describe('Width stops; compile sorts them by offset before interpolation.'),
     interpolation: z
-      .enum(['linear', 'smooth', 'step'])
+      .enum(RibbonWidthInterpolation)
       .optional()
       .describe('Interpolation curve between adjacent stops.'),
   })
@@ -146,7 +153,7 @@ export const PathRibbonOptionsSchema = z
     start: RibbonEndpointSchema.optional().describe('Start endpoint properties: width, tangent direction, and cap.'),
     end: RibbonEndpointSchema.optional().describe('End endpoint properties: width, tangent direction, and cap.'),
     interpolation: z
-      .enum(['linear', 'smooth'])
+      .enum(RibbonTaperInterpolation)
       .optional()
       .describe('Interpolation curve between start.width and end.width.'),
     align: z.enum(RibbonAlignment).optional().describe('Which side of the generated band stays on the centerline.'),

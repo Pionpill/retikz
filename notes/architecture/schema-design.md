@@ -4,7 +4,7 @@
 >
 > **状态：方向已定，alpha 阶段不实现，后续统一优化。** 本设计已做过可用原型（core + plot 全跑通、测试守门全绿），评估后决定推迟落地、先把设计沉淀在此；后续按本文实现即可，不必重新探索。
 >
-> 关联：[`core-design.md` §AI 优先](./core-design.md) · `packages/kernel/core/src/ir/**`（IR zod schema，含 `.describe()`）· `packages/graph/plot/src/ir/**`。
+> 关联：[`core-design.md` §AI 优先](./core-design.md) · `packages/kernel/core/src/ir/**`（IR zod schema，含 `.describe()`）· `packages/viz/plot/src/ir/**`。
 
 ---
 

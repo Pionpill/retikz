@@ -1,9 +1,3 @@
-/**
- * bend out/in/looseness + path rotate/scale/marks schema 单元测试
- * @description 覆盖 BendStepSchema 三新字段（outAngle / inAngle / looseness）、PathSchema 三新字段
- *   （rotate / scale / marks）、ArrowMarkSchema（kind:'arrow' + 视觉子集）的合法 / 越界拒 / round-trip。
- *   编译行为（out/in→cubic、self-loop、path transform 包 GroupPrim、marks→marker）由 compile 测试覆盖。
- */
 import { describe, expect, it } from 'vitest';
 
 import { ArrowMarkSchema, BendStepSchema, PathScaleSchema, PathSchema } from '../../../src/schemas';

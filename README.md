@@ -48,7 +48,7 @@ This example shows the TikZ-like primitive layer: grid, axes, anchors, labels, a
   <img src="./assets/readme/karl-circle.svg" alt="Karl's unit circle example" />
 </p>
 
-Example: [Karl's Unit Circle](https://pionpill.github.io/retikz/core/examples/karl-circle) · [source](./apps/docs/src/contents/core/examples/karl-circle/karl-circle-07-info.en.demo.tsx)
+Example: [Karl's Unit Circle](https://pionpill.github.io/retikz/kernel/examples/karl-circle) · [source](./apps/docs/src/modules/docs/contents/kernel/examples/karl-circle/karl-circle-07-info.en.demo.tsx)
 
 ### Ohm's law circuit
 
@@ -58,7 +58,7 @@ This example shows the encapsulation path for product and business diagrams: cus
   <img src="./assets/readme/ohms-law-circuit.svg" alt="Ohm's law circuit example" />
 </p>
 
-Example: [Ohm's Law Circuit](https://pionpill.github.io/retikz/core/examples/ohms-law-circuit) · [source](./apps/docs/src/contents/core/examples/ohms-law-circuit/ohms-law-circuit-06-labels.en.demo.tsx)
+Example: [Ohm's Law Circuit](https://pionpill.github.io/retikz/kernel/examples/ohms-law-circuit) · [source](./apps/docs/src/modules/docs/contents/kernel/examples/ohms-law-circuit/ohms-law-circuit-06-labels.en.demo.tsx)
 
 ## Quick start
 
@@ -105,7 +105,7 @@ const fig = figure([
 fig.mount(document.querySelector('#diagram')); // also: fig.toSvgString() / fig.toCanvas(canvas)
 ```
 
-Open the [Quick Start](https://pionpill.github.io/retikz/core/get-start) to build the same idea step by step, or jump into the [examples](https://pionpill.github.io/retikz/core/examples/karl-circle).
+Open the [Quick Start](https://pionpill.github.io/retikz/kernel/get-start) to build the same idea step by step, or jump into the [examples](https://pionpill.github.io/retikz/kernel/examples/karl-circle).
 
 One level deeper, the stable boundary is the IR: create JSON IR directly with plain JavaScript, or build another framework adapter that emits the same IR, then compile it with `@retikz/core`.
 

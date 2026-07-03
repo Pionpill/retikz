@@ -1,15 +1,16 @@
 import type { z } from 'zod';
 
-import type { Position } from '../../geometry/point';
-import type { Rect } from '../../geometry/rect';
-import type { PaintValue, ScenePrimitive } from '../../primitive';
-import type { ResolvedDropShadow } from '../../schemas/effects';
-import type { IRJsonObject } from '../../schemas/json';
-import type { IRGraphicStyle } from '../../schemas/style';
-import type { WebSideValue } from '../../shared';
+import type { ResolvedDropShadow } from '../../schemas';
+import type { IRJsonObject } from '../../schemas';
+import type { IRGraphicStyle } from '../../schemas';
+import type { AnchorValue, Position, Rect, SideValue } from '../../shared';
+import type { PaintValue, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段。 */
 type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'fillOpacity' | 'strokeWidth' | 'drawOpacity' | 'opacity' | 'blendMode'>;
+
+/** Shape provider 接收到的命名 anchor：标准方位名或 shape 自定义扩展名。 */
+export type ShapeAnchorName = AnchorValue | (string & {});
 
 /**
  * emit 需要的已解析视觉样式子集。
@@ -72,8 +73,9 @@ export type ResolvedShapeStyle = {
 /**
  * 一个 shape 的参数化可注册定义（定义点 typed 形态）
  * @description plain object（factory 友好：`createPolygonShape(6)` 这类普通函数返回它即可）；含函数与
- *   `paramsSchema`，**不进 IR**，走 `CompileOptions.shapes` 运行时注入。内置 shape（rectangle / ellipse /
- *   sector / arc / polygon / star，circle / diamond 为 preset 别名）也是注册项（无内置特权）。
+ *   `paramsSchema`，**不进 IR**，走 `CompileOptions.shapes` 运行时注入。内置 provider（rectangle / ellipse /
+ *   sector / arc / polygon / star 等）也是注册项（无内置特权）；circle / diamond 是 core IR 保留的内置 shape preset，
+ *   不要求第三方实现独立 provider。
  *   每个计算函数末位收 per-instance `params`（类型由 `paramsSchema.parse` 在编译期保证），无参形状用
  *   `z.strictObject({})` 并忽略 `params`。
  */
@@ -108,24 +110,25 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
   circumscribeOffset?: (params: TParams) => Position;
   /**
    * 中心 → toward 射线 ∩ 边界。
-   * @description rect 带 rotate；需要局部系几何时从 `geometry/transform` 使用 `worldToLocal` / `localToWorld`。
+   * @description rect 带 rotate；第三方作者可从 `@retikz/core` 顶层使用 `worldToLocal` / `localToWorld`。
+   *   core 内部 owner 为 `shared/geometry`。
    */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /**
    * 命名 anchor 世界坐标；shape 不认识的名字返回 `undefined`（调用方据此抛清晰错误）。
-   * @description 标准方位名使用 Web/CSS canonical 值（top / right / ...）：默认连接面下 compile 先调本函数，
+   * @description 标准方位名使用 `top` / `right` / `bottom` / `left` / corner 值：默认连接面下 compile 先调本函数，
    *   shape 返回真实形状上的点即采用（如 ellipse 落真实周长、polygon 落外接 AABB）；返回 `undefined` 则 compile
    *   回退到外接 AABB 矩形。故 shape 作者可只实现 shape 专属命名 anchor（tip-N / apex 等），标准方位名交回退即可；
    *   要让标准方位贴真实形状边界（圆 / 椭圆类）才需自行处理。`center` 由 compile 特殊处理，不传给 provider。
    */
-  anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
+  anchor: (rect: Rect, name: ShapeAnchorName, params: TParams) => Position | undefined;
   /**
-   * 边上比例点：Web side 真实边界从约定起点起 t∈[0,1] 处（轴对齐空间求出后由 layout 投回世界系）。
-   * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, t }` 时编译期（resolveEdgePoint）抛明确错。
-   *   side 使用 Web/CSS canonical 值：top/right/bottom/left。与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 `worldToLocal` / `localToWorld` 处理旋转。
+   * 边上比例点：标准 side 真实边界从约定起点起 t∈[0,1] 处（轴对齐空间求出后由 layout 投回世界系）。
+   * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, fraction }` 时编译期（resolveEdgePoint）抛明确错。
+   *   side 使用 `top` / `right` / `bottom` / `left`。与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 `worldToLocal` / `localToWorld` 处理旋转。
    * @default 不支持；该 shape 的 side anchor 会抛错
    */
-  edgePoint?: (rect: Rect, side: WebSideValue, t: number, params: TParams) => Position;
+  edgePoint?: (rect: Rect, side: SideValue, t: number, params: TParams) => Position;
   /**
    * 视觉 primitive。
    * @description emit 收轴对齐空间（rotate=0）的 rect；旋转由编译器在外层 `GroupPrim` 统一施加。

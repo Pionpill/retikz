@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '../contract/composite';
+﻿import type { CompositeDefinition } from '../contract';
 import type { IR, IRChild } from '../schemas';
 import type { CompileWarning } from './constant';
 

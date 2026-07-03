@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-import type { PolarPosition } from '../../../shared';
+import type { SharedPolarPosition } from '../../../shared';
 
 import { AngleDegreesSchema } from '../../scalar';
 import { PositionSchema } from '../position';
 
-export const PolarPositionSchema: z.ZodType<PolarPosition> = z.lazy(() =>
+export const PolarPositionSchema: z.ZodType<SharedPolarPosition> = z.lazy(() =>
   z
     .object({
       origin: z

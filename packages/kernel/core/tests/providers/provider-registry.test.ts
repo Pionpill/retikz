@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { providerDefinitionOf, resolveProviderRegistry } from '../../src/providers/registry';
+import { BUILTIN_CLIPS } from '../../src/providers/clip';
+import { defineKeyedProviderArray, providerDefinitionOf, resolveProviderRegistry } from '../../src/providers/registry';
 
 type MockProvider = {
   name: string;
@@ -16,7 +17,6 @@ describe('provider registry contract', () => {
       builtins: [provider('builtin')],
       custom: [provider('custom')],
       keyOf: def => def.name,
-      optionName: 'mockProviders',
     });
 
     expect([...registry.keys()]).toEqual(['builtin', 'custom']);
@@ -32,7 +32,6 @@ describe('provider registry contract', () => {
         builtins: [provider('builtin')],
         custom: [provider('builtin', 2)],
         keyOf: def => def.name,
-        optionName: 'mockProviders',
       }),
     ).toThrow(/duplicate mock provider registration: "builtin"/);
   });
@@ -44,7 +43,6 @@ describe('provider registry contract', () => {
         builtins: [],
         custom: [provider('custom'), provider('custom', 2)],
         keyOf: def => def.name,
-        optionName: 'mockProviders',
       }),
     ).toThrow(/duplicate mock provider registration: "custom"/);
   });
@@ -55,7 +53,6 @@ describe('provider registry contract', () => {
       builtins: [provider('alpha')],
       custom: [provider('beta')],
       keyOf: def => def.name,
-      optionName: 'mockProviders',
     });
 
     expect(() =>
@@ -70,8 +67,25 @@ describe('provider registry contract', () => {
         builtins: [provider('')],
         custom: [],
         keyOf: def => def.name,
-        optionName: 'mockProviders',
       }),
     ).toThrow(/non-empty string/);
+  });
+
+  it('indexes_builtin_provider_arrays_by_custom_keys', () => {
+    const providers = defineKeyedProviderArray(
+      [
+        { kind: 'alpha', value: 1 },
+        { kind: 'beta', value: 2 },
+      ],
+      definition => definition.kind,
+    );
+
+    expect(providers.alpha).toEqual({ kind: 'alpha', value: 1 });
+    expect(providers.beta).toEqual({ kind: 'beta', value: 2 });
+  });
+
+  it('indexes_builtin_clips_by_kind', () => {
+    expect(BUILTIN_CLIPS.rect.kind).toBe('rect');
+    expect(BUILTIN_CLIPS.compound.kind).toBe('compound');
   });
 });

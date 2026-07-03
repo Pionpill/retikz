@@ -1,9 +1,3 @@
-/**
- * ClipSpecSchema 校验测试
- * @description 覆盖裁剪区 4 种结构化形状（rect / circle / ellipse / polygon）各自的合法接受，
- *   与退化形态拒绝（尺寸 ≤ 0、非 finite、polygon 点数不足 / 点非二元组）；
- *   并验证 Scope schema 接受可选 clip 字段（向后兼容、缺省合法）。
- */
 import { describe, expect, it } from 'vitest';
 
 import { ClipSpecSchema, ScopeSchema } from '../../src/schemas';
