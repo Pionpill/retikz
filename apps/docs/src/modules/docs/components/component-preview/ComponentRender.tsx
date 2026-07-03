@@ -3,8 +3,8 @@ import type { FC } from 'react';
 import { Fragment, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
-import { useComponentPreviewStore } from '@/modules/docs/store/use-component-preview-store';
+import { useAiChatStore } from '@/modules/docs/ai-chat';
+import { useComponentPreviewStore } from '@/modules/docs/store';
 
 import type {
   AlignKey,

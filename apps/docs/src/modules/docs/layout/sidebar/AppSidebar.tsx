@@ -5,10 +5,10 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
-import type { SubPage } from '@/modules/docs/data/interface';
+import type { SubPage } from '@/modules/docs/data';
 
 import { cn } from '@/lib/utils';
-import { getSectionsByModule } from '@/modules/docs/data/sections';
+import { getSectionsByModule } from '@/modules/docs/data';
 
 import type { SidebarCategoryData, SidebarSubModuleData } from './interface';
 

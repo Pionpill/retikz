@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 import { MarkdownInline } from '@/modules/docs/components/inline-markdown';
 
 import { AiChatConversation } from './parts/AiChatConversation';
@@ -14,6 +13,7 @@ import { AiChatEmpty } from './parts/AiChatEmpty';
 import { AiChatHelpDialog } from './parts/AiChatHelpDialog';
 import { AiChatHistory } from './parts/AiChatHistory';
 import { AiChatSettings } from './parts/AiChatSettings';
+import { useAiChatStore } from './use-ai-chat-store';
 
 /**
  * AI 聊天面板内容（与容器无关，由调用方决定 sizing context）

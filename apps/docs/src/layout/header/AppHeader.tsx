@@ -4,7 +4,7 @@ import { ButtonGroup } from '@/components/ui/button-group';
 import { cn } from '@/lib/utils';
 import { AiChatTrigger } from '@/modules/docs/ai-chat';
 import { DocsSearch } from '@/modules/docs/components/docs-search';
-import { useLayoutStore } from '@/store/use-layout-store';
+import { useLayoutStore } from '@/store';
 
 import { BrandLink } from './BrandLink';
 import { HeaderActions } from './HeaderActions';

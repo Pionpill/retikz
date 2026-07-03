@@ -8,7 +8,8 @@ import { Shortcut } from '@/components/shared/shortcut';
 import { buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+
+import { useAiChatStore } from './use-ai-chat-store';
 
 /**
  * AI 聊天 Sheet 的 Header 触发器

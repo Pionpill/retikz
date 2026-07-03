@@ -8,13 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 
 import type { CustomProvider } from '../providers/resolve';
 import type { ProviderId } from '../providers/types';
 
 import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../models';
 import { PROVIDER_IDS } from '../providers/types';
+import { useAiChatStore } from '../use-ai-chat-store';
 
 const KEY_HELP_URL: Record<ProviderId, string> = {
   deepseek: 'https://platform.deepseek.com/api_keys',

@@ -8,13 +8,13 @@ import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 
 import type { ProviderId } from '../providers/types';
 
 import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
 import { isBuiltInProviderId } from '../providers/resolve';
 import { PROVIDER_IDS } from '../providers/types';
+import { useAiChatStore } from '../use-ai-chat-store';
 
 type BrandIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 

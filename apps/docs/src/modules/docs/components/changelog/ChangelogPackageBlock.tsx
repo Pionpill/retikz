@@ -5,11 +5,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
-import type { PackageBlock } from '@/modules/docs/data/changelog.types';
+import type { PackageBlock } from '@/modules/docs/data';
 
 import { cn } from '@/lib/utils';
 import { InlineMdx } from '@/modules/docs/components/mdx-content';
-import { PACKAGE_LABEL } from '@/modules/docs/data/changelog.types';
+import { PACKAGE_LABEL } from '@/modules/docs/data';
 
 import { ChangelogItems } from './ChangelogItems';
 import { ChangelogSubVersions } from './ChangelogSubVersions';

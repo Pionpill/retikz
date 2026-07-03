@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 import { MarkdownInline } from '@/modules/docs/components/inline-markdown';
 
 import type { Conversation } from '../conversations-storage';
+
+import { useAiChatStore } from '../use-ai-chat-store';
 
 /**
  * AI 历史会话列表视图

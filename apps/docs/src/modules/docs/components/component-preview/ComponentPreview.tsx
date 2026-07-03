@@ -15,88 +15,31 @@ import type {
   PreviewOverlay,
   RendererMode,
   SizeKey,
-  SourceLang,
 } from './types';
 
 import { ComponentRender } from './ComponentRender';
 import { RawSvgFrame } from './components';
 import { useDemoSegments } from './demo-location-context';
+import {
+  actionModules,
+  buildActionsKey,
+  buildIrJsonKey,
+  buildSourceFileKey,
+  buildVanillaKey,
+  demoModules,
+  demoSources,
+  filenameFromKey,
+  irJsonOverrides,
+  langOfFilename,
+  localSourceFiles,
+  resolveDemoKey,
+  resolvePreviewActions,
+  vanillaModules,
+  vanillaOverrides,
+} from './registry';
 import { computeUnifiedDiff, formatIR, irToVanillaCode } from './utils';
 
-/**
- * 收集 contents 下全部 demo 模块 + 源码字符串
- * @description 双 glob 同 key 一一对应：default 导出当渲染组件，?raw 取源码喂底部代码段。`undefined` 显式声明，让 TS 知道存在性检查不是冗余
- */
-const demoModules: Record<string, { default: FC; previewIR?: IR; previewActions?: Array<PreviewAction> } | undefined> =
-  import.meta.glob<{
-    default: FC;
-    previewIR?: IR;
-    previewActions?: Array<PreviewAction>;
-  }>('../../contents/**/*.demo.tsx', { eager: true });
-const demoSources: Record<string, string | undefined> = import.meta.glob<string>('../../contents/**/*.demo.tsx', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-});
-const localSourceFiles: Record<string, string | undefined> = import.meta.glob<string>(
-  ['../../contents/**/*.{ts,tsx}', '!../../contents/**/*.demo.tsx'],
-  {
-    query: '?raw',
-    import: 'default',
-    eager: true,
-  },
-);
-const actionModules: Record<string, Record<string, unknown> | undefined> = import.meta.glob<Record<string, unknown>>(
-  '../../contents/**/*.actions.ts',
-  {
-    eager: true,
-  },
-);
-// vanilla 代码视图的手写覆盖：同级 `<name>.vanilla.ts`（命中则原文优先，否则走 IR codegen）
-const vanillaOverrides: Record<string, string | undefined> = import.meta.glob<string>(
-  '../../contents/**/*.vanilla.ts',
-  {
-    query: '?raw',
-    import: 'default',
-    eager: true,
-  },
-);
-// vanilla 视图的「真渲染」：同 `<name>.vanilla.ts` 导出的 `svg` 字符串（renderPlot 等 SSR 产物）；有则切到 vanilla 视图用它真渲染
-const vanillaModules: Record<string, { svg?: unknown } | undefined> = import.meta.glob(
-  '../../contents/**/*.vanilla.ts',
-  {
-    eager: true,
-  },
-);
-// IR 视图的手写覆盖：同级 `<name>.ir.json`（命中则该文本即 IR 源 + 真渲染来源，不论 interactive 与否）。
-// 用途：interactive demo 带 hooks 无法静态求 IR，配一份初始态 IR.json 让 IR 视图照样出现（React + IR 两视图）。
-// 语言无关（IR 里中文文本即中文）——单文件、两语共用，故 key 用 name 不含 lang。
-const irJsonOverrides: Record<string, string | undefined> = import.meta.glob<string>('../../contents/**/*.ir.json', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-});
-
-const buildKey = (segments: Array<string>, name: string) => `../../contents/${segments.join('/')}/${name}.demo.tsx`;
-const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
-  `../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
-const buildSourceFileKey = (segments: Array<string>, filename: string) =>
-  `../../contents/${segments.join('/')}/${filename}`;
-const buildActionsKey = (segments: Array<string>, name: string) =>
-  `../../contents/${segments.join('/')}/${name}.actions.ts`;
-const buildVanillaKey = (segments: Array<string>, name: string) =>
-  `../../contents/${segments.join('/')}/${name}.vanilla.ts`;
-const buildIrJsonKey = (segments: Array<string>, name: string) =>
-  `../../contents/${segments.join('/')}/${name}.ir.json`;
-const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') + 1);
 const COMPONENT_EXPANSION_LIMIT = 16;
-
-const resolvePreviewActions = (mod: Record<string, unknown> | undefined): Array<PreviewAction> | undefined => {
-  if (mod === undefined) return undefined;
-  if (Array.isArray(mod.previewActions)) return mod.previewActions as Array<PreviewAction>;
-  const namedActions = Object.entries(mod).find(([key, value]) => key.endsWith('Actions') && Array.isArray(value));
-  return namedActions?.[1] as Array<PreviewAction> | undefined;
-};
 
 type PreviewRootProps = {
   children?: ReactNode;
@@ -204,20 +147,6 @@ const nodeHasAnimations = (node: unknown): boolean => {
 /** IR 是否含任意动画（scene 根镜头或任意元素）——据此自动给预览卡装配动画工具（重播 / 播放暂停 / 停止） */
 const irHasAnimations = (ir: IR): boolean =>
   (Array.isArray(ir.animations) && ir.animations.length > 0) || ir.children.some(nodeHasAnimations);
-
-/** 由文件名后缀推语法高亮语言 */
-const langOfFilename = (filename: string): SourceLang =>
-  filename.endsWith('.json') ? 'json' : filename.endsWith('.tsx') ? 'tsx' : 'ts';
-
-/**
- * 解析 demo key
- * @description 优先 `<name>.<lang>.demo.tsx`，找不到回退到 `<name>.demo.tsx`；含展示文本的 demo 配双语副本，纯几何 demo 单文件即可
- */
-const resolveDemoKey = (segments: Array<string>, name: string, lang: string): string => {
-  const langKey = buildLangKey(segments, name, lang);
-  if (demoModules[langKey] !== undefined) return langKey;
-  return buildKey(segments, name);
-};
 
 export type ComponentPreviewProps = {
   /** demo 文件名（不含 `.demo.tsx` 后缀），相对当前 mdx 同级目录解析 */

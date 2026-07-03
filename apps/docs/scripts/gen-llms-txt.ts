@@ -1,11 +1,10 @@
 ﻿import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import type { I18nKey } from '../src/modules/docs/data/interface';
+import type { I18nKey } from '../src/modules/docs/data';
 
 import { en } from '../src/i18n/locales';
-import { modules } from '../src/modules/docs/data/module';
-import { getSectionsByModule } from '../src/modules/docs/data/sections';
+import { getSectionsByModule, modules } from '../src/modules/docs/data';
 
 /**
  * 生成 llms.txt：站点文章索引，供 AI 工具发现页面。

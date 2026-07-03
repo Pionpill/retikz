@@ -2,7 +2,7 @@
 
 import { Link, useLocation } from 'react-router';
 
-import { resolveModule } from '@/modules/docs/data/module';
+import { resolveModule } from '@/modules/docs/data';
 
 /**
  * 顶栏左侧 brand：logo + 模块名 + 版本 badge

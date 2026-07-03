@@ -6,8 +6,7 @@ import { Outlet } from 'react-router';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
-import { AiChatPanel } from '@/modules/docs/ai-chat';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+import { AiChatPanel, useAiChatStore } from '@/modules/docs/ai-chat';
 
 import AppHeader from '../header/AppHeader';
 

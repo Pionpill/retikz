@@ -8,9 +8,10 @@ import { useTranslation } from 'react-i18next';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 
 import type { ContextMode } from '../context';
+
+import { useAiChatStore } from '../use-ai-chat-store';
 
 const MODES: ReadonlyArray<ContextMode> = ['lean', 'balanced', 'heavy'];
 

@@ -2,7 +2,7 @@
 import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+import { useAiChatStore } from '../use-ai-chat-store';
 
 const SUGGESTION_KEYS = [
   'ai.convEmptySuggestion1',

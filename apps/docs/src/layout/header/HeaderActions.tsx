@@ -23,10 +23,8 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/components/comparison';
-import { useComparisonStore } from '@/modules/docs/store/use-comparison-store';
-import { useComponentPreviewStore } from '@/modules/docs/store/use-component-preview-store';
-import { useTocStore } from '@/modules/docs/store/use-toc-store';
-import { useLayoutStore } from '@/store/use-layout-store';
+import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
+import { useLayoutStore } from '@/store';
 
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './use-doc-actions';
 

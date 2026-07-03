@@ -4,7 +4,7 @@ import { FileText, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+import { useAiChatStore } from '../use-ai-chat-store';
 
 /**
  * Header 内的 chips 列表（仅展示，添加走 toolbar 的 + 按钮）

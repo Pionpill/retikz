@@ -5,12 +5,13 @@ import { Ban, Infinity as InfinityIcon, Wrench } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { AutoRepairMode } from '@/modules/docs/ai-chat/use-ai-chat-store';
-
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+
+import type { AutoRepairMode } from '../use-ai-chat-store';
+
+import { useAiChatStore } from '../use-ai-chat-store';
 
 const MODES: ReadonlyArray<AutoRepairMode> = ['off', 'limited', 'always'];
 
