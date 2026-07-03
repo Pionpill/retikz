@@ -16,11 +16,11 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
-import type { RendererMode, SizeKey, Transform } from './_shared';
+import type { RendererMode, SizeKey, Transform } from '../types';
 
-import { RendererModeButton, ToolbarIconButton } from './_parts';
-import { SIZE_KEYS } from './_shared';
-import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './use-pan-zoom';
+import { SIZE_KEYS } from '../constants';
+import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from '../hooks';
+import { RendererModeButton, ToolbarIconButton } from './parts';
 
 export type PanZoomToolbarProps = {
   transform: Transform;

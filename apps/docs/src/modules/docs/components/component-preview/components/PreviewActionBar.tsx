@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-import type { PreviewAction, PreviewActionContext } from './_shared';
+import type { PreviewAction, PreviewActionContext } from '../types';
 
-import { ToolbarIconButton } from './_parts';
+import { ToolbarIconButton } from './parts';
 
 const releaseSelectDocumentLock = (): void => {
   if (document.querySelector('[role="dialog"]')) return;

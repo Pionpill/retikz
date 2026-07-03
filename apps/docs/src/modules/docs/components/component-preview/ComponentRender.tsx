@@ -1,11 +1,7 @@
-﻿import type { FC, ReactNode } from 'react';
+import type { FC } from 'react';
 
-import { Ban, BotMessageSquare, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
 import { Fragment, useRef, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 import { useComponentPreviewStore } from '@/modules/docs/store/use-component-preview-store';
@@ -15,61 +11,23 @@ import type {
   ComponentRenderSource,
   DiffMode,
   PreviewAction,
-  PreviewActionContext,
   PreviewOverlay,
   RendererMode,
   SizeKey,
   UnifiedDiff,
-} from './_shared';
+} from './types';
 
-import { HighlightedCode } from '../highlight-code';
-import { CopyButton, SourceViewBar, ToolbarIconButton } from './_parts';
-import { alignClass, filterDiffByMode, PreviewActionStateContext, sizeClass } from './_shared';
-import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
-import { ComponentDetailDialog } from './ComponentDetailDialog';
-import { DemoRenderer } from './DemoRenderer';
-import { PanZoomToolbar } from './PanZoomToolbar';
-import { PreviewActionBar } from './PreviewActionBar';
-import { usePanZoom } from './use-pan-zoom';
-import { useSourceViews } from './use-source-views';
+import { downloadPreviewImage } from './commands';
+import { ComponentDetailDialog, DemoRenderer, PanZoomToolbar, PreviewActionBar, SourceCodePanel } from './components';
+import { alignClass, sizeClass } from './constants';
+import { PreviewActionStateContext } from './context';
+import { usePanZoom, usePreviewActions, useSourceViews } from './hooks';
+import { buildAskAiPrompt, filterDiffByMode, findPrecedingHeading } from './utils';
 
-export type { ComponentRenderSource } from './_shared';
+export type { ComponentRenderSource } from './types';
 
-/**
- * 反查最近的前置 heading：从当前节点出发往左找兄弟，找不到就上一层继续
- * @description MDX 渲染产物里 ComponentPreview 卡和 h2/h3 标题是同级兄弟节点（被 article 容器包裹），常规一两轮回溯就能命中；找不到（页面首部无标题）返回 null
- */
-const findPrecedingHeading = (el: HTMLElement | null): HTMLElement | null => {
-  if (!el) return null;
-  let sib: Element | null = el.previousElementSibling;
-  while (sib) {
-    if (/^H[1-6]$/.test(sib.tagName)) return sib as HTMLElement;
-    sib = sib.previousElementSibling;
-  }
-  return el.parentElement ? findPrecedingHeading(el.parentElement) : null;
-};
-
-const buildAskAiPrompt = (lang: 'zh' | 'en', pageTitle: string, heading: string, demoName: string): string => {
-  if (lang === 'en') {
-    const ref = heading ? `the "${heading}" section of ${pageTitle}` : pageTitle;
-    return `Based on ${ref}, walk me through the \`${demoName}\` example:
-
-- Implementation rationale + key retikz APIs used
-- How could I modify or extend it`;
-  }
-  const ref = heading ? `${pageTitle}「${heading}」小节` : pageTitle;
-  return `请基于${ref}里的 \`${demoName}\` 示例：
-
-- 解释它的实现思路 + 关键 retikz API 用法
-- 可以怎么改 / 怎么扩展`;
-};
-
-/** 折叠态显示前几行 */
+/** 折叠态显示前几行。 */
 const PREVIEW_MAX_LINES = 3;
-/** 已 View Code 之后默认折叠状态下的代码区高度上限（按 ~15 行 × 1.5em line-height + 一点点 padding 算） */
-const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[15rem] [&_pre]:overflow-y-auto';
-/** 触发「展开/收起」按钮的最小行数门槛 */
-const COLLAPSE_THRESHOLD_LINES = 10;
 
 export type ComponentRenderProps = {
   /** demo 标识（仅用于 Dialog header 显示） */
@@ -146,11 +104,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle
   const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  // 重播：bump nonce → keyed Fragment 重挂渲染子树（CSS @keyframes / canvas rAF / WAAPI 重置）
-  const [replayNonce, setReplayNonce] = useState(0);
-  // per-card 工具开关态（播放暂停、未来性能监视器等 toggle 类工具）
-  const [toolState, setToolState] = useState<Record<string, boolean>>({});
-  const [actionValues, setActionValues] = useState<Record<string, string>>({});
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
   // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
@@ -203,70 +156,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     setView('react');
   };
 
-  const downloadBlob = (blob: Blob, fileName: string) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadDataUrl = (dataUrl: string, fileName: string) => {
-    const [header = '', payload = ''] = dataUrl.split(',');
-    const mimeType = header.match(/^data:([^;]+)/)?.[1] ?? 'application/octet-stream';
-    const binary = window.atob(payload);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    downloadBlob(new Blob([bytes], { type: mimeType }), fileName);
-  };
-
-  const downloadSvg = () => {
-    const svg = renderPaneRef.current?.querySelector('svg');
-    if (!svg) return;
-    let svgSource = new XMLSerializer().serializeToString(svg);
-    // 序列化 React 渲染出的 svg 不一定带 xmlns；离线打开 / 嵌别处时缺它会被当 HTML 解析
-    if (!/\sxmlns=/.test(svgSource)) {
-      svgSource = svgSource.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
-    }
-    downloadBlob(
-      new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${svgSource}`], {
-        type: 'image/svg+xml;charset=utf-8',
-      }),
-      `${name || 'retikz'}.svg`,
-    );
-  };
-
-  const downloadCanvas = () => {
-    const canvas = renderPaneRef.current?.querySelector('canvas');
-    if (!canvas) return;
-    try {
-      const fileName = `${name || 'retikz'}.png`;
-      if (typeof canvas.toBlob === 'function') {
-        canvas.toBlob(blob => {
-          if (!blob) return;
-          downloadBlob(blob, fileName);
-        }, 'image/png');
-        return;
-      }
-      downloadDataUrl(canvas.toDataURL('image/png'), fileName);
-    } catch {
-      // canvas 可能因跨域图片被标记为 tainted，此时浏览器会阻止导出
-    }
-  };
-
-  /** 下载当前渲染图：SVG 模式导出 `.svg`，Canvas 模式导出 `.png`。 */
-  const handleDownload = () => {
-    if (rendererMode === 'canvas') {
-      downloadCanvas();
-      return;
-    }
-    downloadSvg();
-  };
+  const handleDownload = () => downloadPreviewImage(renderPaneRef.current, name, rendererMode);
 
   const handleAskAi = () => {
     const heading = findPrecedingHeading(containerRef.current);
@@ -280,28 +170,13 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
 
   const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
 
-  // 动作 / 浮层共享上下文：每次渲染重建（active 读当前 toolState、renderPane 用 getter 取最新 ref）
-  const actionCtx: PreviewActionContext = {
-    replay: () => setReplayNonce(n => n + 1),
+  const { replayNonce, actionCtx, allActions, previewActionState, overlayNodes } = usePreviewActions({
+    animated,
+    actions,
+    overlays,
     rendererMode,
-    get renderPane() {
-      return renderPaneRef.current;
-    },
-    active: id => toolState[id] ?? false,
-    setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
-    actionValue: id => actionValues[id],
-    setActionValue: (id, value) => setActionValues(prev => ({ ...prev, [id]: value })),
-  };
-  // 有效动作 = 内置工具（含动画时的重播/播放暂停/停止）∪ 自定义 actions
-  const builtinActions = animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : [];
-  const allActions: Array<PreviewAction> = [...builtinActions, ...(actions ?? [])];
-  const previewActionState = {
-    values: actionValues,
-    setValue: actionCtx.setActionValue,
-  };
-  const overlayNodes: Array<ReactNode> = (overlays ?? []).map(o => (
-    <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>
-  ));
+    renderPaneRef,
+  });
 
   return (
     <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
@@ -363,124 +238,30 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         />
       </div>
       {hasCode ? (
-        <div className="relative overflow-hidden border-t bg-muted/50 text-sm">
-          {showFull ? (
-            <>
-              <div className="flex items-center justify-between p-1 px-2">
-                <div className="flex min-w-0 flex-1 items-center gap-1">
-                  <SourceViewBar
-                    views={views}
-                    view={view}
-                    onViewChange={setView}
-                    files={files}
-                    activeFileIndex={activeFileIndex}
-                    onFileChange={setSourceFileIndex}
-                  />
-                </div>
-                {/* 工具条上每个按钮用 native title 而非 radix Tooltip + asChild：
-                   项目 React 18.2 下 shadcn Button / DropdownMenuTrigger / TooltipTrigger 都是 FC 不 forwardRef，
-                   `<TooltipTrigger asChild>` 透传 ref 给 FC 会触发 React warning + 偶发未捕获错误把整树 unmount。
-                   原生 title 没 portal / ref 链路，最稳。视觉上 toolbar 已经 icon-only + aria-label，可达性不丢 */}
-                <div className="flex items-center gap-1">
-                  {showDiffPicker && (
-                    <ToggleGroup
-                      type="single"
-                      variant="outline"
-                      value={diffMode}
-                      onValueChange={value => {
-                        // radix 单选 ToggleGroup 在点击已激活项时会回 ''（取消选择）；这里禁掉取消，保证 diffMode 始终有 mode
-                        if (value === 'off' || value === 'added' || value === 'removed' || value === 'full') {
-                          setLocalDiffMode(value);
-                        }
-                      }}
-                      className="mr-1"
-                    >
-                      <ToggleGroupItem
-                        value="off"
-                        aria-label="Diff off"
-                        title="Off"
-                        className="h-7 min-w-7 cursor-pointer px-1.5"
-                      >
-                        <Ban className="size-3.5" />
-                      </ToggleGroupItem>
-                      <ToggleGroupItem
-                        value="added"
-                        aria-label="Added only"
-                        title="Added only"
-                        className="h-7 min-w-7 cursor-pointer px-1.5"
-                      >
-                        <Plus className="size-3.5" />
-                      </ToggleGroupItem>
-                      <ToggleGroupItem
-                        value="removed"
-                        aria-label="Removed only"
-                        title="Removed only"
-                        className="h-7 min-w-7 cursor-pointer px-1.5"
-                      >
-                        <Minus className="size-3.5" />
-                      </ToggleGroupItem>
-                      <ToggleGroupItem
-                        value="full"
-                        aria-label="Full diff"
-                        title="Full diff"
-                        className="h-7 min-w-7 cursor-pointer px-1.5"
-                      >
-                        <Diff className="size-3.5" />
-                      </ToggleGroupItem>
-                    </ToggleGroup>
-                  )}
-                  <CopyButton copied={copied} onCopy={handleCopy} title={copied ? 'Copied' : 'Copy'} />
-                  {showAskAi && (
-                    <ToolbarIconButton label="Ask AI" title="Ask AI" onClick={handleAskAi}>
-                      <BotMessageSquare className="size-4" />
-                    </ToolbarIconButton>
-                  )}
-                  {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
-                    <ToolbarIconButton
-                      label={isExpanded ? 'Collapse' : 'Expand'}
-                      title={isExpanded ? 'Collapse' : 'Expand'}
-                      onClick={() => setLocalIsExpanded(!isExpanded)}
-                    >
-                      {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
-                    </ToolbarIconButton>
-                  )}
-                  <ToolbarIconButton label="Hide source" title="Hide source" onClick={handleHideAll}>
-                    <X className="size-4" />
-                  </ToolbarIconButton>
-                </div>
-              </div>
-              <Separator className="opacity-40" />
-            </>
-          ) : null}
-          <div className={cn('relative', showFull && !isExpanded && COLLAPSED_CODE_MAX_H)}>
-            <HighlightedCode
-              lang={displayedLang}
-              code={displayedCode}
-              showLineNumbers={displayedLineCount >= 10}
-              lineKinds={displayedLineKinds}
-            />
-            {!showFull && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(to top, var(--muted), color-mix(in oklab, var(--muted) 60%, transparent), transparent)',
-                  }}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setLocalIsCodeVisible(true)}
-                  className="relative z-10 cursor-pointer rounded-lg bg-background text-foreground shadow-none hover:bg-muted dark:bg-background dark:text-foreground dark:hover:bg-muted font-medium"
-                >
-                  View Code
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
+        <SourceCodePanel
+          views={views}
+          view={view}
+          onViewChange={setView}
+          files={files}
+          activeFileIndex={activeFileIndex}
+          onFileChange={setSourceFileIndex}
+          showFull={showFull}
+          showDiffPicker={showDiffPicker}
+          diffMode={diffMode}
+          onDiffModeChange={setLocalDiffMode}
+          copied={copied}
+          onCopy={handleCopy}
+          showAskAi={showAskAi}
+          onAskAi={handleAskAi}
+          displayedLineCount={displayedLineCount}
+          isExpanded={isExpanded}
+          onExpandedChange={setLocalIsExpanded}
+          onHideSource={handleHideAll}
+          displayedLang={displayedLang}
+          displayedCode={displayedCode}
+          displayedLineKinds={displayedLineKinds}
+          onShowCode={() => setLocalIsCodeVisible(true)}
+        />
       ) : null}
       <ComponentDetailDialog
         open={isMaximized}

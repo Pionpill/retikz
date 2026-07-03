@@ -3,9 +3,11 @@ import { type FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { RendererModeButton } from '../../src/modules/docs/components/component-preview/_parts';
-import { DemoRenderer } from '../../src/modules/docs/components/component-preview/DemoRenderer';
-import { PanZoomToolbar } from '../../src/modules/docs/components/component-preview/PanZoomToolbar';
+import {
+  DemoRenderer,
+  PanZoomToolbar,
+  RendererModeButton,
+} from '../../src/modules/docs/components/component-preview/components';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/use-component-preview-store';
 
 const Demo: FC = () => <Layout width={40} height={20} />;

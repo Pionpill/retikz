@@ -1,6 +1,6 @@
 import { Pause, Play, RotateCcw, Square } from 'lucide-react';
 
-import type { PreviewAction } from './_shared';
+import type { PreviewAction } from './types';
 
 /** 播放/暂停工具的 toolState key（ComponentRender 据它取暂停态选图标） */
 export const ANIM_PAUSE_ID = 'anim-paused';

@@ -2,7 +2,7 @@ import type { MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } fro
 
 import { useEffect, useRef, useState } from 'react';
 
-import type { Transform } from './_shared';
+import type { Transform } from '../types';
 
 /** 单次按钮点击平移步长（px） */
 export const PAN_STEP = 24;

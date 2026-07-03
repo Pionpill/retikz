@@ -5,7 +5,7 @@ import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/pris
 
 import { useThemeStore } from '@/store/use-theme-store';
 
-import type { DiffLineKind } from '../component-preview/_shared';
+import type { DiffLineKind } from '../component-preview';
 
 export type HighlightCodeProps = {
   /** Prism 语言名（来自围栏 `language-*`），未知值 prism 会回落为不高亮 */

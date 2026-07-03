@@ -5,7 +5,7 @@ import { PathCurve } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
-import { usePreviewActionValue } from '@/modules/docs/components/component-preview/_shared';
+import { usePreviewActionValue } from '@/modules/docs/components/component-preview/context';
 
 import { closureRadar, closureTrend } from './line-closure.data';
 import { PATH_CURVE_ACTION_ID } from './line-curve.actions';

@@ -4,7 +4,7 @@ import type { FC, ReactElement, ReactNode } from 'react';
 import { Layout, RendererModeProvider } from '@retikz/react';
 import { Children, cloneElement, isValidElement } from 'react';
 
-import type { RendererMode } from './_shared';
+import type { RendererMode } from '../types';
 
 type ElementWithChildrenProps = {
   /** 子节点 */

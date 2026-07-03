@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { ComponentRenderSource, ComponentSourceFile, RendererMode, SourceView } from './_shared';
+import type { ComponentRenderSource, ComponentSourceFile, RendererMode, SourceView } from '../types';
 
-import { availableSourceViews } from './_shared';
+import { availableSourceViews } from '../utils';
 
 /** useSourceViews 返回：视图选择 + 当前视图文件 + 复制态，card / dialog 共用，消除两处重复推导 */
 export type SourceViewsState = {

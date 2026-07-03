@@ -1,23 +1,22 @@
 import type { FC, ReactNode, Ref } from 'react';
 
 import { X } from 'lucide-react';
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useRef } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 
-import type { AlignKey, PreviewAction, PreviewActionContext, PreviewOverlay, RendererMode } from './_shared';
-import type { ComponentRenderSource } from './ComponentRender';
+import type { AlignKey, ComponentRenderSource, PreviewAction, PreviewOverlay, RendererMode } from '../types';
 
-import { HighlightedCode } from '../highlight-code';
-import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './_parts';
-import { alignClass, filterDiffByMode, PreviewActionStateContext } from './_shared';
-import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
+import { HighlightedCode } from '../../highlight-code';
+import { alignClass } from '../constants';
+import { PreviewActionStateContext } from '../context';
+import { usePanZoom, usePreviewActions, useSourceViews } from '../hooks';
+import { filterDiffByMode } from '../utils';
 import { DemoRenderer } from './DemoRenderer';
+import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './parts';
 import { PreviewActionBar } from './PreviewActionBar';
-import { usePanZoom } from './use-pan-zoom';
-import { useSourceViews } from './use-source-views';
 
 export type ComponentDetailDialogProps = {
   open: boolean;
@@ -135,26 +134,14 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   } = useSourceViews(source, sourceFileIndex);
   const hasCode = views.length > 0;
 
-  // 动作 / 浮层（Dialog 独立的 replay nonce / toolState / renderPane ref）
-  const [replayNonce, setReplayNonce] = useState(0);
-  const [toolState, setToolState] = useState<Record<string, boolean>>({});
-  const [actionValues, setActionValues] = useState<Record<string, string>>({});
   const paneRef = useRef<HTMLDivElement>(null);
-  const actionCtx: PreviewActionContext = {
-    replay: () => setReplayNonce(n => n + 1),
+  const { replayNonce, actionCtx, allActions, previewActionState, overlayNodes } = usePreviewActions({
+    animated,
+    actions,
+    overlays,
     rendererMode,
-    get renderPane() {
-      return paneRef.current;
-    },
-    active: id => toolState[id] ?? false,
-    setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
-    actionValue: id => actionValues[id],
-    setActionValue: (id, value) => setActionValues(prev => ({ ...prev, [id]: value })),
-  };
-  const allActions: Array<PreviewAction> = [
-    ...(animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : []),
-    ...(actions ?? []),
-  ];
+    renderPaneRef: paneRef,
+  });
   const actionBar = (
     <PreviewActionBar
       actions={allActions}
@@ -162,11 +149,6 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
       alwaysVisible={actionsAlwaysVisible || (actions?.length ?? 0) === 0}
     />
   );
-  const overlayNodes = (overlays ?? []).map(o => <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>);
-  const previewActionState = {
-    values: actionValues,
-    setValue: actionCtx.setActionValue,
-  };
   // 渲染内容包 keyed Fragment：重播时重挂
   const demoContent = (
     <Fragment key={replayNonce}>

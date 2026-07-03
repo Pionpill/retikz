@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
-import type { ComponentSourceFile, RendererMode, SourceView } from './_shared';
+import type { ComponentSourceFile, RendererMode, SourceView } from '../types';
 
 /**
  * 工具条小型 ghost icon button

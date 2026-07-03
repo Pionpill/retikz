@@ -3,7 +3,7 @@
 import { parseWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { irToVanillaCode } from '../src/modules/docs/components/component-preview/ir-to-vanilla-code';
+import { irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 
 const ir = (children: IR['children'], viewBox?: IR['viewBox']): IR => ({
   version: 1,

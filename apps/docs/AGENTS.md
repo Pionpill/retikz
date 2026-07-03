@@ -40,6 +40,7 @@ URL 段、`modules/docs/data/` 节点 `id`、`modules/docs/contents/` 目录段�
 
 docs 内容规则不复制在 AGENTS 中，按需动态加载：
 
+- 代码 / 文件结构基础规范：`.agents/skills/docs-standard-contract/SKILL.md`
 - 通用规则：`.agents/skills/docs-doc-principle/SKILL.md`
 - 组件页：`docs-doc-component`
 - 示例页：`docs-doc-example`

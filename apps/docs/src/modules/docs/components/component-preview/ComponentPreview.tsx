@@ -16,13 +16,12 @@ import type {
   RendererMode,
   SizeKey,
   SourceLang,
-} from './_shared';
+} from './types';
 
-import { computeUnifiedDiff, formatIR } from './_shared';
 import { ComponentRender } from './ComponentRender';
+import { RawSvgFrame } from './components';
 import { useDemoSegments } from './demo-location-context';
-import { RawSvgFrame } from './DemoRenderer';
-import { irToVanillaCode } from './ir-to-vanilla-code';
+import { computeUnifiedDiff, formatIR, irToVanillaCode } from './utils';
 
 /**
  * 收集 contents 下全部 demo 模块 + 源码字符串
