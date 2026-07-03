@@ -1,9 +1,8 @@
-import { ArrowUpRight, Languages, Link as LinkIcon, Moon, MoreHorizontal, Sun } from 'lucide-react';
+﻿import { ArrowUpRight, Languages, Link as LinkIcon, Moon, MoreHorizontal, Sun } from 'lucide-react';
 import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GitHubIcon } from '@/components/icons';
-import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/components/shared/comparison';
 import { Shortcut } from '@/components/shared/shortcut';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -23,10 +22,11 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useComparisonStore } from '@/store/use-comparison-store';
-import { useComponentPreviewStore } from '@/store/use-component-preview-store';
+import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/components/comparison';
+import { useComparisonStore } from '@/modules/docs/store/use-comparison-store';
+import { useComponentPreviewStore } from '@/modules/docs/store/use-component-preview-store';
+import { useTocStore } from '@/modules/docs/store/use-toc-store';
 import { useLayoutStore } from '@/store/use-layout-store';
-import { useTocStore } from '@/store/use-toc-store';
 
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './use-doc-actions';
 import { useHeaderCompact } from './use-header-compact';

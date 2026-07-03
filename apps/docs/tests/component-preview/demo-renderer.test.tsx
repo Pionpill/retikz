@@ -1,12 +1,14 @@
-import { Layout } from '@retikz/react';
+﻿import { Layout } from '@retikz/react';
 import { type FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { RendererModeButton } from '../../src/components/shared/component-preview/_parts';
-import { DemoRenderer } from '../../src/components/shared/component-preview/DemoRenderer';
-import { PanZoomToolbar } from '../../src/components/shared/component-preview/PanZoomToolbar';
-import { useComponentPreviewStore } from '../../src/store/use-component-preview-store';
+import {
+  DemoRenderer,
+  PanZoomToolbar,
+  RendererModeButton,
+} from '../../src/modules/docs/components/component-preview/components';
+import { useComponentPreviewStore } from '../../src/modules/docs/store/use-component-preview-store';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
 const WrappedLayout: FC = () => <Layout width={40} height={20} />;

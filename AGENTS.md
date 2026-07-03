@@ -8,7 +8,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - Monorepo：pnpm workspace，glob 为 `packages/*/*` + `apps/*`
 - Kernel 组：`packages/kernel/{math,core,render,react,vanilla,tex}`，其中 `math` 是零依赖计算底座，`tex` 是可选 LaTeX 公式接入包
-- Graph 组：`packages/graph/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
+- Viz 组：`packages/viz/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
 - Apps：`apps/docs` 文档站，`apps/eval` 评测工具
 - 架构背景：`notes/architecture/core-design.md`
 
@@ -107,9 +107,9 @@ Control: <human-directed|llm-autonomous>
 
 - `main`：稳定发布线，只接正式发布、hotfix、发布后文档补丁。
 - `next`：下版本集成真源，release 只从这里切。
-- `next-kernel` / `next-graph`：方向集成分支；功能改动先合 `next`，不直接进 `main`。
+- `next-kernel` / `next-viz`：方向集成分支；功能改动先合 `next`，不直接进 `main`。
 - `feature/*`、`release/*`、`hotfix/*` 按任务需要创建；创建 / 切换 / 合并 / 删除分支前确认确实需要。
-- 分支同步由 GitHub Actions 自动开 PR：`main -> next`，`next -> next-kernel`，`next -> next-graph`。冲突和 CI 在 PR 中处理，不静默强推目标分支。
+- 分支同步由 GitHub Actions 自动开 PR：`main -> next`，`next -> next-kernel`，`next -> next-viz`。冲突和 CI 在 PR 中处理，不静默强推目标分支。
 
 ## 代码风格
 
@@ -140,6 +140,6 @@ Control: <human-directed|llm-autonomous>
 - `packages/kernel/AGENTS.md`：kernel 组 lockstep、包职责和发布分组。
 - `packages/kernel/core/AGENTS.md`：IR、Scene 编译、几何、schema、registry。
 - `packages/kernel/react/AGENTS.md`：React adapter、Kernel / Sugar、renderer、hydration。
-- `packages/graph/AGENTS.md`：graph 组分层和 plot adapter 边界。
-- `packages/graph/plot/AGENTS.md`：plot IR、provider / contract / pipeline。
+- `packages/viz/AGENTS.md`：viz 组分层和 plot adapter 边界。
+- `packages/viz/plot/AGENTS.md`：plot IR、provider / contract / pipeline。
 - `apps/docs/AGENTS.md`：文档站结构、路由、MDX / demo / i18n 协作。

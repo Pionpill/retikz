@@ -250,13 +250,13 @@ importers:
         version: link:../../packages/kernel/core
       '@retikz/plot':
         specifier: workspace:*
-        version: link:../../packages/graph/plot
+        version: link:../../packages/viz/plot
       '@retikz/plot-react':
         specifier: workspace:*
-        version: link:../../packages/graph/plot-react
+        version: link:../../packages/viz/plot-react
       '@retikz/plot-vanilla':
         specifier: workspace:*
-        version: link:../../packages/graph/plot-vanilla
+        version: link:../../packages/viz/plot-vanilla
       '@retikz/react':
         specifier: workspace:*
         version: link:../../packages/kernel/react
@@ -418,138 +418,6 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-
-  packages/graph/plot:
-    dependencies:
-      '@retikz/core':
-        specifier: workspace:*
-        version: link:../../kernel/core
-      '@retikz/math':
-        specifier: workspace:*
-        version: link:../../kernel/math
-      d3-array:
-        specifier: 'catalog:'
-        version: 3.2.4
-      d3-format:
-        specifier: 'catalog:'
-        version: 3.1.2
-      d3-scale:
-        specifier: 'catalog:'
-        version: 4.0.2
-      d3-scale-chromatic:
-        specifier: 'catalog:'
-        version: 3.1.0
-      d3-time-format:
-        specifier: 'catalog:'
-        version: 4.1.0
-      zod:
-        specifier: 'catalog:'
-        version: 4.4.3
-    devDependencies:
-      '@types/d3-array':
-        specifier: 'catalog:'
-        version: 3.2.2
-      '@types/d3-format':
-        specifier: 'catalog:'
-        version: 3.0.4
-      '@types/d3-scale':
-        specifier: 'catalog:'
-        version: 4.0.9
-      '@types/d3-scale-chromatic':
-        specifier: 'catalog:'
-        version: 3.1.0
-      '@types/d3-time-format':
-        specifier: 'catalog:'
-        version: 4.0.3
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.6.0
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite:
-        specifier: 'catalog:'
-        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
-      vite-plugin-dts:
-        specifier: 'catalog:'
-        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-
-  packages/graph/plot-react:
-    dependencies:
-      '@retikz/plot':
-        specifier: workspace:*
-        version: link:../plot
-      '@retikz/react':
-        specifier: workspace:*
-        version: link:../../kernel/react
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.6.0
-      '@types/react':
-        specifier: 'catalog:'
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: 'catalog:'
-        version: 18.2.25
-      '@vitejs/plugin-react':
-        specifier: 'catalog:'
-        version: 6.0.1(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      react:
-        specifier: 'catalog:'
-        version: 18.2.0
-      react-dom:
-        specifier: 'catalog:'
-        version: 18.2.0(react@18.2.0)
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite:
-        specifier: 'catalog:'
-        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
-      vite-plugin-dts:
-        specifier: 'catalog:'
-        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      zod:
-        specifier: 'catalog:'
-        version: 4.4.3
-
-  packages/graph/plot-vanilla:
-    dependencies:
-      '@retikz/core':
-        specifier: workspace:*
-        version: link:../../kernel/core
-      '@retikz/plot':
-        specifier: workspace:*
-        version: link:../plot
-      '@retikz/vanilla':
-        specifier: workspace:*
-        version: link:../../kernel/vanilla
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.6.0
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite:
-        specifier: 'catalog:'
-        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
-      vite-plugin-dts:
-        specifier: 'catalog:'
-        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
-      zod:
-        specifier: 'catalog:'
-        version: 4.4.3
 
   packages/kernel/core:
     dependencies:
@@ -713,6 +581,138 @@ importers:
       '@retikz/render':
         specifier: workspace:*
         version: link:../render
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+
+  packages/viz/plot:
+    dependencies:
+      '@retikz/core':
+        specifier: workspace:*
+        version: link:../../kernel/core
+      '@retikz/math':
+        specifier: workspace:*
+        version: link:../../kernel/math
+      d3-array:
+        specifier: 'catalog:'
+        version: 3.2.4
+      d3-format:
+        specifier: 'catalog:'
+        version: 3.1.2
+      d3-scale:
+        specifier: 'catalog:'
+        version: 4.0.2
+      d3-scale-chromatic:
+        specifier: 'catalog:'
+        version: 3.1.0
+      d3-time-format:
+        specifier: 'catalog:'
+        version: 4.1.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      '@types/d3-array':
+        specifier: 'catalog:'
+        version: 3.2.2
+      '@types/d3-format':
+        specifier: 'catalog:'
+        version: 3.0.4
+      '@types/d3-scale':
+        specifier: 'catalog:'
+        version: 4.0.9
+      '@types/d3-scale-chromatic':
+        specifier: 'catalog:'
+        version: 3.1.0
+      '@types/d3-time-format':
+        specifier: 'catalog:'
+        version: 4.0.3
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+
+  packages/viz/plot-react:
+    dependencies:
+      '@retikz/plot':
+        specifier: workspace:*
+        version: link:../plot
+      '@retikz/react':
+        specifier: workspace:*
+        version: link:../../kernel/react
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.2.25
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.0.1(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      react:
+        specifier: 'catalog:'
+        version: 18.2.0
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.2.0(react@18.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+
+  packages/viz/plot-vanilla:
+    dependencies:
+      '@retikz/core':
+        specifier: workspace:*
+        version: link:../../kernel/core
+      '@retikz/plot':
+        specifier: workspace:*
+        version: link:../plot
+      '@retikz/vanilla':
+        specifier: workspace:*
+        version: link:../../kernel/vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

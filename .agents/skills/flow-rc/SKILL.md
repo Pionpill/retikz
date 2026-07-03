@@ -46,7 +46,7 @@ rc 是公开 API 冻结后的验收窗口。目标是让外部用户能从 npm �
 - packaging：记录目标包、版本、环境、包管理器、框架版本。
 - 先看 `git status --short`，识别已有改动归属，不覆盖用户改动。
 
-当前发布组路径以 `package.json` 为准。kernel 组在 `packages/kernel/{math,core,render,vanilla,react,tex}`；plot 组在 `packages/graph/{plot,plot-vanilla,plot-react}`。
+当前发布组路径以 `package.json` 为准。kernel 组在 `packages/kernel/{math,core,render,vanilla,react,tex}`；plot 组在 `packages/viz/{plot,plot-vanilla,plot-react}`。
 
 ### Stage 2 实施
 

@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import type { Release } from '@/data/changelog.types';
+import type { Release } from '@/modules/docs/data/changelog.types';
 
-import { changelogToMarkdown } from '@/components/shared/changelog/changelog-to-markdown';
+import { changelogToMarkdown } from '@/modules/docs/components/changelog/changelog-to-markdown';
 
 const fixture: Array<Release> = [
   {

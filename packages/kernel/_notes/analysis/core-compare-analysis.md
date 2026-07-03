@@ -1,9 +1,9 @@
 # core 底座横向对比分析：TikZ/PGF / D3 / Two.js / Mermaid / react-flow / Excalidraw / Vega vs retikz
 
 > 目的：把 `@retikz/core`（core / render / react / vanilla 四个 Tier 1 包）放进底层绘图 / IR 基础库的坐标系里，看清底座能力位置与架构能力上限，为 core roadmap 取舍提供参照。
-> 范围：只评「底座 / 底层能力」——图元 / 几何 / 锚点 / 路径文法、IR / Scene 架构、renderer-agnostic、跨框架、扩展性、AI 契约、类型与性能；**不评图表层**（chart / scale / guide 归 `@retikz/plot`，见 [`plot-compare-analysis.md`](../../../graph/_notes/analysis/plot-compare-analysis.md)）。
+> 范围：只评「底座 / 底层能力」——图元 / 几何 / 锚点 / 路径文法、IR / Scene 架构、renderer-agnostic、跨框架、扩展性、AI 契约、类型与性能；**不评图表层**（chart / scale / guide 归 `@retikz/plot`，见 [`plot-compare-analysis.md`](../../../viz/_notes/analysis/plot-compare-analysis.md)）。
 > 评分：公平客观、不迎合 retikz，标杆库在其强项给满分；retikz 现状按 **core 0.3.0-beta.1** 已落地能力打分，**目标 = 现有架构（IR 居中 / Scene 渲染中立 / Kernel·Sugar·Tier 2 分层 / core 仅依赖 zod）的能力上限**（受架构取舍约束，大数据性能等非目标维度即便做满也不高）。
-> 版本：v0.1 · 日期：2026-06-12 · 关联：[`core-design.md`](../../../../notes/architecture/core-design.md) · [`plot-compare-analysis.md`](../../../graph/_notes/analysis/plot-compare-analysis.md) · `packages/kernel/AGENTS.md`
+> 版本：v0.1 · 日期：2026-06-12 · 关联：[`core-design.md`](../../../../notes/architecture/core-design.md) · [`plot-compare-analysis.md`](../../../viz/_notes/analysis/plot-compare-analysis.md) · `packages/kernel/AGENTS.md`
 
 ## 评分口径
 

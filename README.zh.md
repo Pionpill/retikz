@@ -48,7 +48,7 @@ AI 友好不是 retikz 后补的能力，而是 IR 存在的理由。
   <img src="./assets/readme/karl-circle.svg" alt="Karl 单位圆示例" />
 </p>
 
-示例：[Karl 单位圆](https://pionpill.github.io/retikz/core/examples/karl-circle) · [源码](./apps/docs/src/contents/core/examples/karl-circle/karl-circle-07-info.zh.demo.tsx)
+示例：[Karl 单位圆](https://pionpill.github.io/retikz/kernel/examples/karl-circle) · [源码](./apps/docs/src/modules/docs/contents/kernel/examples/karl-circle/karl-circle-07-info.zh.demo.tsx)
 
 ### 欧姆定律电路
 
@@ -58,7 +58,7 @@ AI 友好不是 retikz 后补的能力，而是 IR 存在的理由。
   <img src="./assets/readme/ohms-law-circuit.svg" alt="欧姆定律电路示例" />
 </p>
 
-示例：[欧姆定律电路](https://pionpill.github.io/retikz/core/examples/ohms-law-circuit) · [源码](./apps/docs/src/contents/core/examples/ohms-law-circuit/ohms-law-circuit-06-labels.zh.demo.tsx)
+示例：[欧姆定律电路](https://pionpill.github.io/retikz/kernel/examples/ohms-law-circuit) · [源码](./apps/docs/src/modules/docs/contents/kernel/examples/ohms-law-circuit/ohms-law-circuit-06-labels.zh.demo.tsx)
 
 ## 快速开始
 
@@ -105,7 +105,7 @@ const fig = figure([
 fig.mount(document.querySelector('#diagram')); // 也可 fig.toSvgString() / fig.toCanvas(canvas)
 ```
 
-可以从[快速开始](https://pionpill.github.io/retikz/core/get-start)一步步搭起这个例子，也可以直接看更完整的[示例](https://pionpill.github.io/retikz/core/examples/karl-circle)。
+可以从[快速开始](https://pionpill.github.io/retikz/kernel/get-start)一步步搭起这个例子，也可以直接看更完整的[示例](https://pionpill.github.io/retikz/kernel/examples/karl-circle)。
 
 再往底层走，稳定边界是 IR：你可以用原生 JavaScript 直接创建 JSON IR，也可以实现其它框架 adapter，让它输出同一份 IR，再交给 `@retikz/core` 编译。
 

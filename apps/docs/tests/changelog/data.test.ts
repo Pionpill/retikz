@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { changelog } from '@/data/changelog';
-import { PACKAGE_IDS } from '@/data/changelog.types';
+import { changelog } from '@/modules/docs/data/changelog';
+import { PACKAGE_IDS } from '@/modules/docs/data/changelog.types';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const Localized = z.object({ zh: z.string().min(1), en: z.string().min(1) });

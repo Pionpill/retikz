@@ -1,11 +1,11 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+﻿import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import type { I18nKey } from '../src/data/interface';
+import type { I18nKey } from '../src/modules/docs/data/interface';
 
-import { modules } from '../src/data/module';
-import { getSectionsByModule } from '../src/data/sections';
 import { en } from '../src/i18n/locales/en';
+import { modules } from '../src/modules/docs/data/module';
+import { getSectionsByModule } from '../src/modules/docs/data/sections';
 
 /**
  * 生成 llms.txt：站点文章索引，供 AI 工具发现页面。
@@ -42,7 +42,7 @@ const collect = (rootDir: string, moduleId: string): Array<Item> => {
     out.push({
       url: `${SITE_URL}/${parts.join('/')}`,
       title,
-      desc: readDescription(path.resolve(rootDir, 'src/contents', ...parts, 'index.en.mdx')),
+      desc: readDescription(path.resolve(rootDir, 'src/modules/docs/contents', ...parts, 'index.en.mdx')),
     });
   };
 

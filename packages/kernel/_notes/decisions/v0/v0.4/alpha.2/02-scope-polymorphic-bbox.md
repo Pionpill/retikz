@@ -2,7 +2,7 @@
 
 - 状态：Accepted（MVP = rectangle + circle，2026-06-15 已实现；polygon / ellipse 缓做）
 - 记录日期：2026-06-13
-- 关联：[v0.4 路线讨论](../roadmap.md) · [core v0.2-alpha.1 ADR-03 scope-id-bbox（矩形版前身）](../../v0.2/alpha.1/03-scope-id-bounding-box.md) · [core v0.2-alpha.3 ShapeRegistry（precondition）](../../v0.2/alpha.3/01-shape-registry.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方）](../../../../../../graph/_notes/decisions/v0/v0.1/alpha.10/02-plot-composable.md) · [plot-design §7 多坐标组合](../../../../../../graph/_notes/architecture/plot-design.md)
+- 关联：[v0.4 路线讨论](../roadmap.md) · [core v0.2-alpha.1 ADR-03 scope-id-bbox（矩形版前身）](../../v0.2/alpha.1/03-scope-id-bounding-box.md) · [core v0.2-alpha.3 ShapeRegistry（precondition）](../../v0.2/alpha.3/01-shape-registry.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方）](../../../../../../viz/_notes/decisions/v0/v0.1/alpha.10/02-plot-composable.md) · [plot-design §7 多坐标组合](../../../../../../viz/_notes/architecture/plot-design.md)
 
 ## 背景（塑造决策的硬约束）
 

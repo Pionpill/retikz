@@ -90,7 +90,7 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
     figure({ width: 200, height: 150 }, [
       node('a', { position: [0, 0], text: 'A' }),
       node('b', { position: [80, 0], text: 'B' }),
-      draw(['a', 'b'], { arrow: '->' }),
+      draw(['a', 'b'], { marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
     ]).mount(c);
     expect(c.querySelector('svg')).not.toBeNull();
     expect(c.querySelector('text, rect, g, path')).not.toBeNull();

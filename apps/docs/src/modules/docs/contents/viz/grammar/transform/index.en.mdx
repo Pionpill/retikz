@@ -1,0 +1,99 @@
+---
+title: Transforms
+description: transform is the statistical layer of the plot grammar: it rewrites rows before scales and marks, preserving detail rows or producing statistic, representative, or paired rows.
+---
+
+`transform` is the statistical layer of the plot grammar. After data is normalized into canonical rows and before scales or marks consume it, transforms rewrite those rows into a shape that is easier to draw.
+
+Transforms sit between the [data layer](/viz/grammar/data) and scale inference, mark lowering, and locators. Multiple `<Transform>` declarations compose in order: the output rows from one transform become the input rows for the next.
+
+<ComponentPreview name="transform-pipeline" size="sm" hideCode />
+
+## Responsibilities
+
+| Group               | Members                                               | Rows                  | Primitive                              | Good for                                         |
+| ------------------- | ----------------------------------------------------- | --------------------- | -------------------------------------- | ------------------------------------------------ |
+| Row rewrite         | `sort` / `derive-interval` / `jitter`                 | N → N                 | row rewrite                            | Sorting, per-row intervals, deterministic jitter |
+| Row annotation      | `stack` / `normalize` / `annotate`                    | N → N                 | reducer / row context                  | Stack bounds, shares, group means                |
+| Summary & selection | `bin` / `summarize` / `select` / `density` / `smooth` | N → M/K               | reducer / selector / sampled transform | Histograms, boxplots, density areas, trend lines |
+| Row pairing         | `relate`                                              | N → P                 | selector / projection                  | Source/target relation fields                    |
+| Extensions          | custom transform / reducer / selector                 | Depends on definition | definition registry                    | Custom processing or statistic sub-operations    |
+
+The grouping follows the output row shape. `summarize` and `annotate` both use reducers, but one collapses rows into statistic rows while the other broadcasts statistics back onto source rows. `select` and `relate` both use selectors, but one emits representative source rows while the other emits source/target pair rows.
+
+## Declaration
+
+Use `<Transform kind="...">` for plot-level transforms. `kind` selects the transform type and the remaining props match that transform's fields. Multiple transforms run in declaration order:
+
+```tsx
+<Plot data={rows} model={model}>
+  <Transform kind="summarize" groupBy={['region']} metrics={[{ op: 'sum', field: 'revenue', as: 'total' }]} />
+  <IntervalMark x="region" y="total" />
+</Plot>
+```
+
+The same transform array can also live on any mark, giving only that layer a local data view:
+
+```tsx
+<Plot data={rows} model={model}>
+  <PointMark x="region" y="raw" />
+  <IntervalMark
+    x="region"
+    y="total"
+    transform={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'raw', as: 'total' }] }]}
+  />
+</Plot>
+```
+
+Fields produced by transforms are derived fields: `binStart` / `binEnd` / `binCount`, `total`, `sourceId` / `targetId`, `y0` / `y1`, and so on. They do not need to be listed in `model`; fields read by transforms still go through model and data validation.
+
+For programmatic construction, `<Plot dataTransforms={[...]}>` passes an array directly. It shares the same pipeline as `<Transform>` children; direct arrays run before child declarations.
+
+> The prop is named `dataTransforms` instead of `transforms` to avoid colliding with core geometric transforms such as translate and rotate.
+
+React DSL shortcuts still lower to ordinary transforms. For example, `IntervalMark` `angle` / `stack` / `percent` expands to `stack` or `normalize + stack`; custom authoring layers can use `markTransformShortcuts` to generate the same transform operations. Shortcuts do not add new data semantics.
+
+## How It Works
+
+During lowering, Plot collects the source fields read by transforms and registers the fields they derive. That lets strict models validate true input fields without requiring derived fields to be declared early.
+
+`bin`, `summarize`, and `annotate` reuse [reducer / selector statistic operations](/viz/grammar/transform/statistics), such as `count` / `sum` / `mean` / `median` / `quantile-band`. `select` and `relate` reuse selectors such as `min` / `max` / `first` / `last` / `top`. `density` and `smooth` generate sampled rows, then let `PathMark` draw density areas or trend lines. For long-tail statistics, use `defineTransform` for a full transform or register reducer / selector definitions for the built-in statistical transforms.
+
+Plot-level transforms affect the whole chart: scales, guides, and every mark. Mark-local transforms only affect the rows seen by that one mark, which is useful for local summary layers or relation rows.
+
+`relate` is often placed on `RelationMark.transform`, but it is not private to RelationMark. Its output fields such as `sourceId` / `targetId` / `delta` are ordinary fields that can be consumed by PointMark, ReferenceMark, or custom marks.
+
+## Sections
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/grammar/transform/row">
+    <span className="font-semibold">Row Transforms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Keep row count unchanged while sorting, deriving intervals, or applying deterministic jitter.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/grammar/transform/annotation">
+    <span className="font-semibold">Row Annotations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Keep detail rows and add stack bounds, shares, or group statistic fields.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/grammar/transform/summary">
+    <span className="font-semibold">Summaries & Selection</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Create bins, group statistic rows, or representative source rows.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/grammar/transform/statistics">
+    <span className="font-semibold">Statistic Operations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Reuse reducers and selectors for statistic values, representative rows, and parameterized quantile bands.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/grammar/transform/relate">
+    <span className="font-semibold">Pairing Rows</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Select source and target rows and project relation fields.
+    </span>
+  </LinkedCard>
+</div>

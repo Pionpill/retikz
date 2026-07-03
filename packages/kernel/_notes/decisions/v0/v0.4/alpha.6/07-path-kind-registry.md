@@ -44,6 +44,6 @@ React `<Ribbon>` 可以作为 sugar 保留，但必须产出 `Path kind="ribbon"
 
 - 发布版本：kernel group `v0.4.0-alpha.6`。
 - 主要文件范围：core path schema/registry/compile，React sugar，Vanilla 消费，docs Path/Ribbon 页面。
-- 验收范围：stroke 兼容、ribbon path kind 编译、custom kind 注册、unknown kind 诊断、React `<Ribbon>` 等价输出、graph relation ribbon 消费。
+- 验收范围：stroke 兼容、ribbon path kind 编译、custom kind 注册、unknown kind 诊断、React `<Ribbon>` 等价输出、plot relation ribbon 消费。
 
 > 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/kernel/v0/v0.4/alpha.6/07-path-kind-registry.md`（封板全文）。
