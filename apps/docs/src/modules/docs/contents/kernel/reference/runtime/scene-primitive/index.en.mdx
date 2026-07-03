@@ -32,6 +32,15 @@ Every primitive carries the interaction-layer contract fields `id?` (stable anch
 
 Shape primitives share common visual fields such as `fill`, `fillOpacity`, `stroke`, `strokeOpacity`, `strokeWidth`, `dashPattern`, and `opacity`. The `fill` and `stroke` of `RectPrim` / `EllipsePrim` / `PathPrim` are `PaintValue`s (CSS color string / a paint server referencing the resource table / `contextStroke`), not just strings. Not every primitive supports every field; for example, `TextPrim.fill` (string only) is text color.
 
+Element-level visual effects only live on renderable main geometry primitives:
+
+| Field       | Applies to                            | Notes                                                                 |
+| ----------- | ------------------------------------- | --------------------------------------------------------------------- |
+| `shadow?`   | `RectPrim` / `EllipsePrim` / `PathPrim` | Resolved `ResolvedDropShadow`; renderers materialize it as a platform shadow |
+| `blendMode?` | `RectPrim` / `EllipsePrim` / `PathPrim` | `BlendModeValue`; renderers map it to the target platform's blend mode |
+
+`TextPrim` does not support element-level `shadow` / `blendMode`. `GroupPrim` currently only carries `transforms`, `clipRef`, `children`, and the common `id` / `meta` / `animations`; it has no group-level effect fields. Visual effects do not change a primitive's hit area; interaction should still use `id` / `meta` plus an external hit-test / hydration layer.
+
 ## Text
 
 | Type       | Fields                                                                            | Notes                                                     |

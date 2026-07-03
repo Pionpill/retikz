@@ -12,6 +12,15 @@ alpha.8 是 v0.4 的 alpha 收口版本，不新增运行时能力。它的目�
 - `core-drawing-complete.md` 已把 headless interaction 纳入完备评测，但 interaction 实现不进入 alpha.8。
 - 后续 v0.5 / beta / long-term 候选保持分层：v0.5 可讨论 headless interaction / progressive update 等机制，beta 聚焦 API 与安装验收，长期项不塞进 v0.4。
 
+## 决策列表
+
+| ADR | 状态 | 主题 | 说明 |
+| --- | --- | --- | --- |
+| [ADR-01](./01-drawing-complete-alpha4-closeout.md) | Proposed | Drawing complete × alpha.4 收口审计 | 总审计与分流索引，确认 alpha.4 图元级 effect 无阻塞问题，并把 interaction / group effect / docs reference 分拆到后续 ADR。 |
+| [ADR-02](./02-headless-interaction-boundary.md) | Proposed | Headless interaction manifest 边界登记 | 明确现有 hydration / hit-test 不是缺失；缺口是 core 缺 JSON-safe target / role / intent / hit-area manifest，进入 v0.5 候选。 |
+| [ADR-03](./03-group-scope-effect-boundary.md) | Proposed | Group / Scope 级视觉效果延期边界 | 保持 alpha.4 图元级 shadow / blend 语义，登记 group effect / blend isolation / offscreen composite 为独立后续设计。 |
+| [ADR-04](./04-scene-primitive-reference-closeout.md) | Proposed | ScenePrimitive reference 与发布文案收口 | alpha.8 必须做 docs-only reference / changelog 对账，不回写 alpha.4 历史 ADR。 |
+
 ## 范围
 
 本 milestone 覆盖：
@@ -20,6 +29,7 @@ alpha.8 是 v0.4 的 alpha 收口版本，不新增运行时能力。它的目�
 - kernel v0.4 notes 中 alpha 里程碑状态。
 - docs changelog 与 public roadmap 的 alpha.8 描述。
 - release 前用于核对的轻量验证。
+- alpha.8 ADR 集合：结合 Drawing Complete 与 alpha.4 Scene 视觉效果做收口审计，登记 interaction / group effect / docs reference 的后续分流。
 
 不在本 milestone 范围：
 
@@ -37,6 +47,8 @@ alpha.8 是 v0.4 的 alpha 收口版本，不新增运行时能力。它的目�
 - [x] docs changelog 有 alpha.8 条目，说明无新增 runtime API。
 - [x] public roadmap 指向 `v0.4.0-alpha.8`，并把 v0.5 / beta / long-term 候选分开。
 - [x] `git diff --check` 通过。
+- [x] alpha.8 ADR 集合已完成 subagent review。
+- [x] 已按 ADR-04 补 reference docs / changelog wording。
 
 ## 后续分流建议
 

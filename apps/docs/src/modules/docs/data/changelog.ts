@@ -356,8 +356,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'shadow 两端落地', en: 'shadow on both backends' },
                 content: {
-                  zh: 'SVG 去重注册 `<filter><feDropShadow>`，filter region 取 `userSpaceOnUse` + 整 viewBox（修复细线 / 大 blur 投影被默认 objectBoundingBox 区域裁切）；Canvas `withShadow` set `ctx.shadow*` 并按当前 transform 校准，`opacity` 烘焙进 color alpha。',
-                  en: 'SVG registers a deduped `<filter><feDropShadow>` with its region set to `userSpaceOnUse` + the full viewBox (fixing thin-line / large-blur shadows clipped by the default objectBoundingBox region); Canvas `withShadow` sets `ctx.shadow*` calibrated to the current transform, baking `opacity` into the color alpha.',
+                  zh: 'SVG 去重注册 `<filter><feDropShadow>`，filter region 取 `userSpaceOnUse` + 按 shadow offset / blur 外扩后的 scene viewBox（修复细线 / 大 blur 投影被默认 objectBoundingBox 区域裁切）；Canvas `withShadow` set `ctx.shadow*` 并按当前 transform 校准，`opacity` 烘焙进 color alpha。',
+                  en: 'SVG registers a deduped `<filter><feDropShadow>` with its region set to `userSpaceOnUse` + the scene viewBox expanded by shadow offset / blur (fixing thin-line / large-blur shadows clipped by the default objectBoundingBox region); Canvas `withShadow` sets `ctx.shadow*` calibrated to the current transform, baking `opacity` into the color alpha.',
                 },
               },
               {
