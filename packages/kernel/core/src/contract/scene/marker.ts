@@ -10,16 +10,13 @@ import type { PathCommand } from './path';
 
 /**
  * marker-local 填充取值
- * @description ArrowDefinition.emit 产物的 fill 收窄子集——只允许 `string`（纯色 CSS）或
- *   `{ kind: 'contextStroke' }`（继承所在元素描边，主题反应）；不含 `{ kind: 'resourceRef' }`
- *   （marker 内禁外部 paint server 引用，杜绝跨 `<defs>` 资源耦合）。
+ * @description 只允许纯色或 `contextStroke`，不允许引用外部 paint resource。
  */
 export type MarkerFill = string | { kind: 'contextStroke' };
 
 /**
  * marker-local path 原语：`PathPrim` 去掉 arrowStart / arrowEnd（禁递归箭头），fill 收窄到 `MarkerFill`
- * @description 局部 baseSize 坐标系（viewBox `0 0 baseSize baseSize`）；adapter 把它嵌进 `<marker>`。
- *   不含外部 resourceRef / clip / text。
+ * @description 局部 baseSize 坐标系；不含外部 resourceRef / clip / text。
  */
 export type MarkerPathPrim = {
   /** 类型判别符 */
@@ -160,9 +157,6 @@ export type MarkerGroupPrim = {
 
 /**
  * marker 物化窄子集：ArrowDefinition.emit 的产物类型
- * @description renderer-agnostic：core 只产此结构（局部 baseSize 坐标系），react adapter 把它嵌进
- *   `<marker>`。相对 `ScenePrimitive` 的收窄——禁 `TextPrim`、禁 `arrowStart`/`arrowEnd`、禁外部
- *   `resourceRef`、禁 `clip`；`fill` 限 `MarkerFill`。这条收窄兜住"marker 内递归引用 marker / clip /
- *   文本布局"的复杂度。
+ * @description 相对 `ScenePrimitive` 的收窄子集：禁 text、递归箭头、外部 resourceRef 和 clip。
  */
 export type MarkerPrimitive = MarkerPathPrim | MarkerEllipsePrim | MarkerRectPrim | MarkerGroupPrim;

@@ -6,10 +6,7 @@ import type { AnchorValue, Rect } from '../../shared';
 
 /**
  * 连接面命名 anchor 的名字。
- *
- * 编译器会优先传入标准 anchor 名，例如 `top` / `right` / `bottom` /
- * `left` / `top-left` / `top-right` / `bottom-left` / `bottom-right`。
- * 第三方 boundary 也可以约定额外名字；不支持时返回 `undefined` 即可。
+ * @description 包含标准 anchor 名，也允许 boundary 自定义额外名字。
  */
 export type BoundaryAnchorName = AnchorValue | (string & {});
 

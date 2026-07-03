@@ -104,7 +104,7 @@ export type ClosePathCommand = {
 
 /**
  * Path 命令：结构化路径绘制操作（7 分支 discriminated union）
- * @description discriminated union 按 kind 分发；坐标 / 角度均使用 user units（角度=度，0=+x、90=+y/视觉下、CW=正）。各 adapter 自行翻译为原生 API：SVG 拼 `d` 字符串、Canvas 调 ctx.moveTo/lineTo/arc 等。每个 kind 有对应 named type export，便于 wrapper / `Pick<>` 派生。
+ * @description 坐标 / 角度均使用 user units；角度单位为度，0 指向 +x，正方向为顺时针。
  */
 export type PathCommand =
   | MovePathCommand
@@ -116,31 +116,26 @@ export type PathCommand =
   | ClosePathCommand;
 
 /**
- * 端点级已解析的箭头 marker 描述（Scene primitive 层，renderer-agnostic）
- * @description compile 把 IR `arrowDetail` 顶层 + start/end merge、查 effective arrow 表、调 `def.emit`
- *   产几何，所有视觉输入（scale / length / width / color / fill / lineWidth）在 compile 解析阶段被消费、
- *   **不**出现在本结构里。最终挂在 `PathPrim.arrowStart` / `arrowEnd` 上的是"已解析 marker 描述"：内部几何
- *   `marker`（`MarkerPrimitive[]`，局部 baseSize 坐标系）+ wrapper 参数（`baseSize` / `refX` / `markerWidth` /
- *   `markerHeight` / `opacity`）。adapter 只**物化**——把 `marker` 嵌进 `<marker viewBox refX refY markerWidth
- *   markerHeight>`，不再 switch、不调 emit、不需要 arrows 注册表。纯 JSON 数据（无函数）。
+ * 端点级已解析的箭头 marker 描述。
+ * @description 包含 marker 内部几何与定位尺寸；纯 JSON 数据，无函数或注册表依赖。
  */
 export type ResolvedArrowEndSpec = {
-  /** 形状名：内置 8 或经 `CompileOptions.arrows` 注册的扩展名；标识 / 调试用，已解析后渲染不依赖（保留） */
+  /** 形状名：内置或经 `CompileOptions.arrows` 注册的扩展名，供标识 / 调试使用。 */
   shape: ArrowShapeValue;
-  /** marker viewBox 边长（`def.baseSize ?? 10`）；adapter 据此推 viewBox `0 0 baseSize baseSize` 与 refY = baseSize/2 */
+  /** marker 局部坐标系的基准边长。 */
   baseSize: number;
-  /** 线接触点（marker refX）；hollow 已在 compile 解析阶段减 lineWidth/2（adapter 不再算） */
+  /** 线接触点。 */
   refX: number;
-  /** 已解析尖长 = `(length ?? def.defaultLength) * scale`（adapter 直接当 markerWidth 用） */
+  /** 已解析箭头长度。 */
   markerWidth: number;
-  /** 已解析尖宽 = `(width ?? def.defaultWidth) * scale`（adapter 直接当 markerHeight 用） */
+  /** 已解析箭头宽度。 */
   markerHeight: number;
   /**
    * marker 元素级不透明度 0..1；缺省继承 path opacity
    * @default 继承 `path.opacity`
    */
   opacity?: number;
-  /** `def.emit` 产物：局部 baseSize 坐标系下的内部几何（fill 限 `string | { kind:'contextStroke' }`） */
+  /** 局部 baseSize 坐标系下的内部几何。 */
   marker: Array<MarkerPrimitive>;
 };
 
