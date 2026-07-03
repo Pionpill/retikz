@@ -12,7 +12,7 @@
 
 > 任意数据可视化语义，都应能通过 plot 的 Data -> Transform -> Encoding -> Scale -> Coordinate -> Mark -> Guide -> Layer / Scope -> Lowering 管线表达，并最终下沉到 core IR。
 
-这里的“任意数据可视化”不是指 plot 内置所有图表类型，而是指 plot 有足够稳定的图形语法底座，让新增可视化能力可以通过同一套机制进入：
+这里的“任意数据可视化”不是指 plot 内置所有图表类型，也不是把所有交互运行时塞进 plot。它指 plot 有足够稳定的图形语法与交互契约底座，让新增可视化能力可以通过同一套机制进入：
 
 ```text
 Plot IR / schema
@@ -21,15 +21,18 @@ Plot IR / schema
   -> pipeline
   -> core IR
   -> core compile / render
+  -> interaction metadata / locator
 ```
 
 如果某种可视化只能靠 chart type、adapter props、demo 代码或 renderer 特判实现，而不能落回 Plot IR 与 core IR，它不属于 plot 完备能力。
+
+如果某种交互只能靠 React / DOM / SVG 私有事件树或 renderer 私有状态实现，而不能落回 plot provenance、locator、selection 语义与 core Scene metadata，它也不属于 plot 完备能力。
 
 ---
 
 ## 2. Plot 需要检测的能力面
 
-Plot 可视化完备至少覆盖八类能力面。每类能力都可以独立演进，但必须共享同一条 Plot IR -> core IR 管线。
+Plot 可视化完备至少覆盖九类能力面。每类能力都可以独立演进，但必须共享同一条 Plot IR -> core IR -> interaction metadata 管线。
 
 | 能力面 | 目标 | 不属于 plot 的情况 |
 | --- | --- | --- |
@@ -41,8 +44,11 @@ Plot 可视化完备至少覆盖八类能力面。每类能力都可以独立演
 | Mark | 定义数据在坐标空间中的几何显现。 | chart type preset；只服务单个 demo 的几何拼装。 |
 | Guide | 生成 axis、grid、legend、label 等解释性结构。 | 文档说明文字；上层 UI 控件。 |
 | Layer / Lowering | 组织图层、scope、provenance，并下沉到 core IR。 | 独立 renderer、平行 scene graph、adapter 私有树。 |
+| Interaction | 定义 tooltip、hover、selection、brush、linked highlighting 等交互语义所需的 datum identity、locator、命中索引、状态映射和诊断边界。 | React / DOM / SVG 私有事件绑定；renderer 私有 hit-test；大数据 dashboard 的高频过滤 dataflow。 |
 
 这些能力面是检测维度，不是必须一一对应目录。具体实现仍按 `schemas / contract / providers / features / pipeline` 分层。
+
+Interaction 是横切能力：plot 负责让下沉产物可追踪、可定位、可从 datum / series / scope 映射到图形元素和交互状态；React / Vanilla adapter 负责把浏览器事件、水合实例或框架状态接到这套契约上。adapter 可以暴露 `onHover` / `onClick` / tooltip 等体验入口，但不能私造与 Plot IR、locator 或 provenance 脱节的交互模型。
 
 ---
 
@@ -59,6 +65,8 @@ Plot 可视化完备至少覆盖八类能力面。每类能力都可以独立演
 - 能通过 lowering 下沉为 core IR。
 - 不依赖 React、DOM、Canvas 实例、SVG DOM 或具体 renderer。
 - 不要求 plot 自造 core 已有的 geometry、target、shape、style 或 renderer 语义。
+
+Interaction 能力有一个例外：事件监听、水合实例和 DOM 命中本身属于 adapter / renderer runtime，但交互语义的静态契约属于 plot。判断时看它是否能用 plot 的数据身份、locator、provenance、selection 状态映射表达，而不是看某个 adapter 能否临时绑事件。
 
 不满足这些条件时，优先放到 chart、table、geo、domain 包、adapter 层，或下沉补 core / math。
 
@@ -84,6 +92,7 @@ contract 可扩展
 provider / feature 可实现
 pipeline 可消费
 core IR 可承载
+interaction 可追踪 / 可定位
 adapter 可等价暴露
 tests 可锁定
 docs / notes 可解释
@@ -107,6 +116,7 @@ docs / notes 可解释
 - 是否需要新 contract / definition：
 - 是否需要新 provider / registry：
 - 是否需要改 pipeline / lowering：
+- 是否需要 interaction provenance / locator / state mapping：
 - React / Vanilla adapter 如何等价暴露：
 - 不支持边界与诊断：
 - 本轮不做的能力及原因：
@@ -116,6 +126,7 @@ docs / notes 可解释
 
 1. **能力放错层**：chart / adapter / demo 能力被塞进 plot，或 plot 通用能力被上层私造。
 2. **闭环缺失**：只加 schema、只加内置实现、只能手写 IR、或 React / Vanilla 表面不等价。
+3. **交互脱轨**：tooltip / hover / selection 只在某个 renderer 或 adapter 私有实现里成立，无法通过 plot locator、provenance 或 selection state 反查 datum / series / scope。
 
 ---
 
