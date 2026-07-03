@@ -29,18 +29,16 @@ import { useTocStore } from '@/modules/docs/store/use-toc-store';
 import { useLayoutStore } from '@/store/use-layout-store';
 
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './use-doc-actions';
-import { useHeaderCompact } from './use-header-compact';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 
 /**
  * 顶栏右侧动作组
- * @description 完整模式（header 实宽 ≥ `@4xl/header:` = 896px）GitHub / 复制链接 / 主题 / 语言 / 更多 平铺；紧凑模式（< 896px）只保留 More 按钮，前四项折进 Dropdown 顶部分组。紧凑模式判断走 `useHeaderCompact()` 读 Context（DropdownMenuContent 是 Radix Portal 出去的，容器查询过不去）。AI 触发器由 AppHeader 直接放在中间，不再属于这里
+ * @description 桌面视口（≥ 896px）GitHub / 复制链接 / 主题 / 语言 / 更多 平铺；窄视口（< 896px）只保留 More 按钮，前四项折进 Dropdown 顶部分组。AI 触发器由 AppHeader 直接放在中间，不再属于这里
  */
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();
-  const compact = useHeaderCompact();
   const { theme, handleToggleTheme, handleCycleLang, handleCopyLink } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
@@ -114,34 +112,30 @@ export const HeaderActions: FC = () => {
               </TooltipTrigger>
               <TooltipContent>{t('common.more')}</TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end" className={compact ? 'w-56' : 'w-72'}>
-              {/* 紧凑模式独占：完整模式平铺的主题 / 语言 / 复制链接 / GitHub 在紧凑模式收纳到这 */}
-              {compact && (
-                <>
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={handleToggleTheme} className="cursor-pointer">
-                      <ThemeIcon className="size-4" />
-                      {themeLabel}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleCycleLang} className="cursor-pointer">
-                      <Languages className="size-4" />
-                      {t('common.switchLanguage')}
-                      <DropdownMenuShortcut>{i18n.resolvedLanguage?.toUpperCase()}</DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer">
-                      <LinkIcon className="size-4" />
-                      {t('toc.copyLink')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer">
-                      <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-                        <GitHubIcon className="size-4" />
-                        {t('common.github')}
-                      </a>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                </>
-              )}
+            <DropdownMenuContent align="end" className="w-56 min-[896px]:w-72">
+              {/* 窄视口独占：桌面平铺的主题 / 语言 / 复制链接 / GitHub 收纳到这 */}
+              <DropdownMenuGroup className="min-[896px]:hidden">
+                <DropdownMenuItem onClick={handleToggleTheme} className="cursor-pointer">
+                  <ThemeIcon className="size-4" />
+                  {themeLabel}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCycleLang} className="cursor-pointer">
+                  <Languages className="size-4" />
+                  {t('common.switchLanguage')}
+                  <DropdownMenuShortcut>{i18n.resolvedLanguage?.toUpperCase()}</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer">
+                  <LinkIcon className="size-4" />
+                  {t('toc.copyLink')}
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                    <GitHubIcon className="size-4" />
+                    {t('common.github')}
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator className="min-[896px]:hidden" />
               <DropdownMenuLabel inset className="text-xs font-normal text-muted-foreground">
                 {t('view.groupLabel')}
               </DropdownMenuLabel>
@@ -149,20 +143,16 @@ export const HeaderActions: FC = () => {
                 {hasToc && (
                   <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
                     {t('toc.outline')}
-                    {!compact && (
-                      <DropdownMenuShortcut>
-                        <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />
-                      </DropdownMenuShortcut>
-                    )}
+                    <DropdownMenuShortcut className="max-[895px]:hidden">
+                      <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />
+                    </DropdownMenuShortcut>
                   </DropdownMenuCheckboxItem>
                 )}
                 <DropdownMenuCheckboxItem checked={layout === 'centered'} onCheckedChange={toggleLayout}>
                   {t('common.layoutCentered')}
-                  {!compact && (
-                    <DropdownMenuShortcut>
-                      <Shortcut keys={['mod', 'alt', 'M']} className="tracking-normal" />
-                    </DropdownMenuShortcut>
-                  )}
+                  <DropdownMenuShortcut className="max-[895px]:hidden">
+                    <Shortcut keys={['mod', 'alt', 'M']} className="tracking-normal" />
+                  </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
@@ -179,19 +169,15 @@ export const HeaderActions: FC = () => {
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewHideCode} onCheckedChange={togglePreviewHideCode}>
                   {t('preview.hideAllCode')}
-                  {!compact && (
-                    <DropdownMenuShortcut>
-                      <Shortcut keys={['mod', 'alt', 'H']} className="tracking-normal" />
-                    </DropdownMenuShortcut>
-                  )}
+                  <DropdownMenuShortcut className="max-[895px]:hidden">
+                    <Shortcut keys={['mod', 'alt', 'H']} className="tracking-normal" />
+                  </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewIsExpand} onCheckedChange={togglePreviewIsExpand}>
                   {t('preview.expandAllCode')}
-                  {!compact && (
-                    <DropdownMenuShortcut>
-                      <Shortcut keys={['mod', 'alt', 'E']} className="tracking-normal" />
-                    </DropdownMenuShortcut>
-                  )}
+                  <DropdownMenuShortcut className="max-[895px]:hidden">
+                    <Shortcut keys={['mod', 'alt', 'E']} className="tracking-normal" />
+                  </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewDragEnabled} onCheckedChange={togglePreviewDragEnabled}>
                   {t('preview.dragComponent')}
