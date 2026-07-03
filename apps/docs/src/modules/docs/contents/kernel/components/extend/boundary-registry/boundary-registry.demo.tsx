@@ -1,9 +1,11 @@
-import type { BoundaryDefinition, Position } from '@retikz/core';
+import type { BoundaryDefinition, IRPosition } from '@retikz/core';
 import type { FC } from 'react';
 
 import { defineBoundary } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
+
+type Position = IRPosition;
 
 const horizontalPorts: BoundaryDefinition = defineBoundary({
   name: 'horizontal-ports',

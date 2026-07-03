@@ -4,12 +4,12 @@ import { Draw, Layout, Node, Rectangle } from '@retikz/react';
 
 const CONTENT_WIDTH = 86;
 const CONTENT_HEIGHT = 34;
-const INNER_SEP = 24;
-const OUTER_SEP = 20;
-const INNER_WIDTH = CONTENT_WIDTH + INNER_SEP * 2;
-const INNER_HEIGHT = CONTENT_HEIGHT + INNER_SEP * 2;
-const OUTER_WIDTH = INNER_WIDTH + OUTER_SEP * 2;
-const OUTER_HEIGHT = INNER_HEIGHT + OUTER_SEP * 2;
+const PADDING = 24;
+const MARGIN = 20;
+const INNER_WIDTH = CONTENT_WIDTH + PADDING * 2;
+const INNER_HEIGHT = CONTENT_HEIGHT + PADDING * 2;
+const OUTER_WIDTH = INNER_WIDTH + MARGIN * 2;
+const OUTER_HEIGHT = INNER_HEIGHT + MARGIN * 2;
 const FONT = { size: 10 }; // 与「模型解剖」图字号视觉一致（viewBox 更小，故缩小字号）
 
 const Demo: FC = () => (
@@ -19,7 +19,7 @@ const Demo: FC = () => (
     viewBox={{ x: -185, y: -105, width: 370, height: 210 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    {/* 外框：内框 + outerSep（margin），自动连线端点的边界 */}
+    {/* 外框：内框 + margin，自动连线端点的边界 */}
     <Rectangle
       center={[0, 0]}
       width={OUTER_WIDTH}
@@ -28,7 +28,7 @@ const Demo: FC = () => (
       stroke="gray"
       dashPattern={[4, 3]}
     />
-    {/* 内框：内容盒 + innerSep，矩形节点的 shape */}
+    {/* 内框：内容盒 + padding，矩形节点的 shape */}
     <Rectangle
       center={[0, 0]}
       width={INNER_WIDTH}
@@ -62,17 +62,17 @@ const Demo: FC = () => (
     </Node>
     <Draw way={['content-label', [-CONTENT_WIDTH / 2, 0]]} stroke="currentColor" arrow="->" />
 
-    {/* innerSep（= padding）：右侧标签指向内边距间隙，currentColor */}
+    {/* padding：右侧标签指向内边距间隙，currentColor */}
     <Node id="inner-sep-label" position={[150, -20]} stroke="none" font={FONT}>
-      {'innerSep\n= padding'}
+      padding
     </Node>
-    <Draw way={['inner-sep-label', [CONTENT_WIDTH / 2 + INNER_SEP / 2, -20]]} stroke="currentColor" arrow="->" />
+    <Draw way={['inner-sep-label', [CONTENT_WIDTH / 2 + PADDING / 2, -20]]} stroke="currentColor" arrow="->" />
 
-    {/* outerSep（= margin）：右侧标签指向外边距间隙，gray */}
+    {/* margin：右侧标签指向外边距间隙，gray */}
     <Node id="outer-sep-label" position={[150, 20]} stroke="none" textColor="gray" font={FONT}>
-      {'outerSep\n= margin'}
+      margin
     </Node>
-    <Draw way={['outer-sep-label', [INNER_WIDTH / 2 + OUTER_SEP / 2, 20]]} stroke="gray" arrow="->" />
+    <Draw way={['outer-sep-label', [INNER_WIDTH / 2 + MARGIN / 2, 20]]} stroke="gray" arrow="->" />
   </Layout>
 );
 

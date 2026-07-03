@@ -18,6 +18,26 @@ import type { CompileWarningCodeValue } from '../constant';
 import type { LowerTex } from '../lower-tex';
 import type { LaidLine } from '../text-layout';
 
+/** 节点盒模型四边距。 */
+export type BoxInsets = {
+  /** 上边距。 */
+  top: number;
+  /** 右边距。 */
+  right: number;
+  /** 下边距。 */
+  bottom: number;
+  /** 左边距。 */
+  left: number;
+};
+
+/** 构造四边同值的盒模型边距。 */
+export const boxInsets = (value: number): BoxInsets => ({
+  top: value,
+  right: value,
+  bottom: value,
+  left: value,
+});
+
 export type NodeLayout = {
   /** 节点 id（其他位置可引用） */
   id?: string;
@@ -37,10 +57,12 @@ export type NodeLayout = {
    * @description rectangle: rect 本身；circle: width=height=2×radius；ellipse: 2×rx,2×ry；diamond: 2×halfA,2×halfB。x,y 是几何中心，rotate 弧度
    */
   rect: Rect;
+  /** 文本内容块中心；非对称 padding 时与视觉 rect 中心不同。 */
+  contentCenter: [number, number];
   /** IR 原始旋转角（度数），供 emit 阶段写入 GroupPrim 的 rotate transform */
   rotateDeg: number;
-  /** 外边距（≥ 0），path 附着到外扩 margin 的虚拟边界 */
-  margin: number;
+  /** 外边距（四边 ≥ 0），path 附着到外扩 margin 的虚拟边界 */
+  margin: BoxInsets;
   /**
    * 节点文本行（undefined 表示无文本，否则非空数组）
    * @description 每行可带覆盖样式（fill/opacity/fontSize/fontFamily/fontWeight/fontStyle），未覆盖字段 emit 阶段不写出由下游走块级默认

@@ -30,6 +30,21 @@ export const NodeLabelBoundaryPositionSchema = z
   .strict()
   .describe('Label position on a box-like node boundary.');
 
+export const BoxSpacingSchema = z
+  .object({
+    default: z.number().nonnegative().optional().describe('Fallback spacing for all sides.'),
+    x: z.number().nonnegative().optional().describe('Horizontal spacing for left and right sides.'),
+    y: z.number().nonnegative().optional().describe('Vertical spacing for top and bottom sides.'),
+    left: z.number().nonnegative().optional().describe('Left-side spacing.'),
+    right: z.number().nonnegative().optional().describe('Right-side spacing.'),
+    top: z.number().nonnegative().optional().describe('Top-side spacing.'),
+    bottom: z.number().nonnegative().optional().describe('Bottom-side spacing.'),
+  })
+  .strict()
+  .describe('CSS-like box spacing overrides. Side fields override axis fields, then default.');
+
+const BoxSpacingValueSchema = z.union([z.number().nonnegative(), BoxSpacingSchema]);
+
 export const NodeLabelPinSchema = z
   .object({
     stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
@@ -187,33 +202,12 @@ export const NodeSchema = z
     xScale: z.number().positive().optional().describe('Horizontal scale factor; overrides `scale` for the X axis.'),
     yScale: z.number().positive().optional().describe('Vertical scale factor; overrides `scale` for the Y axis.'),
     textColor: CssColorSchema.optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
-    innerXSep: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Inner horizontal padding from text to border in user units. Falls back to `padding` then default.'),
-    innerYSep: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Inner vertical padding from text to border in user units. Falls back to `padding` then default.'),
-    outerSep: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Uniform outer offset around the node connection boundary, in user units. Affects endpoints and anchors, contributes to layout, and falls back to `margin`.',
-      ),
-    padding: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Symmetric inner padding (alias for `innerXSep` + `innerYSep`); axis-specific fields take precedence.'),
-    margin: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Symmetric outer offset alias for `outerSep`; `outerSep` takes precedence.'),
+    padding: BoxSpacingValueSchema.optional().describe(
+      'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',
+    ),
+    margin: BoxSpacingValueSchema.optional().describe(
+      'Outer offset around the connection boundary. Number applies to all sides; object fields resolve as side > axis > default.',
+    ),
     font: FontSchema.optional().describe('Font spec for the inner text label. Missing fields use text defaults.'),
     label: z
       .union([NodeLabelSchema, z.array(NodeLabelSchema)])

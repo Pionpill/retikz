@@ -102,7 +102,7 @@ circumscribeOffset: (params) => {
 boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
 ```
 
-Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It returns the point where the ray from the center toward `toward` hits the shape boundary, deciding where the line stops on the edge. Here `rect` **includes `rotate`**: use `worldToLocal` to enter local coordinates for the geometry, then `localToWorld` to return world coordinates. When the node sets `outerSep` (margin), the `rect` passed in is already expanded by the engine — just compute geometry on the given `rect`; you never handle outer sep yourself.
+Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It returns the point where the ray from the center toward `toward` hits the shape boundary, deciding where the line stops on the edge. Here `rect` **includes `rotate`**: use `worldToLocal` to enter local coordinates for the geometry, then `localToWorld` to return world coordinates. When the node sets `margin`, the `rect` passed in is already expanded by the engine — just compute geometry on the given `rect`; you never handle margin yourself.
 
 ```ts
 // polygon: intersect the ray with the edges in local space, then map back to world
@@ -120,7 +120,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-Called when users write `A.top` or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Standard direction names use Web/CSS canonical values (`top` / `right` / `bottom` / `left` plus corners); compass names such as `north` / `east` are accepted as aliases and normalized before provider hooks run. Ordinary `A.center` is handled by the compiler as the node center; only shapes whose semantic center differs from the AABB center, such as sector / arc, need to declare their own `center`. Standard direction names are resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
+Called when users write `A.top` or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Standard direction names use Web/CSS canonical values (`top` / `right` / `bottom` / `left` plus corners); compass names such as `north` / `east` are accepted as aliases and normalized before provider hooks run. Ordinary `A.center` is handled by the compiler as the node center; only shapes whose semantic center differs from the AABB center, such as sector / arc, need to declare their own `center`. Standard direction names are resolved on the engine-expanded `rect` (including `margin`); shape-specific anchors always use the visual `rect`, without margin.
 
 ```ts
 // sector: exposes semantic anchors like apex / centroid / arc midpoints

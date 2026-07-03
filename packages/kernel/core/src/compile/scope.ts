@@ -22,6 +22,7 @@ import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
 import { Anchor } from '../shared';
 import { DEG_TO_RAD, RAD_TO_DEG, rect as rectOps } from '../shared/geometry';
+import { boxInsets } from './node';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
@@ -212,12 +213,16 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
     width: layout.rect.width * Math.abs(scaleX),
     height: layout.rect.height * Math.abs(scaleY),
   };
-  const marginScale = Math.max(Math.abs(scaleX), Math.abs(scaleY));
   return {
     ...layout,
     rect: globalRect,
     rotateDeg: layout.rotateDeg + rotateAccumRad * RAD_TO_DEG,
-    margin: layout.margin * marginScale,
+    margin: {
+      top: layout.margin.top * Math.abs(scaleY),
+      right: layout.margin.right * Math.abs(scaleX),
+      bottom: layout.margin.bottom * Math.abs(scaleY),
+      left: layout.margin.left * Math.abs(scaleX),
+    },
   };
 };
 
@@ -290,8 +295,9 @@ export const registerScopeAsLayout = (
     shapeName: 'rectangle',
     shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
     rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
+    contentCenter: [box.x, box.y],
     rotateDeg: 0,
-    margin: 0,
+    margin: boxInsets(0),
     textWidth: box.width,
     textHeight: box.height,
     align: 'middle',
@@ -323,8 +329,9 @@ export const registerScopeCircleLayout = (
     shapeDef: providerDefinitionOf(shapes, 'ellipse', { capability: 'shape', optionName: 'shapes' }),
     shapeParams: { circumscribe: 'equal' },
     rect: { x: center[0], y: center[1], width: diameter, height: diameter, rotate: 0 },
+    contentCenter: [center[0], center[1]],
     rotateDeg: 0,
-    margin: 0,
+    margin: boxInsets(0),
     textWidth: diameter,
     textHeight: diameter,
     align: 'middle',

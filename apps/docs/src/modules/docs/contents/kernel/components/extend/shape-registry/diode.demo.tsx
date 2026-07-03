@@ -1,9 +1,11 @@
-import type { PathCommand, Position, ShapeDefinition } from '@retikz/core';
+import type { IRPosition, PathCommand, ShapeDefinition } from '@retikz/core';
 import type { FC } from 'react';
 
 import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
+
+type Position = IRPosition;
 
 const diode: ShapeDefinition = defineShape({
   name: 'diode',

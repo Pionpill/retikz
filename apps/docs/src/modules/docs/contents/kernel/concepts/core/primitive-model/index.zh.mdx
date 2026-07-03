@@ -5,7 +5,7 @@ description: '像理解 DOM 盒模型一样理解 retikz Node：内容、padding
 
 图元（primitive）是 retikz 里可被绘制和引用的最小单位。**图元模型**描述一个图元在几何上如何被搭起来——从内容、内框、shape，到外接框、boundary 与 anchor——使它能被测量、布局、连接和引用。它是一层抽象概念，不绑定某个具体组件。
 
-Node 是这套图元模型最常用的具体实现。你可以把它想成一个“会被连线识别的盒模型”：`position` 给出节点的语义参考点，文本测量、`innerXSep` / `innerYSep` 和最小尺寸先形成内框，shape 再把内框包成视觉外接框，boundary 和 anchor 决定路径从哪里接上来。
+Node 是这套图元模型最常用的具体实现。你可以把它想成一个“会被连线识别的盒模型”：`position` 给出节点的语义参考点，文本测量、`padding` 和最小尺寸先形成内框，shape 再把内框包成视觉外接框，boundary 和 anchor 决定路径从哪里接上来。
 
 ## 模型解剖
 
@@ -22,7 +22,7 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 | 层                       | 由什么决定                                            | 影响什么                                               |
 | ------------------------ | ----------------------------------------------------- | ------------------------------------------------------ |
 | 内容盒<br />content box  | `text` / children / font                              | 文本测量的基础尺寸                                     |
-| 内框<br />inner frame    | 文本测量 + `innerXSep` / `innerYSep` + 最小尺寸       | 传给 shape 的基础半轴                                  |
+| 内框<br />inner frame    | 文本测量 + `padding` + 最小尺寸                       | 传给 shape 的基础半轴                                  |
 | 形状<br />shape          | `shape.circumscribe` 与 `shape.emit`                  | 节点真正画出来的轮廓                                   |
 | 外接框<br />bounding box | shape 对内框的包围结果（视觉包围矩形，不含 `margin`） | 渲染裁剪的基础；+`margin` 后即布局占位 / viewBox       |
 | 连接面<br />boundary     | `boundary`，默认跟随 shape                            | border 锚点（自动连线 / 命名方位 / 角度）贴的连接面形状 |
@@ -32,28 +32,28 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 
 <ComponentPreview name="node-model-pipeline" size="xs" hideCode />
 
-外接框只包住 shape 的渲染结果，不含 `margin`。`margin`（`outerSep`）是连接面外的一层均匀偏移：它把**所有 border 锚点**（自动连线端点、显式 `.top` / `.30`）整体外推 `margin`，节点在 viewBox / 布局里也按外推后的范围占位——视觉 shape 本身不变（对齐 TikZ `outer sep`）。
+外接框只包住 shape 的渲染结果，不含 `margin`。`margin` 是连接面外的一层偏移：它把**所有 border 锚点**（自动连线端点、显式 `.top` / `.30`）外推，节点在 viewBox / 布局里也按外推后的范围占位——视觉 shape 本身不变。
 
 ## 盒模型
 
 一个 Node 像 CSS 盒模型一样，由三层从内到外嵌套的框组成。
 
 - **内容盒**：由 `text` / children 和 `font` 决定，是文本测量出的基础尺寸。
-- **内框**：在内容盒外加上 `innerXSep` / `innerYSep`（对称别名 `padding`），再与 `minimumWidth` / `minimumHeight`（或 `minimumSize`）取较大者，得到传给 shape 的基础半轴——对矩形节点来说，它就是画出来的 shape。
-- **外框**：在内框外再加 `outerSep`（对称别名 `margin`）。它不改变视觉 shape，而是把节点的连接 / 引用边界整体外推 `margin`——所有 border 锚点（自动连线端点和显式 `.top` 这类）都落在这一圈上，节点的布局占位 / viewBox 也按这一圈算（对齐 TikZ `outer sep`）。
+- **内框**：在内容盒外加上 `padding`，再与 `minimumWidth` / `minimumHeight`（或 `minimumSize`）取较大者，得到传给 shape 的基础半轴——对矩形节点来说，它就是画出来的 shape。
+- **外框**：在内框外再加 `margin`。它不改变视觉 shape，而是把节点的连接 / 引用边界外推——所有 border 锚点（自动连线端点和显式 `.top` 这类）都落在这一圈上，节点的布局占位 / viewBox 也按这一圈算。
 
 <ComponentPreview name="node-frames" size="md" hideCode />
 
-最内灰块是内容盒，中间虚线是内框（矩形节点的 shape），最外虚线是外框（border 锚点与连线端点停靠的外边界）。两道间距分别是 `innerSep`（即 `padding`，撑在内容盒与 shape 之间、把 shape 顶大）和 `outerSep`（即 `margin`，留在 shape 与外边界之间——shape 不变，但锚点 / 连线端点整体外移、布局占位也含它）。
+最内灰块是内容盒，中间虚线是内框（矩形节点的 shape），最外虚线是外框（border 锚点与连线端点停靠的外边界）。两道间距分别是 `padding`（撑在内容盒与 shape 之间、把 shape 顶大）和 `margin`（留在 shape 与外边界之间——shape 不变，但锚点 / 连线端点整体外移、布局占位也含它）。
 
-内框决定“这个节点至少要多大”，是后续所有几何的起点：shape 拿它算外接框，连线与 anchor 最终都落在由它派生的边界上。空文本节点也有内框——inner sep 与最小尺寸保证它不会塌成一个点。
+内框决定“这个节点至少要多大”，是后续所有几何的起点：shape 拿它算外接框，连线与 anchor 最终都落在由它派生的边界上。空文本节点也有内框——padding 与最小尺寸保证它不会塌成一个点。
 
 | 属性                  | 改的是                                 | 结果                                                          |
 | --------------------- | -------------------------------------- | ------------------------------------------------------------- |
-| `padding`（innerSep） | 内容盒到 shape 的距离                  | shape 变大，外接框也变大                                      |
-| `margin`（outerSep）  | 连接面外的均匀外偏移（TikZ outer sep） | shape 不变；所有 border 锚点与连线端点外移、布局占位含 margin |
+| `padding` | 内容盒到 shape 的距离 | shape 变大，外接框也变大                                      |
+| `margin`  | 连接面外的外偏移     | shape 不变；所有 border 锚点与连线端点外移、布局占位含 margin |
 
-padding 撑大 shape 本身；margin 不动 shape，而是把节点的外边界（锚点 / 连线 / 占位）整体外推——和 TikZ `outer sep` 一致。缺省 0，不设则零影响。
+padding 撑大 shape 本身；margin 不动 shape，而是把节点的外边界（锚点 / 连线 / 占位）外推。缺省 0，不设则零影响。
 
 ## 形状 Shape
 
@@ -94,11 +94,11 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 因此，外接框是“渲染 / 视觉包围矩形”（再加 `margin` 即布局占位），连接面更接近“连接用的 hit surface”——都不是“画出来的外壳”。
 
-`outerSep`（`margin`）与连接面正交，二者一起定出外边界：**连接面定它的形状**（贴 shape，或借 circle / rectangle），**`outerSep` 定连接面离节点内部多远**。换句话说，`margin` 就是「连接面 ↔ 内部 shape」之间那段间距的旋钮——调大它，连接面连同所有 border 锚点、自动连线端点会一起均匀离开 shape，相当于给整个节点套一圈连接留白；缺省 0 时连接面紧贴 shape。这段间距在[盒模型](#盒模型)的外框图里就是 `outerSep` 那一圈。
+`margin` 与连接面正交，二者一起定出外边界：**连接面定它的形状**（贴 shape，或借 circle / rectangle），**`margin` 定连接面离节点内部多远**。换句话说，`margin` 就是「连接面 ↔ 内部 shape」之间那段间距的旋钮——调大它，连接面连同所有 border 锚点、自动连线端点会一起离开 shape，相当于给整个节点套一圈连接留白；缺省 0 时连接面紧贴 shape。这段间距在[盒模型](#盒模型)的外框图里就是 `margin` 那一圈。
 
 <ComponentPreview name="margin-boundary-gap" size="md" hideCode />
 
-每列从内到外三层：最内灰块是文本区（内容盒），currentColor 实线是 shape（内框，矩形节点画出来的就是它），虚线是连接面（boundary），灰点是落在连接面上的命名方位锚点。左、中是默认 `boundary="shape"`：`margin` 越大，连接面连同锚点离 shape 越远，shape 和文本区都不变。右是 `boundary="circle"`：`margin` 同样把连接面从 shape 推开（圆半径 = 较长半轴 + `margin`），但外边界的**形状**由 `boundary` 决定。中、右 `margin` 相同、boundary 不同——正好印证「`outerSep` 定多远、连接面定形状」。
+每列从内到外三层：最内灰块是文本区（内容盒），currentColor 实线是 shape（内框，矩形节点画出来的就是它），虚线是连接面（boundary），灰点是落在连接面上的命名方位锚点。左、中是默认 `boundary="shape"`：`margin` 越大，连接面连同锚点离 shape 越远，shape 和文本区都不变。右是 `boundary="circle"`：`margin` 同样把连接面从 shape 推开（圆半径 = 较长半轴 + `margin`），但外边界的**形状**由 `boundary` 决定。中、右 `margin` 相同、boundary 不同——正好印证「`margin` 定多远、连接面定形状」。
 
 ## 锚点 Anchor
 
@@ -143,7 +143,7 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
 
 边上比例点 `{ side, fraction }` 取 shape **真实边界**某条边上从约定起点起 `fraction ∈ [0, 1]` 比例处——方向 top/bottom 左→右、right/left 上→下：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'left', fraction: 1/3 }` = 左边三等分点，`{ side: 'top', fraction: 0.5 }` = 上边中点（等于命名 `'top'`）。
 
-解析时，命名方位点和数字角度点是 **border 锚点**：先经选定 boundary 的连接面、再按 `outerSep` 外推——`boundary="shape"` 时落在外接框（含 `outerSep`）的矩形方位上，数字角度点则沿射线打到外扩后的 boundary 上。`center`、shape 专属点和边上比例点始终走视觉 shape，既不受 `boundary` 改写、也不吃 `outerSep`。
+解析时，命名方位点和数字角度点是 **border 锚点**：先经选定 boundary 的连接面、再按 `margin` 外推——`boundary="shape"` 时落在外接框（含 `margin`）的矩形方位上，数字角度点则沿射线打到外扩后的 boundary 上。`center`、shape 专属点和边上比例点始终走视觉 shape，既不受 `boundary` 改写、也不吃 `margin`。
 
 这些点怎么被另一个图元引用、连接端点如何在 auto / 锁定两种模式间解析，见 [图元关系](/kernel/concepts/kernel/primitive-relations)。
 

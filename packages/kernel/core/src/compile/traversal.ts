@@ -18,7 +18,7 @@ import { filterAnimations } from './animation';
 import { CompileWarningCode } from './constant';
 import { resolveShadow } from './effects';
 import { NameStack } from './name-stack';
-import { emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
+import { boxInsets, emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
 import { emitPathPrimitive, refPointOfTarget } from './path';
 import { emitRibbonPrimitive } from './path/ribbon';
 import { resolvePosition } from './position';
@@ -47,8 +47,9 @@ const zeroSizeRectAt = (
   shapeName: 'rectangle',
   shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
   rect: { x: cx, y: cy, width: 0, height: 0, rotate: 0 },
+  contentCenter: [cx, cy],
   rotateDeg: 0,
-  margin: 0,
+  margin: boxInsets(0),
   textWidth: 0,
   textHeight: 0,
   align: 'middle',
@@ -392,7 +393,7 @@ export const compileChildrenToPrimitives = (
           if (child.zIndex !== undefined) zIndexOf.set(prim, child.zIndex);
         }
         // bbox 用全局坐标系下的 4 角点累积——scope 内 node 也参与顶层 layout 计算；
-        // node 含 outerSep（margin）时按外边界（rect + margin）入 bbox，与 viewBox 占位口径一致
+        // node 含 margin 时按外边界（rect + margin）入 bbox，与 viewBox 占位口径一致
         const outerRect = outerRectOf(globalLayout);
         const nodePoints: Array<IRPosition> = [
           rectOps.anchor(outerRect, Anchor.TopLeft),

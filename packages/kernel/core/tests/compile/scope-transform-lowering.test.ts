@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import type { NodeLayout } from '../../src/compile/node';
 import type { IRTransform } from '../../src/schemas';
 
 import { NameStack } from '../../src/compile/name-stack';
-import { type NodeLayout } from '../../src/compile/node';
+import { boxInsets } from '../../src/compile/node';
 import { lowerScopeTransforms, projectLayoutToGlobal } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
@@ -16,8 +17,9 @@ const makeStack = (entries: Array<[string, [number, number]]>): NameStack => {
       shapeName: 'rectangle',
       shapeDef: BUILTIN_SHAPES.rectangle,
       rect: { x, y, width: 0, height: 0, rotate: 0 },
+      contentCenter: [x, y],
       rotateDeg: 0,
-      margin: 0,
+      margin: boxInsets(0),
       textWidth: 0,
       textHeight: 0,
       align: 'middle',
@@ -35,8 +37,9 @@ const layoutForProjection = (): NodeLayout => ({
   shapeName: 'rectangle',
   shapeDef: BUILTIN_SHAPES.rectangle,
   rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
+  contentCenter: [10, 20],
   rotateDeg: 0,
-  margin: 2,
+  margin: boxInsets(2),
   textWidth: 30,
   textHeight: 40,
   align: 'middle',
@@ -207,7 +210,7 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
     expect(layout.rect.y).toBeCloseTo(60, 6);
     expect(layout.rect.width).toBe(60);
     expect(layout.rect.height).toBe(120);
-    expect(layout.margin).toBe(6);
+    expect(layout.margin).toEqual({ top: 6, right: 4, bottom: 6, left: 4 });
   });
 
   it('projectLayoutToGlobal 应同步 rect.rotate 与 rotateDeg', () => {

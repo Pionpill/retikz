@@ -1,9 +1,11 @@
-import type { PathCommand, Position } from '@retikz/core';
+import type { IRPosition, PathCommand } from '@retikz/core';
 import type { FC } from 'react';
 
 import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
+
+type Position = IRPosition;
 
 /**
  * 带参正多边形 ngon：参数走 nested params（不是 factory 闭包）

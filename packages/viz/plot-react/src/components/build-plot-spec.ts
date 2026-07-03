@@ -13,6 +13,7 @@ import type {
   MarkNodeLabel,
   MarkNodeLabelList,
   MarkValueType,
+  NodeBoxSpacingStyle,
   PlotSpec,
   PointColorStyle,
   PointFillStyle,
@@ -443,6 +444,21 @@ const jsonStyleOf = <T>(
   return { kind: 'constant', value };
 };
 
+const boxSpacingStyleOf = (
+  value: CoreNodeChannelProps['padding'],
+  prop: string,
+  context: StyleSugarContext,
+): NodeBoxSpacingStyle | undefined => {
+  if (value === undefined) return undefined;
+  if (isMarkValue(value)) return value;
+  if (typeof value === 'string') {
+    if (context.fieldNames.has(value)) return { kind: 'field', value };
+    warnSkippedStyle(prop, value);
+    return undefined;
+  }
+  return { kind: 'constant', value };
+};
+
 const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContext): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
   const put = (name: string, value: unknown): void => {
@@ -455,10 +471,8 @@ const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContex
   put('scale', numberStyleOf(props.scale, 'scale', context));
   put('xScale', numberStyleOf(props.xScale, 'xScale', context));
   put('yScale', numberStyleOf(props.yScale, 'yScale', context));
-  put('innerXSep', numberStyleOf(props.innerXSep, 'innerXSep', context));
-  put('innerYSep', numberStyleOf(props.innerYSep, 'innerYSep', context));
-  put('outerSep', numberStyleOf(props.outerSep, 'outerSep', context));
-  put('margin', numberStyleOf(props.margin, 'margin', context));
+  put('padding', boxSpacingStyleOf(props.padding, 'padding', context));
+  put('margin', boxSpacingStyleOf(props.margin, 'margin', context));
   put('dashed', booleanStyleOf(props.dashed, 'dashed', context));
   put('dotted', booleanStyleOf(props.dotted, 'dotted', context));
   put('dashPattern', jsonStyleOf(props.dashPattern, 'dashPattern', context));
@@ -759,10 +773,8 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     cornerRadius: props.cornerRadius,
     xScale: props.xScale,
     yScale: props.yScale,
-    innerXSep: props.innerXSep,
-    innerYSep: props.innerYSep,
-    outerSep: props.outerSep,
     margin: props.margin,
+    padding: props.padding,
     dashed: props.dashed,
     dotted: props.dotted,
     font: props.font,
@@ -1050,7 +1062,7 @@ const collectInto = (
       const drawOpacityStyle = numberStyleOf<PointOpacityStyle>(drawOpacity, 'drawOpacity', styleContext);
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       const rotateStyle = numberStyleOf<PointNumberStyle>(rotate, 'rotate', styleContext);
-      const paddingStyle = numberStyleOf<PointNonnegativeNumberStyle>(padding, 'padding', styleContext);
+      const paddingStyle = boxSpacingStyleOf(padding, 'padding', styleContext);
       const minimumSizeStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumSize, 'minimumSize', styleContext);
       const minimumWidthStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumWidth, 'minimumWidth', styleContext);
       const minimumHeightStyle = numberStyleOf<PointNonnegativeNumberStyle>(

@@ -10,7 +10,10 @@ import type {
   NodeLabelRotateMode,
   NodeTextAlign,
 } from './constants';
-import type { NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } from './schema';
+import type { BoxSpacingSchema, NodeLabelBoundaryPositionSchema, NodeLabelSchema, NodeSchema } from './schema';
+
+/** CSS-like 四边 spacing 对象，供 Node padding / margin 复用。 */
+export type IRBoxSpacing = z.infer<typeof BoxSpacingSchema>;
 
 export type IRNodeLabelBoundaryPosition = z.infer<typeof NodeLabelBoundaryPositionSchema>;
 

@@ -6,6 +6,7 @@ import type { IR } from '../../src/schemas';
 
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import { compileToScene } from '../../src/compile/compile';
+import { boxInsets } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';
@@ -15,8 +16,9 @@ const mkLayout = (margin: number, rotate = 0): NodeLayout => ({
   shapeName: 'rectangle',
   shapeDef: BUILTIN_SHAPES.rectangle,
   rect: { x: 0, y: 0, width: 40, height: 30, rotate },
+  contentCenter: [0, 0],
   rotateDeg: (rotate * 180) / Math.PI,
-  margin,
+  margin: boxInsets(margin),
   textWidth: 0,
   textHeight: 0,
   align: 'middle',
@@ -29,7 +31,7 @@ const hypot = (p: readonly [number, number]): number => Math.hypot(p[0], p[1]);
 
 // ── Happy path ──────────────────────────────────────────────────────────────
 
-describe('outerSep：border 类 anchor 外扩（happy）', () => {
+describe('margin：border 类 anchor 外扩（happy）', () => {
   it('canonical-margin：A.top / A.right 落在视觉 shape 外 margin 处', () => {
     // 视觉半轴 (20,15)。top = [0,-15]，right = [20,0]；margin=10 → 外边界半轴 (30,25)
     expect(resolveAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
@@ -49,7 +51,7 @@ describe('outerSep：border 类 anchor 外扩（happy）', () => {
   });
 
   it('autoclip-margin-regression：自动连线端点仍停在 shape 外 margin（行为不变）', () => {
-    // 默认无 text、innerSep=8 → rect 16×16；A=(0,0) 朝 B=(100,0) → 端点 = 8 + 10 = 18
+    // 默认无 text、padding=8 → rect 16×16；A=(0,0) 朝 B=(100,0) → 端点 = 8 + 10 = 18
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -85,7 +87,7 @@ describe('outerSep：border 类 anchor 外扩（happy）', () => {
 
 // ── 边界 ──────────────────────────────────────────────────────────────────────
 
-describe('outerSep：边界', () => {
+describe('margin：边界', () => {
   it('margin-zero-identity：margin=0 时所有 anchor = 视觉 shape（同改前）', () => {
     const tan30 = Math.tan((30 * Math.PI) / 180);
     expect(resolveAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
@@ -104,7 +106,7 @@ describe('outerSep：边界', () => {
 
 // ── 错误路径 / 不外扩护栏 ──────────────────────────────────────────────────────
 
-describe('outerSep：不外扩护栏 + 校验', () => {
+describe('margin：不外扩护栏 + 校验', () => {
   it('negative-margin-rejected：margin=-1 被 schema 拒绝（.nonnegative）', () => {
     const ok = NodeSchema.safeParse({ type: 'node', id: 'A', position: [0, 0], margin: 0 });
     expect(ok.success).toBe(true);
@@ -147,7 +149,7 @@ describe('outerSep：不外扩护栏 + 校验', () => {
     expect(tipOf(10)).toEqual(tipOf(0));
   });
 
-  it('label-no-margin：label 附着点恒走视觉 shape（不被 outer sep 双偏移）', () => {
+  it('label-no-margin：label 附着点恒走视觉 shape（不被 margin 双偏移）', () => {
     const mk = (margin: number): IR => ({
       version: 1,
       type: 'scene',
@@ -180,7 +182,7 @@ describe('outerSep：不外扩护栏 + 校验', () => {
 
 // ── 交互 ──────────────────────────────────────────────────────────────────────
 
-describe('outerSep：交互', () => {
+describe('margin：交互', () => {
   it('margin-x-rotate：旋转后外扩量随旋转一致（距中心 = 外边界半轴）', () => {
     // top 半轴：margin=0 → 15，margin=10 → 25；旋转保距离
     expect(hypot(resolveAnchor(mkLayout(0, Math.PI / 2), 'top'))).toBeCloseTo(15, 6);

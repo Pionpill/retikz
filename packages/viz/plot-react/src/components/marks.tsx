@@ -6,6 +6,7 @@ import type {
   ExternalRow,
   IntervalBounds,
   IRBoundary,
+  IRBoxSpacing,
   IRDropShadow,
   IRFont,
   IRPaintSpec,
@@ -17,6 +18,7 @@ import type {
   MarkValueType,
   NodeBooleanStyle,
   NodeBoundaryStyle,
+  NodeBoxSpacingStyle,
   NodeDashPatternStyle,
   NodeFontStyle,
   NodePositiveNumberStyle,
@@ -78,10 +80,8 @@ export type CoreNodeChannelProps = {
   scale?: MarkValueProp<number> | NodePositiveNumberStyle;
   xScale?: MarkValueProp<number> | NodePositiveNumberStyle;
   yScale?: MarkValueProp<number> | NodePositiveNumberStyle;
-  innerXSep?: MarkValueProp<number> | PointNonnegativeNumberStyle;
-  innerYSep?: MarkValueProp<number> | PointNonnegativeNumberStyle;
-  outerSep?: MarkValueProp<number> | PointNonnegativeNumberStyle;
-  margin?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+  padding?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
+  margin?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
   dashed?: MarkValueProp<boolean> | NodeBooleanStyle;
   dotted?: MarkValueProp<boolean> | NodeBooleanStyle;
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
@@ -211,8 +211,8 @@ export type PointMarkProps = MarkTransformProps &
     drawOpacity?: MarkValueProp<number> | PointOpacityStyle;
     /** 旋转角度：字符串按字段解析，数字为常量糖 */
     rotate?: MarkValueProp<number> | PointNumberStyle;
-    /** node padding：字符串按字段解析，数字为常量糖 */
-    padding?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+    /** node padding：字符串按字段解析，数字或对象为常量糖 */
+    padding?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
     /** 最小视觉尺寸；size 通道逐 datum 优先 */
     minimumSize?: MarkValueProp<number> | PointNonnegativeNumberStyle;
     /** 最小视觉宽度 */

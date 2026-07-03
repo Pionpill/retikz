@@ -4,12 +4,12 @@ import { Draw, Layout, Node, Rectangle } from '@retikz/react';
 
 const CONTENT_WIDTH = 86;
 const CONTENT_HEIGHT = 34;
-const INNER_SEP = 24;
-const OUTER_SEP = 20;
-const INNER_WIDTH = CONTENT_WIDTH + INNER_SEP * 2;
-const INNER_HEIGHT = CONTENT_HEIGHT + INNER_SEP * 2;
-const OUTER_WIDTH = INNER_WIDTH + OUTER_SEP * 2;
-const OUTER_HEIGHT = INNER_HEIGHT + OUTER_SEP * 2;
+const PADDING = 24;
+const MARGIN = 20;
+const INNER_WIDTH = CONTENT_WIDTH + PADDING * 2;
+const INNER_HEIGHT = CONTENT_HEIGHT + PADDING * 2;
+const OUTER_WIDTH = INNER_WIDTH + MARGIN * 2;
+const OUTER_HEIGHT = INNER_HEIGHT + MARGIN * 2;
 const FONT = { size: 10 }; // match the Model Anatomy figure's visual font size (smaller viewBox)
 
 const Demo: FC = () => (
@@ -19,7 +19,7 @@ const Demo: FC = () => (
     viewBox={{ x: -185, y: -105, width: 370, height: 210 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    {/* Outer frame: inner frame + outerSep (margin), where automatic path endpoints land */}
+    {/* Outer frame: inner frame + margin, where automatic path endpoints land */}
     <Rectangle
       center={[0, 0]}
       width={OUTER_WIDTH}
@@ -28,7 +28,7 @@ const Demo: FC = () => (
       stroke="gray"
       dashPattern={[4, 3]}
     />
-    {/* Inner frame: content box + innerSep, the rectangular node's shape */}
+    {/* Inner frame: content box + padding, the rectangular node's shape */}
     <Rectangle
       center={[0, 0]}
       width={INNER_WIDTH}
@@ -62,17 +62,17 @@ const Demo: FC = () => (
     </Node>
     <Draw way={['content-label', [-CONTENT_WIDTH / 2, 0]]} stroke="currentColor" arrow="->" />
 
-    {/* innerSep (= padding): right label pointing to the padding gap, currentColor */}
+    {/* padding: right label pointing to the padding gap, currentColor */}
     <Node id="inner-sep-label" position={[150, -20]} stroke="none" font={FONT}>
-      {'innerSep\n= padding'}
+      padding
     </Node>
-    <Draw way={['inner-sep-label', [CONTENT_WIDTH / 2 + INNER_SEP / 2, -20]]} stroke="currentColor" arrow="->" />
+    <Draw way={['inner-sep-label', [CONTENT_WIDTH / 2 + PADDING / 2, -20]]} stroke="currentColor" arrow="->" />
 
-    {/* outerSep (= margin): right label pointing to the margin gap, gray */}
+    {/* margin: right label pointing to the margin gap, gray */}
     <Node id="outer-sep-label" position={[150, 20]} stroke="none" textColor="gray" font={FONT}>
-      {'outerSep\n= margin'}
+      margin
     </Node>
-    <Draw way={['outer-sep-label', [INNER_WIDTH / 2 + OUTER_SEP / 2, 20]]} stroke="gray" arrow="->" />
+    <Draw way={['outer-sep-label', [INNER_WIDTH / 2 + MARGIN / 2, 20]]} stroke="gray" arrow="->" />
   </Layout>
 );
 

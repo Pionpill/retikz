@@ -48,6 +48,7 @@ describe('compile source structure', () => {
       'anchorOf',
       'angleBoundaryOf',
       'boundaryPointOf',
+      'boxInsets',
       'emitNodePrimitives',
       'labelExtentPoints',
       'layoutNode',

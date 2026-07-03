@@ -1,6 +1,6 @@
-import type { IRBoundary, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
+import type { IRBoundary, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
 
-import { BoundarySchema, DropShadowSchema, FontSchema, JsonValueSchema, ShapeRefSchema } from '@retikz/core';
+import { BoundarySchema, BoxSpacingSchema, DropShadowSchema, FontSchema, JsonValueSchema, ShapeRefSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 
 import type {
@@ -62,6 +62,11 @@ const jsonValue = (value: unknown): JsonValue | undefined =>
 const positiveNumber = (value: unknown): number | undefined => (isFiniteNumber(value) && value > 0 ? value : undefined);
 const nonnegativeNumber = (value: unknown): number | undefined =>
   isFiniteNumber(value) && value >= 0 ? value : undefined;
+const boxSpacingValue = (value: unknown): number | IRBoxSpacing | undefined => {
+  if (isFiniteNumber(value) && value >= 0) return value;
+  const result = BoxSpacingSchema.safeParse(value);
+  return result.success ? result.data : undefined;
+};
 const booleanValue = (value: unknown): boolean | undefined => {
   if (typeof value === 'boolean') return value;
   if (value === 'true') return true;
@@ -291,7 +296,6 @@ const numericNodeChannels: {
   fillOpacity: NodeChannelDefinition<number>;
   drawOpacity: NodeChannelDefinition<number>;
   rotate: NodeChannelDefinition<number>;
-  padding: NodeChannelDefinition<number>;
   minimumSize: NodeChannelDefinition<number>;
   minimumWidth: NodeChannelDefinition<number>;
   minimumHeight: NodeChannelDefinition<number>;
@@ -360,21 +364,6 @@ const numericNodeChannels: {
       ),
     deliver: (node, value) => {
       node.rotate = value;
-    },
-  }),
-  padding: defineNodeChannel<number>({
-    channel: 'padding',
-    output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx =>
-      makeNumericNodeResolver(
-        ctx.node,
-        ctx.rows,
-        ctx.fieldTypes,
-        mark => pickStyleChannel<number>(mark, 'padding'),
-        'padding',
-      ),
-    deliver: (node, value) => {
-      node.padding = value;
     },
   }),
   minimumSize: defineNodeChannel<number>({
@@ -535,36 +524,20 @@ const directNodeChannels = {
       node.yScale = value;
     },
   ),
-  innerXSep: defineSimpleNodeChannel<number>(
-    'innerXSep',
-    { outputKind: 'number', range: [0, 0] },
-    nonnegativeNumber,
+  padding: defineSimpleNodeChannel<JsonValue>(
+    'padding',
+    { outputKind: 'json' },
+    value => boxSpacingValue(value),
     (node, value) => {
-      node.innerXSep = value;
+      node.padding = value as number | IRBoxSpacing;
     },
   ),
-  innerYSep: defineSimpleNodeChannel<number>(
-    'innerYSep',
-    { outputKind: 'number', range: [0, 0] },
-    nonnegativeNumber,
-    (node, value) => {
-      node.innerYSep = value;
-    },
-  ),
-  outerSep: defineSimpleNodeChannel<number>(
-    'outerSep',
-    { outputKind: 'number', range: [0, 0] },
-    nonnegativeNumber,
-    (node, value) => {
-      node.outerSep = value;
-    },
-  ),
-  margin: defineSimpleNodeChannel<number>(
+  margin: defineSimpleNodeChannel<JsonValue>(
     'margin',
-    { outputKind: 'number', range: [0, 0] },
-    nonnegativeNumber,
+    { outputKind: 'json' },
+    value => boxSpacingValue(value),
     (node, value) => {
-      node.margin = value;
+      node.margin = value as number | IRBoxSpacing;
     },
   ),
   dashed: defineSimpleNodeChannel<boolean>('dashed', { outputKind: 'boolean' }, booleanValue, (node, value) => {
@@ -659,7 +632,6 @@ export type BuiltinNodeChannels = {
   fillOpacity: NodeChannelDefinition<number>;
   drawOpacity: NodeChannelDefinition<number>;
   rotate: NodeChannelDefinition<number>;
-  padding: NodeChannelDefinition<number>;
   minimumSize: NodeChannelDefinition<number>;
   minimumWidth: NodeChannelDefinition<number>;
   minimumHeight: NodeChannelDefinition<number>;

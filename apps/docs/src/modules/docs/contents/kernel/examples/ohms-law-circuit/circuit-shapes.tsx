@@ -3,7 +3,7 @@ import type {
   IRAnchorRef,
   IRNodeLabel,
   IRNodeTarget,
-  Position,
+  IRPosition,
   Rect,
   ScenePrimitive,
   ShapeDefinition,
@@ -13,6 +13,8 @@ import type { FC } from 'react';
 import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '@retikz/react';
 import { z } from 'zod';
+
+type Position = IRPosition;
 
 /** 元件可选标签（透传给内部 Node 的 label，TikZ `[label=top:foo]` 同义） */
 type CircuitLabel = IRNodeLabel | Array<IRNodeLabel>;

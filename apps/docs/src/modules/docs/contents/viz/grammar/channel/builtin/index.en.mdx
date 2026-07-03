@@ -85,7 +85,7 @@ Node geometry channels control the node's own size constraints, spacing, corner 
 | Channel                                                          | Channel Value                                                        | Meaning                 | Delivery                   |
 | ---------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------- | -------------------------- |
 | `minimumSize` / `minimumWidth`<br />`minimumHeight`              | Field: `minimumWidth = "field"`<br />Constant: `minimumWidth = {54}` | Node size constraints   | core node size fields      |
-| `padding` / `innerXSep` / `innerYSep`<br />`outerSep` / `margin` | Field: `padding = "field"`<br />Constant: `padding = {8}`            | Node spacing            | core node spacing fields   |
+| `padding` / `margin`                                                                                                                                                                                                        | Field: `padding = "field"`<br />Constant: `padding = {8}` / `padding = {{ x: 8, y: 4 }}` | Node spacing            | core node spacing fields   |
 | `cornerRadius`                                                   | Field: `cornerRadius = "field"`<br />Constant: `cornerRadius = {8}`  | Rectangle corner radius | core node `cornerRadius`   |
 | `rotate` / `scale`<br />`xScale` / `yScale`                      | Field: `rotate = "field"`<br />Constant: `rotate = {18}`             | Node transform hints    | core node transform fields |
 

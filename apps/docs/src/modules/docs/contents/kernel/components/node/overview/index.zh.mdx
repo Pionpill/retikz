@@ -233,18 +233,18 @@ Line 2`}</Node>;
 
 #### 内 / 外边距
 
-内 / 外边距支持**对称别名**与**轴特化**两套写法。若同时提供，分轴字段优先；没有分轴字段时使用对称别名；两者都没有时使用默认值：
+内 / 外边距采用 CSS 风格的嵌套对象：单边字段优先，其次是 `x` / `y`，最后回退到 `default` 和默认值。
 
-- 内边距：`padding`（对称） · `innerXSep` / `innerYSep`（分轴）
-- 外边距：`margin`（对称） · `outerSep`（分轴目前只有 outer 一个）
+- 内边距：`padding={N}` 或 `padding={{ default, x, y, left, right, top, bottom }}`
+- 外边距：`margin={N}` 或 `margin={{ default, x, y, left, right, top, bottom }}`
 
-多数节点只需要写 `padding={N}`。当水平留白和垂直留白需要不同数值时，再改用 `innerXSep` / `innerYSep`。
+多数节点只需要写 `padding={N}`。当水平留白和垂直留白需要不同数值时，改用 `padding={{ x, y }}`；只有单边需要特殊处理时才写 `left` / `right` / `top` / `bottom`。
 
 <ComponentPreview name="node-sep" size="xs" />
 
-<Comparison target="tikz" title="Sep 命名">
+<Comparison target="tikz" title="间距命名">
 
-`innerXSep` / `innerYSep` / `outerSep` 沿用 TikZ 的 sep 词汇；retikz 另外保留 `padding` / `margin` 作为更接近 CSS 的对称别名。
+retikz 的间距字段现在只保留 CSS 风格命名。TikZ 的 `inner sep` 对应 `padding`，`outer sep` 对应 `margin`。
 
 </Comparison>
 
@@ -340,11 +340,8 @@ Line 2`}</Node>;
 | `fill`                           | `string \| PaintSpec`                                                                                         | —                 | 背景填充：纯色 CSS 串，或 PaintSpec（渐变 linear / radial / conic、图案 pattern、图片 image）                                                                                                                                                                                                                                                                                                                                                                                       |
 | `stroke`                         | `string \| PaintSpec`                                                                                         | `currentColor`    | 边框 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image）                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `strokeWidth`                    | `number`                                                                                                      | `1`               | 边框宽度（user units）                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `innerXSep`                      | `number`                                                                                                      | —                 | 横向内边距（text → 左右 border）；不填走 `padding` 兜底                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `innerYSep`                      | `number`                                                                                                      | —                 | 纵向内边距（text → 上下 border）；不填走 `padding` 兜底                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `outerSep`                       | `number`                                                                                                      | `0`               | 连接面外的均匀外偏移（TikZ `outer sep`）：作用于**所有 border 锚点**（显式 `.top` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状；`center`、形状专属锚点、边上比例点、标签附着点仍贴视觉形状。不填走 `margin` 兜底                                                                                                                                                                                                                                    |
-| `padding`                        | `number`                                                                                                      | `8`               | 内边距对称别名；轴特化字段优先                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `margin`                         | `number`                                                                                                      | `0`               | `outerSep` 的对称别名（TikZ `outer sep`）；`outerSep` 优先                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `padding`                        | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                                                | `8`               | 内容到边框的内边距；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析                                                                                                                                                                                                                                                                                                                                                                                              |
+| `margin`                         | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                                                | `0`               | 边框外推距离；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析；作用于**所有 border 锚点**（显式 `.top` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状                                                                                                                                                                                                                                                                             |
 | `font`                           | `{ family?, size?, weight?, style? }`                                                                         | —                 | 字体规格；嵌套对象，所有字段可选                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `textColor`                      | `string`                                                                                                      | `currentColor`    | 文字颜色（块级默认；行级覆盖通过 LineSpec.fill）                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `opacity`                        | `number`                                                                                                      | —                 | 整节点 0~1，同时作用于 shape + text                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -369,9 +366,9 @@ Line 2`}</Node>;
 |           | 影响什么                               | 视觉表现                                                                 |
 | --------- | -------------------------------------- | ------------------------------------------------------------------------ |
 | `padding` | 文字到 border 的距离                   | 视觉形状变大                                                             |
-| `margin`  | 连接面外的均匀外偏移（TikZ outer sep） | 视觉形状不变；所有 border 锚点与连线端点外移 margin，节点占位也含 margin |
+| `margin`  | 连接面外的外偏移                       | 视觉形状不变；所有 border 锚点与连线端点外移 margin，节点占位也含 margin |
 
-`padding` 撑大节点本身；`margin` 不动视觉形状，而是把节点的连接/引用边界整体外推 margin（含显式 `.top` 这类锚点），并让节点在布局里多占 margin 的空间——既给连线"留呼吸空间"，也和 TikZ `outer sep` 一致。`margin` 缺省 0，不设则零影响。
+`padding` 撑大节点本身；`margin` 不动视觉形状，而是把节点的连接/引用边界外推（含显式 `.top` 这类锚点），并让节点在布局里多占 margin 的空间。`margin` 缺省 0，不设则零影响。
 
 ## 相关
 
