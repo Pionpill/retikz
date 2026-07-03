@@ -86,10 +86,10 @@ meta 是随图元带进 Scene 的来源信息，渲染器不会读它、它不�
 
 | 字段              | 含义                                        |
 | ----------------- | ------------------------------------------- |
-| `coordinateScope` | 产出该图层或数据点的坐标 scope id           |
+| `coordinateView`  | 产出该图层或数据点的坐标 view id            |
 | `facet`           | facet 面板身份，形如 `{ id, row?, column? }` |
-| `scaffold`        | 当前 scope 所属的 shared scaffold id        |
-| `track`           | scaffold 内的 track id                      |
+| `arrangement`     | 当前 view 所属的分面或共享轨道 arrangement id |
+| `track`           | 共享轨道内的 track id                       |
 
 单坐标图保持旧形状；只有 composition 场景需要区分来源时才会出现这些字段。
 
@@ -143,9 +143,9 @@ locator.series('north');
 // → { position: <该 series 所有已渲染点的质心>, meta: { …, series: 'north' } }
 
 locator.resolve('sales.datum.0'); // 点路径串解析
-locator.datum(1, { coordinateScope: 'rain' });
+locator.datum(1, { coordinateView: 'rain' });
 locator.datum(1, { facet: { id: 'region', column: 'north' } });
-locator.resolve('sales.scope.rain.datum.1');
+locator.resolve('sales.view.rain.datum.1');
 locator.datum(999); // 越界 → null
 ```
 
@@ -157,7 +157,7 @@ locator.datum(999); // 越界 → null
 | `series(value)`           | 按 series 值解析其区域锚点（所有已渲染成员的质心）                           |
 | `resolve(address)`        | 解析 `<plotId>.datum.<i>` / `<plotId>.series.<值>` 点路径串；不匹配 → `null` |
 
-`datum` 和 `series` 也接受 `{ markIndex?, coordinateScope?, facet?, track? }`。当同一个渲染序号会出现在多个 panel、overlay scope 或 track 中时，显式传这些选项来消歧。`resolve` 保留旧地址，同时增加 `<plotId>.scope.<scope>.datum.<i>`、`<plotId>.track.<track>.datum.<i>` 这类便捷地址。
+`datum` 和 `series` 也接受 `{ markIndex?, coordinateView?, facet?, track? }`。当同一个渲染序号会出现在多个 panel、overlay view 或 track 中时，显式传这些选项来消歧。`resolve` 支持基础地址，并增加 `<plotId>.view.<view>.datum.<i>`、`<plotId>.track.<track>.datum.<i>` 这类便捷地址。
 
 `resolve` 的地址是**索引 / 值地址**——`datum.<transformedIndex>`（渲染序号）和 `series.<值>`，**不是**绑定在节点上的 `id`（那个 `<plotId>.datum.<slug>` 句柄是给 core 连接用的，在 `ResolvedAnchor.id` 里返回，slug 不可逆、不拿来 resolve）。series 值会做字符串归一，所以数值 series（`series.5`）也能寻址；但**值里含 `.`** 的 series 无法经 resolve 寻址（地址按 `.` 切分），这类请直接用 `series(value)`。`series()` 对任何带 series 字段的 mark（line / area / interval）都可用——上面「series 结构落点只在 line/area」说的是 _lowering 里 id/meta 的宿主_，不限制 `series()` 求质心。
 

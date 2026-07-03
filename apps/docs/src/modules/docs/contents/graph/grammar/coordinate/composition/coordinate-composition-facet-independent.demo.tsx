@@ -11,8 +11,8 @@ const Demo: FC = () => (
       row={{ field: 'tier', order: ['free', 'pro'] }}
       column={{ field: 'product', order: ['core', 'growth', 'platform'] }}
       empty="show"
-      scales={{ roles: { y: 'independent' } }}
-      layout={{ panelGap: 22 }}
+      resolve={{ scale: { y: 'independent' } }}
+      spacing={{ panelGap: 22 }}
     >
       <Axis dimension="x" title="month" />
       <Axis dimension="y" grid title="accounts" />

@@ -183,18 +183,18 @@ type AxisBoundGuide = Guide & {
 };
 
 type CompositionSpec = NonNullable<PlotSpec['composition']>;
-type FacetGridSpec = NonNullable<CompositionSpec['facets']>[number];
-type SharedScaffoldSpec = NonNullable<CompositionSpec['scaffolds']>[number];
+type ArrangementSpec = NonNullable<CompositionSpec['arrangements']>[number];
+type FacetGridSpec = Extract<ArrangementSpec, { kind: 'facet' }>;
+type SharedScaffoldSpec = Extract<ArrangementSpec, { kind: 'tracks' }>;
 type ScaffoldTrackSpec = SharedScaffoldSpec['tracks'][number];
 type CollectedFacet = FacetGridSpec & {
-  scopeId: string;
-  layout?: CompositionSpec['layout'];
-  guidePolicy?: CompositionSpec['guidePolicy'];
+  spacing?: CompositionSpec['spacing'];
+  resolve?: CompositionSpec['resolve'];
 };
 type CollectedScaffold = Omit<SharedScaffoldSpec, 'coordinate'> & {
   coordinate?: SharedScaffoldSpec['coordinate'];
-  layout?: CompositionSpec['layout'];
-  guidePolicy?: CompositionSpec['guidePolicy'];
+  spacing?: CompositionSpec['spacing'];
+  resolve?: CompositionSpec['resolve'];
 };
 
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 <Plot> 本身不补）：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
@@ -672,7 +672,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     color,
     label,
     id,
-    coordinateScope,
+    coordinateView,
     transform,
     channels,
     strokeWidth,
@@ -772,7 +772,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     type: PlotMark.Reference,
     ...(kind !== undefined ? { kind } : {}),
     ...(id !== undefined ? { id } : {}),
-    ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+    ...(coordinateView !== undefined ? { coordinateView } : {}),
     ...(transform !== undefined ? { transform } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),
@@ -813,8 +813,14 @@ const scaffoldTracksOf = (
       return;
     }
     if (child.type === Track) {
-      const { id, band, order } = child.props as ScaffoldTrackSpec & { children?: ReactNode };
-      tracks.push({ id, band, ...(order !== undefined ? { order } : {}) });
+      const props = child.props as ScaffoldTrackSpec & { children?: ReactNode };
+      tracks.push({
+        id: props.id,
+        band: props.band,
+        ...(props.view !== undefined ? { view: props.view } : {}),
+        ...(props.coordinate !== undefined ? { coordinate: props.coordinate } : {}),
+        ...(props.order !== undefined ? { order: props.order } : {}),
+      });
     }
   });
   appendChildTracks(children);
@@ -858,55 +864,69 @@ const collectInto = (
       return;
     }
     if (child.type === Facet) {
-      const { id, row, column, empty, scales, coordinate, scopeId, scopeIdTemplate, layout, guidePolicy, children: facetChildren } =
+      const {
+        id,
+        row,
+        column,
+        empty,
+        coordinate,
+        view,
+        viewIdTemplate,
+        header,
+        spacing,
+        resolve,
+        children: facetChildren,
+      } =
         child.props as {
           id: string;
           row?: string | NonNullable<FacetGridSpec['row']>;
           column?: string | NonNullable<FacetGridSpec['column']>;
           empty?: FacetGridSpec['empty'];
-          scales?: FacetGridSpec['scales'];
           coordinate?: FacetGridSpec['coordinate'];
-          scopeId?: string;
-          scopeIdTemplate?: string;
-          layout?: CompositionSpec['layout'];
-          guidePolicy?: CompositionSpec['guidePolicy'];
+          view?: string;
+          viewIdTemplate?: string;
+          header?: FacetGridSpec['header'];
+          spacing?: CompositionSpec['spacing'];
+          resolve?: CompositionSpec['resolve'];
           children?: ReactNode;
         };
       into.facets.push({
+        kind: 'facet',
         id,
-        scopeId: scopeId ?? `${id}Panel`,
+        view: view ?? `${id}Panel`,
         ...(facetDimensionOf(row) !== undefined ? { row: facetDimensionOf(row) } : {}),
         ...(facetDimensionOf(column) !== undefined ? { column: facetDimensionOf(column) } : {}),
         ...(empty !== undefined ? { empty } : {}),
-        ...(scales !== undefined ? { scales } : {}),
         ...(coordinate !== undefined ? { coordinate } : {}),
-        ...(scopeIdTemplate !== undefined ? { scopeIdTemplate } : {}),
-        ...(layout !== undefined ? { layout } : {}),
-        ...(guidePolicy !== undefined ? { guidePolicy } : {}),
+        ...(viewIdTemplate !== undefined ? { viewIdTemplate } : {}),
+        ...(header !== undefined ? { header } : {}),
+        ...(spacing !== undefined ? { spacing } : {}),
+        ...(resolve !== undefined ? { resolve } : {}),
       });
       collectInto(facetChildren, into, styleContext, { facetId: id });
       return;
     }
     if (child.type === Scaffold) {
-      const { id, coordinate, sharedRoles, frame, tracks, layout, guidePolicy, children: scaffoldChildren } =
+      const { id, coordinate, sharedRoles, frame, tracks, spacing, resolve, children: scaffoldChildren } =
         child.props as {
           id: string;
           coordinate?: SharedScaffoldSpec['coordinate'];
           sharedRoles: SharedScaffoldSpec['sharedRoles'];
           frame?: SharedScaffoldSpec['frame'];
           tracks?: Array<ScaffoldTrackSpec>;
-          layout?: CompositionSpec['layout'];
-          guidePolicy?: CompositionSpec['guidePolicy'];
+          spacing?: CompositionSpec['spacing'];
+          resolve?: CompositionSpec['resolve'];
           children?: ReactNode;
         };
       into.scaffolds.push({
+        kind: 'tracks',
         id,
         sharedRoles,
         tracks: scaffoldTracksOf(id, tracks, scaffoldChildren),
         ...(coordinate !== undefined ? { coordinate } : {}),
         ...(frame !== undefined ? { frame } : {}),
-        ...(layout !== undefined ? { layout } : {}),
-        ...(guidePolicy !== undefined ? { guidePolicy } : {}),
+        ...(spacing !== undefined ? { spacing } : {}),
+        ...(resolve !== undefined ? { resolve } : {}),
       });
       collectScaffoldChildren(id, scaffoldChildren, into, styleContext);
       return;
@@ -928,7 +948,7 @@ const collectInto = (
         closure,
         curve,
         id,
-        coordinateScope,
+        coordinateView,
         xAxisId,
         yAxisId,
         facetId,
@@ -957,7 +977,7 @@ const collectInto = (
       into.marks.push({
         type: PlotMark.Path,
         ...(id !== undefined ? { id } : {}),
-        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+        ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(xAxisId !== undefined ? { xAxisId } : {}),
         ...(yAxisId !== undefined ? { yAxisId } : {}),
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
@@ -1009,7 +1029,7 @@ const collectInto = (
         dx,
         dy,
         id,
-        coordinateScope,
+        coordinateView,
         xAxisId,
         yAxisId,
         facetId,
@@ -1049,7 +1069,7 @@ const collectInto = (
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
-        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+        ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(xAxisId !== undefined ? { xAxisId } : {}),
         ...(yAxisId !== undefined ? { yAxisId } : {}),
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
@@ -1105,7 +1125,7 @@ const collectInto = (
         stack,
         bounds: explicitBounds,
         id,
-        coordinateScope,
+        coordinateView,
         xAxisId,
         yAxisId,
         facetId,
@@ -1180,7 +1200,7 @@ const collectInto = (
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
-          ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+          ...(coordinateView !== undefined ? { coordinateView } : {}),
           ...(xAxisId !== undefined ? { xAxisId } : {}),
           ...(yAxisId !== undefined ? { yAxisId } : {}),
           ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
@@ -1211,7 +1231,7 @@ const collectInto = (
         into.marks.push({
           type: PlotMark.Interval,
           ...(id !== undefined ? { id } : {}),
-          ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+          ...(coordinateView !== undefined ? { coordinateView } : {}),
           ...(xAxisId !== undefined ? { xAxisId } : {}),
           ...(yAxisId !== undefined ? { yAxisId } : {}),
           ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
@@ -1329,7 +1349,7 @@ const collectInto = (
       into.marks.push({
         type: PlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
-        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+        ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(xAxisId !== undefined ? { xAxisId } : {}),
         ...(yAxisId !== undefined ? { yAxisId } : {}),
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
@@ -1362,7 +1382,7 @@ const collectInto = (
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === RelationMark) {
-      const { id, kind, coordinateScope, transform, source, target, label, style, path, ribbon, color, channels } =
+      const { id, kind, coordinateView, transform, source, target, label, style, path, ribbon, color, channels } =
         child.props as RelationMarkProps;
       const colorEnc = colorChannel(color, undefined);
       const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
@@ -1370,7 +1390,7 @@ const collectInto = (
         type: PlotMark.Relation,
         ...(id !== undefined ? { id } : {}),
         ...(kind !== undefined ? { kind } : {}),
-        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+        ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(transform !== undefined ? { transform } : {}),
         source,
         target,
@@ -1382,7 +1402,7 @@ const collectInto = (
       });
       recordColor(into, colorEnc);
     } else if (child.type === Axis) {
-      const { dimension, scale, tickCount, tickLabels, grid, coordinateScope, facetId, scaffoldId, trackId, placement, title, id } =
+      const { dimension, scale, tickCount, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, id } =
         child.props as AxisProps;
       if (scale !== undefined) {
         into.scales.push({ dimension, type: scale });
@@ -1394,7 +1414,7 @@ const collectInto = (
         type: PlotGuide.Axis,
         dimension,
         ...(id !== undefined ? { id } : {}),
-        ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+        ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveScaffoldId !== undefined ? { scaffoldId: effectiveScaffoldId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
@@ -1656,18 +1676,30 @@ const fillCompositionScaleBindings = (
   if (composition === undefined) return undefined;
   return {
     ...composition,
-    scopes: composition.scopes.map(scope => ({
-      ...scope,
-      ...(scope.coordinate !== undefined
-        ? { coordinate: fillCoordinateScaleBindings(scope.coordinate, defaults) }
-        : {}),
-    })),
-    ...(composition.scaffolds !== undefined
+    ...(composition.views !== undefined
       ? {
-          scaffolds: composition.scaffolds.map(scaffold => ({
-            ...scaffold,
-            coordinate: fillCoordinateScaleBindings(scaffold.coordinate, defaults),
+          views: composition.views.map(view => ({
+            ...view,
+            coordinate: fillCoordinateScaleBindings(view.coordinate, defaults),
           })),
+        }
+      : {}),
+    ...(composition.arrangements !== undefined
+      ? {
+          arrangements: composition.arrangements.map(arrangement =>
+            arrangement.kind === 'tracks'
+              ? {
+                  ...arrangement,
+                  coordinate: fillCoordinateScaleBindings(arrangement.coordinate, defaults),
+                  tracks: arrangement.tracks.map(track => ({
+                    ...track,
+                    ...(track.coordinate !== undefined
+                      ? { coordinate: fillCoordinateScaleBindings(track.coordinate, defaults) }
+                      : {}),
+                  })),
+                }
+              : arrangement,
+          ),
         }
       : {}),
   };
@@ -1689,7 +1721,7 @@ type AxisBindingNormalization = {
   composition?: PlotSpec['composition'];
 };
 
-type CoordinateScopeSpec = CompositionSpec['scopes'][number];
+type CoordinateViewSpec = NonNullable<CompositionSpec['views']>[number];
 
 const yAxisScaleNameOf = (axisId: string): string => `__y.${axisId}`;
 const xAxisScaleNameOf = (axisId: string): string => `__x.${axisId}`;
@@ -1716,15 +1748,15 @@ const stripGuideBindings = (guide: AxisBoundGuide): Guide => {
   return rest;
 };
 
-const withMarkScope = (mark: AxisBoundMark, coordinateScope: string | undefined): Mark => {
+const withMarkScope = (mark: AxisBoundMark, coordinateView: string | undefined): Mark => {
   const stripped = stripMarkBindings(mark);
-  return coordinateScope === undefined ? stripped : { ...stripped, coordinateScope };
+  return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
 };
 
-const withGuideScope = (guide: AxisBoundGuide, coordinateScope: string | undefined): Guide => {
+const withGuideScope = (guide: AxisBoundGuide, coordinateView: string | undefined): Guide => {
   const stripped = stripGuideBindings(guide);
   if (!isAxisGuide(stripped)) return stripped;
-  return coordinateScope === undefined ? stripped : { ...stripped, coordinateScope };
+  return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
 };
 
 const assertMarkBindingCompatibility = (mark: AxisBoundMark): void => {
@@ -1738,8 +1770,8 @@ const assertMarkBindingCompatibility = (mark: AxisBoundMark): void => {
     throw new Error(`buildPlotSpec: mark has multiple binding props: ${bindings.join(', ')}`);
   }
   const binding = bindings.at(0);
-  if (mark.coordinateScope !== undefined && binding !== undefined) {
-    throw new Error(`buildPlotSpec: mark cannot set both coordinateScope and ${binding}`);
+  if (mark.coordinateView !== undefined && binding !== undefined) {
+    throw new Error(`buildPlotSpec: mark cannot set both coordinateView and ${binding}`);
   }
 };
 
@@ -1756,8 +1788,8 @@ const assertGuideBindingCompatibility = (guide: AxisBoundGuide): void => {
   if (binding !== undefined && !isAxisGuide(guide)) {
     throw new Error(`buildPlotSpec: ${binding} binding is only supported on <Axis> guides`);
   }
-  if (isAxisGuide(guide) && guide.coordinateScope !== undefined && binding !== undefined) {
-    throw new Error(`buildPlotSpec: guide cannot set both coordinateScope and ${binding}`);
+  if (isAxisGuide(guide) && guide.coordinateView !== undefined && binding !== undefined) {
+    throw new Error(`buildPlotSpec: guide cannot set both coordinateView and ${binding}`);
   }
 };
 
@@ -1805,88 +1837,67 @@ const insertAxisBindingScales = (
   return out;
 };
 
-const mergeCompositionObject = <T extends object>(
-  current: T | undefined,
-  next: T | undefined,
-): T | undefined => {
-  if (next === undefined) return current;
-  if (current === undefined) return { ...next };
-  return { ...current, ...next };
-};
-
 const buildTopologyComposition = (
   facets: ReadonlyArray<CollectedFacet>,
   scaffolds: ReadonlyArray<CollectedScaffold>,
   coordinate: CoordinateOperation,
 ): {
   composition: CompositionSpec;
-  facetScopeById: Map<string, string>;
-  trackScopeById: Map<string, string>;
-  scaffoldDefaultScopeById: Map<string, string>;
+  facetViewById: Map<string, string>;
+  trackViewById: Map<string, string>;
+  scaffoldDefaultViewById: Map<string, string>;
 } => {
-  const scopes: Array<CoordinateScopeSpec> = [];
+  const views: Array<CoordinateViewSpec> = [];
   const facetSpecs: Array<FacetGridSpec> = [];
   const scaffoldSpecs: Array<SharedScaffoldSpec> = [];
-  const facetScopeById = new Map<string, string>();
-  const trackScopeById = new Map<string, string>();
-  const scaffoldDefaultScopeById = new Map<string, string>();
-  let layout: CompositionSpec['layout'] | undefined;
-  let guidePolicy: CompositionSpec['guidePolicy'] | undefined;
+  const facetViewById = new Map<string, string>();
+  const trackViewById = new Map<string, string>();
+  const scaffoldDefaultViewById = new Map<string, string>();
 
   for (const scaffold of scaffolds) {
     if (scaffoldSpecs.some(candidate => candidate.id === scaffold.id)) {
       throw new Error(`buildPlotSpec: duplicate scaffold id "${scaffold.id}"`);
     }
-    const { layout: scaffoldLayout, guidePolicy: scaffoldGuidePolicy, ...scaffoldSpec } = scaffold;
-    layout = mergeCompositionObject(layout, scaffoldLayout);
-    guidePolicy = mergeCompositionObject(guidePolicy, scaffoldGuidePolicy);
     scaffoldSpecs.push({
-      ...scaffoldSpec,
+      ...scaffold,
+      kind: 'tracks',
       coordinate: fillCoordinateScaleBindings(scaffold.coordinate ?? coordinate, coordinate),
+      tracks: scaffold.tracks.map(track => ({ ...track, view: track.view ?? track.id })),
     });
     for (const track of scaffold.tracks) {
-      if (trackScopeById.has(track.id)) {
+      if (trackViewById.has(track.id)) {
         throw new Error(`buildPlotSpec: duplicate track id "${track.id}" across scaffold bindings`);
       }
-      trackScopeById.set(track.id, track.id);
-      scaffoldDefaultScopeById.set(scaffold.id, scaffoldDefaultScopeById.get(scaffold.id) ?? track.id);
-      scopes.push({
-        id: track.id,
-        placement: { kind: 'track', scaffold: scaffold.id, track: track.id },
-      });
+      const view = track.view ?? track.id;
+      trackViewById.set(track.id, view);
+      scaffoldDefaultViewById.set(scaffold.id, scaffoldDefaultViewById.get(scaffold.id) ?? view);
     }
   }
 
   for (const facet of facets) {
-    if (facetScopeById.has(facet.id)) throw new Error(`buildPlotSpec: duplicate facet id "${facet.id}"`);
-    const { scopeId, layout: facetLayout, guidePolicy: facetGuidePolicy, ...facetSpec } = facet;
-    layout = mergeCompositionObject(layout, facetLayout);
-    guidePolicy = mergeCompositionObject(guidePolicy, facetGuidePolicy);
-    facetScopeById.set(facet.id, scopeId);
-    facetSpecs.push(facetSpec);
-    scopes.push({
-      id: scopeId,
+    if (facetViewById.has(facet.id)) throw new Error(`buildPlotSpec: duplicate facet id "${facet.id}"`);
+    facetViewById.set(facet.id, facet.view);
+    facetSpecs.push(facet);
+    views.push({
+      id: facet.view,
       coordinate: fillCoordinateScaleBindings(coordinate, coordinate),
     });
   }
 
-  const defaultScope = scopes.at(0)?.id;
-  if (defaultScope === undefined) {
+  const defaultView = views.at(0)?.id ?? scaffoldSpecs[0]?.tracks[0]?.view;
+  if (defaultView === undefined) {
     throw new Error('buildPlotSpec: topology binding requires at least one <Facet> or <Scaffold> declaration');
   }
 
   return {
     composition: {
-      defaultScope,
-      ...(scaffoldSpecs.length > 0 ? { scaffolds: scaffoldSpecs } : {}),
-      scopes,
-      ...(facetSpecs.length > 0 ? { facets: facetSpecs } : {}),
-      ...(layout !== undefined ? { layout } : {}),
-      ...(guidePolicy !== undefined ? { guidePolicy } : {}),
+      defaultView,
+      ...(views.length > 0 ? { views } : {}),
+      ...([...scaffoldSpecs, ...facetSpecs].length > 0 ? { arrangements: [...scaffoldSpecs, ...facetSpecs] } : {}),
     },
-    facetScopeById,
-    trackScopeById,
-    scaffoldDefaultScopeById,
+    facetViewById,
+    trackViewById,
+    scaffoldDefaultViewById,
   };
 };
 
@@ -1898,7 +1909,7 @@ const normalizeTopologyBindings = (
   facets: ReadonlyArray<CollectedFacet>,
   scaffolds: ReadonlyArray<CollectedScaffold>,
 ): AxisBindingNormalization => {
-  const { composition, facetScopeById, trackScopeById, scaffoldDefaultScopeById } = buildTopologyComposition(
+  const { composition, facetViewById, trackViewById, scaffoldDefaultViewById } = buildTopologyComposition(
     facets,
     scaffolds,
     coordinate,
@@ -1906,33 +1917,33 @@ const normalizeTopologyBindings = (
 
   const normalizedMarks = marks.map(mark => {
     if (mark.facetId !== undefined) {
-      const scope = facetScopeById.get(mark.facetId);
-      if (scope === undefined) throw new Error(`buildPlotSpec: missing facet for facetId "${mark.facetId}"`);
-      return withMarkScope(mark, scope);
+      const view = facetViewById.get(mark.facetId);
+      if (view === undefined) throw new Error(`buildPlotSpec: missing facet for facetId "${mark.facetId}"`);
+      return withMarkScope(mark, view);
     }
     if (mark.trackId !== undefined) {
-      const scope = trackScopeById.get(mark.trackId);
-      if (scope === undefined) throw new Error(`buildPlotSpec: missing track for trackId "${mark.trackId}"`);
-      return withMarkScope(mark, scope);
+      const view = trackViewById.get(mark.trackId);
+      if (view === undefined) throw new Error(`buildPlotSpec: missing track for trackId "${mark.trackId}"`);
+      return withMarkScope(mark, view);
     }
     return stripMarkBindings(mark);
   });
 
   const normalizedGuides = guides.map(guide => {
     if (guide.facetId !== undefined) {
-      const scope = facetScopeById.get(guide.facetId);
-      if (scope === undefined) throw new Error(`buildPlotSpec: missing facet for facetId "${guide.facetId}"`);
-      return withGuideScope(guide, scope);
+      const view = facetViewById.get(guide.facetId);
+      if (view === undefined) throw new Error(`buildPlotSpec: missing facet for facetId "${guide.facetId}"`);
+      return withGuideScope(guide, view);
     }
     if (guide.trackId !== undefined) {
-      const scope = trackScopeById.get(guide.trackId);
-      if (scope === undefined) throw new Error(`buildPlotSpec: missing track for trackId "${guide.trackId}"`);
-      return withGuideScope(guide, scope);
+      const view = trackViewById.get(guide.trackId);
+      if (view === undefined) throw new Error(`buildPlotSpec: missing track for trackId "${guide.trackId}"`);
+      return withGuideScope(guide, view);
     }
     if (guide.scaffoldId !== undefined) {
-      const scope = scaffoldDefaultScopeById.get(guide.scaffoldId);
-      if (scope === undefined) throw new Error(`buildPlotSpec: missing scaffold for scaffoldId "${guide.scaffoldId}"`);
-      return withGuideScope(guide, scope);
+      const view = scaffoldDefaultViewById.get(guide.scaffoldId);
+      if (view === undefined) throw new Error(`buildPlotSpec: missing scaffold for scaffoldId "${guide.scaffoldId}"`);
+      return withGuideScope(guide, view);
     }
     return stripGuideBindings(guide);
   });
@@ -2067,10 +2078,21 @@ const normalizeAxisBindings = (
 
   const explicitComposition = composition !== undefined ? fillCompositionScaleBindings(composition, coordinate) : undefined;
   if (explicitComposition !== undefined) {
-    const scopeIds = new Set(explicitComposition.scopes.map(scope => scope.id));
+    const viewIds = new Set([
+      ...(explicitComposition.views ?? []).map(view => view.id),
+      ...(explicitComposition.arrangements ?? []).flatMap(arrangement =>
+        arrangement.kind === 'tracks'
+          ? arrangement.tracks.map(track =>
+              (track.view ?? arrangement.viewIdTemplate ?? '{arrangement}.track.{track}')
+                .replaceAll('{arrangement}', arrangement.id)
+                .replaceAll('{track}', track.id),
+            )
+          : [],
+      ),
+    ]);
     for (const axisId of [...xAxisIds, ...yAxisIds]) {
-      if (!scopeIds.has(axisId)) {
-        throw new Error(`buildPlotSpec: axis id "${axisId}" requires an explicit composition scope with the same id`);
+      if (!viewIds.has(axisId)) {
+        throw new Error(`buildPlotSpec: axis id "${axisId}" requires an explicit composition view with the same id`);
       }
     }
   }
@@ -2079,20 +2101,20 @@ const normalizeAxisBindings = (
     if (!isPositionMark(mark)) return stripMarkBindings(mark);
     if (mark.xAxisId !== undefined) return withMarkScope(mark, mark.xAxisId);
     if (mark.yAxisId !== undefined) return withMarkScope(mark, mark.yAxisId);
-    return mark.coordinateScope === undefined ? withMarkScope(mark, DEFAULT_AXIS_SCOPE) : stripMarkBindings(mark);
+    return mark.coordinateView === undefined ? withMarkScope(mark, DEFAULT_AXIS_SCOPE) : stripMarkBindings(mark);
   });
   const normalizedGuides = guides.map(guide => {
     if (!isAxisGuide(guide)) return stripGuideBindings(guide);
     if (guide.dimension !== 'x' && guide.dimension !== 'y') return stripGuideBindings(guide);
     if (guide.dimension === 'x' && !hasXAxisBinding) return stripGuideBindings(guide);
     if (guide.dimension === 'y' && !hasYAxisBinding) return stripGuideBindings(guide);
-    const coordinateScope = guide.id ?? DEFAULT_AXIS_SCOPE;
-    if (guide.coordinateScope !== undefined && guide.coordinateScope !== coordinateScope) {
+    const coordinateView = guide.id ?? DEFAULT_AXIS_SCOPE;
+    if (guide.coordinateView !== undefined && guide.coordinateView !== coordinateView) {
       throw new Error(
-        `buildPlotSpec: ${guide.dimension} axis "${guide.id ?? '<anonymous>'}" cannot set coordinateScope different from its binding scope`,
+        `buildPlotSpec: ${guide.dimension} axis "${guide.id ?? '<anonymous>'}" cannot set coordinateView different from its bound coordinate view`,
       );
     }
-    return withGuideScope(guide, coordinateScope);
+    return withGuideScope(guide, coordinateView);
   });
 
   if (explicitComposition !== undefined) {
@@ -2106,14 +2128,14 @@ const normalizeAxisBindings = (
 
   const defaultXScaleName = hasXAxisBinding ? xAxisScaleNameOf(DEFAULT_AXIS_SCOPE) : AUTO_X;
   const defaultYScaleName = hasYAxisBinding ? yAxisScaleNameOf(DEFAULT_AXIS_SCOPE) : AUTO_Y;
-  const xAxisScopes: Array<CoordinateScopeSpec> = xAxisIds
+  const xAxisScopes: Array<CoordinateViewSpec> = xAxisIds
     .filter(axisId => axisId !== DEFAULT_AXIS_SCOPE)
     .map(axisId => ({
       id: axisId,
       coordinate: { type: PlotCoordinate.Cartesian2D, x: xAxisScaleNameOf(axisId), y: defaultYScaleName },
       placement: { kind: 'overlay' as const, target: DEFAULT_AXIS_SCOPE },
     }));
-  const yAxisScopes: Array<CoordinateScopeSpec> = yAxisIds
+  const yAxisScopes: Array<CoordinateViewSpec> = yAxisIds
     .filter(axisId => axisId !== DEFAULT_AXIS_SCOPE)
     .map(axisId => ({
       id: axisId,
@@ -2126,8 +2148,8 @@ const normalizeAxisBindings = (
     guides: normalizedGuides,
     scales: insertAxisBindingScales(scales, xAxisIds, yAxisIds),
     composition: {
-      defaultScope: DEFAULT_AXIS_SCOPE,
-      scopes: [
+      defaultView: DEFAULT_AXIS_SCOPE,
+      views: [
         {
           id: DEFAULT_AXIS_SCOPE,
           coordinate: { type: PlotCoordinate.Cartesian2D, x: defaultXScaleName, y: defaultYScaleName },

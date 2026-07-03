@@ -6,7 +6,7 @@ import { operationsRows } from './coordinate-composition-tracks.data';
 
 const Demo: FC = () => (
   <Plot data={operationsRows} width={560} height={330}>
-    <Scaffold id="ops" sharedRoles={['x']} layout={{ trackGap: 6 }}>
+    <Scaffold id="ops" sharedRoles={['x']} spacing={{ trackGap: 6 }}>
       <Axis dimension="x" grid title="trading day" />
       <Track id="trend" band={{ role: 'y', start: 0, end: 0.28 }}>
         <Axis dimension="y" title="trend" />

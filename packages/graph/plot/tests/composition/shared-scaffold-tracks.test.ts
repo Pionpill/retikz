@@ -20,30 +20,27 @@ const cartesianScaffoldSpec = {
     { type: 'linear', name: 'yLane' },
   ],
   composition: {
-    defaultScope: 'events',
-    scaffolds: [
+    defaultView: 'events',
+    arrangements: [
       {
+        kind: 'tracks',
         id: 'lanes',
         coordinate: { type: 'cartesian2D', x: 'xShared', y: 'yLane' },
         sharedRoles: ['x'],
         tracks: [
-          { id: 'events', band: { role: 'y', start: 0, end: 0.45 } },
-          { id: 'volume', band: { role: 'y', start: 0.55, end: 1 } },
+          { id: 'events', view: 'events', band: { role: 'y', start: 0, end: 0.45 } },
+          { id: 'volume', view: 'volume', band: { role: 'y', start: 0.55, end: 1 } },
         ],
       },
     ],
-    scopes: [
-      { id: 'events', placement: { kind: 'track', scaffold: 'lanes', track: 'events' } },
-      { id: 'volume', placement: { kind: 'track', scaffold: 'lanes', track: 'volume' } },
-    ],
   },
   marks: [
-    { type: 'point', coordinateScope: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
-    { type: 'point', coordinateScope: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
+    { type: 'point', coordinateView: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
+    { type: 'point', coordinateView: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
   ],
   guides: [
-    { type: 'axis', dimension: 'x', coordinateScope: 'events' },
-    { type: 'axis', dimension: 'y', coordinateScope: 'volume', placement: { kind: 'side', side: 'right' } },
+    { type: 'axis', dimension: 'x', coordinateView: 'events' },
+    { type: 'axis', dimension: 'y', coordinateView: 'volume', placement: { kind: 'side', side: 'right' } },
   ],
 };
 
@@ -57,32 +54,31 @@ const polarScaffoldSpec = {
     { type: 'linear', name: 'radiusTrack' },
   ],
   composition: {
-    defaultScope: 'inner',
-    scaffolds: [
+    defaultView: 'inner',
+    arrangements: [
       {
+        kind: 'tracks',
         id: 'rings',
         coordinate: { type: 'polar2D', angle: 'angleShared', radius: 'radiusTrack' },
         sharedRoles: ['x'],
         tracks: [
-          { id: 'inner', band: { role: 'y', start: 0.2, end: 0.5 } },
-          { id: 'outer', band: { role: 'y', start: 0.7, end: 1 } },
+          { id: 'inner', view: 'inner', band: { role: 'y', start: 0.2, end: 0.5 } },
+          { id: 'outer', view: 'outer', band: { role: 'y', start: 0.7, end: 1 } },
         ],
       },
     ],
-    scopes: [
-      { id: 'inner', placement: { kind: 'track', scaffold: 'rings', track: 'inner' } },
-      { id: 'outer', placement: { kind: 'track', scaffold: 'rings', track: 'outer' } },
-    ],
   },
   marks: [
-    { type: 'point', coordinateScope: 'inner', encoding: { x: { field: 'angleA' }, y: { field: 'radiusA' } } },
-    { type: 'point', coordinateScope: 'outer', encoding: { x: { field: 'angleB' }, y: { field: 'radiusB' } } },
+    { type: 'point', coordinateView: 'inner', encoding: { x: { field: 'angleA' }, y: { field: 'radiusA' } } },
+    { type: 'point', coordinateView: 'outer', encoding: { x: { field: 'angleB' }, y: { field: 'radiusB' } } },
   ],
 };
 
+const parsePlotSpec = (spec: unknown) => PlotSpecSchema.parse(spec);
+
 const expandOf = (spec: unknown, provenance = false): IRScope => {
   const [definition] = lowerPlots({ d: rows }, { width: 480, height: 300, provenance });
-  return definition.expand(PlotSpecSchema.parse(spec)) as IRScope;
+  return definition.expand(parsePlotSpec(spec)) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -113,17 +109,18 @@ const distancesFromCenter = (scope: IRScope, center: [number, number]): Array<nu
 
 describe('shared scaffold tracks schema', () => {
   it('shared scaffold spec preserves JSON round trip', () => {
-    const parsed = PlotSpecSchema.parse(JSON.parse(JSON.stringify(cartesianScaffoldSpec)));
+    const parsed = parsePlotSpec(JSON.parse(JSON.stringify(cartesianScaffoldSpec)));
     expect(parsed).toEqual(cartesianScaffoldSpec);
   });
 
-  it('track scope can inherit scaffold coordinate', () => {
-    const parsed = PlotSpecSchema.parse(cartesianScaffoldSpec);
-    expect(parsed.composition?.scopes.every(scope => scope.coordinate === undefined)).toBe(true);
+  it('track view can inherit scaffold coordinate', () => {
+    const parsed = parsePlotSpec(cartesianScaffoldSpec);
+    const tracks = parsed.composition?.arrangements?.find(arrangement => arrangement.kind === 'tracks')?.tracks ?? [];
+    expect(tracks.every(track => track.coordinate === undefined)).toBe(true);
   });
 
   it('band can touch scaffold edges', () => {
-    expect(() => PlotSpecSchema.parse(cartesianScaffoldSpec)).not.toThrow();
+    expect(() => parsePlotSpec(cartesianScaffoldSpec)).not.toThrow();
   });
 
   it('bad band range is rejected', () => {
@@ -131,15 +128,15 @@ describe('shared scaffold tracks schema', () => {
       ...cartesianScaffoldSpec,
       composition: {
         ...cartesianScaffoldSpec.composition,
-        scaffolds: [
+        arrangements: [
           {
-            ...cartesianScaffoldSpec.composition.scaffolds[0],
+            ...cartesianScaffoldSpec.composition.arrangements[0],
             tracks: [{ id: 'events', band: { role: 'y', start: 0.8, end: 0.2 } }],
           },
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/band|start|end/i);
+    expect(() => parsePlotSpec(spec)).toThrow(/band|start|end/i);
   });
 
   it('overlapping bands on the same role are rejected', () => {
@@ -147,9 +144,9 @@ describe('shared scaffold tracks schema', () => {
       ...cartesianScaffoldSpec,
       composition: {
         ...cartesianScaffoldSpec.composition,
-        scaffolds: [
+        arrangements: [
           {
-            ...cartesianScaffoldSpec.composition.scaffolds[0],
+            ...cartesianScaffoldSpec.composition.arrangements[0],
             tracks: [
               { id: 'a', band: { role: 'y', start: 0, end: 0.6 } },
               { id: 'b', band: { role: 'y', start: 0.5, end: 1 } },
@@ -158,18 +155,26 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/overlap|band/i);
+    expect(() => parsePlotSpec(spec)).toThrow(/overlap|band/i);
   });
 
-  it('track placement must reference an existing scaffold and track', () => {
+  it('duplicate track id is rejected', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
         ...cartesianScaffoldSpec.composition,
-        scopes: [{ id: 'events', placement: { kind: 'track', scaffold: 'lanes', track: 'missing' } }],
+        arrangements: [
+          {
+            ...cartesianScaffoldSpec.composition.arrangements[0],
+            tracks: [
+              { id: 'events', band: { role: 'y', start: 0, end: 0.4 } },
+              { id: 'events', band: { role: 'y', start: 0.6, end: 1 } },
+            ],
+          },
+        ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/track/i);
+    expect(() => parsePlotSpec(spec)).toThrow(/duplicate track/i);
   });
 
   it('local band role must not be shared', () => {
@@ -177,15 +182,15 @@ describe('shared scaffold tracks schema', () => {
       ...cartesianScaffoldSpec,
       composition: {
         ...cartesianScaffoldSpec.composition,
-        scaffolds: [
+        arrangements: [
           {
-            ...cartesianScaffoldSpec.composition.scaffolds[0],
+            ...cartesianScaffoldSpec.composition.arrangements[0],
             sharedRoles: ['x', 'y'],
           },
         ],
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/sharedRoles|band/i);
+    expect(() => parsePlotSpec(spec)).toThrow(/sharedRoles|band/i);
   });
 });
 
@@ -210,16 +215,16 @@ describe('shared scaffold tracks lowering', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
-        defaultScope: 'events',
-        scaffolds: [
+        defaultView: 'events',
+        arrangements: [
           {
+            kind: 'tracks',
             id: 'single',
             coordinate: { type: 'cartesian2D', x: 'xShared', y: 'yLane' },
             sharedRoles: ['x'],
-            tracks: [{ id: 'events', band: { role: 'y', start: 0, end: 1 } }],
+            tracks: [{ id: 'events', view: 'events', band: { role: 'y', start: 0, end: 1 } }],
           },
         ],
-        scopes: [{ id: 'events', placement: { kind: 'track', scaffold: 'single', track: 'events' } }],
       },
       marks: [cartesianScaffoldSpec.marks[0]],
       guides: [],
@@ -232,9 +237,9 @@ describe('shared scaffold tracks lowering', () => {
       ...cartesianScaffoldSpec,
       composition: {
         ...cartesianScaffoldSpec.composition,
-        scaffolds: [
+        arrangements: [
           {
-            ...cartesianScaffoldSpec.composition.scaffolds[0],
+            ...cartesianScaffoldSpec.composition.arrangements[0],
             sharedRoles: [],
             frame: 'shared',
           },
@@ -244,17 +249,19 @@ describe('shared scaffold tracks lowering', () => {
     expect(markLayersOf(expandOf(spec, true))).toHaveLength(2);
   });
 
-  it('guide can bind to a track scope', () => {
+  it('guide can bind to a track view', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const axes = axisLayersOf(outer);
     expect(axes.map(axis => axis.meta?.dimension)).toEqual(['x', 'y']);
   });
 
-  it('provenance meta carries scaffold and track identity', () => {
+  it('provenance meta carries arrangement and track identity', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const [events, volume] = markLayersOf(outer);
-    expect(events.meta).toMatchObject({ scaffold: 'lanes', track: 'events' });
-    expect(volume.meta).toMatchObject({ scaffold: 'lanes', track: 'volume' });
+    expect(events.meta).toMatchObject({ arrangement: 'lanes', track: 'events' });
+    expect(volume.meta).toMatchObject({ arrangement: 'lanes', track: 'volume' });
+    expect(events.meta?.scaffold).toBeUndefined();
+    expect(volume.meta?.scaffold).toBeUndefined();
   });
 
   it('unknown shared role fails loud during lowering', () => {
@@ -262,9 +269,9 @@ describe('shared scaffold tracks lowering', () => {
       ...cartesianScaffoldSpec,
       composition: {
         ...cartesianScaffoldSpec.composition,
-        scaffolds: [
+        arrangements: [
           {
-            ...cartesianScaffoldSpec.composition.scaffolds[0],
+            ...cartesianScaffoldSpec.composition.arrangements[0],
             sharedRoles: ['theta'],
           },
         ],

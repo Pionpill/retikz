@@ -10,7 +10,7 @@ const Demo: FC = () => (
       id="sales"
       row={{ field: 'channel', order: ['online', 'store'] }}
       column={{ field: 'region', order: ['north', 'south', 'west'] }}
-      layout={{ panelGap: 24 }}
+      spacing={{ panelGap: 24 }}
     >
       <Axis dimension="x" title="month" />
       <Axis dimension="y" grid title="revenue" />

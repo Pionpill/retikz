@@ -13,8 +13,8 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
         <Scaffold
           id="ops"
           sharedRoles={['x']}
-          layout={{ trackGap: 24, axisGap: 8, labelGap: 6 }}
-          guidePolicy={{ gridPlacement: 'sharedRole', trackLabels: 'inline' }}
+          spacing={{ trackGap: 24, axisGap: 8, labelGap: 6 }}
+          resolve={{ grid: { x: 'all', y: 'all' } }}
         >
           <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
           <Track id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
@@ -29,32 +29,29 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
 
     expect(spec.coordinate).toBeUndefined();
     expect(spec.composition).toEqual({
-      defaultScope: 'incidents',
-      scaffolds: [
+      defaultView: 'incidents',
+      arrangements: [
         {
+          kind: 'tracks',
           id: 'ops',
           coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
           sharedRoles: ['x'],
+          spacing: { trackGap: 24, axisGap: 8, labelGap: 6 },
+          resolve: { grid: { x: 'all', y: 'all' } },
           tracks: [
-            { id: 'incidents', band: { role: 'y', start: 0, end: 0.42 } },
-            { id: 'load', band: { role: 'y', start: 0.58, end: 1 } },
+            { id: 'incidents', view: 'incidents', band: { role: 'y', start: 0, end: 0.42 } },
+            { id: 'load', view: 'load', band: { role: 'y', start: 0.58, end: 1 } },
           ],
         },
       ],
-      scopes: [
-        { id: 'incidents', placement: { kind: 'track', scaffold: 'ops', track: 'incidents' } },
-        { id: 'load', placement: { kind: 'track', scaffold: 'ops', track: 'load' } },
-      ],
-      layout: { trackGap: 24, axisGap: 8, labelGap: 6 },
-      guidePolicy: { gridPlacement: 'sharedRole', trackLabels: 'inline' },
     });
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'incidents' },
-      { type: 'path', coordinateScope: 'load' },
+      { type: 'path', coordinateView: 'incidents' },
+      { type: 'path', coordinateView: 'load' },
     ]);
     expect(spec.guides).toMatchObject([
-      { type: 'axis', dimension: 'x', coordinateScope: 'incidents', grid: true },
-      { type: 'axis', dimension: 'y', coordinateScope: 'load' },
+      { type: 'axis', dimension: 'x', coordinateView: 'incidents', grid: true },
+      { type: 'axis', dimension: 'y', coordinateView: 'load' },
     ]);
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
@@ -74,10 +71,13 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
       { coordinate: { type: 'polar2D' } },
     );
 
-    expect(spec.composition?.scaffolds?.[0]?.coordinate).toMatchObject({
+    expect(spec.composition?.arrangements?.[0]).toMatchObject({
+      kind: 'tracks',
+      coordinate: {
       type: 'polar2D',
       angle: '__angle',
       radius: '__radius',
+      },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
@@ -99,30 +99,27 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
     );
 
     expect(spec.composition).toMatchObject({
-      defaultScope: 'incidents',
-      scaffolds: [
+      defaultView: 'incidents',
+      arrangements: [
         {
+          kind: 'tracks',
           id: 'ops',
           sharedRoles: ['x'],
           tracks: [
-            { id: 'incidents', band: { role: 'y', start: 0, end: 0.42 } },
-            { id: 'load', band: { role: 'y', start: 0.58, end: 1 } },
+            { id: 'incidents', view: 'incidents', band: { role: 'y', start: 0, end: 0.42 } },
+            { id: 'load', view: 'load', band: { role: 'y', start: 0.58, end: 1 } },
           ],
         },
       ],
-      scopes: [
-        { id: 'incidents', placement: { kind: 'track', scaffold: 'ops', track: 'incidents' } },
-        { id: 'load', placement: { kind: 'track', scaffold: 'ops', track: 'load' } },
-      ],
     });
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'incidents' },
-      { type: 'point', coordinateScope: 'load' },
+      { type: 'path', coordinateView: 'incidents' },
+      { type: 'point', coordinateView: 'load' },
     ]);
     expect(spec.guides).toMatchObject([
-      { type: 'axis', dimension: 'x', coordinateScope: 'incidents', grid: true },
-      { type: 'axis', dimension: 'y', coordinateScope: 'incidents' },
-      { type: 'axis', dimension: 'y', coordinateScope: 'load' },
+      { type: 'axis', dimension: 'x', coordinateView: 'incidents', grid: true },
+      { type: 'axis', dimension: 'y', coordinateView: 'incidents' },
+      { type: 'axis', dimension: 'y', coordinateView: 'load' },
     ]);
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
@@ -134,9 +131,9 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
           id="sales"
           row={{ field: 'channel', order: ['online', 'store'] }}
           column={{ field: 'region', order: ['north', 'south', 'west'] }}
-          scales={{ roles: { y: 'shared' } }}
-          layout={{ panelGap: 24, axisGap: 8, labelGap: 6 }}
-          guidePolicy={{ axes: 'outerShared', gridPlacement: 'self', facetLabels: 'rowColumn' }}
+          resolve={{ scale: { y: 'shared' }, axis: { x: 'outer', y: 'outer' }, grid: { x: 'local', y: 'local' } }}
+          header={{ row: true, column: true }}
+          spacing={{ panelGap: 24, axisGap: 8, labelGap: 6 }}
         />
         <PathMark facetId="sales" x="month" y="revenue" order="month" />
         <PointMark facetId="sales" x="month" y="revenue" />
@@ -148,26 +145,28 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
 
     expect(spec.coordinate).toBeUndefined();
     expect(spec.composition).toEqual({
-      defaultScope: 'salesPanel',
-      scopes: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
-      facets: [
+      defaultView: 'salesPanel',
+      views: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
+      arrangements: [
         {
+          kind: 'facet',
           id: 'sales',
+          view: 'salesPanel',
           row: { field: 'channel', order: ['online', 'store'] },
           column: { field: 'region', order: ['north', 'south', 'west'] },
-          scales: { roles: { y: 'shared' } },
+          header: { row: true, column: true },
+          spacing: { panelGap: 24, axisGap: 8, labelGap: 6 },
+          resolve: { scale: { y: 'shared' }, axis: { x: 'outer', y: 'outer' }, grid: { x: 'local', y: 'local' } },
         },
       ],
-      layout: { panelGap: 24, axisGap: 8, labelGap: 6 },
-      guidePolicy: { axes: 'outerShared', gridPlacement: 'self', facetLabels: 'rowColumn' },
     });
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'salesPanel' },
-      { type: 'point', coordinateScope: 'salesPanel' },
+      { type: 'path', coordinateView: 'salesPanel' },
+      { type: 'point', coordinateView: 'salesPanel' },
     ]);
     expect(spec.guides).toMatchObject([
-      { type: 'axis', dimension: 'x', coordinateScope: 'salesPanel' },
-      { type: 'axis', dimension: 'y', coordinateScope: 'salesPanel', grid: true },
+      { type: 'axis', dimension: 'x', coordinateView: 'salesPanel' },
+      { type: 'axis', dimension: 'y', coordinateView: 'salesPanel', grid: true },
     ]);
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
@@ -184,17 +183,17 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
     );
 
     expect(spec.composition).toMatchObject({
-      defaultScope: 'salesPanel',
-      scopes: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
-      facets: [{ id: 'sales', column: { field: 'region' } }],
+      defaultView: 'salesPanel',
+      views: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
+      arrangements: [{ kind: 'facet', id: 'sales', view: 'salesPanel', column: { field: 'region' } }],
     });
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'salesPanel' },
-      { type: 'point', coordinateScope: 'salesPanel' },
+      { type: 'path', coordinateView: 'salesPanel' },
+      { type: 'point', coordinateView: 'salesPanel' },
     ]);
     expect(spec.guides).toMatchObject([
-      { type: 'axis', dimension: 'x', coordinateScope: 'salesPanel' },
-      { type: 'axis', dimension: 'y', coordinateScope: 'salesPanel', grid: true },
+      { type: 'axis', dimension: 'x', coordinateView: 'salesPanel' },
+      { type: 'axis', dimension: 'y', coordinateView: 'salesPanel', grid: true },
     ]);
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
@@ -217,11 +216,13 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
     );
 
     expect(spec.composition).toMatchObject({
-      defaultScope: 'salesPanel',
-      scopes: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
-      facets: [
+      defaultView: 'salesPanel',
+      views: [{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } }],
+      arrangements: [
         {
+          kind: 'facet',
           id: 'sales',
+          view: 'salesPanel',
           row: [
             { field: 'region', order: ['north', 'south'] },
             { field: 'channel', order: ['online', 'store'] },
@@ -230,7 +231,7 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
         },
       ],
     });
-    expect(spec.marks).toMatchObject([{ type: 'path', coordinateScope: 'salesPanel' }]);
+    expect(spec.marks).toMatchObject([{ type: 'path', coordinateView: 'salesPanel' }]);
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
@@ -261,11 +262,11 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
       buildPlotSpec(
         <>
           <Facet id="sales" column="region" />
-          <PathMark facetId="sales" coordinateScope="salesPanel" x="month" y="revenue" />
+          <PathMark facetId="sales" coordinateView="salesPanel" x="month" y="revenue" />
         </>,
         'sales',
       ),
-    ).toThrow(/coordinateScope.*facetId/i);
+    ).toThrow(/coordinateView.*facetId/i);
 
     expect(() =>
       buildPlotSpec(

@@ -20,8 +20,8 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
 
     expect(spec.coordinate).toBeUndefined();
     expect(spec.composition).toEqual({
-      defaultScope: 'default',
-      scopes: [
+      defaultView: 'default',
+      views: [
         { id: 'default', coordinate: { type: 'cartesian2D', x: '__x', y: '__y.default' } },
         {
           id: 'temperature',
@@ -42,13 +42,13 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       { type: 'linear', name: '__y.rainfall' },
     ]);
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'temperature' },
-      { type: 'path', coordinateScope: 'rainfall' },
+      { type: 'path', coordinateView: 'temperature' },
+      { type: 'path', coordinateView: 'rainfall' },
     ]);
     expect(spec.guides).toMatchObject([
       { type: 'axis', dimension: 'x' },
-      { type: 'axis', id: 'temperature', dimension: 'y', coordinateScope: 'temperature' },
-      { type: 'axis', id: 'rainfall', dimension: 'y', coordinateScope: 'rainfall', grid: true },
+      { type: 'axis', id: 'temperature', dimension: 'y', coordinateView: 'temperature' },
+      { type: 'axis', id: 'rainfall', dimension: 'y', coordinateView: 'rainfall', grid: true },
     ]);
     expect(JSON.stringify(spec)).not.toContain('yAxisId');
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
@@ -90,8 +90,8 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
 
     expect(spec.coordinate).toBeUndefined();
     expect(spec.composition).toEqual({
-      defaultScope: 'default',
-      scopes: [
+      defaultView: 'default',
+      views: [
         { id: 'default', coordinate: { type: 'cartesian2D', x: '__x.default', y: '__y' } },
         {
           id: 'elapsed',
@@ -112,12 +112,12 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       { type: 'linear', name: '__y' },
     ]);
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'elapsed' },
-      { type: 'point', coordinateScope: 'date' },
+      { type: 'path', coordinateView: 'elapsed' },
+      { type: 'point', coordinateView: 'date' },
     ]);
     expect(spec.guides).toMatchObject([
-      { type: 'axis', id: 'elapsed', dimension: 'x', coordinateScope: 'elapsed' },
-      { type: 'axis', id: 'date', dimension: 'x', coordinateScope: 'date' },
+      { type: 'axis', id: 'elapsed', dimension: 'x', coordinateView: 'elapsed' },
+      { type: 'axis', id: 'date', dimension: 'x', coordinateView: 'date' },
       { type: 'axis', dimension: 'y' },
     ]);
     expect(JSON.stringify(spec)).not.toContain('xAxisId');
@@ -150,8 +150,8 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
     );
 
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'temperature' },
-      { type: 'point', coordinateScope: 'default' },
+      { type: 'path', coordinateView: 'temperature' },
+      { type: 'point', coordinateView: 'default' },
     ]);
   });
 
@@ -166,15 +166,15 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
     );
 
     expect(spec.composition).toMatchObject({
-      defaultScope: 'default',
-      scopes: [
+      defaultView: 'default',
+      views: [
         { id: 'default', coordinate: { y: '__y.default' } },
         { id: 'rainfall', coordinate: { y: '__y.rainfall' }, placement: { kind: 'overlay', target: 'default' } },
       ],
     });
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'default' },
-      { type: 'path', coordinateScope: 'rainfall' },
+      { type: 'path', coordinateView: 'default' },
+      { type: 'path', coordinateView: 'rainfall' },
     ]);
   });
 
@@ -189,8 +189,8 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       'weather',
       {
         composition: {
-          defaultScope: 'default',
-          scopes: [
+          defaultView: 'default',
+          views: [
             { id: 'default', coordinate: { type: 'cartesian2D' } },
             { id: 'temperature', coordinate: { type: 'cartesian2D' }, placement: { kind: 'overlay', target: 'default' } },
             { id: 'rainfall', coordinate: { type: 'cartesian2D' }, placement: { kind: 'overlay', target: 'default' } },
@@ -199,14 +199,14 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       },
     );
 
-    expect(spec.composition?.defaultScope).toBe('default');
+    expect(spec.composition?.defaultView).toBe('default');
     expect(spec.marks).toMatchObject([
-      { type: 'path', coordinateScope: 'temperature' },
-      { type: 'path', coordinateScope: 'rainfall' },
+      { type: 'path', coordinateView: 'temperature' },
+      { type: 'path', coordinateView: 'rainfall' },
     ]);
     expect(spec.guides).toMatchObject([
-      { type: 'axis', id: 'temperature', coordinateScope: 'temperature' },
-      { type: 'axis', id: 'rainfall', coordinateScope: 'rainfall' },
+      { type: 'axis', id: 'temperature', coordinateView: 'temperature' },
+      { type: 'axis', id: 'rainfall', coordinateView: 'rainfall' },
     ]);
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
@@ -247,11 +247,11 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       buildPlotSpec(
         <>
           <Axis id="left" dimension="y" />
-          <PathMark coordinateScope="left" x="day" y="temperature" yAxisId="left" />
+          <PathMark coordinateView="left" x="day" y="temperature" yAxisId="left" />
         </>,
         'weather',
       ),
-    ).toThrow(/coordinateScope.*yAxisId/i);
+    ).toThrow(/coordinateView.*yAxisId/i);
   });
 
   it('rejects axis binding outside cartesian2D and missing explicit scopes', () => {
@@ -273,8 +273,8 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
           <PathMark x="day" y="temperature" yAxisId="left" />
         </>,
         'weather',
-        { composition: { defaultScope: 'default', scopes: [{ id: 'default', coordinate: { type: 'cartesian2D' } }] } },
+        { composition: { defaultView: 'default', views: [{ id: 'default', coordinate: { type: 'cartesian2D' } }] } },
       ),
-    ).toThrow(/left.*scope/i);
+    ).toThrow(/left.*view/i);
   });
 });

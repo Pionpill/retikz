@@ -1,11 +1,11 @@
-import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
+﻿import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
 import type { PlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { AxisGridApplyTo, CompositionAxisPolicy, CompositionGridPlacement, PlotSpecSchema } from '../../src/schemas';
+import { AxisGridApplyTo, PlotSpecSchema } from '../../src/schemas';
 
 const salesRows = [
   { region: 'north', month: 0, revenue: 10 },
@@ -32,6 +32,8 @@ const laneRows = [
   { eventX: 1, eventY: 2, volumeX: 1, volumeY: 200 },
 ];
 
+const parsePlotSpec = (spec: unknown): PlotSpec => PlotSpecSchema.parse(spec);
+
 const facetSpec = {
   namespace: 'plot',
   type: 'plot',
@@ -42,17 +44,19 @@ const facetSpec = {
     { type: 'linear', name: 'yRevenue' },
   ],
   composition: {
-    defaultScope: 'root',
-    scopes: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' } }],
-    facets: [
+    defaultView: 'root',
+    views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' } }],
+    arrangements: [
       {
+        kind: 'facet',
         id: 'region',
+        view: 'root',
         column: { field: 'region', order: ['north', 'south'] },
-        scales: { roles: { y: 'shared' } },
+        resolve: { scale: { y: 'shared' } },
       },
     ],
-    layout: { panelGap: 24, axisGap: 8, labelGap: 6 },
-    guidePolicy: { axes: CompositionAxisPolicy.OuterShared, gridPlacement: CompositionGridPlacement.Self },
+    spacing: { panelGap: 24, axisGap: 8, labelGap: 6 },
+    resolve: { axis: { x: 'outer', y: 'outer' }, grid: { x: 'local', y: 'local' } },
   },
   marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
   guides: [
@@ -72,8 +76,8 @@ const overlaySpec = {
     { type: 'linear', name: 'yRain' },
   ],
   composition: {
-    defaultScope: 'temp',
-    scopes: [
+    defaultView: 'temp',
+    views: [
       { id: 'temp', coordinate: { type: 'cartesian2D', x: 'xDay', y: 'yTemp' } },
       {
         id: 'rain',
@@ -81,15 +85,15 @@ const overlaySpec = {
         placement: { kind: 'overlay', target: 'temp' },
       },
     ],
-    layout: { axisGap: 12, labelGap: 5 },
+    spacing: { axisGap: 12, labelGap: 5 },
   },
   marks: [
     { type: 'path', order: 'day', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } },
-    { type: 'interval', coordinateScope: 'rain', encoding: { x: { field: 'day' }, y: { field: 'rainfall' } } },
+    { type: 'interval', coordinateView: 'rain', encoding: { x: { field: 'day' }, y: { field: 'rainfall' } } },
   ],
   guides: [
-    { type: 'axis', dimension: 'y', coordinateScope: 'temp', placement: { kind: 'side', side: 'left' }, title: 'Temperature' },
-    { type: 'axis', dimension: 'y', coordinateScope: 'rain', placement: { kind: 'side', side: 'left' }, title: 'Rainfall' },
+    { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' }, title: 'Temperature' },
+    { type: 'axis', dimension: 'y', coordinateView: 'rain', placement: { kind: 'side', side: 'left' }, title: 'Rainfall' },
   ],
 };
 
@@ -103,31 +107,28 @@ const lanesSpec = {
     { type: 'linear', name: 'yLane' },
   ],
   composition: {
-    defaultScope: 'events',
-    scaffolds: [
+    defaultView: 'events',
+    arrangements: [
       {
+        kind: 'tracks',
         id: 'tracks',
         coordinate: { type: 'cartesian2D', x: 'xShared', y: 'yLane' },
         sharedRoles: ['x'],
         tracks: [
-          { id: 'events', band: { role: 'y', start: 0, end: 0.5 } },
-          { id: 'volume', band: { role: 'y', start: 0.5, end: 1 } },
+          { id: 'events', view: 'events', band: { role: 'y', start: 0, end: 0.5 } },
+          { id: 'volume', view: 'volume', band: { role: 'y', start: 0.5, end: 1 } },
         ],
       },
     ],
-    scopes: [
-      { id: 'events', placement: { kind: 'track', scaffold: 'tracks', track: 'events' } },
-      { id: 'volume', placement: { kind: 'track', scaffold: 'tracks', track: 'volume' } },
-    ],
-    layout: { trackGap: 20 },
-    guidePolicy: { gridPlacement: CompositionGridPlacement.SharedRole },
+    spacing: { trackGap: 20 },
+    resolve: { grid: { x: 'all', y: 'all' } },
   },
   marks: [
-    { type: 'point', coordinateScope: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
-    { type: 'point', coordinateScope: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
+    { type: 'point', coordinateView: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
+    { type: 'point', coordinateView: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
   ],
   guides: [
-    { type: 'axis', dimension: 'x', coordinateScope: 'events', grid: true },
+    { type: 'axis', dimension: 'x', coordinateView: 'events', grid: true },
   ],
 };
 
@@ -172,7 +173,7 @@ const markLayersOf = (scope: IRScope): Array<IRScope> =>
 
 describe('composition guides layout schema', () => {
   it('layout_and_guide_policy_round_trip', () => {
-    const parsed = PlotSpecSchema.parse(JSON.parse(JSON.stringify(facetSpec)));
+    const parsed = parsePlotSpec(JSON.parse(JSON.stringify(facetSpec)));
     expect(parsed).toEqual(facetSpec);
   });
 
@@ -183,15 +184,15 @@ describe('composition guides layout schema', () => {
         {
           type: 'axis',
           dimension: 'y',
-          coordinateScope: 'volume',
+          coordinateView: 'volume',
           grid: {
             applyTo: AxisGridApplyTo.Selected,
-            select: { track: { scaffold: 'tracks', id: ['volume'] } },
+            select: { track: { arrangement: 'tracks', id: ['volume'] } },
           },
         },
       ],
     };
-    const parsed = PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)));
+    const parsed = parsePlotSpec(JSON.parse(JSON.stringify(spec)));
     expect(parsed.guides?.[0]).toEqual(spec.guides[0]);
   });
 
@@ -208,7 +209,7 @@ describe('composition guides layout schema', () => {
 
   it('selected_grid_without_selector_is_rejected', () => {
     expect(() =>
-      PlotSpecSchema.parse({
+      parsePlotSpec({
         ...lanesSpec,
         guides: [{ type: 'axis', dimension: 'x', grid: { applyTo: AxisGridApplyTo.Selected } }],
       }),
@@ -220,10 +221,10 @@ describe('composition guides layout schema', () => {
       ...facetSpec,
       composition: {
         ...facetSpec.composition,
-        layout: { panelGap: -1 },
+        spacing: { panelGap: -1 },
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+    expect(() => parsePlotSpec(spec)).toThrow();
   });
 
   it('zero_gaps_are_valid', () => {
@@ -231,10 +232,10 @@ describe('composition guides layout schema', () => {
       ...facetSpec,
       composition: {
         ...facetSpec.composition,
-        layout: { panelGap: 0, trackGap: 0, axisGap: 0, labelGap: 0 },
+        spacing: { panelGap: 0, trackGap: 0, axisGap: 0, labelGap: 0 },
       },
     };
-    expect(PlotSpecSchema.parse(spec).composition?.layout).toEqual({
+    expect(parsePlotSpec(spec).composition?.spacing).toEqual({
       panelGap: 0,
       trackGap: 0,
       axisGap: 0,
@@ -245,7 +246,7 @@ describe('composition guides layout schema', () => {
 
 describe('composition guides layout lowering', () => {
   it('facet_outer_shared_axes_keeps_only_outer_shared_axis', () => {
-    const outer = expandOf(PlotSpecSchema.parse(facetSpec), { sales: salesRows });
+    const outer = expandOf(parsePlotSpec(facetSpec), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
     expect(yAxes).toHaveLength(1);
   });
@@ -255,23 +256,31 @@ describe('composition guides layout lowering', () => {
       ...facetSpec,
       composition: {
         ...facetSpec.composition,
-        facets: [{ id: 'region', column: { field: 'region' }, scales: { roles: { y: 'independent' } } }],
+        arrangements: [
+          {
+            kind: 'facet',
+            id: 'region',
+            view: 'root',
+            column: { field: 'region' },
+            resolve: { scale: { y: 'independent' } },
+          },
+        ],
       },
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec), { sales: salesRows });
+    const outer = expandOf(parsePlotSpec(spec), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
     expect(yAxes).toHaveLength(2);
   });
 
   it('panel_gap_changes_panel_translation_without_changing_panel_order', () => {
-    const outer = expandOf(PlotSpecSchema.parse(facetSpec), { sales: salesRows });
+    const outer = expandOf(parsePlotSpec(facetSpec), { sales: salesRows });
     const panels = panelScopesOf(outer);
     expect(panels.map(panel => String(panel.meta?.column))).toEqual(['north', 'south']);
     expect(panels[1].transforms).toEqual([{ kind: 'translate', x: 252, y: 0 }]);
   });
 
   it('overlay_same_side_axis_gap_offsets_axes', () => {
-    const outer = expandOf(PlotSpecSchema.parse(overlaySpec), { weather: weatherRows });
+    const outer = expandOf(parsePlotSpec(overlaySpec), { weather: weatherRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
     expect(yAxes).toHaveLength(2);
     expect(firstMoveX(yAxes[0]) - firstMoveX(yAxes[1])).toBeCloseTo(12, 6);
@@ -282,10 +291,10 @@ describe('composition guides layout lowering', () => {
     const spec = {
       ...overlaySpec,
       guides: [
-        { type: 'axis', dimension: 'y', coordinateScope: 'temp', placement: { kind: 'side', side: 'left' }, title: longTitle },
+        { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' }, title: longTitle },
       ],
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec), { weather: weatherRows });
+    const outer = expandOf(parsePlotSpec(spec), { weather: weatherRows });
     const axis = axisLayersOf(outer)[0];
     expect(allNodes(axis).some(node => node.text === longTitle)).toBe(true);
   });
@@ -295,10 +304,10 @@ describe('composition guides layout lowering', () => {
       ...facetSpec,
       composition: {
         ...facetSpec.composition,
-        guidePolicy: undefined,
+        resolve: undefined,
       },
     };
-    const outer = expandOf(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec))), { sales: salesRows });
+    const outer = expandOf(parsePlotSpec(JSON.parse(JSON.stringify(spec))), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
     expect(yAxes).toHaveLength(1);
   });
@@ -308,7 +317,7 @@ describe('composition guides layout lowering', () => {
       ...facetSpec,
       guides: facetSpec.guides.map(guide => ({ ...guide, grid: false })),
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec), { sales: salesRows });
+    const outer = expandOf(parsePlotSpec(spec), { sales: salesRows });
     expect(gridLayersOf(outer)).toHaveLength(0);
   });
 
@@ -317,10 +326,10 @@ describe('composition guides layout lowering', () => {
       ...facetSpec,
       composition: {
         ...facetSpec.composition,
-        guidePolicy: { axes: CompositionAxisPolicy.OuterShared, gridPlacement: CompositionGridPlacement.Self },
+        resolve: { axis: { x: 'outer', y: 'outer' }, grid: { x: 'local', y: 'local' } },
       },
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec), { sales: salesRows });
+    const outer = expandOf(parsePlotSpec(spec), { sales: salesRows });
     const panels = panelScopesOf(outer);
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
 
@@ -328,17 +337,87 @@ describe('composition guides layout lowering', () => {
     expect(panels.map(panel => gridLayersOf(panel).length)).toEqual([2, 2]);
   });
 
+  it('facet_local_resolve_overrides_composition_grid_default', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'sales',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      composition: {
+        defaultView: 'root',
+        views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' } }],
+        resolve: { grid: { y: 'none' } },
+        arrangements: [
+          {
+            kind: 'facet',
+            id: 'region',
+            view: 'root',
+            column: { field: 'region', order: ['north', 'south'] },
+            resolve: { grid: { y: 'all' } },
+          },
+        ],
+      },
+      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      guides: [{ type: 'axis', dimension: 'y', grid: true }],
+    });
+    const outer = expandOf(spec, { sales: salesRows });
+    const panels = panelScopesOf(outer);
+
+    expect(panels.map(panel => gridLayersOf(panel).length)).toEqual([1, 1]);
+  });
+
+  it('facet_axis_none_suppresses_matching_axis_role', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'sales',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      composition: {
+        defaultView: 'root',
+        views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' } }],
+        arrangements: [
+          {
+            kind: 'facet',
+            id: 'region',
+            view: 'root',
+            column: { field: 'region', order: ['north', 'south'] },
+            resolve: { axis: { y: 'none' } },
+          },
+        ],
+      },
+      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y' },
+      ],
+    });
+    const outer = expandOf(spec, { sales: salesRows });
+
+    expect(axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y')).toHaveLength(0);
+    expect(axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'x').length).toBeGreaterThan(0);
+  });
+
   it('facet_selected_grid_targets_only_matching_panels', () => {
     const spec = {
       ...facetSpec,
       composition: {
         ...facetSpec.composition,
-        facets: [
+        arrangements: [
           {
+            kind: 'facet',
             id: 'regionChannel',
+            view: 'root',
             row: { field: 'channel', order: ['a', 'b'] },
             column: { field: 'region', order: ['north', 'south'] },
-            scales: { roles: { y: 'shared' } },
+            resolve: { scale: { y: 'shared' } },
           },
         ],
       },
@@ -348,12 +427,12 @@ describe('composition guides layout lowering', () => {
           dimension: 'y',
           grid: {
             applyTo: AxisGridApplyTo.Selected,
-            select: { facet: { id: 'regionChannel', row: ['b'] } },
+            select: { facet: { arrangement: 'regionChannel', row: ['b'] } },
           },
         },
       ],
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec), { sales: salesByChannelRows });
+    const outer = expandOf(parsePlotSpec(spec), { sales: salesByChannelRows });
     const panels = panelScopesOf(outer);
 
     expect(panels.map(panel => [panel.meta?.row, gridLayersOf(panel).length])).toEqual([
@@ -369,11 +448,11 @@ describe('composition guides layout lowering', () => {
       ...lanesSpec,
       composition: {
         ...lanesSpec.composition,
-        layout: { trackGap: 0 },
+        spacing: { trackGap: 0 },
       },
     };
-    const withGap = markLayersOf(expandOf(PlotSpecSchema.parse(lanesSpec), { lanes: laneRows }));
-    const withoutGap = markLayersOf(expandOf(PlotSpecSchema.parse(noGapSpec), { lanes: laneRows }));
+    const withGap = markLayersOf(expandOf(parsePlotSpec(lanesSpec), { lanes: laneRows }));
+    const withoutGap = markLayersOf(expandOf(parsePlotSpec(noGapSpec), { lanes: laneRows }));
     const withGapDistance = Math.min(...allNodes(withGap[0]).map(node => (node.position as [number, number])[1])) -
       Math.max(...allNodes(withGap[1]).map(node => (node.position as [number, number])[1]));
     const withoutGapDistance =
@@ -382,8 +461,63 @@ describe('composition guides layout lowering', () => {
     expect(withGapDistance).toBeGreaterThan(withoutGapDistance);
   });
 
+  it('track_local_spacing_opens_space_between_adjacent_track_bands', () => {
+    const directLanesSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      id: 'lanes',
+      data: { reference: 'lanes' },
+      scales: [
+        { type: 'linear', name: 'xShared' },
+        { type: 'linear', name: 'yLane' },
+      ],
+      composition: {
+        defaultView: 'events',
+        arrangements: [
+          {
+            kind: 'tracks',
+            id: 'tracks',
+            coordinate: { type: 'cartesian2D', x: 'xShared', y: 'yLane' },
+            sharedRoles: ['x'],
+            spacing: { trackGap: 18 },
+            tracks: [
+              { id: 'events', view: 'events', band: { role: 'y', start: 0, end: 0.5 } },
+              { id: 'volume', view: 'volume', band: { role: 'y', start: 0.5, end: 1 } },
+            ],
+          },
+        ],
+      },
+      marks: [
+        { type: 'point', coordinateView: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
+        { type: 'point', coordinateView: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
+      ],
+      guides: [],
+    };
+    const noGapSpec = PlotSpecSchema.parse({
+      ...directLanesSpec,
+      composition: {
+        ...directLanesSpec.composition,
+        arrangements: [
+          {
+            ...directLanesSpec.composition.arrangements[0],
+            spacing: { trackGap: 0 },
+          },
+        ],
+      },
+    });
+    const withGap = markLayersOf(expandOf(PlotSpecSchema.parse(directLanesSpec), { lanes: laneRows }));
+    const withoutGap = markLayersOf(expandOf(noGapSpec, { lanes: laneRows }));
+    const withGapDistance = Math.min(...allNodes(withGap[0]).map(node => (node.position as [number, number])[1])) -
+      Math.max(...allNodes(withGap[1]).map(node => (node.position as [number, number])[1]));
+    const withoutGapDistance =
+      Math.min(...allNodes(withoutGap[0]).map(node => (node.position as [number, number])[1])) -
+      Math.max(...allNodes(withoutGap[1]).map(node => (node.position as [number, number])[1]));
+
+    expect(withGapDistance).toBeGreaterThan(withoutGapDistance);
+  });
+
   it('scaffold_shared_grid_keeps_one_grid_per_dimension', () => {
-    const outer = expandOf(PlotSpecSchema.parse(lanesSpec), { lanes: laneRows });
+    const outer = expandOf(parsePlotSpec(lanesSpec), { lanes: laneRows });
     const trackGridScopes = gridLayersOf(outer).map(layer => layer.meta?.track);
     expect(trackGridScopes).toEqual(['events', 'volume']);
   });
@@ -393,10 +527,10 @@ describe('composition guides layout lowering', () => {
       ...lanesSpec,
       composition: {
         ...lanesSpec.composition,
-        guidePolicy: undefined,
+        resolve: undefined,
       },
     };
-    const outer = expandOf(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec))), { lanes: laneRows });
+    const outer = expandOf(parsePlotSpec(JSON.parse(JSON.stringify(spec))), { lanes: laneRows });
     const trackGridScopes = gridLayersOf(outer).map(layer => layer.meta?.track);
     expect(trackGridScopes).toEqual(['events', 'volume']);
   });
@@ -408,15 +542,15 @@ describe('composition guides layout lowering', () => {
         {
           type: 'axis',
           dimension: 'y',
-          coordinateScope: 'volume',
+          coordinateView: 'volume',
           grid: {
             applyTo: AxisGridApplyTo.Selected,
-            select: { track: { scaffold: 'tracks', id: ['volume'] } },
+            select: { track: { arrangement: 'tracks', id: ['volume'] } },
           },
         },
       ],
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec), { lanes: laneRows });
+    const outer = expandOf(parsePlotSpec(spec), { lanes: laneRows });
     expect(gridLayersOf(outer).map(layer => layer.meta?.track)).toEqual(['volume']);
   });
 
@@ -427,14 +561,14 @@ describe('composition guides layout lowering', () => {
         {
           type: 'axis',
           dimension: 'x',
-          coordinateScope: 'events',
+          coordinateView: 'events',
           grid: {
             applyTo: AxisGridApplyTo.Selected,
-            select: { track: { scaffold: 'tracks', id: ['missing'] } },
+            select: { track: { arrangement: 'tracks', id: ['missing'] } },
           },
         },
       ],
     };
-    expect(() => expandOf(PlotSpecSchema.parse(spec), { lanes: laneRows })).toThrow(/grid selector/i);
+    expect(() => expandOf(parsePlotSpec(spec), { lanes: laneRows })).toThrow(/grid selector/i);
   });
 });

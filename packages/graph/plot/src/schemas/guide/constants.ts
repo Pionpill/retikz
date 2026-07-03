@@ -49,19 +49,21 @@ export const AxisCardinalSide = {
 export type AxisCardinalSideValue = ValueOf<typeof AxisCardinalSide>;
 
 /**
- * axis grid 投放模式。
- * @description self 只投放到 axis 自身 scope；sharedRole 投放到共享 role 的 scope；selected 使用显式 selector。
+ * 坐标轴网格投放模式。
+ * @description `local` 只投放到坐标轴绑定的坐标视图；`all` 投放到组合结构选中的坐标视图；`selected` 使用显式选择器。
  */
 export const AxisGridApplyTo = {
-  /** 只投放到 axis 自己绑定的 coordinate scope。 */
-  Self: 'self',
-  /** 投放到与 axis 共享 coordinate role / scale identity 的目标。 */
-  SharedRole: 'sharedRole',
-  /** 只投放到 selector 命中的 scope / facet panel / track。 */
+  /** 只投放到坐标轴绑定的坐标视图。 */
+  Local: 'local',
+  /** 投放到组合结构选中的所有坐标视图。 */
+  All: 'all',
+  /** 不为该坐标轴投放网格。 */
+  None: 'none',
+  /** 只投放到选择器命中的坐标视图、分面面板或轨道。 */
   Selected: 'selected',
 } as const;
 
-/** axis grid 投放模式取值。 */
+/** 坐标轴网格投放模式取值。 */
 export type AxisGridApplyToValue = ValueOf<typeof AxisGridApplyTo>;
 
 /**

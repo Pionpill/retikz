@@ -83,9 +83,6 @@ import {
 } from '../providers';
 import {
   AxisGridApplyTo,
-  CompositionAxisPolicy,
-  CompositionFacetLabelPolicy,
-  CompositionGridPlacement,
   FieldOrderMode,
   IntervalBoundKind,
   isBuiltinMark,
@@ -171,11 +168,19 @@ export type MarkDataView = {
   rows: Array<ExternalRow>;
 };
 
-type CoordinateScopePlacement = NonNullable<NonNullable<PlotSpec['composition']>['scopes'][number]['placement']>;
-type SharedScaffold = NonNullable<NonNullable<PlotSpec['composition']>['scaffolds']>[number];
+type CompositionSpec = NonNullable<PlotSpec['composition']>;
+type CoordinateView = NonNullable<CompositionSpec['views']>[number];
+type CoordinateViewPlacement = NonNullable<CoordinateView['placement']>;
+type CoordinateScopePlacement =
+  | Exclude<CoordinateViewPlacement, { kind: 'slot' }>
+  | { kind: 'track'; scaffold: string; track: string };
+type CoordinateArrangement = NonNullable<CompositionSpec['arrangements']>[number];
+type FacetGrid = Extract<CoordinateArrangement, { kind: 'facet' }>;
+type SharedScaffold = Extract<CoordinateArrangement, { kind: 'tracks' }>;
 type ScaffoldTrack = SharedScaffold['tracks'][number];
-type CompositionLayout = NonNullable<NonNullable<PlotSpec['composition']>['layout']>;
-type CompositionGuidePolicy = NonNullable<NonNullable<PlotSpec['composition']>['guidePolicy']>;
+type CompositionLayout = NonNullable<CompositionSpec['spacing']>;
+type CompositionResolve = NonNullable<CompositionSpec['resolve']>;
+type CompositionAxisPolicyValue = 'perScope' | 'outerShared' | 'none';
 
 const relationTargetRoleValues = (
   mark: MarkOperation,
@@ -218,25 +223,43 @@ export type CoordinateScopeRegistry = {
   scopes: Array<CoordinateScopeRegistryEntry>;
 };
 
+const trackViewIdOf = (arrangement: SharedScaffold, track: ScaffoldTrack): string => {
+  if (track.view !== undefined) return track.view;
+  const template = arrangement.viewIdTemplate ?? '{arrangement}.track.{track}';
+  return template.replaceAll('{arrangement}', arrangement.id).replaceAll('{track}', track.id);
+};
+
 export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeRegistry => {
   if (node.composition !== undefined) {
-    const scaffoldById = new Map((node.composition.scaffolds ?? []).map(scaffold => [scaffold.id, scaffold] as const));
+    const scaffolds = (node.composition.arrangements ?? []).filter(
+      (arrangement): arrangement is SharedScaffold => arrangement.kind === 'tracks',
+    );
+    const explicitScopes: Array<CoordinateScopeRegistryEntry> = (node.composition.views ?? []).map(view => {
+      const placement =
+        view.placement === undefined || view.placement.kind !== 'slot' ? view.placement : undefined;
+      return {
+        id: view.id,
+        coordinate: view.coordinate,
+        ...(placement !== undefined ? { placement } : {}),
+      };
+    });
+    const generatedTrackScopes: Array<CoordinateScopeRegistryEntry> = scaffolds.flatMap(scaffold =>
+      scaffold.tracks.map(track => ({
+        id: trackViewIdOf(scaffold, track),
+        coordinate: track.coordinate ?? scaffold.coordinate,
+        placement: { kind: 'track', scaffold: scaffold.id, track: track.id },
+        scaffold: scaffold.id,
+        track: track.id,
+      })),
+    );
+    const seen = new Set<string>();
+    for (const scope of [...explicitScopes, ...generatedTrackScopes]) {
+      if (seen.has(scope.id)) throw new Error(`lowerPlots: coordinate view "${scope.id}" is duplicated`);
+      seen.add(scope.id);
+    }
     return {
-      defaultScope: node.composition.defaultScope,
-      scopes: node.composition.scopes.map(scope => {
-        const placement = scope.placement;
-        const scaffold = placement?.kind === 'track' ? scaffoldById.get(placement.scaffold) : undefined;
-        const coordinate = scope.coordinate ?? scaffold?.coordinate;
-        if (coordinate === undefined) {
-          throw new Error(`lowerPlots: coordinate scope "${scope.id}" must declare coordinate or inherit one from scaffold`);
-        }
-        return {
-          id: scope.id,
-          coordinate,
-          ...(placement !== undefined ? { placement } : {}),
-          ...(placement?.kind === 'track' ? { scaffold: placement.scaffold, track: placement.track } : {}),
-        };
-      }),
+      defaultScope: node.composition.defaultView,
+      scopes: [...explicitScopes, ...generatedTrackScopes],
     };
   }
   if (node.coordinate === undefined) {
@@ -249,24 +272,66 @@ export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeR
 };
 
 export const coordinateScopeIdOf = (
-  operation: { coordinateScope?: string },
+  operation: { coordinateView?: string },
   defaultScope: string,
-): string => operation.coordinateScope ?? defaultScope;
+): string => operation.coordinateView ?? defaultScope;
 
 const axisGuideScopeIdOf = (guide: AxisGuide, defaultScope: string): string =>
-  guide.coordinateScope ?? defaultScope;
+  guide.coordinateView ?? defaultScope;
 
 const compositionAxisPolicyOf = (
-  policy: CompositionGuidePolicy | undefined,
+  resolve: CompositionResolve | undefined,
   context: { hasFacets: boolean; hasScaffolds: boolean },
-): string =>
-  policy?.axes ?? (context.hasFacets || context.hasScaffolds ? CompositionAxisPolicy.OuterShared : CompositionAxisPolicy.PerScope);
+  dimension: DimensionRole,
+): CompositionAxisPolicyValue => {
+  const mode = resolve?.axis?.[dimension];
+  if (mode === 'none') return 'none';
+  if (mode === 'outer') return 'outerShared';
+  if (mode === 'local') return 'perScope';
+  return context.hasFacets || context.hasScaffolds ? 'outerShared' : 'perScope';
+};
 
 const compositionGridPlacementOf = (
-  policy: CompositionGuidePolicy | undefined,
+  resolve: CompositionResolve | undefined,
   context: { hasFacets: boolean; hasScaffolds: boolean },
-): string =>
-  policy?.gridPlacement ?? (!context.hasFacets && context.hasScaffolds ? CompositionGridPlacement.SharedRole : CompositionGridPlacement.Self);
+  dimension: DimensionRole,
+): string => resolve?.grid?.[dimension] ?? (context.hasFacets || context.hasScaffolds ? AxisGridApplyTo.All : AxisGridApplyTo.Local);
+
+const mergeCompositionLayout = (
+  base: CompositionLayout | undefined,
+  override: CompositionLayout | undefined,
+): CompositionLayout | undefined => {
+  if (override === undefined) return base;
+  if (base === undefined) return { ...override };
+  return { ...base, ...override };
+};
+
+const mergeCompositionResolveRecord = <T extends string>(
+  base: Record<string, T> | undefined,
+  override: Record<string, T> | undefined,
+): Record<string, T> | undefined => {
+  if (override === undefined) return base;
+  if (base === undefined) return { ...override };
+  return { ...base, ...override };
+};
+
+const mergeCompositionResolve = (
+  base: CompositionResolve | undefined,
+  override: CompositionResolve | undefined,
+): CompositionResolve | undefined => {
+  if (override === undefined) return base;
+  return {
+    ...(mergeCompositionResolveRecord(base?.scale, override.scale) !== undefined
+      ? { scale: mergeCompositionResolveRecord(base?.scale, override.scale) }
+      : {}),
+    ...(mergeCompositionResolveRecord(base?.axis, override.axis) !== undefined
+      ? { axis: mergeCompositionResolveRecord(base?.axis, override.axis) }
+      : {}),
+    ...(mergeCompositionResolveRecord(base?.grid, override.grid) !== undefined
+      ? { grid: mergeCompositionResolveRecord(base?.grid, override.grid) }
+      : {}),
+  };
+};
 
 const axisGapKeyOf = (guide: AxisGuide): string | null => {
   const placement = guide.placement;
@@ -301,9 +366,9 @@ const withAxisGapOffsets = (guides: ReadonlyArray<Guide>, axisGap: number | unde
 const withoutAxisGrid = (guides: ReadonlyArray<Guide>): Array<Guide> =>
   guides.map(guide => (isAxisGuide(guide) && guide.grid !== undefined ? { ...guide, grid: false } : guide));
 
-const withEnabledAxisGrid = (guide: AxisGuide, coordinateScope: string | undefined): AxisGuide => ({
+const withEnabledAxisGrid = (guide: AxisGuide, coordinateView: string | undefined): AxisGuide => ({
   ...guide,
-  ...(coordinateScope !== undefined ? { coordinateScope } : {}),
+  ...(coordinateView !== undefined ? { coordinateView } : {}),
   grid: true,
 });
 
@@ -338,7 +403,6 @@ const withScopeContext = (child: IRChild, context: IRJsonObject): IRChild => {
   return child;
 };
 
-type FacetGrid = NonNullable<NonNullable<PlotSpec['composition']>['facets']>[number];
 type FacetDimension = NonNullable<FacetGrid['row']>;
 type FacetDimensionItem = Extract<FacetDimension, Array<unknown>>[number] | Exclude<FacetDimension, Array<unknown>>;
 type FacetScalar = string | number | boolean | null;
@@ -437,19 +501,20 @@ const defaultFacetPanelId = (
   row: FacetTuple | undefined,
   column: FacetTuple | undefined,
 ): string => {
-  const parts = ['facet', facet.id];
-  if (row !== undefined) parts.push('row', slugFacetValue(row));
-  if (column !== undefined) parts.push('column', slugFacetValue(column));
-  return parts.join('.');
+  const rowKey = row === undefined ? '_' : slugFacetValue(row);
+  const columnKey = column === undefined ? '_' : slugFacetValue(column);
+  return `${facet.id}.panel.${rowKey}.${columnKey}`;
 };
 
 const facetPanelId = (facet: FacetGrid, row: FacetTuple | undefined, column: FacetTuple | undefined): string => {
-  const template = facet.scopeIdTemplate;
+  const panel = defaultFacetPanelId(facet, row, column);
+  const template = facet.viewIdTemplate;
   if (template === undefined) return defaultFacetPanelId(facet, row, column);
   return template
-    .replaceAll('{facet}', facet.id)
+    .replaceAll('{arrangement}', facet.id)
     .replaceAll('{row}', slugFacetValue(row))
-    .replaceAll('{column}', slugFacetValue(column));
+    .replaceAll('{column}', slugFacetValue(column))
+    .replaceAll('{panel}', panel);
 };
 
 const resolveFacetPanels = (
@@ -474,7 +539,7 @@ const resolveFacetPanels = (
       const panelRows = groups.get(key) ?? [];
       if (panelRows.length === 0 && facet.empty !== 'show') continue;
       const id = facetPanelId(facet, rowValue, columnValue);
-      if (usedIds.has(id)) throw new Error(`lowerPlots: facet panel scope id "${id}" is duplicated`);
+      if (usedIds.has(id)) throw new Error(`lowerPlots: facet panel view id "${id}" is duplicated`);
       usedIds.add(id);
       panels.push({
         id,
@@ -781,7 +846,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const registry = resolveCoordinateScopeRegistry(node);
   const coordinateOperation = node.coordinate ?? registry.scopes.find(scope => scope.id === registry.defaultScope)?.coordinate;
   if (coordinateOperation === undefined) {
-    throw new Error(`lowerPlots: default coordinate scope "${registry.defaultScope}" is not registered`);
+    throw new Error(`lowerPlots: default coordinate view "${registry.defaultScope}" is not registered`);
   }
   const coordinateRegistry = resolveCoordinateRegistry(coordinates);
   const coordinateDefinition = coordinateRegistry.get(coordinateOperation.type);
@@ -1518,30 +1583,53 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     rows: resolveMarkRows(mark, rows, transformRegistry, transformContext),
   }));
 
-  const compositionLayout = node.composition?.layout;
-  const compositionFacets = node.composition?.facets ?? [];
-  const compositionScaffolds = node.composition?.scaffolds ?? [];
-  const compositionGuidePolicy = node.composition?.guidePolicy;
+  const compositionLayout = node.composition?.spacing;
+  const compositionArrangements = node.composition?.arrangements ?? [];
+  const compositionFacets = compositionArrangements.filter(
+    (arrangement): arrangement is FacetGrid => arrangement.kind === 'facet',
+  );
+  const compositionScaffolds = compositionArrangements.filter(
+    (arrangement): arrangement is SharedScaffold => arrangement.kind === 'tracks',
+  );
+  const compositionResolve = node.composition?.resolve;
   const compositionPolicyContext = {
     hasFacets: compositionFacets.length > 0,
     hasScaffolds: compositionScaffolds.length > 0,
   };
-  const compositionAxisPolicy = compositionAxisPolicyOf(compositionGuidePolicy, compositionPolicyContext);
-  const compositionGridPlacement = compositionGridPlacementOf(compositionGuidePolicy, compositionPolicyContext);
-  const frameMargin = mergeCompositionMargin(compositionLayout?.padding, options.margin);
-  const allGuides = withAxisGapOffsets(node.guides ?? [], compositionLayout?.axisGap);
+  const allGuides = node.guides ?? [];
+  const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
   const coordinateScopes = resolveCoordinateScopeRegistry(node);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
   const scopeContextOf = (scope: CoordinateScopeRegistryEntry): IRJsonObject => {
     if (node.composition === undefined) return {};
-    const context: IRJsonObject = { coordinateScope: scope.id };
+    const context: IRJsonObject = { coordinateView: scope.id };
     if (scope.placement?.kind === 'track') {
-      context.scaffold = scope.placement.scaffold;
+      context.arrangement = scope.placement.scaffold;
       context.track = scope.placement.track;
     }
     return context;
   };
   const scaffoldById = new Map(compositionScaffolds.map(scaffold => [scaffold.id, scaffold] as const));
+  const arrangementLayoutOf = (arrangement: CoordinateArrangement | undefined): CompositionLayout | undefined =>
+    mergeCompositionLayout(compositionLayout, arrangement?.spacing);
+  const arrangementResolveOf = (arrangement: CoordinateArrangement | undefined): CompositionResolve | undefined =>
+    mergeCompositionResolve(compositionResolve, arrangement?.resolve);
+  const scopeArrangementOf = (scope: CoordinateScopeRegistryEntry): CoordinateArrangement | undefined =>
+    scope.placement?.kind === 'track' ? scaffoldById.get(scope.placement.scaffold) : undefined;
+  const scopeLayoutOf = (scope: CoordinateScopeRegistryEntry): CompositionLayout | undefined =>
+    arrangementLayoutOf(scopeArrangementOf(scope));
+  const scopeResolveOf = (scope: CoordinateScopeRegistryEntry): CompositionResolve | undefined =>
+    arrangementResolveOf(scopeArrangementOf(scope));
+  const axisPolicyFor = (
+    resolve: CompositionResolve | undefined,
+    context: { hasFacets: boolean; hasScaffolds: boolean },
+    dimension: DimensionRole,
+  ): CompositionAxisPolicyValue => compositionAxisPolicyOf(resolve, context, dimension);
+  const gridPlacementFor = (
+    resolve: CompositionResolve | undefined,
+    context: { hasFacets: boolean; hasScaffolds: boolean },
+    dimension: DimensionRole,
+  ): string => compositionGridPlacementOf(resolve, context, dimension);
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const rolesOf = (coordinate: CoordinateOperation): ReadonlySet<DimensionRole> => {
     const definition = coordinateRegistry.get(coordinate.type);
@@ -1559,7 +1647,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   };
   const assertTrackRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scopeId: string): void => {
     if (!roles.has(role)) {
-      throw new Error(`lowerPlots: coordinate scope "${scopeId}" track band role "${role}" is not supported by its coordinate`);
+      throw new Error(`lowerPlots: coordinate view "${scopeId}" track band role "${role}" is not supported by its coordinate`);
     }
   };
   const roleRangeOf = (
@@ -1587,7 +1675,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const delta = range[1] - range[0];
     const start = range[0] + delta * track.band.start;
     const end = range[0] + delta * track.band.end;
-    const gap = compositionLayout?.trackGap ?? 0;
+    const gap = arrangementLayoutOf(scaffold)?.trackGap ?? 0;
     if (gap === 0) return [start, end];
     const { index, count } = trackIndexOf(scaffold, track);
     const direction = delta >= 0 ? 1 : -1;
@@ -1607,22 +1695,27 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   }
   type AxisGridConfig = Exclude<NonNullable<AxisGuide['grid']>, boolean>;
   type GridTargetSelector = NonNullable<AxisGridConfig['select']>;
-  const axisGridApplyToOf = (guide: AxisGuide): string | null => {
+  const axisGridApplyToOf = (
+    guide: AxisGuide,
+    resolve: CompositionResolve | undefined,
+    context: { hasFacets: boolean; hasScaffolds: boolean },
+  ): string | null => {
     if (guide.grid === undefined || guide.grid === false) return null;
-    if (guide.grid === true) return compositionGridPlacement;
-    return guide.grid.applyTo ?? compositionGridPlacement;
+    if (guide.grid === true) return gridPlacementFor(resolve, context, guide.dimension);
+    return guide.grid.applyTo ?? gridPlacementFor(resolve, context, guide.dimension);
   };
   const axisGridSelectorOf = (guide: AxisGuide): GridTargetSelector | undefined =>
     typeof guide.grid === 'object' ? guide.grid.select : undefined;
   const facetScalarKey = (value: FacetScalar): string => JSON.stringify(value);
   const scalarSelectorIncludes = (
-    values: ReadonlyArray<FacetScalar> | undefined,
+    values: FacetPanelValue,
     value: FacetPanelValue,
   ): boolean => {
     if (values === undefined) return true;
     if (value === undefined) return false;
+    const selectorValues = Array.isArray(values) ? values : [values];
     const panelValues = Array.isArray(value) ? value : [value];
-    const accepted = new Set(values.map(facetScalarKey));
+    const accepted = new Set(selectorValues.map(facetScalarKey));
     return panelValues.some(item => accepted.has(facetScalarKey(item)));
   };
   const coordinateScaleNameOf = (scope: CoordinateScopeRegistryEntry, role: DimensionRole): string | undefined => {
@@ -1646,21 +1739,32 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     return sourceScale !== undefined && sourceScale === targetScale;
   };
   const selectorMatchesScope = (selector: GridTargetSelector, scope: CoordinateScopeRegistryEntry): boolean => {
-    if (selector.scopes?.includes(scope.id)) return true;
+    if (selector.view !== undefined) {
+      const views = Array.isArray(selector.view) ? selector.view : [selector.view];
+      if (views.includes(scope.id)) return true;
+    }
     if (selector.track !== undefined && scope.placement?.kind === 'track') {
-      const scaffoldMatches = selector.track.scaffold === undefined || selector.track.scaffold === scope.placement.scaffold;
-      const trackMatches = selector.track.id === undefined || selector.track.id.includes(scope.placement.track);
+      const scaffoldMatches =
+        selector.track.arrangement === undefined || selector.track.arrangement === scope.placement.scaffold;
+      const trackIds =
+        selector.track.id === undefined
+          ? undefined
+          : Array.isArray(selector.track.id)
+            ? selector.track.id
+            : [selector.track.id];
+      const trackMatches = trackIds === undefined || trackIds.includes(scope.placement.track);
       return scaffoldMatches && trackMatches;
     }
     return false;
   };
   const axisGridTargetsScope = (guide: AxisGuide, scope: CoordinateScopeRegistryEntry): boolean => {
-    const applyTo = axisGridApplyToOf(guide);
-    if (applyTo === null) return false;
     const sourceScope = scopeById.get(axisGuideScopeIdOf(guide, coordinateScopes.defaultScope));
     if (sourceScope === undefined) return false;
-    if (applyTo === AxisGridApplyTo.Self) return sourceScope.id === scope.id;
-    if (applyTo === AxisGridApplyTo.SharedRole) return scopeSharesAxisRole(sourceScope, scope, guide.dimension);
+    const applyTo = axisGridApplyToOf(guide, scopeResolveOf(sourceScope), compositionPolicyContext);
+    if (applyTo === null) return false;
+    if (applyTo === AxisGridApplyTo.None) return false;
+    if (applyTo === AxisGridApplyTo.Local) return sourceScope.id === scope.id;
+    if (applyTo === AxisGridApplyTo.All) return scopeSharesAxisRole(sourceScope, scope, guide.dimension);
     const selector = axisGridSelectorOf(guide);
     return selector !== undefined && selectorMatchesScope(selector, scope);
   };
@@ -1670,7 +1774,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     );
   const assertSelectedGridTargetsScopes = (): void => {
     for (const guide of allGuides) {
-      if (!isAxisGuide(guide) || axisGridApplyToOf(guide) !== AxisGridApplyTo.Selected) continue;
+      if (!isAxisGuide(guide)) continue;
+      const sourceScope = scopeById.get(axisGuideScopeIdOf(guide, coordinateScopes.defaultScope));
+      if (sourceScope === undefined) continue;
+      if (axisGridApplyToOf(guide, scopeResolveOf(sourceScope), compositionPolicyContext) !== AxisGridApplyTo.Selected) continue;
       const count = coordinateScopes.scopes.filter(scope => axisGridTargetsScope(guide, scope)).length;
       if (count === 0) {
         throw new Error(`lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target scope`);
@@ -1697,6 +1804,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       marks: scaffoldMarkDataViews.map(view => view.mark),
       guides: [],
     };
+    const scaffoldLayout = arrangementLayoutOf(scaffold);
     const resolved = resolveFrame({
       node: scaffoldNode,
       rows,
@@ -1704,8 +1812,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       width,
       height,
       fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-      margin: frameMargin,
-      labelGap: compositionLayout?.labelGap,
+      margin: mergeCompositionMargin(scaffoldLayout?.padding, options.margin),
+      labelGap: scaffoldLayout?.labelGap,
       provenance,
       coordinates: options.coordinates,
       scaleRegistry,
@@ -1718,7 +1826,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const cached = resolvedFrames.get(scope.id);
     if (cached !== undefined) return cached;
     if (resolvingFrames.has(scope.id)) {
-      throw new Error(`lowerPlots: overlay coordinate scope cycle detected at "${scope.id}"`);
+      throw new Error(`lowerPlots: overlay coordinate view cycle detected at "${scope.id}"`);
     }
     resolvingFrames.add(scope.id);
     const targetPlotArea =
@@ -1763,9 +1871,16 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         if (sharedViews.length > scopedMarkDataViews.length) roleMarkDataViews[role] = sharedViews;
       }
     }
-    const scopedGuides = withoutAxisGrid(allGuides.filter(
-      guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === scope.id,
-    ));
+    const scopedArrangement = scopeArrangementOf(scope);
+    const scopedLayout = scopeLayoutOf(scope);
+    const rawScopedGuides = (scopedArrangement === undefined ? allGuidesWithCompositionGap : allGuides).filter(guide => {
+      if (!isAxisGuide(guide)) return true;
+      if (axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) !== scope.id) return false;
+      return axisPolicyFor(scopeResolveOf(scope), compositionPolicyContext, guide.dimension) !== 'none';
+    });
+    const scopedGuides = withoutAxisGrid(
+      scopedArrangement === undefined ? rawScopedGuides : withAxisGapOffsets(rawScopedGuides, scopedLayout?.axisGap),
+    );
     const scopedGridGuides = gridGuidesForScope(scope);
     const scopedNode: PlotSpec = {
       ...node,
@@ -1781,8 +1896,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       width,
       height,
       fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-      margin: frameMargin,
-      labelGap: compositionLayout?.labelGap,
+      margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
+      labelGap: scopedLayout?.labelGap,
       ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
       ...(scaffoldFrame !== undefined && (scaffold?.frame ?? 'shared') === 'shared'
         ? { plotAreaOverride: scaffoldFrame.plotArea }
@@ -1803,8 +1918,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
             width,
             height,
             fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-            margin: frameMargin,
-            labelGap: compositionLayout?.labelGap,
+            margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
+            labelGap: scopedLayout?.labelGap,
             plotAreaOverride: rawResolution.plotArea,
             ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
             provenance,
@@ -1851,26 +1966,27 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   if (facets.length > 0) {
     const defaultScope = coordinateScopes.scopes.find(scope => scope.id === coordinateScopes.defaultScope);
     if (defaultScope === undefined) {
-      throw new Error(`lowerPlots: default coordinate scope "${coordinateScopes.defaultScope}" is not registered`);
+      throw new Error(`lowerPlots: default coordinate view "${coordinateScopes.defaultScope}" is not registered`);
     }
 
     const usedFacetScopeIds = new Set(coordinateScopes.scopes.map(scope => scope.id));
     const panels = facets.flatMap(facet => resolveFacetPanels(facet, rows, usedFacetScopeIds));
     const maxColumnIndex = panels.reduce((max, panel) => Math.max(max, panel.columnIndex), 0);
     const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
-    const panelGap = compositionLayout?.panelGap ?? 0;
-    const facetLabelsEnabled = compositionGuidePolicy?.facetLabels === CompositionFacetLabelPolicy.RowColumn;
+    const facetLayout = arrangementLayoutOf(facets[0]);
+    const panelGap = facetLayout?.panelGap ?? 0;
+    const facetLabelsEnabled = facets.some(facet => facet.header?.row === true || facet.header?.column === true);
     const rowFacetLevelCount = facetLabelsEnabled
-      ? Math.max(0, ...facets.map(facet => facetDimensionsOf(facet.row).length))
+      ? Math.max(0, ...facets.map(facet => (facet.header?.row === true ? facetDimensionsOf(facet.row).length : 0)))
       : 0;
     const columnFacetLevelCount = facetLabelsEnabled
-      ? Math.max(0, ...facets.map(facet => facetDimensionsOf(facet.column).length))
+      ? Math.max(0, ...facets.map(facet => (facet.header?.column === true ? facetDimensionsOf(facet.column).length : 0)))
       : 0;
     const facetLabelBandSize =
       facetLabelsEnabled && (rowFacetLevelCount > 0 || columnFacetLevelCount > 0)
         ? Math.max((options.fontSize ?? DEFAULT_FONT_SIZE) + 10, 22)
         : 0;
-    const facetLabelGap = facetLabelsEnabled ? (compositionLayout?.labelGap ?? facetLabelBandSize) : 0;
+    const facetLabelGap = facetLabelsEnabled ? (facetLayout?.labelGap ?? facetLabelBandSize) : 0;
     const rowLabelGap = rowFacetLevelCount > 0 ? facetLabelGap : 0;
     const columnLabelGap = columnFacetLevelCount > 0 ? facetLabelGap : 0;
     const rowLabelWidth = rowFacetLevelCount * facetLabelBandSize + rowLabelGap;
@@ -1954,29 +2070,45 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
           return labels;
         })
       : [];
-    const facetGuides = allGuides.filter(
-      guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === defaultScope.id,
+    const facetGuides = withAxisGapOffsets(
+      allGuides.filter(
+        guide => !isAxisGuide(guide) || axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) === defaultScope.id,
+      ),
+      facetLayout?.axisGap,
     );
     const keepOuterSharedAxisForPanel = (guide: Guide, panel: FacetPanel): boolean => {
-        if (!isAxisGuide(guide) || compositionAxisPolicy !== CompositionAxisPolicy.OuterShared) return true;
-        const sharing = panel.facet.scales?.roles?.[guide.dimension] ?? 'shared';
-        if (sharing === 'independent') return true;
-        if (guide.dimension === 'x') return panel.rowIndex === maxRowIndex;
-        if (guide.dimension === 'y') return panel.columnIndex === 0;
-        return panel.rowIndex === 0 && panel.columnIndex === 0;
+      const resolve = arrangementResolveOf(panel.facet);
+      if (!isAxisGuide(guide)) return true;
+      const policy = axisPolicyFor(resolve, { hasFacets: true, hasScaffolds: false }, guide.dimension);
+      if (policy === 'none') return false;
+      if (policy !== 'outerShared') {
+        return true;
+      }
+      const sharing = resolve?.scale?.[guide.dimension] ?? 'shared';
+      if (sharing === 'independent') return true;
+      if (guide.dimension === 'x') return panel.rowIndex === maxRowIndex;
+      if (guide.dimension === 'y') return panel.columnIndex === 0;
+      return panel.rowIndex === 0 && panel.columnIndex === 0;
     };
     const selectorMatchesFacetPanel = (selector: GridTargetSelector, panel: FacetPanel): boolean => {
-      if (selector.scopes?.includes(panel.id)) return true;
+      if (selector.view !== undefined) {
+        const views = Array.isArray(selector.view) ? selector.view : [selector.view];
+        if (views.includes(panel.id)) return true;
+      }
       if (selector.facet === undefined) return false;
-      const facetMatches = selector.facet.id === undefined || selector.facet.id === panel.facet.id;
+      const facetMatches = selector.facet.arrangement === undefined || selector.facet.arrangement === panel.facet.id;
       const rowMatches = scalarSelectorIncludes(selector.facet.row, panel.row);
       const columnMatches = scalarSelectorIncludes(selector.facet.column, panel.column);
       return facetMatches && rowMatches && columnMatches;
     };
     const axisGridTargetsFacetPanel = (guide: AxisGuide, panel: FacetPanel): boolean => {
-      const applyTo = axisGridApplyToOf(guide);
+      const applyTo = axisGridApplyToOf(guide, arrangementResolveOf(panel.facet), {
+        hasFacets: true,
+        hasScaffolds: false,
+      });
       if (applyTo === null) return false;
-      if (applyTo === AxisGridApplyTo.Self || applyTo === AxisGridApplyTo.SharedRole) return true;
+      if (applyTo === AxisGridApplyTo.None) return false;
+      if (applyTo === AxisGridApplyTo.Local || applyTo === AxisGridApplyTo.All) return true;
       const selector = axisGridSelectorOf(guide);
       return selector !== undefined && selectorMatchesFacetPanel(selector, panel);
     };
@@ -1989,7 +2121,15 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
           : [],
       );
     for (const guide of facetGuides) {
-      if (!isAxisGuide(guide) || axisGridApplyToOf(guide) !== AxisGridApplyTo.Selected) continue;
+      if (!isAxisGuide(guide)) continue;
+      const hasSelectedTarget = panels.some(
+        panel =>
+          axisGridApplyToOf(guide, arrangementResolveOf(panel.facet), {
+            hasFacets: true,
+            hasScaffolds: false,
+          }) === AxisGridApplyTo.Selected,
+      );
+      if (!hasSelectedTarget) continue;
       const count = panels.filter(panel => axisGridTargetsFacetPanel(guide, panel)).length;
       if (count === 0) {
         throw new Error(`lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target facet panel`);
@@ -2003,7 +2143,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         rows: resolveMarkRows(mark, panel.rows, transformRegistry, transformContext),
       }));
       const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
-      for (const [role, sharing] of Object.entries(panel.facet.scales?.roles ?? {})) {
+      for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
         if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
       }
       const panelNode: PlotSpec = {
@@ -2013,6 +2153,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         marks: node.marks,
         guides: panelAxisGuides,
       };
+      const panelLayout = arrangementLayoutOf(panel.facet);
       const frameResolution = resolveFrame({
         node: panelNode,
         rows: panel.rows,
@@ -2020,8 +2161,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         width: panelWidth,
         height: panelHeight,
         fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-        margin: frameMargin,
-        labelGap: compositionLayout?.labelGap,
+        margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+        labelGap: panelLayout?.labelGap,
         provenance,
         coordinates: options.coordinates,
         scaleRegistry,
@@ -2038,8 +2179,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
               width: panelWidth,
               height: panelHeight,
               fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-              margin: frameMargin,
-              labelGap: compositionLayout?.labelGap,
+              margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+              labelGap: panelLayout?.labelGap,
               plotAreaOverride: frameResolution.plotArea,
               provenance,
               coordinates: options.coordinates,
@@ -2051,7 +2192,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       const facetContext: IRJsonObject = { id: panel.facet.id };
       if (panel.row !== undefined) facetContext.row = panel.row;
       if (panel.column !== undefined) facetContext.column = panel.column;
-      const panelContext: IRJsonObject = { coordinateScope: panel.id, facet: facetContext };
+      const panelContext: IRJsonObject = { coordinateView: panel.id, facet: facetContext };
       const markLayers: Array<IRChild> = node.marks
         .map((mark, markIndex) => {
           const markRows = panelMarkDataViews[markIndex]?.rows ?? panel.rows;
@@ -2139,7 +2280,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       const coordinateScopeId = coordinateScopeIdOf(mark, coordinateScopes.defaultScope);
       const frame = frameByScope.get(coordinateScopeId);
       if (frame === undefined) {
-        throw new Error(`lowerPlots: coordinateScope "${coordinateScopeId}" is not registered`);
+        throw new Error(`lowerPlots: coordinateView "${coordinateScopeId}" is not registered`);
       }
       const layer = lowerMark(
         mark,
