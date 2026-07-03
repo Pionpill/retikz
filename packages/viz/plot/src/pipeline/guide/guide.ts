@@ -3,66 +3,26 @@ import type { Position } from '@retikz/math';
 
 import { arcEndPoint } from '@retikz/math';
 
-import type { CoordinateFrame, DimensionRole, PositionScale, TickSet } from '../../contract';
-import type { Rect } from '../../pipeline/layout';
-import type { ProvenanceContext } from '../../pipeline/provenance';
-import type { PolarCoordinateFrame, TernaryVertices } from '../../providers';
+import type {
+  CoordinateFrame,
+  DimensionRole,
+  GuideContext,
+  LoweredGuide,
+  PolarCoordinateFrame,
+  TernaryVertices,
+} from '../../contract';
+import type { ResolvedLegendGuideTokens } from '../../providers';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
-import type { ResolvedLegendGuideTokens } from '../theme';
+import type { Rect } from '../../shared';
+import type { ProvenanceContext } from '../provenance';
 
-import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../pipeline/layout';
-import { guideLayerId, guideLayerMeta } from '../../pipeline/provenance';
 import { resolveGuideTicks } from '../../providers/scale/shared';
 import { AxisCardinalSide, AxisPlacementKind } from '../../schemas';
+import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
+import { guideLayerId, guideLayerMeta } from '../provenance';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
 const DEG_TO_RAD = Math.PI / 180;
-
-/**
- * lowerGuide 上下文：cartesian 直线 guide 用 plotArea + 两维投影 + ticks；polar 经 `frame` 走弧 / 辐条几何
- * @description cartesian 使用 projectX/projectY/plotArea/xTicks/yTicks；
- *   polar 由 `frame` 驱动：圆心 / 内外半径 / 起止角 + primary(angle)/secondary(radius) 投影。
- *   存在 `frame.type === polar2D` 即走极坐标分支，guide 与 mark 同帧严格对齐。
- */
-export type GuideContext = {
-  /** 缩进后的绘图区矩形（cartesian 轴线 / 网格框） */
-  plotArea: Rect;
-  /** x 维位置 scale（值 → 像素 x，含 band 中心；cartesian 用） */
-  projectX: PositionScale;
-  /** y 维位置 scale（值 → 像素 y；cartesian 用） */
-  projectY: PositionScale;
-  /** x 轴刻度集（axis 与同维 grid 复用；cartesian 用） */
-  xTicks: TickSet;
-  /** y 轴刻度集（cartesian 用） */
-  yTicks: TickSet;
-  /** label 字号（与 layout 估算同源） */
-  fontSize: number;
-  /** axis title / composition label 与 axis 的固定间距；省略时复用默认 axis label gap。 */
-  labelGap?: number;
-  /**
-   * 直线轴向覆盖（仅 cartesian1D 给）：horizontal → 沿 x 轴线（用 projectX/xTicks），vertical → 沿 y 轴线（用 projectY/yTicks）。
-   * @description cartesian1D 单维角色恒为 x，但轴可竖排；给此值时 lowerCartesianGuide 按它选屏幕方向，而非按 dimension。
-   */
-  axisOrientation?: 'horizontal' | 'vertical';
-  /** polar 坐标帧（仅 polar2D / polar1D 时给）：存在即按维度角色走 angular / radial 几何 */
-  frame?: PolarCoordinateFrame;
-  /** angular 维刻度集（polar；angle / x 维 axis 与同维 grid 复用） */
-  angularTicks?: TickSet;
-  /** radial 维刻度集（polar；radius / y 维） */
-  radialTicks?: TickSet;
-  /** 三角顶点（仅 ternary2D 给）：[Va, Vb, Vc]，存在即走三角轴几何 */
-  ternaryVertices?: TernaryVertices;
-  /** 三角轴共享刻度集（仅 ternary2D；values 为 0..1 占比） */
-  ternaryTicks?: TickSet;
-};
-
-/** lowerGuide 返回：网格层（仅 grid:true 时非空，垫底）+ 轴层（总有，压顶） */
-export type LoweredGuide = {
-  /** 网格层 scope（grid:true 且有刻度时）；否则 null */
-  gridLayer: IRScope | null;
-  /** 轴层 scope（轴线 + 刻度线 + 可选标签）；空刻度时 null */
-  axisLayer: IRScope | null;
-};
 
 /** 一段直线（首尾两点） */
 type Segment = [readonly [number, number], readonly [number, number]];

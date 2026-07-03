@@ -7,7 +7,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { PlotSpec } from '../../../src/schemas';
 
 import { defineTransform } from '../../../src';
-import { createPlotLocator } from '../../../src/features';
+import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { SOURCE_INDEX } from '../../../src/pipeline/provenance';
 import { PlotSpecSchema } from '../../../src/schemas';

@@ -20,7 +20,6 @@ import type {
   TickSet,
   TransformContext,
 } from '../contract';
-import type { LegendEntry, LegendInput } from '../features';
 import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
@@ -39,18 +38,12 @@ import type {
   ScaleOperation,
   TransformOperation,
 } from '../schemas';
+import type { LegendEntry, LegendInput } from './guide';
 import type { LegendReserve, Margins, Rect } from './layout';
 import type { DatumIdRegistrar, ProvenanceContext } from './provenance';
 
 import { isBuiltinScaleOperation } from '../contract';
-import {
-  lowerCustomAxis,
-  lowerGuide,
-  lowerLegend,
-  resolveAxisGuideTokens,
-  resolveLegendGuideTokens,
-  resolvePlotTheme,
-} from '../features';
+import { resolveAxisGuideTokens, resolveLegendGuideTokens, resolvePlotTheme } from '../providers';
 import {
   applyFieldResolver,
   applyTransforms,
@@ -101,7 +94,8 @@ import {
   PlotSpecSchema,
 } from '../schemas';
 import { createAnchorRegistry } from './anchors';
-import { DEFAULT_FONT_SIZE } from './layout';
+import { lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
+import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from './layout';
 import { createDatumIdRegistrar, rootMeta, slug, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
 
@@ -712,9 +706,6 @@ const assertRequiredPositionChannels = (
 };
 
 /** 默认整图尺寸（user units）；尺寸是渲染选项、不进 IR */
-const DEFAULT_WIDTH = 480;
-const DEFAULT_HEIGHT = 300;
-
 /** lowerPlots 运行时选项：整图尺寸 + label 字号 + margin + provenance 开关（均不进 IR） */
 export type LowerPlotsOptions = {
   /** 整图宽（user units），默认 480 */
@@ -1585,8 +1576,8 @@ export const prepareRows = (
  */
 const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
-  const width = node.width ?? options.width ?? DEFAULT_WIDTH;
-  const height = node.height ?? options.height ?? DEFAULT_HEIGHT;
+  const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
+  const height = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
   // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
   if (!Number.isFinite(width) || width <= 0) {
     throw new Error(`lowerPlots: width must be a positive finite number, got ${width}`);

@@ -8,14 +8,15 @@ import type {
   CellGeometry,
   CoordinateDefinition,
   DimensionRole,
+  GuideContext,
+  TernaryVertices,
   TickSet,
 } from '../../../contract';
-import type { GuideContext } from '../../../features';
 import type { Ternary2DCoordinate } from '../../../schemas';
 
 import { cellInterval } from '../../../contract';
-import { computeTernaryFrame } from '../../../pipeline';
 import { PlotCoordinate, PlotScale, Ternary2DSchema } from '../../../schemas';
+import { computeTernaryFrame } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 /** 空刻度集：三角 guide 的 x/y 位置 scale 占位不会被实际读取。 */
@@ -23,9 +24,6 @@ const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
 /** 三角轴共享刻度集（占比 0..1，标签为百分数）。 */
 const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', '25', '50', '75', '100'] };
-
-/** 三元坐标三角顶点序（屏幕坐标）：[Vx(x=100%), Vy(y=100%), Vz(z=100%)]。 */
-export type TernaryVertices = [Position, Position, Position];
 
 /** 三元坐标的重心分量 [x, y, z]，三个分量按 coordinate roles 顺序相加为 1。 */
 type BarycentricPoint = [number, number, number];

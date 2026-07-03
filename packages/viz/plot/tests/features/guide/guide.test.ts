@@ -4,10 +4,10 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { PositionScale } from '../../../src/contract';
-import type { GuideContext } from '../../../src/features';
+import type { GuideContext } from '../../../src/contract';
 import type { PlotSpec } from '../../../src/schemas';
 
-import { lowerGuide } from '../../../src/features';
+import { lowerGuide } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 

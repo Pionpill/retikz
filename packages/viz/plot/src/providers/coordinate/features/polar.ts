@@ -4,19 +4,18 @@ import { arcEndPoint, isFiniteNumber } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
-  Cell,
-  CellGeometry,
   CoordinateDefinition,
   DimensionRole,
+  GuideContext,
+  PolarCoordinateFrame,
   PositionScale,
   TickSet,
 } from '../../../contract';
-import type { GuideContext } from '../../../features';
 import type { Coordinate, Polar1DCoordinate } from '../../../schemas';
 
 import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
-import { computePolarCoordinate } from '../../../pipeline';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
+import { computePolarCoordinate } from '../../../shared';
 import { resolveGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
@@ -49,44 +48,6 @@ const isContinuousAngleScale = (scaleType: string): boolean =>
  */
 const polarPoint = (center: Position, angleDeg: number, radius: number): Position | null =>
   isFiniteNumber(angleDeg) && isFiniteNumber(radius) ? arcEndPoint(center, radius, angleDeg) : null;
-
-/**
- * 二维极坐标运行时坐标帧。
- * @description x 角色解释为角向、y 角色解释为径向；scale 输出先落到 [θ, r]，再投影为屏幕坐标。
- *   同时提供 projectPolar / densify 支持连续角轴上的弧线采样。
- */
-export type PolarCoordinateFrame = {
-  /** 判别字段：2D 极坐标 */
-  type: typeof PlotCoordinate.Polar2D;
-  /** 位置角色序（[angle, radius]）；mark 按此序取 encoding 通道值（x→angle、y→radius 别名） */
-  roles: ReadonlyArray<DimensionRole>;
-  /** 圆心（屏幕坐标） */
-  center: Position;
-  /** 内半径（user units，环图内半径，0 = 实心） */
-  innerRadius: number;
-  /** 外半径（user units，可用外半径） */
-  outerRadius: number;
-  /** 角向起始角（度，角向 range 起） */
-  startAngle: number;
-  /** 角向终止角（度，角向 range 止） */
-  endAngle: number;
-  /** 角向 scale 是否连续（linear / time）；连续才在段内插值采样，分类（band / point）走弦 */
-  continuousAngle: boolean;
-  /** angle 位置 scale（range = [startAngle, endAngle] 度） */
-  primary: PositionScale;
-  /** radius 位置 scale（range = [innerRadius, outerRadius]） */
-  secondary: PositionScale;
-  /** 按通用 coordinate contract 暴露各 role 的位置 scale。 */
-  roleScales: Partial<Record<DimensionRole, PositionScale>>;
-  /** 投影：θ=primary.coordinate(angle)°、r=secondary.coordinate(radius)，[cx + r·cosθ, cy + r·sinθ]；任一非有限 → null */
-  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
-  /** N 通道投影：按 roles 序传值（[angle, radius]），内部委托 project；任一非有限 → null */
-  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
-  /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（段内采样反投影用；非有限 → null） */
-  projectPolar: (thetaDeg: number, radius: number) => Position | null;
-  /** 正交 cell → 环楔（闭式快路）：center = frame.center、角度带 = primary、半径带 = secondary */
-  projectCell: (cell: Cell) => CellGeometry;
-};
 
 /** 创建二维极坐标运行时坐标帧所需的已解析参数。 */
 export type PolarCoordinateSpec = {

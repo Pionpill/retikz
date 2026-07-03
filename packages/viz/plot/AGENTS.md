@@ -5,17 +5,19 @@
 ## 分层
 
 ```text
+shared/       无依赖共享词汇、纯函数、映射和工具类型
 schemas/      Zod schema 与 Plot IR 类型真源
-contract/     coordinate / scale / transform / mark / channel / format 的扩展契约
-providers/    内置 definition、BUILTIN_*、registry resolver、dispatch / apply / resolve
-features/     暂未开放 define 机制的内置子系统，如 data、guide、interaction
-pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract / features
+contract/     coordinate / scale / transform / mark / channel / format / guide / locator 的扩展契约与公开类型
+providers/    内置 definition、BUILTIN_*、registry resolver、dispatch / apply / resolve，以及 theme token 解析
+pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract；guide / locator 等运行时编排也归这里
 ```
 
-- `contract` 不依赖 `providers` / `features`；providers 依赖 contract；pipeline 负责编排。
+- `shared` 不依赖其他 plot 层；跨层复用的纯函数和稳定词汇优先放这里。
+- `contract` 不依赖 `providers` / `pipeline`；providers 依赖 contract；pipeline 负责编排。providers 里的既有 provenance helper 依赖是历史例外，新增代码不要扩大例外。
 - `schemas` 可被所有层依赖，但 schema 不读取实现层。
-- `features/*` 是必须但尚未抽象为 define-registry 的内部子系统。若某能力要开放扩展，再抽成 `contract/<能力>` + `providers/<能力>`，并补 options / adapter 透传。
-- 模块外 import 优先走对应顶层 barrel（`../contract` / `../providers` / `../features`）；公共 API barrel 可 deep import 做表面裁剪。
+- `pipeline/guide` 负责 axis / legend 下沉为 Kernel IR；`contract/guide` 只放 coordinate provider 与 pipeline 共用的 guide context 类型。
+- `pipeline/locator` 负责通过 lowering 流程解析 datum / series 锚点；`contract/locator` 只放公开 locator 类型。
+- 模块外 import 优先走对应顶层 barrel（`../shared` / `../contract` / `../providers` / `../pipeline`）；公共 API barrel 可 deep import 做表面裁剪。
 - 新共享逻辑放到最小合理归属层；多个语法层都需要时优先下沉到更底层，或上移到 `@retikz/math` / `@retikz/core`。
 
 改上述分层、依赖方向或 define-registry 能力前，先按根 AGENTS 读取 `standard-structure` 及对应层级 skill。

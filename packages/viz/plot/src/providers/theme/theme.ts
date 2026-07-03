@@ -2,7 +2,7 @@ import type { IRNode, IRPath } from '@retikz/core';
 
 import type { AxisGuide, LegendGuide, PlotTheme } from '../../schemas';
 
-import { DEFAULT_PLOT_COLORS, PlotColorScheme } from '../../providers/scale/shared';
+import { DEFAULT_PLOT_COLORS, PlotColorScheme } from '../scale/shared';
 
 type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'drawOpacity' | 'dashPattern'>>;
 type GuideTextStyle = Partial<Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>>;

@@ -6,15 +6,14 @@ import type {
   CellGeometry,
   CoordinateDefinition,
   DimensionRole,
+  GuideContext,
   PositionScale,
   TickSet,
 } from '../../../contract';
-import type { GuideContext } from '../../../features';
-import type { Rect } from '../../../pipeline/layout';
 import type { Cartesian1DCoordinate, Cartesian1DOrientationType, Coordinate, ScaleOperation } from '../../../schemas';
+import type { Rect } from '../../../shared';
 
 import { cellInterval } from '../../../contract';
-import { computePlotArea } from '../../../pipeline/layout';
 import {
   Cartesian1DOrientation,
   Cartesian1DSchema,
@@ -22,6 +21,7 @@ import {
   PlotCoordinate,
   PlotScale,
 } from '../../../schemas';
+import { computePlotArea } from '../../../shared';
 import { resolveGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
