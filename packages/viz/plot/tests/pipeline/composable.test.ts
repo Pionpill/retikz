@@ -22,8 +22,8 @@ const pointSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
     type: 'plot',
     data: { reference: 'sales' },
     scales: [
-      { type: 'linear', name: 'xMonth' },
-      { type: 'linear', name: 'yRevenue' },
+      { type: 'linear', name: 'xMonth', domainPadding: 0 },
+      { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
     marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],

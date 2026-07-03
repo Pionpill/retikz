@@ -7,6 +7,9 @@ import { BUILTIN_SCALE_TYPES } from '../schemas';
 /** 刻度值 + 标签集（axis 与同维 grid 复用同一份）。 */
 export type TickSet = { values: Array<ScalarValue>; labels: Array<string> };
 
+/** position scale 的刻度值族，用于 guide 标签格式化。 */
+export type PositionTickKind = 'number' | 'time' | 'category';
+
 /**
  * 归一化位置 scale：连续 / band / point 对 projector & guide 暴露同一形态
  * @description 把「band 起点 vs 中心」「bandwidth 是否为 0」「类别 vs 数值刻度」收进一层；
@@ -22,6 +25,8 @@ export type PositionScale = {
   readonly bandwidth: number;
   /** 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位） */
   ticks: (count?: number) => TickSet;
+  /** guide 标签格式化用的刻度值族；自定义 scale 可省略并保留原 tick 标签。 */
+  tickKind?: PositionTickKind;
   /** 当前 range [start, end]（屏幕坐标，y 可能倒置） */
   range: () => [number, number];
   /** 设置 range（显式 range 的 scale 由 expand 决定是否调用） */

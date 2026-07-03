@@ -3,7 +3,7 @@ title: Axis
 description: Customize ticks, labels, and grid with <Axis>; dimension picks which dimension to decorate — cartesian x / y or polar x / y.
 ---
 
-`<Axis>` declares one axis. `dimension` picks which dimension it decorates: under cartesian it's `x` (horizontal) / `y` (vertical), under polar it still uses `x` (angular) / `y` (radial), under ternary it's `x` / `y` / `z` (the three triangle edges). The dimension must match the current coordinate system — a wrong one errors (no silent empty axis). The grid is a `grid` boolean prop, not a separate component.
+`<Axis>` declares one axis. `dimension` picks which dimension it decorates: under cartesian it's `x` (horizontal) / `y` (vertical), under polar it still uses `x` (angular) / `y` (radial), under ternary it's `x` / `y` / `z` (the three triangle edges). The dimension must match the current coordinate system — a wrong one errors (no silent empty axis). Axis line, ticks, tick labels, title, and grid are slots on the same Axis guide.
 
 `<Plot>` is a thin container and draws no axes on its own — without `<Axis>` there are no axes, and only the `<Axis>` you list get drawn. When you only need to switch an axis to a log, time, or square-root scale, put `scale` on the same `<Axis>` instead of adding a separate `<Scale>`.
 
@@ -17,7 +17,7 @@ import { Plot, Axis } from '@retikz/plot-react';
 <Plot data={revenue}>
   <PathMark x="month" y="revenue" order="month" />
   <Axis dimension="x" />
-  <Axis dimension="y" scale="log" grid tickCount={5} />
+  <Axis dimension="y" scale="log" grid ticks={{ count: 5 }} />
 </Plot>
 ```
 
@@ -28,6 +28,21 @@ import { Plot, Axis } from '@retikz/plot-react';
 List x / y axes explicitly, with a grid and a target tick count on y.
 
 <ComponentPreview name="axis-cartesian" sourceFiles={['axis-cartesian.data.ts']} />
+
+### Style Slots
+
+`line` controls the axis line; `ticks` controls the tick source, length, and tick-line style; `tickLabels` controls whether tick text renders and how it is styled; `title` is the axis title and accepts a string or structured text; `grid` can be a boolean or a line-style object.
+
+```tsx
+<Axis
+  dimension="y"
+  line={{ stroke: '#334155', strokeWidth: 1.5 }}
+  ticks={{ count: 5, length: 6, line: { stroke: '#64748b' } }}
+  tickLabels={{ gap: 6, textColor: '#475569', font: { size: 11 } }}
+  title={{ text: 'Revenue', gap: 10, font: { weight: 600 } }}
+  grid={{ stroke: '#cbd5e1', drawOpacity: 0.45 }}
+/>
+```
 
 ### Polar axes
 
@@ -44,10 +59,12 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 | Prop         | Type                                               | Default            | Description                                                                                                                                       |
 | ------------ | -------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dimension`  | `'x' \| 'y' \| 'z'`                                | —                  | Which dimension to decorate: cartesian x / y, polar x / y, ternary x / y / z (triangle edges); must match the coordinate's valid set or it errors |
-| `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | auto-derived       | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z             |
-| `tickCount`  | `number?`                                          | default tick count | Target tick count; grid lines reuse the same ticks                                                                                                |
-| `tickLabels` | `boolean?`                                         | `true`             | Whether to render tick labels                                                                                                                     |
-| `grid`       | `boolean?`                                         | `false`            | Draw grid lines aligned to this axis's ticks (concentric rings for polar y)                                                                       |
+| `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt' \| 'symlog' \| 'radial'` | auto-derived       | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z |
+| `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern? }` | default line | Axis-line style; `false` hides the line without hiding ticks, labels, or grid |
+| `ticks`      | `{ count?, values?, length?, line? }`              | default ticks      | Target tick count or explicit tick values; `line` styles tick lines, and `line: false` hides them |
+| `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | `true` | Tick-label config; `false` hides labels; `format` accepts d3-format / d3-time-format style strings |
+| `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | Axis title; `text` reuses the core text-block shape, so multiline or run-based text is allowed |
+| `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern? }` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar y); object form overrides line style |
 | `id`         | `string?`                                          | —                  | Optional handle (reserved, not yet resolved)                                                                                                      |
 
 ## Related

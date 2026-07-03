@@ -1402,7 +1402,7 @@ const collectInto = (
       });
       recordColor(into, colorEnc);
     } else if (child.type === Axis) {
-      const { dimension, scale, tickCount, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, id } =
+      const { dimension, scale, line, ticks, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, id } =
         child.props as AxisProps;
       if (scale !== undefined) {
         into.scales.push({ dimension, type: scale });
@@ -1419,8 +1419,9 @@ const collectInto = (
         ...(effectiveScaffoldId !== undefined ? { scaffoldId: effectiveScaffoldId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(placement !== undefined ? { placement } : {}),
+        ...(line !== undefined ? { line } : {}),
+        ...(ticks !== undefined ? { ticks } : {}),
         ...(title !== undefined ? { title } : {}),
-        ...(tickCount !== undefined ? { tickCount } : {}),
         ...(tickLabels !== undefined ? { tickLabels } : {}),
         ...(grid !== undefined ? { grid } : {}),
       });
@@ -1437,8 +1438,7 @@ const collectInto = (
         ...(tickLabels !== undefined ? { tickLabels } : {}),
       });
     } else if (child.type === Scale) {
-      const { dimension, type } = child.props as ScaleProps;
-      into.scales.push({ dimension, type });
+      into.scales.push(child.props as ScaleProps);
     } else if (child.type === TransformComponent) {
       // 通用 <Transform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
       into.transforms.push(child.props as TransformProps);
@@ -1468,22 +1468,39 @@ const buildColorScale = (
   return { type: PlotScale.Ordinal, name: AUTO_COLOR, ...(colors !== undefined ? { range: colors } : {}) };
 };
 
-const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpec => {
+type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'point'> }>;
+type PositionScaleOptions = Pick<ContinuousScaleProps, 'domain' | 'domainPadding' | 'singleValueSpan'>;
+
+const isContinuousScaleProps = (options: ScaleProps | undefined): options is ContinuousScaleProps =>
+  options !== undefined && options.type !== 'point';
+
+const continuousPositionScaleOptions = (options: PositionScaleOptions | undefined): PositionScaleOptions => ({
+  ...(options?.domain !== undefined ? { domain: options.domain } : {}),
+  ...(options?.domainPadding !== undefined ? { domainPadding: options.domainPadding } : {}),
+  ...(options?.singleValueSpan !== undefined ? { singleValueSpan: options.singleValueSpan } : {}),
+});
+
+const buildPositionScale = (
+  name: string,
+  type: PositionScaleType,
+  options?: ScaleProps,
+): PlotScaleSpec => {
+  const scaleOptions = continuousPositionScaleOptions(isContinuousScaleProps(options) ? options : undefined);
   switch (type) {
     case 'linear':
-      return { type: PlotScale.Linear, name };
+      return { type: PlotScale.Linear, name, ...scaleOptions };
     case 'time':
-      return { type: PlotScale.Time, name };
+      return { type: PlotScale.Time, name, ...scaleOptions };
     case 'point':
       return { type: PlotScale.Point, name };
     case 'log':
-      return { type: PlotScale.Log, name };
+      return { type: PlotScale.Log, name, ...scaleOptions };
     case 'sqrt':
-      return { type: PlotScale.Sqrt, name };
+      return { type: PlotScale.Sqrt, name, ...scaleOptions };
     case 'symlog':
-      return { type: PlotScale.Symlog, name };
+      return { type: PlotScale.Symlog, name, ...scaleOptions };
     case 'radial':
-      return { type: PlotScale.Radial, name };
+      return { type: PlotScale.Radial, name, ...scaleOptions };
     default: {
       // 穷尽守卫：新增 PositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
       const exhaustive: never = type;
@@ -1493,43 +1510,43 @@ const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpe
 };
 
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
-const buildCartesianXScale = (forceBand: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | undefined): PlotScaleSpec => {
   if (forceBand && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference',
     );
   }
   if (forceBand) return { type: PlotScale.Band, name: AUTO_X };
-  return buildPositionScale(AUTO_X, explicit ?? 'linear');
+  return buildPositionScale(AUTO_X, explicit?.type ?? 'linear', explicit);
 };
 
 /** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
-const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined): PlotScaleSpec => {
   if (hasRect && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference',
     );
   }
   if (hasRect) return { type: PlotScale.Band, name: AUTO_Y };
-  return buildPositionScale(AUTO_Y, explicit ?? 'linear');
+  return buildPositionScale(AUTO_Y, explicit?.type ?? 'linear', explicit);
 };
 
 /**
  * polar 角向 scale 类型推断：IntervalMark angle → linear（连续累积角界）；IntervalMark x/y → band（径向柱分类）；
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
-const buildAngleScale = (collected: Collected, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+const buildAngleScale = (collected: Collected, explicit: ScaleProps | undefined): PlotScaleSpec => {
   if (collected.hasBar && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference',
     );
   }
-  if (collected.hasSector && explicit !== undefined && explicit !== 'linear') {
+  if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {
     throw new Error(
       'buildPlotSpec: <IntervalMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"',
     );
   }
-  if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit);
+  if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit.type, explicit);
   if (collected.hasSector) return { type: PlotScale.Linear, name: AUTO_ANGLE };
   if (collected.hasBar) return { type: PlotScale.Band, name: AUTO_ANGLE };
   if (collected.hasClosedLine) return { type: PlotScale.Point, name: AUTO_ANGLE };
@@ -1538,7 +1555,7 @@ const buildAngleScale = (collected: Collected, explicit: PositionScaleType | und
 
 type ScaleRole = 'x' | 'y' | 'angle' | 'radius';
 
-type ExplicitScaleMap = Partial<Record<ScaleRole, PositionScaleType>>;
+type ExplicitScaleMap = Partial<Record<ScaleRole, ScaleProps>>;
 
 const validScaleDimensionsOf = (coordKind: ReturnType<typeof coordinateTypeOf>): ReadonlyArray<ScaleDimension> => {
   if (coordKind === 'cartesian2D') return ['x', 'y'];
@@ -1579,7 +1596,7 @@ const collectExplicitScales = (
     if (out[role] !== undefined) {
       throw new Error(`buildPlotSpec: duplicate scale for "${role}" role (dimension "${scale.dimension}")`);
     }
-    out[role] = scale.type;
+    out[role] = scale;
   }
   return out;
 };
@@ -2230,7 +2247,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   if (coordKind === 'polar2D') {
     const polar = toPolarConfig(options.coordinate) as PolarConfig;
     const angleScale = buildAngleScale(collected, explicitScales.angle);
-    const radiusScale = buildPositionScale(AUTO_RADIUS, explicitScales.radius ?? 'linear');
+    const radiusScale = buildPositionScale(AUTO_RADIUS, explicitScales.radius?.type ?? 'linear', explicitScales.radius);
     coordinate = shouldDeferPositionScales
       ? {
           type: PlotCoordinate.Polar2D,
@@ -2276,7 +2293,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
       ...(cfg?.startAngle !== undefined ? { startAngle: cfg.startAngle } : {}),
       ...(cfg?.endAngle !== undefined ? { endAngle: cfg.endAngle } : {}),
     };
-    const angleScale = buildPositionScale(AUTO_ANGLE, explicitScales.angle ?? 'linear');
+    const angleScale = buildPositionScale(AUTO_ANGLE, explicitScales.angle?.type ?? 'linear', explicitScales.angle);
     coordinate = shouldDeferPositionScales
       ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom }
       : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };

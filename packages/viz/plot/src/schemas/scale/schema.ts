@@ -14,6 +14,38 @@ export const CategoryValueSchema = z
   .union([z.string(), z.number()])
   .describe('A category value: string or number (the leaf a band / point scale domain element resolves to)');
 
+export const DomainPaddingSchema = z
+  .union([
+    z.number().nonnegative(),
+    z
+      .object({
+        lower: z.number().nonnegative().optional().describe('Padding fraction applied below the lower domain bound'),
+        upper: z.number().nonnegative().optional().describe('Padding fraction applied above the upper domain bound'),
+      })
+      .strict()
+      .superRefine((padding, ctx) => {
+        if (padding.lower === undefined && padding.upper === undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [],
+            message: 'domainPadding object requires lower or upper',
+          });
+        }
+      }),
+  ])
+  .describe('Position scale domain padding fraction; number applies to both sides, object can target each side');
+
+const ContinuousPositionDomainShape = {
+  domainPadding: DomainPaddingSchema.optional().describe(
+    'Fractional padding added to the resolved domain. Inferred domains default to 0.05; explicit domains default to 0',
+  ),
+  singleValueSpan: z
+    .number()
+    .positive()
+    .optional()
+    .describe('Fallback domain span used when the resolved domain collapses to a single value'),
+} as const;
+
 export const LinearScaleSchema = z
   .object({
     type: z.literal(PlotScale.Linear).describe('Discriminator: continuous linear scale'),
@@ -28,6 +60,7 @@ export const LinearScaleSchema = z
       .describe('[start, end] output extent in plot-area units; omit to derive from the coordinate extent at lowering'),
     nice: z.boolean().optional().describe('Round the domain to nice human-readable numbers; default false'),
     clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+    ...ContinuousPositionDomainShape,
   })
   .describe('Linear scale: a continuous numeric mapping from domain to range');
 
@@ -111,6 +144,7 @@ export const TimeScaleSchema = z
       .optional()
       .describe('Round the domain outward to nice time boundaries (day / month / year); default false'),
     clamp: z.boolean().optional().describe('Clamp out-of-domain instants to the range ends; default false'),
+    ...ContinuousPositionDomainShape,
   })
   .describe(
     'Time scale: continuous mapping from time instants (epoch ms) to range; ticks land on human-readable time boundaries',
@@ -135,6 +169,7 @@ export const LogScaleSchema = z
     base: z.number().gt(1).optional().describe('Logarithm base; default 10'),
     nice: z.boolean().optional().describe('Round the domain outward to nice powers of the base; default false'),
     clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+    ...ContinuousPositionDomainShape,
   })
   .describe(
     'Log scale: continuous logarithmic mapping; valid only on point / line marks (interval / area baseline includes 0)',
@@ -157,6 +192,7 @@ export const PowScaleSchema = z
     exponent: z.number().optional().describe('Power exponent; default 2'),
     nice: z.boolean().optional().describe('Round the domain to nice numbers; default false'),
     clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+    ...ContinuousPositionDomainShape,
   })
   .describe('Pow scale: continuous power mapping y = m·x^exponent + b; valid only on point / line marks');
 
@@ -180,6 +216,7 @@ export const SqrtScaleSchema = z
       ),
     nice: z.boolean().optional().describe('Round the domain to nice numbers; default false'),
     clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+    ...ContinuousPositionDomainShape,
   })
   .describe(
     'Sqrt scale: continuous square-root mapping (area-perceptual); valid only on point / line marks; also the default derivation target for the size channel',
@@ -212,6 +249,7 @@ export const SymlogScaleSchema = z
       ),
     nice: z.boolean().optional().describe('Round the domain to nice numbers; default false'),
     clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+    ...ContinuousPositionDomainShape,
   })
   .describe(
     'Symlog scale: continuous bi-symmetric-log mapping, linear near zero and logarithmic in the tails, so it handles wide-range data that crosses or includes zero (unlike log); valid only on point / line marks',
@@ -237,6 +275,7 @@ export const RadialScaleSchema = z
       ),
     nice: z.boolean().optional().describe('Round the domain to nice numbers; default false'),
     clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+    ...ContinuousPositionDomainShape,
   })
   .describe(
     'Radial scale: continuous mapping whose output radius is area-true (encoded area is proportional to value); the natural value scale for polar / rose (Nightingale) charts',

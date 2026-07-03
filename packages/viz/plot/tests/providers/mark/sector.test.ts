@@ -71,7 +71,7 @@ describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
       coordinate: { type: 'polar2D', angle: 'cat', radius: 'val' },
       scales: [
         { type: 'band', name: 'cat' },
-        { type: 'linear', name: 'val' },
+        { type: 'linear', name: 'val', domainPadding: 0 },
       ],
       marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'amount' } } }],
     });
@@ -148,7 +148,7 @@ describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
       coordinate: { type: 'polar2D', angle: 'cat', radius: 'val' },
       scales: [
         { type: 'band', name: 'cat' },
-        { type: 'linear', name: 'val' },
+        { type: 'linear', name: 'val', domainPadding: 0 },
         { type: 'ordinal', name: 'col', range: ['#a', '#b', '#c'] },
       ],
       marks: [
@@ -173,7 +173,7 @@ describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
       coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45 },
       scales: [
         { type: 'band', name: 'cat' },
-        { type: 'linear', name: 'val' },
+        { type: 'linear', name: 'val', domainPadding: 0 },
       ],
       marks: [
         {
@@ -191,7 +191,7 @@ describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
       coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45 },
       scales: [
         { type: 'band', name: 'cat' },
-        { type: 'linear', name: 'val' },
+        { type: 'linear', name: 'val', domainPadding: 0 },
       ],
       marks: [
         {
@@ -241,8 +241,8 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
       transform: [{ kind: 'stack', y: 'value' }],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', innerRadius },
       scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'a', domainPadding: 0 },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [
         {
@@ -313,8 +313,8 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
       transform: [{ kind: 'stack', y: 'value' }],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'a', domainPadding: 0 },
+        { type: 'linear', name: 'r', domainPadding: 0 },
         { type: 'ordinal', name: 'col', range: ['#a', '#b', '#c'] },
       ],
       marks: [
@@ -350,8 +350,8 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
       // 故意不挂 stack transform → 行里没有 y0 / y1
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'a', domainPadding: 0 },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [
         {
@@ -374,8 +374,8 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
       transform: [{ kind: 'stack', y: 'value' }],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'a', domainPadding: 0 },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [
         {

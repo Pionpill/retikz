@@ -556,3 +556,28 @@ describe('离散化 / 连续色阶 · 非有限数值字段被 schema 拒（自 
     ).toThrow();
   });
 });
+
+describe('ScaleSchema position domain padding', () => {
+  it('linear_accepts_domain_padding_object', () => {
+    const s = { type: 'linear', name: 'x', domainPadding: { lower: 0.1, upper: 0.2 }, singleValueSpan: 2 };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('time_accepts_domain_padding_number', () => {
+    const s = { type: 'time', name: 'x', domainPadding: 0.05, singleValueSpan: 2 };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('domain_padding_object_requires_a_side', () => {
+    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domainPadding: {} })).toThrow();
+  });
+
+  it('domain_padding_rejects_negative_values', () => {
+    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domainPadding: -0.1 })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domainPadding: { upper: -0.1 } })).toThrow();
+  });
+
+  it('single_value_span_must_be_positive', () => {
+    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', singleValueSpan: 0 })).toThrow();
+  });
+});

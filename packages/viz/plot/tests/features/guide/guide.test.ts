@@ -30,6 +30,8 @@ const ctx: GuideContext = {
   fontSize: 11,
 };
 
+const nodeChildren = (layer: IRScope): Array<IRNode> => layer.children.filter(child => child.type === 'node') as Array<IRNode>;
+
 describe('lowerGuide (ADR-04)', () => {
   // Happy path
   it('lower_axis_x_structure', () => {
@@ -38,9 +40,9 @@ describe('lowerGuide (ADR-04)', () => {
     expect(axisLayer).not.toBeNull();
     const layer = axisLayer as IRScope;
     // 1 条 Path（轴线 + 刻度线）+ 3 个 label Node
-    expect(layer.children).toHaveLength(4);
+    expect(layer.children).toHaveLength(5);
     expect((layer.children[0] as IRPath).type).toBe('path');
-    const labels = layer.children.slice(1) as Array<IRNode>;
+    const labels = nodeChildren(layer);
     expect(labels.map(n => n.text)).toEqual(['0', '1', '2']);
     // 轴线起点 = plot area 底边左端
     expect((layer.children[0] as IRPath).children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 260] });
@@ -49,7 +51,7 @@ describe('lowerGuide (ADR-04)', () => {
   it('lower_axis_y_structure', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y' }, ctx);
     const layer = axisLayer as IRScope;
-    const labels = layer.children.slice(1) as Array<IRNode>;
+    const labels = nodeChildren(layer);
     expect(labels.map(n => n.text)).toEqual(['9', '10', '11']);
     // y label 垂直居中于 tick y（projectY(9)=35），水平在左侧轴外
     expect((labels[0].position as [number, number])[1]).toBe(35);
@@ -76,7 +78,7 @@ describe('lowerGuide (ADR-04)', () => {
 
   it('tick_pixels_match_projector', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x' }, ctx).axisLayer as IRScope;
-    const labels = layer.children.slice(1) as Array<IRNode>;
+    const labels = nodeChildren(layer);
     // tick value 1 → projectX(1)=80
     expect((labels[1].position as [number, number])[0]).toBe(80);
   });
@@ -89,8 +91,9 @@ describe('lowerGuide (ADR-04)', () => {
   it('axis_ticklabels_false_no_text', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x', tickLabels: false }, ctx).axisLayer as IRScope;
     // 只剩轴线 + 刻度线 Path，无 label Node
-    expect(layer.children).toHaveLength(1);
+    expect(layer.children).toHaveLength(2);
     expect((layer.children[0] as IRPath).type).toBe('path');
+    expect(nodeChildren(layer)).toEqual([]);
   });
 
   it('grid_empty_ticks_skipped', () => {
@@ -107,7 +110,7 @@ describe('lowerGuide (ADR-04)', () => {
     expect((axisLayer as IRScope).pathDefault?.stroke).toBe('currentColor');
     expect((axisLayer as IRScope).nodeDefault?.font?.size).toBe(11);
     expect((axisLayer as IRScope).nodeDefault?.stroke).toBe('none');
-    expect((gridLayer as IRScope).pathDefault?.drawOpacity).toBe(0.15);
+    expect(((gridLayer as IRScope).children[0] as IRPath).drawOpacity).toBe(0.15);
   });
 
   it('axis_id_to_scope_id', () => {
@@ -153,7 +156,7 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
     // children = [y 网格层, mark 层, x 轴层, y 轴层]
     expect(outer.children).toHaveLength(4);
     // 第一个是网格层（带 drawOpacity）
-    expect((outer.children[0] as IRScope).pathDefault?.drawOpacity).toBe(0.15);
+    expect(((outer.children[0] as IRScope).children[0] as IRPath).drawOpacity).toBe(0.15);
     // 最后一个是轴层（纯文字 nodeDefault）
     expect((outer.children[3] as IRScope).nodeDefault?.stroke).toBe('none');
   });

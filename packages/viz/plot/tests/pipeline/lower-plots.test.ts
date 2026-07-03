@@ -30,8 +30,8 @@ const lineSpec: PlotSpec = PlotSpecSchema.parse({
   type: 'plot',
   data: { reference: 'sales' },
   scales: [
-    { type: 'linear', name: 'xMonth' },
-    { type: 'linear', name: 'yRevenue' },
+    { type: 'linear', name: 'xMonth', domainPadding: 0 },
+    { type: 'linear', name: 'yRevenue', domainPadding: 0 },
   ],
   coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
   marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
@@ -43,8 +43,8 @@ const pointSpec = (): PlotSpec =>
     type: 'plot',
     data: { reference: 'sales' },
     scales: [
-      { type: 'linear', name: 'xMonth' },
-      { type: 'linear', name: 'yRevenue' },
+      { type: 'linear', name: 'xMonth', domainPadding: 0 },
+      { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
     marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
@@ -109,8 +109,8 @@ describe('lowerPlots (ADR-06)', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'xMonth' },
-        { type: 'linear', name: 'yRevenue' },
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
@@ -156,10 +156,10 @@ describe('lowerPlots (ADR-06)', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'xMonth' },
-        { type: 'linear', name: 'yRevenue' },
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
         { type: 'ordinal', name: 'strokeRegion', domain: ['north', 'south'], range: ['#0f172a', '#dc2626'] },
-        { type: 'linear', name: 'strokeWeight', domain: [10, 30], range: [1, 3], clamp: true },
+        { type: 'linear', name: 'strokeWeight', domainPadding: 0, domain: [10, 30], range: [1, 3], clamp: true },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
@@ -253,8 +253,8 @@ describe('lowerPlots (ADR-06)', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'xMonth', domain: [0, 10], range: [0, 100] },
-        { type: 'linear', name: 'yRevenue', domain: [0, 100], range: [100, 0] },
+        { type: 'linear', name: 'xMonth', domainPadding: 0, domain: [0, 10], range: [0, 100] },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0, domain: [0, 100], range: [100, 0] },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
@@ -282,8 +282,8 @@ describe('lowerPlots (ADR-06)', () => {
     type: 'plot',
     data: { reference: 'sales' },
     scales: [
-      { type: 'linear', name: 'xMonth' },
-      { type: 'linear', name: 'yRevenue' },
+      { type: 'linear', name: 'xMonth', domainPadding: 0 },
+      { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
     marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
@@ -320,8 +320,8 @@ describe('lowerPlots (ADR-06)', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'xMonth', domain: [0, 10], range: [0, 100] },
-        { type: 'linear', name: 'yRevenue', domain: [0, 100], range: [100, 0] },
+        { type: 'linear', name: 'xMonth', domainPadding: 0, domain: [0, 10], range: [0, 100] },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0, domain: [0, 100], range: [100, 0] },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
@@ -343,7 +343,7 @@ const barSpec = (): PlotSpec =>
     data: { reference: 'sales' },
     scales: [
       { type: 'band', name: 'xMonth' },
-      { type: 'linear', name: 'yRevenue' },
+      { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
     marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
@@ -402,8 +402,8 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
       type: 'plot',
       data: { reference: 'labor' },
       scales: [
-        { type: 'linear', name: 'xWidth' },
-        { type: 'linear', name: 'yCost' },
+        { type: 'linear', name: 'xWidth', domainPadding: 0 },
+        { type: 'linear', name: 'yCost', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'xWidth', y: 'yCost' },
       marks: [
@@ -458,7 +458,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
       data: { reference: 'sales' },
       scales: [
         { type: 'band', name: 'xMonth' },
-        { type: 'linear', name: 'yRevenue' },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
@@ -500,8 +500,8 @@ describe('lowerPlots color (ADR-04)', () => {
   it('point_color_groups_into_subscopes', () => {
     const layer = firstLayer(
       coloredPoint([
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ]),
       { c: COUNTRIES },
@@ -521,8 +521,8 @@ describe('lowerPlots color (ADR-04)', () => {
   it('point_color_default_scheme', () => {
     const layer = firstLayer(
       coloredPoint([
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'col' },
       ]),
       { c: COUNTRIES },
@@ -539,8 +539,8 @@ describe('lowerPlots color (ADR-04)', () => {
       type: 'plot',
       data: { reference: 'c' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -562,8 +562,8 @@ describe('lowerPlots color (ADR-04)', () => {
       type: 'plot',
       data: { reference: 'c' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -582,17 +582,17 @@ describe('lowerPlots color (ADR-04)', () => {
 
   it('color_unknown_scale_ref_throws', () => {
     const spec = coloredPoint([
-      { type: 'linear', name: 'x' },
-      { type: 'linear', name: 'y' },
+      { type: 'linear', name: 'x', domainPadding: 0 },
+      { type: 'linear', name: 'y', domainPadding: 0 },
     ]);
     expect(() => expandOf(spec, { c: COUNTRIES }, opts)).toThrow(/unknown scale/);
   });
 
   it('color_non_ordinal_scale_ref_throws', () => {
     const spec = coloredPoint([
-      { type: 'linear', name: 'x' },
-      { type: 'linear', name: 'y' },
-      { type: 'linear', name: 'col' },
+      { type: 'linear', name: 'x', domainPadding: 0 },
+      { type: 'linear', name: 'y', domainPadding: 0 },
+      { type: 'linear', name: 'col', domainPadding: 0 },
     ]);
     expect(() => expandOf(spec, { c: COUNTRIES }, opts)).toThrow(/ordinal/);
   });
@@ -603,8 +603,8 @@ describe('lowerPlots color (ADR-04)', () => {
       type: 'plot',
       data: { reference: 'c' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -625,7 +625,7 @@ describe('lowerPlots color (ADR-04)', () => {
       data: { reference: 'c' },
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
@@ -654,8 +654,8 @@ describe('lowerPlots mark paint', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'xMonth' },
-        { type: 'linear', name: 'yRevenue' },
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
@@ -684,8 +684,8 @@ describe('lowerPlots mark paint', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'xMonth' },
-        { type: 'linear', name: 'yRevenue' },
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
@@ -714,7 +714,7 @@ describe('lowerPlots mark paint', () => {
       data: { reference: 'sales' },
       scales: [
         { type: 'band', name: 'xMonth' },
-        { type: 'linear', name: 'yRevenue' },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
@@ -743,8 +743,8 @@ describe('lowerPlots mark paint', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'xMonth' },
-        { type: 'linear', name: 'yRevenue' },
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
@@ -775,8 +775,8 @@ describe('lowerPlots mark paint', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'xMonth' },
-        { type: 'linear', name: 'yRevenue' },
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [
@@ -819,7 +819,7 @@ describe('lowerPlots relation (ADR-05)', () => {
       data: { reference: 's' },
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
@@ -856,7 +856,7 @@ describe('lowerPlots relation (ADR-05)', () => {
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
@@ -888,7 +888,7 @@ describe('lowerPlots relation (ADR-05)', () => {
       data: { reference: 's' },
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -915,8 +915,8 @@ describe('lowerPlots relation (ADR-05)', () => {
       type: 'plot',
       data: { reference: 't' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
@@ -945,7 +945,7 @@ describe('lowerPlots relation (ADR-05)', () => {
       data: { reference: 's' },
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
@@ -962,7 +962,7 @@ describe('lowerPlots relation (ADR-05)', () => {
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'col' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },

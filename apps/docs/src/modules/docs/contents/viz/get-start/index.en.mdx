@@ -67,12 +67,12 @@ Keep these 4 rules in mind:
 
 ## Common Switches
 
-`<Plot>` draws only the `<Axis>` you list; each `<Axis>` can tune tick count, labels, and grid:
+`<Plot>` draws only the `<Axis>` you list; each `<Axis>` can tune ticks, labels, and grid:
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
   <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="y" grid tickCount={5} />
+  <Axis dimension="y" grid ticks={{ count: 5 }} />
 </Plot>
 ```
 

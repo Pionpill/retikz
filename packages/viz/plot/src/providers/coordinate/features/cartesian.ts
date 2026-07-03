@@ -22,6 +22,7 @@ import {
   PlotCoordinate,
   PlotScale,
 } from '../../../schemas';
+import { resolveGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
@@ -169,10 +170,10 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     const xAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const yAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
     const xTicks: TickSet | undefined = xAxis
-      ? (ctx.collectAxisTicks('x') ?? xScale.ticks(xAxis.tickCount))
+      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(xScale, xAxis.ticks, xAxis.tickLabels || undefined))
       : undefined;
     const yTicks: TickSet | undefined = yAxis
-      ? (ctx.collectAxisTicks('y') ?? yScale.ticks(yAxis.tickCount))
+      ? (ctx.collectAxisTicks('y') ?? resolveGuideTicks(yScale, yAxis.ticks, yAxis.tickLabels || undefined))
       : undefined;
 
     const computed = computePlotArea(
@@ -238,7 +239,9 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
 
     const provisional: [number, number] = horizontal ? [0, ctx.width] : [ctx.height, 0];
     const scale = ctx.buildPositionScale(scaleDef, values, provisional);
-    const ticks: TickSet | undefined = axis ? (ctx.collectAxisTicks('x') ?? scale.ticks(axis.tickCount)) : undefined;
+    const ticks: TickSet | undefined = axis
+      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(scale, axis.ticks, axis.tickLabels || undefined))
+      : undefined;
     const computed = computePlotArea(
       ctx.width,
       ctx.height,

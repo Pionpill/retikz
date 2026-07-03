@@ -1,4 +1,5 @@
-﻿import { z } from 'zod';
+﻿import { FontSchema, NodeTextAlign, PaintValueSchema, TextBlockSchema } from '@retikz/core';
+import { z } from 'zod';
 
 import { AxisCardinalSide, AxisGridApplyTo, AxisPlacementKind, LegendOrient, LegendPosition, PlotGuide } from './constants';
 
@@ -38,6 +39,120 @@ const AxisEdgePlacementSchema = z
 export const AxisPlacementSchema = z
   .discriminatedUnion('kind', [AxisAutoPlacementSchema, AxisSidePlacementSchema, AxisEdgePlacementSchema])
   .describe('Axis placement mode: automatic coordinate default, cardinal plot-area side, or coordinate-native edge');
+
+const OpacitySchema = z.number().min(0).max(1).describe('Opacity fraction in [0, 1]');
+
+const textBlockHasContent = (value: unknown): boolean => {
+  if (typeof value === 'string') return value.length > 0;
+  if (!Array.isArray(value)) return false;
+  return value.some(line => {
+    if (typeof line === 'string') return line.length > 0;
+    if (line && typeof line === 'object' && 'text' in line && typeof line.text === 'string') return line.text.length > 0;
+    if (line && typeof line === 'object' && 'runs' in line && Array.isArray(line.runs)) {
+      return line.runs.some((run: unknown) => {
+        if (!run || typeof run !== 'object') return false;
+        if ('text' in run && typeof run.text === 'string') return run.text.length > 0;
+        if ('tex' in run && typeof run.tex === 'string') return run.tex.length > 0;
+        return false;
+      });
+    }
+    return false;
+  });
+};
+
+const NonEmptyTextBlockSchema = TextBlockSchema.refine(textBlockHasContent, {
+  message: 'axis title text must not be empty',
+});
+
+export const GuideLineStyleSchema = z
+  .object({
+    stroke: PaintValueSchema.optional().describe('Guide line stroke paint; omit to inherit currentColor'),
+    strokeWidth: z.number().nonnegative().optional().describe('Guide line stroke width in user units'),
+    drawOpacity: OpacitySchema.optional().describe('Guide line stroke opacity'),
+    dashPattern: z
+      .array(z.number().nonnegative())
+      .min(1)
+      .optional()
+      .describe('Guide line dash pattern lengths in user units'),
+  })
+  .strict()
+  .describe('Shared guide line style fields mapped to core path vocabulary');
+
+export const GuideTextStyleSchema = z
+  .object({
+    font: FontSchema.optional().describe('Guide text font; missing fields inherit the plot text default'),
+    textColor: z.string().min(1).optional().describe('Guide text color; omit to inherit currentColor'),
+    opacity: OpacitySchema.optional().describe('Guide text opacity'),
+    align: z.enum(NodeTextAlign).optional().describe('Multi-line guide text alignment'),
+    lineHeight: z.number().positive().optional().describe('Guide text line height in user units'),
+    maxTextWidth: z.number().positive().optional().describe('Maximum guide text line width before wrapping'),
+  })
+  .strict()
+  .describe('Shared guide text style fields mapped to core node text vocabulary');
+
+export const GuideTickSourceSchema = z
+  .object({
+    count: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe('Target number of guide ticks; ignored when explicit values are provided'),
+    values: z
+      .array(z.union([z.string(), z.number()]))
+      .min(1)
+      .optional()
+      .describe('Explicit guide tick values. Continuous scales accept numbers; time scales also accept ISO-like strings'),
+  })
+  .strict()
+  .describe('Shared guide tick source: count hint or explicit values');
+
+export const GuideTickLabelFormatSchema = z
+  .object({
+    format: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('d3-format specifier for numeric ticks or UTC d3-time-format specifier for time ticks'),
+  })
+  .strict()
+  .describe('Shared guide tick label formatting options');
+
+export const AxisLineSchema = GuideLineStyleSchema.describe('Axis baseline line style');
+
+export const AxisTicksSchema = z
+  .object({
+    ...GuideTickSourceSchema.shape,
+    length: z.number().nonnegative().optional().describe('Tick mark length in user units'),
+    line: z
+      .union([z.literal(false), GuideLineStyleSchema])
+      .optional()
+      .describe('Tick line style; false hides tick marks but leaves labels available'),
+  })
+  .strict()
+  .describe('Axis tick source and tick mark style');
+
+export const AxisTickLabelsSchema = z
+  .object({
+    ...GuideTickLabelFormatSchema.shape,
+    gap: z.number().nonnegative().optional().describe('Gap between tick end and tick label center, in user units'),
+    rotate: z.number().optional().describe('Tick label rotation in degrees around the label center'),
+    anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
+    ...GuideTextStyleSchema.shape,
+  })
+  .strict()
+  .describe('Axis tick label style. Text content comes from the resolved tick set');
+
+export const AxisTitleSchema = z
+  .object({
+    text: NonEmptyTextBlockSchema.describe('Axis title text block'),
+    gap: z.number().nonnegative().optional().describe('Gap from the tick label band to the title center, in user units'),
+    rotate: z.number().optional().describe('Axis title rotation in degrees around the title center'),
+    anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
+    ...GuideTextStyleSchema.shape,
+  })
+  .strict()
+  .describe('Axis title text block and style');
 
 const FacetTargetValueSchema = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
@@ -90,8 +205,7 @@ export const GuideTargetSelectorSchema = z
   })
   .describe('Axis grid target selector for coordinate views, facet panels, and shared tracks');
 
-export const AxisGridSchema = z
-  .object({
+const AxisGridProjectionShape = {
     applyTo: z
       .enum(AxisGridApplyTo)
       .optional()
@@ -99,25 +213,42 @@ export const AxisGridSchema = z
     select: GuideTargetSelectorSchema.optional().describe(
       'Explicit target selector; required when applyTo is selected',
     ),
+} as const;
+
+const refineAxisGridProjection = (
+  grid: { applyTo?: string; select?: unknown },
+  ctx: z.RefinementCtx,
+): void => {
+  if (grid.applyTo === AxisGridApplyTo.Selected && grid.select === undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['select'],
+      message: 'selected axis grid requires a select target selector',
+    });
+  }
+  if (grid.applyTo !== undefined && grid.applyTo !== AxisGridApplyTo.Selected && grid.select !== undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['select'],
+      message: 'axis grid select is only valid when applyTo is selected',
+    });
+  }
+};
+
+export const AxisGridSchema = z
+  .object(AxisGridProjectionShape)
+  .strict()
+  .superRefine(refineAxisGridProjection)
+  .describe('Axis grid projection configuration');
+
+export const AxisGridComponentSchema = z
+  .object({
+    ...AxisGridProjectionShape,
+    ...GuideLineStyleSchema.shape,
   })
   .strict()
-  .superRefine((grid, ctx) => {
-    if (grid.applyTo === AxisGridApplyTo.Selected && grid.select === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['select'],
-        message: 'selected axis grid requires a select target selector',
-      });
-    }
-    if (grid.applyTo !== undefined && grid.applyTo !== AxisGridApplyTo.Selected && grid.select !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['select'],
-        message: 'axis grid select is only valid when applyTo is selected',
-      });
-    }
-  })
-  .describe('Axis grid projection configuration');
+  .superRefine(refineAxisGridProjection)
+  .describe('Axis grid projection and line style configuration');
 
 export const AxisGuideSchema = z
   .object({
@@ -145,24 +276,23 @@ export const AxisGuideSchema = z
     placement: AxisPlacementSchema.optional().describe(
       'Axis placement mode; omit to infer an automatic placement from the active coordinate system and dimension',
     ),
-    tickCount: z
-      .number()
-      .int()
-      .positive()
+    line: z
+      .union([z.literal(false), AxisLineSchema])
       .optional()
-      .describe(
-        'Target number of ticks (a hint to the scale; omit to use the default tick count). Grid lines, when enabled, sit at these same tick positions',
-      ),
+      .describe('Axis baseline line; false hides the baseline while keeping ticks, labels, and grid available'),
+    ticks: AxisTicksSchema.optional().describe(
+      'Axis tick source and tick mark style. Grid lines, when enabled, sit at these same tick positions',
+    ),
     tickLabels: z
-      .boolean()
+      .union([z.literal(false), AxisTickLabelsSchema])
       .optional()
-      .describe('Whether to render tick labels beside each tick; omit = true'),
+      .describe('Axis tick labels; false hides labels, object styles and formats labels, omit = defaults'),
     title: z
-      .string()
+      .union([z.string().min(1), AxisTitleSchema])
       .optional()
-      .describe('Axis title text rendered near this axis; omit for no axis title'),
+      .describe('Axis title text or styled text block rendered near this axis; omit for no title'),
     grid: z
-      .union([z.boolean(), AxisGridSchema])
+      .union([z.boolean(), AxisGridComponentSchema])
       .optional()
       .describe(
         'Whether to draw grid lines at this axis tick positions and where to project them; omit = false. Grid is an axis sub-property, so there is no separate grid tick source',

@@ -344,12 +344,12 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     const spec = buildPlotSpec(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="y" tickCount={5} tickLabels={false} grid id="yA" />
+        <Axis dimension="y" ticks={{ count: 5 }} tickLabels={false} grid id="yA" />
       </>,
       '__plot',
     );
     expect(spec.guides).toEqual([
-      { type: 'axis', dimension: 'y', tickCount: 5, tickLabels: false, grid: true, id: 'yA' },
+      { type: 'axis', dimension: 'y', ticks: { count: 5 }, tickLabels: false, grid: true, id: 'yA' },
     ]);
   });
 

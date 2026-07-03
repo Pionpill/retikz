@@ -12,10 +12,12 @@ export type AxisProps = {
   dimension: 'x' | 'y' | 'z';
   /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <Scale dimension={dimension} type={scale} /> */
   scale?: PositionScaleType;
-  /** 目标刻度数（缺省用默认刻度数）；网格线复用同刻度 */
-  tickCount?: number;
-  /** 是否出刻度标签；缺省 = true */
-  tickLabels?: boolean;
+  /** 轴线样式；false 隐藏轴线但保留 ticks / labels / grid。 */
+  line?: AxisGuide['line'];
+  /** 刻度来源和刻度线样式；grid 复用同一批 ticks。 */
+  ticks?: AxisGuide['ticks'];
+  /** 刻度标签开关、格式化和文本样式；false 隐藏刻度标签，缺省显示。 */
+  tickLabels?: AxisGuide['tickLabels'];
   /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */
   grid?: AxisGuide['grid'];
   coordinateView?: string;
@@ -23,7 +25,7 @@ export type AxisProps = {
   scaffoldId?: string;
   trackId?: string;
   placement?: AxisGuide['placement'];
-  title?: string;
+  title?: AxisGuide['title'];
   /** 可选 guide 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;
 };

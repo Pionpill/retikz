@@ -369,7 +369,7 @@ const withoutAxisGrid = (guides: ReadonlyArray<Guide>): Array<Guide> =>
 const withEnabledAxisGrid = (guide: AxisGuide, coordinateView: string | undefined): AxisGuide => ({
   ...guide,
   ...(coordinateView !== undefined ? { coordinateView } : {}),
-  grid: true,
+  grid: guide.grid === undefined || guide.grid === false ? true : guide.grid,
 });
 
 const mergeCompositionMargin = (

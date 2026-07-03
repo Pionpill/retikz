@@ -11,6 +11,7 @@ import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionVa
 
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../pipeline/layout';
 import { guideLayerId, guideLayerMeta } from '../../pipeline/provenance';
+import { resolveGuideTicks } from '../../providers/scale/shared';
 import { AxisCardinalSide, AxisPlacementKind } from '../../schemas';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
@@ -65,14 +66,73 @@ export type LoweredGuide = {
 /** 一段直线（首尾两点） */
 type Segment = [readonly [number, number], readonly [number, number]];
 
+type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'drawOpacity' | 'dashPattern'>>;
+type GuideTextStyle = Partial<Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>>;
+
+const lineStyleProps = (style: GuidePathStyle | undefined): GuidePathStyle => ({
+  ...(style?.stroke !== undefined ? { stroke: style.stroke } : {}),
+  ...(style?.strokeWidth !== undefined ? { strokeWidth: style.strokeWidth } : {}),
+  ...(style?.drawOpacity !== undefined ? { drawOpacity: style.drawOpacity } : {}),
+  ...(style?.dashPattern !== undefined ? { dashPattern: style.dashPattern } : {}),
+});
+
+const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({
+  ...(style?.font !== undefined ? { font: style.font } : {}),
+  ...(style?.textColor !== undefined ? { textColor: style.textColor } : {}),
+  ...(style?.opacity !== undefined ? { opacity: style.opacity } : {}),
+  ...(style?.align !== undefined ? { align: style.align } : {}),
+  ...(style?.lineHeight !== undefined ? { lineHeight: style.lineHeight } : {}),
+  ...(style?.maxTextWidth !== undefined ? { maxTextWidth: style.maxTextWidth } : {}),
+  ...(style?.rotate !== undefined ? { rotate: style.rotate } : {}),
+});
+
+const axisLineStyleOf = (guide: AxisGuide): GuidePathStyle | false =>
+  guide.line === false ? false : lineStyleProps(guide.line);
+
+const axisTickLengthOf = (guide: AxisGuide): number => guide.ticks?.length ?? AXIS_TICK_LENGTH;
+
+const axisTickLineStyleOf = (guide: AxisGuide): GuidePathStyle | false =>
+  guide.ticks?.line === false ? false : lineStyleProps(guide.ticks?.line);
+
+const axisTickLabelStyleOf = (guide: AxisGuide): GuideTextStyle | false =>
+  guide.tickLabels === false ? false : textStyleProps(guide.tickLabels);
+
+const axisTickLabelGapOf = (guide: AxisGuide): number =>
+  guide.tickLabels !== false ? (guide.tickLabels?.gap ?? AXIS_LABEL_GAP) : AXIS_LABEL_GAP;
+
+const axisTitleOf = (
+  guide: AxisGuide,
+): ({ text: IRNode['text']; gap?: number } & GuideTextStyle) | null => {
+  if (guide.title === undefined) return null;
+  if (typeof guide.title === 'string') return { text: guide.title };
+  return { text: guide.title.text, gap: guide.title.gap, ...textStyleProps(guide.title) };
+};
+
+const textBlockMeasureText = (text: IRNode['text']): string => {
+  if (text === undefined) return '';
+  if (typeof text === 'string') return text;
+  return text
+    .map(line => {
+      if (typeof line === 'string') return line;
+      if ('text' in line) return line.text;
+      return line.runs
+        .map(run => ('text' in run ? run.text : run.tex))
+        .join('');
+    })
+    .join('\n');
+};
+
+const axisGridStyleOf = (guide: AxisGuide): GuidePathStyle | undefined =>
+  typeof guide.grid === 'object' ? lineStyleProps(guide.grid) : undefined;
+
 /** 把若干直线段拼成一条多子路径 Path（每段一对 move/line）；空段返回 null */
-const segmentsToPath = (segments: Array<Segment>): IRPath | null => {
+const segmentsToPath = (segments: Array<Segment>, style?: GuidePathStyle): IRPath | null => {
   if (segments.length === 0) return null;
   const steps: Array<IRStep> = segments.flatMap(([from, to]) => [
     { type: 'step', kind: 'move', to: [from[0], from[1]] },
     { type: 'step', kind: 'line', to: [to[0], to[1]] },
   ]);
-  return { type: 'path', children: steps };
+  return { type: 'path', ...lineStyleProps(style), children: steps };
 };
 
 /** 某 dimension 是否为 primary 角色（cartesian x / polar angle）；否则 secondary（y / radius） */
@@ -154,7 +214,10 @@ const lowerCartesianGuide = (
   const right = plotArea.x + plotArea.width;
   const top = plotArea.y;
   const bottom = plotArea.y + plotArea.height;
-  const showLabels = guide.tickLabels !== false;
+  const tickLength = axisTickLengthOf(guide);
+  const tickLabelGap = axisTickLabelGapOf(guide);
+  const tickLabelStyle = axisTickLabelStyleOf(guide);
+  const showLabels = tickLabelStyle !== false;
 
   // cartesian1D 给 axisOrientation 覆盖（单维角色恒 x，但轴可竖排）；cartesian2D 按 dimension 判
   const isX = ctx.axisOrientation !== undefined ? ctx.axisOrientation === 'horizontal' : guide.dimension === 'x';
@@ -181,45 +244,51 @@ const lowerCartesianGuide = (
     return isX
       ? [
           [p, axisY],
-          [p, axisY + tickDirection * AXIS_TICK_LENGTH],
+          [p, axisY + tickDirection * tickLength],
         ]
       : [
           [axisX, p],
-          [axisX + tickDirection * AXIS_TICK_LENGTH, p],
+          [axisX + tickDirection * tickLength, p],
         ];
   });
-  const linePath = segmentsToPath([axisLine, ...tickSegments]);
+  const axisLineStyle = axisLineStyleOf(guide);
+  const tickLineStyle = axisTickLineStyleOf(guide);
+  const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
+  const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
         const p = project.coordinate(value);
         const text = ticks.labels[index];
         const position: [number, number] = isX
-          ? [p, axisY + tickDirection * (AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2)]
+          ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
           : [
               axisX +
-                tickDirection * (AXIS_TICK_LENGTH + AXIS_LABEL_GAP + estimateLabelWidth(text, fontSize) / 2),
+                tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2),
               p,
             ];
-        return { type: 'node', position, text };
+        return { type: 'node', position, text, ...tickLabelStyle };
       })
     : [];
 
   const titleNode = ((): IRNode | null => {
-    if (guide.title === undefined) return null;
-    const labelOffset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2;
+    const title = axisTitleOf(guide);
+    if (title === null) return null;
+    const titleText = textBlockMeasureText(title.text);
+    const titleGap = title.gap ?? labelGap;
+    const labelOffset = tickLength + tickLabelGap + fontSize + titleGap + fontSize / 2;
     const position: [number, number] = isX
       ? [left + plotArea.width / 2, axisY + tickDirection * labelOffset]
       : [
           axisX +
-            tickDirection * (AXIS_TICK_LENGTH + AXIS_LABEL_GAP + estimateLabelWidth(guide.title, fontSize) / 2 + labelGap),
+            tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(titleText, fontSize) / 2 + titleGap),
           top + plotArea.height / 2,
         ];
-    return { type: 'node', position, text: guide.title };
+    return { type: 'node', position, text: title.text, ...textStyleProps(title) };
   })();
-  const axisLayer: IRScope | null = linePath
+  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...labels];
+  if (titleNode) axisChildren.push(titleNode);
+  const axisLayer: IRScope | null = axisChildren.length > 0
     ? (() => {
-        const axisChildren: Array<IRPath | IRNode> = [linePath, ...labels];
-        if (titleNode) axisChildren.push(titleNode);
         return {
         type: 'scope',
         ...guideScopeProps(guide, 'axis', context),
@@ -245,12 +314,12 @@ const lowerCartesianGuide = (
             [right, p],
           ];
     });
-    const gridPath = segmentsToPath(gridSegments);
+    const gridPath = segmentsToPath(gridSegments, { drawOpacity: 0.15, ...axisGridStyleOf(guide) });
     if (gridPath) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        pathDefault: { stroke: 'currentColor' },
         children: [gridPath],
       };
     }
@@ -294,18 +363,24 @@ const lowerAngularAxis = (
   const ticks = ctx.angularTicks ?? { values: [], labels: [] };
   const scale = frame.primary;
   const outer = frame.outerRadius;
-  const showLabels = guide.tickLabels !== false;
+  const tickLength = axisTickLengthOf(guide);
+  const tickLabelGap = axisTickLabelGapOf(guide);
+  const tickLabelStyle = axisTickLabelStyleOf(guide);
+  const showLabels = tickLabelStyle !== false;
 
   // ---- 轴层 ----
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const theta = scale.coordinate(value);
     return [
       finitePolarPoint(frame.center, theta, outer),
-      finitePolarPoint(frame.center, theta, outer + AXIS_TICK_LENGTH),
+      finitePolarPoint(frame.center, theta, outer + tickLength),
     ];
   });
-  const tickPath = segmentsToPath(tickSegments);
-  const axisChildren: Array<IRPath | IRNode> = [arcPath(frame, outer)];
+  const axisLineStyle = axisLineStyleOf(guide);
+  const tickLineStyle = axisTickLineStyleOf(guide);
+  const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
+  const axisChildren: Array<IRPath | IRNode> =
+    axisLineStyle === false ? [] : [{ ...arcPath(frame, outer), ...lineStyleProps(axisLineStyle) }];
   if (tickPath) axisChildren.push(tickPath);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
@@ -313,21 +388,23 @@ const lowerAngularAxis = (
         const position = finitePolarPoint(
           frame.center,
           theta,
-          outer + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2,
+          outer + tickLength + tickLabelGap + fontSize / 2,
         );
-        return { type: 'node', position, text: ticks.labels[index] };
+        return { type: 'node', position, text: ticks.labels[index], ...tickLabelStyle };
       })
     : [];
-  if (guide.title !== undefined) {
+  const title = axisTitleOf(guide);
+  if (title !== null) {
     const midAngle = (frame.startAngle + frame.endAngle) / 2;
     labels.push({
       type: 'node',
       position: finitePolarPoint(
         frame.center,
         midAngle,
-        outer + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2,
+        outer + tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2,
       ),
-      text: guide.title,
+      text: title.text,
+      ...textStyleProps(title),
     });
   }
 
@@ -346,12 +423,12 @@ const lowerAngularAxis = (
       const theta = scale.coordinate(value);
       return [finitePolarPoint(frame.center, theta, frame.innerRadius), finitePolarPoint(frame.center, theta, outer)];
     });
-    const gridPath = segmentsToPath(spokes);
+    const gridPath = segmentsToPath(spokes, { drawOpacity: 0.15, ...axisGridStyleOf(guide) });
     if (gridPath) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        pathDefault: { stroke: 'currentColor' },
         children: [gridPath],
       };
     }
@@ -376,7 +453,10 @@ const lowerRadialAxis = (
   const ticks = ctx.radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
   const baseAngle = frame.startAngle;
-  const showLabels = guide.tickLabels !== false;
+  const tickLength = axisTickLengthOf(guide);
+  const tickLabelGap = axisTickLabelGapOf(guide);
+  const tickLabelStyle = axisTickLabelStyleOf(guide);
+  const showLabels = tickLabelStyle !== false;
   // 辐条切向单位向量（垂直于辐条）；刻度短线与标签沿此方向朝一侧（-tangent）偏移，与 cartesian / angular 轴一致。
   // 不沿辐条方向画刻度——否则首尾刻度会沿辐条越出内 / 外圆端点（各多出半个刻度长）。
   const tangent: [number, number] = [-Math.sin(baseAngle * DEG_TO_RAD), Math.cos(baseAngle * DEG_TO_RAD)];
@@ -389,37 +469,43 @@ const lowerRadialAxis = (
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const radius = scale.coordinate(value);
     const point = finitePolarPoint(frame.center, baseAngle, radius);
-    return [point, [point[0] - tangent[0] * AXIS_TICK_LENGTH, point[1] - tangent[1] * AXIS_TICK_LENGTH]];
+    return [point, [point[0] - tangent[0] * tickLength, point[1] - tangent[1] * tickLength]];
   });
-  const linePath = segmentsToPath([axisLine, ...tickSegments]);
+  const axisLineStyle = axisLineStyleOf(guide);
+  const tickLineStyle = axisTickLineStyleOf(guide);
+  const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
+  const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
         const radius = scale.coordinate(value);
         const point = finitePolarPoint(frame.center, baseAngle, radius);
         const text = ticks.labels[index];
         // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
-        const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
+        const offset = tickLength + tickLabelGap + fontSize / 2;
         const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
-        return { type: 'node', position, text };
+        return { type: 'node', position, text, ...tickLabelStyle };
       })
     : [];
-  if (guide.title !== undefined) {
+  const title = axisTitleOf(guide);
+  if (title !== null) {
     const titlePoint = finitePolarPoint(frame.center, baseAngle, (frame.innerRadius + frame.outerRadius) / 2);
-    const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2;
+    const offset = tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2;
     labels.push({
       type: 'node',
       position: [titlePoint[0] - tangent[0] * offset, titlePoint[1] - tangent[1] * offset],
-      text: guide.title,
+      text: title.text,
+      ...textStyleProps(title),
     });
   }
 
-  const axisLayer: IRScope | null = linePath
+  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...labels];
+  const axisLayer: IRScope | null = axisChildren.length > 0
     ? {
         type: 'scope',
         ...guideScopeProps(guide, 'axis', context),
         pathDefault: { stroke: 'currentColor' },
         nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
-        children: [linePath, ...labels],
+        children: axisChildren,
       }
     : null;
 
@@ -429,12 +515,12 @@ const lowerRadialAxis = (
     const rings: Array<IRPath> = ticks.values
       .map(value => scale.coordinate(value))
       .filter(radius => Number.isFinite(radius) && radius > 0)
-      .map(radius => arcPath(frame, radius));
+      .map(radius => ({ ...arcPath(frame, radius), ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(guide) }) }));
     if (rings.length > 0) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        pathDefault: { stroke: 'currentColor' },
         children: rings,
       };
     }
@@ -478,7 +564,10 @@ const lowerTernaryGuide = (
   const { fontSize } = ctx;
   const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
   const ticks = ctx.ternaryTicks ?? { values: [], labels: [] };
-  const showLabels = guide.tickLabels !== false;
+  const tickLength = axisTickLengthOf(guide);
+  const tickLabelGap = axisTickLabelGapOf(guide);
+  const tickLabelStyle = axisTickLabelStyleOf(guide);
+  const showLabels = tickLabelStyle !== false;
   const { apex, baseP, baseQ } = ternaryAxisRoles(guide.dimension, vertices);
   const [vx, vy, vz] = vertices;
   const centroid: [number, number] = [(vx[0] + vy[0] + vz[0]) / 3, (vx[1] + vy[1] + vz[1]) / 3];
@@ -499,24 +588,41 @@ const lowerTernaryGuide = (
     const t = Number(value);
     const point = lerp2(baseP, apex, t);
     const out = outwardAt(point);
-    tickSegments.push([point, [point[0] + out[0] * AXIS_TICK_LENGTH, point[1] + out[1] * AXIS_TICK_LENGTH]]);
+    tickSegments.push([point, [point[0] + out[0] * tickLength, point[1] + out[1] * tickLength]]);
     if (showLabels) {
-      const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
+      const offset = tickLength + tickLabelGap + fontSize / 2;
       labels.push({
         type: 'node',
         position: [point[0] + out[0] * offset, point[1] + out[1] * offset],
         text: ticks.labels[index],
+        ...tickLabelStyle,
       });
     }
   });
-  const linePath = segmentsToPath([axisLine, ...tickSegments]);
-  const axisLayer: IRScope | null = linePath
+  const title = axisTitleOf(guide);
+  if (title !== null) {
+    const mid = lerp2(baseP, apex, 0.5);
+    const out = outwardAt(mid);
+    const offset = tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2;
+    labels.push({
+      type: 'node',
+      position: [mid[0] + out[0] * offset, mid[1] + out[1] * offset],
+      text: title.text,
+      ...textStyleProps(title),
+    });
+  }
+  const axisLineStyle = axisLineStyleOf(guide);
+  const tickLineStyle = axisTickLineStyleOf(guide);
+  const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
+  const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
+  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...labels];
+  const axisLayer: IRScope | null = axisChildren.length > 0
     ? {
         type: 'scope',
         ...guideScopeProps(guide, 'axis', context),
         pathDefault: { stroke: 'currentColor' },
         nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
-        children: [linePath, ...labels],
+        children: axisChildren,
       }
     : null;
 
@@ -529,27 +635,16 @@ const lowerTernaryGuide = (
       if (t <= 0 || t >= 1) continue; // 0（0 边）/ 1（顶点）退化，不画
       isoSegments.push([lerp2(baseP, apex, t), lerp2(baseQ, apex, t)]);
     }
-    const gridPath = segmentsToPath(isoSegments);
+    const gridPath = segmentsToPath(isoSegments, { drawOpacity: 0.15, ...axisGridStyleOf(guide) });
     if (gridPath) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        pathDefault: { stroke: 'currentColor' },
         children: [gridPath],
       };
     }
   }
-  if (guide.title !== undefined) {
-    const mid = lerp2(baseP, apex, 0.5);
-    const out = outwardAt(mid);
-    const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2;
-    labels.push({
-      type: 'node',
-      position: [mid[0] + out[0] * offset, mid[1] + out[1] * offset],
-      text: guide.title,
-    });
-  }
-
   return { gridLayer, axisLayer };
 };
 
@@ -580,12 +675,15 @@ export const lowerCustomAxis = (
 ): LoweredGuide => {
   const scale = frame.roleScales?.[guide.dimension];
   if (!scale) return { gridLayer: null, axisLayer: null };
-  const ticks = scale.ticks(guide.tickCount);
+  const ticks = resolveGuideTicks(scale, guide.ticks, guide.tickLabels || undefined);
   const numericTicks = ticks.values
     .map((value, index) => ({ value: Number(value), label: ticks.labels[index] }))
     .filter(tick => Number.isFinite(tick.value));
   if (numericTicks.length === 0) return { gridLayer: null, axisLayer: null };
-  const showLabels = guide.tickLabels !== false;
+  const tickLength = axisTickLengthOf(guide);
+  const tickLabelGap = axisTickLabelGapOf(guide);
+  const tickLabelStyle = axisTickLabelStyleOf(guide);
+  const showLabels = tickLabelStyle !== false;
   const labelGap = AXIS_LABEL_GAP;
 
   // 其它角色锚在各自 scale 首刻度（≈ domain 起点）；按 frame.roles 序拼 values 喂 projectRoles
@@ -632,43 +730,49 @@ export const lowerCustomAxis = (
     const [point, tangent] = resolved;
     const length = Math.hypot(tangent[0], tangent[1]) || 1;
     const normal: [number, number] = [-tangent[1] / length, tangent[0] / length];
-    tickSegments.push([point, [point[0] + normal[0] * AXIS_TICK_LENGTH, point[1] + normal[1] * AXIS_TICK_LENGTH]]);
+    tickSegments.push([point, [point[0] + normal[0] * tickLength, point[1] + normal[1] * tickLength]]);
     if (showLabels) {
-      const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
+      const offset = tickLength + tickLabelGap + fontSize / 2;
       labels.push({
         type: 'node',
         position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
         text: tick.label,
+        ...tickLabelStyle,
       });
     }
   }
-  if (guide.title !== undefined) {
+  const title = axisTitleOf(guide);
+  if (title !== null) {
     const resolved = pointAndTangent((lo + hi) / 2);
     if (resolved) {
       const [point, tangent] = resolved;
       const length = Math.hypot(tangent[0], tangent[1]) || 1;
       const normal: [number, number] = [-tangent[1] / length, tangent[0] / length];
-      const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize + labelGap + fontSize / 2;
+      const offset = tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2;
       labels.push({
         type: 'node',
         position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
-        text: guide.title,
+        text: title.text,
+        ...textStyleProps(title),
       });
     }
   }
 
   const lineChildren: Array<IRPath> = [];
-  if (axisLinePath) lineChildren.push(axisLinePath);
-  const tickPath = segmentsToPath(tickSegments);
+  const axisLineStyle = axisLineStyleOf(guide);
+  if (axisLinePath && axisLineStyle !== false) lineChildren.push({ ...axisLinePath, ...lineStyleProps(axisLineStyle) });
+  const tickLineStyle = axisTickLineStyleOf(guide);
+  const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   if (tickPath) lineChildren.push(tickPath);
-  if (lineChildren.length === 0) return { gridLayer: null, axisLayer: null };
+  const axisChildren: Array<IRPath | IRNode> = [...lineChildren, ...labels];
+  if (axisChildren.length === 0) return { gridLayer: null, axisLayer: null };
 
   const axisLayer: IRScope = {
     type: 'scope',
     ...guideScopeProps(guide, 'axis', context),
     pathDefault: { stroke: 'currentColor' },
     nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
-    children: [...lineChildren, ...labels],
+    children: axisChildren,
   };
   return { gridLayer: null, axisLayer };
 };

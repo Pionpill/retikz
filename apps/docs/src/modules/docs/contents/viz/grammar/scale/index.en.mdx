@@ -39,6 +39,12 @@ See [Data Model](/viz/grammar/data/model) for how to declare field types. The lo
 
 Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases are accepted. `Axis.scale` supports the positional shortcuts `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial`. For finer control — log base, power exponent, symlog constant — write the full spec `scales`.
 
+When a continuous positional scale infers its domain, it leaves 5% padding on both ends by default so a single point or an extreme value does not sit directly on a cartesian corner. Use `domainPadding={0}` when the domain must touch the edge exactly, or target one side with an object:
+
+```tsx
+<Scale dimension="y" type="linear" domainPadding={{ lower: 0, upper: 0.12 }} />
+```
+
 ## In this section
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">

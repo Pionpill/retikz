@@ -70,8 +70,8 @@ const pieSpec = (pull?: unknown, extraMark: Record<string, unknown> = {}, innerR
     transform: [{ kind: 'stack', y: 'value' }],
     coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', innerRadius },
     scales: [
-      { type: 'linear', name: 'angle' },
-      { type: 'linear', name: 'radius' },
+      { type: 'linear', name: 'angle', domainPadding: 0 },
+      { type: 'linear', name: 'radius', domainPadding: 0 },
     ],
     marks: [
       {
@@ -135,7 +135,7 @@ describe('IntervalMark.pull sector geometry', () => {
       data: { reference: 'share' },
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [

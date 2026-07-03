@@ -17,6 +17,7 @@ import type { Coordinate, Polar1DCoordinate } from '../../../schemas';
 import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { computePolarCoordinate } from '../../../pipeline';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
+import { resolveGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
@@ -288,7 +289,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
     const angularTicks: TickSet | undefined = angularAxis
-      ? (ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount))
+      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
       : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
@@ -306,7 +307,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     if (radiusRangeOverride !== undefined) radiusScale.setRange([radiusRangeOverride[0], radiusRangeOverride[1]]);
     const radialTicks: TickSet | undefined = radialAxis
-      ? (ctx.collectAxisTicks('y') ?? radiusScale.ticks(radialAxis.tickCount))
+      ? (ctx.collectAxisTicks('y') ?? resolveGuideTicks(radiusScale, radialAxis.ticks, radialAxis.tickLabels || undefined))
       : undefined;
     const [radiusRangeStart, radiusRangeEnd] = radiusScale.range();
     const frameInnerRadius = Math.min(radiusRangeStart, radiusRangeEnd);
@@ -361,7 +362,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angleRangeOverride = ctx.roleRangeOverrides?.x;
     if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
-      ? (ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount))
+      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
       : undefined;
     const layout = computePolarCoordinate(
       ctx.width,

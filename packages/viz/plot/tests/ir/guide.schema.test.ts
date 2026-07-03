@@ -10,7 +10,7 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
   });
 
   it('axis_y_full_valid', () => {
-    const guide = { type: 'axis', dimension: 'y', tickCount: 5, grid: true, tickLabels: false, id: 'yAxis' };
+    const guide = { type: 'axis', dimension: 'y', ticks: { count: 5 }, grid: true, tickLabels: false, id: 'yAxis' };
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -48,10 +48,10 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     }
   });
 
-  it('axis_tickcount_non_positive_rejected', () => {
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', tickCount: 0 })).toThrow();
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', tickCount: -1 })).toThrow();
-    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', tickCount: 2.5 })).toThrow();
+  it('axis_tick_count_non_positive_rejected', () => {
+    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { count: 0 } })).toThrow();
+    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { count: -1 } })).toThrow();
+    expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { count: 2.5 } })).toThrow();
   });
 
   it('axis_grid_non_boolean_rejected', () => {
@@ -60,8 +60,20 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
 
   // 交互
   it('guide_roundtrip', () => {
-    const guide = { type: 'axis', dimension: 'y', tickCount: 4, grid: true, tickLabels: true, id: 'yA' };
+    const guide = { type: 'axis', dimension: 'y', ticks: { count: 4 }, grid: true, tickLabels: { format: '.1f' }, id: 'yA' };
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
+  });
+
+  it('axis_title_accepts_text_block_and_style', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      title: { text: ['Revenue', { text: 'USD', fill: '#666' }], font: { size: 12 }, textColor: '#111' },
+      tickLabels: { format: '$.2f', rotate: -30, align: 'right' },
+      line: { stroke: '#333', dashPattern: [4, 2] },
+      ticks: { values: [0, 10], length: 6 },
+    };
+    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 });
 
@@ -220,7 +232,7 @@ describe('GuideSchema discriminated union (ADR-03 alpha.8)', () => {
 
   // JSON round-trip：axis（回归 union 后仍保形）
   it('axis_roundtrip_through_union', () => {
-    const guide = { type: 'axis', dimension: 'y', tickCount: 4, grid: true };
+    const guide = { type: 'axis', dimension: 'y', ticks: { count: 4 }, grid: true };
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 });

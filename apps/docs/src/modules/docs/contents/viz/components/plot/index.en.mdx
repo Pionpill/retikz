@@ -56,7 +56,7 @@ When one chart needs multiple coordinate regions, everyday JSX does not need a h
 
 ### Scales
 
-Default scales come from field values and mark types: numbers use continuous axes, ordinary strings use categorical positions, and ISO dates use time axes. To request log axes, square-root axes, or a manual domain, add a `<Scale>` child to override the relevant dimension.
+Default scales come from field values and mark types: numbers use continuous axes, ordinary strings use categorical positions, and ISO dates use time axes. Inferred continuous positional domains leave 5% breathing room by default. To request log axes, square-root axes, a manual domain, or `domainPadding={0}`, add a `<Scale>` child to override the relevant dimension.
 
 <ComponentPreview name="plot-scale" sourceFiles={['plot-scale.data.ts']} size="md" />
 

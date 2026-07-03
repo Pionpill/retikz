@@ -45,7 +45,7 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 ### 比例尺
 
-默认 scale 来自字段值和 mark 类型：数字走连续轴，普通字符串走分类位置，ISO 日期走时间轴。需要对数轴、平方根轴或手动 domain 时，在 `<Plot>` 里写 `<Scale>` 子组件覆盖对应维度。
+默认 scale 来自字段值和 mark 类型：数字走连续轴，普通字符串走分类位置，ISO 日期走时间轴。连续位置轴推断 domain 时默认留 5% 弹性空间；需要对数轴、平方根轴、手动 domain 或 `domainPadding={0}` 时，在 `<Plot>` 里写 `<Scale>` 子组件覆盖对应维度。
 
 如果一张图里需要多个坐标区域，日常 JSX 不必手写 `composition` 对象。双轴用 `<Axis id>` 加 mark 上的 `xAxisId` / `yAxisId` 绑定；分面和共享轨道用对应容器把 axis / mark 包起来。完整模型见[坐标组合](/viz/grammar/coordinate/composition)。
 
