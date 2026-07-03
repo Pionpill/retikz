@@ -654,19 +654,19 @@ after`;
       });
     });
 
-    it('canonicalizes compass aliases for labels and relative positions', () => {
+    it('passes canonical anchors for labels and relative positions', () => {
       const ir = buildIR(
-        <Scope transforms={[{ kind: 'at-translate', direction: 'south', of: 'A', distance: 4 }]}>
-          <Coordinate id="C" position={{ direction: 'north-west', of: 'A' }} />
+        <Scope transforms={[{ kind: 'at-translate', direction: 'bottom', of: 'A', distance: 4 }]}>
+          <Coordinate id="C" position={{ direction: 'top-left', of: 'A' }} />
           <Node
             id="B"
-            position={{ direction: 'north-east', of: 'A' }}
-            label={{ text: 'tag', position: 'south-east' }}
+            position={{ direction: 'top-right', of: 'A' }}
+            label={{ text: 'tag', position: 'bottom-right' }}
           />
           <Path>
             <Step kind="move" to="A" />
             <Step to="B">
-              <EdgeLabel side="north">edge</EdgeLabel>
+              <EdgeLabel side="top">edge</EdgeLabel>
             </Step>
           </Path>
         </Scope>,

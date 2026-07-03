@@ -149,7 +149,7 @@ edgePoint?: (
 ) => Position;
 ```
 
-用户写边上比例点（`{ side, t }`）时调用：`side` 是 `top` / `right` / `bottom` / `left`，`t` 是这条边上 0..1 的比例。`north` / `east` 等 compass side 可作为输入别名，但 provider 收到的是 Web 名。内置形状都实现；未实现的形状收到比例点请求时编译期报错。坐标语义与 `anchor` 相同，`rect` 带 `rotate`。
+用户写边上比例点（`{ side, fraction }`）时调用：`side` 是 `top` / `right` / `bottom` / `left`，`t` 是 provider 回调收到的 0..1 比例，来自输入对象的 `fraction`。`north` / `east` 等 compass side 可作为输入别名，但 provider 收到的是 Web 名。内置形状都实现；未实现的形状收到比例点请求时编译期报错。坐标语义与 `anchor` 相同，`rect` 带 `rotate`。
 
 ```ts
 // rectangle：复用 rect 几何层时先转成几何层 side

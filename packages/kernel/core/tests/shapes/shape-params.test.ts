@@ -1,20 +1,13 @@
-/**
- * shape 参数化泛化（ADR-01）schema + 编译期桥接测试
- * @description 覆盖 ShapeRefSchema 的 string / nested object 解析与拒绝、defineShape 擦除注册往返、
- *   编译期双护栏（paramsSchema → JsonObjectSchema）、未注册 type throw、circumscribe 驱动 bbox、
- *   nested shape × rotate / scale、含 nested shape 的 IR JSON round-trip。
- *   注：涉及 compile 行为的 case 此刻 fail（compile/node.ts 桥接尚未实现）——预期。
- */
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ShapeDefinition } from '../../src/contract/shape';
-import type { Position, Rect } from '../../src/geometry';
-import type { ScenePrimitive } from '../../src/primitive';
+import type { ScenePrimitive } from '../../src/contract';
+import type { ShapeDefinition } from '../../src/contract';
 import type { IR, IRJsonObject } from '../../src/schemas';
+import type { Position, Rect } from '../../src/shared/geometry';
 
 import { compileToScene } from '../../src/compile/compile';
-import { defineShape } from '../../src/contract/shape';
+import { defineShape } from '../../src/contract';
 import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

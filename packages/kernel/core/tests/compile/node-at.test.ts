@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RectPrim, ScenePrimitive } from '../../src/primitive';
+import type { RectPrim, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -17,16 +17,18 @@ const centers = (ir: IR): Array<[number, number]> =>
 
 describe('Node at relative positioning', () => {
   describe('schema aliases', () => {
-    it('direction 支持 Web canonical、compass alias 与旧 above/below alias，并归一到 Web', () => {
+    it('direction 只接受 canonical 方位', () => {
       expect(AtPositionSchema.parse({ direction: 'top', of: 'A' })).toEqual({ direction: 'top', of: 'A' });
-      expect(AtPositionSchema.parse({ direction: 'north-west', of: 'A' })).toEqual({
+      expect(AtPositionSchema.parse({ direction: 'top-left', of: 'A' })).toEqual({
         direction: 'top-left',
         of: 'A',
       });
-      expect(AtPositionSchema.parse({ direction: 'below-right', of: 'A' })).toEqual({
+      expect(AtPositionSchema.parse({ direction: 'bottom-right', of: 'A' })).toEqual({
         direction: 'bottom-right',
         of: 'A',
       });
+      expect(() => AtPositionSchema.parse({ direction: 'north-west', of: 'A' })).toThrow();
+      expect(() => AtPositionSchema.parse({ direction: 'below', of: 'A' })).toThrow();
     });
   });
 

@@ -20,7 +20,7 @@ description: Use when changing retikz shared layer code, dependency-free vocabul
 
 - 主题复杂时用 `shared/<topic>/{constants,types,utils,index}.ts`。
 - 简单工具可保留单文件，如 `shared/types.ts`、`shared/position.ts`。
-- 模块外只从 shared barrel 导入，例如 `../shared`、`../../shared` 或包公开入口；主题内部文件可相邻导入。
+- 模块外只从 shared barrel 或稳定子域 barrel 导入，例如 `../shared`、`../../shared`、`../../shared/geometry` 或包公开入口；主题内部文件可相邻导入。
 
 ## Vocabulary
 

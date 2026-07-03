@@ -80,10 +80,10 @@ description: position 字段的五种形态 —— 笛卡尔 / 极坐标 / 相�
 
 <ZodSchema
   name="BetweenPositionSchema"
-  description="两端点之间按比例 t 取点（lerp）；端点为 AbsoluteTarget（可嵌套 between）。"
+  description="两端点之间按 fraction 取点（lerp）；端点为 AbsoluteTarget（可嵌套 between）。"
   descriptions={{
     between: '两端点（各为 AbsoluteTarget；排除 path-relative）',
-    t: '沿 A→B 的比例 0..1（0 = A，1 = B）；外插暂不支持',
+    fraction: '沿 A→B 的比例 0..1（0 = A，1 = B）；外插暂不支持',
   }}
 />
 

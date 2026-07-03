@@ -36,3 +36,11 @@ export const PathThickness = {
   VeryThick: 'veryThick',
   UltraThick: 'ultraThick',
 } as const;
+
+/** 路径编译 kind 关键字。 */
+export const PathKind = {
+  /** 标准描边路径。 */
+  Stroke: 'stroke',
+  /** Ribbon 带状路径。 */
+  Ribbon: 'ribbon',
+} as const;

@@ -1,12 +1,4 @@
-import type { MarkerPrimitive } from '../primitive/marker';
-
-/**
- * marker 窄子集运行时栅栏（arrow + pattern 共用）
- * @description `MarkerPrimitive` 的窄子集（type 限 path/ellipse/rect/group、fill 限 string | contextStroke、
- *   无外部 resourceRef / text / 函数）TS 只能编译期守门；第三方 / LLM 写出的 emit 会在运行时绕过类型，
- *   故这里做运行时校验。arrow（marker 几何）与 pattern（motif 几何）emit 产物同契约，复用本组校验。
- *   `owner` 是错误消息里的归属串（如 `Arrow 'normal'` / `Pattern 'lines'`），便于第三方 / LLM 自修。
- */
+﻿import type { MarkerPrimitive } from '../contract';
 
 /** marker 子集允许的 primitive type（窄子集运行时栅栏） */
 const MARKER_PRIM_TYPES = new Set(['path', 'ellipse', 'rect', 'group']);

@@ -1,10 +1,3 @@
-/**
- * compile：path 整体 rotate / scale 变换行为测试
- * @description 断言实现完成后的语义：path rotate/scale 把 path 几何包进 GroupPrim 并写 transforms，
- *   旋转支点 = path 包围盒中心；与包一个绕同一中心旋转的 Scope 等价；非等比 scale；
- *   旋转 path + 箭头时箭头方向随变换正确（变换顺序硬契约：端点先 resolve、shrink 在原始几何、最后包 group）。
- *   编译实现尚未消费 path rotate/scale，故本组用例当前应失败（待实现 Agent 落地编译）。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, IR, PathPrim, RotateTransform, ScaleTransform, ScenePrimitive } from '../../src';
@@ -123,6 +116,10 @@ describe('path scale（等比 / 非等比）', () => {
     expect(sc).toBeDefined();
     expect(sc?.x).toBe(2);
     expect(sc?.y).toBe(0.5);
+  });
+
+  it('transform projection 产生非有限坐标时抛出，避免 Infinity 进入 Scene', () => {
+    expect(() => compileToScene(linePath({ scale: Number.MAX_VALUE }))).toThrow(/finite|Infinity|NaN/i);
   });
 });
 

@@ -200,7 +200,7 @@ describe('lowerComposites — 交互', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: { id: 'panel', anchor: 'north' } },
+            { type: 'step', kind: 'move', to: { id: 'panel', anchor: 'top' } },
             { type: 'step', kind: 'line', to: [0, 0] },
           ],
         },

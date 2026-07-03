@@ -352,7 +352,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 ## 目标点
 
-`TargetSchema` 是路径端点的 union：笛卡尔 / 极坐标 / 节点引用对象 `{ id, anchor?, offset?, boundary? }` / 偏移定位 `{ of, offset }` / 比例定位 `{ between, t }` / 相对偏移（relative / relativeAccumulate）。节点引用对象里 `boundary?` 单边覆盖本端点贴向的连接面（缺省取节点自身 `boundary`，默认 `shape`）；`anchor?` 缺省时自动贴边裁剪。字符串节点 id 是 React DSL 的便捷写法，会在进入 IR 前解析成对象：
+`TargetSchema` 是路径端点的 union：笛卡尔 / 极坐标 / 节点引用对象 `{ id, anchor?, offset?, boundary? }` / 偏移定位 `{ of, offset }` / 比例定位 `{ between, fraction }` / 相对偏移（relative / relativeAccumulate）。节点引用对象里 `boundary?` 单边覆盖本端点贴向的连接面（缺省取节点自身 `boundary`，默认 `shape`）；`anchor?` 缺省时自动贴边裁剪。字符串节点 id 是 React DSL 的便捷写法，会在进入 IR 前解析成对象：
 
 <ZodSchema
   name="TargetSchema"

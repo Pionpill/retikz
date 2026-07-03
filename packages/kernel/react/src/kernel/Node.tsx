@@ -32,7 +32,7 @@ export type NodeProps = HydrationEventProps & {
   animations?: IRNode['animations'];
   /**
    * 节点中心位置
-   * @description 五种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）/ 偏移定位 `{ of, offset }`（TikZ `calc` 同义）/ 比例 partway `{ between: [A, B], t }`（A、B 连线上 t 处，TikZ `($(A)!t!(B)$)` 同义）；非笛卡尔形态在编译时解析
+   * @description 五种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）/ 偏移定位 `{ of, offset }`（TikZ `calc` 同义）/ 比例 partway `{ between: [A, B], fraction }`（A、B 连线上 fraction 处）；非笛卡尔形态在编译时解析
    */
   position: IRPosition | PolarPosition | IRAtPosition | IRAtPositionInput | IROffsetPosition | IRBetweenPosition;
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */

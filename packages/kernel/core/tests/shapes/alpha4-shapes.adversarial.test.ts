@@ -1,10 +1,6 @@
-/**
- * [adversarial] v0.3-alpha.4 五个 shape ADR 对抗测试
- * 目标：让 LLM 真实生成 / 边角 IR 暴露实现 bug。不修代码，仅报告。
- */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/primitive';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -114,14 +110,14 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
     expect(normalizeAngularRange(0, 1e8).end).toBe(360); // 巨角钳到 360
   });
 
-  it('[G3] ellipse 节点 compass diagonal 落真实周长（与 TikZ 一致，非 AABB 角）', () => {
+  it('[G3] ellipse 节点 canonical diagonal 落真实周长（与 parser sugar 一致，非 AABB 角）', () => {
     const compiled = compileToScene(
       scene([
         { type: 'node', id: 'e', position: [0, 0], shape: { type: 'ellipse' }, minimumSize: 40 },
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: { id: 'e', anchor: 'north-east' } },
+            { type: 'step', kind: 'move', to: { id: 'e', anchor: 'top-right' } },
             { type: 'step', kind: 'line', to: [200, -200] },
           ],
         },
@@ -129,7 +125,7 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
     );
     const path = findByType(compiled.primitives, 'path');
     const move = path!.commands[0];
-    // minimumSize=40 floor 外接框 → rx=ry=20；north-east 真实周长点 =(20/√2, −20/√2)≈(14.14, −14.14)；
+    // minimumSize=40 floor 外接框 → rx=ry=20；top-right 真实周长点 =(20/√2, −20/√2)≈(14.14, −14.14)；
     // 旧实现（AABB 角）会是 (20, −20)
     expect(move.kind).toBe('move');
     if (move.kind === 'move') {
@@ -168,7 +164,7 @@ describe('[adversarial] JSON round-trip 自描述', () => {
     const node = { type: 'node', id: 'c', position: [0, 0], shape: 'circle' };
     const parsed = NodeSchema.parse(node);
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
-    // IR 自描述：shape 字段应保留 'circle'，规范化只在 compile 内部，不写回 IR
+    // IR 自描述：shape 字段应保留 'circle'，preset 解析只在 compile 内部，不写回 IR
     expect(round.shape).toBe('circle');
   });
 
@@ -291,7 +287,7 @@ describe('[adversarial] shape type 失稳', () => {
     expect(() => ShapeRefSchema.parse({ type: '' })).toThrow();
   });
 
-  it('[adversarial] shape:"circle" 注册表查不到 circle（已收为 preset）但 normalizeShape 先消解 → 应正常编译', () => {
+  it('[adversarial] shape:"circle" 是内置 preset，经 compile 解析后应正常编译', () => {
     expect(() => compileNode({ shape: 'circle', text: 'x' })).not.toThrow();
   });
 
@@ -487,10 +483,10 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
   });
 });
 
-// ════════════════ 攻击面 10：收敛别名 × 交叉 ════════════════
+// ════════════════ 攻击面 10：shape preset × anchor / scale 交叉 ════════════════
 
-describe('[adversarial] 别名 × anchor / scale 交叉', () => {
-  it('[adversarial] diamond（→polygon 4/0）的 anchor "north" 应与 rect anchor 一致、不抛', () => {
+describe('[adversarial] shape preset × anchor / scale 交叉', () => {
+  it('[adversarial] diamond（→polygon 4/0）的 anchor "top" 应与 rect anchor 一致、不抛', () => {
     expect(() =>
       compileToScene(
         scene([
@@ -499,7 +495,7 @@ describe('[adversarial] 别名 × anchor / scale 交叉', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [100, 0] },
-              { type: 'step', kind: 'line', to: { id: 'd', anchor: 'north' } },
+              { type: 'step', kind: 'line', to: { id: 'd', anchor: 'top' } },
             ],
           },
         ] as IR['children']),

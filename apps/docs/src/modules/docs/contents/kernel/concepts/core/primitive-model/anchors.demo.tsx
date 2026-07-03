@@ -33,7 +33,7 @@ const WEB_ANCHORS: Array<{ dx: number; dy: number; l: string }> = [
 
 // 角度 anchor 30°：从中心沿 30° 射线打到边界（命中 right 边）
 const ANG_PT: [number, number] = [RB.x + RB.w, RB.y + RB.w * Math.tan(30 * DEG)];
-// 边比例 anchor {side:'top', t:0.25}：top 边左→右，t=0 在 TL
+// 边比例 anchor { side: 'top', fraction:0.25}：top 边左→右，fraction=0 在 TL
 const EDGE_PT: [number, number] = [RB.x - RB.w + 0.25 * 2 * RB.w, RB.y - RB.h];
 
 // 第二排：有 shape 专属 anchor 的非矩形 —— star / sector / arc

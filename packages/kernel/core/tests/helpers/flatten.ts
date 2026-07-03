@@ -1,4 +1,4 @@
-import type { ScenePrimitive } from '../../src/primitive';
+﻿import type { ScenePrimitive } from '../../src/contract';
 
 /**
  * 测试 helper：把 Scene primitive 树递归摊平为前序序列（含 GroupPrim 自身与其后代）

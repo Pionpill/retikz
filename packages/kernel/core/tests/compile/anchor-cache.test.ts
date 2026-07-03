@@ -1,17 +1,12 @@
-/**
- * Anchor 缓存单元测试
- * @description 覆盖：cache 命中返回严格相等引用；keyword vs 数字角度 cache key 互不串扰；
- *   不同 layout 各自一份缓存；同 layout 多次 lookup 结果一致；数字角度 + 负号 / 小数支持
- */
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { NodeLayout } from '../../src/compile/node';
-import type { ShapeDefinition } from '../../src/contract/shape';
+import type { ShapeDefinition } from '../../src/contract';
 import type { BuiltinShapeValue } from '../../src/schemas';
 
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
-import { defineShape } from '../../src/contract/shape';
+import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */
@@ -23,7 +18,7 @@ const makeLayout = (
   cy = 0,
   rotate = 0,
 ): NodeLayout => {
-  // circle / diamond 无独立 shapeDef（收为 preset）：circle → ellipse 等轴、diamond → polygon 4/0。
+  // circle / diamond 是内置 shape preset：circle → ellipse 等轴、diamond → polygon 4/0。
   const def =
     shape === 'circle' ? BUILTIN_SHAPES.ellipse : shape === 'diamond' ? BUILTIN_SHAPES.polygon : BUILTIN_SHAPES[shape];
   return {
@@ -46,8 +41,8 @@ const makeLayout = (
 describe('resolveAnchor cache 命中返回同一引用', () => {
   it('anchor_cache_hit_returns_same_reference：keyword 第二次 lookup 返回 === 引用', () => {
     const layout = makeLayout();
-    const first = resolveAnchor(layout, 'north');
-    const second = resolveAnchor(layout, 'north');
+    const first = resolveAnchor(layout, 'top');
+    const second = resolveAnchor(layout, 'top');
     expect(second).toBe(first);
   });
 
@@ -62,28 +57,28 @@ describe('resolveAnchor cache 命中返回同一引用', () => {
 describe('resolveAnchor 不同 key 互不串扰', () => {
   it('anchor_cache_keyword_vs_numeric_isolated：同 layout 上 keyword 与数字角度 cache 互不影响', () => {
     const layout = makeLayout();
-    const kw = resolveAnchor(layout, 'east');
+    const kw = resolveAnchor(layout, 'right');
     const num = resolveAnchor(layout, '0');
-    // east 关键字与 0 度数字角度数值上等价但缓存键不同 → 各自独立存储
-    expect(resolveAnchor(layout, 'east')).toBe(kw);
+    // right 关键字与 0 度数字角度数值上等价但缓存键不同 → 各自独立存储
+    expect(resolveAnchor(layout, 'right')).toBe(kw);
     expect(resolveAnchor(layout, '0')).toBe(num);
-    // 数值上 east 与 .0 都是 (+x, 0) 方向；不强求引用相等（key 不同）
+    // 数值上 right 与 .0 都是 (+x, 0) 方向；不强求引用相等（key 不同）
     expect(Math.abs(kw[0] - num[0])).toBeLessThan(1e-6);
     expect(Math.abs(kw[1] - num[1])).toBeLessThan(1e-6);
   });
 
   it('同 layout 多个 keyword 各自独立缓存', () => {
     const layout = makeLayout();
-    const n = resolveAnchor(layout, 'north');
-    const s = resolveAnchor(layout, 'south');
-    const e = resolveAnchor(layout, 'east');
+    const n = resolveAnchor(layout, 'top');
+    const s = resolveAnchor(layout, 'bottom');
+    const e = resolveAnchor(layout, 'right');
     expect(n).not.toBe(s);
     expect(n).not.toBe(e);
     expect(s).not.toBe(e);
     // 各自二次 lookup 仍命中各自 cache
-    expect(resolveAnchor(layout, 'north')).toBe(n);
-    expect(resolveAnchor(layout, 'south')).toBe(s);
-    expect(resolveAnchor(layout, 'east')).toBe(e);
+    expect(resolveAnchor(layout, 'top')).toBe(n);
+    expect(resolveAnchor(layout, 'bottom')).toBe(s);
+    expect(resolveAnchor(layout, 'right')).toBe(e);
   });
 });
 
@@ -91,23 +86,23 @@ describe('resolveAnchor 不同 layout 独立 WeakMap entry', () => {
   it('anchor_cache_different_layouts_isolated：两 layout 各自一份缓存', () => {
     const layoutA = makeLayout('rectangle', 40, 30, 0, 0);
     const layoutB = makeLayout('rectangle', 40, 30, 100, 0);
-    const aNorth = resolveAnchor(layoutA, 'north');
-    const bNorth = resolveAnchor(layoutB, 'north');
+    const aNorth = resolveAnchor(layoutA, 'top');
+    const bNorth = resolveAnchor(layoutB, 'top');
     // 不同 layout → 不同 IRPosition 引用，且各自坐标不同（cx 差 100）
     expect(aNorth).not.toBe(bNorth);
     expect(Math.abs(bNorth[0] - aNorth[0] - 100)).toBeLessThan(1e-6);
     // 各自二次 lookup 仍命中各自 cache（不串）
-    expect(resolveAnchor(layoutA, 'north')).toBe(aNorth);
-    expect(resolveAnchor(layoutB, 'north')).toBe(bNorth);
+    expect(resolveAnchor(layoutA, 'top')).toBe(aNorth);
+    expect(resolveAnchor(layoutB, 'top')).toBe(bNorth);
   });
 });
 
 describe('resolveAnchor 多次调用结果一致', () => {
   it('anchor_cache_consistent_across_lookups：同 layout 同 anchor 多次 lookup 都返首调结果', () => {
     const layout = makeLayout();
-    const first = resolveAnchor(layout, 'north-east');
-    // 模拟 path 引用 A.north-east 在不同 sub-path / segment 重复触发
-    const refs = Array.from({ length: 5 }, () => resolveAnchor(layout, 'north-east'));
+    const first = resolveAnchor(layout, 'top-right');
+    // 模拟 path 引用 A.top-right 在不同 sub-path / segment 重复触发
+    const refs = Array.from({ length: 5 }, () => resolveAnchor(layout, 'top-right'));
     for (const r of refs) {
       expect(r).toBe(first);
       expect(r[0]).toBe(first[0]);
@@ -119,25 +114,25 @@ describe('resolveAnchor 多次调用结果一致', () => {
 describe('resolveAnchor 各 shape 分发正确', () => {
   it('circle layout 调 anchor 关键字返回圆周点', () => {
     const layout = makeLayout('circle', 40, 40, 0, 0);
-    const east = resolveAnchor(layout, 'east');
-    // circle 半径 20 → east 应在 (20, 0)
-    expect(east[0]).toBeCloseTo(20, 5);
-    expect(east[1]).toBeCloseTo(0, 5);
+    const right = resolveAnchor(layout, 'right');
+    // circle 半径 20 → right 应在 (20, 0)
+    expect(right[0]).toBeCloseTo(20, 5);
+    expect(right[1]).toBeCloseTo(0, 5);
   });
 
   it('ellipse layout 调 anchor 关键字返回椭圆周点', () => {
     const layout = makeLayout('ellipse', 60, 40, 0, 0);
-    const east = resolveAnchor(layout, 'east');
-    expect(east[0]).toBeCloseTo(30, 5);
-    expect(east[1]).toBeCloseTo(0, 5);
+    const right = resolveAnchor(layout, 'right');
+    expect(right[0]).toBeCloseTo(30, 5);
+    expect(right[1]).toBeCloseTo(0, 5);
   });
 
   it('diamond (= polygon 4/0) layout 调 anchor 关键字返回外接 AABB 边点', () => {
     const layout = makeLayout('diamond', 40, 30, 0, 0);
-    const north = resolveAnchor(layout, 'north');
-    // polygon 命名 anchor 走外接 AABB：north = AABB 上边中点 (0, -height/2) = (0, -15)
-    expect(north[0]).toBeCloseTo(0, 5);
-    expect(north[1]).toBeCloseTo(-15, 5);
+    const top = resolveAnchor(layout, 'top');
+    // polygon 命名 anchor 走外接 AABB：top = AABB 上边中点 (0, -height/2) = (0, -15)
+    expect(top[0]).toBeCloseTo(0, 5);
+    expect(top[1]).toBeCloseTo(-15, 5);
   });
 });
 
@@ -205,7 +200,7 @@ paramsSchema: z.strictObject({}),
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/does not support side anchors/);
   });
 
-  it('零尺寸 Coordinate → { side, t } 报错（决策细节 #10）', () => {
+  it('零尺寸 Coordinate → { side, fraction } 报错（决策细节 #10）', () => {
     const layout = makeLayout('rectangle', 0, 0, 5, 5);
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/zero-size Coordinate/);
   });

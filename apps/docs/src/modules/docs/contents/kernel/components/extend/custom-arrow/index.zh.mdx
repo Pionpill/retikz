@@ -33,7 +33,7 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 defineArr
 
 ## emit 与 MarkerPrimitive
 
-`emit` 在 **compile 阶段**调用（与 shape 的 emit 同位）：产出的 `MarkerPrimitive[]` 连同已解析的 wrapper 参数（`baseSize` / `refX` / `markerWidth` / `markerHeight`）一起写进 Scene 的 `ArrowEndSpec`，渲染器（SVG / Canvas / …）只负责**物化**，不认识箭头注册表、也不重算几何。core / IR 里不出现 SVG `<marker>`。
+`emit` 在 **compile 阶段**调用（与 shape 的 emit 同位）：产出的 `MarkerPrimitive[]` 连同已解析的 wrapper 参数（`baseSize` / `refX` / `markerWidth` / `markerHeight`）一起写进 Scene 的 `ResolvedArrowEndSpec`，渲染器（SVG / Canvas / …）只负责**物化**，不认识箭头注册表、也不重算几何。core / IR 里不出现 SVG `<marker>`。
 
 `MarkerPrimitive` 是 `ScenePrimitive` 的**窄子集**——只允许 marker 局部几何，杜绝"marker 内递归引用 marker / clip / 文本布局"：
 

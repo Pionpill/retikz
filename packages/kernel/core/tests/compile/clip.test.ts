@@ -1,10 +1,3 @@
-/**
- * clip 编译：Scope clip → ClipResource 资源 + GroupPrim.clipRef
- * @description `<Scope clip={...}>` 经 compileToScene 把裁剪区去重成 `{ kind:'clip', id, shape }` 进 Scene.resources，
- *   并给该 scope 的 GroupPrim 挂 clipRef 指向资源 id；相同 clip 去重为一条资源、不同 clip 各自资源；
- *   无 transforms / 无 id 但带 clip 的 scope 仍产 GroupPrim（不被 prune）；paint 与 clip 资源同表共存、id 命名空间不撞；
- *   带 transforms 的 scope 内 path 被 hoist 到顶层、不进 GroupPrim（既有架构限制）；手搓非 finite 裁剪区编译期抛。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, IR, IRPaintSpec, ScenePrimitive, SceneResource } from '../../src';

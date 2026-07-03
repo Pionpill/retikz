@@ -65,5 +65,5 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 - ADR / TODO scope 内代码已实现。
 - 相关测试、lint、类型检查通过，或阻塞原因已明确报告。
 - 用户可见改动已有 docs 同步计划或已进入 `develop-document`。
-- 非明确功能类代码完工并提交或准备提交后，询问用户是否需要子 agent review。
+- 非明确功能类代码完工并提交或准备提交后，询问用户是否需要子 agent review；改动面大、核心功能或高风险提交仍需询问；小任务且用户已明确认可本次单次 commit 时不再额外询问。
 - 未经当前对话授权不 commit / push / publish。

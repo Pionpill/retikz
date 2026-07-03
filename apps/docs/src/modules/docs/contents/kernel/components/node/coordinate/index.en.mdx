@@ -15,7 +15,7 @@ import { Coordinate } from '@retikz/react';
 <Coordinate id="hub" position={[0, 0]} />
 ```
 
-`position` accepts the same five forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }` / proportional `{ between, t }`.
+`position` accepts the same five forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }` / proportional `{ between, fraction }`.
 
 ### Why it exists
 
@@ -53,11 +53,11 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 
 ### Proportional partway positioning
 
-`{ between: [A, B], t }` takes a point along the A→B segment at proportion t (0..1) — `lerp(A, B, t)`, matching TikZ `($(A)!t!(B)$)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
+`{ between: [A, B], fraction }` takes a point along the A→B segment at proportion `fraction` (0..1) — `lerp(A, B, fraction)`, matching TikZ `($(A)!t!(B)$)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
 
 <ComponentPreview name="coordinate-between" size="xs" />
 
-> `t` is strict [0,1] (extrapolation not yet supported); when an endpoint references an undefined node, Coordinate / Node position resolution throws while a path `Step.to` warns and skips — the same as other positioning forms.
+> `fraction` is strict [0,1] (extrapolation not yet supported); when an endpoint references an undefined node, Coordinate / Node position resolution throws while a path `Step.to` warns and skips — the same as other positioning forms.
 
 ## How it works
 
@@ -74,7 +74,7 @@ Internally a Coordinate registers as a **0×0 point**, which gives three observa
 | Prop       | Type                                                                                          | Default | Description                                                                                                                                           |
 | ---------- | --------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`       | `string`                                                                                      | —       | **Required** — a placeholder's entire purpose is to be referenced by id                                                                               |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | —       | Placeholder position; same shapes as `<Node position>` — includes the offset `{ of, offset }` and proportional partway `{ between: [A, B], t }` forms |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —       | Placeholder position; same shapes as `<Node position>` — includes the offset `{ of, offset }` and proportional partway `{ between: [A, B], fraction }` forms |
 
 ## Related
 

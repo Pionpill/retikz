@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR } from '../../src';
-import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
 import { RectangleStepSchema } from '../../src/schemas';

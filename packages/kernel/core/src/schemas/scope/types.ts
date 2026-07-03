@@ -3,7 +3,7 @@ import type { z } from 'zod';
 import type { ValueOf } from '../../shared';
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
-import type { ScopeBoundingShape } from './constants';
+import type { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
 
 import { type IRAnimationTrack } from '../animation';
@@ -27,7 +27,7 @@ export type IRLabelDefault = z.infer<typeof LabelDefaultSchema>;
 export type IRArrowDefault = z.infer<typeof ArrowDefaultSchema>;
 
 /** 样式继承通道标识——resetStyle 按通道切外层继承 */
-export type StyleChannel = 'node' | 'path' | 'label' | 'arrow';
+export type StyleChannel = ValueOf<typeof ScopeStyleChannel>;
 
 /**
  * Scope IR 类型——手写而非 z.infer 派生

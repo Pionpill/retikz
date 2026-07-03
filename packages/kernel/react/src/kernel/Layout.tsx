@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -193,7 +193,8 @@ export type LayoutProps = ScopeStyleProps & {
   nodeDistance?: number;
   /**
    * 运行时注入的第三方 / 自定义 shape（透传给 `compileToScene` 的 `CompileOptions.shapes`）
-   * @description IR ? `<Node shape="...">` ?????????????????????????????????? throw
+   * @description IR 或 `<Node shape="...">` 只保存 shape 名字或 `{ type, params }`；definition 在这里注入。
+   *   内置名碰撞会在注册期 throw，未知 shape 在编译期 throw。
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
@@ -206,15 +207,15 @@ export type LayoutProps = ScopeStyleProps & {
   /**
    * 运行时注入的第三方 / 自定义 arrow（透传给 `compileToScene` 的 `CompileOptions.arrows`）
    * @description IR 里 `<Path arrowDetail={{ shape: '...' }}>` 仍只写字符串名；定义在此注入。emit-in-compile：
-   *   compile 调 `def.emit` 产 marker 几何进 `ArrowEndSpec`，react adapter 只物化、不需 arrows 表。同名覆盖
-   *   compile ? `def.emit` ? marker ??? `ArrowEndSpec`?????????????????? throw
+   *   compile 调 `def.emit` 产 marker 几何进 `ResolvedArrowEndSpec`，react adapter 只物化、不需 arrows 表。
+   *   与内置或自定义同名会在注册期 throw，未注册 shape 在 compile 阶段报错。
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /**
    * 运行时注入的第三方 / 自定义 pattern motif（透传给 `compileToScene` 的 `CompileOptions.patterns`）
    * @description IR 里 `fill={{ kind: 'pattern', shape: '...' }}` 仍只写字符串名；motif 定义在此注入。
    *   emit-in-compile：compile 调 `def.emit` 产 motif 几何进 `SceneResource.tile`，react adapter 只物化、
-   *   ?? patterns ??????????????????? throw
+   *   不需要 patterns 表；内置名碰撞会在注册期 throw，未知 pattern 在编译期 throw。
    */
   patterns?: ReadonlyArray<PatternDefinition>;
   /**
@@ -235,7 +236,7 @@ export type LayoutProps = ScopeStyleProps & {
    * @description IR 里含 namespace 的 tier2 节点经此注册表在 compile 第一步展开成 Tier 1；core 无内置，
    *   未注册 namespace/type → 警告并跳过。展开始终在 core，不在 React 层。
    */
-  composites?: Array<CompositeDefinition>;
+  composites?: ReadonlyArray<CompositeDefinition>;
   /**
    * 运行时注入的公式渲染能力（透传给 `compileToScene` 的 `CompileOptions.lowerTex`）
    * @description `<Node tex>` / `<Node>{{ tex }}</Node>` 公式编译时调它把 LaTeX → 字形路径 + bbox；由 `@retikz/tex`

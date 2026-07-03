@@ -96,7 +96,7 @@ It describes label text, normalized position along the host segment or centerlin
 
 ## Target
 
-`TargetSchema` is the union for path endpoints: Cartesian / polar / node target object `{ id, anchor?, offset?, boundary? }` / offset placement `{ of, offset }` / proportional placement `{ between, t }` / relative offsets (relative / relativeAccumulate). In the node target object, `boundary?` overrides the connection surface this single endpoint clips to (defaults to the node's own `boundary`, i.e. `shape`); `anchor?` auto-clips to the boundary when omitted. Node id strings are React DSL shorthand and are parsed into objects before reaching the IR:
+`TargetSchema` is the union for path endpoints: Cartesian / polar / node target object `{ id, anchor?, offset?, boundary? }` / offset placement `{ of, offset }` / proportional placement `{ between, fraction }` / relative offsets (relative / relativeAccumulate). In the node target object, `boundary?` overrides the connection surface this single endpoint clips to (defaults to the node's own `boundary`, i.e. `shape`); `anchor?` auto-clips to the boundary when omitted. Node id strings are React DSL shorthand and are parsed into objects before reaching the IR:
 
 <ZodSchema name="TargetSchema" />
 

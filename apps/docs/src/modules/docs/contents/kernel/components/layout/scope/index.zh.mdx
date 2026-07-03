@@ -51,7 +51,7 @@ scope 子树产出任何 primitive，或带有 `transforms` / `id` / `clip` 之�
 | `polar-translate`   | `{ origin?, angle, radius }`   | 极坐标平移，`origin` 为 `id` / `[x,y]` / `PolarPosition`，缺省 = 原点                   |
 | `at-translate`      | `{ direction, of, distance? }` | 落到 referent 节点的某方向 distance 处，`distance` 缺省走 `<Layout nodeDistance>`       |
 | `offset-translate`  | `{ of, offset? }`              | scope 原点 = referent 全局坐标 + `[dx, dy]`，`offset` 缺省 = `[0, 0]`                   |
-| `between-translate` | `{ between, t }`               | scope 原点 = 两个端点按 `t` 插值的位置，端点支持坐标 / 节点引用 / offset / 嵌套 between |
+| `between-translate` | `{ between, fraction }`               | scope 原点 = 两个端点按 `fraction` 插值的位置，端点支持坐标 / 节点引用 / offset / 嵌套 between |
 | `rotate`            | `{ degrees, cx?, cy? }`        | 旋转 degrees 度，`cx/cy` 缺省 = scope 局部原点                                          |
 | `scale`             | `{ x, y? }`                    | 缩放，`y` 缺省 = `x`（等比）                                                            |
 
@@ -335,7 +335,7 @@ IR 7 变体在 compile 阶段统一压成 Scene 3 变体（Cartesian translate /
 | `polar-translate`   | `resolvePosition` 解出 origin 全局点 + (angle, radius) → Cartesian (x, y)        | `translate(x, y)`         |
 | `at-translate`      | `resolvePosition` 解出 referent 全局点 + direction + distance → Cartesian (x, y) | `translate(x, y)`         |
 | `offset-translate`  | `resolvePosition` 解出 referent 全局点 + (dx, dy) → Cartesian (x, y)             | `translate(x, y)`         |
-| `between-translate` | `resolvePosition` 解出两端点全局点并按 `t` 插值 → Cartesian (x, y)               | `translate(x, y)`         |
+| `between-translate` | `resolvePosition` 解出两端点全局点并按 `fraction` 插值 → Cartesian (x, y)               | `translate(x, y)`         |
 | `rotate`            | 直接透传                                                                         | `rotate(degrees, cx, cy)` |
 | `scale`             | 直接透传                                                                         | `scale(x, y)`             |
 

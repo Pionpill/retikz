@@ -1,17 +1,10 @@
-/**
- * compile：path 中段 marking 行为 + 段几何采样契约测试
- * @description marks 沿路径在 pos∈[0,1] 处放按切线定向的 arrow marker（复用段采样取点 + 切线）。
- *   compile 侧断言：有 marks 比无 marks 多产 primitive，且数量随 mark 个数增长（编译实现尚未消费 marks，
- *   故 compile 组当前应失败，待实现 Agent 落地）。段几何采样契约组直接验证 segment.ts 在直线 / 曲线 / arc
- *   段的切线方向正确（marks 定向所依赖的机器），当前应通过。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IR, IRPath, ScenePrimitive } from '../../src';
-import type { ArrowDefinition } from '../../src/contract/arrow';
+import type { ArrowDefinition } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
-import { arcSegmentSample, cubicSegmentSample, lineSegmentSample } from '../../src/geometry/segment';
+import { arcSegmentSample, cubicSegmentSample, lineSegmentSample } from '../../src/shared/geometry/path';
 import { flattenPrims } from '../helpers/flatten';
 
 type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
@@ -84,7 +77,7 @@ describe('marks → 中段 marker primitive', () => {
   });
 });
 
-describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致，TikZ 语义）', () => {
+describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致，parser sugar 语义）', () => {
   const markPathIR = (strokeWidth?: number): IR => ({
     version: 1,
     type: 'scene',

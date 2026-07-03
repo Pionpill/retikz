@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ShapeDefinition } from '../../src/contract/shape';
-import type { ScenePrimitive } from '../../src/primitive';
+import type { ScenePrimitive } from '../../src/contract';
+import type { ShapeDefinition } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { defineShape } from '../../src/contract/shape';
-import { localToWorld, worldToLocal } from '../../src/geometry/transform';
+import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
+import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
 import { flattenPrims } from '../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -198,12 +198,12 @@ describe('Shape registry — boundary', () => {
           transforms: [],
           children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'x' }],
         },
-        // coordinate center (0×0 rect → boundary == center) and scope.id.north must not crash
+        // coordinate center (0×0 rect → boundary == center) and scope.id.top must not crash
         {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: { id: 'co' } },
-            { type: 'step', kind: 'line', to: { id: 's', anchor: 'north' } },
+            { type: 'step', kind: 'line', to: { id: 's', anchor: 'top' } },
           ],
         },
       ],
@@ -256,7 +256,7 @@ describe('Shape registry — error path', () => {
       children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }],
     };
     expect(() => compileToScene(ir)).toThrow(/Unknown shape 'cloud'/);
-    // circle 已收为 ellipse 等轴 preset，不在注册表（裸 'circle' 由 normalizeShape 先消解为 ellipse，不走查表）
+    // circle 是内置 shape preset，不在 provider 注册表（裸 'circle' 由 compile 解析到 ellipse，不走查表）
     // 注册表含 polygon（ADR-04）：排序后落在 ellipse 与 rectangle 之间
     expect(() => compileToScene(ir)).toThrow(/ellipse, polygon, rectangle/);
   });
@@ -266,9 +266,9 @@ describe('Shape registry — error path', () => {
     expect(NodeSchema.safeParse({ type: 'node', shape: '', position: [0, 0] }).success).toBe(false);
   });
 
-  it('custom_shape_anchor_only_center: compass anchor (north) 通过 AABB 上提不再 throw', () => {
-    // compass 名（north / south / east / west / center / north-east / north-west / south-east / south-west）
-    // 在 anchorOf 内上提为 rectangle AABB，所有自定义 shape 自动获得 compass anchor。
+  it('custom_shape_anchor_only_center: canonical anchor (top) 通过 AABB 上提不再 throw', () => {
+    // canonical 名（top / bottom / right / left / center / top-right / top-left / bottom-right / bottom-left）
+    // 在 anchorOf 内上提为 rectangle AABB，所有自定义 shape 自动获得 canonical anchor。
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -277,18 +277,18 @@ describe('Shape registry — error path', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'north' } },
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'top' } },
             { type: 'step', kind: 'line', to: [0, -100] },
           ],
         },
       ],
     };
-    // north 是 compass 名，上提后走 AABB rectangle，不再 throw
+    // top 是 canonical 名，上提后走 AABB rectangle，不再 throw
     expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] })).not.toThrow();
   });
 
-  it('custom_shape_anchor_only_center: 非 compass 专属 anchor (tip) 仍然 throw', () => {
-    // 非 compass 的自定义 anchor 名（不在 9 个 rect 方位名集合内）：走视觉 shapeDef.anchor，返回 undefined → throw
+  it('custom_shape_anchor_only_center: 非 canonical 专属 anchor (tip) 仍然 throw', () => {
+    // 非 canonical 的自定义 anchor 名（不在 9 个 rect 方位名集合内）：走视觉 shapeDef.anchor，返回 undefined → throw
     const ir: IR = {
       version: 1,
       type: 'scene',

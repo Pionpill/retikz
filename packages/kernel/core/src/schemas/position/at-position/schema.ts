@@ -1,21 +1,16 @@
 import { z } from 'zod';
 
-import { normalizeAtDirection } from '../../../shared';
 import { AtDirection } from './constants';
 
 export const AtPositionSchema = z
   .object({
     direction: z
-      .preprocess(value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value), z.enum(AtDirection))
-      .describe(
-        'Direction from the referenced node toward this node, in visual convention. Web names are canonical; compass and above/below names are accepted aliases.',
-      ),
+      .enum(AtDirection)
+      .describe('Canonical direction from the referenced node toward this node, in visual convention.'),
     of: z
       .string()
       .min(1)
-      .describe(
-        'Id of the referenced node or coordinate; must be defined earlier in the IR (forward references rejected, mirroring polar `origin` and string targets).',
-      ),
+      .describe('Referenced node or coordinate id; must already be defined.'),
     distance: z
       .number()
       .positive()

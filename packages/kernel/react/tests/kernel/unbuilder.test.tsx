@@ -1042,7 +1042,7 @@ describe('convertIRToReactNode', () => {
         children: [
           { type: 'node', id: 'A', position: [-50, 0], text: 'A' },
           { type: 'node', id: 'B', position: [50, 0], text: 'B' },
-          { type: 'node', id: 'mid', position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }, text: 'm' },
+          { type: 'node', id: 'mid', position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }, text: 'm' },
           {
             type: 'coordinate',
             id: 'q',
@@ -1051,14 +1051,14 @@ describe('convertIRToReactNode', () => {
                 [0, 0],
                 [90, 0],
               ],
-              t: 0.333,
+              fraction: 0.333,
             },
           },
           {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [0, 100] },
-              { type: 'step', kind: 'line', to: { between: [{ id: 'A' }, { id: 'B' }], t: 0.25 } },
+              { type: 'step', kind: 'line', to: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 } },
             ],
           },
         ],

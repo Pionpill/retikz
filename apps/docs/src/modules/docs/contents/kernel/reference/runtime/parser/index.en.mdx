@@ -60,7 +60,7 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 
 ## Relative Target Sugar
 
-`parseTargetSugar` only handles React DSL string shorthand. Non-string input is returned unchanged, so object targets such as `{ id, anchor? }`, `{ of, offset }`, and `{ between, t }` are not rewritten. Valid node ref / offset strings convert per the table below; invalid strings (e.g. `'+x,'`, unknown anchor, empty id, bare decimal string) throw:
+`parseTargetSugar` only handles React DSL string shorthand. Non-string input is returned unchanged, so object targets such as `{ id, anchor? }`, `{ of, offset }`, and `{ between, fraction }` are not rewritten. Valid node ref / offset strings convert per the table below; invalid strings (e.g. `'+x,'`, unknown anchor, empty id, bare decimal string) throw:
 
 | Input                                             | Output                                            | Meaning                                                            |
 | ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
@@ -70,7 +70,7 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 | `'node-id.top'`                                   | `{ id: 'node-id', anchor: 'top' }`                | Named anchor                                                       |
 | `'node-id.30'`                                    | `{ id: 'node-id', anchor: 30 }`                   | Numeric-angle anchor                                               |
 | `[10, 20]`                                        | `[10, 20]`                                        | Non-string input, returned unchanged                               |
-| `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }` | `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }` | Object target returned unchanged; compile resolves endpoints later |
+| `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }` | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }` | Object target returned unchanged; compile resolves endpoints later |
 
 The regex accepts whitespace and negative numbers, such as `'+ -4, 8'` / `'++-4,8'`.
 

@@ -10,8 +10,6 @@ import type {
   IRTarget,
 } from '@retikz/core';
 
-import { normalizeSide } from '@retikz/core';
-
 import type {
   ExternalRow,
   MarkValueType,
@@ -160,7 +158,7 @@ const anchorInputMissing = (ref: PlotTargetRef, row: ExternalRow): boolean => {
 };
 
 const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => {
-  const side = label.side === undefined ? undefined : normalizeSide(label.side) ?? label.side;
+  const side = label.side;
   return { sloped: true, ...label, ...(side !== undefined ? { side } : {}) };
 };
 

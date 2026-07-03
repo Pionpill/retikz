@@ -1,17 +1,7 @@
-/**
- * polygon cornerRadius（ADR-07 统一圆角）—— params + emit fillet 弧 + boundary 感知 + r=0 等价 + scaleParams
- * @description 覆盖：
- *   - paramsSchema：cornerRadius 可选 nonnegative finite，负值 / 非有限 reject；
- *   - emit：cornerRadius>0 path 含 fillet arc 命令；
- *   - boundary-aware：朝顶点方向 boundaryPoint 落 fillet 弧上（≠ 尖顶点）；cornerRadius=0 = 尖顶点；
- *   - r=0 等价：省略 cornerRadius → emit / boundaryPoint 逐字段同现状（直接对照原始尖角轮廓数学）；
- *   - scaleParams：scale=2 → cornerRadius×2、sides/rotate 不变；
- *   - circumscribe 不随 cornerRadius 变（AABB = 尖角极值）。
- */
 import { describe, expect, it } from 'vitest';
 
-import type { Position } from '../../src/geometry/point';
-import type { Rect } from '../../src/geometry/rect';
+import type { Position } from '../../src/shared/geometry/point';
+import type { Rect } from '../../src/shared/geometry/rect';
 
 import { polygon } from '../../src/providers/shape';
 
@@ -75,7 +65,7 @@ describe('polygon cornerRadius — emit', () => {
 });
 
 describe('polygon cornerRadius — boundary aware', () => {
-  // sides=4 rotate=0：顶点角 0/90/180/270；首顶点在 +x 方向（east）。朝首顶点方向 [1,0] 射线，
+  // sides=4 rotate=0：顶点角 0/90/180/270；首顶点在 +x 方向（right）。朝首顶点方向 [1,0] 射线，
   //   r=0 命中尖顶点（外接半径处）；r>0 命中被磨圆的 fillet 弧（离中心更近）。
   it('polygon_boundary_aware：朝顶点方向 r>0 落 fillet 弧（≠ 尖顶点），r=0 = 尖顶点', () => {
     const rect = squareRect();

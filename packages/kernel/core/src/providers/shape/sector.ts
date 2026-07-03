@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
-import type { ContourSegment, FilletSolution } from '../../geometry/contour';
-import type { Position } from '../../geometry/point';
-import type { Rect } from '../../geometry/rect';
-import type { ScenePrimitive } from '../../primitive';
+import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
+import type { Position } from '../../shared/geometry';
+import type { Rect } from '../../shared/geometry';
+import type { ContourSegment, FilletSolution } from '../../shared/geometry';
 import type { SectorGeometry } from './sector-geometry';
 
-import { defineShape } from '../../contract/shape/define';
-import { boundaryFromContour, contourCommands, filletContour } from '../../geometry/contour';
-import { localToWorld } from '../../geometry/transform';
+import { defineShape } from '../../contract';
+import { localToWorld } from '../../shared/geometry';
+import { boundaryFromContour, contourCommands, filletContour } from '../../shared/geometry';
 import { contourToPathCommands, contourToPathPrimitive } from './outline';
 import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
@@ -154,7 +154,7 @@ export const sector = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, originWorld, toward, fillets);
     return hit ?? originWorld;
   },
-  anchor: (rect: Rect, name: string, params: SectorParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params: SectorParams): Position | undefined => {
     const geo = getSectorGeometry(params);
     const { innerRadius, outerRadius } = params;
     const { start, end, mid } = geo.range;

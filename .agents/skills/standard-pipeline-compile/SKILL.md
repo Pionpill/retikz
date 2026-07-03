@@ -12,7 +12,7 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 - `pipeline/`：Tier 2 到 Kernel IR 的 lowering 编排，例如 plot 的 data / scale / coordinate / transform / mark / guide 阶段。
 - `compile/`：Kernel IR 到 Scene primitive 的确定性编译，例如 core 的 registry options、坐标、路径、节点、样式继承、命名空间和 warning。
 
-具体规则回到拥有概念的层：schema 形态回 `schemas`，能力协议回 `contract`，内置实现回 `providers`，通用纯函数回 `shared`。
+具体规则回到拥有概念的层：schema 形态回 `schemas`，能力协议回 `contract`，内置实现回 `providers`，通用纯函数回 `shared`，字符串 / DSL / Sugar shorthand 到 IR 的 eager 解析回 `parsers`。
 
 ## 确定性
 
@@ -37,12 +37,21 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 - warning code 用 const object enum + `XxxValue` 派生；message 写当前契约，不写内部调试故事。
 - lowering stage helper 用动词短语命名：`resolveXxx`、`lowerXxx`、`emitXxx`、`collectXxx`。
 
+## Core compile 文件结构
+
+- `compile.ts` 只放 `CompileOptions`、`compileToScene` 和顶层编排；node/path/ribbon/scope 细节下沉到对应模块。
+- 目录级 `index.ts` 只做稳定入口导出，不承载大型实现。
+- 大型 emitter 按 `types.ts` / `emit.ts` / 能力 helper 拆分；普通 path emitter 不继续堆到 `path/index.ts`。
+- node 编译按 `node/types.ts`、`node/layout.ts`、`node/emit.ts`、`node/anchors.ts`、`node/labels.ts`、`node/text.ts` 分边界。
+- ribbon 编译是 path 子能力，放在 `compile/path/ribbon/`；普通 path emitter 只调用它的入口。
+
 ## 迁移判断
 
 - 跨能力复用纯函数 → `shared`。
 - 内置项如何工作 → `providers`。
 - 用户如何定义能力 → `contract`。
 - IR 字段是否合法 → `schemas`；只有跨字段运行时上下文规则留在 pipeline / compile。
+- 字符串 / DSL / Sugar shorthand 解析成 IR 节点或片段 → `parsers`；compile 只保留 Scene 编译期间必须消费的内部解析。
 
 ## 改代码前检查
 

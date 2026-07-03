@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../src/geometry/rect';
-import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IR, IRNodeTarget } from '../../src/schemas';
+import type { Rect } from '../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../src/compile/compile';
 import { NameStack } from '../../src/compile/name-stack';
@@ -55,7 +55,7 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
   ascent: 0,
 });
 
-describe('boundary-aware boundary/compass', () => {
+describe('boundary-aware boundary/canonical', () => {
   it("boundaryPointOf 'rectangle' boundary hits AABB edge, 'shape' hits star outline", () => {
     const nameStack = new NameStack();
     const starLayout = layoutNode(
@@ -101,7 +101,7 @@ describe('boundary-aware boundary/compass', () => {
     expect(boundaryPointOf(layout, toward)).toEqual(boundaryPointOf(layout, toward, 'shape'));
   });
 
-  it('sector compass north via AABB (不再 throw)', () => {
+  it('sector canonical top via AABB (不再 throw)', () => {
     const nameStack = new NameStack();
     const sectorLayout = layoutNode(
       {
@@ -117,11 +117,11 @@ describe('boundary-aware boundary/compass', () => {
       undefined,
       BUILTIN_SHAPES,
     );
-    // 改前：sector.anchor 不认识 compass 名，抛 Unknown anchor
-    // 改后：compass 名上提为 AABB，不再 throw，返回 AABB 上的点
-    expect(() => anchorOf(sectorLayout, 'north', 'shape')).not.toThrow();
-    const point = anchorOf(sectorLayout, 'north', 'shape');
-    // north 点的 y 坐标应在 rect 上边（y <= rect.y，即 north = y - halfHeight）
+    // 改前：sector.anchor 不认识 canonical 名，抛 Unknown anchor
+    // 改后：canonical 名上提为 AABB，不再 throw，返回 AABB 上的点
+    expect(() => anchorOf(sectorLayout, 'top', 'shape')).not.toThrow();
+    const point = anchorOf(sectorLayout, 'top', 'shape');
+    // top 点的 y 坐标应在 rect 上边（y <= rect.y，即 top = y - halfHeight）
     expect(point).toBeDefined();
     expect(Array.isArray(point)).toBe(true);
   });
@@ -171,11 +171,11 @@ describe('boundary-aware boundary/compass', () => {
   });
 });
 
-describe('star.anchor no longer handles compass directly', () => {
-  it('returns undefined for compass names (compile layer owns them now)', () => {
+describe('star.anchor no longer handles canonical directly', () => {
+  it('returns undefined for canonical names (compile layer owns them now)', () => {
     const rect: Rect = { x: 0, y: 0, width: 60, height: 60, rotate: 0 };
     const params = { points: 5, innerRadius: 10, outerRadius: 30 };
-    expect(star.anchor(rect, 'north', params)).toBeUndefined();
+    expect(star.anchor(rect, 'top', params)).toBeUndefined();
     expect(star.anchor(rect, 'tip-0', params)).toBeDefined();
   });
 });
@@ -243,7 +243,7 @@ const lineEndpointWithNode = (
 describe('端到端：path clip 透传 boundary ?? node.boundary', () => {
   // 方向选取：[200, 0] → star 中心 [0, 0]，即 toward = [0,0]（path 从 [200,0] 连到 star）
   // star 有 5 个尖角，0° 是第一个尖角（outerRadius=30）；
-  // 改从 [0,0] 方向出发，让 toward 从 star 中心看去往 [200,0]（即 east 方向 0°）——
+  // 改从 [0,0] 方向出发，让 toward 从 star 中心看去往 [200,0]（即 right 方向 0°）——
   // star 在 0° 方向是尖角（outerRadius=30）；circle 也是半径30（max(30,30)=30）→ 数值相同！
   //
   // 默认 −90 基准下：tip-k 角 = −90 + k·72（即 270/342/54/126/198°），notch-k 角 = −54 + k·72
@@ -440,7 +440,7 @@ describe('public export + remaining quadrants', () => {
                   { id: 'A', boundary: 'circle' },
                   { id: 'B' },
                 ],
-                t: 0.5,
+                fraction: 0.5,
               },
             },
           ],

@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
-import { CssColorSchema, OpacitySchema } from '../style/primitives';
+import { CssColorSchema, OpacitySchema } from '../style';
+import { ImageFit } from './constants';
 
 export const GradientStopSchema = z
   .object({
@@ -13,7 +14,7 @@ export const GradientStopSchema = z
 
 export const LinearGradientPaintSpecSchema = z
   .object({
-    kind: z.literal('linearGradient'),
+    kind: z.literal('linearGradient').describe('Discriminator for linear gradient paint.'),
     stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
     angle: AngleDegreesSchema
       .optional()
@@ -23,7 +24,7 @@ export const LinearGradientPaintSpecSchema = z
 
 export const RadialGradientPaintSpecSchema = z
   .object({
-    kind: z.literal('radialGradient'),
+    kind: z.literal('radialGradient').describe('Discriminator for radial gradient paint.'),
     stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
     center: z
       .tuple([z.number(), z.number()])
@@ -39,7 +40,7 @@ export const RadialGradientPaintSpecSchema = z
 
 export const ConicGradientPaintSpecSchema = z
   .object({
-    kind: z.literal('conicGradient'),
+    kind: z.literal('conicGradient').describe('Discriminator for conic gradient paint.'),
     stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
     center: z
       .tuple([z.number(), z.number()])
@@ -53,7 +54,7 @@ export const ConicGradientPaintSpecSchema = z
 
 export const PatternPaintSpecSchema = z
   .object({
-    kind: z.literal('pattern'),
+    kind: z.literal('pattern').describe('Discriminator for pattern paint.'),
     shape: z
       .string()
       .min(1)
@@ -80,10 +81,10 @@ export const PatternPaintSpecSchema = z
 
 export const ImagePaintSpecSchema = z
   .object({
-    kind: z.literal('image'),
+    kind: z.literal('image').describe('Discriminator for image paint.'),
     href: z.string().min(1).describe('Image URL (http(s) or data URI)'),
     fit: z
-      .enum(['fill', 'contain', 'cover'])
+      .enum(ImageFit)
       .optional()
       .describe('How the image maps to the shape: `fill` (stretch) / `contain` / `cover`. Default `cover`'),
   })

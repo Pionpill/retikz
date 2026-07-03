@@ -1,10 +1,3 @@
-/**
- * compile 把 IR 元素 user id stamp 到 emit 图元 测试（TDD red）
- * @description 覆盖水合挂点：纯几何 Node 逐个平铺 shape 图元 stamp 同一 id、带文本 Node 的 GroupPrim
- *   带 id、Path 的 PathPrim 带 id、Scope 的 GroupPrim 带 id、无 id 元素 emit 图元不含 id、
- *   Coordinate 无视觉不 emit 任何 ScenePrimitive。
- *   ⚠️ 本文件断言"期望的正确行为"——compile stamp 尚未实现，大部分 case 此刻预计 fail（预期 TDD red）。
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IR, ScenePrimitive } from '../../src';

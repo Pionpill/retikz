@@ -1,6 +1,6 @@
-import type { IRDropShadow, ResolvedDropShadow, ShadowPresetValue } from '../schemas/effects';
+import type { IRDropShadow, ResolvedDropShadow, ShadowPresetValue } from '../schemas';
 
-import { SHADOW_PRESETS } from '../schemas/effects';
+import { SHADOW_PRESETS } from '../schemas';
 
 /** shadow color 缺省（半透明黑）；preset 与显式 color 均未给时兜底 */
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';

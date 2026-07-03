@@ -1,39 +1,35 @@
 import { z } from 'zod';
 
-import { normalizeSide, WebSide } from '../../../shared';
+import { Side } from '../../../shared';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
 import { TargetSchema } from '../target';
-import { FoldStepVia, GeometryLabelPlacement } from './constants';
+import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 
 export const GeometryLabelSchema = z
   .object({
     ...createLabelVisualStyleShape({
-      textColor:
-        "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
+      textColor: "Label text color; falls back to label defaults, path color, then currentColor.",
       opacity: 'Label-only opacity, multiplied with the owning path opacity.',
       font: 'Label font overrides. Missing fields inherit from scope label defaults.',
     }),
     text: LabelTextContentSchema,
     position: z
       .union([
-        z.enum(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end']),
+        z.enum(GeometryLabelPosition),
         NormalizedFractionSchema,
       ])
       .optional()
       .describe(
-        'Position along the step. Use a normalized number or a keyword: at-start, very-near-start, near-start, midway, near-end, very-near-end, or at-end. Parameter meaning follows the step kind.',
+        'Position along the step: keyword or normalized number. Parameter meaning follows the step kind.',
       ),
     side: z
-      .preprocess(
-        value => (typeof value === 'string' ? normalizeSide(value) ?? value : value),
-        z.enum(WebSide),
-      )
+      .enum(Side)
       .optional()
       .describe(
-        'Side relative to the label anchor. Web sides top/bottom/left/right are canonical; compass and TikZ side names are accepted aliases. Default `top`.',
+        'Canonical side relative to the label anchor. Default `top`.',
       ),
     sloped: z
       .boolean()
@@ -43,7 +39,7 @@ export const GeometryLabelSchema = z
       .enum(GeometryLabelPlacement)
       .optional()
       .describe(
-        'Placement mode for path-like labels. `outside` keeps the default Path label behavior; `inside` lets area-like hosts such as Ribbon place labels in the band when no side is specified.',
+        'Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band.',
       ),
     distance: z
       .number()
@@ -131,7 +127,7 @@ export const BendStepSchema = z
       ),
     to: TargetSchema.describe('Destination point of the bend'),
     bendDirection: z
-      .enum(['left', 'right'])
+      .enum(BendDirection)
       .optional()
       .describe(
         'Bend side relative to the from-to direction. Use with bendAngle unless outAngle and inAngle are provided.',
@@ -190,7 +186,7 @@ const refineArcStep = (step: { radius?: number; radiusX?: number; radiusY?: numb
 };
 
 const refinePartialAngles = (
-  step: { startAngle?: number; endAngle?: number; closed?: 'closed' | 'chord' | 'open' | 'sector' },
+  step: { startAngle?: number; endAngle?: number; closed?: string },
   ctx: z.RefinementCtx,
   kind: 'circlePath' | 'ellipsePath',
 ): void => {
@@ -246,9 +242,7 @@ const ArcStepBaseSchema = z
       .describe(
         'Elliptical arc y-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).',
       ),
-    center: TargetSchema.optional().describe(
-      'Explicit arc center. Defaults to the cursor (previous step anchor) for backward compatibility; set it to anchor the arc independently of the cursor (used by <Sector> to draw a correct wedge).',
-    ),
+    center: TargetSchema.optional().describe('Explicit arc center. Omitted fields use the current cursor as center.'),
     label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
   })
   .describe(
@@ -278,7 +272,7 @@ const CirclePathStepBaseSchema = z
       .optional()
       .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
     closed: z
-      .enum(['closed', 'chord', 'open', 'sector'])
+      .enum(PathCloseMode)
       .optional()
       .describe(
         'Closing mode for a circle path: closed, chord, sector, or open. With angles, omitted fields use chord.',
@@ -318,7 +312,7 @@ const EllipsePathStepBaseSchema = z
       .optional()
       .describe('Partial-ellipse end angle in degrees.'),
     closed: z
-      .enum(['closed', 'chord', 'open', 'sector'])
+      .enum(PathCloseMode)
       .optional()
       .describe(
         'Closing mode for an ellipse path: closed, chord, sector, or open. With angles, omitted fields use chord.',
@@ -365,7 +359,7 @@ export const SmoothStepSchema = z
       .array(TargetSchema)
       .min(1)
       .describe(
-        'Through-points after the cursor, in order; the curve passes through each. The current cursor is the implicit first knot, so a single point yields one segment. The cursor ends at the last point.',
+        'Through-points after the cursor, in order. The cursor is the implicit first knot and ends at the last point.',
       ),
     tension: z
       .number()
@@ -384,7 +378,7 @@ export const GeneratorStepSchema = z
     kind: z
       .literal('generator')
       .describe(
-        'Delegate this segment to a registered path generator looked up by `name` in CompileOptions.pathGenerators; the generator turns `from` / `to` / `params` into low-level path commands at compile time',
+        'Registered path generator segment. `name` selects CompileOptions.pathGenerators; `params` is JSON input.',
       ),
     name: z
       .string()

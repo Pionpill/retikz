@@ -51,7 +51,7 @@ The 5 translate variants mirror the 5 `<Node position>` shapes (Cartesian / pola
 | `polar-translate`   | `{ origin?, angle, radius }`   | Polar translation; `origin` accepts `id` / `[x, y]` / `PolarPosition`; defaults to origin point                                    |
 | `at-translate`      | `{ direction, of, distance? }` | Place scope at `distance` from referent node along `direction`; `distance` defaults to `<Layout nodeDistance>`                     |
 | `offset-translate`  | `{ of, offset? }`              | Scope origin = referent global position + `[dx, dy]`; `offset` defaults to `[0, 0]`                                                |
-| `between-translate` | `{ between, t }`               | Scope origin = proportional point between two endpoints; endpoints support coordinates / node references / offset / nested between |
+| `between-translate` | `{ between, fraction }`               | Scope origin = proportional point between two endpoints; endpoints support coordinates / node references / offset / nested between |
 | `rotate`            | `{ degrees, cx?, cy? }`        | Rotate by degrees; `cx/cy` default to scope local origin                                                                           |
 | `scale`             | `{ x, y? }`                    | Scale; `y` defaults to `x` (uniform)                                                                                               |
 
@@ -335,7 +335,7 @@ The 7 IR variants are uniformly flattened to 3 Scene variants (Cartesian transla
 | `polar-translate`   | `resolvePosition` resolves origin global + (angle, radius) → Cartesian (x, y)                 | `translate(x, y)`         |
 | `at-translate`      | `resolvePosition` resolves referent global + direction + distance → Cartesian (x, y)          | `translate(x, y)`         |
 | `offset-translate`  | `resolvePosition` resolves referent global + (dx, dy) → Cartesian (x, y)                      | `translate(x, y)`         |
-| `between-translate` | `resolvePosition` resolves both endpoints globally and interpolates by `t` → Cartesian (x, y) | `translate(x, y)`         |
+| `between-translate` | `resolvePosition` resolves both endpoints globally and interpolates by `fraction` → Cartesian (x, y) | `translate(x, y)`         |
 | `rotate`            | Pass through                                                                                  | `rotate(degrees, cx, cy)` |
 | `scale`             | Pass through                                                                                  | `scale(x, y)`             |
 

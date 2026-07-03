@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -49,7 +49,7 @@ describe('OffsetPosition: step.to schema 校验', () => {
 
   it('TargetSchema 不再接受字符串节点引用（已对象化；字符串 shorthand 仅 React DSL 层）', () => {
     expect(() => TargetSchema.parse('A')).toThrow();
-    expect(() => TargetSchema.parse('A.north')).toThrow();
+    expect(() => TargetSchema.parse('A.top')).toThrow();
   });
 });
 

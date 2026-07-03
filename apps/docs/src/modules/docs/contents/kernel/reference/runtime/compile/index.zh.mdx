@@ -30,7 +30,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `arrows`            | `ReadonlyArray<ArrowDefinition>`         | `—`                                         | 运行时注入自定义箭头；每个 definition 通过 `name` 查表，内置名碰撞注册期报错。见 [自定义箭头](/kernel/components/extend/custom-arrow) |
 | `patterns`          | `ReadonlyArray<PatternDefinition>`       | `—`                                         | 运行时注入自定义填充图案；每个 definition 通过 `name` 查表，内置名碰撞注册期报错。见 [自定义图案](/kernel/components/extend/custom-pattern) |
 | `pathGenerators`    | `ReadonlyArray<PathGeneratorDefinition>` | `—`                                         | 运行时注入自定义曲线生成器；generator step 按 `name` 查表，未注册编译期 throw。见 [路径生成器](/kernel/components/extend/path-generator) |
-| `composites`        | `Array<CompositeDefinition>`              | `—`                                         | 运行时注入 Tier 2 composite 展开逻辑；编译第一步把 composite 节点展开成 Tier 1，未注册发 `COMPOSITE_NOT_REGISTERED` 并跳过该节点         |
+| `composites`        | `ReadonlyArray<CompositeDefinition>`      | `—`                                         | 运行时注入 Tier 2 composite 展开逻辑；编译第一步把 composite 节点展开成 Tier 1，未注册发 `COMPOSITE_NOT_REGISTERED` 并跳过该节点         |
 | `maxCompositeDepth` | `number`                                  | `32`                                        | composite 嵌套展开的最大深度（防环 / 防失控递归），超限或成环 throw                                                                      |
 
 ## 文字度量

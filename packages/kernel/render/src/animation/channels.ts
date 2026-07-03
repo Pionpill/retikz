@@ -4,7 +4,7 @@
  */
 import type { IRAnimationOrigin, IRAnimationTrack, ScenePrimitive } from '@retikz/core';
 
-import { AnimationProperty, CenterAnchor, normalizeAnchor, WebAnchor } from '@retikz/core';
+import { Anchor, AnimationProperty, CenterAnchor } from '@retikz/core';
 
 /** transform 类通道（落 transform，需支点 origin） */
 const TRANSFORM_PROPERTIES = new Set<string>([
@@ -53,24 +53,24 @@ const anchorOnBBox = (
   const right = bbox.x + bbox.w;
   const top = bbox.y;
   const bottom = bbox.y + bbox.h;
-  switch (normalizeAnchor(name)) {
+  switch (name) {
     case CenterAnchor.Center:
       return [cx, cy];
-    case WebAnchor.Top:
+    case Anchor.Top:
       return [cx, top];
-    case WebAnchor.Bottom:
+    case Anchor.Bottom:
       return [cx, bottom];
-    case WebAnchor.Right:
+    case Anchor.Right:
       return [right, cy];
-    case WebAnchor.Left:
+    case Anchor.Left:
       return [left, cy];
-    case WebAnchor.TopRight:
+    case Anchor.TopRight:
       return [right, top];
-    case WebAnchor.TopLeft:
+    case Anchor.TopLeft:
       return [left, top];
-    case WebAnchor.BottomRight:
+    case Anchor.BottomRight:
       return [right, bottom];
-    case WebAnchor.BottomLeft:
+    case Anchor.BottomLeft:
       return [left, bottom];
     default:
       return undefined;

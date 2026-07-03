@@ -1,15 +1,16 @@
 import { z } from 'zod';
 
-import type { ContourSegment } from '../../geometry/contour';
-import type { Position } from '../../geometry/point';
-import type { Rect } from '../../geometry/rect';
-import type { ScenePrimitive } from '../../primitive';
+import type { ScenePrimitive } from '../../contract';
+import type { Position } from '../../shared/geometry';
+import type { Rect } from '../../shared/geometry';
+import type { ContourSegment } from '../../shared/geometry';
 
-import { defineShape } from '../../contract/shape/define';
-import { boundaryFromContour } from '../../geometry/contour';
-import { rect as rectOps } from '../../geometry/rect';
-import { localToWorld } from '../../geometry/transform';
-import { CenterAnchor, normalizeAnchor } from '../../shared';
+import { defineShape } from '../../contract';
+import { BuiltinShape } from '../../schemas';
+import { CenterAnchor, isDirectionalAnchor } from '../../shared';
+import { rect } from '../../shared/geometry';
+import { localToWorld } from '../../shared/geometry';
+import { boundaryFromContour } from '../../shared/geometry';
 import { verticesToSegments } from './outline';
 
 /**
@@ -26,14 +27,14 @@ type RectangleParams = {
 };
 
 /** 轴对齐 / 旋转矩形的 4 个角（CW 绕向：左上 → 右上 → 右下 → 左下），局部系经 localToWorld 投世界 */
-const rectVertices = (rect: Rect): Array<Position> => {
-  const halfW = rect.width / 2;
-  const halfH = rect.height / 2;
+const rectVertices = (bounds: Rect): Array<Position> => {
+  const halfW = bounds.width / 2;
+  const halfH = bounds.height / 2;
   return [
-    localToWorld(rect, [-halfW, -halfH]),
-    localToWorld(rect, [halfW, -halfH]),
-    localToWorld(rect, [halfW, halfH]),
-    localToWorld(rect, [-halfW, halfH]),
+    localToWorld(bounds, [-halfW, -halfH]),
+    localToWorld(bounds, [halfW, -halfH]),
+    localToWorld(bounds, [halfW, halfH]),
+    localToWorld(bounds, [-halfW, halfH]),
   ];
 };
 
@@ -46,7 +47,7 @@ const rectVertices = (rect: Rect): Array<Position> => {
  *   scaleParams：cornerRadius 是长度，随 node scale 用 uniform 几何均值因子协同缩放（边数 / 角度类参数才不缩）。
  */
 export const rectangle = defineShape({
-  name: 'rectangle',
+  name: BuiltinShape.Rectangle,
   paramsSchema: z.strictObject({
     cornerRadius: z
       .number()
@@ -58,18 +59,18 @@ export const rectangle = defineShape({
       ),
   }),
   circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-  boundaryPoint: (rect: Rect, toward: Position, params: RectangleParams): Position => {
-    const verts = rectVertices(rect);
+  boundaryPoint: (bounds: Rect, toward: Position, params: RectangleParams): Position => {
+    const verts = rectVertices(bounds);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
-    const center: Position = [rect.x, rect.y];
+    const center: Position = [bounds.x, bounds.y];
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
   anchor: (r, name) => {
-    const a = normalizeAnchor(name);
-    return a !== undefined && a !== CenterAnchor.Center ? rectOps.anchor(r, a) : undefined;
+    if (name === CenterAnchor.Center) return undefined;
+    return isDirectionalAnchor(name) ? rect.anchor(r, name) : undefined;
   },
-  edgePoint: (r, side, t) => rectOps.edgePoint(r, side, t),
+  edgePoint: (r, side, t) => rect.edgePoint(r, side, t),
   *emit(r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

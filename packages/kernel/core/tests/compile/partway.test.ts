@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
-import type { RectPrim } from '../../src/primitive';
+import type { RectPrim } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
@@ -40,7 +40,7 @@ describe('Node 中心落两端点之间', () => {
       {
         type: 'node',
         id: 'mid',
-        position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+        position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
         text: 'mid',
       },
     ]);
@@ -60,7 +60,7 @@ describe('Node 中心落两端点之间', () => {
             [-40, -40],
             [40, 40],
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
         text: 'm',
       },
@@ -82,7 +82,7 @@ describe('Coordinate 注册位置落两端点之间', () => {
             [0, 0],
             [90, 0],
           ],
-          t: 0.333,
+          fraction: 0.333,
         },
       },
       {
@@ -112,7 +112,7 @@ describe('Path step 端点落两端点之间', () => {
           {
             type: 'step',
             kind: 'line',
-            to: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            to: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
           },
         ],
       },
@@ -132,7 +132,7 @@ describe('比例 t 边界命中端点', () => {
       {
         type: 'node',
         id: 'p',
-        position: { between: [{ id: 'A' }, { id: 'B' }], t: 0 },
+        position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0 },
         text: 'p',
       },
     ]);
@@ -149,7 +149,7 @@ describe('比例 t 边界命中端点', () => {
       {
         type: 'node',
         id: 'p',
-        position: { between: [{ id: 'A' }, { id: 'B' }], t: 1 },
+        position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 1 },
         text: 'p',
       },
     ]);
@@ -172,8 +172,8 @@ describe('嵌套 between 解析', () => {
         type: 'node',
         id: 'p',
         position: {
-          between: [{ between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }, { id: 'C' }],
-          t: 0.5,
+          between: [{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }, { id: 'C' }],
+          fraction: 0.5,
         },
         text: 'p',
       },
@@ -186,9 +186,9 @@ describe('嵌套 between 解析', () => {
 });
 
 describe('端点带 anchor 时用对应 anchor 点插值', () => {
-  it('between_endpoint_anchor：端点 { id:"A", anchor:"north" } → lerp 用 A 的 north 点', () => {
+  it('between_endpoint_anchor：端点 { id:"A", anchor:"top" } → lerp 用 A 的 top 点', () => {
     // 两个有尺寸的同款节点 A=[0,0] B=[0,200]（竖直排布）。
-    // 用 north anchor：两端点都取各自 north（y 比中心小），t=0.5 → 中点 y 比两中心几何中点 y 小。
+    // 用 top anchor：两端点都取各自 top（y 比中心小），t=0.5 → 中点 y 比两中心几何中点 y 小。
     const baseIr = scene([
       { type: 'node', id: 'A', position: [0, 0], text: 'AAA' },
       { type: 'node', id: 'B', position: [0, 200], text: 'BBB' },
@@ -197,10 +197,10 @@ describe('端点带 anchor 时用对应 anchor 点插值', () => {
         id: 'm',
         position: {
           between: [
-            { id: 'A', anchor: 'north' },
-            { id: 'B', anchor: 'north' },
+            { id: 'A', anchor: 'top' },
+            { id: 'B', anchor: 'top' },
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
         text: 'm',
       },
@@ -216,16 +216,16 @@ describe('端点带 anchor 时用对应 anchor 点插值', () => {
             { id: 'A', anchor: 'center' },
             { id: 'B', anchor: 'center' },
           ],
-          t: 0.5,
+          fraction: 0.5,
         },
         text: 'm',
       },
     ]);
     const withNorth = rects(compileToScene(baseIr).primitives).map(rectCenter)[2];
     const withCenter = rects(compileToScene(centerIr).primitives).map(rectCenter)[2];
-    // north anchor 比 center 在屏幕坐标里 y 更小（更靠上），两端同向偏移 → 中点 y 也更小
+    // top anchor 比 center 在屏幕坐标里 y 更小（更靠上），两端同向偏移 → 中点 y 也更小
     expect(withNorth[1]).toBeLessThan(withCenter[1]);
-    // x 不变（竖直排布，north 不偏 x）
+    // x 不变（竖直排布，top 不偏 x）
     expect(withNorth[0]).toBeCloseTo(withCenter[0]);
   });
 });
@@ -245,7 +245,7 @@ describe('transforms scope 内 between 投影', () => {
           {
             type: 'node',
             id: 'm',
-            position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
+            position: { between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 },
             text: 'm',
           },
         ],
@@ -278,7 +278,7 @@ describe('端点引用未定义节点不崩', () => {
           {
             type: 'step',
             kind: 'line',
-            to: { between: [{ id: 'A' }, { id: 'bogus' }], t: 0.5 },
+            to: { between: [{ id: 'A' }, { id: 'bogus' }], fraction: 0.5 },
           },
         ],
       },

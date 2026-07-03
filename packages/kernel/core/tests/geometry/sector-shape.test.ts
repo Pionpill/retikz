@@ -1,23 +1,6 @@
-/**
- * sector shape（ADR-03）—— paramsSchema + 几何契约 + scaleParams 测试
- * @description 覆盖：
- *   - paramsSchema 校验（outerRadius>innerRadius、finite 角度、strictObject 缺字段拒绝）；
- *   - 几何契约：emit 外弧 + 径向边 + 内弧、命名 anchor、pie slice（innerRadius=0）、
- *     circumscribe 精确 AABB（含跨 90° 的 +y 极值点）、近全圆、end<start、position=AABB 中心；
- *   - 交互：rotate × sector、Path 连接 outer-arc-mid；
- *   - round-trip（nested params IR）+ zod 错误两类；
- *   - scaleParams：node scale 只缩半径、不缩角度。
- *
- *   角度约定（与 polar.ts / @retikz/math arc 一致，SVG y-down）：
- *     point = [cx + r·cosθ, cy + r·sinθ]，0°=+x(east)，90°=+y(屏幕下方)，180°=-x，270°=-y(屏幕上方)。
- *
- *   注：涉及 circumscribe / emit / boundaryPoint / anchor 真实几何的 case 此刻 fail
- *   （sector.ts 的几何四函数仍是占位 stub，实现 Agent 填真实数学）——预期。
- *   paramsSchema / scaleParams / round-trip / zod 错误类 case 此刻应通过。
- */
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/primitive';
+import type { ScenePrimitive } from '../../src/contract';
 import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

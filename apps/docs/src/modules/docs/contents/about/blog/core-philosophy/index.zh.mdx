@@ -41,11 +41,11 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 }
 ```
 
-`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/kernel/kernel/src/schemas/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
+`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/kernel/core/src/schemas/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
 
 中间层是 **Node** 和 **Path**：
 
-- **Node** 是可定位、可旋转的形状容器（内置 rectangle / circle / ellipse / diamond，ShapeRegistry 可注册更多），带 text / label / padding / scale 等字段；position 支持 5 种形式（笛卡尔 / 极坐标 / `at` 引用 / 偏移 / 比例 partway `{ between, t }`）。
+- **Node** 是可定位、可旋转的形状容器（内置 rectangle / circle / ellipse / diamond，ShapeRegistry 可注册更多），带 text / label / padding / scale 等字段；position 支持 5 种形式（笛卡尔 / 极坐标 / `at` 引用 / 偏移 / 比例 partway `{ between, fraction }`）。
 - **Path** 是绘制命令序列，`children` 一般至少 2 个 `Step`（自包含的 rectangle step 可独立成段），外加 stroke / fill / arrow / dashPattern / rotate / scale / marks 等视觉属性。
 
 底层是 **Step**，12 种 kind 覆盖全部路径动作：
@@ -69,7 +69,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 
 ## Scene 编译器：两 pass 在做什么
 
-`compileToScene(ir, options)` 是 core 包最重的资产（`packages/kernel/kernel/src/compile/compile.ts`），两 pass 设计：
+`compileToScene(ir, options)` 是 core 包最重的资产（`packages/kernel/core/src/compile/compile.ts`），两 pass 设计：
 
 - **Pass 1**：遍历所有 Node，解析相对定位（如 `{ direction: 'right', of: 'A', distance: 2 }`），登记到 `nodeIndex` 表里——节点 id 到已知坐标 + 锚点表的映射。
 - **Pass 2**：按 JSX 源码顺序发 primitive。Path 里的 Step 这时才解析 `to`——节点引用 `"A.right"` / `"A.45"` 都查 nodeIndex；相对 / 累积相对则跟踪游标位置。
@@ -122,8 +122,8 @@ Tier 2 目前还没在 core 里实装，规划中由 `@retikz/flow` / `@retikz/p
 
 `@retikz/react` 是当前唯一发出来的 adapter，整套架构反复强调它要"薄"：
 
-- 顶层 `<Layout>` 容器（`packages/react/src/kernel/Layout.tsx`）只做三件事：拿到 `ir` prop 或 `useMemo(buildIR(children))`、调 `compileToScene`、把 Scene primitive 翻成 `<svg>` 子元素。
-- Builder（`packages/react/src/kernel/builder.ts`）做 JSX → IR 的同步转换，靠共享字段表（`NODE_FIELDS` / `PATH_FIELDS`）和组件 `displayName` 识别；它不调 hook、不进 React render 调用栈。
+- 顶层 `<Layout>` 容器（`packages/kernel/react/src/kernel/Layout.tsx`）只做三件事：拿到 `ir` prop 或 `useMemo(buildIR(children))`、调 `compileToScene`、把 Scene primitive 翻成 `<svg>` 子元素。
+- Builder（`packages/kernel/react/src/kernel/builder.ts`）做 JSX → IR 的同步转换，靠共享字段表（`NODE_FIELDS` / `PATH_FIELDS`）和组件 `displayName` 识别；它不调 hook、不进 React render 调用栈。
 - 文字度量用 `browserMeasurer`（canvas.measureText），作为 `TextMeasurer` 注入 compile——后续 SSR adapter 可换成 satori / sharp 之类的实现，compile 本身零改动。
 
 这层的目标是**未来加新 adapter 时只写 50 行翻译代码**。SSR 翻 SVG 字符串、Canvas 翻 ctx 调用、PDF 翻 PDFKit 命令——共享同一份 Scene primitive。零依赖原则在这里落地：CI 强制 `@retikz/core` 在零 React 环境可加载，packages/kernel 的 dependencies 白名单里只剩 `zod`。

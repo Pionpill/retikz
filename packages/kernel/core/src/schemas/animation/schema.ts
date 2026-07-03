@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { Anchor, CenterAnchor } from '../../shared';
 import { JsonValueSchema } from '../json';
 import { NormalizedFractionSchema } from '../scalar';
 import { AnimationDirection, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
@@ -38,9 +39,8 @@ export const TriggerSchema = z
 export const OriginSchema = z
   .union([
     z
-      .string()
-      .min(1)
-      .describe('Named transform pivot using the node anchor vocabulary, resolved against the animated element.'),
+      .enum({ ...CenterAnchor, ...Anchor })
+      .describe('Named transform pivot using the canonical node anchor vocabulary, resolved against the animated element.'),
     z.tuple([z.number(), z.number()]).describe('Explicit transform pivot in element-local coordinates [x, y].'),
   ])
   .describe(
@@ -53,7 +53,7 @@ export const AnimationTrackSchema = z
       .string()
       .min(1)
       .describe(
-        'Animated property name. Built-ins are opacity, fill, stroke, strokeWidth, translateX, translateY, rotate, scale, scaleX, scaleY, pathDraw, and viewBox. Other names are custom properties. viewBox is scene-root only.',
+        'Animated property name. Built-ins have refined value types; custom names accept JSON values. viewBox is scene-root only.',
       ),
     keyframes: z
       .array(KeyframeSchema)

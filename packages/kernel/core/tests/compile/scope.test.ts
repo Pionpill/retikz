@@ -1,7 +1,3 @@
-/**
- * compile + scope 集成测试
- * @description 只覆盖 scope.transforms 5 个 translate 变体 lower + 累积 chain、嵌套 scope、prune、跨 scope path 引用、scope.transforms 失败时的 warn
- */
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, GroupPrim, IR, ScenePrimitive, Transform } from '../../src';
@@ -161,7 +157,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       { type: 'node', id: 'B', position: [100, 40], text: 'B' },
       {
         type: 'scope',
-        transforms: [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }],
+        transforms: [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }],
         children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
       },
     ]);
@@ -386,7 +382,7 @@ describe('scope GroupPrim emit 形态', () => {
 
   it('scope scale 下 path 端点 boundary clip 按缩放后的矩形对齐', () => {
     // scope scale 1.5 + 内 path 串联两节点；boundary clip 应按 1.5x 的视觉尺寸算
-    // s1.east 视觉位置 = s1.center.x + halfWidth * 1.5；line 起点应接近此点
+    // s1.right 视觉位置 = s1.center.x + halfWidth * 1.5；line 起点应接近此点
     const ir = scene([
       {
         type: 'scope',

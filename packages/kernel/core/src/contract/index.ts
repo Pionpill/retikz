@@ -4,4 +4,6 @@ export * from './clip';
 export * from './composite';
 export * from './path';
 export * from './pattern';
+export * from './ribbon';
+export * from './scene';
 export * from './shape';

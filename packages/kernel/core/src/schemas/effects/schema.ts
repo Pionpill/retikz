@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { CssColorSchema, OpacitySchema } from '../style/primitives';
+import { CssColorSchema, OpacitySchema } from '../style';
 import { ShadowPreset } from './constants';
 
 export const DropShadowSchema = z

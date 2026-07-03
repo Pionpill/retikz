@@ -44,7 +44,7 @@ export type TextMetrics = {
 export type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 
 /**
- * 默认 fallback 度量：基于平均字宽估算，不准但保证可运行
+ * 默认兜底度量：基于平均字宽估算，不准但保证可运行
  * @description size=0 → 退化返回 (0, 0)（与 text='' 一致）；负 size 或非有限（NaN / Infinity）size → throw（非法输入早 fail，避免 NaN / Infinity 传播到 Scene）
  */
 export const fallbackMeasurer: TextMeasurer = (text, font) => {

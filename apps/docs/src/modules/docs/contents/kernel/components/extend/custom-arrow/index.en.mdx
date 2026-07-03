@@ -33,7 +33,7 @@ Visual fields `length` / `width` / `scale` / `opacity` are handled uniformly by 
 
 ## emit and MarkerPrimitive
 
-`emit` runs at **compile time** (same place as a shape's emit): the resulting `MarkerPrimitive[]`, together with the resolved wrapper params (`baseSize` / `refX` / `markerWidth` / `markerHeight`), is written into the Scene's `ArrowEndSpec`. The renderer (SVG / Canvas / …) only **materializes** it — it doesn't know the arrow registry and doesn't recompute geometry. No SVG `<marker>` appears in core / IR.
+`emit` runs at **compile time** (same place as a shape's emit): the resulting `MarkerPrimitive[]`, together with the resolved wrapper params (`baseSize` / `refX` / `markerWidth` / `markerHeight`), is written into the Scene's `ResolvedArrowEndSpec`. The renderer (SVG / Canvas / …) only **materializes** it — it doesn't know the arrow registry and doesn't recompute geometry. No SVG `<marker>` appears in core / IR.
 
 `MarkerPrimitive` is a **narrow subset** of `ScenePrimitive` — only marker-local geometry, which rules out "a marker recursively referencing markers / clips / text layout":
 

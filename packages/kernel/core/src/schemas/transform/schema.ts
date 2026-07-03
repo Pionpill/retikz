@@ -1,10 +1,6 @@
 import { z } from 'zod';
 
-import { normalizeAtDirection } from '../../shared';
-import { AtDirection } from '../position/at-position';
-import { AbsoluteTargetSchema } from '../position/between-position';
-import { PolarPositionSchema } from '../position/polar-position';
-import { PositionSchema } from '../position/position';
+import { AbsoluteTargetSchema, AtDirection, PolarPositionSchema, PositionSchema } from '../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 
 const TranslateSchema = z
@@ -37,14 +33,12 @@ const AtTranslateSchema = z
   .object({
     kind: z.literal('at-translate').describe('Discriminator for direction-relative translate.'),
     direction: z
-      .preprocess(value => (typeof value === 'string' ? normalizeAtDirection(value) ?? value : value), z.enum(AtDirection))
-      .describe('Direction enum (8 values, shared with AtPosition.direction). Web names are canonical; compass and above/below names are accepted aliases.'),
+      .enum(AtDirection)
+      .describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
     of: z
       .string()
       .min(1)
-      .describe(
-        'Referent node id; must be defined earlier in the IR (forward references rejected, mirroring AtPosition.of).',
-      ),
+      .describe('Referenced node id; must already be defined.'),
     distance: z
       .number()
       .positive()
@@ -74,7 +68,7 @@ const BetweenTranslateSchema = z
     between: z
       .tuple([AbsoluteTargetSchema, AbsoluteTargetSchema])
       .describe('Two absolute endpoints; path-relative targets are excluded.'),
-    t: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
+    fraction: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
   })
   .describe('Proportional translate transform lowered to Cartesian translate at compile time.');
 

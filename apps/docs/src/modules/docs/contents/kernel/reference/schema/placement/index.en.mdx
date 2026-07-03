@@ -45,7 +45,7 @@ A `position` field can be filled with any of five forms. Non-Cartesian forms res
 
 ## BetweenPosition
 
-`BetweenPositionSchema` takes a point along the segment between two endpoints at proportion `t` (0..1) — `lerp(A, B, t)`. Endpoints use the self-contained `AbsoluteTarget`.
+`BetweenPositionSchema` takes a point along the segment between two endpoints at proportion `fraction` (0..1) — `lerp(A, B, fraction)`. Endpoints use the self-contained `AbsoluteTarget`.
 
 <ZodSchema name="BetweenPositionSchema" />
 

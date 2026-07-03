@@ -1,8 +1,3 @@
-/**
- * PathSchema.id 校验 + JSON round-trip 测试
- * @description 覆盖新增的 `IRPath.id`：带 id parse 成功、省略 id（optional）parse 成功、
- *   含 id 的 IRPath 经 JSON 序列化往返后语义不变、空串 id 被 `.min(1)` 拒绝并抛明确错误
- */
 import { describe, expect, it } from 'vitest';
 
 import type { IRPath } from '../../src/schemas/path/path';

@@ -125,8 +125,8 @@ describe("compile path: 'step' 折角", () => {
   it('折角中点对齐节点几何中心，不取 boundary 偏移（bugfix）', () => {
     // A=(0,0)，B=(100,60)，无文本默认 width=height=2*padding=16
     // 期望 corner = (B.center.x=100, A.center.y=0)
-    // A 端点向 (100, 0) 切 boundary → A.east = (8, 0)
-    // B 端点向 (100, 0) 切 boundary → B.north = (100, 52)
+    // A 端点向 (100, 0) 切 boundary → A.right = (8, 0)
+    // B 端点向 (100, 0) 切 boundary → B.top = (100, 52)
     // 路径："M 8 0 L 100 0 L 100 52"
     const ir: IR = {
       version: 1,

@@ -15,7 +15,7 @@ const Demo: FC = () => (
       B
     </Node>
     <Draw way={['A', 'B']} stroke="gray" dashPattern={[4, 2]} />
-    <Scope transforms={[{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }]}>
+    <Scope transforms={[{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }]}>
       <Node id="mid" position={[0, 0]} shape="circle" fill="white">
         mid
       </Node>

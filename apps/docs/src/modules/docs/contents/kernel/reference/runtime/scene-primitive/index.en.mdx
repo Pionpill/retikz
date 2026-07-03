@@ -63,11 +63,11 @@ Coordinates use user units. Angles follow the screen-coordinate convention: `0 =
 
 ## Arrows
 
-`PathPrim.arrowStart` / `arrowEnd` use `ArrowEndSpec`. Note: all visual inputs (`scale` / `length` / `width` / `color` / `fill` / `lineWidth`) are **consumed during the compile resolve phase** and do **not** appear in this structure. What gets attached is a "resolved marker description" — internal geometry plus wrapper params; the adapter only **materializes** it (embeds it in a `<marker>` or draws it on Canvas), with no switch, no `emit` call, and no arrows-registry lookup:
+`PathPrim.arrowStart` / `arrowEnd` use `ResolvedArrowEndSpec`. Note: all visual inputs (`scale` / `length` / `width` / `color` / `fill` / `lineWidth`) are **consumed during the compile resolve phase** and do **not** appear in this structure. What gets attached is a "resolved marker description" — internal geometry plus wrapper params; the adapter only **materializes** it (embeds it in a `<marker>` or draws it on Canvas), with no switch, no `emit` call, and no arrows-registry lookup:
 
 | Field          | Type                     | Notes                                                                                                                                |
 | -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `shape`        | `ArrowShapeName`         | Shape name; rendering no longer depends on it after resolution — kept for identity / debugging                                       |
+| `shape`        | `ArrowShapeValue`         | Shape name; rendering no longer depends on it after resolution — kept for identity / debugging                                       |
 | `baseSize`     | `number`                 | Marker viewBox side length; the adapter derives viewBox `0 0 baseSize baseSize` and refY = baseSize/2                                |
 | `refX`         | `number`                 | Line contact point (marker refX); hollow shapes already subtract lineWidth/2 during compile                                          |
 | `markerWidth`  | `number`                 | Resolved tip length = (`length ?? def.defaultLength`) × scale                                                                        |
@@ -75,7 +75,7 @@ Coordinates use user units. Angles follow the screen-coordinate convention: `0 =
 | `opacity?`     | `number`                 | Marker element-level opacity 0..1; inherits the path opacity when omitted                                                            |
 | `marker`       | `Array<MarkerPrimitive>` | `def.emit` output: internal geometry in the local baseSize coordinate space (`fill` limited to `string \| { kind:'contextStroke' }`) |
 
-The compile layer has already resolved endpoint arrow entries from core IR `marks` into `ArrowEndSpec`: it looks up the effective arrow table, calls `def.emit` to produce geometry, and shrinks path endpoints. Renderers do not need to know the arrow registry or recompute visual sizes.
+The compile layer has already resolved endpoint arrow entries from core IR `marks` into `ResolvedArrowEndSpec`: it looks up the effective arrow table, calls `def.emit` to produce geometry, and shrinks path endpoints. Renderers do not need to know the arrow registry or recompute visual sizes.
 
 ## Transforms
 

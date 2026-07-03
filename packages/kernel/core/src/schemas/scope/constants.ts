@@ -10,3 +10,15 @@ export const ScopeBoundingShape = {
   /** 最小外接圆 */
   Circle: 'circle',
 } as const;
+
+/** scope 样式继承重置通道 */
+export const ScopeStyleChannel = {
+  /** node 默认样式通道 */
+  Node: 'node',
+  /** path 默认样式通道 */
+  Path: 'path',
+  /** label 默认样式通道 */
+  Label: 'label',
+  /** arrow 默认样式通道 */
+  Arrow: 'arrow',
+} as const;

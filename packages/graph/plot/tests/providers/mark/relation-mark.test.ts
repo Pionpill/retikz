@@ -315,7 +315,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect('label' in path.children[2] ? path.children[2].label : undefined).toBeUndefined();
   });
 
-  it('canonicalizes explicit relation label side aliases', () => {
+  it('passes explicit relation label canonical side names', () => {
     const root = expandOf(
       baseSpec([
         { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -323,7 +323,7 @@ describe('RelationMark and anchorId lowering', () => {
           type: 'relation',
           source: { anchorId: { prefix: 'pt', field: 'source' } },
           target: { anchorId: { prefix: 'pt', field: 'target' } },
-          path: { label: { text: { field: 'label' }, side: 'north' } },
+          path: { label: { text: { field: 'label' }, side: 'top' } },
         },
       ]),
       { d: rows },

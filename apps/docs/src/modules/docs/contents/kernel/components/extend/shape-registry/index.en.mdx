@@ -149,7 +149,7 @@ edgePoint?: (
 ) => Position;
 ```
 
-Called for proportional edge points (`{ side, t }`): `side` is `top` / `right` / `bottom` / `left`, and `t` is a 0..1 ratio along that edge. Compass side names are accepted as input aliases, but provider hooks receive the Web canonical form. The built-in shapes implement it; shapes that don't will throw at compile time when a proportional point is requested. Same coordinate semantics as `anchor` — `rect` includes `rotate`.
+Called for proportional edge points (`{ side, fraction }`): `side` is `top` / `right` / `bottom` / `left`, and `t` is the 0..1 provider callback ratio from the input `fraction`. Compass side names are accepted as input aliases, but provider hooks receive the Web canonical form. The built-in shapes implement it; shapes that don't will throw at compile time when a proportional point is requested. Same coordinate semantics as `anchor` — `rect` includes `rotate`.
 
 ```ts
 // rectangle: bridge from public Web sides to the compass geometry layer

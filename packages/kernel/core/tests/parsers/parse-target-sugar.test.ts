@@ -38,7 +38,7 @@ describe('parseTargetSugar', () => {
     expect(parseTargetSugar(polar)).toEqual(polar);
     const relative = { relative: [3, 4] };
     expect(parseTargetSugar(relative)).toEqual(relative);
-    const nodeTarget = { id: 'A', anchor: { side: 'top', t: 0.5 } };
+    const nodeTarget = { id: 'A', anchor: { side: 'top', fraction: 0.5 } };
     expect(parseTargetSugar(nodeTarget)).toEqual(nodeTarget);
   });
 
