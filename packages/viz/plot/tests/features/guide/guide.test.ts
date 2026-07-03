@@ -150,6 +150,29 @@ describe('lowerGuide (ADR-04)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).drawOpacity).toBe(0.15);
   });
 
+  it('guide_line_style_includes_dash_offset', () => {
+    const { gridLayer, axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        line: { dashPattern: [4, 2], dashOffset: 1.5 },
+        ticks: { line: { dashPattern: [2, 2], dashOffset: -1 } },
+        grid: { dashPattern: [1, 3], dashOffset: 3 },
+      },
+      ctx,
+    );
+    const axisPath = (axisLayer as IRScope).children[0] as IRPath;
+    const tickPath = (axisLayer as IRScope).children[1] as IRPath;
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(axisPath.dashPattern).toEqual([4, 2]);
+    expect(axisPath.dashOffset).toBe(1.5);
+    expect(tickPath.dashPattern).toEqual([2, 2]);
+    expect(tickPath.dashOffset).toBe(-1);
+    expect(gridPath.dashPattern).toEqual([1, 3]);
+    expect(gridPath.dashOffset).toBe(3);
+  });
+
   it('axis_id_to_scope_id', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x', id: 'xAxis' }, ctx).axisLayer as IRScope;
     expect(layer.id).toBe('xAxis');

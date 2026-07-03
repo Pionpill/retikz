@@ -70,10 +70,15 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
       dimension: 'x',
       title: { text: ['Revenue', { text: 'USD', fill: '#666' }], font: { size: 12 }, textColor: '#111' },
       tickLabels: { format: '$.2f', rotate: -30, align: 'right' },
-      line: { stroke: '#333', dashPattern: [4, 2] },
+      line: { stroke: '#333', dashPattern: [4, 2], dashOffset: 1.5 },
       ticks: { values: [0, 10], length: 6 },
     };
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('axis_line_dash_offset_rejects_non_finite_values', () => {
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.NaN } })).toThrow();
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.POSITIVE_INFINITY } })).toThrow();
   });
 });
 

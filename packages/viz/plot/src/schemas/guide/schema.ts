@@ -78,6 +78,11 @@ export const GuideLineStyleSchema = z
       .min(1)
       .optional()
       .describe('Guide line dash pattern lengths in user units'),
+    dashOffset: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Guide line dash offset in user units'),
   })
   .strict()
   .describe('Shared guide line style fields mapped to core path vocabulary');

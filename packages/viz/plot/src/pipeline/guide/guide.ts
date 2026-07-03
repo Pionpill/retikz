@@ -27,7 +27,7 @@ const DEG_TO_RAD = Math.PI / 180;
 /** 一段直线（首尾两点） */
 type Segment = [readonly [number, number], readonly [number, number]];
 
-type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'drawOpacity' | 'dashPattern'>>;
+type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'drawOpacity' | 'dashPattern' | 'dashOffset'>>;
 type GuideTextStyle = Partial<Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>>;
 
 const lineStyleProps = (style: GuidePathStyle | undefined): GuidePathStyle => ({
@@ -35,6 +35,7 @@ const lineStyleProps = (style: GuidePathStyle | undefined): GuidePathStyle => ({
   ...(style?.strokeWidth !== undefined ? { strokeWidth: style.strokeWidth } : {}),
   ...(style?.drawOpacity !== undefined ? { drawOpacity: style.drawOpacity } : {}),
   ...(style?.dashPattern !== undefined ? { dashPattern: style.dashPattern } : {}),
+  ...(style?.dashOffset !== undefined ? { dashOffset: style.dashOffset } : {}),
 });
 
 const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({

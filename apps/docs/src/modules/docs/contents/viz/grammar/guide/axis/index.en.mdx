@@ -38,11 +38,11 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 | ------------ | -------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dimension`  | `'x' \| 'y' \| 'z'`                                | —                  | Which dimension to decorate: cartesian x / y, polar x / y, ternary x / y / z (triangle edges); must match the coordinate's valid set or it errors |
 | `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt' \| 'symlog' \| 'radial'` | auto-derived       | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z |
-| `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern? }` | default line | Axis-line style; `false` hides the line without hiding ticks, labels, or grid |
+| `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | default line | Axis-line style; `false` hides the line without hiding ticks, labels, or grid |
 | `ticks`      | `{ count?, values?, length?, line? }`              | default ticks      | Target tick count or explicit tick values; `line` styles tick lines, and `line: false` hides them |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | `true` | Tick-label config; `false` hides labels; `format` accepts d3-format / d3-time-format style strings |
 | `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | Axis title; `text` reuses the core text-block shape, so multiline or run-based text is allowed |
-| `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern? }` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar y); object form overrides line style |
+| `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar y); object form overrides line style |
 | `id`         | `string?`                                          | —                  | Optional handle (reserved, not yet resolved)                                                                                                      |
 
 ## Related

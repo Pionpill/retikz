@@ -79,6 +79,12 @@ const pathsOf = (root: IRScope): Array<IRPath> => {
   return out;
 };
 
+const hasMinimumSize = (node: IRNode, width: number, height: number): boolean => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size === width && size === height;
+  return size?.width === width && size.height === height;
+};
+
 describe('plot theme schema and lowering', () => {
   it('accepts_json_safe_theme_and_rejects_unknown_keys', () => {
     expect(() =>
@@ -109,8 +115,7 @@ describe('plot theme schema and lowering', () => {
     const background = root.children[0] as IRNode;
     expect(background.type).toBe('node');
     expect(background.fill).toBe('#f8fafc');
-    expect(background.minimumWidth).toBe(480);
-    expect(background.minimumHeight).toBe(300);
+    expect(hasMinimumSize(background, 480, 300)).toBe(true);
   });
 
   it('theme_palette_categorical_beats_colors_for_ordinal_scale', () => {
@@ -163,13 +168,13 @@ describe('plot theme schema and lowering', () => {
           {
             type: 'axis',
             dimension: 'x',
-            grid: { stroke: '#ef4444' },
+            grid: { stroke: '#ef4444', dashOffset: 2 },
             tickLabels: { textColor: '#2563eb' },
           },
         ],
         theme: {
           axis: {
-            grid: { stroke: '#94a3b8', drawOpacity: 0.4 },
+            grid: { stroke: '#94a3b8', drawOpacity: 0.4, dashPattern: [4, 2], dashOffset: 5 },
             tickLabels: { textColor: '#475569', font: { size: 10 } },
           },
         },
@@ -177,6 +182,8 @@ describe('plot theme schema and lowering', () => {
     );
     const gridPath = pathsOf(root).find(path => path.drawOpacity === 0.4);
     expect(gridPath?.stroke).toBe('#ef4444');
+    expect(gridPath?.dashPattern).toEqual([4, 2]);
+    expect(gridPath?.dashOffset).toBe(2);
     const labels = nodesOf(root).filter(node => node.text !== undefined && node.textColor !== undefined);
     expect(labels.every(label => label.textColor === '#2563eb')).toBe(true);
     expect(labels.every(label => label.font?.size === 10)).toBe(true);
@@ -204,7 +211,7 @@ describe('plot theme schema and lowering', () => {
     const labels = (legend as IRScope).children.filter(
       (child): child is IRNode => child.type === 'node' && child.text !== undefined,
     );
-    expect(swatches.every(node => node.minimumWidth === 8 && node.minimumHeight === 8)).toBe(true);
+    expect(swatches.every(node => hasMinimumSize(node, 8, 8))).toBe(true);
     expect(labels.every(node => node.textColor === '#dc2626')).toBe(true);
   });
 });

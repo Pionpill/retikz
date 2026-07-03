@@ -36,11 +36,11 @@ polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向
 | ------------ | -------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
 | `dimension`  | `'x' \| 'y' \| 'z'`                                | —          | 装饰哪个维度：cartesian 的 x / y，polar 的 x / y，ternary 的 x / y / z（三角三边）；须匹配坐标系合法集、否则报错 |
 | `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt' \| 'symlog' \| 'radial'` | 自动派生   | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`，仅适用于 x / y / z |
-| `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern? }` | 默认轴线 | 轴线样式；设为 `false` 只隐藏轴线，不影响刻度、标签和网格 |
+| `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | 默认轴线 | 轴线样式；设为 `false` 只隐藏轴线，不影响刻度、标签和网格 |
 | `ticks`      | `{ count?, values?, length?, line? }`              | 默认刻度   | 目标刻度数或显式刻度值；`line` 可设刻度线样式，`line: false` 隐藏刻度线 |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | `true` | 刻度文字配置；设为 `false` 隐藏刻度文字；`format` 支持 d3-format / d3-time-format 风格字符串 |
 | `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | 轴标题；`text` 复用 core 文本块能力，可写多行或带 run 的结构化文本 |
-| `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern? }` | `false` | 是否画对齐本轴刻度的网格线（polar 的 y 轴即同心环），对象写法可覆盖网格线样式 |
+| `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | 是否画对齐本轴刻度的网格线（polar 的 y 轴即同心环），对象写法可覆盖网格线样式 |
 | `id`         | `string?`                                          | —          | 可选句柄（预留，暂不解析）                                                                                       |
 
 ## 相关
