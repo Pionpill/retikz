@@ -66,6 +66,18 @@ const firstLayer = (
   options?: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
+const nodeWidth = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.width ?? size?.default ?? 0;
+};
+
+const nodeHeight = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.height ?? size?.default ?? 0;
+};
+
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 describe('lowerPlots (ADR-06)', () => {
@@ -124,9 +136,7 @@ describe('lowerPlots (ADR-06)', () => {
           opacity: { kind: 'constant', value: 0.8 },
           rotate: { kind: 'constant', value: 45 },
           padding: { kind: 'constant', value: 2 },
-          minimumSize: { kind: 'constant', value: 14 },
-          minimumWidth: { kind: 'constant', value: 16 },
-          minimumHeight: { kind: 'constant', value: 12 },
+          minimumSize: { kind: 'constant', value: { default: 14, width: 16, height: 12 } },
           zIndex: { kind: 'constant', value: 3 },
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
         },
@@ -143,9 +153,7 @@ describe('lowerPlots (ADR-06)', () => {
       opacity: 0.8,
       rotate: 45,
       padding: 2,
-      minimumSize: 14,
-      minimumWidth: 16,
-      minimumHeight: 12,
+      minimumSize: { default: 14, width: 16, height: 12 },
     });
     expect((layer.children[0] as IRNode).zIndex).toBe(3);
   });
@@ -357,13 +365,13 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     expect(layer.nodeDefault?.padding).toBe(0);
     expect(layer.nodeDefault?.strokeWidth).toBe(0);
     expect(layer.nodeDefault?.fill).toBe(d3SchemeCategory10[0]);
-    // 每个 node 裸（只有 type/position/minimumWidth/minimumHeight，无 shape）
+    // 每个 node 裸（只有 type/position/minimumSize，无 shape）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
   });
 
   it('bar_width_is_bandwidth_equal', () => {
     const widths = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
-      n => n.minimumWidth as number,
+      n => nodeWidth(n),
     );
     expect(widths.every(w => w > 0)).toBe(true);
     expect(widths[0]).toBeCloseTo(widths[1], 6);
@@ -372,7 +380,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
 
   it('bar_height_reflects_value', () => {
     const heights = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
-      n => n.minimumHeight as number,
+      n => nodeHeight(n),
     );
     // revenue 10/14/9 → 第二根最高、第三根最矮
     expect(heights[1]).toBeGreaterThan(heights[0]);
@@ -383,7 +391,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     // 无 guides → plot area 满，baseline y(0)=300：正值柱底 center + height/2 ≈ 300
     for (const node of firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>) {
       const cy = (node.position as [number, number])[1];
-      expect(cy + (node.minimumHeight as number) / 2).toBeCloseTo(300, 6);
+      expect(cy + (nodeHeight(node)) / 2).toBeCloseTo(300, 6);
     }
   });
 
@@ -838,7 +846,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const nodes = allNodes(layer);
     expect(nodes).toHaveLength(4);
     // 所有子带等宽
-    const widths = nodes.map(n => n.minimumWidth as number);
+    const widths = nodes.map(n => nodeWidth(n));
     expect(widths.every(w => Math.abs(w - widths[0]) < 1e-6)).toBe(true);
     // 同类别内 A（系列 0）在 B（系列 1）左侧：A.Jan.x < B.Jan.x
     const seriesA = layer.children[0] as IRScope;
@@ -873,7 +881,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const nodes = allNodes(layer);
     expect(nodes).toHaveLength(4);
     // 全宽柱（堆叠不切子带）：宽度都相等
-    const widths = nodes.map(n => n.minimumWidth as number);
+    const widths = nodes.map(n => nodeWidth(n));
     expect(widths.every(w => Math.abs(w - widths[0]) < 1e-6)).toBe(true);
     // Jan：B（值更高、堆在上）中心像素 < A（y 屏幕向下，越高像素越小）
     const aJan = (layer.children[0] as IRScope).children[0] as IRNode; // 系列 A

@@ -27,7 +27,7 @@ import { Arc, Sector } from '@retikz/react';
 | 写法                                                 | 适合   |
 | ---------------------------------------------------- | ------ |
 | `{ center, radius, startAngle, endAngle }`           | 圆弧   |
-| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆弧 |
+| `{ center, radius, startAngle, endAngle }` | 椭圆弧 |
 
 角度从 +x 方向开始；`90` 指向屏幕下方。角度三选二：`startAngle` / `endAngle` / `sweepAngle`（扫掠角）任给两个即可，例如 `{ startAngle: 30, sweepAngle: 90 }`。`center` 接任意 target（节点 id / 极坐标 / 笛卡尔）。
 
@@ -62,7 +62,7 @@ import { Arc, Sector } from '@retikz/react';
 | 写法                                                 | 适合         |
 | ---------------------------------------------------- | ------------ |
 | `{ center, radius, startAngle, endAngle }`           | 圆扇形       |
-| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆扇形     |
+| `{ center, radius, startAngle, endAngle }` | 椭圆扇形     |
 | 加 `innerRadius`                                     | 空心圆扇形   |
 | 加 `innerRadiusX` + `innerRadiusY`                   | 空心椭圆扇形 |
 
@@ -87,9 +87,9 @@ import { Arc, Sector } from '@retikz/react';
 | 组件       | 组合                                    | 含义                       |
 | ---------- | --------------------------------------- | -------------------------- |
 | `<Arc>`    | `center` + `radius` + 角度              | 圆弧（默认开放；角度必填） |
-|            | `center` + `radiusX` + `radiusY` + 角度 | 椭圆弧                     |
+|            | `center` + `radius` + 角度 | 椭圆弧                     |
 | `<Sector>` | `center` + `radius` + 角度              | 圆扇形（角度必填）         |
-|            | `center` + `radiusX` + `radiusY` + 角度 | 椭圆扇形                   |
+|            | `center` + `radius` + 角度 | 椭圆扇形                   |
 |            | + `innerRadius?`                        | 空心圆扇形                 |
 |            | + `innerRadiusX?` + `innerRadiusY?`     | 空心椭圆扇形               |
 

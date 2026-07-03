@@ -7,12 +7,16 @@ import type {
   ExternalRow,
   Guide,
   IntervalBounds,
+  IRAxisScale,
+  IRBoxSize,
   IRPaintSpec,
   Mark,
   MarkGeometryLabelList,
   MarkNodeLabel,
   MarkNodeLabelList,
   MarkValueType,
+  NodeAxisScaleStyle,
+  NodeBoxSizeStyle,
   NodeBoxSpacingStyle,
   PlotSpec,
   PointColorStyle,
@@ -459,6 +463,18 @@ const boxSpacingStyleOf = (
   return { kind: 'constant', value };
 };
 
+const nodeScaleStyleOf = (
+  value: CoreNodeChannelProps['scale'],
+  prop: string,
+  context: StyleSugarContext,
+): NodeAxisScaleStyle | undefined => jsonStyleOf<number | IRAxisScale>(value, prop, context);
+
+const nodeBoxSizeStyleOf = (
+  value: PointMarkProps['minimumSize'],
+  prop: string,
+  context: StyleSugarContext,
+): NodeBoxSizeStyle | undefined => jsonStyleOf<number | IRBoxSize>(value, prop, context);
+
 const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContext): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
   const put = (name: string, value: unknown): void => {
@@ -468,9 +484,7 @@ const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContex
   put('lineHeight', numberStyleOf(props.lineHeight, 'lineHeight', context));
   put('maxTextWidth', numberStyleOf(props.maxTextWidth, 'maxTextWidth', context));
   put('cornerRadius', numberStyleOf(props.cornerRadius, 'cornerRadius', context));
-  put('scale', numberStyleOf(props.scale, 'scale', context));
-  put('xScale', numberStyleOf(props.xScale, 'xScale', context));
-  put('yScale', numberStyleOf(props.yScale, 'yScale', context));
+  put('scale', nodeScaleStyleOf(props.scale, 'scale', context));
   put('padding', boxSpacingStyleOf(props.padding, 'padding', context));
   put('margin', boxSpacingStyleOf(props.margin, 'margin', context));
   put('dashed', booleanStyleOf(props.dashed, 'dashed', context));
@@ -771,8 +785,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     lineHeight: props.lineHeight,
     maxTextWidth: props.maxTextWidth,
     cornerRadius: props.cornerRadius,
-    xScale: props.xScale,
-    yScale: props.yScale,
+    scale: props.scale,
     margin: props.margin,
     padding: props.padding,
     dashed: props.dashed,
@@ -1030,8 +1043,6 @@ const collectInto = (
         rotate,
         padding,
         minimumSize,
-        minimumWidth,
-        minimumHeight,
         zIndex,
         size,
         opacity,
@@ -1063,13 +1074,7 @@ const collectInto = (
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       const rotateStyle = numberStyleOf<PointNumberStyle>(rotate, 'rotate', styleContext);
       const paddingStyle = boxSpacingStyleOf(padding, 'padding', styleContext);
-      const minimumSizeStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumSize, 'minimumSize', styleContext);
-      const minimumWidthStyle = numberStyleOf<PointNonnegativeNumberStyle>(minimumWidth, 'minimumWidth', styleContext);
-      const minimumHeightStyle = numberStyleOf<PointNonnegativeNumberStyle>(
-        minimumHeight,
-        'minimumHeight',
-        styleContext,
-      );
+      const minimumSizeStyle = nodeBoxSizeStyleOf(minimumSize, 'minimumSize', styleContext);
       const zIndexStyle = numberStyleOf<PointZIndexStyle>(zIndex, 'zIndex', styleContext);
       // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x / x/y / x/y/z）
       const textEnc: { text: TextChannel } | undefined =
@@ -1101,8 +1106,6 @@ const collectInto = (
         ...(rotateStyle !== undefined ? { rotate: rotateStyle } : {}),
         ...(paddingStyle !== undefined ? { padding: paddingStyle } : {}),
         ...(minimumSizeStyle !== undefined ? { minimumSize: minimumSizeStyle } : {}),
-        ...(minimumWidthStyle !== undefined ? { minimumWidth: minimumWidthStyle } : {}),
-        ...(minimumHeightStyle !== undefined ? { minimumHeight: minimumHeightStyle } : {}),
         ...(zIndexStyle !== undefined ? { zIndex: zIndexStyle } : {}),
         ...nodeStylePropsOf(props, styleContext),
         ...(dx !== undefined ? { dx } : {}),

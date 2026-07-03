@@ -161,9 +161,9 @@ describe('Draw: 各 step kind 分派', () => {
   });
 
   it('ellipse 算子 → kind=ellipsePath', () => {
-    const out = ir(<Draw way={['a', { ellipse: { radiusX: 20, radiusY: 10 } }]} />);
+    const out = ir(<Draw way={['a', { ellipse: { radius: { x: 20, y: 10 } } }]} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
-    expect(steps[1]).toMatchObject({ kind: 'ellipsePath', radiusX: 20, radiusY: 10 });
+    expect(steps[1]).toMatchObject({ kind: 'ellipsePath', radius: { x: 20, y: 10 } });
   });
 });
 

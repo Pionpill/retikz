@@ -346,10 +346,9 @@ describe('[adversarial] scaleParams：角度/计数不该被缩', () => {
     expect(moveLines.length).toBe(10); // 2×5 顶点
   });
 
-  it('[adversarial] sector × 非均匀 xScale:2,yScale:1 → scaleParams 用 sqrt(sx·sy) 半径均值，角度不缩', () => {
+  it('[adversarial] sector × 非均匀 scale.x=2,scale.y=1 → scaleParams 用 sqrt(sx·sy) 半径均值，角度不缩', () => {
     const compiled = compileNode({
-      xScale: 2,
-      yScale: 1,
+      scale: { x: 2, y: 1 },
       shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
     });
     const path = findByType(compiled.primitives, 'path');

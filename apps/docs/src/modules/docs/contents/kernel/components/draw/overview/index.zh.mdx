@@ -72,7 +72,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 <ComponentPreview name="draw-circle" size="xs" />
 
-`{ ellipse: { radiusX, radiusY } }` 以上一项为中心画整椭圆。
+`{ ellipse: { radius: { x, y } } }` 以上一项为中心画整椭圆。
 
 <ComponentPreview name="draw-ellipse" size="sm" />
 
@@ -184,7 +184,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `{ bend, angle }` | `number`                           | 是         | `kind="bend"`        | 覆盖 bend 角度                        |
 | `{ arc }`         | `{ startAngle, endAngle, radius }` | 否         | `kind="arc"`         | 以当前点为圆心画弧段                  |
 | `{ circle }`      | `{ radius }`                       | 否         | `kind="circlePath"`  | 以当前点为圆心画整圆                  |
-| `{ ellipse }`     | `{ radiusX, radiusY }`             | 否         | `kind="ellipsePath"` | 以当前点为中心画整椭圆                |
+| `{ ellipse }`     | `{ radius: { x, y } }`             | 否         | `kind="ellipsePath"` | 以当前点为中心画整椭圆                |
 | `{ label }`       | `string \| StepLabel`              | 是         | `step.label`         | 标注下一段；字符串短写等价 `{ text }` |
 
 ### StepLabel

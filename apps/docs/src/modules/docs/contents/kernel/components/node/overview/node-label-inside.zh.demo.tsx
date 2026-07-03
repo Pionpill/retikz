@@ -7,8 +7,7 @@ const Demo: FC = () => (
     <Node
       id="outside"
       position={[-150, 0]}
-      minimumWidth={110}
-      minimumHeight={68}
+      minimumSize={{ width: 110, height: 68 }}
       label={[
         { text: '外侧', position: 'top', distance: 14 },
         { text: '0°', position: 0, distance: 14 },
@@ -19,8 +18,7 @@ const Demo: FC = () => (
     <Node
       id="inside"
       position={[90, 0]}
-      minimumWidth={160}
-      minimumHeight={90}
+      minimumSize={{ width: 160, height: 90 }}
       label={[
         {
           text: 'top 25%',

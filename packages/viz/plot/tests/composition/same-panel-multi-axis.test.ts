@@ -130,6 +130,12 @@ const allPaths = (child: IRChild): Array<IRPath> => {
   return child.children.flatMap(allPaths);
 };
 
+const nodeHeight = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.height ?? size?.default ?? 0;
+};
+
 const pathYValues = (path: IRPath): Array<number> =>
   path.children.flatMap(step => ('to' in step && Array.isArray(step.to) ? [(step.to)[1]] : []));
 
@@ -233,7 +239,7 @@ describe('same-panel multi-axis overlay lowering', () => {
     const intervalNodes = allNodes(marks[1]);
     const pathYMin = Math.min(...allPaths(marks[0]).flatMap(pathYValues));
     const intervalYMin = Math.min(
-      ...intervalNodes.map(node => (node.position as [number, number])[1] - (node.minimumHeight ?? 0) / 2),
+      ...intervalNodes.map(node => (node.position as [number, number])[1] - nodeHeight(node) / 2),
     );
     expect(intervalYMin).toBeCloseTo(pathYMin, 6);
   });

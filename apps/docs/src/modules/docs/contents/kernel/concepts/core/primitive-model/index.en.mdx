@@ -39,7 +39,7 @@ The bounding box encloses only the rendered shape, not `margin`. `margin` is an 
 Like the CSS box model, a Node is three nested frames from the inside out.
 
 - **Content box**: determined by `text` / children and `font` — the base size from text measurement.
-- **Inner frame**: the content box plus `padding`, taken at least as large as `minimumWidth` / `minimumHeight` (or `minimumSize`). This is the base half-axes passed to the shape — for a rectangular node, it is the drawn shape.
+- **Inner frame**: the content box plus `padding`, taken at least as large as `minimumSize`. This is the base half-axes passed to the shape — for a rectangular node, it is the drawn shape.
 - **Outer frame**: the inner frame plus `margin`. It does not change the visible shape; it pushes the node's connection/reference boundary outward — every border anchor (automatic endpoints and explicit ones like `.top`) lands on this ring, and the node's layout footprint / viewBox is measured from it too.
 
 <ComponentPreview name="node-frames" size="md" hideCode />

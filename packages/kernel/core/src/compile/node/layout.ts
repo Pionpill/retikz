@@ -3,6 +3,8 @@ import type { TextLine, Transform } from '../../contract';
 import type { ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
+  IRAxisScale,
+  IRBoxSize,
   IRBoxSpacing,
   IRJsonObject,
   IRLabelDefault,
@@ -33,6 +35,8 @@ import { alignToTextAnchor, DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT_FACTOR, resol
 const DEFAULT_PADDING = 8;
 
 type NodeSpacingValue = number | IRBoxSpacing | undefined;
+type NodeAxisScaleValue = number | IRAxisScale | undefined;
+type NodeBoxSizeValue = number | IRBoxSize | undefined;
 
 const resolveBoxSpacing = (value: NodeSpacingValue, fallback: number): { left: number; right: number; top: number; bottom: number } => {
   if (typeof value === 'number') {
@@ -44,6 +48,24 @@ const resolveBoxSpacing = (value: NodeSpacingValue, fallback: number): { left: n
     right: value?.right ?? value?.x ?? base,
     top: value?.top ?? value?.y ?? base,
     bottom: value?.bottom ?? value?.y ?? base,
+  };
+};
+
+const resolveAxisScale = (value: NodeAxisScaleValue, fallback: number): { x: number; y: number } => {
+  if (typeof value === 'number') return { x: value, y: value };
+  const base = value?.default ?? fallback;
+  return {
+    x: value?.x ?? base,
+    y: value?.y ?? base,
+  };
+};
+
+const resolveBoxSize = (value: NodeBoxSizeValue, fallback: number): { width: number; height: number } => {
+  if (typeof value === 'number') return { width: value, height: value };
+  const base = value?.default ?? fallback;
+  return {
+    width: value?.width ?? base,
+    height: value?.height ?? base,
   };
 };
 
@@ -93,10 +115,9 @@ export const layoutNode = (
       ? { ...parsedShapeParams, cornerRadius: node.cornerRadius }
       : parsedShapeParams;
 
-  // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
+  // 缩放：axis-specific 字段优先于 default，默认 1；乘进所有尺寸让 path 贴缩放后边界。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
-  const sx = node.xScale ?? node.scale ?? 1;
-  const sy = node.yScale ?? node.scale ?? 1;
+  const { x: sx, y: sy } = resolveAxisScale(node.scale, 1);
   const fontScale = Math.min(sx, sy);
   // shape params 是形状内在长度（半径 / 内外径 等），随 node scale 协同缩放。
   // shapeDef.scaleParams 给定时由形状自定缩放语义（如 sector / arc 只缩半径、不缩角度）；
@@ -230,12 +251,13 @@ export const layoutNode = (
   // 外接边界（bounding rect）半轴：内框半轴经 shape.circumscribe 派生
   const circumscribed = shapeDef.circumscribe(innerHalfW, innerHalfH, shapeParams);
 
-  // minimum 尺寸（TikZ 语义）：floor 外接框（bounding box）而非内框，且随 scale 缩（与 sep / text / fontSize 同口径，
-  // minimumWidth→sx、minimumHeight→sy）。minimumWidth/Height 覆盖 minimumSize（对称别名）。inner-driven shape
+  // minimum 尺寸：floor 外接框（bounding box）而非内框，且随 scale 缩（与 padding / text / fontSize 同口径）。
+  // minimumSize.width/height 覆盖 minimumSize.default。inner-driven shape
   // （rectangle/ellipse/polygon）emit 按 floor 后的 rect 重建、恰好填满；params-radius-driven shape（sector/star/arc）
   // glyph 由半径定、minimum 仅预留 bbox 空间不缩放 glyph。
-  const minHalfW = ((node.minimumWidth ?? node.minimumSize ?? 0) * sx) / 2;
-  const minHalfH = ((node.minimumHeight ?? node.minimumSize ?? 0) * sy) / 2;
+  const minimumSize = resolveBoxSize(node.minimumSize, 0);
+  const minHalfW = (minimumSize.width * sx) / 2;
+  const minHalfH = (minimumSize.height * sy) / 2;
   const boundsHalfW = Math.max(circumscribed.halfWidth, minHalfW);
   const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 

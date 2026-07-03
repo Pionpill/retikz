@@ -1,4 +1,4 @@
-import type { IRStepLabelInput } from '@retikz/core';
+import type { IRStepAnisotropicRadius, IRStepLabelInput } from '@retikz/core';
 import type { FC, ReactElement } from 'react';
 
 import type { DslTarget } from '../kernel/Step';
@@ -23,10 +23,8 @@ export type SectorProps = PathVisualProps &
     | { center: DslTarget; radius: number; innerRadius?: number }
     | {
         center: DslTarget;
-        radiusX: number;
-        radiusY: number;
-        innerRadiusX?: number;
-        innerRadiusY?: number;
+        radius: IRStepAnisotropicRadius;
+        innerRadius?: IRStepAnisotropicRadius;
       }
   );
 
@@ -41,20 +39,19 @@ export const Sector: FC<SectorProps> = props => {
   if (!angles) throw new Error('<Sector> 需给角度');
   const { startAngle, endAngle } = angles;
 
-  const circular = 'radius' in props;
-  const outerRX = 'radius' in props ? props.radius : props.radiusX;
-  const outerRY = 'radius' in props ? props.radius : props.radiusY;
+  const { radius } = props;
+  const circular = typeof radius === 'number';
+  const outerRX = circular ? radius : radius.x;
+  const outerRY = circular ? radius : radius.y;
 
   // 内半径（空心扇形）：圆用 innerRadius；椭圆用 innerRadiusX + innerRadiusY（both-or-neither）
   let inner: [number, number] | null = null;
-  if ('radius' in props) {
-    if (props.innerRadius !== undefined) inner = [props.innerRadius, props.innerRadius];
-  } else if (props.innerRadiusX !== undefined && props.innerRadiusY !== undefined) {
-    inner = [props.innerRadiusX, props.innerRadiusY];
-  } else if (props.innerRadiusX !== undefined || props.innerRadiusY !== undefined) {
-    throw new Error('<Sector> 椭圆空心需同时给 innerRadiusX 与 innerRadiusY');
+  if (props.innerRadius !== undefined) {
+    inner =
+      typeof props.innerRadius === 'number'
+        ? [props.innerRadius, props.innerRadius]
+        : [props.innerRadius.x, props.innerRadius.y];
   }
-
   const visual = pickPathVisual(props);
 
   if (!inner) {
@@ -74,8 +71,7 @@ export const Sector: FC<SectorProps> = props => {
         ) : (
           <Step
             kind="ellipsePath"
-            radiusX={outerRX}
-            radiusY={outerRY}
+            radius={{ x: outerRX, y: outerRY }}
             startAngle={startAngle}
             endAngle={endAngle}
             closed="sector"
@@ -89,12 +85,12 @@ export const Sector: FC<SectorProps> = props => {
   // 空心扇形：须 literal center 算内 / 外弧端点
   const center = requireXY(props.center, 'Sector', 'center');
 
-  /** 一段 arc step（圆用 radius、椭圆用 radiusX/radiusY） */
+  /** 一段 arc step（圆用 number，椭圆用 { x, y }） */
   const arcEl = (rx: number, ry: number, a: number, b: number, label?: IRStepLabelInput): ReactElement =>
     circular ? (
       <Step kind="arc" center={center} startAngle={a} endAngle={b} radius={rx} label={label} />
     ) : (
-      <Step kind="arc" center={center} startAngle={a} endAngle={b} radiusX={rx} radiusY={ry} label={label} />
+      <Step kind="arc" center={center} startAngle={a} endAngle={b} radius={{ x: rx, y: ry }} label={label} />
     );
 
   // 空心扇形：外弧 → 径向边 → 内弧（反向）→ 径向边回起点；label 挂外弧

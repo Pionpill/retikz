@@ -10,7 +10,7 @@ const Demo: FC = () => (
     {/* 横扁椭圆 */}
     <Path stroke="currentColor">
       <Step kind="move" to="center" />
-      <Step kind="ellipsePath" radiusX={100} radiusY={50} />
+      <Step kind="ellipsePath" radius={{ x: 100, y: 50 }} />
     </Path>
   </Layout>
 );

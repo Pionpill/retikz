@@ -19,6 +19,8 @@ import type {
   MoveStepSchema,
   RectangleStepSchema,
   SmoothStepSchema,
+  StepAnisotropicRadiusSchema,
+  StepRadiusSchema,
   StepSchema,
 } from './schema';
 
@@ -37,6 +39,12 @@ export type IRGeometryLabelInput = Omit<IRGeometryLabel, 'side'> & {
 export type IRStepLabel = IRGeometryLabel;
 
 export type IRStepLabelInput = IRGeometryLabelInput;
+
+/** 椭圆半径对象，供 arc / ellipsePath step 复用。 */
+export type IRStepAnisotropicRadius = z.infer<typeof StepAnisotropicRadiusSchema>;
+
+/** 路径 step 半径：number 表示正圆，object 表示椭圆。 */
+export type IRStepRadius = z.infer<typeof StepRadiusSchema>;
 
 /** 控制点类型（曲线 step 用） */
 export type IRControlPoint = z.infer<typeof ControlPointSchema>;

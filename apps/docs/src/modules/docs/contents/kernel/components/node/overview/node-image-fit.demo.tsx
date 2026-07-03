@@ -15,8 +15,7 @@ const Demo: FC = () => (
       id="cover"
       position={[-150, -15]}
       shape="rectangle"
-      minimumWidth={100}
-      minimumHeight={100}
+      minimumSize={{ width: 100, height: 100 }}
       stroke="gray"
       fill={{ kind: 'image', href: 'https://picsum.photos/seed/retikz/320/200', fit: 'cover' }}
     />
@@ -24,8 +23,7 @@ const Demo: FC = () => (
       id="contain"
       position={[0, -15]}
       shape="rectangle"
-      minimumWidth={100}
-      minimumHeight={100}
+      minimumSize={{ width: 100, height: 100 }}
       stroke="gray"
       fill={{ kind: 'image', href: 'https://picsum.photos/seed/retikz/320/200', fit: 'contain' }}
     />
@@ -33,8 +31,7 @@ const Demo: FC = () => (
       id="fill"
       position={[150, -15]}
       shape="rectangle"
-      minimumWidth={100}
-      minimumHeight={100}
+      minimumSize={{ width: 100, height: 100 }}
       stroke="gray"
       fill={{ kind: 'image', href: 'https://picsum.photos/seed/retikz/320/200', fit: 'fill' }}
     />

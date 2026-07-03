@@ -53,8 +53,7 @@ const loadIr: IR = {
       id: 'a',
       position: [0, 0],
       shape: 'rectangle',
-      minimumWidth: 40,
-      minimumHeight: 20,
+      minimumSize: { width: 40, height: 20 },
       fill: '#0a0',
       animations: [
         {
@@ -78,8 +77,7 @@ const manualIr: IR = {
       id: 'a',
       position: [0, 0],
       shape: 'rectangle',
-      minimumWidth: 40,
-      minimumHeight: 20,
+      minimumSize: { width: 40, height: 20 },
       stroke: '#000',
       animations: [
         {
@@ -184,8 +182,7 @@ describe('mountCanvas visible-trigger 监听合帧', () => {
         id: 'a',
         position: [0, 0],
         shape: 'rectangle',
-        minimumWidth: 40,
-        minimumHeight: 20,
+        minimumSize: { width: 40, height: 20 },
         fill: '#0a0',
         animations: [
           {

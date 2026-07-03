@@ -418,10 +418,8 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         kind: 'arc',
         startAngle: p.startAngle,
         endAngle: p.endAngle,
+        radius: p.radius,
       };
-      if (p.radius !== undefined) step.radius = p.radius;
-      if (p.radiusX !== undefined) step.radiusX = p.radiusX;
-      if (p.radiusY !== undefined) step.radiusY = p.radiusY;
       if (p.center !== undefined) step.center = parseTargetSugar(p.center);
       if (label) step.label = label;
       out.push(step);
@@ -446,8 +444,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       const step: Extract<IRStep, { kind: 'ellipsePath' }> = {
         type: 'step',
         kind: 'ellipsePath',
-        radiusX: p.radiusX,
-        radiusY: p.radiusY,
+        radius: p.radius,
       };
       if (p.startAngle !== undefined) step.startAngle = p.startAngle;
       if (p.endAngle !== undefined) step.endAngle = p.endAngle;

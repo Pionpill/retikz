@@ -190,7 +190,7 @@ Called when compiling the visible node body; returns one or more primitives to d
 scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
 ```
 
-Called when a node sets `scale` / `xScale` / `yScale`, deciding how the scale applies to params. By default the compiler deep-scales **every** numeric leaf in params — correct for pure length params (radii), but wrong for angles and counts such as `sides` / `points`. **Shapes with angle or count params must implement it**, scaling only length quantities and leaving angles and counts untouched.
+Called when a node sets `scale`（数字或 `{ x, y }`）, deciding how the scale applies to params. By default the compiler deep-scales **every** numeric leaf in params — correct for pure length params (radii), but wrong for angles and counts such as `sides` / `points`. **Shapes with angle or count params must implement it**, scaling only length quantities and leaving angles and counts untouched.
 
 ```ts
 // sector: scale only the radii, leave the angles alone

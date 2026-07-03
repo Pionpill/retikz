@@ -33,8 +33,7 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
       id: 'a',
       position: [0, 0],
       cornerRadius: 8,
-      minimumWidth: 40,
-      minimumHeight: 40,
+      minimumSize: { width: 40, height: 40 },
     };
     const layout = layoutSquare(node);
     // 朝右上角方向取边界点
@@ -58,16 +57,14 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
       id: 'a',
       position: [0, 0],
       cornerRadius: 8,
-      minimumWidth: 40,
-      minimumHeight: 40,
+      minimumSize: { width: 40, height: 40 },
     };
     const viaParams: IRNode = {
       type: 'node',
       id: 'b',
       position: [0, 0],
       shape: { type: 'rectangle', params: { cornerRadius: 8 } },
-      minimumWidth: 40,
-      minimumHeight: 40,
+      minimumSize: { width: 40, height: 40 },
     };
     const toward = [100, -100] as [number, number];
     const hitTop = boundaryPointOf(layoutSquare(top), toward);
@@ -83,16 +80,14 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
       position: [0, 0],
       cornerRadius: 8,
       shape: { type: 'rectangle', params: { cornerRadius: 2 } },
-      minimumWidth: 40,
-      minimumHeight: 40,
+      minimumSize: { width: 40, height: 40 },
     };
     const onlyParams: IRNode = {
       type: 'node',
       id: 'b',
       position: [0, 0],
       shape: { type: 'rectangle', params: { cornerRadius: 2 } },
-      minimumWidth: 40,
-      minimumHeight: 40,
+      minimumSize: { width: 40, height: 40 },
     };
     const toward = [100, -100] as [number, number];
     const hitBoth = boundaryPointOf(layoutSquare(both), toward);

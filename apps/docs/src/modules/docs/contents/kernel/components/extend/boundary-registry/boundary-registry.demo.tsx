@@ -29,8 +29,7 @@ const Demo: FC = () => (
       id="controller"
       position={[0, 0]}
       text="IO"
-      minimumWidth={92}
-      minimumHeight={56}
+      minimumSize={{ width: 92, height: 56 }}
       boundary="horizontal-ports"
       fill="white"
       stroke="dodgerblue"

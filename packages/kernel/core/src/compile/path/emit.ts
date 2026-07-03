@@ -549,10 +549,10 @@ export const emitPathPrimitive = (
         center = prev.anchor;
       }
 
-      if (step.radiusX !== undefined && step.radiusY !== undefined) {
+      if (typeof step.radius === 'object') {
         // 椭圆弧
-        const rx = step.radiusX;
-        const ry = step.radiusY;
+        const rx = step.radius.x;
+        const ry = step.radius.y;
         startSegment(ellipseArcPoint(center, rx, ry, step.startAngle));
         emitEllipseArc(center, rx, ry, step.startAngle, step.endAngle);
         for (const p of ellipseArcBoundingPoints(center, rx, ry, step.startAngle, step.endAngle)) {
@@ -563,7 +563,7 @@ export const emitPathPrimitive = (
         continue;
       }
 
-      if (step.radius !== undefined) {
+      if (typeof step.radius === 'number') {
         // 正圆弧（输出与改造前一致，emitArc 不变）
         const r = step.radius;
         startSegment(arcEndPoint(center, r, step.startAngle));
@@ -576,10 +576,10 @@ export const emitPathPrimitive = (
         continue;
       }
 
-      // 既无 radius 也无 radiusX/radiusY：malformed arc
+      // 理论上 schema 已保证 radius 必填；这里保留编译期防御。
       warn(
         CompileWarningCode.ArcMissingRadius,
-        'Arc step requires radius (circular) or both radiusX and radiusY (elliptical); the entire path is skipped',
+        'Arc step requires radius; the entire path is skipped',
         `children[${i}]`,
       );
       return null;
@@ -633,8 +633,8 @@ export const emitPathPrimitive = (
 
     if (step.kind === 'ellipsePath') {
       const center = prev.anchor;
-      const rx = step.radiusX;
-      const ry = step.radiusY;
+      const rx = step.radius.x;
+      const ry = step.radius.y;
 
       if (step.startAngle !== undefined && step.endAngle !== undefined) {
         // 部分椭圆

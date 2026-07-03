@@ -40,8 +40,7 @@ const Demo: FC = () => (
     <Node
       id="a"
       position={[0, 0]}
-      minimumWidth={140}
-      minimumHeight={90}
+      minimumSize={{ width: 140, height: 90 }}
       fill={{ kind: 'pattern', shape: 'cross', color: 'darkorange' }}
       stroke="darkorange"
     />

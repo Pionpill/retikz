@@ -574,11 +574,11 @@ after`;
   });
 
   it('<Draw way={[..., { ellipse }, ...]}> 等价于 Kernel ellipsePath step', () => {
-    const fromSugar = buildIR(<Draw way={['A', { ellipse: { radiusX: 8, radiusY: 4 } }]} />);
+    const fromSugar = buildIR(<Draw way={['A', { ellipse: { radius: { x: 8, y: 4 } } }]} />);
     const fromKernel = buildIR(
       <Path>
         <Step kind="move" to="A" />
-        <Step kind="ellipsePath" radiusX={8} radiusY={4} />
+        <Step kind="ellipsePath" radius={{ x: 8, y: 4 }} />
       </Path>,
     );
     expect(fromSugar).toEqual(fromKernel);
@@ -743,7 +743,7 @@ after`;
           <Step kind="bend" bendDirection="left" to={[40, 0]} label={{ text: 'b' }} />
           <Step kind="arc" startAngle={0} endAngle={90} radius={5} label={{ text: 'a' }} />
           <Step kind="circlePath" radius={3} label={{ text: 'o' }} />
-          <Step kind="ellipsePath" radiusX={4} radiusY={2} label={{ text: 'e' }} />
+          <Step kind="ellipsePath" radius={{ x: 4, y: 2 }} label={{ text: 'e' }} />
         </Path>,
       );
       const steps = (ir.children[0] as { children: Array<{ label?: { text: string } }> }).children;

@@ -1,8 +1,10 @@
 import type {
   IRAtPosition,
   IRAtPositionInput,
+  IRAxisScale,
   IRBetweenPosition,
   IRBoundary,
+  IRBoxSize,
   IRBoxSpacing,
   IRFont,
   IRLineSpec,
@@ -83,17 +85,12 @@ export type NodeProps = HydrationEventProps & {
   /** 圆角半径（user units）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */
   cornerRadius?: number;
   /** 最小 border 宽度（user units）；不足时撑开 bbox */
-  minimumWidth?: number;
-  /** 最小 border 高度（user units） */
-  minimumHeight?: number;
-  /** 对称最小尺寸别名——等价于同时设 `minimumWidth` 与 `minimumHeight`；轴特化字段优先 */
-  minimumSize?: number;
+  /** 最小 border 尺寸；数字作用于宽高，对象按 width/height > default 解析 */
+  minimumSize?: number | IRBoxSize;
   /** 均匀缩放因子；同时影响 bbox / 字号 / padding / margin / 路径附着点（与 TikZ scale 一致） */
-  scale?: number;
+  scale?: number | IRAxisScale;
   /** 横向缩放，优先于 `scale` */
-  xScale?: number;
   /** 纵向缩放，优先于 `scale` */
-  yScale?: number;
   /** 文字颜色（块级默认；行级 LineSpec.fill 可覆盖）；不填走 `currentColor` */
   textColor?: string;
   /** 整节点透明度 0~1（同时作用于 shape 与 text） */

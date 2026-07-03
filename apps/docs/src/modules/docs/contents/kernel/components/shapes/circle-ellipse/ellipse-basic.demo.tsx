@@ -4,7 +4,7 @@ import { Ellipse, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={380} height={145}>
-    <Ellipse center={[52, 50]} radiusX={38} radiusY={24} strokeWidth={2} />
+    <Ellipse center={[52, 50]} radius={{ x: 38, y: 24 }} strokeWidth={2} />
     <Node position={[52, 105]} stroke="none" textColor="gray" font={{ size: 11 }}>
       radii
     </Node>

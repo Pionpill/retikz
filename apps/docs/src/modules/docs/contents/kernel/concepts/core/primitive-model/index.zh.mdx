@@ -39,7 +39,7 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 一个 Node 像 CSS 盒模型一样，由三层从内到外嵌套的框组成。
 
 - **内容盒**：由 `text` / children 和 `font` 决定，是文本测量出的基础尺寸。
-- **内框**：在内容盒外加上 `padding`，再与 `minimumWidth` / `minimumHeight`（或 `minimumSize`）取较大者，得到传给 shape 的基础半轴——对矩形节点来说，它就是画出来的 shape。
+- **内框**：在内容盒外加上 `padding`，再与 `minimumSize`取较大者，得到传给 shape 的基础半轴——对矩形节点来说，它就是画出来的 shape。
 - **外框**：在内框外再加 `margin`。它不改变视觉 shape，而是把节点的连接 / 引用边界外推——所有 border 锚点（自动连线端点和显式 `.top` 这类）都落在这一圈上，节点的布局占位 / viewBox 也按这一圈算。
 
 <ComponentPreview name="node-frames" size="md" hideCode />

@@ -72,7 +72,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 <ComponentPreview name="draw-circle" size="xs" />
 
-`{ ellipse: { radiusX, radiusY } }` draws a full ellipse centered on the previous item.
+`{ ellipse: { radius: { x, y } } }` draws a full ellipse centered on the previous item.
 
 <ComponentPreview name="draw-ellipse" size="sm" />
 
@@ -182,7 +182,7 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/ker
 | `{ bend, angle }` | `number`                           | Yes                | `kind="bend"`        | Override the bend angle                                        |
 | `{ arc }`         | `{ startAngle, endAngle, radius }` | No                 | `kind="arc"`         | Draw an arc around the current point                           |
 | `{ circle }`      | `{ radius }`                       | No                 | `kind="circlePath"`  | Draw a full circle around the current point                    |
-| `{ ellipse }`     | `{ radiusX, radiusY }`             | No                 | `kind="ellipsePath"` | Draw a full ellipse centered on the current point              |
+| `{ ellipse }`     | `{ radius: { x, y } }`             | No                 | `kind="ellipsePath"` | Draw a full ellipse centered on the current point              |
 | `{ label }`       | `string \| StepLabel`              | Yes                | `step.label`         | Decorates the next segment; string shorthand equals `{ text }` |
 
 ### StepLabel

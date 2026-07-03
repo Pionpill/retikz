@@ -9,7 +9,7 @@ Built-in channels are easiest to read by intent, not by the lower-level `Node` /
 | ---------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Position         | `x` / `y`<br />`z`                                                                     | Fields determine coordinate roles              |
 | Style            | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`            | Color, opacity, size, and shape                |
-| Node geometry    | `padding` / `cornerRadius`<br />`rotate` / `minimumWidth`                              | Node size, spacing, and transforms             |
+| Node geometry    | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                              | Node size, spacing, and transforms             |
 | Text             | `text`<br />`label`                                                                    | Text inside nodes and labels attached to nodes |
 | Paths           | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern`             | Path stroke, caps, joins, corners, and dashes  |
 | Effects          | `shadow`<br />`blendMode`                                                              | Shadows and compositing                        |
@@ -84,10 +84,10 @@ Node geometry channels control the node's own size constraints, spacing, corner 
 
 | Channel                                                          | Channel Value                                                        | Meaning                 | Delivery                   |
 | ---------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------- | -------------------------- |
-| `minimumSize` / `minimumWidth`<br />`minimumHeight`              | Field: `minimumWidth = "field"`<br />Constant: `minimumWidth = {54}` | Node size constraints   | core node size fields      |
+| `minimumSize`              | Field: `minimumSize = "field"`<br />Constant: `minimumSize = {54}` | Node size constraints   | core node size fields      |
 | `padding` / `margin`                                                                                                                                                                                                        | Field: `padding = "field"`<br />Constant: `padding = {8}` / `padding = {{ x: 8, y: 4 }}` | Node spacing            | core node spacing fields   |
 | `cornerRadius`                                                   | Field: `cornerRadius = "field"`<br />Constant: `cornerRadius = {8}`  | Rectangle corner radius | core node `cornerRadius`   |
-| `rotate` / `scale`<br />`xScale` / `yScale`                      | Field: `rotate = "field"`<br />Constant: `rotate = {18}`             | Node transform hints    | core node transform fields |
+| `rotate` / `scale`                      | Field: `rotate = "field"`<br />Constant: `rotate = {18}`             | Node transform hints    | core node transform fields |
 
 ## Text
 

@@ -12,8 +12,10 @@ import type {
   MarkOperationSchema,
   MarkSchema,
   MarkTransformSchema,
+  NodeAxisScaleStyleSchema,
   NodeBooleanStyleSchema,
   NodeBoundaryStyleSchema,
+  NodeBoxSizeStyleSchema,
   NodeBoxSpacingStyleSchema,
   NodeDashPatternStyleSchema,
   NodeFontStyleSchema,
@@ -88,6 +90,8 @@ export type NodeDashPatternStyle = z.infer<typeof NodeDashPatternStyleSchema>;
 export type NodeFontStyle = z.infer<typeof NodeFontStyleSchema>;
 export type NodeBoundaryStyle = z.infer<typeof NodeBoundaryStyleSchema>;
 export type NodeBoxSpacingStyle = z.infer<typeof NodeBoxSpacingStyleSchema>;
+export type NodeAxisScaleStyle = z.infer<typeof NodeAxisScaleStyleSchema>;
+export type NodeBoxSizeStyle = z.infer<typeof NodeBoxSizeStyleSchema>;
 export type ShadowStyle = z.infer<typeof ShadowStyleSchema>;
 export type BlendModeStyle = z.infer<typeof BlendModeStyleSchema>;
 export type PathFillRuleStyle = z.infer<typeof PathFillRuleStyleSchema>;

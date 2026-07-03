@@ -190,7 +190,7 @@ emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number, params: TPar
 scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
 ```
 
-node 设 `scale` / `xScale` / `yScale` 时，决定缩放如何作用到 params。缺省会深度缩放 params 里**所有**数值叶子——对纯长度参数（半径）正确，但会缩坏角度和 `sides` / `points` 这类计数。**带角度或计数参数的形状必须实现它**，只缩长度量、放过角度与计数。
+node 设 `scale`（数字或 `{ x, y }`） 时，决定缩放如何作用到 params。缺省会深度缩放 params 里**所有**数值叶子——对纯长度参数（半径）正确，但会缩坏角度和 `sides` / `points` 这类计数。**带角度或计数参数的形状必须实现它**，只缩长度量、放过角度与计数。
 
 ```ts
 // sector：只缩内外半径，起止角不动

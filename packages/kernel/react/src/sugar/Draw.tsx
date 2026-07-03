@@ -142,7 +142,7 @@ export const Draw: FC<DrawProps> = props => {
           return <Step key={i} kind="circlePath" radius={s.radius} label={s.label} />;
         }
         if (s.kind === 'ellipsePath') {
-          return <Step key={i} kind="ellipsePath" radiusX={s.radiusX} radiusY={s.radiusY} label={s.label} />;
+          return <Step key={i} kind="ellipsePath" radius={s.radius} label={s.label} />;
         }
         if (s.kind === 'line') {
           return <Step key={i} kind="line" to={s.to} label={s.label} />;

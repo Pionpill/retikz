@@ -45,6 +45,28 @@ export const BoxSpacingSchema = z
 
 const BoxSpacingValueSchema = z.union([z.number().nonnegative(), BoxSpacingSchema]);
 
+export const AxisScaleSchema = z
+  .object({
+    default: z.number().positive().optional().describe('Fallback scale factor for both axes.'),
+    x: z.number().positive().optional().describe('Horizontal scale factor.'),
+    y: z.number().positive().optional().describe('Vertical scale factor.'),
+  })
+  .strict()
+  .describe('Axis-specific scale overrides. Axis fields override default.');
+
+const AxisScaleValueSchema = z.union([z.number().positive(), AxisScaleSchema]);
+
+export const BoxSizeSchema = z
+  .object({
+    default: z.number().nonnegative().optional().describe('Fallback size for width and height.'),
+    width: z.number().nonnegative().optional().describe('Width size.'),
+    height: z.number().nonnegative().optional().describe('Height size.'),
+  })
+  .strict()
+  .describe('Box size overrides. Width and height override default.');
+
+const BoxSizeValueSchema = z.union([z.number().nonnegative(), BoxSizeSchema]);
+
 export const NodeLabelPinSchema = z
   .object({
     stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
@@ -177,30 +199,16 @@ export const NodeSchema = z
       .describe(
         'Top-level corner radius in user units. Only effective on `rectangle` shape.',
       ),
-    minimumWidth: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Minimum visual border width in user units; floors the bounding box width.'),
-    minimumHeight: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Minimum visual border height in user units; floors the bounding box height.'),
-    minimumSize: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Symmetric alias for `minimumWidth` + `minimumHeight`; axis-specific fields take precedence.'),
-    scale: z
-      .number()
-      .positive()
+    minimumSize: BoxSizeValueSchema
       .optional()
       .describe(
-        'Uniform scale factor; multiplies all node dimensions (border, padding, text, fontSize) at layout time. Affects path attachment positions.',
+        'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
       ),
-    xScale: z.number().positive().optional().describe('Horizontal scale factor; overrides `scale` for the X axis.'),
-    yScale: z.number().positive().optional().describe('Vertical scale factor; overrides `scale` for the Y axis.'),
+    scale: AxisScaleValueSchema
+      .optional()
+      .describe(
+        'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
+      ),
     textColor: CssColorSchema.optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
     padding: BoxSpacingValueSchema.optional().describe(
       'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',

@@ -14,8 +14,7 @@ const Demo: FC = () => (
       id="fade"
       position={[-100, 0]}
       shape="rectangle"
-      minimumWidth={110}
-      minimumHeight={80}
+      minimumSize={{ width: 110, height: 80 }}
       stroke="none"
       fill={{
         kind: 'linearGradient',

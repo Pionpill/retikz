@@ -383,8 +383,7 @@ export const Battery: FC<{ id?: string; position: Position; rotate?: number; lab
     rotate={rotate}
     label={label}
     shape="circuit-battery"
-    minimumWidth={118}
-    minimumHeight={56}
+    minimumSize={{ width: 118, height: 56 }}
     stroke={INK}
     strokeWidth={STROKE_WIDTH}
     fill="none"
@@ -398,8 +397,7 @@ export const Switch: FC<{ id?: string; position: Position; label?: CircuitLabel 
     position={position}
     label={label}
     shape="circuit-switch"
-    minimumWidth={156}
-    minimumHeight={52}
+    minimumSize={{ width: 156, height: 52 }}
     stroke={INK}
     strokeWidth={STROKE_WIDTH}
     fill="none"
@@ -413,8 +411,7 @@ export const Resistor: FC<{ id?: string; position: Position; label?: CircuitLabe
     position={position}
     label={label}
     shape="circuit-resistor"
-    minimumWidth={182}
-    minimumHeight={48}
+    minimumSize={{ width: 182, height: 48 }}
     stroke={INK}
     strokeWidth={STROKE_WIDTH}
     fill="none"
@@ -428,8 +425,7 @@ export const Rheostat: FC<{ id?: string; position: Position; label?: CircuitLabe
     position={position}
     label={label}
     shape="circuit-rheostat"
-    minimumWidth={182}
-    minimumHeight={48}
+    minimumSize={{ width: 182, height: 48 }}
     stroke={INK}
     strokeWidth={STROKE_WIDTH}
     fill="none"
