@@ -139,6 +139,10 @@ const axisPlacementOffsetOf = (guide: AxisGuide): number =>
     ? (guide.placement.offset ?? 0)
     : 0;
 
+/** y 轴标题默认旋转：让文字局部顶部朝向轴线。 */
+const cartesianYAxisTitleRotateOf = (side: CartesianAxisSide): number =>
+  side === AxisCardinalSide.Right ? -90 : 90;
+
 /**
  * 极坐标点投影的窄返回值 helper。
  * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露。
@@ -234,17 +238,20 @@ const lowerCartesianGuide = (
   const titleNode = ((): IRNode | null => {
     const title = axisTitleOf(guide);
     if (title === null) return null;
-    const titleText = textBlockMeasureText(title.text);
+    const titleStyle = textStyleProps(title);
     const titleGap = title.gap ?? labelGap;
-    const labelOffset = tickLength + tickLabelGap + fontSize + titleGap + fontSize / 2;
+    const yLabelBandWidth =
+      showLabels && ticks.labels.length > 0
+        ? Math.max(...ticks.labels.map(label => estimateLabelWidth(label, fontSize)))
+        : 0;
+    const labelOffset = isX
+      ? tickLength + tickLabelGap + fontSize + titleGap + fontSize / 2
+      : tickLength + tickLabelGap + yLabelBandWidth + titleGap + fontSize / 2;
     const position: [number, number] = isX
       ? [left + plotArea.width / 2, axisY + tickDirection * labelOffset]
-      : [
-          axisX +
-            tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(titleText, fontSize) / 2 + titleGap),
-          top + plotArea.height / 2,
-        ];
-    return { type: 'node', position, text: title.text, ...textStyleProps(title) };
+      : [axisX + tickDirection * labelOffset, top + plotArea.height / 2];
+    const rotate = isX ? titleStyle.rotate : (titleStyle.rotate ?? cartesianYAxisTitleRotateOf(side));
+    return { type: 'node', position, text: title.text, ...titleStyle, ...(rotate !== undefined ? { rotate } : {}) };
   })();
   const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...labels];
   if (titleNode) axisChildren.push(titleNode);

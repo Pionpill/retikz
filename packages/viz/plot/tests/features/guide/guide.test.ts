@@ -32,6 +32,12 @@ const ctx: GuideContext = {
 
 const nodeChildren = (layer: IRScope): Array<IRNode> => layer.children.filter(child => child.type === 'node') as Array<IRNode>;
 
+const nodeByText = (layer: IRScope, text: string): IRNode => {
+  const node = nodeChildren(layer).find(child => child.text === text);
+  expect(node).toBeDefined();
+  return node as IRNode;
+};
+
 describe('lowerGuide (ADR-04)', () => {
   // Happy path
   it('lower_axis_x_structure', () => {
@@ -56,6 +62,37 @@ describe('lowerGuide (ADR-04)', () => {
     // y label 垂直居中于 tick y（projectY(9)=35），水平在左侧轴外
     expect((labels[0].position as [number, number])[1]).toBe(35);
     expect((labels[0].position as [number, number])[0]).toBeLessThan(40);
+  });
+
+  it('y_axis_title_defaults_to_rotated_top_edge_near_left_axis', () => {
+    const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y', title: 'Revenue' }, ctx);
+    const title = nodeByText(axisLayer as IRScope, 'Revenue');
+
+    expect(title.rotate).toBe(90);
+    expect((title.position as [number, number])[0]).toBeCloseTo(7.3, 6);
+    expect((title.position as [number, number])[1]).toBe(135);
+  });
+
+  it('right_y_axis_title_defaults_to_rotated_top_edge_near_left_side', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'right' }, title: 'Revenue' },
+      ctx,
+    );
+    const title = nodeByText(axisLayer as IRScope, 'Revenue');
+
+    expect(title.rotate).toBe(-90);
+    expect((title.position as [number, number])[0]).toBeCloseTo(472.7, 6);
+    expect((title.position as [number, number])[1]).toBe(135);
+  });
+
+  it('explicit_y_axis_title_rotation_is_preserved', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'y', title: { text: 'Revenue', rotate: 0 } },
+      ctx,
+    );
+    const title = nodeByText(axisLayer as IRScope, 'Revenue');
+
+    expect(title.rotate).toBe(0);
   });
 
   it('lower_axis_x_grid_lines', () => {
