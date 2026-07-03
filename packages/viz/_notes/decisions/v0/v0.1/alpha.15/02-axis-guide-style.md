@@ -54,7 +54,7 @@ const yAxis = {
 
 Guide 文本统一使用 core 文本 vocabulary：内容使用 `TextBlockSchema`，字体使用 `FontSchema`，文本样式使用 `textColor` / `opacity` / `align` / `lineHeight` / `maxTextWidth`。Plot 不直接暴露完整 `NodeSchema`，因为 guide layout 必须控制 position、shape、padding、minimum size、label 等 Node 字段；但 title / tick label / legend label 的文本内容和文本样式必须与 core Node 文本保持同名同义。
 
-Guide 线条样式同样复用 core path vocabulary：`GuideLineStyleSchema` 只包含 `stroke`、`strokeWidth`、`drawOpacity`、`dashPattern`。PlotSpec schema 不新增 `dash` 这类平行 shorthand；如果 React / Vanilla 以后需要更短 authoring，可以在 adapter 入参层转换成 PlotSpec 的 `dashPattern`。
+Guide 线条样式同样复用 core path vocabulary：`GuideLineStyleSchema` 只包含 `stroke`、`strokeWidth`、`drawOpacity`、`dashPattern`、`dashOffset`。PlotSpec schema 不新增 `dash` 这类平行 shorthand；如果 React / Vanilla 以后需要更短 authoring，可以在 adapter 入参层转换成 PlotSpec 的 `dashPattern` / `dashOffset`。
 
 Guide tick 语义需要跨 axis 与 legend ramp 共用。本 ADR 固定 axis 形态，但实现时应把 `count` / `values` 抽成 `GuideTickSourceSchema`，把 `format` 抽成 `GuideTickLabelFormatSchema`，并由 `resolveGuideTicks(scale, tickSource, labelFormat)` 统一生成 tick values 与 labels。Axis 的 `tickLabels` 只是在此基础上追加 layout 和 text style。
 
@@ -102,7 +102,7 @@ Vanilla builder 暴露同名 plain object；所有字段都必须 JSON-safe，�
 
 - `AxisGuideSchema` 增加 `line`、`ticks`、`tickLabels`、`title`、`grid` 的对象形态，并保留必要 shorthand。
 - guide 文本样式新增统一 `GuideTextStyleSchema`，复用 core `FontSchema`、`TextBlockSchema` 和文本字段命名；Axis title、tick labels、Legend title / label 共享它。
-- guide 线条样式新增统一 `GuideLineStyleSchema`，复用 core path `stroke`、`strokeWidth`、`drawOpacity`、`dashPattern` 字段；Axis line、tick line、grid line 与 legend 可描边部件共享它。
+- guide 线条样式新增统一 `GuideLineStyleSchema`，复用 core path `stroke`、`strokeWidth`、`drawOpacity`、`dashPattern`、`dashOffset` 字段；Axis line、tick line、grid line 与 legend 可描边部件共享它。
 - 现有 root `tickCount` 被 `ticks.count` 取代；ADR-01 的显式 tick 值 / tick label 格式分别落到 `ticks.values` / `tickLabels.format`。
 - `features/guide` 的 axis lowering 不再直接使用硬编码常量作为唯一来源，而是通过 resolved axis component token 读取默认值。
 - ADR-03 可以把同一 token 结构挂到 `PlotSpec.theme.axis`。
@@ -145,6 +145,7 @@ Vanilla builder 暴露同名 plain object；所有字段都必须 JSON-safe，�
 | `GuideLineStyleSchema` | `strokeWidth` | `z.number().nonnegative().optional()` | 1 | 线条宽度；字段与 core path `strokeWidth` 同名同义 |
 | `GuideLineStyleSchema` | `drawOpacity` | `OpacitySchema.optional()` | 1 | 线条描边透明度；字段与 core path `drawOpacity` 同名同义 |
 | `GuideLineStyleSchema` | `dashPattern` | `z.array(z.number().nonnegative()).min(1).optional()` | `—` | 线条 dash pattern；字段与 core path `dashPattern` 同名同义 |
+| `GuideLineStyleSchema` | `dashOffset` | `z.number().finite().optional()` | `—` | 线条 dash offset；字段与 core path `dashOffset` 同名同义 |
 | `GuideTextStyleSchema` | `font` | `FontSchema.optional()` | 继承 plot typography / core text 默认 | 文本字体；字段与 core `FontSchema` 同名同义 |
 | `GuideTextStyleSchema` | `textColor` | `CssColorSchema.optional()` | currentColor | 文本颜色；字段名与 core Node 文本一致 |
 | `GuideTextStyleSchema` | `opacity` | `OpacitySchema.optional()` | 1 | 文本透明度 |
@@ -165,7 +166,7 @@ Vanilla builder 暴露同名 plain object；所有字段都必须 JSON-safe，�
 | `AxisGridComponentSchema` | `applyTo` / `select` | 沿用现有 `AxisGridSchema` | 沿用现有 grid 默认 | Grid 投影语义 |
 | `AxisGridComponentSchema` | `...GuideLineStyleSchema` | 见上，drawOpacity 默认 0.15 | 见上 | Grid line 样式 |
 
-所有数值尺寸单位为 plot user units；`rotate` 单位为 degree，沿用 core Node / label 的字段名。`dashPattern` 是 JSON-safe number array，直接映射到 core path dash 风格；guide token resolver 不引入平行字段名。
+所有数值尺寸单位为 plot user units；`rotate` 单位为 degree，沿用 core Node / label 的字段名。`dashPattern` 是 JSON-safe number array，`dashOffset` 是 JSON-safe finite number，二者直接映射到 core path dash 风格；guide token resolver 不引入平行字段名。
 
 `ticks.line: false` 只控制 tick line 是否绘制，不改写 tick source。tick label 与 title 的位置仍按 `ticks.length` 和各自 `gap` 计算。用户若想让 label 贴近轴线，应显式设置 `ticks.length: 0` 或减小 `tickLabels.gap`。
 
@@ -192,7 +193,7 @@ Vanilla builder 暴露同名 plain object；所有字段都必须 JSON-safe，�
 
 **Happy path**：
 
-- `line token reaches axis path`：设置 stroke / strokeWidth / dashPattern → axis main path 使用该样式。
+- `line token reaches axis path`：设置 stroke / strokeWidth / dashPattern / dashOffset → axis main path 使用该样式。
 - `ticks length changes tick geometry`：设置 `ticks.length` → tick segment 端点距离按 token 改变。
 - `tickLabels token reaches tick nodes`：设置 font / textColor / gap → label node style 和位置符合预期。
 - `title string shorthand creates title node`：`title: 'Revenue'` 生成 title node，样式走默认。
@@ -211,6 +212,7 @@ Vanilla builder 暴露同名 plain object；所有字段都必须 JSON-safe，�
 
 - `negative lengths are rejected`：tick length / gap / font.size / lineHeight / maxTextWidth 负值 schema 拒绝。
 - `empty dashPattern arrays are rejected`：dashPattern 为空数组 schema 拒绝。
+- `invalid dashOffset is rejected`：dashOffset 为 NaN / Infinity 或非 number 时 schema 拒绝。
 - `invalid anchor is rejected`：anchor 非 `start/middle/end` schema 拒绝。
 - `empty title object text is rejected`：`title: { text: '' }` schema 拒绝。
 
