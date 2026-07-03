@@ -1,6 +1,6 @@
 # ADR-02：core 纯几何按函数粒度下沉 `@retikz/math`，re-export 保公开面
 
-- 状态：Accepted（设计已拍板，待实现）
+- 状态：Accepted（2026-07-03 已实现）
 - 决策日期：2026-06-13（拆分重写 2026-06-14）
 - 关联：[ADR-01 math 包 + 首切 API](./01-math-package-and-geometry-api.md) · [ADR-03 point 公开面修正](./03-point-polar-surface-fix.md) · [alpha.1 roadmap](./roadmap.md) · [v0.4 roadmap 候选 A](../roadmap.md) · core `geometry/`、`compile/`、`shapes/`
 

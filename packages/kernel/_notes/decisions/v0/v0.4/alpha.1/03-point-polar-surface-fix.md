@@ -1,6 +1,6 @@
 # ADR-03：修正 `point` 公开面 —— `toPolar` / `equalPolar` 迁 `polar`
 
-- 状态：Accepted（设计已拍板，待实现）
+- 状态：Accepted（2026-07-03 已实现）
 - 决策日期：2026-06-13（拆分重写 2026-06-14）
 - 关联：[ADR-01 math 包 + 首切 API](./01-math-package-and-geometry-api.md) · [ADR-02 core 纯几何下沉](./02-core-pure-geometry-sink.md) · [alpha.1 roadmap](./roadmap.md) · core `geometry/{point,polar}.ts`
 

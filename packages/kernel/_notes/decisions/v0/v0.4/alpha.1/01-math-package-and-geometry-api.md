@@ -1,6 +1,6 @@
 # ADR-01：新建 `@retikz/math` 零依赖纯计算几何包 + 首切几何 API
 
-- 状态：Accepted（设计已拍板，待实现）
+- 状态：Accepted（2026-07-03 已实现）
 - 决策日期：2026-06-13（拆分重写 2026-06-14）
 - 关联：[v0.4 roadmap 候选 A](../roadmap.md#a--retikzmath2026-06-12-拍板) · [alpha.1 roadmap](./roadmap.md) · [ADR-02 core 纯几何下沉](./02-core-pure-geometry-sink.md) · [ADR-03 point 公开面修正](./03-point-polar-surface-fix.md) · core `geometry/`（`packages/kernel/core/src/geometry/`）
 
