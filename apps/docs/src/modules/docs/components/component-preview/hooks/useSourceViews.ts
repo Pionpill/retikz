@@ -6,7 +6,7 @@ import type { ComponentRenderSource, ComponentSourceFile, RendererMode, SourceVi
 
 import { availableSourceViews } from '../utils';
 
-/** useSourceViews 返回：视图选择 + 当前视图文件 + 复制态，card / dialog 共用，消除两处重复推导 */
+/** useSourceViews 返回值。 */
 export type SourceViewsState = {
   /** 可用视图（固定顺序，按是否有文件过滤） */
   views: Array<SourceView>;
@@ -21,18 +21,14 @@ export type SourceViewsState = {
   activeFileIndex: number;
   /** 当前文件 */
   activeFile: ComponentSourceFile | undefined;
-  /** 当前视图的「对应 runtime 渲染」实现（缺省则复用 React demo 渲染） */
+  /** 当前视图的「对应 runtime 渲染」实现。 */
   render?: (mode: RendererMode) => ReactNode;
   copied: boolean;
   /** 复制当前文件的真实源码（与 diff 视觉装饰无关） */
   handleCopy: () => void;
 };
 
-/**
- * 演示卡源码视图的共享状态
- * @description 统一处理「视图选择 + 当前视图文件 + 复制」三件事；diff 模式 / teaser 折叠等视图特定展示逻辑留在各 consumer。
- *   fileIndex 由调用方持有（card 持 state、dialog 经 prop 共享），本 hook 只做夹取与派生
- */
+/** 演示卡源码视图的共享状态。 */
 export const useSourceViews = (source: ComponentRenderSource | undefined, fileIndex: number): SourceViewsState => {
   const views = useMemo(() => (source ? availableSourceViews(source) : []), [source]);
   const [view, setView] = useState<SourceView>('react');

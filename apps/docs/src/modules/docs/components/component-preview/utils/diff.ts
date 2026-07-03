@@ -1,9 +1,6 @@
 import type { DiffLineKind, DiffMode, UnifiedDiff } from '../types';
 
-/**
- * 按 mode 过滤 unified diff
- * @description added → 丢掉 removed 行（剩 added + context）；removed → 丢掉 added 行（剩 removed + context）；full → 原样返回。'off' 不走这里，调用方应直接用 current 源码。
- */
+/** 按 mode 过滤 unified diff。 */
 export const filterDiffByMode = (diff: UnifiedDiff, mode: Exclude<DiffMode, 'off'>): UnifiedDiff => {
   if (mode === 'full') return diff;
   const lines = diff.code.split('\n');
@@ -18,10 +15,7 @@ export const filterDiffByMode = (diff: UnifiedDiff, mode: Exclude<DiffMode, 'off
   return { code: outLines.join('\n'), lineKinds: outKinds };
 };
 
-/**
- * 按行对比两段源码，生成 unified diff（current + baseline 删除行）
- * @description 走标准 LCS 动态规划（demo 通常 < 150 行，O(m·n) 完全够用）。回溯阶段：a/b 同行 → context；a 独占 → removed（取自 baseline）；b 独占 → added（取自 current）。a/b 都耗尽前的串尾处理保持顺序稳定。
- */
+/** 按行对比两段源码，生成 unified diff。 */
 export const computeUnifiedDiff = (baseline: string, current: string): UnifiedDiff => {
   const a = baseline.split('\n');
   const b = current.split('\n');

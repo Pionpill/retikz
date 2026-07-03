@@ -47,17 +47,12 @@ export type ComponentDetailDialogProps = {
   onSourceFileIndexChange: (index: number) => void;
 };
 
-/** Dialog 左侧渲染区的「透明」点状底纹（仿 PS/Figma 棋盘的 dot 版本，用 color-mix 同步主题） */
 const DOT_PATTERN_STYLE: React.CSSProperties = {
   backgroundImage:
     'radial-gradient(circle, color-mix(in oklab, var(--foreground) 15%, transparent) 1px, transparent 1px)',
   backgroundSize: '14px 14px',
 };
 
-/**
- * 把 transform / drag 状态封装在自己内部
- * @description 拖拽期间 setState 只让本组件重渲染，不带动右侧 HighlightCode 重跑 syntax highlight（之前 transform 提到 Dialog 顶层 → 整树重渲染 → 卡）
- */
 type DialogDemoPaneProps = {
   align: AlignKey;
   children: ReactNode;
@@ -97,11 +92,7 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
   );
 };
 
-/**
- * 演示卡详情模态
- * @description 顶部 header（demo 名 + 关闭 X） + 左右 split-pane（左渲染 + 拖拽 transform，右代码 + React/IR 切换 + Copy）。
- *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
- */
+/** 演示卡详情模态。 */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   const {
     open,
@@ -120,7 +111,6 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
     sourceFileIndex,
     onSourceFileIndexChange,
   } = props;
-  // 视图 / 文件 / 复制走共享 hook（与卡片同源推导）；view 状态本 Dialog 独立、fileIndex 经 prop 与卡片共享
   const {
     views,
     view,
@@ -149,7 +139,6 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
       alwaysVisible={actionsAlwaysVisible || (actions?.length ?? 0) === 0}
     />
   );
-  // 渲染内容包 keyed Fragment：重播时重挂
   const demoContent = (
     <Fragment key={replayNonce}>
       <PreviewActionStateContext.Provider value={previewActionState}>
@@ -165,7 +154,6 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   const activeCode = activeFile?.code ?? '';
   const activeLang = activeFile?.lang ?? 'tsx';
   const activeDiff = activeFile?.diff;
-  // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）；任意视图均可带 diff
   const displayedDiff = activeDiff !== undefined ? filterDiffByMode(activeDiff, 'added') : null;
   const displayedCode = displayedDiff?.code ?? activeCode;
   const displayedLineKinds = displayedDiff?.lineKinds;
@@ -173,7 +161,6 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        // 大屏放大 + 自定义 header + split-pane；showCloseButton=false：自带的右上 X 与 Copy 重合，关闭挪到 header
         showCloseButton={false}
         className="flex h-[90vh] max-h-[900px] w-[96vw] max-w-[1500px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[1500px]"
       >
@@ -220,7 +207,6 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
                   </div>
                   <CopyButton copied={copied} onCopy={handleCopy} />
                 </div>
-                {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
                 <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
                   <HighlightCode
                     lang={activeLang}

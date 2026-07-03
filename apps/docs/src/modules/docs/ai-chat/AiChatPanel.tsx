@@ -15,17 +15,7 @@ import { AiChatHistory } from './parts/AiChatHistory';
 import { AiChatSettings } from './parts/AiChatSettings';
 import { useAiChatStore } from './use-ai-chat-store';
 
-/**
- * AI 聊天面板内容（与容器无关，由调用方决定 sizing context）
- * @description 桌面 ViewLayout 把它放进 ResizablePanel 内的 sticky h-screen aside；
- *   移动 ViewLayout 把它放进 bottom Sheet 的 h-dvh（全高）容器。组件本身只负责
- *   内部布局：`flex h-full flex-col`。
- *
- *   单层顶栏：左侧动态会话标题（点击 inline 改名）+ 右侧 [+ New] / History / Settings / X。
- *   Settings / History 自带返回式顶栏，这里隐藏。
- *
- *   Esc：生成中 abort；非生成中关闭 panel。
- */
+/** AI 聊天面板内容。 */
 export const AiChatPanel: FC = () => {
   const { t } = useTranslation();
   const open = useAiChatStore(s => s.open);
@@ -49,12 +39,10 @@ export const AiChatPanel: FC = () => {
   const renameConversation = useAiChatStore(s => s.renameConversation);
   const clearConversation = useAiChatStore(s => s.clearConversation);
 
-  // panel 渲染挂载即触发一次 IDB 装载（幂等）；history 视图就有数据可显示
   useEffect(() => {
     void hydrateConversations();
   }, [hydrateConversations]);
 
-  // 生成中 Esc 优先 abort、非生成中关闭 panel；panel 打开时全局监听
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -73,12 +61,10 @@ export const AiChatPanel: FC = () => {
 
   const showSettings = view === 'settings';
   const showHistory = view === 'history';
-  // Settings / History 自带顶栏（带返回按钮），主视图顶栏才出现
   const showMainHeader = !showSettings && !showHistory;
   const showEmpty = showMainHeader && !hasKey;
   const showConversation = showMainHeader && hasKey;
 
-  // 标题：active 会话存在时取其 title（空 → Untitled 兜底）；没有 active 显示品牌 label
   const titleDisplay =
     activeConversation && activeConversation.title.trim()
       ? activeConversation.title
@@ -87,7 +73,6 @@ export const AiChatPanel: FC = () => {
         : t('ai.triggerLabel');
   const titleEditable = hasKey && !!activeConversationId;
 
-  // inline rename：点击标题切到 input；Enter 提交 / Esc 取消 / blur 提交；切换 active 时强制退出编辑
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [prevActiveId, setPrevActiveId] = useState(activeConversationId);
@@ -123,7 +108,6 @@ export const AiChatPanel: FC = () => {
     }
   };
 
-  // [+ New chat] 在主视图常驻；生成中或当前会话空时禁用（避免生成空 thread）
   const showNewChatButton = showMainHeader && hasKey;
   const newChatDisabled = isGenerating || messagesLength === 0;
 

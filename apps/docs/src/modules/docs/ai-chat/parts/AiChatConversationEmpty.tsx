@@ -11,12 +11,7 @@ const SUGGESTION_KEYS = [
   'ai.convEmptySuggestion4',
 ] as const;
 
-/**
- * 对话视图空态：messages.length === 0 且无 error 时展示
- * @description Untitled UI 风格：圆形 icon 容器 + 标题 + 一段使用说明（强调直连 LLM、
- *   无后端、Key 留本地）+ "试试这些" + 4 条 suggestion 按钮。点击 suggestion 把文本
- *   写入 store.draft 并请求 input focus
- */
+/** 对话视图空态。 */
 export const AiChatConversationEmpty: FC = () => {
   const { t } = useTranslation();
   const fillDraftAndFocus = useAiChatStore(s => s.fillDraftAndFocus);

@@ -24,10 +24,7 @@ import { cn } from '@/lib/utils';
 
 import type { ComponentSourceFile, RendererMode, SourceView } from '../types';
 
-/**
- * 工具条小型 ghost icon button
- * @description 统一外观（size-7、rounded-sm、muted 色）；透传 button 属性 + `pressed` toggle 态（可用 secondary + aria-pressed）
- */
+/** 工具条小型 icon button。 */
 export type ToolbarIconButtonProps = Omit<ComponentProps<'button'>, 'aria-label'> & {
   label: string;
   pressed?: boolean;
@@ -70,17 +67,14 @@ export const RendererModeButton: FC<RendererModeButtonProps> = props => {
   );
 };
 
-/** 各视图的展示元数据（图标 / 文案 / aria-label） */
 const VIEW_META: Record<SourceView, { label: string; text: string; icon: ReactNode }> = {
   react: { label: 'React source', text: 'React', icon: <ReactIcon className="size-3.5" /> },
   ir: { label: 'IR JSON', text: 'IR', icon: <JsonIcon className="size-3.5" /> },
   vanilla: { label: 'Vanilla builder code', text: 'Vanilla', icon: <Braces className="size-3.5" /> },
 };
 
-/** 数据集文件命名约定：`<主demo名>.data.ts` / `<主demo名>.<dataset>.data.ts`（多数据集），用专属 Database 图标区分 */
 const DATA_FILE_PATTERN = /\.data\.tsx?$/;
 
-/** 文件类型图标：数据文件（`*.data.ts`）用 Database，主 demo 文件用 FileCode2，其他 sourceFiles 用 FileSymlink */
 const FileKindIcon: FC<{ filename: string; isMain?: boolean; className?: string }> = ({
   filename,
   isMain,
@@ -94,7 +88,6 @@ const FileKindIcon: FC<{ filename: string; isMain?: boolean; className?: string 
     <FileSymlink className={className} />
   );
 
-/** 单个视图切换按钮（React / Vanilla / IR），各自独立 */
 type ViewButtonProps = {
   target: SourceView;
   active: boolean;
@@ -125,7 +118,6 @@ const ViewButton: FC<ViewButtonProps> = props => {
   );
 };
 
-/** 当前视图的多文件下拉选择（原 SourceFileMenu 行为）；作为 ButtonGroup 成员贴在选中视图按钮右侧 */
 type FileMenuProps = {
   files: ReadonlyArray<ComponentSourceFile>;
   activeFileIndex: number;
@@ -171,11 +163,7 @@ const FileMenu: FC<FileMenuProps> = props => {
   );
 };
 
-/**
- * 视图切换条：React / Vanilla / IR 各自独立按钮；**选中**且有多文件的那个视图，与其文件下拉拼成一个 ButtonGroup
- * @description 例：React 选中且有 2 个文件 → `[React ▾file]` 一个 ButtonGroup，Vanilla / IR 仍是旁边的独立按钮。
- *   文件选择沿用原下拉。视图 ≤ 1 且文件 ≤ 1 时整条不渲染；单视图 + 多文件则只出文件下拉。
- */
+/** 源码视图切换条。 */
 export type SourceViewBarProps = {
   /** 可用视图（外部已按 react→vanilla→ir 排好） */
   views: ReadonlyArray<SourceView>;
@@ -195,7 +183,6 @@ export const SourceViewBar: FC<SourceViewBarProps> = props => {
   const multiFile = files.length > 1;
   if (!showViews && !multiFile) return null;
 
-  // 单视图 + 多文件：无需视图切换，只出文件下拉
   if (!showViews) {
     return <FileMenu files={files} activeFileIndex={activeFileIndex} onFileChange={onFileChange} />;
   }
@@ -204,7 +191,6 @@ export const SourceViewBar: FC<SourceViewBarProps> = props => {
     <div className="flex items-center gap-1">
       {views.map(target => {
         const active = target === view;
-        // 选中视图 + 多文件 → 视图按钮与文件下拉合成一个 ButtonGroup
         if (active && multiFile) {
           return (
             <ButtonGroup key={target}>
@@ -219,7 +205,7 @@ export const SourceViewBar: FC<SourceViewBarProps> = props => {
   );
 };
 
-/** 复制按钮：copied=true 时图标切到对勾、aria-label 同步切换。颜色保持 muted 与其它工具按钮一致。 */
+/** 复制按钮。 */
 export type CopyButtonProps = {
   copied: boolean;
   onCopy: () => void;

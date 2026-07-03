@@ -11,18 +11,7 @@ import { HeaderActions } from './HeaderActions';
 import { MobileNav } from './MobileNav';
 import { ModuleNav } from './ModuleNav';
 
-/**
- * 文档站顶栏（sticky 全宽）
- * @description 两段式：左 = 汉堡 / brand / 模块切换；右 = 搜索 + AI 触发 + HeaderActions
- *   响应式按 **header 自身宽度** 切换（容器查询 `@container/header`），不再吃 viewport：
- *   AI 面板打开后 header 实宽变小可正确折叠成紧凑布局。
- *
- *   阈值映射：`@xs/header:` (320px) BrandLink 版本徽章；`@4xl/header:` (896px) 完整桌面 chrome
- *   （ModuleNav / 平铺 action / Shortcut 徽章 / DocsSearch 切输入框 / AiChatTrigger 升 outlined）；
- *   `@5xl/header:` (1024px) DocsSearch 输入框扩到 w-64
- *
- *   DropdownMenuContent 走 Radix Portal，内部用近似的 viewport media variant 处理紧凑显示。
- */
+/** 文档站顶栏。 */
 export const AppHeader: FC = () => {
   const layout = useLayoutStore(s => s.layout);
 

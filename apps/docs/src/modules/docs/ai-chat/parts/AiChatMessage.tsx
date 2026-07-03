@@ -127,14 +127,7 @@ const AssistantMessageMenu: FC<MessageMenuProps> = ({ index, message, children }
   );
 };
 
-/**
- * AI 对话单条消息
- * @description User: 右对齐 bubble；Assistant: 左对齐 markdown（自带极简解析器）。
- *   解析器支持：段落、围栏代码块、行内 code、链接 ([text](url)) — 链接 `/` 开头走 router Link、外链走新窗口；
- *   粗体 **bold**、斜体 *italic*、删除线 ~~strike~~、引用块 `> ...`、水平线 `---`、表格 GFM、
- *   无序列表（含嵌套、任务列表 `- [ ] / - [x]`）、h1-h3。
- *   不支持有序列表 / 嵌套表格 / 行内 HTML 等不常见语法。
- */
+/** AI 对话单条消息。 */
 export const AiChatMessage: FC<AiChatMessageProps> = ({ message, index, isStreaming }) => {
   const { t } = useTranslation();
   if (message.role === 'user') {

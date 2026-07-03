@@ -18,16 +18,9 @@ import { AiChatInputMicButton } from './AiChatInputMicButton';
 import { AiChatInputModelPicker } from './AiChatInputModelPicker';
 import { AiChatInputPolishButton } from './AiChatInputPolishButton';
 
-/** textarea 最大高度（约 5 行 leading-relaxed 文本） */
 const MAX_TEXTAREA_HEIGHT = 120;
 
-/**
- * AI Chat 输入框（v4.2 三段独立）
- * @description Header / Card / Footer 三段：header 与 footer 都在 card 外、无 border、与外层 bg 同色。
- *   card 内：textarea（2 行起、5 行封顶滚动）+ Wand2 润色按钮 + toolbar。
- *   toolbar 左：+ Add Context / 竖分隔 / Model / Context Mode；
- *   toolbar 右：上下文圆环 + % / Mic / ghost Send
- */
+/** AI Chat 输入框。 */
 export const AiChatInput: FC = () => {
   const { t } = useTranslation();
   const send = useAiChatStore(s => s.send);
@@ -39,7 +32,6 @@ export const AiChatInput: FC = () => {
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // 自适应行高 —— 2 行起、最高 5 行（约 120px），超出后内部滚动；滚动条按项目约定隐藏
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;

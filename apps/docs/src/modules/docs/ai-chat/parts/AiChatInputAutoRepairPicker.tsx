@@ -33,11 +33,7 @@ const MODE_ICON: Record<AutoRepairMode, LucideIcon> = {
   always: InfinityIcon,
 };
 
-/**
- * Auto-Repair Mode picker：off / limited / always 单选 popover
- * @description trigger 仅显示当前 mode 的 icon（off=Ban / limited=Wrench / always=WandSparkles），
- *   tooltip 显示「Auto-repair · 当前模式名」；popover 列表每项 icon + label + 描述。与 DiagramFormatPicker 同款骨架
- */
+/** Auto-Repair Mode picker。 */
 export const AiChatInputAutoRepairPicker: FC = () => {
   const { t } = useTranslation();
   const mode = useAiChatStore(s => s.autoRepairMode);

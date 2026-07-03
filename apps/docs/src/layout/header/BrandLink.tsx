@@ -4,11 +4,7 @@ import { Link, useLocation } from 'react-router';
 
 import { resolveModule } from '@/modules/docs/data';
 
-/**
- * 顶栏左侧 brand：logo + 模块名 + 版本 badge
- * @description 名称随当前模块切换——core → `retikz.core`、plot → `retikz.plot`，各显示对应包版本；
- *   其余路由（首页 / about）显示 `retikz.doc` 且不带版本徽章。logo 资产到位后替换占位 Sparkles
- */
+/** 顶栏左侧 brand。 */
 export const BrandLink: FC = () => {
   const { pathname } = useLocation();
   const activeModule = resolveModule(pathname);

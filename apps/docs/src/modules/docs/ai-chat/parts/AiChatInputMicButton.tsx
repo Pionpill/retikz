@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 
 import { useAiChatStore } from '../use-ai-chat-store';
 
-/** Web Speech API 的最小类型 —— 不同浏览器命名不同，TS lib 也没默认带 */
 type SpeechRecognitionResult = {
   isFinal: boolean;
   0: { transcript: string };
@@ -40,12 +39,7 @@ const getSpeechRecognitionConstructor = (): SpeechRecognitionConstructor | null 
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 };
 
-/**
- * Toolbar 右侧 Mic 按钮 —— Web Speech API 单次录音
- * @description 不支持 Web Speech 的浏览器（Firefox / 部分 Safari）整体不渲染；
- *   按当前 i18n 选 zh-CN / en-US；识别中按钮高亮 + 点击再次按下停止；
- *   结果 append 到 draft 末尾
- */
+/** Toolbar 右侧 Mic 按钮。 */
 export const AiChatInputMicButton: FC = () => {
   const { t, i18n } = useTranslation();
   const draft = useAiChatStore(s => s.draft);
@@ -100,7 +94,6 @@ export const AiChatInputMicButton: FC = () => {
       recognitionRef.current = recognition;
       setListening(true);
     } catch {
-      // Safari 等浏览器在已有 recognition 运行时再次 start() 会抛
       setListening(false);
     }
   }, [Constructor, draft, i18n.language, setDraft]);

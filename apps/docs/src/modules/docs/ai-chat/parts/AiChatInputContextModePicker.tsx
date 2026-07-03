@@ -33,11 +33,7 @@ const MODE_ICON: Record<ContextMode, LucideIcon> = {
   heavy: Layers,
 };
 
-/**
- * Context Mode picker：lean / balanced / heavy 单选 popover
- * @description trigger 仅显示当前模式 icon（lean=Feather / balanced=Scale / heavy=Layers），
- *   tooltip 显示「Context Mode · 当前模式名」；popover 列表每项保留 label + 描述
- */
+/** Context Mode picker。 */
 export const AiChatInputContextModePicker: FC = () => {
   const { t } = useTranslation();
   const contextMode = useAiChatStore(s => s.contextMode);

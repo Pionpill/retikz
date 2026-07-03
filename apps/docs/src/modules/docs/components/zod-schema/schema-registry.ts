@@ -11,11 +11,9 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
-  // 顶层 scene
   SceneSchema: { schema: IR.SceneSchema, label: 'Scene', url: '/kernel/reference/schema/scene' },
   ChildSchema: { schema: IR.ChildSchema, label: 'Child', url: '/kernel/reference/schema/scene#child' },
 
-  // Entity 及文本相关结构
   NodeSchema: { schema: IR.NodeSchema, label: 'Node', url: '/kernel/reference/schema/entity#node' },
   NodeLabelSchema: { schema: IR.NodeLabelSchema, label: 'NodeLabel', url: '/kernel/reference/schema/entity#nodelabel' },
   CoordinateSchema: {
@@ -27,7 +25,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   TextBlockSchema: { schema: IR.TextBlockSchema, label: 'TextBlock', url: '/kernel/reference/schema/entity#textblock' },
   LineSpecSchema: { schema: IR.LineSpecSchema, label: 'LineSpec', url: '/kernel/reference/schema/entity#linespec' },
 
-  // Path / Step / Target
   PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/reference/schema/path#path' },
   DrawableStyleSchema: {
     schema: IR.DrawableStyleSchema,
@@ -84,7 +81,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/placement#absolutetarget',
   },
 
-  // Step 12 变体（同页 #anchor）
   MoveStepSchema: { schema: IR.MoveStepSchema, label: 'MoveStep', url: '/kernel/reference/schema/path#move' },
   LineStepSchema: { schema: IR.LineStepSchema, label: 'LineStep', url: '/kernel/reference/schema/path#line' },
   FoldStepSchema: { schema: IR.FoldStepSchema, label: 'FoldStep', url: '/kernel/reference/schema/path#fold' },
@@ -92,10 +88,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   CurveStepSchema: { schema: IR.CurveStepSchema, label: 'CurveStep', url: '/kernel/reference/schema/path#curve' },
   CubicStepSchema: { schema: IR.CubicStepSchema, label: 'CubicStep', url: '/kernel/reference/schema/path#cubic' },
   BendStepSchema: { schema: IR.BendStepSchema, label: 'BendStep', url: '/kernel/reference/schema/path#bend' },
-  // 注：arc / circlePath / ellipsePath 这里登记的是 superRefine 产物，
-  // StepSchema 联合内部用的是未导出的 Base 实例，identity 不同；ZodSchema 走 StepSchema
-  // 联合时这三项不会命中 lookupSchema、会整段内联展开（链接仍可单独命中本条目）。
-  // 彻底链接需 core 导出 Base 实例或 walker 加 Base→注册项映射。
   ArcStepSchema: { schema: IR.ArcStepSchema, label: 'ArcStep', url: '/kernel/reference/schema/path#arc' },
   CirclePathStepSchema: {
     schema: IR.CirclePathStepSchema,
@@ -118,7 +110,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/path#generator',
   },
 
-  // Target 2 变体（同页 #anchor）
   RelativeTargetSchema: {
     schema: IR.RelativeTargetSchema,
     label: 'RelativeTarget',
@@ -130,7 +121,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/path#relativeaccumulate',
   },
 
-  // Arrow detail（path-level 箭头视觉规格）
   ArrowMarkSchema: {
     schema: IR.ArrowMarkSchema,
     label: 'ArrowMark',
@@ -148,7 +138,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 };
 
-/** 按 identity 反查注册表项（同一 Zod schema 实例必命中同一条目） */
 export function lookupSchema(schema: core.$ZodType): SchemaRegistryEntry | undefined {
   return Object.values(SCHEMA_REGISTRY).find(e => e.schema === schema);
 }

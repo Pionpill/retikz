@@ -33,11 +33,7 @@ const FORMAT_ICON: Record<DiagramFormatPreference, LucideIcon> = {
   tsx: FileCode2,
 };
 
-/**
- * Diagram Format picker：auto / ir / tsx 单选 popover
- * @description trigger 仅显示当前格式 icon（auto=Sparkles / ir=Braces / tsx=FileCode2），
- *   tooltip 显示「Format · 当前模式名」；popover 列表每项保留 icon + label + 描述
- */
+/** Diagram Format picker。 */
 export const AiChatInputDiagramFormatPicker: FC = () => {
   const { t } = useTranslation();
   const preference = useAiChatStore(s => s.diagramFormatPreference);

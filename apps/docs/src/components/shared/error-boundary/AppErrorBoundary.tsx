@@ -11,10 +11,7 @@ type AppErrorBoundaryState = {
   info: ErrorInfo | null;
 };
 
-/**
- * 顶层 ErrorBoundary：抓 render 阶段未捕获异常并展示可读错误页，避免整树 unmount 后用户看到"白屏"
- * @description 仅捕获 render / lifecycle 同步抛出；事件 handler 内的异步异常仍会冒到 window.onerror。重置按钮把 state 清空让子树重新挂载；常用于交互后 React 抛 invariant 的场景
- */
+/** 顶层 ErrorBoundary。 */
 export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundaryState> {
   override state: AppErrorBoundaryState = { error: null, info: null };
 

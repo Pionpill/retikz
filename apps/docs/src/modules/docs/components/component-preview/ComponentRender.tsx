@@ -55,10 +55,7 @@ export type ComponentRenderProps = {
   overlays?: Array<PreviewOverlay>;
 };
 
-/**
- * 演示卡核心：接已解析好的 Component + 源码视图，渲染卡片骨架 / pan&zoom 工具条 / 代码面板 / 放大对话框
- * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
- */
+/** 演示卡核心。 */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
   const {
     name,
@@ -74,14 +71,10 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     actionsAlwaysVisible = true,
     overlays,
   } = props;
-  // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [sourceFileIndex, setSourceFileIndex] = useState(0);
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
-  // diff 模式默认 'added'（有 diff 数据时）；用户选过一次后 localDiffMode 胜出。
-  // 偏好 added/removed 优先于 full：full unified（current + 删除行交织）阅读噪声大，教学场景只看新增 / 只看删除更直观
   const [localDiffMode, setLocalDiffMode] = useState<DiffMode | undefined>(undefined);
-  // 视图选择 + 当前视图文件 + 复制：统一走 useSourceViews（与 Dialog 共用同一份推导，任意视图都能多文件 + diff）
   const {
     views,
     view,
@@ -94,21 +87,15 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     handleCopy,
   } = useSourceViews(source, sourceFileIndex);
   const hasCode = views.length > 0;
-  // 卡内 drag 默认关闭：local 为 undefined 时跟随全局；单卡点过 Hand 后本地胜出
   const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
-  // 卡内 svg/canvas 切换只作用于本卡：local 为 undefined 时跟随全局默认（Header 菜单设），单卡切过一次后本地胜出
   const [localRendererMode, setLocalRendererMode] = useState<RendererMode | undefined>(undefined);
-  // 用户在 PanZoomToolbar 切了 size 之后本地胜出；未切时跟随 prop 的 size
   const [localSize, setLocalSize] = useState<SizeKey | undefined>(undefined);
   const effectiveSize = localSize ?? size;
-  // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle
   const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
-  // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
   const containerRef = useRef<HTMLDivElement>(null);
-  // 渲染区内 transform 容器的 ref：下载时从里头 querySelector('svg') 拿到当前展示的 SVG 节点
   const renderPaneRef = useRef<HTMLDivElement>(null);
   const setAiOpen = useAiChatStore(s => s.setOpen);
   const fillAiDraft = useAiChatStore(s => s.fillDraftAndFocus);
@@ -122,32 +109,26 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const isExpanded = localIsExpanded ?? globalIsExpand;
   const dragEnabled = localDragEnabled ?? globalDragEnabled;
   const rendererMode = localRendererMode ?? globalRendererMode;
-  // 单卡 svg/canvas 切换写本地 override，不动全局 store → 只影响当前卡
   const toggleRendererMode = () => setLocalRendererMode(rendererMode === 'svg' ? 'canvas' : 'svg');
 
-  // 当前文件的真实源码 / 语言 / diff（任意视图均可带 diff，不再限 React）
   const activeCode = activeFile?.code ?? '';
   const activeLang = activeFile?.lang ?? 'tsx';
   const activeDiff = activeFile?.diff;
 
-  // teaser 判定基于当前文件行数（初始 view=react，展示首几行 + View Code）
   const codeLineCount = activeCode.split('\n').length;
   const codeHasMoreLines = codeLineCount > PREVIEW_MAX_LINES;
   const codePreview = activeCode.split('\n').slice(0, PREVIEW_MAX_LINES).join('\n');
   const usesTeaser = hasCode && codeHasMoreLines;
   const showFull = !usesTeaser || isCodeVisible;
 
-  // 默认 'added'：有 diff 数据 → 默认只看新增；用户在下拉里改过 mode 后 local 胜出
   const hasActiveDiff = activeDiff !== undefined;
   const diffMode: DiffMode = localDiffMode ?? (hasActiveDiff ? 'added' : 'off');
-  // 展开态 + 有 diff + mode≠off → 按 mode 过滤 unified diff（任意视图）
   const displayedDiff: UnifiedDiff | null =
     showFull && activeDiff !== undefined && diffMode !== 'off' ? filterDiffByMode(activeDiff, diffMode) : null;
   const displayedCode = showFull ? (displayedDiff?.code ?? activeCode) : codePreview;
   const displayedLang = activeLang;
   const displayedLineCount = displayedCode.split('\n').length;
   const displayedLineKinds = displayedDiff?.lineKinds;
-  // 右侧工具条 diff 下拉：展开态 + 有 diff 数据时出（任意视图）
   const showDiffPicker = hasActiveDiff && showFull;
 
   const handleHideAll = () => {
@@ -185,7 +166,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           'group/preview relative flex w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
           sizeClass[effectiveSize],
           alignClass[align],
-          // 触摸设备启用拖拽时关闭浏览器原生 pan/zoom；关闭时保持默认 touch-action 让用户能正常滚动页面经过 demo
           dragEnabled && 'touch-none',
           cardDragCursor,
           componentClassName,
@@ -197,7 +177,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         <div
           ref={renderPaneRef}
           className={cn(
-            // SVG / Canvas 都按父框收紧，不超出宽 / 高；TikZ 自身 width/height 只是 intrinsic 上限
             'flex items-center justify-center max-w-full max-h-full [&>canvas]:max-w-full [&>canvas]:max-h-full [&>svg]:max-w-full [&>svg]:max-h-full',
             !isDragging && 'transition-transform duration-150',
           )}
