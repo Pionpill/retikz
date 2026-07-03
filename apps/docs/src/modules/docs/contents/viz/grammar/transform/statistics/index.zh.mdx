@@ -1,0 +1,149 @@
+---
+title: 统计子算子
+description: reducer 和 selector 是 transform 共享的统计底层能力，用来计算统计值、选择代表行，并支撑参数化分位区间等可扩展统计结构。
+---
+
+统计子算子不是新的管线阶段。它们嵌在已有 transform 里：reducer 计算“统计值”，selector 选择“代表行”。这样 `summarize`、`annotate`、`bin`、`select` 和 `relate` 可以复用同一套统计能力，而不是每种图形类型各自发明一套字段。
+
+| 子算子   | 返回什么 | 被谁复用                         | 适合表达                            |
+| -------- | -------- | -------------------------------- | ----------------------------------- |
+| reducer  | 字段片段 | `bin` / `summarize` / `annotate` | 计数、均值、分位区间、风险分数      |
+| selector | 原始行   | `select` / `annotate` / `relate` | 极值点、top-N、阈值外样本、配对端点 |
+
+## 完整 transform
+
+有些统计会直接生成一批新的采样行，不能塞进 reducer 或 selector。`density` 读取一维连续字段，用 KDE 生成 `xAs` / `densityAs` 输出字段；`smooth` 读取 `(x, y)` 样本，用回归模型生成 `xAs` / `yAs` 预测字段。它们都输出普通 rows，再交给 `PathMark` 画曲线或面积。
+
+### 密度 density
+
+<ComponentPreview name="transform-density" sourceFiles={['transform-density.data.ts']} />
+
+| prop                | 类型                                                            | 默认值       | 说明                              |
+| ------------------- | --------------------------------------------------------------- | ------------ | --------------------------------- |
+| `field`             | `string`                                                        | —            | 用来估计密度的一维连续字段        |
+| `groupBy`           | `Array<string>?`                                                | 全局单组     | 按组分别估计 density              |
+| `bandwidth`         | `{ kind: 'silverman' }`<br />`{ kind: 'value'; value: number }` | `silverman`  | KDE 带宽；显式值必须为正数        |
+| `sampleCount`       | `number?`                                                       | `64`         | 每组输出的采样点数量，至少为 2    |
+| `extent`            | `[number, number]?`                                             | 观测范围外扩 | 采样区间                          |
+| `xAs` / `densityAs` | `string`                                                        | —            | 输出采样位置和 density 值的字段名 |
+
+`density` 输出的是普通 rows。密度曲线用 `PathMark`；密度面积用同一个 `PathMark` 加 `closure={{ kind: 'baseline' }}` 和 `fill`。不要为了 density 新增专用 mark。
+
+### 趋势 smooth
+
+`smooth` 把散点或时间序列中的 `(x, y)` 样本拟合成趋势线采样行。alpha.13 首轮只支持 `{ kind: 'linear' }`，默认不外推；输出行通常交给 `PathMark` 按 `order` 连接。
+
+<ComponentPreview name="transform-smooth" sourceFiles={['transform-smooth.data.ts']} />
+
+| prop          | 类型                  | 默认值          | 说明                               |
+| ------------- | --------------------- | --------------- | ---------------------------------- |
+| `x` / `y`     | `string`              | —               | 回归输入字段                       |
+| `groupBy`     | `Array<string>?`      | 全局单组        | 按组分别拟合趋势线                 |
+| `method`      | `{ kind: 'linear' }?` | `linear`        | 平滑方法；首轮只支持线性回归       |
+| `sampleCount` | `number?`             | `64`            | 每组输出的预测采样点数量，至少为 2 |
+| `extent`      | `[number, number]?`   | 有限 x 观测范围 | 采样区间；显式传入可做外推         |
+| `xAs` / `yAs` | `string`              | —               | 输出预测采样位置和 y 值的字段名    |
+
+`smooth` 对不可拟合输入会 fail-loud：每组至少需要两个有限 `(x, y)` 点，并且 x 不能全相同。原始散点和趋势线应分成两层 mark：散点继续读源数据，趋势线读 `smooth` 生成的采样行。
+
+## reducer
+
+reducer 接收一组 rows，返回要写入输出行或标注行的字段片段。它只关心“这一组的统计结果是什么”，不决定 transform 最后保留明细行还是生成汇总行。
+
+| op              | 输入                          | 输出      | 说明           |
+| --------------- | ----------------------------- | --------- | -------------- |
+| `count`         | 行集合                        | `as`      | 组内行数       |
+| `sum` / `mean`  | `field`                       | `as`      | 数值求和或均值 |
+| `median`        | `field`                       | `as`      | 中位数         |
+| `min` / `max`   | `field`                       | `as`      | 有限数值极值   |
+| `extent`        | `field`                       | `as`      | `[min, max]`   |
+| `quantile`      | `field` / `p`                 | `as`      | 单个分位点     |
+| `quantile-band` | `field` / `lowerP` / `upperP` | `outputs` | 参数化分位区间 |
+
+同一个 reducer 可以出现在不同 transform 里。放在 `summarize.metrics` 时，它把每组压成一行；放在 `annotate.metrics` 时，它把同一个统计值广播回组内每一行；放在 `bin.metrics` 时，它对每个箱分别规约。
+
+## selector
+
+selector 接收一组 rows，返回被选中的原始行和可选 rank。它适合“仍然需要原始 id、标签、锚点字段”的场景，因为输出行来自源数据，而不是新造的统计对象。
+
+| op                      | 输入                          | 输出       | 说明                     |
+| ----------------------- | ----------------------------- | ---------- | ------------------------ |
+| `min` / `max`           | `by`                          | 原始行     | 数值最小或最大行         |
+| `first` / `last`        | `orderBy?`                    | 原始行     | 当前顺序或排序后的首尾行 |
+| `top` / `bottom`        | `by` / `n`                    | 原始行集合 | 排名前 N 或后 N          |
+| `nth`                   | `orderBy` / `index`           | 原始行     | 排序后的第 N 行          |
+| `outside-quantile-band` | `field` / `lowerP` / `upperP` | 原始行集合 | 分位区间外的行           |
+
+`select` 会直接输出 selector 选中的行；`annotate.selectors` 会把代表行上的值广播回组内明细；`relate` 会分别运行 source / target selector，再把端点字段投影成关系行。
+
+## 分位区间
+
+`quantile-band` 用 `lowerP` 和 `upperP` 定义任意分位区间，不固定成 `q1` / `q3`。`outputs` 显式声明所有派生字段名，因此同一套 reducer 可以表达箱型图、中央 80% 带、异常范围、业务阈值带或其它统计摘要。
+
+```tsx
+<Transform
+  kind="summarize"
+  groupBy={['group']}
+  metrics={[
+    {
+      op: 'quantile-band',
+      field: 'value',
+      lowerP: 0.1,
+      upperP: 0.9,
+      outputs: {
+        lower: 'p10',
+        upper: 'p90',
+        points: [{ p: 0.5, as: 'p50' }],
+        spread: 'p80Spread',
+      },
+    },
+  ]}
+/>
+```
+
+`whisker` 是可选策略，不是区间本体。`{ kind: 'minMax' }` 直接输出有限最小 / 最大值；`{ kind: 'spread', factor: 1.5 }` 用 `(upper - lower) * factor` 推出 fence，再输出 fence 内的 whisker。
+
+| outputs 字段                | 作用                               |
+| --------------------------- | ---------------------------------- |
+| `lower` / `upper`           | 必填，分位区间下界和上界           |
+| `points`                    | 可选，额外分位点，例如中位数或 p95 |
+| `spread`                    | 可选，`upper - lower`              |
+| `lowerFence` / `upperFence` | 可选，spread whisker 的 fence      |
+| `whiskerMin` / `whiskerMax` | 可选，min/max 或 fence 内 whisker  |
+| `min` / `max` / `count`     | 可选，有限值极值与数量             |
+
+## 区间外选择
+
+`outside-quantile-band` 是 selector，所以它输出的是原始行。`boundary: { kind: 'band' }` 选择低于 `lowerP` 或高于 `upperP` 的行；`boundary: { kind: 'spread', factor }` 先按区间 spread 推出 fence，再选择 fence 外的行。
+
+```tsx
+<Transform
+  kind="select"
+  groupBy={['group']}
+  selector={{
+    op: 'outside-quantile-band',
+    field: 'value',
+    lowerP: 0.25,
+    upperP: 0.75,
+    boundary: { kind: 'spread', factor: 1.5 },
+  }}
+  rankAs="outlierRank"
+/>
+```
+
+如果要画“异常点”，用 selector 更合适：输出行保留原始坐标、标签和 datum provenance。若要画“统计带”，用 `quantile-band` reducer 更合适：输出的是每组的区间字段。
+
+## 扩展
+
+新增统计值能力时，优先注册 `defineStatisticsReducer`；新增代表行选择时，优先注册 `defineRowSelector`。只有输入 / 输出行结构本身不属于现有 transform 形态时，才注册完整 `defineTransform`。
+
+扩展 definition 不进入 JSON IR。IR 只保存 `{ op, ...config }`，运行时通过 `<Plot statisticsReducerDefinitions={...}>` 或 `<Plot rowSelectorDefinitions={...}>` 注入 definition。
+
+| definition          | 负责声明                                 | 进入 IR |
+| ------------------- | ---------------------------------------- | ------- |
+| `schema`            | 校验 `{ op, ...config }`，并提取注册键   | 否      |
+| `inputFields`       | 读取哪些源字段，参与 strict model 校验   | 否      |
+| `outputFields`      | 产生哪些派生字段，从 strict model 中排除 | 否      |
+| `reduce` / `select` | 运行时计算逻辑                           | 否      |
+
+更多自定义写法见[自定义变换](/viz/grammar/extend/transform)。

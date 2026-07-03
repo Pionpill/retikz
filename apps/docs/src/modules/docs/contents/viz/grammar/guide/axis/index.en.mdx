@@ -1,0 +1,61 @@
+---
+title: Axis
+description: Customize ticks, labels, and grid with <Axis>; dimension picks which dimension to decorate — cartesian x / y or polar x / y.
+---
+
+`<Axis>` declares one axis. `dimension` picks which dimension it decorates: under cartesian it's `x` (horizontal) / `y` (vertical), under polar it still uses `x` (angular) / `y` (radial), under ternary it's `x` / `y` / `z` (the three triangle edges). The dimension must match the current coordinate system — a wrong one errors (no silent empty axis). The grid is a `grid` boolean prop, not a separate component.
+
+`<Plot>` is a thin container and draws no axes on its own — without `<Axis>` there are no axes, and only the `<Axis>` you list get drawn. When you only need to switch an axis to a log, time, or square-root scale, put `scale` on the same `<Axis>` instead of adding a separate `<Scale>`.
+
+## Usage
+
+```tsx
+import { Plot, Axis } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue}>
+  <PathMark x="month" y="revenue" order="month" />
+  <Axis dimension="x" />
+  <Axis dimension="y" scale="log" grid tickCount={5} />
+</Plot>
+```
+
+## Examples
+
+### Cartesian axes
+
+List x / y axes explicitly, with a grid and a target tick count on y.
+
+<ComponentPreview name="axis-cartesian" sourceFiles={['axis-cartesian.data.ts']} />
+
+### Polar axes
+
+Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radial ticks + concentric grid rings). Radar / polar charts usually use both together.
+
+<ComponentPreview name="axis-polar" sourceFiles={['axis-polar.data.ts']} />
+
+<p className="text-sm text-muted-foreground">
+  The x axis labels angular dimensions; the y axis with grid draws concentric rings.
+</p>
+
+## API
+
+| Prop         | Type                                               | Default            | Description                                                                                                                                       |
+| ------------ | -------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dimension`  | `'x' \| 'y' \| 'z'`                                | —                  | Which dimension to decorate: cartesian x / y, polar x / y, ternary x / y / z (triangle edges); must match the coordinate's valid set or it errors |
+| `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | auto-derived       | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z             |
+| `tickCount`  | `number?`                                          | default tick count | Target tick count; grid lines reuse the same ticks                                                                                                |
+| `tickLabels` | `boolean?`                                         | `true`             | Whether to render tick labels                                                                                                                     |
+| `grid`       | `boolean?`                                         | `false`            | Draw grid lines aligned to this axis's ticks (concentric rings for polar y)                                                                       |
+| `id`         | `string?`                                          | —                  | Optional handle (reserved, not yet resolved)                                                                                                      |
+
+## Related
+
+- [Coordinates](/viz/grammar/coordinate) — the polar switch and channel roles
+- [Plot](/viz/components/plot) — `<Plot>` draws no axes by default
+
+<ComponentAlert
+  title="Reference lines / bands are not axes"
+  description="To draw a threshold line, mean line, or tolerance band at a value / interval, use <ReferenceMark> (a data-driven annotation that joins mark draw order), not <Axis>. <Axis> only renders the tick body of a scale."
+/>

@@ -1,0 +1,176 @@
+---
+title: Plot
+description: '<Plot> is the chart container: it takes raw data and a size, assembles mark / guide / scale children, and lowers to core primitives at compile time.'
+---
+
+`<Plot>` is the container component for the plot layer. It takes `data` (an array of raw rows) and a display size, collects `<PathMark>` / `<IntervalMark>` / `<Axis>` / `<Scale>` children, then assembles a PlotSpec and lowers it to core at compile time. Data never enters the IR; it is injected during lowering. `<Plot>` does not draw axes, grids, or legends by itself. Declare those guides explicitly. Scales are inferred unless overridden with `<Scale>`; the coordinate system defaults to `cartesian2D` and can be switched with `coordinate`.
+
+## Usage
+
+```tsx
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue} width={360} height={220}>
+  <IntervalMark x="quarter" y="value" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid />
+</Plot>
+```
+
+`width × height` is the full chart box, including the plot area, axes, and tick labels. Children declare field mappings and guides, not pixel coordinates; omit `<Axis>` / `<Legend>` guide children when you only want data marks.
+
+## Examples
+
+### Coordinates
+
+`coordinate` decides how one `<Plot>` projects data internally. It defaults to `cartesian2D`; the same data can switch to `polar2D`, so the same field mappings are interpreted in another coordinate system.
+
+<ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+
+<p className="text-sm text-muted-foreground">Left: cartesian bars; right: the same data as polar2D radial bars.</p>
+
+`coordinate` accepts a string shorthand or an object, covering the coordinate family:
+
+```tsx
+<Plot coordinate="polar2D">                                    {/* polar (pie / radar / radial bars) */}
+<Plot coordinate={{ type: 'polar2D', innerRadius: 0.5 }}>      {/* carve the center into a donut */}
+<Plot coordinate="cartesian1D">                                {/* 1D line (rug / timeline) */}
+<Plot coordinate="polar1D">                                    {/* 1D circle (cyclic data) */}
+<Plot coordinate="ternary2D">                                  {/* ternary (barycentric) */}
+```
+
+See [Coordinates](/viz/grammar/coordinate) for each system's geometry options (polar's `innerRadius` / `startAngle` / `endAngle`, cartesian1D's `orientation`, polar1D's `radius`, …) and which marks / channels apply.
+
+When one chart needs multiple coordinate regions, everyday JSX does not need a hand-written `composition` object. Dual axes use `<Axis id>` plus `xAxisId` / `yAxisId` on marks; facets and shared tracks use their containers to scope axes and marks. See [Coordinate Composition](/viz/grammar/coordinate/composition) for the full model.
+
+```tsx
+<Plot data={weather}>
+  <PathMark x="day" y="temperature" />
+  <IntervalMark x="day" y="rainfall" yAxisId="rain" />
+  <Axis id="temp" dimension="y" placement={{ kind: 'side', side: 'left' }} title="Temperature" />
+  <Axis id="rain" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
+</Plot>
+```
+
+### Scales
+
+Default scales come from field values and mark types: numbers use continuous axes, ordinary strings use categorical positions, and ISO dates use time axes. To request log axes, square-root axes, or a manual domain, add a `<Scale>` child to override the relevant dimension.
+
+<ComponentPreview name="plot-scale" sourceFiles={['plot-scale.data.ts']} size="md" />
+
+<p className="text-sm text-muted-foreground">
+  Left: the default linear y axis compresses early points near the bottom; right: an explicit log y axis spreads the
+  same exponential data evenly.
+</p>
+
+### Color Palettes
+
+`colors` controls the default palette for one `<Plot>`. When omitted, Plot uses d3's `schemeCategory10`; when provided, categorical `color` channels use it as their range, and marks without a `color` encoding use it by layer order, cycling when needed. Use `'currentColor'` when a layer should keep the inherited core color.
+
+<ComponentPreview name="plot-colors" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+
+<p className="text-sm text-muted-foreground">
+  Left: the default schemeCategory10; right: the same data with d3-scale-chromatic's schemeTableau10.
+</p>
+
+### Data Models
+
+Real data often uses field names that differ from the chart's logical names. `model` declares the logical fields and their types, while `fieldMap` maps those logical fields to actual data paths; marks always reference the logical names.
+
+<ComponentPreview name="plot-field-map" sourceFiles={['plot-field-map.data.ts']} size="sm" />
+
+<p className="text-sm text-muted-foreground">
+  The data rows use period / amount; the chart still writes date / visits.
+</p>
+
+### Panel Composition
+
+One parent `<Layout>` can contain several `<Plot>` panels. Each chart uses its own `width` / `height` for the outer box, then `x` / `y` or `transforms` positions that panel inside the parent canvas; the parent only carries and composes panels, without participating in each chart's scale inference.
+
+<ComponentPreview name="plot-panels" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+
+<p className="text-sm text-muted-foreground">
+  Left: a cartesian line chart; right: a cartesian bar chart inside the same Layout.
+</p>
+
+`width` / `height` still describe each chart's own outer box; the parent `<Layout>` size only controls the combined canvas.
+
+### Entry Forms
+
+`<Plot>` has two entries, dispatched by whether `spec` is passed:
+
+| Entry           | Required                                         | Use                                                      |
+| --------------- | ------------------------------------------------ | -------------------------------------------------------- |
+| Composition DSL | `data` (raw array) + `children`                  | Declare marks / guides / scales in JSX (the common case) |
+| Spec entry      | `spec` (built PlotSpec) + `data` (dataset table) | Feed a persisted / externally generated spec directly    |
+
+When chart configuration comes from persisted JSON or an external generator, pass `spec` directly. Data is still injected separately through the `data` table, not written into the PlotSpec.
+
+<ComponentPreview name="plot-spec-entry" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+
+<p className="text-sm text-muted-foreground">
+  The spec entry skips JSX child collection and sends the PlotSpec straight to lowering.
+</p>
+
+## How it works
+
+> Optional for everyday use; revisit when you want to understand how `<Plot>` is compiled, or when you write / generate the low-level IR directly.
+
+`<Plot>` draws nothing on its own. The composition entry first assembles children (marks / guides / scales / coordinate) into a **PlotSpec**: a high-level Tier 2 IR (fully JSON-serializable; data is not part of it). At compile time, **lowering** turns that PlotSpec into `@retikz/core`'s Tier 1 IR (`<Scope>` / `<Node>` / `<Path>`), which core then compiles into a Scene for the renderer. The spec entry skips assembly and feeds a PlotSpec directly.
+
+Lowering isn't private to `<Plot>`: it's registered as a **composite** in core's compile pipeline. Core expands any PlotSpec node through it, the same way it handles every high-level node — upper layers add no parallel rendering path.
+
+### Each lowering step
+
+Data enters lowering alongside the PlotSpec and becomes Tier 1 step by step:
+
+| Step                         | Input                                               | Output                                                      |
+| ---------------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
+| Resolve data                 | dataset via `data.reference` + `model` / `fieldMap` | normalized rows (type inference, renaming, transforms)      |
+| Infer scales                 | fields bound to each channel + coordinate           | band / linear / time / log… scales and the projection frame |
+| Mark → layer                 | each `<PathMark>` / `<IntervalMark>` …              | one core `<Scope>` layer (of `<Node>` / `<Path>`)           |
+| Axis / grid / legend → layer | explicit `<Axis>` / `<Legend>`                      | grid, axis, and legend layers (each a `<Scope>`)            |
+| Order z-index                | all layers above                                    | grid at the bottom → marks → axes → legend                  |
+
+Every layer is wrapped in one isolated-namespace `<Scope>`, so each chart's internal ids (datum / series) never collide.
+
+### Composable panels
+
+When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps an extra **externally visible** panel `<Scope>`: the panel bbox is registered as `<plotId>` and the drawing area as `<plotId>.plotArea`, both placed outside the isolated namespace. Sibling nodes can anchor to them to connect or annotate — letting you compose several charts into one figure.
+
+## API
+
+| Prop                 | Type                                         | Default            | Description                                                                                                                                                                                        |
+| -------------------- | -------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`               | `Array<Row>`                                 | —                  | Raw data rows (composition DSL entry); data never enters the IR                                                                                                                                    |
+| `children`           | `ReactNode`                                  | —                  | Mark / guide / scale children (composition DSL entry)                                                                                                                                              |
+| `model`              | `DataModel`                                  | —                  | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/viz/grammar/data/model)                                                  |
+| `fieldMap`           | `Record<string, string>`                     | —                  | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/viz/grammar/data/processing)                                                |
+| `coordinate`         | see [Coordinates](/viz/grammar/coordinate) | cartesian2D        | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default                                                            |
+| `composition`        | `PlotSpec['composition']`                    | —                  | Low-level coordinate composition config with `defaultView`, `views`, `arrangements`, `spacing`, and `resolve`. Mutually exclusive with `coordinate`; everyday JSX usually uses axis ids, `<Facet>`, and `<Scaffold>` sugar |
+| `colors`             | `Array<string>`                              | `schemeCategory10` | Default palette. Categorical color scales use it as their range; marks without a color encoding use it by layer order and cycle when needed. Use `'currentColor'` to keep the inherited core color |
+| `id`                 | `string`                                     | —                  | Panel id: written to PlotSpec.id as an external anchor handle; in embedded DSL mode it is also the default dataset reference when `dataRef` is omitted                                             |
+| `dataRef`            | `string`                                     | —                  | Dataset reference name for the DSL entry; set the same value on multiple plots to share one data source                                                                                            |
+| `width`              | `number`                                     | —                  | Outer width (including axes and labels); also written as the PlotSpec intrinsic width                                                                                                              |
+| `height`             | `number`                                     | —                  | Outer height (including axes and labels); also written as the PlotSpec intrinsic height                                                                                                            |
+| `x` / `y`            | `number`                                     | —                  | Panel top-left position inside a parent `<Layout>`; converted to an outer `translate`                                                                                                              |
+| `transforms`         | `Array<IRTransform>`                         | —                  | Panel-level transforms; can be combined with `x` / `y` for finer placement                                                                                                                         |
+| `zIndex`             | `number`                                     | `0`                | Draw order for the panel inside its parent                                                                                                                                                         |
+| `clip`               | `IRClipSpec`                                 | —                  | Panel-level clipping region                                                                                                                                                                        |
+| `fontSize`           | `number?`                                    | —                  | Tick label font size                                                                                                                                                                               |
+| `margin`             | `{ top?; right?; bottom?; left? }`           | —                  | Override the surrounding padding                                                                                                                                                                   |
+| `channelDefinitions` | `Array<AnyChannelDefinition>`                | —                  | Runtime definitions for custom channels; used together with `encoding.channels` in a spec. See [Custom Channels](/viz/grammar/extend/channel)                                                    |
+| `spec`               | `PlotSpec`                                   | —                  | Spec entry: a prebuilt Plot IR root (mutually exclusive with `children`)                                                                                                                           |
+
+In addition, `renderer` / `className` / `style` pass through to the underlying `<Layout>` — picking the render backend, an extra class name, and inline styles respectively.
+
+## Related
+
+- [Coordinates](/viz/grammar/coordinate) — the polar switch and channel roles
+- [Marks](/viz/grammar/mark) — line / point / bar / sector / area
+- [Axis](/viz/grammar/guide/axis) — ticks, labels, grid, polar dimensions
+- [Data Model](/viz/grammar/data/model) — `model` field types and type-driven derivation
+- [Processing](/viz/grammar/data/processing) — `fieldMap`, validation, custom parsing
+- [Custom Channels](/viz/grammar/extend/channel) — `channelDefinitions` and `encoding.channels`

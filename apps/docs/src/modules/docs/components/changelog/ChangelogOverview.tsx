@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +24,7 @@ export type ChangelogOverviewProps = {
 export const ChangelogOverview: FC<ChangelogOverviewProps> = ({ releases, moduleId }) => {
   const { i18n, t } = useTranslation();
   const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
-  const leadPkg = `@retikz/${moduleId}` as PackageId;
+  const leadPkg = (moduleId === 'viz' ? '@retikz/plot' : `@retikz/${moduleId}`) as PackageId;
 
   return (
     <ul className="flex flex-col gap-2.5">

@@ -70,9 +70,9 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   docs: { zh: '文档站', en: 'Docs' },
 };
 
-/** 包的类别分组:core 基础设施 / plot 图表层 / other（文档站等非 npm 包）；用于把包映射到对应文档模块的 changelog 切片 */
+/** 包的类别分组：kernel 基础设施 / viz 可视化层 / other（文档站等非 npm 包）；用于把包映射到对应文档模块的 changelog 切片 */
 export type PackageGroup = {
-  id: 'kernel' | 'graph' | 'other';
+  id: 'kernel' | 'viz' | 'other';
   /** 该组按序包含的包标识 */
   members: ReadonlyArray<PackageId>;
 };
@@ -81,6 +81,6 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
     id: 'kernel',
     members: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla', '@retikz/tex'],
   },
-  { id: 'graph', members: ['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla'] },
+  { id: 'viz', members: ['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla'] },
   { id: 'other', members: ['docs'] },
 ];
