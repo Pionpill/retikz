@@ -5,12 +5,13 @@ import { Ban, Infinity as InfinityIcon, Wrench } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { AutoRepairMode } from '@/modules/docs/ai-chat/use-ai-chat-store';
-
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+
+import type { AutoRepairMode } from '../use-ai-chat-store';
+
+import { useAiChatStore } from '../use-ai-chat-store';
 
 const MODES: ReadonlyArray<AutoRepairMode> = ['off', 'limited', 'always'];
 
@@ -32,11 +33,7 @@ const MODE_ICON: Record<AutoRepairMode, LucideIcon> = {
   always: InfinityIcon,
 };
 
-/**
- * Auto-Repair Mode picker：off / limited / always 单选 popover
- * @description trigger 仅显示当前 mode 的 icon（off=Ban / limited=Wrench / always=WandSparkles），
- *   tooltip 显示「Auto-repair · 当前模式名」；popover 列表每项 icon + label + 描述。与 DiagramFormatPicker 同款骨架
- */
+/** Auto-Repair Mode picker。 */
 export const AiChatInputAutoRepairPicker: FC = () => {
   const { t } = useTranslation();
   const mode = useAiChatStore(s => s.autoRepairMode);

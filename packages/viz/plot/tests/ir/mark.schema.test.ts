@@ -371,13 +371,20 @@ describe('MarkSchema (ADR-05)', () => {
       opacity: { kind: 'constant', value: 0.8 },
       rotate: { kind: 'constant', value: 45 },
       padding: { kind: 'constant', value: 2 },
-      minimumSize: { kind: 'constant', value: 14 },
-      minimumWidth: { kind: 'constant', value: 16 },
-      minimumHeight: { kind: 'constant', value: 12 },
+      minimumSize: { kind: 'constant', value: { default: 14, width: 16, height: 12 } },
+      scale: { kind: 'constant', value: { default: 1, x: 1.2 } },
       zIndex: { kind: 'constant', value: 3 },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_point_rejects_legacy_node_size_and_scale_fields', () => {
+    const base = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+    expect(() => MarkSchema.parse({ ...base, minimumWidth: { kind: 'constant', value: 16 } })).toThrow();
+    expect(() => MarkSchema.parse({ ...base, minimumHeight: { kind: 'constant', value: 12 } })).toThrow();
+    expect(() => MarkSchema.parse({ ...base, xScale: { kind: 'constant', value: 1.2 } })).toThrow();
+    expect(() => MarkSchema.parse({ ...base, yScale: { kind: 'constant', value: 0.9 } })).toThrow();
   });
 
   it('mark_point_with_stroke_channels_valid', () => {

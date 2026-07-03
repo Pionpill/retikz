@@ -1,6 +1,6 @@
 import 'i18next';
 
-import type { I18nResources } from './locales/zh';
+import type { I18nResources } from './locales';
 
 /**
  * i18next 类型增强：把资源结构注入到 TypeScript

@@ -5,12 +5,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
-import { isBuiltInProviderId } from '@/modules/docs/ai-chat/use-ai-chat-store';
 
 import type { CustomProvider } from '../providers/resolve';
 
 import { PROVIDER_LABEL } from '../models';
+import { isBuiltInProviderId, useAiChatStore } from '../use-ai-chat-store';
 
 const LABEL_KEY = {
   lean: 'ai.settingsContextLean',

@@ -1,6 +1,6 @@
 # v0.4.0-alpha.1 实施待办：新增 `@retikz/math` + core 纯几何下沉
 
-> 写于 2026-06-14。本 stage 拆 3 个聚焦 ADR，各自实现；本文件是 kanban 索引 + 验收，设计细节看各 ADR，逐文件 TDD 步骤在实现各 ADR 时再出。
+> 写于 2026-06-14；2026-07-03 回填收尾状态。本 stage 拆 3 个聚焦 ADR，各自实现；本文件是 kanban 索引 + 验收，设计细节看各 ADR，逐文件 TDD 步骤在实现各 ADR 时再出。
 >
 > 关联：[`ADR-01 math 包 + 首切 API`](./01-math-package-and-geometry-api.md) · [`ADR-02 core 纯几何下沉`](./02-core-pure-geometry-sink.md) · [`ADR-03 point 公开面修正`](./03-point-polar-surface-fix.md) · [`v0.4 roadmap`](../roadmap.md)
 
@@ -14,11 +14,11 @@
 
 | # | ADR | 标题 | 依赖 | 工作量 | 优先级 | 状态 |
 |---|---|---|---|---|---|---|
-| T1 | [ADR-01](./01-math-package-and-geometry-api.md) | 新建 `@retikz/math` 包 + 首切几何 API | — | 大 | P0 | ☐ |
-| T2 | [ADR-02](./02-core-pure-geometry-sink.md) | core 纯几何下沉 + 公开面 re-export | T1 | 中 | P0 | ☐ |
-| T3 | [ADR-03](./03-point-polar-surface-fix.md) | `point` 公开面修正：toPolar/equalPolar 迁 polar | T1 | 小 | P0 | ☐ |
+| T1 | [ADR-01](./01-math-package-and-geometry-api.md) | 新建 `@retikz/math` 包 + 首切几何 API | — | 大 | P0 | ✅ 已实现 |
+| T2 | [ADR-02](./02-core-pure-geometry-sink.md) | core 纯几何下沉 + 公开面 re-export | T1 | 中 | P0 | ✅ 已实现 |
+| T3 | [ADR-03](./03-point-polar-surface-fix.md) | `point` 公开面修正：toPolar/equalPolar 迁 polar | T1 | 小 | P0 | ✅ 已实现 |
 
-实现序：**T1 先**（build math 底座）→ **T2 + T3 并行**（均 core 侧，依赖 T1；T3 可并入 T2 实现窗口）。每个 ADR 实现时单独走 plan（subagent-driven / inline）+ 单独 commit 序列。
+实现序：**T1 先**（build math 底座）→ **T2 + T3 并行**（均 core 侧，依赖 T1；T3 可并入 T2 实现窗口）。本 milestone 已按该顺序落地，保留本段作为执行记录。
 
 约定：类型检查只用 `pnpm --filter <pkg> exec tsc --noEmit`（禁 emit）；`Array<T>`、箭头函数、`Position=[number,number]`、`DEFAULT_EPSILON=1e-9`；「迁移」= 从指定 core 源逐字搬函数体、仅改 import；禁 `eslint-disable`/`as any`/`@ts-ignore` 绕过。
 

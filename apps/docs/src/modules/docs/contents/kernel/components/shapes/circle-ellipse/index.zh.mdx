@@ -17,7 +17,7 @@ import { Circle, Ellipse } from '@retikz/react';
 
 ```tsx
 <Circle center={[0, 0]} radius={32} fill="none" />
-<Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
+<Ellipse center={[0, 0]} radius={{ x: 48, y: 28 }} fill="none" />
 ```
 
 ### 例子
@@ -37,11 +37,11 @@ import { Circle, Ellipse } from '@retikz/react';
 
 <ComponentPreview name="circle-basic" size="sm" />
 
-椭圆和圆很像，只是半径拆成了 `radiusX` 和 `radiusY`。它也支持 `corner1 + corner2` 和 `box`。
+椭圆和圆很像，只是半径拆成了 `radius: { x, y }``。它也支持 `corner1 + corner2` 和 `box`。
 
 | 写法                               | 适合                                              |
 | ---------------------------------- | ------------------------------------------------- |
-| `{ center, radiusX, radiusY }`     | 已知中心和两个半轴                                |
+| `{ center, radius }`     | 已知中心和两个半轴                                |
 | `{ center, diameterX, diameterY }` | 已知两个直径                                      |
 | `{ corner1, corner2 }`             | 放进一个包围盒                                    |
 | `{ box }`                          | 用 `x/y/origin + width + height` 直接描述矩形范围 |
@@ -62,7 +62,7 @@ import { Circle, Ellipse } from '@retikz/react';
 |             | + `fit?`                                                                 | `contain` 取短边之半（内切），`cover` 取长边之半  |
 |             | + `inset?` / `outset?`                                                   | 收缩或扩展 box 范围后再计算                       |
 |             | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | 部分圆：`chord` / `sector` / `open`               |
-| `<Ellipse>` | `center` + `radiusX` + `radiusY`                                         | 用中心和两个半轴画椭圆                            |
+| `<Ellipse>` | `center` + `radius`                                         | 用中心和两个半轴画椭圆                            |
 |             | `center` + `diameterX` + `diameterY`                                     | 用中心和两个直径画椭圆                            |
 |             | `corner1` + `corner2`                                                    | 用包围盒画内切椭圆                                |
 |             | `box`                                                                    | 用矩形范围描述椭圆，配合 `inset` / `outset`       |

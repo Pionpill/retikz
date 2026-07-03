@@ -1,9 +1,11 @@
+import type { Position } from '@retikz/math';
+
 import { arcEndPoint } from '@retikz/math';
 
 import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../schemas';
-import type { Position } from '../../shared/geometry';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
+import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../shared/geometry';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from '../direction';
 import { anchorOf, angleBoundaryOf } from './anchors';
 
@@ -101,9 +103,6 @@ export const labelBoxEdgeToward = (center: Position, border: Position, halfW: nu
   return [center[0] + ux * s, center[1] + uy * s];
 };
 
-/** 角度换算常量（弧度 → 度） */
-const RAD_TO_DEG = 180 / Math.PI;
-
 /**
  * 算 label 文本自旋角度（度，屏幕 y-down，节点局部系）
  * @description radial = atan2(label中心 − node中心)；tangent = radial + 90；number = 原值；none / 缺省 = 0。
@@ -126,7 +125,7 @@ export const resolveLabelRotateDeg = (
     deg = mode === 'tangent' ? radial + 90 : radial;
   }
   if (label.keepUpright) {
-    const norm = ((deg % 360) + 360) % 360;
+    const norm = normalizeDegrees(deg);
     if (norm > 90 && norm < 270) deg += 180;
   }
   return deg;
@@ -141,7 +140,7 @@ export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
   const cx = layout.rect.x;
   const cy = layout.rect.y;
-  const rad = (layout.rotateDeg * Math.PI) / 180;
+  const rad = layout.rotateDeg * DEG_TO_RAD;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
   const pts: Array<Position> = [];

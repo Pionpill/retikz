@@ -1,11 +1,11 @@
+import type { Position } from '@retikz/math';
+
 import type { AnchorValue, SideValue } from '../anchor';
-import type { Position } from './point';
 
 import { Anchor } from '../anchor';
+import { DEG_TO_RAD } from './angle';
 import { edgeAngleDeg } from './edge';
 import { localToWorld, worldToLocal } from './transform';
-
-const DEG_TO_RAD = Math.PI / 180;
 
 /** 椭圆：中心 + 半长轴 rx / 半短轴 ry + 可选旋转 */
 export type Ellipse = {

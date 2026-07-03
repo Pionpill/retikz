@@ -6,6 +6,7 @@ import type { ShapeDefinition } from '../../src/contract';
 import type { BuiltinShapeValue } from '../../src/schemas';
 
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
+import { boxInsets } from '../../src/compile/node';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
@@ -27,8 +28,9 @@ const makeLayout = (
     shapeParams:
       shape === 'circle' ? { circumscribe: 'equal' } : shape === 'diamond' ? { sides: 4, rotate: 0 } : undefined,
     rect: { x: cx, y: cy, width, height, rotate },
+    contentCenter: [cx, cy],
     rotateDeg: (rotate * 180) / Math.PI,
-    margin: 0,
+    margin: boxInsets(0),
     textWidth: 0,
     textHeight: 0,
     align: 'middle',
@@ -188,8 +190,9 @@ paramsSchema: z.strictObject({}),
       shapeName: 'custom',
       shapeDef: noEdge,
       rect: { x: 0, y: 0, width: 20, height: 10, rotate: 0 },
+      contentCenter: [0, 0],
       rotateDeg: 0,
-      margin: 0,
+      margin: boxInsets(0),
       textWidth: 0,
       textHeight: 0,
       align: 'middle',
@@ -214,8 +217,9 @@ describe('resolveAnchor boundary no cross-pollination', () => {
       shapeDef: BUILTIN_SHAPES.star,
       shapeParams: { points: 5, innerRadius: 10, outerRadius: 30 },
       rect: { x: 0, y: 0, width: 60, height: 60, rotate: 0 },
+      contentCenter: [0, 0],
       rotateDeg: 0,
-      margin: 0,
+      margin: boxInsets(0),
       textWidth: 0,
       textHeight: 0,
       align: 'middle',

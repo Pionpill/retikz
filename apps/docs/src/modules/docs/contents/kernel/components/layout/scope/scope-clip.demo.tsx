@@ -14,8 +14,7 @@ const Demo: FC = () => (
         id="grid"
         position={[0, 0]}
         shape="rectangle"
-        minimumWidth={220}
-        minimumHeight={220}
+        minimumSize={{ width: 220, height: 220 }}
         stroke="none"
         fill={{ kind: 'pattern', shape: 'grid', color: 'darkorange', size: 16 }}
       />

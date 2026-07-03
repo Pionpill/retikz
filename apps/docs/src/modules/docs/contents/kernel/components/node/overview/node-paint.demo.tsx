@@ -13,8 +13,7 @@ const Demo: FC = () => (
       id="lin"
       position={[-170, 0]}
       shape="rectangle"
-      minimumWidth={96}
-      minimumHeight={80}
+      minimumSize={{ width: 96, height: 80 }}
       stroke="none"
       fill={{
         kind: 'linearGradient',
@@ -43,8 +42,7 @@ const Demo: FC = () => (
       id="conic"
       position={[170, 0]}
       shape="rectangle"
-      minimumWidth={96}
-      minimumHeight={96}
+      minimumSize={{ width: 96, height: 96 }}
       stroke="none"
       fill={{
         kind: 'conicGradient',

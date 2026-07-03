@@ -52,6 +52,18 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
+const nodeWidth = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.width ?? size?.default ?? 0;
+};
+
+const nodeHeight = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.height ?? size?.default ?? 0;
+};
+
 /** 简易线性 PositionScale 桩（domain → range 线性映射，bandwidth 固定）；只用于本文件单元断言 */
 const linearStub = (domain: [number, number], range: [number, number], bandwidth = 0): PositionScale => {
   const [d0, d1] = domain;
@@ -146,15 +158,15 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
     expect(nodes).toHaveLength(3);
     for (const node of nodes) {
       expect(node.type).toBe('node');
-      expect(typeof node.minimumWidth).toBe('number');
-      expect(typeof node.minimumHeight).toBe('number');
+      expect(typeof nodeWidth(node)).toBe('number');
+      expect(typeof nodeHeight(node)).toBe('number');
       // 矩形柱无 shape ref（barStyle 在 nodeDefault 给 rectangle）；position 为 [x, y]
       expect(node.shape).toBeUndefined();
       expect(Array.isArray(node.position)).toBe(true);
     }
     // 柱宽相等（同 bandwidth）、柱高随 value 单调
-    expect(nodes[0].minimumWidth).toBeCloseTo(nodes[1].minimumWidth as number, 9);
-    expect((nodes[2].minimumHeight as number) > (nodes[0].minimumHeight as number)).toBe(true);
+    expect(nodeWidth(nodes[0])).toBeCloseTo(nodeWidth(nodes[1]), 9);
+    expect(nodeHeight(nodes[2]) > nodeHeight(nodes[0])).toBe(true);
   });
 
   it('cartesian_interval_dodge_rect_subwidth', () => {
@@ -168,7 +180,7 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
     expect(nodes).toHaveLength(4);
     // dodge：子带宽 = bandwidth / 2 < plain bandwidth
     const plain = nodesOf(firstLayer(cartesianBarSpec(), { d: rows }, cartOpts));
-    expect((nodes[0].minimumWidth as number) < (plain[0].minimumWidth as number)).toBe(true);
+    expect(nodeWidth(nodes[0]) < nodeWidth(plain[0])).toBe(true);
   });
 
   it('cartesian_interval_compiles_to_scene', () => {
@@ -501,13 +513,13 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     expect(nodes).toHaveLength(2);
     // coord(0)=0, coord(2)=40, coord(4)=80 → 宽 40 各；中心 20 / 60；紧贴（node0 右 = node1 左）
-    expect(nodes[0].minimumWidth).toBeCloseTo(40, 9);
-    expect(nodes[1].minimumWidth).toBeCloseTo(40, 9);
+    expect(nodeWidth(nodes[0])).toBeCloseTo(40, 9);
+    expect(nodeWidth(nodes[1])).toBeCloseTo(40, 9);
     expect((nodes[0].position as [number, number])[0]).toBeCloseTo(20, 9);
     expect((nodes[1].position as [number, number])[0]).toBeCloseTo(60, 9);
     // secondary 高度 = coord(0)..coord(binCount)：bar0 = |200-100|=100、bar1 = |200-140|=60
-    expect(nodes[0].minimumHeight).toBeCloseTo(100, 9);
-    expect(nodes[1].minimumHeight).toBeCloseTo(60, 9);
+    expect(nodeHeight(nodes[0])).toBeCloseTo(100, 9);
+    expect(nodeHeight(nodes[1])).toBeCloseTo(60, 9);
   });
 
   it('x0x1_unequal_width_bins_follow_edges', () => {
@@ -520,8 +532,8 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
     // coord(1)-coord(0)=20、coord(5)-coord(1)=80
-    expect(nodes[0].minimumWidth).toBeCloseTo(20, 9);
-    expect(nodes[1].minimumWidth).toBeCloseTo(80, 9);
+    expect(nodeWidth(nodes[0])).toBeCloseTo(20, 9);
+    expect(nodeWidth(nodes[1])).toBeCloseTo(80, 9);
   });
 
   it('x0x1_histogram_end_to_end_renders_continuous_bars', () => {

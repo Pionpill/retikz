@@ -1,6 +1,4 @@
-import type { Position, Vector2 } from '@retikz/math';
-
-export type { Position, Vector2 };
+import type { Position } from '@retikz/math';
 
 /**
  * 极坐标点：相对 origin 的角度 + 半径偏移。

@@ -23,7 +23,7 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" size="xs" />
 
-先按图元角色选择写法：流程图节点通常用默认 rectangle + `padding`；纯文字标签用 `stroke="none"` / `fill="none"`；按钮感节点加 `cornerRadius` + `minimumWidth`；说明框适合多行 `text` + `align="left"`；如果只需要一个可被引用的点，而不需要可见形状，用 [Coordinate](/kernel/components/node/coordinate) 更合适。
+先按图元角色选择写法：流程图节点通常用默认 rectangle + `padding`；纯文字标签用 `stroke="none"` / `fill="none"`；按钮感节点加 `cornerRadius` + `minimumSize`；说明框适合多行 `text` + `align="left"`；如果只需要一个可被引用的点，而不需要可见形状，用 [Coordinate](/kernel/components/node/coordinate) 更合适。
 
 ### 定位
 
@@ -219,7 +219,7 @@ Line 2`}</Node>;
 
 #### 引脚
 
-`label.pin` 给标签加一条**引线**连回节点边界（TikZ `pin`）：`pin: true` 是默认细实线（继承标签色）；`pin: { stroke, strokeWidth, dashPattern }` 自定义引线样式；不写 / `false` 则无引线。标签摆放仍由 `position` / `distance` 决定，pin 只是多画一条引线。
+`label.pin` 给标签加一条**引线**连回节点边界（TikZ `pin`）：`pin: true` 是默认细实线（继承标签色）；`pin: { stroke, strokeWidth, dashPattern, dashOffset }` 自定义引线样式；不写 / `false` 则无引线。标签摆放仍由 `position` / `distance` 决定，pin 只是多画一条引线。
 
 <Comparison target="tikz" title="引脚">
 
@@ -233,26 +233,26 @@ Line 2`}</Node>;
 
 #### 内 / 外边距
 
-内 / 外边距支持**对称别名**与**轴特化**两套写法。若同时提供，分轴字段优先；没有分轴字段时使用对称别名；两者都没有时使用默认值：
+内 / 外边距采用 CSS 风格的嵌套对象：单边字段优先，其次是 `x` / `y`，最后回退到 `default` 和默认值。
 
-- 内边距：`padding`（对称） · `innerXSep` / `innerYSep`（分轴）
-- 外边距：`margin`（对称） · `outerSep`（分轴目前只有 outer 一个）
+- 内边距：`padding={N}` 或 `padding={{ default, x, y, left, right, top, bottom }}`
+- 外边距：`margin={N}` 或 `margin={{ default, x, y, left, right, top, bottom }}`
 
-多数节点只需要写 `padding={N}`。当水平留白和垂直留白需要不同数值时，再改用 `innerXSep` / `innerYSep`。
+多数节点只需要写 `padding={N}`。当水平留白和垂直留白需要不同数值时，改用 `padding={{ x, y }}`；只有单边需要特殊处理时才写 `left` / `right` / `top` / `bottom`。
 
 <ComponentPreview name="node-sep" size="xs" />
 
-<Comparison target="tikz" title="Sep 命名">
+<Comparison target="tikz" title="间距命名">
 
-`innerXSep` / `innerYSep` / `outerSep` 沿用 TikZ 的 sep 词汇；retikz 另外保留 `padding` / `margin` 作为更接近 CSS 的对称别名。
+retikz 的间距字段现在只保留 CSS 风格命名。TikZ 的 `inner sep` 对应 `padding`，`outer sep` 对应 `margin`。
 
 </Comparison>
 
 #### 尺寸约束 + 缩放
 
 - `cornerRadius`——圆角半径。`rectangle` / `polygon` / `star` / `sector` 支持圆角（`ellipse` 等不支持），写在形状 params 里：`shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`、`star` / `sector` / `rectangle` 同理。顶层 `cornerRadius` 只对 `rectangle` 形状生效（默认或显式 `'rectangle'` 都算），且仅在 params 未显式给 `cornerRadius` 时合入；两者并存时 params 优先
-- `minimumWidth` / `minimumHeight` / `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
-- `scale` / `xScale` / `yScale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
+- `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
+- `scale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
 
 <ComponentPreview name="node-size-constraints" size="xs" />
 
@@ -293,7 +293,7 @@ Line 2`}</Node>;
 
 <ComponentPreview name="node-paint" size="sm" />
 
-节点外框也能用渐变描边，`strokeWidth`、`drawOpacity`、`dashPattern` 等描边样式照常生效：
+节点外框也能用渐变描边，`strokeWidth`、`drawOpacity`、`dashPattern`、`dashOffset` 等描边样式照常生效：
 
 <ComponentPreview name="node-stroke-paint" size="sm" />
 
@@ -318,7 +318,7 @@ Line 2`}</Node>;
 
 #### 描边样式
 
-`dashed` / `dotted` 是预设；`dashPattern` 是显式 dash/gap 长度序列（优先级：`dashPattern` > `dashed` > `dotted`）：
+`dashed` / `dotted` 是预设；`dashPattern` 是显式 dash/gap 长度序列（优先级：`dashPattern` > `dashed` > `dotted`），`dashOffset` 可移动虚线节奏起点：
 
 <ComponentPreview name="node-stroke-style" size="xs" />
 
@@ -340,11 +340,8 @@ Line 2`}</Node>;
 | `fill`                           | `string \| PaintSpec`                                                                                         | —                 | 背景填充：纯色 CSS 串，或 PaintSpec（渐变 linear / radial / conic、图案 pattern、图片 image）                                                                                                                                                                                                                                                                                                                                                                                       |
 | `stroke`                         | `string \| PaintSpec`                                                                                         | `currentColor`    | 边框 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image）                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `strokeWidth`                    | `number`                                                                                                      | `1`               | 边框宽度（user units）                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `innerXSep`                      | `number`                                                                                                      | —                 | 横向内边距（text → 左右 border）；不填走 `padding` 兜底                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `innerYSep`                      | `number`                                                                                                      | —                 | 纵向内边距（text → 上下 border）；不填走 `padding` 兜底                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `outerSep`                       | `number`                                                                                                      | `0`               | 连接面外的均匀外偏移（TikZ `outer sep`）：作用于**所有 border 锚点**（显式 `.top` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状；`center`、形状专属锚点、边上比例点、标签附着点仍贴视觉形状。不填走 `margin` 兜底                                                                                                                                                                                                                                    |
-| `padding`                        | `number`                                                                                                      | `8`               | 内边距对称别名；轴特化字段优先                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `margin`                         | `number`                                                                                                      | `0`               | `outerSep` 的对称别名（TikZ `outer sep`）；`outerSep` 优先                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `padding`                        | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                                                | `8`               | 内容到边框的内边距；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析                                                                                                                                                                                                                                                                                                                                                                                              |
+| `margin`                         | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                                                | `0`               | 边框外推距离；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析；作用于**所有 border 锚点**（显式 `.top` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状                                                                                                                                                                                                                                                                             |
 | `font`                           | `{ family?, size?, weight?, style? }`                                                                         | —                 | 字体规格；嵌套对象，所有字段可选                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `textColor`                      | `string`                                                                                                      | `currentColor`    | 文字颜色（块级默认；行级覆盖通过 LineSpec.fill）                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `opacity`                        | `number`                                                                                                      | —                 | 整节点 0~1，同时作用于 shape + text                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -355,13 +352,13 @@ Line 2`}</Node>;
 | `dashed`                         | `boolean`                                                                                                     | —                 | 虚线预设（`[4, 2]`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `dotted`                         | `boolean`                                                                                                     | —                 | 点线预设（`[1, 2]`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `dashPattern`                    | `Array<number>`                                                                                               | —                 | 显式 dash/gap 长度序列；优先级最高                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `dashOffset`                     | `number`                                                                                                      | —                 | 边框虚线起点偏移，单位同 user units                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `cornerRadius`                   | `number`                                                                                                      | —                 | 顶层圆角半径；仅对 `rectangle` 形状生效（默认或显式 `'rectangle'`），且仅在 params 未给 `cornerRadius` 时合入。各形状的圆角写在 params 里：`shape={{ type, params:{ ..., cornerRadius } }}`（params 优先）                                                                                                                                                                                                                                                                          |
-| `minimumWidth` / `minimumHeight` | `number`                                                                                                      | —                 | 撑开最小 bbox 宽高                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `minimumSize`                   | `number | { default?: number; width?: number; height?: number }`                                              | —                 | 撑开最小 bbox 宽高；数字表示宽高相同，对象可分别指定宽高                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `minimumSize`                    | `number`                                                                                                      | —                 | 对称最小尺寸别名；轴特化字段优先                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `scale`                          | `number`                                                                                                      | `1`               | 均匀缩放（含字号、padding、路径附着点）                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `xScale` / `yScale`              | `number`                                                                                                      | —                 | 分轴缩放，优先于 `scale`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `zIndex`                         | `number`（整数）                                                                                              | `0`               | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `label`                          | `NodeLabel \| Array<NodeLabel>`                                                                               | —                 | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度或 `{ boundary, fraction }`（矩形边界比例点），`placement` 缺省 `'outside'`，可设 `'inside'` 放到节点内部；`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线，且仅支持外侧标签 |
+| `label`                          | `NodeLabel \| Array<NodeLabel>`                                                                               | —                 | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'top'`）、`'center'`、数字角度或 `{ boundary, fraction }`（矩形边界比例点），`placement` 缺省 `'outside'`，可设 `'inside'` 放到节点内部；`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern, dashOffset }` 带样式 / 省略无引线）画引线，且仅支持外侧标签 |
 | `animations`                     | `Array<AnimationTrack>`                                                                                       | —                 | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/kernel/components/effects/animation)                                                                                                                                                                                                                                                                                             |
 
 ### margin 与 padding 的区别
@@ -369,9 +366,9 @@ Line 2`}</Node>;
 |           | 影响什么                               | 视觉表现                                                                 |
 | --------- | -------------------------------------- | ------------------------------------------------------------------------ |
 | `padding` | 文字到 border 的距离                   | 视觉形状变大                                                             |
-| `margin`  | 连接面外的均匀外偏移（TikZ outer sep） | 视觉形状不变；所有 border 锚点与连线端点外移 margin，节点占位也含 margin |
+| `margin`  | 连接面外的外偏移                       | 视觉形状不变；所有 border 锚点与连线端点外移 margin，节点占位也含 margin |
 
-`padding` 撑大节点本身；`margin` 不动视觉形状，而是把节点的连接/引用边界整体外推 margin（含显式 `.top` 这类锚点），并让节点在布局里多占 margin 的空间——既给连线"留呼吸空间"，也和 TikZ `outer sep` 一致。`margin` 缺省 0，不设则零影响。
+`padding` 撑大节点本身；`margin` 不动视觉形状，而是把节点的连接/引用边界外推（含显式 `.top` 这类锚点），并让节点在布局里多占 margin 的空间。`margin` 缺省 0，不设则零影响。
 
 ## 相关
 

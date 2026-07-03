@@ -102,7 +102,7 @@ circumscribeOffset: (params) => {
 boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
 ```
 
-路径连接节点边界、解析 `A.30` 这种数字角度时调用，决定线条停在形状边上的哪里——返回从中心朝 `toward` 的射线与形状边界的交点。这里的 `rect` **带 `rotate`**：先用 `worldToLocal` 进入局部坐标算几何，再用 `localToWorld` 转回世界坐标。节点设了 `outerSep`（margin）时，传入的 `rect` 已由引擎外扩好——你只管在给定 `rect` 上算几何，outer sep 不用自己处理。
+路径连接节点边界、解析 `A.30` 这种数字角度时调用，决定线条停在形状边上的哪里——返回从中心朝 `toward` 的射线与形状边界的交点。这里的 `rect` **带 `rotate`**：先用 `worldToLocal` 进入局部坐标算几何，再用 `localToWorld` 转回世界坐标。节点设了 `margin` 时，传入的 `rect` 已由引擎外扩好——你只管在给定 `rect` 上算几何，不用自己处理 margin。
 
 ```ts
 // polygon：射线在局部系与各边求交，再投回世界系
@@ -120,7 +120,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-用户写 `A.top` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。Web 方位名（top/right…）会传给 provider；`north` / `east` 等 compass 写法只是输入别名，解析后也会变成 Web 名。普通 `A.center` 由编译器按节点中心处理；只有 sector / arc 这类语义中心不同于 AABB 中心的形状才需要自行声明 `center`。形状专属锚点恒走视觉 `rect`，不含 outer sep。
+用户写 `A.top` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。Web 方位名（top/right…）会传给 provider；`north` / `east` 等 compass 写法只是输入别名，解析后也会变成 Web 名。普通 `A.center` 由编译器按节点中心处理；只有 sector / arc 这类语义中心不同于 AABB 中心的形状才需要自行声明 `center`。形状专属锚点恒走视觉 `rect`，不含 margin。
 
 ```ts
 // sector：暴露 apex / centroid / 弧中点等语义锚点
@@ -190,7 +190,7 @@ emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number, params: TPar
 scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
 ```
 
-node 设 `scale` / `xScale` / `yScale` 时，决定缩放如何作用到 params。缺省会深度缩放 params 里**所有**数值叶子——对纯长度参数（半径）正确，但会缩坏角度和 `sides` / `points` 这类计数。**带角度或计数参数的形状必须实现它**，只缩长度量、放过角度与计数。
+node 设 `scale`（数字或 `{ x, y }`） 时，决定缩放如何作用到 params。缺省会深度缩放 params 里**所有**数值叶子——对纯长度参数（半径）正确，但会缩坏角度和 `sides` / `points` 这类计数。**带角度或计数参数的形状必须实现它**，只缩长度量、放过角度与计数。
 
 ```ts
 // sector：只缩内外半径，起止角不动
@@ -247,6 +247,7 @@ const createPolygonShape = (name: string, sides: number): ShapeDefinition =>
         strokeOpacity: style.strokeOpacity,
         strokeWidth: style.strokeWidth ?? 1,
         dashPattern: style.dashPattern,
+        dashOffset: style.dashOffset,
         opacity: style.opacity,
       };
     },
@@ -300,7 +301,7 @@ const scene = compileToScene(ir, { shapes: [createPolygonShape('hexagon', 6)] })
 - `boundaryPoint` 要处理 `toward` 刚好等于中心点的情况；常见做法是选一个固定默认方向。
 - `boundaryPoint` 和 `anchor` 如果涉及旋转，先用 `worldToLocal` 进入形状自己的局部坐标，算完后再用 `localToWorld` 返回世界坐标。
 - `anchor` 只处理自己认识的名字；未知名返回 `undefined`，让编译层抛统一错误。
-- `emit` 里用传入的 `round` 处理坐标与尺寸，并尽量透传相关样式字段：`fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `cornerRadius`。
+- `emit` 里用传入的 `round` 处理坐标与尺寸，并尽量透传相关样式字段：`fillOpacity` / `strokeOpacity` / `dashPattern` / `dashOffset` / `opacity` / `cornerRadius`。
 - 形状参数含角度或计数（如扇形角度、多边形 `sides`、星形 `points`）时实现 `scaleParams`，只缩长度量；否则默认缩放会把角度和计数一起缩坏。
 - 几何参考点偏离外接框中心的形状（如以圆心定位的扇形）实现 `circumscribeOffset`，让 bbox 精确罩住形状、position 仍落在语义参考点上。
 

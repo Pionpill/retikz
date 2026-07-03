@@ -13,6 +13,7 @@ const PATH_VISUAL_KEYS = [
   'stroke',
   'strokeWidth',
   'dashPattern',
+  'dashOffset',
   'lineCap',
   'lineJoin',
   'thickness',

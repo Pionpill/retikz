@@ -17,8 +17,7 @@ const Demo: FC = () => (
       id="frame"
       position={[0, 0]}
       shape="rectangle"
-      minimumWidth={236}
-      minimumHeight={236}
+      minimumSize={{ width: 236, height: 236 }}
       fill="none"
       stroke="lightgray"
       dashed

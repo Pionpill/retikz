@@ -6,14 +6,13 @@ import { useTranslation } from 'react-i18next';
 import type { MdxFrontmatter } from '@/modules/docs/components/mdx-content';
 
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { BlogFrontmatter } from '@/modules/docs/components/blog-frontmatter';
 import { ChangelogOverview, changelogToMarkdown, ChangelogVersionDetail } from '@/modules/docs/components/changelog';
 import { InlineMdx, MdxContent, mdxHasToc, MdxToc } from '@/modules/docs/components/mdx-content';
-import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/modules/docs/data/changelog';
-import { getSectionsByModule } from '@/modules/docs/data/sections';
+import { changelogForModule, changelogPageDescription, changelogVersionSlug, getSectionsByModule } from '@/modules/docs/data';
 import { buildDocPageLinks } from '@/modules/docs/lib/doc-links';
-import { useTocStore } from '@/modules/docs/store/use-toc-store';
+import { useTocStore } from '@/modules/docs/store';
 
 import { docPathSegments, isChangelogLocation, useDocLocation } from './doc-location';
 import { DocPageActions } from './DocPageActions';

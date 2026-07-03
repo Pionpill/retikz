@@ -50,6 +50,7 @@ export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
           'stroke-opacity': prim.strokeOpacity,
           'stroke-width': prim.strokeWidth,
           'stroke-dasharray': prim.dashPattern?.join(' '),
+          'stroke-dashoffset': prim.dashOffset,
           'stroke-linecap': prim.strokeLinecap,
           'stroke-linejoin': prim.strokeLinejoin,
         }),
@@ -68,6 +69,7 @@ export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
           'stroke-opacity': prim.strokeOpacity,
           'stroke-width': prim.strokeWidth,
           'stroke-dasharray': prim.dashPattern?.join(' '),
+          'stroke-dashoffset': prim.dashOffset,
           transform: prim.rotate ? `rotate(${prim.rotate} ${prim.cx} ${prim.cy})` : undefined,
         }),
       };
@@ -87,6 +89,7 @@ export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
           'stroke-opacity': prim.strokeOpacity,
           'stroke-width': prim.strokeWidth,
           'stroke-dasharray': prim.dashPattern?.join(' '),
+          'stroke-dashoffset': prim.dashOffset,
         }),
       };
     case 'group':

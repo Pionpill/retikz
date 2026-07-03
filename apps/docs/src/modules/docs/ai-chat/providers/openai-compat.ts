@@ -2,11 +2,7 @@ import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions, Provid
 
 import { readSse } from './sse';
 
-/**
- * 工厂：构建 OpenAI-Compatible provider（OpenAI 本家 / DeepSeek 都用这个）
- * @description 三家中 OpenAI 与 DeepSeek SSE schema 一致，统一一处实现避免重复。
- *   流体格式：`data: {choices:[{delta:{content:"..."}}]}\n\n`，结束 `data: [DONE]\n\n`。
- */
+/** 构建 OpenAI-Compatible provider。 */
 export const createOpenAiCompatProvider = (opts: {
   id: ProviderId;
   baseUrl: string;

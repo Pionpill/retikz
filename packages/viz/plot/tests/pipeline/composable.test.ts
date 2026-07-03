@@ -35,6 +35,18 @@ const expandOf = (spec: PlotSpec, options?: LowerPlotsOptions): IRScope => {
   return def.expand(spec) as IRScope;
 };
 
+const nodeWidth = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.width ?? size?.default ?? 0;
+};
+
+const nodeHeight = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return size?.height ?? size?.default ?? 0;
+};
+
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 describe('ADR-02 L1-a · PlotSpec 自描述尺寸', () => {
@@ -83,8 +95,8 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
     expect(carrier!.type).toBe('node');
     expect(carrier!.shape).toBe('rectangle');
     expect(carrier!.opacity).toBe(0);
-    expect(carrier!.minimumWidth).toBeGreaterThan(0);
-    expect(carrier!.minimumHeight).toBeGreaterThan(0);
+    expect(nodeWidth(carrier!)).toBeGreaterThan(0);
+    expect(nodeHeight(carrier!)).toBeGreaterThan(0);
   });
 
   it('plotarea_carrier_matches_drawing_region', () => {
@@ -104,8 +116,8 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
         (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea',
     );
     if (carrier === undefined) throw new Error('Expected p.plotArea carrier node');
-    expect(carrier.minimumWidth).toBeLessThan(480);
-    expect(carrier.minimumHeight).toBeLessThan(300);
+    expect(nodeWidth(carrier)).toBeLessThan(480);
+    expect(nodeHeight(carrier)).toBeLessThan(300);
   });
 
   it('no_id_structure_unchanged', () => {

@@ -1,4 +1,4 @@
-import type { IRControlPoint, IRStepLabelInput, IRTarget } from '@retikz/core';
+import type { IRControlPoint, IRStepAnisotropicRadius, IRStepLabelInput, IRStepRadius, IRTarget } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import { TIKZ_STEP } from './_displayNames';
@@ -113,12 +113,8 @@ export type ArcStepProps = {
   startAngle: number;
   /** 终止角度（度），sweep 方向由 startAngle vs endAngle 决定 */
   endAngle: number;
-  /** 正圆弧半径（user units）；与 radiusX/radiusY 二选一 */
-  radius?: number;
-  /** 椭圆弧 x 半轴；需与 radiusY 同给 */
-  radiusX?: number;
-  /** 椭圆弧 y 半轴；需与 radiusX 同给 */
-  radiusY?: number;
+  /** 弧半径；number 表示正圆，{ x, y } 表示椭圆 */
+  radius: IRStepRadius;
   /** 显式圆心；缺省取游标（上一 step anchor） */
   center?: DslTarget;
   /** 边标注 */
@@ -150,9 +146,8 @@ export type EllipsePathStepProps = {
   /** 整椭圆 step 鉴别字面量 */
   kind: 'ellipsePath';
   /** 椭圆 x 轴半径 */
-  radiusX: number;
+  radius: IRStepAnisotropicRadius;
   /** 椭圆 y 轴半径 */
-  radiusY: number;
   /** 部分椭圆起始角（度）；与 endAngle 同给才生效 */
   startAngle?: number;
   /** 部分椭圆终止角（度） */

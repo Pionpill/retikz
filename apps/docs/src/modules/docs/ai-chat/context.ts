@@ -4,16 +4,16 @@ export type ContextMode = 'lean' | 'balanced' | 'heavy';
 
 export type Lang = 'zh' | 'en';
 
-/** AI 出图首选格式：auto 让模型自选；ir 强制 IR JSON；tsx 强制 retikz-tsx */
+/** AI 出图首选格式。 */
 export type DiagramFormatPreference = 'auto' | 'ir' | 'tsx';
 
 export type CurrentPage = {
   title: string;
   mdx: string;
   lang: Lang;
-  /** GitHub raw URL of the page mdx；空状态深链按钮需要把这个 URL 喂给外部 AI */
+  /** GitHub raw URL of the page mdx。 */
   rawUrl: string;
-  /** 站内绝对路径 `/<module>/.../<page>`，用于 ContextChips 自动加入选择集时识别"当前页" */
+  /** 站内绝对路径。 */
   path: string;
 };
 
@@ -104,7 +104,7 @@ Coordinate = {
 
 ### 形状 sugar（一行画几何形，仅 retikz-tsx）
 
-\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radiusX={30} radiusY={15} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} cornerRadius={4} />\` · \`<Grid corner1={[0,0]} corner2={[60,40]} step={10} />\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} fill="#fbbf24" />\`。Circle/Ellipse 带 \`startAngle\`+\`endAngle\` 画部分弧；视觉 prop（fill/stroke/...）与 Path 一致。**需算坐标的形态**（Circle from/to、bbox corner、Rectangle center+宽高、Sector、Grid、RegularPolygon、Star）点位只接 literal \`[x, y]\`。
+\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radius={{ x: 30, y: 15 }} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} cornerRadius={4} />\` · \`<Grid corner1={[0,0]} corner2={[60,40]} step={10} />\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} fill="#fbbf24" />\`。Circle/Ellipse 带 \`startAngle\`+\`endAngle\` 画部分弧；视觉 prop（fill/stroke/...）与 Path 一致。**需算坐标的形态**（Circle from/to、bbox corner、Rectangle center+宽高、Sector、Grid、RegularPolygon、Star）点位只接 literal \`[x, y]\`。
 
 ### 复杂场景的扩展参考
 
@@ -210,7 +210,7 @@ Coordinate = {
 
 ### Shape sugar (one-liner geometry, retikz-tsx only)
 
-\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radiusX={30} radiusY={15} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} cornerRadius={4} />\` · \`<Grid corner1={[0,0]} corner2={[60,40]} step={10} />\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} fill="#fbbf24" />\`. Circle/Ellipse with \`startAngle\`+\`endAngle\` draw a partial arc; visual props (fill/stroke/...) match Path. **Forms that compute coordinates** (Circle from/to, bbox corners, Rectangle center+size, Sector, Grid, RegularPolygon, Star) only accept literal \`[x, y]\` points.
+\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radius={{ x: 30, y: 15 }} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} cornerRadius={4} />\` · \`<Grid corner1={[0,0]} corner2={[60,40]} step={10} />\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} fill="#fbbf24" />\`. Circle/Ellipse with \`startAngle\`+\`endAngle\` draw a partial arc; visual props (fill/stroke/...) match Path. **Forms that compute coordinates** (Circle from/to, bbox corners, Rectangle center+size, Sector, Grid, RegularPolygon, Star) only accept literal \`[x, y]\` points.
 
 ### When you need more depth
 
@@ -234,13 +234,7 @@ These pages are already indexed in the llms.txt at the end of this prompt. When 
   return intro + directive;
 };
 
-/**
- * 按 contextMode 拼 system message
- * @description lean=只送当前页；balanced=当前页 + 全站 llms.txt 索引；heavy=v1 暂同 balanced。
- *   extras（用户通过 Add Context 选中的额外页面）以"参考清单"形式附在末尾——v1 不抓 mdx，
- *   仅提示模型用户关心哪些页面；TODO-2 阶段再做实际 mdx 注入。
- *   diagramFormatPreference 决定是否拼接 retikz 画图协议段（auto/ir/tsx 都拼，无是关闭开关）
- */
+/** 按 contextMode 拼 system message。 */
 export const composeSystem = async (
   mode: ContextMode,
   page: CurrentPage | null,

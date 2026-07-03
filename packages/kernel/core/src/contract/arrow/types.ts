@@ -1,15 +1,13 @@
 import type { MarkerFill, MarkerPrimitive } from '../scene';
 
 /**
- * emit 拿到的运行时上下文
- * @description framework 把宿主 path 已解析的颜色 / 描边粗细传进来；def 据此产 marker 几何。
- *   `stroke` / `fill` 是 `MarkerFill`（纯色串或 `{ kind: 'contextStroke' }`，无 override 时取 contextStroke
- *   继承 path stroke、主题反应不冻结）——可直接当 marker primitive 的 `fill` / `stroke` 用，无需收窄。
+ * arrow emit 的运行时上下文。
+ * @description 提供已解析的颜色、描边粗细和取整函数，供定义生成 marker 几何。
  */
 export type ArrowEmitContext = {
   /** 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） */
   stroke: MarkerFill;
-  /** 填充颜色（实心箭头主导色；空心箭头由 framework 据 `hollow` 处理后传入） */
+  /** 填充颜色（实心箭头主导色；空心箭头会按 `hollow` 处理后传入） */
   fill: MarkerFill;
   /** 描边粗细（marker 局部坐标，user units）；空心箭头据此画外轮廓 */
   lineWidth: number;
@@ -18,16 +16,11 @@ export type ArrowEmitContext = {
 };
 
 /**
- * 一个 arrow 的可注册定义：几何尺寸 + emit
- * @description plain object（factory 友好），含函数、**不进 IR**，走 `CompileOptions.arrows` 运行时注入。
- *   内置 8 箭头也是注册项（无内置特权，对齐 `ShapeDefinition` / `BUILTIN_SHAPES`）。
- *
- *   `lineContactX` 存**静态 base**（不含 lineWidth 调整）：实心 normal/diamond/circle = 0、stealth = 3、
- *   open/openDiamond base = 1、openStealth base = 3、openCircle base = 0.75。framework 对 `hollow: true` 的 def 统一减
- *   `lineWidth/2` 得到实际 refX / shrink 接触点（这条调整由编译器 / adapter 落，def 只声明静态 base）。
+ * 可注册的 arrow 定义。
+ * @description 描述箭头 marker 的尺寸、接触点和几何生成能力；定义本身不进入 IR。
  */
 export type ArrowDefinition = {
-  /** 注册表 key，由 IR `arrowDetail.shape` 引用 */
+  /** arrow 名称，由 IR `arrowDetail.shape` 引用。 */
   name: string;
   /**
    * marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10
@@ -35,11 +28,11 @@ export type ArrowDefinition = {
    */
   baseSize?: number;
   /**
-   * 空心标志：true 时 framework 丢 fill、color 主导描边、启用 lineWidth；并对 lineContactX 减 lineWidth/2
+   * 空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点。
    * @default false
    */
   hollow?: boolean;
-  /** 线接触点静态 base（决定 path shrink + marker refX）；空心 def 由 framework 再减 lineWidth/2 */
+  /** 线接触点静态 base，决定 path shrink 与 marker refX。 */
   lineContactX: number;
   /**
    * 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0

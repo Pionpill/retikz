@@ -27,6 +27,7 @@ const subroutine: ShapeDefinition = defineShape({
       strokeOpacity: style.strokeOpacity,
       strokeWidth,
       dashPattern: style.dashPattern,
+      dashOffset: style.dashOffset,
       opacity: style.opacity,
     };
     yield {

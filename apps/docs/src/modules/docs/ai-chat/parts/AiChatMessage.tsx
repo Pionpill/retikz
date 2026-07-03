@@ -1,4 +1,4 @@
-﻿import type { TFunction } from 'i18next';
+import type { TFunction } from 'i18next';
 import type { FC, ReactNode } from 'react';
 
 import { Bot, Code, Copy, Pencil, RefreshCw, Trash2 } from 'lucide-react';
@@ -15,12 +15,13 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 import { CodeBlock } from '@/modules/docs/components/highlight-code';
 
 import type { ChatMessage } from '../providers/types';
-import type { RetikzPreviewFormat } from './RetikzPreview';
+import type { ListItem, TableAlign } from './message-blocks';
 
+import { useAiChatStore } from '../use-ai-chat-store';
+import { extractFirstRetikzBlock, parseMessageBlocks } from './message-blocks';
 import { RetikzPreview, RetikzPreviewPending } from './RetikzPreview';
 
 export type AiChatMessageProps = {
@@ -37,13 +38,6 @@ const writeClipboardWithToast = (content: string, t: TFunction) =>
     () => toast.success(t('ai.messageCopiedLabel')),
     () => toast.error(t('ai.messageCopyFailedLabel')),
   );
-
-/** 从 markdown 抽出第一段 ```retikz-tsx``` / ```retikz-ir``` 围栏的内部代码（不含围栏） */
-const extractFirstRetikzBlock = (content: string): { format: 'tsx' | 'ir'; code: string } | null => {
-  const m = /```retikz-(tsx|ir)\r?\n([\s\S]*?)\r?\n```/.exec(content);
-  if (!m) return null;
-  return { format: m[1] as 'tsx' | 'ir', code: m[2] };
-};
 
 type MessageMenuProps = {
   index: number;
@@ -133,19 +127,10 @@ const AssistantMessageMenu: FC<MessageMenuProps> = ({ index, message, children }
   );
 };
 
-/**
- * AI 对话单条消息
- * @description User: 右对齐 bubble；Assistant: 左对齐 markdown（自带极简解析器）。
- *   解析器支持：段落、围栏代码块、行内 code、链接 ([text](url)) — 链接 `/` 开头走 router Link、外链走新窗口；
- *   粗体 **bold**、斜体 *italic*、删除线 ~~strike~~、引用块 `> ...`、水平线 `---`、表格 GFM、
- *   无序列表（含嵌套、任务列表 `- [ ] / - [x]`）、h1-h3。
- *   不支持有序列表 / 嵌套表格 / 行内 HTML 等不常见语法。
- */
+/** AI 对话单条消息。 */
 export const AiChatMessage: FC<AiChatMessageProps> = ({ message, index, isStreaming }) => {
   const { t } = useTranslation();
   if (message.role === 'user') {
-    // autoSent（系统自动追的修复 prompt）样式区别于真用户气泡：左对齐、虚线边框、小号 Bot 头标记 + 灰底；
-    // 走 renderMarkdown 但关掉 retikz live 渲染（消息体里嵌的是上一轮的非法源码，再 live 一次只是再失败一次）
     if (message.autoSent) {
       return (
         <div className="flex justify-start">
@@ -165,8 +150,6 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({ message, index, isStream
         </div>
       );
     }
-    // 真用户气泡：同样跑 markdown 渲染，支持 ``` 围栏代码、列表、bold、链接；retikz 围栏 live render
-    // （用户偶尔粘贴的 retikz 示例也能直接显示渲染图）；first/last 块 margin 重置以贴合气泡内边距
     return (
       <div className="flex justify-end">
         <HumanMessageMenu index={index} message={message}>
@@ -189,205 +172,9 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({ message, index, isStream
   );
 };
 
-type TableAlign = 'left' | 'center' | 'right' | null;
-
-type ListItem = {
-  text: string;
-  /** null：普通列表项；boolean：任务列表项（GFM `- [ ]` / `- [x]`） */
-  checked: boolean | null;
-  children: Array<ListItem>;
-};
-
-type Block =
-  | { type: 'p'; text: string }
-  | { type: 'code'; lang: string; code: string }
-  | { type: 'list'; items: Array<ListItem> }
-  | { type: 'h'; level: 1 | 2 | 3; text: string }
-  | { type: 'retikz'; format: RetikzPreviewFormat; source: string }
-  | { type: 'retikz-pending'; format: RetikzPreviewFormat }
-  | { type: 'blockquote'; text: string }
-  | { type: 'hr' }
-  | { type: 'table'; header: Array<string>; aligns: Array<TableAlign>; rows: Array<Array<string>> };
-
-/** 显式 `| undefined`：让 lang 字符串查表后的"未命中"分支不被 TS 视作死代码 */
-const RETIKZ_LANG_FORMAT: Readonly<Record<string, RetikzPreviewFormat | undefined>> = {
-  'retikz-ir': 'ir',
-  'retikz-tsx': 'tsx',
-};
-
-const RE_HEADING = /^(#{1,3})\s+(.*)$/;
-const RE_LIST = /^[-*]\s/;
-/** 含缩进的列表项；tab 视作 2 空格 */
-const RE_LIST_INDENTED = /^(\s*)[-*]\s+/;
-/** 任务列表前缀（去掉列表标记后剩下的内容前缀）：`[ ]`、`[x]`、`[X]` */
-const RE_TASK_ITEM = /^\[([ xX])\]\s+(.*)$/;
-const RE_BLOCKQUOTE = /^>\s?/;
-const RE_HR = /^(-{3,}|\*{3,}|_{3,})\s*$/;
-/** GitHub table separator：`|---|---|`、`|:---|---:|:---:|` 等，至少 2 列 */
-const RE_TABLE_SEPARATOR = /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/;
-
-/** 拆 `| a | b | c |` 这种行；可省略首尾管道 */
-const parseTableRow = (line: string): Array<string> => {
-  let s = line.trim();
-  if (s.startsWith('|')) s = s.slice(1);
-  if (s.endsWith('|')) s = s.slice(0, -1);
-  return s.split('|').map(c => c.trim());
-};
-
-const parseTableAligns = (separator: string): Array<TableAlign> =>
-  parseTableRow(separator).map(cell => {
-    const left = cell.startsWith(':');
-    const right = cell.endsWith(':');
-    if (left && right) return 'center';
-    if (right) return 'right';
-    if (left) return 'left';
-    return null;
-  });
-
-const isTableStart = (lines: Array<string>, idx: number): boolean =>
-  lines[idx].includes('|') && idx + 1 < lines.length && RE_TABLE_SEPARATOR.test(lines[idx + 1]);
-
-/** 当前行若是列表项（任意缩进），返回其缩进字符数（tab → 2 空格）；否则 null */
-const getListIndent = (line: string): number | null => {
-  const m = RE_LIST_INDENTED.exec(line);
-  if (!m) return null;
-  return m[1].replace(/\t/g, '  ').length;
-};
-
-/** 把单行列表项的"裸文本"（去掉 `- ` / `* ` 标记后的部分）切成 task 或普通项 */
-const buildListItem = (raw: string): ListItem => {
-  const taskMatch = RE_TASK_ITEM.exec(raw);
-  if (taskMatch) return { text: taskMatch[2], checked: taskMatch[1].toLowerCase() === 'x', children: [] };
-  return { text: raw, checked: null, children: [] };
-};
-
-/**
- * 从 `start` 开始递归吃下一段同级（缩进 == baseIndent）的列表项；
- * 遇到更深缩进的列表行就递归塞进当前 item.children；遇到更浅缩进或非列表行就停止
- */
-const parseListAt = (
-  lines: Array<string>,
-  start: number,
-  baseIndent: number,
-): { items: Array<ListItem>; end: number } => {
-  const items: Array<ListItem> = [];
-  let i = start;
-  while (i < lines.length) {
-    const indent = getListIndent(lines[i]);
-    if (indent === null || indent < baseIndent) break;
-    if (indent > baseIndent) break;
-    const raw = lines[i].replace(/^\s*[-*]\s+/, '');
-    const item = buildListItem(raw);
-    i++;
-    if (i < lines.length) {
-      const nextIndent = getListIndent(lines[i]);
-      if (nextIndent !== null && nextIndent > baseIndent) {
-        const child = parseListAt(lines, i, nextIndent);
-        item.children = child.items;
-        i = child.end;
-      }
-    }
-    items.push(item);
-  }
-  return { items, end: i };
-};
-
-/** 段落收集器停止条件：遇到任意块起始或空行就收尾 */
-const isBlockStarter = (lines: Array<string>, idx: number): boolean => {
-  const line = lines[idx];
-  if (line.trim() === '') return true;
-  if (line.startsWith('```')) return true;
-  if (RE_HEADING.test(line)) return true;
-  if (RE_LIST.test(line)) return true;
-  if (RE_BLOCKQUOTE.test(line)) return true;
-  if (RE_HR.test(line)) return true;
-  if (isTableStart(lines, idx)) return true;
-  return false;
-};
-
-const parseBlocks = (src: string): Array<Block> => {
-  const lines = src.split('\n');
-  const blocks: Array<Block> = [];
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (line.trim() === '') {
-      i++;
-      continue;
-    }
-    if (line.startsWith('```')) {
-      const lang = line.slice(3).trim();
-      const start = i + 1;
-      let j = start;
-      while (j < lines.length && !lines[j].startsWith('```')) j++;
-      const closed = j < lines.length;
-      const retikzFormat = RETIKZ_LANG_FORMAT[lang];
-      if (retikzFormat !== undefined) {
-        // retikz fenced 块特化：闭合走 RetikzPreview 真渲染；未闭合（流式中）走骨架占位
-        if (closed) {
-          blocks.push({ type: 'retikz', format: retikzFormat, source: lines.slice(start, j).join('\n') });
-        } else {
-          blocks.push({ type: 'retikz-pending', format: retikzFormat });
-        }
-      } else {
-        blocks.push({ type: 'code', lang: lang || 'text', code: lines.slice(start, j).join('\n') });
-      }
-      i = j + 1;
-      continue;
-    }
-    const headingMatch = RE_HEADING.exec(line);
-    if (headingMatch) {
-      blocks.push({ type: 'h', level: headingMatch[1].length as 1 | 2 | 3, text: headingMatch[2] });
-      i++;
-      continue;
-    }
-    if (RE_LIST.test(line)) {
-      const { items, end } = parseListAt(lines, i, 0);
-      blocks.push({ type: 'list', items });
-      i = end;
-      continue;
-    }
-    if (RE_BLOCKQUOTE.test(line)) {
-      const start = i;
-      while (i < lines.length && RE_BLOCKQUOTE.test(lines[i])) i++;
-      const text = lines
-        .slice(start, i)
-        .map(l => l.replace(RE_BLOCKQUOTE, ''))
-        .join('\n');
-      blocks.push({ type: 'blockquote', text });
-      continue;
-    }
-    // table：当前行带 `|` 且下一行是分隔行；优先于 hr 判断（`|---|` 含管道，被 RE_HR 拒绝，但更明确的顺序更安全）
-    if (isTableStart(lines, i)) {
-      const header = parseTableRow(lines[i]);
-      const aligns = parseTableAligns(lines[i + 1]);
-      i += 2;
-      const rows: Array<Array<string>> = [];
-      while (i < lines.length && lines[i].includes('|') && lines[i].trim() !== '') {
-        rows.push(parseTableRow(lines[i]));
-        i++;
-      }
-      blocks.push({ type: 'table', header, aligns, rows });
-      continue;
-    }
-    if (RE_HR.test(line)) {
-      blocks.push({ type: 'hr' });
-      i++;
-      continue;
-    }
-    const pStart = i;
-    while (i < lines.length && !isBlockStarter(lines, i)) {
-      i++;
-    }
-    blocks.push({ type: 'p', text: lines.slice(pStart, i).join('\n') });
-  }
-  return blocks;
-};
-
 /** 行内：code (`...`) → <code>；**bold** → <strong>；*italic* → <em>；~~strike~~ → <del>；[text](url) → <Link>/<a>；其它原文输出 */
 const renderInline = (src: string): ReactNode => {
   const nodes: Array<ReactNode> = [];
-  // 顺序敏感：bold (`\*\*..\*\*`) 必须排在 italic (`\*..\*`) 之前；italic 用 lookaround 避开 `**` 边界和"两侧空格"误命中（避免 `5 * 6 * 2` 被吞）
   const re =
     /(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|((?<!\*)\*(?!\s)[^*\n]+?(?<!\s)\*(?!\*))|(~~[^~\n]+~~)|(\[[^\]]+\]\([^)\s]+\))/g;
   let lastIndex = 0;
@@ -474,7 +261,6 @@ const renderListItem = (item: ListItem, idx: number): ReactNode => {
     renderInline(item.text)
   );
   return (
-    // task 项关 disc + 负 ml 抵消父 ul 的 ml-5，让 checkbox 起点对齐普通 bullet
     <li key={idx} className={isTask ? '-ml-5 list-none' : undefined}>
       {body}
       {item.children.length > 0 && (
@@ -498,7 +284,7 @@ type RenderMarkdownOptions = {
 const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): ReactNode => {
   if (!src) return null;
   const { liveRetikz = true } = options;
-  const blocks = parseBlocks(src);
+  const blocks = parseMessageBlocks(src);
   return blocks.map((b, i) => {
     if (b.type === 'code') {
       return (

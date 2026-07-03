@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 import type { ComponentSourceFile, DiffLineKind, DiffMode, SourceLang, SourceView } from '../types';
 
-import { HighlightedCode } from '../../highlight-code';
+import { HighlightCode } from '../../highlight-code';
 import { CopyButton, SourceViewBar, ToolbarIconButton } from './parts';
 
 /** 已 View Code 之后默认折叠状态下的代码区高度上限（按 ~15 行 x 1.5em line-height + 一点点 padding 算）。 */
@@ -182,7 +182,7 @@ export const SourceCodePanel: FC<SourceCodePanelProps> = props => {
         </>
       ) : null}
       <div className={cn('relative', showFull && !isExpanded && COLLAPSED_CODE_MAX_H)}>
-        <HighlightedCode
+        <HighlightCode
           lang={displayedLang}
           code={displayedCode}
           showLineNumbers={displayedLineCount >= 10}

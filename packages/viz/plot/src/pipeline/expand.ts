@@ -2316,8 +2316,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       id: `${node.id}.plotArea`,
       position: [facetContentWidth / 2, facetContentHeight / 2],
       shape: 'rectangle',
-      minimumWidth: facetContentWidth,
-      minimumHeight: facetContentHeight,
+      minimumSize: { width: facetContentWidth, height: facetContentHeight },
       padding: 0,
       opacity: 0,
     };
@@ -2422,8 +2421,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     id: `${node.id}.plotArea`,
     position: [plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height / 2],
     shape: 'rectangle',
-    minimumWidth: plotArea.width,
-    minimumHeight: plotArea.height,
+    minimumSize: { width: plotArea.width, height: plotArea.height },
     padding: 0,
     opacity: 0,
   };

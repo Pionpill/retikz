@@ -1,6 +1,6 @@
 # v0.4.0-alpha.2 实施待办
 
-> 写于 2026-06-14；2026-06-15 收尾对账。本 stage 两个独立子项目均已实现并通过验证，待 changelog 封口。
+> 写于 2026-06-14；2026-06-15 收尾对账；2026-07-03 回填 changelog 封口状态。本 stage 两个独立子项目均已实现、通过验证并同步 changelog。
 >
 > 关联：[`ADR-01 可嵌入 Tier2`](./01-embeddable-tier2-in-layout.md)（Accepted MVP）· [`ADR-02 scope 多态 bbox`](./02-scope-polymorphic-bbox.md)（Accepted MVP）· [`v0.4 roadmap`](../roadmap.md)
 
@@ -8,8 +8,8 @@
 
 | # | 子项 | ADR | 状态 |
 |---|---|---|---|
-| S | scope 多态 bbox（MVP: rectangle + circle） | [ADR-02](./02-scope-polymorphic-bbox.md) | 已实现，待 changelog |
-| E | 可嵌入 Tier2 in `<Layout>` | [ADR-01](./01-embeddable-tier2-in-layout.md) | 已实现，待 changelog |
+| S | scope 多态 bbox（MVP: rectangle + circle） | [ADR-02](./02-scope-polymorphic-bbox.md) | ✅ 已实现并同步 changelog |
+| E | 可嵌入 Tier2 in `<Layout>` | [ADR-01](./01-embeddable-tier2-in-layout.md) | ✅ 已实现并同步 changelog |
 
 ## S — scope 多态 bounding shape（MVP）
 

@@ -8,13 +8,13 @@ import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 
 import type { ProviderId } from '../providers/types';
 
 import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
 import { isBuiltInProviderId } from '../providers/resolve';
 import { PROVIDER_IDS } from '../providers/types';
+import { useAiChatStore } from '../use-ai-chat-store';
 
 type BrandIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 
@@ -32,13 +32,7 @@ type ProviderGroup = {
   isCustom: boolean;
 };
 
-/**
- * AI Chat input 底部 Model picker
- * @description popover 按 provider 分组展示已配置 Key 的模型；未填 Key 的内置 provider
- *   整组隐藏。点列表项跨 provider 切换会同时切 providerId。底部双入口：
- *   "+ 自定义模型名" 行内输入追加到当前 provider 的 customModels；
- *   "+ 添加 Provider" 跳 Settings 视图
- */
+/** AI Chat 模型选择器。 */
 export const AiChatInputModelPicker: FC = () => {
   const { t } = useTranslation();
   const providerId = useAiChatStore(s => s.providerId);

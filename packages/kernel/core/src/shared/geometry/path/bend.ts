@@ -1,4 +1,6 @@
-import type { Position } from '../point';
+import type { Position } from '@retikz/math';
+
+import { DEG_TO_RAD } from '../angle';
 
 /**
  * cubic Bezier 拟合 from→to 的弧形 bend
@@ -23,7 +25,7 @@ export const bendControlPoints = (
   const nx = (dy / chord) * sign;
   const ny = (-dx / chord) * sign;
 
-  const apexOffset = (chord / 2) * Math.tan((bendAngle * Math.PI) / 180 / 2);
+  const apexOffset = (chord / 2) * Math.tan((bendAngle * DEG_TO_RAD) / 2);
   const ctlOffset = (4 / 3) * apexOffset;
 
   const c1: Position = [from[0] + dx / 3 + ctlOffset * nx, from[1] + dy / 3 + ctlOffset * ny];
@@ -42,7 +44,7 @@ const OUTIN_DISTANCE_FACTOR = 1 / 3;
 
 /** 角度（度）转单位方向向量（0°=+x，90°=+y screen-down，与 IR 角度约定一致） */
 const dirOf = (angleDeg: number): Position => {
-  const rad = (angleDeg * Math.PI) / 180;
+  const rad = angleDeg * DEG_TO_RAD;
   return [Math.cos(rad), Math.sin(rad)];
 };
 

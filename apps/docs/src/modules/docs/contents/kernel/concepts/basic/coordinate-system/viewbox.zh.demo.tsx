@@ -14,8 +14,7 @@ const Demo: FC = () => (
       id="world"
       position={[-110, 0]}
       shape="rectangle"
-      minimumWidth={120}
-      minimumHeight={110}
+      minimumSize={{ width: 120, height: 110 }}
       fill="none"
       stroke="gray"
     />
@@ -23,8 +22,7 @@ const Demo: FC = () => (
       id="window"
       position={[-100, 5]}
       shape="rectangle"
-      minimumWidth={74}
-      minimumHeight={58}
+      minimumSize={{ width: 74, height: 58 }}
       fill="none"
       stroke="currentColor"
       dashed
@@ -50,8 +48,7 @@ const Demo: FC = () => (
       id="page"
       position={[112, 0]}
       shape="rectangle"
-      minimumWidth={104}
-      minimumHeight={82}
+      minimumSize={{ width: 104, height: 82 }}
       fill="none"
       stroke="gray"
     />

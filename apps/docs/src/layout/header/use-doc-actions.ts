@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import type { Lang } from '@/i18n';
 
 import { LANGS } from '@/i18n';
-import { useThemeStore } from '@/store/use-theme-store';
+import { useThemeStore } from '@/store';
 
 /** 顶栏 / 抽屉共享的动作集合：主题、语言、复制链接。 */
 export const useDocActions = () => {

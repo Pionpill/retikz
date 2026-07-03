@@ -1,3 +1,4 @@
+export * from './angle';
 export * from './circle';
 export * from './diamond';
 export * from './edge';

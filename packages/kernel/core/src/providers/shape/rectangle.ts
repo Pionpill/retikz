@@ -1,16 +1,13 @@
+import type { Position } from '@retikz/math';
+
 import { z } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
-import type { ContourSegment } from '../../shared/geometry';
+import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
-import { CenterAnchor, isDirectionalAnchor } from '../../shared';
-import { rect } from '../../shared/geometry';
-import { localToWorld } from '../../shared/geometry';
-import { boundaryFromContour } from '../../shared/geometry';
+import { boundaryFromContour, CenterAnchor, isDirectionalAnchor, localToWorld, rect } from '../../shared';
 import { verticesToSegments } from './outline';
 
 /**
@@ -51,7 +48,6 @@ export const rectangle = defineShape({
   paramsSchema: z.strictObject({
     cornerRadius: z
       .number()
-
       .nonnegative()
       .optional()
       .describe(
@@ -88,6 +84,7 @@ export const rectangle = defineShape({
       strokeOpacity: style.strokeOpacity,
       strokeWidth: style.strokeWidth ?? 1,
       dashPattern: style.dashPattern,
+      dashOffset: style.dashOffset,
       cornerRadius: cornerRadius !== undefined ? round(cornerRadius) : undefined,
       opacity: style.opacity,
       shadow: style.shadow,

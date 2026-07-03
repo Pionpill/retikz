@@ -70,7 +70,7 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `DUPLICATE_NODE_ID`             | 同一命名空间帧内重复 id；后定义覆盖先定义（last-wins）                                      |
 | `COMPOSITE_NOT_REGISTERED`      | composite 节点的 `namespace.type` 未注册，跳过该节点                                        |
 | `ANIMATION_INVALID_PROPERTY`    | 动画 track 的 property 非法（如 scene-root 非 viewBox 属性），该 track 丢弃                 |
-| `ARC_MISSING_RADIUS`            | arc step 缺 `radius`（圆）或 `radiusX`+`radiusY`（椭圆），整条 path 跳过                    |
+| `ARC_MISSING_RADIUS`            | arc step 缺 `radius`，整条 path 跳过；`radius` 可为数字圆弧或 `{ x, y }` 椭圆弧                    |
 | `PARTIAL_ARC_NEEDS_BOTH_ANGLES` | circlePath / ellipsePath 部分弧需同时给 `startAngle` 与 `endAngle`，否则按完整圆 / 椭圆处理 |
 | `PARTIAL_ARC_CLOSED_INVALID`    | 带角度的部分圆 / 椭圆不能用 `closed:'closed'`，退回 `'chord'`                               |
 

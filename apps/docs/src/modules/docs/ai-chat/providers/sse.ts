@@ -1,9 +1,4 @@
-/**
- * 极小 SSE 解析器
- * @description fetch Response.body → 逐行读 → 拼 event + data → yield 出来。
- *   只支持本场景需要的子集：text/event-stream 内 `event: <name>\n` 和 `data: <payload>\n`，
- *   双换行 `\n\n` 作为事件边界。
- */
+/** 极小 SSE 解析器。 */
 export type SseEvent = {
   event: string | null;
   data: string;
@@ -29,7 +24,6 @@ export async function* readSse(stream: ReadableStream<Uint8Array>): AsyncGenerat
         boundary = buffer.indexOf('\n\n');
       }
     }
-    // 处理 stream 末尾未带 \n\n 的最后一段
     const trailing = buffer.trim();
     if (trailing) {
       const parsed = parseEventBlock(trailing);
@@ -51,7 +45,6 @@ const parseEventBlock = (block: string): SseEvent | null => {
     } else if (line.startsWith('data:')) {
       dataLines.push(line.slice(5).replace(/^ /, ''));
     }
-    // 忽略 `:comment` 和其他字段（id / retry）
   }
   if (dataLines.length === 0 && event === null) return null;
   return { event, data: dataLines.join('\n') };

@@ -8,9 +8,10 @@ import { useTranslation } from 'react-i18next';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 
 import type { ContextMode } from '../context';
+
+import { useAiChatStore } from '../use-ai-chat-store';
 
 const MODES: ReadonlyArray<ContextMode> = ['lean', 'balanced', 'heavy'];
 
@@ -32,11 +33,7 @@ const MODE_ICON: Record<ContextMode, LucideIcon> = {
   heavy: Layers,
 };
 
-/**
- * Context Mode picker：lean / balanced / heavy 单选 popover
- * @description trigger 仅显示当前模式 icon（lean=Feather / balanced=Scale / heavy=Layers），
- *   tooltip 显示「Context Mode · 当前模式名」；popover 列表每项保留 label + 描述
- */
+/** Context Mode picker。 */
 export const AiChatInputContextModePicker: FC = () => {
   const { t } = useTranslation();
   const contextMode = useAiChatStore(s => s.contextMode);

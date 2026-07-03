@@ -22,13 +22,7 @@ const touchCenter = (a: TouchPoint, b: TouchPoint): { x: number; y: number } => 
 const touchDistance = (a: TouchPoint, b: TouchPoint): number =>
   Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
 
-/**
- * 渲染区平移 + 缩放统一 hook
- * @description 拖拽期间监听 window 而非容器，指针离开 demo 边界仍能继续 drag；
- *   双指自实现 pinch（用 touch-action: none 抢回手势所有权，否则与浏览器原生 pinch 互相冲掉），
- *   按 startDist→当前距离 比例缩放，并按双指中心位移平移；
- *   `beginDrag(enabled)` 工厂：卡内传 dragEnabled，Dialog 内传 true 强制启用
- */
+/** 渲染区平移与缩放 hook。 */
 export const usePanZoom = () => {
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
@@ -52,7 +46,6 @@ export const usePanZoom = () => {
       setTransform(t => ({ ...t, x: dragRef.current!.baseX + dx, y: dragRef.current!.baseY + dy }));
     };
     const onMouseMove = (e: MouseEvent) => apply(e.clientX, e.clientY);
-    // touchmove 注册为 passive: false：拖拽期间 preventDefault 抑制页面滚动，否则浏览器优先把触摸交给页面 pan，demo 位移跟不上手指
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       e.preventDefault();
@@ -90,7 +83,6 @@ export const usePanZoom = () => {
       setTransform({ x, y, scale });
     };
     const onTouchEnd = (e: TouchEvent) => {
-      // 任一手指离开就退出 pinch（不平滑过渡回单指 drag，避免抬一根再缩放跳变）
       if (e.touches.length < 2) {
         pinchRef.current = null;
         setIsPinching(false);
@@ -111,18 +103,12 @@ export const usePanZoom = () => {
     setTransform(t => ({ ...t, scale: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, t.scale * factor)) }));
   const resetTransform = () => setTransform({ x: 0, y: 0, scale: 1 });
 
-  /**
-   * mousedown / touchstart 共用入口
-   * @description 鼠标只接左键；触摸单指走 drag、双指走自实现 pinch（touch-action: none 已抢回手势所有权）；
-   *   抑制页面滚动靠 useEffect 里的 window touchmove preventDefault
-   */
   const beginDrag =
     (enabled: boolean) =>
     (e: ReactMouseEvent<HTMLDivElement> | ReactTouchEvent<HTMLDivElement>): void => {
       if (!enabled) return;
       if ('touches' in e) {
         if (e.touches.length >= 2) {
-          // 双指：进入 pinch 模式，若 1 指已在 drag 中先收掉避免两个 effect 同时 setTransform
           const [a, b] = [e.touches[0], e.touches[1]];
           const dist = touchDistance(a, b);
           const center = touchCenter(a, b);

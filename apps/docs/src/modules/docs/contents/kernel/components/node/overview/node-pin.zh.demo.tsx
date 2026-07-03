@@ -4,7 +4,7 @@ import { Layout, Node } from '@retikz/react';
 
 /**
  * pin 引脚：带引线的标签
- * @description 节点边界画引线连到标签；右侧实线 pin、左上虚线 pin（pin.dashPattern）。
+ * @description 节点边界画引线连到标签；右侧实线 pin、左上虚线 pin（pin.dashPattern / pin.dashOffset）。
  */
 const Demo: FC = () => (
   <Layout width={440} height={240}>
@@ -21,7 +21,7 @@ const Demo: FC = () => (
           text: '初始',
           position: 'top-left',
           distance: 34,
-          pin: { stroke: 'gray', dashPattern: [3, 2] },
+          pin: { stroke: 'gray', dashPattern: [3, 2], dashOffset: 1 },
         },
       ]}
     >

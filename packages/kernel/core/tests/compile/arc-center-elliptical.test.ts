@@ -65,14 +65,14 @@ describe('arc 显式 center', () => {
   });
 });
 
-describe('arc 椭圆弧（radiusX / radiusY）', () => {
+describe('arc 椭圆弧（radius: { x, y }）', () => {
   it('椭圆弧 0°→90° → ellipseArc 命令，起点 (cx+rx, cy)', () => {
     const ir = scene([
       {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radiusX: 15, radiusY: 10 },
+          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: { x: 15, y: 10 } },
         ],
       },
     ]);
@@ -88,7 +88,7 @@ describe('arc 椭圆弧（radiusX / radiusY）', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radiusX: 15, radiusY: 10 },
+          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: { x: 15, y: 10 } },
         ],
       },
     ]);
@@ -107,7 +107,7 @@ describe('arc 椭圆弧（radiusX / radiusY）', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radiusX: 7, radiusY: 7 },
+          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: { x: 7, y: 7 } },
         ],
       },
     ]);
@@ -129,16 +129,20 @@ describe('arc 椭圆弧（radiusX / radiusY）', () => {
 });
 
 describe('arc malformed', () => {
-  it('既无 radius 也无 radiusX/radiusY → 整 path 跳过', () => {
-    const ir = scene([
-      {
-        type: 'path',
-        children: [
-          { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90 },
-        ],
-      },
-    ]);
+  it('缺少 radius → 整 path 跳过', () => {
+    const ir = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90 },
+          ],
+        },
+      ],
+    } as unknown as IR;
     expect(compileToScene(ir, silent).primitives.find(p => p.type === 'path')).toBeUndefined();
   });
 });

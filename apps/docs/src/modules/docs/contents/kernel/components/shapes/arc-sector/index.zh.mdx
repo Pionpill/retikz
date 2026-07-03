@@ -27,7 +27,7 @@ import { Arc, Sector } from '@retikz/react';
 | 写法                                                 | 适合   |
 | ---------------------------------------------------- | ------ |
 | `{ center, radius, startAngle, endAngle }`           | 圆弧   |
-| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆弧 |
+| `{ center, radius, startAngle, endAngle }` | 椭圆弧 |
 
 角度从 +x 方向开始；`90` 指向屏幕下方。角度三选二：`startAngle` / `endAngle` / `sweepAngle`（扫掠角）任给两个即可，例如 `{ startAngle: 30, sweepAngle: 90 }`。`center` 接任意 target（节点 id / 极坐标 / 笛卡尔）。
 
@@ -35,7 +35,7 @@ import { Arc, Sector } from '@retikz/react';
 
 #### 视觉属性
 
-`<Arc>` 透传整套 `<Path>` 视觉属性：`stroke` / `strokeWidth` / `dashPattern` / `arrow` / `marks` / `opacity` / `rotate` / `scale` 等。常见的有箭头弧（`arrow="->"`）、虚线弧（`dashPattern`）和中段方向标记（`marks`，朝向随切线）。
+`<Arc>` 透传整套 `<Path>` 视觉属性：`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `marks` / `opacity` / `rotate` / `scale` 等。常见的有箭头弧（`arrow="->"`）、虚线弧（`dashPattern` / `dashOffset`）和中段方向标记（`marks`，朝向随切线）。
 
 <ComponentPreview name="arc-visual" size="sm" />
 
@@ -62,7 +62,7 @@ import { Arc, Sector } from '@retikz/react';
 | 写法                                                 | 适合         |
 | ---------------------------------------------------- | ------------ |
 | `{ center, radius, startAngle, endAngle }`           | 圆扇形       |
-| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆扇形     |
+| `{ center, radius, startAngle, endAngle }` | 椭圆扇形     |
 | 加 `innerRadius`                                     | 空心圆扇形   |
 | 加 `innerRadiusX` + `innerRadiusY`                   | 空心椭圆扇形 |
 
@@ -87,9 +87,9 @@ import { Arc, Sector } from '@retikz/react';
 | 组件       | 组合                                    | 含义                       |
 | ---------- | --------------------------------------- | -------------------------- |
 | `<Arc>`    | `center` + `radius` + 角度              | 圆弧（默认开放；角度必填） |
-|            | `center` + `radiusX` + `radiusY` + 角度 | 椭圆弧                     |
+|            | `center` + `radius` + 角度 | 椭圆弧                     |
 | `<Sector>` | `center` + `radius` + 角度              | 圆扇形（角度必填）         |
-|            | `center` + `radiusX` + `radiusY` + 角度 | 椭圆扇形                   |
+|            | `center` + `radius` + 角度 | 椭圆扇形                   |
 |            | + `innerRadius?`                        | 空心圆扇形                 |
 |            | + `innerRadiusX?` + `innerRadiusY?`     | 空心椭圆扇形               |
 
@@ -103,7 +103,7 @@ import { Arc, Sector } from '@retikz/react';
 | `label`            | 边标注对象                                                                | Arc / Sector      | 沿弧定位，`position` 缺省 `midway`                           |
 | `rotate` / `scale` | `number` / `{ x, y }`                                                     | Arc / Sector      | 绕包围盒中心整体变换                                         |
 | `marks`            | `{ pos, mark }[]`                                                         | Arc / Sector      | 沿路径中段放方向标记                                         |
-| 视觉               | `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `fill` / `opacity` … | Arc / Sector      | 透传 `<Path>` 全套视觉属性                                   |
+| 视觉               | `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `fill` / `opacity` … | Arc / Sector      | 透传 `<Path>` 全套视觉属性                                   |
 
 ## 作为 Node 形状
 

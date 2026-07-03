@@ -297,10 +297,10 @@ describe('parseWay', () => {
       ]);
     });
 
-    it('{ ellipse: { radiusX, radiusY } } 产出 ellipsePath step', () => {
-      expect(parseWay(['A', { ellipse: { radiusX: 8, radiusY: 4 } }])).toEqual([
+    it('{ ellipse: { radius: { x, y } } } 产出 ellipsePath step', () => {
+      expect(parseWay(['A', { ellipse: { radius: { x: 8, y: 4 } } }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'ellipsePath', radiusX: 8, radiusY: 4 },
+        { type: 'step', kind: 'ellipsePath', radius: { x: 8, y: 4 } },
       ]);
     });
 
@@ -536,13 +536,12 @@ describe('parseWay', () => {
           label: { text: 'o' },
         },
       ]);
-      expect(parseWay(['A', { label: 'e' }, { ellipse: { radiusX: 6, radiusY: 3 } }])).toEqual([
+      expect(parseWay(['A', { label: 'e' }, { ellipse: { radius: { x: 6, y: 3 } } }])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
           kind: 'ellipsePath',
-          radiusX: 6,
-          radiusY: 3,
+          radius: { x: 6, y: 3 },
           label: { text: 'e' },
         },
       ]);

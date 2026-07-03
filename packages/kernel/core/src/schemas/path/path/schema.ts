@@ -74,6 +74,11 @@ export const PathBaseSchema = z
       .min(1)
       .optional()
       .describe('Stroke dash pattern lengths in user units. Omitted fields mean solid line.'),
+    dashOffset: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Stroke dash offset in user units. Positive and negative finite values are allowed.'),
     fillRule: PathFillRuleSchema
       .optional()
       .describe(

@@ -11,8 +11,7 @@ const Demo: FC = () => (
     {/* 原始轴对齐椭圆扇形 */}
     <Sector
       center={[80, 80]}
-      radiusX={70}
-      radiusY={40}
+      radius={{ x: 70, y: 40 }}
       startAngle={0}
       endAngle={120}
       fill="dodgerblue"
@@ -22,8 +21,7 @@ const Demo: FC = () => (
     {/* rotate={40}：整条 path 绕包围盒中心旋转，得到倾斜椭圆扇形 */}
     <Sector
       center={[240, 80]}
-      radiusX={70}
-      radiusY={40}
+      radius={{ x: 70, y: 40 }}
       startAngle={0}
       endAngle={120}
       rotate={40}

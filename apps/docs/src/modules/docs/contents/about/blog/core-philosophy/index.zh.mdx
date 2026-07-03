@@ -59,9 +59,9 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 | `curve`       | `to`, `control`, `label?`                                            | 二次 Bézier                                             |
 | `cubic`       | `to`, `control1`, `control2`, `label?`                               | 三次 Bézier                                             |
 | `bend`        | `to`, `bendDirection?` / `outAngle?` `inAngle?`, `looseness?`        | 弧线简记（bend 角或 out/in 角，支持自环；编译为 cubic） |
-| `arc`         | `startAngle`, `endAngle`, `radius` 或 `radiusX`/`radiusY`, `center?` | 圆 / 椭圆弧（默认游标为圆心，可显式 `center`）          |
+| `arc`         | `startAngle`, `endAngle`, `radius`（数字或 `{ x, y }`）, `center?` | 圆 / 椭圆弧（默认游标为圆心，可显式 `center`）          |
 | `circlePath`  | `radius`, `startAngle?`, `endAngle?`, `closed?`                      | 整圆或部分弧（chord / sector / open）                   |
-| `ellipsePath` | `radiusX`, `radiusY`, `startAngle?`, `endAngle?`, `closed?`          | 整椭圆或部分弧                                          |
+| `ellipsePath` | `radius`, `startAngle?`, `endAngle?`, `closed?`          | 整椭圆或部分弧                                          |
 | `rectangle`   | `from`, `to`, `cornerRadius?`                                        | 轴对齐矩形（两对角，自包含）                            |
 | `generator`   | `name`, `to?`, `params`                                              | 委托注册的路径生成器（parabola / sin…，core 不内置）    |
 

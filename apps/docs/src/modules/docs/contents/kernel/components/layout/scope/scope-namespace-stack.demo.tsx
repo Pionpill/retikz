@@ -15,11 +15,11 @@ import { Draw, Layout, Node } from '@retikz/react';
 const Demo: FC = () => (
   <Layout width={640} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* === 5 个 box Node（带 id，empty 内容，仅当 cascade 箭头的端点） === */}
-    <Node id="B" position={[-155, -100]} minimumWidth={250} minimumHeight={40} stroke="gray" dashPattern={[4, 3]} />
-    <Node id="A" position={[-155, -30]} minimumWidth={250} minimumHeight={60} stroke="gray" />
-    <Node id="Y" position={[155, -100]} minimumWidth={250} minimumHeight={40} stroke="gray" dashPattern={[4, 3]} />
-    <Node id="X" position={[155, -30]} minimumWidth={250} minimumHeight={60} stroke="gray" dashPattern={[4, 3]} />
-    <Node id="root" position={[0, 55]} minimumWidth={560} minimumHeight={50} stroke="gray" />
+    <Node id="B" position={[-155, -100]} minimumSize={{ width: 250, height: 40 }} stroke="gray" dashPattern={[4, 3]} />
+    <Node id="A" position={[-155, -30]} minimumSize={{ width: 250, height: 60 }} stroke="gray" />
+    <Node id="Y" position={[155, -100]} minimumSize={{ width: 250, height: 40 }} stroke="gray" dashPattern={[4, 3]} />
+    <Node id="X" position={[155, -30]} minimumSize={{ width: 250, height: 60 }} stroke="gray" dashPattern={[4, 3]} />
+    <Node id="root" position={[0, 55]} minimumSize={{ width: 560, height: 50 }} stroke="gray" />
 
     {/* === 标签（各自落在所属 box 内部） === */}
     {/* B */}

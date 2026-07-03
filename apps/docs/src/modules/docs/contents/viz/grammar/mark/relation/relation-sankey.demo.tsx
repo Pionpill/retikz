@@ -33,8 +33,7 @@ const Demo: FC = () => (
       fill="nodeFill"
       stroke="#ffffff"
       strokeWidth={0.9}
-      minimumWidth={8}
-      minimumHeight={{ kind: 'field', value: 'nodeHeight' }}
+      minimumSize="nodeHeight"
       label="nodeLabel"
       labelPosition="left"
       labelDistance={10}

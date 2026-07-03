@@ -30,11 +30,53 @@ export const NodeLabelBoundaryPositionSchema = z
   .strict()
   .describe('Label position on a box-like node boundary.');
 
+export const BoxSpacingSchema = z
+  .object({
+    default: z.number().nonnegative().optional().describe('Fallback spacing for all sides.'),
+    x: z.number().nonnegative().optional().describe('Horizontal spacing for left and right sides.'),
+    y: z.number().nonnegative().optional().describe('Vertical spacing for top and bottom sides.'),
+    left: z.number().nonnegative().optional().describe('Left-side spacing.'),
+    right: z.number().nonnegative().optional().describe('Right-side spacing.'),
+    top: z.number().nonnegative().optional().describe('Top-side spacing.'),
+    bottom: z.number().nonnegative().optional().describe('Bottom-side spacing.'),
+  })
+  .strict()
+  .describe('CSS-like box spacing overrides. Side fields override axis fields, then default.');
+
+const BoxSpacingValueSchema = z.union([z.number().nonnegative(), BoxSpacingSchema]);
+
+export const AxisScaleSchema = z
+  .object({
+    default: z.number().positive().optional().describe('Fallback scale factor for both axes.'),
+    x: z.number().positive().optional().describe('Horizontal scale factor.'),
+    y: z.number().positive().optional().describe('Vertical scale factor.'),
+  })
+  .strict()
+  .describe('Axis-specific scale overrides. Axis fields override default.');
+
+const AxisScaleValueSchema = z.union([z.number().positive(), AxisScaleSchema]);
+
+export const BoxSizeSchema = z
+  .object({
+    default: z.number().nonnegative().optional().describe('Fallback size for width and height.'),
+    width: z.number().nonnegative().optional().describe('Width size.'),
+    height: z.number().nonnegative().optional().describe('Height size.'),
+  })
+  .strict()
+  .describe('Box size overrides. Width and height override default.');
+
+const BoxSizeValueSchema = z.union([z.number().nonnegative(), BoxSizeSchema]);
+
 export const NodeLabelPinSchema = z
   .object({
     stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
     strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
     dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
+    dashOffset: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Leader dash offset in user units. Positive and negative finite values are allowed.'),
   })
   .describe('Leader line style overrides for an outside node label.');
 
@@ -155,6 +197,11 @@ export const NodeSchema = z
       .min(1)
       .optional()
       .describe('Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.'),
+    dashOffset: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Explicit stroke dash offset in user units. Positive and negative finite values are allowed.'),
     cornerRadius: z
       .number()
       .nonnegative()
@@ -162,58 +209,23 @@ export const NodeSchema = z
       .describe(
         'Top-level corner radius in user units. Only effective on `rectangle` shape.',
       ),
-    minimumWidth: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Minimum visual border width in user units; floors the bounding box width.'),
-    minimumHeight: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Minimum visual border height in user units; floors the bounding box height.'),
-    minimumSize: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Symmetric alias for `minimumWidth` + `minimumHeight`; axis-specific fields take precedence.'),
-    scale: z
-      .number()
-      .positive()
+    minimumSize: BoxSizeValueSchema
       .optional()
       .describe(
-        'Uniform scale factor; multiplies all node dimensions (border, padding, text, fontSize) at layout time. Affects path attachment positions.',
+        'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
       ),
-    xScale: z.number().positive().optional().describe('Horizontal scale factor; overrides `scale` for the X axis.'),
-    yScale: z.number().positive().optional().describe('Vertical scale factor; overrides `scale` for the Y axis.'),
+    scale: AxisScaleValueSchema
+      .optional()
+      .describe(
+        'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
+      ),
     textColor: CssColorSchema.optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
-    innerXSep: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Inner horizontal padding from text to border in user units. Falls back to `padding` then default.'),
-    innerYSep: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Inner vertical padding from text to border in user units. Falls back to `padding` then default.'),
-    outerSep: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Uniform outer offset around the node connection boundary, in user units. Affects endpoints and anchors, contributes to layout, and falls back to `margin`.',
-      ),
-    padding: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Symmetric inner padding (alias for `innerXSep` + `innerYSep`); axis-specific fields take precedence.'),
-    margin: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Symmetric outer offset alias for `outerSep`; `outerSep` takes precedence.'),
+    padding: BoxSpacingValueSchema.optional().describe(
+      'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',
+    ),
+    margin: BoxSpacingValueSchema.optional().describe(
+      'Outer offset around the connection boundary. Number applies to all sides; object fields resolve as side > axis > default.',
+    ),
     font: FontSchema.optional().describe('Font spec for the inner text label. Missing fields use text defaults.'),
     label: z
       .union([NodeLabelSchema, z.array(NodeLabelSchema)])

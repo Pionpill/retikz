@@ -1,9 +1,11 @@
+import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
 import type { ResolvedDropShadow } from '../../schemas';
 import type { IRJsonObject } from '../../schemas';
 import type { IRGraphicStyle } from '../../schemas';
-import type { AnchorValue, Position, Rect, SideValue } from '../../shared';
+import type { IRPathBase } from '../../schemas';
+import type { AnchorValue, Rect, SideValue } from '../../shared';
 import type { PaintValue, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段。 */
@@ -49,6 +51,11 @@ export type ResolvedShapeStyle = {
    */
   dashPattern?: Array<number>;
   /**
+   * 描边虚线起始偏移；缺省为 0。
+   * @default 0
+   */
+  dashOffset?: IRPathBase['dashOffset'];
+  /**
    * 圆角半径。
    * @default 0
    */
@@ -71,28 +78,20 @@ export type ResolvedShapeStyle = {
 };
 
 /**
- * 一个 shape 的参数化可注册定义（定义点 typed 形态）
- * @description plain object（factory 友好：`createPolygonShape(6)` 这类普通函数返回它即可）；含函数与
- *   `paramsSchema`，**不进 IR**，走 `CompileOptions.shapes` 运行时注入。内置 provider（rectangle / ellipse /
- *   sector / arc / polygon / star 等）也是注册项（无内置特权）；circle / diamond 是 core IR 保留的内置 shape preset，
- *   不要求第三方实现独立 provider。
- *   每个计算函数末位收 per-instance `params`（类型由 `paramsSchema.parse` 在编译期保证），无参形状用
- *   `z.strictObject({})` 并忽略 `params`。
+ * 可注册的 shape 定义。
+ * @description 描述第三方作者和内置 shape 共同实现的运行时能力契约；定义本身不进入 IR。
+ *   每个能力函数都以实例级 `params` 作为末位参数。
  */
 export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
-  /** 注册表 key，由 IR `node.shape` 引用。 */
+  /** shape 名称，由 IR `node.shape` 引用。 */
   name: string;
   /**
-   * params 的 zod schema。
-   * @description 类型约束输出 JSON-safe（`z.ZodType<TParams>`）。这是类型层约束，不是运行时唯一保证：
-   *   compile 在 `paramsSchema.parse(params)` 之后还会对结果跑一次 `JsonObjectSchema.parse`，
-   *   拦下宽松 schema 放过的非 JSON 输出（function / undefined 等）。
+   * 实例参数 schema。
+   * @description 解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`。
    */
   paramsSchema: z.ZodType<TParams>;
   /**
-   * 外接：内容半轴（text + padding）+ params → 外接框半轴。
-   * @description 必返回**包含完整 shape 的精确 AABB 半轴**（compile 的 viewBox / scope bbox 只累积该 AABB
-   *   四角）。rectangle: identity；circle: √(hw²+hh²) 两轴相等；ellipse: ×√2；diamond: ×2；参数化形状据 params 算。
+   * 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴。
    */
   circumscribe: (
     innerHalfWidth: number,
@@ -100,47 +99,32 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
     params: TParams,
   ) => { halfWidth: number; halfHeight: number };
   /**
-   * AABB 中心相对 node `position` 的偏移（可选；缺省 `[0, 0]` = AABB 中心即 position）。
-   * @description 多数 shape 的视觉 AABB 以 position 为中心（rectangle / ellipse / diamond）；但 sector 等
-   *   形状的语义锚点（圆心 apex）才是 position，其外接 AABB 中心偏在一侧——此 hook 让 compile 把
-   *   `rect.center` 放到 `position + offset`，使 bbox / viewBox 罩住完整形状、anchor 以 AABB 中心 rect 计算时
-   *   apex 落回 position。返回**未旋转**局部偏移（compile 在施加 node rotate 前用于定位 rect 中心）。
+   * 外接 AABB 中心相对 node `position` 的未旋转局部偏移。
    * @default [0, 0]
    */
   circumscribeOffset?: (params: TParams) => Position;
   /**
-   * 中心 → toward 射线 ∩ 边界。
-   * @description rect 带 rotate；第三方作者可从 `@retikz/core` 顶层使用 `worldToLocal` / `localToWorld`。
-   *   core 内部 owner 为 `shared/geometry`。
+   * 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点。
+   * @description `rect` 可包含旋转；实现需要按需转换坐标。
    */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /**
-   * 命名 anchor 世界坐标；shape 不认识的名字返回 `undefined`（调用方据此抛清晰错误）。
-   * @description 标准方位名使用 `top` / `right` / `bottom` / `left` / corner 值：默认连接面下 compile 先调本函数，
-   *   shape 返回真实形状上的点即采用（如 ellipse 落真实周长、polygon 落外接 AABB）；返回 `undefined` 则 compile
-   *   回退到外接 AABB 矩形。故 shape 作者可只实现 shape 专属命名 anchor（tip-N / apex 等），标准方位名交回退即可；
-   *   要让标准方位贴真实形状边界（圆 / 椭圆类）才需自行处理。`center` 由 compile 特殊处理，不传给 provider。
+   * 解析命名 anchor 的世界坐标；不支持时返回 `undefined`。
    */
   anchor: (rect: Rect, name: ShapeAnchorName, params: TParams) => Position | undefined;
   /**
-   * 边上比例点：标准 side 真实边界从约定起点起 t∈[0,1] 处（轴对齐空间求出后由 layout 投回世界系）。
-   * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, fraction }` 时编译期（resolveEdgePoint）抛明确错。
-   *   side 使用 `top` / `right` / `bottom` / `left`。与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 `worldToLocal` / `localToWorld` 处理旋转。
-   * @default 不支持；该 shape 的 side anchor 会抛错
+   * 解析标准 side 上 `t ∈ [0, 1]` 的比例点。
+   * @description `rect` 可包含旋转；未实现表示该 shape 不支持 side anchor。
+   * @default 不支持
    */
   edgePoint?: (rect: Rect, side: SideValue, t: number, params: TParams) => Position;
   /**
-   * 视觉 primitive。
-   * @description emit 收轴对齐空间（rotate=0）的 rect；旋转由编译器在外层 `GroupPrim` 统一施加。
-   *   params 喂参数化几何。
+   * 生成轴对齐 rect 内的视觉 primitive。
    */
   emit: (rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
   /**
-   * node scale 作用于 params 的方式（可选）。
-   * @description 给定原始 params 与水平 / 垂直缩放因子 `sx` / `sy`，返回缩放后的 params。
-   *   缺省时编译器沿用默认行为——深度缩放 params 里所有数值叶子（uniform 几何均值因子）。
-   *   适用于 params 含「非长度」语义字段（如角度）的形状：sector / arc 只缩半径、不缩角度，
-   *   通过本 hook 把 startAngle / endAngle 排除在缩放外。不缩放任何 params 的形状不必实现。
+   * 返回 node scale 后的 params。
+   * @description 适用于 params 含角度等非长度字段的 shape。
    * @default 按 `Math.sqrt(sx * sy)` 深度缩放 params 中的数值叶子
    */
   scaleParams?: (params: TParams, sx: number, sy: number) => TParams;

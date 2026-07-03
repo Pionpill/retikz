@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PackageId } from '@/modules/docs/data/changelog.types';
+import type { PackageId } from '@/modules/docs/data';
 
-import { changelogForModule, changelogVersionSlug } from '@/modules/docs/data/changelog';
-import { PACKAGE_GROUPS } from '@/modules/docs/data/changelog.types';
+import { changelogForModule, changelogVersionSlug, PACKAGE_GROUPS } from '@/modules/docs/data';
 
 const membersOf = (id: 'kernel' | 'viz' | 'other'): Set<PackageId> =>
   new Set(PACKAGE_GROUPS.find(g => g.id === id)?.members ?? []);

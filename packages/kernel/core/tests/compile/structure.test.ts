@@ -48,6 +48,7 @@ describe('compile source structure', () => {
       'anchorOf',
       'angleBoundaryOf',
       'boundaryPointOf',
+      'boxInsets',
       'emitNodePrimitives',
       'labelExtentPoints',
       'layoutNode',
@@ -67,6 +68,11 @@ describe('compile source structure', () => {
     const text = source('src/compile/compile.ts');
     expect(text).not.toContain('const processChildren =');
     expect(text).not.toContain('const resolvePendingPaths =');
+  });
+
+  it('boundary compile does not import concrete shape providers', () => {
+    const text = source('src/compile/boundary.ts');
+    expect(text).not.toContain("from '../providers/shape'");
   });
 
   it('ribbon compile implementation is directory based', () => {

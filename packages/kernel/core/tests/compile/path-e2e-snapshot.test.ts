@@ -200,7 +200,7 @@ describe('ADR-05 e2e snapshot：拆分前 commands 锁定', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'ellipsePath', radiusX: 8, radiusY: 4 },
+            { type: 'step', kind: 'ellipsePath', radius: { x: 8, y: 4 } },
           ],
         },
       ]),

@@ -158,32 +158,17 @@ export const BendStepSchema = z
   })
   .describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
-const refineArcStep = (step: { radius?: number; radiusX?: number; radiusY?: number }, ctx: z.RefinementCtx): void => {
-  const hasRadius = step.radius !== undefined;
-  const hasRadiusX = step.radiusX !== undefined;
-  const hasRadiusY = step.radiusY !== undefined;
-  if (hasRadius && (hasRadiusX || hasRadiusY)) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['radius'],
-      message: 'Arc step must use either radius or radiusX/radiusY, not both',
-    });
-  }
-  if (!hasRadius && !(hasRadiusX && hasRadiusY)) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['radius'],
-      message: 'Arc step requires radius or both radiusX and radiusY',
-    });
-  }
-  if (hasRadiusX !== hasRadiusY) {
-    ctx.addIssue({
-      code: 'custom',
-      path: hasRadiusX ? ['radiusY'] : ['radiusX'],
-      message: 'Arc step requires radiusX and radiusY together',
-    });
-  }
-};
+export const StepAnisotropicRadiusSchema = z
+  .object({
+    x: z.number().positive().describe('Horizontal radius in user units.'),
+    y: z.number().positive().describe('Vertical radius in user units.'),
+  })
+  .strict()
+  .describe('Anisotropic radius object.');
+
+export const StepRadiusSchema = z
+  .union([z.number().positive(), StepAnisotropicRadiusSchema])
+  .describe('Circular radius number or anisotropic radius object.');
 
 const refinePartialAngles = (
   step: { startAngle?: number; endAngle?: number; closed?: string },
@@ -214,42 +199,26 @@ const ArcStepBaseSchema = z
     kind: z
       .literal('arc')
       .describe(
-        'Arc segment sweeping from startAngle to endAngle around a center. Use either radius or radiusX/radiusY.',
+        'Arc segment sweeping from startAngle to endAngle around a center. Use radius as a number or `{ x, y }`.',
       ),
     startAngle: AngleDegreesSchema
       .describe(
         'Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.',
       ),
     endAngle: AngleDegreesSchema.describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
-    radius: z
-      .number()
-      .positive()
-      .optional()
+    radius: StepRadiusSchema
       .describe(
-        'Circular arc radius in user units. Give either radius (circular) or both radiusX and radiusY (elliptical), never both.',
-      ),
-    radiusX: z
-      .number()
-      .positive()
-      .optional()
-      .describe(
-        'Elliptical arc x-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).',
-      ),
-    radiusY: z
-      .number()
-      .positive()
-      .optional()
-      .describe(
-        'Elliptical arc y-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).',
+        'Arc radius. Number creates a circular arc; `{ x, y }` creates an elliptical arc.',
       ),
     center: TargetSchema.optional().describe('Explicit arc center. Omitted fields use the current cursor as center.'),
     label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
   })
+  .strict()
   .describe(
-    'Arc action: circular (radius) or elliptical (radiusX/radiusY) arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.',
+    'Arc action: circular or elliptical arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.',
   );
 
-export const ArcStepSchema = ArcStepBaseSchema.superRefine(refineArcStep);
+export const ArcStepSchema = ArcStepBaseSchema;
 
 const CirclePathStepBaseSchema = z
   .object({
@@ -279,6 +248,7 @@ const CirclePathStepBaseSchema = z
       ),
     label: StepLabelSchema.optional().describe('Edge label attached to this circle'),
   })
+  .strict()
   .describe(
     'CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).',
   );
@@ -295,14 +265,7 @@ const EllipsePathStepBaseSchema = z
       .describe(
         'Ellipse centered at the cursor. Without angles, emits a full ellipse; with angles, emits a partial arc closed by `closed`.',
       ),
-    radiusX: z
-      .number()
-      .positive()
-      .describe('Ellipse x-axis radius (semi-major or semi-minor on x)'),
-    radiusY: z
-      .number()
-      .positive()
-      .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
+    radius: StepAnisotropicRadiusSchema.describe('Ellipse radius object `{ x, y }` in user units.'),
     startAngle: AngleDegreesSchema
       .optional()
       .describe(
@@ -319,6 +282,7 @@ const EllipsePathStepBaseSchema = z
       ),
     label: StepLabelSchema.optional().describe('Edge label attached to this ellipse'),
   })
+  .strict()
   .describe(
     'EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).',
   );
@@ -405,7 +369,7 @@ export const StepSchema = z
     CurveStepSchema,
     CubicStepSchema,
     BendStepSchema,
-    ArcStepBaseSchema,
+    ArcStepSchema,
     CirclePathStepBaseSchema,
     EllipsePathStepBaseSchema,
     RectangleStepSchema,
@@ -413,10 +377,6 @@ export const StepSchema = z
     GeneratorStepSchema,
   ])
   .superRefine((step, ctx) => {
-    if (step.kind === 'arc') {
-      refineArcStep(step, ctx);
-      return;
-    }
     if (step.kind === 'circlePath') {
       refinePartialAngles(step, ctx, 'circlePath');
       return;

@@ -7,7 +7,7 @@ import { cellGeometryAnchor } from '../../../contract';
 import { type Mark } from '../../../schemas';
 import { colorGroupedScope, constantNodeStyleOverrides, DEFAULT_FILL } from '../shared';
 
-/** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸）。 */
+/** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumSize 即真实柱尺寸）。 */
 const barStyle = (fill: MarkPaint, stroke: MarkPaint | undefined): IRNodeDefault => ({
   shape: 'rectangle',
   padding: 0,
@@ -52,12 +52,12 @@ export const cellLayer = (
 
 /**
  * CellGeometry → core Node（统一装配）。
- * @description rect → Node{position, minimumWidth, minimumHeight}；sector → Node{position:center, shape:sector}
+ * @description rect → Node{position, minimumSize}；sector → Node{position:center, shape:sector}
  *   （半径 swap 保 outer>inner）；contour → Node{position: 顶点 AABB 中心, shape:contour{points}}；不可锚定 contour 返回 null。
  */
 export const cellGeometryNode = (geometry: CellGeometry): IRNode | null => {
   if (geometry.kind === 'rect') {
-    return { type: 'node', position: geometry.position, minimumWidth: geometry.width, minimumHeight: geometry.height };
+    return { type: 'node', position: geometry.position, minimumSize: { width: geometry.width, height: geometry.height } };
   }
   if (geometry.kind === 'sector') {
     return {

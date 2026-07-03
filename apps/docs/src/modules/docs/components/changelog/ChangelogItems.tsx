@@ -1,7 +1,7 @@
 ﻿import type { ComponentPropsWithoutRef, FC } from 'react';
 
 import type { Lang } from '@/i18n';
-import type { ChangeItem } from '@/modules/docs/data/changelog.types';
+import type { ChangeItem } from '@/modules/docs/data';
 
 import { cn } from '@/lib/utils';
 import { InlineMdx } from '@/modules/docs/components/mdx-content';

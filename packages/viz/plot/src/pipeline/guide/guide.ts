@@ -837,15 +837,14 @@ export type LegendInput = {
 /**
  * 矩形 swatch / ramp 条 → core Node（shape rectangle）
  * @description core PathSchema 要求 children ≥ 2 step，单 rectangle step 的 Path 非法；矩形改用 Node
- *   （与 bar mark 同款：shape rectangle + minimumWidth/Height + fill），符合「一切可见物是 Node」。
+ *   （与 bar mark 同款：shape rectangle + minimumSize + fill），符合「一切可见物是 Node」。
  *   入参沿用左上角 + 宽高语义，内部换算成 Node 中心点（Node.position 是中心）。
  */
 const rectNode = (x: number, y: number, width: number, height: number): IRNode => ({
   type: 'node',
   position: [x + width / 2, y + height / 2],
   shape: 'rectangle',
-  minimumWidth: width,
-  minimumHeight: height,
+  minimumSize: { width, height },
   padding: 0,
 });
 

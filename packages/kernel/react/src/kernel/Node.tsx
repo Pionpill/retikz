@@ -1,8 +1,11 @@
 import type {
   IRAtPosition,
   IRAtPositionInput,
+  IRAxisScale,
   IRBetweenPosition,
   IRBoundary,
+  IRBoxSize,
+  IRBoxSpacing,
   IRFont,
   IRLineSpec,
   IRNode,
@@ -57,16 +60,10 @@ export type NodeProps = HydrationEventProps & {
   maxTextWidth?: number;
   /** 字体规格：family / size / weight / style 全部可选；不填走渲染端默认值 */
   font?: IRFont;
-  /** 横向内边距（text → 左右 border）；不填走 `padding` 兜底，再走默认 */
-  innerXSep?: number;
-  /** 纵向内边距（text → 上下 border）；不填走 `padding` 兜底，再走默认 */
-  innerYSep?: number;
-  /** 外边距（border → path 附着点）；不影响 border 位置；不填走 `margin` 兜底 */
-  outerSep?: number;
-  /** 内边距对称别名——等价于同时设 `innerXSep` 和 `innerYSep`；轴特化字段优先 */
-  padding?: number;
-  /** 外边距对称别名——等价于 `outerSep`；轴特化字段优先 */
-  margin?: number;
+  /** 内边距；数字作用于四边，对象按 left/right/top/bottom > x/y > default 解析 */
+  padding?: number | IRBoxSpacing;
+  /** 外边距；数字作用于四边，对象按 left/right/top/bottom > x/y > default 解析 */
+  margin?: number | IRBoxSpacing;
   /** 主色（TikZ `color=`）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label */
   color?: IRNode['color'];
   /** 背景色 */
@@ -85,20 +82,17 @@ export type NodeProps = HydrationEventProps & {
   dotted?: boolean;
   /** 显式 dash pattern（如 [4, 2]）；优先级最高 */
   dashPattern?: IRNode['dashPattern'];
+  /** 描边 dash offset。 */
+  dashOffset?: IRNode['dashOffset'];
   /** 圆角半径（user units）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */
   cornerRadius?: number;
   /** 最小 border 宽度（user units）；不足时撑开 bbox */
-  minimumWidth?: number;
-  /** 最小 border 高度（user units） */
-  minimumHeight?: number;
-  /** 对称最小尺寸别名——等价于同时设 `minimumWidth` 与 `minimumHeight`；轴特化字段优先 */
-  minimumSize?: number;
+  /** 最小 border 尺寸；数字作用于宽高，对象按 width/height > default 解析 */
+  minimumSize?: number | IRBoxSize;
   /** 均匀缩放因子；同时影响 bbox / 字号 / padding / margin / 路径附着点（与 TikZ scale 一致） */
-  scale?: number;
+  scale?: number | IRAxisScale;
   /** 横向缩放，优先于 `scale` */
-  xScale?: number;
   /** 纵向缩放，优先于 `scale` */
-  yScale?: number;
   /** 文字颜色（块级默认；行级 LineSpec.fill 可覆盖）；不填走 `currentColor` */
   textColor?: string;
   /** 整节点透明度 0~1（同时作用于 shape 与 text） */

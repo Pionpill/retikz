@@ -53,7 +53,7 @@ const Demo: FC = () => (
 
     {/* shape 轮廓（darkorange），以内框为准 circumscribe */}
     <Rectangle center={[C.rect, ROW1]} width={IHW * 2} height={IHH * 2} {...SHAPE} />
-    <Ellipse center={[C.ellipse, ROW1]} radiusX={IHW * Math.SQRT2} radiusY={IHH * Math.SQRT2} {...SHAPE} />
+    <Ellipse center={[C.ellipse, ROW1]} radius={{ x: IHW * Math.SQRT2, y: IHH * Math.SQRT2 }} {...SHAPE} />
     <Draw way={[...shift(C.diamond, ROW1, DIAMOND), DrawWay.Cycle]} {...STROKE} />
     <Draw way={[...shift(C.polygon, ROW2, PENTAGON), DrawWay.Cycle]} {...STROKE} />
     <Circle center={[C.circle, ROW2]} radius={Math.sqrt(IHW ** 2 + IHH ** 2)} {...SHAPE} />

@@ -9,7 +9,7 @@ The About section is the meta-layer around the docs: how versions are scheduled,
 
 | Page                                                                | Content                                                                              |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| [Source Code Guide](/about/developer/source-code-guide)             | core / render / react / vanilla source layout, extension surfaces, and reading order |
+| [Source Code Guide](/about/developer/source-code-guide)             | Kernel package source layout, extension surfaces, and reading order                  |
 | [AI-assisted development](/about/developer/ai-assisted-development) | Human / AI responsibility across alpha, beta, and rc                                 |
 | [Changelog](/kernel/releases/changelog)                             | Per-version release notes (maintained per core / plot module)                        |
 | [Versioning](/about/releases/versioning)                            | SemVer + pre-release channels + per-channel dev model + deprecation                  |
@@ -17,15 +17,17 @@ The About section is the meta-layer around the docs: how versions are scheduled,
 
 ## Current repository versions
 
-| Package           | Version        | Notes                                                                                               |
-| ----------------- | -------------- | --------------------------------------------------------------------------------------------------- |
-| `@retikz/core`    | `0.3.0-beta.1` | IR schemas, geometry, parsers, and Scene compiler; zero React / zero DOM                            |
-| `@retikz/render`  | `0.3.0-beta.1` | SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities              |
-| `@retikz/react`   | `0.3.0-beta.1` | React adapter with SVG / Canvas renderers                                                           |
-| `@retikz/vanilla` | `0.3.0-beta.1` | Framework-free builder, SVG / Canvas mounting, hydration, animation controls, and SVG string output |
+| Package           | Version         | Notes                                                                                               |
+| ----------------- | --------------- | --------------------------------------------------------------------------------------------------- |
+| `@retikz/math`    | `0.4.0-alpha.8` | Zero-dependency computational geometry base reused by core and domain packages                      |
+| `@retikz/core`    | `0.4.0-alpha.8` | IR schemas, geometry, parsers, and Scene compiler; zero React / zero DOM                            |
+| `@retikz/render`  | `0.4.0-alpha.8` | SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities              |
+| `@retikz/react`   | `0.4.0-alpha.8` | React adapter with SVG / Canvas renderers                                                           |
+| `@retikz/vanilla` | `0.4.0-alpha.8` | Framework-free builder, SVG / Canvas mounting, hydration, animation controls, and SVG string output |
+| `@retikz/tex`     | `0.4.0-alpha.8` | Optional LaTeX lowering via MathJax SVG glyph paths into the core Scene model                       |
 
-`0.3.0-beta.1` is the v0.3 pre-rc hardening window: the main renderer, hydration, Canvas, vanilla, and animation capabilities have landed, while the current work focuses on parity fixes, docs/package surface cleanup, optional export entries, and engineering cleanup before rc. See [Versioning](/about/releases/versioning).
+`0.4.0-alpha.8` is the v0.4 alpha wrap-up: math, tex, path, ribbon, provider contracts, and related base mechanisms have been reconciled. The current changes only align versions, roadmap notes, changelog, and completeness-evaluation boundaries; they add no runtime API. See [Versioning](/about/releases/versioning).
 
 ## Feedback
 
-retikz is in the v0.3 beta phase. Feedback should focus on SVG / Canvas parity, hydration and animation behavior, docs accuracy, installation issues, unreproducible examples, and real-project integration bugs before the rc freeze.
+retikz is in the v0.4 alpha wrap-up phase. Feedback should focus on v0.4 base-mechanism docs accuracy, installation and package-composition issues, unreproducible examples, and whether v0.5 candidates such as headless interaction / Progressive IR should come first.

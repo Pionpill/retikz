@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import type { CenteredShape } from '@retikz/math';
 
-import type { CenteredShape } from '../../src/shared/geometry/transform';
+import { describe, expect, it } from 'vitest';
 
 import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
 

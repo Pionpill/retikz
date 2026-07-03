@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import type { Vector2 } from '@retikz/math';
 
-import type { Vector2 } from '../../../shared';
+import { z } from 'zod';
 
 export const Vector2Schema: z.ZodType<Vector2> = z
   .tuple([z.number(), z.number()])

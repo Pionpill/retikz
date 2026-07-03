@@ -52,14 +52,13 @@ export type CompileOptions = {
    */
   onWarn?: (warning: CompileWarning) => void;
   /**
-   * 运行时注入的第三方 shape（不进 IR）
-   * @description 内置 shape 先注册，自定义 shape 后注册；任何同名 key 都在注册期 throw，不能覆盖内置。
-   *   IR 的 `node.shape` 仍是字符串或 `{ type, params }`；未注册名在编译期 throw。
+   * 运行时注入的 shape 定义。
+   * @description `node.shape` 仍只保存 shape 名称和 params；未注册名称会在编译期报错。
    * @default 仅 `BUILTIN_SHAPES`
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
-   * 运行时注入的第三方 connection surface（不进 IR）
+   * 运行时注入的 connection surface 定义。
    * @description `boundary` 先查本注册表，再兜底查 shape 注册表；`shape` 保留为节点自身视觉 shape。
    * @default 仅 `BUILTIN_BOUNDARIES`
    */
@@ -70,27 +69,20 @@ export type CompileOptions = {
    */
   clips?: ReadonlyArray<ClipDefinition>;
   /**
-   * 运行时注入的第三方 arrow（不进 IR）
-   * @description 内置 arrow 先注册，自定义 arrow 后注册；任何同名 key 都在注册期 throw，不能覆盖内置。
-   *   IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
+   * 运行时注入的 arrow 定义。
+   * @description `arrowDetail.shape` 仍只保存 arrow 名称；未注册名称会在编译期报错。
    * @default 仅 `BUILTIN_ARROWS`
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /**
-   * 运行时注入的第三方 pattern motif（不进 IR）
-   * @description 内置 pattern 先注册，自定义 pattern 后注册；任何同名 key 都在注册期 throw，不能覆盖内置。
-   *   IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
-   *   compile 对 pattern 资源查本表 + 调 `PatternDefinition.emit` 产 tile，写进 `SceneResource.tile`。
+   * 运行时注入的 pattern motif 定义。
+   * @description `pattern.shape` 仍只保存 pattern 名称；未注册名称会在编译期报错。
    * @default 仅 `BUILTIN_PATTERNS`
    */
   patterns?: ReadonlyArray<PatternDefinition>;
   /**
-   * 运行时注入的第三方 path generator（不进 IR）
-   * @description generator step 编译时按 `name` 查本表；core 不内置任何曲线生成器，故无内置合并。
-   *   解析时序：查表（未注册 throw，错误列出可用名）→ `paramsSchema.parse(params)` →
-   *   对结果再跑 `JsonObjectSchema.parse` 二次确认 JSON-safe → `targetParams` 顶层 key 经 target lookup
-   *   resolve 成世界坐标 → 调 `generate(ctx)` → splice 产出的 `PathCommand[]` 进命令流。IR 的
-   *   `generator.name` 仍是字符串；generator 函数本身只在此运行时注入面、不进 IR。
+   * 运行时注入的 path generator 定义。
+   * @description `generator.name` 仍只保存 generator 名称；未注册名称会在编译期报错。
    * @default 空注册表
    */
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
@@ -106,9 +98,8 @@ export type CompileOptions = {
    */
   ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /**
-   * 运行时注入的 Tier 2 composite 展开逻辑（不进 IR）
-   * @description compileToScene 第一步据各 def 的 schema 提取的 `${namespace}.${type}` 把 IR 里的 composite
-   *   节点展开成 Tier 1；core 无内置。未注册 namespace/type → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点。
+   * 运行时注入的 Tier 2 composite 展开逻辑。
+   * @description 未注册的 namespace/type 会触发 warning，并跳过该 composite 节点。
    * @default 空注册表
    */
   composites?: ReadonlyArray<CompositeDefinition>;
@@ -119,18 +110,16 @@ export type CompileOptions = {
    */
   maxCompositeDepth?: number;
   /**
-   * 运行时注入的公式渲染能力（不进 IR；由 `@retikz/tex` 提供）
-   * @description node `tex` 内容编译时调本函数把 LaTeX → 字形路径 + bbox。core 不依赖
-   *   MathJax，仅声明注入类型。带 tex 内容但未注入 → `onWarn(TEX_LOWERER_MISSING)` + 降级；返回 null
-   *   （非法 tex）→ `onWarn(TEX_INVALID)` + 降级。均不抛、不丢节点。
+   * 运行时注入的公式渲染能力。
+   * @description 带 tex 内容但未注入或解析失败时会 warning 并降级。
    * @default undefined；禁用 TeX 降级能力
    */
   lowerTex?: LowerTex;
 };
 
 /**
- * IR → Scene 纯函数转换，所有 adapter 共享
- * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 5 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 NameStack 中存全局坐标供其他节点 / path 引用。NameStack 用栈式 frame 管理命名空间：默认全局扁平、`<Scope localNamespace>` 推入子 frame；scope.id 始终在父 frame 注册（外部句柄）；id lookup 从栈顶向栈底 inside-out 搜索；同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + 后定义覆盖前定义。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
+ * IR → Scene 纯函数转换，所有 adapter 共享。
+ * @description 解析节点、scope、path、资源和动画，并输出 renderer-agnostic 的 Scene。
  */
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const context = createCompileContext(ir, options);

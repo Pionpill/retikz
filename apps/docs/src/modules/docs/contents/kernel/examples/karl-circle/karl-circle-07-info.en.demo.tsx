@@ -129,8 +129,7 @@ const Demo: FC = () => {
         stroke="lightgray"
         dashed
         cornerRadius={6}
-        innerXSep={12}
-        innerYSep={8}
+        padding={{ x: 12, y: 8 }}
         align="left"
         text={LEGEND}
       />

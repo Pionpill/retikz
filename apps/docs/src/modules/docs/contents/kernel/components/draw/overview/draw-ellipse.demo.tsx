@@ -7,7 +7,7 @@ const Demo: FC = () => (
     <Node id="center" position={[140, 100]} stroke="none">
       ·
     </Node>
-    <Draw way={['center', { ellipse: { radiusX: 100, radiusY: 50 } }]} />
+    <Draw way={['center', { ellipse: { radius: { x: 100, y: 50  }} }]} />
   </Layout>
 );
 
