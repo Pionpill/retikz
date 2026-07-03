@@ -84,16 +84,13 @@ export const arc = defineShape({
   paramsSchema: z.strictObject({
     radius: z
       .number()
-
       .positive()
       .describe('Arc radius in user units.'),
     startAngle: z
       .number()
-
       .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
     endAngle: z
       .number()
-
       .describe('End angle in degrees; swept from startAngle in screen space.'),
     close: z
       .boolean()

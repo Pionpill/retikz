@@ -111,12 +111,10 @@ export const polygon = defineShape({
       .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
     rotate: z
       .number()
-
       .optional()
       .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
     cornerRadius: z
       .number()
-
       .nonnegative()
       .optional()
       .describe(

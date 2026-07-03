@@ -113,25 +113,20 @@ export const sector = defineShape({
     .strictObject({
       innerRadius: z
         .number()
-
         .nonnegative()
         .describe('Inner radius (user units); 0 = solid pie slice.'),
       outerRadius: z
         .number()
-
         .positive()
         .describe('Outer radius (user units); must be > innerRadius.'),
       startAngle: z
         .number()
-
         .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
       endAngle: z
         .number()
-
         .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
       cornerRadius: z
         .number()
-
         .nonnegative()
         .optional()
         .describe(

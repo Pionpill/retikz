@@ -118,24 +118,20 @@ export const star = defineShape({
         ),
       innerRadius: z
         .number()
-
         .positive()
         .describe('Inner (notch) radius in user units.'),
       outerRadius: z
         .number()
-
         .positive()
         .describe('Outer (tip) radius in user units; must be > innerRadius.'),
       rotate: z
         .number()
-
         .optional()
         .describe(
           'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
         ),
       cornerRadius: z
         .number()
-
         .nonnegative()
         .optional()
         .describe(

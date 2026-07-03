@@ -51,7 +51,6 @@ export const rectangle = defineShape({
   paramsSchema: z.strictObject({
     cornerRadius: z
       .number()
-
       .nonnegative()
       .optional()
       .describe(
