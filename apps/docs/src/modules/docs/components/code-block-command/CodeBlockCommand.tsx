@@ -3,11 +3,11 @@
 import { Check, Copy, Terminal } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { PkgManager } from '@/modules/docs/store/use-pkg-manager-store';
+import type { PkgManager } from '@/modules/docs/store';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePkgManagerStore } from '@/modules/docs/store/use-pkg-manager-store';
+import { usePkgManagerStore } from '@/modules/docs/store';
 
 export type CodeBlockCommandProps = {
   pnpm?: string;

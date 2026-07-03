@@ -8,7 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { modules, resolveModule } from '@/modules/docs/data/module';
+import { modules, resolveModule } from '@/modules/docs/data';
 import { AppSidebar } from '@/modules/docs/layout/sidebar/AppSidebar';
 
 /**

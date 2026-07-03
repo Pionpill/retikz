@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Outlet } from 'react-router';
 
 import { cn } from '@/lib/utils';
-import { useLayoutStore } from '@/store/use-layout-store';
+import { useLayoutStore } from '@/store';
 
 import { AppSidebar } from './sidebar/AppSidebar';
 

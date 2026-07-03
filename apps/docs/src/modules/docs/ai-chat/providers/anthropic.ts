@@ -2,11 +2,7 @@ import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions } from 
 
 import { readSse } from './sse';
 
-/**
- * Anthropic Messages API（直连浏览器要求 `anthropic-dangerous-direct-browser-access: true`）
- * @description SSE 由 `event: <type>\ndata: {json}` 组成；text 在 content_block_delta；usage 分两段：
- *   message_start 里给 input_tokens + cache_read_input_tokens；message_delta 里给 output_tokens。
- */
+/** Anthropic Messages API provider。 */
 export const anthropicProvider: ChatProvider = {
   id: 'anthropic',
   async *chat(req: ChatRequestOptions): AsyncGenerator<ChatChunk, void, void> {

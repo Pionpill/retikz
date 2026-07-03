@@ -20,17 +20,11 @@ import {
   Text,
 } from '@retikz/react';
 import { Parser } from 'acorn';
-// acorn-jsx 没有 ESM 类型；用 default import + 运行时签名足够
 import jsx from 'acorn-jsx';
 import { createElement } from 'react';
 
 const JsxParser = Parser.extend(jsx());
 
-/**
- * 允许在 `retikz-tsx` 块里出现的组件白名单
- * @description 17 个主组件名（含 `Layout`）；其它名（含原生 div / 用户自定义）一律拒绝
- */
-/** 标 `| undefined` 是为了让查表后的 `!Component` 守卫不被 TS 视作死代码 */
 const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined> = {
   Layout,
   Node: Node as unknown as FC<Record<string, unknown>>,
@@ -55,15 +49,9 @@ const componentNames = Object.keys(COMPONENT_REGISTRY).join(', ');
 
 export type ParseRetikzJsxResult = { ok: true; element: ReactElement } | { ok: false; error: string };
 
-/** AST 节点用 acorn 自己的运行时形状，类型层面 `any`-shape：只用 .type / .name / .value / .properties 等公开字段 */
 type AstNode = { type: string; [key: string]: unknown };
 
-/**
- * 把 retikz-tsx 源码解析成可渲染的 React element
- * @description 不执行 AI 的代码——纯 AST walk + `React.createElement(Whitelisted, props, ...children)`。
- *   props 只允许字面量（string / number / boolean / null / undefined / 数组 / 对象 / 模板字符串无插值 / 一元 -+ 字面量数字）；
- *   组件只允许 retikz 17 个公开 kernel + sugar；其它任何形式都给出**具体**错误描述
- */
+/** 把 retikz-tsx 源码解析成可渲染的 React element。 */
 export const parseRetikzJsx = (source: string): ParseRetikzJsxResult => {
   const trimmed = source.trim();
   if (trimmed.length === 0) {
@@ -149,7 +137,6 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
     case 'UnaryExpression': {
       const operator = node.operator as string;
       const argument = node.argument as AstNode;
-      // 允许 -1, -0.5, +0.5 等数值字面量前缀
       if ((operator === '-' || operator === '+') && argument.type === 'Literal' && typeof argument.value === 'number') {
         return operator === '-' ? -argument.value : argument.value;
       }
@@ -198,7 +185,6 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
     }
     case 'Identifier': {
       const name = node.name as string;
-      // 仅放过 undefined；其它标识符（变量引用）一律拒绝
       if (name === 'undefined') return undefined;
       throw new Error(`不支持的表达式：标识符 ${name}（仅允许字面量，不允许变量引用）`);
     }
@@ -210,7 +196,6 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
 const walkChild = (node: AstNode, index: number): ReactNode | null => {
   switch (node.type) {
     case 'JSXText': {
-      // 纯空白文本丢弃，避免 React 警告 + 减少 DOM 噪音；保留有内容的字符串（含前后空白由 React 自行处理）
       const value = node.value as string;
       if (value.trim() === '') return null;
       return value;

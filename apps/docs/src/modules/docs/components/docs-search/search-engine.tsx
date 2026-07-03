@@ -4,10 +4,9 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
-import type { Page } from '@/modules/docs/data/interface';
+import type { Page } from '@/modules/docs/data';
 
-import { modules } from '@/modules/docs/data/module';
-import { getSectionsByModule } from '@/modules/docs/data/sections';
+import { getSectionsByModule, modules } from '@/modules/docs/data';
 
 import { type IndexedPage, type SearchIndex } from './search-index';
 

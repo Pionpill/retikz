@@ -2,9 +2,8 @@ import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
-import { useComponentPreviewStore } from '@/modules/docs/store/use-component-preview-store';
-import { useTocStore } from '@/modules/docs/store/use-toc-store';
-import { useLayoutStore } from '@/store/use-layout-store';
+import { useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
+import { useLayoutStore } from '@/store';
 
 /**
  * 全局快捷键

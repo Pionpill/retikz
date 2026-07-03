@@ -6,9 +6,9 @@ import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 
 import { FALLBACK_CONTEXT_LIMIT, MODEL_CONTEXT_LIMIT } from '../models';
+import { useAiChatStore } from '../use-ai-chat-store';
 
 const CIRCLE_RADIUS = 4.5;
 const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;

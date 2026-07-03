@@ -16,39 +16,35 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
+import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { InlineMarkdown } from '@/modules/docs/components/inline-markdown';
 
-/** Example 页 Prompt 节 props——主 prompt（短摘要 + 可展开详情）+ 可选「发散思路」扩展列表 */
+/** Example 页 Prompt 节 props。 */
 export type ExamplePromptProps = {
-  /** 最小概括（markdown）；默认显示 */
+  /** 最小概括。 */
   short: string;
-  /** 完整 prompt（markdown）；左下角「展开」按钮点开后替换 short 展示。省略 = 不显示展开按钮 */
+  /** 完整 prompt。 */
   detailed?: string;
-  /** 可选「还可以试试这些发散思路」扩展提示词列表（markdown）；每条只有 short 模式，仅可发送到聊天面板（不复制） */
+  /** 扩展提示词列表。 */
   extensions?: Array<string>;
 };
 
-/** 在浏览器里推出 llms.txt 的绝对 URL，用户复制到外部 AI 工具时可直接 fetch */
 const getLlmsTxtUrl = (): string => {
   if (typeof window === 'undefined') return '/llms.txt';
   return new URL(`${import.meta.env.BASE_URL}llms.txt`, window.location.origin).toString();
 };
 
-/** 当前文档页 URL；SSR 兜底为站点根 */
 const getPageUrl = (): string => {
   if (typeof window === 'undefined') return '/';
   return window.location.href;
 };
 
-/** 每行前置 `> `，得到 markdown 引用块 */
 const toMarkdownQuote = (content: string): string =>
   content
     .split('\n')
     .map(line => `> ${line}`)
     .join('\n');
 
-/** 双行菜单项：图标盒 + 标题 + 灰字描述（对齐 DocPageActions 的 MenuItemBody 风格） */
 const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ icon, title, desc }) => (
   <>
     <span className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background">{icon}</span>
@@ -59,7 +55,6 @@ const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ ic
   </>
 );
 
-/** 主 prompt 的动作区：复制（4 档下拉）+ 发送到聊天面板 */
 const PromptActions: FC<{ content: string }> = ({ content }) => {
   const { t } = useTranslation();
   const setOpen = useAiChatStore(s => s.setOpen);
@@ -145,7 +140,6 @@ const PromptActions: FC<{ content: string }> = ({ content }) => {
   );
 };
 
-/** 扩展条目：markdown 正文 + 单一 secondary send 按钮（仅发送，不复制） */
 const ExtensionRow: FC<{ content: string }> = ({ content }) => {
   const { t } = useTranslation();
   const setOpen = useAiChatStore(s => s.setOpen);
@@ -173,13 +167,7 @@ const ExtensionRow: FC<{ content: string }> = ({ content }) => {
   );
 };
 
-/**
- * Example 页的 Prompt 节
- * @description 只读，markdown 渲染。
- *   - 主 prompt：默认显示 `short`；有 `detailed` 时左下角出「展开」按钮，点开后切换为 `detailed`
- *   - 右下角行动：「复制」（4 档下拉：纯文本默认 / 带 retikz 上下文 / Markdown 引用块 / 附页面来源链接）+「发送到 AI 对话」
- *   - 可选 `extensions`：通栏 Separator + 小标题「还可以试试这些发散思路」+ 条目列表；条目间用 Separator 分隔，每条只有 secondary 发送按钮（不支持复制——发散思路用站内 AI 跑就够，不主推外部 AI）
- */
+/** Example 页的 Prompt 节。 */
 export const ExamplePrompt: FC<ExamplePromptProps> = props => {
   const { short, detailed, extensions } = props;
   const { t } = useTranslation();

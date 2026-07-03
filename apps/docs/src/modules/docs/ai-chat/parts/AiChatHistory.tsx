@@ -8,18 +8,13 @@ import { Button } from '@/components/ui/button';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat/use-ai-chat-store';
 import { MarkdownInline } from '@/modules/docs/components/inline-markdown';
 
 import type { Conversation } from '../conversations-storage';
 
-/**
- * AI 历史会话列表视图
- * @description view==='history' 时渲染。顶栏返回 / 新建；中间列表按 updatedAt 倒序。
- *   每行：标题（空 → "未命名对话" 兜底）+ 相对时间 + 消息数；当前 active 高亮 + "当前"徽标。
- *   右键 / 长按行弹 ContextMenu：Rename / Delete。Rename 走 inline edit（Enter 提交 / Esc 取消 / blur 提交）。
- *   Delete 走 window.confirm 一道防误删；hydration 未完成时显示骨架
- */
+import { useAiChatStore } from '../use-ai-chat-store';
+
+/** AI 历史会话列表。 */
 export const AiChatHistory: FC = () => {
   const { t, i18n } = useTranslation();
   const setView = useAiChatStore(s => s.setView);
@@ -199,11 +194,7 @@ export const AiChatHistory: FC = () => {
   );
 };
 
-/**
- * 简版相对时间格式化：< 1m / Xm / Xh / Xd / 绝对日期
- * @description 不引第三方库；Intl.RelativeTimeFormat 与 toLocaleDateString 走系统 locale；
- *   一周内显示相对，更老的转 yyyy-mm-dd 形式
- */
+/** 格式化历史会话时间。 */
 const formatRelativeTime = (timestamp: number, locale: string): string => {
   const diffMs = Date.now() - timestamp;
   const diffSec = Math.round(diffMs / 1000);

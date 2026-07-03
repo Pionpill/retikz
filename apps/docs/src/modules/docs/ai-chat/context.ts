@@ -4,16 +4,16 @@ export type ContextMode = 'lean' | 'balanced' | 'heavy';
 
 export type Lang = 'zh' | 'en';
 
-/** AI 出图首选格式：auto 让模型自选；ir 强制 IR JSON；tsx 强制 retikz-tsx */
+/** AI 出图首选格式。 */
 export type DiagramFormatPreference = 'auto' | 'ir' | 'tsx';
 
 export type CurrentPage = {
   title: string;
   mdx: string;
   lang: Lang;
-  /** GitHub raw URL of the page mdx；空状态深链按钮需要把这个 URL 喂给外部 AI */
+  /** GitHub raw URL of the page mdx。 */
   rawUrl: string;
-  /** 站内绝对路径 `/<module>/.../<page>`，用于 ContextChips 自动加入选择集时识别"当前页" */
+  /** 站内绝对路径。 */
   path: string;
 };
 
@@ -234,13 +234,7 @@ These pages are already indexed in the llms.txt at the end of this prompt. When 
   return intro + directive;
 };
 
-/**
- * 按 contextMode 拼 system message
- * @description lean=只送当前页；balanced=当前页 + 全站 llms.txt 索引；heavy=v1 暂同 balanced。
- *   extras（用户通过 Add Context 选中的额外页面）以"参考清单"形式附在末尾——v1 不抓 mdx，
- *   仅提示模型用户关心哪些页面；TODO-2 阶段再做实际 mdx 注入。
- *   diagramFormatPreference 决定是否拼接 retikz 画图协议段（auto/ir/tsx 都拼，无是关闭开关）
- */
+/** 按 contextMode 拼 system message。 */
 export const composeSystem = async (
   mode: ContextMode,
   page: CurrentPage | null,

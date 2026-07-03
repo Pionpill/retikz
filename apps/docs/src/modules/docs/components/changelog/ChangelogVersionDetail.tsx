@@ -3,7 +3,7 @@
 import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
-import type { Release } from '@/modules/docs/data/changelog.types';
+import type { Release } from '@/modules/docs/data';
 
 import { ChangelogPackageBlock } from './ChangelogPackageBlock';
 
