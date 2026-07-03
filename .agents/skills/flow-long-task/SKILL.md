@@ -11,12 +11,12 @@ description: Use when retikz work is a large, long-running, batch, multi-commit,
 
 执行前先确认：
 
-1. 任务 source of truth：功能迭代用一篇或多篇 ADR；非功能重构用 `superpowers:writing-plans` 产出的 plan；beta / rc / 发布用 roadmap、plan 或发布清单。
+1. 任务 source of truth：功能迭代用一篇或多篇 ADR 草案或 roadmap 项；非功能重构用 `superpowers:writing-plans` 产出的 plan；beta / rc / 发布用 roadmap、plan 或发布清单。
 2. 是否允许批量执行、是否允许 LLM 分步 commit。
 3. 是否授权 plan / ADR 草案 review、批量自动 commit 前 review、最终整体 review。
 4. 临时状态文件位置，必须在 `.gitignore` 覆盖的 `notes/plans/` 或就近 `**/_notes/plans/`。
 
-未确认 source of truth 前不改代码；未授权 commit 前不 commit；未授权子 agent / 外部模型前不调度 review。
+未确认 source of truth 前不改代码；ADR 草案人工 ack 后可执行但默认不提交；未授权 commit 前不 commit；未授权子 agent / 外部模型前不调度 review。
 
 ## 分流
 
@@ -43,7 +43,7 @@ notes/plans/<task>/TASK_STATE.md
 - 人工裁决、阻塞点、风险和下一步。
 - 恢复指令：下一轮先读哪些文件、从哪一步继续。
 
-每次 commit 后、停止前、预计可能压缩前都更新。状态文件默认不 stage / commit。
+每次 commit 后、停止前、预计可能压缩前都更新。状态文件默认不 stage / commit；不要把文件索引、LLM 执行 checklist、review prompt 等临时材料塞进最终 ADR。
 
 ## 恢复流程
 
