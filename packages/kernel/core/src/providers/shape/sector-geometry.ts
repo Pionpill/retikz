@@ -2,9 +2,7 @@ import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 
 import type { AngleRange, Position } from '../../shared';
 
-import { normalizeAngleRange } from '../../shared';
-
-const DEG_TO_RAD = Math.PI / 180;
+import { DEG_TO_RAD, normalizeAngleRange } from '../../shared';
 
 /**
  * sector 的派生几何。

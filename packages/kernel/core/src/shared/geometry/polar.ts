@@ -1,5 +1,7 @@
 import type { Position, SharedPolarPosition } from '../position';
 
+import { DEG_TO_RAD, RAD_TO_DEG } from './angle';
+
 /*
  * 极坐标不直接参与几何计算——所有计算（intersection/bbox/boundaryPoint/Path 端点）都在笛卡尔下进行，
  * 遇 PolarPosition 必先 polar.toPosition 转笛卡尔。
@@ -8,9 +10,6 @@ import type { Position, SharedPolarPosition } from '../position';
  */
 
 export type { SharedPolarPosition } from '../position';
-
-const DEG_TO_RAD = Math.PI / 180;
-const RAD_TO_DEG = 180 / Math.PI;
 
 /** 极坐标 ↔ 笛卡尔转换工具集（polar 不参与几何计算，参与时先 toPosition） */
 export const polar = {

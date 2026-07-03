@@ -21,7 +21,7 @@ import { resolveBoundaryRegistry } from '../providers/boundary';
 import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
 import { Anchor } from '../shared';
-import { rect as rectOps } from '../shared/geometry';
+import { DEG_TO_RAD, RAD_TO_DEG, rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
@@ -125,7 +125,7 @@ export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Tran
     } else if (t.kind === 'rotate') {
       const cx = t.cx ?? 0;
       const cy = t.cy ?? 0;
-      const rad = (t.degrees * Math.PI) / 180;
+      const rad = t.degrees * DEG_TO_RAD;
       const cos = Math.cos(rad);
       const sin = Math.sin(rad);
       const dx = x - cx;
@@ -160,7 +160,7 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
     } else if (t.kind === 'rotate') {
       const cx = t.cx ?? 0;
       const cy = t.cy ?? 0;
-      const rad = (-t.degrees * Math.PI) / 180;
+      const rad = -t.degrees * DEG_TO_RAD;
       const cos = Math.cos(rad);
       const sin = Math.sin(rad);
       const dx = x - cx;
@@ -198,7 +198,7 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
   let scaleY = 1;
   for (const t of chain) {
     if (t.kind === 'rotate') {
-      rotateAccumRad += (t.degrees * Math.PI) / 180;
+      rotateAccumRad += t.degrees * DEG_TO_RAD;
     } else if (t.kind === 'scale') {
       scaleX *= t.x;
       scaleY *= t.y ?? t.x;
@@ -216,7 +216,7 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
   return {
     ...layout,
     rect: globalRect,
-    rotateDeg: layout.rotateDeg + rotateAccumRad * (180 / Math.PI),
+    rotateDeg: layout.rotateDeg + rotateAccumRad * RAD_TO_DEG,
     margin: layout.margin * marginScale,
   };
 };

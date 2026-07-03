@@ -2,7 +2,7 @@ import type { Position } from '@retikz/math';
 
 import { arcAngleInRange, arcEndPoint, intersect, point, rayArc } from '@retikz/math';
 
-import { alignAngleSweep, normalizeSignedDegrees } from '../angle';
+import { alignAngleSweep, DEG_TO_RAD, normalizeSignedDegrees, RAD_TO_DEG } from '../angle';
 
 /*
  * 圆角轮廓模块：把「闭合有序段序列」(Line / Arc) 的每个接缝（角）替换为与两侧段相切、半径 r 的
@@ -16,8 +16,6 @@ import { alignAngleSweep, normalizeSignedDegrees } from '../angle';
  * 凸角 fillet 弧 sweep 与轮廓绕向同向、凹角反向；圆心恒在轮廓内侧（朝转向方向）。
  */
 
-const DEG_TO_RAD = Math.PI / 180;
-const RAD_TO_DEG = 180 / Math.PI;
 const EPSILON = 1e-9;
 
 /** 直线段：从 from 到 to 的有向线段 */

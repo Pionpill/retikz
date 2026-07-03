@@ -4,7 +4,15 @@ import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { ContourSegment, Position, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { boundaryFromContour, CenterAnchor, contourCommands, isDirectionalAnchor, localToWorld, rect } from '../../shared';
+import {
+  boundaryFromContour,
+  CenterAnchor,
+  contourCommands,
+  DEG_TO_RAD,
+  isDirectionalAnchor,
+  localToWorld,
+  rect,
+} from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
@@ -27,7 +35,6 @@ type PolygonParams = {
   cornerRadius?: number;
 };
 
-const DEG_TO_RAD = Math.PI / 180;
 const MAX_POLYGON_SIDES = 1024;
 
 /** 顶点角集合（度）：第 k 个顶点角 = rotate + k·(360/sides) */

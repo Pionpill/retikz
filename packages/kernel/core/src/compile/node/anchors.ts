@@ -5,6 +5,7 @@ import type { NodeLayout } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { CenterAnchor, isAnchor } from '../../shared';
+import { DEG_TO_RAD } from '../../shared/geometry';
 import { fallbackBoundaryAnchor, resolveBoundary } from '../boundary';
 
 /** 无参 / 合成 layout 的 shape params 兜底（避免每次调用重建空对象） */
@@ -113,7 +114,7 @@ export const angleBoundaryOf = (
   angleDeg: number,
   boundary: IRBoundary | undefined = 'shape',
 ): Position => {
-  const rad = (angleDeg * Math.PI) / 180;
+  const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);
   const rot = layout.rect.rotate ?? 0;

@@ -5,9 +5,7 @@ import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contrac
 import type { Position, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { localToWorld, normalizeAngleRange, worldToLocal } from '../../shared';
-
-const RAD_TO_DEG = 180 / Math.PI;
+import { localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
 
 /**
  * arc shape 的 per-instance params 类型

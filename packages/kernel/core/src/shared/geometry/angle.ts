@@ -8,6 +8,12 @@ export type AngleRange = {
   mid: number;
 };
 
+/** 角度（degree）转弧度（radian）的乘数。 */
+export const DEG_TO_RAD = Math.PI / 180;
+
+/** 弧度（radian）转角度（degree）的乘数。 */
+export const RAD_TO_DEG = 180 / Math.PI;
+
 /** 把角度规范化到 [0, 360) 区间。 */
 export const normalizeDegrees = (degrees: number): number => {
   const normalized = degrees % 360;

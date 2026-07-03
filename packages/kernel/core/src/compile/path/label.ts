@@ -6,6 +6,7 @@ import type { LowerTex } from '../lower-tex';
 import type { LineLayoutContext } from '../text-layout';
 import type { FontSpec, TextMeasurer } from '../text-metrics';
 
+import { RAD_TO_DEG } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
 import { toAlphabeticBaselineY } from '../text-baseline';
 import { layoutInlineLine, resolveLineRuns } from '../text-layout';
@@ -14,7 +15,6 @@ import { layoutInlineLine, resolveLineRuns } from '../text-layout';
 const LABEL_FONT_SIZE = 14;
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
-const RAD_TO_DEG = 180 / Math.PI;
 type LabelSide = GeometryLabelSideValue | 'center';
 
 /** 边标注公式上下文（注入的 lowerTex + gating + warn）；缺省 = 无 tex 能力 */

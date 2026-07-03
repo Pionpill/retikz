@@ -20,6 +20,7 @@ import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { providerDefinitionOf } from '../../providers/registry';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { JsonObjectSchema } from '../../schemas';
+import { DEG_TO_RAD } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
 import { resolveShadow } from '../effects';
 import { resolvePosition } from '../position';
@@ -43,8 +44,6 @@ const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
   }
   return value;
 };
-const DEG_TO_RAD = Math.PI / 180;
-
 export const layoutNode = (
   node: IRNode,
   measureText: TextMeasurer,

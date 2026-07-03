@@ -5,7 +5,7 @@ import type { ContourSegment, FilletSolution, Position, Rect } from '../../share
 import type { SectorGeometry } from './sector-geometry';
 
 import { defineShape } from '../../contract';
-import { boundaryFromContour, contourCommands, filletContour, localToWorld } from '../../shared';
+import { boundaryFromContour, contourCommands, filletContour, localToWorld, RAD_TO_DEG } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive } from './outline';
 import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
@@ -48,7 +48,7 @@ const sectorSegments = (rect: Rect, geo: SectorGeometry, params: SectorParams): 
   const apex = toWorld(rect, geo, [0, 0]);
   // arc 角度走「圆心局部极角」约定；rect 旋转（弧度）下世界系极角整体加 rotate（度），与端点 toWorld 自洽。
   //   emit 收 rect.rotate=0（外层 group 施旋转）→ 偏移 0、角度逐字同现状；boundaryPoint 收带 rotate 的 rect。
-  const rotateDeg = ((rect.rotate ?? 0) * 180) / Math.PI;
+  const rotateDeg = (rect.rotate ?? 0) * RAD_TO_DEG;
   const sa = start + rotateDeg;
   const ea = end + rotateDeg;
   const outerStart = toWorld(rect, geo, sectorPolarPoint(outerRadius, start));

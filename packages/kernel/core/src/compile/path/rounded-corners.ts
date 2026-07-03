@@ -1,7 +1,7 @@
 ﻿import type { PathCommand } from '../../contract';
 import type { ContourCommand, ContourSegment, FilletSolution } from '../../shared/geometry';
 
-import { contourCommands, filletContour } from '../../shared/geometry';
+import { contourCommands, DEG_TO_RAD, filletContour } from '../../shared/geometry';
 
 /** 单条 emit 命令的来源 step kind（用于判定接缝两侧是否均为 line step） */
 export type CommandProvenance = string;
@@ -147,8 +147,6 @@ export const applyRoundedCorners = (
 
 /** 暴露 fillet 解（供 marks 弧长重算等沿倒角后几何采样） */
 export type { FilletSolution };
-
-const DEG_TO_RAD = Math.PI / 180;
 
 /** 倒角后命令采样结果：pos∈[0,1] 处的点 + 归一化切线（与 SegmentSample 同形态） */
 export type CommandSample = {

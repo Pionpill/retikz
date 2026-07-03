@@ -16,7 +16,7 @@ import type { PathBaseProps } from './split';
 import type { EmitPathWarnHook } from './types';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
-import { rectOutline } from '../../shared/geometry';
+import { DEG_TO_RAD, rectOutline } from '../../shared/geometry';
 import {
   arcSegmentSample,
   bendControlPoints,
@@ -338,8 +338,8 @@ export const emitPathPrimitive = (
     provenance.push(currentStepKind);
     // 椭圆弧终点：未旋转椭圆 polar 投影
     const endPt: IRPosition = [
-      center[0] + Math.cos((endAngle * Math.PI) / 180) * radiusX,
-      center[1] + Math.sin((endAngle * Math.PI) / 180) * radiusY,
+      center[0] + Math.cos(endAngle * DEG_TO_RAD) * radiusX,
+      center[1] + Math.sin(endAngle * DEG_TO_RAD) * radiusY,
     ];
     points.push(endPt);
     lastEnd = endPt;

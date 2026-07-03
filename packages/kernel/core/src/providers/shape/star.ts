@@ -4,7 +4,7 @@ import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { ContourSegment, Position, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { boundaryFromContour, contourCommands, localToWorld } from '../../shared';
+import { boundaryFromContour, contourCommands, DEG_TO_RAD, localToWorld } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 /**
@@ -30,7 +30,6 @@ type StarParams = {
   cornerRadius?: number;
 };
 
-const DEG_TO_RAD = Math.PI / 180;
 const MAX_STAR_POINTS = 1024;
 
 /**

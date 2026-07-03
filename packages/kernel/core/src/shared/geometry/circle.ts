@@ -2,10 +2,9 @@ import type { AnchorValue, SideValue } from '../anchor';
 import type { Position } from './point';
 
 import { Anchor } from '../anchor';
+import { DEG_TO_RAD } from './angle';
 import { edgeAngleDeg } from './edge';
 import { localToWorld, worldToLocal } from './transform';
-
-const DEG_TO_RAD = Math.PI / 180;
 
 /** 圆形：几何中心 + 半径，预留旋转字段保持与 Rect 同形 API */
 export type Circle = {
