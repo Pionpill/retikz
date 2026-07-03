@@ -134,7 +134,7 @@
     "grammarCoordinateTernary": "三元坐标系",
     "grammarCoordinateComposition": "坐标组合",
     "grammarMark": "图元",
-    "grammarGuide": "引导",
+    "grammarGuide": "辅助",
     "grammarProvenance": "来源与锚点",
     "grammarExtend": "扩展",
     "grammarExtendData": "自定义数据",

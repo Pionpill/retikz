@@ -9,40 +9,18 @@ description: Customize ticks, labels, and grid with <Axis>; dimension picks whic
 
 ## Usage
 
-```tsx
-import { Plot, Axis } from '@retikz/plot-react';
-```
+The smallest structure is to list the x / y axes you want inside `<Plot>`. In the demo below, the y axis adds a grid and a target tick count; use the preview panel to inspect the source, IR, and Vanilla form.
 
-```tsx
-<Plot data={revenue}>
-  <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="x" />
-  <Axis dimension="y" scale="log" grid ticks={{ count: 5 }} />
-</Plot>
-```
-
-## Examples
-
-### Cartesian axes
-
-List x / y axes explicitly, with a grid and a target tick count on y.
 
 <ComponentPreview name="axis-cartesian" sourceFiles={['axis-cartesian.data.ts']} />
+
+## Examples
 
 ### Style Slots
 
 `line` controls the axis line; `ticks` controls the tick source, length, and tick-line style; `tickLabels` controls whether tick text renders and how it is styled; `title` is the axis title and accepts a string or structured text; `grid` can be a boolean or a line-style object.
 
-```tsx
-<Axis
-  dimension="y"
-  line={{ stroke: '#334155', strokeWidth: 1.5 }}
-  ticks={{ count: 5, length: 6, line: { stroke: '#64748b' } }}
-  tickLabels={{ gap: 6, textColor: '#475569', font: { size: 11 } }}
-  title={{ text: 'Revenue', gap: 10, font: { weight: 600 } }}
-  grid={{ stroke: '#cbd5e1', drawOpacity: 0.45 }}
-/>
-```
+<ComponentPreview name="axis-style-slots" sourceFiles={['axis-style-slots.data.ts']} />
 
 ### Polar axes
 

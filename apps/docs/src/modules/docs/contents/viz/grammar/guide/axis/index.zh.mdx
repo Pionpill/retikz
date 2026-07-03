@@ -9,40 +9,18 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 
 ## 用法
 
-```tsx
-import { Plot, Axis } from '@retikz/plot-react';
-```
+最小结构是在 `<Plot>` 里显式列出要画的 x / y 轴。下面的 demo 里，y 轴加了网格和目标刻度数；源码、IR 和 Vanilla 写法都可以在 demo 面板里切换查看。
 
-```tsx
-<Plot data={revenue}>
-  <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="x" />
-  <Axis dimension="y" scale="log" grid ticks={{ count: 5 }} />
-</Plot>
-```
-
-## 例子
-
-### cartesian 轴
-
-显式列 x / y 轴，y 轴加网格、指定目标刻度数。
 
 <ComponentPreview name="axis-cartesian" sourceFiles={['axis-cartesian.data.ts']} />
+
+## 例子
 
 ### 样式槽位
 
 `line` 控制轴线；`ticks` 控制刻度来源、长度和刻度线样式；`tickLabels` 控制刻度文字是否显示和文字样式；`title` 是轴标题，支持字符串或结构化文本；`grid` 可以是布尔值，也可以带线条样式。
 
-```tsx
-<Axis
-  dimension="y"
-  line={{ stroke: '#334155', strokeWidth: 1.5 }}
-  ticks={{ count: 5, length: 6, line: { stroke: '#64748b' } }}
-  tickLabels={{ gap: 6, textColor: '#475569', font: { size: 11 } }}
-  title={{ text: 'Revenue', gap: 10, font: { weight: 600 } }}
-  grid={{ stroke: '#cbd5e1', drawOpacity: 0.45 }}
-/>
-```
+<ComponentPreview name="axis-style-slots" sourceFiles={['axis-style-slots.data.ts']} />
 
 ### polar 轴
 
