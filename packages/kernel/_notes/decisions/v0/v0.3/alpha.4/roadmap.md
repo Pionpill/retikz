@@ -1,7 +1,7 @@
 # v0.3-alpha.4 实施待办：shape 参数化泛化（架构 + 内置形状）
 
 > milestone 执行路线。长期决策放同目录 `NN-*.md` ADR；本文件可更新。
-> 关联：[`v0.3 roadmap`](../roadmap.md) · [`v0 roadmap`](../../roadmap.md) · [`core-design.md §7 AI 友好`](../../../../../../../notes/architecture/core-design.md) · 范式参照：[`v0.3-alpha.2 ADR-01 Tier 2 支撑`](../alpha.2/01-tier2-support.md)（passthrough + 注册表）· 下游动机：[`plot v0.1-alpha.4`](../../../../../../graph/_notes/decisions/v0/v0.1/roadmap.md)（polar 扇形需可连接 sector）
+> 关联：[`v0.3 roadmap`](../roadmap.md) · [`v0 roadmap`](../../roadmap.md) · [`core-design.md §7 AI 友好`](../../../../../../../notes/architecture/core-design.md) · 范式参照：[`v0.3-alpha.2 ADR-01 Tier 2 支撑`](../alpha.2/01-tier2-support.md)（passthrough + 注册表）· 下游动机：[`plot v0.1-alpha.4`](../../../../../../viz/_notes/decisions/v0/v0.1/roadmap.md)（polar 扇形需可连接 sector）
 
 > **2026-06-07 封板**：ADR-01~08 全部 Accepted；绿灯关全过（core 1870 / react 341 / render 87 / vanilla 56 测试，4 包 `tsc --noEmit` + `pnpm lint` 全绿），changelog 入库，随 `v0.3.0-alpha.4` 发布。后续含 ADR-06 连接面、ADR-07 统一圆角 `cornerRadius`（rename `roundedCorners`）、ADR-08 `meta` provenance（原计划 01~05 之外的收尾增补）。
 

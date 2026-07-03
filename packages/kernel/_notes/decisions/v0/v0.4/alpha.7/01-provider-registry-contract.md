@@ -2,14 +2,14 @@
 
 - 状态：Accepted（2026-06-29 人工签字，2026-07-03 已实现）
 - 决策日期：2026-06-28
-- 关联：[alpha.7 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md) · [plot-design.md](../../../../../../graph/_notes/architecture/plot-design.md)
+- 关联：[alpha.7 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md) · [plot-design.md](../../../../../../viz/_notes/architecture/plot-design.md)
 - 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/kernel/_notes/decisions/v0/v0.4/alpha.7/01-provider-registry-contract.md`
 
 ## 背景
 
 kernel 已经有多组运行时扩展能力：shape、arrow、pattern、path generator、path kind、ribbon width profile 与 composite。它们都遵守"definition 含函数、不进 IR，通过 compile options 注入"这个大方向，但 registry 输入形态和冲突处理并不一致。
 
-当前实现里有的能力使用 `Record<string, Definition>`，有的使用 `Array<Definition>`；有的 custom 覆盖 builtin 时发 warn，有的直接替换；有的空 custom 会保留 builtin，有的把 builtin 也替掉。随着 alpha.6 引入 `Path.kind` provider，这些差异已经开始影响下游 plot / graph 的扩展心智。
+当前实现里有的能力使用 `Record<string, Definition>`，有的使用 `Array<Definition>`；有的 custom 覆盖 builtin 时发 warn，有的直接替换；有的空 custom 会保留 builtin，有的把 builtin 也替掉。随着 alpha.6 引入 `Path.kind` provider，这些差异已经开始影响下游 plot / viz 的扩展心智。
 
 plot 在 v0.1-alpha.12 已经完成一轮 registry 收敛：`ReadonlyArray<AnyXxxDefinition>` 输入、builtin first、custom duplicate throw、resolve 后使用 `Map` 分派。kernel alpha.7 应吸收这套经验，把 provider registry 变成明确契约，而不是每个能力各自发明。
 

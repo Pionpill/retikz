@@ -19,7 +19,7 @@ composite 是「带语义的高层 IR 节点」。相比直接手写一堆 Tier 
 
 - **语义自描述，AI 友好**：composite 经 zod schema 表达领域含义——一个流程图节点、一根柱、一棵树——而不是「20 个矩形 + 19 条线」。LLM 生成 / 人读 IR 时面对的是 `{ type: 'pipeline', stages: [...] }` 这样的**意图**，而非展开后的几何噪声。
 - **高层抽象，屏蔽底层**：用户与 LLM 只关心领域字段（数据、步骤、刻度），不关心坐标 / 连线 / 裁剪怎么算；底层 `expand` 实现可随时优化重构，只要 schema 契约不变，调用方 IR 不动。
-- **体积小，运行时展开**：composite 节点本身只存领域参数（下例的 pipeline 就是 `{ stages, arrows }` 两个短数组），序列化体积极小；真正的几何（框 / 连线 / 箭头 / 标签 / 边界裁剪）在 compile 期由 `expand` 现场生成。而这张图画的，正是 composite 自己经历的展开链路——`Tier 2 DSL → composite IR → core IR → graph`，其中 `lower` 这一步（composite IR → core IR）正是本页主题：
+- **体积小，运行时展开**：composite 节点本身只存领域参数（下例的 pipeline 就是 `{ stages, arrows }` 两个短数组），序列化体积极小；真正的几何（框 / 连线 / 箭头 / 标签 / 边界裁剪）在 compile 期由 `expand` 现场生成。而这张图画的，正是 composite 自己经历的展开链路——`Tier 2 DSL → composite IR → core IR → 图形`，其中 `lower` 这一步（composite IR → core IR）正是本页主题：
 
 <ComponentPreview name="composite-pipeline" size="xs" hideCode />
 

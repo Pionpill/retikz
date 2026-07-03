@@ -12,7 +12,7 @@ alpha.7 聚焦 kernel 扩展面的机制收敛。此前 shape / arrow / pattern 
 - runtime definition 可以包含函数、schema 与 helper，但不进 IR；IR 只保存 JSON-safe 的字符串引用或 operation object。
 - 允许破坏性改动，不为 0.x 旧 provider 输入形态保留兼容桥。
 
-## plot / graph 参考结论
+## plot / viz 参考结论
 
 本轮设计参考 `@retikz/plot` 在 v0.1-alpha.12 的 registry 收敛经验:
 

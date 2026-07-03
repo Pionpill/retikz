@@ -21,7 +21,7 @@ plot 的 relation 需要表达有流量宽度的边，例如 Sankey、alluvial �
 - ribbon 第一版表达单段 source -> target relation，至少需要 width；可选端点宽度、曲率等仍是 ribbon 子对象语义。
 - `kind: "ribbon"` 不支持 `path.route`、via、routing、step label 或 arrow；这些属于 path relation 的路由/step 模型。
 
-该设计保持 graph 只是 grammar/lowering 层：relation ribbon 不是新 chart，不新增 `RibbonMark`，也不绕开 core path kind registry。
+该设计保持 plot 只是 grammar/lowering 层：relation ribbon 不是新 chart，不新增 `RibbonMark`，也不绕开 core path kind registry。
 
 ## 被否决方案
 

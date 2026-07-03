@@ -12,7 +12,7 @@ const STAGE_GAP = 165;
  * 示例 Tier 2 type：pipeline —— 据 { stages, arrows } 展开成「N 个阶段框 + N−1 条带标签箭头」（node + path 混合）。
  * 体现「体积小、运行时展开」：IR 里只存两个短数组（语义自描述、LLM 易生成易读），
  *   框 / 连线 / 箭头 / 标签 / 边界裁剪等几何全在 compile 期由 expand 现场生成，不进 IR。
- * 图中画的正是 composite 自身经历的链路：Tier 2 DSL → composite IR →（lower）→ core IR →（render）→ graph。
+ * 图中画的正是 composite 自身经历的链路：Tier 2 DSL → composite IR →（lower）→ core IR →（render）→ 图形。
  */
 const pipeline = defineComposite({
   namespace: 'demo',
@@ -57,7 +57,7 @@ const ir: IR = {
     {
       namespace: 'demo',
       type: 'pipeline',
-      stages: ['Tier 2 DSL', 'composite IR', 'core IR', 'graph'],
+      stages: ['Tier 2 DSL', 'composite IR', 'core IR', '图形'],
       arrows: ['build', 'lower', 'render'],
     },
   ],

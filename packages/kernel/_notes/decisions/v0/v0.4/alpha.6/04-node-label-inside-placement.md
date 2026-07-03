@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-06-26
 - Owner：core
-- 关联：[kernel v0.4-alpha.6 roadmap](./roadmap.md) · [graph alpha.13 ADR-07](../../../../../../graph/_notes/decisions/v0/v0.1/alpha.13/07-mark-label-surface.md)
+- 关联：[kernel v0.4-alpha.6 roadmap](./roadmap.md) · [plot alpha.13 ADR-07](../../../../../../viz/_notes/decisions/v0/v0.1/alpha.13/07-mark-label-surface.md)
 
 ## 背景
 
@@ -30,7 +30,7 @@ Node label 早期主要表达外侧标签，适合普通点、矩形节点和关
 ## 实现指针
 
 - 发布版本：kernel group `v0.4.0-alpha.6`。
-- 主要消费方：graph alpha.13 mark label surface 将 interval/cell/sector label 投递到 `Node.label`。
+- 主要消费方：plot alpha.13 mark label surface 将 interval/cell/sector label 投递到 `Node.label`。
 - 验收范围：core node label schema、boundary position 编译、inside/outside placement 和文档 Node label 说明。
 
 > 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/kernel/v0/v0.4/alpha.6/04-node-label-inside-placement.md`（封板全文）。

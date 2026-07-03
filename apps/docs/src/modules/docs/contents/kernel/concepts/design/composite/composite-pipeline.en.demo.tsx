@@ -12,7 +12,7 @@ const STAGE_GAP = 165;
  * Example Tier 2 type: pipeline — expands { stages, arrows } into N stage boxes + N−1 labelled arrows (node + path mix).
  * Shows "small IR, expanded at runtime": the IR stores only two short arrays (self-describing, easy for an LLM to author / read);
  *   all geometry (boxes / connectors / arrows / labels / boundary clipping) is generated at compile time inside `expand`, never in the IR.
- * The diagram depicts the very path a composite itself travels: Tier 2 DSL → composite IR → (lower) → core IR → (render) → graph.
+ * The diagram depicts the very path a composite itself travels: Tier 2 DSL → composite IR → (lower) → core IR → (render) → diagram.
  */
 const pipeline = defineComposite({
   namespace: 'demo',
@@ -57,7 +57,7 @@ const ir: IR = {
     {
       namespace: 'demo',
       type: 'pipeline',
-      stages: ['Tier 2 DSL', 'composite IR', 'core IR', 'graph'],
+      stages: ['Tier 2 DSL', 'composite IR', 'core IR', 'diagram'],
       arrows: ['build', 'lower', 'render'],
     },
   ],
