@@ -84,12 +84,12 @@ describe('ADR-07 mark host label lowering', () => {
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 
-  it('path-mark-host-geometry-label normalizes compass side aliases', () => {
+  it('path-mark-host-geometry-label accepts canonical side names', () => {
     const root = expandOf(
       baseSpec([
         {
           type: 'path',
-          label: { content: { value: 'trend' }, position: 'midway', side: 'north' },
+          label: { content: { value: 'trend' }, position: 'midway', side: 'top' },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },
       ]),

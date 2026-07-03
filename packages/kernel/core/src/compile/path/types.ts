@@ -31,14 +31,14 @@ export type EmitPathWarnHook = {
   resolvePaint?: PaintResolver;
   /**
    * 已解析 arrow 注册表（内置 8 + 注入）；缺省 = 仅内置 8
-   * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
-   *   endpoint arrow marks 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
+   * @description compileToScene 解析 `options.arrows` 后传入；内置与自定义同名会在注册期 throw。
+   *   endpoint arrow marks 据此查表算 shrink / 调 def.emit；未注册名编译期 throw。
    * @default resolveArrowRegistry()
    */
   resolvedArrows?: ResolvedArrowRegistry;
   /**
    * 有效 path generator 表（注入即全部，core 无内置）；缺省 = 空表
-   * @description compileToScene 传 `options.pathGenerators ?? {}`；generator step 据此查表（未注册名
+   * @description compileToScene 解析 `options.pathGenerators` 后传入；generator step 据此查表（未注册名
    *   编译期 throw，错误列出可用名）→ 双 parse 护栏 → targetParams resolve → 调 generate splice 命令。
    * @default EMPTY_PATH_GENERATORS
    */

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { Anchor, CenterAnchor } from '../../shared';
 import { JsonValueSchema } from '../json';
 import { NormalizedFractionSchema } from '../scalar';
 import { AnimationDirection, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
@@ -38,9 +39,8 @@ export const TriggerSchema = z
 export const OriginSchema = z
   .union([
     z
-      .string()
-      .min(1)
-      .describe('Named transform pivot using the node anchor vocabulary, resolved against the animated element.'),
+      .enum({ ...CenterAnchor, ...Anchor })
+      .describe('Named transform pivot using the canonical node anchor vocabulary, resolved against the animated element.'),
     z.tuple([z.number(), z.number()]).describe('Explicit transform pivot in element-local coordinates [x, y].'),
   ])
   .describe(

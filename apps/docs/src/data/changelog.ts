@@ -115,6 +115,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.7',
+            date: '2026-07-03',
+            summary: {
+              zh: 'Provider contract 收敛：shape / arrow / pattern / path generator / path kind / ribbon profile / composite 统一为 definition 数组注册；新增 BoundaryDefinition 与 ClipDefinition，一等支持自定义连接面和裁剪区。',
+              en: 'Provider contract convergence: shape / arrow / pattern / path generator / path kind / ribbon profile / composite now use definition-array registration; BoundaryDefinition and ClipDefinition add first-class custom connection surfaces and clipping regions.',
+            },
+            items: [
+              {
+                label: { zh: '统一 provider registry', en: 'Unified provider registry' },
+                content: {
+                  zh: '`CompileOptions` 的 provider 字段统一接受 `ReadonlyArray<...Definition>`；内置先注册、自定义后注册，任何同名 collision 都直接报错，未知 provider 报错会列出可用 key 与对应 options 字段。',
+                  en: '`CompileOptions` provider fields consistently accept `ReadonlyArray<...Definition>`; built-ins register first, custom definitions register after them, every key collision throws, and unknown-provider errors list available keys plus the relevant options field.',
+                },
+              },
+              {
+                label: { zh: 'Boundary / Clip 成为一等扩展面', en: 'Boundary / Clip as first-class extensions' },
+                content: {
+                  zh: '`CompileOptions.boundaries` / `<Layout boundaries>` 注入自定义连接面，`boundary="shape"` 保留视觉 shape 语义，其余名字先查 Boundary Registry 再 fallback 到 Shape Registry；`CompileOptions.clips` / `<Layout clips>` 按 `Scope.clip.kind` 注入自定义裁剪区，内置和自定义 clip 走同一套解析。',
+                  en: '`CompileOptions.boundaries` / `<Layout boundaries>` inject custom connection surfaces: `boundary="shape"` keeps its visual-shape meaning, while other names check the Boundary Registry before falling back to the Shape Registry. `CompileOptions.clips` / `<Layout clips>` inject custom clipping regions by `Scope.clip.kind`, with built-in and custom clips using the same resolver.',
+                },
+              },
+              {
+                label: { zh: 'Adapter 与文档同步', en: 'Adapter and docs alignment' },
+                content: {
+                  zh: 'React `<Layout>` 与 Vanilla options 透传 core provider 字段，不重新解释 provider 语义；扩展分组新增自定义连接面、自定义裁剪区、自定义路径等页面，说明 runtime definition 不进 IR，IR 只保留 JSON-safe 的名字、kind 或 operation。',
+                  en: 'React `<Layout>` and Vanilla options pass core provider fields through without reinterpreting provider semantics. The Extending docs now include custom boundaries, custom clips, custom paths, and related pages explaining that runtime definitions never enter IR; IR keeps only JSON-safe names, kinds, or operations.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.6',
             date: '2026-06-28',
             summary: {

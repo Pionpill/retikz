@@ -116,7 +116,7 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 
 上排都用最常见的矩形：左边是固定的 8 个方位 anchor（外加 `center`）；右边是角度 anchor（`A.30`，沿 30° 射线打到边界）和边比例 anchor（`{ side: 'top', fraction: 0.25 }`，top 边左→右取 1/4 处）。下排是几种自带 shape 专属点的非矩形形状：star 的 `tip-N` 尖角（另有 `notch-N` 凹角）、sector 的 `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`、arc 的 `start` / `arc-mid` / `end`。这些专属点用对象形态引用，如 `{ id: 'A', anchor: 'tip-0' }`。
 
-方位锚点保留三套名字：`WebAnchor` 是 canonical 名称，符合 Web / CSS 心智；`CompassAnchor` 使用 `north` / `south` 这类 compass 风格；`TikzAnchor` 使用 `above` / `below` 这类 TikZ positioning 风格。后两者只作为输入别名，解析时归一到对应的 Web 名称。`center` 是独立的中心锚点，不属于这些方向枚举。
+IR / schema 里的方位锚点只保留一套 canonical 名称：`top` / `right` / `bottom` / `left` 以及四个角点，符合 Web / CSS 心智。`center` 是独立的中心锚点，不属于这些方向枚举。少数 sugar 解析器可以接收 TikZ / compass 风格输入，但进入 IR 前必须归一成这套 canonical 名称。
 
 | Anchor                                                    | 位置                               |
 | --------------------------------------------------------- | ---------------------------------- |
@@ -131,23 +131,11 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 | `top` / 等 4 方位        | 边中点（= AABB 边中点） | 圆周 4 方位 | 椭圆轴端          | AABB 边中点        |
 | `top-right` / 等 4 对角  | 4 角                    | 圆周 45° 处 | 椭圆参数 t=π/4 处 | AABB 4 角          |
 
-节点 `rotate` 时中心与 8 个方位锚点跟着旋转。`CompassAnchor` 和 `TikzAnchor` 别名归一如下：
-
-| CompassAnchor                                             | 等价 WebAnchor                                            |
-| --------------------------------------------------------- | --------------------------------------------------------- |
-| `north` / `south` / `east` / `west`                       | `top` / `bottom` / `right` / `left`                       |
-| `north-east` / `north-west`                               | `top-right` / `top-left`                                  |
-| `south-east` / `south-west`                               | `bottom-right` / `bottom-left`                            |
-
-| TikzAnchor                                                | 等价 WebAnchor                                            |
-| --------------------------------------------------------- | --------------------------------------------------------- |
-| `above` / `below` / `right` / `left`                      | `top` / `bottom` / `right` / `left`                       |
-| `above-right` / `above-left`                              | `top-right` / `top-left`                                  |
-| `below-right` / `below-left`                              | `bottom-right` / `bottom-left`                            |
+节点 `rotate` 时中心与 8 个方位锚点跟着旋转。
 
 <Comparison target="tikz" title="锚点命名">
 
-`north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` 作为 compass 风格输入别名保留；`above` / `below` / `above-left` 等 TikZ positioning 风格也可以输入。解析后的 canonical 值是 `top` / `right` 等 Web 名称。
+TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz 的 IR / schema 只保存 `top` / `right` / `bottom` / `left` 这套 canonical 名称；如果某个 sugar 支持 TikZ 风格输入，也会先归一后再进入 IR。
 
 </Comparison>
 

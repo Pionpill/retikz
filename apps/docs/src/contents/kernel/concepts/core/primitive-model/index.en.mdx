@@ -116,7 +116,7 @@ Anchors are the stable points that a Node exposes to other primitives. Paths, po
 
 The top row uses the most common rectangle: on the left, the eight fixed directional anchors (plus `center`); on the right, an angle anchor (`A.30`, a ray cast at 30° onto the boundary) and an edge-proportion anchor (`{ side: 'top', fraction: 0.25 }`, a quarter of the way along the top edge, left→right). The bottom row shows several non-rectangular shapes that carry their own shape-specific points: a star's `tip-N` points (it also has `notch-N`), a sector's `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`, and an arc's `start` / `arc-mid` / `end`. These are referenced in object form, e.g. `{ id: 'A', anchor: 'tip-0' }`.
 
-Directional anchors keep three name sets: `WebAnchor` is the canonical, Web / CSS-friendly vocabulary; `CompassAnchor` uses compass-style names such as `north` / `south`; `TikzAnchor` uses TikZ positioning-style names such as `above` / `below`. The latter two are input aliases normalized to the matching `WebAnchor` at parse time. `center` is a separate center anchor, not part of these directional enums.
+IR / schema directional anchors keep one canonical vocabulary: `top` / `right` / `bottom` / `left` plus the four corners, matching Web / CSS naming. `center` is a separate center anchor, not part of these directional enums. A few sugar parsers may accept TikZ / compass-style inputs, but they must normalize them to the canonical names before they enter IR.
 
 | Anchor                                                    | Position                     |
 | --------------------------------------------------------- | ---------------------------- |
@@ -131,23 +131,11 @@ The built-in [`shape`](/kernel/components/node) types share this naming, but the
 | `top` & 4 cardinals        | Edge midpoints (= AABB edge midpoints) | Circle perimeter | Ellipse axis ends        | AABB edge midpoints |
 | `top-right` & 4 diagonals  | The 4 corners                          | Perimeter at 45° | Ellipse parametric t=π/4 | AABB corners        |
 
-When a node has `rotate`, the center plus the 8 directional anchors rotate with it. `CompassAnchor` and `TikzAnchor` aliases normalize as follows:
-
-| CompassAnchor                                             | Equivalent WebAnchor                                      |
-| --------------------------------------------------------- | --------------------------------------------------------- |
-| `north` / `south` / `east` / `west`                       | `top` / `bottom` / `right` / `left`                       |
-| `north-east` / `north-west`                               | `top-right` / `top-left`                                  |
-| `south-east` / `south-west`                               | `bottom-right` / `bottom-left`                            |
-
-| TikzAnchor                                                | Equivalent WebAnchor                                      |
-| --------------------------------------------------------- | --------------------------------------------------------- |
-| `above` / `below` / `right` / `left`                      | `top` / `bottom` / `right` / `left`                       |
-| `above-right` / `above-left`                              | `top-right` / `top-left`                                  |
-| `below-right` / `below-left`                              | `bottom-right` / `bottom-left`                            |
+When a node has `rotate`, the center plus the 8 directional anchors rotate with it.
 
 <Comparison target="tikz" title="Anchor Names">
 
-`north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` remain accepted compass-style aliases; TikZ positioning-style inputs such as `above` / `below` / `above-left` are also accepted. The canonical parsed values are Web names such as `top` and `right`.
+TikZ uses compass names such as `north` / `south` / `east` / `west`. retikz IR / schema only store canonical names such as `top` / `right` / `bottom` / `left`; when a sugar layer supports TikZ-style input, it normalizes before producing IR.
 
 </Comparison>
 

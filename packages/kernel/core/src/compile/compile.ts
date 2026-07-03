@@ -53,8 +53,8 @@ export type CompileOptions = {
   onWarn?: (warning: CompileWarning) => void;
   /**
    * 运行时注入的第三方 shape（不进 IR）
-   * @description 有效 shape 表 = `{ ...BUILTIN_SHAPES, ...shapes }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   Duplicate names fail at registration time. IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
+   * @description 内置 shape 先注册，自定义 shape 后注册；任何同名 key 都在注册期 throw，不能覆盖内置。
+   *   IR 的 `node.shape` 仍是字符串或 `{ type, params }`；未注册名在编译期 throw。
    * @default 仅 `BUILTIN_SHAPES`
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
@@ -71,15 +71,15 @@ export type CompileOptions = {
   clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 运行时注入的第三方 arrow（不进 IR）
-   * @description 有效 arrow 表 = `{ ...BUILTIN_ARROWS, ...arrows }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   Duplicate names fail at registration time. IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
+   * @description 内置 arrow 先注册，自定义 arrow 后注册；任何同名 key 都在注册期 throw，不能覆盖内置。
+   *   IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
    * @default 仅 `BUILTIN_ARROWS`
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /**
    * 运行时注入的第三方 pattern motif（不进 IR）
-   * @description 有效 pattern 表 = `{ ...BUILTIN_PATTERNS, ...patterns }`——同名 key 覆盖内置，经 `onWarn` 发
-   *   Duplicate names fail at registration time. IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
+   * @description 内置 pattern 先注册，自定义 pattern 后注册；任何同名 key 都在注册期 throw，不能覆盖内置。
+   *   IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
    *   compile 对 pattern 资源查本表 + 调 `PatternDefinition.emit` 产 tile，写进 `SceneResource.tile`。
    * @default 仅 `BUILTIN_PATTERNS`
    */

@@ -1,6 +1,6 @@
 # ADR-06：Clip provider contract
 
-- 状态：Proposed
+- 状态：Accepted（2026-07-03 收尾确认，已实现）
 - 决策日期：2026-06-29
 - 关联：[alpha.7 roadmap](./roadmap.md) · [ADR-01](./01-provider-registry-contract.md) · [ADR-02](./02-provider-key-contract.md) · [ADR-03](./03-capability-provider-migration.md) · [ADR-04](./04-adapter-surface-and-docs.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md)
 

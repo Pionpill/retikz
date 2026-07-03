@@ -62,7 +62,7 @@ type AnimationTrack = {
   direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // defaults to normal
   fill?: 'none' | 'forwards' | 'backwards' | 'both'; // value outside the active interval, defaults to forwards
   trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // defaults to load
-  origin?: string | [number, number]; // pivot for scale / scaleX|Y / rotate, defaults to the geometric center
+  origin?: 'center' | 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | [number, number]; // pivot for scale / scaleX|Y / rotate, defaults to the geometric center
 };
 ```
 
@@ -83,8 +83,8 @@ Intro animations **play once on load**, bringing an element from a transparent /
 | `fadeIn`  | Opacity 0→1, the most common entrance                                                                   | — (common options only)                                                                                                     |
 | `scaleIn` | Uniform scale `from`→1, popping in around a pivot                                                       | `from` (starting scale, defaults to `0.8`; last frame always `1`), `origin` (scale pivot, defaults to the geometric center) |
 | `grow`    | The `from: 0` alias of `scaleIn`, growing from nothing                                                  | `origin` (same as `scaleIn`)                                                                                                |
-| `growUp`  | `scaleY` 0→1 with the pivot at the bottom edge — bars growing from the baseline                         | `origin` (defaults to `'bottom'`, the bottom-edge midpoint; compass names such as `south` are accepted aliases)             |
-| `slideIn` | `translateX                                                                                             | Y` `offset`→0, sliding back to place from an offset                                                                         | `axis` (`'x'`→`translateX` / `'y'`→`translateY`, defaults to `'x'`), `offset` (starting shift, defaults to `-20`; last frame always `0`) |
+| `growUp`  | `scaleY` 0→1 with the pivot at the bottom edge — bars growing from the baseline                         | `origin` (defaults to `'bottom'`, the bottom-edge midpoint; also accepts another canonical anchor or `[x, y]`)              |
+| `slideIn` | `translateX`/`translateY` `offset`→0, sliding back to place from an offset                               | `axis` (`'x'`→`translateX` / `'y'`→`translateY`, defaults to `'x'`), `offset` (starting shift, defaults to `-20`; last frame always `0`) |
 | `drawOn`  | `pathDraw` 0→1, the stroke drawing progressively along the path; only for **stroked** `<Path>` / shapes | — (common options only)                                                                                                     |
 
 ## Emphasis & Loop

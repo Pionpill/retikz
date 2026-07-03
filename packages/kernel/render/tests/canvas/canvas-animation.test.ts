@@ -91,7 +91,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     expect(argsOf(ctx, 'translate')).toContainEqual([50, 0]);
   });
 
-  it('scaleY + origin south 在中点 → 绕支点 ctx.scale(1, 0.5)', () => {
+  it('scaleY + origin bottom 在中点 → 绕支点 ctx.scale(1, 0.5)', () => {
     const t: IRAnimationTrack = {
       property: 'scaleY',
       keyframes: [
@@ -99,12 +99,12 @@ describe('Happy：drawScene({time}) 应用通道', () => {
         { at: 1, value: 1 },
       ],
       duration: 400,
-      origin: 'south',
+      origin: 'bottom',
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect({ animations: [t] })]), { time: 200 });
     expect(argsOf(ctx, 'scale')).toContainEqual([1, 0.5]);
-    expect(argsOf(ctx, 'translate')).toContainEqual([5, 10]); // rect 10×10 south 支点
+    expect(argsOf(ctx, 'translate')).toContainEqual([5, 10]); // rect 10×10 bottom 支点
   });
 
   it('pathDraw（有描边）→ setLineDash([len]) + lineDashOffset 设置', () => {

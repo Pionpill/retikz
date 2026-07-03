@@ -176,6 +176,7 @@ describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
     ).toBe(false);
     expect(AnimationTrackSchema.safeParse({ ...GROW_UP, origin: [2, 3] }).success).toBe(true);
     expect(AnimationTrackSchema.safeParse({ ...GROW_UP, origin: '' }).success).toBe(false);
+    expect(AnimationTrackSchema.safeParse({ ...GROW_UP, origin: 'south' }).success).toBe(false);
     expect(AnimationTrackSchema.safeParse({ ...GROW_UP, origin: [1, 2, 3] }).success).toBe(false);
   });
 

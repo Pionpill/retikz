@@ -1,7 +1,5 @@
 import type { IRChild, IRGeometryLabel, IRNode, IRNodeDefault, IRNodeLabel, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
 
-import { normalizeAtDirection, normalizeSide } from '@retikz/core';
-
 import type {
   ChannelValue,
   ChannelValueResolver,
@@ -164,13 +162,10 @@ const normalizeResolvedLabels = <T>(labels: Array<T>): T | Array<T> | undefined 
 const normalizeNodeLabelPosition = (position: IRNodeLabel['position']): IRNodeLabel['position'] => {
   if (position === undefined) return undefined;
   if (typeof position !== 'string') {
-    if (typeof position === 'object') {
-      return { ...position, boundary: normalizeSide(position.boundary) ?? position.boundary };
-    }
     return position;
   }
   if (position === 'center') return position;
-  return normalizeAtDirection(position) ?? position;
+  return position;
 };
 
 const normalizeNodeLabel = (label: IRNodeLabel): IRNodeLabel => {
@@ -187,7 +182,7 @@ const normalizeNodeLabel = (label: IRNodeLabel): IRNodeLabel => {
 
 const normalizeGeometryLabel = (label: IRGeometryLabel): IRGeometryLabel => {
   if (label.side === undefined) return label;
-  const side = normalizeSide(label.side) ?? label.side;
+  const side = label.side;
   return side === label.side ? label : { ...label, side };
 };
 

@@ -166,7 +166,7 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
     expect(flash({ iterations: 4 }).iterations).toBe(4);
     expect(blink({ iterations: 5 }).iterations).toBe(5);
     expect(wiggle({ angle: 10 }).keyframes[1]).toEqual({ at: 0.25, value: 10 });
-    expect(wiggle({ origin: 'south' }).origin).toBe('south');
+    expect(wiggle({ origin: 'bottom' }).origin).toBe('bottom');
   });
 
   it('每个 preset 产出都通过 AnimationTrackSchema（合法 IR）', () => {
