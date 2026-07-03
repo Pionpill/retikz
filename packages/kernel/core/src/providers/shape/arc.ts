@@ -5,8 +5,7 @@ import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contrac
 import type { Position, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { localToWorld, worldToLocal } from '../../shared';
-import { normalizeAngleRange } from './angle';
+import { localToWorld, normalizeAngleRange, worldToLocal } from '../../shared';
 
 const RAD_TO_DEG = 180 / Math.PI;
 

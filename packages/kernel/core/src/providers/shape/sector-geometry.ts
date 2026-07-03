@@ -1,9 +1,8 @@
 import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 
-import type { Position } from '../../shared';
-import type { AngleRange } from './angle';
+import type { AngleRange, Position } from '../../shared';
 
-import { normalizeAngleRange } from './angle';
+import { normalizeAngleRange } from '../../shared';
 
 const DEG_TO_RAD = Math.PI / 180;
 

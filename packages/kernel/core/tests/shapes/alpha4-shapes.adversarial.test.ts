@@ -5,8 +5,8 @@ import type { IR } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arc, polygon, sector, star } from '../../src/providers/shape';
-import { normalizeAngleRange } from '../../src/providers/shape/angle';
 import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
+import { normalizeAngleRange } from '../../src/shared';
 import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });

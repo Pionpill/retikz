@@ -2,6 +2,8 @@ import type { Position } from '@retikz/math';
 
 import { arcAngleInRange, arcEndPoint, intersect, point, rayArc } from '@retikz/math';
 
+import { alignAngleSweep, normalizeSignedDegrees } from '../angle';
+
 /*
  * 圆角轮廓模块：把「闭合有序段序列」(Line / Arc) 的每个接缝（角）替换为与两侧段相切、半径 r 的
  * fillet 圆弧，并支持沿倒角后轮廓发射线求交（连接面感知倒角）。供 polygon / star / sector / rectangle
@@ -143,9 +145,7 @@ const fractionAlong = (seg: ContourSegment, p: Position, fromStart: boolean): nu
   // 从 ref 出发、沿（fromStart ? 扫描方向 : 反扫描方向）量到 angle 的非负角差
   const goingCcw = fromStart ? ccw : !ccw;
   const raw = goingCcw ? ref - angle : angle - ref;
-  let swept = raw % 360;
-  if (swept < 0) swept += 360;
-  if (swept > 180) swept -= 360; // 取最近表示，越界角可为负
+  const swept = normalizeSignedDegrees(raw);
   return swept / span;
 };
 
@@ -271,7 +271,7 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     const endAngle = Math.atan2(best.tOutPt[1] - best.center[1], best.tOutPt[0] - best.center[0]) * RAD_TO_DEG;
     // turnSign>0（叉积正，y-down 下为顺时针转弯凸角）→ CW（counterClockwise=false）；凹角反向。
     const counterClockwise = turnSign < 0;
-    const adjusted = alignSweep(startAngle, endAngle, counterClockwise);
+    const adjusted = alignAngleSweep(startAngle, endAngle, counterClockwise);
     return {
       tangentInPoint: best.tInPt,
       tangentOutPoint: best.tOutPt,
@@ -465,7 +465,7 @@ const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cm
   }
   const originalSweep = Math.abs(seg.endAngle - seg.startAngle);
   if (originalSweep >= 360 - 1e-9 && point.length([start[0] - end[0], start[1] - end[1]]) < 1e-9) {
-    const adjusted = alignSweep(seg.startAngle, seg.endAngle, seg.counterClockwise ?? false);
+    const adjusted = alignAngleSweep(seg.startAngle, seg.endAngle, seg.counterClockwise ?? false);
     cmds.push({
       kind: 'arc',
       center: seg.center,
@@ -479,7 +479,7 @@ const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cm
   // arc：起点角 / 终点角 = start / end 相对圆心的角，扫描方向不变
   const startAngle = Math.atan2(start[1] - seg.center[1], start[0] - seg.center[0]) * RAD_TO_DEG;
   const endAngle = Math.atan2(end[1] - seg.center[1], end[0] - seg.center[0]) * RAD_TO_DEG;
-  const adjusted = alignSweep(startAngle, endAngle, seg.counterClockwise ?? false);
+  const adjusted = alignAngleSweep(startAngle, endAngle, seg.counterClockwise ?? false);
   cmds.push({
     kind: 'arc',
     center: seg.center,
@@ -488,17 +488,6 @@ const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cm
     endAngle: adjusted.end,
     counterClockwise: seg.counterClockwise,
   });
-};
-
-/** 调整 endAngle 使「start→end」沿给定扫描方向（ccw: 递减 / 否则递增），保持裁剪后弧方向不变 */
-export const alignSweep = (start: number, end: number, ccw: boolean): { start: number; end: number } => {
-  const sweep = end - start;
-  if (sweep === 0) return { start, end: start };
-  if (Math.abs(sweep) === 360) return { start, end: start + (ccw ? -360 : 360) };
-
-  const normalized = ((sweep % 360) + 360) % 360;
-  const alignedSweep = ccw ? (normalized === 0 ? -360 : normalized - 360) : normalized === 0 ? 360 : normalized;
-  return { start, end: start + alignedSweep };
 };
 
 /**
@@ -539,7 +528,7 @@ export const boundaryFromContour = (
   const considerArc = (center: Position, radius: number, startAngle: number, endAngle: number, ccw: boolean): void => {
     // 把 (start, end) 规范成与 ccw 一致的有向区间（end 落在 start 同向的 [0,360) 内），
     //   再喂 rayArc——arcAngleInRange 据 end−start 的符号判扫描方向，必须与 ccw 自洽。
-    const aligned = alignSweep(startAngle, endAngle, ccw);
+    const aligned = alignAngleSweep(startAngle, endAngle, ccw);
     const hits = rayArc(rayOrigin, dir, center, radius, aligned.start, aligned.end);
     for (const s of hits) {
       if (s > 1e-9 && s < best) best = s;
@@ -564,7 +553,7 @@ export const boundaryFromContour = (
       } else {
         const sA = Math.atan2(start[1] - seg.center[1], start[0] - seg.center[0]) * RAD_TO_DEG;
         const eA = Math.atan2(end[1] - seg.center[1], end[0] - seg.center[0]) * RAD_TO_DEG;
-        const aligned = alignSweep(sA, eA, seg.counterClockwise ?? false);
+        const aligned = alignAngleSweep(sA, eA, seg.counterClockwise ?? false);
         considerArc(seg.center, seg.radius, aligned.start, aligned.end, seg.counterClockwise ?? false);
       }
       if (!thisFillet.clampedToZero) {

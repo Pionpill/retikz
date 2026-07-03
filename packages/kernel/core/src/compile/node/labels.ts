@@ -4,6 +4,7 @@ import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../schemas';
 import type { Position } from '../../shared/geometry';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
+import { normalizeDegrees } from '../../shared/geometry';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from '../direction';
 import { anchorOf, angleBoundaryOf } from './anchors';
 
@@ -126,7 +127,7 @@ export const resolveLabelRotateDeg = (
     deg = mode === 'tangent' ? radial + 90 : radial;
   }
   if (label.keepUpright) {
-    const norm = ((deg % 360) + 360) % 360;
+    const norm = normalizeDegrees(deg);
     if (norm > 90 && norm < 270) deg += 180;
   }
   return deg;
