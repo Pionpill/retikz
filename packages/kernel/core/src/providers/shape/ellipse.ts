@@ -1,13 +1,11 @@
 import { z } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
-import type { Ellipse } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
+import type { Ellipse, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
-import { CenterAnchor, isDirectionalAnchor } from '../../shared';
-import { ellipse } from '../../shared/geometry';
+import { CenterAnchor, ellipse, isDirectionalAnchor } from '../../shared';
 
 /** 外接框 Rect → Ellipse（rx/ry = 半宽/半高） */
 const toEllipse = (r: Rect): Ellipse => ({

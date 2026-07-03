@@ -2,11 +2,10 @@ import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 import { z } from 'zod';
 
 import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
+import type { Position, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { localToWorld, worldToLocal } from '../../shared/geometry';
+import { localToWorld, worldToLocal } from '../../shared';
 import { normalizeAngleRange } from './angle';
 
 const RAD_TO_DEG = 180 / Math.PI;

@@ -1,14 +1,11 @@
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { Position } from '../../shared/geometry';
-import type { Rect } from '../../shared/geometry';
-import type { ContourSegment, FilletSolution } from '../../shared/geometry';
+import type { ContourSegment, FilletSolution, Position, Rect } from '../../shared';
 import type { SectorGeometry } from './sector-geometry';
 
 import { defineShape } from '../../contract';
-import { localToWorld } from '../../shared/geometry';
-import { boundaryFromContour, contourCommands, filletContour } from '../../shared/geometry';
+import { boundaryFromContour, contourCommands, filletContour, localToWorld } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive } from './outline';
 import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
