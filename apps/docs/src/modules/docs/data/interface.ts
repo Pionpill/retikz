@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { I18nResources } from '@/i18n/locales/zh';
+import type { I18nResources } from '@/i18n/locales';
 
 /** 全部合法的 i18n 完整 key：<ns>.<key>，给 t(...) 用 */
 export type I18nKey = {
