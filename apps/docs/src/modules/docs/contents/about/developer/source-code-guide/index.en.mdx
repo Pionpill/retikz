@@ -49,10 +49,10 @@ Walk inward from both ends: input contract (IR) first, then output contract (Sce
 1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts) — Public API**<br />
    Skim the named re-exports. What `@retikz/core` exposes (and doesn't) lives here; every adapter must import from this single file.
 
-2. **[`schemas/scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene.ts) — IR root**<br />
+2. **[`schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts) — IR root**<br />
    `SceneSchema = { version, type: 'scene', children: ChildSchema[] }`; `ChildSchema` is a discriminated union of node / path / coordinate / scope.
 
-3. **[`schemas/node.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node.ts) + [`schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path) + [`schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position) — IR fields**<br />
+3. **[`schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts) + [`schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path) + [`schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position) — IR fields**<br />
    Read the zod schemas with their `.describe(...)` text. Each `.describe` is the LLM tool-use contract — schema and field semantics in one place.
 
 4. **[`contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene) — Scene output**<br />
@@ -64,7 +64,7 @@ Walk inward from both ends: input contract (IR) first, then output contract (Sce
 6. **[`compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts) — Compiler entry**<br />
    `compileToScene(ir, options): Scene`. The main flow recursively processes children, lays out nodes and scopes, resolves paths, and collects paint / clip / marker resources. Reading it shows how an IR becomes a Scene.
 
-7. **[`compile/node.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/node.ts) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) — Sub-compilers**<br />
+7. **[`compile/node/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/node) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) — Sub-compilers**<br />
    Drill in as needed: node layout / path stepping / position resolution. [`text-metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text-metrics.ts) ships a fallback measurer; adapters can inject a more accurate one.
 
 8. **[`parsers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parsers) — Sugar entry (optional)**<br />
@@ -110,7 +110,7 @@ Keep these constraints in mind when reading core; they explain why some implemen
 4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Step.tsx) etc. — Kernel components**<br />
    These components don't render anything themselves — they only declare a `displayName` and hand props to `builder`. Read one and you've read them all.
 
-5. **[`render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/renderPrim.tsx) — Scene → SVG element**<br />
+5. **[`render/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/render-prim.tsx) — Scene → SVG element**<br />
    Dispatches by primitive `type` to `<rect>` / `<ellipse>` / `<text>` / `<path>` / `<g>`; paint / clip / marker resources are materialized by sibling defs components. This layer is the main rewrite surface when porting to another framework.
 
 6. **[`render/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/browser-measurer.ts) — Text measurer injection**<br />
@@ -130,7 +130,7 @@ If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter ma
 | ------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `kernel/*.tsx` components (declare `displayName`) | Equivalent component types in your framework (with a recognizable marker)           |
 | `kernel/builder.ts` (JSX → IR)                    | A children / vnode → IR bridge for your framework                                   |
-| `render/renderPrim.tsx` + defs components         | Mapping Scene primitives and resources to your framework's native elements          |
+| `render/render-prim.tsx` + defs components         | Mapping Scene primitives and resources to your framework's native elements          |
 | `render/browser-measurer.ts`                      | A measurer for your environment (browser / SSR / Native) — implement `TextMeasurer` |
 
 `@retikz/core`'s IR, `compileToScene`, `shared/geometry` helpers, and `contract/scene` types are reused unchanged — no need to rewrite them.
@@ -139,8 +139,8 @@ If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter ma
 
 | Looking for               | File                                                                                                                              |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| IR root                   | [`core/schemas/scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene.ts)               |
-| Node fields               | [`core/schemas/node.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node.ts)                 |
+| IR root                   | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)               |
+| Node fields               | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)                 |
 | Path / Step types         | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                      |
 | Polar / relative position | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)              |
 | Scene primitive types     | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                    |
@@ -150,7 +150,7 @@ If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter ma
 | core public API           | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                           |
 | React top-level pipeline  | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Layout.tsx)             |
 | JSX → IR bridge           | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/builder.ts)             |
-| Scene → SVG element       | [`react/render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/renderPrim.tsx)     |
+| Scene → SVG element       | [`react/render/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/render-prim.tsx)     |
 | react public API          | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                           |
 
 ## Further Reading
