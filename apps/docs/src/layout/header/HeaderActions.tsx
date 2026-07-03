@@ -31,10 +31,7 @@ import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './u
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 
-/**
- * 顶栏右侧动作组
- * @description 桌面视口（≥ 896px）GitHub / 复制链接 / 主题 / 语言 / 更多 平铺；窄视口（< 896px）只保留 More 按钮，前四项折进 Dropdown 顶部分组。AI 触发器由 AppHeader 直接放在中间，不再属于这里
- */
+/** 顶栏右侧动作组。 */
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();
   const { theme, handleToggleTheme, handleCycleLang, handleCopyLink } = useDocActions();
@@ -61,7 +58,7 @@ export const HeaderActions: FC = () => {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex items-center gap-2">
-        <div className="hidden @4xl/header:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger
               asChild
@@ -83,16 +80,16 @@ export const HeaderActions: FC = () => {
             </TooltipContent>
           </Tooltip>
         </div>
-        <Separator orientation="vertical" className="hidden @4xl/header:block h-4!" />
+        <Separator orientation="vertical" className="hidden lg:block h-4!" />
         <div className="flex items-center gap-1">
           <Tooltip>
-            <TooltipTrigger className={cn(triggerClass, 'hidden @4xl/header:inline-flex')} onClick={handleToggleTheme}>
+            <TooltipTrigger className={cn(triggerClass, 'hidden lg:inline-flex')} onClick={handleToggleTheme}>
               <ThemeIcon className="size-4" />
             </TooltipTrigger>
             <TooltipContent>{themeLabel}</TooltipContent>
           </Tooltip>
           <Tooltip>
-            <TooltipTrigger className={cn(triggerClass, 'hidden @4xl/header:inline-flex')} onClick={handleCycleLang}>
+            <TooltipTrigger className={cn(triggerClass, 'hidden lg:inline-flex')} onClick={handleCycleLang}>
               <Languages className="size-4" />
             </TooltipTrigger>
             <TooltipContent>
@@ -110,9 +107,8 @@ export const HeaderActions: FC = () => {
               </TooltipTrigger>
               <TooltipContent>{t('common.more')}</TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end" className="w-56 min-[896px]:w-72">
-              {/* 窄视口独占：桌面平铺的主题 / 语言 / 复制链接 / GitHub 收纳到这 */}
-              <DropdownMenuGroup className="min-[896px]:hidden">
+            <DropdownMenuContent align="end" className="w-56 lg:w-72">
+              <DropdownMenuGroup className="lg:hidden">
                 <DropdownMenuItem onClick={handleToggleTheme} className="cursor-pointer">
                   <ThemeIcon className="size-4" />
                   {themeLabel}
@@ -133,7 +129,7 @@ export const HeaderActions: FC = () => {
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator className="min-[896px]:hidden" />
+              <DropdownMenuSeparator className="lg:hidden" />
               <DropdownMenuLabel inset className="text-xs font-normal text-muted-foreground">
                 {t('view.groupLabel')}
               </DropdownMenuLabel>
@@ -141,14 +137,14 @@ export const HeaderActions: FC = () => {
                 {hasToc && (
                   <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
                     {t('toc.outline')}
-                    <DropdownMenuShortcut className="max-[895px]:hidden">
+                    <DropdownMenuShortcut className="max-lg:hidden">
                       <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />
                     </DropdownMenuShortcut>
                   </DropdownMenuCheckboxItem>
                 )}
                 <DropdownMenuCheckboxItem checked={layout === 'centered'} onCheckedChange={toggleLayout}>
                   {t('common.layoutCentered')}
-                  <DropdownMenuShortcut className="max-[895px]:hidden">
+                  <DropdownMenuShortcut className="max-lg:hidden">
                     <Shortcut keys={['mod', 'alt', 'M']} className="tracking-normal" />
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
@@ -167,13 +163,13 @@ export const HeaderActions: FC = () => {
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewHideCode} onCheckedChange={togglePreviewHideCode}>
                   {t('preview.hideAllCode')}
-                  <DropdownMenuShortcut className="max-[895px]:hidden">
+                  <DropdownMenuShortcut className="max-lg:hidden">
                     <Shortcut keys={['mod', 'alt', 'H']} className="tracking-normal" />
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewIsExpand} onCheckedChange={togglePreviewIsExpand}>
                   {t('preview.expandAllCode')}
-                  <DropdownMenuShortcut className="max-[895px]:hidden">
+                  <DropdownMenuShortcut className="max-lg:hidden">
                     <Shortcut keys={['mod', 'alt', 'E']} className="tracking-normal" />
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>

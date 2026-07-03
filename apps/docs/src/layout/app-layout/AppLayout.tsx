@@ -40,34 +40,34 @@ export const AppLayout: FC = () => {
 
   return (
     <>
-      <ResizablePanelGroup
-        direction="horizontal"
-        autoSaveId="docs-view"
-        className="min-h-screen overflow-x-clip! overflow-y-visible!"
-      >
-        <ResizablePanel order={1} className="overflow-x-clip! overflow-y-visible!">
-          <div className="flex min-h-screen min-w-0 flex-col">
-            <AppHeader />
+      <div className="flex min-h-screen min-w-0 flex-col">
+        <AppHeader />
+        <ResizablePanelGroup
+          direction="horizontal"
+          autoSaveId="docs-view"
+          className="min-h-[calc(100dvh-3.5rem)] flex-1 overflow-x-clip! overflow-y-visible!"
+        >
+          <ResizablePanel order={1} className="overflow-x-clip! overflow-y-visible!">
             <Outlet />
-          </div>
-        </ResizablePanel>
-        {aiOpenDesktop && (
-          <>
-            <ResizableHandle />
-            <ResizablePanel
-              order={2}
-              defaultSize={toPercent(DEFAULT_AI_PX)}
-              minSize={toPercent(MIN_AI_PX)}
-              maxSize={toPercent(MAX_AI_PX)}
-              className="overflow-x-clip! overflow-y-visible! min-w-0!"
-            >
-              <div className="sticky top-0 h-screen min-w-0 max-w-full">
-                <AiChatPanel />
-              </div>
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+          </ResizablePanel>
+          {aiOpenDesktop && (
+            <>
+              <ResizableHandle />
+              <ResizablePanel
+                order={2}
+                defaultSize={toPercent(DEFAULT_AI_PX)}
+                minSize={toPercent(MIN_AI_PX)}
+                maxSize={toPercent(MAX_AI_PX)}
+                className="overflow-x-clip! overflow-y-visible! min-w-0!"
+              >
+                <div className="sticky top-14 h-[calc(100dvh-3.5rem)] min-w-0 max-w-full">
+                  <AiChatPanel />
+                </div>
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
+      </div>
       {!isDesktop && (
         <Sheet open={aiOpenMobile} onOpenChange={setOpen}>
           <SheetContent

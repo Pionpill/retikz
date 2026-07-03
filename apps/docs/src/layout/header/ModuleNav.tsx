@@ -20,7 +20,7 @@ export const ModuleNav: FC = () => {
   const { moduleId } = useParams<'moduleId'>();
 
   return (
-    <NavigationMenu className="hidden @4xl/header:flex">
+    <NavigationMenu className="hidden lg:flex">
       <NavigationMenuList>
         {modules.map(m => {
           const active = moduleId === m.id;

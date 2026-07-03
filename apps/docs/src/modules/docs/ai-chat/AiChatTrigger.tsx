@@ -40,11 +40,9 @@ export const AiChatTrigger: FC = () => {
           onClick={toggleOpen}
           aria-label={t('ai.triggerLabel')}
           className={cn(
-            // < @4xl/header:：ghost size-7（与 DocsSearch 紧凑模式图标 / HeaderActions More 对齐）
             buttonVariants({ variant: 'ghost', size: 'icon' }),
             'size-7 cursor-pointer rounded-sm text-muted-foreground hover:text-accent-foreground',
-            // @4xl/header: 起：升级为 outline icon-sm 与桌面端搜索输入框的边框风格呼应
-            '@4xl/header:size-8 @4xl/header:rounded-md @4xl/header:border @4xl/header:bg-background @4xl/header:shadow-xs @4xl/header:dark:border-input @4xl/header:dark:bg-input/30 @4xl/header:dark:hover:bg-input/50',
+            'lg:size-8 lg:rounded-md lg:border lg:bg-background lg:shadow-xs lg:dark:border-input lg:dark:bg-input/30 lg:dark:hover:bg-input/50',
           )}
         >
           <BotMessageSquare className="size-4" />
