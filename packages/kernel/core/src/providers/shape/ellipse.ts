@@ -5,6 +5,7 @@ import type { Ellipse } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 
 import { defineShape } from '../../contract';
+import { BuiltinShape } from '../../schemas';
 import { CenterAnchor, isDirectionalAnchor } from '../../shared';
 import { ellipse } from '../../shared/geometry';
 
@@ -25,7 +26,7 @@ const toEllipse = (r: Rect): Ellipse => ({
  *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`。
  */
 export const ellipseShape = defineShape({
-  name: 'ellipse',
+  name: BuiltinShape.Ellipse,
   paramsSchema: z.strictObject({
     circumscribe: z
       .enum(['proportional', 'equal'])

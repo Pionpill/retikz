@@ -1,8 +1,7 @@
-﻿import type { RibbonWidthProfileDefinition } from '../../contract';
+import type { RibbonWidthProfileDefinition } from '../../contract';
 
 import { resolveProviderRegistry } from '../registry';
-
-export const BUILTIN_RIBBON_WIDTH_PROFILES: ReadonlyArray<RibbonWidthProfileDefinition> = [];
+import { BUILTIN_RIBBON_WIDTH_PROFILES } from './definitions';
 
 export const resolveRibbonWidthProfileRegistry = (
   profiles?: ReadonlyArray<RibbonWidthProfileDefinition>,

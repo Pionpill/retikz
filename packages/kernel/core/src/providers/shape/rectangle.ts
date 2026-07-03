@@ -6,6 +6,7 @@ import type { Rect } from '../../shared/geometry';
 import type { ContourSegment } from '../../shared/geometry';
 
 import { defineShape } from '../../contract';
+import { BuiltinShape } from '../../schemas';
 import { CenterAnchor, isDirectionalAnchor } from '../../shared';
 import { rect } from '../../shared/geometry';
 import { localToWorld } from '../../shared/geometry';
@@ -46,7 +47,7 @@ const rectVertices = (bounds: Rect): Array<Position> => {
  *   scaleParams：cornerRadius 是长度，随 node scale 用 uniform 几何均值因子协同缩放（边数 / 角度类参数才不缩）。
  */
 export const rectangle = defineShape({
-  name: 'rectangle',
+  name: BuiltinShape.Rectangle,
   paramsSchema: z.strictObject({
     cornerRadius: z
       .number()

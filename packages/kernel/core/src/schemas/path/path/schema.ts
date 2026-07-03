@@ -7,7 +7,7 @@ import { ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema } from '../step';
 import { StepSchema } from '../step';
-import { PathFillRule, PathLineCap, PathLineJoin, PathThickness } from './constants';
+import { PathFillRule, PathKind, PathLineCap, PathLineJoin, PathThickness } from './constants';
 
 export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');
 
@@ -121,8 +121,8 @@ export const PathBaseSchema = z
   .describe('Base fields for a path-like relation before kind-specific structural refinement.');
 
 export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
-  const kind = path.kind ?? 'stroke';
-  if (kind === 'stroke') {
+  const kind = path.kind ?? PathKind.Stroke;
+  if (kind === PathKind.Stroke) {
     if (path.children === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -146,7 +146,7 @@ export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
     }
     return;
   }
-  if (kind === 'ribbon') {
+  if (kind === PathKind.Ribbon) {
     if (path.ribbon === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

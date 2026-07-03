@@ -1,8 +1,7 @@
-﻿import type { CompositeDefinition } from '../../contract';
+import type { CompositeDefinition } from '../../contract';
 
 import { resolveProviderRegistry } from '../registry';
-
-export const BUILTIN_COMPOSITES: ReadonlyArray<CompositeDefinition> = [];
+import { BUILTIN_COMPOSITES } from './definitions';
 
 const keyOfComposite = (definition: CompositeDefinition): string => `${definition.namespace}.${definition.type}`;
 

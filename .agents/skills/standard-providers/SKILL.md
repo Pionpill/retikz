@@ -42,6 +42,7 @@ description: Use when changing retikz providers layer code, builtin definitions,
 
 - 内置项也通过 `defineXxx()` 或同等 contract 入口创建。
 - 名称、kind、type 使用 schema / shared vocabulary 成员，不写裸字符串。
+- 内置 helper 若有可扩展配置项，使用 `options` 对象承载；不要把第三个及之后的位置参数作为未来扩展槽。
 - helper 默认留在 provider 内部；跨层复用时再抽到 `shared`。
 
 ## 改代码前检查
@@ -49,4 +50,6 @@ description: Use when changing retikz providers layer code, builtin definitions,
 1. 内置和用户 definition 是否同路注册、解析、消费？
 2. key 冲突、保留名和已移除名诊断是否集中在 resolver？
 3. pipeline / compile 是否只消费 resolver 输出？
-4. 新增内置项是否补了索引、默认值、测试和必要文档？
+4. 内置集合是否在 `definitions.ts` 组装，`registry.ts` 是否只负责 resolver？
+5. `BUILTIN_*` 数组里是否只放命名 definition，不直接内联长对象？
+6. 新增内置项是否补了索引、默认值、测试和必要文档？

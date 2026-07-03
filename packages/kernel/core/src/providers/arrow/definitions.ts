@@ -43,8 +43,8 @@ const hollowPath = (
 const normalArrow = defineArrow({
   name: BuiltinArrowShape.Normal,
   lineContactX: 0,
-  emit: ctx => [
-    filledPath(ctx, [
+  emit: context => [
+    filledPath(context, [
       [0, 0],
       [10, 5],
       [0, 10],
@@ -58,8 +58,8 @@ const openArrow = defineArrow({
   hollow: true,
   lineContactX: 1,
   tipX: 9,
-  emit: ctx => [
-    hollowPath(ctx, [
+  emit: context => [
+    hollowPath(context, [
       [1, 1],
       [9, 5],
       [1, 9],
@@ -71,8 +71,8 @@ const openArrow = defineArrow({
 const stealthArrow = defineArrow({
   name: BuiltinArrowShape.Stealth,
   lineContactX: 3,
-  emit: ctx => [
-    filledPath(ctx, [
+  emit: context => [
+    filledPath(context, [
       [0, 0],
       [10, 5],
       [0, 10],
@@ -87,9 +87,9 @@ const openStealthArrow = defineArrow({
   hollow: true,
   lineContactX: 3,
   tipX: 9,
-  emit: ctx => [
+  emit: context => [
     hollowPath(
-      ctx,
+      context,
       [
         [1, 1],
         [9, 5],
@@ -105,8 +105,8 @@ const openStealthArrow = defineArrow({
 const diamondArrow = defineArrow({
   name: BuiltinArrowShape.Diamond,
   lineContactX: 0,
-  emit: ctx => [
-    filledPath(ctx, [
+  emit: context => [
+    filledPath(context, [
       [0, 5],
       [5, 0],
       [10, 5],
@@ -121,9 +121,9 @@ const openDiamondArrow = defineArrow({
   hollow: true,
   lineContactX: 1,
   tipX: 9,
-  emit: ctx => [
+  emit: context => [
     hollowPath(
-      ctx,
+      context,
       [
         [1, 5],
         [5, 1],
@@ -139,14 +139,14 @@ const openDiamondArrow = defineArrow({
 const circleArrow = defineArrow({
   name: BuiltinArrowShape.Circle,
   lineContactX: 0,
-  emit: ctx => [
+  emit: context => [
     {
       type: 'ellipse',
       cx: 5,
       cy: 5,
       rx: 5,
       ry: 5,
-      fill: typeof ctx.fill === 'string' ? ctx.fill : { kind: 'contextStroke' },
+      fill: typeof context.fill === 'string' ? context.fill : { kind: 'contextStroke' },
     },
   ],
 });
@@ -156,15 +156,15 @@ const openCircleArrow = defineArrow({
   name: BuiltinArrowShape.OpenCircle,
   hollow: true,
   lineContactX: 0.75,
-  emit: ctx => [
+  emit: context => [
     {
       type: 'ellipse',
       cx: 5,
       cy: 5,
       rx: 4.25,
       ry: 4.25,
-      stroke: typeof ctx.stroke === 'string' ? ctx.stroke : { kind: 'contextStroke' },
-      strokeWidth: ctx.lineWidth,
+      stroke: typeof context.stroke === 'string' ? context.stroke : { kind: 'contextStroke' },
+      strokeWidth: context.lineWidth,
     },
   ],
 });
