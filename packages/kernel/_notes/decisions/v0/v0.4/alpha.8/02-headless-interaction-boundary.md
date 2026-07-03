@@ -1,6 +1,6 @@
 # ADR-02：Headless interaction manifest 边界登记
 
-- 状态：Proposed
+- 状态：Accepted（2026-07-03 收尾确认：alpha.8 不新增 interaction API；现有 hydration / hit-test 保留为 runtime 定位层，headless interaction manifest 进入 v0.5 候选）
 - 决策日期：2026-07-03
 - 关联：[v0.4-alpha.8 roadmap](./roadmap.md) · [ADR-01 closeout](./01-drawing-complete-alpha4-closeout.md) · [core drawing complete](../../../../architecture/core-drawing-complete.md)
 

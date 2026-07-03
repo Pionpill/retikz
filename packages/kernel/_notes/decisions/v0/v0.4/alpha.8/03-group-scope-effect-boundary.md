@@ -1,6 +1,6 @@
 # ADR-03：Group / Scope 级视觉效果延期边界
 
-- 状态：Proposed
+- 状态：Accepted（2026-07-03 收尾确认：alpha.4 图元级 effect 语义保持；group / scope effect、blend isolation 与 offscreen composite 延后到独立设计）
 - 决策日期：2026-07-03
 - 关联：[v0.4-alpha.8 roadmap](./roadmap.md) · [ADR-01 closeout](./01-drawing-complete-alpha4-closeout.md) · [alpha.4 ADR-01 shadow](../alpha.4/01-scene-drop-shadow.md) · [alpha.4 ADR-02 blend](../alpha.4/02-blend-mode.md)
 

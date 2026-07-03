@@ -1,6 +1,6 @@
 # ADR-04：ScenePrimitive reference 与发布文案收口
 
-- 状态：Proposed
+- 状态：Accepted（2026-07-03 收尾确认：ScenePrimitive reference 与 alpha.4 changelog wording 已完成 docs-only 对账）
 - 决策日期：2026-07-03
 - 关联：[v0.4-alpha.8 roadmap](./roadmap.md) · [ADR-01 closeout](./01-drawing-complete-alpha4-closeout.md) · [ADR-03 group effect boundary](./03-group-scope-effect-boundary.md)
 

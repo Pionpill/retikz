@@ -1,6 +1,6 @@
 # ADR-01：Drawing complete × alpha.4 视觉效果收口审计
 
-- 状态：Proposed
+- 状态：Accepted（2026-07-03 收尾确认：alpha.8 ADR / docs / changelog 对账完成；interaction manifest 分流到 v0.5 候选，group / scope effect 分流到独立后续设计）
 - 决策日期：2026-07-03
 - 关联：[v0.4-alpha.8 roadmap](./roadmap.md) · [core drawing complete](../../../../architecture/core-drawing-complete.md) · [v0.4-alpha.4 roadmap](../alpha.4/roadmap.md) · [alpha.4 ADR-01 shadow](../alpha.4/01-scene-drop-shadow.md) · [alpha.4 ADR-02 blend](../alpha.4/02-blend-mode.md) · [ADR-02 interaction boundary](./02-headless-interaction-boundary.md) · [ADR-03 group effect boundary](./03-group-scope-effect-boundary.md) · [ADR-04 docs closeout](./04-scene-primitive-reference-closeout.md)
 

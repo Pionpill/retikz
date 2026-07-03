@@ -16,10 +16,10 @@ alpha.8 是 v0.4 的 alpha 收口版本，不新增运行时能力。它的目�
 
 | ADR | 状态 | 主题 | 说明 |
 | --- | --- | --- | --- |
-| [ADR-01](./01-drawing-complete-alpha4-closeout.md) | Proposed | Drawing complete × alpha.4 收口审计 | 总审计与分流索引，确认 alpha.4 图元级 effect 无阻塞问题，并把 interaction / group effect / docs reference 分拆到后续 ADR。 |
-| [ADR-02](./02-headless-interaction-boundary.md) | Proposed | Headless interaction manifest 边界登记 | 明确现有 hydration / hit-test 不是缺失；缺口是 core 缺 JSON-safe target / role / intent / hit-area manifest，进入 v0.5 候选。 |
-| [ADR-03](./03-group-scope-effect-boundary.md) | Proposed | Group / Scope 级视觉效果延期边界 | 保持 alpha.4 图元级 shadow / blend 语义，登记 group effect / blend isolation / offscreen composite 为独立后续设计。 |
-| [ADR-04](./04-scene-primitive-reference-closeout.md) | Proposed | ScenePrimitive reference 与发布文案收口 | alpha.8 必须做 docs-only reference / changelog 对账，不回写 alpha.4 历史 ADR。 |
+| [ADR-01](./01-drawing-complete-alpha4-closeout.md) | Accepted | Drawing complete × alpha.4 收口审计 | 总审计与分流索引，确认 alpha.4 图元级 effect 无阻塞问题，并把 interaction / group effect / docs reference 分拆到后续 ADR。 |
+| [ADR-02](./02-headless-interaction-boundary.md) | Accepted | Headless interaction manifest 边界登记 | 明确现有 hydration / hit-test 不是缺失；缺口是 core 缺 JSON-safe target / role / intent / hit-area manifest，进入 v0.5 候选。 |
+| [ADR-03](./03-group-scope-effect-boundary.md) | Accepted | Group / Scope 级视觉效果延期边界 | 保持 alpha.4 图元级 shadow / blend 语义，登记 group effect / blend isolation / offscreen composite 为独立后续设计。 |
+| [ADR-04](./04-scene-primitive-reference-closeout.md) | Accepted | ScenePrimitive reference 与发布文案收口 | alpha.8 已完成 docs-only reference / changelog 对账，不回写 alpha.4 历史 ADR。 |
 
 ## 范围
 
