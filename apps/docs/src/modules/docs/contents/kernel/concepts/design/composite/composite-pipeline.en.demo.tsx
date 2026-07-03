@@ -35,7 +35,7 @@ const pipeline = defineComposite({
     // One labelled arrow between adjacent stages; endpoints reference node ids and auto-clip to the (border-less) text box
     const edges = node.stages.slice(1).map((_label, i) => ({
       type: 'path' as const,
-      arrow: '->' as const,
+      marks: [{ pos: 1, mark: { kind: 'arrow' as const } }],
       children: [
         { type: 'step' as const, kind: 'move' as const, to: { id: `stage-${i}` } },
         {

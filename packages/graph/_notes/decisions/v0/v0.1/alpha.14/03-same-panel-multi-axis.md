@@ -3,6 +3,7 @@
 - 状态：Accepted（实现字段以 ADR-09 为准）
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [ADR-02 facet grid data routing](./02-facet-grid-data-routing.md)
+- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/03-same-panel-multi-axis.md`
 
 ## 背景
 
@@ -65,13 +66,6 @@ type AxisGuideSpec = {
 4. 使用 ADR-01 的 `coordinateScope`，mark / guide / locator 都能共享同一个 scope identity。
 5. axis placement 不是裸四方向字段，避免把 cartesian 的 left/right/top/bottom 泄漏到 ternary / polar / custom coordinate。
 
-## 待决策点 🔻
-
-- **`AxisGuide.placement` 是否在 ADR-03 落地**：本草案倾向落地最小 union。双轴用 `placement.kind = 'side'` 表达 left / right；ternary / custom 坐标使用 `auto` 或 `edge`，不把所有坐标系压成四方向。
-- **overlay scope 是否允许 chain**：本草案允许 A overlay B、C overlay A，但 normalize 时需要解析到同一个 root plotArea。自引用和环必须 fail-loud。
-- **grid 默认策略**：本草案倾向 overlay guide 不自动画 grid，只有 `grid: true` 才画；多 grid 视觉合并交给 ADR-05。
-- **不同 coordinate 类型 overlay**：本草案允许 cartesian 与 polar / custom overlay，只要它们共享 bbox；语义由用户负责，lowering 不做“合理性”判断。
-- **axis placement 枚举实现方式**：所有 placement kind / cardinal side 都用 const object enum（`AxisPlacementKind`、`AxisCardinalSide`）+ `z.enum(X)`，不写散落裸字符串 union。
 
 ## DSL 表面
 
@@ -142,69 +136,3 @@ const spec = {
 - 不做非线性双轴数学换算提示；用户显式给两套 scale，retikz 不推断单位关系。
 - 不做 linked brushing / tooltip。
 - 不把 overlay 写进 facet schema。
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-本 ADR 自评 level：`red`。
-
-原因：扩展 PlotSpec / AxisGuide schema，并改变 guide duplicate 校验、frame 布局和 mark z-order。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-| --- | --- | --- | --- | --- | --- |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 改 | `composition.scopes[].placement.zIndex` | `z.number().optional()` | scope 声明顺序 | overlay scope 内 mark 层 z-order 提示 |
-| `packages/graph/plot/src/schemas/guide/schema.ts` | 加 | `AxisPlacementKind` | `as const` value object + `z.enum(AxisPlacementKind)` | 无 | axis placement 判别枚举：auto / side / edge |
-| `packages/graph/plot/src/schemas/guide/schema.ts` | 加 | `AxisCardinalSide` | `as const` value object + `z.enum(AxisCardinalSide)` | 无 | cartesian cardinal side 枚举：top / right / bottom / left |
-| `packages/graph/plot/src/schemas/guide/schema.ts` | 加 | `axis.placement` | `AxisPlacementSchema.optional()` | `{ kind: 'auto' }` | axis 放置方式：coordinate 自动、cardinal side 或 native edge |
-| `packages/graph/plot/src/schemas/guide/schema.ts` | 加 | `axis.placement.offset` | `z.number().nonnegative().optional()` | `0` | 同 placement key 多 axis 的额外偏移量 |
-
-### 文件 scope
-
-- `packages/graph/plot/src/schemas/plot/schema.ts`
-- `packages/graph/plot/src/schemas/guide/schema.ts`
-- `packages/graph/plot/src/pipeline/**`
-- `packages/graph/plot/src/features/guide/**`
-- `packages/graph/plot/src/providers/coordinate/**`
-- `packages/graph/plot/tests/composition/same-panel-multi-axis.test.ts`
-- `packages/graph/plot/tests/lower/guide.test.ts`
-- `apps/docs/src/contents/graph/**`（文档阶段）
-
-### 测试象限
-
-**Happy path**：
-
-- `left right y axes`：左右 y 轴同时 lower。
-- `mark scope projections`：两个 mark 使用不同 y scale。
-- `shared plot area`：overlay scope 与 target scope bbox 一致。
-
-**边界**：
-
-- `single overlay no guide`：overlay scope 没有 axis guide 仍可只画 mark。
-- `zIndex order`：zIndex 改变 mark 层顺序。
-- `placement omitted defaults`：cartesian x/y side 推断稳定，ternary x/y/z edge 推断稳定。
-
-**错误路径**：
-
-- `duplicate axis same placement`：同 scope + dimension + placement key 重复报错。
-- `ternary rejects cardinal side`：ternary2D 显式 side placement 报错，auto / edge 合法。
-- `overlay target missing`：target 未注册报错。
-- `overlay cycle`：overlay 引用环报错。
-
-**交互**：
-
-- `facet plus overlay`：facet panel 内可拥有 overlay scope，数据不跨 panel。
-- `custom coordinate overlay`：custom coordinate 可 overlay root scope。
-- `grid explicit only`：overlay grid 只有显式 `grid: true` 才生成。
-
-### 依赖的现有元素
-
-- ADR-01 `coordinateScope`：mark / guide 绑定入口。
-- ADR-02 facet panel：overlay 后续可嵌入 panel scope。
-- `AxisGuideSchema` / `lowerGuide`：扩展 axis placement。
-- coordinate providers：需要按 coordinate-native placement 输出 axis。
-- core `Scope` z-order：plot 只调整 children 顺序。

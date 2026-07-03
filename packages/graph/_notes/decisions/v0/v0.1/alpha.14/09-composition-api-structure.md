@@ -3,6 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-01
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [ADR-02 facet grid data routing](./02-facet-grid-data-routing.md) · [ADR-04 shared scaffold tracks](./04-shared-scaffold-tracks.md) · [ADR-05 composition guides, axes, grid, spacing](./05-composition-guides-layout.md) · [ADR-08 React axis binding sugar](./08-react-axis-binding-sugar.md)
+- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/09-composition-api-structure.md`
 
 ## 完工摘要
 
@@ -157,10 +158,6 @@ type AxisGuideSpec = {
 4. `header` 从 guide policy 中拆出来后，多层 facet label 分组更自然，后续可以加 formatter / style，而不污染 axis / grid 策略。
 5. 删除 alias 能防止 docs、schema、adapter 同时维护两套写法。0.x 阶段应优先把长期模型修正到位。
 
-## 待决策点 🔾
-
-- **React 组件命名**：本 ADR 保留当前 `<Scaffold>` / `<Track>` 主 API。文档标题继续叫“共享轨道”。`<TrackGroup>` 更贴近用户心智，但属于独立命名议题，避免和本轮数据结构迁移混在一起。
-- **Vanilla API 形态**：本 ADR 只要求与 React authoring surface 同构，不强制 builder 链式命名。实现可以选择 object builder 或函数 builder，但输出必须是同一份 PlotSpec。
 
 ## DSL 表面
 
@@ -316,107 +313,3 @@ docs 验收：
 - 不做 dashboard / arbitrary layout / free inset。
 - 不设计 legend resolve；本 ADR 只覆盖 position scale、axis、grid、facet / track header。
 - 不保留旧字段 alias；如果必须支持迁移工具，另开 beta cleanup ADR。
-
----
-
-## 实现契约（必填）🔾
-
-### Level
-
-本 ADR 自评 level：`red`。
-
-原因：需要破坏性修改 `@retikz/plot` IR schema、composition normalization、lowering、adapter 输出、docs demo 和测试矩阵。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-| --- | --- | --- | --- | --- | --- |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 改 | `composition.defaultView` | `z.string().min(1)` | 无 | 省略 view binding 时使用的默认坐标视图 id |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 改 | `composition.views` | `z.array(CoordinateViewSchema).min(1)` | 无 | Plot 内显式坐标视图注册表 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.arrangements` | `z.array(CompositionArrangementSchema).optional()` | 无 | facet / tracks 等坐标组合结构 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.resolve` | `CompositionResolveSchema.optional()` | 内置默认 | composition 级 scale / axis / grid 共享策略 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 改 | `composition.spacing` | `CompositionSpacingSchema.optional()` | 内置默认 | composition 级间距默认值 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `spacing.panelGap` / `trackGap` / `axisGap` / `labelGap` | `z.number().nonnegative().optional()` | 内置默认 | composition 间距，单位为 user units |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `spacing.padding.*` | `z.number().nonnegative().optional()` | 无 | composition 外侧 padding，单位为 user units |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `arrangements[].kind` | `z.literal('facet') \| z.literal('tracks')` | 无 | arrangement 判别字段 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `facet.header` | `{ row?: boolean; column?: boolean }` | `{}` | facet row / column header 开关 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `facet.viewIdTemplate` | `z.string().min(1).optional()` | `{arrangement}.panel.{row}.{column}` | facet 派生 view id 模板 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `tracks.header` | `{ track?: boolean }` | `{}` | track header 开关 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `tracks.viewIdTemplate` | `z.string().min(1).optional()` | `{arrangement}.track.{track}` | tracks 派生 view id 模板 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `tracks.tracks[].view` | `z.string().min(1).optional()` | 由模板生成 | 单个 track 的显式 view id |
-| `packages/graph/plot/src/schemas/mark/schema.ts` | 改 | `coordinateView` | `z.string().min(1).optional()` | `composition.defaultView` | mark 绑定到的坐标视图 id |
-| `packages/graph/plot/src/schemas/guide/schema.ts` | 改 | `axis.coordinateView` | `z.string().min(1).optional()` | `composition.defaultView` | axis guide 绑定到的坐标视图 id |
-| `packages/graph/plot/src/schemas/guide/schema.ts` | 改 | `axis.grid` | `z.union([z.boolean(), AxisGridSchema]).optional()` | 无 | axis 是否生成 grid，以及 selected selector 精确投放 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 删 | `defaultScope` / `scopes` / `facets` / `scaffolds` / `layout` / `guidePolicy` | 旧字段 | 无 | 不保留 alias |
-
-字段名一经本 ADR 人工确认，后续实现不得自行改名；如需改名，回本 ADR 补条或新开 ADR。
-
-### 文件 scope
-
-- `packages/graph/plot/src/schemas/plot/schema.ts`
-- `packages/graph/plot/src/schemas/plot/constants.ts`
-- `packages/graph/plot/src/schemas/plot/types.ts`
-- `packages/graph/plot/src/schemas/mark/schema.ts`
-- `packages/graph/plot/src/schemas/guide/schema.ts`
-- `packages/graph/plot/src/pipeline/**`
-- `packages/graph/plot/src/features/guide/**`
-- `packages/graph/plot/src/features/interaction/**`
-- `packages/graph/plot/tests/composition/**`
-- `packages/graph/plot-react/src/components/composition.tsx`
-- `packages/graph/plot-react/src/components/build-plot-spec.ts`
-- `packages/graph/plot-react/src/components/marks.tsx`
-- `packages/graph/plot-react/src/components/guides.tsx`
-- `packages/graph/plot-react/tests/**`
-- `packages/graph/plot-vanilla/src/**`
-- `packages/graph/plot-vanilla/tests/**`
-- `apps/docs/src/contents/graph/grammar/coordinate/composition/**`
-- `apps/docs/src/data/**`
-- `apps/docs/src/i18n/**`
-- `packages/graph/_notes/decisions/v0/v0.1/alpha.14/roadmap.md`
-
-偏离白名单的改动需要回本 ADR 增补文件 scope，或新开 ADR。
-
-### 测试象限
-
-**Happy path**
-
-- `composition_views_default_binding`：默认 view 正确绑定 mark / axis。
-- `facet_arrangement_with_multilevel_header`：多层 row / column facet 生成分组 header。
-- `tracks_arrangement_with_cartesian_lanes`：笛卡尔共享轨道生成多 track views。
-- `axis_id_sugar_generates_overlay_views`：双轴 sugar 展开为 views + overlay placement。
-
-**边界**
-
-- `single_view_composition_equivalent_to_coordinate_shorthand`：单 view composition 与顶层 coordinate shorthand 等价。
-- `zero_spacing_is_valid`：`panelGap/trackGap/axisGap/labelGap = 0` 合法。
-- `resolve_omitted_uses_defaults`：省略 resolve 时使用推荐默认值。
-- `synchronized_scale_single_panel_is_noop`：单 panel 下 synchronized 不改变输出。
-- `negative_spacing_rejected`：spacing / padding 任一负数均被 schema 拒绝。
-
-**错误路径**
-
-- `legacy_composition_fields_rejected`：旧字段全部拒绝。
-- `missing_default_view_rejected`：`defaultView` 引用不存在时报错。
-- `duplicate_view_id_rejected`：重复 view id 报错。
-- `invalid_arrangement_view_rejected`：facet arrangement 引用不存在 view 报错。
-- `track_band_overlap_rejected`：同 role track band 重叠时报错。
-- `generated_view_id_conflict_rejected`：派生 view id 与显式 view 或其他派生 view 重复时报错。
-- `coordinate_view_and_axis_id_conflict_rejected`：mark 同时写 `coordinateView` 与 axis id sugar 报错。
-
-**交互**
-
-- `resolve_grid_respects_axis_grid_flag`：只有 `Axis.grid` 开启时才生成 grid，投放范围读 resolve。
-- `axis_grid_selected_selector_survives_composition_rename`：ADR-07 的 selected selector 在新命名下可按 view / arrangement / facet / track 精确命中。
-- `mixed_facet_and_tracks_arrangements_are_rejected`：同一 Plot 内暂不允许 facet arrangement 与 tracks arrangement 并列，避免未定义的组合层级被静默忽略；后续若要支持嵌套组合，需另行设计 arrangement 层级关系。
-- `locator_provenance_uses_coordinate_view`：locator/provenance 输出 coordinateView、facet key、track key。
-- `react_vanilla_manual_spec_parity`：React、Vanilla 与手写 PlotSpec 输出等价。
-
-### 依赖的现有元素
-
-- `PlotSpecSchema`（`packages/graph/plot/src/schemas/plot/schema.ts`）：破坏性重构 composition 字段。
-- `CoordinateOperationSchema`：继续作为 view / tracks arrangement 的 coordinate 真源。
-- `AxisGuideSchema`：继续由 axis 自己声明 `grid` 是否生成，并新增 / 重命名 view binding。
-- mark schema：继续由 mark 声明绑定到哪个坐标视图。
-- plot lowering pipeline：消费 normalized views / arrangements / resolve。
-- core `Scope`：lowering 目标仍复用 core Scope，不新增 core IR 能力。
-- React / Vanilla adapter：提供用户友好的结构组件和 axis id sugar，输出新 PlotSpec。

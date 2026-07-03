@@ -1728,6 +1728,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.14',
+            date: '2026-07-03',
+            summary: {
+              zh: 'Coordinate composition 坐标复合：PlotSpec 支持多个 coordinate view、arrangement、facet panel、same-panel 多轴 overlay 与 shared scaffold tracks；mark / guide / locator / provenance 都按同一 view identity 路由。',
+              en: 'Coordinate composition: PlotSpec now supports multiple coordinate views, arrangements, facet panels, same-panel multi-axis overlays, and shared-scaffold tracks; marks, guides, locators, and provenance all route through the same view identity.',
+            },
+            items: [
+              {
+                label: { zh: 'composition 结构收敛', en: 'Composition structure convergence' },
+                content: {
+                  zh: '`composition` 收敛为 `defaultView` / `views` / `arrangements` / `spacing` / `resolve`，旧 `scopes` / `facets` / `scaffolds` / `layout` / `guidePolicy` 结构不再作为公开 schema；facet、overlay、track 都展开到同一坐标视图机制。 [坐标系](/graph/grammar/coordinate/composition)',
+                  en: '`composition` converges on `defaultView` / `views` / `arrangements` / `spacing` / `resolve`; the old `scopes` / `facets` / `scaffolds` / `layout` / `guidePolicy` shape is no longer public schema. Facets, overlays, and tracks all expand into the same coordinate-view mechanism. [Coordinates](/graph/grammar/coordinate/composition)',
+                },
+              },
+              {
+                label: { zh: 'facet / overlay / track', en: 'Facets / overlays / tracks' },
+                content: {
+                  zh: '分面按字段拆 panel，可选择共享或独立 position scale；同 panel 多轴通过 mark 选择 coordinate view / position scale；共享骨架 track 支持笛卡尔 lanes 与极坐标 rings。axis grid 改由 AxisGuide 声明，composition 只提供默认投放策略。',
+                  en: 'Facets split panels by fields with shared or independent position scales; same-panel multi-axis overlays let marks choose a coordinate view / position scale; shared-scaffold tracks cover Cartesian lanes and polar rings. Axis grids are now declared by AxisGuide, with composition providing only default targeting.',
+                },
+              },
+              {
+                label: { zh: 'locator / provenance 对齐', en: 'Locator / provenance alignment' },
+                content: {
+                  zh: 'datum locator 与 provenance 带上 coordinate view、facet key 与 track key，同一 datum 出现在不同 panel / view / track 时可区分；lowering 仍复用 core `Scope`，不引入跨域容器。',
+                  en: 'Datum locators and provenance carry coordinate-view, facet, and track keys, so the same datum can be distinguished across panels / views / tracks. Lowering still reuses core `Scope` and introduces no cross-domain container.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.13',
             date: '2026-06-28',
             summary: {
@@ -2239,6 +2270,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.14',
+            date: '2026-07-03',
+            summary: {
+              zh: 'React DSL 暴露坐标复合 authoring 面：`<Facet>`、`<Scaffold>` / `<Track>`、axis id 绑定与 mark 级坐标选择都展开到同一 PlotSpec composition。',
+              en: 'The React DSL exposes coordinate-composition authoring: `<Facet>`, `<Scaffold>` / `<Track>`, axis-id binding, and mark-level coordinate selection all expand to the same PlotSpec composition.',
+            },
+            items: [
+              {
+                label: { zh: '坐标复合组件糖', en: 'Coordinate-composition component sugar' },
+                content: {
+                  zh: '`<Facet>` 写小多图，`<Scaffold>` / `<Track>` 写共享骨架与 lanes / rings；常见双 y 轴可用 `yAxisId` 绑定自动生成 overlay view。组件只装配 spec，不复制 lowering 逻辑。',
+                  en: '`<Facet>` authors small multiples, while `<Scaffold>` / `<Track>` author shared scaffolds and lanes / rings; common dual-y charts can use `yAxisId` binding to generate overlay views. Components only assemble the spec and do not duplicate lowering.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.13',
             date: '2026-06-28',
             summary: {
@@ -2589,6 +2637,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.14',
+            date: '2026-07-03',
+            summary: {
+              zh: 'Vanilla builder / SSR 跟进坐标复合：builder 可装配 facet、overlay 与 shared track 结构，`renderPlot` 继续纯 spec 驱动渲染同一 composition。',
+              en: 'The vanilla builder / SSR surface follows coordinate composition: the builder can assemble facet, overlay, and shared-track structures, while `renderPlot` keeps rendering the same composition from pure specs.',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 零新渲染入口', en: 'No new SSR rendering entry' },
+                content: {
+                  zh: '`plotBuilder` 产出的 composition 与手写 PlotSpec / React DSL 同构；`renderPlot(spec, datasets)` 经共享 lowering 自动渲染分面、多轴 overlay 与 track 图，不新增 SSR 专用路径。',
+                  en: '`plotBuilder` emits the same composition shape as handwritten PlotSpec and the React DSL. `renderPlot(spec, datasets)` renders facets, multi-axis overlays, and track charts through shared lowering with no SSR-specific path.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.13',
             date: '2026-06-28',

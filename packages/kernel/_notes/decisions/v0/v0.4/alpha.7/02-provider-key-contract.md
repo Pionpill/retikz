@@ -3,6 +3,7 @@
 - 状态：Accepted（2026-06-29 人工签字，2026-07-03 已实现）
 - 决策日期：2026-06-28
 - 关联：[alpha.7 roadmap](./roadmap.md) · [ADR-01](./01-provider-registry-contract.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md) · [plot-design.md](../../../../../../graph/_notes/architecture/plot-design.md)
+- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/kernel/_notes/decisions/v0/v0.4/alpha.7/02-provider-key-contract.md`
 
 ## 背景
 
@@ -54,11 +55,6 @@ IR 保存完整 operation object，registry key 从 operation discriminant 或 n
 2. operation provider 的 key 应和 IR discriminant 绑定，避免 `definition.name` 与 schema literal 双真源漂移。
 3. composite 保留 namespace 防撞，对齐 plot 的 namespace 设计和 core Tier 2 lowering 模型。
 
-## 待决策点
-
-- **Pattern IR 字段是否改名**：倾向不为统一而把 `pattern.shape` 机械改成 `pattern.name`；本 ADR 只要求该字段引用 `PatternDefinition.name`。
-- **Path kind schema key helper 名称**：倾向 `extractPathKindKey(schema)`，对齐 plot 的 `extractScaleType` / `extractTransformKind`。
-- **Composite key helper 名称**：倾向 `extractCompositeKey(definition)`，返回 `${namespace}.${type}`。
 
 ## DSL 表面
 
@@ -82,7 +78,6 @@ const customComposite = defineComposite({
 
 `packages/kernel/core/tests/providers/provider-key-contract.test.ts` 覆盖 key 提取规则；各 capability 测试验证 IR 引用与 definition key 对齐。
 
-具体 case 拆分见下面"实现契约 § 测试象限"。
 
 ## 影响
 
@@ -96,67 +91,3 @@ const customComposite = defineComposite({
 - registry duplicate / unknown 的统一错误行为由 [ADR-01](./01-provider-registry-contract.md) 处理。
 - 各 provider 的实际迁移由 [ADR-03](./03-capability-provider-migration.md) 处理。
 - 不引入全局 namespace registry；namespace 仍是 composite 自身语义。
-
----
-
-## 实现契约（必填）
-
-### Level
-
-`red`
-
-自评 level：`red`。本 ADR 改 public definition 类型，并会牵动 `packages/*/*/src/index.ts` 的公开导出。
-
-### Schema 改动
-
-无。
-
-### 文件 scope
-
-本 ADR 实现允许触碰的文件白名单：
-
-- `packages/kernel/core/src/contract/shape/types.ts`
-- `packages/kernel/core/src/contract/shape/define.ts`
-- `packages/kernel/core/src/contract/arrow/types.ts`
-- `packages/kernel/core/src/contract/arrow/define.ts`
-- `packages/kernel/core/src/contract/pattern/types.ts`
-- `packages/kernel/core/src/contract/pattern/define.ts`
-- `packages/kernel/core/src/contract/path/types.ts`
-- `packages/kernel/core/src/contract/path/define.ts`
-- `packages/kernel/core/src/contract/ribbon/types.ts`
-- `packages/kernel/core/src/contract/ribbon/define.ts`
-- `packages/kernel/core/src/contract/composite/types.ts`
-- `packages/kernel/core/src/contract/composite/define.ts`
-- `packages/kernel/core/src/contract/index.ts`
-- `packages/kernel/core/src/index.ts`
-- `packages/kernel/core/tests/providers/provider-key-contract.test.ts`（新建）
-- `packages/kernel/core/tests/providers/composite-key-contract.test.ts`（可选新建）
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `shape_name_key`：`defineShape({ name: 'pill', ... })` → key helper 返回 `pill`。
-- `path_kind_schema_literal_key`：`definePathKind({ schema: z.object({ kind: z.literal('route') }) })` → key helper 返回 `route`。
-- `composite_namespace_type_key`：`defineComposite({ namespace: 'plot', type: 'axis', ... })` → key helper 返回 `plot.axis`。
-
-**边界（≥ 2）**：
-
-- `provider_name_trim_not_allowed`：空字符串或 whitespace-only name → define helper throw。
-- `composite_namespace_type_non_empty`：namespace / type 为空 → define helper throw。
-
-**错误路径（≥ 2）**：
-
-- `path_kind_schema_without_literal_kind_throws`：schema 无 `kind: z.literal(...)` → key extraction throw。
-- `definition_missing_name_throws`：string reference provider 缺 name → define helper throw。
-
-**交互（≥ 2）**：
-
-- `ir_string_matches_definition_name`：IR 引用 custom shape name → registry lookup 到同一 definition。
-- `schema_parse_uses_same_operation_key`：custom path kind operation parse 后仍按 literal kind 分派。
-
-### 依赖的现有元素
-
-- `JsonObjectSchema` / `IRJsonObject`（`packages/kernel/core/src/ir/json.ts`）——用于 params / operation JSON 边界。
-- `defineShape` / `defineArrow` / `definePattern` / `definePathGenerator` / `definePathKind` / `defineComposite`——修改为 key contract 的定义点。
-- plot `extractScaleType` / `extractTransformKind`——参考 schema literal key 提取方式。

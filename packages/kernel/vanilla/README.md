@@ -30,7 +30,7 @@ import { figure, node, draw } from '@retikz/vanilla';
 const fig = figure([
   node('a', { position: [0, 0], text: 'A' }),
   node('b', { position: [120, 0], text: 'B' }),
-  draw(['a', 'b'], { arrow: '->' }),
+  draw(['a', 'b'], { marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
 ]);
 
 const svg = fig.toSvgString(); // also: fig.mount(el) / fig.toCanvas(canvas)

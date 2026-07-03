@@ -8,6 +8,8 @@ import type { MathJaxSvgEngine } from '../src/mathjax/engine';
 import { createLowerTex } from '../src/lower/lower-tex';
 import { createMathJaxEngine } from '../src/mathjax/engine';
 
+const MATHJAX_INTEGRATION_TIMEOUT = 15_000;
+
 const fakeSvg = (tex: string): string =>
   `<svg viewBox="0 -100 ${tex.length * 100} 110"><g transform="scale(1,-1)">` +
   `<path d="M0 100 L${tex.length * 100} 100 L${tex.length * 100} -10 Z"></path></g></svg>`;
@@ -72,19 +74,19 @@ describe('[lower-tex] MathJax integration', () => {
     const frac = lower({ tex: '\\frac{a}{b}', displayMode: true }, { fontSize: 14 });
     expect(frac).not.toBeNull();
     expect(frac!.commands.length).toBeGreaterThan(x!.commands.length);
-  });
+  }, MATHJAX_INTEGRATION_TIMEOUT);
 
   it('returns null for syntax errors that MathJax marks as merror', async () => {
     const engine = await createMathJaxEngine();
     const lower = createLowerTex(engine);
     expect(lower({ tex: '{', displayMode: false }, { fontSize: 14 })).toBeNull();
-  });
+  }, MATHJAX_INTEGRATION_TIMEOUT);
 
   it('returns null for undefined control sequences', async () => {
     const engine = await createMathJaxEngine();
     const lower = createLowerTex(engine);
     expect(lower({ tex: '\\nonexistentcmd', displayMode: false }, { fontSize: 14 })).toBeNull();
-  });
+  }, MATHJAX_INTEGRATION_TIMEOUT);
 
   it('works end to end through compileToScene', async () => {
     const lowerTex = createLowerTex(await createMathJaxEngine());
@@ -95,5 +97,5 @@ describe('[lower-tex] MathJax integration', () => {
     };
     const scene = compileToScene(ir, { lowerTex });
     expect(JSON.stringify(scene.primitives)).toContain('"fillRule":"evenodd"');
-  });
+  }, MATHJAX_INTEGRATION_TIMEOUT);
 });

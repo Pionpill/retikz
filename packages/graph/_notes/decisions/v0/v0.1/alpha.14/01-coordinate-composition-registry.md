@@ -3,6 +3,7 @@
 - 状态：Accepted（实现字段以 ADR-09 为准）
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [plot-design.md §7](../../../../architecture/plot-design.md) · [alpha.2 ADR-01 guide IR](../alpha.2/01-guide-ir.md) · [alpha.10 ADR-02 plot composable foundation](../alpha.10/02-plot-composable.md)
+- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/01-coordinate-composition-registry.md`
 
 ## 背景
 
@@ -62,12 +63,6 @@ type AxisGuideSpec = {
 3. 顶层 `coordinate` 作为 shorthand 保留，可以让现有单图 spec 不需要整体迁移；但多 scope 场景统一走 `composition`，避免双真源。
 4. `placement` 只保留最小判别外形，具体 `panel` 排布、`overlay` 轴侧、`track` 带宽和共享 scaffold 在后续 ADR 中定义，避免 ADR-01 过早把 polar 或 facet 细节写死。
 
-## 待决策点 🔻
-
-- **字段名是否最终使用 `coordinateScope`**：本草案倾向 `coordinateScope`，因为它明确表示 scope identity。备选 `scope` 更短但容易与 core `Scope`、HTML scope 或 data scope 混淆；备选 `coordinate` 又会和 coordinate operation 混淆。
-- **`composition` 与顶层 `coordinate` 是否允许同时出现**：本草案倾向“不允许同时作为输入真源出现”。实现中先把无 `composition` 的旧 spec 规范化为隐式默认 scope；如果用户同时写 `coordinate` 与 `composition`，schema / normalize 阶段 fail-loud。
-- **`placement` 在 ADR-01 是否落完整 union**：本草案先落 `root` / `panel` / `overlay` / `track` 四种 discriminant 与最小引用字段。后续 ADR 可以给各 kind 扩展 payload，但不得改变 `kind` 与 scope identity 的基础契约。
-- **legend 是否也绑定 `coordinateScope`**：本草案不在 ADR-01 改 legend。legend 主要绑定 scale / channel，不一定属于某个局部坐标空间；如后续 facet 或 track 需要 per-scope legend，由 ADR-05 再补。
 
 ## DSL 表面
 
@@ -154,90 +149,3 @@ const spec = {
 - 不改 legend 绑定策略。
 - 不做 tooltip、hover、brush、linked highlighting。
 - 不做 v0.3 composite / chart preset；高层封装后续必须 lower 到本 ADR 定义的 coordinate scope registry。
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-本 ADR 自评 level：`red`。
-
-原因：需要改 `PlotSpec` schema、mark / guide schema、normalize / lowering 的公共上下文，并影响后续 locator / provenance 契约。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-| --- | --- | --- | --- | --- | --- |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 改 | `coordinate` | `CoordinateOperationSchema.optional()` + superRefine 条件 | 无 | 单坐标 shorthand；无 composition 时必填，有 composition 时不得同时作为第二坐标真源 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition` | `CoordinateCompositionSchema.optional()` | 无 | Plot 内 coordinate scope registry，声明可被 mark / guide 引用的坐标空间 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.defaultScope` | `z.string().min(1)` | 无 | 省略 coordinateScope 时使用的默认 scope id |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.scopes` | `z.array(CoordinateScopeSchema).min(1)` | 无 | 本 Plot 内注册的 coordinate scope 列表，id 必须唯一 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.scopes[].id` | `z.string().min(1)` | 无 | coordinate scope 的稳定引用 id |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.scopes[].coordinate` | `CoordinateOperationSchema` | 无 | 此 scope 使用的 coordinate operation |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.scopes[].placement` | `CoordinateScopePlacementSchema.optional()` | `{ kind: 'root' }`（normalize 后） | 此 scope 在 plot 内的最小 placement 分类，具体布局由后续 ADR 扩展 |
-| `packages/graph/plot/src/schemas/mark/schema.ts` | 加 | `coordinateScope` | `z.string().min(1).optional()` | `composition.defaultScope`（normalize 后） | mark 绑定到的 coordinate scope id |
-| `packages/graph/plot/src/schemas/guide/schema.ts` | 加 | `axis.coordinateScope` | `z.string().min(1).optional()` | `composition.defaultScope`（normalize 后） | axis guide 绑定到的 coordinate scope id |
-
-字段名一旦人工确认，后续 Spec Writer / 实现 Agent 不得自行改名；如需改名，回本 ADR 补条或另开 ADR。
-
-### 文件 scope
-
-本 ADR 实现允许触碰的文件白名单：
-
-- `packages/graph/plot/src/schemas/plot/schema.ts`
-- `packages/graph/plot/src/schemas/mark/schema.ts`
-- `packages/graph/plot/src/schemas/guide/schema.ts`
-- `packages/graph/plot/src/schemas/plot/index.ts`
-- `packages/graph/plot/src/schemas/coordinate/schema.ts`（仅复用 / 导出 CoordinateOperationSchema 所需调整）
-- `packages/graph/plot/src/pipeline/**`
-- `packages/graph/plot/src/features/guide/**`
-- `packages/graph/plot/src/features/interaction/**`（仅 provenance / locator 需要 scope id 时）
-- `packages/graph/plot/tests/composition/**`
-- `packages/graph/plot-react/src/components/**`（仅透传 coordinateScope / composition 所需调整）
-- `packages/graph/plot-vanilla/src/**`（仅透传 coordinateScope / composition 所需调整）
-- `packages/graph/plot-react/tests/**`
-- `packages/graph/plot-vanilla/tests/**`
-- `apps/docs/src/contents/graph/**`（后续文档阶段）
-- `apps/docs/src/data/**`（后续文档阶段）
-
-偏离白名单的改动需要回本 ADR 增补文件 scope，或新开 ADR。
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `legacy coordinate shorthand`：旧 spec 只写顶层 `coordinate`，normalize 生成隐式默认 scope，lowering 产物与 alpha.13 单图等价。
-- `composition default scope`：省略 mark / axis `coordinateScope` 时绑定 `composition.defaultScope`。
-- `explicit mark and axis scope binding`：两个 scope、两个 mark、两个 axis guide 分别绑定不同 scope，lowering provenance 可区分。
-- `custom coordinate scope`：scope 内 custom coordinate operation 通过现有 coordinate registry / passthrough，不进入内置白名单。
-
-**边界（≥ 2）**：
-
-- `single explicit root scope`：`composition.scopes` 只有一个 root scope 时行为与 shorthand 等价。
-- `placement omitted`：scope 省略 `placement` 时 normalize 为 `{ kind: 'root' }`，后续 ADR 可在多 root 场景继续约束。
-- `axis coordinateScope omitted`：axis guide 省略 `coordinateScope` 时使用默认 scope。
-
-**错误路径（≥ 2）**：
-
-- `empty composition scopes`：空 scopes 拒绝。
-- `duplicate scope id`：重复 id 拒绝，并指出重复 id。
-- `missing default scope`：defaultScope 引用未注册 id 拒绝。
-- `missing mark or guide scope`：mark / axis guide 引用未注册 id 拒绝。
-- `coordinate and composition coexist`：顶层 `coordinate` 与 `composition` 同时出现拒绝。
-- `invalid placement reference`：overlay target 未注册、track 缺 scaffold / track key 拒绝。
-
-**交互（≥ 2）**：
-
-- `guide lowering uses scope coordinate`：axis guide 的 dimension 解释来自其绑定 scope 的 coordinate，而不是全局单 coordinate。
-- `locator provenance carries scope id`：同一 datum key 出现在两个 scope 时，provenance 包含不同 coordinate scope id。
-- `react vanilla parity`：后续 React / Vanilla surface 的 composition 与手写 PlotSpec normalize 后等价。
-
-### 依赖的现有元素
-
-- `PlotSpecSchema`（`packages/graph/plot/src/schemas/plot/schema.ts`）：修改顶层 coordinate 契约并新增 composition。
-- `CoordinateOperationSchema`（`packages/graph/plot/src/schemas/coordinate/schema.ts`）：作为每个 coordinate scope 的坐标操作真源，内置与 custom 同机制。
-- `markBase` / mark schema（`packages/graph/plot/src/schemas/mark/schema.ts`）：扩展可选 `coordinateScope`。
-- `AxisGuideSchema`（`packages/graph/plot/src/schemas/guide/schema.ts`）：扩展可选 `coordinateScope`，复用 alpha.2 guide IR。
-- plot normalize / pipeline：新增“输入 spec → normalized coordinate scope registry”的标准化步骤。
-- core `Scope`：后续 lowering 目标仍复用 core `Scope`；本 ADR 不改 core IR，不反向依赖 core 内部实现。

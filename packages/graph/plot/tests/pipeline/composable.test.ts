@@ -143,8 +143,8 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
   };
 
   it('panel_bbox_resolvable_from_sibling', () => {
-    // 面板 bbox：core ADR-03 既有能力（scope.id 注册父帧）；无 guides → 内容满图，p.east ≈ [480,150]
-    const end = lineEndpoint(pointSpec({ id: 'p' }), { id: 'p', anchor: 'east' });
+    // 面板 bbox：core ADR-03 既有能力（scope.id 注册父帧）；无 guides → 内容满图，p.right ≈ [480,150]
+    const end = lineEndpoint(pointSpec({ id: 'p' }), { id: 'p', anchor: 'right' });
     expect(end).toBeDefined();
     // 内容右边 ≈ 480（+ 散点字形半径），y 居中 ≈ 150
     expect(end![0]).toBeGreaterThan(470);

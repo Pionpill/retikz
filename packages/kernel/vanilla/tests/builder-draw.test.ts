@@ -7,10 +7,11 @@ import { draw } from '../src/builder/draw';
 
 describe('@retikz/vanilla draw()', () => {
   it('draw-way-reuses-core：draw(way) 的 steps 与 core parseWay 逐字一致', () => {
-    const p = draw(['a', 'b'], { arrow: '->' });
+    const marks = [{ pos: 1, mark: { kind: 'arrow' as const } }];
+    const p = draw(['a', 'b'], { marks });
     expect(p.type).toBe('path');
     if (p.type !== 'path') throw new Error('unreachable');
-    expect(p.arrow).toBe('->');
+    expect(p.marks).toBe(marks);
     expect(p.children).toEqual(parseWay(['a', 'b']));
   });
 

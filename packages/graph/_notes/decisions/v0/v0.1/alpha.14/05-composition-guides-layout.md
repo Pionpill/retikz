@@ -3,6 +3,7 @@
 - 状态：Accepted（实现字段以 ADR-09 为准）
 - 决策日期：2026-06-28
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-02 facet grid data routing](./02-facet-grid-data-routing.md) · [ADR-03 same-panel multi-axis overlay](./03-same-panel-multi-axis.md) · [ADR-04 shared scaffold tracks](./04-shared-scaffold-tracks.md)
+- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/05-composition-guides-layout.md`
 
 ## 背景
 
@@ -83,12 +84,6 @@ type AxisGuideSpec = {
 3. 明确“不测量文字”，保持 lowering 纯计算和 renderer-agnostic。
 4. `AxisGuide.title` 放在 guide 上，因为 title 属于某根 axis，而不是 coordinate scope。
 
-## 待决策点 🔻
-
-- **`outerShared` 的最小语义**：本草案仅在 facet / track 中对同 scale identity 的共享 role 使用外侧轴；不同 scale 即使同 role 也不合并。
-- **默认 guidePolicy**：本草案倾向 `{ axes: 'perScope', grid: 'perScope' }`，更显式、更少惊喜。docs demo 可展示如何切到 outerShared。
-- **label 文本来源**：本草案不新增 facet/track title schema，只定义 policy。facet label 默认来自 facet value，track label 默认来自 track id；后续可扩展 format/title。
-- **axis title 是否纳入本 ADR**：本草案纳入 `AxisGuide.title`，因为多轴 review 时没有 title 很难解释左右轴含义。
 
 ## DSL 表面
 
@@ -163,75 +158,3 @@ const spec = {
 - 不做自由 dashboard layout、inset、legend packer。
 - 不做复杂 axis title rotation / multi-line wrapping。
 - 不做 renderer-specific text metrics。
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-本 ADR 自评 level：`red`。
-
-原因：扩展 PlotSpec / AxisGuide schema，并影响 lowering 布局和 guide 输出。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-| --- | --- | --- | --- | --- | --- |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.layout` | `CompositionLayoutSchema.optional()` | 内置默认 | composition 级 spacing 配置 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `layout.panelGap` | `z.number().nonnegative().optional()` | 内置默认 | facet panel 间距 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `layout.trackGap` | `z.number().nonnegative().optional()` | 内置默认 | scaffold track 间距 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `layout.axisGap` | `z.number().nonnegative().optional()` | 内置默认 | 同侧 axis 间距 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `layout.labelGap` | `z.number().nonnegative().optional()` | 内置默认 | panel / track / axis label 间距 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `layout.padding` | `BoxPaddingSchema.optional()` | 无 | composition 外侧 padding |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `CompositionAxisPolicy` | `as const` value object + `z.enum(CompositionAxisPolicy)` | 无 | axes policy 枚举：perScope / outerShared |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `CompositionGridPolicy` | `as const` value object + `z.enum(CompositionGridPolicy)` | 无 | grid policy 枚举：none / perScope / shared |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `CompositionFacetLabelPolicy` | `as const` value object + `z.enum(CompositionFacetLabelPolicy)` | 无 | facet label policy 枚举 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `CompositionTrackLabelPolicy` | `as const` value object + `z.enum(CompositionTrackLabelPolicy)` | 无 | track label policy 枚举 |
-| `packages/graph/plot/src/schemas/plot/schema.ts` | 加 | `composition.guidePolicy` | `CompositionGuidePolicySchema.optional()` | `{ axes: 'perScope', grid: 'perScope' }` | 多 scope guide 默认策略 |
-| `packages/graph/plot/src/schemas/guide/schema.ts` | 加 | `axis.title` | `z.string().optional()` | 无 | axis title 文本 |
-
-### 文件 scope
-
-- `packages/graph/plot/src/schemas/plot/schema.ts`
-- `packages/graph/plot/src/schemas/guide/schema.ts`
-- `packages/graph/plot/src/pipeline/layout.ts`
-- `packages/graph/plot/src/pipeline/expand.ts`
-- `packages/graph/plot/src/features/guide/**`
-- `packages/graph/plot/tests/composition/composition-guides-layout.test.ts`
-- `packages/graph/plot/tests/lower/guide.test.ts`
-- `apps/docs/src/contents/graph/**`（文档阶段）
-
-### 测试象限
-
-**Happy path**：
-
-- `facet outer shared axes`：shared scale facet 只输出外侧轴。
-- `overlay side axis gap`：左右轴按 `placement.kind = 'side'` / gap 放置。
-- `track gap layout`：trackGap 改变 band 间距。
-
-**边界**：
-
-- `zero gaps`：gap=0 合法且布局稳定。
-- `long axis title`：长 title 不触发布局测量。
-- `policy omitted`：默认 perScope 行为与旧 guide 输出兼容。
-
-**错误路径**：
-
-- `negative gap rejected`：负 gap schema 拒绝。
-- `outerShared incompatible scale`：不同 scale identity 不合并轴。
-- `axis placement conflict`：同 placement key offset 冲突 fail-loud 或稳定自动 offset。
-
-**交互**：
-
-- `facet overlay guides`：facet panel 内 overlay 双轴按 guidePolicy 输出。
-- `scaffold shared grid`：scaffold tracks 共享 grid 策略正确。
-- `json round trip layout`：layout / guidePolicy JSON round-trip 等价。
-
-### 依赖的现有元素
-
-- ADR-02 facet panel bbox。
-- ADR-03 axis placement / overlay scope。
-- ADR-04 scaffold track band。
-- `lowerGuide` / guide feature：扩展 title 和 placement gap。
-- `pipeline/layout.ts`：统一 spacing 常量。

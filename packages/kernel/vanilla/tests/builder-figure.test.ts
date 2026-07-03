@@ -9,13 +9,14 @@ import { node } from '../src/builder/node';
 
 describe('@retikz/vanilla figure() — IR 装配', () => {
   it('figure-ir：hyperscript 把 children 装进 { version:1, type:scene }', () => {
+    const marks = [{ pos: 1, mark: { kind: 'arrow' as const } }];
     const fig = figure({ width: 400, height: 300 }, [
       node('a', { position: [0, 0], text: 'A' }),
-      draw(['a', 'b'], { arrow: '->' }),
+      draw(['a', 'b'], { marks }),
     ]);
     expect(fig.ir.version).toBe(1);
     expect(fig.ir.type).toBe('scene');
-    expect(fig.ir.children).toEqual([node('a', { position: [0, 0], text: 'A' }), draw(['a', 'b'], { arrow: '->' })]);
+    expect(fig.ir.children).toEqual([node('a', { position: [0, 0], text: 'A' }), draw(['a', 'b'], { marks })]);
   });
 
   it('figure-viewbox：config.viewBox → IR.viewBox；width/height 不进 IR', () => {
@@ -26,15 +27,16 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
   });
 
   it('hyperscript-eq-fluent：同图两路 ir 相等', () => {
+    const marks = [{ pos: 1, mark: { kind: 'arrow' as const } }];
     const hyper = figure({ width: 400, height: 300 }, [
       node('a', { position: [0, 0], text: 'A' }),
-      draw(['a', 'b'], { arrow: '->' }),
+      draw(['a', 'b'], { marks }),
       draw(['a', 'b'], { kind: 'ribbon', ribbon: { width: 3 } }),
       coordinate('mid', { position: [60, 40] }),
     ]);
     const fluent = figure({ width: 400, height: 300 })
       .node('a', { position: [0, 0], text: 'A' })
-      .draw(['a', 'b'], { arrow: '->' })
+      .draw(['a', 'b'], { marks })
       .draw(['a', 'b'], { kind: 'ribbon', ribbon: { width: 3 } })
       .coordinate('mid', { position: [60, 40] });
     expect(fluent.ir).toEqual(hyper.ir);

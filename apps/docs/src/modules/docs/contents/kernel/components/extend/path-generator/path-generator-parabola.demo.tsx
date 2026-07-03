@@ -25,7 +25,7 @@ const ir: IR = {
       type: 'path',
       stroke: 'darkorange',
       strokeWidth: 1.5,
-      arrow: '->',
+      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'generator', name: 'parabola', to: [160, 0], params: { bend: [80, -70] } },

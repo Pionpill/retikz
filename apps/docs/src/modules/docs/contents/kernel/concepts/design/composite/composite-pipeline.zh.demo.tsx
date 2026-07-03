@@ -35,7 +35,7 @@ const pipeline = defineComposite({
     // 相邻两阶段间一条带标签箭头；端点给 node id，自动裁剪到（无边框的）文本框
     const edges = node.stages.slice(1).map((_label, i) => ({
       type: 'path' as const,
-      arrow: '->' as const,
+      marks: [{ pos: 1, mark: { kind: 'arrow' as const } }],
       children: [
         { type: 'step' as const, kind: 'move' as const, to: { id: `stage-${i}` } },
         {

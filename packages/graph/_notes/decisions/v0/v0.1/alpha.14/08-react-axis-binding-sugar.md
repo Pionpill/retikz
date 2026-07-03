@@ -3,6 +3,7 @@
 - 状态：Accepted（实现字段以 ADR-09 为准）
 - 决策日期：2026-06-29
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.14 roadmap](./roadmap.md) · [ADR-01 coordinate composition registry](./01-coordinate-composition-registry.md) · [ADR-03 same-panel multi-axis overlay](./03-same-panel-multi-axis.md) · [ADR-06 scope provenance surface](./06-scope-provenance-surface.md) · [ADR-07 axis-level grid targeting](./07-axis-grid-targeting.md)
+- 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/graph/_notes/decisions/v0/v0.1/alpha.14/08-react-axis-binding-sugar.md`
 
 ## 背景
 
@@ -100,13 +101,6 @@ const spec = plotBuilder({ data, scales: [] })
 4. 只先做 `yAxisId`，避免一次性设计 x/y overlay 矩阵、facet binding、track binding 过度展开。
 5. Vanilla builder 也支持同一 sugar 字段，保持 authoring surface 对等；但字段在 builder 输出前消失，不污染 IR。
 
-## 待决策点
-
-- **默认 y axis 选择**：本 ADR 倾向“第一个被 y mark 引用的 y axis 是默认 scope”。如果没有任何 mark 写 `yAxisId`，沿用现有单坐标输出。
-- **scale name 派生**：建议使用 `__y.<axisId>`，可读且稳定。axis id 必须是非空字符串；如果未来允许任意字符，scale name 需要 slug 化。
-- **显式 `composition` + `yAxisId`**：第一版选择保守策略，不自动修改用户传入的 composition；只做同名 axis/scope 绑定校验。
-- **`xAxisId` 是否一起做**：本 ADR 不做。x 轴共享是常见双轴的最小形态；x/y 双向 overlay 需要单独设计 scale domain 合并与 axis collision。
-- **Reference / Relation mark 是否支持**：第一版只覆盖有常规 x/y position encoding 的 mark；reference line / relation projection 后续再加。
 
 ## DSL 表面
 
@@ -165,68 +159,3 @@ const spec = plotBuilder({ data: { reference: 'weather' }, scales: [] })
 - 不把 `yAxisId` 写进 `@retikz/plot` IR schema。
 - 不做 tooltip / legend / interaction binding。
 - 不做完整 `<Composition>` / `<Scope>` 结构化 DSL；它是后续高级 DSL 方向。
-
----
-
-## 实现契约（必填）
-
-### Level
-
-本 ADR 自评 level：`yellow`。
-
-原因：不改 `@retikz/plot` IR schema，但新增 React / Vanilla authoring surface，并让 adapter 自动生成 composition。若实现发现必须修改 `@retikz/plot` lowering 才能保证共享 x domain，应升级为 `red` 并回到设计阶段补充契约。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-| --- | --- | --- | --- | --- | --- |
-| `packages/graph/plot/src/schemas/**` | 无 | 无 | 无 | 无 | 不修改 PlotSpec / MarkOperation / AxisGuide IR schema |
-| `packages/graph/plot-react/src/components/marks.tsx` | 加 | `PathMarkProps.yAxisId` | `string | undefined` | 无 | React adapter 绑定 y axis 的 sugar，不进 IR |
-| `packages/graph/plot-react/src/components/marks.tsx` | 加 | `PointMarkProps.yAxisId` | `string | undefined` | 无 | React adapter 绑定 y axis 的 sugar，不进 IR |
-| `packages/graph/plot-react/src/components/marks.tsx` | 加 | `IntervalMarkProps.yAxisId` | `string | undefined` | 无 | React adapter 绑定 y axis 的 sugar，不进 IR |
-| `packages/graph/plot-vanilla/src/plot-builder.ts` | 加 | builder mark input `yAxisId` | `string | undefined` | 无 | Vanilla builder 绑定 y axis 的 sugar，build 输出前移除 |
-
-### 文件 scope
-
-- `packages/graph/plot-react/src/components/marks.tsx`
-- `packages/graph/plot-react/src/components/build-plot-spec.ts`
-- `packages/graph/plot-react/tests/components/build-plot-spec.test.tsx`
-- `packages/graph/plot-vanilla/src/plot-builder.ts`
-- `packages/graph/plot-vanilla/tests/plot-builder.test.ts`
-- `apps/docs/src/contents/graph/grammar/coordinate/composition/**`
-- `packages/graph/_notes/decisions/v0/v0.1/alpha.14/roadmap.md`
-
-### 测试象限
-
-**Happy path**
-
-- `react_y_axis_binding_generates_overlay_composition`：两个 y axis id 生成 default scope + overlay scope。
-- `react_axis_binding_marks_receive_coordinate_scope`：不同 `yAxisId` 的 mark 输出不同 `coordinateScope`。
-- `vanilla_axis_binding_matches_react_plot_spec`：Vanilla builder 输出与 React sugar 同构。
-
-**边界**
-
-- `axis_binding_omitted_keeps_single_coordinate`：没有 `yAxisId` 时不生成 composition。
-- `explicit_composition_with_same_named_scope_accepts_y_axis_id`：已有同名 scope 时只做绑定校验，不改 composition。
-- `axis_id_scale_name_is_stable`：`Axis id="rainfall"` 派生 `__y.rainfall`。
-
-**错误路径**
-
-- `missing_y_axis_id_rejected`：mark 引用不存在的 y axis id fail-loud。
-- `y_axis_id_dimension_mismatch_rejected`：引用到非 y axis fail-loud。
-- `duplicate_axis_id_rejected`：同 dimension 下重复 axis id fail-loud。
-- `coordinate_scope_and_y_axis_id_conflict_rejected`：mark 同时写 `coordinateScope` 与 `yAxisId` fail-loud。
-
-**交互**
-
-- `axis_binding_preserves_axis_grid_targeting`：带 `grid` 的 y axis 在生成 scope 后仍按 ADR-07 行为投放 grid。
-- `axis_binding_provenance_uses_generated_scope`：lowering 后 mark / axis meta 带生成的 coordinateScope。
-- `axis_binding_with_default_x_axis_shares_x_scale`：生成 scopes 共享 `__x` scale name。
-
-### 依赖的现有元素
-
-- ADR-01：coordinate scope registry 与 `coordinateScope` 引用机制（扩展使用）。
-- ADR-03：same-panel overlay scope 语义（扩展使用）。
-- ADR-06：React / Vanilla adapter surface 与 provenance scope 输出（扩展使用）。
-- ADR-07：axis-level grid targeting；axis binding 不得破坏 `Axis.grid` 的目标选择语义（兼容使用）。
-- `PlotSpecSchema`：验证 adapter 输出仍是合法 IR（引用）。
