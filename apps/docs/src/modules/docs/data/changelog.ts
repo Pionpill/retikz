@@ -115,6 +115,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.8',
+            date: '2026-07-03',
+            summary: {
+              zh: 'v0.4 alpha 收口：六个 kernel 包 lockstep bump 到 `0.4.0-alpha.8`，同步 roadmap / changelog / 完备评测边界；本版本不新增运行时 API。',
+              en: 'v0.4 alpha wrap-up: the six kernel packages move in lockstep to `0.4.0-alpha.8`, aligning the roadmap, changelog, and completeness-evaluation boundaries. This release adds no runtime API.',
+            },
+            items: [
+              {
+                label: { zh: '发布边界收束', en: 'Release boundary closure' },
+                content: {
+                  zh: '把 alpha.1-alpha.7 已落地的 math、tex、path、ribbon、provider contract 等能力重新对账；public roadmap 指向 alpha.8 收口，后续 headless interaction / Progressive IR 等机制留到 v0.5 设计讨论。',
+                  en: 'Audits the math, tex, path, ribbon, provider-contract, and related work already landed through alpha.1-alpha.7. The public roadmap now points to alpha.8 as the wrap-up, while mechanisms such as headless interaction and Progressive IR stay in the v0.5 design discussion.',
+                },
+              },
+              {
+                label: { zh: '无新增运行时 API', en: 'No new runtime API' },
+                content: {
+                  zh: '本次 bump 只更新版本、路线图与发布说明；core IR / Scene / renderer / React / Vanilla / Tex 行为不随 alpha.8 改变。',
+                  en: 'This bump only updates versions, roadmap notes, and release notes; core IR, Scene, renderer, React, Vanilla, and Tex runtime behavior do not change in alpha.8.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.7',
             date: '2026-07-03',
             summary: {

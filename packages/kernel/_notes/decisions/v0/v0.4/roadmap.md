@@ -1,6 +1,6 @@
 # v0.4 路线总计划
 
-> 本文件是 v0.4 的总计划与执行索引：记录已拍板方向、alpha 里程碑、取舍和后续候选。alpha.1-alpha.7 已按各自 roadmap / ADR 落地并同步 changelog；下一段 alpha 内容待新一轮讨论后再追加。
+> 本文件是 v0.4 的总计划与执行索引：记录已拍板方向、alpha 里程碑、取舍和后续候选。alpha.1-alpha.7 已按各自 roadmap / ADR 落地并同步 changelog；alpha.8 定为 v0.4 改动收口，不新增运行时能力，只做版本、roadmap、changelog 与架构评测边界对账。
 >
 > 关联：[`v0 roadmap`](../roadmap.md) · [`core 底座对比分析`](../../../analysis/core-compare-analysis.md) · [`v0.3 renderer / runtime 专题`](../v0.3/roadmap.md) · [`plot-design.md`](../../../../../viz/_notes/architecture/plot-design.md)
 
@@ -41,10 +41,11 @@ core 0.4 只做**纵向底座深化（机制 / 引擎 / 契约）**；**横向�
 | alpha.5          | 数学公式 `@retikz/tex`（E）——行内 text+math `$...$` 混排  | E                  | [roadmap](./alpha.5/roadmap.md) · [ADR-01/02/03](./alpha.5/roadmap.md)                                                                                     | ✅ Accepted（`@retikz/tex` 包 + `lowerTex` 注入 + 文本里 `$...$` / `$$...$$` / `{ runs }` 行内 text+math 混排；E1/E2 的 `node.tex` 同周期被 E3 收敛进文本、未发布。实现 + 文档 + changelog + 对账完成，2026-06-19 完工，roadmap [alpha.5](./alpha.5/roadmap.md)） |
 | alpha.6          | Path kind / Ribbon 关系路径（plot 桑基图底座）            | plot→core 请求     | [roadmap](./alpha.6/roadmap.md) · [ADR-07](./alpha.6/07-path-kind-registry.md)                                                                              | ✅ 已接受（`Path.kind` provider registry + `kind="ribbon"` 可变宽度关系路径；独立 `IRRibbon` 被 ADR-07 收敛进 `IRPath`；实现 + 文档 + changelog + 对账完成，2026-06-28 完工，roadmap [alpha.6](./alpha.6/roadmap.md)） |
 | alpha.7          | Provider contract 收敛与功能补齐                         | contract-provider 机制 | [roadmap](./alpha.7/roadmap.md)                                                                                                                             | ✅ Accepted（Provider registry / key contract / capability migration / BoundaryDefinition / ClipDefinition 已实现；React / Vanilla 透传与 docs authoring surface 已同步；实现 + 文档 + changelog + 对账完成，2026-07-03 完工） |
-| 待讨论           | 下一段 alpha                                              | 待定               | —                                                                                                                                                         | 待确定：可从 Progressive IR / P3D / scope 包络富化 / beta 加固中选择，但尚未进入正式计划                  |
-| 暂不             | 交互行为 / 跨框架 runtime / 伪三维                        | C / G / P3D        | —                                                                                                                                                         | ⏸（P3D 详见下文「伪三维视角层」）                                                                         |
+| alpha.8          | v0.4 改动收口                                             | release closeout   | [roadmap](./alpha.8/roadmap.md)                                                                                                                             | 🚧 准备中（版本 bump 到 `0.4.0-alpha.8`；同步 changelog / public roadmap / 完备评测边界；不新增运行时 API） |
+| 后续版本         | v0.5 / beta / long-term 候选拆分                          | 待定               | —                                                                                                                                                         | 待讨论：headless interaction / Progressive IR 可进入 v0.5 设计；beta 聚焦 API 与安装验收；P3D / scope 富化等更长期处理 |
+| 暂不             | 跨框架 runtime / 完整伪三维系统                           | G / P3D            | —                                                                                                                                                         | ⏸（P3D 详见下文「伪三维视角层」；完整编辑器式 interaction 不进 core，本轮只保留 headless 方向候选）        |
 
-**建议实现顺序**：alpha.1 **A（math 底座）** → alpha.2 **scope 多态 bbox（消费 A）+ 可嵌入 Tier2**（已实现发布）→ alpha.3 **B（路径补强，消费 A）** → alpha.4 **F（Scene 视觉，独立、视余量）** → alpha.5 **E（tex，行内 `$...$` text+math 混排）** → alpha.6 **Path kind / Ribbon** → alpha.7 **Provider contract 收敛**。（D eval 已交其他分支，不在本路线）
+**建议实现顺序**：alpha.1 **A（math 底座）** → alpha.2 **scope 多态 bbox（消费 A）+ 可嵌入 Tier2**（已实现发布）→ alpha.3 **B（路径补强，消费 A）** → alpha.4 **F（Scene 视觉，独立、视余量）** → alpha.5 **E（tex，行内 `$...$` text+math 混排）** → alpha.6 **Path kind / Ribbon** → alpha.7 **Provider contract 收敛** → alpha.8 **v0.4 收口**。（D eval 已交其他分支，不在本路线）
 
 依赖约束：
 

@@ -1,31 +1,31 @@
 ---
 title: Roadmap
-description: "retikz's current and near-future roadmap: kernel v0.4 alpha wrap-up, next-alpha candidates, v0.4 beta / rc, and v1+ domain packages."
+description: "retikz's current and near-future roadmap: kernel v0.4.0-alpha.8 wrap-up, v0.5 mechanism candidates, v0.4 beta / rc, and v1+ domain packages."
 ---
 
 The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/kernel/releases/changelog).
 
 ## Now
 
-**kernel v0.4.0-alpha.7** — the vertical-base alpha line has reached Provider contract convergence.
+**kernel v0.4.0-alpha.8** — the v0.4 alpha wrap-up release; it adds no runtime API and aligns versions, roadmap, changelog, and completeness-evaluation boundaries.
 
 | Item                      | Status                   |
 | ------------------------- | ------------------------ |
 | `@retikz/math` / `tex`    | ✅ In kernel lockstep     |
 | path / ribbon / provider  | ✅ Landed through alpha.7 |
-| docs / changelog          | ✅ v0.4 alpha entries synced |
-| next alpha                | ⏳ To be discussed        |
+| docs / changelog          | ✅ alpha.8 wrap-up notes synced |
+| interaction               | 🧭 Covered by completeness evaluation; implementation stays for v0.5 discussion |
 
-## Short Term: Next Alpha
+## Short Term: After Alpha.8
 
-The next alpha is not decided yet. It should pick one main line first, so mechanism exploration does not blur into beta hardening.
+After alpha.8, the work should stay split into three tracks: v0.5 for vertical mechanism exploration, v0.4 beta / rc for stabilization, and longer-term items waiting for stronger design pull.
 
-| Candidate                  | Content                                                       |
-| -------------------------- | ------------------------------------------------------------- |
-| Progressive / JSON Patch   | Incremental rendering, AI step updates, local SVG / Canvas updates |
-| P3D / view layer           | Project 3D points into 2D Scene, derive opacity / zIndex from depth |
-| Scope envelope enrichment  | `boundingShape` polygon / ellipse / padding                   |
-| Beta hardening             | Add no new capability; focus API review, install validation, docs audit |
+| Track | Candidate | Content |
+| ----- | --------- | ------- |
+| v0.5 alpha | headless interaction | Core provides target / intent / manifest contracts; tooltip / select UI and state machines stay in adapters or userland |
+| v0.5 alpha | Progressive / JSON Patch | Incremental rendering, AI step updates, local SVG / Canvas update strategies |
+| v0.4 beta / rc | beta hardening | Add no capability; focus API review, install validation, and docs audit |
+| Longer term | P3D / scope enrichment / blur-mask-layer | Pseudo-3D, `boundingShape` polygon / ellipse / padding, and visual-layer capabilities wait for stronger design pull |
 
 ## Current v0.4 Shape
 
