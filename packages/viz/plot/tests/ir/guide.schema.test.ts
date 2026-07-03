@@ -112,8 +112,9 @@ describe('LegendGuideSchema (ADR-03 alpha.8)', () => {
       title: 'Population',
       position: 'bottom',
       orient: 'horizontal',
-      tickCount: 4,
-      tickLabels: true,
+      ticks: { count: 4 },
+      tickLabels: { format: '.1f' },
+      style: { swatchSize: 12, label: { textColor: '#334155' } },
     };
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
@@ -164,10 +165,18 @@ describe('LegendGuideSchema (ADR-03 alpha.8)', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', scale: '' })).toThrow();
   });
 
+  it('legend_empty_title_reports_legend_message', () => {
+    const result = LegendGuideSchema.safeParse({ type: 'legend', channel: 'color', title: '' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some(issue => issue.message.includes('legend title'))).toBe(true);
+    }
+  });
+
   it('legend_tickcount_non_positive_rejected', () => {
-    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', tickCount: 0 })).toThrow();
-    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', tickCount: -2 })).toThrow();
-    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', tickCount: 3.5 })).toThrow();
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', ticks: { count: 0 } })).toThrow();
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', ticks: { count: -2 } })).toThrow();
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', ticks: { count: 3.5 } })).toThrow();
   });
 
   it('legend_ticklabels_non_boolean_rejected', () => {
@@ -224,7 +233,7 @@ describe('GuideSchema discriminated union (ADR-03 alpha.8)', () => {
       title: 'Density',
       position: 'left',
       orient: 'vertical',
-      tickCount: 5,
+      ticks: { count: 5 },
       tickLabels: false,
     };
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);

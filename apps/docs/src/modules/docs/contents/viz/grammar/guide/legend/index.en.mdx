@@ -37,7 +37,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 ### Continuous color ramp
 
-`color` bound to a continuous numeric field (declared `continuous` via `model`) → a sequential color scale, drawn as a smooth ramp + ticks. `tickCount` hints the tick count.
+`color` bound to a continuous numeric field (declared `continuous` via `model`) → a sequential color scale, drawn as a smooth ramp + ticks. Use `ticks` for tick source and `tickLabels.format` for display format.
 
 <ComponentPreview name="legend-color-ramp" sourceFiles={['legend.data.ts']} />
 
@@ -49,9 +49,22 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 <ComponentPreview name="legend-size" sourceFiles={['legend.data.ts']} />
 
-<p className="text-sm text-muted-foreground">
-  A few representative sizes map size to value; the legend sits at the bottom.
-</p>
+<p className="text-sm text-muted-foreground">A few representative sizes map size to value; the legend sits at the bottom.</p>
+
+### Theme and local style
+
+Legend defaults come from `Plot.theme.legend` and `Plot.theme.palette`. A single `<Legend>` can still override its own layout and text tokens with `style`; semantic fields such as `channel`, `position`, `orient`, `ticks`, and `tickLabels.format` stay on the root `<Legend>`.
+
+```tsx
+<Plot
+  theme={{
+    palette: { sequential: 'magma' },
+    legend: { rampLength: 120, label: { textColor: '#475569' } },
+  }}
+>
+  <Legend channel="color" ticks={{ count: 4 }} tickLabels={{ format: '~s' }} style={{ title: { font: { weight: 600 } } }} />
+</Plot>
+```
 
 ## API
 
@@ -59,11 +72,12 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 | ------------ | ------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
 | `channel`    | `'color' \| 'size' \| 'opacity' \| 'shape'` | —                  | Which non-positional channel the legend explains; form follows the bound scale type                     |
 | `scale`      | `string?`                                   | —                  | Disambiguating scale name when one channel is driven by several scales; omit = the channel's only scale |
-| `title`      | `string?`                                   | none               | Legend title (rendered above the entries); omit for no title                                            |
+| `title`      | `string \| TextBlock?`                      | none               | Legend title content; accepts the same text-block form as core text nodes                               |
 | `position`   | `'right' \| 'left' \| 'top' \| 'bottom'`    | `'right'`          | Which edge the legend sits on (a band is reserved there)                                                |
 | `orient`     | `'vertical' \| 'horizontal'`                | by `position`      | Item layout direction; left/right default to vertical, top/bottom to horizontal                         |
-| `tickCount`  | `number?`                                   | default tick count | Tick-count hint for continuous ramps; ignored for discrete legends                                      |
-| `tickLabels` | `boolean?`                                  | `true`             | Whether to render swatch / tick labels                                                                  |
+| `ticks`      | `{ count?; values? }`                       | scale default      | Tick source for continuous ramps; explicit `values` win over `count`; ignored for discrete swatches     |
+| `tickLabels` | `false \| { format? }`                      | `true`             | Hide labels with `false`, or format ramp tick labels with a declarative format string                   |
+| `style`      | `LegendGuideStyle?`                         | theme legend       | Local legend visual tokens: swatch / ramp size, gaps, and title / label text style                      |
 
 ## Related
 

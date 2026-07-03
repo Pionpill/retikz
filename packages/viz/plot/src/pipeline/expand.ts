@@ -14,6 +14,7 @@ import type {
   CoordinateFrame,
   DimensionRole,
   FieldFormatDefinition,
+  PositionScale,
   ResolveField,
   ResolveLabel,
   TickSet,
@@ -42,7 +43,14 @@ import type { LegendReserve, Margins, Rect } from './layout';
 import type { DatumIdRegistrar, ProvenanceContext } from './provenance';
 
 import { isBuiltinScaleOperation } from '../contract';
-import { lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
+import {
+  lowerCustomAxis,
+  lowerGuide,
+  lowerLegend,
+  resolveAxisGuideTokens,
+  resolveLegendGuideTokens,
+  resolvePlotTheme,
+} from '../features';
 import {
   applyFieldResolver,
   applyTransforms,
@@ -54,8 +62,6 @@ import {
   channelValue,
   collectFormatFields,
   createPositionChannelDefinitions,
-  DEFAULT_PLOT_COLORS,
-  DEFAULT_TICK_COUNT,
   DEFAULT_TRANSFORM_CONTEXT,
   deriveScale,
   lowerMark,
@@ -68,6 +74,7 @@ import {
   resolveFieldPath,
   resolveFieldTypes,
   resolveFormatRegistry,
+  resolveGuideTicks,
   resolveIntervalBound,
   resolveLinearScale,
   resolveMarkChannels,
@@ -158,10 +165,27 @@ const intervalProportionalAxisTicks = (
   return values.length > 0 ? { values, labels } : undefined;
 };
 
-const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
-  const colors = node.colors ?? DEFAULT_PLOT_COLORS;
+const defaultColorOf = (colors: ReadonlyArray<string>, markIndex: number): string => {
   return colors[markIndex % colors.length];
 };
+
+const plotBackgroundNode = (
+  width: number,
+  height: number,
+  fill: string | undefined,
+): IRNode | null =>
+  fill === undefined
+    ? null
+    : {
+        type: 'node',
+        position: [width / 2, height / 2],
+        shape: 'rectangle',
+        minimumWidth: width,
+        minimumHeight: height,
+        padding: 0,
+        strokeWidth: 0,
+        fill,
+      };
 
 export type MarkDataView = {
   mark: MarkOperation;
@@ -1096,9 +1120,11 @@ const collectChannelDescriptors = (
     fieldTypes: PlotFieldTypeMap;
     scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
     resolveColorScheme: (name: string) => (t: number) => string;
+    palette: ReturnType<typeof resolvePlotTheme>['palette'];
   },
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   markRegistry: ReadonlyMap<string, AnyMarkDefinition>,
+  defaultColor: string,
   markDataViews?: ReadonlyArray<MarkDataView>,
 ): Array<ScaleDescriptor> => {
   const out: Array<ScaleDescriptor> = [];
@@ -1110,7 +1136,7 @@ const collectChannelDescriptors = (
       view.mark,
       { ...channelCtx, rows: view.rows },
       channelRegistry,
-      DEFAULT_PLOT_COLORS[0],
+      defaultColor,
       channelKindsForMark(view.mark, markRegistry),
     );
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
@@ -1171,6 +1197,39 @@ const niceNumericTicks = (
   }));
 };
 
+const legendRampTickScale = (
+  domain: readonly [number, number],
+  fieldType: PlotFieldTypeValue | undefined,
+): PositionScale => {
+  const scale = resolveLinearScale({ domain: [domain[0], domain[1]] }, [], [0, 1]);
+  return {
+    coordinate: value => scale(Number(value)),
+    domain: () => [domain[0], domain[1]],
+    bandwidth: 0,
+    ticks: count => scaleTicks(scale, count),
+    tickKind: fieldType === PlotFieldType.Temporal ? 'time' : 'number',
+    range: () => [0, 1],
+    setRange: () => {},
+  };
+};
+
+const legendRampTicks = (
+  descriptor: ScaleDescriptor,
+  guide: LegendGuide,
+  domain: readonly [number, number],
+): Array<{ offset: number; label: string }> => {
+  const scale = legendRampTickScale(domain, descriptor.fieldType);
+  const ticks = resolveGuideTicks(scale, guide.ticks, guide.tickLabels === false ? undefined : guide.tickLabels);
+  const span = domain[1] - domain[0];
+  return ticks.values.map((value, index) => {
+    const numeric = Number(value);
+    return {
+      offset: span === 0 ? 0.5 : (numeric - domain[0]) / span,
+      label: ticks.labels[index],
+    };
+  });
+};
+
 /** legend 专用 sqrt 半径映射：domain [lo, hi]（sqrt 感知）→ range [rMin, rMax]，与 mark size resolver 同核 */
 const resolveSqrtForLegend = (
   domain: readonly [number, number],
@@ -1197,6 +1256,7 @@ type LegendBaseInput = {
   fontSize: number;
   band: Rect;
   id: string;
+  style: LegendInput['style'];
 };
 
 /**
@@ -1229,12 +1289,7 @@ const resolveColorLegend = (
       const t = index / (STOP_COUNT - 1);
       return { offset: t, color: resolution.of(lo + (hi - lo) * t) ?? '' };
     });
-    const ticks = showLabels
-      ? niceNumericTicks([lo, hi], guide.tickCount ?? DEFAULT_TICK_COUNT).map(tick => ({
-          offset: tick.offset,
-          label: tick.label,
-        }))
-      : [];
+    const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
     return { ...baseInput, form: 'ramp', title, entries: [], ramp: { stops, ticks } };
   }
 
@@ -1352,6 +1407,7 @@ const buildLegendLayers = (
   fontSize: number,
   bands: Array<Rect>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
+  resolvedTheme: ReturnType<typeof resolvePlotTheme>,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return legendGuides.map((guide, legendIndex): IRScope => {
@@ -1359,6 +1415,7 @@ const buildLegendLayers = (
     const orient =
       guide.orient ?? (guide.position === 'top' || guide.position === 'bottom' ? 'horizontal' : 'vertical');
     const id = legendGuides.length > 1 ? `legend.${guide.channel}.${legendIndex}` : `legend.${guide.channel}`;
+    const style = resolveLegendGuideTokens(resolvedTheme, guide.style);
     const baseInput: LegendBaseInput = {
       channel: guide.channel,
       position: guide.position ?? 'right',
@@ -1366,6 +1423,7 @@ const buildLegendLayers = (
       fontSize,
       band,
       id,
+      style,
     };
     const showLabels = guide.tickLabels !== false;
     const descriptor = selectLegendDescriptor(guide, channelDescriptors, scaleByName, scaleRegistry);
@@ -1397,7 +1455,7 @@ const buildLegendLayers = (
     }
     if (guide.channel === 'size') {
       const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
-      const ticks = niceNumericTicks([lo, hi], guide.tickCount ?? 3).filter(tick => tick.value > 0);
+      const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3).filter(tick => tick.value > 0);
       const reps = ticks.length > 0 ? ticks : [{ value: hi, offset: 1, label: String(hi) }];
       // 半径据 descriptor range（与 mark 实绘同源）线性插值（sqrt domain→radius）
       const [rMin, rMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
@@ -1410,7 +1468,7 @@ const buildLegendLayers = (
     }
     // opacity：梯度透明度块（nice 几档 + 透明度）
     const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
-    const ticks = niceNumericTicks([lo, hi], guide.tickCount ?? 3);
+    const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3);
     const [oMin, oMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
     const span = hi - lo;
     const entries: Array<LegendEntry> = ticks.map(tick => {
@@ -1596,7 +1654,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     hasFacets: compositionFacets.length > 0,
     hasScaffolds: compositionScaffolds.length > 0,
   };
-  const allGuides = node.guides ?? [];
+  const resolvedTheme = resolvePlotTheme(node.theme, node.colors);
+  const allGuides: Array<Guide> = (node.guides ?? []).map(guide =>
+    isAxisGuide(guide) ? resolveAxisGuideTokens(resolvedTheme, guide) : guide,
+  );
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
   const coordinateScopes = resolveCoordinateScopeRegistry(node);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
@@ -1948,7 +2009,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const axisLayers = scopedFrames.flatMap(scopeFrame => scopeFrame.axisLayers);
   const plotArea = scopedFrames[0]?.plotArea ?? { x: 0, y: 0, width, height };
 
-  const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme };
+  const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme, palette: resolvedTheme.palette };
   // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
   const channelRegistry = resolveChannelRegistry({
     custom: options.channelDefinitions,
@@ -2204,7 +2265,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
               mark,
               { ...channelCtx, rows: markRows },
               channelRegistry,
-              defaultColorOf(node, markIndex),
+              defaultColorOf(resolvedTheme.palette.series, markIndex),
               channelKindsForMark(mark, markRegistry),
             ),
             {
@@ -2248,7 +2309,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     });
 
     anchorRegistry.assertResolved();
-    const children: Array<IRChild> = [...panelScopes, ...facetLabelScopes];
+    const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
+    const children: Array<IRChild> = [...(backgroundNode ? [backgroundNode] : []), ...panelScopes, ...facetLabelScopes];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
       return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
@@ -2290,7 +2352,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
           mark,
           { ...channelCtx, rows: markRows },
           channelRegistry,
-          defaultColorOf(node, markIndex),
+          defaultColorOf(resolvedTheme.palette.series, markIndex),
           channelKindsForMark(mark, markRegistry),
         ),
         {
@@ -2325,6 +2387,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       channelCtx,
       channelRegistry,
       markRegistry,
+      defaultColorOf(resolvedTheme.palette.series, 0),
       markDataViews,
     );
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
@@ -2336,12 +2399,20 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         options.fontSize ?? DEFAULT_FONT_SIZE,
         bands,
         scaleRegistry,
+        resolvedTheme,
       ),
     );
   }
 
   // z-order：所有网格层 → marks → 所有轴层 → legend（网格垫底、坐标轴压顶不被数据盖、legend 在预留带最上）
-  const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers, ...legendLayers];
+  const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
+  const children: Array<IRChild> = [
+    ...(backgroundNode ? [backgroundNode] : []),
+    ...gridLayers,
+    ...markLayers,
+    ...axisLayers,
+    ...legendLayers,
+  ];
 
   // 无 id：root = localNamespace 内容 scope（可带 provenance meta）。
   if (node.id === undefined) {

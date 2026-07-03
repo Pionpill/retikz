@@ -1,6 +1,6 @@
 # ADR-01：Axis domain padding 与 tick 策略
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-03
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.4 Scale](../../../../architecture/plot-design.md#34-scale) · [plot-design.md §3.9 Guide](../../../../architecture/plot-design.md#39-guide)
 

@@ -162,7 +162,7 @@ const sequentialColorLegendSpec = (): PlotSpec =>
         encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
       },
     ],
-    guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', tickCount: 4 }],
+    guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', ticks: { count: 4 } }],
   });
 
 /** size 散点 + size legend */
@@ -281,7 +281,7 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
     expect(legend).toBeDefined();
-    // 连续 ramp：刻度标签数 > 1（非逐类 swatch），tickCount 提示 4 档左右
+    // 连续 ramp：刻度标签数 > 1（非逐类 swatch），ticks.count 提示 4 档左右
     const labels = labelsOf(legend as IRScope);
     expect(labels.length).toBeGreaterThan(1);
     expect(labels.every(n => typeof n.text === 'string')).toBe(true);
@@ -574,7 +574,7 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-au
           encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
         },
       ],
-      guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', tickCount: 4 }],
+      guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', ticks: { count: 4 } }],
     });
 
   it('explicit_domain_ramp_ticks_follow_domain_not_data_extent', () => {
@@ -586,6 +586,58 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-au
       .filter(value => Number.isFinite(value));
     // 数据 extent 上界仅 30；domain 上界 100 → 应出现 > 30 的刻度（证实刻度跟 domain 而非数据）
     expect(Math.max(...labelNumbers)).toBeGreaterThan(30);
+  });
+
+  it('temporal_ramp_explicit_string_ticks_keep_finite_label_positions', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 'date', type: 'temporal' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        {
+          type: 'sequential',
+          name: 'dateColor',
+          domain: [Date.UTC(2026, 0, 1), Date.UTC(2026, 0, 3)],
+        },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'date', scale: 'dateColor' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
+      guides: [
+        {
+          type: 'legend',
+          channel: 'color',
+          scale: 'dateColor',
+          ticks: { values: ['2026-01-01T00:00:00.000Z', '2026-01-03T00:00:00.000Z'] },
+          tickLabels: { format: '%Y-%m-%d' },
+        },
+      ],
+    });
+    const rows = [
+      { lon: 0, lat: 0, date: '2026-01-01T00:00:00.000Z' },
+      { lon: 1, lat: 1, date: '2026-01-03T00:00:00.000Z' },
+    ];
+
+    const outer = expandOf(spec, { d: rows });
+    const legend = findLegendLayer(outer);
+    const labels = labelsOf(legend as IRScope);
+
+    expect(labels.map(node => node.text)).toEqual(['2026-01-01', '2026-01-03']);
+    expect(labels.map(node => node.position as [number, number]).flat().every(Number.isFinite)).toBe(true);
   });
 });
 

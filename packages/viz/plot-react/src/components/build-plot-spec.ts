@@ -149,6 +149,8 @@ export type BuildPlotSpecOptions = {
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
+  /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
+  theme?: PlotSpec['theme'];
   /** 当前数据集可见字段名集合；用于把样式字符串糖优先解析成字段通道 */
   dataFieldNames?: ReadonlySet<string>;
   /**
@@ -1426,7 +1428,7 @@ const collectInto = (
         ...(grid !== undefined ? { grid } : {}),
       });
     } else if (child.type === Legend) {
-      const { channel, scale, title, position, orient, tickCount, tickLabels } = child.props as LegendProps;
+      const { channel, scale, title, position, orient, ticks, tickLabels, style } = child.props as LegendProps;
       into.guides.push({
         type: PlotGuide.Legend,
         channel,
@@ -1434,8 +1436,9 @@ const collectInto = (
         ...(title !== undefined ? { title } : {}),
         ...(position !== undefined ? { position } : {}),
         ...(orient !== undefined ? { orient } : {}),
-        ...(tickCount !== undefined ? { tickCount } : {}),
+        ...(ticks !== undefined ? { ticks } : {}),
         ...(tickLabels !== undefined ? { tickLabels } : {}),
+        ...(style !== undefined ? { style } : {}),
       });
     } else if (child.type === Scale) {
       into.scales.push(child.props as ScaleProps);
@@ -2356,6 +2359,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     ...(transforms.length > 0 ? { transform: transforms } : {}),
     scales: normalizedAxisBinding.scales,
     ...(options.colors !== undefined ? { colors: options.colors } : {}),
+    ...(options.theme !== undefined ? { theme: options.theme } : {}),
     ...(options.width !== undefined ? { width: options.width } : {}),
     ...(options.height !== undefined ? { height: options.height } : {}),
     ...(normalizedAxisBinding.composition !== undefined

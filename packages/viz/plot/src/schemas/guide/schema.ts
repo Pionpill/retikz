@@ -60,9 +60,13 @@ const textBlockHasContent = (value: unknown): boolean => {
   });
 };
 
-const NonEmptyTextBlockSchema = TextBlockSchema.refine(textBlockHasContent, {
-  message: 'axis title text must not be empty',
-});
+const nonEmptyTextBlockSchema = (label: string) =>
+  TextBlockSchema.refine(textBlockHasContent, {
+    message: `${label} text must not be empty`,
+  });
+
+const AxisTitleTextSchema = nonEmptyTextBlockSchema('axis title');
+const LegendTitleTextSchema = nonEmptyTextBlockSchema('legend title');
 
 export const GuideLineStyleSchema = z
   .object({
@@ -145,7 +149,7 @@ export const AxisTickLabelsSchema = z
 
 export const AxisTitleSchema = z
   .object({
-    text: NonEmptyTextBlockSchema.describe('Axis title text block'),
+    text: AxisTitleTextSchema.describe('Axis title text block'),
     gap: z.number().nonnegative().optional().describe('Gap from the tick label band to the title center, in user units'),
     rotate: z.number().optional().describe('Axis title rotation in degrees around the title center'),
     anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
@@ -153,6 +157,20 @@ export const AxisTitleSchema = z
   })
   .strict()
   .describe('Axis title text block and style');
+
+export const LegendGuideStyleSchema = z
+  .object({
+    swatchSize: z.number().positive().optional().describe('Legend swatch baseline size in user units'),
+    swatchGap: z.number().nonnegative().optional().describe('Gap between a legend swatch and its label, in user units'),
+    entryGap: z.number().nonnegative().optional().describe('Gap between adjacent legend entries, in user units'),
+    titleGap: z.number().nonnegative().optional().describe('Gap between legend title and the first entry, in user units'),
+    rampLength: z.number().positive().optional().describe('Continuous legend ramp long edge length in user units'),
+    rampThickness: z.number().positive().optional().describe('Continuous legend ramp short edge thickness in user units'),
+    title: GuideTextStyleSchema.optional().describe('Legend title text style'),
+    label: GuideTextStyleSchema.optional().describe('Legend entry label text style'),
+  })
+  .strict()
+  .describe('Legend visual style tokens. Semantic fields such as position, orient, ticks, and tick label format stay on the legend guide root');
 
 const FacetTargetValueSchema = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
@@ -322,10 +340,9 @@ export const LegendGuideSchema = z
       .describe(
         'Disambiguating scale name when the channel is driven by more than one scale; omit when the channel has a single scale (more than one and omitted is a fail-loud error during lowering)',
       ),
-    title: z
-      .string()
-      .optional()
-      .describe('Legend title rendered above the entries; omit for no title'),
+    title: LegendTitleTextSchema.optional().describe(
+      'Legend title text block rendered above the entries; omit for no title',
+    ),
     position: z
       .enum(LegendPosition)
       .optional()
@@ -338,18 +355,16 @@ export const LegendGuideSchema = z
       .describe(
         'How legend entries are laid out; omit to derive from position (left/right -> vertical, top/bottom -> horizontal, applied during lowering)',
       ),
-    tickCount: z
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe(
-        'Target number of ticks for a continuous color ramp (a hint); meaningless for discrete legends and ignored there',
-      ),
+    ticks: GuideTickSourceSchema.optional().describe(
+      'Legend ramp tick source. Discrete legends ignore tick source but still honor tickLabels=false',
+    ),
     tickLabels: z
-      .boolean()
+      .union([z.literal(false), GuideTickLabelFormatSchema])
       .optional()
-      .describe('Whether to render the text labels beside swatches / ramp ticks; omit = true'),
+      .describe('Legend label switch and ramp tick label format; false hides labels, object formats ramp tick labels'),
+    style: LegendGuideStyleSchema.optional().describe(
+      'Legend-local visual token overrides. This does not change channel, scale, position, orient, or tick source semantics',
+    ),
   })
   .describe(
     'Legend guide: visualizes a non-positional scale (color / size / opacity / shape), with form derived from the bound scale type',

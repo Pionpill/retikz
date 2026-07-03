@@ -55,6 +55,46 @@ describe('plotBuilder', () => {
     expect(() => PlotSpecSchema.parse(built)).not.toThrow();
   });
 
+  it('passes theme and legend style as plain PlotSpec data', () => {
+    const built = plotBuilder({
+      data: { reference: 'cities' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      theme: {
+        background: '#ffffff',
+        palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
+        legend: { swatchSize: 12, label: { textColor: '#475569' } },
+      },
+    })
+      .point({ type: 'point', encoding: { x: { field: 'lng' }, y: { field: 'lat' }, color: { field: 'region' } } })
+      .legend({
+        type: 'legend',
+        channel: 'color',
+        title: ['Region', { text: 'n = 42', font: { size: 10 }, opacity: 0.72 }],
+        ticks: { count: 4 },
+        tickLabels: { format: '~s' },
+        style: { swatchSize: 10, title: { font: { weight: 600 } } },
+      })
+      .build();
+
+    expect(built.theme).toMatchObject({
+      background: '#ffffff',
+      palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
+      legend: { swatchSize: 12, label: { textColor: '#475569' } },
+    });
+    expect(built.guides?.[0]).toMatchObject({
+      type: 'legend',
+      channel: 'color',
+      ticks: { count: 4 },
+      tickLabels: { format: '~s' },
+      style: { swatchSize: 10, title: { font: { weight: 600 } } },
+    });
+    expect(() => PlotSpecSchema.parse(built)).not.toThrow();
+  });
+
   it('expands yAxisId binding sugar into overlay composition', () => {
     const built = plotBuilder({ data: { reference: 'weather' }, scales: [] })
       .axis({ type: 'axis', dimension: 'x', title: 'day' })

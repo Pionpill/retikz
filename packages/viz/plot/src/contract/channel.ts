@@ -13,6 +13,18 @@ import type {
 import type { DimensionRole } from './coordinate';
 import type { AnyScaleDefinition, ChannelScaleResolution } from './scale';
 
+/** 通道解析可见的 palette 默认值；由 PlotSpec.theme / colors 在 lowering 前解析。 */
+export type ChannelPaletteContext = {
+  /** 分类 scale 默认颜色。 */
+  categorical: ReadonlyArray<string>;
+  /** 无 color 编码的 mark / series 默认颜色。 */
+  series: ReadonlyArray<string>;
+  /** 连续单向色阶默认 scheme。 */
+  sequential: string;
+  /** 发散色阶默认 scheme。 */
+  diverging: string;
+};
+
 /**
  * 通道解析器的输出值。
  * @description 通道 definition 只产运行时值，不进入 PlotSpec / core IR；对象值若需要支持，必须先明确 JSON 契约与落点。
@@ -178,6 +190,7 @@ export type ChannelContext = {
   fieldTypes: PlotFieldTypeMap;
   scaleRegistry?: ReadonlyMap<string, AnyScaleDefinition>;
   resolveColorScheme?: (name: string) => (t: number) => string;
+  palette?: ChannelPaletteContext;
 };
 
 /** Node 通道解析上下文：保留独立别名，实际与通用 ChannelContext 同构。 */

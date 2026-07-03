@@ -8,6 +8,7 @@ import type { Rect } from '../../pipeline/layout';
 import type { ProvenanceContext } from '../../pipeline/provenance';
 import type { PolarCoordinateFrame, TernaryVertices } from '../../providers';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
+import type { ResolvedLegendGuideTokens } from '../theme';
 
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../pipeline/layout';
 import { guideLayerId, guideLayerMeta } from '../../pipeline/provenance';
@@ -847,7 +848,7 @@ export type LegendInput = {
   /** 绑定通道（决定 swatch 视觉量取色 / 形状 / 半径 / 透明度） */
   channel: LegendChannelValue;
   /** 标题（缺省 = 绑定字段名；undefined → 不画标题） */
-  title?: string;
+  title?: IRNode['text'];
   /** 离散条目（form==='swatch'） */
   entries: Array<LegendEntry>;
   /** 连续色带（form==='ramp'） */
@@ -862,6 +863,8 @@ export type LegendInput = {
   band: Rect;
   /** legend scope id（稳定，'legend' 前缀；anchor / 识别用） */
   id?: string;
+  /** 已按 built-in theme < PlotSpec.theme < LegendGuide.style 合并的视觉 token */
+  style: ResolvedLegendGuideTokens;
 };
 
 /**
@@ -888,23 +891,25 @@ const rectNode = (x: number, y: number, width: number, height: number): IRNode =
  */
 export const lowerLegend = (input: LegendInput): IRScope => {
   const { fontSize, band, orient } = input;
+  const { swatchSize, swatchGap, entryGap, titleGap, rampLength, rampThickness, title: titleStyle, label: labelStyle } =
+    input.style;
   const children: Array<IRNode> = [];
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;
   if (input.title !== undefined) {
+    const titleText = textBlockMeasureText(input.title);
     children.push({
       type: 'node',
-      position: [band.x + estimateLabelWidth(input.title, fontSize) / 2, cursorY + fontSize / 2],
+      position: [band.x + estimateLabelWidth(titleText, fontSize) / 2, cursorY + fontSize / 2],
       text: input.title,
+      ...titleStyle,
     });
-    cursorY += fontSize + LEGEND_TITLE_GAP;
+    cursorY += fontSize + titleGap;
   }
 
   if (input.form === 'ramp' && input.ramp) {
     // 连续色带：一个矩形 Node 填 linearGradient（vertical → 自上而下、horizontal → 自左而右）
     const vertical = orient === 'vertical';
-    const rampLength = LEGEND_RAMP_LENGTH;
-    const rampThickness = LEGEND_RAMP_THICKNESS;
     const rampX = band.x;
     const rampY = cursorY;
     const ramp = vertical
@@ -918,11 +923,11 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     for (const tick of input.ramp.ticks) {
       const position: [number, number] = vertical
         ? [
-            rampX + rampThickness + LEGEND_LABEL_GAP + estimateLabelWidth(tick.label, fontSize) / 2,
+            rampX + rampThickness + swatchGap + estimateLabelWidth(tick.label, fontSize) / 2,
             rampY + tick.offset * rampLength,
           ]
-        : [rampX + tick.offset * rampLength, rampY + rampThickness + LEGEND_LABEL_GAP + fontSize / 2];
-      children.push({ type: 'node', position, text: tick.label });
+        : [rampX + tick.offset * rampLength, rampY + rampThickness + swatchGap + fontSize / 2];
+      children.push({ type: 'node', position, text: tick.label, ...labelStyle });
     }
   } else {
     // 离散 swatch：逐条目堆叠（vertical 自上而下、horizontal 自左而右）
@@ -934,14 +939,14 @@ export const lowerLegend = (input: LegendInput): IRScope => {
         // shape 图例：swatch 本身就是编码的 glyph（circle / rectangle / diamond…），不画矩形框
         children.push({
           type: 'node',
-          position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2],
+          position: [cursorX + swatchSize / 2, rowY + swatchSize / 2],
           shape: entry.shape,
-          minimumSize: LEGEND_SWATCH_SIZE,
+          minimumSize: swatchSize,
           fill: entry.color ?? 'currentColor',
         });
       } else {
         // color / 分箱 / opacity / size：矩形色块（size 再叠圆点）
-        const swatch = rectNode(cursorX, rowY, LEGEND_SWATCH_SIZE, LEGEND_SWATCH_SIZE);
+        const swatch = rectNode(cursorX, rowY, swatchSize, swatchSize);
         if (entry.color !== undefined) swatch.fill = entry.color;
         if (entry.opacity !== undefined) {
           swatch.fill = 'currentColor';
@@ -952,7 +957,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
         if (entry.radius !== undefined) {
           children.push({
             type: 'node',
-            position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2],
+            position: [cursorX + swatchSize / 2, rowY + swatchSize / 2],
             shape: 'circle',
             minimumSize: entry.radius * Math.SQRT2,
             fill: 'currentColor',
@@ -960,13 +965,13 @@ export const lowerLegend = (input: LegendInput): IRScope => {
         }
       }
       // 标签：swatch 右侧
-      const labelX = cursorX + LEGEND_SWATCH_SIZE + LEGEND_LABEL_GAP + estimateLabelWidth(entry.label, fontSize) / 2;
-      const labelY = rowY + LEGEND_SWATCH_SIZE / 2;
-      children.push({ type: 'node', position: [labelX, labelY], text: entry.label });
+      const labelX = cursorX + swatchSize + swatchGap + estimateLabelWidth(entry.label, fontSize) / 2;
+      const labelY = rowY + swatchSize / 2;
+      children.push({ type: 'node', position: [labelX, labelY], text: entry.label, ...labelStyle });
       if (vertical) {
-        rowY += LEGEND_SWATCH_SIZE + LEGEND_ENTRY_GAP;
+        rowY += swatchSize + entryGap;
       } else {
-        cursorX = labelX + estimateLabelWidth(entry.label, fontSize) / 2 + LEGEND_ENTRY_GAP;
+        cursorX = labelX + estimateLabelWidth(entry.label, fontSize) / 2 + entryGap;
       }
     }
   }

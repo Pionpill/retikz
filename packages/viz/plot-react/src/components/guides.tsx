@@ -1,4 +1,4 @@
-import type { AxisGuide } from '@retikz/plot';
+import type { AxisGuide, LegendGuide } from '@retikz/plot';
 import type { FC } from 'react';
 
 import type { PositionScaleType } from './scales';
@@ -42,16 +42,18 @@ export type LegendProps = {
   channel: string;
   /** 消歧 scale name（同通道被多个 scale 驱动时指定；省略 = 该通道唯一 scale，多于一个且省略 → lowering fail-loud） */
   scale?: string;
-  /** 图例标题；省略 = 用绑定字段名 */
-  title?: string;
+  /** 图例标题；支持字符串、多行文本和 styled text block */
+  title?: LegendGuide['title'];
   /** 图例位置（预留带所在边）；缺省 = right */
   position?: 'right' | 'left' | 'top' | 'bottom';
   /** 条目排布方向；省略 = 按 position（左右→vertical、上下→horizontal） */
   orient?: 'vertical' | 'horizontal';
-  /** 连续色带刻度数提示（离散图例无意义、忽略） */
-  tickCount?: number;
-  /** 是否出 swatch / 刻度旁标签；缺省 = true */
-  tickLabels?: boolean;
+  /** 连续色带刻度来源；离散图例忽略 tick source */
+  ticks?: LegendGuide['ticks'];
+  /** 是否出 swatch / 刻度旁标签，以及连续 ramp 的标签格式；缺省 = true */
+  tickLabels?: LegendGuide['tickLabels'];
+  /** 图例本地视觉 token；覆盖 Plot theme.legend */
+  style?: LegendGuide['style'];
 };
 
 /**

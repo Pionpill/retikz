@@ -49,6 +49,10 @@ export type ChannelResolveContext = {
   resolveColorScheme: (name: string) => (t: number) => string;
   /** plot 级默认分类调色板（ordinal range 缺省取此；= PlotSpec.colors） */
   defaultColors?: ReadonlyArray<string>;
+  /** 连续单向色阶默认 scheme；显式 scale.scheme / range 优先 */
+  defaultSequentialScheme?: string;
+  /** 发散色阶默认 scheme；显式 scale.scheme / range 优先 */
+  defaultDivergingScheme?: string;
 };
 
 /**
