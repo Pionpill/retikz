@@ -8,7 +8,7 @@
 
 ADR-03 把引擎层 mark 从图表形状名收敛为抽象数据几何 mark。若 React、Vanilla 和 docs 仍暴露 `<BarMark>`、`<RectMark>`、`<TextMark>`、`<LineMark>` 等旧形态，用户会按旧文档写出无法匹配新 IR 的 spec。
 
-v0.1 的 graph 三包采用 lockstep 发布，plot 本体、React adapter、Vanilla adapter 与文档必须作为同一个用户可见表面一起收敛。
+v0.1 的 viz 三包采用 lockstep 发布，plot 本体、React adapter、Vanilla adapter 与文档必须作为同一个用户可见表面一起收敛。
 
 ## 决策
 
@@ -29,7 +29,7 @@ v0.1 的 graph 三包采用 lockstep 发布，plot 本体、React adapter、Vani
 
 ## 实现状态
 
-最终公开表面随实现继续演进：`LinkMark` 方向被 ADR-13 的 `RelationMark` 取代；自定义 mark 与 relation mark 成为 graph grammar 的扩展与关系入口。旧 mark 组件与旧 IR 形态不保留兼容壳。
+最终公开表面随实现继续演进：`LinkMark` 方向被 ADR-13 的 `RelationMark` 取代；自定义 mark 与 relation mark 成为 viz grammar 的扩展与关系入口。旧 mark 组件与旧 IR 形态不保留兼容壳。
 
 ## 实现指针
 

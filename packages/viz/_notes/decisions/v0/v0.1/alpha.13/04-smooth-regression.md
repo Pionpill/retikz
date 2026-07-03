@@ -33,7 +33,7 @@ trend line / regression line 是 plot grammar 的基础统计能力，但不应�
 
 ## 实现指针
 
-- 发布版本：graph group `v0.1.0-alpha.13`。
+- 发布版本：viz group `v0.1.0-alpha.13`。
 - 验收范围：smooth transform schema、linear regression 数值测试、退化输入诊断、group 输出与 PathMark demo。
 - 结构约束见 [ADR-05](./05-stat-geom-surface.md)：不新增 regression chart preset。
 

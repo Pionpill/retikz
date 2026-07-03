@@ -135,7 +135,7 @@ const spec = {
 
 ## 测试设计
 
-`packages/graph/plot/tests/composition/shared-scaffold-tracks.test.ts` 覆盖：
+`packages/viz/plot/tests/composition/shared-scaffold-tracks.test.ts` 覆盖：
 
 - polar rings 共享 angle scale，两个 track 使用不同 radius band。
 - cartesian lanes 共享 x scale，两个 track 使用不同 y band。

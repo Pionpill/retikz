@@ -11,7 +11,7 @@
 > slug 用 kebab-case
 > **plot 版本线独立**：`@retikz/plot` 有自身演进节奏，**不与 core 版本号对齐**——它只消费 core 能力、不反向依赖，里程碑由「所需 core 能力是否就绪」gating（见 [plot-design §13](../architecture/plot-design.md)）。
 > 模板对应 [`develop-design`](../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
-> 路径假设实例位于 `packages/graph/_notes/decisions/<MAJOR>/<MAJOR>.<MINOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
+> 路径假设实例位于 `packages/viz/_notes/decisions/<MAJOR>/<MAJOR>.<MINOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
 > **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
 
 - 状态：Proposed
@@ -52,7 +52,7 @@
 
 ## 测试设计
 
-`packages/graph/plot/tests/<对应路径>.test.ts`（chart preset 相关则 `packages/graph/chart/tests/...`）覆盖：
+`packages/viz/plot/tests/<对应路径>.test.ts`（chart preset 相关则 `packages/viz/chart/tests/...`）覆盖：
 
 - <case 类别 1>
 - <case 类别 2>
@@ -85,8 +85,8 @@
 
 判级规则（参 [`flow-alpha`](../../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
 
-- **red**：动 `packages/graph/plot/src/ir/**` · `packages/graph/plot/src/lowering/**`（下沉到 core IR 的契约边界）· `packages/graph/*/src/index.ts`
-- **yellow**：动 `packages/graph/plot/src/{transform,encoding,scale,coordinate,mark,relation,guide,scope}/**` · `packages/graph/chart/src/**`（preset 层）
+- **red**：动 `packages/viz/plot/src/ir/**` · `packages/viz/plot/src/lowering/**`（下沉到 core IR 的契约边界）· `packages/viz/*/src/index.ts`
+- **yellow**：动 `packages/viz/plot/src/{transform,encoding,scale,coordinate,mark,relation,guide,scope}/**` · `packages/viz/chart/src/**`（preset 层）
 - **green**：仅 `apps/docs/**` / 测试 / 注释 / 配置
 
 跨级取最高 level。本 ADR 自评 level：`<red / yellow / green>`，与"文件 scope" 段相符。
@@ -95,7 +95,7 @@
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/graph/plot/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
+| `packages/viz/plot/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
 | ... | ... | ... | ... | ... | ... |
 
 每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**——发现需要改 → 回本 ADR 加条 / 开新 ADR。
@@ -106,11 +106,11 @@
 
 本 ADR 实现允许触碰的文件白名单：
 
-- `packages/graph/plot/src/ir/<新建>.ts`
-- `packages/graph/plot/src/<模块>/<...>.ts`（修改）
-- `packages/graph/plot/src/lowering/<...>.ts`（修改）
-- `packages/graph/plot/tests/<.../...>.test.ts`（新建）
-- `packages/graph/chart/src/<...>.ts`（preset，按需）
+- `packages/viz/plot/src/ir/<新建>.ts`
+- `packages/viz/plot/src/<模块>/<...>.ts`（修改）
+- `packages/viz/plot/src/lowering/<...>.ts`（修改）
+- `packages/viz/plot/tests/<.../...>.test.ts`（新建）
+- `packages/viz/chart/src/<...>.ts`（preset，按需）
 - `apps/docs/src/contents/<...>/<...>.mdx`（修改）
 - `apps/docs/src/contents/<...>/<...>.demo.tsx`（新建）
 - ...

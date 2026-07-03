@@ -81,7 +81,7 @@ renderPlot(
 
 ## 测试设计
 
-`packages/graph/plot/tests/lower/size-channel.test.ts` + `lower/channel-resolver.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：通道 resolver 抽象、size 半径几何、③ 边界退化、schema 拒绝（size 在非 point / value 非数值或负）、与 color 交互。落地测试见实现指针。
+`packages/viz/plot/tests/lower/size-channel.test.ts` + `lower/channel-resolver.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：通道 resolver 抽象、size 半径几何、③ 边界退化、schema 拒绝（size 在非 point / value 非数值或负）、与 color 交互。落地测试见实现指针。
 
 ## 影响
 
@@ -99,5 +99,5 @@ renderPlot(
 - **常量半径的 React `size={number}` 表面** → 后续（IR 已支持 `size.value`）。
 - **自定义通道注册表（`ChannelDefinition` 对外开放）** → 另立里程碑（plot-design §11「先内置，后开放自定义」）；本轮 resolver 仅留接缝，用户要任意视觉控制走 Kernel（`<Node>` / `<Path>`）。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/{encoding,mark}.ts`、`packages/graph/plot/src/lower/{channel,mark,scale}.ts` 与 `packages/graph/plot-react/src/components/marks.tsx`，测试见 `packages/graph/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/size-channel,lower/channel-resolver}.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/{encoding,mark}.ts`、`packages/viz/plot/src/lower/{channel,mark,scale}.ts` 与 `packages/viz/plot-react/src/components/marks.tsx`，测试见 `packages/viz/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/size-channel,lower/channel-resolver}.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.7/02-channel-scale-resolver-size.md`（封板全文）。

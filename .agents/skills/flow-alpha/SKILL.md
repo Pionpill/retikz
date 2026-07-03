@@ -73,7 +73,7 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 
 1. 读每条 ADR 全文，至少读“实现契约段 / 文件 scope / 依赖的现有元素”。
 2. 判断依赖：文件 scope 交叉、显式依赖、引用另一 ADR 产物都算有依赖。
-3. 输出布局图：平行 / 堆叠 / 混合，并建议 base（kernel 通常 `next-kernel`，graph 通常 `next-graph`，跨域 `next`）。
+3. 输出布局图：平行 / 堆叠 / 混合，并建议 base（kernel 通常 `next-kernel`，viz 通常 `next-viz`，跨域 `next`）。
 4. 人工 ack 后创建 worktree 和分支。
 5. 每个 worktree 只跑自己的 ADR，结束后写 `REVIEW.md` 并 halt。
 

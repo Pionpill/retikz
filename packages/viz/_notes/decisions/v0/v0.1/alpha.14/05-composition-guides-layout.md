@@ -132,7 +132,7 @@ const spec = {
 
 ## 测试设计
 
-`packages/graph/plot/tests/composition/composition-guides-layout.test.ts` 覆盖：
+`packages/viz/plot/tests/composition/composition-guides-layout.test.ts` 覆盖：
 
 - facet panel gap 改变 panel bbox，且不影响数据投影顺序。
 - trackGap 改变 track band 间距。

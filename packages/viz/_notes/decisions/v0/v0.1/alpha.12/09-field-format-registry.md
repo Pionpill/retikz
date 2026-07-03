@@ -31,14 +31,14 @@ IR 侧保留 JSON-safe 形态：内置格式仍是既有枚举 / 字符串，自
 
 最终行为以代码为准，主要落在：
 
-- `packages/graph/plot/src/contract/format.ts`
-- `packages/graph/plot/src/providers/format/**`
-- `packages/graph/plot/src/providers/data/**`
-- `packages/graph/plot/src/schemas/data/**`
+- `packages/viz/plot/src/contract/format.ts`
+- `packages/viz/plot/src/providers/format/**`
+- `packages/viz/plot/src/providers/data/**`
+- `packages/viz/plot/src/schemas/data/**`
 
 验证覆盖：
 
-- `packages/graph/plot/tests/lower/type-driven-scale.test.ts`
+- `packages/viz/plot/tests/lower/type-driven-scale.test.ts`
 - data coerce / format registry 相关测试
 
 ## 影响

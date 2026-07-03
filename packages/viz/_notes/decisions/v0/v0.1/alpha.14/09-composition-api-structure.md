@@ -265,7 +265,7 @@ const spec = {
 
 ## 测试设计
 
-`packages/graph/plot/tests/composition/composition-structure.test.ts` 覆盖：
+`packages/viz/plot/tests/composition/composition-structure.test.ts` 覆盖：
 
 - `views_default_view_binding`：`defaultView` 指向已注册 view，mark / axis 省略绑定时使用该 view。
 - `coordinate_and_composition_rejected`：顶层 `coordinate` 与 `composition` 同时出现时 fail-loud。
@@ -279,14 +279,14 @@ const spec = {
 - `generated_view_id_conflict_rejected`：facet / tracks 派生 view id 与显式 view 或彼此冲突时 fail-loud。
 - `json_round_trip_composition_structure`：`views / arrangements / resolve / spacing` JSON round-trip 后等价。
 
-`packages/graph/plot-react/tests/components/build-plot-spec/topology-binding.test.tsx` 覆盖：
+`packages/viz/plot-react/tests/components/build-plot-spec/topology-binding.test.tsx` 覆盖：
 
 - `<Facet>` 生成 `arrangements.kind = 'facet'`，children mark / axis 继承 facet context。
 - `<Scaffold>` / `<Track>` 生成 `arrangements.kind = 'tracks'`，children mark / axis 继承 track context。
 - `yAxisId` 生成 overlay views，不暴露 `__x` / `__y.*` 给用户。
 - 同一个 mark 同时设置 `coordinateView` 与 `yAxisId` 时 fail-loud。
 
-`packages/graph/plot-vanilla/tests/**` 覆盖与 React DSL 同构输出。
+`packages/viz/plot-vanilla/tests/**` 覆盖与 React DSL 同构输出。
 
 docs 验收：
 

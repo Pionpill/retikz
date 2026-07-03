@@ -32,8 +32,8 @@ polar interval 已能表达 pie、donut 与 radial bar。常见需求是把某�
 
 ## 实现指针
 
-- 发布版本：graph group `v0.1.0-alpha.13`。
-- 验收范围：`packages/graph/plot` sector pull lowering 与 locator 测试，React `<IntervalMark pull>` 映射，Vanilla PlotSpec 消费，docs pie/donut 静态 pulled sector demo。
+- 发布版本：viz group `v0.1.0-alpha.13`。
+- 验收范围：`packages/viz/plot` sector pull lowering 与 locator 测试，React `<IntervalMark pull>` 映射，Vanilla PlotSpec 消费，docs pie/donut 静态 pulled sector demo。
 - 不在范围：hover/selected state、animated explode、tooltip、label collision avoidance、PieChart/DonutChart preset。
 
 > 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/graph/v0/v0.1/alpha.13/06-sector-explode-pull.md`（封板全文）。

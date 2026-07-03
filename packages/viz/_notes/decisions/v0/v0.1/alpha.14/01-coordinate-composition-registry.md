@@ -116,7 +116,7 @@ const spec = {
 
 ## 测试设计
 
-`packages/graph/plot/tests/composition/coordinate-scope-registry.test.ts` 覆盖：
+`packages/viz/plot/tests/composition/coordinate-scope-registry.test.ts` 覆盖：
 
 - 旧单坐标 spec：没有 `composition` 时，顶层 `coordinate` 被规范化为默认 coordinate scope，mark / axis guide 省略 `coordinateScope` 仍能 lower。
 - 显式默认 scope：`composition.defaultScope` 指向已注册 scope，省略 `coordinateScope` 的 mark / axis guide 绑定到该 scope。

@@ -33,7 +33,7 @@ area/density visual 由 `PathMark` 的曲线与 baseline closure 表达，不新
 
 ## 实现指针
 
-- 发布版本：graph group `v0.1.0-alpha.13`。
+- 发布版本：viz group `v0.1.0-alpha.13`。
 - 验收范围：density transform schema、KDE 数值边界、group provenance、PathMark 消费与 docs density demo。
 - 结构约束见 [ADR-05](./05-stat-geom-surface.md)：不新增 `DensityPlot` / `DensityMark`。
 

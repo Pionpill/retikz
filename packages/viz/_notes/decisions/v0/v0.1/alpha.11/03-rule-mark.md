@@ -40,7 +40,7 @@
 // encoding 复用 positionalEncoding（x/y 下界 + color）；上界不入 encoding
 ```
 
-DSL / API 两套表面（IR `{value}`/`{field}` 互斥；React `<RuleMark>` 扁平 props，数字→value、字符串→field）的完整示例见文档站 `apps/docs/src/contents/graph/components/mark/rule/`（zh / en）。
+DSL / API 两套表面（IR `{value}`/`{field}` 互斥；React `<RuleMark>` 扁平 props，数字→value、字符串→field）的完整示例见文档站 `apps/docs/src/modules/docs/contents/viz/components/mark/rule/`（zh / en）。
 
 ## 理由
 
@@ -65,11 +65,11 @@ DSL / API 两套表面（IR `{value}`/`{field}` 互斥；React `<RuleMark>` 扁�
 ## 实现指针
 
 - 实现 commit：`d0071529`（后续对抗审查修复见 `f0085156` 的 ribbon/rule 边界修复）。
-- IR schema：`packages/graph/plot/src/ir/mark.ts`（`PlotMark.Rule` + `RuleMarkSchema` + 并入 `MarkSchema` discriminatedUnion + `RuleMark` 类型）。
-- lowering：`packages/graph/plot/src/lower/mark.ts`（`lowerRule`，line 产 core Path、band 经 `frame.projectCell` 出 Node）。
-- React sugar：`packages/graph/plot-react/src/components/marks.tsx`（`RuleMark` / `RuleMarkProps`）+ `packages/graph/plot-react/src/components/build-plot-spec.ts`（扁平 props → rule IR 装配 + fail-loud 校验）。
-- 测试：`packages/graph/plot/tests/lower/rule.test.ts`、`packages/graph/plot-react/tests/components/build-plot-spec.test.tsx`、`packages/graph/plot-vanilla/tests/render-plot.test.ts`。
-- 文档 + demo：`apps/docs/src/contents/graph/components/mark/rule/`（line / band / per-datum demo，zh / en）。
+- IR schema：`packages/viz/plot/src/ir/mark.ts`（`PlotMark.Rule` + `RuleMarkSchema` + 并入 `MarkSchema` discriminatedUnion + `RuleMark` 类型）。
+- lowering：`packages/viz/plot/src/lower/mark.ts`（`lowerRule`，line 产 core Path、band 经 `frame.projectCell` 出 Node）。
+- React sugar：`packages/viz/plot-react/src/components/marks.tsx`（`RuleMark` / `RuleMarkProps`）+ `packages/viz/plot-react/src/components/build-plot-spec.ts`（扁平 props → rule IR 装配 + fail-loud 校验）。
+- 测试：`packages/viz/plot/tests/lower/rule.test.ts`、`packages/viz/plot-react/tests/components/build-plot-spec.test.tsx`、`packages/viz/plot-vanilla/tests/render-plot.test.ts`。
+- 文档 + demo：`apps/docs/src/modules/docs/contents/viz/components/mark/rule/`（line / band / per-datum demo，zh / en）。
 
 ---
 

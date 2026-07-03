@@ -32,8 +32,8 @@ plot 的 relation 需要表达有流量宽度的边，例如 Sankey、alluvial �
 
 ## 实现指针
 
-- 发布版本：graph group `v0.1.0-alpha.13`。
+- 发布版本：viz group `v0.1.0-alpha.13`。
 - 依赖能力：kernel group `v0.4.0-alpha.6` 的 `Path.kind="ribbon"`。
-- 验收范围：`packages/graph/plot` relation schema/lowering，React `<RelationMark kind="ribbon">`，Vanilla PlotSpec 消费，以及 graph relation docs/demo。
+- 验收范围：`packages/viz/plot` relation schema/lowering，React `<RelationMark kind="ribbon">`，Vanilla PlotSpec 消费，以及 viz relation docs/demo。
 
 > 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/graph/v0/v0.1/alpha.13/01-relation-ribbon.md`（封板全文）。

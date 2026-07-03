@@ -29,7 +29,7 @@ plot alpha.13 采用“stat = transform / reducer / selector，geom = abstract m
 
 ## 实现指针
 
-- 发布版本：graph group `v0.1.0-alpha.13`。
+- 发布版本：viz group `v0.1.0-alpha.13`。
 - 验收范围：测试中显式保证没有 specialized chart marks，React/Vanilla PlotSpec 等价，docs 用 grammar 组合页解释统计闭环。
 - 受约束 ADR：[ADR-02](./02-quantile-band-boxplot.md)、[ADR-03](./03-density-transform.md)、[ADR-04](./04-smooth-regression.md)。
 

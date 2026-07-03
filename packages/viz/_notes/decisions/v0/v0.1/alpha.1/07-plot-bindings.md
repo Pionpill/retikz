@@ -12,8 +12,8 @@ ADR-01~06 让 `@retikz/plot` 能「Plot IR + 数据 → core IR → 渲染」，
 
 **包结构**（镜像 `packages/kernel/{react,vanilla}`，glob `packages/*/*` 已覆盖）：
 
-- `packages/graph/plot-react` → `@retikz/plot-react`：deps `@retikz/plot` + `@retikz/react`（`<Layout>`），React 为 peer。
-- `packages/graph/plot-vanilla` → `@retikz/plot-vanilla`：deps `@retikz/plot` + `@retikz/vanilla`（framework-free runtime / SSR）。
+- `packages/viz/plot-react` → `@retikz/plot-react`：deps `@retikz/plot` + `@retikz/react`（`<Layout>`），React 为 peer。
+- `packages/viz/plot-vanilla` → `@retikz/plot-vanilla`：deps `@retikz/plot` + `@retikz/vanilla`（framework-free runtime / SSR）。
 
 **薄包装**：react 的 `<Plot spec data width height/>` 内部接 `lowerPlots` + `<Layout ir composites>`；vanilla 的 `renderPlot(spec, data, options?)` 经 `compileToScene` + `renderToSvgString` 产 SVG 串（SSR）。两路在转发前对 spec 做一次 **`PlotSpecSchema.parse`**（薄包装的唯一「语义」）：合法 spec 为恒等、渲染结果不变；非法 spec（缺 `namespace` / `type` 等判别字段，否则会绕过 composite 路由落到 core 内部崩出与 plot 无关的 TypeError）抛清晰 ZodError，对齐 plot-design §7「AI 可据报错自我修正」契约。
 
@@ -43,6 +43,6 @@ plot-react / plot-vanilla 跟 `@retikz/plot` 同版本线，三包 **lockstep �
 
 ---
 
-> **实现指针**：level `red`（首次公开 `react/src/index.ts` / `vanilla/src/index.ts`）、无 IR schema 改动。真源以代码为准——`<Plot>` / `PlotProps`（`react/src/Plot.tsx`，薄路径在此分流，见 ADR-08）、`renderPlot`（`vanilla/src/renderPlot.ts`）；仅消费 `@retikz/plot` 的 `lowerPlots` / `PlotSpec` / `ExternalDatasets` / `LowerPlotsOptions` + `@retikz/react` 的 `Layout` + `@retikz/vanilla` 的 `renderToSvgString` + core `compileToScene`，不改 core / plot 本体。测试在 `packages/graph/plot-react/tests/Plot.test.tsx`、`packages/graph/plot-vanilla/tests/renderPlot.test.ts`。完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
+> **实现指针**：level `red`（首次公开 `react/src/index.ts` / `vanilla/src/index.ts`）、无 IR schema 改动。真源以代码为准——`<Plot>` / `PlotProps`（`react/src/Plot.tsx`，薄路径在此分流，见 ADR-08）、`renderPlot`（`vanilla/src/renderPlot.ts`）；仅消费 `@retikz/plot` 的 `lowerPlots` / `PlotSpec` / `ExternalDatasets` / `LowerPlotsOptions` + `@retikz/react` 的 `Layout` + `@retikz/vanilla` 的 `renderToSvgString` + core `compileToScene`，不改 core / plot 本体。测试在 `packages/viz/plot-react/tests/Plot.test.tsx`、`packages/viz/plot-vanilla/tests/renderPlot.test.ts`。完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
 
 > 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/07-plot-bindings.md`。

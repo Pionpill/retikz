@@ -34,16 +34,16 @@ ADR-07 收敛了 scale registry，但 visual channel 仍有缺口：color 通道
 
 最终行为以代码为准，主要落在：
 
-- `packages/graph/plot/src/contract/channel.ts`
-- `packages/graph/plot/src/providers/channel/**`
-- `packages/graph/plot/src/providers/scale/**`
-- `packages/graph/plot/src/features/guide/**`
+- `packages/viz/plot/src/contract/channel.ts`
+- `packages/viz/plot/src/providers/channel/**`
+- `packages/viz/plot/src/providers/scale/**`
+- `packages/viz/plot/src/features/guide/**`
 
 验证覆盖：
 
-- `packages/graph/plot/tests/lower/size-channel.test.ts`
-- `packages/graph/plot/tests/lower/opacity-channel.test.ts`
-- `packages/graph/plot/tests/lower/shape-channel.test.ts`
+- `packages/viz/plot/tests/lower/size-channel.test.ts`
+- `packages/viz/plot/tests/lower/opacity-channel.test.ts`
+- `packages/viz/plot/tests/lower/shape-channel.test.ts`
 - legend / guide / channel delivery 相关测试
 
 ## 影响

@@ -6,7 +6,7 @@
 
 ## 背景
 
-plot 的数据层把「用户外部数据 → canonical 行」分两段：① `resolveFieldTypes`（`packages/graph/plot/src/lower/expand.ts`）定每个字段的测量类型——有 `model` 用声明、无 `model` 走 `inferFieldType` 抽样推断；② `normalizeRows` / `coerceValue`（`packages/graph/plot/src/lower/coerce.ts`）按类型把原始值强制成 canonical 值（temporal→epoch ms、continuous→number、categorical→string|number）。类型与解析都**只认内置规则**，用户无从介入。三类真实需求因此落空：
+plot 的数据层把「用户外部数据 → canonical 行」分两段：① `resolveFieldTypes`（`packages/viz/plot/src/lower/expand.ts`）定每个字段的测量类型——有 `model` 用声明、无 `model` 走 `inferFieldType` 抽样推断；② `normalizeRows` / `coerceValue`（`packages/viz/plot/src/lower/coerce.ts`）按类型把原始值强制成 canonical 值（temporal→epoch ms、continuous→number、categorical→string|number）。类型与解析都**只认内置规则**，用户无从介入。三类真实需求因此落空：
 
 - **非 ISO 日期 / 自定义日期格式**：`temporal` 的 `coerceTimestamp` 只接受 `Date` / epoch ms / 严格 ISO（`YYYY-MM-DD` 或带时区 ISO datetime）。`'2024/01/01'`、epoch 秒、`'2024Q1'` 一律 NaN→静默跳过。用户没有挂自定义 parser 的口子。
 - **数值枚举想当类别**：`status: 0/1/2` 这种数值编码的类别。声明 `model` 的 `type: 'categorical'` 已能解决（`coerceCategory` 原样保留有限 number），但**无 model 时**（推断模式）数值一律 `continuous`，没有不写整份 model 就单点纠偏的手段。
@@ -52,7 +52,7 @@ export type LowerPlotsOptions = {
 
 - **优先级 `resolveField.type > model > infer`**，但 **model strict 不破**：`resolveField` 能盖已声明字段的类型，**不能**让未在 model 声明的字段通过 strict 校验——catch-all resolver 不得把拼错字段洗成合法字段（守本里程碑 ADR-01 data-model 的 strict fail-loud）。strict 的「字段必须声明」检查在 resolver 之前、独立成立。
 - **normalize 门控放宽**：现 `normalizeRows` 契约是「仅 model 在时调用」（coerce.ts）。改成 **有 model 或任一字段命中 resolver → 进 canonical normalize**。否则无 model 的 `{ type:'categorical' }` / `{ type, parse }` 用法不生效。
-- **render 与 locator 同源**：`createPlotLocator`（`packages/graph/plot/src/lower/locate.ts`）也走归一化；上一轮 cross-review 的 P2 即「locator 与 render 对 fieldMaps 行为必须一致」。`resolveField` 必须在两条路同样生效，否则命中坐标与画出的点用不同解析。
+- **render 与 locator 同源**：`createPlotLocator`（`packages/viz/plot/src/lower/locate.ts`）也走归一化；上一轮 cross-review 的 P2 即「locator 与 render 对 fieldMaps 行为必须一致」。`resolveField` 必须在两条路同样生效，否则命中坐标与画出的点用不同解析。
 - **`parse` 单独出现需类型来源**：`{ parse }` 无 `type` 的合理语义是「类型沿用 model、只换解析」。**无 model 时类型来源不清**（自定义日期 parse 成 epoch number 会被误当 continuous）→ 要求：`{ parse }` 单独出现必须有 model 声明该字段；否则必须同时给 `type`，违反 fail-loud。
 - **覆盖后的类型贯穿下游**：`resolveField.type` 盖类型后，`assertScaleFieldCompatible` 等用的是**覆盖后**的类型（实现时注意取值时序，别拿 model 旧类型校验）。
 
@@ -77,14 +77,14 @@ export type LowerPlotsOptions = {
 
 ## 测试设计
 
-`packages/graph/plot/tests/lower/field-resolver.test.ts` 覆盖类型覆盖、自定义 parse、门控、strict 守恒、locator 同源、与 fieldMaps 交叉。落地测试见实现指针。
+`packages/viz/plot/tests/lower/field-resolver.test.ts` 覆盖类型覆盖、自定义 parse、门控、strict 守恒、locator 同源、与 fieldMaps 交叉。落地测试见实现指针。
 
 ## 影响
 
 - **lowering 管线**：`resolveFieldTypes`（加 resolver 优先级 + strict 守恒）、`normalizeRows` / `coerceValue`（门控放宽 + parse 钩子）、`createPlotLocator`（同源透传）、`validateData`（可选 parse 输出校验）。
 - **公开 API（用户可见，新增非破坏）**：`LowerPlotsOptions.resolveField` + 导出 `FieldResolution` / `ParsedFieldValue` 类型；`@retikz/plot-react` `<Plot resolveField>` prop、`@retikz/plot-vanilla` `renderPlot(spec, data, { resolveField })` 透传。
 - **IR**：**无 schema 改动**——`resolveField` 是运行时函数、不进 IR（守可序列化红线）。
-- **文档站**：`apps/docs/src/contents/graph/grammar/data` 补「自定义解析 / resolveField」段 + demo。
+- **文档站**：`apps/docs/src/modules/docs/contents/viz/grammar/data` 补「自定义解析 / resolveField」段 + demo。
 - **core**：无（纯 plot 数据层，不碰 core）。
 
 ## 不在本 ADR 范围
@@ -94,5 +94,5 @@ export type LowerPlotsOptions = {
 - **值重映射 / 标签化**（`0→'低'`）——显示格式化 / guide label 概念，与值强制无关，另议。
 - **`bigint` 作为一等标量进 `ScalarValueSchema`**——本 ADR 仅让用户经 `parse` 自行收口 bigint；是否把 bigint 纳入内置 `coerceNumber` / 标量 schema 另议。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/lower/{expand,coerce,locate,infer}.ts`、plot public export 与 React/vanilla options 透传，测试见 `packages/graph/plot/tests/lower/field-resolver.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/lower/{expand,coerce,locate,infer}.ts`、plot public export 与 React/vanilla options 透传，测试见 `packages/viz/plot/tests/lower/field-resolver.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/04-field-resolver.md`（封板全文）。

@@ -43,7 +43,7 @@
 
 ## 前置 setup
 
-无新包（三包脚手架 alpha.1 已建）。transform 是 `packages/graph/plot/src/lower/**`（或新 `transform/`）下的新阶段；scale union / mark union / encoding 扩展在 `src/ir/**`。plot 包新增 d3 子依赖（catalog 登记，具体见各 ADR）：
+无新包（三包脚手架 alpha.1 已建）。transform 是 `packages/viz/plot/src/lower/**`（或新 `transform/`）下的新阶段；scale union / mark union / encoding 扩展在 `src/ir/**`。plot 包新增 d3 子依赖（catalog 登记，具体见各 ADR）：
 
 - **band/point scale**：`d3-scale` 已在（`scaleBand` / `scalePoint` 同包）；
 - **color scale**：`d3-scale-chromatic`（配色方案）；

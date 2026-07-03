@@ -36,7 +36,7 @@ plot mark label 改为 host-inferred schema：用户在 mark 上写 `label`，�
 
 ## 实现指针
 
-- 发布版本：graph group `v0.1.0-alpha.13`。
+- 发布版本：viz group `v0.1.0-alpha.13`。
 - 依赖能力：kernel group `v0.4.0-alpha.6` 的 node inside label 与 path/ribbon shared geometry label。
 - 验收范围：mark label schema host-specific accept/reject、Point/Interval/Path/Reference/Relation lowering、React 结构化 label props、Vanilla SSR 消费、docs mark label demo。
 

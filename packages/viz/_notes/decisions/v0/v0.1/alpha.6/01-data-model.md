@@ -106,7 +106,7 @@ vanilla builder 对等（同一 IR）：`plot(spec, datasets)`，`spec.data = { 
 
 ## 测试设计
 
-`packages/graph/plot/tests/lower/data-model.test.ts` 覆盖：
+`packages/viz/plot/tests/lower/data-model.test.ts` 覆盖：
 
 - 缺省推断各类型（temporal / quantitative / nominal）
 - 显式 model 优先于推断
@@ -132,5 +132,5 @@ vanilla builder 对等（同一 IR）：`plot(spec, datasets)`，`spec.data = { 
 - **新 scale 类型**（log/pow/quantize/gradient）→ alpha.7-8。
 - **值级校验**（声明 temporal 但值不可解析）→ 暂不做（沿用跳过语义，见待决策点）。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/data.ts` 与 `packages/graph/plot/src/lower/{infer,validate,expand}.ts`，测试见 `packages/graph/plot/tests/lower/data-model.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/data.ts` 与 `packages/viz/plot/src/lower/{infer,validate,expand}.ts`，测试见 `packages/viz/plot/tests/lower/data-model.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/01-data-model.md`（封板全文）。

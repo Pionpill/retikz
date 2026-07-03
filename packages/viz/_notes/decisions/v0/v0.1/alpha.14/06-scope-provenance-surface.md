@@ -112,7 +112,7 @@ locator.datum(4, {
 
 ## 测试设计
 
-`packages/graph/plot/tests/composition/scope-provenance-surface.test.ts` 覆盖：
+`packages/viz/plot/tests/composition/scope-provenance-surface.test.ts` 覆盖：
 
 - lower 输出 mark layer meta 带 coordinateScope。
 - facet panel 下 datum meta 带 facet id / row / column。

@@ -36,16 +36,16 @@ lowering 不再在所有阶段假设 mark 一定是内置 union 成员。`pipeli
 
 最终行为以代码为准，主要落在：
 
-- `packages/graph/plot/src/contract/mark.ts`
-- `packages/graph/plot/src/providers/mark/**`
-- `packages/graph/plot/src/schemas/mark/**`
-- `packages/graph/plot/src/pipeline/expand.ts`
-- `packages/graph/plot/src/features/interaction/locate.ts`
+- `packages/viz/plot/src/contract/mark.ts`
+- `packages/viz/plot/src/providers/mark/**`
+- `packages/viz/plot/src/schemas/mark/**`
+- `packages/viz/plot/src/pipeline/expand.ts`
+- `packages/viz/plot/src/features/interaction/locate.ts`
 
 验证覆盖：
 
-- `packages/graph/plot/tests/lower/mark-registry.test.ts`
-- `packages/graph/plot/tests/lower/mark-value-resolver.test.ts`
+- `packages/viz/plot/tests/lower/mark-registry.test.ts`
+- `packages/viz/plot/tests/lower/mark-value-resolver.test.ts`
 - custom mark / locator / scale 推断相关测试
 
 ## 影响

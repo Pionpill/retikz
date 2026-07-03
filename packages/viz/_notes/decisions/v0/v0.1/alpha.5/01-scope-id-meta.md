@@ -139,7 +139,7 @@ prim?.meta;   // → { source:'plot', mark:'interval', markIndex:0, datum:0 }
 
 ## 测试设计
 
-`packages/graph/plot/tests/lower/scope-id-meta.test.ts`（新建）覆盖：
+`packages/viz/plot/tests/lower/scope-id-meta.test.ts`（新建）覆盖：
 
 - root / mark / series scope 的 id 命名与 `<plotId>.` 前缀
 - layer / series meta 内容；per-datum meta 开关行为
@@ -171,5 +171,5 @@ prim?.meta;   // → { source:'plot', mark:'interval', markIndex:0, datum:0 }
 - **`sourceIndex` 全链路强追踪**：跨所有 transform（含派生行）精确回指源行——backlog；v0.1 best-effort。
 - **legend / 跨域组合 UI**：v0.5。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/pipeline/expand.ts`、`packages/graph/plot/src/providers/{mark,guide}/`、plot React/vanilla options 透传与 provenance 测试，测试见 `packages/graph/plot/tests/pipeline/scope-id-meta.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/pipeline/expand.ts`、`packages/viz/plot/src/providers/{mark,guide}/`、plot React/vanilla options 透传与 provenance 测试，测试见 `packages/viz/plot/tests/pipeline/scope-id-meta.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.5/01-scope-id-meta.md`（封板全文）。

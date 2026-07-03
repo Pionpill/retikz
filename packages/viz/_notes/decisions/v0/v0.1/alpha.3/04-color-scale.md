@@ -16,7 +16,7 @@
 
 `ChannelSchema` 加可选 `scale?`（非位置通道用它指明 scale 名；位置通道省略、scale 由 coordinate 绑）。`EncodingSchema` 加 `color?` 通道。`ScaleSchema` 加 `ordinal` 成员（分类域 → 输出值数组，颜色是其典型用途；`range` 省略时 lowering 用默认配色方案）。lowering：解析 color scale，把行按 color 值分组，**每个颜色一个子 Scope**（`fill` 设为该色），柱 / 点落进对应子 Scope——颜色上提到 Scope、不逐元素写，守 IR 体积原则。**注意主从（与 [ADR-05](./05-relation.md) 统一）：当 mark 带 `series` 时，分区以 series 为主、color 仅决定每系列 paint；本 ADR 的「按 color 分子 Scope」专指 *无 series* 的着色（如分类散点）**——lowering 永远不会「先按 color 拆、再按 series 拆」。
 
-判别串以代码为准（命名 / 语义即决策）：`ScaleSchema` 升 4 成员 union、`PlotScale` 补 `Ordinal:'ordinal'`（`packages/graph/plot/src/ir/scale.ts`）；`ChannelSchema.scale` / `EncodingSchema.color` 见 `packages/graph/plot/src/ir/encoding.ts`。
+判别串以代码为准（命名 / 语义即决策）：`ScaleSchema` 升 4 成员 union、`PlotScale` 补 `Ordinal:'ordinal'`（`packages/viz/plot/src/ir/scale.ts`）；`ChannelSchema.scale` / `EncodingSchema.color` 见 `packages/viz/plot/src/ir/encoding.ts`。
 
 理由：
 
@@ -50,8 +50,8 @@
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/**` encoding+scale schema + `src/lower/**` + plot 包依赖）、非 breaking（位置通道省 `scale` 零影响；color 通道纯新增；对 core 无影响，color 在 lowering 算成 CSS 色串落 Scope.fill / element fill，IR 纯 JSON）。
-> - 真源以代码为准：`ChannelSchema`（加 `scale?`）/ `EncodingSchema`（加 `color?`）（`packages/graph/plot/src/ir/encoding.ts`）、`OrdinalScaleSchema` / `PlotScale.Ordinal` / `ScaleSchema` 4 成员 union（`packages/graph/plot/src/ir/scale.ts`）、`resolveOrdinalScale` + 自动合成（`packages/graph/plot/src/lower/scale.ts`）、按 color 分组着色（`packages/graph/plot/src/lower/mark.ts`）、解析 / 合成 color scale（`packages/graph/plot/src/lower/expand.ts`）。基于 `d3-scale`（`scaleOrdinal`）+ `d3-scale-chromatic`（`schemeCategory10`），版本在 `pnpm-workspace.yaml` catalog；color 在 lowering 内部算、不进 IR。
-> - 测试见 `packages/graph/plot/tests/ir/encoding.schema.test.ts` / `tests/ir/scale.schema.test.ts`（color 通道 + scale ref accept/reject、ordinal schema、range 非串拒、field/value 互斥）与 `tests/lower/lowerPlots.test.ts`（按值分子 Scope、默认方案循环、显式 range、固定 `color.value`、无 scale ref 自动合成、point 落 fill / line 落 stroke、color 域与 band 域同源）。
+> - 真源以代码为准：`ChannelSchema`（加 `scale?`）/ `EncodingSchema`（加 `color?`）（`packages/viz/plot/src/ir/encoding.ts`）、`OrdinalScaleSchema` / `PlotScale.Ordinal` / `ScaleSchema` 4 成员 union（`packages/viz/plot/src/ir/scale.ts`）、`resolveOrdinalScale` + 自动合成（`packages/viz/plot/src/lower/scale.ts`）、按 color 分组着色（`packages/viz/plot/src/lower/mark.ts`）、解析 / 合成 color scale（`packages/viz/plot/src/lower/expand.ts`）。基于 `d3-scale`（`scaleOrdinal`）+ `d3-scale-chromatic`（`schemeCategory10`），版本在 `pnpm-workspace.yaml` catalog；color 在 lowering 内部算、不进 IR。
+> - 测试见 `packages/viz/plot/tests/ir/encoding.schema.test.ts` / `tests/ir/scale.schema.test.ts`（color 通道 + scale ref accept/reject、ordinal schema、range 非串拒、field/value 互斥）与 `tests/lower/lowerPlots.test.ts`（按值分子 Scope、默认方案循环、显式 range、固定 `color.value`、无 scale ref 自动合成、point 落 fill / line 落 stroke、color 域与 band 域同源）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。
 
 > 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:_notes/decisions/plot/v0/v0.1/alpha.3/04-color-scale.md`。

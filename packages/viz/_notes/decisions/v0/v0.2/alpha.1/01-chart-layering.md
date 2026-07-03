@@ -15,16 +15,16 @@ v0 roadmap 现已明确 `@retikz/chart` / `@retikz/chart-react` / `@retikz/chart
 
 - chart 要**同时服务 react 与 vanilla** → 需一份**框架无关的共享核心**（装饰 / 主题 → PlotSpec），不能各绑定包各写一遍（撞 AGENTS.md「不造平行机制」）。
 - plot 核心要保持**纯 grammar** → chart 核心是「PlotSpec 生产者」纯函数，放在 `@retikz/chart`，不污染 plot grammar / lowering。
-- 长期高层封装由 chart 承担：line/bar/pie 与 gauge/progress/tree/network/wordCloud/pictogram 等都必须先生成 PlotSpec；table 不由 chart 调度；map/choropleth/flowMap 所属的 geo 边界待后续 ADR 决定。现阶段只做 plot-backed 组合式 `<Chart>`，不建统一 `@retikz/graph-react` / `@retikz/graph-vanilla`。
+- 长期高层封装由 chart 承担：line/bar/pie 与 gauge/progress/tree/network/wordCloud/pictogram 等都必须先生成 PlotSpec；table 不由 chart 调度；map/choropleth/flowMap 所属的 geo 边界待后续 ADR 决定。现阶段只做 plot-backed 组合式 `<Chart>`，不建统一 `@retikz/viz-react` / `@retikz/viz-vanilla`。
 
 同类库对照：Recharts `<ResponsiveContainer>`（容器）vs 高层组合；Observable Plot `Plot.plot({marks})` 自带轴、mark 是纯数据层；Vega-Lite unit spec 默认出轴；ECharts `type`+option 配置驱动。retikz 取「Tier 2 底层显式组合（Plot / Table / geo 待决策）/ Tier 3 chart 友好封装 / 各模块各自框架绑定」。
 
 ## 决策：plot-backed chart 核心归 `@retikz/chart`，绑定包独立发布
 
-**(1) plot-backed chart 核心归 `@retikz/chart`**。新增框架无关的 chart / preset 模块（`packages/graph/chart/src/`），**复用或承接 v0.1-alpha.10 抽出的 `decorateDefaultGuides` 语义** 并扩展为完整装饰：输入 marks/config + theme、输出**装饰完整的 `PlotSpec`**（补默认轴 / 图例 / 网格 + 透出 theme）。**无新 IR、无新 lowering、不进 IR**——它是 PlotSpec 生产者，与用户手写 PlotSpec 同级。
+**(1) plot-backed chart 核心归 `@retikz/chart`**。新增框架无关的 chart / preset 模块（`packages/viz/chart/src/`），**复用或承接 v0.1-alpha.10 抽出的 `decorateDefaultGuides` 语义** 并扩展为完整装饰：输入 marks/config + theme、输出**装饰完整的 `PlotSpec`**（补默认轴 / 图例 / 网格 + 透出 theme）。**无新 IR、无新 lowering、不进 IR**——它是 PlotSpec 生产者，与用户手写 PlotSpec 同级。
 
 ```ts
-// packages/graph/chart/src/decorate.ts （示意）
+// packages/viz/chart/src/decorate.ts （示意）
 /** 框架无关：裸 PlotSpec（marks + scale/coord）→ 装饰完整 PlotSpec（默认轴/图例/网格 + theme） */
 export const decorateChartSpec = (spec: PlotSpec, options?: ChartDecorateOptions): PlotSpec => { /* 复用 decorateDefaultGuides + theme 注入 */ };
 ```
@@ -44,14 +44,14 @@ export const decorateChartSpec = (spec: PlotSpec, options?: ChartDecorateOptions
 const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 ```
 
-**(3) 包结构不设 graph adapter 聚合**。chart 是长期独立 Tier 3 包，但不是 graph-level 聚合 adapter；本轮只调度 plot，不拉入 table / geo。若 table 后续需要高层入口，应由 table 自己承担；geo 是否独立成包另行决策。
+**(3) 包结构不设 viz adapter 聚合**。chart 是长期独立 Tier 3 包，但不是 viz-level 聚合 adapter；本轮只调度 plot，不拉入 table / geo。若 table 后续需要高层入口，应由 table 自己承担；geo 是否独立成包另行决策。
 
 理由：
 
 1. **同时服务 react + vanilla 需共享核心**。chart 装饰 / 主题逻辑框架无关，放 `@retikz/chart` 后由两个绑定共享；放某绑定包内则另一包要重写（撞「不造平行机制」）。
 2. **复用 v0.1 装饰函数、不重写**。v0.1-alpha.10 已把装饰抽成纯函数；本轮在 chart 核心中承接同一语义，临时方案不沉没（AGENTS.md）。
 3. **职责清晰、不造平行 IR**。本轮 plot-backed 表面编译到唯一 `PlotSpec`、共走 `expandPlot`，物理上不可能自造平行 IR（plot-design §2）。未来结构化算法类 type 仍经 plot layout transform 生成 PlotSpec；table / geo 不由 chart 在本轮调度。
-4. **安装边界清晰**。不做 `@retikz/graph-react` 聚合包；用户只用 plot 时无需安装 chart / table / geo，用户要新手友好 API 时显式安装 chart 三包。
+4. **安装边界清晰**。不做 `@retikz/viz-react` 聚合包；用户只用 plot 时无需安装 chart / table / geo，用户要新手友好 API 时显式安装 chart 三包。
 
 ## 待决策点 🔻
 
@@ -76,7 +76,7 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 ## 测试设计
 
-`packages/graph/chart/tests/decorate.test.ts`（新建：装饰函数契约）+ `packages/graph/chart-react/tests/Chart.test.tsx`（新建：`<Chart>` 表面）+ `packages/graph/chart-vanilla/tests/renderChart.test.ts`（新建）覆盖：
+`packages/viz/chart/tests/decorate.test.ts`（新建：装饰函数契约）+ `packages/viz/chart-react/tests/Chart.test.tsx`（新建：`<Chart>` 表面）+ `packages/viz/chart-vanilla/tests/renderChart.test.ts`（新建）覆盖：
 
 - `decorateChartSpec` 等价性：装饰产物 = 薄 `<Plot>` + 手写默认轴 / 图例 / 网格
 - `<Chart>` 复用 `<Plot>` DSL props（coordinate / scaleX / model…）+ title/theme
@@ -88,7 +88,7 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 ## 影响
 
-- **`@retikz/chart` 新增 chart 核心**：`packages/graph/chart/src/`（框架无关，承接 + 扩展 v0.1 装饰语义）；**无新 IR 字段、无 lowering 改动**。
+- **`@retikz/chart` 新增 chart 核心**：`packages/viz/chart/src/`（框架无关，承接 + 扩展 v0.1 装饰语义）；**无新 IR 字段、无 lowering 改动**。
 - **`@retikz/chart-react`**：新增 `<Chart>` 组件 + 导出。
 - **`@retikz/chart-vanilla`**：新增 `renderChart` / chart builder + 导出。
 - **公开 API**：`@retikz/chart` 导出 chart 核心（red）；chart-react `<Chart>` / chart-vanilla `renderChart` 新导出。
@@ -99,14 +99,14 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 ## 不在本 ADR 范围
 
-- **跨表达层 `type` + 配置驱动 preset**（ECharts 式）：本轮不做 graph-level 聚合 chart；只做 plot-backed 组合式 chart。
+- **跨表达层 `type` + 配置驱动 preset**（ECharts 式）：本轮不做 viz-level 聚合 chart；只做 plot-backed 组合式 chart。
 - **data 共享层抽离**：本轮不抽 `@retikz/data`；后续 plot / table / geo 共享数据模型、字段、通用 transform、通道、scale / formatter 时另立 ADR。
 - **plot layout chart type**：gauge / progress / token ring / tree / network / wordCloud / pictogram 等先由 `@retikz/plot` 提供 layout transform 能力，再由 chart 封装。
 - **table-backed chart type**：table / pivotTable / matrix 等由 `@retikz/table` 自己决定是否提供高层封装。
 - **geo-backed chart type**：map / choropleth / flowMap 等先做 geo 边界决策；geo 可能独立成包，也可能作为 plot projection / layout 能力。
-- **graph adapter 收敛**：不规划；本轮新增 `@retikz/chart-react` / `@retikz/chart-vanilla`，table / geo（若独立）后续各自发包。
+- **viz adapter 收敛**：不规划；本轮新增 `@retikz/chart-react` / `@retikz/chart-vanilla`，table / geo（若独立）后续各自发包。
 - **完整主题透出**：gate 于 v0.1-alpha.15 Theme；本轮仅预留接缝。
-- **graph adapter 目标包**：不做；不规划 `@retikz/graph-react` / `@retikz/graph-vanilla`。
+- **viz adapter 目标包**：不做；不规划 `@retikz/viz-react` / `@retikz/viz-vanilla`。
 - **薄 Plot 本身**：已在 [v0.1-alpha.10 ADR-01](../../v0.1/alpha.10/01-plot-thin-container.md) 完成。
 
 ---
@@ -119,7 +119,7 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 `red`
 
-判级：新增 `packages/graph/chart/src/index.ts`（导出 chart 核心）+ `packages/graph/chart-react/src/index.ts` / `packages/graph/chart-vanilla/src/index.ts`（导出 `<Chart>` / `renderChart`），公开 API 新增 → red。chart 核心本身是 yellow（preset 层），跨级取最高 → red。
+判级：新增 `packages/viz/chart/src/index.ts`（导出 chart 核心）+ `packages/viz/chart-react/src/index.ts` / `packages/viz/chart-vanilla/src/index.ts`（导出 `<Chart>` / `renderChart`），公开 API 新增 → red。chart 核心本身是 yellow（preset 层），跨级取最高 → red。
 
 ### Schema 改动
 
@@ -127,13 +127,13 @@ const svg = renderChart({ data: rows, marks: [...], title: 'Sales' });
 
 ### 文件 scope
 
-- `packages/graph/chart/src/`（新建：`decorateChartSpec` + 承接 v0.1 `decorateDefaultGuides` 语义 + theme 注入）
-- `packages/graph/chart/src/index.ts`（新建：导出 chart 核心 / preset）
-- `packages/graph/chart-react/src/Chart.tsx`（新建：`<Chart>` 组件）
-- `packages/graph/chart-react/src/index.ts`（新建：导出 `<Chart>`）
-- `packages/graph/chart-vanilla/src/renderChart.ts`（新建）+ `packages/graph/chart-vanilla/src/index.ts`（新建：导出）
-- `packages/graph/chart/tests/decorate.test.ts` / `packages/graph/chart-react/tests/Chart.test.tsx` / `packages/graph/chart-vanilla/tests/renderChart.test.ts`（新建）
-- `apps/docs/src/contents/graph/**`（新增 `<Chart>` 线 + demo，zh/en 同步）
+- `packages/viz/chart/src/`（新建：`decorateChartSpec` + 承接 v0.1 `decorateDefaultGuides` 语义 + theme 注入）
+- `packages/viz/chart/src/index.ts`（新建：导出 chart 核心 / preset）
+- `packages/viz/chart-react/src/Chart.tsx`（新建：`<Chart>` 组件）
+- `packages/viz/chart-react/src/index.ts`（新建：导出 `<Chart>`）
+- `packages/viz/chart-vanilla/src/renderChart.ts`（新建）+ `packages/viz/chart-vanilla/src/index.ts`（新建：导出）
+- `packages/viz/chart/tests/decorate.test.ts` / `packages/viz/chart-react/tests/Chart.test.tsx` / `packages/viz/chart-vanilla/tests/renderChart.test.ts`（新建）
+- `apps/docs/src/modules/docs/contents/viz/**`（新增 `<Chart>` 线 + demo，zh/en 同步）
 
 偏离白名单需加条目自注或开新 ADR。
 

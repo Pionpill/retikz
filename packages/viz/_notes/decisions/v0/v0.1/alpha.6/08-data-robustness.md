@@ -70,5 +70,5 @@
 - **per-field / per-mark invalid 覆盖**——先全局。
 - **`bigint` 进 IR 标量**——破 JSON 可序列化，永不收；只 ingest 转 number。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/pipeline/expand.ts`、`packages/graph/plot/src/providers/data/{coerce,field,normalize}.ts` 与 React `invalid` options 透传，测试见 `packages/graph/plot/tests/providers/data/data-robustness.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/pipeline/expand.ts`、`packages/viz/plot/src/providers/data/{coerce,field,normalize}.ts` 与 React `invalid` options 透传，测试见 `packages/viz/plot/tests/providers/data/data-robustness.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/08-data-robustness.md`（封板全文）。

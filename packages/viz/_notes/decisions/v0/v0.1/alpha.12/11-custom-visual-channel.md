@@ -38,16 +38,16 @@ registry 合并顺序为内置先注册、自定义后合并。冲突、未知�
 
 最终行为以代码为准，主要落在：
 
-- `packages/graph/plot/src/contract/channel.ts`
-- `packages/graph/plot/src/providers/channel/**`
-- `packages/graph/plot/src/schemas/encoding/**`
-- `packages/graph/plot/src/providers/mark/features/point.ts`
+- `packages/viz/plot/src/contract/channel.ts`
+- `packages/viz/plot/src/providers/channel/**`
+- `packages/viz/plot/src/schemas/encoding/**`
+- `packages/viz/plot/src/providers/mark/features/point.ts`
 
 验证覆盖：
 
-- `packages/graph/plot/tests/lower/node-channel-registry.test.ts`
-- `packages/graph/plot/tests/lower/size-channel.test.ts`
-- `packages/graph/plot/tests/lower/opacity-channel.test.ts`
+- `packages/viz/plot/tests/lower/node-channel-registry.test.ts`
+- `packages/viz/plot/tests/lower/size-channel.test.ts`
+- `packages/viz/plot/tests/lower/opacity-channel.test.ts`
 - 自定义 channel delivery 相关测试
 
 ## 影响

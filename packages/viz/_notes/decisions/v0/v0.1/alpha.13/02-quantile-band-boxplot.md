@@ -31,8 +31,8 @@ boxplot 由现有 mark 组合表达：
 
 ## 实现指针
 
-- 发布版本：graph group `v0.1.0-alpha.13`。
-- 验收范围：`packages/graph/plot` summary/reducer/selector 测试，React/Vanilla 等价 PlotSpec，docs 以组合 demo 展示 boxplot。
+- 发布版本：viz group `v0.1.0-alpha.13`。
+- 验收范围：`packages/viz/plot` summary/reducer/selector 测试，React/Vanilla 等价 PlotSpec，docs 以组合 demo 展示 boxplot。
 - 结构约束见 [ADR-05](./05-stat-geom-surface.md)：不新增 boxplot chart preset。
 
 > 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/graph/v0/v0.1/alpha.13/02-quantile-band-boxplot.md`（封板全文）。

@@ -50,6 +50,6 @@ React sugar `<RectMark>` 与 `<BarMark>` / `<PointMark>` 同风格：`x` / `y` /
 
 ---
 
-实现指针：mark IR / cell 构造 / 下沉装配 / color 白名单见 commit `74df2ab1`，落地于 `packages/graph/plot/src/ir/mark.ts`、`packages/graph/plot/src/lower/{anchor,mark,expand}.ts`（消费 ADR-01 `packages/graph/plot/src/lower/project.ts` 的 `projectCell` / `Cell` / `CellGeometry`）；React sugar 见 `packages/graph/plot-react/src/components/{marks.tsx,build-plot-spec.ts}`。测试见 `packages/graph/plot/tests/lower/rect.test.ts`、`packages/graph/plot/tests/ir/mark.test.ts`、`packages/graph/plot-react/tests/components/build-plot-spec.test.tsx`、`packages/graph/plot-vanilla/tests/render-plot.test.ts`（SSR heatmap）。文档见 `apps/docs/src/contents/graph/components/mark/rect/`。
+实现指针：mark IR / cell 构造 / 下沉装配 / color 白名单见 commit `74df2ab1`，落地于 `packages/viz/plot/src/ir/mark.ts`、`packages/viz/plot/src/lower/{anchor,mark,expand}.ts`（消费 ADR-01 `packages/viz/plot/src/lower/project.ts` 的 `projectCell` / `Cell` / `CellGeometry`）；React sugar 见 `packages/viz/plot-react/src/components/{marks.tsx,build-plot-spec.ts}`。测试见 `packages/viz/plot/tests/lower/rect.test.ts`、`packages/viz/plot/tests/ir/mark.test.ts`、`packages/viz/plot-react/tests/components/build-plot-spec.test.tsx`、`packages/viz/plot-vanilla/tests/render-plot.test.ts`（SSR heatmap）。文档见 `apps/docs/src/modules/docs/contents/viz/components/mark/rect/`。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:_notes/decisions/plot/v0/v0.1/alpha.11/02-rect-mark.md`（封板全文）。

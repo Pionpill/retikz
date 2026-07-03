@@ -66,7 +66,7 @@ datum label 两套优先级表面，**不要混用**，各有 IR / React 两层�
 - **priority-1（首选）：宿主 mark 加 `label` 通道**——给位置 mark 一个 `label`，lowering 挂到该 mark 每个 datum 的 `Node.label`。React 扁平：`<BarMark x="month" y="revenue" label="revenue" labelPosition="above" labelDistance={6} labelDisplayFormat=",.0f" />`；`resolveLabel={row => ...}` 不进 IR、经 options 注入。坐标系无关——换 polar 标签自动跟到环上对应位置。
 - **priority-2（兜底）：独立 `<TextMark>`**——无宿主自由文本，x / y / text / color 顶层 string，新建 Node 承载 `text`。`TextEncodingSchema.text` 必填（缺失 schema 层即拒）。
 
-落地形态与示例见文档站 `apps/docs/src/contents/graph/components/mark/text/`（zh / en + label / free / resolve 三组 demo）。
+落地形态与示例见文档站 `apps/docs/src/modules/docs/contents/viz/components/mark/text/`（zh / en + label / free / resolve 三组 demo）。
 
 ## 不在本 ADR 范围
 
@@ -85,10 +85,10 @@ datum label 两套优先级表面，**不要混用**，各有 IR / React 两层�
 
 ## 实现指针
 
-- IR schema：`packages/graph/plot/src/ir/encoding.ts`（`TextChannelSchema` / `MarkLabelSchema` / `TextEncodingSchema`）、`packages/graph/plot/src/ir/mark.ts`（`PlotMark.Text` / `TextMarkSchema` / 位置 mark 的可选 `label` / 并入 `MarkSchema`）。
-- lowering：`packages/graph/plot/src/lower/mark.ts`（宿主 label 装配 + `lowerText` 兜底 + `labelOf` 解析）、`lower/field.ts`（`format` 套用与 `resolveLabel` 注入接入点）、`lower/expand.ts` / `lower/validate.ts`（text 排除出 1D/ternary/custom fail-loud 网）、`lower/anchor.ts`（text 走 point 同投影路径）。
-- React：`packages/graph/plot-react/src/components/marks.tsx`（`label*` props + `resolveLabel` + `TextMark`）、`build-plot-spec.ts`（扁平 props → IR 装配）。
-- 测试：`packages/graph/plot/tests/lower/text-mark.test.ts`、`packages/graph/plot-react/tests/components/text-mark-assembly.test.tsx`、`packages/graph/plot-vanilla/tests/render-plot.test.ts`（宿主 label + 自由 TextMark 的 SSR 断言）。
-- 文档：`apps/docs/src/contents/graph/components/mark/text/`（zh / en + 三组 demo）。
+- IR schema：`packages/viz/plot/src/ir/encoding.ts`（`TextChannelSchema` / `MarkLabelSchema` / `TextEncodingSchema`）、`packages/viz/plot/src/ir/mark.ts`（`PlotMark.Text` / `TextMarkSchema` / 位置 mark 的可选 `label` / 并入 `MarkSchema`）。
+- lowering：`packages/viz/plot/src/lower/mark.ts`（宿主 label 装配 + `lowerText` 兜底 + `labelOf` 解析）、`lower/field.ts`（`format` 套用与 `resolveLabel` 注入接入点）、`lower/expand.ts` / `lower/validate.ts`（text 排除出 1D/ternary/custom fail-loud 网）、`lower/anchor.ts`（text 走 point 同投影路径）。
+- React：`packages/viz/plot-react/src/components/marks.tsx`（`label*` props + `resolveLabel` + `TextMark`）、`build-plot-spec.ts`（扁平 props → IR 装配）。
+- 测试：`packages/viz/plot/tests/lower/text-mark.test.ts`、`packages/viz/plot-react/tests/components/text-mark-assembly.test.tsx`、`packages/viz/plot-vanilla/tests/render-plot.test.ts`（宿主 label + 自由 TextMark 的 SSR 断言）。
+- 文档：`apps/docs/src/modules/docs/contents/viz/components/mark/text/`（zh / en + 三组 demo）。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:_notes/decisions/plot/v0/v0.1/alpha.11/04-text-mark.md`（封板全文）。

@@ -2,7 +2,7 @@
 
 > 本文是 `@retikz/plot` 的底层设计预研。它只讨论技术语义：坐标系、数据映射、mark、guide、layer 与 lowering 边界；不定义已发布 API，也不承诺实现排期。
 >
-> 另在 §6 补记 graph domain 中 data / plot / table / geo 及各自框架绑定包的结构与命名（属仓库工程约定，非发布 API 承诺）。
+> 另在 §6 补记 viz domain 中 data / plot / table / geo 及各自框架绑定包的结构与命名（属仓库工程约定，非发布 API 承诺）。
 
 ## 1. 核心判断
 
@@ -49,7 +49,7 @@ Data + Transform + Channel(Encoding):
 
 边界原则：
 
-> graph 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 展开成 PlotSpec。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
+> viz 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 展开成 PlotSpec。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
 
 ## 3. 核心概念
 
@@ -276,16 +276,16 @@ Annotation 不应被 plot 黑盒吞掉。它应该能直接混用 retikz core �
 
 > 常见误区：把「折线」当作「画完点之后再连」的独立步骤。在本模型里折线是 line mark、由 order relation 驱动的一等几何；真正的「图元间联系」只有 connector / ribbon（跨 scope、sankey 流量），且它们同样是 mark，不是后处理。
 
-## 5. Graph API 分层
+## 5. Viz API 分层
 
-graph domain 分为三类 API：
+viz domain 分为三类 API：
 
 - **共享数据层**：`@retikz/data`。职责是数据模型、字段解析、通用 transform、数据通道等跨可视化表达层共用的契约。
 - **Tier 2 表达层**：`@retikz/plot` / `@retikz/table` / geo 候选能力。职责是抽象能力、扩展契约、底层实现和 lowering；面向高级用户、AI、preset 作者和扩展作者。原 struct 范围收敛进 plot 的 layout transform，不作为独立包。
 - **Tier 3 封装层**：`@retikz/chart`。职责是通过 `type` / config / preset 提供新手友好的 API，当前主要生成 PlotSpec 并调度 plot 底层能力；不拥有自己的 IR、lowering 或 renderer。
-- **框架绑定层**：各模块各自发布 React / Vanilla 绑定包，例如 `@retikz/plot-react` / `@retikz/plot-vanilla`、`@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/graph-react` / `@retikz/graph-vanilla` 聚合 adapter，避免安装不需要的模块。
+- **框架绑定层**：各模块各自发布 React / Vanilla 绑定包，例如 `@retikz/plot-react` / `@retikz/plot-vanilla`、`@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/viz-react` / `@retikz/viz-vanilla` 聚合 adapter，避免安装不需要的模块。
 
-`data` 是 graph 共享数据语义层，`plot` / `table` / geo（若独立）都消费它；`chart` 是 `plot` 之上的友好封装，line / bar / tree / wordCloud 等 type/config 入口必须展开成 PlotSpec。
+`data` 是 viz 共享数据语义层，`plot` / `table` / geo（若独立）都消费它；`chart` 是 `plot` 之上的友好封装，line / bar / tree / wordCloud 等 type/config 入口必须展开成 PlotSpec。
 
 ### 5.1 Chart API
 
@@ -311,7 +311,7 @@ Chart API（包：`@retikz/chart`，框架表面由 `@retikz/chart-react` / `@re
 
 ### 5.2 Data API
 
-Data API（包：`@retikz/data`）是 graph 的共享数据层。它负责数据模型、数据引用、字段解析、通用 transform、数据通道、scale / formatter / theme token 等跨 plot / table / geo（若独立）共用的契约。
+Data API（包：`@retikz/data`）是 viz 的共享数据层。它负责数据模型、数据引用、字段解析、通用 transform、数据通道、scale / formatter / theme token 等跨 plot / table / geo（若独立）共用的契约。
 
 数据层的原则：
 
@@ -387,7 +387,7 @@ Geo API 是否独立成 `@retikz/geo` 尚待后续 ADR 决定。地图类可视�
 
 ### 5.7 Framework Adapter Packages
 
-框架绑定按表达层各自发包，不设统一 graph adapter：
+框架绑定按表达层各自发包，不设统一 viz adapter：
 
 ```tsx
 import { Plot } from "@retikz/plot-react";
@@ -398,15 +398,15 @@ import { Geo } from "@retikz/geo-react";
 
 绑定包只负责把框架 authoring 表面装配成对应 spec 并委托底层包；不复制 data transform、plot grammar / layout、chart preset、table layout 或 geo projection 逻辑。
 
-保留 per-module adapter 的原因是 npm 安装边界：用户只用 plot 时只安装 `@retikz/plot-react`，不会被统一 `graph-react` 聚合包拉入 table / geo 依赖。
+保留 per-module adapter 的原因是 npm 安装边界：用户只用 plot 时只安装 `@retikz/plot-react`，不会被统一 `viz-react` 聚合包拉入 table / geo 依赖。
 
 ## 6. 包结构与命名约定
 
-本节是工程约定，约束 graph domain 相关包如何命名、如何在 monorepo 中分组；语义设计见前文各节。
+本节是工程约定，约束 viz domain 相关包如何命名、如何在 monorepo 中分组；语义设计见前文各节。
 
 ### 6.1 Tier 2 能力层 + Per-Module Adapter
 
-- **共享 `@retikz/data`**：graph 数据语义层，提供 data model / field / transform / channel / scale / formatter 等共享契约。
+- **共享 `@retikz/data`**：viz 数据语义层，提供 data model / field / transform / channel / scale / formatter 等共享契约。
 - **底层 `@retikz/plot`**：可组合的坐标语法 primitive（data / transform / layout / scale / coordinate / encoding / mark / guide / layer），像 Recharts / Observable Plot 那样自由组合（即 §5.3 Plot API）。原 struct 范围作为 plot layout transform，不独立成包。
 - **底层 `@retikz/table`**：可组合的表格可视化 primitive（columns / cells / grouping / summary / pivot / matrix 等），承载表格布局和表格语义。
 - **底层 `@retikz/geo`（候选）**：可组合的地图可视化 primitive（projection / feature / layer / geo channel 等），是否独立成包待决策；若不独立，地图投影 / 地理布局能力进入 plot pipeline。
@@ -430,16 +430,16 @@ import { Geo } from "@retikz/geo-react";
 | 表格可视化底层 | `@retikz/table` | `@retikz/table-react` | `@retikz/table-vanilla` |
 | 地图可视化候选底层 | `@retikz/geo`（候选） | `@retikz/geo-react`（候选） | `@retikz/geo-vanilla`（候选） |
 
-**禁止**把层级塞进后缀（如 `@retikz/plot-chart`）。`plot-react` / `chart-react` / `table-react` / `geo-react` 这类 per-module adapter 是长期形态，不再由 graph adapter 收敛。
+**禁止**把层级塞进后缀（如 `@retikz/plot-chart`）。`plot-react` / `chart-react` / `table-react` / `geo-react` 这类 per-module adapter 是长期形态，不再由 viz adapter 收敛。
 
-### 6.3 目录分组：graph domain 下按包分，glob 用 `packages/*/*`
+### 6.3 目录分组：viz domain 下按包分，glob 用 `packages/*/*`
 
-路径形如 `packages/<域>/<短名>/`。core 是基础域；data / plot / chart / table / geo 及其绑定包都属于 graph domain，放在 `packages/graph/` 下，避免把每个可视化 family 扩成新的顶层 workspace 域。
+路径形如 `packages/<域>/<短名>/`。core 是基础域；data / plot / chart / table / geo 及其绑定包都属于 viz domain，放在 `packages/viz/` 下，避免把每个可视化 family 扩成新的顶层 workspace 域。
 
 ```text
 packages/
   core/      core/  render/  react/  vanilla/    -> @retikz/core, render, react, vanilla
-  graph/     data/     -> @retikz/data
+  viz/       data/     -> @retikz/data
              plot/     -> @retikz/plot
              plot-react/   -> @retikz/plot-react
              plot-vanilla/ -> @retikz/plot-vanilla
@@ -455,16 +455,16 @@ packages/
 ```
 
 - workspace glob：`packages/*/*`（根 `tsconfig.json` 的 `include` 同步为 `packages/*/*/src`）。
-- core 域的 render / react / vanilla 是一等基元、名字已立，**不加 `core-` 前缀**；graph 域下的框架包按能力包派生，保持 npm 安装边界精确。
+- core 域的 render / react / vanilla 是一等基元、名字已立，**不加 `core-` 前缀**；viz 域下的框架包按能力包派生，保持 npm 安装边界精确。
 - 先例：`radix-ui/primitives` 即用 `packages/*/*`（`core/` + `react/` 分组）；pnpm 自身按域分几十个顶层文件夹；TanStack Query 用 `query-core` + `react-query` 的「锚点 + 框架变体」命名。
 
 ### 6.4 单仓而非独立仓
 
-graph domain（data / plot / chart / table / geo 及其绑定包）留在主 monorepo，不拆独立仓——至少贯穿整个 0.x。
+viz domain（data / plot / chart / table / geo 及其绑定包）留在主 monorepo，不拆独立仓——至少贯穿整个 0.x。
 
 - **理由**：data / plot / chart / table / geo 及其绑定包是 core 的紧耦合消费者，直接吃 core 的 IR / Scene 契约、并以验证该契约为职责；0.x 契约频繁破坏性变更，单仓可在同一 PR 原子联调、用 `workspace:*` 直连源码，免去「发版 → 消费」回环与版本错配。
-- **可逆**：`packages/graph/*` 是干净子树，需要时可 `git subtree split` 带历史拆出。先合后拆易，先拆再天天联调难。
-- **重新评估触发条件**：core API 稳定（≥1.0）且 graph 各包有独立发布节奏；或出现不同团队 / 治理 / license 需求。注意「仓库 ≠ 安装单位」——各包在 npm 上始终独立可选安装，与同处一仓无关。
+- **可逆**：`packages/viz/*` 是干净子树，需要时可 `git subtree split` 带历史拆出。先合后拆易，先拆再天天联调难。
+- **重新评估触发条件**：core API 稳定（≥1.0）且 viz 各包有独立发布节奏；或出现不同团队 / 治理 / license 需求。注意「仓库 ≠ 安装单位」——各包在 npm 上始终独立可选安装，与同处一仓无关。
 
 ## 7. 多坐标组合
 
@@ -849,7 +849,7 @@ intent
 
 ### 16.1 六条固有软肋
 
-代码核对于 `packages/graph/plot/src/lower/`：
+代码核对于 `packages/viz/plot/src/lower/`：
 
 1. **高基数性能天花板**：散点/柱每行下沉成**一个 `IRNode`**（`mark.ts` `lowerPoint` / `intervalRect`），IR 体积 O(数据点数) 个重对象 → Scene O(N) primitive → SVG O(N) DOM。「一切可见物是 Node」直接与「大数据合批渲染」相冲（可连接 ⊥ 合批）。
    - *已缓解的一半*：颜色不逐 node 写，按色分组到 O(色数) 子 Scope（`colorGroupedScope`），样式不是 O(N)；但 node 数量仍 O(行数)。§8.1 风险备注已点出 datum 逐点绑 id 的同类问题（locator 不预注册即对此的缓解）。

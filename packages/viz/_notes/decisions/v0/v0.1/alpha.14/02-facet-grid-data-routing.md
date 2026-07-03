@@ -119,7 +119,7 @@ const spec = {
 
 ## 测试设计
 
-`packages/graph/plot/tests/composition/facet-grid-data-routing.test.ts` 覆盖：
+`packages/viz/plot/tests/composition/facet-grid-data-routing.test.ts` 覆盖：
 
 - 单字段 column facet 生成多个 panel scope，panel 数等于 distinct field values。
 - row × column facet 按 row-major 顺序生成稳定 panel。

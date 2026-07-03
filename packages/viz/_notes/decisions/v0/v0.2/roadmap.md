@@ -22,7 +22,7 @@ v0.1-alpha.10 已把 `<Plot>` 退化为薄容器，并把"默认轴 / 网格补�
 本轮高层封装的框架无关核心逻辑（marks/config + theme → 装饰完整 `PlotSpec`）**放进 `@retikz/chart`**，向 `@retikz/chart-react` / `@retikz/chart-vanilla` 提供能力；chart 依赖并产出 plot 的 `PlotSpec`，不自造 IR / lowering / renderer，也不承担 table / geo 聚合。
 
 - **理由**：plot 继续保持 GoG 抽象层职责清晰；chart 明确服务新手友好的 type/config API；两者用 PlotSpec 作为边界，既不混职责，也不复制 lowering。
-- **长期标注**：chart 是独立 Tier 3 包，但不是 graph-level 聚合 adapter。它当前只调度 plot；table 不由 chart 调度，geo 的独立性待后续 ADR 决定。
+- **长期标注**：chart 是独立 Tier 3 包，但不是 viz-level 聚合 adapter。它当前只调度 plot；table 不由 chart 调度，geo 的独立性待后续 ADR 决定。
 
 ## Milestones
 
@@ -37,7 +37,7 @@ v0.1-alpha.10 已把 `<Plot>` 退化为薄容器，并把"默认轴 / 网格补�
 - **plot v0.1**：薄 `<Plot>`（alpha.10）+ 抽出的装饰函数；grammar mark/scale/coordinate/guide lowering。本轮 chart 封装不新增 IR、不新增 lowering。
 - **data**：不参与本轮；后续 plot / table / geo（若独立）共享的数据模型、字段解析、通用 transform、通道、scale / formatter 等应先由 `@retikz/data` 提供。
 - **plot layout / table / geo**：plot layout transform 不参与本轮；后续 gauge / progress / tree / network / word cloud / pictogram 等先由 `@retikz/plot` 提供 layout transform 能力。table 不参与本轮；geo 是否独立成包另行决策。
-- **framework adapter**：本轮新增 `@retikz/chart-react` / `@retikz/chart-vanilla` 表面；不规划 graph-react / graph-vanilla 收敛。
+- **framework adapter**：本轮新增 `@retikz/chart-react` / `@retikz/chart-vanilla` 表面；不规划 viz-react / viz-vanilla 收敛。
 - **core**：无新增依赖（高层封装不直接碰 core，经 plot 既有 lowering 下沉）。
 
 ## 与 v0.1 的关系

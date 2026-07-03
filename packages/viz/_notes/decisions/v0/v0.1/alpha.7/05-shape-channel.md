@@ -53,7 +53,7 @@ export const ShapeChannelSchema = z.object({
 
 ## 测试设计
 
-`packages/graph/plot/tests/lower/shape-channel.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：分类映射到调色板、循环复用、常量 value、continuous/temporal fail-loud、shape+color+size 共存、schema accept/reject。落地测试见实现指针。
+`packages/viz/plot/tests/lower/shape-channel.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：分类映射到调色板、循环复用、常量 value、continuous/temporal fail-loud、shape+color+size 共存、schema accept/reject。落地测试见实现指针。
 
 ## 影响
 
@@ -69,5 +69,5 @@ export const ShapeChannelSchema = z.object({
 - **shape 作用于非 point mark** → 无意义，不做。
 - **显式自定义 shape 调色板（range）** → 顺延（本轮默认调色板；显式 ordinal scale range 可作逃生舱，按需）。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/encoding.ts`、`packages/graph/plot/src/lower/{channel,mark}.ts` 与 `packages/graph/plot-react/src/components/marks.tsx`，测试见 `packages/graph/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/shape-channel}.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/encoding.ts`、`packages/viz/plot/src/lower/{channel,mark}.ts` 与 `packages/viz/plot-react/src/components/marks.tsx`，测试见 `packages/viz/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/shape-channel}.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.7/05-shape-channel.md`（封板全文）。

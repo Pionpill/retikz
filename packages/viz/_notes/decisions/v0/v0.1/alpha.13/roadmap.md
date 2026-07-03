@@ -41,13 +41,13 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 ## 依赖与顺序
 
-1. **ADR-01 独立优先**：RelationMark ribbon 是关系几何补洞，直接服务 docs 关系页面 Sankey demo；不依赖统计主线，但应先做，避免 demo 绕开 graph 层。
+1. **ADR-01 独立优先**：RelationMark ribbon 是关系几何补洞，直接服务 docs 关系页面 Sankey demo；不依赖统计主线，但应先做，避免 demo 绕开 viz 层。
 2. **ADR-02 → ADR-05**：boxplot 是最小 stat-geom 验收。它复用 alpha.12 的 `quantile` 算法，把固定 q1 / q3 提升为可配置 quantile band，不要求先有 density / smooth。
 3. **ADR-03 → ADR-05**：density 需要新增 transform kind，输出采样 rows；docs demo 用 density area 验收 `PathMark` baseline closure 消费统计 rows。
 4. **ADR-04 → ADR-05**：smooth / regression 需要新增 transform kind，输出趋势线 rows；首轮不承诺多算法矩阵。
 5. **ADR-05 依赖 02–04**：统一三包薄适配、docs 章节和示例命名，防止每条统计能力各自发明表面；不追求 chart 级易用封装。
 6. **ADR-06 独立且最后**：只在统计主线闭环后处理 sector backlog；不得反向阻塞 01–05。
-7. **ADR-07 独立优先于 mark demo 清理**：依赖 core 已有 node / geometry label 能力，不依赖统计主线；应在更新 `graph/grammar/mark` demo 前完成，避免 demo 继续用文字 PointMark 绕开宿主 label。
+7. **ADR-07 独立优先于 mark demo 清理**：依赖 core 已有 node / geometry label 能力，不依赖统计主线；应在更新 `viz/grammar/mark` demo 前完成，避免 demo 继续用文字 PointMark 绕开宿主 label。
 
 ## 关键设计约束
 
@@ -156,22 +156,22 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 后续各 ADR 可按自身范围细化，初步 scope 如下：
 
-- `packages/graph/plot/src/schemas/mark/**`
-- `packages/graph/plot/src/schemas/encoding/**`
-- `packages/graph/plot/src/schemas/transform/**`
-- `packages/graph/plot/src/contract/transform.ts`
-- `packages/graph/plot/src/contract/statistics.ts`
-- `packages/graph/plot/src/providers/transform/**`
-- `packages/graph/plot/src/providers/statistics/**`
-- `packages/graph/plot/src/providers/mark/features/**`
-- `packages/graph/plot/src/providers/mark/shared/**`
-- `packages/graph/plot-react/src/components/**`
-- `packages/graph/plot-react/src/components/build-plot-spec.ts`
-- `packages/graph/plot-vanilla/src/**`
-- `packages/graph/plot/tests/**`
-- `packages/graph/plot-react/tests/**`
-- `packages/graph/plot-vanilla/tests/**`
-- `apps/docs/src/contents/graph/**`
+- `packages/viz/plot/src/schemas/mark/**`
+- `packages/viz/plot/src/schemas/encoding/**`
+- `packages/viz/plot/src/schemas/transform/**`
+- `packages/viz/plot/src/contract/transform.ts`
+- `packages/viz/plot/src/contract/statistics.ts`
+- `packages/viz/plot/src/providers/transform/**`
+- `packages/viz/plot/src/providers/statistics/**`
+- `packages/viz/plot/src/providers/mark/features/**`
+- `packages/viz/plot/src/providers/mark/shared/**`
+- `packages/viz/plot-react/src/components/**`
+- `packages/viz/plot-react/src/components/build-plot-spec.ts`
+- `packages/viz/plot-vanilla/src/**`
+- `packages/viz/plot/tests/**`
+- `packages/viz/plot-react/tests/**`
+- `packages/viz/plot-vanilla/tests/**`
+- `apps/docs/src/modules/docs/contents/viz/**`
 - `apps/docs/src/data/**`
 
 ## 测试 case 规则
@@ -204,6 +204,6 @@ alpha.13 封口时应满足：
 - ADR-01–05 全部 Accepted，ADR-06 Accepted 或明确顺延且不阻塞主线，ADR-07 Accepted 或其 demo 清理范围明确顺延。
 - `@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 三包版本面一致。
 - 至少四组端到端 demo：sankey ribbon、boxplot、density-area、regression path。
-- `graph/grammar/mark` demo 中纯文字说明优先使用 mark label，而不是新增仅用于文字的 PointMark。
+- `viz/grammar/mark` demo 中纯文字说明优先使用 mark label，而不是新增仅用于文字的 PointMark。
 - 统计 transform 渲染与 locator 使用同一 registry / rows 产物。
 - docs 能让用户理解“stat 是 transform，geom 是抽象 mark 消费统计 rows”。

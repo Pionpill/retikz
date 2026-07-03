@@ -35,7 +35,7 @@
 
 ## 前置 setup（非 ADR）
 
-新建包 `packages/graph/plot`（`@retikz/plot`）脚手架，镜像 `packages/kernel/core` 工程约定：
+新建包 `packages/viz/plot`（`@retikz/plot`）脚手架，镜像 `packages/kernel/core` 工程约定：
 
 - `package.json`（catalog 依赖 zod；workspace 链 `@retikz/core`）、`tsconfig`、`vite` 库构建、`vitest`、`src/index.ts` 空 barrel。
 - 框架绑定包 `@retikz/plot-react` / `@retikz/plot-vanilla` 的脚手架由 ADR-07 建（三包 lockstep，不再推迟到 v0.3）。

@@ -42,7 +42,7 @@
 
 ## 前置 setup
 
-无新包（三包脚手架 alpha.1 已建）。scale（`lower/scale.ts` 用 d3-scale 重构）/ 布局是 `packages/graph/plot/src/lower/**` 下的模块，guide IR 是 `src/ir/**` 下的新 schema 文件。plot 包新增 `d3-scale` / `d3-array` 依赖（catalog 登记，见 [ADR-02](./02-d3-scale.md)）。
+无新包（三包脚手架 alpha.1 已建）。scale（`lower/scale.ts` 用 d3-scale 重构）/ 布局是 `packages/viz/plot/src/lower/**` 下的模块，guide IR 是 `src/ir/**` 下的新 schema 文件。plot 包新增 `d3-scale` / `d3-array` 依赖（catalog 登记，见 [ADR-02](./02-d3-scale.md)）。
 
 ## ADR 清单
 

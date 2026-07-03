@@ -6,7 +6,7 @@
 
 ## 1. plot 的图元随数据量线性爆炸（O(N)，已确认）
 
-探查 `packages/graph/plot/src/lower/mark.ts` 的下沉逻辑，每种 mark 把 N 个数据点下沉成的 Tier 1 节点 / 编译后 Scene primitive：
+探查 `packages/viz/plot/src/lower/mark.ts` 的下沉逻辑，每种 mark 把 N 个数据点下沉成的 Tier 1 节点 / 编译后 Scene primitive：
 
 | mark | N 数据点 → Tier 1 | 编译后 Scene primitive | 量级 | 备注 |
 |---|---|---|---|---|

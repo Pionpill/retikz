@@ -36,17 +36,17 @@ scale definition 按 family 分层。位置 scale 产出 `PositionScale`，颜�
 
 最终行为以代码为准，主要落在：
 
-- `packages/graph/plot/src/contract/scale.ts`
-- `packages/graph/plot/src/providers/scale/**`
-- `packages/graph/plot/src/schemas/scale/**`
-- `packages/graph/plot/src/providers/channel/**`
-- `packages/graph/plot/src/features/guide/**`
+- `packages/viz/plot/src/contract/scale.ts`
+- `packages/viz/plot/src/providers/scale/**`
+- `packages/viz/plot/src/schemas/scale/**`
+- `packages/viz/plot/src/providers/channel/**`
+- `packages/viz/plot/src/features/guide/**`
 
 验证覆盖：
 
-- `packages/graph/plot/tests/lower/scale-family.test.ts`
-- `packages/graph/plot/tests/lower/type-driven-scale.test.ts`
-- `packages/graph/plot/tests/coordinate/registry.test.ts`
+- `packages/viz/plot/tests/lower/scale-family.test.ts`
+- `packages/viz/plot/tests/lower/type-driven-scale.test.ts`
+- `packages/viz/plot/tests/coordinate/registry.test.ts`
 - scale / guide / channel 相关 lower 测试
 
 ## 影响

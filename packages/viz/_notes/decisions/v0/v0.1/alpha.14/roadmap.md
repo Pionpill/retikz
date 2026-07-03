@@ -60,19 +60,19 @@ alpha.14 已按 ADR-09 的最终结构实现并文档化。底层 PlotSpec 使�
 
 ## 文件 scope 预估
 
-- `packages/graph/plot/src/schemas/plot/**`
-- `packages/graph/plot/src/schemas/coordinate/**`
-- `packages/graph/plot/src/schemas/guide/**`
-- `packages/graph/plot/src/schemas/mark/**`
-- `packages/graph/plot/src/pipeline/**`
-- `packages/graph/plot/src/features/guide/**`
-- `packages/graph/plot/src/features/interaction/**`
-- `packages/graph/plot-react/src/components/**`
-- `packages/graph/plot-vanilla/src/**`
-- `packages/graph/plot/tests/**`
-- `packages/graph/plot-react/tests/**`
-- `packages/graph/plot-vanilla/tests/**`
-- `apps/docs/src/contents/graph/**`
+- `packages/viz/plot/src/schemas/plot/**`
+- `packages/viz/plot/src/schemas/coordinate/**`
+- `packages/viz/plot/src/schemas/guide/**`
+- `packages/viz/plot/src/schemas/mark/**`
+- `packages/viz/plot/src/pipeline/**`
+- `packages/viz/plot/src/features/guide/**`
+- `packages/viz/plot/src/features/interaction/**`
+- `packages/viz/plot-react/src/components/**`
+- `packages/viz/plot-vanilla/src/**`
+- `packages/viz/plot/tests/**`
+- `packages/viz/plot-react/tests/**`
+- `packages/viz/plot-vanilla/tests/**`
+- `apps/docs/src/modules/docs/contents/viz/**`
 - `apps/docs/src/data/**`
 
 ## 测试 case 规则

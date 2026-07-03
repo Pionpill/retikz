@@ -40,18 +40,18 @@ Vanilla / SSR 侧继续通过 Plot IR 自动消费，无额外 API。
 
 最终行为以代码为准，主要落在：
 
-- `packages/graph/plot/src/schemas/transform/**`
-- `packages/graph/plot/src/providers/transform/**`
-- `packages/graph/plot/src/providers/statistics/**`
-- `packages/graph/plot/src/pipeline/{expand,provenance}.ts`
-- `packages/graph/plot-react/src/components/{transform,build-plot-spec}.ts`
+- `packages/viz/plot/src/schemas/transform/**`
+- `packages/viz/plot/src/providers/transform/**`
+- `packages/viz/plot/src/providers/statistics/**`
+- `packages/viz/plot/src/pipeline/{expand,provenance}.ts`
+- `packages/viz/plot-react/src/components/{transform,build-plot-spec}.ts`
 
 验证覆盖：
 
-- `packages/graph/plot/tests/transform/statistics.test.ts`
-- `packages/graph/plot/tests/lower/transform.test.ts`
-- `packages/graph/plot-react/tests/components/build-plot-spec.test.tsx`
-- `packages/graph/plot-vanilla/tests/render-plot.test.ts`
+- `packages/viz/plot/tests/transform/statistics.test.ts`
+- `packages/viz/plot/tests/lower/transform.test.ts`
+- `packages/viz/plot-react/tests/components/build-plot-spec.test.tsx`
+- `packages/viz/plot-vanilla/tests/render-plot.test.ts`
 
 ## 影响
 

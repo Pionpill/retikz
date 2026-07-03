@@ -46,6 +46,6 @@ ADR-01~05 定了 Plot IR（配置）但**零行为**。本 ADR 落「逻辑」�
 
 ---
 
-> **实现指针**：level `red`（动 `plot/src/lower/**` + `plot/src/index.ts`）、无 IR schema 改动（尺寸是 `lowerPlots` 运行时选项、不进 IR）。真源以代码为准——`lowerPlots` / `LowerPlotsOptions`（编排 + 入口 + `defineComposite`）及 `field`（路径解析 / 取值 / 排序）/ `scale`（线性映射 + domain·range 求解）/ `project`（坐标系投影）/ `mark`（point→Node / line→Path）helper，均在 `plot/src/lower/`，barrel `plot/src/lower/index.ts`；仅消费 core `compileToScene` / `defineComposite` / `CompositeDefinition` / IR 类型，不改 core。测试在 `packages/graph/plot/tests/lower/`。完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
+> **实现指针**：level `red`（动 `plot/src/lower/**` + `plot/src/index.ts`）、无 IR schema 改动（尺寸是 `lowerPlots` 运行时选项、不进 IR）。真源以代码为准——`lowerPlots` / `LowerPlotsOptions`（编排 + 入口 + `defineComposite`）及 `field`（路径解析 / 取值 / 排序）/ `scale`（线性映射 + domain·range 求解）/ `project`（坐标系投影）/ `mark`（point→Node / line→Path）helper，均在 `plot/src/lower/`，barrel `plot/src/lower/index.ts`；仅消费 core `compileToScene` / `defineComposite` / `CompositeDefinition` / IR 类型，不改 core。测试在 `packages/viz/plot/tests/lower/`。完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
 
 > 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/06-plot-lowering.md`。

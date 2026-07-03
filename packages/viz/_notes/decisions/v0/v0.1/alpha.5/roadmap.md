@@ -45,7 +45,7 @@ v0.1 的**收尾里程碑**：把 alpha.1 起就埋好的 **anchor / scope 预�
 
 ## 前置 setup
 
-无新包。alpha.5 主要在 `src/lower/{expand,mark,guide}.ts` 改（绑 id / 写 meta + 抽 frame 构造），新建 `src/lower/locate.ts`（locator），扩 `LowerPlotsOptions`（`provenance` 总开关 + `datumProvenance` + `datumIdField`），并改 `packages/graph/plot-react/src/Plot.tsx` + vanilla 入口转发新 option（评审 P1）。
+无新包。alpha.5 主要在 `src/lower/{expand,mark,guide}.ts` 改（绑 id / 写 meta + 抽 frame 构造），新建 `src/lower/locate.ts`（locator），扩 `LowerPlotsOptions`（`provenance` 总开关 + `datumProvenance` + `datumIdField`），并改 `packages/viz/plot-react/src/Plot.tsx` + vanilla 入口转发新 option（评审 P1）。
 
 ## ADR 清单
 

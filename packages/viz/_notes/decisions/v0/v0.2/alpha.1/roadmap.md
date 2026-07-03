@@ -27,7 +27,7 @@
 
 ## 待决策（ADR-01 起草前定）
 
-- **① chart 核心目录与导出边界**：倾向 `packages/graph/chart/src/`，经 `@retikz/chart` 主入口导出供 chart-react / chart-vanilla 消费；不与 plot grammar / lowering 目录混。
+- **① chart 核心目录与导出边界**：倾向 `packages/viz/chart/src/`，经 `@retikz/chart` 主入口导出供 chart-react / chart-vanilla 消费；不与 plot grammar / lowering 目录混。
 - **② 自动装饰补齐规则**：`<Chart>` 在哪些条件补默认轴 / 图例 / 网格——倾向**先 1:1 复用 v0.1 抽出的 `decorateDefaultGuides`**（cartesian2D 补 x/y 轴、y 带网格；有 color scale 补 legend），默认微调另立需求。
 - **③ `<Chart>` 与 `<Plot>` 的 props 关系**：倾向**复用 + 叠加**——`<Chart>` ≈ `<Plot>` 的 DSL props（data / model / coordinate / scaleX…）+ 自动装饰 + `title` / `theme`。
 - **④ vanilla chart builder 形态**：对齐现有 `renderPlot` / builder 风格，调同一 chart 核心。

@@ -83,5 +83,5 @@ DSL：
 - **resolveField 函数逃生舱**——已是 ADR-04，本 ADR 只把它降为「词表外」兜底。
 - **数字 locale / 千分位完整支持**——先 `numberString` 宽松版，完整 locale 留后续。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/data.ts` 与 `packages/graph/plot/src/lower/{coerce,validate,expand}.ts`，测试见 `packages/graph/plot/tests/lower/field-format.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/data.ts` 与 `packages/viz/plot/src/lower/{coerce,validate,expand}.ts`，测试见 `packages/viz/plot/tests/lower/field-format.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/06-declarative-format.md`（封板全文）。

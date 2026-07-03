@@ -103,7 +103,7 @@ locator.datum(999);                       // → null（越界）
 
 ## 测试设计
 
-`packages/graph/plot/tests/lower/locate.test.ts`（新建）覆盖：
+`packages/viz/plot/tests/lower/locate.test.ts`（新建）覆盖：
 
 - locator.datum(i).position 与 lowering 实际摆放第 i 行 Node.position 逐点一致（point / interval / sector × cartesian / polar）
 - meta 按需合成（lowering 未开 per-datum 时仍给同构 meta）
@@ -114,7 +114,7 @@ locator.datum(999);                       // → null（越界）
 
 ## 影响
 
-- **新模块** `packages/graph/plot/src/features/interaction/locate.ts`（`createPlotLocator` + `ResolvedAnchor` / `PlotLocator` 类型）。
+- **新模块** `packages/viz/plot/src/features/interaction/locate.ts`（`createPlotLocator` + `ResolvedAnchor` / `PlotLocator` 类型）。
 - **`src/lower/index.ts`** / **`src/index.ts`**：导出 locator API（新 public surface）。
 - **共享几何抽取**：mark provider registry 的逐行锚点计算抽成 `datumAnchor`（与 locate.ts 共用）——属内部重构，mark 下沉产物等价。
 - **frame 复用**：消费 [ADR-01](./01-scope-id-meta.md) 抽出的 `resolveFrame`。
@@ -130,5 +130,5 @@ locator.datum(999);                       // → null（越界）
 - **line / area 的顶点级具名锚点**：本 ADR `datum(i)` 给 line/area 顶点位置但不绑具名 id；逐顶点可连接锚点留后续。
 - **series bbox / 外接锚点**：本 ADR series 锚点取 centroid；bbox 留后续。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/features/interaction/locate.ts`、`packages/graph/plot/src/providers/mark/`、`packages/graph/plot/src/pipeline/expand.ts` 与 `packages/graph/plot/src/index.ts` public export，测试见 `packages/graph/plot/tests/features/interaction/locate.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/features/interaction/locate.ts`、`packages/viz/plot/src/providers/mark/`、`packages/viz/plot/src/pipeline/expand.ts` 与 `packages/viz/plot/src/index.ts` public export，测试见 `packages/viz/plot/tests/features/interaction/locate.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.5/02-datum-locator.md`（封板全文）。

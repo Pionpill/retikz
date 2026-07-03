@@ -1,7 +1,7 @@
 # plot v0 Roadmap
 
 > 更新于 2026-06-07。本文件记录 `@retikz/plot` 的总体路线。**v0.1 承载整套图形语法（GoG 8 组件）**，分阶段一（alpha.1–5 基础架构，已完成）+ 阶段二（alpha.6–9 / 11–15 完善语法；alpha.10 为插入的绑定层 milestone、非 GoG）；交互 / 动画 / 性能等能力轴留 v0.1 之后。alpha 级执行细节见 `v0.1/roadmap.md`。
-> 具体执行计划放在同目录 `v0.*/roadmap.md`，设计决策放在 `packages/graph/_notes/decisions/`，里程碑详情以 [`plot-design.md §13`](../../architecture/plot-design.md) 为准。
+> 具体执行计划放在同目录 `v0.*/roadmap.md`，设计决策放在 `packages/viz/_notes/decisions/`，里程碑详情以 [`plot-design.md §13`](../../architecture/plot-design.md) 为准。
 
 ## 定位
 
@@ -9,10 +9,10 @@
 
 - plot **只消费 core 能力、不反向依赖**，也不自带 renderer（见 [plot-design §2 / §8](../../architecture/plot-design.md)）。
 - plot **版本线独立于 core**，不与 core 版本号对齐；每个里程碑由「所需 core 能力是否就绪」gating。
-- 规划中的 `@retikz/data` 是 graph 共享数据语义层：负责数据模型、数据引用、字段解析、通用 transform、数据通道、scale / formatter / theme token 等跨 plot / table / geo（若独立）共用的契约。
-- graph 组解决的是「有了数据之后如何可视化」：`@retikz/plot` 通过 GoG 可视化，`@retikz/table` 通过表格可视化，geo 处理地图类可视化但是否独立拆包待决策。原 `struct` 范围不作为独立包，gauge / progress / tree / network / word cloud / pictogram 等通过 plot 的 layout transform + mark 表达。
+- 规划中的 `@retikz/data` 是 viz 共享数据语义层：负责数据模型、数据引用、字段解析、通用 transform、数据通道、scale / formatter / theme token 等跨 plot / table / geo（若独立）共用的契约。
+- viz 组解决的是「有了数据之后如何可视化」：`@retikz/plot` 通过 GoG 可视化，`@retikz/table` 通过表格可视化，geo 处理地图类可视化但是否独立拆包待决策。原 `struct` 范围不作为独立包，gauge / progress / tree / network / word cloud / pictogram 等通过 plot 的 layout transform + mark 表达。
 - 规划独立 `@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla`：chart 是 Tier 3 新手友好封装层，通过 `type` / config / preset 调度 plot 底层能力并生成 PlotSpec；它不拥有自己的 IR、lowering 或 renderer，也不聚合 table / geo。
-- 框架绑定由各表达层各自发布：`@retikz/plot-react` / `@retikz/plot-vanilla`、规划中的 `@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/graph-react` / `@retikz/graph-vanilla` 聚合 adapter，避免安装不需要的模块。
+- 框架绑定由各表达层各自发布：`@retikz/plot-react` / `@retikz/plot-vanilla`、规划中的 `@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/viz-react` / `@retikz/viz-vanilla` 聚合 adapter，避免安装不需要的模块。
 
 模块边界与 MVP 范围见 [plot-design §11](../../architecture/plot-design.md)，里程碑拆分见 [§13](../../architecture/plot-design.md)。
 
@@ -55,7 +55,7 @@
 
 - 架构与里程碑详情：[`plot-design.md`](../../architecture/plot-design.md)（§11 模块划分 / §13 里程碑）
 - v0.1 执行计划：[`v0.1/roadmap.md`](./v0.1/roadmap.md)
-- ADR：`packages/graph/_notes/decisions/`
+- ADR：`packages/viz/_notes/decisions/`
 - core 路线与能力：[`core v0 roadmap`](../../../../kernel/_notes/decisions/v0/roadmap.md)
 - 横向对比分析：[`plot-compare-analysis.md`](../../analysis/plot-compare-analysis.md)
 

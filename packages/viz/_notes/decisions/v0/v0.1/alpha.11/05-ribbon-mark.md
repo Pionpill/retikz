@@ -52,7 +52,7 @@ RibbonMarkSchema = {
 - **把 sankey 布局塞进 ribbon mark**：会让本应干净的几何 primitive 背上启发式算法的不确定性，且与 plot 既有 `transform` 层（stack / dodge）职责重叠。布局是 Statistics / layout 职责，ribbon 只消费布局产物。否决，划出范围。
 - **node id 端点产 core `NodeTarget`**：id 只有 core compile 期解析坐标，lowering 期无坐标，`NodeTarget` 不足以算半宽偏移与四角。不在 plot 层造一个解析不出坐标的半成品。降级为后续方向。
 
-DSL 表面与字段含义见文档站 `apps/docs/src/contents/graph/components/mark/ribbon/`（IR 形态 + React `<RibbonMark>` 扁平 props 形态）。
+DSL 表面与字段含义见文档站 `apps/docs/src/modules/docs/contents/viz/components/mark/ribbon/`（IR 形态 + React `<RibbonMark>` 扁平 props 形态）。
 
 ## 不在本 ADR 范围
 
@@ -71,9 +71,9 @@ DSL 表面与字段含义见文档站 `apps/docs/src/contents/graph/components/m
 
 ## 实现指针
 
-- IR / lowering / 几何辅助：`packages/graph/plot/src/ir/mark.ts`、`packages/graph/plot/src/lower/mark.ts`（`lowerRibbon`）、`packages/graph/plot/src/lower/anchor.ts`（四角 / 法向 / 控制点 / datum 中线锚点）；测试 `packages/graph/plot/tests/lower/ribbon.test.ts`、`packages/graph/plot/tests/ir/mark.schema.test.ts`。
-- React sugar：`packages/graph/plot-react/src/components/marks.tsx`（`RibbonMark` FC）+ `build-plot-spec.ts`（`collectInto` ribbon 分支）+ barrel；测试 `packages/graph/plot-react/tests/components/ribbon-mark-assembly.test.tsx`。
-- vanilla SSR：`packages/graph/plot-vanilla/tests/render-plot.test.ts`（无 vanilla 源码改动）。
-- 文档：`apps/docs/src/contents/graph/components/mark/ribbon/`（mdx zh/en + basic / flared demo）。
+- IR / lowering / 几何辅助：`packages/viz/plot/src/ir/mark.ts`、`packages/viz/plot/src/lower/mark.ts`（`lowerRibbon`）、`packages/viz/plot/src/lower/anchor.ts`（四角 / 法向 / 控制点 / datum 中线锚点）；测试 `packages/viz/plot/tests/lower/ribbon.test.ts`、`packages/viz/plot/tests/ir/mark.schema.test.ts`。
+- React sugar：`packages/viz/plot-react/src/components/marks.tsx`（`RibbonMark` FC）+ `build-plot-spec.ts`（`collectInto` ribbon 分支）+ barrel；测试 `packages/viz/plot-react/tests/components/ribbon-mark-assembly.test.tsx`。
+- vanilla SSR：`packages/viz/plot-vanilla/tests/render-plot.test.ts`（无 vanilla 源码改动）。
+- 文档：`apps/docs/src/modules/docs/contents/viz/components/mark/ribbon/`（mdx zh/en + basic / flared demo）。
 
 > 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:_notes/decisions/plot/v0/v0.1/alpha.11/05-ribbon-mark.md`（封板全文）。

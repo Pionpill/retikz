@@ -109,7 +109,7 @@ const spec = {
 
 ## 测试设计
 
-`packages/graph/plot/tests/composition/same-panel-multi-axis.test.ts` 覆盖：
+`packages/viz/plot/tests/composition/same-panel-multi-axis.test.ts` 覆盖：
 
 - 两个 cartesian2D overlay scope 共享 plotArea bbox。
 - 两个 mark 绑定不同 coordinateScope，y domain / projection 各自独立。

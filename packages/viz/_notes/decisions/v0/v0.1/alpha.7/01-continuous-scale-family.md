@@ -6,7 +6,7 @@
 
 ## 背景
 
-当前 `PlotScale` 只有 5 个成员——`linear` / `band` / `point` / `ordinal` / `time`（`packages/graph/plot/src/ir/scale.ts:8`），连续数值映射仅 `linear`（`time` 是时间专用）。真实数据有两类常见诉求落不下：
+当前 `PlotScale` 只有 5 个成员——`linear` / `band` / `point` / `ordinal` / `time`（`packages/viz/plot/src/ir/scale.ts:8`），连续数值映射仅 `linear`（`time` 是时间专用）。真实数据有两类常见诉求落不下：
 
 1. **跨数量级**：人口、收入、计数、地震能量等跨多个 10 倍区间的数据，线性轴把小值压成一团，需 **log** 轴。
 2. **感知/几何编码**：面积正确的尺寸编码（散点 bubble）要 **sqrt**（半径 ∝ √值，面积 ∝ 值）；更一般的幂次需 **pow**。alpha.7 的 `size` 通道（[ADR-02](./02-channel-scale-resolver-size.md)）**直接依赖 sqrt**。
@@ -83,7 +83,7 @@ renderPlot(
 
 ## 测试设计
 
-`packages/graph/plot/tests/lower/scale-family.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：
+`packages/viz/plot/tests/lower/scale-family.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：
 
 - 三类 scale 求值与 tick 生成（log/pow/sqrt）
 - L1 守卫：bar/area + 非线性连续 scale → 抛错
@@ -108,5 +108,5 @@ renderPlot(
 - **React `<Scale>` 组件 / pow 自定义 exponent 的 React 表面** → 后续。
 - **polar radius 用 log** → 需求驱动（本轮 L1 守卫覆盖 cartesian；polar 径向暂不特别支持非线性）。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/graph/plot/src/ir/scale.ts`、`packages/graph/plot/src/lower/{scale,expand}.ts` 与 React `scaleX/scaleY` DSL，测试见 `packages/graph/plot/tests/{ir/scale.schema,lower/scale-family}.test.ts` 和 `packages/graph/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/scale.ts`、`packages/viz/plot/src/lower/{scale,expand}.ts` 与 React `scaleX/scaleY` DSL，测试见 `packages/viz/plot/tests/{ir/scale.schema,lower/scale-family}.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.7/01-continuous-scale-family.md`（封板全文）。
