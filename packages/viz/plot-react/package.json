@@ -1,15 +1,15 @@
 {
-  "name": "@retikz/plot-vanilla",
+  "name": "@retikz/plot-react",
   "version": "0.1.0-alpha.14",
-  "description": "Framework-free bindings for @retikz/plot: renderPlot(spec, data) to SVG string (SSR) lowering to @retikz/core.",
+  "description": "React bindings for @retikz/plot: <Plot> (thin spec wrapper + composition DSL) lowering to @retikz/core via @retikz/react.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
+    "react",
     "tikz",
     "plot",
     "chart",
-    "ssr",
     "grammar-of-graphics",
     "visualization"
   ],
@@ -17,7 +17,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/graph/plot-vanilla"
+    "directory": "packages/viz/plot-react"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
@@ -58,13 +58,21 @@
     "test": "vitest",
     "test:run": "vitest run"
   },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
   "dependencies": {
-    "@retikz/core": "workspace:*",
     "@retikz/plot": "workspace:*",
-    "@retikz/vanilla": "workspace:*"
+    "@retikz/react": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",

@@ -1,12 +1,11 @@
 {
-  "name": "@retikz/plot-react",
+  "name": "@retikz/plot",
   "version": "0.1.0-alpha.14",
-  "description": "React bindings for @retikz/plot: <Plot> (thin spec wrapper + composition DSL) lowering to @retikz/core via @retikz/react.",
+  "description": "retikz plot (Tier 2): JSON-serializable grammar-of-graphics Plot IR that lowers to @retikz/core.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
-    "react",
     "tikz",
     "plot",
     "chart",
@@ -17,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/graph/plot-react"
+    "directory": "packages/viz/plot"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
@@ -58,25 +57,26 @@
     "test": "vitest",
     "test:run": "vitest run"
   },
-  "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
-  },
   "dependencies": {
-    "@retikz/plot": "workspace:*",
-    "@retikz/react": "workspace:*"
+    "@retikz/core": "workspace:*",
+    "@retikz/math": "workspace:*",
+    "d3-array": "catalog:",
+    "d3-format": "catalog:",
+    "d3-scale": "catalog:",
+    "d3-scale-chromatic": "catalog:",
+    "d3-time-format": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/d3-array": "catalog:",
+    "@types/d3-format": "catalog:",
+    "@types/d3-scale": "catalog:",
+    "@types/d3-scale-chromatic": "catalog:",
+    "@types/d3-time-format": "catalog:",
     "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:",
-    "zod": "catalog:"
+    "vitest": "catalog:"
   }
 }

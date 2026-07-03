@@ -1,7 +1,7 @@
 {
-  "name": "@retikz/plot",
+  "name": "@retikz/plot-vanilla",
   "version": "0.1.0-alpha.14",
-  "description": "retikz plot (Tier 2): JSON-serializable grammar-of-graphics Plot IR that lowers to @retikz/core.",
+  "description": "Framework-free bindings for @retikz/plot: renderPlot(spec, data) to SVG string (SSR) lowering to @retikz/core.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
@@ -9,6 +9,7 @@
     "tikz",
     "plot",
     "chart",
+    "ssr",
     "grammar-of-graphics",
     "visualization"
   ],
@@ -16,7 +17,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/graph/plot"
+    "directory": "packages/viz/plot-vanilla"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
@@ -59,24 +60,15 @@
   },
   "dependencies": {
     "@retikz/core": "workspace:*",
-    "@retikz/math": "workspace:*",
-    "d3-array": "catalog:",
-    "d3-format": "catalog:",
-    "d3-scale": "catalog:",
-    "d3-scale-chromatic": "catalog:",
-    "d3-time-format": "catalog:",
-    "zod": "catalog:"
+    "@retikz/plot": "workspace:*",
+    "@retikz/vanilla": "workspace:*"
   },
   "devDependencies": {
-    "@types/d3-array": "catalog:",
-    "@types/d3-format": "catalog:",
-    "@types/d3-scale": "catalog:",
-    "@types/d3-scale-chromatic": "catalog:",
-    "@types/d3-time-format": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "catalog:"
   }
 }

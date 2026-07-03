@@ -1,6 +1,6 @@
-# graph 分组工作指南
+# viz 分组工作指南
 
-本文件覆盖 `packages/graph/`。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)。
+本文件覆盖 `packages/viz/`。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)。
 
 ## 当前包
 
@@ -14,9 +14,9 @@
 
 ## 分层约束
 
-- graph 组是 Tier 2 能力层，不向 core 组反向注入实现；通用绘图 / 几何缺口优先补 `@retikz/core` 或 `@retikz/math`。
+- viz 组是 Tier 2 能力层，不向 core 组反向注入实现；通用绘图 / 几何缺口优先补 `@retikz/core` 或 `@retikz/math`。
 - `@retikz/plot` 是 plot 语义、layout transform 和 lowering 真源；adapter 不复制 data、scale、coordinate、mark、guide 或 lowering 算法。
-- graph 内共用几何类型和工具优先来自 `@retikz/math` / `@retikz/core`。例如二维坐标用 `Position`，有限 / 无穷数值判断用既有 helper，不在 plot 内重复定义。
+- viz 内共用几何类型和工具优先来自 `@retikz/math` / `@retikz/core`。例如二维坐标用 `Position`，有限 / 无穷数值判断用既有 helper，不在 plot 内重复定义。
 - 已存在的本包工具应复用；如果工具应上移到 math/core，先迁移再使用。
 
 ## 代码风格

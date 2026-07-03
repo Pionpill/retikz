@@ -1,6 +1,6 @@
 # @retikz/plot 工作指南
 
-`@retikz/plot` 是 graph 组核心包：定义 Plot IR，处理 data / transform / scale / coordinate / mark / guide，并通过 composite lowering 接入 `@retikz/core`。
+`@retikz/plot` 是 viz 组核心包：定义 Plot IR，处理 data / transform / scale / coordinate / mark / guide，并通过 composite lowering 接入 `@retikz/core`。
 
 ## 分层
 
