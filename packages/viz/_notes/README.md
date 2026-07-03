@@ -13,6 +13,7 @@
 ## 当前入口
 
 - [`architecture/plot-design.md`](./architecture/plot-design.md)：plot grammar-of-graphics、Plot IR、lowering 管线设计。
+- [`architecture/plot-visualization-complete.md`](./architecture/plot-visualization-complete.md)：plot 可视化完备检测设计。
 - [`decisions/v0/roadmap.md`](./decisions/v0/roadmap.md)：plot v0 总路线。
 - [`decisions/v0/v0.1/roadmap.md`](./decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`decisions/_template.md`](./decisions/_template.md)：plot ADR 模板。

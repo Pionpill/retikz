@@ -5,6 +5,7 @@
 ## 目录
 
 - [`decisions/`](./decisions)：版本路线、milestone roadmap、ADR。
+- [`architecture/`](./architecture)：kernel / core 长期架构设计与能力准入标准。
 - [`analysis/`](./analysis)：kernel / core 相关一次性分析。
 
 跨包长期架构原则仍放在根 [`notes/architecture`](../../../notes/architecture)。
@@ -14,6 +15,7 @@
 - [`decisions/v0/roadmap.md`](./decisions/v0/roadmap.md)：kernel v0 总路线。
 - [`decisions/v0/v0.4/roadmap.md`](./decisions/v0/v0.4/roadmap.md)：当前 kernel v0.4 路线。
 - [`decisions/_template.md`](./decisions/_template.md)：kernel ADR 模板。
+- [`architecture/core-drawing-complete.md`](./architecture/core-drawing-complete.md)：core 绘图完备检测设计。
 - [`analysis/core-compare-analysis.md`](./analysis/core-compare-analysis.md)：core 底座横向对比。
 
 ## 规则
