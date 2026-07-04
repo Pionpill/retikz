@@ -7,7 +7,7 @@ import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
 
-import type { AlignKey, ComponentRenderSource, PreviewAction, PreviewOverlay, RendererMode } from '../types';
+import type { AlignKey, ComponentRenderSource, PreviewAction, RendererMode } from '../types';
 
 import { HighlightCode } from '../../highlight-code';
 import { alignClass } from '../constants';
@@ -16,7 +16,7 @@ import { usePanZoom, usePreviewActions, useSourceViews } from '../hooks';
 import { filterDiffByMode } from '../utils';
 import { DemoRenderer } from './DemoRenderer';
 import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './parts';
-import { PreviewActionBar } from './PreviewActionBar';
+import { PreviewControlSlotLayer } from './PreviewControlSlotLayer';
 
 export type ComponentDetailDialogProps = {
   open: boolean;
@@ -37,10 +37,11 @@ export type ComponentDetailDialogProps = {
   animated?: boolean;
   /** 自定义动作按钮 */
   actions?: Array<PreviewAction>;
+  /** 自定义预览控制插槽，优先于兼容用的 actions。 */
+  controlSlots?: Array<PreviewAction>;
   /** 自定义动作栏是否常驻显示；默认 true */
   actionsAlwaysVisible?: boolean;
   /** 渲染区内常驻浮层 */
-  overlays?: Array<PreviewOverlay>;
   /** 当前 React 源码文件序号，与卡片内源码面板共享 */
   sourceFileIndex: number;
   /** 切换 React 源码文件时同步回卡片层 */
@@ -59,11 +60,11 @@ type DialogDemoPaneProps = {
   /** 渲染区 DOM ref（供动画工具 getAnimations） */
   paneRef?: Ref<HTMLDivElement>;
   /** 左上角动作栏（重播 / 播放暂停 / 停止 …），渲染在 relative 容器内 */
-  actionBar?: ReactNode;
+  controlLayer?: ReactNode;
 };
 
 const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
-  const { align, children, paneRef, actionBar } = props;
+  const { align, children, paneRef, controlLayer } = props;
   const { isDragging, transformStyle, beginDrag } = usePanZoom();
   const dragCursor = isDragging ? 'cursor-grabbing' : 'cursor-grab';
   return (
@@ -77,7 +78,7 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
       onMouseDown={beginDrag(true)}
       onTouchStart={beginDrag(true)}
     >
-      {actionBar}
+      {controlLayer}
       <div
         ref={paneRef}
         className={cn(
@@ -106,8 +107,8 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
     interactive,
     animated = false,
     actions,
+    controlSlots,
     actionsAlwaysVisible = true,
-    overlays,
     sourceFileIndex,
     onSourceFileIndexChange,
   } = props;
@@ -125,18 +126,21 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   const hasCode = views.length > 0;
 
   const paneRef = useRef<HTMLDivElement>(null);
-  const { replayNonce, actionCtx, allActions, previewActionState, overlayNodes } = usePreviewActions({
+  const resolvedControlSlots = controlSlots ?? actions;
+  const { replayNonce, controlCtx, slots, previewActionState } = usePreviewActions({
     animated,
-    actions,
-    overlays,
+    actions: resolvedControlSlots,
     rendererMode,
     renderPaneRef: paneRef,
+    hovered: true,
+    pinned: true,
+    expanded: open,
   });
-  const actionBar = (
-    <PreviewActionBar
-      actions={allActions}
-      ctx={actionCtx}
-      alwaysVisible={actionsAlwaysVisible || (actions?.length ?? 0) === 0}
+  const controlLayer = (
+    <PreviewControlSlotLayer
+      slots={slots}
+      ctx={controlCtx}
+      alwaysVisible={actionsAlwaysVisible || (resolvedControlSlots?.length ?? 0) === 0}
     />
   );
   const demoContent = (
@@ -181,12 +185,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
               <DialogDemoPane
                 align={align}
                 paneRef={paneRef}
-                actionBar={
-                  <>
-                    {actionBar}
-                    {overlayNodes}
-                  </>
-                }
+                controlLayer={controlLayer}
               >
                 {demoContent}
               </DialogDemoPane>
@@ -223,12 +222,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
             <DialogDemoPane
               align={align}
               paneRef={paneRef}
-              actionBar={
-                <>
-                  {actionBar}
-                  {overlayNodes}
-                </>
-              }
+              controlLayer={controlLayer}
             >
               {demoContent}
             </DialogDemoPane>

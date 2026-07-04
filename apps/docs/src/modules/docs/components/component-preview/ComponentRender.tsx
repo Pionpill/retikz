@@ -11,16 +11,15 @@ import type {
   ComponentRenderSource,
   DiffMode,
   PreviewAction,
-  PreviewOverlay,
   RendererMode,
   SizeKey,
   UnifiedDiff,
 } from './types';
 
-import { downloadPreviewImage } from './commands';
-import { ComponentDetailDialog, DemoRenderer, PanZoomToolbar, PreviewActionBar, SourceCodePanel } from './components';
+import { ComponentDetailDialog, DemoRenderer, PreviewControlSlotLayer, SourceCodePanel } from './components';
 import { alignClass, sizeClass } from './constants';
 import { PreviewActionStateContext } from './context';
+import { buildPreviewToolSlots } from './control-slots';
 import { usePanZoom, usePreviewActions, useSourceViews } from './hooks';
 import { buildAskAiPrompt, filterDiffByMode, findPrecedingHeading } from './utils';
 
@@ -49,10 +48,11 @@ export type ComponentRenderProps = {
   animated?: boolean;
   /** 自定义动作按钮（追加在内置工具之后，渲染在左上角动作栏） */
   actions?: Array<PreviewAction>;
+  /** 自定义预览控制插槽，优先于兼容用的 actions。 */
+  controlSlots?: Array<PreviewAction>;
   /** 自定义动作栏是否常驻显示；默认 true */
   actionsAlwaysVisible?: boolean;
   /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
-  overlays?: Array<PreviewOverlay>;
 };
 
 /** 演示卡核心。 */
@@ -68,8 +68,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     interactive,
     animated = false,
     actions,
+    controlSlots,
     actionsAlwaysVisible = true,
-    overlays,
   } = props;
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [sourceFileIndex, setSourceFileIndex] = useState(0);
@@ -92,6 +92,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const [localSize, setLocalSize] = useState<SizeKey | undefined>(undefined);
   const effectiveSize = localSize ?? size;
   const [toolbarPinned, setToolbarPinned] = useState(false);
+  const [isPreviewHovered, setIsPreviewHovered] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
@@ -137,8 +138,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     setView('react');
   };
 
-  const handleDownload = () => downloadPreviewImage(renderPaneRef.current, name, rendererMode);
-
   const handleAskAi = () => {
     const heading = findPrecedingHeading(containerRef.current);
     const lang = aiCurrentPage?.lang ?? 'zh';
@@ -150,13 +149,31 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   };
 
   const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
+  const resolvedControlSlots = controlSlots ?? actions;
 
-  const { replayNonce, actionCtx, allActions, previewActionState, overlayNodes } = usePreviewActions({
+  const { replayNonce, controlCtx, slots, previewActionState } = usePreviewActions({
     animated,
-    actions,
-    overlays,
+    actions: resolvedControlSlots,
     rendererMode,
     renderPaneRef,
+    hovered: isPreviewHovered,
+    pinned: toolbarPinned,
+    expanded: isMaximized,
+  });
+  const previewToolSlots = buildPreviewToolSlots({
+    transform,
+    isTransformed,
+    panBy,
+    zoomBy,
+    resetTransform,
+    dragEnabled,
+    toggleDrag: () => setLocalDragEnabled(!dragEnabled),
+    onMaximize: () => setIsMaximized(true),
+    size: effectiveSize,
+    onSizeChange: setLocalSize,
+    name,
+    rendererMode,
+    toggleRendererMode,
   });
 
   return (
@@ -171,6 +188,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           componentClassName,
         )}
         onMouseDown={beginDrag(dragEnabled)}
+        onMouseEnter={() => setIsPreviewHovered(true)}
+        onMouseLeave={() => setIsPreviewHovered(false)}
         onTouchStart={beginDrag(dragEnabled)}
         onClick={() => setToolbarPinned(prev => !prev)}
       >
@@ -192,28 +211,11 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
             </PreviewActionStateContext.Provider>
           </Fragment>
         </div>
-        <PreviewActionBar
-          actions={allActions}
-          ctx={actionCtx}
+        <PreviewControlSlotLayer
+          slots={[...slots, ...previewToolSlots]}
+          ctx={controlCtx}
           pinned={toolbarPinned}
-          alwaysVisible={actionsAlwaysVisible && (actions?.length ?? 0) > 0}
-        />
-        {overlayNodes}
-        <PanZoomToolbar
-          transform={transform}
-          isTransformed={isTransformed}
-          panBy={panBy}
-          zoomBy={zoomBy}
-          resetTransform={resetTransform}
-          dragEnabled={dragEnabled}
-          toggleDrag={() => setLocalDragEnabled(!dragEnabled)}
-          onMaximize={() => setIsMaximized(true)}
-          size={effectiveSize}
-          onSizeChange={setLocalSize}
-          onDownload={handleDownload}
-          rendererMode={rendererMode}
-          toggleRendererMode={toggleRendererMode}
-          pinned={toolbarPinned}
+          alwaysVisible={actionsAlwaysVisible && (resolvedControlSlots?.length ?? 0) > 0}
         />
       </div>
       {hasCode ? (
@@ -253,9 +255,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         toggleRendererMode={toggleRendererMode}
         interactive={interactive}
         animated={animated}
-        actions={actions}
+        controlSlots={resolvedControlSlots}
         actionsAlwaysVisible={actionsAlwaysVisible}
-        overlays={overlays}
         sourceFileIndex={activeFileIndex}
         onSourceFileIndexChange={setSourceFileIndex}
       />

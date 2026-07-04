@@ -4,10 +4,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildPreviewToolSlots,
   DemoRenderer,
-  PanZoomToolbar,
+  PreviewControlSlotLayer,
   RendererModeButton,
-} from '../../src/modules/docs/components/component-preview/components';
+} from '../../src/modules/docs/components/component-preview';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
@@ -61,24 +62,39 @@ describe('useComponentPreviewStore', () => {
   });
 });
 
-describe('PanZoomToolbar', () => {
+describe('PreviewControlSlotLayer', () => {
   it('canvas 模式下下载按钮切换为 PNG', () => {
+    const slots = buildPreviewToolSlots({
+      transform: { x: 0, y: 0, scale: 1 },
+      isTransformed: false,
+      panBy: noop,
+      zoomBy: noop,
+      resetTransform: noop,
+      dragEnabled: false,
+      toggleDrag: noop,
+      onMaximize: noop,
+      size: 'md',
+      onSizeChange: noop,
+      name: 'demo',
+      rendererMode: 'canvas',
+      toggleRendererMode: noop,
+    });
     const markup = renderToStaticMarkup(
-      <PanZoomToolbar
-        transform={{ x: 0, y: 0, scale: 1 }}
-        isTransformed={false}
-        panBy={noop}
-        zoomBy={noop}
-        resetTransform={noop}
-        dragEnabled={false}
-        toggleDrag={noop}
-        onMaximize={noop}
-        size="md"
-        onSizeChange={noop}
-        onDownload={noop}
-        rendererMode="canvas"
-        toggleRendererMode={noop}
+      <PreviewControlSlotLayer
+        slots={slots}
         pinned
+        ctx={{
+          replay: noop,
+          rendererMode: 'canvas',
+          renderPane: null,
+          hovered: false,
+          pinned: true,
+          expanded: false,
+          active: () => false,
+          setActive: noop,
+          value: () => undefined,
+          setValue: noop,
+        }}
       />,
     );
 

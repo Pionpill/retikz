@@ -11,7 +11,6 @@ import type {
   AlignKey,
   ComponentRenderSource,
   PreviewAction,
-  PreviewOverlay,
   RendererMode,
   SizeKey,
 } from './types';
@@ -63,10 +62,11 @@ export type ComponentPreviewProps = {
   replayable?: boolean;
   /** 自定义动作按钮（渲染在渲染区左上角动作栏，追加在内置工具后） */
   actions?: Array<PreviewAction>;
+  /** 自定义预览控制插槽，优先于兼容用的 actions。 */
+  controlSlots?: Array<PreviewAction>;
   /** 自定义动作栏是否常驻显示；默认 true */
   actionsAlwaysVisible?: boolean;
   /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
-  overlays?: Array<PreviewOverlay>;
 };
 
 /** MDX 内的演示卡入口。 */
@@ -82,8 +82,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     interactive = false,
     replayable,
     actions,
+    controlSlots,
     actionsAlwaysVisible = true,
-    overlays,
   } = props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
@@ -207,6 +207,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       };
 
   const animated = replayable ?? (previewIr !== null && irHasAnimations(previewIr.ir));
+  const resolvedControlSlots = controlSlots ?? actions ?? moduleActions;
 
   return (
     <ComponentRender
@@ -218,9 +219,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       componentClassName={componentClassName}
       interactive={interactive}
       animated={animated}
-      actions={actions ?? moduleActions}
+      controlSlots={resolvedControlSlots}
       actionsAlwaysVisible={actionsAlwaysVisible}
-      overlays={overlays}
     />
   );
 };
