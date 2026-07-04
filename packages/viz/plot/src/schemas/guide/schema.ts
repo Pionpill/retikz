@@ -11,13 +11,18 @@ import { z } from 'zod';
 
 import {
   AxisCardinalSide,
+  AxisCrossingCorner,
+  AxisCrossingLabelPolicy,
+  AxisCrossingTickPolicy,
   AxisGridApplyTo,
   AxisPlacementKind,
   AxisTickDensityKind,
+  AxisTickEndpointAffect,
   AxisTickLabelHideStrategy,
   AxisTickLabelOverflow,
   AxisTickMarkKind,
   AxisTickShapeOrientation,
+  AxisTitlePlacementKeyword,
   GuideTickIntervalKind,
   GuideTickTimeUnit,
   LegendOrient,
@@ -58,7 +63,7 @@ const AxisEdgePlacementSchema = z
   .strict()
   .describe('Coordinate-native edge axis placement');
 
-export const AxisGuideValueSchema = z.union([z.string(), z.number()]).describe('JSON-safe axis guide value');
+export const AxisGuideValueSchema = z.union([z.string(), z.number().finite()]).describe('JSON-safe axis guide value');
 
 const AxisOriginPlacementSchema = z
   .object({
@@ -79,6 +84,7 @@ export const AxisPlacementSchema = z
 
 const OpacitySchema = z.number().min(0).max(1).describe('Opacity fraction in [0, 1]');
 const NonNegativeFiniteSchema = z.number().finite().nonnegative();
+const NormalizedRatioSchema = z.number().finite().min(0).max(1);
 
 const textBlockHasContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
@@ -272,6 +278,19 @@ export const AxisTickDensitySchema = z
   ])
   .describe('Candidate tick to visible tick density strategy');
 
+const AxisTickEndpointPolicySchema = z
+  .union([
+    z.literal(false),
+    z
+      .object({
+        hideWhenArrow: z.boolean().optional().describe('Hide endpoint ticks near axis arrows; omit = true'),
+        distance: NonNegativeFiniteSchema.optional().describe('Endpoint distance threshold in user units; omit = derived from arrow and tick size'),
+        affect: z.enum(AxisTickEndpointAffect).optional().describe('Which tick artifacts are hidden; omit = mark'),
+      })
+      .strict(),
+  ])
+  .describe('Endpoint tick hiding policy near axis arrow endpoints');
+
 const AxisTickLineMarkSchema = z
   .object({
     kind: z.literal(AxisTickMarkKind.Line).describe('Line tick mark'),
@@ -327,6 +346,7 @@ export const AxisTicksSchema = z
       .optional()
       .describe('Tick line style; false hides tick marks but leaves labels available'),
     density: AxisTickDensitySchema.optional().describe('Visible tick density strategy; omit = all candidate ticks'),
+    endpoint: AxisTickEndpointPolicySchema.optional().describe('Endpoint tick hiding policy near axis arrows'),
     mark: AxisTickMarkSchema.optional().describe('Unified tick mark slot; omit uses length / line shorthand as a line mark'),
   })
   .strict()
@@ -399,10 +419,38 @@ export const AxisTickLabelsSchema = z
   .strict()
   .describe('Axis tick label style. Text content comes from the resolved tick set');
 
+const AxisTitlePlacementSchema = z
+  .union([z.enum(AxisTitlePlacementKeyword), NormalizedRatioSchema])
+  .describe('Axis title position along the baseline: keyword or normalized number from negative to positive direction');
+
+const AxisCrossingSchema = z
+  .union([
+    z.literal(false),
+    z
+      .object({
+        value: AxisGuideValueSchema.optional().describe('Axis value treated as the crossing value; omit = 0'),
+        tick: z.enum(AxisCrossingTickPolicy).optional().describe('Whether to render the tick mark at the crossing value; omit = show'),
+        label: z.enum(AxisCrossingLabelPolicy).optional().describe('How to render the tick label at the crossing value; omit = show'),
+        corner: z.enum(AxisCrossingCorner).optional().describe('Corner used when label is corner; omit = bottom-left'),
+      })
+      .strict()
+      .superRefine((crossing, ctx) => {
+        if (crossing.corner !== undefined && crossing.label !== AxisCrossingLabelPolicy.Corner) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['corner'],
+            message: 'axis crossing corner is only valid when label is corner',
+          });
+        }
+      }),
+  ])
+  .describe('Axis crossing tick and label conflict policy');
+
 export const AxisTitleSchema = z
   .object({
     text: AxisTitleTextSchema.describe('Axis title text block'),
     gap: z.number().nonnegative().optional().describe('Gap from the tick label band to the title center, in user units'),
+    placement: AxisTitlePlacementSchema.optional().describe('Axis title position along the axis baseline; omit = midway'),
     rotate: z.number().optional().describe('Axis title rotation in degrees around the title center'),
     anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
     ...GuideTextStyleSchema.shape,
@@ -553,6 +601,7 @@ export const AxisGuideSchema = z
     ticks: AxisTicksSchema.optional().describe(
       'Axis tick source and tick mark style. Grid lines, when enabled, sit at these same tick positions',
     ),
+    crossing: AxisCrossingSchema.optional().describe('Tick and label policy at an axis crossing value'),
     tickLabels: z
       .union([z.literal(false), AxisTickLabelsSchema])
       .optional()

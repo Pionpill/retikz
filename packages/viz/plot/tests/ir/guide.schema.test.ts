@@ -119,6 +119,76 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
+  it('axis_title_placement_accepts_core_label_keywords_and_ratio', () => {
+    const keywordGuide = {
+      type: 'axis',
+      dimension: 'x',
+      title: { text: 'x', placement: 'at-end' },
+    };
+    const ratioGuide = {
+      type: 'axis',
+      dimension: 'x',
+      title: { text: 'x', placement: 0.4 },
+    };
+
+    expect(AxisGuideSchema.parse(keywordGuide)).toEqual(keywordGuide);
+    expect(AxisGuideSchema.parse(ratioGuide)).toEqual(ratioGuide);
+  });
+
+  it('axis_title_placement_rejects_out_of_range_ratio', () => {
+    expect(() =>
+      AxisGuideSchema.parse({
+        type: 'axis',
+        dimension: 'x',
+        title: { text: 'x', placement: 1.2 },
+      }),
+    ).toThrow();
+  });
+
+  it('axis_crossing_policy_accepts_corner_label_and_hidden_tick', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      crossing: { value: 0, tick: 'hide', label: 'corner', corner: 'bottom-left' },
+    };
+
+    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('axis_crossing_policy_rejects_non_finite_value_and_unused_corner', () => {
+    expect(() =>
+      AxisGuideSchema.parse({
+        type: 'axis',
+        dimension: 'x',
+        crossing: { value: Number.POSITIVE_INFINITY },
+      }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({
+        type: 'axis',
+        dimension: 'x',
+        crossing: { label: 'hide', corner: 'bottom-left' },
+      }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({
+        type: 'axis',
+        dimension: 'x',
+        crossing: { tick: 'hide', corner: 'bottom-left' },
+      }),
+    ).toThrow();
+  });
+
+  it('axis_tick_endpoint_policy_rejects_negative_distance', () => {
+    expect(() =>
+      AxisGuideSchema.parse({
+        type: 'axis',
+        dimension: 'x',
+        ticks: { endpoint: { distance: -1 } },
+      }),
+    ).toThrow();
+  });
+
   it('axis_ticks_accept_custom_shape_mark', () => {
     const guide = {
       type: 'axis',

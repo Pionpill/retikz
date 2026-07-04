@@ -127,6 +127,17 @@ export const AxisTickMarkKind = {
 /** tick mark 形态 kind 取值。 */
 export type AxisTickMarkKindValue = ValueOf<typeof AxisTickMarkKind>;
 
+/** tick 端点避让影响范围。 */
+export const AxisTickEndpointAffect = {
+  /** 只隐藏 tick mark，保留 tick label 与 grid。 */
+  Mark: 'mark',
+  /** 同时隐藏 tick mark 与 tick label，grid 仍使用原 tick source。 */
+  MarkAndLabel: 'mark-and-label',
+} as const;
+
+/** tick 端点避让影响范围取值。 */
+export type AxisTickEndpointAffectValue = ValueOf<typeof AxisTickEndpointAffect>;
+
 /** shape tick mark 方向策略。 */
 export const AxisTickShapeOrientation = {
   /** 沿 tick 外法线方向。 */
@@ -165,6 +176,66 @@ export const AxisTickLabelOverflow = {
 
 /** tick label 超出轴范围时的处理策略取值。 */
 export type AxisTickLabelOverflowValue = ValueOf<typeof AxisTickLabelOverflow>;
+
+/** axis title 沿轴线的定位关键字。 */
+export const AxisTitlePlacementKeyword = {
+  /** 轴线负方向端点。 */
+  AtStart: 'at-start',
+  /** 非常靠近轴线负方向端点。 */
+  VeryNearStart: 'very-near-start',
+  /** 靠近轴线负方向端点。 */
+  NearStart: 'near-start',
+  /** 轴线中点。 */
+  Midway: 'midway',
+  /** 靠近轴线正方向端点。 */
+  NearEnd: 'near-end',
+  /** 非常靠近轴线正方向端点。 */
+  VeryNearEnd: 'very-near-end',
+  /** 轴线正方向端点。 */
+  AtEnd: 'at-end',
+} as const;
+
+/** axis title 沿轴线的定位关键字取值。 */
+export type AxisTitlePlacementKeywordValue = ValueOf<typeof AxisTitlePlacementKeyword>;
+
+/** axis 交叉值处 tick mark 策略。 */
+export const AxisCrossingTickPolicy = {
+  /** 显示交叉值 tick mark。 */
+  Show: 'show',
+  /** 隐藏交叉值 tick mark。 */
+  Hide: 'hide',
+} as const;
+
+/** axis 交叉值处 tick mark 策略取值。 */
+export type AxisCrossingTickPolicyValue = ValueOf<typeof AxisCrossingTickPolicy>;
+
+/** axis 交叉值处 tick label 策略。 */
+export const AxisCrossingLabelPolicy = {
+  /** 显示交叉值 tick label。 */
+  Show: 'show',
+  /** 隐藏交叉值 tick label。 */
+  Hide: 'hide',
+  /** 将交叉值 tick label 放到交叉点角落。 */
+  Corner: 'corner',
+} as const;
+
+/** axis 交叉值处 tick label 策略取值。 */
+export type AxisCrossingLabelPolicyValue = ValueOf<typeof AxisCrossingLabelPolicy>;
+
+/** axis 交叉值 label 的角落位置。 */
+export const AxisCrossingCorner = {
+  /** 左上角。 */
+  TopLeft: 'top-left',
+  /** 右上角。 */
+  TopRight: 'top-right',
+  /** 左下角。 */
+  BottomLeft: 'bottom-left',
+  /** 右下角。 */
+  BottomRight: 'bottom-right',
+} as const;
+
+/** axis 交叉值 label 的角落位置取值。 */
+export type AxisCrossingCornerValue = ValueOf<typeof AxisCrossingCorner>;
 
 /**
  * 图例绑定的非位置通道名。

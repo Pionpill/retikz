@@ -213,6 +213,42 @@ describe('plot theme schema and lowering', () => {
     expect(labels.every(label => label.rotate === 0)).toBe(true);
   });
 
+  it('theme_axis_rejects_structural_crossing_endpoint_and_title_placement', () => {
+    expect(() =>
+      PlotSpecSchema.parse(
+        baseSpec({
+          theme: {
+            axis: {
+              crossing: { tick: 'hide' },
+            },
+          } as PlotSpec['theme'],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse(
+        baseSpec({
+          theme: {
+            axis: {
+              ticks: { endpoint: { hideWhenArrow: true } },
+            },
+          } as PlotSpec['theme'],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse(
+        baseSpec({
+          theme: {
+            axis: {
+              title: { placement: 'at-end' },
+            },
+          } as PlotSpec['theme'],
+        }),
+      ),
+    ).toThrow();
+  });
+
   it('legend_local_style_overrides_theme_legend_tokens', () => {
     const root = expandOf(
       baseSpec({
