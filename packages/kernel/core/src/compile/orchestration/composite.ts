@@ -1,8 +1,8 @@
-﻿import type { CompositeDefinition } from '../contract';
-import type { IRChild, IRScene } from '../schemas';
-import type { CompileWarning } from './constant';
+﻿import type { CompositeDefinition } from '../../contract';
+import type { IRChild, IRScene } from '../../schemas';
+import type { CompileWarning } from '../constant';
 
-import { CompileWarningCode } from './constant';
+import { CompileWarningCode } from '../constant';
 
 /** composite 嵌套展开最大深度。 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;

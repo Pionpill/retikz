@@ -15,9 +15,8 @@ import type { CompileWarning } from './constant';
 import type { LowerTex, TextMeasurer } from './text';
 
 import { filterAnimations } from './animation';
-import { createCompileContext } from './context';
+import { compileChildrenToPrimitives, createCompileContext } from './orchestration';
 import { assertFiniteLayout, computeLayout, viewBoxToLayout } from './scene';
-import { compileChildrenToPrimitives } from './traversal';
 
 export type { CompileWarning } from './constant';
 export { CompileWarningCode } from './constant';

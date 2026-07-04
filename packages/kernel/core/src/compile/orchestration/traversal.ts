@@ -5,26 +5,26 @@ import type {
   ScenePrimitive,
   ShapeDefinition,
   Transform,
-} from '../contract';
-import type { ProviderCollection } from '../providers/registry';
-import type { IRChild, IRPathBase, IRPosition, IRTransform, ResolvedDropShadow } from '../schemas';
-import type { CompileWarning } from './constant';
+} from '../../contract';
+import type { ProviderCollection } from '../../providers/registry';
+import type { IRChild, IRPathBase, IRPosition, IRTransform, ResolvedDropShadow } from '../../schemas';
+import type { CompileWarning } from '../constant';
+import type { DuplicateRegisterInfo } from '../name-stack';
+import type { NodeLayout } from '../node';
+import type { StyleFrame } from '../style';
 import type { CompileContext } from './context';
-import type { DuplicateRegisterInfo } from './name-stack';
-import type { NodeLayout } from './node';
-import type { StyleFrame } from './style';
 
-import { providerDefinitionOf } from '../providers/registry';
-import { ScopeBoundingShape } from '../schemas';
-import { Anchor } from '../shared';
-import { rect as rectOps } from '../shared/geometry';
-import { filterAnimations } from './animation';
-import { CompileWarningCode } from './constant';
-import { NameStack } from './name-stack';
-import { boxInsets, emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
-import { emitPathPrimitive, refPointOfTarget } from './path';
-import { emitRibbonPrimitive } from './path/ribbon';
-import { resolvePosition } from './position';
+import { providerDefinitionOf } from '../../providers/registry';
+import { ScopeBoundingShape } from '../../schemas';
+import { Anchor } from '../../shared';
+import { rect as rectOps } from '../../shared/geometry';
+import { filterAnimations } from '../animation';
+import { CompileWarningCode } from '../constant';
+import { NameStack } from '../name-stack';
+import { boxInsets, emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from '../node';
+import { emitPathPrimitive, refPointOfTarget } from '../path';
+import { emitRibbonPrimitive } from '../path/ribbon';
+import { resolvePosition } from '../position';
 import {
   applyTransformChain,
   collectScopeCornerPoints,
@@ -33,8 +33,9 @@ import {
   projectLayoutToGlobal,
   registerScopeAsLayout,
   registerScopeCircleLayout,
-} from './scope';
-import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from './style';
+} from '../scope';
+import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
+
 /** 构造落在指定全局点的 0×0 rectangle layout。 */
 const zeroSizeRectAt = (
   id: string,
