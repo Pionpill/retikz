@@ -4,7 +4,7 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 import { tickLabelLayoutRows } from './axis-tick-label-layout.data';
 
-/** Long labels use tickLabels.layout to rotate first, then hide overlaps with a greedy pass. */
+/** Long labels use tickLabels.layout to rotate, keep all labels, and flush endpoint text back into the axis span. */
 const Demo: FC = () => (
   <Plot data={tickLabelLayoutRows} width={360} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
     <IntervalMark x="month" y="value" color="#2563eb" />
@@ -13,7 +13,7 @@ const Demo: FC = () => (
       tickLabels={{
         layout: {
           rotate: { angles: [0, -45, -90] },
-          hide: { strategy: 'greedy', preserveEnds: true, separation: 2 },
+          hide: false,
           bounds: { overflow: 'flush' },
         },
       }}

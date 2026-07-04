@@ -12,7 +12,7 @@ import type {
   TernaryVertices,
 } from '../../contract';
 import type { ResolvedLegendGuideTokens } from '../../providers';
-import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
+import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue, ScalarValue } from '../../schemas';
 import type { Rect } from '../../shared';
 import type { ProvenanceContext } from '../provenance';
 
@@ -105,7 +105,7 @@ type AxisTickMarkToken = Exclude<NonNullable<AxisTicksToken['mark']>, false>;
 type AxisShapeTickMarkToken = Exclude<AxisTickMarkToken, { kind: 'line' }>;
 type AxisCrossingToken = Exclude<NonNullable<AxisGuide['crossing']>, false>;
 type AxisTickEndpointPolicyToken = Exclude<NonNullable<AxisTicksToken['endpoint']>, false>;
-type AxisGuideValue = string | number;
+type AxisGuideValue = ScalarValue;
 type AxisTitlePlacementValue = NonNullable<Exclude<NonNullable<AxisGuide['title']>, string>['placement']>;
 
 const axisTickLineMarkOf = (guide: AxisGuide): { length: number; line: GuidePathStyle | false } | false | null => {

@@ -1419,7 +1419,7 @@ const collectInto = (
       });
       recordColor(into, colorEnc);
     } else if (child.type === Axis) {
-      const { dimension, scale, line, ticks, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, id } =
+      const { dimension, scale, line, ticks, crossing, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, id } =
         child.props as AxisProps;
       if (scale !== undefined) {
         into.scales.push({ dimension, type: scale });
@@ -1438,6 +1438,7 @@ const collectInto = (
         ...(placement !== undefined ? { placement } : {}),
         ...(line !== undefined ? { line } : {}),
         ...(ticks !== undefined ? { ticks } : {}),
+        ...(crossing !== undefined ? { crossing } : {}),
         ...(title !== undefined ? { title } : {}),
         ...(tickLabels !== undefined ? { tickLabels } : {}),
         ...(grid !== undefined ? { grid } : {}),

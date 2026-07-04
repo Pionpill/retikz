@@ -16,6 +16,8 @@ export type AxisProps = {
   line?: AxisGuide['line'];
   /** 刻度来源和刻度线样式；grid 复用同一批 ticks。 */
   ticks?: AxisGuide['ticks'];
+  /** 轴线交叉值处的 tick / label 冲突策略。 */
+  crossing?: AxisGuide['crossing'];
   /** 刻度标签开关、格式化和文本样式；false 隐藏刻度标签，缺省显示。 */
   tickLabels?: AxisGuide['tickLabels'];
   /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */

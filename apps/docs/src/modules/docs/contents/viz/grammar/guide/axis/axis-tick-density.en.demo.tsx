@@ -15,7 +15,7 @@ const Demo: FC = () => (
       ticks={{
         interval: { kind: 'number', step: 10 },
         density: { kind: 'sample', maxCount: 6, minGap: 36 },
-        mark: { kind: 'triangle', size: 6, orientation: 'outward', fill: '#334155' },
+        mark: { kind: 'triangle', size: 6, orientation: 'inward', fill: '#334155' },
       }}
       title="Progress"
     />

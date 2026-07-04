@@ -14,15 +14,17 @@ const Demo: FC = () => (
       dimension="x"
       placement={{ kind: 'origin', origin: 0, tickSide: 'bottom' }}
       line={{ arrow: { positive: { shape: 'stealth', length: 7 } }, extent: { from: -4, to: 4 } }}
-      ticks={{ count: 5 }}
-      title="x"
+      ticks={{ values: [-4, -2, 0, 2, 4], endpoint: { distance: 12 } }}
+      crossing={{ value: 0, tick: 'hide', label: 'corner', corner: 'bottom-left' }}
+      title={{ text: 'x', placement: 'at-end' }}
     />
     <Axis
       dimension="y"
       placement={{ kind: 'origin', origin: 0, tickSide: 'left' }}
       line={{ arrow: { positive: { shape: 'stealth', length: 7 } }, extent: { from: -1, to: 8 } }}
-      ticks={{ count: 5 }}
-      title="y"
+      ticks={{ values: [0, 2, 4, 6, 8], endpoint: { distance: 12 } }}
+      crossing={{ value: 0, tick: 'hide', label: 'hide' }}
+      title={{ text: 'y', placement: 'at-end' }}
     />
   </Plot>
 );

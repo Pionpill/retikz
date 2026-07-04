@@ -49,7 +49,15 @@ The smallest structure is to list the x / y axes you want inside `<Plot>`. In th
 
 ### Origin Axes
 
-Under cartesian coordinates, an axis can cross a data value from the other dimension. `placement.kind="origin"` only changes where the axis baseline sits; it does not expand the domain automatically. Configure `domain` or `domainPadding` when the origin needs to be visible. `line.arrow` uses `positive` / `negative` for axis-direction endpoints, and `line.extent` controls the data span covered by the baseline.
+Under cartesian coordinates, an axis can cross a data value from the other dimension. `placement.kind="origin"` only changes where the axis baseline sits; it does not expand the domain automatically. Configure `domain` or `domainPadding` when the origin needs to be visible. `crossing` controls the tick and label at the crossing value, `line.arrow` uses `positive` / `negative` for axis-direction endpoints, `ticks.endpoint` hides tick marks near arrows, and `title.placement` places the title along the visible baseline.
+
+| Config | Common values | Purpose |
+| ------ | ------------- | ------- |
+| `crossing.tick` | `'show' \| 'hide'` | Show or hide the tick mark at the crossing value |
+| `crossing.label` | `'show' \| 'hide' \| 'corner'` | Show, hide, or move the crossing label to a corner |
+| `crossing.corner` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | Corner used when `label:'corner'` |
+| `ticks.endpoint` | `false \| { hideWhenArrow?, distance?, affect? }` | Control tick avoidance near arrow endpoints; `false` disables the default avoidance, and `affect:'mark-and-label'` also hides the label |
+| `title.placement` | `'at-start'` / `'near-start'` / `'midway'` / `'near-end'` / `'at-end'` / `0..1` | Place the title from negative to positive axis direction |
 
 <ComponentPreview name="axis-math-origin" sourceFiles={['axis-math-origin.data.ts']} />
 
@@ -71,9 +79,10 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 | `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt' \| 'symlog' \| 'radial'` | auto-derived       | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z |
 | `placement`  | `{ kind:'auto' } \| { kind:'side', side, offset? } \| { kind:'edge', edge, offset? } \| { kind:'origin', origin?, tickSide?, offset? }` | inferred | Axis placement; `origin` only supports cartesian axes. For an x axis, `origin` is a y value; for a y axis, it is an x value |
 | `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap?, extent?, arrow? }` | default line | Axis-line style and endpoint geometry; `extent` controls the data span, and `arrow.positive/negative` controls axis-direction arrows; `extent` / `arrow` currently only support cartesian axes |
-| `ticks`      | `{ count?, values?, interval?, density?, mark?, length?, line? }` | default ticks      | `values > interval > count` creates candidate ticks; `density` samples visible ticks; `mark` controls line / shape marks, while `length` / `line` remain line-mark shorthands |
+| `crossing`   | `false \| { value?, tick?, label?, corner? }` | normal ticks | Tick and label policy at an axis crossing value; `label:'corner'` can move a shared origin label to one corner |
+| `ticks`      | `{ count?, values?, interval?, density?, endpoint?, mark?, length?, line? }` | default ticks      | `values > interval > count` creates candidate ticks; `density` samples visible ticks; `endpoint` hides tick artifacts near arrows without changing grid source; `mark` controls line / shape marks |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate?, layout? }` | `true` | Tick-label config; `format` accepts d3-format / d3-time-format; `rotate` is fixed rotation and takes priority over `layout.rotate`; `layout:false` disables adaptive layout |
-| `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | Axis title; `text` reuses the core text-block shape, so multiline or run-based text is allowed |
+| `title`      | `string \| { text, gap?, placement?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | Axis title; `placement` supports path-label-like keywords or a `0..1` ratio from negative to positive axis direction |
 | `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar y); object form overrides line style |
 | `id`         | `string?`                                          | —                  | Optional handle (reserved, not yet resolved)                                                                                                      |
 

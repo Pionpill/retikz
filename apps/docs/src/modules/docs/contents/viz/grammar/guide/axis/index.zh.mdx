@@ -49,7 +49,15 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 
 ### 原点轴
 
-cartesian 下可以让轴线穿过另一维的指定值。`placement.kind="origin"` 只改变轴线摆放，不会自动扩展 domain；需要原点可见时，请显式配置 `domain` 或 `domainPadding`。`line.arrow` 用 `positive` / `negative` 表达轴方向端点，`line.extent` 控制轴线覆盖的数据范围。
+cartesian 下可以让轴线穿过另一维的指定值。`placement.kind="origin"` 只改变轴线摆放，不会自动扩展 domain；需要原点可见时，请显式配置 `domain` 或 `domainPadding`。`crossing` 控制交叉值处的 tick 与 label，`line.arrow` 用 `positive` / `negative` 表达轴方向端点，`ticks.endpoint` 避让箭头附近的刻度标记，`title.placement` 控制标题沿可见轴线的位置。
+
+| 配置 | 常用取值 | 作用 |
+| ---- | -------- | ---- |
+| `crossing.tick` | `'show' \| 'hide'` | 显示或隐藏交叉值处的 tick mark |
+| `crossing.label` | `'show' \| 'hide' \| 'corner'` | 显示、隐藏或把交叉值 label 放到角落 |
+| `crossing.corner` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `label:'corner'` 时的角落位置 |
+| `ticks.endpoint` | `false \| { hideWhenArrow?, distance?, affect? }` | 控制箭头端点附近的 tick 避让；`false` 关闭默认避让，`affect:'mark-and-label'` 会同时隐藏 label |
+| `title.placement` | `'at-start'` / `'near-start'` / `'midway'` / `'near-end'` / `'at-end'` / `0..1` | 沿轴线从负方向到正方向放置标题 |
 
 <ComponentPreview name="axis-math-origin" sourceFiles={['axis-math-origin.data.ts']} />
 
@@ -69,9 +77,10 @@ polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向
 | `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt' \| 'symlog' \| 'radial'` | 自动派生   | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`，仅适用于 x / y / z |
 | `placement`  | `{ kind:'auto' } \| { kind:'side', side, offset? } \| { kind:'edge', edge, offset? } \| { kind:'origin', origin?, tickSide?, offset? }` | 自动推断 | 坐标轴摆放；`origin` 仅支持 cartesian，x 轴的 `origin` 是 y 值，y 轴的 `origin` 是 x 值 |
 | `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap?, extent?, arrow? }` | 默认轴线 | 轴线样式与端点几何；`extent` 控制数据范围，`arrow.positive/negative` 控制轴方向箭头；`extent` / `arrow` 目前仅支持 cartesian |
-| `ticks`      | `{ count?, values?, interval?, density?, mark?, length?, line? }` | 默认刻度   | `values > interval > count` 生成候选 tick；`density` 抽稀可见 tick；`mark` 控制短线 / 形状刻度，`length` / `line` 是 line mark 的旧快捷写法 |
+| `crossing`   | `false \| { value?, tick?, label?, corner? }` | 正常刻度 | 控制轴线交叉值处的 tick 与 label；`label:'corner'` 可把共用原点 label 放到角落 |
+| `ticks`      | `{ count?, values?, interval?, density?, endpoint?, mark?, length?, line? }` | 默认刻度   | `values > interval > count` 生成候选 tick；`density` 抽稀可见 tick；`endpoint` 避让箭头附近的刻度标记且不改变 grid 来源；`mark` 控制短线 / 形状刻度 |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate?, layout? }` | `true` | 刻度文字配置；`format` 支持 d3-format / d3-time-format；`rotate` 是固定旋转，优先于 `layout.rotate`；`layout:false` 关闭自动避让 |
-| `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | 轴标题；`text` 复用 core 文本块能力，可写多行或带 run 的结构化文本 |
+| `title`      | `string \| { text, gap?, placement?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | 轴标题；`placement` 支持 path label 同类关键字或 `0..1` 比例，方向为轴线负方向到正方向 |
 | `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | 是否画对齐本轴刻度的网格线（polar 的 y 轴即同心环），对象写法可覆盖网格线样式 |
 | `id`         | `string?`                                          | —          | 可选句柄（预留，暂不解析）                                                                                       |
 
