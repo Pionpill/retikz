@@ -1,17 +1,13 @@
 import { z } from 'zod';
 
-import { AxisLineStyleSchema, GuideLineStyleSchema, GuideTextStyleSchema, LegendGuideStyleSchema } from '../guide';
+import { AxisLineStyleSchema, AxisTickMarkSchema, GuideLineStyleSchema, GuideTextStyleSchema, LegendGuideStyleSchema } from '../guide';
 
 const ThemeAxisTicksSchema = z
   .object({
-    length: z.number().nonnegative().optional().describe('Axis tick mark length in user units'),
-    line: z
-      .union([z.literal(false), GuideLineStyleSchema])
-      .optional()
-      .describe('Axis tick line default style; false hides tick marks by default'),
+    mark: AxisTickMarkSchema.optional().describe('Axis tick mark visual default'),
   })
   .strict()
-  .describe('Theme defaults for axis tick marks. Tick count and explicit values are guide semantics and are not accepted here');
+  .describe('Theme defaults for axis tick marks. Tick source and density are guide semantics and are not accepted here');
 
 const ThemeAxisTickLabelsSchema = z
   .union([

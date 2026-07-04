@@ -210,6 +210,61 @@ describe('lowerGuide (ADR-04)', () => {
     expect(axisPath.marks).toEqual([{ pos: 0, mark: { kind: 'arrow' } }]);
   });
 
+  it('shape_tick_mark_lowers_to_nodes_instead_of_tick_path', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        tickLabels: false,
+        ticks: { values: [0, 1], mark: { kind: 'triangle', size: 6, orientation: 'outward', fill: '#111' } },
+      },
+      ctx,
+    );
+    const layer = axisLayer as IRScope;
+    const paths = layer.children.filter((child): child is IRPath => child.type === 'path');
+    const nodes = layer.children.filter((child): child is IRNode => child.type === 'node');
+
+    expect(paths).toHaveLength(1);
+    expect(nodes).toHaveLength(3);
+    expect(nodes[0].shape).toEqual({ type: 'polygon', params: { sides: 3 } });
+    expect(nodes[0].padding).toBe(0);
+    expect(nodes[0].minimumSize).toEqual({ width: 6, height: 6 });
+    expect(nodes[0].fill).toBe('#111');
+  });
+
+  it('custom_shape_tick_mark_preserves_shape_ref', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        tickLabels: false,
+        ticks: { values: [0], mark: { kind: 'custom', shape: { type: 'polygon', params: { sides: 5 } }, width: 8, height: 6 } },
+      },
+      ctx,
+    );
+    const node = ((axisLayer as IRScope).children as Array<IRPath | IRNode>).find((child): child is IRNode => child.type === 'node');
+
+    expect(node?.shape).toEqual({ type: 'polygon', params: { sides: 5 } });
+    expect(node?.fill).toBe('currentColor');
+    expect(node?.minimumSize).toEqual({ width: 8, height: 6 });
+  });
+
+  it('mark_false_hides_tick_marks_but_keeps_grid_source', () => {
+    const { axisLayer, gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        tickLabels: false,
+        ticks: { values: [0, 1], mark: false },
+        grid: true,
+      },
+      ctx,
+    );
+
+    expect((axisLayer as IRScope).children.filter(child => child.type === 'path')).toHaveLength(1);
+    expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
+  });
+
   it('y_axis_line_positive_arrow_and_extent_follow_axis_direction', () => {
     const { axisLayer } = lowerGuide(
       {
@@ -290,6 +345,25 @@ describe('lowerGuide (ADR-04)', () => {
         ]),
       ),
     ).toThrow(/duplicate axis/);
+  });
+
+  it('ternary_axis_rejects_custom_tick_source_or_density', () => {
+    const specOf = (ticks: { count?: number; density?: { kind: 'sample'; maxCount: number } }) => PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'z' },
+      ],
+      coordinate: { type: 'ternary2D' },
+      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, z: { field: 'revenue' } } }],
+      guides: [{ type: 'axis', dimension: 'x', ticks }],
+    });
+
+    expect(() => expandOf(specOf({ density: { kind: 'sample', maxCount: 3 } }))).toThrow(/ternary2D axis/);
+    expect(() => expandOf(specOf({ count: 3 }))).toThrow(/ternary2D axis/);
   });
 });
 
@@ -378,5 +452,22 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
     const axisLine = (axisLayer.children[0] as IRPath).children;
     expect((axisLine[0] as { to: [number, number] }).to[0]).toBe(100);
     expect((axisLine[1] as { to: [number, number] }).to[0]).toBe(200);
+  });
+
+  it('grid_uses_density_sampled_visible_tick_set', () => {
+    const outer = expandOf(
+      guidedSpec([
+        {
+          type: 'axis',
+          dimension: 'x',
+          grid: true,
+          ticks: { values: [0, 0.5, 1, 1.5, 2], density: { kind: 'sample', maxCount: 3 } },
+        },
+      ]),
+    );
+    const gridLayer = outer.children[0] as IRScope;
+    const gridPath = gridLayer.children[0] as IRPath;
+
+    expect(gridPath.children).toHaveLength(6);
   });
 });

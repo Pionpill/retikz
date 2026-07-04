@@ -175,6 +175,7 @@ describe('plot theme schema and lowering', () => {
         theme: {
           axis: {
             line: { lineCap: 'round' },
+            ticks: { mark: { kind: 'circle', size: 4, fill: '#111827' } },
             grid: { stroke: '#94a3b8', drawOpacity: 0.4, dashPattern: [4, 2], dashOffset: 5 },
             tickLabels: { textColor: '#475569', font: { size: 10 } },
           },
@@ -186,6 +187,7 @@ describe('plot theme schema and lowering', () => {
     expect(gridPath?.dashPattern).toEqual([4, 2]);
     expect(gridPath?.dashOffset).toBe(2);
     expect(pathsOf(root).some(path => path.lineCap === 'round')).toBe(true);
+    expect(nodesOf(root).some(node => node.shape === 'circle' && node.fill === '#111827')).toBe(true);
     const labels = nodesOf(root).filter(node => node.text !== undefined && node.textColor !== undefined);
     expect(labels.every(label => label.textColor === '#2563eb')).toBe(true);
     expect(labels.every(label => label.font?.size === 10)).toBe(true);

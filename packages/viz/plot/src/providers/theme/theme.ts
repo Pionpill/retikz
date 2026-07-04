@@ -127,12 +127,47 @@ const mergeAxisTicks = (
   local: AxisGuide['ticks'],
 ): AxisGuide['ticks'] => {
   if (theme === undefined) return local;
-  const line =
-    local?.line === false ? false : local?.line !== undefined ? mergePathStyle(theme.line === false ? undefined : theme.line, local.line) : theme.line;
+  const themeMark = theme.mark;
+  const lineMarkFromShorthand = (): AxisTicksToken['mark'] => {
+    const themeLineMark = themeMark !== undefined && themeMark !== false && themeMark.kind === 'line' ? themeMark : undefined;
+    const line =
+      local?.line === false
+        ? false
+        : local?.line !== undefined
+          ? mergePathStyle(themeLineMark?.line === false ? undefined : themeLineMark?.line, local.line)
+          : themeLineMark?.line;
+    return {
+      ...(themeLineMark ?? { kind: 'line' as const }),
+      ...(local?.length !== undefined ? { length: local.length } : {}),
+      ...(line !== undefined ? { line } : {}),
+    };
+  };
+  const usesLineShorthand = local?.mark === undefined && (local?.length !== undefined || local?.line !== undefined);
+  if (usesLineShorthand) {
+    const rest = { ...local };
+    delete rest.length;
+    delete rest.line;
+    return { ...rest, mark: lineMarkFromShorthand() } satisfies AxisTicksToken;
+  }
+  const mark = (() => {
+    if (local?.mark === false) return false;
+    if (local?.mark === undefined) return themeMark;
+    if (themeMark === undefined || themeMark === false || themeMark.kind !== local.mark.kind) return local.mark;
+    if (local.mark.kind === 'line') {
+      if (themeMark.kind !== 'line') return local.mark;
+      const line =
+        local.mark.line === false
+          ? false
+          : local.mark.line !== undefined
+            ? mergePathStyle(themeMark.line === false ? undefined : themeMark.line, local.mark.line)
+            : themeMark.line;
+      return { ...themeMark, ...local.mark, ...(line !== undefined ? { line } : {}) };
+    }
+    return { ...themeMark, ...local.mark };
+  })();
   return {
-    ...theme,
-    ...local,
-    ...(line !== undefined ? { line } : {}),
+    ...(local ?? {}),
+    ...(mark !== undefined ? { mark } : {}),
   } satisfies AxisTicksToken;
 };
 

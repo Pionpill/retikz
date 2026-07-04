@@ -106,6 +106,42 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     ).toThrow();
   });
 
+  it('axis_ticks_accept_interval_density_and_shape_mark', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      ticks: {
+        interval: { kind: 'number', step: 10, anchor: 0 },
+        density: { kind: 'sample', maxCount: 6, minGap: 24 },
+        mark: { kind: 'triangle', size: 6, orientation: 'outward', fill: 'currentColor' },
+      },
+    };
+    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('axis_ticks_accept_custom_shape_mark', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      ticks: {
+        values: [0, 1],
+        mark: { kind: 'custom', shape: { type: 'polygon', params: { sides: 5 } }, width: 8, height: 6 },
+      },
+    };
+    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('axis_ticks_reject_invalid_density_interval_and_mark_conflicts', () => {
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { density: { kind: 'sample' } } })).toThrow();
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { interval: { kind: 'number', step: 0 } } })).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { mark: { kind: 'line' }, length: 4 } }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { mark: { kind: 'custom' } } }),
+    ).toThrow();
+  });
+
   it('theme_axis_line_rejects_structural_geometry', () => {
     const spec = {
       namespace: 'plot',
@@ -121,6 +157,51 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
       },
     };
     expect(() => PlotSpecSchema.parse(spec)).toThrow();
+  });
+
+  it('theme_axis_ticks_accepts_mark_but_rejects_tick_source_and_density', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        theme: { axis: { ticks: { mark: { kind: 'circle', size: 4 } } } },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        theme: { axis: { ticks: { count: 5 } } },
+      }),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        theme: { axis: { ticks: { density: { kind: 'sample', maxCount: 4 } } } },
+      }),
+    ).toThrow();
   });
 });
 

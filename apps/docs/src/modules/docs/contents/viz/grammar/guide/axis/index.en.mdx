@@ -22,6 +22,18 @@ The smallest structure is to list the x / y axes you want inside `<Plot>`. In th
 
 <ComponentPreview name="axis-style-slots" sourceFiles={['axis-style-slots.data.ts']} />
 
+### Tick Density
+
+`ticks.count` is a target hint for the scale, not a guaranteed final count. Use `ticks.interval` for fixed-step candidates, `ticks.density` to sample visible ticks, and `ticks.mark` to replace line ticks with builtin shapes or a custom core shape.
+
+| Config | Main forms | Purpose |
+| ------ | ---------- | ------- |
+| `interval` | `{ kind:'number', step, anchor? }` / `{ kind:'time', unit, step?, anchor? }` / `{ kind:'category', step, offset? }` | Generate fixed-step candidate ticks |
+| `density` | `{ kind:'all' }` / `{ kind:'sample', maxCount?, minGap?, preserveEnds? }` | Sample candidate ticks into visible ticks |
+| `mark` | `false` / `{ kind:'line', length?, line? }` / `{ kind:'circle' \| 'square' \| 'triangle' \| 'diamond', ... }` / `{ kind:'custom', shape, ... }` | Control tick marker appearance |
+
+<ComponentPreview name="axis-tick-density" sourceFiles={['axis-tick-density.data.ts']} />
+
 ### Origin Axes
 
 Under cartesian coordinates, an axis can cross a data value from the other dimension. `placement.kind="origin"` only changes where the axis baseline sits; it does not expand the domain automatically. Configure `domain` or `domainPadding` when the origin needs to be visible. `line.arrow` uses `positive` / `negative` for axis-direction endpoints, and `line.extent` controls the data span covered by the baseline.
@@ -46,7 +58,7 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 | `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt' \| 'symlog' \| 'radial'` | auto-derived       | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension, and only applies to x / y / z |
 | `placement`  | `{ kind:'auto' } \| { kind:'side', side, offset? } \| { kind:'edge', edge, offset? } \| { kind:'origin', origin?, tickSide?, offset? }` | inferred | Axis placement; `origin` only supports cartesian axes. For an x axis, `origin` is a y value; for a y axis, it is an x value |
 | `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap?, extent?, arrow? }` | default line | Axis-line style and endpoint geometry; `extent` controls the data span, and `arrow.positive/negative` controls axis-direction arrows; `extent` / `arrow` currently only support cartesian axes |
-| `ticks`      | `{ count?, values?, length?, line? }`              | default ticks      | Target tick count or explicit tick values; `line` styles tick lines, and `line: false` hides them |
+| `ticks`      | `{ count?, values?, interval?, density?, mark?, length?, line? }` | default ticks      | `values > interval > count` creates candidate ticks; `density` samples visible ticks; `mark` controls line / shape marks, while `length` / `line` remain line-mark shorthands |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | `true` | Tick-label config; `false` hides labels; `format` accepts d3-format / d3-time-format style strings |
 | `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | Axis title; `text` reuses the core text-block shape, so multiline or run-based text is allowed |
 | `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar y); object form overrides line style |

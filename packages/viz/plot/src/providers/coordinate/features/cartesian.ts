@@ -22,7 +22,7 @@ import {
   PlotScale,
 } from '../../../schemas';
 import { computePlotArea } from '../../../shared';
-import { resolveGuideTicks } from '../../scale/shared';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
@@ -175,6 +175,8 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     const yTicks: TickSet | undefined = yAxis
       ? (ctx.collectAxisTicks('y') ?? resolveGuideTicks(yScale, yAxis.ticks, yAxis.tickLabels || undefined))
       : undefined;
+    const layoutXTicks = xAxis ? resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value)) : undefined;
+    const layoutYTicks = yAxis ? resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value)) : undefined;
 
     const computed = computePlotArea(
       ctx.width,
@@ -182,8 +184,8 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       {
         hasXAxis: !!xAxis,
         hasYAxis: !!yAxis,
-        xLabels: xTicks?.labels ?? [],
-        yLabels: yTicks?.labels ?? [],
+        xLabels: layoutXTicks?.labels ?? [],
+        yLabels: layoutYTicks?.labels ?? [],
         legendReserve: ctx.legendReserve,
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
@@ -197,6 +199,8 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     if (xRangeOverride !== undefined) xScale.setRange([xRangeOverride[0], xRangeOverride[1]]);
     if (yRangeOverride !== undefined) yScale.setRange([yRangeOverride[0], yRangeOverride[1]]);
     const frame = createCartesianCoordinate(xScale, yScale);
+    const visibleXTicks = xAxis ? resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value)) : undefined;
+    const visibleYTicks = yAxis ? resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value)) : undefined;
 
     const [xRangeStart, xRangeEnd] = xScale.range();
     const [yRangeStart, yRangeEnd] = yScale.range();
@@ -210,8 +214,8 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       plotArea: guideFrame,
       projectX: xScale,
       projectY: yScale,
-      xTicks: xTicks ?? EMPTY_TICKS,
-      yTicks: yTicks ?? EMPTY_TICKS,
+      xTicks: visibleXTicks ?? EMPTY_TICKS,
+      yTicks: visibleYTicks ?? EMPTY_TICKS,
       fontSize: ctx.fontSize,
       labelGap: ctx.labelGap,
     };
@@ -242,14 +246,15 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
     const ticks: TickSet | undefined = axis
       ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(scale, axis.ticks, axis.tickLabels || undefined))
       : undefined;
+    const layoutTicks = axis ? resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value)) : undefined;
     const computed = computePlotArea(
       ctx.width,
       ctx.height,
       {
         hasXAxis: horizontal ? !!axis : false,
         hasYAxis: horizontal ? false : !!axis,
-        xLabels: horizontal ? (ticks?.labels ?? []) : [],
-        yLabels: horizontal ? [] : (ticks?.labels ?? []),
+        xLabels: horizontal ? (layoutTicks?.labels ?? []) : [],
+        yLabels: horizontal ? [] : (layoutTicks?.labels ?? []),
         legendReserve: ctx.legendReserve,
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
@@ -261,13 +266,14 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
     if (rangeOverride !== undefined) scale.setRange([rangeOverride[0], rangeOverride[1]]);
     const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
     const frame = createCartesian1DCoordinate(scale, orientation, baseline);
+    const visibleTicks = axis ? resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value)) : undefined;
 
     const guideContext: GuideContext = {
       plotArea,
       projectX: scale,
       projectY: scale,
-      xTicks: horizontal ? (ticks ?? EMPTY_TICKS) : EMPTY_TICKS,
-      yTicks: horizontal ? EMPTY_TICKS : (ticks ?? EMPTY_TICKS),
+      xTicks: horizontal ? (visibleTicks ?? EMPTY_TICKS) : EMPTY_TICKS,
+      yTicks: horizontal ? EMPTY_TICKS : (visibleTicks ?? EMPTY_TICKS),
       fontSize: ctx.fontSize,
       labelGap: ctx.labelGap,
       axisOrientation: horizontal ? 'horizontal' : 'vertical',

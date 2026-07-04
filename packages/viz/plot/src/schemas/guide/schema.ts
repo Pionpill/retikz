@@ -1,7 +1,27 @@
-﻿import { ArrowEndDetailSchema, FontSchema, NodeTextAlign, PaintValueSchema, PathLineCapSchema, TextBlockSchema } from '@retikz/core';
+﻿import {
+  ArrowEndDetailSchema,
+  FontSchema,
+  NodeTextAlign,
+  PaintValueSchema,
+  PathLineCapSchema,
+  ShapeRefSchema,
+  TextBlockSchema,
+} from '@retikz/core';
 import { z } from 'zod';
 
-import { AxisCardinalSide, AxisGridApplyTo, AxisPlacementKind, LegendOrient, LegendPosition, PlotGuide } from './constants';
+import {
+  AxisCardinalSide,
+  AxisGridApplyTo,
+  AxisPlacementKind,
+  AxisTickDensityKind,
+  AxisTickMarkKind,
+  AxisTickShapeOrientation,
+  GuideTickIntervalKind,
+  GuideTickTimeUnit,
+  LegendOrient,
+  LegendPosition,
+  PlotGuide,
+} from './constants';
 
 const AxisAutoPlacementSchema = z
   .object({
@@ -56,6 +76,7 @@ export const AxisPlacementSchema = z
   .describe('Axis placement mode: automatic coordinate default, cardinal plot-area side, coordinate-native edge, or cartesian origin');
 
 const OpacitySchema = z.number().min(0).max(1).describe('Opacity fraction in [0, 1]');
+const NonNegativeFiniteSchema = z.number().finite().nonnegative();
 
 const textBlockHasContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
@@ -120,6 +141,41 @@ export const GuideTextStyleSchema = z
   .strict()
   .describe('Shared guide text style fields mapped to core node text vocabulary');
 
+export const GuideTickIntervalSchema = z
+  .discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal(GuideTickIntervalKind.Number).describe('Numeric fixed-step tick interval'),
+        step: z.number().finite().positive().describe('Positive numeric step between candidate ticks'),
+        anchor: z.number().finite().optional().describe('Numeric alignment anchor; omit to align from the scale domain lower bound'),
+      })
+      .strict(),
+    z
+      .object({
+        kind: z.literal(GuideTickIntervalKind.Time).describe('UTC time fixed-step tick interval'),
+        unit: z.enum(GuideTickTimeUnit).describe('UTC time unit used by this interval'),
+        step: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe('Positive integer number of units between candidate ticks; omit = 1'),
+        anchor: z
+          .union([z.string().min(1), z.number().finite()])
+          .optional()
+          .describe('Epoch millisecond or ISO-like alignment anchor; omit to align from the scale domain lower bound'),
+      })
+      .strict(),
+    z
+      .object({
+        kind: z.literal(GuideTickIntervalKind.Category).describe('Category index fixed-step tick interval'),
+        step: z.number().int().positive().describe('Positive integer category stride'),
+        offset: z.number().int().nonnegative().optional().describe('Zero-based category offset; omit = 0'),
+      })
+      .strict(),
+  ])
+  .describe('Fixed-interval candidate tick source. Priority is values > interval > count');
+
 export const GuideTickSourceSchema = z
   .object({
     count: z
@@ -127,15 +183,18 @@ export const GuideTickSourceSchema = z
       .int()
       .positive()
       .optional()
-      .describe('Target number of guide ticks; ignored when explicit values are provided'),
+      .describe('Target number of guide ticks; ignored when values or interval are provided'),
     values: z
       .array(z.union([z.string(), z.number()]))
       .min(1)
       .optional()
       .describe('Explicit guide tick values. Continuous scales accept numbers; time scales also accept ISO-like strings'),
+    interval: GuideTickIntervalSchema.optional().describe(
+      'Fixed-interval candidate tick source. Used when values are omitted and before falling back to count',
+    ),
   })
   .strict()
-  .describe('Shared guide tick source: count hint or explicit values');
+  .describe('Shared guide tick source: explicit values, fixed interval, or count hint');
 
 export const GuideTickLabelFormatSchema = z
   .object({
@@ -188,6 +247,75 @@ export const AxisLineSchema = AxisLineStyleSchema.extend({
   .strict()
   .describe('Axis baseline line style and structural endpoint geometry');
 
+export const AxisTickDensitySchema = z
+  .discriminatedUnion('kind', [
+    z.object({ kind: z.literal(AxisTickDensityKind.All).describe('Render all candidate ticks') }).strict(),
+    z
+      .object({
+        kind: z.literal(AxisTickDensityKind.Sample).describe('Deterministically sample candidate ticks'),
+        maxCount: z.number().int().positive().optional().describe('Hard upper bound for visible ticks'),
+        minGap: NonNegativeFiniteSchema.optional().describe('Minimum projected gap between adjacent visible ticks'),
+        preserveEnds: z.boolean().optional().describe('Whether to always preserve first and last candidate ticks; omit = true'),
+      })
+      .strict()
+      .superRefine((density, ctx) => {
+        if (density.maxCount === undefined && density.minGap === undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [],
+            message: 'sample tick density requires maxCount or minGap',
+          });
+        }
+      }),
+  ])
+  .describe('Candidate tick to visible tick density strategy');
+
+const AxisTickLineMarkSchema = z
+  .object({
+    kind: z.literal(AxisTickMarkKind.Line).describe('Line tick mark'),
+    length: NonNegativeFiniteSchema.optional().describe('Line tick length in user units'),
+    line: z.union([z.literal(false), GuideLineStyleSchema]).optional().describe('Line tick style; false hides line marks'),
+  })
+  .strict()
+  .describe('Line tick mark configuration');
+
+const AxisTickShapeMarkBase = {
+  size: NonNegativeFiniteSchema.optional().describe('Uniform shape tick size in user units'),
+  width: NonNegativeFiniteSchema.optional().describe('Shape tick width; overrides size for width'),
+  height: NonNegativeFiniteSchema.optional().describe('Shape tick height; overrides size for height'),
+  offset: NonNegativeFiniteSchema.optional().describe('Shape center offset along the tick normal; omit = half effective size'),
+  orientation: z.enum(AxisTickShapeOrientation).optional().describe('Shape tick rotation strategy; omit = fixed'),
+  rotate: z.number().finite().optional().describe('Additional rotation in degrees'),
+  fill: PaintValueSchema.optional().describe('Shape tick fill paint'),
+  stroke: PaintValueSchema.optional().describe('Shape tick stroke paint'),
+  strokeWidth: NonNegativeFiniteSchema.optional().describe('Shape tick stroke width'),
+  opacity: OpacitySchema.optional().describe('Shape tick node opacity'),
+  drawOpacity: OpacitySchema.optional().describe('Shape tick draw opacity'),
+};
+
+const AxisTickBuiltinShapeMarkSchema = z
+  .object({
+    kind: z
+      .enum([AxisTickMarkKind.Circle, AxisTickMarkKind.Square, AxisTickMarkKind.Triangle, AxisTickMarkKind.Diamond])
+      .describe('Builtin shape tick mark kind'),
+    ...AxisTickShapeMarkBase,
+  })
+  .strict()
+  .describe('Builtin shape tick mark configuration');
+
+const AxisTickCustomShapeMarkSchema = z
+  .object({
+    kind: z.literal(AxisTickMarkKind.Custom).describe('Custom core Node shape tick mark'),
+    shape: z.union([z.string().min(1), ShapeRefSchema]).describe('Core shape reference used by this tick mark'),
+    ...AxisTickShapeMarkBase,
+  })
+  .strict()
+  .describe('Custom shape tick mark configuration');
+
+export const AxisTickMarkSchema = z
+  .union([z.literal(false), AxisTickLineMarkSchema, AxisTickBuiltinShapeMarkSchema, AxisTickCustomShapeMarkSchema])
+  .describe('Axis tick mark switch and shape configuration');
+
 export const AxisTicksSchema = z
   .object({
     ...GuideTickSourceSchema.shape,
@@ -196,8 +324,26 @@ export const AxisTicksSchema = z
       .union([z.literal(false), GuideLineStyleSchema])
       .optional()
       .describe('Tick line style; false hides tick marks but leaves labels available'),
+    density: AxisTickDensitySchema.optional().describe('Visible tick density strategy; omit = all candidate ticks'),
+    mark: AxisTickMarkSchema.optional().describe('Unified tick mark slot; omit uses length / line shorthand as a line mark'),
   })
   .strict()
+  .superRefine((ticks, ctx) => {
+    if (ticks.mark !== undefined && ticks.length !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['length'],
+        message: 'ticks.length cannot be used together with ticks.mark',
+      });
+    }
+    if (ticks.mark !== undefined && ticks.line !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['line'],
+        message: 'ticks.line cannot be used together with ticks.mark',
+      });
+    }
+  })
   .describe('Axis tick source and tick mark style');
 
 export const AxisTickLabelsSchema = z

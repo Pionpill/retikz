@@ -17,8 +17,8 @@ import type { Rect } from '../../shared';
 import type { ProvenanceContext } from '../provenance';
 
 import { defaultOriginAxisTickSideOf } from '../../providers';
-import { resolveGuideTicks } from '../../providers/scale/shared';
-import { AxisCardinalSide, AxisPlacementKind } from '../../schemas';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../providers/scale/shared';
+import { AxisCardinalSide, AxisPlacementKind, AxisTickMarkKind, AxisTickShapeOrientation } from '../../schemas';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
 import { guideLayerId, guideLayerMeta } from '../provenance';
 
@@ -88,10 +88,95 @@ const axisLineMarksOf = (guide: AxisGuide): IRPath['marks'] | undefined => {
   return marks.length > 0 ? marks : undefined;
 };
 
-const axisTickLengthOf = (guide: AxisGuide): number => guide.ticks?.length ?? AXIS_TICK_LENGTH;
+type AxisTicksToken = NonNullable<AxisGuide['ticks']>;
+type AxisTickMarkToken = Exclude<NonNullable<AxisTicksToken['mark']>, false>;
+type AxisShapeTickMarkToken = Exclude<AxisTickMarkToken, { kind: 'line' }>;
 
-const axisTickLineStyleOf = (guide: AxisGuide): GuidePathStyle | false =>
-  guide.ticks?.line === false ? false : lineStyleProps(guide.ticks?.line);
+const axisTickLineMarkOf = (guide: AxisGuide): { length: number; line: GuidePathStyle | false } | false | null => {
+  const mark = guide.ticks?.mark;
+  if (mark === false) return false;
+  if (mark === undefined) {
+    return { length: guide.ticks?.length ?? AXIS_TICK_LENGTH, line: guide.ticks?.line === false ? false : lineStyleProps(guide.ticks?.line) };
+  }
+  if (mark.kind !== AxisTickMarkKind.Line) return null;
+  return { length: mark.length ?? AXIS_TICK_LENGTH, line: mark.line === false ? false : lineStyleProps(mark.line) };
+};
+
+const axisShapeTickMarkOf = (guide: AxisGuide): AxisShapeTickMarkToken | null => {
+  const mark = guide.ticks?.mark;
+  return mark !== undefined && mark !== false && mark.kind !== AxisTickMarkKind.Line ? mark : null;
+};
+
+const shapeMarkSizeOf = (mark: AxisShapeTickMarkToken): { width: number; height: number; offset: number } => {
+  const size = mark.size ?? 4;
+  const width = mark.width ?? size;
+  const height = mark.height ?? size;
+  return { width, height, offset: mark.offset ?? Math.max(width, height) / 2 };
+};
+
+const axisTickLengthOf = (guide: AxisGuide): number => {
+  const line = axisTickLineMarkOf(guide);
+  if (line !== null) return line === false ? 0 : line.length;
+  const shape = axisShapeTickMarkOf(guide);
+  if (shape === null) return AXIS_TICK_LENGTH;
+  const size = shapeMarkSizeOf(shape);
+  return size.offset + Math.max(size.width, size.height) / 2;
+};
+
+const axisTickLineStyleOf = (guide: AxisGuide): GuidePathStyle | false => {
+  const line = axisTickLineMarkOf(guide);
+  if (line === null || line === false || line.line === false) return false;
+  return line.line;
+};
+
+type TickShapePlacement = {
+  point: readonly [number, number];
+  normal: readonly [number, number];
+  tangent: readonly [number, number];
+};
+
+const angleOf = (vector: readonly [number, number]): number => (Math.atan2(vector[1], vector[0]) * 180) / Math.PI;
+
+const axisTickShapeRefOf = (mark: AxisShapeTickMarkToken): IRNode['shape'] => {
+  if (mark.kind === AxisTickMarkKind.Circle) return 'circle';
+  if (mark.kind === AxisTickMarkKind.Square) return 'rectangle';
+  if (mark.kind === AxisTickMarkKind.Triangle) return { type: 'polygon', params: { sides: 3 } };
+  if (mark.kind === AxisTickMarkKind.Diamond) return 'diamond';
+  return 'shape' in mark ? mark.shape : 'rectangle';
+};
+
+const axisTickShapeRotationOf = (mark: AxisShapeTickMarkToken, placement: TickShapePlacement): number | undefined => {
+  const base = (() => {
+    if (mark.orientation === AxisTickShapeOrientation.Outward) return angleOf(placement.normal);
+    if (mark.orientation === AxisTickShapeOrientation.Inward) return angleOf(placement.normal) + 180;
+    if (mark.orientation === AxisTickShapeOrientation.Axis) return angleOf(placement.tangent);
+    return 0;
+  })();
+  const rotate = base + (mark.rotate ?? 0);
+  return rotate === 0 ? undefined : rotate;
+};
+
+const axisTickShapeNodesOf = (guide: AxisGuide, placements: ReadonlyArray<TickShapePlacement>): Array<IRNode> => {
+  const mark = axisShapeTickMarkOf(guide);
+  if (mark === null) return [];
+  const { width, height, offset } = shapeMarkSizeOf(mark);
+  return placements.map((placement): IRNode => {
+    const rotate = axisTickShapeRotationOf(mark, placement);
+    return {
+      type: 'node',
+      position: [placement.point[0] + placement.normal[0] * offset, placement.point[1] + placement.normal[1] * offset],
+      shape: axisTickShapeRefOf(mark),
+      padding: 0,
+      minimumSize: { width, height },
+      fill: mark.fill ?? 'currentColor',
+      ...(mark.stroke !== undefined ? { stroke: mark.stroke } : {}),
+      ...(mark.strokeWidth !== undefined ? { strokeWidth: mark.strokeWidth } : {}),
+      ...(mark.opacity !== undefined ? { opacity: mark.opacity } : {}),
+      ...(mark.drawOpacity !== undefined ? { drawOpacity: mark.drawOpacity } : {}),
+      ...(rotate !== undefined ? { rotate } : {}),
+    };
+  });
+};
 
 const axisTickLabelStyleOf = (guide: AxisGuide): GuideTextStyle | false =>
   guide.tickLabels === false ? false : textStyleProps(guide.tickLabels);
@@ -296,6 +381,12 @@ const lowerCartesianGuide = (
           [axisX + tickDirection * tickLength, p],
         ];
   });
+  const tickShapePlacements: Array<TickShapePlacement> = ticks.values.map(value => {
+    const p = project.coordinate(value);
+    return isX
+      ? { point: [p, axisY], normal: [0, tickDirection], tangent: [1, 0] }
+      : { point: [axisX, p], normal: [tickDirection, 0], tangent: [0, -1] };
+  });
   const axisLineStyle = axisLineStyleOf(guide);
   const tickLineStyle = axisTickLineStyleOf(guide);
   const axisLinePath =
@@ -307,6 +398,7 @@ const lowerCartesianGuide = (
           return path !== null && marks !== undefined ? { ...path, marks } : path;
         })();
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
+  const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
         const p = project.coordinate(value);
@@ -340,7 +432,7 @@ const lowerCartesianGuide = (
     const rotate = isX ? titleStyle.rotate : (titleStyle.rotate ?? cartesianYAxisTitleRotateOf(side));
     return { type: 'node', position, text: title.text, ...titleStyle, ...(rotate !== undefined ? { rotate } : {}) };
   })();
-  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...labels];
+  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...tickShapeNodes, ...labels];
   if (titleNode) axisChildren.push(titleNode);
   const axisLayer: IRScope | null = axisChildren.length > 0
     ? (() => {
@@ -431,12 +523,20 @@ const lowerAngularAxis = (
       finitePolarPoint(frame.center, theta, outer + tickLength),
     ];
   });
+  const tickShapePlacements: Array<TickShapePlacement> = ticks.values.map(value => {
+    const theta = scale.coordinate(value);
+    const point = finitePolarPoint(frame.center, theta, outer);
+    const radians = theta * DEG_TO_RAD;
+    return { point, normal: [Math.cos(radians), Math.sin(radians)], tangent: [-Math.sin(radians), Math.cos(radians)] };
+  });
   const axisLineStyle = axisLineStyleOf(guide);
   const tickLineStyle = axisTickLineStyleOf(guide);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
+  const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
   const axisChildren: Array<IRPath | IRNode> =
     axisLineStyle === false ? [] : [{ ...arcPath(frame, outer), ...lineStyleProps(axisLineStyle) }];
   if (tickPath) axisChildren.push(tickPath);
+  axisChildren.push(...tickShapeNodes);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
         const theta = scale.coordinate(value);
@@ -526,10 +626,16 @@ const lowerRadialAxis = (
     const point = finitePolarPoint(frame.center, baseAngle, radius);
     return [point, [point[0] - tangent[0] * tickLength, point[1] - tangent[1] * tickLength]];
   });
+  const tickShapePlacements: Array<TickShapePlacement> = ticks.values.map(value => {
+    const radius = scale.coordinate(value);
+    const point = finitePolarPoint(frame.center, baseAngle, radius);
+    return { point, normal: [-tangent[0], -tangent[1]], tangent: [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)] };
+  });
   const axisLineStyle = axisLineStyleOf(guide);
   const tickLineStyle = axisTickLineStyleOf(guide);
   const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
+  const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
         const radius = scale.coordinate(value);
@@ -553,7 +659,7 @@ const lowerRadialAxis = (
     });
   }
 
-  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...labels];
+  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...tickShapeNodes, ...labels];
   const axisLayer: IRScope | null = axisChildren.length > 0
     ? {
         type: 'scope',
@@ -638,12 +744,16 @@ const lowerTernaryGuide = (
   // ---- 轴层：baseP→apex 边 + 沿边刻度 + 外侧标签 ----
   const axisLine: Segment = [baseP, apex];
   const tickSegments: Array<Segment> = [];
+  const tickShapePlacements: Array<TickShapePlacement> = [];
   const labels: Array<IRNode> = [];
+  const axisTangentLength = Math.hypot(apex[0] - baseP[0], apex[1] - baseP[1]) || 1;
+  const axisTangent: [number, number] = [(apex[0] - baseP[0]) / axisTangentLength, (apex[1] - baseP[1]) / axisTangentLength];
   ticks.values.forEach((value, index) => {
     const t = Number(value);
     const point = lerp2(baseP, apex, t);
     const out = outwardAt(point);
     tickSegments.push([point, [point[0] + out[0] * tickLength, point[1] + out[1] * tickLength]]);
+    tickShapePlacements.push({ point, normal: out, tangent: axisTangent });
     if (showLabels) {
       const offset = tickLength + tickLabelGap + fontSize / 2;
       labels.push({
@@ -670,7 +780,8 @@ const lowerTernaryGuide = (
   const tickLineStyle = axisTickLineStyleOf(guide);
   const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
-  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...labels];
+  const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
+  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...tickShapeNodes, ...labels];
   const axisLayer: IRScope | null = axisChildren.length > 0
     ? {
         type: 'scope',
@@ -734,7 +845,8 @@ export const lowerCustomAxis = (
   }
   const scale = frame.roleScales?.[guide.dimension];
   if (!scale) return { gridLayer: null, axisLayer: null };
-  const ticks = resolveGuideTicks(scale, guide.ticks, guide.tickLabels || undefined);
+  const candidateTicks = resolveGuideTicks(scale, guide.ticks, guide.tickLabels || undefined);
+  const ticks = resolveVisibleGuideTicks(candidateTicks, guide.ticks, value => scale.coordinate(value));
   const numericTicks = ticks.values
     .map((value, index) => ({ value: Number(value), label: ticks.labels[index] }))
     .filter(tick => Number.isFinite(tick.value));
@@ -782,6 +894,7 @@ export const lowerCustomAxis = (
     return [point, [after[0] - before[0], after[1] - before[1]]];
   };
   const tickSegments: Array<Segment> = [];
+  const tickShapePlacements: Array<TickShapePlacement> = [];
   const labels: Array<IRNode> = [];
   for (const tick of numericTicks) {
     const resolved = pointAndTangent(tick.value);
@@ -789,7 +902,9 @@ export const lowerCustomAxis = (
     const [point, tangent] = resolved;
     const length = Math.hypot(tangent[0], tangent[1]) || 1;
     const normal: [number, number] = [-tangent[1] / length, tangent[0] / length];
+    const unitTangent: [number, number] = [tangent[0] / length, tangent[1] / length];
     tickSegments.push([point, [point[0] + normal[0] * tickLength, point[1] + normal[1] * tickLength]]);
+    tickShapePlacements.push({ point, normal, tangent: unitTangent });
     if (showLabels) {
       const offset = tickLength + tickLabelGap + fontSize / 2;
       labels.push({
@@ -823,7 +938,8 @@ export const lowerCustomAxis = (
   const tickLineStyle = axisTickLineStyleOf(guide);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   if (tickPath) lineChildren.push(tickPath);
-  const axisChildren: Array<IRPath | IRNode> = [...lineChildren, ...labels];
+  const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
+  const axisChildren: Array<IRPath | IRNode> = [...lineChildren, ...tickShapeNodes, ...labels];
   if (axisChildren.length === 0) return { gridLayer: null, axisLayer: null };
 
   const axisLayer: IRScope = {

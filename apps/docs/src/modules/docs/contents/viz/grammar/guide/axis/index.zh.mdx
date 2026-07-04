@@ -22,6 +22,18 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 
 <ComponentPreview name="axis-style-slots" sourceFiles={['axis-style-slots.data.ts']} />
 
+### 刻度密度
+
+`ticks.count` 是给 scale 的目标数量提示，不保证最终数量。需要固定间隔时用 `ticks.interval`，需要从候选 tick 中抽稀时用 `ticks.density`；`ticks.mark` 可以把短线换成内置形状或自定义 core shape。
+
+| 配置 | 主要形态 | 用途 |
+| ---- | -------- | ---- |
+| `interval` | `{ kind:'number', step, anchor? }` / `{ kind:'time', unit, step?, anchor? }` / `{ kind:'category', step, offset? }` | 生成固定间隔候选 tick |
+| `density` | `{ kind:'all' }` / `{ kind:'sample', maxCount?, minGap?, preserveEnds? }` | 从候选 tick 中抽稀可见 tick |
+| `mark` | `false` / `{ kind:'line', length?, line? }` / `{ kind:'circle' \| 'square' \| 'triangle' \| 'diamond', ... }` / `{ kind:'custom', shape, ... }` | 控制刻度标记外观 |
+
+<ComponentPreview name="axis-tick-density" sourceFiles={['axis-tick-density.data.ts']} />
+
 ### 原点轴
 
 cartesian 下可以让轴线穿过另一维的指定值。`placement.kind="origin"` 只改变轴线摆放，不会自动扩展 domain；需要原点可见时，请显式配置 `domain` 或 `domainPadding`。`line.arrow` 用 `positive` / `negative` 表达轴方向端点，`line.extent` 控制轴线覆盖的数据范围。
@@ -44,7 +56,7 @@ polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向
 | `scale`      | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt' \| 'symlog' \| 'radial'` | 自动派生   | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`，仅适用于 x / y / z |
 | `placement`  | `{ kind:'auto' } \| { kind:'side', side, offset? } \| { kind:'edge', edge, offset? } \| { kind:'origin', origin?, tickSide?, offset? }` | 自动推断 | 坐标轴摆放；`origin` 仅支持 cartesian，x 轴的 `origin` 是 y 值，y 轴的 `origin` 是 x 值 |
 | `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap?, extent?, arrow? }` | 默认轴线 | 轴线样式与端点几何；`extent` 控制数据范围，`arrow.positive/negative` 控制轴方向箭头；`extent` / `arrow` 目前仅支持 cartesian |
-| `ticks`      | `{ count?, values?, length?, line? }`              | 默认刻度   | 目标刻度数或显式刻度值；`line` 可设刻度线样式，`line: false` 隐藏刻度线 |
+| `ticks`      | `{ count?, values?, interval?, density?, mark?, length?, line? }` | 默认刻度   | `values > interval > count` 生成候选 tick；`density` 抽稀可见 tick；`mark` 控制短线 / 形状刻度，`length` / `line` 是 line mark 的旧快捷写法 |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | `true` | 刻度文字配置；设为 `false` 隐藏刻度文字；`format` 支持 d3-format / d3-time-format 风格字符串 |
 | `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | 轴标题；`text` 复用 core 文本块能力，可写多行或带 run 的结构化文本 |
 | `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | 是否画对齐本轴刻度的网格线（polar 的 y 轴即同心环），对象写法可覆盖网格线样式 |

@@ -163,6 +163,17 @@ const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> =
     if (ctx.axisGuides.some(guide => guide.placement?.kind === 'side')) {
       throw new Error('lowerPlots: ternary2D axis does not support cardinal side placement; use auto or edge');
     }
+    if (
+      ctx.axisGuides.some(
+        guide =>
+          guide.ticks?.count !== undefined ||
+          guide.ticks?.values !== undefined ||
+          guide.ticks?.interval !== undefined ||
+          guide.ticks?.density !== undefined,
+      )
+    ) {
+      throw new Error('lowerPlots: ternary2D axis does not support custom tick source or density');
+    }
     assertUniqueAxisPlacement(ctx.axisGuides);
     const hasAxis = ctx.axisGuides.length > 0;
     const showAnyLabels = ctx.axisGuides.some(guide => guide.tickLabels !== false);

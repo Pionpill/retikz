@@ -68,6 +68,80 @@ export const AxisGridApplyTo = {
 /** 坐标轴网格投放模式取值。 */
 export type AxisGridApplyToValue = ValueOf<typeof AxisGridApplyTo>;
 
+/** 固定间隔 tick source kind。 */
+export const GuideTickIntervalKind = {
+  /** 数值轴按固定数值步长生成 tick。 */
+  Number: 'number',
+  /** 时间轴按固定 UTC 时间单位生成 tick。 */
+  Time: 'time',
+  /** 分类型轴按类别序号间隔抽取 tick。 */
+  Category: 'category',
+} as const;
+
+/** 固定间隔 tick source kind 取值。 */
+export type GuideTickIntervalKindValue = ValueOf<typeof GuideTickIntervalKind>;
+
+/** 时间间隔单位。 */
+export const GuideTickTimeUnit = {
+  Millisecond: 'millisecond',
+  Second: 'second',
+  Minute: 'minute',
+  Hour: 'hour',
+  Day: 'day',
+  Week: 'week',
+  Month: 'month',
+  Quarter: 'quarter',
+  Year: 'year',
+} as const;
+
+/** 时间间隔单位取值。 */
+export type GuideTickTimeUnitValue = ValueOf<typeof GuideTickTimeUnit>;
+
+/** tick 可见密度策略 kind。 */
+export const AxisTickDensityKind = {
+  /** 保留全部候选 tick。 */
+  All: 'all',
+  /** 对候选 tick 做确定性抽样。 */
+  Sample: 'sample',
+} as const;
+
+/** tick 可见密度策略 kind 取值。 */
+export type AxisTickDensityKindValue = ValueOf<typeof AxisTickDensityKind>;
+
+/** tick mark 形态 kind。 */
+export const AxisTickMarkKind = {
+  /** 短线 tick mark。 */
+  Line: 'line',
+  /** 圆形 tick mark。 */
+  Circle: 'circle',
+  /** 方形 tick mark。 */
+  Square: 'square',
+  /** 三角形 tick mark。 */
+  Triangle: 'triangle',
+  /** 菱形 tick mark。 */
+  Diamond: 'diamond',
+  /** 自定义 core Node shape tick mark。 */
+  Custom: 'custom',
+} as const;
+
+/** tick mark 形态 kind 取值。 */
+export type AxisTickMarkKindValue = ValueOf<typeof AxisTickMarkKind>;
+
+/** shape tick mark 方向策略。 */
+export const AxisTickShapeOrientation = {
+  /** 沿 tick 外法线方向。 */
+  Outward: 'outward',
+  /** 沿 tick 内法线方向。 */
+  Inward: 'inward',
+  /** 沿轴线切向。 */
+  Axis: 'axis',
+  /** 使用显式 rotate 或 0。 */
+  Fixed: 'fixed',
+} as const;
+
+/** shape tick mark 方向策略取值。 */
+export type AxisTickShapeOrientationValue = ValueOf<typeof AxisTickShapeOrientation>;
+
 /**
  * 图例绑定的非位置通道名。
  * @description schema 只要求非空字符串；该通道是否存在、是否产出 legend descriptor，由 channel registry 在 lowering 时解析。

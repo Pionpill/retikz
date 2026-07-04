@@ -16,7 +16,7 @@ import type { Coordinate, Polar1DCoordinate } from '../../../schemas';
 import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
 import { computePolarCoordinate } from '../../../shared';
-import { resolveGuideTicks } from '../../scale/shared';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
@@ -249,26 +249,35 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radialAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
+    const angleRangeOverride = ctx.roleRangeOverrides?.x;
+    if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
       ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
+      : undefined;
+    const layoutAngularTicks = angularAxis
+      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
       : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
       {
         hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
-        angularLabels: angularTicks?.labels ?? [],
+        angularLabels: layoutAngularTicks?.labels ?? [],
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
-    const angleRangeOverride = ctx.roleRangeOverrides?.x;
     const radiusRangeOverride = ctx.roleRangeOverrides?.y;
-    if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     if (radiusRangeOverride !== undefined) radiusScale.setRange([radiusRangeOverride[0], radiusRangeOverride[1]]);
     const radialTicks: TickSet | undefined = radialAxis
       ? (ctx.collectAxisTicks('y') ?? resolveGuideTicks(radiusScale, radialAxis.ticks, radialAxis.tickLabels || undefined))
+      : undefined;
+    const visibleAngularTicks = angularAxis
+      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
+      : undefined;
+    const visibleRadialTicks = radialAxis
+      ? resolveVisibleGuideTicks(radialTicks ?? EMPTY_TICKS, radialAxis.ticks, value => radiusScale.coordinate(value))
       : undefined;
     const [radiusRangeStart, radiusRangeEnd] = radiusScale.range();
     const frameInnerRadius = Math.min(radiusRangeStart, radiusRangeEnd);
@@ -288,13 +297,13 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: angleScale,
       projectY: radiusScale,
-      xTicks: angularTicks ?? EMPTY_TICKS,
-      yTicks: radialTicks ?? EMPTY_TICKS,
+      xTicks: visibleAngularTicks ?? EMPTY_TICKS,
+      yTicks: visibleRadialTicks ?? EMPTY_TICKS,
       fontSize: ctx.fontSize,
       labelGap: ctx.labelGap,
       frame,
-      angularTicks: angularTicks ?? EMPTY_TICKS,
-      radialTicks: radialTicks ?? EMPTY_TICKS,
+      angularTicks: visibleAngularTicks ?? EMPTY_TICKS,
+      radialTicks: visibleRadialTicks ?? EMPTY_TICKS,
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
     return {
@@ -325,12 +334,15 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angularTicks: TickSet | undefined = angularAxis
       ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
       : undefined;
+    const visibleAngularTicks = angularAxis
+      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
+      : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
       {
         hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
-        angularLabels: angularTicks?.labels ?? [],
+        angularLabels: visibleAngularTicks?.labels ?? [],
       },
       { fontSize: ctx.fontSize, margin: ctx.margin },
     );
@@ -359,12 +371,12 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: angleScale,
       projectY: angleScale,
-      xTicks: angularTicks ?? EMPTY_TICKS,
+      xTicks: visibleAngularTicks ?? EMPTY_TICKS,
       yTicks: EMPTY_TICKS,
       fontSize: ctx.fontSize,
       labelGap: ctx.labelGap,
       frame: guidePolarCoordinate,
-      angularTicks: angularTicks ?? EMPTY_TICKS,
+      angularTicks: visibleAngularTicks ?? EMPTY_TICKS,
       radialTicks: EMPTY_TICKS,
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
