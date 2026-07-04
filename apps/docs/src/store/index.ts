@@ -1,2 +1,2 @@
-export * from './use-layout-store';
-export * from './use-theme-store';
+export * from './useLayoutStore';
+export * from './useThemeStore';

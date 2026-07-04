@@ -1,4 +1,4 @@
-﻿import type { FC, HTMLAttributes } from 'react';
+import type { FC, HTMLAttributes } from 'react';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,13 +7,18 @@ import type { MdxFrontmatter } from '@/modules/docs/components/mdx-content';
 
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
-import { BlogFrontmatter } from '@/modules/docs/components/blog-frontmatter';
 import { ChangelogOverview, changelogToMarkdown, ChangelogVersionDetail } from '@/modules/docs/components/changelog';
 import { InlineMdx, MdxContent, mdxHasToc, MdxToc } from '@/modules/docs/components/mdx-content';
-import { changelogForModule, changelogPageDescription, changelogVersionSlug, getSectionsByModule } from '@/modules/docs/data';
+import {
+  changelogForModule,
+  changelogPageDescription,
+  changelogVersionSlug,
+  getSectionsByModule,
+} from '@/modules/docs/data';
 import { buildDocPageLinks } from '@/modules/docs/lib/doc-links';
 import { useTocStore } from '@/modules/docs/store';
 
+import { BlogFrontmatter } from './BlogFrontmatter';
 import { docPathSegments, isChangelogLocation, useDocLocation } from './doc-location';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';

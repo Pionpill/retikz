@@ -6,7 +6,6 @@ import { Link } from 'react-router';
 
 import { cn } from '@/lib/utils';
 
-import { CodeBlockCommand } from '../code-block-command';
 import { Comparison } from '../comparison';
 import { ComponentAlert } from '../component-alert';
 import { ComponentPreview } from '../component-preview';
@@ -164,7 +163,6 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  CodeBlockCommand,
   Comparison,
   ComponentAlert,
   ComponentPreview,

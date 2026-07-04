@@ -7,10 +7,7 @@ export type BlogFrontmatterProps = {
   tags?: Array<string>;
 };
 
-/**
- * 博客文章正文上方的元数据条：日期 + 标签 chips
- * @description 纯 Tailwind 实现，不引入 shadcn vendored 组件，避免新依赖与 dev pre-bundle 抖动
- */
+/** 博客文章正文上方的元数据条。 */
 export const BlogFrontmatter: FC<BlogFrontmatterProps> = props => {
   const { date, tags } = props;
   if (!date && (!tags || tags.length === 0)) return null;
