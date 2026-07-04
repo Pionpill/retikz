@@ -20,6 +20,20 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
+  it('legend_style_accepts_size_symbol_layout_tokens', () => {
+    const guide = {
+      type: 'legend',
+      channel: 'size',
+      style: {
+        symbolSize: 12,
+        symbolScale: 0.75,
+        symbolFit: 'preserve',
+      },
+    };
+
+    expect(LegendGuideSchema.parse(guide)).toEqual(guide);
+  });
+
   it('axis_grid_accepts_independent_tick_source_density_minor_and_line_cap', () => {
     const guide = {
       type: 'axis',
@@ -86,6 +100,14 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { bandPosition: 1.1 } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: true } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: {} } })).toThrow();
+  });
+
+  it('legend_symbol_layout_rejects_invalid_values', () => {
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'size', style: { symbolSize: 0 } })).toThrow();
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'size', style: { symbolScale: 0 } })).toThrow();
+    expect(() =>
+      LegendGuideSchema.parse({ type: 'legend', channel: 'size', style: { symbolFit: 'stretch' } }),
+    ).toThrow();
   });
 
   // 交互

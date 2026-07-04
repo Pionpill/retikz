@@ -1802,18 +1802,22 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     let cursorX = band.x;
     let rowY = cursorY;
     for (const entry of input.entries) {
+      const symbolSide =
+        entry.radius !== undefined ? Math.max(swatchSize, entry.radius * Math.SQRT2) : swatchSize;
+      const symbolCenter: [number, number] = [cursorX + symbolSide / 2, rowY + symbolSide / 2];
       if (entry.shape !== undefined) {
         // shape 图例：swatch 本身就是编码的 glyph（circle / rectangle / diamond…），不画矩形框
         children.push({
           type: 'node',
-          position: [cursorX + swatchSize / 2, rowY + swatchSize / 2],
+          position: symbolCenter,
           shape: entry.shape,
           minimumSize: swatchSize,
           fill: entry.color ?? 'currentColor',
         });
       } else {
         // color / 分箱 / opacity / size：矩形色块（size 再叠圆点）
-        const swatch = rectNode(cursorX, rowY, swatchSize, swatchSize);
+        const swatchOffset = (symbolSide - swatchSize) / 2;
+        const swatch = rectNode(cursorX + swatchOffset, rowY + swatchOffset, swatchSize, swatchSize);
         if (entry.color !== undefined) swatch.fill = entry.color;
         if (entry.opacity !== undefined) {
           swatch.fill = 'currentColor';
@@ -1824,7 +1828,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
         if (entry.radius !== undefined) {
           children.push({
             type: 'node',
-            position: [cursorX + swatchSize / 2, rowY + swatchSize / 2],
+            position: symbolCenter,
             shape: 'circle',
             minimumSize: entry.radius * Math.SQRT2,
             fill: 'currentColor',
@@ -1832,11 +1836,11 @@ export const lowerLegend = (input: LegendInput): IRScope => {
         }
       }
       // 标签：swatch 右侧
-      const labelX = cursorX + swatchSize + swatchGap + estimateLabelWidth(entry.label, fontSize) / 2;
-      const labelY = rowY + swatchSize / 2;
+      const labelX = cursorX + symbolSide + swatchGap + estimateLabelWidth(entry.label, fontSize) / 2;
+      const labelY = rowY + symbolSide / 2;
       children.push(legendTextNode({ type: 'node', position: [labelX, labelY], text: entry.label, ...labelStyle }));
       if (vertical) {
-        rowY += swatchSize + entryGap;
+        rowY += symbolSide + entryGap;
       } else {
         cursorX = labelX + estimateLabelWidth(entry.label, fontSize) / 2 + entryGap;
       }

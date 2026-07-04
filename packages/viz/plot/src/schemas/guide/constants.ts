@@ -291,6 +291,20 @@ export const LegendOrient = {
 export type LegendOrientValue = ValueOf<typeof LegendOrient>;
 
 /**
+ * 图例符号尺寸适配策略。
+ * @description fit 会把 size legend 的符号压入 symbolSize 盒子；preserve 保留通道 descriptor 的原始半径。
+ */
+export const LegendSymbolFit = {
+  /** 压入 legend symbol 盒子。 */
+  Fit: 'fit',
+  /** 保留 descriptor 半径。 */
+  Preserve: 'preserve',
+} as const;
+
+/** 图例符号尺寸适配策略。 */
+export type LegendSymbolFitValue = ValueOf<typeof LegendSymbolFit>;
+
+/**
  * guide 绑定的坐标系定位维度名。
  * @description schema 只要求非空字符串；该维度是否被坐标系支持，由 CoordinateDefinition.roles 在 lowering 时校验。
  */

@@ -27,8 +27,9 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 | ADR-08 | **axis title layout and anchor strategy** | 为 axis title 统一复用 core position 关键字，`gap` 改名为 `padding`，并补齐 shift、结构化 anchor 与 title layout 避让策略 | Accepted（已实现） |
 | ADR-09 | **axis grid source and style strategy** | 为 axis grid 增加独立 tick source、density、minor grid、bandPosition 与 lineCap；层级 / z-order 延后统一讨论 | Accepted |
 | ADR-10 | **plot decoration layout and placement strategy** | 用 LayoutClaim 统一整图标题、caption、source note、legend、axis title / labels 等 decoration 的占位、placement 与避让；明确静态文案公开归 `labels`，scale-bound 文本仍归 guide | Accepted（首轮实现） |
+| ADR-11 | **legend size symbol layout and scaling strategy** | 为 size legend 增加 `symbolSize`、`symbolScale`、`symbolFit`，默认把大半径符号压入图例 symbol 盒子，并让 legend 条目按最终符号尺寸预留空间 | Accepted（首轮实现） |
 
-> 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`、`08-axis-title-layout.md`、`09-axis-grid-source-and-style.md`、`10-plot-decoration-layout.md`。
+> 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`、`08-axis-title-layout.md`、`09-axis-grid-source-and-style.md`、`10-plot-decoration-layout.md`、`11-legend-size-symbol-layout.md`。
 
 ## 依赖与顺序
 
@@ -42,6 +43,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 8. **ADR-08 补 axis title 布局与锚点**：复用 core path label 的 position 关键字心智模型，修正 `gap -> padding` 命名，并把端点标题的锚点、微调和自动避让做成配置，而不是 chart preset 私有规则。
 9. **ADR-09 补 axis grid 来源与样式**：复用 guide tick source / density 模型，为 grid 增加独立 source、minor grid、bandPosition 和 lineCap；grid 层级等待后续统一 layer 模型。
 10. **ADR-10 统一 decoration 空间布局**：在 axis 局部 placement 之外建立整图 LayoutClaim 模型，让 plot title、caption、source note、legend、axis title / tick labels 等都通过同一阶段声明占位、定位和避让；后续 layer / z-order 仍单独处理。
+11. **ADR-11 修正 size legend 符号布局**：在 ADR-04 legend token 的基础上补齐 `symbolSize`、`symbolScale`、`symbolFit`，默认避免 size legend 大半径符号遮挡相邻条目，同时保留 `preserve` 给真实尺寸图例。
 
 ## 关键设计约束
 

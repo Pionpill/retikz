@@ -82,6 +82,7 @@ import {
   scaleTicks,
   validateBoundData,
 } from '../providers';
+import { LegendSymbolFit } from '../schemas';
 import {
   AxisGridApplyTo,
   FieldOrderMode,
@@ -1459,9 +1460,17 @@ const buildLegendLayers = (
       // 半径据 descriptor range（与 mark 实绘同源）线性插值（sqrt domain→radius）
       const [rMin, rMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
       const radiusScale = resolveSqrtForLegend([lo, hi], [rMin, rMax]);
+      const symbolRadiusLimit = style.symbolSize / Math.SQRT2;
+      const fitScale =
+        style.symbolFit === LegendSymbolFit.Fit && Number.isFinite(rMax) && rMax > 0
+          ? Math.min(1, symbolRadiusLimit / rMax)
+          : 1;
       const entries: Array<LegendEntry> = reps.map(tick => ({
         label: showLabels ? tick.label : '',
-        radius: radiusScale(tick.value),
+        radius:
+          (style.symbolFit === LegendSymbolFit.Fit
+            ? Math.min(radiusScale(tick.value) * fitScale, symbolRadiusLimit)
+            : radiusScale(tick.value)) * style.symbolScale,
       }));
       return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
     }

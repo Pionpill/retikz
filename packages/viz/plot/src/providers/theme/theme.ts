@@ -2,6 +2,7 @@ import type { IRNode, IRPath } from '@retikz/core';
 
 import type { AxisGuide, LegendGuide, PlotTheme } from '../../schemas';
 
+import { LegendSymbolFit } from '../../schemas';
 import { DEFAULT_PLOT_COLORS, PlotColorScheme } from '../scale/shared';
 
 type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'drawOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>>;
@@ -27,7 +28,18 @@ export type ResolvedPlotPalette = {
 
 /** Plot legend 解析后的视觉 token。 */
 export type ResolvedLegendGuideTokens = Required<
-  Pick<LegendStyle, 'swatchSize' | 'swatchGap' | 'entryGap' | 'titleGap' | 'rampLength' | 'rampThickness'>
+  Pick<
+    LegendStyle,
+    | 'swatchSize'
+    | 'swatchGap'
+    | 'entryGap'
+    | 'titleGap'
+    | 'rampLength'
+    | 'rampThickness'
+    | 'symbolSize'
+    | 'symbolScale'
+    | 'symbolFit'
+  >
 > & {
   /** Legend title 文本样式。 */
   title: GuideTextStyle;
@@ -60,6 +72,9 @@ const DEFAULT_LEGEND: ResolvedLegendGuideTokens = {
   titleGap: 6,
   rampLength: 100,
   rampThickness: 12,
+  symbolSize: 14,
+  symbolScale: 1,
+  symbolFit: LegendSymbolFit.Fit,
   title: DEFAULT_TYPOGRAPHY,
   label: DEFAULT_TYPOGRAPHY,
 };
@@ -119,6 +134,9 @@ export const resolvePlotTheme = (
       titleGap: legend?.titleGap ?? DEFAULT_LEGEND.titleGap,
       rampLength: legend?.rampLength ?? DEFAULT_LEGEND.rampLength,
       rampThickness: legend?.rampThickness ?? DEFAULT_LEGEND.rampThickness,
+      symbolSize: legend?.symbolSize ?? legend?.swatchSize ?? DEFAULT_LEGEND.symbolSize,
+      symbolScale: legend?.symbolScale ?? DEFAULT_LEGEND.symbolScale,
+      symbolFit: legend?.symbolFit ?? DEFAULT_LEGEND.symbolFit,
       title: mergeTextStyle(typography, legend?.title),
       label: mergeTextStyle(typography, legend?.label),
     },
@@ -242,6 +260,9 @@ export const resolveLegendGuideTokens = (
   titleGap: local?.titleGap ?? theme.legend.titleGap,
   rampLength: local?.rampLength ?? theme.legend.rampLength,
   rampThickness: local?.rampThickness ?? theme.legend.rampThickness,
+  symbolSize: local?.symbolSize ?? local?.swatchSize ?? theme.legend.symbolSize,
+  symbolScale: local?.symbolScale ?? theme.legend.symbolScale,
+  symbolFit: local?.symbolFit ?? theme.legend.symbolFit,
   title: mergeTextStyle(theme.legend.title, local?.title),
   label: mergeTextStyle(theme.legend.label, local?.label),
 });

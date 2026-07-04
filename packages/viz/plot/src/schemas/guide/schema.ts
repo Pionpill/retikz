@@ -29,6 +29,7 @@ import {
   GuideTickTimeUnit,
   LegendOrient,
   LegendPosition,
+  LegendSymbolFit,
   PlotGuide,
 } from './constants';
 
@@ -533,6 +534,9 @@ export const LegendGuideStyleSchema = z
     titleGap: z.number().nonnegative().optional().describe('Gap between legend title and the first entry, in user units'),
     rampLength: z.number().positive().optional().describe('Continuous legend ramp long edge length in user units'),
     rampThickness: z.number().positive().optional().describe('Continuous legend ramp short edge thickness in user units'),
+    symbolSize: z.number().positive().optional().describe('Target visual box size for symbol-like legend entries; omit = swatchSize'),
+    symbolScale: z.number().positive().optional().describe('Scale factor applied to legend symbols after the fit strategy; omit = 1'),
+    symbolFit: z.enum(LegendSymbolFit).optional().describe('How size legend symbols map descriptor radius into the legend symbol box; omit = fit'),
     title: GuideTextStyleSchema.optional().describe('Legend title text style'),
     label: GuideTextStyleSchema.optional().describe('Legend entry label text style'),
   })

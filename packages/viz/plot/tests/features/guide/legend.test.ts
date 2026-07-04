@@ -56,6 +56,14 @@ const swatchNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text === undefined);
 const labelsOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text !== undefined);
+const sizeSymbolNodesOf = (scope: IRScope): Array<IRNode> =>
+  scope.children.filter(isNode).filter(node => node.text === undefined && node.shape === 'circle');
+
+const nodeMinimumSide = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return Math.max(size?.width ?? 0, size?.height ?? 0, size?.default ?? 0);
+};
 
 /** 找 legend 层：约定 id 以 'legend' 开头（lowerLegend 给稳定 id）；退化用结构特征兜底（含 swatch Node + label Node） */
 const findLegendLayer = (outer: IRScope): IRScope | undefined => {
@@ -319,6 +327,51 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     // 梯度符号：≥2 档代表大小（nice 3 档左右）+ 值标签
     const labels = labelsOf(legend as IRScope);
     expect(labels.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('size_legend_default_symbols_fit_inside_symbol_box', () => {
+    const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(14 + 1e-9);
+  });
+
+  it('size_legend_symbol_size_style_controls_fit_box', () => {
+    const outer = expandOf(sizeLegendSpec({ style: { symbolSize: 10 } }), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + 1e-9);
+  });
+
+  it('size_legend_preserve_keeps_descriptor_radius_and_reserves_space', () => {
+    const outer = expandOf(sizeLegendSpec({ style: { symbolFit: 'preserve' } }), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeGreaterThan(14);
+    const [first, second] = symbols;
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    const yGap = Math.abs(((second).position as [number, number])[1] - ((first).position as [number, number])[1]);
+    expect(yGap).toBeGreaterThanOrEqual((nodeMinimumSide(first) + nodeMinimumSide(second)) / 2 + 6);
+  });
+
+  it('theme_legend_symbol_size_is_overridden_by_local_style', () => {
+    const themed = PlotSpecSchema.parse({
+      ...sizeLegendSpec({ style: { symbolSize: 10 } }),
+      theme: { legend: { symbolSize: 18 } },
+    });
+    const outer = expandOf(themed, { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + 1e-9);
   });
 });
 

@@ -106,6 +106,14 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 | `layout` | `{ mode?, autoPadding?, padding?, maxIterations?, collision? }` | auto layout | Controls whether plot labels reserve space automatically; `mode:'fixed'` or `autoPadding:false` places text without shrinking the plot area |
 | `labels` | `Array<{ type:'text', role?, text, placement?, reserveSpace?, priority?, overflow?, ...textStyle }>` | `[]` | Static plot text; `role:'title'/'caption'/'source'` reserves space by default, while `role:'note'` and `kind:'point'` only place text by default |
 
+Legend `style` also controls size legend symbols. By default, `symbolFit:'fit'` keeps size symbols inside the `symbolSize` box so large radius values do not overlap neighboring legend entries. Use `symbolFit:'preserve'` when the legend must keep the rendered radius.
+
+| Field | Type | Default | Description |
+| ----- | ---- | ------- | ----------- |
+| `style.symbolSize` | `number` | `style.swatchSize` | Target visual box for symbol-like legends such as size and shape |
+| `style.symbolScale` | `number` | `1` | Scale factor applied to legend symbols |
+| `style.symbolFit` | `'fit' \| 'preserve'` | `'fit'` | `fit` maps size symbols into `symbolSize`; `preserve` keeps descriptor radius and reserves entry space from the final symbol size |
+
 ## Related
 
 - [Coordinates](/viz/grammar/coordinate) — the polar switch and channel roles
