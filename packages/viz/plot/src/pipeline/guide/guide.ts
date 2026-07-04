@@ -20,7 +20,11 @@ import { defaultOriginAxisTickSideOf } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../providers/scale/shared';
 import {
   AxisCardinalSide,
+  AxisCrossingCorner,
+  AxisCrossingLabelPolicy,
+  AxisCrossingTickPolicy,
   AxisPlacementKind,
+  AxisTickEndpointAffect,
   AxisTickLabelHideStrategy,
   AxisTickLabelOverflow,
   AxisTickMarkKind,
@@ -98,6 +102,9 @@ const axisLineMarksOf = (guide: AxisGuide): IRPath['marks'] | undefined => {
 type AxisTicksToken = NonNullable<AxisGuide['ticks']>;
 type AxisTickMarkToken = Exclude<NonNullable<AxisTicksToken['mark']>, false>;
 type AxisShapeTickMarkToken = Exclude<AxisTickMarkToken, { kind: 'line' }>;
+type AxisCrossingToken = Exclude<NonNullable<AxisGuide['crossing']>, false>;
+type AxisTickEndpointPolicyToken = Exclude<NonNullable<AxisTicksToken['endpoint']>, false>;
+type AxisGuideValue = string | number;
 
 const axisTickLineMarkOf = (guide: AxisGuide): { length: number; line: GuidePathStyle | false } | false | null => {
   const mark = guide.ticks?.mark;
@@ -135,6 +142,75 @@ const axisTickLineStyleOf = (guide: AxisGuide): GuidePathStyle | false => {
   if (line === null || line === false || line.line === false) return false;
   return line.line;
 };
+
+const axisCrossingTokenOf = (guide: AxisGuide): AxisCrossingToken | undefined =>
+  guide.crossing !== undefined && guide.crossing !== false ? guide.crossing : undefined;
+
+const axisCrossingValueOf = (guide: AxisGuide): AxisGuideValue | undefined => {
+  const crossing = axisCrossingTokenOf(guide);
+  return crossing === undefined ? undefined : (crossing.value ?? 0);
+};
+
+const axisGuideValuesEqual = (a: AxisGuideValue, b: AxisGuideValue): boolean =>
+  typeof a === 'number' && typeof b === 'number' ? Math.abs(a - b) <= 1e-6 : String(a) === String(b);
+
+const isCrossingTickValue = (guide: AxisGuide, value: AxisGuideValue): boolean => {
+  const crossingValue = axisCrossingValueOf(guide);
+  return crossingValue !== undefined && axisGuideValuesEqual(crossingValue, value);
+};
+
+const shouldHideCrossingTickMark = (guide: AxisGuide, value: AxisGuideValue): boolean =>
+  axisCrossingTokenOf(guide)?.tick === AxisCrossingTickPolicy.Hide && isCrossingTickValue(guide, value);
+
+const shouldHideCrossingTickLabel = (guide: AxisGuide, value: AxisGuideValue): boolean =>
+  axisCrossingTokenOf(guide)?.label === AxisCrossingLabelPolicy.Hide && isCrossingTickValue(guide, value);
+
+const shouldUseCrossingCornerLabel = (guide: AxisGuide, value: AxisGuideValue): boolean =>
+  axisCrossingTokenOf(guide)?.label === AxisCrossingLabelPolicy.Corner && isCrossingTickValue(guide, value);
+
+const crossingCornerVectorOf = (corner: AxisCrossingToken['corner']): readonly [number, number] => {
+  if (corner === AxisCrossingCorner.TopLeft) return [-1, -1];
+  if (corner === AxisCrossingCorner.TopRight) return [1, -1];
+  if (corner === AxisCrossingCorner.BottomRight) return [1, 1];
+  return [-1, 1];
+};
+
+const axisTickEndpointPolicyOf = (guide: AxisGuide): AxisTickEndpointPolicyToken | undefined => {
+  const endpoint = guide.ticks?.endpoint;
+  return endpoint !== undefined && endpoint !== false ? endpoint : undefined;
+};
+
+const hasAxisArrowEnd = (
+  arrow: NonNullable<AxisLineToken['arrow']>['negative'] | NonNullable<AxisLineToken['arrow']>['positive'],
+): boolean => arrow !== undefined && arrow !== false;
+
+const shouldHideEndpointTickMark = (
+  guide: AxisGuide,
+  projected: number,
+  range: readonly [number, number],
+  tickLength: number,
+): boolean => {
+  if (guide.ticks?.endpoint === false) return false;
+  const arrow = axisLineTokenOf(guide)?.arrow;
+  if (arrow === undefined) return false;
+  const endpoint = axisTickEndpointPolicyOf(guide);
+  if (endpoint?.hideWhenArrow === false) return false;
+  const distance = endpoint?.distance ?? tickLength + 6;
+  const [negative, positive] = range;
+  return (
+    (hasAxisArrowEnd(arrow.negative) && Math.abs(projected - negative) <= distance) ||
+    (hasAxisArrowEnd(arrow.positive) && Math.abs(projected - positive) <= distance)
+  );
+};
+
+const shouldHideEndpointTickLabel = (
+  guide: AxisGuide,
+  projected: number,
+  range: readonly [number, number],
+  tickLength: number,
+): boolean =>
+  axisTickEndpointPolicyOf(guide)?.affect === AxisTickEndpointAffect.MarkAndLabel &&
+  shouldHideEndpointTickMark(guide, projected, range, tickLength);
 
 type TickShapePlacement = {
   point: readonly [number, number];
@@ -587,8 +663,14 @@ const lowerCartesianGuide = (
           [axisX, top],
         ];
   })();
-  const tickSegments: Array<Segment> = ticks.values.map(value => {
-    const p = project.coordinate(value);
+  const axisRange: readonly [number, number] = isX ? [axisLine[0][0], axisLine[1][0]] : [axisLine[0][1], axisLine[1][1]];
+  const tickEntries = ticks.values.map((value, index) => ({ value, label: ticks.labels[index], projected: project.coordinate(value) }));
+  const visibleTickMarkEntries = tickEntries.filter(entry => {
+    if (shouldHideCrossingTickMark(guide, entry.value)) return false;
+    return !shouldHideEndpointTickMark(guide, entry.projected, axisRange, tickLength);
+  });
+  const tickSegments: Array<Segment> = visibleTickMarkEntries.map(entry => {
+    const p = entry.projected;
     return isX
       ? [
           [p, axisY],
@@ -599,8 +681,8 @@ const lowerCartesianGuide = (
           [axisX + tickDirection * tickLength, p],
         ];
   });
-  const tickShapePlacements: Array<TickShapePlacement> = ticks.values.map(value => {
-    const p = project.coordinate(value);
+  const tickShapePlacements: Array<TickShapePlacement> = visibleTickMarkEntries.map(entry => {
+    const p = entry.projected;
     return isX
       ? { point: [p, axisY], normal: [0, tickDirection], tangent: [1, 0] }
       : { point: [axisX, p], normal: [tickDirection, 0], tangent: [0, -1] };
@@ -618,27 +700,47 @@ const lowerCartesianGuide = (
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
   const labels: Array<IRNode> = showLabels
-    ? layoutTickLabelNodes(
-        guide,
-        ticks.values.map((value, index): IRNode => {
-          const p = project.coordinate(value);
-          const text = ticks.labels[index];
-          const position: [number, number] = isX
-            ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
-            : [
-                axisX +
-                  tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2),
-                p,
-              ];
-          return { type: 'node', position, text, ...tickLabelStyle };
-        }),
-        {
+    ? (() => {
+        const cornerLabels: Array<IRNode> = [];
+        const layoutLabels = tickEntries.flatMap((entry): Array<IRNode> => {
+          if (shouldHideCrossingTickLabel(guide, entry.value)) return [];
+          if (shouldHideEndpointTickLabel(guide, entry.projected, axisRange, tickLength)) return [];
+          const p = entry.projected;
+          const text = entry.label;
+          const isCornerLabel = shouldUseCrossingCornerLabel(guide, entry.value);
+          const position: [number, number] = (() => {
+            if (isCornerLabel) {
+              const vector = crossingCornerVectorOf(axisCrossingTokenOf(guide)?.corner);
+              const distance = tickLength + tickLabelGap + fontSize / 2;
+              return isX
+                ? [p + vector[0] * distance, axisY + vector[1] * distance]
+                : [axisX + vector[0] * distance, p + vector[1] * distance];
+            }
+            return isX
+              ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
+              : [
+                  axisX +
+                    tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2),
+                  p,
+                ];
+          })();
+          const node: IRNode = { type: 'node', position, text, ...tickLabelStyle };
+          if (isCornerLabel) {
+            cornerLabels.push(node);
+            return [];
+          }
+          return [node];
+        });
+        return [
+          ...layoutTickLabelNodes(guide, layoutLabels, {
           fontSize,
           mode: isX ? 'cartesian-x' : 'cartesian-y',
           axis: isX ? 'x' : 'y',
           axisRange: isX ? [left, right] : [top, bottom],
-        },
-      )
+          }),
+          ...cornerLabels,
+        ];
+      })()
     : [];
 
   const titleNode = ((): IRNode | null => {

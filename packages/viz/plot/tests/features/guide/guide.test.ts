@@ -369,6 +369,90 @@ describe('lowerGuide (ADR-04)', () => {
     expect(axisPath.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', length: 8 } }]);
   });
 
+  it('origin_crossing_hides_tick_and_renders_single_corner_label_when_configured', () => {
+    const originCtx: GuideContext = {
+      ...ctx,
+      xTicks: { values: [-1, 0, 1], labels: ['-1', '0', '1'] },
+      yTicks: { values: [0, 4, 8], labels: ['0', '4', '8'] },
+    };
+    const { axisLayer: xAxisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        placement: { kind: 'origin', origin: 0, tickSide: 'bottom' },
+        crossing: { value: 0, tick: 'hide', label: 'corner', corner: 'bottom-left' },
+      },
+      originCtx,
+    );
+    const { axisLayer: yAxisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'y',
+        placement: { kind: 'origin', origin: 0, tickSide: 'left' },
+        crossing: { value: 0, tick: 'hide', label: 'hide' },
+      },
+      originCtx,
+    );
+    const xTickPath = (xAxisLayer as IRScope).children[1] as IRPath;
+    const yTickPath = (yAxisLayer as IRScope).children[1] as IRPath;
+    const xOriginLabel = nodeByText(xAxisLayer as IRScope, '0');
+    const yOriginLabels = nodeChildren(yAxisLayer as IRScope).filter(node => node.text === '0');
+
+    expect(xTickPath.children).toHaveLength(4);
+    expect(xTickPath.children).not.toContainEqual({ type: 'step', kind: 'move', to: [40, 260] });
+    expect(yTickPath.children).toHaveLength(4);
+    expect(yOriginLabels).toHaveLength(0);
+    expect((xOriginLabel.position as [number, number])[0]).toBeLessThan(40);
+    expect((xOriginLabel.position as [number, number])[1]).toBeGreaterThan(260);
+  });
+
+  it('axis_endpoint_policy_hides_tick_mark_near_arrow_but_keeps_label_and_grid_by_default', () => {
+    const endpointCtx: GuideContext = {
+      ...ctx,
+      xTicks: { values: [0, 5, 10], labels: ['0', '5', '10'] },
+    };
+    const { axisLayer, gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        line: { arrow: { positive: { length: 8 } } },
+        ticks: { endpoint: { distance: 12 } },
+        grid: true,
+      },
+      endpointCtx,
+    );
+    const tickPath = (axisLayer as IRScope).children[1] as IRPath;
+    const labels = nodeChildren(axisLayer as IRScope);
+
+    expect(tickPath.children).toHaveLength(4);
+    expect(tickPath.children).not.toContainEqual({ type: 'step', kind: 'move', to: [440, 260] });
+    expect(labels.map(label => label.text)).toContain('10');
+    expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
+  });
+
+  it('axis_endpoint_default_hides_tick_mark_near_arrow_without_endpoint_config', () => {
+    const endpointCtx: GuideContext = {
+      ...ctx,
+      xTicks: { values: [0, 5, 10], labels: ['0', '5', '10'] },
+    };
+    const { axisLayer, gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        line: { arrow: { positive: { length: 8 } } },
+        grid: true,
+      },
+      endpointCtx,
+    );
+    const tickPath = (axisLayer as IRScope).children[1] as IRPath;
+    const labels = nodeChildren(axisLayer as IRScope);
+
+    expect(tickPath.children).toHaveLength(4);
+    expect(tickPath.children).not.toContainEqual({ type: 'step', kind: 'move', to: [440, 260] });
+    expect(labels.map(label => label.text)).toContain('10');
+    expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
+  });
+
   it('non_cartesian_axis_rejects_structural_line_geometry', () => {
     expect(() =>
       lowerGuide({ type: 'axis', dimension: 'x', line: { arrow: { positive: true } } }, { ...ctx, ternaryVertices: [[0, 0], [1, 0], [0, 1]] }),
