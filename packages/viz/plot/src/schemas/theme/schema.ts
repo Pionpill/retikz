@@ -33,9 +33,8 @@ const ThemeAxisTickLabelsSchema = z
 
 const ThemeAxisTitleSchema = z
   .object({
-    gap: z.number().nonnegative().optional().describe('Default gap from tick labels to axis title center'),
+    padding: z.number().nonnegative().optional().describe('Default padding from tick labels to axis title center'),
     rotate: z.number().optional().describe('Default axis title rotation in degrees around the title center'),
-    anchor: z.string().min(1).optional().describe('Default semantic anchor hint for axis titles'),
     ...GuideTextStyleSchema.shape,
   })
   .strict()

@@ -135,6 +135,23 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(AxisGuideSchema.parse(ratioGuide)).toEqual(ratioGuide);
   });
 
+  it('axis_title_accepts_padding_anchor_shift_and_layout', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      title: {
+        text: 'x',
+        padding: 8,
+        placement: 'very-near-end',
+        anchor: { align: 'end', baseline: 'top' },
+        shift: { along: -6, normal: 2 },
+        layout: { reserveSpace: false, avoidTickLabels: true, avoidLineMarks: true, overflow: 'flush' },
+      },
+    };
+
+    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
   it('axis_title_placement_rejects_out_of_range_ratio', () => {
     expect(() =>
       AxisGuideSchema.parse({
@@ -142,6 +159,15 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
         dimension: 'x',
         title: { text: 'x', placement: 1.2 },
       }),
+    ).toThrow();
+  });
+
+  it('axis_title_rejects_gap_and_empty_layout_objects', () => {
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', title: { text: 'x', gap: 4 } })).toThrow();
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', title: { text: 'x', shift: {} } })).toThrow();
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', title: { text: 'x', anchor: {} } })).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', title: { text: 'x', layout: { overflow: 'clip' } } }),
     ).toThrow();
   });
 

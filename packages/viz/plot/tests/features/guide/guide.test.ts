@@ -147,6 +147,18 @@ describe('lowerGuide (ADR-04)', () => {
     expect((title.position as [number, number])[0]).toBe(200);
   });
 
+  it('axis_title_padding_shift_and_anchor_lower_to_title_node', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', title: { text: 'x', padding: 10, placement: 'at-end', shift: { along: -6, normal: 2 }, anchor: { align: 'end' } } },
+      ctx,
+    );
+    const title = nodeByText(axisLayer as IRScope, 'x');
+
+    expect(title.align).toBe('right');
+    expect((title.position as [number, number])[0]).toBe(434);
+    expect((title.position as [number, number])[1]).toBe(298.5);
+  });
+
   it('axis_title_at_end_places_y_title_near_visual_top', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'y', title: { text: 'y', placement: 'at-end' } },

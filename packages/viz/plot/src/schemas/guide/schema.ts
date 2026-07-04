@@ -1,6 +1,7 @@
 ﻿import {
   ArrowEndDetailSchema,
   FontSchema,
+  GeometryLabelPosition,
   NodeTextAlign,
   PaintValueSchema,
   PathLineCapSchema,
@@ -22,8 +23,8 @@ import {
   AxisTickLabelOverflow,
   AxisTickMarkKind,
   AxisTickShapeOrientation,
+  AxisTitleAnchor,
   AxisTitleOrientation,
-  AxisTitlePlacementKeyword,
   GuideTickIntervalKind,
   GuideTickTimeUnit,
   LegendOrient,
@@ -421,8 +422,64 @@ export const AxisTickLabelsSchema = z
   .describe('Axis tick label style. Text content comes from the resolved tick set');
 
 const AxisTitlePlacementSchema = z
-  .union([z.enum(AxisTitlePlacementKeyword), NormalizedRatioSchema])
+  .union([z.enum(GeometryLabelPosition), NormalizedRatioSchema])
   .describe('Axis title position along the baseline: keyword or normalized number from negative to positive direction');
+
+const AxisTitleAnchorAlignSchema = z.enum([AxisTitleAnchor.Start, AxisTitleAnchor.Center, AxisTitleAnchor.End]);
+
+const AxisTitleAnchorBaselineSchema = z.enum(['top', 'middle', 'bottom']);
+
+const AxisTitleAnchorObjectSchema = z
+  .object({
+    align: AxisTitleAnchorAlignSchema.optional().describe('Horizontal title anchor relative to the axis direction'),
+    baseline: AxisTitleAnchorBaselineSchema.optional().describe('Vertical title baseline hint reserved for text renderers'),
+  })
+  .strict()
+  .superRefine((anchor, ctx) => {
+    if (anchor.align === undefined && anchor.baseline === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [],
+        message: 'axis title anchor object requires align or baseline',
+      });
+    }
+  })
+  .describe('Structured axis title text anchor');
+
+const AxisTitleAnchorSchema = z
+  .union([z.enum(AxisTitleAnchor), AxisTitleAnchorObjectSchema])
+  .describe('Axis title anchor: auto/start/center/end shorthand or structured anchor object');
+
+const AxisTitleShiftSchema = z
+  .object({
+    along: z.number().finite().optional().describe('Additional shift along the axis positive direction, in user units'),
+    normal: z.number().finite().optional().describe('Additional shift along the outward axis normal, in user units'),
+  })
+  .strict()
+  .superRefine((shift, ctx) => {
+    if (shift.along === undefined && shift.normal === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [],
+        message: 'axis title shift requires along or normal',
+      });
+    }
+  })
+  .describe('Axis title local offset in axis tangent/normal coordinates');
+
+const AxisTitleLayoutSchema = z
+  .union([
+    z.literal(false),
+    z
+      .object({
+        reserveSpace: z.boolean().optional().describe('Whether this title should participate in layout reservation'),
+        avoidTickLabels: z.boolean().optional().describe('Whether auto layout should avoid tick label bands'),
+        avoidLineMarks: z.boolean().optional().describe('Whether auto layout should avoid axis line endpoint marks'),
+        overflow: z.enum(AxisTickLabelOverflow).optional().describe('How title overflow near axis endpoints is handled'),
+      })
+      .strict(),
+  ])
+  .describe('Axis title adaptive layout policy');
 
 const AxisCrossingSchema = z
   .union([
@@ -450,11 +507,13 @@ const AxisCrossingSchema = z
 export const AxisTitleSchema = z
   .object({
     text: AxisTitleTextSchema.describe('Axis title text block'),
-    gap: z.number().nonnegative().optional().describe('Gap from the tick label band to the title center, in user units'),
+    padding: z.number().nonnegative().optional().describe('Padding from the tick label band to the title center, in user units'),
     placement: AxisTitlePlacementSchema.optional().describe('Axis title position along the axis baseline; omit = midway'),
     orientation: z.enum(AxisTitleOrientation).optional().describe('Axis title rotation strategy; omit = auto'),
     rotate: z.number().optional().describe('Axis title rotation in degrees around the title center'),
-    anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
+    anchor: AxisTitleAnchorSchema.optional().describe('Axis title anchor relative to the title position'),
+    shift: AxisTitleShiftSchema.optional().describe('Axis title local tangent/normal offset'),
+    layout: AxisTitleLayoutSchema.optional().describe('Axis title adaptive layout policy'),
     ...GuideTextStyleSchema.shape,
   })
   .strict()

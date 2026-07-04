@@ -229,6 +229,33 @@ describe('plot theme schema and lowering', () => {
     expect(title?.rotate).toBe(0);
   });
 
+  it('axis_title_local_padding_overrides_theme_padding', () => {
+    const root = expandOf(
+      baseSpec({
+        guides: [{ type: 'axis', dimension: 'x', title: { text: 'x', padding: 4 } }],
+        theme: {
+          axis: {
+            title: { padding: 20 },
+          },
+        },
+      }),
+    );
+    const themeRoot = expandOf(
+      baseSpec({
+        guides: [{ type: 'axis', dimension: 'x', title: 'x' }],
+        theme: {
+          axis: {
+            title: { padding: 20 },
+          },
+        },
+      }),
+    );
+    const title = nodesOf(root).find(node => node.text === 'x');
+    const themeTitle = nodesOf(themeRoot).find(node => node.text === 'x');
+
+    expect((themeTitle?.position as [number, number])[1] - (title?.position as [number, number])[1]).toBe(16);
+  });
+
   it('theme_axis_rejects_structural_crossing_endpoint_and_title_controls', () => {
     expect(() =>
       PlotSpecSchema.parse(
@@ -269,6 +296,50 @@ describe('plot theme schema and lowering', () => {
           theme: {
             axis: {
               title: { orientation: 'horizontal' },
+            },
+          } as PlotSpec['theme'],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse(
+        baseSpec({
+          theme: {
+            axis: {
+              title: { gap: 4 },
+            },
+          } as PlotSpec['theme'],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse(
+        baseSpec({
+          theme: {
+            axis: {
+              title: { anchor: { align: 'end' } },
+            },
+          } as PlotSpec['theme'],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse(
+        baseSpec({
+          theme: {
+            axis: {
+              title: { shift: { normal: 2 } },
+            },
+          } as PlotSpec['theme'],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse(
+        baseSpec({
+          theme: {
+            axis: {
+              title: { layout: false },
             },
           } as PlotSpec['theme'],
         }),

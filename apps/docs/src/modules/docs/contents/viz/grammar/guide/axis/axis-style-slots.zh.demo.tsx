@@ -14,7 +14,7 @@ const Demo: FC = () => (
       line={{ stroke: '#334155', strokeWidth: 1.5 }}
       ticks={{ count: 5, length: 6, line: { stroke: '#64748b' } }}
       tickLabels={{ gap: 6, textColor: '#475569', font: { size: 11 } }}
-      title={{ text: '营收', gap: 10, font: { weight: 600 } }}
+      title={{ text: '营收', padding: 10, font: { weight: 600 } }}
       grid={{ stroke: '#cbd5e1', drawOpacity: 0.45 }}
     />
   </Plot>

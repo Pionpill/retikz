@@ -1,5 +1,7 @@
 ﻿import type { ValueOf } from '@retikz/core';
 
+import { GeometryLabelPosition } from '@retikz/core';
+
 /**
  * guide 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'axis'` 同样可用）
  * @description grammar-of-graphics 的 guide 是 scale 的可视化身（坐标轴 / 图例等）。
@@ -177,26 +179,26 @@ export const AxisTickLabelOverflow = {
 /** tick label 超出轴范围时的处理策略取值。 */
 export type AxisTickLabelOverflowValue = ValueOf<typeof AxisTickLabelOverflow>;
 
-/** axis title 沿轴线的定位关键字。 */
-export const AxisTitlePlacementKeyword = {
-  /** 轴线负方向端点。 */
-  AtStart: 'at-start',
-  /** 非常靠近轴线负方向端点。 */
-  VeryNearStart: 'very-near-start',
-  /** 靠近轴线负方向端点。 */
-  NearStart: 'near-start',
-  /** 轴线中点。 */
-  Midway: 'midway',
-  /** 靠近轴线正方向端点。 */
-  NearEnd: 'near-end',
-  /** 非常靠近轴线正方向端点。 */
-  VeryNearEnd: 'very-near-end',
-  /** 轴线正方向端点。 */
-  AtEnd: 'at-end',
-} as const;
+/** axis title 沿轴线的定位关键字，复用 core path label position 词表。 */
+export const AxisTitlePlacementKeyword = GeometryLabelPosition;
 
 /** axis title 沿轴线的定位关键字取值。 */
 export type AxisTitlePlacementKeywordValue = ValueOf<typeof AxisTitlePlacementKeyword>;
+
+/** axis title 对齐锚点。 */
+export const AxisTitleAnchor = {
+  /** 由坐标轴和 title 位置自动推导。 */
+  Auto: 'auto',
+  /** 沿轴线负方向一侧对齐。 */
+  Start: 'start',
+  /** 居中对齐。 */
+  Center: 'center',
+  /** 沿轴线正方向一侧对齐。 */
+  End: 'end',
+} as const;
+
+/** axis title 对齐锚点取值。 */
+export type AxisTitleAnchorValue = ValueOf<typeof AxisTitleAnchor>;
 
 /** axis title 旋转策略。 */
 export const AxisTitleOrientation = {

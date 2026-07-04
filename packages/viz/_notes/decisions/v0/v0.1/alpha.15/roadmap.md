@@ -24,8 +24,9 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 | ADR-05 | **axis line advanced geometry** | 为 cartesian axis line 增加 lineCap、baseline extent、positive / negative 方向箭头与 origin placement；箭头样式复用 core ArrowEndDetail，theme 不接结构字段 | Accepted（已实现） |
 | ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density | Accepted（已实现） |
 | ADR-07 | **axis tick label adaptive layout** | 为 axis tick label 增加自适应旋转、重叠省略与边界处理；允许用户关闭旋转、省略或全部自适应，且不改变 tick / grid / mark 同源语义 | Accepted（已实现） |
+| ADR-08 | **axis title layout and anchor strategy** | 为 axis title 统一复用 core position 关键字，`gap` 改名为 `padding`，并补齐 shift、结构化 anchor 与 title layout 避让策略 | Accepted（已实现） |
 
-> 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`。
+> 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`、`08-axis-title-layout.md`。
 
 ## 依赖与顺序
 
@@ -36,6 +37,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 5. **ADR-05 补 axis line 进阶几何**：复用 ADR-02 的 axis line 槽位和 core path / arrow 能力，补齐 lineCap、静态 axis 箭头与 origin crossing；它不扩大 theme 的结构语义。
 6. **ADR-06 补 axis tick 来源、形态与密度**：复用 ADR-02 的 ticks 槽位和 ADR-01 的 tick source 语义，把候选 tick 生成、visible tick 抽稀、tick mark 形态分层；它不改变 theme 的 tick source 语义。
 7. **ADR-07 补 tick label 自适应布局**：复用 ADR-02 的 tickLabels 槽位和 ADR-06 的 visible tick set，只处理 label node 的旋转、隐藏和边界避让；它不回写 tick source、grid 或 tick mark。
+8. **ADR-08 补 axis title 布局与锚点**：复用 core path label 的 position 关键字心智模型，修正 `gap -> padding` 命名，并把端点标题的锚点、微调和自动避让做成配置，而不是 chart preset 私有规则。
 
 ## 关键设计约束
 
@@ -106,7 +108,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
   - line: stroke、strokeWidth、drawOpacity、dashPattern、dashOffset。
   - ticks: count、values、length、line stroke、line dashPattern、line dashOffset。
   - tickLabels: format、gap、font、textColor、opacity、align、lineHeight、maxTextWidth、rotate、anchor。
-  - title: TextBlock text、gap、font、textColor、opacity、align、lineHeight、maxTextWidth、rotate、anchor。
+  - title: TextBlock text、padding（ADR-08 替换 gap）、placement、orientation、font、textColor、opacity、align、lineHeight、maxTextWidth、rotate、anchor、shift、layout。
   - grid: applyTo/select、stroke、strokeWidth、drawOpacity、dashPattern、dashOffset。
 - 共享 schema / resolver：
   - `GuideLineStyleSchema`: core path line vocabulary。
@@ -253,6 +255,21 @@ built-in default theme
 - Theme 可以默认 `tickLabels.layout`，但不能默认 label 文本、formatter、tick source 或 density。
 
 不在本 ADR 范围：ellipsis / wrap、renderer 真实文本测量、label formatter 函数、interaction state、label 背景和 leader line。
+
+### ADR-08：axis title layout and anchor strategy
+
+目标是补齐 axis title 的命名、复用和布局能力，避免数学坐标系标题、端点标题和多坐标系标题继续依赖 chart preset 私有规则。
+
+设计倾向：
+
+- `title.placement` 字段名保留，但关键字来源改为复用 core `GeometryLabelPosition`；plot 不再维护平行 `AxisTitlePlacementKeyword`。
+- `title.gap` 破坏性改名为 `title.padding`，表示标题相对 tick label band 外缘的外侧留白；theme title 同步使用 `padding`。
+- `title.orientation` 与 `title.rotate` 继续共存，显式 `rotate` 优先。
+- 新增 `title.shift: { along?, normal? }`，用轴切向与外法线表达微调，不引入裸 `x/y`。
+- 新增结构化 `title.anchor`，覆盖端点标题、旋转标题和多行标题的对齐语义。
+- 新增 `title.layout`，把 reserve / avoid / overflow 策略做成配置入口，后续自动避让 tick label band 和 line endpoint mark 时复用。
+
+不在本 ADR 范围：labelArrow、标题截断 / 换行、真实 renderer text measurement、标题背景 / 边框 / leader line、chart preset 默认规则。
 
 ## 文件 scope 预估
 
