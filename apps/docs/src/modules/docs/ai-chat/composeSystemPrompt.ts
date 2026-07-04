@@ -1,4 +1,4 @@
-import { fetchLlmsTxt } from './llms-txt';
+import { fetchLlmsTxt } from './utils';
 
 export type ContextMode = 'lean' | 'balanced' | 'heavy';
 

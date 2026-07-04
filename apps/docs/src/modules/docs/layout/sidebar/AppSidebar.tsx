@@ -7,7 +7,7 @@ import { useParams } from 'react-router';
 import { cn } from '@/lib/utils';
 import { getSectionsByModule } from '@/modules/docs/data';
 
-import { buildSidebarCategories } from '../navigation-model';
+import { buildSidebarCategories } from '../utils';
 import { AppSidebarMenu } from './AppSidebarMenu';
 
 export type AppSidebarProps = {

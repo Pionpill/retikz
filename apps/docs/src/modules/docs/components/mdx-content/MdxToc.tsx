@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 
 import { cn } from '@/lib/utils';
 
-import { parseHeadings } from './toc-headings';
+import { parseHeadings } from './utils';
 
 /** 顶部 sticky header h-12 (48px) + 留白 */
 const SCROLL_OFFSET = 64;

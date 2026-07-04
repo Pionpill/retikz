@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import type { CustomProvider } from '../providers/resolve';
 import type { ProviderId } from '../providers/types';
 
-import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../models';
+import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../constants';
 import { PROVIDER_IDS } from '../providers/types';
 import { useAiChatStore } from '../useAiChatStore';
 

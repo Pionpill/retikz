@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 
 import { getSectionsByModule } from '@/modules/docs/data';
 
-import type { LeafNode } from './navigation-model';
+import type { LeafNode } from './types';
 
-import { useDocLocation } from './doc-location';
-import { flattenLeaves } from './navigation-model';
+import { useDocLocation } from './useDocLocation';
+import { flattenLeaves } from './utils';
 
 export type PageNavigation = {
   /** 上一篇，到头返回 null。 */

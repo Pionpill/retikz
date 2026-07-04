@@ -2,7 +2,7 @@
 
 import type { Release } from '@/modules/docs/data';
 
-import { changelogToMarkdown } from '@/modules/docs/components/changelog/changelog-to-markdown';
+import { changelogToMarkdown } from '@/modules/docs/components/changelog';
 
 const fixture: Array<Release> = [
   {

@@ -9,9 +9,9 @@ import { changelogToMarkdown } from '@/modules/docs/components/changelog';
 import { buildDocPageLinks } from '@/modules/docs/lib/doc-links';
 import { useTocStore } from '@/modules/docs/store';
 
-import type { DocLocation } from './doc-location';
+import type { DocLocation } from './types';
 
-import { docPathSegments } from './doc-location';
+import { docPathSegments } from './utils';
 
 /** 文档页全局副作用输入。 */
 export type DocPageEffectsInput = {

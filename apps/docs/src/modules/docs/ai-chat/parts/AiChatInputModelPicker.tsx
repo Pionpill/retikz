@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 import type { ProviderId } from '../providers/types';
 
-import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
+import { MODEL_CHOICES, PROVIDER_LABEL } from '../constants';
 import { isBuiltInProviderId } from '../providers/resolve';
 import { PROVIDER_IDS } from '../providers/types';
 import { useAiChatStore } from '../useAiChatStore';

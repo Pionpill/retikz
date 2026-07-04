@@ -1,23 +1,21 @@
 import type { TFunction } from 'i18next';
 
-import type { I18nKey, Page, Section, SubPage } from '@/modules/docs/data';
+import type { Page, Section, SubPage } from '@/modules/docs/data';
 
 import type { SidebarCategoryData, SidebarSubModuleData } from './sidebar/types';
+import type { DocLocation, LeafNode } from './types';
 
-import { docPathSegments } from './doc-location';
+/** 是否为数据驱动渲染的 changelog 页面。 */
+export const isChangelogLocation = (loc: DocLocation | null): boolean =>
+  loc?.sectionId === 'releases' && loc.pageId === 'changelog';
 
-/** 文档树中的可导航叶子页。 */
-export type LeafNode = {
-  /** 路由 :sectionId 段；ungrouped 时为 null。 */
-  sectionId: string | null;
-  /** 路由 :pageId 段。 */
-  pageId: string;
-  /** 路由 :subPageId 段。 */
-  subPageId?: string;
-  /** 节点 i18n label key。 */
-  label: I18nKey;
-  /** 完整路径，含 moduleId 前缀；无分组时不出现 sectionId 段。 */
-  path: string;
+/** location -> URL / 文件路径所需的 segment 数组。 */
+export const docPathSegments = (loc: DocLocation): Array<string> => {
+  const parts = [loc.moduleId];
+  if (loc.sectionId) parts.push(loc.sectionId);
+  parts.push(loc.pageId);
+  if (loc.subPageId) parts.push(loc.subPageId);
+  return parts;
 };
 
 /** 组装文档页 URL path。 */
@@ -63,7 +61,7 @@ const collectFromPage = (moduleId: string, sectionId: string | null, page: Page,
   });
 };
 
-/** 跨 sections 拍平所有叶子节点，按 sidebar 展示顺序输出。 */
+/** 按 sidebar 展示顺序拍平 sections 中的所有叶子节点。 */
 export const flattenLeaves = (moduleId: string, sections: Array<Section>): Array<LeafNode> => {
   const acc: Array<LeafNode> = [];
   for (const section of sections) {

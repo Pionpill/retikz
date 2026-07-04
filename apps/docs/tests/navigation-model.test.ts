@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Section } from '@/modules/docs/data';
 
-import { buildSidebarCategories, flattenLeaves } from '@/modules/docs/layout/navigation-model';
+import { buildSidebarCategories, flattenLeaves } from '@/modules/docs/layout';
 
 const sections: Array<Section> = [
   { pages: [{ id: 'intro', label: 'common.notFound' }] },
@@ -24,7 +24,7 @@ const sections: Array<Section> = [
   },
 ];
 
-describe('navigation-model', () => {
+describe('layout utils', () => {
   it('按 sidebar 顺序拍平叶子页', () => {
     expect(flattenLeaves('kernel', sections).map(node => node.path)).toEqual([
       '/kernel/intro',

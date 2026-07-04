@@ -19,7 +19,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { buildAiUrl, buildDocPageLinks } from '@/modules/docs/lib/doc-links';
 
-import { useDocLocation } from './doc-location';
+import { useDocLocation } from './useDocLocation';
 import { usePageNavigation } from './usePageNavigation';
 
 export type DocPageActionsProps = {

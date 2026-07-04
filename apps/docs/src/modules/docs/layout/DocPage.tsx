@@ -12,13 +12,14 @@ import { changelogForModule, changelogPageDescription, changelogVersionSlug } fr
 import { useTocStore } from '@/modules/docs/store';
 
 import { BlogFrontmatter } from './BlogFrontmatter';
-import { isChangelogLocation, useDocLocation } from './doc-location';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';
+import { useDocLocation } from './useDocLocation';
 import { useDocPageEffects } from './useDocPageEffects';
 import { useDocPageNode } from './useDocPageNode';
 import { useMdxSource } from './useMdxSource';
 import { useStableMdxSource } from './useStableMdxSource';
+import { isChangelogLocation } from './utils';
 
 export type DocPageProps = HTMLAttributes<HTMLDivElement>;
 

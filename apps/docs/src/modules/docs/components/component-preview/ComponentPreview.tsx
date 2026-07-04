@@ -5,7 +5,7 @@ import { Layout } from '@retikz/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { docPathSegments, useDocLocation } from '@/modules/docs/layout/doc-location';
+import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 
 import type {
   AlignKey,

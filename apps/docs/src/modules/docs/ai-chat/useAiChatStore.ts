@@ -5,9 +5,10 @@ import type { ContextMode, CurrentPage, DiagramFormatPreference } from './compos
 import type { Conversation } from './conversations-storage';
 import type { CustomProvider } from './providers/resolve';
 import type { ChatErrorKind, ChatMessage, ProviderId } from './providers/types';
-import type { AutoRepairMode } from './repair';
+import type { AutoRepairMode } from './types';
 
 import { composeSystem } from './composeSystemPrompt';
+import { DEFAULT_MODELS, RETIKZ_REPAIR_MAX_BY_MODE } from './constants';
 import {
   CONVERSATION_SCHEMA_VERSION,
   deleteConversationFromStorage,
@@ -15,12 +16,10 @@ import {
   loadAllConversations,
   saveConversation,
 } from './conversations-storage';
-import { DEFAULT_MODELS } from './models';
 import { isBuiltInProviderId, resolveProvider } from './providers/resolve';
-import { RETIKZ_REPAIR_MAX_BY_MODE } from './repair';
 import { buildRepairPrompt, findInvalidRetikzBlocks } from './retikz-validation';
 
-export type { AutoRepairMode } from './repair';
+export type { AutoRepairMode } from './types';
 
 /** 主视图 / 设置视图 / 历史会话列表视图 */
 type View = 'main' | 'settings' | 'history';

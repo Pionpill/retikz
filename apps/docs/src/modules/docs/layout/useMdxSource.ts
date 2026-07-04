@@ -5,7 +5,8 @@ import type { Lang } from '@/i18n';
 
 import { LANGS } from '@/i18n';
 
-import { docPathSegments, useDocLocation } from './doc-location';
+import { useDocLocation } from './useDocLocation';
+import { docPathSegments } from './utils';
 
 type MdxLoader = () => Promise<string>;
 

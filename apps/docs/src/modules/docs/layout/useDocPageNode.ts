@@ -4,7 +4,7 @@ import type { Page, Section, SubPage } from '@/modules/docs/data';
 
 import { getSectionsByModule } from '@/modules/docs/data';
 
-import type { DocLocation } from './doc-location';
+import type { DocLocation } from './types';
 
 /** 当前文档路由命中的 data 节点。 */
 export type DocPageNode = {
