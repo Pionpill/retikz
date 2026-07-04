@@ -1111,9 +1111,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('generator step 无 React DSL 表示（IR-only）：convertIRToReactNode 明确抛错', () => {
-      // generator 是 IR 级能力（经 <Layout ir={...}> 用），暂无 <Step kind="generator"> JSX sugar；
-      // IR→JSX 反构对它 fail-loud（加 React DSL 属新功能，留待后续 alpha）。
+    it('round-trips generator step：name / to / params / label', () => {
       const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -1122,12 +1120,19 @@ describe('convertIRToReactNode', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'generator', name: 'parabola', params: { bend: [5, 5], samples: 20 } },
+              {
+                type: 'step',
+                kind: 'generator',
+                name: 'parabola',
+                to: [160, 0],
+                params: { control: [80, -70] },
+                label: { text: 'p', position: 'near-end' },
+              },
             ],
           },
         ],
       };
-      expect(() => convertIRToReactNode(ir)).toThrow(/generator step has no React DSL/);
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
   });
 

@@ -44,9 +44,9 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `clips`               | `ReadonlyArray<ClipDefinition>`               | `—`     | 注入自定义裁剪区。见 [自定义裁剪区](/kernel/components/extend/clip-registry)           |
 | `arrows`              | `ReadonlyArray<ArrowDefinition>`              | `—`     | 注入自定义箭头。见 [自定义箭头](/kernel/components/extend/custom-arrow)                |
 | `patterns`            | `ReadonlyArray<PatternDefinition>`            | `—`     | 注入自定义填充图案。见 [自定义图案](/kernel/components/extend/custom-pattern)          |
-| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | `—`     | 注入自定义曲线生成器。见 [路径生成器](/kernel/components/extend/path-generator)        |
+| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | `—`     | 注入自定义曲线生成器；core 内置 `parabola`。见 [路径生成器](/kernel/components/extend/path-generator) |
 | `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | `—`     | 注入自定义 path kind provider                                                          |
-| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | `—`     | 注入 ribbon 宽度 profile；profile 函数不进入 IR                                        |
+| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | `—`     | 注入 ribbon 宽度 profile；core 内置 `bulge`，profile 函数不进入 IR                     |
 
 ### 组合展开
 

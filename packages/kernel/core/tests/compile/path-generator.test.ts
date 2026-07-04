@@ -13,9 +13,9 @@ import { flattenPrims } from '../helpers/flatten';
 const firstDrawnPath = (prims: Array<ScenePrimitive>): Extract<ScenePrimitive, { type: 'path' }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path');
 
-/** parabola 生成器：from→to + 一个 control，产单个 quad 命令；params.bend 为顶层 Target */
-const parabola = definePathGenerator({
-  name: 'parabola',
+/** customQuad 生成器：from→to + 一个 control，产单个 quad 命令；params.bend 为顶层 Target */
+const customQuad = definePathGenerator({
+  name: 'customQuad',
 paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
   targetParams: ['bend'],
   generate: ({ from, to, resolvedTargets }) => {
@@ -52,7 +52,7 @@ paramsSchema: z.object({ length: z.number() }),
 });
 
 describe('Path generator 注册面 — happy path', () => {
-  it('register_parabola_to_curve：注册 parabola → generator step 产 1 个 quad 命令、端到端编译', () => {
+  it('register_custom_quad_to_curve：注册 customQuad → generator step 产 1 个 quad 命令、端到端编译', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -65,7 +65,7 @@ describe('Path generator 注册面 — happy path', () => {
             {
               type: 'step',
               kind: 'generator',
-              name: 'parabola',
+              name: 'customQuad',
               to: [100, 0],
               params: { bend: { id: 'C' } },
             },
@@ -73,7 +73,7 @@ describe('Path generator 注册面 — happy path', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [parabola] });
+    const scene = compileToScene(ir, { pathGenerators: [customQuad] });
     const drawn = firstDrawnPath(scene.primitives);
     expect(drawn?.commands.some(c => c.kind === 'quad')).toBe(true);
   });
@@ -249,8 +249,8 @@ describe('Path generator 注册面 — 错误路径', () => {
         },
       ],
     };
-    expect(() => compileToScene(ir, { pathGenerators: [parabola] })).toThrow(/nope/);
-    expect(() => compileToScene(ir, { pathGenerators: [parabola] })).toThrow(/parabola/);
+    expect(() => compileToScene(ir, { pathGenerators: [customQuad] })).toThrow(/nope/);
+    expect(() => compileToScene(ir, { pathGenerators: [customQuad] })).toThrow(/customQuad/);
   });
 
   it('params_non_json_rejected：params 含 function → 编译期被拒（双 parse 第二道）', () => {

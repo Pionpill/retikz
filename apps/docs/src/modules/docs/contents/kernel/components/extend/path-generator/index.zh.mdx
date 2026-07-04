@@ -1,17 +1,23 @@
 ---
 title: 路径生成器
-description: generator step 让外部包注册自定义曲线（parabola / sin-cos / 二次方程…）。core 不内置任何曲线，只提供 IR 级注入面：params 限 JSON、targetParams 顶层 resolve、generate 产低层 PathCommand。
+description: generator step 可引用内置 parabola，也可注册自定义曲线（sin-cos / 二次方程…）：params 限 JSON、targetParams 顶层 resolve、generate 产低层 PathCommand。
 ---
 
-step 的内置 kind 是固定 12 种（move / line / fold / cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle / generator）。其中 **`generator`** 是开放注入口：parabola、sin-cos、二次方程曲线这类"曲线 step"由**外部包**注册，**core 不内置任何具体曲线**。
+step 的内置 kind 是固定 13 种（move / line / fold / cycle / curve / cubic / bend / smooth / arc / circlePath / ellipsePath / rectangle / generator）。其中 **`generator`** 是开放注入口：core 内置一个低歧义的 `parabola`，sin-cos、二次方程曲线这类更具体的"曲线 step"仍由外部包或应用注册。
 
-注册靠 `CompileOptions.pathGenerators`（React 里是 `<Layout pathGenerators={...}>`）：IR 的 generator step 只写字符串 `name`，曲线定义在此注入。未注册名编译期报错（带可用名列表）。
+React 里用 `<Step kind="generator" name="..." params={...} />` 写 generator step。内置名可直接编译；自定义名靠 `CompileOptions.pathGenerators`（React 里是 `<Layout pathGenerators={...}>`）注入。未注册名编译期报错（带可用名列表），自定义与内置同名也会报重复注册。
 
-## 注册一个生成器
+## 内置 parabola
 
-下面注册一个 `parabola`——`from → to` 加一个顶层 Target `bend` 作控制点，产一段二次贝塞尔：
+`parabola` 是 core 内置 path generator：`from → to` 加一个顶层 Target `control` 作控制点，产一段二次贝塞尔。它要求 step 写 `to`，缺失时编译期报错。
 
 <ComponentPreview name="path-generator-parabola" size="xs" />
+
+## 注册自定义生成器
+
+要加入自己的曲线，仍用 `definePathGenerator` 创建 definition，再通过 `CompileOptions.pathGenerators` 或 `<Layout pathGenerators>` 注入。
+
+<ComponentPreview name="path-generator-sin" size="xs" />
 
 `PathGeneratorDefinition` 是普通对象（不进 IR，可由工厂返回），建议用 `definePathGenerator` 包一层（注册时 best-effort 元校验）：
 
@@ -63,12 +69,10 @@ IR 必须 100% JSON 可序列化，所以 generator 的 `params` **只能是 JSO
 
 `generate` 返回低层 `PathCommand[]`（可含 `move` 形成 sub-path，如多段波形），splice 进 path 命令流；游标落最后一个命令的终点，后续 step 从此续接。
 
-<ComponentPreview name="path-generator-sin" size="xs" />
-
 > generate 的坐标视作**已在世界系**：generator step 在 transformed scope 内时，`ctx.from` / `ctx.to` / `resolvedTargets` 已是世界坐标，scope 的 transform 不会对 generate 内部的增量二次作用。
 
 <Comparison target="tikz" title="路径生成器">
 
-TikZ 的 `to path` / decorations / `\pgfdeclarepathgenerator` 在 TeX 宏层算曲线。retikz 把它落成 IR 级注册面：曲线由外部包的 `generate` 产结构化 `PathCommand`，core 一次提供注入口、以后不为新曲线改动。parabola / sin-cos 都能作 `@retikz/*` 外部包实现。
+TikZ 的 `to path` / decorations / `\pgfdeclarepathgenerator` 在 TeX 宏层算曲线。retikz 把它落成 IR 级注册面：内置 `parabola` 覆盖最小常用曲线，其它曲线由外部包的 `generate` 产结构化 `PathCommand`，core 不为每种新曲线改 schema。
 
 </Comparison>

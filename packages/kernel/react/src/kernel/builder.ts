@@ -477,6 +477,19 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push(step);
       return;
     }
+    if (kind === 'generator') {
+      const p = props as Extract<StepProps, { kind: 'generator' }>;
+      const step: Extract<IRStep, { kind: 'generator' }> = {
+        type: 'step',
+        kind: 'generator',
+        name: p.name,
+        params: p.params,
+      };
+      if (p.to !== undefined) step.to = parseTargetSugar(p.to);
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
     if (kind === 'move') {
       const p = props as Extract<StepProps, { kind: 'move' }>;
       out.push({ type: 'step', kind: 'move', to: parseTargetSugar(p.to) });

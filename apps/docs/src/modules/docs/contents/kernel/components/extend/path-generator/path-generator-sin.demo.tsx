@@ -1,50 +1,45 @@
-import type { IRScene, PathCommand } from '@retikz/core';
 import type { FC } from 'react';
 
 import { definePathGenerator } from '@retikz/core';
-import { Layout } from '@retikz/react';
+import { Layout, Path, Step } from '@retikz/react';
 import { z } from 'zod';
 
-/**
- * 正弦波生成器：沿 from → to 采样多段 line（含 sub-path），amplitude / waves 为 JSON params。
- * generate 返回低层 PathCommand[]，cursor 落最后命令终点。
- */
 const sin = definePathGenerator({
   name: 'sin',
-  paramsSchema: z.object({ amplitude: z.number(), waves: z.number() }),
+  paramsSchema: z.strictObject({
+    amplitude: z.number().finite().nonnegative(),
+    waves: z.number().int().positive(),
+  }),
   generate: ({ from, to, params }) => {
-    const end = to ?? [from[0] + 200, from[1]];
-    const amplitude = params.amplitude as number;
-    const waves = params.waves as number;
-    const samples = 64;
-    const cmds: Array<PathCommand> = [];
-    for (let i = 1; i <= samples; i++) {
-      const t = i / samples;
-      cmds.push({
-        kind: 'line',
-        to: [from[0] + (end[0] - from[0]) * t, from[1] + Math.sin(t * Math.PI * 2 * waves) * amplitude],
-      });
+    if (to === undefined) {
+      throw new Error('path generator "sin" requires step.to.');
     }
-    return cmds;
+    const amplitude = typeof params.amplitude === 'number' ? params.amplitude : 0;
+    const waves = typeof params.waves === 'number' ? params.waves : 1;
+    const dx = to[0] - from[0];
+    const dy = to[1] - from[1];
+    const length = Math.hypot(dx, dy);
+    const normal: [number, number] = length === 0 ? [0, 0] : [-dy / length, dx / length];
+    const pointAt = (t: number): [number, number] => {
+      const offset = Math.sin(t * Math.PI * 2 * waves) * amplitude;
+      return [from[0] + dx * t + normal[0] * offset, from[1] + dy * t + normal[1] * offset];
+    };
+
+    return Array.from({ length: waves * 4 }, (_, i) => {
+      const start = i / (waves * 4);
+      const end = (i + 1) / (waves * 4);
+      return { kind: 'quad' as const, control: pointAt((start + end) / 2), to: pointAt(end) };
+    });
   },
 });
 
-const ir: IRScene = {
-  version: 1,
-  type: 'scene',
-  children: [
-    {
-      type: 'path',
-      stroke: 'darkorange',
-      strokeWidth: 1.5,
-      children: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'generator', name: 'sin', to: [260, 0], params: { amplitude: 28, waves: 2 } },
-      ],
-    },
-  ],
-};
-
-const Demo: FC = () => <Layout ir={ir} pathGenerators={[sin]} width={320} height={90} />;
+const Demo: FC = () => (
+  <Layout width={420} height={140} viewBox={{ x: -210, y: -70, width: 420, height: 140 }} pathGenerators={[sin]}>
+    <Path stroke="#2563eb" strokeWidth={2.2} arrow="->">
+      <Step kind="move" to={[-170, 0]} />
+      <Step kind="generator" name="sin" to={[170, 0]} params={{ amplitude: 34, waves: 3 }} />
+    </Path>
+  </Layout>
+);
 
 export default Demo;

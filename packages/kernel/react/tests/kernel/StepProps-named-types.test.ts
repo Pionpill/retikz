@@ -9,6 +9,7 @@ import type {
   CycleStepProps,
   EllipsePathStepProps,
   FoldStepProps,
+  GeneratorStepProps,
   LineStepProps,
   MoveStepProps,
   RectangleStepProps,
@@ -30,9 +31,10 @@ describe('StepProps named types', () => {
     expectTypeOf<EllipsePathStepProps['kind']>().toEqualTypeOf<'ellipsePath'>();
     expectTypeOf<RectangleStepProps['kind']>().toEqualTypeOf<'rectangle'>();
     expectTypeOf<SmoothStepProps['kind']>().toEqualTypeOf<'smooth'>();
+    expectTypeOf<GeneratorStepProps['kind']>().toEqualTypeOf<'generator'>();
   });
 
-  it('StepProps 是 12 个 named type 的并集', () => {
+  it('StepProps 是 13 个 named type 的并集', () => {
     expectTypeOf<StepProps>().toEqualTypeOf<
       | MoveStepProps
       | LineStepProps
@@ -46,6 +48,7 @@ describe('StepProps named types', () => {
       | EllipsePathStepProps
       | RectangleStepProps
       | SmoothStepProps
+      | GeneratorStepProps
     >();
   });
 

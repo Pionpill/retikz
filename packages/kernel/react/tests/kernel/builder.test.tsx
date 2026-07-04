@@ -1,3 +1,4 @@
+import { compileToScene } from '@retikz/core';
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -543,6 +544,46 @@ after`;
         [10, 10],
       ],
     });
+  });
+
+  it('<Step kind="generator"> → IR generator step（name / to / params / label 透传）', () => {
+    const ir = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="generator" name="parabola" to="B" params={{ control: { id: 'C' } }} label={{ text: 'p' }} />
+      </Path>,
+    );
+    expect(ir.children).toEqual([
+      expect.objectContaining({
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          {
+            type: 'step',
+            kind: 'generator',
+            name: 'parabola',
+            to: { id: 'B' },
+            params: { control: { id: 'C' } },
+            label: { text: 'p' },
+          },
+        ],
+      }),
+    ]);
+  });
+
+  it('<Step kind="generator" name="parabola"> 使用 JSON Target params 可编译', () => {
+    const ir = buildIR(
+      <>
+        <Coordinate id="A" position={[0, 0]} />
+        <Coordinate id="B" position={[160, 0]} />
+        <Coordinate id="C" position={[80, -70]} />
+        <Path>
+          <Step kind="move" to="A" />
+          <Step kind="generator" name="parabola" to="B" params={{ control: { id: 'C' } }} />
+        </Path>
+      </>,
+    );
+    expect(() => compileToScene(ir)).not.toThrow();
   });
 
   it('<Draw way={[..., { bend }, ...]}> 等价于 Kernel bend step（含 / 不含 angle 两种）', () => {

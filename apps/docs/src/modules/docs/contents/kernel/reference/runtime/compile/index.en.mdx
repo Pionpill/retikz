@@ -44,9 +44,9 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 | `clips`               | `ReadonlyArray<ClipDefinition>`               | `—`     | Inject custom clipping regions. See [Custom Clips](/kernel/components/extend/clip-registry) |
 | `arrows`              | `ReadonlyArray<ArrowDefinition>`              | `—`     | Inject custom arrows. See [Custom Arrows](/kernel/components/extend/custom-arrow)       |
 | `patterns`            | `ReadonlyArray<PatternDefinition>`            | `—`     | Inject custom fill pattern motifs. See [Custom Patterns](/kernel/components/extend/custom-pattern) |
-| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | `—`     | Inject custom curve generators. See [Path Generators](/kernel/components/extend/path-generator) |
+| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | `—`     | Inject custom curve generators; core includes `parabola`. See [Path Generators](/kernel/components/extend/path-generator) |
 | `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | `—`     | Inject custom path kind providers                                                       |
-| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | `—`     | Inject ribbon width profiles; profile functions never enter IR                          |
+| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | `—`     | Inject ribbon width profiles; core includes `bulge`, and profile functions never enter IR |
 
 ### Composite Expansion
 

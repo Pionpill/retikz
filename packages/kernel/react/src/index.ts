@@ -41,9 +41,10 @@ export type {
   DslTarget,
   EllipsePathStepProps,
   FoldStepProps,
+  GeneratorStepProps,
   LayoutProps,
   LineStepProps,
-  /** 12 个 named Step kind props（按 IR `IR*Step` 命名对照） */
+  /** 13 个 named Step kind props（按 IR `IR*Step` 命名对照） */
   MoveStepProps,
   NodeProps,
   PathProps,
