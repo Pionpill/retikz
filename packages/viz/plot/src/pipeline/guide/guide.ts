@@ -29,6 +29,7 @@ import {
   AxisTickLabelOverflow,
   AxisTickMarkKind,
   AxisTickShapeOrientation,
+  AxisTitlePlacementKeyword,
 } from '../../schemas';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
 import { guideLayerId, guideLayerMeta } from '../provenance';
@@ -105,6 +106,7 @@ type AxisShapeTickMarkToken = Exclude<AxisTickMarkToken, { kind: 'line' }>;
 type AxisCrossingToken = Exclude<NonNullable<AxisGuide['crossing']>, false>;
 type AxisTickEndpointPolicyToken = Exclude<NonNullable<AxisTicksToken['endpoint']>, false>;
 type AxisGuideValue = string | number;
+type AxisTitlePlacementValue = NonNullable<Exclude<NonNullable<AxisGuide['title']>, string>['placement']>;
 
 const axisTickLineMarkOf = (guide: AxisGuide): { length: number; line: GuidePathStyle | false } | false | null => {
   const mark = guide.ticks?.mark;
@@ -211,6 +213,17 @@ const shouldHideEndpointTickLabel = (
 ): boolean =>
   axisTickEndpointPolicyOf(guide)?.affect === AxisTickEndpointAffect.MarkAndLabel &&
   shouldHideEndpointTickMark(guide, projected, range, tickLength);
+
+const axisTitlePlacementRatioOf = (placement: AxisTitlePlacementValue | undefined): number => {
+  if (typeof placement === 'number') return placement;
+  if (placement === AxisTitlePlacementKeyword.AtStart) return 0;
+  if (placement === AxisTitlePlacementKeyword.VeryNearStart) return 0.125;
+  if (placement === AxisTitlePlacementKeyword.NearStart) return 0.25;
+  if (placement === AxisTitlePlacementKeyword.NearEnd) return 0.75;
+  if (placement === AxisTitlePlacementKeyword.VeryNearEnd) return 0.875;
+  if (placement === AxisTitlePlacementKeyword.AtEnd) return 1;
+  return 0.5;
+};
 
 type TickShapePlacement = {
   point: readonly [number, number];
@@ -480,10 +493,10 @@ const layoutTickLabelNodes = (
 
 const axisTitleOf = (
   guide: AxisGuide,
-): ({ text: IRNode['text']; gap?: number } & GuideTextStyle) | null => {
+): ({ text: IRNode['text']; gap?: number; placement?: AxisTitlePlacementValue } & GuideTextStyle) | null => {
   if (guide.title === undefined) return null;
   if (typeof guide.title === 'string') return { text: guide.title };
-  return { text: guide.title.text, gap: guide.title.gap, ...textStyleProps(guide.title) };
+  return { text: guide.title.text, gap: guide.title.gap, placement: guide.title.placement, ...textStyleProps(guide.title) };
 };
 
 const textBlockMeasureText = (text: IRNode['text']): string => {
@@ -755,9 +768,12 @@ const lowerCartesianGuide = (
     const labelOffset = isX
       ? tickLength + tickLabelGap + fontSize + titleGap + fontSize / 2
       : tickLength + tickLabelGap + yLabelBandWidth + titleGap + fontSize / 2;
+    const placementRatio = axisTitlePlacementRatioOf(title.placement);
+    const baseX = axisLine[0][0] + (axisLine[1][0] - axisLine[0][0]) * placementRatio;
+    const baseY = axisLine[0][1] + (axisLine[1][1] - axisLine[0][1]) * placementRatio;
     const position: [number, number] = isX
-      ? [left + plotArea.width / 2, axisY + tickDirection * labelOffset]
-      : [axisX + tickDirection * labelOffset, top + plotArea.height / 2];
+      ? [baseX, baseY + tickDirection * labelOffset]
+      : [baseX + tickDirection * labelOffset, baseY];
     const rotate = isX ? titleStyle.rotate : (titleStyle.rotate ?? cartesianYAxisTitleRotateOf(side));
     return { type: 'node', position, text: title.text, ...titleStyle, ...(rotate !== undefined ? { rotate } : {}) };
   })();

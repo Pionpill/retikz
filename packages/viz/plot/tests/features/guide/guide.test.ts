@@ -95,6 +95,36 @@ describe('lowerGuide (ADR-04)', () => {
     expect(title.rotate).toBe(0);
   });
 
+  it('axis_title_at_end_places_x_title_near_positive_axis_end', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', title: { text: 'x', placement: 'at-end' } },
+      ctx,
+    );
+    const title = nodeByText(axisLayer as IRScope, 'x');
+
+    expect((title.position as [number, number])[0]).toBe(440);
+  });
+
+  it('axis_title_ratio_placement_samples_baseline_from_negative_to_positive', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', title: { text: 'x', placement: 0.4 } },
+      ctx,
+    );
+    const title = nodeByText(axisLayer as IRScope, 'x');
+
+    expect((title.position as [number, number])[0]).toBe(200);
+  });
+
+  it('axis_title_at_end_places_y_title_near_visual_top', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'y', title: { text: 'y', placement: 'at-end' } },
+      ctx,
+    );
+    const title = nodeByText(axisLayer as IRScope, 'y');
+
+    expect((title.position as [number, number])[1]).toBe(10);
+  });
+
   it('lower_axis_x_grid_lines', () => {
     const { gridLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, ctx);
     const layer = gridLayer as IRScope;
