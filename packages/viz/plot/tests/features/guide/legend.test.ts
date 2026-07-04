@@ -195,7 +195,7 @@ const sizeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
   });
 
 /** shape 散点 + shape legend（categorical → glyph 调色板） */
-const shapeLegendSpec = (): PlotSpec =>
+const shapeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -212,7 +212,7 @@ const shapeLegendSpec = (): PlotSpec =>
         encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
       },
     ],
-    guides: [{ type: 'legend', channel: 'shape' }],
+    guides: [{ type: 'legend', channel: 'shape', ...legend }],
   });
 
 /** sector（饼）+ ordinal color + color legend */
@@ -263,6 +263,27 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     // 3 类 → 3 个 glyph swatch；调色板 circle/rectangle/diamond，至少含一个非 rectangle（证实用了编码形状）
     expect(shapes.length).toBe(3);
     expect(shapes.some(shape => shape !== 'rectangle')).toBe(true);
+  });
+
+  it('shape_legend_glyphs_default_to_no_stroke', () => {
+    const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const glyphs = swatchNodesOf(legend as IRScope);
+
+    expect(glyphs.length).toBe(3);
+    expect(glyphs.every(node => node.stroke === 'none')).toBe(true);
+    expect(glyphs.every(node => node.strokeWidth === 0)).toBe(true);
+  });
+
+  it('shape_legend_symbol_size_style_controls_glyph_box', () => {
+    const outer = expandOf(shapeLegendSpec({ style: { symbolSize: 18 } }), { d: ORDINAL_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const glyphs = swatchNodesOf(legend as IRScope).filter(node => node.shape !== 'rectangle');
+
+    expect(glyphs.length).toBeGreaterThan(0);
+    expect(glyphs.every(node => nodeMinimumSide(node) === 18)).toBe(true);
   });
 
   // P2：color legend 绑到位置 linear scale（非颜色 scale）→ fail-loud，而非落空 ordinal 出空图例
@@ -332,10 +353,14 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
   it('size_legend_default_symbols_fit_inside_symbol_box', () => {
     const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
+    const swatches = swatchNodesOf(legend as IRScope);
     const symbols = sizeSymbolNodesOf(legend as IRScope);
 
     expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(swatches.every(node => node.shape === 'circle')).toBe(true);
     expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(14 + 1e-9);
+    expect(symbols.every(node => node.stroke === 'none')).toBe(true);
+    expect(symbols.every(node => node.strokeWidth === 0)).toBe(true);
   });
 
   it('size_legend_symbol_size_style_controls_fit_box', () => {

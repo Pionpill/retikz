@@ -1681,6 +1681,8 @@ export type LegendEntry = {
   color?: string;
   /** glyph 形状名（shape swatch） */
   shape?: string;
+  /** glyph 视觉盒尺寸（shape swatch） */
+  symbolSize?: number;
   /** size 梯度符号半径（px） */
   radius?: number;
   /** 透明度（opacity 块；0..1） */
@@ -1803,7 +1805,11 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     let rowY = cursorY;
     for (const entry of input.entries) {
       const symbolSide =
-        entry.radius !== undefined ? Math.max(swatchSize, entry.radius * Math.SQRT2) : swatchSize;
+        entry.radius !== undefined
+          ? Math.max(swatchSize, entry.radius * Math.SQRT2)
+          : entry.symbolSize !== undefined
+            ? Math.max(swatchSize, entry.symbolSize)
+            : swatchSize;
       const symbolCenter: [number, number] = [cursorX + symbolSide / 2, rowY + symbolSide / 2];
       if (entry.shape !== undefined) {
         // shape 图例：swatch 本身就是编码的 glyph（circle / rectangle / diamond…），不画矩形框
@@ -1811,11 +1817,24 @@ export const lowerLegend = (input: LegendInput): IRScope => {
           type: 'node',
           position: symbolCenter,
           shape: entry.shape,
-          minimumSize: swatchSize,
+          minimumSize: entry.symbolSize ?? swatchSize,
           fill: entry.color ?? 'currentColor',
+          stroke: 'none',
+          strokeWidth: 0,
+        });
+      } else if (entry.radius !== undefined) {
+        // size 图例：只画代表半径的圆点，不额外画矩形 swatch。
+        children.push({
+          type: 'node',
+          position: symbolCenter,
+          shape: 'circle',
+          minimumSize: entry.radius * Math.SQRT2,
+          fill: 'currentColor',
+          stroke: 'none',
+          strokeWidth: 0,
         });
       } else {
-        // color / 分箱 / opacity / size：矩形色块（size 再叠圆点）
+        // color / 分箱 / opacity：矩形色块
         const swatchOffset = (symbolSide - swatchSize) / 2;
         const swatch = rectNode(cursorX + swatchOffset, rowY + swatchOffset, swatchSize, swatchSize);
         if (entry.color !== undefined) swatch.fill = entry.color;
@@ -1824,16 +1843,6 @@ export const lowerLegend = (input: LegendInput): IRScope => {
           swatch.fillOpacity = entry.opacity;
         }
         children.push(swatch);
-        // size 梯度符号：在格内画一个代表半径的圆点 Node（覆盖 swatch 框，给出比例感）
-        if (entry.radius !== undefined) {
-          children.push({
-            type: 'node',
-            position: symbolCenter,
-            shape: 'circle',
-            minimumSize: entry.radius * Math.SQRT2,
-            fill: 'currentColor',
-          });
-        }
       }
       // 标签：swatch 右侧
       const labelX = cursorX + symbolSide + swatchGap + estimateLabelWidth(entry.label, fontSize) / 2;

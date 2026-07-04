@@ -38,6 +38,7 @@ type LegendStyle = {
 - `symbolScale` 是 legend 符号缩放系数，默认 `1`。在 `fit` 模式下，它作用在 fit 后的符号半径上；在 `preserve` 模式下，它直接作用在 descriptor 半径上。
 - `symbolFit:'fit'` 将 size descriptor 的最大符号压缩到 `symbolSize` 视觉盒内，同时保持各代表值之间的半径比例。默认采用该模式，保证普通图例不会遮挡。
 - `symbolFit:'preserve'` 不按 `symbolSize` 压缩，只使用 descriptor 半径与 `symbolScale`。此模式适合精确说明实绘半径，但 layout 仍按最终符号尺寸动态预留空间。
+- size legend 只渲染代表半径的圆点符号，不再额外绘制矩形 swatch 外框；color / opacity / bin legend 仍保留矩形 swatch。
 - legend item 的主轴步进使用 `max(swatchSize, symbolBBox)`，标签中心对齐 item 中心。横向 legend 同理用 item 宽度推进，避免大符号压住下一个条目。
 
 理由：
@@ -107,7 +108,7 @@ type LegendStyle = {
 - `style.symbolFit:'preserve'` 保留 descriptor 半径，并让条目布局按更大符号留空间。
 - `theme.legend.symbolSize` 能作为全局默认，被单个 legend `style.symbolSize` 覆盖。
 
-`packages/viz/plot/tests/ir/plot.schema.test.ts` 覆盖：
+`packages/viz/plot/tests/ir/guide.schema.test.ts` 覆盖：
 
 - `LegendGuideStyleSchema` 接受 `symbolSize`、`symbolScale`、`symbolFit`。
 - 非正数 `symbolSize` / `symbolScale` 被拒绝。
@@ -154,7 +155,7 @@ type LegendStyle = {
 - `packages/viz/plot/src/pipeline/expand.ts`
 - `packages/viz/plot/src/pipeline/guide/guide.ts`
 - `packages/viz/plot/tests/features/guide/legend.test.ts`
-- `packages/viz/plot/tests/ir/plot.schema.test.ts`
+- `packages/viz/plot/tests/ir/guide.schema.test.ts`
 - `packages/viz/plot/tests/theme/theme.test.ts`
 - `apps/docs/src/modules/docs/contents/viz/grammar/guide/axis/index.zh.mdx`
 - `apps/docs/src/modules/docs/contents/viz/grammar/guide/axis/index.en.mdx`
@@ -162,8 +163,9 @@ type LegendStyle = {
 ### 测试象限
 
 Happy path：
-- `size_legend_default_symbols_fit_inside_symbol_box`：默认 size legend 最大符号不超过 symbol box。
+- `size_legend_default_symbols_fit_inside_symbol_box`：默认 size legend 最大符号不超过 symbol box，且不绘制圆点外侧的矩形 swatch。
 - `size_legend_symbol_size_style_controls_fit_box`：局部 `style.symbolSize` 改变最大 legend 符号尺寸。
+- `shape_legend_symbol_size_style_controls_glyph_box`：局部 `style.symbolSize` 改变 shape legend 的 glyph 视觉盒尺寸。
 - `theme_legend_symbol_size_is_used_by_size_legend`：主题默认影响 size legend。
 
 边界：

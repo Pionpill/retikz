@@ -1449,6 +1449,7 @@ const buildLegendLayers = (
       const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({
         label: showLabels ? String(category) : '',
         shape: String(descriptor.range[index]),
+        symbolSize: style.symbolSize,
         color: 'currentColor',
       }));
       return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
