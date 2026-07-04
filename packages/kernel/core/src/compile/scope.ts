@@ -243,6 +243,41 @@ export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): Sco
   return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, width: maxX - minX, height: maxY - minY };
 };
 
+const syntheticRectangleLayout = (
+  id: string,
+  center: IRPosition,
+  width: number,
+  height: number,
+  shapes: ProviderCollection<ShapeDefinition>,
+  boundaries: ProviderCollection<BoundaryDefinition>,
+): NodeLayout => ({
+  id,
+  shapeName: 'rectangle',
+  shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
+  rect: { x: center[0], y: center[1], width, height, rotate: 0 },
+  contentCenter: center,
+  rotateDeg: 0,
+  margin: boxInsets(0),
+  textWidth: width,
+  textHeight: height,
+  align: 'middle',
+  lineHeight: 0,
+  fontSize: 0,
+  shapes,
+  boundaries,
+});
+
+/** 用 scope id 和当前 transform chain 构造临时 0×0 synthetic layout。 */
+export const registerScopePlaceholderLayout = (
+  id: string,
+  chain: ReadonlyArray<Transform>,
+  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
+  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
+): NodeLayout => {
+  const globalOrigin: IRPosition = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
+  return syntheticRectangleLayout(id, globalOrigin, 0, 0, shapes, boundaries);
+};
+
 /** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout。 */
 export const registerScopeAsLayout = (
   id: string,
@@ -252,22 +287,7 @@ export const registerScopeAsLayout = (
   boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
 ): NodeLayout => {
   const box: ScopeBoundingBox = bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
-  return {
-    id,
-    shapeName: 'rectangle',
-    shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
-    rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
-    contentCenter: [box.x, box.y],
-    rotateDeg: 0,
-    margin: boxInsets(0),
-    textWidth: box.width,
-    textHeight: box.height,
-    align: 'middle',
-    lineHeight: 0,
-    fontSize: 0,
-    shapes,
-    boundaries,
-  };
+  return syntheticRectangleLayout(id, [box.x, box.y], box.width, box.height, shapes, boundaries);
 };
 
 /** 用 scope id 和子树点集构造可引用的 synthetic circle layout。 */
