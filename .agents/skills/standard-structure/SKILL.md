@@ -53,6 +53,7 @@ shared/schemas <- parsers
 - 目录级 `index.ts` 导出当前目录稳定 API；默认 `export *`，需要裁剪公共面或避免冲突时才精选导出。
 - 消费方从拥有者 barrel 导入；不要从非拥有者模块转手 export 其它层内容。
 - 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
+- 同一文件中同 kind（type 或 value）且同 source 的 named import 必须合并为一条；type/value 因 lint 规则保持分离。
 - 尽量避免 import / export `as` 重命名；命名冲突优先在定义源头改成准确名称，或由 owner barrel 调整公共面。
 - 主题内部可相邻导入；模块外避免 deep import 到 `constants.ts` / `schema.ts` 等私有文件。
 

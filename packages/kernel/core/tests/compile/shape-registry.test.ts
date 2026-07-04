@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../src/contract';
-import type { ShapeDefinition } from '../../src/contract';
+import type { ScenePrimitive, ShapeDefinition } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

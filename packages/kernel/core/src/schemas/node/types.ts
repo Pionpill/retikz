@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 
-import type { SideInput } from '../../shared';
-import type { ValueOf } from '../../shared';
+import type { SideInput, ValueOf } from '../../shared';
 import type { AtDirectionInput } from '../position';
 import type {
   BuiltinShape,

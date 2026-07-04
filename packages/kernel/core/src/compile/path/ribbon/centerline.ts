@@ -7,13 +7,14 @@ import type { NameStack } from '../../name-stack';
 import type { TextMeasurer } from '../../text';
 import type { RibbonEmitOptions, RibbonSegment, RibbonSegmentInput } from './types';
 
-import { polar, vector2 } from '../../../shared/geometry';
 import {
   arcSegmentSample,
   cubicSegmentSample,
   ellipseArcSegmentSample,
   lineSegmentSample,
+  polar,
   quadSegmentSample,
+  vector2,
 } from '../../../shared/geometry';
 import { emitPathPrimitive } from '..';
 

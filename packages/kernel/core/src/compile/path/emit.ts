@@ -16,18 +16,19 @@ import type { PathBaseProps } from './split';
 import type { EmitPathWarnHook } from './types';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
-import { DEG_TO_RAD, rectOutline } from '../../shared/geometry';
 import {
   arcSegmentSample,
   bendControlPoints,
   circleSegmentSample,
   cubicSegmentSample,
+  DEG_TO_RAD,
   ellipseArcSegmentSample,
   ellipseSegmentSample,
   foldSegmentSample,
   lineSegmentSample,
   outInControlPoints,
   quadSegmentSample,
+  rectOutline,
   rectPerimeterSample,
 } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';

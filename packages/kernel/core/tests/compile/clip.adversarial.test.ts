@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IRPaintSpec, IRScene, ScenePrimitive, SceneResource } from '../../src';
-import type { ClipResource } from '../../src';
+import type {
+  ClipResource,
+  GroupPrim,
+  IRPaintSpec,
+  IRScene,
+  ScenePrimitive,
+  SceneResource,
+} from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 

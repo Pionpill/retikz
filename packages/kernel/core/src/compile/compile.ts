@@ -1,12 +1,15 @@
-﻿import type { ArrowDefinition } from '../contract';
-import type { BoundaryDefinition } from '../contract';
-import type { ClipDefinition } from '../contract';
-import type { CompositeDefinition } from '../contract';
-import type { PathGeneratorDefinition, PathKindDefinition } from '../contract';
-import type { PatternDefinition } from '../contract';
-import type { RibbonWidthProfileDefinition } from '../contract';
-import type { Scene } from '../contract';
-import type { ShapeDefinition } from '../contract';
+﻿import type {
+  ArrowDefinition,
+  BoundaryDefinition,
+  ClipDefinition,
+  CompositeDefinition,
+  PathGeneratorDefinition,
+  PathKindDefinition,
+  PatternDefinition,
+  RibbonWidthProfileDefinition,
+  Scene,
+  ShapeDefinition,
+} from '../contract';
 import type { IRScene } from '../schemas';
 import type { CompileWarning } from './constant';
 import type { LowerTex, TextMeasurer } from './text';
@@ -44,7 +47,7 @@ export type CompileHostOptions = {
 export type CompileLayoutOptions = {
   /**
    * layout 周围的留白。
-   * @default 10
+   * @default DEFAULT_LAYOUT_PADDING (10)
    */
   padding?: number;
   /**
@@ -95,7 +98,7 @@ export type CompileProviderOptions = {
   /**
    * 运行时注入的 path generator 定义。
    * @description 未注册名称会在编译期报错。
-   * @default 空注册表
+   * @default 仅 BUILTIN_PATH_GENERATORS
    */
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /**
@@ -106,7 +109,7 @@ export type CompileProviderOptions = {
   /**
    * 运行时注入的 ribbon 宽度 profile。
    * @description profile 函数从这里注入，永不进入 IR。
-   * @default 空注册表
+   * @default 仅 BUILTIN_RIBBON_WIDTH_PROFILES
    */
   ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
 };

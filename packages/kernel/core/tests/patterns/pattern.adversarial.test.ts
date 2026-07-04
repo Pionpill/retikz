@@ -1,10 +1,10 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { PatternDefinition } from '../../src/contract';
 import type {
   MarkerPrimitive,
   PaintResource,
+  PatternDefinition,
   ResolvedPatternTile,
   SceneResource,
 } from '../../src/contract';

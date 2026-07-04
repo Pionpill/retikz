@@ -1,12 +1,13 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { PatternDefinition, PatternEmitContext } from '../../src/contract';
 import type {
   MarkerEllipsePrim,
   MarkerPathPrim,
   MarkerPrimitive,
   PaintResource,
+  PatternDefinition,
+  PatternEmitContext,
   ResolvedPatternTile,
   SceneResource,
 } from '../../src/contract';

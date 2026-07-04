@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ArrowDefinition } from '../../src/contract';
-import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
+import type {
+  ArrowDefinition,
+  PathCommand,
+  PathPrim,
+  ScenePrimitive,
+} from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';

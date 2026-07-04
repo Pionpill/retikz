@@ -3,8 +3,7 @@ import type { Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../src/contract';
-import type { ShapeDefinition } from '../../src/contract';
+import type { ScenePrimitive, ShapeDefinition } from '../../src/contract';
 import type { IRJsonObject,IRScene } from '../../src/schemas';
 import type { Rect } from '../../src/shared/geometry';
 

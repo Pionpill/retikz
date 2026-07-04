@@ -5,8 +5,7 @@ import { JsonObjectSchema } from '../../json';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
-import { GeometryLabelSchema } from '../step';
-import { StepSchema } from '../step';
+import { GeometryLabelSchema, StepSchema } from '../step';
 import { PathFillRule, PathKind, PathLineCap, PathLineJoin, PathThickness } from './constants';
 
 export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');

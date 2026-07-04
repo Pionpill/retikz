@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 
-import type { DirectionalAnchorInput } from '../../../shared';
-import type { ValueOf } from '../../../shared';
+import type { DirectionalAnchorInput, ValueOf } from '../../../shared';
 import type { AtDirection } from './constants';
 import type { AtPositionSchema } from './schema';
 

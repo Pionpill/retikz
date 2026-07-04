@@ -1,7 +1,13 @@
 ﻿import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
 
-import type { ArrowDefinition, ArrowEmitContext } from '../../contract';
-import type { MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEndSpec } from '../../contract';
+import type {
+  ArrowDefinition,
+  ArrowEmitContext,
+  MarkerFill,
+  MarkerPrimitive,
+  PathCommand,
+  ResolvedArrowEndSpec,
+} from '../../contract';
 import type { IRArrowMark, IRPosition } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';

@@ -1,10 +1,12 @@
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
-import type { ResolvedDropShadow } from '../../schemas';
-import type { IRJsonObject } from '../../schemas';
-import type { IRGraphicStyle } from '../../schemas';
-import type { IRPathBase } from '../../schemas';
+import type {
+  IRGraphicStyle,
+  IRJsonObject,
+  IRPathBase,
+  ResolvedDropShadow,
+} from '../../schemas';
 import type { AnchorValue, Rect, SideValue } from '../../shared';
 import type { PaintValue, ScenePrimitive } from '../scene';
 

@@ -2,8 +2,7 @@ import type { Position } from '@retikz/math';
 
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { BoxInsets } from './types';
-import type { NodeLayout } from './types';
+import type { BoxInsets, NodeLayout } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { CenterAnchor, isAnchor } from '../../shared';

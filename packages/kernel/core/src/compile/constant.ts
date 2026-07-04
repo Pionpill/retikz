@@ -1,5 +1,11 @@
 import type { ValueOf } from '../shared';
 
+/** 相对定位默认距离。 */
+export const DEFAULT_NODE_DISTANCE = 24;
+
+/** 自动 layout 默认留白。 */
+export const DEFAULT_LAYOUT_PADDING = 10;
+
 /** 编译期 warning code（机器可读）。 */
 export const CompileWarningCode = {
   UnresolvedNodeReference: 'UNRESOLVED_NODE_REFERENCE',

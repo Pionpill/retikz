@@ -1,12 +1,17 @@
 ﻿import type { Transform } from '../../contract';
-import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../schemas';
-import type { IRBoundary } from '../../schemas';
+import type {
+  FoldStepViaValue,
+  IRBetweenPosition,
+  IRBoundary,
+  IRNodeTarget,
+  IRPosition,
+  IRTarget,
+} from '../../schemas';
 import type { NameStack } from '../name-stack';
 import type { NodeLayout } from '../node';
 
 import { FoldStepVia } from '../../schemas';
-import { lerpPoint } from '../../shared/geometry';
-import { point } from '../../shared/geometry';
+import { lerpPoint, point } from '../../shared/geometry';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import { boundaryPointOf } from '../node';
 import { resolvePosition } from '../position';

@@ -1,10 +1,12 @@
 ﻿import type { Position } from '@retikz/math';
 
-import type { BoundaryAnchorName, BoundaryDefinition } from '../contract';
-import type { ShapeDefinition } from '../contract';
+import type {
+  BoundaryAnchorName,
+  BoundaryDefinition,
+  ShapeDefinition,
+} from '../contract';
 import type { ProviderCollection } from '../providers/registry';
-import type { IRBoundary } from '../schemas';
-import type { IRJsonObject } from '../schemas';
+import type { IRBoundary, IRJsonObject } from '../schemas';
 import type { Rect } from '../shared/geometry';
 
 import { resolveBoundaryRegistry } from '../providers/boundary';

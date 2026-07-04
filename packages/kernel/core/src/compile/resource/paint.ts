@@ -1,5 +1,11 @@
-import type { PatternDefinition, PatternEmitContext } from '../../contract';
-import type { MarkerPrimitive, PaintValue, ResolvedPatternTile, SceneResource } from '../../contract';
+import type {
+  MarkerPrimitive,
+  PaintValue,
+  PatternDefinition,
+  PatternEmitContext,
+  ResolvedPatternTile,
+  SceneResource,
+} from '../../contract';
 import type { IRPaintSpec } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';

@@ -2,13 +2,11 @@
 import { z } from 'zod';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { BoundaryDefinition } from '../../src/contract';
-import type { ScenePrimitive } from '../../src/contract';
+import type { BoundaryDefinition, ScenePrimitive } from '../../src/contract';
 import type { IRBoundary,IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { defineBoundary } from '../../src/contract';
-import { defineShape } from '../../src/contract';
+import { defineBoundary, defineShape } from '../../src/contract';
 import { BoundarySchema } from '../../src/schemas/boundary';
 import { flattenPrims } from '../helpers/flatten';
 

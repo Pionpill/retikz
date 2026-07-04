@@ -4,8 +4,7 @@ import type { ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema } from '../../src/schemas';
-import { BlendMode } from '../../src/schemas';
+import { BlendMode,NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };

@@ -1,6 +1,9 @@
-import type { BoundaryDefinition } from '../../contract';
-import type { TextLine, Transform } from '../../contract';
-import type { ShapeDefinition } from '../../contract';
+import type {
+  BoundaryDefinition,
+  ShapeDefinition,
+  TextLine,
+  Transform,
+} from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
   IRAxisScale,

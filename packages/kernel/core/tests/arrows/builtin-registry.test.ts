@@ -1,8 +1,8 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { ArrowDefinition } from '../../src/contract';
 import type {
+  ArrowDefinition,
   MarkerEllipsePrim,
   MarkerFill,
   MarkerPathPrim,

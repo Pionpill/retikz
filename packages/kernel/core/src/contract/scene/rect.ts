@@ -1,7 +1,12 @@
-import type { IRAnimationTrack } from '../../schemas';
-import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
-import type { IRGraphicStyle, IRNode, IRPathBase } from '../../schemas';
-import type { IRJsonObject } from '../../schemas';
+import type {
+  BlendModeValue,
+  IRAnimationTrack,
+  IRGraphicStyle,
+  IRJsonObject,
+  IRNode,
+  IRPathBase,
+  ResolvedDropShadow,
+} from '../../schemas';
 import type { PaintValue } from './paint';
 
 /** 矩形原语 */

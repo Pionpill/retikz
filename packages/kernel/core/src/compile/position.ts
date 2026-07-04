@@ -4,6 +4,7 @@ import type { Transform } from '../contract';
 import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../schemas';
 import type { NameStack } from './name-stack';
 
+import { DEFAULT_NODE_DISTANCE } from './constant';
 import { DirectionVectorByAtDirection } from './direction';
 import { inverseTransformChain } from './scope';
 
@@ -13,9 +14,6 @@ export type ResolveBetweenGlobal = (
   nameStack: NameStack,
   scopeChain: ReadonlyArray<Transform>,
 ) => IRPosition | null;
-
-/** 相对定位距离常量。 */
-const DEFAULT_NODE_DISTANCE = 24;
 
 /**
  * 把 IR 位置解析为笛卡尔坐标。

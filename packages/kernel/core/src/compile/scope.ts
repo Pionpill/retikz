@@ -1,8 +1,10 @@
 import { minimalEnclosingCircle } from '@retikz/math';
 
-import type { BoundaryDefinition } from '../contract';
-import type { Transform } from '../contract';
-import type { ShapeDefinition } from '../contract';
+import type {
+  BoundaryDefinition,
+  ShapeDefinition,
+  Transform,
+} from '../contract';
 import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAtPosition,
@@ -22,8 +24,7 @@ import { providerDefinitionOf } from '../providers/registry';
 import { resolveShapeRegistry } from '../providers/shape';
 import { Anchor } from '../shared';
 import { DEG_TO_RAD, RAD_TO_DEG, rect as rectOps } from '../shared/geometry';
-import { boxInsets } from './node';
-import { outerRectOf } from './node';
+import { boxInsets, outerRectOf } from './node';
 import { resolvePosition } from './position';
 
 /** 把 IR transform 归一为 Scene transform；引用解析失败时返回 null。 */

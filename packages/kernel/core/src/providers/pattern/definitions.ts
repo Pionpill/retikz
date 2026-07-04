@@ -1,5 +1,8 @@
-import type { PatternDefinition, PatternEmitContext } from '../../contract';
-import type { MarkerPrimitive } from '../../contract';
+import type {
+  MarkerPrimitive,
+  PatternDefinition,
+  PatternEmitContext,
+} from '../../contract';
 import type { BuiltinPatternName } from '../../schemas';
 
 import { definePattern } from '../../contract';

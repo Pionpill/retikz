@@ -1,7 +1,10 @@
 ﻿import type { Position } from '@retikz/math';
 
-import type { PathCommand, PathPrim } from '../../contract';
-import type { ResolvedShapeStyle } from '../../contract';
+import type {
+  PathCommand,
+  PathPrim,
+  ResolvedShapeStyle,
+} from '../../contract';
 import type { ContourCommand, LineSegment } from '../../shared';
 
 import { pathPrimitiveStyle } from './style';

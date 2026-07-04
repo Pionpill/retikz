@@ -1,6 +1,10 @@
-import type { IRAnimationTrack } from '../../schemas';
-import type { IRFont, IRGraphicStyle, IRTextRun } from '../../schemas';
-import type { IRJsonObject } from '../../schemas';
+import type {
+  IRAnimationTrack,
+  IRFont,
+  IRGraphicStyle,
+  IRJsonObject,
+  IRTextRun,
+} from '../../schemas';
 
 type SceneFontWeight = NonNullable<IRFont['weight']> | (string & {});
 
