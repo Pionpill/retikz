@@ -43,7 +43,7 @@ const AtTranslateSchema = z
       .number()
       .positive()
       .optional()
-      .describe('Distance along direction in user units. Omitted fields use CompileOptions.nodeDistance, then 1.'),
+      .describe('Distance along direction in user units. Omitted fields use CompileOptions.nodeDistance, then 24.'),
   })
   .describe('Direction-relative translate transform lowered to Cartesian translate at compile time.');
 

@@ -40,7 +40,7 @@ export type CompileOptions = {
   /**
    * 相对定位距离。
    * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值。
-   * @default `DEFAULT_NODE_DISTANCE` (1)
+   * @default `DEFAULT_NODE_DISTANCE` (24)
    */
   nodeDistance?: number;
   /**

@@ -15,7 +15,7 @@ export type ResolveBetweenGlobal = (
 ) => IRPosition | null;
 
 /** 相对定位距离常量。 */
-const DEFAULT_NODE_DISTANCE = 1;
+const DEFAULT_NODE_DISTANCE = 24;
 
 /**
  * 把 IR 位置解析为笛卡尔坐标。

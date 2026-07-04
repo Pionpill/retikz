@@ -188,7 +188,7 @@ export type LayoutProps = ScopeStyleProps & {
   idPrefix?: string;
   /**
    * 节点相对定位（`Node.position = { direction, of }`）的默认距离，单位 user units
-   * @description 对应 TikZ `node distance=...`；节点 position 自带 `distance` 时优先用自带值，都缺省时回退到 1
+   * @description 节点 position 自带 `distance` 时优先用自带值，都缺省时回退到 24
    */
   nodeDistance?: number;
   /**

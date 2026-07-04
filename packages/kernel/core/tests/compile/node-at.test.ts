@@ -152,7 +152,7 @@ describe('Node at relative positioning', () => {
       expect(b[0]).toBeCloseTo(12);
     });
 
-    it('两者都缺省 → 默认 1', () => {
+    it('两者都缺省 → 默认 24', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -163,7 +163,7 @@ describe('Node at relative positioning', () => {
       };
       const scene = compileToScene(ir);
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
-      expect(b[0]).toBeCloseTo(1);
+      expect(b[0]).toBeCloseTo(24);
     });
   });
 
