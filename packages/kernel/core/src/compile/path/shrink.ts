@@ -6,7 +6,7 @@ import type { IRArrowMark, IRPosition } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
 import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
-import { validateMarkerPrimitives } from '../marker-prim';
+import { validateMarkerPrimitives } from '../resource';
 import { shiftToward } from './anchor';
 
 /** 已解析 arrow registry：内置 8 + 注入 */

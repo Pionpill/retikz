@@ -1,4 +1,4 @@
-import type { FontSpec, TextMeasurer } from '../text-metrics';
+import type { FontSpec, TextMeasurer } from '../text';
 
 /** 默认节点字号（user units）。 */
 export const DEFAULT_FONT_SIZE = 14;

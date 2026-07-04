@@ -1,8 +1,8 @@
 ﻿import type { ScenePrimitive } from '../../../contract';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { NameStack } from '../../name-stack';
-import type { PaintResolver } from '../../paint';
-import type { TextMeasurer } from '../../text-metrics';
+import type { PaintResolver } from '../../resource';
+import type { TextMeasurer } from '../../text';
 import type { RibbonEmitOptions, RibbonLike } from './types';
 
 import { emitLabelPrimitive, tForLabelPosition } from '../label';

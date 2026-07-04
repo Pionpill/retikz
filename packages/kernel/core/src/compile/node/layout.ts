@@ -15,8 +15,7 @@ import type {
 } from '../../schemas';
 import type { NameStack } from '../name-stack';
 import type { ResolveBetweenGlobal } from '../position';
-import type { LaidLine, LineLayoutContext } from '../text-layout';
-import type { FontSpec, TextMeasurer } from '../text-metrics';
+import type { FontSpec, LaidLine, LineLayoutContext, TextMeasurer } from '../text';
 import type { NodeLabelLayout, NodeLayout, TexLoweringContext } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -25,9 +24,9 @@ import { resolveShapeRegistry } from '../../providers/shape';
 import { JsonObjectSchema } from '../../schemas';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
-import { resolveShadow } from '../effects';
 import { resolvePosition } from '../position';
-import { layoutInlineLine, resolveLineRuns } from '../text-layout';
+import { resolveShadow } from '../style';
+import { layoutInlineLine, resolveLineRuns } from '../text';
 import { DEFAULT_LABEL_DISTANCE, normalizeLabelPosition } from './labels';
 import { resolveNodeShapePreset } from './shape-presets';
 import { alignToTextAnchor, DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern, wrapText } from './text';

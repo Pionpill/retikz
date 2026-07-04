@@ -4,7 +4,7 @@ import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IR, IRNode, IRNodeLabel } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 import { NodeLabelSchema, SceneSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

@@ -16,7 +16,6 @@ import { Anchor } from '../shared';
 import { rect as rectOps } from '../shared/geometry';
 import { filterAnimations } from './animation';
 import { CompileWarningCode } from './constant';
-import { resolveShadow } from './effects';
 import { NameStack } from './name-stack';
 import { boxInsets, emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
 import { emitPathPrimitive, refPointOfTarget } from './path';
@@ -31,7 +30,7 @@ import {
   registerScopeAsLayout,
   registerScopeCircleLayout,
 } from './scope';
-import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle } from './style';
+import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from './style';
 /**
  * 构造一个落在指定全局点的 0×0 rectangle NodeLayout
  * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，

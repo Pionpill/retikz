@@ -12,7 +12,7 @@ import type {
 } from '../../src';
 
 import { compileToScene, PathSchema, StepLabelSchema } from '../../src';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,

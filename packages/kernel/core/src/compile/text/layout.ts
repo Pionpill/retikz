@@ -1,13 +1,13 @@
-﻿import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../contract';
-import type { IRFont, IRLineSpec } from '../schemas';
-import type { CompileWarningCodeValue } from './constant';
-import type { IRInlineRun } from './inline-tex';
-import type { LowerTex } from './lower-tex';
-import type { FontSpec, TextMeasurer } from './text-metrics';
+import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
+import type { IRFont, IRLineSpec } from '../../schemas';
+import type { CompileWarningCodeValue } from '../constant';
+import type { IRInlineRun } from './inline';
+import type { FontSpec, TextMeasurer } from './metrics';
+import type { LowerTex } from './tex';
 
-import { CompileWarningCode } from './constant';
-import { isMathRun, parseInlineRuns } from './inline-tex';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from './text-baseline';
+import { CompileWarningCode } from '../constant';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
+import { isMathRun, parseInlineRuns } from './inline';
 
 /** 行高近似系数（与 node.ts 的 DEFAULT_LINE_HEIGHT_FACTOR 同口径） */
 const LINE_HEIGHT_FACTOR = 1.2;

@@ -1,4 +1,4 @@
-import type { IRMathRun, IRTextRun } from '../schemas';
+import type { IRMathRun, IRTextRun } from '../../schemas';
 
 /** 行内 run（text 或 math）—— parseInlineRuns 产物元素 */
 export type IRInlineRun = IRTextRun | IRMathRun;

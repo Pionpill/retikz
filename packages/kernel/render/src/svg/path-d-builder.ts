@@ -2,7 +2,7 @@ import type { PathCommand } from '@retikz/core';
 
 const DEG_TO_RAD = Math.PI / 180;
 
-/** 默认 round：保留 2 位小数，配 compile/precision 的默认 */
+/** 默认 round：保留 2 位小数，配 compile/scene/precision 的默认 */
 const defaultRound = (n: number) => Math.round(n * 100) / 100;
 
 /**

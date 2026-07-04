@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { IR, IRChild } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
-import { computeLayout } from '../../src/compile/layout';
-import { createRound } from '../../src/compile/precision';
+import { computeLayout } from '../../src/compile/scene';
+import { createRound } from '../../src/compile/scene';
 
 /** 一个尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize），落在给定中心 */
 const circleNode = (id: string, position: [number, number], minimumSize = 40): IRChild => ({

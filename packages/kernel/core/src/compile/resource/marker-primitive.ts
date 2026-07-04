@@ -1,4 +1,4 @@
-﻿import type { MarkerPrimitive } from '../contract';
+import type { MarkerPrimitive } from '../../contract';
 
 /** marker 子集允许的 primitive type（窄子集运行时栅栏） */
 const MARKER_PRIM_TYPES = new Set(['path', 'ellipse', 'rect', 'group']);

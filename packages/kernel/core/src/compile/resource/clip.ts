@@ -1,10 +1,10 @@
-﻿import type { ClipDefinition } from '../contract';
-import type { ClipResource, ClipShape, PathClipShape } from '../contract';
-import type { PathCommand } from '../contract';
-import type { IRClipSpec } from '../schemas';
+import type { ClipDefinition } from '../../contract';
+import type { ClipResource, ClipShape, PathClipShape } from '../../contract';
+import type { PathCommand } from '../../contract';
+import type { IRClipSpec } from '../../schemas';
 
-import { providerDefinitionOf } from '../providers/registry';
-import { JsonObjectSchema } from '../schemas';
+import { providerDefinitionOf } from '../../providers/registry';
+import { JsonObjectSchema } from '../../schemas';
 
 export type ClipRegistry = {
   resolve: (clip: IRClipSpec) => string;

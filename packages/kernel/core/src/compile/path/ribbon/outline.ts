@@ -4,7 +4,7 @@ import type { PathCommand, PathPrim } from '../../../contract';
 import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { NameStack } from '../../name-stack';
-import type { PaintResolver } from '../../paint';
+import type { PaintResolver } from '../../resource';
 import type {
   RibbonAnalyticSegment,
   RibbonCrossSection,
@@ -14,7 +14,7 @@ import type {
 } from './types';
 
 import { cubicSegmentSample, lineSegmentSample, quadSegmentSample } from '../../../shared/geometry';
-import { resolveShadow } from '../../effects';
+import { resolveShadow } from '../../style';
 import { arcCapPoints, capExtension, isArcCap, midpoint, roundedArcPoints } from './caps';
 import {
   alignTangentNormal,

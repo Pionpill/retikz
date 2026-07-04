@@ -10,8 +10,8 @@ import type { IRPath, IRPathBase, IRPosition, IRStep, IRTarget } from '../../sch
 import type { AssertEqual } from '../../shared';
 import type { SegmentSample } from '../../shared/geometry';
 import type { NameStack } from '../name-stack';
-import type { PaintResolver } from '../paint';
-import type { TextMeasurer } from '../text-metrics';
+import type { PaintResolver } from '../resource';
+import type { TextMeasurer } from '../text';
 import type { PathBaseProps } from './split';
 import type { EmitPathWarnHook } from './types';
 
@@ -31,8 +31,8 @@ import {
   rectPerimeterSample,
 } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
-import { resolveShadow } from '../effects';
-import { fallbackMeasurer } from '../text-metrics';
+import { resolveShadow } from '../style';
+import { fallbackMeasurer } from '../text';
 import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
 import { resolveGeneratorCommands } from './generator';
 import { emitLabelPrimitive, tForLabelPosition } from './label';

@@ -19,12 +19,11 @@ import { resolvePathKindRegistry } from '../providers/path-kind';
 import { resolvePatternRegistry } from '../providers/pattern';
 import { resolveRibbonWidthProfileRegistry } from '../providers/ribbon';
 import { resolveShapeRegistry } from '../providers/shape';
-import { createClipRegistry } from './clip';
 import { lowerComposites } from './composite';
 import { formatCompileWarning } from './constant';
-import { createPaintRegistry } from './paint';
-import { createRound, DEFAULT_PRECISION } from './precision';
-import { fallbackMeasurer } from './text-metrics';
+import { createClipRegistry, createPaintRegistry } from './resource';
+import { createRound, DEFAULT_PRECISION } from './scene';
+import { fallbackMeasurer } from './text';
 
 /**
  * 默认 warning 分发器：开发模式写到 console.warn，生产环境静默

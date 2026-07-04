@@ -1,5 +1,5 @@
-﻿import type { PathCommand } from '../contract';
-import type { IRTexContent } from '../schemas';
+import type { PathCommand } from '../../contract';
+import type { IRTexContent } from '../../schemas';
 
 export type LoweredTex = {
   commands: Array<PathCommand>;

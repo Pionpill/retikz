@@ -2,10 +2,10 @@
 import type { ResolvedShapeStyle } from '../../contract';
 import type { IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { PaintResolver } from '../paint';
+import type { PaintResolver } from '../resource';
 import type { NodeLayout } from './types';
 
-import { toAlphabeticBaselineY } from '../text-baseline';
+import { toAlphabeticBaselineY } from '../text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './labels';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './text';
 

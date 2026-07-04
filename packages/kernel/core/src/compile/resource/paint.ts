@@ -1,9 +1,9 @@
-﻿import type { PatternDefinition, PatternEmitContext } from '../contract';
-import type { MarkerPrimitive, PaintValue, ResolvedPatternTile, SceneResource } from '../contract';
-import type { IRPaintSpec } from '../schemas';
+import type { PatternDefinition, PatternEmitContext } from '../../contract';
+import type { MarkerPrimitive, PaintValue, ResolvedPatternTile, SceneResource } from '../../contract';
+import type { IRPaintSpec } from '../../schemas';
 
-import { providerDefinitionOf } from '../providers/registry';
-import { validateMarkerPrimitives } from './marker-prim';
+import { providerDefinitionOf } from '../../providers/registry';
+import { validateMarkerPrimitives } from './marker-primitive';
 
 /** paint 解析器：纯色 string 原样返回；PaintSpec 去重 + 派稳定 id → `{ kind:'resourceRef', id }`；undefined 透传 */
 export type PaintResolver = (paint: string | IRPaintSpec | undefined) => PaintValue | undefined;

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IR, IRChild } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
-import { createRound } from '../../src/compile/precision';
+import { createRound } from '../../src/compile/scene';
 
 /** 尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize） */
 const circleNode = (id: string, position: [number, number], minimumSize = 40): IRChild => ({

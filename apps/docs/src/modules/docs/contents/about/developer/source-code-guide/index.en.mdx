@@ -65,7 +65,7 @@ Walk inward from both ends: input contract (IR) first, then output contract (Sce
    `compileToScene(ir, options): Scene`. The main flow recursively processes children, lays out nodes and scopes, resolves paths, and collects paint / clip / marker resources. Reading it shows how an IR becomes a Scene.
 
 7. **[`compile/node/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/node) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) — Sub-compilers**<br />
-   Drill in as needed: node layout / path stepping / position resolution. [`text-metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text-metrics.ts) ships a fallback measurer; adapters can inject a more accurate one.
+   Drill in as needed: node layout / path stepping / position resolution. [`text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) ships a fallback measurer; adapters can inject a more accurate one.
 
 8. **[`parsers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parsers) — Sugar entry (optional)**<br />
    [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parsers/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parsers/target-sugar.ts) translate `<Draw way={[...]}>` and similar Sugar forms into IR. `@retikz/react` calls them inside its Sugar components.
@@ -145,7 +145,7 @@ If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter ma
 | Polar / relative position | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)              |
 | Scene primitive types     | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                    |
 | Compile pipeline          | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)           |
-| Text measurement contract | [`core/compile/text-metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text-metrics.ts) |
+| Text measurement contract | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) |
 | boundaryPoint / anchor    | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) and siblings |
 | core public API           | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                           |
 | React top-level pipeline  | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Layout.tsx)             |

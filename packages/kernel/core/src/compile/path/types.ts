@@ -1,8 +1,8 @@
 ﻿import type { PathGeneratorDefinition } from '../../contract';
 import type { Transform } from '../../contract';
 import type { CompileWarning } from '../constant';
-import type { LowerTex } from '../lower-tex';
-import type { PaintResolver } from '../paint';
+import type { PaintResolver } from '../resource';
+import type { LowerTex } from '../text';
 import type { ResolvedArrowRegistry } from './shrink';
 
 /** emitPathPrimitive 可选 warn 钩子 */

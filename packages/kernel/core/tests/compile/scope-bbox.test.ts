@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
-import type { TextMeasurer } from '../../src/compile/text-metrics';
+import type { TextMeasurer } from '../../src/compile/text';
 
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';

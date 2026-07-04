@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { AssertEqual, Layout, Scene } from '../../src';
 
 import { computeLayout } from '../../src';
-import { createRound } from '../../src/compile/precision';
+import { createRound } from '../../src/compile/scene';
 
 describe('Layout public API', () => {
   it('exports Layout and computeLayout from package entry', () => {

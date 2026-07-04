@@ -1,5 +1,5 @@
-﻿import type { Layout } from '../contract';
-import type { IRPosition } from '../schemas';
+import type { Layout } from '../../contract';
+import type { IRPosition } from '../../schemas';
 
 /** 由所有 bbox 候选点算出布局边界（含 padding）；points 为空时返回 100×100 兜底 */
 export const computeLayout = (points: Array<IRPosition>, padding: number, round: (n: number) => number): Layout => {

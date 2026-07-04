@@ -15,8 +15,7 @@ import type {
 } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { CompileWarningCodeValue } from '../constant';
-import type { LowerTex } from '../lower-tex';
-import type { LaidLine } from '../text-layout';
+import type { LaidLine, LowerTex } from '../text';
 
 /** 节点盒模型四边距。 */
 export type BoxInsets = {

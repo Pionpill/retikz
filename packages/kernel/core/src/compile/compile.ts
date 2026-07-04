@@ -9,13 +9,11 @@ import type { Scene } from '../contract';
 import type { ShapeDefinition } from '../contract';
 import type { IR } from '../schemas';
 import type { CompileWarning } from './constant';
-import type { LowerTex } from './lower-tex';
-import type { TextMeasurer } from './text-metrics';
+import type { LowerTex, TextMeasurer } from './text';
 
 import { filterAnimations } from './animation';
 import { createCompileContext } from './context';
-import { computeLayout } from './layout';
-import { assertFiniteLayout, viewBoxToLayout } from './scene-layout';
+import { assertFiniteLayout, computeLayout, viewBoxToLayout } from './scene';
 import { compileChildrenToPrimitives } from './traversal';
 
 export type { CompileWarning } from './constant';

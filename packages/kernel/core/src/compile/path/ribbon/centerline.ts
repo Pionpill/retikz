@@ -4,7 +4,7 @@ import type { PathCommand, PathPrim, ScenePrimitive } from '../../../contract';
 import type { IRPath, IRPosition, IRRibbonDirection, IRStep } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { NameStack } from '../../name-stack';
-import type { TextMeasurer } from '../../text-metrics';
+import type { TextMeasurer } from '../../text';
 import type { RibbonEmitOptions, RibbonSegment, RibbonSegmentInput } from './types';
 
 import { polar, vector2 } from '../../../shared/geometry';

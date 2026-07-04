@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeLayout } from '../../src/compile/layout';
-import { createRound } from '../../src/compile/precision';
+import { computeLayout } from '../../src/compile/scene';
+import { createRound } from '../../src/compile/scene';
 
 const round2 = createRound(2);
 const noRound = (n: number) => n;

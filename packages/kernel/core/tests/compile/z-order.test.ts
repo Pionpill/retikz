@@ -243,6 +243,7 @@ describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () =
             ],
           },
         ],
+        "dashOffset": undefined,
         "dashPattern": undefined,
         "fill": "none",
         "fillOpacity": undefined,

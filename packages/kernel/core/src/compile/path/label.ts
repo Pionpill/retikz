@@ -2,14 +2,11 @@ import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
 import type { SegmentSample } from '../../shared/geometry';
 import type { CompileWarningCodeValue } from '../constant';
-import type { LowerTex } from '../lower-tex';
-import type { LineLayoutContext } from '../text-layout';
-import type { FontSpec, TextMeasurer } from '../text-metrics';
+import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../text';
 
 import { RAD_TO_DEG } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
-import { toAlphabeticBaselineY } from '../text-baseline';
-import { layoutInlineLine, resolveLineRuns } from '../text-layout';
+import { layoutInlineLine, resolveLineRuns, toAlphabeticBaselineY } from '../text';
 
 /** 边标注默认字号 / 偏移量 */
 const LABEL_FONT_SIZE = 14;
