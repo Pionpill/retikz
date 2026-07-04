@@ -16,10 +16,7 @@ export type ParsedInlineRuns = {
 /** run 是否为 math run（结构判别：有 tex 字段） */
 export const isMathRun = (run: IRInlineRun): run is IRMathRun => 'tex' in run;
 
-/**
- * 从 from 起找下一个未转义定界符；display 找 `$$`、inline 找单个 `$`
- * @description 跳过 `\x`（转义，含 `\$`）；display 模式下遇单个 `$`（非 `$$`）继续扫不当 close。返回定界符起始 index，找不到返回 -1
- */
+/** 从指定位置查找下一个未转义公式闭合符。 */
 const findClose = (raw: string, from: number, display: boolean): number => {
   const n = raw.length;
   let i = from;
@@ -40,12 +37,7 @@ const findClose = (raw: string, from: number, display: boolean): number => {
   return -1;
 };
 
-/**
- * 把含 `$...$` / `$$...$$` 的字符串解析成 text/math run 序列
- * @description `gatingOn` 为 false（未注入 lowerTex）时整串原样作单个 text run、**不解析不反转义**（兼容现有含 `$` 文本）。
- *   gatingOn 时：`$...$` → inline math run；`$$...$$` → display math run（displayMode）；`\$` → 字面 `$`（仅文本段反转义，math 内容原样喂 tex）；
- *   空公式（定界符间无内容）跳过；不闭合定界符 → 该 `$` 起的剩余按字面文本保留 + warn=true，不抛。解析后若无 math run 则 hasMath=false（调用方走纯文本快路径）
- */
+/** 把行内文本解析为 text/math run；未开启 TeX 时原样返回文本。 */
 export const parseInlineRuns = (raw: string, gatingOn: boolean): ParsedInlineRuns => {
   if (!gatingOn) {
     return { runs: [{ text: raw }], hasMath: false, warn: false };

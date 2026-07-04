@@ -16,16 +16,7 @@ type LowerOptions = {
   maxDepth?: number;
 };
 
-/**
- * Tier 2 lowering：把 IR 里的 composite 节点据注册表展开成 Tier 1
- * @description compileToScene 第一步调用。DFS 遍历，`'namespace' in node` → tier2（据 `${namespace}.${type}`
- *   查表 → `schema.parse(node)` 精确校验 + 强类型 → `expand` → 递归展开产物 fixpoint），否则 tier1（scope 递归
- *   children）。未注册 → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点（不进 Scene），继续编译其余；
- *   环 / 超 `maxDepth` → throw（死循环防护）。无 tier2 节点时等价于原样返回。
- *
- *   composite registry 已在 compile 入口按 `namespace.type` resolved 成 Map；这里只消费 resolved registry。
- *   未注册 composite 仍走 **warn + skip**，因为 composite 是高层节点，缺对应包时跳过它仍能渲染其余图元。
- */
+/** 把 composite 节点展开为 Tier 1 IR；未注册节点 warning 后跳过。 */
 export const lowerComposites = (ir: IR, registry: ReadonlyMap<string, CompositeDefinition>, options: LowerOptions): IR => {
   const { onWarn, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
 

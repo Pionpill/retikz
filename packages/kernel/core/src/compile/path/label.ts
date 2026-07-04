@@ -61,9 +61,8 @@ const resolveLabelOpacity = (labelOpacity?: number, hostOpacity?: number): numbe
   labelOpacity !== undefined ? (hostOpacity !== undefined ? labelOpacity * hostOpacity : labelOpacity) : hostOpacity;
 
 /**
- * step.label + 段采样 → 单行 primitive（纯文本走 TextPrim、含公式走 GroupPrim；sloped 时再裹一层 group 旋转）
- * @description side 偏移 + align/baseline：top/bottom 锚点 y±offset 横向居中；left/right x±offset 纵向居中；sloped 仅控制 rotate(切线角)。
- *   `$...$` 行内公式仅在注入 lowerTex（texCtx.gatingOn）时解析。返回 primitive + bbox 外接点
+ * step.label + 段采样 → 单行 primitive。
+ * @description 返回 label primitive 及其 bbox 外接点。
  */
 export const emitLabelPrimitive = (
   label: IRStepLabel,

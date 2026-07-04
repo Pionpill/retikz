@@ -20,13 +20,7 @@ const FALLBACK_PATTERN_SIZE = 8;
 /** motif 缺省主色：CSS `currentColor`（继承 svg color，主题反应天然） */
 const DEFAULT_MOTIF_COLOR = 'currentColor';
 
-/**
- * 对一个 pattern spec 查表 + 调 `def.emit` 产已解析 tile
- * @description 构 `PatternEmitContext`（size = spec.size ?? def.defaultSize ?? 8；color = spec.color ??
- *   currentColor；background 透传；lineWidth 仅 spec 显式给值时存在——让 dots 缺省半径 size/5、lines/grid
- *   缺省描边 1）→ 调 emit 收 `MarkerPrimitive[]` → 跑共享窄子集 + JSON-safe 校验 → 组装 `ResolvedPatternTile`。
- *   emit 抛错 / 产非法原语都包成含 shape 名的清晰错（带 cause）。
- */
+/** 解析 pattern paint spec 为 Scene resource tile。 */
 const resolvePatternTile = (
   spec: Extract<IRPaintSpec, { kind: 'pattern' }>,
   effectivePatterns: ReadonlyMap<string, PatternDefinition>,
@@ -81,15 +75,7 @@ const resolvePatternTile = (
   return tile;
 };
 
-/**
- * 建一个 paint 登记表
- * @description resolve 对相同 PaintSpec（结构化 JSON 深比较）合并为一个资源、派稳定 id（`paint-1` / `paint-2`…，首见序）。
- *   同一份 IR 编译两次 → 同 id（快照稳定、SSR / CSR 一致）。SVG id 跨实例唯一性由 react adapter 加 useId 前缀解决。
- *   pattern 资源额外查 `effectivePatterns` + 调 `PatternDefinition.emit` 产 tile 写进 `SceneResource.tile`
- *   （未注册名 throw、含可用名）；gradient / image 资源只 spec。
- * @param effectivePatterns 有效 pattern 表（内置 + 注入），供 pattern 资源查表 + emit
- * @param round 精度取整（与 compile / render 同一 round，保 tile 几何一致）
- */
+/** 创建 paint 资源登记表，按 spec 稳定去重。 */
 export const createPaintRegistry = (
   effectivePatterns: ReadonlyMap<string, PatternDefinition>,
   round: (n: number) => number,

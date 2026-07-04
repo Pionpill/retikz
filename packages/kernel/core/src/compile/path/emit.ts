@@ -50,13 +50,7 @@ import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './t
 const referentNodeId = (ref: unknown): string | undefined =>
   typeof ref === 'string' ? ref : nodeRefId(ref as IRTarget);
 
-/**
- * 目标里的一个代表性节点 id——给 UNRESOLVED_NODE_REFERENCE 诊断用
- * @description 对象 NodeTarget（`{ id, ... }`）直接取 id；between 比例点递归挖端点里第一个节点引用
- *   （端点未解析时整 between 失败，需照样报 unresolved 而非静默）；OffsetPosition（`{ of }`）/ PolarPosition
- *   （`{ origin }`）递归挖其 referent——否则引用未定义节点时 refPoint 为 null 但 toId 为 undefined，整条 path
- *   会被静默丢弃（零诊断）；直接坐标 / 极坐标无 origin 等形态返回 undefined。
- */
+/** 从目标里提取一个代表性节点 id，用于 unresolved 诊断。 */
 const nodeRefId = (t: IRTarget): string | undefined => {
   if (typeof t !== 'object' || Array.isArray(t)) return undefined;
   if ('id' in t) return t.id;
@@ -77,8 +71,6 @@ const isFinitePoint = (pt: unknown): boolean =>
 
 /**
  * 语义 stroke 档位 → 数值（user units）
- * @description 对齐 TikZ 比例（thin=0.4pt→1=默认 strokeWidth）：ultraThin 0.25、veryThin 0.5、thin 1、semithick 1.5、thick 2、veryThick 3、ultraThick 4。显式 strokeWidth 覆盖 thickness。
- * `as const satisfies` + `AssertEqual` 双约束：加 IRPath['thickness'] 档位时漏写 TS 报错（字段表互锁）
  */
 const THICKNESS_TO_WIDTH = {
   ultraThin: 0.25,
@@ -90,14 +82,14 @@ const THICKNESS_TO_WIDTH = {
   ultraThick: 4,
 } as const satisfies Record<NonNullable<IRPath['thickness']>, number>;
 
-/** 类型互锁完备性：THICKNESS_TO_WIDTH 的 key 集合必须与 IRPath['thickness'] 完全等价；漏键 / 多键 / 类型错位 → AssertEqual = false → 下方常量赋值 TS 编译期报错 */
+/** 类型互锁：语义 stroke 档位必须全部映射到数值宽度。 */
 type _ThicknessCheck = AssertEqual<keyof typeof THICKNESS_TO_WIDTH, NonNullable<IRPath['thickness']>>;
 const _assertThicknessCheck: _ThicknessCheck = true;
 void _assertThicknessCheck;
 
 /**
  * IR Path → PathPrim
- * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：commands 用多组 move/line 表达 sub-path；段起点等于上段终点时复用 cursor 省 move。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 close，否则显式画段 line。引用未定义节点/解析失败返回 null，并通过 `warnHook.onWarn` 同步触发 warning
+ * @description 解析失败返回 null，并通过 `warnHook.onWarn` 报告 warning。
  */
 export const emitPathPrimitive = (
   path: IRPathBase,
@@ -194,10 +186,7 @@ export const emitPathPrimitive = (
     return ref;
   });
 
-  /**
-   * 单调指针：最近一个 hasTo step 的索引；主循环开头根据上一 step 推进；O(1) 读
-   * @description 旧实现 findPrev(i) 反向扫 anchors 数组每步 O(i)、整 path O(n²)；改为只在 step `i-1` 是 hasTo 时推进。anchor 失效"中毒"判断保留：lastHasToIdx 指向的 anchor 为 null 时 findPrev 返回 null，与旧"扫到第一个 hasTo 步若 anchor=null 返回 null"语义等价
-   */
+  /** 最近一个 hasTo step 的索引，供主循环 O(1) 读取。 */
   let lastHasToIdx = -1;
   /** 同步维护：最近一个 move 步的 `to`，给 cycle 闭合用；旧 findRecentMoveTo 反向扫 → O(1) */
   let lastMoveTo: IRTarget | null = null;

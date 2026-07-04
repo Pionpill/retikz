@@ -25,13 +25,7 @@ export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
   return [(minX + maxX) / 2, (minY + maxY) / 2];
 };
 
-/**
- * path 整体 rotate / scale → 绕包围盒中心的 GroupPrim transforms
- * @description rotate 写成 `{ kind:'rotate', degrees, cx, cy }`（cx/cy = bbox center），等价包一个绕同中心旋转的 Scope；
- *   scale number → `{ kind:'scale', x }`（等比，y 省略），`{x,y}` → `{ kind:'scale', x, y }`。
- *   缩放支点同为 bbox center：用 translate(center) ∘ scale ∘ translate(-center) 三段表达。两者都缺时返回空数组。
- *   数组顺序与 GroupPrim 渲染一致（array[0] 最外层、最后 apply）：先 rotate 段再 scale 段（rotate 在外）。
- */
+/** 把 path 的 rotate / scale 编译为绕 bbox 中心的 transforms。 */
 export const buildPathTransforms = (
   rotate: number | undefined,
   scale: IRPathScale | undefined,

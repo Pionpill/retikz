@@ -124,12 +124,7 @@ type MathPiece = {
 };
 type Piece = TextPiece | MathPiece;
 
-/**
- * 度量 + 降解一行 run 序列，产出行盒尺寸与 emit
- * @description text run 经 measureText（缺 ascent/descent 用 fontSize×0.8/0.2 兜底）；math run 经 lowerTex 得 {commands,width,height,depth}，
- *   glyph bbox `[0,0]..[w,h]`、基线在顶下 `height-depth` 处；x 左→右累加，公式 group 平移到 `baselineY-(height-depth)` 贴文字基线。
- *   缺 lowerTex → 跳过该 math run + TexLowererMissing；非法 tex → 跳过 + TexInvalid
- */
+/** 度量一行 inline run，并返回可 emit 的行布局。 */
 export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContext): LaidLine => {
   let x = 0;
   let ascent = 0;

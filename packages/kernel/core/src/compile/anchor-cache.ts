@@ -8,10 +8,7 @@ import { isAnchor } from '../shared';
 import { boundaryKey } from './boundary';
 import { anchorOf, angleBoundaryOf, outerRectOf } from './node';
 
-/**
- * (layout, anchorName) → IRPosition 缓存
- * @description WeakMap 让 NodeLayout 引用一旦失效（compile 结束、NameStack 回收），对应 Map 自动 GC，无需手动 invalidate
- */
+/** 单个 NodeLayout 生命周期内的 anchor 坐标缓存。 */
 const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();
 
 /** 角度字符串识别：可选负号 + 数字 + 可选小数；与 parseTarget.ts 的 ANGLE_RE 同语义 */
@@ -23,13 +20,7 @@ const withOuterRect = (layout: NodeLayout): NodeLayout => ({
   rect: outerRectOf(layout),
 });
 
-/**
- * 把 anchorName 解析到对应 shape 的 anchor / boundaryPoint 上
- * @description 数字字符串走 angleBoundaryOf；其余按标准方位 / shape-specific anchor 走 anchorOf；boundary 透传给两者。
- *   border 类 anchor（数字角度 + 标准方位名）按 margin 外推：在外扩 margin 的 rect（`outerRectOf`）上解析。
- *   形状专属命名 anchor（tip-N / apex 等）恒走视觉 rect、不外扩。`center` 在 inflate 下
- *   中心不变，走哪条路结果一致。
- */
+/** 把 anchor 名称解析为节点上的全局坐标。 */
 const computeAnchor = (layout: NodeLayout, anchorName: string, boundary: IRBoundary | undefined): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
     const angle = Number(anchorName);
@@ -46,16 +37,7 @@ const computeAnchor = (layout: NodeLayout, anchorName: string, boundary: IRBound
 /** geometry Position（含 readonly 形态）转 IRPosition 元组（IRPosition === [number, number]） */
 const positionToIR = (p: Position): IRPosition => [p[0], p[1]];
 
-/**
- * 取节点 anchor 的全局坐标，带 per-layout 缓存
- * @description name 接受标准方位 anchor 关键字（如 `'top'` / `'bottom-left'`）或数字角度字符串（如 `'30'` / `'-45'`）；
- *   boundary 指定连接面（默认 `'shape'`，即节点自身视觉轮廓）；不同 boundary 产生独立缓存条目，互不串扰；
- *   同一 (layout, name, boundary) 组合第二次起返回首调用结果的**同一引用**——上游可用 `===` 判定 cache 命中
- * @param layout 已 Pass 1 完成的 NodeLayout（rect 已是全局坐标）
- * @param anchorName 关键字或数字角度字符串
- * @param boundary 连接面，缺省为 `'shape'`（视觉轮廓）
- * @returns 全局坐标系下的 IRPosition `[x, y]`
- */
+/** 取节点 anchor 的全局坐标。 */
 export const resolveAnchor = (
   layout: NodeLayout,
   anchorName: string,
@@ -74,14 +56,7 @@ export const resolveAnchor = (
   return result;
 };
 
-/**
- * 取节点边上比例点 `{ side, fraction }` 的全局坐标，带 per-layout 缓存
- * @description 走 `layout.shapeDef.edgePoint`——shape 未实现（如自定义 shape）抛"does not support side anchors"；
- *   零尺寸 layout（Coordinate）抛错（边上比例点对一个点无意义，报错比退化中心更可诊断）。
- *   缓存 key = `${side}:${t}`，与命名 anchor（`'top'` / `'30'`）共用 layout 的 Map——key 含 `:` 故命名空间不冲突。
- * @param layout 已 Pass 1 完成的 NodeLayout（rect 已是全局坐标）
- * @returns 全局坐标系下的 IRPosition `[x, y]`
- */
+/** 取节点边上比例点的全局坐标。 */
 export const resolveEdgePoint = (layout: NodeLayout, side: SideValue, t: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {

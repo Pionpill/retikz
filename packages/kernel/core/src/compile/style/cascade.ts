@@ -175,12 +175,7 @@ const expandRibbonColor = (src: Partial<IRPathBase>): Partial<IRPathBase> => {
 // 元素样式解析（fold style frame 栈 + 元素显式）
 // ===========================================================================
 
-/**
- * 解析 node 最终样式——fold 外→内 frame 栈 + 元素显式
- * @description 优先级链（每分项就近 model A）：元素显式分项 > 元素 color > nodeDefault 分项 > nodeDefault color
- *   > scope 级联分项 > scope color > 内置（layoutNode 兜底）。同 frame 内 nodeDefault 优先于级联。
- *   resetStyle('node') 丢外层累积；position / id / text / label 取元素自身（不参与继承）。
- */
+/** 解析 node 的最终样式，元素显式字段优先于 scope 默认样式。 */
 export const resolveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleFrame>): IRNode => {
   let acc: Partial<IRNode> = {};
   for (const frame of stack) {
@@ -221,12 +216,7 @@ const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undef
   return out;
 };
 
-/**
- * 解析 step label 最终样式——消费 scope labelDefault + 宿主 path 已解析主色
- * @description 继承顺序：label 显式 > scope.labelDefault (textColor → color) > 宿主 path 主色 > currentColor（emit 兜底）。
- *   跟随的是宿主 path 主色（不是 stroke）；font 逐字段回退 labelDefault；opacity 与 path opacity 相乘在 emit 阶段。
- *   masterColor 是 host 轴（结构关系），不受 resetStyle('label') 影响——label 仍跟所属线，不成孤岛。
- */
+/** 解析 path label 的最终样式，并让缺省文字色跟随宿主 path 主色。 */
 const resolveGeometryLabel = (
   label: IRGeometryLabel,
   labelDefault: IRLabelDefault,
@@ -272,12 +262,7 @@ const dropArrowEndColor = (end: IRArrowEndDetail): IRArrowEndDetail => {
   return next;
 };
 
-/**
- * 解析 arrow detail——fold arrowDefault 通道 + 跟宿主 path 主色 + 元素 arrowDetail
- * @description color 优先级（顶层与 start / end 端点同理）：元素显式 arrowDetail（含 start / end.color）> 宿主 path 已解析主色 > arrowDefault（含 start / end.color）> 内置。
- *   宿主主色（host 轴，决策 13）会清掉 arrowDefault 带来的端点 color，让 start / end 回退到顶层主色；元素自身 arrowDetail（含 start / end.color）仍最高。
- *   masterColor 不受 resetStyle('arrow') 影响（host 轴非 scope 继承）。lineWidth / fill 的主色映射推迟（render 端仍按现有兜底继承 path stroke）。
- */
+/** 解析 arrow detail，并让缺省箭头色跟随宿主 path 主色。 */
 const resolveArrowDetail = (
   explicit: IRArrowDetail | undefined,
   stack: ReadonlyArray<StyleFrame>,
@@ -368,9 +353,8 @@ const resolveGeometryLabelField = (
 };
 
 /**
- * 解析 path 最终样式——fold frame 栈 + 元素显式 + arrow / step-label 跟宿主主色
- * @description 返回 effective IRPath：base 样式 fold（优先级链同 node）；arrowDetail 消费 arrowDefault 通道 + 跟主色；
- *   每个 step.label 消费 labelDefault 通道 + 跟主色。masterColor = path 已解析主色（就近 color），arrow / step-label 跟它（不跟 stroke）。
+ * 解析 path 的最终样式。
+ * @description arrow 和 step label 的缺省颜色跟随宿主 path 主色。
  */
 export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<StyleFrame>): IRPathBase => {
   let acc: Partial<IRPathBase> = {};

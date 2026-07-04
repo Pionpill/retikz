@@ -15,12 +15,7 @@ export type ResolvedArrowRegistry = ReadonlyMap<string, ArrowDefinition>;
 /** 默认 baseSize（marker 局部基准边长，viewBox `0 0 baseSize baseSize`） */
 const ARROW_GEOMETRY_BASE_SIZE = 10;
 
-/**
- * compile 内部中间体：把顶层默认 ⊕ end-side override merge 后的"视觉输入"集合
- * @description 仅 compile 解析阶段用——shrink 几何 + 调 def.emit 都读它；这些视觉输入字段（scale /
- *   length / width / color / fill / lineWidth）解析完即消费，**不**进最终 `ResolvedArrowEndSpec`（已解析 marker 描述）。
- *   这是 compile-internal 类型，不导出公开 API。
- */
+/** compile 内部使用的箭头视觉输入。 */
 type ResolvedArrowVisual = {
   shape: string;
   /**
@@ -64,11 +59,7 @@ type ResolvedArrowVisual = {
 const lookupArrowDef = (shape: string, registry: ResolvedArrowRegistry): ArrowDefinition =>
   providerDefinitionOf(registry, shape, { capability: 'arrow shape', optionName: 'arrows' });
 
-/**
- * 端点级视觉输入：顶层默认 ⊕ end-side override（逐字段 merge）
- * @description 缺省字段继承顶层（不是"完全替换"）；空心 def 上 fill 字段被丢（silent no-op）。
- *   产 compile-internal 中间体，供 shrink + emit 消费。
- */
+/** 解析端点箭头的视觉输入。 */
 const resolveArrowMarkVisual = (mark: IRArrowMark, registry: ResolvedArrowRegistry): ResolvedArrowVisual => {
   const baseShape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const out: ResolvedArrowVisual = { shape: baseShape };
@@ -83,11 +74,7 @@ const resolveArrowMarkVisual = (mark: IRArrowMark, registry: ResolvedArrowRegist
   return out;
 };
 
-/**
- * 校验 def 几何字段有限（baseSize 还须 > 0）
- * @description 第三方 / LLM 写出的 def 可能漏字段或塞 NaN / Infinity / 0 baseSize；这些数会经 shrink 公式
- *   污染 path 本体坐标（非仅 marker），故在此抛清晰错（含 shape 名，便于自修），不放任 NaN 静默流出。
- */
+/** 校验 arrow definition 的几何字段有效。 */
 const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
   if (!Number.isFinite(def.lineContactX)) {
     throw new Error(
@@ -109,11 +96,7 @@ const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
   }
 };
 
-/**
- * 调 def.emit 收集 marker 并跑窄子集 + JSON-safe 校验
- * @description emit 缺失 / 非函数 / 抛错 / 返回非 iterable 都包成含 shape 名的清晰错（便于第三方 / LLM 自修），
- *   不泄漏内部变量名；产物逐个过共享 `validateMarkerPrimitives`（窄子集 + 深度无函数检查，与 pattern motif 同套）。
- */
+/** 调用 arrow emit，并校验 marker 产物。 */
 const callEmit = (shape: string, def: ArrowDefinition, ctx: ArrowEmitContext): Array<MarkerPrimitive> => {
   if (typeof def.emit !== 'function') {
     throw new Error(`Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`);
@@ -175,18 +158,11 @@ const resolveGeometry = (visual: ResolvedArrowVisual, registry: ResolvedArrowReg
   return { def, baseSize, tipX, contactX, lineWidth, resolvedLength, resolvedWidth, boundaryOuterInset };
 };
 
-/**
- * 端点级 shrink（strokeWidth 倍）：line 末端朝起点缩这么多，让箭头尖端落回原 target
- * @description 不分实心 / 空心：路径端点接在箭头尾部或凹口，箭头尖端仍贴原 target。低 opacity 下不会再透出 line。
- */
+/** 计算端点箭头需要的 path 收缩量。 */
 const computeShrink = (geometry: ResolvedArrowGeometry): number =>
   ((geometry.tipX - geometry.contactX) * geometry.resolvedLength) / geometry.baseSize;
 
-/**
- * 据 def + 解析后视觉输入构 `ArrowEmitContext`
- * @description hollow def：fill 丢（neutral）、stroke = color override ?? contextStroke、lineWidth 启用；
- *   solid def：fill = fill ?? color ?? contextStroke、stroke = color ?? contextStroke。
- */
+/** 构造 ArrowDefinition.emit 的上下文。 */
 const buildEmitContext = (
   visual: ResolvedArrowVisual,
   geometry: ResolvedArrowGeometry,
@@ -198,11 +174,7 @@ const buildEmitContext = (
   return { stroke, fill, lineWidth: geometry.lineWidth, round };
 };
 
-/**
- * 把视觉中间体物化成最终 `ResolvedArrowEndSpec`（已解析 marker 描述）
- * @description 构 `ArrowEmitContext` → 调 `def.emit` 收集 `MarkerPrimitive[]`，并算 baseSize /
- *   refX（hollow 减 lineWidth/2）/ markerWidth = 解析 length / markerHeight = 解析 width / opacity 透传。
- */
+/** 把箭头视觉输入物化为 Scene 端点箭头描述。 */
 const materializeArrowEndSpec = (
   visual: ResolvedArrowVisual,
   geometry: ResolvedArrowGeometry,
@@ -222,12 +194,7 @@ const materializeArrowEndSpec = (
   return out;
 };
 
-/**
- * IR path-level `arrow` + `arrowDetail` → PathPrim 起末端点已解析 marker 描述
- * @description merge 视觉输入 → 查 resolved registry + 解析几何 → 算 shrink → 调 def.emit 物化最终 `ResolvedArrowEndSpec`。
- *   返回同时带 compile-internal 的 shrink 量（端点收缩在 compile 落，与 emit 落点无关）。
- *   未注册 shape 名在此 throw（lookupArrowDef）。
- */
+/** 已解析的端点箭头及对应 path 收缩量。 */
 export type ResolvedEndpointArrowMark = {
   /** 已物化的 Scene 端点箭头描述。 */
   spec: ResolvedArrowEndSpec;
@@ -251,13 +218,7 @@ export const resolveEndpointArrowMark = (
   };
 };
 
-/**
- * 解析一个中段标记 `IRArrowMark` 为已物化的 marker 描述（`ResolvedArrowEndSpec`）
- * @description 复用端点箭头同一管线：mark 自身视觉子集字段（shape / scale / length / width / color /
- *   fill / opacity / lineWidth）即 `ResolvedArrowVisual`（空心 def 上 fill 字段被丢）→ 查 resolved registry
- *   解析几何 → 调 def.emit 物化局部 baseSize 几何 + wrapper 参数。方向由调用方按路径切线决定，本函数不含定向。
- *   未注册 shape 名在此 throw（lookupArrowDef）。
- */
+/** 解析中段 arrow mark 为 marker 描述。 */
 export const resolveMarkArrowSpec = (
   mark: IRArrowMark,
   registry: ResolvedArrowRegistry,
@@ -305,10 +266,7 @@ const setEndpoint = (
   // arc / ellipseArc 不参与 shrink——首末段都是 line/cubic（path-arrow 的 path 形态）
 };
 
-/**
- * 按 shape + spec（length / scale / lineWidth）把首/末段端点向内缩短
- * @description 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过。in-place 改写 commands 数组
- */
+/** 按箭头收缩量改写 path 首尾端点。 */
 export const applyArrowShrinks = (
   commands: Array<PathCommand>,
   shrinkStart: number,

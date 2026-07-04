@@ -32,19 +32,10 @@ const inflateRect = (r: Rect, m: BoxInsets): Rect => {
   };
 };
 
-/**
- * 视觉 rect 外扩 margin 得到外边界 AABB
- * @description = `inflateRect(layout.rect, layout.margin)`。border 类
- *   anchor（标准方位 / 数字角度）解析与 bbox / viewBox / 布局占位都基于这层；视觉 emit / 裁剪 /
- *   形状专属 anchor / edgePoint / label 附着点仍读 `layout.rect`（不外扩）。单一派生量，不另存字段。
- */
+/** 取节点视觉 rect 外扩 margin 后的外边界。 */
 export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.rect, layout.margin);
 
-/**
- * 取节点 shape 在 toward 方向的附着点（path 端点贴边用）
- * @description 走连接面（boundary）对应的 def.boundaryPoint；margin > 0 时先膨胀外接 Rect，让 path 在 border 外停 margin。
- *   boundary 缺省 = 'shape'（视觉形状自身），与改前行为一致。
- */
+/** 取节点 shape 在 toward 方向的附着点。 */
 export const boundaryPointOf = (
   layout: NodeLayout,
   toward: Position,
@@ -61,16 +52,7 @@ export const boundaryPointOf = (
   return def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
 };
 
-/**
- * 取节点 shape 命名 anchor（center / top / right / top-right）
- * @description 纯几何：在传入的 `layout.rect` 上求点，本体**不施加 margin**。margin 的
- *   「border 外推」由调用方决定——`anchor-cache.ts` 的标准方位解析先把 rect 外扩 margin（`outerRectOf`）
- *   再调本函数；`labelBorderPoint` 喂视觉 rect（label 附着点不含 margin）。这样 margin 只作用于
- *   path / position 的 anchor 引用，不波及 label。
- *   标准方位名：默认连接面先走视觉 shape 自身方位几何（ellipse/circle 落真实周长、polygon/rect 落 AABB，与 TikZ 一致），shape 未实现则回退 AABB 矩形；显式 boundary 按其解析。
- *   形状专属命名 anchor（tip-N / apex 等非标准方位名）恒走视觉形状自身，boundary 不影响。
- *   boundary 缺省 = 'shape'。
- */
+/** 取节点 shape 的命名 anchor。 */
 export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
@@ -120,11 +102,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
   return p;
 };
 
-/**
- * 取节点 shape 在指定角度方向的边界点
- * @description 角度是节点**局部坐标系**下的极角（度数：0°=局部 +x，90°=局部 +y）。layout.rect.rotate 把局部基绕中心旋转，得到世界系下的视觉方向；shape boundaryPoint 内部用 rotate-aware 投影，所以这里把局部 (cos, sin) 经 rect.rotate 旋转后加到中心当作世界系 toward 传入。本体**不施加 margin（同 anchorOf）**——margin 外推由 `anchor-cache.ts` 调用方喂 `outerRectOf` 实现；用于 `'A.30'` 落点。
- *   boundary 缺省 = 'shape'（视觉形状自身）。
- */
+/** 取节点 shape 在指定角度方向的边界点。 */
 export const angleBoundaryOf = (
   layout: NodeLayout,
   angleDeg: number,

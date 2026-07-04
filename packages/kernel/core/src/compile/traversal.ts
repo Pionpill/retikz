@@ -31,11 +31,7 @@ import {
   registerScopeCircleLayout,
 } from './scope';
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from './style';
-/**
- * 构造一个落在指定全局点的 0×0 rectangle NodeLayout
- * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
- *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
- */
+/** 构造落在指定全局点的 0×0 rectangle layout。 */
 const zeroSizeRectAt = (
   id: string,
   [cx, cy]: IRPosition,
@@ -58,10 +54,7 @@ const zeroSizeRectAt = (
   boundaries,
 });
 
-/**
- * 把 coordinate 注册成 0×0 NodeLayout
- * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
- */
+/** 把 coordinate 表示为 0×0 layout。 */
 const coordinateAsLayout = (
   id: string,
   center: IRPosition,
@@ -111,12 +104,7 @@ const pushLayoutPoints = (
   for (const p of shadowOverflowPoints(points, shadow)) target.push(p);
 };
 
-/**
- * scope.id 入场时的临时占位 NodeLayout
- * @description scope 子树尚未处理时先放 0×0 占位（落在 scope 局部原点经累积 chain 投到全局的位置），
- *   让 scope 子树内任何 lookup 不返回 undefined（占位语义自洽）。
- *   子树 Pass 1 处理完毕后由 `registerScopeAsLayout` 算出真 bbox layout 覆盖此占位（NameStack.replaceLayout 不发 duplicate warn）
- */
+/** scope.id 的临时 0×0 layout，占位后会替换为真实 bbox layout。 */
 const scopePlaceholderLayout = (
   id: string,
   chain: ReadonlyArray<Transform>,
@@ -127,9 +115,7 @@ const scopePlaceholderLayout = (
   return zeroSizeRectAt(id, globalOrigin, shapes, boundaries);
 };
 
-/**
- * 编译期占位 primitive：Pass 1 的 path 分支先在 sink 占一个位记住声明位置，Pass 2 解析出真 primitive 后按引用 splice 替换。绝不进入最终 Scene 输出（compileToScene 返回前由 placeholderBalance 无条件校验兜底）。
- */
+/** path 延迟解析时使用的内部占位 primitive。 */
 type PathPlaceholder = { type: 'path-placeholder' };
 
 /** compile 内部 sink 元素类型：真 Scene primitive 或编译期占位；构造 GroupPrim / 返回 Scene 前收窄回 ScenePrimitive */
@@ -137,7 +123,7 @@ type InternalScenePrimitive = ScenePrimitive | PathPlaceholder;
 
 const makePathPlaceholder = (): PathPlaceholder => ({ type: 'path-placeholder' });
 
-/** 把内部 sink 收窄回公开 ScenePrimitive[]：占位已全部回填（compileToScene 末端 placeholderBalance 无条件校验兜底） */
+/** 把内部 sink 收窄回公开 ScenePrimitive[]。 */
 const sealSink = (sink: Array<InternalScenePrimitive>): Array<ScenePrimitive> => sink as Array<ScenePrimitive>;
 
 /** 开发诊断：递归找出残留占位的 index 路径，供末端无条件校验报错时定位 */
@@ -164,7 +150,7 @@ type PendingDrawing = {
   zIndex?: number;
 };
 
-/** 据**实际解析失败**的那个 transform 的成因映射 warn code（由 lowerScopeTransforms 的 onUnresolved 回调给出） */
+/** 按 transform 失败来源选择 warning code。 */
 const transformWarnCode = (failed: IRTransform | undefined): CompileWarning['code'] => {
   switch (failed?.kind) {
     case 'offset-translate':
@@ -288,13 +274,8 @@ export const compileChildrenToPrimitives = (
     });
   };
 
-  /**
-   * 解析一批本层收集的 pending paths（lookup-only 阶段）
-   * @description 两种落点：有 `slot`（scopeChain 为空）→ 原位 splice 回填该 path 在本层 sink 占的位（按引用定位免索引漂移），保住与同层 node 的 IR 声明序；无 `slot`（scopeChain 非空）→ hoist 到顶层 `primitives`，因端点已是全局坐标、进 transformed GroupPrim 会被 scope.transform 二次 apply。NameStack 切到 pass2 守门：path 解析中误调 register 抛 internal error；解析完切回 pass1 让上层 scope 子树继续 register 子节点。
-   *   `item.scopeChain` 记录该 path 所属 scope 累积 transform 链——传给 emitPathPrimitive，
-   *   让 step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"投影回全局。
-   */
-  const resolvePendingPaths = (pending: ReadonlyArray<PendingDrawing>): void => {
+/** 解析当前层收集的 pending paths。 */
+const resolvePendingPaths = (pending: ReadonlyArray<PendingDrawing>): void => {
     if (pending.length === 0) return;
     nameStack.enterLookupPhase();
     try {
@@ -328,17 +309,7 @@ export const compileChildrenToPrimitives = (
     }
   };
 
-  /**
-   * 递归处理一组 IR child，把 node / coordinate 发到 sink、把本层 path 收集到 pathsAccumulator、scope 下沉为 GroupPrim
-   * @description **不**在内部 resolve pathsAccumulator——调用方负责在合适时机（scope 入口：bbox replaceLayout 之后 / popFrame 之前；顶层：所有处理结束后）调用 resolvePendingPaths。这样 scope.id 的 placeholder→real bbox 替换在本层 path 端点 lookup 之前完成，避免 "scope 内 path 自引用本 scope.id 拿到 placeholder" 的 latent bug，同时保留"本层 path 在本层 frame 还在栈顶时 resolve"的 inside-out lookup 语义。
-   * @param children 当前层级的 IR child 数组
-   * @param chain 从根到当前层级累积的 Cartesian-only transform 链
-   * @param sink 当前层级 Scene primitive 落点（顶层 = primitives，scope 内 = GroupPrim.children）
-   * @param locatorPrefix IR locator 前缀（如 `''` 表示顶层、`children[2].scope.` 表示某 scope 内）
-   * @param layoutsAccumulator 当前 scope 子树所有"实体"layout（node / coordinate / 嵌套 scope.id synthetic）累积——专给上层 scope.id bbox 计算用；顶层调用传一个共享数组（用得着就用，丢弃也不影响）
-   * @param pathsAccumulator 当前层级收集的 pending paths——由调用方分配并在合适时机 resolve
-   * @param styleStack 从根到当前层级累积的样式 frame 栈（scope 级联 graphic state + 四通道 every-X + resetStyle）；node / path 进入时按 inside-out per-field 解析 effective 样式
-   */
+  /** 递归编译一层 IR child，并收集本层待解析 path。 */
   const processChildren = (
     children: ReadonlyArray<IRChild>,
     chain: ReadonlyArray<Transform>,

@@ -1,9 +1,6 @@
 import type { NodeLayout } from './node';
 
-/**
- * 单条 duplicate warn 由 NameStack 通过 onDuplicate 回调向外发出的载荷
- * @description 由 compile 层把 NameStack 内部 frame depth + 前后两次 IR locator 翻译成 CompileWarning（含可读 message）；NameStack 不知道 CompileWarning 的具体形态，避免反向耦合
- */
+/** 同一 namespace frame 内重复 id 的诊断载荷。 */
 export type DuplicateRegisterInfo = {
   /** 同 frame 内重复出现的 id（两次 register 都用此 id） */
   id: string;
@@ -17,19 +14,13 @@ export type DuplicateRegisterInfo = {
 
 /** NameStack 构造选项 */
 export type NameStackOptions = {
-  /**
-   * 同 frame 重复 register 时的回调
-   * @description 第 N 次 register（N ≥ 2）发一次；first register 不发；NameStack 不直接发 CompileWarning，由 compile 层翻译
-   */
+  /** 同 frame 重复 register 时的回调。 */
   onDuplicate?: (info: DuplicateRegisterInfo) => void;
 };
 
 /**
- * 栈式 namespace frame —— 默认全局扁平、`<Scope localNamespace>` 时 pushFrame 隔离
- * @description 内部维护 `Array<Map<string, NodeLayout>>`，栈底是根 frame；
- *   register 写入栈顶 frame；lookup 从栈顶向栈底 inside-out 搜索（内层 shadowing 外层）；
- *   同 frame 同 id 触发 onDuplicate + last-wins 覆盖（不抛错）；跨 frame 同 id 不算 duplicate；
- *   Pass 1 = register-only，Pass 2 = lookup-only，phase 状态守护违规调用
+ * 栈式 namespace frame。
+ * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断。
  */
 export class NameStack {
   /** 栈式 frame 容器；栈底（index 0）= 根 frame，栈顶（last）= 当前 frame */
@@ -62,10 +53,7 @@ export class NameStack {
     this.firstIrPaths.push(new Map());
   }
 
-  /**
-   * 弹出栈顶 frame；通常对应 `<Scope localNamespace>` 出场
-   * @description 禁止把栈弹空（根 frame 必须始终存在）；意外调用抛 internal error 暴露 bug
-   */
+  /** 弹出栈顶 frame；根 frame 不可弹出。 */
   popFrame(): void {
     if (this.frames.length <= 1) {
       throw new Error('NameStack.popFrame: cannot pop the root frame (internal invariant violated)');
@@ -84,14 +72,7 @@ export class NameStack {
     this.currentPhase = 'pass1';
   }
 
-  /**
-   * 注册一条 id → NodeLayout 到栈顶 frame
-   * @description 若栈顶 frame 已有同 id：触发 onDuplicate 回调（first register 不触发），用新 layout last-wins 覆盖；返回是否覆盖了已有 entry
-   * @param id 要注册的 id（node.id / coordinate.id / scope.id）
-   * @param layout 对应的 NodeLayout
-   * @param irPath 触发此次 register 的 IR locator（jq-like 路径），用于 duplicate warn
-   * @returns true = 当前 frame 已有同 id 被覆盖；false = 新 entry
-   */
+  /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值。 */
   register(id: string, layout: NodeLayout, irPath?: string): boolean {
     if (this.currentPhase !== 'pass1') {
       throw new Error(
@@ -115,18 +96,7 @@ export class NameStack {
     return wasOverwritten;
   }
 
-  /**
-   * 在指定深度的 frame 上替换已注册 id 对应的 layout，**不触发** onDuplicate 回调
-   * @description 专为"scope.id 入场注册临时占位 layout、子树结束后用真 bbox layout 覆盖"流程设计——
-   *   同一 scope.id 的两次 register 是预期的 placeholder → real-bbox 接力，不是命名冲突；
-   *   此 API 跳过 duplicate 检测但保留 firstIrPath（不刷新 first-register 位置）。
-   *   若指定 frame 不存在该 id（说明 id 没被 register 过），抛 internal error 暴露调用方 bug
-   * @param id 要替换的 id（必须已在该 frame 注册过）
-   * @param layout 新的 NodeLayout（覆盖旧值）
-   * @param frameDepth 0 = 根 frame；通常传 scope 入场前的栈深 - 1
-   * @param expectedCurrent 可选的当前 layout 引用；传入后仅当 frame 中仍是该引用时才替换
-   * @returns true = 完成替换；false = 当前值已被后续 register 覆盖，未替换
-   */
+  /** 替换指定 frame 内已注册的 layout；用于 scope 占位升级，不触发重复 id 诊断。 */
   replaceLayout(id: string, layout: NodeLayout, frameDepth: number, expectedCurrent?: NodeLayout): boolean {
     if (this.currentPhase !== 'pass1') {
       throw new Error(
@@ -147,10 +117,7 @@ export class NameStack {
     return true;
   }
 
-  /**
-   * inside-out 查找 id 对应的 NodeLayout
-   * @description 从栈顶向栈底依次查找；首个命中的 frame 返回；都没命中返回 undefined。内层可见外层（shadowing），外层不可见内层
-   */
+  /** 按 inside-out 规则查找 id 对应的 layout。 */
   lookup(id: string): NodeLayout | undefined {
     for (let i = this.frames.length - 1; i >= 0; i--) {
       const layout = this.frames[i].get(id);

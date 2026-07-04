@@ -7,15 +7,7 @@ import type { NameStack } from '../name-stack';
 import { inverseTransformChain } from '../scope';
 import { refPointOfTarget } from './anchor';
 
-/**
- * relative/relativeAccumulate 目标解析为绝对 Position（step kind 不变，to 为局部坐标 tuple）
- * @description relative 不更新 prevEnd（TikZ `+`），relativeAccumulate 更新（TikZ `++`）。prevEnd 推进：有 to 的 kind 用 refPointOfTarget(to)；arc 用 arcEndPoint；circlePath/ellipsePath/cycle 不变。首步 relative 时 prevEnd 回退 [0,0]；解析失败保持原 step。
- *   prevEnd 始终是全局坐标系下的 cursor；relative 形态 `[dx, dy]` 在**当前 scope 局部度量**——
- *   先反向投影 prevEnd 到 scope 局部 + 加 (dx, dy) 得局部 tuple，写回 step.to。下游
- *   `refPointOfTarget` / `clipForTarget` 把 tuple 视作 scope 局部字面量，统一 `applyTransformChain` 投回全局——
- *   relative 分支只负责"折算到局部"，不能在此处提前投影到全局，否则与下游 chain apply 形成 double-apply。
- *   `scopeChain=[]` 时 inverse 恒等，保持全局坐标语义。
- */
+/** 把 relative / relativeAccumulate 目标归一为局部坐标 tuple。 */
 export const normalizeRelativeTargets = (
   steps: ReadonlyArray<IRStep>,
   nameStack: NameStack,

@@ -44,17 +44,9 @@ export type NodeLayout = {
   shapeName: string;
   /** 已解析的 shape 定义；circumscribe / boundaryPoint / anchor / emit 多点复用，取代旧 switch */
   shapeDef: ShapeDefinition;
-  /**
-   * 已校验的 per-instance shape 参数（经 `paramsSchema.parse` + `JsonObjectSchema.parse` 双护栏）
-   * @description 透传给 `shapeDef` 的 circumscribe / boundaryPoint / anchor / edgePoint / emit；
-   *   无参形状（内置 4 个）解析为 `{}`。省略时各调用点以空对象兜底（合成 layout 如 coordinate / scope.id）。
-   * @default {}
-   */
+  /** 已校验的 per-instance shape 参数。 */
   shapeParams?: IRJsonObject;
-  /**
-   * 节点视觉边界框（所有 shape 共享语义）
-   * @description rectangle: rect 本身；circle: width=height=2×radius；ellipse: 2×rx,2×ry；diamond: 2×halfA,2×halfB。x,y 是几何中心，rotate 弧度
-   */
+  /** 节点视觉边界框。 */
   rect: Rect;
   /** 文本内容块中心；非对称 padding 时与视觉 rect 中心不同。 */
   contentCenter: [number, number];
@@ -62,15 +54,9 @@ export type NodeLayout = {
   rotateDeg: number;
   /** 外边距（四边 ≥ 0），path 附着到外扩 margin 的虚拟边界 */
   margin: BoxInsets;
-  /**
-   * 节点文本行（undefined 表示无文本，否则非空数组）
-   * @description 每行可带覆盖样式（fill/opacity/fontSize/fontFamily/fontWeight/fontStyle），未覆盖字段 emit 阶段不写出由下游走块级默认
-   */
+  /** 节点文本行；undefined 表示无文本。 */
   lines?: Array<TextLine>;
-  /**
-   * 含 math run 的混排块（与 lines 互斥）：逐行 emit TextPrim / glyph group
-   * @description 每行 laid 携带度量 + emit；baselineOffset 是该行 alphabetic 基线相对块顶的距离
-   */
+  /** 含 math run 的混排块，与 lines 互斥。 */
   inlineBlock?: { lines: Array<{ laid: LaidLine; baselineOffset: number }> };
   /** 文本块宽度 = max(per-line measureText.width) */
   textWidth: number;
@@ -148,11 +134,7 @@ export type NodeLayout = {
    * @default 'normal'
    */
   blendMode?: BlendModeValue;
-  /**
-   * 已解析的 label 列表
-   * @description IR 层 `Node.label` 标准化：position 默认 'top'、distance 默认 DEFAULT_LABEL_DISTANCE、font 从 Node 继承
-   * @default []
-   */
+  /** 已解析的 label 列表。 */
   labels?: Array<NodeLabelLayout>;
   /**
    * 节点默认连接面（来自 IR `node.boundary`；undefined = 'shape'）；path 端点 boundary 可覆盖
@@ -229,10 +211,7 @@ export type NodeLabelLayout = {
   pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number>; dashOffset?: number };
 };
 
-/**
- * 公式渲染上下文：注入的 lowerTex + 预绑路径的 warn 发射器
- * @description compile 调用点把 onWarn + IR locator 预绑成 warn 闭包传入，使 layoutNode 不必背 onWarn / path。
- */
+/** 公式渲染上下文。 */
 export type TexLoweringContext = {
   lowerTex?: LowerTex;
   warn: (code: CompileWarningCodeValue, message: string) => void;

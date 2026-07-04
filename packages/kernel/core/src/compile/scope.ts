@@ -26,12 +26,7 @@ import { boxInsets } from './node';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
-/**
- * 把 IR 7 变体 transforms 展平为 Scene 3 变体（Cartesian translate / rotate / scale）
- * @description 5 个 translate 变体（translate / polar-translate / at-translate / offset-translate / between-translate）
- *   各自构造对应 Position 字面量并调用 `resolvePosition` 拿到 Cartesian (x, y)，再写成 Cartesian translate；
- *   rotate / scale 直接透传。referent 未解析时返回 null（上游负责发 warn / throw）
- */
+/** 把 IR transform 归一为 Scene transform；引用解析失败时返回 null。 */
 export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
   nameStack: NameStack,
@@ -108,13 +103,7 @@ export const lowerScopeTransforms = (
   return out;
 };
 
-/**
- * 把局部坐标点 (x, y) 按 Cartesian-only transform 链 apply 到全局坐标
- * @description 数组语义与 SVG `transform="t0 t1 t2"` / TikZ scope option 顺序一致：
- *   array[0] 是最外层（最后 apply 到 local），array[last] 是最内层（最先 apply）；
- *   即对局部点 P，结果 = t0(t1(t2(P)))。实现上从数组尾部往头部迭代依次 apply。
- *   只接受已被 `lowerScopeTransforms` 展平后的 3 变体（translate / rotate / scale）
- */
+/** 把 scope 局部点投影到全局坐标。 */
 export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
   let x = local[0];
   let y = local[1];
@@ -142,15 +131,7 @@ export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Tran
   return [x, y];
 };
 
-/**
- * 把全局坐标点反向投影回 scope 局部坐标系（`applyTransformChain` 的逆）
- * @description chain = [t0, t1, t2]（array[0] 最外层、最后 apply）的逆 =
- *   按数组正序应用每个 transform 的逆：t0^-1 / t1^-1 / t2^-1。
- *   translate(-x, -y) / rotate(-deg, cx, cy) / scale(1/x, 1/y)。
- *   scale 分量为 0 时反向投影未定义——退化为返回原点 (0, 0) 当前层，避免 NaN 污染下游。
- *   作用：referent 全局点 → 当前 scope 局部坐标系，配合 `applyTransformChain` 实现
- *   "referent 全局 + relative 部分在当前 scope 局部度量 + 末端正向投影回全局" 的语义。
- */
+/** 把全局坐标反投影回 scope 局部坐标。 */
 export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
   let x = global[0];
   let y = global[1];
@@ -184,14 +165,7 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
   return [x, y];
 };
 
-/**
- * 复制 NodeLayout 并把 rect 中心点 + rotate + 尺寸全部按 scope transform chain 投到全局
- * @description rect 中心走 `applyTransformChain`；chain 里的 rotate 累加到 `rect.rotate`（弧度）、
- *   scale 乘进 rect.width / height / margin——这样 path 端点的 boundary clip 取的是与 SVG `<g>`
- *   实际渲染一致的视觉尺寸 / 朝向，跨 / 入 / 出 rotate / scale scope 的 path 都贴节点视觉边界。
- *   非均匀 scale 与 rotate 在 chain 中混合时，按"累加 rotate + 分量相乘 scale"近似（uniform scale 精确，
- *   anisotropic + rotate 的剪切耦合不展开——当前投影模型限制）。
- */
+/** 把 NodeLayout 投影到全局坐标系。 */
 export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<Transform>): NodeLayout => {
   const [gx, gy] = applyTransformChain([layout.rect.x, layout.rect.y], chain);
   let rotateAccumRad = 0;
@@ -253,14 +227,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
   return points;
 };
 
-/**
- * 收集一组 NodeLayout 的全局 axis-aligned bounding box
- * @description 每个 layout 的 4 角点已是全局坐标系（Pass 1 累积 chain apply 后），
- *   取每个 layout 的 rotate-aware `top-left` / `top-right` / `bottom-left` / `bottom-right`
- *   4 角点（rect.anchor 已含 layout.rect.rotate 处理）并求 AABB；
- *   layout 是 0×0（coordinate / 空 scope 占位）时退化为单点也合法；
- *   空 layouts 数组返回 null（调用方按"空 scope + 兜底原点"退化为 0×0 占位）
- */
+/** 计算一组 layout 的全局 AABB；空数组返回 null。 */
 export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): ScopeBoundingBox | null => {
   if (layouts.length === 0) return null;
   let minX = Infinity,
@@ -276,12 +243,7 @@ export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): Sco
   return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, width: maxX - minX, height: maxY - minY };
 };
 
-/**
- * 用 scope id + bbox 构造 synthetic rectangle NodeLayout
- * @description bbox 为 null 时退化为 fallbackOrigin 的 0×0 占位（空 scope 仍要有可引用句柄）。
- *   synthetic layout 完全复用 rectangle 路径：`scope.id.<keyword>` / `scope.id.<deg>` / `scope.id` 作为 referent
- *   走与普通 rectangle Node 完全一致的 anchorOf / boundaryPointOf / 中心点取值
- */
+/** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout。 */
 export const registerScopeAsLayout = (
   id: string,
   bbox: ScopeBoundingBox | null,
@@ -308,11 +270,7 @@ export const registerScopeAsLayout = (
   };
 };
 
-/**
- * 用 scope id + 子树点集的最小外接圆构造 synthetic circle NodeLayout
- * @description 复用 ellipse + circumscribe:'equal' 的既有圆形 anchor/boundary 路径（与 `<Node shape="circle">` 一致），
- *   零新 anchor 代码。空点集 / MEC 退化时落 fallbackOrigin 的 0 半径占位。
- */
+/** 用 scope id 和子树点集构造可引用的 synthetic circle layout。 */
 export const registerScopeCircleLayout = (
   id: string,
   cornerPoints: ReadonlyArray<IRPosition>,
