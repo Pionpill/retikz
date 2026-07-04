@@ -262,6 +262,21 @@ describe('lowerGuide (ADR-04)', () => {
     expect(nodes[0].fill).toBe('#111');
   });
 
+  it('triangle_tick_marker_points_up_on_bottom_x_axis_when_inward', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        tickLabels: false,
+        ticks: { values: [1], mark: { kind: 'triangle', size: 6, orientation: 'inward' } },
+      },
+      ctx,
+    );
+    const triangle = nodeChildren(axisLayer as IRScope).find(node => JSON.stringify(node.shape).includes('polygon'));
+
+    expect(triangle?.rotate).toBe(270);
+  });
+
   it('custom_shape_tick_mark_preserves_shape_ref', () => {
     const { axisLayer } = lowerGuide(
       {
