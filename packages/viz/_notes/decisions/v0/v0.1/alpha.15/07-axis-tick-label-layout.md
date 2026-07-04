@@ -106,6 +106,20 @@ Theme 可以给 `tickLabels.layout` 提供视觉默认，但不能把 `tickLabel
 4. 固定 `rotate` 继续保留，兼容现有 schema，并让用户能强制 0 / 45 / 90 等角度。
 5. 暂不做 ellipsis / wrap，避免在没有真实文本测量和文本截断契约时把问题扩大。
 
+## 实现补充：旋转标签端点对齐
+
+实现后补充一个布局细节：cartesian tick label 发生旋转时，不能只改变 bbox 估算，还需要把文字节点沿 tick 外侧法线外移到旋转后端点对齐的位置，否则竖排长标签的中心仍靠近轴线，视觉上会压到或穿过 baseline。
+
+最终顺序固定为：
+
+1. 生成原始 tick label node。
+2. 计算固定 rotate 或 auto rotate。
+3. 在 cartesian axis 上按 tick 外侧法线执行旋转标签端点对齐。
+4. 再执行 `layout.hide` 的重叠隐藏。
+5. 最后执行 `layout.bounds` 的边界 flush / hide。
+
+`layout:false` 仍表示关闭自动旋转、隐藏和边界处理，但如果用户显式写了 `tickLabels.rotate`，固定旋转会继续生效，并同样使用端点对齐。非 cartesian axis 没有传入 `sideNormal`，因此端点对齐保持 no-op；单个 tick label 也不能因为无需避让而跳过 fixed rotate。
+
 ## 待决策点
 
 无。ellipsis、wrap、真实 renderer text measurement 和 label event / interaction 不在本 ADR 内。

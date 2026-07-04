@@ -128,6 +128,16 @@ Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字�
 4. `lineCap` 已是 core Path 的稳定字段，补入 axis line 能覆盖圆头 / 方头 baseline，成本低且与常见 axis domain cap 能力对齐。
 5. Theme 只保留视觉 token 默认，避免全局 theme 不小心改变 axis 的结构和阅读语义。
 
+## 实现补充：交叉值、端点刻度与标题位置
+
+在实现 ADR-05 后，数学坐标系示例暴露出三个和 axis line 端点相关但不应写死在 chart preset 里的低层策略。最终补充为可配置字段，而不是只针对现有截图做特殊分支：
+
+- 原点交叉冲突通过 `axis.crossing` 表达。`crossing.value` 默认是 `0`，`crossing.tick: 'hide'` 可隐藏交叉值 tick mark，`crossing.label: 'hide' | 'corner'` 可隐藏或把共用原点 label 放到指定角落。chart / math-axis preset 可以默认组合出“隐藏交叉 tick，单个左下角 label”的规则，但 plot guide 只提供配置能力。
+- 箭头端点附近的刻度避让通过 `ticks.endpoint` 表达。省略该字段时，有 axis arrow 的端点默认会避让附近 tick mark；`ticks.endpoint: false` 可关闭该默认避让。默认只影响 mark，不改变 tick source、grid 或 tick label；需要连 label 一起隐藏时使用 `affect: 'mark-and-label'`。
+- 轴标题沿轴线位置通过 `title.placement` 表达。它复用 core path label 同类心智模型，支持 `at-start`、`near-start`、`midway`、`near-end`、`at-end` 等关键字，也支持 `0..1` 比例。baseline 始终按 negative -> positive 方向解释，所以 x 轴 `at-end` 是右侧，y 轴 `at-end` 是视觉顶部。
+
+这三个补充字段均属于具体 guide 的结构语义，不进入 theme。React `<Axis>` 已透传 `crossing`；`ticks.endpoint` 与 `title.placement` 继续通过既有 `ticks` / `title` props 派生。
+
 ## 待决策点
 
 无。非 cartesian axis arrow、自动 domain 扩展到 origin、axis clipping 和全局 arrow theme 默认均不在本 ADR 内。
@@ -250,7 +260,7 @@ Vanilla builder 暴露同名 plain object；所有字段必须 JSON-safe，不�
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
 | `packages/viz/plot/src/schemas/guide/constants.ts` | 加 | `AxisPlacementKind.Origin` | `'origin'` | `—` | axis 穿过另一维指定数据值的 placement kind |
-| `packages/viz/plot/src/schemas/guide/schema.ts` | 加 | `AxisGuideValueSchema` | `z.union([z.string(), z.number()])` | `—` | axis placement / extent 使用的 JSON-safe 数据值 |
+| `packages/viz/plot/src/schemas/guide/schema.ts` | 加 | `AxisGuideValueSchema` | `z.union([z.string(), z.number().finite()])` | `—` | axis placement / extent 使用的 JSON-safe 数据值 |
 | `packages/viz/plot/src/schemas/guide/schema.ts` | 加 | `AxisOriginPlacementSchema` | `{ kind:'origin'; origin?: AxisGuideValue; tickSide?: AxisCardinalSide; offset?: number }` | `origin: 0`; x tickSide bottom；y tickSide left；offset 0 | cartesian axis 穿过另一维指定值，tick/title 侧向可控 |
 | `packages/viz/plot/src/schemas/guide/schema.ts` | 改 | `AxisPlacementSchema` | `z.discriminatedUnion('kind', [auto, side, edge, origin])` | `auto` | 增加 origin placement |
 | `packages/viz/plot/src/schemas/guide/schema.ts` | 加 | `AxisLineStyleSchema` | `GuideLineStyleSchema.shape + { lineCap?: PathLineCapSchema }` | currentColor / strokeWidth 1 / lineCap butt | 纯 axis baseline 线条样式，供 theme 复用 |

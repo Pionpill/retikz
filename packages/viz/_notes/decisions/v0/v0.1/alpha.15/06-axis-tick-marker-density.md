@@ -34,7 +34,7 @@ const xAxis = {
     mark: {
       kind: 'triangle',
       size: 6,
-      orientation: 'outward',
+      orientation: 'inward',
       fill: 'currentColor',
     },
   },
@@ -163,6 +163,17 @@ type PlotAxisTheme = {
 4. density 对 tick mark 和 grid 使用同一可见 tick set，避免 tick mark 抽稀但 grid 不抽稀的默认不一致。
 5. Theme 只给 tick mark 外观默认，不控制 tick source 或 density，避免全局 theme 改变图表阅读粒度。
 
+## 实现补充：三角形方向语义
+
+实现复核时确认，内置 `triangle` 只是复用 core polygon shape，并不为 plot 单独定义新的三角形坐标系。`orientation` 的语义保持为 tick 法线 / 轴线切线策略：
+
+- `outward` 始终沿 tick 外法线方向。对于默认 bottom x axis，外法线是向下。
+- `inward` 始终沿 tick 内法线方向。对于默认 bottom x axis，内法线朝向绘图区，因此三角尖端朝上。
+- `axis` 沿轴线切向，`fixed` 使用显式 `rotate` 或 0。
+- `custom` shape 不继承 triangle 的任何额外 base rotation；用户自定义 shape 的 canonical direction 由自定义 shape 自己决定。
+
+因此文档和 demo 中“底部 x 轴三角刻度朝上”的示例使用 `orientation: 'inward'`。实现只补充回归测试锁定该语义，不额外修改 triangle lowering 的默认旋转，避免破坏 top / left / right 轴和 custom shape 的既有方向规则。
+
 ## 待决策点
 
 无。label 相关能力后一轮单独讨论；本 ADR 只处理 ticks 本身。
@@ -179,7 +190,7 @@ type PlotAxisTheme = {
     mark: {
       kind: 'triangle',
       size: 6,
-      orientation: 'outward',
+      orientation: 'inward',
       fill: 'currentColor',
     },
   }}
