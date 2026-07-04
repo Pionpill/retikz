@@ -77,7 +77,7 @@ const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Po
  *   emit 出弧 path（close=false 开放描边、无 close 命令；close=true 弦闭合成弓形可填充）；anchor 提供
  *   arc-mid（弧中点）/ start / end / center（圆心）。scaleParams 只缩 radius、不缩角度与 close。
  */
-export const arc = defineShape({
+export const arc = defineShape<ArcParams>({
   name: 'arc',
   paramsSchema: z.strictObject({
     radius: z
@@ -95,13 +95,13 @@ export const arc = defineShape({
       .optional()
       .describe('When true, close the arc into a chord/segment outline (fillable); default false = open stroked arc.'),
   }),
-  circumscribe: (_hw, _hh, params: ArcParams) => arcGeometry(params).aabbHalfAxes,
+  circumscribe: (_hw, _hh, params) => arcGeometry(params).aabbHalfAxes,
   // position = 圆心；AABB 中心相对圆心的偏移 = −centerOffset（centerOffset 是圆心相对 AABB 中心）
-  circumscribeOffset: (params: ArcParams): Position => {
+  circumscribeOffset: (params): Position => {
     const { centerOffset } = arcGeometry(params);
     return [-centerOffset[0], -centerOffset[1]];
   },
-  boundaryPoint: (rect: Rect, toward: Position, params: ArcParams): Position => {
+  boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const geo = arcGeometry(params);
     const { radius } = params;
     const { start, end } = geo.range;
@@ -117,7 +117,7 @@ export const arc = defineShape({
     const angle = theta <= end ? theta : theta - end <= start + 360 - theta ? end : start;
     return arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], radius, angle));
   },
-  anchor: (rect: Rect, name: ShapeAnchorName, params: ArcParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
     const geo = arcGeometry(params);
     const { radius } = params;
     const { start, end, mid } = geo.range;
@@ -135,7 +135,7 @@ export const arc = defineShape({
         return undefined;
     }
   },
-  *emit(rect: Rect, style, round, params: ArcParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const geo = arcGeometry(params);
     const { radius, close } = params;
     const { start, end } = geo.range;
@@ -162,7 +162,7 @@ export const arc = defineShape({
       blendMode: style.blendMode,
     };
   },
-  scaleParams: (params: ArcParams, sx: number, sy: number): ArcParams => ({
+  scaleParams: (params, sx: number, sy: number) => ({
     ...params,
     radius: params.radius * Math.sqrt(sx * sy),
   }),

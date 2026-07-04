@@ -43,7 +43,7 @@ const rectVertices = (bounds: Rect): Array<Position> => {
  *   emit 仍出 RectPrim，圆角半径优先取 `params.cornerRadius`、回退到 `style.cornerRadius`。
  *   scaleParams：cornerRadius 是长度，随 node scale 用 uniform 几何均值因子协同缩放（边数 / 角度类参数才不缩）。
  */
-export const rectangle = defineShape({
+export const rectangle = defineShape<RectangleParams>({
   name: BuiltinShape.Rectangle,
   paramsSchema: z.strictObject({
     cornerRadius: z
@@ -55,7 +55,7 @@ export const rectangle = defineShape({
       ),
   }),
   circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-  boundaryPoint: (bounds: Rect, toward: Position, params: RectangleParams): Position => {
+  boundaryPoint: (bounds: Rect, toward: Position, params): Position => {
     const verts = rectVertices(bounds);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const center: Position = [bounds.x, bounds.y];
@@ -67,7 +67,7 @@ export const rectangle = defineShape({
     return isDirectionalAnchor(name) ? rect.anchor(r, name) : undefined;
   },
   edgePoint: (r, side, t) => rect.edgePoint(r, side, t),
-  *emit(r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
+  *emit(r, style, round, params): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;
     // compile 已把顶层 Node.cornerRadius 合进 params（见 compile/node.ts），故与 boundaryPoint 一致只读 params.cornerRadius
@@ -91,6 +91,6 @@ export const rectangle = defineShape({
       blendMode: style.blendMode,
     };
   },
-  scaleParams: (params: RectangleParams, sx: number, sy: number): RectangleParams =>
+  scaleParams: (params, sx: number, sy: number) =>
     params.cornerRadius === undefined ? params : { ...params, cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) },
 });

@@ -102,7 +102,7 @@ const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> => geo.ve
  *   self-rotate（params.rotate）与 Node.rotate 叠加。scaleParams 只缩 inner/outerRadius / cornerRadius（长度）、
  *   不缩 points（计数）/ rotate（角度）。
  */
-export const star = defineShape({
+export const star = defineShape<StarParams>({
   name: 'star',
   paramsSchema: z
     .strictObject({
@@ -139,8 +139,8 @@ export const star = defineShape({
     .refine(p => p.outerRadius > p.innerRadius, {
       message: 'outerRadius must be greater than innerRadius',
     }),
-  circumscribe: (_hw, _hh, params: StarParams) => starGeometry(params).aabbHalfAxes,
-  boundaryPoint: (rect: Rect, toward: Position, params: StarParams): Position => {
+  circumscribe: (_hw, _hh, params) => starGeometry(params).aabbHalfAxes,
+  boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const geo = starGeometry(params);
     // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 星形几何中心（= rect 中心 = node position，星形关于中心对称）。
     const verts = worldVertices(rect, geo);
@@ -149,7 +149,7 @@ export const star = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  anchor: (rect: Rect, name: ShapeAnchorName, params: StarParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
     const geo = starGeometry(params);
     // tip-N → 顶点 2N（尖角）；notch-N → 顶点 2N+1（凹角）。范围越界返回 undefined。
     const tip = /^tip-(\d+)$/.exec(name);
@@ -166,7 +166,7 @@ export const star = defineShape({
     }
     return undefined;
   },
-  *emit(rect: Rect, style, round, params: StarParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const geo = starGeometry(params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = worldVertices(rect, geo);
@@ -175,7 +175,7 @@ export const star = defineShape({
     yield contourToPathPrimitive(commands, style);
   },
   // 半径 / cornerRadius 是长度（随 scale 协同放大，几何均值因子）；points 是计数、rotate 是角度——均不随 scale 缩。
-  scaleParams: (params: StarParams, sx: number, sy: number): StarParams => {
+  scaleParams: (params, sx: number, sy: number) => {
     const factor = Math.sqrt(sx * sy);
     return {
       ...params,

@@ -106,7 +106,7 @@ const createSectorContour = (
  *   inner-arc-mid / outer-arc-mid / start-edge-mid / end-edge-mid + 角度边界点；emit 出外弧 + 两径向边 + 内弧
  *   闭合 path（innerRadius=0 时径向边交于圆心、无内弧）。scaleParams 只缩半径、不缩角度。
  */
-export const sector = defineShape({
+export const sector = defineShape<SectorParams>({
   name: 'sector',
   paramsSchema: z
     .strictObject({
@@ -135,20 +135,20 @@ export const sector = defineShape({
     .refine(p => p.outerRadius > p.innerRadius, {
       message: 'outerRadius must be greater than innerRadius',
     }),
-  circumscribe: (_hw, _hh, params: SectorParams) => getSectorGeometry(params).aabbHalfAxes,
+  circumscribe: (_hw, _hh, params) => getSectorGeometry(params).aabbHalfAxes,
   // position = 圆心 apex；AABB 中心相对 apex 的偏移 = −apexOffset（apexOffset 是 apex 相对 AABB 中心）
-  circumscribeOffset: (params: SectorParams): Position => {
+  circumscribeOffset: (params): Position => {
     const { apexOffset } = getSectorGeometry(params);
     return [-apexOffset[0], -apexOffset[1]];
   },
-  boundaryPoint: (rect: Rect, toward: Position, params: SectorParams): Position => {
+  boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const { geo, segments, fillets } = createSectorContour(rect, params);
     // rayOrigin 必须落在填充区域内；环形扇区的质心可能落入内孔。
     const originWorld = localToWorld(rect, geo.boundaryOriginOffset);
     const hit = boundaryFromContour(segments, params.cornerRadius, originWorld, toward, fillets);
     return hit ?? originWorld;
   },
-  anchor: (rect: Rect, name: ShapeAnchorName, params: SectorParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
     const geo = getSectorGeometry(params);
     const { innerRadius, outerRadius } = params;
     const { start, end, mid } = geo.range;
@@ -170,7 +170,7 @@ export const sector = defineShape({
         return undefined;
     }
   },
-  *emit(rect: Rect, style, round, params: SectorParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     // 轮廓段（emit 收轴对齐 rect，rotate 由外层 group 施加）→ rounded-contour 命令 → path
     const { segments, fillets } = createSectorContour(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius, fillets), round);
@@ -179,7 +179,7 @@ export const sector = defineShape({
     yield path;
   },
   // 半径 / cornerRadius 是长度，随几何均值因子缩；角度是方向，不缩。
-  scaleParams: (params: SectorParams, sx: number, sy: number): SectorParams => {
+  scaleParams: (params, sx: number, sy: number) => {
     const factor = Math.sqrt(sx * sy);
     return {
       ...params,

@@ -1,5 +1,12 @@
 import type { ClipDefinition } from '../../contract';
-import type { IRCompoundClipSpec } from '../../schemas';
+import type {
+  IRCircleClipSpec,
+  IRCompoundClipSpec,
+  IREllipseClipSpec,
+  IRPathClipSpec,
+  IRPolygonClipSpec,
+  IRRectClipSpec,
+} from '../../schemas';
 
 import { defineClip } from '../../contract';
 import {
@@ -30,35 +37,35 @@ const keyOfBuiltinClip = (definition: ClipDefinition): BuiltinClipProviderName =
 };
 
 /** 矩形 clip provider：将 IR rect spec 直接映射为 Scene rect clip。 */
-const rectClip = defineClip({
+const rectClip = defineClip<IRRectClipSpec>({
   kind: 'rect',
   schema: RectClipSchema,
   resolve: spec => ({ kind: 'rect', x: spec.x, y: spec.y, width: spec.width, height: spec.height }),
 });
 
 /** 圆形 clip provider：将 IR circle spec 直接映射为 Scene circle clip。 */
-const circleClip = defineClip({
+const circleClip = defineClip<IRCircleClipSpec>({
   kind: 'circle',
   schema: CircleClipSchema,
   resolve: spec => ({ kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.r }),
 });
 
 /** 椭圆 clip provider：将 IR ellipse spec 直接映射为 Scene ellipse clip。 */
-const ellipseClip = defineClip({
+const ellipseClip = defineClip<IREllipseClipSpec>({
   kind: 'ellipse',
   schema: EllipseClipSchema,
   resolve: spec => ({ kind: 'ellipse', cx: spec.cx, cy: spec.cy, rx: spec.rx, ry: spec.ry }),
 });
 
 /** 多边形 clip provider：将 IR polygon spec 直接映射为 Scene polygon clip。 */
-const polygonClip = defineClip({
+const polygonClip = defineClip<IRPolygonClipSpec>({
   kind: 'polygon',
   schema: PolygonClipSchema,
   resolve: spec => ({ kind: 'polygon', points: spec.points }),
 });
 
 /** 路径 clip provider：保留结构化 path commands 和 fill rule。 */
-const pathClip = defineClip({
+const pathClip = defineClip<IRPathClipSpec>({
   kind: 'path',
   schema: PathClipSchema,
   resolve: spec => ({ kind: 'path', commands: spec.commands, fillRule: spec.fillRule }),

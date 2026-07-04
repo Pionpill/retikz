@@ -104,7 +104,7 @@ const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): A
  *   缩（几何均值因子），sides 计数 / rotate 角度不缩。
  *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`，由 compile 解析。
  */
-export const polygon = defineShape({
+export const polygon = defineShape<PolygonParams>({
   name: 'polygon',
   paramsSchema: z.strictObject({
     sides: z
@@ -125,7 +125,7 @@ export const polygon = defineShape({
         'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
       ),
   }),
-  circumscribe: (hw, hh, params: PolygonParams) => {
+  circumscribe: (hw, hh, params) => {
     const radius = circumradiusFor(hw, hh, params);
     const angles = vertexAngles(params);
     let halfWidth = 0;
@@ -137,7 +137,7 @@ export const polygon = defineShape({
     }
     return { halfWidth, halfHeight };
   },
-  boundaryPoint: (bounds: Rect, toward: Position, params: PolygonParams): Position => {
+  boundaryPoint: (bounds: Rect, toward: Position, params): Position => {
     const radius = circumradiusFromRect(bounds, params);
     // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 几何中心（= rect 中心 = node position）
     const verts = polygonVertices(bounds, radius, params);
@@ -146,12 +146,12 @@ export const polygon = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  anchor: (bounds: Rect, name: ShapeAnchorName, params: PolygonParams): Position | undefined => {
+  anchor: (bounds: Rect, name: ShapeAnchorName, params): Position | undefined => {
     void params;
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
-  *emit(bounds: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
+  *emit(bounds: Rect, style, round, params): Iterable<ScenePrimitive> {
     const radius = circumradiusFromRect(bounds, params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = polygonVertices(bounds, radius, params);
@@ -160,6 +160,6 @@ export const polygon = defineShape({
     yield contourToPathPrimitive(commands, style);
   },
   // sides 计数 / rotate 角度不缩（默认深缩会缩坏 sides）；cornerRadius 是长度，随 node scale 用几何均值因子缩。
-  scaleParams: (params: PolygonParams, sx: number, sy: number): PolygonParams =>
+  scaleParams: (params, sx: number, sy: number) =>
     params.cornerRadius === undefined ? params : { ...params, cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) },
 });

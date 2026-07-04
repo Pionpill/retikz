@@ -76,7 +76,7 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
  *   undefined → compile 回退外接 AABB rect；boundaryPoint（指向式）精确命中轮廓。scaleParams：points 是长度
  *   按轴各向异性缩，cornerRadius 是长度按几何均值因子缩（同 polygon）。
  */
-export const contour = defineShape({
+export const contour = defineShape<ContourParams>({
   name: 'contour',
   paramsSchema: z.strictObject({
     points: z
@@ -94,37 +94,37 @@ export const contour = defineShape({
       ),
   }),
   // 几何驱动：AABB 半轴由 points 算（平移不变，自动居中无需调用方预居中）；rect 中心维持在 position。
-  circumscribe: (innerHalfWidth, innerHalfHeight, params: ContourParams) => {
+  circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
     void innerHalfWidth;
     void innerHalfHeight;
     const { maxX, maxY, minX, minY } = aabbOf(params.points);
     return { halfWidth: (maxX - minX) / 2, halfHeight: (maxY - minY) / 2 };
   },
   // 自动居中收在 emit / boundaryPoint 内部（减 AABB 中心），rect 仍中心在 position。
-  circumscribeOffset: (params: ContourParams): Position => {
+  circumscribeOffset: (params): Position => {
     void params;
     return [0, 0];
   },
-  boundaryPoint: (rect: Rect, toward: Position, params: ContourParams): Position => {
+  boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const segments = worldSegments(rect, params);
     const center: Position = [rect.x, rect.y];
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
   // 标准方位名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
-  anchor: (rect: Rect, name: ShapeAnchorName, params: ContourParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
     void rect;
     void name;
     void params;
     return undefined;
   },
-  *emit(rect: Rect, style, round, params: ContourParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const segments = worldSegments(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
     yield contourToPathPrimitive(commands, style);
   },
   // points 是长度（按轴各向异性缩）；cornerRadius 是长度（几何均值因子，同 polygon）。
-  scaleParams: (params: ContourParams, sx: number, sy: number): ContourParams => ({
+  scaleParams: (params, sx: number, sy: number) => ({
     points: params.points.map(([x, y]): Position => [x * sx, y * sy]),
     ...(params.cornerRadius === undefined ? {} : { cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) }),
   }),

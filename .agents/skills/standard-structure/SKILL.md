@@ -7,6 +7,10 @@ description: Use when changing retikz package file layout, dependency direction,
 
 retikz 模块按“shared → schemas → contract → providers → pipeline/compile”分层；core 另有 `parsers/` 作为 Sugar / DSL 到 IR 的必要入口。本 skill 只做总纲和路由；不要一次加载所有子 skill。
 
+## 入口类型
+
+- 有命名类型且存在统一承载入口时，把类型写在入口处（如 `defineXxx<TParams>({...})`、builder 泛型、类泛型或构造入口），不要在其上下文回调、成员或内部参数上重复声明同一类型。
+
 ## 按需加载
 
 | 改动内容 | 读取 |
