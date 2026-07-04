@@ -1,25 +1,14 @@
-import type { TFunction } from 'i18next';
 import type { FC } from 'react';
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
-import type { SubPage } from '@/modules/docs/data';
-
 import { cn } from '@/lib/utils';
 import { getSectionsByModule } from '@/modules/docs/data';
 
-import type { SidebarCategoryData, SidebarSubModuleData } from './types';
-
+import { buildSidebarCategories } from '../navigation-model';
 import { AppSidebarMenu } from './AppSidebarMenu';
-
-const mapChildren = (t: TFunction, children?: Array<SubPage>): Array<SidebarSubModuleData> | undefined =>
-  children?.map(child => ({
-    value: child.id,
-    label: t(child.label),
-    children: mapChildren(t, child.children),
-  }));
 
 export type AppSidebarProps = {
   /** 容器额外类（移动端 Sheet 复用本组件时关掉 sticky 等） */
@@ -33,27 +22,12 @@ export type AppSidebarProps = {
 
 export const AppSidebar: FC<AppSidebarProps> = props => {
   const { className, moduleId: moduleIdProp } = props;
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const params = useParams<'moduleId'>();
   const moduleId = moduleIdProp ?? params.moduleId;
   const sections = getSectionsByModule(moduleId);
 
-  const categories = useMemo<Array<SidebarCategoryData>>(
-    () =>
-      sections.map((section, idx) => ({
-        // ungrouped section（无 id）用稳定的 sentinel 仅作 React key；ungrouped 标志告诉 menu 跳过 URL 段
-        value: section.id ?? `__ungrouped_${idx}`,
-        label: section.label ? t(section.label) : undefined,
-        ungrouped: !section.label,
-        modules: section.pages.map(page => ({
-          value: page.id,
-          label: t(page.label),
-          children: mapChildren(t, page.children),
-        })),
-      })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t, i18n.resolvedLanguage, sections],
-  );
+  const categories = useMemo(() => buildSidebarCategories(t, sections), [t, sections]);
 
   return (
     <aside

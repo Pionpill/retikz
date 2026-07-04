@@ -1,8 +1,8 @@
-import type { IR, PathKindDefinition } from '@retikz/core';
-import type { FC, ReactElement, ReactNode } from 'react';
+import type { IR } from '@retikz/core';
+import type { FC } from 'react';
 
-import { convertReactNodeToIR, Layout, Scope } from '@retikz/react';
-import { createElement, isValidElement, useMemo } from 'react';
+import { Layout } from '@retikz/react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout/doc-location';
@@ -10,12 +10,12 @@ import { docPathSegments, useDocLocation } from '@/modules/docs/layout/doc-locat
 import type {
   AlignKey,
   ComponentRenderSource,
-  ComponentSourceFile,
   PreviewAction,
   PreviewOverlay,
   RendererMode,
   SizeKey,
 } from './types';
+import type { PreviewIR } from './utils';
 
 import { ComponentRender } from './ComponentRender';
 import { RawSvgFrame } from './components';
@@ -24,117 +24,23 @@ import {
   actionModules,
   buildActionsKey,
   buildIrJsonKey,
-  buildSourceFileKey,
   buildVanillaKey,
   demoModules,
   demoSources,
-  filenameFromKey,
   irJsonOverrides,
-  langOfFilename,
-  localSourceFiles,
   resolveDemoKey,
   resolvePreviewActions,
   vanillaModules,
   vanillaOverrides,
 } from './registry';
-import { computeUnifiedDiff, formatIR, irToVanillaCode } from './utils';
-
-const COMPONENT_EXPANSION_LIMIT = 16;
-
-type PreviewRootProps = {
-  children?: ReactNode;
-  ir?: IR;
-  viewBox?: IR['viewBox'];
-};
-
-type FunctionComponentProps = Record<string, unknown> & {
-  children?: ReactNode;
-};
-
-const resolvePreviewRootElement = (
-  node: ReactNode,
-  depth = COMPONENT_EXPANSION_LIMIT,
-): ReactElement<PreviewRootProps> | null => {
-  if (!isValidElement(node)) return null;
-  const element = node as ReactElement<FunctionComponentProps>;
-  if (element.type === Layout || typeof element.type !== 'function' || depth <= 0) {
-    return element as ReactElement<PreviewRootProps>;
-  }
-  const component = element.type as (props: FunctionComponentProps) => ReactNode;
-  return resolvePreviewRootElement(component(element.props), depth - 1);
-};
-
-const LAYOUT_OWN_PROPS = new Set([
-  'children',
-  'ir',
-  'width',
-  'height',
-  'viewBox',
-  'className',
-  'style',
-  'nodeDistance',
-  'shapes',
-  'arrows',
-  'patterns',
-  'pathGenerators',
-  'pathKinds',
-  'ribbonWidthProfiles',
-  'animate',
-  'animations',
-  'easings',
-  'animationProperties',
-]);
-
-type PreviewIR = {
-  ir: IR;
-  width?: number | string;
-  height?: number | string;
-  pathKinds?: ReadonlyArray<PathKindDefinition>;
-};
-
-const buildPreviewIR = (Component: FC): PreviewIR => {
-  const rootElement = resolvePreviewRootElement(Component({}));
-  const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
-  let childNode = props.children;
-  if (props.ir === undefined) {
-    const styleProps = Object.fromEntries(
-      Object.entries(props).filter(([key, value]) => !LAYOUT_OWN_PROPS.has(key) && value !== undefined),
-    );
-    if (Object.keys(styleProps).length > 0) {
-      childNode = createElement(Scope, styleProps, props.children);
-    }
-  }
-  const base = props.ir ?? convertReactNodeToIR(childNode);
-  const isLayout = rootElement?.type === Layout;
-  const viewBox = isLayout ? rootElement.props.viewBox : undefined;
-  const rootAnimations = isLayout ? (props.animations as IR['animations'] | undefined) : undefined;
-  let ir = base;
-  if (viewBox !== undefined) ir = { ...ir, viewBox };
-  if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
-  const width = isLayout ? (props.width as number | string | undefined) : undefined;
-  const height = isLayout ? (props.height as number | string | undefined) : undefined;
-  const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<PathKindDefinition> | undefined) : undefined;
-  return { ir, width, height, pathKinds };
-};
-
-const nodeHasComposite = (node: unknown): boolean => {
-  if (typeof node !== 'object' || node === null) return false;
-  if ('namespace' in node) return true;
-  const children = (node as { children?: unknown }).children;
-  return Array.isArray(children) && children.some(nodeHasComposite);
-};
-
-const irHasComposite = (ir: IR): boolean => ir.children.some(nodeHasComposite);
-
-const nodeHasAnimations = (node: unknown): boolean => {
-  if (typeof node !== 'object' || node === null) return false;
-  const record = node as { animations?: unknown; children?: unknown };
-  if (Array.isArray(record.animations) && record.animations.length > 0) return true;
-  return Array.isArray(record.children) && record.children.some(nodeHasAnimations);
-};
-
-const irHasAnimations = (ir: IR): boolean =>
-  (Array.isArray(ir.animations) && ir.animations.length > 0) || ir.children.some(nodeHasAnimations);
+import {
+  buildPreviewIR,
+  buildReactSourceFiles,
+  formatIR,
+  irHasAnimations,
+  irHasComposite,
+  irToVanillaCode,
+} from './utils';
 
 export type ComponentPreviewProps = {
   /** demo 文件名（不含 `.demo.tsx` 后缀），相对当前 mdx 同级目录解析 */
@@ -251,34 +157,17 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     );
   }
 
-  const trimmedSource = rawSource.replace(/\n$/, '');
-  const reactDiff =
-    !hideCode && baselineRawSource !== undefined
-      ? computeUnifiedDiff(baselineRawSource.replace(/\n$/, ''), trimmedSource)
-      : undefined;
-  const extraSourceFiles: Array<ComponentSourceFile> = (sourceFiles ?? []).map(entry => {
-    const filename = typeof entry === 'string' ? entry : entry.file;
-    const rawSourceFile = localSourceFiles[buildSourceFileKey(segments, filename)];
-    const code = rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`;
-    const baselineFilename =
-      typeof entry !== 'string'
-        ? entry.diffFrom
-        : diffFrom !== undefined && filename.startsWith(`${name}.`)
-          ? `${diffFrom}.${filename.slice(name.length + 1)}`
-          : undefined;
-    if (baselineFilename === undefined) return { filename, code, lang: langOfFilename(filename) };
-    const baselineRaw = localSourceFiles[buildSourceFileKey(segments, baselineFilename)];
-    const diff =
-      !hideCode && rawSourceFile !== undefined && baselineRaw !== undefined
-        ? computeUnifiedDiff(baselineRaw.replace(/\n$/, ''), code)
-        : undefined;
-    return { filename, code, lang: langOfFilename(filename), diff };
+  const reactFiles = buildReactSourceFiles({
+    key,
+    name,
+    segments,
+    rawSource,
+    sourceFiles,
+    diffFrom,
+    baselineRawSource,
+    hideCode,
   });
-  const mainFilename = filenameFromKey(key);
-  const reactFiles: Array<ComponentSourceFile> = [
-    { filename: mainFilename, code: trimmedSource, lang: langOfFilename(mainFilename), diff: reactDiff, isMain: true },
-    ...extraSourceFiles,
-  ];
+  const extraSourceFiles = reactFiles.filter(file => !file.isMain);
 
   const previewIr = irState.previewIr;
   const source: ComponentRenderSource | undefined = hideCode

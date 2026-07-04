@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-import type { DiagramFormatPreference } from '../context';
+import type { DiagramFormatPreference } from '../composeSystemPrompt';
 
 import { useAiChatStore } from '../useAiChatStore';
 

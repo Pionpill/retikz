@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/core';
 
 /** 可选对照对象枚举。 */
 export const ComparisonTarget = {
-  /** TikZ / PGF 绘图语法 */
+  /** TikZ / PGF 绘图语法。 */
   TikZ: 'tikz',
 } as const;
 
@@ -17,7 +17,6 @@ export type ComparisonTargetLabelKey = 'comparison.tikz';
 
 /** 对照对象到 i18n key 的映射。 */
 export const ComparisonTargetLabelKeys: Record<ComparisonTargetValue, ComparisonTargetLabelKey> = {
-  /** TikZ label */
   tikz: 'comparison.tikz',
 };
 

@@ -22,7 +22,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/components/comparison';
+import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/data';
 import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
 import { useLayoutStore } from '@/store';
 

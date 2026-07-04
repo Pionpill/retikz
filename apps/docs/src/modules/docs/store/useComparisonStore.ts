@@ -1,9 +1,9 @@
 ﻿import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import type { ComparisonTargetValue } from '@/modules/docs/components/comparison/targets';
+import type { ComparisonTargetValue } from '@/modules/docs/data';
 
-import { ComparisonTarget } from '@/modules/docs/components/comparison/targets';
+import { ComparisonTarget } from '@/modules/docs/data';
 
 /** 对照对象可见性表。 */
 export type ComparisonTargetVisibility = Record<ComparisonTargetValue, boolean>;

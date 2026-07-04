@@ -1,6 +1,6 @@
 ﻿import { createStore, del, entries, set as idbSet } from 'idb-keyval';
 
-import type { CurrentPage } from './context';
+import type { CurrentPage } from './composeSystemPrompt';
 import type { ChatMessage } from './providers/types';
 
 /**

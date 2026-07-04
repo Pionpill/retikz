@@ -4,6 +4,8 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { ComparisonTargetValue } from '@/modules/docs/data';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,11 +17,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { ComparisonTargetLabelKeys, isComparisonTarget } from '@/modules/docs/data';
 import { useComparisonStore } from '@/modules/docs/store';
-
-import type { ComparisonTargetValue } from './targets';
-
-import { ComparisonTargetLabelKeys, isComparisonTarget } from './targets';
 
 /** 可选对照块 props。 */
 export type ComparisonProps = {

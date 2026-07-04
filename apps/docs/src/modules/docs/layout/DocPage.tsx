@@ -1,28 +1,24 @@
 import type { FC, HTMLAttributes } from 'react';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { MdxFrontmatter } from '@/modules/docs/components/mdx-content';
 
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/modules/docs/ai-chat';
-import { ChangelogOverview, changelogToMarkdown, ChangelogVersionDetail } from '@/modules/docs/components/changelog';
+import { ChangelogOverview, ChangelogVersionDetail } from '@/modules/docs/components/changelog';
 import { InlineMdx, MdxContent, mdxHasToc, MdxToc } from '@/modules/docs/components/mdx-content';
-import {
-  changelogForModule,
-  changelogPageDescription,
-  changelogVersionSlug,
-  getSectionsByModule,
-} from '@/modules/docs/data';
-import { buildDocPageLinks } from '@/modules/docs/lib/doc-links';
+import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/modules/docs/data';
 import { useTocStore } from '@/modules/docs/store';
 
 import { BlogFrontmatter } from './BlogFrontmatter';
-import { docPathSegments, isChangelogLocation, useDocLocation } from './doc-location';
+import { isChangelogLocation, useDocLocation } from './doc-location';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';
+import { useDocPageEffects } from './useDocPageEffects';
+import { useDocPageNode } from './useDocPageNode';
 import { useMdxSource } from './useMdxSource';
+import { useStableMdxSource } from './useStableMdxSource';
 
 export type DocPageProps = HTMLAttributes<HTMLDivElement>;
 
@@ -35,22 +31,10 @@ export const DocPage: FC<DocPageProps> = props => {
 
   const { t, i18n } = useTranslation();
   const loc = useDocLocation();
-
-  const sections = loc ? getSectionsByModule(loc.moduleId) : [];
-  const section = loc
-    ? loc.sectionId
-      ? sections.find(s => s.id === loc.sectionId)
-      : sections.find(s => !s.label)
-    : undefined;
-  const page = section?.pages.find(p => p.id === loc?.pageId);
-  const subPage = loc?.subPageId ? page?.children?.find(c => c.id === loc.subPageId) : undefined;
-
-  /** 当前 URL 实际指向的节点：4 段时是 subPage，否则是 page */
-  const target = loc?.subPageId ? subPage : page;
+  const { section, target } = useDocPageNode(loc);
 
   const { source, segments: sourceSegments, notFound, resolvedLang } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
-  const setHasToc = useTocStore(state => state.setHasToc);
 
   /** changelog 页走数据驱动渲染,不走 mdx 管线（releases/changelog 分组下的概览与各中版本详情子页） */
   const isChangelog = isChangelogLocation(loc);
@@ -69,67 +53,26 @@ export const DocPage: FC<DocPageProps> = props => {
   }, [isChangelog, loc?.subPageId, changelogReleases]);
 
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
-  /** 始终保留上一次非 null 的 source；过渡态时下游继续看见旧内容直至新 mdx 编译就绪 */
-  const [stableSource, setStableSource] = useState<string | null>(source);
-  /** 与 stableSource 锁步更新的 segments：保证下游 demo 解析用的是"屏幕上这份内容所属页面"的目录，而非实时路由 */
-  const [stableSegments, setStableSegments] = useState<Array<string> | null>(sourceSegments);
-  if (source != null && source !== stableSource) {
-    setStableSource(source);
-    setStableSegments(sourceSegments);
-  }
+  const { stableSource, stableSegments } = useStableMdxSource(source, sourceSegments);
 
   /** 当前页是否有右栏目录内容：changelog 页无目录，mdx 页需含 h1-h3。无内容时右栏不渲染、不占位 */
   const hasToc = useMemo(
     () => !isChangelog && stableSource != null && mdxHasToc(stableSource),
     [isChangelog, stableSource],
   );
-  useEffect(() => {
-    setHasToc(hasToc);
-  }, [hasToc, setHasToc]);
-
-  // 把当前页 mdx + 元信息推给 AI 聊天面板（Sheet 打开时按当前页作为 context）
-  const setAiChatCurrentPage = useAiChatStore(s => s.setCurrentPage);
   const aiChatLang: 'zh' | 'en' = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
   const aiChatTitleKey = target?.label ?? null;
-  useEffect(() => {
-    if (!loc || !aiChatTitleKey) return;
-    const mdx = isChangelog
-      ? changelogToMarkdown(changelogVersion ? [changelogVersion] : changelogReleases, aiChatLang)
-      : stableSource;
-    if (mdx == null) return;
-    const title = String(t(aiChatTitleKey));
-    const { rawUrl } = buildDocPageLinks(loc, aiChatLang);
-    const path = `/${docPathSegments(loc).join('/')}`;
-    setAiChatCurrentPage({ title, mdx, lang: aiChatLang, rawUrl, path });
-  }, [
+  useDocPageEffects({
     loc,
-    aiChatTitleKey,
+    titleKey: aiChatTitleKey,
     stableSource,
+    hasToc,
     isChangelog,
     changelogReleases,
     changelogVersion,
-    aiChatLang,
+    lang: aiChatLang,
     t,
-    setAiChatCurrentPage,
-  ]);
-  useEffect(
-    () => () => {
-      useAiChatStore.getState().setCurrentPage(null);
-      useTocStore.getState().setHasToc(false);
-    },
-    [],
-  );
-
-  // 把当前页 label 写到 document.title，离开 DocPage 恢复 index.html 的 slogan
-  useEffect(() => {
-    if (!aiChatTitleKey) return;
-    const pageTitle = String(t(aiChatTitleKey));
-    const fallback = 'retikz — Draw TikZ figures the React way';
-    document.title = `${pageTitle} · retikz`;
-    return () => {
-      document.title = fallback;
-    };
-  }, [aiChatTitleKey, t]);
+  });
 
   if (!loc || !section || !target) {
     return (

@@ -1,12 +1,13 @@
 ﻿import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import type { ContextMode, CurrentPage, DiagramFormatPreference } from './context';
+import type { ContextMode, CurrentPage, DiagramFormatPreference } from './composeSystemPrompt';
 import type { Conversation } from './conversations-storage';
 import type { CustomProvider } from './providers/resolve';
 import type { ChatErrorKind, ChatMessage, ProviderId } from './providers/types';
+import type { AutoRepairMode } from './repair';
 
-import { composeSystem } from './context';
+import { composeSystem } from './composeSystemPrompt';
 import {
   CONVERSATION_SCHEMA_VERSION,
   deleteConversationFromStorage,
@@ -16,7 +17,10 @@ import {
 } from './conversations-storage';
 import { DEFAULT_MODELS } from './models';
 import { isBuiltInProviderId, resolveProvider } from './providers/resolve';
+import { RETIKZ_REPAIR_MAX_BY_MODE } from './repair';
 import { buildRepairPrompt, findInvalidRetikzBlocks } from './retikz-validation';
+
+export type { AutoRepairMode } from './repair';
 
 /** 主视图 / 设置视图 / 历史会话列表视图 */
 type View = 'main' | 'settings' | 'history';
@@ -50,9 +54,6 @@ type PersistedState = {
   /** 当前 active 会话 id。 */
   activeConversationId: string | null;
 };
-
-/** Auto-repair 三档：关 / 有限（默认）/ 始终 */
-export type AutoRepairMode = 'off' | 'limited' | 'always';
 
 type EphemeralState = {
   open: boolean;
@@ -149,12 +150,6 @@ const INITIAL_EPHEMERAL: EphemeralState = {
   retikzRepairInProgress: false,
   conversations: {},
   conversationsHydrated: false,
-};
-
-const RETIKZ_REPAIR_MAX_BY_MODE: Record<AutoRepairMode, number> = {
-  off: 0,
-  limited: 3,
-  always: 99,
 };
 
 const MAX_CONVERSATIONS = 20;
