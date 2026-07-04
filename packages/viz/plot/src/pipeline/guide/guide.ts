@@ -1739,6 +1739,14 @@ const rectNode = (x: number, y: number, width: number, height: number): IRNode =
   padding: 0,
 });
 
+/** legend 文本节点默认只绘制文字，不继承外部节点描边或填充。 */
+const legendTextNode = (node: IRNode): IRNode => ({
+  ...node,
+  stroke: 'none',
+  fill: 'none',
+  padding: 0,
+});
+
 /**
  * 把已解析的 legend 内容下沉成一个 core scope（swatch / ramp + 标签）
  * @description swatch 形态：每条目一个矩形 swatch Node（shape rectangle，填 color / opacity；size 条目额外一个圆点 Node）+ 一个标签 Node，纵 / 横堆叠；
@@ -1755,12 +1763,14 @@ export const lowerLegend = (input: LegendInput): IRScope => {
   let cursorY = band.y;
   if (input.title !== undefined) {
     const titleText = textBlockMeasureText(input.title);
-    children.push({
-      type: 'node',
-      position: [band.x + estimateLabelWidth(titleText, fontSize) / 2, cursorY + fontSize / 2],
-      text: input.title,
-      ...titleStyle,
-    });
+    children.push(
+      legendTextNode({
+        type: 'node',
+        position: [band.x + estimateLabelWidth(titleText, fontSize) / 2, cursorY + fontSize / 2],
+        text: input.title,
+        ...titleStyle,
+      }),
+    );
     cursorY += fontSize + titleGap;
   }
 
@@ -1784,7 +1794,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
             rampY + tick.offset * rampLength,
           ]
         : [rampX + tick.offset * rampLength, rampY + rampThickness + swatchGap + fontSize / 2];
-      children.push({ type: 'node', position, text: tick.label, ...labelStyle });
+      children.push(legendTextNode({ type: 'node', position, text: tick.label, ...labelStyle }));
     }
   } else {
     // 离散 swatch：逐条目堆叠（vertical 自上而下、horizontal 自左而右）
@@ -1824,7 +1834,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
       // 标签：swatch 右侧
       const labelX = cursorX + swatchSize + swatchGap + estimateLabelWidth(entry.label, fontSize) / 2;
       const labelY = rowY + swatchSize / 2;
-      children.push({ type: 'node', position: [labelX, labelY], text: entry.label, ...labelStyle });
+      children.push(legendTextNode({ type: 'node', position: [labelX, labelY], text: entry.label, ...labelStyle }));
       if (vertical) {
         rowY += swatchSize + entryGap;
       } else {

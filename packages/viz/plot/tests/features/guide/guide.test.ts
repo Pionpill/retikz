@@ -502,6 +502,14 @@ describe('lowerGuide (ADR-04)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).drawOpacity).toBe(0.15);
   });
 
+  it('axis_text_nodes_inherit_no_stroke_or_fill_defaults', () => {
+    const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', title: 'Month' }, ctx);
+    const layer = axisLayer as IRScope;
+
+    expect(layer.nodeDefault).toMatchObject({ stroke: 'none', fill: 'none', padding: 0 });
+    expect(nodeChildren(layer).map(node => node.text)).toEqual(['0', '1', '2', 'Month']);
+  });
+
   it('guide_line_style_includes_dash_offset', () => {
     const { gridLayer, axisLayer } = lowerGuide(
       {

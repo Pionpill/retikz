@@ -276,6 +276,18 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     expect(swatchNodesOf(legend as IRScope).length).toBeGreaterThanOrEqual(3);
   });
 
+  it('ordinal_legend_text_nodes_default_to_no_stroke_or_fill', () => {
+    const outer = expandOf(ordinalColorLegendSpec({ title: 'Kind' }), { d: ORDINAL_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const labels = labelsOf(legend as IRScope);
+
+    expect(labels.map(node => node.text).sort()).toEqual(['A', 'B', 'C', 'Kind']);
+    expect(labels.every(node => node.stroke === 'none')).toBe(true);
+    expect(labels.every(node => node.fill === 'none')).toBe(true);
+    expect(labels.every(node => node.padding === 0)).toBe(true);
+  });
+
   // 连续 ramp：色带 + nice 刻度
   it('sequential_color_legend_continuous_ramp', () => {
     const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
@@ -285,6 +297,18 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     const labels = labelsOf(legend as IRScope);
     expect(labels.length).toBeGreaterThan(1);
     expect(labels.every(n => typeof n.text === 'string')).toBe(true);
+  });
+
+  it('ramp_legend_tick_labels_default_to_no_stroke_or_fill', () => {
+    const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const labels = labelsOf(legend as IRScope);
+
+    expect(labels.length).toBeGreaterThan(1);
+    expect(labels.every(node => node.stroke === 'none')).toBe(true);
+    expect(labels.every(node => node.fill === 'none')).toBe(true);
+    expect(labels.every(node => node.padding === 0)).toBe(true);
   });
 
   // size 梯度符号：几档代表圈 + 值

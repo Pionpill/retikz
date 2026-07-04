@@ -52,6 +52,20 @@ const allNodes = (root: IRScope): Array<IRNode> => {
   return out;
 };
 
+const allScopes = (root: IRScope): Array<IRScope> => {
+  const out: Array<IRScope> = [];
+  const walk = (scope: IRScope): void => {
+    for (const child of scope.children) {
+      if (isScope(child)) {
+        out.push(child);
+        walk(child);
+      }
+    }
+  };
+  walk(root);
+  return out;
+};
+
 const flattenPrimitives = (primitives: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   primitives.flatMap(primitive =>
     primitive.type === 'group' ? [primitive, ...flattenPrimitives(primitive.children)] : [primitive],
@@ -91,6 +105,25 @@ describe('plot label layout', () => {
     expect((decoratedCarrier.position as [number, number])[1]).toBeGreaterThan((plainCarrier.position as [number, number])[1]);
     expect(nodeHeight(decoratedCarrier)).toBeLessThan(nodeHeight(plainCarrier));
     expect(allNodes(decorated).some(node => node.text === 'Monthly Revenue')).toBe(true);
+  });
+
+  it('plot_label_scope_defaults_to_no_stroke_or_fill', () => {
+    const decorated = expandOf(
+      baseSpec({
+        labels: [
+          {
+            type: 'text',
+            role: 'title',
+            text: 'Monthly Revenue',
+            placement: { kind: 'side', side: 'top', placement: 'midway', padding: 8 },
+          },
+        ],
+      }),
+    );
+    const decoration = allScopes(decorated).find(scope => scope.meta?.layer === 'decoration');
+
+    expect(decoration).toBeDefined();
+    expect(decoration?.nodeDefault).toMatchObject({ stroke: 'none', fill: 'none', padding: 0 });
   });
 
   it('plot_title_styled_text_block_compiles_to_multi_line_scene_text', () => {
