@@ -2,9 +2,10 @@ import { Navigate, Route, Routes, useParams } from 'react-router';
 
 import type { Section } from '@/modules/docs/data';
 
-import { AppLayout } from '@/layout/app-layout';
 import { getSectionsByModule, kernelSection, modules } from '@/modules/docs/data';
 import { DocLayout, DocPage } from '@/modules/docs/layout';
+
+import { AppLayout } from './AppLayout';
 
 /** section + 它的首页 -> 完整 URL（无分组时跳过 sectionId 段） */
 const firstPageUrl = (moduleId: string, section: Section): string => {

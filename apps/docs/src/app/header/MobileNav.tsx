@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { Menu } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -13,7 +13,7 @@ import { AppSidebar } from '@/modules/docs/layout/sidebar/AppSidebar';
 
 /**
  * 移动端汉堡按钮 + Sheet 抽屉
- * @description 抽屉内 SheetHeader（brand + 模块 ToggleGroup） + AppSidebar；挂在 AppHeader 里位置在 `<Routes>` 外，moduleId 直接从 pathname 首段解析
+ * @description 抽屉内 SheetHeader（brand + 模块 ToggleGroup） + AppSidebar；挂在 Header 里位置在 `<Routes>` 外，moduleId 直接从 pathname 首段解析
  */
 export const MobileNav: FC = () => {
   const { t } = useTranslation();

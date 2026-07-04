@@ -11,8 +11,7 @@ description: retikz docs 站代码与文件结构基础规范。Use when changin
 
 ## 顶层职责
 
-- `src/app/`：入口、路由、全局快捷键和 App 装配。
-- `src/layout/`：站点级 layout、header、全局面板容器；不得放阅读模块业务状态。
+- `src/app/`：入口、路由、全局快捷键、App 装配、站点级 layout、header、全局面板容器；不得放阅读模块业务状态。
 - `src/modules/docs/`：文档阅读模块，包含 contents、data、DocLayout、MDX runtime、demo preview、docs 专属 store/lib/components。
 - `src/components/shared/`：真正跨模块复用组件；docs-only 组件先放 `modules/docs/components/`。
 - `src/store/`：全局状态，如 theme/layout；模块状态放模块内。

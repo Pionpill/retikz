@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { AiChatPanel, useAiChatStore } from '@/modules/docs/ai-chat';
 
-import AppHeader from '../header/AppHeader';
+import { Header } from './header';
 
 const MIN_AI_PX = 320;
 const MAX_AI_PX = 800;
@@ -41,7 +41,7 @@ export const AppLayout: FC = () => {
   return (
     <>
       <div className="flex min-h-screen min-w-0 flex-col">
-        <AppHeader />
+        <Header />
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="docs-view"

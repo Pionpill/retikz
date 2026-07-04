@@ -13,12 +13,11 @@ retikz 文档站。根 [`AGENTS.md`](../../AGENTS.md) 的全仓约定继承生�
 
 ```text
 apps/docs/src/
-  app/                  入口、App 装配、顶层路由、全局快捷键
+  app/                  入口、App 装配、顶层路由、全局快捷键、根布局、Header、全局面板容器
   modules/docs/         文档阅读模块：contents、data、DocLayout、MDX runtime、demo preview、docs 专属 store/lib
   i18n/                 zh / en 文案与类型增强
-  layout/               站点级布局：AppLayout、Header、全局面板容器
   components/ui/        shadcn vendored，不直接手改
-  components/shared/    真跨模块复用组件，如 ErrorBoundary、Shortcut
+  components/shared/    真跨模块复用组件，如 Shortcut
   components/icons/     品牌图标
   store/                全局 zustand store：theme、layout
   lib/                  无 React、无业务模块依赖的底层工具
@@ -41,6 +40,7 @@ URL 段、`modules/docs/data/` 节点 `id`、`modules/docs/contents/` 目录段�
 docs 内容规则不复制在 AGENTS 中，按需动态加载：
 
 - 代码 / 文件结构基础规范：`.agents/skills/docs-standard-contract/SKILL.md`
+- React 组件 / layout / shadcn UI 规范：`.agents/skills/develop-docs/SKILL.md`
 - 通用规则：`.agents/skills/docs-doc-principle/SKILL.md`
 - 组件页：`docs-doc-component`
 - 示例页：`docs-doc-example`

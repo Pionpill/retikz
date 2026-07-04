@@ -12,7 +12,7 @@ import { MobileNav } from './MobileNav';
 import { ModuleNav } from './ModuleNav';
 
 /** 文档站顶栏。 */
-export const AppHeader: FC = () => {
+export const Header: FC = () => {
   const layout = useLayoutStore(s => s.layout);
 
   return (
@@ -39,5 +39,3 @@ export const AppHeader: FC = () => {
     </header>
   );
 };
-
-export default AppHeader;
