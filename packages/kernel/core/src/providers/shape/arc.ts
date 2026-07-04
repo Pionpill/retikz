@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
+import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
 import { z } from 'zod';
 
 import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contract';
@@ -46,20 +46,12 @@ const computeArcGeometry = (params: ArcParams): ArcGeometry => {
   const center: Position = [0, 0];
   // close=true（弓形）含弦 / 区域，AABB 由弧 bbox 点决定；圆心本身不强制进框（开放弧 / 弓形都不含圆心）
   const points = arcBoundingPoints(center, radius, range.start, range.end);
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (const [px, py] of points) {
-    if (px < minX) minX = px;
-    if (px > maxX) maxX = px;
-    if (py < minY) minY = py;
-    if (py > maxY) maxY = py;
-  }
-  const aabbCenter: Position = [(minX + maxX) / 2, (minY + maxY) / 2];
+  const bounds = boundsOf(points);
+  if (bounds === undefined) throw new Error('arc: bounding points must not be empty.');
+  const aabbCenter = boundsCenter(bounds);
   return {
     range,
-    aabbHalfAxes: { halfWidth: (maxX - minX) / 2, halfHeight: (maxY - minY) / 2 },
+    aabbHalfAxes: boundsHalfAxes(bounds),
     centerOffset: [-aabbCenter[0], -aabbCenter[1]],
   };
 };

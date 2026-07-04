@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
+import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
 
 import type { AngleRange } from '../../shared';
 
@@ -49,21 +49,10 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
     candidates.push(...arcBoundingPoints(apex, innerRadius, range.start, range.end));
   }
 
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (const [px, py] of candidates) {
-    if (px < minX) minX = px;
-    if (px > maxX) maxX = px;
-    if (py < minY) minY = py;
-    if (py > maxY) maxY = py;
-  }
-
-  const halfWidth = (maxX - minX) / 2;
-  const halfHeight = (maxY - minY) / 2;
+  const bounds = boundsOf(candidates);
+  if (bounds === undefined) throw new Error('sectorGeometry: bounding candidates must not be empty.');
   // AABB 中心（圆心局部系）；apex(0,0) 相对 AABB 中心的偏移 = -AABB 中心。
-  const aabbCenter: Position = [(minX + maxX) / 2, (minY + maxY) / 2];
+  const aabbCenter = boundsCenter(bounds);
   const apexOffset: Position = [-aabbCenter[0], -aabbCenter[1]];
 
   // 质心：环楔（annular sector）质心在中分角方向上，到圆心距离。
@@ -93,7 +82,7 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
 
   return {
     range,
-    aabbHalfAxes: { halfWidth, halfHeight },
+    aabbHalfAxes: boundsHalfAxes(bounds),
     apexOffset,
     centroidOffset,
     boundaryOriginOffset,

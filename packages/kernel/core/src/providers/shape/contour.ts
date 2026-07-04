@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import { boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
@@ -27,37 +28,11 @@ const contourParamsSchema = z.strictObject({
 
 export type ContourParams = z.infer<typeof contourParamsSchema>;
 
-/** 点集 AABB 范围。 */
-type ContourAabb = {
-  /** 最小 x 坐标。 */
-  minX: number;
-  /** 最小 y 坐标。 */
-  minY: number;
-  /** 最大 x 坐标。 */
-  maxX: number;
-  /** 最大 y 坐标。 */
-  maxY: number;
-};
-
-/** 点集 AABB。 */
-const aabbOf = (points: Array<Position>): ContourAabb => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const [x, y] of points) {
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-  }
-  return { maxX, maxY, minX, minY };
-};
-
 /** 点集 AABB 中心；core 据此自动居中（每顶点减去它，使几何中心落到 Node position） */
 const aabbCenterOf = (points: Array<Position>): Position => {
-  const { maxX, maxY, minX, minY } = aabbOf(points);
-  return [(minX + maxX) / 2, (minY + maxY) / 2];
+  const bounds = boundsOf(points);
+  if (bounds === undefined) throw new Error('contour: points must contain at least one vertex.');
+  return boundsCenter(bounds);
 };
 
 /** 顶点环 → 自动居中（减 AABB 中心）→ 经 rect 投世界系 → 闭合折线段 */
@@ -83,8 +58,9 @@ export const contour = defineShape<ContourParams>({
   circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
     void innerHalfWidth;
     void innerHalfHeight;
-    const { maxX, maxY, minX, minY } = aabbOf(params.points);
-    return { halfWidth: (maxX - minX) / 2, halfHeight: (maxY - minY) / 2 };
+    const bounds = boundsOf(params.points);
+    if (bounds === undefined) throw new Error('contour: points must contain at least one vertex.');
+    return boundsHalfAxes(bounds);
   },
   // 自动居中收在 emit / boundaryPoint 内部（减 AABB 中心），rect 仍中心在 position。
   circumscribeOffset: (params): Position => {

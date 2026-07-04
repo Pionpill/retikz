@@ -1,4 +1,5 @@
 export * from './arc';
+export * from './bounds';
 export * from './enclose';
 export * from './hull';
 export * from './intersect';
