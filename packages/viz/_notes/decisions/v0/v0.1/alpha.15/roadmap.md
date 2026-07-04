@@ -21,9 +21,9 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 | ADR-02 | **axis guide structure and style tokens** | 细化 line、ticks、tickLabels、title、grid 部件槽位的样式与几何 token；替换 guide lowering 中的硬编码常量 | Accepted |
 | ADR-03 | **plot theme schema and merge priority** | 新增 JSON-safe `PlotSpec.theme`，定义 built-in theme、spec theme、guide local override 的合并顺序和默认 token 结构 | Accepted |
 | ADR-04 | **legend, palette, and guide family theme** | 收敛 categorical / sequential / diverging palette、series / sector 默认配色、legend swatch / ramp / label / title 样式 | Accepted |
-| ADR-05 | **axis line advanced geometry** | 为 cartesian axis line 增加 lineCap、baseline extent、positive / negative 方向箭头与 origin placement；箭头样式复用 core ArrowEndDetail，theme 不接结构字段 | Proposed |
-| ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density | Proposed |
-| ADR-07 | **axis tick label adaptive layout** | 为 axis tick label 增加自适应旋转、重叠省略与边界处理；允许用户关闭旋转、省略或全部自适应，且不改变 tick / grid / mark 同源语义 | Proposed |
+| ADR-05 | **axis line advanced geometry** | 为 cartesian axis line 增加 lineCap、baseline extent、positive / negative 方向箭头与 origin placement；箭头样式复用 core ArrowEndDetail，theme 不接结构字段 | Accepted（已实现） |
+| ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density | Accepted（已实现） |
+| ADR-07 | **axis tick label adaptive layout** | 为 axis tick label 增加自适应旋转、重叠省略与边界处理；允许用户关闭旋转、省略或全部自适应，且不改变 tick / grid / mark 同源语义 | Accepted（已实现） |
 
 > 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`。
 
@@ -308,7 +308,7 @@ built-in default theme
 
 alpha.15 封口时应满足：
 
-- ADR-01～04 全部 Proposed -> Accepted，字段名、默认值、merge 顺序在 ADR 内固定。
+- ADR-01～07 全部 Proposed -> Accepted，字段名、默认值、merge 顺序在 ADR 内固定。
 - `@retikz/plot` 的连续 / 时间位置 scale 默认能避免单点或极值贴边；显式 domain 行为可预测。
 - axis line、tick line、tick label、axis title、grid line 不再只能依赖 lowering 硬编码常量。
 - axis tick 能表达 line mark、常见内置 shape mark 与 custom shape mark；shape mark 复用 core Node shape，不新增 plot-only shape 系统。

@@ -1,6 +1,6 @@
 # ADR-06：Axis tick 来源、标记与密度策略
 
-- 状态：Proposed
+- 状态：Accepted（已实现）
 - 决策日期：2026-07-04
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.9 Guide](../../../../architecture/plot-design.md#39-guide)
 
