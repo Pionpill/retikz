@@ -8,6 +8,7 @@ import type { Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
 import { createCache, localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
+import { pathPrimitiveStyle } from './style';
 
 const arcParamsSchema = z.strictObject({
   radius: z
@@ -139,16 +140,7 @@ export const arc = defineShape<ArcParams>({
     yield {
       type: 'path',
       commands,
-      fill: close ? (style.fill ?? 'transparent') : 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      dashOffset: style.dashOffset,
-      opacity: style.opacity,
-      shadow: style.shadow,
-      blendMode: style.blendMode,
+      ...pathPrimitiveStyle(style, close ? undefined : { fill: 'transparent' }),
     };
   },
   scaleParams: (params, sx: number, sy: number) => ({

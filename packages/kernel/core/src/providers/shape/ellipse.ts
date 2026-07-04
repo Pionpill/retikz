@@ -6,6 +6,7 @@ import type { Ellipse, Rect } from '../../shared';
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import { CenterAnchor, ellipse, isDirectionalAnchor } from '../../shared';
+import { ellipsePrimitiveStyle } from './style';
 
 const ellipseParamsSchema = z.strictObject({
   circumscribe: z
@@ -54,16 +55,7 @@ export const ellipseShape = defineShape<EllipseParams>({
       cy: round(r.y),
       rx: round(r.width / 2),
       ry: round(r.height / 2),
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      dashOffset: style.dashOffset,
-      opacity: style.opacity,
-      shadow: style.shadow,
-      blendMode: style.blendMode,
+      ...ellipsePrimitiveStyle(style),
     };
   },
 });

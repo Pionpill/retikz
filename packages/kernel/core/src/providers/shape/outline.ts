@@ -4,6 +4,8 @@ import type { PathCommand, PathPrim } from '../../contract';
 import type { ResolvedShapeStyle } from '../../contract';
 import type { ContourCommand, LineSegment } from '../../shared';
 
+import { pathPrimitiveStyle } from './style';
+
 /**
  * 由顶点环构造闭合折线段序列（接缝顺序同顶点顺序）
  * @description 第 i 段 from = 顶点 i、to = 顶点 (i+1)%n；供 polygon / star 的 emit / boundaryPoint
@@ -66,14 +68,5 @@ export const contourToPathCommands = (
 export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ResolvedShapeStyle): PathPrim => ({
   type: 'path',
   commands,
-  fill: style.fill ?? 'transparent',
-  fillOpacity: style.fillOpacity,
-  stroke: style.stroke ?? 'currentColor',
-  strokeOpacity: style.strokeOpacity,
-  strokeWidth: style.strokeWidth ?? 1,
-  dashPattern: style.dashPattern,
-  dashOffset: style.dashOffset,
-  opacity: style.opacity,
-  shadow: style.shadow,
-  blendMode: style.blendMode,
+  ...pathPrimitiveStyle(style),
 });

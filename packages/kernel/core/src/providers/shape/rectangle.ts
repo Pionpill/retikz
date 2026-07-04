@@ -9,6 +9,7 @@ import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import { boundaryFromContour, CenterAnchor, isDirectionalAnchor, localToWorld, rect } from '../../shared';
 import { verticesToSegments } from './outline';
+import { rectPrimitiveStyle } from './style';
 
 const rectangleParamsSchema = z.strictObject({
   cornerRadius: z
@@ -69,17 +70,7 @@ export const rectangle = defineShape<RectangleParams>({
       y: round(r.y - halfH),
       width: round(r.width),
       height: round(r.height),
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      dashOffset: style.dashOffset,
-      cornerRadius: cornerRadius !== undefined ? round(cornerRadius) : undefined,
-      opacity: style.opacity,
-      shadow: style.shadow,
-      blendMode: style.blendMode,
+      ...rectPrimitiveStyle(style, cornerRadius !== undefined ? round(cornerRadius) : undefined),
     };
   },
   scaleParams: (params, sx: number, sy: number) =>
