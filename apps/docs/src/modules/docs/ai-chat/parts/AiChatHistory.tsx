@@ -1,4 +1,4 @@
-﻿import type { FC, KeyboardEvent } from 'react';
+import type { FC, KeyboardEvent } from 'react';
 
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -12,7 +12,7 @@ import { MarkdownInline } from '@/modules/docs/components/inline-markdown';
 
 import type { Conversation } from '../conversations-storage';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 
 /** AI 历史会话列表。 */
 export const AiChatHistory: FC = () => {

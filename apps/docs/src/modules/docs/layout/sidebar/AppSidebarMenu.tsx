@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
-import type { SidebarCategoryData } from './interface';
+import type { SidebarCategoryData } from './types';
 
 import { AppSidebarMenuItem } from './AppSidebarMenuItem';
 

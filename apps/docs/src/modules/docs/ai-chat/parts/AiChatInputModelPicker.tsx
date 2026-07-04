@@ -1,4 +1,4 @@
-﻿import type { ComponentType, FC, SVGProps } from 'react';
+import type { ComponentType, FC, SVGProps } from 'react';
 
 import { Bot, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -14,7 +14,7 @@ import type { ProviderId } from '../providers/types';
 import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
 import { isBuiltInProviderId } from '../providers/resolve';
 import { PROVIDER_IDS } from '../providers/types';
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 
 type BrandIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 

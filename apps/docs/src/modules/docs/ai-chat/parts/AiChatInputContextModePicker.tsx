@@ -1,4 +1,4 @@
-﻿import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { FC } from 'react';
 
 import { Feather, Layers, Scale } from 'lucide-react';
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 import type { ContextMode } from '../context';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 
 const MODES: ReadonlyArray<ContextMode> = ['lean', 'balanced', 'heavy'];
 

@@ -35,7 +35,7 @@ description: "发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 - 发布组：`kernel` / `viz`；
 - 目标版本、npm dist-tag、git tag；
 - 包列表与每个包的 `old -> target`；
-- `apps/docs/src/data/changelog.ts` 的 release note 范围；
+- `apps/docs/src/modules/docs/data/changelog.ts` 的 release note 范围；
 - 是否需要同步 module badge 或 roadmap milestone 状态。
 
 ## 版本连续性
@@ -61,8 +61,8 @@ npm view @retikz/plot dist-tags --registry=https://registry.npmjs.org/
 只做发布准备相关改动：
 
 1. **包版本号**：发布组内每个包都改到目标版本。
-2. **changelog 数据**：更新 `apps/docs/src/data/changelog.ts`，结构以 `apps/docs/src/data/changelog.types.ts` 为准；不要改旧 changelog MDX。
-3. **模块徽章**：只有可见模块版本变化时才改 `apps/docs/src/data/module.ts`，例如 minor / major 切档或 alpha -> beta -> rc -> stable。
+2. **changelog 数据**：更新 `apps/docs/src/modules/docs/data/changelog.ts`，结构以 `apps/docs/src/modules/docs/data/types.ts` 为准；不要改旧 changelog MDX。
+3. **模块徽章**：只有可见模块版本变化时才改 `apps/docs/src/modules/docs/data/module.ts`，例如 minor / major 切档或 alpha -> beta -> rc -> stable。
 4. **roadmap**：按发布组当前 roadmap 的既有格式更新。
 5. **ADR 检查**：确认本次发版覆盖的已完成 ADR 已在 `develop-wrapup` 阶段压缩并置为 `Accepted`；发现未压缩 ADR 时停下，先走 wrapup 修正。
 6. **lockfile**：package metadata 或依赖图变化导致 lockfile 漂移时，运行 `pnpm install`。

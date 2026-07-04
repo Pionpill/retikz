@@ -22,7 +22,7 @@ import { BlogFrontmatter } from './BlogFrontmatter';
 import { docPathSegments, isChangelogLocation, useDocLocation } from './doc-location';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';
-import { useMdxSource } from './use-mdx-source';
+import { useMdxSource } from './useMdxSource';
 
 export type DocPageProps = HTMLAttributes<HTMLDivElement>;
 

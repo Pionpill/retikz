@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { BotMessageSquare } from 'lucide-react';
 import { useEffect } from 'react';
@@ -9,7 +9,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-import { useAiChatStore } from './use-ai-chat-store';
+import { useAiChatStore } from './useAiChatStore';
 
 /**
  * AI 聊天 Sheet 的 Header 触发器

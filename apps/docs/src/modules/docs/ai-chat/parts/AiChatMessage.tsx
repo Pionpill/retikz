@@ -20,7 +20,7 @@ import { CodeBlock } from '@/modules/docs/components/highlight-code';
 import type { ChatMessage } from '../providers/types';
 import type { ListItem, TableAlign } from './message-blocks';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 import { extractFirstRetikzBlock, parseMessageBlocks } from './message-blocks';
 import { RetikzPreview, RetikzPreviewPending } from './RetikzPreview';
 

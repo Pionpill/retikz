@@ -1,4 +1,4 @@
-﻿import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { FC } from 'react';
 
 import { Braces, FileCode2, Sparkles } from 'lucide-react';
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 import type { DiagramFormatPreference } from '../context';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 
 const PREFERENCES: ReadonlyArray<DiagramFormatPreference> = ['auto', 'ir', 'tsx'];
 

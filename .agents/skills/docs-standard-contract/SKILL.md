@@ -28,11 +28,13 @@ description: retikz docs 站代码与文件结构基础规范。Use when changin
 
 简单场景可以先单文件；当一个文件同时承担工具、类型、常量、组件或状态时，再拆成上面的职责文件 / 文件夹。
 
+一般情况下不使用 `xxx.xxx.ts` / `xxx.xxx.tsx` 这类双后缀命名；只有需要批量统一处理、外部工具识别或已有命名解析逻辑时例外，例如 `*.demo.tsx`、`*.data.ts`。
+
 ## React 场景目录
 
 React 相关文件按职责分目录，文件名保持可搜索：
 
-- `context/`：React Context。公开消费入口命名为 `useXxxContext.ts` 或同名 `.tsx`。
+- `context/`：React Context。公开消费文件与导出的 hook 统一命名为 `useXxxContext.ts` / `useXxxContext`，provider context 常量可放在同文件内。
 - `store/`：zustand 状态。文件命名为 `useXxxStore.ts`。
 - `hooks/`：业务钩子。文件命名为 `useXxx.ts` / `useXxx.tsx`。
 - `components/`：本场景内部展示组件；确认跨模块复用后再上移到 `components/shared/`。

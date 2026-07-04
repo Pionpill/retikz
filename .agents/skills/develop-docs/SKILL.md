@@ -17,7 +17,7 @@ description: Use when editing apps/docs React components, shared components, lay
 
 - 组件使用 `FC<Props>`，Props 类型独立声明并导出，命名为 `XxxProps`。
 - props 在函数体内解构，不在参数列表里展开复杂结构。
-- 组件文件用 PascalCase；非组件文件和目录用 kebab-case。
+- 组件文件用 PascalCase；hook / store / context 文件按 `useXxx`、`useXxxStore`、`useXxxContext` 命名；其他非组件文件和目录用 kebab-case。
 - 简单内部 helper 可留在同文件；被复用或承担独立职责时拆到 `utils.ts` / `types.ts` / `constants.ts`。
 - JSDoc 保持短，只写职责或非显而易见的约束；不要写临时说明、历史原因或长篇原理。
 

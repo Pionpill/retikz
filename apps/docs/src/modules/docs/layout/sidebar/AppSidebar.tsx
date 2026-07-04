@@ -10,7 +10,7 @@ import type { SubPage } from '@/modules/docs/data';
 import { cn } from '@/lib/utils';
 import { getSectionsByModule } from '@/modules/docs/data';
 
-import type { SidebarCategoryData, SidebarSubModuleData } from './interface';
+import type { SidebarCategoryData, SidebarSubModuleData } from './types';
 
 import { AppSidebarMenu } from './AppSidebarMenu';
 

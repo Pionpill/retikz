@@ -8,7 +8,7 @@ import {
   PanZoomToolbar,
   RendererModeButton,
 } from '../../src/modules/docs/components/component-preview/components';
-import { useComponentPreviewStore } from '../../src/modules/docs/store/use-component-preview-store';
+import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
 const WrappedLayout: FC = () => <Layout width={40} height={20} />;

@@ -1,4 +1,4 @@
-import type { Section } from './interface';
+import type { Section } from './types';
 
 export const kernelSection: Array<Section> = [
   {

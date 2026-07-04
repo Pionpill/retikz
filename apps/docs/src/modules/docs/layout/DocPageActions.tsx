@@ -1,4 +1,4 @@
-﻿import type { FC, ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { buildAiUrl, buildDocPageLinks } from '@/modules/docs/lib/doc-links';
 
 import { useDocLocation } from './doc-location';
-import { usePageNavigation } from './use-page-navigation';
+import { usePageNavigation } from './usePageNavigation';
 
 export type DocPageActionsProps = {
   /** 当前页面 mdx 源码（用于"复制 markdown"） */

@@ -1,3 +1,33 @@
+import type { ReactNode } from 'react';
+
+import type { I18nResources } from '@/i18n/locales';
+
+/** 全部合法的 i18n 完整 key。 */
+export type I18nKey = {
+  [N in keyof I18nResources]: `${N & string}.${keyof I18nResources[N] & string}`;
+}[keyof I18nResources];
+
+type SubPageBase = {
+  id: string;
+  /** i18n 完整 key，调用方直接 t(label) */
+  label: I18nKey;
+  /** 标题右侧的自定义元素（外链、徽章、操作按钮等），可选 */
+  extra?: ReactNode;
+};
+
+/** 子页递归节点。 */
+export type SubPage = (SubPageBase & { children?: never }) | (SubPageBase & { children: Array<SubPage> });
+
+/** 一级页：与 SubPage 同结构（shadcn 风格 sidebar 不再需要图标） */
+export type Page = SubPage;
+
+/** 顶层栏目分组。 */
+export type Section = {
+  id?: string;
+  label?: I18nKey;
+  pages: Array<Page>;
+};
+
 /** 双语文本:zh / en 各一份 markdown 字符串 */
 export type Localized = { zh: string; en: string };
 
@@ -10,7 +40,7 @@ export type ChangeItem = {
 
 /** 一个预发布 / patch */
 export type SubVersion = {
-  /** 'alpha.4' | 'rc.2' | 'beta.1' | '1'(patch)| 'rc.0–rc.3'(旧单包合并) */
+  /** 'alpha.4' | 'rc.2' | 'beta.1' | '1'(patch)| 'rc.0-rc.3'(旧单包合并) */
   version: string;
   /** 'YYYY-MM-DD',git 推导 */
   date: string;
@@ -24,9 +54,9 @@ export type PackageBlock = {
   pkg: PackageId;
   /** 该包在此里程碑的中版本,如 'v0.2' */
   version: string;
-  /** ≤200 字符中版本级摘要 */
+  /** <=200 字符中版本级摘要 */
   description: Localized;
-  /** 常驻精选(单独撰写,2–4 条) */
+  /** 常驻精选(单独撰写,2-4 条) */
   highlights: Array<ChangeItem>;
   /** 逐预发布明细(默认收起) */
   subVersions: Array<SubVersion>;
@@ -36,7 +66,7 @@ export type PackageBlock = {
 export type Release = {
   /** 'v0.2',时间线 key */
   minor: string;
-  /** stable 发布日;null ⇒ 开发中 */
+  /** stable 发布日;null => 开发中 */
   stableDate: string | null;
   packages: Array<PackageBlock>;
 };
@@ -56,7 +86,7 @@ export const PACKAGE_IDS = [
 ] as const;
 export type PackageId = (typeof PACKAGE_IDS)[number];
 
-/** 包标识 → 展示名(多数包名两语一致,docs 例外) */
+/** 包标识 -> 展示名(多数包名两语一致,docs 例外) */
 export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/math': { zh: '@retikz/math', en: '@retikz/math' },
   '@retikz/core': { zh: '@retikz/core', en: '@retikz/core' },

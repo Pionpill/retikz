@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { AlertTriangle, ChevronLeft, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -14,7 +14,7 @@ import type { ProviderId } from '../providers/types';
 
 import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../models';
 import { PROVIDER_IDS } from '../providers/types';
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 
 const KEY_HELP_URL: Record<ProviderId, string> = {
   deepseek: 'https://platform.deepseek.com/api_keys',

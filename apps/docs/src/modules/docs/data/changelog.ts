@@ -1,6 +1,6 @@
-import type { Localized, PackageId, Release } from './changelog.types';
+import type { Localized, PackageId, Release } from './types';
 
-import { PACKAGE_GROUPS } from './changelog.types';
+import { PACKAGE_GROUPS } from './types';
 
 /** changelog 概览页副标题(替代原 mdx frontmatter description) */
 export const changelogPageDescription: Localized = {

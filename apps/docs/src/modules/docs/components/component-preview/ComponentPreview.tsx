@@ -1,4 +1,4 @@
-﻿import type { IR, PathKindDefinition } from '@retikz/core';
+import type { IR, PathKindDefinition } from '@retikz/core';
 import type { FC, ReactElement, ReactNode } from 'react';
 
 import { convertReactNodeToIR, Layout, Scope } from '@retikz/react';
@@ -19,7 +19,7 @@ import type {
 
 import { ComponentRender } from './ComponentRender';
 import { RawSvgFrame } from './components';
-import { useDemoSegments } from './demo-location-context';
+import { useDemoLocationContext } from './context';
 import {
   actionModules,
   buildActionsKey,
@@ -183,7 +183,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
 
-  const ctxSegments = useDemoSegments();
+  const ctxSegments = useDemoLocationContext();
   const segments = ctxSegments ?? (loc ? docPathSegments(loc) : null);
   const key = segments ? resolveDemoKey(segments, name, lang) : null;
   const mod = key ? demoModules[key] : undefined;

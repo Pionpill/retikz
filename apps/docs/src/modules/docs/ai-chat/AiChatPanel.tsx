@@ -1,4 +1,4 @@
-﻿import type { FC, KeyboardEvent as ReactKeyboardEvent } from 'react';
+import type { FC, KeyboardEvent as ReactKeyboardEvent } from 'react';
 
 import { Bot, HelpCircle, History, Plus, Settings, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ import { AiChatEmpty } from './parts/AiChatEmpty';
 import { AiChatHelpDialog } from './parts/AiChatHelpDialog';
 import { AiChatHistory } from './parts/AiChatHistory';
 import { AiChatSettings } from './parts/AiChatSettings';
-import { useAiChatStore } from './use-ai-chat-store';
+import { useAiChatStore } from './useAiChatStore';
 
 /** AI 聊天面板内容。 */
 export const AiChatPanel: FC = () => {

@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { ArrowUpRight, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { CustomProvider } from '../providers/resolve';
 
 import { PROVIDER_LABEL } from '../models';
-import { isBuiltInProviderId, useAiChatStore } from '../use-ai-chat-store';
+import { isBuiltInProviderId, useAiChatStore } from '../useAiChatStore';
 
 const LABEL_KEY = {
   lean: 'ai.settingsContextLean',
