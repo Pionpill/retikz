@@ -38,11 +38,11 @@ export const boxInsets = (value: number): BoxInsets => ({
 });
 
 export type NodeLayout = {
-  /** 节点 id（其他位置可引用） */
+  /** 节点 id。 */
   id?: string;
-  /** 节点形状名（诊断 / 错误信息用；几何走 shapeDef） */
+  /** 节点形状名。 */
   shapeName: string;
-  /** 已解析的 shape 定义；circumscribe / boundaryPoint / anchor / emit 多点复用，取代旧 switch */
+  /** 已解析的 shape 定义。 */
   shapeDef: ShapeDefinition;
   /** 已校验的 per-instance shape 参数。 */
   shapeParams?: IRJsonObject;
@@ -50,26 +50,26 @@ export type NodeLayout = {
   rect: Rect;
   /** 文本内容块中心；非对称 padding 时与视觉 rect 中心不同。 */
   contentCenter: [number, number];
-  /** IR 原始旋转角（度数），供 emit 阶段写入 GroupPrim 的 rotate transform */
+  /** IR 原始旋转角。 */
   rotateDeg: number;
-  /** 外边距（四边 ≥ 0），path 附着到外扩 margin 的虚拟边界 */
+  /** 外边距。 */
   margin: BoxInsets;
   /** 节点文本行；undefined 表示无文本。 */
   lines?: Array<TextLine>;
   /** 含 math run 的混排块，与 lines 互斥。 */
   inlineBlock?: { lines: Array<{ laid: LaidLine; baselineOffset: number }> };
-  /** 文本块宽度 = max(per-line measureText.width) */
+  /** 文本块宽度。 */
   textWidth: number;
-  /** 文本块高度 ≈ lines × lineHeight */
+  /** 文本块高度。 */
   textHeight: number;
-  /** 文本对齐（start / middle / end 三态） */
+  /** 文本对齐。 */
   align: 'start' | 'middle' | 'end';
-  /** 行高（已应用默认值） */
+  /** 行高。 */
   lineHeight: number;
-  /** 文本字号（已应用默认值） */
+  /** 文本字号。 */
   fontSize: number;
   /**
-   * 字体族（CSS font-family）
+   * 字体族。
    * @default 'sans-serif'
    */
   fontFamily?: string;
@@ -84,7 +84,7 @@ export type NodeLayout = {
    */
   fontStyle?: 'normal' | 'italic' | 'oblique';
   /**
-   * 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolvePaint → PaintValue、'transparent' 兜底
+   * 节点背景填充。
    * @default 'transparent'
    */
   fill?: string | IRPaintSpec;
@@ -94,17 +94,17 @@ export type NodeLayout = {
    */
   fillOpacity?: number;
   /**
-   * 节点边框 paint，emit 时经 resolvePaint → PaintValue、'currentColor' 兜底
+   * 节点边框 paint。
    * @default 'currentColor'
    */
   stroke?: string | IRPaintSpec;
   /**
-   * 描边透明度 0~1（TikZ `draw opacity`）
+   * 描边透明度。
    * @default 1
    */
   strokeOpacity?: number;
   /**
-   * 边框宽度，emit 时 1 兜底
+   * 边框宽度。
    * @default 1
    */
   strokeWidth?: number;
@@ -113,58 +113,58 @@ export type NodeLayout = {
   /** 描边 dash offset。 */
   dashOffset?: number;
   /**
-   * rectangle 圆角半径（非 rect shape 无效）
+   * rectangle 圆角半径。
    * @default 0
    */
   cornerRadius?: number;
   /**
-   * 文字颜色，emit 时 'currentColor' 兜底
+   * 文字颜色。
    * @default 'currentColor'
    */
   textColor?: string;
   /**
-   * 整节点透明度 0~1（同时挂 shape 与 text primitive）
+   * 整节点透明度。
    * @default 1
    */
   opacity?: number;
-  /** 已解析的主形状投影（compile 已展开 preset + 显式覆盖）；仅挂 shape 几何图元，不挂 text */
+  /** 已解析的主形状投影。 */
   shadow?: ResolvedDropShadow;
   /**
-   * 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text
+   * 主形状混合模式。
    * @default 'normal'
    */
   blendMode?: BlendModeValue;
   /** 已解析的 label 列表。 */
   labels?: Array<NodeLabelLayout>;
   /**
-   * 节点默认连接面（来自 IR `node.boundary`；undefined = 'shape'）；path 端点 boundary 可覆盖
+   * 节点连接面。
    * @default 'shape'
    */
   boundary?: IRBoundary;
-  /** provenance 元数据（来自 IR `node.meta`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 忽略 */
+  /** provenance 元数据。 */
   meta?: IRJsonObject;
-  /** 时间轴动画 tracks（来自 IR `node.animations`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 播放 / 降级 */
+  /** 时间轴动画 tracks。 */
   animations?: Array<IRAnimationTrack>;
-  /** 构建本 layout 的 shape 注册表引用——借用连接面（borrowed boundary）查表用 */
+  /** 构建本 layout 的 shape 注册表引用。 */
   shapes: ProviderCollection<ShapeDefinition>;
   /**
-   * 构建本 layout 的 boundary 注册表引用——connection surface provider 查表用
-   * @default resolveBoundaryRegistry()
+   * boundary 注册表引用。
+   * @default `resolveBoundaryRegistry`
    */
   boundaries?: ProviderCollection<BoundaryDefinition>;
 };
 
-/** 节点附属标签 layout（layoutNode 已合并默认值与样式继承） */
+/** 节点附属标签 layout。 */
 export type NodeLabelLayout = {
-  /** 纯文本内容（混排时是各 text run 拼接，仅作兜底显示 / 测量） */
+  /** 纯文本内容。 */
   text: string;
-  /** 含公式时的混排行布局（emit 走 laid）；纯文本时 undefined */
+  /** 含公式时的混排行布局。 */
   laid?: LaidLine;
   /** 8 方向枚举、center、数字角度，或 box-like boundary 上的归一位置 */
   position: NodeLabelPositionValue | number | IRNodeLabelBoundaryPosition;
-  /** label 相对附着点向外或向内偏移 */
+  /** label 相对附着点向外或向内偏移。 */
   placement: NodeLabelPlacementValue;
-  /** 已应用默认值 */
+  /** label 距离。 */
   distance: number;
   /**
    * label 文本颜色。
@@ -193,19 +193,19 @@ export type NodeLabelLayout = {
    */
   fontStyle?: 'normal' | 'italic' | 'oblique';
   /**
-   * label 文本自旋模式（none / radial / tangent / 数字角度）；缺省 = 不旋转
+   * label 文本自旋模式。
    * @default 'none'
    */
   rotate?: 'none' | 'radial' | 'tangent' | number;
   /**
-   * 自旋后若文字倒置则翻 180°；缺省 false
+   * 自旋后若文字倒置则翻 180°。
    * @default false
    */
   keepUpright?: boolean;
-  /** label 文本测量宽度（pin leader 算 label 框近边用） */
+  /** label 文本测量宽度。 */
   measuredWidth: number;
   /**
-   * pin：true = 默认引线；对象 = 带样式引线（stroke / strokeWidth / dashPattern / dashOffset）；缺省 / false = 无引线
+   * pin 引线配置。
    * @default false
    */
   pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number>; dashOffset?: number };

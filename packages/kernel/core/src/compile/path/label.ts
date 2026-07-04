@@ -8,20 +8,20 @@ import { RAD_TO_DEG } from '../../shared/geometry';
 import { CompileWarningCode } from '../constant';
 import { layoutInlineLine, resolveLineRuns, toAlphabeticBaselineY } from '../text';
 
-/** 边标注默认字号 / 偏移量 */
+/** 边标注字号与偏移量。 */
 const LABEL_FONT_SIZE = 14;
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
 type LabelSide = GeometryLabelSideValue | 'center';
 
-/** 边标注公式上下文（注入的 lowerTex + gating + warn）；缺省 = 无 tex 能力 */
+/** 边标注公式上下文。 */
 export type LabelTexContext = {
   /**
    * 注入的 TeX 降解能力。
    * @default undefined
    */
   lowerTex?: LowerTex;
-  /** `$...$` 解析门控（= lowerTex 已注入） */
+  /** `$...$` 解析门控。 */
   gatingOn: boolean;
   warn: (code: CompileWarningCodeValue, message: string) => void;
 };
@@ -35,7 +35,7 @@ export type LabelPlacementContext = {
   boundaryOffset?: number;
 };
 
-/** keyword → t 数值映射；含旧 3 keyword（midway/near-start/near-end）+ 新 4 keyword */
+/** keyword → t 数值映射。 */
 const KEYWORD_TO_T: Record<string, number> = {
   'at-start': 0,
   'very-near-start': 0.125,
@@ -48,7 +48,7 @@ const KEYWORD_TO_T: Record<string, number> = {
 
 /**
  * label.position → 段参数 t∈[0,1]
- * @description 数值原样返回（schema 已 clamp 0..1）；keyword 走 KEYWORD_TO_T 映射；undefined 退默认 midway (0.5)
+ * @description 数值原样返回；keyword 走 KEYWORD_TO_T 映射。
  */
 export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
   if (typeof pos === 'number') return pos;

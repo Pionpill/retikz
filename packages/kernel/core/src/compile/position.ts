@@ -14,7 +14,7 @@ export type ResolveBetweenGlobal = (
   scopeChain: ReadonlyArray<Transform>,
 ) => IRPosition | null;
 
-/** 默认相对定位距离（CompileOptions.nodeDistance 未配时使用） */
+/** 相对定位距离常量。 */
 const DEFAULT_NODE_DISTANCE = 1;
 
 /**

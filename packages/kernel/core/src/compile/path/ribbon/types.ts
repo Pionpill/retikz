@@ -11,7 +11,7 @@ import type { EmitPathWarnHook } from '../types';
  */
 export type RibbonLike = Omit<IRPathBase, 'kind' | 'kindOptions' | 'ribbon'> & IRPathRibbonOptions;
 
-/** 动态宽度 / boundary ribbon 的默认采样点数量。 */
+/** 动态宽度 / boundary ribbon 的采样点数量。 */
 export const DEFAULT_RIBBON_SAMPLES = 64;
 
 /**

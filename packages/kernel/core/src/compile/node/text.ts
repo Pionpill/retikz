@@ -1,8 +1,8 @@
 import type { FontSpec, TextMeasurer } from '../text';
 
-/** 默认节点字号（user units）。 */
+/** 节点字号常量。 */
 export const DEFAULT_FONT_SIZE = 14;
-/** 默认行高倍率；实际行高 = fontSize × 本倍率。 */
+/** 行高倍率。 */
 export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 
 /** CJK / 全角字符范围：无需空白分隔，折行时可按单字符切分 */

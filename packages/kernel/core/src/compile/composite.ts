@@ -4,7 +4,7 @@ import type { CompileWarning } from './constant';
 
 import { CompileWarningCode } from './constant';
 
-/** composite 嵌套展开的默认最大深度（防环 / 防失控递归）；可经 CompileOptions.maxCompositeDepth 覆盖 */
+/** composite 嵌套展开最大深度。 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
 
 type LowerOptions = {
@@ -44,7 +44,7 @@ export const lowerComposites = (ir: IR, registry: ReadonlyMap<string, CompositeD
       const parsed = definition.schema.parse(child); // 精确校验 + 强类型（含 default 填充）
       const produced = definition.expand(parsed);
       const list = Array.isArray(produced) ? produced : [produced];
-      // fixpoint：展开产物可能仍含 tier2，继续展开（depth + 1 用于环 / 深度守卫）
+      // 展开产物可能仍含 tier2，继续展开。
       return expandList(list, depth + 1, path);
     }
     if (child.type === 'scope') {

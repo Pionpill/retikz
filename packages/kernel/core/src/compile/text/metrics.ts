@@ -1,14 +1,14 @@
 /** 字体规格：传给 TextMeasurer 的最小信息 */
 export type FontSpec = {
   /**
-   * 字体族；不填走兜底值 "sans-serif"
+   * 字体族。
    * @default 'sans-serif'
    */
   family?: string;
   /** 字号（user units） */
   size: number;
   /**
-   * 字重；可以是 'normal' / 'bold' / 100~900 数字等
+   * 字重。
    * @default 'normal'
    */
   weight?: string | number;
@@ -23,29 +23,26 @@ export type FontSpec = {
 export type TextMetrics = {
   /** 文本宽度（user units） */
   width: number;
-  /** 文本高度（user units），通常 ≈ ascent + descent */
+  /** 文本高度（user units） */
   height: number;
   /**
-   * 基线以上的高度；不一定所有 measurer 都返回
-   * @default 根据 `height` 估算
+   * 基线以上的高度。
+   * @default 由调用方按字体估算
    */
   ascent?: number;
   /**
-   * 基线以下的深度；不一定所有 measurer 都返回
-   * @default 根据 `height` 估算
+   * 基线以下的深度。
+   * @default 由调用方按字体估算
    */
   descent?: number;
 };
 
-/**
- * 文字度量函数接口（编译期由 adapter 注入）
- * @description @retikz/react: canvas measureText；@retikz/ssr: opentype.js/fontkit；@retikz/render/canvas: ctx.measureText
- */
+/** 文字度量函数接口。 */
 export type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 
 /**
- * 默认兜底度量：基于平均字宽估算，不准但保证可运行
- * @description size=0 → 退化返回 (0, 0)（与 text='' 一致）；负 size 或非有限（NaN / Infinity）size → throw（非法输入早 fail，避免 NaN / Infinity 传播到 Scene）
+ * 兜底文字度量。
+ * @description 基于平均字宽估算；非法字号会 throw。
  */
 export const fallbackMeasurer: TextMeasurer = (text, font) => {
   if (!Number.isFinite(font.size) || font.size < 0) {

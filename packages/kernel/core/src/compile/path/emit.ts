@@ -760,7 +760,7 @@ export const emitPathPrimitive = (
     if (step.kind === 'bend') {
       // 起点参考：自包含前驱留 penOverride 时取游标，否则 prev.anchor（node→node 中心向，不变）
       const fromRef = usedOverride ?? prev.anchor;
-      // out/in 角（任一给定）优先于 bendDirection 对称弯；都缺则按 bendDirection 对称弯，仍缺则默认 left 弯
+      // out/in 角优先于 bendDirection 对称弯。
       const [c1, c2] =
         step.outAngle !== undefined || step.inAngle !== undefined
           ? outInControlPoints(fromRef, currAnchor, step.outAngle ?? 0, step.inAngle ?? 180, step.looseness)
@@ -804,7 +804,7 @@ export const emitPathPrimitive = (
     }
   }
 
-  // strokeWidth 解析：显式 strokeWidth > thickness 档位 > 默认 1
+  // strokeWidth 解析。
   const strokeWidth = path.strokeWidth ?? (path.thickness ? THICKNESS_TO_WIDTH[path.thickness] : 1);
   const baseProps: PathBaseProps = {
     stroke: resolvePaint(path.stroke) ?? 'currentColor',

@@ -1,4 +1,4 @@
-/** 默认输出精度：保留 2 位小数 */
+/** 输出精度常量。 */
 export const DEFAULT_PRECISION = 2;
 
 /** 创建 Scene 输出 rounder，并把 -0 归一为 0。 */

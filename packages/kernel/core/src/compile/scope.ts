@@ -152,8 +152,7 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
     } else {
       const sy = t.y ?? t.x;
       if (t.x === 0 || sy === 0) {
-        // scale 0 不可逆——退化为 (0, 0) 防 NaN（兜底手搓 IR 绕过 schema 的退化输入）；
-        // ScaleSchema describe 已提醒用户避坑，此处运行时再守一道
+        // scale 0 不可逆，退化为原点。
         x = 0;
         y = 0;
         continue;

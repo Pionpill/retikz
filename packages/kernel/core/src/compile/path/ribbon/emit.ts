@@ -108,7 +108,7 @@ export const emitRibbonPrimitive = (
   const widthAt = centerlineWidthFunction(ribbon, options.ribbonWidthProfiles ?? new Map(), totalLength);
   const samples = resolveSampleCount(ribbon.samples, ribbon.sampling, totalLength);
   const sampleCount = samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
-  // 未要求采样且宽度静态时优先解析型轮廓；解析失败（如 arc）再回退到默认采样。
+  // 静态宽度优先解析型轮廓，必要时回退采样。
   const outline =
     sampleCount === undefined
       ? (analyticOutlineCommands(

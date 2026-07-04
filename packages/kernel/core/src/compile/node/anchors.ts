@@ -10,7 +10,7 @@ import { CenterAnchor, isAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { fallbackBoundaryAnchor, resolveBoundary } from '../boundary';
 
-/** 无参 / 合成 layout 的 shape params 兜底（避免每次调用重建空对象） */
+/** 空 shape params。 */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
 
 const isZeroInsets = (m: BoxInsets): boolean => m.top === 0 && m.right === 0 && m.bottom === 0 && m.left === 0;
@@ -64,9 +64,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
       return own ?? [layout.rect.x, layout.rect.y];
     }
 
-    // 标准方位名：默认连接面（'shape'）先走视觉 shape 自身 anchor——ellipse/circle 落真实周长、
-    // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现标准方位（star/sector/arc 返回 undefined）
-    // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
+    // 标准方位名优先走视觉 shape 自身 anchor；未实现时回退外接 AABB。
     if (boundary === 'shape') {
       const own = layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
       if (own !== undefined) return own;
@@ -94,7 +92,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }
-  // 形状专属命名 anchor（tip-N / outer-arc-mid / apex 等）：恒走视觉形状，boundary 不影响
+  // 形状专属命名 anchor 恒走视觉形状。
   const p = layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
   if (p === undefined) {
     throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
@@ -114,7 +112,7 @@ export const angleBoundaryOf = (
   const rot = layout.rect.rotate ?? 0;
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
-  // 局部 (lx, ly) → 世界方向 (lx*cos - ly*sin, lx*sin + ly*cos)；toward 距离任意，boundaryPoint 只用方向
+  // 局部方向转为世界方向。
   const toward: Position = [layout.rect.x + lx * cosR - ly * sinR, layout.rect.y + lx * sinR + ly * cosR];
   const { def, rect, params } = resolveBoundary(
     boundary,

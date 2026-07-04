@@ -7,8 +7,8 @@ import { Anchor } from '../shared';
 export type DirectionVector = readonly [number, number];
 
 /**
- * 8 方向在屏幕坐标系（y 向下）里的单位向量。
- * @description top=视觉上方（y 减小）；对角分量用 1/√2，保证斜向 distance 与水平 / 垂直 distance 等长。
+ * 8 方向在屏幕坐标系里的单位向量。
+ * @description 对角分量归一化，保证斜向 distance 与水平 / 垂直 distance 等长。
  */
 export const DirectionVectorByAtDirection = {
   [AtDirection.Top]: [0, -1],

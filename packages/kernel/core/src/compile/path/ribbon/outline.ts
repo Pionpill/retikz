@@ -453,7 +453,7 @@ export const boundaryOutlineCommands = (
 
 /**
  * 将闭合轮廓命令写成最终 PathPrim
- * @description fill 默认 currentColor；仅当用户显式请求 stroke / strokeWidth 时才写描边字段，保持 Scene 输出精简。
+ * @description 仅当用户显式请求 stroke / strokeWidth 时写描边字段。
  */
 export const styledPrimitiveFromOutline = (
   ribbon: RibbonLike,

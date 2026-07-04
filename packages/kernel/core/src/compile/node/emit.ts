@@ -9,10 +9,10 @@ import { toAlphabeticBaselineY } from '../text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './labels';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './text';
 
-/** 无参 / 合成 layout 的 shape params 兜底（避免每次调用重建空对象） */
+/** 空 shape params。 */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
 
-/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ResolvedShapeStyle，不含几何 / 文本）；fill / stroke 经 resolvePaint 转 PaintValue */
+/** 从 NodeLayout 收敛 shape emit 所需的视觉样式。 */
 const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
   fill: resolvePaint(layout.fill),
   fillOpacity: layout.fillOpacity,
@@ -31,15 +31,14 @@ const cloneScenePrimitive = <T extends ScenePrimitive>(primitive: T): T => ({ ..
 
 /**
  * NodeLayout → Scene primitives
- * @description shape 主体走 `shapeDef.emit`（收轴对齐 rect、可出多 primitive）；text 始终走 TextPrim；
- *   有旋转时外层 GroupPrim 用 `rotate(deg cx cy)` 统一包裹 shape + text（diamond 顶点 / text 都靠 group 旋转）
+ * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive。
  */
 export const emitNodePrimitives = (
   layout: NodeLayout,
   round: (n: number) => number,
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
-  // shape 主体：emit 收**轴对齐 rect（rotate=0）**，rotate 由末端外层 GroupPrim 统一施加
+  // shape 主体按轴对齐 rect emit。
   const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
   const shapePrims: Array<ScenePrimitive> = [
     ...layout.shapeDef.emit(
@@ -51,7 +50,7 @@ export const emitNodePrimitives = (
   ].map(cloneScenePrimitive);
   const inner: Array<ScenePrimitive> = [...shapePrims];
   if (layout.inlineBlock) {
-    // 混排块：逐行按 align 求行起点 originX、按 baselineOffset 求基线 y，委托 laid.emit 产 TextPrim / glyph group
+    // 混排块逐行 emit。
     const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
     const halfBlockW = layout.textWidth / 2;
     for (const { laid, baselineOffset } of layout.inlineBlock.lines) {
@@ -86,13 +85,13 @@ export const emitNodePrimitives = (
       measuredHeight: round(layout.textHeight),
     });
   }
-  // 每个 label 一个 TextPrim，放在 inner 同组 → 跟 node 旋转一致；rotate 时再包一层绕 label 自身中心的 group
+  // 每个 label 一个附属 primitive。
   if (layout.labels) {
     const cx = layout.rect.x;
     const cy = layout.rect.y;
     for (const lab of layout.labels) {
       const [lx, ly] = labelCenter(layout, lab);
-      // pin：true 或样式对象都画引线；false / 缺省跳过。从 node 边界画到 label 框近 node 边（textPrim 前 push → 线在文字下层）
+      // pin 引线放在 label 内容下层。
       if (lab.pin) {
         const style = typeof lab.pin === 'object' ? lab.pin : undefined;
         const [bx, by] = labelBorderPoint(layout, lab);
@@ -113,7 +112,7 @@ export const emitNodePrimitives = (
       }
       let labelContent: ScenePrimitive;
       if (lab.laid) {
-        // 混排 label：以 label 中心 (lx,ly) 横向居中、纵向居中放置 run 序列
+        // 混排 label 按中心放置。
         const laid = lab.laid;
         const originX = lx - laid.width / 2;
         const baselineY = ly + (laid.ascent - laid.descent) / 2;
@@ -142,7 +141,7 @@ export const emitNodePrimitives = (
       if (deg === 0) {
         inner.push(labelContent);
       } else {
-        // 绕 label 自身中心自旋——位置仍由 position / distance 决定，rotate 只改朝向
+        // 绕 label 自身中心自旋。
         inner.push({
           type: 'group',
           transforms: [{ kind: 'rotate', degrees: round(deg), cx: round(lx), cy: round(ly) }],
@@ -151,26 +150,24 @@ export const emitNodePrimitives = (
       }
     }
   }
-  // 带文本（layout.lines 非空）或有旋转的 Node 包进单层 GroupPrim：给"语义化节点"一个稳定 DOM /
-  // stacking 单位边界；纯几何装饰 Node 维持平铺、零额外 DOM 层。无旋转时 group 不带 transforms。
+  // 带文本或旋转的 Node 包进单层 GroupPrim。
   const needsGroup = layout.rotateDeg !== 0 || layout.lines !== undefined || layout.inlineBlock !== undefined;
   if (!needsGroup) {
-    // 纯几何 Node（不包 group）：把 user id stamp 到每个平铺 shape 图元（多 shape emit 时共享同一 id）；
-    // label / pin 等附属图元不 stamp。无 user id 时保持 undefined。
+    // 纯几何 Node 不包 group，id stamp 到 shape 图元。
     if (layout.id !== undefined) {
       for (const prim of shapePrims) prim.id = layout.id;
     }
-    // meta provenance 与 id 同款：原样复制到每个平铺 shape 图元（label / pin 不 stamp）
+    // meta stamp 到 shape 图元。
     if (layout.meta !== undefined) {
       for (const prim of shapePrims) prim.meta = layout.meta;
     }
-    // animations 与 meta 同款：原样复制到每个平铺 shape 图元（transform/opacity 复制后视觉等价于动 group）
+    // animations stamp 到 shape 图元。
     if (layout.animations !== undefined) {
       for (const prim of shapePrims) prim.animations = layout.animations;
     }
     return inner;
   }
-  // 带文本 / rotate Node：user id 落到单层 GroupPrim（top-level emit 图元），子图元不重复 stamp。
+  // 带文本或旋转时，id / meta / animations 落到外层 group。
   const group: GroupPrim = { type: 'group', children: inner };
   if (layout.id !== undefined) group.id = layout.id;
   if (layout.meta !== undefined) group.meta = layout.meta;

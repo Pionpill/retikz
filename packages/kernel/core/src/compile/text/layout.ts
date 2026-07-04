@@ -9,7 +9,7 @@ import { CompileWarningCode } from '../constant';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import { isMathRun, parseInlineRuns } from './inline';
 
-/** 行高近似系数（与 node.ts 的 DEFAULT_LINE_HEIGHT_FACTOR 同口径） */
+/** 行高近似系数。 */
 const LINE_HEIGHT_FACTOR = 1.2;
 
 type Round = (n: number) => number;
@@ -18,19 +18,19 @@ type Round = (n: number) => number;
 export type LineLayoutContext = {
   measureText: TextMeasurer;
   /**
-   * TeX 降解能力；缺省时 math run 跳过并发警告。
+   * TeX 降解能力。
    * @default undefined
    */
   lowerTex?: LowerTex;
-  /** 块级字体（行 / run 未覆盖时兜底） */
+  /** 块级字体。 */
   font: FontSpec;
   /**
-   * 块级文字色（run 未给 fill 时；emit 时 'currentColor' 兜底）
+   * 块级文字色。
    * @default 'currentColor'
    */
   color?: string;
   /**
-   * 宿主整体不透明度（node / label 级）；与 run 自身 opacity 相乘
+   * 宿主整体不透明度。
    * @default 1
    */
   opacity?: number;
@@ -51,7 +51,7 @@ export type LaidLine = {
   descent: number;
   /** 无 math run（纯文本，可与既有 TextPrim 路径等价） */
   isPlain: boolean;
-  /** 把本行子图元放到行起点 (originX, baselineY)（originX = 左对齐起点，baselineY = alphabetic 基线 y） */
+  /** 把本行子图元放到行起点。 */
   emit: (originX: number, baselineY: number, round: Round) => Array<ScenePrimitive>;
 };
 

@@ -81,7 +81,7 @@ export const applyRoundedCorners = (
       i++;
       continue;
     }
-    // run 起点 = 上一条命令的终点（line 不会是首命令，故 out 非空；防御性兜底无前置 / 无终点的命令）
+    // run 起点取上一条命令的终点。
     const prev = out[out.length - 1];
     const start = endpointOf(prev);
     if (!start) {

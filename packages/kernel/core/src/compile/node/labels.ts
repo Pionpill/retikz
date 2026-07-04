@@ -9,7 +9,7 @@ import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../shared/geometry'
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from '../direction';
 import { anchorOf, angleBoundaryOf } from './anchors';
 
-/** Node label 与 node 边界默认距离（TikZ 默认 0pt 视觉太贴） */
+/** Node label 与 node 边界距离。 */
 export const DEFAULT_LABEL_DISTANCE = 12;
 
 const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): position is IRNodeLabelBoundaryPosition =>
@@ -61,7 +61,7 @@ const labelBoundaryDirection = (position: IRNodeLabelBoundaryPosition): Position
 
 const labelPlacementSign = (label: NodeLabelLayout): number => (label.placement === 'inside' ? -1 : 1);
 
-/** label 在 node 边界上的附着点（未旋转局部系；pin 引线起点 = 此点） */
+/** label 在 node 边界上的附着点。 */
 export const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
@@ -89,7 +89,7 @@ export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Positio
   return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
 };
 
-/** 从 label 中心朝 border 方向，求 label 框（halfW×halfH）边界交点（pin 引线终点 = label 框近 node 边） */
+/** 从 label 中心朝 border 方向，求 label 框边界交点。 */
 export const labelBoxEdgeToward = (center: Position, border: Position, halfW: number, halfH: number): Position => {
   const dx = border[0] - center[0];
   const dy = border[1] - center[1];
@@ -104,9 +104,8 @@ export const labelBoxEdgeToward = (center: Position, border: Position, halfW: nu
 };
 
 /**
- * 算 label 文本自旋角度（度，屏幕 y-down，节点局部系）
- * @description radial = atan2(label中心 − node中心)；tangent = radial + 90；number = 原值；none / 缺省 = 0。
- *   keepUpright 时把"偏离正立 > 90°"的角度翻 180° 保阅读方向。方向向量在局部坐标算，node 自身 rotate 由外层 group 叠加。
+ * 算 label 文本自旋角度。
+ * @description keepUpright 会翻转倒置文本。
  */
 export const resolveLabelRotateDeg = (
   label: NodeLabelLayout,
@@ -132,9 +131,8 @@ export const resolveLabelRotateDeg = (
 };
 
 /**
- * 节点 label 的外接点（供顶层 bbox / viewBox 计算，让 label 不被裁——与 step.label 进 bbox 一致）
- * @description 每个 label 取其文本框四角；label 中心走 labelCenter（轴对齐系），node 自身 rotate 时绕 node 中心旋转
- *   （与 emit 的 group rotate 同步）。pin 引线起点在 node 边界内、已被 node 四角覆盖，无需额外。
+ * 节点 label 的外接点。
+ * @description 用于顶层 bbox / viewBox 计算。
  */
 export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];

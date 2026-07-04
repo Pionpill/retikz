@@ -12,7 +12,7 @@ import { shiftToward } from './anchor';
 /** 已解析 arrow registry：内置 8 + 注入 */
 export type ResolvedArrowRegistry = ReadonlyMap<string, ArrowDefinition>;
 
-/** 默认 baseSize（marker 局部基准边长，viewBox `0 0 baseSize baseSize`） */
+/** marker 局部基准边长。 */
 const ARROW_GEOMETRY_BASE_SIZE = 10;
 
 /** compile 内部使用的箭头视觉输入。 */
@@ -25,12 +25,12 @@ type ResolvedArrowVisual = {
   scale?: number;
   /**
    * 箭头长度。
-   * @default `def.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE`
+   * @default `def.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE` (fallback 6)
    */
   length?: number;
   /**
    * 箭头宽度。
-   * @default `def.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE`
+   * @default `def.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE` (fallback 6)
    */
   width?: number;
   /**
@@ -50,7 +50,7 @@ type ResolvedArrowVisual = {
   opacity?: number;
   /**
    * 空心箭头局部描边宽度。
-   * @default `ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH`
+   * @default `ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH` (1.5)
    */
   lineWidth?: number;
 };

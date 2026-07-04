@@ -15,7 +15,7 @@ import type {
 
 /**
  * scope 级联 graphic state——主色 color + 跨类共享分项
- * @description 级联到 scope 内全部元素（= TikZ scope option / current color）
+ * @description 级联到 scope 内全部元素。
  */
 type CascadeState = Pick<
   IRScope,
@@ -24,18 +24,18 @@ type CascadeState = Pick<
 
 /**
  * 单层 scope 的样式 frame——compile 维护 frame 栈做 inside-out per-field 解析
- * @description 级联 graphic state + 四通道 every-X 默认 + resetStyle 屏障；从 IRScope 抽取（createStyleFrame）
+ * @description 包含级联 graphic state、样式通道和 resetStyle 屏障。
  */
 export type StyleFrame = {
-  /** 级联 graphic state（主色 + 跨类共享分项） */
+  /** 级联 graphic state。 */
   cascade: CascadeState;
-  /** every node 默认 */
+  /** node 样式通道。 */
   nodeDefault?: IRScope['nodeDefault'];
-  /** every path 默认 */
+  /** path 样式通道。 */
   pathDefault?: IRScope['pathDefault'];
-  /** every label 默认（node label + step label 共享） */
+  /** label 样式通道。 */
   labelDefault?: IRLabelDefault;
-  /** every arrow 默认 */
+  /** arrow 样式通道。 */
   arrowDefault?: IRArrowDetail;
   /** 朝外的继承屏障：切外层对应通道 */
   resetStyle?: IRScope['resetStyle'];
@@ -104,7 +104,7 @@ const cuts = (reset: StyleFrame['resetStyle'], channel: StyleChannel): boolean =
 // 主色展开（同源内分项覆盖主色）
 // ===========================================================================
 
-/** 级联 graphic state 投影到 node 样式字段（主色展开：stroke / fill / textColor 默认随 color） */
+/** 级联 graphic state 投影到 node 样式字段。 */
 const cascadeToNode = (c: CascadeState): Partial<IRNode> => {
   const out: Partial<IRNode> = {};
   const master = c.color;
@@ -120,7 +120,7 @@ const cascadeToNode = (c: CascadeState): Partial<IRNode> => {
   return out;
 };
 
-/** 级联 graphic state 投影到 path 样式字段（主色展开 stroke；path fill 不随主色——与 TikZ 一致） */
+/** 级联 graphic state 投影到 path 样式字段。 */
 const cascadeToPath = (c: CascadeState): Partial<IRPathBase> => {
   const out: Partial<IRPathBase> = {};
   const stroke = c.stroke ?? c.color;
@@ -175,7 +175,7 @@ const expandRibbonColor = (src: Partial<IRPathBase>): Partial<IRPathBase> => {
 // 元素样式解析（fold style frame 栈 + 元素显式）
 // ===========================================================================
 
-/** 解析 node 的最终样式，元素显式字段优先于 scope 默认样式。 */
+/** 解析 node 的最终样式。 */
 export const resolveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleFrame>): IRNode => {
   let acc: Partial<IRNode> = {};
   for (const frame of stack) {

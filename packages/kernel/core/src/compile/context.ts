@@ -25,10 +25,7 @@ import { createClipRegistry, createPaintRegistry } from './resource';
 import { createRound, DEFAULT_PRECISION } from './scene';
 import { fallbackMeasurer } from './text';
 
-/**
- * 默认 warning 分发器：开发模式写到 console.warn，生产环境静默
- * @description 用户传入 onWarn 时使用用户回调；未传时走此兜底逻辑。
- */
+/** warning 分发器。 */
 const defaultWarnDispatcher = (warning: CompileWarning): void => {
   if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
   console.warn(formatCompileWarning(warning));
@@ -48,7 +45,7 @@ export type CompileContext = {
   layoutPadding: number;
   /** Scene 输出 rounder。 */
   round: (n: number) => number;
-  /** 默认 node distance。 */
+  /** 相对定位距离。 */
   nodeDistance: CompileOptions['nodeDistance'];
   /** 编译 warning dispatcher。 */
   onWarn: (warning: CompileWarning) => void;
