@@ -149,7 +149,7 @@ export type NodeLayout = {
   shapes: ProviderCollection<ShapeDefinition>;
   /**
    * boundary 注册表引用。
-   * @default `resolveBoundaryRegistry`
+   * @default resolveBoundaryRegistry
    */
   boundaries?: ProviderCollection<BoundaryDefinition>;
 };

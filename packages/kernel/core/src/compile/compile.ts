@@ -23,7 +23,7 @@ export { CompileWarningCode } from './constant';
 export type CompileHostOptions = {
   /**
    * 注入文字度量函数。
-   * @default `fallbackMeasurer`
+   * @default fallbackMeasurer
    */
   measureText?: TextMeasurer;
   /**
@@ -35,7 +35,7 @@ export type CompileHostOptions = {
   /**
    * 编译期警告收集器
    * @description path / position 解析失败时按 IR locator + code + message 同步触发。
-   * @default `defaultWarnDispatcher`
+   * @default defaultWarnDispatcher
    */
   onWarn?: (warning: CompileWarning) => void;
 };
@@ -50,13 +50,13 @@ export type CompileLayoutOptions = {
   /**
    * 输出坐标的小数位精度。
    * @description 仅作用于 Scene 输出；内部几何保持 double 精度。
-   * @default `DEFAULT_PRECISION` (2)
+   * @default DEFAULT_PRECISION (2)
    */
   precision?: number;
   /**
    * 相对定位距离。
    * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值。
-   * @default `DEFAULT_NODE_DISTANCE` (24)
+   * @default DEFAULT_NODE_DISTANCE (24)
    */
   nodeDistance?: number;
 };
@@ -66,30 +66,30 @@ export type CompileProviderOptions = {
   /**
    * 运行时注入的 shape 定义。
    * @description 未注册名称会在编译期报错。
-   * @default 仅 `BUILTIN_SHAPES`
+   * @default 仅 BUILTIN_SHAPES
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
    * 运行时注入的 connection surface 定义。
    * @description `boundary` 先查本注册表，再兜底查 shape 注册表。
-   * @default 仅 `BUILTIN_BOUNDARIES`
+   * @default 仅 BUILTIN_BOUNDARIES
    */
   boundaries?: ReadonlyArray<BoundaryDefinition>;
   /**
    * 运行时注入的 clip providers。
-   * @default 仅 `BUILTIN_CLIPS`
+   * @default 仅 BUILTIN_CLIPS
    */
   clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 运行时注入的 arrow 定义。
    * @description 未注册名称会在编译期报错。
-   * @default 仅 `BUILTIN_ARROWS`
+   * @default 仅 BUILTIN_ARROWS
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /**
    * 运行时注入的 pattern motif 定义。
    * @description 未注册名称会在编译期报错。
-   * @default 仅 `BUILTIN_PATTERNS`
+   * @default 仅 BUILTIN_PATTERNS
    */
   patterns?: ReadonlyArray<PatternDefinition>;
   /**
@@ -100,7 +100,7 @@ export type CompileProviderOptions = {
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /**
    * 运行时注入的 path kind providers。
-   * @default 仅 `BUILTIN_PATH_KINDS`
+   * @default 仅 BUILTIN_PATH_KINDS
    */
   pathKinds?: ReadonlyArray<PathKindDefinition>;
   /**
@@ -122,7 +122,7 @@ export type CompileCompositeOptions = {
   /**
    * composite 嵌套展开的最大深度。
    * @description 超限或环会 throw。
-   * @default `DEFAULT_MAX_COMPOSITE_DEPTH` (32)
+   * @default DEFAULT_MAX_COMPOSITE_DEPTH (32)
    */
   maxCompositeDepth?: number;
 };

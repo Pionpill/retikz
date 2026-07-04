@@ -25,12 +25,12 @@ type ResolvedArrowVisual = {
   scale?: number;
   /**
    * 箭头长度。
-   * @default `def.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE` (fallback 6)
+   * @default def.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE (fallback 6)
    */
   length?: number;
   /**
    * 箭头宽度。
-   * @default `def.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE` (fallback 6)
+   * @default def.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE (fallback 6)
    */
   width?: number;
   /**
@@ -40,7 +40,7 @@ type ResolvedArrowVisual = {
   color?: string;
   /**
    * 实心箭头填充色。
-   * @default `color ?? contextStroke`
+   * @default color ?? contextStroke
    */
   fill?: string;
   /**
@@ -50,7 +50,7 @@ type ResolvedArrowVisual = {
   opacity?: number;
   /**
    * 空心箭头局部描边宽度。
-   * @default `ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH` (1.5)
+   * @default ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH (1.5)
    */
   lineWidth?: number;
 };

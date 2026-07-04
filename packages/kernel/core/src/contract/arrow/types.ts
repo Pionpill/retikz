@@ -36,12 +36,12 @@ export type ArrowDefinition = {
   lineContactX: number;
   /**
    * 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0
-   * @default `hollow ? lineWidth / 2 : 0`
+   * @default hollow ? lineWidth / 2 : 0
    */
   outerInset?: number;
   /**
    * 尖端 x（shrink 用）；缺省 = baseSize
-   * @default `baseSize`
+   * @default baseSize
    */
   tipX?: number;
   /**

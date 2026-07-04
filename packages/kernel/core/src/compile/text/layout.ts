@@ -93,12 +93,12 @@ type TextPiece = {
   font: FontSpec;
   /**
    * 文本 run 填充色。
-   * @default `LineLayoutContext.color`
+   * @default LineLayoutContext.color
    */
   fill?: string;
   /**
    * 文本 run 不透明度。
-   * @default `LineLayoutContext.opacity`
+   * @default LineLayoutContext.opacity
    */
   opacity?: number;
   width: number;
@@ -113,12 +113,12 @@ type MathPiece = {
   depth: number;
   /**
    * 公式 run 填充色。
-   * @default `LineLayoutContext.color`
+   * @default LineLayoutContext.color
    */
   fill?: string;
   /**
    * 公式 run 不透明度。
-   * @default `LineLayoutContext.opacity`
+   * @default LineLayoutContext.opacity
    */
   opacity?: number;
 };

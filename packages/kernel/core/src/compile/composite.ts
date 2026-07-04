@@ -11,7 +11,7 @@ type LowerOptions = {
   onWarn: (warning: CompileWarning) => void;
   /**
    * composite 嵌套展开最大深度。
-   * @default `DEFAULT_MAX_COMPOSITE_DEPTH` (32)
+   * @default DEFAULT_MAX_COMPOSITE_DEPTH (32)
    */
   maxDepth?: number;
 };

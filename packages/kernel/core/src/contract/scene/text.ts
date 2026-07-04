@@ -10,32 +10,32 @@ export type TextLine = {
   text: string;
   /**
    * 行级字号覆盖（user units）；缺省走块级 TextPrim.fontSize
-   * @default `TextPrim.fontSize`
+   * @default TextPrim.fontSize
    */
   fontSize?: IRFont['size'];
   /**
    * 行级字体族覆盖（CSS font-family）；缺省走块级
-   * @default `TextPrim.fontFamily`
+   * @default TextPrim.fontFamily
    */
   fontFamily?: IRFont['family'];
   /**
    * 行级字重覆盖（CSS font-weight）；缺省走块级
-   * @default `TextPrim.fontWeight`
+   * @default TextPrim.fontWeight
    */
   fontWeight?: SceneFontWeight;
   /**
    * 行级字形覆盖；缺省走块级
-   * @default `TextPrim.fontStyle`
+   * @default TextPrim.fontStyle
    */
   fontStyle?: IRFont['style'];
   /**
    * 行级文字颜色覆盖；缺省走块级 TextPrim.fill
-   * @default `TextPrim.fill`
+   * @default TextPrim.fill
    */
   fill?: IRTextRun['fill'];
   /**
    * 行级透明度 0..1 覆盖；缺省走块级
-   * @default `TextPrim.opacity`
+   * @default TextPrim.opacity
    */
   opacity?: IRTextRun['opacity'];
 };
