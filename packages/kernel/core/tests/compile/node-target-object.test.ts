@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR, IRTarget } from '../../src/schemas';
+import type { IRScene, IRTarget } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 
@@ -18,7 +18,7 @@ const lastLineEnd = (prim: PathPrim): [number, number] => {
 
 /** 编一条从 (100,100) line 到 target 的 path，返回末端 line 终点 */
 const endOf = (target: IRTarget): [number, number] => {
-  const ir: IR = {
+  const ir: IRScene = {
     version: 1,
     type: 'scene',
     children: [
@@ -93,7 +93,7 @@ describe('offset 世界系叠加', () => {
 
 describe('错误路径', () => {
   it('未定义 id → 不产 PathPrim', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -114,7 +114,7 @@ describe('错误路径', () => {
 describe('Coordinate（零尺寸）anchor 退化（ADR-01 决策细节 #10）', () => {
   /** 编一条 line 到 target、终点（场景含 id='c' 的零尺寸 Coordinate 在 (50,50)） */
   const coordEnd = (target: IRTarget): [number, number] => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

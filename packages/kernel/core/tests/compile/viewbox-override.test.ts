@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, IRChild } from '../../src';
+import type { IRChild,IRScene } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 import { computeLayout } from '../../src/compile/scene';
@@ -17,7 +17,7 @@ const circleNode = (id: string, position: [number, number], minimumSize = 40): I
 });
 
 /** 手搓一个带 / 不带 viewBox 的 Scene IR */
-const scene = (children: ReadonlyArray<IRChild>, viewBox?: IR['viewBox']): IR => ({
+const scene = (children: ReadonlyArray<IRChild>, viewBox?: IRScene['viewBox']): IRScene => ({
   version: 1,
   type: 'scene',
   children: [...children],

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { findPathPrim } from './helpers';
 
 describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
   it('opacity 透传到 PathPrim.opacity', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -25,7 +25,7 @@ describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
   });
 
   it('fillOpacity 透传', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -46,7 +46,7 @@ describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
   });
 
   it('IR drawOpacity → PathPrim.strokeOpacity（命名映射，与 Node 一致）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -64,7 +64,7 @@ describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
   });
 
   it('未指定时三个 opacity 字段都是 undefined', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

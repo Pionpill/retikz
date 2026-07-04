@@ -1,7 +1,7 @@
 import { minimalEnclosingCircle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -9,7 +9,7 @@ import { boxInsets } from '../../src/compile/node';
 import { collectScopeCornerPoints, registerScopeCircleLayout } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

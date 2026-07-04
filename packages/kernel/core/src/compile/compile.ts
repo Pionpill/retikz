@@ -7,7 +7,7 @@ import type { PatternDefinition } from '../contract';
 import type { RibbonWidthProfileDefinition } from '../contract';
 import type { Scene } from '../contract';
 import type { ShapeDefinition } from '../contract';
-import type { IR } from '../schemas';
+import type { IRScene } from '../schemas';
 import type { CompileWarning } from './constant';
 import type { LowerTex, TextMeasurer } from './text';
 
@@ -137,8 +137,8 @@ export type CompileOptions = CompileHostOptions &
  * IR → Scene 纯函数转换，所有 adapter 共享。
  * @description 解析节点、scope、path、资源和动画，并输出 renderer-agnostic 的 Scene。
  */
-export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
-  const context = createCompileContext(ir, options);
+export const compileToScene = (ir: IRScene, options?: CompileOptions): Scene => {
+  const context = createCompileContext(ir, options ?? {});
   const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
   const { primitives, allPoints } = compileChildrenToPrimitives(loweredIr.children, context);
 

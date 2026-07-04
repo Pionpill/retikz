@@ -1,4 +1,4 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -90,7 +90,7 @@ describe('[lower-tex] MathJax integration', () => {
 
   it('works end to end through compileToScene', async () => {
     const lowerTex = createLowerTex(await createMathJaxEngine());
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' }],

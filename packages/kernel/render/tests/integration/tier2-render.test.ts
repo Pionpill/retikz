@@ -1,4 +1,4 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -22,7 +22,7 @@ const labeledBox = defineComposite({
   expand: node => ({ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }),
 });
 
-const ir: IR = {
+const ir: IRScene = {
   version: 1,
   type: 'scene',
   children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],

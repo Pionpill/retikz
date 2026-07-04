@@ -9,7 +9,7 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 
 | API                | Signature                                     | Purpose                                                                                         |
 | ------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `compileToScene`   | `(ir: IR, options?: CompileOptions) => Scene` | Main compile entry point; handles nodes, coordinates, paths, and returns primitives plus layout |
+| `compileToScene`   | `(ir: IRScene, options?: CompileOptions) => Scene` | Main compile entry point; handles nodes, coordinates, paths, and returns primitives plus layout |
 | `computeLayout`    | `(points, padding, round) => Layout`          | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene`    |
 | `fallbackMeasurer` | `(text, font) => TextMetrics`                 | Default text measurer; approximate but runnable, useful as a no-DOM fallback                    |
 

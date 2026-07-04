@@ -1,4 +1,4 @@
-import type { IR, PathCommand } from '@retikz/core';
+import type { IRScene, PathCommand } from '@retikz/core';
 import type { FC } from 'react';
 
 import { definePathGenerator } from '@retikz/core';
@@ -29,7 +29,7 @@ const sin = definePathGenerator({
   },
 });
 
-const ir: IR = {
+const ir: IRScene = {
   version: 1,
   type: 'scene',
   children: [

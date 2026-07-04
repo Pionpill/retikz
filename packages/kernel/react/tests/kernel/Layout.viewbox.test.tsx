@@ -3,7 +3,7 @@
  * @description Layout 接受 viewBox prop 并注入构造出的 IR 根，使 `<svg viewBox="x y w h">` 用显式视框；
  *   直接传 ir prop 且 IR 自带 viewBox 时尊重 IR 内置值（prop 缺省不覆盖）；prop 与 IR 内置冲突时 prop 优先。
  */
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -33,7 +33,7 @@ describe('<Layout viewBox> 注入显式视框', () => {
 
 describe('viewBox prop 与 IR 内置值的优先级', () => {
   it('直接传 ir 且 IR 自带 viewBox、prop 缺省 → 用 IR 内置值', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'o', shape: 'circle', position: [0, 0], minimumSize: 40, fill: '#2563eb' }],
@@ -44,7 +44,7 @@ describe('viewBox prop 与 IR 内置值的优先级', () => {
   });
 
   it('IR 自带 viewBox 且又传 viewBox prop → prop 优先', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'o', shape: 'circle', position: [0, 0], minimumSize: 40, fill: '#2563eb' }],

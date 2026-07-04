@@ -10,7 +10,7 @@ import type {
   ScenePrimitive,
   TextPrim,
 } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -25,14 +25,14 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   return out;
 };
 
-const allPrims = (ir: IR): Array<ScenePrimitive> => flatten(compileToScene(ir).primitives);
-const rectOf = (ir: IR): RectPrim | undefined => allPrims(ir).find((p): p is RectPrim => p.type === 'rect');
-const ellipseOf = (ir: IR): EllipsePrim | undefined => allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');
-const linePathOf = (ir: IR): PathPrim | undefined =>
+const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileToScene(ir).primitives);
+const rectOf = (ir: IRScene): RectPrim | undefined => allPrims(ir).find((p): p is RectPrim => p.type === 'rect');
+const ellipseOf = (ir: IRScene): EllipsePrim | undefined => allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');
+const linePathOf = (ir: IRScene): PathPrim | undefined =>
   allPrims(ir).find((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
-const textsOf = (ir: IR): Array<TextPrim> => allPrims(ir).filter((p): p is TextPrim => p.type === 'text');
+const textsOf = (ir: IRScene): Array<TextPrim> => allPrims(ir).filter((p): p is TextPrim => p.type === 'text');
 /** 取指定文字内容的 TextPrim（node 文本 vs step label 文本区分） */
-const textWith = (ir: IR, content: string): TextPrim | undefined => textsOf(ir).find(t => t.lines[0]?.text === content);
+const textWith = (ir: IRScene, content: string): TextPrim | undefined => textsOf(ir).find(t => t.lines[0]?.text === content);
 
 /**
  * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何里抽"主导箭头颜色"
@@ -65,7 +65,7 @@ const markerPaintColor = (spec: ResolvedArrowEndSpec | undefined): string | unde
 
 describe('Happy: 主色级联 / 四通道', () => {
   it('scope_color_cascades_all：<Scope color="blue"> → node 边/文字/path stroke/arrow/label 全蓝', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -98,7 +98,7 @@ describe('Happy: 主色级联 / 四通道', () => {
   });
 
   it('node_default_applies：nodeDefault={{shape:circle, fill:lightblue}} → 子 node 圆 + 浅蓝', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -113,7 +113,7 @@ describe('Happy: 主色级联 / 四通道', () => {
   });
 
   it('path_color_follows_to_label_arrow：<Path color="crimson" arrow="->"> + label → label 与 arrow 均 crimson', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -134,7 +134,7 @@ describe('Happy: 主色级联 / 四通道', () => {
   });
 
   it('arrow_default_applies：arrowDefault={{shape:stealth, scale:1.5}} → 子 path 箭头 stealth 1.5×', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -166,7 +166,7 @@ describe('Happy: 主色级联 / 四通道', () => {
 
 describe('边界: 缺省 / 显式 / 内置', () => {
   it('specific_overrides_master_same_source：<Node color="blue" stroke="red"> → stroke red、fill/text blue', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'x', color: 'blue', stroke: 'red' }],
@@ -177,7 +177,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
   });
 
   it('missing_falls_through_to_outer：外层 color=white ⊃ 内层无 → 继承 white', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -194,7 +194,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
   });
 
   it('whole_chain_silent_builtin：全链无色 → 内置（currentColor / transparent，零破坏）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'x' }],
@@ -205,7 +205,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
   });
 
   it('empty_default_no_effect：nodeDefault={{}} → 无变化（内置）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -227,7 +227,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
 
 describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   it('explicit_none_overrides_outer：外 color=white ⊃ node stroke="none" → stroke none（显式截断），fill 仍 white', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -243,7 +243,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('nested_inner_color_beats_outer：S1 color=red ⊃ S2 color=blue ⊃ node → blue（就近）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -264,7 +264,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('node_default_beats_scope_cascade：<Scope stroke="red" nodeDefault={{stroke:"green"}}> → node green', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -280,7 +280,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('reset_style_cuts_outer_keeps_own：S1 color=red ⊃ S2 resetStyle color=white → node white、其余回内置', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -303,7 +303,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('reset_style_arrow_keeps_host_color：resetStyle=[arrow] 切外层 arrowDefault，箭头仍跟宿主 path 主色', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -336,7 +336,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('reset_style_label_keeps_host_color：resetStyle=[label] 切外层 labelDefault，label 仍跟宿主线红', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -366,7 +366,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('opacity_per_element_no_compound：S1 opacity .5 ⊃ S2 opacity .5 ⊃ node → 0.5（不复合）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -387,7 +387,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('style_orthogonal_to_transforms：scope scale + strokeWidth → strokeWidth 不随 scale 缩放', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -403,7 +403,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('style_orthogonal_to_local_namespace：<Scope localNamespace color="red"> → 样式照常级联', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -419,7 +419,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('arrow_master_color_beats_arrow_default：path 主色覆盖外层 arrowDefault.color；元素 arrowDetail.color 最高（回归 BUG-1）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -457,7 +457,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('arrow_end_color_master_beats_default_end：path 主色覆盖 arrowDefault.end.color；显式 arrowDetail.end.color 最高（端点级）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -495,7 +495,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
   });
 
   it('arrow_default_nested_end_per_field_merge：内层 arrowDefault.end 只改 shape，保留外层 end.color（nested per-field 合并）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

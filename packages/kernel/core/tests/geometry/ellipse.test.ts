@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 import type { Ellipse } from '../../src/shared/geometry/ellipse';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -28,7 +28,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 describe('ellipse.center', () => {
   it('中心 = (x, y)', () => {

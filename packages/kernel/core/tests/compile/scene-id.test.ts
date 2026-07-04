@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, ScenePrimitive } from '../../src';
+import type { IRScene, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

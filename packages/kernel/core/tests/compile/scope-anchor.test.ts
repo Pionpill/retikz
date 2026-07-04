@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, ScenePrimitive } from '../../src';
+import type { IRScene, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
@@ -334,8 +334,8 @@ describe('跨 scope anchor 边界', () => {
 
   it('scope_deep_nested_anchor：5 层嵌套 scope 累积 translate(20,0) ×5 → A.top 全局 x ≈ 100', () => {
     // 构造 5 层嵌套，每层 translate(20, 0)；最内层有 node id='A'
-    const inner: IR['children'][number] = { type: 'node', id: 'A', position: [0, 0], text: 'A' };
-    let acc: IR['children'][number] = inner;
+    const inner: IRScene['children'][number] = { type: 'node', id: 'A', position: [0, 0], text: 'A' };
+    let acc: IRScene['children'][number] = inner;
     for (let i = 0; i < 5; i++) {
       acc = {
         type: 'scope',

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type {
   GroupPrim,
-  IR,
   IRPathBase,
   IRPathRibbonOptions,
+  IRScene,
   IRStep,
   PathPrim,
   ScenePrimitive,
@@ -14,7 +14,7 @@ import type {
 import { compileToScene, PathSchema, StepLabelSchema } from '../../src';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

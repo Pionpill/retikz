@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
 import type { TextMeasurer } from '../../src/compile/text';
 
@@ -9,7 +9,7 @@ import { boxInsets } from '../../src/compile/node';
 import { computeScopeBoundingBox, registerScopeAsLayout } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

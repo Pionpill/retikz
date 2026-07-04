@@ -1,4 +1,4 @@
-import type { CompileOptions, IR, Scene } from '@retikz/core';
+import type { CompileOptions, IRScene, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 
@@ -6,8 +6,8 @@ import type { Figure } from './figure';
 
 export type { AnimationControls } from '@retikz/render/animation';
 
-/** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IR`，或命令式 builder 的 `Figure` */
-export type RenderInput = Scene | IR | Figure;
+/** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene`，或命令式 builder 的 `Figure`。 */
+export type RenderInput = Scene | IRScene | Figure;
 
 /**
  * 两个入口共享的选项

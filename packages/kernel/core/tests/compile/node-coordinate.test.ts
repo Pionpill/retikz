@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
@@ -8,7 +8,7 @@ import { line, move } from '../helpers/path-command-factory';
 
 describe('Coordinate placeholder', () => {
   it('coordinate 自身不发任何 primitive', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'coordinate', id: 'm', position: [3, 2] }],
@@ -20,17 +20,17 @@ describe('Coordinate placeholder', () => {
   it('coordinate 不参与 layout 扩展（与"无 child"等价兜底）', () => {
     // 远离原点的 coordinate 不该撑大 layout：
     // 仅含 coordinate 时 allPoints 为空，layout 走 layout.ts 的兜底 100x100@(0,0)
-    const farIR: IR = {
+    const farIR: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'coordinate', id: 'far', position: [9999, 9999] }],
     };
-    const emptyIR: IR = { version: 1, type: 'scene', children: [] };
+    const emptyIR: IRScene = { version: 1, type: 'scene', children: [] };
     expect(compileToScene(farIR).layout).toEqual(compileToScene(emptyIR).layout);
   });
 
   it('path target 字符串可命中 coordinate id', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -55,7 +55,7 @@ describe('Coordinate placeholder', () => {
   });
 
   it('node.position.of 可引用 coordinate id（mixed scenario）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -81,7 +81,7 @@ describe('Coordinate placeholder', () => {
   });
 
   it('coordinate 的 position 也支持 polar / at（链式）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -110,7 +110,7 @@ describe('Coordinate placeholder', () => {
   });
 
   it('引用未定义的 of 抛错', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } }],
@@ -119,7 +119,7 @@ describe('Coordinate placeholder', () => {
   });
 
   it('coordinate 在 IR children 顺序里——前向引用不允许', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

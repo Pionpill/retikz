@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR, Scene, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, Scene, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
 });
 
-const compileWithWarnings = (ir: IR): { compiled: Scene; warnings: Array<CompileWarning> } => {
+const compileWithWarnings = (ir: IRScene): { compiled: Scene; warnings: Array<CompileWarning> } => {
   const warnings: Array<CompileWarning> = [];
   const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
   return { compiled, warnings };

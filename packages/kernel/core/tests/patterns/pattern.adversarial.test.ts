@@ -8,7 +8,7 @@ import type {
   ResolvedPatternTile,
   SceneResource,
 } from '../../src/contract';
-import type { IR, IRPaintSpec } from '../../src/schemas';
+import type { IRPaintSpec,IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 
@@ -22,7 +22,7 @@ import { compileToScene } from '../../src/compile/compile';
  * 可接受的边角（空 motif / dedup / override / 错误质量 / 交叉资源 / background 透传）保持稳定行为。
  */
 
-const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IR => ({
+const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
@@ -240,7 +240,7 @@ defaultSize: 8,
     };
     const img: IRPaintSpec = { kind: 'image', href: 'data:image/png;base64,AAAA' };
     const pat: IRPaintSpec = { kind: 'pattern', shape: 'grid' };
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -261,7 +261,7 @@ defaultSize: 8,
   });
 
   it('pattern_on_path_fill：pattern 用在 path.fill（非 node）→ tile 正常解析', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -276,7 +276,7 @@ defaultSize: 8,
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const tile = firstPatternResource(compileToScene(ir).resources)?.tile;
     expect(tile?.motif.some(m => m.type === 'ellipse')).toBe(true);
   });

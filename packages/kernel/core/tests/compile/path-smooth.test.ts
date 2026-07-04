@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR } from '../../src';
+import type { CompileWarning, IRScene } from '../../src';
 import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -15,8 +15,8 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   return p;
 };
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
-const path = (...steps: Array<unknown>): IR => scene([{ type: 'path', children: steps as never }]);
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
+const path = (...steps: Array<unknown>): IRScene => scene([{ type: 'path', children: steps as never }]);
 
 /** 命令是否为有限坐标的 cubic */
 const isFiniteCubic = (cmd: CubicPathCommand): boolean =>
@@ -290,7 +290,7 @@ describe('smooth step：交互', () => {
         ],
       },
     );
-    const withMark: IR = scene([
+    const withMark: IRScene = scene([
       {
         type: 'path',
         marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
@@ -315,7 +315,7 @@ describe('smooth step：交互', () => {
   it('smooth → line 到 Node：line 朝 smooth 末点方向裁剪目标边界（非 smooth 前位置）', () => {
     // 回归：smooth 不属 hasTo，prev.anchor 仍指 smooth 前的 move；line 终点须朝 smooth 末点 [100,0] 裁剪
     // T 右边界（x>0），而非朝 move 起点 [-100,0] 裁到左边界（x<0）。
-    const ir: IR = scene([
+    const ir: IRScene = scene([
       { type: 'node', id: 'T', position: [0, 0], minimumSize: 20 },
       {
         type: 'path',

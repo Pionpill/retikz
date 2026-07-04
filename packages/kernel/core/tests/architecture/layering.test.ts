@@ -189,12 +189,12 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('scene contracts do not rename whole IR branches as Scene-owned types', () => {
+  it('scene contracts do not rename whole IRScene branches as Scene-owned types', () => {
     const sceneRoot = join(SRC_ROOT, 'contract', 'scene');
     const forbiddenPatterns = [
-      { label: 'direct IR branch alias', pattern: /export type \w+ = IR\w+/u },
-      { label: 'extracted IR branch alias', pattern: /export type \w+ = Extract<IR\w+/u },
-      { label: 'omitted IR branch alias', pattern: /export type \w+ = Omit<IR\w+/u },
+      { label: 'direct IRScene branch alias', pattern: /export type \w+ = IR\w+/u },
+      { label: 'extracted IRScene branch alias', pattern: /export type \w+ = Extract<IR\w+/u },
+      { label: 'omitted IRScene branch alias', pattern: /export type \w+ = Omit<IR\w+/u },
     ];
 
     const offenders = tsFiles(sceneRoot).flatMap(file => {

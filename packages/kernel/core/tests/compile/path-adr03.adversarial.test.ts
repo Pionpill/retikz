@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, IRPath, ScenePrimitive } from '../../src';
+import type { IRPath, IRScene, ScenePrimitive } from '../../src';
 import type { Scene } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -38,13 +38,13 @@ const jsonRoundTripLossless = (scene: Scene): boolean => {
 };
 
 /** 简化 IR：单条 path + 任意 path-level 字段 */
-const pathIR = (children: IRPath['children'], extra: Record<string, unknown> = {}): IR => ({
+const pathIR = (children: IRPath['children'], extra: Record<string, unknown> = {}): IRScene => ({
   version: 1,
   type: 'scene',
   children: [{ type: 'path', ...extra, children }],
 });
 
-const linePath = (extra: Record<string, unknown> = {}): IR =>
+const linePath = (extra: Record<string, unknown> = {}): IRScene =>
   pathIR(
     [
       { type: 'step', kind: 'move', to: [0, 0] },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IR, PathPrim, RotateTransform, ScaleTransform, ScenePrimitive } from '../../src';
+import type { GroupPrim, IRScene, PathPrim, RotateTransform, ScaleTransform, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -26,7 +26,7 @@ const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim | undefine
 };
 
 /** 两段直线 path 的最小 IR（bbox center = [5, 0]） */
-const linePath = (extra: Record<string, unknown>): IR => ({
+const linePath = (extra: Record<string, unknown>): IRScene => ({
   version: 1,
   type: 'scene',
   children: [

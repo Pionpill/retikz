@@ -1,4 +1,4 @@
-import type { IR, IRChild, IRNode, IRScope, IRStep } from '@retikz/core';
+import type { IRChild, IRNode, IRScene, IRScope, IRStep } from '@retikz/core';
 import type { ReactNode } from 'react';
 
 import { createElement } from 'react';
@@ -185,4 +185,4 @@ const scopePropsFromIR = (s: IRScope, key: number): ScopeProps & { key: number }
  * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）
  * @description 调用方可 `<Layout>{convertIRToReactNode(ir)}</Layout>` 或用 `<Layout ir={ir}/>`；Sugar 不可逆——buildIR 在收集阶段已把 <Draw/> 求值展开为 Path+Step，IR 里没有"原本是 Draw"的痕迹，本函数永远只产 Kernel 三件套
  */
-export const convertIRToReactNode = (ir: IR): ReactNode => ir.children.map((child, i) => childToElement(child, i));
+export const convertIRToReactNode = (ir: IRScene): ReactNode => ir.children.map((child, i) => childToElement(child, i));

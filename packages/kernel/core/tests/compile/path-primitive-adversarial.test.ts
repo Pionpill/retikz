@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -16,7 +16,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
  */
 describe('PathPrim.commands：结构化形态约束', () => {
   it('PathPrim 持有 commands 字段（不再是 d 字符串）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -39,7 +39,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
 
   it('commands 数组只包含 move/line/quad/cubic/arc/ellipseArc/close 七种 kind', () => {
     const allKinds = new Set(['move', 'line', 'quad', 'cubic', 'arc', 'ellipseArc', 'close']);
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -75,7 +75,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 
   it('arc step 编译为 arc PathCommand（center / radius / startAngle / endAngle 全填）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -98,7 +98,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 
   it('circlePath 编译为单个 ellipseArc 全 sweep（rx=ry=radius, 0→360）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -124,7 +124,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 
   it('ellipsePath 编译为单个 ellipseArc（rx ≠ ry）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -147,7 +147,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 
   it('cycle 段 emit close PathCommand（不再是 Z token）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -167,7 +167,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 
   it('PathCommand 坐标在 compile 阶段已按 round 精度截断（2 位）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -196,7 +196,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 
   it('curve step → quad PathCommand（IR 用 curve 但 primitive 一致用 quad 跨 adapter 名）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -217,7 +217,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
   });
 
   it('bend step 折角 → cubic PathCommand（与 cubic 同形）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -238,7 +238,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
 
 describe('GroupPrim.transforms：结构化形态约束', () => {
   it('rotate 节点 emit GroupPrim 持 transforms 数组（不再是 transform 字符串）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [10, 20], text: 'A', rotate: 30 }],
@@ -264,7 +264,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
 
   it('无文本无 rotate 节点不外裹 group（transforms 缺省语义不浪费一层）', () => {
     // 纯几何节点（无 text、无 rotate）维持平铺；带文本节点会包 group，故此处用无文本节点隔离 rotate 判定
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0] }],
@@ -274,7 +274,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
   });
 
   it('多 sub-path + arrow 包裹的 GroupPrim 不带 transforms（仅为分组）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -302,7 +302,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
   });
 
   it('sloped label group 的 transforms 含 rotate kind（绕标签锚点）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -329,12 +329,12 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
 describe('交互：rotated node 与 path 在 rotated parent 中', () => {
   it('rotate node 编译结果与未 rotate 节点的 commands 在 transforms 包裹下视觉等价', () => {
     // 两个节点同位置同文本，一个 rotate=0、一个 rotate=45，验证 commands 结构相同（仅外层 group 存在/不存在差异）
-    const irNoRot: IR = {
+    const irNoRot: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [10, 20], shape: 'diamond' }],
     };
-    const irRot: IR = {
+    const irRot: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [10, 20], shape: 'diamond', rotate: 45 }],
@@ -354,7 +354,7 @@ describe('交互：rotated node 与 path 在 rotated parent 中', () => {
 
 describe('边界 / 错误路径', () => {
   it('单步 path（只有 move）→ emitPathPrimitive 返回 null，不产 primitive', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -369,7 +369,7 @@ describe('边界 / 错误路径', () => {
   });
 
   it('引用未定义节点 → 不产 PathPrim（防御性 null 返回）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -388,7 +388,7 @@ describe('边界 / 错误路径', () => {
 
   it('两段 line + cycle 产出 4 个结构化 PathCommand（move/line/line/close）', () => {
     // 等价回归：commands 序列与 1.x d 字符串语义对齐
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

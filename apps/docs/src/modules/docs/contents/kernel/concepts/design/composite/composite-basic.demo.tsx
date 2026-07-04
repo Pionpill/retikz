@@ -1,4 +1,4 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -56,7 +56,7 @@ const barChart = defineComposite({
   },
 });
 
-const ir: IR = {
+const ir: IRScene = {
   version: 1,
   type: 'scene',
   children: [{ namespace: 'demo', type: 'barChart', data: [4, 7, 3, 8, 5, 6] }],

@@ -1,4 +1,4 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
 import { definePathGenerator } from '@retikz/core';
@@ -17,7 +17,7 @@ const parabola = definePathGenerator({
   generate: ({ from, to, resolvedTargets }) => [{ kind: 'quad', control: resolvedTargets.bend, to: to ?? from }],
 });
 
-const ir: IR = {
+const ir: IRScene = {
   version: 1,
   type: 'scene',
   children: [

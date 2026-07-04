@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileWarning, IR, IRAnimationTrack, PathCommand, Scene, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRAnimationTrack, IRScene, PathCommand, Scene, ScenePrimitive } from '../../src';
 
 import { compileToScene, definePathGenerator } from '../../src';
 import { flattenPrims } from '../helpers/flatten';
@@ -24,7 +24,7 @@ const FADE: IRAnimationTrack = {
   duration: 250,
 };
 
-const compileWithWarnings = (ir: IR): { scene: Scene; warnings: Array<CompileWarning> } => {
+const compileWithWarnings = (ir: IRScene): { scene: Scene; warnings: Array<CompileWarning> } => {
   const warnings: Array<CompileWarning> = [];
   const scene = compileToScene(ir, {
     onWarn: warning => warnings.push(warning),
@@ -55,7 +55,7 @@ const primitiveTypes = (primitives: ReadonlyArray<ScenePrimitive>): Array<SceneP
 
 describe('compile refactor canary', () => {
   it('keeps high-risk scene semantics stable across compile module moves', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       animations: [CAMERA, FADE],

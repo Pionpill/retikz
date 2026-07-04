@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IR, Scene } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -10,7 +10,7 @@ import { mountSvg, renderToSvgString } from '../src';
  * @retikz/vanilla mountSvg（无框架浏览器 DOM，jsdom 环境）
  */
 const sceneOf = (text = 'A'): ReturnType<typeof compileToScene> => {
-  const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0], text }] };
+  const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0], text }] };
   return compileToScene(ir);
 };
 
@@ -36,7 +36,7 @@ describe('@retikz/vanilla mountSvg', () => {
   });
 
   it('idprefix-ssr-mount-parity：同 idPrefix 下 SSR 串与 DOM 的资源 id 一致', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

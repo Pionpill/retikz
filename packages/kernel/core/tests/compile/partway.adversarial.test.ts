@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import type { RectPrim } from '../../src/contract';
 
 import { SceneSchema } from '../../src';
@@ -27,7 +27,7 @@ const firstLineTo = (prim: ScenePrimitive | undefined): [number, number] | undef
   return undefined;
 };
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
@@ -351,7 +351,7 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const warnings: Array<CompileWarning> = [];
     // 契约：非 finite 端点要么编译期干净抛（Coordinate 位置不可解析），要么不让非 finite 进 Scene
     let scn: ReturnType<typeof compileToScene> | undefined;
@@ -388,7 +388,7 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const warnings: Array<CompileWarning> = [];
     let scn: ReturnType<typeof compileToScene> | undefined;
     try {
@@ -557,7 +557,7 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const warnings: Array<CompileWarning> = [];
     // t=NaN → lerp 出 NaN：要么干净抛（Coordinate 不可解析），要么 NaN 绝不进 Scene（JSON 序列化变 null 破坏 round-trip）
     let scn: ReturnType<typeof compileToScene> | undefined;
@@ -598,7 +598,7 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const scn = compileToScene(ir);
     expect(allNumbersFinite(scn.primitives)).toBe(true);
     expect(allNumbersFinite(scn.layout)).toBe(true);
@@ -627,7 +627,7 @@ describe('between 端点为 relative（手搓绕过 schema）应被拒绝，不�
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const warnings: Array<CompileWarning> = [];
     const scn = compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(allNumbersFinite(scn.primitives)).toBe(true);
@@ -650,7 +650,7 @@ describe('between 端点为 relative（手搓绕过 schema）应被拒绝，不�
           text: 'mid',
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     expect(() => compileToScene(ir, { onWarn: () => {} })).toThrow(/Cannot resolve position/);
   });
 });

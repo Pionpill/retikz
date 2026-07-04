@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
@@ -14,7 +14,7 @@ const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>
 const opts: CompileOptions = { measureText: text => ({ width: [...text].length, height: 14 }) };
 
 const compileNode = (node: Record<string, unknown>): TextPrim => {
-  const ir: IR = {
+  const ir: IRScene = {
     version: 1,
     type: 'scene',
     children: [{ type: 'node', id: 'A', position: [0, 0], ...node }] as never,

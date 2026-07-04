@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IR, IRPaintSpec, ScenePrimitive, SceneResource } from '../../src';
+import type { GroupPrim, IRPaintSpec, IRScene, ScenePrimitive, SceneResource } from '../../src';
 import type { ClipResource } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

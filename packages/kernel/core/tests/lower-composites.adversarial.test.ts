@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileWarning, IR, ScenePrimitive } from '../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../src';
 
 import { compileToScene, CompositeBaseSchema, defineComposite } from '../src';
 import { flattenPrims } from './helpers/flatten';
@@ -37,7 +37,7 @@ describe('lowerComposites — adversarial', () => {
       schema: CompositeBaseSchema.extend({ namespace: z.literal('x'), type: z.literal('y') }),
       expand: () => [],
     });
-    const ir: IR = { version: 1, type: 'scene', children: [] };
+    const ir: IRScene = { version: 1, type: 'scene', children: [] };
     expect(() => compileToScene(ir, { composites: [dupA, dupB] })).toThrow(
       /duplicate composite registration: "x\.y"/,
     );
@@ -78,12 +78,12 @@ describe('lowerComposites — adversarial', () => {
       schema: CompositeBaseSchema.extend({ namespace: z.literal('m'), type: z.literal('b') }),
       expand: () => ({ namespace: 'm', type: 'a' }),
     });
-    const ir: IR = { version: 1, type: 'scene', children: [{ namespace: 'm', type: 'a' }] };
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'm', type: 'a' }] };
     expect(() => compileToScene(ir, { composites: [aDef, bDef] })).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
   });
 
   it('custom-maxdepth-respected: maxCompositeDepth=0 → 任何 tier2 即 throw', () => {
-    const ir: IR = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }] };
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }] };
     expect(() => compileToScene(ir, { composites: [labeledBox], maxCompositeDepth: 0 })).toThrow(
       /COMPOSITE_NEST_TOO_DEEP/,
     );
@@ -92,12 +92,12 @@ describe('lowerComposites — adversarial', () => {
   });
 
   it('scope-nested-tier2-expands: scope.children 含 tier2 → 递归展开（与手写 scope 等价）', () => {
-    const irComposite: IR = {
+    const irComposite: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'scope', children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }] }],
     };
-    const irManual: IR = {
+    const irManual: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -109,7 +109,7 @@ describe('lowerComposites — adversarial', () => {
 
   it('tier1-with-namespace-skipped: tier1 节点误带 namespace → 视 tier2、未注册 warn + 跳过（设计陷阱可诊断）', () => {
     const warnings: Array<CompileWarning> = [];
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ namespace: 'core', type: 'node', position: [0, 0], text: 'A' }],
@@ -129,7 +129,7 @@ describe('lowerComposites — adversarial', () => {
         { namespace: 'example', type: 'labeledBox', text: 'inner' },
       ],
     });
-    const ir: IR = { version: 1, type: 'scene', children: [{ namespace: 'mix', type: 'pair' }] };
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'mix', type: 'pair' }] };
     const scene = compileToScene(ir, { composites: [mixed, labeledBox] });
     // 两个 node（kept + 展开的 lb）都产 rect/text
     expect(flattenPrims(scene.primitives).filter(p => p.type === 'rect').length).toBeGreaterThanOrEqual(1);

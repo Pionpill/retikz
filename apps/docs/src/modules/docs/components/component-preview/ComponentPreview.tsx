@@ -1,4 +1,4 @@
-﻿import type { IR, PathKindDefinition } from '@retikz/core';
+﻿import type { IRScene, PathKindDefinition } from '@retikz/core';
 import type { FC, ReactElement, ReactNode } from 'react';
 
 import { convertReactNodeToIR, Layout, Scope } from '@retikz/react';
@@ -43,8 +43,8 @@ const COMPONENT_EXPANSION_LIMIT = 16;
 
 type PreviewRootProps = {
   children?: ReactNode;
-  ir?: IR;
-  viewBox?: IR['viewBox'];
+  ir?: IRScene;
+  viewBox?: IRScene['viewBox'];
 };
 
 type FunctionComponentProps = Record<string, unknown> & {
@@ -86,7 +86,7 @@ const LAYOUT_OWN_PROPS = new Set([
 ]);
 
 type PreviewIR = {
-  ir: IR;
+  ir: IRScene;
   width?: number | string;
   height?: number | string;
   pathKinds?: ReadonlyArray<PathKindDefinition>;
@@ -107,7 +107,7 @@ const buildPreviewIR = (Component: FC): PreviewIR => {
   const base = props.ir ?? convertReactNodeToIR(childNode);
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;
-  const rootAnimations = isLayout ? (props.animations as IR['animations'] | undefined) : undefined;
+  const rootAnimations = isLayout ? (props.animations as IRScene['animations'] | undefined) : undefined;
   let ir = base;
   if (viewBox !== undefined) ir = { ...ir, viewBox };
   if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
@@ -124,7 +124,7 @@ const nodeHasComposite = (node: unknown): boolean => {
   return Array.isArray(children) && children.some(nodeHasComposite);
 };
 
-const irHasComposite = (ir: IR): boolean => ir.children.some(nodeHasComposite);
+const irHasComposite = (ir: IRScene): boolean => ir.children.some(nodeHasComposite);
 
 const nodeHasAnimations = (node: unknown): boolean => {
   if (typeof node !== 'object' || node === null) return false;
@@ -133,7 +133,7 @@ const nodeHasAnimations = (node: unknown): boolean => {
   return Array.isArray(record.children) && record.children.some(nodeHasAnimations);
 };
 
-const irHasAnimations = (ir: IR): boolean =>
+const irHasAnimations = (ir: IRScene): boolean =>
   (Array.isArray(ir.animations) && ir.animations.length > 0) || ir.children.some(nodeHasAnimations);
 
 export type ComponentPreviewProps = {
@@ -202,7 +202,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     if (irJsonOverride !== undefined) {
       const irJson = irJsonOverride.replace(/\n$/, '');
       try {
-        const ir = JSON.parse(irJson) as IR;
+        const ir = JSON.parse(irJson) as IRScene;
         return { previewIr: { ir, width: undefined, height: undefined }, irJson };
       } catch (err) {
         return {

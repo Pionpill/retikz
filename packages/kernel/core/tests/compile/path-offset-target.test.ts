@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { TargetSchema } from '../../src/schemas';
@@ -56,7 +56,7 @@ describe('OffsetPosition: step.to schema 校验', () => {
 describe('OffsetPosition: step.to compile resolve', () => {
   describe('Happy path', () => {
     it('step_to_offset_of_string：path 终点 = A + (10, 5)', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -79,7 +79,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
     });
 
     it('step_to_offset_of_cartesian：path 终点 = (60, 50)', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -107,7 +107,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
     });
 
     it('step_to_offset_of_polar：path 终点 = polar 解析后 + offset', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -139,7 +139,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
 
   describe('交互', () => {
     it('step_to_offset_chains_with_relative：IRTarget 五种形态混用全部 resolve', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -178,7 +178,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
 
   describe('错误路径', () => {
     it('step.to=offset of 未定义 id → 整 path 不产出 PathPrim', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [

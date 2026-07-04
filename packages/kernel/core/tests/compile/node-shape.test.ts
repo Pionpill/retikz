@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
-import type { IR, IRNode } from '../../src/schemas';
+import type { IRNode,IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema } from '../../src/schemas';
@@ -16,7 +16,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 
 describe('Node shape multimorphism', () => {
   it('默认 shape = rectangle，emit RectPrim', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
@@ -27,7 +27,7 @@ describe('Node shape multimorphism', () => {
   });
 
   it("shape='circle' emit EllipsePrim 且 rx == ry（外接圆）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'A' }],
@@ -39,7 +39,7 @@ describe('Node shape multimorphism', () => {
   });
 
   it("shape='ellipse' emit EllipsePrim 且 rx ≠ ry（外接椭圆）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -54,7 +54,7 @@ describe('Node shape multimorphism', () => {
   });
 
   it("shape='diamond' emit PathPrim（4 顶点 + Z）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
@@ -69,12 +69,12 @@ describe('Node shape multimorphism', () => {
   });
 
   it("rectangle 默认 = 显式传 'rectangle'（向后兼容）", () => {
-    const ir1: IR = {
+    const ir1: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
-    const ir2: IR = {
+    const ir2: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: 'A' }],
@@ -86,7 +86,7 @@ describe('Node shape multimorphism', () => {
 describe('Target 字符串锚点扩展', () => {
   it("`'A.right'` → 端点固定在 right anchor，不受 toward 影响", () => {
     // 矩形 A=(0,0)，无文本，padding=8 → 16x16；right = (8, 0)
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -110,7 +110,7 @@ describe('Target 字符串锚点扩展', () => {
   it("`'A.30'` → 端点在 30° 方向上的视觉边界（圆形 r 半径处）", () => {
     // 圆形 A=(0,0)，无文本，r = sqrt(8² + 8²) ≈ 11.31
     // 30° → (cos 30°, sin 30°) = (0.866, 0.5) × r = (9.798, 5.657)
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -134,7 +134,7 @@ describe('Target 字符串锚点扩展', () => {
   it("不同 shape 的 'A.top' anchor 都在最高点", () => {
     // rectangle / circle / ellipse / diamond 4 shape，A.top 都应在节点 top
     for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -165,7 +165,7 @@ describe('Target 字符串锚点扩展', () => {
   });
 
   it("'A.center' 等价于节点几何中心（任意 shape）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -203,7 +203,7 @@ describe('ellipse nested params IR round-trip', () => {
   it('非法 circumscribe 枚举 → NodeSchema 不 reject（shape 枚举校验在编译期 paramsSchema），但编译期 throw', () => {
     // ShapeRefSchema 的 params 是开放 JSON object（IR 层不知具体 shape 的 paramsSchema），
     // 枚举校验落在 compile 的 shapeDef.paramsSchema.parse —— 非法枚举编译期 throw。
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -222,12 +222,12 @@ describe('ellipse nested params IR round-trip', () => {
 describe('circle 内置 shape preset 解析到 ellipse equal', () => {
   // circle 是 core IR 内置 shape preset；compile 期解析为显式 ellipse-equal provider 形态。
   it("circle_resolves_to_ellipse_equal：shape:'circle' 编译等价显式 ellipse equal", () => {
-    const bareIr: IR = {
+    const bareIr: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'long text' }],
     };
-    const explicitIr: IR = {
+    const explicitIr: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -244,7 +244,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
   });
 
   it('circle_emit_equivalent：circle 解析后 emit EllipsePrim 且 rx == ry（等轴）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       // 非正方内框（宽文本）下仍须 rx == ry，验证走的是 equal（等轴）而非 proportional
@@ -256,7 +256,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
   });
 
   it("circle_with_extra_params_rejected：{type:'ellipse', params:{foo:1}} → strictObject reject", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -304,7 +304,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
       'bottom-right',
       'bottom-left',
     ] as const) {
-      const mk = (shape: IRNode['shape']): IR => ({
+      const mk = (shape: IRNode['shape']): IRScene => ({
         version: 1,
         type: 'scene',
         children: [
@@ -318,7 +318,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
           },
         ],
       });
-      const findLine = (ir: IR) =>
+      const findLine = (ir: IRScene) =>
         compileToScene(ir).primitives.find(
           (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
             p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
@@ -333,12 +333,12 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
 describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
   // diamond 是 core IR 内置 shape preset；compile 期解析为显式 polygon 4/0 provider 形态。
   it("diamond_resolves_to_polygon：shape:'diamond' 编译等价显式 polygon 4/0", () => {
-    const bareIr: IR = {
+    const bareIr: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
     };
-    const explicitIr: IR = {
+    const explicitIr: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -355,7 +355,7 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
   });
 
   it('diamond_emit_topology：diamond preset 解析后 emit 闭合 path（4 顶点 + close）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
@@ -380,7 +380,7 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
       'bottom-right',
       'bottom-left',
     ] as const) {
-      const mk = (shape: IRNode['shape']): IR => ({
+      const mk = (shape: IRNode['shape']): IRScene => ({
         version: 1,
         type: 'scene',
         children: [
@@ -394,7 +394,7 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
           },
         ],
       });
-      const findLine = (ir: IR) =>
+      const findLine = (ir: IRScene) =>
         compileToScene(ir).primitives.find(
           (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
             p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
@@ -411,7 +411,7 @@ describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', ()
     // A=(0,0) 圆形 + B=(100,0) 笛卡尔点；line 从 A 到 B
     // A 的圆周半径 = sqrt((textHalfW+p)² + (textHalfH+p)²)
     // 端点应该距 A 中心 = radius 且在朝向 B 的方向
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -439,7 +439,7 @@ describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', ()
   it('diamond 节点 path 端点贴菱形边（满足 |x|/halfA + |y|/halfB = 1）', () => {
     // A=(0,0) diamond + B=(100,100); line A→B 沿 (1,1) 方向
     // diamond 自身也是 PathPrim（"M ... Z"）；连接 line 是不带 Z 的 PathPrim
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
@@ -19,7 +19,7 @@ const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR 
 
 describe('Node label position center', () => {
   it('draws the label at the node center', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

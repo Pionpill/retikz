@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileWarning, IR, ScenePrimitive } from '../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../src';
 
 import { compileToScene, CompositeBaseSchema, defineComposite } from '../src';
 import { flattenPrims } from './helpers/flatten';
@@ -69,7 +69,7 @@ const boxWithId = defineComposite({
 
 describe('lowerComposites — happy path', () => {
   it('register-and-expand: tier2 节点经注册 expand 展开成 tier1 → Scene 含 rect', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
@@ -78,12 +78,12 @@ describe('lowerComposites — happy path', () => {
   });
 
   it('expand-is-ir-to-ir: 展开后与手写等价 tier1 IR 同 Scene', () => {
-    const irComposite: IR = {
+    const irComposite: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
     };
-    const irManual: IR = {
+    const irManual: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'Hi' }],
@@ -94,8 +94,8 @@ describe('lowerComposites — happy path', () => {
 
 describe('lowerComposites — 边界', () => {
   it('nested-fixpoint: tier2 展开出 tier2 → 递归到全 tier1', () => {
-    const ir: IR = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'panel' }] };
-    const irDirect: IR = {
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'panel' }] };
+    const irDirect: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'inner' }],
@@ -104,7 +104,7 @@ describe('lowerComposites — 边界', () => {
   });
 
   it('empty-expand: expand 返回 [] → 节点消失、不抛、与无该节点等价', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -112,7 +112,7 @@ describe('lowerComposites — 边界', () => {
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
       ],
     };
-    const irOnlyA: IR = {
+    const irOnlyA: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
@@ -122,7 +122,7 @@ describe('lowerComposites — 边界', () => {
   });
 
   it('namespace-discriminates: 无 namespace 走 tier1（core4 不受影响）；有 namespace 走 tier2', () => {
-    const tier1Ir: IR = {
+    const tier1Ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
@@ -130,7 +130,7 @@ describe('lowerComposites — 边界', () => {
     // tier1 IR 不传 composites 也正常（不受 lowering 影响）
     expect(compileToScene(tier1Ir)).toEqual(compileToScene(tier1Ir, { composites: [labeledBox] }));
     // 有 namespace 的节点被当 tier2 展开
-    const tier2Ir: IR = {
+    const tier2Ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 'x' }],
@@ -142,7 +142,7 @@ describe('lowerComposites — 边界', () => {
 describe('lowerComposites — 错误路径', () => {
   it('unregistered-warns-and-skips: 未注册 namespace.type → warn + 跳过、不抛，其余照常渲染', () => {
     const warnings: Array<CompileWarning> = [];
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -156,12 +156,12 @@ describe('lowerComposites — 错误路径', () => {
   });
 
   it('cycle-guard: tier2 展开出自身 → 深度守卫 throw、非死循环', () => {
-    const ir: IR = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'loop' }] };
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'loop' }] };
     expect(() => compileToScene(ir, { composites: [loop] })).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
   });
 
   it('bad-node-throws: 字段不过注册 schema → 展开时 schema.parse throw', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 123 as unknown as string }],
@@ -172,7 +172,7 @@ describe('lowerComposites — 错误路径', () => {
 
 describe('lowerComposites — 交互', () => {
   it('zindex-through-lowering: 展开产物 zIndex → 与手写带 zIndex 等价（穿透排序）', () => {
-    const irComposite: IR = {
+    const irComposite: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -180,7 +180,7 @@ describe('lowerComposites — 交互', () => {
         { namespace: 'example', type: 'zbox' },
       ],
     };
-    const irManual: IR = {
+    const irManual: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -192,7 +192,7 @@ describe('lowerComposites — 交互', () => {
   });
 
   it('anchor-into-tier2-output: kernel 引用 tier2 展开产物的 anchor → 解析成功（展开在 anchor 之前）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

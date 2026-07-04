@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IR, IRPaintSpec, ScenePrimitive, SceneResource } from '../../src';
+import type { GroupPrim, IRPaintSpec, IRScene, ScenePrimitive, SceneResource } from '../../src';
 import type { ClipResource } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
@@ -32,8 +32,8 @@ const grad: IRPaintSpec = {
 /** 手搓非 finite / 非法字段：用 any cast 绕过 IR zod，直接喂 compileToScene */
 const handcraftedScope = (
   clip: unknown,
-  children: IR['children'] = [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
-): IR => scene([{ type: 'scope', clip, children } as unknown as IR['children'][number]]);
+  children: IRScene['children'] = [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+): IRScene => scene([{ type: 'scope', clip, children } as unknown as IRScene['children'][number]]);
 
 describe('clip 非 finite 守卫：必须编译期抛、绝不进 Scene', () => {
   const cases: Array<{ name: string; clip: unknown }> = [
@@ -114,7 +114,7 @@ describe('finite 守卫不误伤合法值', () => {
 
 describe('clip Scene JSON round-trip 不失真', () => {
   /** JSON 序列化 + 反序列化后 Scene 与原始等价（NaN/Infinity 会变 null，-0 会变 0） */
-  const assertRoundTrip = (ir: IR): void => {
+  const assertRoundTrip = (ir: IRScene): void => {
     const compiled = compileToScene(ir);
     const roundTripped = JSON.parse(JSON.stringify(compiled));
     expect(roundTripped).toEqual(compiled);
@@ -171,12 +171,12 @@ describe('clip dedup 边界', () => {
         type: 'scope',
         clip: clipA,
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
-      } as unknown as IR['children'][number],
+      } as unknown as IRScene['children'][number],
       {
         type: 'scope',
         clip: clipB,
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
-      } as unknown as IR['children'][number],
+      } as unknown as IRScene['children'][number],
     ]);
     const compiled = compileToScene(ir);
     expect(clipResources(compiled.resources)).toHaveLength(1);

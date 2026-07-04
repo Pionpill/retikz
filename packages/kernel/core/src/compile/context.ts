@@ -6,7 +6,7 @@ import type { PathKindDefinition } from '../contract';
 import type { PatternDefinition } from '../contract';
 import type { RibbonWidthProfileDefinition } from '../contract';
 import type { ShapeDefinition } from '../contract';
-import type { IR } from '../schemas';
+import type { IRScene } from '../schemas';
 import type { CompileOptions } from './compile';
 import type { CompileWarning } from './constant';
 
@@ -38,7 +38,7 @@ const defaultWarnDispatcher = (warning: CompileWarning): void => {
  */
 export type CompileContext = {
   /** composite lowering 后的 Tier 1 IR。 */
-  loweredIr: IR;
+  loweredIr: IRScene;
   /** 文字度量函数。 */
   measureText: NonNullable<CompileOptions['measureText']>;
   /** 自动 layout padding。 */
@@ -74,7 +74,7 @@ export type CompileContext = {
 };
 
 /** 创建 compile 编排所需的不可变依赖上下文。 */
-export const createCompileContext = (ir: IR, options: CompileOptions): CompileContext => {
+export const createCompileContext = (ir: IRScene, options: CompileOptions): CompileContext => {
   const measureText = options.measureText ?? fallbackMeasurer;
   const layoutPadding = options.padding ?? 10;
   const round = createRound(options.precision ?? DEFAULT_PRECISION);

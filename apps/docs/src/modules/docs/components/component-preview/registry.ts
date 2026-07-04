@@ -1,4 +1,4 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
 import type { PreviewAction, SourceLang } from './types';
@@ -9,10 +9,10 @@ import type { PreviewAction, SourceLang } from './types';
  */
 export const demoModules: Record<
   string,
-  { default: FC; previewIR?: IR; previewActions?: Array<PreviewAction> } | undefined
+  { default: FC; previewIR?: IRScene; previewActions?: Array<PreviewAction> } | undefined
 > = import.meta.glob<{
   default: FC;
-  previewIR?: IR;
+  previewIR?: IRScene;
   previewActions?: Array<PreviewAction>;
 }>('../../contents/**/*.demo.tsx', { eager: true });
 

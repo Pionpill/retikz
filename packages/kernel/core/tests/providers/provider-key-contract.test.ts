@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IR } from '../../src';
+import type { IRScene } from '../../src';
 
 import {
   BUILTIN_PATH_KINDS,
@@ -31,7 +31,7 @@ describe('provider key contract', () => {
       anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
       emit: () => [{ type: 'ellipse', cx: 0, cy: 0, rx: 10, ry: 10 }],
     });
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'ring', position: [0, 0], text: '' }],
@@ -49,7 +49,7 @@ describe('provider key contract', () => {
       anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
       emit: () => [],
     });
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: '' }],
@@ -64,7 +64,7 @@ describe('provider key contract', () => {
       paramsSchema: z.object({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 10, from[1]] }],
     });
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -98,7 +98,7 @@ describe('provider key contract', () => {
       schema,
       expand: () => ({ type: 'node', id: 'badge', position: [0, 0], text: 'B' }),
     });
-    const ir: IR = { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge' }] };
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge' }] };
 
     expect(() => compileToScene(ir, { composites: [badge] })).not.toThrow();
   });

@@ -3,8 +3,8 @@
   BoundaryDefinition,
   ClipDefinition,
   CompositeDefinition,
-  IR,
   IRAnimationTrack,
+  IRScene,
   IRViewBox,
   LowerTex,
   PathGeneratorDefinition,
@@ -118,7 +118,7 @@ const aggregateEmbeddableComposites = (
  */
 export type LayoutProps = ScopeStyleProps & {
   /** 直接喂 IR JSON（持久化 / AI / 编辑器场景），与 children 二选一 */
-  ir?: IR;
+  ir?: IRScene;
   /** Kernel/Sugar JSX children */
   children?: ReactNode;
   /**

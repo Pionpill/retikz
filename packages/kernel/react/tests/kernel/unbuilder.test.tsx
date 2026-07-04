@@ -1,4 +1,4 @@
-import type { IR, IRChild, IRPathBase } from '@retikz/core';
+import type { IRChild, IRPathBase,IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
 import { CURRENT_IR_VERSION } from '@retikz/core';
@@ -10,7 +10,7 @@ import { buildIR } from '../../src/kernel/builder';
 import { convertIRToReactNode } from '../../src/kernel/unbuilder';
 import { Draw } from '../../src/sugar/Draw';
 
-const emptyScene: IR = {
+const emptyScene: IRScene = {
   version: CURRENT_IR_VERSION,
   type: 'scene',
   children: [],
@@ -29,7 +29,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('单 Node 还原为 <Node /> element，displayName 与关键 props 原样', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -57,7 +57,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('IR Node 上 undefined 字段不写进 element props', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0] }],
@@ -69,7 +69,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Path + 2 Step 还原：<Path> 含两个 <Step> children，displayName / kind / to 全对', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -95,7 +95,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Kernel-only round-trip：IR → React → IR 等价', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -117,7 +117,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Ribbon round-trip：IR → React → IR 等价', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -143,7 +143,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Boundary Ribbon round-trip：IR → React → IR 等价', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -181,7 +181,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it("折角 step 'step' round-trip：via 字段透传保留", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -199,7 +199,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Path fill / fillRule round-trip', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -220,7 +220,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('zIndex round-trip：Node / Path / Scope 各自透传保留（重点验 path 手写分支不漏）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -246,7 +246,7 @@ describe('convertIRToReactNode', () => {
 
   it('Node shape round-trip：4 种 shape 字段透传保留', () => {
     for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [{ type: 'node', id: 'A', shape, position: [0, 0], text: 'A' }],
@@ -266,7 +266,7 @@ describe('convertIRToReactNode', () => {
       ],
     ];
     for (const marks of cases) {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -286,7 +286,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('cycle step round-trip：无 to / via 字段保留', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -306,7 +306,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('curve step round-trip：control 字段透传保留', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -323,7 +323,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('cubic step round-trip：control1 / control2 字段透传保留', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -340,7 +340,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('bend step round-trip：bendDirection 必填、bendAngle 可选', () => {
-    const irWithAngle: IR = {
+    const irWithAngle: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -355,7 +355,7 @@ describe('convertIRToReactNode', () => {
     };
     expect(buildIR(convertIRToReactNode(irWithAngle))).toEqual(irWithAngle);
 
-    const irNoAngle: IR = {
+    const irNoAngle: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -372,7 +372,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('arc step round-trip：startAngle / endAngle / radius 透传保留', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -389,7 +389,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('circlePath step round-trip：radius 透传保留', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -406,7 +406,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('ellipsePath step round-trip：radius object 透传保留', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: [
@@ -424,7 +424,7 @@ describe('convertIRToReactNode', () => {
 
   describe('step.label round-trip', () => {
     it('line + label round-trip 完整保留 text/position/side', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -446,7 +446,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('八种带 label 的 kind 全部 round-trip', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -490,7 +490,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('IR 中没有 label 字段时 round-trip 不会凭空多出 label', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -509,7 +509,7 @@ describe('convertIRToReactNode', () => {
 
   describe('path 级视觉属性 round-trip', () => {
     it('lineCap / lineJoin 双向保留', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -529,7 +529,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('thickness 语义档位双向保留', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -547,7 +547,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('opacity / fillOpacity / drawOpacity 三件双向保留', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -572,7 +572,7 @@ describe('convertIRToReactNode', () => {
 
   describe('扩展形态 round-trip', () => {
     it('round-trips AtPosition Node：{ direction, of, distance }', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -600,7 +600,7 @@ describe('convertIRToReactNode', () => {
         'bottom-right',
       ] as const;
       for (const direction of directions) {
-        const ir: IR = {
+        const ir: IRScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
           children: [
@@ -619,7 +619,7 @@ describe('convertIRToReactNode', () => {
 
     it('round-trips OffsetPosition Node：{ of, offset }（of 字符串 / 笛卡尔 / 嵌套 polar）', () => {
       // of = 字符串
-      const irString: IR = {
+      const irString: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -635,7 +635,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(irString))).toEqual(irString);
 
       // of = 笛卡尔
-      const irCartesian: IR = {
+      const irCartesian: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -650,7 +650,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(irCartesian))).toEqual(irCartesian);
 
       // of = 嵌套 polar
-      const irPolar: IR = {
+      const irPolar: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -670,7 +670,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips OffsetPosition Step.to：path 内 step 用 { of, offset }', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -688,7 +688,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips arrowDetail 顶层 + start / end 子对象 merge', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -717,7 +717,7 @@ describe('convertIRToReactNode', () => {
     it.each(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end'] as const)(
       "round-trips StepLabel.position keyword '%s'",
       position => {
-        const ir: IR = {
+        const ir: IRScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
           children: [
@@ -740,7 +740,7 @@ describe('convertIRToReactNode', () => {
     );
 
     it.each([0, 0.25, 0.5, 0.75, 1])('round-trips StepLabel.position 数值 t = %s', position => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -762,7 +762,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRTarget `relative` / `relativeAccumulate`', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -780,7 +780,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRScope：仅 children（无 id / transforms / localNamespace）', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -794,7 +794,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRScope：含 id / localNamespace / 6 种 transform 变体复合', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -819,7 +819,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips 嵌套 IRScope', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -840,7 +840,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRScope 含 path 子节点', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -865,7 +865,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips IRScope 样式继承字段：级联 + 四通道 + resetStyle + node/path color + step label 样式', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -903,7 +903,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips Coordinate 占位节点', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -922,7 +922,7 @@ describe('convertIRToReactNode', () => {
 
     it('round-trips Node.label 单对象 + 数组形态', () => {
       // 单对象
-      const irSingle: IR = {
+      const irSingle: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -938,7 +938,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(irSingle))).toEqual(irSingle);
 
       // 数组形态：多 label
-      const irArray: IR = {
+      const irArray: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -981,7 +981,7 @@ describe('convertIRToReactNode', () => {
         { kind: 'image' as const, href: 'a.png', fit: 'cover' as const },
       ];
       for (const fill of fills) {
-        const ir: IR = {
+        const ir: IRScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
           children: [{ type: 'node', id: 'A', position: [0, 0], shape: 'rectangle', fill }],
@@ -991,7 +991,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips Node maxTextWidth + label.pin（true / 对象样式）', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1026,7 +1026,7 @@ describe('convertIRToReactNode', () => {
         },
       ];
       for (const clip of clips) {
-        const ir: IR = {
+        const ir: IRScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
           children: [{ type: 'scope', clip, children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] }],
@@ -1036,7 +1036,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips between 定位：Node.position / Coordinate.position / Step.to', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1067,7 +1067,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips Path rotate / scale（等比 + 非等比）/ marks', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1095,7 +1095,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips bend out/in/looseness（asymmetric / self-loop）', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
@@ -1114,7 +1114,7 @@ describe('convertIRToReactNode', () => {
     it('generator step 无 React DSL 表示（IR-only）：convertIRToReactNode 明确抛错', () => {
       // generator 是 IR 级能力（经 <Layout ir={...}> 用），暂无 <Step kind="generator"> JSX sugar；
       // IR→JSX 反构对它 fail-loud（加 React DSL 属新功能，留待后续 alpha）。
-      const ir: IR = {
+      const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [

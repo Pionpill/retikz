@@ -1,5 +1,4 @@
 import type {
-  IR,
   IRArcStep,
   IRBendStep,
   IRChild,
@@ -8,6 +7,7 @@ import type {
   IREllipsePathStep,
   IRNode,
   IRPathBase,
+  IRScene,
   IRScope,
   IRStep,
 } from '@retikz/core';
@@ -246,7 +246,7 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
 
 const BUILDER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'draw', 'coordinate', 'scope'];
 
-export const irToVanillaCode = (ir: IR): string => {
+export const irToVanillaCode = (ir: IRScene): string => {
   const ctx: Ctx = { used: new Set(['figure']), usesDrawWay: false };
   const childrenStr = childListCode(ir.children, 0, ctx);
   const configStr = ir.viewBox ? formatObject({ viewBox: ir.viewBox }, 0) : null;

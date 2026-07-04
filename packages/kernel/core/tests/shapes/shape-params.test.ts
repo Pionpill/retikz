@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import type { ScenePrimitive } from '../../src/contract';
 import type { ShapeDefinition } from '../../src/contract';
-import type { IR, IRJsonObject } from '../../src/schemas';
+import type { IRJsonObject,IRScene } from '../../src/schemas';
 import type { Rect } from '../../src/shared/geometry';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -67,7 +67,7 @@ const looseShape = (): ShapeDefinition =>
     },
   });
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 // ─────────────────────────── Happy path（≥3）───────────────────────────
 

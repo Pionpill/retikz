@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 
@@ -44,7 +44,7 @@ const angleDiff = (a: number, b: number): number => {
 
 describe('out/in 角编译为 cubic 控制点方向', () => {
   it('outAngle/inAngle → control1 沿 outAngle、control2 沿 inAngle', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -79,7 +79,7 @@ describe('out/in 角编译为 cubic 控制点方向', () => {
 
 describe('out/in 与 bendDirection 同给 → out/in 优先', () => {
   it('out/in 在场时控制点由 out/in 决定，忽略 bendDirection 对称弯', () => {
-    const withOutIn: IR = {
+    const withOutIn: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -111,7 +111,7 @@ describe('out/in 与 bendDirection 同给 → out/in 优先', () => {
 
 describe('looseness 调控制点距离', () => {
   it('looseness 越大控制点离端点越远', () => {
-    const mk = (looseness: number): IR => ({
+    const mk = (looseness: number): IRScene => ({
       version: 1,
       type: 'scene',
       children: [
@@ -143,7 +143,7 @@ describe('looseness 调控制点距离', () => {
 
 describe('self-loop（from==to）成环（非退化直线）', () => {
   it('同坐标 bend + out/in → cubic 控制点偏离端点（环张开）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -172,7 +172,7 @@ describe('self-loop（from==to）成环（非退化直线）', () => {
   });
 
   it('同 node id 自环（from==to 同节点）→ 成环', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

@@ -1,4 +1,4 @@
-﻿import type { IR } from '@retikz/core';
+﻿import type { IRScene } from '@retikz/core';
 import type { ErrorInfo, FC, ReactElement, ReactNode } from 'react';
 
 import { SceneSchema } from '@retikz/core';
@@ -53,7 +53,7 @@ const resolveIr = (source: string): Resolved => {
       errorDetail: `schema mismatch — ${formatZodError(parsed.error)}`,
     };
   }
-  const ir: IR = parsed.data;
+  const ir: IRScene = parsed.data;
   const Component: FC = () => <Layout ir={ir} width={DEFAULT_TIKZ_WIDTH} height={DEFAULT_TIKZ_HEIGHT} />;
   return {
     ok: true,

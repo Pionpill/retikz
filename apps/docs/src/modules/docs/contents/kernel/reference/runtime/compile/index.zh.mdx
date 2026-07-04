@@ -9,7 +9,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 | API                | Signature                                     | 用途                                                                    |
 | ------------------ | --------------------------------------------- | ----------------------------------------------------------------------- |
-| `compileToScene`   | `(ir: IR, options?: CompileOptions) => Scene` | 主编译入口；处理 node / coordinate / path，输出 primitive 列表和 layout |
+| `compileToScene`   | `(ir: IRScene, options?: CompileOptions) => Scene` | 主编译入口；处理 node / coordinate / path，输出 primitive 列表和 layout |
 | `computeLayout`    | `(points, padding, round) => Layout`          | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用            |
 | `fallbackMeasurer` | `(text, font) => TextMetrics`                 | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底                       |
 

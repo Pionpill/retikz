@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR, IRNodeTarget } from '../../src/schemas';
+import type { IRNodeTarget,IRScene } from '../../src/schemas';
 import type { Rect } from '../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -202,7 +202,7 @@ const lineEndpointWithNode = (
   start: [number, number] = [200, 0],
 ): [number, number] => {
   const target: IRNodeTarget = { id: 'star', ...targetOverride };
-  const nodeIr: IR['children'][number] = nodeBoundary
+  const nodeIr: IRScene['children'][number] = nodeBoundary
     ? {
         type: 'node',
         id: 'star',
@@ -216,7 +216,7 @@ const lineEndpointWithNode = (
         shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
         position: [0, 0],
       };
-  const ir: IR = {
+  const ir: IRScene = {
     version: 1,
     type: 'scene',
     children: [
@@ -298,7 +298,7 @@ describe('public export + remaining quadrants', () => {
 
   it('boundary_unregistered_throws: boundary 指向未注册 shape 且有 path 连到该节点时编译抛错', () => {
     // resolveBoundary 在 clipForTarget → boundaryPointOf 里被调用（有 path 才触发）
-    const ir: core.IR = {
+    const ir: core.IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -324,7 +324,7 @@ describe('public export + remaining quadrants', () => {
 
   it('specific_anchor_ignores_boundary: tip-0 是星形专属 anchor，boundary 不影响其解析结果', () => {
     // 两个 IR：boundary='shape'（默认）和 boundary='circle'，anchor='tip-0' 均指向同一尖角
-    const makeIr = (boundary: string): core.IR => ({
+    const makeIr = (boundary: string): core.IRScene => ({
       version: 1,
       type: 'scene',
       children: [
@@ -365,7 +365,7 @@ describe('public export + remaining quadrants', () => {
   });
 
   it('layout_neutral: boundary 改变不影响 scene.layout（节点布局边界）', () => {
-    const makeIr = (boundary: string | undefined): core.IR => ({
+    const makeIr = (boundary: string | undefined): core.IRScene => ({
       version: 1,
       type: 'scene',
       children: [
@@ -387,7 +387,7 @@ describe('public export + remaining quadrants', () => {
   });
 
   it('roundtrip_self_describing: 含 node.boundary / 端点 boundary 的 IR JSON 序列化后再 schema parse 等价', () => {
-    const ir: core.IR = {
+    const ir: core.IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -421,7 +421,7 @@ describe('public export + remaining quadrants', () => {
 
   it('boundary_noop_in_between: between 端点带 boundary 编译不报错，正常产出路径', () => {
     // between 端点被 clipForTarget 处理为固定中点（refPointOfTarget），boundary 字段被忽略不引发 throw
-    const ir: core.IR = {
+    const ir: core.IRScene = {
       version: 1,
       type: 'scene',
       children: [

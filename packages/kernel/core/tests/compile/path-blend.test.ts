@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas';
@@ -11,7 +11,7 @@ import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = flattenPrims(prims).find((x): x is PathPrim => x.type === 'path');

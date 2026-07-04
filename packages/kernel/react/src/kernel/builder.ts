@@ -1,5 +1,4 @@
 import type {
-  IR,
   IRArrowMark,
   IRChild,
   IRLineSpec,
@@ -7,6 +6,7 @@ import type {
   IRNodeLabel,
   IRNodeLabelInput,
   IRPathBase,
+  IRScene,
   IRScope,
   IRStep,
   IRStepLabel,
@@ -668,7 +668,7 @@ export const wrapRootScope = (children: ReactNode, style: ScopeStyleProps): Reac
 export const buildIRWithContributions = (
   children: ReactNode,
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
-): { ir: IR; contributions: Array<EmbeddableContributionRecord> } => {
+): { ir: IRScene; contributions: Array<EmbeddableContributionRecord> } => {
   const contributions: Array<EmbeddableContributionRecord> = [];
   const sceneChildren = readSceneChildren(children, { contributions, embeddables });
   return { ir: { version: CURRENT_IR_VERSION, type: 'scene', children: sceneChildren }, contributions };
@@ -678,4 +678,4 @@ export const buildIRWithContributions = (
  * 把 <TikZ> 的 children 同步翻译为 IR
  * @description 纯函数，不依赖 effect/state；render 阶段即可直接使用；委托 buildIRWithContributions 并丢弃贡献
  */
-export const buildIR = (children: ReactNode): IR => buildIRWithContributions(children).ir;
+export const buildIR = (children: ReactNode): IRScene => buildIRWithContributions(children).ir;
