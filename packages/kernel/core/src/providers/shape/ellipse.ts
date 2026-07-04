@@ -29,11 +29,8 @@ const toEllipse = (r: Rect): Ellipse => ({
 });
 
 /**
- * ellipse 注册项
- * @description circumscribe 受 `params.circumscribe` 控制：`'equal'`（等轴，circle：两轴 = 内框对角线半长
- *   `√(hw²+hh²)`）/ `'proportional'`（默认，各轴 ×√2，内框 4 顶点落在椭圆周上）。几何由外接框半轴派生；
- *   emit / anchor / edgePoint / boundaryPoint 只一套（不读 `params`）。circle 作为内置 shape preset 在 compile 期解析为
- *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`。
+ * ellipse 注册项。
+ * @description circumscribe 支持默认比例外接和等轴外接；circle 由 compile 解析为等轴 ellipse preset。
  */
 export const ellipseShape = defineShape<EllipseParams>({
   name: BuiltinShape.Ellipse,

@@ -12,10 +12,8 @@ import { contourToPathCommands, contourToPathPrimitive } from './outline';
 import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
 /**
- * sector shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；内外半径 + 起止角 + 可选倒角半径。
- *   innerRadius=0 退化为实心扇片（pie slice）；outerRadius 必须 > innerRadius；
- *   cornerRadius 给四个接缝（环楔的 4 个 line-arc / pie 的 apex line-line + 2 line-arc）逐角夹紧倒角。
+ * sector 参数 schema。
+ * @description innerRadius=0 表示实心扇片；cornerRadius 对边界接缝倒角。
  */
 const sectorParamsSchema = z
   .strictObject({
@@ -55,12 +53,8 @@ const toWorld = (rect: Rect, geo: SectorGeometry, localFromApex: Position): Posi
 };
 
 /**
- * 构造 sector 闭合轮廓的有序段序列（line + arc），段序与现状 emit 完全一致
- * @description 环楔（innerRadius>0）4 段闭环：radial Line(inner-start→outer-start) → outer Arc(start→end, CW)
- *   → radial Line(outer-end→inner-end) → inner Arc(end→start, CCW)。pie（innerRadius=0）3 段闭环：
- *   radial Line(apex→outer-start) → outer Arc(start→end, CW) → radial Line(outer-end→apex)，apex 处为 line-line 接缝。
- *   Arc 圆心 = apex 世界坐标、半径 = inner/outer radius、起止角与现状 emit 同（度，CW 即 counterClockwise=false）。
- *   emit / boundaryPoint 共用此真源；emit 收轴对齐 rect、boundaryPoint 收带 rotate 的 rect，rect 不同自然投不同世界系。
+ * 构造 sector 闭合轮廓。
+ * @description 环楔包含内外弧，实心扇片退化为圆心到外弧的闭合区域；emit / boundaryPoint 共用此段序。
  */
 const sectorSegments = (rect: Rect, geo: SectorGeometry, params: SectorParams): Array<ContourSegment> => {
   const { innerRadius, outerRadius } = params;
@@ -118,11 +112,9 @@ const createSectorContour = (
 };
 
 /**
- * sector 注册项：环楔（内外半径 + 起止角围成的可填充 2D 区域）
- * @description 四何函数共用 `sectorGeometry`（单一真源）：circumscribe 返回含圆心 + 内外弧的精确 AABB 半轴
- *   （含弧跨过 90°·k 轴向的 outerRadius 极值点），node position = AABB 中心；anchor 含 apex（圆心）/ centroid /
- *   inner-arc-mid / outer-arc-mid / start-edge-mid / end-edge-mid + 角度边界点；emit 出外弧 + 两径向边 + 内弧
- *   闭合 path（innerRadius=0 时径向边交于圆心、无内弧）。scaleParams 只缩半径、不缩角度。
+ * sector 注册项：可填充的环楔 / 扇片。
+ * @description 几何由内外半径和起止角驱动；提供圆心、质心、弧中点和边中点 anchor。
+ *   scaleParams 只缩半径和倒角，不缩角度。
  */
 export const sector = defineShape<SectorParams>({
   name: 'sector',

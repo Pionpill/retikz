@@ -36,12 +36,9 @@ const rectVertices = (bounds: Rect): Array<Position> => {
 };
 
 /**
- * rectangle 注册项（文本容器形状，尺寸由内框 + minimumSize 驱动）
- * @description circumscribe = identity（视觉边界 = 内框）；anchor / edgePoint 直接走 rect 数学层；
- *   boundaryPoint 把矩形 4 角构造成 4 条折线段、委托 rounded-contour 模块（cornerRadius 省略 / 0 出原尖角
- *   求交、>0 在每个角插逐角夹紧的 fillet 弧，连接感知倒角），rayOrigin = 矩形中心（= node position）。
- *   emit 仍出 RectPrim，圆角半径优先取 `params.cornerRadius`、回退到 `style.cornerRadius`。
- *   scaleParams：cornerRadius 是长度，随 node scale 用 uniform 几何均值因子协同缩放（边数 / 角度类参数才不缩）。
+ * rectangle 注册项：文本容器矩形。
+ * @description anchor / edgePoint 走 rect 几何；cornerRadius 影响 boundaryPoint 和 emit。
+ *   scaleParams 只缩 cornerRadius。
  */
 export const rectangle = defineShape<RectangleParams>({
   name: BuiltinShape.Rectangle,

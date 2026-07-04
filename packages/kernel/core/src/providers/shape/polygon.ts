@@ -50,7 +50,7 @@ const vertexAngles = (params: PolygonParams): Array<number> => {
   return out;
 };
 
-/** 顶点角的 |cos| 最大值（恒 >0，sides≥3 时至少一个顶点不在 ±y 轴上）；用于由 AABB 半宽反推外接半径 */
+/** 顶点角的 |cos| 最大值，用于由 AABB 半宽反推外接半径。 */
 const maxAbsCos = (params: PolygonParams): number => {
   let max = 0;
   for (const angle of vertexAngles(params)) {
@@ -61,11 +61,8 @@ const maxAbsCos = (params: PolygonParams): number => {
 };
 
 /**
- * 能容纳内框（半轴 hw/hh）的正 sides 边形外接圆半径
- * @description rectangle / polygon 是文本容器——尺寸由内框（text + padding）驱动，circumscribe 从内框推外接。
- *   正多边形 = 各边内法向投影 ≤ 内切半径(apothem) 的半平面交；apothem = R·cos(π/sides)。内框 4 角
- *   (±hw,±hh) 全在多边形内 ⇔ 对每条边法向 φ_j，max 角投影 hw·|cosφ_j|+hh·|sinφ_j| ≤ apothem。
- *   取使等号成立的最小 R = max_j(hw·|cosφ_j|+hh·|sinφ_j|) / cos(π/sides)，φ_j = rotate+(j+0.5)·(360/sides)。
+ * 计算能容纳内框的正多边形外接圆半径。
+ * @description polygon 是文本容器 shape，尺寸由内框推导而不是由 params 直接指定。
  */
 const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number => {
   const { sides } = params;
@@ -85,9 +82,8 @@ const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number 
 const circumradiusFromRect = (bounds: Rect, params: PolygonParams): number => bounds.width / 2 / maxAbsCos(params);
 
 /**
- * 正多边形 `sides` 个顶点的世界坐标（外接圆半径 radius、起始角 rotate、绕 rect 中心）
- * @description 顶点均布外接圆：第 k 个顶点角 = rotate + k·(360/sides)；点在 rect 局部系算后经 localToWorld 投世界。
- *   emit / boundaryPoint / anchor 共用此真源。
+ * 正多边形顶点的世界坐标。
+ * @description 顶点均布在外接圆上，按 params.rotate 自旋。
  */
 const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): Array<Position> =>
   vertexAngles(params).map(deg => {
@@ -96,15 +92,9 @@ const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): A
   });
 
 /**
- * polygon 注册项：正多边形（sides 顶点均布外接圆，rotate 定起始角，cornerRadius 顶点倒角）
- * @description 文本容器形状——circumscribe 从内框 `innerHalfWidth/Height` 推能容纳内框的外接圆、再取其 AABB 半轴，
- *   尺寸仍由内框 + minimumSize 驱动（区别于 sector / star 的 params-半径驱动）。emit / boundaryPoint 把顶点环构造成
- *   `sides` 条折线段，委托 rounded-contour 模块：cornerRadius 省略 / 0 出原尖角轮廓、>0 在每个顶点插逐角夹紧的
- *   fillet 弧。emit 收轴对齐 rect（旋转由外层 group 施加）、boundaryPoint 收带 rotate 的 rect 且 rayOrigin = 几何中心
- *   （多边形关于中心对称，AABB 中心 = 形心 = node position）。命名 anchor 走外接 AABB 的 9 名 rect anchor（不随
- *   cornerRadius 移）；self-rotate（params.rotate）与 Node.rotate 叠加。scaleParams：cornerRadius 是长度随 scale
- *   缩（几何均值因子），sides 计数 / rotate 角度不缩。
- *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`，由 compile 解析。
+ * polygon 注册项：正多边形文本容器。
+ * @description sides/rotate 决定顶点环，cornerRadius 做顶点倒角；命名 anchor 走外接 AABB。
+ *   scaleParams 只缩 cornerRadius，不缩 sides / rotate。diamond 由 compile 解析为 polygon preset。
  */
 export const polygon = defineShape<PolygonParams>({
   name: 'polygon',

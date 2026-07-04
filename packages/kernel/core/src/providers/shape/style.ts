@@ -53,10 +53,7 @@ const withoutCornerRadius = (
   return passthroughStyle;
 };
 
-/**
- * 将 shape style 落到 path primitive 样式字段。
- * @description `cornerRadius` 是 shape 输入字段，不属于 path primitive；fill / stroke / strokeWidth 在这里补默认值。
- */
+/** 将 shape style 落到 path primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth。 */
 export const pathPrimitiveStyle = (
   style: ResolvedShapeStyle,
   options?: { fill?: PathPrim['fill'] },
@@ -70,10 +67,7 @@ export const pathPrimitiveStyle = (
   };
 };
 
-/**
- * 将 shape style 落到 ellipse primitive 样式字段。
- * @description ellipse primitive 不接收 `cornerRadius`；fill / stroke / strokeWidth 在这里补默认值。
- */
+/** 将 shape style 落到 ellipse primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth。 */
 export const ellipsePrimitiveStyle = (style: ResolvedShapeStyle): EllipsePrimitiveStyle => {
   const { fill, stroke, strokeWidth, ...passthroughStyle } = style;
   return {
@@ -84,10 +78,7 @@ export const ellipsePrimitiveStyle = (style: ResolvedShapeStyle): EllipsePrimiti
   };
 };
 
-/**
- * 将 shape style 落到 rect primitive 样式字段。
- * @description rect primitive 接收调用方传入的圆角半径，覆盖 style 上的原始 `cornerRadius`。
- */
+/** 将 shape style 落到 rect primitive；用调用方圆角覆盖 style.cornerRadius。 */
 export const rectPrimitiveStyle = (
   style: ResolvedShapeStyle,
   cornerRadius: RectPrim['cornerRadius'],

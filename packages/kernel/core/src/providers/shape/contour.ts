@@ -28,14 +28,14 @@ const contourParamsSchema = z.strictObject({
 
 export type ContourParams = z.infer<typeof contourParamsSchema>;
 
-/** 点集 AABB 中心；core 据此自动居中（每顶点减去它，使几何中心落到 Node position） */
+/** 点集 AABB 中心，用于把任意原点的顶点环居中到 Node position。 */
 const aabbCenterOf = (points: Array<Position>): Position => {
   const bounds = boundsOf(points);
   if (bounds === undefined) throw new Error('contour: points must contain at least one vertex.');
   return boundsCenter(bounds);
 };
 
-/** 顶点环 → 自动居中（减 AABB 中心）→ 经 rect 投世界系 → 闭合折线段 */
+/** 顶点环居中后投到世界系，生成闭合折线段。 */
 const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment> => {
   const center = aabbCenterOf(params.points);
   const verts = params.points.map(p => localToWorld(rect, point.sub(p, center)));
@@ -43,13 +43,9 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
 };
 
 /**
- * contour 注册项：吃任意闭合顶点环的几何驱动 shape（可圆角、可连接 Node）
- * @description per-instance params 给一圈局部系顶点（任意原点）+ 可选 cornerRadius；core 按顶点 AABB 中心
- *   自动归一化（每顶点减 AABB 中心再 localToWorld），Node position = 轮廓几何中心，circumscribeOffset 维持 [0,0]。
- *   emit / boundaryPoint / 圆角全部委托 shared/geometry contour helper + shapes/contour.ts helper（与 polygon 同一条
- *   实现路径，仅顶点来源不同：polygon 由 rect+sides 推导，contour 直接取 params.points）。命名 anchor 返回
- *   undefined → compile 回退外接 AABB rect；boundaryPoint（指向式）精确命中轮廓。scaleParams：points 是长度
- *   按轴各向异性缩，cornerRadius 是长度按几何均值因子缩（同 polygon）。
+ * contour 注册项：任意闭合顶点环。
+ * @description 顶点按 AABB 中心自动归一化，Node position 对齐轮廓中心；命名 anchor 交给外接 AABB 回退。
+ *   points 按轴缩放，cornerRadius 按几何均值缩放。
  */
 export const contour = defineShape<ContourParams>({
   name: 'contour',

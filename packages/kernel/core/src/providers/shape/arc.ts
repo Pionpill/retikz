@@ -69,10 +69,9 @@ const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Po
   localToWorld(rect, [localFromCenter[0] + centerOffset[0], localFromCenter[1] + centerOffset[1]]);
 
 /**
- * arc 注册项：单半径曲线（描边、可选闭合为弓形）
- * @description circumscribe 返回弧 bbox 半轴（含弧跨过的 90°·k 轴向极值点），node position = AABB 中心；
- *   emit 出弧 path（close=false 开放描边、无 close 命令；close=true 弦闭合成弓形可填充）；anchor 提供
- *   arc-mid（弧中点）/ start / end / center（圆心）。scaleParams 只缩 radius、不缩角度与 close。
+ * arc 注册项：单半径弧线。
+ * @description close=true 时闭合成可填充弓形；anchor 提供 center / start / end / arc-mid。
+ *   scaleParams 只缩 radius。
  */
 export const arc = defineShape<ArcParams>({
   name: 'arc',
