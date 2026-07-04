@@ -9,30 +9,43 @@ import { defineShape } from '../../contract';
 import { boundaryFromContour, contourCommands, DEG_TO_RAD, localToWorld } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
-/**
- * star shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；points = 尖角数（≥3），
- *   innerRadius / outerRadius = 凹角 / 尖角半径（长度），rotate = 起始尖角自旋角（度，可选），
- *   cornerRadius = 顶点倒角半径（user units，可选，逐角夹紧；凸尖与凹角都倒）。
- *   星形为外径尖角 / 内径凹角交替的 `2×points` 顶点闭合多边形。
- */
-type StarParams = {
-  points: number;
-  innerRadius: number;
-  outerRadius: number;
-  /**
-   * 起始尖角自旋角（度）。
-   * @default 0
-   */
-  rotate?: number;
-  /**
-   * 顶点倒角半径。
-   * @default 0
-   */
-  cornerRadius?: number;
-};
-
 const MAX_STAR_POINTS = 1024;
+
+const starParamsSchema = z
+  .strictObject({
+    points: z
+      .number()
+      .int()
+      .min(3)
+      .max(MAX_STAR_POINTS)
+      .describe(`Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`),
+    innerRadius: z
+      .number()
+      .positive()
+      .describe('Inner (notch) radius in user units.'),
+    outerRadius: z
+      .number()
+      .positive()
+      .describe('Outer (tip) radius in user units; must be > innerRadius.'),
+    rotate: z
+      .number()
+      .optional()
+      .describe(
+        'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
+      ),
+    cornerRadius: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+      ),
+  })
+  .refine(p => p.outerRadius > p.innerRadius, {
+    message: 'outerRadius must be greater than innerRadius',
+  });
+
+type StarParams = z.infer<typeof starParamsSchema>;
 
 /**
  * star 派生几何（circumscribe / boundaryPoint / anchor / emit 单一真源）
@@ -104,41 +117,7 @@ const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> => geo.ve
  */
 export const star = defineShape<StarParams>({
   name: 'star',
-  paramsSchema: z
-    .strictObject({
-      points: z
-        .number()
-        .int()
-        .min(3)
-        .max(MAX_STAR_POINTS)
-        .describe(
-          `Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`,
-        ),
-      innerRadius: z
-        .number()
-        .positive()
-        .describe('Inner (notch) radius in user units.'),
-      outerRadius: z
-        .number()
-        .positive()
-        .describe('Outer (tip) radius in user units; must be > innerRadius.'),
-      rotate: z
-        .number()
-        .optional()
-        .describe(
-          'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
-        ),
-      cornerRadius: z
-        .number()
-        .nonnegative()
-        .optional()
-        .describe(
-          'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-        ),
-    })
-    .refine(p => p.outerRadius > p.innerRadius, {
-      message: 'outerRadius must be greater than innerRadius',
-    }),
+  paramsSchema: starParamsSchema,
   circumscribe: (_hw, _hh, params) => starGeometry(params).aabbHalfAxes,
   boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const geo = starGeometry(params);

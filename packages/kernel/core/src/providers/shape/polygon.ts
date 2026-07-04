@@ -17,27 +17,29 @@ import {
 } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
-/**
- * polygon shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；sides = 边数（≥3），rotate = 起始顶点自旋角（度，可选），
- *   cornerRadius = 顶点倒角半径（user units，可选，逐角夹紧）。
- *   diamond 作为内置 shape preset 在 compile 期解析为此 shape 的 `{ sides: 4, rotate: 0 }`。
- */
-type PolygonParams = {
-  sides: number;
-  /**
-   * 起始顶点自旋角（度）。
-   * @default 0
-   */
-  rotate?: number;
-  /**
-   * 顶点倒角半径。
-   * @default 0
-   */
-  cornerRadius?: number;
-};
-
 const MAX_POLYGON_SIDES = 1024;
+
+const polygonParamsSchema = z.strictObject({
+  sides: z
+    .number()
+    .int()
+    .min(3)
+    .max(MAX_POLYGON_SIDES)
+    .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
+  rotate: z
+    .number()
+    .optional()
+    .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
+  cornerRadius: z
+    .number()
+    .nonnegative()
+    .optional()
+    .describe(
+      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+    ),
+});
+
+type PolygonParams = z.infer<typeof polygonParamsSchema>;
 
 /** 顶点角集合（度）：第 k 个顶点角 = rotate + k·(360/sides) */
 const vertexAngles = (params: PolygonParams): Array<number> => {
@@ -106,25 +108,7 @@ const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): A
  */
 export const polygon = defineShape<PolygonParams>({
   name: 'polygon',
-  paramsSchema: z.strictObject({
-    sides: z
-      .number()
-      .int()
-      .min(3)
-      .max(MAX_POLYGON_SIDES)
-      .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
-    rotate: z
-      .number()
-      .optional()
-      .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-      ),
-  }),
+  paramsSchema: polygonParamsSchema,
   circumscribe: (hw, hh, params) => {
     const radius = circumradiusFor(hw, hh, params);
     const angles = vertexAngles(params);

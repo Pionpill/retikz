@@ -17,17 +17,35 @@ import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
  *   innerRadius=0 退化为实心扇片（pie slice）；outerRadius 必须 > innerRadius；
  *   cornerRadius 给四个接缝（环楔的 4 个 line-arc / pie 的 apex line-line + 2 line-arc）逐角夹紧倒角。
  */
-type SectorParams = {
-  innerRadius: number;
-  outerRadius: number;
-  startAngle: number;
-  endAngle: number;
-  /**
-   * 环楔接缝倒角半径。
-   * @default 0
-   */
-  cornerRadius?: number;
-};
+const sectorParamsSchema = z
+  .strictObject({
+    innerRadius: z
+      .number()
+      .nonnegative()
+      .describe('Inner radius (user units); 0 = solid pie slice.'),
+    outerRadius: z
+      .number()
+      .positive()
+      .describe('Outer radius (user units); must be > innerRadius.'),
+    startAngle: z
+      .number()
+      .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
+    endAngle: z
+      .number()
+      .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
+    cornerRadius: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+      ),
+  })
+  .refine(p => p.outerRadius > p.innerRadius, {
+    message: 'outerRadius must be greater than innerRadius',
+  });
+
+type SectorParams = z.infer<typeof sectorParamsSchema>;
 
 /** sector 局部 AABB 系点（圆心为原点偏移后）→ 世界系（含 rect 旋转 / 平移） */
 const toWorld = (rect: Rect, geo: SectorGeometry, localFromApex: Position): Position => {
@@ -108,33 +126,7 @@ const createSectorContour = (
  */
 export const sector = defineShape<SectorParams>({
   name: 'sector',
-  paramsSchema: z
-    .strictObject({
-      innerRadius: z
-        .number()
-        .nonnegative()
-        .describe('Inner radius (user units); 0 = solid pie slice.'),
-      outerRadius: z
-        .number()
-        .positive()
-        .describe('Outer radius (user units); must be > innerRadius.'),
-      startAngle: z
-        .number()
-        .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
-      endAngle: z
-        .number()
-        .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
-      cornerRadius: z
-        .number()
-        .nonnegative()
-        .optional()
-        .describe(
-          'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-        ),
-    })
-    .refine(p => p.outerRadius > p.innerRadius, {
-      message: 'outerRadius must be greater than innerRadius',
-    }),
+  paramsSchema: sectorParamsSchema,
   circumscribe: (_hw, _hh, params) => getSectorGeometry(params).aabbHalfAxes,
   // position = 圆心 apex；AABB 中心相对 apex 的偏移 = −apexOffset（apexOffset 是 apex 相对 AABB 中心）
   circumscribeOffset: (params): Position => {

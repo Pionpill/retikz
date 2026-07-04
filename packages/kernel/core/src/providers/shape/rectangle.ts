@@ -10,18 +10,17 @@ import { BuiltinShape } from '../../schemas';
 import { boundaryFromContour, CenterAnchor, isDirectionalAnchor, localToWorld, rect } from '../../shared';
 import { verticesToSegments } from './outline';
 
-/**
- * rectangle shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；仅 cornerRadius 一个可选长度字段。
- *   cornerRadius 从 Node 顶层迁入 params；缺省 / 0 = 直角。
- */
-type RectangleParams = {
-  /**
-   * 矩形圆角半径。
-   * @default 0
-   */
-  cornerRadius?: number;
-};
+const rectangleParamsSchema = z.strictObject({
+  cornerRadius: z
+    .number()
+    .nonnegative()
+    .optional()
+    .describe(
+      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+    ),
+});
+
+type RectangleParams = z.infer<typeof rectangleParamsSchema>;
 
 /** 轴对齐 / 旋转矩形的 4 个角（CW 绕向：左上 → 右上 → 右下 → 左下），局部系经 localToWorld 投世界 */
 const rectVertices = (bounds: Rect): Array<Position> => {
@@ -45,15 +44,7 @@ const rectVertices = (bounds: Rect): Array<Position> => {
  */
 export const rectangle = defineShape<RectangleParams>({
   name: BuiltinShape.Rectangle,
-  paramsSchema: z.strictObject({
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-      ),
-  }),
+  paramsSchema: rectangleParamsSchema,
   circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
   boundaryPoint: (bounds: Rect, toward: Position, params): Position => {
     const verts = rectVertices(bounds);

@@ -9,32 +9,39 @@ import type { Rect } from '../../shared';
 import { defineShape } from '../../contract';
 import { localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
 
-/**
- * arc shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；半径 + 起止角 + 可选闭合。
- */
-type ArcParams = {
-  radius: number;
-  startAngle: number;
-  endAngle: number;
-  /**
-   * 是否闭合为可填充弓形。
-   * @default false
-   */
-  close?: boolean;
-};
+const arcParamsSchema = z.strictObject({
+  radius: z
+    .number()
+    .positive()
+    .describe('Arc radius in user units.'),
+  startAngle: z
+    .number()
+    .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
+  endAngle: z
+    .number()
+    .describe('End angle in degrees; swept from startAngle in screen space.'),
+  close: z
+    .boolean()
+    .optional()
+    .describe('When true, close the arc into a chord/segment outline (fillable); default false = open stroked arc.'),
+});
+
+type ArcParams = z.infer<typeof arcParamsSchema>;
 
 /** arc 的派生几何类型：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
 type ArcGeometry = {
+  /** 规范化后的起止角与弧中点角度。 */
   range: { start: number; end: number; mid: number };
+  /** 覆盖整段弧线的精确 AABB 半轴。 */
   aabbHalfAxes: { halfWidth: number; halfHeight: number };
+  /** 圆心相对 AABB 中心的偏移；投影到 rect 前先加到圆心局部点上。 */
   centerOffset: Position;
 };
 
 /** arc 的派生几何：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
 const computeArcGeometry = (params: ArcParams): ArcGeometry => {
-  const { radius } = params;
-  const range = normalizeAngleRange(params.startAngle, params.endAngle);
+  const { radius, startAngle, endAngle } = params;
+  const range = normalizeAngleRange(startAngle, endAngle);
   const center: Position = [0, 0];
   // close=true（弓形）含弦 / 区域，AABB 由弧 bbox 点决定；圆心本身不强制进框（开放弧 / 弓形都不含圆心）
   const points = arcBoundingPoints(center, radius, range.start, range.end);
@@ -56,16 +63,7 @@ const computeArcGeometry = (params: ArcParams): ArcGeometry => {
   };
 };
 
-/** params → 派生几何的 WeakMap 缓存（同 sector：同一 params 实例多次取几何只算一次，纯性能、行为不变） */
-const arcGeometryCache = new WeakMap<ArcParams, ArcGeometry>();
-
-const arcGeometry = (params: ArcParams): ArcGeometry => {
-  const cached = arcGeometryCache.get(params);
-  if (cached !== undefined) return cached;
-  const geo = computeArcGeometry(params);
-  arcGeometryCache.set(params, geo);
-  return geo;
-};
+const arcGeometry = (params: ArcParams): ArcGeometry => computeArcGeometry(params);
 
 /** 圆心局部点（相对圆心）→ 世界系（+centerOffset 到相对 AABB 中心后经 rect 投影） */
 const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Position): Position =>
@@ -79,22 +77,7 @@ const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Po
  */
 export const arc = defineShape<ArcParams>({
   name: 'arc',
-  paramsSchema: z.strictObject({
-    radius: z
-      .number()
-      .positive()
-      .describe('Arc radius in user units.'),
-    startAngle: z
-      .number()
-      .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
-    endAngle: z
-      .number()
-      .describe('End angle in degrees; swept from startAngle in screen space.'),
-    close: z
-      .boolean()
-      .optional()
-      .describe('When true, close the arc into a chord/segment outline (fillable); default false = open stroked arc.'),
-  }),
+  paramsSchema: arcParamsSchema,
   circumscribe: (_hw, _hh, params) => arcGeometry(params).aabbHalfAxes,
   // position = 圆心；AABB 中心相对圆心的偏移 = −centerOffset（centerOffset 是圆心相对 AABB 中心）
   circumscribeOffset: (params): Position => {

@@ -7,6 +7,17 @@ import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import { CenterAnchor, ellipse, isDirectionalAnchor } from '../../shared';
 
+const ellipseParamsSchema = z.strictObject({
+  circumscribe: z
+    .enum(['proportional', 'equal'])
+    .optional()
+    .describe(
+      'Circumscription policy from the inner content box: "proportional" (per-axis ×√2, ellipse) or "equal" (isotropic, circle: r = diagonal half-length). Default "proportional".',
+    ),
+});
+
+type EllipseParams = z.infer<typeof ellipseParamsSchema>;
+
 /** 外接框 Rect → Ellipse（rx/ry = 半宽/半高） */
 const toEllipse = (r: Rect): Ellipse => ({
   x: r.x,
@@ -23,16 +34,9 @@ const toEllipse = (r: Rect): Ellipse => ({
  *   emit / anchor / edgePoint / boundaryPoint 只一套（不读 `params`）。circle 作为内置 shape preset 在 compile 期解析为
  *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`。
  */
-export const ellipseShape = defineShape({
+export const ellipseShape = defineShape<EllipseParams>({
   name: BuiltinShape.Ellipse,
-  paramsSchema: z.strictObject({
-    circumscribe: z
-      .enum(['proportional', 'equal'])
-      .optional()
-      .describe(
-        'Circumscription policy from the inner content box: "proportional" (per-axis ×√2, ellipse) or "equal" (isotropic, circle: r = diagonal half-length). Default "proportional".',
-      ),
-  }),
+  paramsSchema: ellipseParamsSchema,
   circumscribe: (hw, hh, params) =>
     params.circumscribe === 'equal'
       ? { halfWidth: Math.hypot(hw, hh), halfHeight: Math.hypot(hw, hh) }

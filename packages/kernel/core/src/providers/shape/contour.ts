@@ -9,23 +9,23 @@ import { defineShape } from '../../contract';
 import { boundaryFromContour, contourCommands, localToWorld, point } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
-/**
- * contour shape 的 per-instance params 类型
- * @description 与 paramsSchema 保持同形，供 definition 内部拿到强类型 params。
- */
-export type ContourParams = {
-  /**
-   * 闭合局部系顶点环。
-   * @description 任意原点；core 按其 AABB 中心自动居中，Node position 对齐几何中心。
-   *   至少 3 个点，隐式闭合，段间直线。
-   */
-  points: Array<Position>;
-  /**
-   * 逐顶点统一 fillet 半径。
-   * @default 0
-   */
-  cornerRadius?: number;
-};
+const contourParamsSchema = z.strictObject({
+  points: z
+    .array(z.tuple([z.number(), z.number()]))
+    .min(3)
+    .describe(
+      "Closed local-frame vertex ring (any local origin — core auto-centers on the points' AABB center so Node position aligns to the geometric center; no caller pre-centering needed), >=3 points; edges are straight lines, last point auto-connects to first.",
+    ),
+  cornerRadius: z
+    .number()
+    .nonnegative()
+    .optional()
+    .describe(
+      'Uniform per-vertex fillet radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+    ),
+});
+
+export type ContourParams = z.infer<typeof contourParamsSchema>;
 
 /** 点集 AABB 范围。 */
 type ContourAabb = {
@@ -78,21 +78,7 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
  */
 export const contour = defineShape<ContourParams>({
   name: 'contour',
-  paramsSchema: z.strictObject({
-    points: z
-      .array(z.tuple([z.number(), z.number()]))
-      .min(3)
-      .describe(
-        "Closed local-frame vertex ring (any local origin — core auto-centers on the points' AABB center so Node position aligns to the geometric center; no caller pre-centering needed), >=3 points; edges are straight lines, last point auto-connects to first.",
-      ),
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Uniform per-vertex fillet radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-      ),
-  }),
+  paramsSchema: contourParamsSchema,
   // 几何驱动：AABB 半轴由 points 算（平移不变，自动居中无需调用方预居中）；rect 中心维持在 position。
   circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
     void innerHalfWidth;
