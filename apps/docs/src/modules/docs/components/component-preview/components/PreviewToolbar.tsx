@@ -2,6 +2,7 @@ import type { FC, ReactNode } from 'react';
 
 import { useEffect, useState } from 'react';
 
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -142,6 +143,30 @@ export const PreviewToolbarSelect: FC<PreviewToolbarSelectProps> = props => {
         ))}
       </SelectContent>
     </Select>
+  );
+};
+
+export type PreviewToolbarInputProps = {
+  label: string;
+  value: string;
+  placeholder?: string;
+  className?: string;
+  onValueChange: (value: string) => void;
+};
+
+/** 预览工具栏里的文本输入控件。 */
+export const PreviewToolbarInput: FC<PreviewToolbarInputProps> = props => {
+  const { label, value, placeholder, className, onValueChange } = props;
+
+  return (
+    <Input
+      aria-label={label}
+      title={label}
+      value={value}
+      placeholder={placeholder}
+      className={cn('h-7 min-w-28 bg-background px-2 text-xs', className)}
+      onChange={event => onValueChange(event.target.value)}
+    />
   );
 };
 

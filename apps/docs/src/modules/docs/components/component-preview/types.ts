@@ -56,6 +56,37 @@ export type PreviewControlSlot = {
 };
 
 /** 兼容旧 previewActions 命名，后续可单独重命名。 */
+/** 预览控件选项。 */
+export type PreviewControlOption = {
+  /** 写入预览状态的值。 */
+  value: string;
+  /** 展示给用户的文本。 */
+  label: string;
+};
+
+/** 下拉选择类预览控件。 */
+export type PreviewSelectControlConfig = {
+  kind: 'select';
+  id: string;
+  label: string;
+  defaultValue: string;
+  options: Array<PreviewControlOption>;
+  placement?: PreviewControlPlacement;
+};
+
+/** 文本输入类预览控件。 */
+export type PreviewInputControlConfig = {
+  kind: 'input';
+  id: string;
+  label: string;
+  defaultValue: string;
+  placeholder?: string;
+  placement?: PreviewControlPlacement;
+};
+
+/** 常见预览控件的声明式配置。 */
+export type PreviewControlConfig = PreviewSelectControlConfig | PreviewInputControlConfig;
+
 export type PreviewActionContext = PreviewControlContext;
 export type PreviewAction = PreviewControlSlot;
 

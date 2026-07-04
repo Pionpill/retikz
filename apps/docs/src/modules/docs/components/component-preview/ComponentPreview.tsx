@@ -19,6 +19,7 @@ import type { PreviewIR } from './utils';
 import { ComponentRender } from './ComponentRender';
 import { RawSvgFrame } from './components';
 import { useDemoLocationContext } from './context';
+import { buildConfiguredControlSlots } from './control-slots';
 import {
   actionModules,
   buildActionsKey,
@@ -29,6 +30,7 @@ import {
   irJsonOverrides,
   resolveDemoKey,
   resolvePreviewActions,
+  resolvePreviewControls,
   vanillaModules,
   vanillaOverrides,
 } from './registry';
@@ -97,6 +99,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const Component = mod?.default;
   const actionModule = segments ? actionModules[buildActionsKey(segments, name)] : undefined;
   const moduleActions = mod?.previewActions ?? resolvePreviewActions(actionModule);
+  const moduleControls = mod?.previewControls ?? resolvePreviewControls(actionModule);
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
@@ -207,7 +210,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       };
 
   const animated = replayable ?? (previewIr !== null && irHasAnimations(previewIr.ir));
-  const resolvedControlSlots = controlSlots ?? actions ?? moduleActions;
+  const configuredControlSlots = buildConfiguredControlSlots(moduleControls);
+  const resolvedControlSlots = controlSlots ?? actions ?? [...configuredControlSlots, ...(moduleActions ?? [])];
 
   return (
     <ComponentRender

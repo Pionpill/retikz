@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildConfiguredControlSlots,
   buildPreviewToolSlots,
   DemoRenderer,
   PreviewControlSlotLayer,
@@ -15,6 +16,18 @@ const Demo: FC = () => <Layout width={40} height={20} />;
 const WrappedLayout: FC = () => <Layout width={40} height={20} />;
 const WrappedDemo: FC = () => <WrappedLayout />;
 const noop = () => {};
+const previewControlCtx = {
+  replay: noop,
+  rendererMode: 'svg' as const,
+  renderPane: null,
+  hovered: false,
+  pinned: true,
+  expanded: false,
+  active: () => false,
+  setActive: noop,
+  value: () => undefined,
+  setValue: noop,
+};
 
 describe('DemoRenderer', () => {
   it('svg 模式保持 svg 输出', () => {
@@ -100,5 +113,43 @@ describe('PreviewControlSlotLayer', () => {
 
     expect(markup).toContain('aria-label="Download PNG"');
     expect(markup).not.toContain('aria-label="Download SVG"');
+  });
+
+  it('渲染配置式 select 控件', () => {
+    const slots = buildConfiguredControlSlots([
+      {
+        kind: 'select',
+        id: 'mark-style',
+        label: '标记样式',
+        defaultValue: 'circle',
+        options: [
+          { value: 'circle', label: '圆点' },
+          { value: 'square', label: '方块' },
+        ],
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(<PreviewControlSlotLayer slots={slots} pinned ctx={previewControlCtx} />);
+
+    expect(markup).toContain('aria-label="标记样式"');
+    expect(markup).toContain('圆点');
+  });
+
+  it('渲染配置式 input 控件', () => {
+    const slots = buildConfiguredControlSlots([
+      {
+        kind: 'input',
+        id: 'mark-size',
+        label: '标记大小',
+        defaultValue: '6',
+        placeholder: '输入大小',
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(<PreviewControlSlotLayer slots={slots} pinned ctx={previewControlCtx} />);
+
+    expect(markup).toContain('aria-label="标记大小"');
+    expect(markup).toContain('value="6"');
+    expect(markup).toContain('placeholder="输入大小"');
   });
 });

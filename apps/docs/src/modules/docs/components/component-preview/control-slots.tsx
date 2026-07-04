@@ -14,13 +14,15 @@ import {
   ZoomOut,
 } from 'lucide-react';
 
-import type { PreviewControlSlot, RendererMode, SizeKey, Transform } from './types';
+import type { PreviewControlConfig, PreviewControlSlot, RendererMode, SizeKey, Transform } from './types';
 
 import { downloadPreviewImage } from './commands';
 import { RendererModeButton } from './components/parts';
 import {
   PreviewToolbar,
   PreviewToolbarButton,
+  PreviewToolbarInput,
+  PreviewToolbarSelect,
   PreviewToolbarSeparator,
   PreviewToolbarToggleGroup,
 } from './components/PreviewToolbar';
@@ -79,6 +81,45 @@ export const buildAnimationSlots = (isPaused: boolean): Array<PreviewControlSlot
     ),
   },
 ];
+
+/** 将声明式配置转换成预览控制插槽。 */
+export const buildConfiguredControlSlots = (
+  configs: Array<PreviewControlConfig> | undefined,
+): Array<PreviewControlSlot> => {
+  if (configs === undefined || configs.length === 0) return [];
+
+  return configs.map(config => ({
+    id: config.id,
+    placement: config.placement ?? 'top-start',
+    render: ctx => {
+      const value = ctx.value(config.id) ?? config.defaultValue;
+
+      if (config.kind === 'select') {
+        return (
+          <PreviewToolbar>
+            <PreviewToolbarSelect
+              label={config.label}
+              value={value}
+              options={config.options}
+              onValueChange={nextValue => ctx.setValue(config.id, nextValue)}
+            />
+          </PreviewToolbar>
+        );
+      }
+
+      return (
+        <PreviewToolbar>
+          <PreviewToolbarInput
+            label={config.label}
+            value={value}
+            placeholder={config.placeholder}
+            onValueChange={nextValue => ctx.setValue(config.id, nextValue)}
+          />
+        </PreviewToolbar>
+      );
+    },
+  }));
+};
 
 export type BuildPreviewToolSlotsOptions = {
   transform: Transform;
