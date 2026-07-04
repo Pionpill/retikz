@@ -24,7 +24,7 @@ const Demo: FC = () => (
       line={{ arrow: { positive: { shape: 'stealth', length: 7 } }, extent: { from: -1, to: 8 } }}
       ticks={{ values: [0, 2, 4, 6, 8], endpoint: { distance: 12 } }}
       crossing={{ value: 0, tick: 'hide', label: 'hide' }}
-      title={{ text: 'y', placement: 'at-end' }}
+      title={{ text: 'y', placement: 'at-end', orientation: 'horizontal' }}
     />
   </Plot>
 );

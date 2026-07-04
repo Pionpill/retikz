@@ -58,6 +58,7 @@ cartesian 下可以让轴线穿过另一维的指定值。`placement.kind="origi
 | `crossing.corner` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `label:'corner'` 时的角落位置 |
 | `ticks.endpoint` | `false \| { hideWhenArrow?, distance?, affect? }` | 控制箭头端点附近的 tick 避让；`false` 关闭默认避让，`affect:'mark-and-label'` 会同时隐藏 label |
 | `title.placement` | `'at-start'` / `'near-start'` / `'midway'` / `'near-end'` / `'at-end'` / `0..1` | 沿轴线从负方向到正方向放置标题 |
+| `title.orientation` | `'auto'` / `'horizontal'` / `'axis'` | 控制标题旋转；数学坐标系常用 `horizontal` 让 y 标题正向显示 |
 
 <ComponentPreview name="axis-math-origin" sourceFiles={['axis-math-origin.data.ts']} />
 
@@ -80,7 +81,7 @@ polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向
 | `crossing`   | `false \| { value?, tick?, label?, corner? }` | 正常刻度 | 控制轴线交叉值处的 tick 与 label；`label:'corner'` 可把共用原点 label 放到角落 |
 | `ticks`      | `{ count?, values?, interval?, density?, endpoint?, mark?, length?, line? }` | 默认刻度   | `values > interval > count` 生成候选 tick；`density` 抽稀可见 tick；`endpoint` 避让箭头附近的刻度标记且不改变 grid 来源；`mark` 控制短线 / 形状刻度 |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate?, layout? }` | `true` | 刻度文字配置；`format` 支持 d3-format / d3-time-format；`rotate` 是固定旋转，优先于 `layout.rotate`；`layout:false` 关闭自动避让 |
-| `title`      | `string \| { text, gap?, placement?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | 轴标题；`placement` 支持 path label 同类关键字或 `0..1` 比例，方向为轴线负方向到正方向 |
+| `title`      | `string \| { text, gap?, placement?, orientation?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | 轴标题；`placement` 支持 path label 同类关键字或 `0..1` 比例，`orientation` 控制标题旋转，显式 `rotate` 优先 |
 | `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | 是否画对齐本轴刻度的网格线（polar 的 y 轴即同心环），对象写法可覆盖网格线样式 |
 | `id`         | `string?`                                          | —          | 可选句柄（预留，暂不解析）                                                                                       |
 

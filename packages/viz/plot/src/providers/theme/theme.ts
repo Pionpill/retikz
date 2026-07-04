@@ -188,10 +188,14 @@ const mergeAxisTitle = (
 ): AxisGuide['title'] => {
   if (local === undefined) return undefined;
   if (typeof local === 'string') return theme === undefined ? local : { text: local, ...theme };
+  const themeTitle = theme === undefined ? undefined : { ...theme };
+  if (local.orientation !== undefined && local.rotate === undefined && themeTitle !== undefined) {
+    delete themeTitle.rotate;
+  }
   return {
-    ...theme,
+    ...themeTitle,
     ...local,
-    ...mergeTextStyle(theme, local),
+    ...mergeTextStyle(themeTitle, local),
   } satisfies AxisTitleToken;
 };
 

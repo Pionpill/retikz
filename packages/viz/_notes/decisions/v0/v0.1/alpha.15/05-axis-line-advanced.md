@@ -135,8 +135,9 @@ Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字�
 - 原点交叉冲突通过 `axis.crossing` 表达。`crossing.value` 默认是 `0`，`crossing.tick: 'hide'` 可隐藏交叉值 tick mark，`crossing.label: 'hide' | 'corner'` 可隐藏或把共用原点 label 放到指定角落。chart / math-axis preset 可以默认组合出“隐藏交叉 tick，单个左下角 label”的规则，但 plot guide 只提供配置能力。
 - 箭头端点附近的刻度避让通过 `ticks.endpoint` 表达。省略该字段时，有 axis arrow 的端点默认会避让附近 tick mark；`ticks.endpoint: false` 可关闭该默认避让。默认只影响 mark，不改变 tick source、grid 或 tick label；需要连 label 一起隐藏时使用 `affect: 'mark-and-label'`。
 - 轴标题沿轴线位置通过 `title.placement` 表达。它复用 core path label 同类心智模型，支持 `at-start`、`near-start`、`midway`、`near-end`、`at-end` 等关键字，也支持 `0..1` 比例。baseline 始终按 negative -> positive 方向解释，所以 x 轴 `at-end` 是右侧，y 轴 `at-end` 是视觉顶部；polar / ternary / custom 轴也按各自可见轴线或曲线轴从起点到终点采样。
+- 轴标题旋转通过 `title.orientation` 表达语义模式：`auto` 保持现有默认，`horizontal` 强制水平显示，`axis` 沿轴线切向显示。显式 `title.rotate` 仍是低层逃生口，优先级高于 `orientation`。数学坐标系 preset 可以用 `title: { text: 'y', placement: 'at-end', orientation: 'horizontal' }` 得到正向 y 标题。
 
-这三个补充字段均属于具体 guide 的结构语义，不进入 theme。React `<Axis>` 已透传 `crossing`；`ticks.endpoint` 与 `title.placement` 继续通过既有 `ticks` / `title` props 派生。
+这些补充字段均属于具体 guide 的结构语义，不进入 theme。React `<Axis>` 已透传 `crossing`；`ticks.endpoint`、`title.placement` 与 `title.orientation` 继续通过既有 `ticks` / `title` props 派生。
 
 ## 待决策点
 

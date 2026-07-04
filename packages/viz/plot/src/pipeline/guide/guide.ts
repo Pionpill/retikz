@@ -29,6 +29,7 @@ import {
   AxisTickLabelOverflow,
   AxisTickMarkKind,
   AxisTickShapeOrientation,
+  AxisTitleOrientation,
   AxisTitlePlacementKeyword,
 } from '../../schemas';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
@@ -106,7 +107,9 @@ type AxisShapeTickMarkToken = Exclude<AxisTickMarkToken, { kind: 'line' }>;
 type AxisCrossingToken = Exclude<NonNullable<AxisGuide['crossing']>, false>;
 type AxisTickEndpointPolicyToken = Exclude<NonNullable<AxisTicksToken['endpoint']>, false>;
 type AxisGuideValue = ScalarValue;
-type AxisTitlePlacementValue = NonNullable<Exclude<NonNullable<AxisGuide['title']>, string>['placement']>;
+type AxisTitleToken = Exclude<NonNullable<AxisGuide['title']>, string>;
+type AxisTitlePlacementValue = NonNullable<AxisTitleToken['placement']>;
+type AxisTitleOrientationValue = NonNullable<AxisTitleToken['orientation']>;
 
 const axisTickLineMarkOf = (guide: AxisGuide): { length: number; line: GuidePathStyle | false } | false | null => {
   const mark = guide.ticks?.mark;
@@ -225,13 +228,24 @@ const axisTitlePlacementRatioOf = (placement: AxisTitlePlacementValue | undefine
   return 0.5;
 };
 
+const angleOf = (vector: readonly [number, number]): number => (Math.atan2(vector[1], vector[0]) * 180) / Math.PI;
+
+const axisTitleRotateOf = (
+  title: NonNullable<ReturnType<typeof axisTitleOf>>,
+  fallback: number | undefined,
+  axisTangent: readonly [number, number] | undefined,
+): number | undefined => {
+  if (title.rotate !== undefined) return title.rotate;
+  if (title.orientation === AxisTitleOrientation.Horizontal) return 0;
+  if (title.orientation === AxisTitleOrientation.Axis && axisTangent !== undefined) return angleOf(axisTangent);
+  return fallback;
+};
+
 type TickShapePlacement = {
   point: readonly [number, number];
   normal: readonly [number, number];
   tangent: readonly [number, number];
 };
-
-const angleOf = (vector: readonly [number, number]): number => (Math.atan2(vector[1], vector[0]) * 180) / Math.PI;
 
 const axisTickShapeRefOf = (mark: AxisShapeTickMarkToken): IRNode['shape'] => {
   if (mark.kind === AxisTickMarkKind.Circle) return 'circle';
@@ -515,10 +529,16 @@ const layoutTickLabelNodes = (
 
 const axisTitleOf = (
   guide: AxisGuide,
-): ({ text: IRNode['text']; gap?: number; placement?: AxisTitlePlacementValue } & GuideTextStyle) | null => {
+): ({ text: IRNode['text']; gap?: number; placement?: AxisTitlePlacementValue; orientation?: AxisTitleOrientationValue } & GuideTextStyle) | null => {
   if (guide.title === undefined) return null;
   if (typeof guide.title === 'string') return { text: guide.title };
-  return { text: guide.title.text, gap: guide.title.gap, placement: guide.title.placement, ...textStyleProps(guide.title) };
+  return {
+    text: guide.title.text,
+    gap: guide.title.gap,
+    placement: guide.title.placement,
+    orientation: guide.title.orientation,
+    ...textStyleProps(guide.title),
+  };
 };
 
 const textBlockMeasureText = (text: IRNode['text']): string => {
@@ -797,7 +817,8 @@ const lowerCartesianGuide = (
     const position: [number, number] = isX
       ? [baseX, baseY + tickDirection * labelOffset]
       : [baseX + tickDirection * labelOffset, baseY];
-    const rotate = isX ? titleStyle.rotate : (titleStyle.rotate ?? cartesianYAxisTitleRotateOf(side));
+    const axisTangent: [number, number] = [axisLine[1][0] - axisLine[0][0], axisLine[1][1] - axisLine[0][1]];
+    const rotate = axisTitleRotateOf(title, isX ? undefined : cartesianYAxisTitleRotateOf(side), axisTangent);
     return { type: 'node', position, text: title.text, ...titleStyle, ...(rotate !== undefined ? { rotate } : {}) };
   })();
   const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...tickShapeNodes, ...labels];
@@ -924,6 +945,13 @@ const lowerAngularAxis = (
   if (title !== null) {
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
     const titleAngle = frame.startAngle + (frame.endAngle - frame.startAngle) * placementRatio;
+    const titleRadians = titleAngle * DEG_TO_RAD;
+    const tangentSign = frame.endAngle >= frame.startAngle ? 1 : -1;
+    const axisTangent: [number, number] = [
+      -Math.sin(titleRadians) * tangentSign,
+      Math.cos(titleRadians) * tangentSign,
+    ];
+    const rotate = axisTitleRotateOf(title, undefined, axisTangent);
     labels.push({
       type: 'node',
       position: finitePolarPoint(
@@ -933,6 +961,7 @@ const lowerAngularAxis = (
       ),
       text: title.text,
       ...textStyleProps(title),
+      ...(rotate !== undefined ? { rotate } : {}),
     });
   }
 
@@ -1029,12 +1058,15 @@ const lowerRadialAxis = (
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
     const titleRadius = frame.innerRadius + (frame.outerRadius - frame.innerRadius) * placementRatio;
     const titlePoint = finitePolarPoint(frame.center, baseAngle, titleRadius);
+    const axisTangent: [number, number] = [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)];
+    const rotate = axisTitleRotateOf(title, undefined, axisTangent);
     const offset = tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2;
     labels.push({
       type: 'node',
       position: [titlePoint[0] - tangent[0] * offset, titlePoint[1] - tangent[1] * offset],
       text: title.text,
       ...textStyleProps(title),
+      ...(rotate !== undefined ? { rotate } : {}),
     });
   }
 
@@ -1149,12 +1181,14 @@ const lowerTernaryGuide = (
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
     const point = lerp2(baseP, apex, placementRatio);
     const out = outwardAt(point);
+    const rotate = axisTitleRotateOf(title, undefined, axisTangent);
     const offset = tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2;
     labels.push({
       type: 'node',
       position: [point[0] + out[0] * offset, point[1] + out[1] * offset],
       text: title.text,
       ...textStyleProps(title),
+      ...(rotate !== undefined ? { rotate } : {}),
     });
   }
   const axisLineStyle = axisLineStyleOf(guide);
@@ -1305,12 +1339,15 @@ export const lowerCustomAxis = (
       const [point, tangent] = resolved;
       const length = Math.hypot(tangent[0], tangent[1]) || 1;
       const normal: [number, number] = [-tangent[1] / length, tangent[0] / length];
+      const unitTangent: [number, number] = [tangent[0] / length, tangent[1] / length];
+      const rotate = axisTitleRotateOf(title, undefined, unitTangent);
       const offset = tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2;
       labels.push({
         type: 'node',
         position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
         text: title.text,
         ...textStyleProps(title),
+        ...(rotate !== undefined ? { rotate } : {}),
       });
     }
   }

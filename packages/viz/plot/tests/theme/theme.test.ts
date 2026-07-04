@@ -213,7 +213,23 @@ describe('plot theme schema and lowering', () => {
     expect(labels.every(label => label.rotate === 0)).toBe(true);
   });
 
-  it('theme_axis_rejects_structural_crossing_endpoint_and_title_placement', () => {
+  it('axis_title_local_orientation_overrides_theme_rotate', () => {
+    const root = expandOf(
+      baseSpec({
+        guides: [{ type: 'axis', dimension: 'y', title: { text: 'y', orientation: 'horizontal' } }],
+        theme: {
+          axis: {
+            title: { rotate: 90 },
+          },
+        },
+      }),
+    );
+    const title = nodesOf(root).find(node => node.text === 'y');
+
+    expect(title?.rotate).toBe(0);
+  });
+
+  it('theme_axis_rejects_structural_crossing_endpoint_and_title_controls', () => {
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
@@ -242,6 +258,17 @@ describe('plot theme schema and lowering', () => {
           theme: {
             axis: {
               title: { placement: 'at-end' },
+            },
+          } as PlotSpec['theme'],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse(
+        baseSpec({
+          theme: {
+            axis: {
+              title: { orientation: 'horizontal' },
             },
           } as PlotSpec['theme'],
         }),

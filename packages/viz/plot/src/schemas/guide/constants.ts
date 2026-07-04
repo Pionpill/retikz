@@ -198,6 +198,19 @@ export const AxisTitlePlacementKeyword = {
 /** axis title 沿轴线的定位关键字取值。 */
 export type AxisTitlePlacementKeywordValue = ValueOf<typeof AxisTitlePlacementKeyword>;
 
+/** axis title 旋转策略。 */
+export const AxisTitleOrientation = {
+  /** 使用坐标系和轴位置推导的默认旋转。 */
+  Auto: 'auto',
+  /** 强制标题水平显示。 */
+  Horizontal: 'horizontal',
+  /** 标题沿轴线切向显示。 */
+  Axis: 'axis',
+} as const;
+
+/** axis title 旋转策略取值。 */
+export type AxisTitleOrientationValue = ValueOf<typeof AxisTitleOrientation>;
+
 /** axis 交叉值处 tick mark 策略。 */
 export const AxisCrossingTickPolicy = {
   /** 显示交叉值 tick mark。 */

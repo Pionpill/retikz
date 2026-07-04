@@ -106,6 +106,27 @@ describe('lowerGuide (ADR-04)', () => {
     expect(title.rotate).toBe(0);
   });
 
+  it('horizontal_y_axis_title_orientation_overrides_default_rotation', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'y', title: { text: 'y', placement: 'at-end', orientation: 'horizontal' } },
+      ctx,
+    );
+    const title = nodeByText(axisLayer as IRScope, 'y');
+
+    expect(title.rotate).toBe(0);
+    expect((title.position as [number, number])[1]).toBe(10);
+  });
+
+  it('explicit_title_rotate_overrides_title_orientation', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'y', title: { text: 'Revenue', orientation: 'horizontal', rotate: 45 } },
+      ctx,
+    );
+    const title = nodeByText(axisLayer as IRScope, 'Revenue');
+
+    expect(title.rotate).toBe(45);
+  });
+
   it('axis_title_at_end_places_x_title_near_positive_axis_end', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'x', title: { text: 'x', placement: 'at-end' } },
@@ -164,6 +185,36 @@ describe('lowerGuide (ADR-04)', () => {
     const title = nodeByText(axisLayer as IRScope, 'theta');
 
     expect((title.position as [number, number])[0]).toBeLessThan(40);
+  });
+
+  it('polar_angular_axis_title_orientation_axis_follows_arc_tangent', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', title: { text: 'theta', placement: 'at-end', orientation: 'axis' } },
+      {
+        ...ctx,
+        frame: {
+          type: 'polar2D',
+          roles: ['x', 'y'],
+          center: [100, 100],
+          innerRadius: 20,
+          outerRadius: 80,
+          startAngle: 0,
+          endAngle: 180,
+          continuousAngle: true,
+          primary: fakeScale(value => value),
+          secondary: fakeScale(value => value),
+          roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
+          project: () => null,
+          projectRoles: () => null,
+          projectPolar: () => null,
+          projectCell: () => ({ kind: 'sector', center: [100, 100], innerRadius: 0, outerRadius: 1, startAngle: 0, endAngle: 1 }),
+        },
+        angularTicks: { values: [], labels: [] },
+      },
+    );
+    const title = nodeByText(axisLayer as IRScope, 'theta');
+
+    expect(title.rotate).toBeCloseTo(-90, 6);
   });
 
   it('polar_radial_axis_title_placement_samples_radius_range', () => {

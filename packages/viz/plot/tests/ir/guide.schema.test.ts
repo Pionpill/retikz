@@ -145,6 +145,27 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     ).toThrow();
   });
 
+  it('axis_title_orientation_accepts_semantic_rotation_modes', () => {
+    for (const orientation of ['auto', 'horizontal', 'axis']) {
+      const guide = {
+        type: 'axis',
+        dimension: 'y',
+        title: { text: 'y', orientation },
+      };
+      expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+    }
+  });
+
+  it('axis_title_orientation_rejects_unknown_mode', () => {
+    expect(() =>
+      AxisGuideSchema.parse({
+        type: 'axis',
+        dimension: 'y',
+        title: { text: 'y', orientation: 'upright' },
+      }),
+    ).toThrow();
+  });
+
   it('axis_crossing_policy_accepts_corner_label_and_hidden_tick', () => {
     const guide = {
       type: 'axis',
