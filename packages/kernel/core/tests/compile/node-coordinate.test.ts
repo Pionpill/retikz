@@ -19,7 +19,7 @@ describe('Coordinate placeholder', () => {
 
   it('coordinate 不参与 layout 扩展（与"无 child"等价兜底）', () => {
     // 远离原点的 coordinate 不该撑大 layout：
-    // 仅含 coordinate 时 allPoints 为空，layout 走 layout.ts 的兜底 100x100@(0,0)
+    // 仅含 coordinate 时 boundsPoints 为空，layout 走 layout.ts 的兜底 100x100@(0,0)
     const farIR: IRScene = {
       version: 1,
       type: 'scene',

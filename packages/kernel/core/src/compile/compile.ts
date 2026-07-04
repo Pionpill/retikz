@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -142,7 +142,7 @@ export type CompileOptions = CompileHostOptions &
 export const compileToScene = (ir: IRScene, options?: CompileOptions): Scene => {
   const context = createCompileContext(ir, options ?? {});
   const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
-  const { primitives, allPoints } = compileChildrenToPrimitives(loweredIr.children, context);
+  const { primitives, boundsPoints } = compileChildrenToPrimitives(loweredIr.children, context);
 
   // paint 与 clip 资源同表。
   const resources = [...paint.resources(), ...clip.resources()];
@@ -154,7 +154,7 @@ export const compileToScene = (ir: IRScene, options?: CompileOptions): Scene => 
     layout:
       loweredIr.viewBox !== undefined
         ? viewBoxToLayout(loweredIr.viewBox, round)
-        : assertFiniteLayout(computeLayout(allPoints, layoutPadding, round)),
+        : assertFiniteLayout(computeLayout(boundsPoints, layoutPadding, round)),
     // 无资源时省略字段。
     ...(resources.length > 0 ? { resources } : {}),
     // 无根动画时省略字段。

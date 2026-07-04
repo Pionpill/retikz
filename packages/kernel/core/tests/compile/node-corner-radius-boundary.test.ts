@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IRNode } from '../../src/schemas/node';
 import type { ContourSegment } from '../../src/shared/geometry/path';
 
-import { NameStack } from '../../src/compile/name-stack';
+import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { filletContour } from '../../src/shared/geometry/path';
@@ -16,7 +16,7 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 
 /** 用固定 minimumSize 造一个 40×40 居中正方 rectangle 节点（半边 20） */
 const layoutSquare = (node: IRNode) =>
-  layoutNode(node, measureText, new NameStack(), undefined, [], undefined, BUILTIN_SHAPES);
+  layoutNode(node, measureText, new NamespaceStack(), undefined, [], undefined, BUILTIN_SHAPES);
 
 /** 40×40 正方轮廓的 4 条 CW Line 段（用于独立复算 fillet 弧，断言边界端点落弧上） */
 const square40Segments = (): Array<ContourSegment> => [

@@ -1,4 +1,4 @@
-﻿import type { Transform } from '../../contract';
+import type { Transform } from '../../contract';
 import type {
   FoldStepViaValue,
   IRBetweenPosition,
@@ -7,7 +7,7 @@ import type {
   IRPosition,
   IRTarget,
 } from '../../schemas';
-import type { NameStack } from '../name-stack';
+import type { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 
 import { FoldStepVia } from '../../schemas';
@@ -44,12 +44,12 @@ const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition
 /** 求 step.to 的参考点，用于端点裁剪和折角计算。 */
 export const refPointOfTarget = (
   target: IRTarget,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
   // 对象形态 NodeTarget：{ id, anchor?, offset? }（refPoint 用——anchor 缺省取中心，中心不受 boundary 影响）
   if (isNodeTarget(target)) {
-    const node = nameStack.lookup(target.id);
+    const node = namespaceStack.lookup(target.id);
     if (!node) return null;
     const base =
       target.anchor === undefined
@@ -60,8 +60,8 @@ export const refPointOfTarget = (
   // between 比例点：两端点各 resolve 成世界坐标后 lerp（端点可嵌套 between，递归）；
   // lerp 仿射 ⇒ 全局 lerp = 局部 lerp 投全局，无需逐端点反投影
   if (isBetween(target)) {
-    const a = refPointOfTarget(target.between[0], nameStack, scopeChain);
-    const b = refPointOfTarget(target.between[1], nameStack, scopeChain);
+    const a = refPointOfTarget(target.between[0], namespaceStack, scopeChain);
+    const b = refPointOfTarget(target.between[1], namespaceStack, scopeChain);
     if (!a || !b) return null;
     const mid = lerpPoint(a, b, target.fraction);
     // finite 守卫：端点（极坐标 radius=Infinity / offset NaN 等）或手搓 t=NaN 会产非 finite 中点；
@@ -77,7 +77,7 @@ export const refPointOfTarget = (
   ) {
     return null;
   }
-  const local = resolvePosition(target, nameStack, undefined, scopeChain);
+  const local = resolvePosition(target, namespaceStack, undefined, scopeChain);
   if (!local) return null;
   return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };
@@ -90,12 +90,12 @@ export const cornerOf = (prev: IRPosition, curr: IRPosition, via: FoldStepViaVal
 export const clipForTarget = (
   target: IRTarget,
   toward: IRPosition,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
   // 对象形态 NodeTarget：{ id, anchor?, offset? }（clip 用——anchor 缺省按连接面边界贴 toward）
   if (isNodeTarget(target)) {
-    const node = nameStack.lookup(target.id);
+    const node = namespaceStack.lookup(target.id);
     if (!node) return null;
     const boundary = target.boundary ?? node.boundary;
     const base =
@@ -106,7 +106,7 @@ export const clipForTarget = (
   }
   // between 比例点是固定点（非节点边界），直接走 refPointOfTarget（不随 toward 变）
   if (isBetween(target)) {
-    return refPointOfTarget(target, nameStack, scopeChain);
+    return refPointOfTarget(target, namespaceStack, scopeChain);
   }
   // relative/relativeAccumulate 已被预解析；防御性守卫给 TS narrowing 用
   if (
@@ -116,7 +116,7 @@ export const clipForTarget = (
   ) {
     return null;
   }
-  const local = resolvePosition(target, nameStack, undefined, scopeChain);
+  const local = resolvePosition(target, namespaceStack, undefined, scopeChain);
   if (!local) return null;
   return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };

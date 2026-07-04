@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DuplicateRegisterInfo } from '../../src/compile/name-stack';
+import type { DuplicateRegisterInfo } from '../../src/compile/namespace';
 import type { NodeLayout } from '../../src/compile/node';
 
-import { NameStack } from '../../src/compile/name-stack';
+import { NamespaceStack } from '../../src/compile/namespace';
 import { boxInsets } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
@@ -23,28 +23,28 @@ const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
   shapes: BUILTIN_SHAPES,
 });
 
-describe('NameStack 基本 register / lookup', () => {
+describe('NamespaceStack 基本 register / lookup', () => {
   it('name_stack_basic_register_lookup', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     const layout = makeLayout('A', 10, 20);
     stack.register('A', layout);
     expect(stack.lookup('A')).toBe(layout);
   });
 
   it('lookup 未注册 id 返回 undefined', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     expect(stack.lookup('ghost')).toBeUndefined();
   });
 
   it('构造后初始 depth = 1（根 frame 存在）', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     expect(stack.depth).toBe(1);
   });
 });
 
-describe('NameStack push / pop frame 隔离', () => {
+describe('NamespaceStack push / pop frame 隔离', () => {
   it('name_stack_push_pop_frame_isolated', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     stack.pushFrame();
     expect(stack.depth).toBe(2);
     const inner = makeLayout('A', 100);
@@ -56,7 +56,7 @@ describe('NameStack push / pop frame 隔离', () => {
   });
 
   it('外层 register 后 push frame，外层 id 在内层仍可见（inside-out 落到外层 frame）', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     const outer = makeLayout('outer', 1);
     stack.register('outer', outer);
     stack.pushFrame();
@@ -64,9 +64,9 @@ describe('NameStack push / pop frame 隔离', () => {
   });
 });
 
-describe('NameStack inside-out shadowing', () => {
+describe('NamespaceStack inside-out shadowing', () => {
   it('name_stack_lookup_inside_out_shadowing', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     const outer = makeLayout('A', 0);
     stack.register('A', outer);
     stack.pushFrame();
@@ -78,7 +78,7 @@ describe('NameStack inside-out shadowing', () => {
   });
 
   it('三层嵌套各自有 id="A" 时 lookup 命中栈顶', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     const a0 = makeLayout('A', 0);
     const a1 = makeLayout('A', 1);
     const a2 = makeLayout('A', 2);
@@ -95,14 +95,14 @@ describe('NameStack inside-out shadowing', () => {
   });
 });
 
-describe('NameStack pop 根 frame 防御性 throw', () => {
+describe('NamespaceStack pop 根 frame 防御性 throw', () => {
   it('name_stack_pop_empty_throws', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     expect(() => stack.popFrame()).toThrow(/cannot pop the root frame/);
   });
 
   it('多次 push/pop 配平后再 pop 一次抛错', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     stack.pushFrame();
     stack.pushFrame();
     stack.popFrame();
@@ -111,9 +111,9 @@ describe('NameStack pop 根 frame 防御性 throw', () => {
   });
 });
 
-describe('NameStack register 返回 overwritten flag', () => {
+describe('NamespaceStack register 返回 overwritten flag', () => {
   it('name_stack_register_returns_overwritten_flag', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     const first = makeLayout('A', 0);
     const second = makeLayout('A', 10);
     expect(stack.register('A', first)).toBe(false);
@@ -122,17 +122,17 @@ describe('NameStack register 返回 overwritten flag', () => {
   });
 
   it('跨 frame 同 id 不算 overwritten（push frame 内首次 register 返回 false）', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     stack.register('A', makeLayout('A', 0));
     stack.pushFrame();
     expect(stack.register('A', makeLayout('A', 10))).toBe(false);
   });
 });
 
-describe('NameStack onDuplicate 回调', () => {
+describe('NamespaceStack onDuplicate 回调', () => {
   it('同 frame 第二次 register 触发回调，含 id + frameDepth + 双 irPath', () => {
     const events: Array<DuplicateRegisterInfo> = [];
-    const stack = new NameStack({
+    const stack = new NamespaceStack({
       onDuplicate: info => events.push(info),
     });
     stack.register('A', makeLayout('A', 0), 'children[0].node.id');
@@ -146,14 +146,14 @@ describe('NameStack onDuplicate 回调', () => {
 
   it('首次 register 不触发回调', () => {
     const cb = vi.fn();
-    const stack = new NameStack({ onDuplicate: cb });
+    const stack = new NamespaceStack({ onDuplicate: cb });
     stack.register('A', makeLayout('A'));
     expect(cb).not.toHaveBeenCalled();
   });
 
   it('同 frame 三次 register 触发两次回调（不合并），各自携带前一次 irPath', () => {
     const events: Array<DuplicateRegisterInfo> = [];
-    const stack = new NameStack({ onDuplicate: info => events.push(info) });
+    const stack = new NamespaceStack({ onDuplicate: info => events.push(info) });
     stack.register('A', makeLayout('A', 0), 'p1');
     stack.register('A', makeLayout('A', 1), 'p2');
     stack.register('A', makeLayout('A', 2), 'p3');
@@ -167,7 +167,7 @@ describe('NameStack onDuplicate 回调', () => {
 
   it('跨 frame 同 id 不触发 duplicate 回调', () => {
     const cb = vi.fn();
-    const stack = new NameStack({ onDuplicate: cb });
+    const stack = new NamespaceStack({ onDuplicate: cb });
     stack.register('A', makeLayout('A'), 'root');
     stack.pushFrame();
     stack.register('A', makeLayout('A'), 'inner');
@@ -176,7 +176,7 @@ describe('NameStack onDuplicate 回调', () => {
 
   it('frameDepth 反映栈中所处深度（push 后内层 duplicate = 1）', () => {
     const events: Array<DuplicateRegisterInfo> = [];
-    const stack = new NameStack({ onDuplicate: info => events.push(info) });
+    const stack = new NamespaceStack({ onDuplicate: info => events.push(info) });
     stack.pushFrame();
     stack.register('A', makeLayout('A'), 'p1');
     stack.register('A', makeLayout('A'), 'p2');
@@ -184,9 +184,9 @@ describe('NameStack onDuplicate 回调', () => {
   });
 });
 
-describe('NameStack Pass 2 phase 禁止 register', () => {
+describe('NamespaceStack Pass 2 phase 禁止 register', () => {
   it('name_stack_register_during_layout_pass2', () => {
-    const stack = new NameStack();
+    const stack = new NamespaceStack();
     stack.register('A', makeLayout('A'));
     stack.enterLookupPhase();
     expect(stack.phase).toBe('pass2');

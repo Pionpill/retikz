@@ -306,7 +306,7 @@ describe('ATTACK 6: marks + path transform 交互（二次变换 / 定向污染�
     expect(expectAllFinite(rotScene).ok).toBe(true);
     // 诊断：rotate 时整 path（含 markPrims）包进 GroupPrim。mark marker 的 buildMarkMarkerGroup
     // 用未变换几何采样点 + tangent 算朝向，再被外层 GroupPrim 旋转一次 → 视觉正确（marker 跟 path 转）。
-    // 但 mark 的 point 也被 push 进 points，再经 applyTransformChain 投影进 layout——这是 bbox 用途，OK。
+    // 但 mark 的 point 也被 push 进 boundsPoints，再经 applyTransformChain 投影进 layout——这是 bbox 用途，OK。
     // 关键检查：rotScene 顶层是带 transform 的 group，markPrims 在其 children 内（随 path 一起转）。
     const topGroup = rotScene.primitives.find(
       (p): p is Extract<ScenePrimitive, { type: 'group' }> =>

@@ -20,6 +20,18 @@ export type BoundsHalfAxes = {
   halfHeight: number;
 };
 
+/** 轴对齐外接范围外扩量。 */
+export type BoundsInsets = {
+  /** 向左外扩距离。 */
+  left: number;
+  /** 向右外扩距离。 */
+  right: number;
+  /** 向上外扩距离。 */
+  top: number;
+  /** 向下外扩距离。 */
+  bottom: number;
+};
+
 /**
  * 点集的轴对齐外接范围。
  * @description 输入为空时返回 undefined；调用方按自身语义决定兜底、报错或忽略。
@@ -50,3 +62,22 @@ export const boundsHalfAxes = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): B
   halfWidth: (maxX - minX) / 2,
   halfHeight: (maxY - minY) / 2,
 });
+
+/** 按四边外扩轴对齐外接范围。 */
+export const expandBounds = (
+  { maxX, maxY, minX, minY }: AxisAlignedBounds,
+  { bottom, left, right, top }: BoundsInsets,
+): AxisAlignedBounds => ({
+  minX: minX - left,
+  minY: minY - top,
+  maxX: maxX + right,
+  maxY: maxY + bottom,
+});
+
+/** 轴对齐外接范围的四个角点。 */
+export const boundsCorners = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): Array<Position> => [
+  [minX, minY],
+  [maxX, minY],
+  [minX, maxY],
+  [maxX, maxY],
+];

@@ -16,7 +16,7 @@ import type {
   IRNodeLabel,
   JsonValue,
 } from '../../schemas';
-import type { NameStack } from '../name-stack';
+import type { NamespaceStack } from '../namespace';
 import type { ResolveBetweenGlobal } from '../position';
 import type { FontSpec, LaidLine, LineLayoutContext, TextMeasurer } from '../text';
 import type { NodeLabelLayout, NodeLayout, TexLoweringContext } from './types';
@@ -85,7 +85,7 @@ const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
 export const layoutNode = (
   node: IRNode,
   measureText: TextMeasurer,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   nodeDistance?: number,
   scopeChain: ReadonlyArray<Transform> = [],
   labelDefault?: IRLabelDefault,
@@ -247,7 +247,7 @@ export const layoutNode = (
   const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
   const rotateDeg = node.rotate ?? 0;
-  const center = resolvePosition(node.position, nameStack, nodeDistance, scopeChain, resolveBetweenGlobal);
+  const center = resolvePosition(node.position, namespaceStack, nodeDistance, scopeChain, resolveBetweenGlobal);
   if (!center) {
     throw new Error(
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,

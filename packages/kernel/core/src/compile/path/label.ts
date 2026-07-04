@@ -72,7 +72,7 @@ export const emitLabelPrimitive = (
   hostOpacity?: number,
   texCtx?: LabelTexContext,
   placementCtx?: LabelPlacementContext,
-): { primitive: ScenePrimitive; points: Array<IRPosition> } => {
+): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
   // label.font / textColor / opacity 已由 compile/style 解析（fold scope labelDefault + 宿主 path 主色）
   const fontSize = label.font?.size ?? LABEL_FONT_SIZE;
   const fontFamily = label.font?.family;
@@ -147,7 +147,7 @@ export const emitLabelPrimitive = (
       const r = Math.max(laid.width / 2, (laid.ascent + laid.descent) / 2);
       return {
         primitive: rotated,
-        points: [
+        boundsPoints: [
           [ax - r, ay - r],
           [ax + r, ay - r],
           [ax - r, ay + r],
@@ -161,7 +161,7 @@ export const emitLabelPrimitive = (
     const bottom = baselineY + laid.descent;
     return {
       primitive: group,
-      points: [
+      boundsPoints: [
         [left, top],
         [right, top],
         [left, bottom],
@@ -235,7 +235,7 @@ export const emitLabelPrimitive = (
     const r = Math.max(measuredWidth / 2, measuredHeight / 2);
     return {
       primitive: groupPrim,
-      points: [
+      boundsPoints: [
         [x - r, y - r],
         [x + r, y - r],
         [x - r, y + r],
@@ -255,7 +255,7 @@ export const emitLabelPrimitive = (
   const bottom = baseline === 'top' ? y + measuredHeight : baseline === 'bottom' ? y : y + halfH;
   return {
     primitive: textPrim,
-    points: [
+    boundsPoints: [
       [left, top],
       [right, top],
       [left, bottom],

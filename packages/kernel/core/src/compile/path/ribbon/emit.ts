@@ -1,6 +1,6 @@
-﻿import type { ScenePrimitive } from '../../../contract';
+import type { ScenePrimitive } from '../../../contract';
 import type { IRPathBase, IRPosition } from '../../../schemas';
-import type { NameStack } from '../../name-stack';
+import type { NamespaceStack } from '../../namespace';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import type { RibbonEmitOptions, RibbonLike } from './types';
@@ -37,11 +37,11 @@ import {
  */
 export const emitRibbonPrimitive = (
   path: IRPathBase,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   round: (n: number) => number,
   measureText: TextMeasurer,
   options: RibbonEmitOptions = {},
-): { primitives: Array<ScenePrimitive>; points: Array<IRPosition> } | null => {
+): { primitives: Array<ScenePrimitive>; boundsPoints: Array<IRPosition> } | null => {
   if (path.ribbon === undefined) {
     throw new Error('Ribbon path requires a `ribbon` options object.');
   }
@@ -56,8 +56,8 @@ export const emitRibbonPrimitive = (
     if (ribbon.upper === undefined || ribbon.lower === undefined) {
       throw new Error('Boundary ribbon requires `upper` and `lower` steps.');
     }
-    const upper = segmentsFromSteps(ribbon.upper, 'upper boundary', nameStack, round, measureText, options);
-    const lower = segmentsFromSteps(ribbon.lower, 'lower boundary', nameStack, round, measureText, options);
+    const upper = segmentsFromSteps(ribbon.upper, 'upper boundary', namespaceStack, round, measureText, options);
+    const lower = segmentsFromSteps(ribbon.lower, 'lower boundary', namespaceStack, round, measureText, options);
     const samples = assertSampleCount(
       resolveSampleCount(ribbon.samples, ribbon.sampling, Math.max(upper.totalLength, lower.totalLength)) ??
         DEFAULT_RIBBON_SAMPLES,
@@ -72,7 +72,7 @@ export const emitRibbonPrimitive = (
     );
     return {
       primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint)],
-      points: outline.points,
+      boundsPoints: outline.points,
     };
   }
 
@@ -81,7 +81,7 @@ export const emitRibbonPrimitive = (
   }
   // centerline 模式先降成普通 PathPrim，再把 commands 转成 ribbon 自己的 segment 输入。
   const segmentInputs = commandsToSegmentInputs(
-    emittedPathFromSteps(ribbon.children, 'centerline', nameStack, round, measureText, options).commands,
+    emittedPathFromSteps(ribbon.children, 'centerline', namespaceStack, round, measureText, options).commands,
     'centerline',
   );
   const rawSegments = segmentInputsToSegments(segmentInputs);
@@ -124,7 +124,7 @@ export const emitRibbonPrimitive = (
           ribbon.align ?? 'center',
           ribbon.start?.cap ?? 'butt',
           ribbon.end?.cap ?? 'butt',
-          nameStack,
+          namespaceStack,
           round,
         ) ??
         outlineCommands(
@@ -136,7 +136,7 @@ export const emitRibbonPrimitive = (
           ribbon.align ?? 'center',
           ribbon.start?.cap ?? 'butt',
           ribbon.end?.cap ?? 'butt',
-          nameStack,
+          namespaceStack,
           round,
         ))
       : outlineCommands(
@@ -148,12 +148,12 @@ export const emitRibbonPrimitive = (
           ribbon.align ?? 'center',
           ribbon.start?.cap ?? 'butt',
           ribbon.end?.cap ?? 'butt',
-          nameStack,
+          namespaceStack,
           round,
         );
 
   const labelPrimitives: Array<ScenePrimitive> = [];
-  const labelPoints: Array<IRPosition> = [];
+  const labelBoundsPoints: Array<IRPosition> = [];
   const labels = ribbon.label === undefined ? [] : Array.isArray(ribbon.label) ? ribbon.label : [ribbon.label];
   for (const label of labels) {
     // ribbon label 以中心线采样点为锚点，boundaryOffset 用当前宽度的一半把 outside/inside 放到带状区域边缘。
@@ -183,11 +183,11 @@ export const emitRibbonPrimitive = (
       { boundaryOffset: section.width / 2 },
     );
     labelPrimitives.push(result.primitive);
-    labelPoints.push(...result.points);
+    labelBoundsPoints.push(...result.boundsPoints);
   }
 
   return {
     primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint), ...labelPrimitives],
-    points: [...outline.points, ...labelPoints],
+    boundsPoints: [...outline.points, ...labelBoundsPoints],
   };
 };

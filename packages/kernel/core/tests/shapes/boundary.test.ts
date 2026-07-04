@@ -5,7 +5,7 @@ import type { IRNodeTarget,IRScene } from '../../src/schemas';
 import type { Rect } from '../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../src/compile/compile';
-import { NameStack } from '../../src/compile/name-stack';
+import { NamespaceStack } from '../../src/compile/namespace';
 import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../src/compile/node';
 import * as core from '../../src/index';
 import { BUILTIN_SHAPES, star } from '../../src/providers/shape';
@@ -57,7 +57,7 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 
 describe('boundary-aware boundary/canonical', () => {
   it("boundaryPointOf 'rectangle' boundary hits AABB edge, 'shape' hits star outline", () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const starLayout = layoutNode(
       {
         type: 'node',
@@ -66,7 +66,7 @@ describe('boundary-aware boundary/canonical', () => {
         position: [0, 0],
       },
       measureText,
-      nameStack,
+      namespaceStack,
       undefined,
       [],
       undefined,
@@ -81,7 +81,7 @@ describe('boundary-aware boundary/canonical', () => {
   });
 
   it("boundaryPointOf 缺省参数等价于 'shape'", () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const layout = layoutNode(
       {
         type: 'node',
@@ -90,7 +90,7 @@ describe('boundary-aware boundary/canonical', () => {
         position: [0, 0],
       },
       measureText,
-      nameStack,
+      namespaceStack,
       undefined,
       [],
       undefined,
@@ -102,7 +102,7 @@ describe('boundary-aware boundary/canonical', () => {
   });
 
   it('sector canonical top via AABB (不再 throw)', () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const sectorLayout = layoutNode(
       {
         type: 'node',
@@ -111,7 +111,7 @@ describe('boundary-aware boundary/canonical', () => {
         position: [0, 0],
       },
       measureText,
-      nameStack,
+      namespaceStack,
       undefined,
       [],
       undefined,
@@ -127,7 +127,7 @@ describe('boundary-aware boundary/canonical', () => {
   });
 
   it("anchorOf sector 专属 anchor 'apex' 仍返回形状自身值，不受 boundary 影响", () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const sectorLayout = layoutNode(
       {
         type: 'node',
@@ -136,7 +136,7 @@ describe('boundary-aware boundary/canonical', () => {
         position: [0, 0],
       },
       measureText,
-      nameStack,
+      namespaceStack,
       undefined,
       [],
       undefined,
@@ -151,7 +151,7 @@ describe('boundary-aware boundary/canonical', () => {
   });
 
   it('angleBoundaryOf 缺省与显式 shape 等价', () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const layout = layoutNode(
       {
         type: 'node',
@@ -160,7 +160,7 @@ describe('boundary-aware boundary/canonical', () => {
         position: [0, 0],
       },
       measureText,
-      nameStack,
+      namespaceStack,
       undefined,
       [],
       undefined,

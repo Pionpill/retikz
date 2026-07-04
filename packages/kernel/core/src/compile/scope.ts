@@ -1,4 +1,4 @@
-import { minimalEnclosingCircle } from '@retikz/math';
+import { boundsCenter, boundsOf, minimalEnclosingCircle } from '@retikz/math';
 
 import type {
   BoundaryDefinition,
@@ -15,7 +15,7 @@ import type {
   PolarPosition,
 } from '../schemas';
 import type { Rect } from '../shared/geometry';
-import type { NameStack } from './name-stack';
+import type { NamespaceStack } from './namespace';
 import type { NodeLayout } from './node';
 import type { ResolveBetweenGlobal } from './position';
 
@@ -30,7 +30,7 @@ import { resolvePosition } from './position';
 /** 把 IR transform 归一为 Scene transform；引用解析失败时返回 null。 */
 export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   nodeDistance?: number,
   resolveBetweenGlobal?: ResolveBetweenGlobal,
   onUnresolved?: (failed: IRTransform) => void,
@@ -44,7 +44,7 @@ export const lowerScopeTransforms = (
       case 'polar-translate': {
         const polar: PolarPosition = { angle: t.angle, radius: t.radius };
         if (t.origin !== undefined) polar.origin = t.origin;
-        const resolved = resolvePosition(polar, nameStack, nodeDistance);
+        const resolved = resolvePosition(polar, namespaceStack, nodeDistance);
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -55,7 +55,7 @@ export const lowerScopeTransforms = (
       case 'at-translate': {
         const at: IRAtPosition = { direction: t.direction, of: t.of };
         if (t.distance !== undefined) at.distance = t.distance;
-        const resolved = resolvePosition(at, nameStack, nodeDistance);
+        const resolved = resolvePosition(at, namespaceStack, nodeDistance);
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -68,7 +68,7 @@ export const lowerScopeTransforms = (
           of: t.of,
           offset: t.offset ?? [0, 0],
         };
-        const resolved = resolvePosition(off, nameStack, nodeDistance);
+        const resolved = resolvePosition(off, namespaceStack, nodeDistance);
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -78,7 +78,7 @@ export const lowerScopeTransforms = (
       }
       case 'between-translate': {
         const between: IRBetweenPosition = { between: t.between, fraction: t.fraction };
-        const resolved = resolvePosition(between, nameStack, nodeDistance, [], resolveBetweenGlobal);
+        const resolved = resolvePosition(between, namespaceStack, nodeDistance, [], resolveBetweenGlobal);
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -229,21 +229,14 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
 
 /** 计算一组 layout 的全局 AABB；空数组返回 null。 */
 export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): ScopeBoundingBox | null => {
-  if (layouts.length === 0) return null;
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity;
-  for (const [cx, cy] of collectScopeCornerPoints(layouts)) {
-    if (cx < minX) minX = cx;
-    if (cy < minY) minY = cy;
-    if (cx > maxX) maxX = cx;
-    if (cy > maxY) maxY = cy;
-  }
-  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, width: maxX - minX, height: maxY - minY };
+  const bounds = boundsOf(collectScopeCornerPoints(layouts));
+  if (bounds === undefined) return null;
+  const center = boundsCenter(bounds);
+  return { x: center[0], y: center[1], width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY };
 };
 
-const syntheticRectangleLayout = (
+/** 构造编译期 synthetic rectangle layout。 */
+export const createSyntheticRectangleLayout = (
   id: string,
   center: IRPosition,
   width: number,
@@ -275,7 +268,7 @@ export const registerScopePlaceholderLayout = (
   boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
 ): NodeLayout => {
   const globalOrigin: IRPosition = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
-  return syntheticRectangleLayout(id, globalOrigin, 0, 0, shapes, boundaries);
+  return createSyntheticRectangleLayout(id, globalOrigin, 0, 0, shapes, boundaries);
 };
 
 /** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout。 */
@@ -287,7 +280,7 @@ export const registerScopeAsLayout = (
   boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
 ): NodeLayout => {
   const box: ScopeBoundingBox = bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
-  return syntheticRectangleLayout(id, [box.x, box.y], box.width, box.height, shapes, boundaries);
+  return createSyntheticRectangleLayout(id, [box.x, box.y], box.width, box.height, shapes, boundaries);
 };
 
 /** 用 scope id 和子树点集构造可引用的 synthetic circle layout。 */

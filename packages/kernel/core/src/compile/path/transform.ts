@@ -1,4 +1,6 @@
-﻿import type { Transform } from '../../contract';
+import { boundsCenter, boundsOf } from '@retikz/math';
+
+import type { Transform } from '../../contract';
 import type { IRPathScale, IRPosition } from '../../schemas';
 
 import { applyTransformChain } from '../scope';
@@ -12,17 +14,9 @@ const isFinitePoint = (pt: unknown): boolean =>
 
 /** 一组点的 axis-aligned 包围盒中心 */
 export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const [x, y] of pts) {
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-  }
-  return [(minX + maxX) / 2, (minY + maxY) / 2];
+  const bounds = boundsOf(pts);
+  if (bounds === undefined) return [Number.NaN, Number.NaN];
+  return boundsCenter(bounds);
 };
 
 /** 把 path 的 rotate / scale 编译为绕 bbox 中心的 transforms。 */

@@ -1,9 +1,9 @@
-﻿import type { Vector2 } from '@retikz/math';
+import type { Vector2 } from '@retikz/math';
 
 import type { PathCommand, PathPrim } from '../../../contract';
 import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { NameStack } from '../../name-stack';
+import type { NamespaceStack } from '../../namespace';
 import type { PaintResolver } from '../../resource';
 import type {
   RibbonAnalyticSegment,
@@ -177,7 +177,7 @@ export const outlineCommands = (
   align: RibbonAlignmentValue,
   startEndpointCap: IRRibbonCap,
   endEndpointCap: IRRibbonCap,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   round: (n: number) => number,
 ): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
   const left: Array<IRPosition> = [];
@@ -212,7 +212,7 @@ export const outlineCommands = (
   for (let i = 1; i < left.length; i += 1) commands.push({ kind: 'line', to: left[i] });
   if (isArcCap(endEndpointCap)) {
     const last = sampleCount - 1;
-    for (const point of arcCapPoints(endEndpointCap, left[last], right[last], 'end', nameStack, round)) {
+    for (const point of arcCapPoints(endEndpointCap, left[last], right[last], 'end', namespaceStack, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (endEndpointCap === 'round') {
@@ -231,7 +231,7 @@ export const outlineCommands = (
   }
   for (let i = right.length - 2; i >= 0; i -= 1) commands.push({ kind: 'line', to: right[i] });
   if (isArcCap(startEndpointCap)) {
-    for (const point of arcCapPoints(startEndpointCap, right[0], left[0], 'start', nameStack, round)) {
+    for (const point of arcCapPoints(startEndpointCap, right[0], left[0], 'start', namespaceStack, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (startEndpointCap === 'round') {
@@ -264,7 +264,7 @@ export const analyticOutlineCommands = (
   align: RibbonAlignmentValue,
   startEndpointCap: IRRibbonCap,
   endEndpointCap: IRRibbonCap,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   round: (n: number) => number,
 ): { commands: Array<PathCommand>; points: Array<IRPosition> } | null => {
   if (inputs.length !== segments.length) return null;
@@ -380,7 +380,7 @@ export const analyticOutlineCommands = (
   const lastLeftCommand = commands[commands.length - 1];
   if ('to' in lastLeftCommand) lastLeftCommand.to = endLeft;
   if (isArcCap(endEndpointCap)) {
-    for (const point of arcCapPoints(endEndpointCap, endLeft, endRight, 'end', nameStack, round)) {
+    for (const point of arcCapPoints(endEndpointCap, endLeft, endRight, 'end', namespaceStack, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (endEndpointCap === 'round') {
@@ -396,7 +396,7 @@ export const analyticOutlineCommands = (
     commands.push(command);
   }
   if (isArcCap(startEndpointCap)) {
-    for (const point of arcCapPoints(startEndpointCap, startRight, startLeft, 'start', nameStack, round)) {
+    for (const point of arcCapPoints(startEndpointCap, startRight, startLeft, 'start', namespaceStack, round)) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (startEndpointCap === 'round') {

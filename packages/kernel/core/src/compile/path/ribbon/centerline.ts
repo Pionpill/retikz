@@ -1,9 +1,9 @@
-﻿import type { Vector2 } from '@retikz/math';
+import type { Vector2 } from '@retikz/math';
 
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../../contract';
 import type { IRPath, IRPosition, IRRibbonDirection, IRStep } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { NameStack } from '../../name-stack';
+import type { NamespaceStack } from '../../namespace';
 import type { TextMeasurer } from '../../text';
 import type { RibbonEmitOptions, RibbonSegment, RibbonSegmentInput } from './types';
 
@@ -336,7 +336,7 @@ export const sampleAtDistance = (
 export const emittedPathFromSteps = (
   steps: ReadonlyArray<IRStep>,
   source: string,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   round: (n: number) => number,
   measureText: TextMeasurer,
   options: RibbonEmitOptions,
@@ -345,7 +345,7 @@ export const emittedPathFromSteps = (
     type: 'path',
     children: steps.map(stripStepLabel),
   };
-  const emitted = emitPathPrimitive(path, nameStack, round, measureText, options);
+  const emitted = emitPathPrimitive(path, namespaceStack, round, measureText, options);
   if (emitted === null) {
     throw new Error(`Ribbon ${source} path was skipped unexpectedly.`);
   }
@@ -362,13 +362,13 @@ export const emittedPathFromSteps = (
 export const segmentsFromSteps = (
   steps: ReadonlyArray<IRStep>,
   source: string,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   round: (n: number) => number,
   measureText: TextMeasurer,
   options: RibbonEmitOptions,
   endpointTangents: { start?: Vector2; end?: Vector2 } = {},
 ): { segments: Array<RibbonSegment>; totalLength: number } => {
-  const prim = emittedPathFromSteps(steps, source, nameStack, round, measureText, options);
+  const prim = emittedPathFromSteps(steps, source, namespaceStack, round, measureText, options);
   const inputs = commandsToSegmentInputs(prim.commands, source);
   const segments = segmentInputsToSegments(inputs, endpointTangents);
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);

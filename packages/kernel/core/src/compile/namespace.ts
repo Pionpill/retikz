@@ -12,8 +12,8 @@ export type DuplicateRegisterInfo = {
   secondIrPath?: string;
 };
 
-/** NameStack 构造选项 */
-export type NameStackOptions = {
+/** NamespaceStack 构造选项 */
+export type NamespaceStackOptions = {
   /** 同 frame 重复 register 时的回调。 */
   onDuplicate?: (info: DuplicateRegisterInfo) => void;
 };
@@ -22,7 +22,7 @@ export type NameStackOptions = {
  * 栈式 namespace frame。
  * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断。
  */
-export class NameStack {
+export class NamespaceStack {
   /** 栈式 frame 容器；栈底（index 0）= 根 frame，栈顶（last）= 当前 frame */
   private readonly frames: Array<Map<string, NodeLayout>>;
   /** 与每个 frame 对应的"已注册 id → 首次 register 时的 irPath"映射，用于 duplicate warn 复述位置 */
@@ -31,7 +31,7 @@ export class NameStack {
   /** 当前阶段；compile Pass 1 = 'pass1'（register 合法），Pass 2 = 'pass2'（只能 lookup） */
   private currentPhase: 'pass1' | 'pass2' = 'pass1';
 
-  constructor(options: NameStackOptions = {}) {
+  constructor(options: NamespaceStackOptions = {}) {
     this.frames = [new Map()];
     this.firstIrPaths = [new Map()];
     this.onDuplicate = options.onDuplicate;
@@ -56,7 +56,7 @@ export class NameStack {
   /** 弹出栈顶 frame；根 frame 不可弹出。 */
   popFrame(): void {
     if (this.frames.length <= 1) {
-      throw new Error('NameStack.popFrame: cannot pop the root frame (internal invariant violated)');
+      throw new Error('NamespaceStack.popFrame: cannot pop the root frame (internal invariant violated)');
     }
     this.frames.pop();
     this.firstIrPaths.pop();
@@ -76,7 +76,7 @@ export class NameStack {
   register(id: string, layout: NodeLayout, irPath?: string): boolean {
     if (this.currentPhase !== 'pass1') {
       throw new Error(
-        `NameStack.register('${id}'): only allowed during pass1; current phase is '${this.currentPhase}'`,
+        `NamespaceStack.register('${id}'): only allowed during pass1; current phase is '${this.currentPhase}'`,
       );
     }
     const topFrame = this.frames[this.frames.length - 1];
@@ -100,17 +100,17 @@ export class NameStack {
   replaceLayout(id: string, layout: NodeLayout, frameDepth: number, expectedCurrent?: NodeLayout): boolean {
     if (this.currentPhase !== 'pass1') {
       throw new Error(
-        `NameStack.replaceLayout('${id}'): only allowed during pass1; current phase is '${this.currentPhase}'`,
+        `NamespaceStack.replaceLayout('${id}'): only allowed during pass1; current phase is '${this.currentPhase}'`,
       );
     }
     if (frameDepth < 0 || frameDepth >= this.frames.length) {
       throw new Error(
-        `NameStack.replaceLayout('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frames.length})`,
+        `NamespaceStack.replaceLayout('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frames.length})`,
       );
     }
     const targetFrame = this.frames[frameDepth];
     if (!targetFrame.has(id)) {
-      throw new Error(`NameStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`);
+      throw new Error(`NamespaceStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`);
     }
     if (expectedCurrent !== undefined && targetFrame.get(id) !== expectedCurrent) return false;
     targetFrame.set(id, layout);

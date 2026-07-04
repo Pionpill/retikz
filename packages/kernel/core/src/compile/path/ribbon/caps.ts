@@ -1,7 +1,7 @@
 import type { Vector2 } from '@retikz/math';
 
 import type { IRPosition, IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
-import type { NameStack } from '../../name-stack';
+import type { NamespaceStack } from '../../namespace';
 
 import { resolvePosition } from '../../position';
 
@@ -74,10 +74,10 @@ export const arcCapPoints = (
   from: IRPosition,
   to: IRPosition,
   endpoint: 'start' | 'end',
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   round: (n: number) => number,
 ): Array<IRPosition> => {
-  const resolvedCenter = resolvePosition(cap.center, nameStack);
+  const resolvedCenter = resolvePosition(cap.center, namespaceStack);
   if (resolvedCenter === null) {
     throw new Error(`Ribbon ${endpoint} arc cap center could not be resolved.`);
   }
