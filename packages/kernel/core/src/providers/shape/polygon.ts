@@ -120,8 +120,7 @@ export const polygon = defineShape<PolygonParams>({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  anchor: (bounds: Rect, name: ShapeAnchorName, params): Position | undefined => {
-    void params;
+  anchor: (bounds: Rect, name: ShapeAnchorName): Position | undefined => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },

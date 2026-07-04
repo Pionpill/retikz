@@ -3,7 +3,7 @@ import type { Position } from '@retikz/math';
 import { boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
 import { z } from 'zod';
 
-import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
+import type { ScenePrimitive } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
@@ -51,31 +51,21 @@ export const contour = defineShape<ContourParams>({
   name: 'contour',
   paramsSchema: contourParamsSchema,
   // 几何驱动：AABB 半轴由 points 算（平移不变，自动居中无需调用方预居中）；rect 中心维持在 position。
-  circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
-    void innerHalfWidth;
-    void innerHalfHeight;
+  circumscribe: (_innerHalfWidth, _innerHalfHeight, params) => {
     const bounds = boundsOf(params.points);
     if (bounds === undefined) throw new Error('contour: points must contain at least one vertex.');
     return boundsHalfAxes(bounds);
   },
   // 自动居中收在 emit / boundaryPoint 内部（减 AABB 中心），rect 仍中心在 position。
-  circumscribeOffset: (params): Position => {
-    void params;
-    return [0, 0];
-  },
+  circumscribeOffset: (): Position => [0, 0],
   boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const segments = worldSegments(rect, params);
     const center: Position = [rect.x, rect.y];
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  // 标准方位名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
-  anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
-    void rect;
-    void name;
-    void params;
-    return undefined;
-  },
+  // 标准方位名交 compile 回退到外接 AABB rect；曲边块没有有意义的真·命名方位。
+  anchor: () => undefined,
   *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const segments = worldSegments(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
