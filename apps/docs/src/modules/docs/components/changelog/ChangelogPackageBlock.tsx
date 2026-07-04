@@ -8,7 +8,7 @@ import type { Lang } from '@/i18n';
 import type { PackageBlock } from '@/modules/docs/data';
 
 import { cn } from '@/lib/utils';
-import { InlineMdx } from '@/modules/docs/components/mdx-content';
+import { InlineMdx } from '@/modules/docs/components';
 import { PACKAGE_LABEL } from '@/modules/docs/data';
 
 import { ChangelogItems } from './ChangelogItems';

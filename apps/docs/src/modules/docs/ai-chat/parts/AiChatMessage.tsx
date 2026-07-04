@@ -15,7 +15,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
-import { CodeBlock } from '@/modules/docs/components/highlight-code';
+import { CodeBlock } from '@/modules/docs/components';
 
 import type { ChatMessage } from '../providers/types';
 import type { ListItem, TableAlign } from './message-blocks';

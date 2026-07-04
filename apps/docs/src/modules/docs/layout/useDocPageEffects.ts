@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import type { I18nKey, Release } from '@/modules/docs/data';
 
 import { useAiChatStore } from '@/modules/docs/ai-chat';
-import { changelogToMarkdown } from '@/modules/docs/components/changelog';
+import { changelogToMarkdown } from '@/modules/docs/components';
 import { buildDocPageLinks } from '@/modules/docs/lib/doc-links';
 import { useTocStore } from '@/modules/docs/store';
 

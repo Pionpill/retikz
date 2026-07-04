@@ -4,7 +4,7 @@ import type { Lang } from '@/i18n';
 import type { ChangeItem } from '@/modules/docs/data';
 
 import { cn } from '@/lib/utils';
-import { InlineMdx } from '@/modules/docs/components/mdx-content';
+import { InlineMdx } from '@/modules/docs/components';
 
 /** label 与 content 的分隔 */
 const SEP: Record<Lang, string> = { zh: '：', en: ':' };

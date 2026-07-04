@@ -1,6 +1,6 @@
 ﻿import { PathCurve } from '@retikz/plot';
 
-import type { PreviewAction } from '@/modules/docs/components/component-preview';
+import type { PreviewAction } from '@/modules/docs/components';
 
 export const PATH_CURVE_ACTION_ID = 'path-curve';
 

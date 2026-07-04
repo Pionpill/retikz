@@ -14,7 +14,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { DemoLocationContext } from '@/modules/docs/components/component-preview/context';
+import { DemoLocationContext } from '@/modules/docs/components';
 
 import { mdxComponents } from './components';
 

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DocsSearchPanel } from '@/modules/docs/components/docs-search';
+import { DocsSearchPanel } from '@/modules/docs/components';
 
 import { useAiChatStore } from '../useAiChatStore';
 

@@ -7,13 +7,12 @@ import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import { cloneElement, Component as ReactComponent, isValidElement, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { ComponentRenderSource } from '@/modules/docs/components/component-preview';
+import type { ComponentRenderSource } from '@/modules/docs/components';
 
 import { Button } from '@/components/ui/button';
 import { parseRetikzJsx } from '@/lib/jsx-to-ir';
 import { cn } from '@/lib/utils';
-import { ComponentRender, formatIR } from '@/modules/docs/components/component-preview';
-import { CodeBlock } from '@/modules/docs/components/highlight-code';
+import { CodeBlock, ComponentRender, formatIR } from '@/modules/docs/components';
 
 import { formatZodError } from '../retikz-validation';
 

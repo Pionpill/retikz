@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import { PathCurve } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
-import { usePreviewActionValue } from '@/modules/docs/components/component-preview/context';
+import { usePreviewActionValue } from '@/modules/docs/components';
 
 import { PATH_CURVE_ACTION_ID } from './line-curve.actions';
 import { curveSamples } from './line-curve.data';

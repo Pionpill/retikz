@@ -17,7 +17,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
-import { InlineMarkdown } from '@/modules/docs/components/inline-markdown';
+
+import { InlineMarkdown } from '../../inline-markdown';
 
 /** Example 页 Prompt 节 props。 */
 export type ExamplePromptProps = {

@@ -3,11 +3,10 @@ import type { FC, HTMLAttributes } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { MdxFrontmatter } from '@/modules/docs/components/mdx-content';
+import type { MdxFrontmatter } from '@/modules/docs/components';
 
 import { cn } from '@/lib/utils';
-import { ChangelogOverview, ChangelogVersionDetail } from '@/modules/docs/components/changelog';
-import { InlineMdx, MdxContent, mdxHasToc, MdxToc } from '@/modules/docs/components/mdx-content';
+import { ChangelogOverview, ChangelogVersionDetail, InlineMdx, MdxContent, mdxHasToc, MdxToc } from '@/modules/docs/components';
 import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/modules/docs/data';
 import { useTocStore } from '@/modules/docs/store';
 

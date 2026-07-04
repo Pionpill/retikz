@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { walk, walkType } from '@/modules/docs/components/zod-schema/walker';
+import { walk, walkType } from '@/modules/docs/components';
 
 describe('walker — primitives & literal', () => {
   it('walks z.string() to primitive', () => {

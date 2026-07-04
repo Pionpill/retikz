@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { cn } from '@/lib/utils';
 import { AiChatTrigger } from '@/modules/docs/ai-chat';
-import { DocsSearch } from '@/modules/docs/components/docs-search';
+import { DocsSearch } from '@/modules/docs/components';
 import { useLayoutStore } from '@/store';
 
 import { BrandLink } from './BrandLink';
