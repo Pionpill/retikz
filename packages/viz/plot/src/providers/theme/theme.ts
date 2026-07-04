@@ -47,6 +47,8 @@ export type ResolvedPlotTheme = {
   axis: NonNullable<PlotTheme['axis']>;
   /** Legend 视觉默认值。 */
   legend: ResolvedLegendGuideTokens;
+  /** Plot label 文本默认样式。 */
+  labelText: GuideTextStyle;
 };
 
 const DEFAULT_TYPOGRAPHY: GuideTextStyle = { font: { size: 12 }, textColor: 'currentColor' };
@@ -109,6 +111,7 @@ export const resolvePlotTheme = (
     typography,
     palette: resolvePalette(theme?.palette, colors),
     axis: theme?.axis ?? {},
+    labelText: mergeTextStyle(typography, theme?.labelText),
     legend: {
       swatchSize: legend?.swatchSize ?? DEFAULT_LEGEND.swatchSize,
       swatchGap: legend?.swatchGap ?? DEFAULT_LEGEND.swatchGap,

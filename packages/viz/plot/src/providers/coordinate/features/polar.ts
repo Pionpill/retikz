@@ -264,7 +264,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
         hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
         angularLabels: layoutAngularTicks?.labels ?? [],
       },
-      { fontSize: ctx.fontSize, margin: ctx.margin },
+      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
@@ -344,7 +344,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
         hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
         angularLabels: visibleAngularTicks?.labels ?? [],
       },
-      { fontSize: ctx.fontSize, margin: ctx.margin },
+      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
     const radius = radiusFraction * layout.outerRadius;
     const continuousAngle = isContinuousAngleScale(angleScaleDef.type);

@@ -181,7 +181,7 @@ const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> =
       ctx.width,
       ctx.height,
       { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] },
-      { fontSize: ctx.fontSize, margin: ctx.margin },
+      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
     const frame = createTernary2DCoordinate(layout.vertices);
     const placeholderScale = ctx.buildPositionScale(

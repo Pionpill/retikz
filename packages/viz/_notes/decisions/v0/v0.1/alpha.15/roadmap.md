@@ -26,8 +26,9 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 | ADR-07 | **axis tick label adaptive layout** | 为 axis tick label 增加自适应旋转、重叠省略与边界处理；允许用户关闭旋转、省略或全部自适应，且不改变 tick / grid / mark 同源语义 | Accepted（已实现） |
 | ADR-08 | **axis title layout and anchor strategy** | 为 axis title 统一复用 core position 关键字，`gap` 改名为 `padding`，并补齐 shift、结构化 anchor 与 title layout 避让策略 | Accepted（已实现） |
 | ADR-09 | **axis grid source and style strategy** | 为 axis grid 增加独立 tick source、density、minor grid、bandPosition 与 lineCap；层级 / z-order 延后统一讨论 | Accepted |
+| ADR-10 | **plot decoration layout and placement strategy** | 用 LayoutClaim 统一整图标题、caption、source note、legend、axis title / labels 等 decoration 的占位、placement 与避让；明确静态文案公开归 `labels`，scale-bound 文本仍归 guide | Accepted（首轮实现） |
 
-> 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`、`08-axis-title-layout.md`、`09-axis-grid-source-and-style.md`。
+> 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`、`08-axis-title-layout.md`、`09-axis-grid-source-and-style.md`、`10-plot-decoration-layout.md`。
 
 ## 依赖与顺序
 
@@ -40,6 +41,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 7. **ADR-07 补 tick label 自适应布局**：复用 ADR-02 的 tickLabels 槽位和 ADR-06 的 visible tick set，只处理 label node 的旋转、隐藏和边界避让；它不回写 tick source、grid 或 tick mark。
 8. **ADR-08 补 axis title 布局与锚点**：复用 core path label 的 position 关键字心智模型，修正 `gap -> padding` 命名，并把端点标题的锚点、微调和自动避让做成配置，而不是 chart preset 私有规则。
 9. **ADR-09 补 axis grid 来源与样式**：复用 guide tick source / density 模型，为 grid 增加独立 source、minor grid、bandPosition 和 lineCap；grid 层级等待后续统一 layer 模型。
+10. **ADR-10 统一 decoration 空间布局**：在 axis 局部 placement 之外建立整图 LayoutClaim 模型，让 plot title、caption、source note、legend、axis title / tick labels 等都通过同一阶段声明占位、定位和避让；后续 layer / z-order 仍单独处理。
 
 ## 关键设计约束
 
@@ -293,6 +295,12 @@ built-in default theme
 - major / minor grid 使用同一个 `applyTo/select` 投放范围。
 
 不在本 ADR 范围：grid layer / z-index / draw order、data-driven per-line style、reference band、custom coordinate grid surface、自动 minor tick 生成、grid label / interaction。
+
+### ADR-10：plot decoration layout and placement strategy
+
+目标是建立整图 labels 空间布局入口，让 plot title、caption、source note、note 等静态文案不再挤进 axis guide，同时为后续 legend、axis title / tick labels 和 facet header 统一 claim 化留出模型。
+
+实现状态：2026-07-04 已完成 Plot 级 text label schema、theme.labelText、React `<TitleLabel>` / `<CaptionLabel>`（含 `text` prop、普通 children 和 core `<Text>` styled line）、Vanilla `labels` 透传、side / point placement、frame / plotArea target、自动 reserve 和 axis 文档 demo。完整 LayoutClaim solver、legend / axis title / tick label claim 汇入、`target:'view'` 和 collision / overflow 细化仍留后续迭代。
 
 ## 文件 scope 预估
 

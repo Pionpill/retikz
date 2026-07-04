@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { CoordinateOperationSchema } from '../coordinate';
 import { DataRefSchema } from '../data';
 import { GuideSchema } from '../guide';
+import { BoxPaddingSchema, PlotLabelSchema, PlotLayoutSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { PlotThemeSchema } from '../theme';
@@ -17,16 +18,6 @@ import {
   PlotComposite,
   ScaffoldFrameMode,
 } from './constants';
-
-const BoxPaddingSchema = z
-  .object({
-    top: z.number().nonnegative().optional().describe('Top composition padding in user units'),
-    right: z.number().nonnegative().optional().describe('Right composition padding in user units'),
-    bottom: z.number().nonnegative().optional().describe('Bottom composition padding in user units'),
-    left: z.number().nonnegative().optional().describe('Left composition padding in user units'),
-  })
-  .strict()
-  .describe('Optional per-side padding around a coordinate composition');
 
 export const CompositionSpacingSchema = z
   .object({
@@ -457,6 +448,13 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
   theme: PlotThemeSchema.optional().describe(
     'JSON-safe plot theme for background, typography, axis, legend, and palette defaults; consumed during lowering and never passed through as opaque core IR',
   ),
+  layout: PlotLayoutSchema.optional().describe(
+    'Plot-level label layout strategy for titles, captions, legends, and guide reservations',
+  ),
+  labels: z
+    .array(PlotLabelSchema)
+    .optional()
+    .describe('Static plot labels such as titles, captions, source notes, and custom text'),
   width: z
     .number()
     .positive()

@@ -78,6 +78,8 @@ export type PlotAreaInput = {
 export type PlotAreaOptions = {
   /** label 字号（估算 + 实绘共用），默认 DEFAULT_FONT_SIZE */
   fontSize?: number;
+  /** layout / decoration 额外预留，只叠加到自动 margin；显式 margin 仍逐边覆盖。 */
+  reserve?: Partial<Margins>;
   /** 逐边覆盖估算的 margin */
   margin?: Partial<Margins>;
 };
@@ -100,14 +102,22 @@ export const computePlotArea = (
 ): { plotArea: Rect; margins: Margins } => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
   const reserve = input.legendReserve ?? {};
+  const layoutReserve = options.reserve ?? {};
   // legend 预留叠加在 axis margin 之外：legend 占某边 → 该边 margin += 预留带宽，plotArea 在该边收窄
   const auto: Margins = {
-    top: (input.hasYAxis ? fontSize * 0.5 : 0) + (reserve.top ?? 0),
-    right: (input.hasXAxis ? maxLabelWidth(input.xLabels.slice(-1), fontSize) * 0.5 : 0) + (reserve.right ?? 0),
-    bottom: (input.hasXAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : 0) + (reserve.bottom ?? 0),
+    top: (input.hasYAxis ? fontSize * 0.5 : 0) + (reserve.top ?? 0) + (layoutReserve.top ?? 0),
+    right:
+      (input.hasXAxis ? maxLabelWidth(input.xLabels.slice(-1), fontSize) * 0.5 : 0) +
+      (reserve.right ?? 0) +
+      (layoutReserve.right ?? 0),
+    bottom:
+      (input.hasXAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : 0) +
+      (reserve.bottom ?? 0) +
+      (layoutReserve.bottom ?? 0),
     left:
       (input.hasYAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0) +
-      (reserve.left ?? 0),
+      (reserve.left ?? 0) +
+      (layoutReserve.left ?? 0),
   };
   const margins: Margins = { ...auto, ...options.margin };
   // 用户 margin 可能传入 NaN / 负值——会一路污染出坏坐标，逐边校验有限非负（与 width/height 入口校验同思路）
@@ -165,11 +175,12 @@ export const computePolarCoordinate = (
     ? Math.max(maxLabelWidth(input.angularLabels, fontSize), fontSize) + AXIS_TICK_LENGTH + AXIS_LABEL_GAP
     : 0;
   const explicit: Partial<Margins> = options.margin ?? {};
+  const layoutReserve = options.reserve ?? {};
   const margins: Margins = {
-    top: explicit.top ?? labelReserve,
-    right: explicit.right ?? labelReserve,
-    bottom: explicit.bottom ?? labelReserve,
-    left: explicit.left ?? labelReserve,
+    top: explicit.top ?? labelReserve + (layoutReserve.top ?? 0),
+    right: explicit.right ?? labelReserve + (layoutReserve.right ?? 0),
+    bottom: explicit.bottom ?? labelReserve + (layoutReserve.bottom ?? 0),
+    left: explicit.left ?? labelReserve + (layoutReserve.left ?? 0),
   };
   for (const side of ['top', 'right', 'bottom', 'left'] as const) {
     const value = margins[side];
@@ -223,11 +234,12 @@ export const computeTernaryFrame = (
     ? maxLabelWidth(input.labels, fontSize) + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize
     : fontSize;
   const explicit: Partial<Margins> = options.margin ?? {};
+  const layoutReserve = options.reserve ?? {};
   const margins: Margins = {
-    top: explicit.top ?? reserve,
-    right: explicit.right ?? reserve,
-    bottom: explicit.bottom ?? reserve,
-    left: explicit.left ?? reserve,
+    top: explicit.top ?? reserve + (layoutReserve.top ?? 0),
+    right: explicit.right ?? reserve + (layoutReserve.right ?? 0),
+    bottom: explicit.bottom ?? reserve + (layoutReserve.bottom ?? 0),
+    left: explicit.left ?? reserve + (layoutReserve.left ?? 0),
   };
   for (const side of ['top', 'right', 'bottom', 'left'] as const) {
     const value = margins[side];

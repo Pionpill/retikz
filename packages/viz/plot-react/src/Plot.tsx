@@ -32,8 +32,10 @@ export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'rendere
 export type PlotColorProps = {
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
-  /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
-  theme?: PlotSpec['theme'];
+    /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
+    theme?: PlotSpec['theme'];
+    /** 整图 label 空间布局策略。 */
+    layout?: PlotSpec['layout'];
 };
 
 /** spec 入口（薄包装）：给已构造好的完整 PlotSpec + 数据集表 */
@@ -235,6 +237,7 @@ const resolvePlotRuntime = (
       dataFieldNames: dataFieldNamesOf(props.data),
       colors: props.colors,
       theme: props.theme,
+      layout: props.layout,
       transforms: props.dataTransforms,
       markTransformShortcuts: props.markTransformShortcuts,
       deferPositionScaleInference: props.model === undefined,

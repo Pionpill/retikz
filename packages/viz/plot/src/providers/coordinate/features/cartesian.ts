@@ -188,7 +188,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
         yLabels: layoutYTicks?.labels ?? [],
         legendReserve: ctx.legendReserve,
       },
-      { fontSize: ctx.fontSize, margin: ctx.margin },
+      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
     const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
 
@@ -257,7 +257,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
         yLabels: horizontal ? [] : (layoutTicks?.labels ?? []),
         legendReserve: ctx.legendReserve,
       },
-      { fontSize: ctx.fontSize, margin: ctx.margin },
+      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
     const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
     if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);

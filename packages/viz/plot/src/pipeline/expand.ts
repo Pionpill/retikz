@@ -95,6 +95,7 @@ import {
   PlotSpecSchema,
 } from '../schemas';
 import { createAnchorRegistry } from './anchors';
+import { lowerPlotLabels, resolveLabelReserve } from './decoration-layout';
 import { lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from './layout';
 import { createDatumIdRegistrar, rootMeta, slug, tagSourceIndex } from './provenance';
@@ -822,6 +823,8 @@ export type ResolveFrameParams = {
   labelGap?: number;
   /** 逐边覆盖自动估算的 margin */
   margin?: Partial<Margins>;
+  /** decoration / layout 触发的自动预留，叠加到坐标系自动 margin。 */
+  layoutReserve?: Partial<Margins>;
   /** overlay scope 共享 target scope 的 plotArea；省略时由坐标系自行计算。 */
   plotAreaOverride?: Rect;
   /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band。 */
@@ -852,6 +855,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     fontSize,
     labelGap,
     margin,
+    layoutReserve,
     plotAreaOverride,
     roleRangeOverrides,
     provenance,
@@ -1075,6 +1079,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     fontSize,
     ...(labelGap !== undefined ? { labelGap } : {}),
     ...(margin !== undefined ? { margin } : {}),
+    ...(layoutReserve !== undefined ? { layoutReserve } : {}),
     legendReserve,
     ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
     ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
@@ -1649,6 +1654,13 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     hasScaffolds: compositionScaffolds.length > 0,
   };
   const resolvedTheme = resolvePlotTheme(node.theme, node.colors);
+  const labelReserve = resolveLabelReserve({
+    layout: node.layout,
+    labels: node.labels ?? [],
+    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    textStyle: resolvedTheme.labelText,
+  });
+  const scopedLabelReserve = node.composition === undefined ? labelReserve : undefined;
   const allGuides: Array<Guide> = (node.guides ?? []).map(guide =>
     isAxisGuide(guide) ? resolveAxisGuideTokens(resolvedTheme, guide) : guide,
   );
@@ -1952,6 +1964,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       height,
       fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
       margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
+      ...(scopedLabelReserve !== undefined ? { layoutReserve: scopedLabelReserve } : {}),
       labelGap: scopedLayout?.labelGap,
       ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
       ...(scaffoldFrame !== undefined && (scaffold?.frame ?? 'shared') === 'shared'
@@ -2304,7 +2317,21 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
     anchorRegistry.assertResolved();
     const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
-    const children: Array<IRChild> = [...(backgroundNode ? [backgroundNode] : []), ...panelScopes, ...facetLabelScopes];
+    const labelLayers = lowerPlotLabels({
+      layout: node.layout,
+      labels: node.labels ?? [],
+      width,
+      height,
+      plotArea: { x: 0, y: 0, width, height },
+      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+      textStyle: resolvedTheme.labelText,
+    });
+    const children: Array<IRChild> = [
+      ...(backgroundNode ? [backgroundNode] : []),
+      ...panelScopes,
+      ...facetLabelScopes,
+      ...labelLayers,
+    ];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
       return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
@@ -2396,14 +2423,24 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       ),
     );
   }
+  const labelLayers = lowerPlotLabels({
+    layout: node.layout,
+    labels: node.labels ?? [],
+    width,
+    height,
+    plotArea,
+    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    textStyle: resolvedTheme.labelText,
+  });
 
-  // z-order：所有网格层 → marks → 所有轴层 → legend（网格垫底、坐标轴压顶不被数据盖、legend 在预留带最上）
+  // z-order：所有网格层 → marks → 所有轴层 → plot labels → legend（legend 在预留带最上）
   const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
   const children: Array<IRChild> = [
     ...(backgroundNode ? [backgroundNode] : []),
     ...gridLayers,
     ...markLayers,
     ...axisLayers,
+    ...labelLayers,
     ...legendLayers,
   ];
 
