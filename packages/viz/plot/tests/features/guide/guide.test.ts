@@ -7,7 +7,8 @@ import type { PositionScale } from '../../../src/contract';
 import type { GuideContext } from '../../../src/contract';
 import type { PlotSpec } from '../../../src/schemas';
 
-import { lowerGuide } from '../../../src/pipeline';
+import { createCoordinateFrame } from '../../../src/contract';
+import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
@@ -18,6 +19,16 @@ const fakeScale = (coordinate: (value: number) => number): PositionScale => ({
   bandwidth: 0,
   ticks: () => ({ values: [], labels: [] }),
   range: () => [0, 0],
+  setRange: () => {},
+});
+
+/** 测试曲线轴用 scale：lowerCustomAxis 依赖 ticks 推导轴采样范围 */
+const fakeTickScale = (coordinate: (value: number) => number, values: Array<number>): PositionScale => ({
+  coordinate: value => coordinate(value as number),
+  domain: () => [values[0], values[values.length - 1]],
+  bandwidth: 0,
+  ticks: () => ({ values, labels: values.map(value => String(value)) }),
+  range: () => [coordinate(values[0]), coordinate(values[values.length - 1])],
   setRange: () => {},
 });
 
@@ -123,6 +134,97 @@ describe('lowerGuide (ADR-04)', () => {
     const title = nodeByText(axisLayer as IRScope, 'y');
 
     expect((title.position as [number, number])[1]).toBe(10);
+  });
+
+  it('polar_angular_axis_title_placement_samples_angle_range', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', title: { text: 'theta', placement: 'at-end' } },
+      {
+        ...ctx,
+        frame: {
+          type: 'polar2D',
+          roles: ['x', 'y'],
+          center: [100, 100],
+          innerRadius: 20,
+          outerRadius: 80,
+          startAngle: 0,
+          endAngle: 180,
+          continuousAngle: true,
+          primary: fakeScale(value => value),
+          secondary: fakeScale(value => value),
+          roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
+          project: () => null,
+          projectRoles: () => null,
+          projectPolar: () => null,
+          projectCell: () => ({ kind: 'sector', center: [100, 100], innerRadius: 0, outerRadius: 1, startAngle: 0, endAngle: 1 }),
+        },
+        angularTicks: { values: [], labels: [] },
+      },
+    );
+    const title = nodeByText(axisLayer as IRScope, 'theta');
+
+    expect((title.position as [number, number])[0]).toBeLessThan(40);
+  });
+
+  it('polar_radial_axis_title_placement_samples_radius_range', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'y', title: { text: 'radius', placement: 'at-end' } },
+      {
+        ...ctx,
+        frame: {
+          type: 'polar2D',
+          roles: ['x', 'y'],
+          center: [100, 100],
+          innerRadius: 20,
+          outerRadius: 80,
+          startAngle: 0,
+          endAngle: 180,
+          continuousAngle: true,
+          primary: fakeScale(value => value),
+          secondary: fakeScale(value => value),
+          roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
+          project: () => null,
+          projectRoles: () => null,
+          projectPolar: () => null,
+          projectCell: () => ({ kind: 'sector', center: [100, 100], innerRadius: 0, outerRadius: 1, startAngle: 0, endAngle: 1 }),
+        },
+        radialTicks: { values: [], labels: [] },
+      },
+    );
+    const title = nodeByText(axisLayer as IRScope, 'radius');
+
+    expect((title.position as [number, number])[0]).toBeGreaterThan(170);
+  });
+
+  it('ternary_axis_title_placement_samples_axis_edge', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', title: { text: 'x', placement: 'at-end' } },
+      {
+        ...ctx,
+        ternaryVertices: [[50, 0], [0, 100], [100, 100]],
+        ternaryTicks: { values: [0, 1], labels: ['0', '1'] },
+      },
+    );
+    const title = nodeByText(axisLayer as IRScope, 'x');
+
+    expect((title.position as [number, number])[1]).toBeLessThan(20);
+  });
+
+  it('custom_axis_title_placement_samples_numeric_axis_range', () => {
+    const scale = fakeTickScale(value => value * 10, [0, 5, 10]);
+    const frame = createCoordinateFrame(
+      'custom-line',
+      ['u'],
+      values => {
+        const value = Number(values[0]);
+        return Number.isFinite(value) ? [value * 10, 0] : null;
+      },
+      { roleScales: { u: scale } },
+    );
+    const { axisLayer } = lowerCustomAxis(frame, { type: 'axis', dimension: 'u', title: { text: 'u', placement: 'at-end' } }, 11, undefined);
+    const title = nodeByText(axisLayer as IRScope, 'u');
+
+    expect((title.position as [number, number])[0]).toBeCloseTo(100, 6);
   });
 
   it('lower_axis_x_grid_lines', () => {

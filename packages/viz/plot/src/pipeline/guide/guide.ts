@@ -922,12 +922,13 @@ const lowerAngularAxis = (
     : [];
   const title = axisTitleOf(guide);
   if (title !== null) {
-    const midAngle = (frame.startAngle + frame.endAngle) / 2;
+    const placementRatio = axisTitlePlacementRatioOf(title.placement);
+    const titleAngle = frame.startAngle + (frame.endAngle - frame.startAngle) * placementRatio;
     labels.push({
       type: 'node',
       position: finitePolarPoint(
         frame.center,
-        midAngle,
+        titleAngle,
         outer + tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2,
       ),
       text: title.text,
@@ -1025,7 +1026,9 @@ const lowerRadialAxis = (
     : [];
   const title = axisTitleOf(guide);
   if (title !== null) {
-    const titlePoint = finitePolarPoint(frame.center, baseAngle, (frame.innerRadius + frame.outerRadius) / 2);
+    const placementRatio = axisTitlePlacementRatioOf(title.placement);
+    const titleRadius = frame.innerRadius + (frame.outerRadius - frame.innerRadius) * placementRatio;
+    const titlePoint = finitePolarPoint(frame.center, baseAngle, titleRadius);
     const offset = tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2;
     labels.push({
       type: 'node',
@@ -1143,12 +1146,13 @@ const lowerTernaryGuide = (
   const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, { fontSize, mode: 'generic', axis: 'both' });
   const title = axisTitleOf(guide);
   if (title !== null) {
-    const mid = lerp2(baseP, apex, 0.5);
-    const out = outwardAt(mid);
+    const placementRatio = axisTitlePlacementRatioOf(title.placement);
+    const point = lerp2(baseP, apex, placementRatio);
+    const out = outwardAt(point);
     const offset = tickLength + tickLabelGap + fontSize + (title.gap ?? labelGap) + fontSize / 2;
     labels.push({
       type: 'node',
-      position: [mid[0] + out[0] * offset, mid[1] + out[1] * offset],
+      position: [point[0] + out[0] * offset, point[1] + out[1] * offset],
       text: title.text,
       ...textStyleProps(title),
     });
@@ -1295,7 +1299,8 @@ export const lowerCustomAxis = (
   const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, { fontSize, mode: 'generic', axis: 'both' });
   const title = axisTitleOf(guide);
   if (title !== null) {
-    const resolved = pointAndTangent((lo + hi) / 2);
+    const placementRatio = axisTitlePlacementRatioOf(title.placement);
+    const resolved = pointAndTangent(lo + span * placementRatio);
     if (resolved) {
       const [point, tangent] = resolved;
       const length = Math.hypot(tangent[0], tangent[1]) || 1;
