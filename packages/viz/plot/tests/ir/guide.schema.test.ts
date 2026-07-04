@@ -142,6 +142,37 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     ).toThrow();
   });
 
+  it('axis_tick_labels_accept_adaptive_layout', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      tickLabels: {
+        layout: {
+          rotate: { angles: [0, -45, -90], recoverWhenFailed: false },
+          hide: { strategy: 'parity', preserveEnds: true, separation: 4 },
+          bounds: { overflow: 'hide', tolerance: 2 },
+          sampleSize: 8,
+        },
+      },
+    };
+    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('axis_tick_labels_reject_invalid_layout_values', () => {
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', tickLabels: { layout: { rotate: { angles: [] } } } }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', tickLabels: { layout: { hide: { separation: -1 } } } }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', tickLabels: { layout: { bounds: { tolerance: -1 } } } }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', tickLabels: { layout: { sampleSize: 0 } } }),
+    ).toThrow();
+  });
+
   it('theme_axis_line_rejects_structural_geometry', () => {
     const spec = {
       namespace: 'plot',
@@ -200,6 +231,37 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
         theme: { axis: { ticks: { density: { kind: 'sample', maxCount: 4 } } } },
+      }),
+    ).toThrow();
+  });
+
+  it('theme_axis_tick_labels_accept_layout_but_reject_format', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        theme: { axis: { tickLabels: { layout: { hide: { strategy: 'greedy' } } } } },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        theme: { axis: { tickLabels: { format: '.2f' } } },
       }),
     ).toThrow();
   });

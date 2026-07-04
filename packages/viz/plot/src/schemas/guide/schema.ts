@@ -14,6 +14,8 @@ import {
   AxisGridApplyTo,
   AxisPlacementKind,
   AxisTickDensityKind,
+  AxisTickLabelHideStrategy,
+  AxisTickLabelOverflow,
   AxisTickMarkKind,
   AxisTickShapeOrientation,
   GuideTickIntervalKind,
@@ -346,12 +348,52 @@ export const AxisTicksSchema = z
   })
   .describe('Axis tick source and tick mark style');
 
+export const AxisTickLabelAutoRotateSchema = z
+  .object({
+    angles: z.array(z.number().finite()).min(1).optional().describe('Candidate label rotation angles in degrees'),
+    recoverWhenFailed: z.boolean().optional().describe('Whether to fall back to the original angle when all candidates overlap; omit = true'),
+  })
+  .strict()
+  .describe('Axis tick label auto-rotation strategy');
+
+export const AxisTickLabelAutoHideSchema = z
+  .object({
+    strategy: z.enum(AxisTickLabelHideStrategy).optional().describe('Overlap hiding strategy; omit = greedy'),
+    preserveEnds: z.boolean().optional().describe('Whether first and last labels should be preserved when possible; omit = true'),
+    separation: NonNegativeFiniteSchema.optional().describe('Minimum separation between label boxes in user units; omit = 0'),
+  })
+  .strict()
+  .describe('Axis tick label overlap hiding strategy');
+
+export const AxisTickLabelBoundsSchema = z
+  .object({
+    overflow: z.enum(AxisTickLabelOverflow).optional().describe('How labels outside the axis span are handled; omit = flush'),
+    tolerance: NonNegativeFiniteSchema.optional().describe('Overflow tolerance in user units; omit = 1'),
+  })
+  .strict()
+  .describe('Axis tick label boundary handling strategy');
+
+export const AxisTickLabelLayoutSchema = z
+  .union([
+    z.literal(false),
+    z
+      .object({
+        rotate: z.union([z.literal(false), AxisTickLabelAutoRotateSchema]).optional().describe('Auto-rotation strategy; false disables auto rotation'),
+        hide: z.union([z.literal(false), AxisTickLabelAutoHideSchema]).optional().describe('Overlap hiding strategy; false keeps all labels'),
+        bounds: z.union([z.literal(false), AxisTickLabelBoundsSchema]).optional().describe('Axis-span boundary strategy; false disables boundary handling'),
+        sampleSize: z.number().int().positive().optional().describe('Number of labels sampled while choosing auto rotation'),
+      })
+      .strict(),
+  ])
+  .describe('Axis tick label adaptive layout strategy');
+
 export const AxisTickLabelsSchema = z
   .object({
     ...GuideTickLabelFormatSchema.shape,
     gap: z.number().nonnegative().optional().describe('Gap between tick end and tick label center, in user units'),
     rotate: z.number().optional().describe('Tick label rotation in degrees around the label center'),
     anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
+    layout: AxisTickLabelLayoutSchema.optional().describe('Adaptive tick label rotation, hiding, and boundary handling'),
     ...GuideTextStyleSchema.shape,
   })
   .strict()

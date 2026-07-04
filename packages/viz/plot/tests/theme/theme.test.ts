@@ -193,6 +193,26 @@ describe('plot theme schema and lowering', () => {
     expect(labels.every(label => label.font?.size === 10)).toBe(true);
   });
 
+  it('axis_tick_label_local_layout_overrides_theme_layout', () => {
+    const root = expandOf(
+      baseSpec({
+        guides: [{ type: 'axis', dimension: 'x', tickLabels: { rotate: 0, layout: false, textColor: '#0891b2' } }],
+        theme: {
+          axis: {
+            tickLabels: {
+              rotate: -90,
+              layout: { hide: { strategy: 'greedy' } },
+            },
+          },
+        },
+      }),
+    );
+    const labels = nodesOf(root).filter(node => node.textColor === '#0891b2');
+
+    expect(labels.length).toBeGreaterThan(3);
+    expect(labels.every(label => label.rotate === 0)).toBe(true);
+  });
+
   it('legend_local_style_overrides_theme_legend_tokens', () => {
     const root = expandOf(
       baseSpec({

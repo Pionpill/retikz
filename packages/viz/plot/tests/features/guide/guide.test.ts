@@ -249,6 +249,91 @@ describe('lowerGuide (ADR-04)', () => {
     expect(node?.minimumSize).toEqual({ width: 8, height: 6 });
   });
 
+  it('tick_label_auto_rotate_chooses_first_non_overlapping_angle', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        ticks: { values: [0, 1, 2] },
+        tickLabels: { layout: { rotate: { angles: [0, -90] }, hide: false } },
+      },
+      { ...ctx, xTicks: { values: [0, 1, 2], labels: ['January', 'February', 'September'] } },
+    );
+    const labels = nodeChildren(axisLayer as IRScope).filter(node => typeof node.text === 'string');
+
+    expect(labels).toHaveLength(3);
+    expect(labels.every(label => label.rotate === -90)).toBe(true);
+  });
+
+  it('fixed_tick_label_rotate_overrides_auto_rotate', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        ticks: { values: [0, 1, 2] },
+        tickLabels: { rotate: 0, layout: { rotate: { angles: [-90] }, hide: false } },
+      },
+      { ...ctx, xTicks: { values: [0, 1, 2], labels: ['January', 'February', 'September'] } },
+    );
+    const labels = nodeChildren(axisLayer as IRScope).filter(node => typeof node.text === 'string');
+
+    expect(labels).toHaveLength(3);
+    expect(labels.every(label => label.rotate === 0)).toBe(true);
+  });
+
+  it('greedy_tick_label_hide_removes_overlaps_without_changing_grid_ticks', () => {
+    const labels = ['January', 'February', 'March', 'April', 'September'];
+    const { axisLayer, gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        ticks: { values: [0, 1, 2, 3, 4] },
+        tickLabels: { layout: { rotate: false, hide: { strategy: 'greedy', preserveEnds: true } } },
+        grid: true,
+      },
+      { ...ctx, xTicks: { values: [0, 1, 2, 3, 4], labels } },
+    );
+    const tickLabels = nodeChildren(axisLayer as IRScope).filter(node => labels.includes(String(node.text)));
+
+    expect(tickLabels.length).toBeLessThan(labels.length);
+    expect(tickLabels[0].text).toBe('January');
+    expect(tickLabels[tickLabels.length - 1].text).toBe('September');
+    expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(10);
+  });
+
+  it('layout_false_preserves_all_tick_labels', () => {
+    const labels = ['January', 'February', 'March', 'April', 'September'];
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        ticks: { values: [0, 1, 2, 3, 4] },
+        tickLabels: { rotate: 0, layout: false },
+      },
+      { ...ctx, xTicks: { values: [0, 1, 2, 3, 4], labels } },
+    );
+    const tickLabels = nodeChildren(axisLayer as IRScope).filter(node => labels.includes(String(node.text)));
+
+    expect(tickLabels.map(label => label.text)).toEqual(labels);
+  });
+
+  it('bounds_flush_moves_edge_tick_labels_inside_axis_range', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        ticks: { values: [0, 10] },
+        tickLabels: { layout: { rotate: false, hide: false, bounds: { overflow: 'flush' } } },
+      },
+      { ...ctx, xTicks: { values: [0, 10], labels: ['VeryLongStartLabel', 'VeryLongEndLabel'] } },
+    );
+    const start = nodeByText(axisLayer as IRScope, 'VeryLongStartLabel');
+    const end = nodeByText(axisLayer as IRScope, 'VeryLongEndLabel');
+
+    expect((start.position as [number, number])[0]).toBeGreaterThan(40);
+    expect((end.position as [number, number])[0]).toBeLessThan(440);
+  });
+
   it('mark_false_hides_tick_marks_but_keeps_grid_source', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {

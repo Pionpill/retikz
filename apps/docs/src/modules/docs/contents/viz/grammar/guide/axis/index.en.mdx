@@ -34,6 +34,19 @@ The smallest structure is to list the x / y axes you want inside `<Plot>`. In th
 
 <ComponentPreview name="axis-tick-density" sourceFiles={['axis-tick-density.data.ts']} />
 
+### Tick Label Layout
+
+`tickLabels.layout` only adjusts label nodes; it does not change ticks, tick marks, or grid lines. Omit it to use the builtin adaptive strategy, or set `layout: false` when exact label placement is more important than automatic rotation, hiding, and boundary handling.
+
+| Config | Main forms | Purpose |
+| ------ | ---------- | ------- |
+| `layout.rotate` | `false` / `{ angles?, recoverWhenFailed? }` | Pick an automatic tick-label rotation angle; explicit `tickLabels.rotate` takes priority |
+| `layout.hide` | `false` / `{ strategy:'greedy' \| 'parity', preserveEnds?, separation? }` | Hide overlapping labels while keeping ticks, tick marks, and grid lines |
+| `layout.bounds` | `false` / `{ overflow:'allow' \| 'hide' \| 'flush', tolerance? }` | Handle labels that overflow the axis span |
+| `layout.sampleSize` | `number` | Limit how many labels are scanned while estimating auto rotation |
+
+<ComponentPreview name="axis-tick-label-layout" sourceFiles={['axis-tick-label-layout.data.ts']} />
+
 ### Origin Axes
 
 Under cartesian coordinates, an axis can cross a data value from the other dimension. `placement.kind="origin"` only changes where the axis baseline sits; it does not expand the domain automatically. Configure `domain` or `domainPadding` when the origin needs to be visible. `line.arrow` uses `positive` / `negative` for axis-direction endpoints, and `line.extent` controls the data span covered by the baseline.
@@ -59,7 +72,7 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 | `placement`  | `{ kind:'auto' } \| { kind:'side', side, offset? } \| { kind:'edge', edge, offset? } \| { kind:'origin', origin?, tickSide?, offset? }` | inferred | Axis placement; `origin` only supports cartesian axes. For an x axis, `origin` is a y value; for a y axis, it is an x value |
 | `line`       | `false \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap?, extent?, arrow? }` | default line | Axis-line style and endpoint geometry; `extent` controls the data span, and `arrow.positive/negative` controls axis-direction arrows; `extent` / `arrow` currently only support cartesian axes |
 | `ticks`      | `{ count?, values?, interval?, density?, mark?, length?, line? }` | default ticks      | `values > interval > count` creates candidate ticks; `density` samples visible ticks; `mark` controls line / shape marks, while `length` / `line` remain line-mark shorthands |
-| `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | `true` | Tick-label config; `false` hides labels; `format` accepts d3-format / d3-time-format style strings |
+| `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate?, layout? }` | `true` | Tick-label config; `format` accepts d3-format / d3-time-format; `rotate` is fixed rotation and takes priority over `layout.rotate`; `layout:false` disables adaptive layout |
 | `title`      | `string \| { text, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | Axis title; `text` reuses the core text-block shape, so multiline or run-based text is allowed |
 | `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar y); object form overrides line style |
 | `id`         | `string?`                                          | —                  | Optional handle (reserved, not yet resolved)                                                                                                      |

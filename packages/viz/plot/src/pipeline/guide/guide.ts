@@ -18,7 +18,14 @@ import type { ProvenanceContext } from '../provenance';
 
 import { defaultOriginAxisTickSideOf } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../providers/scale/shared';
-import { AxisCardinalSide, AxisPlacementKind, AxisTickMarkKind, AxisTickShapeOrientation } from '../../schemas';
+import {
+  AxisCardinalSide,
+  AxisPlacementKind,
+  AxisTickLabelHideStrategy,
+  AxisTickLabelOverflow,
+  AxisTickMarkKind,
+  AxisTickShapeOrientation,
+} from '../../schemas';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
 import { guideLayerId, guideLayerMeta } from '../provenance';
 
@@ -183,6 +190,217 @@ const axisTickLabelStyleOf = (guide: AxisGuide): GuideTextStyle | false =>
 
 const axisTickLabelGapOf = (guide: AxisGuide): number =>
   guide.tickLabels !== false ? (guide.tickLabels?.gap ?? AXIS_LABEL_GAP) : AXIS_LABEL_GAP;
+
+type AxisTickLabelsToken = Exclude<NonNullable<AxisGuide['tickLabels']>, false>;
+type AxisTickLabelLayoutToken = NonNullable<AxisTickLabelsToken['layout']>;
+type AxisTickLabelLayoutObject = Exclude<AxisTickLabelLayoutToken, false>;
+type TickLabelLayoutAxis = 'x' | 'y' | 'both';
+type TickLabelLayoutMode = 'cartesian-x' | 'cartesian-y' | 'generic';
+
+type TickLabelBox = {
+  index: number;
+  node: IRNode;
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+};
+
+type TickLabelLayoutOptions = {
+  fontSize: number;
+  mode: TickLabelLayoutMode;
+  axis: TickLabelLayoutAxis;
+  axisRange?: readonly [number, number];
+};
+
+const axisTickLabelsTokenOf = (guide: AxisGuide): AxisTickLabelsToken | undefined =>
+  guide.tickLabels !== undefined && guide.tickLabels !== false ? guide.tickLabels : undefined;
+
+const labelTextOf = (node: IRNode): string => textBlockMeasureText(node.text);
+
+const labelFontSizeOf = (node: IRNode, fallback: number): number => {
+  const size = node.font?.size;
+  return typeof size === 'number' && Number.isFinite(size) && size > 0 ? size : fallback;
+};
+
+const rotatedLabelSizeOf = (node: IRNode, fontSize: number, rotate: number): { width: number; height: number } => {
+  const size = labelFontSizeOf(node, fontSize);
+  const width = Math.min(estimateLabelWidth(labelTextOf(node), size), node.maxTextWidth ?? Number.POSITIVE_INFINITY);
+  const height = node.lineHeight ?? size;
+  const radians = Math.abs(rotate) * DEG_TO_RAD;
+  const cos = Math.abs(Math.cos(radians));
+  const sin = Math.abs(Math.sin(radians));
+  return { width: width * cos + height * sin, height: width * sin + height * cos };
+};
+
+const nodePointOf = (node: IRNode): [number, number] => {
+  const position = node.position;
+  return Array.isArray(position) && typeof position[0] === 'number' && typeof position[1] === 'number'
+    ? [position[0], position[1]]
+    : [0, 0];
+};
+
+const tickLabelBoxOf = (node: IRNode, index: number, fontSize: number, rotate: number): TickLabelBox => {
+  const [x, y] = nodePointOf(node);
+  const size = rotatedLabelSizeOf(node, fontSize, rotate);
+  return {
+    index,
+    node,
+    x0: x - size.width / 2,
+    x1: x + size.width / 2,
+    y0: y - size.height / 2,
+    y1: y + size.height / 2,
+  };
+};
+
+const tickLabelBoxesOf = (nodes: ReadonlyArray<IRNode>, fontSize: number, rotate: number): Array<TickLabelBox> =>
+  nodes.map((node, index) => tickLabelBoxOf(node, index, fontSize, rotate));
+
+const tickLabelBoxesOverlap = (a: TickLabelBox, b: TickLabelBox, axis: TickLabelLayoutAxis, separation: number): boolean => {
+  const xOverlap = a.x0 - separation < b.x1 && a.x1 + separation > b.x0;
+  const yOverlap = a.y0 - separation < b.y1 && a.y1 + separation > b.y0;
+  if (axis === 'x') return xOverlap;
+  if (axis === 'y') return yOverlap;
+  return xOverlap && yOverlap;
+};
+
+const hasTickLabelOverlap = (boxes: ReadonlyArray<TickLabelBox>, axis: TickLabelLayoutAxis, separation = 0): boolean =>
+  boxes.some((box, index) => boxes.slice(0, index).some(previous => tickLabelBoxesOverlap(previous, box, axis, separation)));
+
+const sampleTickLabelBoxes = (boxes: ReadonlyArray<TickLabelBox>, sampleSize: number | undefined): Array<TickLabelBox> => {
+  if (sampleSize === undefined || boxes.length <= sampleSize) return [...boxes];
+  if (sampleSize === 1) return [boxes[0]];
+  const last = boxes.length - 1;
+  return Array.from({ length: sampleSize }, (_unused, index) => boxes[Math.round((index * last) / (sampleSize - 1))]);
+};
+
+const defaultTickLabelAutoAnglesOf = (mode: TickLabelLayoutMode): Array<number> =>
+  mode === 'cartesian-x' ? [0, -30, -45, -60, -90] : [0];
+
+const tickLabelAutoRotateOf = (
+  guide: AxisGuide,
+  nodes: ReadonlyArray<IRNode>,
+  layout: AxisTickLabelLayoutObject | undefined,
+  options: TickLabelLayoutOptions,
+): number => {
+  const token = axisTickLabelsTokenOf(guide);
+  if (token?.rotate !== undefined) return token.rotate;
+  if (layout?.rotate === false) return 0;
+  const rotate = layout?.rotate;
+  const angles = rotate?.angles ?? defaultTickLabelAutoAnglesOf(options.mode);
+  const recoverWhenFailed = rotate?.recoverWhenFailed ?? true;
+  for (const angle of angles) {
+    const boxes = sampleTickLabelBoxes(tickLabelBoxesOf(nodes, options.fontSize, angle), layout?.sampleSize);
+    if (!hasTickLabelOverlap(boxes, options.axis)) return angle;
+  }
+  return recoverWhenFailed ? 0 : (angles[angles.length - 1] ?? 0);
+};
+
+const flushTickLabelBounds = (
+  box: TickLabelBox,
+  axis: Exclude<TickLabelLayoutAxis, 'both'>,
+  range: readonly [number, number],
+): IRNode => {
+  const [lo, hi] = range[0] <= range[1] ? [range[0], range[1]] : [range[1], range[0]];
+  const position: [number, number] = nodePointOf(box.node);
+  if (axis === 'x') {
+    const width = box.x1 - box.x0;
+    if (width >= hi - lo) position[0] = (lo + hi) / 2;
+    else if (box.x0 < lo) position[0] += lo - box.x0;
+    else if (box.x1 > hi) position[0] -= box.x1 - hi;
+  } else {
+    const height = box.y1 - box.y0;
+    if (height >= hi - lo) position[1] = (lo + hi) / 2;
+    else if (box.y0 < lo) position[1] += lo - box.y0;
+    else if (box.y1 > hi) position[1] -= box.y1 - hi;
+  }
+  return { ...box.node, position };
+};
+
+const applyTickLabelBounds = (
+  boxes: ReadonlyArray<TickLabelBox>,
+  axis: TickLabelLayoutAxis,
+  range: readonly [number, number] | undefined,
+  layout: AxisTickLabelLayoutObject | undefined,
+): Array<IRNode> => {
+  if (range === undefined || axis === 'both' || layout?.bounds === false) return boxes.map(box => box.node);
+  const bounds = layout?.bounds;
+  const overflow = bounds?.overflow ?? AxisTickLabelOverflow.Flush;
+  if (overflow === AxisTickLabelOverflow.Allow) return boxes.map(box => box.node);
+  const tolerance = bounds?.tolerance ?? 1;
+  const [lo, hi] = range[0] <= range[1] ? [range[0], range[1]] : [range[1], range[0]];
+  if (overflow === AxisTickLabelOverflow.Hide) {
+    return boxes
+      .filter(box => (axis === 'x' ? box.x0 >= lo - tolerance && box.x1 <= hi + tolerance : box.y0 >= lo - tolerance && box.y1 <= hi + tolerance))
+      .map(box => box.node);
+  }
+  return boxes.map(box => flushTickLabelBounds(box, axis, range));
+};
+
+const hideGreedyTickLabels = (
+  boxes: ReadonlyArray<TickLabelBox>,
+  axis: TickLabelLayoutAxis,
+  preserveEnds: boolean,
+  separation: number,
+): Array<IRNode> => {
+  if (boxes.length <= 2) return boxes.map(box => box.node);
+  const kept: Array<TickLabelBox> = preserveEnds ? [boxes[0]] : [];
+  const last = preserveEnds ? boxes[boxes.length - 1] : undefined;
+  for (const box of boxes.slice(preserveEnds ? 1 : 0, preserveEnds ? -1 : undefined)) {
+    const conflicts = kept.some(keptBox => tickLabelBoxesOverlap(keptBox, box, axis, separation)) ||
+      (last !== undefined && tickLabelBoxesOverlap(last, box, axis, separation));
+    if (!conflicts) kept.push(box);
+  }
+  if (last !== undefined && !kept.includes(last)) kept.push(last);
+  return kept.sort((a, b) => a.index - b.index).map(box => box.node);
+};
+
+const hideParityTickLabels = (
+  boxes: ReadonlyArray<TickLabelBox>,
+  axis: TickLabelLayoutAxis,
+  preserveEnds: boolean,
+  separation: number,
+): Array<IRNode> => {
+  if (!hasTickLabelOverlap(boxes, axis, separation)) return boxes.map(box => box.node);
+  for (let stride = 2; stride < boxes.length; stride *= 2) {
+    const picked = boxes.filter((_box, index) => index % stride === 0 || (preserveEnds && (index === 0 || index === boxes.length - 1)));
+    if (!hasTickLabelOverlap(picked, axis, separation)) return picked.map(box => box.node);
+  }
+  return hideGreedyTickLabels(boxes, axis, preserveEnds, separation);
+};
+
+const applyTickLabelHide = (
+  nodes: ReadonlyArray<IRNode>,
+  layout: AxisTickLabelLayoutObject | undefined,
+  options: TickLabelLayoutOptions,
+  rotate: number,
+): Array<IRNode> => {
+  if (layout?.hide === false) return [...nodes];
+  const hide = layout?.hide;
+  const strategy = hide?.strategy ?? AxisTickLabelHideStrategy.Greedy;
+  const preserveEnds = hide?.preserveEnds ?? true;
+  const separation = hide?.separation ?? 0;
+  const boxes = tickLabelBoxesOf(nodes, options.fontSize, rotate);
+  if (strategy === AxisTickLabelHideStrategy.Parity) return hideParityTickLabels(boxes, options.axis, preserveEnds, separation);
+  return hideGreedyTickLabels(boxes, options.axis, preserveEnds, separation);
+};
+
+const layoutTickLabelNodes = (
+  guide: AxisGuide,
+  nodes: ReadonlyArray<IRNode>,
+  options: TickLabelLayoutOptions,
+): Array<IRNode> => {
+  if (nodes.length <= 1) return [...nodes];
+  const token = axisTickLabelsTokenOf(guide) ?? ({});
+  const layout = token.layout;
+  if (layout === false) return nodes.map(node => ({ ...node, ...(token.rotate !== undefined ? { rotate: token.rotate } : {}) }));
+  const layoutObject = layout === undefined ? undefined : layout;
+  const rotate = tickLabelAutoRotateOf(guide, nodes, layoutObject, options);
+  const hasFixedRotate = token.rotate !== undefined;
+  const rotated = nodes.map(node => ({ ...node, ...(rotate !== 0 || hasFixedRotate ? { rotate } : {}) }));
+  const visible = applyTickLabelHide(rotated, layoutObject, options, rotate);
+  return applyTickLabelBounds(tickLabelBoxesOf(visible, options.fontSize, rotate), options.axis, options.axisRange, layoutObject);
+};
 
 const axisTitleOf = (
   guide: AxisGuide,
@@ -400,18 +618,27 @@ const lowerCartesianGuide = (
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
   const labels: Array<IRNode> = showLabels
-    ? ticks.values.map((value, index): IRNode => {
-        const p = project.coordinate(value);
-        const text = ticks.labels[index];
-        const position: [number, number] = isX
-          ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
-          : [
-              axisX +
-                tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2),
-              p,
-            ];
-        return { type: 'node', position, text, ...tickLabelStyle };
-      })
+    ? layoutTickLabelNodes(
+        guide,
+        ticks.values.map((value, index): IRNode => {
+          const p = project.coordinate(value);
+          const text = ticks.labels[index];
+          const position: [number, number] = isX
+            ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
+            : [
+                axisX +
+                  tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2),
+                p,
+              ];
+          return { type: 'node', position, text, ...tickLabelStyle };
+        }),
+        {
+          fontSize,
+          mode: isX ? 'cartesian-x' : 'cartesian-y',
+          axis: isX ? 'x' : 'y',
+          axisRange: isX ? [left, right] : [top, bottom],
+        },
+      )
     : [];
 
   const titleNode = ((): IRNode | null => {
@@ -538,15 +765,19 @@ const lowerAngularAxis = (
   if (tickPath) axisChildren.push(tickPath);
   axisChildren.push(...tickShapeNodes);
   const labels: Array<IRNode> = showLabels
-    ? ticks.values.map((value, index): IRNode => {
-        const theta = scale.coordinate(value);
-        const position = finitePolarPoint(
-          frame.center,
-          theta,
-          outer + tickLength + tickLabelGap + fontSize / 2,
-        );
-        return { type: 'node', position, text: ticks.labels[index], ...tickLabelStyle };
-      })
+    ? layoutTickLabelNodes(
+        guide,
+        ticks.values.map((value, index): IRNode => {
+          const theta = scale.coordinate(value);
+          const position = finitePolarPoint(
+            frame.center,
+            theta,
+            outer + tickLength + tickLabelGap + fontSize / 2,
+          );
+          return { type: 'node', position, text: ticks.labels[index], ...tickLabelStyle };
+        }),
+        { fontSize, mode: 'generic', axis: 'both' },
+      )
     : [];
   const title = axisTitleOf(guide);
   if (title !== null) {
@@ -637,7 +868,9 @@ const lowerRadialAxis = (
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
   const labels: Array<IRNode> = showLabels
-    ? ticks.values.map((value, index): IRNode => {
+    ? layoutTickLabelNodes(
+        guide,
+        ticks.values.map((value, index): IRNode => {
         const radius = scale.coordinate(value);
         const point = finitePolarPoint(frame.center, baseAngle, radius);
         const text = ticks.labels[index];
@@ -645,7 +878,9 @@ const lowerRadialAxis = (
         const offset = tickLength + tickLabelGap + fontSize / 2;
         const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
         return { type: 'node', position, text, ...tickLabelStyle };
-      })
+        }),
+        { fontSize, mode: 'generic', axis: 'both' },
+      )
     : [];
   const title = axisTitleOf(guide);
   if (title !== null) {
@@ -745,7 +980,7 @@ const lowerTernaryGuide = (
   const axisLine: Segment = [baseP, apex];
   const tickSegments: Array<Segment> = [];
   const tickShapePlacements: Array<TickShapePlacement> = [];
-  const labels: Array<IRNode> = [];
+  const tickLabelNodes: Array<IRNode> = [];
   const axisTangentLength = Math.hypot(apex[0] - baseP[0], apex[1] - baseP[1]) || 1;
   const axisTangent: [number, number] = [(apex[0] - baseP[0]) / axisTangentLength, (apex[1] - baseP[1]) / axisTangentLength];
   ticks.values.forEach((value, index) => {
@@ -756,7 +991,7 @@ const lowerTernaryGuide = (
     tickShapePlacements.push({ point, normal: out, tangent: axisTangent });
     if (showLabels) {
       const offset = tickLength + tickLabelGap + fontSize / 2;
-      labels.push({
+      tickLabelNodes.push({
         type: 'node',
         position: [point[0] + out[0] * offset, point[1] + out[1] * offset],
         text: ticks.labels[index],
@@ -764,6 +999,7 @@ const lowerTernaryGuide = (
       });
     }
   });
+  const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, { fontSize, mode: 'generic', axis: 'both' });
   const title = axisTitleOf(guide);
   if (title !== null) {
     const mid = lerp2(baseP, apex, 0.5);
@@ -895,7 +1131,7 @@ export const lowerCustomAxis = (
   };
   const tickSegments: Array<Segment> = [];
   const tickShapePlacements: Array<TickShapePlacement> = [];
-  const labels: Array<IRNode> = [];
+  const tickLabelNodes: Array<IRNode> = [];
   for (const tick of numericTicks) {
     const resolved = pointAndTangent(tick.value);
     if (!resolved) continue;
@@ -907,7 +1143,7 @@ export const lowerCustomAxis = (
     tickShapePlacements.push({ point, normal, tangent: unitTangent });
     if (showLabels) {
       const offset = tickLength + tickLabelGap + fontSize / 2;
-      labels.push({
+      tickLabelNodes.push({
         type: 'node',
         position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
         text: tick.label,
@@ -915,6 +1151,7 @@ export const lowerCustomAxis = (
       });
     }
   }
+  const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, { fontSize, mode: 'generic', axis: 'both' });
   const title = axisTitleOf(guide);
   if (title !== null) {
     const resolved = pointAndTangent((lo + hi) / 2);

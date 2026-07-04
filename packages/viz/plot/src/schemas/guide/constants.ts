@@ -142,6 +142,30 @@ export const AxisTickShapeOrientation = {
 /** shape tick mark 方向策略取值。 */
 export type AxisTickShapeOrientationValue = ValueOf<typeof AxisTickShapeOrientation>;
 
+/** tick label 重叠隐藏策略。 */
+export const AxisTickLabelHideStrategy = {
+  /** 顺序扫描，保留不与上一个可见 label 重叠的 label。 */
+  Greedy: 'greedy',
+  /** 先隔一个隐藏一个，不够时继续扩大步长。 */
+  Parity: 'parity',
+} as const;
+
+/** tick label 重叠隐藏策略取值。 */
+export type AxisTickLabelHideStrategyValue = ValueOf<typeof AxisTickLabelHideStrategy>;
+
+/** tick label 超出轴范围时的处理策略。 */
+export const AxisTickLabelOverflow = {
+  /** 允许超出轴范围。 */
+  Allow: 'allow',
+  /** 超出容忍范围时隐藏。 */
+  Hide: 'hide',
+  /** 把首尾附近 label 推回轴范围内。 */
+  Flush: 'flush',
+} as const;
+
+/** tick label 超出轴范围时的处理策略取值。 */
+export type AxisTickLabelOverflowValue = ValueOf<typeof AxisTickLabelOverflow>;
+
 /**
  * 图例绑定的非位置通道名。
  * @description schema 只要求非空字符串；该通道是否存在、是否产出 legend descriptor，由 channel registry 在 lowering 时解析。

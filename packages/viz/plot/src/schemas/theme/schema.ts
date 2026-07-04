@@ -1,6 +1,13 @@
 import { z } from 'zod';
 
-import { AxisLineStyleSchema, AxisTickMarkSchema, GuideLineStyleSchema, GuideTextStyleSchema, LegendGuideStyleSchema } from '../guide';
+import {
+  AxisLineStyleSchema,
+  AxisTickLabelLayoutSchema,
+  AxisTickMarkSchema,
+  GuideLineStyleSchema,
+  GuideTextStyleSchema,
+  LegendGuideStyleSchema,
+} from '../guide';
 
 const ThemeAxisTicksSchema = z
   .object({
@@ -17,6 +24,7 @@ const ThemeAxisTickLabelsSchema = z
         gap: z.number().nonnegative().optional().describe('Default gap between tick end and tick label center'),
         rotate: z.number().optional().describe('Default tick label rotation in degrees around the label center'),
         anchor: z.string().min(1).optional().describe('Default semantic anchor hint for tick labels'),
+        layout: AxisTickLabelLayoutSchema.optional().describe('Default tick label adaptive layout strategy'),
         ...GuideTextStyleSchema.shape,
       })
       .strict(),
