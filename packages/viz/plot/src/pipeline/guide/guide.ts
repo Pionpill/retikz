@@ -9,7 +9,9 @@ import type {
   GuideContext,
   LoweredGuide,
   PolarCoordinateFrame,
+  PositionScale,
   TernaryVertices,
+  TickSet,
 } from '../../contract';
 import type { ResolvedLegendGuideTokens } from '../../providers';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue, ScalarValue } from '../../schemas';
@@ -613,8 +615,73 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
     .join('\n');
 };
 
-const axisGridStyleOf = (guide: AxisGuide): GuidePathStyle | undefined =>
-  typeof guide.grid === 'object' ? lineStyleProps(guide.grid) : undefined;
+type AxisGridToken = Exclude<NonNullable<AxisGuide['grid']>, boolean>;
+type AxisMinorGridToken = Exclude<NonNullable<AxisGridToken['minor']>, false>;
+type AxisGridTickOptions = Pick<AxisGridToken, 'ticks' | 'density' | 'bandPosition'>;
+
+const axisGridTokenOf = (guide: AxisGuide): AxisGridToken | undefined =>
+  typeof guide.grid === 'object' ? guide.grid : undefined;
+
+const axisMinorGridTokenOf = (grid: AxisGridToken | undefined): AxisMinorGridToken | undefined =>
+  grid?.minor !== undefined && grid.minor !== false ? grid.minor : undefined;
+
+const axisGridStyleOf = (grid: AxisGridToken | AxisMinorGridToken | undefined): GuidePathStyle | undefined =>
+  grid === undefined ? undefined : lineStyleProps(grid);
+
+const gridCoordinateOf = (
+  scale: PositionScale,
+  value: ScalarValue,
+  bandPosition: number | undefined,
+): number => {
+  const coordinate = scale.coordinate(value);
+  if (!Number.isFinite(coordinate) || !Number.isFinite(scale.bandwidth) || scale.bandwidth <= 0) return coordinate;
+  return coordinate + ((bandPosition ?? 0.5) - 0.5) * scale.bandwidth;
+};
+
+const resolveAxisGridTicks = (
+  scale: PositionScale,
+  fallbackTicks: TickSet,
+  options: AxisGridTickOptions | undefined,
+  coordinate: (value: ScalarValue) => number,
+): TickSet => {
+  const candidateTicks = options?.ticks === undefined ? fallbackTicks : resolveGuideTicks(scale, options.ticks);
+  if (options?.density === undefined) return candidateTicks;
+  return resolveVisibleGuideTicks(candidateTicks, { density: options.density }, coordinate);
+};
+
+const filterOverlappingGridTicks = (
+  ticks: TickSet,
+  reference: TickSet,
+  coordinate: (value: ScalarValue) => number,
+  referenceCoordinate: (value: ScalarValue) => number = coordinate,
+): TickSet => {
+  const referenceCoordinates = reference.values
+    .map(value => referenceCoordinate(value))
+    .filter(value => Number.isFinite(value));
+  const indices = ticks.values
+    .map((value, index) => ({ index, projected: coordinate(value) }))
+    .filter(({ projected }) => !referenceCoordinates.some(referenceProjected => Math.abs(referenceProjected - projected) <= 1e-6))
+    .map(({ index }) => index);
+  return {
+    values: indices.map(index => ticks.values[index]),
+    labels: indices.map(index => ticks.labels[index]),
+  };
+};
+
+const unitGridScale = (fallbackTicks: TickSet): PositionScale => ({
+  coordinate: value => Number(value),
+  domain: () => [0, 1],
+  bandwidth: 0,
+  ticks: count => {
+    if (count === undefined) return fallbackTicks;
+    if (count <= 1) return { values: [0], labels: ['0'] };
+    const values = Array.from({ length: count }, (_unused, index) => index / (count - 1));
+    return { values, labels: values.map(value => String(value)) };
+  },
+  tickKind: 'number',
+  range: () => [0, 1],
+  setRange: () => {},
+});
 
 /** 把若干直线段拼成一条多子路径 Path（每段一对 move/line）；空段返回 null */
 const segmentsToPath = (segments: Array<Segment>, style?: GuidePathStyle): IRPath | null => {
@@ -898,8 +965,16 @@ const lowerCartesianGuide = (
   // ---- 网格层（grid:true 才出）----
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
-    const gridSegments: Array<Segment> = ticks.values.map(value => {
-      const p = project.coordinate(value);
+    const grid = axisGridTokenOf(guide);
+    const majorBandPosition = grid?.bandPosition;
+    const majorTicks = resolveAxisGridTicks(
+      project,
+      ticks,
+      grid,
+      value => gridCoordinateOf(project, value, majorBandPosition),
+    );
+    const gridSegments: Array<Segment> = majorTicks.values.map(value => {
+      const p = gridCoordinateOf(project, value, majorBandPosition);
       return isX
         ? [
             [p, top],
@@ -910,13 +985,44 @@ const lowerCartesianGuide = (
             [right, p],
           ];
     });
-    const gridPath = segmentsToPath(gridSegments, { drawOpacity: 0.15, ...axisGridStyleOf(guide) });
-    if (gridPath) {
+    const gridPath = segmentsToPath(gridSegments, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
+    const minorGrid = axisMinorGridTokenOf(grid);
+    const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
+    const minorTicks = minorGrid === undefined
+      ? null
+      : filterOverlappingGridTicks(
+          resolveAxisGridTicks(
+            project,
+            ticks,
+            minorGrid,
+            value => gridCoordinateOf(project, value, minorBandPosition),
+          ),
+          majorTicks,
+          value => gridCoordinateOf(project, value, minorBandPosition),
+          value => gridCoordinateOf(project, value, majorBandPosition),
+        );
+    const minorSegments: Array<Segment> = minorTicks === null
+      ? []
+      : minorTicks.values.map(value => {
+          const p = gridCoordinateOf(project, value, minorBandPosition);
+          return isX
+            ? [
+                [p, top],
+                [p, bottom],
+              ]
+            : [
+                [left, p],
+                [right, p],
+              ];
+        });
+    const minorGridPath = segmentsToPath(minorSegments, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
+    const gridChildren = [gridPath, minorGridPath].filter((path): path is IRPath => path !== null);
+    if (gridChildren.length > 0) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
         pathDefault: { stroke: 'currentColor' },
-        children: [gridPath],
+        children: gridChildren,
       };
     }
   }
@@ -1039,17 +1145,48 @@ const lowerAngularAxis = (
   // ---- 网格层（grid:true → 每角向刻度一条圆心→外圆辐条）----
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
-    const spokes: Array<Segment> = ticks.values.map(value => {
-      const theta = scale.coordinate(value);
+    const grid = axisGridTokenOf(guide);
+    const majorBandPosition = grid?.bandPosition;
+    const majorTicks = resolveAxisGridTicks(
+      scale,
+      ticks,
+      grid,
+      value => gridCoordinateOf(scale, value, majorBandPosition),
+    );
+    const spokes: Array<Segment> = majorTicks.values.map(value => {
+      const theta = gridCoordinateOf(scale, value, majorBandPosition);
       return [finitePolarPoint(frame.center, theta, frame.innerRadius), finitePolarPoint(frame.center, theta, outer)];
     });
-    const gridPath = segmentsToPath(spokes, { drawOpacity: 0.15, ...axisGridStyleOf(guide) });
-    if (gridPath) {
+    const gridPath = segmentsToPath(spokes, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
+    const minorGrid = axisMinorGridTokenOf(grid);
+    const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
+    const minorTicks = minorGrid === undefined
+      ? null
+      : filterOverlappingGridTicks(
+          resolveAxisGridTicks(
+            scale,
+            ticks,
+            minorGrid,
+            value => gridCoordinateOf(scale, value, minorBandPosition),
+          ),
+          majorTicks,
+          value => gridCoordinateOf(scale, value, minorBandPosition),
+          value => gridCoordinateOf(scale, value, majorBandPosition),
+        );
+    const minorSpokes: Array<Segment> = minorTicks === null
+      ? []
+      : minorTicks.values.map(value => {
+          const theta = gridCoordinateOf(scale, value, minorBandPosition);
+          return [finitePolarPoint(frame.center, theta, frame.innerRadius), finitePolarPoint(frame.center, theta, outer)];
+        });
+    const minorGridPath = segmentsToPath(minorSpokes, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
+    const gridChildren = [gridPath, minorGridPath].filter((path): path is IRPath => path !== null);
+    if (gridChildren.length > 0) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
         pathDefault: { stroke: 'currentColor' },
-        children: [gridPath],
+        children: gridChildren,
       };
     }
   }
@@ -1150,16 +1287,46 @@ const lowerRadialAxis = (
   // ---- 网格层（grid:true → 每径向刻度一个同心圆环）----
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
-    const rings: Array<IRPath> = ticks.values
-      .map(value => scale.coordinate(value))
+    const grid = axisGridTokenOf(guide);
+    const majorBandPosition = grid?.bandPosition;
+    const majorTicks = resolveAxisGridTicks(
+      scale,
+      ticks,
+      grid,
+      value => gridCoordinateOf(scale, value, majorBandPosition),
+    );
+    const rings: Array<IRPath> = majorTicks.values
+      .map(value => gridCoordinateOf(scale, value, majorBandPosition))
       .filter(radius => Number.isFinite(radius) && radius > 0)
-      .map(radius => ({ ...arcPath(frame, radius), ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(guide) }) }));
-    if (rings.length > 0) {
+      .map(radius => ({ ...arcPath(frame, radius), ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }) }));
+    const minorGrid = axisMinorGridTokenOf(grid);
+    const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
+    const minorTicks = minorGrid === undefined
+      ? null
+      : filterOverlappingGridTicks(
+          resolveAxisGridTicks(
+            scale,
+            ticks,
+            minorGrid,
+            value => gridCoordinateOf(scale, value, minorBandPosition),
+          ),
+          majorTicks,
+          value => gridCoordinateOf(scale, value, minorBandPosition),
+          value => gridCoordinateOf(scale, value, majorBandPosition),
+        );
+    const minorRings: Array<IRPath> = minorTicks === null
+      ? []
+      : minorTicks.values
+          .map(value => gridCoordinateOf(scale, value, minorBandPosition))
+          .filter(radius => Number.isFinite(radius) && radius > 0)
+          .map(radius => ({ ...arcPath(frame, radius), ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }) }));
+    const gridChildren = [...rings, ...minorRings];
+    if (gridChildren.length > 0) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
         pathDefault: { stroke: 'currentColor' },
-        children: rings,
+        children: gridChildren,
       };
     }
   }
@@ -1278,19 +1445,40 @@ const lowerTernaryGuide = (
   // ---- 网格层（grid:true → 内部刻度处平行 0 边的等值线）----
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
+    const grid = axisGridTokenOf(guide);
+    const gridScale = unitGridScale(ticks);
+    const majorTicks = resolveAxisGridTicks(gridScale, ticks, grid, value => Number(value));
     const isoSegments: Array<Segment> = [];
-  for (const value of ticks.values) {
+    for (const value of majorTicks.values) {
       const t = Number(value);
       if (t <= 0 || t >= 1) continue; // 0（0 边）/ 1（顶点）退化，不画
       isoSegments.push([lerp2(baseP, apex, t), lerp2(baseQ, apex, t)]);
     }
-    const gridPath = segmentsToPath(isoSegments, { drawOpacity: 0.15, ...axisGridStyleOf(guide) });
-    if (gridPath) {
+    const gridPath = segmentsToPath(isoSegments, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
+    const minorGrid = axisMinorGridTokenOf(grid);
+    const minorTicks = minorGrid === undefined
+      ? null
+      : filterOverlappingGridTicks(
+          resolveAxisGridTicks(gridScale, ticks, minorGrid, value => Number(value)),
+          majorTicks,
+          value => Number(value),
+        );
+    const minorIsoSegments: Array<Segment> = [];
+    if (minorTicks !== null) {
+      for (const value of minorTicks.values) {
+        const t = Number(value);
+        if (t <= 0 || t >= 1) continue;
+        minorIsoSegments.push([lerp2(baseP, apex, t), lerp2(baseQ, apex, t)]);
+      }
+    }
+    const minorGridPath = segmentsToPath(minorIsoSegments, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
+    const gridChildren = [gridPath, minorGridPath].filter((path): path is IRPath => path !== null);
+    if (gridChildren.length > 0) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
         pathDefault: { stroke: 'currentColor' },
-        children: [gridPath],
+        children: gridChildren,
       };
     }
   }

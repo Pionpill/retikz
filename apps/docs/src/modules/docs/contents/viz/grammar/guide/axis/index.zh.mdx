@@ -18,9 +18,15 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 
 ### 样式槽位
 
-`line` 控制轴线；`ticks` 控制刻度来源、长度和刻度线样式；`tickLabels` 控制刻度文字是否显示和文字样式；`title` 是轴标题，支持字符串或结构化文本；`grid` 可以是布尔值，也可以带线条样式。`dashOffset` 与 `dashPattern` 配合时，可以调整虚线起点。
+`line` 控制轴线；`ticks` 控制刻度来源、长度和刻度线样式；`tickLabels` 控制刻度文字是否显示和文字样式；`title` 是轴标题，支持字符串或结构化文本；`grid` 可以是布尔值，也可以带线条样式与独立刻度来源。`dashOffset` 与 `dashPattern` 配合时，可以调整虚线起点。
 
 <ComponentPreview name="axis-style-slots" sourceFiles={['axis-style-slots.data.ts']} />
+
+### 网格来源
+
+默认情况下，`grid: true` 会复用当前轴的可见 tick。需要轴上只显示少量刻度、但背景网格更密时，可以给 `grid.ticks` 单独配置 `values`、`interval` 或 `count`；`grid.density` 只抽稀网格，不会改变轴 tick。`grid.minor` 用来画次网格，和主网格重合的位置会自动跳过。
+
+<ComponentPreview name="axis-grid-source" sourceFiles={['axis-grid-source.data.ts']} />
 
 ### 刻度密度
 
@@ -82,7 +88,7 @@ polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向
 | `ticks`      | `{ count?, values?, interval?, density?, endpoint?, mark?, length?, line? }` | 默认刻度   | `values > interval > count` 生成候选 tick；`density` 抽稀可见 tick；`endpoint` 避让箭头附近的刻度标记且不改变 grid 来源；`mark` 控制短线 / 形状刻度 |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate?, layout? }` | `true` | 刻度文字配置；`format` 支持 d3-format / d3-time-format；`rotate` 是固定旋转，优先于 `layout.rotate`；`layout:false` 关闭自动避让 |
 | `title`      | `string \| { text, padding?, placement?, orientation?, anchor?, shift?, layout?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | 轴标题；`padding` 控制标题到刻度文字带的距离，`placement` 支持 path label 同类关键字或 `0..1` 比例，`anchor` / `shift` 微调端点对齐与局部偏移，显式 `rotate` 优先 |
-| `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | 是否画对齐本轴刻度的网格线（polar 的 y 轴即同心环），对象写法可覆盖网格线样式 |
+| `grid`       | `boolean \| { applyTo?, select?, ticks?, density?, bandPosition?, minor?, stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap? }` | `false` | 是否画网格线；默认复用本轴可见 tick，也可用 `grid.ticks` 独立设置来源；`minor` 画次网格；`applyTo/select` 控制组合 / 分面投放；`bandPosition` 只在 band scale 上生效 |
 | `id`         | `string?`                                          | —          | 可选句柄（预留，暂不解析）                                                                                       |
 
 ## 相关

@@ -18,9 +18,15 @@ The smallest structure is to list the x / y axes you want inside `<Plot>`. In th
 
 ### Style Slots
 
-`line` controls the axis line; `ticks` controls the tick source, length, and tick-line style; `tickLabels` controls whether tick text renders and how it is styled; `title` is the axis title and accepts a string or structured text; `grid` can be a boolean or a line-style object. `dashOffset` pairs with `dashPattern` when you need to shift the dash phase.
+`line` controls the axis line; `ticks` controls the tick source, length, and tick-line style; `tickLabels` controls whether tick text renders and how it is styled; `title` is the axis title and accepts a string or structured text; `grid` can be a boolean, a line-style object, or an object with its own tick source. `dashOffset` pairs with `dashPattern` when you need to shift the dash phase.
 
 <ComponentPreview name="axis-style-slots" sourceFiles={['axis-style-slots.data.ts']} />
+
+### Grid Source
+
+By default, `grid: true` reuses the current axis's visible ticks. When the axis should keep sparse labels but the background needs denser guides, set `grid.ticks` with `values`, `interval`, or `count`; `grid.density` samples only grid lines and does not change axis ticks. Use `grid.minor` for minor grid lines; positions that overlap the major grid are skipped automatically.
+
+<ComponentPreview name="axis-grid-source" sourceFiles={['axis-grid-source.data.ts']} />
 
 ### Tick Density
 
@@ -84,7 +90,7 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
 | `ticks`      | `{ count?, values?, interval?, density?, endpoint?, mark?, length?, line? }` | default ticks      | `values > interval > count` creates candidate ticks; `density` samples visible ticks; `endpoint` hides tick artifacts near arrows without changing grid source; `mark` controls line / shape marks |
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate?, layout? }` | `true` | Tick-label config; `format` accepts d3-format / d3-time-format; `rotate` is fixed rotation and takes priority over `layout.rotate`; `layout:false` disables adaptive layout |
 | `title`      | `string \| { text, padding?, placement?, orientation?, anchor?, shift?, layout?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | Axis title; `padding` controls distance from the tick-label band, `placement` supports path-label-like keywords or a `0..1` ratio, `anchor` / `shift` fine-tune endpoint alignment and local offset, and explicit `rotate` takes priority |
-| `grid`       | `boolean \| { stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset? }` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar y); object form overrides line style |
+| `grid`       | `boolean \| { applyTo?, select?, ticks?, density?, bandPosition?, minor?, stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap? }` | `false` | Draw grid lines; by default it reuses the axis's visible ticks, while `grid.ticks` gives the grid its own source. `minor` draws minor lines; `applyTo/select` controls composition / facet projection; `bandPosition` only affects band scales |
 | `id`         | `string?`                                          | —                  | Optional handle (reserved, not yet resolved)                                                                                                      |
 
 ## Related

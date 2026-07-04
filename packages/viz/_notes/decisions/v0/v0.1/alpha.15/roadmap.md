@@ -25,8 +25,9 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 | ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density | Accepted（已实现） |
 | ADR-07 | **axis tick label adaptive layout** | 为 axis tick label 增加自适应旋转、重叠省略与边界处理；允许用户关闭旋转、省略或全部自适应，且不改变 tick / grid / mark 同源语义 | Accepted（已实现） |
 | ADR-08 | **axis title layout and anchor strategy** | 为 axis title 统一复用 core position 关键字，`gap` 改名为 `padding`，并补齐 shift、结构化 anchor 与 title layout 避让策略 | Accepted（已实现） |
+| ADR-09 | **axis grid source and style strategy** | 为 axis grid 增加独立 tick source、density、minor grid、bandPosition 与 lineCap；层级 / z-order 延后统一讨论 | Accepted |
 
-> 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`、`08-axis-title-layout.md`。
+> 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`、`08-axis-title-layout.md`、`09-axis-grid-source-and-style.md`。
 
 ## 依赖与顺序
 
@@ -38,6 +39,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 6. **ADR-06 补 axis tick 来源、形态与密度**：复用 ADR-02 的 ticks 槽位和 ADR-01 的 tick source 语义，把候选 tick 生成、visible tick 抽稀、tick mark 形态分层；它不改变 theme 的 tick source 语义。
 7. **ADR-07 补 tick label 自适应布局**：复用 ADR-02 的 tickLabels 槽位和 ADR-06 的 visible tick set，只处理 label node 的旋转、隐藏和边界避让；它不回写 tick source、grid 或 tick mark。
 8. **ADR-08 补 axis title 布局与锚点**：复用 core path label 的 position 关键字心智模型，修正 `gap -> padding` 命名，并把端点标题的锚点、微调和自动避让做成配置，而不是 chart preset 私有规则。
+9. **ADR-09 补 axis grid 来源与样式**：复用 guide tick source / density 模型，为 grid 增加独立 source、minor grid、bandPosition 和 lineCap；grid 层级等待后续统一 layer 模型。
 
 ## 关键设计约束
 
@@ -49,6 +51,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 - **tick 是 guide family 语义的一部分**：`ticks.count` 只是 hint；本轮开放 `ticks.values` 与声明式 `tickLabels.format`，避免只有 count 无法控制关键刻度。Axis 与 legend ramp 必须复用同一 tick resolver。
 - **tick source 与 visible density 分层**：`ticks.count` / `ticks.values` / `ticks.interval` 只产生候选 tick set；可见 tick 抽稀由 `ticks.density` 显式控制，缺省保持全量显示，不让 theme 隐式改变阅读粒度。
 - **tick label 避让不改变 tick set**：`tickLabels.layout` 只能改变 label node 的旋转、可见性和边界对齐，不改变 ticks、grid 或 tick mark 的 visible tick set。
+- **grid 默认同源但允许显式独立**：`grid:true` 继续使用 axis visible tick set；只有显式 `grid.ticks` / `grid.minor.ticks` 时，grid 才独立生成自己的 tick source。
 - **受限 scale 必须守住 domain invariant**：log 只能正 domain；sqrt / radial 不能负；pow 在非整数指数时不能负。domain padding 与单值 fallback 不能把合法 domain 扩成非法 domain，family matrix 必须落到 shared domain resolver。
 - **axis 部件分层明确**：line、ticks、tickLabels、title、grid 分开控制，不把所有外观和几何 token 塞进一个 `style` 对象；guide 文本统一复用 core `TextBlock` / `Font` 词汇，guide 线条统一复用 core path `stroke` / `strokeWidth` / `drawOpacity` / `dashPattern` / `dashOffset` 词汇，不另造平行文本或线条类型。
 - **tick shape 复用 core Node shape**：axis tick 需要三角、圆点、菱形或自定义形态时，plot 只 lowering 成 core Node shape；不新增 plot-only shape provider。
@@ -110,6 +113,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
   - tickLabels: format、gap、font、textColor、opacity、align、lineHeight、maxTextWidth、rotate、anchor。
   - title: TextBlock text、padding（ADR-08 替换 gap）、placement、orientation、font、textColor、opacity、align、lineHeight、maxTextWidth、rotate、anchor、shift、layout。
   - grid: applyTo/select、stroke、strokeWidth、drawOpacity、dashPattern、dashOffset。
+  - grid 进阶（ADR-09）：ticks、density、minor、bandPosition、lineCap。
 - 共享 schema / resolver：
   - `GuideLineStyleSchema`: core path line vocabulary。
   - `GuideTextStyleSchema`: core text vocabulary。
@@ -270,6 +274,25 @@ built-in default theme
 - 新增 `title.layout`，把 reserve / avoid / overflow 策略做成配置入口，后续自动避让 tick label band 和 line endpoint mark 时复用。
 
 不在本 ADR 范围：labelArrow、标题截断 / 换行、真实 renderer text measurement、标题背景 / 边框 / leader line、chart preset 默认规则。
+
+### ADR-09：axis grid source and style strategy
+
+目标是补齐 axis grid 的来源、主 / 次网格和 band 位置能力，同时保持 grid 仍是 axis 的子属性。
+
+实现状态：2026-07-04 已完成 schema、theme 边界、cartesian / polar / ternary lowering、测试与 axis 文档 demo；custom coordinate grid surface 仍不在范围内。
+
+设计倾向：
+
+- `grid:true` 默认行为不变，继续使用 axis visible tick set。
+- 新增 `grid.ticks?: GuideTickSource`，允许主 grid 独立于 axis tick source 生成 tick。
+- 新增 `grid.density?: AxisTickDensity`，复用 ADR-06 的 visible sampling 模型；省略时不额外抽稀。
+- 新增 `grid.minor?: false | { ticks, density?, bandPosition?, ...lineStyle }`，次网格必须显式给 `ticks`，不由底层 guide 猜测 minor tick。
+- 新增 `grid.bandPosition?: number`，band scale 下 `0` / `0.5` / `1` 分别表示 band 负向边界 / 中心 / 正向边界；连续与 point scale 下无效果。
+- 新增 `grid.lineCap`，复用 core `PathLineCapSchema`，只作用于 grid line。
+- theme axis grid 只接收视觉 token：stroke、strokeWidth、drawOpacity、dashPattern、dashOffset、lineCap；不接收 ticks、density、minor、bandPosition、applyTo/select。
+- major / minor grid 使用同一个 `applyTo/select` 投放范围。
+
+不在本 ADR 范围：grid layer / z-index / draw order、data-driven per-line style、reference band、custom coordinate grid surface、自动 minor tick 生成、grid label / interaction。
 
 ## 文件 scope 预估
 

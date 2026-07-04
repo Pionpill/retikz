@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 import {
+  AxisGridLineStyleSchema,
   AxisLineStyleSchema,
   AxisTickLabelLayoutSchema,
   AxisTickMarkSchema,
-  GuideLineStyleSchema,
   GuideTextStyleSchema,
   LegendGuideStyleSchema,
 } from '../guide';
@@ -49,7 +49,7 @@ export const PlotAxisThemeSchema = z
     ticks: ThemeAxisTicksSchema.optional().describe('Axis tick mark default style'),
     tickLabels: ThemeAxisTickLabelsSchema.optional().describe('Axis tick label default style'),
     title: ThemeAxisTitleSchema.optional().describe('Axis title default style'),
-    grid: GuideLineStyleSchema.optional().describe('Axis grid line default style. It does not enable grid by itself'),
+    grid: AxisGridLineStyleSchema.optional().describe('Axis grid line default style. It does not enable grid by itself'),
   })
   .strict()
   .describe('Plot theme defaults for axis visual tokens');

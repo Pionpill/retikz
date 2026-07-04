@@ -20,6 +20,28 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
+  it('axis_grid_accepts_independent_tick_source_density_minor_and_line_cap', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      grid: {
+        ticks: { interval: { kind: 'number', step: 10 } },
+        density: { kind: 'sample', maxCount: 4 },
+        bandPosition: 0,
+        lineCap: 'round',
+        minor: {
+          ticks: { values: [5, 15, 25] },
+          density: { kind: 'sample', minGap: 12 },
+          bandPosition: 1,
+          stroke: '#e2e8f0',
+          lineCap: 'butt',
+        },
+      },
+    };
+
+    expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
   // 边界
   it('axis_omits_optional_valid', () => {
     const guide = { type: 'axis', dimension: 'y' };
@@ -57,6 +79,13 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
 
   it('axis_grid_non_boolean_rejected', () => {
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', grid: 'yes' })).toThrow();
+  });
+
+  it('axis_grid_rejects_invalid_minor_and_band_position', () => {
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { bandPosition: -0.1 } })).toThrow();
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { bandPosition: 1.1 } })).toThrow();
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: true } })).toThrow();
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: {} } })).toThrow();
   });
 
   // 交互
@@ -381,6 +410,47 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
         theme: { axis: { tickLabels: { format: '.2f' } } },
       }),
     ).toThrow();
+  });
+
+  it('theme_axis_grid_accepts_line_cap_but_rejects_semantic_grid_fields', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        theme: { axis: { grid: { stroke: '#ddd', lineCap: 'round' } } },
+      }),
+    ).not.toThrow();
+
+    for (const grid of [
+      { ticks: { count: 4 } },
+      { density: { kind: 'sample', maxCount: 4 } },
+      { minor: { ticks: { values: [1] } } },
+      { bandPosition: 0.5 },
+      { applyTo: 'all' },
+      { select: { view: 'main' } },
+    ]) {
+      expect(() =>
+        PlotSpecSchema.parse({
+          namespace: 'plot',
+          type: 'plot',
+          data: { reference: 'd' },
+          scales: [
+            { type: 'linear', name: 'x' },
+            { type: 'linear', name: 'y' },
+          ],
+          coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+          marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+          theme: { axis: { grid } },
+        }),
+      ).toThrow();
+    }
   });
 });
 

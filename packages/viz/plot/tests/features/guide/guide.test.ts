@@ -32,6 +32,19 @@ const fakeTickScale = (coordinate: (value: number) => number, values: Array<numb
   setRange: () => {},
 });
 
+const fakeBandScale = (coordinates: Record<string, number>, bandwidth: number): PositionScale => ({
+  coordinate: value => coordinates[String(value)] ?? Number.NaN,
+  domain: () => Object.keys(coordinates),
+  bandwidth,
+  ticks: () => ({ values: Object.keys(coordinates), labels: Object.keys(coordinates) }),
+  tickKind: 'category',
+  range: () => {
+    const values = Object.values(coordinates);
+    return [Math.min(...values), Math.max(...values)];
+  },
+  setRange: () => {},
+});
+
 const ctx: GuideContext = {
   plotArea: { x: 40, y: 10, width: 400, height: 250 },
   projectX: fakeScale(value => 40 + value * 40),
@@ -306,6 +319,150 @@ describe('lowerGuide (ADR-04)', () => {
     // 横线：y=projectY(9)=35，从 left 到 right
     expect(path.children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 35] });
     expect(path.children[1]).toEqual({ type: 'step', kind: 'line', to: [440, 35] });
+  });
+
+  it('axis_grid_can_use_independent_tick_source_and_line_cap', () => {
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { ticks: { values: [0, 1, 2] }, lineCap: 'round' },
+      },
+      { ...ctx, xTicks: { values: [0, 2], labels: ['0', '2'] } },
+    );
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(gridPath.children).toHaveLength(6);
+    expect(gridPath.lineCap).toBe('round');
+  });
+
+  it('axis_grid_density_samples_grid_ticks_without_changing_axis_ticks', () => {
+    const { axisLayer, gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { density: { kind: 'sample', maxCount: 2 } },
+      },
+      { ...ctx, xTicks: { values: [0, 1, 2, 3], labels: ['0', '1', '2', '3'] } },
+    );
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(gridPath.children).toHaveLength(4);
+    expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['0', '1', '2', '3']);
+  });
+
+  it('axis_grid_minor_uses_second_path_and_skips_major_overlap', () => {
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: {
+          ticks: { values: [0, 2] },
+          minor: { ticks: { values: [0, 1, 2] }, stroke: '#e2e8f0', drawOpacity: 0.08 },
+        },
+      },
+      ctx,
+    );
+    const [majorGrid, minorGrid] = (gridLayer as IRScope).children as Array<IRPath>;
+
+    expect(majorGrid.children).toHaveLength(4);
+    expect(minorGrid.children).toHaveLength(2);
+    expect(minorGrid.stroke).toBe('#e2e8f0');
+    expect(minorGrid.drawOpacity).toBe(0.08);
+  });
+
+  it('axis_grid_band_position_offsets_grid_line_inside_band', () => {
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { bandPosition: 0 },
+      },
+      {
+        ...ctx,
+        projectX: fakeBandScale({ A: 100 }, 20),
+        xTicks: { values: ['A'], labels: ['A'] },
+      },
+    );
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(gridPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [90, 10] });
+  });
+
+  it('axis_grid_minor_band_position_compares_actual_major_positions', () => {
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { bandPosition: 0, minor: { ticks: { values: ['A'] }, bandPosition: 1, stroke: '#cbd5e1' } },
+      },
+      {
+        ...ctx,
+        projectX: fakeBandScale({ A: 100 }, 20),
+        xTicks: { values: ['A'], labels: ['A'] },
+      },
+    );
+    const [majorGrid, minorGrid] = (gridLayer as IRScope).children as Array<IRPath>;
+
+    expect(majorGrid.children[0]).toEqual({ type: 'step', kind: 'move', to: [90, 10] });
+    expect(minorGrid.children[0]).toEqual({ type: 'step', kind: 'move', to: [110, 10] });
+  });
+
+  it('polar_angular_grid_source_and_minor_keep_spoke_paths', () => {
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { ticks: { values: [0, 90] }, minor: { ticks: { values: [0, 45, 90] }, dashPattern: [2, 2] } },
+      },
+      {
+        ...ctx,
+        frame: {
+          type: 'polar2D',
+          roles: ['x', 'y'],
+          center: [100, 100],
+          innerRadius: 20,
+          outerRadius: 80,
+          startAngle: 0,
+          endAngle: 180,
+          continuousAngle: true,
+          primary: fakeScale(value => value),
+          secondary: fakeScale(value => value),
+          roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
+          project: () => null,
+          projectRoles: () => null,
+          projectPolar: () => null,
+          projectCell: () => ({ kind: 'sector', center: [100, 100], innerRadius: 0, outerRadius: 1, startAngle: 0, endAngle: 1 }),
+        },
+        angularTicks: { values: [], labels: [] },
+      },
+    );
+    const [majorGrid, minorGrid] = (gridLayer as IRScope).children as Array<IRPath>;
+
+    expect(majorGrid.children).toHaveLength(4);
+    expect(majorGrid.children.every(step => step.kind !== 'arc')).toBe(true);
+    expect(minorGrid.children).toHaveLength(2);
+    expect(minorGrid.dashPattern).toEqual([2, 2]);
+  });
+
+  it('ternary_grid_source_and_minor_keep_iso_line_paths', () => {
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { ticks: { values: [0.25, 0.75] }, minor: { ticks: { values: [0.25, 0.5, 0.75] }, stroke: '#cbd5e1' } },
+      },
+      {
+        ...ctx,
+        ternaryVertices: [[50, 0], [0, 100], [100, 100]],
+        ternaryTicks: { values: [0, 1], labels: ['0', '1'] },
+      },
+    );
+    const [majorGrid, minorGrid] = (gridLayer as IRScope).children as Array<IRPath>;
+
+    expect(majorGrid.children).toHaveLength(4);
+    expect(minorGrid.children).toHaveLength(2);
+    expect(minorGrid.stroke).toBe('#cbd5e1');
   });
 
   it('tick_pixels_match_projector', () => {

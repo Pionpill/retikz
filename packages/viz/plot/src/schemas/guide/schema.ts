@@ -139,6 +139,12 @@ export const AxisLineStyleSchema = GuideLineStyleSchema.extend({
   .strict()
   .describe('Axis baseline pure line style fields');
 
+export const AxisGridLineStyleSchema = GuideLineStyleSchema.extend({
+  lineCap: PathLineCapSchema.optional().describe('Axis grid line stroke endpoint cap'),
+})
+  .strict()
+  .describe('Axis grid pure line style fields');
+
 export const GuideTextStyleSchema = z
   .object({
     font: FontSchema.optional().describe('Guide text font; missing fields inherit the plot text default'),
@@ -614,6 +620,22 @@ const refineAxisGridProjection = (
   }
 };
 
+const AxisGridSourceShape = {
+  ticks: GuideTickSourceSchema.optional().describe('Grid tick source. Omit to reuse the visible axis ticks'),
+  density: AxisTickDensitySchema.optional().describe('Visible grid tick density strategy; omit = all candidate grid ticks'),
+  bandPosition: NormalizedRatioSchema.optional().describe('Position inside a band scale used by grid lines; omit = 0.5'),
+} as const;
+
+const AxisMinorGridSchema = z
+  .object({
+    ticks: GuideTickSourceSchema.describe('Minor grid tick source'),
+    density: AxisTickDensitySchema.optional().describe('Visible minor grid tick density strategy; omit = all candidate minor ticks'),
+    bandPosition: NormalizedRatioSchema.optional().describe('Position inside a band scale used by minor grid lines; omit = parent bandPosition or 0.5'),
+    ...AxisGridLineStyleSchema.shape,
+  })
+  .strict()
+  .describe('Minor axis grid line source and style configuration');
+
 export const AxisGridSchema = z
   .object(AxisGridProjectionShape)
   .strict()
@@ -623,11 +645,13 @@ export const AxisGridSchema = z
 export const AxisGridComponentSchema = z
   .object({
     ...AxisGridProjectionShape,
-    ...GuideLineStyleSchema.shape,
+    ...AxisGridSourceShape,
+    minor: z.union([z.literal(false), AxisMinorGridSchema]).optional().describe('Minor grid line configuration; false disables minor grid'),
+    ...AxisGridLineStyleSchema.shape,
   })
   .strict()
   .superRefine(refineAxisGridProjection)
-  .describe('Axis grid projection and line style configuration');
+  .describe('Axis grid projection, tick source, and line style configuration');
 
 export const AxisGuideSchema = z
   .object({
@@ -675,7 +699,7 @@ export const AxisGuideSchema = z
       .union([z.boolean(), AxisGridComponentSchema])
       .optional()
       .describe(
-        'Whether to draw grid lines at this axis tick positions and where to project them; omit = false. Grid is an axis sub-property, so there is no separate grid tick source',
+        'Whether to draw grid lines at this axis tick positions and where to project them; omit = false. Grid may override its tick source without changing axis ticks',
       ),
   })
   .describe(
