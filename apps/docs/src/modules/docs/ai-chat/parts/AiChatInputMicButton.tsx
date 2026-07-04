@@ -4,7 +4,7 @@ import { Mic, MicOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import { useAiChatStore } from '../useAiChatStore';
 

@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Link } from 'react-router';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import type { TypeRepr } from './types';
 

@@ -1,10 +1,10 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import type { ContextMode, CurrentPage, DiagramFormatPreference } from './composeSystemPrompt';
 import type { Conversation } from './conversations-storage';
-import type { CustomProvider } from './providers/resolve';
-import type { ChatErrorKind, ChatMessage, ProviderId } from './providers/types';
+import type { CustomProvider } from './providers';
+import type { ChatErrorKind, ChatMessage, ProviderId } from './providers';
 import type { AutoRepairMode } from './types';
 
 import { composeSystem } from './composeSystemPrompt';
@@ -16,7 +16,7 @@ import {
   loadAllConversations,
   saveConversation,
 } from './conversations-storage';
-import { isBuiltInProviderId, resolveProvider } from './providers/resolve';
+import { isBuiltInProviderId, resolveProvider } from './providers';
 import { buildRepairPrompt, findInvalidRetikzBlocks } from './retikz-validation';
 
 export type { AutoRepairMode } from './types';

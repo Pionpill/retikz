@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { Shortcut } from '@/components/shared/shortcut';
+import { Shortcut } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import { DocsSearchPanel } from './DocsSearchPanel';
 

@@ -4,7 +4,7 @@ import { Fragment } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import type { SidebarCategoryData } from './types';
 

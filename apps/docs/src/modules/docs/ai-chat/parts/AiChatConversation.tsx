@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStickToBottom } from 'use-stick-to-bottom';
 
-import type { ChatErrorKind } from '../providers/types';
+import type { ChatErrorKind } from '../providers';
 
 import { useAiChatStore } from '../useAiChatStore';
 import { AiChatConversationEmpty } from './AiChatConversationEmpty';

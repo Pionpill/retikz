@@ -5,14 +5,10 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { MarkdownInline } from '@/modules/docs/components';
 
-import { AiChatConversation } from './parts/AiChatConversation';
-import { AiChatEmpty } from './parts/AiChatEmpty';
-import { AiChatHelpDialog } from './parts/AiChatHelpDialog';
-import { AiChatHistory } from './parts/AiChatHistory';
-import { AiChatSettings } from './parts/AiChatSettings';
+import { AiChatConversation, AiChatEmpty, AiChatHelpDialog, AiChatHistory, AiChatSettings } from './parts';
 import { useAiChatStore } from './useAiChatStore';
 
 /** AI 聊天面板内容。 */

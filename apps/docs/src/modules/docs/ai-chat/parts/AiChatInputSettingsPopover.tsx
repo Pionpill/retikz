@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-import type { CustomProvider } from '../providers/resolve';
+import type { CustomProvider } from '../providers';
 
 import { PROVIDER_LABEL } from '../constants';
 import { isBuiltInProviderId, useAiChatStore } from '../useAiChatStore';

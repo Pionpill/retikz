@@ -1,4 +1,4 @@
-import type { ProviderId } from './providers/types';
+import type { ProviderId } from './providers';
 
 import { FALLBACK_MODEL_PRICE, LLMS_TXT_CACHE_TTL_MS, MODEL_PRICES } from './constants';
 

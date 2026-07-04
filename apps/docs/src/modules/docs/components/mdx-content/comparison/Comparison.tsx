@@ -1,4 +1,4 @@
-﻿import type { FC, ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { X } from 'lucide-react';
 import { useState } from 'react';
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { ComparisonTargetLabelKeys, isComparisonTarget } from '@/modules/docs/data';
 import { useComparisonStore } from '@/modules/docs/store';
 

@@ -4,10 +4,10 @@ import { BotMessageSquare } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Shortcut } from '@/components/shared/shortcut';
+import { Shortcut } from '@/components/shared';
 import { buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import { useAiChatStore } from './useAiChatStore';
 

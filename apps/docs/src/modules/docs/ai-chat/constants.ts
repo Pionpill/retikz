@@ -1,4 +1,4 @@
-import type { ProviderId } from './providers/types';
+import type { ProviderId } from './providers';
 import type { AutoRepairMode } from './types';
 
 type Price = { inputPerMTok: number; outputPerMTok: number };

@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
-import { isMac } from '@/lib/platform';
+import { isMac } from '@/lib';
 
 type ShortcutModifierKey = 'mod' | 'alt' | 'shift';
 

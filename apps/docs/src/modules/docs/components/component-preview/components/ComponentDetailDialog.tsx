@@ -5,7 +5,7 @@ import { Fragment, useRef } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import type { AlignKey, ComponentRenderSource, PreviewAction, PreviewOverlay, RendererMode } from '../types';
 

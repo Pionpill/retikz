@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GitHubIcon } from '@/components/icons';
-import { Shortcut } from '@/components/shared/shortcut';
+import { Shortcut } from '@/components/shared';
 import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/data';
 import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
 import { useLayoutStore } from '@/store';

@@ -4,7 +4,7 @@ import type { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
 
 import { Link } from 'react-router';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import { ComponentPreview } from '../component-preview';
 import { CodeBlock } from '../highlight-code';

@@ -1,9 +1,9 @@
-﻿import type { FC, ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { Fragment } from 'react';
 import { Link } from 'react-router';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import { CodeBlock } from '../highlight-code';
 

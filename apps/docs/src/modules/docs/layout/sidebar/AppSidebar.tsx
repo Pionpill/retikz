@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { getSectionsByModule } from '@/modules/docs/data';
 
 import { buildSidebarCategories } from '../utils';

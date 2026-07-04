@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { modules, resolveModule } from '@/modules/docs/data';
-import { AppSidebar } from '@/modules/docs/layout/sidebar/AppSidebar';
+import { AppSidebar } from '@/modules/docs/layout';
 
 /**
  * 移动端汉堡按钮 + Sheet 抽屉

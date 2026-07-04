@@ -14,7 +14,7 @@ import { type FC } from 'react';
 
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import type { RendererMode, SizeKey, Transform } from '../types';
 

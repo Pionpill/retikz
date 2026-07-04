@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next';
 
 import type { Page, Section, SubPage } from '@/modules/docs/data';
 
-import type { SidebarCategoryData, SidebarSubModuleData } from './sidebar/types';
+import type { SidebarCategoryData, SidebarSubModuleData } from './sidebar';
 import type { DocLocation, LeafNode } from './types';
 
 /** 是否为数据驱动渲染的 changelog 页面。 */

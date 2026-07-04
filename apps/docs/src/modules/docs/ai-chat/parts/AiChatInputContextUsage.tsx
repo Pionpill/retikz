@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import { FALLBACK_CONTEXT_LIMIT, MODEL_CONTEXT_LIMIT } from '../constants';
 import { useAiChatStore } from '../useAiChatStore';

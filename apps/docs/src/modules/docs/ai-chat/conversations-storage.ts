@@ -1,7 +1,7 @@
-﻿import { createStore, del, entries, set as idbSet } from 'idb-keyval';
+import { createStore, del, entries, set as idbSet } from 'idb-keyval';
 
 import type { CurrentPage } from './composeSystemPrompt';
-import type { ChatMessage } from './providers/types';
+import type { ChatMessage } from './providers';
 
 /**
  * AI 聊天会话的持久化模型

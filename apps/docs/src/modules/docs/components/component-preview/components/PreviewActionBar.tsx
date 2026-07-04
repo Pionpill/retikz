@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import type { PreviewAction, PreviewActionContext } from '../types';
 

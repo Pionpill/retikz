@@ -1,4 +1,4 @@
-﻿import type { IR } from '@retikz/core';
+import type { IR } from '@retikz/core';
 import type { ErrorInfo, FC, ReactElement, ReactNode } from 'react';
 
 import { SceneSchema } from '@retikz/core';
@@ -10,8 +10,8 @@ import { useTranslation } from 'react-i18next';
 import type { ComponentRenderSource } from '@/modules/docs/components';
 
 import { Button } from '@/components/ui/button';
-import { parseRetikzJsx } from '@/lib/jsx-to-ir';
-import { cn } from '@/lib/utils';
+import { parseRetikzJsx } from '@/lib';
+import { cn } from '@/lib';
 import { CodeBlock, ComponentRender, formatIR } from '@/modules/docs/components';
 
 import { formatZodError } from '../retikz-validation';

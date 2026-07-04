@@ -5,7 +5,7 @@ import { Ban, BotMessageSquare, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plu
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import type { ComponentSourceFile, DiffLineKind, DiffMode, SourceLang, SourceView } from '../types';
 
