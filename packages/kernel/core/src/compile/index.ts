@@ -1,4 +1,11 @@
-export type { CompileOptions, CompileWarning } from './compile';
+export type {
+  CompileCompositeOptions,
+  CompileHostOptions,
+  CompileLayoutOptions,
+  CompileOptions,
+  CompileProviderOptions,
+  CompileWarning,
+} from './compile';
 export { compileToScene } from './compile';
 export type { CompileWarningCodeValue } from './constant';
 export { CompileWarningCode, formatCompileWarning } from './constant';

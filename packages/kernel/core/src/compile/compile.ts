@@ -19,13 +19,29 @@ import { compileChildrenToPrimitives } from './traversal';
 export type { CompileWarning } from './constant';
 export { CompileWarningCode } from './constant';
 
-/** compileToScene 的可选参数 */
-export type CompileOptions = {
+/** 宿主环境注入的 compile 能力。 */
+export type CompileHostOptions = {
   /**
    * 注入文字度量函数。
    * @default `fallbackMeasurer`
    */
   measureText?: TextMeasurer;
+  /**
+   * 运行时注入的公式渲染能力。
+   * @description 带 tex 内容但未注入或解析失败时会 warning 并降级。
+   * @default undefined
+   */
+  lowerTex?: LowerTex;
+  /**
+   * 编译期警告收集器
+   * @description path / position 解析失败时按 IR locator + code + message 同步触发。
+   * @default `defaultWarnDispatcher`
+   */
+  onWarn?: (warning: CompileWarning) => void;
+};
+
+/** 自动布局与 Scene 输出口径。 */
+export type CompileLayoutOptions = {
   /**
    * layout 周围的留白。
    * @default 10
@@ -43,12 +59,10 @@ export type CompileOptions = {
    * @default `DEFAULT_NODE_DISTANCE` (24)
    */
   nodeDistance?: number;
-  /**
-   * 编译期警告收集器
-   * @description path / position 解析失败时按 IR locator + code + message 同步触发。
-   * @default `defaultWarnDispatcher`
-   */
-  onWarn?: (warning: CompileWarning) => void;
+};
+
+/** 运行时注入的 provider 注册表。 */
+export type CompileProviderOptions = {
   /**
    * 运行时注入的 shape 定义。
    * @description 未注册名称会在编译期报错。
@@ -95,6 +109,10 @@ export type CompileOptions = {
    * @default 空注册表
    */
   ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
+};
+
+/** Tier 2 composite 展开选项。 */
+export type CompileCompositeOptions = {
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑。
    * @description 未注册的 namespace/type 会触发 warning，并跳过该 composite 节点。
@@ -107,13 +125,13 @@ export type CompileOptions = {
    * @default `DEFAULT_MAX_COMPOSITE_DEPTH` (32)
    */
   maxCompositeDepth?: number;
-  /**
-   * 运行时注入的公式渲染能力。
-   * @description 带 tex 内容但未注入或解析失败时会 warning 并降级。
-   * @default undefined
-   */
-  lowerTex?: LowerTex;
 };
+
+/** compileToScene 的可选参数 */
+export type CompileOptions = CompileHostOptions &
+  CompileLayoutOptions &
+  CompileProviderOptions &
+  CompileCompositeOptions;
 
 /**
  * IR → Scene 纯函数转换，所有 adapter 共享。
