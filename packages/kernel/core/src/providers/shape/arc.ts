@@ -7,7 +7,7 @@ import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contrac
 import type { Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
+import { createCache, localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
 
 const arcParamsSchema = z.strictObject({
   radius: z
@@ -63,7 +63,13 @@ const computeArcGeometry = (params: ArcParams): ArcGeometry => {
   };
 };
 
-const arcGeometry = (params: ArcParams): ArcGeometry => computeArcGeometry(params);
+const ARC_GEOMETRY_CACHE_LIMIT = 256;
+
+const arcGeometry = createCache<ArcParams, ArcGeometry>({
+  keyOf: params => `${params.radius}|${params.startAngle}|${params.endAngle}|${params.close === true ? 1 : 0}`,
+  compute: computeArcGeometry,
+  maxSize: ARC_GEOMETRY_CACHE_LIMIT,
+});
 
 /** 圆心局部点（相对圆心）→ 世界系（+centerOffset 到相对 AABB 中心后经 rect 投影） */
 const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Position): Position =>
