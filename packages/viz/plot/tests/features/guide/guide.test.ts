@@ -362,6 +362,71 @@ describe('lowerGuide (ADR-04)', () => {
     expect(tickLabels.map(label => label.text)).toEqual(labels);
   });
 
+  it('rotated_bottom_x_tick_labels_keep_near_endpoint_outside_axis', () => {
+    const labels = ['January revenue', 'February revenue'];
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        tickLabels: { rotate: -90, layout: false },
+      },
+      { ...ctx, xTicks: { values: [0, 1], labels } },
+    );
+    const tickLabels = nodeChildren(axisLayer as IRScope).filter(node => labels.includes(String(node.text)));
+
+    expect(tickLabels.every(label => label.rotate === -90)).toBe(true);
+    expect(tickLabels.every(label => (label.position as [number, number])[1] > 310)).toBe(true);
+  });
+
+  it('single_rotated_tick_label_still_applies_endpoint_alignment', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        tickLabels: { rotate: -90, layout: false },
+      },
+      { ...ctx, xTicks: { values: [0], labels: ['January revenue'] } },
+    );
+    const label = nodeByText(axisLayer as IRScope, 'January revenue');
+
+    expect(label.rotate).toBe(-90);
+    expect((label.position as [number, number])[1]).toBeGreaterThan(310);
+  });
+
+  it('single_generic_tick_label_still_applies_fixed_rotate_without_endpoint_alignment', () => {
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        tickLabels: { rotate: -45, layout: false },
+      },
+      {
+        ...ctx,
+        ternaryVertices: [[0, 100], [100, 100], [50, 0]],
+        ternaryTicks: { values: [0.5], labels: ['50%'] },
+      },
+    );
+    const label = nodeByText(axisLayer as IRScope, '50%');
+
+    expect(label.rotate).toBe(-45);
+  });
+
+  it('auto_rotated_tick_labels_use_endpoint_alignment_before_overlap_hiding', () => {
+    const labels = ['January revenue', 'February revenue', 'March revenue'];
+    const { axisLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        tickLabels: { layout: { rotate: { angles: [-90] }, hide: false } },
+      },
+      { ...ctx, xTicks: { values: [0, 1, 2], labels } },
+    );
+    const tickLabels = nodeChildren(axisLayer as IRScope).filter(node => labels.includes(String(node.text)));
+
+    expect(tickLabels.every(label => label.rotate === -90)).toBe(true);
+    expect(tickLabels.every(label => (label.position as [number, number])[1] > 310)).toBe(true);
+  });
+
   it('bounds_flush_moves_edge_tick_labels_inside_axis_range', () => {
     const { axisLayer } = lowerGuide(
       {

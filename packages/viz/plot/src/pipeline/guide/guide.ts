@@ -300,6 +300,7 @@ type TickLabelLayoutOptions = {
   mode: TickLabelLayoutMode;
   axis: TickLabelLayoutAxis;
   axisRange?: readonly [number, number];
+  sideNormal?: readonly [number, number];
 };
 
 const axisTickLabelsTokenOf = (guide: AxisGuide): AxisTickLabelsToken | undefined =>
@@ -474,19 +475,40 @@ const applyTickLabelHide = (
   return hideGreedyTickLabels(boxes, options.axis, preserveEnds, separation);
 };
 
+const alignRotatedTickLabelEndpoint = (
+  node: IRNode,
+  fontSize: number,
+  rotate: number,
+  sideNormal: readonly [number, number] | undefined,
+): IRNode => {
+  if (sideNormal === undefined || rotate === 0) return node;
+  const size = rotatedLabelSizeOf(node, fontSize, rotate);
+  const shift = Math.abs(sideNormal[0]) > 0 ? size.width / 2 : size.height / 2;
+  const [x, y] = nodePointOf(node);
+  return { ...node, position: [x + sideNormal[0] * shift, y + sideNormal[1] * shift] };
+};
+
 const layoutTickLabelNodes = (
   guide: AxisGuide,
   nodes: ReadonlyArray<IRNode>,
   options: TickLabelLayoutOptions,
 ): Array<IRNode> => {
-  if (nodes.length <= 1) return [...nodes];
+  if (nodes.length === 0) return [];
   const token = axisTickLabelsTokenOf(guide) ?? ({});
   const layout = token.layout;
-  if (layout === false) return nodes.map(node => ({ ...node, ...(token.rotate !== undefined ? { rotate: token.rotate } : {}) }));
+  if (layout === false) {
+    const rotate = token.rotate ?? 0;
+    return nodes
+      .map(node => ({ ...node, ...(token.rotate !== undefined ? { rotate: token.rotate } : {}) }))
+      .map(node => alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal));
+  }
   const layoutObject = layout === undefined ? undefined : layout;
   const rotate = tickLabelAutoRotateOf(guide, nodes, layoutObject, options);
   const hasFixedRotate = token.rotate !== undefined;
-  const rotated = nodes.map(node => ({ ...node, ...(rotate !== 0 || hasFixedRotate ? { rotate } : {}) }));
+  const rotated = nodes
+    .map(node => ({ ...node, ...(rotate !== 0 || hasFixedRotate ? { rotate } : {}) }))
+    .map(node => alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal));
+  if (nodes.length === 1) return rotated;
   const visible = applyTickLabelHide(rotated, layoutObject, options, rotate);
   return applyTickLabelBounds(tickLabelBoxesOf(visible, options.fontSize, rotate), options.axis, options.axisRange, layoutObject);
 };
@@ -750,6 +772,7 @@ const lowerCartesianGuide = (
           mode: isX ? 'cartesian-x' : 'cartesian-y',
           axis: isX ? 'x' : 'y',
           axisRange: isX ? [left, right] : [top, bottom],
+          sideNormal: isX ? [0, tickDirection] : [tickDirection, 0],
           }),
           ...cornerLabels,
         ];
