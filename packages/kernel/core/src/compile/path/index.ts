@@ -1,4 +1,4 @@
-export { refPointOfTarget } from './anchor';
-export { emitPathPrimitive } from './emit';
-export { emitRibbonPrimitive } from './ribbon';
-export type { EmitPathWarnHook } from './types';
+export * from './anchor';
+export * from './emit';
+export * from './ribbon';
+export * from './types';

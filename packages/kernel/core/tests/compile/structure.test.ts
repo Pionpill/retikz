@@ -39,8 +39,8 @@ describe('compile source structure', () => {
 
   it('node compile implementation is directory based', () => {
     expect(() => source('src/compile/node.ts')).toThrow();
-    expect(source('src/compile/node/index.ts')).toContain("export { layoutNode } from './layout';");
-    expect(source('src/compile/node/index.ts')).toContain("export { emitNodePrimitives } from './emit';");
+    expect(source('src/compile/node/index.ts')).toContain("export * from './layout';");
+    expect(source('src/compile/node/index.ts')).toContain("export * from './emit';");
   });
 
   it('node compile barrel keeps the internal compatibility surface', () => {
@@ -56,10 +56,18 @@ describe('compile source structure', () => {
       'createSyntheticRectangleLayout',
       'emitNodePrimitives',
       'fallbackBoundaryAnchor',
+      'labelBorderPoint',
+      'labelBoxEdgeToward',
+      'labelCenter',
       'labelExtentPoints',
       'layoutNode',
+      'normalizeLabelPosition',
       'outerRectOf',
+      'resolveAxisScale',
       'resolveBoundary',
+      'resolveBoxSize',
+      'resolveBoxSpacing',
+      'resolveLabelRotateDeg',
     ]);
 
     const layout: Partial<NodeLayout> = {};
@@ -84,7 +92,7 @@ describe('compile source structure', () => {
 
   it('ribbon compile implementation is directory based', () => {
     expect(() => source('src/compile/path/ribbon.ts')).toThrow();
-    expect(source('src/compile/path/ribbon/index.ts')).toContain("export { emitRibbonPrimitive } from './emit';");
+    expect(source('src/compile/path/ribbon/index.ts')).toContain("export * from './emit';");
 
     const options: RibbonEmitOptions = {};
 
