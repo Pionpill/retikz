@@ -1,4 +1,6 @@
-import { boundsCorners, boundsOf, expandBounds } from '@retikz/math';
+import type { AxisAlignedBounds } from '@retikz/math';
+
+import { boundsOf, expandBounds, mergeBounds } from '@retikz/math';
 
 import type {
   GroupPrim,
@@ -44,36 +46,32 @@ import {
   stableSortByZIndex,
 } from './primitive';
 
-/** 返回点集受 shadow 影响后的外溢角点。 */
-const shadowOverflowPoints = (
-  boundsPoints: ReadonlyArray<IRPosition>,
+/** 返回 shadow 影响后的外溢 bbox。 */
+const expandBoundsForShadow = (
+  bounds: AxisAlignedBounds | undefined,
   shadow: ResolvedDropShadow | undefined,
-): Array<IRPosition> => {
-  if (shadow === undefined || boundsPoints.length === 0) return [];
+): AxisAlignedBounds | undefined => {
+  if (bounds === undefined || shadow === undefined) return bounds;
 
   const dx = shadow.offsetX;
   const dy = shadow.offsetY;
   const blur = shadow.blur ?? 0;
-  const bounds = boundsOf(boundsPoints);
-  if (bounds === undefined) return [];
-  return boundsCorners(
-    expandBounds(bounds, {
-      left: blur + Math.max(0, -dx),
-      right: blur + Math.max(0, dx),
-      top: blur + Math.max(0, -dy),
-      bottom: blur + Math.max(0, dy),
-    }),
-  );
+  return expandBounds(bounds, {
+    left: blur + Math.max(0, -dx),
+    right: blur + Math.max(0, dx),
+    top: blur + Math.max(0, -dy),
+    bottom: blur + Math.max(0, dy),
+  });
 };
 
-/** 将几何点及其 shadow 外溢点加入自动 layout 候选集。 */
-const pushBoundsPoints = (
-  target: Array<IRPosition>,
+/** 将几何点及其 shadow 外溢范围合并到自动 layout bbox。 */
+const collectLayoutBounds = (
+  current: AxisAlignedBounds | undefined,
   boundsPoints: ReadonlyArray<IRPosition>,
   shadow?: ResolvedDropShadow,
-): void => {
-  for (const p of boundsPoints) target.push(p);
-  for (const p of shadowOverflowPoints(boundsPoints, shadow)) target.push(p);
+): AxisAlignedBounds | undefined => {
+  const bounds = boundsOf(boundsPoints);
+  return mergeBounds(mergeBounds(current, bounds), expandBoundsForShadow(bounds, shadow));
 };
 
 /** 等待命名引用完成注册后再 emit 的 path 任务。 */
@@ -119,20 +117,20 @@ const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => 
   };
 };
 
-/** child 遍历编译后的 primitive 与自动 layout 候选点。 */
+/** child 遍历编译后的 primitive 与自动 layout bbox。 */
 export type TraversalResult = {
   /** 已完成排序和占位回填的 Scene primitive。 */
   primitives: Array<ScenePrimitive>;
-  /** 自动 layout 使用的全局 bbox 候选点。 */
-  boundsPoints: Array<IRPosition>;
+  /** 自动 layout 使用的全局 bbox。 */
+  layoutBounds: AxisAlignedBounds | undefined;
 };
 
 /** 整棵 child 树遍历期间共享的可变状态。 */
 type TraversalState = {
   /** 顶层 primitive 输出容器，path 占位会在返回前回填。 */
   primitives: Array<InternalScenePrimitive>;
-  /** 自动 layout 使用的全局 bbox 候选点。 */
-  boundsPoints: Array<IRPosition>;
+  /** 自动 layout 使用的全局 bbox。 */
+  layoutBounds: AxisAlignedBounds | undefined;
   /** id 注册与查找栈。 */
   namespaceStack: NamespaceStack;
   /** primitive 的编译期 zIndex 旁路表。 */
@@ -247,7 +245,7 @@ export const compileChildrenToPrimitives = (
     },
     state: {
       primitives: [],
-      boundsPoints: [],
+      layoutBounds: undefined,
       namespaceStack: new NamespaceStack({
         onDuplicate: info => context.onWarn(createDuplicateWarning(info)),
       }),
@@ -319,7 +317,11 @@ export const compileChildrenToPrimitives = (
         }
         for (const prim of primitives) recordPrimitiveZIndex(runtime.state.zIndexOf, prim, pendingPath.zIndex);
         if (result !== null) {
-          pushBoundsPoints(runtime.state.boundsPoints, result.boundsPoints, resolveShadow(pendingPath.path.shadow));
+          runtime.state.layoutBounds = collectLayoutBounds(
+            runtime.state.layoutBounds,
+            result.boundsPoints,
+            resolveShadow(pendingPath.path.shadow),
+          );
         }
       }
     } finally {
@@ -371,8 +373,8 @@ export const compileChildrenToPrimitives = (
       rectOps.anchor(outerRect, Anchor.BottomLeft),
       rectOps.anchor(outerRect, Anchor.BottomRight),
     ];
-    pushBoundsPoints(runtime.state.boundsPoints, nodeBoundsPoints, globalLayout.shadow);
-    for (const p of labelExtentPoints(globalLayout)) runtime.state.boundsPoints.push(p);
+    runtime.state.layoutBounds = collectLayoutBounds(runtime.state.layoutBounds, nodeBoundsPoints, globalLayout.shadow);
+    runtime.state.layoutBounds = mergeBounds(runtime.state.layoutBounds, boundsOf(labelExtentPoints(globalLayout)));
     layoutSink.push(globalLayout);
   };
 
@@ -613,6 +615,6 @@ export const compileChildrenToPrimitives = (
 
   return {
     primitives: stableSortByZIndex(sealSink(runtime.state.primitives), runtime.state.zIndexOf),
-    boundsPoints: runtime.state.boundsPoints,
+    layoutBounds: runtime.state.layoutBounds,
   };
 };

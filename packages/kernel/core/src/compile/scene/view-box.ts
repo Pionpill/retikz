@@ -1,57 +1,41 @@
-/** 把显式 viewBox 转为 Scene.layout，并做 finite 守卫。 */
-export const viewBoxToLayout = (
-  vb: { x: number; y: number; width: number; height: number },
-  round: (n: number) => number,
-): { x: number; y: number; width: number; height: number } => {
-  // 先守 raw（直接 NaN/Infinity/退化的清晰错），再 round，再复检 round 后值——
-  // 极端 precision（10**p 溢出 Infinity）/ 极值坐标（×10**p 溢出）/ 负 precision（round 成 0 宽）
-  // 都可能让"合法 raw" round 后变脏；round 产物才是真正进 Scene 的值，故 round 后是最终关口。
-  if (!Number.isFinite(vb.x) || !Number.isFinite(vb.y)) {
-    throw new Error(`viewBox has a non-finite origin (x=${String(vb.x)}, y=${String(vb.y)}); both must be finite.`);
-  }
-  if (!Number.isFinite(vb.width) || vb.width <= 0) {
-    throw new Error(`viewBox has an invalid width (${String(vb.width)}); it must be a finite number greater than 0.`);
-  }
-  if (!Number.isFinite(vb.height) || vb.height <= 0) {
+import { isPositiveBoundsRect } from '@retikz/math';
+
+import type { Layout } from '../../contract';
+import type { IRViewBox } from '../../schemas';
+
+import { roundLayout } from './layout';
+
+/** 校验显式 viewBox 的原始输入。 */
+const assertViewBoxInput = (viewBox: IRViewBox): void => {
+  if (!Number.isFinite(viewBox.x) || !Number.isFinite(viewBox.y)) {
     throw new Error(
-      `viewBox has an invalid height (${String(vb.height)}); it must be a finite number greater than 0.`,
+      `viewBox has a non-finite origin (x=${String(viewBox.x)}, y=${String(viewBox.y)}); both must be finite.`,
     );
   }
-  const x = round(vb.x);
-  const y = round(vb.y);
-  const width = round(vb.width);
-  const height = round(vb.height);
-  if (
-    !Number.isFinite(x) ||
-    !Number.isFinite(y) ||
-    !Number.isFinite(width) ||
-    width <= 0 ||
-    !Number.isFinite(height) ||
-    height <= 0
-  ) {
+  if (!Number.isFinite(viewBox.width) || viewBox.width <= 0) {
     throw new Error(
-      `viewBox rounds to an invalid layout (x=${String(x)}, y=${String(y)}, width=${String(width)}, height=${String(height)}); check precision and coordinate magnitude.`,
+      `viewBox has an invalid width (${String(viewBox.width)}); it must be a finite number greater than 0.`,
     );
   }
-  return { x, y, width, height };
+  if (!Number.isFinite(viewBox.height) || viewBox.height <= 0) {
+    throw new Error(
+      `viewBox has an invalid height (${String(viewBox.height)}); it must be a finite number greater than 0.`,
+    );
+  }
 };
 
-/** 校验自动 layout 不含非 finite 值。 */
-export const assertFiniteLayout = (layout: {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}): { x: number; y: number; width: number; height: number } => {
-  if (
-    !Number.isFinite(layout.x) ||
-    !Number.isFinite(layout.y) ||
-    !Number.isFinite(layout.width) ||
-    !Number.isFinite(layout.height)
-  ) {
+/** 校验 round 后真正进入 Scene 的 viewBox layout。 */
+const assertRoundedViewBoxLayout = (layout: Layout): Layout => {
+  if (!isPositiveBoundsRect(layout)) {
     throw new Error(
-      `Node layout produced non-finite bounds (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check shape geometry (e.g. extreme radius).`,
+      `viewBox rounds to an invalid layout (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check precision and coordinate magnitude.`,
     );
   }
   return layout;
+};
+
+/** 把显式 viewBox 转为 Scene.layout，并做输入和输出守卫。 */
+export const viewBoxToLayout = (viewBox: IRViewBox, round: (n: number) => number): Layout => {
+  assertViewBoxInput(viewBox);
+  return assertRoundedViewBoxLayout(roundLayout(viewBox, round));
 };

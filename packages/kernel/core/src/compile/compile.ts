@@ -15,7 +15,7 @@ import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
 import { compileChildrenToPrimitives, createCompileContext, filterAnimations } from './orchestration';
-import { assertFiniteLayout, computeLayout, viewBoxToLayout } from './scene';
+import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 
 export { CompileWarningCode } from './constants';
 export type { CompileWarning } from './warning';
@@ -140,7 +140,7 @@ export type CompileOptions = CompileHostOptions &
 export const compileToScene = (ir: IRScene, options?: CompileOptions): Scene => {
   const context = createCompileContext(ir, options ?? {});
   const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
-  const { primitives, boundsPoints } = compileChildrenToPrimitives(loweredIr.children, context);
+  const { primitives, layoutBounds } = compileChildrenToPrimitives(loweredIr.children, context);
 
   // paint 与 clip 资源同表。
   const resources = [...paint.resources(), ...clip.resources()];
@@ -152,7 +152,7 @@ export const compileToScene = (ir: IRScene, options?: CompileOptions): Scene => 
     layout:
       loweredIr.viewBox !== undefined
         ? viewBoxToLayout(loweredIr.viewBox, round)
-        : assertFiniteLayout(computeLayout(boundsPoints, layoutPadding, round)),
+        : assertFiniteLayout(computeLayoutFromBounds(layoutBounds, layoutPadding, round)),
     // 无资源时省略字段。
     ...(resources.length > 0 ? { resources } : {}),
     // 无根动画时省略字段。

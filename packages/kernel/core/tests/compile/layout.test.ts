@@ -1,6 +1,8 @@
+import type { AxisAlignedBounds } from '@retikz/math';
+
 import { describe, expect, it } from 'vitest';
 
-import { computeLayout, createRound } from '../../src/compile/scene';
+import { computeLayout, computeLayoutFromBounds, createRound } from '../../src/compile/scene';
 
 const round2 = createRound(2);
 const noRound = (n: number) => n;
@@ -8,6 +10,20 @@ const noRound = (n: number) => n;
 describe('computeLayout', () => {
   it('空点集返回 100×100 兜底框（不抛错）', () => {
     expect(computeLayout([], 10, round2)).toEqual({ x: 0, y: 0, width: 100, height: 100 });
+  });
+
+  it('bounds 入口与点集入口计算结果一致', () => {
+    const points: Array<[number, number]> = [
+      [-10, -5],
+      [10, 5],
+    ];
+    const bounds: AxisAlignedBounds = { minX: -10, minY: -5, maxX: 10, maxY: 5 };
+
+    expect(computeLayoutFromBounds(bounds, 4, noRound)).toEqual(computeLayout(points, 4, noRound));
+  });
+
+  it('bounds 入口为空时返回自动 layout 兜底框', () => {
+    expect(computeLayoutFromBounds(undefined, 10, round2)).toEqual({ x: 0, y: 0, width: 100, height: 100 });
   });
 
   it('单个点：bbox 为 0×0 + 四周 padding', () => {
