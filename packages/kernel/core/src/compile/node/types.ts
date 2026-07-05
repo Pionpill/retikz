@@ -1,4 +1,6 @@
-﻿import type {
+﻿import type { BoundsInsets } from '@retikz/math';
+
+import type {
   BoundaryDefinition,
   ShapeDefinition,
   TextLine,
@@ -19,26 +21,6 @@ import type {
 import type { Rect } from '../../shared/geometry';
 import type { FontSpec, LaidLine, LowerTex, TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
-
-/** 节点盒模型四边距。 */
-export type BoxInsets = {
-  /** 上边距。 */
-  top: number;
-  /** 右边距。 */
-  right: number;
-  /** 下边距。 */
-  bottom: number;
-  /** 左边距。 */
-  left: number;
-};
-
-/** 构造四边同值的盒模型边距。 */
-export const boxInsets = (value: number): BoxInsets => ({
-  top: value,
-  right: value,
-  bottom: value,
-  left: value,
-});
 
 /** 节点各轴缩放因子。 */
 export type AxisScale = {
@@ -90,7 +72,7 @@ export type NodeLayout = {
   /** IR 原始旋转角。 */
   rotateDeg: number;
   /** 外边距。 */
-  margin: BoxInsets;
+  margin: BoundsInsets;
   /** 节点文本行；undefined 表示无文本。 */
   lines?: Array<TextLine>;
   /** 含 math run 的混排块，与 lines 互斥。 */

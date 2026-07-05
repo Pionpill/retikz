@@ -1,14 +1,24 @@
+import type { BoundsInsets } from '@retikz/math';
+
 import type { IRAxisScale, IRBoxSize, IRBoxSpacing } from '../../schemas';
-import type { AxisScale, BoxInsets, BoxSize } from './types';
+import type { AxisScale, BoxSize } from './types';
 
 type NodeSpacingValue = number | IRBoxSpacing | undefined;
 type NodeAxisScaleValue = number | IRAxisScale | undefined;
 type NodeBoxSizeValue = number | IRBoxSize | undefined;
 
+/** 构造四边同值的盒模型边距。 */
+export const boxInsets = (value: number): BoundsInsets => ({
+  top: value,
+  right: value,
+  bottom: value,
+  left: value,
+});
+
 /** 解析节点盒间距，支持统一值、轴向值和边向值。 */
-export const resolveBoxSpacing = (value: NodeSpacingValue, fallback: number): BoxInsets => {
+export const resolveBoxSpacing = (value: NodeSpacingValue, fallback: number): BoundsInsets => {
   if (typeof value === 'number') {
-    return { top: value, right: value, bottom: value, left: value };
+    return boxInsets(value);
   }
   const base = value?.default ?? fallback;
   return {

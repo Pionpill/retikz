@@ -1,9 +1,9 @@
-import type { Position } from '@retikz/math';
+import type { BoundsInsets, Position } from '@retikz/math';
 
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { ResolveBoundaryContext } from './boundary';
-import type { BoxInsets, NodeLayout } from './types';
+import type { NodeLayout } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { CenterAnchor, isAnchor } from '../../shared';
@@ -13,10 +13,10 @@ import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 /** 空 shape params。 */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
 
-const isZeroInsets = (m: BoxInsets): boolean => m.top === 0 && m.right === 0 && m.bottom === 0 && m.left === 0;
+const isZeroInsets = (m: BoundsInsets): boolean => m.top === 0 && m.right === 0 && m.bottom === 0 && m.left === 0;
 
 /** 按 rect 局部坐标系四边外扩，非对称外扩会移动外边界中心。 */
-const inflateRect = (r: Rect, m: BoxInsets): Rect => {
+const inflateRect = (r: Rect, m: BoundsInsets): Rect => {
   if (isZeroInsets(m)) return r;
   const dx = (m.right - m.left) / 2;
   const dy = (m.bottom - m.top) / 2;

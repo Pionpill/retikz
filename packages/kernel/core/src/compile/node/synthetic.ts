@@ -10,7 +10,7 @@ import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { providerDefinitionOf } from '../../providers/registry';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { applyTransformChain } from '../transform';
-import { boxInsets } from './types';
+import { boxInsets } from './box';
 
 /** synthetic layout 构造使用的 shape / boundary 注册表。 */
 export type SyntheticLayoutRegistryContext = {
