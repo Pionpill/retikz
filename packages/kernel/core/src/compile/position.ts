@@ -4,8 +4,8 @@ import type { Transform } from '../contract';
 import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../schemas';
 import type { NamespaceStack } from './namespace';
 
-import { DEFAULT_NODE_DISTANCE } from './constant';
-import { DirectionVectorByAnchor } from './direction';
+import { AnchorUnitVectorByAnchor } from '../shared';
+import { DEFAULT_NODE_DISTANCE } from './constants';
 import { inverseTransformChain } from './transform';
 
 /** between 端点的世界坐标解析器，由 path 编译侧注入。 */
@@ -55,7 +55,7 @@ export const resolvePosition = (
     const refGlobal: IRPosition = [ref.rect.x, ref.rect.y];
     const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
     const distance = pos.distance ?? nodeDistance;
-    const [dx, dy] = DirectionVectorByAnchor[pos.direction];
+    const [dx, dy] = AnchorUnitVectorByAnchor[pos.direction];
     return [refLocal[0] + dx * distance, refLocal[1] + dy * distance];
   }
   if ('offset' in pos) {

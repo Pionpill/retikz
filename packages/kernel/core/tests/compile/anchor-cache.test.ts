@@ -5,8 +5,8 @@ import type { NodeLayout } from '../../src/compile/node';
 import type { ShapeDefinition } from '../../src/contract';
 import type { BuiltinShapeValue } from '../../src/schemas';
 
-import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import { boxInsets } from '../../src/compile/node';
+import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 

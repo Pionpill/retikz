@@ -1,11 +1,11 @@
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
 import type { SegmentSample } from '../../shared/geometry';
-import type { CompileWarningCodeValue } from '../constant';
+import type { CompileWarningCodeValue } from '../constants';
 import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../text';
 
 import { RAD_TO_DEG } from '../../shared/geometry';
-import { CompileWarningCode } from '../constant';
+import { CompileWarningCode } from '../constants';
 import { layoutInlineLine, resolveLineRuns, toAlphabeticBaselineY } from '../text';
 
 /** 边标注字号与偏移量。 */

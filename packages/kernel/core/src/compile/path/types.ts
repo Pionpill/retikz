@@ -1,5 +1,5 @@
 ﻿import type { PathGeneratorDefinition, Transform } from '../../contract';
-import type { CompileWarning } from '../constant';
+import type { CompileWarning } from '../constants';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';
 import type { ResolvedArrowRegistry } from './shrink';

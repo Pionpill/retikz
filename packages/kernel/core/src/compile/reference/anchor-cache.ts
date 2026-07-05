@@ -1,12 +1,11 @@
 import type { Position } from '@retikz/math';
 
-import type { IRBoundary, IRPosition } from '../schemas';
-import type { SideValue } from '../shared';
-import type { NodeLayout } from './node';
+import type { IRBoundary, IRPosition } from '../../schemas';
+import type { SideValue } from '../../shared';
+import type { NodeLayout } from '../node';
 
-import { isAnchor } from '../shared';
-import { boundaryKey } from './boundary';
-import { anchorOf, angleBoundaryOf, outerRectOf } from './node';
+import { isAnchor } from '../../shared';
+import { anchorOf, angleBoundaryOf, boundaryKey, outerRectOf } from '../node';
 
 /** 单个 NodeLayout 生命周期内的 anchor 坐标缓存。 */
 const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();

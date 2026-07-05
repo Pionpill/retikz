@@ -16,7 +16,7 @@ import type {
   ResolvedDropShadow,
 } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { CompileWarningCodeValue } from '../constant';
+import type { CompileWarningCodeValue } from '../constants';
 import type { LaidLine, LowerTex } from '../text';
 
 /** 节点盒模型四边距。 */
@@ -38,6 +38,22 @@ export const boxInsets = (value: number): BoxInsets => ({
   bottom: value,
   left: value,
 });
+
+/** 节点各轴缩放因子。 */
+export type AxisScale = {
+  /** x 轴缩放。 */
+  x: number;
+  /** y 轴缩放。 */
+  y: number;
+};
+
+/** 节点盒尺寸。 */
+export type BoxSize = {
+  /** 宽度。 */
+  width: number;
+  /** 高度。 */
+  height: number;
+};
 
 export type NodeLayout = {
   /** 节点 id。 */

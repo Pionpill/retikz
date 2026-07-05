@@ -16,7 +16,7 @@ export type PaintResolver = (paint: string | IRPaintSpec | undefined) => PaintVa
 
 /** paint 资源登记表：编译期收集 PaintSpec、去重派 id，最后产出 Scene.resources */
 export type PaintRegistry = {
-  resolve: PaintResolver;
+  register: PaintResolver;
   resources: () => Array<SceneResource>;
 };
 
@@ -89,7 +89,7 @@ export const createPaintRegistry = (
   const idByKey = new Map<string, string>();
   const list: Array<SceneResource> = [];
   let counter = 0;
-  const resolve: PaintResolver = paint => {
+  const register: PaintResolver = paint => {
     if (paint === undefined) return undefined;
     if (typeof paint === 'string') return paint;
     const key = JSON.stringify(paint);
@@ -107,5 +107,5 @@ export const createPaintRegistry = (
     }
     return { kind: 'resourceRef', id };
   };
-  return { resolve, resources: () => list };
+  return { register, resources: () => list };
 };

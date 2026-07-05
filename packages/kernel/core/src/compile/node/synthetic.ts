@@ -78,7 +78,7 @@ export const createSyntheticRectangleLayout = (
 };
 
 /** 用 scope id 和当前 transform chain 构造临时 0×0 synthetic layout。 */
-export const registerScopePlaceholderLayout = (
+export const createScopePlaceholderLayout = (
   id: string,
   scopeChain: ReadonlyArray<Transform>,
   context: SyntheticLayoutRegistryContext = {},
@@ -91,7 +91,7 @@ export const registerScopePlaceholderLayout = (
 };
 
 /** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout。 */
-export const registerScopeAsLayout = (
+export const createScopeRectangleLayout = (
   input: ScopeRectangleLayoutInput,
   context: SyntheticLayoutRegistryContext = {},
 ): NodeLayout => {
@@ -106,7 +106,7 @@ export const registerScopeAsLayout = (
 };
 
 /** 用 scope id 和子树点集构造可引用的 synthetic circle layout。 */
-export const registerScopeCircleLayout = (
+export const createScopeCircleLayout = (
   input: ScopeCircleLayoutInput,
   context: SyntheticLayoutRegistryContext = {},
 ): NodeLayout => {

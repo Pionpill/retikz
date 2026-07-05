@@ -31,16 +31,16 @@ import {
   rectOutline,
   rectPerimeterSample,
 } from '../../shared/geometry';
-import { CompileWarningCode } from '../constant';
+import { CompileWarningCode } from '../constants';
 import { resolveShadow } from '../style';
 import { fallbackMeasurer } from '../text';
 import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
-import { resolveGeneratorCommands } from './generator';
+import { lowerGeneratorStepToCommands } from './generator';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { assertArrowCanInheritStroke, buildMarkMarkerGroup, markerContextStroke } from './marks';
-import { normalizeRelativeTargets } from './relative';
+import { resolveRelativeStepTargets } from './relative';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
-import { applyArrowShrinks, resolveEndpointArrowMark, resolveMarkArrowSpec } from './shrink';
+import { applyArrowShrinks, emitEndpointArrowMark, emitMarkArrowSpec } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
 
@@ -126,7 +126,7 @@ export const emitPathPrimitive = (
     throw new Error('Stroke path requires `children` steps.');
   }
   // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
-  const steps = normalizeRelativeTargets(path.children, namespaceStack, scopeChain);
+  const steps = resolveRelativeStepTargets(path.children, namespaceStack, scopeChain);
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；
   // 其余 step 需"起点 + 至少一段绘制"故最少 2 段
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
@@ -429,7 +429,7 @@ export const emitPathPrimitive = (
       // 终点：step.to resolve 后的世界坐标（无 to 则 undefined）
       const resolvedTo = step.to !== undefined ? refPointOfTarget(step.to, namespaceStack, scopeChain) : null;
       const toGen = resolvedTo ?? undefined;
-      const generated = resolveGeneratorCommands({
+      const generated = lowerGeneratorStepToCommands({
         step,
         generators: warnHook.effectivePathGenerators,
         from: fromGen,
@@ -724,7 +724,7 @@ export const emitPathPrimitive = (
       // arc/circle/ellipse 留下的 penOverride 决定起点；普通 prev 用 boundary clip 朝首个 through-point 收口
       const usedOverride = penOverride;
 
-      // 各 through-point resolve 成世界坐标（relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析为局部 tuple）
+      // 各 through-point resolve 成世界坐标（relative/relativeAccumulate 已被 resolveRelativeStepTargets 预解析为局部 tuple）
       const resolved: Array<IRPosition> = [];
       let resolveFailed = false;
       for (let k = 0; k < step.points.length; k++) {
@@ -900,14 +900,14 @@ export const emitPathPrimitive = (
   const inlineMarks: NonNullable<IRPathBase['marks']> = [];
   for (const item of path.marks ?? []) {
     if (item.pos === 0 && arrows.arrowStart === undefined) {
-      const resolved = resolveEndpointArrowMark(item.mark, resolvedArrows, round);
+      const resolved = emitEndpointArrowMark(item.mark, resolvedArrows, round);
       arrows.arrowStart = resolved.spec;
       arrows.shrinkStart = resolved.shrink;
       arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
       continue;
     }
     if (item.pos === 1 && arrows.arrowEnd === undefined) {
-      const resolved = resolveEndpointArrowMark(item.mark, resolvedArrows, round);
+      const resolved = emitEndpointArrowMark(item.mark, resolvedArrows, round);
       arrows.arrowEnd = resolved.spec;
       arrows.shrinkEnd = resolved.shrink;
       arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
@@ -933,7 +933,7 @@ export const emitPathPrimitive = (
             const localT = scaled - segIdx;
             return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
       })();
-      const spec = resolveMarkArrowSpec(mark, resolvedArrows, round);
+      const spec = emitMarkArrowSpec(mark, resolvedArrows, round);
       markPrims.push(
         buildMarkMarkerGroup(spec, sample, {
           strokeWidth,

@@ -11,7 +11,7 @@ import { providerDefinitionOf } from '../../providers/registry';
 import { JsonObjectSchema } from '../../schemas';
 
 export type ClipRegistry = {
-  resolve: (clip: IRClipSpec) => string;
+  register: (clip: IRClipSpec) => string;
   resources: () => Array<ClipResource>;
 };
 
@@ -179,7 +179,7 @@ export const createClipRegistry = (
     JsonObjectSchema.parse(parsed);
     return guardAndRoundShape(definition.resolve(parsed, { round, resolve: resolveShape }), round);
   };
-  const resolve = (clip: IRClipSpec): string => {
+  const register = (clip: IRClipSpec): string => {
     const shape = resolveShape(clip);
     const key = JSON.stringify(shape);
     let id = idByKey.get(key);
@@ -191,5 +191,5 @@ export const createClipRegistry = (
     }
     return id;
   };
-  return { resolve, resources: () => list };
+  return { register, resources: () => list };
 };

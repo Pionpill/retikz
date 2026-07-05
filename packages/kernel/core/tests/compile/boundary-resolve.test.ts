@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ResolveBoundaryContext } from '../../src/compile/boundary';
+import type { ResolveBoundaryContext } from '../../src/compile/node';
 import type { Rect } from '../../src/shared/geometry/rect';
 
-import { boundaryKey, resolveBoundary } from '../../src/compile/boundary';
+import { boundaryKey, resolveBoundary } from '../../src/compile/node';
 import { ellipseShape, rectangle } from '../../src/providers/shape';
 
 const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };

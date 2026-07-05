@@ -7,7 +7,7 @@ import type {
   Transform,
 } from '../../contract';
 import type { IRChild, IRPathBase, IRPosition, IRTransform, ResolvedDropShadow } from '../../schemas';
-import type { CompileWarning } from '../constant';
+import type { CompileWarning } from '../constants';
 import type { DuplicateRegisterInfo } from '../namespace';
 import type { NodeLayout } from '../node';
 import type { StyleFrame } from '../style';
@@ -18,24 +18,24 @@ import { providerDefinitionOf } from '../../providers/registry';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
-import { filterAnimations } from '../animation';
-import { CompileWarningCode } from '../constant';
+import { CompileWarningCode } from '../constants';
 import { NamespaceStack } from '../namespace';
 import {
+  createScopeCircleLayout,
+  createScopePlaceholderLayout,
+  createScopeRectangleLayout,
   createSyntheticRectangleLayout,
   emitNodePrimitives,
   labelExtentPoints,
   layoutNode,
   outerRectOf,
-  registerScopeAsLayout,
-  registerScopeCircleLayout,
-  registerScopePlaceholderLayout,
 } from '../node';
 import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
 import { resolvePosition } from '../position';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
 import { applyTransformChain, projectLayoutToGlobal } from '../transform';
+import { filterAnimations } from './animation';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -105,7 +105,7 @@ const transformWarnCode = (failed: IRTransform | undefined): CompileWarning['cod
 };
 
 /** 格式化重复 id warning。 */
-const formatDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => {
+const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => {
   const frameNote =
     info.frameDepth === 0
       ? 'frame depth: 0 (root namespace)'
@@ -210,7 +210,7 @@ type ScopeLayoutPlaceholderContext = {
   frame: TraversalFrame;
 };
 
-type ResolveScopeLayoutContext = {
+type RegisterResolvedScopeLayoutContext = {
   childScopeChain: ReadonlyArray<Transform>;
   scopeLayouts: ReadonlyArray<NodeLayout>;
   layoutPlaceholder: ScopeLayoutPlaceholder;
@@ -249,7 +249,7 @@ export const compileChildrenToPrimitives = (
       primitives: [],
       boundsPoints: [],
       namespaceStack: new NamespaceStack({
-        onDuplicate: info => context.onWarn(formatDuplicateWarning(info)),
+        onDuplicate: info => context.onWarn(createDuplicateWarning(info)),
       }),
       zIndexOf: new WeakMap(),
       placeholderBalance: 0,
@@ -271,7 +271,7 @@ export const compileChildrenToPrimitives = (
       onWarn: runtime.context.onWarn,
       irPath,
       scopeChain,
-      resolvePaint: runtime.context.paint.resolve,
+      resolvePaint: runtime.context.paint.register,
       resolvedArrows: runtime.context.arrows,
       effectivePathGenerators: runtime.context.pathGenerators,
       lowerTex: runtime.context.lowerTex,
@@ -300,7 +300,7 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 在命名引用可查阶段 emit 延迟 path，并把结果回填到对应输出容器。 */
-  const resolvePendingPathEmissions = (pendingPaths: ReadonlyArray<PendingPathEmission>): void => {
+  const flushPendingPathEmissions = (pendingPaths: ReadonlyArray<PendingPathEmission>): void => {
     if (pendingPaths.length === 0) return;
     runtime.state.namespaceStack.enterResolvingPhase();
     try {
@@ -360,7 +360,7 @@ export const compileChildrenToPrimitives = (
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);
     }
-    for (const prim of emitNodePrimitives(layout, runtime.context.round, runtime.context.paint.resolve)) {
+    for (const prim of emitNodePrimitives(layout, runtime.context.round, runtime.context.paint.register)) {
       primitiveSink.push(prim);
       recordPrimitiveZIndex(runtime.state.zIndexOf, prim, child.zIndex);
     }
@@ -469,7 +469,7 @@ export const compileChildrenToPrimitives = (
       return { parentFrameDepth };
     }
 
-    const placeholderLayout = registerScopePlaceholderLayout(child.id, childScopeChain, {
+    const placeholderLayout = createScopePlaceholderLayout(child.id, childScopeChain, {
       shapes: runtime.context.shapes,
       boundaries: runtime.context.boundaries,
     });
@@ -478,9 +478,9 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 根据子 layout 计算 scope 的最终命名 layout，并回填 scope.id 注册结果。 */
-  const resolveScopeLayout = (
+  const registerResolvedScopeLayout = (
     child: ScopeChild,
-    input: ResolveScopeLayoutContext,
+    input: RegisterResolvedScopeLayoutContext,
   ): void => {
     const { childScopeChain, scopeLayouts, layoutPlaceholder, frame } = input;
     const { layoutSink } = frame;
@@ -492,11 +492,11 @@ export const compileChildrenToPrimitives = (
     const fallbackOrigin: IRPosition = childScopeChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], childScopeChain);
     const bboxLayout =
       child.boundingShape === ScopeBoundingShape.Circle
-        ? registerScopeCircleLayout(
+        ? createScopeCircleLayout(
             { id: child.id, cornerPoints: collectScopeCornerPoints(scopeLayouts), fallbackOrigin },
             { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
           )
-        : registerScopeAsLayout(
+        : createScopeRectangleLayout(
             { id: child.id, bbox: computeScopeBoundingBox(scopeLayouts), fallbackOrigin },
             { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
           );
@@ -535,13 +535,13 @@ export const compileChildrenToPrimitives = (
     });
     if (scopeAnimations !== undefined) group.animations = scopeAnimations;
     if (hasScopeTransforms) group.transforms = [...scopeTransforms];
-    if (child.clip !== undefined) group.clipRef = runtime.context.clip.resolve(child.clip);
+    if (child.clip !== undefined) group.clipRef = runtime.context.clip.register(child.clip);
     primitiveSink.push(group);
     recordPrimitiveZIndex(runtime.state.zIndexOf, group, child.zIndex);
   };
 
   /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出。 */
-  const processScopeChild = (child: ScopeChild, index: number, frame: TraversalFrame): void => {
+  const compileScopeChild = (child: ScopeChild, index: number, frame: TraversalFrame): void => {
     const { locatorPrefix, styleStack } = frame;
     const { scopeTransforms, childScopeChain } = resolveScopeTransforms(child, index, frame);
     const layoutPlaceholder = registerScopeLayoutPlaceholder(child, { index, childScopeChain, frame });
@@ -552,7 +552,7 @@ export const compileChildrenToPrimitives = (
     const scopeLayouts: Array<NodeLayout> = [];
     const scopePendingPaths: Array<PendingPathEmission> = [];
     try {
-      processChildren(child.children, {
+      compileChildren(child.children, {
         scopeChain: childScopeChain,
         primitiveSink: scopePrimitiveSink,
         locatorPrefix: `${locatorPrefix}children[${index}].scope.`,
@@ -560,8 +560,8 @@ export const compileChildrenToPrimitives = (
         pathSink: scopePendingPaths,
         styleStack: [...styleStack, createStyleFrame(child)],
       });
-      resolveScopeLayout(child, { childScopeChain, scopeLayouts, layoutPlaceholder, frame });
-      resolvePendingPathEmissions(scopePendingPaths);
+      registerResolvedScopeLayout(child, { childScopeChain, scopeLayouts, layoutPlaceholder, frame });
+      flushPendingPathEmissions(scopePendingPaths);
     } finally {
       if (didPushNamespaceFrame) runtime.state.namespaceStack.popFrame();
     }
@@ -569,7 +569,7 @@ export const compileChildrenToPrimitives = (
     emitScopeGroup(child, { index, scopeTransforms, scopePrimitiveSink, frame });
   };
 
-  const processChildren = (children: ReadonlyArray<IRChild>, frame: TraversalFrame): void => {
+  const compileChildren = (children: ReadonlyArray<IRChild>, frame: TraversalFrame): void => {
     for (const [i, child] of children.entries()) {
       if ('namespace' in child) {
         throw new Error(
@@ -584,7 +584,7 @@ export const compileChildrenToPrimitives = (
           registerCoordinateChild(child, i, frame);
           break;
         case 'scope':
-          processScopeChild(child, i, frame);
+          compileScopeChild(child, i, frame);
           break;
         default:
           queuePathChild(child, i, frame);
@@ -593,7 +593,7 @@ export const compileChildrenToPrimitives = (
   };
 
   const rootPendingPaths: Array<PendingPathEmission> = [];
-  processChildren(rootChildren, {
+  compileChildren(rootChildren, {
     scopeChain: [],
     primitiveSink: runtime.state.primitives,
     locatorPrefix: '',
@@ -601,7 +601,7 @@ export const compileChildrenToPrimitives = (
     pathSink: rootPendingPaths,
     styleStack: [],
   });
-  resolvePendingPathEmissions(rootPendingPaths);
+  flushPendingPathEmissions(rootPendingPaths);
 
   if (runtime.state.placeholderBalance !== 0) {
     const detail =

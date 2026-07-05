@@ -1,7 +1,7 @@
-import type { IRAnimationTrack } from '../schemas';
-import type { CompileWarning } from './constant';
+import type { IRAnimationTrack } from '../../schemas';
+import type { CompileWarning } from '../constants';
 
-import { CompileWarningCode } from './constant';
+import { CompileWarningCode } from '../constants';
 
 /** animation 过滤上下文。 */
 export type FilterAnimationsContext = {

@@ -12,9 +12,9 @@ import type { NodeLayout } from '../node';
 
 import { FoldStepVia } from '../../schemas';
 import { lerpPoint, point } from '../../shared/geometry';
-import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import { boundaryPointOf } from '../node';
 import { resolvePosition } from '../position';
+import { resolveAnchor, resolveEdgePoint } from '../reference';
 import { applyTransformChain } from '../transform';
 
 /** target 是否对象形态 NodeTarget（`{ id, anchor?, offset? }`）；与 Position(array) / Polar / Offset(of) / Relative 区分（独有 `id`） */
@@ -69,7 +69,7 @@ export const refPointOfTarget = (
     if (!Number.isFinite(mid[0]) || !Number.isFinite(mid[1])) return null;
     return mid;
   }
-  // relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
+  // relative/relativeAccumulate 已被 resolveRelativeStepTargets 预解析；防御性守卫给 TS narrowing 用
   if (
     typeof target === 'object' &&
     !Array.isArray(target) &&

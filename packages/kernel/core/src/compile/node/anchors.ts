@@ -2,13 +2,13 @@ import type { Position } from '@retikz/math';
 
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { ResolveBoundaryContext } from '../boundary';
+import type { ResolveBoundaryContext } from './boundary';
 import type { BoxInsets, NodeLayout } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { CenterAnchor, isAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
-import { fallbackBoundaryAnchor, resolveBoundary } from '../boundary';
+import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 
 /** 空 shape params。 */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};

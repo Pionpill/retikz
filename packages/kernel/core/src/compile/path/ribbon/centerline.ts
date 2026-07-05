@@ -16,7 +16,7 @@ import {
   quadSegmentSample,
   vector2,
 } from '../../../shared/geometry';
-import { emitPathPrimitive } from '..';
+import { emitPathPrimitive } from '../emit';
 
 const LENGTH_SUBDIVISIONS = 16;
 

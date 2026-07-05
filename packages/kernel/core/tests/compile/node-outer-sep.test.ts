@@ -4,9 +4,9 @@ import type { NodeLayout } from '../../src/compile/node';
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
-import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';
+import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';

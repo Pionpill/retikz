@@ -56,7 +56,7 @@ const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
   }
 };
 
-export const resolveGeneratorCommands = (args: {
+export const lowerGeneratorStepToCommands = (args: {
   step: Extract<IRStep, { kind: 'generator' }>;
   generators?: ReadonlyMap<string, PathGeneratorDefinition>;
   from: IRPosition;

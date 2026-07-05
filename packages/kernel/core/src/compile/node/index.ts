@@ -1,4 +1,6 @@
 export { anchorOf, angleBoundaryOf, boundaryPointOf, outerRectOf } from './anchors';
+export type { ResolveBoundaryContext } from './boundary';
+export { boundaryKey, fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 export { emitNodePrimitives } from './emit';
 export { labelExtentPoints } from './labels';
 export type { LayoutNodeContext } from './layout';
@@ -10,10 +12,10 @@ export type {
   SyntheticRectangleLayoutInput,
 } from './synthetic';
 export {
+  createScopeCircleLayout,
+  createScopePlaceholderLayout,
+  createScopeRectangleLayout,
   createSyntheticRectangleLayout,
-  registerScopeAsLayout,
-  registerScopeCircleLayout,
-  registerScopePlaceholderLayout,
 } from './synthetic';
-export type { BoxInsets, NodeLabelLayout, NodeLayout, TexLoweringContext } from './types';
+export type { AxisScale, BoxInsets, BoxSize, NodeLabelLayout, NodeLayout, TexLoweringContext } from './types';
 export { boxInsets } from './types';

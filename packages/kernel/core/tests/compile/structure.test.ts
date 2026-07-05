@@ -47,12 +47,19 @@ describe('compile source structure', () => {
     expect(Object.keys(nodeCompile).sort()).toEqual([
       'anchorOf',
       'angleBoundaryOf',
+      'boundaryKey',
       'boundaryPointOf',
       'boxInsets',
+      'createScopeCircleLayout',
+      'createScopePlaceholderLayout',
+      'createScopeRectangleLayout',
+      'createSyntheticRectangleLayout',
       'emitNodePrimitives',
+      'fallbackBoundaryAnchor',
       'labelExtentPoints',
       'layoutNode',
       'outerRectOf',
+      'resolveBoundary',
     ]);
 
     const layout: Partial<NodeLayout> = {};
@@ -71,7 +78,7 @@ describe('compile source structure', () => {
   });
 
   it('boundary compile does not import concrete shape providers', () => {
-    const text = source('src/compile/boundary.ts');
+    const text = source('src/compile/node/boundary.ts');
     expect(text).not.toContain("from '../providers/shape'");
   });
 

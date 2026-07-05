@@ -11,15 +11,14 @@ import type {
   ShapeDefinition,
 } from '../contract';
 import type { IRScene } from '../schemas';
-import type { CompileWarning } from './constant';
+import type { CompileWarning } from './constants';
 import type { LowerTex, TextMeasurer } from './text';
 
-import { filterAnimations } from './animation';
-import { compileChildrenToPrimitives, createCompileContext } from './orchestration';
+import { compileChildrenToPrimitives, createCompileContext, filterAnimations } from './orchestration';
 import { assertFiniteLayout, computeLayout, viewBoxToLayout } from './scene';
 
-export type { CompileWarning } from './constant';
-export { CompileWarningCode } from './constant';
+export type { CompileWarning } from './constants';
+export { CompileWarningCode } from './constants';
 
 /** 宿主环境注入的 compile 能力。 */
 export type CompileHostOptions = {

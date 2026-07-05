@@ -4,13 +4,13 @@ import type {
   BoundaryAnchorName,
   BoundaryDefinition,
   ShapeDefinition,
-} from '../contract';
-import type { ProviderCollection } from '../providers/registry';
-import type { IRBoundary, IRJsonObject } from '../schemas';
-import type { Rect } from '../shared/geometry';
+} from '../../contract';
+import type { ProviderCollection } from '../../providers/registry';
+import type { IRBoundary, IRJsonObject } from '../../schemas';
+import type { Rect } from '../../shared/geometry';
 
-import { resolveBoundaryRegistry } from '../providers/boundary';
-import { isDirectionalAnchor, rect as rectOps } from '../shared';
+import { resolveBoundaryRegistry } from '../../providers/boundary';
+import { isDirectionalAnchor, rect as rectOps } from '../../shared';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
 const SELF = 'shape';

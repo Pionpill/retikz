@@ -103,7 +103,7 @@ const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
 };
 
 /** 调用 arrow emit，并校验 marker 产物。 */
-const callEmit = (shape: string, def: ArrowDefinition, ctx: ArrowEmitContext): Array<MarkerPrimitive> => {
+const emitArrowMarkerPrimitives = (shape: string, def: ArrowDefinition, ctx: ArrowEmitContext): Array<MarkerPrimitive> => {
   if (typeof def.emit !== 'function') {
     throw new Error(`Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`);
   }
@@ -181,13 +181,13 @@ const buildEmitContext = (
 };
 
 /** 把箭头视觉输入物化为 Scene 端点箭头描述。 */
-const materializeArrowEndSpec = (
+const emitArrowEndSpec = (
   visual: ResolvedArrowVisual,
   geometry: ResolvedArrowGeometry,
   round: (n: number) => number,
 ): ResolvedArrowEndSpec => {
   const ctx = buildEmitContext(visual, geometry, round);
-  const marker = callEmit(visual.shape, geometry.def, ctx);
+  const marker = emitArrowMarkerPrimitives(visual.shape, geometry.def, ctx);
   const out: ResolvedArrowEndSpec = {
     shape: visual.shape,
     baseSize: geometry.baseSize,
@@ -210,7 +210,7 @@ export type ResolvedEndpointArrowMark = {
   boundaryOuterInset: number;
 };
 
-export const resolveEndpointArrowMark = (
+export const emitEndpointArrowMark = (
   mark: IRArrowMark,
   registry: ResolvedArrowRegistry,
   round: (n: number) => number,
@@ -218,21 +218,21 @@ export const resolveEndpointArrowMark = (
   const visual = resolveArrowMarkVisual(mark, registry);
   const geometry = resolveGeometry(visual, registry);
   return {
-    spec: materializeArrowEndSpec(visual, geometry, round),
+    spec: emitArrowEndSpec(visual, geometry, round),
     shrink: computeShrink(geometry),
     boundaryOuterInset: geometry.boundaryOuterInset,
   };
 };
 
 /** 解析中段 arrow mark 为 marker 描述。 */
-export const resolveMarkArrowSpec = (
+export const emitMarkArrowSpec = (
   mark: IRArrowMark,
   registry: ResolvedArrowRegistry,
   round: (n: number) => number,
 ): ResolvedArrowEndSpec => {
   const visual = resolveArrowMarkVisual(mark, registry);
   const geometry = resolveGeometry(visual, registry);
-  return materializeArrowEndSpec(visual, geometry, round);
+  return emitArrowEndSpec(visual, geometry, round);
 };
 
 /** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */

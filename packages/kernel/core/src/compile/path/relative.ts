@@ -7,8 +7,8 @@ import type { NamespaceStack } from '../namespace';
 import { inverseTransformChain } from '../transform';
 import { refPointOfTarget } from './anchor';
 
-/** 把 relative / relativeAccumulate 目标归一为局部坐标 tuple。 */
-export const normalizeRelativeTargets = (
+/** 解析 relative / relativeAccumulate 目标为局部坐标 tuple。 */
+export const resolveRelativeStepTargets = (
   steps: ReadonlyArray<IRStep>,
   namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform> = [],

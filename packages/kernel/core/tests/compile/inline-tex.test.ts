@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning } from '../../src/compile/constant';
+import type { CompileWarning } from '../../src/compile/constants';
 import type { LowerTex } from '../../src/compile/text';
 import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { CompileWarningCode } from '../../src/compile/constant';
+import { CompileWarningCode } from '../../src/compile/constants';
 import { flattenPrims } from '../helpers/flatten';
 
 const lowerTexCalls: Array<{ tex: string; displayMode?: boolean }> = [];

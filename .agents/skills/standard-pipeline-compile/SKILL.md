@@ -37,6 +37,23 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 - warning code 用 const object enum + `XxxValue` 派生；message 写当前契约，不写内部调试故事。
 - lowering stage helper 用动词短语命名：`resolveXxx`、`lowerXxx`、`emitXxx`、`collectXxx`。
 
+### Compile 函数动词
+
+- `createXxx` 创建 context、cache、资源表或 synthetic 结构；不查 provider，不注册。
+- `resolveXxx` 把 IR / options 解析成编译期消费值；可查 registry、套默认值、parse、warn / throw；不产出 primitive。
+- `resolveXxxRegistry` 只用于 provider registry 合并。
+- `lowerXxx` 把高层语义降成低层 IR、命令或 transform；不产出 primitive / resource。
+- `layoutXxx` 度量或计算 layout 数据；可调用 `resolveXxx`；不写 namespace，不产出 primitive。
+- `emitXxx` 把 layout / lowered result / provider output 转成 Scene primitive 或 resource。
+- `collectXxx` 只收集派生数据；最多追加到显式传入的 collection。
+- `registerXxx` 写 namespace、registry 或 cache；有写入副作用才用。
+- `lookupXxx` 只读查表；可 fail loud，不写入。
+- `normalizeXxx` 纯规范化输入；不查 registry / namespace，不 warn。
+- `filterXxx` 过滤非法项；可 warn，不改写合法项。
+- `computeXxx` 纯计算；不 lookup、不 warn、不 mutation。
+- `formatXxx` 只格式化字符串。
+- 避免 `processXxx` / `handleXxx` / `doXxx`；`compileXxx` 只用于跨 register / resolve / layout / emit 多阶段的 orchestration 入口。
+
 ## Core compile 文件结构
 
 - `compile.ts` 只放 `CompileOptions`、`compileToScene` 和顶层编排；node/path/ribbon/scope 细节下沉到对应模块。
