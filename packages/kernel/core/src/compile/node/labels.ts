@@ -6,7 +6,7 @@ import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../schemas';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../shared/geometry';
-import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from '../direction';
+import { DirectionVectorByAnchor } from '../direction';
 import { anchorOf, angleBoundaryOf } from './anchors';
 
 /** Node label 与 node 边界距离。 */
@@ -71,7 +71,7 @@ export const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Po
   if (typeof label.position === 'number') {
     return angleBoundaryOf(aaLayout, label.position);
   }
-  return anchorOf(aaLayout, LabelAnchorByAtDirection[label.position]);
+  return anchorOf(aaLayout, label.position);
 };
 
 export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
@@ -85,7 +85,7 @@ export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Positio
   if (typeof label.position === 'number') {
     return arcEndPoint([bx, by], label.distance * sign, label.position);
   }
-  const vec = DirectionVectorByAtDirection[label.position];
+  const vec = DirectionVectorByAnchor[label.position];
   return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
 };
 

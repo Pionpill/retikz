@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-import { AtDirection } from './constants';
+import { Anchor } from '../../../shared';
 
 export const AtPositionSchema = z
   .object({
     direction: z
-      .enum(AtDirection)
+      .enum(Anchor)
       .describe('Canonical direction from the referenced node toward this node, in visual convention.'),
     of: z
       .string()

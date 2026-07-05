@@ -5,7 +5,8 @@ import type { IRTransform } from '../../src/schemas';
 
 import { NamespaceStack } from '../../src/compile/namespace';
 import { boxInsets } from '../../src/compile/node';
-import { lowerScopeTransforms, projectLayoutToGlobal } from '../../src/compile/scope';
+import { lowerScopeTransforms } from '../../src/compile/scope';
+import { projectLayoutToGlobal } from '../../src/compile/transform';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 /** 把 id → 中心 entries 灌进新建的 namespaceStack，便于 lower 单测验证 referent lookup */

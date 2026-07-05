@@ -6,7 +6,8 @@ import type { NodeLayout } from '../../src/compile/node';
 
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';
-import { collectScopeCornerPoints, registerScopeCircleLayout } from '../../src/compile/scope';
+import { registerScopeCircleLayout } from '../../src/compile/node';
+import { collectScopeCornerPoints } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const scene = (children: IRScene['children']): IRScene => ({

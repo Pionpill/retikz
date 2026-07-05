@@ -21,22 +21,21 @@ import { rect as rectOps } from '../../shared/geometry';
 import { filterAnimations } from '../animation';
 import { CompileWarningCode } from '../constant';
 import { NamespaceStack } from '../namespace';
-import { emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from '../node';
-import { emitPathPrimitive, refPointOfTarget } from '../path';
-import { emitRibbonPrimitive } from '../path/ribbon';
-import { resolvePosition } from '../position';
 import {
-  applyTransformChain,
-  collectScopeCornerPoints,
-  computeScopeBoundingBox,
   createSyntheticRectangleLayout,
-  lowerScopeTransforms,
-  projectLayoutToGlobal,
+  emitNodePrimitives,
+  labelExtentPoints,
+  layoutNode,
+  outerRectOf,
   registerScopeAsLayout,
   registerScopeCircleLayout,
   registerScopePlaceholderLayout,
-} from '../scope';
+} from '../node';
+import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
+import { resolvePosition } from '../position';
+import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
+import { applyTransformChain, projectLayoutToGlobal } from '../transform';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -394,7 +393,7 @@ export const compileChildrenToPrimitives = (
     }
     const globalCenter = scopeChain.length === 0 ? localCenter : applyTransformChain(localCenter, scopeChain);
     const coordinateLayout = createSyntheticRectangleLayout(
-      { id: child.id, center: globalCenter, width: 0, height: 0 },
+      { id: child.id, rect: { x: globalCenter[0], y: globalCenter[1], width: 0, height: 0, rotate: 0 } },
       { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
     );
     runtime.state.namespaceStack.register(child.id, coordinateLayout, `${coordinateIrPath}.id`);

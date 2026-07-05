@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRPosition, IRScene, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
-import { applyTransformChain, inverseTransformChain } from '../../src/compile/scope';
+import { applyTransformChain, inverseTransformChain } from '../../src/compile/transform';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,

@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 
-import type { SideInput, ValueOf } from '../../shared';
-import type { AtDirectionInput } from '../position';
+import type { DirectionalAnchorInput, SideInput, ValueOf } from '../../shared';
 import type {
   BuiltinShape,
   NodeLabelPlacement,
@@ -37,7 +36,7 @@ export type IRNodeLabelBoundaryPositionInput = Omit<IRNodeLabelBoundaryPosition,
 export type IRNodeLabel = z.infer<typeof NodeLabelSchema>;
 
 export type NodeLabelPositionInput =
-  | AtDirectionInput
+  | DirectionalAnchorInput
   | typeof NodeLabelPosition.Center
   | number
   | IRNodeLabelBoundaryPositionInput;

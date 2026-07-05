@@ -241,7 +241,7 @@ describe('core layer import boundaries', () => {
     const scannedRoots = ['shared', 'schemas', 'contract', 'providers', 'compile'].map(root => join(SRC_ROOT, root));
     const forbiddenPatterns = [
       /\b(?:Compass|Tikz|Web)(?:Anchor|Side|Corner)\w*\b/u,
-      /\bnormalize(?:Anchor|Side|AtDirection)\b/u,
+      /\bnormalize(?:Anchor|Side)\b/u,
     ];
 
     const offenders = scannedRoots.flatMap(root =>

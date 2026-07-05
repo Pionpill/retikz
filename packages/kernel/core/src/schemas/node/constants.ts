@@ -1,4 +1,4 @@
-import { AtDirection } from '../position';
+import { Anchor } from '../../shared';
 
 /** 节点形状关键字（用 const + ValueOf 派生，不用 TS enum） */
 export const BuiltinShape = {
@@ -17,7 +17,7 @@ export const NodeTextAlign = {
 
 /** 节点标签相对节点的位置关键字 */
 export const NodeLabelPosition = {
-  ...AtDirection,
+  ...Anchor,
   Center: 'center',
 } as const;
 

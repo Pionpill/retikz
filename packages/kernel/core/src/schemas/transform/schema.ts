@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { AbsoluteTargetSchema, AtDirection, PolarPositionSchema, PositionSchema } from '../position';
+import { Anchor } from '../../shared';
+import { AbsoluteTargetSchema, PolarPositionSchema, PositionSchema } from '../position';
 import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
 
 const TranslateSchema = z
@@ -33,7 +34,7 @@ const AtTranslateSchema = z
   .object({
     kind: z.literal('at-translate').describe('Discriminator for direction-relative translate.'),
     direction: z
-      .enum(AtDirection)
+      .enum(Anchor)
       .describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
     of: z
       .string()

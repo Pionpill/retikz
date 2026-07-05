@@ -4,7 +4,7 @@ import type { Transform } from '../../contract';
 import type { IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 
-import { inverseTransformChain } from '../scope';
+import { inverseTransformChain } from '../transform';
 import { refPointOfTarget } from './anchor';
 
 /** 把 relative / relativeAccumulate 目标归一为局部坐标 tuple。 */

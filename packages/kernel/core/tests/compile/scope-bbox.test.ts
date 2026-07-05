@@ -6,7 +6,8 @@ import type { TextMeasurer } from '../../src/compile/text';
 
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';
-import { computeScopeBoundingBox, registerScopeAsLayout } from '../../src/compile/scope';
+import { registerScopeAsLayout } from '../../src/compile/node';
+import { computeScopeBoundingBox } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const scene = (children: IRScene['children']): IRScene => ({

@@ -15,7 +15,7 @@ import { lerpPoint, point } from '../../shared/geometry';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import { boundaryPointOf } from '../node';
 import { resolvePosition } from '../position';
-import { applyTransformChain } from '../scope';
+import { applyTransformChain } from '../transform';
 
 /** target 是否对象形态 NodeTarget（`{ id, anchor?, offset? }`）；与 Position(array) / Polar / Offset(of) / Relative 区分（独有 `id`） */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => typeof t === 'object' && !Array.isArray(t) && 'id' in t;

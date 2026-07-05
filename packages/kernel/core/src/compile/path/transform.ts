@@ -3,7 +3,7 @@ import { boundsCenter, boundsOf } from '@retikz/math';
 import type { Transform } from '../../contract';
 import type { IRPathScale, IRPosition } from '../../schemas';
 
-import { applyTransformChain } from '../scope';
+import { applyTransformChain } from '../transform';
 
 /** 有限数 */
 const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);

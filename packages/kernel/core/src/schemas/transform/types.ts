@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { AtDirectionInput } from '../position';
+import type { DirectionalAnchorInput } from '../../shared';
 import type { TransformSchema } from './schema';
 
 /** IR 层 transform 类型——7 变体 discriminated union（5 translate + rotate + scale） */
@@ -16,7 +16,7 @@ export type IRPolarTranslateTransform = Extract<IRTransform, { kind: 'polar-tran
 export type IRAtTranslateTransform = Extract<IRTransform, { kind: 'at-translate' }>;
 
 export type IRAtTranslateTransformInput = Omit<IRAtTranslateTransform, 'direction'> & {
-  direction: AtDirectionInput;
+  direction: DirectionalAnchorInput;
 };
 
 export type IRTransformInput = Exclude<IRTransform, IRAtTranslateTransform> | IRAtTranslateTransformInput;
