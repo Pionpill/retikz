@@ -60,11 +60,11 @@ type AxisGridLineStyle = GuideLineStyle & {
 2. `grid.minor` 用显式 `ticks` 避免隐式 minor tick 规则；未来 chart preset 可以基于 scale family 自动生成，但底层 PlotSpec 保持可解释。
 3. `bandPosition` 比布尔 `offset` 更通用，能表达 band 起点、中心、终点以及 0.25 / 0.75 等比例位置。
 4. `lineCap` 与 axis line 能力对齐，且只复用 core Path 已有字段，不新增 renderer 语义。
-5. 不把层级放进本 ADR，避免局部 grid API 先于全局 layer / z-order 模型定型。
+5. 本 ADR 不定义局部 grid 层级字段；全局 layer / z-order 模型已由 ADR-12 定型。
 
 ## 待决策点
 
-无。grid 层级、z-order、独立 grid mark / reference band 和 data-driven grid style 后续单独讨论。
+无。全局 grid 层级与默认 zIndex 已由 ADR-12 固定；独立 axis.grid.layer 覆盖、独立 grid mark / reference band 和 data-driven grid style 后续单独讨论。
 
 ## DSL 表面
 
@@ -147,11 +147,11 @@ Vanilla builder 暴露同名 plain object；所有字段必须 JSON-safe，不�
 - major / minor grid 分别生成 path；minor 与 major 投影重合的位置会跳过，minor 默认 `drawOpacity` 为 `0.08`。
 - 文档轴页面已新增网格来源 demo，并更新 `grid` API 表。
 
-后续如果要把 grid layer / z-order、data-driven per-line style 或 custom coordinate grid surface 纳入能力，需要另开 ADR。
+全局 grid layer / z-order 已由 ADR-12 落地。后续如果要把 axis.grid.layer 覆盖、data-driven per-line style 或 custom coordinate grid surface 纳入能力，需要另开 ADR。
 
 ## 不在本 ADR 范围
 
-- grid layer / z-index / draw order。该能力等待全局 layer 模型统一讨论。
+- axis.grid.layer 覆盖。默认 grid 层级已由 ADR-12 固定；若要单独调整某条轴的 grid zIndex，需扩展 grid 自身的 layer 字段。
 - data-driven / per-line style encoding，例如按 index 或 value 给不同 grid line 着色。
 - reference line / reference band / alternate plot bands；这些应是独立 mark 或 reference guide，不塞进 axis grid。
 - custom coordinate grid surface。

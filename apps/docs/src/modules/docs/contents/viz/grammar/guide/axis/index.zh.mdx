@@ -99,7 +99,7 @@ polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向
 | `tickLabels` | `false \| { format?, gap?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate?, layout? }` | `true` | 刻度文字配置；`format` 支持 d3-format / d3-time-format；`rotate` 是固定旋转，优先于 `layout.rotate`；`layout:false` 关闭自动避让 |
 | `title`      | `string \| { text, padding?, placement?, orientation?, anchor?, shift?, layout?, font?, textColor?, opacity?, align?, lineHeight?, maxTextWidth?, rotate? }` | — | 轴标题；`padding` 控制标题到刻度文字带的距离，`placement` 支持 path label 同类关键字或 `0..1` 比例，`anchor` / `shift` 微调端点对齐与局部偏移，显式 `rotate` 优先 |
 | `grid`       | `boolean \| { applyTo?, select?, ticks?, density?, bandPosition?, minor?, stroke?, strokeWidth?, drawOpacity?, dashPattern?, dashOffset?, lineCap? }` | `false` | 是否画网格线；默认复用本轴可见 tick，也可用 `grid.ticks` 独立设置来源；`minor` 画次网格；`applyTo/select` 控制组合 / 分面投放；`bandPosition` 只在 band scale 上生效 |
-| `id`         | `string?`                                          | —          | 可选句柄（预留，暂不解析）                                                                                       |
+| `id`         | `string?`                                          | —          | 可选 guide 句柄；开启 provenance 时作为轴层 scope id，网格层仍使用结构 id                                         |
 
 `layout` 和 `labels` 是 `<Plot>` 级字段，不属于 `<Axis>`：
 
