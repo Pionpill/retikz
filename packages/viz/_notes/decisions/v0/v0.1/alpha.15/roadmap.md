@@ -25,7 +25,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 | ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density | Accepted（已实现） |
 | ADR-07 | **axis tick label adaptive layout** | 为 axis tick label 增加自适应旋转、重叠省略与边界处理；允许用户关闭旋转、省略或全部自适应，且不改变 tick / grid / mark 同源语义 | Accepted（已实现） |
 | ADR-08 | **axis title layout and anchor strategy** | 为 axis title 统一复用 core position 关键字，`gap` 改名为 `padding`，并补齐 shift、结构化 anchor 与 title layout 避让策略 | Accepted（已实现） |
-| ADR-09 | **axis grid source and style strategy** | 为 axis grid 增加独立 tick source、density、minor grid、bandPosition 与 lineCap；层级 / z-order 延后统一讨论 | Accepted |
+| ADR-09 | **axis grid source and style strategy** | 为 axis grid 增加独立 tick source、density、minor grid、bandPosition 与 lineCap；默认层级由 ADR-12 的全局 layer / zIndex 模型统一处理 | Accepted |
 | ADR-10 | **plot decoration layout and placement strategy** | 用 LayoutClaim 统一整图标题、caption、source note、legend、axis title / labels 等 decoration 的占位、placement 与避让；明确静态文案公开归 `labels`，scale-bound 文本仍归 guide | Accepted（首轮实现） |
 | ADR-11 | **legend size symbol layout and scaling strategy** | 为 size legend 增加 `symbolSize`、`symbolScale`、`symbolFit`，默认把大半径符号压入图例 symbol 盒子，并让 legend 条目按最终符号尺寸预留空间 | Accepted（首轮实现） |
 | ADR-12 | **plot layer and zIndex strategy** | 明确 background、grid、mark、axis、facet label、plot label、legend 与后续 interaction 的默认层级；Plot lowering 复用 core scope `zIndex`，并用 `layer.zIndex` 区分图层级排序与 datum/path 级 `mark.zIndex` | Accepted（已实现） |
@@ -68,7 +68,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 - **三包 lockstep**：`@retikz/plot` 是 schema / lowering 真源；React / Vanilla 只提供等价 authoring 表面，不另造 theme 或 guide 语义。
 - **Interaction 顺延到 v0.3**：不设计 hover / selected token，不实现 tooltip、selection、brush、event callback。
 
-## ADR 草案要点
+## ADR 要点
 
 ### ADR-01：axis domain padding and tick strategy
 
@@ -360,7 +360,7 @@ built-in default theme
 
 alpha.15 封口时应满足：
 
-- ADR-01～07 全部 Proposed -> Accepted，字段名、默认值、merge 顺序在 ADR 内固定。
+- ADR-01～12 全部 Proposed -> Accepted，字段名、默认值、merge 顺序在 ADR 内固定。
 - `@retikz/plot` 的连续 / 时间位置 scale 默认能避免单点或极值贴边；显式 domain 行为可预测。
 - axis line、tick line、tick label、axis title、grid line 不再只能依赖 lowering 硬编码常量。
 - axis tick 能表达 line mark、常见内置 shape mark 与 custom shape mark；shape mark 复用 core Node shape，不新增 plot-only shape 系统。
@@ -369,5 +369,5 @@ alpha.15 封口时应满足：
 - cartesian axis line 能表达 lineCap、positive / negative 方向箭头与 origin crossing，且不污染 theme 结构语义。
 - `PlotSpec.theme` 能控制 axis、axis grid、legend、palette、typography、background 的默认样式。
 - React / Vanilla 能等价暴露 theme 与 guide 局部样式，不绕开 PlotSpec。
-- docs 至少覆盖：单点散点留白、axis/grid 样式、theme 切换、legend/palette 样式。
+- docs 至少覆盖：单点散点留白、axis/grid 样式、theme 切换、legend/palette 样式、plot labels 与 layer zIndex。
 - roadmap 明确 Interaction 进入 v0.3 能力线，不与 alpha.15 混杂。
