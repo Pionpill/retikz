@@ -158,9 +158,9 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
     expect(labelOf(pathWithLabel({ opacity: 0.5 }, { opacity: 0.5 }))?.opacity).toBe(0.25);
   });
 
-  it('step_label_zero_break：既有无样式 label → currentColor + 默认字号 14（快照不变）', () => {
+  it('step_label_zero_break：既有无样式 label → currentColor + 默认字号 16', () => {
     const t = labelOf(pathWithLabel({}, {}));
     expect(t?.fill).toBe('currentColor');
-    expect(t?.fontSize).toBe(14);
+    expect(t?.fontSize).toBe(16);
   });
 });

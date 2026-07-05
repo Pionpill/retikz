@@ -332,7 +332,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
     font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 labelDefault → 渲染端默认',
     'font.family': 'CSS font-family 字符串，如 "serif" / "monospace"',
-    'font.size': '字号（用户单位）；未填走 labelDefault → 渲染端默认',
+    'font.size': '字号：正数、Web preset（2xs..9xl）或 em/rem；未填走 labelDefault → CompileOptions.fontSize',
     'font.weight': 'CSS font-weight：keyword normal/bold 或数字 100..900',
     'font.style': 'CSS font-style：normal / italic / oblique',
   }}

@@ -5,11 +5,10 @@ import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../tex
 import type { CompileWarningCodeValue } from '../warning';
 
 import { RAD_TO_DEG } from '../../shared/geometry';
-import { CompileWarningCode } from '../constants';
-import { layoutInlineLine, resolveLineRuns, toAlphabeticBaselineY } from '../text';
+import { CompileWarningCode, DEFAULT_FONT_SIZE } from '../constants';
+import { layoutInlineLine, resolveFontSize, resolveLineRuns, toAlphabeticBaselineY } from '../text';
 
-/** 边标注字号与偏移量。 */
-const LABEL_FONT_SIZE = 14;
+/** 边标注默认行高与偏移量。 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
 type LabelSide = GeometryLabelSideValue | 'center';
@@ -36,6 +35,7 @@ export type LabelPlacementContext = {
 export type EmitLabelPrimitiveContext = {
   measureText: TextMeasurer;
   round: (n: number) => number;
+  rootFontSize?: number;
   hostOpacity?: number;
   tex?: LabelTexContext;
   placement?: LabelPlacementContext;
@@ -75,9 +75,19 @@ export const emitLabelPrimitive = (
   sample: SegmentSample,
   context: EmitLabelPrimitiveContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
-  const { measureText, round, hostOpacity, tex: texCtx, placement: placementCtx } = context;
+  const {
+    measureText,
+    round,
+    rootFontSize = DEFAULT_FONT_SIZE,
+    hostOpacity,
+    tex: texCtx,
+    placement: placementCtx,
+  } = context;
   // label.font / textColor / opacity 已由 compile/style 解析（fold scope labelDefault + 宿主 path 主色）
-  const fontSize = label.font?.size ?? LABEL_FONT_SIZE;
+  const fontSize = resolveFontSize(label.font?.size, {
+    rootFontSize,
+    inheritedFontSize: rootFontSize,
+  });
   const fontFamily = label.font?.family;
   const fontWeight = label.font?.weight;
   const fontStyle = label.font?.style;
@@ -111,6 +121,7 @@ export const emitLabelPrimitive = (
       measureText,
       lowerTex: texCtx?.lowerTex,
       font,
+      rootFontSize,
       color: label.textColor,
       opacity: labelOpacity,
       warn: texCtx?.warn ?? ((): void => {}),

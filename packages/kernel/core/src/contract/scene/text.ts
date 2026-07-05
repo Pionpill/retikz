@@ -16,7 +16,7 @@ export type TextLine = {
    * 行级字号覆盖（user units）；缺省走块级 TextPrim.fontSize
    * @default TextPrim.fontSize
    */
-  fontSize?: IRFont['size'];
+  fontSize?: number;
   /**
    * 行级字体族覆盖（CSS font-family）；缺省走块级
    * @default TextPrim.fontFamily
@@ -62,7 +62,7 @@ export type TextPrim = {
   y: number;
   /** 至少 1 行；单行节点也用 `[{ text: 'Hello' }]` */
   lines: Array<TextLine>;
-  fontSize: NonNullable<IRFont['size']>;
+  fontSize: number;
   /**
    * 块级字体族。
    * @default 'sans-serif'

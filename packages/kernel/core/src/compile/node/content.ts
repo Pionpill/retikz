@@ -4,13 +4,17 @@ import type { FontSpec, LaidLine, LineLayoutContext } from '../text';
 import type { NodeTextLayoutContext } from './types';
 
 import { CompileWarningCode } from '../constants';
-import { layoutInlineLine, resolveLineRuns } from '../text';
+import { layoutInlineLine, resolveFontSize, resolveLineRuns } from '../text';
 import { wrapText } from './text';
 
 /** 节点正文布局输入。 */
 export type LayoutNodeContentInput = NodeTextLayoutContext & {
   /** 基准字体大小。 */
   fontSize: number;
+  /** 未缩放前的节点基准字号。 */
+  baseFontSize: number;
+  /** preset 与 rem 字号解析的根字号。 */
+  rootFontSize: number;
   /** 行高。 */
   lineHeight: number;
   /** 已按节点缩放处理的最大文本宽度。 */
@@ -36,7 +40,9 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
     measureText,
     texLowering,
     fontSize,
+    baseFontSize,
     fontScale,
+    rootFontSize,
     fontFamily,
     fontWeight,
     fontStyle,
@@ -69,6 +75,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         measureText,
         lowerTex: texLowering?.lowerTex,
         font: blockFont,
+        rootFontSize,
         color: node.textColor,
         opacity: node.opacity,
         warn: inlineWarn,
@@ -91,8 +98,12 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         const text = resolved[li].runs.map(r => ('text' in r ? r.text : '')).join('');
         const lineObj = typeof spec === 'object' && !('runs' in spec) ? spec : undefined;
         const lineFont = lineObj?.font;
+        const lineFontSize =
+          lineFont?.size !== undefined
+            ? resolveFontSize(lineFont.size, { rootFontSize, inheritedFontSize: baseFontSize })
+            : undefined;
         const font: FontSpec = {
-          size: lineFont?.size !== undefined ? lineFont.size * fontScale : fontSize,
+          size: lineFontSize !== undefined ? lineFontSize * fontScale : fontSize,
           family: lineFont?.family ?? fontFamily,
           weight: lineFont?.weight ?? fontWeight,
           style: lineFont?.style ?? fontStyle,
@@ -108,7 +119,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
           if (lineObj) {
             if (lineObj.fill !== undefined) out.fill = lineObj.fill;
             if (lineObj.opacity !== undefined) out.opacity = lineObj.opacity;
-            if (lineFont?.size !== undefined) out.fontSize = lineFont.size * fontScale;
+            if (lineFontSize !== undefined) out.fontSize = lineFontSize * fontScale;
             if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
             if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
             if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;

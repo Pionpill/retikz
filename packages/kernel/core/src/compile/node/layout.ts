@@ -13,14 +13,15 @@ import type { NodeLayout, TexLoweringContext } from './types';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { DEG_TO_RAD } from '../../shared/geometry';
-import { DEFAULT_LABEL_DISTANCE } from '../constants';
+import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE } from '../constants';
 import { resolvePosition } from '../position';
 import { resolveShadow } from '../style';
+import { resolveFontSize } from '../text';
 import { resolveAxisScale, resolveBoxSize, resolveBoxSpacing } from './box';
 import { layoutNodeContent } from './content';
 import { layoutNodeLabels } from './label-layout';
 import { resolveNodeShape } from './shape';
-import { DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './text';
+import { DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './text';
 
 const DEFAULT_PADDING = 8;
 
@@ -34,6 +35,8 @@ export type LayoutNodeContext = {
   nodeDistance?: number;
   /** 节点 label 默认距离。 */
   labelDistance?: number;
+  /** preset 与 rem 字号解析的根字号。 */
+  rootFontSize?: number;
   /** 当前 scope 累积 transform。 */
   scopeChain?: ReadonlyArray<Transform>;
   /** 当前样式栈解析出的 label 默认值。 */
@@ -54,6 +57,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     namespaceStack,
     nodeDistance,
     labelDistance = DEFAULT_LABEL_DISTANCE,
+    rootFontSize = DEFAULT_FONT_SIZE,
     scopeChain = [],
     labelDefault,
     shapes = resolveShapeRegistry(),
@@ -67,7 +71,10 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
   const fontScale = Math.min(sx, sy);
   const { shapeName, shapeDef, shapeParams } = resolveNodeShape({ node, shapes, scaleX: sx, scaleY: sy });
 
-  const baseFontSize = node.font?.size ?? DEFAULT_FONT_SIZE;
+  const baseFontSize = resolveFontSize(node.font?.size, {
+    rootFontSize,
+    inheritedFontSize: rootFontSize,
+  });
   const fontSize = baseFontSize * fontScale;
   const fontFamily = node.font?.family;
   const fontWeight = node.font?.weight;
@@ -95,7 +102,9 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     measureText,
     texLowering,
     fontSize,
+    baseFontSize,
     fontScale,
+    rootFontSize,
     fontFamily,
     fontWeight,
     fontStyle,
@@ -138,6 +147,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     labelDefault,
     labelDistance,
     baseFontSize,
+    rootFontSize,
     fontScale,
     fontFamily,
     fontWeight,

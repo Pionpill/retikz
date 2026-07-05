@@ -160,6 +160,7 @@ export const emitPathPrimitive = (
     const r = emitLabelPrimitive(step.label, sample, {
       measureText,
       round,
+      rootFontSize: warnHook.rootFontSize,
       hostOpacity: path.opacity,
       tex: {
         lowerTex: warnHook.lowerTex,

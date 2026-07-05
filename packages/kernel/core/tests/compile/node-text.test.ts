@@ -92,10 +92,10 @@ describe('Node multi-line text', () => {
     };
     const t = findText(compileToScene(ir).primitives);
     expect(t?.lines).toEqual([{ text: 'ab' }, { text: 'longer line' }, { text: 'c' }]);
-    // fallback measurer: width = text.length × 14 × 0.55；'longer line' 11 字符 → 84.7
-    // 多行高度 = 3 × (14 × 1.2) = 50.4
-    expect(t?.measuredWidth).toBeCloseTo(84.7, 1);
-    expect(t?.measuredHeight).toBeCloseTo(50.4, 1);
+    // fallback measurer: width = text.length × 16 × 0.55；'longer line' 11 字符 → 96.8
+    // 多行高度 = 3 × (16 × 1.2) = 57.6
+    expect(t?.measuredWidth).toBeCloseTo(96.8, 1);
+    expect(t?.measuredHeight).toBeCloseTo(57.6, 1);
   });
 
   it("align='start' → TextPrim.align='start' 且 x 偏到块左边", () => {
@@ -292,7 +292,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).primitives);
-    expect(t?.fontSize).toBe(28);
+    expect(t?.fontSize).toBe(32);
     expect(t?.lines[0]).toEqual({ text: 'scaled', fontSize: 28 });
   });
 });

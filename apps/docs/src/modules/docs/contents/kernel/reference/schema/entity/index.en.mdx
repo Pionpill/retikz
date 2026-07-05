@@ -66,6 +66,6 @@ description: Named members placed in a scene — Node and Coordinate
 
 ## Font
 
-`FontSchema` is shared by node text, node labels, and per-line text overrides. All fields are optional.
+`FontSchema` is shared by node text, node labels, and per-line text overrides. All fields are optional. `size` accepts a positive number, a Web preset such as `sm` / `lg`, or an `em` / `rem` string; omitted sizes use `CompileOptions.fontSize`. TikZ-style sizes are handled by higher-level sugar, not core IR.
 
 <ZodSchema name="FontSchema" />

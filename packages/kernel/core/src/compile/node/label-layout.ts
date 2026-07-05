@@ -3,7 +3,7 @@ import type { FontSpec } from '../text';
 import type { NodeLabelLayout, NodeTextLayoutContext } from './types';
 
 import { CompileWarningCode } from '../constants';
-import { layoutInlineLine, resolveLineRuns } from '../text';
+import { layoutInlineLine, resolveFontSize, resolveLineRuns } from '../text';
 import { normalizeLabelPosition } from './label-geometry';
 
 /** 节点附属 label 布局输入。 */
@@ -14,6 +14,8 @@ export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
   labelDistance: number;
   /** 基准字体大小。 */
   baseFontSize: number;
+  /** preset 与 rem 字号解析的根字号。 */
+  rootFontSize: number;
 };
 
 /** 布局节点附属 label。 */
@@ -25,6 +27,7 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
     labelDefault,
     labelDistance,
     baseFontSize,
+    rootFontSize,
     fontScale,
     fontFamily,
     fontWeight,
@@ -36,7 +39,14 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   return rawLabels?.map(lab => {
     const labFont = lab.font;
-    const labFontSize = (labFont?.size ?? labelDefault?.font?.size ?? baseFontSize) * fontScale;
+    const labelBaseFontSize = resolveFontSize(labelDefault?.font?.size, {
+      rootFontSize,
+      inheritedFontSize: baseFontSize,
+    });
+    const labFontSize = resolveFontSize(labFont?.size, {
+      rootFontSize,
+      inheritedFontSize: labelBaseFontSize,
+    }) * fontScale;
     const labFamily = labFont?.family ?? labelDefault?.font?.family ?? fontFamily;
     const labWeight = labFont?.weight ?? labelDefault?.font?.weight ?? fontWeight;
     const labStyle = labFont?.style ?? labelDefault?.font?.style ?? fontStyle;
@@ -57,6 +67,7 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
           measureText,
           lowerTex: texLowering?.lowerTex,
           font: labFontSpec,
+          rootFontSize,
           color: labTextColor,
           opacity: labOpacity,
           warn: inlineWarn,

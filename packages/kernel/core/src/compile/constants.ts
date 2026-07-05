@@ -7,6 +7,9 @@ export const DEFAULT_LAYOUT_PADDING = 10;
 /** Node label 与 node 边界的默认距离。 */
 export const DEFAULT_LABEL_DISTANCE = 12;
 
+/** 默认字号，同时作为 preset 与 rem 的解析根字号。 */
+export const DEFAULT_FONT_SIZE = 16;
+
 /** 编译期 warning code（机器可读）。 */
 export const CompileWarningCode = {
   UnresolvedNodeReference: 'UNRESOLVED_NODE_REFERENCE',

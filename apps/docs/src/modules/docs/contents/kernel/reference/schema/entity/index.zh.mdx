@@ -128,14 +128,14 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 ## 字体
 
-`FontSchema` 复用于节点文本、节点标签和行级文本覆盖；所有字段均可选。
+`FontSchema` 复用于节点文本、节点标签和行级文本覆盖；所有字段均可选。`size` 可写正数、Web 风格 preset（如 `sm` / `lg`）或 `em` / `rem` 字符串；TikZ 风格字号由上层 sugar 处理，不进入 core IR。
 
 <ZodSchema
   name="FontSchema"
   description="字体规格：family / size / weight / style 全部可选。"
   descriptions={{
     family: 'CSS font-family 字符串，如 "serif" / "monospace" / "Inter, sans-serif"',
-    size: '字号（用户单位）；未填走渲染器默认',
+    size: '字号：正数、Web preset（2xs..9xl）或 em/rem；未填走 CompileOptions.fontSize',
     weight: 'CSS font-weight：keyword `normal`/`bold` 或数字 100..900',
     style: 'CSS font-style：`normal` / `italic` / `oblique`',
   }}

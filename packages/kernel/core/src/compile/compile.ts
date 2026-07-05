@@ -65,6 +65,12 @@ export type CompileLayoutOptions = {
    * @default DEFAULT_LABEL_DISTANCE (12)
    */
   labelDistance?: number;
+  /**
+   * 默认字号。
+   * @description `font.size` 缺省时使用此值；同时作为字号 preset 与 `rem` 的根字号。不改变显式数字字号。
+   * @default DEFAULT_FONT_SIZE (16)
+   */
+  fontSize?: number;
 };
 
 /** 运行时注入的 provider 注册表。 */

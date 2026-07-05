@@ -5,8 +5,9 @@ import type { IRInlineRun } from './inline';
 import type { FontSpec, TextMeasurer } from './metrics';
 import type { LowerTex } from './tex';
 
-import { CompileWarningCode } from '../constants';
+import { CompileWarningCode, DEFAULT_FONT_SIZE } from '../constants';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
+import { resolveFontSize } from './font-size';
 import { isMathRun, parseInlineRuns } from './inline';
 
 /** 行高近似系数。 */
@@ -21,6 +22,8 @@ export type LineLayoutContext = {
   lowerTex?: LowerTex;
   /** 块级字体。 */
   font: FontSpec;
+  /** preset 与 rem 字号解析的根字号。 */
+  rootFontSize?: number;
   /**
    * 块级文字色。
    * @default 'currentColor'
@@ -52,8 +55,8 @@ export type LaidLine = {
   emit: (originX: number, baselineY: number, round: Round) => Array<ScenePrimitive>;
 };
 
-const mergeFont = (base: FontSpec, override?: IRFont): FontSpec => ({
-  size: override?.size ?? base.size,
+const mergeFont = (base: FontSpec, override: IRFont | undefined, rootFontSize: number): FontSpec => ({
+  size: resolveFontSize(override?.size, { rootFontSize, inheritedFontSize: base.size }),
   family: override?.family ?? base.family,
   weight: override?.weight ?? base.weight,
   style: override?.style ?? base.style,
@@ -124,6 +127,7 @@ type Piece = TextPiece | MathPiece;
 
 /** 度量一行 inline run，并返回可 emit 的行布局。 */
 export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContext): LaidLine => {
+  const rootFontSize = ctx.rootFontSize ?? DEFAULT_FONT_SIZE;
   let x = 0;
   let ascent = 0;
   let descent = 0;
@@ -160,7 +164,7 @@ export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContex
       });
       x += lowered.width;
     } else {
-      const font = mergeFont(ctx.font, run.font);
+      const font = mergeFont(ctx.font, run.font, rootFontSize);
       const m = ctx.measureText(run.text, font);
       ascent = Math.max(ascent, m.ascent ?? font.size * ASCENT_FACTOR);
       descent = Math.max(descent, m.descent ?? font.size * DESCENT_FACTOR);

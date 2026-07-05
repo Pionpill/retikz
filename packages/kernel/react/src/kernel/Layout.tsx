@@ -192,6 +192,12 @@ export type LayoutProps = ScopeStyleProps & {
    */
   nodeDistance?: number;
   /**
+   * 默认字号。
+   * @description 透传给 `CompileOptions.fontSize`；`font.size` 缺省时使用此值，同时作为 preset 与 rem 的根字号。
+   * @default DEFAULT_FONT_SIZE (16)
+   */
+  fontSize?: number;
+  /**
    * 运行时注入的第三方 / 自定义 shape（透传给 `compileToScene` 的 `CompileOptions.shapes`）
    * @description IR 或 `<Node shape="...">` 只保存 shape 名字或 `{ type, params }`；definition 在这里注入。
    *   内置名碰撞会在注册期 throw，未知 shape 在编译期 throw。
@@ -323,6 +329,7 @@ export const Layout: FC<LayoutProps> = props => {
     animationProperties,
     idPrefix,
     nodeDistance,
+    fontSize,
     shapes,
     boundaries,
     clips,
@@ -421,6 +428,7 @@ export const Layout: FC<LayoutProps> = props => {
       compileToScene(ir, {
         measureText,
         nodeDistance,
+        fontSize,
         shapes,
         boundaries,
         clips,
@@ -436,6 +444,7 @@ export const Layout: FC<LayoutProps> = props => {
       ir,
       measureText,
       nodeDistance,
+      fontSize,
       shapes,
       boundaries,
       clips,

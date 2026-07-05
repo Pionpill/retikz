@@ -29,4 +29,6 @@ export type EmitPathWarnHook = {
   effectivePathGenerators?: ReadonlyMap<string, PathGeneratorDefinition>;
   /** 注入的 TeX 降解能力。 */
   lowerTex?: LowerTex;
+  /** preset 与 rem 字号解析的根字号。 */
+  rootFontSize?: number;
 };

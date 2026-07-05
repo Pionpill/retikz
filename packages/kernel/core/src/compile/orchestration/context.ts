@@ -21,7 +21,7 @@ import { resolvePathKindRegistry } from '../../providers/path-kind';
 import { resolvePatternRegistry } from '../../providers/pattern';
 import { resolveRibbonWidthProfileRegistry } from '../../providers/ribbon';
 import { resolveShapeRegistry } from '../../providers/shape';
-import { DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
+import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
@@ -49,6 +49,8 @@ export type CompileContext = {
   nodeDistance: number;
   /** 节点 label 默认距离。 */
   labelDistance: number;
+  /** preset 与 rem 字号解析的根字号。 */
+  rootFontSize: number;
   /** shape provider 注册表。 */
   shapes: ReadonlyMap<string, ShapeDefinition>;
   /** boundary provider 注册表。 */
@@ -96,6 +98,7 @@ export const createCompileContext = (ir: IRScene, options: CompileOptions): Comp
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
     nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,
     labelDistance: options.labelDistance ?? DEFAULT_LABEL_DISTANCE,
+    rootFontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
     shapes: resolveShapeRegistry(options.shapes),
     boundaries: resolveBoundaryRegistry(options.boundaries),
     clips,

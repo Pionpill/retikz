@@ -208,6 +208,7 @@ export const emitRibbonPrimitive = (
     const result = emitLabelPrimitive(label, sample, {
       measureText,
       round,
+      rootFontSize: options.rootFontSize,
       hostOpacity: ribbon.opacity,
       tex: {
         lowerTex: options.lowerTex,

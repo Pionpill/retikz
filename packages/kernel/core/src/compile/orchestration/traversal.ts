@@ -148,6 +148,7 @@ type TraversalContext = Pick<
   | 'round'
   | 'nodeDistance'
   | 'labelDistance'
+  | 'rootFontSize'
   | 'shapes'
   | 'boundaries'
   | 'arrows'
@@ -233,10 +234,11 @@ export const compileChildrenToPrimitives = (
       measureText: context.measureText,
       lowerTex: context.lowerTex,
       onWarn: context.onWarn,
-      round: context.round,
-      nodeDistance: context.nodeDistance,
-      labelDistance: context.labelDistance,
-      shapes: context.shapes,
+          round: context.round,
+          nodeDistance: context.nodeDistance,
+          labelDistance: context.labelDistance,
+          rootFontSize: context.rootFontSize,
+          shapes: context.shapes,
       boundaries: context.boundaries,
       arrows: context.arrows,
       pathGenerators: context.pathGenerators,
@@ -275,6 +277,7 @@ export const compileChildrenToPrimitives = (
       resolvedArrows: runtime.context.arrows,
       effectivePathGenerators: runtime.context.pathGenerators,
       lowerTex: runtime.context.lowerTex,
+      rootFontSize: runtime.context.rootFontSize,
     };
     return definition.compile({
       path,
@@ -350,6 +353,7 @@ export const compileChildrenToPrimitives = (
         namespaceStack: runtime.state.namespaceStack,
         nodeDistance: runtime.context.nodeDistance,
         labelDistance: runtime.context.labelDistance,
+        rootFontSize: runtime.context.rootFontSize,
         scopeChain,
         labelDefault: resolveLabelDefault(styleStack),
         shapes: runtime.context.shapes,

@@ -1,7 +1,5 @@
 import type { FontSpec, TextMeasurer } from '../text';
 
-/** 节点字号常量。 */
-export const DEFAULT_FONT_SIZE = 14;
 /** 行高倍率。 */
 export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 
