@@ -2,6 +2,7 @@ import { GeometryLabelPosition, TextBlockSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { AxisCardinalSide, GuideTextStyleSchema } from '../guide';
+import { PlotLayerSchema } from '../layer';
 import {
   LayoutAnchor,
   LayoutCollisionStrategy,
@@ -139,6 +140,7 @@ const PlotTextLabelSchema = z
     id: z.string().min(1).optional().describe('Optional label id used for stable output metadata'),
     role: z.enum(PlotLabelRole).optional().describe('Semantic text label role used for defaults and priority'),
     text: PlotLabelTextSchema.describe('Label text block'),
+    layer: PlotLayerSchema.optional().describe('Semantic plot layer override applied to this generated plot label scope'),
     placement: LayoutPlacementSchema.optional().describe('Label placement; omit to derive from role'),
     reserveSpace: z.boolean().optional().describe('Whether this label participates in layout reservation'),
     priority: z.number().finite().optional().describe('Collision priority; higher priority labels are preserved first'),

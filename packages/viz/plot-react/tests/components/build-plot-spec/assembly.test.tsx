@@ -8,7 +8,7 @@ import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotSpec } from '../../../src/components/build-plot-spec';
-import { Axis } from '../../../src/components/guides';
+import { Axis, Legend } from '../../../src/components/guides';
 import { CaptionLabel, TitleLabel } from '../../../src/components/labels';
 import { IntervalMark, PathMark, PointMark, RelationMark } from '../../../src/components/marks';
 
@@ -76,6 +76,26 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
         },
       },
     });
+  });
+
+  it('layer prop forwards to mark, guide, legend, and plot labels', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark x="x" y="y" layer={{ zIndex: 120 }} color="kind" />
+        <Axis dimension="x" layer={{ zIndex: 240 }} />
+        <Legend channel="color" layer={{ zIndex: 520 }} />
+        <TitleLabel text="Revenue" layer={{ zIndex: 430 }} />
+      </>,
+      '__plot',
+      { dataFieldNames: new Set(['kind']) },
+    );
+
+    expect(spec.marks[0]).toMatchObject({ layer: { zIndex: 120 } });
+    expect(spec.guides).toEqual([
+      { type: 'axis', dimension: 'x', layer: { zIndex: 240 } },
+      { type: 'legend', channel: 'color', layer: { zIndex: 520 } },
+    ]);
+    expect(spec.labels?.[0]).toMatchObject({ role: 'title', layer: { zIndex: 430 } });
   });
 
   it('point shape 字段 → shape 通道（alpha.7 ADR-05）', () => {

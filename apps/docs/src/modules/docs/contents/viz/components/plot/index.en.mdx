@@ -147,9 +147,9 @@ Data enters lowering alongside the PlotSpec and becomes Tier 1 step by step:
 | Infer scales                 | fields bound to each channel + coordinate           | band / linear / time / log… scales and the projection frame |
 | Mark → layer                 | each `<PathMark>` / `<IntervalMark>` …              | one core `<Scope>` layer (of `<Node>` / `<Path>`)           |
 | Axis / grid / legend → layer | explicit `<Axis>` / `<Legend>`                      | grid, axis, and legend layers (each a `<Scope>`)            |
-| Order z-index                | all layers above                                    | grid at the bottom → marks → axes → legend                  |
+| Order z-index                | all layers above                                    | background `-1000` → grid `-300` → marks `0` → axis `200` → facet labels `300` → plot labels `400` → legend `500` |
 
-Every layer is wrapped in one isolated-namespace `<Scope>`, so each chart's internal ids (datum / series) never collide.
+Every layer is wrapped in one isolated-namespace `<Scope>`, so each chart's internal ids (datum / series) never collide. Use `layer={{ zIndex }}` on marks, `<Axis>`, `<Legend>`, `<TitleLabel>`, or `<CaptionLabel>` when you need to move a semantic layer; it overrides the outer scope's zIndex without changing datum order inside the layer.
 
 ### Composable panels
 

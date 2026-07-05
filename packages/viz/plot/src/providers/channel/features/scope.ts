@@ -17,7 +17,7 @@ const pickConstantStyleChannel = <T>(mark: MarkOperation, channel: string): T | 
 };
 
 const numericScopeChannel = (
-  channel: 'strokeWidth' | 'opacity' | 'fillOpacity' | 'drawOpacity' | 'zIndex',
+  channel: 'strokeWidth' | 'opacity' | 'fillOpacity' | 'drawOpacity',
   output: ScopeChannelDefinition<number>['output'],
   deliver: ScopeChannelDefinition<number>['deliver'],
   legend?: ScopeChannelDefinition<number>['legend'],
@@ -63,9 +63,6 @@ export const BUILTIN_SCOPE_CHANNELS = {
       scope.drawOpacity = value;
     },
   ),
-  zIndex: numericScopeChannel('zIndex', { outputKind: 'number', range: [0, 0] }, (scope, value) => {
-    scope.zIndex = Math.trunc(value);
-  }),
 };
 
 const eraseScopeChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;

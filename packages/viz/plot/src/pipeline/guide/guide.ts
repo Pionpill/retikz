@@ -34,6 +34,7 @@ import {
   AxisTitleAnchor,
   AxisTitleOrientation,
   AxisTitlePlacementKeyword,
+  PlotLayerZIndex,
 } from '../../schemas';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
 import { guideLayerId, guideLayerMeta } from '../provenance';
@@ -769,12 +770,13 @@ const guideScopeProps = (
   guide: AxisGuide,
   layer: 'axis' | 'grid',
   context: ProvenanceContext | undefined,
-): { id?: string; meta?: ReturnType<typeof guideLayerMeta> } => {
-  if (!context) return layer === 'axis' && guide.id ? { id: guide.id } : {};
+): { id?: string; meta?: ReturnType<typeof guideLayerMeta>; zIndex: number } => {
+  const zIndex = layer === 'grid' ? PlotLayerZIndex.Grid : (guide.layer?.zIndex ?? PlotLayerZIndex.Axis);
+  if (!context) return { ...(layer === 'axis' && guide.id ? { id: guide.id } : {}), zIndex };
   // 用户句柄 guide.id 只挂轴层（一个 guide 一个外部句柄）；网格层走结构 id，避免轴 / 网格 id 撞名
   const guideId = layer === 'axis' ? guide.id : undefined;
   const id = guideLayerId(context.plotId, guideId, layer, guide.dimension);
-  return { ...(id !== undefined ? { id } : {}), meta: guideLayerMeta(layer, guide.dimension) };
+  return { ...(id !== undefined ? { id } : {}), meta: guideLayerMeta(layer, guide.dimension), zIndex };
 };
 
 /** cartesian guide：直线轴 + 竖 / 横刻度 + grid 跨绘图区直线 */
@@ -1723,6 +1725,8 @@ export type LegendInput = {
   band: Rect;
   /** legend scope id（稳定，'legend' 前缀；anchor / 识别用） */
   id?: string;
+  /** legend 语义图层的 core zIndex。 */
+  zIndex?: number;
   /** 已按 built-in theme < PlotSpec.theme < LegendGuide.style 合并的视觉 token */
   style: ResolvedLegendGuideTokens;
 };
@@ -1859,6 +1863,8 @@ export const lowerLegend = (input: LegendInput): IRScope => {
   return {
     type: 'scope',
     ...(input.id !== undefined ? { id: input.id } : {}),
+    zIndex: input.zIndex ?? PlotLayerZIndex.Legend,
+    meta: { source: 'plot', layer: 'legend', channel: input.channel },
     // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）。
     // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis。
     nodeDefault: { font: { size: fontSize }, padding: 0, strokeWidth: 0 },

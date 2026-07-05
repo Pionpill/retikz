@@ -84,6 +84,10 @@ Under polar, use `dimension="x"` (angular tick labels) and `dimension="y"` (radi
   The x axis labels angular dimensions; the y axis with grid draws concentric rings.
 </p>
 
+### Layer Order
+
+Axes are drawn above marks by default, but below legends and plot-level labels. Use `layer={{ zIndex }}` on `<Axis>` when you need to override that semantic layer. The override applies to the axis scope only; `grid` stays in the grid layer so grid lines do not cover data marks. The default order is grid `-300`, marks `0`, axis `200`, plot labels `400`, and legend `500`.
+
 ## API
 
 | Prop         | Type                                               | Default            | Description                                                                                                                                       |

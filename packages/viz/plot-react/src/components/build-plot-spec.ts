@@ -715,6 +715,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     id,
     coordinateView,
     transform,
+    layer,
     channels,
     strokeWidth,
     fillOpacity,
@@ -812,6 +813,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     ...(id !== undefined ? { id } : {}),
     ...(coordinateView !== undefined ? { coordinateView } : {}),
     ...(transform !== undefined ? { transform } : {}),
+    ...(layer !== undefined ? { layer } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),
     ...(extentToField !== undefined ? { extentToField } : {}),
@@ -1133,6 +1135,7 @@ const collectInto = (
         facetId,
         trackId,
         transform,
+        layer,
         anchorId,
         channels,
         strokeWidth,
@@ -1162,6 +1165,7 @@ const collectInto = (
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
@@ -1212,6 +1216,7 @@ const collectInto = (
         facetId,
         trackId,
         transform,
+        layer,
         anchorId,
         channels,
       } = props;
@@ -1246,6 +1251,7 @@ const collectInto = (
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(colorStyle !== undefined ? { color: colorStyle } : {}),
         ...(textColorStyle !== undefined ? { textColor: textColorStyle } : {}),
@@ -1300,6 +1306,7 @@ const collectInto = (
         facetId,
         trackId,
         transform,
+        layer,
         anchorId,
         channels,
         fill,
@@ -1375,6 +1382,7 @@ const collectInto = (
           ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
           ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
           ...(transform !== undefined ? { transform } : {}),
+          ...(layer !== undefined ? { layer } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...intervalStyle,
           bounds: { x: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' }, y: { kind: IntervalBoundKind.Full } },
@@ -1406,6 +1414,7 @@ const collectInto = (
           ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
           ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
           ...(transform !== undefined ? { transform } : {}),
+          ...(layer !== undefined ? { layer } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...(series !== undefined ? { series } : {}),
           ...intervalStyle,
@@ -1524,6 +1533,7 @@ const collectInto = (
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(series !== undefined ? { series } : {}),
         ...intervalStyle,
@@ -1551,7 +1561,7 @@ const collectInto = (
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === RelationMark) {
-      const { id, kind, coordinateView, transform, source, target, label, style, path, ribbon, color, channels } =
+      const { id, kind, coordinateView, transform, layer, source, target, label, style, path, ribbon, color, channels } =
         child.props as RelationMarkProps;
       const colorEnc = colorChannel(color, undefined);
       const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
@@ -1561,6 +1571,7 @@ const collectInto = (
         ...(kind !== undefined ? { kind } : {}),
         ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(transform !== undefined ? { transform } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         source,
         target,
         ...(label !== undefined ? { label: canonicalGeometryLabel(label) } : {}),
@@ -1571,7 +1582,7 @@ const collectInto = (
       });
       recordColor(into, colorEnc);
     } else if (child.type === Axis) {
-      const { dimension, scale, line, ticks, crossing, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, id } =
+      const { dimension, scale, line, ticks, crossing, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, layer, id } =
         child.props as AxisProps;
       if (scale !== undefined) {
         into.scales.push({ dimension, type: scale });
@@ -1587,6 +1598,7 @@ const collectInto = (
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveScaffoldId !== undefined ? { scaffoldId: effectiveScaffoldId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         ...(placement !== undefined ? { placement } : {}),
         ...(line !== undefined ? { line } : {}),
         ...(ticks !== undefined ? { ticks } : {}),
@@ -1596,7 +1608,7 @@ const collectInto = (
         ...(grid !== undefined ? { grid } : {}),
       });
     } else if (child.type === Legend) {
-      const { channel, scale, title, position, orient, ticks, tickLabels, style } = child.props as LegendProps;
+      const { channel, scale, title, position, orient, ticks, tickLabels, style, layer } = child.props as LegendProps;
       into.guides.push({
         type: PlotGuide.Legend,
         channel,
@@ -1607,6 +1619,7 @@ const collectInto = (
         ...(ticks !== undefined ? { ticks } : {}),
         ...(tickLabels !== undefined ? { tickLabels } : {}),
         ...(style !== undefined ? { style } : {}),
+        ...(layer !== undefined ? { layer } : {}),
       });
     } else if (child.type === Scale) {
       into.scales.push(child.props as ScaleProps);

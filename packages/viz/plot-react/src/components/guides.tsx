@@ -28,6 +28,8 @@ export type AxisProps = {
   trackId?: string;
   placement?: AxisGuide['placement'];
   title?: AxisGuide['title'];
+  /** 语义图层覆盖；控制坐标轴外层 scope 在 plot 内的 zIndex。 */
+  layer?: AxisGuide['layer'];
   /** 可选 guide 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;
 };
@@ -56,6 +58,8 @@ export type LegendProps = {
   tickLabels?: LegendGuide['tickLabels'];
   /** 图例本地视觉 token；覆盖 Plot theme.legend */
   style?: LegendGuide['style'];
+  /** 语义图层覆盖；控制图例外层 scope 在 plot 内的 zIndex。 */
+  layer?: LegendGuide['layer'];
 };
 
 /**

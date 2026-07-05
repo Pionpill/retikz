@@ -66,6 +66,10 @@ Legend defaults come from `Plot.theme.legend` and `Plot.theme.palette`. A single
 </Plot>
 ```
 
+### Layer Order
+
+Legends are drawn above axes, marks, and plot-level labels by default, with zIndex `500`. Use `layer={{ zIndex }}` on `<Legend>` to move the whole legend scope up or down; it does not change the order of entries inside the legend.
+
 ## API
 
 | Prop         | Type                                        | Default            | Description                                                                                             |

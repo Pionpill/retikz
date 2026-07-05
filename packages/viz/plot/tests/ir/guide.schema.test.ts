@@ -20,6 +20,19 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
+  it('axis_and_legend_accept_layer_zindex', () => {
+    const axis = { type: 'axis', dimension: 'x', layer: { zIndex: 240 } };
+    const legend = { type: 'legend', channel: 'color', layer: { zIndex: 520 } };
+
+    expect(AxisGuideSchema.parse(axis)).toEqual(axis);
+    expect(LegendGuideSchema.parse(legend)).toEqual(legend);
+  });
+
+  it('guide_layer_rejects_fractional_zindex_and_unknown_fields', () => {
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', layer: { zIndex: 1.5 } })).toThrow();
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', layer: { zIndex: 1, order: 2 } })).toThrow();
+  });
+
   it('legend_style_accepts_size_symbol_layout_tokens', () => {
     const guide = {
       type: 'legend',

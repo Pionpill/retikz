@@ -10,6 +10,7 @@
 } from '@retikz/core';
 import { z } from 'zod';
 
+import { PlotLayerSchema } from '../layer';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,
@@ -680,6 +681,9 @@ export const AxisGuideSchema = z
       .describe(
         'Coordinate view id this axis is bound to; omit to use the plot composition default view',
       ),
+    layer: PlotLayerSchema.optional().describe(
+      'Semantic plot layer override applied to the generated axis scope; axis grid keeps the grid layer',
+    ),
     placement: AxisPlacementSchema.optional().describe(
       'Axis placement mode; omit to infer an automatic placement from the active coordinate system and dimension',
     ),
@@ -730,6 +734,7 @@ export const LegendGuideSchema = z
       .describe(
         'Disambiguating scale name when the channel is driven by more than one scale; omit when the channel has a single scale (more than one and omitted is a fail-loud error during lowering)',
       ),
+    layer: PlotLayerSchema.optional().describe('Semantic plot layer override applied to the generated legend scope'),
     title: LegendTitleTextSchema.optional().describe(
       'Legend title text block rendered above the entries; omit for no title',
     ),

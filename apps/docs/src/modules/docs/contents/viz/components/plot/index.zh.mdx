@@ -147,9 +147,9 @@ lowering 不是 `<Plot>` 私有逻辑，而是注册进 core 编译管线的一�
 | 推断 scale | 各通道绑定字段 + 坐标系 | band / linear / time / log 等 scale 与投影框 |
 | 选 mark 成层 | 每个 `<PathMark>` / `<IntervalMark>` 等 | 一个 core `<Scope>` 图层，内含 `<Node>` / `<Path>` |
 | 轴 / 网格 / 图例成层 | 显式 `<Axis>` / `<Legend>` | 网格层、轴层、图例层，都是 `<Scope>` |
-| 编排 z-order | 上面所有层 | 网格垫底 → mark → 轴 → 图例 |
+| 编排 z-order | 上面所有层 | 背景 `-1000` → 网格 `-300` → mark `0` → 轴 `200` → 分面标签 `300` → 整图文案 `400` → 图例 `500` |
 
-所有层包进一个隔离命名空间的 `<Scope>`，每张图的内部 id（datum / series）互不串扰。
+所有层包进一个隔离命名空间的 `<Scope>`，每张图的内部 id（datum / series）互不串扰。需要局部调整时，在 mark、`<Axis>`、`<Legend>`、`<TitleLabel>` 或 `<CaptionLabel>` 上写 `layer={{ zIndex }}`；这会覆盖该语义层外层 scope 的层级，不改变图元内部的 datum 顺序。
 
 ### 可组合的面板
 

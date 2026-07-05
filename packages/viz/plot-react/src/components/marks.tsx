@@ -33,6 +33,7 @@ import type {
   PathFillRuleStyle,
   PathScaleStyle,
   PathThicknessStyle,
+  PlotLayer,
   PlotTargetRef,
   PointColorStyle,
   PointFillStyle,
@@ -68,6 +69,8 @@ export type ExtensionChannelProp = FieldName | JsonValue | Channel | MarkValueTy
 
 export type MarkTransformProps = {
   transform?: Array<Transform>;
+  /** 语义图层覆盖；控制该 mark 外层 scope 在 plot 内的 zIndex。 */
+  layer?: PlotLayer;
 };
 
 export type CoordinateScopeProps = {

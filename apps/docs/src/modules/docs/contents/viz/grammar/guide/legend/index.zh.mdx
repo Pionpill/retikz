@@ -66,6 +66,10 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 </Plot>
 ```
 
+### 图层顺序
+
+图例默认在坐标轴、mark 和整图文案之上，层级值是 `500`。需要把图例压低或抬高时，在 `<Legend>` 上写 `layer={{ zIndex }}`；它只影响图例外层 scope，不改变图例内部条目顺序。
+
 ## API
 
 | 属性         | 类型                                        | 默认值        | 描述                                                       |

@@ -6,6 +6,7 @@ import type { PlotLabel, PlotLayout } from '../schemas';
 import type { Margins, Rect } from './layout';
 
 import { AxisCardinalSide } from '../schemas';
+import { PlotLayerZIndex } from '../schemas/layer';
 import {
   LayoutAnchor,
   LayoutPlacementKind,
@@ -217,12 +218,17 @@ const labelMetaOf = (label: TextLabel): IRJsonObject => ({
 export const lowerPlotLabels = (input: LowerLabelsInput): Array<IRScope> => {
   const items = resolveLabels(input);
   if (items.length === 0) return [];
-  return [
-    {
+  const groups = new Map<number, Array<ResolvedTextLabel>>();
+  for (const item of items) {
+    const zIndex = item.label.layer?.zIndex ?? PlotLayerZIndex.PlotLabel;
+    groups.set(zIndex, [...(groups.get(zIndex) ?? []), item]);
+  }
+  return Array.from(groups, ([zIndex, group]) => ({
       type: 'scope',
+      zIndex,
       meta: { source: 'plot', layer: 'decoration' },
       nodeDefault: { fill: 'none', stroke: 'none', padding: 0 },
-      children: items.map(item => {
+      children: group.map(item => {
         const ratio = placementRatioOf(item.placement);
         const node: IRNode = {
           type: 'node',
@@ -239,6 +245,5 @@ export const lowerPlotLabels = (input: LowerLabelsInput): Array<IRScope> => {
         };
         return node;
       }),
-    },
-  ];
+    }));
 };

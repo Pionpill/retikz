@@ -91,6 +91,7 @@ import {
   PathClosureKind,
   PlotFieldType,
   PlotGuide,
+  PlotLayerZIndex,
   PlotMark,
   PlotScale,
   PlotSpecSchema,
@@ -181,7 +182,11 @@ const plotBackgroundNode = (
         padding: 0,
         strokeWidth: 0,
         fill,
+        zIndex: PlotLayerZIndex.Background,
       };
+
+const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
+  child.type === 'coordinate' ? child : { ...child, zIndex };
 
 export type MarkDataView = {
   mark: MarkOperation;
@@ -1256,6 +1261,7 @@ type LegendBaseInput = {
   fontSize: number;
   band: Rect;
   id: string;
+  zIndex: number;
   style: LegendInput['style'];
 };
 
@@ -1423,6 +1429,7 @@ const buildLegendLayers = (
       fontSize,
       band,
       id,
+      zIndex: guide.layer?.zIndex ?? PlotLayerZIndex.Legend,
       style,
     };
     const showLabels = guide.tickLabels !== false;
@@ -2093,6 +2100,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
+        zIndex: PlotLayerZIndex.FacetLabel,
         meta: {
           source: 'plot',
           layer: 'facetLabel',
@@ -2396,10 +2404,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (layer === null) return null;
       const scope = scopeById.get(coordinateScopeId);
       const scopedLayer = scope === undefined ? layer : withScopeContext(layer, scopeContextOf(scope));
+      const semanticLayer = withLayerZIndex(scopedLayer, mark.layer?.zIndex ?? PlotLayerZIndex.Mark);
       const declarationOrder = scopeOrderById.get(coordinateScopeId) ?? markIndex;
       const zIndex =
         scope?.placement?.kind === 'overlay' ? (scope.placement.zIndex ?? declarationOrder) : declarationOrder;
-      return { layer: scopedLayer, markIndex, zIndex };
+      return { layer: semanticLayer, markIndex, zIndex };
     })
     .filter((entry): entry is { layer: IRChild; markIndex: number; zIndex: number } => entry !== null);
   const markLayers: Array<IRChild> = markLayerEntries

@@ -82,6 +82,10 @@ polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向
 
 <p className="text-sm text-muted-foreground">x 轴在 polar 中标角向维度，y 轴加 grid 画同心环。</p>
 
+### 图层顺序
+
+坐标轴默认在 mark 之上、图例和整图文案之下。需要特殊覆盖时，在 `<Axis>` 上写 `layer={{ zIndex }}`；它只控制轴本身的外层 scope，`grid` 仍然留在网格层，避免网格盖住数据图元。默认层级是：网格 `-300`、mark `0`、轴 `200`、整图文案 `400`、图例 `500`。
+
 ## API
 
 | 属性         | 类型                                               | 默认值     | 描述                                                                                                             |

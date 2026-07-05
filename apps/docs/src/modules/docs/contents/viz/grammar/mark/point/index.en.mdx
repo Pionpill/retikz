@@ -162,6 +162,10 @@ The function runs in four steps:
 | Point-only channels | `size` / `opacity` / `shape` / `stroke` / `strokeWidth` only apply to `PointMark`, and are written onto each datum Node          |
 | Text variant        | Set `text` and the mark produces borderless text Nodes instead of dots, while reusing the same position projection               |
 
+### Layer Order
+
+Each mark lowers into its own scope by default, above grid lines and below axes, with zIndex `0`. `zIndex` remains the draw-order hint for datum Nodes inside the point layer; use `layer={{ zIndex }}` when you want to move the whole mark layer relative to axes, legends, or plot-level labels.
+
 ## API
 
 `PointMark` props are grouped as Position, Specific, Node, Text, Label, General, and Custom: position fields decide the projected location, specific fields are consumed by PointMark itself, and node fields lower onto core `Node`. `FieldName` means a data field name or field path, such as `region` / `user.age`.

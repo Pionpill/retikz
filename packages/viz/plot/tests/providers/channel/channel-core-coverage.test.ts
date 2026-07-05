@@ -86,6 +86,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       opacity: 0.7,
       fillOpacity: 0.5,
       drawOpacity: 0.4,
+      zIndex: 0,
+    });
+    const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0 }] }));
+    expect(node).toMatchObject({
       zIndex: 3,
     });
   });

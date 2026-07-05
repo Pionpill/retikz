@@ -178,6 +178,30 @@ describe('PlotSpecSchema (ADR-01)', () => {
     expect(() => PlotSpecSchema.parse({ ...baseLine, labels: [{ type: 'text', text: '' }] })).toThrow();
   });
 
+  it('plot_label_accepts_layer_zindex', () => {
+    const spec = {
+      ...baseLine,
+      labels: [{ type: 'text', role: 'title', text: 'Monthly Revenue', layer: { zIndex: 430 } }],
+    };
+
+    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('plot_label_layer_rejects_fractional_zindex_and_unknown_fields', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        ...baseLine,
+        labels: [{ type: 'text', text: 'Monthly Revenue', layer: { zIndex: 1.5 } }],
+      }),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse({
+        ...baseLine,
+        labels: [{ type: 'text', text: 'Monthly Revenue', layer: { zIndex: 1, order: 2 } }],
+      }),
+    ).toThrow();
+  });
+
   it('guides_coexist_with_marks', () => {
     const spec = {
       ...baseLine,

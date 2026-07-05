@@ -66,6 +66,20 @@ const firstLayer = (
   options?: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
+const isScope = (value: unknown): value is IRScope =>
+  typeof value === 'object' && value !== null && (value as { type?: unknown }).type === 'scope';
+
+const collectScopes = (scope: IRScope): Array<IRScope> => [
+  scope,
+  ...scope.children.filter(isScope).flatMap(child => collectScopes(child)),
+];
+
+const scopeByLayerMeta = (root: IRScope, layer: string): IRScope => {
+  const scope = collectScopes(root).find(item => (item.meta as { layer?: unknown } | undefined)?.layer === layer);
+  expect(scope).toBeDefined();
+  return scope as IRScope;
+};
+
 const nodeWidth = (node: IRNode): number => {
   const size = node.minimumSize;
   if (typeof size === 'number') return size;
@@ -155,6 +169,67 @@ describe('lowerPlots (ADR-06)', () => {
       padding: 2,
       minimumSize: { default: 14, width: 16, height: 12 },
     });
+    expect((layer.children[0] as IRNode).zIndex).toBe(3);
+  });
+
+  it('semantic_layers_emit_default_zindex_scopes', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
+        { type: 'ordinal', name: 'regionColor', domain: ['north', 'south'], range: ['#2563eb', '#dc2626'] },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'point',
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'region', scale: 'regionColor' } },
+        },
+      ],
+      guides: [
+        { type: 'axis', dimension: 'x', grid: true },
+        { type: 'legend', channel: 'color', scale: 'regionColor', title: 'Region' },
+      ],
+      labels: [{ type: 'text', role: 'title', text: 'Revenue' }],
+    });
+    const root = expandOf(
+      spec,
+      { sales: SALES.map(row => ({ ...row, region: row.month % 2 === 0 ? 'north' : 'south' })) },
+      { ...opts, provenance: true },
+    );
+
+    expect(scopeByLayerMeta(root, 'grid').zIndex).toBe(-300);
+    expect(scopeByLayerMeta(root, 'mark').zIndex).toBe(0);
+    expect(scopeByLayerMeta(root, 'axis').zIndex).toBe(200);
+    expect(scopeByLayerMeta(root, 'decoration').zIndex).toBe(400);
+    expect(scopeByLayerMeta(root, 'legend').zIndex).toBe(500);
+  });
+
+  it('layer_zindex_overrides_semantic_scope_without_reusing_mark_node_zindex', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'point',
+          layer: { zIndex: 120 },
+          zIndex: { kind: 'constant', value: 3 },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const layer = firstLayer(spec, { sales: SALES }, { ...opts, provenance: true });
+
+    expect(layer.zIndex).toBe(120);
     expect((layer.children[0] as IRNode).zIndex).toBe(3);
   });
 
