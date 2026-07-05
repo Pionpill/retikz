@@ -98,7 +98,7 @@ describe('Node multi-line text', () => {
     expect(t?.measuredHeight).toBeCloseTo(50.4, 1);
   });
 
-  it("align='left' → TextPrim.align='start' 且 x 偏到块左边", () => {
+  it("align='start' → TextPrim.align='start' 且 x 偏到块左边", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -108,17 +108,17 @@ describe('Node multi-line text', () => {
           id: 'A',
           position: [100, 0],
           text: ['line one', 'line two'],
-          align: 'left',
+          align: 'start',
         },
       ],
     };
     const t = findText(compileToScene(ir).primitives);
     expect(t?.align).toBe('start');
-    // align=left 时 TextPrim.x = center.x - blockHalfWidth
+    // align=start 时 TextPrim.x = center.x - blockHalfWidth
     expect(t!.x).toBeLessThan(100);
   });
 
-  it("align='right' → TextPrim.align='end' 且 x 偏到块右边", () => {
+  it("align='end' → TextPrim.align='end' 且 x 偏到块右边", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -128,7 +128,7 @@ describe('Node multi-line text', () => {
           id: 'A',
           position: [100, 0],
           text: ['ab', 'cdefg'],
-          align: 'right',
+          align: 'end',
         },
       ],
     };
@@ -137,7 +137,7 @@ describe('Node multi-line text', () => {
     expect(t!.x).toBeGreaterThan(100);
   });
 
-  it("默认 align='center' → TextPrim.align='middle' 且 x = node 中心", () => {
+  it("默认 align='middle' → TextPrim.align='middle' 且 x = node 中心", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

@@ -27,7 +27,7 @@ const Demo: FC = () => (
       y="y"
       text="word"
       textColor="ink"
-      align="center"
+      align="middle"
       maxTextWidth={96}
       lineHeight={1.1}
       font={{ size: 13, weight: 'bold' }}

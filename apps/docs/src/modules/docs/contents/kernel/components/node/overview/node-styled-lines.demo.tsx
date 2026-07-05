@@ -8,7 +8,7 @@ import { Layout, Node, Text } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={520} height={160}>
-    <Node id="left" position={[-180, 0]} align="left">
+    <Node id="left" position={[-180, 0]} align="start">
       <Text fill="red" font={{ weight: 'bold', size: 16 }}>
         Heading
       </Text>
@@ -18,7 +18,7 @@ const Demo: FC = () => (
     <Node
       id="mid"
       position={[0, 0]}
-      align="left"
+      align="start"
       text={[
         { text: 'Title', font: { weight: 'bold', size: 16 }, fill: 'dodgerblue' },
         'body 1',
@@ -26,7 +26,7 @@ const Demo: FC = () => (
       ]}
     />
 
-    <Node id="right" position={[180, 0]} align="left">
+    <Node id="right" position={[180, 0]} align="start">
       <Text fill="green">success</Text>
       <Text fill="darkorange">warning</Text>
       <Text fill="red" opacity={0.8}>

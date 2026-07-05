@@ -4,7 +4,7 @@ import type { NodeLabelLayout, NodeTextLayoutContext } from './types';
 
 import { CompileWarningCode } from '../constants';
 import { layoutInlineLine, resolveLineRuns } from '../text';
-import { normalizeLabelPosition } from './labels';
+import { normalizeLabelPosition } from './label-geometry';
 
 /** 节点附属 label 布局输入。 */
 export type LayoutNodeLabelsInput = NodeTextLayoutContext & {

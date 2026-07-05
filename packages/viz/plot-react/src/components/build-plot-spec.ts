@@ -480,7 +480,7 @@ const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContex
   const put = (name: string, value: unknown): void => {
     if (value !== undefined) out[name] = value;
   };
-  put('align', enumStyleOf(props.align, 'align', new Set(['left', 'center', 'right']), context));
+  put('align', enumStyleOf(props.align, 'align', new Set(['start', 'middle', 'end']), context));
   put('lineHeight', numberStyleOf(props.lineHeight, 'lineHeight', context));
   put('maxTextWidth', numberStyleOf(props.maxTextWidth, 'maxTextWidth', context));
   put('cornerRadius', numberStyleOf(props.cornerRadius, 'cornerRadius', context));

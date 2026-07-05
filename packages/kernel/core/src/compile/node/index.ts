@@ -2,7 +2,7 @@ export { anchorOf, angleBoundaryOf, boundaryPointOf, outerRectOf } from './ancho
 export type { ResolveBoundaryContext } from './boundary';
 export { boundaryKey, fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 export { emitNodePrimitives } from './emit';
-export { labelExtentPoints } from './labels';
+export { labelExtentPoints } from './label-geometry';
 export type { LayoutNodeContext } from './layout';
 export { layoutNode } from './layout';
 export type {

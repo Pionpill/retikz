@@ -525,7 +525,7 @@ export const PathClosureSchema = z
 
 const coreNodeStyle = {
   align: NodeTextAlignStyleSchema.optional().describe(
-    'Core Node text alignment: field-bound datum channel or constant left / center / right',
+    'Core Node text alignment: field-bound datum channel or constant start / middle / end',
   ),
   lineHeight: NodePositiveNumberStyleSchema.optional().describe(
     'Core Node lineHeight: field-bound datum channel or constant positive value',

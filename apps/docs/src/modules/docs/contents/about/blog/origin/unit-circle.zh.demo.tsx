@@ -144,7 +144,7 @@ const Demo: FC = () => (
       dashed
       cornerRadius={6}
       padding={{ x: 10, y: 4 }}
-      align="left"
+      align="start"
       text={[
         { text: '角 α = 30°', fill: 'green' },
         '即 π/6 弧度',

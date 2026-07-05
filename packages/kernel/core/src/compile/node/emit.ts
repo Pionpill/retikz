@@ -9,7 +9,7 @@ import type { PaintResolver } from '../resource';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
 import { toAlphabeticBaselineY } from '../text';
-import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './labels';
+import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './label-geometry';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './text';
 
 /** 空 shape params。 */

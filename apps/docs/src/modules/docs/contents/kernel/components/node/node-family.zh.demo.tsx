@@ -15,7 +15,7 @@ const Demo: FC = () => (
     </Node>
 
     {/* Text：在节点内给单独一行覆盖样式 */}
-    <Node id="textDemo" position={[0, 35]} align="left">
+    <Node id="textDemo" position={[0, 35]} align="start">
       <Text fill="darkorange" font={{ weight: 'bold' }}>
         橙色加粗
       </Text>
@@ -35,7 +35,7 @@ const Demo: FC = () => (
       position={[-190, 100]}
       stroke="none"
       fill="none"
-      align="center"
+      align="middle"
       textColor="gray"
       font={{ size: 12 }}
     >
@@ -46,7 +46,7 @@ const Demo: FC = () => (
       position={[0, 100]}
       stroke="none"
       fill="none"
-      align="center"
+      align="middle"
       textColor="gray"
       font={{ size: 12 }}
     >
@@ -57,7 +57,7 @@ const Demo: FC = () => (
       position={[190, 100]}
       stroke="none"
       fill="none"
-      align="center"
+      align="middle"
       textColor="gray"
       font={{ size: 12 }}
     >

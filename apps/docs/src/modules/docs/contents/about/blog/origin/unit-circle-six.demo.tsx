@@ -179,7 +179,7 @@ const Demo: FC = () => (
       dashed
       cornerRadius={6}
       padding={{ x: 10, y: 4 }}
-      align="left"
+      align="start"
       text={[
         { text: 'α = 30°', fill: 'green' },
         { text: 'sin α = 1/2', fill: 'red' },

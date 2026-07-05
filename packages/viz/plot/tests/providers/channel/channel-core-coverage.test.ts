@@ -264,9 +264,9 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
         },
       ],
     });
-    const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0, label: 'A', align: 'left' }] }));
+    const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0, label: 'A', align: 'start' }] }));
     expect(node).toMatchObject({
-      align: 'left',
+      align: 'start',
       lineHeight: 18,
       maxTextWidth: 72,
       cornerRadius: 4,

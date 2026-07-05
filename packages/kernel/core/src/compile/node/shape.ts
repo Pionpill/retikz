@@ -1,10 +1,9 @@
 import type { ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
-import type { IRJsonObject, IRNode, JsonValue } from '../../schemas';
+import type { IRJsonObject, IRNode, IRShapeRef, JsonValue } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
-import { JsonObjectSchema } from '../../schemas';
-import { resolveNodeShapePreset } from './shape-presets';
+import { BuiltinShape, JsonObjectSchema } from '../../schemas';
 
 /** 节点 shape 解析输入。 */
 export type ResolveNodeShapeInput = {
@@ -28,13 +27,31 @@ export type ResolvedNodeShape = {
   shapeParams: IRJsonObject;
 };
 
+/** Node shape preset 解析后的 provider 查询形态。 */
+type ResolvedNodeShapePreset = {
+  /** 实际查询的 shape provider 名称。 */
+  type: string;
+  /** 传给 provider 的 JSON-safe 参数对象。 */
+  params: IRJsonObject;
+};
+
+/** 把 Node shape preset 解析到实际 provider 名称和参数。 */
+const resolveNodeShapePreset = (shape: IRNode['shape']): ResolvedNodeShapePreset => {
+  if (shape === undefined) return { type: BuiltinShape.Rectangle, params: {} };
+  if (shape === BuiltinShape.Circle) return { type: BuiltinShape.Ellipse, params: { circumscribe: 'equal' } };
+  if (shape === BuiltinShape.Diamond) return { type: 'polygon', params: { sides: 4, rotate: 0 } };
+  if (typeof shape === 'string') return { type: shape, params: {} };
+  const ref: IRShapeRef = shape;
+  return { type: ref.type, params: ref.params ?? {} };
+};
+
 /** 递归把 JSON 值里的数值叶子乘以 factor。 */
 const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
   if (typeof value === 'number') return (value * factor) as T;
   if (Array.isArray(value)) return value.map(v => scaleJsonNumbers(v, factor)) as T;
   if (value !== null && typeof value === 'object') {
     const out: Record<string, JsonValue> = {};
-    for (const [k, v] of Object.entries(value)) out[k] = scaleJsonNumbers(v, factor);
+    for (const [key, childValue] of Object.entries(value)) out[key] = scaleJsonNumbers(childValue, factor);
     return out as T;
   }
   return value;

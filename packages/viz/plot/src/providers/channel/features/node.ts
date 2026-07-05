@@ -416,7 +416,7 @@ const numericNodeChannels: {
   }),
 };
 
-const textAlignValues = new Set(['left', 'center', 'right']);
+const textAlignValues = new Set(['start', 'middle', 'end']);
 const blendModeValues = new Set([
   'normal',
   'multiply',
@@ -438,11 +438,11 @@ const blendModeValues = new Set([
 const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
 
 const directNodeChannels = {
-  align: defineSimpleNodeChannel<'left' | 'center' | 'right'>(
+  align: defineSimpleNodeChannel<'start' | 'middle' | 'end'>(
     'align',
     { outputKind: 'symbol', palette: [...textAlignValues] },
     value =>
-      typeof value === 'string' && textAlignValues.has(value) ? (value as 'left' | 'center' | 'right') : undefined,
+      typeof value === 'string' && textAlignValues.has(value) ? (value as 'start' | 'middle' | 'end') : undefined,
     (node, value) => {
       node.align = value;
     },

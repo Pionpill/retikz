@@ -10,9 +10,9 @@ export const BuiltinShape = {
 
 /** 节点文本对齐 */
 export const NodeTextAlign = {
-  Left: 'left',
-  Center: 'center',
-  Right: 'right',
+  Start: 'start',
+  Middle: 'middle',
+  End: 'end',
 } as const;
 
 /** 节点标签相对节点的位置关键字 */

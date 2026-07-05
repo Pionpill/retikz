@@ -8,7 +8,7 @@ import { Layout, Node, Text } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={320} height={140}>
-    <Node id="mix" position={[0, 0]} align="left">
+    <Node id="mix" position={[0, 0]} align="start">
       {'before\nplain1'}
       <Text fill="red" font={{ weight: 'bold' }}>
         RED + BOLD

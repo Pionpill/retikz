@@ -174,7 +174,7 @@ export const NodeSchema = z
     align: z
       .enum(NodeTextAlign)
       .optional()
-      .describe('Multi-line text alignment within the text block. Omitted fields use center.'),
+      .describe('Multi-line text alignment within the text block. Omitted fields use middle.'),
     lineHeight: z
       .number()
       .positive()

@@ -92,7 +92,3 @@ export const resolveDashPattern = (
   if (dotted) return DOTTED_PATTERN;
   return undefined;
 };
-
-/** IR align → TextPrim 的文字对齐锚点（start / middle / end） */
-export const alignToTextAnchor = (a: 'left' | 'center' | 'right'): 'start' | 'middle' | 'end' =>
-  a === 'left' ? 'start' : a === 'right' ? 'end' : 'middle';

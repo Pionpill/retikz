@@ -18,9 +18,9 @@ import { resolvePosition } from '../position';
 import { resolveShadow } from '../style';
 import { resolveAxisScale, resolveBoxSize, resolveBoxSpacing } from './box';
 import { layoutNodeContent } from './content';
-import { layoutNodeLabels } from './label';
-import { resolveNodeShape } from './shape-resolve';
-import { alignToTextAnchor, DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './text';
+import { layoutNodeLabels } from './label-layout';
+import { resolveNodeShape } from './shape';
+import { DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './text';
 
 const DEFAULT_PADDING = 8;
 
@@ -86,7 +86,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     left: marginSpacing.left * sx,
   };
   const lineHeight = (node.lineHeight ?? baseFontSize * DEFAULT_LINE_HEIGHT_FACTOR) * sy;
-  const align = alignToTextAnchor(node.align ?? 'center');
+  const align = node.align ?? 'middle';
 
   // 折行阈值受 x 缩放。
   const maxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
