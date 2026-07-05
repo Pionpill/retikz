@@ -73,7 +73,15 @@ export const emitNodePrimitives = (
     inner.push({
       type: 'text',
       x: round(layout.contentCenter[0] + xOffset),
-      y: round(toAlphabeticBaselineY(layout.contentCenter[1], 'middle', layout.lines.length, lineHeight, layout.fontSize)),
+      y: round(
+        toAlphabeticBaselineY({
+          y: layout.contentCenter[1],
+          baseline: 'middle',
+          lineCount: layout.lines.length,
+          lineHeight,
+          fontSize: layout.fontSize,
+        }),
+      ),
       lines: layout.lines,
       fontSize: layout.fontSize,
       fontFamily: layout.fontFamily,
@@ -99,7 +107,12 @@ export const emitNodePrimitives = (
         const style = typeof lab.pin === 'object' ? lab.pin : undefined;
         const [bx, by] = labelBorderPoint(layout, lab);
         const pad = 2;
-        const [nx, ny] = labelBoxEdgeToward([lx, ly], [bx, by], lab.measuredWidth / 2 + pad, lab.fontSize / 2 + pad);
+        const [nx, ny] = labelBoxEdgeToward({
+          center: [lx, ly],
+          border: [bx, by],
+          halfWidth: lab.measuredWidth / 2 + pad,
+          halfHeight: lab.fontSize / 2 + pad,
+        });
         inner.push({
           type: 'path',
           commands: [
@@ -125,7 +138,15 @@ export const emitNodePrimitives = (
         labelContent = {
           type: 'text',
           x: round(lx),
-          y: round(toAlphabeticBaselineY(ly, 'middle', 1, labLineHeight, lab.fontSize)),
+          y: round(
+            toAlphabeticBaselineY({
+              y: ly,
+              baseline: 'middle',
+              lineCount: 1,
+              lineHeight: labLineHeight,
+              fontSize: lab.fontSize,
+            }),
+          ),
           lines: [{ text: lab.text }],
           fontSize: lab.fontSize,
           fontFamily: lab.fontFamily,
@@ -140,7 +161,7 @@ export const emitNodePrimitives = (
           measuredHeight: round(lab.fontSize),
         };
       }
-      const deg = resolveLabelRotateDeg(lab, lx, ly, cx, cy);
+      const deg = resolveLabelRotateDeg({ label: lab, labelPosition: [lx, ly], nodeCenter: [cx, cy] });
       if (deg === 0) {
         inner.push(labelContent);
       } else {

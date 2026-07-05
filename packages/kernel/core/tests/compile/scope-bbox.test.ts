@@ -68,7 +68,7 @@ describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
   });
 
   it('registerScopeAsLayout(bbox=null, fallback) → 0×0 占位 layout 落在 fallback 点', () => {
-    const layout = registerScopeAsLayout('g', null, [50, 50]);
+    const layout = registerScopeAsLayout({ id: 'g', bbox: null, fallbackOrigin: [50, 50] });
     expect(layout.id).toBe('g');
     expect(layout.shapeName).toBe('rectangle');
     expect(layout.shapeDef).toBe(BUILTIN_SHAPES.rectangle);
@@ -82,7 +82,11 @@ describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
   });
 
   it('registerScopeAsLayout(bbox=有效) → rect 字段反映 bbox', () => {
-    const layout = registerScopeAsLayout('g', { x: 100, y: 50, width: 80, height: 60 }, [0, 0]);
+    const layout = registerScopeAsLayout({
+      id: 'g',
+      bbox: { x: 100, y: 50, width: 80, height: 60 },
+      fallbackOrigin: [0, 0],
+    });
     expect(layout.rect.x).toBe(100);
     expect(layout.rect.y).toBe(50);
     expect(layout.rect.width).toBe(80);

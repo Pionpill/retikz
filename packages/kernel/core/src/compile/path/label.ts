@@ -35,6 +35,15 @@ export type LabelPlacementContext = {
   boundaryOffset?: number;
 };
 
+/** step label emit 所需上下文。 */
+export type EmitLabelPrimitiveContext = {
+  measureText: TextMeasurer;
+  round: (n: number) => number;
+  hostOpacity?: number;
+  tex?: LabelTexContext;
+  placement?: LabelPlacementContext;
+};
+
 /** keyword → t 数值映射。 */
 const KEYWORD_TO_T: Record<string, number> = {
   'at-start': 0,
@@ -67,12 +76,9 @@ const resolveLabelOpacity = (labelOpacity?: number, hostOpacity?: number): numbe
 export const emitLabelPrimitive = (
   label: IRStepLabel,
   sample: SegmentSample,
-  measureText: TextMeasurer,
-  round: (n: number) => number,
-  hostOpacity?: number,
-  texCtx?: LabelTexContext,
-  placementCtx?: LabelPlacementContext,
+  context: EmitLabelPrimitiveContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
+  const { measureText, round, hostOpacity, tex: texCtx, placement: placementCtx } = context;
   // label.font / textColor / opacity 已由 compile/style 解析（fold scope labelDefault + 宿主 path 主色）
   const fontSize = label.font?.size ?? LABEL_FONT_SIZE;
   const fontFamily = label.font?.family;
@@ -202,7 +208,7 @@ export const emitLabelPrimitive = (
   const textPrim: TextPrim = {
     type: 'text',
     x: round(x),
-    y: round(toAlphabeticBaselineY(y, baseline, 1, emittedLineHeight, fontSize)),
+    y: round(toAlphabeticBaselineY({ y, baseline, lineCount: 1, lineHeight: emittedLineHeight, fontSize })),
     lines: [{ text }],
     fontSize,
     align,

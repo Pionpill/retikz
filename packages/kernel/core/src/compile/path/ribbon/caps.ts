@@ -14,17 +14,25 @@ const distance = (a: IRPosition, b: IRPosition): number => {
   return Math.hypot(dx, dy);
 };
 
+export type RoundedArcPointsInput = {
+  center: IRPosition;
+  from: IRPosition;
+  to: IRPosition;
+  outwardDirection: Vector2;
+  round: (n: number) => number;
+};
+
 /**
  * 生成 round cap 的离散圆弧点
  * @description 在左右边界点之间选择朝 outwardDirection 外凸的那段圆弧，避免圆头反向穿过 ribbon 内部。
  */
-export const roundedArcPoints = (
-  center: IRPosition,
-  from: IRPosition,
-  to: IRPosition,
-  outwardDirection: Vector2,
-  round: (n: number) => number,
-): Array<IRPosition> => {
+export const roundedArcPoints = ({
+  center,
+  from,
+  to,
+  outwardDirection,
+  round,
+}: RoundedArcPointsInput): Array<IRPosition> => {
   const start = Math.atan2(from[1] - center[1], from[0] - center[0]);
   const end = Math.atan2(to[1] - center[1], to[0] - center[0]);
   let delta = end - start;
@@ -50,13 +58,15 @@ export const roundedArcPoints = (
 /** 判定是否为显式圆弧端帽配置。 */
 export const isArcCap = (cap: IRRibbonCap): cap is IRRibbonArcCap => typeof cap === 'object';
 
+type AssertArcCapRadiusInput = {
+  actual: number;
+  expected: number;
+  endpoint: 'start' | 'end';
+  side: 'first' | 'second';
+};
+
 /** 校验显式 arc cap 的圆心和半径能同时经过端面两侧点。 */
-export const assertArcCapRadius = (
-  actual: number,
-  expected: number,
-  endpoint: 'start' | 'end',
-  side: 'first' | 'second',
-): void => {
+export const assertArcCapRadius = ({ actual, expected, endpoint, side }: AssertArcCapRadiusInput): void => {
   const tolerance = Math.max(0.01, Math.abs(expected) * 1e-4);
   if (Math.abs(actual - expected) > tolerance) {
     throw new Error(
@@ -65,25 +75,34 @@ export const assertArcCapRadius = (
   }
 };
 
+export type ArcCapPointsInput = {
+  cap: IRRibbonArcCap;
+  from: IRPosition;
+  to: IRPosition;
+  endpoint: 'start' | 'end';
+  namespaceStack: NamespaceStack;
+  round: (n: number) => number;
+};
+
 /**
  * 解析显式 arc cap 并生成离散圆弧点
  * @description cap.center 可引用节点 / 坐标；半径必须与端面两侧点一致，否则端帽无法闭合。
  */
-export const arcCapPoints = (
-  cap: IRRibbonArcCap,
-  from: IRPosition,
-  to: IRPosition,
-  endpoint: 'start' | 'end',
-  namespaceStack: NamespaceStack,
-  round: (n: number) => number,
-): Array<IRPosition> => {
-  const resolvedCenter = resolvePosition(cap.center, namespaceStack);
+export const arcCapPoints = ({
+  cap,
+  from,
+  to,
+  endpoint,
+  namespaceStack,
+  round,
+}: ArcCapPointsInput): Array<IRPosition> => {
+  const resolvedCenter = resolvePosition(cap.center, { namespaceStack });
   if (resolvedCenter === null) {
     throw new Error(`Ribbon ${endpoint} arc cap center could not be resolved.`);
   }
   const center: IRPosition = [round(resolvedCenter[0]), round(resolvedCenter[1])];
-  assertArcCapRadius(distance(center, from), cap.radius, endpoint, 'first');
-  assertArcCapRadius(distance(center, to), cap.radius, endpoint, 'second');
+  assertArcCapRadius({ actual: distance(center, from), expected: cap.radius, endpoint, side: 'first' });
+  assertArcCapRadius({ actual: distance(center, to), expected: cap.radius, endpoint, side: 'second' });
 
   const start = Math.atan2(from[1] - center[1], from[0] - center[0]);
   const end = Math.atan2(to[1] - center[1], to[0] - center[0]);

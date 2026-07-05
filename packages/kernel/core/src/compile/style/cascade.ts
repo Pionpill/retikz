@@ -300,11 +300,15 @@ const arrowMarkFromDetail = (detail: IRArrowEndDetail | undefined): Omit<IRArrow
   return pickDefinedKeys(detail);
 };
 
+type ResolveArrowMarkContext = {
+  pos: number;
+  stack: ReadonlyArray<StyleFrame>;
+  masterColor: string | undefined;
+};
+
 const resolveArrowMark = (
   mark: IRArrowMark,
-  pos: number,
-  stack: ReadonlyArray<StyleFrame>,
-  masterColor: string | undefined,
+  { pos, stack, masterColor }: ResolveArrowMarkContext,
 ): IRArrowMark => {
   const detail = resolveArrowDetail(undefined, stack, masterColor);
   if (detail === undefined) return mark;
@@ -324,7 +328,7 @@ const resolvePathMarks = (
   masterColor: string | undefined,
 ): IRPathBase['marks'] | undefined => {
   if (marks === undefined) return undefined;
-  return marks.map(item => ({ ...item, mark: resolveArrowMark(item.mark, item.pos, stack, masterColor) }));
+  return marks.map(item => ({ ...item, mark: resolveArrowMark(item.mark, { pos: item.pos, stack, masterColor }) }));
 };
 
 /** 替换 path children 中各 step 的 label 为已解析 effective label */

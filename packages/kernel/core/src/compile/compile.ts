@@ -147,7 +147,7 @@ export const compileToScene = (ir: IRScene, options?: CompileOptions): Scene => 
   // paint 与 clip 资源同表。
   const resources = [...paint.resources(), ...clip.resources()];
   // scene 根动画先做 camera 约束校验。
-  const rootAnimations = filterAnimations(loweredIr.animations, 'root', onWarn, 'scene');
+  const rootAnimations = filterAnimations(loweredIr.animations, { target: 'root', onWarn, irPath: 'scene' });
   return {
     primitives,
     // 显式 viewBox 覆盖自动 layout。

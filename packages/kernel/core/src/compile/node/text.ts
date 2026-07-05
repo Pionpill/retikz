@@ -22,7 +22,17 @@ const isCjk = (ch: string): boolean => {
  * 按 maxWidth 贪心折行：西文按词（空白分割）、CJK 按字；长不可断 token 溢出不硬断
  * @description 用注入的 measureText 度量；连续空白归一为单空格分隔。空文本返回 [''].
  */
-export const wrapText = (text: string, font: FontSpec, maxWidth: number, measure: TextMeasurer): Array<string> => {
+export type WrapTextContext = {
+  /** 文本字体。 */
+  font: FontSpec;
+  /** 最大行宽。 */
+  maxWidth: number;
+  /** 文本测量函数。 */
+  measureText: TextMeasurer;
+};
+
+export const wrapText = (text: string, context: WrapTextContext): Array<string> => {
+  const { font, maxWidth, measureText } = context;
   // 拆 unit：空白段 → 单空格分隔符；非空白段把 CJK 拆单字、非 CJK 连续 run 保整
   const units: Array<string> = [];
   for (const seg of text.split(/(\s+)/)) {
@@ -55,7 +65,7 @@ export const wrapText = (text: string, font: FontSpec, maxWidth: number, measure
     }
     const candidate = cur === '' ? u : cur + u;
     // cur 为空时即使溢出也接受（单 token 宽于阈值 → 溢出不硬断）
-    if (cur !== '' && measure(candidate, font).width > maxWidth) {
+    if (cur !== '' && measureText(candidate, font).width > maxWidth) {
       lines.push(cur.trimEnd());
       cur = u;
     } else {

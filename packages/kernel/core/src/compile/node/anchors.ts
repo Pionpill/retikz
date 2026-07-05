@@ -2,6 +2,7 @@ import type { Position } from '@retikz/math';
 
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
+import type { ResolveBoundaryContext } from '../boundary';
 import type { BoxInsets, NodeLayout } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -34,20 +35,21 @@ const inflateRect = (r: Rect, m: BoxInsets): Rect => {
 /** 取节点视觉 rect 外扩 margin 后的外边界。 */
 export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.rect, layout.margin);
 
+const boundaryContextOf = (layout: NodeLayout): ResolveBoundaryContext => ({
+  visualDef: layout.shapeDef,
+  visualRect: layout.rect,
+  visualParams: layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+  shapeRegistry: layout.shapes,
+  boundaryRegistry: layout.boundaries ?? resolveBoundaryRegistry(),
+});
+
 /** 取节点 shape 在 toward 方向的附着点。 */
 export const boundaryPointOf = (
   layout: NodeLayout,
   toward: Position,
   boundary: IRBoundary | undefined = 'shape',
 ): Position => {
-  const { def, rect, params } = resolveBoundary(
-    boundary,
-    layout.shapeDef,
-    layout.rect,
-    layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-    layout.shapes,
-    layout.boundaries ?? resolveBoundaryRegistry(),
-  );
+  const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
   return def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
 };
 
@@ -67,26 +69,12 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
     if (boundary === 'shape') {
       const own = layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
       if (own !== undefined) return own;
-      const fallback = resolveBoundary(
-        'rectangle',
-        layout.shapeDef,
-        layout.rect,
-        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-        layout.shapes,
-        layout.boundaries ?? resolveBoundaryRegistry(),
-      );
+      const fallback = resolveBoundary('rectangle', boundaryContextOf(layout));
       const p = fallback.def.anchor?.(fallback.rect, name, fallback.params);
       if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
       return p;
     }
-    const { def, rect, params } = resolveBoundary(
-      boundary,
-      layout.shapeDef,
-      layout.rect,
-      layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-      layout.shapes,
-      layout.boundaries ?? resolveBoundaryRegistry(),
-    );
+    const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
     const p = def.anchor?.(rect, name, params) ?? fallbackBoundaryAnchor(rect, name);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
@@ -113,13 +101,6 @@ export const angleBoundaryOf = (
   const sinR = Math.sin(rot);
   // 局部方向转为世界方向。
   const toward: Position = [layout.rect.x + lx * cosR - ly * sinR, layout.rect.y + lx * sinR + ly * cosR];
-  const { def, rect, params } = resolveBoundary(
-    boundary,
-    layout.shapeDef,
-    layout.rect,
-    layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-    layout.shapes,
-    layout.boundaries ?? resolveBoundaryRegistry(),
-  );
+  const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
   return def.boundaryPoint(rect, toward, params);
 };

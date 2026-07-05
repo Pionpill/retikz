@@ -21,6 +21,20 @@ type ResolvedBoundaryDefinition = {
   anchor?: (rect: Rect, name: BoundaryAnchorName, params: IRJsonObject) => ReturnType<ShapeDefinition['anchor']>;
 };
 
+/** 连接面解析上下文。 */
+export type ResolveBoundaryContext = {
+  /** 节点视觉形状 definition。 */
+  visualDef: ShapeDefinition;
+  /** 节点视觉形状 rect。 */
+  visualRect: Rect;
+  /** 节点视觉形状参数。 */
+  visualParams: IRJsonObject;
+  /** shape 注册表。 */
+  shapeRegistry: ProviderCollection<ShapeDefinition>;
+  /** boundary 注册表。 */
+  boundaryRegistry?: ProviderCollection<BoundaryDefinition>;
+};
+
 const providerOf = <TDefinition>(
   registry: ProviderCollection<TDefinition>,
   key: string,
@@ -37,12 +51,15 @@ const registeredNames = <TDefinition>(registry: ProviderCollection<TDefinition>)
 /** 解析连接面引用，返回可用于 boundaryPoint / anchor 的定义和参数。 */
 export const resolveBoundary = (
   boundary: IRBoundary | undefined,
-  visualDef: ShapeDefinition,
-  visualRect: Rect,
-  visualParams: IRJsonObject,
-  shapeRegistry: ProviderCollection<ShapeDefinition>,
-  boundaryRegistry: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
+  context: ResolveBoundaryContext,
 ): { def: ResolvedBoundaryDefinition; rect: Rect; params: IRJsonObject } => {
+  const {
+    visualDef,
+    visualRect,
+    visualParams,
+    shapeRegistry,
+    boundaryRegistry = resolveBoundaryRegistry(),
+  } = context;
   if (boundary === undefined || boundary === SELF) {
     return { def: visualDef, rect: visualRect, params: visualParams };
   }

@@ -14,23 +14,25 @@ describe('toAlphabeticBaselineY', () => {
   const lineHeight = 20;
   const asc = fontSize * ASCENT_FACTOR;
   const desc = fontSize * DESCENT_FACTOR;
+  const baselineY = (baseline: 'top' | 'middle' | 'bottom' | 'alphabetic', lineCount: number) =>
+    toAlphabeticBaselineY({ y: 100, baseline, lineCount, lineHeight, fontSize });
 
   it('alphabetic 锚点原样返回（首行基线 = 锚点）', () => {
-    expect(toAlphabeticBaselineY(100, 'alphabetic', 1, lineHeight, fontSize)).toBe(100);
+    expect(baselineY('alphabetic', 1)).toBe(100);
   });
 
   it('top 单行：块顶（ascent 线）落在锚点', () => {
-    const b = toAlphabeticBaselineY(100, 'top', 1, lineHeight, fontSize);
+    const b = baselineY('top', 1);
     expect(b - asc).toBeCloseTo(100, 10);
   });
 
   it('bottom 单行：块底（descent 线）落在锚点', () => {
-    const b = toAlphabeticBaselineY(100, 'bottom', 1, lineHeight, fontSize);
+    const b = baselineY('bottom', 1);
     expect(b + desc).toBeCloseTo(100, 10);
   });
 
   it('middle 单行：视觉中心落在锚点', () => {
-    const b = toAlphabeticBaselineY(100, 'middle', 1, lineHeight, fontSize);
+    const b = baselineY('middle', 1);
     const top = b - asc;
     const bottom = b + desc;
     expect((top + bottom) / 2).toBeCloseTo(100, 10);
@@ -38,7 +40,7 @@ describe('toAlphabeticBaselineY', () => {
 
   it('middle 多行：整块视觉中心落在锚点（绕锚点对称居中）', () => {
     const n = 3;
-    const b = toAlphabeticBaselineY(100, 'middle', n, lineHeight, fontSize);
+    const b = baselineY('middle', n);
     const top = b - asc;
     const bottom = b + (n - 1) * lineHeight + desc;
     expect((top + bottom) / 2).toBeCloseTo(100, 10);
@@ -46,13 +48,13 @@ describe('toAlphabeticBaselineY', () => {
 
   it('top 多行：块顶（首行 ascent 线）落在锚点', () => {
     const n = 2;
-    const b = toAlphabeticBaselineY(100, 'top', n, lineHeight, fontSize);
+    const b = baselineY('top', n);
     expect(b - asc).toBeCloseTo(100, 10);
   });
 
   it('bottom 多行：块底（末行 descent 线）落在锚点', () => {
     const n = 2;
-    const b = toAlphabeticBaselineY(100, 'bottom', n, lineHeight, fontSize);
+    const b = baselineY('bottom', n);
     expect(b + (n - 1) * lineHeight + desc).toBeCloseTo(100, 10);
   });
 });

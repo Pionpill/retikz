@@ -41,6 +41,13 @@ export const markerContextStroke = (stroke: PaintValue | undefined): string => {
   throw new Error('Path mark cannot inherit a PaintSpec stroke; set the mark or arrow color to an explicit CSS color.');
 };
 
+/** marker 放置所需上下文。 */
+export type BuildMarkMarkerGroupContext = {
+  strokeWidth: number;
+  round: (n: number) => number;
+  contextStroke: string;
+};
+
 /** marker 图元 → Scene 图元：结构同构，仅把 fill/stroke 的 contextStroke 解析成具体描边色（递归 group） */
 const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): ScenePrimitive => {
   if (prim.type === 'group') {
@@ -61,10 +68,9 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
 export const buildMarkMarkerGroup = (
   spec: ResolvedArrowEndSpec,
   sample: SegmentSample,
-  strokeWidth: number,
-  round: (n: number) => number,
-  contextStroke: string,
+  context: BuildMarkMarkerGroupContext,
 ): GroupPrim => {
+  const { strokeWidth, round, contextStroke } = context;
   const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
   const sx = (spec.markerWidth * strokeWidth) / spec.baseSize;
   const sy = (spec.markerHeight * strokeWidth) / spec.baseSize;

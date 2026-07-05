@@ -45,13 +45,13 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
 
 describe('registerScopeCircleLayout 单元测试', () => {
   it('shapeName ellipse + shapeParams circumscribe:equal', () => {
-    const layout = registerScopeCircleLayout('g', [], [0, 0]);
+    const layout = registerScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [0, 0] });
     expect(layout.shapeName).toBe('ellipse');
     expect(layout.shapeParams).toEqual({ circumscribe: 'equal' });
   });
 
   it('空点集 → 0×0 占位落在 fallbackOrigin', () => {
-    const layout = registerScopeCircleLayout('g', [], [30, 40]);
+    const layout = registerScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [30, 40] });
     expect(layout.id).toBe('g');
     expect(layout.rect.x).toBe(30);
     expect(layout.rect.y).toBe(40);
@@ -69,7 +69,7 @@ describe('registerScopeCircleLayout 单元测试', () => {
     ];
     const mec = minimalEnclosingCircle([...corners]);
     expect(mec).not.toBeNull();
-    const layout = registerScopeCircleLayout('g', corners, [0, 0]);
+    const layout = registerScopeCircleLayout({ id: 'g', cornerPoints: corners, fallbackOrigin: [0, 0] });
     const diameter = mec!.radius * 2;
     expect(layout.rect.width).toBeCloseTo(diameter, 5);
     expect(layout.rect.height).toBeCloseTo(diameter, 5);

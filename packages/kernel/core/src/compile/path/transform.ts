@@ -19,13 +19,21 @@ export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
   return boundsCenter(bounds);
 };
 
+/** path rotate / scale transform 构造输入。 */
+export type BuildPathTransformsInput = {
+  rotate: number | undefined;
+  scale: IRPathScale | undefined;
+  center: IRPosition;
+  round: (n: number) => number;
+};
+
 /** 把 path 的 rotate / scale 编译为绕 bbox 中心的 transforms。 */
-export const buildPathTransforms = (
-  rotate: number | undefined,
-  scale: IRPathScale | undefined,
-  center: IRPosition,
-  round: (n: number) => number,
-): Array<Transform> => {
+export const buildPathTransforms = ({
+  rotate,
+  scale,
+  center,
+  round,
+}: BuildPathTransformsInput): Array<Transform> => {
   const out: Array<Transform> = [];
   if (rotate !== undefined) {
     out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });

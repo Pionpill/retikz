@@ -90,37 +90,50 @@ export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Positio
 };
 
 /** 从 label 中心朝 border 方向，求 label 框边界交点。 */
-export const labelBoxEdgeToward = (center: Position, border: Position, halfW: number, halfH: number): Position => {
+export type LabelBoxEdgeTowardInput = {
+  center: Position;
+  border: Position;
+  halfWidth: number;
+  halfHeight: number;
+};
+
+export const labelBoxEdgeToward = ({
+  center,
+  border,
+  halfWidth,
+  halfHeight,
+}: LabelBoxEdgeTowardInput): Position => {
   const dx = border[0] - center[0];
   const dy = border[1] - center[1];
   const len = Math.hypot(dx, dy);
   if (len < 1e-9) return center;
   const ux = dx / len;
   const uy = dy / len;
-  const sx = Math.abs(ux) > 1e-9 ? halfW / Math.abs(ux) : Number.POSITIVE_INFINITY;
-  const sy = Math.abs(uy) > 1e-9 ? halfH / Math.abs(uy) : Number.POSITIVE_INFINITY;
+  const sx = Math.abs(ux) > 1e-9 ? halfWidth / Math.abs(ux) : Number.POSITIVE_INFINITY;
+  const sy = Math.abs(uy) > 1e-9 ? halfHeight / Math.abs(uy) : Number.POSITIVE_INFINITY;
   const s = Math.min(sx, sy, len); // 不越过 border 本身
   return [center[0] + ux * s, center[1] + uy * s];
+};
+
+/** label 自旋角计算输入。 */
+export type ResolveLabelRotateDegInput = {
+  label: NodeLabelLayout;
+  labelPosition: Position;
+  nodeCenter: Position;
 };
 
 /**
  * 算 label 文本自旋角度。
  * @description keepUpright 会翻转倒置文本。
  */
-export const resolveLabelRotateDeg = (
-  label: NodeLabelLayout,
-  lx: number,
-  ly: number,
-  cx: number,
-  cy: number,
-): number => {
+export const resolveLabelRotateDeg = ({ label, labelPosition, nodeCenter }: ResolveLabelRotateDegInput): number => {
   const mode = label.rotate;
   if (mode === undefined || mode === 'none') return 0;
   let deg: number;
   if (typeof mode === 'number') {
     deg = mode;
   } else {
-    const radial = Math.atan2(ly - cy, lx - cx) * RAD_TO_DEG;
+    const radial = Math.atan2(labelPosition[1] - nodeCenter[1], labelPosition[0] - nodeCenter[0]) * RAD_TO_DEG;
     deg = mode === 'tangent' ? radial + 90 : radial;
   }
   if (label.keepUpright) {

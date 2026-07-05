@@ -1,5 +1,8 @@
 import type { NodeLayout } from './node';
 
+/** namespace 栈当前写入/解析阶段。 */
+export type NamespacePhase = 'registering' | 'resolving';
+
 /** 同一 namespace frame 内重复 id 的诊断载荷。 */
 export type DuplicateRegisterInfo = {
   /** 同 frame 内重复出现的 id（两次 register 都用此 id） */
@@ -28,8 +31,8 @@ export class NamespaceStack {
   /** 与每个 frame 对应的"已注册 id → 首次 register 时的 irPath"映射，用于 duplicate warn 复述位置 */
   private readonly firstIrPaths: Array<Map<string, string | undefined>>;
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
-  /** 当前阶段；compile Pass 1 = 'pass1'（register 合法），Pass 2 = 'pass2'（只能 lookup） */
-  private currentPhase: 'pass1' | 'pass2' = 'pass1';
+  /** 当前阶段；registering 允许写入，resolving 只允许 lookup。 */
+  private currentPhase: NamespacePhase = 'registering';
 
   constructor(options: NamespaceStackOptions = {}) {
     this.frames = [new Map()];
@@ -42,8 +45,8 @@ export class NamespaceStack {
     return this.frames.length;
   }
 
-  /** 当前阶段（'pass1' / 'pass2'） */
-  get phase(): 'pass1' | 'pass2' {
+  /** 当前阶段。 */
+  get phase(): NamespacePhase {
     return this.currentPhase;
   }
 
@@ -62,21 +65,21 @@ export class NamespaceStack {
     this.firstIrPaths.pop();
   }
 
-  /** 切换到 Pass 2（lookup-only）阶段；切换后 register 调用一律抛 internal error */
-  enterLookupPhase(): void {
-    this.currentPhase = 'pass2';
+  /** 切换到 resolving 阶段；切换后 register / replaceLayout 一律抛 internal error。 */
+  enterResolvingPhase(): void {
+    this.currentPhase = 'resolving';
   }
 
-  /** 切回 Pass 1（register + lookup 均可）阶段；用于嵌套 path-resolve 完成后继续处理上层 scope 子树 */
-  exitLookupPhase(): void {
-    this.currentPhase = 'pass1';
+  /** 切回 registering 阶段；用于 pending path 解析完成后继续处理上层 scope 子树。 */
+  exitResolvingPhase(): void {
+    this.currentPhase = 'registering';
   }
 
   /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值。 */
   register(id: string, layout: NodeLayout, irPath?: string): boolean {
-    if (this.currentPhase !== 'pass1') {
+    if (this.currentPhase !== 'registering') {
       throw new Error(
-        `NamespaceStack.register('${id}'): only allowed during pass1; current phase is '${this.currentPhase}'`,
+        `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
     const topFrame = this.frames[this.frames.length - 1];
@@ -98,9 +101,9 @@ export class NamespaceStack {
 
   /** 替换指定 frame 内已注册的 layout；用于 scope 占位升级，不触发重复 id 诊断。 */
   replaceLayout(id: string, layout: NodeLayout, frameDepth: number, expectedCurrent?: NodeLayout): boolean {
-    if (this.currentPhase !== 'pass1') {
+    if (this.currentPhase !== 'registering') {
       throw new Error(
-        `NamespaceStack.replaceLayout('${id}'): only allowed during pass1; current phase is '${this.currentPhase}'`,
+        `NamespaceStack.replaceLayout('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
     if (frameDepth < 0 || frameDepth >= this.frames.length) {

@@ -65,12 +65,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
         position: [0, 0],
       },
-      measureText,
-      namespaceStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     // 对角线方向：星形轮廓凹入（凹角内径），AABB 矩形则在外接框边缘——两者一定不同
     const toward: [number, number] = [100, 100];
@@ -89,12 +84,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: 'rectangle',
         position: [0, 0],
       },
-      measureText,
-      namespaceStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     const toward: [number, number] = [100, 0];
     // 缺省与显式 'shape' 结果相同
@@ -110,12 +100,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
         position: [0, 0],
       },
-      measureText,
-      namespaceStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     // 改前：sector.anchor 不认识 canonical 名，抛 Unknown anchor
     // 改后：canonical 名上提为 AABB，不再 throw，返回 AABB 上的点
@@ -135,12 +120,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
         position: [0, 0],
       },
-      measureText,
-      namespaceStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     // apex 是 sector 专属命名 anchor，不是 rect 方位名，始终走视觉形状
     expect(() => anchorOf(sectorLayout, 'apex')).not.toThrow();
@@ -159,12 +139,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: 'rectangle',
         position: [0, 0],
       },
-      measureText,
-      namespaceStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     expect(angleBoundaryOf(layout, 0)).toEqual(angleBoundaryOf(layout, 0, 'shape'));
     expect(angleBoundaryOf(layout, 90)).toEqual(angleBoundaryOf(layout, 90, 'shape'));

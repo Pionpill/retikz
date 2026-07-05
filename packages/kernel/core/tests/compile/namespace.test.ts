@@ -184,13 +184,13 @@ describe('NamespaceStack onDuplicate 回调', () => {
   });
 });
 
-describe('NamespaceStack Pass 2 phase 禁止 register', () => {
-  it('name_stack_register_during_layout_pass2', () => {
+describe('NamespaceStack resolving phase 禁止 register', () => {
+  it('namespace_stack_register_during_resolving', () => {
     const stack = new NamespaceStack();
     stack.register('A', makeLayout('A'));
-    stack.enterLookupPhase();
-    expect(stack.phase).toBe('pass2');
+    stack.enterResolvingPhase();
+    expect(stack.phase).toBe('resolving');
     expect(stack.lookup('A')).toBeDefined();
-    expect(() => stack.register('B', makeLayout('B'))).toThrow(/only allowed during pass1/);
+    expect(() => stack.register('B', makeLayout('B'))).toThrow(/only allowed during registering/);
   });
 });

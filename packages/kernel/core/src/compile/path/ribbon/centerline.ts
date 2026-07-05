@@ -78,7 +78,14 @@ const smoothstep = (t: number): number => t * t * (3 - 2 * t);
  * 在端点指定方向和中心线采样切线之间平滑过渡
  * @description 只用于首尾一小段，避免用户指定 start/end direction 时横截面突然旋转。
  */
-export const blendTangent = (endpointTangent: Vector2, sampleTangent: Vector2, t: number, source: string): Vector2 => {
+export type BlendTangentInput = {
+  endpointTangent: Vector2;
+  sampleTangent: Vector2;
+  t: number;
+  source: string;
+};
+
+export const blendTangent = ({ endpointTangent, sampleTangent, t, source }: BlendTangentInput): Vector2 => {
   const u = smoothstep(Math.max(0, Math.min(1, t)));
   return normalizeVector(
     [
@@ -236,12 +243,19 @@ export const commandsToSegmentInputs = (
   return inputs;
 };
 
-const segmentToSampler = (
-  input: RibbonSegmentInput,
-  index: number,
-  count: number,
-  endpointTangents: { start?: Vector2; end?: Vector2 } = {},
-): ((t: number) => SegmentSample) => {
+type SegmentToSamplerInput = {
+  input: RibbonSegmentInput;
+  index: number;
+  count: number;
+  endpointTangents?: { start?: Vector2; end?: Vector2 };
+};
+
+const segmentToSampler = ({
+  input,
+  index,
+  count,
+  endpointTangents = {},
+}: SegmentToSamplerInput): ((t: number) => SegmentSample) => {
   const isFirst = index === 0;
   const isLast = index === count - 1;
   if (input.kind === 'line') {
@@ -304,7 +318,7 @@ export const segmentInputsToSegments = (
 ): Array<RibbonSegment> => {
   const segments: Array<RibbonSegment> = [];
   for (let index = 0; index < inputs.length; index += 1) {
-    const sampleAt = segmentToSampler(inputs[index], index, inputs.length, endpointTangents);
+    const sampleAt = segmentToSampler({ input: inputs[index], index, count: inputs.length, endpointTangents });
     const length = estimateLength(sampleAt);
     if (length > 0) segments.push({ sampleAt, length });
   }
@@ -329,23 +343,32 @@ export const sampleAtDistance = (
   return segments[segments.length - 1].sampleAt(1);
 };
 
+export type EmittedPathFromStepsInput = {
+  steps: ReadonlyArray<IRStep>;
+  source: string;
+  namespaceStack: NamespaceStack;
+  round: (n: number) => number;
+  measureText: TextMeasurer;
+  options: RibbonEmitOptions;
+};
+
 /**
  * 复用普通 path emit，把 ribbon.children 降成单个 PathPrim
  * @description 这一步负责解析节点引用、relative、generator 等 path 语义；ribbon 后续只消费已物化的 commands。
  */
-export const emittedPathFromSteps = (
-  steps: ReadonlyArray<IRStep>,
-  source: string,
-  namespaceStack: NamespaceStack,
-  round: (n: number) => number,
-  measureText: TextMeasurer,
-  options: RibbonEmitOptions,
-): PathPrim => {
+export const emittedPathFromSteps = ({
+  steps,
+  source,
+  namespaceStack,
+  round,
+  measureText,
+  options,
+}: EmittedPathFromStepsInput): PathPrim => {
   const path: IRPath = {
     type: 'path',
     children: steps.map(stripStepLabel),
   };
-  const emitted = emitPathPrimitive(path, namespaceStack, round, measureText, options);
+  const emitted = emitPathPrimitive(path, { namespaceStack, round, measureText, options });
   if (emitted === null) {
     throw new Error(`Ribbon ${source} path was skipped unexpectedly.`);
   }
@@ -355,20 +378,24 @@ export const emittedPathFromSteps = (
   return emitted.primitives[0];
 };
 
+export type SegmentsFromStepsInput = EmittedPathFromStepsInput & {
+  endpointTangents?: { start?: Vector2; end?: Vector2 };
+};
+
 /**
  * 从一组 IRStep 生成 ribbon 中心线段与总长度
  * @description boundary 模式的 upper/lower 和 centerline 模式的 children 都走这里，保证 path 解析口径一致。
  */
-export const segmentsFromSteps = (
-  steps: ReadonlyArray<IRStep>,
-  source: string,
-  namespaceStack: NamespaceStack,
-  round: (n: number) => number,
-  measureText: TextMeasurer,
-  options: RibbonEmitOptions,
-  endpointTangents: { start?: Vector2; end?: Vector2 } = {},
-): { segments: Array<RibbonSegment>; totalLength: number } => {
-  const prim = emittedPathFromSteps(steps, source, namespaceStack, round, measureText, options);
+export const segmentsFromSteps = ({
+  steps,
+  source,
+  namespaceStack,
+  round,
+  measureText,
+  options,
+  endpointTangents = {},
+}: SegmentsFromStepsInput): { segments: Array<RibbonSegment>; totalLength: number } => {
+  const prim = emittedPathFromSteps({ steps, source, namespaceStack, round, measureText, options });
   const inputs = commandsToSegmentInputs(prim.commands, source);
   const segments = segmentInputsToSegments(inputs, endpointTangents);
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);

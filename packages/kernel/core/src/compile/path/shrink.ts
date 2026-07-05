@@ -252,34 +252,42 @@ const endpointOf = (cmd: PathCommand): IRPosition | null => {
   }
 };
 
+type SetEndpointInput = {
+  commands: Array<PathCommand>;
+  index: number;
+  point: IRPosition;
+  round: (n: number) => number;
+};
+
 /** 改写一个 PathCommand 的 endpoint（用于 shrink） */
-const setEndpoint = (
-  commands: Array<PathCommand>,
-  idx: number,
-  newPt: IRPosition,
-  round: (n: number) => number,
-): void => {
-  const cmd = commands[idx];
+const setEndpoint = ({ commands, index, point, round }: SetEndpointInput): void => {
+  const cmd = commands[index];
   if (cmd.kind === 'close') return;
-  const rp: [number, number] = [round(newPt[0]), round(newPt[1])];
+  const rp: [number, number] = [round(point[0]), round(point[1])];
   if (cmd.kind === 'move' || cmd.kind === 'line') {
-    commands[idx] = { ...cmd, to: rp };
+    commands[index] = { ...cmd, to: rp };
   } else if (cmd.kind === 'quad') {
-    commands[idx] = { ...cmd, to: rp };
+    commands[index] = { ...cmd, to: rp };
   } else if (cmd.kind === 'cubic') {
-    commands[idx] = { ...cmd, to: rp };
+    commands[index] = { ...cmd, to: rp };
   }
   // arc / ellipseArc 不参与 shrink——首末段都是 line/cubic（path-arrow 的 path 形态）
+};
+
+/** 箭头收缩改写所需上下文。 */
+export type ApplyArrowShrinksContext = {
+  shrinkStart: number;
+  shrinkEnd: number;
+  strokeWidth: number;
+  round: (n: number) => number;
 };
 
 /** 按箭头收缩量改写 path 首尾端点。 */
 export const applyArrowShrinks = (
   commands: Array<PathCommand>,
-  shrinkStart: number,
-  shrinkEnd: number,
-  strokeWidth: number,
-  round: (n: number) => number,
+  context: ApplyArrowShrinksContext,
 ): void => {
+  const { shrinkStart, shrinkEnd, strokeWidth, round } = context;
   if (shrinkStart !== 0) {
     // 找首个 move 与其后第一个有 endpoint 的命令
     const firstIdx = commands.findIndex(o => o.kind === 'move');
@@ -290,7 +298,7 @@ export const applyArrowShrinks = (
         const nextPt = endpointOf(commands[nextIdx]);
         if (nextPt) {
           const shifted = shiftToward([cur.to[0], cur.to[1]], nextPt, shrinkStart * strokeWidth);
-          setEndpoint(commands, firstIdx, shifted, round);
+          setEndpoint({ commands, index: firstIdx, point: shifted, round });
         }
       }
     }
@@ -312,7 +320,7 @@ export const applyArrowShrinks = (
         const prevPt = endpointOf(commands[prevIdx]);
         if (curPt && prevPt) {
           const shifted = shiftToward(curPt, prevPt, shrinkEnd * strokeWidth);
-          setEndpoint(commands, lastIdx, shifted, round);
+          setEndpoint({ commands, index: lastIdx, point: shifted, round });
         }
       }
     }

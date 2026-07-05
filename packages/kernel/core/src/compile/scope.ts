@@ -27,14 +27,29 @@ import { DEG_TO_RAD, RAD_TO_DEG, rect as rectOps } from '../shared/geometry';
 import { boxInsets, outerRectOf } from './node';
 import { resolvePosition } from './position';
 
+/** scope transform lowering 所需的编译上下文。 */
+export type LowerScopeTransformsContext = {
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 相对定位默认距离。 */
+  nodeDistance?: number;
+  /** between 端点的全局坐标解析器。 */
+  resolveBetweenGlobal?: ResolveBetweenGlobal;
+  /** transform 引用解析失败时的回调。 */
+  onUnresolved?: (failed: IRTransform) => void;
+};
+
 /** 把 IR transform 归一为 Scene transform；引用解析失败时返回 null。 */
 export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
-  namespaceStack: NamespaceStack,
-  nodeDistance?: number,
-  resolveBetweenGlobal?: ResolveBetweenGlobal,
-  onUnresolved?: (failed: IRTransform) => void,
+  context: LowerScopeTransformsContext,
 ): Array<Transform> | null => {
+  const {
+    namespaceStack,
+    nodeDistance,
+    resolveBetweenGlobal,
+    onUnresolved,
+  } = context;
   const out: Array<Transform> = [];
   for (const t of transforms) {
     switch (t.kind) {
@@ -44,7 +59,7 @@ export const lowerScopeTransforms = (
       case 'polar-translate': {
         const polar: PolarPosition = { angle: t.angle, radius: t.radius };
         if (t.origin !== undefined) polar.origin = t.origin;
-        const resolved = resolvePosition(polar, namespaceStack, nodeDistance);
+        const resolved = resolvePosition(polar, { namespaceStack, nodeDistance });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -55,7 +70,7 @@ export const lowerScopeTransforms = (
       case 'at-translate': {
         const at: IRAtPosition = { direction: t.direction, of: t.of };
         if (t.distance !== undefined) at.distance = t.distance;
-        const resolved = resolvePosition(at, namespaceStack, nodeDistance);
+        const resolved = resolvePosition(at, { namespaceStack, nodeDistance });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -68,7 +83,7 @@ export const lowerScopeTransforms = (
           of: t.of,
           offset: t.offset ?? [0, 0],
         };
-        const resolved = resolvePosition(off, namespaceStack, nodeDistance);
+        const resolved = resolvePosition(off, { namespaceStack, nodeDistance });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -78,7 +93,7 @@ export const lowerScopeTransforms = (
       }
       case 'between-translate': {
         const between: IRBetweenPosition = { between: t.between, fraction: t.fraction };
-        const resolved = resolvePosition(between, namespaceStack, nodeDistance, [], resolveBetweenGlobal);
+        const resolved = resolvePosition(between, { namespaceStack, nodeDistance, resolveBetweenGlobal });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -212,6 +227,46 @@ export type ScopeBoundingBox = {
   height: number;
 };
 
+/** synthetic layout 构造使用的 shape / boundary 注册表。 */
+export type SyntheticLayoutRegistryContext = {
+  /** shape 注册表。 */
+  shapes?: ProviderCollection<ShapeDefinition>;
+  /** boundary 注册表。 */
+  boundaries?: ProviderCollection<BoundaryDefinition>;
+};
+
+/** synthetic rectangle layout 输入。 */
+export type SyntheticRectangleLayoutInput = {
+  /** layout id。 */
+  id: string;
+  /** layout 中心点。 */
+  center: IRPosition;
+  /** layout 宽度。 */
+  width: number;
+  /** layout 高度。 */
+  height: number;
+};
+
+/** synthetic scope rectangle layout 输入。 */
+export type ScopeRectangleLayoutInput = {
+  /** layout id。 */
+  id: string;
+  /** 已计算的 bbox；空 scope 时传 null。 */
+  bbox: ScopeBoundingBox | null;
+  /** 空 bbox 时使用的回退原点。 */
+  fallbackOrigin: IRPosition;
+};
+
+/** synthetic scope circle layout 输入。 */
+export type ScopeCircleLayoutInput = {
+  /** layout id。 */
+  id: string;
+  /** 子树外包络角点。 */
+  cornerPoints: ReadonlyArray<IRPosition>;
+  /** 空点集时使用的回退原点。 */
+  fallbackOrigin: IRPosition;
+};
+
 /** 收集一组 NodeLayout 的全局 4 角点（rotate-aware outerRect 四角），供 AABB / MEC 等包络复用 */
 export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Array<IRPosition> => {
   const points: Array<IRPosition> = [];
@@ -237,65 +292,68 @@ export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): Sco
 
 /** 构造编译期 synthetic rectangle layout。 */
 export const createSyntheticRectangleLayout = (
-  id: string,
-  center: IRPosition,
-  width: number,
-  height: number,
-  shapes: ProviderCollection<ShapeDefinition>,
-  boundaries: ProviderCollection<BoundaryDefinition>,
-): NodeLayout => ({
-  id,
-  shapeName: 'rectangle',
-  shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
-  rect: { x: center[0], y: center[1], width, height, rotate: 0 },
-  contentCenter: center,
-  rotateDeg: 0,
-  margin: boxInsets(0),
-  textWidth: width,
-  textHeight: height,
-  align: 'middle',
-  lineHeight: 0,
-  fontSize: 0,
-  shapes,
-  boundaries,
-});
+  input: SyntheticRectangleLayoutInput,
+  context: SyntheticLayoutRegistryContext = {},
+): NodeLayout => {
+  const shapes = context.shapes ?? resolveShapeRegistry();
+  const boundaries = context.boundaries ?? resolveBoundaryRegistry();
+  return {
+    id: input.id,
+    shapeName: 'rectangle',
+    shapeDef: providerDefinitionOf(shapes, 'rectangle', {
+      capability: 'shape',
+      optionName: 'shapes',
+    }),
+    rect: { x: input.center[0], y: input.center[1], width: input.width, height: input.height, rotate: 0 },
+    contentCenter: input.center,
+    rotateDeg: 0,
+    margin: boxInsets(0),
+    textWidth: input.width,
+    textHeight: input.height,
+    align: 'middle',
+    lineHeight: 0,
+    fontSize: 0,
+    shapes,
+    boundaries,
+  };
+};
 
 /** 用 scope id 和当前 transform chain 构造临时 0×0 synthetic layout。 */
 export const registerScopePlaceholderLayout = (
   id: string,
-  chain: ReadonlyArray<Transform>,
-  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
-  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
+  scopeChain: ReadonlyArray<Transform>,
+  context: SyntheticLayoutRegistryContext = {},
 ): NodeLayout => {
-  const globalOrigin: IRPosition = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
-  return createSyntheticRectangleLayout(id, globalOrigin, 0, 0, shapes, boundaries);
+  const globalOrigin: IRPosition = scopeChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], scopeChain);
+  return createSyntheticRectangleLayout({ id, center: globalOrigin, width: 0, height: 0 }, context);
 };
 
 /** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout。 */
 export const registerScopeAsLayout = (
-  id: string,
-  bbox: ScopeBoundingBox | null,
-  fallbackOrigin: IRPosition,
-  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
-  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
+  input: ScopeRectangleLayoutInput,
+  context: SyntheticLayoutRegistryContext = {},
 ): NodeLayout => {
-  const box: ScopeBoundingBox = bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
-  return createSyntheticRectangleLayout(id, [box.x, box.y], box.width, box.height, shapes, boundaries);
+  const box: ScopeBoundingBox = input.bbox ?? {
+    x: input.fallbackOrigin[0],
+    y: input.fallbackOrigin[1],
+    width: 0,
+    height: 0,
+  };
+  return createSyntheticRectangleLayout({ id: input.id, center: [box.x, box.y], width: box.width, height: box.height }, context);
 };
 
 /** 用 scope id 和子树点集构造可引用的 synthetic circle layout。 */
 export const registerScopeCircleLayout = (
-  id: string,
-  cornerPoints: ReadonlyArray<IRPosition>,
-  fallbackOrigin: IRPosition,
-  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
-  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
+  input: ScopeCircleLayoutInput,
+  context: SyntheticLayoutRegistryContext = {},
 ): NodeLayout => {
-  const mec = cornerPoints.length > 0 ? minimalEnclosingCircle([...cornerPoints]) : null;
-  const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : fallbackOrigin;
+  const shapes = context.shapes ?? resolveShapeRegistry();
+  const boundaries = context.boundaries ?? resolveBoundaryRegistry();
+  const mec = input.cornerPoints.length > 0 ? minimalEnclosingCircle([...input.cornerPoints]) : null;
+  const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : input.fallbackOrigin;
   const diameter = mec ? mec.radius * 2 : 0;
   return {
-    id,
+    id: input.id,
     shapeName: 'ellipse',
     shapeDef: providerDefinitionOf(shapes, 'ellipse', { capability: 'shape', optionName: 'shapes' }),
     shapeParams: { circumscribe: 'equal' },

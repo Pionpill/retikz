@@ -67,6 +67,6 @@ alpha.8 发布后，下一轮讨论应把候选拆成三层：
 
 | 层级 | 候选 | 说明 |
 | --- | --- | --- |
-| v0.5 alpha | headless interaction、Progressive IR / JSON Patch | 仍属于纵向机制探索，需先做 ADR。 |
+| v0.5 alpha | headless interaction、Progressive IR / JSON Patch、incremental compile | 仍属于纵向机制探索，需先做 ADR；交互和用户操作场景要评估 IR diff、bailout、局部重编译与 concurrent 调度。 |
 | v0.4 beta / rc | API 复核、安装验收、docs / changelog 对账 | 不新增能力，面向稳定化。 |
 | 更长期 | P3D、scope polygon / ellipse / padding、blur / mask / layer | 需要更强需求牵引或跨包设计，不随 v0.4 收口发布。 |

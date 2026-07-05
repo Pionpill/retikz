@@ -82,18 +82,41 @@ const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
   }
   return value;
 };
-export const layoutNode = (
-  node: IRNode,
-  measureText: TextMeasurer,
-  namespaceStack: NamespaceStack,
-  nodeDistance?: number,
-  scopeChain: ReadonlyArray<Transform> = [],
-  labelDefault?: IRLabelDefault,
-  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
-  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
-  resolveBetweenGlobal?: ResolveBetweenGlobal,
-  texLowering?: TexLoweringContext,
-): NodeLayout => {
+
+/** 节点 layout 阶段使用的编译依赖。 */
+export type LayoutNodeContext = {
+  /** 文本测量函数。 */
+  measureText: TextMeasurer;
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 相对定位默认距离。 */
+  nodeDistance?: number;
+  /** 当前 scope 累积 transform。 */
+  scopeChain?: ReadonlyArray<Transform>;
+  /** 当前样式栈解析出的 label 默认值。 */
+  labelDefault?: IRLabelDefault;
+  /** shape 注册表。 */
+  shapes?: ProviderCollection<ShapeDefinition>;
+  /** boundary 注册表。 */
+  boundaries?: ProviderCollection<BoundaryDefinition>;
+  /** between target 的全局点解析函数。 */
+  resolveBetweenGlobal?: ResolveBetweenGlobal;
+  /** TeX 降级上下文。 */
+  texLowering?: TexLoweringContext;
+};
+
+export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout => {
+  const {
+    measureText,
+    namespaceStack,
+    nodeDistance,
+    scopeChain = [],
+    labelDefault,
+    shapes = resolveShapeRegistry(),
+    boundaries = resolveBoundaryRegistry(),
+    resolveBetweenGlobal,
+    texLowering,
+  } = context;
   // shape preset 解析。
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   const shapeDef = providerDefinitionOf(shapes, shapeName, { capability: 'shape', optionName: 'shapes' });
@@ -208,7 +231,7 @@ export const layoutNode = (
         // 硬换行先拆成物理行，再按 maxTextWidth 折行。
         const hardLines = text.split('\n');
         const physical = hardLines.flatMap(hardLine =>
-          maxTextWidth !== undefined ? wrapText(hardLine, font, maxTextWidth, measureText) : [hardLine],
+          maxTextWidth !== undefined ? wrapText(hardLine, { font, maxWidth: maxTextWidth, measureText }) : [hardLine],
         );
         for (const ptext of physical) {
           const m = measureText(ptext, font);
@@ -247,7 +270,7 @@ export const layoutNode = (
   const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
   const rotateDeg = node.rotate ?? 0;
-  const center = resolvePosition(node.position, namespaceStack, nodeDistance, scopeChain, resolveBetweenGlobal);
+  const center = resolvePosition(node.position, { namespaceStack, nodeDistance, scopeChain, resolveBetweenGlobal });
   if (!center) {
     throw new Error(
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,

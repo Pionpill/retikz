@@ -30,6 +30,18 @@ import {
   resolveSampleCount,
 } from './width';
 
+/** ribbon path emit 所需的编译上下文。 */
+export type EmitRibbonPrimitiveContext = {
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 坐标取整函数。 */
+  round: (n: number) => number;
+  /** 文本测量函数。 */
+  measureText: TextMeasurer;
+  /** ribbon emit 选项。 */
+  options?: RibbonEmitOptions;
+};
+
 /**
  * IR ribbon path → Scene primitive
  * @description boundary 模式把 upper/lower 两条 path 采样成闭合轮廓；centerline 模式先复用普通 path emit 解析中心线，
@@ -37,11 +49,14 @@ import {
  */
 export const emitRibbonPrimitive = (
   path: IRPathBase,
-  namespaceStack: NamespaceStack,
-  round: (n: number) => number,
-  measureText: TextMeasurer,
-  options: RibbonEmitOptions = {},
+  context: EmitRibbonPrimitiveContext,
 ): { primitives: Array<ScenePrimitive>; boundsPoints: Array<IRPosition> } | null => {
+  const {
+    namespaceStack,
+    round,
+    measureText,
+    options = {},
+  } = context;
   if (path.ribbon === undefined) {
     throw new Error('Ribbon path requires a `ribbon` options object.');
   }
@@ -56,20 +71,34 @@ export const emitRibbonPrimitive = (
     if (ribbon.upper === undefined || ribbon.lower === undefined) {
       throw new Error('Boundary ribbon requires `upper` and `lower` steps.');
     }
-    const upper = segmentsFromSteps(ribbon.upper, 'upper boundary', namespaceStack, round, measureText, options);
-    const lower = segmentsFromSteps(ribbon.lower, 'lower boundary', namespaceStack, round, measureText, options);
+    const upper = segmentsFromSteps({
+      steps: ribbon.upper,
+      source: 'upper boundary',
+      namespaceStack,
+      round,
+      measureText,
+      options,
+    });
+    const lower = segmentsFromSteps({
+      steps: ribbon.lower,
+      source: 'lower boundary',
+      namespaceStack,
+      round,
+      measureText,
+      options,
+    });
     const samples = assertSampleCount(
       resolveSampleCount(ribbon.samples, ribbon.sampling, Math.max(upper.totalLength, lower.totalLength)) ??
         DEFAULT_RIBBON_SAMPLES,
     );
-    const outline = boundaryOutlineCommands(
-      upper.segments,
-      upper.totalLength,
-      lower.segments,
-      lower.totalLength,
-      samples,
+    const outline = boundaryOutlineCommands({
+      upper: upper.segments,
+      upperLength: upper.totalLength,
+      lower: lower.segments,
+      lowerLength: lower.totalLength,
+      sampleCount: samples,
       round,
-    );
+    });
     return {
       primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint)],
       boundsPoints: outline.points,
@@ -81,7 +110,14 @@ export const emitRibbonPrimitive = (
   }
   // centerline 模式先降成普通 PathPrim，再把 commands 转成 ribbon 自己的 segment 输入。
   const segmentInputs = commandsToSegmentInputs(
-    emittedPathFromSteps(ribbon.children, 'centerline', namespaceStack, round, measureText, options).commands,
+    emittedPathFromSteps({
+      steps: ribbon.children,
+      source: 'centerline',
+      namespaceStack,
+      round,
+      measureText,
+      options,
+    }).commands,
     'centerline',
   );
   const rawSegments = segmentInputsToSegments(segmentInputs);
@@ -111,46 +147,46 @@ export const emitRibbonPrimitive = (
   // 静态宽度优先解析型轮廓，必要时回退采样。
   const outline =
     sampleCount === undefined
-      ? (analyticOutlineCommands(
-          segmentInputs,
+      ? (analyticOutlineCommands({
+          inputs: segmentInputs,
           segments,
           totalLength,
           widthAt,
           endpointTangents,
-          {
+          endpointTangentOverrides: {
             start: ribbon.start?.direction === undefined ? undefined : endpointTangents.start,
             end: ribbon.end?.direction === undefined ? undefined : endpointTangents.end,
           },
-          ribbon.align ?? 'center',
-          ribbon.start?.cap ?? 'butt',
-          ribbon.end?.cap ?? 'butt',
+          align: ribbon.align ?? 'center',
+          startEndpointCap: ribbon.start?.cap ?? 'butt',
+          endEndpointCap: ribbon.end?.cap ?? 'butt',
           namespaceStack,
           round,
-        ) ??
-        outlineCommands(
+        }) ??
+        outlineCommands({
           segments,
           totalLength,
-          DEFAULT_RIBBON_SAMPLES,
+          sampleCount: DEFAULT_RIBBON_SAMPLES,
           widthAt,
           endpointTangents,
-          ribbon.align ?? 'center',
-          ribbon.start?.cap ?? 'butt',
-          ribbon.end?.cap ?? 'butt',
+          align: ribbon.align ?? 'center',
+          startEndpointCap: ribbon.start?.cap ?? 'butt',
+          endEndpointCap: ribbon.end?.cap ?? 'butt',
           namespaceStack,
           round,
-        ))
-      : outlineCommands(
+        }))
+      : outlineCommands({
           segments,
           totalLength,
-          assertSampleCount(sampleCount),
+          sampleCount: assertSampleCount(sampleCount),
           widthAt,
           endpointTangents,
-          ribbon.align ?? 'center',
-          ribbon.start?.cap ?? 'butt',
-          ribbon.end?.cap ?? 'butt',
+          align: ribbon.align ?? 'center',
+          startEndpointCap: ribbon.start?.cap ?? 'butt',
+          endEndpointCap: ribbon.end?.cap ?? 'butt',
           namespaceStack,
           round,
-        );
+        });
 
   const labelPrimitives: Array<ScenePrimitive> = [];
   const labelBoundsPoints: Array<IRPosition> = [];
@@ -161,27 +197,25 @@ export const emitRibbonPrimitive = (
     const sample = sampleAtDistance(segments, totalLength, t * totalLength);
     const offset = t * totalLength;
     const normalizedOffset = totalLength === 0 ? 0 : offset / totalLength;
-    const section = ribbonCrossSection(
+    const section = ribbonCrossSection({
       sample,
-      normalizedOffset,
+      offset: normalizedOffset,
       widthAt,
       endpointTangents,
-      ribbon.align ?? 'center',
+      align: ribbon.align ?? 'center',
       round,
-    );
-    const result = emitLabelPrimitive(
-      label,
-      sample,
+    });
+    const result = emitLabelPrimitive(label, sample, {
       measureText,
       round,
-      ribbon.opacity,
-      {
+      hostOpacity: ribbon.opacity,
+      tex: {
         lowerTex: options.lowerTex,
         gatingOn: options.lowerTex !== undefined,
         warn: (code, message) => options.onWarn?.({ code, message, path: `${options.irPath ?? 'ribbon'}.label` }),
       },
-      { boundaryOffset: section.width / 2 },
-    );
+      placement: { boundaryOffset: section.width / 2 },
+    });
     labelPrimitives.push(result.primitive);
     labelBoundsPoints.push(...result.boundsPoints);
   }

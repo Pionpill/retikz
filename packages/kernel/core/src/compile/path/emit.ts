@@ -88,17 +88,32 @@ type _ThicknessCheck = AssertEqual<keyof typeof THICKNESS_TO_WIDTH, NonNullable<
 const _assertThicknessCheck: _ThicknessCheck = true;
 void _assertThicknessCheck;
 
+/** 普通 path emit 所需的编译上下文。 */
+export type EmitPathPrimitiveContext = {
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 坐标取整函数。 */
+  round: (n: number) => number;
+  /** 文本测量函数。 */
+  measureText?: TextMeasurer;
+  /** path emit 选项与 warning 钩子。 */
+  options?: EmitPathWarnHook;
+};
+
 /**
  * IR Path → PathPrim
  * @description 解析失败返回 null，并通过 `warnHook.onWarn` 报告 warning。
  */
 export const emitPathPrimitive = (
   path: IRPathBase,
-  namespaceStack: NamespaceStack,
-  round: (n: number) => number,
-  measureText: TextMeasurer = fallbackMeasurer,
-  warnHook: EmitPathWarnHook = {},
+  context: EmitPathPrimitiveContext,
 ): { primitives: Array<ScenePrimitive>; boundsPoints: Array<IRPosition> } | null => {
+  const {
+    namespaceStack,
+    round,
+    measureText = fallbackMeasurer,
+    options: warnHook = {},
+  } = context;
   const irPath = warnHook.irPath ?? 'path';
   const warn = (code: string, message: string, subPath = ''): void => {
     warnHook.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
@@ -142,10 +157,15 @@ export const emitPathPrimitive = (
     }
     const t = tForLabelPosition(step.label.position);
     const sample = sampleAt(t);
-    const r = emitLabelPrimitive(step.label, sample, measureText, round, path.opacity, {
-      lowerTex: warnHook.lowerTex,
-      gatingOn: warnHook.lowerTex !== undefined,
-      warn: (code, message) => warn(code, message, 'label'),
+    const r = emitLabelPrimitive(step.label, sample, {
+      measureText,
+      round,
+      hostOpacity: path.opacity,
+      tex: {
+        lowerTex: warnHook.lowerTex,
+        gatingOn: warnHook.lowerTex !== undefined,
+        warn: (code, message) => warn(code, message, 'label'),
+      },
     });
     labelPrims.push(r.primitive);
     for (const p of r.boundsPoints) boundsPoints.push(p);
@@ -275,11 +295,21 @@ export const emitPathPrimitive = (
     boundsPoints.push(p);
     lastEnd = p;
   };
-  const emitCubic = (c1: IRPosition, c2: IRPosition, p: IRPosition, sourceAutoBoundary = false) => {
+  const emitCubic = ({
+    control1,
+    control2,
+    to,
+    sourceAutoBoundary = false,
+  }: {
+    control1: IRPosition;
+    control2: IRPosition;
+    to: IRPosition;
+    sourceAutoBoundary?: boolean;
+  }) => {
     noteEndpointSource(sourceAutoBoundary);
-    const rc1 = roundPoint(c1);
-    const rc2 = roundPoint(c2);
-    const rp = roundPoint(p);
+    const rc1 = roundPoint(control1);
+    const rc2 = roundPoint(control2);
+    const rp = roundPoint(to);
     commands.push({
       kind: 'cubic',
       control1: [rc1[0], rc1[1]],
@@ -288,12 +318,22 @@ export const emitPathPrimitive = (
     });
     provenance.push(currentStepKind);
     // 控制点纳入 bbox（保守，实际 bezier 包络小于凸包）
-    boundsPoints.push(c1);
-    boundsPoints.push(c2);
-    boundsPoints.push(p);
-    lastEnd = p;
+    boundsPoints.push(control1);
+    boundsPoints.push(control2);
+    boundsPoints.push(to);
+    lastEnd = to;
   };
-  const emitArc = (center: IRPosition, radius: number, startAngle: number, endAngle: number) => {
+  const emitArc = ({
+    center,
+    radius,
+    startAngle,
+    endAngle,
+  }: {
+    center: IRPosition;
+    radius: number;
+    startAngle: number;
+    endAngle: number;
+  }) => {
     noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({
@@ -308,13 +348,19 @@ export const emitPathPrimitive = (
     boundsPoints.push(arcEndPoint(center, radius, endAngle));
     lastEnd = arcEndPoint(center, radius, endAngle);
   };
-  const emitEllipseArc = (
-    center: IRPosition,
-    radiusX: number,
-    radiusY: number,
-    startAngle: number,
-    endAngle: number,
-  ) => {
+  const emitEllipseArc = ({
+    center,
+    radiusX,
+    radiusY,
+    startAngle,
+    endAngle,
+  }: {
+    center: IRPosition;
+    radiusX: number;
+    radiusY: number;
+    startAngle: number;
+    endAngle: number;
+  }) => {
     noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({
@@ -406,13 +452,19 @@ export const emitPathPrimitive = (
             emitQuad(cmd.control, cmd.to);
             break;
           case 'cubic':
-            emitCubic(cmd.control1, cmd.control2, cmd.to);
+            emitCubic({ control1: cmd.control1, control2: cmd.control2, to: cmd.to });
             break;
           case 'arc':
-            emitArc(cmd.center, cmd.radius, cmd.startAngle, cmd.endAngle);
+            emitArc({ center: cmd.center, radius: cmd.radius, startAngle: cmd.startAngle, endAngle: cmd.endAngle });
             break;
           case 'ellipseArc':
-            emitEllipseArc(cmd.center, cmd.radiusX, cmd.radiusY, cmd.startAngle, cmd.endAngle);
+            emitEllipseArc({
+              center: cmd.center,
+              radiusX: cmd.radiusX,
+              radiusY: cmd.radiusY,
+              startAngle: cmd.startAngle,
+              endAngle: cmd.endAngle,
+            });
             break;
           case 'close':
             emitClose();
@@ -438,8 +490,9 @@ export const emitPathPrimitive = (
       const moveAnchor = refPointOfTarget(moveTo, namespaceStack, scopeChain);
       if (!moveAnchor) return null;
 
-      const fromClip = usedOverride ?? (prev ? clipForTarget(prev.step.to, moveAnchor, namespaceStack, scopeChain) : null);
-      const toClip = clipForTarget(moveTo, fromClip ?? prev?.anchor ?? moveAnchor, namespaceStack, scopeChain);
+      const fromClip =
+        usedOverride ?? (prev ? clipForTarget(prev.step.to, moveAnchor, { namespaceStack, scopeChain }) : null);
+      const toClip = clipForTarget(moveTo, fromClip ?? prev?.anchor ?? moveAnchor, { namespaceStack, scopeChain });
       if (!fromClip || !toClip) return null;
 
       // 闭合段是 fromClip→toClip 的直线（无论走 close 还是 move+line）；登记采样器供中段 marks（cycle 无 label）
@@ -489,7 +542,7 @@ export const emitPathPrimitive = (
         } else if (op.kind === 'line') {
           emitLine(op.to);
         } else if (op.kind === 'arc') {
-          emitArc(op.center, op.radius, op.startAngle, op.endAngle);
+          emitArc({ center: op.center, radius: op.radius, startAngle: op.startAngle, endAngle: op.endAngle });
         } else {
           emitClose();
         }
@@ -544,7 +597,7 @@ export const emitPathPrimitive = (
         const rx = step.radius.x;
         const ry = step.radius.y;
         startSegment(ellipseArcPoint(center, rx, ry, step.startAngle));
-        emitEllipseArc(center, rx, ry, step.startAngle, step.endAngle);
+        emitEllipseArc({ center, radiusX: rx, radiusY: ry, startAngle: step.startAngle, endAngle: step.endAngle });
         for (const p of ellipseArcBoundingPoints(center, rx, ry, step.startAngle, step.endAngle)) {
           boundsPoints.push(p);
         }
@@ -557,7 +610,7 @@ export const emitPathPrimitive = (
         // 正圆弧（输出与改造前一致，emitArc 不变）
         const r = step.radius;
         startSegment(arcEndPoint(center, r, step.startAngle));
-        emitArc(center, r, step.startAngle, step.endAngle);
+        emitArc({ center, radius: r, startAngle: step.startAngle, endAngle: step.endAngle });
         for (const p of arcBoundingPoints(center, r, step.startAngle, step.endAngle)) {
           boundsPoints.push(p);
         }
@@ -585,7 +638,7 @@ export const emitPathPrimitive = (
         const startA = step.startAngle;
         const endA = step.endAngle;
         startSegment(ellipseArcPoint(center, r, r, startA));
-        emitEllipseArc(center, r, r, startA, endA);
+        emitEllipseArc({ center, radiusX: r, radiusY: r, startAngle: startA, endAngle: endA });
         for (const p of ellipseArcBoundingPoints(center, r, r, startA, endA)) boundsPoints.push(p);
         collectLabel(step, t => ellipseArcSegmentSample(center, r, r, startA, endA, t));
         const closing = resolvePartialClosed(step.closed, i);
@@ -611,7 +664,7 @@ export const emitPathPrimitive = (
         );
       }
       startSegment([center[0] + r, center[1]]);
-      emitEllipseArc(center, r, r, 0, 360);
+      emitEllipseArc({ center, radiusX: r, radiusY: r, startAngle: 0, endAngle: 360 });
       boundsPoints.push([center[0] + r, center[1]]);
       boundsPoints.push([center[0] - r, center[1]]);
       boundsPoints.push([center[0], center[1] + r]);
@@ -631,7 +684,7 @@ export const emitPathPrimitive = (
         const startA = step.startAngle;
         const endA = step.endAngle;
         startSegment(ellipseArcPoint(center, rx, ry, startA));
-        emitEllipseArc(center, rx, ry, startA, endA);
+        emitEllipseArc({ center, radiusX: rx, radiusY: ry, startAngle: startA, endAngle: endA });
         for (const p of ellipseArcBoundingPoints(center, rx, ry, startA, endA)) boundsPoints.push(p);
         collectLabel(step, t => ellipseArcSegmentSample(center, rx, ry, startA, endA, t));
         const closing = resolvePartialClosed(step.closed, i);
@@ -657,7 +710,7 @@ export const emitPathPrimitive = (
         );
       }
       startSegment([center[0] + rx, center[1]]);
-      emitEllipseArc(center, rx, ry, 0, 360);
+      emitEllipseArc({ center, radiusX: rx, radiusY: ry, startAngle: 0, endAngle: 360 });
       boundsPoints.push([center[0] + rx, center[1]]);
       boundsPoints.push([center[0] - rx, center[1]]);
       boundsPoints.push([center[0], center[1] + ry]);
@@ -694,7 +747,7 @@ export const emitPathPrimitive = (
       if (resolveFailed) return null;
 
       // 首 knot = 当前游标：penOverride 优先，否则 prev.step.to 朝首个 through-point boundary clip
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, resolved[0], namespaceStack, scopeChain);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, resolved[0], { namespaceStack, scopeChain });
       if (!fromClip) return null;
 
       // knots = [游标, ...through-points]；centripetal Catmull-Rom 转 cubic 段链
@@ -702,7 +755,7 @@ export const emitPathPrimitive = (
       const segs = curve.catmullRomToCubic(knots, step.tension ?? 1);
 
       startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
-      for (const seg of segs) emitCubic(seg.control1, seg.control2, seg.to);
+      for (const seg of segs) emitCubic({ control1: seg.control1, control2: seg.control2, to: seg.to });
 
       // label 沿生成 cubic 链按贝塞尔参数定位：把 t∈[0,1] 分摊到 N 段，落第 ⌊t·N⌋ 段、段内 = 余数（与中段 marks 同款便宜模型）
       collectLabel(step, t => {
@@ -729,10 +782,10 @@ export const emitPathPrimitive = (
     penOverride = null;
 
     if (step.kind === 'line') {
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, namespaceStack, scopeChain);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, { namespaceStack, scopeChain });
       // toClip 的 toward = 本段实际起点：自包含前驱（arc/smooth/rectangle…）留下 penOverride 时取游标，
       // 否则取 prev.anchor（node→node 的中心向语义，等价、不变）。修：smooth/arc 后接 line→node 朝错方向裁剪。
-      const toClip = clipForTarget(step.to, usedOverride ?? prev.anchor, namespaceStack, scopeChain);
+      const toClip = clipForTarget(step.to, usedOverride ?? prev.anchor, { namespaceStack, scopeChain });
       if (!fromClip || !toClip) return null;
       startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
       emitLine(toClip, isAutoBoundaryTarget(step.to));
@@ -741,8 +794,8 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'curve') {
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control, namespaceStack, scopeChain);
-      const toClip = clipForTarget(step.to, step.control, namespaceStack, scopeChain);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control, { namespaceStack, scopeChain });
+      const toClip = clipForTarget(step.to, step.control, { namespaceStack, scopeChain });
       if (!fromClip || !toClip) return null;
       startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
       emitQuad(step.control, toClip, isAutoBoundaryTarget(step.to));
@@ -750,11 +803,16 @@ export const emitPathPrimitive = (
       continue;
     }
     if (step.kind === 'cubic') {
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control1, namespaceStack, scopeChain);
-      const toClip = clipForTarget(step.to, step.control2, namespaceStack, scopeChain);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control1, { namespaceStack, scopeChain });
+      const toClip = clipForTarget(step.to, step.control2, { namespaceStack, scopeChain });
       if (!fromClip || !toClip) return null;
       startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
-      emitCubic(step.control1, step.control2, toClip, isAutoBoundaryTarget(step.to));
+      emitCubic({
+        control1: step.control1,
+        control2: step.control2,
+        to: toClip,
+        sourceAutoBoundary: isAutoBoundaryTarget(step.to),
+      });
       collectLabel(step, t => cubicSegmentSample(fromClip, step.control1, step.control2, toClip, t));
       continue;
     }
@@ -770,19 +828,19 @@ export const emitPathPrimitive = (
       if (!isFinitePoint(c1) || !isFinitePoint(c2)) {
         throw new Error('Bend produced a non-finite control point (looseness / angle too large); use smaller values.');
       }
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, namespaceStack, scopeChain);
-      const toClip = clipForTarget(step.to, c2, namespaceStack, scopeChain);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, { namespaceStack, scopeChain });
+      const toClip = clipForTarget(step.to, c2, { namespaceStack, scopeChain });
       if (!fromClip || !toClip) return null;
       startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
-      emitCubic(c1, c2, toClip, isAutoBoundaryTarget(step.to));
+      emitCubic({ control1: c1, control2: c2, to: toClip, sourceAutoBoundary: isAutoBoundaryTarget(step.to) });
       collectLabel(step, t => cubicSegmentSample(fromClip, c1, c2, toClip, t));
       continue;
     }
 
     // fold：经一个直角中间点拆成两段 line。起点参考同 line/bend：penOverride 优先（自包含前驱后），否则 prev.anchor
     const corner = cornerOf(usedOverride ?? prev.anchor, currAnchor, step.via);
-    const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, namespaceStack, scopeChain);
-    const toClip = clipForTarget(step.to, corner, namespaceStack, scopeChain);
+    const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, { namespaceStack, scopeChain });
+    const toClip = clipForTarget(step.to, corner, { namespaceStack, scopeChain });
     if (!fromClip || !toClip) return null;
     startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
     emitLine(corner);
@@ -796,7 +854,7 @@ export const emitPathPrimitive = (
   let roundedCommands = false;
   if (path.roundedCorners !== undefined && path.roundedCorners > 0) {
     const before = commands.length;
-    const next = applyRoundedCorners(commands, provenance, path.roundedCorners, round);
+    const next = applyRoundedCorners({ commands, provenance, radius: path.roundedCorners, round });
     // 原地替换 commands 内容（下游 applyArrowShrinks / split 直接消费此数组）
     if (next.length !== before || next.some((c, k) => c !== commands[k])) {
       commands.length = 0;
@@ -876,7 +934,13 @@ export const emitPathPrimitive = (
             return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
       })();
       const spec = resolveMarkArrowSpec(mark, resolvedArrows, round);
-      markPrims.push(buildMarkMarkerGroup(spec, sample, strokeWidth, round, markerContextStroke(baseProps.stroke)));
+      markPrims.push(
+        buildMarkMarkerGroup(spec, sample, {
+          strokeWidth,
+          round,
+          contextStroke: markerContextStroke(baseProps.stroke),
+        }),
+      );
       // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
       boundsPoints.push(sample.point);
     }
@@ -886,7 +950,7 @@ export const emitPathPrimitive = (
   // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过
   const shrinkStart = arrows.shrinkStart + (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
   const shrinkEnd = arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
-  applyArrowShrinks(commands, shrinkStart, shrinkEnd, strokeWidth, round);
+  applyArrowShrinks(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
 
   // 只在端点有箭头时塞 key——避免给无箭头 path 注入 `arrowStart: undefined` / `arrowEnd: undefined`（保 Scene 输出纯净）
   const endpointSpecs: { arrowStart?: typeof arrows.arrowStart; arrowEnd?: typeof arrows.arrowEnd } = {};
@@ -900,7 +964,7 @@ export const emitPathPrimitive = (
   // 这里才以 bbox center 为支点包 group（几何留原坐标、变换由外层 group 承担）；layout 外接框据变换后 bbox 计。
   if ((path.rotate !== undefined || path.scale !== undefined) && boundsPoints.length > 0) {
     const center = bboxCenter(boundsPoints);
-    const transforms = buildPathTransforms(path.rotate, path.scale, center, round);
+    const transforms = buildPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });
     if (transforms.length > 0) {
       const group: GroupPrim = { type: 'group', transforms, children: bodyPrims };
       // 水合挂点：rotate / scale 包裹时 user id 落到最外层 GroupPrim（唯一 top-level emit 图元），

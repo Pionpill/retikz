@@ -77,7 +77,7 @@ export const refPointOfTarget = (
   ) {
     return null;
   }
-  const local = resolvePosition(target, namespaceStack, undefined, scopeChain);
+  const local = resolvePosition(target, { namespaceStack, scopeChain });
   if (!local) return null;
   return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };
@@ -87,12 +87,23 @@ export const cornerOf = (prev: IRPosition, curr: IRPosition, via: FoldStepViaVal
   via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
 
 /** 在 toward 方向求 step.to 的实际绘制端点。 */
+/** target 裁剪解析所需上下文。 */
+export type ClipForTargetContext = {
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 当前 scope 累积 transform。 */
+  scopeChain?: ReadonlyArray<Transform>;
+};
+
 export const clipForTarget = (
   target: IRTarget,
   toward: IRPosition,
-  namespaceStack: NamespaceStack,
-  scopeChain: ReadonlyArray<Transform> = [],
+  context: ClipForTargetContext,
 ): IRPosition | null => {
+  const {
+    namespaceStack,
+    scopeChain = [],
+  } = context;
   // 对象形态 NodeTarget：{ id, anchor?, offset? }（clip 用——anchor 缺省按连接面边界贴 toward）
   if (isNodeTarget(target)) {
     const node = namespaceStack.lookup(target.id);
@@ -116,7 +127,7 @@ export const clipForTarget = (
   ) {
     return null;
   }
-  const local = resolvePosition(target, namespaceStack, undefined, scopeChain);
+  const local = resolvePosition(target, { namespaceStack, scopeChain });
   if (!local) return null;
   return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };

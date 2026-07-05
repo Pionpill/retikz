@@ -16,12 +16,7 @@ describe('NodeLayout boundary / shapes', () => {
     const shapes = resolveShapeRegistry();
     const layout = layoutNode(
       { type: 'node', id: 'a', shape: 'rectangle', position: [0, 0] },
-      measureText,
-      namespaceStack,
-      undefined,
-      [],
-      undefined,
-      shapes,
+      { measureText, namespaceStack, shapes },
     );
     expect(layout.boundary).toBeUndefined();
     expect(layout.shapes).toBe(shapes);
@@ -32,12 +27,7 @@ describe('NodeLayout boundary / shapes', () => {
     const shapes = resolveShapeRegistry();
     const layout = layoutNode(
       { type: 'node', id: 'a', shape: 'rectangle', boundary: 'circle', position: [0, 0] },
-      measureText,
-      namespaceStack,
-      undefined,
-      [],
-      undefined,
-      shapes,
+      { measureText, namespaceStack, shapes },
     );
     expect(layout.boundary).toBe('circle');
     expect(layout.shapes).toBe(shapes);
@@ -45,7 +35,7 @@ describe('NodeLayout boundary / shapes', () => {
 
   it('不传 shapes 时 layout.shapes 回退到 BUILTIN_SHAPES', () => {
     const namespaceStack = new NamespaceStack();
-    const layout = layoutNode({ type: 'node', id: 'a', position: [0, 0] }, measureText, namespaceStack);
+    const layout = layoutNode({ type: 'node', id: 'a', position: [0, 0] }, { measureText, namespaceStack });
     const shapeNames = Array.from(layout.shapes.values()).map(definition => definition.name);
     expect(shapeNames.sort()).toEqual(BUILTIN_SHAPES.map(def => def.name).sort());
   });
@@ -55,12 +45,7 @@ describe('NodeLayout boundary / shapes', () => {
     const customShapes = resolveShapeRegistry();
     const layout = layoutNode(
       { type: 'node', id: 'a', position: [0, 0] },
-      measureText,
-      namespaceStack,
-      undefined,
-      [],
-      undefined,
-      customShapes,
+      { measureText, namespaceStack, shapes: customShapes },
     );
     expect(layout.shapes).toBe(customShapes);
   });

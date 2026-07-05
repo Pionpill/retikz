@@ -15,17 +15,32 @@ export type ResolveBetweenGlobal = (
   scopeChain: ReadonlyArray<Transform>,
 ) => IRPosition | null;
 
+/** position 解析所需的编译上下文。 */
+export type ResolvePositionContext = {
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 相对定位默认距离。 */
+  nodeDistance?: number;
+  /** 当前 scope 累积 transform。 */
+  scopeChain?: ReadonlyArray<Transform>;
+  /** between 端点的全局坐标解析器。 */
+  resolveBetweenGlobal?: ResolveBetweenGlobal;
+};
+
 /**
  * 把 IR 位置解析为笛卡尔坐标。
  * @description `scopeChain` 非空时返回当前 scope 局部坐标；解析失败返回 null。
  */
 export const resolvePosition = (
   pos: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | IRBetweenPosition | string,
-  namespaceStack: NamespaceStack,
-  nodeDistance: number = DEFAULT_NODE_DISTANCE,
-  scopeChain: ReadonlyArray<Transform> = [],
-  resolveBetweenGlobal?: ResolveBetweenGlobal,
+  context: ResolvePositionContext,
 ): IRPosition | null => {
+  const {
+    namespaceStack,
+    nodeDistance = DEFAULT_NODE_DISTANCE,
+    scopeChain = [],
+    resolveBetweenGlobal,
+  } = context;
   if (typeof pos === 'string') {
     const node = namespaceStack.lookup(pos);
     if (!node) return null;
@@ -47,7 +62,7 @@ export const resolvePosition = (
   if ('offset' in pos) {
     // OffsetPosition：递归 resolve `of`（string id / Position / PolarPosition）后已是局部坐标，
     // 再叠加 (dx, dy)（局部度量）
-    const base = resolvePosition(pos.of, namespaceStack, nodeDistance, scopeChain);
+    const base = resolvePosition(pos.of, context);
     if (!base) return null;
     return [base[0] + pos.offset[0], base[1] + pos.offset[1]];
   }
@@ -64,7 +79,7 @@ export const resolvePosition = (
   if (!pos.origin) {
     origin = [0, 0];
   } else {
-    const resolved = resolvePosition(pos.origin, namespaceStack, nodeDistance, scopeChain);
+    const resolved = resolvePosition(pos.origin, context);
     if (!resolved) return null;
     origin = resolved;
   }

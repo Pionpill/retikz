@@ -17,7 +17,24 @@ export type ClipRegistry = {
 
 const clipKindOf = (clip: IRClipSpec): string => clip.kind;
 
-const bad = (kind: string, field: string, value: number, positive = false): never => {
+type ClipFieldInput = {
+  kind: string;
+  field: string;
+  value: number;
+};
+
+type ClipRoundFieldInput = ClipFieldInput & {
+  round: (n: number) => number;
+};
+
+type ClipPointInput = {
+  kind: string;
+  field: string;
+  value: [number, number];
+  round: (n: number) => number;
+};
+
+const bad = ({ kind, field, value, positive = false }: ClipFieldInput & { positive?: boolean }): never => {
   throw new Error(
     `Clip '${kind}' has an invalid ${field} (${String(value)}); it must be a finite number${
       positive ? ' greater than 0' : ''
@@ -25,58 +42,60 @@ const bad = (kind: string, field: string, value: number, positive = false): neve
   );
 };
 
-const finite = (kind: string, field: string, value: number, round: (n: number) => number): number => {
-  if (!Number.isFinite(value)) bad(kind, field, value);
+const finite = ({ kind, field, value, round }: ClipRoundFieldInput): number => {
+  if (!Number.isFinite(value)) bad({ kind, field, value });
   return round(value);
 };
 
-const positive = (kind: string, field: string, value: number, round: (n: number) => number): number => {
-  if (!Number.isFinite(value) || value <= 0) bad(kind, field, value, true);
+const positive = ({ kind, field, value, round }: ClipRoundFieldInput): number => {
+  if (!Number.isFinite(value) || value <= 0) bad({ kind, field, value, positive: true });
   return round(value);
 };
 
-const point = (kind: string, field: string, value: [number, number], round: (n: number) => number): [number, number] => [
-  finite(kind, `${field}[0]`, value[0], round),
-  finite(kind, `${field}[1]`, value[1], round),
+const point = ({ kind, field, value, round }: ClipPointInput): [number, number] => [
+  finite({ kind, field: `${field}[0]`, value: value[0], round }),
+  finite({ kind, field: `${field}[1]`, value: value[1], round }),
 ];
 
 const roundCommand = (command: PathCommand, round: (n: number) => number): PathCommand => {
   switch (command.kind) {
     case 'move':
-      return { kind: 'move', to: point('path', 'to', command.to, round) };
+      return { kind: 'move', to: point({ kind: 'path', field: 'to', value: command.to, round }) };
     case 'line':
-      return { kind: 'line', to: point('path', 'to', command.to, round) };
+      return { kind: 'line', to: point({ kind: 'path', field: 'to', value: command.to, round }) };
     case 'quad':
       return {
         kind: 'quad',
-        control: point('path', 'control', command.control, round),
-        to: point('path', 'to', command.to, round),
+        control: point({ kind: 'path', field: 'control', value: command.control, round }),
+        to: point({ kind: 'path', field: 'to', value: command.to, round }),
       };
     case 'cubic':
       return {
         kind: 'cubic',
-        control1: point('path', 'control1', command.control1, round),
-        control2: point('path', 'control2', command.control2, round),
-        to: point('path', 'to', command.to, round),
+        control1: point({ kind: 'path', field: 'control1', value: command.control1, round }),
+        control2: point({ kind: 'path', field: 'control2', value: command.control2, round }),
+        to: point({ kind: 'path', field: 'to', value: command.to, round }),
       };
     case 'arc':
       return {
         kind: 'arc',
-        center: point('path', 'center', command.center, round),
-        radius: positive('path', 'radius', command.radius, round),
-        startAngle: finite('path', 'startAngle', command.startAngle, round),
-        endAngle: finite('path', 'endAngle', command.endAngle, round),
+        center: point({ kind: 'path', field: 'center', value: command.center, round }),
+        radius: positive({ kind: 'path', field: 'radius', value: command.radius, round }),
+        startAngle: finite({ kind: 'path', field: 'startAngle', value: command.startAngle, round }),
+        endAngle: finite({ kind: 'path', field: 'endAngle', value: command.endAngle, round }),
         ...(command.counterClockwise !== undefined ? { counterClockwise: command.counterClockwise } : {}),
       };
     case 'ellipseArc':
       return {
         kind: 'ellipseArc',
-        center: point('path', 'center', command.center, round),
-        radiusX: positive('path', 'radiusX', command.radiusX, round),
-        radiusY: positive('path', 'radiusY', command.radiusY, round),
-        ...(command.rotation !== undefined ? { rotation: finite('path', 'rotation', command.rotation, round) } : {}),
-        startAngle: finite('path', 'startAngle', command.startAngle, round),
-        endAngle: finite('path', 'endAngle', command.endAngle, round),
+        center: point({ kind: 'path', field: 'center', value: command.center, round }),
+        radiusX: positive({ kind: 'path', field: 'radiusX', value: command.radiusX, round }),
+        radiusY: positive({ kind: 'path', field: 'radiusY', value: command.radiusY, round }),
+        ...(command.rotation !== undefined
+          ? { rotation: finite({ kind: 'path', field: 'rotation', value: command.rotation, round }) }
+          : {}),
+        startAngle: finite({ kind: 'path', field: 'startAngle', value: command.startAngle, round }),
+        endAngle: finite({ kind: 'path', field: 'endAngle', value: command.endAngle, round }),
         ...(command.counterClockwise !== undefined ? { counterClockwise: command.counterClockwise } : {}),
       };
     case 'close':
@@ -89,25 +108,25 @@ const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): Cli
     case 'rect':
       return {
         kind: 'rect',
-        x: finite(shape.kind, 'x', shape.x, round),
-        y: finite(shape.kind, 'y', shape.y, round),
-        width: positive(shape.kind, 'width', shape.width, round),
-        height: positive(shape.kind, 'height', shape.height, round),
+        x: finite({ kind: shape.kind, field: 'x', value: shape.x, round }),
+        y: finite({ kind: shape.kind, field: 'y', value: shape.y, round }),
+        width: positive({ kind: shape.kind, field: 'width', value: shape.width, round }),
+        height: positive({ kind: shape.kind, field: 'height', value: shape.height, round }),
       };
     case 'circle':
       return {
         kind: 'circle',
-        cx: finite(shape.kind, 'cx', shape.cx, round),
-        cy: finite(shape.kind, 'cy', shape.cy, round),
-        r: positive(shape.kind, 'r', shape.r, round),
+        cx: finite({ kind: shape.kind, field: 'cx', value: shape.cx, round }),
+        cy: finite({ kind: shape.kind, field: 'cy', value: shape.cy, round }),
+        r: positive({ kind: shape.kind, field: 'r', value: shape.r, round }),
       };
     case 'ellipse':
       return {
         kind: 'ellipse',
-        cx: finite(shape.kind, 'cx', shape.cx, round),
-        cy: finite(shape.kind, 'cy', shape.cy, round),
-        rx: positive(shape.kind, 'rx', shape.rx, round),
-        ry: positive(shape.kind, 'ry', shape.ry, round),
+        cx: finite({ kind: shape.kind, field: 'cx', value: shape.cx, round }),
+        cy: finite({ kind: shape.kind, field: 'cy', value: shape.cy, round }),
+        rx: positive({ kind: shape.kind, field: 'rx', value: shape.rx, round }),
+        ry: positive({ kind: shape.kind, field: 'ry', value: shape.ry, round }),
       };
     case 'polygon':
       if (shape.points.length < 3) {
@@ -116,8 +135,8 @@ const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): Cli
       return {
         kind: 'polygon',
         points: shape.points.map(([x, y], index) => [
-          finite(shape.kind, `points[${index}][0]`, x, round),
-          finite(shape.kind, `points[${index}][1]`, y, round),
+          finite({ kind: shape.kind, field: `points[${index}][0]`, value: x, round }),
+          finite({ kind: shape.kind, field: `points[${index}][1]`, value: y, round }),
         ]),
       };
     case 'path': {
