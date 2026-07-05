@@ -17,10 +17,7 @@ type Round = (n: number) => number;
 /** 混排行布局上下文：注入的度量 / 降解 + 块级字体 / 色 + warn 发射器 */
 export type LineLayoutContext = {
   measureText: TextMeasurer;
-  /**
-   * TeX 降解能力。
-   * @default undefined
-   */
+  /** TeX 降解能力。 */
   lowerTex?: LowerTex;
   /** 块级字体。 */
   font: FontSpec;
@@ -104,6 +101,7 @@ type TextPiece = {
   width: number;
   measuredHeight: number;
 };
+
 type MathPiece = {
   kind: 'math';
   x: number;

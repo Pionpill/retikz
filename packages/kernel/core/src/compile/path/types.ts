@@ -8,7 +8,7 @@ import type { ResolvedArrowRegistry } from './shrink';
 export type EmitPathWarnHook = {
   /**
    * 警告收集器（由 compileToScene 传入）
-   * @default undefined；不发出警告
+   * 缺省时不发出警告。
    */
   onWarn?: (warning: CompileWarning) => void;
   /**

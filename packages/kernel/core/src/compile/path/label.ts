@@ -16,10 +16,7 @@ type LabelSide = GeometryLabelSideValue | 'center';
 
 /** 边标注公式上下文。 */
 export type LabelTexContext = {
-  /**
-   * 注入的 TeX 降解能力。
-   * @default undefined
-   */
+  /** 注入的 TeX 降解能力。 */
   lowerTex?: LowerTex;
   /** `$...$` 解析门控。 */
   gatingOn: boolean;

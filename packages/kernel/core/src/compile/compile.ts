@@ -30,7 +30,6 @@ export type CompileHostOptions = {
   /**
    * 运行时注入的公式渲染能力。
    * @description 带 tex 内容但未注入或解析失败时会 warning 并降级。
-   * @default undefined
    */
   lowerTex?: LowerTex;
   /**

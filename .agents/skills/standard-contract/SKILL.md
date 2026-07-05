@@ -44,7 +44,7 @@ description: Use when changing retikz contract layer code, XxxDefinition types, 
 - 细节 JSDoc 可说明实现细节，但仍从功能目的出发简短描述；不要复述代码逐行做了什么。
 - `@description` 写主语义、生命周期、跨字段规则、回调协议或 registry 消费契约。
 - `@remarks` 只写设计理由、typed identity / future hook 这类非主路径补充。
-- 字段含义写到字段 JSDoc；可省略字段有默认行为时写 `@default`，tag 值直接写标识符或字面量，不加 Markdown 反引号。
+- 字段含义写到字段 JSDoc；可省略字段有非 undefined 默认行为时写 `@default`，tag 值直接写标识符或字面量，不加 Markdown 反引号。
 
 ## 改代码前检查
 

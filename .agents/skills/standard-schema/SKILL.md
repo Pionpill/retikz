@@ -88,7 +88,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - schema 常量一般不写 JSDoc；`types.ts`、`constants.ts` 的导出类型、非 schema 常量和重要 helper 默认写中文 JSDoc，纯推断 / 重命名别名（如 `ValueOf`、`z.infer`）可省略。
 - 整体 JSDoc 写功能视角：让读者先知道函数、类、类型负责什么，不从实现过程、内部步骤或历史背景开头。
 - 细节 JSDoc 可说明实现细节，但仍从功能目的出发简短描述；不要复述代码逐行做了什么。
-- `@description` 写主语义和契约边界；`@remarks` 只写设计理由或非主路径补充；字段默认值写 `@default`，tag 值不加 Markdown 反引号。
+- `@description` 写主语义和契约边界；`@remarks` 只写设计理由或非主路径补充；字段默认值写 `@default`，tag 值不加 Markdown 反引号；默认缺省为 undefined 时不要写。
 - 不在 JSDoc / describe / 测试标题里引用 ADR、alpha/beta 历史阶段或临时过程描述。
 
 ## Refinement 与 vocabulary
