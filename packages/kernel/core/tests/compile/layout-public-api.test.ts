@@ -1,12 +1,14 @@
+import type { BoundsRect } from '@retikz/math';
+
 import { describe, expect, it } from 'vitest';
 
-import type { AssertEqual, Layout, Scene } from '../../src';
+import type { AssertEqual, Scene } from '../../src';
 
 import { computeLayout } from '../../src';
 import { createRound } from '../../src/compile/scene';
 
-describe('Layout public API', () => {
-  it('exports Layout and computeLayout from package entry', () => {
+describe('layout public API', () => {
+  it('exports computeLayout and uses BoundsRect for Scene.layout', () => {
     const layout = computeLayout(
       [
         [0, 0],
@@ -15,7 +17,7 @@ describe('Layout public API', () => {
       5,
       createRound(2),
     );
-    const _assertLayout: AssertEqual<Scene['layout'], Layout> = true;
+    const _assertLayout: AssertEqual<Scene['layout'], BoundsRect> = true;
     void _assertLayout;
 
     expect(layout).toEqual({ x: -5, y: -5, width: 20, height: 30 });

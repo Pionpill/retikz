@@ -1,4 +1,5 @@
-import type { IRDropShadow, Layout, ScenePrimitive } from '@retikz/core';
+import type { IRDropShadow, ScenePrimitive } from '@retikz/core';
+import type { BoundsRect } from '@retikz/math';
 
 import type { SvgNode } from '../types';
 
@@ -43,7 +44,7 @@ export const stableShadowKey = (s: IRDropShadow): string => {
 export const shadowHash = (s: IRDropShadow): string => hashKey(stableShadowKey(s));
 
 /** 以 shadow 的位移 + 模糊半径外扩 filter region，避免大档位投影被 viewBox 边缘裁掉 */
-const shadowRegion = (s: IRDropShadow, region: Layout): Layout => {
+const shadowRegion = (s: IRDropShadow, region: BoundsRect): BoundsRect => {
   const dx = s.offsetX ?? 0;
   const dy = s.offsetY ?? 0;
   const blur = s.blur ?? 0;
@@ -73,7 +74,7 @@ const svgShadowStdDeviation = (s: IRDropShadow): number => (s.blur ?? 0) / 2;
  *   小图元上 offset+blur 超过 10% 也会被切边（Tailwind 预设几乎都会）。一个 filter 跨不同尺寸元素共享去重，
  *   故区域不能依赖单个 bbox；统一覆盖并外扩 viewBox 即与 Canvas 口径更接近，且对直线 / 大模糊一致生效。
  */
-export const buildShadowDef = (s: IRDropShadow, id: string, region: Layout): SvgNode => {
+export const buildShadowDef = (s: IRDropShadow, id: string, region: BoundsRect): SvgNode => {
   const expanded = shadowRegion(s, region);
   return {
     tag: 'filter',

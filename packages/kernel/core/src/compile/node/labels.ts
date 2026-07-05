@@ -9,9 +9,6 @@ import { AnchorUnitVectorByAnchor } from '../../shared';
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../shared/geometry';
 import { anchorOf, angleBoundaryOf } from './anchors';
 
-/** Node label 与 node 边界距离。 */
-export const DEFAULT_LABEL_DISTANCE = 12;
-
 const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): position is IRNodeLabelBoundaryPosition =>
   typeof position === 'object';
 

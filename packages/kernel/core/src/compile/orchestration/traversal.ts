@@ -147,6 +147,7 @@ type TraversalContext = Pick<
   | 'onWarn'
   | 'round'
   | 'nodeDistance'
+  | 'labelDistance'
   | 'shapes'
   | 'boundaries'
   | 'arrows'
@@ -234,6 +235,7 @@ export const compileChildrenToPrimitives = (
       onWarn: context.onWarn,
       round: context.round,
       nodeDistance: context.nodeDistance,
+      labelDistance: context.labelDistance,
       shapes: context.shapes,
       boundaries: context.boundaries,
       arrows: context.arrows,
@@ -347,6 +349,7 @@ export const compileChildrenToPrimitives = (
         measureText: runtime.context.measureText,
         namespaceStack: runtime.state.namespaceStack,
         nodeDistance: runtime.context.nodeDistance,
+        labelDistance: runtime.context.labelDistance,
         scopeChain,
         labelDefault: resolveLabelDefault(styleStack),
         shapes: runtime.context.shapes,

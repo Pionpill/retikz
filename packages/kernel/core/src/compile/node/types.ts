@@ -9,6 +9,7 @@ import type {
   IRAnimationTrack,
   IRBoundary,
   IRJsonObject,
+  IRNode,
   IRNodeLabelBoundaryPosition,
   IRPaintSpec,
   NodeLabelPlacementValue,
@@ -16,7 +17,7 @@ import type {
   ResolvedDropShadow,
 } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { LaidLine, LowerTex } from '../text';
+import type { FontSpec, LaidLine, LowerTex, TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
 
 /** 节点盒模型四边距。 */
@@ -53,6 +54,24 @@ export type BoxSize = {
   width: number;
   /** 高度。 */
   height: number;
+};
+
+/** 节点正文与附属 label 共享的文本布局上下文。 */
+export type NodeTextLayoutContext = {
+  /** 待布局节点。 */
+  node: IRNode;
+  /** 文本度量函数。 */
+  measureText: TextMeasurer;
+  /** TeX 降级上下文。 */
+  texLowering?: TexLoweringContext;
+  /** 字体缩放。 */
+  fontScale: number;
+  /** 继承字体族。 */
+  fontFamily?: string;
+  /** 继承字重。 */
+  fontWeight?: string | number;
+  /** 继承字体样式。 */
+  fontStyle?: FontSpec['style'];
 };
 
 export type NodeLayout = {

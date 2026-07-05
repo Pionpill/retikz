@@ -13,11 +13,12 @@ import type { NodeLayout, TexLoweringContext } from './types';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { DEG_TO_RAD } from '../../shared/geometry';
+import { DEFAULT_LABEL_DISTANCE } from '../constants';
 import { resolvePosition } from '../position';
 import { resolveShadow } from '../style';
 import { resolveAxisScale, resolveBoxSize, resolveBoxSpacing } from './box';
-import { layoutNodeContent } from './content-layout';
-import { layoutNodeLabels } from './label-layout';
+import { layoutNodeContent } from './content';
+import { layoutNodeLabels } from './label';
 import { resolveNodeShape } from './shape-resolve';
 import { alignToTextAnchor, DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './text';
 
@@ -31,6 +32,8 @@ export type LayoutNodeContext = {
   namespaceStack: NamespaceStack;
   /** 相对定位默认距离。 */
   nodeDistance?: number;
+  /** 节点 label 默认距离。 */
+  labelDistance?: number;
   /** 当前 scope 累积 transform。 */
   scopeChain?: ReadonlyArray<Transform>;
   /** 当前样式栈解析出的 label 默认值。 */
@@ -50,6 +53,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     measureText,
     namespaceStack,
     nodeDistance,
+    labelDistance = DEFAULT_LABEL_DISTANCE,
     scopeChain = [],
     labelDefault,
     shapes = resolveShapeRegistry(),
@@ -132,6 +136,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     measureText,
     texLowering,
     labelDefault,
+    labelDistance,
     baseFontSize,
     fontScale,
     fontFamily,

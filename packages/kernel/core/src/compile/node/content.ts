@@ -1,37 +1,23 @@
 import type { TextLine } from '../../contract';
-import type { IRLineSpec, IRNode } from '../../schemas';
-import type { FontSpec, LaidLine, LineLayoutContext, TextMeasurer } from '../text';
-import type { TexLoweringContext } from './types';
+import type { IRLineSpec } from '../../schemas';
+import type { FontSpec, LaidLine, LineLayoutContext } from '../text';
+import type { NodeTextLayoutContext } from './types';
 
 import { CompileWarningCode } from '../constants';
 import { layoutInlineLine, resolveLineRuns } from '../text';
 import { wrapText } from './text';
 
-/** 节点内容布局输入。 */
-export type LayoutNodeContentInput = {
-  /** 待布局节点。 */
-  node: IRNode;
-  /** 文本度量函数。 */
-  measureText: TextMeasurer;
-  /** TeX 降级上下文。 */
-  texLowering?: TexLoweringContext;
+/** 节点正文布局输入。 */
+export type LayoutNodeContentInput = NodeTextLayoutContext & {
   /** 基准字体大小。 */
   fontSize: number;
-  /** 字体缩放。 */
-  fontScale: number;
-  /** 字体族。 */
-  fontFamily?: string;
-  /** 字重。 */
-  fontWeight?: string | number;
-  /** 字体样式。 */
-  fontStyle?: FontSpec['style'];
   /** 行高。 */
   lineHeight: number;
   /** 已按节点缩放处理的最大文本宽度。 */
   maxTextWidth?: number;
 };
 
-/** 节点内容布局结果。 */
+/** 节点正文布局结果。 */
 export type NodeContentLayout = {
   /** 普通文本行。 */
   lines?: Array<TextLine>;

@@ -6,7 +6,7 @@
 import type { IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../resource';
-import type { NodeLayout } from './types';
+import type { NodeLabelLayout, NodeLayout } from './types';
 
 import { toAlphabeticBaselineY } from '../text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './labels';
@@ -14,6 +14,8 @@ import { DEFAULT_LINE_HEIGHT_FACTOR } from './text';
 
 /** 空 shape params。 */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
+
+type Round = (n: number) => number;
 
 /** 从 NodeLayout 收敛 shape emit 所需的视觉样式。 */
 const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
@@ -30,47 +32,48 @@ const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): Resolved
   blendMode: layout.blendMode,
 });
 
-const cloneScenePrimitive = <T extends ScenePrimitive>(primitive: T): T => ({ ...primitive });
-
-/**
- * NodeLayout → Scene primitives
- * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive。
- */
-export const emitNodePrimitives = (
+/** 发出节点 shape 主体图元。 */
+const emitNodeShapePrimitives = (
   layout: NodeLayout,
-  round: (n: number) => number,
+  round: Round,
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
-  // shape 主体按轴对齐 rect emit。
   const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
-  const shapePrims: Array<ScenePrimitive> = [
+  return [
     ...layout.shapeDef.emit(
       axisAlignedRect,
       toShapeStyle(layout, resolvePaint),
       round,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     ),
-  ].map(cloneScenePrimitive);
-  const inner: Array<ScenePrimitive> = [...shapePrims];
+  ].map(primitive => ({ ...primitive }));
+};
+
+/** 发出节点正文图元。 */
+const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<ScenePrimitive> => {
   if (layout.inlineBlock) {
-    // 混排块逐行 emit。
     const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
     const halfBlockW = layout.textWidth / 2;
-    for (const { laid, baselineOffset } of layout.inlineBlock.lines) {
+    return layout.inlineBlock.lines.flatMap(({ laid, baselineOffset }) => {
       const originX =
         layout.align === 'start'
           ? layout.contentCenter[0] - halfBlockW
           : layout.align === 'end'
             ? layout.contentCenter[0] + halfBlockW - laid.width
             : layout.contentCenter[0] - laid.width / 2;
-      inner.push(...laid.emit(originX, blockTop + baselineOffset, round));
-    }
-  } else if (layout.lines) {
-    // 对齐换算：start 取块左侧，end 取块右侧，middle 取块中心。
-    const halfBlockW = layout.textWidth / 2;
-    const xOffset = layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
-    const lineHeight = round(layout.lineHeight);
-    inner.push({
+      return laid.emit(originX, blockTop + baselineOffset, round);
+    });
+  }
+
+  if (layout.lines === undefined) {
+    return [];
+  }
+
+  const halfBlockW = layout.textWidth / 2;
+  const xOffset = layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
+  const lineHeight = round(layout.lineHeight);
+  return [
+    {
       type: 'text',
       x: round(layout.contentCenter[0] + xOffset),
       y: round(
@@ -94,105 +97,131 @@ export const emitNodePrimitives = (
       opacity: layout.opacity,
       measuredWidth: round(layout.textWidth),
       measuredHeight: round(layout.textHeight),
-    });
+    },
+  ];
+};
+
+/** 发出 label pin 引线图元。 */
+const emitNodeLabelPinPrimitive = (
+  layout: NodeLayout,
+  label: NodeLabelLayout,
+  labelCenterPosition: [number, number],
+  round: Round,
+): ScenePrimitive | undefined => {
+  if (!label.pin) return undefined;
+  const style = typeof label.pin === 'object' ? label.pin : undefined;
+  const [lx, ly] = labelCenterPosition;
+  const [bx, by] = labelBorderPoint(layout, label);
+  const pad = 2;
+  const [nx, ny] = labelBoxEdgeToward({
+    center: [lx, ly],
+    border: [bx, by],
+    halfWidth: label.measuredWidth / 2 + pad,
+    halfHeight: label.fontSize / 2 + pad,
+  });
+  return {
+    type: 'path',
+    commands: [
+      { kind: 'move', to: [round(bx), round(by)] },
+      { kind: 'line', to: [round(nx), round(ny)] },
+    ],
+    stroke: style?.stroke ?? label.textColor ?? 'currentColor',
+    strokeWidth: style?.strokeWidth ?? 1,
+    dashPattern: style?.dashPattern,
+    dashOffset: style?.dashOffset,
+    opacity: label.opacity ?? layout.opacity,
+  };
+};
+
+/** 发出 label 正文图元。 */
+const emitNodeLabelContentPrimitive = (
+  layout: NodeLayout,
+  label: NodeLabelLayout,
+  labelCenterPosition: [number, number],
+  round: Round,
+): ScenePrimitive => {
+  const [lx, ly] = labelCenterPosition;
+  if (label.laid) {
+    const laid = label.laid;
+    const originX = lx - laid.width / 2;
+    const baselineY = ly + (laid.ascent - laid.descent) / 2;
+    return { type: 'group', children: laid.emit(originX, baselineY, round) };
   }
-  // 每个 label 一个附属 primitive。
-  if (layout.labels) {
-    const cx = layout.rect.x;
-    const cy = layout.rect.y;
-    for (const lab of layout.labels) {
-      const [lx, ly] = labelCenter(layout, lab);
-      // pin 引线放在 label 内容下层。
-      if (lab.pin) {
-        const style = typeof lab.pin === 'object' ? lab.pin : undefined;
-        const [bx, by] = labelBorderPoint(layout, lab);
-        const pad = 2;
-        const [nx, ny] = labelBoxEdgeToward({
-          center: [lx, ly],
-          border: [bx, by],
-          halfWidth: lab.measuredWidth / 2 + pad,
-          halfHeight: lab.fontSize / 2 + pad,
-        });
-        inner.push({
-          type: 'path',
-          commands: [
-            { kind: 'move', to: [round(bx), round(by)] },
-            { kind: 'line', to: [round(nx), round(ny)] },
-          ],
-          stroke: style?.stroke ?? lab.textColor ?? 'currentColor',
-          strokeWidth: style?.strokeWidth ?? 1,
-          dashPattern: style?.dashPattern,
-          dashOffset: style?.dashOffset,
-          opacity: lab.opacity ?? layout.opacity,
-        });
-      }
-      let labelContent: ScenePrimitive;
-      if (lab.laid) {
-        // 混排 label 按中心放置。
-        const laid = lab.laid;
-        const originX = lx - laid.width / 2;
-        const baselineY = ly + (laid.ascent - laid.descent) / 2;
-        labelContent = { type: 'group', children: laid.emit(originX, baselineY, round) };
-      } else {
-        const labLineHeight = round(lab.fontSize * DEFAULT_LINE_HEIGHT_FACTOR);
-        labelContent = {
-          type: 'text',
-          x: round(lx),
-          y: round(
-            toAlphabeticBaselineY({
-              y: ly,
-              baseline: 'middle',
-              lineCount: 1,
-              lineHeight: labLineHeight,
-              fontSize: lab.fontSize,
-            }),
-          ),
-          lines: [{ text: lab.text }],
-          fontSize: lab.fontSize,
-          fontFamily: lab.fontFamily,
-          fontWeight: lab.fontWeight,
-          fontStyle: lab.fontStyle,
-          align: 'middle',
-          baseline: 'alphabetic',
-          lineHeight: labLineHeight,
-          fill: lab.textColor ?? 'currentColor',
-          opacity: lab.opacity ?? layout.opacity,
-          measuredWidth: round(lab.measuredWidth),
-          measuredHeight: round(lab.fontSize),
-        };
-      }
-      const deg = resolveLabelRotateDeg({ label: lab, labelPosition: [lx, ly], nodeCenter: [cx, cy] });
-      if (deg === 0) {
-        inner.push(labelContent);
-      } else {
-        // 绕 label 自身中心自旋。
-        inner.push({
+
+  const labelLineHeight = round(label.fontSize * DEFAULT_LINE_HEIGHT_FACTOR);
+  return {
+    type: 'text',
+    x: round(lx),
+    y: round(
+      toAlphabeticBaselineY({
+        y: ly,
+        baseline: 'middle',
+        lineCount: 1,
+        lineHeight: labelLineHeight,
+        fontSize: label.fontSize,
+      }),
+    ),
+    lines: [{ text: label.text }],
+    fontSize: label.fontSize,
+    fontFamily: label.fontFamily,
+    fontWeight: label.fontWeight,
+    fontStyle: label.fontStyle,
+    align: 'middle',
+    baseline: 'alphabetic',
+    lineHeight: labelLineHeight,
+    fill: label.textColor ?? 'currentColor',
+    opacity: label.opacity ?? layout.opacity,
+    measuredWidth: round(label.measuredWidth),
+    measuredHeight: round(label.fontSize),
+  };
+};
+
+/** 发出节点附属 label 图元。 */
+const emitNodeLabelPrimitives = (
+  layout: NodeLayout,
+  label: NodeLabelLayout,
+  round: Round,
+): Array<ScenePrimitive> => {
+  const labelCenterPosition = labelCenter(layout, label);
+  const [lx, ly] = labelCenterPosition;
+  const primitives: Array<ScenePrimitive> = [];
+  const pinPrimitive = emitNodeLabelPinPrimitive(layout, label, labelCenterPosition, round);
+  if (pinPrimitive !== undefined) primitives.push(pinPrimitive);
+
+  const labelContent = emitNodeLabelContentPrimitive(layout, label, labelCenterPosition, round);
+  const deg = resolveLabelRotateDeg({
+    label,
+    labelPosition: [lx, ly],
+    nodeCenter: [layout.rect.x, layout.rect.y],
+  });
+  primitives.push(
+    deg === 0
+      ? labelContent
+      : {
           type: 'group',
           transforms: [{ kind: 'rotate', degrees: round(deg), cx: round(lx), cy: round(ly) }],
           children: [labelContent],
-        });
-      }
-    }
+        },
+  );
+  return primitives;
+};
+
+/** 把节点标识和元数据写到纯几何节点的 shape 图元。 */
+const stampNodeShapePrimitives = (layout: NodeLayout, primitives: Array<ScenePrimitive>): void => {
+  if (layout.id !== undefined) {
+    for (const prim of primitives) prim.id = layout.id;
   }
-  // 带文本或旋转的 Node 包进单层 GroupPrim。
-  const needsGroup = layout.rotateDeg !== 0 || layout.lines !== undefined || layout.inlineBlock !== undefined;
-  if (!needsGroup) {
-    // 纯几何 Node 不包 group，id stamp 到 shape 图元。
-    if (layout.id !== undefined) {
-      for (const prim of shapePrims) prim.id = layout.id;
-    }
-    // meta stamp 到 shape 图元。
-    if (layout.meta !== undefined) {
-      for (const prim of shapePrims) prim.meta = layout.meta;
-    }
-    // animations stamp 到 shape 图元。
-    if (layout.animations !== undefined) {
-      for (const prim of shapePrims) prim.animations = layout.animations;
-    }
-    return inner;
+  if (layout.meta !== undefined) {
+    for (const prim of primitives) prim.meta = layout.meta;
   }
-  // 带文本或旋转时，id / meta / animations 落到外层 group。
-  const group: GroupPrim = { type: 'group', children: inner };
+  if (layout.animations !== undefined) {
+    for (const prim of primitives) prim.animations = layout.animations;
+  }
+};
+
+/** 包装带文本或旋转的节点 group。 */
+const wrapNodeGroupPrimitive = (layout: NodeLayout, children: Array<ScenePrimitive>, round: Round): GroupPrim => {
+  const group: GroupPrim = { type: 'group', children };
   if (layout.id !== undefined) group.id = layout.id;
   if (layout.meta !== undefined) group.meta = layout.meta;
   if (layout.animations !== undefined) group.animations = layout.animations;
@@ -206,5 +235,30 @@ export const emitNodePrimitives = (
       },
     ];
   }
-  return [group];
+  return group;
+};
+
+/**
+ * NodeLayout → Scene primitives
+ * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive。
+ */
+export const emitNodePrimitives = (
+  layout: NodeLayout,
+  round: Round,
+  resolvePaint: PaintResolver,
+): Array<ScenePrimitive> => {
+  const shapePrimitives = emitNodeShapePrimitives(layout, round, resolvePaint);
+  const inner: Array<ScenePrimitive> = [
+    ...shapePrimitives,
+    ...emitNodeContentPrimitives(layout, round),
+    ...(layout.labels?.flatMap(label => emitNodeLabelPrimitives(layout, label, round)) ?? []),
+  ];
+
+  const needsGroup = layout.rotateDeg !== 0 || layout.lines !== undefined || layout.inlineBlock !== undefined;
+  if (!needsGroup) {
+    stampNodeShapePrimitives(layout, shapePrimitives);
+    return inner;
+  }
+
+  return [wrapNodeGroupPrimitive(layout, inner, round)];
 };

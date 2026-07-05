@@ -4,6 +4,9 @@ export const DEFAULT_NODE_DISTANCE = 24;
 /** 自动 layout 默认留白。 */
 export const DEFAULT_LAYOUT_PADDING = 10;
 
+/** Node label 与 node 边界的默认距离。 */
+export const DEFAULT_LABEL_DISTANCE = 12;
+
 /** 编译期 warning code（机器可读）。 */
 export const CompileWarningCode = {
   UnresolvedNodeReference: 'UNRESOLVED_NODE_REFERENCE',

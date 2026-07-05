@@ -1,7 +1,8 @@
+import type { BoundsRect } from '@retikz/math';
+
 import type { IRAnimationTrack } from '../../schemas';
 import type { EllipsePrim } from './ellipse';
 import type { GroupPrim } from './group';
-import type { Layout } from './layout';
 import type { SceneResource } from './paint';
 import type { PathPrim } from './path';
 import type { RectPrim } from './rect';
@@ -21,7 +22,7 @@ export type Scene = {
   /** 已布局好的图元数组，按渲染顺序排列 */
   primitives: Array<ScenePrimitive>;
   /** 整个场景的布局边界 */
-  layout: Layout;
+  layout: BoundsRect;
   /**
    * 渲染无关资源表（paint server 等）；adapter 物化（SVG → `<defs>`）。无资源时省略
    * @default []

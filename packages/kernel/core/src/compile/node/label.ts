@@ -1,31 +1,19 @@
-import type { IRLabelDefault, IRNode, IRNodeLabel } from '../../schemas';
-import type { FontSpec, TextMeasurer } from '../text';
-import type { NodeLabelLayout, TexLoweringContext } from './types';
+import type { IRLabelDefault, IRNodeLabel } from '../../schemas';
+import type { FontSpec } from '../text';
+import type { NodeLabelLayout, NodeTextLayoutContext } from './types';
 
 import { CompileWarningCode } from '../constants';
 import { layoutInlineLine, resolveLineRuns } from '../text';
-import { DEFAULT_LABEL_DISTANCE, normalizeLabelPosition } from './labels';
+import { normalizeLabelPosition } from './labels';
 
-/** 节点 label 布局输入。 */
-export type LayoutNodeLabelsInput = {
-  /** 宿主节点。 */
-  node: IRNode;
-  /** 文本度量函数。 */
-  measureText: TextMeasurer;
-  /** TeX 降级上下文。 */
-  texLowering?: TexLoweringContext;
+/** 节点附属 label 布局输入。 */
+export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
   /** 样式栈解析出的 label 默认值。 */
   labelDefault?: IRLabelDefault;
+  /** 节点 label 与节点边界的默认距离。 */
+  labelDistance: number;
   /** 基准字体大小。 */
   baseFontSize: number;
-  /** 字体缩放。 */
-  fontScale: number;
-  /** 宿主字体族。 */
-  fontFamily?: string;
-  /** 宿主字重。 */
-  fontWeight?: string | number;
-  /** 宿主字体样式。 */
-  fontStyle?: FontSpec['style'];
 };
 
 /** 布局节点附属 label。 */
@@ -35,6 +23,7 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
     measureText,
     texLowering,
     labelDefault,
+    labelDistance,
     baseFontSize,
     fontScale,
     fontFamily,
@@ -78,7 +67,7 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
       laid,
       position: normalizeLabelPosition(lab.position),
       placement: lab.placement ?? 'outside',
-      distance: lab.distance ?? DEFAULT_LABEL_DISTANCE,
+      distance: lab.distance ?? labelDistance,
       textColor: labTextColor,
       opacity: labOpacity,
       fontSize: labFontSize,

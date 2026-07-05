@@ -102,7 +102,7 @@ export const NodeLabelSchema = z
       .number()
       .nonnegative()
       .optional()
-      .describe('Gap between the node border and the label center, in user units. Default 12.'),
+      .describe('Gap between the node border and the label center, in user units. Omitted fields use compile labelDistance.'),
     rotate: z
       .union([z.enum(NodeLabelRotateMode), AngleDegreesSchema])
       .optional()

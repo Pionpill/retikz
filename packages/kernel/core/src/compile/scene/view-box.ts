@@ -1,6 +1,7 @@
+import type { BoundsRect } from '@retikz/math';
+
 import { isPositiveBoundsRect } from '@retikz/math';
 
-import type { Layout } from '../../contract';
 import type { IRViewBox } from '../../schemas';
 
 import { roundLayout } from './layout';
@@ -25,7 +26,7 @@ const assertViewBoxInput = (viewBox: IRViewBox): void => {
 };
 
 /** 校验 round 后真正进入 Scene 的 viewBox layout。 */
-const assertRoundedViewBoxLayout = (layout: Layout): Layout => {
+const assertRoundedViewBoxLayout = (layout: BoundsRect): BoundsRect => {
   if (!isPositiveBoundsRect(layout)) {
     throw new Error(
       `viewBox rounds to an invalid layout (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check precision and coordinate magnitude.`,
@@ -35,7 +36,7 @@ const assertRoundedViewBoxLayout = (layout: Layout): Layout => {
 };
 
 /** 把显式 viewBox 转为 Scene.layout，并做输入和输出守卫。 */
-export const viewBoxToLayout = (viewBox: IRViewBox, round: (n: number) => number): Layout => {
+export const viewBoxToLayout = (viewBox: IRViewBox, round: (n: number) => number): BoundsRect => {
   assertViewBoxInput(viewBox);
   return assertRoundedViewBoxLayout(roundLayout(viewBox, round));
 };

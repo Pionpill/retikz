@@ -59,6 +59,12 @@ export type CompileLayoutOptions = {
    * @default DEFAULT_NODE_DISTANCE (24)
    */
   nodeDistance?: number;
+  /**
+   * 节点 label 与节点边界的默认距离。
+   * @description `Node.label.distance` 未设置时取此值。
+   * @default DEFAULT_LABEL_DISTANCE (12)
+   */
+  labelDistance?: number;
 };
 
 /** 运行时注入的 provider 注册表。 */
