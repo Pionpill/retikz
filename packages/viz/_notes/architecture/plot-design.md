@@ -25,7 +25,7 @@ Data + Transform + Channel(Encoding):
 
 这条判断决定了 plot 的能力边界（见 §2）：凡能被「数据 → 通道」描述的图就能进 plot——位置通道交给坐标系、关系类几何交给 ribbon 等 mark；而定义性几何来自 packing / layout 算法（与原始数据字段无直接映射）的图（如词云）也不需要独立 struct 包，它们应作为 plot 的 layout transform：先算出位置 / 尺寸 / 路由等派生字段，再继续走通道、scale、坐标系、mark、guide 与 lowering。
 
-`type="line"` / `type="bar"` 这类新手友好入口归 `@retikz/chart`：chart 负责把 type/config/preset 展开成 PlotSpec 并调度 plot 底层能力，不能拥有 plot 底层无法表达的能力。这与 retikz 现有的 Kernel / Sugar 分层规则一致：快捷入口服务上手，语义核心保持单一。
+`type="line"` / `type="bar"` 这类新手友好入口归 `@retikz/chart`：chart 可以拥有自己的 Tier 3 `ChartSpec`，但它只 lower 成 PlotSpec，再由 plot 下沉到 core。chart 不能直接 lower 到 core，也不能拥有 plot 底层无法表达的能力。这与 retikz 现有的 Kernel / Sugar 分层规则一致：快捷入口服务上手，语义核心保持单一。
 
 ## 2. Plot 包边界
 
@@ -49,7 +49,7 @@ Data + Transform + Channel(Encoding):
 
 边界原则：
 
-> viz 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 展开成 PlotSpec。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
+> viz 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 收敛为 `ChartSpec`，再 lower 成 PlotSpec。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
 
 ## 3. 核心概念
 
@@ -282,10 +282,10 @@ viz domain 分为三类 API：
 
 - **共享数据层**：`@retikz/data`。职责是数据模型、字段解析、通用 transform、数据通道等跨可视化表达层共用的契约。
 - **Tier 2 表达层**：`@retikz/plot` / `@retikz/table` / geo 候选能力。职责是抽象能力、扩展契约、底层实现和 lowering；面向高级用户、AI、preset 作者和扩展作者。原 struct 范围收敛进 plot 的 layout transform，不作为独立包。
-- **Tier 3 封装层**：`@retikz/chart`。职责是通过 `type` / config / preset 提供新手友好的 API，当前主要生成 PlotSpec 并调度 plot 底层能力；不拥有自己的 IR、lowering 或 renderer。
+- **Tier 3 封装层**：`@retikz/chart`。职责是通过 `type` / config / preset 提供新手友好的 API；可以拥有 JSON-safe 的 `ChartSpec`，但唯一执行出口是 lower 成 PlotSpec；不拥有直接到 core 的底层 IR、lowering 或 renderer。
 - **框架绑定层**：各模块各自发布 React / Vanilla 绑定包，例如 `@retikz/plot-react` / `@retikz/plot-vanilla`、`@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/viz-react` / `@retikz/viz-vanilla` 聚合 adapter，避免安装不需要的模块。
 
-`data` 是 viz 共享数据语义层，`plot` / `table` / geo（若独立）都消费它；`chart` 是 `plot` 之上的友好封装，line / bar / tree / wordCloud 等 type/config 入口必须展开成 PlotSpec。
+`data` 是 viz 共享数据语义层，`plot` / `table` / geo（若独立）都消费它；`chart` 是 `plot` 之上的友好封装，line / bar / tree / wordCloud 等 type/config 入口可以先装配成 ChartSpec，但必须 lower 成 PlotSpec。
 
 ### 5.1 Chart API
 
@@ -301,12 +301,14 @@ Chart API（包：`@retikz/chart`，框架表面由 `@retikz/chart-react` / `@re
 
 约束：
 
-- Chart 只是 recipe / sugar / preset dispatcher。
+- Chart 可以定义自己的 JSON-safe `ChartSpec`，承载 type、series、默认装饰、主题 preset 与语义配置。
+- ChartSpec 的唯一执行出口是 `lowerChartSpec(chartSpec): PlotSpec`。
 - Chart preset 必须可展开成 plot 底层表达 API。
 - `line` / `bar` / `pie` 等坐标化图形展开成 plot primitive。
 - `tree` / `network` / `wordCloud` / `gauge` / `progress` / `pictogram` 等结构化图形展开成 plot layout transform + plot mark 组合。
 - Chart 不封装 table 能力；geo-backed type 等 geo 边界决策后再定。
 - Chart 不引入底层无法表达的能力；新能力先进入 data / plot / core，再由 chart 封装。
+- Chart 不直接表达 core Node / Path，不直接 lower 到 core。
 - 文档应展示 chart type 的底层展开结构或等价 primitive 写法。
 
 ### 5.2 Data API
@@ -410,7 +412,7 @@ import { Geo } from "@retikz/geo-react";
 - **底层 `@retikz/plot`**：可组合的坐标语法 primitive（data / transform / layout / scale / coordinate / encoding / mark / guide / layer），像 Recharts / Observable Plot 那样自由组合（即 §5.3 Plot API）。原 struct 范围作为 plot layout transform，不独立成包。
 - **底层 `@retikz/table`**：可组合的表格可视化 primitive（columns / cells / grouping / summary / pivot / matrix 等），承载表格布局和表格语义。
 - **底层 `@retikz/geo`（候选）**：可组合的地图可视化 primitive（projection / feature / layer / geo channel 等），是否独立成包待决策；若不独立，地图投影 / 地理布局能力进入 plot pipeline。
-- **高层 `@retikz/chart`**：line / bar / tree / wordCloud 等新手友好封装，展开成 PlotSpec 并调度 plot；不封装 table，不在本阶段封装 geo。
+- **高层 `@retikz/chart`**：line / bar / tree / wordCloud 等新手友好封装，拥有 Tier 3 ChartSpec，lower 成 PlotSpec 并调度 plot；不封装 table，不在本阶段封装 geo。
 - **框架绑定**：各表达层各自发布 `*-react` / `*-vanilla` 包，保持安装依赖精确。
 
 命名理由与业界直觉一致：**data** 指共享数据语义，**plot** 指坐标语法 / 组合层（Observable Plot、ggplot、Recharts），**chart** 指面向用户的图表封装，**table** 指表格可视化底座，**geo** 指地图 / 地理可视化候选底座。结构化算法不再命名为独立 struct 包，而是作为 plot 的 layout transform。
@@ -742,58 +744,45 @@ intent
 
 `@retikz/plot` 有自身独立的版本演进，**不与 core 版本号对齐**；它只消费 core 能力、不反向依赖，因此每个里程碑由「所需 core 能力是否就绪」gating。模块名见 §11，首批细节见 §12。
 
-> ⚠️ **版本主题真源以 [plot v0 roadmap](../decisions/v0/roadmap.md) 为准**：路线已重组——**v0.1 承载整套图形语法（GoG 8 组件）**，分阶段一（alpha.1–5 基础架构，已完成）+ 阶段二（alpha.6–9 / 11–15 完善语法：Data → Aesthetics+Scales → Coordinates/Geometry → Statistics → Coordinate composition → Theme）；交互 / 动画 / AI 渐进 / 性能等**能力轴**留 v0.1 之后的 minor。下文 §13.1~§13.6 是早期里程碑设计草案，**版本编号已过时**（原按 v0.1–v0.5 多 minor 设想），保留作各组件的**设计参考**；实际 alpha 序列见 [v0.1/roadmap](../decisions/v0/v0.1/roadmap.md)。
+> ⚠️ **版本主题真源以 [plot v0 roadmap](../decisions/v0/roadmap.md) 为准**：路线已重组——**v0.1 承载整套图形语法（GoG 8 组件）**，beta 阶段抽出最小 `@retikz/data` 并稳定化；**v0.2 聚焦交互能力 + layout transform / structured visualization**，并与 chart v0.1 并行迭代；**v0.3 聚焦渐进式 AI 生成 + 跨域复合**。下文 §13.1~§13.6 是早期里程碑设计草案，**版本编号已过时**（原按 v0.1–v0.5 多 minor 设想），保留作各组件的**设计参考**；实际 alpha 序列见 [v0.1/roadmap](../decisions/v0/v0.1/roadmap.md)。
 
-主线（阶段一）：纵向闭环 → 横向铺 mark → 动态 → AI 渐进 → 组合。
+当前主线：GoG 基座 → 交互 + layout transform → 渐进式 AI + 跨域复合。
 
 > **贯穿原则**：v0.1 的 IR 与 lowering 必须预留两样东西，即便功能要到后面才露出——
 >
-> - **semantic anchor / datum locator**（v0.3 交互命中要用，§7）；
-> - **scope-aware IR**（v0.5 组合与坐标复合要用，§7）。
+> - **semantic anchor / datum locator**（v0.2 交互命中要用，§7）；
+> - **scope-aware IR**（v0.3 跨域复合要用，§7）。
 >
 > 现在预留近乎零成本，事后补极痛。
 
-### 13.1 v0.1 — 基础纵向闭环
+### 13.1 v0.1 — GoG 基座
 
-- 目标：对 ≥1 个 mark 跑通全 8 段管线，并在 **cartesian + polar** 两套坐标系下都成立；产出带轴与网格的基本图。
-- 模块：`ir`、`transform`（最小）、`scale`、`coordinate`（cartesian + polar）、`mark`（point / line / bar）、`relation`（order）、`guide`（x/y 轴 + 径向 / 角向轴 + grid）、`lowering`；并埋入 anchor、scope（见上贯穿原则）。
+- 目标：完成 GoG 8 组件：Data / Aesthetics / Geometry / Statistics / Scales / Coordinates / Coordinate composition / Theme。
+- 模块：`data.model`、encoding、scale、coordinate、mark、relation、transform/stat、guide/theme、layer、lowering；并埋入 anchor、scope、locator、provenance。
 - 依赖 core 能力：IR / Scene / `compileToScene`、Tier 2 composite 接入与 `lowerComposites` 管线（core v0.3 起的 Tier 2 支撑，现已就绪）。
-- 包：`@retikz/plot`（IR + lowering）、`@retikz/plot-react`（`<Plot>` + 组合 DSL）、`@retikz/plot-vanilla`（builder + SSR）——**三包从 v0.1 起 lockstep 协同**，每加一个 plot 能力同步在 react/vanilla 表面 + 文档 demo 露出（原计划把绑定推到 v0.3 已废除：否则文档只能写 `<Layout ir composites={lowerPlots(...)}/>` 这种低可读示例）。底层渲染仍走 `@retikz/react` / `@retikz/vanilla`（消费 core IR）。**交互**（tooltip/hover/事件）仍留 v0.3（依赖 core 水合，非 authoring）。
-- 备注：polar 进 v0.1 是为逼出通用 coordinate 抽象、避免写死笛卡尔，代价是 guide / coordinate 工作量约翻倍。
+- 包：`@retikz/plot`（IR + lowering）、`@retikz/plot-react`（`<Plot>` + 组合 DSL）、`@retikz/plot-vanilla`（builder + SSR）——**三包从 v0.1 起 lockstep 协同**，每加一个 plot 能力同步在 react/vanilla 表面 + 文档 demo 露出（原计划把绑定推到 v0.3 已废除：否则文档只能写 `<Layout ir composites={lowerPlots(...)}/>` 这种低可读示例）。底层渲染仍走 `@retikz/react` / `@retikz/vanilla`（消费 core IR）。**交互**（tooltip/hover/事件）仍留 v0.2（依赖 core runtime / 水合，非 authoring）。
+- beta 收口：抽出最小 `@retikz/data`，只搬迁 plot 已稳定的数据语义，不新增 table / geo / chart 专属能力。
 
-### 13.2 v0.2 — 图形横向扩展（仍为静态）
+### 13.2 v0.2 — 交互能力 + layout transform
 
-- 目标：铺开常见图——折线、柱状、散点、面积等。
-- 模块新增：非位置通道 `scale`（color / size）、`guide`（legend）、`relation`（stack / dodge）、更多 `mark`（area、scatter 用 point + size、bar 变体）。
-- 依赖 core 能力：Path / Step / Paint 等几何与资源（已具备）。
-- 包：`@retikz/plot`。
+- 目标：补全 tooltip、hover、selection、brush、legend interaction、事件回调与 overlay；同时建立结构化 layout transform 能力。
+- 关键：交互是 **framework runtime** 的事，不是纯 IR。PlotSpec 保持 JSON-safe，只存意图、identity 与可复用配置；命中与事件绑定落在框架绑定包和 core runtime。
+- layout transform 属于 plot：tree、network、wordCloud、treemap、gauge、progress、pictogram 等先产出位置 / 尺寸 / 路由字段，再继续走普通 mark / guide / lowering。
+- 包：`@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` lockstep；chart v0.1 并行消费这些能力。
 
-### 13.3 v0.2+（并行支线）— chart 高层封装
+### 13.3 chart v0.1 — Tier 3 ChartSpec
 
-- 目标：在 plot 底层能力之上做 `type` + 配置的快速封装（§5.1 / §6）。
-- 约束：chart preset 必须展开成 PlotSpec；tree / network / wordCloud / gauge 等结构化 type 通过 plot layout transform 实现，不得新增底层无法表达的能力。table 不由 chart 调度；geo 边界待决策。
-- 包：`@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla`。
+- 目标：提供新手友好的 chart type / config / preset 表面。
+- 约束：chart 可以拥有自己的 JSON-safe `ChartSpec`，但唯一执行出口是 `lowerChartSpec(chartSpec): PlotSpec`。它不直接表达 core Node / Path，不直接 lower 到 core。
+- 范围：首批 line / bar / area / scatter / pie 等常规类型；后续随 plot v0.2 的 interaction 与 layout transform 暴露 tree / network / wordCloud / gauge 等 type。
+- 包：`@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla` lockstep。
 
-### 13.4 v0.3 — 动态能力（跨包里程碑）
+### 13.4 v0.3 — 渐进式 AI 生成 + 跨域复合
 
-- 目标：tooltip、hover、函数回调等交互。
-- 关键：交互是 **框架 runtime** 的事，不是纯 IR——靠 v0.1 预留的 anchor 做命中，事件绑定落在框架绑定包。
-- 依赖 core 能力：hydration / runtime（core v0.3 的水合）。
-- 包：`@retikz/plot-react` / `@retikz/plot-vanilla` **已在 v0.1 创建**（authoring 绑定，见 §13.1）；本版只**给已有绑定包加交互**（事件 / 回调 / 命中），不新建包。
-
-### 13.5 v0.4 — AI 渐进生成
-
-- 目标：分层渐进产出 / 渲染——坐标轴 → 图元 → label。
-- 依赖 core 能力：**Progressive IR / JSON Patch stream**（core v0.4 方向）+ 分层 lowering（§3.10 layer）。
-- 顺序说明：与 v0.3 互相独立（都只需 v0.1–v0.2 打底）；排在 v0.3 之后，是因为它依赖的 core Progressive IR 比交互依赖的 hydration 晚就绪——plot 里程碑随 core 能力就绪排序。
-- 包：`@retikz/plot`（+ 框架绑定承接增量渲染）。
-
-### 13.6 v0.5 — 坐标复合 + 组合就绪
-
-- 目标：(1) plot 内 **coordinate composition** 坐标复合：facet 小多图、同 panel 多坐标轴 / 多位置 scale 叠加、共享坐标骨架的 tracks / rings / lanes；(2) 跨图 connector / ribbon；(3) 验证 plot 能被 **通用组合能力** 正常编排。
-- 关键：**跨域内容组合（plot 与 uml / table / 任意业务内容混排）不由 plot 实现**——它是基于 core 现有 `Scope` 的通用能力（§7 / §14），任意 Tier 2 内容共用同一套。plot 的职责仅是「可被组合」，而这在 v0.1 已通过「lower 进可引用 scope + 暴露 anchor」满足；本版只新增 plot 内坐标复合 / connector 与对接验证。
-- 依赖 core 能力：core `Scope`、已预留的 plot anchor（组合编排本身复用现有 `Scope`，无需 plot 新建容器）。
-- 包：`@retikz/plot`（coordinate composition / connector）；组合容器属 core / 跨域，不在 plot。
+- 目标：分层渐进产出 / 渲染（先坐标轴 / guide，再 mark，再 label / annotation），并支持 plot 与 table / diagram / 任意 Tier 2 内容的 attached-space composition。
+- AI 生成优先面向 `ChartSpec`，复杂场景可降到 PlotSpec 或跨域 composition；增量过程依赖稳定 identity、layer 与可局部替换的 spec 片段。
+- 跨域复合不由 plot 自建容器；plot 的义务是 lower 进可引用 Scope、暴露 anchor / bbox / provenance，让通用 composition 能摆放和连接它。
+- 包：plot / chart / table / 其它 Tier 2 共同消费 core Scope 与 attached-space 组合能力。
 
 ## 14. 明确不做
 

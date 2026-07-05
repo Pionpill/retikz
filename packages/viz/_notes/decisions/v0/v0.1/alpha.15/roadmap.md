@@ -1,7 +1,7 @@
 # plot v0.1-alpha.15 Roadmap：Guide + Theme 主题样式
 
 > 上游：[plot v0.1 roadmap](../roadmap.md)「Theme 主题样式」行。
-> 主题：把 plot 的解释性结构收口：axis 的值域弹性、刻度策略、轴线 / 刻度 / 标签 / 网格 / 图例样式，以及全局 theme 的默认与覆盖规则。Interaction 不进入本 milestone，放到 v0.3 Interaction 能力线。
+> 主题：把 plot 的解释性结构收口：axis 的值域弹性、刻度策略、轴线 / 刻度 / 标签 / 网格 / 图例样式，以及全局 theme 的默认与覆盖规则。Interaction 不进入本 milestone，放到 v0.2 Interaction 能力线。
 
 ## 定位
 
@@ -11,7 +11,7 @@ alpha.15 不是单纯“换皮肤”。它是 plot v0.1 图形语法的最后一
 
 本 milestone 同时收敛 guide 样式。现有 axis / grid / legend lowering 中有多处硬编码常量，例如 tick length、label gap、grid opacity、legend swatch / ramp 尺寸。alpha.15 要把这些变成可解释、可覆盖、可由 theme 驱动的语义，不再散落在 lowering 内部。
 
-Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip、brush、linked highlighting、事件回调、水合命中都不在本轮。v0.3 Interaction 能力线可以消费 alpha.5 / alpha.14 已经建立的 provenance / locator / scope identity，但不被 alpha.15 的半成品交互字段绑住。
+Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip、brush、linked highlighting、事件回调、水合命中都不在本轮。v0.2 Interaction 能力线可以消费 alpha.5 / alpha.14 已经建立的 provenance / locator / scope identity，但不被 alpha.15 的半成品交互字段绑住。
 
 ## ADR 索引
 
@@ -66,7 +66,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 - **theme JSON-safe**：theme 只能包含 plain data、token、颜色串、数值、枚举。formatter 函数、DOM、ReactNode、renderer 对象不进 theme。
 - **local override 胜过 theme**：用户在单个 Axis / Legend 上写的局部字段应覆盖 `PlotSpec.theme`；theme 覆盖 built-in visual default。scale 的 `domain` / `domainPadding` / `nice` / `ticks.values` 等语义字段不参与 theme 合并链。
 - **三包 lockstep**：`@retikz/plot` 是 schema / lowering 真源；React / Vanilla 只提供等价 authoring 表面，不另造 theme 或 guide 语义。
-- **Interaction 顺延到 v0.3**：不设计 hover / selected token，不实现 tooltip、selection、brush、event callback。
+- **Interaction 顺延到 v0.2**：不设计 hover / selected token，不实现 tooltip、selection、brush、event callback。
 
 ## ADR 要点
 
@@ -352,7 +352,7 @@ built-in default theme
 - 不做 hover / selected / active / disabled 等 interaction state token。
 - 不做 renderer 真实文字测量、tick label ellipsis / wrap、label formatter 函数。
 - 不做 CSS runtime 变量读取、DOM theme provider、React context theme。
-- 不做 chart preset；v0.2 `<Chart>` 可以消费本轮 theme，但不在本轮实现。
+- 不做 chart preset；chart v0.1 可以消费本轮 theme，但不在本轮实现。
 - 不做 HTML legend、自定义 legend render template、manual legend item template。
 - 不做大数据 dashboard 的高频过滤 dataflow。
 
@@ -370,4 +370,4 @@ alpha.15 封口时应满足：
 - `PlotSpec.theme` 能控制 axis、axis grid、legend、palette、typography、background 的默认样式。
 - React / Vanilla 能等价暴露 theme 与 guide 局部样式，不绕开 PlotSpec。
 - docs 至少覆盖：单点散点留白、axis/grid 样式、theme 切换、legend/palette 样式、plot labels 与 layer zIndex。
-- roadmap 明确 Interaction 进入 v0.3 能力线，不与 alpha.15 混杂。
+- roadmap 明确 Interaction 进入 v0.2 能力线，不与 alpha.15 混杂。

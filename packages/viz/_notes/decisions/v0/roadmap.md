@@ -1,6 +1,6 @@
 # plot v0 Roadmap
 
-> 更新于 2026-06-07。本文件记录 `@retikz/plot` 的总体路线。**v0.1 承载整套图形语法（GoG 8 组件）**，分阶段一（alpha.1–5 基础架构，已完成）+ 阶段二（alpha.6–9 / 11–15 完善语法；alpha.10 为插入的绑定层 milestone、非 GoG）；交互 / 动画 / 性能等能力轴留 v0.1 之后。alpha 级执行细节见 `v0.1/roadmap.md`。
+> 更新于 2026-07-05。本文件记录 `@retikz/plot` 的总体路线。**v0.1 承载整套图形语法（GoG 8 组件）**，beta 阶段抽出最小 `@retikz/data` 并稳定化；**v0.2 承载交互能力 + layout transform / structured visualization**；**v0.3 承载渐进式 AI 生成 + 跨域复合**。alpha 级执行细节见对应 `v0.*/roadmap.md`。
 > 具体执行计划放在同目录 `v0.*/roadmap.md`，设计决策放在 `packages/viz/_notes/decisions/`，里程碑详情以 [`plot-design.md §13`](../../architecture/plot-design.md) 为准。
 
 ## 定位
@@ -11,7 +11,7 @@
 - plot **版本线独立于 core**，不与 core 版本号对齐；每个里程碑由「所需 core 能力是否就绪」gating。
 - 规划中的 `@retikz/data` 是 viz 共享数据语义层：负责数据模型、数据引用、字段解析、通用 transform、数据通道、scale / formatter / theme token 等跨 plot / table / geo（若独立）共用的契约。
 - viz 组解决的是「有了数据之后如何可视化」：`@retikz/plot` 通过 GoG 可视化，`@retikz/table` 通过表格可视化，geo 处理地图类可视化但是否独立拆包待决策。原 `struct` 范围不作为独立包，gauge / progress / tree / network / word cloud / pictogram 等通过 plot 的 layout transform + mark 表达。
-- 规划独立 `@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla`：chart 是 Tier 3 新手友好封装层，通过 `type` / config / preset 调度 plot 底层能力并生成 PlotSpec；它不拥有自己的 IR、lowering 或 renderer，也不聚合 table / geo。
+- 规划独立 `@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla`：chart 是 Tier 3 新手友好封装层，可以拥有 JSON-safe `ChartSpec`，但唯一执行出口是 lower 成 PlotSpec；它不拥有直接到 core 的底层 IR、lowering 或 renderer，也不聚合 table / geo。
 - 框架绑定由各表达层各自发布：`@retikz/plot-react` / `@retikz/plot-vanilla`、规划中的 `@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/viz-react` / `@retikz/viz-vanilla` 聚合 adapter，避免安装不需要的模块。
 
 模块边界与 MVP 范围见 [plot-design §11](../../architecture/plot-design.md)，里程碑拆分见 [§13](../../architecture/plot-design.md)。
@@ -22,13 +22,13 @@
 
 - **阶段一 · 基础架构搭建（v0.1 alpha.1–5，✅ 已完成）**：验证 8 段管线 / lowering / 坐标系抽象 / anchor·scope 等**架构能力端到端成立**，并搭起 6 个语法组件（Data / Aesthetics / Geometry / Statistics / Scales / Coordinates）的**最小骨架**（2 个二维坐标系、position + 基础 color、基础 mark）。是「搭骨架」，不求语法完备。
 - **阶段二 · 完善图形语法（v0.1 alpha.6–9 / 11–15）**：在已验证的架构上**补全全部 8 组件**——含两个全新组件 **Coordinate composition / Theme**（Coordinate composition 覆盖 GoG 的 Facets，并向同 panel 多坐标复合扩展）。（**alpha.10 为 2026-06-13 插入的绑定层 milestone**「退化 Plot 为薄容器」、非 GoG 组件，故语法 milestone 顺延 11–15。）
-- **v0.1 发布 = 图形语法完整**。
+- **v0.1 发布 = 图形语法完整**；beta 阶段只做最小 `@retikz/data` 抽层、类型 / 注释 / 测试 / docs 稳定化，不新增 table / geo / chart 专属数据能力。
 
-**v0.1 之后 · 能力轴 minor**（**不属图形语法**，按 core 能力 gating 排，版本号待定）：
+**v0.1 之后 · 能力轴 minor**：
 
-- 交互 / 动画（tooltip / hover / 事件 / 过渡）——依赖 core 水合 / runtime；
-- AI 渐进生成（分层渐进产出 / 渲染）——依赖 core Progressive IR；
-- 性能（大数据稠密 primitive 等，见本文「后续处理」段）——依赖 core Tier 1 原语。
+- **v0.2**：交互能力 + layout transform / structured visualization。交互依赖 locator / provenance / layer identity 与 core runtime；layout transform 承载 tree / network / wordCloud / treemap / gauge / progress / pictogram 等结构化算法。
+- **chart v0.1**：与 plot v0.2 并行迭代，拥有 Tier 3 ChartSpec，lower 成 PlotSpec 并消费 plot v0.1/v0.2 能力。
+- **v0.3**：渐进式 AI 生成 + 跨域复合。AI 可优先生成 ChartSpec，复杂场景降到 PlotSpec 或 attached-space composition；plot / table / diagram 等 Tier 2 内容通过 core Scope 组合。
 
 > **阶段二排序原则**：上游先于下游、结构性先于增量、地基先于铺面。故 Data（数据模型，结构性地基）先行，Aesthetics + Scales（通道×scale×legend，语法核心）居中，Geometry / Coordinates（铺面、增量）随后，Statistics 配对几何，Coordinate composition / Theme 收尾。推导见 [plot-design §15~§16](../../architecture/plot-design.md)。
 
@@ -69,7 +69,7 @@ plot 聚焦坐标语法本身：transform / encoding / scale / coordinate / mark
 
 - **渲染**：plot 不自带 renderer，绘制走 core / `@retikz/render` / 框架绑定包；
 - **共享数据层**：数据模型、字段解析、通用 transform、数据通道、scale / formatter 等规划归 `@retikz/data`，plot 只消费；
-- **chart 高层封装**：`type` + 配置的快速出图规划归 `@retikz/chart`，展开成 PlotSpec 并调度 plot 能力；chart 不拥有自己的底层 IR / lowering / renderer；
+- **chart 高层封装**：`type` + 配置的快速出图规划归 `@retikz/chart`，ChartSpec lower 成 PlotSpec 并调度 plot 能力；chart 不拥有直接到 core 的底层 IR / lowering / renderer；
 - **结构化可视化**：gauge / progress / token ring / tree / network / word cloud / pictogram 等不设独立 struct 包，规划归 plot 的 layout transform：算法先产出位置、尺寸、路由等派生字段，再统一走 plot mark / guide / lowering；
 - **表格可视化**：table / pivot table / matrix 等表格型展示规划归 `@retikz/table`；
 - **地图可视化**：map / choropleth / flow map / tile layer 等地图型展示待决策；可独立为 `@retikz/geo`，也可作为 plot projection / layout 能力进入 plot pipeline；
