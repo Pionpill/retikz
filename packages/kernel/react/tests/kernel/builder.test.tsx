@@ -1,4 +1,4 @@
-import { compileToScene } from '@retikz/core';
+﻿import { compileToScene } from '@retikz/core';
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -842,11 +842,11 @@ after`;
           thickness="veryThick"
           opacity={0.8}
           fillOpacity={0.5}
-          drawOpacity={0.7}
+          strokeOpacity={0.7}
         />,
       );
       const fromKernel = buildIR(
-        <Path lineCap="round" lineJoin="bevel" thickness="veryThick" opacity={0.8} fillOpacity={0.5} drawOpacity={0.7}>
+        <Path lineCap="round" lineJoin="bevel" thickness="veryThick" opacity={0.8} fillOpacity={0.5} strokeOpacity={0.7}>
           <Step kind="move" to="A" />
           <Step to="B" />
         </Path>,

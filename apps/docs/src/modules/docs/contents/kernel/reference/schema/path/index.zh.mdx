@@ -1,4 +1,4 @@
----
+﻿---
 title: 路径
 description: 笔画外壳、step 动作序列与 step 目标点
 ---
@@ -26,7 +26,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     thickness: '语义化描边厚度预设；显式 strokeWidth 优先',
     opacity: '整路径不透明度 0..1，同时作用于描边与填充',
     fillOpacity: '填充不透明度 0..1，只影响闭合区域',
-    drawOpacity: '描边不透明度 0..1，只影响描边',
+    strokeOpacity: '描边不透明度 0..1，只影响描边',
     id: '可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）',
     meta: 'provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象',
     animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档',
@@ -53,7 +53,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     fillOpacity: '填充不透明度 0..1',
     stroke: '描边 paint；Path 用于主线，Ribbon 用于可选外轮廓',
     strokeWidth: '描边宽度（用户单位）',
-    drawOpacity: '描边不透明度 0..1',
+    strokeOpacity: '描边不透明度 0..1',
     opacity: '主几何整体不透明度 0..1',
     shadow: '主几何阴影预设或显式阴影对象',
     blendMode: '主几何与下方内容的混合模式',
@@ -385,11 +385,11 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <Comparison target="tikz" title="Path / Step 字段对照">
 
-| IR 字段                                      | TikZ 对照                                              |
+| IR 字段                                      | 语义 / TikZ 对照                                      |
 | -------------------------------------------- | ------------------------------------------------------ |
 | `lineCap` / `lineJoin`                       | `line cap` / `line join`                               |
 | `thickness`                                  | `ultra thin` … `ultra thick`                           |
-| `drawOpacity`                                | `draw opacity`                                         |
+| `strokeOpacity`                                | 描边透明度                                             |
 | `kind: 'fold'`                               | `-\|` / `\|-`                                          |
 | `kind: 'cycle'`                              | `cycle`                                                |
 | `kind: 'bend'`                               | `to[bend left=N]` / `to[bend right=N]`                 |

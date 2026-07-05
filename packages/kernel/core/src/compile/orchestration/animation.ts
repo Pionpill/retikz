@@ -1,5 +1,5 @@
 import type { IRAnimationTrack } from '../../schemas';
-import type { CompileWarning } from '../constants';
+import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';
 

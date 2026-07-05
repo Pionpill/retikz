@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   BlendModeValue,
   IRAnimationTrack,
   IRGraphicStyle,
@@ -40,7 +40,7 @@ export type RectPrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['drawOpacity'];
+  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */

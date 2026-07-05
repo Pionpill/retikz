@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   BlendModeValue,
   IRAnimationTrack,
   IRGraphicStyle,
@@ -39,7 +39,7 @@ export type EllipsePrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['drawOpacity'];
+  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   dashPattern?: IRPathBase['dashPattern'];
   /** 描边 dash offset */

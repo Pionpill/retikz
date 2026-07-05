@@ -1,9 +1,9 @@
-import type { IRDrawableStyle, IRLabelDefault, IRScope, StyleChannel } from '../../schemas';
+﻿import type { IRDrawableStyle, IRLabelDefault, IRScope, StyleChannel } from '../../schemas';
 
 /** scope 级联 graphic state。 */
 export type CascadeState = Pick<
   IRScope,
-  'color' | 'stroke' | 'fill' | 'strokeWidth' | 'opacity' | 'fillOpacity' | 'drawOpacity'
+  'color' | 'stroke' | 'fill' | 'strokeWidth' | 'opacity' | 'fillOpacity' | 'strokeOpacity'
 >;
 
 /** 单层 scope 样式 frame。 */
@@ -38,7 +38,7 @@ const DRAWABLE_STYLE_KEYS = [
   'fillOpacity',
   'stroke',
   'strokeWidth',
-  'drawOpacity',
+  'strokeOpacity',
   'opacity',
   'shadow',
   'blendMode',
@@ -62,7 +62,7 @@ export const createStyleFrame = (scope: IRScope): StyleFrame => {
   if (scope.strokeWidth !== undefined) cascade.strokeWidth = scope.strokeWidth;
   if (scope.opacity !== undefined) cascade.opacity = scope.opacity;
   if (scope.fillOpacity !== undefined) cascade.fillOpacity = scope.fillOpacity;
-  if (scope.drawOpacity !== undefined) cascade.drawOpacity = scope.drawOpacity;
+  if (scope.strokeOpacity !== undefined) cascade.strokeOpacity = scope.strokeOpacity;
   const frame: StyleFrame = { cascade };
   if (scope.nodeDefault) frame.nodeDefault = scope.nodeDefault;
   if (scope.pathDefault) frame.pathDefault = scope.pathDefault;

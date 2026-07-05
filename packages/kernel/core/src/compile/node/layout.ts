@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   BoundaryDefinition,
   ShapeDefinition,
   Transform,
@@ -169,7 +169,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     fill: node.fill,
     fillOpacity: node.fillOpacity,
     stroke: node.stroke,
-    strokeOpacity: node.drawOpacity,
+    strokeOpacity: node.strokeOpacity,
     strokeWidth: node.strokeWidth,
     dashPattern: resolveDashPattern(node.dashPattern, node.dashed, node.dotted),
     dashOffset: node.dashOffset,

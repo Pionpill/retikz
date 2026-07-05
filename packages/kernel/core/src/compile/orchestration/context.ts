@@ -10,7 +10,7 @@
 } from '../../contract';
 import type { IRScene } from '../../schemas';
 import type { CompileOptions } from '../compile';
-import type { CompileWarning } from '../constants';
+import type { CompileWarning } from '../warning';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -21,10 +21,11 @@ import { resolvePathKindRegistry } from '../../providers/path-kind';
 import { resolvePatternRegistry } from '../../providers/pattern';
 import { resolveRibbonWidthProfileRegistry } from '../../providers/ribbon';
 import { resolveShapeRegistry } from '../../providers/shape';
-import { DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE, formatCompileWarning } from '../constants';
+import { DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
+import { formatCompileWarning } from '../warning';
 import { lowerComposites } from './composite';
 
 /**

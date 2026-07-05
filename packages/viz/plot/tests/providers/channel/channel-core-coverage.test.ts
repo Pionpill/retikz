@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope } from '@retikz/core';
+﻿import type { IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -75,7 +75,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
           strokeWidth: { kind: 'constant', value: 2 },
           opacity: { kind: 'constant', value: 0.7 },
           fillOpacity: { kind: 'constant', value: 0.5 },
-          drawOpacity: { kind: 'constant', value: 0.4 },
+          strokeOpacity: { kind: 'constant', value: 0.4 },
           zIndex: { kind: 'constant', value: 3 },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },
@@ -85,7 +85,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       strokeWidth: 2,
       opacity: 0.7,
       fillOpacity: 0.5,
-      drawOpacity: 0.4,
+      strokeOpacity: 0.4,
       zIndex: 3,
     });
   });
@@ -363,7 +363,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       marks: [
         {
           type: 'path',
-          drawOpacity: { kind: 'constant', value: 0.45 },
+          strokeOpacity: { kind: 'constant', value: 0.45 },
           zIndex: { kind: 'constant', value: 7 },
           rotate: { kind: 'constant', value: 15 },
           scale: { kind: 'constant', value: { x: 1.2, y: 0.8 } },
@@ -385,7 +385,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       }),
     );
     expect(path).toMatchObject({
-      drawOpacity: 0.45,
+      strokeOpacity: 0.45,
       zIndex: 7,
       rotate: 15,
       scale: { x: 1.2, y: 0.8 },

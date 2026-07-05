@@ -1,4 +1,4 @@
----
+﻿---
 title: PathMark
 description: PathMark 是有序点形成的一维轨迹；折线、闭合路径、多系列线和雷达线框都是它在不同配置下的表现形态。
 ---
@@ -178,7 +178,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 |        | `closure`                                    | `{ kind: 'cycle' }`<br />`{ kind: 'baseline'; baseline?: number }`<br />`{ kind: 'stack'; baselineField: FieldName }` | —                                         | 构建闭合路径；`baseline` 省略时取值轴基础值，显式传入时使用常量下边界，`stack` 读取逐行下边界字段                       |
 | 路径   | `stroke` / `fill`                            | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?`                                           | `currentColor` / —                        | 路径描边和闭合路径填充样式；`stroke="none"` 可关闭边框线，`fill` 省略则不填充                                           |
 |        | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?`                                                              | —<br />—                                  | 路径描边宽度、整体透明度和填充透明度                                                                                    |
-|        | `drawOpacity`<br />`zIndex` / `rotate`       | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?`                                                | —<br />—<br />—                           | 描边透明度、绘制顺序和旋转                                                                                              |
+|        | `strokeOpacity`<br />`zIndex` / `rotate`       | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?`                                                | —<br />—<br />—                           | 描边透明度、绘制顺序和旋转                                                                                              |
 |        | `roundedCorners`                             | `MarkValueProp<number>`                                                                                               | —                                         | step 转角圆角                                                                                                           |
 |        | `lineCap` / `lineJoin`                       | `FieldName / LineCapValue`<br />`FieldName / LineJoinValue`                                                           | —<br />—                                  | 线帽与连接样式                                                                                                          |
 |        | `scale`<br />`fillRule` / `thickness`        | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?`                                                | —<br />—<br />—                           | 路径缩放、填充规则和厚度预设                                                                                            |

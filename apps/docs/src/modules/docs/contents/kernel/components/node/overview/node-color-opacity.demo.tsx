@@ -1,10 +1,10 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
 
 /**
  * 颜色 / 不透明度族对照
- * @description textColor 块级文字色、opacity 整节点透明、fillOpacity 仅填充、drawOpacity 仅描边。
+ * @description textColor 块级文字色、opacity 整节点透明、fillOpacity 仅填充、strokeOpacity 仅描边。
  */
 const Demo: FC = () => (
   <Layout width={520} height={120}>
@@ -17,8 +17,8 @@ const Demo: FC = () => (
     <Node id="fo" position={[80, 0]} fill="dodgerblue" fillOpacity={0.3}>
       fillOpacity
     </Node>
-    <Node id="do" position={[210, 0]} stroke="red" strokeWidth={3} drawOpacity={0.3}>
-      drawOpacity
+    <Node id="do" position={[210, 0]} stroke="red" strokeWidth={3} strokeOpacity={0.3}>
+      strokeOpacity
     </Node>
   </Layout>
 );

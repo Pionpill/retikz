@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { IRPathBase, IRPathRibbonOptions, IRScene, IRStep, PathPrim, ScenePrimitive } from '../../src';
 
@@ -738,7 +738,7 @@ describe('compile ribbon', () => {
           fillOpacity: 0.4,
           stroke: '#172033',
           strokeWidth: 2,
-          drawOpacity: 0.7,
+          strokeOpacity: 0.7,
           opacity: 0.5,
         }),
       ]),

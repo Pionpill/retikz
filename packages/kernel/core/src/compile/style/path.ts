@@ -1,4 +1,4 @@
-import type { IRGeometryLabel, IRLabelDefault, IRPathBase, IRStep } from '../../schemas';
+﻿import type { IRGeometryLabel, IRLabelDefault, IRPathBase, IRStep } from '../../schemas';
 import type { CascadeState, StyleFrame } from './frame';
 
 import { resolvePathMarks } from './arrow';
@@ -14,7 +14,7 @@ const cascadeToPath = (c: CascadeState): Partial<IRPathBase> => {
   if (c.strokeWidth !== undefined) out.strokeWidth = c.strokeWidth;
   if (c.opacity !== undefined) out.opacity = c.opacity;
   if (c.fillOpacity !== undefined) out.fillOpacity = c.fillOpacity;
-  if (c.drawOpacity !== undefined) out.drawOpacity = c.drawOpacity;
+  if (c.strokeOpacity !== undefined) out.strokeOpacity = c.strokeOpacity;
   return out;
 };
 
@@ -27,7 +27,7 @@ const cascadeToRibbon = (c: CascadeState): Partial<IRPathBase> => {
   if (c.strokeWidth !== undefined) out.strokeWidth = c.strokeWidth;
   if (c.opacity !== undefined) out.opacity = c.opacity;
   if (c.fillOpacity !== undefined) out.fillOpacity = c.fillOpacity;
-  if (c.drawOpacity !== undefined) out.drawOpacity = c.drawOpacity;
+  if (c.strokeOpacity !== undefined) out.strokeOpacity = c.strokeOpacity;
   return out;
 };
 

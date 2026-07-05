@@ -1,4 +1,4 @@
----
+﻿---
 title: Path
 description: Kernel 路径容器——`<Step>` 子节点序列定义折线 / 曲线 / 弧形，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
 ---
@@ -102,7 +102,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 渐变描边
 
-`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`drawOpacity` 等描边样式照常作用在这条线本身。
+`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。
 
 <ComponentPreview name="path-stroke-paint" size="sm" />
 
@@ -134,13 +134,9 @@ import { Path, Step } from '@retikz/react';
 
 #### 透明度
 
-三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`drawOpacity` 仅 stroke。三者可叠加：
+三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`strokeOpacity` 仅 stroke。三者可叠加：
 
-<Comparison target="tikz" title="drawOpacity 命名">
-
-`drawOpacity` 对应 TikZ 的 `draw opacity`，并与 `<Node>` 的描边透明字段保持一致。
-
-</Comparison>
+`strokeOpacity` 使用与 Scene primitive 一致的描边透明字段名，并与 `<Node>` 的描边透明字段保持一致。
 
 <ComponentPreview name="path-opacity" />
 
@@ -265,7 +261,7 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 | `fillRule`       | `'nonzero' \| 'evenodd'`                                                                                      | `'nonzero'`    | 填充规则；环形 / 孔洞场景用 `'evenodd'`                                                                                                                                                                           |
 | `opacity`        | `number`                                                                                                      | —              | 整 path 透明度 0~1（同时作用于 stroke 与 fill）                                                                                                                                                                   |
 | `fillOpacity`    | `number`                                                                                                      | —              | 仅 fill 透明度 0~1                                                                                                                                                                                                |
-| `drawOpacity`    | `number`                                                                                                      | —              | 仅 stroke 透明度 0~1                                                                                                                                                                                              |
+| `strokeOpacity`    | `number`                                                                                                      | —              | 仅 stroke 透明度 0~1                                                                                                                                                                                              |
 | `shadow`         | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —              | 主路径投影：预设字符串或对象；图元级，端点箭头随主路径一起投影。详见 [视觉效果](/kernel/components/effects)                                                                                                       |
 | `blendMode`      | `'normal' \| 'multiply' \| 'screen' \| ...`（16 个 W3C 分离模式）                                             | `'normal'`     | 主路径与其下方已绘内容的混合模式；图元级，端点箭头随主路径一起混合。详见 [视觉效果](/kernel/components/effects)                                                                                                   |
 | `zIndex`         | `number`（整数）                                                                                              | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                                                        |

@@ -1,6 +1,6 @@
 ﻿import type { CompositeDefinition } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
-import type { CompileWarning } from '../constants';
+import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';
 

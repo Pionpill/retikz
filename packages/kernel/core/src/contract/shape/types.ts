@@ -1,4 +1,4 @@
-import type { Position } from '@retikz/math';
+﻿import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
 import type {
@@ -11,7 +11,7 @@ import type { AnchorValue, Rect, SideValue } from '../../shared';
 import type { PaintValue, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段。 */
-type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'fillOpacity' | 'strokeWidth' | 'drawOpacity' | 'opacity' | 'blendMode'>;
+type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'fillOpacity' | 'strokeWidth' | 'strokeOpacity' | 'opacity' | 'blendMode'>;
 
 /** Shape provider 接收到的命名 anchor：标准方位名或 shape 自定义扩展名。 */
 export type ShapeAnchorName = AnchorValue | (string & {});
@@ -38,10 +38,10 @@ export type ResolvedShapeStyle = {
    */
   stroke?: PaintValue;
   /**
-   * 描边不透明度；来自 IR 的 `drawOpacity`，进入 provider 前按 primitive 字段语义改名。
+   * 描边不透明度。
    * @default 1
    */
-  strokeOpacity?: ResolvedShapeStyleFields['drawOpacity'];
+  strokeOpacity?: ResolvedShapeStyleFields['strokeOpacity'];
   /**
    * 描边宽度。
    * @default 1

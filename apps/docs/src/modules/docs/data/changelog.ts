@@ -1,4 +1,4 @@
-import type { Localized, PackageId, Release } from './changelog.types';
+﻿import type { Localized, PackageId, Release } from './changelog.types';
 
 import { PACKAGE_GROUPS } from './changelog.types';
 
@@ -3321,8 +3321,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Layout> 全图默认样式', en: '<Layout> whole-figure defaults' },
                 content: {
-                  zh: '`<Layout>` 加 11 个级联样式 props（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`）；设任一项时把 children 包进合成的隐式根 `<Scope>`，编译产物与手写根 `<Scope>` 完全同一 IR，内层 `<Scope>` / 图元显式属性照常级联覆盖。与 `ir` prop 并用时样式被忽略（dev 警告）[Layout 概览](/kernel/components/layout/overview)',
-                  en: '`<Layout>` gains 11 cascade style props (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`); setting any wraps children in a synthetic implicit root `<Scope>` producing the exact same IR as a hand-written root `<Scope>`, with inner `<Scope>` / explicit primitive props cascading over it. Ignored (dev warning) when combined with the `ir` prop [Layout overview](/kernel/components/layout/overview)',
+                  zh: '`<Layout>` 加 11 个级联样式 props（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`）；设任一项时把 children 包进合成的隐式根 `<Scope>`，编译产物与手写根 `<Scope>` 完全同一 IR，内层 `<Scope>` / 图元显式属性照常级联覆盖。与 `ir` prop 并用时样式被忽略（dev 警告）[Layout 概览](/kernel/components/layout/overview)',
+                  en: '`<Layout>` gains 11 cascade style props (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`); setting any wraps children in a synthetic implicit root `<Scope>` producing the exact same IR as a hand-written root `<Scope>`, with inner `<Scope>` / explicit primitive props cascading over it. Ignored (dev warning) when combined with the `ir` prop [Layout overview](/kernel/components/layout/overview)',
                 },
               },
             ],
@@ -3982,8 +3982,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Node 颜色 / 描边 / 缩放', en: 'Node color / stroke / scale' },
                 content: {
-                  zh: '`textColor` / `opacity` / `fillOpacity` / `drawOpacity`,`dashed` / `dotted` / `dashArray`,`scale` / `xScale` / `yScale`',
-                  en: '`textColor` / `opacity` / `fillOpacity` / `drawOpacity`, `dashed` / `dotted` / `dashArray`, `scale` / `xScale` / `yScale`',
+                  zh: '`textColor` / `opacity` / `fillOpacity` / `strokeOpacity`,`dashed` / `dotted` / `dashArray`,`scale` / `xScale` / `yScale`',
+                  en: '`textColor` / `opacity` / `fillOpacity` / `strokeOpacity`, `dashed` / `dotted` / `dashArray`, `scale` / `xScale` / `yScale`',
                 },
               },
             ],

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { EllipsePrim, PathPrim, RectPrim, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -90,11 +90,11 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
     expect(findShapePath(diamondIR)?.fillOpacity).toBe(0.4);
   });
 
-  it('drawOpacity → shape primitive.strokeOpacity', () => {
+  it('strokeOpacity → shape primitive.strokeOpacity', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], drawOpacity: 0.3 }],
+      children: [{ type: 'node', position: [0, 0], strokeOpacity: 0.3 }],
     };
     expect(findRect(ir)?.strokeOpacity).toBe(0.3);
   });

@@ -1,4 +1,4 @@
-import type { IRNode } from '../../schemas';
+﻿import type { IRNode } from '../../schemas';
 import type { CascadeState, StyleFrame } from './frame';
 
 import { cuts, pickDefinedKeys } from './frame';
@@ -15,7 +15,7 @@ const cascadeToNode = (c: CascadeState): Partial<IRNode> => {
   if (c.strokeWidth !== undefined) out.strokeWidth = c.strokeWidth;
   if (c.opacity !== undefined) out.opacity = c.opacity;
   if (c.fillOpacity !== undefined) out.fillOpacity = c.fillOpacity;
-  if (c.drawOpacity !== undefined) out.drawOpacity = c.drawOpacity;
+  if (c.strokeOpacity !== undefined) out.strokeOpacity = c.strokeOpacity;
   return out;
 };
 

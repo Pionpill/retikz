@@ -1,4 +1,4 @@
-import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+﻿import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { Position } from '@retikz/math';
 
 import { arcEndPoint } from '@retikz/math';
@@ -250,7 +250,7 @@ const lowerCartesianGuide = (
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        pathDefault: { stroke: 'currentColor', strokeOpacity: 0.15 },
         children: [gridPath],
       };
     }
@@ -351,7 +351,7 @@ const lowerAngularAxis = (
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        pathDefault: { stroke: 'currentColor', strokeOpacity: 0.15 },
         children: [gridPath],
       };
     }
@@ -434,7 +434,7 @@ const lowerRadialAxis = (
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        pathDefault: { stroke: 'currentColor', strokeOpacity: 0.15 },
         children: rings,
       };
     }
@@ -534,7 +534,7 @@ const lowerTernaryGuide = (
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        pathDefault: { stroke: 'currentColor', strokeOpacity: 0.15 },
         children: [gridPath],
       };
     }

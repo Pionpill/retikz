@@ -1,4 +1,4 @@
-import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
+﻿import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
 
 import type {
   GroupPrim,
@@ -875,10 +875,9 @@ export const emitPathPrimitive = (
     dashOffset: path.dashOffset,
     strokeLinecap: path.lineCap,
     strokeLinejoin: path.lineJoin,
-    // IR `drawOpacity` → primitive `strokeOpacity`（与 Node 命名一致）
     opacity: path.opacity,
     fillOpacity: path.fillOpacity,
-    strokeOpacity: path.drawOpacity,
+    strokeOpacity: path.strokeOpacity,
     shadow: resolveShadow(path.shadow),
     blendMode: path.blendMode,
   };

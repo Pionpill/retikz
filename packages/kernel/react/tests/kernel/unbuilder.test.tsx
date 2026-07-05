@@ -1,4 +1,4 @@
-import type { IRChild, IRPathBase,IRScene } from '@retikz/core';
+﻿import type { IRChild, IRPathBase,IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
 import { CURRENT_IR_VERSION } from '@retikz/core';
@@ -546,7 +546,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('opacity / fillOpacity / drawOpacity 三件双向保留', () => {
+    it('opacity / fillOpacity / strokeOpacity 三件双向保留', () => {
       const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -556,7 +556,7 @@ describe('convertIRToReactNode', () => {
             fill: 'red',
             opacity: 0.8,
             fillOpacity: 0.4,
-            drawOpacity: 0.6,
+            strokeOpacity: 0.6,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },

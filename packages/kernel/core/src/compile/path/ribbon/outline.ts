@@ -1,4 +1,4 @@
-import type { Vector2 } from '@retikz/math';
+﻿import type { Vector2 } from '@retikz/math';
 
 import type { PathCommand, PathPrim } from '../../../contract';
 import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
@@ -595,7 +595,7 @@ export const styledPrimitiveFromOutline = (
   if (outlineRequested) {
     primitive.stroke = resolvePaint(ribbon.stroke) ?? 'currentColor';
     primitive.strokeWidth = ribbon.strokeWidth ?? 1;
-    primitive.strokeOpacity = ribbon.drawOpacity;
+    primitive.strokeOpacity = ribbon.strokeOpacity;
   }
   if (ribbon.id !== undefined) primitive.id = ribbon.id;
   if (ribbon.meta !== undefined) primitive.meta = ribbon.meta;

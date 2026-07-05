@@ -1,8 +1,8 @@
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
 import type { SegmentSample } from '../../shared/geometry';
-import type { CompileWarningCodeValue } from '../constants';
 import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../text';
+import type { CompileWarningCodeValue } from '../warning';
 
 import { RAD_TO_DEG } from '../../shared/geometry';
 import { CompileWarningCode } from '../constants';

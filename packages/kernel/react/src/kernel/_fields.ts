@@ -1,4 +1,4 @@
-import type { AssertEqual, IRNode, IRPath, IRScope } from '@retikz/core';
+﻿import type { AssertEqual, IRNode, IRPath, IRScope } from '@retikz/core';
 
 /**
  * IRNode 纯透传字段表（除 type / position / text / label 特化字段外）
@@ -18,7 +18,7 @@ export const NODE_FIELDS = [
   'fill',
   'fillOpacity',
   'stroke',
-  'drawOpacity',
+  'strokeOpacity',
   'strokeWidth',
   'dashed',
   'dotted',
@@ -70,7 +70,7 @@ export const PATH_FIELDS = [
   'thickness',
   'opacity',
   'fillOpacity',
-  'drawOpacity',
+  'strokeOpacity',
   'zIndex',
   'rotate',
   'scale',
@@ -98,7 +98,7 @@ export const SCOPE_FIELDS = [
   'strokeWidth',
   'opacity',
   'fillOpacity',
-  'drawOpacity',
+  'strokeOpacity',
   'nodeDefault',
   'pathDefault',
   'labelDefault',
@@ -135,8 +135,8 @@ export type ScopeStyleProps = {
   opacity?: IRScope['opacity'];
   /** 级联默认填充透明度 0~1 */
   fillOpacity?: IRScope['fillOpacity'];
-  /** 级联默认描边透明度 0~1（TikZ `draw opacity`） */
-  drawOpacity?: IRScope['drawOpacity'];
+  /** 级联默认描边透明度 0~1（TikZ `stroke opacity`） */
+  strokeOpacity?: IRScope['strokeOpacity'];
   /** every node 默认样式（TikZ `every node`），扁平独立通道 */
   nodeDefault?: IRScope['nodeDefault'];
   /** every path 默认样式（TikZ `every path`）；箭头走 arrowDefault 通道 */
@@ -159,7 +159,7 @@ export const SCOPE_STYLE_FIELDS = [
   'strokeWidth',
   'opacity',
   'fillOpacity',
-  'drawOpacity',
+  'strokeOpacity',
   'nodeDefault',
   'pathDefault',
   'labelDefault',

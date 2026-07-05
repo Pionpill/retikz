@@ -1,4 +1,4 @@
-import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
+﻿import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
 
 import {
   AxisScaleSchema,
@@ -313,7 +313,7 @@ export const resolveShapeChannel = (
 const numericNodeChannels: {
   opacity: NodeChannelDefinition<number>;
   fillOpacity: NodeChannelDefinition<number>;
-  drawOpacity: NodeChannelDefinition<number>;
+  strokeOpacity: NodeChannelDefinition<number>;
   rotate: NodeChannelDefinition<number>;
   zIndex: NodeChannelDefinition<number>;
   strokeWidth: NodeChannelDefinition<number>;
@@ -351,20 +351,20 @@ const numericNodeChannels: {
       node.fillOpacity = value;
     },
   }),
-  drawOpacity: defineNodeChannel<number>({
-    channel: 'drawOpacity',
+  strokeOpacity: defineNodeChannel<number>({
+    channel: 'strokeOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
     resolve: ctx =>
       makeNumericNodeResolver(
         ctx.node,
         ctx.rows,
         ctx.fieldTypes,
-        mark => pickStyleChannel<number>(mark, 'drawOpacity'),
-        'drawOpacity',
+        mark => pickStyleChannel<number>(mark, 'strokeOpacity'),
+        'strokeOpacity',
         { range: [0.2, 1], clamp: true },
       ),
     deliver: (node, value) => {
-      node.drawOpacity = value;
+      node.strokeOpacity = value;
     },
   }),
   rotate: defineNodeChannel<number>({
@@ -593,7 +593,7 @@ const shapeNodeChannel: NodeChannelDefinition<JsonValue> = defineNodeChannel<Jso
 export type BuiltinNodeChannels = {
   opacity: NodeChannelDefinition<number>;
   fillOpacity: NodeChannelDefinition<number>;
-  drawOpacity: NodeChannelDefinition<number>;
+  strokeOpacity: NodeChannelDefinition<number>;
   rotate: NodeChannelDefinition<number>;
   zIndex: NodeChannelDefinition<number>;
   textColor: NodeChannelDefinition<string>;

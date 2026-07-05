@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AnyChannelDefinition,
   ChannelContext,
   ChannelDefinitionKindValue,
@@ -32,7 +32,7 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'shape',
   'strokeWidth',
   'fillOpacity',
-  'drawOpacity',
+  'strokeOpacity',
   'rotate',
   'padding',
   'minimumSize',

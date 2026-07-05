@@ -1,4 +1,4 @@
----
+﻿---
 title: Path
 description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline / curve / arc; `<Draw>` compiles down to this.
 ---
@@ -102,7 +102,7 @@ Below, two edges target the same five-pointed star (no node `boundary` set) and 
 
 #### Gradient stroke
 
-Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `drawOpacity`, and other stroke styles still apply to the line itself.
+Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `strokeOpacity`, and other stroke styles still apply to the line itself.
 
 <ComponentPreview name="path-stroke-paint" size="sm" />
 
@@ -134,13 +134,9 @@ These presets reuse TikZ names from `ultra thin` through `ultra thick`; retikz e
 
 #### Opacity
 
-Three independent channels: `opacity` overall (multiplies onto stroke and fill), `fillOpacity` for fill only, `drawOpacity` for stroke only. The three compose:
+Three independent channels: `opacity` overall (multiplies onto stroke and fill), `fillOpacity` for fill only, `strokeOpacity` for stroke only. The three compose:
 
-<Comparison target="tikz" title="drawOpacity Naming">
-
-`drawOpacity` maps to TikZ `draw opacity`, and matches the stroke-only opacity field on `<Node>`.
-
-</Comparison>
+`strokeOpacity` uses the same stroke-opacity naming as Scene primitives, and matches the stroke-only opacity field on `<Node>`.
 
 <ComponentPreview name="path-opacity" />
 
@@ -265,7 +261,7 @@ Ribbon is a closed area, so styling focuses on `fill`, outline `stroke`, opacity
 | `fillRule`       | `'nonzero' \| 'evenodd'`                                                                                      | `'nonzero'`    | Fill rule; use `'evenodd'` for rings / holes                                                                                                                                                                                                                                                                                                                        |
 | `opacity`        | `number`                                                                                                      | —              | Whole-path opacity 0..1 (multiplies onto stroke and fill)                                                                                                                                                                                                                                                                                                           |
 | `fillOpacity`    | `number`                                                                                                      | —              | Fill-only opacity 0..1                                                                                                                                                                                                                                                                                                                                              |
-| `drawOpacity`    | `number`                                                                                                      | —              | Stroke-only opacity 0..1                                                                                                                                                                                                                                                                                                                                            |
+| `strokeOpacity`    | `number`                                                                                                      | —              | Stroke-only opacity 0..1                                                                                                                                                                                                                                                                                                                                            |
 | `shadow`         | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —              | Drop shadow on the main path: preset string or object; element-level, endpoint arrows cast a shadow together with the main path. See [Visual Effects](/kernel/components/effects)                                                                                                                                                                                   |
 | `blendMode`      | `'normal' \| 'multiply' \| 'screen' \| ...` (16 W3C separable modes)                                          | `'normal'`     | How the main path blends with content beneath it; element-level, endpoint arrows blend with the main path. See [Visual Effects](/kernel/components/effects)                                                                                                                                                                                                         |
 | `zIndex`         | `number` (integer)                                                                                            | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level                                                                                                                                                                                                                                          |

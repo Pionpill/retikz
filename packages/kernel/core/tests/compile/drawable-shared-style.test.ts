@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { IRScene, PathPrim, ScenePrimitive } from '../../src';
 
@@ -55,7 +55,7 @@ describe('Drawable shared style resolution', () => {
             fillOpacity: 0.4,
             stroke: '#134e4a',
             strokeWidth: 2,
-            drawOpacity: 0.6,
+            strokeOpacity: 0.6,
             opacity: 0.8,
             shadow: 'sm',
             blendMode: 'multiply',

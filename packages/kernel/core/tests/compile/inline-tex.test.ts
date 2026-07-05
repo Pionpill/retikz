@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning } from '../../src/compile/constants';
 import type { LowerTex } from '../../src/compile/text';
+import type { CompileWarning } from '../../src/compile/warning';
 import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 

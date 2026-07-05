@@ -1,4 +1,4 @@
-import type { IRArrowDetail, IRPath } from '@retikz/core';
+﻿import type { IRArrowDetail, IRPath } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from './event-props';
@@ -59,8 +59,8 @@ export type PathProps = HydrationEventProps & {
   opacity?: IRPath['opacity'];
   /** 仅 fill 透明度 0~1 */
   fillOpacity?: IRPath['fillOpacity'];
-  /** 仅 stroke 透明度 0~1（TikZ `draw opacity`） */
-  drawOpacity?: IRPath['drawOpacity'];
+  /** 仅 stroke 透明度 0~1（TikZ `stroke opacity`） */
+  strokeOpacity?: IRPath['strokeOpacity'];
   /** 主路径投影（仅作用于主 PathPrim，不含 step label / marks / endpoint arrows）；预设字符串或对象（显式字段覆盖 preset） */
   shadow?: IRPath['shadow'];
   /** 主路径混合模式（与下方已绘内容混合，W3C 分离模式）；不含 step label / marks / arrows。省略 / `normal` = 普通 source-over */

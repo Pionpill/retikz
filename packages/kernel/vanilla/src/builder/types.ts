@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CompileOptions,
   IRAnimationTrack,
   IRChild,
@@ -40,7 +40,7 @@ export type FigureRootStyle = Pick<
   | 'strokeWidth'
   | 'opacity'
   | 'fillOpacity'
-  | 'drawOpacity'
+  | 'strokeOpacity'
   | 'nodeDefault'
   | 'pathDefault'
   | 'labelDefault'
@@ -55,7 +55,7 @@ export const FIGURE_ROOT_STYLE_FIELDS = [
   'strokeWidth',
   'opacity',
   'fillOpacity',
-  'drawOpacity',
+  'strokeOpacity',
   'nodeDefault',
   'pathDefault',
   'labelDefault',

@@ -11,14 +11,14 @@ import type {
   ShapeDefinition,
 } from '../contract';
 import type { IRScene } from '../schemas';
-import type { CompileWarning } from './constants';
 import type { LowerTex, TextMeasurer } from './text';
+import type { CompileWarning } from './warning';
 
 import { compileChildrenToPrimitives, createCompileContext, filterAnimations } from './orchestration';
 import { assertFiniteLayout, computeLayout, viewBoxToLayout } from './scene';
 
-export type { CompileWarning } from './constants';
 export { CompileWarningCode } from './constants';
+export type { CompileWarning } from './warning';
 
 /** 宿主环境注入的 compile 能力。 */
 export type CompileHostOptions = {

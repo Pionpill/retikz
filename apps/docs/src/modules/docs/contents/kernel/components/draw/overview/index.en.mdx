@@ -1,4 +1,4 @@
----
+﻿---
 title: Draw
 description: Sugar component — a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
 ---
@@ -164,12 +164,12 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/ker
 | `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | Fill rule                                                                                                                                                                              |
 | `opacity`        | `number`                                                                                       | —              | Whole-path opacity, 0..1                                                                                                                                                               |
 | `fillOpacity`    | `number`                                                                                       | —              | Fill-only opacity, 0..1                                                                                                                                                                |
-| `drawOpacity`    | `number`                                                                                       | —              | Stroke-only opacity, 0..1                                                                                                                                                              |
+| `strokeOpacity`    | `number`                                                                                       | —              | Stroke-only opacity, 0..1                                                                                                                                                              |
 | `zIndex`         | `number` (integer)                                                                             | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`)                      |
 
 <Comparison target="tikz" title="Style Naming">
 
-`lineCap` / `lineJoin` map to TikZ `line cap` / `line join`; `drawOpacity` maps to `draw opacity`; `thickness` presets reuse semantic stroke-width names from `ultra thin` through `ultra thick`.
+`lineCap` / `lineJoin` map to TikZ `line cap` / `line join`; `strokeOpacity` is stroke-only opacity; `thickness` presets reuse semantic stroke-width names from `ultra thin` through `ultra thick`.
 
 </Comparison>
 

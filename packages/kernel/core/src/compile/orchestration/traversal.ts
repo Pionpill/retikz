@@ -7,10 +7,10 @@ import type {
   Transform,
 } from '../../contract';
 import type { IRChild, IRPathBase, IRPosition, IRTransform, ResolvedDropShadow } from '../../schemas';
-import type { CompileWarning } from '../constants';
 import type { DuplicateRegisterInfo } from '../namespace';
 import type { NodeLayout } from '../node';
 import type { StyleFrame } from '../style';
+import type { CompileWarning } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
 

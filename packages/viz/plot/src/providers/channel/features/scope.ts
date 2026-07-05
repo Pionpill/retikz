@@ -1,4 +1,4 @@
-import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
+﻿import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
 
 import { defineScopeChannel } from '../../../contract';
 import { type MarkOperation, type ScaledMarkValueType } from '../../../schemas';
@@ -17,7 +17,7 @@ const pickConstantStyleChannel = <T>(mark: MarkOperation, channel: string): T | 
 };
 
 const numericScopeChannel = (
-  channel: 'strokeWidth' | 'opacity' | 'fillOpacity' | 'drawOpacity' | 'zIndex',
+  channel: 'strokeWidth' | 'opacity' | 'fillOpacity' | 'strokeOpacity' | 'zIndex',
   output: ScopeChannelDefinition<number>['output'],
   deliver: ScopeChannelDefinition<number>['deliver'],
   legend?: ScopeChannelDefinition<number>['legend'],
@@ -56,11 +56,11 @@ export const BUILTIN_SCOPE_CHANNELS = {
       scope.fillOpacity = value;
     },
   ),
-  drawOpacity: numericScopeChannel(
-    'drawOpacity',
+  strokeOpacity: numericScopeChannel(
+    'strokeOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     (scope, value) => {
-      scope.drawOpacity = value;
+      scope.strokeOpacity = value;
     },
   ),
   zIndex: numericScopeChannel('zIndex', { outputKind: 'number', range: [0, 0] }, (scope, value) => {

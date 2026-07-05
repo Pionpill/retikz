@@ -16,8 +16,8 @@ import type {
   ResolvedDropShadow,
 } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { CompileWarningCodeValue } from '../constants';
 import type { LaidLine, LowerTex } from '../text';
+import type { CompileWarningCodeValue } from '../warning';
 
 /** 节点盒模型四边距。 */
 export type BoxInsets = {

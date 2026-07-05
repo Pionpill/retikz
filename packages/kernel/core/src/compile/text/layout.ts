@@ -1,6 +1,6 @@
 import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { IRFont, IRLineSpec } from '../../schemas';
-import type { CompileWarningCodeValue } from '../constants';
+import type { CompileWarningCodeValue } from '../warning';
 import type { IRInlineRun } from './inline';
 import type { FontSpec, TextMeasurer } from './metrics';
 import type { LowerTex } from './tex';

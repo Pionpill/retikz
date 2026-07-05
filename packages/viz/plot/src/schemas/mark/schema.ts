@@ -461,7 +461,7 @@ export const RelationPrimitiveStyleSchema = z
     strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
       'Shared relation stroke width: field-bound datum channel or constant non-negative value',
     ),
-    drawOpacity: PointOpacityStyleSchema.optional().describe(
+    strokeOpacity: PointOpacityStyleSchema.optional().describe(
       'Shared relation stroke opacity: field-bound datum channel or constant opacity 0..1',
     ),
     opacity: PointOpacityStyleSchema.optional().describe(
@@ -569,8 +569,8 @@ const corePathStyle = {
   stroke: PointStrokeStyleSchema.optional().describe(
     'Core Path stroke paint: field-bound datum channel or constant CSS color / PaintSpec',
   ),
-  drawOpacity: PointOpacityStyleSchema.optional().describe(
-    'Core Path drawOpacity: field-bound datum channel or constant opacity 0..1',
+  strokeOpacity: PointOpacityStyleSchema.optional().describe(
+    'Core Path strokeOpacity: field-bound datum channel or constant opacity 0..1',
   ),
   zIndex: PointZIndexStyleSchema.optional().describe('Core Path zIndex: field-bound datum channel or constant integer'),
   rotate: PointNumberStyleSchema.optional().describe('Core Path rotate: field-bound datum channel or constant angle'),
@@ -624,7 +624,7 @@ export const PointMarkSchema = z
     fillOpacity: PointOpacityStyleSchema.optional().describe(
       'Glyph fill opacity: field-bound datum channel or constant opacity 0..1',
     ),
-    drawOpacity: PointOpacityStyleSchema.optional().describe(
+    strokeOpacity: PointOpacityStyleSchema.optional().describe(
       'Glyph stroke opacity: field-bound datum channel or constant opacity 0..1',
     ),
     opacity: PointOpacityStyleSchema.optional().describe(

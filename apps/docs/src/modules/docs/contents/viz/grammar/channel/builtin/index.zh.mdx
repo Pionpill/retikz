@@ -1,4 +1,4 @@
----
+﻿---
 title: 内置通道
 description: 按通道类型说明 plot 内置通道、通道值写法、底层落点和图例能力。
 ---
@@ -46,7 +46,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 ### 透明度
 
-这个 demo 左中右分别绑定 `opacity`、`fillOpacity`、`drawOpacity`。整体透明度会同时影响填充和描边；填充透明度只弱化内部；描边透明度只弱化外框。
+这个 demo 左中右分别绑定 `opacity`、`fillOpacity`、`strokeOpacity`。整体透明度会同时影响填充和描边；填充透明度只弱化内部；描边透明度只弱化外框。
 
 <ComponentPreview name="builtin-opacity" size="md" />
 
@@ -54,7 +54,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 | ------------- | -------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------- |
 | `opacity`     | 字段：`opacity = "field"`<br />常量：`opacity = {0.45}`        | 整体透明度 | `IRScope.opacity`、`IRNode.opacity` 或 `IRPath.opacity`；字段值支持 ramp legend |
 | `fillOpacity` | 字段：`fillOpacity = "field"`<br />常量：`fillOpacity = {0.7}` | 填充透明度 | scope / node / path fill opacity                                                |
-| `drawOpacity` | 字段：`drawOpacity = "field"`<br />常量：`drawOpacity = {0.7}` | 描边透明度 | scope / node / path draw opacity                                                |
+| `strokeOpacity` | 字段：`strokeOpacity = "field"`<br />常量：`strokeOpacity = {0.7}` | 描边透明度 | scope / node / path stroke opacity                                                |
 
 ### 大小
 
