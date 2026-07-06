@@ -4,3 +4,4 @@ export * from './coordinate';
 export * from './mark';
 export * from './scale';
 export * from './theme';
+export * from './transform';

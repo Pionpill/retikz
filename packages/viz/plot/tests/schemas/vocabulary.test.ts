@@ -4,8 +4,10 @@ import {
   ReducerOperationKind,
   RowSelectorTie,
   SelectorOp,
-  TransformSchema,
 } from '@retikz/data';
+import {
+  TransformSchema,
+} from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 describe('schema vocabulary constants', () => {

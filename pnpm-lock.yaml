@@ -707,6 +707,12 @@ importers:
 
   packages/viz/plot-react:
     dependencies:
+      '@retikz/core':
+        specifier: workspace:*
+        version: link:../../kernel/core
+      '@retikz/data':
+        specifier: workspace:*
+        version: link:../data
       '@retikz/plot':
         specifier: workspace:*
         version: link:../plot

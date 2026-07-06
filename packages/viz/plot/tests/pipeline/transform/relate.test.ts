@@ -1,9 +1,10 @@
-import { applyTransforms, resolveTransformRegistry } from '@retikz/data';
-import { TransformSchema } from '@retikz/data';
+import { applyTransforms } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
+import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { PlotSpecSchema } from '../../../src/schemas';
+import { TransformSchema } from '../../../src/schemas';
 
 describe('relate transform', () => {
   const operation = {
@@ -45,7 +46,7 @@ describe('relate transform', () => {
         { id: 'c', x: 2, value: 21 },
       ],
       [operation],
-      resolveTransformRegistry(),
+      resolvePlotTransformRegistry(),
     );
     expect(rows).toEqual([
       {
@@ -70,7 +71,7 @@ describe('relate transform', () => {
         { group: 'B', id: 'b2', x: 1, value: 15 },
       ],
       [{ ...operation, groupBy: ['group'] }],
-      resolveTransformRegistry(),
+      resolvePlotTransformRegistry(),
     );
     expect(rows).toEqual([
       expect.objectContaining({ group: 'A', sourceId: 'a2', targetId: 'a1', delta: 8 }),
@@ -93,7 +94,7 @@ describe('relate transform', () => {
           target: { selector: { op: 'first' }, fields: { id: 'id' } },
         },
       ],
-      resolveTransformRegistry(),
+      resolvePlotTransformRegistry(),
     );
     expect(rows).toEqual([expect.objectContaining({ group: 'A', sourceId: 'last', targetId: 'first' })]);
   });
@@ -125,6 +126,6 @@ describe('relate transform', () => {
         },
       ],
     });
-    expect([...collectSourceFields(spec, resolveTransformRegistry())].sort()).toEqual(['id', 'value', 'x']);
+    expect([...collectSourceFields(spec, resolvePlotTransformRegistry())].sort()).toEqual(['id', 'value', 'x']);
   });
 });

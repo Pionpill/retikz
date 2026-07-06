@@ -1,8 +1,21 @@
-import type { ExternalRow } from '@retikz/data';
+import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
 
-import { applyTransforms } from '@retikz/data';
+import { applyTransforms as applyDataTransforms } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
+
+import type { TransformOperation } from '../../../src/schemas';
+
+import { resolvePlotTransformRegistry } from '../../../src/providers';
+
+const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
+
+const applyTransforms = (
+  rows: Array<ExternalRow>,
+  operations?: Array<TransformOperation>,
+  registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
+  context?: TransformContext,
+): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
 
 const SALES: Array<ExternalRow> = [
   { month: 'Jan', product: 'A', revenue: 3 },

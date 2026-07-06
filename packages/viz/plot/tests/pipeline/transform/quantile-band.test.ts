@@ -1,9 +1,10 @@
-import { applyTransforms, collectTransformFields, resolveTransformRegistry } from '@retikz/data';
-import { TransformSchema } from '@retikz/data';
+import { applyTransforms, collectTransformFields } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
+import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { createFieldCollector } from '../../../src/providers/channel/shared';
+import { TransformSchema } from '../../../src/schemas';
 import { PlotSpecSchema } from '../../../src/schemas/plot';
 
 describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
@@ -368,7 +369,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
       },
       createFieldCollector(fields),
       derivedOutputs,
-      resolveTransformRegistry(),
+      resolvePlotTransformRegistry(),
     );
 
     expect([...fields].sort()).toEqual(['group', 'value']);
@@ -415,6 +416,6 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
       ],
     });
 
-    expect([...collectSourceFields(spec, resolveTransformRegistry())].sort()).toEqual(['group', 'value']);
+    expect([...collectSourceFields(spec, resolvePlotTransformRegistry())].sort()).toEqual(['group', 'value']);
   });
 });

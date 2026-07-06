@@ -7,3 +7,4 @@ export * from './mark';
 export * from './plot';
 export * from './scale';
 export * from './theme';
+export * from './transform';

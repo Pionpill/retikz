@@ -1,6 +1,5 @@
 import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
 import { DataRefSchema } from '@retikz/data';
-import { TransformSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
@@ -9,6 +8,7 @@ import { BoxPaddingSchema, PlotLabelSchema, PlotLayoutSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { PlotThemeSchema } from '../theme';
+import { TransformSchema } from '../transform';
 import {
   CompositionAxisResolve,
   CompositionGridResolve,

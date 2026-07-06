@@ -1,7 +1,6 @@
 import type { IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
 import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
-import type { TransformOperation } from '@retikz/data';
 
 import { applyTransforms, readSourceIndex, readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
@@ -14,7 +13,7 @@ import type {
   PlotLocatorOptions,
   ResolvedAnchor,
 } from '../../contract';
-import type { Mark, MarkOperation, PlotSpec } from '../../schemas';
+import type { Mark, MarkOperation, PlotSpec, TransformOperation } from '../../schemas';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 import type { ProvenanceContext } from '../provenance';
 

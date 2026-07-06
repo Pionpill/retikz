@@ -2,8 +2,8 @@ import type { AnyTransformDefinition } from '@retikz/data';
 import type { ExternalRow } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
-import { applyTransforms, defineTransform, extractTransformKind, resolveTransformRegistry } from '@retikz/data';
-import { PlotTransform } from '@retikz/data';
+import { applyTransforms, defineTransform, extractTransformKind } from '@retikz/data';
+import { PlotTransform as DataTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -12,7 +12,8 @@ import type { PlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { resolvePlotTransformRegistry } from '../../../src/providers';
+import { PlotSpecSchema, PlotTransform } from '../../../src/schemas';
 
 const doubleDefinition = defineTransform({
   schema: z.object({
@@ -88,8 +89,8 @@ const pointSpec = (transform: PlotSpec['transform']): PlotSpec =>
 
 describe('transform registry (alpha.12 ADR-06)', () => {
   it('builtin_registry_contains_all_transform_kinds', () => {
-    const registry = resolveTransformRegistry();
-    expect([...registry.keys()].sort()).toEqual(Object.values(PlotTransform).sort());
+    const registry = resolvePlotTransformRegistry();
+    expect([...registry.keys()].sort()).toEqual([...Object.values(DataTransform), ...Object.values(PlotTransform)].sort());
   });
 
   it('define_transform_preserves_schema_and_extracts_kind', () => {
@@ -102,14 +103,14 @@ describe('transform registry (alpha.12 ADR-06)', () => {
   });
 
   it('duplicate_custom_or_builtin_registration_throws', () => {
-    expect(() => resolveTransformRegistry([doubleDefinition, doubleDefinition])).toThrow(
+    expect(() => resolvePlotTransformRegistry([doubleDefinition, doubleDefinition])).toThrow(
       /duplicate transform registration/i,
     );
     const builtinCollision = defineTransform({
       schema: z.object({ kind: z.literal('sort') }),
       apply: rows => rows,
     });
-    expect(() => resolveTransformRegistry([builtinCollision])).toThrow(/duplicate transform registration/i);
+    expect(() => resolvePlotTransformRegistry([builtinCollision])).toThrow(/duplicate transform registration/i);
   });
 
   it('malformed_registration_schema_throws', () => {
@@ -121,19 +122,19 @@ describe('transform registry (alpha.12 ADR-06)', () => {
       schema: z.object({ kind: z.string() }),
       apply: rows => rows,
     };
-    expect(() => resolveTransformRegistry([nonObject])).toThrow(/ZodObject/i);
-    expect(() => resolveTransformRegistry([missingLiteralKind])).toThrow(/literal/i);
+    expect(() => resolvePlotTransformRegistry([nonObject])).toThrow(/ZodObject/i);
+    expect(() => resolvePlotTransformRegistry([missingLiteralKind])).toThrow(/literal/i);
   });
 
   it('custom_transform_apply_uses_same_registry_pipeline', () => {
-    const registry = resolveTransformRegistry([doubleDefinition]);
+    const registry = resolvePlotTransformRegistry([doubleDefinition]);
     const rows = applyTransforms([{ x: 2, y: 5 }], [{ kind: 'double', field: 'x', as: 'x2' }], registry);
     expect(rows).toEqual([{ x: 2, y: 5, x2: 4 }]);
   });
 
   it('input_and_output_fields_feed_source_field_collection', () => {
     const spec = pointSpec([{ kind: 'double', field: 'x', as: 'x2' }]);
-    const fields = collectSourceFields(spec, resolveTransformRegistry([doubleDefinition]));
+    const fields = collectSourceFields(spec, resolvePlotTransformRegistry([doubleDefinition]));
     expect([...fields].sort()).toEqual(['x', 'y']);
   });
 
@@ -161,7 +162,7 @@ describe('transform registry (alpha.12 ADR-06)', () => {
   });
 
   it('custom_group_provenance_tracks_source_indices', () => {
-    const registry = resolveTransformRegistry([groupSumDefinition]);
+    const registry = resolvePlotTransformRegistry([groupSumDefinition]);
     const rows = applyTransforms(
       tagSourceIndex([
         { group: 'A', value: 2 },
@@ -180,7 +181,7 @@ describe('transform registry (alpha.12 ADR-06)', () => {
   });
 
   it('custom_then_builtin_chain_uses_one_registry', () => {
-    const registry = resolveTransformRegistry([doubleDefinition]);
+    const registry = resolvePlotTransformRegistry([doubleDefinition]);
     const rows = applyTransforms(
       [{ x: 2 }, { x: 1 }],
       [

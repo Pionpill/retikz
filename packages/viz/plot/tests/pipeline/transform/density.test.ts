@@ -1,14 +1,26 @@
-import type { ExternalRow } from '@retikz/data';
+import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
 
-import { applyTransforms, collectTransformFields, defineTransform, resolveTransformRegistry } from '@retikz/data';
-import { TransformSchema } from '@retikz/data';
+import { applyTransforms as applyDataTransforms, collectTransformFields, defineTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import type { TransformOperation } from '../../../src/schemas';
+
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
+import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { createFieldCollector } from '../../../src/providers/channel/shared';
+import { TransformSchema } from '../../../src/schemas';
 import { PlotSpecSchema } from '../../../src/schemas/plot';
+
+const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
+
+const applyTransforms = (
+  rows: Array<ExternalRow>,
+  operations?: Array<TransformOperation>,
+  registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
+  context?: TransformContext,
+): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
 
 const densityOperation = (operation: unknown) => TransformSchema.parse(operation);
 
@@ -203,7 +215,7 @@ describe('density transform behavior (alpha.13 ADR-03)', () => {
       }),
       createFieldCollector(fields),
       derivedOutputs,
-      resolveTransformRegistry(),
+      resolvePlotTransformRegistry(),
     );
 
     expect([...fields].sort()).toEqual(['species', 'value']);
@@ -237,7 +249,7 @@ describe('density transform behavior (alpha.13 ADR-03)', () => {
       ],
     });
 
-    expect([...collectSourceFields(spec, resolveTransformRegistry())].sort()).toEqual(['species', 'value']);
+    expect([...collectSourceFields(spec, resolvePlotTransformRegistry())].sort()).toEqual(['species', 'value']);
   });
 
   it('rejects custom transform registration collisions with density', () => {
@@ -246,6 +258,6 @@ describe('density transform behavior (alpha.13 ADR-03)', () => {
       apply: inputRows => inputRows,
     });
 
-    expect(() => resolveTransformRegistry([collision])).toThrow(/duplicate transform registration/i);
+    expect(() => resolvePlotTransformRegistry([collision])).toThrow(/duplicate transform registration/i);
   });
 });

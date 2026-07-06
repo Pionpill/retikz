@@ -1,5 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { Transform } from '@retikz/data';
+import type { Transform } from '@retikz/plot';
 import type { PlotSpec } from '@retikz/plot';
 
 type CartesianScaleNames = {

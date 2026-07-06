@@ -10,6 +10,7 @@ import type { PlotSpec } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
+import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
@@ -157,7 +158,7 @@ describe('coerce-before-transform（评审 P1 关键回归）', () => {
       ],
       new Map([['v', PlotFieldType.Continuous]]),
     );
-    const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }]);
+    const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }], resolvePlotTransformRegistry());
     expect(stacked[1]).toMatchObject({ y0: 3, y1: 8 });
   });
 });

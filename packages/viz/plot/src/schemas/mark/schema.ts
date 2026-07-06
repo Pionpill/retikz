@@ -15,11 +15,11 @@ import {
   ShadowPreset,
   ShapeRefSchema,
 } from '@retikz/core';
-import { TransformSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { EncodingSchema, MarkGeometryLabelListSchema, MarkNodeLabelListSchema, PointEncodingSchema } from '../encoding';
 import { PlotLayerSchema } from '../layer';
+import { TransformSchema } from '../transform';
 import {
   BUILTIN_MARK_TYPES,
   IntervalBoundKind,

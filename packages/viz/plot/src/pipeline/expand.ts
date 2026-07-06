@@ -13,7 +13,6 @@ import type {
   PlotFieldTypeMap,
   PlotFieldTypeValue,
 } from '@retikz/data';
-import type { TransformOperation } from '@retikz/data';
 
 import { defineComposite, JsonObjectSchema } from '@retikz/core';
 import { applyTransforms, DEFAULT_TRANSFORM_CONTEXT, tagSourceIndex } from '@retikz/data';
@@ -27,7 +26,6 @@ import {
 } from '@retikz/data';
 import { collectFormatFields, resolveFormatRegistry } from '@retikz/data';
 import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
-import { resolveTransformRegistry } from '@retikz/data';
 import { FieldOrderMode, PlotFieldType } from '@retikz/data';
 
 import type {
@@ -54,6 +52,7 @@ import type {
   MarkOperation,
   PlotSpec,
   ScaleOperation,
+  TransformOperation,
 } from '../schemas';
 import type { LegendEntry, LegendInput } from './guide';
 import type { LegendReserve, Margins, Rect } from './layout';
@@ -79,6 +78,7 @@ import {
   resolveLinearScale,
   resolveMarkChannels,
   resolveMarkRegistry,
+  resolvePlotTransformRegistry,
   resolvePositionScale,
   resolveScaleRegistry,
   resolveSqrtScale,
@@ -1558,7 +1558,7 @@ export const prepareRows = (
   markRegistry: Map<string, AnyMarkDefinition>;
 } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
+  const transformRegistry = resolvePlotTransformRegistry(options.transformDefinitions);
   const transformContext: TransformContext = {
     ...DEFAULT_TRANSFORM_CONTEXT,
     statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.statisticsReducerDefinitions),

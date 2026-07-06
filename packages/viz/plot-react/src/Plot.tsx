@@ -2,6 +2,8 @@ import type {
   DataModel,
   ExternalDatasets,
   ExternalRow,
+} from '@retikz/data';
+import type {
   LowerPlotsOptions,
   PlotSpec,
   TransformOperation,
