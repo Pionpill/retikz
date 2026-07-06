@@ -25,6 +25,11 @@ export type Page = SubPage;
 export type Section = {
   id?: string;
   label?: I18nKey;
+  /**
+   * 分组自身是否拥有文档页。
+   * @description 为 true 时 `/<module>/<section>` 渲染 `contents/<module>/<section>/index.<lang>.mdx`；未设置时保持旧行为，分组路径重定向到第一个子页面。
+   */
+  document?: true;
   pages: Array<Page>;
 };
 

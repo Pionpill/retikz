@@ -13,14 +13,18 @@ export const isChangelogLocation = (loc: DocLocation | null): boolean =>
 export const docPathSegments = (loc: DocLocation): Array<string> => {
   const parts = [loc.moduleId];
   if (loc.sectionId) parts.push(loc.sectionId);
-  parts.push(loc.pageId);
+  if (loc.pageId !== null) parts.push(loc.pageId);
   if (loc.subPageId) parts.push(loc.subPageId);
   return parts;
 };
 
 /** 组装文档页 URL path。 */
-export const buildDocPath = (moduleId: string, sectionId: string | null, pageId: string, subPageId?: string): string =>
-  '/' + docPathSegments({ moduleId, sectionId, pageId, subPageId }).join('/');
+export const buildDocPath = (
+  moduleId: string,
+  sectionId: string | null,
+  pageId: string | null,
+  subPageId?: string,
+): string => '/' + docPathSegments({ moduleId, sectionId, pageId, subPageId }).join('/');
 
 const collectFromSubPage = (
   moduleId: string,
@@ -66,6 +70,14 @@ export const flattenLeaves = (moduleId: string, sections: Array<Section>): Array
   const acc: Array<LeafNode> = [];
   for (const section of sections) {
     const sectionId = section.label ? (section.id ?? null) : null;
+    if (section.document && section.id && section.label) {
+      acc.push({
+        sectionId: section.id,
+        pageId: null,
+        label: section.label,
+        path: buildDocPath(moduleId, section.id, null),
+      });
+    }
     for (const page of section.pages) {
       collectFromPage(moduleId, sectionId, page, acc);
     }
@@ -84,10 +96,15 @@ const mapSidebarChildren = (
   }));
 
 /** 从 docs data 构建 sidebar 视图数据。 */
-export const buildSidebarCategories = (t: TFunction, sections: Array<Section>): Array<SidebarCategoryData> =>
+export const buildSidebarCategories = (
+  t: TFunction,
+  moduleId: string,
+  sections: Array<Section>,
+): Array<SidebarCategoryData> =>
   sections.map((section, index) => ({
     value: section.id ?? `__ungrouped_${index}`,
     label: section.label ? t(section.label) : undefined,
+    path: section.document && section.id ? buildDocPath(moduleId, section.id, null) : undefined,
     ungrouped: !section.label,
     modules: section.pages.map(page => ({
       value: page.id,

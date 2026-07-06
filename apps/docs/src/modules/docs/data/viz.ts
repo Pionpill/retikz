@@ -21,11 +21,8 @@ export const vizSection: Array<Section> = [
   {
     id: 'data',
     label: 'viz.dataFlow',
+    document: true,
     pages: [
-      {
-        id: 'overview',
-        label: 'viz.dataFlowOverview',
-      },
       { id: 'model', label: 'viz.dataModel' },
       { id: 'transform', label: 'viz.dataTransform' },
       { id: 'provenance', label: 'viz.dataProvenance' },

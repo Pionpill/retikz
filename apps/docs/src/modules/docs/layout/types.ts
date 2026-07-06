@@ -5,7 +5,8 @@ export type DocLocation = {
   moduleId: string;
   /** 分组 id；无分组页面时为 null。 */
   sectionId: string | null;
-  pageId: string;
+  /** 路由 :pageId 段；分组文档页没有该段，因此为 null。 */
+  pageId: string | null;
   subPageId?: string;
 };
 
@@ -13,8 +14,8 @@ export type DocLocation = {
 export type LeafNode = {
   /** 路由 :sectionId 段；ungrouped 时为 null。 */
   sectionId: string | null;
-  /** 路由 :pageId 段。 */
-  pageId: string;
+  /** 路由 :pageId 段；分组文档页为 null。 */
+  pageId: string | null;
   /** 路由 :subPageId 段。 */
   subPageId?: string;
   /** 节点 i18n label key。 */

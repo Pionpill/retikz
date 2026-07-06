@@ -37,54 +37,73 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
 
   return (
     <nav className="flex flex-col">
-      {categories.map((category, idx) => (
-        <Fragment key={category.value}>
-          {idx > 0 && <Separator className="my-3" />}
-          <section className="flex flex-col">
-            {category.label && (
-              <h4 className="mb-1.5 px-3 text-xs font-medium text-muted-foreground">{category.label}</h4>
-            )}
-            <ul className="flex flex-col gap-0.5">
-              {category.modules.map(module => {
-                const modulePath = category.ungrouped
-                  ? `/${moduleId}/${module.value}`
-                  : `/${moduleId}/${category.value}/${module.value}`;
-                const hasChildren = Boolean(module.children?.length);
-
-                if (!hasChildren) {
-                  const isActive = pathname.toLowerCase() === modulePath.toLowerCase();
-                  return (
-                    <li key={module.value}>
-                      <button
-                        type="button"
-                        className={cn(leafBase, isActive && leafActive)}
-                        onClick={e => {
-                          e.preventDefault();
-                          navigate(modulePath);
-                        }}
-                      >
-                        <span className="truncate">{module.label}</span>
-                      </button>
-                    </li>
-                  );
-                }
-
-                return (
-                  <AppSidebarMenuItem
-                    key={module.value}
-                    item={{
-                      value: module.value,
-                      label: module.label,
-                      children: module.children,
+      {categories.map((category, idx) => {
+        const categoryPath = category.path;
+        return (
+          <Fragment key={category.value}>
+            {idx > 0 && <Separator className="my-3" />}
+            <section className="flex flex-col">
+              {category.label &&
+                (categoryPath ? (
+                  <button
+                    type="button"
+                    className={cn(
+                      'mb-1.5 flex w-full cursor-pointer items-center rounded-md px-3 py-1 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground',
+                      pathname.toLowerCase() === categoryPath.toLowerCase() && 'bg-accent text-foreground',
+                    )}
+                    onClick={e => {
+                      e.preventDefault();
+                      navigate(categoryPath);
                     }}
-                    path={modulePath.toLowerCase()}
-                  />
-                );
-              })}
-            </ul>
-          </section>
-        </Fragment>
-      ))}
+                  >
+                    <span className="truncate">{category.label}</span>
+                  </button>
+                ) : (
+                  <h4 className="mb-1.5 px-3 text-xs font-medium text-muted-foreground">{category.label}</h4>
+                )
+              )}
+              <ul className="flex flex-col gap-0.5">
+                {category.modules.map(module => {
+                  const modulePath = category.ungrouped
+                    ? `/${moduleId}/${module.value}`
+                    : `/${moduleId}/${category.value}/${module.value}`;
+                  const hasChildren = Boolean(module.children?.length);
+
+                  if (!hasChildren) {
+                    const isActive = pathname.toLowerCase() === modulePath.toLowerCase();
+                    return (
+                      <li key={module.value}>
+                        <button
+                          type="button"
+                          className={cn(leafBase, isActive && leafActive)}
+                          onClick={e => {
+                            e.preventDefault();
+                            navigate(modulePath);
+                          }}
+                        >
+                          <span className="truncate">{module.label}</span>
+                        </button>
+                      </li>
+                    );
+                  }
+
+                  return (
+                    <AppSidebarMenuItem
+                      key={module.value}
+                      item={{
+                        value: module.value,
+                        label: module.label,
+                        children: module.children,
+                      }}
+                      path={modulePath.toLowerCase()}
+                    />
+                  );
+                })}
+              </ul>
+            </section>
+          </Fragment>
+        );
+      })}
     </nav>
   );
 };

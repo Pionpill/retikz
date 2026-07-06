@@ -27,6 +27,8 @@ export type SidebarCategoryData = {
   value: string;
   /** 分组标题（已过 t()）；不填则该 Group 不渲染顶部 label，菜单项直接展示 */
   label?: string;
+  /** 分组自身的文档路径；不存在时分组标题保持不可点击。 */
+  path?: string;
   /** 无分组：菜单项直挂 module 根（URL 跳过 category 段）。默认 false */
   ungrouped?: boolean;
   /** 该分组下的菜单项 */
