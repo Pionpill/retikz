@@ -27,12 +27,14 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 
 const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileToScene(ir).primitives);
 const rectOf = (ir: IRScene): RectPrim | undefined => allPrims(ir).find((p): p is RectPrim => p.type === 'rect');
-const ellipseOf = (ir: IRScene): EllipsePrim | undefined => allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');
+const ellipseOf = (ir: IRScene): EllipsePrim | undefined =>
+  allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');
 const linePathOf = (ir: IRScene): PathPrim | undefined =>
   allPrims(ir).find((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
 const textsOf = (ir: IRScene): Array<TextPrim> => allPrims(ir).filter((p): p is TextPrim => p.type === 'text');
 /** 取指定文字内容的 TextPrim（node 文本 vs step label 文本区分） */
-const textWith = (ir: IRScene, content: string): TextPrim | undefined => textsOf(ir).find(t => t.lines[0]?.text === content);
+const textWith = (ir: IRScene, content: string): TextPrim | undefined =>
+  textsOf(ir).find(t => t.lines[0]?.text === content);
 
 /**
  * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何里抽"主导箭头颜色"

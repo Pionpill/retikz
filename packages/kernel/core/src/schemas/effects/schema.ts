@@ -11,10 +11,7 @@ export const DropShadowSchema = z
       .describe(
         'Tailwind-style size preset seeding offsetX / offsetY / blur / color; any explicit field below overrides it.',
       ),
-    offsetX: z
-      .number()
-      .optional()
-      .describe('Horizontal shadow offset in user units. Overrides the preset value.'),
+    offsetX: z.number().optional().describe('Horizontal shadow offset in user units. Overrides the preset value.'),
     offsetY: z
       .number()
       .optional()
@@ -24,11 +21,9 @@ export const DropShadowSchema = z
       .nonnegative()
       .optional()
       .describe('Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.'),
-    color: CssColorSchema
-      .optional()
-      .describe(
-        'Shadow color, any CSS color (overrides preset); when neither preset nor color given = translucent black rgba(0,0,0,0.5).',
-      ),
+    color: CssColorSchema.optional().describe(
+      'Shadow color, any CSS color (overrides preset); when neither preset nor color given = translucent black rgba(0,0,0,0.5).',
+    ),
     opacity: OpacitySchema.optional().describe('Shadow opacity multiplier applied to the resolved shadow color.'),
   })
   .refine(s => s.preset !== undefined || (s.offsetX !== undefined && s.offsetY !== undefined), {

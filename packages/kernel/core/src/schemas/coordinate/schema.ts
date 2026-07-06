@@ -17,9 +17,7 @@ export const CoordinateSchema = z
       .describe('Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes'),
     position: z
       .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema, BetweenPositionSchema])
-      .describe(
-        'Coordinate position. Supports Cartesian, polar, at-position, offset, and between-position forms.',
-      ),
+      .describe('Coordinate position. Supports Cartesian, polar, at-position, offset, and between-position forms.'),
   })
   .strict()
   .describe(

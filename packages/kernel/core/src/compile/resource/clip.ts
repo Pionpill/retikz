@@ -1,10 +1,4 @@
-import type {
-  ClipDefinition,
-  ClipResource,
-  ClipShape,
-  PathClipShape,
-  PathCommand,
-} from '../../contract';
+import type { ClipDefinition, ClipResource, ClipShape, PathClipShape, PathCommand } from '../../contract';
 import type { IRClipSpec } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';

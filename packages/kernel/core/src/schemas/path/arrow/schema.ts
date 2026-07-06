@@ -8,9 +8,7 @@ export const ArrowEndDetailSchema = z
     shape: z
       .union([z.enum(BuiltinArrowShape), z.string().min(1)])
       .optional()
-      .describe(
-        'Arrow shape provider name. Built-ins and registered custom names are accepted.',
-      ),
+      .describe('Arrow shape provider name. Built-ins and registered custom names are accepted.'),
     scale: z
       .number()
       .positive()
@@ -26,16 +24,12 @@ export const ArrowEndDetailSchema = z
       .nonnegative()
       .optional()
       .describe('Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition fallback.'),
-    color: CssColorSchema
-      .optional()
-      .describe(
-        'Arrow color override. Hollow arrows use it as stroke; solid arrows use it as the fallback fill/stroke color. Omitted arrows inherit the path stroke.',
-      ),
-    fill: CssColorSchema
-      .optional()
-      .describe(
-        'Fill override for solid arrow shapes. Hollow arrow definitions ignore fill and use `color` for their outline.',
-      ),
+    color: CssColorSchema.optional().describe(
+      'Arrow color override. Hollow arrows use it as stroke; solid arrows use it as the fallback fill/stroke color. Omitted arrows inherit the path stroke.',
+    ),
+    fill: CssColorSchema.optional().describe(
+      'Fill override for solid arrow shapes. Hollow arrow definitions ignore fill and use `color` for their outline.',
+    ),
     opacity: OpacitySchema.optional().describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),
     lineWidth: z
       .number()

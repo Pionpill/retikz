@@ -17,9 +17,7 @@ const normalizeLabelBoundaryPosition = (position: IRNodeLabelBoundaryPosition): 
   boundary: position.boundary,
 });
 
-export const normalizeLabelPosition = (
-  position: IRNodeLabel['position'] | undefined,
-): NodeLabelLayout['position'] => {
+export const normalizeLabelPosition = (position: IRNodeLabel['position'] | undefined): NodeLabelLayout['position'] => {
   if (position === undefined) return 'top';
   if (typeof position !== 'string') {
     return typeof position === 'object' ? normalizeLabelBoundaryPosition(position) : position;
@@ -94,12 +92,7 @@ export type LabelBoxEdgeTowardInput = {
   halfHeight: number;
 };
 
-export const labelBoxEdgeToward = ({
-  center,
-  border,
-  halfWidth,
-  halfHeight,
-}: LabelBoxEdgeTowardInput): Position => {
+export const labelBoxEdgeToward = ({ center, border, halfWidth, halfHeight }: LabelBoxEdgeTowardInput): Position => {
   const dx = border[0] - center[0];
   const dy = border[1] - center[1];
   const len = Math.hypot(dx, dy);

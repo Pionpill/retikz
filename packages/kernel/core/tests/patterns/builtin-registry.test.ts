@@ -11,7 +11,7 @@ import type {
   ResolvedPatternTile,
   SceneResource,
 } from '../../src/contract';
-import type { IRPaintSpec,IRScene } from '../../src/schemas';
+import type { IRPaintSpec, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { definePattern } from '../../src/contract';
@@ -278,7 +278,7 @@ describe('Pattern registry — BUILTIN_PATTERNS 注册表结构', () => {
     // 正向：path / ellipse / rect / group 合法 motif
     const ok: PatternDefinition = {
       name: 'ok',
-emit: (ctx: PatternEmitContext): Array<MarkerPrimitive> => [
+      emit: (ctx: PatternEmitContext): Array<MarkerPrimitive> => [
         { type: 'path', commands: [{ kind: 'move', to: [0, 0] }] },
         { type: 'ellipse', cx: ctx.size / 2, cy: ctx.size / 2, rx: 1, ry: 1, fill: ctx.color },
       ],

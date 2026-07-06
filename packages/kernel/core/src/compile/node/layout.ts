@@ -1,8 +1,4 @@
-﻿import type {
-  BoundaryDefinition,
-  ShapeDefinition,
-  Transform,
-} from '../../contract';
+﻿import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type { IRLabelDefault, IRNode } from '../../schemas';
 import type { NamespaceStack } from '../namespace';

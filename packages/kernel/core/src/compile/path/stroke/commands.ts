@@ -150,13 +150,7 @@ export const createPathCommandEmitter = ({
     lastEnd = endPoint;
   };
 
-  const emitEllipseArc = ({
-    center,
-    radiusX,
-    radiusY,
-    startAngle,
-    endAngle,
-  }: EmitEllipseArcCommandInput): void => {
+  const emitEllipseArc = ({ center, radiusX, radiusY, startAngle, endAngle }: EmitEllipseArcCommandInput): void => {
     noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({

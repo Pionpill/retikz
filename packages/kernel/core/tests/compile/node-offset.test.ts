@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { EllipsePrim, RectPrim, ScenePrimitive } from '../../src/contract';
-import type { IROffsetPosition,IRScene } from '../../src/schemas';
+import type { IROffsetPosition, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { OffsetPositionSchema } from '../../src/schemas';

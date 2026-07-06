@@ -95,11 +95,7 @@ export const emitLabelPrimitive = (
   const fontStyle = label.font?.style;
   const font: FontSpec = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
   const side: LabelSide =
-    label.side === undefined
-      ? label.sloped === true || label.placement === 'inside'
-        ? 'center'
-        : 'top'
-      : label.side;
+    label.side === undefined ? (label.sloped === true || label.placement === 'inside' ? 'center' : 'top') : label.side;
   const sloped = label.sloped === true;
   const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;

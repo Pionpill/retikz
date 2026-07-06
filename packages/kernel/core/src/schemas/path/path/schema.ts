@@ -16,14 +16,8 @@ export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke cor
 
 export const PathAnisotropicScaleSchema = z
   .object({
-    x: z
-      .number()
-      .positive()
-      .describe('Scale factor on the x axis.'),
-    y: z
-      .number()
-      .positive()
-      .describe('Scale factor on the y axis.'),
+    x: z.number().positive().describe('Scale factor on the x axis.'),
+    y: z.number().positive().describe('Scale factor on the y axis.'),
   })
   .describe('Anisotropic scale with independent x / y factors.');
 
@@ -34,9 +28,7 @@ export const PathScaleSchema = z
   );
 
 export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
-  kind: z
-    .literal('arrow')
-    .describe('Discriminator marking this mark as an arrow tip.'),
+  kind: z.literal('arrow').describe('Discriminator marking this mark as an arrow tip.'),
 }).describe(
   'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
 );
@@ -75,19 +67,15 @@ export const PathBaseSchema = z
       .number()
       .optional()
       .describe('Stroke dash offset in user units. Positive and negative finite values are allowed.'),
-    fillRule: PathFillRuleSchema
-      .optional()
-      .describe(
-        'How self-intersecting / nested sub-paths are filled. `nonzero` (default) winds-by-direction; `evenodd` toggles fill on each crossing — useful for ring / donut shapes.',
-      ),
-    lineCap: PathLineCapSchema
-      .optional()
-      .describe(
-        'Stroke endpoint shape. Omitted fields use butt; round adds a half-disc cap and square extends past the endpoint.',
-      ),
-    lineJoin: PathLineJoinSchema
-      .optional()
-      .describe('Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.'),
+    fillRule: PathFillRuleSchema.optional().describe(
+      'How self-intersecting / nested sub-paths are filled. `nonzero` (default) winds-by-direction; `evenodd` toggles fill on each crossing — useful for ring / donut shapes.',
+    ),
+    lineCap: PathLineCapSchema.optional().describe(
+      'Stroke endpoint shape. Omitted fields use butt; round adds a half-disc cap and square extends past the endpoint.',
+    ),
+    lineJoin: PathLineJoinSchema.optional().describe(
+      'Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.',
+    ),
     roundedCorners: z
       .number()
       .nonnegative()
@@ -95,20 +83,16 @@ export const PathBaseSchema = z
       .describe(
         'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
       ),
-    rotate: AngleDegreesSchema
-      .optional()
-      .describe(
-        'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
-      ),
+    rotate: AngleDegreesSchema.optional().describe(
+      'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
+    ),
     scale: PathScaleSchema.optional().describe(
       'Scale the whole path around its bounding-box center. Applied with rotate around the same center.',
     ),
     marks: z
       .array(PathMarkPlacementSchema)
       .optional()
-      .describe(
-        'Marks placed along the path at normalized positions; direction follows the path tangent.',
-      ),
+      .describe('Marks placed along the path at normalized positions; direction follows the path tangent.'),
     children: z
       .array(StepSchema)
       .min(2)

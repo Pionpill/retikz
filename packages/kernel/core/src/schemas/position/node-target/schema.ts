@@ -6,9 +6,7 @@ import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 
 export const BoundaryAnchorRefSchema = z
   .object({
-    side: z
-      .enum(Side)
-      .describe('Canonical edge of the shape boundary.'),
+    side: z.enum(Side).describe('Canonical edge of the shape boundary.'),
     fraction: NormalizedFractionSchema.describe(
       'Proportion along the edge; top/bottom run left to right, right/left run top to bottom.',
     ),
@@ -20,13 +18,13 @@ export const AnchorRefSchema = z
     z
       .string()
       .min(1)
-      .describe(
-        'Named anchor: canonical anchor or shape-specific anchor. Unknown names fail at compile time.',
-      ),
+      .describe('Named anchor: canonical anchor or shape-specific anchor. Unknown names fail at compile time.'),
     AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),
     BoundaryAnchorRefSchema,
   ])
-  .describe('Anchor reference: named anchor, angle in degrees, or proportional point { side, fraction } on the boundary');
+  .describe(
+    'Anchor reference: named anchor, angle in degrees, or proportional point { side, fraction } on the boundary',
+  );
 
 export const NodeTargetSchema = z
   .object({

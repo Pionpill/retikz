@@ -4,7 +4,7 @@ import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { BlendMode,PathSchema } from '../../src/schemas';
+import { BlendMode, PathSchema } from '../../src/schemas';
 import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -77,7 +77,9 @@ describe('[path-blend] 错误路径（schema 拒）', () => {
 
 describe('[path-blend] 交互', () => {
   it('blend-text-not-inherited（path 类比）：带 arrow 的 path + blendMode → arrow spec 不带 blendMode', () => {
-    const prim = findPathPrim(compilePath({ stroke: 'cyan', marks: arrowMarks('->'), blendMode: 'multiply' }).primitives);
+    const prim = findPathPrim(
+      compilePath({ stroke: 'cyan', marks: arrowMarks('->'), blendMode: 'multiply' }).primitives,
+    );
     expect(prim.blendMode).toBe('multiply');
     expect(prim.arrowEnd).toBeDefined();
     expect((prim.arrowEnd as unknown as { blendMode?: unknown }).blendMode).toBeUndefined();

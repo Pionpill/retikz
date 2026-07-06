@@ -1,17 +1,6 @@
-import type {
-  AnchorInput,
-  AnchorValue,
-  SideValue,
-} from '../shared';
+import type { AnchorInput, AnchorValue, SideValue } from '../shared';
 
-import {
-  Anchor,
-  CenterAnchor,
-  Corner,
-  isAnchor,
-  isSide,
-  Side,
-} from '../shared';
+import { Anchor, CenterAnchor, Corner, isAnchor, isSide, Side } from '../shared';
 
 const SideAliasToSide: Record<string, SideValue> = {
   north: Side.Top,
@@ -46,5 +35,4 @@ export const parseAnchorAlias = (name: string): AnchorInput | undefined =>
   isAnchor(name) ? name : AnchorAliasToAnchor[name];
 
 /** Parser sugar：把 compass / TikZ side 别名转换为 core canonical side。 */
-export const parseSideAlias = (name: string): SideValue | undefined =>
-  isSide(name) ? name : SideAliasToSide[name];
+export const parseSideAlias = (name: string): SideValue | undefined => (isSide(name) ? name : SideAliasToSide[name]);

@@ -24,7 +24,8 @@ const pathWith = (config: Record<string, unknown>, ...steps: Array<unknown>): IR
   scene([{ type: 'path', ...config, children: steps as never }]);
 
 /** 取编译后首个 PathPrim 的 commands 的 kind 序列（结构化断言用） */
-const kinds = (ir: IRScene): Array<string> => findPathPrim(compileToScene(ir, silent).primitives).commands.map(c => c.kind);
+const kinds = (ir: IRScene): Array<string> =>
+  findPathPrim(compileToScene(ir, silent).primitives).commands.map(c => c.kind);
 
 // ───────────────────────── Happy path ─────────────────────────
 

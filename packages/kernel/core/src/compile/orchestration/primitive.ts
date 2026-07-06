@@ -24,10 +24,7 @@ export const recordPrimitiveZIndex = (
 };
 
 /** 按 zIndex 升序稳定排序，同 zIndex 保持原顺序。 */
-export const stableSortByZIndex = (
-  arr: Array<ScenePrimitive>,
-  table: PrimitiveZIndexTable,
-): Array<ScenePrimitive> => {
+export const stableSortByZIndex = (arr: Array<ScenePrimitive>, table: PrimitiveZIndexTable): Array<ScenePrimitive> => {
   const decorated = arr.map((prim, index) => ({ prim, index, z: table.get(prim) ?? 0 }));
   decorated.sort((a, b) => a.z - b.z || a.index - b.index);
   for (let i = 0; i < arr.length; i++) arr[i] = decorated[i].prim;

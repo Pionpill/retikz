@@ -80,9 +80,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
   });
 
   it('polar-translate 带 origin=笛卡尔', () => {
-    const out = lower(
-      [{ kind: 'polar-translate', origin: [10, 5], angle: 90, radius: 20 }],
-    );
+    const out = lower([{ kind: 'polar-translate', origin: [10, 5], angle: 90, radius: 20 }]);
     expect(out).not.toBeNull();
     const t = out![0] as { x: number; y: number };
     expect(t.x).toBeCloseTo(10, 6);
@@ -132,11 +130,8 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
       ['A', [0, 0]],
       ['B', [100, 40]],
     ]);
-    const out = lower(
-      [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }],
-      idx,
-      {
-        resolveBetweenGlobal: between => {
+    const out = lower([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }], idx, {
+      resolveBetweenGlobal: between => {
         const [a, b] = between.between;
         const aLayout = 'id' in a ? idx.lookup(a.id) : null;
         const bLayout = 'id' in b ? idx.lookup(b.id) : null;
@@ -146,8 +141,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
           aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
         ];
       },
-      },
-    );
+    });
     expect(out![0]).toEqual({ kind: 'translate', x: 25, y: 10 });
   });
 });
@@ -242,16 +236,18 @@ describe('lowerScopeTransforms 链复合', () => {
       { kind: 'rotate', degrees: 30 },
       { kind: 'scale', x: 2 },
     ];
-    const out = lower(transforms, idx, { resolveBetweenGlobal: between => {
-      const [a, b] = between.between;
-      const aLayout = 'id' in a ? idx.lookup(a.id) : null;
-      const bLayout = 'id' in b ? idx.lookup(b.id) : null;
-      if (!aLayout || !bLayout) return null;
-      return [
-        aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
-        aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
-      ];
-    } });
+    const out = lower(transforms, idx, {
+      resolveBetweenGlobal: between => {
+        const [a, b] = between.between;
+        const aLayout = 'id' in a ? idx.lookup(a.id) : null;
+        const bLayout = 'id' in b ? idx.lookup(b.id) : null;
+        if (!aLayout || !bLayout) return null;
+        return [
+          aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
+          aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
+        ];
+      },
+    });
     expect(out).not.toBeNull();
     expect(out!).toHaveLength(7);
     expect(out![0]).toEqual({ kind: 'translate', x: 5, y: 5 });

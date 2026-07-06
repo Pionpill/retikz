@@ -1,10 +1,5 @@
 import type { ValueOf } from '../types';
-import type {
-  Anchor,
-  CenterAnchor,
-  Corner,
-  Side,
-} from './constants';
+import type { Anchor, CenterAnchor, Corner, Side } from './constants';
 
 export type CenterAnchorValue = ValueOf<typeof CenterAnchor>;
 

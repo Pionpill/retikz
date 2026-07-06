@@ -57,11 +57,7 @@ export const boundaryPointOf = (
 export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
-      const own = layout.shapeDef.anchor(
-        layout.rect,
-        CenterAnchor.Center,
-        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-      );
+      const own = layout.shapeDef.anchor(layout.rect, CenterAnchor.Center, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
       return own ?? [layout.rect.x, layout.rect.y];
     }
 

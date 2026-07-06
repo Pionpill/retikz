@@ -26,7 +26,9 @@ export const MathRunSchema = z
       .describe(
         'Display (block) vs inline TeX metrics; default inline (false). The `$$...$$` sugar sets this true, `$...$` leaves it false.',
       ),
-    fill: CssColorSchema.optional().describe('Glyph color for this formula segment; overrides the line / block text color.'),
+    fill: CssColorSchema.optional().describe(
+      'Glyph color for this formula segment; overrides the line / block text color.',
+    ),
     opacity: OpacitySchema.optional().describe('Per-run opacity.'),
   })
   .strict()

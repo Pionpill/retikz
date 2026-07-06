@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
-import type { IRPaintSpec,IRScene } from '../../src/schemas';
+import type { IRPaintSpec, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';

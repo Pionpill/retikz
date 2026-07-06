@@ -28,8 +28,10 @@ export type NamedProviderDefinition = {
 };
 
 /** 带同名属性索引的内置 provider 数组。 */
-export type NamedProviderArray<TDefinition extends NamedProviderDefinition, TName extends string = string> =
-  ReadonlyArray<TDefinition> & Readonly<Record<TName, TDefinition>>;
+export type NamedProviderArray<
+  TDefinition extends NamedProviderDefinition,
+  TName extends string = string,
+> = ReadonlyArray<TDefinition> & Readonly<Record<TName, TDefinition>>;
 
 /** 带 key 属性索引的内置 provider 数组。 */
 export type IndexedProviderArray<TDefinition, TKey extends string = string> = ReadonlyArray<TDefinition> &

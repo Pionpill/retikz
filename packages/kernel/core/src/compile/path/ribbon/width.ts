@@ -97,7 +97,10 @@ export const centerlineWidthFunction = (
   }
   const mode = ribbon.interpolation ?? 'linear';
   return offset =>
-    assertFiniteWidth(interpolate({ from: startWidth, to: endWidth, t: offset, mode }), `endpoint width taper at offset ${offset}`);
+    assertFiniteWidth(
+      interpolate({ from: startWidth, to: endWidth, t: offset, mode }),
+      `endpoint width taper at offset ${offset}`,
+    );
 };
 
 /** 动态 width（stops/profile）会让解析型 offset 不再可靠，需要走采样轮廓。 */

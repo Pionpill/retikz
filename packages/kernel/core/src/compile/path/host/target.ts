@@ -114,10 +114,7 @@ export const clipForTarget = (
   toward: IRPosition,
   context: ClipForTargetContext,
 ): IRPosition | null => {
-  const {
-    namespaceStack,
-    scopeChain = [],
-  } = context;
+  const { namespaceStack, scopeChain = [] } = context;
   // NodeTarget 的裁剪端点可能随 toward 落在不同连接面位置。
   if (isNodeTarget(target)) {
     const node = namespaceStack.lookup(target.id);

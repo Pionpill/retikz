@@ -1,8 +1,4 @@
-﻿import type {
-  GroupPrim,
-  ResolvedShapeStyle,
-  ScenePrimitive,
-} from '../../contract';
+﻿import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive } from '../../contract';
 import type { IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../resource';
@@ -177,11 +173,7 @@ const emitNodeLabelContentPrimitive = (
 };
 
 /** 发出节点附属 label 图元。 */
-const emitNodeLabelPrimitives = (
-  layout: NodeLayout,
-  label: NodeLabelLayout,
-  round: Round,
-): Array<ScenePrimitive> => {
+const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, round: Round): Array<ScenePrimitive> => {
   const labelCenterPosition = labelCenter(layout, label);
   const [lx, ly] = labelCenterPosition;
   const primitives: Array<ScenePrimitive> = [];

@@ -38,9 +38,7 @@ describe('lowerComposites — adversarial', () => {
       expand: () => [],
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [] };
-    expect(() => compileToScene(ir, { composites: [dupA, dupB] })).toThrow(
-      /duplicate composite registration: "x\.y"/,
-    );
+    expect(() => compileToScene(ir, { composites: [dupA, dupB] })).toThrow(/duplicate composite registration: "x\.y"/);
   });
 
   it('non-zodobject-schema-throws: schema 非 ZodObject（z.string）→ 注册期可诊断 throw', () => {
@@ -83,7 +81,11 @@ describe('lowerComposites — adversarial', () => {
   });
 
   it('custom-maxdepth-respected: maxCompositeDepth=0 → 任何 tier2 即 throw', () => {
-    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }] };
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
+    };
     expect(() => compileToScene(ir, { composites: [labeledBox], maxCompositeDepth: 0 })).toThrow(
       /COMPOSITE_NEST_TOO_DEEP/,
     );

@@ -1,10 +1,6 @@
 ﻿import type { BoundsInsets } from '@retikz/math';
 
-import type {
-  BoundaryDefinition,
-  ShapeDefinition,
-  TextLine,
-} from '../../contract';
+import type { BoundaryDefinition, ShapeDefinition, TextLine } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
   BlendModeValue,

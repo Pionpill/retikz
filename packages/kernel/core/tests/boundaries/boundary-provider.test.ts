@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import type { CompileOptions } from '../../src/compile/compile';
 import type { BoundaryDefinition, ScenePrimitive } from '../../src/contract';
-import type { IRBoundary,IRScene } from '../../src/schemas';
+import type { IRBoundary, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { defineBoundary, defineShape } from '../../src/contract';
@@ -38,8 +38,8 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
       p.type === 'path' && !p.commands.some(command => command.kind === 'close'),
   );
   if (prim === undefined) throw new Error('expected connection path');
-  const line = prim.commands.find((command): command is Extract<(typeof prim.commands)[number], { kind: 'line' }> =>
-    command.kind === 'line',
+  const line = prim.commands.find(
+    (command): command is Extract<(typeof prim.commands)[number], { kind: 'line' }> => command.kind === 'line',
   );
   if (line === undefined) throw new Error('expected line command');
   return [line.to[0], line.to[1]];

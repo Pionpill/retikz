@@ -19,14 +19,8 @@ const starParamsSchema = z
       .min(3)
       .max(MAX_STAR_POINTS)
       .describe(`Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`),
-    innerRadius: z
-      .number()
-      .positive()
-      .describe('Inner (notch) radius in user units.'),
-    outerRadius: z
-      .number()
-      .positive()
-      .describe('Outer (tip) radius in user units; must be > innerRadius.'),
+    innerRadius: z.number().positive().describe('Inner (notch) radius in user units.'),
+    outerRadius: z.number().positive().describe('Outer (tip) radius in user units; must be > innerRadius.'),
     rotate: z
       .number()
       .optional()

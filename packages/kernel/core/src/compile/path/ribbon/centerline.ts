@@ -265,11 +265,7 @@ const segmentToSampler = ({
     const fallback = point.distance(input.from, input.to) / 3;
     const control1 =
       isFirst && endpointTangents.start
-        ? point.along(
-            input.from,
-            endpointTangents.start,
-            controlHandleLength(input.from, input.control1, fallback),
-          )
+        ? point.along(input.from, endpointTangents.start, controlHandleLength(input.from, input.control1, fallback))
         : input.control1;
     const control2 =
       isLast && endpointTangents.end

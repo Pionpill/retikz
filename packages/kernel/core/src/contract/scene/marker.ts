@@ -1,10 +1,4 @@
-﻿import type {
-  IRGraphicStyle,
-  IRPathBase,
-  PathFillRuleValue,
-  PathLineCapValue,
-  PathLineJoinValue,
-} from '../../schemas';
+﻿import type { IRGraphicStyle, IRPathBase, PathFillRuleValue, PathLineCapValue, PathLineJoinValue } from '../../schemas';
 import type { Transform } from './group';
 import type { PathCommand } from './path';
 

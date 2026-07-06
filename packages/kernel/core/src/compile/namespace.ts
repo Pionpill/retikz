@@ -113,7 +113,9 @@ export class NamespaceStack {
     }
     const targetFrame = this.frames[frameDepth];
     if (!targetFrame.has(id)) {
-      throw new Error(`NamespaceStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`);
+      throw new Error(
+        `NamespaceStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`,
+      );
     }
     if (expectedCurrent !== undefined && targetFrame.get(id) !== expectedCurrent) return false;
     targetFrame.set(id, layout);

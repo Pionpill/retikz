@@ -11,10 +11,7 @@ describe("compile path: 'circlePath'", () => {
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'circlePath', radius: 10 },
       ]),
-    ).toEqual([
-      move([10, 0]),
-      ellipseArc([0, 0], 10, 10, 0, 360),
-    ]);
+    ).toEqual([move([10, 0]), ellipseArc([0, 0], 10, 10, 0, 360)]);
   });
 
   it('circle 之后接 line：line 起点是圆心（不是圆周）', () => {
@@ -26,12 +23,7 @@ describe("compile path: 'circlePath'", () => {
         { type: 'step', kind: 'circlePath', radius: 10 },
         { type: 'step', kind: 'line', to: [50, 50] },
       ]),
-    ).toEqual([
-      move([10, 0]),
-      ellipseArc([0, 0], 10, 10, 0, 360),
-      move([0, 0]),
-      line([50, 50]),
-    ]);
+    ).toEqual([move([10, 0]), ellipseArc([0, 0], 10, 10, 0, 360), move([0, 0]), line([50, 50])]);
   });
 
   it('circle 圆心带偏移', () => {
@@ -40,9 +32,6 @@ describe("compile path: 'circlePath'", () => {
         { type: 'step', kind: 'move', to: [20, 30] },
         { type: 'step', kind: 'circlePath', radius: 5 },
       ]),
-    ).toEqual([
-      move([25, 30]),
-      ellipseArc([20, 30], 5, 5, 0, 360),
-    ]);
+    ).toEqual([move([25, 30]), ellipseArc([20, 30], 5, 5, 0, 360)]);
   });
 });

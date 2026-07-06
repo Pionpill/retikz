@@ -21,12 +21,7 @@ export type BuildPathTransformsInput = {
 };
 
 /** 把 path 的 rotate / scale 编译为绕 bbox 中心的 transforms。 */
-export const buildPathTransforms = ({
-  rotate,
-  scale,
-  center,
-  round,
-}: BuildPathTransformsInput): Array<Transform> => {
+export const buildPathTransforms = ({ rotate, scale, center, round }: BuildPathTransformsInput): Array<Transform> => {
   const out: Array<Transform> = [];
   if (rotate !== undefined) {
     out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });

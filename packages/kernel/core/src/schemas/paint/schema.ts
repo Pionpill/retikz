@@ -16,9 +16,9 @@ export const LinearGradientPaintSpecSchema = z
   .object({
     kind: z.literal('linearGradient').describe('Discriminator for linear gradient paint.'),
     stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
-    angle: AngleDegreesSchema
-      .optional()
-      .describe('Gradient direction angle in degrees. Omitted fields use the paint backend default.'),
+    angle: AngleDegreesSchema.optional().describe(
+      'Gradient direction angle in degrees. Omitted fields use the paint backend default.',
+    ),
   })
   .describe('Linear gradient paint server');
 
@@ -30,11 +30,7 @@ export const RadialGradientPaintSpecSchema = z
       .tuple([z.number(), z.number()])
       .optional()
       .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
-    radius: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Radius in object-bounding-box units. Omitted fields use 0.5.'),
+    radius: z.number().positive().optional().describe('Radius in object-bounding-box units. Omitted fields use 0.5.'),
   })
   .describe('Radial gradient paint server');
 
@@ -46,9 +42,7 @@ export const ConicGradientPaintSpecSchema = z
       .tuple([z.number(), z.number()])
       .optional()
       .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
-    angle: AngleDegreesSchema
-      .optional()
-      .describe('Start angle in degrees. Omitted fields use 0.'),
+    angle: AngleDegreesSchema.optional().describe('Start angle in degrees. Omitted fields use 0.'),
   })
   .describe('Conic gradient paint server');
 
@@ -63,19 +57,13 @@ export const PatternPaintSpecSchema = z
       ),
     color: CssColorSchema.optional().describe('Motif color; any CSS color, defaults to `currentColor`'),
     background: CssColorSchema.optional().describe('Tile background fill; omitted = transparent'),
-    size: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Tile period in user units (line gap / dot spacing); default 8'),
+    size: z.number().positive().optional().describe('Tile period in user units (line gap / dot spacing); default 8'),
     lineWidth: z
       .number()
       .positive()
       .optional()
       .describe('Line / grid stroke width; for dots, drives the dot radius. Default 1 (dots default to size/5)'),
-    rotation: AngleDegreesSchema
-      .optional()
-      .describe('Rotate the whole pattern, in degrees'),
+    rotation: AngleDegreesSchema.optional().describe('Rotate the whole pattern, in degrees'),
   })
   .describe('Pattern paint server (hatching / dots / grid)');
 

@@ -433,9 +433,7 @@ describe('parseWay', () => {
     });
 
     it('label 完整字段透传：position + side', () => {
-      expect(
-        parseWay(['A', { label: { text: 'q', position: 'near-end', side: 'sloped' } as never }, 'B']),
-      ).toEqual([
+      expect(parseWay(['A', { label: { text: 'q', position: 'near-end', side: 'sloped' } as never }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',

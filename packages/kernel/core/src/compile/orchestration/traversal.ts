@@ -1,10 +1,6 @@
 import { boundsOf, mergeBounds } from '@retikz/math';
 
-import type {
-  GroupPrim,
-  PathKindCompileResult,
-  Transform,
-} from '../../contract';
+import type { GroupPrim, PathKindCompileResult, Transform } from '../../contract';
 import type { IRChild, IRPathBase, IRPosition, IRTransform } from '../../schemas';
 import type { NodeLayout } from '../node';
 import type { CompileContext } from './context';
@@ -67,11 +63,11 @@ export const compileChildrenToPrimitives = (
       measureText: context.measureText,
       lowerTex: context.lowerTex,
       onWarn: context.onWarn,
-          round: context.round,
-          nodeDistance: context.nodeDistance,
-          labelDistance: context.labelDistance,
-          rootFontSize: context.rootFontSize,
-          shapes: context.shapes,
+      round: context.round,
+      nodeDistance: context.nodeDistance,
+      labelDistance: context.labelDistance,
+      rootFontSize: context.rootFontSize,
+      shapes: context.shapes,
       boundaries: context.boundaries,
       arrows: context.arrows,
       pathGenerators: context.pathGenerators,
@@ -98,10 +94,13 @@ export const compileChildrenToPrimitives = (
     scopeChain: ReadonlyArray<Transform>,
   ): PathKindCompileResult | null => {
     const kind = path.kind ?? 'stroke';
-    const definition = providerDefinitionOf(runtime.context.pathKinds, kind, { capability: 'path kind', optionName: 'pathKinds' });
+    const definition = providerDefinitionOf(runtime.context.pathKinds, kind, {
+      capability: 'path kind',
+      optionName: 'pathKinds',
+    });
     const optionsValue = definition.optionsSchema
       ? definition.optionsSchema.parse(path.kindOptions ?? {})
-      : path.kindOptions ?? {};
+      : (path.kindOptions ?? {});
     const emitOptions = {
       onWarn: runtime.context.onWarn,
       irPath,
@@ -320,10 +319,7 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 根据子 layout 计算 scope 的最终命名 layout，并回填 scope.id 注册结果。 */
-  const registerResolvedScopeLayout = (
-    child: ScopeChild,
-    input: RegisterResolvedScopeLayoutContext,
-  ): void => {
+  const registerResolvedScopeLayout = (child: ScopeChild, input: RegisterResolvedScopeLayoutContext): void => {
     const { childScopeChain, scopeLayouts, layoutPlaceholder, frame } = input;
     const { layoutSink } = frame;
     if (child.id === undefined) {
@@ -331,7 +327,8 @@ export const compileChildrenToPrimitives = (
       return;
     }
 
-    const fallbackOrigin: IRPosition = childScopeChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], childScopeChain);
+    const fallbackOrigin: IRPosition =
+      childScopeChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], childScopeChain);
     const bboxLayout =
       child.boundingShape === ScopeBoundingShape.Circle
         ? createScopeCircleLayout(
@@ -352,10 +349,7 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画。 */
-  const emitScopeGroup = (
-    child: ScopeChild,
-    input: EmitScopeGroupContext,
-  ): void => {
+  const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): void => {
     const { index, scopeTransforms, scopePrimitiveSink, frame } = input;
     const { primitiveSink, locatorPrefix } = frame;
     const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
@@ -450,7 +444,9 @@ export const compileChildrenToPrimitives = (
       typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
         ? ` at ${collectPlaceholderLocators(runtime.state.primitives).join(', ')}`
         : '';
-    throw new Error(`internal: ${runtime.state.placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`);
+    throw new Error(
+      `internal: ${runtime.state.placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
+    );
   }
 
   return {

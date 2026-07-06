@@ -20,12 +20,10 @@ import { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode, NodeTextAli
 
 export const NodeLabelBoundaryPositionSchema = z
   .object({
-    boundary: z
-      .enum(Side)
-      .describe('Canonical box-like node boundary side used as the label attachment line.'),
-    fraction: NormalizedFractionSchema
-      .optional()
-      .describe('Normalized position along the selected boundary. Defaults to 0.5.'),
+    boundary: z.enum(Side).describe('Canonical box-like node boundary side used as the label attachment line.'),
+    fraction: NormalizedFractionSchema.optional().describe(
+      'Normalized position along the selected boundary. Defaults to 0.5.',
+    ),
   })
   .strict()
   .describe('Label position on a box-like node boundary.');
@@ -101,13 +99,13 @@ export const NodeLabelSchema = z
       .number()
       .nonnegative()
       .optional()
-      .describe('Gap between the node border and the label center, in user units. Omitted fields use compile labelDistance.'),
+      .describe(
+        'Gap between the node border and the label center, in user units. Omitted fields use compile labelDistance.',
+      ),
     rotate: z
       .union([z.enum(NodeLabelRotateMode), AngleDegreesSchema])
       .optional()
-      .describe(
-        'Label self-rotation: none, radial, tangent, or an explicit angle in degrees.',
-      ),
+      .describe('Label self-rotation: none, radial, tangent, or an explicit angle in degrees.'),
     keepUpright: z
       .boolean()
       .optional()
@@ -117,9 +115,7 @@ export const NodeLabelSchema = z
     pin: z
       .union([z.boolean(), NodeLabelPinSchema])
       .optional()
-      .describe(
-        'Outside-label leader line. Use true for defaults or an object for style overrides.',
-      ),
+      .describe('Outside-label leader line. Use true for defaults or an object for style overrides.'),
   })
   .superRefine((label, ctx) => {
     if (label.placement === NodeLabelPlacement.Inside && label.pin) {
@@ -164,9 +160,9 @@ export const NodeSchema = z
       .describe(
         'Center point of the node content box: Cartesian [x, y], polar, relative-to-node, offset, or between two endpoints. Non-Cartesian forms resolve at compile time.',
       ),
-    rotate: AngleDegreesSchema
-      .optional()
-      .describe('Rotation in degrees around the node center; positive is visually clockwise.'),
+    rotate: AngleDegreesSchema.optional().describe(
+      'Rotation in degrees around the node center; positive is visually clockwise.',
+    ),
     text: TextBlockSchema.optional().describe(
       'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex.',
     ),
@@ -184,11 +180,7 @@ export const NodeSchema = z
       .positive()
       .optional()
       .describe('Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.'),
-    strokeWidth: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Border width in user units; defaults to 1 when omitted'),
+    strokeWidth: z.number().nonnegative().optional().describe('Border width in user units; defaults to 1 when omitted'),
     dashed: z.boolean().optional().describe('Dashed border preset. `dashPattern` takes precedence.'),
     dotted: z.boolean().optional().describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
     dashPattern: z
@@ -204,19 +196,13 @@ export const NodeSchema = z
       .number()
       .nonnegative()
       .optional()
-      .describe(
-        'Top-level corner radius in user units. Only effective on `rectangle` shape.',
-      ),
-    minimumSize: BoxSizeValueSchema
-      .optional()
-      .describe(
-        'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
-      ),
-    scale: AxisScaleValueSchema
-      .optional()
-      .describe(
-        'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
-      ),
+      .describe('Top-level corner radius in user units. Only effective on `rectangle` shape.'),
+    minimumSize: BoxSizeValueSchema.optional().describe(
+      'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
+    ),
+    scale: AxisScaleValueSchema.optional().describe(
+      'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
+    ),
     textColor: CssColorSchema.optional().describe('Text label color; any CSS color. Defaults to `currentColor`.'),
     padding: BoxSpacingValueSchema.optional().describe(
       'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',

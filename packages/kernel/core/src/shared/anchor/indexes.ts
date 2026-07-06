@@ -1,22 +1,10 @@
 import type { Vector2 } from '@retikz/math';
 
-import type {
-  AnchorValue,
-  CornerValue,
-  SideValue,
-} from './types';
+import type { AnchorValue, CornerValue, SideValue } from './types';
 
-import {
-  Corner,
-  Side,
-} from './constants';
+import { Corner, Side } from './constants';
 
-export const SideValues = [
-  Side.Top,
-  Side.Right,
-  Side.Bottom,
-  Side.Left,
-] as const satisfies Readonly<Array<SideValue>>;
+export const SideValues = [Side.Top, Side.Right, Side.Bottom, Side.Left] as const satisfies Readonly<Array<SideValue>>;
 
 export const CornerValues = [
   Corner.TopRight,
@@ -25,10 +13,7 @@ export const CornerValues = [
   Corner.BottomLeft,
 ] as const satisfies Readonly<Array<CornerValue>>;
 
-export const AnchorValues = [
-  ...SideValues,
-  ...CornerValues,
-] as const satisfies Readonly<Array<AnchorValue>>;
+export const AnchorValues = [...SideValues, ...CornerValues] as const satisfies Readonly<Array<AnchorValue>>;
 
 /**
  * 标准方向 anchor 在屏幕坐标系里的单位向量。

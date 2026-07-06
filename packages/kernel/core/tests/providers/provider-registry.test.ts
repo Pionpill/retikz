@@ -20,9 +20,9 @@ describe('provider registry contract', () => {
     });
 
     expect([...registry.keys()]).toEqual(['builtin', 'custom']);
-    expect(providerDefinitionOf(registry, 'custom', { capability: 'mock provider', optionName: 'mockProviders' })).toEqual(
-      provider('custom'),
-    );
+    expect(
+      providerDefinitionOf(registry, 'custom', { capability: 'mock provider', optionName: 'mockProviders' }),
+    ).toEqual(provider('custom'));
   });
 
   it('fails_loud_when_custom_definition_collides_with_builtin', () => {

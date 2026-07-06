@@ -40,10 +40,7 @@ export const RibbonCapSchema = z
 export const RibbonWidthStopSchema = z
   .object({
     offset: NormalizedFractionSchema.describe('Normalized position along the centerline.'),
-    value: z
-      .number()
-      .nonnegative()
-      .describe('Ribbon width in user units at this stop.'),
+    value: z.number().nonnegative().describe('Ribbon width in user units at this stop.'),
   })
   .strict()
   .describe('One stop in a sampled ribbon width curve.');
@@ -55,10 +52,7 @@ export const RibbonWidthStopsSchema = z
       .array(RibbonWidthStopSchema)
       .min(2)
       .describe('Width stops; compile sorts them by offset before interpolation.'),
-    interpolation: z
-      .enum(RibbonWidthInterpolation)
-      .optional()
-      .describe('Interpolation curve between adjacent stops.'),
+    interpolation: z.enum(RibbonWidthInterpolation).optional().describe('Interpolation curve between adjacent stops.'),
   })
   .strict()
   .describe('A multi-stop ribbon width rule.');
@@ -66,10 +60,7 @@ export const RibbonWidthStopsSchema = z
 export const RibbonWidthProfileSchema = z
   .object({
     kind: z.literal('profile').describe('Discriminator for registered width profiles.'),
-    name: z
-      .string()
-      .min(1)
-      .describe('Ribbon width profile name from built-ins or CompileOptions.ribbonWidthProfiles.'),
+    name: z.string().min(1).describe('Ribbon width profile name from built-ins or CompileOptions.ribbonWidthProfiles.'),
     params: JsonObjectSchema.optional().describe('JSON-safe profile parameters.'),
   })
   .strict()
@@ -95,11 +86,7 @@ export const RibbonDirectionSchema: z.ZodType<IRRibbonDirection> = z
 
 export const RibbonEndpointSchema = z
   .object({
-    width: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Ribbon width in user units at this endpoint.'),
+    width: z.number().nonnegative().optional().describe('Ribbon width in user units at this endpoint.'),
     direction: RibbonDirectionSchema.optional().describe(
       'Optional tangent direction override at this endpoint; omitted means the start-to-end connection direction.',
     ),
@@ -124,10 +111,7 @@ export const RibbonFixedSamplingSchema = z
 export const RibbonAdaptiveSamplingSchema = z
   .object({
     kind: z.literal('adaptive').describe('Choose a sample count from path length and tolerance.'),
-    tolerance: z
-      .number()
-      .positive()
-      .describe('Approximate target segment length in user units.'),
+    tolerance: z.number().positive().describe('Approximate target segment length in user units.'),
     maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples.'),
   })
   .strict()

@@ -42,10 +42,11 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
       rootFontSize,
       inheritedFontSize: baseFontSize,
     });
-    const labFontSize = resolveFontSize(labFont?.size, {
-      rootFontSize,
-      inheritedFontSize: labelBaseFontSize,
-    }) * fontScale;
+    const labFontSize =
+      resolveFontSize(labFont?.size, {
+        rootFontSize,
+        inheritedFontSize: labelBaseFontSize,
+      }) * fontScale;
     const labFamily = labFont?.family ?? labelDefault?.font?.family ?? fontFamily;
     const labWeight = labFont?.weight ?? labelDefault?.font?.weight ?? fontWeight;
     const labStyle = labFont?.style ?? labelDefault?.font?.style ?? fontStyle;

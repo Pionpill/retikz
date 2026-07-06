@@ -8,9 +8,7 @@ const TranslateSchema = z
   .object({
     kind: z.literal('translate').describe('Discriminator for Cartesian translate.'),
     x: z.number().describe('Cartesian x translation in user units.'),
-    y: z
-      .number()
-      .describe('Cartesian y translation in user units (screen y-down).'),
+    y: z.number().describe('Cartesian y translation in user units (screen y-down).'),
   })
   .describe('Cartesian translate transform using user-unit x and y offsets.');
 
@@ -33,13 +31,8 @@ const PolarTranslateSchema = z
 const AtTranslateSchema = z
   .object({
     kind: z.literal('at-translate').describe('Discriminator for direction-relative translate.'),
-    direction: z
-      .enum(Anchor)
-      .describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
-    of: z
-      .string()
-      .min(1)
-      .describe('Referenced node id; must already be defined.'),
+    direction: z.enum(Anchor).describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
+    of: z.string().min(1).describe('Referenced node id; must already be defined.'),
     distance: z
       .number()
       .positive()
@@ -76,28 +69,19 @@ const BetweenTranslateSchema = z
 const RotateSchema = z
   .object({
     kind: z.literal('rotate').describe('Discriminator: rotation about a point.'),
-    degrees: AngleDegreesSchema.describe('Rotation angle in degrees; positive = visually clockwise under screen y-down.'),
-    cx: z
-      .number()
-      .optional()
-      .describe('Rotation center x in user units; omit = 0 (rotate about local origin).'),
-    cy: z
-      .number()
-      .optional()
-      .describe('Rotation center y in user units; omit = 0 (rotate about local origin).'),
+    degrees: AngleDegreesSchema.describe(
+      'Rotation angle in degrees; positive = visually clockwise under screen y-down.',
+    ),
+    cx: z.number().optional().describe('Rotation center x in user units; omit = 0 (rotate about local origin).'),
+    cy: z.number().optional().describe('Rotation center y in user units; omit = 0 (rotate about local origin).'),
   })
   .describe('Rotation transform around an optional local-origin offset.');
 
 const ScaleSchema = z
   .object({
     kind: z.literal('scale').describe('Discriminator: uniform / anisotropic scale.'),
-    x: z
-      .number()
-      .describe('Scale factor on the x axis.'),
-    y: z
-      .number()
-      .optional()
-      .describe('Scale factor on the y axis. Omitted fields use x for uniform scaling.'),
+    x: z.number().describe('Scale factor on the x axis.'),
+    y: z.number().optional().describe('Scale factor on the y axis. Omitted fields use x for uniform scaling.'),
   })
   .describe('Scale transform with x and optional y factors.');
 

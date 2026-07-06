@@ -72,9 +72,12 @@ const runSegments = (run: LineRun): Array<ContourSegment> => {
  * @description provenance 与 commands 一一对应、给出每条命令的来源 step kind。返回新 commands（≥2 段 line run 才倒，
  *   无合格 run 时原样返回）。radius ≤ 0 由调用方提前短路。
  */
-export const applyRoundedCorners = (
-  { commands, provenance, radius, round }: ApplyRoundedCornersInput,
-): Array<PathCommand> => {
+export const applyRoundedCorners = ({
+  commands,
+  provenance,
+  radius,
+  round,
+}: ApplyRoundedCornersInput): Array<PathCommand> => {
   // 收集合格 run：连续 line-step 的 line 命令。move / 非 line step 命令打断 run。
   const out: Array<PathCommand> = [];
   let i = 0;

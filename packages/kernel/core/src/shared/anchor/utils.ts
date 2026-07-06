@@ -1,14 +1,7 @@
-import type {
-  AnchorInput,
-  DirectionalAnchorInput,
-  SideValue,
-} from './types';
+import type { AnchorInput, DirectionalAnchorInput, SideValue } from './types';
 
 import { CenterAnchor } from './constants';
-import {
-  AnchorValues,
-  SideValues,
-} from './indexes';
+import { AnchorValues, SideValues } from './indexes';
 
 const AnchorSet = new Set<string>(AnchorValues);
 const SideSet = new Set<string>(SideValues);

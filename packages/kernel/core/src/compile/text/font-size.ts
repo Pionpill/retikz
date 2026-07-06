@@ -10,10 +10,7 @@ export type ResolveFontSizeContext = {
 };
 
 /** 把 IR 字号输入解析为 compile 阶段消费的 number。 */
-export const resolveFontSize = (
-  size: IRFont['size'] | undefined,
-  context: ResolveFontSizeContext,
-): number => {
+export const resolveFontSize = (size: IRFont['size'] | undefined, context: ResolveFontSizeContext): number => {
   const { rootFontSize, inheritedFontSize } = context;
   if (!Number.isFinite(rootFontSize) || rootFontSize <= 0) {
     throw new Error(`CompileOptions.fontSize must be a positive finite number; received ${rootFontSize}.`);

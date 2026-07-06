@@ -13,7 +13,9 @@ export const EasingSchema = z
 
 export const KeyframeSchema = z
   .object({
-    at: NormalizedFractionSchema.describe('Normalized keyframe time. Keyframes in one track must be sorted by this field.'),
+    at: NormalizedFractionSchema.describe(
+      'Normalized keyframe time. Keyframes in one track must be sorted by this field.',
+    ),
     value: JsonValueSchema.describe(
       'Absolute property value at this keyframe. Built-in properties are refined by track property; custom properties accept any JSON value.',
     ),
@@ -25,10 +27,7 @@ export const KeyframeSchema = z
 
 export const EventTriggerSchema = z
   .object({
-    onEvent: z
-      .string()
-      .min(1)
-      .describe('Runtime event name that starts playback. Only the event name enters the IR.'),
+    onEvent: z.string().min(1).describe('Runtime event name that starts playback. Only the event name enters the IR.'),
   })
   .describe('Runtime event trigger descriptor.');
 
@@ -40,7 +39,9 @@ export const OriginSchema = z
   .union([
     z
       .enum({ ...CenterAnchor, ...Anchor })
-      .describe('Named transform pivot using the canonical node anchor vocabulary, resolved against the animated element.'),
+      .describe(
+        'Named transform pivot using the canonical node anchor vocabulary, resolved against the animated element.',
+      ),
     z.tuple([z.number(), z.number()]).describe('Explicit transform pivot in element-local coordinates [x, y].'),
   ])
   .describe(
@@ -64,15 +65,8 @@ export const AnimationTrackSchema = z
       .describe(
         'Keyframes sorted by `at`. Each value is absolute, not a delta. The final keyframe should represent the settled value.',
       ),
-    duration: z
-      .number()
-      .positive()
-      .describe('Duration of one animation iteration in milliseconds.'),
-    delay: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Delay before playback starts, in milliseconds.'),
+    duration: z.number().positive().describe('Duration of one animation iteration in milliseconds.'),
+    delay: z.number().nonnegative().optional().describe('Delay before playback starts, in milliseconds.'),
     easing: EasingSchema.optional().describe(
       'Default easing for keyframe segments without keyframe-level easing. Omitted fields use linear easing.',
     ),

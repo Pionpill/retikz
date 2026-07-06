@@ -17,7 +17,11 @@ type LowerOptions = {
 };
 
 /** 把 composite 节点展开为 Tier 1 IR；未注册节点 warning 后跳过。 */
-export const lowerComposites = (ir: IRScene, registry: ReadonlyMap<string, CompositeDefinition>, options: LowerOptions): IRScene => {
+export const lowerComposites = (
+  ir: IRScene,
+  registry: ReadonlyMap<string, CompositeDefinition>,
+  options: LowerOptions,
+): IRScene => {
   const { onWarn, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
 
   const expandList = (children: Array<IRChild>, depth: number, path: string): Array<IRChild> =>
