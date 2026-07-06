@@ -14,8 +14,8 @@
 
 - [`architecture/plot-design.md`](./architecture/plot-design.md)：plot grammar-of-graphics、Plot IR、lowering 管线设计。
 - [`architecture/plot-visualization-complete.md`](./architecture/plot-visualization-complete.md)：plot 可视化完备检测设计。
-- [`decisions/v0/roadmap.md`](./decisions/v0/roadmap.md)：plot v0 总路线。
-- [`decisions/v0/v0.1/roadmap.md`](./decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
+- [`decisions/plot/v0/roadmap.md`](./decisions/plot/v0/roadmap.md)：plot v0 总路线。
+- [`decisions/plot/v0/v0.1/roadmap.md`](./decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`decisions/chart/v0/v0.1/roadmap.md`](./decisions/chart/v0/v0.1/roadmap.md)：chart v0.1 路线与 Tier 3 `ChartSpec` 边界。
 - [`decisions/_template.md`](./decisions/_template.md)：plot ADR 模板。
 - [`analysis/plot-compare-analysis.md`](./analysis/plot-compare-analysis.md)：plot 横向对比。

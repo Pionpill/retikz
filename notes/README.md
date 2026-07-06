@@ -1,4 +1,4 @@
-﻿# retikz 内部文档地图
+# retikz 内部文档地图
 
 面向项目内部协作，不面向终端用户。用户文档放在 `apps/docs/`。
 
@@ -45,8 +45,8 @@
 
 - [`plot notes`](../packages/viz/_notes/README.md)：plot 发布组内部文档入口。
 - [`plot-design.md`](../packages/viz/_notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
-- [`plot v0 roadmap`](../packages/viz/_notes/decisions/v0/roadmap.md)：plot v0 总路线。
-- [`plot v0.1 roadmap`](../packages/viz/_notes/decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
+- [`plot v0 roadmap`](../packages/viz/_notes/decisions/plot/v0/roadmap.md)：plot v0 总路线。
+- [`plot v0.1 roadmap`](../packages/viz/_notes/decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`plot compare analysis`](../packages/viz/_notes/analysis/plot-compare-analysis.md)：plot 横向对比。
 - [`plot rendering performance`](../packages/viz/_notes/analysis/plot-rendering-performance.md)：plot 渲染性能分析。
 

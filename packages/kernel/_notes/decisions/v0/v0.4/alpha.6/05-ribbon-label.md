@@ -3,7 +3,7 @@
 - 状态：被 ADR-07 收敛
 - 决策日期：2026-06-26
 - Owner：core
-- 关联：[kernel v0.4-alpha.6 roadmap](./roadmap.md) · [ADR-07](./07-path-kind-registry.md) · [plot alpha.13 ADR-07](../../../../../../viz/_notes/decisions/v0/v0.1/alpha.13/07-mark-label-surface.md)
+- 关联：[kernel v0.4-alpha.6 roadmap](./roadmap.md) · [ADR-07](./07-path-kind-registry.md) · [plot alpha.13 ADR-07](../../../../../../viz/_notes/decisions/plot/v0/v0.1/alpha.13/07-mark-label-surface.md)
 
 ## 背景
 
