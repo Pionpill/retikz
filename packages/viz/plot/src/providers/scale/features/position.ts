@@ -1,3 +1,4 @@
+import type { FieldDef } from '@retikz/data';
 import type {
   ScaleBand as D3ScaleBand,
   ScaleContinuousNumeric as D3ScaleContinuousNumeric,
@@ -6,6 +7,8 @@ import type {
   ScaleTime as D3ScaleTime,
 } from 'd3-scale';
 
+import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
+import { FieldOrderMode, PlotFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import { extent as d3Extent } from 'd3-array';
 import {
@@ -22,7 +25,6 @@ import {
 import type { AnyScaleDefinition, PositionScale, TickSet } from '../../../contract';
 import type {
   BandScale,
-  FieldDef,
   LinearScale,
   LogScale,
   PointScale,
@@ -36,10 +38,8 @@ import type {
 import { defineScale } from '../../../contract';
 import {
   BandScaleSchema,
-  FieldOrderMode,
   LinearScaleSchema,
   LogScaleSchema,
-  PlotFieldType,
   PointScaleSchema,
   PowScaleSchema,
   RadialScaleSchema,
@@ -47,7 +47,6 @@ import {
   SymlogScaleSchema,
   TimeScaleSchema,
 } from '../../../schemas';
-import { coerceTimestamp, inferCategoryDomain } from '../../data';
 import { DEFAULT_TICK_COUNT, resolvePaddedDomain, safeExtent, scaleTicks } from '../shared';
 
 // ── 连续数值位置 scale（linear / log / pow / sqrt / symlog / radial）────────────────

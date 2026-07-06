@@ -1,4 +1,7 @@
+import type { ExternalRow } from '@retikz/data';
+
 import { type IRChild, type IRNode, type IRNodeLabel, type IRPath, type IRScope, type IRStep } from '@retikz/core';
+import { resolveFieldPath } from '@retikz/data';
 
 import type {
   Cell,
@@ -13,15 +16,15 @@ import type {
   PositionScale,
 } from '../../../contract';
 import type { PolarCoordinateFrame } from '../../../contract';
-import type { ExternalRow, Mark, MarkGeometryLabel, MarkNodeLabel, ReferenceMark } from '../../../schemas';
+import type { Mark, MarkGeometryLabel, MarkNodeLabel, ReferenceMark } from '../../../schemas';
 import type { CartesianCoordinateFrame } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { ChannelDefinitionKind } from '../../../contract';
 import { PlotMark } from '../../../schemas';
+import { channelValue } from '../../channel/shared';
 import { isCartesianCoordinateFrame, isPolarCoordinateFrame, isTernary2DCoordinateFrame } from '../../coordinate';
-import { channelValue, resolveFieldPath } from '../../data';
 import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
 import {
   applyNodeChannelDeliveries,

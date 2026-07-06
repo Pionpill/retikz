@@ -1,16 +1,18 @@
 import type { IRPaintSpec } from '@retikz/core';
+import type { PlotFieldTypeMap } from '@retikz/data';
 
 import { PaintSpecSchema } from '@retikz/core';
+import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
+import { FieldOrderMode, PlotFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';
 import type { ChannelPaletteContext } from '../../../contract';
-import type { Channel, MarkOperation, PlotFieldTypeMap, PlotSpec, ScaleOperation } from '../../../schemas';
+import type { Channel, MarkOperation, PlotSpec, ScaleOperation } from '../../../schemas';
 import type { CategoryOrder } from '../../scale';
 
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
-import { FieldOrderMode, PlotFieldType, PlotScale } from '../../../schemas';
-import { coerceTimestamp, resolveFieldPath } from '../../data';
+import { PlotScale } from '../../../schemas';
 import { orderedCategoryDomain, resolveChannelScale } from '../../scale';
 
 export type ColorChannelDefinitionOptions = {

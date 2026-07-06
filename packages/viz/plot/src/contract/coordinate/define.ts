@@ -1,8 +1,9 @@
 import type { IRScope } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
-import type { AxisGuide, CoordinateOperation, ExternalRow, MarkOperation, ScaleOperation } from '../../schemas';
+import type { AxisGuide, CoordinateOperation, MarkOperation, ScaleOperation } from '../../schemas';
 import type { LegendReserve, Margins } from '../../shared';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../provenance';

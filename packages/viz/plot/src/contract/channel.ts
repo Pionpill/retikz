@@ -1,14 +1,11 @@
 import type { IRNode, IRPath, IRScope, JsonValue, ValueOf } from '@retikz/core';
+import type { ExternalRow, PlotFieldTypeMap, PlotFieldTypeValue, ScalarValue } from '@retikz/data';
 
 import type {
   Channel,
-  ExternalRow,
   LegendChannelValue,
   MarkOperation,
-  PlotFieldTypeMap,
-  PlotFieldTypeValue,
   PlotSpec,
-  ScalarValue,
 } from '../schemas';
 import type { DimensionRole } from './coordinate';
 import type { AnyScaleDefinition, ChannelScaleResolution } from './scale';
@@ -33,6 +30,9 @@ export type ChannelValue = JsonValue;
 
 /** 逐行通道值解析器；返回 undefined 表示该行不应用该通道。 */
 export type ChannelValueResolver<T extends ChannelValue = ChannelValue> = (row: ExternalRow) => T | undefined;
+
+/** 运行时 label 解析逃生舱，不进 IR。 */
+export type ResolveLabel = (row: ExternalRow) => string;
 
 /**
  * 通道 definition 类型。

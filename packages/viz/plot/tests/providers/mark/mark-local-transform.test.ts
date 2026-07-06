@@ -1,15 +1,16 @@
 import type { IRScope } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 
+import { defineTransform, resolveTransformRegistry } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { CustomMark, ExternalRow, PlotSpec } from '../../../src/schemas';
+import type { CustomMark, PlotSpec } from '../../../src/schemas';
 
-import { defineMark, defineTransform } from '../../../src/contract';
+import { defineMark } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
-import { resolveTransformRegistry } from '../../../src/providers';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;

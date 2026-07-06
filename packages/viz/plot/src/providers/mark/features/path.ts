@@ -1,3 +1,5 @@
+import type { ExternalRow } from '@retikz/data';
+
 import {
   type IRChild,
   type IRCoordinate,
@@ -6,8 +8,9 @@ import {
   type IRScope,
   type IRStep,
 } from '@retikz/core';
+import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 
-import type { ExternalRow, Mark, PathClosure, PathCurveValue, PathMark } from '../../../schemas';
+import type { Mark, PathClosure, PathCurveValue, PathMark } from '../../../schemas';
 import type { PolarVertex } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 
@@ -22,13 +25,13 @@ import {
 } from '../../../contract';
 import { seriesPathMeta, slug } from '../../../pipeline';
 import { PathClosureKind, PathCurve, PlotMark } from '../../../schemas';
+import { channelValue } from '../../channel/shared';
 import {
   densifyPolarSegments,
   isCartesianCoordinateFrame,
   isPolarCoordinateFrame,
   toPolarVertex,
 } from '../../coordinate';
-import { channelValue, compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../../data';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,

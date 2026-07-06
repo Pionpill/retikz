@@ -1,7 +1,13 @@
-import { type AnyMarkDefinition, type AnyTransformDefinition, type TransformContext } from '../contract';
-import { createFieldCollector } from '../providers';
-import { collectMarkFields, collectTransformFields, resolveMarkRegistry, resolveTransformRegistry } from '../providers';
-import { type MarkOperation, type PlotSpec, type TransformOperation } from '../schemas';
+import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
+import type { TransformOperation } from '@retikz/data';
+
+import { collectTransformFields } from '@retikz/data';
+import { resolveTransformRegistry } from '@retikz/data';
+
+import { type AnyMarkDefinition } from '../contract';
+import { collectMarkFields, resolveMarkRegistry } from '../providers';
+import { createFieldCollector } from '../providers/channel/shared';
+import { type MarkOperation, type PlotSpec } from '../schemas';
 
 const markTransformOf = (mark: MarkOperation): Array<TransformOperation> | undefined =>
   (mark as { transform?: Array<TransformOperation> }).transform;

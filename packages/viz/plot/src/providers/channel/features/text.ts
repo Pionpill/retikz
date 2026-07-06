@@ -4,7 +4,7 @@ import type { MarkChannelDefinition, ResolveLabel } from '../../../contract';
 
 import { ChannelDefinitionKind } from '../../../contract';
 import { type MarkLabelContent, type MarkOperation, type TextChannel } from '../../../schemas';
-import { labelOf } from '../../data';
+import { labelOf } from '../shared';
 
 export type BuiltinTextChannels = {
   label: MarkChannelDefinition<IRNodeLabel['text']>;

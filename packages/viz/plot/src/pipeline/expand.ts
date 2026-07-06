@@ -1,42 +1,59 @@
 import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
+import type {
+  AnyRowSelectorDefinition,
+  AnyStatisticsReducerDefinition,
+  AnyTransformDefinition,
+  FieldFormatDefinition,
+  ResolveField,
+  TransformContext,
+} from '@retikz/data';
+import type {
+  ExternalDatasets,
+  ExternalRow,
+  PlotFieldTypeMap,
+  PlotFieldTypeValue,
+} from '@retikz/data';
+import type { TransformOperation } from '@retikz/data';
 
 import { defineComposite, JsonObjectSchema } from '@retikz/core';
+import { applyTransforms, DEFAULT_TRANSFORM_CONTEXT, tagSourceIndex } from '@retikz/data';
+import {
+  applyFieldResolver,
+  assertAllValuesValid,
+  normalizeRows,
+  resolveFieldPath,
+  resolveFieldTypes,
+  validateBoundData,
+} from '@retikz/data';
+import { collectFormatFields, resolveFormatRegistry } from '@retikz/data';
+import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
+import { resolveTransformRegistry } from '@retikz/data';
+import { FieldOrderMode, PlotFieldType } from '@retikz/data';
 
 import type {
   AnchorIdGenerator,
   AnyChannelDefinition,
   AnyCoordinateDefinition,
   AnyMarkDefinition,
-  AnyRowSelectorDefinition,
   AnyScaleDefinition,
-  AnyStatisticsReducerDefinition,
-  AnyTransformDefinition,
   CoordinateFrame,
   DimensionRole,
-  FieldFormatDefinition,
   PositionScale,
-  ResolveField,
   ResolveLabel,
   TickSet,
-  TransformContext,
 } from '../contract';
 import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
   Channel,
   CoordinateOperation,
-  ExternalDatasets,
-  ExternalRow,
   Guide,
   IntervalMark,
   LegendChannelValue,
   LegendGuide,
   MarkOperation,
-  PlotFieldTypeMap,
-  PlotFieldTypeValue,
   PlotSpec,
   ScaleOperation,
-  TransformOperation,
 } from '../schemas';
 import type { LegendEntry, LegendInput } from './guide';
 import type { LegendReserve, Margins, Rect } from './layout';
@@ -45,51 +62,36 @@ import type { DatumIdRegistrar, ProvenanceContext } from './provenance';
 import { isBuiltinScaleOperation } from '../contract';
 import { resolveAxisGuideTokens, resolveLegendGuideTokens, resolvePlotTheme } from '../providers';
 import {
-  applyFieldResolver,
-  applyTransforms,
-  assertAllValuesValid,
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   buildProportionalIntervals,
-  channelKindsForMark,
-  channelValue,
-  collectFormatFields,
   createPositionChannelDefinitions,
-  DEFAULT_TRANSFORM_CONTEXT,
   defaultOriginAxisTickSideOf,
   deriveScale,
   lowerMark,
   makeColorSchemeResolver,
-  normalizeRows,
   orderedCategoryDomain,
   proportionalIntervalDomainValues,
   resolveChannelRegistry,
   resolveCoordinateRegistry,
-  resolveFieldPath,
-  resolveFieldTypes,
-  resolveFormatRegistry,
   resolveGuideTicks,
   resolveIntervalBound,
   resolveLinearScale,
   resolveMarkChannels,
   resolveMarkRegistry,
   resolvePositionScale,
-  resolveRowSelectorRegistry,
   resolveScaleRegistry,
   resolveSqrtScale,
-  resolveStatisticsReducerRegistry,
-  resolveTransformRegistry,
   scaleTicks,
-  validateBoundData,
 } from '../providers';
+import { channelValue } from '../providers/channel/shared';
+import { channelKindsForMark } from '../providers/mark';
 import { LegendSymbolFit } from '../schemas';
 import {
   AxisGridApplyTo,
-  FieldOrderMode,
   IntervalBoundKind,
   isBuiltinMark,
   PathClosureKind,
-  PlotFieldType,
   PlotGuide,
   PlotLayerZIndex,
   PlotMark,
@@ -100,7 +102,7 @@ import { createAnchorRegistry } from './anchors';
 import { lowerPlotLabels, resolveLabelReserve } from './decoration-layout';
 import { lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from './layout';
-import { createDatumIdRegistrar, rootMeta, slug, tagSourceIndex } from './provenance';
+import { createDatumIdRegistrar, rootMeta, slug } from './provenance';
 import { collectSourceFields } from './source-fields';
 
 /**

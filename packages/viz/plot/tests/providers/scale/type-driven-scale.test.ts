@@ -1,13 +1,15 @@
+import type { PlotFieldTypeValue } from '@retikz/data';
+
 import { compileToScene } from '@retikz/core';
+import { PlotFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { PlotFieldTypeValue } from '../../../src/schemas';
 import type { PlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { deriveScale } from '../../../src/providers';
 import { assertScaleFieldCompatible as assertScaleFieldCompatibleOp, resolveScaleRegistry } from '../../../src/providers';
-import { PlotFieldType, PlotSpecSchema } from '../../../src/schemas';
+import { PlotSpecSchema } from '../../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参。
 const scaleRegistry = resolveScaleRegistry();

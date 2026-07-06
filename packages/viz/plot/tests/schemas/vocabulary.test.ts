@@ -1,13 +1,12 @@
-import { describe, expect, it } from 'vitest';
-
+import { FieldOrderMode } from '@retikz/data';
 import {
-  FieldOrderMode,
   PlotSortOrder,
   ReducerOperationKind,
   RowSelectorTie,
   SelectorOp,
   TransformSchema,
-} from '../../src/schemas';
+} from '@retikz/data';
+import { describe, expect, it } from 'vitest';
 
 describe('schema vocabulary constants', () => {
   it('exports plot transform and data vocabularies as const objects', () => {

@@ -1,10 +1,13 @@
+import type { PlotFieldTypeValue } from '@retikz/data';
+
 import { JsonObjectSchema } from '@retikz/core';
+import { PlotFieldType } from '@retikz/data';
 
 import type { AnyScaleDefinition, ChannelResolveContext, ChannelScaleResolution, PositionScale } from '../../contract';
-import type { MarkOperation, PlotFieldTypeValue, Scale, ScaleOperation } from '../../schemas';
+import type { MarkOperation, Scale, ScaleOperation } from '../../schemas';
 
 import { extractScaleType, isBuiltinScaleOperation } from '../../contract';
-import { isBuiltinMark, PathClosureKind, PlotFieldType, PlotMark, PlotScale } from '../../schemas';
+import { isBuiltinMark, PathClosureKind, PlotMark, PlotScale } from '../../schemas';
 import { COLOR_SCALE_DEFINITIONS, POSITION_SCALE_DEFINITIONS } from './features';
 
 /**

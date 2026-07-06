@@ -1,36 +1,31 @@
 import type { IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
+import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { TransformOperation } from '@retikz/data';
+
+import { applyTransforms, readSourceIndex, readSourceIndices, tagSourceIndex } from '@retikz/data';
+import { resolveFieldPath } from '@retikz/data';
 
 import type {
-  AnyTransformDefinition,
   CoordinateFrame,
   IntervalContext,
   PlotFacetLocatorOptions,
   PlotLocator,
   PlotLocatorOptions,
   ResolvedAnchor,
-  TransformContext,
 } from '../../contract';
-import type { ExternalDatasets, ExternalRow, Mark, MarkOperation, PlotSpec, TransformOperation } from '../../schemas';
+import type { Mark, MarkOperation, PlotSpec } from '../../schemas';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 import type { ProvenanceContext } from '../provenance';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
-import {
-  applyTransforms,
-  buildIntervalContext,
-  datumAnchor,
-  intervalCellGeometry,
-  resolveFieldPath,
-} from '../../providers';
+import { buildIntervalContext, datumAnchor, intervalCellGeometry } from '../../providers';
 import { isBuiltinMark, PlotMark } from '../../schemas';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { lowerPlots, prepareRows, resolveFrame } from '../expand';
 import {
   createDatumIdRegistrar,
   datumMeta,
-  readSourceIndex,
-  readSourceIndices,
-  tagSourceIndex,
 } from '../provenance';
 
 type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;

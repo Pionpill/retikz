@@ -1,6 +1,8 @@
+import { resolveFieldPath } from '@retikz/data';
+import { type PlotFieldTypeMap, type PlotFieldTypeValue } from '@retikz/data';
+
 import { type ChannelResolution } from '../../../contract';
-import { type MarkValueType, type PlotFieldTypeMap, type PlotFieldTypeValue } from '../../../schemas';
-import { resolveFieldPath } from '../../data';
+import { type MarkValueType } from '../../../schemas';
 export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
 export type MarkValueResolution<T> = ChannelResolution<T> & {

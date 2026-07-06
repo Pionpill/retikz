@@ -1,21 +1,16 @@
-﻿import type { IRPathScale, JsonValue } from '@retikz/core';
+import type { IRPathScale, JsonValue } from '@retikz/core';
+import type { ExternalRow, PlotFieldTypeMap } from '@retikz/data';
 
 import { DropShadowSchema, JsonValueSchema, PathScaleSchema } from '@retikz/core';
+import { resolveFieldPath } from '@retikz/data';
+import { PlotFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
-import type {
-  ExternalRow,
-  LinearScale,
-  MarkOperation,
-  PlotFieldTypeMap,
-  PlotSpec,
-  ScaledMarkValueType,
-} from '../../../schemas';
+import type { LinearScale, MarkOperation, PlotSpec, ScaledMarkValueType } from '../../../schemas';
 
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
-import { PlotFieldType, PlotScale } from '../../../schemas';
-import { resolveFieldPath } from '../../data';
+import { PlotScale } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
 import { makeMarkValueResolver } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';

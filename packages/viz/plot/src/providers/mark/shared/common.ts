@@ -1,4 +1,7 @@
 import type { IRChild, IRGeometryLabel, IRNode, IRNodeDefault, IRNodeLabel, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
+
+import { readSourceIndex, readSourceIndices } from '@retikz/data';
 
 import type {
   ChannelValue,
@@ -12,10 +15,9 @@ import type {
 } from '../../../contract';
 
 import { ChannelDefinitionKind } from '../../../contract';
-import { datumMeta, markLayerId, markLayerMeta, readSourceIndex, readSourceIndices } from '../../../pipeline';
+import { datumMeta, markLayerId, markLayerMeta } from '../../../pipeline';
 import {
   type AnchorIdSpec,
-  type ExternalRow,
   type IntervalMark,
   type Mark,
   type MarkGeometryLabel,
@@ -25,7 +27,7 @@ import {
   type PointMark,
 } from '../../../schemas';
 import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS } from '../../channel';
-import { labelOf as resolveLabelContent } from '../../data';
+import { labelOf as resolveLabelContent } from '../../channel/shared';
 
 /** 折线默认描边宽度（user units）。 */
 export const LINE_STROKE_WIDTH = 2;

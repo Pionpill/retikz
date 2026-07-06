@@ -1,6 +1,8 @@
+import type { PlotFieldTypeValue, ScalarValue } from '@retikz/data';
+
 import { z } from 'zod';
 
-import type { PlotFieldTypeValue, ScalarValue, Scale, ScaleOperation } from '../schemas';
+import type { Scale, ScaleOperation } from '../schemas';
 
 import { BUILTIN_SCALE_TYPES } from '../schemas';
 

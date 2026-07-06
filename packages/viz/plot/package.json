@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@retikz/core": "workspace:*",
+    "@retikz/data": "workspace:*",
     "@retikz/math": "workspace:*",
     "d3-array": "catalog:",
     "d3-format": "catalog:",

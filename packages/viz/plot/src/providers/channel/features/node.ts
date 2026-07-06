@@ -1,4 +1,5 @@
-﻿import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
+import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
+import type { ExternalRow, PlotFieldTypeMap } from '@retikz/data';
 
 import {
   AxisScaleSchema,
@@ -10,6 +11,8 @@ import {
   JsonValueSchema,
   ShapeRefSchema,
 } from '@retikz/core';
+import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
+import { PlotFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type {
@@ -19,19 +22,16 @@ import type {
   NodeChannelDefinition,
 } from '../../../contract';
 import type {
-  ExternalRow,
   LinearScale,
   MarkOperation,
   OrdinalScale,
-  PlotFieldTypeMap,
   PlotSpec,
   ScaledMarkValueType,
   SqrtScale,
 } from '../../../schemas';
 
 import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
-import { PlotFieldType, PlotScale } from '../../../schemas';
-import { inferCategoryDomain, resolveFieldPath } from '../../data';
+import { PlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveOrdinalScale, resolveSqrtScale } from '../../scale';
 import { makeMarkValueResolver } from '../shared';
 

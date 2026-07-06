@@ -1,6 +1,8 @@
+import type { ExternalRow } from '@retikz/data';
+
 import { type IRChild, type IRScope } from '@retikz/core';
 
-import type { ExternalRow, Mark, MarkOperation, PlotMarkValue } from '../../schemas';
+import type { Mark, MarkOperation, PlotMarkValue } from '../../schemas';
 
 import {
   type AnyMarkDefinition,

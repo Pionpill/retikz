@@ -1,5 +1,6 @@
 import type { IRNode, IRScope } from '@retikz/core';
 
+import { PlotFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -20,7 +21,7 @@ import {
   resolvePositionScale,
   resolveScaleRegistry,
 } from '../../../src/providers';
-import { BUILTIN_SCALE_TYPES, PlotFieldType, PlotSpecSchema } from '../../../src/schemas';
+import { BUILTIN_SCALE_TYPES, PlotSpecSchema } from '../../../src/schemas';
 
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */
 const unitScale = defineScale({

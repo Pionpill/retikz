@@ -1,7 +1,7 @@
+import { BuiltinTransformSchema, TransformSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { PlotSpecSchema } from '../../src/schemas';
-import { BuiltinTransformSchema, TransformSchema } from '../../src/schemas/transform';
 
 describe('TransformSchema sort / stack', () => {
   // Happy path

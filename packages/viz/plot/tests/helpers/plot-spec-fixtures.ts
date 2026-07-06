@@ -1,4 +1,6 @@
-import type { ExternalDatasets, PlotSpec, Transform } from '@retikz/plot';
+import type { ExternalDatasets } from '@retikz/data';
+import type { Transform } from '@retikz/data';
+import type { PlotSpec } from '@retikz/plot';
 
 type CartesianScaleNames = {
   x: string;

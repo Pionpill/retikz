@@ -1,3 +1,5 @@
+import { inferCategoryDomain } from '@retikz/data';
+import { PlotFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import {
   scaleLinear as d3ScaleLinear,
@@ -22,14 +24,12 @@ import { defineScale } from '../../../contract';
 import {
   DivergingColorScaleSchema,
   OrdinalScaleSchema,
-  PlotFieldType,
   PlotScale,
   QuantileColorScaleSchema,
   QuantizeColorScaleSchema,
   SequentialColorScaleSchema,
   ThresholdColorScaleSchema,
 } from '../../../schemas';
-import { inferCategoryDomain } from '../../data';
 import {
   builtinColorSchemeInterpolator,
   DEFAULT_PLOT_COLORS,
