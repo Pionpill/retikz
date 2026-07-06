@@ -7,18 +7,3 @@ export * from './mark';
 export * from './plot';
 export * from './scale';
 export * from './theme';
-export type {
-  BlendModeValue,
-  IRArrowDetail,
-  IRAxisScale,
-  IRBoundary,
-  IRBoxSize,
-  IRDropShadow,
-  IRFont,
-  IRPaintSpec,
-  IRPathScale,
-  IRShapeRef,
-  JsonValue,
-  NodeTextAlignValue,
-  ShadowPresetValue,
-} from '@retikz/core';
