@@ -52,40 +52,6 @@ const shapes = resolveProviderRegistry({
 3. `Map` 输出让 compile lookup 的语义统一，避免 `Record` 原型键、own-property 检查和排序诊断在各能力里重复实现。
 
 
-## DSL 表面
-
-本 ADR 不新增用户 DSL 元素，但会统一所有 provider 注入形态：
-
-```tsx
-<Layout
-  shapes={[customShape]}
-  arrows={[customArrow]}
-  pathKinds={[customPathKind]}
->
-  <Node id="a" shape="custom-shape" />
-  <Path kind="custom-path" way={[['a'], ['b']]} />
-</Layout>
-```
-
-```ts
-renderToSvgString(ir, {
-  shapes: [customShape],
-  pathKinds: [customPathKind],
-});
-```
-
-## 测试设计
-
-`packages/kernel/core/tests/providers/registry-contract.test.ts` 覆盖 provider helper 的通用行为，并由各 capability migration 测试补充真实 lookup。
-
-
-## 影响
-
-- ⚠️ BREAKING：`CompileOptions` 中 provider 字段不再接受 `Record<string, Definition>`。
-- ⚠️ BREAKING：custom provider 不能覆盖 builtin provider；旧的 warn + override 行为删除。
-- 所有 provider registry 的错误消息将统一，相关测试快照需要更新。
-- React / Vanilla 透传 provider 时也必须使用数组形态。
-
 ## 不在本 ADR 范围
 
 - 各 capability 的具体字段迁移由 [ADR-03](./03-capability-provider-migration.md) 处理。

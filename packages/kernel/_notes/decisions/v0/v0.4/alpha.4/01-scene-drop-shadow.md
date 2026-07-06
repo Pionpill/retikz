@@ -46,18 +46,6 @@ shadow: z.union([z.enum(ShadowPreset), DropShadowSchema]).optional();
 // DropShadowSchema.refine：须有 preset，或同时给 offsetX + offsetY
 ```
 
-## DSL 表面
-
-react kernel `<Node shadow>` / `<Path shadow>` 与 vanilla `node()` / `draw()` config（经 `Omit<IRNode>` / `Omit<IRPath>` 自动派生 `shadow`，同 react 一份 schema）皆支持预设字符串与对象两种写法。落地用法 / demo 见文档站 `apps/docs/src/contents/kernel/components/effects/shadow/`（zh/en + presets / object / primary-only 三组 demo）。
-
-## 影响
-
-- **附属图元继承语义**（关键，文档须并排写清）：shadow 跟随图元本身——Node shape、Path 主路径（**含端点箭头**）；Node 的 text / label / pin、Path 的 step label 是独立图元，不继承。「端点箭头随主路径一起投影」可以，「整张卡片含文字一起投影」做不到（那是 group 级）。
-- **与 `opacity` / `clip` 区分**：shadow 是新增投影，不改 opacity / clip 语义；三者可叠加。
-- **视觉外溢纳入根 auto-layout**：shadow 是视觉效果、不改锚点 / scope bbox，但 offset+blur 会溢出图元包围盒；根 auto-layout 把每个带 shadow 图元的外溢角点纳入计算，避免投影被根 viewBox / 画布裁掉。显式 layout 不受影响。
-- **SVG filter region = `userSpaceOnUse` + 整 viewBox**（被否决：默认 `objectBoundingBox` `-10%/120%`）。否决理由：默认按被引用元素包围盒裁剪——直线 / 细 path 包围盒退化为零宽/零高（120%×0≈0）会把投影整段裁没，小图元上 offset+blur 超 10% 也被切边；且一个 filter 跨不同尺寸元素共享去重，无法按单元素定区域。故统一取 scene viewBox（与 Canvas 无区域裁剪口径对齐）。
-- **对外 API**：新增 `shadow` prop / IR 字段 + `DropShadow` 公开类型，optional / additive，无 breaking。
-
 ## 不在本 ADR 范围
 
 - **blend mode** —— [ADR-02](./02-blend-mode.md)。
@@ -74,6 +62,5 @@ react kernel `<Node shadow>` / `<Path shadow>` 与 vanilla `node()` / `draw()` c
 - 测试：`packages/kernel/core/tests/ir/effects-schema.test.ts`、`tests/compile/{node,path}-shadow.test.ts`、`packages/kernel/render/tests/svg-effects.test.ts`、`packages/kernel/react/tests/string-react-parity.test.tsx`。
 - 文档：`apps/docs/src/contents/kernel/components/effects/shadow/`。
 
----
 
-> 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:_notes/decisions/core/v0/v0.4/alpha.4/01-scene-drop-shadow.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.4/01-scene-drop-shadow.md`（封板全文）。

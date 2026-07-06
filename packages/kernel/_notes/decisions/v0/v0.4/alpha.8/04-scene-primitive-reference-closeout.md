@@ -41,23 +41,6 @@ alpha.8 必须执行以下 docs-only 收口，完成后才关闭本 milestone �
 - changelog 只改 alpha.4 render 条目，避免重写历史发布记录。
 - ScenePrimitive reference 中英文同步补齐 effect 字段与 Text / Group 边界。
 
-## DSL 表面
-
-无新增 DSL。
-
-## 测试设计
-
-docs-only follow-up 验证：
-
-- `git diff --check`
-- `pnpm --filter @retikz/docs exec -- tsc --noEmit --pretty false`
-
-## 影响
-
-- 对 runtime：无。
-- 对 public API：无。
-- 对 docs：ScenePrimitive reference 更完整；changelog 文案与当前实现一致。
-
 ## 不在本 ADR 范围
 
 - 修改 `shadow` / `blendMode` runtime 行为。
@@ -67,53 +50,6 @@ docs-only follow-up 验证：
 
 ---
 
-## 实现契约（必填）🔻
+> **实现指针**：本 ADR 已随 kernel v0.4-alpha.8 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
 
-### Level
-
-`green`
-
-本 ADR 自评 level：`green`。仅 docs data / MDX。
-
-### Schema 改动
-
-无。
-
-### 文件 scope
-
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/04-scene-primitive-reference-closeout.md`（新建）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/01-drawing-complete-alpha4-closeout.md`（引用本 ADR）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/roadmap.md`（登记本 ADR）
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/scene-primitive/index.zh.mdx`（docs follow-up）
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/scene-primitive/index.en.mdx`（docs follow-up）
-- `apps/docs/src/modules/docs/data/changelog.ts`（精确化 alpha.4 render 文案）
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `rect-ellipse-path-effects-documented`：三类几何 primitive 的 effect 字段有说明。
-- `custom-renderer-contract-clear`：reference 告知自定义 renderer 需要消费 effect。
-- `changelog-filter-region-accurate`：filter region 文案与当前实现一致。
-
-**边界（≥ 2）**：
-
-- `text-no-effect-documented`：TextPrim 不支持 effect。
-- `group-no-effect-documented`：GroupPrim 不支持 group-level effect。
-
-**错误路径（≥ 2）**：
-
-- `no-runtime-change`：diff 不触碰 `packages/kernel/*/src/**`。
-- `no-navigation-change`：diff 不改 docs data navigation。
-
-**交互（≥ 2）**：
-
-- `effect-not-hit-area`：reference 不暗示 shadow 外溢可命中。
-- `interaction-not-covered`：reference 不把 `id/meta` 误写成 manifest。
-
-### 依赖的现有元素
-
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/scene-primitive/index.zh.mdx`
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/scene-primitive/index.en.mdx`
-- `apps/docs/src/modules/docs/data/changelog.ts`
-- `packages/kernel/render/src/svg/builders/shadow-defs.ts`
+> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show v0.4.0-alpha.8:packages/kernel/_notes/decisions/v0/v0.4/alpha.8/04-scene-primitive-reference-closeout.md`。

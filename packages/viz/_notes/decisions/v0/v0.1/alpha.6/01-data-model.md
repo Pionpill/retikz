@@ -80,50 +80,6 @@ export type FieldType = ValueOf<typeof PlotFieldType>;
 6. **temporal 用正则 guard 而非裸 `Date.parse`**：`Date.parse('5')` 在多数引擎返回有效值，会把数值误判时间——必须收窄（也与 ADR-02 temporal coercion 的 guard 保持一致）。
 
 
-## DSL 表面
-
-> 注：组合 DSL 入口的 `model` prop 由 [ADR-02 React/vanilla API 段](./02-data-portability.md) 定义（`<Plot data={rows}>` 现无 model 面）；本 ADR 用它示意类型层效果。spec 入口则 model 在 `spec.data.model`。
-
-```tsx
-// (a) DSL 入口 + model prop：声明类型，scale/guide 由类型派生（ADR-03），LLM 不看数据即知字段
-<Plot data={rows} model={[
-  { name: 'quarter', type: 'temporal' },
-  { name: 'share',   type: 'proportion' },
-]}>
-  <LineMark x="quarter" y="share" />   {/* 无需手写 scale：quarter→time、share→linear[0,1] */}
-</Plot>
-
-// (b) 无 model：类型从数据推断（quarter 字符串日期→temporal、value 数值→quantitative）
-<Plot data={rows}><LineMark x="quarter" y="value" /></Plot>
-
-// (c) 声明 model = strict：引用未列出字段 → 编译期 fail-loud
-<Plot data={rows} model={[{ name: 'quarter', type: 'temporal' }, { name: 'value', type: 'quantitative' }]}>
-  <LineMark x="quater" y="value" />   {/* throw: unknown field "quater" */}
-</Plot>
-```
-
-vanilla builder 对等（同一 IR）：`plot(spec, datasets)`，`spec.data = { reference, model }` —— `model` / encoding 字段进 IR，解析在 `lowerPlots` 内，两套 authoring 共享类型层。
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/data-model.test.ts` 覆盖：
-
-- 缺省推断各类型（temporal / quantitative / nominal）
-- 显式 model 优先于推断
-- 引用未声明字段 / 重复字段名 fail-loud
-- proportion 经 model 声明、不被自动推断
-- temporal guard（数值 `5` 不误判 temporal）
-
-具体 case 见下「实现契约 § 测试象限」。
-
-## 影响
-
-- **IR**：`PlotFieldType` 加 `Proportion`（additive、非 breaking）；`data.ts` schema describe 微调。
-- **lowering**：新增 `collectUserSourceFields`（扫 mark encoding `field` + `order` + `series` + transform `Sort.field` / `Stack.x` / `Stack.y` / `Stack.groupBy`，排除派生/输出字段）+ `resolveFieldTypes` + `inferFieldType` 解析步，接进 `expand.ts` ingest（在 scale 解析前产出类型 `Map`，供 ADR-02 coercion / ADR-03 scale 选型消费）；新增 strict 引用校验。**alpha.6 ADR-01 本身不改 scale 选型**（仍走现有显式声明），只产出类型映射 + 校验——scale 选型在 ADR-03 接入。
-- **core**：无（纯 plot 内）。
-- **文档站**：`data` / data-model 概念页补 `proportion` + 推断规则 + 校验行为；放 alpha.6 develop-document 阶段。
-- **对外 API**：`data.model[].type` 多一个合法值 `'proportion'`；引用错字段从「静默」变「报错」（行为收紧，但属修正非 breaking——原本就是 bug spec）。
-
 ## 不在本 ADR 范围
 
 - **数据模型可移植契约**：逻辑名→物理路径的 `fieldMaps` 映射、按 PlotFieldType 的值强制（coercion）、换源场景 → ADR-02。
@@ -133,4 +89,4 @@ vanilla builder 对等（同一 IR）：`plot(spec, datasets)`，`spec.data = { 
 - **值级校验**（声明 temporal 但值不可解析）→ 暂不做（沿用跳过语义，见待决策点）。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/data.ts` 与 `packages/viz/plot/src/lower/{infer,validate,expand}.ts`，测试见 `packages/viz/plot/tests/lower/data-model.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/01-data-model.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.6/01-data-model.md`（封板全文）。

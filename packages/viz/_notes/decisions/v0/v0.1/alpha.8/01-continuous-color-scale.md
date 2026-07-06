@@ -65,42 +65,6 @@ export const PlotScale = {
 4. **守 mark 边界**：line/area 连续色 fail-loud，不偷偷做半成品 path gradient。
 
 
-## DSL 表面
-
-```tsx
-// React：散点连续色（数值字段 → 自动 sequential viridis，按 datum 取色）
-<Plot data={{ stations }}>
-  <PointMark x="lon" y="lat" color="temperature" />   {/* continuous → sequential 自动派生 */}
-</Plot>
-```
-
-```ts
-// vanilla / 原生 IR：显式 diverging（盈亏，0 为中点）+ 自定义 scheme
-renderPlot(
-  { type: 'plot', data: { reference: 'rows' },
-    coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-    scales: [
-      { type: 'linear', name: '__x' }, { type: 'linear', name: '__y' },
-      { type: 'diverging', name: '__color', domain: [-100, 0, 100], scheme: 'rdbu' },
-    ],
-    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'profit', scale: '__color' } } }],
-    guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y' }] },
-  { rows },
-);
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/continuous-color.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：sequential / diverging 求值、端点 / 中点映射、scheme 取色、range 覆盖、domain 推断、line/area 连续色 fail-loud、React type-driven 派生。落地测试见实现指针。
-
-## 影响
-
-- **Plot IR**：`ir/scale.ts` 加 2 schema + `PlotColorScheme` 词表 + 派生类型，`ScaleSchema` union 扩 2 成员；纯增量。
-- **lowering**：`lower/scale.ts` 加 sequential/diverging 求值（d3 scaleSequential/scaleDiverging + d3-scale-chromatic）；`lower/expand.ts` `makeColorResolver` 去掉 continuous/temporal fail-loud、改派生连续色阶（line/area 仍 fail-loud，复用 alpha.7 ADR-03 既有 within-series 校验路径）。
-- **core**：无新依赖、不触 core IR（连续色求值在 plot 内，产物仍是 core node 的 fill/stroke 颜色字符串）。
-- **文档站**：scale 概念页加连续色阶；散点 / 柱 / 扇形页加连续色 demo；`<Plot>` color 文案补「连续字段自动 sequential」。
-- **对外 API**：`PlotScale` 加 2 成员 + `PlotColorScheme` 词表；React color 入口从「全 ordinal」变「按字段类型派生」。⚠️ **行为变化**：此前 point/bar/sector 绑连续 `color.field` 会 fail-loud，现在出连续色——属能力新增，不破坏既有合法 spec。
-
 ## 不在本 ADR 范围
 
 - **离散化 scale**（quantize / threshold / quantile）→ [ADR-02](./02-discretization-scale.md)（复用本 ADR scheme/range）。
@@ -110,4 +74,4 @@ renderPlot(
 - **多 hue 自定义插值 / 自定义 interpolator 函数** → 不做（IR 须可序列化，只命名 scheme + range 端点）。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/scale.ts`、`packages/viz/plot/src/lower/{scale,expand}.ts` 与 `packages/viz/plot-react/src/components/buildPlotSpec.ts`，测试见 `packages/viz/plot/tests/{ir/scale.schema,lower/continuous-color}.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.8/01-continuous-color-scale.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.8/01-continuous-color-scale.md`（封板全文）。

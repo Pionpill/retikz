@@ -55,41 +55,6 @@ alpha.8 对 alpha.4 与完备评测的处理采用三分流：
 
 - **alpha.8 reference / changelog docs-only follow-up**：已按 [ADR-04](./04-scene-primitive-reference-closeout.md) 执行，alpha.8 文档对账项可关闭。
 
-## 待决策点 🔻
-
-- **是否回写 alpha.4 Accepted ADR 的实现指针**：建议不回写历史 ADR，只在本 ADR 记录当前真源；旧 ADR 的施工指针保留历史上下文。
-- **v0.5 首个主题是否定为 headless interaction manifest**：需要人工下一轮讨论拍板。
-
-## DSL 表面
-
-alpha.8 本身无新增 DSL。已有 alpha.4 DSL 维持不变：
-
-```tsx
-<Node shape="rectangle" fill="white" shadow="md" />
-<Path blendMode="multiply">
-  <Step kind="move" to={[0, 0]} />
-  <Step kind="line" to={[120, 0]} />
-</Path>
-```
-
-后续 interaction manifest 若进入 v0.5，必须另开 ADR 决定 DSL / IR 表面；本 ADR 不预设字段名。
-
-## 测试设计
-
-alpha.8 仅做 notes / docs 收口。若按本 ADR 修 reference 或 changelog，验证：
-
-- `git diff --check`
-- `pnpm --filter @retikz/docs exec -- tsc --noEmit --pretty false`
-
-具体 case 拆分见“实现契约 § 测试象限”。
-
-## 影响
-
-- 对 runtime：无。
-- 对 public API：无。
-- 对 docs：已补 ScenePrimitive reference 与 changelog 精确文案。
-- 对 roadmap：alpha.8 明确为收口审计版本；interaction manifest 与 group effect 进入后续候选。
-
 ## 不在本 ADR 范围
 
 - 新增 `InteractionManifest` / `InteractionTarget` / tooltip / selection intent 字段。
@@ -100,61 +65,6 @@ alpha.8 仅做 notes / docs 收口。若按本 ADR 修 reference 或 changelog�
 
 ---
 
-## 实现契约（必填）🔻
+> **实现指针**：本 ADR 已随 kernel v0.4-alpha.8 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
 
-### Level
-
-`green`
-
-本 ADR 自评 level：`green`。只允许 notes / docs 收口；不得触碰 `packages/kernel/*/src/**`。
-
-### Schema 改动
-
-无。
-
-### 文件 scope
-
-本 ADR 实现允许触碰的文件白名单：
-
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/01-drawing-complete-alpha4-closeout.md`（新建）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/02-headless-interaction-boundary.md`（新建）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/03-group-scope-effect-boundary.md`（新建）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/04-scene-primitive-reference-closeout.md`（新建）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/roadmap.md`（追加 ADR 链接 / 状态）
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/scene-primitive/index.zh.mdx`（docs follow-up）
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/scene-primitive/index.en.mdx`（docs follow-up）
-- `apps/docs/src/modules/docs/data/changelog.ts`（精确化 alpha.4 render 文案）
-
-偏离白名单的改动需要人工确认。
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `scene-reference-shadow-field`：ScenePrimitive reference 明确 `RectPrim` / `EllipsePrim` / `PathPrim` 支持 `shadow`。
-- `scene-reference-blend-field`：ScenePrimitive reference 明确 `RectPrim` / `EllipsePrim` / `PathPrim` 支持 `blendMode`。
-- `alpha8-roadmap-links-adr`：alpha.8 roadmap 链接本 ADR。
-
-**边界（≥ 2）**：
-
-- `text-prim-effect-boundary`：reference 明确 `TextPrim` 不支持图元级 `shadow` / `blendMode`。
-- `group-prim-effect-boundary`：reference 明确 `GroupPrim` 不支持组级 effect，只有 `clipRef` / transforms / children。
-
-**错误路径（≥ 2）**：
-
-- `no-runtime-scope-creep`：diff 不包含 `packages/kernel/*/src/**`。
-- `no-interaction-field-sneak-in`：diff 不新增 interaction manifest 字段或 schema。
-
-**交互（≥ 2）**：
-
-- `hit-test-boundary-stated`：ADR 说明 hit-test 仍是 render 层几何定位，不等于 core manifest。
-- `tooltip-selection-deferred`：ADR 说明 tooltip/select UI 与状态机不进 core。
-
-### 依赖的现有元素
-
-- `core-drawing-complete.md` —— 完备评测框架与 interaction manifest 准入标准。
-- `alpha.4/01-scene-drop-shadow.md` —— 图元级 shadow 决策与 group effect 延后项。
-- `alpha.4/02-blend-mode.md` —— element-level blend 与 isolation 延后项。
-- `packages/kernel/core/src/schemas/style/schema.ts` —— 当前 `shadow` / `blendMode` schema 真源。
-- `packages/kernel/core/src/contract/scene/*` —— 当前 Scene primitive 类型真源。
-- `packages/kernel/render/src/svg/builders/shadow-defs.ts` / `prim.ts`、`packages/kernel/render/src/canvas/draw-scene.ts` —— 当前 renderer emit 真源。
+> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show v0.4.0-alpha.8:packages/kernel/_notes/decisions/v0/v0.4/alpha.8/01-drawing-complete-alpha4-closeout.md`。

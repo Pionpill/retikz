@@ -130,10 +130,6 @@ view.hydrate({
 hydrate(root, { handlers, scene: toScene(ir) });
 ```
 
-### Schema 改动
-
-**无 IR schema 改动**。本 ADR 只动 **runtime / handler 公开契约**（handler 签名 + `HydrationContext` 类型 + 接线）；不增删 IR 字段（`meta` / `animations` 早在 ADR-08 / ADR-01 入 IR，本 ADR 仅在交互层消费）。
-
 理由：
 
 1. **meta 收割**：ADR-08 的 provenance 透传在交互层兑现——handler 拿 `context.meta` 认数据，是图表 hit-test / tooltip / 联动的基础。
@@ -150,4 +146,4 @@ hydrate(root, { handlers, scene: toScene(ir) });
 
 
 > 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:_notes/decisions/core/v0/v0.3/alpha.5/06-hydration-context.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.3/alpha.5/06-hydration-context.md`（封板全文）。

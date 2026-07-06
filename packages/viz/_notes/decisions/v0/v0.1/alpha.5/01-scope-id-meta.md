@@ -111,55 +111,6 @@ meta = {
 - **datum-id 注册器提升到 plot 级（cross-review 修复）**：原实现每 mark 各自建注册器，同图多个 datum-bearing mark（如 point + bar）+ 同 `datumIdField` 会各自生成 `<plotId>.datum.<值>` → 同命名空间撞 id。改为 **plot 级共享注册器**（`expandPlot` 建一次、贯穿所有 mark），跨 mark 重复 id 同样 **fail loud**（与单 mark 内重复一致）——一个 plot 内多 datum mark 想绑 id 须用不同字段/值消歧。
 
 
-## DSL 表面
-
-> id / meta 主要由 lowering **程序化注入**——用户在 plot spec 给 `id`（root / mark）+ 在 `lowerPlots` options 开 datum 级，lowering 自动绑。用户不手写 core meta。
-
-```tsx
-// react —— root / mark 给 id；lowerPlots 开 datum 级 provenance + id 源字段
-const datasets = { sales: [{ q:'Q1', v:120, region:'north' }, /* … */ ] };
-
-<Layout compileOptions={{ composites: lowerPlots(datasets, {
-  provenance: true,           // 总开关：写 layer/series meta + 合成 <plotId>. 内部 id（默认关 → 逐字节等价 alpha.4）
-  datumProvenance: true,      // 每个 datum Node 写 per-datum meta（hit-test 用；蕴含需 provenance 开）
-  datumIdField: 'q',          // 把 q 字段值绑成 <plotId>.datum.<q> 的 Node.id（可连接；缺字段/重复值 fail loud）
-}) }}>
-  <Plot id="sales" data="sales" coordinate="cartesian2D">
-    <BarMark id="bars" x="q" y="v" />
-  </Plot>
-</Layout>
-// → 下沉出 scope#sales > scope#sales.bars（meta layer:mark）> node#sales.datum.Q1（meta datum:0）…
-```
-
-```ts
-// 消费侧（v0.3 交互层预览）—— 命中图元读 meta 反查来源
-const prim = hitTest(scene, pointer);
-prim?.meta;   // → { source:'plot', mark:'interval', markIndex:0, datum:0 }
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/scope-id-meta.test.ts`（新建）覆盖：
-
-- root / mark / series scope 的 id 命名与 `<plotId>.` 前缀
-- layer / series meta 内容；per-datum meta 开关行为
-- datumIdField 绑 `Node.id`；缺省不绑（产物等价 alpha.4）
-- 无 root id 时退回匿名（无合成 id）；meta 一律不含 plotId key
-- cartesian / polar 双系下 id / meta 一致
-- core ADR-08 通道连通：含 meta 的 lowering 产物经 `compileToScene` → Scene 图元带 meta
-
-具体 case 见下「实现契约 § 测试象限」。
-
-## 影响
-
-- **lowering 产物变化（默认零回归）**：`provenance` 默认关 → 产物**逐字节等价 alpha.4**（无新 key）。开 provenance → mark/series 元素多 `id`（root.id 在时）+ layer/series meta；datum 开关另控 per-datum meta。用户设 root.id / mark.id 时该处绑 id（opt-in by naming）。**meta 渲染中立**（core ADR-08）：开 provenance 不改 viewBox / 图元几何 / 渲染输出。
-- **`LowerPlotsOptions` 扩**：加 `provenance?: boolean`（总开关，默认 false）/ `datumProvenance?: boolean`（默认 false）/ `datumIdField?: string`（运行时选项，**不进 IR**）。
-- **React / vanilla 适配器必须转发新 options（P1 评审）**：`@retikz/plot-react` 的 `PlotCommonProps extends LowerPlotsOptions`，但 `Plot.tsx` 当前**只转发 `{ width, height, fontSize, margin }`**（[Plot.tsx](../../../../../plot-react/src/Plot.tsx)）——新增三 option 会被静默丢弃。须把 `provenance` / `datumProvenance` / `datumIdField` 纳入转发，并同步 `@retikz/plot-vanilla` 对等入口（develop-design 适配器对等）。
-- **core**：纯消费 ADR-08 的 `Scope.meta` / `Node.meta` / `Path.meta`（line/area series）+ 既有 `Scope.id` / `Node.id`；**不改 core**。
-- **plot IR schema**：无字段增删（`mark.id` / root `id` / root `meta` alpha.1 已在）。
-- **文档站**：`@retikz/plot` 文档需补「provenance / anchor」一节——root/mark `id` 的 anchor 语义、`lowerPlots` 的 `provenance` / `datumProvenance` / `datumIdField` 选项、meta 用于交互命中的说明 + index 语义（source vs transformed）（双语 + 一个「命中读 meta」概念示例；meta 不可见，无渲染 demo）。
-- **对外 API**：`lowerPlots` options additive（三个可选字段）+ react/vanilla `<Plot>` 多接三 prop；plot spec 表面无变化。**非 BREAKING**。
-
 ## 不在本 ADR 范围
 
 - **datum locator 正向解析**：[ADR-02](./02-datum-locator.md)（本 ADR 只抽出共用 frame 构造）。
@@ -172,4 +123,4 @@ prim?.meta;   // → { source:'plot', mark:'interval', markIndex:0, datum:0 }
 - **legend / 跨域组合 UI**：v0.5。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/pipeline/expand.ts`、`packages/viz/plot/src/providers/{mark,guide}/`、plot React/vanilla options 透传与 provenance 测试，测试见 `packages/viz/plot/tests/pipeline/scope-id-meta.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.5/01-scope-id-meta.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.5/01-scope-id-meta.md`（封板全文）。

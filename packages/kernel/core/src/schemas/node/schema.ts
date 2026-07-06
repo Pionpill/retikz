@@ -74,7 +74,6 @@ export const NodeLabelPinSchema = z
     dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
     dashOffset: z
       .number()
-      .finite()
       .optional()
       .describe('Leader dash offset in user units. Positive and negative finite values are allowed.'),
   })
@@ -199,7 +198,6 @@ export const NodeSchema = z
       .describe('Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.'),
     dashOffset: z
       .number()
-      .finite()
       .optional()
       .describe('Explicit stroke dash offset in user units. Positive and negative finite values are allowed.'),
     cornerRadius: z
