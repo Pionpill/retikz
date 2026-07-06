@@ -89,34 +89,6 @@ export type ScaleDescriptor = {
 - **ramp 刻度域取配置 domain（contract-audit W2 修）**：连续 ramp 的取色 / 刻度域显式 `domain` 优先（sequential `[min,max]`、diverging `[low,high]`），与实绘取色同基准；缺省回退数据 extent。早期曾固定取数据 extent，致显式 domain 时图例刻度与颜色错位，已修 + 回归测试。
 
 
-## DSL 表面
-
-```tsx
-// React：连续色散点 + 图例（显式声明，不影响默认 x/y 轴）
-<Plot data={{ stations }}>
-  <PointMark x="lon" y="lat" color="temperature" size="population" />
-  <Legend channel="color" title="气温 ℃" />
-  <Legend channel="size" position="bottom" />
-</Plot>
-```
-
-```ts
-// vanilla / 原生 IR：分箱色图例（消费 ADR-02 的 quantize scale）
-{ type: 'legend', channel: 'color', scale: '__color', position: 'right', title: 'Density' }
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/legend.test.ts`（新建）+ `tests/ir/guide.schema.test.ts`（扩）+ `react/tests/components/buildPlotSpec.test.tsx`（扩）覆盖：union 判别、各通道各 scale 形态派生、descriptor 产出、默认 axes 共存、占位、标签 formatter、多 legend、fail-loud。落地测试见实现指针。
-
-## 影响
-
-- **Plot IR**：`ir/guide.ts` `GuideSchema` 升 discriminatedUnion（**结构变化但非破坏**——axis 仍合法，type 判别位 alpha.2 已留）；`PlotGuide` 加 `Legend`、新增 `LegendChannel` + `LegendGuideSchema` + 派生类型。
-- **lowering**：`lower/channel.ts` resolver 双产出（+ ScaleDescriptor）；`lower/guide.ts` 加 `lowerLegend`；`lower/layout.ts` `computePlotArea` 加 legend 占位；`lower/expand.ts` 串 legend source 注册 + 占位输入。
-- **core**：legend swatch/标签下沉 core Node/Path/Scope；连续 ramp **可能用 core `linearGradient` paint server**（待实现期核验，不足走 next-core）。不改 core 内部。
-- **文档站**：新增 legend 概念页 + 各形态 demo（分类色 swatch / 连续 ramp / 分箱 / size 梯度）；散点等页补 legend。
-- **对外 API**：`GuideSchema` 升 union（非破坏）；新增 `<Legend>` React 组件 + vanilla spec；**修 `buildPlotSpec` 默认 axes 规则**（行为：加 Legend 不再吞掉默认 axes——属修 bug 方向，不破坏既有合法 spec）。
-
 ## 不在本 ADR 范围
 
 - **legend 自动派生**（声明通道即自动出）→ alpha.15 theme auto-guide。
@@ -126,4 +98,4 @@ export type ScaleDescriptor = {
 - **legend 内排序 / 自定义 swatch 模板** → 顺延。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/guide.ts`、`packages/viz/plot/src/lower/{channel,guide,layout,expand}.ts` 与 `packages/viz/plot-react/src/components/`，测试见 `packages/viz/plot/tests/{ir/guide.schema,lower/legend}.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.8/03-legend-guide.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.8/03-legend-guide.md`（封板全文）。

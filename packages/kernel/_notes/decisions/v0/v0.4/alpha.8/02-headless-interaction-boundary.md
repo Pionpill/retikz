@@ -48,32 +48,6 @@ alpha.8 对 interaction 的结论如下：
 - 对后续设计：v0.5 若启动 interaction，需要另开红级 ADR 评估 IR / schema、compile 输出、Scene 或独立 manifest、render hydration、React / Vanilla headless runtime 与 docs。
 - 对 alpha.8：不新增字段、schema 或 runtime API；只把缺口登记为后续候选，避免收口版本变成功能版本。
 
-## 待决策点 🔻
-
-- **v0.5 是否优先做 interaction manifest**：需人工在下一轮 alpha 主题讨论中确认。
-- **manifest 是默认输出还是 opt-in 输出**：需结合 Scene 输出体积和 runtime 常用性讨论。
-- **tooltip content 边界**：倾向只存 content key / semantic hint，不存 ReactNode / DOM / callback。
-
-## DSL 表面
-
-alpha.8 无新增 DSL，也不提供 v0.5 JSX 草案。后续若进入 v0.5，必须先经独立 ADR 确认字段名、JSON 形态、React / Vanilla authoring surface 与 runtime 消费方式。
-
-## 测试设计
-
-alpha.8 不实现测试。v0.5 正式 ADR 至少需要覆盖：
-
-- manifest JSON round-trip。
-- SVG 与 Canvas hydration 对同一 target 的定位一致。
-- target 不存在时 fail-loud 或 diagnostic。
-- tooltip / selectable intent 不保存 runtime state。
-- React / Vanilla 使用同一 manifest 语义。
-
-## 影响
-
-- 对 runtime：alpha.8 无。
-- 对 public API：alpha.8 无。
-- 对 docs：alpha.8 roadmap 可把 tooltip / select 分流为 headless interaction 候选，而不是承诺 UI。
-
 ## 不在本 ADR 范围
 
 - 新增 interaction schema 字段。
@@ -83,49 +57,6 @@ alpha.8 不实现测试。v0.5 正式 ADR 至少需要覆盖：
 
 ---
 
-## 实现契约（必填）🔻
+> **实现指针**：本 ADR 已随 kernel v0.4-alpha.8 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
 
-### Level
-
-`green`
-
-本 ADR 自评 level：`green`。只允许 notes / roadmap 收口；不得触碰 `packages/kernel/*/src/**`。
-
-### Schema 改动
-
-无。
-
-### 文件 scope
-
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/02-headless-interaction-boundary.md`（新建）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/01-drawing-complete-alpha4-closeout.md`（引用本 ADR）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/roadmap.md`（登记本 ADR）
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `boundary-recorded`：ADR 明确现有 hydration 不被替代。
-- `headless-only`：ADR 明确 core 只讨论 JSON-safe manifest。
-- `v05-deferred`：ADR 明确后续必须另开红级 ADR。
-
-**边界（≥ 2）**：
-
-- `tooltip-ui-out-of-core`：tooltip UI 不进 core。
-- `selection-state-out-of-core`：selected / hovered 状态不进 core。
-
-**错误路径（≥ 2）**：
-
-- `no-schema-change`：diff 不新增 interaction schema。
-- `no-runtime-change`：diff 不触碰 render / react / vanilla runtime。
-
-**交互（≥ 2）**：
-
-- `hydration-coexists`：现有 hydration 被描述为 runtime 定位层。
-- `manifest-gap-clear`：缺口描述为 core manifest，不是缺少所有 interaction runtime。
-
-### 依赖的现有元素
-
-- `packages/kernel/_notes/architecture/core-drawing-complete.md` —— Interaction 能力面定义。
-- `packages/kernel/render/src/hydration/**` —— 现有 runtime hydration 定位层。
-- `packages/kernel/render/src/canvas/hit-test.ts` —— Canvas 命中定位能力。
+> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show v0.4.0-alpha.8:packages/kernel/_notes/decisions/v0/v0.4/alpha.8/02-headless-interaction-boundary.md`。

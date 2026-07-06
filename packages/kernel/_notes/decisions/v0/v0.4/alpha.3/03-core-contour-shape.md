@@ -55,29 +55,6 @@ type ContourParams = {
 
 > 实现：core `e43809f8`（contour 注册 + paramsSchema + spec）→ `cddea5fe`（几何实现：自动按 AABB 中心居中 + 复用轮廓引擎），清理 `8b9f60da`；测试 `packages/kernel/core/tests/shapes/contour.test.ts`；最终 schema / 行为以代码为准。
 
-## DSL 表面
-
-字面形态即决策：contour 是纯 `shape` ref（`{ type:'contour', params }`），不引入新 step / `way` 文法；它仍是 Node，所以另一条 Path 能按 id 连到它（`boundaryPoint` 给射线 ∩ 轮廓交点）——这正是本 ADR 的主目标。
-
-```tsx
-// 任意轮廓直接当 node 形状（局部系顶点，任意原点——core 自动按 AABB 中心居中），可圆角
-<Node
-  position={[0, 0]}
-  shape={{ type: 'contour', params: { points: [[-24, 40], [24, 28], [24, -40], [-24, -40]], cornerRadius: 4 } }}
-  fill="steelblue"
-/>
-// 它仍是 Node：<Path> 里 line to 此节点 → boundaryPoint 给射线 ∩ 轮廓交点
-```
-
-react `<Node shape>` 与 vanilla `node({ shape })` 是同一字段、同一 zod schema 的两种写法，天然对等。完整双语示例见文档站 contour shape 页。
-
-> plot 侧消费形态归 plot alpha.11，不在本 ADR。
-
-## 影响
-
-- **对外 API**：新增公开 shape `contour` + 其 params（`points` / `cornerRadius`），非 breaking（纯新增）；IR 无 schema 改动（`ShapeRefSchema.type` 已开放）、renderer 无改动（emit 出既有 `PathPrim`）、适配器透传现有 `IRShapeRef`。
-- **与 alpha.3 ADR-01 协同**：两者都用 `geometry/contour.ts`——ADR-01 修改它（加开放折线 seam），ADR-03 只读它（闭合顶点环走现有闭合路径，同 polygon）；ADR-01 须保证现有闭合 seam 语义不回退。不同入口，无 merge 冲突。
-
 ## 不在本 ADR 范围
 
 - **plot 侧 lowering 规则**：「坐标系声明投影后 cell 是闭式 shape（走 rectangle/sector）还是退 contour」的三级阶梯、坐标系声明契约 → 归 **plot alpha.11**，另起 plot ADR。本 ADR 只交付 core 这块使能图元。
@@ -85,4 +62,4 @@ react `<Node shape>` 与 vanilla `node({ shape })` 是同一字段、同一 zod 
 - **语义命名 anchor**（base/top/边中点等曲边块专属锚点）：后续按需。
 - **小 IR 优化**：contour 是 O(顶点) IR，不解决 plot-design §16.1 软肋 #1（高基数 O(N) Node）；密采样曲线柱 IR 偏大，采样密度旋钮归 plot 侧。
 
-> 🔖 本文件压缩前完整施工蓝图 = `git show fd0a8598:_notes/decisions/core/v0/v0.4/alpha.3/03-core-contour-shape.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.3/03-core-contour-shape.md`（封板全文）。

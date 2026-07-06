@@ -52,17 +52,6 @@ contour 不是引擎自动产物，而是**曲线 frame 在自己的 `projectCel
 - **cell 描述空间 = scale 输出空间**（像素 / 度 / 半径），而非数据值区间——因为柱宽来自 `bandwidth`、cartesian 柱高来自 `coordinate(baseline)..coordinate(value)`，本就是输出空间量。
 - **每边采样密度**：复用 `RETIKZ_POLAR_SEGMENT_SAMPLES`（16）量级常量，曲边每边采样、直边每边 1 段；单常量起步，按需再开旋钮。
 
-## DSL 表面
-
-本 ADR 是 lowering 内部契约重构，**不新增任何 IR 字段 / React 组件**；spec 表面不变（`interval` IR mark，React sugar `<BarMark>`，坐标系走 `<Plot coordinate>` prop）。用户可见面只有「曲线 / 自定义坐标系下 interval 不再 fail-loud，柱为 contour Node、仍可连接」。文档见 `apps/docs/src/modules/docs/contents/viz/components/mark/bar/` 与 `apps/docs/src/modules/docs/contents/viz/grammar/coordinate/`。
-
-## 影响与兼容性
-
-- **Plot IR**：无 schema 改动——`projectCell` / `Cell` / `CellGeometry` 是 lowering 期 frame 方法与内部类型，不进 IR、不序列化。
-- **行为**：cartesian2D / polar2D 产物零变化；cartesian1D / polar1D / ternary2D 对 interval/sector 维持 fail-loud（无 2D 正交 cell）；custom 由 fail-loud 改为「实现 `projectCell` → contour，否则仍 fail-loud 并给清晰提示」。
-- **依赖 core**：仅消费已实现的 `contour` shape，不改 core。
-- **对外 API**：spec 表面不变；非 breaking。
-
 ## 不在本 ADR 范围
 
 - **rect / rule / text / ribbon mark** 本体：各自 alpha.11 ADR（02–05）。rect 是本契约的下一个消费者（双维 band cell，cartesian 下仍走 rect 快路）。
@@ -70,8 +59,7 @@ contour 不是引擎自动产物，而是**曲线 frame 在自己的 `projectCel
 - **柱圆角（cornerRadius）prop**：core `rectangle` / `contour` 都支持，但 mark 层是否暴露「圆角柱」是样式议题，归 Theme（alpha.15）。
 - **小 IR 优化**：contour 兜底是 O(顶点) IR，不解决 plot-design §16.1 软肋 #1（高基数 O(N) Node）。
 
----
 
 实现指针：契约与 `densifyCellContour` 在 `packages/viz/plot/src/lower/project.ts`（`Cell` / `CellGeometry` / `projectCell`）；mark 单路径装配在 `packages/viz/plot/src/lower/mark.ts`；锚点同源在 `packages/viz/plot/src/lower/anchor.ts`；core `contour` shape 在 `packages/kernel/core/src/shapes/contour-shape.ts`。测试在 `packages/viz/plot/tests/lower/cell-geometry.test.ts`（含回归基线、三态装配、曲线 frame contour、AABB 中心、fail-loud、连接性、locator parity），回归基线另见同目录 `mark`/`anchor`/`sector` 相关测试。
 
-> 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:_notes/decisions/plot/v0/v0.1/alpha.11/01-cell-geometry-projection.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.11/01-cell-geometry-projection.md`（封板全文）。

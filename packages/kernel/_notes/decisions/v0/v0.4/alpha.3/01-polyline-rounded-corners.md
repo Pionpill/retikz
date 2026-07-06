@@ -40,26 +40,6 @@ roundedCorners: z
 
 > 实现：core `9f3f3a49`（schema+spec）→ `3b04e046`（折线接缝圆角编译）→ `9ac26761`（react `<Path>` / vanilla draw 透传），修正 `dbdb7cee`；测试 `packages/kernel/core/tests/compile/path-rounded-corners.test.ts`；最终 schema / 行为以代码为准。
 
-## DSL 表面
-
-react（kernel `<Path>` prop）：
-
-```tsx
-<Path stroke="steelblue" roundedCorners={8}>
-  <Step kind="move" to="A" />
-  <Step to="B" />
-  <Step to="C" />
-  <Step kind="cycle" />
-</Path>
-```
-
-vanilla（`draw` 的 path 级 config）与 react 同消费一份 IRPath、同字段，用法见文档站 `<Path>` 页。
-
-## 影响
-
-- **与 `lineJoin` 区分**：`roundedCorners` 改**几何**（端点回退 + 插弧 → 影响 bbox / 弧长 / 路径级 `marks` 归一化参数 / 填充区 / 连接点解析）；`lineJoin` 只改**描边视觉**。文档须并排说明、给「几何圆角 vs 描边 round join」对照，避免误用。（step `label` 的倒角后重定位见「不在本 ADR 范围」。）
-- **对外 API**：react `<Path>` 加 `roundedCorners` prop；vanilla `DrawConfig` 加 `roundedCorners`。均 optional、additive，无 breaking。
-
 ## 不在本 ADR 范围
 
 - **per-corner 半径覆盖**（path 级半径之外逐拐角微调）——推迟。
@@ -70,6 +50,5 @@ vanilla（`draw` 的 path 级 config）与 react 同消费一份 IRPath、同字
 - **过点平滑曲线**——[ADR-02](./02-smooth-curve-through-points.md)。
 - **装饰 motif**（波浪 / 花括号 / 弹簧）——roadmap B4，归 extension，另议。
 
----
 
-> 🔖 本文件压缩前完整施工蓝图 = `git show fd0a8598:_notes/decisions/core/v0/v0.4/alpha.3/01-polyline-rounded-corners.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.3/01-polyline-rounded-corners.md`（封板全文）。

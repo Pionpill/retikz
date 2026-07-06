@@ -80,49 +80,6 @@ retikz「数据不进 IR、外部数据是任意可嵌套 JS」（plot-design §
 要点：**非标量叶子与数组路径都收敛到「跳过 + 不伪造」**，配合可选 `validateData` 让「为什么图是空的」可诊断——这是文档型数据的主要错误处理保证。
 
 
-## DSL 表面
-
-```ts
-// 同一 spec + model，三种数据源都能出图：
-const spec = buildPlotSpec(/* model: [{name:'quarter',type:'temporal'},{name:'value',type:'quantitative'}] */);
-
-// 源 A：同名同类型（需求 1）—— 零配置
-lowerPlots({ sales: [{ quarter: '2024-01-01', value: 120 }] });
-
-// 源 B：字段名不同（需求 2）—— 给 fieldMaps
-lowerPlots({ sales: [{ period: '2024-01-01', amount: 120 }] },
-           { fieldMaps: { sales: { quarter: 'period', value: 'amount' } } });
-
-// 源 C：JS 类型不同但同 PlotFieldType（需求 3）—— quarter 是 Date 对象、value 是数字串，coercion 兜
-lowerPlots({ sales: [{ quarter: new Date('2024-01-01'), value: '120' }] });
-```
-
-React / vanilla 具体 API（评审 P1，当前 `Plot.tsx` 只显式转发列举的 options、DSL 入口无 model 面）：
-
-- **spec 入口** `<Plot spec={…} data={datasets} fieldMaps={…} />`：`model` 在 `spec.data.model`；`fieldMaps` 是 `LowerPlotsOptions` 字段，已含在 `PlotCommonProps`，但 `Plot.tsx` 需把它**加进解构（line 46）+ 转发给 `lowerPlots`（line 63）**（现仅转发 `provenance` 等显式项）。`fieldMaps` 按数据集 reference 键。
-- **组合 DSL 入口** `<Plot data={rows} model={…} fieldMap={…}>…</Plot>`：`data` 是单数据行数组（内部包成 `{__plot: rows}`）。需给 `PlotDslProps` 加 **`model?`**（注入内部构造的 `spec.data.model`）+ **`fieldMap?`**（单数据集的**扁平** `{逻辑名: 物理路径}`，内部映射到 `__plot` ref，不让用户写内部 ref 名）。
-- **vanilla** `plot(spec, datasets, { fieldMaps })`：builder option 对等转发，与 react 共享同一 `LowerPlotsOptions`。`fieldMaps` / `model` 都属绑定期/spec，不进 Scene IR。
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/data-portability.test.ts` 覆盖：
-
-- 恒等绑定换源（需求 1）
-- fieldMaps 改名后正确取值（需求 2）
-- 各 PlotFieldType coercion（Date/ISO/epoch → temporal；数字串 → quantitative；需求 3）
-- fieldMaps fail-loud（未知逻辑名）
-- 非法值跳过（不报错）
-
-落地测试见实现指针。
-
-## 影响
-
-- **IR**：无（`fieldMaps` / coercion 都不进 IR）。
-- **lowering**：`LowerPlotsOptions` 增 `fieldMaps`（TS 类型，非 IR schema）；新建 `coerce.ts`（按类型强制）+ ingest **归一化步**（resolve fieldMap + coerce → canonical rows）；扩展 `coerceTimestamp`（加 `Date` 分支 + 严格 ISO guard）。**关键：归一化在 transform 之前**，全下游（transform / scale / mark / anchor / locator / provenance）读 canonical rows。归一化须保留 `SOURCE_INDEX` 标记。现有无 fieldMaps 的 spec 行为不变（恒等 + coercion 对已支持表示等价；数字串进 stack 等场景从「被当 0」修正为正确）。
-- **core**：无。
-- **文档站**：data 概念页加「可移植契约 / 换源 / fieldMaps / 类型容错」一节 + demo（三源同 spec）。
-- **对外 API**：`lowerPlots` options 增 `fieldMaps`（可选、additive，需 model）；`@retikz/plot-react` `Plot.tsx` 转发 `fieldMaps` + DSL 入口加 `model`/`fieldMap` props；`-vanilla` 对等。coercion 让此前因 JS 类型不符被跳过的值现在能渲染（行为放宽、非 breaking）。
-
 ## 不在本 ADR 范围
 
 - **值变换函数**（逻辑字段 = 物理字段的计算式）→ transform / derive（alpha.12），`fieldMaps` 只改名。
@@ -131,4 +88,4 @@ React / vanilla 具体 API（评审 P1，当前 `Plot.tsx` 只显式转发列举
 - **运行时响应式换源（不重 lower）** → v0.1 之后交互/性能轴。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/lower/{coerce,expand,scale,field}.ts`、plot React/vanilla 入口透传与 public export，测试见 `packages/viz/plot/tests/lower/data-portability.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/02-data-portability.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.6/02-data-portability.md`（封板全文）。

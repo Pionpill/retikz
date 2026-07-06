@@ -49,44 +49,6 @@ docs 新增 provider authoring 总览，说明：
 3. docs 先讲机制，再讲具体 shape / path kind 示例，更适合 LLM 和用户生成自定义 provider。
 
 
-## DSL 表面
-
-```tsx
-import { Layout, Node, Path } from '@retikz/react';
-import { defineShape, definePathKind } from '@retikz/core';
-
-const pill = defineShape({ name: 'pill', /* ... */ });
-const flow = definePathKind({ schema: FlowPathSchema, /* ... */ });
-
-export const Diagram = () => (
-  <Layout shapes={[pill]} pathKinds={[flow]}>
-    <Node id="start" shape="pill" label="Start" />
-    <Path kind="flow" way={[['start'], [4, 0]]} />
-  </Layout>
-);
-```
-
-```ts
-import { compileToScene } from '@retikz/core';
-
-const scene = compileToScene(ir, {
-  shapes: [pill],
-  pathKinds: [flow],
-});
-```
-
-## 测试设计
-
-Adapter 测试验证 React / Vanilla 只透传 provider definitions，不重新解释 provider 语义；docs 通过 `git diff --check` 与 docs typecheck 验证结构化改动。
-
-
-## 影响
-
-- ⚠️ BREAKING：React `<Layout>` provider props 改为 definition 数组。
-- ⚠️ BREAKING：Vanilla render / builder provider options 改为 definition 数组。
-- docs 中旧 `Record<string, Definition>` 写法全部删除，不保留兼容写法。
-- provider authoring 成为 kernel docs 的一等概念页。
-
 ## 不在本 ADR 范围
 
 - 不实现 provider registry 迁移本身；由 ADR-03 处理。

@@ -37,32 +37,6 @@ export const OpacityChannelSchema = z.object({
 3. **core 现成**：落 core node opacity，不需要补 core。
 
 
-## DSL 表面
-
-```tsx
-// 散点：透明度编码 density 字段（叠点时低密度更淡）
-<Plot data={points}>
-  <PointMark x="x" y="y" opacity="density" />
-</Plot>
-```
-
-```ts
-// vanilla / 原生 IR
-{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'density' } } }
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/opacity-channel.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：linear 映射到 [min,1]、常量 value、`value` 越界 schema 拒绝、`field` 越界 clamp 不报错、temporal fail-loud、size+opacity 共存、schema accept/reject。落地测试见实现指针。
-
-## 影响
-
-- **Plot IR**：`ir/encoding.ts` 加 `OpacityChannelSchema`；`PointEncodingSchema` 加 `opacity`（其它 mark encoding 不变）。
-- **lowering**：`lower/channel.ts` 加 opacity resolver（continuous→linear）；`lower/mark.ts` lowerPoint 接 opacity → per-node 不透明度。
-- **core**：消费 core node opacity，不改 core。
-- **文档站**：散点页加 opacity demo + API 行。
-- **对外 API**：`<PointMark opacity>` + IR PointMark encoding `opacity`。非 breaking（纯新增可选）。
-
 ## 不在本 ADR 范围
 
 - **opacity 作用于 bar/area/line/sector** → 顺延（⑤ 仅 PointMark）。
@@ -70,4 +44,4 @@ export const OpacityChannelSchema = z.object({
 - **stroke/fill 分别控制 opacity** → 顺延（本轮整节点 opacity）。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/encoding.ts`、`packages/viz/plot/src/lower/{channel,mark}.ts` 与 `packages/viz/plot-react/src/components/marks.tsx`，测试见 `packages/viz/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/opacity-channel}.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.7/04-opacity-channel.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/04-opacity-channel.md`（封板全文）。

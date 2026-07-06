@@ -57,36 +57,6 @@ export type LowerPlotsOptions = {
 - **覆盖后的类型贯穿下游**：`resolveField.type` 盖类型后，`assertScaleFieldCompatible` 等用的是**覆盖后**的类型（实现时注意取值时序，别拿 model 旧类型校验）。
 
 
-## DSL 表面
-
-```tsx
-<Plot
-  data={rows}
-  model={[{ name: 'createdAt', type: 'temporal' }, { name: 'statusCode', type: 'categorical' }]}
-  resolveField={(field) => {
-    // 自定义日期格式：类型 + 解析一起给，避开「标了 temporal 但值被默认 coercer 静默丢」
-    if (field === 'createdAt') return { type: 'temporal', parse: raw => Date.parse(String(raw).replaceAll('/', '-')) };
-    // 只换解析、类型沿用 model（statusCode 已声明 categorical）
-    if (field === 'bigCount')  return { type: 'continuous', parse: raw => Number(raw) }; // 顺手收掉 bigint 静默丢
-    return undefined; // 其余走 model/推断 + 内置 coerce
-  }}
->
-  <LineMark x="createdAt" y="bigCount" order="createdAt" />
-</Plot>
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/field-resolver.test.ts` 覆盖类型覆盖、自定义 parse、门控、strict 守恒、locator 同源、与 fieldMaps 交叉。落地测试见实现指针。
-
-## 影响
-
-- **lowering 管线**：`resolveFieldTypes`（加 resolver 优先级 + strict 守恒）、`normalizeRows` / `coerceValue`（门控放宽 + parse 钩子）、`createPlotLocator`（同源透传）、`validateData`（可选 parse 输出校验）。
-- **公开 API（用户可见，新增非破坏）**：`LowerPlotsOptions.resolveField` + 导出 `FieldResolution` / `ParsedFieldValue` 类型；`@retikz/plot-react` `<Plot resolveField>` prop、`@retikz/plot-vanilla` `renderPlot(spec, data, { resolveField })` 透传。
-- **IR**：**无 schema 改动**——`resolveField` 是运行时函数、不进 IR（守可序列化红线）。
-- **文档站**：`apps/docs/src/modules/docs/contents/viz/grammar/data` 补「自定义解析 / resolveField」段 + demo。
-- **core**：无（纯 plot 数据层，不碰 core）。
-
 ## 不在本 ADR 范围
 
 - **声明式 `format` 词表**（`{ name, type:'temporal', format:'epoch-s'|'YYYY/MM/DD' }`，可序列化、LLM 友好、进 model/IR）——互补线，单独 ADR。
@@ -95,4 +65,4 @@ export type LowerPlotsOptions = {
 - **`bigint` 作为一等标量进 `ScalarValueSchema`**——本 ADR 仅让用户经 `parse` 自行收口 bigint；是否把 bigint 纳入内置 `coerceNumber` / 标量 schema 另议。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/lower/{expand,coerce,locate,infer}.ts`、plot public export 与 React/vanilla options 透传，测试见 `packages/viz/plot/tests/lower/field-resolver.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/04-field-resolver.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.6/04-field-resolver.md`（封板全文）。

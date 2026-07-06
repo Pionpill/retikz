@@ -40,16 +40,6 @@ export const PlotMark = { Point: 'point', Line: 'line', Interval: 'interval' } a
 - **柱描边**：默认 `strokeWidth:0`（纯填充柱，主流默认）；描边 / 圆角（`roundedCorners`）留后续样式字段。
 - **柱宽是否减 padding**：柱宽直接用 `bandwidth`（band scale 的 paddingInner 已在 [ADR-01](./01-band-scale.md) 留出柱间缝）；bar 层不再二次缩。
 
-## 影响
-
-- **对外 API**：`@retikz/plot` 公开 `IntervalMarkSchema`，`PlotMark` 增 `Interval` 成员，`MarkSchema` 升 3 成员 union——均非破坏（旧 point/line spec 不受影响）。
-- **对 core**：无（仍下沉到既有 rectangle Node，不依赖 core 新能力）。
-- **被消费**：[ADR-05](./05-relation.md) 在此基础上加 dodge（切子带 + 偏移）/ stack（消费 y0/y1）。
-
-## DSL 表面
-
-面向用户的 `<BarMark>` 见 [ADR-07](./07-bindings-dsl.md) 与[文档站](https://pionpill.github.io/retikz/)。
-
 ## 不在本 ADR 范围
 
 - **分组（dodge）/ 堆叠（stack）柱、多系列** → [ADR-05](./05-relation.md)。
@@ -57,11 +47,10 @@ export const PlotMark = { Point: 'point', Line: 'line', Interval: 'interval' } a
 - **横向柱（y 分类 / x 数值）、自定义 baseline、start-end 双端区间（甘特）、圆角 / 描边样式** → 后续。
 - **area / sector / rule / text mark** → 后续。
 
----
 
 > **实现指针**：level `red`（动 `plot/src/ir/**` mark schema + `src/lower/**` 下沉契约）、非 breaking（仅扩 union 成员，守 alpha.1 mark 跳过语义）。
 > - 真源以代码为准：`IntervalMarkSchema` / `PlotMark`（含 `Interval`）/ `MarkSchema`（`packages/viz/plot/src/ir/mark.ts`）；interval 下沉分支与 baseline=0 入 y 域见 `src/lower/mark.ts` / `src/lower/expand.ts`，消费 [ADR-01](./01-band-scale.md) projector 的 `xBandwidth` / `xCoordinate` / `yCoordinate`。柱下沉目标是 core `NodeSchema`（`shape:'rectangle'` / `minimumWidth` / `minimumHeight` / `padding`），仅用既有字段不改 core。
 > - 测试见 `packages/viz/plot/tests/ir/mark.schema.test.ts`（schema accept/reject）与 `tests/lower/lowerPlots.test.ts`（柱宽=bandwidth、柱高=|baseline−value|、柱中心、负值跨 baseline、0 值仍产 Node、缺失跳过 / 全跳过 null 图层、与 point/line 共存、band 轴对齐、Node 盒=柱）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。
 
-> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:_notes/decisions/plot/v0/v0.1/alpha.3/02-interval-mark.md`。
+> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.3/02-interval-mark.md`。

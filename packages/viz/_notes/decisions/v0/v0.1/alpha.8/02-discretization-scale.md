@@ -73,33 +73,6 @@ export const PlotScale = {
 - **数值字段 `.finite()`**：`breakpoints` / quantize `domain`（及 ADR-01 sequential/diverging `domain`）的数值改 `z.number().finite()`，parse 期拒 `Infinity`/`-Infinity`（修 adversarial BLOCKING：裸 `z.number()` 放过 Infinity，既过 schema 又破坏 JSON round-trip）。
 
 
-## DSL 表面
-
-```ts
-// vanilla / 原生 IR：quantize 5 档 choropleth 风散点
-{ type: 'quantize', name: '__color', domain: [0, 100], count: 5, scheme: 'blues' }
-
-// threshold 业务断点（3 色：<60 / 60–80 / ≥80）
-{ type: 'threshold', name: '__color', breakpoints: [60, 80], range: ['#e74c3c', '#f1c40f', '#2ecc71'] }
-
-// quantile 4 档（每档样本数约等，抗偏斜）
-{ type: 'quantile', name: '__color', count: 4, scheme: 'viridis' }
-```
-
-> React 表面：本轮离散化 scale **仅经 vanilla IR**（与 ADR-01 diverging 同口径——React 自动派生只做连续 sequential，离散化属显式高级用法，等 `<ColorScale>` DSL）。
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/discretization-scale.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：三类切档求值、scheme 采样档色、range 覆盖、threshold 断点校验、quantile 分位、边界落档、fail-loud。落地测试见实现指针。
-
-## 影响
-
-- **Plot IR**：`ir/scale.ts` 加 3 schema + 派生类型，`ScaleSchema` union 扩 3 成员；纯增量。
-- **lowering**：`lower/scale.ts` 加 quantize/threshold/quantile 求值 + scheme→离散色采样（与 ADR-01 共用采样工具）；`lower/expand.ts` color resolver 认离散化 scale（categorical 之外，离散化是「连续字段 → 离散色」的第三条路）。
-- **core**：无新依赖、不触 core IR。
-- **文档站**：scale 页加离散化三件套；散点 / 柱 choropleth demo。
-- **对外 API**：`PlotScale` 加 3 成员；纯新增，不破坏既有 spec。
-
 ## 不在本 ADR 范围
 
 - **离散 size / opacity 档**（D1）→ 顺延需求驱动（本轮离散化只输出 color）。
@@ -108,4 +81,4 @@ export const PlotScale = {
 - **legend 分箱 swatch 渲染** → [ADR-03](./03-legend-guide.md)。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/scale.ts` 与 `packages/viz/plot/src/lower/{scale,expand}.ts`，测试见 `packages/viz/plot/tests/{ir/scale.schema,lower/discretization-scale}.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.8/02-discretization-scale.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.8/02-discretization-scale.md`（封板全文）。

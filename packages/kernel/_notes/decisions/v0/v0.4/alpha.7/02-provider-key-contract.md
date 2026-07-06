@@ -56,36 +56,6 @@ IR 保存完整 operation object，registry key 从 operation discriminant 或 n
 3. composite 保留 namespace 防撞，对齐 plot 的 namespace 设计和 core Tier 2 lowering 模型。
 
 
-## DSL 表面
-
-```tsx
-<Layout shapes={[customShape]} arrows={[customArrow]}>
-  <Node id="box" shape="custom-box" />
-  <Path arrow="->" arrowDetail={{ shape: 'custom-tip' }} way={[['box'], [3, 0]]} />
-</Layout>
-```
-
-```ts
-const customComposite = defineComposite({
-  namespace: 'acme',
-  type: 'callout',
-  schema: CalloutSchema,
-  expand: node => [/* kernel IR */],
-});
-```
-
-## 测试设计
-
-`packages/kernel/core/tests/providers/provider-key-contract.test.ts` 覆盖 key 提取规则；各 capability 测试验证 IR 引用与 definition key 对齐。
-
-
-## 影响
-
-- ⚠️ BREAKING：string reference provider definition 必须带 `name` 字段。
-- ⚠️ BREAKING：`PathKindDefinition` 需要明确 schema literal key；不允许 schema 与注册 key 分离。
-- ⚠️ BREAKING：`CompositeDefinition` 不再仅从 schema 反推 namespace / type；definition 必须显式声明 namespace 与 type，schema 负责 payload 校验。
-- docs 中所有自定义 provider 示例都要展示 key 字段或 key helper。
-
 ## 不在本 ADR 范围
 
 - registry duplicate / unknown 的统一错误行为由 [ADR-01](./01-provider-registry-contract.md) 处理。

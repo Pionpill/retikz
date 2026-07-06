@@ -102,55 +102,6 @@ const spec = plotBuilder({ data, scales: [] })
 5. Vanilla builder 也支持同一 sugar 字段，保持 authoring surface 对等；但字段在 builder 输出前消失，不污染 IR。
 
 
-## DSL 表面
-
-React 双 y 轴：
-
-```tsx
-<Plot data={data}>
-  <Axis dimension="x" title="name" />
-  <Axis id="left" dimension="y" placement={{ kind: 'side', side: 'left' }} title="pv" />
-  <Axis id="right" dimension="y" placement={{ kind: 'side', side: 'right' }} title="uv" />
-  <PathMark x="name" y="pv" yAxisId="left" />
-  <PathMark x="name" y="uv" yAxisId="right" />
-</Plot>
-```
-
-React 仍可使用底层 composition：
-
-```tsx
-<Plot data={data} composition={composition}>
-  <PathMark coordinateScope="rainfall" x="day" y="rainfall" />
-</Plot>
-```
-
-Vanilla builder：
-
-```ts
-const spec = plotBuilder({ data: { reference: 'weather' }, scales: [] })
-  .axis({ type: 'axis', id: 'left', dimension: 'y' })
-  .axis({ type: 'axis', id: 'right', dimension: 'y', placement: { kind: 'side', side: 'right' } })
-  .path({ type: 'path', yAxisId: 'left', encoding: { x: { field: 'day' }, y: { field: 'temperature' } } })
-  .path({ type: 'path', yAxisId: 'right', encoding: { x: { field: 'day' }, y: { field: 'rainfall' } } })
-  .build();
-```
-
-## 测试设计
-
-- schema 层确认 `yAxisId` 不进入 `@retikz/plot` IR；输出 PlotSpec 仍由 `PlotSpecSchema` 解析。
-- React adapter 测试确认 `<PathMark yAxisId>` 生成 overlay composition 与 mark `coordinateScope`。
-- Vanilla builder 测试确认 `.path({ yAxisId })` 输出同构 PlotSpec。
-- 错误路径覆盖缺失 axis、dimension 不匹配、重复 axis id、`coordinateScope` 与 `yAxisId` 同时出现。
-- docs demo 用双 y 轴 sugar 替换当前手写 composition 的多坐标 scope 示例。
-
-## 影响
-
-- `@retikz/plot` IR schema 不变。
-- `@retikz/plot-react` position mark props 增加 `yAxisId`，`buildPlotSpec` 增加 axis binding normalization。
-- `@retikz/plot-vanilla` builder 输入类型增加 adapter-only `yAxisId`，`build()` 前展开为 PlotSpec。
-- docs coordinate composition 页需要把多坐标 scope demo 改成 axis binding sugar，并在正文解释“底层仍会展开为 composition”。
-- 现有显式 composition 写法继续可用，适合 facet / track / advanced scope control。
-
 ## 不在本 ADR 范围
 
 - 不新增 `xAxisId`。
