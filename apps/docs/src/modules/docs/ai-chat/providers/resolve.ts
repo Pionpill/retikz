@@ -1,8 +1,8 @@
 import type { ChatChunk, ChatRequestOptions, ProviderId } from './types';
 
 import { anthropicProvider } from './anthropic';
-import { getProvider } from './index';
 import { createOpenAiCompatProvider } from './openai-compat';
+import { getProvider } from './registry';
 import { PROVIDER_IDS } from './types';
 
 /** 自定义 provider 持久化结构。 */

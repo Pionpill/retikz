@@ -4,19 +4,19 @@ import { arcEndPoint, isFiniteNumber } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
-  Cell,
-  CellGeometry,
   CoordinateDefinition,
   DimensionRole,
+  GuideContext,
+  PolarCoordinateFrame,
   PositionScale,
   TickSet,
 } from '../../../contract';
-import type { GuideContext } from '../../../features';
 import type { Coordinate, Polar1DCoordinate } from '../../../schemas';
 
 import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
-import { computePolarCoordinate } from '../../../pipeline';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
+import { computePolarCoordinate } from '../../../shared';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
@@ -48,44 +48,6 @@ const isContinuousAngleScale = (scaleType: string): boolean =>
  */
 const polarPoint = (center: Position, angleDeg: number, radius: number): Position | null =>
   isFiniteNumber(angleDeg) && isFiniteNumber(radius) ? arcEndPoint(center, radius, angleDeg) : null;
-
-/**
- * 二维极坐标运行时坐标帧。
- * @description x 角色解释为角向、y 角色解释为径向；scale 输出先落到 [θ, r]，再投影为屏幕坐标。
- *   同时提供 projectPolar / densify 支持连续角轴上的弧线采样。
- */
-export type PolarCoordinateFrame = {
-  /** 判别字段：2D 极坐标 */
-  type: typeof PlotCoordinate.Polar2D;
-  /** 位置角色序（[angle, radius]）；mark 按此序取 encoding 通道值（x→angle、y→radius 别名） */
-  roles: ReadonlyArray<DimensionRole>;
-  /** 圆心（屏幕坐标） */
-  center: Position;
-  /** 内半径（user units，环图内半径，0 = 实心） */
-  innerRadius: number;
-  /** 外半径（user units，可用外半径） */
-  outerRadius: number;
-  /** 角向起始角（度，角向 range 起） */
-  startAngle: number;
-  /** 角向终止角（度，角向 range 止） */
-  endAngle: number;
-  /** 角向 scale 是否连续（linear / time）；连续才在段内插值采样，分类（band / point）走弦 */
-  continuousAngle: boolean;
-  /** angle 位置 scale（range = [startAngle, endAngle] 度） */
-  primary: PositionScale;
-  /** radius 位置 scale（range = [innerRadius, outerRadius]） */
-  secondary: PositionScale;
-  /** 按通用 coordinate contract 暴露各 role 的位置 scale。 */
-  roleScales: Partial<Record<DimensionRole, PositionScale>>;
-  /** 投影：θ=primary.coordinate(angle)°、r=secondary.coordinate(radius)，[cx + r·cosθ, cy + r·sinθ]；任一非有限 → null */
-  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
-  /** N 通道投影：按 roles 序传值（[angle, radius]），内部委托 project；任一非有限 → null */
-  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
-  /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（段内采样反投影用；非有限 → null） */
-  projectPolar: (thetaDeg: number, radius: number) => Position | null;
-  /** 正交 cell → 环楔（闭式快路）：center = frame.center、角度带 = primary、半径带 = secondary */
-  projectCell: (cell: Cell) => CellGeometry;
-};
 
 /** 创建二维极坐标运行时坐标帧所需的已解析参数。 */
 export type PolarCoordinateSpec = {
@@ -287,26 +249,35 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radialAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
 
     const angleScale = ctx.buildPositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
+    const angleRangeOverride = ctx.roleRangeOverrides?.x;
+    if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
-      ? (ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount))
+      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
+      : undefined;
+    const layoutAngularTicks = angularAxis
+      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
       : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
       {
         hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
-        angularLabels: angularTicks?.labels ?? [],
+        angularLabels: layoutAngularTicks?.labels ?? [],
       },
-      { fontSize: ctx.fontSize, margin: ctx.margin },
+      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
-    const angleRangeOverride = ctx.roleRangeOverrides?.x;
     const radiusRangeOverride = ctx.roleRangeOverrides?.y;
-    if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     if (radiusRangeOverride !== undefined) radiusScale.setRange([radiusRangeOverride[0], radiusRangeOverride[1]]);
     const radialTicks: TickSet | undefined = radialAxis
-      ? (ctx.collectAxisTicks('y') ?? radiusScale.ticks(radialAxis.tickCount))
+      ? (ctx.collectAxisTicks('y') ?? resolveGuideTicks(radiusScale, radialAxis.ticks, radialAxis.tickLabels || undefined))
+      : undefined;
+    const visibleAngularTicks = angularAxis
+      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
+      : undefined;
+    const visibleRadialTicks = radialAxis
+      ? resolveVisibleGuideTicks(radialTicks ?? EMPTY_TICKS, radialAxis.ticks, value => radiusScale.coordinate(value))
       : undefined;
     const [radiusRangeStart, radiusRangeEnd] = radiusScale.range();
     const frameInnerRadius = Math.min(radiusRangeStart, radiusRangeEnd);
@@ -326,13 +297,13 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: angleScale,
       projectY: radiusScale,
-      xTicks: angularTicks ?? EMPTY_TICKS,
-      yTicks: radialTicks ?? EMPTY_TICKS,
+      xTicks: visibleAngularTicks ?? EMPTY_TICKS,
+      yTicks: visibleRadialTicks ?? EMPTY_TICKS,
       fontSize: ctx.fontSize,
       labelGap: ctx.labelGap,
       frame,
-      angularTicks: angularTicks ?? EMPTY_TICKS,
-      radialTicks: radialTicks ?? EMPTY_TICKS,
+      angularTicks: visibleAngularTicks ?? EMPTY_TICKS,
+      radialTicks: visibleRadialTicks ?? EMPTY_TICKS,
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
     return {
@@ -361,16 +332,19 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angleRangeOverride = ctx.roleRangeOverrides?.x;
     if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
-      ? (ctx.collectAxisTicks('x') ?? angleScale.ticks(angularAxis.tickCount))
+      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
+      : undefined;
+    const visibleAngularTicks = angularAxis
+      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
       : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
       {
         hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
-        angularLabels: angularTicks?.labels ?? [],
+        angularLabels: visibleAngularTicks?.labels ?? [],
       },
-      { fontSize: ctx.fontSize, margin: ctx.margin },
+      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
     const radius = radiusFraction * layout.outerRadius;
     const continuousAngle = isContinuousAngleScale(angleScaleDef.type);
@@ -397,12 +371,12 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
       projectX: angleScale,
       projectY: angleScale,
-      xTicks: angularTicks ?? EMPTY_TICKS,
+      xTicks: visibleAngularTicks ?? EMPTY_TICKS,
       yTicks: EMPTY_TICKS,
       fontSize: ctx.fontSize,
       labelGap: ctx.labelGap,
       frame: guidePolarCoordinate,
-      angularTicks: angularTicks ?? EMPTY_TICKS,
+      angularTicks: visibleAngularTicks ?? EMPTY_TICKS,
       radialTicks: EMPTY_TICKS,
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));

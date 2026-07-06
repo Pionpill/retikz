@@ -301,6 +301,22 @@ const continuousColorOf = (
   };
 };
 
+const withSequentialTheme = <TDef extends { range?: unknown; scheme?: string }>(
+  def: TDef,
+  ctx: ChannelResolveContext,
+): TDef =>
+  def.range !== undefined || def.scheme !== undefined || ctx.defaultSequentialScheme === undefined
+    ? def
+    : { ...def, scheme: ctx.defaultSequentialScheme };
+
+const withDivergingTheme = <TDef extends { range?: unknown; scheme?: string }>(
+  def: TDef,
+  ctx: ChannelResolveContext,
+): TDef =>
+  def.range !== undefined || def.scheme !== undefined || ctx.defaultDivergingScheme === undefined
+    ? def
+    : { ...def, scheme: ctx.defaultDivergingScheme };
+
 const ordinalScaleDefinition = defineScale<OrdinalScale>({
   family: 'channel',
   schema: OrdinalScaleSchema,
@@ -328,7 +344,8 @@ const sequentialScaleDefinition = defineScale<SequentialColorScale>({
   isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
   resolve: (def, values, ctx) => {
     const numeric = numericValuesOf(values, ctx);
-    const evaluate = resolveSequentialColorScale(def, numeric, ctx.resolveColorScheme);
+    const themedDef = withSequentialTheme(def, ctx);
+    const evaluate = resolveSequentialColorScale(themedDef, numeric, ctx.resolveColorScheme);
     const [lo, hi] = def.domain ?? (numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)]);
     return {
       of: continuousColorOf(ctx, evaluate),
@@ -347,7 +364,8 @@ const divergingScaleDefinition = defineScale<DivergingColorScale>({
   isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous,
   resolve: (def, values, ctx) => {
     const numeric = numericValuesOf(values, ctx);
-    const evaluate = resolveDivergingColorScale(def, numeric, ctx.resolveColorScheme);
+    const themedDef = withDivergingTheme(def, ctx);
+    const evaluate = resolveDivergingColorScale(themedDef, numeric, ctx.resolveColorScheme);
     const extentRange: [number, number] = numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)];
     const [lo, hi] = def.domain ? [def.domain[0], def.domain[def.domain.length - 1]] : extentRange;
     return {
@@ -376,42 +394,48 @@ const quantizeScaleDefinition = defineScale<QuantizeColorScale>({
   family: 'channel',
   schema: QuantizeColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
-  resolve: (def, values, ctx) =>
-    discretizedResolution(
+  resolve: (def, values, ctx) => {
+    const themedDef = withSequentialTheme(def, ctx);
+    return discretizedResolution(
       PlotScale.Quantize,
-      def,
+      themedDef,
       values,
       ctx,
-      resolveQuantizeColorScale(def, numericValuesOf(values, ctx), ctx.resolveColorScheme),
-    ),
+      resolveQuantizeColorScale(themedDef, numericValuesOf(values, ctx), ctx.resolveColorScheme),
+    );
+  },
 });
 
 const thresholdScaleDefinition = defineScale<ThresholdColorScale>({
   family: 'channel',
   schema: ThresholdColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
-  resolve: (def, values, ctx) =>
-    discretizedResolution(
+  resolve: (def, values, ctx) => {
+    const themedDef = withSequentialTheme(def, ctx);
+    return discretizedResolution(
       PlotScale.Threshold,
-      def,
+      themedDef,
       values,
       ctx,
-      resolveThresholdColorScale(def, ctx.resolveColorScheme),
-    ),
+      resolveThresholdColorScale(themedDef, ctx.resolveColorScheme),
+    );
+  },
 });
 
 const quantileScaleDefinition = defineScale<QuantileColorScale>({
   family: 'channel',
   schema: QuantileColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
-  resolve: (def, values, ctx) =>
-    discretizedResolution(
+  resolve: (def, values, ctx) => {
+    const themedDef = withSequentialTheme(def, ctx);
+    return discretizedResolution(
       PlotScale.Quantile,
-      def,
+      themedDef,
       values,
       ctx,
-      resolveQuantileColorScale(def, numericValuesOf(values, ctx), ctx.resolveColorScheme),
-    ),
+      resolveQuantileColorScale(themedDef, numericValuesOf(values, ctx), ctx.resolveColorScheme),
+    );
+  },
 });
 
 /** channel 族 scale definition（分类 1 + 连续色 2 + 离散化 3 = 6）：产视觉量（颜色），喂 color 通道 + legend。 */

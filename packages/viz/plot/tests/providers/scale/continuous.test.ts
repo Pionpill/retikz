@@ -1,4 +1,4 @@
-import type { IRPath, IRScope, IRStep } from '@retikz/core';
+﻿import type { IRPath, IRScope, IRStep } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -9,7 +9,7 @@ import type { PlotSpec } from '../../../src/schemas';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
-/** 笛卡尔默认画布；polar 用正方形 → outerRadius = min(w,h)/2 = 200、center = [200,200] */
+/** 绗涘崱灏旈粯璁ょ敾甯冿紱polar 鐢ㄦ鏂瑰舰 鈫?outerRadius = min(w,h)/2 = 200銆乧enter = [200,200] */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 const polarOpts: LowerPlotsOptions = { width: 400, height: 400 };
 
@@ -22,14 +22,14 @@ const expandOf = (
   return def.expand(spec) as IRScope;
 };
 
-/** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
+/** 鍙栫涓€涓?mark 鍥惧眰 scope锛堝灞?plot scope 鐨勭涓€涓瓙 scope锛?*/
 const firstLayer = (
   spec: PlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
-/** 深度收集图层内所有 Path（无 color 时直接子或藏在子 Scope 里） */
+/** 娣卞害鏀堕泦鍥惧眰鍐呮墍鏈?Path锛堟棤 color 鏃剁洿鎺ュ瓙鎴栬棌鍦ㄥ瓙 Scope 閲岋級 */
 const collectPaths = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
   const walk = (children: ReadonlyArray<unknown>): void => {
@@ -43,10 +43,10 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
   return out;
 };
 
-/** step 是否有 to 坐标点 */
+/** step 鏄惁鏈?to 鍧愭爣鐐?*/
 const stepPoint = (step: IRStep): [number, number] => (step as { to: [number, number] }).to;
 
-/** 是否闭合（含 cycle step，或末点回到首点） */
+/** 鏄惁闂悎锛堝惈 cycle step锛屾垨鏈偣鍥炲埌棣栫偣锛?*/
 const isClosedSteps = (steps: ReadonlyArray<IRStep>): boolean => {
   if (steps.some(s => s.kind === 'cycle')) return true;
   const withTo = steps.filter(s => s.kind === 'move' || s.kind === 'line');
@@ -56,7 +56,7 @@ const isClosedSteps = (steps: ReadonlyArray<IRStep>): boolean => {
   return Math.abs(first[0] - last[0]) < 1e-6 && Math.abs(first[1] - last[1]) < 1e-6;
 };
 
-// ── cartesian area：上沿 + baseline 回边闭合的填充 Path ───────────────────
+// 鈹€鈹€ cartesian area锛氫笂娌?+ baseline 鍥炶竟闂悎鐨勫～鍏?Path 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 describe('lowerPlots area cartesian (ADR-03)', () => {
   const SALES = [
     { month: 0, revenue: 10 },
@@ -69,8 +69,8 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -112,17 +112,17 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
   });
 
   it('area_top_outline_matches_value_projection', () => {
-    // domain x [0,2]->[0,480]; y [9,14]->[300,0]。上沿首点 = 投影(month0,rev10)
+    // domain x [0,2]->[0,480]; y [9,14]->[300,0]銆備笂娌块鐐?= 鎶曞奖(month0,rev10)
     const path = collectPaths(firstLayer(areaSpec({ order: 'month' }), { sales: SALES }, cartOpts))[0];
     const first = stepPoint(path.children[0]);
     expect(first[0]).toBeCloseTo(0, 6);
-    // revenue 10 在 [9,14] 内 → y 介于 300 与 0 之间（非 baseline）
+    // revenue 10 鍦?[9,14] 鍐?鈫?y 浠嬩簬 300 涓?0 涔嬮棿锛堥潪 baseline锛?
     expect(first[1]).toBeGreaterThan(0);
     expect(first[1]).toBeLessThan(300);
   });
 
   it('area_baseline_zero_return_edge_at_baseline', () => {
-    // baseline 0 投影 y = 300（屏幕底）。回边上至少有一点贴 baseline y≈300
+    // baseline 0 鎶曞奖 y = 300锛堝睆骞曞簳锛夈€傚洖杈逛笂鑷冲皯鏈変竴鐐硅创 baseline y鈮?00
     const path = collectPaths(
       firstLayer(areaSpec({ order: 'month', closure: { kind: 'baseline', baseline: 0 } }), { sales: SALES }, cartOpts),
     )[0];
@@ -141,8 +141,8 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y', domain: [30, 70] },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domain: [30, 70], domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -167,7 +167,7 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
-  // 边界：<2 点 → null（不成面）
+  // 杈圭晫锛?2 鐐?鈫?null锛堜笉鎴愰潰锛?
   it('area_single_point_yields_no_layer', () => {
     const outer = expandOf(areaSpec(), { sales: [{ month: 1, revenue: 5 }] }, cartOpts);
     expect(outer.children).toHaveLength(0);
@@ -178,19 +178,19 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
     expect(outer.children).toHaveLength(0);
   });
 
-  // 错误路径：非有限值跳过该点（守投影 null 语义）
+  // 閿欒璺緞锛氶潪鏈夐檺鍊艰烦杩囪鐐癸紙瀹堟姇褰?null 璇箟锛?
   it('area_non_finite_point_skipped', () => {
     const rows = [
       { month: 0, revenue: 10 },
       { month: 'oops', revenue: 14 },
       { month: 2, revenue: 9 },
     ];
-    // 仍有 2 个有效顶点 → 成面（不抛错）
+    // 浠嶆湁 2 涓湁鏁堥《鐐?鈫?鎴愰潰锛堜笉鎶涢敊锛?
     const path = collectPaths(firstLayer(areaSpec({ order: 'month' }), { sales: rows }, cartOpts))[0];
     expect(path.type).toBe('path');
   });
 
-  // 交互：多系列 area → 拆多子 Path
+  // 浜や簰锛氬绯诲垪 area 鈫?鎷嗗瀛?Path
   it('area_series_splits_into_multiple_paths', () => {
     const TREND = [
       { t: 0, v: 1, city: 'X' },
@@ -203,8 +203,8 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
       type: 'plot',
       data: { reference: 't' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
@@ -222,8 +222,7 @@ describe('lowerPlots area cartesian (ADR-03)', () => {
     expect(paths).toHaveLength(2);
   });
 });
-
-// ── cartesian line 回归：不采样、产物等价既有 ─────────────────────────────
+// 鈹€鈹€ cartesian line 鍥炲綊锛氫笉閲囨牱銆佷骇鐗╃瓑浠锋棦鏈?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 describe('lowerPlots line cartesian regression (ADR-03)', () => {
   const SALES = [
     { month: 0, revenue: 10 },
@@ -236,15 +235,15 @@ describe('lowerPlots line cartesian regression (ADR-03)', () => {
       type: 'plot',
       data: { reference: 'sales' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } }, ...extra }],
     });
 
   it('line_unchanged_no_sampling', () => {
-    // cartesian 永不采样：3 顶点 → move + 2 line，逐字等价 alpha.3
+    // cartesian 姘镐笉閲囨牱锛? 椤剁偣 鈫?move + 2 line锛岄€愬瓧绛変环 alpha.3
     const path = collectPaths(firstLayer(lineSpec(), { sales: SALES }, cartOpts))[0];
     expect(path.children).toEqual([
       { type: 'step', kind: 'move', to: [0, 240] },
@@ -254,12 +253,12 @@ describe('lowerPlots line cartesian regression (ADR-03)', () => {
   });
 
   it('open_line_not_closed', () => {
-    // 默认 closed 省略 → 不闭合（无 cycle、末点 ≠ 首点）
+    // 榛樿 closed 鐪佺暐 鈫?涓嶉棴鍚堬紙鏃?cycle銆佹湯鐐?鈮?棣栫偣锛?
     const path = collectPaths(firstLayer(lineSpec(), { sales: SALES }, cartOpts))[0];
     expect(path.children.some(s => s.kind === 'cycle')).toBe(false);
   });
 
-  // closed line（cartesian 允许闭合多边形）
+  // closed line锛坈artesian 鍏佽闂悎澶氳竟褰級
   it('closed_line_returns_to_first_point', () => {
     const path = collectPaths(firstLayer(lineSpec({ closed: true }), { sales: SALES }, cartOpts))[0];
     expect(isClosedSteps(path.children)).toBe(true);
@@ -306,8 +305,8 @@ describe('lowerPlots path closure cartesian', () => {
       type: 'plot',
       data: { reference: 'series' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'path', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } }, ...extra }],
@@ -406,9 +405,9 @@ describe('lowerPlots path closure cartesian', () => {
   });
 });
 
-// ── polar line：连续角轴段内采样、分类角轴走弦 ───────────────────────────
+// 鈹€鈹€ polar line锛氳繛缁杞存鍐呴噰鏍枫€佸垎绫昏杞磋蛋寮?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 describe('lowerPlots line polar sampling (ADR-03)', () => {
-  // 两顶点大角差：linear 角轴 domain → [0,360]，半径线性
+  // 涓ら《鐐瑰ぇ瑙掑樊锛歭inear 瑙掕酱 domain 鈫?[0,360]锛屽崐寰勭嚎鎬?
   const POLAR = [
     { a: 0, r: 5 },
     { a: 9, r: 10 },
@@ -420,8 +419,8 @@ describe('lowerPlots line polar sampling (ADR-03)', () => {
       data: { reference: 'd' },
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'a', domainPadding: 0 },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [{ type: 'path', order: 'a', encoding: { x: { field: 'a' }, y: { field: 'r' } }, ...extra }],
     });
@@ -438,14 +437,14 @@ describe('lowerPlots line polar sampling (ADR-03)', () => {
   });
 
   it('polar_continuous_axis_densifies_segment', () => {
-    // 连续角轴 + 非 closed：相邻顶点大角差 → 段内插值中间点（points 数 > 顶点数 2）
+    // 杩炵画瑙掕酱 + 闈?closed锛氱浉閭婚《鐐瑰ぇ瑙掑樊 鈫?娈靛唴鎻掑€间腑闂寸偣锛坧oints 鏁?> 椤剁偣鏁?2锛?
     const path = collectPaths(firstLayer(polarLineSpec({ closed: false }), { d: POLAR }, polarOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
     expect(points.length).toBeGreaterThan(2);
   });
 
   it('polar_sampled_points_lie_on_projected_arc', () => {
-    // 采样点在 [θ,r] 空间线性插值后反投影：半径插值 → 到圆心距离介于两端半径之间且单调
+    // 閲囨牱鐐瑰湪 [胃,r] 绌洪棿绾挎€ф彃鍊煎悗鍙嶆姇褰憋細鍗婂緞鎻掑€?鈫?鍒板渾蹇冭窛绂讳粙浜庝袱绔崐寰勪箣闂翠笖鍗曡皟
     const path = collectPaths(firstLayer(polarLineSpec({ closed: false }), { d: POLAR }, polarOpts))[0];
     const center = [200, 200];
     const radii = path.children
@@ -454,17 +453,17 @@ describe('lowerPlots line polar sampling (ADR-03)', () => {
         const [x, y] = stepPoint(s);
         return Math.hypot(x - center[0], y - center[1]);
       });
-    // 端点半径：r=5 (domain min→innerRadius 0)、r=10 (domain max→outerRadius 200)
+    // 绔偣鍗婂緞锛歳=5 (domain min鈫抜nnerRadius 0)銆乺=10 (domain max鈫抩uterRadius 200)
     expect(radii[0]).toBeCloseTo(0, 6);
     expect(radii[radii.length - 1]).toBeCloseTo(200, 6);
-    // 中间采样点半径单调递增（半径空间线性插值）
+    // 涓棿閲囨牱鐐瑰崐寰勫崟璋冮€掑锛堝崐寰勭┖闂寸嚎鎬ф彃鍊硷級
     for (let i = 1; i < radii.length; i += 1) {
       expect(radii[i]).toBeGreaterThanOrEqual(radii[i - 1] - 1e-6);
     }
   });
 
   it('polar_band_axis_walks_chords_no_sampling', () => {
-    // 分类角轴（band）：类别间无中间值 → 不采样、走弦（points 数 == 顶点数）
+    // 鍒嗙被瑙掕酱锛坆and锛夛細绫诲埆闂存棤涓棿鍊?鈫?涓嶉噰鏍枫€佽蛋寮︼紙points 鏁?== 椤剁偣鏁帮級
     const CAT = [
       { dim: 'A', v: 5 },
       { dim: 'B', v: 8 },
@@ -477,7 +476,7 @@ describe('lowerPlots line polar sampling (ADR-03)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
         { type: 'band', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [{ type: 'path', encoding: { x: { field: 'dim' }, y: { field: 'v' } } }],
     });
@@ -487,16 +486,16 @@ describe('lowerPlots line polar sampling (ADR-03)', () => {
   });
 
   it('polar_closed_line_walks_chords_no_sampling', () => {
-    // closed（雷达）恒走弦：即便连续角轴，closed 多边形不段内采样
+    // closed锛堥浄杈撅級鎭掕蛋寮︼細鍗充究杩炵画瑙掕酱锛宑losed 澶氳竟褰笉娈靛唴閲囨牱
     const path = collectPaths(firstLayer(polarLineSpec({ closed: true }), { d: POLAR }, polarOpts))[0];
     expect(isClosedSteps(path.children)).toBe(true);
-    // 顶点 2 个 → 走弦（不因连续角轴而采样）；闭合多边形点数贴近顶点数
+    // 椤剁偣 2 涓?鈫?璧板鸡锛堜笉鍥犺繛缁杞磋€岄噰鏍凤級锛涢棴鍚堝杈瑰舰鐐规暟璐磋繎椤剁偣鏁?
     const lines = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
     expect(lines.length).toBeLessThanOrEqual(3);
   });
 });
 
-// ── 雷达：line + polar + point 角向 + closed → 闭合多边形 ─────────────────
+// 鈹€鈹€ 闆疯揪锛歭ine + polar + point 瑙掑悜 + closed 鈫?闂悎澶氳竟褰?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 describe('lowerPlots radar (ADR-03)', () => {
   const METRICS = [
     { dim: 'speed', value: 3 },
@@ -512,7 +511,7 @@ describe('lowerPlots radar (ADR-03)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
         { type: 'point', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [{ type: 'path', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
     });
@@ -523,7 +522,7 @@ describe('lowerPlots radar (ADR-03)', () => {
   });
 
   it('radar_vertices_lie_on_distinct_angular_axes', () => {
-    // 4 维 point scale 等分角度 → 4 顶点各落不同方位（角度互异）
+    // 4 缁?point scale 绛夊垎瑙掑害 鈫?4 椤剁偣鍚勮惤涓嶅悓鏂逛綅锛堣搴︿簰寮傦級
     const path = collectPaths(firstLayer(radarSpec(), { m: METRICS }, polarOpts))[0];
     const center = [200, 200];
     const angles = path.children
@@ -545,7 +544,7 @@ describe('lowerPlots radar (ADR-03)', () => {
   });
 });
 
-// ── polar area：上沿 + baseline 回边（polar baseline = 径向内界方向）─────
+// 鈹€鈹€ polar area锛氫笂娌?+ baseline 鍥炶竟锛坧olar baseline = 寰勫悜鍐呯晫鏂瑰悜锛夆攢鈹€鈹€鈹€鈹€
 describe('lowerPlots area polar (ADR-03)', () => {
   const METRICS = [
     { dim: 'a', value: 4 },
@@ -565,7 +564,7 @@ describe('lowerPlots area polar (ADR-03)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
         { type: 'point', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [
         {
@@ -584,7 +583,7 @@ describe('lowerPlots area polar (ADR-03)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
         { type: 'point', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       marks: [
         {
@@ -610,7 +609,7 @@ describe('lowerPlots area polar (ADR-03)', () => {
   });
 
   it('polar_area_return_edge_at_inner_baseline', () => {
-    // baseline 0 → 径向内界（radiusScale(0) = innerRadius 0 = 圆心方向）。回边点贴近圆心
+    // baseline 0 鈫?寰勫悜鍐呯晫锛坮adiusScale(0) = innerRadius 0 = 鍦嗗績鏂瑰悜锛夈€傚洖杈圭偣璐磋繎鍦嗗績
     const path = collectPaths(
       firstLayer(polarAreaSpec({ closure: { kind: 'baseline', baseline: 0 } }), { m: METRICS }, polarOpts),
     )[0];
@@ -621,7 +620,7 @@ describe('lowerPlots area polar (ADR-03)', () => {
         const [x, y] = stepPoint(s);
         return Math.hypot(x - center[0], y - center[1]);
       });
-    // baseline 回边至少一点贴圆心（半径 ≈ 0）
+    // baseline 鍥炶竟鑷冲皯涓€鐐硅创鍦嗗績锛堝崐寰?鈮?0锛?
     expect(Math.min(...radii)).toBeCloseTo(0, 6);
   });
 
@@ -638,7 +637,7 @@ describe('lowerPlots area polar (ADR-03)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
         { type: 'point', name: 'a' },
-        { type: 'linear', name: 'r', domain: [30, 70] },
+        { type: 'linear', name: 'r', domain: [30, 70], domainPadding: 0 },
       ],
       marks: [
         { type: 'path', closure: { kind: 'baseline' }, encoding: { x: { field: 'dim' }, y: { field: 'value' } } },

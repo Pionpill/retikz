@@ -9,69 +9,91 @@ export type SourceView = 'react' | 'ir' | 'vanilla';
 /** demo 渲染目标：SVG DOM 或 Canvas 2D。 */
 export type RendererMode = 'svg' | 'canvas';
 
-/** 预览卡动作 / 浮层共享上下文。 */
-export type PreviewActionContext = {
-  /** 重挂渲染子树（重播：CSS @keyframes / Canvas rAF / WAAPI 全部从头） */
+/** 预览区控制插槽位置。 */
+export type PreviewControlPlacement =
+  | 'top-start'
+  | 'top-center'
+  | 'top-end'
+  | 'center-start'
+  | 'center'
+  | 'center-end'
+  | 'bottom-start'
+  | 'bottom-center'
+  | 'bottom-end';
+
+/** 预览区控制插槽共享上下文。 */
+export type PreviewControlContext = {
+  /** 重挂载渲染子树，用于重播 CSS / Canvas / WAAPI 动画。 */
   replay: () => void;
-  /** 当前渲染目标 */
+  /** 当前渲染目标。 */
   rendererMode: RendererMode;
-  /** 渲染区 DOM（拿 svg / canvas、`getAnimations({subtree})` 等） */
+  /** 渲染区 DOM，用于读取 svg / canvas / animation。 */
   renderPane: HTMLElement | null;
-  /** 读 per-card 工具开关态（toggle 类工具，如播放/暂停、性能监视器） */
+  /** 预览区是否处于 hover 状态。 */
+  hovered: boolean;
+  /** 控制层是否被移动端点击固定。 */
+  pinned: boolean;
+  /** 是否处于详情弹窗放大视图。 */
+  expanded: boolean;
+  /** 读取 per-card toggle 状态。 */
   active: (id: string) => boolean;
-  /** 写 / 翻转 per-card 工具开关态（`on` 省略 = 翻转） */
+  /** 写入或翻转 per-card toggle 状态。 */
   setActive: (id: string, on?: boolean) => void;
-  /** 读取自定义 action 值（select 类工具） */
-  actionValue: (id: string) => string | undefined;
-  /** 写入自定义 action 值（select 类工具） */
-  setActionValue: (id: string, value: string) => void;
-};
-
-/** 渲染区左上角的工具按钮。 */
-export type PreviewButtonAction = {
-  type?: 'button';
-  /** 稳定 id（兼作 toolState key） */
-  id: string;
-  /** 图标元素 */
-  icon: ReactNode;
-  /** aria-label + title */
-  label: string;
-  /** 受控按下态（toggle 类工具高亮）；one-shot 工具省略 */
-  active?: boolean;
-  /** 点击：从 ctx 取能力执行 */
-  onClick: (ctx: PreviewActionContext) => void;
-};
-
-/** 渲染区左上角的选择器动作（用于 demo 参数切换）。 */
-export type PreviewSelectAction = {
-  type: 'select';
-  /** 稳定 id（兼作 actionValues key） */
-  id: string;
-  /** aria-label + title */
-  label: string;
-  /** 初始值；运行时优先取 actionValues 中的当前值 */
-  value: string;
-  /** 选择项 */
-  options: Array<{ value: string; label: string }>;
-  /** 切换后回调；状态写入由 PreviewActionBar 统一处理 */
-  onValueChange?: (value: string, ctx: PreviewActionContext) => void;
-};
-
-/** 渲染区左上角的动作定义。 */
-export type PreviewAction = PreviewButtonAction | PreviewSelectAction;
-
-/** 自定义预览动作的选择器状态。 */
-export type PreviewActionState = {
-  values: Record<string, string>;
+  /** 读取 slot 共享值。 */
+  value: (id: string) => string | undefined;
+  /** 写入 slot 共享值。 */
   setValue: (id: string, value: string) => void;
 };
 
-/** 渲染区内的常驻浮层（角标 / 面板，如 FPS 监视器）；与 action 分离，按需渲染自身 UI。 */
-export type PreviewOverlay = {
-  /** 稳定 id */
+/** 预览区控制插槽。 */
+export type PreviewControlSlot = {
+  /** 稳定 id。 */
   id: string;
-  /** 渲染浮层节点（自管定位 / 显隐，可读 ctx 的开关态） */
-  render: (ctx: PreviewActionContext) => ReactNode;
+  /** 插槽在预览区九宫格中的位置。 */
+  placement?: PreviewControlPlacement;
+  /** 根据当前预览上下文渲染插槽内容。 */
+  render: (ctx: PreviewControlContext) => ReactNode;
+};
+
+/** 兼容旧 previewActions 命名，后续可单独重命名。 */
+/** 预览控件选项。 */
+export type PreviewControlOption = {
+  /** 写入预览状态的值。 */
+  value: string;
+  /** 展示给用户的文本。 */
+  label: string;
+};
+
+/** 下拉选择类预览控件。 */
+export type PreviewSelectControlConfig = {
+  kind: 'select';
+  id: string;
+  label: string;
+  defaultValue: string;
+  options: Array<PreviewControlOption>;
+  placement?: PreviewControlPlacement;
+};
+
+/** 文本输入类预览控件。 */
+export type PreviewInputControlConfig = {
+  kind: 'input';
+  id: string;
+  label: string;
+  defaultValue: string;
+  placeholder?: string;
+  placement?: PreviewControlPlacement;
+};
+
+/** 常见预览控件的声明式配置。 */
+export type PreviewControlConfig = PreviewSelectControlConfig | PreviewInputControlConfig;
+
+export type PreviewActionContext = PreviewControlContext;
+export type PreviewAction = PreviewControlSlot;
+
+/** 自定义预览插槽共享值状态。 */
+export type PreviewActionState = {
+  values: Record<string, string>;
+  setValue: (id: string, value: string) => void;
 };
 
 /** 渲染区垂直对齐档位。 */
@@ -94,23 +116,23 @@ export type SourceLang = 'tsx' | 'ts' | 'json';
 
 /** ComponentPreview 源码面板中的单个文件。 */
 export type ComponentSourceFile = {
-  /** 展示在文件切换条里的文件名 */
+  /** 展示在文件切换条里的文件名。 */
   filename: string;
-  /** 当前文件的原始源码 */
+  /** 当前文件的原始源码。 */
   code: string;
-  /** 语法高亮语言（react→tsx、vanilla→ts、ir→json） */
+  /** 语法高亮语言。 */
   lang: SourceLang;
   /** 可选的教学 diff 数据。 */
   diff?: UnifiedDiff;
-  /** 是否为 demo 主文件（`name` 对应文件）；用于文件选择器区分图标，sourceFiles 引入的其他文件为 false */
+  /** 是否为 demo 主文件。 */
   isMain?: boolean;
 };
 
 /** 单个源码视图的数据。 */
 export type SourceViewData = {
-  /** 该视图的源码文件（≥ 1）；> 1 时出文件分段 */
+  /** 该视图的源码文件。 */
   files: Array<ComponentSourceFile>;
-  /** 用对应 runtime 渲染该视图的产物；缺省则复用 React demo 渲染 */
+  /** 用对应 runtime 渲染该视图的产物；缺省则复用 React demo 渲染。 */
   render?: (mode: RendererMode) => ReactNode;
 };
 

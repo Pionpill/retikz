@@ -19,6 +19,12 @@ Positional scales map a data value to a **coordinate / length / radius** on the 
 | `band`   | Categorical (bars)                       | Each category gets an equal-width slot; marks sit in the center and can fill it                 |
 | `point`  | Categorical (lines / scatter)            | Each category lands on an evenly-spaced point, no slot width                                    |
 
+## Domain Padding
+
+When a continuous positional scale (`linear` / `time` / `log` / `pow` / `sqrt` / `symlog` / `radial`) has no explicit `domain`, Plot infers the data min / max and pads both ends by 5% by default. That keeps single-point charts, all-positive scatter, and corner extrema from sitting directly on the coordinate frame.
+
+Use `domainPadding={0}` to restore edge-to-edge behavior, or `domainPadding={{ lower: 0, upper: 0.1 }}` when only the upper side needs room. `singleValueSpan` controls the minimum span when all values are equal.
+
 ## Linear vs log
 
 When data spans several orders of magnitude, a linear axis crushes the small values against the bottom. A log axis (`<Scale dimension="y" type="log" />`) gives every magnitude equal height, so small values stay legible. Both charts use the same yearly user counts.

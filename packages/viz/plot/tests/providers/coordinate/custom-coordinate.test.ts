@@ -187,7 +187,7 @@ const uvCoordinate = defineCoordinate({
 describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () => {
   it('点落在正弦曲线上（一维坐标系不止直线）', () => {
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
-    const scaleAt = (v: number): number => (v / 12) * WIDTH; // 线性 domain[0,12]→[0,WIDTH]
+    const scaleAt = (v: number): number => ((v + 0.6) / 13.2) * WIDTH;
     const positions = positionsOf(firstLayer(sineSpec(), { d: rows }, opts([sineCoordinate])));
     expect(positions).toHaveLength(13);
     for (const row of rows) {
@@ -215,8 +215,8 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
   it('点落在「拱形 x 基线 + 竖直 y」上（坐标系形态任意切换）', () => {
     const rows: Array<Record<string, number>> = [];
     for (const x of [0, 5, 10]) for (const y of [0, 10]) rows.push({ x, y });
-    const xAt = (x: number): number => (x / 10) * WIDTH;
-    const yAt = (y: number): number => HEIGHT - 40 + (y / 10) * (40 - (HEIGHT - 40));
+    const xAt = (x: number): number => ((x + 0.5) / 11) * WIDTH;
+    const yAt = (y: number): number => HEIGHT - 40 + ((y + 0.5) / 11) * (40 - (HEIGHT - 40));
     const positions = positionsOf(firstLayer(bridgeSpec(), { d: rows }, opts([bridgeCoordinate])));
     expect(positions).toHaveLength(6);
     rows.forEach((row, index) => {
@@ -253,8 +253,10 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
     );
     const points = positionsOf(root.children[0] as IRScope);
     expect(points).toHaveLength(2);
-    expect(points[0]).toEqual([0, HEIGHT]);
-    expect(points[1]).toEqual([WIDTH, 0]);
+    expect(points[0][0]).toBeCloseTo((0.5 / 11) * WIDTH, 6);
+    expect(points[0][1]).toBeCloseTo(HEIGHT - (0.5 / 11) * HEIGHT, 6);
+    expect(points[1][0]).toBeCloseTo((10.5 / 11) * WIDTH, 6);
+    expect(points[1][1]).toBeCloseTo(HEIGHT - (10.5 / 11) * HEIGHT, 6);
     expect(axisLayersOf(root)).toHaveLength(1);
   });
 });

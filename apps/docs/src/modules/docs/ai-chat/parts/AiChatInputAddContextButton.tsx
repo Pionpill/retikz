@@ -1,13 +1,13 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DocsSearchPanel } from '@/modules/docs/components/docs-search';
+import { DocsSearchPanel } from '@/modules/docs/components';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 
 /** popover 内的 Command 紧凑变体：input h-9、item py-1.5、icon size-3.5 */
 const COMPACT_COMMAND_CLASS =

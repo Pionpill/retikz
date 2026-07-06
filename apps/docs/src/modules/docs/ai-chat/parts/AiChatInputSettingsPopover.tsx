@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { ArrowUpRight, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
@@ -6,10 +6,10 @@ import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-import type { CustomProvider } from '../providers/resolve';
+import type { CustomProvider } from '../providers';
 
-import { PROVIDER_LABEL } from '../models';
-import { isBuiltInProviderId, useAiChatStore } from '../use-ai-chat-store';
+import { PROVIDER_LABEL } from '../constants';
+import { isBuiltInProviderId, useAiChatStore } from '../useAiChatStore';
 
 const LABEL_KEY = {
   lean: 'ai.settingsContextLean',

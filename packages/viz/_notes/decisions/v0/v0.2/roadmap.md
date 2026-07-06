@@ -1,48 +1,51 @@
 # plot v0.2 Roadmap
 
 > 本文件汇总 plot v0.2 minor 的路线与 milestone 索引。具体执行记录放各 milestone 的 `roadmap.md`，长期决策放同目录 `NN-*.md` ADR。
-> 关联：[`plot v0 roadmap`](../roadmap.md) · [`plot v0.1 roadmap`](../v0.1/roadmap.md) · [`plot v0.1-alpha.10（薄 Plot 前置）`](../v0.1/alpha.10/roadmap.md) · [`plot-design.md §2 / §11`](../../../architecture/plot-design.md)
-> ⚠️ 草案：本 minor 由 2026-06-13「薄 Plot + chart 上层封装」设计讨论开出，待人工 review。
+> 关联：[`plot v0 roadmap`](../roadmap.md) · [`plot v0.1 roadmap`](../v0.1/roadmap.md) · [`plot-design.md §5 / §10 / §13`](../../../architecture/plot-design.md)
+> ⚠️ 草案：本 minor 由 2026-07-05「v0.1 GoG 基座完成后的能力轴」讨论开出，待人工 review。
 
 ## 定位
 
-**v0.2 承载 `@retikz/chart` 的首个 plot-backed 落点**——chart 是独立 Tier 3 上层封装包，通过 `type/config` 或 `<Chart>` 这类高层抽象生成 PlotSpec，并调度 plot 底层能力。本 minor 先在 v0.1 已退化的薄 `<Plot>` 之上，加一层「batteries-included」表面：
+**v0.2 承载 plot 的运行时交互与 layout transform / structured visualization 能力。**
 
-- **底层 `<Plot>`（薄容器，v0.1-alpha.10 已退化）**：只负责 plot 系底层逻辑（kernel 组合 + scale/coordinate 隐式推断），不生成可见装饰。
-- **高层 `<Chart>` / preset（本 minor）**：自动装饰（marks → 默认轴 / 图例 / 网格）+ 主题，开箱即用。**本轮只覆盖 plot-backed 组合式图形**，必须展开成 PlotSpec、不得拥有 plot 底层无法表达的能力；后续 `type="tree"` / `type="gauge"` / `type="wordCloud"` 等也应通过 plot layout transform + mark 表达。table 不由 chart 调度；geo 是否独立拆包仍待决策。
+v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat / coordinate composition / guide / theme 都已进入 PlotSpec 语义。v0.2 不再补图形语法基础件，而是把两条后续能力轴落到可用：
 
-本轮两层都编译到**唯一的 `PlotSpec`**、共走 `expandPlot` lowering，不造平行 IR / 平行渲染。长期 chart 高层入口也必须产出 PlotSpec；结构化算法类 type 默认仍经 plot layout transform 生成 PlotSpec。
+- **交互能力补全**：tooltip、hover、selection、brush、legend interaction、事件回调、locator 与 provenance 的 runtime 消费；交互是 framework/runtime 能力，PlotSpec 只保留 JSON-safe 的意图和稳定 identity。
+- **layout transform / structured visualization**：tree、network、word cloud、treemap、circle packing、gauge、progress、pictogram 等结构化算法先产出位置 / 尺寸 / 路由等派生字段，再统一进入 plot 的 channel / scale / coordinate / mark / guide / lowering；不新增 `@retikz/struct` 包。
 
-## 前置：v0.1-alpha.10 薄 Plot
+`@retikz/chart v0.1` 与本 minor 并行迭代：chart 可以拥有 Tier 3 `ChartSpec`，但必须 lower 成 PlotSpec。plot v0.2 新增的 interaction 与 layout transform 能力，可以被 chart v0.1 后续 alpha 消费；chart 不放在 plot v0.2 目录内。
 
-v0.1-alpha.10 已把 `<Plot>` 退化为薄容器，并把"默认轴 / 网格补齐"推断**抽成可复用纯函数**（不删除）。本 minor 的高层 `<Chart>` / preset **在 `@retikz/chart` 中复用或承接**这份装饰语义，不重写两套逻辑。见 [v0.1-alpha.10 ADR-01](../v0.1/alpha.10/01-plot-thin-container.md)。
+## 前置：v0.1 beta 数据抽层
 
-## 包结构决策（2026-06-13 更新）
+v0.1 beta 收口时先抽出最小 `@retikz/data`：字段类型、field model、数据引用、dataset normalization、field resolver / parser / formatter、通用 transform 基础接口，以及跨 plot / table / geo 都稳定复用的 channel / scale 词表。
 
-本轮高层封装的框架无关核心逻辑（marks/config + theme → 装饰完整 `PlotSpec`）**放进 `@retikz/chart`**，向 `@retikz/chart-react` / `@retikz/chart-vanilla` 提供能力；chart 依赖并产出 plot 的 `PlotSpec`，不自造 IR / lowering / renderer，也不承担 table / geo 聚合。
-
-- **理由**：plot 继续保持 GoG 抽象层职责清晰；chart 明确服务新手友好的 type/config API；两者用 PlotSpec 作为边界，既不混职责，也不复制 lowering。
-- **长期标注**：chart 是独立 Tier 3 包，但不是 viz-level 聚合 adapter。它当前只调度 plot；table 不由 chart 调度，geo 的独立性待后续 ADR 决定。
+v0.2 默认消费这层共享数据语义；plot 专属的统计 transform、layout transform、coordinate / mark / guide 仍留在 plot。
 
 ## Milestones
 
 | Milestone | 主题 | 模块 / 产出 | 状态 |
 | --- | --- | --- | --- |
-| [v0.2-alpha.1](./alpha.1/roadmap.md) | **chart 核心 + `<Chart>` 表面** | 新增 `@retikz/chart` 框架无关核心（marks/config+theme → 装饰完整 PlotSpec，复用 v0.1 装饰语义）；新增 `@retikz/chart-react` `<Chart>` + `@retikz/chart-vanilla` chart builder；chart 三包表面 + docs lockstep | 草拟中 |
+| [v0.2-alpha.1](./alpha.1/roadmap.md) | **interaction foundation + layout transform foundation** | 接通 locator / provenance runtime 消费、交互事件与 overlay 基础；建立 plot layout transform registry 与首批结构化布局的输入 / 输出契约 | 草拟中 |
 
-> 后续 milestone（data 共享层抽离、plot layout transform、table 高层封装、geo 边界决策、完整主题透出等）攒够需求再排。chart theme 能力依赖 v0.1-alpha.15 Theme（GoG 第 8 组件）——v0.2-alpha.1 先做组合式自动装饰 + 主题接缝，完整主题透出 gate 于 v0.1 Theme 就位。
+后续 alpha 依需求拆分：
+
+- tooltip / hover / selection / brush / legend interaction；
+- transition / animation 与数据过滤型交互的重 lower 策略；
+- tree / network / word cloud / treemap / gauge / progress / pictogram 等 layout transform；
+- layout transform 与 chart type 的消费边界。
 
 ## 依赖
 
-- **plot v0.1**：薄 `<Plot>`（alpha.10）+ 抽出的装饰函数；grammar mark/scale/coordinate/guide lowering。本轮 chart 封装不新增 IR、不新增 lowering。
-- **data**：不参与本轮；后续 plot / table / geo（若独立）共享的数据模型、字段解析、通用 transform、通道、scale / formatter 等应先由 `@retikz/data` 提供。
-- **plot layout / table / geo**：plot layout transform 不参与本轮；后续 gauge / progress / tree / network / word cloud / pictogram 等先由 `@retikz/plot` 提供 layout transform 能力。table 不参与本轮；geo 是否独立成包另行决策。
-- **framework adapter**：本轮新增 `@retikz/chart-react` / `@retikz/chart-vanilla` 表面；不规划 viz-react / viz-vanilla 收敛。
-- **core**：无新增依赖（高层封装不直接碰 core，经 plot 既有 lowering 下沉）。
+- **plot v0.1**：GoG 基座、thin Plot、guide/theme、scope identity、locator/provenance、layer zIndex。
+- **data v0.1 beta**：共享字段、数据引用、formatter、通用 transform 基础契约。
+- **chart v0.1**：并行消费 plot v0.2 能力，但不作为本 minor 的实现内容。
+- **core**：交互 runtime 依赖 hydration / hit-test / event plumbing；layout transform 仍 lower 到既有 core Node / Path / Scope，不绕开 core。
 
-## 与 v0.1 的关系
+## 与 v0.1 / v0.3 的关系
 
-v0.1 = 图形语法完整（GoG 8 组件）+ 薄 Plot（alpha.10）。v0.2 = chart 的首个 plot-backed 上层表面。发布次序：v0.2 在 v0.1 之后；削薄已在 v0.1 内完成，故 v0.1→v0.2 **无破坏性变更**，v0.2 是纯增量（加 `@retikz/chart` / `@retikz/chart-react` / `@retikz/chart-vanilla`）。
+v0.1 = GoG 基座完整；v0.2 = 交互能力 + 结构化 layout transform；v0.3 = 渐进式 AI 生成 + 跨域复合。
+
+v0.2 的复合范围只限 plot 自身交互 overlay 与 layout transform 生成的 mark 组合；plot 与 table / diagram / 任意业务内容的跨域 composition 留给 v0.3。
 
 ## ADR 约定
 

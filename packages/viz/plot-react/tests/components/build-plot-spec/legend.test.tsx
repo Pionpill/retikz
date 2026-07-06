@@ -43,7 +43,7 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
           title="Population"
           position="left"
           orient="vertical"
-          tickCount={4}
+          ticks={{ count: 4 }}
           tickLabels={false}
         />
       </>,
@@ -57,7 +57,7 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
       title: 'Population',
       position: 'left',
       orient: 'vertical',
-      tickCount: 4,
+      ticks: { count: 4 },
       tickLabels: false,
     });
   });

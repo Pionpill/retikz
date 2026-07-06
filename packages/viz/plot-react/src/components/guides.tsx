@@ -1,4 +1,4 @@
-import type { AxisGuide } from '@retikz/plot';
+import type { AxisGuide, LegendGuide } from '@retikz/plot';
 import type { FC } from 'react';
 
 import type { PositionScaleType } from './scales';
@@ -12,10 +12,14 @@ export type AxisProps = {
   dimension: 'x' | 'y' | 'z';
   /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <Scale dimension={dimension} type={scale} /> */
   scale?: PositionScaleType;
-  /** 目标刻度数（缺省用默认刻度数）；网格线复用同刻度 */
-  tickCount?: number;
-  /** 是否出刻度标签；缺省 = true */
-  tickLabels?: boolean;
+  /** 轴线样式；false 隐藏轴线但保留 ticks / labels / grid。 */
+  line?: AxisGuide['line'];
+  /** 刻度来源和刻度线样式；grid 复用同一批 ticks。 */
+  ticks?: AxisGuide['ticks'];
+  /** 轴线交叉值处的 tick / label 冲突策略。 */
+  crossing?: AxisGuide['crossing'];
+  /** 刻度标签开关、格式化和文本样式；false 隐藏刻度标签，缺省显示。 */
+  tickLabels?: AxisGuide['tickLabels'];
   /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */
   grid?: AxisGuide['grid'];
   coordinateView?: string;
@@ -23,7 +27,9 @@ export type AxisProps = {
   scaffoldId?: string;
   trackId?: string;
   placement?: AxisGuide['placement'];
-  title?: string;
+  title?: AxisGuide['title'];
+  /** 语义图层覆盖；控制坐标轴外层 scope 在 plot 内的 zIndex。 */
+  layer?: AxisGuide['layer'];
   /** 可选 guide 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;
 };
@@ -40,16 +46,20 @@ export type LegendProps = {
   channel: string;
   /** 消歧 scale name（同通道被多个 scale 驱动时指定；省略 = 该通道唯一 scale，多于一个且省略 → lowering fail-loud） */
   scale?: string;
-  /** 图例标题；省略 = 用绑定字段名 */
-  title?: string;
+  /** 图例标题；支持字符串、多行文本和 styled text block */
+  title?: LegendGuide['title'];
   /** 图例位置（预留带所在边）；缺省 = right */
   position?: 'right' | 'left' | 'top' | 'bottom';
   /** 条目排布方向；省略 = 按 position（左右→vertical、上下→horizontal） */
   orient?: 'vertical' | 'horizontal';
-  /** 连续色带刻度数提示（离散图例无意义、忽略） */
-  tickCount?: number;
-  /** 是否出 swatch / 刻度旁标签；缺省 = true */
-  tickLabels?: boolean;
+  /** 连续色带刻度来源；离散图例忽略 tick source */
+  ticks?: LegendGuide['ticks'];
+  /** 是否出 swatch / 刻度旁标签，以及连续 ramp 的标签格式；缺省 = true */
+  tickLabels?: LegendGuide['tickLabels'];
+  /** 图例本地视觉 token；覆盖 Plot theme.legend */
+  style?: LegendGuide['style'];
+  /** 语义图层覆盖；控制图例外层 scope 在 plot 内的 zIndex。 */
+  layer?: LegendGuide['layer'];
 };
 
 /**

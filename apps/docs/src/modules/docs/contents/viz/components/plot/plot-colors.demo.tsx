@@ -13,7 +13,21 @@ const Demo: FC = () => (
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
-    <Plot data={revenue} width={300} height={220} colors={[...schemeTableau10]} x={320} y={20}>
+    <Plot
+      data={revenue}
+      width={300}
+      height={220}
+      theme={{
+        background: '#ffffff',
+        palette: { categorical: [...schemeTableau10], series: [...schemeTableau10] },
+        axis: {
+          grid: { stroke: '#cbd5e1', drawOpacity: 0.45 },
+          tickLabels: { textColor: '#475569' },
+        },
+      }}
+      x={320}
+      y={20}
+    >
       <IntervalMark x="quarter" y="value" color="quarter" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />

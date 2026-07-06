@@ -12,8 +12,9 @@ import type {
   MarkProvenance,
   PositionScale,
 } from '../../../contract';
+import type { PolarCoordinateFrame } from '../../../contract';
 import type { ExternalRow, Mark, MarkGeometryLabel, MarkNodeLabel, ReferenceMark } from '../../../schemas';
-import type { CartesianCoordinateFrame, PolarCoordinateFrame } from '../../coordinate';
+import type { CartesianCoordinateFrame } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';

@@ -1,16 +1,15 @@
 import { Toaster } from 'sonner';
 
-import { AppErrorBoundary } from '@/components/shared/error-boundary';
-
+import { ErrorBoundary } from './ErrorBoundary';
 import { AppRoutes } from './routes';
-import { useDocShortcuts } from './use-doc-shortcuts';
+import { useDocShortcuts } from './useDocShortcuts';
 
 export const App = () => {
   useDocShortcuts();
   return (
-    <AppErrorBoundary>
+    <ErrorBoundary>
       <AppRoutes />
       <Toaster position="top-center" />
-    </AppErrorBoundary>
+    </ErrorBoundary>
   );
 };

@@ -280,7 +280,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
     expect(nums.every(Number.isFinite)).toBe(true);
   });
 
-  it('[adversarial] tickCount 非整数 / 负数被 schema 拒绝（zod 报错可定位）', () => {
+  it('[adversarial] ticks.count 非整数 / 负数被 schema 拒绝（zod 报错可定位）', () => {
     const bad = {
       namespace: 'plot',
       type: 'plot',
@@ -298,7 +298,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
           encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
         },
       ],
-      guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: -3 }],
+      guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: -3 } }],
     };
     const parsed = PlotSpecSchema.safeParse(bad);
     expect(parsed.success).toBe(false);
@@ -601,7 +601,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
 });
 
 describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
-  it('[adversarial] sequential ramp tickCount=1：刻度不崩、stops 仍合法', () => {
+  it('[adversarial] sequential ramp ticks.count=1：刻度不崩、stops 仍合法', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -626,7 +626,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
           encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
         },
       ],
-      guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: 1 }],
+      guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: 1 } }],
     });
     const outer = expandOf(spec, {
       d: [
@@ -649,7 +649,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
     }
   });
 
-  it('[adversarial] sequential ramp tickCount 极大（1000）：刻度不死循环 / 不爆栈', () => {
+  it('[adversarial] sequential ramp ticks.count 极大（1000）：刻度不死循环 / 不爆栈', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -674,7 +674,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
           encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
         },
       ],
-      guides: [{ type: 'legend', channel: 'color', scale: 'c', tickCount: 1000 }],
+      guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: 1000 } }],
     });
     const start = Date.now();
     const outer = expandOf(spec, {

@@ -1,4 +1,4 @@
-import type { Section } from './interface';
+import type { Section } from './types';
 
 import { aboutSection } from './about';
 import { kernelSection } from './kernel';

@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { AlertTriangle, ChevronLeft, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -7,14 +7,14 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
-import type { CustomProvider } from '../providers/resolve';
-import type { ProviderId } from '../providers/types';
+import type { CustomProvider } from '../providers';
+import type { ProviderId } from '../providers';
 
-import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../models';
-import { PROVIDER_IDS } from '../providers/types';
-import { useAiChatStore } from '../use-ai-chat-store';
+import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../constants';
+import { PROVIDER_IDS } from '../providers';
+import { useAiChatStore } from '../useAiChatStore';
 
 const KEY_HELP_URL: Record<ProviderId, string> = {
   deepseek: 'https://platform.deepseek.com/api_keys',

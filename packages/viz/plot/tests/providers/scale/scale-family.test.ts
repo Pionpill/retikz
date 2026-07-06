@@ -48,8 +48,8 @@ const lineSpec = (yScale: Record<string, unknown>): PlotSpec =>
     type: 'plot',
     data: { reference: 'd' },
     scales: [
-      { type: 'linear', name: 'x' },
-      { ...yScale, name: 'y' },
+      { type: 'linear', name: 'x', domainPadding: 0 },
+      { ...yScale, name: 'y', domainPadding: yScale.domainPadding ?? 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'path', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
@@ -196,7 +196,7 @@ describe('scale family · radial', () => {
       data: { reference: 'd' },
       scales: [
         { type: 'band', name: 'a' },
-        { type: 'radial', name: 'r' },
+        { type: 'radial', name: 'r', domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
@@ -233,7 +233,7 @@ describe('scale family · radial', () => {
       data: { reference: 'd' },
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'radial', name: 'y' },
+        { type: 'radial', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
@@ -266,7 +266,7 @@ describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
         { ...yScale, name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },

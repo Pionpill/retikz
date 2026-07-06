@@ -4,16 +4,30 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildConfiguredControlSlots,
+  buildPreviewToolSlots,
   DemoRenderer,
-  PanZoomToolbar,
+  PreviewControlSlotLayer,
   RendererModeButton,
-} from '../../src/modules/docs/components/component-preview/components';
-import { useComponentPreviewStore } from '../../src/modules/docs/store/use-component-preview-store';
+} from '../../src/modules/docs/components/component-preview';
+import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
 const WrappedLayout: FC = () => <Layout width={40} height={20} />;
 const WrappedDemo: FC = () => <WrappedLayout />;
 const noop = () => {};
+const previewControlCtx = {
+  replay: noop,
+  rendererMode: 'svg' as const,
+  renderPane: null,
+  hovered: false,
+  pinned: true,
+  expanded: false,
+  active: () => false,
+  setActive: noop,
+  value: () => undefined,
+  setValue: noop,
+};
 
 describe('DemoRenderer', () => {
   it('svg 模式保持 svg 输出', () => {
@@ -61,28 +75,81 @@ describe('useComponentPreviewStore', () => {
   });
 });
 
-describe('PanZoomToolbar', () => {
+describe('PreviewControlSlotLayer', () => {
   it('canvas 模式下下载按钮切换为 PNG', () => {
+    const slots = buildPreviewToolSlots({
+      transform: { x: 0, y: 0, scale: 1 },
+      isTransformed: false,
+      panBy: noop,
+      zoomBy: noop,
+      resetTransform: noop,
+      dragEnabled: false,
+      toggleDrag: noop,
+      onMaximize: noop,
+      size: 'md',
+      onSizeChange: noop,
+      name: 'demo',
+      rendererMode: 'canvas',
+      toggleRendererMode: noop,
+    });
     const markup = renderToStaticMarkup(
-      <PanZoomToolbar
-        transform={{ x: 0, y: 0, scale: 1 }}
-        isTransformed={false}
-        panBy={noop}
-        zoomBy={noop}
-        resetTransform={noop}
-        dragEnabled={false}
-        toggleDrag={noop}
-        onMaximize={noop}
-        size="md"
-        onSizeChange={noop}
-        onDownload={noop}
-        rendererMode="canvas"
-        toggleRendererMode={noop}
+      <PreviewControlSlotLayer
+        slots={slots}
         pinned
+        ctx={{
+          replay: noop,
+          rendererMode: 'canvas',
+          renderPane: null,
+          hovered: false,
+          pinned: true,
+          expanded: false,
+          active: () => false,
+          setActive: noop,
+          value: () => undefined,
+          setValue: noop,
+        }}
       />,
     );
 
     expect(markup).toContain('aria-label="Download PNG"');
     expect(markup).not.toContain('aria-label="Download SVG"');
+  });
+
+  it('渲染配置式 select 控件', () => {
+    const slots = buildConfiguredControlSlots([
+      {
+        kind: 'select',
+        id: 'mark-style',
+        label: '标记样式',
+        defaultValue: 'circle',
+        options: [
+          { value: 'circle', label: '圆点' },
+          { value: 'square', label: '方块' },
+        ],
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(<PreviewControlSlotLayer slots={slots} pinned ctx={previewControlCtx} />);
+
+    expect(markup).toContain('aria-label="标记样式"');
+    expect(markup).toContain('圆点');
+  });
+
+  it('渲染配置式 input 控件', () => {
+    const slots = buildConfiguredControlSlots([
+      {
+        kind: 'input',
+        id: 'mark-size',
+        label: '标记大小',
+        defaultValue: '6',
+        placeholder: '输入大小',
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(<PreviewControlSlotLayer slots={slots} pinned ctx={previewControlCtx} />);
+
+    expect(markup).toContain('aria-label="标记大小"');
+    expect(markup).toContain('value="6"');
+    expect(markup).toContain('placeholder="输入大小"');
   });
 });

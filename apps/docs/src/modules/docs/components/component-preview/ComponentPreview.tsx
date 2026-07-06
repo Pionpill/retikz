@@ -1,140 +1,46 @@
-﻿import type { IRScene, PathKindDefinition } from '@retikz/core';
-import type { FC, ReactElement, ReactNode } from 'react';
+import type { FC } from 'react';
 
-import { convertReactNodeToIR, Layout, Scope } from '@retikz/react';
-import { createElement, isValidElement, useMemo } from 'react';
+import { Layout } from '@retikz/react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { docPathSegments, useDocLocation } from '@/modules/docs/layout/doc-location';
+import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 
 import type {
   AlignKey,
   ComponentRenderSource,
-  ComponentSourceFile,
   PreviewAction,
-  PreviewOverlay,
   RendererMode,
   SizeKey,
 } from './types';
+import type { PreviewIR } from './utils';
 
 import { ComponentRender } from './ComponentRender';
 import { RawSvgFrame } from './components';
-import { useDemoSegments } from './demo-location-context';
+import { useDemoLocationContext } from './context';
+import { buildConfiguredControlSlots } from './control-slots';
 import {
   actionModules,
   buildActionsKey,
   buildIrJsonKey,
-  buildSourceFileKey,
   buildVanillaKey,
   demoModules,
   demoSources,
-  filenameFromKey,
   irJsonOverrides,
-  langOfFilename,
-  localSourceFiles,
   resolveDemoKey,
   resolvePreviewActions,
+  resolvePreviewControls,
   vanillaModules,
   vanillaOverrides,
 } from './registry';
-import { computeUnifiedDiff, formatIR, irToVanillaCode } from './utils';
-
-const COMPONENT_EXPANSION_LIMIT = 16;
-
-type PreviewRootProps = {
-  children?: ReactNode;
-  ir?: IRScene;
-  viewBox?: IRScene['viewBox'];
-};
-
-type FunctionComponentProps = Record<string, unknown> & {
-  children?: ReactNode;
-};
-
-const resolvePreviewRootElement = (
-  node: ReactNode,
-  depth = COMPONENT_EXPANSION_LIMIT,
-): ReactElement<PreviewRootProps> | null => {
-  if (!isValidElement(node)) return null;
-  const element = node as ReactElement<FunctionComponentProps>;
-  if (element.type === Layout || typeof element.type !== 'function' || depth <= 0) {
-    return element as ReactElement<PreviewRootProps>;
-  }
-  const component = element.type as (props: FunctionComponentProps) => ReactNode;
-  return resolvePreviewRootElement(component(element.props), depth - 1);
-};
-
-const LAYOUT_OWN_PROPS = new Set([
-  'children',
-  'ir',
-  'width',
-  'height',
-  'viewBox',
-  'className',
-  'style',
-  'nodeDistance',
-  'shapes',
-  'arrows',
-  'patterns',
-  'pathGenerators',
-  'pathKinds',
-  'ribbonWidthProfiles',
-  'animate',
-  'animations',
-  'easings',
-  'animationProperties',
-]);
-
-type PreviewIR = {
-  ir: IRScene;
-  width?: number | string;
-  height?: number | string;
-  pathKinds?: ReadonlyArray<PathKindDefinition>;
-};
-
-const buildPreviewIR = (Component: FC): PreviewIR => {
-  const rootElement = resolvePreviewRootElement(Component({}));
-  const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
-  let childNode = props.children;
-  if (props.ir === undefined) {
-    const styleProps = Object.fromEntries(
-      Object.entries(props).filter(([key, value]) => !LAYOUT_OWN_PROPS.has(key) && value !== undefined),
-    );
-    if (Object.keys(styleProps).length > 0) {
-      childNode = createElement(Scope, styleProps, props.children);
-    }
-  }
-  const base = props.ir ?? convertReactNodeToIR(childNode);
-  const isLayout = rootElement?.type === Layout;
-  const viewBox = isLayout ? rootElement.props.viewBox : undefined;
-  const rootAnimations = isLayout ? (props.animations as IRScene['animations'] | undefined) : undefined;
-  let ir = base;
-  if (viewBox !== undefined) ir = { ...ir, viewBox };
-  if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
-  const width = isLayout ? (props.width as number | string | undefined) : undefined;
-  const height = isLayout ? (props.height as number | string | undefined) : undefined;
-  const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<PathKindDefinition> | undefined) : undefined;
-  return { ir, width, height, pathKinds };
-};
-
-const nodeHasComposite = (node: unknown): boolean => {
-  if (typeof node !== 'object' || node === null) return false;
-  if ('namespace' in node) return true;
-  const children = (node as { children?: unknown }).children;
-  return Array.isArray(children) && children.some(nodeHasComposite);
-};
-
-const irHasComposite = (ir: IRScene): boolean => ir.children.some(nodeHasComposite);
-
-const nodeHasAnimations = (node: unknown): boolean => {
-  if (typeof node !== 'object' || node === null) return false;
-  const record = node as { animations?: unknown; children?: unknown };
-  if (Array.isArray(record.animations) && record.animations.length > 0) return true;
-  return Array.isArray(record.children) && record.children.some(nodeHasAnimations);
-};
-
-const irHasAnimations = (ir: IRScene): boolean =>
-  (Array.isArray(ir.animations) && ir.animations.length > 0) || ir.children.some(nodeHasAnimations);
+import {
+  buildPreviewIR,
+  buildReactSourceFiles,
+  formatIR,
+  irHasAnimations,
+  irHasComposite,
+  irToVanillaCode,
+} from './utils';
 
 export type ComponentPreviewProps = {
   /** demo 文件名（不含 `.demo.tsx` 后缀），相对当前 mdx 同级目录解析 */
@@ -157,10 +63,11 @@ export type ComponentPreviewProps = {
   replayable?: boolean;
   /** 自定义动作按钮（渲染在渲染区左上角动作栏，追加在内置工具后） */
   actions?: Array<PreviewAction>;
+  /** 自定义预览控制插槽，优先于兼容用的 actions。 */
+  controlSlots?: Array<PreviewAction>;
   /** 自定义动作栏是否常驻显示；默认 true */
   actionsAlwaysVisible?: boolean;
   /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
-  overlays?: Array<PreviewOverlay>;
 };
 
 /** MDX 内的演示卡入口。 */
@@ -176,14 +83,14 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     interactive = false,
     replayable,
     actions,
+    controlSlots,
     actionsAlwaysVisible = true,
-    overlays,
   } = props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
 
-  const ctxSegments = useDemoSegments();
+  const ctxSegments = useDemoLocationContext();
   const segments = ctxSegments ?? (loc ? docPathSegments(loc) : null);
   const key = segments ? resolveDemoKey(segments, name, lang) : null;
   const mod = key ? demoModules[key] : undefined;
@@ -191,6 +98,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const Component = mod?.default;
   const actionModule = segments ? actionModules[buildActionsKey(segments, name)] : undefined;
   const moduleActions = mod?.previewActions ?? resolvePreviewActions(actionModule);
+  const moduleControls = mod?.previewControls ?? resolvePreviewControls(actionModule);
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
@@ -202,7 +110,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     if (irJsonOverride !== undefined) {
       const irJson = irJsonOverride.replace(/\n$/, '');
       try {
-        const ir = JSON.parse(irJson) as IRScene;
+        const ir = JSON.parse(irJson) as PreviewIR['ir'];
         return { previewIr: { ir, width: undefined, height: undefined }, irJson };
       } catch (err) {
         return {
@@ -251,34 +159,17 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     );
   }
 
-  const trimmedSource = rawSource.replace(/\n$/, '');
-  const reactDiff =
-    !hideCode && baselineRawSource !== undefined
-      ? computeUnifiedDiff(baselineRawSource.replace(/\n$/, ''), trimmedSource)
-      : undefined;
-  const extraSourceFiles: Array<ComponentSourceFile> = (sourceFiles ?? []).map(entry => {
-    const filename = typeof entry === 'string' ? entry : entry.file;
-    const rawSourceFile = localSourceFiles[buildSourceFileKey(segments, filename)];
-    const code = rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`;
-    const baselineFilename =
-      typeof entry !== 'string'
-        ? entry.diffFrom
-        : diffFrom !== undefined && filename.startsWith(`${name}.`)
-          ? `${diffFrom}.${filename.slice(name.length + 1)}`
-          : undefined;
-    if (baselineFilename === undefined) return { filename, code, lang: langOfFilename(filename) };
-    const baselineRaw = localSourceFiles[buildSourceFileKey(segments, baselineFilename)];
-    const diff =
-      !hideCode && rawSourceFile !== undefined && baselineRaw !== undefined
-        ? computeUnifiedDiff(baselineRaw.replace(/\n$/, ''), code)
-        : undefined;
-    return { filename, code, lang: langOfFilename(filename), diff };
+  const reactFiles = buildReactSourceFiles({
+    key,
+    name,
+    segments,
+    rawSource,
+    sourceFiles,
+    diffFrom,
+    baselineRawSource,
+    hideCode,
   });
-  const mainFilename = filenameFromKey(key);
-  const reactFiles: Array<ComponentSourceFile> = [
-    { filename: mainFilename, code: trimmedSource, lang: langOfFilename(mainFilename), diff: reactDiff, isMain: true },
-    ...extraSourceFiles,
-  ];
+  const extraSourceFiles = reactFiles.filter(file => !file.isMain);
 
   const previewIr = irState.previewIr;
   const source: ComponentRenderSource | undefined = hideCode
@@ -318,6 +209,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       };
 
   const animated = replayable ?? (previewIr !== null && irHasAnimations(previewIr.ir));
+  const configuredControlSlots = buildConfiguredControlSlots(moduleControls);
+  const resolvedControlSlots = controlSlots ?? actions ?? [...configuredControlSlots, ...(moduleActions ?? [])];
 
   return (
     <ComponentRender
@@ -329,9 +222,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       componentClassName={componentClassName}
       interactive={interactive}
       animated={animated}
-      actions={actions ?? moduleActions}
+      controlSlots={resolvedControlSlots}
       actionsAlwaysVisible={actionsAlwaysVisible}
-      overlays={overlays}
     />
   );
 };

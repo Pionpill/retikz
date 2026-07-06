@@ -1,4 +1,4 @@
-import type { Section } from './interface';
+import type { Section } from './types';
 
 /** viz module sections + pages tree. */
 export const vizSection: Array<Section> = [

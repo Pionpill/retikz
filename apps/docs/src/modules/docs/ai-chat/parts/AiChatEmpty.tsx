@@ -1,12 +1,12 @@
-﻿import { type FC } from 'react';
+import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { buildAiUrl } from '@/modules/docs/lib/doc-links';
+import { cn } from '@/lib';
+import { buildAiUrl } from '@/modules/docs/lib';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 
 const DEEPLINK_BASES = {
   chatgpt: 'https://chatgpt.com/',

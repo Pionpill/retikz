@@ -21,9 +21,19 @@ describe('resolveLinearScale (ADR-02 d3-scale)', () => {
 
   it('scale_infers_domain_from_values', () => {
     // domain 缺省时从数据值 extent 推断
-    const scale = resolveLinearScale({}, [3, 7, 5], [0, 100]);
+    const scale = resolveLinearScale({ domainPadding: 0 }, [3, 7, 5], [0, 100]);
     expect(scale(3)).toBe(0);
     expect(scale(7)).toBe(100);
+  });
+
+  it('scale_inferred_domain_has_default_padding', () => {
+    const scale = resolvePositionScale({ type: 'linear', name: 'x' }, [3, 7, 5], [0, 100]);
+    expect(scale.domain()).toEqual([2.8, 7.2]);
+  });
+
+  it('scale_domain_padding_object_targets_sides', () => {
+    const scale = resolvePositionScale({ type: 'linear', name: 'x', domainPadding: { lower: 0.25 } }, [10, 20], [0, 100]);
+    expect(scale.domain()).toEqual([7.5, 20]);
   });
 
   // 边界
@@ -35,7 +45,7 @@ describe('resolveLinearScale (ADR-02 d3-scale)', () => {
 
   it('scale_empty_values_extent', () => {
     // 空数据 + 无显式 domain → safeExtent 回退 [0,1]
-    const scale = resolveLinearScale({}, [], [0, 100]);
+    const scale = resolveLinearScale({ domainPadding: 0 }, [], [0, 100]);
     expect(scale(0)).toBe(0);
     expect(scale(1)).toBe(100);
   });
@@ -176,7 +186,7 @@ describe('resolvePositionScale linear back-compat (ADR-01)', () => {
 
   it('linear_infers_domain_from_numeric_values', () => {
     // 原始值混入非数值，连续 scale 内部过滤后求 extent
-    const pos = resolvePositionScale({ type: 'linear', name: 'x' }, [3, 'skip', 7, null], [0, 100]);
+    const pos = resolvePositionScale({ type: 'linear', name: 'x', domainPadding: 0 }, [3, 'skip', 7, null], [0, 100]);
     expect(pos.coordinate(3)).toBe(0);
     expect(pos.coordinate(7)).toBe(100);
   });
@@ -220,7 +230,7 @@ describe('resolveTimeScale / coerceTimestamp (ADR-06, UTC)', () => {
   });
 
   it('time_domain_inferred_from_values', () => {
-    const pos = resolvePositionScale({ type: 'time', name: 'x' }, ['2024-01-01', '2024-12-31'], [0, 100]);
+    const pos = resolvePositionScale({ type: 'time', name: 'x', domainPadding: 0 }, ['2024-01-01', '2024-12-31'], [0, 100]);
     expect(pos.coordinate('2024-01-01')).toBeCloseTo(0, 6);
     expect(pos.coordinate('2024-12-31')).toBeCloseTo(100, 6);
   });

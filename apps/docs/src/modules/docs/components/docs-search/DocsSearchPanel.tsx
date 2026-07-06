@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { Lang } from '@/i18n';
 
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import type { Match, SearchEntry } from './search-engine';
 import type { SearchIndex } from './search-index';

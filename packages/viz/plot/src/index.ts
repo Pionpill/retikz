@@ -15,6 +15,7 @@ export type {
   DimensionRole,
 } from './contract';
 export type { FieldResolution, ResolveField } from './contract';
+export type { PlotFacetLocatorOptions, PlotLocator, PlotLocatorOptions, ResolvedAnchor } from './contract';
 export {
   cellInterval,
   createCoordinateFrame,
@@ -22,7 +23,7 @@ export {
   densifyCellContour,
   extractCoordinateType,
 } from './contract';
-export * from './features/interaction/locate';
+export { createPlotLocator } from './pipeline';
 export * from './pipeline/expand';
 export * from './pipeline/layout';
 export { resolveCoordinateRegistry } from './providers';

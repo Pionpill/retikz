@@ -3,7 +3,7 @@
 import type { Lang } from '@/i18n';
 import type { SubVersion } from '@/modules/docs/data';
 
-import { InlineMdx } from '@/modules/docs/components/mdx-content';
+import { InlineMdx } from '@/modules/docs/components';
 
 import { ChangelogItems } from './ChangelogItems';
 

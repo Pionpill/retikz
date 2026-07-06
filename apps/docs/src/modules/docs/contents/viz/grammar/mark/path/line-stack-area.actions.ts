@@ -1,1 +1,1 @@
-export { lineCurveActions as lineStackAreaActions } from './line-curve.actions';
+export { lineCurveControls as lineStackAreaControls } from './line-curve.actions';

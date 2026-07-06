@@ -15,9 +15,9 @@ description: Use when retikz implementation, adversarial testing, and docs are c
 
 ## Changelog
 
-用户可见改动起草 `apps/docs/src/data/changelog.ts` 条目，zh / en 同步。changelog 是数据驱动；不要维护旧的 changelog MDX 页面。
+用户可见改动起草 `apps/docs/src/modules/docs/data/changelog.ts` 条目，zh / en 同步。changelog 是数据驱动；不要维护旧的 changelog MDX 页面。
 
-写法按 `package-publish` 中当前 changelog 数据结构；若该 skill 与 `changelog.types.ts` 不一致，以源码类型为准。
+写法按 `package-publish` 中当前 changelog 数据结构；若该 skill 与 `types.ts` 不一致，以源码类型为准。
 
 internal-only 改动通常不写 changelog；breaking 必写迁移说明。
 

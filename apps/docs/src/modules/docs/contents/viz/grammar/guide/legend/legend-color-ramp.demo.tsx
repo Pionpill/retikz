@@ -15,10 +15,24 @@ const Demo: FC = () => (
     ]}
     width={360}
     height={240}
+    theme={{
+      palette: { sequential: 'magma' },
+      legend: {
+        rampLength: 118,
+        rampThickness: 14,
+        label: { textColor: '#475569' },
+      },
+    }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PointMark x="lng" y="lat" color="pop" />
-    <Legend channel="color" title="Population" />
+    <Legend
+      channel="color"
+      title="Population"
+      ticks={{ count: 4 }}
+      tickLabels={{ format: '~s' }}
+      style={{ title: { font: { weight: 600 } } }}
+    />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
   </Plot>

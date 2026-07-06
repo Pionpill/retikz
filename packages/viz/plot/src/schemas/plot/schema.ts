@@ -4,8 +4,10 @@ import { z } from 'zod';
 import { CoordinateOperationSchema } from '../coordinate';
 import { DataRefSchema } from '../data';
 import { GuideSchema } from '../guide';
+import { BoxPaddingSchema, PlotLabelSchema, PlotLayoutSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
+import { PlotThemeSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import {
   CompositionAxisResolve,
@@ -16,16 +18,6 @@ import {
   PlotComposite,
   ScaffoldFrameMode,
 } from './constants';
-
-const BoxPaddingSchema = z
-  .object({
-    top: z.number().nonnegative().optional().describe('Top composition padding in user units'),
-    right: z.number().nonnegative().optional().describe('Right composition padding in user units'),
-    bottom: z.number().nonnegative().optional().describe('Bottom composition padding in user units'),
-    left: z.number().nonnegative().optional().describe('Left composition padding in user units'),
-  })
-  .strict()
-  .describe('Optional per-side padding around a coordinate composition');
 
 export const CompositionSpacingSchema = z
   .object({
@@ -451,8 +443,18 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .min(1)
     .optional()
     .describe(
-      'Default plot color palette; omit to use d3-scale-chromatic schemeCategory10. Categorical color scales use it as their range; marks without a color encoding use colors[markIndex % colors.length]. Use "currentColor" to keep the inherited core color.',
+      'Compatibility shorthand for theme.palette.categorical/series/sector; omit to use the built-in palette. Explicit theme.palette slots and explicit scale range/scheme have higher priority. Use "currentColor" to keep the inherited core color.',
     ),
+  theme: PlotThemeSchema.optional().describe(
+    'JSON-safe plot theme for background, typography, axis, legend, and palette defaults; consumed during lowering and never passed through as opaque core IR',
+  ),
+  layout: PlotLayoutSchema.optional().describe(
+    'Plot-level label layout strategy for titles, captions, legends, and guide reservations',
+  ),
+  labels: z
+    .array(PlotLabelSchema)
+    .optional()
+    .describe('Static plot labels such as titles, captions, source notes, and custom text'),
   width: z
     .number()
     .positive()

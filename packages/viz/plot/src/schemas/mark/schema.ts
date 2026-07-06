@@ -18,6 +18,7 @@ import {
 import { z } from 'zod';
 
 import { EncodingSchema, MarkGeometryLabelListSchema, MarkNodeLabelListSchema, PointEncodingSchema } from '../encoding';
+import { PlotLayerSchema } from '../layer';
 import { TransformSchema } from '../transform';
 import {
   BUILTIN_MARK_TYPES,
@@ -40,6 +41,9 @@ export const RelationTransformSchema = MarkTransformSchema;
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema，reference 用专属） */
 const markBase = {
   id: z.string().min(1).optional().describe('Optional mark handle used by generated scope and anchor targets'),
+  layer: PlotLayerSchema.optional().describe(
+    'Semantic plot layer override applied to the outer mark scope; mark datum zIndex remains a separate style channel',
+  ),
   coordinateView: z
     .string()
     .min(1)
@@ -1134,6 +1138,9 @@ export const CustomMarkSchema = z
       ),
     transform: MarkTransformSchema.optional().describe(
       'Optional mark-local transform pipeline applied after the plot root transform',
+    ),
+    layer: PlotLayerSchema.optional().describe(
+      'Semantic plot layer override applied to the outer custom mark output scope',
     ),
     coordinateView: z
       .string()

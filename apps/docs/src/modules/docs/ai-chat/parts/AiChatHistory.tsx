@@ -1,4 +1,4 @@
-﻿import type { FC, KeyboardEvent } from 'react';
+import type { FC, KeyboardEvent } from 'react';
 
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -7,12 +7,12 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { MarkdownInline } from '@/modules/docs/components/inline-markdown';
+import { cn } from '@/lib';
+import { MarkdownInline } from '@/modules/docs/components';
 
 import type { Conversation } from '../conversations-storage';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 
 /** AI 历史会话列表。 */
 export const AiChatHistory: FC = () => {

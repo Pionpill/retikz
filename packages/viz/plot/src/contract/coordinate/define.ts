@@ -2,9 +2,9 @@ import type { IRScope } from '@retikz/core';
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
-import type { GuideContext, LoweredGuide } from '../../features';
-import type { LegendReserve, Margins } from '../../pipeline';
 import type { AxisGuide, CoordinateOperation, ExternalRow, MarkOperation, ScaleOperation } from '../../schemas';
+import type { LegendReserve, Margins } from '../../shared';
+import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../provenance';
 import type { PositionScale, TickSet } from '../scale';
 import type { Cell, CellGeometry } from './cell';
@@ -54,6 +54,8 @@ export type CoordinateResolveContext = {
   labelGap?: number;
   /** 用户传入的边距覆盖；自定义坐标系可选择是否消费。 */
   margin?: Partial<Margins>;
+  /** plot layout / decoration 触发的自动预留；内置坐标系把它叠加到自动 plotArea 边距。 */
+  layoutReserve?: Partial<Margins>;
   /** legend 预留区域；内置坐标系用它收窄 plotArea，自定义坐标系 v1 通常保持满画布。 */
   legendReserve: LegendReserve;
   /** overlay scope 共享的目标 plotArea；给定时坐标系仍独立训练 scale，但使用该矩形作为 range。 */

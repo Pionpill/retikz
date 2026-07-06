@@ -39,8 +39,8 @@ const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record
     type: 'plot',
     data: { reference: 'd' },
     scales: [
-      { type: 'linear', name: 'a' },
-      { type: 'linear', name: 'r' },
+      { type: 'linear', name: 'a', domainPadding: 0 },
+      { type: 'linear', name: 'r', domainPadding: 0 },
     ],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r', ...extra },
     marks: [{ type: 'point', encoding }],
@@ -56,8 +56,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a', domain: [0, 360] },
-        { type: 'linear', name: 'r', domain: [0, 10] },
+        { type: 'linear', name: 'a', domainPadding: 0, domain: [0, 360] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [
@@ -87,8 +87,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a', domain: [0, 360] },
-        { type: 'linear', name: 'r', domain: [0, 10] },
+        { type: 'linear', name: 'a', domainPadding: 0, domain: [0, 360] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
@@ -130,8 +130,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a', domain: [0, 1] },
-        { type: 'linear', name: 'r', domain: [0, 10] },
+        { type: 'linear', name: 'a', domainPadding: 0, domain: [0, 1] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' }, // endAngle=360
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
@@ -141,8 +141,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a', domain: [0, 1] },
-        { type: 'linear', name: 'r', domain: [0, 10] },
+        { type: 'linear', name: 'a', domainPadding: 0, domain: [0, 1] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', endAngle: 180 },
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
@@ -167,8 +167,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a', domain: [0, 360] },
-        { type: 'linear', name: 'r', domain: [0, 10] },
+        { type: 'linear', name: 'a', domainPadding: 0, domain: [0, 360] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
@@ -180,8 +180,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a', domain: [0, 360] },
-        { type: 'linear', name: 'r', domain: [0, 10] },
+        { type: 'linear', name: 'a', domainPadding: 0, domain: [0, 360] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 0.5 },
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
@@ -201,7 +201,7 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       data: { reference: 'd' },
       scales: [
         { type: 'band', name: 'a' },
-        { type: 'linear', name: 'r', domain: [0, 10] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
@@ -258,8 +258,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a', domain: [0, 360] },
-        { type: 'linear', name: 'r', domain: [0, 10] },
+        { type: 'linear', name: 'a', domainPadding: 0, domain: [0, 360] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
         { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
@@ -289,8 +289,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'a', domainPadding: 0 },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'missing', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
@@ -306,7 +306,7 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       data: { reference: 'd' },
       scales: [
         { type: 'ordinal', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
@@ -322,8 +322,8 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'a', domainPadding: 0 },
+        { type: 'linear', name: 'r', domainPadding: 0 },
       ],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'theta' } } }],
@@ -336,7 +336,7 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      scales: [{ type: 'linear', name: 'x' }],
+      scales: [{ type: 'linear', name: 'x', domainPadding: 0 }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
       marks: [{ type: 'point', encoding: { y: { field: 'value' } } }],
     });
@@ -356,8 +356,8 @@ describe('lowerPlots cartesian 回归 (ADR-01)', () => {
     type: 'plot',
     data: { reference: 'sales' },
     scales: [
-      { type: 'linear', name: 'xMonth' },
-      { type: 'linear', name: 'yRevenue' },
+      { type: 'linear', name: 'xMonth', domainPadding: 0 },
+      { type: 'linear', name: 'yRevenue', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
     marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],

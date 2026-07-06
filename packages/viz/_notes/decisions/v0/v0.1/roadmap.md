@@ -5,7 +5,7 @@
 
 ## 定位
 
-**v0.1 承载 `@retikz/plot` 的整套图形语法**（GoG 8 组件：Data / Aesthetics / Geometry / Statistics / Scales / Coordinates / Facets / Theme，除交互 / 动画；retikz 把 Facets 扩展为更通用的 Coordinate composition 坐标复合能力）。它经两个阶段、**都在 v0.1 的 alpha 线**完成（版本结构真源见 [v0 roadmap](../roadmap.md)）：
+**v0.1 承载 `@retikz/plot` 的整套图形语法**（GoG 8 组件：Data / Aesthetics / Geometry / Statistics / Scales / Coordinates / Facets / Theme，除交互 / 动画；retikz 把 Facets 扩展为更通用的 Coordinate composition 坐标复合能力）。它经两个阶段、**都在 v0.1 的 alpha 线**完成；beta 阶段只做最小 `@retikz/data` 抽层与稳定化（版本结构真源见 [v0 roadmap](../roadmap.md)）：
 
 - **阶段一 · 基础架构搭建（alpha.1–5，✅ 已完成）**：对 ≥1 个 mark 跑通全 8 段管线（transform → encoding → scale → coordinate → mark → guide → scope → lowering），cartesian + polar 双系成立，端到端出带轴网格的折线 / 柱状图；并搭起 6 个组件的**最小骨架** + anchor·scope 预留。验证 grammar 与 lowering 真正打通，不求语法完备。
 - **阶段二 · 完善图形语法（alpha.6–9 / 11–15）**：补全全部 8 组件——含全新 **Coordinate composition / Theme**。详见下方 Milestones。（**alpha.10 为 2026-06-13 插入的绑定层 milestone**、非 GoG 组件，故语法 milestone 顺延 11–15。）
@@ -16,7 +16,7 @@
 
 **纵向薄片优先**：先打通最薄的端到端（单 mark · linear · cartesian · 最小 lowering），再逐层加宽。每个 milestone 都应产出可渲染的结果，对齐 [plot-design §13](../../../architecture/plot-design.md) 主线「纵向闭环」。
 
-**三包 lockstep 协同（改原计划）**：`@retikz/plot`（IR + lowering）/ `@retikz/plot-react`（`<Plot>` 组件 + 组合 DSL）/ `@retikz/plot-vanilla`（builder + SSR）**从 alpha.1 起一起迭代**——每加一个 plot 能力（mark / scale / coordinate…），同步在 react / vanilla 表面与文档 demo 露出。原计划把框架绑定整体推到 v0.3，现废除：否则文档站只能写 `<Layout ir={{...}} composites={lowerPlots(...)}/>` 这种低可读性示例，对用户极不友好。**注意区分**：authoring 绑定（构图 + 渲染）随 plot 同步；**交互能力**（tooltip / hover / 事件回调）仍留 v0.3——那依赖 core 水合，不只是 authoring 表面。
+**三包 lockstep 协同（改原计划）**：`@retikz/plot`（IR + lowering）/ `@retikz/plot-react`（`<Plot>` 组件 + 组合 DSL）/ `@retikz/plot-vanilla`（builder + SSR）**从 alpha.1 起一起迭代**——每加一个 plot 能力（mark / scale / coordinate…），同步在 react / vanilla 表面与文档 demo 露出。原计划把框架绑定整体推到 v0.3，现废除：否则文档站只能写 `<Layout ir={{...}} composites={lowerPlots(...)}/>` 这种低可读性示例，对用户极不友好。**注意区分**：authoring 绑定（构图 + 渲染）随 plot 同步；**交互能力**（tooltip / hover / 事件回调）留到 v0.2——那依赖 core runtime / 水合，不只是 authoring 表面。
 
 ## Milestones
 
@@ -40,12 +40,12 @@
 | v0.1-alpha.7  | **Aesthetics 全部通道 + 连续 Scales 家族** | 通道×scale 通用抽象（推广出 position）；**size / opacity / shape** 非位置通道（仅 PointMark）；**color 从分组转真 scale 通道** + **series 一等化**（了结 color→series 重构债、修单系列 color field 静默丢弃）；scale 家族 log / pow / sqrt（仅 point/line）。〔2026-06-08 把原 alpha.8 的 opacity/shape 前移并入〕 | [`alpha.7/`](./alpha.7/roadmap.md)（5 ADR 全部实现 + Accepted） |
 | v0.1-alpha.8  | **高级 Scales + Legend**      | **color gradient**（sequential / diverging）+ quantize / threshold / quantile 离散化 scale；**legend** guide（由非位置 scale 派生 + 布局）。〔opacity/shape 已前移 alpha.7〕                                                                               | [`alpha.8/`](./alpha.8/roadmap.md)（3 ADR 全部实现 + Accepted） |
 | v0.1-alpha.9  | **Coordinates 坐标系统**        | **一维坐标系族**（**cartesian1D** 直线：rug / timeline / histogram 底座；**polar1D** 圆周：环形 / 周期数据，复用 alpha.4 角向投影）+ **ternary2D**（a+b+c=1 重心投影，取 continuous 字段自归一化；proportion 已并入 continuous）；1D / 角向 1D / 三角轴 guide；guide dimension 按坐标系校验（拒非法维度）。**地图坐标不进 plot**（§2 独立 domain）；**3D gating 于 core 三维坐标**       | [`alpha.9/`](./alpha.9/roadmap.md)（4 ADR 全部实现 + Accepted） |
-| v0.1-alpha.10 | **绑定层：退化 Plot 为薄容器**（非 GoG，2026-06-13 插入） | `<Plot>` 退化：移除 cartesian2D 默认轴注入、保留 scale/coordinate 推断、装饰抽成可复用纯函数（留 v0.2 chart）；显式 `<Axis>`/`<Legend>` 仍生效；⚠️ alpha 间 breaking + demo 迁移 | [`alpha.10/`](./alpha.10/roadmap.md) |
+| v0.1-alpha.10 | **绑定层：退化 Plot 为薄容器**（非 GoG，2026-06-13 插入） | `<Plot>` 退化：移除 cartesian2D 默认轴注入、保留 scale/coordinate 推断、装饰抽成可复用纯函数（后续 chart v0.1 消费）；显式 `<Axis>`/`<Legend>` 仍生效；⚠️ alpha 间 breaking + demo 迁移 | [`alpha.10/`](./alpha.10/roadmap.md) |
 | v0.1-alpha.11 | **Geometry 基础**               | mark 补 **rect**（heatmap 格）+ **rule**（参考 / 阈值线）+ **text**（datum label）+ **ribbon**（sankey / alluvial 流量、跨 scope connector）。并落地**区间类几何的坐标系无关下沉**（interval / rect / sector 共用，含曲线 / 自定义坐标系）——契约与决策见表后「区间几何下沉」备注。**依赖 core 补 `contour` shape**（core 已实现 contour shape）。契约与决策见表后「区间几何下沉」备注 | [`alpha.11/`](./alpha.11/roadmap.md)（5 ADR 全部实现 + Accepted） |
 | v0.1-alpha.12 | **Statistics 基础**             | `transform` 补 **bin / histogram** + **aggregate**（sum / mean / count / min / max）+ **normalize**（百分比堆叠）+ **derive interval**（字段算 start/end）+ **jitter**                                                                                           | [`alpha.12/`](./alpha.12/roadmap.md)（2 ADR 全部实现 + Accepted）       |
 | v0.1-alpha.13 | **Statistics 进阶 + stat-geom** | **density**（KDE）+ **smooth / 回归** + **quantile-band**；配对几何 **boxplot / density-area**（geom×stat 成对落地）；RelationMark **ribbon**、mark label 宿主与 sector **pull** 收口                                                                           | [`alpha.13/`](./alpha.13/roadmap.md)（7 ADR 全部实现 + Accepted）       |
 | v0.1-alpha.14 | **Coordinate composition 坐标复合** | plot 内多个 coordinate scope 的统一地基：facet 小多图；同 panel 多 y 轴 / 多位置 scale 叠加；共享坐标骨架的 tracks / rings / lanes（如共享圆心/角度但半径分轨，或共享 x 但 y-range 分带）；mark 可选择自己的 coordinate / scale / track；**复用 core `Scope`**（不自建跨域容器，见 [plot-design §7](../../../architecture/plot-design.md)） | [`alpha.14/`](./alpha.14/roadmap.md)（9 ADR 全部实现 + Accepted，2026-07-03 收口） |
-| v0.1-alpha.15 | **Theme 主题样式**              | 标题 / 字体 / 背景 / 网格线 / 图例外观；调色板（categorical / sequential / diverging）；默认样式 token；series / sector 配色。`theme` 模块（[plot-design §11.1](../../../architecture/plot-design.md)）                                                       | 待建                                                                   |
+| v0.1-alpha.15 | **Guide + Theme 主题样式**      | axis 值域弹性与 tick 策略；轴线 / 刻度 / label / grid / legend 外观；调色板（categorical / sequential / diverging）；默认样式 token；series / sector 配色；plot labels 与 layer zIndex。Interaction 顺延到 v0.2 能力线。`theme` 模块（[plot-design §11.1](../../../architecture/plot-design.md)） | [`alpha.15/`](./alpha.15/roadmap.md)（12 ADR 全部 Accepted） |
 
 > 阶段二依赖链：alpha.9 ternary ← alpha.6 proportion；alpha.8 legend ← alpha.7 非位置 scale（size/opacity/shape/color 全在 alpha.7 就位）+ alpha.8 gradient；alpha.13 boxplot ← alpha.12/13 stat；**alpha.11 任意坐标系区间几何 ← core `contour` shape（ADR `ADR-core-contour-shape.md`，已送 core 分支，gate 于 core 落地）**。
 
@@ -64,7 +64,7 @@
 > - **mark 侧 lowering 单路径**：拿 `CellProjection`，`shape` 建 `Node + shape ref`、`contour` 建 `Node + contour shape`；interval / rect / sector 共用这一条，不再各写坐标系分支。
 > - **加新坐标系 O(1)**：声明闭式走快路、不声明自动 contour 兜底，杜绝「加坐标系要给一批 mark 补特判 / fail-loud」。
 > - **代价（已认）**：contour 兜底是 O(顶点) IR、命名 compass anchor 退化到 AABB（`boundaryPoint` 指向式连接仍精确）；圆角逐顶点 fillet、由 plot 控制顶点存在性。详见 core `ADR-core-contour-shape.md` 待决策点。
-> beta / rc 收尾（类型 / 注释 / 测试收口、文档站、发布候选）待 alpha.15 收敛后参照 core 节奏再排。v0.1 共 15 alpha（含 alpha.10 绑定层），是大 minor；若需中途预览发布（如 alpha.8「核心语法预览」）可另切。
+> beta / rc 收尾：v0.1-beta.1 先抽出最小 `@retikz/data`（字段类型 / field model / 数据引用 / dataset normalization / field resolver / formatter / 通用 transform 基础接口），再做类型 / 注释 / 测试 / 文档站 / 发布候选稳定化。v0.1 共 15 alpha（含 alpha.10 绑定层），是大 minor；若需中途预览发布（如 alpha.8「核心语法预览」）可另切。
 
 ## 后续打磨 backlog（alpha.5 后排期）
 
@@ -93,7 +93,7 @@
 
 - core IR / Scene / `compileToScene`；
 - Tier 2 composite 接入与 `lowerComposites` 管线（core v0.3 起的 Tier 2 支撑，现已就绪）——plot 作为 Tier 2 内容 lower 进可引用的 `Scope`；
-- 渲染走现有 `@retikz/react` / `@retikz/vanilla`（消费 core IR）；**plot v0.1 起即出 authoring 绑定** `@retikz/plot-react` / `@retikz/plot-vanilla`（薄 `<Plot>` + 组合 DSL + SSR），与 plot 本体 lockstep（见「拆分策略」）。交互绑定留 v0.3。
+- 渲染走现有 `@retikz/react` / `@retikz/vanilla`（消费 core IR）；**plot v0.1 起即出 authoring 绑定** `@retikz/plot-react` / `@retikz/plot-vanilla`（薄 `<Plot>` + 组合 DSL + SSR），与 plot 本体 lockstep（见「拆分策略」）。交互绑定留 v0.2。
 
 plot 只消费 core 能力、不反向依赖，也不改 core 内部。
 

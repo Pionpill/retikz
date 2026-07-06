@@ -7,7 +7,7 @@ import { intervalRelations } from './relation-interval.data';
 const Demo: FC = () => (
   <Plot data={intervalRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
     <Axis dimension="x" tickLabels={false} />
-    <Axis dimension="y" grid tickCount={4} />
+    <Axis dimension="y" grid ticks={{ count: 4 }} />
     <IntervalMark
       x="slot"
       y="value"

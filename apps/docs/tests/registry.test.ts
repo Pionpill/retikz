@@ -2,7 +2,7 @@ import { CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } f
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components/zod-schema/schema-registry';
+import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components';
 
 describe('SCHEMA_REGISTRY', () => {
   it('contains 40 entries (23 primary + 12 step variants + 2 target variants + 3 arrow detail variants)', () => {

@@ -1,4 +1,4 @@
-﻿import type { ComponentType, FC, SVGProps } from 'react';
+import type { ComponentType, FC, SVGProps } from 'react';
 
 import { Bot, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -7,14 +7,14 @@ import { useTranslation } from 'react-i18next';
 import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
-import type { ProviderId } from '../providers/types';
+import type { ProviderId } from '../providers';
 
-import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
-import { isBuiltInProviderId } from '../providers/resolve';
-import { PROVIDER_IDS } from '../providers/types';
-import { useAiChatStore } from '../use-ai-chat-store';
+import { MODEL_CHOICES, PROVIDER_LABEL } from '../constants';
+import { isBuiltInProviderId } from '../providers';
+import { PROVIDER_IDS } from '../providers';
+import { useAiChatStore } from '../useAiChatStore';
 
 type BrandIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 

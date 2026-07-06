@@ -4,6 +4,7 @@ import { PaintSpecSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';
+import type { ChannelPaletteContext } from '../../../contract';
 import type { Channel, MarkOperation, PlotFieldTypeMap, PlotSpec, ScaleOperation } from '../../../schemas';
 import type { CategoryOrder } from '../../scale';
 
@@ -91,7 +92,7 @@ export const makeColorChannelDefinition = (
       const resolution = resolveChannelScale(
         scaleOperation,
         rawValues,
-        colorResolveContext(ctx.node, ctx.fieldTypes, field, ctx.resolveColorScheme),
+        colorResolveContext(ctx.node, ctx.fieldTypes, field, ctx.resolveColorScheme, ctx.palette),
         ctx.scaleRegistry,
       );
       return {
@@ -116,12 +117,15 @@ const colorResolveContext = (
   fieldTypes: PlotFieldTypeMap,
   field: string,
   resolveColorScheme: (name: string) => (t: number) => string,
+  palette: ChannelPaletteContext | undefined,
 ): ChannelResolveContext => ({
   fieldType: fieldTypes.get(field),
   toNumber: value => (isFiniteNumber(value) ? value : null),
   coerceTimestamp,
   resolveColorScheme,
-  defaultColors: node.colors,
+  defaultColors: palette?.categorical ?? node.colors,
+  defaultSequentialScheme: palette?.sequential,
+  defaultDivergingScheme: palette?.diverging,
 });
 
 export type BuiltinPaintChannels = {

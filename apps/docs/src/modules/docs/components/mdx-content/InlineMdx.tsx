@@ -8,10 +8,10 @@ import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
 import remarkGfm from 'remark-gfm';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 import { mdxComponents } from './components';
-import { escapeBareJsxTriggers } from './escape-bare-jsx-triggers';
+import { escapeBareJsxTriggers } from './utils';
 
 const runtime = {
   jsx: jsxRuntime.jsx,

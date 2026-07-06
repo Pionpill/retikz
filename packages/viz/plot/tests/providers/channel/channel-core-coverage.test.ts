@@ -65,8 +65,8 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -86,6 +86,10 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       opacity: 0.7,
       fillOpacity: 0.5,
       strokeOpacity: 0.4,
+      zIndex: 0,
+    });
+    const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0 }] }));
+    expect(node).toMatchObject({
       zIndex: 3,
     });
   });
@@ -96,8 +100,8 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -136,7 +140,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       data: { reference: 'd' },
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -173,7 +177,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       data: { reference: 'd' },
       scales: [
         { type: 'band', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -214,8 +218,8 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -243,8 +247,8 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -285,8 +289,8 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
         { type: 'ordinal', name: 'tone', range: ['#ef4444', '#2563eb'] },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
@@ -320,8 +324,8 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
@@ -356,8 +360,8 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
