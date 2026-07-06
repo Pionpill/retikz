@@ -1,9 +1,9 @@
 ---
-title: Shared Transforms
-description: Shared transforms rewrite canonical rows after data processing, covering sorting, summarization, representative-row selection, statistical annotation, and custom transform definitions.
+title: Data Transforms
+description: Data transforms rewrite canonical rows after data-model intake, covering sorting, summarization, representative-row selection, statistical annotation, and custom transform definitions.
 ---
 
-Shared transforms belong to `@retikz/data`: they read canonical rows and return canonical rows without depending on plot marks, scales, or coordinates. Plot can use them through `<Transform>`, `dataTransforms`, or mark-local `transform`; table and geo can later reuse the same data capabilities.
+Data transforms belong to `@retikz/data`: they read canonical rows and return canonical rows without depending on plot marks, scales, or coordinates. Plot can use them through `<Transform>`, `dataTransforms`, or mark-local `transform`; table and geo can later reuse the same data capabilities.
 
 Plot-only drawing transforms stay in [Drawing Grammar transforms](/viz/grammar/transform), including `stack`, `bin`, `normalize`, `derive-interval`, `jitter`, `density`, `smooth`, and `relate`. This page covers only the built-in capabilities owned by the data package.
 
@@ -105,7 +105,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 <ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
 
-The boxplot above has no dedicated `BoxPlotMark`. Data shared transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
+The boxplot above has no dedicated `BoxPlotMark`. Data data transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
 
 ## Custom Transforms
 

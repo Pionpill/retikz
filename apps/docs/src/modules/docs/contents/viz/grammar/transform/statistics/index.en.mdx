@@ -5,7 +5,7 @@ description: Density and trend are plot-registered sampled-statistic transforms 
 
 Some statistics do not return one value per group; they generate a batch of sampled rows. `density` reads one continuous field and emits `xAs` / `densityAs` fields from KDE. `smooth` reads `(x, y)` samples and emits predicted `xAs` / `yAs` fields from a regression model. Both produce ordinary rows, then `PathMark` draws curves or areas.
 
-General reducers / selectors, `summarize`, `select`, and custom transform definitions are documented under [Shared Transforms](/viz/data/transform).
+General reducers / selectors, `summarize`, `select`, and custom transform definitions are documented under [Data Transforms](/viz/data/transform).
 
 ## density
 

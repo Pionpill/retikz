@@ -1,9 +1,9 @@
 ---
 title: Data Flow
-description: Data flow covers the @retikz/data model, field processing, shared transforms, and provenance. Real rows stay out of IR and enter the pipeline at compile time.
+description: Data flow covers the @retikz/data model, field processing, data transforms, and provenance. Real rows stay out of IR and enter the pipeline at compile time.
 ---
 
-Data flow is the pure data-processing layer owned by `@retikz/data`: declare field models, normalize external rows into canonical rows, run shared transforms, and keep provenance that downstream modules can inspect. It does not care whether the consumer is plot, table, or geo; those modules read the prepared data result.
+Data flow is the pure data-processing layer owned by `@retikz/data`: declare field models, normalize external rows into canonical rows, run data transforms, and keep provenance that downstream modules can inspect. It does not care whether the consumer is plot, table, or geo; those modules read the prepared data result.
 
 Real data **does not enter IR**. Config only records which fields to read, what types they have, and which serializable processing / transform operations to run. Rows arrive at compile time or pipeline runtime; contracts such as `model`, `format`, and transform operations can be persisted. That keeps one config reusable across data sources, serializable, and AI-friendly.
 
@@ -11,7 +11,7 @@ Real data **does not enter IR**. Config only records which fields to read, what 
 
 ## Pipeline
 
-The data pipeline first collects the fields actually used by the current config, then turns external rows into canonical rows (normalized rows where fields are mapped, parsed, type-normalized, and written back under logical field names). Later shared transforms, plot scales / marks, table views, or geo projections read that normalized result instead of repeatedly reading raw data.
+The data pipeline first collects the fields actually used by the current config, then turns external rows into canonical rows (normalized rows where fields are mapped, parsed, type-normalized, and written back under logical field names). Later data transforms, plot scales / marks, table views, or geo projections read that normalized result instead of repeatedly reading raw data.
 
 | Step              | What it does                                                                                                  | Main config                           |
 | ----------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
@@ -20,9 +20,9 @@ The data pipeline first collects the fields actually used by the current config,
 | Source mapping    | Map logical fields to real data paths, including renamed fields and nested paths                              | `fieldMap` / `fieldMaps`              |
 | Parse / normalize | Parse values through `resolveField`, `format`, and built-ins, then write results under logical field names    | `resolveField` / `format` / field type |
 | Validation        | Sample-check or fully check participating fields, and decide whether invalid values skip or throw             | `validateData` / `invalid`            |
-| Transform and use | Shared transforms rewrite canonical rows; plot channels, scales, and marks read the result                   | `sort` / `summarize` / channel props  |
+| Transform and use | Data transforms rewrite canonical rows; plot channels, scales, and marks read the result                     | `sort` / `summarize` / channel props  |
 
-`model`, `format`, and shared transform operations are serializable contracts. `fieldMap` can be injected by dataset reference. Function options such as `resolveField`, custom parsers, and custom transform runners participate only at runtime and do not enter IR. See [Processing](/viz/data/processing) when you need custom field formats or field parsing.
+`model`, `format`, and data transform operations are serializable contracts. `fieldMap` can be injected by dataset reference. Function options such as `resolveField`, custom parsers, and custom transform runners participate only at runtime and do not enter IR. See [Data Model](/viz/data/model) when you need custom field formats or field parsing.
 
 ## Channel Consumption
 
@@ -33,14 +33,10 @@ The data layer only turns external rows into canonical rows. How fields or const
 <div className="grid gap-3 sm:grid-cols-2">
   <LinkedCard href="/viz/data/model">
     <strong>Data Model</strong>
-    <span>Declare field types, formats, category order, and default inference behavior.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/processing">
-    <strong>Data Processing</strong>
-    <span>Handle renamed fields, storage formats, custom parsers, and reusable field handling before data reaches a consumer module.</span>
+    <span>Declare field types, formats, category order, and handle field mapping, parsing, and validation.</span>
   </LinkedCard>
   <LinkedCard href="/viz/data/transform">
-    <strong>Shared Transforms</strong>
+    <strong>Data Transforms</strong>
     <span>Use sort, summarize, select, annotate, and custom transform definitions.</span>
   </LinkedCard>
   <LinkedCard href="/viz/data/provenance">

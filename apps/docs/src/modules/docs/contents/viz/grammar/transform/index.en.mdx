@@ -5,7 +5,7 @@ description: Drawing-grammar transforms are plot-registered transforms layered o
 
 Plot transforms run after [Data Flow](/viz/data) has produced canonical rows and before scales and marks consume them. This group covers plot-registered drawing capabilities: intervals, percent stacks, histograms, density areas, trend lines, and relation edges.
 
-Shared transforms owned by `@retikz/data` (`sort`, `summarize`, `select`, `annotate`, and `defineTransform`) are documented under [Data Flow / Shared Transforms](/viz/data/transform). Plot can consume them, but this group does not redefine them.
+Data transforms owned by `@retikz/data` (`sort`, `summarize`, `select`, `annotate`, and `defineTransform`) are documented under [Data Flow / Data Transforms](/viz/data/transform). Plot can consume them, but this group does not redefine them.
 
 <ComponentPreview name="transform-pipeline" size="sm" hideCode />
 
@@ -58,7 +58,7 @@ During lowering, Plot first collects source fields read by transforms and regist
 
 Plot-level transforms affect the whole plot's scales, guides, and marks. Mark-local transforms only affect rows visible to the current mark, which is useful for local statistic layers or relation rows.
 
-`bin`, `density`, `smooth`, and `relate` reuse data-level statistical sub-capabilities such as reducers and selectors. Full shared transforms and custom transform definitions are documented under [Shared Transforms](/viz/data/transform).
+`bin`, `density`, `smooth`, and `relate` reuse data-level statistical sub-capabilities such as reducers and selectors. Full data transforms and custom transform definitions are documented under [Data Transforms](/viz/data/transform).
 
 ## Pages
 

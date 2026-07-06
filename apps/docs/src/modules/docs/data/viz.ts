@@ -27,7 +27,6 @@ export const vizSection: Array<Section> = [
         label: 'viz.dataFlowOverview',
       },
       { id: 'model', label: 'viz.dataModel' },
-      { id: 'processing', label: 'viz.dataProcessing' },
       { id: 'transform', label: 'viz.dataTransform' },
       { id: 'provenance', label: 'viz.dataProvenance' },
     ],

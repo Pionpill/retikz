@@ -3,7 +3,7 @@ title: Binning & Stat Layers
 description: Binning and stat layers show how plot cuts continuous fields into histogram bins and composes statistical graphics from ordinary marks.
 ---
 
-This page covers only plot-registered statistical drawing capabilities. General group summaries and representative-row selection live under [Shared Transforms](/viz/data/transform): `summarize` generates grouped statistic rows, and `select` preserves representative original rows.
+This page covers only plot-registered statistical drawing capabilities. General group summaries and representative-row selection live under [Data Transforms](/viz/data/transform): `summarize` generates grouped statistic rows, and `select` preserves representative original rows.
 
 | capability | output rows | common use |
 | ---------- | ----------- | ---------- |
@@ -32,8 +32,8 @@ This page covers only plot-registered statistical drawing capabilities. General 
 
 Statistical transforms produce rows; ordinary marks still draw the graphic. A boxplot is a composition: `quantile-band` generates box, median, and whisker fields, while `outside-quantile-band` keeps outlier original points.
 
-This composition uses data shared transforms to prepare statistic rows, then lets ordinary plot marks consume them. The full example lives under [Shared Transforms](/viz/data/transform#reducers-and-selectors); this page only explains how plot draws those statistic fields as layers.
+This composition uses data data transforms to prepare statistic rows, then lets ordinary plot marks consume them. The full example lives under [Data Transforms](/viz/data/transform#reducers-and-selectors); this page only explains how plot draws those statistic fields as layers.
 
-## Relationship To Shared Transforms
+## Relationship To Data Transforms
 
-`bin` is plot-registered because it targets histogram interval fields and statistical drawing composition, but its `metrics` reuse data reducers. For ordinary grouped statistic rows, use [Shared Transforms / summarize](/viz/data/transform#summarize). For representative original rows, use [Shared Transforms / select](/viz/data/transform#select).
+`bin` is plot-registered because it targets histogram interval fields and statistical drawing composition, but its `metrics` reuse data reducers. For ordinary grouped statistic rows, use [Data Transforms / summarize](/viz/data/transform#summarize). For representative original rows, use [Data Transforms / select](/viz/data/transform#select).

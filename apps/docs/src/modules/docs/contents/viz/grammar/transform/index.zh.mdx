@@ -5,7 +5,7 @@ description: 绘图语法里的 transform 是 plot 在共享数据流之上注�
 
 plot 的变换运行在[数据流](/viz/data)整理出的 canonical 行之后、比例尺和图元之前。这里讲的是 plot 额外注册的绘图能力：它们服务于“怎么画”，例如区间柱、百分比堆叠、直方图、密度面积、趋势线和关系边。
 
-`@retikz/data` 自带的共享变换（`sort`、`summarize`、`select`、`annotate`、`defineTransform`）放在[数据流 / 共享变换](/viz/data/transform)说明。plot 可以消费它们，但不在本分组重复定义。
+`@retikz/data` 自带的数据变换（`sort`、`summarize`、`select`、`annotate`、`defineTransform`）放在[数据流 / 数据变换](/viz/data/transform)说明。plot 可以消费它们，但不在本分组重复定义。
 
 <ComponentPreview name="transform-pipeline" size="sm" hideCode />
 
@@ -58,7 +58,7 @@ lowering 时，Plot 先收集 transform 读取的源字段，同时登记 transf
 
 plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-local transform 只影响当前图元看到的 rows，适合派生局部统计层或 relation 行。
 
-`bin`、`density`、`smooth` 和 `relate` 会复用 data 包提供的 reducer / selector 等统计子能力；完整共享 transform 和自定义 transform definition 见[共享变换](/viz/data/transform)。
+`bin`、`density`、`smooth` 和 `relate` 会复用 data 包提供的 reducer / selector 等统计子能力；完整数据 transform 和自定义 transform definition 见[数据变换](/viz/data/transform)。
 
 ## 章节内容
 

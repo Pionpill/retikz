@@ -1,4 +1,4 @@
-﻿---
+---
 title: ReferenceMark
 description: ReferenceMark expresses reference constraints: constant or field values expanded into lines, one-axis bands, or coordinate regions.
 ---
@@ -69,7 +69,7 @@ Add `yTo` and ReferenceMark turns from a line into a filled band. Bands are usua
 
 ### Reference Layers
 
-ReferenceMark can be layered with other marks as an independent reference layer. In the example below, the point layer shows raw sample scores, while the reference layer uses constant `y={72}` for a target line. When you need a mean, quantile, or representative row from shared data transforms, start with [Shared Transforms](/viz/data/transform), then bind the produced fields to ReferenceMark.
+ReferenceMark can be layered with other marks as an independent reference layer. In the example below, the point layer shows raw sample scores, while the reference layer uses constant `y={72}` for a target line. When you need a mean, quantile, or representative row from data transforms, start with [Data Transforms](/viz/data/transform), then bind the produced fields to ReferenceMark.
 
 <ComponentPreview name="rule-transform" sourceFiles={['rule-transform.data.ts']} />
 

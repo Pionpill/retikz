@@ -1,4 +1,4 @@
-﻿---
+---
 title: ReferenceMark
 description: ReferenceMark 表达参考约束：常量或字段值可以展开成线、单轴带或坐标区域。
 ---
@@ -69,7 +69,7 @@ ReferenceMark 是底层参考 mark：它负责把一个固定轴值解释成 lin
 
 ### 参考线层
 
-ReferenceMark 可以和其它 mark 叠加成独立参考层。下面的点层显示原始样本分数，参考线层用常量 `y={72}` 画出目标线；需要用数据共享 transform 计算均值、分位数或代表行时，先看[共享变换](/viz/data/transform)，再把产出的字段交给 ReferenceMark。
+ReferenceMark 可以和其它 mark 叠加成独立参考层。下面的点层显示原始样本分数，参考线层用常量 `y={72}` 画出目标线；需要用数据数据 transform 计算均值、分位数或代表行时，先看[数据变换](/viz/data/transform)，再把产出的字段交给 ReferenceMark。
 
 <ComponentPreview name="rule-transform" sourceFiles={['rule-transform.data.ts']} />
 

@@ -5,7 +5,7 @@ description: 密度与趋势是 plot 注册的采样统计变换，把原始样�
 
 有些统计不是“给每组一个值”，而是直接生成一批新的采样行。`density` 读取一维连续字段，用 KDE 生成 `xAs` / `densityAs` 输出字段；`smooth` 读取 `(x, y)` 样本，用回归模型生成 `xAs` / `yAs` 预测字段。它们都输出普通 rows，再交给 `PathMark` 画曲线或面积。
 
-通用 reducer / selector、`summarize`、`select` 和自定义 transform definition 见[共享变换](/viz/data/transform)。
+通用 reducer / selector、`summarize`、`select` 和自定义 transform definition 见[数据变换](/viz/data/transform)。
 
 ## 密度 density
 
