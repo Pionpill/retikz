@@ -27,6 +27,25 @@ export type ResolvePositionContext = {
   resolveBetweenGlobal?: ResolveBetweenGlobal;
 };
 
+/** 从 position referent 中提取诊断用节点 id；只读输入，不解析 namespace。 */
+export const nodeIdFromPositionReferent = (ref: unknown): string | undefined =>
+  typeof ref === 'string' ? ref : nodeIdFromResolvableTarget(ref);
+
+/** 从可解析 target / position 形态中提取一个代表性节点 id，供 unresolved warning 使用。 */
+export const nodeIdFromResolvableTarget = (target: unknown): string | undefined => {
+  if (typeof target !== 'object' || target === null || Array.isArray(target)) return undefined;
+  if ('id' in target && typeof target.id === 'string') return target.id;
+  if ('between' in target) {
+    const between = target.between;
+    return Array.isArray(between)
+      ? nodeIdFromResolvableTarget(between[0]) ?? nodeIdFromResolvableTarget(between[1])
+      : undefined;
+  }
+  if ('of' in target) return nodeIdFromPositionReferent(target.of);
+  if ('origin' in target) return nodeIdFromPositionReferent(target.origin);
+  return undefined;
+};
+
 /**
  * 把 IR 位置解析为笛卡尔坐标。
  * @description `scopeChain` 非空时返回当前 scope 局部坐标；解析失败返回 null。

@@ -32,34 +32,18 @@ import {
   rectPerimeterSample,
 } from '../../shared/geometry';
 import { CompileWarningCode } from '../constants';
+import { nodeIdFromResolvableTarget } from '../position';
 import { resolveShadow } from '../style';
 import { fallbackMeasurer } from '../text';
 import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
 import { lowerGeneratorStepToCommands } from './generator';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { assertArrowCanInheritStroke, buildMarkMarkerGroup, markerContextStroke } from './marks';
-import { resolveRelativeStepTargets } from './relative';
+import { normalizePathSteps } from './relative';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
 import { applyArrowShrinks, emitEndpointArrowMark, emitMarkArrowSpec } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
-
-/**
- * referent（offset.of / polar.origin 的并集形态：节点 id 字符串 / `[x, y]` 字面量 / 嵌套 PolarPosition）里挖节点 id
- * @description 裸字符串即节点 id（offset.of / polar.origin 的 string 分支语义）；其余交回 nodeRefId 递归。
- */
-const referentNodeId = (ref: unknown): string | undefined =>
-  typeof ref === 'string' ? ref : nodeRefId(ref as IRTarget);
-
-/** 从目标里提取一个代表性节点 id，用于 unresolved 诊断。 */
-const nodeRefId = (t: IRTarget): string | undefined => {
-  if (typeof t !== 'object' || Array.isArray(t)) return undefined;
-  if ('id' in t) return t.id;
-  if ('between' in t) return nodeRefId(t.between[0]) ?? nodeRefId(t.between[1]);
-  if ('of' in t) return referentNodeId((t as { of: unknown }).of);
-  if ('origin' in t) return referentNodeId((t as { origin?: unknown }).origin);
-  return undefined;
-};
 
 /** 有限坐标点 `[number, number]` */
 const isFinitePoint = (pt: unknown): boolean =>
@@ -125,8 +109,8 @@ export const emitPathPrimitive = (
   if (path.children === undefined) {
     throw new Error('Stroke path requires `children` steps.');
   }
-  // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
-  const steps = resolveRelativeStepTargets(path.children, namespaceStack, scopeChain);
+  // 先把 relative/relativeAccumulate 解析为当前 scope 局部坐标，后续算法可统一按非 relative target 处理
+  const steps = normalizePathSteps(path.children, namespaceStack, scopeChain);
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；
   // 其余 step 需"起点 + 至少一段绘制"故最少 2 段
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
@@ -197,7 +181,7 @@ export const emitPathPrimitive = (
   const anchors: Array<IRPosition | null> = steps.map((s, idx) => {
     if (!hasTo(s)) return null;
     const ref = refPointOfTarget(s.to, namespaceStack, scopeChain);
-    const toId = nodeRefId(s.to);
+    const toId = nodeIdFromResolvableTarget(s.to);
     if (!ref && toId !== undefined) {
       warn(
         CompileWarningCode.UnresolvedNodeReference,
@@ -515,8 +499,8 @@ export const emitPathPrimitive = (
       const fromPt = refPointOfTarget(step.from, namespaceStack, scopeChain);
       const toPt = refPointOfTarget(step.to, namespaceStack, scopeChain);
       if (!fromPt || !toPt) {
-        const fromId = nodeRefId(step.from);
-        const rectToId = nodeRefId(step.to);
+        const fromId = nodeIdFromResolvableTarget(step.from);
+        const rectToId = nodeIdFromResolvableTarget(step.to);
         if (!fromPt && fromId !== undefined) {
           warn(
             CompileWarningCode.UnresolvedNodeReference,
@@ -578,7 +562,7 @@ export const emitPathPrimitive = (
       if (step.center !== undefined) {
         const c = refPointOfTarget(step.center, namespaceStack, scopeChain);
         if (!c) {
-          const centerId = nodeRefId(step.center);
+          const centerId = nodeIdFromResolvableTarget(step.center);
           if (centerId !== undefined) {
             warn(
               CompileWarningCode.UnresolvedNodeReference,
@@ -725,14 +709,14 @@ export const emitPathPrimitive = (
       // arc/circle/ellipse 留下的 penOverride 决定起点；普通 prev 用 boundary clip 朝首个 through-point 收口
       const usedOverride = penOverride;
 
-      // 各 through-point resolve 成世界坐标（relative/relativeAccumulate 已被 resolveRelativeStepTargets 预解析为局部 tuple）
+      // 各 through-point resolve 成世界坐标（relative/relativeAccumulate 已在 normalizePathSteps 中预解析为局部 tuple）
       const resolved: Array<IRPosition> = [];
       let resolveFailed = false;
       for (let k = 0; k < step.points.length; k++) {
         const pt = step.points[k];
         const r = refPointOfTarget(pt, namespaceStack, scopeChain);
         if (!r) {
-          const ptId = nodeRefId(pt);
+          const ptId = nodeIdFromResolvableTarget(pt);
           if (ptId !== undefined) {
             warn(
               CompileWarningCode.UnresolvedNodeReference,
