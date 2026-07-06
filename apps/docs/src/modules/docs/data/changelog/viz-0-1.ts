@@ -29,6 +29,37 @@ export const vizV01: Release = {
         ],
         subVersions: [
           {
+            version: 'alpha.15',
+            date: '2026-07-05',
+            summary: {
+              zh: 'Guide + Theme 收口：axis domain / tick / line / title / grid、legend / palette / size symbol、plot labels 与 layer zIndex 进入稳定的 PlotSpec / theme 契约。',
+              en: 'Guide + Theme wrap-up: axis domain / ticks / lines / titles / grids, legends / palettes / size symbols, plot labels, and layer zIndex now share stable PlotSpec / theme contracts.',
+            },
+            items: [
+              {
+                label: { zh: 'axis guide 能力补齐', en: 'Axis guide completion' },
+                content: {
+                  zh: '连续 / 时间位置 scale 支持 domain padding、single-value fallback、显式 tick source、interval 与 density；axis line 支持 extent、lineCap、dashOffset 与方向箭头；tick mark 支持内置 shape 与自定义 Node shape，tick label 支持自适应旋转 / 省略，title 支持 padding、path-like placement、orientation、anchor 与 shift。 [坐标轴](/viz/grammar/guide/axis)',
+                  en: 'Continuous / temporal position scales gain domain padding, single-value fallbacks, explicit tick sources, intervals, and density. Axis lines support extent, lineCap, dashOffset, and directional arrows; tick marks support built-in shapes and custom Node shapes; tick labels gain adaptive rotation / omission; titles support padding, path-like placement, orientation, anchor, and shift. [Axis](/viz/grammar/guide/axis)',
+                },
+              },
+              {
+                label: { zh: 'grid / legend / theme', en: 'Grid / legend / theme' },
+                content: {
+                  zh: '`PlotSpec.theme` 统一 axis、grid、legend、palette、typography 与 background token；axis grid 支持独立 tick source、density、minor grid、bandPosition、dashOffset 与 lineCap；size legend 默认把大符号压入 symbol 盒子并按最终尺寸预留空间。 [图例](/viz/grammar/guide/legend)',
+                  en: '`PlotSpec.theme` now unifies axis, grid, legend, palette, typography, and background tokens. Axis grids support independent tick sources, density, minor grids, bandPosition, dashOffset, and lineCap; size legends fit large symbols into symbol boxes and reserve space from the final size. [Legend](/viz/grammar/guide/legend)',
+                },
+              },
+              {
+                label: { zh: 'plot labels 与层级', en: 'Plot labels and layers' },
+                content: {
+                  zh: '整图文案归 `labels`，提供 title / caption / source note 的静态布局入口；layer zIndex 复用 core scope，把 background、grid、mark、axis、plot label、legend 与后续 interaction overlay 的默认绘制顺序显式化。',
+                  en: 'Plot-level copy moves under `labels`, providing static layout entries for titles, captions, and source notes. Layer zIndex reuses core scopes and makes the default order of background, grid, marks, axes, plot labels, legends, and future interaction overlays explicit.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.14',
             date: '2026-07-03',
             summary: {
@@ -202,6 +233,30 @@ export const vizV01: Release = {
         ],
         subVersions: [
           {
+            version: 'alpha.15',
+            date: '2026-07-05',
+            summary: {
+              zh: 'React DSL 透传 Guide + Theme：`<Axis>` / `<Legend>` 获得新的 guide 样式与布局字段，`<TitleLabel>` / `<CaptionLabel>` 负责整图文案。',
+              en: 'The React DSL exposes Guide + Theme: `<Axis>` / `<Legend>` gain the new guide style and layout fields, while `<TitleLabel>` / `<CaptionLabel>` handle plot-level copy.',
+            },
+            items: [
+              {
+                label: { zh: 'Axis / Legend props', en: 'Axis / Legend props' },
+                content: {
+                  zh: '`<Axis>` 透传 line extent / arrow、crossing、ticks interval / density / mark、tickLabels layout、title placement / orientation / anchor / shift、grid source / minor / bandPosition 等字段；`<Legend>` 透传 size symbol fit 与 theme 样式入口，组件只装配同一份 PlotSpec。 [坐标轴](/viz/grammar/guide/axis)',
+                  en: '`<Axis>` passes through line extent / arrows, crossing, tick interval / density / marks, tick-label layout, title placement / orientation / anchor / shift, and grid source / minor / bandPosition fields. `<Legend>` passes through size-symbol fit and theme styling entries while still assembling the same PlotSpec. [Axis](/viz/grammar/guide/axis)',
+                },
+              },
+              {
+                label: { zh: 'TitleLabel / CaptionLabel', en: 'TitleLabel / CaptionLabel' },
+                content: {
+                  zh: '`<TitleLabel>` 与 `<CaptionLabel>` 作为 plot-level label 组件参与布局，可直接放文字，也可接收 core `<Text>` 子元素表达多行与局部样式。',
+                  en: '`<TitleLabel>` and `<CaptionLabel>` participate in plot-level label layout. They can receive plain text or core `<Text>` children for multi-line and locally styled text.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.14',
             date: '2026-07-03',
             summary: {
@@ -374,6 +429,23 @@ export const vizV01: Release = {
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.15',
+            date: '2026-07-05',
+            summary: {
+              zh: 'Vanilla builder / SSR 跟进 Guide + Theme：builder 可装配新的 axis、legend、theme、labels 与 layer 字段，`renderPlot` 继续纯 spec 驱动渲染。',
+              en: 'The vanilla builder / SSR surface follows Guide + Theme: the builder can assemble the new axis, legend, theme, labels, and layer fields, while `renderPlot` keeps rendering from pure specs.',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 复用同一下沉路径', en: 'SSR reuses the same lowering path' },
+                content: {
+                  zh: '`renderPlot(spec, datasets)` 消费含 guide / theme / labels / layer 的 PlotSpec，经共享 lowering 自动输出轴线箭头、tick marker、adaptive tick label、minor grid、size legend 与 plot-level labels；vanilla 侧不引入独立渲染语义。',
+                  en: '`renderPlot(spec, datasets)` consumes PlotSpecs with guide / theme / labels / layer fields and emits axis arrows, tick markers, adaptive tick labels, minor grids, size legends, and plot-level labels through shared lowering; vanilla introduces no separate rendering semantics.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.14',
             date: '2026-07-03',

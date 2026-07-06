@@ -125,6 +125,83 @@ describe('PlotSpecSchema (ADR-01)', () => {
     expect(PlotSpecSchema.parse(spec)).toEqual(spec);
   });
 
+  it('plot_layout_and_text_labels_valid', () => {
+    const spec = {
+      ...baseLine,
+      layout: {
+        mode: 'auto',
+        autoPadding: true,
+        padding: { top: 4, right: 6, bottom: 8, left: 10 },
+        maxIterations: 3,
+        collision: { strategy: 'shift', padding: 2 },
+      },
+      labels: [
+        {
+          type: 'text',
+          role: 'title',
+          text: ['Monthly Revenue', 'Internal view'],
+          placement: { kind: 'side', side: 'top', placement: 'midway', padding: 8 },
+          font: { size: 18 },
+        },
+        {
+          type: 'text',
+          role: 'note',
+          text: 'Preliminary',
+          reserveSpace: false,
+          placement: { kind: 'point', target: 'plotArea', x: 0.98, y: 0.02, anchor: 'end' },
+        },
+      ],
+    };
+    expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
+  });
+
+  it('plot_label_point_ratio_out_of_range_rejected', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        ...baseLine,
+        labels: [
+          {
+            type: 'text',
+            text: 'Outside',
+            placement: { kind: 'point', x: 1.2, y: 0.5 },
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it('plot_layout_max_iterations_upper_bound_rejected', () => {
+    expect(() => PlotSpecSchema.parse({ ...baseLine, layout: { maxIterations: 6 } })).toThrow();
+  });
+
+  it('plot_label_text_must_not_be_empty', () => {
+    expect(() => PlotSpecSchema.parse({ ...baseLine, labels: [{ type: 'text', text: '' }] })).toThrow();
+  });
+
+  it('plot_label_accepts_layer_zindex', () => {
+    const spec = {
+      ...baseLine,
+      labels: [{ type: 'text', role: 'title', text: 'Monthly Revenue', layer: { zIndex: 430 } }],
+    };
+
+    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('plot_label_layer_rejects_fractional_zindex_and_unknown_fields', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        ...baseLine,
+        labels: [{ type: 'text', text: 'Monthly Revenue', layer: { zIndex: 1.5 } }],
+      }),
+    ).toThrow();
+    expect(() =>
+      PlotSpecSchema.parse({
+        ...baseLine,
+        labels: [{ type: 'text', text: 'Monthly Revenue', layer: { zIndex: 1, order: 2 } }],
+      }),
+    ).toThrow();
+  });
+
   it('guides_coexist_with_marks', () => {
     const spec = {
       ...baseLine,

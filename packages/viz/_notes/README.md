@@ -1,6 +1,6 @@
-# plot 内部文档
+# viz 内部文档
 
-这里放 `@retikz/plot` 发布组的内部协作文档。plot 发布组包含 `@retikz/plot`、`@retikz/plot-react`、`@retikz/plot-vanilla`，版本按发布组 lockstep。
+这里放 viz 组内部协作文档。`@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 仍按 plot 发布组 lockstep；后续 `data`、`chart`、`table`、`geo` 按各自家族维护路线与版本。
 
 ## 目录
 
@@ -16,6 +16,7 @@
 - [`architecture/plot-visualization-complete.md`](./architecture/plot-visualization-complete.md)：plot 可视化完备检测设计。
 - [`decisions/v0/roadmap.md`](./decisions/v0/roadmap.md)：plot v0 总路线。
 - [`decisions/v0/v0.1/roadmap.md`](./decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
+- [`decisions/chart/v0/v0.1/roadmap.md`](./decisions/chart/v0/v0.1/roadmap.md)：chart v0.1 路线与 Tier 3 `ChartSpec` 边界。
 - [`decisions/_template.md`](./decisions/_template.md)：plot ADR 模板。
 - [`analysis/plot-compare-analysis.md`](./analysis/plot-compare-analysis.md)：plot 横向对比。
 - [`analysis/plot-rendering-performance.md`](./analysis/plot-rendering-performance.md)：plot 渲染性能分析。

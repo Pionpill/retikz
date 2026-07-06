@@ -1,6 +1,6 @@
-import type { AxisGuide } from '../../../schemas';
+import type { AxisCardinalSideValue, AxisGuide } from '../../../schemas';
 
-import { AxisPlacementKind } from '../../../schemas';
+import { AxisCardinalSide, AxisPlacementKind } from '../../../schemas';
 
 /**
  * guide 维度到坐标角色的映射函数。
@@ -8,6 +8,10 @@ import { AxisPlacementKind } from '../../../schemas';
  *   从而禁止同时声明两个指向同一极坐标角色的 axis。
  */
 export type AxisRoleOf = (dimension: string) => string;
+
+/** origin axis 未显式 tickSide 时按维度归一到实际下沉默认值。 */
+export const defaultOriginAxisTickSideOf = (dimension: string): AxisCardinalSideValue =>
+  dimension === 'x' ? AxisCardinalSide.Bottom : AxisCardinalSide.Left;
 
 /**
  * 校验同一坐标角色只声明一根 axis。
@@ -36,6 +40,9 @@ export const axisPlacementKeyOf = (guide: AxisGuide, roleOf: AxisRoleOf = dimens
   const placement = guide.placement;
   if (placement === undefined || placement.kind === AxisPlacementKind.Auto) return `${role}:auto`;
   if (placement.kind === AxisPlacementKind.Side) return `${role}:side:${placement.side}`;
+  if (placement.kind === AxisPlacementKind.Origin) {
+    return `${role}:origin:${String(placement.origin ?? 0)}:${placement.tickSide ?? defaultOriginAxisTickSideOf(role)}`;
+  }
   return `${role}:edge:${placement.edge}`;
 };
 

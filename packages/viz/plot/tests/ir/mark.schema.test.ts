@@ -42,6 +42,33 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   // 错误路径
+  it('mark_accepts_layer_zindex', () => {
+    const mark = {
+      type: 'point',
+      layer: { zIndex: 120 },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
+
+    expect(MarkOperationSchema.parse(mark)).toEqual(mark);
+  });
+
+  it('mark_layer_rejects_fractional_zindex_and_unknown_fields', () => {
+    expect(() =>
+      MarkOperationSchema.parse({
+        type: 'point',
+        layer: { zIndex: 1.5 },
+        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      }),
+    ).toThrow();
+    expect(() =>
+      MarkOperationSchema.parse({
+        type: 'point',
+        layer: { zIndex: 1, order: 2 },
+        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      }),
+    ).toThrow();
+  });
+
   it('mark_unknown_type_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'bar', encoding: {} })).toThrow();
   });

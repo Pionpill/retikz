@@ -56,6 +56,14 @@ const swatchNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text === undefined);
 const labelsOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text !== undefined);
+const sizeSymbolNodesOf = (scope: IRScope): Array<IRNode> =>
+  scope.children.filter(isNode).filter(node => node.text === undefined && node.shape === 'circle');
+
+const nodeMinimumSide = (node: IRNode): number => {
+  const size = node.minimumSize;
+  if (typeof size === 'number') return size;
+  return Math.max(size?.width ?? 0, size?.height ?? 0, size?.default ?? 0);
+};
 
 /** 找 legend 层：约定 id 以 'legend' 开头（lowerLegend 给稳定 id）；退化用结构特征兜底（含 swatch Node + label Node） */
 const findLegendLayer = (outer: IRScope): IRScope | undefined => {
@@ -162,7 +170,7 @@ const sequentialColorLegendSpec = (): PlotSpec =>
         encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
       },
     ],
-    guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', tickCount: 4 }],
+    guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', ticks: { count: 4 } }],
   });
 
 /** size 散点 + size legend */
@@ -187,7 +195,7 @@ const sizeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
   });
 
 /** shape 散点 + shape legend（categorical → glyph 调色板） */
-const shapeLegendSpec = (): PlotSpec =>
+const shapeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -204,7 +212,7 @@ const shapeLegendSpec = (): PlotSpec =>
         encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
       },
     ],
-    guides: [{ type: 'legend', channel: 'shape' }],
+    guides: [{ type: 'legend', channel: 'shape', ...legend }],
   });
 
 /** sector（饼）+ ordinal color + color legend */
@@ -257,6 +265,27 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     expect(shapes.some(shape => shape !== 'rectangle')).toBe(true);
   });
 
+  it('shape_legend_glyphs_default_to_no_stroke', () => {
+    const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const glyphs = swatchNodesOf(legend as IRScope);
+
+    expect(glyphs.length).toBe(3);
+    expect(glyphs.every(node => node.stroke === 'none')).toBe(true);
+    expect(glyphs.every(node => node.strokeWidth === 0)).toBe(true);
+  });
+
+  it('shape_legend_symbol_size_style_controls_glyph_box', () => {
+    const outer = expandOf(shapeLegendSpec({ style: { symbolSize: 18 } }), { d: ORDINAL_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const glyphs = swatchNodesOf(legend as IRScope).filter(node => node.shape !== 'rectangle');
+
+    expect(glyphs.length).toBeGreaterThan(0);
+    expect(glyphs.every(node => nodeMinimumSide(node) === 18)).toBe(true);
+  });
+
   // P2：color legend 绑到位置 linear scale（非颜色 scale）→ fail-loud，而非落空 ordinal 出空图例
   it('color_legend_bound_to_non_color_scale_fail_loud', () => {
     expect(() => expandOf(ordinalColorLegendSpec({ scale: 'x' }), { d: ORDINAL_ROWS })).toThrow(/not a color scale/);
@@ -276,15 +305,39 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     expect(swatchNodesOf(legend as IRScope).length).toBeGreaterThanOrEqual(3);
   });
 
+  it('ordinal_legend_text_nodes_default_to_no_stroke_or_fill', () => {
+    const outer = expandOf(ordinalColorLegendSpec({ title: 'Kind' }), { d: ORDINAL_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const labels = labelsOf(legend as IRScope);
+
+    expect(labels.map(node => node.text).sort()).toEqual(['A', 'B', 'C', 'Kind']);
+    expect(labels.every(node => node.stroke === 'none')).toBe(true);
+    expect(labels.every(node => node.fill === 'none')).toBe(true);
+    expect(labels.every(node => node.padding === 0)).toBe(true);
+  });
+
   // 连续 ramp：色带 + nice 刻度
   it('sequential_color_legend_continuous_ramp', () => {
     const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
     expect(legend).toBeDefined();
-    // 连续 ramp：刻度标签数 > 1（非逐类 swatch），tickCount 提示 4 档左右
+    // 连续 ramp：刻度标签数 > 1（非逐类 swatch），ticks.count 提示 4 档左右
     const labels = labelsOf(legend as IRScope);
     expect(labels.length).toBeGreaterThan(1);
     expect(labels.every(n => typeof n.text === 'string')).toBe(true);
+  });
+
+  it('ramp_legend_tick_labels_default_to_no_stroke_or_fill', () => {
+    const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const labels = labelsOf(legend as IRScope);
+
+    expect(labels.length).toBeGreaterThan(1);
+    expect(labels.every(node => node.stroke === 'none')).toBe(true);
+    expect(labels.every(node => node.fill === 'none')).toBe(true);
+    expect(labels.every(node => node.padding === 0)).toBe(true);
   });
 
   // size 梯度符号：几档代表圈 + 值
@@ -295,6 +348,55 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     // 梯度符号：≥2 档代表大小（nice 3 档左右）+ 值标签
     const labels = labelsOf(legend as IRScope);
     expect(labels.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('size_legend_default_symbols_fit_inside_symbol_box', () => {
+    const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const swatches = swatchNodesOf(legend as IRScope);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(swatches.every(node => node.shape === 'circle')).toBe(true);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(14 + 1e-9);
+    expect(symbols.every(node => node.stroke === 'none')).toBe(true);
+    expect(symbols.every(node => node.strokeWidth === 0)).toBe(true);
+  });
+
+  it('size_legend_symbol_size_style_controls_fit_box', () => {
+    const outer = expandOf(sizeLegendSpec({ style: { symbolSize: 10 } }), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + 1e-9);
+  });
+
+  it('size_legend_preserve_keeps_descriptor_radius_and_reserves_space', () => {
+    const outer = expandOf(sizeLegendSpec({ style: { symbolFit: 'preserve' } }), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeGreaterThan(14);
+    const [first, second] = symbols;
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    const yGap = Math.abs(((second).position as [number, number])[1] - ((first).position as [number, number])[1]);
+    expect(yGap).toBeGreaterThanOrEqual((nodeMinimumSide(first) + nodeMinimumSide(second)) / 2 + 6);
+  });
+
+  it('theme_legend_symbol_size_is_overridden_by_local_style', () => {
+    const themed = PlotSpecSchema.parse({
+      ...sizeLegendSpec({ style: { symbolSize: 10 } }),
+      theme: { legend: { symbolSize: 18 } },
+    });
+    const outer = expandOf(themed, { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + 1e-9);
   });
 });
 
@@ -574,7 +676,7 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-au
           encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
         },
       ],
-      guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', tickCount: 4 }],
+      guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', ticks: { count: 4 } }],
     });
 
   it('explicit_domain_ramp_ticks_follow_domain_not_data_extent', () => {
@@ -586,6 +688,58 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-au
       .filter(value => Number.isFinite(value));
     // 数据 extent 上界仅 30；domain 上界 100 → 应出现 > 30 的刻度（证实刻度跟 domain 而非数据）
     expect(Math.max(...labelNumbers)).toBeGreaterThan(30);
+  });
+
+  it('temporal_ramp_explicit_string_ticks_keep_finite_label_positions', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'lon', type: 'continuous' },
+          { name: 'lat', type: 'continuous' },
+          { name: 'date', type: 'temporal' },
+        ],
+      },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        {
+          type: 'sequential',
+          name: 'dateColor',
+          domain: [Date.UTC(2026, 0, 1), Date.UTC(2026, 0, 3)],
+        },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'date', scale: 'dateColor' },
+          encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        },
+      ],
+      guides: [
+        {
+          type: 'legend',
+          channel: 'color',
+          scale: 'dateColor',
+          ticks: { values: ['2026-01-01T00:00:00.000Z', '2026-01-03T00:00:00.000Z'] },
+          tickLabels: { format: '%Y-%m-%d' },
+        },
+      ],
+    });
+    const rows = [
+      { lon: 0, lat: 0, date: '2026-01-01T00:00:00.000Z' },
+      { lon: 1, lat: 1, date: '2026-01-03T00:00:00.000Z' },
+    ];
+
+    const outer = expandOf(spec, { d: rows });
+    const legend = findLegendLayer(outer);
+    const labels = labelsOf(legend as IRScope);
+
+    expect(labels.map(node => node.text)).toEqual(['2026-01-01', '2026-01-03']);
+    expect(labels.map(node => node.position as [number, number]).flat().every(Number.isFinite)).toBe(true);
   });
 });
 

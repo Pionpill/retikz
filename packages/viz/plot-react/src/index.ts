@@ -2,6 +2,7 @@
 export type {
   AxisProps,
   BuildPlotSpecOptions,
+  CaptionLabelProps,
   CoordinateInput,
   DatumLabelProps,
   FacetDimensionInput,
@@ -12,6 +13,8 @@ export type {
   MarkTransformShortcutContext,
   MarkTransformShortcutDefinition,
   PathMarkProps,
+  PlotLabelText,
+  PlotTextLabelProps,
   PointMarkProps,
   PositionScaleType,
   ReferenceMarkProps,
@@ -20,12 +23,14 @@ export type {
   ScaffoldProps,
   ScaleDimension,
   ScaleProps,
+  TitleLabelProps,
   TrackProps,
   TransformProps,
 } from './components';
 export {
   Axis,
   buildPlotSpec,
+  CaptionLabel,
   Facet,
   IntervalMark,
   Legend,
@@ -36,6 +41,7 @@ export {
   resolveLabelOf,
   Scaffold,
   Scale,
+  TitleLabel,
   Track,
   Transform,
 } from './components';

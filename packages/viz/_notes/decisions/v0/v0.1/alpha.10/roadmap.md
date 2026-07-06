@@ -10,7 +10,7 @@
 
 编号取 **alpha.10**（2026-06-13 决策插入），原语法里程碑 Geometry / Statistics / Coordinate composition / Theme 顺延 **alpha.11–15**（见 [v0.1 roadmap Milestones](../roadmap.md)）。各 Accepted ADR 中对这些语法 milestone 的按号引用同步 +1。
 
-**与 v0.2 chart 的关系**：本轮只做 `<Plot>` 退化（移除自动装饰）；开箱即用的自动轴 / 图例 / 网格 + 主题由 **v0.2 的 `<Chart>`** 上层封装承担（见 [plot v0.2 roadmap](../../v0.2/roadmap.md)）。即：**v0.1 让 Plot 变薄，v0.2 在薄 Plot 之上加 Chart**。
+**与 chart v0.1 的关系**：本轮只做 `<Plot>` 退化（移除自动装饰）；开箱即用的自动轴 / 图例 / 网格 + 主题由 **chart v0.1 的 `<Chart>`** 上层封装承担。即：**v0.1 让 Plot 变薄，chart v0.1 在薄 Plot 之上加 ChartSpec / Chart**。
 
 为什么提前到 alpha.10 而非等语法收口：**削薄 `<Plot>` 是绑定层默认行为的修正**，越晚改、在厚 Plot 上沉淀的 demo / 用法越多、迁移面越大；在 alpha 线内做是 alpha 间 breaking（0.x 不留兼容，AGENTS.md），不产生跨 minor 破坏。
 
@@ -36,16 +36,16 @@
 | ADR | 主题 | Level | 依赖 | 状态 |
 | --- | --- | --- | --- | --- |
 | [01](./01-plot-thin-container.md) | **退化 `<Plot>` 为薄容器**：移除 cartesian2D 默认轴注入、保留 scale/coord 推断、删除 `bare` / `scaleX` / `scaleY`、新增 `<Scale>` 与 `colors`；breaking + demo 迁移 | red | — | Accepted |
-| [02](./02-plot-composable.md) | **让 `<Plot>` 可被组合**：单 svg 多坐标信息图——PlotSpec 自描述尺寸 + plot lowering 暴露外部可见面板 anchor（bbox + plotArea，gated on id）；`<Plot>` 改可嵌入、直接作 core `<Layout>` 子组件（嵌入态不自渲染、lower 时处理）；组合 MVP 从 v0.5 前移 | red | 01 + core-react 机制 | Accepted |
+| [02](./02-plot-composable.md) | **让 `<Plot>` 可被组合**：单 svg 多坐标信息图——PlotSpec 自描述尺寸 + plot lowering 暴露外部可见面板 anchor（bbox + plotArea，gated on id）；`<Plot>` 改可嵌入、直接作 core `<Layout>` 子组件（嵌入态不自渲染、lower 时处理）；组合 MVP 从早期跨域组合规划前移 | red | 01 + core-react 机制 | Accepted |
 
-> 两 ADR 同一主题线：**Plot 作为容器的角色**。01 把 `<Plot>` 降成薄绘图块（角色单一），02 顺势让薄块「可被嵌入与组合」进同一张 svg。02 是组合 MVP（plot-design §7 L1+L2），从原 roadmap v0.5 前移——L1（自描述尺寸 + 可嵌入）不依赖 Coordinate composition，可独立先行；v0.5 收口 plot 内坐标复合 + series/datum 锚 + 相对摆位。装饰逻辑去向（供 v0.2 chart 复用）见 ADR-01。
+> 两 ADR 同一主题线：**Plot 作为容器的角色**。01 把 `<Plot>` 降成薄绘图块（角色单一），02 顺势让薄块「可被嵌入与组合」进同一张 svg。02 是组合 MVP（plot-design §7 L1+L2），属于 v0.1 提前落地的局部复合能力——L1（自描述尺寸 + 可嵌入）不依赖 Coordinate composition，可独立先行；v0.3 收口跨域复合 + attached-space composition。装饰逻辑去向（供 chart v0.1 复用）见 ADR-01。
 
 > ✅ **2026-06-15 alpha.10 封口**：ADR-01/02 全部 `Accepted`；`@retikz/plot` / `@retikz/plot-react` / docs 类型检查与测试全绿（plot 838、plot-react 95、docs 101），`pnpm lint` 与 `git diff --check` 通过。changelog 已同步。重复面板 id 遵循当前 core duplicate-id 语义（warning + last-wins），不在 plot 层额外 fail-loud。
 
 ## 封板决策
 
 - **① `bare` 去留**：删除。薄 Plot 默认态已经不补默认轴；需要只画数据层时不写 `<Axis>` / `<Legend>`。
-- **② 装饰逻辑去向**：抽成自包含函数 `decorateDefaultGuides`（输入/输出 PlotSpec，框架无关），本轮 Plot 不默认调用，v0.2 chart 复用。
+- **② 装饰逻辑去向**：抽成自包含函数 `decorateDefaultGuides`（输入/输出 PlotSpec，框架无关），本轮 Plot 不默认调用，chart v0.1 复用。
 - **③ 薄 Plot 是否仍隐式推 color scale**：保留（与 scale/coord 同属不可见管道，`<Legend>` 需绑定它）。
 - **④ 显式 scale 入口**：`scaleX` / `scaleY` 删除，统一改为 `<Scale>` 子组件。
 - **⑤ 组合入口**：组合容器直接使用 core `<Layout>`，不新增 plot 级 `<Plots>` / `<Figure>` 容器。

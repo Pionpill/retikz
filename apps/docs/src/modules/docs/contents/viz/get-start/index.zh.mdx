@@ -67,12 +67,12 @@ const sales = [
 
 ## 常用开关
 
-`<Plot>` 只画你列出的 `<Axis>`；`<Axis>` 上可调刻度数 / 标签 / 网格：
+`<Plot>` 只画你列出的 `<Axis>`；`<Axis>` 上可调刻度 / 标签 / 网格：
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
   <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="y" grid tickCount={5} />
+  <Axis dimension="y" grid ticks={{ count: 5 }} />
 </Plot>
 ```
 

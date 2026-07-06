@@ -18,6 +18,7 @@
   NodeAxisScaleStyle,
   NodeBoxSizeStyle,
   NodeBoxSpacingStyle,
+  PlotLabel,
   PlotSpec,
   PointColorStyle,
   PointFillStyle,
@@ -34,7 +35,8 @@
   TextChannel,
   TransformOperation,
 } from '@retikz/plot';
-import type { ReactNode } from 'react';
+import type { TextProps } from '@retikz/react';
+import type { ReactElement, ReactNode } from 'react';
 
 import {
   CoordinateOperationSchema,
@@ -56,6 +58,7 @@ import {
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { AxisProps, LegendProps } from './guides';
+import type { CaptionLabelProps, TitleLabelProps } from './labels';
 import type {
   CoreNodeChannelProps,
   CorePathChannelProps,
@@ -72,6 +75,7 @@ import type { TransformProps } from './transform';
 
 import { Facet, Scaffold, Track } from './composition';
 import { Axis, Legend } from './guides';
+import { CaptionLabel, TitleLabel } from './labels';
 import { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from './marks';
 import { Scale } from './scales';
 import { Transform as TransformComponent } from './transform';
@@ -83,6 +87,7 @@ const AUTO_ANGLE = '__angle';
 const AUTO_RADIUS = '__radius';
 const AUTO_COLOR = '__color';
 const DEFAULT_AXIS_SCOPE = 'default';
+const CORE_TEXT_DISPLAY_NAME = '@retikz/Text';
 
 /**
  * <Plot coordinate> 入口形态：字符串简写或对象配置；缺省 cartesian2D
@@ -154,6 +159,12 @@ export type BuildPlotSpecOptions = {
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
+  /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
+  theme?: PlotSpec['theme'];
+  /** Plot-level label layout strategy. */
+  layout?: PlotSpec['layout'];
+  /** Static plot labels such as title, caption, note, or source text. */
+  labels?: PlotSpec['labels'];
   /** 当前数据集可见字段名集合；用于把样式字符串糖优先解析成字段通道 */
   dataFieldNames?: ReadonlySet<string>;
   /**
@@ -223,6 +234,8 @@ type Collected = {
   guides: Array<AxisBoundGuide>;
   facets: Array<CollectedFacet>;
   scaffolds: Array<CollectedScaffold>;
+  /** Plot 级静态文本标签。 */
+  labels: Array<PlotLabel>;
   /** 显式 transform（<Transform> 声明组件收集，按声明序） */
   transforms: Array<TransformOperation>;
   /** mark shortcut 自动装配的 transform；显式 stack 存在时同签名抑制（B4 去重） */
@@ -702,6 +715,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     id,
     coordinateView,
     transform,
+    layer,
     channels,
     strokeWidth,
     fillOpacity,
@@ -799,6 +813,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     ...(id !== undefined ? { id } : {}),
     ...(coordinateView !== undefined ? { coordinateView } : {}),
     ...(transform !== undefined ? { transform } : {}),
+    ...(layer !== undefined ? { layer } : {}),
     ...upper,
     ...(extentField !== undefined ? { extentField } : {}),
     ...(extentToField !== undefined ? { extentToField } : {}),
@@ -874,6 +889,139 @@ const collectScaffoldChildren = (
     }
     collectInto(child, into, styleContext, { scaffoldId });
   });
+};
+
+type TextPlotLabel = Extract<PlotLabel, { type: 'text' }>;
+type PlotLabelTextBlock = TextPlotLabel['text'];
+type PlotLabelLine = Extract<PlotLabelTextBlock, Array<unknown>>[number];
+type StyledPlotLabelLine = Extract<PlotLabelLine, { text: string }>;
+
+const displayNameOf = (element: ReactElement): string | undefined => {
+  const type = element.type as { displayName?: string } | string;
+  if (typeof type === 'string') return type;
+  return type.displayName;
+};
+
+const isEscapedAt = (text: string, index: number): boolean => {
+  let slashCount = 0;
+  for (let i = index - 1; i >= 0 && text[i] === '\\'; i -= 1) slashCount += 1;
+  return slashCount % 2 === 1;
+};
+
+const splitLabelChildTextLines = (text: string): Array<string> => {
+  const lines: Array<string> = [];
+  let start = 0;
+  let inDisplayTex = false;
+  for (let i = 0; i < text.length; i += 1) {
+    if (text[i] === '$' && text[i + 1] === '$' && !isEscapedAt(text, i)) {
+      inDisplayTex = !inDisplayTex;
+      i += 1;
+      continue;
+    }
+    if (text[i] === '\n' && !inDisplayTex) {
+      lines.push(text.slice(start, i));
+      start = i + 1;
+    }
+  }
+  lines.push(text.slice(start));
+  return lines;
+};
+
+const textElementToLabelLine = (element: ReactElement): PlotLabelLine | undefined => {
+  const props = element.props as TextProps;
+  const textChild = Array.isArray(props.children) && props.children.length === 1 ? props.children[0] : props.children;
+  if (typeof textChild !== 'string' && typeof textChild !== 'number') return undefined;
+  const text = String(textChild);
+  if (props.fill === undefined && props.opacity === undefined && props.font === undefined) return text;
+  const line: StyledPlotLabelLine = { text };
+  if (props.fill !== undefined) line.fill = props.fill;
+  if (props.opacity !== undefined) line.opacity = props.opacity;
+  if (props.font !== undefined) line.font = props.font;
+  return line;
+};
+
+const collectLabelChildLines = (children: ReactNode): Array<PlotLabelLine> => {
+  const out: Array<PlotLabelLine> = [];
+  let buffer = '';
+  let bufferActive = false;
+  const flush = (): void => {
+    if (bufferActive && buffer.trim().length > 0) out.push(buffer);
+    buffer = '';
+    bufferActive = false;
+  };
+  const append = (chunk: string): void => {
+    buffer += chunk;
+    bufferActive = true;
+  };
+  const visit = (node: ReactNode): void => {
+    if (typeof node === 'string') {
+      if (node.trim().length === 0) return;
+      const parts = splitLabelChildTextLines(node);
+      append(parts[0] ?? '');
+      for (let i = 1; i < parts.length; i += 1) {
+        flush();
+        append(parts[i] ?? '');
+      }
+      return;
+    }
+    if (typeof node === 'number') {
+      append(String(node));
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const child of node) visit(child);
+      return;
+    }
+    if (isValidElement(node)) {
+      if (node.type === Fragment) {
+        visit((node.props as { children?: ReactNode }).children);
+        return;
+      }
+      if (displayNameOf(node) === CORE_TEXT_DISPLAY_NAME) {
+        const line = textElementToLabelLine(node);
+        if (line !== undefined) {
+          flush();
+          out.push(line);
+        }
+        return;
+      }
+      if (typeof node.type === 'function') {
+        visit((node.type as (props: unknown) => ReactNode)(node.props));
+      }
+    }
+  };
+  visit(children);
+  flush();
+  return out;
+};
+
+const labelTextBlockFromChildren = (children: ReactNode): PlotLabelTextBlock | undefined => {
+  const lines = collectLabelChildLines(children);
+  if (lines.length === 0) return undefined;
+  if (lines.length === 1 && typeof lines[0] === 'string') return lines[0];
+  return lines;
+};
+
+const plotTextLabelOf = (
+  props: TitleLabelProps | CaptionLabelProps,
+  role: NonNullable<TextPlotLabel['role']>,
+  displayName: string,
+): TextPlotLabel => {
+  const { children, text, ...style } = props;
+  const childText = labelTextBlockFromChildren(children);
+  if (text !== undefined && childText !== undefined) {
+    throw new Error(`buildPlotSpec: <${displayName}> cannot use both text and children`);
+  }
+  const content = text ?? childText;
+  if (content === undefined) {
+    throw new Error(`buildPlotSpec: <${displayName}> requires text or children`);
+  }
+  return {
+    type: 'text',
+    role,
+    text: content,
+    ...style,
+  };
 };
 
 const collectInto = (
@@ -959,6 +1107,14 @@ const collectInto = (
     if (child.type === Track) {
       throw new Error('buildPlotSpec: <Track> must be declared inside <Scaffold>');
     }
+    if (child.type === TitleLabel) {
+      into.labels.push(plotTextLabelOf(child.props as TitleLabelProps, 'title', 'TitleLabel'));
+      return;
+    }
+    if (child.type === CaptionLabel) {
+      into.labels.push(plotTextLabelOf(child.props as CaptionLabelProps, 'caption', 'CaptionLabel'));
+      return;
+    }
     if (child.type === PathMark) {
       const props = child.props as PathMarkProps;
       const {
@@ -979,6 +1135,7 @@ const collectInto = (
         facetId,
         trackId,
         transform,
+        layer,
         anchorId,
         channels,
         strokeWidth,
@@ -1008,6 +1165,7 @@ const collectInto = (
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
@@ -1058,6 +1216,7 @@ const collectInto = (
         facetId,
         trackId,
         transform,
+        layer,
         anchorId,
         channels,
       } = props;
@@ -1092,6 +1251,7 @@ const collectInto = (
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(colorStyle !== undefined ? { color: colorStyle } : {}),
         ...(textColorStyle !== undefined ? { textColor: textColorStyle } : {}),
@@ -1146,6 +1306,7 @@ const collectInto = (
         facetId,
         trackId,
         transform,
+        layer,
         anchorId,
         channels,
         fill,
@@ -1221,6 +1382,7 @@ const collectInto = (
           ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
           ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
           ...(transform !== undefined ? { transform } : {}),
+          ...(layer !== undefined ? { layer } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...intervalStyle,
           bounds: { x: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' }, y: { kind: IntervalBoundKind.Full } },
@@ -1252,6 +1414,7 @@ const collectInto = (
           ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
           ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
           ...(transform !== undefined ? { transform } : {}),
+          ...(layer !== undefined ? { layer } : {}),
           ...(anchorId !== undefined ? { anchorId } : {}),
           ...(series !== undefined ? { series } : {}),
           ...intervalStyle,
@@ -1370,6 +1533,7 @@ const collectInto = (
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
         ...(transform !== undefined ? { transform } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         ...(anchorId !== undefined ? { anchorId } : {}),
         ...(series !== undefined ? { series } : {}),
         ...intervalStyle,
@@ -1397,7 +1561,7 @@ const collectInto = (
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === RelationMark) {
-      const { id, kind, coordinateView, transform, source, target, label, style, path, ribbon, color, channels } =
+      const { id, kind, coordinateView, transform, layer, source, target, label, style, path, ribbon, color, channels } =
         child.props as RelationMarkProps;
       const colorEnc = colorChannel(color, undefined);
       const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
@@ -1407,6 +1571,7 @@ const collectInto = (
         ...(kind !== undefined ? { kind } : {}),
         ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(transform !== undefined ? { transform } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         source,
         target,
         ...(label !== undefined ? { label: canonicalGeometryLabel(label) } : {}),
@@ -1417,7 +1582,7 @@ const collectInto = (
       });
       recordColor(into, colorEnc);
     } else if (child.type === Axis) {
-      const { dimension, scale, tickCount, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, id } =
+      const { dimension, scale, line, ticks, crossing, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, layer, id } =
         child.props as AxisProps;
       if (scale !== undefined) {
         into.scales.push({ dimension, type: scale });
@@ -1433,14 +1598,17 @@ const collectInto = (
         ...(effectiveFacetId !== undefined ? { facetId: effectiveFacetId } : {}),
         ...(effectiveScaffoldId !== undefined ? { scaffoldId: effectiveScaffoldId } : {}),
         ...(effectiveTrackId !== undefined ? { trackId: effectiveTrackId } : {}),
+        ...(layer !== undefined ? { layer } : {}),
         ...(placement !== undefined ? { placement } : {}),
+        ...(line !== undefined ? { line } : {}),
+        ...(ticks !== undefined ? { ticks } : {}),
+        ...(crossing !== undefined ? { crossing } : {}),
         ...(title !== undefined ? { title } : {}),
-        ...(tickCount !== undefined ? { tickCount } : {}),
         ...(tickLabels !== undefined ? { tickLabels } : {}),
         ...(grid !== undefined ? { grid } : {}),
       });
     } else if (child.type === Legend) {
-      const { channel, scale, title, position, orient, tickCount, tickLabels } = child.props as LegendProps;
+      const { channel, scale, title, position, orient, ticks, tickLabels, style, layer } = child.props as LegendProps;
       into.guides.push({
         type: PlotGuide.Legend,
         channel,
@@ -1448,12 +1616,13 @@ const collectInto = (
         ...(title !== undefined ? { title } : {}),
         ...(position !== undefined ? { position } : {}),
         ...(orient !== undefined ? { orient } : {}),
-        ...(tickCount !== undefined ? { tickCount } : {}),
+        ...(ticks !== undefined ? { ticks } : {}),
         ...(tickLabels !== undefined ? { tickLabels } : {}),
+        ...(style !== undefined ? { style } : {}),
+        ...(layer !== undefined ? { layer } : {}),
       });
     } else if (child.type === Scale) {
-      const { dimension, type } = child.props as ScaleProps;
-      into.scales.push({ dimension, type });
+      into.scales.push(child.props as ScaleProps);
     } else if (child.type === TransformComponent) {
       // 通用 <Transform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
       into.transforms.push(child.props as TransformProps);
@@ -1483,22 +1652,39 @@ const buildColorScale = (
   return { type: PlotScale.Ordinal, name: AUTO_COLOR, ...(colors !== undefined ? { range: colors } : {}) };
 };
 
-const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpec => {
+type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'point'> }>;
+type PositionScaleOptions = Pick<ContinuousScaleProps, 'domain' | 'domainPadding' | 'singleValueSpan'>;
+
+const isContinuousScaleProps = (options: ScaleProps | undefined): options is ContinuousScaleProps =>
+  options !== undefined && options.type !== 'point';
+
+const continuousPositionScaleOptions = (options: PositionScaleOptions | undefined): PositionScaleOptions => ({
+  ...(options?.domain !== undefined ? { domain: options.domain } : {}),
+  ...(options?.domainPadding !== undefined ? { domainPadding: options.domainPadding } : {}),
+  ...(options?.singleValueSpan !== undefined ? { singleValueSpan: options.singleValueSpan } : {}),
+});
+
+const buildPositionScale = (
+  name: string,
+  type: PositionScaleType,
+  options?: ScaleProps,
+): PlotScaleSpec => {
+  const scaleOptions = continuousPositionScaleOptions(isContinuousScaleProps(options) ? options : undefined);
   switch (type) {
     case 'linear':
-      return { type: PlotScale.Linear, name };
+      return { type: PlotScale.Linear, name, ...scaleOptions };
     case 'time':
-      return { type: PlotScale.Time, name };
+      return { type: PlotScale.Time, name, ...scaleOptions };
     case 'point':
       return { type: PlotScale.Point, name };
     case 'log':
-      return { type: PlotScale.Log, name };
+      return { type: PlotScale.Log, name, ...scaleOptions };
     case 'sqrt':
-      return { type: PlotScale.Sqrt, name };
+      return { type: PlotScale.Sqrt, name, ...scaleOptions };
     case 'symlog':
-      return { type: PlotScale.Symlog, name };
+      return { type: PlotScale.Symlog, name, ...scaleOptions };
     case 'radial':
-      return { type: PlotScale.Radial, name };
+      return { type: PlotScale.Radial, name, ...scaleOptions };
     default: {
       // 穷尽守卫：新增 PositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
       const exhaustive: never = type;
@@ -1508,43 +1694,43 @@ const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpe
 };
 
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
-const buildCartesianXScale = (forceBand: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | undefined): PlotScaleSpec => {
   if (forceBand && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference',
     );
   }
   if (forceBand) return { type: PlotScale.Band, name: AUTO_X };
-  return buildPositionScale(AUTO_X, explicit ?? 'linear');
+  return buildPositionScale(AUTO_X, explicit?.type ?? 'linear', explicit);
 };
 
 /** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
-const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined): PlotScaleSpec => {
   if (hasRect && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference',
     );
   }
   if (hasRect) return { type: PlotScale.Band, name: AUTO_Y };
-  return buildPositionScale(AUTO_Y, explicit ?? 'linear');
+  return buildPositionScale(AUTO_Y, explicit?.type ?? 'linear', explicit);
 };
 
 /**
  * polar 角向 scale 类型推断：IntervalMark angle → linear（连续累积角界）；IntervalMark x/y → band（径向柱分类）；
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
-const buildAngleScale = (collected: Collected, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+const buildAngleScale = (collected: Collected, explicit: ScaleProps | undefined): PlotScaleSpec => {
   if (collected.hasBar && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference',
     );
   }
-  if (collected.hasSector && explicit !== undefined && explicit !== 'linear') {
+  if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {
     throw new Error(
       'buildPlotSpec: <IntervalMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"',
     );
   }
-  if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit);
+  if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit.type, explicit);
   if (collected.hasSector) return { type: PlotScale.Linear, name: AUTO_ANGLE };
   if (collected.hasBar) return { type: PlotScale.Band, name: AUTO_ANGLE };
   if (collected.hasClosedLine) return { type: PlotScale.Point, name: AUTO_ANGLE };
@@ -1553,7 +1739,7 @@ const buildAngleScale = (collected: Collected, explicit: PositionScaleType | und
 
 type ScaleRole = 'x' | 'y' | 'angle' | 'radius';
 
-type ExplicitScaleMap = Partial<Record<ScaleRole, PositionScaleType>>;
+type ExplicitScaleMap = Partial<Record<ScaleRole, ScaleProps>>;
 
 const validScaleDimensionsOf = (coordKind: ReturnType<typeof coordinateTypeOf>): ReadonlyArray<ScaleDimension> => {
   if (coordKind === 'cartesian2D') return ['x', 'y'];
@@ -1594,7 +1780,7 @@ const collectExplicitScales = (
     if (out[role] !== undefined) {
       throw new Error(`buildPlotSpec: duplicate scale for "${role}" role (dimension "${scale.dimension}")`);
     }
-    out[role] = scale.type;
+    out[role] = scale;
   }
   return out;
 };
@@ -2185,6 +2371,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     transforms: [],
     shortcutTransforms: [],
     scales: [],
+    labels: [],
     resolveLabels: {},
     colored: false,
     colorFields: [],
@@ -2222,6 +2409,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     transform => transform.kind !== PlotTransform.Stack || !explicitStackSignatures.has(stackSignature(transform)),
   );
   const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedShortcutTransforms];
+  const labels: Array<PlotLabel> = [...(options.labels ?? []), ...collected.labels];
 
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {
@@ -2245,7 +2433,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   if (coordKind === 'polar2D') {
     const polar = toPolarConfig(options.coordinate) as PolarConfig;
     const angleScale = buildAngleScale(collected, explicitScales.angle);
-    const radiusScale = buildPositionScale(AUTO_RADIUS, explicitScales.radius ?? 'linear');
+    const radiusScale = buildPositionScale(AUTO_RADIUS, explicitScales.radius?.type ?? 'linear', explicitScales.radius);
     coordinate = shouldDeferPositionScales
       ? {
           type: PlotCoordinate.Polar2D,
@@ -2291,7 +2479,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
       ...(cfg?.startAngle !== undefined ? { startAngle: cfg.startAngle } : {}),
       ...(cfg?.endAngle !== undefined ? { endAngle: cfg.endAngle } : {}),
     };
-    const angleScale = buildPositionScale(AUTO_ANGLE, explicitScales.angle ?? 'linear');
+    const angleScale = buildPositionScale(AUTO_ANGLE, explicitScales.angle?.type ?? 'linear', explicitScales.angle);
     coordinate = shouldDeferPositionScales
       ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom }
       : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
@@ -2354,6 +2542,9 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     ...(transforms.length > 0 ? { transform: transforms } : {}),
     scales: normalizedAxisBinding.scales,
     ...(options.colors !== undefined ? { colors: options.colors } : {}),
+    ...(options.theme !== undefined ? { theme: options.theme } : {}),
+    ...(options.layout !== undefined ? { layout: options.layout } : {}),
+    ...(labels.length > 0 ? { labels } : {}),
     ...(options.width !== undefined ? { width: options.width } : {}),
     ...(options.height !== undefined ? { height: options.height } : {}),
     ...(normalizedAxisBinding.composition !== undefined

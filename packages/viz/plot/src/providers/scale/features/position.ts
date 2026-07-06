@@ -48,7 +48,7 @@ import {
   TimeScaleSchema,
 } from '../../../schemas';
 import { coerceTimestamp, inferCategoryDomain } from '../../data';
-import { DEFAULT_TICK_COUNT, safeExtent, scaleTicks } from '../shared';
+import { DEFAULT_TICK_COUNT, resolvePaddedDomain, safeExtent, scaleTicks } from '../shared';
 
 // ── 连续数值位置 scale（linear / log / pow / sqrt / symlog / radial）────────────────
 
@@ -58,13 +58,32 @@ import { DEFAULT_TICK_COUNT, safeExtent, scaleTicks } from '../shared';
  *   返回 d3 ScaleLinear：可作 `(value) => number` 投影，也可 `.ticks()` / `.tickFormat()` / `.range([...])` 后续设值。
  *   单值 domain（d0=d1）d3 归一化返回 0.5 → 映射到 range 中点，与早期自写 linear 行为一致。
  */
+type LinearScaleOptions = Omit<LinearScale, 'type' | 'name'> & {
+  type?: LinearScale['type'];
+  name?: string;
+  defaultDomainPadding?: number;
+  applyDomainPadding?: boolean;
+};
+
 export const resolveLinearScale = (
-  def: { domain?: readonly [number, number]; range?: readonly [number, number]; nice?: boolean; clamp?: boolean },
+  def: LinearScaleOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleLinear<number, number> => {
+  const domain =
+    def.applyDomainPadding === true
+      ? resolvePaddedDomain({
+          scaleName: def.name ?? '__linear',
+          family: 'linear',
+          domain: def.domain ?? safeExtent(values),
+          explicitDomain: def.domain !== undefined,
+          domainPadding: def.domainPadding,
+          singleValueSpan: def.singleValueSpan,
+          defaultDomainPadding: def.defaultDomainPadding ?? 0,
+        })
+      : [...(def.domain ?? safeExtent(values))];
   const scale = d3ScaleLinear()
-    .domain([...(def.domain ?? safeExtent(values))])
+    .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
@@ -76,8 +95,13 @@ export const resolveLinearScale = (
  * @description 显式 domain 含 0 / 负值 → fail-loud；缺省从正值 extent 推断（空集回退 [1, 10]）。
  *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理。
  */
+type PositionDomainOptions = {
+  defaultDomainPadding?: number;
+  applyDomainPadding?: boolean;
+};
+
 export const resolveLogScale = (
-  def: LogScale,
+  def: LogScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -88,9 +112,23 @@ export const resolveLogScale = (
   }
   const positives = values.filter(value => value > 0);
   const [lo, hi] = d3Extent(positives);
+  const sourceDomain = def.domain ?? (lo === undefined ? [1, 10] : [lo, hi]);
+  const domain =
+    def.applyDomainPadding === true
+      ? resolvePaddedDomain({
+          scaleName: def.name,
+          family: 'log',
+          domain: sourceDomain,
+          explicitDomain: def.domain !== undefined,
+          domainPadding: def.domainPadding,
+          singleValueSpan: def.singleValueSpan,
+          base: def.base,
+          defaultDomainPadding: def.defaultDomainPadding ?? 0,
+        })
+      : [...sourceDomain];
   const scale = d3ScaleLog()
     .base(def.base ?? 10)
-    .domain([...(def.domain ?? (lo === undefined ? [1, 10] : [lo, hi]))])
+    .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
@@ -103,7 +141,7 @@ export const resolveLogScale = (
  *   整数 exponent 允许负 domain。exponent 缺省 2。
  */
 export const resolvePowScale = (
-  def: PowScale,
+  def: PowScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -113,9 +151,23 @@ export const resolvePowScale = (
       `lowerPlots: pow scale "${def.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
+  const sourceDomain = def.domain ?? safeExtent(values);
+  const domain =
+    def.applyDomainPadding === true
+      ? resolvePaddedDomain({
+          scaleName: def.name,
+          family: 'pow',
+          domain: sourceDomain,
+          explicitDomain: def.domain !== undefined,
+          domainPadding: def.domainPadding,
+          singleValueSpan: def.singleValueSpan,
+          exponent,
+          defaultDomainPadding: def.defaultDomainPadding ?? 0,
+        })
+      : [...sourceDomain];
   const scale = d3ScalePow()
     .exponent(exponent)
-    .domain([...(def.domain ?? safeExtent(values))])
+    .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
@@ -127,7 +179,7 @@ export const resolvePowScale = (
  * @description 显式 domain 含负值 → fail-loud；缺省从非负值 extent 推断。负数据值由 isValidInput 跳过。
  */
 export const resolveSqrtScale = (
-  def: SqrtScale,
+  def: SqrtScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -136,9 +188,22 @@ export const resolveSqrtScale = (
       `lowerPlots: sqrt scale "${def.name}" domain must be non-negative (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
+  const sourceDomain = def.domain ?? safeExtent(values.filter(value => value >= 0));
+  const domain =
+    def.applyDomainPadding === true
+      ? resolvePaddedDomain({
+          scaleName: def.name,
+          family: 'sqrt',
+          domain: sourceDomain,
+          explicitDomain: def.domain !== undefined,
+          domainPadding: def.domainPadding,
+          singleValueSpan: def.singleValueSpan,
+          defaultDomainPadding: def.defaultDomainPadding ?? 0,
+        })
+      : [...sourceDomain];
   const scale = d3ScalePow()
     .exponent(0.5)
-    .domain([...(def.domain ?? safeExtent(values.filter(value => value >= 0)))])
+    .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
@@ -151,18 +216,25 @@ export const resolveSqrtScale = (
  *   domain 缺省从值 extent 推断；负 / 零 domain 合法（symlog 全域有定义），不 fail-loud。
  */
 export const resolveSymlogScale = (
-  def: {
-    domain?: readonly [number, number];
-    range?: readonly [number, number];
-    constant?: number;
-    nice?: boolean;
-    clamp?: boolean;
-  },
+  def: SymlogScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
+  const sourceDomain = def.domain ?? safeExtent(values);
+  const domain =
+    def.applyDomainPadding === true
+      ? resolvePaddedDomain({
+          scaleName: def.name,
+          family: 'symlog',
+          domain: sourceDomain,
+          explicitDomain: def.domain !== undefined,
+          domainPadding: def.domainPadding,
+          singleValueSpan: def.singleValueSpan,
+          defaultDomainPadding: def.defaultDomainPadding ?? 0,
+        })
+      : [...sourceDomain];
   const scale = d3ScaleSymlog<number, number>()
-    .domain([...(def.domain ?? safeExtent(values))])
+    .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
   if (def.constant !== undefined) scale.constant(def.constant);
   if (def.nice) scale.nice();
@@ -176,12 +248,25 @@ export const resolveSymlogScale = (
  *   domain 缺省从值 extent 推断。
  */
 export const resolveRadialScale = (
-  def: { domain?: readonly [number, number]; range?: readonly [number, number]; nice?: boolean; clamp?: boolean },
+  def: RadialScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
+  const sourceDomain = def.domain ?? safeExtent(values.filter(value => value >= 0));
+  const domain =
+    def.applyDomainPadding === true
+      ? resolvePaddedDomain({
+          scaleName: def.name,
+          family: 'radial',
+          domain: sourceDomain,
+          explicitDomain: def.domain !== undefined,
+          domainPadding: def.domainPadding,
+          singleValueSpan: def.singleValueSpan,
+          defaultDomainPadding: def.defaultDomainPadding ?? 0,
+        })
+      : [...sourceDomain];
   const scale = d3ScaleRadial<number>()
-    .domain([...(def.domain ?? safeExtent(values))])
+    .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
@@ -199,6 +284,7 @@ export const linearPositionScale = (scale: D3ScaleLinear<number, number>): Posit
     return 0;
   },
   ticks: count => scaleTicks(scale, count),
+  tickKind: 'number',
   range: () => {
     const [start, end] = scale.range();
     return [start, end];
@@ -230,6 +316,7 @@ export const continuousPositionScale = (
     return 0;
   },
   ticks: count => scaleTicks(scale, count),
+  tickKind: 'number',
   range: () => {
     const [start, end] = scale.range();
     return [start, end];
@@ -255,7 +342,15 @@ export const resolveTimeScale = (
   fallbackRange: readonly [number, number],
 ): D3ScaleTime<number, number> => {
   const stamps = values.map(coerceTimestamp).filter((stamp): stamp is number => stamp !== null);
-  const [lo, hi] = def.domain ?? safeExtent(stamps);
+  const [lo, hi] = resolvePaddedDomain({
+    scaleName: def.name,
+    family: 'time',
+    domain: def.domain ?? safeExtent(stamps),
+    explicitDomain: def.domain !== undefined,
+    domainPadding: def.domainPadding,
+    singleValueSpan: def.singleValueSpan,
+    defaultDomainPadding: 0.05,
+  });
   const scale = d3ScaleUtc()
     .domain([new Date(lo), new Date(hi)])
     .range([fallbackRange[0], fallbackRange[1]]);
@@ -278,6 +373,7 @@ export const timePositionScale = (scale: D3ScaleTime<number, number>): PositionS
     return 0;
   },
   ticks: count => timeTicks(scale, count),
+  tickKind: 'time',
   range: () => {
     const [start, end] = scale.range();
     return [start, end];
@@ -369,6 +465,7 @@ export const bandPositionScale = (scale: D3ScaleBand<string | number>): Position
     return scale.bandwidth();
   },
   ticks: () => categoryTicks(scale),
+  tickKind: 'category',
   range: () => {
     const [start, end] = scale.range();
     return [start, end];
@@ -390,6 +487,7 @@ export const pointPositionScale = (scale: D3ScalePoint<string | number>): Positi
     return 0;
   },
   ticks: () => categoryTicks(scale),
+  tickKind: 'category',
   range: () => {
     const [start, end] = scale.range();
     return [start, end];
@@ -406,7 +504,10 @@ const linearScaleDefinition = defineScale<LinearScale>({
   schema: LinearScaleSchema,
   isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
   allowsBaseline: true,
-  resolve: (def, values, range) => linearPositionScale(resolveLinearScale(def, values.filter(isFiniteNumber), range)),
+  resolve: (def, values, range) =>
+    linearPositionScale(
+      resolveLinearScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+    ),
 });
 
 const logScaleDefinition = defineScale<LogScale>({
@@ -416,7 +517,7 @@ const logScaleDefinition = defineScale<LogScale>({
   allowsBaseline: false,
   resolve: (def, values, range) =>
     continuousPositionScale(
-      resolveLogScale(def, values.filter(isFiniteNumber), range),
+      resolveLogScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
       value => isFiniteNumber(value) && value > 0,
     ),
 });
@@ -431,7 +532,10 @@ const powScaleDefinition = defineScale<PowScale>({
     const isValidInput = integerExponent
       ? isFiniteNumber
       : (value: unknown): boolean => isFiniteNumber(value) && value >= 0;
-    return continuousPositionScale(resolvePowScale(def, values.filter(isFiniteNumber), range), isValidInput);
+    return continuousPositionScale(
+      resolvePowScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+      isValidInput,
+    );
   },
 });
 
@@ -442,7 +546,7 @@ const sqrtScaleDefinition = defineScale<SqrtScale>({
   allowsBaseline: false,
   resolve: (def, values, range) =>
     continuousPositionScale(
-      resolveSqrtScale(def, values.filter(isFiniteNumber), range),
+      resolveSqrtScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
       value => isFiniteNumber(value) && value >= 0,
     ),
 });
@@ -455,7 +559,9 @@ const symlogScaleDefinition = defineScale<SymlogScale>({
   allowsBaseline: false,
   // symlog 全域有定义（含零 / 负），输入仅需有限数，沿用默认 isFiniteNumber 守门
   resolve: (def, values, range) =>
-    continuousPositionScale(resolveSymlogScale(def, values.filter(isFiniteNumber), range)),
+    continuousPositionScale(
+      resolveSymlogScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+    ),
 });
 
 const radialScaleDefinition = defineScale<RadialScale>({
@@ -465,7 +571,9 @@ const radialScaleDefinition = defineScale<RadialScale>({
   // 面积感知半径，自 0 基线起算（南丁格尔 / 玫瑰图扇区面积编码值）→ 允许作 interval / path closure 值轴
   allowsBaseline: true,
   resolve: (def, values, range) =>
-    continuousPositionScale(resolveRadialScale(def, values.filter(isFiniteNumber), range)),
+    continuousPositionScale(
+      resolveRadialScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+    ),
 });
 
 const timeScaleDefinition = defineScale<TimeScale>({

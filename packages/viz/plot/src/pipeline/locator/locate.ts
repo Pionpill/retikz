@@ -1,20 +1,20 @@
 import type { IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
 
-import type { AnyTransformDefinition, CoordinateFrame, IntervalContext, TransformContext } from '../../contract';
-import type { LowerPlotsOptions, MarkDataView } from '../../pipeline/expand';
-import type { ProvenanceContext } from '../../pipeline/provenance';
+import type {
+  AnyTransformDefinition,
+  CoordinateFrame,
+  IntervalContext,
+  PlotFacetLocatorOptions,
+  PlotLocator,
+  PlotLocatorOptions,
+  ResolvedAnchor,
+  TransformContext,
+} from '../../contract';
 import type { ExternalDatasets, ExternalRow, Mark, MarkOperation, PlotSpec, TransformOperation } from '../../schemas';
+import type { LowerPlotsOptions, MarkDataView } from '../expand';
+import type { ProvenanceContext } from '../provenance';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
-import { lowerPlots, prepareRows, resolveFrame } from '../../pipeline/expand';
-import { DEFAULT_FONT_SIZE } from '../../pipeline/layout';
-import {
-  createDatumIdRegistrar,
-  datumMeta,
-  readSourceIndex,
-  readSourceIndices,
-  tagSourceIndex,
-} from '../../pipeline/provenance';
 import {
   applyTransforms,
   buildIntervalContext,
@@ -23,61 +23,17 @@ import {
   resolveFieldPath,
 } from '../../providers';
 import { isBuiltinMark, PlotMark } from '../../schemas';
-
-/** 默认整图尺寸（与 expand.ts 对齐，保 locator 投影与 lowering 一致） */
-const DEFAULT_WIDTH = 480;
-const DEFAULT_HEIGHT = 300;
-
-/**
- * 解析结果：逻辑地址在 scene 里的落点 + 来源 meta +（若已绑）可连接 id
- * @description position 与 lowering 摆放一致（共享 datumAnchor）；meta 即便 lowering 未开 datumProvenance 也按需合成；
- *   id 仅在 datumIdField 命中且已给该元素绑了具名 id 时回填，否则省略。
- */
-export type ResolvedAnchor = {
-  /** 该 datum / series 的锚点屏幕位置（user units，与 lowering 摆放一致） */
-  position: [number, number];
-  /** 来源 meta（与 per-datum meta 同构；series 携带 {source,dataReference,mark,markIndex,series}） */
-  meta: IRJsonObject;
-  /** 若给该元素绑了具名 id（datumIdField 命中），回填；否则省略 */
-  id?: string;
-};
-
-/**
- * plot locator：对一份 spec + 数据 + 渲染选项的确定性正向解析器（纯函数、无副作用、不进 IR）
- * @description 命中预演：把逻辑地址映射到 scene 落点 + 来源 meta，与实际渲染逐点一致（复用 resolveFrame + datumAnchor）。
- */
-export type PlotFacetLocatorOptions = {
-  id: string;
-  row?: string | number | boolean | null | Array<string | number | boolean | null>;
-  column?: string | number | boolean | null | Array<string | number | boolean | null>;
-};
+import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
+import { lowerPlots, prepareRows, resolveFrame } from '../expand';
+import {
+  createDatumIdRegistrar,
+  datumMeta,
+  readSourceIndex,
+  readSourceIndices,
+  tagSourceIndex,
+} from '../provenance';
 
 type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
-
-export type PlotLocatorOptions = {
-  markIndex?: number;
-  coordinateView?: string;
-  facet?: PlotFacetLocatorOptions;
-  track?: string;
-};
-
-export type PlotLocator = {
-  /**
-   * 按 transformedIndex（transform 后行序 = lowering 迭代序 = 渲染序）解析 datum 锚点。O(1)。
-   * @description markIndex 缺省取首个 mark；越界 / 该行未被渲染（投影无效 / 零尺寸被跳过）→ null。
-   */
-  datum: (transformedIndex: number, opts?: PlotLocatorOptions) => ResolvedAnchor | null;
-  /**
-   * 按 series 值解析其区域锚点（该 series 所有已渲染 datum 锚点的 centroid）。O(k)。
-   * @description 无此 series 值 / 全被跳过 → null；meta 携带 series。
-   */
-  series: (value: string | number, opts?: PlotLocatorOptions) => ResolvedAnchor | null;
-  /**
-   * 按点路径串解析：'<plotId>.datum.<transformedIndex>' / '<plotId>.series.<value>'。
-   * @description root 无 id 时支持无前缀形式 'datum.<i>' / 'series.<v>'；不匹配 / plotId 不符 / 非法段 → null（不抛）。
-   */
-  resolve: (address: string) => ResolvedAnchor | null;
-};
 
 /** 取某 mark 的 series 字段名（无则 undefined）；只有 path / interval 含 series */
 const seriesFieldOf = (mark: Mark): string | undefined =>
@@ -190,8 +146,8 @@ export const createPlotLocator = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions = {},
 ): PlotLocator => {
-  const width = options.width ?? DEFAULT_WIDTH;
-  const height = options.height ?? DEFAULT_HEIGHT;
+  const width = options.width ?? DEFAULT_PLOT_WIDTH;
+  const height = options.height ?? DEFAULT_PLOT_HEIGHT;
 
   // 数据集缺失 / 尺寸非法时给出空 locator（解析全 null），而非抛——保 resolve 永不 throw 的契约。
   const dataset = spec.data.reference in datasets ? datasets[spec.data.reference] : undefined;

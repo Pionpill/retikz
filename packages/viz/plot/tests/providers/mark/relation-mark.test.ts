@@ -103,8 +103,8 @@ const baseSpec = (marks: unknown): PlotSpec =>
     type: 'plot',
     data: { reference: 'd' },
     scales: [
-      { type: 'linear', name: 'x' },
-      { type: 'linear', name: 'y' },
+      { type: 'linear', name: 'x', domainPadding: 0 },
+      { type: 'linear', name: 'y', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks,

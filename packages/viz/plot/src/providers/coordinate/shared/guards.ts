@@ -1,5 +1,5 @@
-import type { CoordinateFrame } from '../../../contract';
-import type { CartesianCoordinateFrame, PolarCoordinateFrame, Ternary2DCoordinateFrame } from '../features';
+import type { CoordinateFrame, PolarCoordinateFrame } from '../../../contract';
+import type { CartesianCoordinateFrame, Ternary2DCoordinateFrame } from '../features';
 
 import { PlotCoordinate } from '../../../schemas';
 

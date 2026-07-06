@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import type { PlotCoordinate } from '../../schemas';
 import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 
@@ -45,10 +46,51 @@ export type CoordinateFrame = {
   projectCell?: (cell: Cell) => CellGeometry;
 };
 
+/**
+ * 二维极坐标运行时坐标帧。
+ * @description x 角色解释为角向、y 角色解释为径向；scale 输出先落到 [theta, radius]，再投影为屏幕坐标。
+ *   该结构由内置 provider 创建，但作为 mark / guide / locator 共用的运行时契约暴露在 contract 层。
+ */
+export type PolarCoordinateFrame = {
+  /** 判别字段：2D 极坐标。 */
+  type: typeof PlotCoordinate.Polar2D;
+  /** 位置角色顺序（[angle, radius]）；mark 按此顺序取 encoding 通道值。 */
+  roles: ReadonlyArray<DimensionRole>;
+  /** 圆心（屏幕坐标）。 */
+  center: Position;
+  /** 内半径（user units，环图内半径；0 = 实心）。 */
+  innerRadius: number;
+  /** 外半径（user units，可用外半径）。 */
+  outerRadius: number;
+  /** 角向起始角（度，角向 range 起点）。 */
+  startAngle: number;
+  /** 角向终止角（度，角向 range 终点）。 */
+  endAngle: number;
+  /** 角向 scale 是否连续；连续时 path 可做段内采样。 */
+  continuousAngle: boolean;
+  /** angle 位置 scale（range = [startAngle, endAngle] 度）。 */
+  primary: PositionScale;
+  /** radius 位置 scale（range = [innerRadius, outerRadius]）。 */
+  secondary: PositionScale;
+  /** 按通用 coordinate contract 暴露各 role 的位置 scale。 */
+  roleScales: Partial<Record<DimensionRole, PositionScale>>;
+  /** 投影：[theta, radius] -> 屏幕点；任一非有限值返回 null。 */
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
+  /** N 通道投影：按 roles 顺序传值，内部委托 project。 */
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  /** 把已映射的极坐标对（theta 度, radius user units）换算成屏幕点。 */
+  projectPolar: (thetaDeg: number, radius: number) => Position | null;
+  /** 正交 cell -> 环扇几何。 */
+  projectCell: (cell: Cell) => CellGeometry;
+};
+
 /** 具备 cell 几何投影能力的运行时坐标帧。 */
 export type CellProjectableCoordinate = CoordinateFrame & {
   projectCell: (cell: Cell) => CellGeometry;
 };
+
+/** 三元坐标三角顶点顺序（屏幕坐标）：[Vx(x=100%), Vy(y=100%), Vz(z=100%)]。 */
+export type TernaryVertices = [Position, Position, Position];
 
 /**
  * 某角色轴曲线在某参数点的局部标架：原点 + 切向，均在屏幕空间。

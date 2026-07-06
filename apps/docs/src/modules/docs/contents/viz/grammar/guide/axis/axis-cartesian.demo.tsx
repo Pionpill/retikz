@@ -9,7 +9,7 @@ const Demo: FC = () => (
   <Plot data={revenue} width={360} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <PathMark x="month" y="revenue" order="month" />
     <Axis dimension="x" />
-    <Axis dimension="y" grid tickCount={5} />
+    <Axis dimension="y" grid ticks={{ count: 5 }} />
   </Plot>
 );
 

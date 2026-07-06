@@ -40,8 +40,8 @@ const pointSpec = (opacity: Record<string, unknown> | undefined): PlotSpec =>
     type: 'plot',
     data: { reference: 'd' },
     scales: [
-      { type: 'linear', name: 'x' },
-      { type: 'linear', name: 'y' },
+      { type: 'linear', name: 'x', domainPadding: 0 },
+      { type: 'linear', name: 'y', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'point', ...(opacity ? { opacity } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
@@ -60,6 +60,37 @@ describe('opacity channel (alpha.7 ADR-04)', () => {
     expect(ops[0]).toBeCloseTo(OPACITY_MIN, 6);
     expect(ops[2]).toBeCloseTo(1, 6);
     expect(ops[1]).toBeCloseTo(OPACITY_MIN + 0.5 * (1 - OPACITY_MIN), 6);
+  });
+
+  it('opacity_explicit_scale_ignores_position_domain_padding', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
+        { type: 'linear', name: 'alpha', domainPadding: 1 },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          opacity: { kind: 'field', value: 'd', scale: 'alpha' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ],
+    });
+    const nodes = collectNodes(
+      firstLayer(spec, {
+        d: [
+          { x: 0, y: 0, d: 0 },
+          { x: 1, y: 1, d: 10 },
+        ],
+      }),
+    );
+    expect(opacityOf(nodes[0])).toBeCloseTo(OPACITY_MIN, 6);
+    expect(opacityOf(nodes[1])).toBeCloseTo(1, 6);
   });
 
   it('opacity_value_constant', () => {
@@ -110,8 +141,8 @@ describe('opacity channel (alpha.7 ADR-04)', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [

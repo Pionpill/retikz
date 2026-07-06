@@ -1,9 +1,9 @@
 # ADR-01：`<Chart>` 上层封装 —— chart 核心归 `@retikz/chart`，使用 plot-backed 表达
 
-- 状态：Proposed
+- 状态：Superseded（迁往 `chart/v0/v0.1` 路线）
 - 决策日期：2026-06-13
 - 关联：[plot v0.2-alpha.1 roadmap](./roadmap.md) · [plot v0.2 roadmap](../roadmap.md) · [plot v0 roadmap §定位](../../roadmap.md) · [前置：v0.1-alpha.10 薄 Plot ADR-01](../../v0.1/alpha.10/01-plot-thin-container.md) · [plot-design §2 / §11](../../../../architecture/plot-design.md)
-> ⚠️ 草案：本 ADR 由 2026-06-13 设计讨论产出，实现契约为 AI 起草建议稿，待人工 review + 红级多 LLM 评审后定稿。
+> 2026-07-05 更新：本文是旧版 plot v0.2 chart 草案，已被新的版本规划取代。chart 仍是 Tier 3 封装层，但拥有 JSON-safe `ChartSpec`，并在独立 `chart/v0/v0.1` 路线中 lower 成 PlotSpec；plot v0.2 改为交互能力 + layout transform 主线。本文保留为 superseded 历史记录，不再作为实现输入。
 
 ## 背景
 

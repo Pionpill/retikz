@@ -1,44 +1,43 @@
-# plot v0.2-alpha.1 实施待办：`@retikz/chart` 核心 + `<Chart>` 三包表面
+# plot v0.2-alpha.1 实施待办：交互地基 + layout transform 地基
 
 > milestone 执行路线。长期决策放同目录 `NN-*.md` ADR；本文件可更新。
-> 关联：[`plot v0.2 roadmap`](../roadmap.md) · [`plot v0 roadmap`](../../roadmap.md) · [`plot v0.1-alpha.10（薄 Plot 前置）`](../../v0.1/alpha.10/roadmap.md) · [`plot-design §2 / §11`](../../../../architecture/plot-design.md) · [`_template.md`](../../../_template.md)
-> ⚠️ 草案：本 milestone 由 2026-06-13 设计讨论开出，待人工 review。
+> 关联：[`plot v0.2 roadmap`](../roadmap.md) · [`plot v0 roadmap`](../../roadmap.md) · [`plot-design §7 / §10 / §13`](../../../../architecture/plot-design.md) · [`_template.md`](../../../_template.md)
+> ⚠️ 草案：本 milestone 由 2026-07-05 版本规划讨论开出，待人工 review。
 
 ## 目标
 
-在 v0.1 已退化的薄 `<Plot>` 之上，加 `<Chart>` 开箱即用层，并落地 [v0 roadmap](../../roadmap.md) 预留的 `@retikz/chart` 上层封装第一版（组合式形态）：
+在 v0.1 GoG 基座之上，先打通 v0.2 两条能力轴的最小纵向闭环：
 
-1. **新增 `@retikz/chart` 框架无关核心**：输入 marks/config + theme → 装饰完整 `PlotSpec`（自动补默认轴 / 图例 / 网格 + 透出 theme）。**复用或承接 v0.1-alpha.10 抽出的装饰语义**（`decorateDefaultGuides`），不重写两套逻辑。无新 IR、无新 lowering。
-2. **新增 `@retikz/chart-react` `<Chart>`**：薄绑定，收集 children → 调 chart 核心 → 委托 plot 的 `<Plot>` / compile path。
-3. **新增 `@retikz/chart-vanilla` 对称 chart builder / SSR**：调同一 chart 核心。
-4. **三包 + docs lockstep**：文档拆「底层 `<Plot>` 组合」与「`<Chart>` 开箱即用」两线。
-
-## 前置
-
-- **v0.1-alpha.10 薄 Plot**：`<Plot>` 已退化、装饰推断已抽成可复用纯函数（见 [v0.1-alpha.10 ADR-01](../../v0.1/alpha.10/01-plot-thin-container.md)）。本 milestone 由 `@retikz/chart` 核心承接同一装饰语义，供 chart-react / chart-vanilla 共享。
+1. **交互地基**：让 locator / provenance / layer identity 能被 runtime 消费，支撑 tooltip、hover、selection、brush、legend interaction 与 overlay 的后续实现。
+2. **layout transform 地基**：建立结构化布局算法的 registry / contract，让 tree、network、word cloud、treemap、gauge、progress、pictogram 等算法产出普通 rows / derived fields，再交给 plot mark 渲染。
+3. **Chart 消费边界**：chart v0.1 可消费本 milestone 产出的 PlotSpec 能力，但 chart 自身 roadmap 独立维护，不在 plot v0.2-alpha.1 里实现。
 
 ## ADR 清单
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 | --- | --- | --- | --- | --- |
-| [01](./01-chart-layering.md) | **chart 核心归属 + 装饰契约 + 三包表面**：chart 框架无关核心归 `@retikz/chart`、装饰函数契约（marks/config+theme → PlotSpec）、自动装饰规则、React `<Chart>` props、Vanilla chart builder | red | v0.1-alpha.10 ADR-01 | 草拟中 |
+| 01 | **interaction runtime contract**：locator / provenance 的 runtime 消费、事件回调、overlay scope、交互状态与 PlotSpec JSON-safe 边界 | red | v0.1 alpha.5 / alpha.14 / alpha.15 | 待起草 |
+| 02 | **layout transform registry**：结构化布局算法的 definition / registry、输入输出 rows、derived field 命名、与普通 transform / mark 的边界 | red | v0.1 stat / mark / composition | 待起草 |
 
-> 单 ADR 起步；若表面 / 主题 / preset 细分需要可再拆 ADR-02+。theme 完整透出 gate 于 v0.1-alpha.15 Theme，本轮仅预留主题接缝。
+> 旧的 `01-chart-layering.md` 是 2026-06-13 的 chart 草案，已被新的「chart v0.1 独立路线 + Tier 3 ChartSpec」取代；保留为 superseded 历史文件，不再作为本 milestone 输入。
 
-## 待决策（ADR-01 起草前定）
+## 前置
 
-- **① chart 核心目录与导出边界**：倾向 `packages/viz/chart/src/`，经 `@retikz/chart` 主入口导出供 chart-react / chart-vanilla 消费；不与 plot grammar / lowering 目录混。
-- **② 自动装饰补齐规则**：`<Chart>` 在哪些条件补默认轴 / 图例 / 网格——倾向**先 1:1 复用 v0.1 抽出的 `decorateDefaultGuides`**（cartesian2D 补 x/y 轴、y 带网格；有 color scale 补 legend），默认微调另立需求。
-- **③ `<Chart>` 与 `<Plot>` 的 props 关系**：倾向**复用 + 叠加**——`<Chart>` ≈ `<Plot>` 的 DSL props（data / model / coordinate / scaleX…）+ 自动装饰 + `title` / `theme`。
-- **④ vanilla chart builder 形态**：对齐现有 `renderPlot` / builder 风格，调同一 chart 核心。
+- **v0.1 beta data 抽层**：共享 field model、dataset normalization、field resolver / formatter 与通用 transform 基础契约。
+- **v0.1 locator / provenance / layer**：交互 runtime 只消费这些 identity，不重新定义来源模型。
+- **core runtime / hydration 能力**：事件绑定、hit-test 与 overlay 渲染依赖 core / adapter 的 runtime 基础。
 
-## core 依赖
+## 不在本 milestone 范围
 
-无新 core 依赖——chart 核心只产 `PlotSpec`，经 plot 既有 lowering 下沉到 core 现有 Node / Path / Scope。
+- 完整 tooltip / brush / selection 交互组件库。
+- 动画与 transition 语法。
+- 全量结构化布局算法实现；本轮先定 registry 与 1-2 个可验证薄片。
+- ChartSpec / `<Chart>` 实现；chart v0.1 单独开 roadmap / ADR。
+- table / geo 的独立包设计。
 
 ## 执行模式
 
-**三包 lockstep（milestone 粒度）**：chart 核心 + chart-react/chart-vanilla 表面 + 文档一次性同步，milestone 完成时四方一致才「可交付」。红级 ADR 按 [`develop-design`](../../../../../../../.agents/skills/develop-design/SKILL.md) 先调研同类库（Recharts `<ResponsiveContainer>` vs 高层组合、Observable Plot `Plot.plot()` vs marks、Vega-Lite unit spec、ECharts type+option）+ 外部 LLM 评审，人工签字后进实现。
+plot v0.2 仍保持 plot 三包 lockstep：`@retikz/plot` 定 contract 与 lowering，`@retikz/plot-react` / `@retikz/plot-vanilla` 提供 runtime / authoring 表面，docs 同步展示。交互红级 ADR 必须先调研 Recharts / Vega(-Lite) selection / Observable Plot / ECharts 的交互边界；layout transform 红级 ADR 必须对照 d3-hierarchy / d3-force / wordcloud / treemap 的输入输出契约。
 
 ## ADR 约定
 

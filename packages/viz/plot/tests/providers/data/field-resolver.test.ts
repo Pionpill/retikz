@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { ParsedFieldValue, ResolveField } from '../../../src/contract';
 import type { PlotSpec } from '../../../src/schemas';
 
-import { createPlotLocator } from '../../../src/features';
+import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots, prepareRows } from '../../../src/pipeline/expand';
 import { applyFieldResolver, normalizeRows } from '../../../src/providers';
 import { PlotFieldType, PlotSpecSchema } from '../../../src/schemas';

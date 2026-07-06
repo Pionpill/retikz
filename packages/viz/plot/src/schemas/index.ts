@@ -2,9 +2,12 @@ export * from './coordinate';
 export * from './data';
 export * from './encoding';
 export * from './guide';
+export * from './layer';
+export * from './layout';
 export * from './mark';
 export * from './plot';
 export * from './scale';
+export * from './theme';
 export * from './transform';
 export type {
   BlendModeValue,

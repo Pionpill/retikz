@@ -32,6 +32,10 @@ export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'rendere
 export type PlotColorProps = {
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
+    /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
+    theme?: PlotSpec['theme'];
+    /** 整图 label 空间布局策略。 */
+    layout?: PlotSpec['layout'];
 };
 
 /** spec 入口（薄包装）：给已构造好的完整 PlotSpec + 数据集表 */
@@ -163,6 +167,11 @@ const withPlotColors = (spec: PlotSpec, colors: Array<string> | undefined): Plot
   ...(colors !== undefined ? { colors } : {}),
 });
 
+const withPlotTheme = (spec: PlotSpec, theme: PlotSpec['theme'] | undefined): PlotSpec => ({
+  ...spec,
+  ...(theme !== undefined ? { theme } : {}),
+});
+
 const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
   for (const [key, child] of Object.entries(value)) {
@@ -213,7 +222,7 @@ const resolvePlotRuntime = (
   // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
-    spec = withPlotColors(props.spec, props.colors);
+    spec = withPlotTheme(withPlotColors(props.spec, props.colors), props.theme);
     datasets = props.data;
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
@@ -227,6 +236,8 @@ const resolvePlotRuntime = (
       model: props.model,
       dataFieldNames: dataFieldNamesOf(props.data),
       colors: props.colors,
+      theme: props.theme,
+      layout: props.layout,
       transforms: props.dataTransforms,
       markTransformShortcuts: props.markTransformShortcuts,
       deferPositionScaleInference: props.model === undefined,

@@ -7,7 +7,7 @@ import type { PlotSpec } from '../../../src/schemas';
 
 import { applyTransforms } from '../../../src';
 import { defineTransform } from '../../../src';
-import { createPlotLocator } from '../../../src/features';
+import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { readSourceIndex, tagSourceIndex } from '../../../src/pipeline/provenance';
 import { coerceValue, normalizeRows, resolveFieldPath } from '../../../src/providers';

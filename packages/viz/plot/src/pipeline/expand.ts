@@ -14,12 +14,12 @@ import type {
   CoordinateFrame,
   DimensionRole,
   FieldFormatDefinition,
+  PositionScale,
   ResolveField,
   ResolveLabel,
   TickSet,
   TransformContext,
 } from '../contract';
-import type { LegendEntry, LegendInput } from '../features';
 import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
@@ -38,11 +38,12 @@ import type {
   ScaleOperation,
   TransformOperation,
 } from '../schemas';
+import type { LegendEntry, LegendInput } from './guide';
 import type { LegendReserve, Margins, Rect } from './layout';
 import type { DatumIdRegistrar, ProvenanceContext } from './provenance';
 
 import { isBuiltinScaleOperation } from '../contract';
-import { lowerCustomAxis, lowerGuide, lowerLegend } from '../features';
+import { resolveAxisGuideTokens, resolveLegendGuideTokens, resolvePlotTheme } from '../providers';
 import {
   applyFieldResolver,
   applyTransforms,
@@ -54,9 +55,8 @@ import {
   channelValue,
   collectFormatFields,
   createPositionChannelDefinitions,
-  DEFAULT_PLOT_COLORS,
-  DEFAULT_TICK_COUNT,
   DEFAULT_TRANSFORM_CONTEXT,
+  defaultOriginAxisTickSideOf,
   deriveScale,
   lowerMark,
   makeColorSchemeResolver,
@@ -68,6 +68,7 @@ import {
   resolveFieldPath,
   resolveFieldTypes,
   resolveFormatRegistry,
+  resolveGuideTicks,
   resolveIntervalBound,
   resolveLinearScale,
   resolveMarkChannels,
@@ -81,6 +82,7 @@ import {
   scaleTicks,
   validateBoundData,
 } from '../providers';
+import { LegendSymbolFit } from '../schemas';
 import {
   AxisGridApplyTo,
   FieldOrderMode,
@@ -89,12 +91,15 @@ import {
   PathClosureKind,
   PlotFieldType,
   PlotGuide,
+  PlotLayerZIndex,
   PlotMark,
   PlotScale,
   PlotSpecSchema,
 } from '../schemas';
 import { createAnchorRegistry } from './anchors';
-import { DEFAULT_FONT_SIZE } from './layout';
+import { lowerPlotLabels, resolveLabelReserve } from './decoration-layout';
+import { lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
+import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from './layout';
 import { createDatumIdRegistrar, rootMeta, slug, tagSourceIndex } from './provenance';
 import { collectSourceFields } from './source-fields';
 
@@ -158,10 +163,30 @@ const intervalProportionalAxisTicks = (
   return values.length > 0 ? { values, labels } : undefined;
 };
 
-const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
-  const colors = node.colors ?? DEFAULT_PLOT_COLORS;
+const defaultColorOf = (colors: ReadonlyArray<string>, markIndex: number): string => {
   return colors[markIndex % colors.length];
 };
+
+const plotBackgroundNode = (
+  width: number,
+  height: number,
+  fill: string | undefined,
+): IRNode | null =>
+  fill === undefined
+    ? null
+    : {
+        type: 'node',
+        position: [width / 2, height / 2],
+        shape: 'rectangle',
+        minimumSize: { width, height },
+        padding: 0,
+        strokeWidth: 0,
+        fill,
+        zIndex: PlotLayerZIndex.Background,
+      };
+
+const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
+  child.type === 'coordinate' ? child : { ...child, zIndex };
 
 export type MarkDataView = {
   mark: MarkOperation;
@@ -337,6 +362,9 @@ const axisGapKeyOf = (guide: AxisGuide): string | null => {
   const placement = guide.placement;
   if (placement === undefined || placement.kind === 'auto') return null;
   if (placement.kind === 'side') return `side:${placement.side}`;
+  if (placement.kind === 'origin') {
+    return `${guide.dimension}:origin:${String(placement.origin ?? 0)}:${placement.tickSide ?? defaultOriginAxisTickSideOf(guide.dimension)}`;
+  }
   return `edge:${placement.edge}`;
 };
 
@@ -349,8 +377,8 @@ const withAxisGapOffsets = (guides: ReadonlyArray<Guide>, axisGap: number | unde
     if (key === null) return guide;
     const index = counts.get(key) ?? 0;
     counts.set(key, index + 1);
-    if (index === 0 && (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge')) return guide;
-    if (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge') {
+    if (index === 0 && (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin')) return guide;
+    if (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin') {
       return {
         ...guide,
         placement: {
@@ -369,7 +397,7 @@ const withoutAxisGrid = (guides: ReadonlyArray<Guide>): Array<Guide> =>
 const withEnabledAxisGrid = (guide: AxisGuide, coordinateView: string | undefined): AxisGuide => ({
   ...guide,
   ...(coordinateView !== undefined ? { coordinateView } : {}),
-  grid: true,
+  grid: guide.grid === undefined || guide.grid === false ? true : guide.grid,
 });
 
 const mergeCompositionMargin = (
@@ -688,9 +716,6 @@ const assertRequiredPositionChannels = (
 };
 
 /** 默认整图尺寸（user units）；尺寸是渲染选项、不进 IR */
-const DEFAULT_WIDTH = 480;
-const DEFAULT_HEIGHT = 300;
-
 /** lowerPlots 运行时选项：整图尺寸 + label 字号 + margin + provenance 开关（均不进 IR） */
 export type LowerPlotsOptions = {
   /** 整图宽（user units），默认 480 */
@@ -804,6 +829,8 @@ export type ResolveFrameParams = {
   labelGap?: number;
   /** 逐边覆盖自动估算的 margin */
   margin?: Partial<Margins>;
+  /** decoration / layout 触发的自动预留，叠加到坐标系自动 margin。 */
+  layoutReserve?: Partial<Margins>;
   /** overlay scope 共享 target scope 的 plotArea；省略时由坐标系自行计算。 */
   plotAreaOverride?: Rect;
   /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band。 */
@@ -834,6 +861,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     fontSize,
     labelGap,
     margin,
+    layoutReserve,
     plotAreaOverride,
     roleRangeOverrides,
     provenance,
@@ -1057,6 +1085,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     fontSize,
     ...(labelGap !== undefined ? { labelGap } : {}),
     ...(margin !== undefined ? { margin } : {}),
+    ...(layoutReserve !== undefined ? { layoutReserve } : {}),
     legendReserve,
     ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
     ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
@@ -1096,9 +1125,11 @@ const collectChannelDescriptors = (
     fieldTypes: PlotFieldTypeMap;
     scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
     resolveColorScheme: (name: string) => (t: number) => string;
+    palette: ReturnType<typeof resolvePlotTheme>['palette'];
   },
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   markRegistry: ReadonlyMap<string, AnyMarkDefinition>,
+  defaultColor: string,
   markDataViews?: ReadonlyArray<MarkDataView>,
 ): Array<ScaleDescriptor> => {
   const out: Array<ScaleDescriptor> = [];
@@ -1110,7 +1141,7 @@ const collectChannelDescriptors = (
       view.mark,
       { ...channelCtx, rows: view.rows },
       channelRegistry,
-      DEFAULT_PLOT_COLORS[0],
+      defaultColor,
       channelKindsForMark(view.mark, markRegistry),
     );
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
@@ -1171,6 +1202,39 @@ const niceNumericTicks = (
   }));
 };
 
+const legendRampTickScale = (
+  domain: readonly [number, number],
+  fieldType: PlotFieldTypeValue | undefined,
+): PositionScale => {
+  const scale = resolveLinearScale({ domain: [domain[0], domain[1]] }, [], [0, 1]);
+  return {
+    coordinate: value => scale(Number(value)),
+    domain: () => [domain[0], domain[1]],
+    bandwidth: 0,
+    ticks: count => scaleTicks(scale, count),
+    tickKind: fieldType === PlotFieldType.Temporal ? 'time' : 'number',
+    range: () => [0, 1],
+    setRange: () => {},
+  };
+};
+
+const legendRampTicks = (
+  descriptor: ScaleDescriptor,
+  guide: LegendGuide,
+  domain: readonly [number, number],
+): Array<{ offset: number; label: string }> => {
+  const scale = legendRampTickScale(domain, descriptor.fieldType);
+  const ticks = resolveGuideTicks(scale, guide.ticks, guide.tickLabels === false ? undefined : guide.tickLabels);
+  const span = domain[1] - domain[0];
+  return ticks.values.map((value, index) => {
+    const numeric = Number(value);
+    return {
+      offset: span === 0 ? 0.5 : (numeric - domain[0]) / span,
+      label: ticks.labels[index],
+    };
+  });
+};
+
 /** legend 专用 sqrt 半径映射：domain [lo, hi]（sqrt 感知）→ range [rMin, rMax]，与 mark size resolver 同核 */
 const resolveSqrtForLegend = (
   domain: readonly [number, number],
@@ -1197,6 +1261,8 @@ type LegendBaseInput = {
   fontSize: number;
   band: Rect;
   id: string;
+  zIndex: number;
+  style: LegendInput['style'];
 };
 
 /**
@@ -1229,12 +1295,7 @@ const resolveColorLegend = (
       const t = index / (STOP_COUNT - 1);
       return { offset: t, color: resolution.of(lo + (hi - lo) * t) ?? '' };
     });
-    const ticks = showLabels
-      ? niceNumericTicks([lo, hi], guide.tickCount ?? DEFAULT_TICK_COUNT).map(tick => ({
-          offset: tick.offset,
-          label: tick.label,
-        }))
-      : [];
+    const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
     return { ...baseInput, form: 'ramp', title, entries: [], ramp: { stops, ticks } };
   }
 
@@ -1352,6 +1413,7 @@ const buildLegendLayers = (
   fontSize: number,
   bands: Array<Rect>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
+  resolvedTheme: ReturnType<typeof resolvePlotTheme>,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return legendGuides.map((guide, legendIndex): IRScope => {
@@ -1359,6 +1421,7 @@ const buildLegendLayers = (
     const orient =
       guide.orient ?? (guide.position === 'top' || guide.position === 'bottom' ? 'horizontal' : 'vertical');
     const id = legendGuides.length > 1 ? `legend.${guide.channel}.${legendIndex}` : `legend.${guide.channel}`;
+    const style = resolveLegendGuideTokens(resolvedTheme, guide.style);
     const baseInput: LegendBaseInput = {
       channel: guide.channel,
       position: guide.position ?? 'right',
@@ -1366,6 +1429,8 @@ const buildLegendLayers = (
       fontSize,
       band,
       id,
+      zIndex: guide.layer?.zIndex ?? PlotLayerZIndex.Legend,
+      style,
     };
     const showLabels = guide.tickLabels !== false;
     const descriptor = selectLegendDescriptor(guide, channelDescriptors, scaleByName, scaleRegistry);
@@ -1391,26 +1456,35 @@ const buildLegendLayers = (
       const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({
         label: showLabels ? String(category) : '',
         shape: String(descriptor.range[index]),
+        symbolSize: style.symbolSize,
         color: 'currentColor',
       }));
       return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
     }
     if (guide.channel === 'size') {
       const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
-      const ticks = niceNumericTicks([lo, hi], guide.tickCount ?? 3).filter(tick => tick.value > 0);
+      const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3).filter(tick => tick.value > 0);
       const reps = ticks.length > 0 ? ticks : [{ value: hi, offset: 1, label: String(hi) }];
       // 半径据 descriptor range（与 mark 实绘同源）线性插值（sqrt domain→radius）
       const [rMin, rMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
       const radiusScale = resolveSqrtForLegend([lo, hi], [rMin, rMax]);
+      const symbolRadiusLimit = style.symbolSize / Math.SQRT2;
+      const fitScale =
+        style.symbolFit === LegendSymbolFit.Fit && Number.isFinite(rMax) && rMax > 0
+          ? Math.min(1, symbolRadiusLimit / rMax)
+          : 1;
       const entries: Array<LegendEntry> = reps.map(tick => ({
         label: showLabels ? tick.label : '',
-        radius: radiusScale(tick.value),
+        radius:
+          (style.symbolFit === LegendSymbolFit.Fit
+            ? Math.min(radiusScale(tick.value) * fitScale, symbolRadiusLimit)
+            : radiusScale(tick.value)) * style.symbolScale,
       }));
       return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
     }
     // opacity：梯度透明度块（nice 几档 + 透明度）
     const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
-    const ticks = niceNumericTicks([lo, hi], guide.tickCount ?? 3);
+    const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3);
     const [oMin, oMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
     const span = hi - lo;
     const entries: Array<LegendEntry> = ticks.map(tick => {
@@ -1527,8 +1601,8 @@ export const prepareRows = (
  */
 const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
-  const width = node.width ?? options.width ?? DEFAULT_WIDTH;
-  const height = node.height ?? options.height ?? DEFAULT_HEIGHT;
+  const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
+  const height = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
   // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
   if (!Number.isFinite(width) || width <= 0) {
     throw new Error(`lowerPlots: width must be a positive finite number, got ${width}`);
@@ -1596,7 +1670,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     hasFacets: compositionFacets.length > 0,
     hasScaffolds: compositionScaffolds.length > 0,
   };
-  const allGuides = node.guides ?? [];
+  const resolvedTheme = resolvePlotTheme(node.theme, node.colors);
+  const labelReserve = resolveLabelReserve({
+    layout: node.layout,
+    labels: node.labels ?? [],
+    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    textStyle: resolvedTheme.labelText,
+  });
+  const scopedLabelReserve = node.composition === undefined ? labelReserve : undefined;
+  const allGuides: Array<Guide> = (node.guides ?? []).map(guide =>
+    isAxisGuide(guide) ? resolveAxisGuideTokens(resolvedTheme, guide) : guide,
+  );
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
   const coordinateScopes = resolveCoordinateScopeRegistry(node);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
@@ -1897,6 +1981,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       height,
       fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
       margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
+      ...(scopedLabelReserve !== undefined ? { layoutReserve: scopedLabelReserve } : {}),
       labelGap: scopedLayout?.labelGap,
       ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
       ...(scaffoldFrame !== undefined && (scaffold?.frame ?? 'shared') === 'shared'
@@ -1948,7 +2033,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const axisLayers = scopedFrames.flatMap(scopeFrame => scopeFrame.axisLayers);
   const plotArea = scopedFrames[0]?.plotArea ?? { x: 0, y: 0, width, height };
 
-  const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme };
+  const channelCtx = { node, rows, fieldTypes, scaleRegistry, resolveColorScheme, palette: resolvedTheme.palette };
   // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
   const channelRegistry = resolveChannelRegistry({
     custom: options.channelDefinitions,
@@ -2015,6 +2100,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
+        zIndex: PlotLayerZIndex.FacetLabel,
         meta: {
           source: 'plot',
           layer: 'facetLabel',
@@ -2204,7 +2290,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
               mark,
               { ...channelCtx, rows: markRows },
               channelRegistry,
-              defaultColorOf(node, markIndex),
+              defaultColorOf(resolvedTheme.palette.series, markIndex),
               channelKindsForMark(mark, markRegistry),
             ),
             {
@@ -2248,7 +2334,22 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     });
 
     anchorRegistry.assertResolved();
-    const children: Array<IRChild> = [...panelScopes, ...facetLabelScopes];
+    const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
+    const labelLayers = lowerPlotLabels({
+      layout: node.layout,
+      labels: node.labels ?? [],
+      width,
+      height,
+      plotArea: { x: 0, y: 0, width, height },
+      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+      textStyle: resolvedTheme.labelText,
+    });
+    const children: Array<IRChild> = [
+      ...(backgroundNode ? [backgroundNode] : []),
+      ...panelScopes,
+      ...facetLabelScopes,
+      ...labelLayers,
+    ];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
       return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
@@ -2289,7 +2390,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
           mark,
           { ...channelCtx, rows: markRows },
           channelRegistry,
-          defaultColorOf(node, markIndex),
+          defaultColorOf(resolvedTheme.palette.series, markIndex),
           channelKindsForMark(mark, markRegistry),
         ),
         {
@@ -2303,10 +2404,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (layer === null) return null;
       const scope = scopeById.get(coordinateScopeId);
       const scopedLayer = scope === undefined ? layer : withScopeContext(layer, scopeContextOf(scope));
+      const semanticLayer = withLayerZIndex(scopedLayer, mark.layer?.zIndex ?? PlotLayerZIndex.Mark);
       const declarationOrder = scopeOrderById.get(coordinateScopeId) ?? markIndex;
       const zIndex =
         scope?.placement?.kind === 'overlay' ? (scope.placement.zIndex ?? declarationOrder) : declarationOrder;
-      return { layer: scopedLayer, markIndex, zIndex };
+      return { layer: semanticLayer, markIndex, zIndex };
     })
     .filter((entry): entry is { layer: IRChild; markIndex: number; zIndex: number } => entry !== null);
   const markLayers: Array<IRChild> = markLayerEntries
@@ -2324,6 +2426,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       channelCtx,
       channelRegistry,
       markRegistry,
+      defaultColorOf(resolvedTheme.palette.series, 0),
       markDataViews,
     );
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
@@ -2335,12 +2438,30 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         options.fontSize ?? DEFAULT_FONT_SIZE,
         bands,
         scaleRegistry,
+        resolvedTheme,
       ),
     );
   }
+  const labelLayers = lowerPlotLabels({
+    layout: node.layout,
+    labels: node.labels ?? [],
+    width,
+    height,
+    plotArea,
+    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    textStyle: resolvedTheme.labelText,
+  });
 
-  // z-order：所有网格层 → marks → 所有轴层 → legend（网格垫底、坐标轴压顶不被数据盖、legend 在预留带最上）
-  const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers, ...legendLayers];
+  // z-order：所有网格层 → marks → 所有轴层 → plot labels → legend（legend 在预留带最上）
+  const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
+  const children: Array<IRChild> = [
+    ...(backgroundNode ? [backgroundNode] : []),
+    ...gridLayers,
+    ...markLayers,
+    ...axisLayers,
+    ...labelLayers,
+    ...legendLayers,
+  ];
 
   // 无 id：root = localNamespace 内容 scope（可带 provenance meta）。
   if (node.id === undefined) {
