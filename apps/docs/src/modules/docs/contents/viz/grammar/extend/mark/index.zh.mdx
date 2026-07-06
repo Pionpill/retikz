@@ -3,7 +3,7 @@ title: 自定义图元
 description: 自定义图元把下沉函数留在运行时：IR 只保存自定义 type 与 JSON 配置，字段收集与 lower 由 defineMark 提供，经 markDefinitions 注入。
 ---
 
-内置图元之外，可以用 `defineMark` 注册自己的图元。它和坐标系的 `defineCoordinate`、比例尺的 `defineScale`、变换的 `defineTransform` 同一套范式：写进 spec 的仍然只是 JSON operation，例如 `{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }`；真正的字段收集和下沉函数放在 runtime definition 里，再通过 `<Plot markDefinitions={[...]}>` 注入。
+内置图元之外，可以用 `defineMark` 注册自己的图元。它和坐标系的 `defineCoordinate`、比例尺的 `defineScale` 同一套运行时 definition 范式：写进 spec 的仍然只是 JSON operation，例如 `{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }`；真正的字段收集和下沉函数放在 runtime definition 里，再通过 `<Plot markDefinitions={[...]}>` 注入。
 
 自定义图元的 `type` 是任意非内置判别串；`encoding` 复用和内置图元同一套通道。常见坐标系用 `x` / `y` / `color`，自定义坐标系也可以声明自己的位置 role。位置通道会参与 scale 推断，它和内置图元共享同一坐标系和比例尺。
 
@@ -54,4 +54,4 @@ description: 自定义图元把下沉函数留在运行时：IR 只保存自定�
 
 - [坐标系](/viz/grammar/coordinate) —— `frame.projectRoles` / `frame.projectCell` 如何解释位置角色
 - [比例尺](/viz/grammar/scale) —— 字段通道如何先解析成 scale，再交给图元 lowering
-- [自定义变换](/viz/grammar/extend/transform) —— 同款 `defineXxx` + `options` 注入范式
+- [共享变换](/viz/data/transform) —— data 层的 transform definition 与统计子能力

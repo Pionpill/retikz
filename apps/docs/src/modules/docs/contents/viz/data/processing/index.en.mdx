@@ -3,7 +3,7 @@ title: Processing
 description: Get real-world data in and trusted — use fieldMap for renamed fields, format or resolveField for custom parsing, and validateData / invalid for dirty data.
 ---
 
-[Data Model](/viz/grammar/data/model) declares what the fields **are**; this page is about getting real-world data **in** — swapping sources, parsing, and validating. `fieldMap` and declarative `format` rely on a model for the logical field contract; `resolveField`, `validateData`, and `invalid` can also work with inferred fields. In practice, declare a model when you want one config to stay reusable across several data sources.
+[Data Model](/viz/data/model) declares what the fields **are**; this page is about getting real-world data **in** — swapping sources, parsing, and validating. `fieldMap` and declarative `format` rely on a model for the logical field contract; `resolveField`, `validateData`, and `invalid` can also work with inferred fields. In practice, declare a model when you want one config to stay reusable across several data sources.
 
 ## Swapping data sources
 
@@ -103,7 +103,15 @@ Rules:
 
 ### Custom Parsing
 
-Beyond the built-in `format` vocabulary, common reusable formats can be registered with `defineFieldFormat`; one-off parsing or data-source branching goes through `resolveField`. See [Custom Data](/viz/grammar/extend/data) for the full contracts, examples, and choosing guide.
+Beyond the built-in `format` vocabulary, common reusable formats can be registered with `defineFieldFormat`; one-off parsing or data-source branching goes through `resolveField`.
+
+Reusable formats still enter the model as strings. The `wan` example below parses the Chinese reporting unit “万”; the chart config stores only `format: 'wan'`, while the runtime definition provides the parser.
+
+<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+
+Use `resolveField` when parsing needs per-source branches, multiple raw fields, or one-off fallback logic. It is a runtime function and does not enter IR; reuse it in application code instead of expecting JSON config to persist it.
+
+<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
 
 Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and custom parsing only affect preparation; the mark still says `y="revenue"`.
 

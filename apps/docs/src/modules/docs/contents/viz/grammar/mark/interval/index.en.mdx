@@ -75,7 +75,7 @@ Without `color`, the same double-band interval draws a fixed grid. It is still I
 
 ### Mark-Local Transforms
 
-IntervalMark can also derive the rows it needs through its own `transform`. The gray points show raw store revenue, while the bar layer summarizes by `segment`, creates `totalRevenue`, and draws bars from the three transformed rows.
+IntervalMark can also derive fields through its own `transform`. The gray points show raw store revenue, while the bar layer runs `derive-interval` only inside this mark and turns each `revenue` value into an interval from 0 to that value.
 
 <ComponentPreview name="bar-transform" sourceFiles={['bar-transform.data.ts']} />
 

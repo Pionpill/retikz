@@ -1,95 +1,39 @@
 ---
-title: Summaries & Selection
-description: Summary and selection transforms change data granularity by producing bins, group statistic rows, or representative source rows.
+title: Binning & Stat Layers
+description: Binning and stat layers show how plot cuts continuous fields into histogram bins and composes statistical graphics from ordinary marks.
 ---
 
-These transforms generate new rows from detail data. `bin` and `summarize` emit statistic rows, while `select` keeps representative original rows. Use them when the rows drawn by a mark should be prepared before rendering.
+This page covers only plot-registered statistical drawing capabilities. General group summaries and representative-row selection live under [Shared Transforms](/viz/data/transform): `summarize` generates grouped statistic rows, and `select` preserves representative original rows.
 
-| kind        | Output rows                         | Typical use                           |
-| ----------- | ----------------------------------- | ------------------------------------- |
-| `bin`       | One row per interval                | Histograms and distribution overviews |
-| `summarize` | One row per group                   | Grouped bars, mean lines, boxplots    |
-| `select`    | One or more original rows per group | Extremes, top-N, nth row in a group   |
-| `density`   | Sampled rows per group              | Density curves and density areas      |
-| `smooth`    | Predicted sampled rows per group    | Trend lines and regression paths      |
+| capability | output rows | common use |
+| ---------- | ----------- | ---------- |
+| `bin`      | one row per interval | Histograms, distribution overviews |
+| Stat-layer composition | Several marks consume statistic fields | Boxplots, outlier points, statistical bands |
 
-## Bin
+## bin
 
-`bin` partitions a continuous field into intervals and emits one row per interval. Each output row contains lower and upper bin edges plus metric fields; the default metric is `{ op: 'count', as: 'binCount' }`.
+`bin` cuts a continuous field into intervals and outputs one row per bin. Output rows include the bin lower bound, upper bound, and metric fields. The default metric is `{ op: 'count', as: 'binCount' }`.
 
 <ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
 
-`IntervalMark` reads `x0` / `x1` from the bin edges to draw contiguous bars on a continuous x scale. `y` reads `binCount` or another metric field for height.
+`IntervalMark` reads `x0` / `x1` for bin edges, drawing adjacent histogram bars on a continuous x axis. `y` reads `binCount` or a custom metric field for height.
 
-| prop                      | Type                | Default               | Notes                                                                  |
-| ------------------------- | ------------------- | --------------------- | ---------------------------------------------------------------------- |
-| `field`                   | `string`            | —                     | Continuous source field to bin                                         |
-| `count`                   | `number?`           | `10`                  | Target bin count; mutually exclusive with `step` / `thresholds`        |
-| `step`                    | `number?`           | —                     | Fixed bin width; mutually exclusive with `count` / `thresholds`        |
-| `thresholds`              | `Array<number>?`    | —                     | Explicit interior boundaries; mutually exclusive with `count` / `step` |
-| `extent`                  | `[number, number]?` | Observed min/max      | Override the binning domain                                            |
-| `metrics`                 | `Array<Reducer>?`   | `count → binCount`    | Per-bin statistics                                                     |
-| `startField` / `endField` | `string?`           | `binStart` / `binEnd` | Output edge fields                                                     |
+| prop                      | type                | default               | description                                  |
+| ------------------------- | ------------------- | --------------------- | -------------------------------------------- |
+| `field`                   | `string`            | —                     | Continuous source field to bin               |
+| `count`                   | `number?`           | `10`                  | Target bin count; mutually exclusive with `step` / `thresholds` |
+| `step`                    | `number?`           | —                     | Fixed bin width; mutually exclusive with `count` / `thresholds` |
+| `thresholds`              | `Array<number>?`    | —                     | Explicit internal boundaries; mutually exclusive with `count` / `step` |
+| `extent`                  | `[number, number]?` | observed min/max      | Override the binning domain                  |
+| `metrics`                 | `Array<Reducer>?`   | `count -> binCount`   | Per-bin statistics, reusing data reducers    |
+| `startField` / `endField` | `string?`           | `binStart` / `binEnd` | Output edge field names                      |
 
-## Summarize
+## Stat-Layer Composition
 
-`summarize` groups by `groupBy` and uses `metrics` to reduce each group into one row. Output rows keep the group keys, and every reducer must name its output with `as`.
+Statistical transforms produce rows; ordinary marks still draw the graphic. A boxplot is a composition: `quantile-band` generates box, median, and whisker fields, while `outside-quantile-band` keeps outlier original points.
 
-<ComponentPreview name="transform-summarize" sourceFiles={['transform-summarize.data.ts']} />
+This composition uses data shared transforms to prepare statistic rows, then lets ordinary plot marks consume them. The full example lives under [Shared Transforms](/viz/data/transform#reducers-and-selectors); this page only explains how plot draws those statistic fields as layers.
 
-`count` does not need `field`; `sum` / `mean` / `median` / `min` / `max` / `quantile` / `quantile-band` do. Omitting `groupBy` or passing an empty array means one global group. See [Statistic Operations](/viz/grammar/transform/statistics) for the full reducer list.
+## Relationship To Shared Transforms
 
-| prop      | Type             | Default          | Notes                                           |
-| --------- | ---------------- | ---------------- | ----------------------------------------------- |
-| `groupBy` | `Array<string>?` | One global group | Grouping keys; composite keys are supported     |
-| `metrics` | `Array<Reducer>` | —                | Group reducers; every reducer must provide `as` |
-
-```tsx
-<Transform
-  kind="summarize"
-  groupBy={['region']}
-  metrics={[
-    { op: 'sum', field: 'revenue', as: 'total' },
-    { op: 'median', field: 'revenue', as: 'median' },
-    { op: 'count', as: 'orders' },
-  ]}
-/>
-```
-
-## Statistic Geometry Composition
-
-Statistic transforms prepare rows; ordinary marks still draw the geometry. A boxplot is a composition: `quantile-band` generates fields for the box, median, and whiskers, while `outside-quantile-band` keeps source rows outside the interval.
-
-<ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
-
-There is no dedicated `BoxPlotMark` here. The box uses `IntervalMark`, the median and whiskers use `ReferenceMark`, and outside points use `PointMark`. The same rule applies to `density` and `smooth`: generate sampled rows first, then let `PathMark` consume them.
-
-## Select
-
-`select` runs a selector per group and emits the selected original rows. It does not reduce values into a new statistic, so fields such as city names, ids, and anchors remain available on the selected rows.
-
-<ComponentPreview name="transform-select" sourceFiles={['transform-select.data.ts']} />
-
-Built-in selectors include `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band`. `rankAs` can write the selected one-based rank into the output row. See [Statistic Operations](/viz/grammar/transform/statistics) for the full selector list.
-
-| prop       | Type             | Default          | Notes                             |
-| ---------- | ---------------- | ---------------- | --------------------------------- |
-| `groupBy`  | `Array<string>?` | One global group | Grouping keys                     |
-| `selector` | `Selector`       | —                | Representative row rule           |
-| `rankAs`   | `string?`        | —                | Optional field for one-based rank |
-
-```tsx
-<Transform kind="select" groupBy={['region']} selector={{ op: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
-```
-
-## Density
-
-`density` turns one-dimensional continuous samples into KDE sample rows, emitting `xAs` and `densityAs` fields. It is meant to feed `PathMark`: a normal path draws a density curve, while `closure={{ kind: 'baseline' }}` plus `fill` draws a density area.
-
-See [Statistic Operations](/viz/grammar/transform/statistics) for the full field table and demo.
-
-## Smooth
-
-`smooth` generates sampled trend-line rows from `(x, y)` samples. The first method is `{ kind: 'linear' }`. It is meant to feed `PathMark` for regression paths; keep raw scatter points in a separate `PointMark` layer.
-
-See [Statistic Operations](/viz/grammar/transform/statistics) for the full field table and demo.
+`bin` is plot-registered because it targets histogram interval fields and statistical drawing composition, but its `metrics` reuse data reducers. For ordinary grouped statistic rows, use [Shared Transforms / summarize](/viz/data/transform#summarize). For representative original rows, use [Shared Transforms / select](/viz/data/transform#select).

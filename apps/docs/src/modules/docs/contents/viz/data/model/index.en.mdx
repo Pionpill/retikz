@@ -40,7 +40,7 @@ Customize `model` when you need to override inference, parse non-default storage
 | -------- | ------------------------------------------------------------------------------------------------------------- |
 | `name`   | logical field name, also the name referenced by marks / transforms                                            |
 | `type`   | measurement type; omitted fields are inferred from data                                                       |
-| `format` | declarative parsing format, such as `slashDate` / `percent`; see [Processing](/viz/grammar/data/processing) |
+| `format` | declarative parsing format, such as `slashDate` / `percent`; see [Processing](/viz/data/processing) |
 | `order`  | category order for categorical fields                                                                         |
 
 The side-by-side demo below uses one funnel dataset. The left chart has no `model`, so numeric `stage` is inferred as a continuous x axis. The right chart declares `stage` as categorical, and parses percent strings into continuous values with `format: 'percent'`.
@@ -155,4 +155,4 @@ The fields bound to one position channel must share a single type; omitting the 
 
 ## Next Step
 
-The model declares the field contract. Real-world data still brings renamed fields, date / percent storage formats, and dirty values that should fail loudly. Continue with [Processing](/viz/grammar/data/processing) for `fieldMap`, `format`, `resolveField`, `validateData`, and `invalid`.
+The model declares the field contract. Real-world data still brings renamed fields, date / percent storage formats, and dirty values that should fail loudly. Continue with [Processing](/viz/data/processing) for `fieldMap`, `format`, `resolveField`, `validateData`, and `invalid`.

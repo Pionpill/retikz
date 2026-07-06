@@ -43,7 +43,7 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 
 ### 图元局部变换
 
-`transform` 可以直接写在当前 PointMark 上。下面的灰点仍然使用原始行，彩色气泡层先按 `region` 聚合出 `totalOrders`，再把变换后的字段绑定到 `y` / `size`。
+`transform` 可以直接写在当前 PointMark 上。下面的灰点仍然使用原始行，彩色气泡层只在当前图元内执行 `jitter`，把重叠的 `orders` 点在 y 方向轻微抖开。
 
 <ComponentPreview name="point-transform" sourceFiles={['point-transform.data.ts']} />
 

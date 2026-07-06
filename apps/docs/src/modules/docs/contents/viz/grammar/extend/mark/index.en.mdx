@@ -3,7 +3,7 @@ title: Custom Marks
 description: A custom mark keeps its lowering function at runtime — the IR stores only a custom type and JSON config; field collection and lower come from defineMark, injected via markDefinitions.
 ---
 
-Beyond the built-in marks, define your own glyph with `defineMark`. It follows the same paradigm as `defineCoordinate`, `defineScale`, and `defineTransform`: the spec still stores only a JSON operation, such as `{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }`; the field collection and lowering function live in a runtime definition injected through `<Plot markDefinitions={[...]}>`.
+Beyond the built-in marks, define your own glyph with `defineMark`. It follows the same runtime-definition paradigm as `defineCoordinate` and `defineScale`: the spec still stores only a JSON operation, such as `{ type: 'diamond', encoding: { x: { field: 'month' }, y: { field: 'sales' } } }`; the field collection and lowering function live in a runtime definition injected through `<Plot markDefinitions={[...]}>`.
 
 A custom mark's `type` is any non-built-in discriminator; its `encoding` reuses the same channel shape as built-in marks. Common coordinates use `x` / `y` / `color`, and custom coordinates may declare their own position roles. Position channels feed scale inference, so the custom mark shares the same coordinate system and scales as built-in marks.
 
@@ -54,4 +54,4 @@ Built-in and custom marks dispatch through the same `resolveMarkRegistry`: built
 
 - [Coordinate](/viz/grammar/coordinate) — how `frame.projectRoles` / `frame.projectCell` interpret position roles
 - [Scale](/viz/grammar/scale) — how field channels resolve into a scale before mark lowering
-- [Custom Transforms](/viz/grammar/extend/transform) — the same `defineXxx` + `options` injection paradigm
+- [Shared Transforms](/viz/data/transform) — data-layer transform definitions and statistical sub-capabilities

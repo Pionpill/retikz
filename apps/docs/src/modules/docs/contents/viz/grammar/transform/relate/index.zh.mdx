@@ -19,7 +19,7 @@ description: relate 会从每个分组中选择 source 和 target 行，并投�
 <ComponentPreview name="transform-relate" sourceFiles={['transform-relate.data.ts']} />
 
 `relate` 的输入仍然是普通数据行。demo 中 `PathMark` 和 `PointMark` 消费原始行；`RelationMark` 的局部 transform 只为当前关系层生成一行配对数据。
-source / target 使用的 selector 与 `select` 共用同一套[统计子算子](/viz/grammar/transform/statistics)，因此也可以选择 top-N、排序后的首尾行或自定义代表行。
+source / target 使用的 selector 与 `select` 共用同一套[共享变换统计子能力](/viz/data/transform#reducer-与-selector)，因此也可以选择 top-N、排序后的首尾行或自定义代表行。
 
 | prop              | 类型                    | 默认值   | 说明                           |
 | ----------------- | ----------------------- | -------- | ------------------------------ |

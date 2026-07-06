@@ -76,7 +76,7 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 ### 图元局部变换
 
-IntervalMark 也可以直接通过自己的 `transform` 获取派生数据。下面的灰点展示门店原始收入，柱层先按 `segment` 聚合出 `totalRevenue`，再用聚合后的三行数据画柱。
+IntervalMark 也可以直接通过自己的 `transform` 获取派生字段。下面的灰点展示门店原始收入，柱层只在当前图元内执行 `derive-interval`，把每行 `revenue` 派生成从 0 到收入值的区间。
 
 <ComponentPreview name="bar-transform" sourceFiles={['bar-transform.data.ts']} />
 

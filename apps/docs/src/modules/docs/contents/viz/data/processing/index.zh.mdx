@@ -3,7 +3,7 @@ title: 数据处理
 description: 把真实数据接进来并信得过：字段不同名给 fieldMap，特殊格式用 format 或 resolveField 解析，脏数据用 validateData / invalid 校验。
 ---
 
-[数据模型](/viz/grammar/data/model)声明了字段**是什么**；这页讲怎么把真实世界的数据**接进来**——换源、解析、校验。`fieldMap` 与声明式 `format` 依赖 model 提供逻辑字段契约；`resolveField`、`validateData`、`invalid` 也能配合自动推断使用。实践中，想让配置稳定复用到多份数据源时，仍建议先声明 model。
+[数据模型](/viz/data/model)声明了字段**是什么**；这页讲怎么把真实世界的数据**接进来**——换源、解析、校验。`fieldMap` 与声明式 `format` 依赖 model 提供逻辑字段契约；`resolveField`、`validateData`、`invalid` 也能配合自动推断使用。实践中，想让配置稳定复用到多份数据源时，仍建议先声明 model。
 
 ## 换数据源
 
@@ -103,7 +103,15 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 ### 自定义解析
 
-内置 `format` 词表之外，常见且可复用的格式用 `defineFieldFormat` 注册成具名格式；一次性、按数据源分支的任意解析用 `resolveField`。两者的完整定义契约、示例和选择建议见[自定义数据](/viz/grammar/extend/data)。
+内置 `format` 词表之外，常见且可复用的格式用 `defineFieldFormat` 注册成具名格式；一次性、按数据源分支的任意解析用 `resolveField`。
+
+可复用格式仍然通过字符串进入 model。下面的 `wan` 解析中文报表里常见的“万”单位，图形配置里只保存 `format: 'wan'`，真正的解析函数由运行时 definition 注入。
+
+<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+
+需要按数据源写分支、读取多个原始字段或临时兜底时，用 `resolveField`。它是运行时函数，不进入 IR；适合应用代码里统一复用，不适合随 JSON 配置持久化。
+
+<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
 
 解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和自定义解析都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
 

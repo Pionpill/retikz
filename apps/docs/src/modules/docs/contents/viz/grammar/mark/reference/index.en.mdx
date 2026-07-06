@@ -67,9 +67,9 @@ Add `yTo` and ReferenceMark turns from a line into a filled band. Bands are usua
 
 <ComponentPreview name="rule-per-datum" sourceFiles={['rule-per-datum.data.ts']} />
 
-### Mark-Local Transforms
+### Reference Layers
 
-Field-based ReferenceMark values can also read the rows produced by the current mark's transform. In the example below, the point layer shows raw sample scores, while the reference line layer computes `meanScore` through `transform` and draws that mean line.
+ReferenceMark can be layered with other marks as an independent reference layer. In the example below, the point layer shows raw sample scores, while the reference layer uses constant `y={72}` for a target line. When you need a mean, quantile, or representative row from shared data transforms, start with [Shared Transforms](/viz/data/transform), then bind the produced fields to ReferenceMark.
 
 <ComponentPreview name="rule-transform" sourceFiles={['rule-transform.data.ts']} />
 

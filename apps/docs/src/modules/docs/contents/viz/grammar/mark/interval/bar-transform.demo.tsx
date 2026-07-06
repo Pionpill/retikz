@@ -9,12 +9,10 @@ const Demo: FC = () => (
     <PointMark x="segment" y="revenue" fill="#94a3b8" opacity={0.45} minimumSize={6} />
     <IntervalMark
       x="segment"
-      y="totalRevenue"
+      bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }}
       color="segment"
-      label="segment"
-      transform={[
-        { kind: 'summarize', groupBy: ['segment'], metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] },
-      ]}
+      label="store"
+      transform={[{ kind: 'derive-interval', from: 'revenue', baseline: 0 }]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />
