@@ -17,7 +17,7 @@ import type {
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
+import { CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { EdgeLabelProps } from '../sugar/EdgeLabel';
@@ -565,6 +565,7 @@ const buildPathFromProps = (props: PathProps): IRChild => {
   const path: IRChild = {
     type: 'path',
     ...pickDefined(props, PATH_FIELDS),
+    ...parsePathThickness(props),
   };
   const marks = buildPathMarksFromProps(props);
   if (marks !== undefined) path.marks = marks;

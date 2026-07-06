@@ -2,7 +2,7 @@ import type { z } from 'zod';
 
 import type { ValueOf } from '../../../shared';
 import type { StepSchema } from '../step';
-import type { PathFillRule, PathKind, PathLineCap, PathLineJoin, PathThickness } from './constants';
+import type { PathFillRule, PathKind, PathLineCap, PathLineJoin } from './constants';
 import type { ArrowMarkSchema, PathBaseSchema, PathScaleSchema } from './schema';
 
 /** 路径填充规则关键字类型。 */
@@ -13,9 +13,6 @@ export type PathLineCapValue = ValueOf<typeof PathLineCap>;
 
 /** 路径拐角连接关键字类型。 */
 export type PathLineJoinValue = ValueOf<typeof PathLineJoin>;
-
-/** 路径语义线宽关键字类型。 */
-export type PathThicknessValue = ValueOf<typeof PathThickness>;
 
 /** 路径编译 kind 关键字类型。 */
 export type PathKindValue = ValueOf<typeof PathKind>;

@@ -122,7 +122,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 语义 stroke 档位
 
-`thickness` 是语义化描边档位——`'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'`，编译期映射到具体数值（`thin = 1` 与默认 strokeWidth 对齐）。**显式 `strokeWidth` 始终优先**——`thickness` 仅在 `strokeWidth` 缺省时生效：
+`thickness` 是组件 / builder 层的语义化描边档位糖——`'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'`，生成 IR 前会解析成具体 `strokeWidth`（`thin = 1` 与默认 strokeWidth 对齐）。**显式 `strokeWidth` 始终优先**——`thickness` 仅在 `strokeWidth` 缺省时生效：
 
 <Comparison target="tikz" title="语义 stroke 档位">
 
@@ -254,7 +254,7 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 | `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                               | `'butt'`       | 描边端点形状                                                                                                                                                                                                      |
 | `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                               | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                                                                                                  |
 | `roundedCorners` | `number`（≥0）                                                                                                | —              | 几何圆角半径：把每个 line↔line 内拐角倒成相切圆弧，改路径几何（区别于 `lineJoin`）；非 line 接缝保持尖，逐拐角按段长夹紧；省略 = 尖角                                                                             |
-| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'`                | —              | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先                                                                                                                                                       |
+| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'`                | —              | 组件 / builder 语法糖：生成 IR 前解析成 `strokeWidth`；显式 `strokeWidth` 始终优先                                                                                                                               |
 | `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                                             | —              | 路径级箭头方向（详见 [Arrow](/kernel/components/draw/arrow)）                                                                                                                                                     |
 | `arrowDetail`    | `ArrowDetail` 对象                                                                                            | —              | 箭头视觉详细配置；字段详见 [Arrow](/kernel/components/draw/arrow)                                                                                                                                                 |
 | `fill`           | `string \| PaintSpec`                                                                                         | `'none'`       | 闭合区域填充：任意 CSS 颜色，或 PaintSpec（渐变 / 图案 / 图片）                                                                                                                                                   |

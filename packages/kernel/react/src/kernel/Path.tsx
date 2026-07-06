@@ -1,4 +1,4 @@
-﻿import type { IRArrowDetail, IRPath } from '@retikz/core';
+﻿import type { IRArrowDetail, IRPath, PathThicknessValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from './event-props';
@@ -38,8 +38,8 @@ export type PathProps = HydrationEventProps & {
    * @description 对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角
    */
   roundedCorners?: IRPath['roundedCorners'];
-  /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
-  thickness?: IRPath['thickness'];
+  /** 语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；构造 IR 时解析为 `strokeWidth`，显式 `strokeWidth` 始终优先 */
+  thickness?: PathThicknessValue;
   /**
    * 路径级箭头方向
    * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头

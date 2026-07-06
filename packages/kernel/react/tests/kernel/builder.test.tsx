@@ -833,7 +833,7 @@ after`;
       expect(fromSugar).toEqual(fromKernel);
     });
 
-    it('<Draw> 与 <Path> 等价透传 lineCap / lineJoin / thickness / opacity 全套', () => {
+    it('<Draw> 与 <Path> 等价解析 lineCap / lineJoin / thickness / opacity 全套', () => {
       const fromSugar = buildIR(
         <Draw
           way={['A', 'B']}
@@ -852,6 +852,7 @@ after`;
         </Path>,
       );
       expect(fromSugar).toEqual(fromKernel);
+      expect(fromSugar.children[0]).toMatchObject({ strokeWidth: 3 });
     });
 
     it('<Scope> emit IRScope：transforms / id / localNamespace 透传', () => {

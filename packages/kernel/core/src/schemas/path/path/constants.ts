@@ -26,17 +26,6 @@ export const PathLineJoin = {
   Bevel: 'bevel',
 } as const;
 
-/** 路径语义线宽关键字。 */
-export const PathThickness = {
-  UltraThin: 'ultraThin',
-  VeryThin: 'veryThin',
-  Thin: 'thin',
-  Semithick: 'semithick',
-  Thick: 'thick',
-  VeryThick: 'veryThick',
-  UltraThick: 'ultraThick',
-} as const;
-
 /** 路径编译 kind 关键字。 */
 export const PathKind = {
   /** 标准描边路径。 */

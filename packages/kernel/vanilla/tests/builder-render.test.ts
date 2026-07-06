@@ -75,6 +75,19 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
     expect(out).toMatch(/<path[^>]*stroke="url\(#retikz-paint-stroke-paint-1\)"/);
   });
 
+  it('draw-thickness-sugar：thickness 在 builder 层解析为 strokeWidth', () => {
+    const child = draw(
+      [
+        [0, 0],
+        [10, 0],
+      ],
+      { thickness: 'thick' },
+    );
+
+    expect(child).toMatchObject({ type: 'path', strokeWidth: 2 });
+    expect(child).not.toHaveProperty('thickness');
+  });
+
   it('figure-feeds-standalone：mountSvg/renderToSvgString 直接接受 Figure', () => {
     const fig = figure({ width: 120, height: 90 }, [node('a', { position: [0, 0], text: 'A' })]);
     const c = document.createElement('div');

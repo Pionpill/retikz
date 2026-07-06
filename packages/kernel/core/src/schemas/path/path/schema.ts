@@ -6,15 +6,13 @@ import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
 import { ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema, StepSchema } from '../step';
-import { PathFillRule, PathKind, PathLineCap, PathLineJoin, PathThickness } from './constants';
+import { PathFillRule, PathKind, PathLineCap, PathLineJoin } from './constants';
 
 export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');
 
 export const PathLineCapSchema = z.enum(PathLineCap).describe('Path stroke endpoint cap keyword.');
 
 export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke corner join keyword.');
-
-export const PathThicknessSchema = z.enum(PathThickness).describe('Semantic path stroke thickness preset.');
 
 export const PathAnisotropicScaleSchema = z
   .object({
@@ -97,9 +95,6 @@ export const PathBaseSchema = z
       .describe(
         'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
       ),
-    thickness: PathThicknessSchema
-      .optional()
-      .describe('Semantic stroke thickness preset. Used only when `strokeWidth` is omitted.'),
     rotate: AngleDegreesSchema
       .optional()
       .describe(

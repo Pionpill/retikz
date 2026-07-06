@@ -6,8 +6,7 @@ import type {
   ResolvedArrowEndSpec,
   ScenePrimitive,
 } from '../../contract';
-import type { IRPath, IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
-import type { AssertEqual } from '../../shared';
+import type { IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { SegmentSample } from '../../shared/geometry';
 import type { NamespaceStack } from '../namespace';
 import type { PaintResolver } from '../resource';
@@ -53,24 +52,6 @@ const isFinitePoint = (pt: unknown): boolean =>
   Number.isFinite(pt[0]) &&
   typeof pt[1] === 'number' &&
   Number.isFinite(pt[1]);
-
-/**
- * 语义 stroke 档位 → 数值（user units）
- */
-const THICKNESS_TO_WIDTH = {
-  ultraThin: 0.25,
-  veryThin: 0.5,
-  thin: 1,
-  semithick: 1.5,
-  thick: 2,
-  veryThick: 3,
-  ultraThick: 4,
-} as const satisfies Record<NonNullable<IRPath['thickness']>, number>;
-
-/** 类型互锁：语义 stroke 档位必须全部映射到数值宽度。 */
-type _ThicknessCheck = AssertEqual<keyof typeof THICKNESS_TO_WIDTH, NonNullable<IRPath['thickness']>>;
-const _assertThicknessCheck: _ThicknessCheck = true;
-void _assertThicknessCheck;
 
 /** 普通 path emit 所需的编译上下文。 */
 export type EmitPathPrimitiveContext = {
@@ -848,8 +829,7 @@ export const emitPathPrimitive = (
     }
   }
 
-  // strokeWidth 解析。
-  const strokeWidth = path.strokeWidth ?? (path.thickness ? THICKNESS_TO_WIDTH[path.thickness] : 1);
+  const strokeWidth = path.strokeWidth ?? 1;
   const baseProps: PathBaseProps = {
     stroke: resolvePaint(path.stroke) ?? 'currentColor',
     strokeWidth,

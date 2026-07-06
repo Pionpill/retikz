@@ -73,7 +73,6 @@ describe('Draw: 基础展开', () => {
       roundedCorners: 6,
       shadow: 'md',
       blendMode: 'multiply',
-      thickness: 'thick',
       marks: [
         { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
         { pos: 1, mark: { kind: 'arrow', shape: 'stealth' } },
