@@ -1,0 +1,77 @@
+{
+  "name": "@retikz/data",
+  "version": "0.1.0-beta.1",
+  "description": "retikz data layer: JSON-serializable data models, field resolution, and transform pipeline for visualization packages.",
+  "type": "module",
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "tikz",
+    "data",
+    "transform",
+    "visualization"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/viz/data"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "main": "dist/lib/index.cjs",
+    "module": "dist/es/index.js",
+    "types": "dist/lib/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/lib/index.d.ts",
+        "import": "./dist/es/index.js",
+        "require": "./dist/lib/index.cjs",
+        "default": "./dist/es/index.js"
+      }
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "@retikz/core": "workspace:*",
+    "@retikz/math": "workspace:*",
+    "d3-format": "catalog:",
+    "d3-scale": "catalog:",
+    "d3-time-format": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/d3-format": "catalog:",
+    "@types/d3-scale": "catalog:",
+    "@types/d3-time-format": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
+  }
+}
