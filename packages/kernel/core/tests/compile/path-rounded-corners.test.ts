@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IR, ScenePrimitive } from '../../src';
+import type { GroupPrim, IRScene, ScenePrimitive } from '../../src';
 import type { PathPrim } from '../../src/contract';
 import type { IRPath } from '../../src/schemas/path/path';
 
@@ -16,15 +16,15 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   return p;
 };
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
-const path = (...steps: Array<unknown>): IR => scene([{ type: 'path', children: steps as never }]);
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
+const path = (...steps: Array<unknown>): IRScene => scene([{ type: 'path', children: steps as never }]);
 
 /** 带 path 级字段（roundedCorners / marks / rotate / scale）的 path IR */
-const pathWith = (config: Record<string, unknown>, ...steps: Array<unknown>): IR =>
+const pathWith = (config: Record<string, unknown>, ...steps: Array<unknown>): IRScene =>
   scene([{ type: 'path', ...config, children: steps as never }]);
 
 /** 取编译后首个 PathPrim 的 commands 的 kind 序列（结构化断言用） */
-const kinds = (ir: IR): Array<string> => findPathPrim(compileToScene(ir, silent).primitives).commands.map(c => c.kind);
+const kinds = (ir: IRScene): Array<string> => findPathPrim(compileToScene(ir, silent).primitives).commands.map(c => c.kind);
 
 // ───────────────────────── Happy path ─────────────────────────
 
@@ -231,7 +231,7 @@ describe('roundedCorners 交互', () => {
     const rounded = scene([{ type: 'path', roundedCorners: 3, marks, children: steps as never }]);
     // mark 沿弧长归一化定位；倒角缩短了路径总弧长并改变中点几何，
     // 故倒角后 mark group 的 transforms（平移/旋转）应与尖角不同。
-    const markGroup = (ir: IR): GroupPrim | undefined => {
+    const markGroup = (ir: IRScene): GroupPrim | undefined => {
       const walk = (list: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
         for (const p of list) {
           if (p.type === 'group' && p.transforms && p.transforms.length > 0) return p;

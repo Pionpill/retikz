@@ -1,4 +1,4 @@
-import type { PathProps } from '../kernel/Path';
+﻿import type { PathProps } from '../kernel/Path';
 
 /**
  * sugar 组件共用的视觉 props
@@ -23,7 +23,7 @@ const PATH_VISUAL_KEYS = [
   'fillRule',
   'opacity',
   'fillOpacity',
-  'drawOpacity',
+  'strokeOpacity',
   'zIndex',
   'rotate',
   'scale',

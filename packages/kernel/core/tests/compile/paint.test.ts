@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
-import type { IR, IRPaintSpec } from '../../src/schemas';
+import type { IRPaintSpec,IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -24,7 +24,7 @@ const pathsOf = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
 
 describe('node PaintSpec fill → 资源表 + resourceRef', () => {
   it('单 node gradient → primitive.fill = resourceRef + resources 1 条', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', fill: grad }],
@@ -36,7 +36,7 @@ describe('node PaintSpec fill → 资源表 + resourceRef', () => {
   });
 
   it('纯色 string → primitive.fill 原样、resources 省略', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', fill: 'lightblue' }],
@@ -49,7 +49,7 @@ describe('node PaintSpec fill → 资源表 + resourceRef', () => {
 
 describe('去重 + 稳定 id', () => {
   it('两 node 同 gradient → 1 条资源、同 id', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -66,7 +66,7 @@ describe('去重 + 稳定 id', () => {
 
   it('不同 gradient → 多条、不同 id', () => {
     const grad2: IRPaintSpec = { kind: 'radialGradient', stops: grad.stops };
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -80,7 +80,7 @@ describe('去重 + 稳定 id', () => {
   });
 
   it('同一 IR 编译两次 → 资源 id 完全一致（确定性）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', fill: grad }],
@@ -91,7 +91,7 @@ describe('去重 + 稳定 id', () => {
 
 describe('path PaintSpec fill', () => {
   it('path gradient fill → PathPrim.fill = resourceRef', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -116,7 +116,7 @@ describe('path PaintSpec fill', () => {
 
 describe('交互：scope 级联 + 纯色/渐变共存', () => {
   it('scope fill 级联到内部无 fill node → 收进资源表（去重）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -138,7 +138,7 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
   });
 
   it('纯色与渐变同场景 → 纯色不进表、渐变进表，互不干扰', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -156,7 +156,7 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
 
 describe('stroke PaintSpec → 资源表 + resourceRef', () => {
   it('path stroke linearGradient → PathPrim.stroke = resourceRef', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -177,7 +177,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
 
   it('node stroke radialGradient → RectPrim.stroke = resourceRef', () => {
     const radial: IRPaintSpec = { kind: 'radialGradient', stops: grad.stops };
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', stroke: radial }],
@@ -188,7 +188,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
   });
 
   it('scope stroke PaintSpec 级联到 node/path，并共用同一个 resourceRef', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -215,7 +215,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
   });
 
   it('fill 与 stroke 使用同一 PaintSpec → 资源去重', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -240,7 +240,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
   });
 
   it('纯色 stroke 保持原样、不进入 resources', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -260,7 +260,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
   });
 
   it('stroke undefined 不生成 paint resource', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -279,7 +279,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
   });
 
   it('arrow × gradient stroke：未显式 arrow 纯色时 fail-loud', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -298,7 +298,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
   });
 
   it('arrow × gradient stroke：显式 arrowDetail.color 时允许，marker 使用纯色', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

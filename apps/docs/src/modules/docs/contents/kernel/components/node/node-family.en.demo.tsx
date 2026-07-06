@@ -16,7 +16,7 @@ const Demo: FC = () => (
     </Node>
 
     {/* Text: override the style of a single line inside a node */}
-    <Node id="textDemo" position={[0, 35]} align="left">
+    <Node id="textDemo" position={[0, 35]} align="start">
       <Text fill="darkorange" font={{ weight: 'bold' }}>
         bold darkorange
       </Text>
@@ -36,7 +36,7 @@ const Demo: FC = () => (
       position={[-190, 100]}
       stroke="none"
       fill="none"
-      align="center"
+      align="middle"
       textColor="gray"
       font={{ size: 12 }}
     >
@@ -47,7 +47,7 @@ const Demo: FC = () => (
       position={[0, 100]}
       stroke="none"
       fill="none"
-      align="center"
+      align="middle"
       textColor="gray"
       font={{ size: 12 }}
     >
@@ -58,7 +58,7 @@ const Demo: FC = () => (
       position={[190, 100]}
       stroke="none"
       fill="none"
-      align="center"
+      align="middle"
       textColor="gray"
       font={{ size: 12 }}
     >

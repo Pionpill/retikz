@@ -1,9 +1,9 @@
----
+﻿---
 title: Path
 description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline / curve / arc; `<Draw>` compiles down to this.
 ---
 
-`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / fold (right-angle) / cycle (close) / curve / cubic / bend (curves) / arc / circlePath / ellipsePath (circle / ellipse) / rectangle actions; plus an IR-level generator step ([path generators](/kernel/components/extend/path-generator)). For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
+`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / fold (right-angle) / cycle (close) / curve / cubic / bend (curves) / smooth / generator (path generators) / arc / circlePath / ellipsePath (circle / ellipse) / rectangle actions. For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
 
 It is strongest in three cases: one path contains multiple subpaths (multiple `move`s), individual segments need different `kind` / label / control-point behavior, or you want the JSX structure to mirror IR `path.children` closely for debugging and generation.
 
@@ -41,7 +41,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports twelve kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/kernel/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/kernel/components/extend/path-generator)).
+`<Step>` supports thirteen kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `generator` for built-in or custom path generators, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/kernel/components/draw/step) and [path generators](/kernel/components/extend/path-generator) for details.
 
 ## Examples
 
@@ -102,7 +102,7 @@ Below, two edges target the same five-pointed star (no node `boundary` set) and 
 
 #### Gradient stroke
 
-Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `drawOpacity`, and other stroke styles still apply to the line itself.
+Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `strokeOpacity`, and other stroke styles still apply to the line itself.
 
 <ComponentPreview name="path-stroke-paint" size="sm" />
 
@@ -134,13 +134,9 @@ These presets reuse TikZ names from `ultra thin` through `ultra thick`; retikz e
 
 #### Opacity
 
-Three independent channels: `opacity` overall (multiplies onto stroke and fill), `fillOpacity` for fill only, `drawOpacity` for stroke only. The three compose:
+Three independent channels: `opacity` overall (multiplies onto stroke and fill), `fillOpacity` for fill only, `strokeOpacity` for stroke only. The three compose:
 
-<Comparison target="tikz" title="drawOpacity Naming">
-
-`drawOpacity` maps to TikZ `draw opacity`, and matches the stroke-only opacity field on `<Node>`.
-
-</Comparison>
+`strokeOpacity` uses the same stroke-opacity naming as Scene primitives, and matches the stroke-only opacity field on `<Node>`.
 
 <ComponentPreview name="path-opacity" />
 
@@ -211,6 +207,10 @@ Centerline mode offsets both sides of the open path by `width` and emits a close
 
 <ComponentPreview name="ribbon-width-stops" size="xs" />
 
+The built-in `bulge` profile uses `base` for both endpoint widths and `peak` for the midpoint width; when `peak` is smaller than `base`, the middle narrows instead.
+
+<ComponentPreview name="ribbon-width-profile" size="xs" />
+
 #### Label placement
 
 Ribbon labels use the same GeometryLabel contract. `position` accepts keywords or a numeric `0..1` offset; `side` keeps the same default outside distance as Path labels; `placement="inside"` places the label inside the band, and `sloped: true` rotates along the centerline tangent.
@@ -261,7 +261,7 @@ Ribbon is a closed area, so styling focuses on `fill`, outline `stroke`, opacity
 | `fillRule`       | `'nonzero' \| 'evenodd'`                                                                                      | `'nonzero'`    | Fill rule; use `'evenodd'` for rings / holes                                                                                                                                                                                                                                                                                                                        |
 | `opacity`        | `number`                                                                                                      | —              | Whole-path opacity 0..1 (multiplies onto stroke and fill)                                                                                                                                                                                                                                                                                                           |
 | `fillOpacity`    | `number`                                                                                                      | —              | Fill-only opacity 0..1                                                                                                                                                                                                                                                                                                                                              |
-| `drawOpacity`    | `number`                                                                                                      | —              | Stroke-only opacity 0..1                                                                                                                                                                                                                                                                                                                                            |
+| `strokeOpacity`    | `number`                                                                                                      | —              | Stroke-only opacity 0..1                                                                                                                                                                                                                                                                                                                                            |
 | `shadow`         | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —              | Drop shadow on the main path: preset string or object; element-level, endpoint arrows cast a shadow together with the main path. See [Visual Effects](/kernel/components/effects)                                                                                                                                                                                   |
 | `blendMode`      | `'normal' \| 'multiply' \| 'screen' \| ...` (16 W3C separable modes)                                          | `'normal'`     | How the main path blends with content beneath it; element-level, endpoint arrows blend with the main path. See [Visual Effects](/kernel/components/effects)                                                                                                                                                                                                         |
 | `zIndex`         | `number` (integer)                                                                                            | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level                                                                                                                                                                                                                                          |

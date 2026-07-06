@@ -1,2 +1,2 @@
-export { emitRibbonPrimitive } from './emit';
-export type { RibbonEmitOptions } from './types';
+export * from './emit';
+export * from './types';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 
@@ -14,11 +14,11 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   return out;
 };
 /** 取首个 step label TextPrim（拍平 group，找 text） */
-const labelOf = (ir: IR): TextPrim | undefined =>
+const labelOf = (ir: IRScene): TextPrim | undefined =>
   flatten(compileToScene(ir).primitives).find((p): p is TextPrim => p.type === 'text');
 
 /** 构造单 line 段 path（可选 path 级字段 + label 字段） */
-const pathWithLabel = (pathProps: Record<string, unknown>, label: Record<string, unknown>): IR => ({
+const pathWithLabel = (pathProps: Record<string, unknown>, label: Record<string, unknown>): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
@@ -85,7 +85,7 @@ describe('边界: 回退链 / 不跟 stroke', () => {
 
 describe('交互: labelDefault / 相乘 / 零破坏', () => {
   it('step_label_explicit_beats_label_default：scope labelDefault textColor=gray + label textColor=red → red', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -108,7 +108,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
   });
 
   it('step_label_default_beats_host_color：labelDefault textColor=gray + <Path color="crimson"> 无 label textColor → gray', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -132,7 +132,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
   });
 
   it('step_label_font_inherits_label_default：labelDefault font.size=10 + label 无 font → fontSize=10', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -158,9 +158,9 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
     expect(labelOf(pathWithLabel({ opacity: 0.5 }, { opacity: 0.5 }))?.opacity).toBe(0.25);
   });
 
-  it('step_label_zero_break：既有无样式 label → currentColor + 默认字号 14（快照不变）', () => {
+  it('step_label_zero_break：既有无样式 label → currentColor + 默认字号 16', () => {
     const t = labelOf(pathWithLabel({}, {}));
     expect(t?.fill).toBe('currentColor');
-    expect(t?.fontSize).toBe(14);
+    expect(t?.fontSize).toBe(16);
   });
 });

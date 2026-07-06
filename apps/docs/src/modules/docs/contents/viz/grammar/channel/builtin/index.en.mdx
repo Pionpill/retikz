@@ -1,4 +1,4 @@
----
+﻿---
 title: Built-In Channels
 description: Explains plot built-in channels by channel type, channel value forms, delivery surfaces, and guide support.
 ---
@@ -46,7 +46,7 @@ This demo separates `color`, `fill`, `stroke`, and `textColor`: the left group s
 
 ### Opacity
 
-This demo binds `opacity`, `fillOpacity`, and `drawOpacity` in separate groups. Overall opacity affects both fill and stroke, fill opacity only fades the interior, and draw opacity only fades the outline.
+This demo binds `opacity`, `fillOpacity`, and `strokeOpacity` in separate groups. Overall opacity affects both fill and stroke, fill opacity only fades the interior, and stroke opacity only fades the outline.
 
 <ComponentPreview name="builtin-opacity" size="md" />
 
@@ -54,7 +54,7 @@ This demo binds `opacity`, `fillOpacity`, and `drawOpacity` in separate groups. 
 | ------------- | ------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
 | `opacity`     | Field: `opacity = "field"`<br />Constant: `opacity = {0.45}`        | Overall opacity | `IRScope.opacity`, `IRNode.opacity`, or `IRPath.opacity`; field values support ramp legend |
 | `fillOpacity` | Field: `fillOpacity = "field"`<br />Constant: `fillOpacity = {0.7}` | Fill opacity    | scope / node / path fill opacity                                                           |
-| `drawOpacity` | Field: `drawOpacity = "field"`<br />Constant: `drawOpacity = {0.7}` | Stroke opacity  | scope / node / path draw opacity                                                           |
+| `strokeOpacity` | Field: `strokeOpacity = "field"`<br />Constant: `strokeOpacity = {0.7}` | Stroke opacity  | scope / node / path stroke opacity                                                           |
 
 ### Size
 

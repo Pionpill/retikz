@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { definePathGenerator } from '../../src/contract';
@@ -20,15 +20,15 @@ const collectNumbers = (v: unknown, out: Array<number> = []): Array<number> => {
   return out;
 };
 
-const wrapPath = (steps: Array<Record<string, unknown>>, extraChildren: Array<Record<string, unknown>> = []): IR =>
+const wrapPath = (steps: Array<Record<string, unknown>>, extraChildren: Array<Record<string, unknown>> = []): IRScene =>
   ({
     version: 1,
     type: 'scene',
     children: [...extraChildren, { type: 'path', children: steps }],
-  }) as unknown as IR;
+  }) as unknown as IRScene;
 
 const catchCompile = (
-  ir: IR,
+  ir: IRScene,
   gens: Record<string, ReturnType<typeof definePathGenerator>>,
 ): Error | undefined => {
   try {
@@ -537,7 +537,7 @@ paramsSchema: z.object({}),
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).primitives);
     const move = drawn?.commands.find(c => c.kind === 'move');
     const line = drawn?.commands.find(c => c.kind === 'line');

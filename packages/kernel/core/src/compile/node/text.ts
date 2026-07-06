@@ -1,8 +1,6 @@
-import type { FontSpec, TextMeasurer } from '../text-metrics';
+import type { FontSpec, TextMeasurer } from '../text';
 
-/** 默认节点字号（user units）。 */
-export const DEFAULT_FONT_SIZE = 14;
-/** 默认行高倍率；实际行高 = fontSize × 本倍率。 */
+/** 行高倍率。 */
 export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 
 /** CJK / 全角字符范围：无需空白分隔，折行时可按单字符切分 */
@@ -22,7 +20,17 @@ const isCjk = (ch: string): boolean => {
  * 按 maxWidth 贪心折行：西文按词（空白分割）、CJK 按字；长不可断 token 溢出不硬断
  * @description 用注入的 measureText 度量；连续空白归一为单空格分隔。空文本返回 [''].
  */
-export const wrapText = (text: string, font: FontSpec, maxWidth: number, measure: TextMeasurer): Array<string> => {
+export type WrapTextContext = {
+  /** 文本字体。 */
+  font: FontSpec;
+  /** 最大行宽。 */
+  maxWidth: number;
+  /** 文本测量函数。 */
+  measureText: TextMeasurer;
+};
+
+export const wrapText = (text: string, context: WrapTextContext): Array<string> => {
+  const { font, maxWidth, measureText } = context;
   // 拆 unit：空白段 → 单空格分隔符；非空白段把 CJK 拆单字、非 CJK 连续 run 保整
   const units: Array<string> = [];
   for (const seg of text.split(/(\s+)/)) {
@@ -55,7 +63,7 @@ export const wrapText = (text: string, font: FontSpec, maxWidth: number, measure
     }
     const candidate = cur === '' ? u : cur + u;
     // cur 为空时即使溢出也接受（单 token 宽于阈值 → 溢出不硬断）
-    if (cur !== '' && measure(candidate, font).width > maxWidth) {
+    if (cur !== '' && measureText(candidate, font).width > maxWidth) {
       lines.push(cur.trimEnd());
       cur = u;
     } else {
@@ -82,7 +90,3 @@ export const resolveDashPattern = (
   if (dotted) return DOTTED_PATTERN;
   return undefined;
 };
-
-/** IR align → TextPrim 的文字对齐锚点（start / middle / end） */
-export const alignToTextAnchor = (a: 'left' | 'center' | 'right'): 'start' | 'middle' | 'end' =>
-  a === 'left' ? 'start' : a === 'right' ? 'end' : 'middle';

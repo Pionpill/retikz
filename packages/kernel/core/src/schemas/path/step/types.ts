@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 
-import type { SideValue } from '../../../shared';
-import type { ValueOf } from '../../../shared';
+import type { SideValue, ValueOf } from '../../../shared';
 import type { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 import type {
   ArcStepSchema,

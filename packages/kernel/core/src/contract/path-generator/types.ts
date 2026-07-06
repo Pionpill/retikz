@@ -13,7 +13,7 @@ export type PathGeneratorGenerateContext = {
   from: Position;
   /**
    * step.to resolve 后的世界坐标。
-   * @default undefined：step 未给 `to`
+   * 缺省表示 step 未给 `to`。
    */
   to?: Position;
   /** paramsSchema 校验后的参数对象。 */

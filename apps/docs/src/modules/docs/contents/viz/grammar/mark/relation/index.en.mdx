@@ -1,4 +1,4 @@
----
+﻿---
 title: RelationMark
 description: RelationMark lowers source / target relationships from data rows into core Paths, using kind to distinguish stroked paths from ribbon bands.
 ---
@@ -113,7 +113,7 @@ When a relation uses generated `anchorId` and the target does not exist, lowerin
 | Ribbon   | `ribbon.width`       | `MarkValue<number>`                                  | Required for `kind="ribbon"` | Ribbon width at the source side, or the whole width when `endWidth` is omitted                                                               |
 |          | `ribbon.endWidth`    | `MarkValue<number>?`                                 | -                            | Optional target-side width for tapered ribbons                                                                                               |
 |          | `ribbon.options`     | `RelationRibbonSpecificOptions?`                     | -                            | Ribbon-only options: `align`, `samples`, `sampling`, and taper `interpolation`                                                               |
-| Style    | `style`              | `RelationPrimitiveStyle?`                            | -                            | Shared style: `color`, `fill`, `fillOpacity`, `stroke`, `strokeWidth`, `drawOpacity`, `opacity`, `shadow`, `blendMode`, `zIndex`             |
+| Style    | `style`              | `RelationPrimitiveStyle?`                            | -                            | Shared style: `color`, `fill`, `fillOpacity`, `stroke`, `strokeWidth`, `strokeOpacity`, `opacity`, `shadow`, `blendMode`, `zIndex`             |
 |          | `color`              | `FieldName?`                                         | -                            | Field-driven relation color channel                                                                                                          |
 | Common   | `id`                 | `string?`                                            | -                            | Optional mark handle for layer ids, errors, and runtime lookup                                                                               |
 | Custom   | `channels`           | `Record<string, Channel>`                            | -                            | Custom channel entry point, resolved by registered channel definitions                                                                       |

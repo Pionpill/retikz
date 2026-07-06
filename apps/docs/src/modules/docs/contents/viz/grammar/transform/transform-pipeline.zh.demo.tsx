@@ -9,19 +9,19 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={640} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="data" position={[-200, -16]} stroke="none" align="center" lineHeight={16}>
+    <Node id="data" position={[-200, -16]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 15, weight: 'bold' }}>数据层</Text>
       <Text fill="gray" font={{ size: 12 }}>
         canonical 行
       </Text>
     </Node>
-    <Node id="pipe" position={[0, -16]} stroke="none" align="center" lineHeight={16}>
+    <Node id="pipe" position={[0, -16]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 15, weight: 'bold' }}>变换管线</Text>
       <Text fill="gray" font={{ size: 12 }}>
         t1 → t2 → …
       </Text>
     </Node>
-    <Node id="down" position={[200, -16]} stroke="none" align="center" lineHeight={16}>
+    <Node id="down" position={[200, -16]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 15, weight: 'bold' }}>下游</Text>
       <Text fill="gray" font={{ size: 12 }}>
         scale · mark · locator
@@ -31,7 +31,7 @@ const Demo: FC = () => (
     <Draw way={['data', 'pipe']} arrow="->" />
     <Draw way={['pipe', 'down']} arrow="->" />
 
-    <Node id="note" position={[0, 70]} stroke="none" align="center">
+    <Node id="note" position={[0, 70]} stroke="none" align="middle">
       <Text fill="gray" font={{ size: 12 }}>
         按声明顺序折叠 · 可保行数或改行数
       </Text>

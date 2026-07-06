@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope } from '@retikz/core';
+﻿import type { IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -107,7 +107,7 @@ describe('lowerGuide (ADR-04)', () => {
     expect((axisLayer as IRScope).pathDefault?.stroke).toBe('currentColor');
     expect((axisLayer as IRScope).nodeDefault?.font?.size).toBe(11);
     expect((axisLayer as IRScope).nodeDefault?.stroke).toBe('none');
-    expect((gridLayer as IRScope).pathDefault?.drawOpacity).toBe(0.15);
+    expect((gridLayer as IRScope).pathDefault?.strokeOpacity).toBe(0.15);
   });
 
   it('axis_id_to_scope_id', () => {
@@ -152,8 +152,8 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
     );
     // children = [y 网格层, mark 层, x 轴层, y 轴层]
     expect(outer.children).toHaveLength(4);
-    // 第一个是网格层（带 drawOpacity）
-    expect((outer.children[0] as IRScope).pathDefault?.drawOpacity).toBe(0.15);
+    // 第一个是网格层（带 strokeOpacity）
+    expect((outer.children[0] as IRScope).pathDefault?.strokeOpacity).toBe(0.15);
     // 最后一个是轴层（纯文字 nodeDefault）
     expect((outer.children[3] as IRScope).nodeDefault?.stroke).toBe('none');
   });

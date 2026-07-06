@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   IRGraphicStyle,
   IRPathBase,
   PathFillRuleValue,
@@ -41,7 +41,7 @@ export type MarkerPathPrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['drawOpacity'];
+  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
   /** 描边宽度（marker 局部坐标） */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
@@ -93,7 +93,7 @@ export type MarkerEllipsePrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['drawOpacity'];
+  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
@@ -130,7 +130,7 @@ export type MarkerRectPrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['drawOpacity'];
+  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */

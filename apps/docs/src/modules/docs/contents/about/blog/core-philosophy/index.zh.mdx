@@ -63,7 +63,7 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 | `circlePath`  | `radius`, `startAngle?`, `endAngle?`, `closed?`                      | 整圆或部分弧（chord / sector / open）                   |
 | `ellipsePath` | `radius`, `startAngle?`, `endAngle?`, `closed?`          | 整椭圆或部分弧                                          |
 | `rectangle`   | `from`, `to`, `cornerRadius?`                                        | 轴对齐矩形（两对角，自包含）                            |
-| `generator`   | `name`, `to?`, `params`                                              | 委托注册的路径生成器（parabola / sin…，core 不内置）    |
+| `generator`   | `name`, `to?`, `params`                                              | 委托内置或注册的路径生成器（内置 parabola，自定义 sin…） |
 
 挑这 12 个是反复砍出来的——TikZ 原生几十条 path 动作，绝大多数能由这 12 种组合表达。kind 多了 LLM 学习成本涨、新增 adapter 实现成本涨；少了 sugar 层兜不住。
 

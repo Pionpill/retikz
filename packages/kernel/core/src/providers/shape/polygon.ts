@@ -17,27 +17,29 @@ import {
 } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
-/**
- * polygon shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；sides = 边数（≥3），rotate = 起始顶点自旋角（度，可选），
- *   cornerRadius = 顶点倒角半径（user units，可选，逐角夹紧）。
- *   diamond 作为内置 shape preset 在 compile 期解析为此 shape 的 `{ sides: 4, rotate: 0 }`。
- */
-type PolygonParams = {
-  sides: number;
-  /**
-   * 起始顶点自旋角（度）。
-   * @default 0
-   */
-  rotate?: number;
-  /**
-   * 顶点倒角半径。
-   * @default 0
-   */
-  cornerRadius?: number;
-};
-
 const MAX_POLYGON_SIDES = 1024;
+
+const polygonParamsSchema = z.strictObject({
+  sides: z
+    .number()
+    .int()
+    .min(3)
+    .max(MAX_POLYGON_SIDES)
+    .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
+  rotate: z
+    .number()
+    .optional()
+    .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
+  cornerRadius: z
+    .number()
+    .nonnegative()
+    .optional()
+    .describe(
+      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+    ),
+});
+
+type PolygonParams = z.infer<typeof polygonParamsSchema>;
 
 /** 顶点角集合（度）：第 k 个顶点角 = rotate + k·(360/sides) */
 const vertexAngles = (params: PolygonParams): Array<number> => {
@@ -48,7 +50,7 @@ const vertexAngles = (params: PolygonParams): Array<number> => {
   return out;
 };
 
-/** 顶点角的 |cos| 最大值（恒 >0，sides≥3 时至少一个顶点不在 ±y 轴上）；用于由 AABB 半宽反推外接半径 */
+/** 顶点角的 |cos| 最大值，用于由 AABB 半宽反推外接半径。 */
 const maxAbsCos = (params: PolygonParams): number => {
   let max = 0;
   for (const angle of vertexAngles(params)) {
@@ -59,11 +61,8 @@ const maxAbsCos = (params: PolygonParams): number => {
 };
 
 /**
- * 能容纳内框（半轴 hw/hh）的正 sides 边形外接圆半径
- * @description rectangle / polygon 是文本容器——尺寸由内框（text + padding）驱动，circumscribe 从内框推外接。
- *   正多边形 = 各边内法向投影 ≤ 内切半径(apothem) 的半平面交；apothem = R·cos(π/sides)。内框 4 角
- *   (±hw,±hh) 全在多边形内 ⇔ 对每条边法向 φ_j，max 角投影 hw·|cosφ_j|+hh·|sinφ_j| ≤ apothem。
- *   取使等号成立的最小 R = max_j(hw·|cosφ_j|+hh·|sinφ_j|) / cos(π/sides)，φ_j = rotate+(j+0.5)·(360/sides)。
+ * 计算能容纳内框的正多边形外接圆半径。
+ * @description polygon 是文本容器 shape，尺寸由内框推导而不是由 params 直接指定。
  */
 const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number => {
   const { sides } = params;
@@ -83,9 +82,8 @@ const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number 
 const circumradiusFromRect = (bounds: Rect, params: PolygonParams): number => bounds.width / 2 / maxAbsCos(params);
 
 /**
- * 正多边形 `sides` 个顶点的世界坐标（外接圆半径 radius、起始角 rotate、绕 rect 中心）
- * @description 顶点均布外接圆：第 k 个顶点角 = rotate + k·(360/sides)；点在 rect 局部系算后经 localToWorld 投世界。
- *   emit / boundaryPoint / anchor 共用此真源。
+ * 正多边形顶点的世界坐标。
+ * @description 顶点均布在外接圆上，按 params.rotate 自旋。
  */
 const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): Array<Position> =>
   vertexAngles(params).map(deg => {
@@ -94,38 +92,14 @@ const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): A
   });
 
 /**
- * polygon 注册项：正多边形（sides 顶点均布外接圆，rotate 定起始角，cornerRadius 顶点倒角）
- * @description 文本容器形状——circumscribe 从内框 `innerHalfWidth/Height` 推能容纳内框的外接圆、再取其 AABB 半轴，
- *   尺寸仍由内框 + minimumSize 驱动（区别于 sector / star 的 params-半径驱动）。emit / boundaryPoint 把顶点环构造成
- *   `sides` 条折线段，委托 rounded-contour 模块：cornerRadius 省略 / 0 出原尖角轮廓、>0 在每个顶点插逐角夹紧的
- *   fillet 弧。emit 收轴对齐 rect（旋转由外层 group 施加）、boundaryPoint 收带 rotate 的 rect 且 rayOrigin = 几何中心
- *   （多边形关于中心对称，AABB 中心 = 形心 = node position）。命名 anchor 走外接 AABB 的 9 名 rect anchor（不随
- *   cornerRadius 移）；self-rotate（params.rotate）与 Node.rotate 叠加。scaleParams：cornerRadius 是长度随 scale
- *   缩（几何均值因子），sides 计数 / rotate 角度不缩。
- *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`，由 compile 解析。
+ * polygon 注册项：正多边形文本容器。
+ * @description sides/rotate 决定顶点环，cornerRadius 做顶点倒角；命名 anchor 走外接 AABB。
+ *   scaleParams 只缩 cornerRadius，不缩 sides / rotate。diamond 由 compile 解析为 polygon preset。
  */
-export const polygon = defineShape({
+export const polygon = defineShape<PolygonParams>({
   name: 'polygon',
-  paramsSchema: z.strictObject({
-    sides: z
-      .number()
-      .int()
-      .min(3)
-      .max(MAX_POLYGON_SIDES)
-      .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
-    rotate: z
-      .number()
-      .optional()
-      .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-      ),
-  }),
-  circumscribe: (hw, hh, params: PolygonParams) => {
+  paramsSchema: polygonParamsSchema,
+  circumscribe: (hw, hh, params) => {
     const radius = circumradiusFor(hw, hh, params);
     const angles = vertexAngles(params);
     let halfWidth = 0;
@@ -137,7 +111,7 @@ export const polygon = defineShape({
     }
     return { halfWidth, halfHeight };
   },
-  boundaryPoint: (bounds: Rect, toward: Position, params: PolygonParams): Position => {
+  boundaryPoint: (bounds: Rect, toward: Position, params): Position => {
     const radius = circumradiusFromRect(bounds, params);
     // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 几何中心（= rect 中心 = node position）
     const verts = polygonVertices(bounds, radius, params);
@@ -146,12 +120,11 @@ export const polygon = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  anchor: (bounds: Rect, name: ShapeAnchorName, params: PolygonParams): Position | undefined => {
-    void params;
+  anchor: (bounds: Rect, name: ShapeAnchorName): Position | undefined => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
-  *emit(bounds: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
+  *emit(bounds: Rect, style, round, params): Iterable<ScenePrimitive> {
     const radius = circumradiusFromRect(bounds, params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = polygonVertices(bounds, radius, params);
@@ -160,6 +133,6 @@ export const polygon = defineShape({
     yield contourToPathPrimitive(commands, style);
   },
   // sides 计数 / rotate 角度不缩（默认深缩会缩坏 sides）；cornerRadius 是长度，随 node scale 用几何均值因子缩。
-  scaleParams: (params: PolygonParams, sx: number, sy: number): PolygonParams =>
+  scaleParams: (params, sx: number, sy: number) =>
     params.cornerRadius === undefined ? params : { ...params, cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) },
 });

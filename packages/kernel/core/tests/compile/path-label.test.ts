@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { TextMeasurer } from '../../src';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 
 const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
   prims.filter((p): p is TextPrim => p.type === 'text');
@@ -19,7 +19,7 @@ const visualTop = (t: TextPrim): number => t.y - t.fontSize * ASCENT_FACTOR;
 const visualBottom = (t: TextPrim): number => t.y + t.fontSize * DESCENT_FACTOR;
 const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
-const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): IR => ({
+const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
@@ -132,7 +132,7 @@ describe('step.label：line 段的 label 几何', () => {
   });
 
   it('sloped 在垂直段上 angle=90', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -153,7 +153,7 @@ describe('step.label：line 段的 label 几何', () => {
 
 describe('step.label：覆盖各 step kind', () => {
   it('curve 段 label 在 t=0.5 处的二次贝塞尔顶点上方', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -183,7 +183,7 @@ describe('step.label：覆盖各 step kind', () => {
   });
 
   it('cubic 段 label 在 t=0.5 处', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -211,7 +211,7 @@ describe('step.label：覆盖各 step kind', () => {
   });
 
   it('fold (step) 段 label 默认 midway 落在 corner 上', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -238,7 +238,7 @@ describe('step.label：覆盖各 step kind', () => {
   });
 
   it('arc 段 label 在扫过区间中点角', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -266,7 +266,7 @@ describe('step.label：覆盖各 step kind', () => {
   });
 
   it('circlePath 段 label 默认在 t=0.5 (left)', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -306,13 +306,13 @@ describe('step.label：覆盖各 step kind', () => {
           ],
         },
       ],
-    } as IR;
+    } as IRScene;
     const scene = compileToScene(ir);
     expect(findTextPrims(scene.primitives)).toHaveLength(0);
   });
 
   it('多个 step 各自带 label → 每个 step 一个 TextPrim，顺序与 step 一致', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -334,7 +334,7 @@ describe('step.label：覆盖各 step kind', () => {
 
 describe('step.label：layout 把标签纳入 bbox', () => {
   it('side=top 时 label 锚点在路径外，layout 至少要包住其外接四角', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -358,7 +358,7 @@ describe('step.label：layout 把标签纳入 bbox', () => {
     const fixed: TextMeasurer = () => ({ width: 200, height: 20 });
 
     it("side='left'（align=end）：文本完全在锚点左侧，layout 左界覆盖整宽（非半宽）", () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -378,7 +378,7 @@ describe('step.label：layout 把标签纳入 bbox', () => {
     });
 
     it("side='top'（baseline=bottom）：文本完全在锚点上方，layout 上界覆盖整高（非半高）", () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -404,7 +404,7 @@ describe('step.label：layout 把标签纳入 bbox', () => {
 // =============================================================================
 
 /** 直线段（长度 L=100）通用 IR 构造器：label.position 自由传 */
-const lineWithLabel = (position: unknown): IR => ({
+const lineWithLabel = (position: unknown): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
@@ -488,7 +488,7 @@ describe('label on line：keyword + 数值 t', () => {
 
 describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 t=0.5', () => {
   /** via='-\|' from (0,0) to (40, 30) → corner (40, 0)；段长悬殊：段1 长 40，段 2 长 30 */
-  const foldIR = (position: unknown): IR => ({
+  const foldIR = (position: unknown): IRScene => ({
     version: 1,
     type: 'scene',
     children: [
@@ -519,7 +519,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
   });
 
   it('label_fold_sloped_uses_tangent_of_actual_sampled_leg', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -576,7 +576,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
   });
   it('label_fold_unequal_segments_corner_still_at_t_0_5：段长悬殊，拐角恒在 t=0.5', () => {
     // 段 1 长 100 / 段 2 长 1：via='-|' from (0,0) to (100, 1) → corner (100, 0)
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -605,7 +605,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
 
 describe('label on curve (quadratic Bezier)：Bezier 参数 t（非弧长）', () => {
   /** 对称二次贝塞尔 from(0,0) control(50,-100) to(100,0)：t=0.5 顶点 (50, -50) */
-  const curveIR = (position: unknown): IR => ({
+  const curveIR = (position: unknown): IRScene => ({
     version: 1,
     type: 'scene',
     children: [
@@ -643,7 +643,7 @@ describe('label on curve (quadratic Bezier)：Bezier 参数 t（非弧长）', (
   });
   it('label_curve_t_0_5_not_arc_length_midpoint：Bezier t=0.5 通常 ≠ 视觉弧长中点（验 x=50 而非弧长中心）', () => {
     // 不对称曲线：control 拉偏让 Bezier t=0.5 与弧长中点显著不同
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -671,7 +671,7 @@ describe('label on curve (quadratic Bezier)：Bezier 参数 t（非弧长）', (
 
 describe('label on cubic Bezier：Bezier 参数 t', () => {
   /** 对称 cubic from(0,0) c1(0,-100) c2(100,-100) to(100,0)：t=0.5 → (50, -75) */
-  const cubicIR = (position: unknown): IR => ({
+  const cubicIR = (position: unknown): IRScene => ({
     version: 1,
     type: 'scene',
     children: [
@@ -710,7 +710,7 @@ describe('label on cubic Bezier：Bezier 参数 t', () => {
 
 describe('label on bend：lower 成 cubic 后 Bezier t', () => {
   it('label_bend_lowered_cubic_same_t_behavior：bend 段 label 在 t=0.5 处（与对称 cubic 行为一致）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -741,7 +741,7 @@ describe('label on bend：lower 成 cubic 后 Bezier t', () => {
 
 describe('label on arc：角度参数化 startAngle..endAngle', () => {
   it('label_arc_t_0_5_at_mid_angle：position=0.5 → (start+end)/2 角度', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -769,7 +769,7 @@ describe('label on arc：角度参数化 startAngle..endAngle', () => {
     expect(t.y).toBeLessThan(Math.sin(Math.PI / 4) * 100);
   });
   it('label_arc_t_0_25_at_quarter_angle：position=0.25 → start + (end-start)·0.25', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -795,7 +795,7 @@ describe('label on arc：角度参数化 startAngle..endAngle', () => {
     expect(t.x).toBeCloseTo(Math.cos((22.5 * Math.PI) / 180) * 100, 1);
   });
   it('label_arc_keyword_at_start：keyword "at-start" → 起始角度位置', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -823,7 +823,7 @@ describe('label on arc：角度参数化 startAngle..endAngle', () => {
 });
 
 describe('label on circlePath：整圆 t∈[0,1]，t=0 = angle 0 (+x), CCW', () => {
-  const circleIR = (position: unknown): IR => ({
+  const circleIR = (position: unknown): IRScene => ({
     version: 1,
     type: 'scene',
     children: [
@@ -877,7 +877,7 @@ describe('label on circlePath：整圆 t∈[0,1]，t=0 = angle 0 (+x), CCW', () 
 
 describe('label on ellipsePath：同 circlePath 角度参数化（非弧长）', () => {
   it('label_ellipsePath_t_0_5_at_180deg：rx≠ry，position=0.5 → angle 180° (-rx, 0)', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -900,7 +900,7 @@ describe('label on ellipsePath：同 circlePath 角度参数化（非弧长）',
     expect(t.x).toBeCloseTo(-150, 1);
   });
   it('label_ellipsePath_t_0_at_pos_x：position=0 → (rx, 0)', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -1028,7 +1028,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     expect(result.success).toBe(false);
   });
   it('adv_arc_cw_sweep：endAngle<startAngle 时 t 仍线性映射（不强制 CCW）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -1077,7 +1077,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     expect(t.x).toBeCloseTo(100, 1);
   });
   it('adv_fold_via_pipe_dash：via="|-" t=0.5 仍落 corner（对称性）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -1104,7 +1104,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     expect(visualBottom(t)).toBeCloseTo(30 - 4, 2);
   });
   it('adv_fold_t_just_top_half：t=0.500001 落第二段起点（边界刚过）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

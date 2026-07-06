@@ -1,30 +1,30 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { EllipsePrim, PathPrim, RectPrim, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 import { line, move } from '../helpers/path-command-factory';
 
-const findRect = (ir: IR): RectPrim | undefined =>
+const findRect = (ir: IRScene): RectPrim | undefined =>
   flattenPrims(compileToScene(ir).primitives).find((p): p is RectPrim => p.type === 'rect');
 
-const findEllipse = (ir: IR): EllipsePrim | undefined =>
+const findEllipse = (ir: IRScene): EllipsePrim | undefined =>
   flattenPrims(compileToScene(ir).primitives).find((p): p is EllipsePrim => p.type === 'ellipse');
 
-const findShapePath = (ir: IR): PathPrim | undefined =>
+const findShapePath = (ir: IRScene): PathPrim | undefined =>
   flattenPrims(compileToScene(ir).primitives).find(
     (p): p is PathPrim => p.type === 'path' && p.commands.some(c => c.kind === 'close'),
   );
 
-const findText = (ir: IR): TextPrim | undefined =>
+const findText = (ir: IRScene): TextPrim | undefined =>
   flattenPrims(compileToScene(ir).primitives).find((p): p is TextPrim => p.type === 'text');
 
 describe('Node 颜色 / 不透明度 (alpha.2)', () => {
   it('textColor 透传到 TextPrim.fill', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'A', textColor: 'red' }],
@@ -33,7 +33,7 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
   });
 
   it('未设 textColor 时 TextPrim.fill = currentColor', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'A' }],
@@ -42,7 +42,7 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
   });
 
   it('opacity 同时挂在 shape 与 text primitive 上', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'A', opacity: 0.5 }],
@@ -52,14 +52,14 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
   });
 
   it('fillOpacity 透传到 shape primitive（rect / ellipse / diamond path）', () => {
-    const rectIR: IR = {
+    const rectIR: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], fill: '#fef3c7', fillOpacity: 0.4 }],
     };
     expect(findRect(rectIR)?.fillOpacity).toBe(0.4);
 
-    const circleIR: IR = {
+    const circleIR: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -74,7 +74,7 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
     };
     expect(findEllipse(circleIR)?.fillOpacity).toBe(0.4);
 
-    const diamondIR: IR = {
+    const diamondIR: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -90,11 +90,11 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
     expect(findShapePath(diamondIR)?.fillOpacity).toBe(0.4);
   });
 
-  it('drawOpacity → shape primitive.strokeOpacity', () => {
-    const ir: IR = {
+  it('strokeOpacity → shape primitive.strokeOpacity', () => {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], drawOpacity: 0.3 }],
+      children: [{ type: 'node', position: [0, 0], strokeOpacity: 0.3 }],
     };
     expect(findRect(ir)?.strokeOpacity).toBe(0.3);
   });
@@ -102,7 +102,7 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
 
 describe('Node 描边样式 (alpha.2)', () => {
   it('dashed → dashPattern 默认 [4, 2]', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], dashed: true }],
@@ -111,7 +111,7 @@ describe('Node 描边样式 (alpha.2)', () => {
   });
 
   it('dotted → dashPattern 默认 [1, 2]', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], dotted: true }],
@@ -120,7 +120,7 @@ describe('Node 描边样式 (alpha.2)', () => {
   });
 
   it('dashPattern 显式值优先于 dashed / dotted', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -137,7 +137,7 @@ describe('Node 描边样式 (alpha.2)', () => {
   });
 
   it('dashed 优先于 dotted（两者同设时）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], dashed: true, dotted: true }],
@@ -148,7 +148,7 @@ describe('Node 描边样式 (alpha.2)', () => {
 
 describe('Node 尺寸约束 (alpha.2)', () => {
   it('cornerRadius → RectPrim.cornerRadius', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], cornerRadius: 8 }],
@@ -157,12 +157,12 @@ describe('Node 尺寸约束 (alpha.2)', () => {
   });
 
   it('minimumSize.width 撑开 bbox 宽度', () => {
-    const small: IR = {
+    const small: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0] }],
     };
-    const wide: IR = {
+    const wide: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], minimumSize: { width: 100 } }],
@@ -174,7 +174,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
   });
 
   it('minimumSize.height 撑开 bbox 高度', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], minimumSize: { height: 60 } }],
@@ -184,7 +184,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
   });
 
   it('minimumSize number 等价于同时设 width + height', () => {
-    const sym: IR = {
+    const sym: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], minimumSize: 50 }],
@@ -194,7 +194,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
   });
 
   it('minimumSize.width 优先于 minimumSize.default', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -211,7 +211,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
 
   it('text 比 minimum 大时取 text 自身尺寸（不缩水）', () => {
     // long text 自然宽度 > minimumSize.width=10 → 用 text 算出的宽
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -229,7 +229,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
 
   // C6：minimum 随 scale 缩 + floor 外接框（而非内框）
   it('minimum 随 scale 缩放：minimumSize=50 + scale=2 → bbox 100', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], minimumSize: 50, scale: 2 }],
@@ -240,7 +240,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
   });
 
   it('minimum floor 外接框而非内框：ellipse minimumSize=100 → 直径 100（非 √2 倍）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], shape: { type: 'ellipse' }, minimumSize: 100 }],
@@ -272,12 +272,12 @@ describe('Node 尺寸约束 (alpha.2)', () => {
 
 describe('Node 缩放 (alpha.2)', () => {
   it('scale=2 同时放大 bbox 与字号', () => {
-    const base: IR = {
+    const base: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'x' }],
     };
-    const big: IR = {
+    const big: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'x', scale: 2 }],
@@ -294,7 +294,7 @@ describe('Node 缩放 (alpha.2)', () => {
   });
 
   it('scale.x / scale.y 各自方向独立放大 bbox', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], scale: { x: 3, y: 1 } }],
@@ -306,7 +306,7 @@ describe('Node 缩放 (alpha.2)', () => {
   });
 
   it('scale.x 优先于 scale.default（X 方向）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], scale: { default: 2, x: 4 } }],
@@ -337,7 +337,7 @@ describe('Node 缩放 (alpha.2)', () => {
   it('scale 影响 path 端点位置（boundary 跟随放大）', () => {
     // A=(0,0) rectangle，scale=2 → bbox 32x32；
     // path A → (100,0) 端点贴在 right = 16 处（之前是 8）
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

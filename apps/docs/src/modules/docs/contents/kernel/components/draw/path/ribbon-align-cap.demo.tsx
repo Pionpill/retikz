@@ -1,4 +1,4 @@
-import type { IRPathRibbonOptions } from '@retikz/core';
+﻿import type { IRPathRibbonOptions } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout, Node, Path, Step } from '@retikz/react';
@@ -73,7 +73,7 @@ const Demo: FC = () => (
         fillOpacity={0.76}
         stroke="#172033"
         strokeWidth={0.8}
-        drawOpacity={0.2}
+        strokeOpacity={0.2}
       >
         {row.path === 'curve' ? (
           <>

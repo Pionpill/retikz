@@ -1,4 +1,4 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -50,7 +50,7 @@ const pipeline = defineComposite({
   },
 });
 
-const ir: IR = {
+const ir: IRScene = {
   version: 1,
   type: 'scene',
   children: [

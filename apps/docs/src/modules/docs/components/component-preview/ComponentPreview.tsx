@@ -1,4 +1,3 @@
-import type { IR } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
@@ -111,7 +110,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     if (irJsonOverride !== undefined) {
       const irJson = irJsonOverride.replace(/\n$/, '');
       try {
-        const ir = JSON.parse(irJson) as IR;
+        const ir = JSON.parse(irJson) as PreviewIR['ir'];
         return { previewIr: { ir, width: undefined, height: undefined }, irJson };
       } catch (err) {
         return {

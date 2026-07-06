@@ -1,4 +1,4 @@
-import type { IR, IRNode, IRScope, IRTarget, ScenePrimitive } from '@retikz/core';
+import type { IRNode, IRScene, IRScope, IRTarget, ScenePrimitive } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -133,7 +133,7 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
 
   // 兄弟 Path line 端点（compile 后从 path primitive 取第一个 line 命令的 to）
   const lineEndpoint = (plotNode: PlotSpec, to: IRTarget): [number, number] | undefined => {
-    const scene: IR = {
+    const scene: IRScene = {
       version: 1,
       type: 'scene',
       children: [

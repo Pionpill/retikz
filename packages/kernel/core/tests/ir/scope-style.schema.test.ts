@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import {
   ArrowDefaultSchema,
@@ -134,7 +134,7 @@ describe('ScopeSchema 级联 graphic state', () => {
         strokeWidth: 2,
         opacity: 0.5,
         fillOpacity: 0.4,
-        drawOpacity: 0.3,
+        strokeOpacity: 0.3,
         children: [],
       }).success,
     ).toBe(true);

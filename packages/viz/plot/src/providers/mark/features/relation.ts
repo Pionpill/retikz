@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   IRChild,
   IRCoordinate,
   IRNodeLabel,
@@ -192,7 +192,7 @@ const relationPrimitiveStyle = (
     'fillOpacity',
     'stroke',
     'strokeWidth',
-    'drawOpacity',
+    'strokeOpacity',
     'opacity',
     'shadow',
     'blendMode',

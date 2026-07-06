@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   IRAtPosition,
   IRAtPositionInput,
   IRAxisScale,
@@ -72,8 +72,8 @@ export type NodeProps = HydrationEventProps & {
   fillOpacity?: number;
   /** 描边色 */
   stroke?: IRNode['stroke'];
-  /** 描边透明度 0~1（TikZ `draw opacity`） */
-  drawOpacity?: number;
+  /** 描边透明度 0~1（TikZ `stroke opacity`） */
+  strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
   /** 描边虚线预设：等价于 dashPattern={[4, 2]}；与 `dotted` / `dashPattern` 优先级：dashPattern > dashed > dotted */

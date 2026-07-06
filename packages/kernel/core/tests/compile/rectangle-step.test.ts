@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR } from '../../src';
+import type { CompileWarning, IRScene } from '../../src';
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -15,8 +15,8 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   return p;
 };
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
-const path = (...steps: Array<unknown>): IR => scene([{ type: 'path', children: steps as never }]);
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
+const path = (...steps: Array<unknown>): IRScene => scene([{ type: 'path', children: steps as never }]);
 
 describe('rectangle step：直角', () => {
   it('两对角 → M(x0,y0) 顺时针 4 line + close', () => {

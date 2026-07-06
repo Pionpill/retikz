@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { NodeLayout } from '../../src/compile/node';
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
-import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';
+import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';
@@ -52,7 +52,7 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
 
   it('autoclip-margin-regression：自动连线端点仍停在 shape 外 margin（行为不变）', () => {
     // 默认无 text、padding=8 → rect 16×16；A=(0,0) 朝 B=(100,0) → 端点 = 8 + 10 = 18
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -71,7 +71,7 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
   });
 
   it('layout-footprint：margin 计入 viewBox（节点占位四向各 +margin）', () => {
-    const mk = (margin: number): IR => ({
+    const mk = (margin: number): IRScene => ({
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], margin }],
@@ -122,7 +122,7 @@ describe('margin：不外扩护栏 + 校验', () => {
   });
 
   it('named-anchor-no-margin：star 的 tip-0 在 margin>0 下仍落视觉尖端（不外扩）', () => {
-    const mk = (margin: number): IR => ({
+    const mk = (margin: number): IRScene => ({
       version: 1,
       type: 'scene',
       children: [
@@ -150,7 +150,7 @@ describe('margin：不外扩护栏 + 校验', () => {
   });
 
   it('label-no-margin：label 附着点恒走视觉 shape（不被 margin 双偏移）', () => {
-    const mk = (margin: number): IR => ({
+    const mk = (margin: number): IRScene => ({
       version: 1,
       type: 'scene',
       children: [
@@ -192,7 +192,7 @@ describe('margin：交互', () => {
   });
 
   it('margin-x-borrowed-boundary：footprint = 视觉 AABB + margin，不受 boundary 影响', () => {
-    const mk = (boundary: 'shape' | 'circle'): IR => ({
+    const mk = (boundary: 'shape' | 'circle'): IRScene => ({
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], margin: 10, boundary }],

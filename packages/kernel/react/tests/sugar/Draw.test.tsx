@@ -1,4 +1,4 @@
-import { DrawWay } from '@retikz/core';
+﻿import { DrawWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { buildIR } from '../../src/kernel/builder';
@@ -58,7 +58,7 @@ describe('Draw: 基础展开', () => {
         fillRule="evenodd"
         opacity={0.8}
         fillOpacity={0.5}
-        drawOpacity={0.7}
+        strokeOpacity={0.7}
         zIndex={5}
       />,
     );
@@ -82,7 +82,7 @@ describe('Draw: 基础展开', () => {
       fillRule: 'evenodd',
       opacity: 0.8,
       fillOpacity: 0.5,
-      drawOpacity: 0.7,
+      strokeOpacity: 0.7,
       zIndex: 5,
     });
   });

@@ -1,4 +1,4 @@
----
+﻿---
 title: Entity
 description: Named members placed in a scene — Node and Coordinate
 ---
@@ -13,7 +13,7 @@ description: Named members placed in a scene — Node and Coordinate
 
 <Comparison target="tikz" title="Node field mapping">
 
-`drawOpacity` maps to TikZ `draw opacity`; `dashed` / `dotted` map to TikZ's dashed / dotted presets; the `{ text, position }` form of `label` maps to `[label=top:foo]` / `[label=30:foo]`. `placement: 'inside'` is retikz's structured extension for labels placed inside a node.
+`strokeOpacity` is stroke-only opacity; `dashed` / `dotted` map to TikZ's dashed / dotted presets; the `{ text, position }` form of `label` maps to `[label=top:foo]` / `[label=30:foo]`. `placement: 'inside'` is retikz's structured extension for labels placed inside a node.
 
 </Comparison>
 
@@ -66,6 +66,6 @@ description: Named members placed in a scene — Node and Coordinate
 
 ## Font
 
-`FontSchema` is shared by node text, node labels, and per-line text overrides. All fields are optional.
+`FontSchema` is shared by node text, node labels, and per-line text overrides. All fields are optional. `size` accepts a positive number, a Web preset such as `sm` / `lg`, or an `em` / `rem` string; omitted sizes use `CompileOptions.fontSize`. TikZ-style sizes are handled by higher-level sugar, not core IR.
 
 <ZodSchema name="FontSchema" />

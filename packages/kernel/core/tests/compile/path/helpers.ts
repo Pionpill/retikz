@@ -1,5 +1,5 @@
 ﻿import type { PathCommand, PathPrim, Scene, ScenePrimitive } from '../../../src/contract';
-import type { IR, IRChild, IRPathBase, IRStep } from '../../../src/schemas';
+import type { IRChild, IRPathBase, IRScene, IRStep } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 
@@ -9,13 +9,13 @@ export const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   return p;
 };
 
-export const pathIr = (children: Array<IRStep>, overrides: Omit<IRPathBase, 'type' | 'children'> = {}): IR => ({
+export const pathIr = (children: Array<IRStep>, overrides: Omit<IRPathBase, 'type' | 'children'> = {}): IRScene => ({
   version: 1,
   type: 'scene',
   children: [{ type: 'path', ...overrides, children }],
 });
 
-export const sceneIr = (children: Array<IRChild>): IR => ({
+export const sceneIr = (children: Array<IRChild>): IRScene => ({
   version: 1,
   type: 'scene',
   children,

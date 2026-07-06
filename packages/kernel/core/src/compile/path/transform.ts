@@ -1,7 +1,9 @@
-﻿import type { Transform } from '../../contract';
+import { boundsCenter, boundsOf } from '@retikz/math';
+
+import type { Transform } from '../../contract';
 import type { IRPathScale, IRPosition } from '../../schemas';
 
-import { applyTransformChain } from '../scope';
+import { applyTransformChain } from '../transform';
 
 /** 有限数 */
 const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
@@ -12,32 +14,26 @@ const isFinitePoint = (pt: unknown): boolean =>
 
 /** 一组点的 axis-aligned 包围盒中心 */
 export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const [x, y] of pts) {
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-  }
-  return [(minX + maxX) / 2, (minY + maxY) / 2];
+  const bounds = boundsOf(pts);
+  if (bounds === undefined) return [Number.NaN, Number.NaN];
+  return boundsCenter(bounds);
 };
 
-/**
- * path 整体 rotate / scale → 绕包围盒中心的 GroupPrim transforms
- * @description rotate 写成 `{ kind:'rotate', degrees, cx, cy }`（cx/cy = bbox center），等价包一个绕同中心旋转的 Scope；
- *   scale number → `{ kind:'scale', x }`（等比，y 省略），`{x,y}` → `{ kind:'scale', x, y }`。
- *   缩放支点同为 bbox center：用 translate(center) ∘ scale ∘ translate(-center) 三段表达。两者都缺时返回空数组。
- *   数组顺序与 GroupPrim 渲染一致（array[0] 最外层、最后 apply）：先 rotate 段再 scale 段（rotate 在外）。
- */
-export const buildPathTransforms = (
-  rotate: number | undefined,
-  scale: IRPathScale | undefined,
-  center: IRPosition,
-  round: (n: number) => number,
-): Array<Transform> => {
+/** path rotate / scale transform 构造输入。 */
+export type BuildPathTransformsInput = {
+  rotate: number | undefined;
+  scale: IRPathScale | undefined;
+  center: IRPosition;
+  round: (n: number) => number;
+};
+
+/** 把 path 的 rotate / scale 编译为绕 bbox 中心的 transforms。 */
+export const buildPathTransforms = ({
+  rotate,
+  scale,
+  center,
+  round,
+}: BuildPathTransformsInput): Array<Transform> => {
   const out: Array<Transform> = [];
   if (rotate !== undefined) {
     out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });

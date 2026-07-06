@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { sector } from '../../src/providers/shape';
 import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
@@ -26,7 +26,7 @@ const allByType = <T extends ScenePrimitive['type']>(
 const wedgeNode = (
   params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number },
   extra: Record<string, unknown> = {},
-): IR['children'][number] => ({
+): IRScene['children'][number] => ({
   type: 'node',
   id: 'wedge',
   position: [0, 0],
@@ -221,7 +221,7 @@ describe('sector — 交互（rotate / Path 连接 / position）', () => {
         { type: 'step', kind: 'move', to: { id: 'wedge', anchor: 'outer-arc-mid' } },
         { type: 'step', kind: 'line', to: [120, -20] },
       ],
-    } as unknown as IR['children'][number];
+    } as unknown as IRScene['children'][number];
     const compiled = compileToScene(
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 }), connectPath]),
     );

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR, IRAnimationTrack, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRAnimationTrack, IRScene, ScenePrimitive } from '../../src';
 
 import { AnimationTrackSchema, NodeDefaultSchema, PathDefaultSchema, SceneSchema } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
-const scene = (children: IR['children'], extra: Partial<IR> = {}): IR => ({
+const scene = (children: IRScene['children'], extra: Partial<IRScene> = {}): IRScene => ({
   version: 1,
   type: 'scene',
   children,

@@ -8,7 +8,7 @@
  *   - 交互：内层 `<Scope>` 覆盖 / 图元显式属性胜出 / 内层 `<Scope resetStyle>` 屏障切断继承
  *   断言层：wrapRootScope（Layout 实际调用的合成函数）+ buildIR 出 IR 形态；compileToScene 出已解析 primitive 样式
  */
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { EllipsePrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
 import type { ReactNode } from 'react';
 
@@ -36,7 +36,7 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 };
 
 /** 复刻 Layout 的 IR 构造：wrapRootScope（按需包合成根 Scope）→ buildIR */
-const layoutIR = (style: ScopeStyleProps, children: ReactNode): IR => buildIR(wrapRootScope(children, style));
+const layoutIR = (style: ScopeStyleProps, children: ReactNode): IRScene => buildIR(wrapRootScope(children, style));
 
 /** Layout 流水线编译后的全部叶子 primitive */
 const layoutPrims = (style: ScopeStyleProps, children: ReactNode): Array<ScenePrimitive> =>
@@ -198,7 +198,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
 
 describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
   it('layout_ir_prop_with_style_warns：同时传 ir + 样式 prop → dev warn + 样式被忽略', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],

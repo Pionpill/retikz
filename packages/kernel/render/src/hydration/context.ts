@@ -6,7 +6,8 @@
  *   （vanilla / react）经 `createContextBuilder` 注入 renderer 专有片段（element 定位 / 指针逆映射 / 动画句柄），
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op。
  */
-import type { IRJsonObject, Layout, Scene, ScenePrimitive } from '@retikz/core';
+import type { IRJsonObject, Scene, ScenePrimitive } from '@retikz/core';
+import type { BoundsRect } from '@retikz/math';
 
 import type { IdClockRegistry } from '../animation/id-clock';
 
@@ -387,7 +388,7 @@ export const createCanvasIdAnimationControls = (deps: CanvasIdControlsDeps): Hyd
  *   （镜像 canvas `clientToScene` / `preserveAspectRatio=meet`）。非指针事件（无 clientX）/ 退化尺寸 → null。
  */
 export const resolvePointViaLayout =
-  (root: Element, layout: Layout) =>
+  (root: Element, layout: BoundsRect) =>
   (event: Event): { x: number; y: number } | null => {
     const mouse = event as MouseEvent;
     if (typeof mouse.clientX !== 'number') return null;

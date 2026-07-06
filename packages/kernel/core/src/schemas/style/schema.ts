@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
 import { PaintSpecSchema } from '../paint';
@@ -17,7 +17,7 @@ export const GraphicStyleSchema = z
     fillOpacity: OpacitySchema.optional().describe('Fill-only opacity for filled regions.'),
     stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: CSS color string or PaintSpec.'),
     strokeWidth: z.number().nonnegative().optional().describe('Stroke width in user units.'),
-    drawOpacity: OpacitySchema.optional().describe('Stroke-only opacity for outlines.'),
+    strokeOpacity: OpacitySchema.optional().describe('Stroke-only opacity for outlines.'),
     opacity: OpacitySchema.optional().describe('Whole-element opacity applied to primary geometry.'),
     shadow: z
       .union([z.enum(ShadowPreset), DropShadowSchema])
@@ -44,7 +44,7 @@ export const CascadingGraphicStyleSchema = z
     fillOpacity: OpacitySchema.optional().describe('Cascading fill-only opacity for filled regions.'),
     stroke: PaintValueSchema.optional().describe('Cascading default stroke paint: CSS color string or PaintSpec.'),
     strokeWidth: z.number().nonnegative().optional().describe('Cascading default stroke width in user units.'),
-    drawOpacity: OpacitySchema.optional().describe('Cascading stroke-only opacity for outlines.'),
+    strokeOpacity: OpacitySchema.optional().describe('Cascading stroke-only opacity for outlines.'),
     opacity: OpacitySchema.optional().describe('Cascading whole-element opacity.'),
   })
   .strict()

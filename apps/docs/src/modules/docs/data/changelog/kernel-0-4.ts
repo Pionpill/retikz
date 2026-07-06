@@ -91,11 +91,17 @@ export const kernelV04: Release = {
             version: 'alpha.8',
             date: '2026-07-03',
             summary: {
-              zh: 'v0.4 alpha 收口：六个 kernel 包 lockstep bump 到 `0.4.0-alpha.8`，同步 roadmap / changelog / 完备评测边界，并补齐与 `dashPattern` 配套的 `dashOffset` 通用描边能力。',
-              en: 'v0.4 alpha wrap-up: the six kernel packages move in lockstep to `0.4.0-alpha.8`, aligning the roadmap, changelog, and completeness-evaluation boundaries while adding the `dashOffset` stroke capability that pairs with `dashPattern`.',
+              zh: 'v0.4 alpha 收口：六个 kernel 包 lockstep bump 到 `0.4.0-alpha.8`，同步 roadmap / changelog / 完备评测边界，并补齐与 `dashPattern` 配套的 `dashOffset` 通用描边能力和最小内置 path/ribbon provider。',
+              en: 'v0.4 alpha wrap-up: the six kernel packages move in lockstep to `0.4.0-alpha.8`, aligning the roadmap, changelog, and completeness-evaluation boundaries while adding the `dashOffset` stroke capability plus minimal built-in path/ribbon providers.',
             },
             items: [
-
+              {
+                label: { zh: '内置 parabola / bulge provider', en: 'Built-in parabola / bulge providers' },
+                content: {
+                  zh: '`PathGeneratorDefinition` 增内置 `parabola`（`params.control` + `to` 生成二次贝塞尔），React `<Step kind="generator">` 可直接调用；`RibbonWidthProfileDefinition` 增内置 `bulge`（`base` / `peak` 中点鼓起或收窄）。此前同名自定义 definition 现在会按 provider key contract 报重复注册。',
+                  en: '`PathGeneratorDefinition` now includes built-in `parabola` (`params.control` + `to` produce a quadratic Bezier), callable through React `<Step kind="generator">`; `RibbonWidthProfileDefinition` includes built-in `bulge` (`base` / `peak` widens or narrows the midpoint). Existing custom definitions with those names now fail under the provider key contract as duplicate registrations.',
+                },
+              },
             ],
           },
           {

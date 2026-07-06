@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 const silent = { onWarn: () => {} };
 
 describe('emitNodePrimitives：带文本 Node 包 <g>', () => {

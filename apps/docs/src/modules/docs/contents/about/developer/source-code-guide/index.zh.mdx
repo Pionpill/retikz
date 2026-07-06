@@ -65,7 +65,7 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
    `compileToScene(ir, options): Scene`。主线是递归处理 children、布局节点与 scope、解析路径、收集 paint / clip / marker 资源。读完它就知道 IR 是怎么落到 Scene 的。
 
 7. **[`compile/node/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/node) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) ——子编译器**<br />
-   按需深入：节点布局 / 路径步进 / 位置解析三个独立文件。[`text-metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text-metrics.ts) 提供 fallback 度量，adapter 可注入更准的版本。
+   按需深入：节点布局 / 路径步进 / 位置解析三个独立文件。[`text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) 提供 fallback 度量，adapter 可注入更准的版本。
 
 8. **[`parsers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parsers) ——Sugar 入口（可选）**<br />
    [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parsers/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parsers/target-sugar.ts)：把 `<Draw way={[...]}>` 这种 Sugar 形态翻译为 IR。`@retikz/react` 在 Sugar 组件内部调用它们。
@@ -145,7 +145,7 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 | 极坐标 / 相对定位      | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)              |
 | Scene primitive 类型   | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                    |
 | 编译流水线             | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)           |
-| 文字度量接口           | [`core/compile/text-metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text-metrics.ts) |
+| 文字度量接口           | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) |
 | boundaryPoint / anchor | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) 等 |
 | core 公开 API          | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                           |
 | React 顶层管道         | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Layout.tsx)             |

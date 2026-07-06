@@ -7,6 +7,10 @@ description: Use when changing retikz package file layout, dependency direction,
 
 retikz 模块按“shared → schemas → contract → providers → pipeline/compile”分层；core 另有 `parsers/` 作为 Sugar / DSL 到 IR 的必要入口。本 skill 只做总纲和路由；不要一次加载所有子 skill。
 
+## 入口类型
+
+- 有命名类型且存在统一承载入口时，把类型写在入口处（如 `defineXxx<TParams>({...})`、builder 泛型、类泛型或构造入口），不要在其上下文回调、成员或内部参数上重复声明同一类型。
+
 ## 按需加载
 
 | 改动内容 | 读取 |
@@ -31,6 +35,13 @@ shared/schemas <- parsers
 
 右侧消费左侧；左侧不反向读取右侧。`parsers/` 是入 IR 前的纯函数旁路，只依赖 `shared` / `schemas`，输出 IR 节点或片段，供 adapter / Sugar 复用；不得依赖 `compile`、`providers` 或运行时 registry。跨层复用的纯函数优先下沉到 `shared`，IR 契约回 `schemas`，作者协议回 `contract`，内置实现回 `providers`，编排消费留在 `pipeline/compile`，字符串 / DSL shorthand 归 `parsers`。
 
+## JSDoc
+
+- 整体 JSDoc 写功能视角：让读者先知道函数、类、类型负责什么，不从实现过程、内部步骤或历史背景开头。
+- 细节 JSDoc 可说明实现细节，但仍从功能目的出发简短描述；不要复述代码逐行做了什么。
+- `@description` 写主语义、契约和跨字段行为；`@remarks` 只写设计理由、非主路径补充或未来扩展钩子。
+- `@default` 只写非 undefined 默认值；可选字段默认缺省为 undefined 时不要写。
+
 ## 共性文件
 
 | 文件 | 职责 |
@@ -49,6 +60,7 @@ shared/schemas <- parsers
 - 目录级 `index.ts` 导出当前目录稳定 API；默认 `export *`，需要裁剪公共面或避免冲突时才精选导出。
 - 消费方从拥有者 barrel 导入；不要从非拥有者模块转手 export 其它层内容。
 - 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
+- 同一文件中同 kind（type 或 value）且同 source 的 named import 必须合并为一条；type/value 因 lint 规则保持分离。
 - 尽量避免 import / export `as` 重命名；命名冲突优先在定义源头改成准确名称，或由 owner barrel 调整公共面。
 - 主题内部可相邻导入；模块外避免 deep import 到 `constants.ts` / `schema.ts` 等私有文件。
 

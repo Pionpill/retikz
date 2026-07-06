@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ScenePrimitive } from '../../src/contract';
-import type { ShapeDefinition } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { ScenePrimitive, ShapeDefinition } from '../../src/contract';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { defineShape } from '../../src/contract';
@@ -90,7 +89,7 @@ const chipShape = (): ShapeDefinition =>
 
 describe('Shape registry — injection (happy path)', () => {
   it('inject_custom_shape_compiles: shapes:{hexagon} + node.shape=hexagon → emits custom prim', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] }],
@@ -100,7 +99,7 @@ describe('Shape registry — injection (happy path)', () => {
   });
 
   it('numeric_angle_generic_for_custom: a custom shape with only boundaryPoint gets `.30` for free', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -121,7 +120,7 @@ describe('Shape registry — injection (happy path)', () => {
   });
 
   it('shape_emits_multiple_primitives: emit yielding body + 2 pins → all prims in Scene', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'chip', position: [0, 0] }],
@@ -145,7 +144,7 @@ describe('Shape registry — injection (happy path)', () => {
         yield cachedPrim;
       },
     };
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -163,7 +162,7 @@ describe('Shape registry — injection (happy path)', () => {
 
 describe('Shape registry — boundary', () => {
   it('empty_shapes_option_equals_baseline: shapes:{} deep-equals no options', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -182,12 +181,12 @@ describe('Shape registry — boundary', () => {
   });
 
   it('default_rectangle_when_shape_absent: no shape → RectPrim', () => {
-    const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
     expect(findByType(compileToScene(ir).primitives, 'rect')).toBeDefined();
   });
 
   it('synthetic_layouts_have_rectangle_shapedef: coordinate + scope.id resolve via rectangle geometry', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -226,7 +225,7 @@ describe('Shape registry — boundary', () => {
       anchor: (rect, name) =>
         name === 'sentinel' ? [rect.x + 77, rect.y + 88] : BUILTIN_SHAPES.rectangle.anchor(rect, name, {}),
     };
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -250,7 +249,7 @@ describe('Shape registry — boundary', () => {
 
 describe('Shape registry — error path', () => {
   it('unknown_shape_throws_with_list: unregistered shape → throw with sorted available names', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }],
@@ -269,7 +268,7 @@ describe('Shape registry — error path', () => {
   it('custom_shape_anchor_only_center: canonical anchor (top) 通过 AABB 上提不再 throw', () => {
     // canonical 名（top / bottom / right / left / center / top-right / top-left / bottom-right / bottom-left）
     // 在 anchorOf 内上提为 rectangle AABB，所有自定义 shape 自动获得 canonical anchor。
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -289,7 +288,7 @@ describe('Shape registry — error path', () => {
 
   it('custom_shape_anchor_only_center: 非 canonical 专属 anchor (tip) 仍然 throw', () => {
     // 非 canonical 的自定义 anchor 名（不在 9 个 rect 方位名集合内）：走视觉 shapeDef.anchor，返回 undefined → throw
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -327,7 +326,7 @@ describe('Shape registry — interaction', () => {
         };
       },
     };
-    const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
     expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] })).toThrow(
       /duplicate shape registration: "rectangle"/,
     );
@@ -344,7 +343,7 @@ describe('Shape registry — interaction', () => {
           yield { type: 'ellipse', cx: rect.x, cy: rect.y, rx: rect.width / 2, ry: rect.height / 2 };
         },
       };
-      const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0] }] };
+      const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0] }] };
       expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] })).toThrow(
         /duplicate shape registration: "rectangle"/,
       );
@@ -354,7 +353,7 @@ describe('Shape registry — interaction', () => {
   });
 
   it('diamond_rotate_via_outer_group: rotated diamond → axis-aligned path under a rotate group', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'D', rotate: 45 }],
@@ -366,7 +365,7 @@ describe('Shape registry — interaction', () => {
   });
 
   it('injected_shape_with_margin: margin inflates the rect passed to boundaryPoint', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

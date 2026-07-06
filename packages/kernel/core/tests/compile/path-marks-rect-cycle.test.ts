@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, ScenePrimitive } from '../../src';
+import type { IRScene, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 import { rectPerimeterSample } from '../../src/shared/geometry/path';
@@ -35,7 +35,7 @@ const findEllipse = (
 
 describe('G4：中段 mark 空心箭头的 contextStroke 拍平进 Scene 时解析为 path 描边色', () => {
   it('openCircle mark：嵌入 Scene 的 ellipse stroke = path 实际描边（非 {contextStroke} / 非裸 context-stroke）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -57,7 +57,7 @@ describe('G4：中段 mark 空心箭头的 contextStroke 拍平进 Scene 时解�
   });
 
   it('path 无显式 stroke → mark contextStroke 解析为 currentColor', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -96,7 +96,7 @@ describe('rectPerimeterSample（矩形周长采样，CW from 左上）', () => {
 
 describe('C7：cycle 闭合段可承载 mark', () => {
   it('三角形闭合路径，pos=5/6 落在闭合段中点 (2.5, 4)', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -122,7 +122,7 @@ describe('C7：cycle 闭合段可承载 mark', () => {
 });
 
 describe('C7：rectangle 段计入段数并可承载 mark', () => {
-  const rectPath = (pos: number): IR => ({
+  const rectPath = (pos: number): IRScene => ({
     version: 1,
     type: 'scene',
     children: [

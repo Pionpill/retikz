@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
@@ -22,7 +22,7 @@ const Demo: FC = () => (
       fillOpacity={0.78}
       stroke="#14532d"
       strokeWidth={1.2}
-      drawOpacity={0.22}
+      strokeOpacity={0.22}
     >
       <Step kind="move" to={[-220, 0]} />
       <Step to={[220, 0]} />

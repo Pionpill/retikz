@@ -9,38 +9,47 @@ import { defineShape } from '../../contract';
 import { boundaryFromContour, contourCommands, DEG_TO_RAD, localToWorld } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
-/**
- * star shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；points = 尖角数（≥3），
- *   innerRadius / outerRadius = 凹角 / 尖角半径（长度），rotate = 起始尖角自旋角（度，可选），
- *   cornerRadius = 顶点倒角半径（user units，可选，逐角夹紧；凸尖与凹角都倒）。
- *   星形为外径尖角 / 内径凹角交替的 `2×points` 顶点闭合多边形。
- */
-type StarParams = {
-  points: number;
-  innerRadius: number;
-  outerRadius: number;
-  /**
-   * 起始尖角自旋角（度）。
-   * @default 0
-   */
-  rotate?: number;
-  /**
-   * 顶点倒角半径。
-   * @default 0
-   */
-  cornerRadius?: number;
-};
-
 const MAX_STAR_POINTS = 1024;
 
+const starParamsSchema = z
+  .strictObject({
+    points: z
+      .number()
+      .int()
+      .min(3)
+      .max(MAX_STAR_POINTS)
+      .describe(`Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`),
+    innerRadius: z
+      .number()
+      .positive()
+      .describe('Inner (notch) radius in user units.'),
+    outerRadius: z
+      .number()
+      .positive()
+      .describe('Outer (tip) radius in user units; must be > innerRadius.'),
+    rotate: z
+      .number()
+      .optional()
+      .describe(
+        'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
+      ),
+    cornerRadius: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+      ),
+  })
+  .refine(p => p.outerRadius > p.innerRadius, {
+    message: 'outerRadius must be greater than innerRadius',
+  });
+
+type StarParams = z.infer<typeof starParamsSchema>;
+
 /**
- * star 派生几何（circumscribe / boundaryPoint / anchor / emit 单一真源）
- * @description `2×points` 个顶点的局部坐标（绕中心、外径尖角与内径凹角交替均布、按 rotate 定起始），
- *   外加由顶点 min/max 算出的精确 AABB 半轴。顶点 k（k=0..2·points−1）角 = rotate + k·(180/points) − 90，
- *   偶 k 取 outerRadius（尖角 tip）、奇 k 取 innerRadius（凹角 notch）；默认（rotate:0）第一尖角朝上（−y）。
- *   中心局部原点恒为 [0,0]
- *   （星形关于中心对称，AABB 中心 = 星形中心 = node position，无 circumscribeOffset）。
+ * star 派生几何。
+ * @description 顶点在内外半径间交替分布，AABB 半轴由顶点范围得到；星形中心恒为局部原点。
  */
 type StarGeometry = {
   /** `2×points` 个顶点局部坐标（中心为原点，偶 index = 尖角、奇 index = 凹角） */
@@ -50,10 +59,8 @@ type StarGeometry = {
 };
 
 /**
- * 计算 star 单一真源几何
- * @description 局部系以中心为原点：顶点 k 角 = (rotate ?? 0) + k·(180/points) − 90，半径偶 outer / 奇 inner，
- *   point = [r·cosθ, r·sinθ]（0°=+x，90°=+y screen y-down）。−90 基准使默认第一尖角朝上（−y）。
- *   AABB 半轴 = 各顶点 |x| / |y| 的最大值（对称 → 中心即原点）。
+ * 计算 star 顶点和 AABB 半轴。
+ * @description 默认第一尖角朝上；rotate 只改变自旋角。
  */
 const starGeometry = (params: StarParams): StarGeometry => {
   const { points, innerRadius, outerRadius } = params;
@@ -83,64 +90,21 @@ const starGeometry = (params: StarParams): StarGeometry => {
 const toWorld = (rect: Rect, local: Position): Position => localToWorld(rect, local);
 
 /**
- * 世界系顶点环（局部 2×points 顶点逐个经 rect 投世界）
- * @description emit 收轴对齐 rect（rotate=0）、boundaryPoint 收带 rotate 的 rect，二者共用此构造；
- *   绕向 = starGeometry 顶点顺序（偶尖 / 奇凹交替），供 verticesToSegments → rounded-contour 模块倒角。
+ * 世界系顶点环。
+ * @description 保持 starGeometry 的尖角 / 凹角交替顺序。
  */
 const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> => geo.vertices.map(v => toWorld(rect, v));
 
 /**
- * star 注册项：星形（外径尖角 / 内径凹角交替的 2×points 顶点闭合多边形）
- * @description params-半径驱动的纯几何形状（像 sector，尺寸由 outerRadius 定、忽略文本内框）：四何函数共用
- *   `starGeometry`（单一真源）。circumscribe 返回含全部尖角的精确 AABB 半轴（随 rotate 变，不随 cornerRadius 变）；
- *   星形关于中心对称 → AABB 中心 = 星形中心 = node position，无需 circumscribeOffset。emit / boundaryPoint 把
- *   `2×points` 顶点环构造成折线段，委托 rounded-contour 模块：cornerRadius 省略 / 0 出原尖角轮廓、>0 在每个顶点
- *   插逐角夹紧的 fillet 弧——凸尖与凹角（notch）由模块按接缝转向叉积统一处理（凹角弧 sweep 反向、圆心在凸侧），
- *   emit 与 boundaryPoint 共用同一份 fillet 结果。emit 收轴对齐 rect（旋转由外层 group 施加）、boundaryPoint
- *   收带 rotate 的 rect 且 rayOrigin = 星形几何中心（关于中心对称，AABB 中心 = 形心 = node position）。
- *   anchor 含 tip-N（第 N 尖角）/ notch-N（第 N 凹角）——恒在原尖角 / 凹角逻辑顶点，不随 cornerRadius 移；
- *   self-rotate（params.rotate）与 Node.rotate 叠加。scaleParams 只缩 inner/outerRadius / cornerRadius（长度）、
- *   不缩 points（计数）/ rotate（角度）。
+ * star 注册项：尖角和凹角交替的闭合多边形。
+ * @description 尺寸由 inner/outerRadius 驱动；cornerRadius 对顶点倒角。
+ *   anchor 提供 tip-N / notch-N；scaleParams 只缩长度参数。
  */
-export const star = defineShape({
+export const star = defineShape<StarParams>({
   name: 'star',
-  paramsSchema: z
-    .strictObject({
-      points: z
-        .number()
-        .int()
-        .min(3)
-        .max(MAX_STAR_POINTS)
-        .describe(
-          `Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`,
-        ),
-      innerRadius: z
-        .number()
-        .positive()
-        .describe('Inner (notch) radius in user units.'),
-      outerRadius: z
-        .number()
-        .positive()
-        .describe('Outer (tip) radius in user units; must be > innerRadius.'),
-      rotate: z
-        .number()
-        .optional()
-        .describe(
-          'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
-        ),
-      cornerRadius: z
-        .number()
-        .nonnegative()
-        .optional()
-        .describe(
-          'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-        ),
-    })
-    .refine(p => p.outerRadius > p.innerRadius, {
-      message: 'outerRadius must be greater than innerRadius',
-    }),
-  circumscribe: (_hw, _hh, params: StarParams) => starGeometry(params).aabbHalfAxes,
-  boundaryPoint: (rect: Rect, toward: Position, params: StarParams): Position => {
+  paramsSchema: starParamsSchema,
+  circumscribe: (_hw, _hh, params) => starGeometry(params).aabbHalfAxes,
+  boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const geo = starGeometry(params);
     // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 星形几何中心（= rect 中心 = node position，星形关于中心对称）。
     const verts = worldVertices(rect, geo);
@@ -149,7 +113,7 @@ export const star = defineShape({
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
     return hit ?? center;
   },
-  anchor: (rect: Rect, name: ShapeAnchorName, params: StarParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
     const geo = starGeometry(params);
     // tip-N → 顶点 2N（尖角）；notch-N → 顶点 2N+1（凹角）。范围越界返回 undefined。
     const tip = /^tip-(\d+)$/.exec(name);
@@ -166,7 +130,7 @@ export const star = defineShape({
     }
     return undefined;
   },
-  *emit(rect: Rect, style, round, params: StarParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const geo = starGeometry(params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = worldVertices(rect, geo);
@@ -175,7 +139,7 @@ export const star = defineShape({
     yield contourToPathPrimitive(commands, style);
   },
   // 半径 / cornerRadius 是长度（随 scale 协同放大，几何均值因子）；points 是计数、rotate 是角度——均不随 scale 缩。
-  scaleParams: (params: StarParams, sx: number, sy: number): StarParams => {
+  scaleParams: (params, sx: number, sy: number) => {
     const factor = Math.sqrt(sx * sy);
     return {
       ...params,

@@ -2,13 +2,11 @@
 import { z } from 'zod';
 
 import type { CompileOptions } from '../../src/compile/compile';
-import type { BoundaryDefinition } from '../../src/contract';
-import type { ScenePrimitive } from '../../src/contract';
-import type { IR, IRBoundary } from '../../src/schemas';
+import type { BoundaryDefinition, ScenePrimitive } from '../../src/contract';
+import type { IRBoundary,IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { defineBoundary } from '../../src/contract';
-import { defineShape } from '../../src/contract';
+import { defineBoundary, defineShape } from '../../src/contract';
 import { BoundarySchema } from '../../src/schemas/boundary';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -19,8 +17,8 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
     position: [0, 0],
     minimumSize: 40,
     boundary,
-  } satisfies IR['children'][number];
-  const ir: IR = {
+  } satisfies IRScene['children'][number];
+  const ir: IRScene = {
     version: 1,
     type: 'scene',
     children: [

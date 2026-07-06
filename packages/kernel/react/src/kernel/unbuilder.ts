@@ -1,4 +1,4 @@
-import type { IR, IRChild, IRNode, IRScope, IRStep } from '@retikz/core';
+import type { IRChild, IRNode, IRScene, IRScope, IRStep } from '@retikz/core';
 import type { ReactNode } from 'react';
 
 import { createElement } from 'react';
@@ -125,8 +125,14 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
     return createElement(Step, { key, kind: 'move', to: step.to });
   }
   if (step.kind === 'generator') {
-    // generator step 暂无对应 React DSL <Step> kind（React sugar 另行实现）；IR→React 反构尚不支持
-    throw new Error('convertIRToReactNode: generator step has no React DSL representation yet');
+    return createElement(Step, {
+      key,
+      kind: 'generator',
+      name: step.name,
+      params: step.params,
+      ...(step.to !== undefined && { to: step.to }),
+      ...(step.label !== undefined && { label: step.label }),
+    });
   }
   // line（默认）
   return createElement(Step, {
@@ -185,4 +191,4 @@ const scopePropsFromIR = (s: IRScope, key: number): ScopeProps & { key: number }
  * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）
  * @description 调用方可 `<Layout>{convertIRToReactNode(ir)}</Layout>` 或用 `<Layout ir={ir}/>`；Sugar 不可逆——buildIR 在收集阶段已把 <Draw/> 求值展开为 Path+Step，IR 里没有"原本是 Draw"的痕迹，本函数永远只产 Kernel 三件套
  */
-export const convertIRToReactNode = (ir: IR): ReactNode => ir.children.map((child, i) => childToElement(child, i));
+export const convertIRToReactNode = (ir: IRScene): ReactNode => ir.children.map((child, i) => childToElement(child, i));

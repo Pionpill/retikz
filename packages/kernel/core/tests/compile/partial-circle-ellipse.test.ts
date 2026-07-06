@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { close, ellipseArc, line, move } from '../helpers/path-command-factory';
@@ -14,9 +14,9 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   return p;
 };
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-const path = (...steps: Array<unknown>): IR => scene([{ type: 'path', children: steps as never }]);
+const path = (...steps: Array<unknown>): IRScene => scene([{ type: 'path', children: steps as never }]);
 
 describe('部分 circlePath', () => {
   it('半圆（0→180, chord 默认）→ M, ellipseArc, close', () => {

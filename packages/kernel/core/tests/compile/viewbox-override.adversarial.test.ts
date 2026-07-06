@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, IRChild } from '../../src';
+import type { IRChild,IRScene } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
-import { createRound } from '../../src/compile/precision';
+import { createRound } from '../../src/compile/scene';
 
 /** 尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize） */
 const circleNode = (id: string, position: [number, number], minimumSize = 40): IRChild => ({
@@ -19,7 +19,7 @@ const circleNode = (id: string, position: [number, number], minimumSize = 40): I
 const sceneWithViewBox = (
   children: ReadonlyArray<IRChild>,
   viewBox: { x: number; y: number; width: number; height: number },
-): IR => ({
+): IRScene => ({
   version: 1,
   type: 'scene',
   children: [...children],
@@ -209,7 +209,7 @@ describe('override 绝对：内容再脏 layout 仍只用 viewBox', () => {
 describe('viewBox 与 clip / paint 资源正交共存', () => {
   it('带 viewBox + scope.clip → layout = viewBox 且 clip 资源照常生成', () => {
     const viewBox = { x: -50, y: -50, width: 100, height: 100 };
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -230,7 +230,7 @@ describe('viewBox 与 clip / paint 资源正交共存', () => {
 
   it('带 viewBox + 渐变 paint fill → layout = viewBox 且 paint 资源照常生成', () => {
     const viewBox = { x: -50, y: -50, width: 100, height: 100 };
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

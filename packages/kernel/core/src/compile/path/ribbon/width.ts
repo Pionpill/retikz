@@ -17,10 +17,17 @@ export const assertFiniteWidth = (width: number, source: string): number => {
 };
 
 /** 按指定插值模式在两个宽度值之间取样。 */
-export const interpolate = (a: number, b: number, t: number, mode: 'linear' | 'smooth' | 'step'): number => {
-  if (mode === 'step') return a;
+export type InterpolateInput = {
+  from: number;
+  to: number;
+  t: number;
+  mode: 'linear' | 'smooth' | 'step';
+};
+
+export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => {
+  if (mode === 'step') return from;
   const u = mode === 'smooth' ? smoothstep(t) : t;
-  return a + (b - a) * u;
+  return from + (to - from) * u;
 };
 
 /**
@@ -48,7 +55,7 @@ export const widthFunction = (
           const span = next.offset - prev.offset;
           const localT = span === 0 ? 1 : (offset - prev.offset) / span;
           return assertFiniteWidth(
-            interpolate(prev.value, next.value, localT, mode),
+            interpolate({ from: prev.value, to: next.value, t: localT, mode }),
             `stops profile at offset ${offset}`,
           );
         }
@@ -90,7 +97,7 @@ export const centerlineWidthFunction = (
   }
   const mode = ribbon.interpolation ?? 'linear';
   return offset =>
-    assertFiniteWidth(interpolate(startWidth, endWidth, offset, mode), `endpoint width taper at offset ${offset}`);
+    assertFiniteWidth(interpolate({ from: startWidth, to: endWidth, t: offset, mode }), `endpoint width taper at offset ${offset}`);
 };
 
 /** 动态 width（stops/profile）会让解析型 offset 不再可靠，需要走采样轮廓。 */

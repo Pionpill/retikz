@@ -1,17 +1,17 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 import { NodeLabelSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 // core emit alphabetic 基线，按字体度量从基线还原单行文本视觉中心（= label 旋转中心 ly）
 const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 const silent = { onWarn: () => {} };
 
 const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrim | undefined =>

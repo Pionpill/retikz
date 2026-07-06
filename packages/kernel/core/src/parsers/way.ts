@@ -5,7 +5,6 @@ import type {
   IRControlPoint,
   IRCubicStep,
   IRCurveStep,
-  IRCycleStep,
   IREllipsePathStep,
   IRFoldStep,
   IRLineStep,
@@ -149,9 +148,6 @@ const isWayShapeOp = (item: WayItem): item is WayArcOp | WayCircleOp | WayEllips
 
 const isWayLabelOp = (item: WayItem): item is WayLabelOp => isPlainObject(item) && 'label' in item;
 
-const isWayOperator = (item: WayItem): boolean =>
-  isWayCycle(item) || isWayVia(item) || isWayCurveLike(item) || isWayShapeOp(item) || isWayLabelOp(item);
-
 /** sugar 字符串/对象 → IR step.label（字符串 = `{text:s}`） */
 const normalizeLabel = (l: WayLabel): IRStepLabel => {
   if (typeof l === 'string') return { text: l };
@@ -182,11 +178,164 @@ const desugarRelativeItem = (item: WayItem): WayItem => {
   throw new Error(`parseWay: WayRelativeItem.type must be DrawWay.Relative or DrawWay.Accumulate`);
 };
 
+type ClassifiedWayItem =
+  | { kind: 'label'; item: WayLabelOp }
+  | { kind: 'cycle'; item: WayCycle }
+  | { kind: 'via'; item: WayVia }
+  | { kind: 'curve'; item: WayCurveOp | WayCubicOp | WayBendOp }
+  | { kind: 'shape'; item: WayArcOp | WayCircleOp | WayEllipseOp }
+  | { kind: 'target'; item: WayItem };
+
+const classifyWayItem = (item: WayItem): ClassifiedWayItem => {
+  if (isWayLabelOp(item)) return { kind: 'label', item };
+  if (isWayCycle(item)) return { kind: 'cycle', item };
+  if (isWayVia(item)) return { kind: 'via', item };
+  if (isWayCurveLike(item)) return { kind: 'curve', item };
+  if (isWayShapeOp(item)) return { kind: 'shape', item };
+  return { kind: 'target', item };
+};
+
+const isWayOperator = (item: WayItem): boolean => classifyWayItem(item).kind !== 'target';
+
 /** WayItem 归约为"目标点"，算子/关键字返回 null */
 const targetOf = (item: WayItem): IRTarget | null => {
   if (isWayOperator(item)) return null;
   return desugarRelativeItem(item) as IRTarget;
 };
+
+type LabelAttachableStep =
+  | IRArcStep
+  | IRBendStep
+  | IRCirclePathStep
+  | IRCubicStep
+  | IRCurveStep
+  | IREllipsePathStep
+  | IRFoldStep
+  | IRLineStep;
+
+const attachLabel = <TStep extends LabelAttachableStep>(step: TStep, label: IRStepLabel | undefined): TStep => {
+  if (label) step.label = label;
+  return step;
+};
+
+const parseFollowingTarget = (
+  way: WayDSL,
+  index: number,
+  endError: string,
+  nextError: (next: WayItem) => string,
+): IRTarget => {
+  if (index + 1 >= way.length) throw new Error(endError);
+  const next = way[index + 1];
+  if (isWayOperator(next)) throw new Error(nextError(next));
+  return parseTargetSugar(desugarRelativeItem(next));
+};
+
+const buildViaStep = (way: WayDSL, index: number, item: WayVia, label: IRStepLabel | undefined): IRFoldStep =>
+  attachLabel(
+    {
+      type: 'step',
+      kind: 'fold',
+      via: item,
+      to: parseFollowingTarget(
+        way,
+        index,
+        `parseWay: via operator '${item}' at end of way must be followed by a target`,
+        next => `parseWay: via operator '${item}' must be followed by a target, got '${String(next)}'`,
+      ),
+    },
+    label,
+  );
+
+const buildCurveLikeStep = (
+  way: WayDSL,
+  index: number,
+  item: WayCurveOp | WayCubicOp | WayBendOp,
+  label: IRStepLabel | undefined,
+): IRCurveStep | IRCubicStep | IRBendStep => {
+  const target = parseFollowingTarget(
+    way,
+    index,
+    'parseWay: curve operator at end of way must be followed by a target',
+    () => 'parseWay: curve operator must be followed by a target, got operator/keyword',
+  );
+  if (isWayCurveOp(item)) {
+    return attachLabel(
+      {
+        type: 'step',
+        kind: 'curve',
+        to: target,
+        control: item.curve,
+      },
+      label,
+    );
+  }
+  if (isWayCubicOp(item)) {
+    return attachLabel(
+      {
+        type: 'step',
+        kind: 'cubic',
+        to: target,
+        control1: item.cubic[0],
+        control2: item.cubic[1],
+      },
+      label,
+    );
+  }
+  const bend: IRBendStep = {
+    type: 'step',
+    kind: 'bend',
+    to: target,
+    bendDirection: item.bend,
+  };
+  if (item.angle !== undefined) bend.bendAngle = item.angle;
+  return attachLabel(bend, label);
+};
+
+const buildShapeStep = (
+  item: WayArcOp | WayCircleOp | WayEllipseOp,
+  label: IRStepLabel | undefined,
+): IRArcStep | IRCirclePathStep | IREllipsePathStep => {
+  if (isWayArcOp(item)) {
+    return attachLabel(
+      {
+        type: 'step',
+        kind: 'arc',
+        startAngle: item.arc.startAngle,
+        endAngle: item.arc.endAngle,
+        radius: item.arc.radius,
+      },
+      label,
+    );
+  }
+  if (isWayCircleOp(item)) {
+    return attachLabel(
+      {
+        type: 'step',
+        kind: 'circlePath',
+        radius: item.circle.radius,
+      },
+      label,
+    );
+  }
+  return attachLabel(
+    {
+      type: 'step',
+      kind: 'ellipsePath',
+      radius: item.ellipse.radius,
+    },
+    label,
+  );
+};
+
+const buildLineStep = (item: WayItem, label: IRStepLabel | undefined): IRLineStep =>
+  attachLabel(
+    {
+      type: 'step',
+      kind: 'line',
+      to: parseTargetSugar(desugarRelativeItem(item)),
+    },
+    label,
+  );
 
 /**
  * way 数组 → IRStep 序列
@@ -216,126 +365,42 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
   const moveTarget: IRTarget = parseTargetSugar(rawMove);
   const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
   out.push(moveStep);
-  for (let i = 1; i < way.length; i++) {
-    const item = way[i];
-    if (isWayLabelOp(item)) {
-      if (pendingLabel) {
-        throw new Error(`parseWay: label operator at index ${i} cannot directly follow another label operator`);
-      }
-      pendingLabel = normalizeLabel(item.label);
-      continue;
+  let index = 1;
+  while (index < way.length) {
+    const classified = classifyWayItem(way[index]);
+    switch (classified.kind) {
+      case 'label':
+        if (pendingLabel) {
+          throw new Error(`parseWay: label operator at index ${index} cannot directly follow another label operator`);
+        }
+        pendingLabel = normalizeLabel(classified.item.label);
+        index += 1;
+        break;
+      case 'cycle':
+        if (pendingLabel) {
+          throw new Error(`parseWay: cycle step cannot carry a label (label operator at index ${index - 1})`);
+        }
+        out.push({ type: 'step', kind: 'cycle' });
+        index += 1;
+        break;
+      case 'via':
+        out.push(buildViaStep(way, index, classified.item, consumeLabel()));
+        index += 2;
+        break;
+      case 'curve':
+        out.push(buildCurveLikeStep(way, index, classified.item, consumeLabel()));
+        index += 2;
+        break;
+      case 'shape':
+        // 形状算子（arc/circle/ellipse）以上一项为圆心，不消耗下一项
+        out.push(buildShapeStep(classified.item, consumeLabel()));
+        index += 1;
+        break;
+      case 'target':
+        out.push(buildLineStep(classified.item, consumeLabel()));
+        index += 1;
+        break;
     }
-    if (isWayCycle(item)) {
-      if (pendingLabel) {
-        throw new Error(`parseWay: cycle step cannot carry a label (label operator at index ${i - 1})`);
-      }
-      const cycle: IRCycleStep = { type: 'step', kind: 'cycle' };
-      out.push(cycle);
-      continue;
-    }
-    if (isWayVia(item)) {
-      if (i + 1 >= way.length) {
-        throw new Error(`parseWay: via operator '${item}' at end of way must be followed by a target`);
-      }
-      const next = way[i + 1];
-      if (isWayOperator(next)) {
-        throw new Error(`parseWay: via operator '${item}' must be followed by a target, got '${String(next)}'`);
-      }
-      const fold: IRFoldStep = {
-        type: 'step',
-        kind: 'fold',
-        via: item,
-        to: parseTargetSugar(desugarRelativeItem(next)),
-      };
-      const label = consumeLabel();
-      if (label) fold.label = label;
-      out.push(fold);
-      i++; // 消费 next
-      continue;
-    }
-    if (isWayCurveLike(item)) {
-      if (i + 1 >= way.length) {
-        throw new Error(`parseWay: curve operator at end of way must be followed by a target`);
-      }
-      const next = way[i + 1];
-      if (isWayOperator(next)) {
-        throw new Error(`parseWay: curve operator must be followed by a target, got operator/keyword`);
-      }
-      const target: IRTarget = parseTargetSugar(desugarRelativeItem(next));
-      const label = consumeLabel();
-      if (isWayCurveOp(item)) {
-        const curve: IRCurveStep = {
-          type: 'step',
-          kind: 'curve',
-          to: target,
-          control: item.curve,
-        };
-        if (label) curve.label = label;
-        out.push(curve);
-      } else if (isWayCubicOp(item)) {
-        const cubic: IRCubicStep = {
-          type: 'step',
-          kind: 'cubic',
-          to: target,
-          control1: item.cubic[0],
-          control2: item.cubic[1],
-        };
-        if (label) cubic.label = label;
-        out.push(cubic);
-      } else {
-        const bend: IRBendStep = {
-          type: 'step',
-          kind: 'bend',
-          to: target,
-          bendDirection: item.bend,
-        };
-        if (item.angle !== undefined) bend.bendAngle = item.angle;
-        if (label) bend.label = label;
-        out.push(bend);
-      }
-      i++; // 消费 next
-      continue;
-    }
-    if (isWayShapeOp(item)) {
-      // 形状算子（arc/circle/ellipse）以上一项为圆心，不消耗下一项
-      const label = consumeLabel();
-      if (isWayArcOp(item)) {
-        const arc: IRArcStep = {
-          type: 'step',
-          kind: 'arc',
-          startAngle: item.arc.startAngle,
-          endAngle: item.arc.endAngle,
-          radius: item.arc.radius,
-        };
-        if (label) arc.label = label;
-        out.push(arc);
-      } else if (isWayCircleOp(item)) {
-        const circle: IRCirclePathStep = {
-          type: 'step',
-          kind: 'circlePath',
-          radius: item.circle.radius,
-        };
-        if (label) circle.label = label;
-        out.push(circle);
-      } else {
-        const ellipse: IREllipsePathStep = {
-          type: 'step',
-          kind: 'ellipsePath',
-          radius: item.ellipse.radius,
-        };
-        if (label) ellipse.label = label;
-        out.push(ellipse);
-      }
-      continue;
-    }
-    const lineStep: IRLineStep = {
-      type: 'step',
-      kind: 'line',
-      to: parseTargetSugar(desugarRelativeItem(item)),
-    };
-    const label = consumeLabel();
-    if (label) lineStep.label = label;
-    out.push(lineStep);
   }
   if (pendingLabel) {
     throw new Error(`parseWay: label operator at end of way must be followed by a step`);

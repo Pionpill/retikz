@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema } from '../../src/schemas';
@@ -9,7 +9,7 @@ import { line, move } from '../helpers/path-command-factory';
 
 const findRect = (prims: Array<ScenePrimitive>) => prims.find(p => p.type === 'rect');
 
-const rectSize = (ir: IR) => {
+const rectSize = (ir: IRScene) => {
   const r = findRect(compileToScene(ir).primitives);
   return r?.type === 'rect' ? { w: r.width, h: r.height } : undefined;
 };
@@ -24,12 +24,12 @@ describe('Node spacing（CSS-like padding / margin）', () => {
   });
 
   it('padding={p} 等价于 padding.default={p}', () => {
-    const a: IR = {
+    const a: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], padding: 12 }],
     };
-    const b: IR = {
+    const b: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -40,12 +40,12 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           padding: { default: 12 },
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     expect(rectSize(a)).toEqual(rectSize(b));
   });
 
   it('padding.x / padding.y 分轴时 width / height 各自跟着 padding 变', () => {
-    const wide: IR = {
+    const wide: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -56,8 +56,8 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           padding: { x: 30, y: 4 },
         },
       ],
-    } as unknown as IR;
-    const tall: IR = {
+    } as unknown as IRScene;
+    const tall: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -68,7 +68,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           padding: { x: 4, y: 30 },
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const w = rectSize(wide);
     const t = rectSize(tall);
     expect(w?.w).toBeGreaterThan(w!.h);
@@ -79,7 +79,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
   });
 
   it('side-specific padding 优先于 axis-specific，再回退到 padding.default', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -90,8 +90,8 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           padding: { default: 8, x: 20, left: 30 },
         },
       ],
-    } as unknown as IR;
-    const sym: IR = {
+    } as unknown as IRScene;
+    const sym: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -102,7 +102,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           padding: { left: 30, right: 20, top: 8, bottom: 8 },
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     expect(rectSize(ir)).toEqual(rectSize(sym));
   });
 
@@ -111,7 +111,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], padding: { left: 30, right: 10 } }],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const rect = findRect(compileToScene(ir).primitives);
     expect(
       rect?.type === 'rect' ? { left: rect.x, center: rect.x + rect.width / 2, width: rect.width } : undefined,
@@ -119,7 +119,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
   });
 
   it('margin.x / margin.y 分轴外扩 border anchor', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -132,7 +132,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       // margin.x=10 → 横向端点 = 默认 padding 8 + 10 = 18
@@ -154,7 +154,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           ],
         },
       ],
-    } as IR;
+    } as IRScene;
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       // right 方向取 margin.right=10，端点 = 默认 padding 8 + 10 = 18
@@ -163,7 +163,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
   });
 
   it('未设任何 padding / margin → 走默认 (padding 默认 8，margin 默认 0)', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0] }],

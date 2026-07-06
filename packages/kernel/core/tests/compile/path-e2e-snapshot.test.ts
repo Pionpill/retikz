@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -15,13 +15,13 @@ import { arrowMarks } from '../helpers/arrow-marks';
 const findPathPrims = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
   prims.filter((p): p is PathPrim => p.type === 'path');
 
-const findPathCommands = (ir: IR): Array<PathCommand> => {
+const findPathCommands = (ir: IRScene): Array<PathCommand> => {
   const prims = findPathPrims(compileToScene(ir).primitives);
   expect(prims.length).toBeGreaterThanOrEqual(1);
   return prims[0].commands;
 };
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

@@ -1,16 +1,21 @@
-﻿import type { Transform } from '../../contract';
-import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../schemas';
-import type { IRBoundary } from '../../schemas';
-import type { NameStack } from '../name-stack';
+import type { Transform } from '../../contract';
+import type {
+  FoldStepViaValue,
+  IRBetweenPosition,
+  IRBoundary,
+  IRNodeTarget,
+  IRPosition,
+  IRTarget,
+} from '../../schemas';
+import type { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 
 import { FoldStepVia } from '../../schemas';
-import { lerpPoint } from '../../shared/geometry';
-import { point } from '../../shared/geometry';
-import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
+import { lerpPoint, point } from '../../shared/geometry';
 import { boundaryPointOf } from '../node';
 import { resolvePosition } from '../position';
-import { applyTransformChain } from '../scope';
+import { resolveAnchor, resolveEdgePoint } from '../reference';
+import { applyTransformChain } from '../transform';
 
 /** target 是否对象形态 NodeTarget（`{ id, anchor?, offset? }`）；与 Position(array) / Polar / Offset(of) / Relative 区分（独有 `id`） */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => typeof t === 'object' && !Array.isArray(t) && 'id' in t;
@@ -36,21 +41,15 @@ const resolveAnchorRef = (
 const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition =>
   offset ? [base[0] + offset[0], base[1] + offset[1]] : base;
 
-/**
- * 求 step.to 的参考点（给 boundary clip 算方向 / 折角 corner 用）
- * @description 三态：`'A'`(auto) 节点中心；`'A.<anchor>'`/`'A.<deg>'` 显式锚点 refPoint=endpoint 位置不随邻居变。直接坐标/极坐标解析为笛卡尔。
- *   string id lookup 拿到的 layout 已是全局坐标——不走 scopeChain 投影；Position / Polar /
- *   At / Offset 字面量经 `resolvePosition(..., scopeChain)` 拿到当前 scope 局部坐标后
- *   `applyTransformChain` 投回全局。`scopeChain=[]` 时按恒等变换处理。
- */
+/** 求 step.to 的参考点，用于端点裁剪和折角计算。 */
 export const refPointOfTarget = (
   target: IRTarget,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
   // 对象形态 NodeTarget：{ id, anchor?, offset? }（refPoint 用——anchor 缺省取中心，中心不受 boundary 影响）
   if (isNodeTarget(target)) {
-    const node = nameStack.lookup(target.id);
+    const node = namespaceStack.lookup(target.id);
     if (!node) return null;
     const base =
       target.anchor === undefined
@@ -61,8 +60,8 @@ export const refPointOfTarget = (
   // between 比例点：两端点各 resolve 成世界坐标后 lerp（端点可嵌套 between，递归）；
   // lerp 仿射 ⇒ 全局 lerp = 局部 lerp 投全局，无需逐端点反投影
   if (isBetween(target)) {
-    const a = refPointOfTarget(target.between[0], nameStack, scopeChain);
-    const b = refPointOfTarget(target.between[1], nameStack, scopeChain);
+    const a = refPointOfTarget(target.between[0], namespaceStack, scopeChain);
+    const b = refPointOfTarget(target.between[1], namespaceStack, scopeChain);
     if (!a || !b) return null;
     const mid = lerpPoint(a, b, target.fraction);
     // finite 守卫：端点（极坐标 radius=Infinity / offset NaN 等）或手搓 t=NaN 会产非 finite 中点；
@@ -70,7 +69,7 @@ export const refPointOfTarget = (
     if (!Number.isFinite(mid[0]) || !Number.isFinite(mid[1])) return null;
     return mid;
   }
-  // relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
+  // relative/relativeAccumulate 已被 resolveRelativeStepTargets 预解析；防御性守卫给 TS narrowing 用
   if (
     typeof target === 'object' &&
     !Array.isArray(target) &&
@@ -78,7 +77,7 @@ export const refPointOfTarget = (
   ) {
     return null;
   }
-  const local = resolvePosition(target, nameStack, undefined, scopeChain);
+  const local = resolvePosition(target, { namespaceStack, scopeChain });
   if (!local) return null;
   return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };
@@ -87,21 +86,27 @@ export const refPointOfTarget = (
 export const cornerOf = (prev: IRPosition, curr: IRPosition, via: FoldStepViaValue): IRPosition =>
   via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
 
-/**
- * 在 toward 方向算 step.to 的实际绘制端点
- * @description 节点 auto `'A'`：按 shape 走 boundaryPointOf 求中心→toward 射线交点；命名 anchor/角度：位置已定不受 toward 影响；直接坐标/极坐标：解析后返回；失败返回 null。
- *   string id lookup 拿到的 layout 已是全局坐标；Position / Polar / At / Offset 字面量经
- *   `resolvePosition(..., scopeChain)` 拿到当前 scope 局部坐标后 `applyTransformChain` 投回全局。
- */
+/** 在 toward 方向求 step.to 的实际绘制端点。 */
+/** target 裁剪解析所需上下文。 */
+export type ClipForTargetContext = {
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 当前 scope 累积 transform。 */
+  scopeChain?: ReadonlyArray<Transform>;
+};
+
 export const clipForTarget = (
   target: IRTarget,
   toward: IRPosition,
-  nameStack: NameStack,
-  scopeChain: ReadonlyArray<Transform> = [],
+  context: ClipForTargetContext,
 ): IRPosition | null => {
+  const {
+    namespaceStack,
+    scopeChain = [],
+  } = context;
   // 对象形态 NodeTarget：{ id, anchor?, offset? }（clip 用——anchor 缺省按连接面边界贴 toward）
   if (isNodeTarget(target)) {
-    const node = nameStack.lookup(target.id);
+    const node = namespaceStack.lookup(target.id);
     if (!node) return null;
     const boundary = target.boundary ?? node.boundary;
     const base =
@@ -112,7 +117,7 @@ export const clipForTarget = (
   }
   // between 比例点是固定点（非节点边界），直接走 refPointOfTarget（不随 toward 变）
   if (isBetween(target)) {
-    return refPointOfTarget(target, nameStack, scopeChain);
+    return refPointOfTarget(target, namespaceStack, scopeChain);
   }
   // relative/relativeAccumulate 已被预解析；防御性守卫给 TS narrowing 用
   if (
@@ -122,7 +127,7 @@ export const clipForTarget = (
   ) {
     return null;
   }
-  const local = resolvePosition(target, nameStack, undefined, scopeChain);
+  const local = resolvePosition(target, { namespaceStack, scopeChain });
   if (!local) return null;
   return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };

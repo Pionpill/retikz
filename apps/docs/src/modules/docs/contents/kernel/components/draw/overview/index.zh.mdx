@@ -1,4 +1,4 @@
----
+﻿---
 title: Draw
 description: Sugar 组件——用 way 数组串起节点、坐标、折角、曲线、闭合、边标注和样式，编译期展开为等价的 Path + Step。
 ---
@@ -166,12 +166,12 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | 填充规则                                                                                                                                       |
 | `opacity`        | `number`                                                                                       | —              | 整 path 透明度 0..1                                                                                                                            |
 | `fillOpacity`    | `number`                                                                                       | —              | 仅 fill 透明度 0..1                                                                                                                            |
-| `drawOpacity`    | `number`                                                                                       | —              | 仅 stroke 透明度 0..1                                                                                                                          |
+| `strokeOpacity`    | `number`                                                                                       | —              | 仅 stroke 透明度 0..1                                                                                                                          |
 | `zIndex`         | `number`（整数）                                                                               | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`）                                                              |
 
 <Comparison target="tikz" title="样式命名">
 
-`lineCap` / `lineJoin` 对应 TikZ 的 `line cap` / `line join`；`drawOpacity` 对应 `draw opacity`；`thickness` 的档位沿用 `ultra thin` 到 `ultra thick` 的语义化描边厚度。
+`lineCap` / `lineJoin` 对应 TikZ 的 `line cap` / `line join`；`strokeOpacity` 表示描边透明度；`thickness` 的档位沿用 `ultra thin` 到 `ultra thick` 的语义化描边厚度。
 
 </Comparison>
 

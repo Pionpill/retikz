@@ -1,4 +1,4 @@
-import type { CompileOptions, IR, Scene } from '@retikz/core';
+import type { CompileOptions, IRScene, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 
@@ -6,15 +6,15 @@ import type { Figure } from './figure';
 
 export type { AnimationControls } from '@retikz/render/animation';
 
-/** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IR`，或命令式 builder 的 `Figure` */
-export type RenderInput = Scene | IR | Figure;
+/** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene`，或命令式 builder 的 `Figure`。 */
+export type RenderInput = Scene | IRScene | Figure;
 
 /**
  * 两个入口共享的选项
  * @description `idPrefix`：SVG 资源 id 前缀，确定性（SSR↔客户端一致），缺省 `'r'`。`width`/`height`：写回根
  *   `<svg>` 的显示尺寸（adapter 职责，`@retikz/render/svg` 只产 viewBox）；缺省不写、由 CSS/容器定。其余继承 core
  *   `CompileOptions`（`measureText` / `shapes` / `boundaries` / `arrows` / `patterns` / `pathGenerators` / `composites` / `lowerTex` /
- *   `padding` / `precision` / `nodeDistance` / `onWarn`）——收 `ir` 时透传给 `compileToScene`，收 `scene` 时忽略。
+ *   `padding` / `precision` / `nodeDistance` / `fontSize` / `onWarn`）——收 `ir` 时透传给 `compileToScene`，收 `scene` 时忽略。
  */
 export type CommonOptions = {
   idPrefix?: string;

@@ -8,19 +8,19 @@ import { Layout, Node, Text } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={520} height={130}>
-    <Node id="fill" position={[-180, 0]} align="left">
+    <Node id="fill" position={[-180, 0]} align="start">
       <Text fill="red">red line</Text>
       <Text fill="green">green line</Text>
       <Text fill="dodgerblue">dodgerblue line</Text>
     </Node>
 
-    <Node id="op" position={[-30, 0]} align="left">
+    <Node id="op" position={[-30, 0]} align="start">
       normal
       <Text opacity={0.6}>fade 0.6</Text>
       <Text opacity={0.3}>fade 0.3</Text>
     </Node>
 
-    <Node id="font" position={[140, 0]} align="left">
+    <Node id="font" position={[140, 0]} align="start">
       <Text font={{ weight: 'bold', size: 16 }}>Bold large</Text>
       <Text font={{ style: 'italic' }}>Italic</Text>
       <Text font={{ family: 'monospace' }}>mono()</Text>

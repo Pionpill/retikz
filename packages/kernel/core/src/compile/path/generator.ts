@@ -1,5 +1,4 @@
-﻿import type { PathGeneratorDefinition } from '../../contract';
-import type { PathCommand } from '../../contract';
+﻿import type { PathCommand,PathGeneratorDefinition } from '../../contract';
 import type { IRPosition, IRStep } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
@@ -14,12 +13,7 @@ const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number
 const isFinitePoint = (pt: unknown): boolean =>
   Array.isArray(pt) && pt.length >= 2 && isFiniteNum(pt[0]) && isFiniteNum(pt[1]);
 
-/**
- * 校验 path generator 产出的单条命令合法（kind 已知 + 引用坐标 / 数值有限）
- * @description 第三方 / LLM 写的 generate 误产坏命令（NaN/Infinity 坐标、未知 kind、缺字段、字符串当命令）时
- *   抛含 generator 名的清晰错——守 Scene 100% finite / JSON 可序列化，不放任非 finite 静默入 Scene
- *   （JSON.stringify(NaN/Infinity)=null 会让 round-trip 失真）。
- */
+/** 校验 path generator 产出的单条命令可写入 Scene。 */
 const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
   const bad = (detail: string): never => {
     throw new Error(`path generator '${name}' produced a ${detail}.`);
@@ -62,7 +56,7 @@ const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
   }
 };
 
-export const resolveGeneratorCommands = (args: {
+export const lowerGeneratorStepToCommands = (args: {
   step: Extract<IRStep, { kind: 'generator' }>;
   generators?: ReadonlyMap<string, PathGeneratorDefinition>;
   from: IRPosition;

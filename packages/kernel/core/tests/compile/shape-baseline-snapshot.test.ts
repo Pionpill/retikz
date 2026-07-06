@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 
@@ -11,7 +11,7 @@ import { compileToScene } from '../../src/compile/compile';
  *   diamond 是内置 shape preset（几何由正多边形定义、顶点位于坐标轴上），其相关字节随之更新；
  *   rectangle / circle / ellipse 路径仍须逐字节稳定。
  */
-const richIR: IR = {
+const richIR: IRScene = {
   version: 1,
   type: 'scene',
   children: [

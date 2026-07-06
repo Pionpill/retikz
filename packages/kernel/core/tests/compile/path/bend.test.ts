@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { cubic, line, move } from '../../helpers/path-command-factory';
@@ -8,7 +8,7 @@ import { findPathPrim } from './helpers';
 
 describe("compile path: 'bend'", () => {
   it('bend left 30° on horizontal chord → C 命令，控制点 y < 0', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -31,7 +31,7 @@ describe("compile path: 'bend'", () => {
   });
 
   it('bend 默认角度 30°（省略 bendAngle）等价于显式 30°', () => {
-    const irImplicit: IR = {
+    const irImplicit: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -44,7 +44,7 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    const irExplicit: IR = {
+    const irExplicit: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -63,7 +63,7 @@ describe("compile path: 'bend'", () => {
   });
 
   it('bend right 与 left 关于 chord 对称（控制点 y 互为相反数）', () => {
-    const irL: IR = {
+    const irL: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -76,7 +76,7 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    const irR: IR = {
+    const irR: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -102,7 +102,7 @@ describe("compile path: 'bend'", () => {
   });
 
   it('bend 与 line 混用', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

@@ -1,4 +1,4 @@
----
+﻿---
 title: RelationMark
 description: RelationMark 把数据行里的 source / target 关系下沉为 core Path，并通过 kind 区分线状路径与带状关系。
 ---
@@ -113,7 +113,7 @@ React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` �
 | Ribbon | `ribbon.width`       | `MarkValue<number>`                                  | `kind="ribbon"` 时必填 | source 侧宽度；省略 `endWidth` 时也是整条带宽                                                                                |
 |        | `ribbon.endWidth`    | `MarkValue<number>?`                                 | -                      | target 侧宽度，用于渐变宽度 ribbon                                                                                           |
 |        | `ribbon.options`     | `RelationRibbonSpecificOptions?`                     | -                      | ribbon-only 选项：`align`、`samples`、`sampling` 和渐变宽度 `interpolation`                                                  |
-| 样式   | `style`              | `RelationPrimitiveStyle?`                            | -                      | 共享样式：`color`、`fill`、`fillOpacity`、`stroke`、`strokeWidth`、`drawOpacity`、`opacity`、`shadow`、`blendMode`、`zIndex` |
+| 样式   | `style`              | `RelationPrimitiveStyle?`                            | -                      | 共享样式：`color`、`fill`、`fillOpacity`、`stroke`、`strokeWidth`、`strokeOpacity`、`opacity`、`shadow`、`blendMode`、`zIndex` |
 |        | `color`              | `FieldName?`                                         | -                      | 字段驱动的关系颜色通道                                                                                                       |
 | 通用   | `id`                 | `string?`                                            | -                      | 可选 mark 句柄，用于图层 id、错误信息和运行时定位                                                                            |
 | 自定义 | `channels`           | `Record<string, Channel>`                            | -                      | 自定义通道入口，交给注册的 channel definition 解析                                                                           |

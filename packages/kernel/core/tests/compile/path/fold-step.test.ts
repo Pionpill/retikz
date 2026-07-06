@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { line, move } from '../../helpers/path-command-factory';
@@ -8,7 +8,7 @@ import { findPathPrim } from './helpers';
 
 describe("compile path: 'step' 折角", () => {
   it("via '-|' 等价于 line(curr.x, prev.y) → line(curr) 拆解", () => {
-    const folded: IR = {
+    const folded: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -21,7 +21,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    const manual: IR = {
+    const manual: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -41,7 +41,7 @@ describe("compile path: 'step' 折角", () => {
   });
 
   it("via '|-' 等价于 line(prev.x, curr.y) → line(curr) 拆解", () => {
-    const folded: IR = {
+    const folded: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -54,7 +54,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    const manual: IR = {
+    const manual: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -76,7 +76,7 @@ describe("compile path: 'step' 折角", () => {
   it('折角中间点参与 layout 计算（不会被裁掉）', () => {
     // 起点 (0,0)，终点 (40, 30)，via='-|' → 中点 (40, 0)
     // 三个点的 bbox: x in [0,40], y in [0,30]；padding=10 → layout [-10,-10,60,50]
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -94,7 +94,7 @@ describe("compile path: 'step' 折角", () => {
   });
 
   it('折角与节点引用配合：节点 ref 端点贴 boundary 后再插中点', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -128,7 +128,7 @@ describe("compile path: 'step' 折角", () => {
     // A 端点向 (100, 0) 切 boundary → A.right = (8, 0)
     // B 端点向 (100, 0) 切 boundary → B.top = (100, 52)
     // 路径："M 8 0 L 100 0 L 100 52"
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -151,7 +151,7 @@ describe("compile path: 'step' 折角", () => {
   });
 
   it("via '|-' 中点对齐：corner = (A.center.x, B.center.y)", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

@@ -1,4 +1,4 @@
-import type { IR, PathKindDefinition } from '@retikz/core';
+import type { IRScene, PathKindDefinition } from '@retikz/core';
 import type { FC, ReactElement, ReactNode } from 'react';
 
 import { convertReactNodeToIR, Layout, Scope } from '@retikz/react';
@@ -8,8 +8,8 @@ const COMPONENT_EXPANSION_LIMIT = 16;
 
 type PreviewRootProps = {
   children?: ReactNode;
-  ir?: IR;
-  viewBox?: IR['viewBox'];
+  ir?: IRScene;
+  viewBox?: IRScene['viewBox'];
 };
 
 type FunctionComponentProps = Record<string, unknown> & {
@@ -52,7 +52,7 @@ const LAYOUT_OWN_PROPS = new Set([
 
 /** ComponentPreview 派生出的 IR 渲染信息。 */
 export type PreviewIR = {
-  ir: IR;
+  ir: IRScene;
   width?: number | string;
   height?: number | string;
   pathKinds?: ReadonlyArray<PathKindDefinition>;
@@ -74,7 +74,7 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
   const base = props.ir ?? convertReactNodeToIR(childNode);
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;
-  const rootAnimations = isLayout ? (props.animations as IR['animations'] | undefined) : undefined;
+  const rootAnimations = isLayout ? (props.animations as IRScene['animations'] | undefined) : undefined;
   let ir = base;
   if (viewBox !== undefined) ir = { ...ir, viewBox };
   if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
@@ -92,7 +92,7 @@ const nodeHasComposite = (node: unknown): boolean => {
 };
 
 /** 判断 IR 是否包含 composite 节点。 */
-export const irHasComposite = (ir: IR): boolean => ir.children.some(nodeHasComposite);
+export const irHasComposite = (ir: IRScene): boolean => ir.children.some(nodeHasComposite);
 
 const nodeHasAnimations = (node: unknown): boolean => {
   if (typeof node !== 'object' || node === null) return false;
@@ -102,5 +102,5 @@ const nodeHasAnimations = (node: unknown): boolean => {
 };
 
 /** 判断 IR 是否包含动画。 */
-export const irHasAnimations = (ir: IR): boolean =>
+export const irHasAnimations = (ir: IRScene): boolean =>
   (Array.isArray(ir.animations) && ir.animations.length > 0) || ir.children.some(nodeHasAnimations);

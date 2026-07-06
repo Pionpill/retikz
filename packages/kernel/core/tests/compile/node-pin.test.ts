@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
@@ -10,7 +10,7 @@ const findPaths = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
   flattenPrims(prims).filter((p): p is PathPrim => p.type === 'path');
 
 const compileNode = (label: unknown): Array<PathPrim> => {
-  const ir: IR = {
+  const ir: IRScene = {
     version: 1,
     type: 'scene',
     children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', label } as never],
@@ -73,7 +73,7 @@ describe('多 pin', () => {
 
 describe('label / pin 进 bbox（不被 viewBox 裁切）', () => {
   const sceneOf = (node: Record<string, unknown>): { width: number; height: number } => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', ...node } as never],

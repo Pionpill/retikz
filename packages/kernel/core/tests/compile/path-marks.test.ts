@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, IRPath, ScenePrimitive } from '../../src';
+import type { IRPath, IRScene, ScenePrimitive } from '../../src';
 import type { ArrowDefinition } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -12,7 +12,7 @@ type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
 /** flatten 后非 group 的叶子 primitive 数（marker 产出体现为新增叶子 / group） */
 const leafCount = (prims: ReadonlyArray<ScenePrimitive>): number => flattenPrims(prims).length;
 
-const linePathIR = (marks?: IRPath['marks']): IR => ({
+const linePathIR = (marks?: IRPath['marks']): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
@@ -78,7 +78,7 @@ describe('marks → 中段 marker primitive', () => {
 });
 
 describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致，parser sugar 语义）', () => {
-  const markPathIR = (strokeWidth?: number): IR => ({
+  const markPathIR = (strokeWidth?: number): IRScene => ({
     version: 1,
     type: 'scene',
     children: [
@@ -95,7 +95,7 @@ describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致
   });
 
   /** 取中段 mark group 的 scale.x（plain line path 无 rotate/scale 时唯一带 scale 的 group 即 mark group） */
-  const markScaleX = (ir: IR): number => {
+  const markScaleX = (ir: IRScene): number => {
     const find = (list: ReadonlyArray<ScenePrimitive>): number | undefined => {
       for (const p of list) {
         if (p.type === 'group') {

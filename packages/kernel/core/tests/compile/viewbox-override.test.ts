@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, IRChild } from '../../src';
+import type { IRChild,IRScene } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
-import { computeLayout } from '../../src/compile/layout';
-import { createRound } from '../../src/compile/precision';
+import { computeLayout, createRound } from '../../src/compile/scene';
 
 /** 一个尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize），落在给定中心 */
 const circleNode = (id: string, position: [number, number], minimumSize = 40): IRChild => ({
@@ -17,7 +16,7 @@ const circleNode = (id: string, position: [number, number], minimumSize = 40): I
 });
 
 /** 手搓一个带 / 不带 viewBox 的 Scene IR */
-const scene = (children: ReadonlyArray<IRChild>, viewBox?: IR['viewBox']): IR => ({
+const scene = (children: ReadonlyArray<IRChild>, viewBox?: IRScene['viewBox']): IRScene => ({
   version: 1,
   type: 'scene',
   children: [...children],

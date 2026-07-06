@@ -1,9 +1,9 @@
----
+﻿---
 title: Path
 description: Kernel 路径容器——`<Step>` 子节点序列定义折线 / 曲线 / 弧形，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
 ---
 
-`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / fold（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列；另有 IR 级的 generator step（[路径生成器](/kernel/components/extend/path-generator)）。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
+`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / fold（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ smooth / generator（路径生成器）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
 
 它最适合三类场景：一条 path 里有多个子路径（多次 `move`）、不同段要混用不同 `kind` / label / 控制点、或者你希望 JSX 结构和 IR `path.children` 几乎一一对应，方便调试和生成。
 
@@ -41,7 +41,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` 支持 12 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`smooth` 画穿过点列的平滑曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/kernel/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/kernel/components/extend/path-generator)）。
+`<Step>` 支持 13 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`smooth` 画穿过点列的平滑曲线，`generator` 调用内置或自定义路径生成器，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/kernel/components/draw/step) 与 [路径生成器](/kernel/components/extend/path-generator)。
 
 ## 例子
 
@@ -102,7 +102,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 渐变描边
 
-`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`drawOpacity` 等描边样式照常作用在这条线本身。
+`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。
 
 <ComponentPreview name="path-stroke-paint" size="sm" />
 
@@ -134,13 +134,9 @@ import { Path, Step } from '@retikz/react';
 
 #### 透明度
 
-三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`drawOpacity` 仅 stroke。三者可叠加：
+三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`strokeOpacity` 仅 stroke。三者可叠加：
 
-<Comparison target="tikz" title="drawOpacity 命名">
-
-`drawOpacity` 对应 TikZ 的 `draw opacity`，并与 `<Node>` 的描边透明字段保持一致。
-
-</Comparison>
+`strokeOpacity` 使用与 Scene primitive 一致的描边透明字段名，并与 `<Node>` 的描边透明字段保持一致。
 
 <ComponentPreview name="path-opacity" />
 
@@ -211,6 +207,10 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="ribbon-width-stops" size="xs" />
 
+内置 `bulge` profile 用 `base` 表示两端宽度、`peak` 表示中点宽度；`peak` 小于 `base` 时会变成中间收窄。
+
+<ComponentPreview name="ribbon-width-profile" size="xs" />
+
 #### 标签位置
 
 Ribbon label 使用同一套 GeometryLabel 契约。`position` 支持关键字或 `0..1` 数值；`side` 默认像普通 Path label 一样带固定外侧距离；`placement="inside"` 可把标签放入带状面内部，`sloped: true` 会沿中心线切线旋转。
@@ -261,7 +261,7 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 | `fillRule`       | `'nonzero' \| 'evenodd'`                                                                                      | `'nonzero'`    | 填充规则；环形 / 孔洞场景用 `'evenodd'`                                                                                                                                                                           |
 | `opacity`        | `number`                                                                                                      | —              | 整 path 透明度 0~1（同时作用于 stroke 与 fill）                                                                                                                                                                   |
 | `fillOpacity`    | `number`                                                                                                      | —              | 仅 fill 透明度 0~1                                                                                                                                                                                                |
-| `drawOpacity`    | `number`                                                                                                      | —              | 仅 stroke 透明度 0~1                                                                                                                                                                                              |
+| `strokeOpacity`    | `number`                                                                                                      | —              | 仅 stroke 透明度 0~1                                                                                                                                                                                              |
 | `shadow`         | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —              | 主路径投影：预设字符串或对象；图元级，端点箭头随主路径一起投影。详见 [视觉效果](/kernel/components/effects)                                                                                                       |
 | `blendMode`      | `'normal' \| 'multiply' \| 'screen' \| ...`（16 个 W3C 分离模式）                                             | `'normal'`     | 主路径与其下方已绘内容的混合模式；图元级，端点箭头随主路径一起混合。详见 [视觉效果](/kernel/components/effects)                                                                                                   |
 | `zIndex`         | `number`（整数）                                                                                              | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                                                        |

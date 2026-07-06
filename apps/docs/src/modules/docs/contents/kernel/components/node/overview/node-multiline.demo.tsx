@@ -9,11 +9,11 @@ const Demo: FC = () => (
 Service
 v2.1`}</Node>
     {/* 字符串内嵌 \n */}
-    <Node id="left" position={[0, 0]} align="left">
+    <Node id="left" position={[0, 0]} align="start">
       {'Step 1: read\nStep 2: parse\nStep 3: emit'}
     </Node>
     {/* text prop 数组 */}
-    <Node id="right" position={[160, 0]} align="right" text={['short', 'longer line', 'mid']} />
+    <Node id="right" position={[160, 0]} align="end" text={['short', 'longer line', 'mid']} />
   </Layout>
 );
 

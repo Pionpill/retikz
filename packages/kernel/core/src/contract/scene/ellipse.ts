@@ -1,7 +1,11 @@
-import type { IRAnimationTrack } from '../../schemas';
-import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
-import type { IRGraphicStyle, IRPathBase } from '../../schemas';
-import type { IRJsonObject } from '../../schemas';
+﻿import type {
+  BlendModeValue,
+  IRAnimationTrack,
+  IRGraphicStyle,
+  IRJsonObject,
+  IRPathBase,
+  ResolvedDropShadow,
+} from '../../schemas';
 import type { PaintValue } from './paint';
 
 /** 椭圆原语，圆形复用 rx=ry 的同一 Scene 分支。 */
@@ -35,7 +39,7 @@ export type EllipsePrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['drawOpacity'];
+  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   dashPattern?: IRPathBase['dashPattern'];
   /** 描边 dash offset */

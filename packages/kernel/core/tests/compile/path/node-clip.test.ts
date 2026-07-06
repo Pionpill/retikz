@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { line, move } from '../../helpers/path-command-factory';
@@ -13,7 +13,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
     // 段 B→C：B.center=(120,0) 朝 C.center=(60,60)，方向 (-60,60) 等比例 → 角点 → B.bottom-left=(112,8)；
     //         C.center=(60,60) 朝 B.center，方向 (60,-60) → C.top-right=(68,52)
     // 段 C→A：C 朝 A 方向 (-60,-60) → C.bottom-left=(52,52)；A 朝 C 方向 (60,60) → A.top-right=(8,8)
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -42,7 +42,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
 
   it('直接坐标点 + 折角混合：cursor 复用（无 clip 差异时不起新 sub-path）', () => {
     // 全直接点，每段 fromClip 等于 lastEnd → 复用 cursor，全程一个 sub-path
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
