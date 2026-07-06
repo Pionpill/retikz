@@ -1,11 +1,21 @@
 ﻿import type { PathGeneratorDefinition, Transform } from '../../contract';
+import type { ScenePrimitive } from '../../contract';
+import type { IRPosition } from '../../schemas';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';
 import type { CompileWarning } from '../warning';
 import type { ResolvedArrowRegistry } from './shrink';
 
-/** emitPathPrimitive 可选 warn 钩子 */
-export type EmitPathWarnHook = {
+/** path emit 阶段产出的 Scene primitive 与 bbox 采样点。 */
+export type PathPrimitiveEmitResult = {
+  /** 实际 Scene 输出。 */
+  primitives: Array<ScenePrimitive>;
+  /** layout 与 path 级 rotate / scale 的几何依据。 */
+  boundsPoints: Array<IRPosition>;
+};
+
+/** path emit 阶段的可选服务与诊断上下文。 */
+export type PathEmitOptions = {
   /**
    * 警告收集器（由 compileToScene 传入）
    * 缺省时不发出警告。
@@ -27,7 +37,7 @@ export type EmitPathWarnHook = {
   resolvedArrows?: ResolvedArrowRegistry;
   /** 有效 path generator 表。 */
   effectivePathGenerators?: ReadonlyMap<string, PathGeneratorDefinition>;
-  /** 注入的 TeX 降解能力。 */
+  /** 注入的 TeX 降级能力。 */
   lowerTex?: LowerTex;
   /** preset 与 rem 字号解析的根字号。 */
   rootFontSize?: number;

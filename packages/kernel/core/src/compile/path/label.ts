@@ -5,8 +5,14 @@ import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../tex
 import type { CompileWarningCodeValue } from '../warning';
 
 import { RAD_TO_DEG } from '../../shared/geometry';
-import { CompileWarningCode, DEFAULT_FONT_SIZE } from '../constants';
-import { layoutInlineLine, resolveFontSize, resolveLineRuns, toAlphabeticBaselineY } from '../text';
+import { DEFAULT_FONT_SIZE } from '../constants';
+import {
+  combineOpacity,
+  layoutInlineLine,
+  resolveFontSize,
+  resolveLineRunsWithWarning,
+  toAlphabeticBaselineY,
+} from '../text';
 
 /** 边标注默认行高与偏移量。 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
@@ -62,10 +68,6 @@ export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
   return 0.5;
 };
 
-/** label-only opacity 与宿主 path opacity 相乘（元素内轴）；label 缺省则跟随宿主 */
-const resolveLabelOpacity = (labelOpacity?: number, hostOpacity?: number): number | undefined =>
-  labelOpacity !== undefined ? (hostOpacity !== undefined ? labelOpacity * hostOpacity : labelOpacity) : hostOpacity;
-
 /**
  * step.label + 段采样 → 单行 primitive。
  * @description 返回 label primitive 及其 bbox 外接点。
@@ -103,16 +105,14 @@ export const emitLabelPrimitive = (
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
   const sideOffset =
     label.placement === 'inside' ? Math.max(0, boundaryOffset - sideDistance) : boundaryOffset + sideDistance;
-  const labelOpacity = resolveLabelOpacity(label.opacity, hostOpacity);
+  const labelOpacity = combineOpacity(label.opacity, hostOpacity);
 
   const gatingOn = texCtx?.gatingOn ?? false;
-  const resolved = resolveLineRuns(label.text, gatingOn);
-  if (resolved.warn) {
-    texCtx?.warn(
-      CompileWarningCode.TextTexParseError,
-      'Unbalanced `$` in edge label; the trailing fragment is kept literal.',
-    );
-  }
+  const resolved = resolveLineRunsWithWarning(label.text, {
+    gatingOn,
+    warn: texCtx?.warn ?? ((): void => {}),
+    warningMessage: 'Unbalanced `$` in edge label; the trailing fragment is kept literal.',
+  });
   const isMixed = resolved.hasMath || typeof label.text === 'object';
 
   // 含公式：走混排布局（逐 run TextPrim / glyph group），按 side 求行起点与基线

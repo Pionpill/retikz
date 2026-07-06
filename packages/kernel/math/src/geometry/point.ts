@@ -10,6 +10,10 @@ export const DEFAULT_EPSILON = 1e-9;
 /** Finite number guard; rejects Infinity and NaN. */
 export const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
+/** Finite 2D point guard; rejects non-arrays, NaN, and Infinity coordinates. */
+export const isFinitePoint = (value: unknown): value is Position =>
+  Array.isArray(value) && value.length >= 2 && isFiniteNumber(value[0]) && isFiniteNumber(value[1]);
+
 /** Infinite number guard; accepts only positive or negative Infinity. */
 export const isInfiniteNumber = (value: unknown): value is number => value === Infinity || value === -Infinity;
 

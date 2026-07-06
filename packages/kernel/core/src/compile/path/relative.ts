@@ -7,14 +7,11 @@ import type { NamespaceStack } from '../namespace';
 import { inverseTransformChain } from '../transform';
 import { refPointOfTarget } from './anchor';
 
-/** path emit 前的内部 normalization：把 relative / relativeAccumulate target 解析为当前 scope 局部坐标。 */
-export type NormalizedPathStep = IRStep;
-
 export const normalizePathSteps = (
   steps: ReadonlyArray<IRStep>,
   namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform> = [],
-): Array<NormalizedPathStep> => {
+): Array<IRStep> => {
   let prevEnd: IRPosition | null = null;
   const out: Array<IRStep> = [];
 

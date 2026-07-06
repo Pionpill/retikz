@@ -1,16 +1,9 @@
-import { boundsCenter, boundsOf } from '@retikz/math';
+import { boundsCenter, boundsOf, isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../contract';
 import type { IRPathScale, IRPosition } from '../../schemas';
 
 import { applyTransformChain } from '../transform';
-
-/** 有限数 */
-const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
-
-/** 有限坐标点 `[number, number]` */
-const isFinitePoint = (pt: unknown): boolean =>
-  Array.isArray(pt) && pt.length >= 2 && isFiniteNum(pt[0]) && isFiniteNum(pt[1]);
 
 /** 一组点的 axis-aligned 包围盒中心 */
 export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {

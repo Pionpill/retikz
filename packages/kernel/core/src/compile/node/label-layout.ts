@@ -2,8 +2,7 @@ import type { IRLabelDefault, IRNodeLabel } from '../../schemas';
 import type { FontSpec } from '../text';
 import type { NodeLabelLayout, NodeTextLayoutContext } from './types';
 
-import { CompileWarningCode } from '../constants';
-import { layoutInlineLine, resolveFontSize, resolveLineRuns } from '../text';
+import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../text';
 import { normalizeLabelPosition } from './label-geometry';
 
 /** 节点附属 label 布局输入。 */
@@ -53,13 +52,11 @@ export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelL
     const labTextColor = lab.textColor ?? labelDefault?.textColor ?? labelDefault?.color ?? node.textColor;
     const labOpacity = lab.opacity ?? labelDefault?.opacity;
     const labFontSpec: FontSpec = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
-    const resolved = resolveLineRuns(lab.text, texGatingOn);
-    if (resolved.warn) {
-      inlineWarn(
-        CompileWarningCode.TextTexParseError,
-        'Unbalanced `$` in node label; the trailing fragment is kept literal.',
-      );
-    }
+    const resolved = resolveLineRunsWithWarning(lab.text, {
+      gatingOn: texGatingOn,
+      warn: inlineWarn,
+      warningMessage: 'Unbalanced `$` in node label; the trailing fragment is kept literal.',
+    });
     const plainText = resolved.runs.map(r => ('text' in r ? r.text : '')).join('');
     const isMixed = resolved.hasMath || typeof lab.text === 'object';
     const laid = isMixed

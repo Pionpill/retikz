@@ -3,6 +3,7 @@ import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
+import type { PathPrimitiveEmitResult } from '../types';
 import type { RibbonEmitOptions, RibbonLike } from './types';
 
 import { emitLabelPrimitive, tForLabelPosition } from '../label';
@@ -50,7 +51,7 @@ export type EmitRibbonPrimitiveContext = {
 export const emitRibbonPrimitive = (
   path: IRPathBase,
   context: EmitRibbonPrimitiveContext,
-): { primitives: Array<ScenePrimitive>; boundsPoints: Array<IRPosition> } | null => {
+): PathPrimitiveEmitResult | null => {
   const {
     namespaceStack,
     round,

@@ -1,17 +1,12 @@
-﻿import type { PathCommand,PathGeneratorDefinition } from '../../contract';
+﻿import { isFiniteNumber, isFinitePoint } from '@retikz/math';
+
+import type { PathCommand, PathGeneratorDefinition } from '../../contract';
 import type { IRPosition, IRStep } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
 import { JsonObjectSchema } from '../../schemas';
 
 const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
-
-/** 有限数 */
-const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
-
-/** 有限坐标点 `[number, number]` */
-const isFinitePoint = (pt: unknown): boolean =>
-  Array.isArray(pt) && pt.length >= 2 && isFiniteNum(pt[0]) && isFiniteNum(pt[1]);
 
 /** 校验 path generator 产出的单条命令可写入 Scene。 */
 const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
@@ -36,16 +31,21 @@ const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
         bad(`non-finite coordinate in a 'cubic' command`);
       break;
     case 'arc':
-      if (!isFinitePoint(c.center) || !isFiniteNum(c.radius) || !isFiniteNum(c.startAngle) || !isFiniteNum(c.endAngle))
+      if (
+        !isFinitePoint(c.center) ||
+        !isFiniteNumber(c.radius) ||
+        !isFiniteNumber(c.startAngle) ||
+        !isFiniteNumber(c.endAngle)
+      )
         bad(`non-finite value in an 'arc' command`);
       break;
     case 'ellipseArc':
       if (
         !isFinitePoint(c.center) ||
-        !isFiniteNum(c.radiusX) ||
-        !isFiniteNum(c.radiusY) ||
-        !isFiniteNum(c.startAngle) ||
-        !isFiniteNum(c.endAngle)
+        !isFiniteNumber(c.radiusX) ||
+        !isFiniteNumber(c.radiusY) ||
+        !isFiniteNumber(c.startAngle) ||
+        !isFiniteNumber(c.endAngle)
       )
         bad(`non-finite value in an 'ellipseArc' command`);
       break;

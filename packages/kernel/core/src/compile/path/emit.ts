@@ -1,18 +1,19 @@
-﻿import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
+﻿import {
+  arcBoundingPoints,
+  arcEndPoint,
+  curve,
+  ellipseArcBoundingPoints,
+  ellipseArcPoint,
+  isFinitePoint,
+} from '@retikz/math';
 
-import type {
-  GroupPrim,
-  PathCommand,
-  ResolvedArrowEndSpec,
-  ScenePrimitive,
-} from '../../contract';
+import type { PathCommand, ScenePrimitive } from '../../contract';
 import type { IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
 import type { SegmentSample } from '../../shared/geometry';
 import type { NamespaceStack } from '../namespace';
 import type { PaintResolver } from '../resource';
 import type { TextMeasurer } from '../text';
-import type { PathBaseProps } from './split';
-import type { EmitPathWarnHook } from './types';
+import type { PathEmitOptions, PathPrimitiveEmitResult } from './types';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
 import {
@@ -32,26 +33,22 @@ import {
 } from '../../shared/geometry';
 import { CompileWarningCode } from '../constants';
 import { nodeIdFromResolvableTarget } from '../position';
-import { resolveShadow } from '../style';
 import { fallbackMeasurer } from '../text';
 import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
+import {
+  emitInlineMarkPrimitives,
+  pathEndpointArrowSpecs,
+  resolvePathEndpointDecorations,
+} from './decorations';
 import { lowerGeneratorStepToCommands } from './generator';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
-import { assertArrowCanInheritStroke, buildMarkMarkerGroup, markerContextStroke } from './marks';
+import { assertArrowCanInheritStroke } from './marks';
+import { wrapPathPrimitiveOutput } from './output';
 import { normalizePathSteps } from './relative';
-import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
-import { applyArrowShrinks, emitEndpointArrowMark, emitMarkArrowSpec } from './shrink';
+import { applyRoundedCorners } from './rounded-corners';
+import { applyArrowShrinks } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
-import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
-
-/** 有限坐标点 `[number, number]` */
-const isFinitePoint = (pt: unknown): boolean =>
-  Array.isArray(pt) &&
-  pt.length >= 2 &&
-  typeof pt[0] === 'number' &&
-  Number.isFinite(pt[0]) &&
-  typeof pt[1] === 'number' &&
-  Number.isFinite(pt[1]);
+import { resolvePathBaseProps } from './style';
 
 /** 普通 path emit 所需的编译上下文。 */
 export type EmitPathPrimitiveContext = {
@@ -62,31 +59,31 @@ export type EmitPathPrimitiveContext = {
   /** 文本测量函数。 */
   measureText?: TextMeasurer;
   /** path emit 选项与 warning 钩子。 */
-  options?: EmitPathWarnHook;
+  options?: PathEmitOptions;
 };
 
 /**
  * IR Path → PathPrim
- * @description 解析失败返回 null，并通过 `warnHook.onWarn` 报告 warning。
+ * @description 解析失败返回 null，并通过 `PathEmitOptions.onWarn` 报告 warning。
  */
 export const emitPathPrimitive = (
   path: IRPathBase,
   context: EmitPathPrimitiveContext,
-): { primitives: Array<ScenePrimitive>; boundsPoints: Array<IRPosition> } | null => {
+): PathPrimitiveEmitResult | null => {
   const {
     namespaceStack,
     round,
     measureText = fallbackMeasurer,
-    options: warnHook = {},
+    options: pathEmitOptions = {},
   } = context;
-  const irPath = warnHook.irPath ?? 'path';
+  const irPath = pathEmitOptions.irPath ?? 'path';
   const warn = (code: string, message: string, subPath = ''): void => {
-    warnHook.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
+    pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
   };
-  const scopeChain = warnHook.scopeChain ?? [];
+  const scopeChain = pathEmitOptions.scopeChain ?? [];
   // paint 解析：有 registry 走去重派 id；无（直调）时纯色透传、PaintSpec 退化为 undefined
   const resolvePaint: PaintResolver =
-    warnHook.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
+    pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
   if (path.children === undefined) {
     throw new Error('Stroke path requires `children` steps.');
   }
@@ -125,11 +122,11 @@ export const emitPathPrimitive = (
     const r = emitLabelPrimitive(step.label, sample, {
       measureText,
       round,
-      rootFontSize: warnHook.rootFontSize,
+      rootFontSize: pathEmitOptions.rootFontSize,
       hostOpacity: path.opacity,
       tex: {
-        lowerTex: warnHook.lowerTex,
-        gatingOn: warnHook.lowerTex !== undefined,
+        lowerTex: pathEmitOptions.lowerTex,
+        gatingOn: pathEmitOptions.lowerTex !== undefined,
         warn: (code, message) => warn(code, message, 'label'),
       },
     });
@@ -397,7 +394,7 @@ export const emitPathPrimitive = (
       const toGen = resolvedTo ?? undefined;
       const generated = lowerGeneratorStepToCommands({
         step,
-        generators: warnHook.effectivePathGenerators,
+        generators: pathEmitOptions.effectivePathGenerators,
         from: fromGen,
         ...(toGen !== undefined ? { to: toGen } : {}),
         round,
@@ -829,86 +826,22 @@ export const emitPathPrimitive = (
     }
   }
 
-  const strokeWidth = path.strokeWidth ?? 1;
-  const baseProps: PathBaseProps = {
-    stroke: resolvePaint(path.stroke) ?? 'currentColor',
-    strokeWidth,
-    // path.fill 缺省 'none'（仅描边）；纯色 / PaintSpec gradient 经 resolvePaint → PaintValue
-    fill: resolvePaint(path.fill) ?? 'none',
-    fillRule: path.fillRule,
-    dashPattern: path.dashPattern,
-    dashOffset: path.dashOffset,
-    strokeLinecap: path.lineCap,
-    strokeLinejoin: path.lineJoin,
-    opacity: path.opacity,
-    fillOpacity: path.fillOpacity,
-    strokeOpacity: path.strokeOpacity,
-    shadow: resolveShadow(path.shadow),
-    blendMode: path.blendMode,
-  };
-
-  const resolvedArrows = warnHook.resolvedArrows ?? resolveArrowRegistry();
-  const arrows: {
-    arrowStart?: ResolvedArrowEndSpec;
-    arrowEnd?: ResolvedArrowEndSpec;
-    shrinkStart: number;
-    shrinkEnd: number;
-    boundaryOuterInsetStart: number;
-    boundaryOuterInsetEnd: number;
-  } = {
-    shrinkStart: 0,
-    shrinkEnd: 0,
-    boundaryOuterInsetStart: 0,
-    boundaryOuterInsetEnd: 0,
-  };
-  const inlineMarks: NonNullable<IRPathBase['marks']> = [];
-  for (const item of path.marks ?? []) {
-    if (item.pos === 0 && arrows.arrowStart === undefined) {
-      const resolved = emitEndpointArrowMark(item.mark, resolvedArrows, round);
-      arrows.arrowStart = resolved.spec;
-      arrows.shrinkStart = resolved.shrink;
-      arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
-      continue;
-    }
-    if (item.pos === 1 && arrows.arrowEnd === undefined) {
-      const resolved = emitEndpointArrowMark(item.mark, resolvedArrows, round);
-      arrows.arrowEnd = resolved.spec;
-      arrows.shrinkEnd = resolved.shrink;
-      arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
-      continue;
-    }
-    inlineMarks.push(item);
-  }
+  const baseProps = resolvePathBaseProps(path, { resolvePaint });
+  const strokeWidth = baseProps.strokeWidth;
+  const resolvedArrows = pathEmitOptions.resolvedArrows ?? resolveArrowRegistry();
+  const { arrows, inlineMarks } = resolvePathEndpointDecorations(path, { resolvedArrows, round });
   assertArrowCanInheritStroke(baseProps.stroke, arrows);
 
-  // 中段 marking：把整条 path 的 pos∈[0,1] 分摊到 N 个绘制段，取该处 { point, tangent }，
-  // 产一个按 tangent 定向的 arrow marker（复用端点箭头同款 def.emit 几何）；point 计入 bbox（远端 mark 不被裁）。
-  const markPrims: Array<ScenePrimitive> = [];
-  if (inlineMarks.length > 0 && segmentSamplers.length > 0) {
-    const segCount = segmentSamplers.length;
-    for (const { pos, mark } of inlineMarks) {
-      // 倒角后：沿倒角后 commands 按总弧长重定位（接缝几何 + 总弧长已变 → 落点 / 切线与尖角不同）。
-      // 未倒角：保持原便宜模型——pos·N 落第 segIdx 段（pos=1 收口落末段尾），段内参数 = 余数。
-      const sample = roundedCommands
-        ? sampleRoundedCommands(commands, pos)
-        : (() => {
-            const scaled = pos * segCount;
-            const segIdx = Math.min(Math.floor(scaled), segCount - 1);
-            const localT = scaled - segIdx;
-            return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
-      })();
-      const spec = emitMarkArrowSpec(mark, resolvedArrows, round);
-      markPrims.push(
-        buildMarkMarkerGroup(spec, sample, {
-          strokeWidth,
-          round,
-          contextStroke: markerContextStroke(baseProps.stroke),
-        }),
-      );
-      // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
-      boundsPoints.push(sample.point);
-    }
-  }
+  const marks = emitInlineMarkPrimitives({
+    commands,
+    inlineMarks,
+    segmentSamplers,
+    roundedCommands,
+    resolvedArrows,
+    baseProps,
+    round,
+  });
+  boundsPoints.push(...marks.boundsPoints);
 
   // shrink 在 compile 算（端点收缩与 emit 落点无关）：按 shape + 视觉输入把首/末段端点向内缩短，
   // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过
@@ -916,39 +849,8 @@ export const emitPathPrimitive = (
   const shrinkEnd = arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
   applyArrowShrinks(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
 
-  // 只在端点有箭头时塞 key——避免给无箭头 path 注入 `arrowStart: undefined` / `arrowEnd: undefined`（保 Scene 输出纯净）
-  const endpointSpecs: { arrowStart?: typeof arrows.arrowStart; arrowEnd?: typeof arrows.arrowEnd } = {};
-  if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;
-  if (arrows.arrowEnd) endpointSpecs.arrowEnd = arrows.arrowEnd;
+  const endpointSpecs = pathEndpointArrowSpecs(arrows);
   const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs);
-  const bodyPrims: Array<ScenePrimitive> = [primitive, ...labelPrims, ...markPrims];
-
-  // 路径整体变换：rotate / scale 给定时，以包围盒中心为支点把本 path 的 primitive 包进 GroupPrim 写 transforms。
-  // 顺序硬契约：端点已在当前 scope resolve 到世界坐标、arrow shrink 已在未变换几何上完成（上方），
-  // 这里才以 bbox center 为支点包 group（几何留原坐标、变换由外层 group 承担）；layout 外接框据变换后 bbox 计。
-  if ((path.rotate !== undefined || path.scale !== undefined) && boundsPoints.length > 0) {
-    const center = bboxCenter(boundsPoints);
-    const transforms = buildPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });
-    if (transforms.length > 0) {
-      const group: GroupPrim = { type: 'group', transforms, children: bodyPrims };
-      // 水合挂点：rotate / scale 包裹时 user id 落到最外层 GroupPrim（唯一 top-level emit 图元），
-      // 内层主体 primitive 不再 stamp。无 user id 时保持 undefined。
-      if (path.id !== undefined) group.id = path.id;
-      // meta provenance 与 id 同款落点：落最外层 GroupPrim，内层不重复
-      if (path.meta !== undefined) group.meta = path.meta;
-      // animations 与 meta 同款落点：落最外层 GroupPrim
-      if (path.animations !== undefined) group.animations = path.animations;
-      // layout 据变换后 bbox：把当前 boundsPoints 经同一变换链投影后回收（应用顺序与 GroupPrim 渲染一致）
-      const transformedBoundsPoints = projectPathTransformPoints(boundsPoints, transforms);
-      return { primitives: [group], boundsPoints: transformedBoundsPoints };
-    }
-  }
-  // 水合挂点：无 rotate / scale 包裹时把 user id stamp 到 path 主体 primitive（PathPrim，或多 sub-path
-  // 箭头时的 GroupPrim）；label / mark primitive 不重复 stamp。无 user id 时保持 undefined。
-  if (path.id !== undefined) primitive.id = path.id;
-  // meta provenance 与 id 同款落点：落 path 主体 primitive，label / mark 不重复
-  if (path.meta !== undefined) primitive.meta = path.meta;
-  // animations 与 meta 同款落点：落 path 主体 primitive
-  if (path.animations !== undefined) primitive.animations = path.animations;
-  return { primitives: bodyPrims, boundsPoints };
+  const bodyPrims: Array<ScenePrimitive> = [primitive, ...labelPrims, ...marks.primitives];
+  return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });
 };
