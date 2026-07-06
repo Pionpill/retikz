@@ -1,15 +1,16 @@
 import { minimalEnclosingCircle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
 
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';
-import { collectScopeCornerPoints, registerScopeCircleLayout } from '../../src/compile/scope';
+import { createScopeCircleLayout } from '../../src/compile/node';
+import { collectScopeCornerPoints } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
@@ -43,15 +44,15 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
   shapes: BUILTIN_SHAPES,
 });
 
-describe('registerScopeCircleLayout 单元测试', () => {
+describe('createScopeCircleLayout 单元测试', () => {
   it('shapeName ellipse + shapeParams circumscribe:equal', () => {
-    const layout = registerScopeCircleLayout('g', [], [0, 0]);
+    const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [0, 0] });
     expect(layout.shapeName).toBe('ellipse');
     expect(layout.shapeParams).toEqual({ circumscribe: 'equal' });
   });
 
   it('空点集 → 0×0 占位落在 fallbackOrigin', () => {
-    const layout = registerScopeCircleLayout('g', [], [30, 40]);
+    const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [30, 40] });
     expect(layout.id).toBe('g');
     expect(layout.rect.x).toBe(30);
     expect(layout.rect.y).toBe(40);
@@ -69,7 +70,7 @@ describe('registerScopeCircleLayout 单元测试', () => {
     ];
     const mec = minimalEnclosingCircle([...corners]);
     expect(mec).not.toBeNull();
-    const layout = registerScopeCircleLayout('g', corners, [0, 0]);
+    const layout = createScopeCircleLayout({ id: 'g', cornerPoints: corners, fallbackOrigin: [0, 0] });
     const diameter = mec!.radius * 2;
     expect(layout.rect.width).toBeCloseTo(diameter, 5);
     expect(layout.rect.height).toBeCloseTo(diameter, 5);

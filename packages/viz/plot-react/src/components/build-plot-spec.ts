@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AxisGuide,
   Channel,
   CoordinateOperation,
@@ -493,7 +493,7 @@ const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContex
   const put = (name: string, value: unknown): void => {
     if (value !== undefined) out[name] = value;
   };
-  put('align', enumStyleOf(props.align, 'align', new Set(['left', 'center', 'right']), context));
+  put('align', enumStyleOf(props.align, 'align', new Set(['start', 'middle', 'end']), context));
   put('lineHeight', numberStyleOf(props.lineHeight, 'lineHeight', context));
   put('maxTextWidth', numberStyleOf(props.maxTextWidth, 'maxTextWidth', context));
   put('cornerRadius', numberStyleOf(props.cornerRadius, 'cornerRadius', context));
@@ -547,7 +547,7 @@ const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSugarContex
   };
   put('fill', paintStyleOf<PointFillStyle>(props.fill, 'fill', context));
   put('stroke', paintStyleOf<PointStrokeStyle>(props.stroke, 'stroke', context));
-  put('drawOpacity', numberStyleOf(props.drawOpacity, 'drawOpacity', context));
+  put('strokeOpacity', numberStyleOf(props.strokeOpacity, 'strokeOpacity', context));
   put('zIndex', numberStyleOf(props.zIndex, 'zIndex', context));
   put('rotate', numberStyleOf(props.rotate, 'rotate', context));
   put('scale', jsonStyleOf(props.scale, 'scale', context));
@@ -1197,7 +1197,7 @@ const collectInto = (
         stroke,
         strokeWidth,
         fillOpacity,
-        drawOpacity,
+        strokeOpacity,
         rotate,
         padding,
         minimumSize,
@@ -1229,7 +1229,7 @@ const collectInto = (
       const strokeStyle = strokeStyleOf(stroke, styleContext);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
       const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-      const drawOpacityStyle = numberStyleOf<PointOpacityStyle>(drawOpacity, 'drawOpacity', styleContext);
+      const strokeOpacityStyle = numberStyleOf<PointOpacityStyle>(strokeOpacity, 'strokeOpacity', styleContext);
       const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
       const rotateStyle = numberStyleOf<PointNumberStyle>(rotate, 'rotate', styleContext);
       const paddingStyle = boxSpacingStyleOf(padding, 'padding', styleContext);
@@ -1261,7 +1261,7 @@ const collectInto = (
         ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
         ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
         ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
-        ...(drawOpacityStyle !== undefined ? { drawOpacity: drawOpacityStyle } : {}),
+        ...(strokeOpacityStyle !== undefined ? { strokeOpacity: strokeOpacityStyle } : {}),
         ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
         ...(rotateStyle !== undefined ? { rotate: rotateStyle } : {}),
         ...(paddingStyle !== undefined ? { padding: paddingStyle } : {}),

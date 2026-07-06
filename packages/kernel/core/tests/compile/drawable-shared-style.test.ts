@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import type { IR, PathPrim, ScenePrimitive } from '../../src';
+import type { IRScene, PathPrim, ScenePrimitive } from '../../src';
 
 import { compileToScene, PathDefaultSchema, ScopeSchema } from '../../src';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -10,19 +10,19 @@ const steps = [
   { type: 'step' as const, kind: 'line' as const, to: [100, 0] as [number, number] },
 ];
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
 });
 
-const linePath = (overrides: Record<string, unknown> = {}): IR['children'][number] => ({
+const linePath = (overrides: Record<string, unknown> = {}): IRScene['children'][number] => ({
   type: 'path',
   children: steps,
   ...overrides,
 });
 
-const ribbon = (overrides: Record<string, unknown> = {}): IR['children'][number] => ({
+const ribbon = (overrides: Record<string, unknown> = {}): IRScene['children'][number] => ({
   type: 'path',
   kind: 'ribbon',
   ribbon: { width: 10, samples: 2 },
@@ -39,7 +39,7 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
   return out;
 };
 
-const pathPrims = (ir: IR): Array<PathPrim> =>
+const pathPrims = (ir: IRScene): Array<PathPrim> =>
   flatten(compileToScene(ir, { padding: 0 }).primitives).filter(
     (primitive): primitive is PathPrim => primitive.type === 'path',
   );
@@ -55,7 +55,7 @@ describe('Drawable shared style resolution', () => {
             fillOpacity: 0.4,
             stroke: '#134e4a',
             strokeWidth: 2,
-            drawOpacity: 0.6,
+            strokeOpacity: 0.6,
             opacity: 0.8,
             shadow: 'sm',
             blendMode: 'multiply',

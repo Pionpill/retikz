@@ -44,7 +44,11 @@ type LowerLabelsInput = LabelLayoutInput & {
 const EMPTY_RESERVE: Partial<Margins> = {};
 
 const textFontSizeOf = (label: TextLabel, themeTextStyle: TextStyle, fallback: number): number =>
-  label.font?.size ?? themeTextStyle.font?.size ?? fallback;
+  typeof label.font?.size === 'number'
+    ? label.font.size
+    : typeof themeTextStyle.font?.size === 'number'
+      ? themeTextStyle.font.size
+      : fallback;
 
 const mergeTextStyle = (themeTextStyle: TextStyle, label: TextLabel): TextStyle => ({
   ...themeTextStyle,
@@ -162,12 +166,12 @@ const targetRectOf = (
 };
 
 const autoAlignOf = (anchor: string | undefined, ratio: number): IRNode['align'] | undefined => {
-  if (anchor === LayoutAnchor.Start) return 'left';
-  if (anchor === LayoutAnchor.Center) return 'center';
-  if (anchor === LayoutAnchor.End) return 'right';
-  if (ratio <= 0.1) return 'left';
-  if (ratio >= 0.9) return 'right';
-  return 'center';
+  if (anchor === LayoutAnchor.Start) return 'start';
+  if (anchor === LayoutAnchor.Center) return 'middle';
+  if (anchor === LayoutAnchor.End) return 'end';
+  if (ratio <= 0.1) return 'start';
+  if (ratio >= 0.9) return 'end';
+  return 'middle';
 };
 
 const sidePositionOf = (item: ResolvedTextLabel, rect: Rect): [number, number] => {

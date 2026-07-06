@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 
 // core emit alphabetic 基线，按字体度量从基线还原单行文本视觉中心，验证垂直居中落点
 const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
@@ -25,7 +25,7 @@ const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrim | undef
 describe('Node label', () => {
   describe('基本生成', () => {
     it('单对象 label → 一个 TextPrim', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -44,7 +44,7 @@ describe('Node label', () => {
     });
 
     it('数组 label → 多个 TextPrim', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -68,7 +68,7 @@ describe('Node label', () => {
 
   describe('位置算法（rectangle 节点上）', () => {
     it("position='top'：在 top 边界外（y 减小）", () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -88,7 +88,7 @@ describe('Node label', () => {
     });
 
     it("position='bottom'：在 bottom 边界外（y 增大）", () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -107,7 +107,7 @@ describe('Node label', () => {
     });
 
     it("position='right'：在 right 边界外（x 增大）", () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -126,7 +126,7 @@ describe('Node label', () => {
     });
 
     it('数字角度 0：相当于沿 +x 方向（right）', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -147,7 +147,7 @@ describe('Node label', () => {
     });
 
     it('数字角度 90：retikz polar y 向下，相当于 bottom', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -168,7 +168,7 @@ describe('Node label', () => {
 
   describe('默认值 / 缺省', () => {
     it('position 缺省 = top', () => {
-      const irExplicit: IR = {
+      const irExplicit: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -181,7 +181,7 @@ describe('Node label', () => {
           },
         ],
       };
-      const irDefault: IR = {
+      const irDefault: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -200,7 +200,7 @@ describe('Node label', () => {
     });
 
     it('distance 缺省 = 12', () => {
-      const irExplicit: IR = {
+      const irExplicit: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -213,7 +213,7 @@ describe('Node label', () => {
           },
         ],
       };
-      const irDefault: IR = {
+      const irDefault: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -234,7 +234,7 @@ describe('Node label', () => {
 
   describe('样式继承', () => {
     it('label.font 缺字段时从 node.font 继承', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -254,7 +254,7 @@ describe('Node label', () => {
     });
 
     it('label.font 显式覆盖 node.font', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -275,7 +275,7 @@ describe('Node label', () => {
     });
 
     it('label TextPrim 写入真实 measuredWidth', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -293,7 +293,7 @@ describe('Node label', () => {
     });
 
     it('label.textColor 缺省时继承 node.textColor', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -314,7 +314,7 @@ describe('Node label', () => {
 
   describe('与节点旋转交互', () => {
     it('rotate 节点带 label：label 与 node 一起被外层 group 旋转', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [

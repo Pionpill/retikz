@@ -3,8 +3,8 @@
 import type { PathCommand, PathPrim } from '../../../contract';
 import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { NameStack } from '../../name-stack';
-import type { PaintResolver } from '../../paint';
+import type { NamespaceStack } from '../../namespace';
+import type { PaintResolver } from '../../resource';
 import type {
   RibbonAnalyticSegment,
   RibbonCrossSection,
@@ -14,7 +14,7 @@ import type {
 } from './types';
 
 import { cubicSegmentSample, lineSegmentSample, quadSegmentSample } from '../../../shared/geometry';
-import { resolveShadow } from '../../effects';
+import { resolveShadow } from '../../style';
 import { arcCapPoints, capExtension, isArcCap, midpoint, roundedArcPoints } from './caps';
 import {
   alignTangentNormal,
@@ -30,26 +30,45 @@ import {
 
 const ENDPOINT_DIRECTION_BLEND_SPAN = 0.18;
 
+export type RibbonCrossSectionInput = {
+  sample: SegmentSample;
+  offset: number;
+  widthAt: (offset: number) => number;
+  endpointTangents: { start: Vector2; end: Vector2 };
+  align: RibbonAlignmentValue;
+  round: (n: number) => number;
+};
+
 /**
  * 计算中心线某一点的 ribbon 横截面
  * @description 宽度按 offset 求值；align 决定宽度分配到左右两侧的比例；首尾附近会把切线向端点 direction 平滑过渡。
  */
-export const ribbonCrossSection = (
-  sample: SegmentSample,
-  offset: number,
-  widthAt: (offset: number) => number,
-  endpointTangents: { start: Vector2; end: Vector2 },
-  align: RibbonAlignmentValue,
-  round: (n: number) => number,
-): RibbonCrossSection => {
+export const ribbonCrossSection = ({
+  sample,
+  offset,
+  widthAt,
+  endpointTangents,
+  align,
+  round,
+}: RibbonCrossSectionInput): RibbonCrossSection => {
   const width = widthAt(offset);
   const startTangent = alignTangentNormal(endpointTangents.start, sample.tangent);
   const endTangent = alignTangentNormal(endpointTangents.end, sample.tangent);
   const tangent =
     offset <= ENDPOINT_DIRECTION_BLEND_SPAN
-      ? blendTangent(startTangent, sample.tangent, offset / ENDPOINT_DIRECTION_BLEND_SPAN, 'start blended')
+      ? blendTangent({
+          endpointTangent: startTangent,
+          sampleTangent: sample.tangent,
+          t: offset / ENDPOINT_DIRECTION_BLEND_SPAN,
+          source: 'start blended',
+        })
       : offset >= 1 - ENDPOINT_DIRECTION_BLEND_SPAN
-        ? blendTangent(endTangent, sample.tangent, (1 - offset) / ENDPOINT_DIRECTION_BLEND_SPAN, 'end blended')
+        ? blendTangent({
+            endpointTangent: endTangent,
+            sampleTangent: sample.tangent,
+            t: (1 - offset) / ENDPOINT_DIRECTION_BLEND_SPAN,
+            source: 'end blended',
+          })
         : sample.tangent;
   const normal = normalOf(tangent);
   const leftOffset = align === 'right' ? 0 : align === 'left' ? width : width / 2;
@@ -74,12 +93,19 @@ export const ribbonCrossSection = (
   };
 };
 
-const segmentInputToAnalyticSegment = (
-  input: RibbonSegmentInput,
-  index: number,
-  count: number,
-  endpointTangents: { start?: Vector2; end?: Vector2 } = {},
-): RibbonAnalyticSegment | null => {
+type SegmentInputToAnalyticSegmentInput = {
+  input: RibbonSegmentInput;
+  index: number;
+  count: number;
+  endpointTangents?: { start?: Vector2; end?: Vector2 };
+};
+
+const segmentInputToAnalyticSegment = ({
+  input,
+  index,
+  count,
+  endpointTangents = {},
+}: SegmentInputToAnalyticSegmentInput): RibbonAnalyticSegment | null => {
   const isFirst = index === 0;
   const isLast = index === count - 1;
   if (input.kind === 'line') return input;
@@ -143,43 +169,67 @@ const analyticSegmentSample = (segment: RibbonAnalyticSegment, t: number): Segme
   return cubicSegmentSample(segment.from, segment.control1, segment.control2, segment.to, t);
 };
 
-const offsetAnalyticPoint = (
-  point: IRPosition,
-  sample: SegmentSample,
-  offset: number,
-  side: 'left' | 'right',
-  widthAt: (offset: number) => number,
-  endpointTangents: { start: Vector2; end: Vector2 },
-  align: RibbonAlignmentValue,
-  round: (n: number) => number,
-): IRPosition => {
-  const section = ribbonCrossSection(
-    { point, tangent: sample.tangent },
+type OffsetAnalyticPointInput = {
+  point: IRPosition;
+  sample: SegmentSample;
+  offset: number;
+  side: 'left' | 'right';
+  widthAt: (offset: number) => number;
+  endpointTangents: { start: Vector2; end: Vector2 };
+  align: RibbonAlignmentValue;
+  round: (n: number) => number;
+};
+
+const offsetAnalyticPoint = ({
+  point,
+  sample,
+  offset,
+  side,
+  widthAt,
+  endpointTangents,
+  align,
+  round,
+}: OffsetAnalyticPointInput): IRPosition => {
+  const section = ribbonCrossSection({
+    sample: { point, tangent: sample.tangent },
     offset,
     widthAt,
     endpointTangents,
     align,
     round,
-  );
+  });
   return side === 'left' ? section.left : section.right;
+};
+
+export type OutlineCommandsInput = {
+  segments: ReadonlyArray<RibbonSegment>;
+  totalLength: number;
+  sampleCount: number;
+  widthAt: (offset: number) => number;
+  endpointTangents: { start: Vector2; end: Vector2 };
+  align: RibbonAlignmentValue;
+  startEndpointCap: IRRibbonCap;
+  endEndpointCap: IRRibbonCap;
+  namespaceStack: NamespaceStack;
+  round: (n: number) => number;
 };
 
 /**
  * 采样型 centerline ribbon 轮廓
  * @description 沿中心线取 sampleCount 个横截面，左侧顺序连线、右侧逆序连线，再按端帽配置闭合。
  */
-export const outlineCommands = (
-  segments: ReadonlyArray<RibbonSegment>,
-  totalLength: number,
-  sampleCount: number,
-  widthAt: (offset: number) => number,
-  endpointTangents: { start: Vector2; end: Vector2 },
-  align: RibbonAlignmentValue,
-  startEndpointCap: IRRibbonCap,
-  endEndpointCap: IRRibbonCap,
-  nameStack: NameStack,
-  round: (n: number) => number,
-): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
+export const outlineCommands = ({
+  segments,
+  totalLength,
+  sampleCount,
+  widthAt,
+  endpointTangents,
+  align,
+  startEndpointCap,
+  endEndpointCap,
+  namespaceStack,
+  round,
+}: OutlineCommandsInput): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
   const left: Array<IRPosition> = [];
   const right: Array<IRPosition> = [];
   const centers: Array<IRPosition> = [];
@@ -188,7 +238,7 @@ export const outlineCommands = (
   for (let i = 0; i < sampleCount; i += 1) {
     const offset = sampleCount === 1 ? 0 : i / (sampleCount - 1);
     const sample = sampleAtDistance(segments, totalLength, offset * totalLength);
-    const section = ribbonCrossSection(sample, offset, widthAt, endpointTangents, align, round);
+    const section = ribbonCrossSection({ sample, offset, widthAt, endpointTangents, align, round });
     left.push(section.left);
     right.push(section.right);
     centers.push(section.center);
@@ -212,18 +262,25 @@ export const outlineCommands = (
   for (let i = 1; i < left.length; i += 1) commands.push({ kind: 'line', to: left[i] });
   if (isArcCap(endEndpointCap)) {
     const last = sampleCount - 1;
-    for (const point of arcCapPoints(endEndpointCap, left[last], right[last], 'end', nameStack, round)) {
+    for (const point of arcCapPoints({
+      cap: endEndpointCap,
+      from: left[last],
+      to: right[last],
+      endpoint: 'end',
+      namespaceStack,
+      round,
+    })) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (endEndpointCap === 'round') {
     const last = sampleCount - 1;
-    for (const point of roundedArcPoints(
-      midpoint(left[last], right[last], round),
-      left[last],
-      right[last],
-      tangents[last],
+    for (const point of roundedArcPoints({
+      center: midpoint(left[last], right[last], round),
+      from: left[last],
+      to: right[last],
+      outwardDirection: tangents[last],
       round,
-    )) {
+    })) {
       commands.push({ kind: 'line', to: point });
     }
   } else {
@@ -231,17 +288,24 @@ export const outlineCommands = (
   }
   for (let i = right.length - 2; i >= 0; i -= 1) commands.push({ kind: 'line', to: right[i] });
   if (isArcCap(startEndpointCap)) {
-    for (const point of arcCapPoints(startEndpointCap, right[0], left[0], 'start', nameStack, round)) {
+    for (const point of arcCapPoints({
+      cap: startEndpointCap,
+      from: right[0],
+      to: left[0],
+      endpoint: 'start',
+      namespaceStack,
+      round,
+    })) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (startEndpointCap === 'round') {
-    for (const point of roundedArcPoints(
-      midpoint(left[0], right[0], round),
-      right[0],
-      left[0],
-      [-tangents[0][0], -tangents[0][1]],
+    for (const point of roundedArcPoints({
+      center: midpoint(left[0], right[0], round),
+      from: right[0],
+      to: left[0],
+      outwardDirection: [-tangents[0][0], -tangents[0][1]],
       round,
-    )) {
+    })) {
       commands.push({ kind: 'line', to: point });
     }
   }
@@ -249,29 +313,48 @@ export const outlineCommands = (
   return { commands, points: [...left, ...right] };
 };
 
+export type AnalyticOutlineCommandsInput = {
+  inputs: ReadonlyArray<RibbonSegmentInput>;
+  segments: ReadonlyArray<RibbonSegment>;
+  totalLength: number;
+  widthAt: (offset: number) => number;
+  endpointTangents: { start: Vector2; end: Vector2 };
+  endpointTangentOverrides: { start?: Vector2; end?: Vector2 };
+  align: RibbonAlignmentValue;
+  startEndpointCap: IRRibbonCap;
+  endEndpointCap: IRRibbonCap;
+  namespaceStack: NamespaceStack;
+  round: (n: number) => number;
+};
+
 /**
  * 解析型 centerline ribbon 轮廓
  * @description 当中心线仅由 line / quad / cubic 组成且宽度可解析时，尽量保留线段阶数生成左右 offset 命令；
  *   遇到 arc / ellipseArc 或输入不匹配返回 null，由调用方退回采样型轮廓。
  */
-export const analyticOutlineCommands = (
-  inputs: ReadonlyArray<RibbonSegmentInput>,
-  segments: ReadonlyArray<RibbonSegment>,
-  totalLength: number,
-  widthAt: (offset: number) => number,
-  endpointTangents: { start: Vector2; end: Vector2 },
-  endpointTangentOverrides: { start?: Vector2; end?: Vector2 },
-  align: RibbonAlignmentValue,
-  startEndpointCap: IRRibbonCap,
-  endEndpointCap: IRRibbonCap,
-  nameStack: NameStack,
-  round: (n: number) => number,
-): { commands: Array<PathCommand>; points: Array<IRPosition> } | null => {
+export const analyticOutlineCommands = ({
+  inputs,
+  segments,
+  totalLength,
+  widthAt,
+  endpointTangents,
+  endpointTangentOverrides,
+  align,
+  startEndpointCap,
+  endEndpointCap,
+  namespaceStack,
+  round,
+}: AnalyticOutlineCommandsInput): { commands: Array<PathCommand>; points: Array<IRPosition> } | null => {
   if (inputs.length !== segments.length) return null;
 
   const analyticSegments: Array<RibbonAnalyticSegment> = [];
   for (let index = 0; index < inputs.length; index += 1) {
-    const analytic = segmentInputToAnalyticSegment(inputs[index], index, inputs.length, endpointTangentOverrides);
+    const analytic = segmentInputToAnalyticSegment({
+      input: inputs[index],
+      index,
+      count: inputs.length,
+      endpointTangents: endpointTangentOverrides,
+    });
     if (analytic === null) return null;
     analyticSegments.push(analytic);
   }
@@ -286,20 +369,30 @@ export const analyticOutlineCommands = (
 
   const sectionAt = (segmentIndex: number, t: number): RibbonCrossSection => {
     const sample = analyticSegmentSample(analyticSegments[segmentIndex], t);
-    return ribbonCrossSection(sample, offsetAt(segmentIndex, t), widthAt, endpointTangents, align, round);
+    return ribbonCrossSection({ sample, offset: offsetAt(segmentIndex, t), widthAt, endpointTangents, align, round });
   };
 
-  const offsetControl = (segmentIndex: number, point: IRPosition, t: number, side: 'left' | 'right'): IRPosition =>
-    offsetAnalyticPoint(
+  const offsetControl = ({
+    segmentIndex,
+    point,
+    t,
+    side,
+  }: {
+    segmentIndex: number;
+    point: IRPosition;
+    t: number;
+    side: 'left' | 'right';
+  }): IRPosition =>
+    offsetAnalyticPoint({
       point,
-      analyticSegmentSample(analyticSegments[segmentIndex], t),
-      offsetAt(segmentIndex, t),
+      sample: analyticSegmentSample(analyticSegments[segmentIndex], t),
+      offset: offsetAt(segmentIndex, t),
       side,
       widthAt,
       endpointTangents,
       align,
       round,
-    );
+    });
 
   const start = sectionAt(0, 0);
   let startLeft = start.left;
@@ -324,16 +417,16 @@ export const analyticOutlineCommands = (
       rightCommands.push({ kind: 'line', to: startSection.right });
       points.push(startSection.left, endSection.left, startSection.right, endSection.right);
     } else if (segment.kind === 'quad') {
-      const leftControl = offsetControl(index, segment.control, 0.5, 'left');
-      const rightControl = offsetControl(index, segment.control, 0.5, 'right');
+      const leftControl = offsetControl({ segmentIndex: index, point: segment.control, t: 0.5, side: 'left' });
+      const rightControl = offsetControl({ segmentIndex: index, point: segment.control, t: 0.5, side: 'right' });
       leftCommands.push({ kind: 'quad', control: leftControl, to: endSection.left });
       rightCommands.push({ kind: 'quad', control: rightControl, to: startSection.right });
       points.push(startSection.left, leftControl, endSection.left, startSection.right, rightControl, endSection.right);
     } else {
-      const leftControl1 = offsetControl(index, segment.control1, 1 / 3, 'left');
-      const leftControl2 = offsetControl(index, segment.control2, 2 / 3, 'left');
-      const rightControl1 = offsetControl(index, segment.control1, 1 / 3, 'right');
-      const rightControl2 = offsetControl(index, segment.control2, 2 / 3, 'right');
+      const leftControl1 = offsetControl({ segmentIndex: index, point: segment.control1, t: 1 / 3, side: 'left' });
+      const leftControl2 = offsetControl({ segmentIndex: index, point: segment.control2, t: 2 / 3, side: 'left' });
+      const rightControl1 = offsetControl({ segmentIndex: index, point: segment.control1, t: 1 / 3, side: 'right' });
+      const rightControl2 = offsetControl({ segmentIndex: index, point: segment.control2, t: 2 / 3, side: 'right' });
       leftCommands.push({
         kind: 'cubic',
         control1: leftControl1,
@@ -380,11 +473,24 @@ export const analyticOutlineCommands = (
   const lastLeftCommand = commands[commands.length - 1];
   if ('to' in lastLeftCommand) lastLeftCommand.to = endLeft;
   if (isArcCap(endEndpointCap)) {
-    for (const point of arcCapPoints(endEndpointCap, endLeft, endRight, 'end', nameStack, round)) {
+    for (const point of arcCapPoints({
+      cap: endEndpointCap,
+      from: endLeft,
+      to: endRight,
+      endpoint: 'end',
+      namespaceStack,
+      round,
+    })) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (endEndpointCap === 'round') {
-    for (const point of roundedArcPoints(midpoint(endLeft, endRight, round), endLeft, endRight, endTangent, round)) {
+    for (const point of roundedArcPoints({
+      center: midpoint(endLeft, endRight, round),
+      from: endLeft,
+      to: endRight,
+      outwardDirection: endTangent,
+      round,
+    })) {
       commands.push({ kind: 'line', to: point });
     }
   } else {
@@ -396,17 +502,24 @@ export const analyticOutlineCommands = (
     commands.push(command);
   }
   if (isArcCap(startEndpointCap)) {
-    for (const point of arcCapPoints(startEndpointCap, startRight, startLeft, 'start', nameStack, round)) {
+    for (const point of arcCapPoints({
+      cap: startEndpointCap,
+      from: startRight,
+      to: startLeft,
+      endpoint: 'start',
+      namespaceStack,
+      round,
+    })) {
       commands.push({ kind: 'line', to: point });
     }
   } else if (startEndpointCap === 'round') {
-    for (const point of roundedArcPoints(
-      midpoint(startLeft, startRight, round),
-      startRight,
-      startLeft,
-      [-startTangent[0], -startTangent[1]],
+    for (const point of roundedArcPoints({
+      center: midpoint(startLeft, startRight, round),
+      from: startRight,
+      to: startLeft,
+      outwardDirection: [-startTangent[0], -startTangent[1]],
       round,
-    )) {
+    })) {
       commands.push({ kind: 'line', to: point });
     }
   }
@@ -414,18 +527,27 @@ export const analyticOutlineCommands = (
   return { commands, points: [...points, startLeft, startRight, endLeft, endRight] };
 };
 
+export type BoundaryOutlineCommandsInput = {
+  upper: ReadonlyArray<RibbonSegment>;
+  upperLength: number;
+  lower: ReadonlyArray<RibbonSegment>;
+  lowerLength: number;
+  sampleCount: number;
+  round: (n: number) => number;
+};
+
 /**
  * boundary 模式 ribbon 轮廓
  * @description upper / lower 已各自解析成中心线段；这里按同一归一化 offset 采样两条边界，再拼成闭合 path。
  */
-export const boundaryOutlineCommands = (
-  upper: ReadonlyArray<RibbonSegment>,
-  upperLength: number,
-  lower: ReadonlyArray<RibbonSegment>,
-  lowerLength: number,
-  sampleCount: number,
-  round: (n: number) => number,
-): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
+export const boundaryOutlineCommands = ({
+  upper,
+  upperLength,
+  lower,
+  lowerLength,
+  sampleCount,
+  round,
+}: BoundaryOutlineCommandsInput): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
   const upperPoints: Array<IRPosition> = [];
   const lowerPoints: Array<IRPosition> = [];
   for (let i = 0; i < sampleCount; i += 1) {
@@ -453,7 +575,7 @@ export const boundaryOutlineCommands = (
 
 /**
  * 将闭合轮廓命令写成最终 PathPrim
- * @description fill 默认 currentColor；仅当用户显式请求 stroke / strokeWidth 时才写描边字段，保持 Scene 输出精简。
+ * @description 仅当用户显式请求 stroke / strokeWidth 时写描边字段。
  */
 export const styledPrimitiveFromOutline = (
   ribbon: RibbonLike,
@@ -473,7 +595,7 @@ export const styledPrimitiveFromOutline = (
   if (outlineRequested) {
     primitive.stroke = resolvePaint(ribbon.stroke) ?? 'currentColor';
     primitive.strokeWidth = ribbon.strokeWidth ?? 1;
-    primitive.strokeOpacity = ribbon.drawOpacity;
+    primitive.strokeOpacity = ribbon.strokeOpacity;
   }
   if (ribbon.id !== undefined) primitive.id = ribbon.id;
   if (ribbon.meta !== undefined) primitive.meta = ribbon.meta;

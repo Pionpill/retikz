@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { arc, ellipseArc, line, move, quad } from '../../helpers/path-command-factory';
@@ -8,7 +8,7 @@ import { findPathPrim } from './helpers';
 
 describe("compile path: 'relative' / 'relativeAccumulate'", () => {
   it('relative 解析为 prevEnd + offset；prevEnd 不更新（链式 relative 全相对同一锚点）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -33,7 +33,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
   });
 
   it('relativeAccumulate 解析为 prevEnd + offset；更新 prevEnd（链式累积）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -57,7 +57,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
   });
 
   it('relative + relativeAccumulate 混用', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -81,7 +81,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
   });
 
   it('relative 与曲线 step 混用（curve 后 prevEnd 是曲线终点）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -109,7 +109,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
   });
 
   it('relative 在 arc 之后：以 arc 终点为锚点', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -138,7 +138,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
   });
 
   it('relative 在 circle 之后：以圆心为锚点（prevEnd 不变）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -164,7 +164,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
   });
 
   it('首步是 relative（无 prevEnd）回退到 [0,0]', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -182,7 +182,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
   });
 
   it('relative 与等价绝对坐标产 IR 不同但 SVG d 相同', () => {
-    const irRel: IR = {
+    const irRel: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -196,7 +196,7 @@ describe("compile path: 'relative' / 'relativeAccumulate'", () => {
         },
       ],
     };
-    const irAbs: IR = {
+    const irAbs: IRScene = {
       version: 1,
       type: 'scene',
       children: [

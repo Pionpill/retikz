@@ -2,7 +2,7 @@ import type { ZodError } from 'zod';
 
 import { SceneSchema } from '@retikz/core';
 
-import { parseRetikzJsx } from '@/lib/jsx-to-ir';
+import { parseRetikzJsx } from '@/lib';
 
 export type RetikzBlockFormat = 'ir' | 'tsx';
 

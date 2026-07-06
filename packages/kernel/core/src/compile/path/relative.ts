@@ -1,24 +1,16 @@
-﻿import { arcEndPoint } from '@retikz/math';
+import { arcEndPoint } from '@retikz/math';
 
 import type { Transform } from '../../contract';
 import type { IRPosition, IRStep, IRTarget } from '../../schemas';
-import type { NameStack } from '../name-stack';
+import type { NamespaceStack } from '../namespace';
 
-import { inverseTransformChain } from '../scope';
+import { inverseTransformChain } from '../transform';
 import { refPointOfTarget } from './anchor';
 
-/**
- * relative/relativeAccumulate 目标解析为绝对 Position（step kind 不变，to 为局部坐标 tuple）
- * @description relative 不更新 prevEnd（TikZ `+`），relativeAccumulate 更新（TikZ `++`）。prevEnd 推进：有 to 的 kind 用 refPointOfTarget(to)；arc 用 arcEndPoint；circlePath/ellipsePath/cycle 不变。首步 relative 时 prevEnd 回退 [0,0]；解析失败保持原 step。
- *   prevEnd 始终是全局坐标系下的 cursor；relative 形态 `[dx, dy]` 在**当前 scope 局部度量**——
- *   先反向投影 prevEnd 到 scope 局部 + 加 (dx, dy) 得局部 tuple，写回 step.to。下游
- *   `refPointOfTarget` / `clipForTarget` 把 tuple 视作 scope 局部字面量，统一 `applyTransformChain` 投回全局——
- *   relative 分支只负责"折算到局部"，不能在此处提前投影到全局，否则与下游 chain apply 形成 double-apply。
- *   `scopeChain=[]` 时 inverse 恒等，保持全局坐标语义。
- */
-export const normalizeRelativeTargets = (
+/** 解析 relative / relativeAccumulate 目标为局部坐标 tuple。 */
+export const resolveRelativeStepTargets = (
   steps: ReadonlyArray<IRStep>,
-  nameStack: NameStack,
+  namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform> = [],
 ): Array<IRStep> => {
   let prevEnd: IRPosition | null = null;
@@ -67,7 +59,7 @@ export const normalizeRelativeTargets = (
         }
         normalizedPoints.push(resolvedPt);
         if (updatePrevEnd) {
-          const pos = refPointOfTarget(resolvedPt, nameStack, scopeChain);
+          const pos = refPointOfTarget(resolvedPt, namespaceStack, scopeChain);
           if (pos) prevEnd = pos;
         }
       }
@@ -79,7 +71,7 @@ export const normalizeRelativeTargets = (
       // generator 产段终点要等编译期 generate 才知；预处理阶段以 step.to 近似推进 prevEnd（多数曲线收于 to），
       // 供后续相对定位。无 to 的纯参数曲线保守不推进（产段末端不可预知）。
       if (step.to !== undefined) {
-        const pos = refPointOfTarget(step.to, nameStack, scopeChain);
+        const pos = refPointOfTarget(step.to, namespaceStack, scopeChain);
         if (pos) prevEnd = pos;
       }
       continue;
@@ -107,7 +99,7 @@ export const normalizeRelativeTargets = (
     out.push({ ...step, to: resolvedTo });
 
     if (updatePrevEnd) {
-      const pos = refPointOfTarget(resolvedTo, nameStack, scopeChain);
+      const pos = refPointOfTarget(resolvedTo, namespaceStack, scopeChain);
       if (pos) prevEnd = pos;
     }
   }

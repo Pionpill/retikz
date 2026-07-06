@@ -69,7 +69,7 @@ export const RibbonWidthProfileSchema = z
     name: z
       .string()
       .min(1)
-      .describe('Registered ribbon width profile name from CompileOptions.ribbonWidthProfiles.'),
+      .describe('Ribbon width profile name from built-ins or CompileOptions.ribbonWidthProfiles.'),
     params: JsonObjectSchema.optional().describe('JSON-safe profile parameters.'),
   })
   .strict()

@@ -1,39 +1,30 @@
-import type { IR } from '@retikz/core';
 import type { FC } from 'react';
 
-import { definePathGenerator } from '@retikz/core';
-import { Layout } from '@retikz/react';
-import { z } from 'zod';
+import { Layout, Node, Path, Step } from '@retikz/react';
 
-/**
- * 抛物线生成器：from → to，bend 顶层 Target 作 quad 控制点。
- * core 不内置任何曲线；这里在外部用 definePathGenerator 注册，经 <Layout pathGenerators> 注入。
- * generator step 目前走 IR 直传（<Layout ir>），正体现 path generator 的 IR 级扩展本质。
- */
-const parabola = definePathGenerator({
-  name: 'parabola',
-  paramsSchema: z.object({ bend: z.tuple([z.number(), z.number()]) }),
-  targetParams: ['bend'],
-  generate: ({ from, to, resolvedTargets }) => [{ kind: 'quad', control: resolvedTargets.bend, to: to ?? from }],
-});
+const Demo: FC = () => (
+  <Layout width={420} height={180} viewBox={{ x: -210, y: -90, width: 420, height: 180 }}>
+    <Node id="A" position={[-160, 48]} shape="circle" fill="#f8fafc">
+      A
+    </Node>
+    <Node id="B" position={[160, 48]} shape="circle" fill="#f8fafc">
+      B
+    </Node>
+    <Node id="C" position={[0, -58]} shape="circle" fill="#fff7ed" stroke="#fb923c">
+      C
+    </Node>
 
-const ir: IR = {
-  version: 1,
-  type: 'scene',
-  children: [
-    {
-      type: 'path',
-      stroke: 'darkorange',
-      strokeWidth: 1.5,
-      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
-      children: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'generator', name: 'parabola', to: [160, 0], params: { bend: [80, -70] } },
-      ],
-    },
-  ],
-};
+    <Path stroke="#94a3b8" dashPattern={[5, 5]} strokeWidth={1}>
+      <Step kind="move" to="A" />
+      <Step kind="line" to="C" />
+      <Step kind="line" to="B" />
+    </Path>
 
-const Demo: FC = () => <Layout ir={ir} pathGenerators={[parabola]} width={320} height={100} />;
+    <Path stroke="#ea580c" strokeWidth={2.4} arrow="->">
+      <Step kind="move" to="A" />
+      <Step kind="generator" name="parabola" to="B" params={{ control: { id: 'C' } }} label={{ text: 'parabola' }} />
+    </Path>
+  </Layout>
+);
 
 export default Demo;

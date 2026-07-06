@@ -1,4 +1,4 @@
----
+﻿---
 title: 路径
 description: 笔画外壳、step 动作序列与 step 目标点
 ---
@@ -26,7 +26,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     thickness: '语义化描边厚度预设；显式 strokeWidth 优先',
     opacity: '整路径不透明度 0..1，同时作用于描边与填充',
     fillOpacity: '填充不透明度 0..1，只影响闭合区域',
-    drawOpacity: '描边不透明度 0..1，只影响描边',
+    strokeOpacity: '描边不透明度 0..1，只影响描边',
     id: '可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）',
     meta: 'provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象',
     animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档',
@@ -53,7 +53,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     fillOpacity: '填充不透明度 0..1',
     stroke: '描边 paint；Path 用于主线，Ribbon 用于可选外轮廓',
     strokeWidth: '描边宽度（用户单位）',
-    drawOpacity: '描边不透明度 0..1',
+    strokeOpacity: '描边不透明度 0..1',
     opacity: '主几何整体不透明度 0..1',
     shadow: '主几何阴影预设或显式阴影对象',
     blendMode: '主几何与下方内容的混合模式',
@@ -88,7 +88,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   description="Path 内置 ribbon kind 的专属参数。"
   descriptions={{
     mode: 'Ribbon 构造模式：centerline 使用 Path children，boundary 使用 upper / lower 两条边界',
-    width: '中心线模式的带宽；可为固定数值、沿路径 stops 或运行时 profile 引用',
+    width: '中心线模式的带宽；可为固定数值、沿路径 stops 或 profile 引用（内置 `bulge`，也可运行时注册）',
     start: '起点宽度、方向和 cap 配置',
     end: '终点宽度、方向和 cap 配置',
     interpolation: '起末宽度之间的插值方式',
@@ -298,11 +298,11 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema
   name="GeneratorStepSchema"
-  description="生成器动作：委托一个注册的 path generator（parabola / sin 等）产出子路径；core 不内置任何曲线 generator。"
+  description="生成器动作：委托一个内置或注册的 path generator（内置 parabola，自定义 sin 等）产出子路径。"
   descriptions={{
     type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`generator` —— 把本段委托给 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
-    name: '注册的生成器名；编译期对照 CompileOptions.pathGenerators 解析，未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数运行时注入、不进 IR',
+    kind: '动作种类：`generator` —— 把本段委托给内置或 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
+    name: '生成器名；内置名可直接用，自定义名由 CompileOptions.pathGenerators 注册，未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
     to: '可选终点（作为段末传给生成器）；纯参数化曲线（闭环 / 定长波形等）不需要终点时可省略',
     params:
       '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析为世界坐标再运行',
@@ -332,7 +332,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
     font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 labelDefault → 渲染端默认',
     'font.family': 'CSS font-family 字符串，如 "serif" / "monospace"',
-    'font.size': '字号（用户单位）；未填走 labelDefault → 渲染端默认',
+    'font.size': '字号：正数、Web preset（2xs..9xl）或 em/rem；未填走 labelDefault → CompileOptions.fontSize',
     'font.weight': 'CSS font-weight：keyword normal/bold 或数字 100..900',
     'font.style': 'CSS font-style：normal / italic / oblique',
   }}
@@ -385,11 +385,11 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <Comparison target="tikz" title="Path / Step 字段对照">
 
-| IR 字段                                      | TikZ 对照                                              |
+| IR 字段                                      | 语义 / TikZ 对照                                      |
 | -------------------------------------------- | ------------------------------------------------------ |
 | `lineCap` / `lineJoin`                       | `line cap` / `line join`                               |
 | `thickness`                                  | `ultra thin` … `ultra thick`                           |
-| `drawOpacity`                                | `draw opacity`                                         |
+| `strokeOpacity`                                | 描边透明度                                             |
 | `kind: 'fold'`                               | `-\|` / `\|-`                                          |
 | `kind: 'cycle'`                              | `cycle`                                                |
 | `kind: 'bend'`                               | `to[bend left=N]` / `to[bend right=N]`                 |

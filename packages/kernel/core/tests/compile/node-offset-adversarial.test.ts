@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../src/schemas';
@@ -77,7 +77,7 @@ describe('OffsetPosition adversarial: schema union 边界', () => {
 
 describe('OffsetPosition adversarial: 循环 / 自引用', () => {
   it('Node 自引用自身 id（offset of self） → 抛错（self 尚未注册）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'X', position: { of: 'X', offset: [10, 0] } }],
@@ -86,7 +86,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
   });
 
   it('Coordinate 自引用自身 id → 抛错', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'coordinate', id: 'a', position: { of: 'a', offset: [0, 0] } }],
@@ -95,7 +95,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
   });
 
   it('A → B → A 互引用：B 先出现 → 抛（前向引用拒绝）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -109,7 +109,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
 
 describe('OffsetPosition adversarial: 数值极端', () => {
   it('小数 offset 精确累加', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -127,7 +127,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
   });
 
   it('极大 offset 不溢出且参与 layout 计算', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -144,7 +144,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
   });
 
   it('深链 4 层 OffsetPosition 累加（id 形式）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -163,7 +163,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
 
 describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
   it('path 第一个 step（move）即 OffsetPosition 笛卡尔基准 → 起点解析为 base+offset', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -193,7 +193,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
   });
 
   it('path 内 OffsetPosition.of 引用 Path 之前定义的 Coordinate', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -220,7 +220,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
   });
 
   it('step.to OffsetPosition.of=未定义 id → emitPathPrimitive 返回 null，整个 path 不产 PathPrim', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -245,7 +245,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
 
 describe('OffsetPosition adversarial: JSON 序列化往返', () => {
   it('IR 含 OffsetPosition → JSON.stringify / parse 后 schema 仍校验通过 + compile 等价', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -258,7 +258,7 @@ describe('OffsetPosition adversarial: JSON 序列化往返', () => {
         },
       ],
     };
-    const restored = JSON.parse(JSON.stringify(ir)) as IR;
+    const restored = JSON.parse(JSON.stringify(ir)) as IRScene;
     const before = rects(compileToScene(ir).primitives).map(rectCenter);
     const after = rects(compileToScene(restored).primitives).map(rectCenter);
     expect(after).toEqual(before);

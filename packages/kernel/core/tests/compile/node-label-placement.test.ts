@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR, IRNode, IRNodeLabel } from '../../src/schemas';
+import type { IRNode, IRNodeLabel,IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 import { NodeLabelSchema, SceneSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -17,7 +17,7 @@ const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrim | undef
     (p): p is TextPrim => p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
   );
 
-const sceneWithLabel = (label: IRNodeLabel, shape: IRNode['shape'] = 'rectangle'): IR => ({
+const sceneWithLabel = (label: IRNodeLabel, shape: IRNode['shape'] = 'rectangle'): IRScene => ({
   version: 1,
   type: 'scene',
   children: [

@@ -1,4 +1,4 @@
-import type { IRPath, WayDSL } from '@retikz/core';
+﻿import type { IRPath, WayDSL } from '@retikz/core';
 import type { FC } from 'react';
 
 import { parseWay } from '@retikz/core';
@@ -53,8 +53,8 @@ export type DrawProps = {
   opacity?: IRPath['opacity'];
   /** 仅 fill 透明度 0~1 */
   fillOpacity?: IRPath['fillOpacity'];
-  /** 仅 stroke 透明度 0~1（TikZ `draw opacity`） */
-  drawOpacity?: IRPath['drawOpacity'];
+  /** 仅 stroke 透明度 0~1（TikZ `stroke opacity`） */
+  strokeOpacity?: IRPath['strokeOpacity'];
   /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效 */
   zIndex?: IRPath['zIndex'];
 };
@@ -82,7 +82,7 @@ export const Draw: FC<DrawProps> = props => {
     fillRule,
     opacity,
     fillOpacity,
-    drawOpacity,
+    strokeOpacity,
     zIndex,
   } = props;
   const steps = parseWay(way);
@@ -105,7 +105,7 @@ export const Draw: FC<DrawProps> = props => {
       fillRule={fillRule}
       opacity={opacity}
       fillOpacity={fillOpacity}
-      drawOpacity={drawOpacity}
+      strokeOpacity={strokeOpacity}
       zIndex={zIndex}
     >
       {steps.map((s, i) => {

@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AnchorIdSpec,
   BlendModeStyle,
   BlendModeValue,
@@ -99,7 +99,7 @@ export type CoreNodeChannelProps = {
 export type CorePathChannelProps = {
   fill?: FieldName | IRPaintSpec | PointFillStyle;
   stroke?: FieldName | IRPaintSpec | PointStrokeStyle;
-  drawOpacity?: MarkValueProp<number> | PointOpacityStyle;
+  strokeOpacity?: MarkValueProp<number> | PointOpacityStyle;
   zIndex?: MarkValueProp<number> | PointZIndexStyle;
   rotate?: MarkValueProp<number> | PointNumberStyle;
   scale?: MarkValueProp<IRPathScale> | PathScaleStyle;
@@ -213,7 +213,7 @@ export type PointMarkProps = MarkTransformProps &
     /** 填充透明度：字符串按字段解析，数字为常量糖 */
     fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
     /** 描边透明度：字符串按字段解析，数字为常量糖 */
-    drawOpacity?: MarkValueProp<number> | PointOpacityStyle;
+    strokeOpacity?: MarkValueProp<number> | PointOpacityStyle;
     /** 旋转角度：字符串按字段解析，数字为常量糖 */
     rotate?: MarkValueProp<number> | PointNumberStyle;
     /** node padding：字符串按字段解析，数字或对象为常量糖 */

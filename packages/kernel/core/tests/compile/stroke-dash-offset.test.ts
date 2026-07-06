@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { NodeDefaultSchema, NodeSchema, PathDefaultSchema, PathSchema } from '../../src/schemas';
@@ -59,7 +59,7 @@ describe('stroke dash offset', () => {
   });
 
   it('compile forwards dashOffset for path, node border, and label pin leader', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+﻿import type { z } from 'zod';
 
 import type { ValueOf } from '../../shared';
 import type { IRComposite } from '../composite';
@@ -79,9 +79,9 @@ export type IRScope = {
   fillOpacity?: number;
   /**
    * 级联绘制不透明度。
-   * @default 继承外层 drawOpacity
+   * @default 继承外层 strokeOpacity
    */
-  drawOpacity?: number;
+  strokeOpacity?: number;
   /**
    * every node 默认样式。
    * @default 继承外层 nodeDefault

@@ -1,4 +1,4 @@
-import type { FC, ReactElement } from 'react';
+﻿import type { FC, ReactElement } from 'react';
 
 import type { PathVisualProps } from './_shared';
 
@@ -22,7 +22,7 @@ type GridPathVisualProps = Pick<
   | 'fillRule'
   | 'opacity'
   | 'fillOpacity'
-  | 'drawOpacity'
+  | 'strokeOpacity'
   | 'zIndex'
 >;
 
@@ -67,7 +67,7 @@ export type GridProps = PathVisualProps & {
   /** 主网格整体透明度 */
   majorOpacity?: GridPathVisualProps['opacity'];
   /** 主网格描边透明度 */
-  majorDrawOpacity?: GridPathVisualProps['drawOpacity'];
+  majorStrokeOpacity?: GridPathVisualProps['strokeOpacity'];
   /** 是否画外边框 */
   border?: boolean;
   /** 外边框与网格范围的距离 */
@@ -101,7 +101,7 @@ export type GridProps = PathVisualProps & {
   /** 外边框填充透明度 */
   borderFillOpacity?: GridPathVisualProps['fillOpacity'];
   /** 外边框描边透明度 */
-  borderDrawOpacity?: GridPathVisualProps['drawOpacity'];
+  borderStrokeOpacity?: GridPathVisualProps['strokeOpacity'];
   /** 外边框栈序 */
   borderZIndex?: GridPathVisualProps['zIndex'];
 } & (
@@ -261,7 +261,7 @@ const getMajorVisual = (props: GridProps, base: PathVisualProps): PathVisualProp
   ...(props.majorLineJoin !== undefined ? { lineJoin: props.majorLineJoin } : {}),
   ...(props.majorThickness !== undefined ? { thickness: props.majorThickness } : {}),
   ...(props.majorOpacity !== undefined ? { opacity: props.majorOpacity } : {}),
-  ...(props.majorDrawOpacity !== undefined ? { drawOpacity: props.majorDrawOpacity } : {}),
+  ...(props.majorStrokeOpacity !== undefined ? { strokeOpacity: props.majorStrokeOpacity } : {}),
 });
 
 const getBorderVisual = (props: GridProps): PathVisualProps => ({
@@ -277,7 +277,7 @@ const getBorderVisual = (props: GridProps): PathVisualProps => ({
   ...(props.borderFillRule !== undefined ? { fillRule: props.borderFillRule } : {}),
   ...(props.borderOpacity !== undefined ? { opacity: props.borderOpacity } : {}),
   ...(props.borderFillOpacity !== undefined ? { fillOpacity: props.borderFillOpacity } : {}),
-  ...(props.borderDrawOpacity !== undefined ? { drawOpacity: props.borderDrawOpacity } : {}),
+  ...(props.borderStrokeOpacity !== undefined ? { strokeOpacity: props.borderStrokeOpacity } : {}),
   ...(props.borderZIndex !== undefined ? { zIndex: props.borderZIndex } : {}),
 });
 

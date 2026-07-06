@@ -1,11 +1,11 @@
-﻿import type { IR } from '@retikz/core';
+﻿import type { IRScene } from '@retikz/core';
 
 import { parseWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 
-const ir = (children: IR['children'], viewBox?: IR['viewBox']): IR => ({
+const ir = (children: IRScene['children'], viewBox?: IRScene['viewBox']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

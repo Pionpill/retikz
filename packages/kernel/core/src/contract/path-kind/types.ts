@@ -12,7 +12,7 @@ export type PathKindCompileResult = {
   /** 实际渲染输出。 */
   primitives: Array<ScenePrimitive>;
   /** layout 与路径级 rotate / scale 的几何依据。 */
-  points: Array<IRPosition>;
+  boundsPoints: Array<IRPosition>;
 };
 
 /**

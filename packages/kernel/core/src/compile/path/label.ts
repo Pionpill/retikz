@@ -1,30 +1,23 @@
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
 import type { SegmentSample } from '../../shared/geometry';
-import type { CompileWarningCodeValue } from '../constant';
-import type { LowerTex } from '../lower-tex';
-import type { LineLayoutContext } from '../text-layout';
-import type { FontSpec, TextMeasurer } from '../text-metrics';
+import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../text';
+import type { CompileWarningCodeValue } from '../warning';
 
 import { RAD_TO_DEG } from '../../shared/geometry';
-import { CompileWarningCode } from '../constant';
-import { toAlphabeticBaselineY } from '../text-baseline';
-import { layoutInlineLine, resolveLineRuns } from '../text-layout';
+import { CompileWarningCode, DEFAULT_FONT_SIZE } from '../constants';
+import { layoutInlineLine, resolveFontSize, resolveLineRuns, toAlphabeticBaselineY } from '../text';
 
-/** 边标注默认字号 / 偏移量 */
-const LABEL_FONT_SIZE = 14;
+/** 边标注默认行高与偏移量。 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
 type LabelSide = GeometryLabelSideValue | 'center';
 
-/** 边标注公式上下文（注入的 lowerTex + gating + warn）；缺省 = 无 tex 能力 */
+/** 边标注公式上下文。 */
 export type LabelTexContext = {
-  /**
-   * 注入的 TeX 降解能力。
-   * @default undefined
-   */
+  /** 注入的 TeX 降解能力。 */
   lowerTex?: LowerTex;
-  /** `$...$` 解析门控（= lowerTex 已注入） */
+  /** `$...$` 解析门控。 */
   gatingOn: boolean;
   warn: (code: CompileWarningCodeValue, message: string) => void;
 };
@@ -38,7 +31,17 @@ export type LabelPlacementContext = {
   boundaryOffset?: number;
 };
 
-/** keyword → t 数值映射；含旧 3 keyword（midway/near-start/near-end）+ 新 4 keyword */
+/** step label emit 所需上下文。 */
+export type EmitLabelPrimitiveContext = {
+  measureText: TextMeasurer;
+  round: (n: number) => number;
+  rootFontSize?: number;
+  hostOpacity?: number;
+  tex?: LabelTexContext;
+  placement?: LabelPlacementContext;
+};
+
+/** keyword → t 数值映射。 */
 const KEYWORD_TO_T: Record<string, number> = {
   'at-start': 0,
   'very-near-start': 0.125,
@@ -51,7 +54,7 @@ const KEYWORD_TO_T: Record<string, number> = {
 
 /**
  * label.position → 段参数 t∈[0,1]
- * @description 数值原样返回（schema 已 clamp 0..1）；keyword 走 KEYWORD_TO_T 映射；undefined 退默认 midway (0.5)
+ * @description 数值原样返回；keyword 走 KEYWORD_TO_T 映射。
  */
 export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
   if (typeof pos === 'number') return pos;
@@ -64,21 +67,27 @@ const resolveLabelOpacity = (labelOpacity?: number, hostOpacity?: number): numbe
   labelOpacity !== undefined ? (hostOpacity !== undefined ? labelOpacity * hostOpacity : labelOpacity) : hostOpacity;
 
 /**
- * step.label + 段采样 → 单行 primitive（纯文本走 TextPrim、含公式走 GroupPrim；sloped 时再裹一层 group 旋转）
- * @description side 偏移 + align/baseline：top/bottom 锚点 y±offset 横向居中；left/right x±offset 纵向居中；sloped 仅控制 rotate(切线角)。
- *   `$...$` 行内公式仅在注入 lowerTex（texCtx.gatingOn）时解析。返回 primitive + bbox 外接点
+ * step.label + 段采样 → 单行 primitive。
+ * @description 返回 label primitive 及其 bbox 外接点。
  */
 export const emitLabelPrimitive = (
   label: IRStepLabel,
   sample: SegmentSample,
-  measureText: TextMeasurer,
-  round: (n: number) => number,
-  hostOpacity?: number,
-  texCtx?: LabelTexContext,
-  placementCtx?: LabelPlacementContext,
-): { primitive: ScenePrimitive; points: Array<IRPosition> } => {
+  context: EmitLabelPrimitiveContext,
+): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
+  const {
+    measureText,
+    round,
+    rootFontSize = DEFAULT_FONT_SIZE,
+    hostOpacity,
+    tex: texCtx,
+    placement: placementCtx,
+  } = context;
   // label.font / textColor / opacity 已由 compile/style 解析（fold scope labelDefault + 宿主 path 主色）
-  const fontSize = label.font?.size ?? LABEL_FONT_SIZE;
+  const fontSize = resolveFontSize(label.font?.size, {
+    rootFontSize,
+    inheritedFontSize: rootFontSize,
+  });
   const fontFamily = label.font?.family;
   const fontWeight = label.font?.weight;
   const fontStyle = label.font?.style;
@@ -112,6 +121,7 @@ export const emitLabelPrimitive = (
       measureText,
       lowerTex: texCtx?.lowerTex,
       font,
+      rootFontSize,
       color: label.textColor,
       opacity: labelOpacity,
       warn: texCtx?.warn ?? ((): void => {}),
@@ -151,7 +161,7 @@ export const emitLabelPrimitive = (
       const r = Math.max(laid.width / 2, (laid.ascent + laid.descent) / 2);
       return {
         primitive: rotated,
-        points: [
+        boundsPoints: [
           [ax - r, ay - r],
           [ax + r, ay - r],
           [ax - r, ay + r],
@@ -165,7 +175,7 @@ export const emitLabelPrimitive = (
     const bottom = baselineY + laid.descent;
     return {
       primitive: group,
-      points: [
+      boundsPoints: [
         [left, top],
         [right, top],
         [left, bottom],
@@ -206,7 +216,7 @@ export const emitLabelPrimitive = (
   const textPrim: TextPrim = {
     type: 'text',
     x: round(x),
-    y: round(toAlphabeticBaselineY(y, baseline, 1, emittedLineHeight, fontSize)),
+    y: round(toAlphabeticBaselineY({ y, baseline, lineCount: 1, lineHeight: emittedLineHeight, fontSize })),
     lines: [{ text }],
     fontSize,
     align,
@@ -239,7 +249,7 @@ export const emitLabelPrimitive = (
     const r = Math.max(measuredWidth / 2, measuredHeight / 2);
     return {
       primitive: groupPrim,
-      points: [
+      boundsPoints: [
         [x - r, y - r],
         [x + r, y - r],
         [x - r, y + r],
@@ -259,7 +269,7 @@ export const emitLabelPrimitive = (
   const bottom = baseline === 'top' ? y + measuredHeight : baseline === 'bottom' ? y : y + halfH;
   return {
     primitive: textPrim,
-    points: [
+    boundsPoints: [
       [left, top],
       [right, top],
       [left, bottom],

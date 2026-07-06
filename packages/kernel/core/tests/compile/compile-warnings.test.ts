@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CompileWarning, IR } from '../../src';
+import type { CompileWarning, IRScene } from '../../src';
 
 import { CompileWarningCode, formatCompileWarning } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

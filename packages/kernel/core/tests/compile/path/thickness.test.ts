@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { findPathPrim } from './helpers';
@@ -15,7 +15,7 @@ describe('alpha.3 P2：thickness 语义档位', () => {
     ['veryThick', 3],
     ['ultraThick', 4],
   ] as const)('thickness=%s → strokeWidth=%s', (thickness, width) => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -33,7 +33,7 @@ describe('alpha.3 P2：thickness 语义档位', () => {
   });
 
   it('显式 strokeWidth 始终覆盖 thickness（thickness 仅在 strokeWidth 缺省时生效）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -52,7 +52,7 @@ describe('alpha.3 P2：thickness 语义档位', () => {
   });
 
   it('两者都缺省时退回默认 1', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

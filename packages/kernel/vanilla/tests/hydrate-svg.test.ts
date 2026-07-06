@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
@@ -15,14 +15,14 @@ import { hydrate, mountSvg, renderToSvgString } from '../src';
  */
 
 /** 带可点击图元 id 的最小 IR（矩形 Node，便于 SVG 输出有 data-retikz-id 挂点） */
-const idIr: IR = {
+const idIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [{ type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20  }}],
 };
 
 /** 带 meta provenance 的 Node IR（验 context.meta / context.geometry） */
-const metaIr: IR = {
+const metaIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [

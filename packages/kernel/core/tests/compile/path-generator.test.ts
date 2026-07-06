@@ -2,7 +2,7 @@
 import { z } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { definePathGenerator } from '../../src/contract';
@@ -13,9 +13,9 @@ import { flattenPrims } from '../helpers/flatten';
 const firstDrawnPath = (prims: Array<ScenePrimitive>): Extract<ScenePrimitive, { type: 'path' }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path');
 
-/** parabola 生成器：from→to + 一个 control，产单个 quad 命令；params.bend 为顶层 Target */
-const parabola = definePathGenerator({
-  name: 'parabola',
+/** customQuad 生成器：from→to + 一个 control，产单个 quad 命令；params.bend 为顶层 Target */
+const customQuad = definePathGenerator({
+  name: 'customQuad',
 paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
   targetParams: ['bend'],
   generate: ({ from, to, resolvedTargets }) => {
@@ -52,8 +52,8 @@ paramsSchema: z.object({ length: z.number() }),
 });
 
 describe('Path generator 注册面 — happy path', () => {
-  it('register_parabola_to_curve：注册 parabola → generator step 产 1 个 quad 命令、端到端编译', () => {
-    const ir: IR = {
+  it('register_custom_quad_to_curve：注册 customQuad → generator step 产 1 个 quad 命令、端到端编译', () => {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -65,7 +65,7 @@ describe('Path generator 注册面 — happy path', () => {
             {
               type: 'step',
               kind: 'generator',
-              name: 'parabola',
+              name: 'customQuad',
               to: [100, 0],
               params: { bend: { id: 'C' } },
             },
@@ -73,13 +73,13 @@ describe('Path generator 注册面 — happy path', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { pathGenerators: [parabola] });
+    const scene = compileToScene(ir, { pathGenerators: [customQuad] });
     const drawn = firstDrawnPath(scene.primitives);
     expect(drawn?.commands.some(c => c.kind === 'quad')).toBe(true);
   });
 
   it('register_sin_sampled：注册 sin → 产采样多段（含 move sub-path）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -115,7 +115,7 @@ paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
         return [{ kind: 'line', to: to ?? from }];
       },
     });
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -140,7 +140,7 @@ paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
   });
 
   it('cursor_advances：generator 产段后 cursor 落最后命令终点（接续 line 从该点起）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -169,7 +169,7 @@ paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
 
 describe('Path generator 注册面 — 边界', () => {
   it('generator_no_to：无 to 的 generator（纯参数曲线）正常编译', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -187,7 +187,7 @@ describe('Path generator 注册面 — 边界', () => {
   });
 
   it('deterministic_output：同 IR + 同 generator → 输出确定（两次 compile 深等价）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -215,7 +215,7 @@ paramsSchema: z.object({}),
         { kind: 'line', to: [from[0] + 30, from[1]] },
       ],
     });
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -236,7 +236,7 @@ paramsSchema: z.object({}),
 
 describe('Path generator 注册面 — 错误路径', () => {
   it('unregistered_generator_throws：未注册 name → 编译期 throw（错误列出可用名）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -249,8 +249,8 @@ describe('Path generator 注册面 — 错误路径', () => {
         },
       ],
     };
-    expect(() => compileToScene(ir, { pathGenerators: [parabola] })).toThrow(/nope/);
-    expect(() => compileToScene(ir, { pathGenerators: [parabola] })).toThrow(/parabola/);
+    expect(() => compileToScene(ir, { pathGenerators: [customQuad] })).toThrow(/nope/);
+    expect(() => compileToScene(ir, { pathGenerators: [customQuad] })).toThrow(/customQuad/);
   });
 
   it('params_non_json_rejected：params 含 function → 编译期被拒（双 parse 第二道）', () => {
@@ -273,7 +273,7 @@ describe('Path generator 注册面 — 错误路径', () => {
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     expect(() => compileToScene(ir, { pathGenerators: [passthrough] })).toThrow();
   });
 
@@ -297,7 +297,7 @@ paramsSchema: z.any(),
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     // z.any() 第一道放行 { fn }，但 compile 第二道 JsonObjectSchema.parse 必须拦下 function
     expect(() => compileToScene(ir, { pathGenerators: [anyGen] })).toThrow();
     // 同时直接证明第二道护栏对 z.any() 放行后的对象有效（护栏逻辑可独立验证）
@@ -317,7 +317,7 @@ paramsSchema: z.object({ control: z.object({ at: z.object({ id: z.string() }) })
         return [{ kind: 'line', to: to ?? from }];
       },
     });
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -345,7 +345,7 @@ paramsSchema: z.object({ control: z.object({ at: z.object({ id: z.string() }) })
 
 describe('Path generator 注册面 — 交互', () => {
   it('generator_with_label：generator step 带 label → 边标注 TextPrim 产出', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -370,7 +370,7 @@ describe('Path generator 注册面 — 交互', () => {
   });
 
   it('generator_in_scope_transform：generator step 在 translate scope 内 → 坐标投回正确', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -397,7 +397,7 @@ describe('Path generator 注册面 — 交互', () => {
   });
 
   it('generator_then_line：generator 段后接 line → cursor 衔接（无重复 move）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

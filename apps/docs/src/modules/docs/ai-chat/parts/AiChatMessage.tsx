@@ -14,13 +14,13 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { cn } from '@/lib/utils';
-import { CodeBlock } from '@/modules/docs/components/highlight-code';
+import { cn } from '@/lib';
+import { CodeBlock } from '@/modules/docs/components';
 
-import type { ChatMessage } from '../providers/types';
+import type { ChatMessage } from '../providers';
 import type { ListItem, TableAlign } from './message-blocks';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 import { extractFirstRetikzBlock, parseMessageBlocks } from './message-blocks';
 import { RetikzPreview, RetikzPreviewPending } from './RetikzPreview';
 

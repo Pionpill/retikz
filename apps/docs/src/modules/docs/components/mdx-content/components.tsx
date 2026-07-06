@@ -4,16 +4,15 @@ import type { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
 
 import { Link } from 'react-router';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
-import { CodeBlockCommand } from '../code-block-command';
-import { Comparison } from '../comparison';
-import { ComponentAlert } from '../component-alert';
 import { ComponentPreview } from '../component-preview';
-import { ExamplePrompt } from '../example-prompt';
 import { CodeBlock } from '../highlight-code';
-import { PackageManagerInstall } from '../package-manager-install';
-import { ZodSchema } from '../zod-schema';
+import { Comparison } from './comparison';
+import { ComponentAlert } from './component-alert';
+import { ExamplePrompt } from './example-prompt';
+import { PackageManagerInstall } from './package-manager-install';
+import { ZodSchema } from './zod-schema';
 
 const linkClass = 'font-medium underline underline-offset-4';
 
@@ -164,7 +163,6 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  CodeBlockCommand,
   Comparison,
   ComponentAlert,
   ComponentPreview,

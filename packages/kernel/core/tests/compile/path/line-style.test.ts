@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { findPathPrim } from './helpers';
 
 describe('alpha.3 P2：lineCap / lineJoin', () => {
   it('lineCap 透传到 PathPrim.strokeLinecap', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -25,7 +25,7 @@ describe('alpha.3 P2：lineCap / lineJoin', () => {
   });
 
   it('lineJoin 透传到 PathPrim.strokeLinejoin', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -44,7 +44,7 @@ describe('alpha.3 P2：lineCap / lineJoin', () => {
   });
 
   it('未指定时 PathPrim 字段为 undefined（不写 SVG 默认值）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arc, polygon, sector, star } from '../../src/providers/shape';
@@ -9,7 +9,7 @@ import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
 import { normalizeAngleRange } from '../../src/shared';
 import { flattenPrims } from '../helpers/flatten';
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
@@ -362,7 +362,7 @@ describe('[adversarial] scaleParams：角度/计数不该被缩', () => {
 // ════════════════ 攻击面 7：AnchorRefSchema 放宽副作用 ════════════════
 
 describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
-  const pathTo = (anchor: string, id: string): IR['children'][number] => ({
+  const pathTo = (anchor: string, id: string): IRScene['children'][number] => ({
     type: 'path',
     children: [
       { type: 'step', kind: 'move', to: [100, 100] },
@@ -382,7 +382,7 @@ describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
             shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
           },
           pathTo('tip-0', 'w'),
-        ] as IR['children']),
+        ] as IRScene['children']),
       );
     } catch (e) {
       msg = e instanceof Error ? e.message : String(e);
@@ -399,7 +399,7 @@ describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
         scene([
           { type: 'node', id: 'w', position: [0, 0], shape: 'rectangle', text: 'x' },
           pathTo('', 'w'),
-        ] as IR['children']),
+        ] as IRScene['children']),
       );
     } catch {
       threw = true;
@@ -415,7 +415,7 @@ describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
         scene([
           { type: 'node', id: 'p', position: [0, 0], text: 'hex', shape: { type: 'polygon', params: { sides: 6 } } },
           pathTo('vertex-0', 'p'),
-        ] as IR['children']),
+        ] as IRScene['children']),
       );
     } catch (e) {
       msg = e instanceof Error ? e.message : String(e);
@@ -443,7 +443,7 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
             { type: 'step', kind: 'line', to: { id: 'w', anchor: 'outer-arc-mid' } },
           ],
         },
-      ] as IR['children']),
+      ] as IRScene['children']),
     );
     const nums = numericLeaves(compiled.primitives);
     expect(nums.filter(n => !Number.isFinite(n))).toEqual([]);
@@ -476,7 +476,7 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
             { type: 'step', kind: 'line', to: { id: 'a', anchor: 'arc-mid' } },
           ],
         },
-      ] as IR['children']),
+      ] as IRScene['children']),
     );
     expect(numericLeaves(compiled.primitives).every(Number.isFinite)).toBe(true);
   });
@@ -497,7 +497,7 @@ describe('[adversarial] shape preset × anchor / scale 交叉', () => {
               { type: 'step', kind: 'line', to: { id: 'd', anchor: 'top' } },
             ],
           },
-        ] as IR['children']),
+        ] as IRScene['children']),
       ),
     ).not.toThrow();
   });

@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { MarkerFill, MarkerPrimitive, PathPrim, ResolvedArrowEndSpec, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -46,7 +46,7 @@ const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined
  */
 describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
   it("arrow='->' 无 arrowDetail → arrowEnd.shape='stealth'，wrapper 参数走默认", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -76,7 +76,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
   });
 
   it("arrow='<->' 无 arrowDetail → 两端都 shape 'stealth'", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -96,7 +96,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
   });
 
   it('arrowDetail={} 等同未传 arrowDetail（空对象 merge 不引入字段）', () => {
-    const irEmpty: IR = {
+    const irEmpty: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -110,7 +110,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
         },
       ],
     };
-    const irNone: IR = {
+    const irNone: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -130,7 +130,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
   });
 
   it("arrow='none' / 缺省 → 两端都不挂 marker", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -152,7 +152,7 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
 
 describe('compile arrowDetail：顶层默认 + start/end merge', () => {
   it('arrowDetail.shape 透传起末共享', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -172,7 +172,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
   });
 
   it('color / scale / opacity 视觉输入解析进 marker 几何 / wrapper 参数（起末共享）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -198,7 +198,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
   });
 
   it("起末异形：start.shape='normal' / end.shape='stealth'（顶层不写 shape）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -224,7 +224,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
   });
 
   it("逐字段 merge：顶层 shape='stealth' + start.color='red' → start.shape 继承 stealth、color 进 marker", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -247,7 +247,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
   });
 
   it('起末异色（顶层 shape 共享）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -273,7 +273,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
   });
 
   it("end override 单端 arrow='<-' 时不挂 end spec（与 arrow direction 一致）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -295,7 +295,7 @@ describe('compile arrowDetail：顶层默认 + start/end merge', () => {
 
 describe('compile arrowDetail：空心 shape silent fill ignore', () => {
   it("shape='open' + fill='red' → 编译不抛；fill 不进 marker（空心 fill silent no-op）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -316,7 +316,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
   });
 
   it("空心 shape 但顶层 color='blue' → color 主导描边进 marker stroke", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -339,7 +339,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
   it.each(['open', 'openStealth', 'openDiamond', 'openCircle'] as const)(
     '空心 shape %s 上 fill 全部丢弃（red 不进 marker）',
     shape => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -359,7 +359,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
   );
 
   it.each(['normal', 'stealth', 'diamond', 'circle'] as const)('实心 shape %s 上 fill 保留进 marker', shape => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -380,7 +380,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
 
 describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数', () => {
   it('顶层 length=10 scale=1.5 → markerWidth = 10 × 1.5 = 15（compile 已乘）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -399,7 +399,7 @@ describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数
   });
 
   it('顶层 width=8 scale=2 → markerHeight = 8 × 2 = 16', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -420,7 +420,7 @@ describe('compile arrowDetail：scale × length / width 解析进 wrapper 参数
 
 describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lineWidth 动态算', () => {
   it("shape='open' 默认 shrink=5.25×strokeWidth（line 端点接在 back stroke 外缘）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -442,7 +442,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
   });
 
   it("shape='openCircle' lineWidth=1 shrink matches the rendered circle edge", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -463,7 +463,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
   });
 
   it('coordinate endpoint does not apply node-boundary outer inset', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -484,7 +484,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
   });
 
   it('auto node-boundary endpoint applies hollow outer inset fallback', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -510,7 +510,7 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
   });
 
   it('custom outerInset overrides hollow fallback on auto node-boundary endpoints', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

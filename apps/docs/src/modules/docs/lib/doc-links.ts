@@ -1,6 +1,6 @@
-﻿import type { DocLocation } from '@/modules/docs/layout/doc-location';
+import type { DocLocation } from '@/modules/docs/layout';
 
-import { docPathSegments } from '@/modules/docs/layout/doc-location';
+import { docPathSegments } from '@/modules/docs/layout';
 
 /** 仓库与分支常量：复制 markdown / 在 GitHub 查看 / 喂给 AI 的 raw URL 都要用 */
 export const DOC_REPO = 'Pionpill/retikz';

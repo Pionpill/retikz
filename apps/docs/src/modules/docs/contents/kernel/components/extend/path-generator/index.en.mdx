@@ -1,17 +1,23 @@
 ---
 title: Path Generators
-description: 'The generator step lets external packages register custom curves (parabola / sin-cos / quadratic…). core ships no curves — only an IR-level injection surface: JSON-only params, top-level targetParams resolution, generate returns low-level PathCommands.'
+description: 'The generator step can reference the built-in parabola or custom curves (sin-cos / quadratic…): JSON-only params, top-level targetParams resolution, generate returns low-level PathCommands.'
 ---
 
-A step's built-in kinds are a fixed set of 12 (move / line / fold / cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle / generator). Among them, **`generator`** is the open injection point: "curve steps" like parabola, sin-cos, or quadratic curves are registered by **external packages** — **core ships no concrete curve**.
+A step's built-in kinds are a fixed set of 13 (move / line / fold / cycle / curve / cubic / bend / smooth / arc / circlePath / ellipsePath / rectangle / generator). Among them, **`generator`** is the open injection point: core ships a low-ambiguity `parabola`, while more specific "curve steps" like sin-cos or quadratic-equation curves still come from external packages or app-level registrations.
 
-Registration goes through `CompileOptions.pathGenerators` (in React, `<Layout pathGenerators={...}>`): the IR's generator step only stores a string `name`; the curve definition is injected here. Unregistered names throw at compile time (with the list of available names).
+In React, write a generator step with `<Step kind="generator" name="..." params={...} />`. Built-in names compile directly; custom names are injected through `CompileOptions.pathGenerators` (in React, `<Layout pathGenerators={...}>`). Unregistered names throw at compile time (with the list of available names), and custom definitions cannot reuse a built-in name.
 
-## Registering a generator
+## Built-in parabola
 
-Below registers a `parabola` — `from → to` plus a top-level Target `bend` as the control point, producing a quadratic Bézier:
+`parabola` is the built-in path generator in core: `from → to` plus a top-level Target `control` as the control point, producing one quadratic Bézier. It requires `step.to`; omitting it throws at compile time.
 
 <ComponentPreview name="path-generator-parabola" size="xs" />
+
+## Registering a custom generator
+
+To add your own curve, create a definition with `definePathGenerator`, then inject it through `CompileOptions.pathGenerators` or `<Layout pathGenerators>`.
+
+<ComponentPreview name="path-generator-sin" size="xs" />
 
 A `PathGeneratorDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it in `definePathGenerator` for a best-effort registration-time meta-check:
 
@@ -63,12 +69,10 @@ The `PathCommand` coordinates produced by `generate` are audited too: non-finite
 
 `generate` returns low-level `PathCommand[]` (may include `move` to form a sub-path, e.g. multi-segment waves), spliced into the path command stream; the cursor lands on the last command's endpoint, and the next step continues from there.
 
-<ComponentPreview name="path-generator-sin" size="xs" />
-
 > generate's coordinates are treated as **already in world space**: when the generator step is inside a transformed scope, `ctx.from` / `ctx.to` / `resolvedTargets` are already world coordinates, and the scope's transform does not apply again to the increments computed inside generate.
 
 <Comparison target="tikz" title="Path generators">
 
-TikZ computes curves at the TeX macro layer with `to path` / decorations / `\pgfdeclarepathgenerator`. retikz lands the same idea as an IR-level registry: curves come from an external package's `generate` producing structured `PathCommand`s, and core provides the injection point once, never changing for new curves. parabola / sin-cos can both ship as external `@retikz/*` packages.
+TikZ computes curves at the TeX macro layer with `to path` / decorations / `\pgfdeclarepathgenerator`. retikz lands the same idea as an IR-level registry: built-in `parabola` covers the smallest common curve, while other curves come from an external package's `generate` producing structured `PathCommand`s, so core does not need schema changes for each new curve.
 
 </Comparison>

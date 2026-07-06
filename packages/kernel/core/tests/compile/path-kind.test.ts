@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IR, PathPrim, ScenePrimitive } from '../../src';
+import type { IRScene, PathPrim, ScenePrimitive } from '../../src';
 
 import { compileToScene, definePathKind } from '../../src';
 
@@ -10,7 +10,7 @@ const steps = [
   { type: 'step' as const, kind: 'line' as const, to: [100, 0] as [number, number] },
 ];
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
@@ -25,7 +25,7 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
   return out;
 };
 
-const pathPrims = (ir: IR, options?: Parameters<typeof compileToScene>[1]): Array<PathPrim> =>
+const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]): Array<PathPrim> =>
   flatten(compileToScene(ir, { padding: 0, ...options }).primitives).filter(
     (primitive): primitive is PathPrim => primitive.type === 'path',
   );
@@ -75,7 +75,7 @@ describe('Path kind registry', () => {
             ],
           },
         },
-      ] as IR['children']),
+      ] as IRScene['children']),
     );
 
     expect(prim.fill).toBe('#bfdbfe');
@@ -84,7 +84,7 @@ describe('Path kind registry', () => {
 
   it('throws for unknown path kinds until a provider is registered', () => {
     expect(() =>
-      compileToScene(scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IR['children'])),
+      compileToScene(scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IRScene['children'])),
     ).toThrow(/Unknown path kind 'missing'/);
   });
 
@@ -112,7 +112,7 @@ describe('Path kind registry', () => {
           kindOptions: { stroke: 'gold' },
           children: steps,
         },
-      ] as IR['children']),
+      ] as IRScene['children']),
       { pathKinds: [highlight] },
     );
 

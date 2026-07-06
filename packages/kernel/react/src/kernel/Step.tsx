@@ -1,4 +1,12 @@
-import type { IRControlPoint, IRStepAnisotropicRadius, IRStepLabelInput, IRStepRadius, IRTarget } from '@retikz/core';
+import type {
+  IRControlPoint,
+  IRGeneratorStep,
+  IRJsonObject,
+  IRStepAnisotropicRadius,
+  IRStepLabelInput,
+  IRStepRadius,
+  IRTarget,
+} from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import { TIKZ_STEP } from './_displayNames';
@@ -190,9 +198,25 @@ export type SmoothStepProps = {
   children?: ReactNode;
 };
 
+/** Generator action：调用内置或运行时注册的 path generator 生成一段低层路径命令 */
+export type GeneratorStepProps = {
+  /** 生成器 step 鉴别字面量 */
+  kind: 'generator';
+  /** path generator 名称；内置名或 `<Layout pathGenerators>` 注册名 */
+  name: IRGeneratorStep['name'];
+  /** 可选终点，会作为 generator context 的 `to` 传入 */
+  to?: DslTarget;
+  /** JSON-safe 参数对象；目标引用需写在 generator 的 `targetParams` 顶层 key 上 */
+  params: IRJsonObject;
+  /** 边标注 */
+  label?: IRStepLabelInput;
+  /** sugar 形态 */
+  children?: ReactNode;
+};
+
 /**
- * `<Step>` 组件的 props（12 种 step kind 的 discriminated union）
- * @description 十二种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
+ * `<Step>` 组件的 props（13 种 step kind 的 discriminated union）
+ * @description 十三种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
  */
 export type StepProps =
   | MoveStepProps
@@ -206,7 +230,8 @@ export type StepProps =
   | CirclePathStepProps
   | EllipsePathStepProps
   | RectangleStepProps
-  | SmoothStepProps;
+  | SmoothStepProps
+  | GeneratorStepProps;
 
 /**
  * Step 是 DSL 标记组件——本身不渲染

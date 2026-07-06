@@ -1,10 +1,11 @@
-﻿import type { FC, ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { Fragment } from 'react';
 import { Link } from 'react-router';
 
-import { cn } from '@/lib/utils';
-import { CodeBlock } from '@/modules/docs/components/highlight-code';
+import { cn } from '@/lib';
+
+import { CodeBlock } from '../highlight-code';
 
 /** InlineMarkdown 组件的 props。 */
 export type InlineMarkdownProps = {

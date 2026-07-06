@@ -1,4 +1,4 @@
-import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope } from '@retikz/core';
+﻿import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope } from '@retikz/core';
 
 import type { ExternalRow, Mark, PointMark } from '../../../schemas';
 import type { MarkPaint } from '../shared';
@@ -37,7 +37,7 @@ const pointStyle = (fill: MarkPaint, mark: PointMark): IRNodeDefault => {
   const stroke = mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
   const strokeWidth = mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
   const fillOpacity = mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
-  const drawOpacity = mark.drawOpacity?.kind === 'constant' ? mark.drawOpacity.value : undefined;
+  const strokeOpacity = mark.strokeOpacity?.kind === 'constant' ? mark.strokeOpacity.value : undefined;
   const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
   const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
   return {
@@ -49,7 +49,7 @@ const pointStyle = (fill: MarkPaint, mark: PointMark): IRNodeDefault => {
     ...(stroke !== undefined ? { stroke } : {}),
     ...(strokeWidth !== undefined ? { strokeWidth } : {}),
     ...(fillOpacity !== undefined ? { fillOpacity } : {}),
-    ...(drawOpacity !== undefined ? { drawOpacity } : {}),
+    ...(strokeOpacity !== undefined ? { strokeOpacity } : {}),
     ...(opacity !== undefined ? { opacity } : {}),
     ...(rotate !== undefined ? { rotate } : {}),
   };

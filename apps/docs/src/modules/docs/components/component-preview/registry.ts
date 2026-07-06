@@ -1,7 +1,7 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import type { PreviewAction, SourceLang } from './types';
+import type { PreviewAction, PreviewControlConfig, SourceLang } from './types';
 
 /**
  * 收集 contents 下全部 demo 模块 + 源码字符串
@@ -9,11 +9,18 @@ import type { PreviewAction, SourceLang } from './types';
  */
 export const demoModules: Record<
   string,
-  { default: FC; previewIR?: IR; previewActions?: Array<PreviewAction> } | undefined
+  | {
+      default: FC;
+      previewIR?: IRScene;
+      previewActions?: Array<PreviewAction>;
+      previewControls?: Array<PreviewControlConfig>;
+    }
+  | undefined
 > = import.meta.glob<{
   default: FC;
-  previewIR?: IR;
+  previewIR?: IRScene;
   previewActions?: Array<PreviewAction>;
+  previewControls?: Array<PreviewControlConfig>;
 }>('../../contents/**/*.demo.tsx', { eager: true });
 
 export const demoSources: Record<string, string | undefined> = import.meta.glob<string>(
@@ -86,6 +93,15 @@ export const resolvePreviewActions = (mod: Record<string, unknown> | undefined):
   if (Array.isArray(mod.previewActions)) return mod.previewActions as Array<PreviewAction>;
   const namedActions = Object.entries(mod).find(([key, value]) => key.endsWith('Actions') && Array.isArray(value));
   return namedActions?.[1] as Array<PreviewAction> | undefined;
+};
+
+export const resolvePreviewControls = (
+  mod: Record<string, unknown> | undefined,
+): Array<PreviewControlConfig> | undefined => {
+  if (mod === undefined) return undefined;
+  if (Array.isArray(mod.previewControls)) return mod.previewControls as Array<PreviewControlConfig>;
+  const namedControls = Object.entries(mod).find(([key, value]) => key.endsWith('Controls') && Array.isArray(value));
+  return namedControls?.[1] as Array<PreviewControlConfig> | undefined;
 };
 
 /**

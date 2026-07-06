@@ -130,7 +130,7 @@ const Demo: FC = () => {
         dashed
         cornerRadius={6}
         padding={{ x: 12, y: 8 }}
-        align="left"
+        align="start"
         text={LEGEND}
       />
     </Layout>

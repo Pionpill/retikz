@@ -45,13 +45,18 @@ const DEG_TO_RAD = Math.PI / 180;
 /** 一段直线（首尾两点） */
 type Segment = [readonly [number, number], readonly [number, number]];
 
-type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'drawOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>>;
+type GuideLineStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>> & {
+  drawOpacity?: number;
+};
+type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>>;
 type GuideTextStyle = Partial<Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>>;
 
-const lineStyleProps = (style: GuidePathStyle | undefined): GuidePathStyle => ({
+const lineStyleProps = (style: GuideLineStyle | undefined): GuidePathStyle => ({
   ...(style?.stroke !== undefined ? { stroke: style.stroke } : {}),
   ...(style?.strokeWidth !== undefined ? { strokeWidth: style.strokeWidth } : {}),
-  ...(style?.drawOpacity !== undefined ? { drawOpacity: style.drawOpacity } : {}),
+  ...(style?.strokeOpacity !== undefined || style?.drawOpacity !== undefined
+    ? { strokeOpacity: style.strokeOpacity ?? style.drawOpacity }
+    : {}),
   ...(style?.dashPattern !== undefined ? { dashPattern: style.dashPattern } : {}),
   ...(style?.dashOffset !== undefined ? { dashOffset: style.dashOffset } : {}),
   ...(style?.lineCap !== undefined ? { lineCap: style.lineCap } : {}),
@@ -276,11 +281,11 @@ const axisTitleAlignOf = (
 ): GuideTextStyle['align'] | undefined => {
   const align = axisTitleAnchorAlignTokenOf(title.anchor);
   if (align === undefined) return undefined;
-  if (align === AxisTitleAnchor.Center) return 'center';
-  if (Math.abs(tangent[0]) < Math.abs(tangent[1])) return 'center';
+  if (align === AxisTitleAnchor.Center) return 'middle';
+  if (Math.abs(tangent[0]) < Math.abs(tangent[1])) return 'middle';
   const positiveDirectionGoesRight = tangent[0] >= 0;
-  if (align === AxisTitleAnchor.Start) return positiveDirectionGoesRight ? 'left' : 'right';
-  return positiveDirectionGoesRight ? 'right' : 'left';
+  if (align === AxisTitleAnchor.Start) return positiveDirectionGoesRight ? 'start' : 'end';
+  return positiveDirectionGoesRight ? 'end' : 'start';
 };
 
 const axisTitleTextStyleOf = (
@@ -332,7 +337,7 @@ const axisTickShapeNodesOf = (guide: AxisGuide, placements: ReadonlyArray<TickSh
       ...(mark.stroke !== undefined ? { stroke: mark.stroke } : {}),
       ...(mark.strokeWidth !== undefined ? { strokeWidth: mark.strokeWidth } : {}),
       ...(mark.opacity !== undefined ? { opacity: mark.opacity } : {}),
-      ...(mark.drawOpacity !== undefined ? { drawOpacity: mark.drawOpacity } : {}),
+      ...(mark.drawOpacity !== undefined ? { strokeOpacity: mark.drawOpacity } : {}),
       ...(rotate !== undefined ? { rotate } : {}),
     };
   });
@@ -685,7 +690,7 @@ const unitGridScale = (fallbackTicks: TickSet): PositionScale => ({
 });
 
 /** 把若干直线段拼成一条多子路径 Path（每段一对 move/line）；空段返回 null */
-const segmentsToPath = (segments: Array<Segment>, style?: GuidePathStyle): IRPath | null => {
+const segmentsToPath = (segments: Array<Segment>, style?: GuideLineStyle): IRPath | null => {
   if (segments.length === 0) return null;
   const steps: Array<IRStep> = segments.flatMap(([from, to]) => [
     { type: 'step', kind: 'move', to: [from[0], from[1]] },

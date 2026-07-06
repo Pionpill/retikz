@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arc, close, ellipseArc, line, move } from '../helpers/path-command-factory';
@@ -14,7 +14,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   return p;
 };
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 describe('arc 显式 center', () => {
   it('显式 center 决定圆心（非游标 / prev.anchor）', () => {
@@ -142,7 +142,7 @@ describe('arc malformed', () => {
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     expect(compileToScene(ir, silent).primitives.find(p => p.type === 'path')).toBeUndefined();
   });
 });

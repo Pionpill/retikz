@@ -1,8 +1,8 @@
-﻿import type { ScenePrimitive } from '../../../contract';
+import type { ScenePrimitive } from '../../../contract';
 import type { IRPathBase, IRPosition } from '../../../schemas';
-import type { NameStack } from '../../name-stack';
-import type { PaintResolver } from '../../paint';
-import type { TextMeasurer } from '../../text-metrics';
+import type { NamespaceStack } from '../../namespace';
+import type { PaintResolver } from '../../resource';
+import type { TextMeasurer } from '../../text';
 import type { RibbonEmitOptions, RibbonLike } from './types';
 
 import { emitLabelPrimitive, tForLabelPosition } from '../label';
@@ -30,6 +30,18 @@ import {
   resolveSampleCount,
 } from './width';
 
+/** ribbon path emit 所需的编译上下文。 */
+export type EmitRibbonPrimitiveContext = {
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 坐标取整函数。 */
+  round: (n: number) => number;
+  /** 文本测量函数。 */
+  measureText: TextMeasurer;
+  /** ribbon emit 选项。 */
+  options?: RibbonEmitOptions;
+};
+
 /**
  * IR ribbon path → Scene primitive
  * @description boundary 模式把 upper/lower 两条 path 采样成闭合轮廓；centerline 模式先复用普通 path emit 解析中心线，
@@ -37,11 +49,14 @@ import {
  */
 export const emitRibbonPrimitive = (
   path: IRPathBase,
-  nameStack: NameStack,
-  round: (n: number) => number,
-  measureText: TextMeasurer,
-  options: RibbonEmitOptions = {},
-): { primitives: Array<ScenePrimitive>; points: Array<IRPosition> } | null => {
+  context: EmitRibbonPrimitiveContext,
+): { primitives: Array<ScenePrimitive>; boundsPoints: Array<IRPosition> } | null => {
+  const {
+    namespaceStack,
+    round,
+    measureText,
+    options = {},
+  } = context;
   if (path.ribbon === undefined) {
     throw new Error('Ribbon path requires a `ribbon` options object.');
   }
@@ -56,23 +71,37 @@ export const emitRibbonPrimitive = (
     if (ribbon.upper === undefined || ribbon.lower === undefined) {
       throw new Error('Boundary ribbon requires `upper` and `lower` steps.');
     }
-    const upper = segmentsFromSteps(ribbon.upper, 'upper boundary', nameStack, round, measureText, options);
-    const lower = segmentsFromSteps(ribbon.lower, 'lower boundary', nameStack, round, measureText, options);
+    const upper = segmentsFromSteps({
+      steps: ribbon.upper,
+      source: 'upper boundary',
+      namespaceStack,
+      round,
+      measureText,
+      options,
+    });
+    const lower = segmentsFromSteps({
+      steps: ribbon.lower,
+      source: 'lower boundary',
+      namespaceStack,
+      round,
+      measureText,
+      options,
+    });
     const samples = assertSampleCount(
       resolveSampleCount(ribbon.samples, ribbon.sampling, Math.max(upper.totalLength, lower.totalLength)) ??
         DEFAULT_RIBBON_SAMPLES,
     );
-    const outline = boundaryOutlineCommands(
-      upper.segments,
-      upper.totalLength,
-      lower.segments,
-      lower.totalLength,
-      samples,
+    const outline = boundaryOutlineCommands({
+      upper: upper.segments,
+      upperLength: upper.totalLength,
+      lower: lower.segments,
+      lowerLength: lower.totalLength,
+      sampleCount: samples,
       round,
-    );
+    });
     return {
       primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint)],
-      points: outline.points,
+      boundsPoints: outline.points,
     };
   }
 
@@ -81,7 +110,14 @@ export const emitRibbonPrimitive = (
   }
   // centerline 模式先降成普通 PathPrim，再把 commands 转成 ribbon 自己的 segment 输入。
   const segmentInputs = commandsToSegmentInputs(
-    emittedPathFromSteps(ribbon.children, 'centerline', nameStack, round, measureText, options).commands,
+    emittedPathFromSteps({
+      steps: ribbon.children,
+      source: 'centerline',
+      namespaceStack,
+      round,
+      measureText,
+      options,
+    }).commands,
     'centerline',
   );
   const rawSegments = segmentInputsToSegments(segmentInputs);
@@ -108,52 +144,52 @@ export const emitRibbonPrimitive = (
   const widthAt = centerlineWidthFunction(ribbon, options.ribbonWidthProfiles ?? new Map(), totalLength);
   const samples = resolveSampleCount(ribbon.samples, ribbon.sampling, totalLength);
   const sampleCount = samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
-  // 未要求采样且宽度静态时优先解析型轮廓；解析失败（如 arc）再回退到默认采样。
+  // 静态宽度优先解析型轮廓，必要时回退采样。
   const outline =
     sampleCount === undefined
-      ? (analyticOutlineCommands(
-          segmentInputs,
+      ? (analyticOutlineCommands({
+          inputs: segmentInputs,
           segments,
           totalLength,
           widthAt,
           endpointTangents,
-          {
+          endpointTangentOverrides: {
             start: ribbon.start?.direction === undefined ? undefined : endpointTangents.start,
             end: ribbon.end?.direction === undefined ? undefined : endpointTangents.end,
           },
-          ribbon.align ?? 'center',
-          ribbon.start?.cap ?? 'butt',
-          ribbon.end?.cap ?? 'butt',
-          nameStack,
+          align: ribbon.align ?? 'center',
+          startEndpointCap: ribbon.start?.cap ?? 'butt',
+          endEndpointCap: ribbon.end?.cap ?? 'butt',
+          namespaceStack,
           round,
-        ) ??
-        outlineCommands(
+        }) ??
+        outlineCommands({
           segments,
           totalLength,
-          DEFAULT_RIBBON_SAMPLES,
+          sampleCount: DEFAULT_RIBBON_SAMPLES,
           widthAt,
           endpointTangents,
-          ribbon.align ?? 'center',
-          ribbon.start?.cap ?? 'butt',
-          ribbon.end?.cap ?? 'butt',
-          nameStack,
+          align: ribbon.align ?? 'center',
+          startEndpointCap: ribbon.start?.cap ?? 'butt',
+          endEndpointCap: ribbon.end?.cap ?? 'butt',
+          namespaceStack,
           round,
-        ))
-      : outlineCommands(
+        }))
+      : outlineCommands({
           segments,
           totalLength,
-          assertSampleCount(sampleCount),
+          sampleCount: assertSampleCount(sampleCount),
           widthAt,
           endpointTangents,
-          ribbon.align ?? 'center',
-          ribbon.start?.cap ?? 'butt',
-          ribbon.end?.cap ?? 'butt',
-          nameStack,
+          align: ribbon.align ?? 'center',
+          startEndpointCap: ribbon.start?.cap ?? 'butt',
+          endEndpointCap: ribbon.end?.cap ?? 'butt',
+          namespaceStack,
           round,
-        );
+        });
 
   const labelPrimitives: Array<ScenePrimitive> = [];
-  const labelPoints: Array<IRPosition> = [];
+  const labelBoundsPoints: Array<IRPosition> = [];
   const labels = ribbon.label === undefined ? [] : Array.isArray(ribbon.label) ? ribbon.label : [ribbon.label];
   for (const label of labels) {
     // ribbon label 以中心线采样点为锚点，boundaryOffset 用当前宽度的一半把 outside/inside 放到带状区域边缘。
@@ -161,33 +197,32 @@ export const emitRibbonPrimitive = (
     const sample = sampleAtDistance(segments, totalLength, t * totalLength);
     const offset = t * totalLength;
     const normalizedOffset = totalLength === 0 ? 0 : offset / totalLength;
-    const section = ribbonCrossSection(
+    const section = ribbonCrossSection({
       sample,
-      normalizedOffset,
+      offset: normalizedOffset,
       widthAt,
       endpointTangents,
-      ribbon.align ?? 'center',
+      align: ribbon.align ?? 'center',
       round,
-    );
-    const result = emitLabelPrimitive(
-      label,
-      sample,
+    });
+    const result = emitLabelPrimitive(label, sample, {
       measureText,
       round,
-      ribbon.opacity,
-      {
+      rootFontSize: options.rootFontSize,
+      hostOpacity: ribbon.opacity,
+      tex: {
         lowerTex: options.lowerTex,
         gatingOn: options.lowerTex !== undefined,
         warn: (code, message) => options.onWarn?.({ code, message, path: `${options.irPath ?? 'ribbon'}.label` }),
       },
-      { boundaryOffset: section.width / 2 },
-    );
+      placement: { boundaryOffset: section.width / 2 },
+    });
     labelPrimitives.push(result.primitive);
-    labelPoints.push(...result.points);
+    labelBoundsPoints.push(...result.boundsPoints);
   }
 
   return {
     primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint), ...labelPrimitives],
-    points: [...outline.points, ...labelPoints],
+    boundsPoints: [...outline.points, ...labelBoundsPoints],
   };
 };

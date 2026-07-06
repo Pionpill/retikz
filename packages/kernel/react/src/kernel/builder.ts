@@ -1,5 +1,4 @@
 import type {
-  IR,
   IRArrowMark,
   IRChild,
   IRLineSpec,
@@ -7,6 +6,7 @@ import type {
   IRNodeLabel,
   IRNodeLabelInput,
   IRPathBase,
+  IRScene,
   IRScope,
   IRStep,
   IRStepLabel,
@@ -477,6 +477,19 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push(step);
       return;
     }
+    if (kind === 'generator') {
+      const p = props as Extract<StepProps, { kind: 'generator' }>;
+      const step: Extract<IRStep, { kind: 'generator' }> = {
+        type: 'step',
+        kind: 'generator',
+        name: p.name,
+        params: p.params,
+      };
+      if (p.to !== undefined) step.to = parseTargetSugar(p.to);
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
     if (kind === 'move') {
       const p = props as Extract<StepProps, { kind: 'move' }>;
       out.push({ type: 'step', kind: 'move', to: parseTargetSugar(p.to) });
@@ -668,7 +681,7 @@ export const wrapRootScope = (children: ReactNode, style: ScopeStyleProps): Reac
 export const buildIRWithContributions = (
   children: ReactNode,
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
-): { ir: IR; contributions: Array<EmbeddableContributionRecord> } => {
+): { ir: IRScene; contributions: Array<EmbeddableContributionRecord> } => {
   const contributions: Array<EmbeddableContributionRecord> = [];
   const sceneChildren = readSceneChildren(children, { contributions, embeddables });
   return { ir: { version: CURRENT_IR_VERSION, type: 'scene', children: sceneChildren }, contributions };
@@ -678,4 +691,4 @@ export const buildIRWithContributions = (
  * 把 <TikZ> 的 children 同步翻译为 IR
  * @description 纯函数，不依赖 effect/state；render 阶段即可直接使用；委托 buildIRWithContributions 并丢弃贡献
  */
-export const buildIR = (children: ReactNode): IR => buildIRWithContributions(children).ir;
+export const buildIR = (children: ReactNode): IRScene => buildIRWithContributions(children).ir;

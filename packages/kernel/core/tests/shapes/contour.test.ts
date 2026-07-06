@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { contour } from '../../src/providers/shape';
 import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
@@ -220,7 +220,7 @@ describe('contour — 交互', () => {
             { type: 'step', kind: 'line', to: { id: 'c' } },
           ],
         },
-      ] as IR['children']),
+      ] as IRScene['children']),
     );
     // 连接 line（无 close 的 path）；端点应在轮廓边界（朝 +x 边 x≈20），不是 AABB 角
     const linePath = flattenPrims(compiled.primitives).find(
@@ -245,7 +245,7 @@ describe('contour — 交互', () => {
               { type: 'step', kind: 'line', to: { id: 'c', anchor: 'top' } },
             ],
           },
-        ] as IR['children']),
+        ] as IRScene['children']),
       ),
     ).not.toThrow();
   });

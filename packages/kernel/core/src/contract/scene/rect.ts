@@ -1,7 +1,12 @@
-import type { IRAnimationTrack } from '../../schemas';
-import type { BlendModeValue, ResolvedDropShadow } from '../../schemas';
-import type { IRGraphicStyle, IRNode, IRPathBase } from '../../schemas';
-import type { IRJsonObject } from '../../schemas';
+﻿import type {
+  BlendModeValue,
+  IRAnimationTrack,
+  IRGraphicStyle,
+  IRJsonObject,
+  IRNode,
+  IRPathBase,
+  ResolvedDropShadow,
+} from '../../schemas';
 import type { PaintValue } from './paint';
 
 /** 矩形原语 */
@@ -35,7 +40,7 @@ export type RectPrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['drawOpacity'];
+  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */

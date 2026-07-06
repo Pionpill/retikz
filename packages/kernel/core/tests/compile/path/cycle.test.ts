@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { arc, close, line, move } from '../../helpers/path-command-factory';
@@ -8,7 +8,7 @@ import { findPathPrim } from './helpers';
 
 describe("compile path: 'cycle' 闭合", () => {
   it("cycle 段在 d 字符串末尾追加 'Z'", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -32,7 +32,7 @@ describe("compile path: 'cycle' 闭合", () => {
   });
 
   it('cycle 不引入新 endpoints，layout 与不带 cycle 的等价路径一致', () => {
-    const irWith: IR = {
+    const irWith: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -47,7 +47,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
-    const irWithout: IR = {
+    const irWithout: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -65,7 +65,7 @@ describe("compile path: 'cycle' 闭合", () => {
   });
 
   it('cycle 与节点 ref 配合：每段独立 clip，cycle 段不能用 Z（闭合点与 lastEnd 不同）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -90,7 +90,7 @@ describe("compile path: 'cycle' 闭合", () => {
   });
 
   it('arc 后显式 move 会切断 arc 留下的 penOverride，新 line 从 move.to 开始', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -114,7 +114,7 @@ describe("compile path: 'cycle' 闭合", () => {
   });
 
   it('arc 后 cycle 从 arc 终点闭合，不回退到上一条 to-bearing step', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

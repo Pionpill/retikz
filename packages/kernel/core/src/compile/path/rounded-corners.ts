@@ -48,6 +48,14 @@ type LineRun = {
   cmdEnd: number;
 };
 
+/** line-step 圆角改写输入。 */
+export type ApplyRoundedCornersInput = {
+  commands: Array<PathCommand>;
+  provenance: Array<CommandProvenance>;
+  radius: number;
+  round: (n: number) => number;
+};
+
 /** 把 LineRun 的折线顶点转成开放 contour 段序列 */
 const runSegments = (run: LineRun): Array<ContourSegment> => {
   const segs: Array<ContourSegment> = [];
@@ -65,10 +73,7 @@ const runSegments = (run: LineRun): Array<ContourSegment> => {
  *   无合格 run 时原样返回）。radius ≤ 0 由调用方提前短路。
  */
 export const applyRoundedCorners = (
-  commands: Array<PathCommand>,
-  provenance: Array<CommandProvenance>,
-  radius: number,
-  round: (n: number) => number,
+  { commands, provenance, radius, round }: ApplyRoundedCornersInput,
 ): Array<PathCommand> => {
   // 收集合格 run：连续 line-step 的 line 命令。move / 非 line step 命令打断 run。
   const out: Array<PathCommand> = [];
@@ -81,7 +86,7 @@ export const applyRoundedCorners = (
       i++;
       continue;
     }
-    // run 起点 = 上一条命令的终点（line 不会是首命令，故 out 非空；防御性兜底无前置 / 无终点的命令）
+    // run 起点取上一条命令的终点。
     const prev = out[out.length - 1];
     const start = endpointOf(prev);
     if (!start) {

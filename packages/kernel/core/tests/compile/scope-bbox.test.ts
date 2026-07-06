@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
-import type { TextMeasurer } from '../../src/compile/text-metrics';
+import type { TextMeasurer } from '../../src/compile/text';
 
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';
-import { computeScopeBoundingBox, registerScopeAsLayout } from '../../src/compile/scope';
+import { createScopeRectangleLayout } from '../../src/compile/node';
+import { computeScopeBoundingBox } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
@@ -43,7 +44,7 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
   shapes: BUILTIN_SHAPES,
 });
 
-describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
+describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', () => {
   it('空 layouts → 返回 null', () => {
     expect(computeScopeBoundingBox([])).toBeNull();
   });
@@ -67,8 +68,8 @@ describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
     expect(bbox!.height).toBeCloseTo(40, 5);
   });
 
-  it('registerScopeAsLayout(bbox=null, fallback) → 0×0 占位 layout 落在 fallback 点', () => {
-    const layout = registerScopeAsLayout('g', null, [50, 50]);
+  it('createScopeRectangleLayout(bbox=null, fallback) → 0×0 占位 layout 落在 fallback 点', () => {
+    const layout = createScopeRectangleLayout({ id: 'g', bbox: null, fallbackOrigin: [50, 50] });
     expect(layout.id).toBe('g');
     expect(layout.shapeName).toBe('rectangle');
     expect(layout.shapeDef).toBe(BUILTIN_SHAPES.rectangle);
@@ -81,8 +82,12 @@ describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
     expect(layout.fontSize).toBe(0);
   });
 
-  it('registerScopeAsLayout(bbox=有效) → rect 字段反映 bbox', () => {
-    const layout = registerScopeAsLayout('g', { x: 100, y: 50, width: 80, height: 60 }, [0, 0]);
+  it('createScopeRectangleLayout(bbox=有效) → rect 字段反映 bbox', () => {
+    const layout = createScopeRectangleLayout({
+      id: 'g',
+      bbox: { x: 100, y: 50, width: 80, height: 60 },
+      fallbackOrigin: [0, 0],
+    });
     expect(layout.rect.x).toBe(100);
     expect(layout.rect.y).toBe(50);
     expect(layout.rect.width).toBe(80);

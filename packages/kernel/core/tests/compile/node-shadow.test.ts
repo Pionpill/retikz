@@ -1,16 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { NodeSchema } from '../../src/schemas';
-import { SHADOW_PRESETS } from '../../src/schemas';
+import { NodeSchema, SHADOW_PRESETS } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,

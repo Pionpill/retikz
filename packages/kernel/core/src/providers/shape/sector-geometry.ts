@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
+import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
 
 import type { AngleRange } from '../../shared';
 
@@ -8,9 +8,7 @@ import { DEG_TO_RAD, normalizeAngleRange } from '../../shared';
 
 /**
  * sector 的派生几何。
- *
- * @description 据 params（内外半径 + 起止角）在「圆心(apex)为原点」局部系算精确 AABB 与各特征点偏移。
- *   AABB 覆盖圆心、外弧、内弧以及弧跨过的轴向极值点；apex / centroid 等特征点以「相对 AABB 中心的偏移」给出。
+ * @description 在圆心局部系计算 AABB、圆心偏移、质心偏移和 boundaryPoint 射线起点。
  */
 export type SectorGeometry = {
   /** 规范化起止角与中分角。 */
@@ -34,9 +32,7 @@ type SectorGeometryInput = {
 
 /**
  * 计算 sector 单一真源几何。
- *
- * @description 局部系以圆心为原点：候选极值点 = 圆心、外弧 bbox 点、内弧 bbox 点。
- *   由这些点的 min/max 得 AABB，质心使用环楔解析公式。
+ * @description AABB 来自圆心、外弧和内弧候选点；质心使用环楔解析公式。
  */
 export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   const { innerRadius, outerRadius } = params;
@@ -49,21 +45,10 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
     candidates.push(...arcBoundingPoints(apex, innerRadius, range.start, range.end));
   }
 
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (const [px, py] of candidates) {
-    if (px < minX) minX = px;
-    if (px > maxX) maxX = px;
-    if (py < minY) minY = py;
-    if (py > maxY) maxY = py;
-  }
-
-  const halfWidth = (maxX - minX) / 2;
-  const halfHeight = (maxY - minY) / 2;
+  const bounds = boundsOf(candidates);
+  if (bounds === undefined) throw new Error('sectorGeometry: bounding candidates must not be empty.');
   // AABB 中心（圆心局部系）；apex(0,0) 相对 AABB 中心的偏移 = -AABB 中心。
-  const aabbCenter: Position = [(minX + maxX) / 2, (minY + maxY) / 2];
+  const aabbCenter = boundsCenter(bounds);
   const apexOffset: Position = [-aabbCenter[0], -aabbCenter[1]];
 
   // 质心：环楔（annular sector）质心在中分角方向上，到圆心距离。
@@ -93,7 +78,7 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
 
   return {
     range,
-    aabbHalfAxes: { halfWidth, halfHeight },
+    aabbHalfAxes: boundsHalfAxes(bounds),
     apexOffset,
     centroidOffset,
     boundaryOriginOffset,

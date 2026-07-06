@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR, ScenePrimitive } from '../../src';
+import type { IRScene, ScenePrimitive } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
@@ -334,8 +334,8 @@ describe('跨 scope anchor 边界', () => {
 
   it('scope_deep_nested_anchor：5 层嵌套 scope 累积 translate(20,0) ×5 → A.top 全局 x ≈ 100', () => {
     // 构造 5 层嵌套，每层 translate(20, 0)；最内层有 node id='A'
-    const inner: IR['children'][number] = { type: 'node', id: 'A', position: [0, 0], text: 'A' };
-    let acc: IR['children'][number] = inner;
+    const inner: IRScene['children'][number] = { type: 'node', id: 'A', position: [0, 0], text: 'A' };
+    let acc: IRScene['children'][number] = inner;
     for (let i = 0; i < 5; i++) {
       acc = {
         type: 'scope',
@@ -516,7 +516,7 @@ describe('跨 scope anchor 交互场景', () => {
     expect(Math.abs(end![1])).toBeLessThan(20);
   });
 
-  it('scope_emit_group_prim_anchor_global：Scene GroupPrim 子 node 在局部坐标；NameStack layout 全局——path 端点取后者，二者一致无 drift', () => {
+  it('scope_emit_group_prim_anchor_global：Scene GroupPrim 子 node 在局部坐标；NamespaceStack layout 全局——path 端点取后者，二者一致无 drift', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -540,7 +540,7 @@ describe('跨 scope anchor 交互场景', () => {
     expect(innerRect).toBeDefined();
     // 局部坐标 rect 左上角 = 10 - halfW < 10；x 应接近 10 - halfW，而不是 130 - halfW
     expect(innerRect!.x).toBeLessThan(40);
-    // path 端点采用 NameStack 中 A 的全局坐标 (130, 0) 算 anchor.center
+    // path 端点采用 NamespaceStack 中 A 的全局坐标 (130, 0) 算 anchor.center
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     expect(Math.abs(end![0] - 130)).toBeLessThan(20);

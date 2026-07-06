@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { EllipsePrim, RectPrim, ScenePrimitive } from '../../src/contract';
-import type { IR, IROffsetPosition } from '../../src/schemas';
+import type { IROffsetPosition,IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { OffsetPositionSchema } from '../../src/schemas';
@@ -78,7 +78,7 @@ describe('OffsetPosition: schema 校验', () => {
 describe('OffsetPosition: compile resolve（Node.position）', () => {
   describe('Happy path', () => {
     it('offset_of_string_basic：of=节点 id → 世界坐标累加', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -92,7 +92,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_of_cartesian_direct：of=笛卡尔字面值 → 无需任何节点定义', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [{ type: 'node', position: { of: [50, 50], offset: [10, 0] }, text: 'X' }],
@@ -103,7 +103,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_of_polar_recursive：of=PolarPosition → 极坐标解析后加 offset', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -125,7 +125,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_of_polar_nested_polar：of 内层再 PolarPosition → 递归解析', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -151,7 +151,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_negative_values：offset 含负数 → 反向偏移', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -165,7 +165,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_nested_id_chain：A→B→C 链式 offset（id 形式）', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -184,7 +184,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
 
   describe('边界', () => {
     it('offset_zero_value：offset=[0, 0] → 与基准点重合', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -198,7 +198,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_of_cartesian_at_origin：of=[0,0] + offset=[10,0]', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [{ type: 'node', position: { of: [0, 0], offset: [10, 0] }, text: 'X' }],
@@ -209,7 +209,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_referent_at_polar_node：referent 自身用 polar position', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -226,7 +226,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_referent_at_at_position：referent 自身用 AtPosition', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -250,7 +250,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
 
   describe('错误路径', () => {
     it('offset_of_string_forward_reference_rejected：被引节点后定义 → 抛错', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -262,7 +262,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_of_nested_polar_string_forward_ref_rejected：嵌套 polar 内 origin 字符串后定义 → 抛错', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -281,7 +281,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_of_unknown_id_rejected：of 引用未定义 id → 抛错', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [{ type: 'node', id: 'B', position: { of: 'nonexistent', offset: [0, 0] } }],
@@ -292,7 +292,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
 
   describe('交互', () => {
     it('offset_node_then_path_string_reference：B 用 offset 相对 A，path 用 B 字符串引用', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -316,7 +316,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_mixed_with_other_position_kinds：五种 position 形态并存全部 resolve', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -365,7 +365,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
     });
 
     it('offset_of_polar_with_at_node_origin：polar.origin 链到 at-positioned 节点', () => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -398,7 +398,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
 
 describe('OffsetPosition: Coordinate.position', () => {
   it('Coordinate 用 offset 作为 anchor → 后续 node 用 offset.of=coordinate.id 引用', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

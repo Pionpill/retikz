@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR, IRNodeTarget } from '../../src/schemas';
+import type { IRNodeTarget,IRScene } from '../../src/schemas';
 import type { Rect } from '../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../src/compile/compile';
-import { NameStack } from '../../src/compile/name-stack';
+import { NamespaceStack } from '../../src/compile/namespace';
 import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../src/compile/node';
 import * as core from '../../src/index';
 import { BUILTIN_SHAPES, star } from '../../src/providers/shape';
@@ -57,7 +57,7 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 
 describe('boundary-aware boundary/canonical', () => {
   it("boundaryPointOf 'rectangle' boundary hits AABB edge, 'shape' hits star outline", () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const starLayout = layoutNode(
       {
         type: 'node',
@@ -65,12 +65,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
         position: [0, 0],
       },
-      measureText,
-      nameStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     // 对角线方向：星形轮廓凹入（凹角内径），AABB 矩形则在外接框边缘——两者一定不同
     const toward: [number, number] = [100, 100];
@@ -81,7 +76,7 @@ describe('boundary-aware boundary/canonical', () => {
   });
 
   it("boundaryPointOf 缺省参数等价于 'shape'", () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const layout = layoutNode(
       {
         type: 'node',
@@ -89,12 +84,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: 'rectangle',
         position: [0, 0],
       },
-      measureText,
-      nameStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     const toward: [number, number] = [100, 0];
     // 缺省与显式 'shape' 结果相同
@@ -102,7 +92,7 @@ describe('boundary-aware boundary/canonical', () => {
   });
 
   it('sector canonical top via AABB (不再 throw)', () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const sectorLayout = layoutNode(
       {
         type: 'node',
@@ -110,12 +100,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
         position: [0, 0],
       },
-      measureText,
-      nameStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     // 改前：sector.anchor 不认识 canonical 名，抛 Unknown anchor
     // 改后：canonical 名上提为 AABB，不再 throw，返回 AABB 上的点
@@ -127,7 +112,7 @@ describe('boundary-aware boundary/canonical', () => {
   });
 
   it("anchorOf sector 专属 anchor 'apex' 仍返回形状自身值，不受 boundary 影响", () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const sectorLayout = layoutNode(
       {
         type: 'node',
@@ -135,12 +120,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
         position: [0, 0],
       },
-      measureText,
-      nameStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     // apex 是 sector 专属命名 anchor，不是 rect 方位名，始终走视觉形状
     expect(() => anchorOf(sectorLayout, 'apex')).not.toThrow();
@@ -151,7 +131,7 @@ describe('boundary-aware boundary/canonical', () => {
   });
 
   it('angleBoundaryOf 缺省与显式 shape 等价', () => {
-    const nameStack = new NameStack();
+    const namespaceStack = new NamespaceStack();
     const layout = layoutNode(
       {
         type: 'node',
@@ -159,12 +139,7 @@ describe('boundary-aware boundary/canonical', () => {
         shape: 'rectangle',
         position: [0, 0],
       },
-      measureText,
-      nameStack,
-      undefined,
-      [],
-      undefined,
-      BUILTIN_SHAPES,
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
     );
     expect(angleBoundaryOf(layout, 0)).toEqual(angleBoundaryOf(layout, 0, 'shape'));
     expect(angleBoundaryOf(layout, 90)).toEqual(angleBoundaryOf(layout, 90, 'shape'));
@@ -202,7 +177,7 @@ const lineEndpointWithNode = (
   start: [number, number] = [200, 0],
 ): [number, number] => {
   const target: IRNodeTarget = { id: 'star', ...targetOverride };
-  const nodeIr: IR['children'][number] = nodeBoundary
+  const nodeIr: IRScene['children'][number] = nodeBoundary
     ? {
         type: 'node',
         id: 'star',
@@ -216,7 +191,7 @@ const lineEndpointWithNode = (
         shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
         position: [0, 0],
       };
-  const ir: IR = {
+  const ir: IRScene = {
     version: 1,
     type: 'scene',
     children: [
@@ -298,7 +273,7 @@ describe('public export + remaining quadrants', () => {
 
   it('boundary_unregistered_throws: boundary 指向未注册 shape 且有 path 连到该节点时编译抛错', () => {
     // resolveBoundary 在 clipForTarget → boundaryPointOf 里被调用（有 path 才触发）
-    const ir: core.IR = {
+    const ir: core.IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -324,7 +299,7 @@ describe('public export + remaining quadrants', () => {
 
   it('specific_anchor_ignores_boundary: tip-0 是星形专属 anchor，boundary 不影响其解析结果', () => {
     // 两个 IR：boundary='shape'（默认）和 boundary='circle'，anchor='tip-0' 均指向同一尖角
-    const makeIr = (boundary: string): core.IR => ({
+    const makeIr = (boundary: string): core.IRScene => ({
       version: 1,
       type: 'scene',
       children: [
@@ -365,7 +340,7 @@ describe('public export + remaining quadrants', () => {
   });
 
   it('layout_neutral: boundary 改变不影响 scene.layout（节点布局边界）', () => {
-    const makeIr = (boundary: string | undefined): core.IR => ({
+    const makeIr = (boundary: string | undefined): core.IRScene => ({
       version: 1,
       type: 'scene',
       children: [
@@ -387,7 +362,7 @@ describe('public export + remaining quadrants', () => {
   });
 
   it('roundtrip_self_describing: 含 node.boundary / 端点 boundary 的 IR JSON 序列化后再 schema parse 等价', () => {
-    const ir: core.IR = {
+    const ir: core.IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -421,7 +396,7 @@ describe('public export + remaining quadrants', () => {
 
   it('boundary_noop_in_between: between 端点带 boundary 编译不报错，正常产出路径', () => {
     // between 端点被 clipForTarget 处理为固定中点（refPointOfTarget），boundary 字段被忽略不引发 throw
-    const ir: core.IR = {
+    const ir: core.IRScene = {
       version: 1,
       type: 'scene',
       children: [

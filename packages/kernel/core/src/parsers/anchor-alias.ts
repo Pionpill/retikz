@@ -13,23 +13,6 @@ import {
   Side,
 } from '../shared';
 
-const AnchorAliasToAnchor: Record<string, AnchorValue> = {
-  north: Side.Top,
-  south: Side.Bottom,
-  east: Side.Right,
-  west: Side.Left,
-  'north-east': Corner.TopRight,
-  'north-west': Corner.TopLeft,
-  'south-east': Corner.BottomRight,
-  'south-west': Corner.BottomLeft,
-  above: Side.Top,
-  below: Side.Bottom,
-  'above-right': Corner.TopRight,
-  'above-left': Corner.TopLeft,
-  'below-right': Corner.BottomRight,
-  'below-left': Corner.BottomLeft,
-};
-
 const SideAliasToSide: Record<string, SideValue> = {
   north: Side.Top,
   south: Side.Bottom,
@@ -37,6 +20,18 @@ const SideAliasToSide: Record<string, SideValue> = {
   west: Side.Left,
   above: Side.Top,
   below: Side.Bottom,
+};
+
+const AnchorAliasToAnchor: Record<string, AnchorValue> = {
+  ...SideAliasToSide,
+  'north-east': Corner.TopRight,
+  'north-west': Corner.TopLeft,
+  'south-east': Corner.BottomRight,
+  'south-west': Corner.BottomLeft,
+  'above-right': Corner.TopRight,
+  'above-left': Corner.TopLeft,
+  'below-right': Corner.BottomRight,
+  'below-left': Corner.BottomLeft,
 };
 
 /** node target sugar 错误提示中展示的 canonical 与别名候选名。 */

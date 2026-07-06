@@ -1,7 +1,6 @@
 export * from './clip';
 export * from './ellipse';
 export * from './group';
-export * from './layout';
 export * from './marker';
 export * from './paint';
 export * from './path';

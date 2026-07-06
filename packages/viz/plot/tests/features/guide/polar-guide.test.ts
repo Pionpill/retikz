@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+﻿import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -58,7 +58,7 @@ const segmentsOfAxis = (axisLayer: IRScope): Array<[[number, number], [number, n
 
 /**
  * 外层 plot scope 子层粗分类：mark 层 = point/sector 的 nodeDefault.shape 层，或 line/area 的 pathDefault.strokeWidth 层
- * （guide 层的 pathDefault 只有 stroke / drawOpacity，无 strokeWidth）。z-order = [...gridLayers, ...markLayers, ...axisLayers]。
+ * （guide 层的 pathDefault 只有 stroke / strokeOpacity，无 strokeWidth）。z-order = [...gridLayers, ...markLayers, ...axisLayers]。
  */
 const layersOf = (outer: IRScope): { children: Array<IRChild>; markIndex: number } => {
   const children = outer.children;

@@ -1,1 +1,1 @@
-export { lineCurveActions as lineClosureActions } from './line-curve.actions';
+export { lineCurveControls as lineClosureControls } from './line-curve.actions';

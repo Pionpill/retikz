@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+﻿import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { IRDrawableInstance, IRDrawableSharedStyle, IRDrawableStyle } from '../../src';
 
@@ -49,7 +49,7 @@ describe('Drawable shared schema', () => {
         fillOpacity: 0.4,
         stroke: '#991b1b',
         strokeWidth: 2,
-        drawOpacity: 0.7,
+        strokeOpacity: 0.7,
         opacity: 0.8,
         shadow: 'md',
         blendMode: 'multiply',
@@ -78,7 +78,7 @@ describe('Drawable shared schema', () => {
         fillOpacity: 0.5,
         stroke: '#0f766e',
         strokeWidth: 1.5,
-        drawOpacity: 0.75,
+        strokeOpacity: 0.75,
         opacity: 0.9,
         shadow: { offsetX: 1, offsetY: 2, blur: 3 },
         blendMode: 'screen',
@@ -155,7 +155,7 @@ describe('Drawable shared schema', () => {
       strokeWidth: 2,
       opacity: 0.8,
       fillOpacity: 0.4,
-      drawOpacity: 0.6,
+      strokeOpacity: 0.6,
       shadow: 'sm',
       blendMode: 'multiply',
     };

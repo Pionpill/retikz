@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR } from '../../src';
+import type { CompileWarning, IRScene } from '../../src';
 import type { GroupPrim, ScenePrimitive } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -9,13 +9,13 @@ import { compileToScene } from '../../src/compile/compile';
 // helpers：构造测试 IR
 // ---------------------------------------------------------------------------
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 /** 文本性 node（无 text、默认 rectangle、无 rotate）→ emit 恰好 1 个 RectPrim */
-const node = (position: [number, number]): IR['children'][number] => ({ type: 'node', position });
+const node = (position: [number, number]): IRScene['children'][number] => ({ type: 'node', position });
 
 /** 直线 path（move [0,0] → line to）→ emit 1 个 PathPrim */
-const line = (to: [number, number]): IR['children'][number] => ({
+const line = (to: [number, number]): IRScene['children'][number] => ({
   type: 'path',
   children: [
     { type: 'step', kind: 'move', to: [0, 0] },
@@ -146,7 +146,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
   });
 
   it('任意用例输出中递归遍历都不含 path-placeholder 占位对象', () => {
-    const cases: Array<IR> = [
+    const cases: Array<IRScene> = [
       scene([node([0, 0]), line([10, 0]), node([20, 0])]),
       scene([line([10, 0])]),
       scene([{ type: 'scope', children: [node([0, 0]), line([10, 0])] }]),
@@ -243,6 +243,7 @@ describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () =
             ],
           },
         ],
+        "dashOffset": undefined,
         "dashPattern": undefined,
         "fill": "none",
         "fillOpacity": undefined,

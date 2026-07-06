@@ -1,24 +1,24 @@
 ﻿import type { Position } from '@retikz/math';
 
-import type { PathCommand, PathPrim } from '../../contract';
-import type { ResolvedShapeStyle } from '../../contract';
+import type {
+  PathCommand,
+  PathPrim,
+  ResolvedShapeStyle,
+} from '../../contract';
 import type { ContourCommand, LineSegment } from '../../shared';
 
+import { pathPrimitiveStyle } from './style';
+
 /**
- * 由顶点环构造闭合折线段序列（接缝顺序同顶点顺序）
- * @description 第 i 段 from = 顶点 i、to = 顶点 (i+1)%n；供 polygon / star 的 emit / boundaryPoint
- *   委托 rounded-contour 模块。绕向与各形状现状 emit 顶点顺序一致（rounded-contour 据接缝转向叉积判内外侧、
- *   凸 / 凹角统一处理），polygon 全凸、star 凸尖 / 凹角交替都用这同一条构造。
+ * 由顶点环构造闭合折线段序列。
+ * @description 接缝顺序跟随顶点顺序，供圆角轮廓 helper 复用。
  */
 export const verticesToSegments = (verts: Array<Position>): Array<LineSegment> =>
   verts.map((from, i) => ({ kind: 'line', from, to: verts[(i + 1) % verts.length] }));
 
 /**
- * contour 命令 → path PathCommand（每点过 round）
- * @description passthrough（r 省略 / 0）时每段都 emit 一条回到起点的 line、末尾接 close；而顶点形状现状 emit
- *   是 `move + (n−1) line + close`（无回起点的冗余 line）——故此处剔除「紧贴 close 前、落点 == 初始 move 落点」
- *   的那条 line，保证 r=0 与现状逐字等价。fillet（r>0）时末尾 fillet 弧已自然收尾，无该冗余。
- *   polygon / star 共用此映射器（单一实现）。
+ * contour 命令转 path 命令。
+ * @description 过滤 close 前回到起点的冗余 line，保持无圆角输出简洁。
  */
 export const contourToPathCommands = (
   commands: Array<ContourCommand>,
@@ -66,14 +66,5 @@ export const contourToPathCommands = (
 export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ResolvedShapeStyle): PathPrim => ({
   type: 'path',
   commands,
-  fill: style.fill ?? 'transparent',
-  fillOpacity: style.fillOpacity,
-  stroke: style.stroke ?? 'currentColor',
-  strokeOpacity: style.strokeOpacity,
-  strokeWidth: style.strokeWidth ?? 1,
-  dashPattern: style.dashPattern,
-  dashOffset: style.dashOffset,
-  opacity: style.opacity,
-  shadow: style.shadow,
-  blendMode: style.blendMode,
+  ...pathPrimitiveStyle(style),
 });

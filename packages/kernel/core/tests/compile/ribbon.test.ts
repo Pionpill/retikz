@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import type { IR, IRPathBase, IRPathRibbonOptions, IRStep, PathPrim, ScenePrimitive } from '../../src';
+import type { IRPathBase, IRPathRibbonOptions, IRScene, IRStep, PathPrim, ScenePrimitive } from '../../src';
 
 import { compileToScene, defineRibbonWidthProfile, PathSchema } from '../../src';
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
@@ -738,7 +738,7 @@ describe('compile ribbon', () => {
           fillOpacity: 0.4,
           stroke: '#172033',
           strokeWidth: 2,
-          drawOpacity: 0.7,
+          strokeOpacity: 0.7,
           opacity: 0.5,
         }),
       ]),

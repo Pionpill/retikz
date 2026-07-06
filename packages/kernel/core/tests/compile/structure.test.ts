@@ -39,20 +39,35 @@ describe('compile source structure', () => {
 
   it('node compile implementation is directory based', () => {
     expect(() => source('src/compile/node.ts')).toThrow();
-    expect(source('src/compile/node/index.ts')).toContain("export { layoutNode } from './layout';");
-    expect(source('src/compile/node/index.ts')).toContain("export { emitNodePrimitives } from './emit';");
+    expect(source('src/compile/node/index.ts')).toContain("export * from './layout';");
+    expect(source('src/compile/node/index.ts')).toContain("export * from './emit';");
   });
 
   it('node compile barrel keeps the internal compatibility surface', () => {
     expect(Object.keys(nodeCompile).sort()).toEqual([
       'anchorOf',
       'angleBoundaryOf',
+      'boundaryKey',
       'boundaryPointOf',
       'boxInsets',
+      'createScopeCircleLayout',
+      'createScopePlaceholderLayout',
+      'createScopeRectangleLayout',
+      'createSyntheticRectangleLayout',
       'emitNodePrimitives',
+      'fallbackBoundaryAnchor',
+      'labelBorderPoint',
+      'labelBoxEdgeToward',
+      'labelCenter',
       'labelExtentPoints',
       'layoutNode',
+      'normalizeLabelPosition',
       'outerRectOf',
+      'resolveAxisScale',
+      'resolveBoundary',
+      'resolveBoxSize',
+      'resolveBoxSpacing',
+      'resolveLabelRotateDeg',
     ]);
 
     const layout: Partial<NodeLayout> = {};
@@ -71,13 +86,13 @@ describe('compile source structure', () => {
   });
 
   it('boundary compile does not import concrete shape providers', () => {
-    const text = source('src/compile/boundary.ts');
+    const text = source('src/compile/node/boundary.ts');
     expect(text).not.toContain("from '../providers/shape'");
   });
 
   it('ribbon compile implementation is directory based', () => {
     expect(() => source('src/compile/path/ribbon.ts')).toThrow();
-    expect(source('src/compile/path/ribbon/index.ts')).toContain("export { emitRibbonPrimitive } from './emit';");
+    expect(source('src/compile/path/ribbon/index.ts')).toContain("export * from './emit';");
 
     const options: RibbonEmitOptions = {};
 

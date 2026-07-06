@@ -1,4 +1,4 @@
-﻿import type { FC, KeyboardEvent } from 'react';
+import type { FC, KeyboardEvent } from 'react';
 
 import { Send, Square } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 
-import { useAiChatStore } from '../use-ai-chat-store';
+import { useAiChatStore } from '../useAiChatStore';
 import { AiChatInputAddContextButton } from './AiChatInputAddContextButton';
 import { AiChatInputAutoRepairPicker } from './AiChatInputAutoRepairPicker';
 import { AiChatInputContextModePicker } from './AiChatInputContextModePicker';

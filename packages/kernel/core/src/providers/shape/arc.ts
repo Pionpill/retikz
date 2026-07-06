@@ -1,107 +1,88 @@
 import type { Position } from '@retikz/math';
 
-import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
+import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
 import { z } from 'zod';
 
 import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
+import { createCache, localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
+import { pathPrimitiveStyle } from './style';
 
-/**
- * arc shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；半径 + 起止角 + 可选闭合。
- */
-type ArcParams = {
-  radius: number;
-  startAngle: number;
-  endAngle: number;
-  /**
-   * 是否闭合为可填充弓形。
-   * @default false
-   */
-  close?: boolean;
-};
+const arcParamsSchema = z.strictObject({
+  radius: z
+    .number()
+    .positive()
+    .describe('Arc radius in user units.'),
+  startAngle: z
+    .number()
+    .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
+  endAngle: z
+    .number()
+    .describe('End angle in degrees; swept from startAngle in screen space.'),
+  close: z
+    .boolean()
+    .optional()
+    .describe('When true, close the arc into a chord/segment outline (fillable); default false = open stroked arc.'),
+});
+
+type ArcParams = z.infer<typeof arcParamsSchema>;
 
 /** arc 的派生几何类型：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
 type ArcGeometry = {
+  /** 规范化后的起止角与弧中点角度。 */
   range: { start: number; end: number; mid: number };
+  /** 覆盖整段弧线的精确 AABB 半轴。 */
   aabbHalfAxes: { halfWidth: number; halfHeight: number };
+  /** 圆心相对 AABB 中心的偏移；投影到 rect 前先加到圆心局部点上。 */
   centerOffset: Position;
 };
 
 /** arc 的派生几何：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
 const computeArcGeometry = (params: ArcParams): ArcGeometry => {
-  const { radius } = params;
-  const range = normalizeAngleRange(params.startAngle, params.endAngle);
+  const { radius, startAngle, endAngle } = params;
+  const range = normalizeAngleRange(startAngle, endAngle);
   const center: Position = [0, 0];
   // close=true（弓形）含弦 / 区域，AABB 由弧 bbox 点决定；圆心本身不强制进框（开放弧 / 弓形都不含圆心）
   const points = arcBoundingPoints(center, radius, range.start, range.end);
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (const [px, py] of points) {
-    if (px < minX) minX = px;
-    if (px > maxX) maxX = px;
-    if (py < minY) minY = py;
-    if (py > maxY) maxY = py;
-  }
-  const aabbCenter: Position = [(minX + maxX) / 2, (minY + maxY) / 2];
+  const bounds = boundsOf(points);
+  if (bounds === undefined) throw new Error('arc: bounding points must not be empty.');
+  const aabbCenter = boundsCenter(bounds);
   return {
     range,
-    aabbHalfAxes: { halfWidth: (maxX - minX) / 2, halfHeight: (maxY - minY) / 2 },
+    aabbHalfAxes: boundsHalfAxes(bounds),
     centerOffset: [-aabbCenter[0], -aabbCenter[1]],
   };
 };
 
-/** params → 派生几何的 WeakMap 缓存（同 sector：同一 params 实例多次取几何只算一次，纯性能、行为不变） */
-const arcGeometryCache = new WeakMap<ArcParams, ArcGeometry>();
+const ARC_GEOMETRY_CACHE_LIMIT = 256;
 
-const arcGeometry = (params: ArcParams): ArcGeometry => {
-  const cached = arcGeometryCache.get(params);
-  if (cached !== undefined) return cached;
-  const geo = computeArcGeometry(params);
-  arcGeometryCache.set(params, geo);
-  return geo;
-};
+const arcGeometry = createCache<ArcParams, ArcGeometry>({
+  keyOf: params => `${params.radius}|${params.startAngle}|${params.endAngle}|${params.close === true ? 1 : 0}`,
+  compute: computeArcGeometry,
+  maxSize: ARC_GEOMETRY_CACHE_LIMIT,
+});
 
 /** 圆心局部点（相对圆心）→ 世界系（+centerOffset 到相对 AABB 中心后经 rect 投影） */
 const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Position): Position =>
   localToWorld(rect, [localFromCenter[0] + centerOffset[0], localFromCenter[1] + centerOffset[1]]);
 
 /**
- * arc 注册项：单半径曲线（描边、可选闭合为弓形）
- * @description circumscribe 返回弧 bbox 半轴（含弧跨过的 90°·k 轴向极值点），node position = AABB 中心；
- *   emit 出弧 path（close=false 开放描边、无 close 命令；close=true 弦闭合成弓形可填充）；anchor 提供
- *   arc-mid（弧中点）/ start / end / center（圆心）。scaleParams 只缩 radius、不缩角度与 close。
+ * arc 注册项：单半径弧线。
+ * @description close=true 时闭合成可填充弓形；anchor 提供 center / start / end / arc-mid。
+ *   scaleParams 只缩 radius。
  */
-export const arc = defineShape({
+export const arc = defineShape<ArcParams>({
   name: 'arc',
-  paramsSchema: z.strictObject({
-    radius: z
-      .number()
-      .positive()
-      .describe('Arc radius in user units.'),
-    startAngle: z
-      .number()
-      .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
-    endAngle: z
-      .number()
-      .describe('End angle in degrees; swept from startAngle in screen space.'),
-    close: z
-      .boolean()
-      .optional()
-      .describe('When true, close the arc into a chord/segment outline (fillable); default false = open stroked arc.'),
-  }),
-  circumscribe: (_hw, _hh, params: ArcParams) => arcGeometry(params).aabbHalfAxes,
+  paramsSchema: arcParamsSchema,
+  circumscribe: (_hw, _hh, params) => arcGeometry(params).aabbHalfAxes,
   // position = 圆心；AABB 中心相对圆心的偏移 = −centerOffset（centerOffset 是圆心相对 AABB 中心）
-  circumscribeOffset: (params: ArcParams): Position => {
+  circumscribeOffset: (params): Position => {
     const { centerOffset } = arcGeometry(params);
     return [-centerOffset[0], -centerOffset[1]];
   },
-  boundaryPoint: (rect: Rect, toward: Position, params: ArcParams): Position => {
+  boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const geo = arcGeometry(params);
     const { radius } = params;
     const { start, end } = geo.range;
@@ -117,7 +98,7 @@ export const arc = defineShape({
     const angle = theta <= end ? theta : theta - end <= start + 360 - theta ? end : start;
     return arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], radius, angle));
   },
-  anchor: (rect: Rect, name: ShapeAnchorName, params: ArcParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
     const geo = arcGeometry(params);
     const { radius } = params;
     const { start, end, mid } = geo.range;
@@ -135,7 +116,7 @@ export const arc = defineShape({
         return undefined;
     }
   },
-  *emit(rect: Rect, style, round, params: ArcParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const geo = arcGeometry(params);
     const { radius, close } = params;
     const { start, end } = geo.range;
@@ -150,19 +131,10 @@ export const arc = defineShape({
     yield {
       type: 'path',
       commands,
-      fill: close ? (style.fill ?? 'transparent') : 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      dashOffset: style.dashOffset,
-      opacity: style.opacity,
-      shadow: style.shadow,
-      blendMode: style.blendMode,
+      ...pathPrimitiveStyle(style, close ? undefined : { fill: 'transparent' }),
     };
   },
-  scaleParams: (params: ArcParams, sx: number, sy: number): ArcParams => ({
+  scaleParams: (params, sx: number, sy: number) => ({
     ...params,
     radius: params.radius * Math.sqrt(sx * sy),
   }),

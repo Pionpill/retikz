@@ -342,12 +342,12 @@ export const GeneratorStepSchema = z
     kind: z
       .literal('generator')
       .describe(
-        'Registered path generator segment. `name` selects CompileOptions.pathGenerators; `params` is JSON input.',
+        'Registered path generator segment. `name` selects a built-in or CompileOptions.pathGenerators provider; `params` is JSON input.',
       ),
     name: z
       .string()
       .min(1)
-      .describe('Path generator provider name. Custom names must be registered via CompileOptions.pathGenerators.'),
+      .describe('Path generator provider name. Built-ins and custom CompileOptions.pathGenerators names are accepted.'),
     to: TargetSchema.optional().describe('Optional destination point passed to the generator as the segment end.'),
     params: JsonObjectSchema.describe(
       'JSON parameter object passed to the generator. The registered generator validates its own parameter fields.',
@@ -357,7 +357,7 @@ export const GeneratorStepSchema = z
     ),
   })
   .describe(
-    'Generator action: produce a sub-path by invoking a registered path generator (parabola / sin / etc.); core ships no built-in curve generators.',
+    'Generator action: produce a sub-path by invoking a built-in or registered path generator.',
   );
 
 export const StepSchema = z

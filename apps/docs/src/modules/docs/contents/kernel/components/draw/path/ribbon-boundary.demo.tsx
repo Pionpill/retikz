@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { Layout, Path } from '@retikz/react';
 
@@ -41,7 +41,7 @@ const Demo: FC = () => (
       fillOpacity={0.74}
       stroke="#172033"
       strokeWidth={1}
-      drawOpacity={0.18}
+      strokeOpacity={0.18}
     />
   </Layout>
 );

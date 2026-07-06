@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -44,7 +44,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const loadIr: IR = {
+const loadIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [
@@ -68,7 +68,7 @@ const loadIr: IR = {
     },
   ],
 };
-const manualIr: IR = {
+const manualIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [
@@ -161,7 +161,7 @@ describe('mountCanvas 动画', () => {
   });
 
   it('无动画 scene → 不起 rAF（零开销，回归现状）', () => {
-    const plainIr: IR = {
+    const plainIr: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'a', position: [0, 0], text: 'x' }],
@@ -173,7 +173,7 @@ describe('mountCanvas 动画', () => {
 });
 
 describe('mountCanvas visible-trigger 监听合帧', () => {
-  const visibleIr: IR = {
+  const visibleIr: IRScene = {
     version: 1,
     type: 'scene',
     children: [

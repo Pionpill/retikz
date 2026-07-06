@@ -1,9 +1,6 @@
-import { minimalEnclosingCircle } from '@retikz/math';
+import { boundsCenter, boundsOf } from '@retikz/math';
 
-import type { BoundaryDefinition } from '../contract';
 import type { Transform } from '../contract';
-import type { ShapeDefinition } from '../contract';
-import type { ProviderCollection } from '../providers/registry';
 import type {
   IRAtPosition,
   IRBetweenPosition,
@@ -13,32 +10,33 @@ import type {
   PolarPosition,
 } from '../schemas';
 import type { Rect } from '../shared/geometry';
-import type { NameStack } from './name-stack';
+import type { NamespaceStack } from './namespace';
 import type { NodeLayout } from './node';
 import type { ResolveBetweenGlobal } from './position';
 
-import { resolveBoundaryRegistry } from '../providers/boundary';
-import { providerDefinitionOf } from '../providers/registry';
-import { resolveShapeRegistry } from '../providers/shape';
 import { Anchor } from '../shared';
-import { DEG_TO_RAD, RAD_TO_DEG, rect as rectOps } from '../shared/geometry';
-import { boxInsets } from './node';
+import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
-/**
- * 把 IR 7 变体 transforms 展平为 Scene 3 变体（Cartesian translate / rotate / scale）
- * @description 5 个 translate 变体（translate / polar-translate / at-translate / offset-translate / between-translate）
- *   各自构造对应 Position 字面量并调用 `resolvePosition` 拿到 Cartesian (x, y)，再写成 Cartesian translate；
- *   rotate / scale 直接透传。referent 未解析时返回 null（上游负责发 warn / throw）
- */
+/** scope transform lowering 所需的编译上下文。 */
+export type LowerScopeTransformsContext = {
+  /** id 查询栈。 */
+  namespaceStack: NamespaceStack;
+  /** 相对定位默认距离。 */
+  nodeDistance?: number;
+  /** between 端点的全局坐标解析器。 */
+  resolveBetweenGlobal?: ResolveBetweenGlobal;
+  /** transform 引用解析失败时的回调。 */
+  onUnresolved?: (failed: IRTransform) => void;
+};
+
+/** 把 IR transform 归一为 Scene transform；引用解析失败时返回 null。 */
 export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
-  nameStack: NameStack,
-  nodeDistance?: number,
-  resolveBetweenGlobal?: ResolveBetweenGlobal,
-  onUnresolved?: (failed: IRTransform) => void,
+  context: LowerScopeTransformsContext,
 ): Array<Transform> | null => {
+  const { namespaceStack, nodeDistance, resolveBetweenGlobal, onUnresolved } = context;
   const out: Array<Transform> = [];
   for (const t of transforms) {
     switch (t.kind) {
@@ -48,7 +46,7 @@ export const lowerScopeTransforms = (
       case 'polar-translate': {
         const polar: PolarPosition = { angle: t.angle, radius: t.radius };
         if (t.origin !== undefined) polar.origin = t.origin;
-        const resolved = resolvePosition(polar, nameStack, nodeDistance);
+        const resolved = resolvePosition(polar, { namespaceStack, nodeDistance });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -59,7 +57,7 @@ export const lowerScopeTransforms = (
       case 'at-translate': {
         const at: IRAtPosition = { direction: t.direction, of: t.of };
         if (t.distance !== undefined) at.distance = t.distance;
-        const resolved = resolvePosition(at, nameStack, nodeDistance);
+        const resolved = resolvePosition(at, { namespaceStack, nodeDistance });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -72,7 +70,7 @@ export const lowerScopeTransforms = (
           of: t.of,
           offset: t.offset ?? [0, 0],
         };
-        const resolved = resolvePosition(off, nameStack, nodeDistance);
+        const resolved = resolvePosition(off, { namespaceStack, nodeDistance });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -82,7 +80,7 @@ export const lowerScopeTransforms = (
       }
       case 'between-translate': {
         const between: IRBetweenPosition = { between: t.between, fraction: t.fraction };
-        const resolved = resolvePosition(between, nameStack, nodeDistance, [], resolveBetweenGlobal);
+        const resolved = resolvePosition(between, { namespaceStack, nodeDistance, resolveBetweenGlobal });
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -108,137 +106,7 @@ export const lowerScopeTransforms = (
   return out;
 };
 
-/**
- * 把局部坐标点 (x, y) 按 Cartesian-only transform 链 apply 到全局坐标
- * @description 数组语义与 SVG `transform="t0 t1 t2"` / TikZ scope option 顺序一致：
- *   array[0] 是最外层（最后 apply 到 local），array[last] 是最内层（最先 apply）；
- *   即对局部点 P，结果 = t0(t1(t2(P)))。实现上从数组尾部往头部迭代依次 apply。
- *   只接受已被 `lowerScopeTransforms` 展平后的 3 变体（translate / rotate / scale）
- */
-export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
-  let x = local[0];
-  let y = local[1];
-  for (let i = chain.length - 1; i >= 0; i--) {
-    const t = chain[i];
-    if (t.kind === 'translate') {
-      x += t.x;
-      y += t.y;
-    } else if (t.kind === 'rotate') {
-      const cx = t.cx ?? 0;
-      const cy = t.cy ?? 0;
-      const rad = t.degrees * DEG_TO_RAD;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
-      const dx = x - cx;
-      const dy = y - cy;
-      x = cx + dx * cos - dy * sin;
-      y = cy + dx * sin + dy * cos;
-    } else {
-      const sy = t.y ?? t.x;
-      x *= t.x;
-      y *= sy;
-    }
-  }
-  return [x, y];
-};
-
-/**
- * 把全局坐标点反向投影回 scope 局部坐标系（`applyTransformChain` 的逆）
- * @description chain = [t0, t1, t2]（array[0] 最外层、最后 apply）的逆 =
- *   按数组正序应用每个 transform 的逆：t0^-1 / t1^-1 / t2^-1。
- *   translate(-x, -y) / rotate(-deg, cx, cy) / scale(1/x, 1/y)。
- *   scale 分量为 0 时反向投影未定义——退化为返回原点 (0, 0) 当前层，避免 NaN 污染下游。
- *   作用：referent 全局点 → 当前 scope 局部坐标系，配合 `applyTransformChain` 实现
- *   "referent 全局 + relative 部分在当前 scope 局部度量 + 末端正向投影回全局" 的语义。
- */
-export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
-  let x = global[0];
-  let y = global[1];
-  for (const t of chain) {
-    if (t.kind === 'translate') {
-      x -= t.x;
-      y -= t.y;
-    } else if (t.kind === 'rotate') {
-      const cx = t.cx ?? 0;
-      const cy = t.cy ?? 0;
-      const rad = -t.degrees * DEG_TO_RAD;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
-      const dx = x - cx;
-      const dy = y - cy;
-      x = cx + dx * cos - dy * sin;
-      y = cy + dx * sin + dy * cos;
-    } else {
-      const sy = t.y ?? t.x;
-      if (t.x === 0 || sy === 0) {
-        // scale 0 不可逆——退化为 (0, 0) 防 NaN（兜底手搓 IR 绕过 schema 的退化输入）；
-        // ScaleSchema describe 已提醒用户避坑，此处运行时再守一道
-        x = 0;
-        y = 0;
-        continue;
-      }
-      x /= t.x;
-      y /= sy;
-    }
-  }
-  return [x, y];
-};
-
-/**
- * 复制 NodeLayout 并把 rect 中心点 + rotate + 尺寸全部按 scope transform chain 投到全局
- * @description rect 中心走 `applyTransformChain`；chain 里的 rotate 累加到 `rect.rotate`（弧度）、
- *   scale 乘进 rect.width / height / margin——这样 path 端点的 boundary clip 取的是与 SVG `<g>`
- *   实际渲染一致的视觉尺寸 / 朝向，跨 / 入 / 出 rotate / scale scope 的 path 都贴节点视觉边界。
- *   非均匀 scale 与 rotate 在 chain 中混合时，按"累加 rotate + 分量相乘 scale"近似（uniform scale 精确，
- *   anisotropic + rotate 的剪切耦合不展开——当前投影模型限制）。
- */
-export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<Transform>): NodeLayout => {
-  const [gx, gy] = applyTransformChain([layout.rect.x, layout.rect.y], chain);
-  let rotateAccumRad = 0;
-  let scaleX = 1;
-  let scaleY = 1;
-  for (const t of chain) {
-    if (t.kind === 'rotate') {
-      rotateAccumRad += t.degrees * DEG_TO_RAD;
-    } else if (t.kind === 'scale') {
-      scaleX *= t.x;
-      scaleY *= t.y ?? t.x;
-    }
-  }
-  const globalRect: Rect = {
-    ...layout.rect,
-    x: gx,
-    y: gy,
-    rotate: (layout.rect.rotate ?? 0) + rotateAccumRad,
-    width: layout.rect.width * Math.abs(scaleX),
-    height: layout.rect.height * Math.abs(scaleY),
-  };
-  return {
-    ...layout,
-    rect: globalRect,
-    rotateDeg: layout.rotateDeg + rotateAccumRad * RAD_TO_DEG,
-    margin: {
-      top: layout.margin.top * Math.abs(scaleY),
-      right: layout.margin.right * Math.abs(scaleX),
-      bottom: layout.margin.bottom * Math.abs(scaleY),
-      left: layout.margin.left * Math.abs(scaleX),
-    },
-  };
-};
-
-/** scope bbox 计算结果：bbox 几何中心 + 尺寸（width/height ≥ 0；空 scope 退化为 0×0 占位时仍合法） */
-export type ScopeBoundingBox = {
-  /** bbox 几何中心 x（全局坐标） */
-  x: number;
-  /** bbox 几何中心 y（全局坐标） */
-  y: number;
-  /** bbox 宽度（≥ 0；空 scope / 单点退化为 0） */
-  width: number;
-  /** bbox 高度（≥ 0；空 scope / 单点退化为 0） */
-  height: number;
-};
-
-/** 收集一组 NodeLayout 的全局 4 角点（rotate-aware outerRect 四角），供 AABB / MEC 等包络复用 */
+/** 收集一组 NodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用。 */
 export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Array<IRPosition> => {
   const points: Array<IRPosition> = [];
   for (const layout of layouts) {
@@ -253,91 +121,10 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
   return points;
 };
 
-/**
- * 收集一组 NodeLayout 的全局 axis-aligned bounding box
- * @description 每个 layout 的 4 角点已是全局坐标系（Pass 1 累积 chain apply 后），
- *   取每个 layout 的 rotate-aware `top-left` / `top-right` / `bottom-left` / `bottom-right`
- *   4 角点（rect.anchor 已含 layout.rect.rotate 处理）并求 AABB；
- *   layout 是 0×0（coordinate / 空 scope 占位）时退化为单点也合法；
- *   空 layouts 数组返回 null（调用方按"空 scope + 兜底原点"退化为 0×0 占位）
- */
-export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): ScopeBoundingBox | null => {
-  if (layouts.length === 0) return null;
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity;
-  for (const [cx, cy] of collectScopeCornerPoints(layouts)) {
-    if (cx < minX) minX = cx;
-    if (cy < minY) minY = cy;
-    if (cx > maxX) maxX = cx;
-    if (cy > maxY) maxY = cy;
-  }
-  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, width: maxX - minX, height: maxY - minY };
-};
-
-/**
- * 用 scope id + bbox 构造 synthetic rectangle NodeLayout
- * @description bbox 为 null 时退化为 fallbackOrigin 的 0×0 占位（空 scope 仍要有可引用句柄）。
- *   synthetic layout 完全复用 rectangle 路径：`scope.id.<keyword>` / `scope.id.<deg>` / `scope.id` 作为 referent
- *   走与普通 rectangle Node 完全一致的 anchorOf / boundaryPointOf / 中心点取值
- */
-export const registerScopeAsLayout = (
-  id: string,
-  bbox: ScopeBoundingBox | null,
-  fallbackOrigin: IRPosition,
-  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
-  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
-): NodeLayout => {
-  const box: ScopeBoundingBox = bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
-  return {
-    id,
-    shapeName: 'rectangle',
-    shapeDef: providerDefinitionOf(shapes, 'rectangle', { capability: 'shape', optionName: 'shapes' }),
-    rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
-    contentCenter: [box.x, box.y],
-    rotateDeg: 0,
-    margin: boxInsets(0),
-    textWidth: box.width,
-    textHeight: box.height,
-    align: 'middle',
-    lineHeight: 0,
-    fontSize: 0,
-    shapes,
-    boundaries,
-  };
-};
-
-/**
- * 用 scope id + 子树点集的最小外接圆构造 synthetic circle NodeLayout
- * @description 复用 ellipse + circumscribe:'equal' 的既有圆形 anchor/boundary 路径（与 `<Node shape="circle">` 一致），
- *   零新 anchor 代码。空点集 / MEC 退化时落 fallbackOrigin 的 0 半径占位。
- */
-export const registerScopeCircleLayout = (
-  id: string,
-  cornerPoints: ReadonlyArray<IRPosition>,
-  fallbackOrigin: IRPosition,
-  shapes: ProviderCollection<ShapeDefinition> = resolveShapeRegistry(),
-  boundaries: ProviderCollection<BoundaryDefinition> = resolveBoundaryRegistry(),
-): NodeLayout => {
-  const mec = cornerPoints.length > 0 ? minimalEnclosingCircle([...cornerPoints]) : null;
-  const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : fallbackOrigin;
-  const diameter = mec ? mec.radius * 2 : 0;
-  return {
-    id,
-    shapeName: 'ellipse',
-    shapeDef: providerDefinitionOf(shapes, 'ellipse', { capability: 'shape', optionName: 'shapes' }),
-    shapeParams: { circumscribe: 'equal' },
-    rect: { x: center[0], y: center[1], width: diameter, height: diameter, rotate: 0 },
-    contentCenter: [center[0], center[1]],
-    rotateDeg: 0,
-    margin: boxInsets(0),
-    textWidth: diameter,
-    textHeight: diameter,
-    align: 'middle',
-    lineHeight: 0,
-    fontSize: 0,
-    shapes,
-    boundaries,
-  };
+/** 计算一组 layout 的全局 AABB；空数组返回 null。 */
+export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): Rect | null => {
+  const bounds = boundsOf(collectScopeCornerPoints(layouts));
+  if (bounds === undefined) return null;
+  const center = boundsCenter(bounds);
+  return { x: center[0], y: center[1], width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY };
 };

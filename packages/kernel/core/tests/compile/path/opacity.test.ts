@@ -1,13 +1,13 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { findPathPrim } from './helpers';
 
-describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
+describe('alpha.3 P2：path 级 opacity / fillOpacity / strokeOpacity', () => {
   it('opacity 透传到 PathPrim.opacity', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -25,7 +25,7 @@ describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
   });
 
   it('fillOpacity 透传', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -45,14 +45,14 @@ describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
     expect(findPathPrim(compileToScene(ir).primitives).fillOpacity).toBe(0.3);
   });
 
-  it('IR drawOpacity → PathPrim.strokeOpacity（命名映射，与 Node 一致）', () => {
-    const ir: IR = {
+  it('IR strokeOpacity → PathPrim.strokeOpacity（命名映射，与 Node 一致）', () => {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
         {
           type: 'path',
-          drawOpacity: 0.7,
+          strokeOpacity: 0.7,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -64,7 +64,7 @@ describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
   });
 
   it('未指定时三个 opacity 字段都是 undefined', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

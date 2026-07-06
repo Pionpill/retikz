@@ -1,15 +1,15 @@
-﻿import { PathCurve } from '@retikz/plot';
+import { PathCurve } from '@retikz/plot';
 
-import type { PreviewAction } from '@/modules/docs/components/component-preview';
+import type { PreviewControlConfig } from '@/modules/docs/components';
 
 export const PATH_CURVE_ACTION_ID = 'path-curve';
 
-export const lineCurveActions = [
+export const lineCurveControls = [
   {
-    type: 'select',
+    kind: 'select',
     id: PATH_CURVE_ACTION_ID,
     label: '连接方式',
-    value: PathCurve.Linear,
+    defaultValue: PathCurve.Linear,
     options: [
       { value: PathCurve.Linear, label: '直线' },
       { value: PathCurve.Step, label: '阶梯' },
@@ -23,4 +23,4 @@ export const lineCurveActions = [
       { value: PathCurve.Natural, label: '自然样条' },
     ],
   },
-] satisfies Array<PreviewAction>;
+] satisfies Array<PreviewControlConfig>;

@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema, ScopeSchema } from '../../src/schemas';
@@ -10,15 +10,15 @@ import { NodeSchema, ScopeSchema } from '../../src/schemas';
 // helpers
 // ---------------------------------------------------------------------------
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-const node = (position: [number, number], zIndex?: number): IR['children'][number] => ({
+const node = (position: [number, number], zIndex?: number): IRScene['children'][number] => ({
   type: 'node',
   position,
   ...(zIndex !== undefined && { zIndex }),
 });
 
-const line = (to: [number, number], zIndex?: number): IR['children'][number] => ({
+const line = (to: [number, number], zIndex?: number): IRScene['children'][number] => ({
   type: 'path',
   ...(zIndex !== undefined && { zIndex }),
   children: [
@@ -105,8 +105,8 @@ describe('compile zIndex 稳定排序', () => {
   });
 
   it('scope.zIndex 不影响 scope 内部子元素的相对栈序', () => {
-    const baseChildren: IR['children'] = [node([0, 0]), line([10, 0], 5), node([20, 0])];
-    const innerOf = (ir: IR): Array<string> => topGroup(compileToScene(ir, silent)).children.map(p => p.type);
+    const baseChildren: IRScene['children'] = [node([0, 0]), line([10, 0], 5), node([20, 0])];
+    const innerOf = (ir: IRScene): Array<string> => topGroup(compileToScene(ir, silent)).children.map(p => p.type);
     const withZ = scene([{ type: 'scope', zIndex: 3, children: baseChildren }]);
     const withoutZ = scene([{ type: 'scope', children: baseChildren }]);
     expect(innerOf(withZ)).toEqual(['rect', 'rect', 'path']);

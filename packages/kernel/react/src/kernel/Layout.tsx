@@ -3,8 +3,8 @@
   BoundaryDefinition,
   ClipDefinition,
   CompositeDefinition,
-  IR,
   IRAnimationTrack,
+  IRScene,
   IRViewBox,
   LowerTex,
   PathGeneratorDefinition,
@@ -118,7 +118,7 @@ const aggregateEmbeddableComposites = (
  */
 export type LayoutProps = ScopeStyleProps & {
   /** 直接喂 IR JSON（持久化 / AI / 编辑器场景），与 children 二选一 */
-  ir?: IR;
+  ir?: IRScene;
   /** Kernel/Sugar JSX children */
   children?: ReactNode;
   /**
@@ -188,9 +188,15 @@ export type LayoutProps = ScopeStyleProps & {
   idPrefix?: string;
   /**
    * 节点相对定位（`Node.position = { direction, of }`）的默认距离，单位 user units
-   * @description 对应 TikZ `node distance=...`；节点 position 自带 `distance` 时优先用自带值，都缺省时回退到 1
+   * @description 节点 position 自带 `distance` 时优先用自带值，都缺省时回退到 24
    */
   nodeDistance?: number;
+  /**
+   * 默认字号。
+   * @description 透传给 `CompileOptions.fontSize`；`font.size` 缺省时使用此值，同时作为 preset 与 rem 的根字号。
+   * @default DEFAULT_FONT_SIZE (16)
+   */
+  fontSize?: number;
   /**
    * 运行时注入的第三方 / 自定义 shape（透传给 `compileToScene` 的 `CompileOptions.shapes`）
    * @description IR 或 `<Node shape="...">` 只保存 shape 名字或 `{ type, params }`；definition 在这里注入。
@@ -323,6 +329,7 @@ export const Layout: FC<LayoutProps> = props => {
     animationProperties,
     idPrefix,
     nodeDistance,
+    fontSize,
     shapes,
     boundaries,
     clips,
@@ -344,7 +351,7 @@ export const Layout: FC<LayoutProps> = props => {
     strokeWidth,
     opacity,
     fillOpacity,
-    drawOpacity,
+    strokeOpacity,
     nodeDefault,
     pathDefault,
     labelDefault,
@@ -361,7 +368,7 @@ export const Layout: FC<LayoutProps> = props => {
       strokeWidth,
       opacity,
       fillOpacity,
-      drawOpacity,
+      strokeOpacity,
       nodeDefault,
       pathDefault,
       labelDefault,
@@ -374,7 +381,7 @@ export const Layout: FC<LayoutProps> = props => {
       strokeWidth,
       opacity,
       fillOpacity,
-      drawOpacity,
+      strokeOpacity,
       nodeDefault,
       pathDefault,
       labelDefault,
@@ -421,6 +428,7 @@ export const Layout: FC<LayoutProps> = props => {
       compileToScene(ir, {
         measureText,
         nodeDistance,
+        fontSize,
         shapes,
         boundaries,
         clips,
@@ -436,6 +444,7 @@ export const Layout: FC<LayoutProps> = props => {
       ir,
       measureText,
       nodeDistance,
+      fontSize,
       shapes,
       boundaries,
       clips,

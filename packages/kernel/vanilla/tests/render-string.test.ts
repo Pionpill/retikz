@@ -1,4 +1,4 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
@@ -12,13 +12,13 @@ import { defineBoundary, defineClip, renderToSvgString } from '../src';
 /**
  * @retikz/vanilla renderToSvgString（SSR / 构建期，node 环境，无 DOM）
  */
-const nodeIr: IR = {
+const nodeIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
 };
 
-const boundaryIr: IR = {
+const boundaryIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [
@@ -60,7 +60,7 @@ const circleFrameClip = (): ClipDefinition =>
     }),
   });
 
-const clipIr: IR = {
+const clipIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [

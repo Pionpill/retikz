@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { PathCommand, ScenePrimitive } from '../../src/contract';
-import type { ResolvedShapeStyle, ShapeDefinition } from '../../src/contract';
+import type {
+  PathCommand,
+  ResolvedShapeStyle,
+  ScenePrimitive,
+  ShapeDefinition,
+} from '../../src/contract';
 import type { Rect } from '../../src/shared/geometry/rect';
 
 import { defineShape } from '../../src/contract';

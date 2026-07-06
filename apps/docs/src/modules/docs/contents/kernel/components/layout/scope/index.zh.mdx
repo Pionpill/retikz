@@ -1,4 +1,4 @@
----
+﻿---
 title: Scope
 description: 局部 transform 容器——把一组 children 包起来批量平移 / 旋转 / 缩放。
 ---
@@ -383,7 +383,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 | `strokeWidth`    | `number`                  | —             | 级联默认描边宽度                                                                                                                                                                                                              |
 | `opacity`        | `number`                  | —             | 级联默认整体透明度 0~1（嵌套替换、不复合）                                                                                                                                                                                    |
 | `fillOpacity`    | `number`                  | —             | 级联默认填充透明度 0~1                                                                                                                                                                                                        |
-| `drawOpacity`    | `number`                  | —             | 级联默认描边透明度 0~1                                                                                                                                                                                                        |
+| `strokeOpacity`    | `number`                  | —             | 级联默认描边透明度 0~1                                                                                                                                                                                                        |
 | `nodeDefault`    | `object`                  | —             | node 默认样式（形状 / 间距 / 色等），作用于 scope 内每个 node                                                                                                                                                                 |
 | `pathDefault`    | `object`                  | —             | path-like 默认样式；Path 使用完整字段，Ribbon 只使用共享几何样式字段；箭头走 `arrowDefault`                                                                                                                                   |
 | `labelDefault`   | `object`                  | —             | label 默认样式（node label + step label 共享）                                                                                                                                                                                |

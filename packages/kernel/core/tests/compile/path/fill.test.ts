@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IR } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { findPathPrim } from './helpers';
 
 describe('compile path: fill / fillRule', () => {
   it('缺省 fill = none（仅描边，向后兼容）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -26,7 +26,7 @@ describe('compile path: fill / fillRule', () => {
   });
 
   it('显式 fill 透传到 PathPrim', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -47,7 +47,7 @@ describe('compile path: fill / fillRule', () => {
   });
 
   it("fillRule 'evenodd' 透传", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

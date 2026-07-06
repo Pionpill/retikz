@@ -42,7 +42,7 @@ core 0.4 只做**纵向底座深化（机制 / 引擎 / 契约）**；**横向�
 | alpha.6          | Path kind / Ribbon 关系路径（plot 桑基图底座）            | plot→core 请求     | [roadmap](./alpha.6/roadmap.md) · [ADR-07](./alpha.6/07-path-kind-registry.md)                                                                              | ✅ 已接受（`Path.kind` provider registry + `kind="ribbon"` 可变宽度关系路径；独立 `IRRibbon` 被 ADR-07 收敛进 `IRPath`；实现 + 文档 + changelog + 对账完成，2026-06-28 完工，roadmap [alpha.6](./alpha.6/roadmap.md)） |
 | alpha.7          | Provider contract 收敛与功能补齐                         | contract-provider 机制 | [roadmap](./alpha.7/roadmap.md)                                                                                                                             | ✅ Accepted（Provider registry / key contract / capability migration / BoundaryDefinition / ClipDefinition 已实现；React / Vanilla 透传与 docs authoring surface 已同步；实现 + 文档 + changelog + 对账完成，2026-07-03 完工） |
 | alpha.8          | v0.4 改动收口 + dashOffset 描边相位补齐                  | release closeout / plot→core 请求 | [roadmap](./alpha.8/roadmap.md)                                                                                                                             | 收口项已 Accepted；ADR-05 Accepted：补齐 `dashPattern` 配套的 `dashOffset` 通用描边字段，覆盖 IR / Scene / renderer / adapter / docs；不先在 plot 私有实现。 |
-| 后续版本         | v0.5 / beta / long-term 候选拆分                          | 待定               | —                                                                                                                                                         | 待讨论：headless interaction / Progressive IR 可进入 v0.5 设计；beta 聚焦 API 与安装验收；P3D / scope 富化等更长期处理 |
+| 后续版本         | v0.5 / beta / long-term 候选拆分                          | 待定               | —                                                                                                                                                         | 待讨论：headless interaction / Progressive IR 可进入 v0.5 设计；交互和用户操作场景需要评估 incremental compile、IR diff、bailout 与 concurrent 调度；beta 聚焦 API 与安装验收；P3D / ScenePrimitive 底层能力重评估 / scope 富化等更长期处理 |
 | 暂不             | 跨框架 runtime / 完整伪三维系统                           | G / P3D            | —                                                                                                                                                         | ⏸（P3D 详见下文「伪三维视角层」；完整编辑器式 interaction 不进 core，本轮只保留 headless 方向候选）        |
 
 **建议实现顺序**：alpha.1 **A（math 底座）** → alpha.2 **scope 多态 bbox（消费 A）+ 可嵌入 Tier2**（已实现发布）→ alpha.3 **B（路径补强，消费 A）** → alpha.4 **F（Scene 视觉，独立、视余量）** → alpha.5 **E（tex，行内 `$...$` text+math 混排）** → alpha.6 **Path kind / Ribbon** → alpha.7 **Provider contract 收敛** → alpha.8 **v0.4 收口 + dashOffset 补齐**。（D eval 已交其他分支，不在本路线）
@@ -115,7 +115,9 @@ core 0.4 只做**纵向底座深化（机制 / 引擎 / 契约）**；**横向�
 - 后续连线、路径、标签等仍沿用既有二维逻辑；
 - 把三维语义限制在 plot / coordinate scope / lowering 层，不污染 renderer。
 
-v0.4 也会作为前一版本预留的 AI 增量渲染方向的正式优化窗口：如果 v0.3 已经把 renderer / runtime / hydration / plot 支撑的结构性条件留好，v0.4 可以开始设计更完整的 Progressive IR、JSON Patch stream、分层增量渲染和更细的 SVG / Canvas 更新策略。
+v0.4 也会作为前一版本预留的 AI 增量渲染方向的正式优化窗口：如果 v0.3 已经把 renderer / runtime / hydration / plot 支撑的结构性条件留好，v0.4 可以开始设计更完整的 Progressive IR、JSON Patch stream、分层增量渲染和更细的 SVG / Canvas 更新策略。长期交互场景还需要评估 compile 层的 IR diff、bailout、局部重编译与 concurrent 调度模型，避免用户操作时总是全量同步编译。
+
+长期性能优化、WebGL / 3D 后端或更接近 GPU 的渲染路径启动时，需要同步重评估 `ScenePrimitive` 的底层能力边界。当前 `RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim` 足够支撑 2D 矢量最大公约子集，但后续若出现位图独立放置、mesh / triangle batch、SDF text、path triangulation、effect graph 或交互命中区域等需求，应作为 Scene contract 重构议题统一设计，而不是在单个 renderer 中局部补丁化。
 
 ### 核心想法
 

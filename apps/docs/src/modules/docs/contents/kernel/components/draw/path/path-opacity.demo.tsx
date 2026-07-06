@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
@@ -22,8 +22,8 @@ const Demo: FC = () => (
       <Step kind="cycle" />
     </Path>
 
-    {/* 下：drawOpacity 只打折 stroke，fill 不变 */}
-    <Path stroke="currentColor" fill="darkorange" strokeWidth={4} drawOpacity={0.2}>
+    {/* 下：strokeOpacity 只打折 stroke，fill 不变 */}
+    <Path stroke="currentColor" fill="darkorange" strokeWidth={4} strokeOpacity={0.2}>
       <Step kind="move" to={[260, 20]} />
       <Step kind="line" to={[340, 20]} />
       <Step kind="line" to={[340, 80]} />
@@ -31,8 +31,8 @@ const Demo: FC = () => (
       <Step kind="cycle" />
     </Path>
 
-    {/* 三者叠加：opacity 0.7 × fillOpacity 0.5 × drawOpacity 0.4 */}
-    <Path stroke="currentColor" fill="dodgerblue" strokeWidth={6} opacity={0.7} fillOpacity={0.5} drawOpacity={0.4}>
+    {/* 三者叠加：opacity 0.7 × fillOpacity 0.5 × strokeOpacity 0.4 */}
+    <Path stroke="currentColor" fill="dodgerblue" strokeWidth={6} opacity={0.7} fillOpacity={0.5} strokeOpacity={0.4}>
       <Step kind="move" to={[80, 130]} />
       <Step kind="line" to={[280, 130]} />
       <Step kind="line" to={[280, 190]} />

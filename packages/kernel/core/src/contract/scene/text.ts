@@ -1,6 +1,10 @@
-import type { IRAnimationTrack } from '../../schemas';
-import type { IRFont, IRGraphicStyle, IRTextRun } from '../../schemas';
-import type { IRJsonObject } from '../../schemas';
+import type {
+  IRAnimationTrack,
+  IRFont,
+  IRGraphicStyle,
+  IRJsonObject,
+  IRTextRun,
+} from '../../schemas';
 
 type SceneFontWeight = NonNullable<IRFont['weight']> | (string & {});
 
@@ -10,32 +14,32 @@ export type TextLine = {
   text: string;
   /**
    * 行级字号覆盖（user units）；缺省走块级 TextPrim.fontSize
-   * @default `TextPrim.fontSize`
+   * @default TextPrim.fontSize
    */
-  fontSize?: IRFont['size'];
+  fontSize?: number;
   /**
    * 行级字体族覆盖（CSS font-family）；缺省走块级
-   * @default `TextPrim.fontFamily`
+   * @default TextPrim.fontFamily
    */
   fontFamily?: IRFont['family'];
   /**
    * 行级字重覆盖（CSS font-weight）；缺省走块级
-   * @default `TextPrim.fontWeight`
+   * @default TextPrim.fontWeight
    */
   fontWeight?: SceneFontWeight;
   /**
    * 行级字形覆盖；缺省走块级
-   * @default `TextPrim.fontStyle`
+   * @default TextPrim.fontStyle
    */
   fontStyle?: IRFont['style'];
   /**
    * 行级文字颜色覆盖；缺省走块级 TextPrim.fill
-   * @default `TextPrim.fill`
+   * @default TextPrim.fill
    */
   fill?: IRTextRun['fill'];
   /**
    * 行级透明度 0..1 覆盖；缺省走块级
-   * @default `TextPrim.opacity`
+   * @default TextPrim.opacity
    */
   opacity?: IRTextRun['opacity'];
 };
@@ -58,7 +62,7 @@ export type TextPrim = {
   y: number;
   /** 至少 1 行；单行节点也用 `[{ text: 'Hello' }]` */
   lines: Array<TextLine>;
-  fontSize: NonNullable<IRFont['size']>;
+  fontSize: number;
   /**
    * 块级字体族。
    * @default 'sans-serif'

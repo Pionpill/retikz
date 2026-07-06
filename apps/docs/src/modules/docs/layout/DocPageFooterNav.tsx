@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { usePageNavigation } from './use-page-navigation';
+import { usePageNavigation } from './usePageNavigation';
 
 const cardClass =
   'flex min-w-0 max-w-[48%] items-center gap-2 rounded-lg bg-muted hover:bg-muted/80 duration-200 transition-colors p-1 px-2 transition-colors hover:bg-accent hover:text-accent-foreground';

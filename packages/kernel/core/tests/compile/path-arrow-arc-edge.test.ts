@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -15,7 +15,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
  */
 describe('arrow + arc 末端：编译不挂', () => {
   it('arc 单段 + arrow="->" 不抛错（端点 shrink 走 fallback）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -39,7 +39,7 @@ describe('arrow + arc 末端：编译不挂', () => {
 
   it('arc 单段 + open shape arrow（hollow）：编译完成，arc 命令保留', () => {
     // hollow shape 在 line/cubic 末端时会 shrink 端点；arc 末端这一边界不 shrink 也不抛错
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -62,7 +62,7 @@ describe('arrow + arc 末端：编译不挂', () => {
 
 describe('cycle + close 在 commands 数组中', () => {
   it('cycle 段后再 line 不会触发回放（close 后由下个 move 重新起 sub-path）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

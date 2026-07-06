@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
 import { PlotFieldType } from '@retikz/plot';
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
@@ -48,7 +48,7 @@ const Demo: FC = () => (
     <PointMark
       x="xDraw"
       y="y"
-      drawOpacity="alpha"
+      strokeOpacity="alpha"
       size={15}
       fill="#f97316"
       stroke="#7c2d12"

@@ -5,8 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import i18n from '@/i18n';
-import { ComponentPreview } from '@/modules/docs/components/component-preview/ComponentPreview';
-import { DemoLocationContext } from '@/modules/docs/components/component-preview/demo-location-context';
+import { ComponentPreview, DemoLocationContext } from '@/modules/docs/components';
 
 /**
  * 切页失步误报回归：旧 MDX 内容在过渡窗口里仍挂载，而实时路由已指向新页。

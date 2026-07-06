@@ -167,7 +167,7 @@ describe('lowerGuide (ADR-04)', () => {
     );
     const title = nodeByText(axisLayer as IRScope, 'x');
 
-    expect(title.align).toBe('right');
+    expect(title.align).toBe('end');
     expect((title.position as [number, number])[0]).toBe(434);
     expect((title.position as [number, number])[1]).toBe(298.5);
   });
@@ -368,7 +368,7 @@ describe('lowerGuide (ADR-04)', () => {
     expect(majorGrid.children).toHaveLength(4);
     expect(minorGrid.children).toHaveLength(2);
     expect(minorGrid.stroke).toBe('#e2e8f0');
-    expect(minorGrid.drawOpacity).toBe(0.08);
+    expect(minorGrid.strokeOpacity).toBe(0.08);
   });
 
   it('axis_grid_band_position_offsets_grid_line_inside_band', () => {
@@ -499,7 +499,7 @@ describe('lowerGuide (ADR-04)', () => {
     expect((axisLayer as IRScope).pathDefault?.stroke).toBe('currentColor');
     expect((axisLayer as IRScope).nodeDefault?.font?.size).toBe(11);
     expect((axisLayer as IRScope).nodeDefault?.stroke).toBe('none');
-    expect(((gridLayer as IRScope).children[0] as IRPath).drawOpacity).toBe(0.15);
+    expect(((gridLayer as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
   });
 
   it('axis_text_nodes_inherit_no_stroke_or_fill_defaults', () => {
@@ -1012,8 +1012,8 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
     );
     // children = [y 网格层, mark 层, x 轴层, y 轴层]
     expect(outer.children).toHaveLength(4);
-    // 第一个是网格层（带 drawOpacity）
-    expect(((outer.children[0] as IRScope).children[0] as IRPath).drawOpacity).toBe(0.15);
+    // 第一个是网格层（带 strokeOpacity）
+    expect(((outer.children[0] as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
     // 最后一个是轴层（纯文字 nodeDefault）
     expect((outer.children[3] as IRScope).nodeDefault?.stroke).toBe('none');
   });

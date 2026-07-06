@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { fallbackMeasurer } from '../../src/compile/text-metrics';
+import { fallbackMeasurer } from '../../src/compile/text';
 
 describe('fallbackMeasurer 边界', () => {
   it('size=0 → 返回 (0, 0)（与 text="" 退化一致）', () => {

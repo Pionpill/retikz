@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -51,7 +51,7 @@ afterEach(() => {
 });
 
 /** 带可命中图元 id 的最小 IR */
-const idIr: IR = {
+const idIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [

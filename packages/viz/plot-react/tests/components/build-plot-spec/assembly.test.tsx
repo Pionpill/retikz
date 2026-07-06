@@ -133,7 +133,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
         stroke="#0f172a"
         strokeWidth={1.5}
         fillOpacity={0.7}
-        drawOpacity={0.9}
+        strokeOpacity={0.9}
         opacity={0.8}
         rotate={45}
         padding={2}
@@ -148,7 +148,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       stroke: { kind: 'constant', value: '#0f172a' },
       strokeWidth: { kind: 'constant', value: 1.5 },
       fillOpacity: { kind: 'constant', value: 0.7 },
-      drawOpacity: { kind: 'constant', value: 0.9 },
+      strokeOpacity: { kind: 'constant', value: 0.9 },
       opacity: { kind: 'constant', value: 0.8 },
       rotate: { kind: 'constant', value: 45 },
       padding: { kind: 'constant', value: 2 },

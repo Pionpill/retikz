@@ -1,4 +1,4 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { RenderOptions } from '@retikz/render/canvas';
 
 import { renderToCanvas } from '@retikz/render/canvas';
@@ -34,7 +34,7 @@ import { toScene } from './to-scene';
  */
 export type Figure = {
   readonly [FIGURE_BRAND]: true;
-  readonly ir: IR;
+  readonly ir: IRScene;
   mount: (container: Element, options?: MountOptions) => VanillaView;
   mountCanvas: (container: Element, options?: MountCanvasOptions) => CanvasView;
   toSvgString: (options?: RenderToStringOptions) => string;
@@ -79,7 +79,7 @@ export const createFigure = (config: FigureConfig, children: Array<Child>): Figu
 
   const fig: Figure = {
     [FIGURE_BRAND]: true,
-    get ir(): IR {
+    get ir(): IRScene {
       // 任一根样式字段携带指令 → 把 children 包进一层合成根 <Scope>，等价用户手写一层根 scope（全缺省时不包）
       const rootStyle = pickRootStyle(config);
       const rootChildren: Array<Child> =

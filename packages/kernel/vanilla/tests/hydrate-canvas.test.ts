@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -223,7 +223,7 @@ afterEach(() => {
 });
 
 /** 含一个填满整个 Scene 的矩形 Node（id="box"）的 IR */
-const boxIr: IR = {
+const boxIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [
@@ -264,7 +264,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
   });
 
   it('hydrate-context：canvas handler 收 (event, context)——element=null、renderer=canvas，id/meta/geometry 仍对', () => {
-    const metaBoxIr: IR = {
+    const metaBoxIr: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -393,7 +393,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     const rafSpy = vi.fn(() => 1);
     vi.stubGlobal('requestAnimationFrame', rafSpy);
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -446,7 +446,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     expect(rafSpy).not.toHaveBeenCalled(); // 旧图无 onEvent track → 点击不起时钟
 
     // update 换入同 id 但带 {onEvent:click} 动画 track 的 scene
-    const animatedIr: IR = {
+    const animatedIr: IRScene = {
       version: 1,
       type: 'scene',
       children: [

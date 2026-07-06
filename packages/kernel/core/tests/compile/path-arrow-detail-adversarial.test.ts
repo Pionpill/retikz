@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { MarkerFill, MarkerPrimitive, PathPrim, ResolvedArrowEndSpec, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { ArrowDetailSchema } from '../../src/schemas';
@@ -57,7 +57,7 @@ describe('adv 1: 字段名 = arrowDetail（旧字段 arrowShape 不偷偷生效�
           ],
         },
       ],
-    } as unknown as IR;
+    } as unknown as IRScene;
     const path = findPathPrim(compileToScene(ir).primitives);
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
@@ -65,7 +65,7 @@ describe('adv 1: 字段名 = arrowDetail（旧字段 arrowShape 不偷偷生效�
 
 describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
   it("顶层 shape='stealth' + start.color='red' → start.shape 仍 'stealth'（顶层继承）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -89,7 +89,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
   });
 
   it("顶层 scale=2 + start.shape='diamond' → start.scale 进 markerWidth（继承非 shape 字段）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -111,7 +111,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
   });
 
   it('end 完全空对象 + 顶层全填 → end 拿到全部顶层字段（不丢失）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -133,7 +133,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
   });
 
   it('end.shape 显式 override 顶层 shape（不被吞）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -155,7 +155,7 @@ describe('adv 2: merge 语义 = 逐字段（不是"完全替换"）', () => {
 
 describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth / markerHeight）', () => {
   it('length=10 scale=1.5 → markerWidth = 10 × 1.5 = 15（compile 乘，scale/length 不再挂 spec）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -174,7 +174,7 @@ describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth 
   });
 
   it('width=8 scale=2 → markerHeight = 8 × 2 = 16', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -197,7 +197,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
   it.each(['open', 'openStealth', 'openDiamond', 'openCircle'] as const)(
     "空心 %s + fill='red' → fill 不进 marker（fill 被丢）",
     shape => {
-      const ir: IR = {
+      const ir: IRScene = {
         version: 1,
         type: 'scene',
         children: [
@@ -219,7 +219,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
   );
 
   it.each(['normal', 'stealth', 'diamond', 'circle'] as const)("实心 %s + fill='red' → fill 保留进 marker", shape => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -238,7 +238,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
   });
 
   it("空心 shape + end.fill='red'（end 子对象上写）也被丢", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -258,7 +258,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
   });
 
   it('起末异形：start 实心 + end 空心，各端 fill 行为独立', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -286,7 +286,7 @@ describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/�
 
 describe('adv 5: 起末异形产 2 不同 marker spec', () => {
   it("start.shape='normal' / end.shape='stealth' → 2 个 spec shape 不同", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -305,7 +305,7 @@ describe('adv 5: 起末异形产 2 不同 marker spec', () => {
   });
 
   it("start.color='red' / end.color='blue' （同 shape）→ 2 个 spec marker 颜色不同", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -361,7 +361,7 @@ describe('adv 6: schema 边界（NaN / Infinity / 字符串数字 / boolean）',
 
 describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到另一端）', () => {
   it("arrow='->' + arrowDetail.start={...} → start spec 被丢（方向不含 start）", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -382,7 +382,7 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
   });
 
   it("arrow='none' + arrowDetail={全配置} → 两端都不挂", () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -402,7 +402,7 @@ describe('adv 7: arrowDetail 与 arrow direction 交互（单端配置不漏到�
   });
 
   it('arrow 缺省（undefined）+ arrowDetail={...} → 两端都不挂（arrow 主导）', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

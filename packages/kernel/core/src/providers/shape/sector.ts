@@ -12,22 +12,38 @@ import { contourToPathCommands, contourToPathPrimitive } from './outline';
 import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
 /**
- * sector shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；内外半径 + 起止角 + 可选倒角半径。
- *   innerRadius=0 退化为实心扇片（pie slice）；outerRadius 必须 > innerRadius；
- *   cornerRadius 给四个接缝（环楔的 4 个 line-arc / pie 的 apex line-line + 2 line-arc）逐角夹紧倒角。
+ * sector 参数 schema。
+ * @description innerRadius=0 表示实心扇片；cornerRadius 对边界接缝倒角。
  */
-type SectorParams = {
-  innerRadius: number;
-  outerRadius: number;
-  startAngle: number;
-  endAngle: number;
-  /**
-   * 环楔接缝倒角半径。
-   * @default 0
-   */
-  cornerRadius?: number;
-};
+const sectorParamsSchema = z
+  .strictObject({
+    innerRadius: z
+      .number()
+      .nonnegative()
+      .describe('Inner radius (user units); 0 = solid pie slice.'),
+    outerRadius: z
+      .number()
+      .positive()
+      .describe('Outer radius (user units); must be > innerRadius.'),
+    startAngle: z
+      .number()
+      .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
+    endAngle: z
+      .number()
+      .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
+    cornerRadius: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+      ),
+  })
+  .refine(p => p.outerRadius > p.innerRadius, {
+    message: 'outerRadius must be greater than innerRadius',
+  });
+
+type SectorParams = z.infer<typeof sectorParamsSchema>;
 
 /** sector 局部 AABB 系点（圆心为原点偏移后）→ 世界系（含 rect 旋转 / 平移） */
 const toWorld = (rect: Rect, geo: SectorGeometry, localFromApex: Position): Position => {
@@ -37,12 +53,8 @@ const toWorld = (rect: Rect, geo: SectorGeometry, localFromApex: Position): Posi
 };
 
 /**
- * 构造 sector 闭合轮廓的有序段序列（line + arc），段序与现状 emit 完全一致
- * @description 环楔（innerRadius>0）4 段闭环：radial Line(inner-start→outer-start) → outer Arc(start→end, CW)
- *   → radial Line(outer-end→inner-end) → inner Arc(end→start, CCW)。pie（innerRadius=0）3 段闭环：
- *   radial Line(apex→outer-start) → outer Arc(start→end, CW) → radial Line(outer-end→apex)，apex 处为 line-line 接缝。
- *   Arc 圆心 = apex 世界坐标、半径 = inner/outer radius、起止角与现状 emit 同（度，CW 即 counterClockwise=false）。
- *   emit / boundaryPoint 共用此真源；emit 收轴对齐 rect、boundaryPoint 收带 rotate 的 rect，rect 不同自然投不同世界系。
+ * 构造 sector 闭合轮廓。
+ * @description 环楔包含内外弧，实心扇片退化为圆心到外弧的闭合区域；emit / boundaryPoint 共用此段序。
  */
 const sectorSegments = (rect: Rect, geo: SectorGeometry, params: SectorParams): Array<ContourSegment> => {
   const { innerRadius, outerRadius } = params;
@@ -100,55 +112,27 @@ const createSectorContour = (
 };
 
 /**
- * sector 注册项：环楔（内外半径 + 起止角围成的可填充 2D 区域）
- * @description 四何函数共用 `sectorGeometry`（单一真源）：circumscribe 返回含圆心 + 内外弧的精确 AABB 半轴
- *   （含弧跨过 90°·k 轴向的 outerRadius 极值点），node position = AABB 中心；anchor 含 apex（圆心）/ centroid /
- *   inner-arc-mid / outer-arc-mid / start-edge-mid / end-edge-mid + 角度边界点；emit 出外弧 + 两径向边 + 内弧
- *   闭合 path（innerRadius=0 时径向边交于圆心、无内弧）。scaleParams 只缩半径、不缩角度。
+ * sector 注册项：可填充的环楔 / 扇片。
+ * @description 几何由内外半径和起止角驱动；提供圆心、质心、弧中点和边中点 anchor。
+ *   scaleParams 只缩半径和倒角，不缩角度。
  */
-export const sector = defineShape({
+export const sector = defineShape<SectorParams>({
   name: 'sector',
-  paramsSchema: z
-    .strictObject({
-      innerRadius: z
-        .number()
-        .nonnegative()
-        .describe('Inner radius (user units); 0 = solid pie slice.'),
-      outerRadius: z
-        .number()
-        .positive()
-        .describe('Outer radius (user units); must be > innerRadius.'),
-      startAngle: z
-        .number()
-        .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
-      endAngle: z
-        .number()
-        .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
-      cornerRadius: z
-        .number()
-        .nonnegative()
-        .optional()
-        .describe(
-          'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-        ),
-    })
-    .refine(p => p.outerRadius > p.innerRadius, {
-      message: 'outerRadius must be greater than innerRadius',
-    }),
-  circumscribe: (_hw, _hh, params: SectorParams) => getSectorGeometry(params).aabbHalfAxes,
+  paramsSchema: sectorParamsSchema,
+  circumscribe: (_hw, _hh, params) => getSectorGeometry(params).aabbHalfAxes,
   // position = 圆心 apex；AABB 中心相对 apex 的偏移 = −apexOffset（apexOffset 是 apex 相对 AABB 中心）
-  circumscribeOffset: (params: SectorParams): Position => {
+  circumscribeOffset: (params): Position => {
     const { apexOffset } = getSectorGeometry(params);
     return [-apexOffset[0], -apexOffset[1]];
   },
-  boundaryPoint: (rect: Rect, toward: Position, params: SectorParams): Position => {
+  boundaryPoint: (rect: Rect, toward: Position, params): Position => {
     const { geo, segments, fillets } = createSectorContour(rect, params);
     // rayOrigin 必须落在填充区域内；环形扇区的质心可能落入内孔。
     const originWorld = localToWorld(rect, geo.boundaryOriginOffset);
     const hit = boundaryFromContour(segments, params.cornerRadius, originWorld, toward, fillets);
     return hit ?? originWorld;
   },
-  anchor: (rect: Rect, name: ShapeAnchorName, params: SectorParams): Position | undefined => {
+  anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
     const geo = getSectorGeometry(params);
     const { innerRadius, outerRadius } = params;
     const { start, end, mid } = geo.range;
@@ -170,7 +154,7 @@ export const sector = defineShape({
         return undefined;
     }
   },
-  *emit(rect: Rect, style, round, params: SectorParams): Iterable<ScenePrimitive> {
+  *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     // 轮廓段（emit 收轴对齐 rect，rotate 由外层 group 施加）→ rounded-contour 命令 → path
     const { segments, fillets } = createSectorContour(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius, fillets), round);
@@ -179,7 +163,7 @@ export const sector = defineShape({
     yield path;
   },
   // 半径 / cornerRadius 是长度，随几何均值因子缩；角度是方向，不缩。
-  scaleParams: (params: SectorParams, sx: number, sy: number): SectorParams => {
+  scaleParams: (params, sx: number, sy: number) => {
     const factor = Math.sqrt(sx * sy);
     return {
       ...params,

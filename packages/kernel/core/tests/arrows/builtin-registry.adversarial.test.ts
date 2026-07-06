@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ArrowDefinition } from '../../src/contract';
-import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type {
+  ArrowDefinition,
+  PathCommand,
+  PathPrim,
+  ScenePrimitive,
+} from '../../src/contract';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas';
@@ -23,7 +27,7 @@ const horizontalPathIR = (
   arrow: '->' | '<-' | '<->',
   detail: Record<string, unknown> = {},
   to: [number, number] = [100, 0],
-): IR => ({
+): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
@@ -340,7 +344,7 @@ describe('ADV — 极端几何 / 功能交叉', () => {
   });
 
   it('arrow_in_transformed_scope：arrow 在 scale scope 内 → 端点 finite', () => {
-    const ir: IR = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [

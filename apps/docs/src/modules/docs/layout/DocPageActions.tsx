@@ -1,4 +1,4 @@
-﻿import type { FC, ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
@@ -17,10 +17,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { buildAiUrl, buildDocPageLinks } from '@/modules/docs/lib/doc-links';
+import { buildAiUrl, buildDocPageLinks } from '@/modules/docs/lib';
 
-import { useDocLocation } from './doc-location';
-import { usePageNavigation } from './use-page-navigation';
+import { useDocLocation } from './useDocLocation';
+import { usePageNavigation } from './usePageNavigation';
 
 export type DocPageActionsProps = {
   /** 当前页面 mdx 源码（用于"复制 markdown"） */

@@ -8,7 +8,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="grammar" position={[-210, -74]} stroke="none" align="center" lineHeight={16}>
+    <Node id="grammar" position={[-210, -74]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 16, weight: 'bold' }}>图形语法</Text>
       <Text fill="gray" font={{ size: 12 }}>
         marks · encoding
@@ -17,7 +17,7 @@ const Demo: FC = () => (
         scales · coordinate
       </Text>
     </Node>
-    <Node id="data" position={[0, -76]} stroke="none" align="center" lineHeight={16}>
+    <Node id="data" position={[0, -76]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 16, weight: 'bold' }}>数据</Text>
       <Text fill="gray" font={{ size: 12 }}>
         rows + model
@@ -26,7 +26,7 @@ const Demo: FC = () => (
         外部数据集
       </Text>
     </Node>
-    <Node id="logic" position={[210, -74]} stroke="none" align="center" lineHeight={16}>
+    <Node id="logic" position={[210, -74]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 16, weight: 'bold' }}>@retikz/plot</Text>
       <Text fill="gray" font={{ size: 12 }}>
         schema · builder
@@ -36,27 +36,27 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Node id="plotIr" position={[-120, 16]} stroke="none" align="center" lineHeight={16}>
+    <Node id="plotIr" position={[-120, 16]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 16, weight: 'bold' }}>Plot IR</Text>
       <Text fill="gray" font={{ size: 12 }}>
         可序列化图表语义
       </Text>
     </Node>
-    <Node id="channels" position={[0, 22]} stroke="none" align="center" lineHeight={16}>
+    <Node id="channels" position={[0, 22]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 16, weight: 'bold' }}>数据通道</Text>
       <Text fill="gray" font={{ size: 12 }}>
         field / value → x / y
       </Text>
     </Node>
 
-    <Node id="lower" position={[0, 102]} stroke="none" align="center" lineHeight={16}>
+    <Node id="lower" position={[0, 102]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 16, weight: 'bold' }}>lowerPlots</Text>
       <Text fill="gray" font={{ size: 12 }}>
         spec + rows
       </Text>
     </Node>
 
-    <Node id="core" position={[0, 174]} stroke="none" align="center" lineHeight={16}>
+    <Node id="core" position={[0, 174]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 16, weight: 'bold' }}>@retikz/core</Text>
       <Text fill="gray" font={{ size: 12 }}>
         Scope · Node · Path · Scene

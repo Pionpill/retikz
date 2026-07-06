@@ -3,14 +3,15 @@ import { describe, expect, it } from 'vitest';
 import type { NodeLayout } from '../../src/compile/node';
 import type { IRTransform } from '../../src/schemas';
 
-import { NameStack } from '../../src/compile/name-stack';
+import { NamespaceStack } from '../../src/compile/namespace';
 import { boxInsets } from '../../src/compile/node';
-import { lowerScopeTransforms, projectLayoutToGlobal } from '../../src/compile/scope';
+import { lowerScopeTransforms } from '../../src/compile/scope';
+import { projectLayoutToGlobal } from '../../src/compile/transform';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
-/** 把 id → 中心 entries 灌进新建的 NameStack，便于 lower 单测验证 referent lookup */
-const makeStack = (entries: Array<[string, [number, number]]>): NameStack => {
-  const stack = new NameStack();
+/** 把 id → 中心 entries 灌进新建的 namespaceStack，便于 lower 单测验证 referent lookup */
+const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack => {
+  const stack = new NamespaceStack();
   for (const [id, [x, y]] of entries) {
     const layout: NodeLayout = {
       id,
@@ -48,14 +49,20 @@ const layoutForProjection = (): NodeLayout => ({
   shapes: BUILTIN_SHAPES,
 });
 
+const lower = (
+  transforms: ReadonlyArray<IRTransform>,
+  namespaceStack: NamespaceStack = new NamespaceStack(),
+  options: Omit<Parameters<typeof lowerScopeTransforms>[1], 'namespaceStack'> = {},
+) => lowerScopeTransforms(transforms, { namespaceStack, ...options });
+
 describe('lowerScopeTransforms 5 translate 变体', () => {
   it('translate 直接透传', () => {
-    const out = lowerScopeTransforms([{ kind: 'translate', x: 5, y: 3 }], new NameStack());
+    const out = lower([{ kind: 'translate', x: 5, y: 3 }]);
     expect(out).toEqual([{ kind: 'translate', x: 5, y: 3 }]);
   });
 
   it('polar-translate 不带 origin lower 成笛卡尔', () => {
-    const out = lowerScopeTransforms([{ kind: 'polar-translate', angle: 0, radius: 50 }], new NameStack());
+    const out = lower([{ kind: 'polar-translate', angle: 0, radius: 50 }]);
     expect(out).not.toBeNull();
     expect(out![0]).toMatchObject({ kind: 'translate' });
     const t = out![0] as { x: number; y: number };
@@ -65,7 +72,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
 
   it('polar-translate 带 origin=string id', () => {
     const idx = makeStack([['A', [10, 0]]]);
-    const out = lowerScopeTransforms([{ kind: 'polar-translate', origin: 'A', angle: 0, radius: 30 }], idx);
+    const out = lower([{ kind: 'polar-translate', origin: 'A', angle: 0, radius: 30 }], idx);
     expect(out).not.toBeNull();
     const t = out![0] as { x: number; y: number };
     expect(t.x).toBeCloseTo(40, 6);
@@ -73,9 +80,8 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
   });
 
   it('polar-translate 带 origin=笛卡尔', () => {
-    const out = lowerScopeTransforms(
+    const out = lower(
       [{ kind: 'polar-translate', origin: [10, 5], angle: 90, radius: 20 }],
-      new NameStack(),
     );
     expect(out).not.toBeNull();
     const t = out![0] as { x: number; y: number };
@@ -84,40 +90,40 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
   });
 
   it('polar-translate radius=0 等价 translate(0, 0)', () => {
-    const out = lowerScopeTransforms([{ kind: 'polar-translate', angle: 45, radius: 0 }], new NameStack());
+    const out = lower([{ kind: 'polar-translate', angle: 45, radius: 0 }]);
     const t = out![0] as { x: number; y: number };
     expect(t.x).toBeCloseTo(0, 6);
     expect(t.y).toBeCloseTo(0, 6);
   });
 
   it('polar-translate angle=360 与 angle=0 数值结果一致', () => {
-    const a = lowerScopeTransforms([{ kind: 'polar-translate', angle: 360, radius: 50 }], new NameStack());
-    const b = lowerScopeTransforms([{ kind: 'polar-translate', angle: 0, radius: 50 }], new NameStack());
+    const a = lower([{ kind: 'polar-translate', angle: 360, radius: 50 }]);
+    const b = lower([{ kind: 'polar-translate', angle: 0, radius: 50 }]);
     expect((a![0] as { x: number; y: number }).x).toBeCloseTo((b![0] as { x: number; y: number }).x, 6);
     expect((a![0] as { x: number; y: number }).y).toBeCloseTo((b![0] as { x: number; y: number }).y, 6);
   });
 
   it('at-translate 含 distance lower 成笛卡尔', () => {
     const idx = makeStack([['A', [0, 0]]]);
-    const out = lowerScopeTransforms([{ kind: 'at-translate', direction: 'right', of: 'A', distance: 20 }], idx);
+    const out = lower([{ kind: 'at-translate', direction: 'right', of: 'A', distance: 20 }], idx);
     expect(out![0]).toEqual({ kind: 'translate', x: 20, y: 0 });
   });
 
   it('at-translate 缺 distance 走 nodeDistance', () => {
     const idx = makeStack([['A', [0, 0]]]);
-    const out = lowerScopeTransforms([{ kind: 'at-translate', direction: 'top', of: 'A' }], idx, 15);
+    const out = lower([{ kind: 'at-translate', direction: 'top', of: 'A' }], idx, { nodeDistance: 15 });
     expect(out![0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
 
   it('offset-translate of=string + offset', () => {
     const idx = makeStack([['A', [0, 0]]]);
-    const out = lowerScopeTransforms([{ kind: 'offset-translate', of: 'A', offset: [10, 5] }], idx);
+    const out = lower([{ kind: 'offset-translate', of: 'A', offset: [10, 5] }], idx);
     expect(out![0]).toEqual({ kind: 'translate', x: 10, y: 5 });
   });
 
   it('offset-translate of=string 缺 offset', () => {
     const idx = makeStack([['A', [100, 100]]]);
-    const out = lowerScopeTransforms([{ kind: 'offset-translate', of: 'A' }], idx);
+    const out = lower([{ kind: 'offset-translate', of: 'A' }], idx);
     expect(out![0]).toEqual({ kind: 'translate', x: 100, y: 100 });
   });
 
@@ -126,11 +132,11 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
       ['A', [0, 0]],
       ['B', [100, 40]],
     ]);
-    const out = lowerScopeTransforms(
+    const out = lower(
       [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }],
       idx,
-      undefined,
-      between => {
+      {
+        resolveBetweenGlobal: between => {
         const [a, b] = between.between;
         const aLayout = 'id' in a ? idx.lookup(a.id) : null;
         const bLayout = 'id' in b ? idx.lookup(b.id) : null;
@@ -140,6 +146,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
           aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
         ];
       },
+      },
     );
     expect(out![0]).toEqual({ kind: 'translate', x: 25, y: 10 });
   });
@@ -147,17 +154,17 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
 
 describe('lowerScopeTransforms 失败情形', () => {
   it('at-translate of 未解析返回 null', () => {
-    const out = lowerScopeTransforms([{ kind: 'at-translate', direction: 'right', of: 'B' }], new NameStack(), 10);
+    const out = lower([{ kind: 'at-translate', direction: 'right', of: 'B' }], undefined, { nodeDistance: 10 });
     expect(out).toBeNull();
   });
 
   it('offset-translate of=string 未解析返回 null', () => {
-    const out = lowerScopeTransforms([{ kind: 'offset-translate', of: 'B', offset: [5, 0] }], new NameStack());
+    const out = lower([{ kind: 'offset-translate', of: 'B', offset: [5, 0] }]);
     expect(out).toBeNull();
   });
 
   it('polar-translate origin=string 未解析返回 null', () => {
-    const out = lowerScopeTransforms([{ kind: 'polar-translate', origin: 'B', angle: 0, radius: 10 }], new NameStack());
+    const out = lower([{ kind: 'polar-translate', origin: 'B', angle: 0, radius: 10 }]);
     expect(out).toBeNull();
   });
 
@@ -166,18 +173,18 @@ describe('lowerScopeTransforms 失败情形', () => {
       ['A', [0, 0]],
       ['B', [100, 40]],
     ]);
-    const out = lowerScopeTransforms([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }], idx);
+    const out = lower([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }], idx);
     expect(out).toBeNull();
   });
 
   it('链中混合：合法 translate + 失败 at-translate → 整体 null', () => {
-    const out = lowerScopeTransforms(
+    const out = lower(
       [
         { kind: 'translate', x: 5, y: 0 },
         { kind: 'at-translate', direction: 'right', of: 'missing' },
       ],
-      new NameStack(),
-      10,
+      undefined,
+      { nodeDistance: 10 },
     );
     expect(out).toBeNull();
   });
@@ -185,22 +192,22 @@ describe('lowerScopeTransforms 失败情形', () => {
 
 describe('lowerScopeTransforms rotate / scale 透传', () => {
   it('rotate 含 cx/cy', () => {
-    const out = lowerScopeTransforms([{ kind: 'rotate', degrees: 45, cx: 1, cy: 2 }], new NameStack());
+    const out = lower([{ kind: 'rotate', degrees: 45, cx: 1, cy: 2 }]);
     expect(out![0]).toEqual({ kind: 'rotate', degrees: 45, cx: 1, cy: 2 });
   });
 
   it('rotate 缺 cx/cy 不带它们', () => {
-    const out = lowerScopeTransforms([{ kind: 'rotate', degrees: 30 }], new NameStack());
+    const out = lower([{ kind: 'rotate', degrees: 30 }]);
     expect(out![0]).toEqual({ kind: 'rotate', degrees: 30 });
   });
 
   it('scale 含 y', () => {
-    const out = lowerScopeTransforms([{ kind: 'scale', x: 2, y: 3 }], new NameStack());
+    const out = lower([{ kind: 'scale', x: 2, y: 3 }]);
     expect(out![0]).toEqual({ kind: 'scale', x: 2, y: 3 });
   });
 
   it('scale 缺 y 不带它', () => {
-    const out = lowerScopeTransforms([{ kind: 'scale', x: 2 }], new NameStack());
+    const out = lower([{ kind: 'scale', x: 2 }]);
     expect(out![0]).toEqual({ kind: 'scale', x: 2 });
   });
 
@@ -235,7 +242,7 @@ describe('lowerScopeTransforms 链复合', () => {
       { kind: 'rotate', degrees: 30 },
       { kind: 'scale', x: 2 },
     ];
-    const out = lowerScopeTransforms(transforms, idx, undefined, between => {
+    const out = lower(transforms, idx, { resolveBetweenGlobal: between => {
       const [a, b] = between.between;
       const aLayout = 'id' in a ? idx.lookup(a.id) : null;
       const bLayout = 'id' in b ? idx.lookup(b.id) : null;
@@ -244,7 +251,7 @@ describe('lowerScopeTransforms 链复合', () => {
         aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
         aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
       ];
-    });
+    } });
     expect(out).not.toBeNull();
     expect(out!).toHaveLength(7);
     expect(out![0]).toEqual({ kind: 'translate', x: 5, y: 5 });

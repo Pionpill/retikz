@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IR, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import type { RectPrim } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -26,7 +26,7 @@ const firstLineTo = (prim: ScenePrimitive | undefined): [number, number] | undef
   return undefined;
 };
 
-const scene = (children: IR['children']): IR => ({
+const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,

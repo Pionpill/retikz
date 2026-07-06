@@ -1,12 +1,12 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning } from '../../src/compile/constant';
-import type { LowerTex } from '../../src/compile/lower-tex';
+import type { LowerTex } from '../../src/compile/text';
+import type { CompileWarning } from '../../src/compile/warning';
 import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IR } from '../../src/schemas';
+import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { CompileWarningCode } from '../../src/compile/constant';
+import { CompileWarningCode } from '../../src/compile/constants';
 import { flattenPrims } from '../helpers/flatten';
 
 const lowerTexCalls: Array<{ tex: string; displayMode?: boolean }> = [];
@@ -29,10 +29,10 @@ const fakeLowerTex: LowerTex = (content, style) => {
   };
 };
 
-const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
+const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 const compile = (
-  children: IR['children'],
+  children: IRScene['children'],
   withTex = true,
 ): { primitives: Array<ScenePrimitive>; warnings: Array<CompileWarning>; width: number } => {
   const warnings: Array<CompileWarning> = [];

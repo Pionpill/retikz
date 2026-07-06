@@ -1,10 +1,10 @@
-import type { IR } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
 
 // 已存好的 IR JSON——来自 LLM 生成 / JSON 编辑器 / URL 反序列化 / 数据库存档，不写 JSX children 照样能渲染。
-const ir: IR = {
+const ir: IRScene = {
   version: 1,
   type: 'scene',
   children: [

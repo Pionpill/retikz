@@ -1,4 +1,5 @@
-import type { Layout } from '@retikz/core';
+import type { BoundsRect } from '@retikz/math';
 
-/** 把 Layout 对象格式化为 SVG `viewBox` 属性字符串 */
-export const formatViewBox = (layout: Layout): string => `${layout.x} ${layout.y} ${layout.width} ${layout.height}`;
+/** 把布局边界格式化为 SVG `viewBox` 属性字符串。 */
+export const formatViewBox = (layout: BoundsRect): string =>
+  `${layout.x} ${layout.y} ${layout.width} ${layout.height}`;

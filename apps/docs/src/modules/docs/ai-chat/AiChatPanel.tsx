@@ -1,19 +1,15 @@
-﻿import type { FC, KeyboardEvent as ReactKeyboardEvent } from 'react';
+import type { FC, KeyboardEvent as ReactKeyboardEvent } from 'react';
 
 import { Bot, HelpCircle, History, Plus, Settings, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { MarkdownInline } from '@/modules/docs/components/inline-markdown';
+import { cn } from '@/lib';
+import { MarkdownInline } from '@/modules/docs/components';
 
-import { AiChatConversation } from './parts/AiChatConversation';
-import { AiChatEmpty } from './parts/AiChatEmpty';
-import { AiChatHelpDialog } from './parts/AiChatHelpDialog';
-import { AiChatHistory } from './parts/AiChatHistory';
-import { AiChatSettings } from './parts/AiChatSettings';
-import { useAiChatStore } from './use-ai-chat-store';
+import { AiChatConversation, AiChatEmpty, AiChatHelpDialog, AiChatHistory, AiChatSettings } from './parts';
+import { useAiChatStore } from './useAiChatStore';
 
 /** AI 聊天面板内容。 */
 export const AiChatPanel: FC = () => {

@@ -1,4 +1,4 @@
-import type { IRPathScale, JsonValue } from '@retikz/core';
+﻿import type { IRPathScale, JsonValue } from '@retikz/core';
 
 import { DropShadowSchema, JsonValueSchema, PathScaleSchema } from '@retikz/core';
 import { isFiniteNumber } from '@retikz/math';
@@ -208,12 +208,12 @@ const blendModeValues = new Set([
 ]);
 
 const directPathChannels = {
-  drawOpacity: defineSimplePathChannel<number>(
-    'drawOpacity',
+  strokeOpacity: defineSimplePathChannel<number>(
+    'strokeOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     opacityNumber,
     (path, value) => {
-      path.drawOpacity = value;
+      path.strokeOpacity = value;
     },
   ),
   zIndex: defineSimplePathChannel<number>(

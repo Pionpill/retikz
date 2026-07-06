@@ -182,7 +182,7 @@ describe('plot theme schema and lowering', () => {
         },
       }),
     );
-    const gridPath = pathsOf(root).find(path => path.drawOpacity === 0.4);
+    const gridPath = pathsOf(root).find(path => path.strokeOpacity === 0.4);
     expect(gridPath?.stroke).toBe('#ef4444');
     expect(gridPath?.dashPattern).toEqual([4, 2]);
     expect(gridPath?.dashOffset).toBe(2);
