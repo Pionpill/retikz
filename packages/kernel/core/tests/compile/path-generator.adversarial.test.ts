@@ -388,7 +388,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
   it('no_generators_option：不传 pathGenerators → throw 含 step name', () => {
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'generator', name: 'parabola', params: {} },
+      { type: 'step', kind: 'generator', name: 'missing-generator', params: {} },
     ]);
     let err: Error | undefined;
     try {
@@ -396,16 +396,16 @@ describe('[ADV] 未注册 / 名称边角', () => {
     } catch (e) {
       err = e as Error;
     }
-    expect(err?.message).toMatch(/parabola/);
+    expect(err?.message).toMatch(/missing-generator/);
   });
 
-  it('empty_generators_table：空表 available 显示 (none registered)', () => {
+  it('empty_generators_table：未注册名 available 显示内置 parabola', () => {
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'sin', params: {} },
     ]);
     const err = catchCompile(ir, {});
-    expect(err?.message).toContain("Unknown path generator 'sin'; available: (none registered)");
+    expect(err?.message).toContain("Unknown path generator 'sin'; available: parabola");
   });
 
   it('name_case_mismatch：大小写敏感', () => {
@@ -416,9 +416,9 @@ paramsSchema: z.object({}),
     });
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'generator', name: 'parabola', params: {} },
+      { type: 'step', kind: 'generator', name: 'custom-curve', params: {} },
     ]);
-    expect(() => compileToScene(ir, { pathGenerators: [{ ...gen, name: 'Parabola' }] })).toThrow(/parabola/);
+    expect(() => compileToScene(ir, { pathGenerators: [{ ...gen, name: 'Custom-Curve' }] })).toThrow(/custom-curve/);
   });
 
   it('name_proto_pollution：原型链 key 经 hasOwnProperty 守门 → throw', () => {

@@ -104,8 +104,12 @@ describe('canvas 降级与边界规格', () => {
     const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
       dependencies?: Record<string, string>;
     };
-    // render 仅依赖 core + csstype（纯类型）；不依赖 react / 任何框架
-    expect(packageJson.dependencies).toEqual({ '@retikz/core': 'workspace:*', csstype: 'catalog:' });
+    // render 仅依赖 kernel 底座 + csstype（纯类型）；不依赖 react / 任何框架
+    expect(packageJson.dependencies).toEqual({
+      '@retikz/core': 'workspace:*',
+      '@retikz/math': 'workspace:*',
+      csstype: 'catalog:',
+    });
 
     const readSrc = (dir: string): string =>
       collectFiles(dir)

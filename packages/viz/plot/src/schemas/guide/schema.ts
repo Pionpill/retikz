@@ -67,7 +67,7 @@ const AxisEdgePlacementSchema = z
   .strict()
   .describe('Coordinate-native edge axis placement');
 
-export const AxisGuideValueSchema = z.union([z.string(), z.number().finite()]).describe('JSON-safe axis guide value');
+export const AxisGuideValueSchema = z.union([z.string(), z.number()]).describe('JSON-safe axis guide value');
 
 const AxisOriginPlacementSchema = z
   .object({
@@ -87,8 +87,8 @@ export const AxisPlacementSchema = z
   .describe('Axis placement mode: automatic coordinate default, cardinal plot-area side, coordinate-native edge, or cartesian origin');
 
 const OpacitySchema = z.number().min(0).max(1).describe('Opacity fraction in [0, 1]');
-const NonNegativeFiniteSchema = z.number().finite().nonnegative();
-const NormalizedRatioSchema = z.number().finite().min(0).max(1);
+const NonNegativeFiniteSchema = z.number().nonnegative();
+const NormalizedRatioSchema = z.number().min(0).max(1);
 
 const textBlockHasContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
@@ -128,7 +128,6 @@ export const GuideLineStyleSchema = z
       .describe('Guide line dash pattern lengths in user units'),
     dashOffset: z
       .number()
-      .finite()
       .optional()
       .describe('Guide line dash offset in user units'),
   })
@@ -164,8 +163,8 @@ export const GuideTickIntervalSchema = z
     z
       .object({
         kind: z.literal(GuideTickIntervalKind.Number).describe('Numeric fixed-step tick interval'),
-        step: z.number().finite().positive().describe('Positive numeric step between candidate ticks'),
-        anchor: z.number().finite().optional().describe('Numeric alignment anchor; omit to align from the scale domain lower bound'),
+        step: z.number().positive().describe('Positive numeric step between candidate ticks'),
+        anchor: z.number().optional().describe('Numeric alignment anchor; omit to align from the scale domain lower bound'),
       })
       .strict(),
     z
@@ -179,7 +178,7 @@ export const GuideTickIntervalSchema = z
           .optional()
           .describe('Positive integer number of units between candidate ticks; omit = 1'),
         anchor: z
-          .union([z.string().min(1), z.number().finite()])
+          .union([z.string().min(1), z.number()])
           .optional()
           .describe('Epoch millisecond or ISO-like alignment anchor; omit to align from the scale domain lower bound'),
       })
@@ -316,7 +315,7 @@ const AxisTickShapeMarkBase = {
   height: NonNegativeFiniteSchema.optional().describe('Shape tick height; overrides size for height'),
   offset: NonNegativeFiniteSchema.optional().describe('Shape center offset along the tick normal; omit = half effective size'),
   orientation: z.enum(AxisTickShapeOrientation).optional().describe('Shape tick rotation strategy; omit = fixed'),
-  rotate: z.number().finite().optional().describe('Additional rotation in degrees'),
+  rotate: z.number().optional().describe('Additional rotation in degrees'),
   fill: PaintValueSchema.optional().describe('Shape tick fill paint'),
   stroke: PaintValueSchema.optional().describe('Shape tick stroke paint'),
   strokeWidth: NonNegativeFiniteSchema.optional().describe('Shape tick stroke width'),
@@ -380,7 +379,7 @@ export const AxisTicksSchema = z
 
 export const AxisTickLabelAutoRotateSchema = z
   .object({
-    angles: z.array(z.number().finite()).min(1).optional().describe('Candidate label rotation angles in degrees'),
+    angles: z.array(z.number()).min(1).optional().describe('Candidate label rotation angles in degrees'),
     recoverWhenFailed: z.boolean().optional().describe('Whether to fall back to the original angle when all candidates overlap; omit = true'),
   })
   .strict()
@@ -460,8 +459,8 @@ const AxisTitleAnchorSchema = z
 
 const AxisTitleShiftSchema = z
   .object({
-    along: z.number().finite().optional().describe('Additional shift along the axis positive direction, in user units'),
-    normal: z.number().finite().optional().describe('Additional shift along the outward axis normal, in user units'),
+    along: z.number().optional().describe('Additional shift along the axis positive direction, in user units'),
+    normal: z.number().optional().describe('Additional shift along the outward axis normal, in user units'),
   })
   .strict()
   .superRefine((shift, ctx) => {

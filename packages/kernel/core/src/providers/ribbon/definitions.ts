@@ -11,8 +11,8 @@ export type BuiltinRibbonWidthProfileName = 'bulge';
 const bulge = defineRibbonWidthProfile({
   name: 'bulge',
   paramsSchema: z.strictObject({
-    base: z.number().finite().nonnegative(),
-    peak: z.number().finite().nonnegative(),
+    base: z.number().nonnegative(),
+    peak: z.number().nonnegative(),
   }),
   widthAt: ({ offset, params }) => {
     const t = Math.sin(Math.PI * offset);

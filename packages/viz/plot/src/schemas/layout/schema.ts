@@ -14,7 +14,7 @@ import {
   PlotLayoutMode,
 } from './constants';
 
-const NormalizedRatioSchema = z.number().finite().min(0).max(1);
+const NormalizedRatioSchema = z.number().min(0).max(1);
 
 const textBlockHasContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
@@ -50,8 +50,8 @@ export const BoxPaddingSchema = z
 
 const LayoutShiftSchema = z
   .object({
-    along: z.number().finite().optional().describe('Additional shift along the placement side in user units'),
-    normal: z.number().finite().optional().describe('Additional shift along the placement outward normal in user units'),
+    along: z.number().optional().describe('Additional shift along the placement side in user units'),
+    normal: z.number().optional().describe('Additional shift along the placement outward normal in user units'),
   })
   .strict()
   .superRefine((shift, ctx) => {
@@ -143,7 +143,7 @@ const PlotTextLabelSchema = z
     layer: PlotLayerSchema.optional().describe('Semantic plot layer override applied to this generated plot label scope'),
     placement: LayoutPlacementSchema.optional().describe('Label placement; omit to derive from role'),
     reserveSpace: z.boolean().optional().describe('Whether this label participates in layout reservation'),
-    priority: z.number().finite().optional().describe('Collision priority; higher priority labels are preserved first'),
+    priority: z.number().optional().describe('Collision priority; higher priority labels are preserved first'),
     overflow: z.enum(PlotLabelOverflow).optional().describe('How label overflow is handled'),
     ...GuideTextStyleSchema.shape,
   })
