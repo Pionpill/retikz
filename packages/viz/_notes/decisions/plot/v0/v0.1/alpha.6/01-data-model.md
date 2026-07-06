@@ -1,14 +1,14 @@
-# ADR-01：数据模型类型层——字段类型集补全 + 缺省推断 + encoding 字段引用/类型校验
+﻿# ADR-01：数据模型类型层——字段类型集补全 + 缺省推断 + encoding 字段引用/类型校验
 
 - 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 待办](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.1 Data / §3.2 Dimension / §3.6 Encoding](../../../../../architecture/plot-design.md) · 前身：[alpha.1 ADR-02 DataRef/DataModel](../alpha.1/02-plot-data.md) · 下游：ADR-02（数据模型可移植契约）/ ADR-03（type-driven scale）
 
-> **逻辑字段前提**：本 ADR 把 `data.model` 的字段 `name` 视为**逻辑标识**，encoding 引用逻辑名。「逻辑名 → 物理数据路径」的绑定期映射（`fieldMaps`）与「同 PlotFieldType 不同 JS 表示」的值强制（coercion）由 [ADR-02](./02-data-portability.md) 负责；无 `fieldMaps` 时逻辑名 = 物理路径（恒等），即当前行为。本 ADR 的校验与推断按逻辑名工作。
+> **逻辑字段前提**：本 ADR 把 `data.model` 的字段 `name` 视为**逻辑标识**，encoding 引用逻辑名。「逻辑名 → 物理数据路径」的绑定期映射（`fieldMaps`）与「同 DataFieldType 不同 JS 表示」的值强制（coercion）由 [ADR-02](./02-data-portability.md) 负责；无 `fieldMaps` 时逻辑名 = 物理路径（恒等），即当前行为。本 ADR 的校验与推断按逻辑名工作。
 
 ## 背景
 
-[alpha.1 ADR-02](../alpha.1/02-plot-data.md) 埋下 `data.model`——字段名 + 测量类型（`PlotFieldType`：quantitative / nominal / ordinal / temporal），当时明说「先放全集、零成本，alpha.1 lowering 仅消费 quantitative」。五个 alpha 过去，这层一直**半消费**：
+[alpha.1 ADR-02](../alpha.1/02-plot-data.md) 埋下 `data.model`——字段名 + 测量类型（`DataFieldType`：quantitative / nominal / ordinal / temporal），当时明说「先放全集、零成本，alpha.1 lowering 仅消费 quantitative」。五个 alpha 过去，这层一直**半消费**：
 
 1. **类型没驱动 scale**：现在 scale 类型靠用户**显式声明** + coordinate 按名绑定（`expand.ts` 的 `requireScaleDef`）；`data.model` 的 `type` 字段几乎不影响 lowering。结果是最小 spec 也得手写每个 scale。
 2. **`model` 缺省时无推断**：alpha.1 ADR-02 说「不给则绑定期从外部数据推断」，但**推断逻辑从未实现**——没有 `model` 时字段类型无从得知。
@@ -28,14 +28,14 @@
 **(1) 字段类型集补 `proportion`**（`interval` 不加为 field type，见待决策点）：
 
 ```ts
-export const PlotFieldType = {
+export const DataFieldType = {
   Quantitative: 'quantitative', // 连续可度量数值 → linear
   Nominal: 'nominal',           // 无序分类 → band/point(位置) · ordinal(颜色)
   Ordinal: 'ordinal',           // 有序分类 → 保序离散
   Temporal: 'temporal',         // 日期/时间戳 → time
   Proportion: 'proportion',     // 归一比例 [0,1]（pie value / ternary a/b/c）→ linear domain [0,1]
 } as const;
-export type FieldType = ValueOf<typeof PlotFieldType>;
+export type FieldType = ValueOf<typeof DataFieldType>;
 ```
 
 **(2) 字段分类（strict 校验范围的关键，评审 P1）**：lowering 里的字段引用分三类，**只有「用户源字段」参与 model strict 校验与类型解析**：
@@ -82,7 +82,7 @@ export type FieldType = ValueOf<typeof PlotFieldType>;
 
 ## 不在本 ADR 范围
 
-- **数据模型可移植契约**：逻辑名→物理路径的 `fieldMaps` 映射、按 PlotFieldType 的值强制（coercion）、换源场景 → ADR-02。
+- **数据模型可移植契约**：逻辑名→物理路径的 `fieldMaps` 映射、按 DataFieldType 的值强制（coercion）、换源场景 → ADR-02。
 - **type-driven scale 选型**（按类型派生 scale）+ 类型↔scale 兼容校验 → ADR-03。
 - **`interval` 双通道编码**（xStart/xEnd）→ alpha.9+。
 - **新 scale 类型**（log/pow/quantize/gradient）→ alpha.7-8。

@@ -1,4 +1,4 @@
-import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
+﻿import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
 
 import { applyTransforms as applyDataTransforms } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';

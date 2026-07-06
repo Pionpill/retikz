@@ -1,4 +1,4 @@
-# ADR-02：plot 自行注册 plot-only transform
+﻿# ADR-02：plot 自行注册 plot-only transform
 
 - 状态：Proposed
 - 决策日期：2026-07-06
@@ -10,7 +10,7 @@ ADR-01 让 `@retikz/plot` 从 `@retikz/data` 消费数据模型、字段解析�
 
 plot 仍然需要这些 transform：堆叠、分箱、归一化区间、relation 派生、抖动、密度、平滑都是当前 GoG 层的重要能力，并被 root transform、mark-local transform、scale domain、locator provenance 共同消费。正确边界不是删除这些能力，而是把它们从 data 内置集合移回 plot，由 plot 在调用 data pipeline 时注入自己的 transform definitions。
 
-本 ADR 修正 ADR-01 中“plot 顶层继续 re-export data 能力”和“data 内置所有 transform”的过渡策略。beta.1 不保留旧兼容层；消费方需要直接从 `@retikz/data` 获取 data-only API，从 `@retikz/plot` 获取 plot API。
+本 ADR 修正 ADR-01 中“plot 顶层继续转发 data 能力”和“data 内置所有 transform”的过渡策略。beta.1 不保留旧兼容层；消费方需要直接从 `@retikz/data` 获取 data-only API，从 `@retikz/plot` 获取 plot API。
 
 ## 决策：plot 拥有 plot-only transform definitions
 
@@ -68,7 +68,7 @@ plot 的 schema 组合必须避免 data external passthrough 抢先接住 plot-o
 ## 待决策点
 
 - **内置集合命名**：倾向 `BUILTIN_PLOT_TRANSFORMS` 与 `resolvePlotTransformRegistry`。最终命名以实现时和 plot 既有 provider 命名一致为准，但必须避免让 data 的 `resolveTransformRegistry` 表示“plot 全量 registry”。
-- **命名收敛**：本 ADR 不处理 `PlotTransform` 等从 data 迁回 plot 后的全局命名整理；迁移完成后再统一处理 data/plot 命名。
+- **内置集合命名**：plot-only transform 常量采用 `PlotTransform`，data 内置 transform 常量采用 `DataTransform`；两者只共享 transform registry 协议，不共享 owner 命名。
 
 ## DSL / API 表面
 
@@ -112,10 +112,10 @@ compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lo
 
 ## 不在本 ADR 范围
 
-- 不重命名 `PlotTransform`、`PlotFieldType`、`PlotSortOrder` 等现有公开名。
+- 不改变 plot transform kind 的 JSON 形态。
 - 不新增 chart / table / geo 包。
 - 不改变 plot transform kind 的 JSON 形态。
-- 不为 `@retikz/plot` 的旧 data re-export 保留兼容层。
+- 不为 `@retikz/plot` 的旧 data 转发入口保留兼容层。
 - 不把 `<Transform>` 组件迁入 `@retikz/data-react`。
 
 ---

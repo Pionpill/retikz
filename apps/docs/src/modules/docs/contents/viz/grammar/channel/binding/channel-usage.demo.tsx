@@ -1,6 +1,6 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
-import { PlotFieldType } from '@retikz/plot';
+import { DataFieldType } from '@retikz/data';
 import { Axis, Legend, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 const rows = [
@@ -18,10 +18,10 @@ const Demo: FC = () => (
   <Plot
     data={rows}
     model={[
-      { name: 'month', type: PlotFieldType.Continuous },
-      { name: 'value', type: PlotFieldType.Continuous },
-      { name: 'segment', type: PlotFieldType.Categorical },
-      { name: 'volume', type: PlotFieldType.Continuous },
+      { name: 'month', type: DataFieldType.Continuous },
+      { name: 'value', type: DataFieldType.Continuous },
+      { name: 'segment', type: DataFieldType.Categorical },
+      { name: 'volume', type: DataFieldType.Continuous },
     ]}
     width={440}
     height={280}

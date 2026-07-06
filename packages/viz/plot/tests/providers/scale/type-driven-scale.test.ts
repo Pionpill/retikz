@@ -1,7 +1,7 @@
-import type { PlotFieldTypeValue } from '@retikz/data';
+﻿import type { DataFieldTypeValue } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
-import { PlotFieldType } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotSpec } from '../../../src/schemas';
@@ -16,7 +16,7 @@ const scaleRegistry = resolveScaleRegistry();
 const assertScaleFieldCompatible = (
   role: string,
   scaleType: string,
-  fieldType: PlotFieldTypeValue,
+  fieldType: DataFieldTypeValue,
   scaleName: string,
 ) => assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, scaleRegistry);
 
@@ -38,15 +38,15 @@ const spec = (
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
 
-describe('deriveScale — 按 PlotFieldTypeValue 派生默认 scale', () => {
+describe('deriveScale — 按 DataFieldTypeValue 派生默认 scale', () => {
   it('continuous_to_linear', () => {
-    expect(deriveScale(PlotFieldType.Continuous, 'x').type).toBe('linear');
+    expect(deriveScale(DataFieldType.Continuous, 'x').type).toBe('linear');
   });
   it('temporal_to_time', () => {
-    expect(deriveScale(PlotFieldType.Temporal, 'x').type).toBe('time');
+    expect(deriveScale(DataFieldType.Temporal, 'x').type).toBe('time');
   });
   it('categorical_to_band', () => {
-    expect(deriveScale(PlotFieldType.Categorical, 'x').type).toBe('band');
+    expect(deriveScale(DataFieldType.Categorical, 'x').type).toBe('band');
   });
   it('undefined_field_defaults_linear', () => {
     expect(deriveScale(undefined, 'x').type).toBe('linear');
@@ -55,19 +55,19 @@ describe('deriveScale — 按 PlotFieldTypeValue 派生默认 scale', () => {
 
 describe('assertScaleFieldCompatible — 类型↔scale 兼容', () => {
   it('incompatible_categorical_linear_throws', () => {
-    expect(() => assertScaleFieldCompatible('x', 'linear', PlotFieldType.Categorical, 'xs')).toThrow(/incompatible/i);
+    expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs')).toThrow(/incompatible/i);
   });
   it('incompatible_temporal_band_throws', () => {
-    expect(() => assertScaleFieldCompatible('x', 'band', PlotFieldType.Temporal, 'xs')).toThrow(/incompatible/i);
+    expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Temporal, 'xs')).toThrow(/incompatible/i);
   });
   it('continuous_band_allowed', () => {
-    expect(() => assertScaleFieldCompatible('x', 'band', PlotFieldType.Continuous, 'xs')).not.toThrow();
+    expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Continuous, 'xs')).not.toThrow();
   });
   it('continuous_linear_allowed', () => {
-    expect(() => assertScaleFieldCompatible('x', 'linear', PlotFieldType.Continuous, 'xs')).not.toThrow();
+    expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Continuous, 'xs')).not.toThrow();
   });
   it('temporal_time_allowed', () => {
-    expect(() => assertScaleFieldCompatible('x', 'time', PlotFieldType.Temporal, 'xs')).not.toThrow();
+    expect(() => assertScaleFieldCompatible('x', 'time', DataFieldType.Temporal, 'xs')).not.toThrow();
   });
 });
 

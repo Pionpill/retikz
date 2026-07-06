@@ -1,4 +1,4 @@
-# ADR-02：收敛 data 内置 provider 边界
+﻿# ADR-02：收敛 data 内置 provider 边界
 
 - 状态：Proposed
 - 决策日期：2026-07-06
@@ -56,8 +56,8 @@ ADR-01 已经把 plot 中的数据 schema、字段解析、format、statistics�
 
 ## 待决策点
 
-- **命名收敛**：本 ADR 不把 `PlotFieldType`、`PlotTransform`、`PlotSortOrder` 等名称改成 `Data*`。迁移完成后单独处理命名，避免边界迁移和公开名替换混在同一改动。
 - **`bin` 的长期归属**：beta.1 先移到 plot。若 table / geo 后续出现共同的“数值分桶 + 通用区间统计”需求，应另开 ADR 设计 data-native bin，不复用 plot 默认字段与 histogram 语义。
+- **宿主 transform union 形态**：plot 已组合 data transform 与 plot transform；table / geo 是否采用同一组合方式，留到对应宿主 ADR 决定。
 
 ## DSL / API 表面
 
@@ -94,7 +94,7 @@ plot-only transform 不再默认从 `@retikz/data` 可用；plot 通过自己的
 
 ## 不在本 ADR 范围
 
-- 不做 `Plot*` 到 `Data*` 的命名重构。
+- 不改变 data 内置 transform 的 JSON kind 字符串。
 - 不设计 table / geo 具体 API。
 - 不新增 data-react。
 - 不删除 transform extension surface。
@@ -114,7 +114,7 @@ plot-only transform 不再默认从 `@retikz/data` 可用；plot 通过自己的
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/viz/data/src/schemas/transform/constants.ts` | 改 | `PlotTransform` 成员 | 删除 plot-only kind，保留 `sort` / `summarize` / `select` / `annotate` | - | data 内置 transform kind 只覆盖跨宿主能力 |
+| `packages/viz/data/src/schemas/transform/constants.ts` | 改 | `DataTransform` 成员 | 删除 plot-only kind，保留 `sort` / `summarize` / `select` / `annotate` | - | data 内置 transform kind 只覆盖跨宿主能力 |
 | `packages/viz/data/src/schemas/transform/schema.ts` | 改 | `BuiltinTransformSchema` | 删除 plot-only transform schema 分支 | - | data 内置 transform schema 只包含通用数据 transform |
 | `packages/viz/data/src/schemas/transform/types.ts` | 改 | plot-only transform type exports | 删除或停止从 data 导出 | - | plot-only operation 类型迁到 plot |
 

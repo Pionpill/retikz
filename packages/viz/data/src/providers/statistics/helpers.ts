@@ -1,8 +1,8 @@
-import { isFiniteNumber } from '@retikz/math';
+﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { ExternalRow, OrderBy, PlotSortOrderValue } from '../../schemas';
+import type { DataSortOrderValue,ExternalRow, OrderBy } from '../../schemas';
 
-import { PlotSortOrder } from '../../schemas';
+import { DataSortOrder } from '../../schemas';
 import { resolveFieldPath } from '../data';
 
 /** quantile-band 的 spread whisker 默认倍率。 */
@@ -105,7 +105,7 @@ export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<OrderBy>): A
     .map((row, index) => ({ row, index }))
     .sort((left, right) => {
       for (const order of orderBy) {
-        const direction = order.order === PlotSortOrder.Descending ? -1 : 1;
+        const direction = order.order === DataSortOrder.Descending ? -1 : 1;
         const compared = compareValues(
           resolveFieldPath(left.row, order.field),
           resolveFieldPath(right.row, order.field),
@@ -121,14 +121,14 @@ export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<OrderBy>): A
 export const rankedByNumericField = (
   rows: Array<ExternalRow>,
   field: string,
-  direction: PlotSortOrderValue,
+  direction: DataSortOrderValue,
 ): Array<ExternalRow> =>
   rows
     .map((row, index) => ({ row, index, value: resolveFieldPath(row, field) }))
     .filter((entry): entry is { row: ExternalRow; index: number; value: number } => isFiniteNumber(entry.value))
     .sort((left, right) => {
       const compared = left.value === right.value ? 0 : left.value < right.value ? -1 : 1;
-      const directed = direction === PlotSortOrder.Ascending ? compared : -compared;
+      const directed = direction === DataSortOrder.Ascending ? compared : -compared;
       return directed === 0 ? left.index - right.index : directed;
     })
     .map(entry => entry.row);

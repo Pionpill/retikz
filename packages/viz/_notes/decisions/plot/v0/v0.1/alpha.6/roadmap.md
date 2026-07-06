@@ -1,4 +1,4 @@
-# plot v0.1-alpha.6 实施待办：数据模型类型层 + type-driven scale 选型（阶段二 R1 · Data + Scales）
+﻿# plot v0.1-alpha.6 实施待办：数据模型类型层 + type-driven scale 选型（阶段二 R1 · Data + Scales）
 
 > milestone 执行路线。长期决策放同目录 `NN-*.md` ADR；本文件可更新。
 > 关联：[`plot v0.1 roadmap`](../roadmap.md) · [`plot v0 roadmap`](../../roadmap.md)（阶段二 alpha.6）· [`plot-design §3.1 Data / §3.2 Dimension / §3.4 Scale`](../../../../../architecture/plot-design.md) · [`_template.md`](../../../../_template.md) · 上个 milestone：[`v0.1-alpha.5`](../alpha.5/roadmap.md)
@@ -12,7 +12,7 @@
 三块（对齐 [v0 roadmap](../roadmap.md) 阶段二排序「Data 先行」）：
 
 - **数据模型类型层（ADR-01，真叶子）**：字段类型集补全（加 `proportion`；`interval` 是否作 field type 待决）+ **缺省推断**（无 `model` 时从绑定数据推字段类型）+ **encoding 字段引用 / 自洽校验**（fail-loud）。这是阶段二的结构性地基，撑住 ADR-02/03 与后续所有 scale / 通道 / guide。
-- **数据模型可移植契约（ADR-02，dep 01）**：把 model 升级成**跨数据源契约**——spec 绑定逻辑字段（名 + PlotFieldType），数据源经适配层插入。解决三条换源需求：① 同名同类型直接换源（恒等绑定）；② 不同名经**绑定期 `fieldMaps`**（逻辑名→物理路径）映射；③ 不同 JS 类型但同 PlotFieldType 经**按类型值强制（coercion）**。前提是声明了 model（model = 可移植性开关）。
+- **数据模型可移植契约（ADR-02，dep 01）**：把 model 升级成**跨数据源契约**——spec 绑定逻辑字段（名 + DataFieldType），数据源经适配层插入。解决三条换源需求：① 同名同类型直接换源（恒等绑定）；② 不同名经**绑定期 `fieldMaps`**（逻辑名→物理路径）映射；③ 不同 JS 类型但同 DataFieldType 经**按类型值强制（coercion）**。前提是声明了 model（model = 可移植性开关）。
 - **type-driven scale 默认选型 + guide 格式化（ADR-03，dep 01）**：channel 未显式声明 scale 时，按字段类型派生默认 scale（quantitative→linear、temporal→time、nominal/ordinal→band/point、proportion→linear[0,1]）；guide 按类型格式化（时间轴日期 / ordinal 分类 tick）。让最小 spec 可省 scale 声明。
 
 ## 不在 alpha.6（顺延）
@@ -53,7 +53,7 @@
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
 | [01](./01-data-model.md) | 数据模型类型层（字段类型集补全 + 缺省推断 + encoding 字段引用 / 自洽校验） | red | — | Accepted |
-| [02](./02-data-portability.md) | 数据模型可移植契约（逻辑字段 + 绑定期 `fieldMaps` 映射 + 按 PlotFieldType 值强制；解决换源三需求） | red | ADR-01 | Accepted |
+| [02](./02-data-portability.md) | 数据模型可移植契约（逻辑字段 + 绑定期 `fieldMaps` 映射 + 按 DataFieldType 值强制；解决换源三需求） | red | ADR-01 | Accepted |
 | [03](./03-type-driven-scale.md) | type-driven scale 默认选型 + guide 格式化（按字段类型派生 scale，channel 可省 scale 声明；类型↔scale fail-loud） | red | ADR-01 | Accepted |
 | [04](./04-field-resolver.md) | `resolveField` 可插拔字段解析（运行时函数覆盖类型 + 自定义 parse，不进 IR） | red | ADR-01/02 | Accepted |
 | [05](./05-optional-field-type.md) | `FieldDef.type` 可选（部分声明 model，name-only 字段推断） | red | ADR-01 | Accepted |
@@ -89,7 +89,7 @@
 
 ## 贯穿原则落点
 
-- **alpha.1 埋点 → 承重**：alpha.1 ADR-02 埋的 `data.model` / `PlotFieldType`（当时「先放全集、零成本」），alpha.6 附上「驱动 scale 选型 + guide 格式化 + 校验」的语义，正是「零成本埋点 → 可用能力」的兑现。
+- **alpha.1 埋点 → 承重**：alpha.1 ADR-02 埋的 `data.model` / `DataFieldType`（当时「先放全集、零成本」），alpha.6 附上「驱动 scale 选型 + guide 格式化 + 校验」的语义，正是「零成本埋点 → 可用能力」的兑现。
 - **AI 友好**：字段类型是 LLM 生成 spec 的核心入口（plot-design §3.6），类型驱动让 LLM 不必逐通道指定 scale；`.describe` 契约完整。
 
 ## ADR 约定

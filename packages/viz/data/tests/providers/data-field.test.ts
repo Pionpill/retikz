@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import type { ExternalRow } from '../../src';
 
-import { coerceValue, normalizeRows, PlotFieldType, resolveFieldPath, resolveFieldTypes } from '../../src';
+import { coerceValue, DataFieldType, normalizeRows, resolveFieldPath, resolveFieldTypes } from '../../src';
 
 describe('data field runtime', () => {
   it('resolves exact dotted keys before nested paths', () => {
@@ -17,8 +17,8 @@ describe('data field runtime', () => {
     const normalized = normalizeRows(
       rows,
       new Map([
-        ['age', PlotFieldType.Continuous],
-        ['group', PlotFieldType.Categorical],
+        ['age', DataFieldType.Continuous],
+        ['group', DataFieldType.Categorical],
       ]),
       { age: 'user.age' },
     );
@@ -28,11 +28,11 @@ describe('data field runtime', () => {
 
   it('uses declared model fields for strict type resolution', () => {
     expect(() =>
-      resolveFieldTypes([{ name: 'x', type: PlotFieldType.Continuous }], [{ y: 1 }], new Set(['y'])),
+      resolveFieldTypes([{ name: 'x', type: DataFieldType.Continuous }], [{ y: 1 }], new Set(['y'])),
     ).toThrow(/unknown field "y"/);
   });
 
   it('returns undefined for missing categorical values', () => {
-    expect(coerceValue(undefined, PlotFieldType.Categorical)).toBeUndefined();
+    expect(coerceValue(undefined, DataFieldType.Categorical)).toBeUndefined();
   });
 });

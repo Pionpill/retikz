@@ -1,4 +1,4 @@
-# ADR-01：从 plot 迁出通用数据层
+﻿# ADR-01：从 plot 迁出通用数据层
 
 - 状态：Proposed
 - 决策日期：2026-07-06
@@ -10,7 +10,7 @@
 
 数据模型、字段解析、transform 和 statistics 本身不依赖 mark、scale、coordinate、guide 或 renderer。它们适合作为 viz 组通用底座，供 plot / chart / table 共同消费。`@retikz/data` 的边界必须保持纯数据处理：不提供 React 组件，不携带宿主可视化语义，不反向依赖 plot。
 
-本 ADR 只定义迁移步骤和 `@retikz/data` 的包内边界。plot 如何保持旧 public surface、如何接入 lowering，由同一 beta.1 的 plot ADR 处理。
+本 ADR 只定义迁移步骤和 `@retikz/data` 的包内边界。plot 如何接入 lowering、如何移除旧 data 转发入口，由同一 beta.1 的 plot ADR 处理。
 
 ## 决策：`@retikz/data` 成为数据层真源
 
@@ -54,7 +54,7 @@ src/
 ## 待决策点
 
 - **`applyTransforms` 的最终目录**：倾向放 `pipeline/transform`；若实现发现现有 providers 内部耦合更小，可先留在 `providers/transform/orchestrate.ts`，但 public barrel 仍从 `@retikz/data` 导出。
-- **Plot 前缀类型名称**：`PlotFieldFormat`、`PlotFieldType`、`PlotTransform`、`PlotSortOrder` 等现有公开名在 beta.1 作为兼容名保留；是否重命名为 `DataFieldFormat` / `DataTransform` 留到 beta.2 单独处理，避免同一迁移混入命名破坏。
+- **后续宿主消费形态**：table / geo 是否直接复用 data 的 `TransformOperation`，还是各自组合宿主 transform union，留到对应宿主 ADR 决定。
 
 ## DSL / API 表面
 
@@ -68,8 +68,8 @@ import {
 } from '@retikz/data';
 
 const transforms: Array<TransformOperation> = [
-  { kind: 'sort', by: 'month', order: 'ascending' },
-  { kind: 'stack', y: 'value', groupBy: ['series'] },
+  { kind: 'sort', field: 'month', order: 'ascending' },
+  { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] },
 ];
 ```
 
@@ -81,7 +81,7 @@ const transforms: Array<TransformOperation> = [
 
 - schema parse：DataModel / TransformOperation 与现有 plot 契约等价。
 - field runtime：字段路径、fieldMap、format、coerce 与 resolveField 行为等价。
-- transform runtime：sort / stack / normalize / derive-interval / jitter / group / bin / summarize / select / density / smooth 输出等价。
+- transform runtime：sort / summarize / select / annotate 等 data 内置 transform 输出等价。
 - registry：内置与自定义 definition 同路注册，重复 key、未注册 kind、schema 不匹配 fail-loud。
 - provenance：sourceIndex / sourceIndices 在保行数与改行数 transform 中按现有语义保留。
 
@@ -89,8 +89,8 @@ const transforms: Array<TransformOperation> = [
 
 - `@retikz/data` 新增为 viz workspace 包，版本从 `0.1.0-beta.1` 起。
 - `@retikz/plot` 失去数据层实现真源，后续通过依赖 `@retikz/data` 消费。
-- `@retikz/plot-react` / `@retikz/plot-vanilla` 不直接依赖 `@retikz/data`，除非后续决定让 adapter 类型从 data 包直引。
-- ⚠️ BREAKING：深导入 `@retikz/plot/src/providers/data/*` 或 `@retikz/plot/src/schemas/transform/*` 的用户不再受支持；公开入口由 `@retikz/data` 与 `@retikz/plot` 顶层 re-export 承载。
+- `@retikz/plot-react` / `@retikz/plot-vanilla` 若暴露 data 类型或外部数据集类型，需要直接依赖 `@retikz/data`。
+- ⚠️ BREAKING：深导入 `@retikz/plot/src/providers/data/*` 或 `@retikz/plot/src/schemas/transform/*` 的用户不再受支持；data API 只能从 `@retikz/data` 顶层入口获取，plot 不转发。
 
 ## 不在本 ADR 范围
 
@@ -98,7 +98,7 @@ const transforms: Array<TransformOperation> = [
 - 不迁移 plot channel / label 解析语义；`channelValue`、`labelOf` 等组合 helper 留在 plot。
 - 不设计 chart / table 的具体数据 DSL。
 - 不新增 `@retikz/data-react`。
-- 不重命名已经公开的 transform kind、field type、registry helper。
+- 不重命名已经公开的 transform kind 字符串。
 
 ---
 
@@ -139,9 +139,9 @@ const transforms: Array<TransformOperation> = [
 - `packages/viz/plot/src/providers/transform/**`
 - `packages/viz/plot/src/providers/statistics/**`
 - `packages/viz/plot/src/providers/format/**`
-- `packages/viz/plot/src/index.ts`（仅配合 re-export 迁移）
+- `packages/viz/plot/src/index.ts`（仅删除 data 转发入口）
 - `packages/viz/plot/package.json`（仅新增 `@retikz/data` dependency 和删除被迁走的 runtime deps）
-- `packages/viz/plot/tests/**`（仅调整 import / 兼容断言）
+- `packages/viz/plot/tests/**`（仅调整 import / owner 边界断言）
 - `package.json`（仅新增 data 包到 viz 脚本过滤器）
 - `pnpm-lock.yaml`
 - `packages/viz/AGENTS.md`

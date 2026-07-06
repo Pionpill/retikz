@@ -1,4 +1,4 @@
-# ADR-05：`FieldDef.type` 改可选——部分声明 model，name-only 字段自动推断（解耦「字段存在」与「测量类型」）
+﻿# ADR-05：`FieldDef.type` 改可选——部分声明 model，name-only 字段自动推断（解耦「字段存在」与「测量类型」）
 
 - 状态：Accepted
 - 决策日期：2026-06-07
@@ -21,7 +21,7 @@
 
 ```ts
 // ir/data.ts：type 必填 → 可选
-type: z.nativeEnum(PlotFieldType).optional()
+type: z.nativeEnum(DataFieldType).optional()
   .describe('Field measurement type; omit to infer from the bound dataset at lowering')
 
 // lower/validate.ts resolveFieldTypes（model 分支重写）：

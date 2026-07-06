@@ -1,4 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
+﻿import { JsonObjectSchema } from '@retikz/core';
 import {
   BuiltinTransformSchema as DataBuiltinTransformSchema,
   GroupBySchema,

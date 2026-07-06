@@ -1,4 +1,4 @@
-import type { PlotFieldTypeValue } from '../../schemas';
+﻿import type { DataFieldTypeValue } from '../../schemas';
 import type { ParsedFieldValue } from '../data';
 
 /**
@@ -9,7 +9,7 @@ export type FieldFormatDefinition = {
   /** 注册键 = IR 中 FieldDef.format 字符串；必须非空，且不与内置格式名冲突。 */
   name: string;
   /** 该格式唯一蕴含的字段测量类型；字段省略 type 时由它覆盖推断。 */
-  impliedType: PlotFieldTypeValue;
+  impliedType: DataFieldTypeValue;
   /** 原始值 -> canonical 值；返回 undefined / NaN 表示该值非法。 */
   parse: (raw: unknown) => ParsedFieldValue;
 };

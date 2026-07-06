@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
   RowSelection,
@@ -21,7 +21,7 @@ export const resolveStatisticsReducerRegistry = (
   for (const def of BUILTIN_STATISTICS_REDUCERS) registry.set(extractStatisticOperation(def.schema), def);
   for (const def of custom ?? []) {
     const op = extractStatisticOperation(def.schema);
-    if (registry.has(op)) throw new Error(`lowerPlots: duplicate statistics reducer registration: "${op}"`);
+    if (registry.has(op)) throw new Error(`data: duplicate statistics reducer registration: "${op}"`);
     registry.set(op, def);
   }
   return registry;
@@ -35,7 +35,7 @@ export const resolveRowSelectorRegistry = (
   for (const def of BUILTIN_ROW_SELECTORS) registry.set(extractStatisticOperation(def.schema), def);
   for (const def of custom ?? []) {
     const op = extractStatisticOperation(def.schema);
-    if (registry.has(op)) throw new Error(`lowerPlots: duplicate row selector registration: "${op}"`);
+    if (registry.has(op)) throw new Error(`data: duplicate row selector registration: "${op}"`);
     registry.set(op, def);
   }
   return registry;
@@ -57,7 +57,7 @@ const reducerDefinitionOf = (
   const definition = registry.get(operation.op);
   if (definition === undefined) {
     throw new Error(
-      `lowerPlots: reducer op "${operation.op}" is not registered; pass a StatisticsReducerDefinition via options.statisticsReducerDefinitions`,
+      `data: reducer op "${operation.op}" is not registered; pass a StatisticsReducerDefinition via options.statisticsReducerDefinitions`,
     );
   }
   return definition;
@@ -71,7 +71,7 @@ const selectorDefinitionOf = (
   const definition = registry.get(operation.op);
   if (definition === undefined) {
     throw new Error(
-      `lowerPlots: selector op "${operation.op}" is not registered; pass a RowSelectorDefinition via options.rowSelectorDefinitions`,
+      `data: selector op "${operation.op}" is not registered; pass a RowSelectorDefinition via options.rowSelectorDefinitions`,
     );
   }
   return definition;

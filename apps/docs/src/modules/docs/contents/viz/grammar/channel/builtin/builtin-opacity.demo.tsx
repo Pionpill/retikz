@@ -1,6 +1,6 @@
 ﻿import type { FC } from 'react';
 
-import { PlotFieldType } from '@retikz/plot';
+import { DataFieldType } from '@retikz/data';
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
 
 const rows = [
@@ -13,11 +13,11 @@ const Demo: FC = () => (
   <Plot
     data={rows}
     model={[
-      { name: 'xOpacity', type: PlotFieldType.Continuous },
-      { name: 'xFill', type: PlotFieldType.Continuous },
-      { name: 'xDraw', type: PlotFieldType.Continuous },
-      { name: 'y', type: PlotFieldType.Continuous },
-      { name: 'alpha', type: PlotFieldType.Continuous },
+      { name: 'xOpacity', type: DataFieldType.Continuous },
+      { name: 'xFill', type: DataFieldType.Continuous },
+      { name: 'xDraw', type: DataFieldType.Continuous },
+      { name: 'y', type: DataFieldType.Continuous },
+      { name: 'alpha', type: DataFieldType.Continuous },
     ]}
     width={560}
     height={250}

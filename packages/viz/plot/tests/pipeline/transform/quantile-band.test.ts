@@ -1,4 +1,4 @@
-import { applyTransforms, collectTransformFields } from '@retikz/data';
+﻿import { applyTransforms, collectTransformFields } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';

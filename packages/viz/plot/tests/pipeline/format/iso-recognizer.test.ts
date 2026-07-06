@@ -1,5 +1,5 @@
-import { coerceTimestamp, inferFieldType, isIsoDateString } from '@retikz/data';
-import { PlotFieldType } from '@retikz/data';
+﻿import { coerceTimestamp, inferFieldType, isIsoDateString } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
@@ -43,12 +43,12 @@ const parseFirst = (
 describe('ISO 识别器扩宽（ADR-09）— happy path', () => {
   it('space_tz_inferred_temporal', () => {
     // 空格分隔 + Z 时区（SQL 时间戳）→ 推断 temporal
-    expect(inferOne(['2024-01-01 12:00:00Z', '2024-06-30 08:30:00Z'])).toBe(PlotFieldType.Temporal);
+    expect(inferOne(['2024-01-01 12:00:00Z', '2024-06-30 08:30:00Z'])).toBe(DataFieldType.Temporal);
   });
 
   it('space_offset_inferred_temporal', () => {
     // 空格分隔 + ±HH:MM offset → 推断 temporal
-    expect(inferOne(['2024-01-01 12:00:00+08:00'])).toBe(PlotFieldType.Temporal);
+    expect(inferOne(['2024-01-01 12:00:00+08:00'])).toBe(DataFieldType.Temporal);
   });
 
   it('space_form_parses_equal_to_T', () => {
@@ -62,7 +62,7 @@ describe('ISO 识别器扩宽（ADR-09）— 边界', () => {
   it('date_only_unchanged', () => {
     // 纯日期正则不动，仍 temporal
     expect(isIsoDateString('2024-01-01')).toBe(true);
-    expect(inferOne(['2024-01-01', '2024-12-31'])).toBe(PlotFieldType.Temporal);
+    expect(inferOne(['2024-01-01', '2024-12-31'])).toBe(DataFieldType.Temporal);
   });
 
   it('strict_T_datetime_unchanged', () => {
@@ -83,19 +83,19 @@ describe('ISO 识别器扩宽（ADR-09）— 错误路径（歧义形态仍拒�
     // 无时区（本地歧义）→ 非 temporal、不解析
     expect(isIsoDateString('2024-01-01 12:00:00')).toBe(false);
     expect(coerceTimestamp('2024-01-01 12:00:00')).toBe(null);
-    expect(inferOne(['2024-01-01 12:00:00'])).toBe(PlotFieldType.Categorical);
+    expect(inferOne(['2024-01-01 12:00:00'])).toBe(DataFieldType.Categorical);
   });
 
   it('slash_still_not_temporal', () => {
     // 斜杠日期仍走声明、非自动 temporal
     expect(isIsoDateString('2024/01/01')).toBe(false);
-    expect(inferOne(['2024/01/01', '2024/02/01'])).toBe(PlotFieldType.Categorical);
+    expect(inferOne(['2024/01/01', '2024/02/01'])).toBe(DataFieldType.Categorical);
   });
 
   it('compact_numeric_not_temporal', () => {
     // 紧凑数字串与裸数字歧义，不收
     expect(isIsoDateString('20240101')).toBe(false);
-    expect(inferOne(['20240101', '20240102'])).toBe(PlotFieldType.Categorical);
+    expect(inferOne(['20240101', '20240102'])).toBe(DataFieldType.Categorical);
   });
 });
 

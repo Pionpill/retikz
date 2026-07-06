@@ -1,4 +1,4 @@
-import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
+﻿import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
 
 import { collectTransformFields } from '@retikz/data';
 

@@ -22,7 +22,7 @@ const SALES: Array<ExternalRow> = [
 ];
 
 describe('data transform runtime', () => {
-  it('keeps shared sort output stable and leaves plot-only transforms to host registries', () => {
+  it('keeps shared sort output stable and leaves host-only transforms to host registries', () => {
     const sorted = applyTransforms(
       [
         { m: 3 },

@@ -1,10 +1,10 @@
-import type { ValueOf } from '@retikz/core';
+﻿import type { ValueOf } from '@retikz/core';
 
 /**
  * transform 类型关键字（暴露给用户；裸 `'sort'` 等字符串同样可用）
- * @description 数据变换 operation 的判别字段，成员里写 z.literal(PlotTransform.x)。
+ * @description 数据变换 operation 的判别字段，成员里写 z.literal(DataTransform.x)。
  */
-export const PlotTransform = {
+export const DataTransform = {
   /** 按字段排序 */
   Sort: 'sort',
   /** 分组汇总：groupBy 字段分组 + 多个 reducer metric → 每组一行（改行数） */
@@ -16,16 +16,16 @@ export const PlotTransform = {
 } as const;
 
 /** transform 类型 */
-export type PlotTransformValue = ValueOf<typeof PlotTransform>;
+export type DataTransformValue = ValueOf<typeof DataTransform>;
 
-/** plot 排序方向。 */
-export const PlotSortOrder = {
+/** data 排序方向。 */
+export const DataSortOrder = {
   Ascending: 'ascending',
   Descending: 'descending',
 } as const;
 
-/** plot 排序方向值。 */
-export type PlotSortOrderValue = ValueOf<typeof PlotSortOrder>;
+/** data 排序方向值。 */
+export type DataSortOrderValue = ValueOf<typeof DataSortOrder>;
 
 /** 内置统计 reducer operation 关键字。 */
 export const ReducerOperationKind = {
@@ -109,7 +109,7 @@ export const RowSelectorTie = {
 export type RowSelectorTieValue = ValueOf<typeof RowSelectorTie>;
 
 /** 内置 transform kind 集：供自定义 transform operation 排除内置判别串。 */
-export const BUILTIN_TRANSFORM_KINDS = new Set<string>(Object.values(PlotTransform));
+export const BUILTIN_TRANSFORM_KINDS = new Set<string>(Object.values(DataTransform));
 
 /** 内置统计 reducer operation key 集合。 */
 export const BUILTIN_REDUCER_OPERATION_KINDS = new Set<string>(Object.values(ReducerOperationKind));

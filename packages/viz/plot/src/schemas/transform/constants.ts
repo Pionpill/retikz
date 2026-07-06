@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+﻿import type { ValueOf } from '@retikz/core';
 
 /**
  * plot-only transform 类型关键字。

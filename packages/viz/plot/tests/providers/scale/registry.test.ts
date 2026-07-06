@@ -1,6 +1,6 @@
-import type { IRNode, IRScope } from '@retikz/core';
+﻿import type { IRNode, IRScope } from '@retikz/core';
 
-import { PlotFieldType } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -27,7 +27,7 @@ import { BUILTIN_SCALE_TYPES, PlotSpecSchema } from '../../../src/schemas';
 const unitScale = defineScale({
   family: 'position',
   schema: z.object({ type: z.literal('unit'), name: z.string().min(1) }),
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
   resolve: (_def, values, range) =>
     linearPositionScale(
@@ -43,7 +43,7 @@ const unitScale = defineScale({
 const monoScale = defineScale({
   family: 'channel',
   schema: z.object({ type: z.literal('mono'), name: z.string().min(1) }),
-  isFieldCompatible: fieldType => fieldType === undefined || fieldType === PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType === undefined || fieldType === DataFieldType.Categorical,
   resolve: (_def, values) => {
     const domain = [
       ...new Set(
@@ -167,7 +167,7 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
     const resolution = resolveChannelScale(
       { type: 'mono', name: 'c' },
       ['a', 'b', 'a'],
-      channelCtx({ fieldType: PlotFieldType.Categorical }),
+      channelCtx({ fieldType: DataFieldType.Categorical }),
       registry,
     );
     expect(resolution.legendForm).toBe('swatch');
@@ -182,7 +182,7 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
       resolveChannelScale(
         { type: 'mono', name: 'c' },
         [1, 2],
-        channelCtx({ fieldType: PlotFieldType.Continuous }),
+        channelCtx({ fieldType: DataFieldType.Continuous }),
         registry,
       ),
     ).toThrow(/incompatible/i);
@@ -191,7 +191,7 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
   it('custom_color_scheme_resolves', () => {
     const registry = resolveScaleRegistry();
     const ctx = channelCtx({
-      fieldType: PlotFieldType.Continuous,
+      fieldType: DataFieldType.Continuous,
       resolveColorScheme: name => (name === 'brand' ? () => '#ff00ff' : () => '#000000'),
     });
     const resolution = resolveChannelScale({ type: 'sequential', name: 'c', scheme: 'brand' }, [0, 1], ctx, registry);
@@ -200,10 +200,10 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
 
   it('isFieldCompatible 谓词驱动 position compat', () => {
     const registry = resolveScaleRegistry();
-    expect(() => assertScaleFieldCompatible('x', 'linear', PlotFieldType.Categorical, 'xs', registry)).toThrow(
+    expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs', registry)).toThrow(
       /incompatible/i,
     );
-    expect(() => assertScaleFieldCompatible('x', 'band', PlotFieldType.Continuous, 'xs', registry)).not.toThrow();
+    expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Continuous, 'xs', registry)).not.toThrow();
   });
 
   it('allowsBaseline 谓词驱动 baseline guard', () => {

@@ -1,4 +1,4 @@
-# ADR-02：数据模型作为可移植契约——逻辑字段 + 绑定期 fieldMaps 映射 + 按 PlotFieldType 值强制
+﻿# ADR-02：数据模型作为可移植契约——逻辑字段 + 绑定期 fieldMaps 映射 + 按 DataFieldType 值强制
 
 - 状态：Accepted
 - 决策日期：2026-06-07
@@ -10,13 +10,13 @@
 
 1. **同名同类型换源**：新数据源字段名 + 类型与 model 一致 → 直接用新数据出图。
 2. **不同名 + 自定义映射**：新数据源字段名与 model 不一致，但允许用户给映射（类型相同）→ 仍能出图。
-3. **不同 JS 类型但同 PlotFieldType**：新数据源字段名、JS 类型都不同，但都归同一 `PlotFieldType`（如 temporal 的 `Date` vs ISO 串 vs epoch 数）→ 仍能出图。
+3. **不同 JS 类型但同 DataFieldType**：新数据源字段名、JS 类型都不同，但都归同一 `DataFieldType`（如 temporal 的 `Date` vs ISO 串 vs epoch 数）→ 仍能出图。
 
-三条的共同前提是**声明了 model**（都说「类型相同 / 同一 PlotFieldType」=model 的声明）。故本 ADR 的核心判断：**model 是可移植性的开关**——声明 model，spec 即跨源可移植（恒等 / 映射 / 强制三档）；不声明，退回当前「物理名直取 + 推断」（ADR-01）。
+三条的共同前提是**声明了 model**（都说「类型相同 / 同一 DataFieldType」=model 的声明）。故本 ADR 的核心判断：**model 是可移植性的开关**——声明 model，spec 即跨源可移植（恒等 / 映射 / 强制三档）；不声明，退回当前「物理名直取 + 推断」（ADR-01）。
 
 同类思路：Vega-Lite 的 spec 与 `data` 分离（named datasets、可换 `data`）；BI 工具（Tableau / Looker）普遍有「逻辑字段 ↔ 物理列」的语义层。retikz 因「数据不进 IR」天然具备分离基础，本 ADR 补上**适配层**。
 
-## 决策：逻辑字段模型 + 绑定期 `fieldMaps`（逻辑名→物理路径）+ 按 PlotFieldType 值强制
+## 决策：逻辑字段模型 + 绑定期 `fieldMaps`（逻辑名→物理路径）+ 按 DataFieldType 值强制
 
 三个机制，分别解决三需求；都在 lowering 绑定期、**不进 IR**（spec 保持源无关）。
 
@@ -40,9 +40,9 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 - `fieldMaps[ref]` 的**逻辑名必须在该 plot 的 `data.model`** → 否则 throw；
 - `ref` **须在 `datasets`** → 否则 throw；datasets 里未被本 plot 用到的 ref 不管。
 
-**(3) 按 PlotFieldType 值强制 / coercion（解决需求 3）**：每个 `PlotFieldType` 配一套「原始 JS 值 → 规范值」强制，路径取值后、喂 scale 前统一：
+**(3) 按 DataFieldType 值强制 / coercion（解决需求 3）**：每个 `DataFieldType` 配一套「原始 JS 值 → 规范值」强制，路径取值后、喂 scale 前统一：
 
-| PlotFieldType | 接受的 JS 表示 | 规范化为 | 非法值 |
+| DataFieldType | 接受的 JS 表示 | 规范化为 | 非法值 |
 |---|---|---|---|
 | quantitative | `number` / **严格数字串**（trimmed 十进制 / 科学计数；**拒** 空串·`Infinity`·`NaN`·hex·带单位串） | `number` | → NaN，跳过 |
 | proportion | 同 quantitative；**越界 [0,1] 原样保留**（不 clamp、不跳过；clamp 交 ADR-03 scale option） | `number` | → NaN，跳过 |
@@ -60,7 +60,7 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 1. **spec 源无关、可移植**：逻辑模型 + 绑定期适配让同一 spec 跑不同源——「数据不进 IR」的兑现，也利于 LLM 复用 spec 模板。
 2. **三档渐进**：同名同类型零配置（恒等）；改名给 fieldMaps；换表示靠 coercion。每档独立、按需启用。
 3. **适配层在数据世界、不进 IR**：`fieldMaps` / coercion 都在 `lowerPlots` 绑定期，IR 仍 100% JSON-safe、源无关。
-4. **coercion 让 PlotFieldType 成真正的类型契约**：类型定义「接受哪些表示」，而非绑死单一 JS 类型——这正是需求 3 的本质。
+4. **coercion 让 DataFieldType 成真正的类型契约**：类型定义「接受哪些表示」，而非绑死单一 JS 类型——这正是需求 3 的本质。
 5. **统一访问器，杜绝半 coerce**：ingest 归一化是**唯一** coerce 点，transform / scale / mark / locator 全读 canonical rows——根治「数字串在 stack 被当 0」类 bug（评审 P1）。
 6. **temporal 收口**：扩展现有 `coerceTimestamp`（加 `Date` 分支 + 严格 ISO guard）成统一 temporal coercion，与 ADR-01 推断 guard **同一套正则**，不打架（评审 P2）。
 

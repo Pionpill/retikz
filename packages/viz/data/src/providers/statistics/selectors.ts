@@ -1,9 +1,9 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 import type { AnyRowSelectorDefinition } from '../../contract';
 
 import { defineRowSelector } from '../../contract';
-import { OutsideQuantileBandSelectorOperationSchema, PlotSortOrder, RowSelectorTie, SelectorOp } from '../../schemas';
+import { DataSortOrder, OutsideQuantileBandSelectorOperationSchema, RowSelectorTie, SelectorOp } from '../../schemas';
 import { resolveFieldPath } from '../data';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
 
@@ -16,7 +16,7 @@ const minSelectorDefinition = defineRowSelector({
   }),
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
-    const ranked = rankedByNumericField(rows, operation.by, PlotSortOrder.Ascending);
+    const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Ascending);
     if (ranked.length === 0) return [];
     if (operation.tie === RowSelectorTie.All) {
       const value = resolveFieldPath(ranked[0], operation.by);
@@ -45,7 +45,7 @@ const maxSelectorDefinition = defineRowSelector({
   }),
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
-    const ranked = rankedByNumericField(rows, operation.by, PlotSortOrder.Descending);
+    const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Descending);
     if (ranked.length === 0) return [];
     if (operation.tie === RowSelectorTie.All) {
       const value = resolveFieldPath(ranked[0], operation.by);
@@ -70,7 +70,7 @@ const firstSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.First),
     orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(PlotSortOrder).optional() }))
+      .array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() }))
       .min(1)
       .optional(),
   }),
@@ -86,7 +86,7 @@ const lastSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Last),
     orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(PlotSortOrder).optional() }))
+      .array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() }))
       .min(1)
       .optional(),
   }),
@@ -107,7 +107,7 @@ const topSelectorDefinition = defineRowSelector({
   }),
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
-    const ranked = rankedByNumericField(rows, operation.by, PlotSortOrder.Descending);
+    const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Descending);
     const selected = ranked.slice(0, operation.n);
     if (operation.tie === RowSelectorTie.All && selected.length > 0 && ranked.length > selected.length) {
       const threshold = resolveFieldPath(selected[selected.length - 1], operation.by);
@@ -130,7 +130,7 @@ const bottomSelectorDefinition = defineRowSelector({
   }),
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
-    const ranked = rankedByNumericField(rows, operation.by, PlotSortOrder.Ascending);
+    const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Ascending);
     const selected = ranked.slice(0, operation.n);
     if (operation.tie === RowSelectorTie.All && selected.length > 0 && ranked.length > selected.length) {
       const threshold = resolveFieldPath(selected[selected.length - 1], operation.by);
@@ -148,7 +148,7 @@ const nthSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Nth),
     orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(PlotSortOrder).optional() }))
+      .array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() }))
       .min(1),
     index: z.number().int().nonnegative(),
   }),

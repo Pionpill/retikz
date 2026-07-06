@@ -1,4 +1,4 @@
-# ADR-02：Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约）
+﻿# ADR-02：Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-06-03
@@ -23,13 +23,13 @@
 
 ```ts
 /** 字段类型：grammar-of-graphics 标准集；alpha.1 lowering 仅消费 quantitative（linear scale） */
-export const PlotFieldType = {
+export const DataFieldType = {
   Quantitative: 'quantitative',
   Nominal: 'nominal',
   Ordinal: 'ordinal',
   Temporal: 'temporal',
 } as const;
-export type FieldType = ValueOf<typeof PlotFieldType>;
+export type FieldType = ValueOf<typeof DataFieldType>;
 ```
 
 理由：
@@ -49,6 +49,6 @@ export type FieldType = ValueOf<typeof PlotFieldType>;
 
 ---
 
-> **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`PlotFieldType` / `FieldDefSchema` / `DataModelSchema` / `DataRefSchema` / `ScalarValueSchema` + 派生类型 + `ExternalRow` / `ExternalDatasets` TS 契约（`plot/src/ir/data.ts`，复用 core `ValueOf`）。外部数据是 TS 类型、非 IR zod schema。测试在 `packages/viz/plot/tests/ir/data.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
+> **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`DataFieldType` / `FieldDefSchema` / `DataModelSchema` / `DataRefSchema` / `ScalarValueSchema` + 派生类型 + `ExternalRow` / `ExternalDatasets` TS 契约（`plot/src/ir/data.ts`，复用 core `ValueOf`）。外部数据是 TS 类型、非 IR zod schema。测试在 `packages/viz/plot/tests/ir/data.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
 
 > 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:_notes/decisions/plot/v0/v0.1/alpha.1/02-plot-data.md`。

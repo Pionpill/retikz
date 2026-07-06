@@ -1,7 +1,7 @@
-import type { DataModel } from '@retikz/plot';
+import type { DataModel } from '@retikz/data';
 import type { FC } from 'react';
 
-import { defineTransform } from '@retikz/plot';
+import { defineTransform } from '@retikz/data';
 import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
 import { z } from 'zod';
 

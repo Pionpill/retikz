@@ -1,5 +1,5 @@
-import type { FieldFormatDefinition, ParsedFieldValue } from '../../contract';
-import type { DataModel, PlotFieldTypeMap } from '../../schemas';
+﻿import type { FieldFormatDefinition, ParsedFieldValue } from '../../contract';
+import type { DataFieldTypeMap,DataModel } from '../../schemas';
 
 import { resolveFormatRegistry } from './definitions';
 
@@ -10,11 +10,11 @@ import { resolveFormatRegistry } from './definitions';
  */
 export const collectFormatFields = (
   model: DataModel | undefined,
-  baseTypes: PlotFieldTypeMap,
+  baseTypes: DataFieldTypeMap,
   userSourceFields: Set<string>,
   registry: ReadonlyMap<string, FieldFormatDefinition> = resolveFormatRegistry(),
-): { fieldTypes: PlotFieldTypeMap; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
-  const fieldTypes: PlotFieldTypeMap = new Map(baseTypes);
+): { fieldTypes: DataFieldTypeMap; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
+  const fieldTypes: DataFieldTypeMap = new Map(baseTypes);
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
   if (model === undefined) return { fieldTypes, parsers };
   for (const field of model) {
@@ -23,13 +23,13 @@ export const collectFormatFields = (
     const definition = registry.get(field.format);
     if (definition === undefined) {
       throw new Error(
-        `lowerPlots: field format "${field.format}" is not registered; pass a FieldFormatDefinition via options.formatDefinitions`,
+        `data: field format "${field.format}" is not registered; pass a FieldFormatDefinition via options.formatDefinitions`,
       );
     }
     const impliedType = definition.impliedType;
     if (field.type !== undefined && field.type !== impliedType) {
       throw new Error(
-        `lowerPlots: field "${field.name}" declares type "${field.type}" but format "${field.format}" implies "${impliedType}" (incompatible)`,
+        `data: field "${field.name}" declares type "${field.type}" but format "${field.format}" implies "${impliedType}" (incompatible)`,
       );
     }
     fieldTypes.set(field.name, impliedType);

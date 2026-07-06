@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
-import { DataModelSchema, DataRefSchema, PlotFieldType, ScalarValueSchema } from '../../src';
+import { DataFieldType, DataModelSchema, DataRefSchema, ScalarValueSchema } from '../../src';
 
 describe('data schema', () => {
   it('parses data model and survives JSON round-trip', () => {
     const model = [
-      { name: 'month', type: PlotFieldType.Categorical },
-      { name: 'revenue', type: PlotFieldType.Continuous, format: 'number-string' },
+      { name: 'month', type: DataFieldType.Categorical },
+      { name: 'revenue', type: DataFieldType.Continuous, format: 'number-string' },
     ];
 
     const parsed = DataModelSchema.parse(model);

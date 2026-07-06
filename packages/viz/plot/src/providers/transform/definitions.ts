@@ -1,4 +1,4 @@
-import type { AnyTransformDefinition } from '@retikz/data';
+﻿import type { AnyTransformDefinition } from '@retikz/data';
 
 import { defineTransform, extractTransformKind, reducerInputFields, reducerOutputFields, resolveTransformRegistry, selectorInputFields } from '@retikz/data';
 

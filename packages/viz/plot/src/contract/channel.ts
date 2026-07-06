@@ -1,5 +1,5 @@
-import type { IRNode, IRPath, IRScope, JsonValue, ValueOf } from '@retikz/core';
-import type { ExternalRow, PlotFieldTypeMap, PlotFieldTypeValue, ScalarValue } from '@retikz/data';
+﻿import type { IRNode, IRPath, IRScope, JsonValue, ValueOf } from '@retikz/core';
+import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow, ScalarValue } from '@retikz/data';
 
 import type {
   Channel,
@@ -155,7 +155,7 @@ export type ScaleDescriptor = {
   /** 绑定字段名；常量通道无字段。 */
   field?: string;
   /** 绑定字段类型；常量 / 类型未知时省略。 */
-  fieldType?: PlotFieldTypeValue;
+  fieldType?: DataFieldTypeValue;
   /** 绑定 scale 名；legend.scale 据此在同通道多 scale 时消歧。 */
   scaleName?: string;
   /** color scale 的 legend 解析结果；仅 color-like mark 通道需要。 */
@@ -187,7 +187,7 @@ export type ChannelOutputSpace =
 export type ChannelContext = {
   node: PlotSpec;
   rows: Array<ExternalRow>;
-  fieldTypes: PlotFieldTypeMap;
+  fieldTypes: DataFieldTypeMap;
   scaleRegistry?: ReadonlyMap<string, AnyScaleDefinition>;
   resolveColorScheme?: (name: string) => (t: number) => string;
   palette?: ChannelPaletteContext;

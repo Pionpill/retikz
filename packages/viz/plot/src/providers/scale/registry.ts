@@ -1,7 +1,7 @@
-import type { PlotFieldTypeValue } from '@retikz/data';
+﻿import type { DataFieldTypeValue } from '@retikz/data';
 
 import { JsonObjectSchema } from '@retikz/core';
-import { PlotFieldType } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 
 import type { AnyScaleDefinition, ChannelResolveContext, ChannelScaleResolution, PositionScale } from '../../contract';
 import type { MarkOperation, Scale, ScaleOperation } from '../../schemas';
@@ -116,7 +116,7 @@ export const resolveChannelScale = (
 export const assertScaleFieldCompatible = (
   role: string,
   scaleType: string,
-  fieldType: PlotFieldTypeValue,
+  fieldType: DataFieldTypeValue,
   scaleName: string,
   registry: ReadonlyMap<string, AnyScaleDefinition>,
 ): void => {
@@ -159,11 +159,11 @@ export const assertBaselineScaleCompatible = (
  * @description continuous→linear、temporal→time、categorical→band；
  *   undefined（无字段绑定，如全常量通道）→ linear 兜底。仅在 coordinate 省略 scale 绑定时调用。
  */
-export const deriveScale = (fieldType: PlotFieldTypeValue | undefined, name: string): Scale => {
+export const deriveScale = (fieldType: DataFieldTypeValue | undefined, name: string): Scale => {
   switch (fieldType) {
-    case PlotFieldType.Temporal:
+    case DataFieldType.Temporal:
       return { type: PlotScale.Time, name };
-    case PlotFieldType.Categorical:
+    case DataFieldType.Categorical:
       return { type: PlotScale.Band, name };
     default:
       return { type: PlotScale.Linear, name };

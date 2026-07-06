@@ -1,6 +1,6 @@
-import type { z } from 'zod';
+﻿import type { z } from 'zod';
 
-import type { PlotFieldTypeValue } from './constants';
+import type { DataFieldTypeValue } from './constants';
 import type { DataModelSchema, DataRefSchema, FieldDefSchema, FieldFormatSchema, ScalarValueSchema } from './schema';
 
 /** 字段解析格式：内置关键字或自定义注册名（求值期解析为 parser）。 */
@@ -16,11 +16,11 @@ export type DataRef = z.infer<typeof DataRefSchema>;
 export type ScalarValue = z.infer<typeof ScalarValueSchema>;
 
 /** 逻辑字段名到字段测量类型的运行时映射；由 data.model / 自动推断 / resolver 合成，不进入 IR。 */
-export type PlotFieldTypeMap = Map<string, PlotFieldTypeValue>;
+export type DataFieldTypeMap = Map<string, DataFieldTypeValue>;
 
 /**
  * 外部数据行（不进 IR）
- * @description 运行时经 lowerPlots 注入的任意 JS 记录（可嵌套）；encoding 的 field 路径对其解析、结果须为标量。
+ * @description 运行时由宿主 lowering pipeline 注入的任意 JS 记录（可嵌套）；field 路径对其解析、结果须为标量。
  */
 export type ExternalRow = Record<string, unknown>;
 /**

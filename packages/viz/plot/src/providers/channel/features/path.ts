@@ -1,9 +1,9 @@
-import type { IRPathScale, JsonValue } from '@retikz/core';
-import type { ExternalRow, PlotFieldTypeMap } from '@retikz/data';
+﻿import type { IRPathScale, JsonValue } from '@retikz/core';
+import type { DataFieldTypeMap,ExternalRow } from '@retikz/data';
 
 import { DropShadowSchema, JsonValueSchema, PathScaleSchema } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
-import { PlotFieldType } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
@@ -62,7 +62,7 @@ const defineSimplePathChannel = <T extends JsonValue>(
 const makeNumericPathResolver = (
   node: PlotSpec,
   rows: Array<ExternalRow>,
-  fieldTypes: PlotFieldTypeMap,
+  fieldTypes: DataFieldTypeMap,
   pick: (mark: MarkOperation) => ScaledMarkValueType<number> | undefined,
   channelName: string,
   options: NumericPathResolverOptions = {},
@@ -73,7 +73,7 @@ const makeNumericPathResolver = (
     if (!channel) return undefined;
     const source = makeMarkValueResolver<number>(channel, fieldTypes, {
       channelName,
-      expectedFieldType: PlotFieldType.Continuous,
+      expectedFieldType: DataFieldType.Continuous,
       parse: value => (isFiniteNumber(value) ? value : undefined),
     });
     if (!source) return undefined;

@@ -1,4 +1,4 @@
-import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
+﻿import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
 import type {
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
@@ -8,10 +8,10 @@ import type {
   TransformContext,
 } from '@retikz/data';
 import type {
+  DataFieldTypeMap,
+  DataFieldTypeValue,
   ExternalDatasets,
   ExternalRow,
-  PlotFieldTypeMap,
-  PlotFieldTypeValue,
 } from '@retikz/data';
 
 import { defineComposite, JsonObjectSchema } from '@retikz/core';
@@ -26,7 +26,7 @@ import {
 } from '@retikz/data';
 import { collectFormatFields, resolveFormatRegistry } from '@retikz/data';
 import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
-import { FieldOrderMode, PlotFieldType } from '@retikz/data';
+import { DataFieldType,FieldOrderMode } from '@retikz/data';
 
 import type {
   AnchorIdGenerator,
@@ -819,8 +819,8 @@ export type ResolveFrameParams = {
   node: PlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
-  /** 用户源字段 → PlotFieldTypeValue；供 type-driven scale 派生与兼容校验 */
-  fieldTypes: PlotFieldTypeMap;
+  /** 用户源字段 → DataFieldTypeValue；供 type-driven scale 派生与兼容校验 */
+  fieldTypes: DataFieldTypeMap;
   /** 整图宽（user units） */
   width: number;
   /** 整图高（user units） */
@@ -965,8 +965,8 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const roleFieldTypes = (
     role: DimensionRole,
     pick: (mark: MarkOperation) => Channel | undefined,
-  ): Array<PlotFieldTypeValue> => {
-    const types: Array<PlotFieldTypeValue> = [];
+  ): Array<DataFieldTypeValue> => {
+    const types: Array<DataFieldTypeValue> = [];
     for (const mark of node.marks) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
         continue;
@@ -1002,7 +1002,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const order = fieldOrders.get(channel.field);
       if (order === undefined || order === FieldOrderMode.Data) continue;
       const type = fieldTypes.get(channel.field);
-      if (type !== undefined && type !== PlotFieldType.Categorical) {
+      if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new Error(
           `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,
         );
@@ -1124,7 +1124,7 @@ const collectChannelDescriptors = (
   channelCtx: {
     node: PlotSpec;
     rows: Array<ExternalRow>;
-    fieldTypes: PlotFieldTypeMap;
+    fieldTypes: DataFieldTypeMap;
     scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
     resolveColorScheme: (name: string) => (t: number) => string;
     palette: ReturnType<typeof resolvePlotTheme>['palette'];
@@ -1206,7 +1206,7 @@ const niceNumericTicks = (
 
 const legendRampTickScale = (
   domain: readonly [number, number],
-  fieldType: PlotFieldTypeValue | undefined,
+  fieldType: DataFieldTypeValue | undefined,
 ): PositionScale => {
   const scale = resolveLinearScale({ domain: [domain[0], domain[1]] }, [], [0, 1]);
   return {
@@ -1214,7 +1214,7 @@ const legendRampTickScale = (
     domain: () => [domain[0], domain[1]],
     bandwidth: 0,
     ticks: count => scaleTicks(scale, count),
-    tickKind: fieldType === PlotFieldType.Temporal ? 'time' : 'number',
+    tickKind: fieldType === DataFieldType.Temporal ? 'time' : 'number',
     range: () => [0, 1],
     setRange: () => {},
   };
@@ -1550,7 +1550,7 @@ export const prepareRows = (
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
 ): {
-  fieldTypes: PlotFieldTypeMap;
+  fieldTypes: DataFieldTypeMap;
   normalized: Array<ExternalRow>;
   transformRegistry: Map<string, AnyTransformDefinition>;
   transformContext: TransformContext;

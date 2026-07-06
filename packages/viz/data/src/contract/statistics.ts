@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 import type { TransformContext } from './transform';
 
@@ -81,11 +81,11 @@ export type AnyRowSelectorDefinition = Omit<
 /** 从统计子算子定义 schema 中提取注册键。 */
 export const extractStatisticOperation = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {
-    throw new Error('lowerPlots: statistic registration schema must be a ZodObject with a literal op field');
+    throw new Error('data: statistic registration schema must be a ZodObject with a literal op field');
   }
   const opSchema = schema.shape.op;
   if (!(opSchema instanceof z.ZodLiteral) || typeof opSchema.value !== 'string' || opSchema.value.length === 0) {
-    throw new Error('lowerPlots: statistic registration schema must declare op as a non-empty z.literal string');
+    throw new Error('data: statistic registration schema must declare op as a non-empty z.literal string');
   }
   return opSchema.value;
 };

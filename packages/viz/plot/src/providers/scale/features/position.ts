@@ -1,4 +1,4 @@
-import type { FieldDef } from '@retikz/data';
+﻿import type { FieldDef } from '@retikz/data';
 import type {
   ScaleBand as D3ScaleBand,
   ScaleContinuousNumeric as D3ScaleContinuousNumeric,
@@ -8,7 +8,7 @@ import type {
 } from 'd3-scale';
 
 import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
-import { FieldOrderMode, PlotFieldType } from '@retikz/data';
+import { DataFieldType,FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import { extent as d3Extent } from 'd3-array';
 import {
@@ -501,7 +501,7 @@ export const pointPositionScale = (scale: D3ScalePoint<string | number>): Positi
 const linearScaleDefinition = defineScale<LinearScale>({
   family: 'position',
   schema: LinearScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
   resolve: (def, values, range) =>
     linearPositionScale(
@@ -512,7 +512,7 @@ const linearScaleDefinition = defineScale<LinearScale>({
 const logScaleDefinition = defineScale<LogScale>({
   family: 'position',
   schema: LogScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
   resolve: (def, values, range) =>
     continuousPositionScale(
@@ -524,7 +524,7 @@ const logScaleDefinition = defineScale<LogScale>({
 const powScaleDefinition = defineScale<PowScale>({
   family: 'position',
   schema: PowScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
   resolve: (def, values, range) => {
     const integerExponent = Number.isInteger(def.exponent ?? 2);
@@ -541,7 +541,7 @@ const powScaleDefinition = defineScale<PowScale>({
 const sqrtScaleDefinition = defineScale<SqrtScale>({
   family: 'position',
   schema: SqrtScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
   resolve: (def, values, range) =>
     continuousPositionScale(
@@ -553,7 +553,7 @@ const sqrtScaleDefinition = defineScale<SqrtScale>({
 const symlogScaleDefinition = defineScale<SymlogScale>({
   family: 'position',
   schema: SymlogScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   // 与 log/pow/sqrt 同属非线性连续 scale → 不作 interval / area 值轴（柱 / 面积长度会失真）
   allowsBaseline: false,
   // symlog 全域有定义（含零 / 负），输入仅需有限数，沿用默认 isFiniteNumber 守门
@@ -566,7 +566,7 @@ const symlogScaleDefinition = defineScale<SymlogScale>({
 const radialScaleDefinition = defineScale<RadialScale>({
   family: 'position',
   schema: RadialScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   // 面积感知半径，自 0 基线起算（南丁格尔 / 玫瑰图扇区面积编码值）→ 允许作 interval / path closure 值轴
   allowsBaseline: true,
   resolve: (def, values, range) =>
@@ -578,7 +578,7 @@ const radialScaleDefinition = defineScale<RadialScale>({
 const timeScaleDefinition = defineScale<TimeScale>({
   family: 'position',
   schema: TimeScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
   resolve: (def, values, range) => timePositionScale(resolveTimeScale(def, values, range)),
 });
@@ -586,7 +586,7 @@ const timeScaleDefinition = defineScale<TimeScale>({
 const bandScaleDefinition = defineScale<BandScale>({
   family: 'position',
   schema: BandScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Temporal,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Temporal,
   allowsBaseline: true,
   resolve: (def, values, range) => bandPositionScale(resolveBandScale(def, values, range)),
 });
@@ -594,7 +594,7 @@ const bandScaleDefinition = defineScale<BandScale>({
 const pointScaleDefinition = defineScale<PointScale>({
   family: 'position',
   schema: PointScaleSchema,
-  isFieldCompatible: fieldType => fieldType !== PlotFieldType.Temporal,
+  isFieldCompatible: fieldType => fieldType !== DataFieldType.Temporal,
   allowsBaseline: true,
   resolve: (def, values, range) => pointPositionScale(resolvePointScale(def, values, range)),
 });

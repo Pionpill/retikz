@@ -8,11 +8,11 @@
 
 `@retikz/data` 在 beta.1 成为数据模型、字段解析、transform、statistics、format 的真源后，`@retikz/plot` 需要从“拥有数据实现”调整为“消费数据实现”。plot 仍负责 GoG 语义：scale、coordinate、mark、guide、locator、theme、composition 与 lowering。
 
-这次适配必须保持用户可见行为等价。现有 `<Plot data model dataTransforms>`、`lowerPlots(datasets, options)`、`TransformOperation`、`defineTransform`、`resolveTransformRegistry` 等公开入口不能在 beta.1 直接消失，否则 plot-react、plot-vanilla 和外部用户会被一次拆包打断。
+这次适配在 beta.1 直接采用破坏式迁移。`@retikz/plot` 不再作为 data API 的兼容转发层；现有 `<Plot data model dataTransforms>`、`lowerPlots(datasets, options)` 等 plot 入口保持语义，但数据模型、外部数据集、字段格式、共享 transform 定义 helper 的 import 源头改为 `@retikz/data`。
 
-因此 plot 的策略是：内部 import 改走 `@retikz/data`；顶层 public API 在 beta.1 继续 re-export data 包中的稳定类型与 helper；深导入不兼容。
+因此 plot 的策略是：内部 import 改走 `@retikz/data`；顶层 public API 只导出 plot 自己拥有的 schema / provider / lowering 能力，不保留 `DataModel`、`ExternalDatasets`、`defineTransform` 等 data re-export；深导入不兼容。
 
-## 决策：plot 消费 data，并保留顶层兼容 re-export
+## 决策：plot 消费 data，不保留顶层兼容 re-export
 
 `@retikz/plot` 新增依赖：
 
@@ -26,67 +26,60 @@
 
 内部适配规则：
 
-1. `schemas/plot`、`schemas/layer`、`schemas/mark` 等 plot schema 中引用 `DataSpec`、`TransformOperation` 的位置改从 `@retikz/data` 导入。
+1. `schemas/plot`、`schemas/layer`、`schemas/mark` 等 plot schema 中引用 `DataRef`、共享 transform schema 的位置改从 `@retikz/data` 导入。
 2. `pipeline/expand.ts` 改从 `@retikz/data` 消费 `applyTransforms`、`collectTransformFields`、`resolveTransformRegistry`、`applyFieldResolver`、`resolveFieldPath`、field type / coerce / format 等纯数据能力。
 3. `providers/scale`、`providers/channel`、`providers/mark` 只保留 plot 语义；`channelValue`、`labelOf` 这类组合 helper 留在 plot，并基于 data 包的字段解析和格式化能力实现。
-4. `src/index.ts` 在 beta.1 继续 re-export `DataModel`、`ExternalRow`、`ExternalDatasets`、`TransformOperation`、`defineTransform`、`AnyTransformDefinition`、`applyTransforms`、`resolveTransformRegistry` 等现有公开数据 API。
-5. plot-react / plot-vanilla 暂时不强制改为直接依赖 `@retikz/data`；它们可继续从 `@retikz/plot` 获取类型，避免 adapter 同步破坏。
+4. `src/index.ts` 不 re-export `DataModel`、`ExternalRow`、`ExternalDatasets`、`defineTransform`、`AnyTransformDefinition`、`applyTransforms`、`resolveTransformRegistry` 等 data API；这些只能从 `@retikz/data` 顶层入口导入。
+5. plot-react / plot-vanilla 需要直接依赖 `@retikz/data`，以获取 adapter 暴露面中的数据类型和 helper。
 
 理由：
 
 1. plot 不应继续拥有跨宿主数据算法，否则 chart / table 会重复实现或反向依赖 plot。
-2. 顶层 re-export 可以让 beta.1 成为低摩擦迁移，真正清理旧导出留到后续 beta。
+2. `0.x` 阶段优先保证 owner 边界正确；保留 plot re-export 会让消费方继续把 data API 误认成 plot API。
 3. 内部 import 改走 data 包可以立即暴露循环依赖和错误边界，保证 data 包不是空壳。
 
 ## 待决策点
 
-- **re-export 保留周期**：beta.1 必须保留；beta.2 是否标记 deprecated，等 docs 和 chart/table 设计确定后再定。
-- **adapter 直接依赖 data**：beta.1 不强制。只有当 plot-react 需要不经 plot 的数据 authoring helper 时，再单独 ADR。
+- **命名统一批次**：本 ADR 只处理边界迁移；`PlotFieldType`、`PlotSortOrder`、`PlotFieldFormat` 等 data 归属命名在迁移后统一改为 `DataXxx`。
+- **adapter 公开面**：plot-react / plot-vanilla 暴露 data 类型时直接从 `@retikz/data` 消费，不经 plot 转发。
 
 ## DSL / API 表面
 
-现有 plot 入口保持可用：
+plot 入口保持 plot 自身 API：
 
 ```ts
-import {
-  defineTransform,
-  lowerPlots,
-  type ExternalDatasets,
-  type PlotSpec,
-  type TransformOperation,
-} from '@retikz/plot';
+import { lowerPlots, type PlotSpec, type TransformOperation } from '@retikz/plot';
 ```
 
-新 data-first 入口也可用：
+data API 从 data 包获取：
 
 ```ts
-import { defineTransform, type TransformOperation } from '@retikz/data';
-import { lowerPlots, type PlotSpec } from '@retikz/plot';
+import { defineTransform, type ExternalDatasets } from '@retikz/data';
+import { lowerPlots, type PlotSpec, type TransformOperation } from '@retikz/plot';
 ```
 
-两种写法在 beta.1 中应得到同一 runtime definition 与 transform 行为。
+`TransformOperation` 仍属于 plot schema：它包含共享 data transform、plot-only transform 与外部 transform passthrough。共享 transform definition helper 与外部数据集类型属于 data。
 
 ## 测试设计
 
 `packages/viz/plot/tests/` 覆盖：
 
 - plot lowering 使用 `@retikz/data` 后，现有 transform / field / format 行为不变。
-- plot 顶层 re-export 的 data 类型和 helper 可被外部测试 import。
-- plot-react 和 plot-vanilla 不需要新增 data dependency 也能通过类型检查。
+- plot 顶层不再 re-export data 类型和 helper。
+- plot-react 和 plot-vanilla 新增 data dependency 后通过类型检查。
 - 深路径删除后，plot 内部没有从本包旧 data/provider 文件导入的残留。
 
 ## 影响
 
 - `@retikz/plot` package dependency 增加 `@retikz/data`。
-- `@retikz/plot` 源码删除私有 data / transform / statistics / format 实现文件，或保留最小 re-export shim；最终真源必须是 `@retikz/data`。
-- docs 需要说明 data 包存在，以及 plot 顶层 data re-export 是 beta.1 兼容入口。
-- ⚠️ BREAKING：依赖 `@retikz/plot/src/...` 的深导入用户需要改为 `@retikz/data` 或 `@retikz/plot` 顶层入口。
+- `@retikz/plot` 源码删除私有 data / transform / statistics / format 实现文件，不保留 re-export shim；最终真源必须是 `@retikz/data`。
+- docs 需要说明 data 包存在，以及 data API 必须从 `@retikz/data` 顶层入口导入。
+- ⚠️ BREAKING：依赖 `@retikz/plot` 获取 data API 或依赖 `@retikz/plot/src/...` 深导入的用户需要改为 `@retikz/data` 或 `@retikz/plot` 对应顶层 owner 入口。
 
 ## 不在本 ADR 范围
 
 - 不改 plot scale / coordinate / mark / guide schema 语义。
 - 不新增 data-react。
-- 不删除 plot 顶层 data re-export。
 - 不设计 chart / table 消费 data 的 API。
 
 ---
@@ -113,7 +106,7 @@ import { lowerPlots, type PlotSpec } from '@retikz/plot';
 - `packages/viz/plot/package.json`
 - `packages/viz/plot/src/index.ts`
 - `packages/viz/plot/src/schemas/**`
-- `packages/viz/plot/src/contract/**`（仅删除/替换 data 相关 re-export）
+- `packages/viz/plot/src/contract/**`（仅删除/替换 data 相关 import）
 - `packages/viz/plot/src/providers/**`（仅删除/替换 data 相关实现与 import）
 - `packages/viz/plot/src/pipeline/**`
 - `packages/viz/plot/tests/**`
@@ -121,14 +114,14 @@ import { lowerPlots, type PlotSpec } from '@retikz/plot';
 - `packages/viz/plot-vanilla/src/**`（仅 import 类型来源必要调整）
 - `packages/viz/plot-react/package.json`（仅在确实直接依赖 data 时修改）
 - `packages/viz/plot-vanilla/package.json`（仅在确实直接依赖 data 时修改）
-- `apps/docs/**`（仅说明 data 包与兼容入口）
+- `apps/docs/**`（仅说明 data 包与 owner 入口）
 
 ### 测试象限
 
 **Happy path（≥ 3）**：
 
 - `plot lowerPlots applies data transforms from data package`：sort + stack 下沉输出与迁移前一致。
-- `plot public barrel re-exports transform extension surface`：从 `@retikz/plot` import `defineTransform` 和 `resolveTransformRegistry` 可用。
+- `plot public barrel does not re-export data surface`：从 `@retikz/plot` 不再导入 `defineTransform` 和 `resolveTransformRegistry`。
 - `plot-react dataTransforms still builds the same PlotSpec`：`<Transform>` 与 `dataTransforms` 顺序不变。
 
 **边界（≥ 2）**：

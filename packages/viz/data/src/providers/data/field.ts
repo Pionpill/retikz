@@ -1,8 +1,8 @@
-import { isFiniteNumber } from '@retikz/math';
+﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { DataModel, ExternalRow, PlotFieldTypeMap, PlotFieldTypeValue } from '../../schemas';
+import type { DataFieldTypeMap, DataFieldTypeValue,DataModel, ExternalRow } from '../../schemas';
 
-import { PlotFieldType } from '../../schemas';
+import { DataFieldType } from '../../schemas';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）
@@ -53,18 +53,18 @@ export const inferCategoryDomain = (values: Array<unknown>): Array<string | numb
 };
 
 /** 单个字段样本值的测量类型推断策略：Date/string ISO -> temporal，bigint/finite number -> continuous，boolean/string -> categorical。 */
-const classifyFieldType = (value: unknown): PlotFieldTypeValue | undefined => {
-  if (value instanceof Date) return PlotFieldType.Temporal;
-  if (typeof value === 'bigint') return PlotFieldType.Continuous;
-  if (typeof value === 'number') return isFiniteNumber(value) ? PlotFieldType.Continuous : undefined;
-  if (typeof value === 'string') return isIsoDateString(value) ? PlotFieldType.Temporal : PlotFieldType.Categorical;
-  if (typeof value === 'boolean') return PlotFieldType.Categorical;
+const classifyFieldType = (value: unknown): DataFieldTypeValue | undefined => {
+  if (value instanceof Date) return DataFieldType.Temporal;
+  if (typeof value === 'bigint') return DataFieldType.Continuous;
+  if (typeof value === 'number') return isFiniteNumber(value) ? DataFieldType.Continuous : undefined;
+  if (typeof value === 'string') return isIsoDateString(value) ? DataFieldType.Temporal : DataFieldType.Categorical;
+  if (typeof value === 'boolean') return DataFieldType.Categorical;
   return undefined;
 };
 
 /** 从绑定数据推断某字段的测量类型；仅在没有 data.model 或 model 缺省 type 时使用。 */
-export const inferFieldType = (rows: Array<ExternalRow>, path: string): PlotFieldTypeValue => {
-  const observedTypes = new Set<PlotFieldTypeValue>();
+export const inferFieldType = (rows: Array<ExternalRow>, path: string): DataFieldTypeValue => {
+  const observedTypes = new Set<DataFieldTypeValue>();
   let sampleCount = 0;
   const scanLimit = Math.min(rows.length, MAX_SCAN_ROWS);
   for (let index = 0; index < scanLimit && sampleCount < MAX_SAMPLE_VALUES; index++) {
@@ -75,13 +75,13 @@ export const inferFieldType = (rows: Array<ExternalRow>, path: string): PlotFiel
     observedTypes.add(type);
     sampleCount++;
   }
-  if (sampleCount === 0) return PlotFieldType.Categorical;
-  if (observedTypes.size > 1) return PlotFieldType.Categorical;
-  return observedTypes.has(PlotFieldType.Temporal)
-    ? PlotFieldType.Temporal
-    : observedTypes.has(PlotFieldType.Continuous)
-      ? PlotFieldType.Continuous
-      : PlotFieldType.Categorical;
+  if (sampleCount === 0) return DataFieldType.Categorical;
+  if (observedTypes.size > 1) return DataFieldType.Categorical;
+  return observedTypes.has(DataFieldType.Temporal)
+    ? DataFieldType.Temporal
+    : observedTypes.has(DataFieldType.Continuous)
+      ? DataFieldType.Continuous
+      : DataFieldType.Categorical;
 };
 
 /** 把源字段解析成字段名到类型的映射，供 type-driven scale / coercion 消费。 */
@@ -89,14 +89,14 @@ export const resolveFieldTypes = (
   model: DataModel | undefined,
   rows: Array<ExternalRow>,
   sourceFields: Set<string>,
-): PlotFieldTypeMap => {
-  const fieldTypeMap: PlotFieldTypeMap = new Map();
+): DataFieldTypeMap => {
+  const fieldTypeMap: DataFieldTypeMap = new Map();
   if (model !== undefined) {
     const declaredNameMap = new Set<string>();
-    const declaredTypeMap: PlotFieldTypeMap = new Map();
+    const declaredTypeMap: DataFieldTypeMap = new Map();
     for (const field of model) {
       if (declaredNameMap.has(field.name)) {
-        throw new Error(`lowerPlots: duplicate field "${field.name}" in data.model`);
+        throw new Error(`data: duplicate field "${field.name}" in data.model`);
       }
       declaredNameMap.add(field.name);
       if (field.type !== undefined) declaredTypeMap.set(field.name, field.type);
@@ -104,7 +104,7 @@ export const resolveFieldTypes = (
     for (const field of sourceFields) {
       if (!declaredNameMap.has(field)) {
         throw new Error(
-          `lowerPlots: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`,
+          `data: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`,
         );
       }
       fieldTypeMap.set(field, declaredTypeMap.get(field) ?? inferFieldType(rows, field));

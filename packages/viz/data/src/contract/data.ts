@@ -1,4 +1,4 @@
-import type { PlotFieldTypeValue } from '../schemas';
+﻿import type { DataFieldTypeValue } from '../schemas';
 
 /** 运行时 canonical 值，不含 boolean / null；coerceValue 与自定义 parse 的输出域。 */
 export type ParsedFieldValue = string | number | undefined;
@@ -9,7 +9,7 @@ export type ParsedFieldValue = string | number | undefined;
  */
 export type FieldResolution = {
   /** 覆盖最终字段类型；省略则用 model 声明 / 自动推断。 */
-  type?: PlotFieldTypeValue;
+  type?: DataFieldTypeValue;
   /** 覆盖内置 coercion：原始值 -> canonical 值；返回 undefined 跳过该值。 */
   parse?: (raw: unknown) => ParsedFieldValue;
 };
@@ -20,10 +20,10 @@ export type FieldResolution = {
  */
 export type ResolveField = (
   field: string,
-  context: { dataReference: string; physicalPath: string; declaredType?: PlotFieldTypeValue },
+  context: { dataReference: string; physicalPath: string; declaredType?: DataFieldTypeValue },
 ) => FieldResolution | undefined;
 
-/** transform/source-field 收集器；只承载 data 层字段名，不理解 plot channel 结构。 */
+/** transform/source-field 收集器；只承载 data 层字段名，不理解宿主 channel 结构。 */
 export type FieldCollector = {
   /** 登记单个字段名；undefined 会被调用方忽略。 */
   addField: (field: string | undefined) => void;

@@ -1,8 +1,8 @@
-import type { ParsedFieldValue, ResolveField } from '@retikz/data';
+﻿import type { ParsedFieldValue, ResolveField } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
 import { applyFieldResolver, normalizeRows } from '@retikz/data';
-import { PlotFieldType } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotSpec } from '../../../src/schemas';
@@ -26,7 +26,7 @@ const parseSlashDate = (raw: unknown): ParsedFieldValue => Date.parse(String(raw
 
 describe('applyFieldResolver — 类型覆盖 + parser 收集（ADR-04）', () => {
   it('apply_resolver_overrides_type_collects_parse', () => {
-    const base = new Map([['x', PlotFieldType.Continuous]]);
+    const base = new Map([['x', DataFieldType.Continuous]]);
     const parse = (raw: unknown): ParsedFieldValue => Number(raw);
     const { fieldTypes, parsers, resolverHit } = applyFieldResolver(
       base,
@@ -34,27 +34,27 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（ADR-04）', () =
       undefined,
       'd',
       undefined,
-      field => (field === 'x' ? { type: PlotFieldType.Categorical, parse } : undefined),
+      field => (field === 'x' ? { type: DataFieldType.Categorical, parse } : undefined),
     );
-    expect(fieldTypes.get('x')).toBe(PlotFieldType.Categorical);
+    expect(fieldTypes.get('x')).toBe(DataFieldType.Categorical);
     expect(parsers.get('x')).toBe(parse);
     expect(resolverHit).toBe(true);
   });
 
   it('apply_resolver_undefined_no_hit', () => {
-    const base = new Map([['x', PlotFieldType.Continuous]]);
+    const base = new Map([['x', DataFieldType.Continuous]]);
     const result = applyFieldResolver(base, new Set(['x']), undefined, 'd', undefined, undefined);
     expect(result.resolverHit).toBe(false);
     expect(result.fieldTypes).toBe(base);
   });
 
   it('apply_resolver_passes_dataset_context', () => {
-    const base = new Map([['x', PlotFieldType.Temporal]]);
+    const base = new Map([['x', DataFieldType.Temporal]]);
     let seen: unknown;
     applyFieldResolver(
       base,
       new Set(['x']),
-      [{ name: 'x', type: PlotFieldType.Temporal }],
+      [{ name: 'x', type: DataFieldType.Temporal }],
       'd',
       { x: 'when' },
       (field, context) => {
@@ -62,22 +62,22 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（ADR-04）', () =
         return undefined;
       },
     );
-    expect(seen).toEqual({ dataReference: 'd', physicalPath: 'when', declaredType: PlotFieldType.Temporal });
+    expect(seen).toEqual({ dataReference: 'd', physicalPath: 'when', declaredType: DataFieldType.Temporal });
   });
 
   it('parse_only_without_declared_type_throws', () => {
-    const base = new Map([['x', PlotFieldType.Continuous]]);
+    const base = new Map([['x', DataFieldType.Continuous]]);
     expect(() =>
       applyFieldResolver(base, new Set(['x']), undefined, 'd', undefined, () => ({ parse: raw => Number(raw) })),
     ).toThrow(/needs a type/i);
   });
 
   it('parse_only_with_declared_type_ok', () => {
-    const base = new Map([['x', PlotFieldType.Temporal]]);
+    const base = new Map([['x', DataFieldType.Temporal]]);
     const { parsers } = applyFieldResolver(
       base,
       new Set(['x']),
-      [{ name: 'x', type: PlotFieldType.Temporal }],
+      [{ name: 'x', type: DataFieldType.Temporal }],
       'd',
       undefined,
       () => ({ parse: parseSlashDate }),
@@ -90,7 +90,7 @@ describe('normalizeRows — 自定义 parser（ADR-04）', () => {
   it('parser_overrides_builtin_coerce', () => {
     const out = normalizeRows(
       [{ x: '2024/01/01' }],
-      new Map([['x', PlotFieldType.Temporal]]),
+      new Map([['x', DataFieldType.Temporal]]),
       undefined,
       new Map([['x', parseSlashDate]]),
     );
@@ -100,7 +100,7 @@ describe('normalizeRows — 自定义 parser（ADR-04）', () => {
   it('parser_returning_boolean_or_null_skipped', () => {
     const out = normalizeRows(
       [{ a: 'x' }],
-      new Map([['a', PlotFieldType.Categorical]]),
+      new Map([['a', DataFieldType.Categorical]]),
       undefined,
       new Map([['a', () => true as unknown as ParsedFieldValue]]),
     );
@@ -110,7 +110,7 @@ describe('normalizeRows — 自定义 parser（ADR-04）', () => {
   it('parser_returning_undefined_skips', () => {
     const out = normalizeRows(
       [{ a: 'x' }],
-      new Map([['a', PlotFieldType.Categorical]]),
+      new Map([['a', DataFieldType.Categorical]]),
       undefined,
       new Map([['a', () => undefined]]),
     );
@@ -143,7 +143,7 @@ describe('prepareRows — resolveField 集成（ADR-04）', () => {
       { resolveField: field => (field === 'x' ? { type: 'categorical' } : undefined) },
       rows,
     );
-    expect(fieldTypes.get('x')).toBe(PlotFieldType.Categorical); // 覆盖推断的 continuous
+    expect(fieldTypes.get('x')).toBe(DataFieldType.Categorical); // 覆盖推断的 continuous
     expect(normalized[0].x).toBe(0); // resolver 命中 → 归一化跑，类别键原样
   });
 
@@ -156,7 +156,7 @@ describe('prepareRows — resolveField 集成（ADR-04）', () => {
       { resolveField: field => (field === 'x' ? { parse: parseSlashDate } : undefined) },
       rows,
     );
-    expect(fieldTypes.get('x')).toBe(PlotFieldType.Temporal); // 类型沿用 model
+    expect(fieldTypes.get('x')).toBe(DataFieldType.Temporal); // 类型沿用 model
     expect(normalized[0].x).toBe(Date.parse('2024-03-04'));
   });
 

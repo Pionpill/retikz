@@ -1,6 +1,6 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
-import { FieldOrderMode, PlotFieldType } from './constants';
+import { DataFieldType, FieldOrderMode } from './constants';
 
 export const FieldFormatSchema = z
   .string()
@@ -13,7 +13,7 @@ export const FieldDefSchema = z
   .object({
     name: z.string().min(1).describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
     type: z
-      .enum(PlotFieldType)
+      .enum(DataFieldType)
       .optional()
       .describe(
         'Field measurement type; omit to infer from the bound dataset at lowering. When given, drives type-driven scale selection and guide formatting without seeing the data',
@@ -44,7 +44,7 @@ export const DataRefSchema = z
       .string()
       .min(1)
       .describe(
-        'Name of an externally-supplied dataset; resolved against lowerPlots(datasets) at compile time. The dataset values never enter the IR.',
+        'Name of an externally-supplied dataset; resolved by the host lowering pipeline at compile time. The dataset values never enter the IR.',
       ),
     model: DataModelSchema.optional().describe('Optional data model (field declarations)'),
   })

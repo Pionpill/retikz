@@ -1,6 +1,6 @@
-import { compileToScene } from '@retikz/core';
+﻿import { compileToScene } from '@retikz/core';
 import { coerceValue, inferFieldType, normalizeRows, validateBoundData } from '@retikz/data';
-import { PlotFieldType, ScalarValueSchema } from '@retikz/data';
+import { DataFieldType, ScalarValueSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -102,19 +102,19 @@ const prepare = (spec: PlotSpec, rows: Array<Record<string, unknown>>, options: 
 describe('ADR-08 数据健壮性 — bigint ingest', () => {
   it('bigint_ingested_as_continuous：无 model 下 bigint 推断 continuous 且归一化成数值', () => {
     // classify(bigint) → continuous（无 model 推断）；normalizeRows 把 42n coerce 成 42
-    expect(inferFieldType([{ a: 42n }, { a: 7n }], 'a')).toBe(PlotFieldType.Continuous);
+    expect(inferFieldType([{ a: 42n }, { a: 7n }], 'a')).toBe(DataFieldType.Continuous);
     const { fieldTypes, normalized } = prepare(specNoModel(), [
       { a: 42n, b: 1n },
       { a: 7n, b: 2n },
     ]);
-    expect(fieldTypes.get('a')).toBe(PlotFieldType.Continuous);
+    expect(fieldTypes.get('a')).toBe(DataFieldType.Continuous);
     expect(normalized[0].a).toBe(42);
     expect(normalized[1].a).toBe(7);
   });
 
   it('safe_integer_bigint_accepted：MAX_SAFE_INTEGER 的 bigint 被接受、转 number', () => {
     const safe = 9007199254740991n; // = Number.MAX_SAFE_INTEGER
-    expect(coerceValue(safe, PlotFieldType.Continuous)).toBe(Number(safe));
+    expect(coerceValue(safe, DataFieldType.Continuous)).toBe(Number(safe));
     const { normalized } = prepare(specWithModel(), [{ a: safe, b: 1 }]);
     expect(normalized[0].a).toBe(Number.MAX_SAFE_INTEGER);
   });
@@ -122,7 +122,7 @@ describe('ADR-08 数据健壮性 — bigint ingest', () => {
   it('unsafe_bigint_treated_invalid：超 safe 区间 bigint（finite 但丢精度）默认 skip 当非法值', () => {
     const unsafe = 9007199254740993n; // > MAX_SAFE_INTEGER，Number(unsafe) 仍 finite 但失精
     // coerceNumber 只收 Number.isSafeInteger(Number(value))，否则 NaN
-    expect(Number.isNaN(coerceValue(unsafe, PlotFieldType.Continuous) as number)).toBe(true);
+    expect(Number.isNaN(coerceValue(unsafe, DataFieldType.Continuous) as number)).toBe(true);
     // 默认 skip：归一化写 NaN 哨兵、不删行、不抛
     const { normalized } = prepare(specWithModel(), [{ a: unsafe, b: 1 }]);
     expect(Number.isNaN(normalized[0].a as number)).toBe(true);
@@ -130,7 +130,7 @@ describe('ADR-08 数据健壮性 — bigint ingest', () => {
 
   it('bigint_with_model_continuous：model 声明 continuous + bigint 数据 → coerce 成 number', () => {
     const { fieldTypes, normalized } = prepare(specWithModel(), [{ a: 100n, b: 200n }]);
-    expect(fieldTypes.get('a')).toBe(PlotFieldType.Continuous);
+    expect(fieldTypes.get('a')).toBe(DataFieldType.Continuous);
     expect(normalized[0].a).toBe(100);
     expect(normalized[0].b).toBe(200);
   });
@@ -219,8 +219,8 @@ describe('ADR-08 数据健壮性 — validateData 字段级报告', () => {
       { a: 'nope', b: 3 },
     ];
     const fieldTypes = new Map([
-      ['a', PlotFieldType.Continuous],
-      ['b', PlotFieldType.Continuous],
+      ['a', DataFieldType.Continuous],
+      ['b', DataFieldType.Continuous],
     ]);
     let message = '';
     try {
@@ -259,7 +259,7 @@ describe('ADR-08 数据健壮性 — 恒归一化（去门控）', () => {
       { t: '2024-01-01', v: 5 },
       { t: '2024-02-01', v: 7 },
     ]);
-    expect(fieldTypes.get('t')).toBe(PlotFieldType.Temporal);
+    expect(fieldTypes.get('t')).toBe(DataFieldType.Temporal);
     expect(normalized[0].t).toBe(Date.parse('2024-01-01'));
     expect(normalized[1].t).toBe(Date.parse('2024-02-01'));
     expect(normalized[0].v).toBe(5);
@@ -271,7 +271,7 @@ describe('ADR-08 数据健壮性 — resolveField 交互', () => {
     const spec = specWithModel();
     // resolveField.parse 对 a 返回 undefined（非法）→ 归一化写哨兵；默认 skip 不抛
     const resolveField: LowerPlotsOptions['resolveField'] = field =>
-      field === 'a' ? { type: PlotFieldType.Continuous, parse: () => undefined } : undefined;
+      field === 'a' ? { type: DataFieldType.Continuous, parse: () => undefined } : undefined;
     const { normalized } = prepare(spec, [{ a: 5, b: 1 }], { resolveField });
     expect(normalized[0].a).toBeUndefined(); // parse 返非法 → 哨兵
     // 同样的 resolveField 非法输出，invalid:error 应 fail-loud（skip / error 对 resolver 输出一致处理）

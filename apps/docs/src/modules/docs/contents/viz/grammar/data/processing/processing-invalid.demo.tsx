@@ -1,4 +1,4 @@
-import type { DataModel } from '@retikz/plot';
+import type { DataModel } from '@retikz/data';
 import type { FC } from 'react';
 
 import { Axis, IntervalMark, Plot } from '@retikz/plot-react';

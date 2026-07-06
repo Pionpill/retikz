@@ -1,4 +1,4 @@
-import type { IRScope } from '@retikz/core';
+﻿import type { IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
 import { defineTransform } from '@retikz/data';

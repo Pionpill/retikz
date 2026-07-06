@@ -1,8 +1,8 @@
-import { isFiniteNumber } from '@retikz/math';
+﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { PlotFieldTypeValue } from '../../schemas';
+import type { DataFieldTypeValue } from '../../schemas';
 
-import { PlotFieldType } from '../../schemas';
+import { DataFieldType } from '../../schemas';
 import { isIsoDateString } from './field';
 
 /** 严格数字串：trimmed 十进制 / 科学计数；拒空串、Infinity、NaN、hex、带单位串。 */
@@ -46,15 +46,15 @@ export const coerceTimestamp = (value: unknown): number | null => {
 };
 
 /**
- * 按 PlotFieldType 把原始 JS 值强制成规范值。
+ * 按 DataFieldType 把原始 JS 值强制成规范值。
  * @description continuous -> number；temporal -> epoch ms；categorical -> string|number。非法值返回 NaN / undefined。
  */
-export const coerceValue = (value: unknown, type: PlotFieldTypeValue): string | number | undefined => {
-  if (type === PlotFieldType.Temporal) {
+export const coerceValue = (value: unknown, type: DataFieldTypeValue): string | number | undefined => {
+  if (type === DataFieldType.Temporal) {
     const stamp = coerceTimestamp(value);
     return stamp === null ? NaN : stamp;
   }
-  if (type === PlotFieldType.Categorical) {
+  if (type === DataFieldType.Categorical) {
     return coerceCategory(value);
   }
   return coerceNumber(value);

@@ -1,4 +1,4 @@
-# ADR-06：声明式 `FieldDef.format`——可序列化的字段值解析词表，让 `resolveField` 退为纯逃生舱
+﻿# ADR-06：声明式 `FieldDef.format`——可序列化的字段值解析词表，让 `resolveField` 退为纯逃生舱
 
 - 状态：Accepted
 - 决策日期：2026-06-07
@@ -14,7 +14,7 @@ Vega-Lite 的对策是 `data.format.parse`：在 spec 里**声明式**写 `{ "da
 
 ## 决策：`FieldDef` 加可选 `format`（closed 字符串词表，**format 蕴含 type**），解析优先级 `resolveField.parse > FieldDef.format > 内置默认`
 
-`format` 是按 `PlotFieldFormat`（`as const` 词表）取值的字符串，进 `data.model`、JSON 可序列化。lowering 时按 `(type, format)` 选内置 parser，喂 `normalizeRows`。
+`format` 是按 `DataFieldFormat`（`as const` 词表）取值的字符串，进 `data.model`、JSON 可序列化。lowering 时按 `(type, format)` 选内置 parser，喂 `normalizeRows`。
 
 **`format` ↔ `type` 关系（钉死，cross-review #1）**：每个 format 词项**唯一绑定一个 type**（`epochSeconds`/`epochMillis`/`slashDate`/`iso` → `temporal`；`numberString`/`percent` → `continuous`）。由此：
 
@@ -26,7 +26,7 @@ Vega-Lite 的对策是 `data.format.parse`：在 spec 里**声明式**写 `{ "da
 
 ```ts
 /** 字段值解析格式词表（暴露给用户；裸字面量同样可用）；按字段 type 校验兼容 */
-export const PlotFieldFormat = {
+export const DataFieldFormat = {
   /** temporal：严格 ISO（默认，等价不写 format） */
   Iso: 'iso',
   /** temporal：数值/数值串按 epoch 秒 → ms */
@@ -40,10 +40,10 @@ export const PlotFieldFormat = {
   /** continuous：百分比串 '50%' → 0.5 */
   Percent: 'percent',
 } as const;
-export type FieldFormat = ValueOf<typeof PlotFieldFormat>;
+export type FieldFormat = ValueOf<typeof DataFieldFormat>;
 
 // FieldDefSchema 加：
-//   format: z.nativeEnum(PlotFieldFormat).optional().describe('Declarative value-parsing format; must be compatible with type. Omit for the built-in default')
+//   format: z.nativeEnum(DataFieldFormat).optional().describe('Declarative value-parsing format; must be compatible with type. Omit for the built-in default')
 ```
 
 DSL：
@@ -71,9 +71,9 @@ DSL：
 
 ## 影响
 
-- **IR schema**：`FieldDefSchema` 加 `format?`（**非破坏**，可选）；新增 `PlotFieldFormat` / `FieldFormat`。
+- **IR schema**：`FieldDefSchema` 加 `format?`（**非破坏**，可选）；新增 `DataFieldFormat` / `FieldFormat`。
 - **lowering**：`coerce.ts` 加 `formatParser(type, format) → parser`；`normalizeRows` 的 per-field parser 槽接受「format 选出的内置 parser」（与 ADR-04 的 resolveField.parse 同槽，优先级 resolveField > format）；`expand.ts` / `validate.ts` 收集 format→parser 并做 type 兼容校验。
-- **公开 API**：`model` 的 FieldDef 多一个声明式 `format`；`PlotFieldFormat` 导出。
+- **公开 API**：`model` 的 FieldDef 多一个声明式 `format`；`DataFieldFormat` 导出。
 - **文档站**：`grammar/data` 补「声明式 format」段（与 resolveField 段并列：声明式优先、函数兜底）。
 - **core**：无。
 

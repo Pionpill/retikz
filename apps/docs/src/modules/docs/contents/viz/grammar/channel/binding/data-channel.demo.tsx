@@ -1,6 +1,6 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
-import { PlotFieldType } from '@retikz/plot';
+import { DataFieldType } from '@retikz/data';
 import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
 
 import { cities } from './data-channel.data';
@@ -10,11 +10,11 @@ const Demo: FC = () => (
   <Plot
     data={cities}
     model={[
-      { name: 'gdp', type: PlotFieldType.Continuous },
-      { name: 'life', type: PlotFieldType.Continuous },
-      { name: 'population', type: PlotFieldType.Continuous },
-      { name: 'region', type: PlotFieldType.Categorical },
-      { name: 'abbr', type: PlotFieldType.Categorical },
+      { name: 'gdp', type: DataFieldType.Continuous },
+      { name: 'life', type: DataFieldType.Continuous },
+      { name: 'population', type: DataFieldType.Continuous },
+      { name: 'region', type: DataFieldType.Categorical },
+      { name: 'abbr', type: DataFieldType.Categorical },
     ]}
     width={460}
     height={300}

@@ -1,4 +1,4 @@
-# ADR-01：bin + aggregate transform
+﻿# ADR-01：bin + aggregate transform
 
 状态：Accepted
 发布：`@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` `0.1.0-alpha.12`
@@ -16,7 +16,7 @@ v0.1-alpha.12 补齐 grammar of graphics 中 Statistics 的基础能力。此前
 
 ## 决策
 
-新增 `PlotTransform.Bin` 与 `PlotTransform.Aggregate`。二者都是 row-changing transform，会生成新的数据行，并通过 provenance 记录其源行集合。
+新增 `DataTransform.Bin` 与 `DataTransform.Aggregate`。二者都是 row-changing transform，会生成新的数据行，并通过 provenance 记录其源行集合。
 
 `bin` 支持互斥的分箱策略：按箱数、按步长或按显式阈值。输出行包含区间字段与统计字段，默认可产出 `binStart` / `binEnd` / `binValue` 一类派生列。空箱仍可产出行，以保证连续区间图形和 guide 对齐。
 

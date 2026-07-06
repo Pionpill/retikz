@@ -1,11 +1,11 @@
-# ADR-09：FieldFormat registry
+﻿# ADR-09：FieldFormat registry
 
 状态：Accepted
 发布：`@retikz/plot` `0.1.0-alpha.12`
 
 ## 背景
 
-data 层复审后，整体数据模型并不适合全面 registry 化：字段类型、字段解析、label resolver 等仍有横切语义或函数 hook。唯一稳定适合抽象成 definition 的，是具名字段解析格式 `PlotFieldFormat`。
+data 层复审后，整体数据模型并不适合全面 registry 化：字段类型、字段解析、label resolver 等仍有横切语义或函数 hook。唯一稳定适合抽象成 definition 的，是具名字段解析格式 `DataFieldFormat`。
 
 此前内置 format 由 `coerce.ts` 中的分支处理，自定义货币、地区日期等格式只能走动态 parse 逃生舱。为补齐 data 层扩展缝，本 ADR 把字段解析格式抽成 registry。
 

@@ -1,7 +1,7 @@
-import type { DataModel } from '@retikz/plot';
+import type { DataModel } from '@retikz/data';
 import type { FC } from 'react';
 
-import { defineFieldFormat } from '@retikz/plot';
+import { defineFieldFormat } from '@retikz/data';
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
 
 import { wanRows } from './processing-custom-format.data';

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
 
@@ -71,11 +71,11 @@ export type AnyTransformDefinition = Omit<
  */
 export const extractTransformKind = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {
-    throw new Error('lowerPlots: transform registration schema must be a ZodObject with a literal kind field');
+    throw new Error('data: transform registration schema must be a ZodObject with a literal kind field');
   }
   const kindSchema = schema.shape.kind;
   if (!(kindSchema instanceof z.ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
-    throw new Error('lowerPlots: transform registration schema must declare kind as a non-empty z.literal string');
+    throw new Error('data: transform registration schema must declare kind as a non-empty z.literal string');
   }
   return kindSchema.value;
 };

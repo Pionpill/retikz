@@ -1,11 +1,11 @@
-import { isFiniteNumber } from '@retikz/math';
+﻿import { isFiniteNumber } from '@retikz/math';
 
 import type { FieldFormatDefinition } from '../../contract';
 
 import { defineFieldFormat } from '../../contract';
-import { PlotFieldType } from '../../schemas';
+import { DataFieldType } from '../../schemas';
 import { coerceValue } from '../data';
-import { PlotFieldFormat } from './constants';
+import { DataFieldFormat } from './constants';
 
 /** 严格 YYYY/MM/DD 斜杠日期：四位年 / 两位月 / 两位日，分隔符必须是 `/`。 */
 const SLASH_DATE_RE = /^(\d{4})\/(\d{2})\/(\d{2})$/;
@@ -56,38 +56,38 @@ const parsePercent = (raw: unknown): number => {
 };
 
 const isoFormat = defineFieldFormat({
-  name: PlotFieldFormat.Iso,
-  impliedType: PlotFieldType.Temporal,
-  parse: raw => coerceValue(raw, PlotFieldType.Temporal),
+  name: DataFieldFormat.Iso,
+  impliedType: DataFieldType.Temporal,
+  parse: raw => coerceValue(raw, DataFieldType.Temporal),
 });
 
 const epochSecondsFormat = defineFieldFormat({
-  name: PlotFieldFormat.EpochSeconds,
-  impliedType: PlotFieldType.Temporal,
+  name: DataFieldFormat.EpochSeconds,
+  impliedType: DataFieldType.Temporal,
   parse: raw => toEpochNumber(raw) * 1000,
 });
 
 const epochMillisFormat = defineFieldFormat({
-  name: PlotFieldFormat.EpochMillis,
-  impliedType: PlotFieldType.Temporal,
+  name: DataFieldFormat.EpochMillis,
+  impliedType: DataFieldType.Temporal,
   parse: raw => toEpochNumber(raw),
 });
 
 const slashDateFormat = defineFieldFormat({
-  name: PlotFieldFormat.SlashDate,
-  impliedType: PlotFieldType.Temporal,
+  name: DataFieldFormat.SlashDate,
+  impliedType: DataFieldType.Temporal,
   parse: parseSlashDate,
 });
 
 const numberStringFormat = defineFieldFormat({
-  name: PlotFieldFormat.NumberString,
-  impliedType: PlotFieldType.Continuous,
+  name: DataFieldFormat.NumberString,
+  impliedType: DataFieldType.Continuous,
   parse: parseNumberString,
 });
 
 const percentFormat = defineFieldFormat({
-  name: PlotFieldFormat.Percent,
-  impliedType: PlotFieldType.Continuous,
+  name: DataFieldFormat.Percent,
+  impliedType: DataFieldType.Continuous,
   parse: parsePercent,
 });
 
@@ -119,10 +119,10 @@ export const resolveFormatRegistry = (
   const registry = new Map(BUILTIN_FORMAT_DEFINITIONS_BY_NAME);
   for (const def of custom ?? []) {
     if (def.name.length === 0) {
-      throw new Error('lowerPlots: field format name must be a non-empty string');
+      throw new Error('data: field format name must be a non-empty string');
     }
     if (registry.has(def.name)) {
-      throw new Error(`lowerPlots: duplicate field format registration: "${def.name}"`);
+      throw new Error(`data: duplicate field format registration: "${def.name}"`);
     }
     registry.set(def.name, def);
   }

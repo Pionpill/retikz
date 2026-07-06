@@ -1,7 +1,7 @@
-import type { ExternalRow, PlotFieldTypeValue } from '@retikz/data';
+﻿import type { DataFieldTypeValue,ExternalRow } from '@retikz/data';
 
 import { resolveFieldPath } from '@retikz/data';
-import { PlotFieldType } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
@@ -24,10 +24,10 @@ export const channelValue = (channel: Channel | undefined, row: ExternalRow): un
 const applyDisplayFormat = (
   value: unknown,
   displayFormat: string,
-  fieldType: PlotFieldTypeValue | undefined,
+  fieldType: DataFieldTypeValue | undefined,
 ): string => {
   try {
-    if (fieldType === PlotFieldType.Temporal) {
+    if (fieldType === DataFieldType.Temporal) {
       if (!isFiniteNumber(value)) return String(value);
       return d3UtcFormat(displayFormat)(new Date(value));
     }
@@ -45,7 +45,7 @@ const applyDisplayFormat = (
 export const labelOf = (
   content: TextChannel | MarkLabelContent,
   row: ExternalRow,
-  fieldType?: PlotFieldTypeValue,
+  fieldType?: DataFieldTypeValue,
   resolveLabel?: ResolveLabel,
 ): MarkLabelContent['value'] | string | undefined => {
   if (resolveLabel !== undefined) return String(resolveLabel(row));

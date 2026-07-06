@@ -4,11 +4,11 @@ import { z } from 'zod';
 import {
   BUILTIN_REDUCER_OPERATION_KINDS,
   BUILTIN_SELECTOR_OPS,
+  DataSortOrder,
+  DataTransform,
   FieldReducerOperationKind,
   FirstLastSelectorOp,
   MinMaxSelectorOp,
-  PlotSortOrder,
-  PlotTransform,
   ReducerOperationKind,
   RESERVED_TRANSFORM_KINDS,
   RowSelectorTie,
@@ -18,9 +18,9 @@ import {
 
 export const SortTransformSchema = z
   .object({
-    kind: z.literal(PlotTransform.Sort).describe('Discriminator: reorder rows by a field'),
+    kind: z.literal(DataTransform.Sort).describe('Discriminator: reorder rows by a field'),
     field: z.string().min(1).describe('Field path the rows are ordered by'),
-    order: z.enum(PlotSortOrder).optional().describe('Sort direction; default ascending'),
+    order: z.enum(DataSortOrder).optional().describe('Sort direction; default ascending'),
   })
   .describe('Sort transform: stable reorder of the data rows by one field');
 
@@ -32,7 +32,7 @@ export const GroupBySchema = z
 export const OrderBySchema = z
   .object({
     field: z.string().min(1).describe('Field path used to order rows'),
-    order: z.enum(PlotSortOrder).optional().describe('Sort direction; default ascending'),
+    order: z.enum(DataSortOrder).optional().describe('Sort direction; default ascending'),
   })
   .strict()
   .describe('Ordering rule used by row selectors');
@@ -397,7 +397,7 @@ export const SelectorOperationSchema = z
 
 export const SummarizeTransformSchema = z
   .object({
-    kind: z.literal(PlotTransform.Summarize).describe('Discriminator: summarize groups into statistic rows'),
+    kind: z.literal(DataTransform.Summarize).describe('Discriminator: summarize groups into statistic rows'),
     groupBy: GroupBySchema,
     metrics: ReducerMetricsSchema.describe('Reducer metrics emitted on each output group row'),
   })
@@ -406,7 +406,7 @@ export const SummarizeTransformSchema = z
 
 export const SelectTransformSchema = z
   .object({
-    kind: z.literal(PlotTransform.Select).describe('Discriminator: select representative source rows per group'),
+    kind: z.literal(DataTransform.Select).describe('Discriminator: select representative source rows per group'),
     groupBy: GroupBySchema,
     selector: SelectorOperationSchema.describe('Row selector applied independently to each group'),
     rankAs: z.string().min(1).optional().describe('Optional output field receiving one-based rank among selected rows'),
@@ -426,7 +426,7 @@ export const AnnotateSelectorSchema = z
 
 export const AnnotateTransformSchema = z
   .object({
-    kind: z.literal(PlotTransform.Annotate).describe('Discriminator: annotate each input row with group statistics'),
+    kind: z.literal(DataTransform.Annotate).describe('Discriminator: annotate each input row with group statistics'),
     groupBy: GroupBySchema,
     metrics: ReducerMetricsSchema.optional().describe('Reducer metrics broadcast to every row in the group'),
     selectors: z

@@ -1,9 +1,9 @@
-import type { IRPaintSpec } from '@retikz/core';
-import type { PlotFieldTypeMap } from '@retikz/data';
+﻿import type { IRPaintSpec } from '@retikz/core';
+import type { DataFieldTypeMap } from '@retikz/data';
 
 import { PaintSpecSchema } from '@retikz/core';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
-import { FieldOrderMode, PlotFieldType } from '@retikz/data';
+import { DataFieldType,FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';
@@ -65,7 +65,7 @@ export const makeColorChannelDefinition = (
       const field = channel.field;
       const colorFieldType = ctx.fieldTypes.get(field);
       if (
-        (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) &&
+        (colorFieldType === DataFieldType.Continuous || colorFieldType === DataFieldType.Temporal) &&
         channel.scale === undefined
       ) {
         throw new Error(
@@ -116,7 +116,7 @@ export const makeColorChannelDefinition = (
 
 const colorResolveContext = (
   node: PlotSpec,
-  fieldTypes: PlotFieldTypeMap,
+  fieldTypes: DataFieldTypeMap,
   field: string,
   resolveColorScheme: (name: string) => (t: number) => string,
   palette: ChannelPaletteContext | undefined,

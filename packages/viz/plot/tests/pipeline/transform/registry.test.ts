@@ -1,9 +1,9 @@
-import type { AnyTransformDefinition } from '@retikz/data';
+﻿import type { AnyTransformDefinition } from '@retikz/data';
 import type { ExternalRow } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
 import { applyTransforms, defineTransform, extractTransformKind } from '@retikz/data';
-import { PlotTransform as DataTransform } from '@retikz/data';
+import { DataTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';

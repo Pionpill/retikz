@@ -1,7 +1,7 @@
-import type { FieldFormatDefinition } from '@retikz/data';
+﻿import type { FieldFormatDefinition } from '@retikz/data';
 
 import * as DataPublic from '@retikz/data';
-import { defineFieldFormat, PlotFieldFormat, resolveFormatRegistry } from '@retikz/data';
+import { DataFieldFormat, defineFieldFormat, resolveFormatRegistry } from '@retikz/data';
 import { DataModelSchema, FieldDefSchema } from '@retikz/data';
 import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
@@ -44,20 +44,20 @@ const parseFirst = (
 describe('FieldDef.format 解析行为（ADR-06）— happy path', () => {
   it('slashdate_parses_utc', () => {
     // 严格 YYYY/MM/DD 按 UTC 零点 → epoch ms
-    const spec = specWithField({ name: 'v', type: 'temporal', format: PlotFieldFormat.SlashDate });
+    const spec = specWithField({ name: 'v', type: 'temporal', format: DataFieldFormat.SlashDate });
     const value = parseFirst(spec, { d: [{ v: '2024/01/01', y: 1 }] }, 'v');
     expect(value).toBe(Date.UTC(2024, 0, 1));
   });
 
   it('epoch_seconds_scaled', () => {
     // epoch 秒 → ms（*1000）
-    const spec = specWithField({ name: 'v', type: 'temporal', format: PlotFieldFormat.EpochSeconds });
+    const spec = specWithField({ name: 'v', type: 'temporal', format: DataFieldFormat.EpochSeconds });
     expect(parseFirst(spec, { d: [{ v: 1700000000, y: 1 }] }, 'v')).toBe(1700000000 * 1000);
   });
 
   it('percent_parses', () => {
     // 百分比串 '50%' → 0.5
-    const spec = specWithField({ name: 'v', type: 'continuous', format: PlotFieldFormat.Percent });
+    const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.Percent });
     expect(parseFirst(spec, { d: [{ v: '50%', y: 1 }] }, 'v')).toBe(0.5);
   });
 });
@@ -72,20 +72,20 @@ describe('FieldDef.format 解析行为（ADR-06）— 边界', () => {
 
   it('numberstring_lenient', () => {
     // 宽松数字串：千分位逗号 / 前后空白
-    const spec = specWithField({ name: 'v', type: 'continuous', format: PlotFieldFormat.NumberString });
+    const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.NumberString });
     expect(parseFirst(spec, { d: [{ v: '1,500', y: 1 }] }, 'v')).toBe(1500);
     expect(parseFirst(spec, { d: [{ v: ' 12 ', y: 1 }] }, 'v')).toBe(12);
   });
 
   it('format_implies_type_when_omitted', () => {
     // 写 format 不写 type → format 蕴含 continuous，'50%'→0.5（不被推断成 categorical）
-    const spec = specWithField({ name: 'v', format: PlotFieldFormat.Percent });
+    const spec = specWithField({ name: 'v', format: DataFieldFormat.Percent });
     expect(parseFirst(spec, { d: [{ v: '50%', y: 1 }] }, 'v')).toBe(0.5);
   });
 
   it('slashdate_rejects_ambiguous_layout', () => {
     // 非 YYYY/MM/DD 的歧义布局（D/M/Y）不猜 → NaN（下游按非有限跳过）
-    const spec = specWithField({ name: 'v', type: 'temporal', format: PlotFieldFormat.SlashDate });
+    const spec = specWithField({ name: 'v', type: 'temporal', format: DataFieldFormat.SlashDate });
     expect(Number.isNaN(parseFirst(spec, { d: [{ v: '13/01/2024', y: 1 }] }, 'v') as number)).toBe(true);
   });
 });
@@ -93,7 +93,7 @@ describe('FieldDef.format 解析行为（ADR-06）— 边界', () => {
 describe('FieldDef.format（ADR-06）— 错误路径', () => {
   it('format_type_mismatch_throws', () => {
     // 显式 continuous + format 蕴含 temporal（epochSeconds）冲突 → lowering fail-loud
-    const spec = specWithField({ name: 'v', type: 'continuous', format: PlotFieldFormat.EpochSeconds });
+    const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.EpochSeconds });
     expect(() => parseFirst(spec, { d: [{ v: 1700000000, y: 1 }] }, 'v')).toThrow();
   });
 
@@ -153,7 +153,7 @@ describe('FieldDef.format 自定义格式（ADR-09）', () => {
       data: {
         reference: 'd',
         model: [
-          { name: 'v', type: 'continuous', format: PlotFieldFormat.Percent },
+          { name: 'v', type: 'continuous', format: DataFieldFormat.Percent },
           { name: 'y', type: 'continuous', format: 'currency' },
         ],
       },
@@ -199,7 +199,7 @@ describe('FieldDef.format 自定义格式（ADR-09）', () => {
     expect(typeof DataPublic.defineFieldFormat).toBe('function');
     expect(typeof DataPublic.resolveFormatRegistry).toBe('function');
     expect(typeof DataPublic.collectFormatFields).toBe('function');
-    expect(DataPublic.PlotFieldFormat.Percent).toBe('percent');
+    expect(DataPublic.DataFieldFormat.Percent).toBe('percent');
     expect(DataPublic.BUILTIN_FORMATS.length).toBe(6);
     expect(DataPublic.BUILTIN_FORMAT_DEFINITIONS_BY_NAME.get('iso')?.impliedType).toBe('temporal');
   });
@@ -208,7 +208,7 @@ describe('FieldDef.format 自定义格式（ADR-09）', () => {
 describe('FieldDef.format（ADR-06）— 交互', () => {
   it('resolveField_parse_overrides_format', () => {
     // 同字段既有 format 又有 resolveField.parse → 用 parse（优先级 resolveField > format）
-    const spec = specWithField({ name: 'v', type: 'continuous', format: PlotFieldFormat.Percent });
+    const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.Percent });
     const value = parseFirst(spec, { d: [{ v: '50%', y: 1 }] }, 'v', {
       resolveField: () => ({ parse: () => 999 }),
     });
@@ -223,7 +223,7 @@ describe('FieldDef.format（ADR-06）— 交互', () => {
       data: {
         reference: 'd',
         model: [
-          { name: 'v', type: 'continuous', format: PlotFieldFormat.Percent },
+          { name: 'v', type: 'continuous', format: DataFieldFormat.Percent },
           { name: 'y', type: 'continuous' },
         ],
       },
