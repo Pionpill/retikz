@@ -1,10 +1,10 @@
 ﻿import { isFiniteNumber, isFinitePoint } from '@retikz/math';
 
-import type { PathCommand, PathGeneratorDefinition } from '../../contract';
-import type { IRPosition, IRStep } from '../../schemas';
+import type { PathCommand, PathGeneratorDefinition } from '../../../contract';
+import type { IRPosition, IRStep } from '../../../schemas';
 
-import { providerDefinitionOf } from '../../providers/registry';
-import { JsonObjectSchema } from '../../schemas';
+import { providerDefinitionOf } from '../../../providers/registry';
+import { JsonObjectSchema } from '../../../schemas';
 
 const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
 

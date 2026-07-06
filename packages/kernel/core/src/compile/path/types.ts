@@ -4,7 +4,7 @@ import type { IRPosition } from '../../schemas';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';
 import type { CompileWarning } from '../warning';
-import type { ResolvedArrowRegistry } from './shrink';
+import type { ResolvedArrowRegistry } from './stroke/shrink';
 
 /** path emit 阶段产出的 Scene primitive 与 bbox 采样点。 */
 export type PathPrimitiveEmitResult = {

@@ -1,9 +1,9 @@
-import type { IRLabelDefault, IRNodeLabel } from '../../schemas';
-import type { FontSpec } from '../text';
-import type { NodeLabelLayout, NodeTextLayoutContext } from './types';
+import type { IRLabelDefault, IRNodeLabel } from '../../../schemas';
+import type { FontSpec } from '../../text';
+import type { NodeLabelLayout, NodeTextLayoutContext } from '../types';
 
-import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../text';
-import { normalizeLabelPosition } from './label-geometry';
+import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
+import { normalizeLabelPosition } from './geometry';
 
 /** 节点附属 label 布局输入。 */
 export type LayoutNodeLabelsInput = NodeTextLayoutContext & {

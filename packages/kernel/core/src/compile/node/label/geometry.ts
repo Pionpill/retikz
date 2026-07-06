@@ -2,12 +2,12 @@ import type { Position } from '@retikz/math';
 
 import { arcEndPoint } from '@retikz/math';
 
-import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../schemas';
-import type { NodeLabelLayout, NodeLayout } from './types';
+import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../../schemas';
+import type { NodeLabelLayout, NodeLayout } from '../types';
 
-import { AnchorUnitVectorByAnchor } from '../../shared';
-import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../shared/geometry';
-import { anchorOf, angleBoundaryOf } from './anchors';
+import { AnchorUnitVectorByAnchor } from '../../../shared';
+import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../../shared/geometry';
+import { anchorOf, angleBoundaryOf } from '../anchors';
 
 const isLabelBoundaryPosition = (position: NodeLabelLayout['position']): position is IRNodeLabelBoundaryPosition =>
   typeof position === 'object';

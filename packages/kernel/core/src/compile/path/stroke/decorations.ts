@@ -1,9 +1,9 @@
-import type { PathCommand, ResolvedArrowEndSpec, ScenePrimitive } from '../../contract';
-import type { IRPathBase, IRPosition } from '../../schemas';
-import type { SegmentSample } from '../../shared/geometry';
+import type { PathCommand, ResolvedArrowEndSpec, ScenePrimitive } from '../../../contract';
+import type { IRPathBase, IRPosition } from '../../../schemas';
+import type { SegmentSample } from '../../../shared/geometry';
+import type { ResolvedPathBaseProps } from '../host';
+import type { PathPrimitiveEmitResult } from '../types';
 import type { ResolvedArrowRegistry } from './shrink';
-import type { ResolvedPathBaseProps } from './style';
-import type { PathPrimitiveEmitResult } from './types';
 
 import { buildMarkMarkerGroup, markerContextStroke } from './marks';
 import { sampleRoundedCommands } from './rounded-corners';

@@ -7,12 +7,12 @@ import type {
   MarkerPrimitive,
   PathCommand,
   ResolvedArrowEndSpec,
-} from '../../contract';
-import type { IRArrowMark, IRPosition } from '../../schemas';
+} from '../../../contract';
+import type { IRArrowMark, IRPosition } from '../../../schemas';
 
-import { providerDefinitionOf } from '../../providers/registry';
-import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
-import { validateMarkerPrimitives } from '../resource';
+import { providerDefinitionOf } from '../../../providers/registry';
+import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../../schemas';
+import { validateMarkerPrimitives } from '../../resource';
 
 /** 已解析 arrow registry：内置 8 + 注入 */
 export type ResolvedArrowRegistry = ReadonlyMap<string, ArrowDefinition>;

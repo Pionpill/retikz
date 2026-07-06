@@ -10,6 +10,7 @@ import type {
   BlendModeValue,
   IRAnimationTrack,
   IRBoundary,
+  IRFont,
   IRJsonObject,
   IRNode,
   IRNodeLabelBoundaryPosition,
@@ -21,6 +22,9 @@ import type {
 import type { Rect } from '../../shared/geometry';
 import type { FontSpec, LaidLine, LowerTex, TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
+
+/** 节点文本布局消费的字重，沿用 IR font weight 契约。 */
+export type NodeFontWeight = NonNullable<IRFont['weight']>;
 
 /** 节点各轴缩放因子。 */
 export type AxisScale = {
@@ -51,7 +55,7 @@ export type NodeTextLayoutContext = {
   /** 继承字体族。 */
   fontFamily?: string;
   /** 继承字重。 */
-  fontWeight?: string | number;
+  fontWeight?: NodeFontWeight;
   /** 继承字体样式。 */
   fontStyle?: FontSpec['style'];
 };
@@ -96,7 +100,7 @@ export type NodeLayout = {
    * 字重
    * @default 'normal'
    */
-  fontWeight?: string | number;
+  fontWeight?: NodeFontWeight;
   /**
    * 字形
    * @default 'normal'
@@ -205,7 +209,7 @@ export type NodeLabelLayout = {
    * label 字重。
    * @default 'normal'
    */
-  fontWeight?: string | number;
+  fontWeight?: NodeFontWeight;
   /**
    * label 字形。
    * @default 'normal'

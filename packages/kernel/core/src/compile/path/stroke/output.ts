@@ -1,6 +1,6 @@
-import type { GroupPrim, ScenePrimitive } from '../../contract';
-import type { IRPathBase, IRPosition } from '../../schemas';
-import type { PathPrimitiveEmitResult } from './types';
+import type { GroupPrim, ScenePrimitive } from '../../../contract';
+import type { IRPathBase, IRPosition } from '../../../schemas';
+import type { PathPrimitiveEmitResult } from '../types';
 
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
 

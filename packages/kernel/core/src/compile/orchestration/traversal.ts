@@ -1,26 +1,34 @@
-import type { AxisAlignedBounds } from '@retikz/math';
-
-import { boundsOf, expandBounds, mergeBounds } from '@retikz/math';
+import { boundsOf, mergeBounds } from '@retikz/math';
 
 import type {
   GroupPrim,
   PathKindCompileResult,
-  ScenePrimitive,
   Transform,
 } from '../../contract';
-import type { IRChild, IRPathBase, IRPosition, IRTransform, ResolvedDropShadow } from '../../schemas';
-import type { DuplicateRegisterInfo } from '../namespace';
+import type { IRChild, IRPathBase, IRPosition, IRTransform } from '../../schemas';
 import type { NodeLayout } from '../node';
-import type { StyleFrame } from '../style';
-import type { CompileWarning } from '../warning';
 import type { CompileContext } from './context';
-import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
+import type { InternalScenePrimitive } from './primitive';
+import type {
+  CoordinateChild,
+  EmitScopeGroupContext,
+  NodeChild,
+  PathChild,
+  PendingPathEmission,
+  RegisterResolvedScopeLayoutContext,
+  ScopeChild,
+  ScopeLayoutPlaceholder,
+  ScopeLayoutPlaceholderContext,
+  ScopeTransformResolution,
+  TraversalFrame,
+  TraversalResult,
+  TraversalRuntime,
+} from './types';
 
 import { providerDefinitionOf } from '../../providers/registry';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
-import { CompileWarningCode } from '../constants';
 import { NamespaceStack } from '../namespace';
 import {
   createScopeCircleLayout,
@@ -38,6 +46,8 @@ import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
 import { applyTransformChain, projectLayoutToGlobal } from '../transform';
 import { filterAnimations } from './animation';
+import { collectLayoutBounds } from './bounds';
+import { createDuplicateWarning, transformWarnCode } from './diagnostics';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -46,184 +56,7 @@ import {
   stableSortByZIndex,
 } from './primitive';
 
-/** 返回 shadow 影响后的外溢 bbox。 */
-const expandBoundsForShadow = (
-  bounds: AxisAlignedBounds | undefined,
-  shadow: ResolvedDropShadow | undefined,
-): AxisAlignedBounds | undefined => {
-  if (bounds === undefined || shadow === undefined) return bounds;
-
-  const dx = shadow.offsetX;
-  const dy = shadow.offsetY;
-  const blur = shadow.blur ?? 0;
-  return expandBounds(bounds, {
-    left: blur + Math.max(0, -dx),
-    right: blur + Math.max(0, dx),
-    top: blur + Math.max(0, -dy),
-    bottom: blur + Math.max(0, dy),
-  });
-};
-
-/** 将几何点及其 shadow 外溢范围合并到自动 layout bbox。 */
-const collectLayoutBounds = (
-  current: AxisAlignedBounds | undefined,
-  boundsPoints: ReadonlyArray<IRPosition>,
-  shadow?: ResolvedDropShadow,
-): AxisAlignedBounds | undefined => {
-  const bounds = boundsOf(boundsPoints);
-  return mergeBounds(mergeBounds(current, bounds), expandBoundsForShadow(bounds, shadow));
-};
-
-/** 等待命名引用完成注册后再 emit 的 path 任务。 */
-type PendingPathEmission = {
-  /** 已合并样式和动画过滤后的 path IR。 */
-  path: IRPathBase;
-  /** warning 与诊断使用的 IR locator。 */
-  irPath: string;
-  /** path 所在 scope 的累计 transform。 */
-  scopeChain: ReadonlyArray<Transform>;
-  /** 顶层原位回填用的占位槽；scope 内 path 走 hoist，不占位。 */
-  placeholderSlot?: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
-  /** 编译期排序用 zIndex，不写入 Scene primitive。 */
-  zIndex?: number;
-};
-
-/** 按 transform 失败来源选择 warning code。 */
-const transformWarnCode = (failed: IRTransform | undefined): CompileWarning['code'] => {
-  switch (failed?.kind) {
-    case 'offset-translate':
-      return CompileWarningCode.OffsetBaseUnresolved;
-    case 'at-translate':
-      return CompileWarningCode.AtTargetUnresolved;
-    case 'polar-translate':
-      return CompileWarningCode.PolarOriginUnresolved;
-    default:
-      return CompileWarningCode.UnresolvedNodeReference;
-  }
-};
-
-/** 格式化重复 id warning。 */
-const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => {
-  const frameNote =
-    info.frameDepth === 0
-      ? 'frame depth: 0 (root namespace)'
-      : `frame depth: ${info.frameDepth} (under <Scope localNamespace>)`;
-  const firstLoc = info.firstIrPath ?? '(unknown earlier location)';
-  const secondLoc = info.secondIrPath ?? '(unknown current location)';
-  return {
-    code: CompileWarningCode.DuplicateNodeId,
-    message: `Duplicate id '${info.id}' registered in the same namespace frame (${frameNote}); first defined at ${firstLoc}, redefined at ${secondLoc}. The later definition overrides the earlier one (last-wins).`,
-    path: secondLoc,
-  };
-};
-
-/** child 遍历编译后的 primitive 与自动 layout bbox。 */
-export type TraversalResult = {
-  /** 已完成排序和占位回填的 Scene primitive。 */
-  primitives: Array<ScenePrimitive>;
-  /** 自动 layout 使用的全局 bbox。 */
-  layoutBounds: AxisAlignedBounds | undefined;
-};
-
-/** 整棵 child 树遍历期间共享的可变状态。 */
-type TraversalState = {
-  /** 顶层 primitive 输出容器，path 占位会在返回前回填。 */
-  primitives: Array<InternalScenePrimitive>;
-  /** 自动 layout 使用的全局 bbox。 */
-  layoutBounds: AxisAlignedBounds | undefined;
-  /** id 注册与查找栈。 */
-  namespaceStack: NamespaceStack;
-  /** primitive 的编译期 zIndex 旁路表。 */
-  zIndexOf: PrimitiveZIndexTable;
-  /** 尚未回填的 path 占位数量。 */
-  placeholderBalance: number;
-};
-
-/** child 遍历期间使用的 compile 依赖。 */
-type TraversalContext = Pick<
-  CompileContext,
-  | 'measureText'
-  | 'lowerTex'
-  | 'onWarn'
-  | 'round'
-  | 'nodeDistance'
-  | 'labelDistance'
-  | 'rootFontSize'
-  | 'shapes'
-  | 'boundaries'
-  | 'arrows'
-  | 'pathGenerators'
-  | 'pathKinds'
-  | 'ribbonWidthProfiles'
-  | 'paint'
-  | 'clip'
->;
-
-/** child 遍历期间共享的运行时对象。 */
-type TraversalRuntime = {
-  /** 遍历可变状态。 */
-  state: TraversalState;
-  /** compile 只读依赖。 */
-  context: TraversalContext;
-};
-
-/** 递归处理一层 child 时的上下文。 */
-type TraversalFrame = {
-  /** 当前 scope 累计 transform。 */
-  scopeChain: ReadonlyArray<Transform>;
-  /** 当前层 primitive 输出容器。 */
-  primitiveSink: Array<InternalScenePrimitive>;
-  /** 当前层 IR locator 前缀。 */
-  locatorPrefix: string;
-  /** 向父 scope 汇报 bbox 输入 layout。 */
-  layoutSink: Array<NodeLayout>;
-  /** 当前层延迟 emit 的 path 任务。 */
-  pathSink: Array<PendingPathEmission>;
-  /** 当前层样式继承栈。 */
-  styleStack: ReadonlyArray<StyleFrame>;
-};
-
-type NodeChild = Extract<IRChild, { type: 'node' }>;
-type CoordinateChild = Extract<IRChild, { type: 'coordinate' }>;
-type ScopeChild = Extract<IRChild, { type: 'scope' }>;
-type PathChild = Extract<IRChild, { type: 'path' | 'ribbon' }>;
-
-/** scope transforms 解析结果。 */
-type ScopeTransformResolution = {
-  /** 当前 scope 自身的 Scene transforms。 */
-  scopeTransforms: ReadonlyArray<Transform>;
-  /** 子树使用的累计 scopeChain。 */
-  childScopeChain: ReadonlyArray<Transform>;
-};
-
-/** scope.id layout 占位注册结果。 */
-type ScopeLayoutPlaceholder = {
-  /** scope.id 所在父 namespace frame 深度。 */
-  parentFrameDepth: number;
-  /** scope.id 初始占位 layout；无 id 时不存在。 */
-  placeholderLayout?: NodeLayout;
-};
-
-type ScopeLayoutPlaceholderContext = {
-  index: number;
-  childScopeChain: ReadonlyArray<Transform>;
-  frame: TraversalFrame;
-};
-
-type RegisterResolvedScopeLayoutContext = {
-  childScopeChain: ReadonlyArray<Transform>;
-  scopeLayouts: ReadonlyArray<NodeLayout>;
-  layoutPlaceholder: ScopeLayoutPlaceholder;
-  frame: TraversalFrame;
-};
-
-type EmitScopeGroupContext = {
-  index: number;
-  scopeTransforms: ReadonlyArray<Transform>;
-  scopePrimitiveSink: Array<InternalScenePrimitive>;
-  frame: TraversalFrame;
-};
-
+/** 编译 child 树，完成 namespace 注册、延迟 path 回填、zIndex 排序和自动 layout bbox 收集。 */
 export const compileChildrenToPrimitives = (
   rootChildren: ReadonlyArray<IRChild>,
   context: CompileContext,

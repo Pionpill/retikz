@@ -31,6 +31,18 @@ export const point = {
   cross: (a: Position, b: Position): number => a[0] * b[1] - a[1] * b[0],
   /** Vector length. */
   length: (a: Position): number => Math.hypot(a[0], a[1]),
+  /** Euclidean distance between two points. */
+  distance: (a: Position, b: Position): number => Math.hypot(b[0] - a[0], b[1] - a[1]),
+  /** Move origin along a unit direction by length. */
+  along: (origin: Position, direction: Vector2, length: number): Position => [
+    origin[0] + direction[0] * length,
+    origin[1] + direction[1] * length,
+  ],
+  /** Move origin against a unit direction by length. */
+  against: (origin: Position, direction: Vector2, length: number): Position => [
+    origin[0] - direction[0] * length,
+    origin[1] - direction[1] * length,
+  ],
   /** Normalize a vector; zero-length vectors return fallback. */
   normalize: (a: Position, fallback: Position = [1, 0], epsilon = DEFAULT_EPSILON): Position => {
     const len = Math.hypot(a[0], a[1]);
@@ -61,6 +73,14 @@ export const vector2 = {
   /** Normalize a vector; zero-length vectors return fallback. */
   normalize: (v: Vector2, fallback: Vector2 = [1, 0], epsilon = DEFAULT_EPSILON): Vector2 =>
     point.normalize(v, fallback, epsilon),
+  /** Normalize a vector; zero-length or non-finite vectors return null. */
+  normalizeOrNull: (v: Vector2, epsilon = 0): Vector2 | null => {
+    const length = point.length(v);
+    if (!Number.isFinite(length) || length <= epsilon) return null;
+    return [v[0] / length, v[1] / length];
+  },
+  /** Left-hand normal of a tangent vector. */
+  normal: (v: Vector2): Vector2 => [-v[1], v[0]],
 };
 
 /** Linear interpolation: a + (b - a) * t. */

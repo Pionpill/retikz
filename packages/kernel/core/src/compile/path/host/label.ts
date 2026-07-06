@@ -1,18 +1,18 @@
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../contract';
-import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../schemas';
-import type { SegmentSample } from '../../shared/geometry';
-import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../text';
-import type { CompileWarningCodeValue } from '../warning';
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
+import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../../schemas';
+import type { SegmentSample } from '../../../shared/geometry';
+import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
+import type { CompileWarningCodeValue } from '../../warning';
 
-import { RAD_TO_DEG } from '../../shared/geometry';
-import { DEFAULT_FONT_SIZE } from '../constants';
+import { RAD_TO_DEG } from '../../../shared/geometry';
+import { DEFAULT_FONT_SIZE } from '../../constants';
 import {
   combineOpacity,
   layoutInlineLine,
   resolveFontSize,
   resolveLineRunsWithWarning,
   toAlphabeticBaselineY,
-} from '../text';
+} from '../../text';
 
 /** 边标注默认行高与偏移量。 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;

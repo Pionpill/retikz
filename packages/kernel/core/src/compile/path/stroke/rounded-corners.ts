@@ -1,7 +1,7 @@
-﻿import type { PathCommand } from '../../contract';
-import type { ContourCommand, ContourSegment, FilletSolution } from '../../shared/geometry';
+﻿import type { PathCommand } from '../../../contract';
+import type { ContourCommand, ContourSegment, FilletSolution } from '../../../shared/geometry';
 
-import { contourCommands, DEG_TO_RAD, filletContour } from '../../shared/geometry';
+import { contourCommands, DEG_TO_RAD, filletContour } from '../../../shared/geometry';
 
 /** 单条 emit 命令的来源 step kind（用于判定接缝两侧是否均为 line step） */
 export type CommandProvenance = string;

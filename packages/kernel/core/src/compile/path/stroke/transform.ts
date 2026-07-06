@@ -1,9 +1,9 @@
 import { boundsCenter, boundsOf, isFinitePoint } from '@retikz/math';
 
-import type { Transform } from '../../contract';
-import type { IRPathScale, IRPosition } from '../../schemas';
+import type { Transform } from '../../../contract';
+import type { IRPathScale, IRPosition } from '../../../schemas';
 
-import { applyTransformChain } from '../transform';
+import { applyTransformChain } from '../../transform';
 
 /** 一组点的 axis-aligned 包围盒中心 */
 export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {

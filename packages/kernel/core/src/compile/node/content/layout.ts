@@ -1,9 +1,9 @@
-import type { TextLine } from '../../contract';
-import type { IRLineSpec } from '../../schemas';
-import type { FontSpec, LaidLine, LineLayoutContext } from '../text';
-import type { NodeTextLayoutContext } from './types';
+import type { TextLine } from '../../../contract';
+import type { IRLineSpec } from '../../../schemas';
+import type { FontSpec, LaidLine, LineLayoutContext } from '../../text';
+import type { NodeTextLayoutContext } from '../types';
 
-import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../text';
+import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
 import { wrapText } from './text';
 
 /** 节点正文布局输入。 */

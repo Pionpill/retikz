@@ -1,11 +1,12 @@
 import { arcEndPoint } from '@retikz/math';
 
-import type { Transform } from '../../contract';
-import type { IRPosition, IRStep, IRTarget } from '../../schemas';
-import type { NamespaceStack } from '../namespace';
+import type { Transform } from '../../../contract';
+import type { IRPosition, IRStep, IRTarget } from '../../../schemas';
+import type { NamespaceStack } from '../../namespace';
 
-import { inverseTransformChain } from '../transform';
-import { refPointOfTarget } from './anchor';
+import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
+import { inverseTransformChain } from '../../transform';
+import { refPointOfTarget } from './target';
 
 export const normalizePathSteps = (
   steps: ReadonlyArray<IRStep>,
@@ -46,12 +47,12 @@ export const normalizePathSteps = (
       for (const original of step.points) {
         let resolvedPt: IRTarget = original;
         let updatePrevEnd = true;
-        if (typeof original === 'object' && !Array.isArray(original) && 'relative' in original) {
+        if (isRelativeTargetLike(original)) {
           const refGlobal = prevEnd ?? [0, 0];
           const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
           resolvedPt = [refLocal[0] + original.relative[0], refLocal[1] + original.relative[1]];
           updatePrevEnd = false;
-        } else if (typeof original === 'object' && !Array.isArray(original) && 'relativeAccumulate' in original) {
+        } else if (isRelativeAccumulateTargetLike(original)) {
           const refGlobal = prevEnd ?? [0, 0];
           const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
           resolvedPt = [refLocal[0] + original.relativeAccumulate[0], refLocal[1] + original.relativeAccumulate[1]];
@@ -81,14 +82,14 @@ export const normalizePathSteps = (
     let resolvedTo: IRTarget = original;
     let updatePrevEnd = true;
 
-    if (typeof original === 'object' && !Array.isArray(original) && 'relative' in original) {
+    if (isRelativeTargetLike(original)) {
       // prevEnd 全局 → 反向投影到当前 scope 局部 + 加 relative 部分（局部度量）= 局部 tuple；
       // 下游 refPointOfTarget / clipForTarget 把 tuple 当 scope 局部字面量再 applyTransformChain 投全局
       const refGlobal = prevEnd ?? [0, 0];
       const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
       resolvedTo = [refLocal[0] + original.relative[0], refLocal[1] + original.relative[1]];
       updatePrevEnd = false;
-    } else if (typeof original === 'object' && !Array.isArray(original) && 'relativeAccumulate' in original) {
+    } else if (isRelativeAccumulateTargetLike(original)) {
       const refGlobal = prevEnd ?? [0, 0];
       const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
       resolvedTo = [refLocal[0] + original.relativeAccumulate[0], refLocal[1] + original.relativeAccumulate[1]];

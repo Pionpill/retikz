@@ -28,13 +28,21 @@ describe('compile source structure', () => {
     const text = source('src/compile/path/index.ts');
     expect(text).not.toContain('export const emitPathPrimitive =');
     expect(text).not.toContain('const buildPathTransforms =');
+    expect(text).not.toContain("export * from './emit';");
+    expect(text).toContain("export * from './stroke';");
   });
 
-  it('path emit module delegates focused helpers', () => {
-    const text = source('src/compile/path/emit.ts');
+  it('path root does not keep compatibility emit shims', () => {
+    expect(() => source('src/compile/path/emit.ts')).toThrow();
+  });
+
+  it('stroke path emit module delegates focused helpers', () => {
+    const text = source('src/compile/path/stroke/emit.ts');
     expect(text).not.toContain('const buildMarkMarkerGroup =');
     expect(text).not.toContain('const buildPathTransforms =');
     expect(text).not.toContain('const assertValidGeneratedCommand =');
+    expect(text).toContain('createPathCommandEmitter');
+    expect(source('src/compile/path/stroke/commands.ts')).toContain('export const createPathCommandEmitter');
   });
 
   it('node compile implementation is directory based', () => {
@@ -92,7 +100,10 @@ describe('compile source structure', () => {
 
   it('ribbon compile implementation is directory based', () => {
     expect(() => source('src/compile/path/ribbon.ts')).toThrow();
+    expect(() => source('src/compile/path/ribbon/outline.ts')).toThrow();
     expect(source('src/compile/path/ribbon/index.ts')).toContain("export * from './emit';");
+    expect(source('src/compile/path/ribbon/outline/index.ts')).toContain("export * from './analytic';");
+    expect(source('src/compile/path/ribbon/outline/index.ts')).toContain("export * from './sampled';");
 
     const options: RibbonEmitOptions = {};
 

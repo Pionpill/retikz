@@ -1,31 +1,43 @@
-import type { Transform } from '../../contract';
+import type { Transform } from '../../../contract';
 import type {
   FoldStepViaValue,
   IRBetweenPosition,
   IRBoundary,
   IRNodeTarget,
   IRPosition,
+  IRRelativeAccumulateTarget,
+  IRRelativeTarget,
   IRTarget,
-} from '../../schemas';
-import type { NamespaceStack } from '../namespace';
-import type { NodeLayout } from '../node';
+} from '../../../schemas';
+import type { NamespaceStack } from '../../namespace';
+import type { NodeLayout } from '../../node';
 
-import { FoldStepVia } from '../../schemas';
-import { lerpPoint, point } from '../../shared/geometry';
-import { boundaryPointOf } from '../node';
-import { resolvePosition } from '../position';
-import { resolveAnchor, resolveEdgePoint } from '../reference';
-import { applyTransformChain } from '../transform';
+import { FoldStepVia } from '../../../schemas';
+import {
+  isBetweenPositionLike,
+  isNodeTargetLike,
+  isRelativeAccumulateTargetLike,
+  isRelativeTargetLike,
+} from '../../../shared';
+import { lerpPoint, point } from '../../../shared/geometry';
+import { boundaryPointOf } from '../../node';
+import { resolvePosition } from '../../position';
+import { resolveAnchor, resolveEdgePoint } from '../../reference';
+import { applyTransformChain } from '../../transform';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
-const isNodeTarget = (t: IRTarget): t is IRNodeTarget => typeof t === 'object' && !Array.isArray(t) && 'id' in t;
+const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);
 
 /** 判断 target 是否需要由节点边界自动裁剪决定端点 */
 export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
   isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
 
 /** 判断 target 是否为两端目标之间的比例点。 */
-const isBetween = (t: IRTarget): t is IRBetweenPosition => typeof t === 'object' && !Array.isArray(t) && 'between' in t;
+const isBetween = (t: IRTarget): t is IRBetweenPosition => isBetweenPositionLike(t);
+
+/** 判断 target 是否为进入 emit 前应被 path 游标归一化的相对端点。 */
+const isRelative = (t: IRTarget): t is IRRelativeTarget | IRRelativeAccumulateTarget =>
+  isRelativeTargetLike(t) || isRelativeAccumulateTargetLike(t);
 
 /** 将显式 anchor 解析为世界坐标 */
 const resolveAnchorRef = (
@@ -72,11 +84,7 @@ export const refPointOfTarget = (
     return mid;
   }
   // relative 目标应已在进入 path emit 前预解析。
-  if (
-    typeof target === 'object' &&
-    !Array.isArray(target) &&
-    ('relative' in target || 'relativeAccumulate' in target)
-  ) {
+  if (isRelative(target)) {
     return null;
   }
   const local = resolvePosition(target, { namespaceStack, scopeChain });
@@ -126,11 +134,7 @@ export const clipForTarget = (
     return refPointOfTarget(target, namespaceStack, scopeChain);
   }
   // relative 目标应已在进入 path emit 前预解析。
-  if (
-    typeof target === 'object' &&
-    !Array.isArray(target) &&
-    ('relative' in target || 'relativeAccumulate' in target)
-  ) {
+  if (isRelative(target)) {
     return null;
   }
   const local = resolvePosition(target, { namespaceStack, scopeChain });

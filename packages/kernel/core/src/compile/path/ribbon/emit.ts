@@ -6,7 +6,7 @@ import type { TextMeasurer } from '../../text';
 import type { PathPrimitiveEmitResult } from '../types';
 import type { RibbonEmitOptions, RibbonLike } from './types';
 
-import { emitLabelPrimitive, tForLabelPosition } from '../label';
+import { emitLabelPrimitive, tForLabelPosition } from '../host';
 import {
   commandsToSegmentInputs,
   directionToTangent,
@@ -52,12 +52,7 @@ export const emitRibbonPrimitive = (
   path: IRPathBase,
   context: EmitRibbonPrimitiveContext,
 ): PathPrimitiveEmitResult | null => {
-  const {
-    namespaceStack,
-    round,
-    measureText,
-    options = {},
-  } = context;
+  const { namespaceStack, round, measureText, options = {} } = context;
   if (path.ribbon === undefined) {
     throw new Error('Ribbon path requires a `ribbon` options object.');
   }

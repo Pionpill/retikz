@@ -7,21 +7,20 @@
   isFinitePoint,
 } from '@retikz/math';
 
-import type { PathCommand, ScenePrimitive } from '../../contract';
-import type { IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
-import type { SegmentSample } from '../../shared/geometry';
-import type { NamespaceStack } from '../namespace';
-import type { PaintResolver } from '../resource';
-import type { TextMeasurer } from '../text';
-import type { PathEmitOptions, PathPrimitiveEmitResult } from './types';
+import type { ScenePrimitive } from '../../../contract';
+import type { IRPathBase, IRPosition, IRStep, IRTarget } from '../../../schemas';
+import type { SegmentSample } from '../../../shared/geometry';
+import type { NamespaceStack } from '../../namespace';
+import type { PaintResolver } from '../../resource';
+import type { TextMeasurer } from '../../text';
+import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
 
-import { resolveArrowRegistry } from '../../providers/arrow';
+import { resolveArrowRegistry } from '../../../providers';
 import {
   arcSegmentSample,
   bendControlPoints,
   circleSegmentSample,
   cubicSegmentSample,
-  DEG_TO_RAD,
   ellipseArcSegmentSample,
   ellipseSegmentSample,
   foldSegmentSample,
@@ -30,25 +29,22 @@ import {
   quadSegmentSample,
   rectOutline,
   rectPerimeterSample,
-} from '../../shared/geometry';
-import { CompileWarningCode } from '../constants';
-import { nodeIdFromResolvableTarget } from '../position';
-import { fallbackMeasurer } from '../text';
-import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
-import {
-  emitInlineMarkPrimitives,
-  pathEndpointArrowSpecs,
-  resolvePathEndpointDecorations,
-} from './decorations';
-import { lowerGeneratorStepToCommands } from './generator';
-import { emitLabelPrimitive, tForLabelPosition } from './label';
+} from '../../../shared/geometry';
+import { CompileWarningCode } from '../../constants';
+import { nodeIdFromResolvableTarget } from '../../position';
+import { fallbackMeasurer } from '../../text';
+import { emitLabelPrimitive, tForLabelPosition } from '../host/label';
+import { normalizePathSteps } from '../host/relative';
+import { resolvePathBaseProps } from '../host/resolve';
+import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from '../host/target';
+import { createPathCommandEmitter } from './commands';
+import { emitInlineMarkPrimitives, pathEndpointArrowSpecs, resolvePathEndpointDecorations } from './decorations';
+import { lowerGeneratorStepToCommands } from './lower';
 import { assertArrowCanInheritStroke } from './marks';
 import { wrapPathPrimitiveOutput } from './output';
-import { normalizePathSteps } from './relative';
 import { applyRoundedCorners } from './rounded-corners';
 import { applyArrowShrinks } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
-import { resolvePathBaseProps } from './style';
 
 /** 普通 path emit 所需的编译上下文。 */
 export type EmitPathPrimitiveContext = {
@@ -70,12 +66,7 @@ export const emitPathPrimitive = (
   path: IRPathBase,
   context: EmitPathPrimitiveContext,
 ): PathPrimitiveEmitResult | null => {
-  const {
-    namespaceStack,
-    round,
-    measureText = fallbackMeasurer,
-    options: pathEmitOptions = {},
-  } = context;
+  const { namespaceStack, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
   const irPath = pathEmitOptions.irPath ?? 'path';
   const warn = (code: string, message: string, subPath = ''): void => {
     pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
@@ -185,169 +176,28 @@ export const emitPathPrimitive = (
     return { step: s, anchor: a };
   };
 
-  const commands: Array<PathCommand> = [];
-  /**
-   * 与 commands 一一对应的来源 step kind（roundedCorners 倒角用：判定接缝两侧是否均为 line step）
-   * @description 由 emit* 闭包按当前 `currentStepKind` 同步 push；fold 产两条 line 但记 'fold'（接缝保持尖），
-   *   cycle 的 close 记 'cycle'，rectangle / generator 等记各自 kind。
-   */
-  const provenance: Array<string> = [];
   /** 主循环每轮置为当前 step.kind，emit* 据此打 provenance 标 */
   let currentStepKind = '';
-  const boundsPoints: Array<IRPosition> = [];
-  let lastEnd: IRPosition | null = null;
-  let subPathStart: IRPosition | null = null;
+  const commandEmitter = createPathCommandEmitter({ round, currentStepKind: () => currentStepKind });
+  const {
+    commands,
+    provenance,
+    boundsPoints,
+    endpointSource,
+    emitMove,
+    emitLine,
+    emitClose,
+    emitQuad,
+    emitCubic,
+    emitArc,
+    emitEllipseArc,
+    startSegment,
+  } = commandEmitter;
   /**
    * 笔位覆盖：arc/circlePath/ellipsePath 无 `to` 字段不能用 prev.step.to 重算起点
    * @description 设置 penOverride 让下个绘制段直接用此点当 fromClip 后清空。arc=弧终点；circlePath/ellipsePath=center（"画完留在圆心"）
    */
   let penOverride: IRPosition | null = null;
-
-  /**
-   * 读当前游标（生成器分支用）
-   * @description 经函数边界读 `lastEnd`，让 TS 用其声明类型（`IRPosition | null`）而非按分支位置 narrow
-   *   成字面 `null`——generator 分支在源码上位于 lastEnd 各赋值点之前，直接读会被误判恒 null
-   */
-  const readCursor = (): IRPosition | null => lastEnd;
-
-  const roundPoint = (p: IRPosition): IRPosition => [round(p[0]), round(p[1])];
-
-  const endpointSource = {
-    firstAutoBoundary: false,
-    lastAutoBoundary: false,
-  };
-  const noteEndpointSource = (sourceAutoBoundary: boolean): void => {
-    if (commands.length === 0) endpointSource.firstAutoBoundary = sourceAutoBoundary;
-    endpointSource.lastAutoBoundary = sourceAutoBoundary;
-  };
-
-  const emitMove = (p: IRPosition, sourceAutoBoundary = false) => {
-    noteEndpointSource(sourceAutoBoundary);
-    const rp = roundPoint(p);
-    commands.push({ kind: 'move', to: [rp[0], rp[1]] });
-    provenance.push(currentStepKind);
-    boundsPoints.push(p);
-    subPathStart = p;
-    lastEnd = p;
-  };
-  const emitLine = (p: IRPosition, sourceAutoBoundary = false) => {
-    noteEndpointSource(sourceAutoBoundary);
-    const rp = roundPoint(p);
-    commands.push({ kind: 'line', to: [rp[0], rp[1]] });
-    provenance.push(currentStepKind);
-    boundsPoints.push(p);
-    lastEnd = p;
-  };
-  const emitClose = () => {
-    commands.push({ kind: 'close' });
-    provenance.push(currentStepKind);
-    lastEnd = subPathStart;
-  };
-  const emitQuad = (control: IRPosition, p: IRPosition, sourceAutoBoundary = false) => {
-    noteEndpointSource(sourceAutoBoundary);
-    const rc = roundPoint(control);
-    const rp = roundPoint(p);
-    commands.push({
-      kind: 'quad',
-      control: [rc[0], rc[1]],
-      to: [rp[0], rp[1]],
-    });
-    provenance.push(currentStepKind);
-    // 曲线视觉范围不超过控制点+端点凸包
-    boundsPoints.push(control);
-    boundsPoints.push(p);
-    lastEnd = p;
-  };
-  const emitCubic = ({
-    control1,
-    control2,
-    to,
-    sourceAutoBoundary = false,
-  }: {
-    control1: IRPosition;
-    control2: IRPosition;
-    to: IRPosition;
-    sourceAutoBoundary?: boolean;
-  }) => {
-    noteEndpointSource(sourceAutoBoundary);
-    const rc1 = roundPoint(control1);
-    const rc2 = roundPoint(control2);
-    const rp = roundPoint(to);
-    commands.push({
-      kind: 'cubic',
-      control1: [rc1[0], rc1[1]],
-      control2: [rc2[0], rc2[1]],
-      to: [rp[0], rp[1]],
-    });
-    provenance.push(currentStepKind);
-    // 控制点纳入 bbox（保守，实际 bezier 包络小于凸包）
-    boundsPoints.push(control1);
-    boundsPoints.push(control2);
-    boundsPoints.push(to);
-    lastEnd = to;
-  };
-  const emitArc = ({
-    center,
-    radius,
-    startAngle,
-    endAngle,
-  }: {
-    center: IRPosition;
-    radius: number;
-    startAngle: number;
-    endAngle: number;
-  }) => {
-    noteEndpointSource(false);
-    const rc = roundPoint(center);
-    commands.push({
-      kind: 'arc',
-      center: [rc[0], rc[1]],
-      radius: round(radius),
-      startAngle,
-      endAngle,
-    });
-    provenance.push(currentStepKind);
-    // 弧端点入 bbox；arc 极值候选（90°·k 轴向点）由各 compile 分支单独 push
-    boundsPoints.push(arcEndPoint(center, radius, endAngle));
-    lastEnd = arcEndPoint(center, radius, endAngle);
-  };
-  const emitEllipseArc = ({
-    center,
-    radiusX,
-    radiusY,
-    startAngle,
-    endAngle,
-  }: {
-    center: IRPosition;
-    radiusX: number;
-    radiusY: number;
-    startAngle: number;
-    endAngle: number;
-  }) => {
-    noteEndpointSource(false);
-    const rc = roundPoint(center);
-    commands.push({
-      kind: 'ellipseArc',
-      center: [rc[0], rc[1]],
-      radiusX: round(radiusX),
-      radiusY: round(radiusY),
-      startAngle,
-      endAngle,
-    });
-    provenance.push(currentStepKind);
-    // 椭圆弧终点：未旋转椭圆 polar 投影
-    const endPt: IRPosition = [
-      center[0] + Math.cos(endAngle * DEG_TO_RAD) * radiusX,
-      center[1] + Math.sin(endAngle * DEG_TO_RAD) * radiusY,
-    ];
-    boundsPoints.push(endPt);
-    lastEnd = endPt;
-  };
-  /** 段起点：与 lastEnd 相同则复用 cursor（省 move），否则发 move */
-  const startSegment = (p: IRPosition, sourceAutoBoundary = false) => {
-    if (samePoint(p, lastEnd)) return;
-    emitMove(p, sourceAutoBoundary);
-  };
 
   /** 部分圆/椭圆的闭合模式：'open' 直接返回；'sector' 连回中心；缺省 / 误给 'closed' 回退 'chord' */
   const resolvePartialClosed = (
@@ -386,9 +236,9 @@ export const emitPathPrimitive = (
 
     if (step.kind === 'generator') {
       // 起点：当前游标（前一绘制段终点 / arc 等留下的 penOverride）；首段时回退最近 hasTo step 的 anchor。
-      // 经闭包 readCursor 读 lastEnd/penOverride（循环外声明的宽类型 let，不被分支位置 narrow 成 null）
+      // 经 emitter getter 读游标，避免 TS 按源码位置把循环外 let narrow 成恒 null。
       const prevGen = findPrev();
-      const fromGen: IRPosition = readCursor() ?? (prevGen ? prevGen.anchor : [0, 0]);
+      const fromGen: IRPosition = commandEmitter.getLastEnd() ?? (prevGen ? prevGen.anchor : [0, 0]);
       // 终点：step.to resolve 后的世界坐标（无 to 则 undefined）
       const resolvedTo = step.to !== undefined ? refPointOfTarget(step.to, namespaceStack, scopeChain) : null;
       const toGen = resolvedTo ?? undefined;
@@ -436,11 +286,11 @@ export const emitPathPrimitive = (
       }
 
       // label 沿生成段定位：用段起点→末端的直线近似采样（midway 取中点）
-      const genEnd = readCursor() ?? fromGen;
+      const genEnd = commandEmitter.getLastEnd() ?? fromGen;
       collectLabel(step, t => lineSegmentSample(fromGen, genEnd, t));
 
       // 游标推进：后续段从生成段末端续接（penOverride 让下个 hasTo 段复用此点、不重发 move）
-      penOverride = readCursor();
+      penOverride = commandEmitter.getLastEnd();
       continue;
     }
 
@@ -462,7 +312,7 @@ export const emitPathPrimitive = (
       segmentSamplers.push(t => lineSegmentSample(fromClip, toClip, t));
 
       // 起点 == lastEnd 且终点 == subPathStart → close 收尾最干净
-      if (samePoint(fromClip, lastEnd) && samePoint(toClip, subPathStart)) {
+      if (samePoint(fromClip, commandEmitter.getLastEnd()) && samePoint(toClip, commandEmitter.getSubPathStart())) {
         emitClose();
         continue;
       }
@@ -732,7 +582,7 @@ export const emitPathPrimitive = (
       });
 
       // 游标推进到末点；后续 hasTo 段从此续接
-      penOverride = readCursor();
+      penOverride = commandEmitter.getLastEnd();
       continue;
     }
 

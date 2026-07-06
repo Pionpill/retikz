@@ -9,7 +9,7 @@
   ShapeDefinition,
 } from '../../contract';
 import type { IRScene } from '../../schemas';
-import type { CompileOptions } from '../compile';
+import type { CompileOptions } from '../types';
 import type { CompileWarning } from '../warning';
 
 import { resolveArrowRegistry } from '../../providers/arrow';
