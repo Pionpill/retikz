@@ -60,13 +60,11 @@
     "@retikz/core": "workspace:*",
     "@retikz/math": "workspace:*",
     "d3-format": "catalog:",
-    "d3-scale": "catalog:",
     "d3-time-format": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/d3-format": "catalog:",
-    "@types/d3-scale": "catalog:",
     "@types/d3-time-format": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",

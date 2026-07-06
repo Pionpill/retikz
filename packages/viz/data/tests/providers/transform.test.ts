@@ -22,7 +22,7 @@ const SALES: Array<ExternalRow> = [
 ];
 
 describe('data transform runtime', () => {
-  it('keeps sort and stack output stable', () => {
+  it('keeps shared sort output stable and leaves plot-only transforms to host registries', () => {
     const sorted = applyTransforms(
       [
         { m: 3 },
@@ -31,11 +31,11 @@ describe('data transform runtime', () => {
       ],
       [{ kind: 'sort', field: 'm' }],
     );
-    const stacked = applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]);
 
     expect(sorted.map(row => row.m)).toEqual([1, 2, 3]);
-    expect(stacked[0]).toMatchObject({ month: 'Jan', product: 'A', y0: 0, y1: 3 });
-    expect(stacked[1]).toMatchObject({ month: 'Jan', product: 'B', y0: 3, y1: 8 });
+    expect(() =>
+      applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]),
+    ).toThrow(/not registered/);
   });
 
   it('executes custom transform through the same registry', () => {

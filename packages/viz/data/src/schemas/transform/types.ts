@@ -3,38 +3,25 @@ import type { z } from 'zod';
 import type {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
-  BinTransformSchema,
   BuiltinTransformSchema,
-  DensityBandwidthSpecSchema,
-  DensityTransformSchema,
-  DeriveIntervalTransformSchema,
-  EndpointProjectionSchema,
-  JitterTransformSchema,
-  NormalizeTransformSchema,
   OrderBySchema,
   OutsideQuantileBandSelectorOperationSchema,
-  PairMeasureOperationSchema,
   QuantileBandReducerOperationSchema,
+  ReducerMetricsSchema,
   ReducerOperationSchema,
-  RelateTransformSchema,
   SelectorOperationSchema,
   SelectTransformSchema,
-  SmoothMethodSpecSchema,
-  SmoothTransformSchema,
   SortTransformSchema,
-  StackTransformSchema,
   SummarizeTransformSchema,
   TransformSchema,
 } from './schema';
 
 /** 排序变换（稳定排序，保行数）。 */
 export type SortTransform = z.infer<typeof SortTransformSchema>;
-/** 堆叠变换（跨行累积区间，保行数）。 */
-export type StackTransform = z.infer<typeof StackTransformSchema>;
-/** 分箱变换（连续分箱，改行数）。 */
-export type BinTransform = z.infer<typeof BinTransformSchema>;
 /** reducer operation（统计规约子算子）。 */
 export type ReducerOperation = z.infer<typeof ReducerOperationSchema>;
+/** reducer metrics 列表。 */
+export type ReducerMetrics = z.infer<typeof ReducerMetricsSchema>;
 /** quantile-band reducer operation（参数化分位区间规约）。 */
 export type QuantileBandReducerOperation = z.infer<typeof QuantileBandReducerOperationSchema>;
 /** row selector operation（代表行选择子算子）。 */
@@ -51,27 +38,7 @@ export type SelectTransform = z.infer<typeof SelectTransformSchema>;
 export type AnnotateSelector = z.infer<typeof AnnotateSelectorSchema>;
 /** 标注变换（统计回填，保行数）。 */
 export type AnnotateTransform = z.infer<typeof AnnotateTransformSchema>;
-/** 归一化变换（组内百分比归一化，保行数）。 */
-export type NormalizeTransform = z.infer<typeof NormalizeTransformSchema>;
-/** 区间派生变换（单行派生区间，保行数）。 */
-export type DeriveIntervalTransform = z.infer<typeof DeriveIntervalTransformSchema>;
-/** relate 端点投影（每组选择 source / target 行并映射字段）。 */
-export type EndpointProjection = z.infer<typeof EndpointProjectionSchema>;
-/** 配对度量（从 source / target 行派生差值等字段）。 */
-export type PairMeasureOperation = z.infer<typeof PairMeasureOperationSchema>;
-/** 关系变换（从数据动态派生 relation rows）。 */
-export type RelateTransform = z.infer<typeof RelateTransformSchema>;
-/** 抖点变换（确定性位置抖动，保行数）。 */
-export type JitterTransform = z.infer<typeof JitterTransformSchema>;
-/** density 带宽策略（Silverman 默认或显式正数带宽）。 */
-export type DensityBandwidthSpec = z.infer<typeof DensityBandwidthSpecSchema>;
-/** density 变换（一维 KDE 采样，改行数）。 */
-export type DensityTransform = z.infer<typeof DensityTransformSchema>;
-/** smooth 方法策略（首轮为线性回归）。 */
-export type SmoothMethodSpec = z.infer<typeof SmoothMethodSpecSchema>;
-/** smooth 变换（线性趋势线采样，改行数）。 */
-export type SmoothTransform = z.infer<typeof SmoothTransformSchema>;
-/** 内置 transform operation（sort / stack / bin / summarize / select / annotate / normalize / derive-interval / relate / jitter / density / smooth）。 */
+/** 内置 transform operation（sort / summarize / select / annotate）。 */
 export type BuiltinTransform = z.infer<typeof BuiltinTransformSchema>;
 /** transform operation（内置 ∪ 外部注册 kind passthrough）。 */
 export type Transform = z.infer<typeof TransformSchema>;

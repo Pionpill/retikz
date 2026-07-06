@@ -51,7 +51,7 @@ export const collectTransformFields = (
 
 /**
  * 按声明顺序折叠应用 transform。
- * @description sort / stack / normalize / derive-interval / jitter 保行数；bin / summarize 改行数。
+ * @description data 内置 transform 包含 sort / summarize / select / annotate；宿主可通过 registry 注入更多 transform。
  */
 export const applyTransforms = (
   rows: Array<ExternalRow>,
