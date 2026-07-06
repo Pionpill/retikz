@@ -25,6 +25,7 @@ alpha.8 是 v0.4 的 alpha 收口版本。原始目标是把 alpha.1-alpha.7 已
 | [ADR-04](./04-scene-primitive-reference-closeout.md) | Accepted | ScenePrimitive reference 与发布文案收口 | alpha.8 已完成 docs-only reference / changelog 对账，不回写 alpha.4 历史 ADR。 |
 | [ADR-05](./05-stroke-dash-offset.md) | Accepted | Stroke dash offset | 补齐 `dashPattern` 配套的 `dashOffset` 通用描边字段，覆盖 IR / Scene / renderer / adapter / docs。 |
 | [ADR-06](./06-builtin-path-generator-ribbon-profile.md) | Accepted | Builtin path generator and ribbon width profile | 为 `pathGenerators` 增加内置 `parabola`，为 `ribbonWidthProfiles` 增加内置 `bulge`，并同步测试与文档。 |
+| [ADR-07](./07-font-size-presets-and-relative-units.md) | Accepted | Font size presets and relative units | 扩展 core 字号契约，支持 Web preset 与 `em` / `rem` 相对单位。 |
 
 ## 范围
 

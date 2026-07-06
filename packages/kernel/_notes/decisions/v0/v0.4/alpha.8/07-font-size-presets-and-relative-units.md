@@ -1,8 +1,8 @@
-# ADR-01: Font Size Presets And Relative Units
+# ADR-07: Font Size Presets And Relative Units
 
 - 状态：Accepted
 - 决策日期：2026-07-06
-- 关联：[v0.4 roadmap](../roadmap.md) / [alpha.8 roadmap](../alpha.8/roadmap.md)
+- 关联：[alpha.8 roadmap](./roadmap.md) / [v0.4 roadmap](../roadmap.md)
 
 ## 背景
 
@@ -105,6 +105,6 @@ compileToScene(ir, {
 - 不改变字体度量模型；`measureText` 仍接收解析后的 number。
 ---
 
-> **实现指针**：本 ADR 已随 kernel v0.4-alpha.9 Accepted 落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
+> **实现指针**：本 ADR 已随 kernel v0.4-alpha.8 Accepted 落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
 
-> 🔖 压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.9/01-font-size-presets-and-relative-units.md`。
+> 🔖 压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.8/07-font-size-presets-and-relative-units.md`。
