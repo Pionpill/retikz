@@ -37,32 +37,6 @@ export const ShapeChannelSchema = z.object({
 3. **core 现成 shape 名**：落 core 内置 shape，不补 core。
 
 
-## DSL 表面
-
-```tsx
-// 散点：形状编码 category 字段（黑白可印图常用）
-<Plot data={points}>
-  <PointMark x="x" y="y" shape="category" />
-</Plot>
-```
-
-```ts
-// vanilla / 原生 IR
-{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'category' } } }
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/shape-channel.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：分类映射到调色板、循环复用、常量 value、continuous/temporal fail-loud、shape+color+size 共存、schema accept/reject。落地测试见实现指针。
-
-## 影响
-
-- **Plot IR**：`ir/encoding.ts` 加 `ShapeChannelSchema`；`PointEncodingSchema` 加 `shape`。
-- **lowering**：`lower/channel.ts` 加 shape resolver（categorical→glyph）；`lower/mark.ts` lowerPoint 接 shape → per-node `shape`。
-- **core**：消费 core 内置 shape 名，不改 core。
-- **文档站**：散点页加 shape demo + API 行。
-- **对外 API**：`<PointMark shape>` + IR PointMark encoding `shape`。非 breaking（纯新增可选）。
-
 ## 不在本 ADR 范围
 
 - **更多 glyph**（triangle / cross / star）→ 顺延（需 polygon params / shape 注册表）。
@@ -70,4 +44,4 @@ export const ShapeChannelSchema = z.object({
 - **显式自定义 shape 调色板（range）** → 顺延（本轮默认调色板；显式 ordinal scale range 可作逃生舱，按需）。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/encoding.ts`、`packages/viz/plot/src/lower/{channel,mark}.ts` 与 `packages/viz/plot-react/src/components/marks.tsx`，测试见 `packages/viz/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/shape-channel}.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.7/05-shape-channel.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/05-shape-channel.md`（封板全文）。

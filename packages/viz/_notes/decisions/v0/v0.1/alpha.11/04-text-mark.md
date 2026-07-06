@@ -59,15 +59,6 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 3. **JSON IR 约束下的三层 + 运行时一层**：声明层 `field` / `value` / `format` 都 JSON 安全、AI 可生成、可序列化往返；完全自定义走运行时 `resolveLabel` 逃生舱。
 4. **text 内容是独立通道、不藏进 type**：符合 §3.6「非位置通道」与 encoding「字段 / 常量显式」原则。
 
-## DSL 表面（字面形态决策）
-
-datum label 两套优先级表面，**不要混用**，各有 IR / React 两层。React 是扁平 props、IR 是嵌套通道对象。
-
-- **priority-1（首选）：宿主 mark 加 `label` 通道**——给位置 mark 一个 `label`，lowering 挂到该 mark 每个 datum 的 `Node.label`。React 扁平：`<BarMark x="month" y="revenue" label="revenue" labelPosition="above" labelDistance={6} labelDisplayFormat=",.0f" />`；`resolveLabel={row => ...}` 不进 IR、经 options 注入。坐标系无关——换 polar 标签自动跟到环上对应位置。
-- **priority-2（兜底）：独立 `<TextMark>`**——无宿主自由文本，x / y / text / color 顶层 string，新建 Node 承载 `text`。`TextEncodingSchema.text` 必填（缺失 schema 层即拒）。
-
-落地形态与示例见文档站 `apps/docs/src/modules/docs/contents/viz/components/mark/text/`（zh / en + label / free / resolve 三组 demo）。
-
 ## 不在本 ADR 范围
 
 - **宿主解析机制**（已拍板归此处避免歧义）：曾考虑 `<TextMark>` 独立声明后 lowering 期按 datum 身份跨 mark 匹配回宿主 Node——脆且歧义（多 mark 同位、键冲突），**已否决**。最终采「label 作为宿主 mark 自己的通道」就地填 `label`，`<TextMark>` 只承担无宿主自由文本，不承担「标注别的 mark」。
@@ -91,4 +82,4 @@ datum label 两套优先级表面，**不要混用**，各有 IR / React 两层�
 - 测试：`packages/viz/plot/tests/lower/text-mark.test.ts`、`packages/viz/plot-react/tests/components/text-mark-assembly.test.tsx`、`packages/viz/plot-vanilla/tests/render-plot.test.ts`（宿主 label + 自由 TextMark 的 SSR 断言）。
 - 文档：`apps/docs/src/modules/docs/contents/viz/components/mark/text/`（zh / en + 三组 demo）。
 
-> 🔖 本文件压缩前完整施工蓝图 = `git show 6902289a:_notes/decisions/plot/v0/v0.1/alpha.11/04-text-mark.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.11/04-text-mark.md`（封板全文）。

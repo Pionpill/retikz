@@ -96,15 +96,6 @@ compileToScene(ir, {
 }
 ```
 
-## 影响
-
-- public IR：`FontSchema.size` 从正数扩展为正数、Web preset、`em` / `rem` 字符串。
-- compile options：新增 `fontSize?: number`，默认 `DEFAULT_FONT_SIZE (16)`，同时作为默认字号和解析根字号。
-- compile 行为：节点文本、节点 label、path label、line / run font override 都在 compile 阶段解析到 number。
-- ScenePrimitive：不新增字段；`TextPrim.fontSize` 和 `TextLine.fontSize` 仍是 number。
-- renderer：无新增职责。
-- breaking：现有显式数字字号行为不变；未显式写 `font.size` 的默认字号统一为 16。
-
 ## 不在范围内
 
 - 不支持 TikZ / LaTeX 字号 preset；该能力留给上层 sugar。
@@ -112,38 +103,8 @@ compileToScene(ir, {
 - 不根据浏览器 computed style 解析字号。
 - 不增加字号取整选项。
 - 不改变字体度量模型；`measureText` 仍接收解析后的 number。
+---
 
-## 实现契约
+> **实现指针**：本 ADR 已随 kernel v0.4-alpha.9 Accepted 落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
 
-### Scope
-
-- `packages/kernel/core/src/schemas/font/constants.ts`
-- `packages/kernel/core/src/schemas/font/schema.ts`
-- `packages/kernel/core/src/schemas/font/types.ts`
-- `packages/kernel/core/src/compile/constants.ts`
-- `packages/kernel/core/src/compile/compile.ts`
-- `packages/kernel/core/src/compile/orchestration/context.ts`
-- `packages/kernel/core/src/compile/text/font-size.ts`
-- `packages/kernel/core/src/compile/text/index.ts`
-- `packages/kernel/core/src/compile/node/layout.ts`
-- `packages/kernel/core/src/compile/node/content.ts`
-- `packages/kernel/core/src/compile/node/label-layout.ts`
-- `packages/kernel/core/src/compile/path/label.ts`
-- `packages/kernel/core/tests/ir/font-size.schema.test.ts`
-- `packages/kernel/core/tests/compile/font-size.test.ts`
-- `apps/docs/src/modules/docs/contents/kernel/reference/schema/entity/index.zh.mdx`
-- `apps/docs/src/modules/docs/contents/kernel/reference/schema/entity/index.en.mdx`
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/compile/index.zh.mdx`
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/compile/index.en.mdx`
-
-### Tests
-
-- 默认字号：未写 `font.size` 时 `TextPrim.fontSize === 16`。
-- Web preset：`font.size = "sm"` 默认 `fontSize = 16` -> `TextPrim.fontSize === 14`。
-- `rem`：`font.size = "1.25rem"` 且 `fontSize: 20` -> `TextPrim.fontSize === 25`。
-- Path label：`font.size = "lg"` -> label primitive 字号为 18。
-- `em`：节点 `font.size = "lg"`，行级 `font.size = "0.5em"` -> 行字号为 9。
-- Scale：preset 先解析为 number，再按现有 node scale 规则缩放。
-- TeX：`lowerTex` 接收解析后的 number。
-- Schema：接受 Web preset / `em` / `rem`，拒绝 TikZ preset、未知 preset 和不支持的 CSS 单位。
-- Compile option：`fontSize <= 0` fail-loud。
+> 🔖 压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.9/01-font-size-presets-and-relative-units.md`。

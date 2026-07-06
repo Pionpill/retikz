@@ -50,43 +50,6 @@ ADR-01 已产出「用户源字段 → `FieldType`」类型 `Map`。本 ADR 用�
 4. **复用现成刻度**：guide 格式化不新写，只按类型路由到 `timeTicks`/`categoryTicks`/`scaleTicks`。
 
 
-## DSL 表面
-
-```tsx
-// 派生：无 scale 声明、无 coordinate scale 绑定 —— x=temporal→time、y=quantitative→linear，自动
-<Plot data={rows} model={[{ name: 'date', type: 'temporal' }, { name: 'value', type: 'quantitative' }]}>
-  <LineMark x="date" y="value" />     {/* 轴自动：date 日期格式、value 数值刻度 */}
-</Plot>
-
-// 显式优先：声明并绑定的 scale 照旧生效（覆盖派生）
-<Plot data={rows} spec={specWithExplicitLinearScale} />
-
-// 不兼容 → fail-loud
-// model: value=nominal，却显式绑 linear scale → throw: scale incompatible with field type
-```
-
-vanilla 对等：spec 省略 `scales` / coordinate 绑定 → lowering 派生；显式声明走原路径。
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/type-driven-scale.test.ts` 覆盖：
-
-- 各 FieldType → 默认 scale（quantitative→linear、temporal→time、nominal→band、proportion→linear[0,1]）
-- 显式 scale 覆盖派生
-- 类型不兼容 fail-loud
-- color nominal→ordinal 派生；quantitative color 报错（连续色留 alpha.8）
-- guide 格式化按类型（time 日期 / band 类别 / linear 数值）
-
-落地测试见实现指针。
-
-## 影响
-
-- **IR**：coordinate 的 scale 绑定字段（`x`/`y`/`angle`/`radius`）+ `encoding.color.scale` 由 required → optional（additive 放宽、非 breaking：已填的照旧）。`scales` 数组可省。
-- **lowering**：`expand.ts` scale 解析改为「显式查 `scaleByName` → 命中用；未命中 / 省略 → 按 ADR-01 类型 `Map` 派生」；新增类型↔scale 兼容校验 + 派生函数 `deriveScale(fieldType, role)`。
-- **core**：无。
-- **文档站**：scale 概念页加「类型驱动默认 / 显式覆盖 / 兼容校验」+ demo（零 scale 声明出图）。
-- **对外 API**：coordinate scale 绑定 / color.scale 变可选；最小 spec 更短。
-
 ## 不在本 ADR 范围
 
 - **连续色阶（color gradient，quantitative/temporal color）** → alpha.8。
@@ -95,4 +58,4 @@ vanilla 对等：spec 省略 `scales` / coordinate 绑定 → lowering 派生；
 - **measure-driven tick 防重叠 / 旋转** → 文字度量 oracle（plot-design §16，后续）。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/{coordinate,encoding}.ts` 与 `packages/viz/plot/src/lower/{scale,expand}.ts`，测试见 `packages/viz/plot/tests/lower/type-driven-scale.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/03-type-driven-scale.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.6/03-type-driven-scale.md`（封板全文）。

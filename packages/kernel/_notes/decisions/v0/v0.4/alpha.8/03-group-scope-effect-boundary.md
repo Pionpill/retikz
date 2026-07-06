@@ -45,38 +45,6 @@ alpha.8 固定以下边界：
 - 对后续设计：未来若支持 group / scope effect，需要一起设计 `GroupPrim` 或 Scene 组合层字段、layout overflow、SVG `<g filter>` / isolation、Canvas offscreen composite、hit-test 边界与跨端 parity 测试。
 - 对 alpha.8：不新增 `IRScope.shadow`、`GroupPrim.shadow`、blend isolation 或 renderer composite 行为；只把缺口登记为独立后续设计。
 
-## 待决策点 🔻
-
-- **是否允许 `IRScope.shadow`**：倾向未来另开 ADR；当前不允许。
-- **是否把 group effect 和 named layer 合并设计**：倾向分开，先解决组级合成，再看 layer。
-- **是否把 blur / mask 与 group effect 同期做**：倾向不做，避免扩大 renderer parity 风险。
-
-## DSL 表面
-
-alpha.8 无新增 DSL。下面只是未来讨论样例：
-
-```tsx
-<Scope shadow="lg" blendMode="multiply">
-  <Node id="card" text="Card" />
-</Scope>
-```
-
-## 测试设计
-
-alpha.8 不实现测试。未来正式 ADR 至少需要：
-
-- group shadow 含 text 的 SVG / Canvas 渲染一致性。
-- group blend isolation 与无 isolation 的差异快照。
-- scope transform × group effect。
-- clip × group effect。
-- hit-test 与 shadow 外溢边界。
-
-## 影响
-
-- 对 runtime：alpha.8 无。
-- 对 public API：alpha.8 无。
-- 对 docs：reference 应明确当前 Text / Group 不支持 `shadow` / `blendMode`。
-
 ## 不在本 ADR 范围
 
 - 给 `GroupPrim` / `IRScope` 新增 effect 字段。
@@ -86,49 +54,6 @@ alpha.8 不实现测试。未来正式 ADR 至少需要：
 
 ---
 
-## 实现契约（必填）🔻
+> **实现指针**：本 ADR 已随 kernel v0.4-alpha.8 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
 
-### Level
-
-`green`
-
-本 ADR 自评 level：`green`。只允许 notes / roadmap 收口；不得触碰 `packages/kernel/*/src/**`。
-
-### Schema 改动
-
-无。
-
-### 文件 scope
-
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/03-group-scope-effect-boundary.md`（新建）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/01-drawing-complete-alpha4-closeout.md`（引用本 ADR）
-- `packages/kernel/_notes/decisions/v0/v0.4/alpha.8/roadmap.md`（登记本 ADR）
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `element-effect-preserved`：ADR 明确 alpha.4 图元级 effect 保持。
-- `group-effect-deferred`：ADR 明确 group effect 延期。
-- `future-design-questions-listed`：ADR 列出合成顺序、layout、hit-test 问题。
-
-**边界（≥ 2）**：
-
-- `scope-defaults-not-group-effect`：scope defaults 只影响子元素。
-- `text-group-no-effect`：Text / Group 当前不支持 effect。
-
-**错误路径（≥ 2）**：
-
-- `no-scope-shadow-schema`：diff 不新增 scope shadow schema。
-- `no-render-composite-change`：diff 不触碰 SVG / Canvas renderer。
-
-**交互（≥ 2）**：
-
-- `hit-area-question-deferred`：shadow 外溢命中区作为未来问题登记。
-- `animation-order-question-deferred`：animation 与 group effect 顺序作为未来问题登记。
-
-### 依赖的现有元素
-
-- `alpha.4/01-scene-drop-shadow.md` —— 图元级 shadow 与 group effect 延后项。
-- `alpha.4/02-blend-mode.md` —— element-level blend 与 isolation 延后项。
-- `packages/kernel/core/src/contract/scene/group.ts` —— 当前 GroupPrim 字段边界。
+> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show v0.4.0-alpha.8:packages/kernel/_notes/decisions/v0/v0.4/alpha.8/03-group-scope-effect-boundary.md`。

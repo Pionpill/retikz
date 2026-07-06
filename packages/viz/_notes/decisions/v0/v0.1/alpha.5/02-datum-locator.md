@@ -85,44 +85,6 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 - **locator datum-id fail-loud 与 lowering 对齐（cross-review 修复）**：`createPlotLocator` 构造时用与 lowering 同一 plot 级注册器对所有 datum mark × 已渲染行跑校验，缺字段 / 重复 → 与 `lowerPlots` 同样**抛错**（`resolve()` 仍对坏地址返回 null、不抛）。`resolve` 地址语义明确为「索引/值地址」（`datum.<transformedIndex>` / `series.<value>`），非绑定的 `Node.id`；series 值匹配加 `String()` 兜底（数值可寻址，含 `.` 的值不可经 resolve 寻址）。
 
 
-## DSL 表面
-
-```ts
-// 与 lowerPlots 同参建 locator（命中预演 / v0.3 交互层 / 跨域组合共用）
-const spec = buildPlotSpec(/* … */);
-const datasets = { sales: [{ q:'Q1', v:120 }, { q:'Q2', v:90 }] };
-
-const locator = createPlotLocator(spec, datasets, { width: 480, height: 300 });
-
-locator.datum(1);
-// → { position:[…,…], meta:{ source:'plot', mark:'interval', markIndex:0, datum:1 }, id:'sales.datum.Q2'? }
-
-locator.resolve('sales.series.north');   // → { position:<centroid>, meta:{…,series:'north'} }
-locator.datum(999);                       // → null（越界）
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/locate.test.ts`（新建）覆盖：
-
-- locator.datum(i).position 与 lowering 实际摆放第 i 行 Node.position 逐点一致（point / interval / sector × cartesian / polar）
-- meta 按需合成（lowering 未开 per-datum 时仍给同构 meta）
-- 越界 / 不存在 series / 非法 address → null
-- id 回填（datumIdField 命中时带 id；否则省）
-
-具体 case 见下「实现契约 § 测试象限」。
-
-## 影响
-
-- **新模块** `packages/viz/plot/src/features/interaction/locate.ts`（`createPlotLocator` + `ResolvedAnchor` / `PlotLocator` 类型）。
-- **`src/lower/index.ts`** / **`src/index.ts`**：导出 locator API（新 public surface）。
-- **共享几何抽取**：mark provider registry 的逐行锚点计算抽成 `datumAnchor`（与 locate.ts 共用）——属内部重构，mark 下沉产物等价。
-- **frame 复用**：消费 [ADR-01](./01-scope-id-meta.md) 抽出的 `resolveFrame`。
-- **core**：不依赖、不改（locator 纯 plot 侧）。
-- **plot IR schema**：无改动（locator 不进 IR）。
-- **文档站**：plot 「provenance / anchor」一节补 locator 用法（命中预演示例；与 ADR-01 同页或紧邻）。
-- **对外 API**：新增 `createPlotLocator`（additive）。**非 BREAKING**。
-
 ## 不在本 ADR 范围
 
 - **反向 hit-test（屏幕坐标 → datum）/ 空间索引 / 最近邻**：v0.3 交互层（在正向映射上建索引）。
@@ -131,4 +93,4 @@ locator.datum(999);                       // → null（越界）
 - **series bbox / 外接锚点**：本 ADR series 锚点取 centroid；bbox 留后续。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/features/interaction/locate.ts`、`packages/viz/plot/src/providers/mark/`、`packages/viz/plot/src/pipeline/expand.ts` 与 `packages/viz/plot/src/index.ts` public export，测试见 `packages/viz/plot/tests/features/interaction/locate.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.5/02-datum-locator.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.5/02-datum-locator.md`（封板全文）。

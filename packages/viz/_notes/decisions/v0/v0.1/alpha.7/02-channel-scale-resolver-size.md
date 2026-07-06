@@ -56,41 +56,6 @@ export const PointEncodingSchema = EncodingSchema.extend({
 注册表对外开放时沿用 core 的**「配置 / 数据 / 函数」三分**（plot-design §6）——自定义通道定义**带函数、经 `CompileOptions` / `lowerPlots` options 运行时注入、不进 JSON IR**（IR 按通道名引用，函数定义运行时给），与 core 自定义 `shape`（IR 写名、几何函数注入）同构。硬约束：任何非位置通道终须 lower 到 core 已有视觉属性（fill / stroke / strokeWidth / opacity / shape 参数…），不能凭空发明 core 不识别的视觉效果（那要先补 core）。**现在就要任意视觉控制**的用户掉到 **Kernel**（`<Node>` / `<Path>`，直接写 core IR）——retikz 版的「Vega-Lite → Vega」逃生舱。本轮**只留接缝、不开放注册**。
 
 
-## DSL 表面
-
-```tsx
-// React：bubble 散点——半径编码 population 字段（面积正确）
-<Plot data={{ cities }}>
-  <PointMark x="lng" y="lat" size="population" color="region" />
-</Plot>
-```
-
-```ts
-// vanilla / 原生 IR：size 通道 + 默认 sqrt 派生（省略 scale → 自动合成）
-renderPlot(
-  { type: 'plot', data: { reference: 'cities' },
-    coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-    scales: [{ type: 'linear', name: '__x' }, { type: 'linear', name: '__y' }],
-    marks: [{ type: 'point', encoding: {
-      x: { field: 'lng' }, y: { field: 'lat' },
-      size: { field: 'population' },           // → 自动 sqrt radius scale
-    } }] },
-  { cities },
-);
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/size-channel.test.ts` + `lower/channel-resolver.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：通道 resolver 抽象、size 半径几何、③ 边界退化、schema 拒绝（size 在非 point / value 非数值或负）、与 color 交互。落地测试见实现指针。
-
-## 影响
-
-- **Plot IR**：`ir/encoding.ts` 加 `SizeChannelSchema` / `PointEncodingSchema`；`ir/mark.ts` 仅 `PointMarkSchema` 改用 `PointEncodingSchema`（其余 mark encoding 不变）。
-- **lowering**：新建 `lower/channel.ts`（通用 resolver）；`lower/mark.ts` `lowerPoint` 接 size → per-node 半径 + core 换算；`colorGroupedScope` 在有 size 时退为 per-node 尺寸。
-- **core**：size 落到 core circle 现有尺寸字段（`minimumSize`），**仅消费**。若实现期发现 core circle 不支持 per-node 半径表达 → 按 AGENTS.md「子组遇 core 能力不足先补 core」走 `next-core`，不在 plot 自造。
-- **文档站**：散点页加 bubble demo + `<PointMark size>` API 行；scale 页提 size 用 sqrt。
-- **对外 API**：`<PointMark>` 加 `size?` prop；IR PointMark encoding 加 `size`。**非 breaking**（纯新增可选）。
-
 ## 不在本 ADR 范围
 
 - **size 作用于 line(strokeWidth) / bar(width) / area / sector**（① S1 范围外）→ 顺延。
@@ -100,4 +65,4 @@ renderPlot(
 - **自定义通道注册表（`ChannelDefinition` 对外开放）** → 另立里程碑（plot-design §11「先内置，后开放自定义」）；本轮 resolver 仅留接缝，用户要任意视觉控制走 Kernel（`<Node>` / `<Path>`）。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/{encoding,mark}.ts`、`packages/viz/plot/src/lower/{channel,mark,scale}.ts` 与 `packages/viz/plot-react/src/components/marks.tsx`，测试见 `packages/viz/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/size-channel,lower/channel-resolver}.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.7/02-channel-scale-resolver-size.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/02-channel-scale-resolver-size.md`（封板全文）。

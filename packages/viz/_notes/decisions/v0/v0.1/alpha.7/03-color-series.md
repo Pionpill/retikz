@@ -52,42 +52,6 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 3. **locator 安全**：隐式拆等价显式 series，alpha.5 接通的 datum 定位不被新行为破坏。
 
 
-## DSL 表面
-
-```tsx
-// 单折线 + categorical color 字段 → 隐式拆成每类一条线（= 显式 series）
-<Plot data={{ sales }}>
-  <LineMark x="month" y="amount" color="region" />   {/* 隐式按 region 拆系列 */}
-</Plot>
-
-// 等价显式写法
-<Plot data={{ sales }}>
-  <LineMark x="month" y="amount" series="region" color="region" />
-</Plot>
-
-// 散点：color 按 datum（不拆系列）
-<Plot data={{ rows }}>
-  <PointMark x="x" y="y" color="category" />
-</Plot>
-```
-
-```ts
-// vanilla / 原生 IR：显式 series + 每系列恒定 color（合法）；series 内 color 不恒定 → 报错
-{ type: 'line', series: 'region', encoding: { x: { field: 'month' }, y: { field: 'amount' }, color: { field: 'region', scale: '__color' } } }
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/color-series.test.ts` 覆盖：类型兼容校验、B/C 各 mark 着色、隐式拆等价性、冲突 fail-loud。落地测试见实现指针。
-
-## 影响
-
-- **Plot IR**：**无 schema 字段增删**（color/series 字段已存在）——本 ADR 是 **lowering 行为契约** 改动。
-- **lowering**：`lower/expand.ts` `makeColorResolver` 加类型校验并迁到通用 resolver（[ADR-02](./02-channel-scale-resolver-size.md)）；`lower/mark.ts` line/area 解析 series 来源（显式 > color 隐式）+ 冲突校验 + 单系列 color 不再丢弃。
-- **core**：无影响。
-- **文档站**：折线/面积/散点页 `color` 语义说明 + 「color 隐式拆系列」概念；改 `<LineMark color>` / `<AreaMark color>` API 文案。
-- **对外 API**：⚠️ **BREAKING（行为）**——此前**单折线/面积 + `color={field}` 被静默忽略**（出一条 `currentColor` 线），现在**隐式拆成多条线**。迁移：不想拆系列就别绑 color 字段（用常量 `color` 或去掉）；想要旧的「单色线」语义用 `color={常量}`。changelog 标明。
-
 ## 不在本 ADR 范围
 
 - **连续色阶**（sequential / diverging color scale）→ alpha.8（本轮连续/temporal color fail-loud）。
@@ -96,4 +60,4 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 - **size 通道** → [ADR-02](./02-channel-scale-resolver-size.md)。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/lower/{expand,mark,channel}.ts` 与 React mark 构造，测试见 `packages/viz/plot/tests/lower/color-series.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.7/03-color-series.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/03-color-series.md`（封板全文）。

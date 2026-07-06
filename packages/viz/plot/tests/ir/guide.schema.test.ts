@@ -134,7 +134,7 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
       type: 'axis',
       dimension: 'x',
       title: { text: ['Revenue', { text: 'USD', fill: '#666' }], font: { size: 12 }, textColor: '#111' },
-      tickLabels: { format: '$.2f', rotate: -30, align: 'right' },
+      tickLabels: { format: '$.2f', rotate: -30, align: 'end' },
       line: { stroke: '#333', dashPattern: [4, 2], dashOffset: 1.5 },
       ticks: { values: [0, 10], length: 6 },
     };

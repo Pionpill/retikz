@@ -52,54 +52,6 @@ export const PlotScale = {
 3. **沿 LinearScale 风格 + d3-scale**：复用已有 scale lowering 路径（alpha.2 起 d3-scale），新增成本集中在 schema + 选型分支。
 
 
-## DSL 表面
-
-```tsx
-// React：log y 轴的折线（仅 point/line 合法）—— y 是值轴，log 的主用场
-<Plot data={{ quakes }} scaleY="log">
-  <LineMark x="year" y="energy" />
-</Plot>
-
-// React：sqrt x（point/line）
-<Plot data={{ rows }} scaleX="sqrt">
-  <PointMark x="dose" y="response" />
-</Plot>
-```
-
-```ts
-// vanilla / 原生 IR：完整连续家族（log base / pow exponent 全可配）
-renderPlot(
-  { type: 'plot', data: { reference: 'rows' },
-    coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-    scales: [
-      { type: 'log', name: '__y', base: 10, nice: true },
-      { type: 'linear', name: '__x' },
-    ],
-    marks: [{ type: 'line', encoding: { x: { field: 'year' }, y: { field: 'value' } } }],
-    guides: [{ type: 'axis', dimension: 'y', grid: true }] },
-  { rows },
-);
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/scale-family.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：
-
-- 三类 scale 求值与 tick 生成（log/pow/sqrt）
-- L1 守卫：bar/area + 非线性连续 scale → 抛错
-- domain 边界（log 含 0 / 负值拒绝、正值域推断、nice；sqrt/pow 负值规则）
-- 与 guide / size（ADR-02）的交互
-
-落地测试见实现指针。
-
-## 影响
-
-- **Plot IR**：`ir/scale.ts` 加 3 个 schema + 派生类型，`ScaleSchema` union 扩 3 成员；**纯增量，无既有字段语义变化**。
-- **lowering**：`lower/scale.ts` 加 log/pow/sqrt 求值 + tick 分支；`lower/expand.ts` 加 L1 守卫。
-- **core**：无新依赖、不触 core IR（连续 scale 求值在 plot 内，产出仍是已有几何）。
-- **文档站**：scale 概念页 + 折线/散点示例页加 log/sqrt demo；`<Plot scaleX>` API 表加 `'log' | 'sqrt'`。
-- **对外 API**：`PlotScale` 加 3 成员（裸字面量 + 常量）；React `DslScaleX` 加 `'log' | 'sqrt'` + **新增 `scaleY`**（`DslScaleY`，同样 `'log' | 'sqrt'`，覆盖 log 值轴主用场）。**非 breaking**（纯新增）。
-
 ## 不在本 ADR 范围
 
 - **symlog**（跨零/负值的对数兜底）——需求驱动，本轮 log 遇非正值 fail-loud。
@@ -109,4 +61,4 @@ renderPlot(
 - **polar radius 用 log** → 需求驱动（本轮 L1 守卫覆盖 cartesian；polar 径向暂不特别支持非线性）。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/scale.ts`、`packages/viz/plot/src/lower/{scale,expand}.ts` 与 React `scaleX/scaleY` DSL，测试见 `packages/viz/plot/tests/{ir/scale.schema,lower/scale-family}.test.ts` 和 `packages/viz/plot-react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.7/01-continuous-scale-family.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.7/01-continuous-scale-family.md`（封板全文）。

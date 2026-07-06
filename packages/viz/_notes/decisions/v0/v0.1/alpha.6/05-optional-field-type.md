@@ -49,33 +49,6 @@ for (const field of userSourceFields) {
 - **削弱 LLM / spec 自描述**：name-only 字段的类型不在 spec 里、依赖运行时数据。要让 LLM 不看数据就全懂、spec 完全可移植，仍应填全 `type`——本特性是 **opt-in 的部分类型化**，不鼓励都省。
 
 
-## DSL 表面
-
-```tsx
-// 20 字段里只点名 2 个特殊的，其余进 strict + 可移植但类型自动推断
-<Plot data={rows} model={[
-  { name: 'createdAt', type: 'temporal' },    // 非 ISO/特殊，需点名
-  { name: 'statusCode', type: 'categorical' }, // 数值枚举，需点名
-  { name: 'revenue' },                          // name-only → 推断 continuous
-  { name: 'region' },                           // name-only → 推断 categorical
-]}>
-  <LineMark x="createdAt" y="revenue" series="region" order="createdAt" />
-</Plot>
-```
-
-## 测试设计
-
-`packages/viz/plot/tests/lower/data-model.test.ts`（扩展现有 `resolveFieldTypes` 段）+ `packages/viz/plot/tests/ir/data.schema.test.ts`（`type` 可省 accept）。落地测试见实现指针。
-
-## 影响
-
-- **IR schema**：`FieldDefSchema.type` required → optional（**非破坏**）；`FieldDefSchema.type` / `DataModelSchema` 的 describe 改写（type 可省 → 推断）。
-- **lowering**：`resolveFieldTypes`（`lower/validate.ts`）model 分支重写为「strict 按 name + 类型声明优先否则推断」；引用 `inferFieldType`。
-- **公开 API**：`model` 字段定义可只给 `name`（用户可见、非破坏放宽）。
-- **文档站**：`apps/docs/src/modules/docs/contents/viz/grammar/data` 补「部分声明 model：只点名特殊字段、其余推断」段，并修正「model = 不看数据就能校验」的措辞为「仅对显式 type 字段」。
-- **core**：无。
-- **与 ADR-04 协同**：优先级链 `resolveField.type > model.type > infer` 跨两 ADR 成立；实现时同一处取值。
-
 ## 不在本 ADR 范围
 
 - **声明式 `format` 词表**（ADR-04 已列后续）——与本 ADR 正交。
@@ -83,4 +56,4 @@ for (const field of userSourceFields) {
 - **推断质量提升**（更聪明的类型嗅探）——沿用 ADR-01 的抽样推断，不在本 ADR 动。
 
 > **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/ir/data.ts` 与 `packages/viz/plot/src/lower/validate.ts`，测试见 `packages/viz/plot/tests/lower/data-model.test.ts` 和 `packages/viz/plot/tests/ir/data.schema.test.ts`。完整施工契约见压缩前蓝图。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:_notes/decisions/plot/v0/v0.1/alpha.6/05-optional-field-type.md`（封板全文）。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.6/05-optional-field-type.md`（封板全文）。

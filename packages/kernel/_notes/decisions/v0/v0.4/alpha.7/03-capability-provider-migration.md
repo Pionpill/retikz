@@ -42,41 +42,6 @@ export type CompileOptions = {
 3. compile 只消费 resolve 后 registry，能让 renderer / adapter 不理解 provider 细节。
 
 
-## DSL 表面
-
-```tsx
-<Layout
-  shapes={[pillShape]}
-  patterns={[hatchPattern]}
-  pathGenerators={[smoothPath]}
-  pathKinds={[flowPathKind]}
-  composites={[calloutComposite]}
->
-  <Node id="a" shape="pill" />
-  <Path way={[{ kind: 'generator', name: 'smooth', params: { tension: 0.4 } }]} />
-</Layout>
-```
-
-```ts
-compileToScene(ir, {
-  shapes: [pillShape],
-  pathKinds: [flowPathKind],
-  composites: [calloutComposite],
-});
-```
-
-## 测试设计
-
-迁移测试分散到各 capability 现有测试目录，重点覆盖 array 输入、Map lookup、unknown 诊断、duplicate 诊断、React / Vanilla 透传。
-
-
-## 影响
-
-- ⚠️ BREAKING：`CompileOptions.shapes` / `arrows` / `patterns` / `pathGenerators` / `pathKinds` / `ribbonWidthProfiles` 从 record 改为 array。
-- ⚠️ BREAKING：`BUILTIN_*` 公共导出类型从 record 改为 array；按 key 访问内置 definition 的代码需要改为 registry resolve 或数组查找。
-- ⚠️ BREAKING：custom 覆盖 builtin 行为删除。
-- core、react、vanilla 与 docs 的 provider 示例需要统一改写。
-
 ## 不在本 ADR 范围
 
 - 不新增新的 provider capability。
