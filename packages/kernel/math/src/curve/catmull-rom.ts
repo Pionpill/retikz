@@ -1,6 +1,6 @@
-import type { Position } from '../geometry/point';
+import type { Position } from '../geometry';
 
-import { DEFAULT_EPSILON } from '../geometry/point';
+import { DEFAULT_EPSILON } from '../geometry';
 
 /** 一段三次贝塞尔：两控制点 + 终点（起点为上一段终点 / 首段为第一个 knot） */
 export type CubicSegment = { control1: Position; control2: Position; to: Position };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { arcAngleInRange, arcBoundingPoints, arcEndPoint, rayArc } from '../../src/geometry/arc';
+import { arcAngleInRange, arcBoundingPoints, arcEndPoint, rayArc } from '../../src';
 
 /*
  * 约定（与 polar.ts 一致）：

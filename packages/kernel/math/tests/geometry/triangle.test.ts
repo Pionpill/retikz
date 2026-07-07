@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { triangle } from '../../src/geometry/triangle';
+import { triangle } from '../../src';
 
 describe('triangle', () => {
   it('circumcircle：直角三角形外心 = 斜边中点', () => {

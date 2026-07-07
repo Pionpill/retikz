@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { convexHull } from '../../src/geometry/hull';
+import { convexHull } from '../../src';
 
 describe('convexHull（Andrew monotone chain，CCW，不含共线中间点）', () => {
   it('正方形 + 内点 → 4 角', () => {

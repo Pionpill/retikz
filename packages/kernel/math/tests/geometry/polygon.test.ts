@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { polygon } from '../../src/geometry/polygon';
+import { polygon } from '../../src';
 
 const square: Array<[number, number]> = [
   [0, 0],

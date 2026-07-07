@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { intersect } from '../../src/geometry/intersect';
+import { intersect } from '../../src';
 
 describe('intersect', () => {
   it('lineLine：相交返回交点，平行返回 null', () => {

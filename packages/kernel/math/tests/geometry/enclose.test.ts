@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { minimalEnclosingCircle } from '../../src/geometry/enclose';
+import { minimalEnclosingCircle } from '../../src';
 
 const encloses = (pts: Array<[number, number]>, eps = 1e-6): boolean => {
   const c = minimalEnclosingCircle(pts)!;
