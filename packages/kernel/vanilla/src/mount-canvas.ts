@@ -133,9 +133,6 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   };
 
   const renderInto = (next: RenderInput): void => {
-    if (isFigure(next)) {
-      throw new Error('mountCanvas: view.update does not accept a Figure; pass figure.ir instead.');
-    }
     const scene = toScene(next, options);
     currentScene = scene;
     const hasNominalSize =
