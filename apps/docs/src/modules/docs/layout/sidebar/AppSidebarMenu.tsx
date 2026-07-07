@@ -49,7 +49,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                     type="button"
                     className={cn(
                       'mb-1.5 flex w-full cursor-pointer items-center rounded-md px-3 py-1 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground',
-                      pathname.toLowerCase() === categoryPath.toLowerCase() && 'bg-accent text-foreground',
+                      pathname.toLowerCase() === categoryPath.toLowerCase() && 'text-foreground',
                     )}
                     onClick={e => {
                       e.preventDefault();
