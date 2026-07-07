@@ -434,8 +434,7 @@ describe('ADV — zod parse 错误质量', () => {
     expect(r.success).toBe(false);
   });
 
-  // 已知（接受）：IR schema 非 strict，typo 字段被静默剥离——全局 IR 行为，不在本 ADR 范围。
-  it('extra_field_typo：拼错字段名 lenght 被静默剥离（全局 IR strip 行为，记录现状）', () => {
+  it('extra_field_typo：拼错字段名 lenght 被拒绝，不静默剥离', () => {
     const r = PathSchema.safeParse({
       type: 'path',
       marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', lenght: 10 } }],
@@ -444,10 +443,6 @@ describe('ADV — zod parse 错误质量', () => {
         { type: 'step', kind: 'line', to: [100, 0] },
       ],
     });
-    expect(r.success).toBe(true);
-    if (r.success) {
-      const detail = r.data.marks?.[0]?.mark as Record<string, unknown>;
-      expect('lenght' in detail).toBe(false);
-    }
+    expect(r.success).toBe(false);
   });
 });

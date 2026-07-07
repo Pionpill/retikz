@@ -19,6 +19,7 @@ export const PathAnisotropicScaleSchema = z
     x: z.number().positive().describe('Scale factor on the x axis.'),
     y: z.number().positive().describe('Scale factor on the y axis.'),
   })
+  .strict()
   .describe('Anisotropic scale with independent x / y factors.');
 
 export const PathScaleSchema = z
@@ -29,9 +30,11 @@ export const PathScaleSchema = z
 
 export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
   kind: z.literal('arrow').describe('Discriminator marking this mark as an arrow tip.'),
-}).describe(
-  'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
-);
+})
+  .strict()
+  .describe(
+    'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
+  );
 
 export const PathMarkPlacementSchema = z
   .object({
@@ -42,6 +45,7 @@ export const PathMarkPlacementSchema = z
       'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
     ),
   })
+  .strict()
   .describe('One mark placement along the path.');
 
 export const PathBaseSchema = z
