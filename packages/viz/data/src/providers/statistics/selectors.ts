@@ -1,11 +1,36 @@
 ﻿import { z } from 'zod';
 
 import type { AnyRowSelectorDefinition } from '../../contract';
+import type { ExternalRow, RowSelectorTieValue } from '../../schemas';
 
 import { defineRowSelector } from '../../contract';
 import { DataSortOrder, OutsideQuantileBandSelectorOperationSchema, RowSelectorTie, SelectorOp } from '../../schemas';
 import { resolveFieldPath } from '../data';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
+
+/** 按 top/bottom 的第 N 名阈值处理边界并列行。 */
+const selectTopBottomRows = (
+  ranked: Array<ExternalRow>,
+  operation: { by: string; n: number; tie?: RowSelectorTieValue },
+): Array<ExternalRow> => {
+  const selected = ranked.slice(0, operation.n);
+  if (selected.length === 0 || ranked.length <= selected.length) return selected;
+
+  const threshold = resolveFieldPath(selected[selected.length - 1], operation.by);
+  if (operation.tie === RowSelectorTie.All) {
+    for (const row of ranked.slice(operation.n)) {
+      if (resolveFieldPath(row, operation.by) !== threshold) break;
+      selected.push(row);
+    }
+  }
+  if (operation.tie === RowSelectorTie.Last) {
+    for (const row of ranked.slice(operation.n)) {
+      if (resolveFieldPath(row, operation.by) !== threshold) break;
+      selected[selected.length - 1] = row;
+    }
+  }
+  return selected;
+};
 
 /** `min` selector：选择数值最小的原始行。 */
 const minSelectorDefinition = defineRowSelector({
@@ -108,14 +133,7 @@ const topSelectorDefinition = defineRowSelector({
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Descending);
-    const selected = ranked.slice(0, operation.n);
-    if (operation.tie === RowSelectorTie.All && selected.length > 0 && ranked.length > selected.length) {
-      const threshold = resolveFieldPath(selected[selected.length - 1], operation.by);
-      for (const row of ranked.slice(operation.n)) {
-        if (resolveFieldPath(row, operation.by) !== threshold) break;
-        selected.push(row);
-      }
-    }
+    const selected = selectTopBottomRows(ranked, operation);
     return selected.map((row, index) => ({ row, rank: index + 1 }));
   },
 });
@@ -131,14 +149,7 @@ const bottomSelectorDefinition = defineRowSelector({
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Ascending);
-    const selected = ranked.slice(0, operation.n);
-    if (operation.tie === RowSelectorTie.All && selected.length > 0 && ranked.length > selected.length) {
-      const threshold = resolveFieldPath(selected[selected.length - 1], operation.by);
-      for (const row of ranked.slice(operation.n)) {
-        if (resolveFieldPath(row, operation.by) !== threshold) break;
-        selected.push(row);
-      }
-    }
+    const selected = selectTopBottomRows(ranked, operation);
     return selected.map((row, index) => ({ row, rank: index + 1 }));
   },
 });

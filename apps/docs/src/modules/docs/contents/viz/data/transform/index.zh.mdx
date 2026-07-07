@@ -113,9 +113,9 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 
 <ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
 
-| definition 字段 | 负责声明                                 | 进入 IR |
-| --------------- | ---------------------------------------- | ------- |
-| `schema`        | 校验 `{ kind, ...config }` 并提取注册键  | 否      |
-| `inputFields`   | 读取哪些源字段，参与 strict model 校验   | 否      |
-| `outputFields`  | 产生哪些派生字段，从 strict model 中排除 | 否      |
-| `transform`     | 运行时行处理逻辑                         | 否      |
+| definition 字段 | 负责声明                                              | 进入 IR |
+| --------------- | ----------------------------------------------------- | ------- |
+| `schema`        | 校验 `{ kind, ...config }` 并提取注册键               | 否      |
+| `inputFields`   | 读取哪些源字段，参与 strict model 校验                | 否      |
+| `outputFields`  | 产生哪些派生字段，从 strict model 中排除              | 否      |
+| `apply`         | 运行时行处理逻辑 `(rows, operation, context) => rows` | 否      |

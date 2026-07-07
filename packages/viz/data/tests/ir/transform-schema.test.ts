@@ -12,4 +12,20 @@ describe('transform schema', () => {
   it('rejects invalid built-in transform shape at schema boundary', () => {
     expect(() => TransformSchema.parse({ kind: 'sort', field: '' })).toThrow();
   });
+
+  it('rejects unknown keys on built-in transforms without blocking external config', () => {
+    expect(() => TransformSchema.parse({ kind: 'sort', field: 'month', oder: 'descending' })).toThrow();
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'summarize',
+        groupBy: ['month'],
+        metrics: [{ op: 'count', as: 'rows', extra: true }],
+      }),
+    ).toThrow();
+
+    expect(TransformSchema.parse({ kind: 'host-transform', extra: { enabled: true } })).toEqual({
+      kind: 'host-transform',
+      extra: { enabled: true },
+    });
+  });
 });

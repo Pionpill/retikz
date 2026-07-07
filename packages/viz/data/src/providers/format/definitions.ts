@@ -18,7 +18,11 @@ const parseSlashDate = (raw: unknown): number => {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  return Date.UTC(year, month - 1, day);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  date.setUTCHours(0, 0, 0, 0);
+  const stamp = date.getTime();
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? stamp : NaN;
 };
 
 /** 数值 / 数值串 -> number；epoch 秒 / 毫秒缩放共用，非有限或空串 -> NaN。 */
