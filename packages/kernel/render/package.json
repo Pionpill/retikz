@@ -1,6 +1,12 @@
 {
   "name": "@retikz/render",
   "version": "0.4.0-beta.1",
+  "retikz": {
+    "domain": "kernel",
+    "releaseGroup": "kernel",
+    "layer": "renderer",
+    "publishable": true
+  },
   "description": "retikz renderers: Scene to SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
   "type": "module",
   "author": "Pionpill",
