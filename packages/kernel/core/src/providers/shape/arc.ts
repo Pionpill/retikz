@@ -7,7 +7,7 @@ import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contrac
 import type { Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { createCache, localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
+import { localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
 import { pathPrimitiveStyle } from './style';
 
 const arcParamsSchema = z.strictObject({
@@ -51,14 +51,6 @@ const computeArcGeometry = (params: ArcParams): ArcGeometry => {
   };
 };
 
-const ARC_GEOMETRY_CACHE_LIMIT = 256;
-
-const arcGeometry = createCache<ArcParams, ArcGeometry>({
-  keyOf: params => `${params.radius}|${params.startAngle}|${params.endAngle}|${params.close === true ? 1 : 0}`,
-  compute: computeArcGeometry,
-  maxSize: ARC_GEOMETRY_CACHE_LIMIT,
-});
-
 /** 圆心局部点（相对圆心）→ 世界系（+centerOffset 到相对 AABB 中心后经 rect 投影） */
 const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Position): Position =>
   localToWorld(rect, [localFromCenter[0] + centerOffset[0], localFromCenter[1] + centerOffset[1]]);
@@ -71,14 +63,14 @@ const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Po
 export const arc = defineShape<ArcParams>({
   name: 'arc',
   paramsSchema: arcParamsSchema,
-  circumscribe: (_hw, _hh, params) => arcGeometry(params).aabbHalfAxes,
+  circumscribe: (_hw, _hh, params) => computeArcGeometry(params).aabbHalfAxes,
   // position = 圆心；AABB 中心相对圆心的偏移 = −centerOffset（centerOffset 是圆心相对 AABB 中心）
   circumscribeOffset: (params): Position => {
-    const { centerOffset } = arcGeometry(params);
+    const { centerOffset } = computeArcGeometry(params);
     return [-centerOffset[0], -centerOffset[1]];
   },
   boundaryPoint: (rect: Rect, toward: Position, params): Position => {
-    const geo = arcGeometry(params);
+    const geo = computeArcGeometry(params);
     const { radius } = params;
     const { start, end } = geo.range;
     // 弧无 2D 内部（开放曲线）：把 toward 投到弧的圆心局部系求角，clamp 进 [start, end]，取弧上最近点作附着点
@@ -94,7 +86,7 @@ export const arc = defineShape<ArcParams>({
     return arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], radius, angle));
   },
   anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
-    const geo = arcGeometry(params);
+    const geo = computeArcGeometry(params);
     const { radius } = params;
     const { start, end, mid } = geo.range;
     const at = (angle: number): Position => arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], radius, angle));
@@ -112,7 +104,7 @@ export const arc = defineShape<ArcParams>({
     }
   },
   *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
-    const geo = arcGeometry(params);
+    const geo = computeArcGeometry(params);
     const { radius, close } = params;
     const { start, end } = geo.range;
     const rp = (p: Position): [number, number] => [round(p[0]), round(p[1])];
