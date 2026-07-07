@@ -394,7 +394,7 @@ describe('channel core coverage (alpha.12 ADR-12)', () => {
       rotate: 15,
       scale: { x: 1.2, y: 0.8 },
       fillRule: 'evenodd',
-      thickness: 'thick',
+      strokeWidth: 2,
       dashPattern: [4, 2],
       shadow: { preset: 'md', offsetX: 1, offsetY: 2 },
       blendMode: 'screen',

@@ -1,7 +1,7 @@
-import type { ExternalRow } from '@retikz/data';
+import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
 
 import {
-  applyTransforms,
+  applyTransforms as applyDataTransforms,
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
   defineStatisticsReducer,
@@ -11,6 +11,17 @@ import {
 import { readSourceIndex, readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+
+import { resolvePlotTransformRegistry } from '../../../src/providers';
+
+const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
+
+const applyTransforms = (
+  rows: Array<ExternalRow>,
+  operations?: Parameters<typeof applyDataTransforms>[1],
+  registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
+  context?: TransformContext,
+): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
 
 const ORDERS: Array<ExternalRow> = [
   { region: 'N', product: 'A', revenue: 3 },
