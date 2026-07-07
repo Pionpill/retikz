@@ -5,6 +5,63 @@ export const vizV01: Release = {
     stableDate: null,
     packages: [
       {
+        pkg: '@retikz/data',
+        version: 'v0.1',
+        description: {
+          zh: 'viz 组的纯数据处理层：承载数据模型、字段解析、format、statistics 子算子、transform contract / registry / pipeline 与 provenance，不绑定宿主语义。',
+          en: 'The pure data-processing layer for viz: data models, field resolution, formatting, statistic reducers, transform contracts / registries / pipelines, and provenance without host semantics.',
+        },
+        highlights: [
+          {
+            label: { zh: '数据层真源', en: 'Data-layer source of truth' },
+            content: {
+              zh: '`@retikz/data` 成为数据模型、外部数据集、字段解析、format、statistics 与共享 transform 的顶层入口；消费方直接从 `@retikz/data` 导入 data-only API。',
+              en: '`@retikz/data` is now the top-level entry for data models, external datasets, field resolution, formatting, statistics, and shared transforms; consumers import data-only APIs directly from `@retikz/data`.',
+            },
+          },
+          {
+            label: { zh: '共享 transform 边界', en: 'Shared transform boundary' },
+            content: {
+              zh: 'data 默认内置项只保留 plot / table / geo 都可复用的数据能力；plot-only transform 由 plot 自己注册，避免把图形语义强加给其它宿主。',
+              en: 'The default data builtins now keep only capabilities reusable by plot / table / geo; plot-only transforms are registered by plot itself, avoiding chart semantics in other hosts.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'beta.1',
+            date: '2026-07-06',
+            summary: {
+              zh: '新增 `@retikz/data` 并从 plot 迁出通用数据处理层，同时收窄默认内置 transform 到跨宿主共享能力。',
+              en: 'Introduces `@retikz/data` by extracting the shared data-processing layer from plot, then narrows the default builtin transforms to cross-host capabilities.',
+            },
+            items: [
+              {
+                label: { zh: '从 plot 抽出数据模型与 pipeline', en: 'Extracted data models and pipelines from plot' },
+                content: {
+                  zh: '数据 schema、字段解析、format、statistics、transform registry、`applyTransforms` 与 provenance 迁入 `@retikz/data`，并通过顶层入口导出。',
+                  en: 'Data schemas, field resolution, formatting, statistics, transform registries, `applyTransforms`, and provenance moved into `@retikz/data` and are exported from its package root.',
+                },
+              },
+              {
+                label: { zh: 'plot-only transform 不再是 data 默认能力', en: 'Plot-only transforms are no longer data defaults' },
+                content: {
+                  zh: '`bin`、`density`、`smooth`、`jitter`、`stack`、`normalize`、`relate` 等直接服务 plot mark / scale / stat-geom 的 transform 移出 data 默认内置集合，由宿主显式注册。',
+                  en: 'Transforms such as `bin`, `density`, `smooth`, `jitter`, `stack`, `normalize`, and `relate` directly serve plot marks / scales / stat-geoms, so they moved out of the data default builtins and are registered by the host.',
+                },
+              },
+              {
+                label: { zh: '不新增 data-react', en: 'No data-react package' },
+                content: {
+                  zh: 'data 保持纯数据处理定位，不提供 React `<Transform>` 组件；React / Vanilla authoring 仍由各宿主 adapter 负责。',
+                  en: 'data stays a pure data-processing package and does not provide a React `<Transform>` component; React / Vanilla authoring remains owned by host adapters.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
         pkg: '@retikz/plot',
         version: 'v0.1',
         description: {
@@ -28,6 +85,37 @@ export const vizV01: Release = {
           },
         ],
         subVersions: [
+          {
+            version: 'beta.1',
+            date: '2026-07-06',
+            summary: {
+              zh: 'plot 改为消费 `@retikz/data`，移除 data-only 顶层转发，并由 plot 自行注册 plot-only transform provider。',
+              en: 'plot now consumes `@retikz/data`, removes data-only root re-exports, and registers plot-only transform providers itself.',
+            },
+            items: [
+              {
+                label: { zh: '数据 API 不再从 plot 转发', en: 'Data APIs are no longer re-exported from plot' },
+                content: {
+                  zh: '`DataModel`、`ExternalDatasets`、`defineTransform`、`applyTransforms` 等 data-only 类型和 helper 需要从 `@retikz/data` 顶层入口导入；plot 顶层只保留 plot 自己拥有的 schema、provider 与 lowering API。',
+                  en: '`DataModel`, `ExternalDatasets`, `defineTransform`, `applyTransforms`, and other data-only types / helpers must be imported from `@retikz/data`; the plot root only exposes plot-owned schemas, providers, and lowering APIs.',
+                },
+              },
+              {
+                label: { zh: 'plot-only transform 回到 plot', en: 'Plot-only transforms moved back to plot' },
+                content: {
+                  zh: 'plot 的默认 registry 组合 `@retikz/data` 共享 transform 与 plot 自己的统计 / 几何 transform，现有 PlotSpec 的 mark-local transform 与 lowering 行为保持不变。',
+                  en: 'The plot default registry combines shared transforms from `@retikz/data` with plot-owned statistical / geometric transforms, preserving existing PlotSpec mark-local transform and lowering behavior.',
+                },
+              },
+              {
+                label: { zh: '⚠️ 破坏性入口调整', en: '⚠️ Breaking entry adjustment' },
+                content: {
+                  zh: '依赖 `@retikz/plot` 获取 data API 或依赖 plot 私有深路径数据实现的代码，需要迁移到 `@retikz/data` 顶层入口或 plot 对应 owner 入口。',
+                  en: 'Code that used `@retikz/plot` for data APIs or relied on plot private deep data paths must migrate to the `@retikz/data` package root or the corresponding plot-owned entry.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.15',
             date: '2026-07-05',
@@ -233,6 +321,30 @@ export const vizV01: Release = {
         ],
         subVersions: [
           {
+            version: 'beta.1',
+            date: '2026-07-06',
+            summary: {
+              zh: 'React adapter 直接依赖 `@retikz/data`，组合 DSL 继续只装配 PlotSpec，不接管 data 的纯处理层。',
+              en: 'The React adapter now depends directly on `@retikz/data`; the composition DSL still only assembles PlotSpecs and does not own the pure data-processing layer.',
+            },
+            items: [
+              {
+                label: { zh: 'data 类型来源改为 data 包', en: 'Data types come from the data package' },
+                content: {
+                  zh: '`<Plot>` 与组合 DSL 暴露外部数据集、数据模型和 transform 相关类型时，直接消费 `@retikz/data`，不再经由 `@retikz/plot` 转发。',
+                  en: '`<Plot>` and the composition DSL consume external-dataset, data-model, and transform-related types directly from `@retikz/data` instead of through `@retikz/plot` re-exports.',
+                },
+              },
+              {
+                label: { zh: '<Transform> 仍属于宿主 DSL', en: '`<Transform>` remains host DSL' },
+                content: {
+                  zh: '没有新增 `@retikz/data-react`；React 侧的 `<Transform>` 仍只负责生成 PlotSpec 片段，运行时 transform pipeline 由 plot + data registry 组合处理。',
+                  en: 'No `@retikz/data-react` package is added; React `<Transform>` still only generates PlotSpec fragments, while runtime transform pipelines are handled by the combined plot + data registries.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.15',
             date: '2026-07-05',
             summary: {
@@ -429,6 +541,30 @@ export const vizV01: Release = {
           },
         ],
         subVersions: [
+          {
+            version: 'beta.1',
+            date: '2026-07-06',
+            summary: {
+              zh: 'Vanilla / SSR adapter 直接依赖 `@retikz/data`，`renderPlot` 继续复用同一 plot lowering 与 data pipeline。',
+              en: 'The Vanilla / SSR adapter now depends directly on `@retikz/data`; `renderPlot` continues to reuse the same plot lowering and data pipeline.',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 数据类型不经 plot 转发', en: 'SSR data types bypass plot re-exports' },
+                content: {
+                  zh: '`renderPlot` 相关的外部数据集和 lower options 类型直接来自 `@retikz/data` 与 `@retikz/plot` 各自顶层入口，避免 adapter 依赖 plot 的旧 data 转发。',
+                  en: '`renderPlot`-related external dataset and lower-options types now come directly from the `@retikz/data` and `@retikz/plot` package roots, avoiding the old data re-export path through plot.',
+                },
+              },
+              {
+                label: { zh: '无额外渲染语义', en: 'No additional rendering semantics' },
+                content: {
+                  zh: 'Vanilla 侧仍然只把 PlotSpec + datasets 送入共享 lowering；plot-only transform 的可用性来自 plot 默认 registry，而不是 vanilla 自己维护 provider。',
+                  en: 'The vanilla side still sends PlotSpecs + datasets into shared lowering; plot-only transform availability comes from the plot default registry, not vanilla-owned providers.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.15',
             date: '2026-07-05',
