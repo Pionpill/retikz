@@ -14,11 +14,12 @@ import type {
   TernaryVertices,
   TickSet,
 } from '../../contract';
+import type { ProvenanceContext } from '../../contract';
 import type { ResolvedLegendGuideTokens } from '../../providers';
 import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
 import type { Rect } from '../../shared';
-import type { ProvenanceContext } from '../provenance';
 
+import { guideLayerId, guideLayerMeta } from '../../contract';
 import { defaultOriginAxisTickSideOf } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../providers/scale/shared';
 import {
@@ -38,7 +39,6 @@ import {
   PlotLayerZIndex,
 } from '../../schemas';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
-import { guideLayerId, guideLayerMeta } from '../provenance';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
 const DEG_TO_RAD = Math.PI / 180;

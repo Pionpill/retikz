@@ -1,3 +1,4 @@
+import type { IRJsonObject, JsonValue } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
 /**
@@ -29,4 +30,94 @@ export type MarkProvenance = {
   markIndex: number;
   /** plot 级 datum id 登记器；无 datumIdField 或无 plotId 时省略。 */
   registerDatumId?: DatumIdRegistrar;
+};
+
+/**
+ * 把任意值转成 id 路径段。
+ * @description 非字符串走 String()；点号会与 plot-local 命名层级冲突，因此替换为下划线。
+ */
+export const slug = (value: unknown): string => String(value).replace(/\./g, '_');
+
+/** plot 来源 meta 的公共前缀字段。 */
+const PLOT_SOURCE = 'plot';
+
+/** 把 series / datum 值收成 JSON-safe meta 标量。 */
+const toJsonValue = (value: unknown): JsonValue => {
+  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+    return value;
+  return String(value);
+};
+
+/** mark 图层来源 meta，写在每个 mark 的图层 Scope。 */
+export const markLayerMeta = (markType: string, markIndex: number): IRJsonObject => ({
+  source: PLOT_SOURCE,
+  layer: 'mark',
+  mark: markType,
+  markIndex,
+});
+
+/** guide 图层来源 meta，写在轴 / 网格 Scope。 */
+export const guideLayerMeta = (layer: 'axis' | 'grid', dimension: string): IRJsonObject => ({
+  source: PLOT_SOURCE,
+  layer,
+  dimension,
+});
+
+/** root 来源 meta，写在外层 plot Scope。 */
+export const rootMeta = (dataReference: string): IRJsonObject => ({
+  source: PLOT_SOURCE,
+  dataReference,
+});
+
+/** series Path 来源 meta，写在每条 series Path。 */
+export const seriesPathMeta = (markType: string, markIndex: number, series: unknown): IRJsonObject => ({
+  source: PLOT_SOURCE,
+  layer: 'mark',
+  mark: markType,
+  markIndex,
+  series: toJsonValue(series),
+});
+
+/** per-datum 来源 meta，写在 point / interval / sector 的每个 datum Node。 */
+export const datumMeta = (
+  context: ProvenanceContext,
+  markType: string,
+  markIndex: number,
+  transformedIndex: number,
+  sourceIndex: number | undefined,
+  series: unknown,
+  sourceIndices?: Array<number>,
+): IRJsonObject => {
+  const meta: IRJsonObject = {
+    source: PLOT_SOURCE,
+    dataReference: context.dataReference,
+    mark: markType,
+    markIndex,
+    transformedIndex,
+  };
+  if (sourceIndices !== undefined && sourceIndices.length > 0) meta.sourceIndices = [...sourceIndices];
+  else if (sourceIndex !== undefined) meta.sourceIndex = sourceIndex;
+  if (series !== undefined) meta.series = toJsonValue(series);
+  return meta;
+};
+
+/** mark 图层 scope.id，存在 plotId 时生成 plot-local 稳定 id。 */
+export const markLayerId = (
+  plotId: string | undefined,
+  markId: string | undefined,
+  markIndex: number,
+): string | undefined => {
+  if (plotId === undefined) return undefined;
+  return markId !== undefined ? `${plotId}.${markId}` : `${plotId}.mark.${markIndex}`;
+};
+
+/** guide scope.id，存在 plotId 时生成 plot-local 稳定 id。 */
+export const guideLayerId = (
+  plotId: string | undefined,
+  guideId: string | undefined,
+  layer: 'axis' | 'grid',
+  dimension: string,
+): string | undefined => {
+  if (plotId === undefined) return undefined;
+  return guideId !== undefined ? `${plotId}.${guideId}` : `${plotId}.${layer}.${dimension}`;
 };

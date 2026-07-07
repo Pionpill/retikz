@@ -35,6 +35,7 @@ import type {
   ResolveLabel,
   TickSet,
 } from '../contract';
+import type { DatumIdRegistrar, ProvenanceContext } from '../contract';
 import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
@@ -49,11 +50,11 @@ import type {
   ScaleOperation,
   TransformOperation,
 } from '../schemas';
+import type { LegendReserve, Margins, Rect } from '../shared';
 import type { LegendEntry, LegendInput } from './guide';
-import type { LegendReserve, Margins, Rect } from './layout';
-import type { DatumIdRegistrar, ProvenanceContext } from './provenance';
 
 import { isBuiltinScaleOperation } from '../contract';
+import { rootMeta, slug } from '../contract';
 import { resolveAxisGuideTokens, resolveLegendGuideTokens, resolvePlotTheme } from '../providers';
 import {
   assertBaselineScaleCompatible,
@@ -93,11 +94,11 @@ import {
   PlotScale,
   PlotSpecSchema,
 } from '../schemas';
+import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../shared';
 import { createAnchorRegistry } from './anchors';
 import { lowerPlotLabels, resolveLabelReserve } from './decoration-layout';
 import { lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
-import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from './layout';
-import { createDatumIdRegistrar, rootMeta, slug } from './provenance';
+import { createDatumIdRegistrar } from './provenance';
 import { collectSourceFields } from './source-fields';
 
 /**
