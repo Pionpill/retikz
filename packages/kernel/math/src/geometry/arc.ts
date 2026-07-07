@@ -88,10 +88,10 @@ export const arcAngleInRange = (
 };
 
 /**
- * 射线（origin + 单位方向 dir）∩ 圆弧（center, radius, [startAngle, endAngle]）
- * @description 泛化 sector 的内联 rayCircle：先解 |origin + s·dir|² = radius² 得至多两个参数 s，
+ * 射线（origin + s·dir）∩ 圆弧（center, radius, [startAngle, endAngle]）
+ * @description 泛化 sector 的内联 rayCircle：按一般参数方程解 |origin + s·dir|² = radius² 得至多两个参数 s，
  *   再用 arcAngleInRange 过滤掉不在弧角度区间内的交点。返回沿射线的正向参数 s（命中点 = origin + s·dir），
- *   按 s 升序、仅含 s > tolerance 的正向交点；不在区间内的根被剔除。dir 必须为单位向量。
+ *   按 s 升序、仅含 s > tolerance 的正向交点；不在区间内的根被剔除。零方向没有射线交点，返回空数组。
  */
 export const rayArc = (
   origin: Position,
@@ -107,13 +107,15 @@ export const rayArc = (
   const oy = origin[1] - center[1];
   const ux = dir[0];
   const uy = dir[1];
-  // |o + s·u|² = radius²  →  s² + 2(o·u)s + (|o|² - r²) = 0（u 单位向量）
+  // |o + s·u|² = radius²  →  (u·u)s² + 2(o·u)s + (|o|² - r²) = 0
+  const a = ux * ux + uy * uy;
+  if (a <= tolerance * tolerance) return [];
   const b = 2 * (ox * ux + oy * uy);
   const c = ox * ox + oy * oy - radius * radius;
-  const disc = b * b - 4 * c;
+  const disc = b * b - 4 * a * c;
   if (disc < 0) return [];
   const sq = Math.sqrt(disc);
-  const roots = [(-b - sq) / 2, (-b + sq) / 2];
+  const roots = [(-b - sq) / (2 * a), (-b + sq) / (2 * a)];
   const hits: Array<number> = [];
   for (const s of roots) {
     if (s <= tolerance) continue;
@@ -122,7 +124,7 @@ export const rayArc = (
     const angle = Math.atan2(py, px) * (180 / Math.PI);
     if (arcAngleInRange(startAngleDeg, endAngleDeg, angle)) hits.push(s);
   }
-  hits.sort((a, z) => a - z);
+  hits.sort((left, right) => left - right);
   return hits;
 };
 

@@ -131,6 +131,17 @@ describe('rayArc', () => {
     expect(hits[1]).toBeCloseTo(7, 9); // 命中 x=2
   });
 
+  it('非单位方向按 origin + s * dir 的一般参数方程返回参数', () => {
+    const hits = rayArc([-5, 0], [2, 0], [0, 0], 2, 0, 360);
+    expect(hits.length).toBe(2);
+    expect(hits[0]).toBeCloseTo(1.5, 9); // origin + 1.5 * [2, 0] = [-2, 0]
+    expect(hits[1]).toBeCloseTo(3.5, 9); // origin + 3.5 * [2, 0] = [2, 0]
+  });
+
+  it('零方向没有正向射线交点', () => {
+    expect(rayArc([-5, 0], [0, 0], [0, 0], 2, 0, 360)).toEqual([]);
+  });
+
   it('未命中（射线离圆心 > 半径）返回空', () => {
     expect(rayArc([0, 5], [1, 0], [0, 0], 2, 0, 360)).toEqual([]);
   });

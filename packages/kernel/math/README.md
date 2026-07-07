@@ -12,7 +12,7 @@ pnpm add @retikz/math
 
 ## Usage
 
-Most consumers get the common primitives through `@retikz/core`'s re-exports (`Position`, `point`, `lerp`, `localToWorld` / `worldToLocal`). Depend on `@retikz/math` directly when you need computation that core does not re-export — `intersect`, `triangle`, `polygon`, `convexHull`.
+Most consumers get the common primitives through `@retikz/core`'s re-exports (`Position`, `point`, `lerp`, `localToWorld` / `worldToLocal`). Depend on `@retikz/math` directly when you need computation that core does not re-export — `intersect`, `triangle`, `polygon`, `convexHull`, `minimalEnclosingCircle`, `ellipse`, or `curve`.
 
 ```ts
 import { point, intersect, triangle, convexHull } from '@retikz/math';
@@ -33,13 +33,18 @@ All functions are pure and side-effect-free; degenerate inputs return `null` (`t
 
 ## Exports
 
-- `Position` / `DEFAULT_EPSILON` / `isFiniteNumber` / `isInfiniteNumber` / `point` (add / sub / scale / dot / cross / length / normalize / shiftToward / equal) / `lerp`
-- `localToWorld` / `worldToLocal` / `CenteredShape` — affine transforms (center + optional rotate)
-- `arcEndPoint` / `arcAngleInRange` / `rayArc` / `ellipseArcPoint` / `arcBoundingPoints` / `ellipseArcBoundingPoints` — arc primitives (SVG y-down angle convention)
-- `intersect` — `lineLine` / `lineCircle` / `circleCircle` / `segmentSegment` (point-returning; `rayArc` lives on the arc module, returns ray-parameter scalars)
-- `triangle` — `incircle` / `circumcircle`
-- `polygon.containsPoint` — ray-casting even-odd test
-- `convexHull` — Andrew's monotone chain (CCW, drops collinear points)
+| Group                  | Exports                                                                                                                                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Points / vectors       | `Position`, `Vector2`, `DEFAULT_EPSILON`, `isFiniteNumber`, `isFinitePoint`, `isInfiniteNumber`, `point`, `vector2`, `lerp`                                                                                                                     |
+| Affine transforms      | `CenteredShape`, `localToWorld`, `worldToLocal`                                                                                                                                                                                                 |
+| Bounds                 | `AxisAlignedBounds`, `BoundsRect`, `BoundsHalfAxes`, `BoundsInsets`, `boundsOf`, `mergeBounds`, `boundsToRect`, `rectToBounds`, `isFiniteBoundsRect`, `isPositiveBoundsRect`, `boundsCenter`, `boundsHalfAxes`, `expandBounds`, `boundsCorners` |
+| Arc primitives         | `arcEndPoint`, `arcAngleInRange`, `rayArc`, `ellipseArcPoint`, `arcBoundingPoints`, `ellipseArcBoundingPoints`                                                                                                                                  |
+| Ellipse helpers        | `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`, `ellipse`                                                                                                                                                                                  |
+| Intersections          | `intersect.lineLine`, `intersect.lineCircle`, `intersect.circleCircle`, `intersect.segmentSegment`                                                                                                                                              |
+| Enclosing / algorithms | `minimalEnclosingCircle`, `triangle.incircle`, `triangle.circumcircle`, `polygon.containsPoint`, `convexHull`                                                                                                                                   |
+| Curves                 | `CubicSegment`, `curve.catmullRomToCubic`                                                                                                                                                                                                       |
+
+`rayArc` returns scalar parameters `s` for the general equation `origin + s * dir`, sorted ascending and filtered to positive forward hits. `dir` does not need to be unit length; a zero direction returns `[]`. The `intersect.*` helpers return coordinate points instead, so `rayArc` stays on the arc primitive API.
 
 ## Docs
 

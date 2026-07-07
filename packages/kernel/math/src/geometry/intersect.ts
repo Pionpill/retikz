@@ -67,7 +67,7 @@ const segmentSegment = (a1: Position, a2: Position, b1: Position, b2: Position):
 
 /**
  * 求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）。
- * @description ray∩arc 不并入本集——`rayArc` 返回的是沿射线的标量参数 `Array<number>`（命中距离），
+ * @description ray∩arc 不并入本集——`rayArc` 返回的是沿射线的标量参数 `Array<number>`（命中点 = origin + s·dir），
  *   语义与点返回不一致，且 contour 等调用方需要该标量找最近命中；故 `rayArc` 仅从 `./arc` 模块导出。
  */
 export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };
