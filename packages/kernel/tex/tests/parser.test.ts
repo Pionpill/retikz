@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseMathJaxSvg } from '../src/svg/parse-svg';
-import { parsePathD } from '../src/svg/path-d';
+import { parseMathJaxSvg, parsePathD } from '../src/svg';
 
 /**
  * alpha.5 ADR-01：SVG path-d 解析 + MathJax SVG → 字形 LoweredMath。
