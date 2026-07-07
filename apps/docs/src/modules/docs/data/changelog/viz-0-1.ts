@@ -29,6 +29,30 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'beta.2',
+          date: '2026-07-07',
+          summary: {
+            zh: '收紧 data IR 校验与统计 selector 边界，修正日期解析和 top / bottom 并列处理。',
+            en: 'Tightens data IR validation and statistic selector boundaries, with fixes for date parsing and top / bottom tie handling.',
+          },
+          items: [
+            {
+              label: { zh: 'DataRef / FieldDef / Sort 严格校验', en: 'Strict DataRef / FieldDef / Sort validation' },
+              content: {
+                zh: '`DataRef`、字段声明和 sort transform 不再吞掉未知字段，写错 key 会在 schema 解析阶段 fail-loud。',
+                en: '`DataRef`, field declarations, and sort transforms no longer swallow unknown keys; misspelled keys now fail loudly during schema parsing.',
+              },
+            },
+            {
+              label: { zh: '日期与并列行处理更可诊断', en: 'More diagnosable date and tie handling' },
+              content: {
+                zh: 'slash 日期解析会拒绝溢出的年月日；top / bottom selector 的 `tie="all"` 与 `tie="last"` 对边界并列行使用同一套阈值逻辑。',
+                en: 'Slash-date parsing now rejects overflowing calendar dates; top / bottom selectors use the same threshold logic for boundary ties under `tie="all"` and `tie="last"`.',
+              },
+            },
+          ],
+        },
+        {
           version: 'beta.1',
           date: '2026-07-06',
           summary: {
@@ -88,6 +112,30 @@ export const vizV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'beta.2',
+          date: '2026-07-07',
+          summary: {
+            zh: '收窄 plot 顶层导出，并把 provenance / layout 相关 helper 归到稳定 owner，降低 deep import 误用风险。',
+            en: 'Narrows the plot root exports and moves provenance / layout helpers under stable owners, reducing accidental deep-import reliance.',
+          },
+          items: [
+            {
+              label: { zh: '顶层入口只保留公开渲染契约', en: 'Root entry keeps only public rendering contracts' },
+              content: {
+                zh: '`@retikz/plot` 顶层继续导出 `lowerPlots`、`LowerPlotsOptions`、locator、schema 与 contract；内部 pipeline / layout helper 不再经顶层 barrel 暴露。',
+                en: 'The `@retikz/plot` root continues to expose `lowerPlots`, `LowerPlotsOptions`, locator, schemas, and contracts; internal pipeline / layout helpers are no longer exposed through the root barrel.',
+              },
+            },
+            {
+              label: { zh: 'provenance helper 归入 contract', en: 'Provenance helpers move into contracts' },
+              content: {
+                zh: 'mark / guide 来源 meta、稳定 id 与 datum id 登记逻辑由 contract owner 提供，内置 mark 与外部扩展复用同一来源契约。',
+                en: 'Mark / guide source meta, stable ids, and datum-id registration now come from the contract owner, so builtin marks and external extensions share the same provenance contract.',
+              },
+            },
+          ],
+        },
         {
           version: 'beta.1',
           date: '2026-07-06',
@@ -296,6 +344,30 @@ export const vizV01: Release = {
       ],
       subVersions: [
         {
+          version: 'beta.2',
+          date: '2026-07-07',
+          summary: {
+            zh: 'React `<Plot>` 的 spec 入口补齐 layout 透传，并让空 mark 的组合 DSL 也走完整 PlotSpec 校验。',
+            en: 'The React `<Plot>` spec entry now forwards layout, and empty-mark composition DSL output also goes through full PlotSpec validation.',
+          },
+          items: [
+            {
+              label: { zh: 'spec 入口支持 layout 覆盖', en: 'Spec entry supports layout overrides' },
+              content: {
+                zh: '使用 `<Plot spec={...} layout={...}>` 时，layout 与 colors / theme 一样合并进传入的 PlotSpec，再交给 lowering。',
+                en: 'When using `<Plot spec={...} layout={...}>`, layout is merged into the supplied PlotSpec alongside colors and theme before lowering.',
+              },
+            },
+            {
+              label: { zh: '空图层也执行 schema 校验', en: 'Empty mark lists are schema-validated' },
+              content: {
+                zh: '组合 DSL 即使没有 mark，也会解析完整 `PlotSpecSchema`；布局、guide、label 等字段错误不会再因为空 mark 被跳过。',
+                en: 'Composition DSL output now parses the full `PlotSpecSchema` even when no marks are present, so layout, guide, label, and related field errors are no longer skipped.',
+              },
+            },
+          ],
+        },
+        {
           version: 'beta.1',
           date: '2026-07-06',
           summary: {
@@ -488,6 +560,30 @@ export const vizV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'beta.2',
+          date: '2026-07-07',
+          summary: {
+            zh: 'Vanilla builder 明确 facet / scaffold / axis 绑定的 authoring 契约，并补齐公开类型说明。',
+            en: 'The Vanilla builder documents the facet / scaffold / axis binding authoring contract and fills in public type descriptions.',
+          },
+          items: [
+            {
+              label: { zh: 'builder-only 字段边界更清楚', en: 'Clearer builder-only field boundary' },
+              content: {
+                zh: '`xAxisId`、`yAxisId`、`facetId`、`trackId`、`scaffoldId` 等字段只在 `build()` 阶段展开，不进入输出的 Plot IR。',
+                en: '`xAxisId`, `yAxisId`, `facetId`, `trackId`, `scaffoldId`, and related fields are expanded during `build()` only and do not enter the emitted Plot IR.',
+              },
+            },
+            {
+              label: { zh: 'SSR authoring 类型补齐 JSDoc', en: 'SSR authoring types gain JSDoc' },
+              content: {
+                zh: '`PlotBuilderConfig`、facet / scaffold 输入和链式 builder 方法补齐说明，生成的 spec 仍可直接交给 `renderPlot` 或 `lowerPlots`。',
+                en: '`PlotBuilderConfig`, facet / scaffold inputs, and fluent builder methods now include documentation; the built spec remains directly consumable by `renderPlot` or `lowerPlots`.',
+              },
+            },
+          ],
+        },
         {
           version: 'beta.1',
           date: '2026-07-06',
