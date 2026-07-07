@@ -75,7 +75,7 @@ ellipseArcPoint(center: Position, rx: number, ry: number, angleDeg: number): Pos
 // whether an angle lies in the arc [startDeg, endDeg] (inclusive, with tolerance)
 arcAngleInRange(startDeg: number, endDeg: number, angleDeg: number, toleranceDeg?: number): boolean;
 
-// ray ∩ arc; returns forward ray-parameters (ascending). dir must be a unit vector
+// ray ∩ arc; returns forward parameters for origin + s·dir (ascending). Zero direction returns []
 rayArc(origin: Position, dir: Position, center: Position, radius: number, startDeg: number, endDeg: number, tolerance?: number): Array<number>;
 
 // candidate extreme points for the (elliptical-)arc bbox (endpoints + 90°·k directions inside the range)
@@ -85,5 +85,5 @@ ellipseArcBoundingPoints(center: Position, rx: number, ry: number, startDeg: num
 
 <ComponentAlert
   title="rayArc returns parameters, not points"
-  description="rayArc returns an array of scalar distances along the ray (hit point = origin + s·dir), handy for picking the nearest hit — unlike intersect.* in Algorithms, which return coordinate points."
+  description="rayArc returns scalar s values from the general parameter equation (hit point = origin + s·dir), handy for picking the nearest hit — unlike intersect.* in Algorithms, which return coordinate points."
 />
