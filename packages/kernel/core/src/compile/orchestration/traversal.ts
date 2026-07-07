@@ -27,6 +27,7 @@ import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
 import { NamespaceStack } from '../namespace';
 import {
+  computeCompiledNodeLayout,
   createScopeCircleLayout,
   createScopePlaceholderLayout,
   createScopeRectangleLayout,
@@ -64,6 +65,7 @@ export const compileChildrenToPrimitives = (
       measureText: context.measureText,
       lowerTex: context.lowerTex,
       onWarn: context.onWarn,
+      onNodeLayout: context.onNodeLayout,
       round: context.round,
       nodeDistance: context.nodeDistance,
       labelDistance: context.labelDistance,
@@ -206,6 +208,7 @@ export const compileChildrenToPrimitives = (
         },
       },
     );
+    runtime.context.onNodeLayout?.(computeCompiledNodeLayout(layout, scopeChain));
     const globalLayout = scopeChain.length === 0 ? layout : projectLayoutToGlobal(layout, scopeChain);
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);

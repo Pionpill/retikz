@@ -21,11 +21,12 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 
 ### Host Services
 
-| Option        | Type                | Default                                     | Notes                                                                 |
-| ------------- | ------------------- | ------------------------------------------- | --------------------------------------------------------------------- |
-| `measureText` | `TextMeasurer`      | `fallbackMeasurer`                          | Injects text measurement; React can use browser APIs                  |
-| `lowerTex`    | `LowerTex`          | `undefined`                                 | Injects TeX rendering; missing or failed rendering warns and degrades |
-| `onWarn`      | `(warning) => void` | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings                            |
+| Option         | Type                    | Default                                     | Notes                                                                                                                                             |
+| -------------- | ----------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `measureText`  | `TextMeasurer`          | `fallbackMeasurer`                          | Injects text measurement; React can use browser APIs                                                                                              |
+| `lowerTex`     | `LowerTex`              | `undefined`                                 | Injects TeX rendering; missing or failed rendering warns and degrades                                                                             |
+| `onWarn`       | `(warning) => void`     | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings                                                                                                        |
+| `onNodeLayout` | `CompileLayoutObserver` | `undefined`                                 | Synchronous node-layout observer; receives plain `CompiledNodeLayout` data, including content-box `content.size` and global AABB `content.bounds` |
 
 ### Layout And Output
 

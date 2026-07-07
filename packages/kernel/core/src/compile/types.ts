@@ -12,6 +12,62 @@ import type {
 import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
+/** 编译期节点布局观测结果。 */
+export type CompiledNodeLayout = {
+  /** 布局对象类型。 */
+  kind: 'node';
+  /** 节点 id。 */
+  id?: string;
+  /** compile 诊断定位符，不保证跨 IR 改写或版本稳定。 */
+  irPath: string;
+  /** 节点正文内容盒测量。 */
+  content: {
+    /** 内容盒中心点，已应用当前 scope transform。 */
+    center: [number, number];
+    /** 内容盒在节点排版轴上的尺寸。 */
+    size: {
+      /** 内容盒宽度。 */
+      width: number;
+      /** 内容盒高度。 */
+      height: number;
+    };
+    /** 内容盒四角经过当前 scope transform 后得到的全局 AABB。 */
+    bounds: {
+      /** AABB 左上角 x。 */
+      x: number;
+      /** AABB 左上角 y。 */
+      y: number;
+      /** AABB 宽度。 */
+      width: number;
+      /** AABB 高度。 */
+      height: number;
+    };
+  };
+  /** 节点视觉外框布局结果。 */
+  rect: {
+    /** 外框中心 x。 */
+    x: number;
+    /** 外框中心 y。 */
+    y: number;
+    /** 外框宽度。 */
+    width: number;
+    /** 外框高度。 */
+    height: number;
+    /** 旋转角，单位为弧度。 */
+    rotate: number;
+  };
+  /** 节点正文文本布局摘要。 */
+  text: {
+    /** 本次布局是否产出 TeX glyph。 */
+    hasInlineTex: boolean;
+    /** 正文行数。 */
+    lineCount: number;
+  };
+};
+
+/** 编译期节点布局观测回调。 */
+export type CompileLayoutObserver = (layout: CompiledNodeLayout) => void;
+
 /** 宿主环境注入的 compile 能力。 */
 export type CompileHostOptions = {
   /**
@@ -30,6 +86,11 @@ export type CompileHostOptions = {
    * @default defaultWarnDispatcher
    */
   onWarn?: (warning: CompileWarning) => void;
+  /**
+   * 节点 layout 完成后的观测回调。
+   * @description 回调接收纯数据 DTO，不暴露内部 NodeLayout / provider / registry；抛错会中断 compile。
+   */
+  onNodeLayout?: CompileLayoutObserver;
 };
 
 /** 自动布局与 Scene 输出口径。 */

@@ -2,6 +2,7 @@
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
+  CompiledNodeLayout,
   CompositeDefinition,
   IRAnimationTrack,
   IRScene,
@@ -251,6 +252,11 @@ export type LayoutProps = ScopeStyleProps & {
    */
   lowerTex?: LowerTex;
   /**
+   * 节点 layout 完成后的批量观测回调。
+   * @description React 在 commit 后通过 effect 通知本次 compile 产出的节点布局，避免在 render 阶段触发用户副作用。
+   */
+  onNodeLayouts?: (layouts: Array<CompiledNodeLayout>) => void;
+  /**
    * 可选：显式注入的可嵌入 Tier2 适配器列表（逃生舱）
    * @description 主路径是子组件静态属性（Component.isTier2Embeddable + embeddableAdapter）自动识别；
    *   本 prop 用于测试注入 / 显式控制 / 未挂静态属性的 domain。按 adapter.displayName 匹配子组件，覆盖静态属性。
@@ -340,6 +346,7 @@ export const Layout: FC<LayoutProps> = props => {
     ribbonWidthProfiles,
     composites,
     lowerTex,
+    onNodeLayouts,
     embeddables,
     handlers,
   } = props;
@@ -426,25 +433,9 @@ export const Layout: FC<LayoutProps> = props => {
   }, [built.contributions, composites]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
-  const scene = useMemo(
-    () =>
-      compileToScene(ir, {
-        measureText,
-        nodeDistance,
-        fontSize,
-        shapes,
-        boundaries,
-        clips,
-        arrows,
-        patterns,
-        pathGenerators,
-        pathKinds,
-        ribbonWidthProfiles,
-        composites: aggregatedComposites,
-        lowerTex,
-      }),
-    [
-      ir,
+  const compiledLayout = useMemo(() => {
+    const nodeLayouts: Array<CompiledNodeLayout> = [];
+    const scene = compileToScene(ir, {
       measureText,
       nodeDistance,
       fontSize,
@@ -456,10 +447,33 @@ export const Layout: FC<LayoutProps> = props => {
       pathGenerators,
       pathKinds,
       ribbonWidthProfiles,
-      aggregatedComposites,
+      composites: aggregatedComposites,
       lowerTex,
-    ],
-  );
+      ...(onNodeLayouts !== undefined ? { onNodeLayout: layout => nodeLayouts.push(layout) } : {}),
+    });
+    return { nodeLayouts, scene };
+  }, [
+    ir,
+    measureText,
+    nodeDistance,
+    fontSize,
+    shapes,
+    boundaries,
+    clips,
+    arrows,
+    patterns,
+    pathGenerators,
+    pathKinds,
+    ribbonWidthProfiles,
+    aggregatedComposites,
+    lowerTex,
+    onNodeLayouts,
+  ]);
+  const scene = compiledLayout.scene;
+  useEffect(() => {
+    if (onNodeLayouts === undefined) return;
+    onNodeLayouts(compiledLayout.nodeLayouts);
+  }, [compiledLayout, onNodeLayouts]);
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
   const rawId = useId();
