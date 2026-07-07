@@ -1,8 +1,8 @@
 # @retikz/core
 
-Framework-agnostic core of [retikz](https://pionpill.github.io/retikz/) — a TikZ-inspired diagramming library. Provides the zod-typed **IR**, the **`compileToScene`** compiler, pure **parsers**, geometry helpers, and the shape / arrow / pattern / path-generator registries.
+Framework-agnostic core of [retikz](https://pionpill.github.io/retikz/) — a TikZ-inspired diagramming library. Provides the zod-typed **IR**, the **`compileToScene`** compiler, pure **parsers**, geometry helpers, and the provider registries used by core compilation.
 
-零框架核心：retikz 的中间表示（IR）、`compileToScene` 编译器、纯解析器、几何工具与形状 / 箭头 / 图案 / 路径生成器注册面。**零 React、零 DOM**，运行时依赖只有 `zod`，IR 100% 可 JSON 序列化。
+零框架核心：retikz 的中间表示（IR）、`compileToScene` 编译器、纯解析器、几何工具与 core 编译期 provider 注册面。**零 React、零 DOM**，运行时依赖只有 `zod` 与 `@retikz/math`，IR 100% 可 JSON 序列化。
 
 ## Install
 
@@ -18,7 +18,7 @@ pnpm add @retikz/core
 import { compileToScene } from '@retikz/core';
 
 const scene = compileToScene(ir);
-// optional: compileToScene(ir, { measureText, shapes, arrows, padding, ... })
+// optional: compileToScene(ir, { measureText, shapes, arrows, clips, pathKinds, padding, ... })
 // hand `scene` to @retikz/render/svg, @retikz/render/canvas, or a runtime
 ```
 
@@ -30,7 +30,8 @@ Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.c
 - IR & `Scene` zod schemas + inferred types
 - `parseWay` / `parseNodeTarget` / `parseTargetSugar` — pure parsers
 - `point` / `rect` / `circle` / `ellipse` / `diamond` / `polar` — geometry
-- `BUILTIN_SHAPES` / `BUILTIN_ARROWS` / `BUILTIN_PATTERNS` + `ShapeDefinition` / `ArrowDefinition` / `PatternDefinition` / `definePathGenerator` — registries
+- Provider registries and definition helpers for `shapes`, `boundaries`, `clips`, `arrows`, `patterns`, `pathGenerators`, `pathKinds`, `ribbonWidthProfiles`, and `composites`
+- Built-in provider collections such as `BUILTIN_SHAPES`, `BUILTIN_BOUNDARIES`, `BUILTIN_CLIPS`, `BUILTIN_ARROWS`, `BUILTIN_PATTERNS`, `BUILTIN_PATH_GENERATORS`, `BUILTIN_PATH_KINDS`, and `BUILTIN_RIBBON_WIDTH_PROFILES`
 
 ## Docs
 
