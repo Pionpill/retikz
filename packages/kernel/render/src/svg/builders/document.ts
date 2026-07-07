@@ -5,6 +5,7 @@ import type { SvgNode } from '../types';
 import type { BuildContext } from './prim';
 
 import { createSvgAnimationCollector } from '../animation/keyframes';
+import { toSafeSvgToken } from '../safe-token';
 import { formatViewBox } from '../view-box';
 import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
 import { buildArrowMarker } from './arrow-markers';
@@ -47,11 +48,12 @@ const makeContext = (
   clipIdFor: (id: string) => string;
   shadowIdFor: (shadow: IRDropShadow) => string;
 } => {
+  const safeIdPrefix = toSafeSvgToken(idPrefix);
   const arrowMarkerIdFor = (spec: ResolvedArrowEndSpec): string =>
-    `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
-  const paintIdFor = (id: string): string => `retikz-paint-${idPrefix}-${id}`;
-  const clipIdFor = (id: string): string => `retikz-clip-${idPrefix}-${id}`;
-  const shadowIdFor = (shadow: IRDropShadow): string => `retikz-shadow-${idPrefix}-${shadowHash(shadow)}`;
+    `retikz-arrow-${safeIdPrefix}-${hashKey(stableSpecKey(spec))}`;
+  const paintIdFor = (id: string): string => `retikz-paint-${safeIdPrefix}-${id}`;
+  const clipIdFor = (id: string): string => `retikz-clip-${safeIdPrefix}-${id}`;
+  const shadowIdFor = (shadow: IRDropShadow): string => `retikz-shadow-${safeIdPrefix}-${shadowHash(shadow)}`;
   return {
     context: {
       arrowMarkerIdFor,
@@ -112,12 +114,13 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
  * @description 给 Vanilla `mountSvg` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用。
  */
 export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): Array<SvgNode> => {
+  const safeIdPrefix = toSafeSvgToken(options.idPrefix);
   const { context } = makeContext(options.idPrefix);
   // 截帧（snapshotAt 给定）→ 烘焙静态帧的收集器；否则按 animate 决定动画收集器 / 无（base）
   const collector =
     options.snapshotAt !== undefined
       ? createSvgAnimationCollector({
-          idPrefix: options.idPrefix,
+          idPrefix: safeIdPrefix,
           easings: options.easings,
           onWarn: options.onAnimationWarn,
           snapshotAt: options.snapshotAt,
@@ -125,7 +128,7 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
       : options.animate === false
         ? undefined
         : createSvgAnimationCollector({
-            idPrefix: options.idPrefix,
+            idPrefix: safeIdPrefix,
             easings: options.easings,
             onWarn: options.onAnimationWarn,
           });

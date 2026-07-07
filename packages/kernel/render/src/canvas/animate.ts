@@ -55,6 +55,12 @@ const approxLength = (prim: ScenePrimitive): number => {
 
 const asNumber = (value: unknown): number => (typeof value === 'number' ? value : Number(value));
 
+const isUnsupportedGroupStyleProperty = (prim: ScenePrimitive, property: string): boolean =>
+  prim.type === 'group' &&
+  (property === AnimationProperty.Fill ||
+    property === AnimationProperty.Stroke ||
+    property === AnimationProperty.StrokeWidth);
+
 /**
  * 给时刻 time 把 prim 的 tracks 应用到 ctx，返回带覆盖值的 prim（无覆盖则原样返回）
  * @description ctx 变更（transform / lineDashOffset）须在 caller 的 ctx.save/restore 作用域内调用。
@@ -85,6 +91,12 @@ export const applyPrimAnimations = (
     if (cls === 'viewBox') continue; // 元素级 viewBox 由 compile drop，这里防御性跳过
     if (cls === 'pathDraw' && !primHasStroke(prim)) {
       context.warn('Canvas animation: pathDraw requires a stroked element; skipping (rendering base).');
+      continue;
+    }
+    if (isUnsupportedGroupStyleProperty(prim, track.property)) {
+      context.warn(
+        `Canvas animation: group property "${track.property}" cannot be inherited by children; skipping (rendering base).`,
+      );
       continue;
     }
     const result = evaluateTrack(track, time, { easings: context.easings });
