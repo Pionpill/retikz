@@ -5,7 +5,8 @@ import { point } from './point';
 /**
  * 凸包（Andrew's monotone chain）
  * @description 返回 CCW 顺序顶点、不含共线中间点；点数 < 3 时返回按 (x,y) 排序去重后的点。
- *   叉积 ≤ 0 视为右转 / 共线并弹出 → 严格凸包（剔除共线）。全部点共线时（无论点数）退化为两端点。
+ *   全部点共线时退化为两端点。
+ * @remarks 复杂度：时间 O(n log n)，空间 O(n)，n 为输入点数。
  */
 export const convexHull = (points: Array<Position>): Array<Position> => {
   const pts = [...points].sort((a, b) => (a[0] === b[0] ? a[1] - b[1] : a[0] - b[0]));

@@ -12,7 +12,7 @@ export type CenteredShape = {
 
 /**
  * 本地坐标（以中心为原点）→ 世界坐标
- * @description rotate=0 / 缺省时退化为平移；非零时按右手系绕中心旋转后再平移
+ * @description rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移。
  */
 export const localToWorld = (s: CenteredShape, local: Position): Position => {
   const angle = s.rotate ?? 0;
@@ -24,7 +24,7 @@ export const localToWorld = (s: CenteredShape, local: Position): Position => {
 
 /**
  * 世界坐标 → 本地坐标（`localToWorld` 逆变换）
- * @description 先反平移到中心、再反旋转回本地基；旋转矩阵转置即逆
+ * @description 返回以形状中心和旋转为基准的本地坐标。
  */
 export const worldToLocal = (s: CenteredShape, world: Position): Position => {
   const tx = world[0] - s.x;

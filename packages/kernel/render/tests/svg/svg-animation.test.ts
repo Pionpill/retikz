@@ -390,6 +390,19 @@ describe('交互', () => {
     expect(typeof r.attrs.class).toBe('string');
   });
 
+  it('unsafe idPrefix is normalized before animation class and keyframe names are emitted', () => {
+    const unsafePrefix = 'bad prefix:foo.bar)';
+    const out = buildSvgFragment(scene([rect({ animations: [FADE] })]), { idPrefix: unsafePrefix });
+    const css = String(findTag(out, 'style')!.children![0]);
+    const r = findTag(out, 'rect')!;
+    const className = String(r.attrs.class);
+    const keyframeName = css.match(/@keyframes ([^{]+)/)?.[1];
+    expect(className).toMatch(/^[A-Za-z_][A-Za-z0-9_-]*$/);
+    expect(keyframeName).toMatch(/^[A-Za-z_][A-Za-z0-9_-]*$/);
+    expect(css).toContain(`.${className}{`);
+    expect(css).not.toContain(unsafePrefix);
+  });
+
   it('确定性：同 scene + idPrefix 两次 renderToSvgString 逐字一致', () => {
     const s = scene(
       [rect({ animations: [FADE, GROW_UP] })],

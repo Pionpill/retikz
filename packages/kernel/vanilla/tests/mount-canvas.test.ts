@@ -135,4 +135,19 @@ describe('@retikz/vanilla mountCanvas', () => {
     expect(view.root).toBeInstanceOf(HTMLCanvasElement);
     expect(container.querySelector('canvas')).toBe(view.root);
   });
+
+  it('mount-canvas-update-figure：CanvasView.update 接收 Figure 并带上 Figure 编译配置', () => {
+    const container = document.createElement('div');
+    const view = mountCanvas(container, idIr);
+    const root = view.root;
+    const initialWidth = root.width;
+    const fig = figure({ padding: 80 }, [
+      node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 }, fill: '#0a0' }),
+    ]);
+
+    expect(() => view.update(fig)).not.toThrow();
+    expect(view.root).toBe(root);
+    expect(container.querySelectorAll('canvas').length).toBe(1);
+    expect(view.root.width).toBeGreaterThan(initialWidth);
+  });
 });

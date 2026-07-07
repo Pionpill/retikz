@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CenteredShape } from '../../src/geometry/transform';
+import type { CenteredShape } from '../../src';
 
-import { localToWorld, worldToLocal } from '../../src/geometry/transform';
+import { localToWorld, worldToLocal } from '../../src';
 
 /*
  * 约定（见 transform.ts）：

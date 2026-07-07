@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Position } from '../../src/geometry/point';
+import type { Position } from '../../src';
 
-import { curve } from '../../src/curve/catmull-rom';
+import { curve } from '../../src';
 
 /** 一段所有坐标皆有限 */
 const segmentFinite = (seg: { control1: Position; control2: Position; to: Position }): boolean =>

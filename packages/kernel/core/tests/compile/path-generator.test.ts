@@ -277,6 +277,32 @@ describe('Path generator 注册面 — 错误路径', () => {
     expect(() => compileToScene(ir, { pathGenerators: [passthrough] })).toThrow();
   });
 
+  it('custom_generator_params_error_contains_provider_and_ir_path', () => {
+    const strictGen = definePathGenerator({
+      name: 'strictGen',
+      paramsSchema: z.strictObject({ length: z.number().positive() }),
+      generate: ({ from, params }) => [{ kind: 'line', to: [from[0] + Number(params.length), from[1]] }],
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'generator', name: 'strictGen', params: { length: 'long' } },
+          ],
+        },
+      ],
+    };
+
+    expect(() => compileToScene(ir, { pathGenerators: [strictGen] })).toThrow(/path generator 'strictGen'/);
+    expect(() => compileToScene(ir, { pathGenerators: [strictGen] })).toThrow(
+      /children\[0\]\.path\.children\[1\]\.params/,
+    );
+  });
+
   it('any_schema_output_caught_at_compile：paramsSchema=z.any() 时 compile 对 parse 结果跑 JsonObjectSchema → 非 JSON 输出被第二道拦', () => {
     // paramsSchema 是 z.any()（放行 function），单靠注册时自省无法证明 JSON-safe；
     // 真正护栏在 compile：paramsSchema.parse(params) 后再 JsonObjectSchema.parse(parsed)。
@@ -444,6 +470,35 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
       coeff: 2.5,
       flags: [true, null],
     });
+  });
+
+  it('generator_params_are_open_json：params 明确开放，未知字段由 provider 自己校验', () => {
+    const path = {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        {
+          type: 'step',
+          kind: 'generator',
+          name: 'custom',
+          params: { known: 1, providerSpecific: { enabled: true } },
+        },
+      ],
+    };
+
+    expect(PathSchema.safeParse(path).success).toBe(true);
+  });
+
+  it('generator_step_unknown_field_rejected：step 闭合字段 typo 不被静默剥离', () => {
+    const path = {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'generator', name: 'custom', params: {}, unknowField: true },
+      ],
+    };
+
+    expect(PathSchema.safeParse(path).success).toBe(false);
   });
 
   it('zod 错误：generator step 缺 name → schema 拒，错误可定位到 name', () => {

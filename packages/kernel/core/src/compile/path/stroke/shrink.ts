@@ -253,7 +253,12 @@ const endpointOf = (cmd: PathCommand): IRPosition | null => {
     case 'arc':
       return arcEndPoint(cmd.center, cmd.radius, cmd.endAngle);
     case 'ellipseArc':
-      return ellipseArcPoint(cmd.center, cmd.radiusX, cmd.radiusY, cmd.endAngle);
+      return ellipseArcPoint({
+        center: cmd.center,
+        radiusX: cmd.radiusX,
+        radiusY: cmd.radiusY,
+        angleDeg: cmd.endAngle,
+      });
     case 'close':
       return null;
   }

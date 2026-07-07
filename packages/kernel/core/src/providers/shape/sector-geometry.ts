@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
+import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf, DEFAULT_EPSILON } from '@retikz/math';
 
 import type { AngleRange } from '../../shared';
 
@@ -40,9 +40,13 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   const apex: Position = [0, 0];
 
   const candidates: Array<Position> = innerRadius === 0 ? [apex] : [];
-  candidates.push(...arcBoundingPoints(apex, outerRadius, range.start, range.end));
+  candidates.push(
+    ...arcBoundingPoints({ center: apex, radius: outerRadius, startAngleDeg: range.start, endAngleDeg: range.end }),
+  );
   if (innerRadius > 0) {
-    candidates.push(...arcBoundingPoints(apex, innerRadius, range.start, range.end));
+    candidates.push(
+      ...arcBoundingPoints({ center: apex, radius: innerRadius, startAngleDeg: range.start, endAngleDeg: range.end }),
+    );
   }
 
   const bounds = boundsOf(candidates);
@@ -59,7 +63,7 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   const half = sweepRad / 2;
   const areaDenom = R * R - r * r;
   let centroidRadius: number;
-  if (Math.abs(half) < 1e-9 || Math.abs(areaDenom) < 1e-12) {
+  if (Math.abs(half) < DEFAULT_EPSILON || Math.abs(areaDenom) < 1e-12) {
     centroidRadius = (R + r) / 2;
   } else {
     centroidRadius = (2 / 3) * (Math.sin(half) / half) * ((R * R * R - r * r * r) / areaDenom);

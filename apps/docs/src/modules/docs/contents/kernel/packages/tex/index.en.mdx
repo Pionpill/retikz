@@ -32,7 +32,7 @@ const Diagram = () => {
 
 <ComponentAlert
   title="lowerTex injection required"
-  description="$...$ is only parsed when lowerTex is injected (React via Layout, vanilla via toScene/renderToString); without it a $ stays literal (existing text with $ is unchanged), and content carrying math degrades to no formula with a diagnosable warning instead of crashing."
+  description="$...$ is only parsed when lowerTex is injected (React via Layout, vanilla via toScene/renderToSvgString); without it a $ stays literal (existing text with $ is unchanged), and content carrying math degrades to no formula with a diagnosable warning instead of crashing."
 />
 
 ## Inline vs display
@@ -80,16 +80,16 @@ If you would rather not use the `useLowerTex` hook, build `lowerTex` yourself fr
 
 ## Vanilla
 
-`createMathJaxEngine` (await) → `createLowerTex` → inject `lowerTex` into `toScene` / `renderToString`; node text uses `$...$` as usual:
+`createMathJaxEngine(options?)` (await) → `createLowerTex` → inject `lowerTex` into `toScene` / `renderToSvgString`; node text uses `$...$` as usual. `options.packages` is passed to MathJax TeX input and defaults to `['base']`:
 
 ```ts
-import { figure, node, renderToString } from '@retikz/vanilla';
+import { figure, node, renderToSvgString } from '@retikz/vanilla';
 import { createMathJaxEngine, createLowerTex } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
 const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })]);
 
-const svg = renderToString(fig, { lowerTex });
+const svg = renderToSvgString(fig, { lowerTex });
 ```
 
 ## Syntax
@@ -103,9 +103,9 @@ const svg = renderToString(fig, { lowerTex });
 
 ## API reference
 
-| API                                 | Type                                     | Description                                                                                                  |
-| ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `useLowerTex` (`@retikz/tex/react`) | `() => LowerTex \| undefined`            | React hook: boots MathJax, returns the function to inject into `<Layout lowerTex>`; `undefined` until ready. |
-| `createMathJaxEngine`               | `() => Promise<MathJaxSvgEngine>`        | Create a MathJax SVG engine.                                                                                 |
-| `createLowerTex`                    | `(engine) => LowerTex`                   | Turn the engine into core's `lowerTex` injection function, cached by `fontSize\|display\|tex`.               |
-| `LowerTex` (`@retikz/core`)         | `(content, style) => LoweredTex \| null` | Core injection-point type; returns `null` on failure, compile emits `TEX_INVALID`.                           |
+| API                                 | Type                                      | Description                                                                                                  |
+| ----------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `useLowerTex` (`@retikz/tex/react`) | `() => LowerTex \| undefined`             | React hook: boots MathJax, returns the function to inject into `<Layout lowerTex>`; `undefined` until ready. |
+| `createMathJaxEngine`               | `(options?) => Promise<MathJaxSvgEngine>` | Create a MathJax SVG engine; `packages` is passed to MathJax TeX input and defaults to `['base']`.           |
+| `createLowerTex`                    | `(engine) => LowerTex`                    | Turn the engine into core's `lowerTex` injection function, cached by `fontSize\|display\|tex`.               |
+| `LowerTex` (`@retikz/core`)         | `(content, style) => LoweredTex \| null`  | Core injection-point type; returns `null` on failure, compile emits `TEX_INVALID`.                           |

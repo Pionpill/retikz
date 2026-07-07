@@ -9,7 +9,7 @@ import { ClipFillRule } from './constants';
 export const ClipFillRuleSchema = z.enum(ClipFillRule).describe('Fill rule used by path-like clip regions.');
 
 export const RectClipSchema = z
-  .object({
+  .strictObject({
     kind: z.literal('rect').describe('Discriminator for rectangular clip regions.'),
     x: z.number().describe('Rect left-top x in scope-local coords.'),
     y: z.number().describe('Rect left-top y in scope-local coords.'),
@@ -19,7 +19,7 @@ export const RectClipSchema = z
   .describe('Rectangular clip region.');
 
 export const CircleClipSchema = z
-  .object({
+  .strictObject({
     kind: z.literal('circle').describe('Discriminator for circular clip regions.'),
     cx: z.number().describe('Circle center x.'),
     cy: z.number().describe('Circle center y.'),
@@ -28,7 +28,7 @@ export const CircleClipSchema = z
   .describe('Circular clip region.');
 
 export const EllipseClipSchema = z
-  .object({
+  .strictObject({
     kind: z.literal('ellipse').describe('Discriminator for elliptical clip regions.'),
     cx: z.number().describe('Ellipse center x.'),
     cy: z.number().describe('Ellipse center y.'),
@@ -38,7 +38,7 @@ export const EllipseClipSchema = z
   .describe('Elliptical clip region.');
 
 export const PolygonClipSchema = z
-  .object({
+  .strictObject({
     kind: z.literal('polygon').describe('Discriminator for polygon clip regions.'),
     points: z
       .array(z.tuple([z.number(), z.number()]))
@@ -48,7 +48,7 @@ export const PolygonClipSchema = z
   .describe('Polygon clip region.');
 
 export const PathClipSchema = z
-  .object({
+  .strictObject({
     kind: z.literal('path').describe('Discriminator for path clip regions.'),
     commands: z.array(PathCommandSchema).min(1).describe('Structured path commands for the clip region.'),
     fillRule: ClipFillRuleSchema.optional().describe('Fill rule for the path clip.'),
@@ -57,7 +57,7 @@ export const PathClipSchema = z
 
 export const CompoundClipSchema: z.ZodType<IRCompoundClipSpec> = z.lazy(() =>
   z
-    .object({
+    .strictObject({
       kind: z.literal('compound').describe('Discriminator for compound clip regions.'),
       children: z.array(ClipSpecSchema).min(1).describe('Child clip regions combined into one clip path.'),
       fillRule: ClipFillRuleSchema.optional().describe('Fill rule for the accumulated compound clip path.'),

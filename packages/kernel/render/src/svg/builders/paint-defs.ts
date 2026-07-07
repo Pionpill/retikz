@@ -1,5 +1,7 @@
 import type { IRPaintSpec, PaintResource, ResolvedPatternTile } from '@retikz/core';
 
+import { DEFAULT_EPSILON } from '@retikz/math';
+
 import type { SvgNode } from '../types';
 
 import { gradientLineFromAngle, parseHexColor } from '../../shared';
@@ -52,7 +54,7 @@ const colorAt = (stops: ReadonlyArray<GradientStop>, t: number): { color: string
     }
   }
   const span = right.offset - left.offset;
-  const localT = span <= 1e-9 ? 0 : (offset - left.offset) / span;
+  const localT = span <= DEFAULT_EPSILON ? 0 : (offset - left.offset) / span;
   const leftRgb = parseHexColor(left.color);
   const rightRgb = parseHexColor(right.color);
   const opacity =

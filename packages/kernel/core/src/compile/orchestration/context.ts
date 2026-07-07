@@ -41,6 +41,8 @@ export type CompileContext = {
   lowerTex: CompileOptions['lowerTex'];
   /** 编译 warning dispatcher。 */
   onWarn: (warning: CompileWarning) => void;
+  /** 节点 layout 观测回调。 */
+  onNodeLayout: CompileOptions['onNodeLayout'];
   /** Scene 输出 rounder。 */
   round: (n: number) => number;
   /** 自动 layout padding。 */
@@ -94,6 +96,7 @@ export const createCompileContext = (ir: IRScene, options: CompileOptions): Comp
     measureText: options.measureText ?? fallbackMeasurer,
     lowerTex: options.lowerTex,
     onWarn,
+    onNodeLayout: options.onNodeLayout,
     round,
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
     nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,

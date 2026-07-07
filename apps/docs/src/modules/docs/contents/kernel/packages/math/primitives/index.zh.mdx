@@ -26,6 +26,38 @@ type CenteredShape = {
   y: number; // 中心 y
   rotate?: number; // 绕中心旋转弧度；省略 / 0 = 不旋转
 };
+
+type ArcBoundingPointsInput = {
+  center: Position;
+  radius: number;
+  startAngleDeg: number;
+  endAngleDeg: number;
+};
+
+type ArcAngleInRangeInput = {
+  startAngleDeg: number;
+  endAngleDeg: number;
+  angleDeg: number;
+  toleranceDeg?: number;
+};
+
+type RayArcInput = ArcBoundingPointsInput & {
+  origin: Position;
+  dir: Position;
+  tolerance?: number;
+};
+
+type EllipseArcPointInput = {
+  center: Position;
+  radiusX: number;
+  radiusY: number;
+  angleDeg: number;
+};
+
+type EllipseArcBoundingPointsInput = Omit<EllipseArcPointInput, 'angleDeg'> & {
+  startAngleDeg: number;
+  endAngleDeg: number;
+};
 ```
 
 ## point 向量运算
@@ -70,20 +102,20 @@ worldToLocal(shape: CenteredShape, world: Position): Position;  // 世界 → �
 
 ```ts
 arcEndPoint(center: Position, radius: number, angleDeg: number): Position;       // 圆周上该角度的点
-ellipseArcPoint(center: Position, rx: number, ry: number, angleDeg: number): Position;  // 椭圆周参数点
+ellipseArcPoint(input: EllipseArcPointInput): Position;  // 椭圆周参数点
 
 // 角度是否落在弧 [startDeg, endDeg] 内（含端点，带容差）
-arcAngleInRange(startDeg: number, endDeg: number, angleDeg: number, toleranceDeg?: number): boolean;
+arcAngleInRange(input: ArcAngleInRangeInput): boolean;
 
-// 射线 ∩ 圆弧；返回沿射线的正向参数（升序）。dir 须为单位向量
-rayArc(origin: Position, dir: Position, center: Position, radius: number, startDeg: number, endDeg: number, tolerance?: number): Array<number>;
+// 射线 ∩ 圆弧；返回一般参数方程 origin + s·dir 的正向参数（升序）。零方向返回 []
+rayArc(input: RayArcInput): Array<number>;
 
 // 弧 / 椭圆弧 bbox 的极值候选点（端点 + 区间内 90°·k 方向点）
-arcBoundingPoints(center: Position, radius: number, startDeg: number, endDeg: number): Array<Position>;
-ellipseArcBoundingPoints(center: Position, rx: number, ry: number, startDeg: number, endDeg: number): Array<Position>;
+arcBoundingPoints(input: ArcBoundingPointsInput): Array<Position>;
+ellipseArcBoundingPoints(input: EllipseArcBoundingPointsInput): Array<Position>;
 ```
 
 <ComponentAlert
   title="rayArc 返回参数不是点"
-  description="rayArc 返回沿射线的标量距离数组（命中点 = origin + s·dir），便于取最近命中；与 algorithms 里返回坐标点的 intersect.* 不同。"
+  description="rayArc 返回一般参数方程里的标量 s（命中点 = origin + s·dir），便于取最近命中；与 algorithms 里返回坐标点的 intersect.* 不同。"
 />

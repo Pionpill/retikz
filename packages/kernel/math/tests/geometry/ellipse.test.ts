@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ellipse } from '../../src/geometry/ellipse';
+import { ellipse } from '../../src';
 
 describe('ellipse geometry helpers', () => {
   it('inscribedInBox returns the centered ellipse inside a box', () => {

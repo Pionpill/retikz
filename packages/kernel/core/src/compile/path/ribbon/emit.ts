@@ -137,7 +137,12 @@ export const emitRibbonPrimitive = (
   if (!Number.isFinite(totalLength) || totalLength <= 0) {
     throw new Error('Ribbon centerline has zero length; at least one nonzero segment is required.');
   }
-  const widthAt = centerlineWidthFunction(ribbon, options.ribbonWidthProfiles ?? new Map(), totalLength);
+  const widthAt = centerlineWidthFunction(
+    ribbon,
+    options.ribbonWidthProfiles ?? new Map(),
+    totalLength,
+    options.irPath,
+  );
   const samples = resolveSampleCount(ribbon.samples, ribbon.sampling, totalLength);
   const sampleCount = samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
   // 静态宽度优先解析型轮廓，必要时回退采样。

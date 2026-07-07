@@ -43,9 +43,6 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: RenderInput): void => {
-    if (isFigure(next)) {
-      throw new Error('mountSvg: view.update does not accept a Figure; pass figure.ir instead.');
-    }
     const scene: Scene = toScene(next, options);
     currentScene = scene;
     const doc = buildSvgDocument(scene, {

@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { Rect } from '../../src/shared/geometry/rect';
@@ -60,11 +61,11 @@ const referenceBoundaryHit = (rect: Rect, params: SectorParams, toward: Position
   const angleInRange = (px: number, py: number): boolean => {
     const a0 = (Math.atan2(py, px) * 180) / Math.PI;
     const a = a0 + 360 * Math.max(0, Math.ceil((start - a0) / 360));
-    return a <= end + 1e-9;
+    return a <= end + DEFAULT_EPSILON;
   };
   for (const R of innerRadius > 0 ? [innerRadius, outerRadius] : [outerRadius]) {
     for (const s of rayCircle(R)) {
-      if (s <= 1e-9 || s >= best) continue;
+      if (s <= DEFAULT_EPSILON || s >= best) continue;
       const px = o[0] + s * ux;
       const py = o[1] + s * uy;
       if (angleInRange(px, py)) best = s;
@@ -78,8 +79,8 @@ const referenceBoundaryHit = (rect: Rect, params: SectorParams, toward: Position
     if (Math.abs(det) < 1e-12) continue;
     const s = (-o[0] * -ey - -ex * -o[1]) / det;
     const q = (ux * -o[1] - -o[0] * uy) / det;
-    if (s <= 1e-9 || s >= best) continue;
-    if (q >= innerRadius - 1e-9 && q <= outerRadius + 1e-9) best = s;
+    if (s <= DEFAULT_EPSILON || s >= best) continue;
+    if (q >= innerRadius - DEFAULT_EPSILON && q <= outerRadius + DEFAULT_EPSILON) best = s;
   }
   if (!Number.isFinite(best)) return undefined;
   const localHit: Position = [o[0] + best * ux, o[1] + best * uy];

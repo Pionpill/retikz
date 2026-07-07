@@ -1,8 +1,8 @@
 import type { LowerTex } from '@retikz/core';
 
-import type { MathJaxSvgEngine } from '../mathjax/engine';
+import type { MathJaxSvgEngine } from '../mathjax';
 
-import { parseMathJaxSvg } from '../svg/parse-svg';
+import { parseMathJaxSvg } from '../svg';
 
 export const createLowerTex = (engine: MathJaxSvgEngine): LowerTex => {
   const cache = new Map<string, ReturnType<LowerTex>>();

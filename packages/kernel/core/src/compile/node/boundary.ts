@@ -7,6 +7,7 @@ import type { Rect } from '../../shared/geometry';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { isDirectionalAnchor, rect as rectOps } from '../../shared';
+import { parseProviderPayload } from '../provider-payload';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
 const SELF = 'shape';
@@ -29,6 +30,8 @@ export type ResolveBoundaryContext = {
   shapeRegistry: ProviderCollection<ShapeDefinition>;
   /** boundary 注册表。 */
   boundaryRegistry?: ProviderCollection<BoundaryDefinition>;
+  /** 当前 node 的 IR 路径，用于 provider payload 诊断。 */
+  irPath?: string;
 };
 
 const providerOf = <TDefinition>(registry: ProviderCollection<TDefinition>, key: string): TDefinition | undefined =>
@@ -52,13 +55,36 @@ export const resolveBoundary = (
   }
   const type = typeof boundary === 'string' ? boundary : boundary.type;
   const rawParams = typeof boundary === 'string' ? {} : (boundary.params ?? {});
+  const paramsPath = `${context.irPath ?? 'node'}.boundary.params`;
   const boundaryDef = providerOf(boundaryRegistry, type);
   if (boundaryDef !== undefined) {
-    return { def: boundaryDef, rect: visualRect, params: boundaryDef.paramsSchema.parse(rawParams) };
+    return {
+      def: boundaryDef,
+      rect: visualRect,
+      params: parseProviderPayload({
+        capability: 'boundary',
+        providerName: type,
+        irPath: paramsPath,
+        payloadName: 'params',
+        schema: boundaryDef.paramsSchema,
+        value: rawParams,
+      }),
+    };
   }
   const shapeDef = providerOf(shapeRegistry, type);
   if (shapeDef !== undefined) {
-    return { def: shapeDef, rect: visualRect, params: shapeDef.paramsSchema.parse(rawParams) };
+    return {
+      def: shapeDef,
+      rect: visualRect,
+      params: parseProviderPayload({
+        capability: 'shape',
+        providerName: type,
+        irPath: paramsPath,
+        payloadName: 'params',
+        schema: shapeDef.paramsSchema,
+        value: rawParams,
+      }),
+    };
   }
   throw new Error(
     `Unknown connection surface provider '${type}'; registered boundaries: ${registeredNames(boundaryRegistry)}; registered shapes: ${registeredNames(shapeRegistry)}. Pass boundary definitions via options.boundaries or shape definitions via options.shapes.`,

@@ -70,6 +70,8 @@ export type {
   MarkerPrimitive,
   PathGeneratorDefinition,
   PathGeneratorGenerateContext,
+  PathKindCompileContext,
+  PathKindDefinition,
   PatternDefinition,
   PatternEmitContext,
   RibbonWidthProfileContext,
@@ -81,6 +83,7 @@ export {
   defineBoundary,
   defineClip,
   definePathGenerator,
+  definePathKind,
   definePattern,
   defineRibbonWidthProfile,
 } from '@retikz/core';

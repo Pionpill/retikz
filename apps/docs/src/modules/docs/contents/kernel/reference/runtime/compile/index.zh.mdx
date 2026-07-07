@@ -21,11 +21,12 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### 宿主能力
 
-| Option        | Type                | Default                                     | 说明                                                  |
-| ------------- | ------------------- | ------------------------------------------- | ----------------------------------------------------- |
-| `measureText` | `TextMeasurer`      | `fallbackMeasurer`                          | 注入文字度量函数；React adapter 使用浏览器能力        |
-| `lowerTex`    | `LowerTex`          | `undefined`                                 | 注入公式渲染能力；未注入或解析失败时会 warning 并降级 |
-| `onWarn`      | `(warning) => void` | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning                            |
+| Option         | Type                    | Default                                     | 说明                                                                                                                        |
+| -------------- | ----------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `measureText`  | `TextMeasurer`          | `fallbackMeasurer`                          | 注入文字度量函数；React adapter 使用浏览器能力                                                                              |
+| `lowerTex`     | `LowerTex`              | `undefined`                                 | 注入公式渲染能力；未注入或解析失败时会 warning 并降级                                                                       |
+| `onWarn`       | `(warning) => void`     | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning                                                                                                  |
+| `onNodeLayout` | `CompileLayoutObserver` | `undefined`                                 | 节点 layout 完成后的同步观测回调；接收纯数据 `CompiledNodeLayout`，可读取内容盒 `content.size` 与全局 AABB `content.bounds` |
 
 ### 布局与输出
 

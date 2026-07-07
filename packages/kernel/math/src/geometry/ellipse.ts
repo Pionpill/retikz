@@ -23,9 +23,8 @@ export type CenteredBox = CenteredShape & {
 /** 椭圆外接内部盒的半轴策略。 */
 export type EllipseCircumscribeMode = 'proportional' | 'equal';
 
-/** 椭圆相关纯几何工具。 */
+/** 基于中心、本地半轴和可选旋转的椭圆运算。 */
 export const ellipse = {
-  /** 中心点。 */
   center: (e: Ellipse): Position => [e.x, e.y],
   /** 矩形盒的内接椭圆。 */
   inscribedInBox: (box: CenteredBox): Ellipse => ({

@@ -1,6 +1,6 @@
 {
   "name": "@retikz/tex",
-  "version": "0.4.0-beta.1",
+  "version": "0.4.0-beta.2",
   "retikz": {
     "domain": "kernel",
     "releaseGroup": "kernel",
@@ -78,8 +78,7 @@
   },
   "peerDependencies": {
     "mathjax-full": "catalog:",
-    "react": ">=18",
-    "react-dom": ">=18"
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
     "mathjax-full": {
@@ -87,18 +86,13 @@
     },
     "react": {
       "optional": true
-    },
-    "react-dom": {
-      "optional": true
     }
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
     "mathjax-full": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",

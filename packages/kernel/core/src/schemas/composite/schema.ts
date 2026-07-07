@@ -7,6 +7,6 @@ const compositeBaseShape = {
   type: z.string().min(1).describe('Composite type name within the namespace.'),
 };
 
-export const CompositeBaseSchema = z.object(compositeBaseShape);
+export const CompositeBaseSchema = z.strictObject(compositeBaseShape);
 
 export const CompositeNodeSchema = z.object(compositeBaseShape).catchall(JsonValueSchema);

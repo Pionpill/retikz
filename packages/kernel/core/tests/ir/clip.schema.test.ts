@@ -80,6 +80,11 @@ describe('ClipSpecSchema 退化 / 非法形态拒绝', () => {
     expect(parsed.success).toBe(false);
   });
 
+  it('rect 未知字段拒绝，不静默剥离', () => {
+    const parsed = ClipSpecSchema.safeParse({ kind: 'rect', x: 0, y: 0, width: 10, height: 10, opacity: 0.5 });
+    expect(parsed.success).toBe(false);
+  });
+
   it('circle r 为 0 拒绝', () => {
     const parsed = ClipSpecSchema.safeParse({ kind: 'circle', cx: 0, cy: 0, r: 0 });
     expect(parsed.success).toBe(false);
@@ -141,6 +146,23 @@ describe('ClipSpecSchema 退化 / 非法形态拒绝', () => {
         [Infinity, 0],
         [5, 10],
       ],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('path clip 内 path command 未知字段拒绝', () => {
+    const parsed = ClipSpecSchema.safeParse({
+      kind: 'path',
+      commands: [{ kind: 'move', to: [0, 0], typo: true }],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('compound clip 未知字段拒绝', () => {
+    const parsed = ClipSpecSchema.safeParse({
+      kind: 'compound',
+      children: [{ kind: 'circle', cx: 0, cy: 0, r: 10 }],
+      extra: 'ignored before strict',
     });
     expect(parsed.success).toBe(false);
   });

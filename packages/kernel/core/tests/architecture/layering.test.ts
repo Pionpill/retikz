@@ -251,4 +251,25 @@ describe('core layer import boundaries', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('compile-reachable core code does not use time or module-level provider geometry caches', () => {
+    const timeOrSharedCacheOffenders = tsFiles(SRC_ROOT).flatMap(file => {
+      const relativePath = relative(SRC_ROOT, file).replace(/\\/g, '/');
+      const source = readFileSync(file, 'utf8');
+      return [
+        ...(source.includes('Date.now(') ? [`${relativePath}: Date.now`] : []),
+        ...(source.includes('createCache') ? [`${relativePath}: createCache`] : []),
+      ];
+    });
+
+    const providerCacheOffenders = tsFiles(join(SRC_ROOT, 'providers', 'shape')).flatMap(file => {
+      const relativePath = relative(SRC_ROOT, file).replace(/\\/g, '/');
+      const source = readFileSync(file, 'utf8');
+      return /const\s+\w+Cache\s*=\s*new\s+(?:Weak)?Map/u.test(source)
+        ? [`${relativePath}: module-level Map cache`]
+        : [];
+    });
+
+    expect([...timeOrSharedCacheOffenders, ...providerCacheOffenders]).toEqual([]);
+  });
 });

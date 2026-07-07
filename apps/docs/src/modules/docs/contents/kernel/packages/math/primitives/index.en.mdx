@@ -26,6 +26,38 @@ type CenteredShape = {
   y: number; // center y
   rotate?: number; // rotation in radians about the center; omitted / 0 = no rotation
 };
+
+type ArcBoundingPointsInput = {
+  center: Position;
+  radius: number;
+  startAngleDeg: number;
+  endAngleDeg: number;
+};
+
+type ArcAngleInRangeInput = {
+  startAngleDeg: number;
+  endAngleDeg: number;
+  angleDeg: number;
+  toleranceDeg?: number;
+};
+
+type RayArcInput = ArcBoundingPointsInput & {
+  origin: Position;
+  dir: Position;
+  tolerance?: number;
+};
+
+type EllipseArcPointInput = {
+  center: Position;
+  radiusX: number;
+  radiusY: number;
+  angleDeg: number;
+};
+
+type EllipseArcBoundingPointsInput = Omit<EllipseArcPointInput, 'angleDeg'> & {
+  startAngleDeg: number;
+  endAngleDeg: number;
+};
 ```
 
 ## point vector math
@@ -70,20 +102,20 @@ Angle convention: SVG **y-down**, `0°=+x`, `90°=+y` (visually down), increasin
 
 ```ts
 arcEndPoint(center: Position, radius: number, angleDeg: number): Position;       // point on the circle at the angle
-ellipseArcPoint(center: Position, rx: number, ry: number, angleDeg: number): Position;  // parametric point on the ellipse
+ellipseArcPoint(input: EllipseArcPointInput): Position;  // parametric point on the ellipse
 
 // whether an angle lies in the arc [startDeg, endDeg] (inclusive, with tolerance)
-arcAngleInRange(startDeg: number, endDeg: number, angleDeg: number, toleranceDeg?: number): boolean;
+arcAngleInRange(input: ArcAngleInRangeInput): boolean;
 
-// ray ∩ arc; returns forward ray-parameters (ascending). dir must be a unit vector
-rayArc(origin: Position, dir: Position, center: Position, radius: number, startDeg: number, endDeg: number, tolerance?: number): Array<number>;
+// ray ∩ arc; returns forward parameters for origin + s·dir (ascending). Zero direction returns []
+rayArc(input: RayArcInput): Array<number>;
 
 // candidate extreme points for the (elliptical-)arc bbox (endpoints + 90°·k directions inside the range)
-arcBoundingPoints(center: Position, radius: number, startDeg: number, endDeg: number): Array<Position>;
-ellipseArcBoundingPoints(center: Position, rx: number, ry: number, startDeg: number, endDeg: number): Array<Position>;
+arcBoundingPoints(input: ArcBoundingPointsInput): Array<Position>;
+ellipseArcBoundingPoints(input: EllipseArcBoundingPointsInput): Array<Position>;
 ```
 
 <ComponentAlert
   title="rayArc returns parameters, not points"
-  description="rayArc returns an array of scalar distances along the ray (hit point = origin + s·dir), handy for picking the nearest hit — unlike intersect.* in Algorithms, which return coordinate points."
+  description="rayArc returns scalar s values from the general parameter equation (hit point = origin + s·dir), handy for picking the nearest hit — unlike intersect.* in Algorithms, which return coordinate points."
 />

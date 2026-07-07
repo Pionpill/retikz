@@ -4,7 +4,7 @@ import { CssColorSchema, OpacitySchema } from '../../style';
 import { BuiltinArrowShape } from './constants';
 
 export const ArrowEndDetailSchema = z
-  .object({
+  .strictObject({
     shape: z
       .union([z.enum(BuiltinArrowShape), z.string().min(1)])
       .optional()
@@ -48,6 +48,8 @@ export const ArrowDetailSchema = ArrowEndDetailSchema.extend({
   end: ArrowEndDetailSchema.optional().describe(
     'Per-end arrow override. Present fields override top-level arrowDetail defaults.',
   ),
-}).describe(
-  'Path-level arrow detail. Top-level fields are shared defaults for both ends; `start` / `end` override them per field.',
-);
+})
+  .strict()
+  .describe(
+    'Path-level arrow detail. Top-level fields are shared defaults for both ends; `start` / `end` override them per field.',
+  );

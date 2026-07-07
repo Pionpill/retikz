@@ -2,6 +2,7 @@
 
 import { applyTransforms as applyDataTransforms } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
+import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { TransformOperation } from '../../../src/schemas';
@@ -552,7 +553,7 @@ describe('applyJitter (alpha.12 ADR-02)', () => {
     expect(a.map(r => r.dose)).toEqual(b.map(r => r.dose));
     // 偏移在 ±amount 内
     a.forEach((r, i) =>
-      expect(Math.abs((r.dose as number) - (SAMPLES[i].dose as number))).toBeLessThanOrEqual(0.3 + 1e-9),
+      expect(Math.abs((r.dose as number) - (SAMPLES[i].dose as number))).toBeLessThanOrEqual(0.3 + DEFAULT_EPSILON),
     );
   });
 

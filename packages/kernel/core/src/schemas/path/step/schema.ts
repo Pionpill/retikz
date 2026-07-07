@@ -9,7 +9,7 @@ import { TargetSchema } from '../target';
 import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 
 export const GeometryLabelSchema = z
-  .object({
+  .strictObject({
     ...createLabelVisualStyleShape({
       textColor: 'Label text color; falls back to label defaults, path color, then currentColor.',
       opacity: 'Label-only opacity, multiplied with the owning path opacity.',
@@ -37,7 +37,6 @@ export const GeometryLabelSchema = z
       .optional()
       .describe('Side offset distance in user units. Defaults to the same distance as Path step labels.'),
   })
-  .strict()
   .describe(
     'Geometry label spec attached to a path-like host; compiled to a TextPrim positioned from a centerline sample.',
   );
@@ -45,7 +44,7 @@ export const GeometryLabelSchema = z
 export const StepLabelSchema = GeometryLabelSchema;
 
 export const MoveStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z.literal('move').describe('Move the cursor to the target without drawing.'),
     to: TargetSchema.describe('Destination point of the move'),
@@ -53,7 +52,7 @@ export const MoveStepSchema = z
   .describe('Move action: relocate the path cursor without drawing');
 
 export const LineStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z.literal('line').describe('Draw a straight line from the current cursor to the target.'),
     to: TargetSchema.describe('Destination point of the line segment'),
@@ -62,7 +61,7 @@ export const LineStepSchema = z
   .describe('Line action: straight-line segment from cursor to target');
 
 export const FoldStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('fold')
@@ -78,7 +77,7 @@ export const FoldStepSchema = z
   .describe('Fold action: right-angle segment with a single intermediate point chosen by `via`.');
 
 export const CycleStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z.literal('cycle').describe('Close the path back to the most recent move target.'),
   })
@@ -87,7 +86,7 @@ export const CycleStepSchema = z
 export const ControlPointSchema = PositionSchema.describe('Bezier control point position.');
 
 export const CurveStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z.literal('curve').describe('Quadratic Bezier curve from cursor to target with one control point.'),
     to: TargetSchema.describe('Destination point of the curve'),
@@ -97,7 +96,7 @@ export const CurveStepSchema = z
   .describe('Curve action: quadratic Bezier; one control point shapes the bend');
 
 export const CubicStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z.literal('cubic').describe('Cubic Bezier curve from cursor to target with two control points.'),
     to: TargetSchema.describe('Destination point of the cubic curve'),
@@ -108,7 +107,7 @@ export const CubicStepSchema = z
   .describe('Cubic action: cubic Bezier; two control points give precise tangent control at both ends');
 
 export const BendStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('bend')
@@ -141,11 +140,10 @@ export const BendStepSchema = z
   .describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
 export const StepAnisotropicRadiusSchema = z
-  .object({
+  .strictObject({
     x: z.number().positive().describe('Horizontal radius in user units.'),
     y: z.number().positive().describe('Vertical radius in user units.'),
   })
-  .strict()
   .describe('Anisotropic radius object.');
 
 export const StepRadiusSchema = z
@@ -176,7 +174,7 @@ const refinePartialAngles = (
 };
 
 const ArcStepBaseSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('arc')
@@ -195,7 +193,6 @@ const ArcStepBaseSchema = z
     center: TargetSchema.optional().describe('Explicit arc center. Omitted fields use the current cursor as center.'),
     label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
   })
-  .strict()
   .describe(
     'Arc action: circular or elliptical arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.',
   );
@@ -203,7 +200,7 @@ const ArcStepBaseSchema = z
 export const ArcStepSchema = ArcStepBaseSchema;
 
 const CirclePathStepBaseSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('circlePath')
@@ -225,7 +222,6 @@ const CirclePathStepBaseSchema = z
       ),
     label: StepLabelSchema.optional().describe('Edge label attached to this circle'),
   })
-  .strict()
   .describe(
     'CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).',
   );
@@ -235,7 +231,7 @@ export const CirclePathStepSchema = CirclePathStepBaseSchema.superRefine((step, 
 );
 
 const EllipsePathStepBaseSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('ellipsePath')
@@ -255,7 +251,6 @@ const EllipsePathStepBaseSchema = z
       ),
     label: StepLabelSchema.optional().describe('Edge label attached to this ellipse'),
   })
-  .strict()
   .describe(
     'EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).',
   );
@@ -265,7 +260,7 @@ export const EllipsePathStepSchema = EllipsePathStepBaseSchema.superRefine((step
 );
 
 export const RectangleStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('rectangle')
@@ -285,7 +280,7 @@ export const RectangleStepSchema = z
   .describe('Rectangle action: closed axis-aligned rectangle (optionally rounded) drawn between two opposite corners.');
 
 export const SmoothStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('smooth')
@@ -310,7 +305,7 @@ export const SmoothStepSchema = z
   .describe('Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.');
 
 export const GeneratorStepSchema = z
-  .object({
+  .strictObject({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('generator')
