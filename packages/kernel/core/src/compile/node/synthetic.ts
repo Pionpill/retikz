@@ -1,4 +1,4 @@
-import { minimalEnclosingCircle } from '@retikz/math';
+import { circle } from '@retikz/math';
 
 import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
@@ -115,7 +115,7 @@ export const createScopeCircleLayout = (
 ): NodeLayout => {
   const shapes = context.shapes ?? resolveShapeRegistry();
   const boundaries = context.boundaries ?? resolveBoundaryRegistry();
-  const mec = input.cornerPoints.length > 0 ? minimalEnclosingCircle([...input.cornerPoints]) : null;
+  const mec = input.cornerPoints.length > 0 ? circle.minimalEnclosing([...input.cornerPoints]) : null;
   const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : input.fallbackOrigin;
   const diameter = mec ? mec.radius * 2 : 0;
   return {

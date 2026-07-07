@@ -1,9 +1,46 @@
 import type { Position } from './point';
 
-import { DEFAULT_EPSILON, point } from './point';
+import { DEFAULT_EPSILON } from '../constants';
+import { point } from './point';
+
+/** 两条无限直线求交参数。 */
+export type LineLineInput = {
+  /** 第一条直线上的第一个点。 */
+  a1: Position;
+  /** 第一条直线上的第二个点。 */
+  a2: Position;
+  /** 第二条直线上的第一个点。 */
+  b1: Position;
+  /** 第二条直线上的第二个点。 */
+  b2: Position;
+};
+
+/** 直线与圆求交参数。 */
+export type LineCircleInput = {
+  /** 直线起点。 */
+  origin: Position;
+  /** 直线方向，不要求单位化。 */
+  dir: Position;
+  /** 圆心。 */
+  center: Position;
+  /** 圆半径。 */
+  radius: number;
+};
+
+/** 两圆求交参数。 */
+export type CircleCircleInput = {
+  /** 第一个圆心。 */
+  centerA: Position;
+  /** 第一个圆半径。 */
+  radiusA: number;
+  /** 第二个圆心。 */
+  centerB: Position;
+  /** 第二个圆半径。 */
+  radiusB: number;
+};
 
 /** 两条无限直线（各由两点定）的交点；平行 / 共线返回 null */
-const lineLine = (a1: Position, a2: Position, b1: Position, b2: Position): Position | null => {
+const lineLine = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const da: Position = [a2[0] - a1[0], a2[1] - a1[1]];
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];
   const det = point.cross(da, db);
@@ -15,7 +52,7 @@ const lineLine = (a1: Position, a2: Position, b1: Position, b2: Position): Posit
 };
 
 /** 直线（origin + 方向 dir，dir 不必单位化）∩ 圆，返回 0/1/2 交点；切线（disc≈0）返回 2 个重合点，调用方自判 */
-const lineCircle = (origin: Position, dir: Position, center: Position, radius: number): Array<Position> => {
+const lineCircle = ({ origin, dir, center, radius }: LineCircleInput): Array<Position> => {
   const ox = origin[0] - center[0];
   const oy = origin[1] - center[1];
   const a = dir[0] * dir[0] + dir[1] * dir[1];
@@ -33,16 +70,22 @@ const lineCircle = (origin: Position, dir: Position, center: Position, radius: n
 };
 
 /** 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（disc≈0）返回 2 个重合点，调用方自判 */
-const circleCircle = (cA: Position, rA: number, cB: Position, rB: number): Array<Position> => {
-  const dx = cB[0] - cA[0];
-  const dy = cB[1] - cA[1];
+const circleCircle = ({ centerA, radiusA, centerB, radiusB }: CircleCircleInput): Array<Position> => {
+  const dx = centerB[0] - centerA[0];
+  const dy = centerB[1] - centerA[1];
   const d = Math.hypot(dx, dy);
-  if (d < DEFAULT_EPSILON || d > rA + rB + DEFAULT_EPSILON || d < Math.abs(rA - rB) - DEFAULT_EPSILON) return [];
-  const a = (rA * rA - rB * rB + d * d) / (2 * d);
-  const h2 = rA * rA - a * a;
+  if (
+    d < DEFAULT_EPSILON ||
+    d > radiusA + radiusB + DEFAULT_EPSILON ||
+    d < Math.abs(radiusA - radiusB) - DEFAULT_EPSILON
+  ) {
+    return [];
+  }
+  const a = (radiusA * radiusA - radiusB * radiusB + d * d) / (2 * d);
+  const h2 = radiusA * radiusA - a * a;
   const h = h2 > 0 ? Math.sqrt(h2) : 0;
-  const mx = cA[0] + (a * dx) / d;
-  const my = cA[1] + (a * dy) / d;
+  const mx = centerA[0] + (a * dx) / d;
+  const my = centerA[1] + (a * dy) / d;
   const rx = (-dy * h) / d;
   const ry = (dx * h) / d;
   return [
@@ -51,8 +94,8 @@ const circleCircle = (cA: Position, rA: number, cB: Position, rB: number): Array
   ];
 };
 
-/** 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null（首切简化，见 ADR 待议） */
-const segmentSegment = (a1: Position, a2: Position, b1: Position, b2: Position): Position | null => {
+/** 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null。 */
+const segmentSegment = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const da: Position = [a2[0] - a1[0], a2[1] - a1[1]];
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];
   const det = point.cross(da, db);
@@ -67,7 +110,6 @@ const segmentSegment = (a1: Position, a2: Position, b1: Position, b2: Position):
 
 /**
  * 求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）。
- * @description ray∩arc 不并入本集——`rayArc` 返回的是沿射线的标量参数 `Array<number>`（命中点 = origin + s·dir），
- *   语义与点返回不一致，且 contour 等调用方需要该标量找最近命中；故 `rayArc` 仅从 `./arc` 模块导出。
+ * @description ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `./arc` 单独导出。
  */
 export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };

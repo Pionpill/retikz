@@ -1,7 +1,7 @@
 import type { IRPosition, PathCommand, ShapeDefinition } from '@retikz/core';
 import type { FC } from 'react';
 
-import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import { DEFAULT_EPSILON, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
 
@@ -32,11 +32,11 @@ const findHexagonBoundaryPoint = (radius: number, direction: Position): Position
     const end = vertices[(index + 1) % vertices.length];
     const edge: Position = [end[0] - start[0], end[1] - start[1]];
     const denominator = cross(ray, edge);
-    if (Math.abs(denominator) < 1e-9) continue;
+    if (Math.abs(denominator) < DEFAULT_EPSILON) continue;
 
     const distance = cross(start, edge) / denominator;
     const edgeRatio = cross(start, ray) / denominator;
-    if (distance >= -1e-9 && edgeRatio >= -1e-9 && edgeRatio <= 1 + 1e-9) {
+    if (distance >= -DEFAULT_EPSILON && edgeRatio >= -DEFAULT_EPSILON && edgeRatio <= 1 + DEFAULT_EPSILON) {
       nearestDistance = Math.min(nearestDistance, distance);
     }
   }

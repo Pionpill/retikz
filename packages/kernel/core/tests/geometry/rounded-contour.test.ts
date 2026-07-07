@@ -40,38 +40,52 @@ describe('filletContour 大坐标相对容差（G6）', () => {
 describe('rayArc：射线 ∩ 圆弧 + 角度区间过滤', () => {
   it('命中区间内的弧', () => {
     // 单位圆右半弧 [-90,90]，从原点朝 +x → 命中 [1,0]
-    const hits = rayArc([0, 0], [1, 0], [0, 0], 1, -90, 90);
+    const hits = rayArc({
+      origin: [0, 0],
+      dir: [1, 0],
+      center: [0, 0],
+      radius: 1,
+      startAngleDeg: -90,
+      endAngleDeg: 90,
+    });
     expect(hits.length).toBeGreaterThanOrEqual(1);
     expect(hits[0]).toBeCloseTo(1);
   });
 
   it('交点在角度区间外不计', () => {
     // 圆右半弧 [-90,90]，朝 -x 的交点 [-1,0] 角=180 不在区间 → 空
-    const hits = rayArc([0, 0], [-1, 0], [0, 0], 1, -90, 90);
+    const hits = rayArc({
+      origin: [0, 0],
+      dir: [-1, 0],
+      center: [0, 0],
+      radius: 1,
+      startAngleDeg: -90,
+      endAngleDeg: 90,
+    });
     expect(hits).toEqual([]);
   });
 
   it('整圆（span≥360）任意方向命中', () => {
-    const hits = rayArc([0, 0], [0, 1], [0, 0], 5, 0, 360);
+    const hits = rayArc({ origin: [0, 0], dir: [0, 1], center: [0, 0], radius: 5, startAngleDeg: 0, endAngleDeg: 360 });
     expect(hits[0]).toBeCloseTo(5);
   });
 });
 
 describe('arcAngleInRange', () => {
   it('CW 区间含端点', () => {
-    expect(arcAngleInRange(0, 90, 45)).toBe(true);
-    expect(arcAngleInRange(0, 90, 0)).toBe(true);
-    expect(arcAngleInRange(0, 90, 90)).toBe(true);
-    expect(arcAngleInRange(0, 90, 135)).toBe(false);
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 45 })).toBe(true);
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 0 })).toBe(true);
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 90 })).toBe(true);
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 135 })).toBe(false);
   });
   it('CCW 区间（end<start）', () => {
-    expect(arcAngleInRange(90, 0, 45)).toBe(true);
-    expect(arcAngleInRange(90, 0, -45)).toBe(false);
+    expect(arcAngleInRange({ startAngleDeg: 90, endAngleDeg: 0, angleDeg: 45 })).toBe(true);
+    expect(arcAngleInRange({ startAngleDeg: 90, endAngleDeg: 0, angleDeg: -45 })).toBe(false);
   });
   it('跨 360°', () => {
-    expect(arcAngleInRange(270, 450, 360)).toBe(true);
-    expect(arcAngleInRange(270, 450, 0)).toBe(true);
-    expect(arcAngleInRange(270, 450, 180)).toBe(false);
+    expect(arcAngleInRange({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 360 })).toBe(true);
+    expect(arcAngleInRange({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 0 })).toBe(true);
+    expect(arcAngleInRange({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 180 })).toBe(false);
   });
 });
 

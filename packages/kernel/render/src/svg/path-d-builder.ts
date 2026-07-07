@@ -1,5 +1,7 @@
 import type { PathCommand } from '@retikz/core';
 
+import { DEFAULT_EPSILON } from '@retikz/math';
+
 const DEG_TO_RAD = Math.PI / 180;
 
 /** 默认 round：保留 2 位小数，配 compile/scene/precision 的默认 */
@@ -42,7 +44,7 @@ const ellipseArcTokens = (
   round: (n: number) => number,
 ): Array<string> => {
   const span = Math.abs(endAngle - startAngle);
-  if (span >= 360 - 1e-9) {
+  if (span >= 360 - DEFAULT_EPSILON) {
     // 拆两段半弧避 360° 退化
     const mid = startAngle + (endAngle - startAngle) / 2;
     const midPt = ellipsePointAt(center[0], center[1], rx, ry, mid);

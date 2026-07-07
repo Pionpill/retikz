@@ -1,3 +1,4 @@
+import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { alignAngleSweep } from '../../src/shared';
@@ -57,7 +58,7 @@ describe('alignAngleSweep sweep 恰为 ±360', () => {
 
 describe('alignAngleSweep 接近但不等于 360 / 0', () => {
   it('sweep 略小于 360（CW）→ 走归一化，得到接近 360 的正向跨度', () => {
-    const eps = 1e-9;
+    const eps = DEFAULT_EPSILON;
     const r = alignAngleSweep(0, 360 - eps, false);
     expect(r.start).toBe(0);
     // 不命中 ===360 分支，normalized = 360 − eps（≠0），保持原跨度
@@ -67,7 +68,7 @@ describe('alignAngleSweep 接近但不等于 360 / 0', () => {
   });
 
   it('sweep 略大于 360（CW）→ 归一化回落到接近 0 的小正跨度', () => {
-    const eps = 1e-9;
+    const eps = DEFAULT_EPSILON;
     const r = alignAngleSweep(0, 360 + eps, false);
     expect(r.start).toBe(0);
     // normalized = (360+eps) % 360 ≈ eps，仍 ≠0，取该小正跨度
@@ -77,7 +78,7 @@ describe('alignAngleSweep 接近但不等于 360 / 0', () => {
   });
 
   it('sweep 略小于 360（CCW）→ 归一化成接近 0 的小负跨度', () => {
-    const eps = 1e-9;
+    const eps = DEFAULT_EPSILON;
     const r = alignAngleSweep(0, 360 - eps, true);
     expect(r.start).toBe(0);
     // normalized ≈ 360 − eps，CCW → normalized − 360 ≈ −eps
@@ -87,14 +88,14 @@ describe('alignAngleSweep 接近但不等于 360 / 0', () => {
   });
 
   it('sweep 略大于 0（CW）→ 保持原小正跨度', () => {
-    const eps = 1e-9;
+    const eps = DEFAULT_EPSILON;
     const r = alignAngleSweep(10, 10 + eps, false);
     expect(r.start).toBe(10);
     expect(r.end).toBeCloseTo(10 + eps, 12);
   });
 
   it('sweep 略小于 0（CW）→ 归一化翻成接近 360 的正跨度', () => {
-    const eps = 1e-9;
+    const eps = DEFAULT_EPSILON;
     const r = alignAngleSweep(10, 10 - eps, false);
     expect(r.start).toBe(10);
     // normalized = ((−eps)%360 + 360)%360 ≈ 360 − eps

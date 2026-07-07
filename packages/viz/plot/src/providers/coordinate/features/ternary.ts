@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { isFiniteNumber } from '@retikz/math';
+import { DEFAULT_EPSILON, isFiniteNumber } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
@@ -29,7 +29,7 @@ const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', 
 type BarycentricPoint = [number, number, number];
 
 /** 三元 cell 裁剪的浮点容差，用于边界包含判断和近似平行边处理。 */
-const TERNARY_EPSILON = 1e-9;
+const TERNARY_EPSILON = DEFAULT_EPSILON;
 
 /** 把区间端点整理为升序，便于后续裁剪统一处理反向区间。 */
 const sortedInterval = (interval: [number, number]): [number, number] =>

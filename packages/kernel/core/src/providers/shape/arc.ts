@@ -40,7 +40,7 @@ const computeArcGeometry = (params: ArcParams): ArcGeometry => {
   const range = normalizeAngleRange(startAngle, endAngle);
   const center: Position = [0, 0];
   // close=true（弓形）含弦 / 区域，AABB 由弧 bbox 点决定；圆心本身不强制进框（开放弧 / 弓形都不含圆心）
-  const points = arcBoundingPoints(center, radius, range.start, range.end);
+  const points = arcBoundingPoints({ center, radius, startAngleDeg: range.start, endAngleDeg: range.end });
   const bounds = boundsOf(points);
   if (bounds === undefined) throw new Error('arc: bounding points must not be empty.');
   const aabbCenter = boundsCenter(bounds);

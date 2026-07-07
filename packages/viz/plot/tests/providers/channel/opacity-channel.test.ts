@@ -1,5 +1,6 @@
 import type { IRNode, IRScope } from '@retikz/core';
 
+import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -111,7 +112,9 @@ describe('opacity channel (alpha.7 ADR-04)', () => {
       { x: 1, y: 1, d: 5 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'd' }), { d: data }));
-    expect(nodes.every(n => opacityOf(n)! >= OPACITY_MIN - 1e-9 && opacityOf(n)! <= 1 + 1e-9)).toBe(true);
+    expect(
+      nodes.every(n => opacityOf(n)! >= OPACITY_MIN - DEFAULT_EPSILON && opacityOf(n)! <= 1 + DEFAULT_EPSILON),
+    ).toBe(true);
   });
 
   it('opacity_no_channel_no_opacity', () => {

@@ -1,12 +1,12 @@
 ﻿---
 title: Algorithms
-description: Full signatures for intersections, triangle in/circumcircles, point-in-polygon, convex hull, and splines — not re-exported by core; import from @retikz/math.
+description: Full signatures for intersections, circle / triangle algorithms, point-in-polygon, convex hull, and splines — not re-exported by core; import from @retikz/math.
 ---
 
 These are higher-level computations `@retikz/core` does **not** re-export; import them directly from `@retikz/math`:
 
 ```ts
-import { intersect, triangle, polygon, convexHull, curve } from '@retikz/math';
+import { intersect, circle, triangle, polygon, convexHull, curve } from '@retikz/math';
 ```
 
 Degenerate inputs do not throw: intersections return `null` / `[]`, triangle circles return `null` on degeneracy. Tolerance is the naive `DEFAULT_EPSILON = 1e-9` (types in [Primitives](/kernel/packages/math/primitives)).
@@ -16,6 +16,27 @@ Degenerate inputs do not throw: intersections return `null` / `[]`, triangle cir
 ```ts
 /** Circle: center + radius */
 type Circle = { center: Position; radius: number };
+
+type LineLineInput = {
+  a1: Position;
+  a2: Position;
+  b1: Position;
+  b2: Position;
+};
+
+type LineCircleInput = {
+  origin: Position;
+  dir: Position;
+  center: Position;
+  radius: number;
+};
+
+type CircleCircleInput = {
+  centerA: Position;
+  radiusA: number;
+  centerB: Position;
+  radiusB: number;
+};
 ```
 
 ## intersect
@@ -24,16 +45,16 @@ Returns **points**: a single hit as `Position | null`, multiple as `Array<Positi
 
 ```ts
 // two infinite lines (each by two points); parallel / collinear → null
-intersect.lineLine(a1: Position, a2: Position, b1: Position, b2: Position): Position | null;
+intersect.lineLine(input: LineLineInput): Position | null;
 
 // two segments; disjoint / parallel / collinear (incl. overlap) → null
-intersect.segmentSegment(a1: Position, a2: Position, b1: Position, b2: Position): Position | null;
+intersect.segmentSegment(input: LineLineInput): Position | null;
 
 // line (origin + direction dir, dir need not be unit) ∩ circle; 0 / 2 hits
-intersect.lineCircle(origin: Position, dir: Position, center: Position, radius: number): Array<Position>;
+intersect.lineCircle(input: LineCircleInput): Array<Position>;
 
 // circle ∩ circle; disjoint / contained / coincident → []
-intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Array<Position>;
+intersect.circleCircle(input: CircleCircleInput): Array<Position>;
 ```
 
 | Function         | Returns / degeneracy                                                                                                           |
@@ -50,9 +71,18 @@ For ray ∩ arc use [`rayArc`](/kernel/packages/math/primitives) (in Primitives;
 Returns `Circle`; collinear vertices (area ≈ 0) → `null`.
 
 ```ts
-triangle.circumcircle(a: Position, b: Position, c: Position): Circle | null;  // circumcircle (through all three vertices)
-triangle.incircle(a: Position, b: Position, c: Position): Circle | null;      // incircle (tangent to all three sides)
+triangle.circumCircle(a: Position, b: Position, c: Position): Circle | null;  // circum-circle (through all three vertices)
+triangle.inCircle(a: Position, b: Position, c: Position): Circle | null;      // in-circle (tangent to all three sides)
 ```
+
+## circle
+
+```ts
+// iterative Welzl; empty point set → null, single point → radius-0 circle
+circle.minimalEnclosing(points: Array<Position>, epsilon?: number): Circle | null;
+```
+
+`circle.minimalEnclosing` returns the smallest circle covering all input points. It is deterministic, with worst-case time `O(n^3)` and space `O(1)`.
 
 ## point-in-polygon
 

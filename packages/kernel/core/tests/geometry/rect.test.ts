@@ -1,3 +1,4 @@
+import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { Rect } from '../../src/shared/geometry/rect';
@@ -177,8 +178,8 @@ describe('rect.boundaryPoint', () => {
       const dy = hit[1] - r.y;
       const lx = dx * cos + dy * sin;
       const ly = -dx * sin + dy * cos;
-      const onVerticalEdge = Math.abs(Math.abs(lx) - halfW) < 1e-9;
-      const onHorizontalEdge = Math.abs(Math.abs(ly) - halfH) < 1e-9;
+      const onVerticalEdge = Math.abs(Math.abs(lx) - halfW) < DEFAULT_EPSILON;
+      const onHorizontalEdge = Math.abs(Math.abs(ly) - halfH) < DEFAULT_EPSILON;
       expect(onVerticalEdge || onHorizontalEdge).toBe(true);
     }
   });

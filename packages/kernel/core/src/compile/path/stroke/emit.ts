@@ -410,13 +410,19 @@ export const emitPathPrimitive = (
         // 椭圆弧
         const rx = step.radius.x;
         const ry = step.radius.y;
-        startSegment(ellipseArcPoint(center, rx, ry, step.startAngle));
+        startSegment(ellipseArcPoint({ center, radiusX: rx, radiusY: ry, angleDeg: step.startAngle }));
         emitEllipseArc({ center, radiusX: rx, radiusY: ry, startAngle: step.startAngle, endAngle: step.endAngle });
-        for (const p of ellipseArcBoundingPoints(center, rx, ry, step.startAngle, step.endAngle)) {
+        for (const p of ellipseArcBoundingPoints({
+          center,
+          radiusX: rx,
+          radiusY: ry,
+          startAngleDeg: step.startAngle,
+          endAngleDeg: step.endAngle,
+        })) {
           boundsPoints.push(p);
         }
         collectLabel(step, t => ellipseArcSegmentSample(center, rx, ry, step.startAngle, step.endAngle, t));
-        penOverride = ellipseArcPoint(center, rx, ry, step.endAngle);
+        penOverride = ellipseArcPoint({ center, radiusX: rx, radiusY: ry, angleDeg: step.endAngle });
         continue;
       }
 
@@ -425,7 +431,12 @@ export const emitPathPrimitive = (
         const r = step.radius;
         startSegment(arcEndPoint(center, r, step.startAngle));
         emitArc({ center, radius: r, startAngle: step.startAngle, endAngle: step.endAngle });
-        for (const p of arcBoundingPoints(center, r, step.startAngle, step.endAngle)) {
+        for (const p of arcBoundingPoints({
+          center,
+          radius: r,
+          startAngleDeg: step.startAngle,
+          endAngleDeg: step.endAngle,
+        })) {
           boundsPoints.push(p);
         }
         collectLabel(step, t => arcSegmentSample(center, r, step.startAngle, step.endAngle, t));
@@ -451,20 +462,28 @@ export const emitPathPrimitive = (
         // 部分圆
         const startA = step.startAngle;
         const endA = step.endAngle;
-        startSegment(ellipseArcPoint(center, r, r, startA));
+        startSegment(ellipseArcPoint({ center, radiusX: r, radiusY: r, angleDeg: startA }));
         emitEllipseArc({ center, radiusX: r, radiusY: r, startAngle: startA, endAngle: endA });
-        for (const p of ellipseArcBoundingPoints(center, r, r, startA, endA)) boundsPoints.push(p);
+        for (const p of ellipseArcBoundingPoints({
+          center,
+          radiusX: r,
+          radiusY: r,
+          startAngleDeg: startA,
+          endAngleDeg: endA,
+        })) {
+          boundsPoints.push(p);
+        }
         collectLabel(step, t => ellipseArcSegmentSample(center, r, r, startA, endA, t));
         const closing = resolvePartialClosed(step.closed, i);
         if (closing === 'chord') {
           emitClose(); // 弦：arcEnd → startPt + 收口
-          penOverride = ellipseArcPoint(center, r, r, startA);
+          penOverride = ellipseArcPoint({ center, radiusX: r, radiusY: r, angleDeg: startA });
         } else if (closing === 'sector') {
           emitLine(center);
           emitClose();
           penOverride = center;
         } else {
-          penOverride = ellipseArcPoint(center, r, r, endA); // open：停弧终点
+          penOverride = ellipseArcPoint({ center, radiusX: r, radiusY: r, angleDeg: endA }); // open：停弧终点
         }
         continue;
       }
@@ -497,20 +516,28 @@ export const emitPathPrimitive = (
         // 部分椭圆
         const startA = step.startAngle;
         const endA = step.endAngle;
-        startSegment(ellipseArcPoint(center, rx, ry, startA));
+        startSegment(ellipseArcPoint({ center, radiusX: rx, radiusY: ry, angleDeg: startA }));
         emitEllipseArc({ center, radiusX: rx, radiusY: ry, startAngle: startA, endAngle: endA });
-        for (const p of ellipseArcBoundingPoints(center, rx, ry, startA, endA)) boundsPoints.push(p);
+        for (const p of ellipseArcBoundingPoints({
+          center,
+          radiusX: rx,
+          radiusY: ry,
+          startAngleDeg: startA,
+          endAngleDeg: endA,
+        })) {
+          boundsPoints.push(p);
+        }
         collectLabel(step, t => ellipseArcSegmentSample(center, rx, ry, startA, endA, t));
         const closing = resolvePartialClosed(step.closed, i);
         if (closing === 'chord') {
           emitClose();
-          penOverride = ellipseArcPoint(center, rx, ry, startA);
+          penOverride = ellipseArcPoint({ center, radiusX: rx, radiusY: ry, angleDeg: startA });
         } else if (closing === 'sector') {
           emitLine(center);
           emitClose();
           penOverride = center;
         } else {
-          penOverride = ellipseArcPoint(center, rx, ry, endA);
+          penOverride = ellipseArcPoint({ center, radiusX: rx, radiusY: ry, angleDeg: endA });
         }
         continue;
       }

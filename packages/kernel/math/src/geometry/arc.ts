@@ -1,27 +1,72 @@
 import type { Position } from './point';
 
-/*
- * 弧几何工具：arc / circlePath / ellipsePath 共用的端点 / bbox 计算。
- * 角度约定（与 polar.ts 一致，SVG y-down）：endpoint = [cx + r·cos(θ), cy + r·sin(θ)]，
- * 0=+x(east), 90=+y(south,视觉下), 180=-x(west), 270=-y(north,视觉上)。
- * 角度递增=SVG 屏幕顺时针。
- */
+import { DEFAULT_EPSILON } from '../constants';
 
 const DEG_TO_RAD = Math.PI / 180;
 
+/** 圆弧外接候选点参数。 */
+export type ArcBoundingPointsInput = {
+  /** 圆心。 */
+  center: Position;
+  /** 半径。 */
+  radius: number;
+  /** 起始角度，单位为度。 */
+  startAngleDeg: number;
+  /** 结束角度，单位为度。 */
+  endAngleDeg: number;
+};
+
+/** 圆弧角度区间判定参数。 */
+export type ArcAngleInRangeInput = {
+  /** 起始角度，单位为度。 */
+  startAngleDeg: number;
+  /** 结束角度，单位为度。 */
+  endAngleDeg: number;
+  /** 待判定角度，单位为度。 */
+  angleDeg: number;
+  /** 角度容差，单位为度。 */
+  toleranceDeg?: number;
+};
+
+/** 射线与圆弧求交参数。 */
+export type RayArcInput = ArcBoundingPointsInput & {
+  /** 射线起点。 */
+  origin: Position;
+  /** 射线方向，不要求单位化。 */
+  dir: Position;
+  /** 正向参数容差。 */
+  tolerance?: number;
+};
+
+/** 椭圆弧参数点参数。 */
+export type EllipseArcPointInput = {
+  /** 椭圆中心。 */
+  center: Position;
+  /** x 方向半轴。 */
+  radiusX: number;
+  /** y 方向半轴。 */
+  radiusY: number;
+  /** 参数角，单位为度。 */
+  angleDeg: number;
+};
+
+/** 椭圆弧外接候选点参数。 */
+export type EllipseArcBoundingPointsInput = Omit<EllipseArcPointInput, 'angleDeg'> & {
+  /** 起始参数角，单位为度。 */
+  startAngleDeg: number;
+  /** 结束参数角，单位为度。 */
+  endAngleDeg: number;
+};
+
 /**
- * 在 [lo, hi] 内枚举所有 90°·k 方向角（弧轴向极值候选）
- * @description 一圈最多 4 个轴向，合法弧 sweep ≤ 360° → 至多 5 个 90°·k；正常区间直接 for 扫。
- *   但 lo/hi 为巨型角度（如 1e308）时 k=ceil(lo/90) 落在浮点无整数分辨率区，`k++` 满足 k+1===k →
- *   for 循环永不前进而挂死（DoS）。此时端点投影已覆盖全部 x/y 极值（巨角下弧实际是退化点 / 单端），
- *   轴向点无新增信息 → 直接跳过枚举。守卫：仅当 kEnd−kStart 是 finite 且 ≤ 安全上界（远大于
- *   任何合法弧的轴向点数）时才枚举，否则返回空（端点已足够定界）。
+ * 枚举角度区间内的轴向极值候选角。
+ * @description 返回 `[lo, hi]` 内所有 `90 * k` 角度；区间不可安全枚举时返回空数组。
+ * @remarks 复杂度：时间 O(m)，空间 O(m)，m 为返回角度数；大区间保护用于避免浮点整数分辨率不足导致枚举不前进。
  */
 const axisAngles = (lo: number, hi: number): Array<number> => {
-  const kStart = Math.ceil(lo / 90); // 第一个 >= lo 的 90°·k
-  const kEnd = Math.floor(hi / 90); // 最后一个 <= hi 的 90°·k
+  const kStart = Math.ceil(lo / 90);
+  const kEnd = Math.floor(hi / 90);
   const span = kEnd - kStart;
-  // span 非 finite / 过大（巨型角度落入浮点无整数分辨率区，k++ 不前进）→ 端点已定界，无需轴向点
   if (!Number.isFinite(span) || span < 0 || span > 1_000_000) return [];
   const angles: Array<number> = [];
   for (let k = kStart; k <= kEnd; k++) angles.push(k * 90);
@@ -36,14 +81,14 @@ export const arcEndPoint = (center: Position, radius: number, angleDeg: number):
 
 /**
  * 弧的 bbox 极值候选：起点、终点，加 [startAngle,endAngle] 内所有 90°·k 方向的圆周点
- * @description 弧投影到 x/y 轴的极值只可能在弧端点或圆周轴向四点出现。endAngle < startAngle 时按 min..max 扫描；跨 360°（270→450）按数值区间正确处理；不去重——端角恰在 90°·k 上时调用方处理
+ * @description 不去重；端角恰在 90°·k 上时由调用方处理。
  */
-export const arcBoundingPoints = (
-  center: Position,
-  radius: number,
-  startAngleDeg: number,
-  endAngleDeg: number,
-): Array<Position> => {
+export const arcBoundingPoints = ({
+  center,
+  radius,
+  startAngleDeg,
+  endAngleDeg,
+}: ArcBoundingPointsInput): Array<Position> => {
   const points: Array<Position> = [
     arcEndPoint(center, radius, startAngleDeg),
     arcEndPoint(center, radius, endAngleDeg),
@@ -59,7 +104,6 @@ export const arcBoundingPoints = (
   return points;
 };
 
-/** 角度（度）→ 规范化到 [0, 360) */
 const normalizeDeg = (deg: number): number => {
   const m = deg % 360;
   return m < 0 ? m + 360 : m;
@@ -67,21 +111,18 @@ const normalizeDeg = (deg: number): number => {
 
 /**
  * 角度 a（度）是否落在弧的角度区间 [startAngle, endAngle] 内（含端点，带容差）
- * @description 与 ir/path arc 同约定：弧从 startAngle 扫到 endAngle，counterClockwise=false（缺省）
- *   时角度递增（屏幕顺时针）、true 时角度递减（逆时针）。统一把扫描量化为「从 start 出发、沿扫描方向
- *   累积的非负 sweep ∈ [0, |span|]」判定，跨 360°、负角、巨型角都正确（不死循环）。
+ * @description start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描。
  */
-export const arcAngleInRange = (
-  startAngleDeg: number,
-  endAngleDeg: number,
-  angleDeg: number,
+export const arcAngleInRange = ({
+  startAngleDeg,
+  endAngleDeg,
+  angleDeg,
   toleranceDeg = 1e-7,
-): boolean => {
+}: ArcAngleInRangeInput): boolean => {
   const span = endAngleDeg - startAngleDeg;
   const total = Math.abs(span);
   if (total >= 360 - toleranceDeg) return true; // 整圆
   const ccw = span < 0;
-  // 从 start 量到 angle 的「沿扫描方向」非负角差
   const raw = ccw ? startAngleDeg - angleDeg : angleDeg - startAngleDeg;
   const swept = normalizeDeg(raw);
   return swept <= total + toleranceDeg || swept >= 360 - toleranceDeg;
@@ -89,25 +130,21 @@ export const arcAngleInRange = (
 
 /**
  * 射线（origin + s·dir）∩ 圆弧（center, radius, [startAngle, endAngle]）
- * @description 泛化 sector 的内联 rayCircle：按一般参数方程解 |origin + s·dir|² = radius² 得至多两个参数 s，
- *   再用 arcAngleInRange 过滤掉不在弧角度区间内的交点。返回沿射线的正向参数 s（命中点 = origin + s·dir），
- *   按 s 升序、仅含 s > tolerance 的正向交点；不在区间内的根被剔除。零方向没有射线交点，返回空数组。
+ * @description 返回沿射线的正向参数 s，按升序排列；零方向或无有效交点时返回空数组。
  */
-export const rayArc = (
-  origin: Position,
-  dir: Position,
-  center: Position,
-  radius: number,
-  startAngleDeg: number,
-  endAngleDeg: number,
-  tolerance = 1e-9,
-): Array<number> => {
-  // 平移到以 center 为原点：o = origin - center
+export const rayArc = ({
+  origin,
+  dir,
+  center,
+  radius,
+  startAngleDeg,
+  endAngleDeg,
+  tolerance = DEFAULT_EPSILON,
+}: RayArcInput): Array<number> => {
   const ox = origin[0] - center[0];
   const oy = origin[1] - center[1];
   const ux = dir[0];
   const uy = dir[1];
-  // |o + s·u|² = radius²  →  (u·u)s² + 2(o·u)s + (|o|² - r²) = 0
   const a = ux * ux + uy * uy;
   if (a <= tolerance * tolerance) return [];
   const b = 2 * (ox * ux + oy * uy);
@@ -122,7 +159,7 @@ export const rayArc = (
     const px = ox + s * ux;
     const py = oy + s * uy;
     const angle = Math.atan2(py, px) * (180 / Math.PI);
-    if (arcAngleInRange(startAngleDeg, endAngleDeg, angle)) hits.push(s);
+    if (arcAngleInRange({ startAngleDeg, endAngleDeg, angleDeg: angle })) hits.push(s);
   }
   hits.sort((left, right) => left - right);
   return hits;
@@ -130,34 +167,33 @@ export const rayArc = (
 
 /**
  * 椭圆弧参数点：中心 + 半轴 rx/ry + 参数角（度）→ 椭圆周上点
- * @description 与 arcEndPoint 同角度约定（SVG y-down）；endpoint = [cx + rx·cosθ, cy + ry·sinθ]。
- *   θ 是参数角（非真实极角，rx≠ry 时两者不等）
+ * @description 与 arcEndPoint 同角度约定；θ 是参数角，不一定等于真实极角。
  */
-export const ellipseArcPoint = (center: Position, radiusX: number, radiusY: number, angleDeg: number): Position => {
+export const ellipseArcPoint = ({ center, radiusX, radiusY, angleDeg }: EllipseArcPointInput): Position => {
   const rad = angleDeg * DEG_TO_RAD;
   return [center[0] + Math.cos(rad) * radiusX, center[1] + Math.sin(rad) * radiusY];
 };
 
 /**
  * 椭圆弧 bbox 极值候选：起点、终点，加 [start,end] 区间内所有 90°·k 参数角处的椭圆周点
- * @description 轴对齐椭圆的 x 极值在 θ=0/180、y 极值在 θ=90/270，与正圆同结构（仅半轴用 rx/ry）
+ * @description 只处理轴对齐椭圆弧，候选点不去重。
  */
-export const ellipseArcBoundingPoints = (
-  center: Position,
-  radiusX: number,
-  radiusY: number,
-  startAngleDeg: number,
-  endAngleDeg: number,
-): Array<Position> => {
+export const ellipseArcBoundingPoints = ({
+  center,
+  radiusX,
+  radiusY,
+  startAngleDeg,
+  endAngleDeg,
+}: EllipseArcBoundingPointsInput): Array<Position> => {
   const points: Array<Position> = [
-    ellipseArcPoint(center, radiusX, radiusY, startAngleDeg),
-    ellipseArcPoint(center, radiusX, radiusY, endAngleDeg),
+    ellipseArcPoint({ center, radiusX, radiusY, angleDeg: startAngleDeg }),
+    ellipseArcPoint({ center, radiusX, radiusY, angleDeg: endAngleDeg }),
   ];
   const lo = Math.min(startAngleDeg, endAngleDeg);
   const hi = Math.max(startAngleDeg, endAngleDeg);
   for (const angle of axisAngles(lo, hi)) {
     if (angle === startAngleDeg || angle === endAngleDeg) continue;
-    points.push(ellipseArcPoint(center, radiusX, radiusY, angle));
+    points.push(ellipseArcPoint({ center, radiusX, radiusY, angleDeg: angle }));
   }
   return points;
 };

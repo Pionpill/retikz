@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { arcAngleInRange, arcBoundingPoints, arcEndPoint, rayArc } from '../../src';
+import { arcAngleInRange, arcBoundingPoints, arcEndPoint, DEFAULT_EPSILON, rayArc } from '../../src';
 
 /*
  * 约定（与 polar.ts 一致）：
@@ -58,11 +58,11 @@ describe('arcEndPoint 圆周点投影', () => {
 
 describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
   // 工具：粗略验证某点是否在结果集合里
-  const containsPoint = (list: Array<[number, number]>, target: [number, number], eps = 1e-9): boolean =>
+  const containsPoint = (list: Array<[number, number]>, target: [number, number], eps = DEFAULT_EPSILON): boolean =>
     list.some(([x, y]) => Math.abs(x - target[0]) < eps && Math.abs(y - target[1]) < eps);
 
   it('0°→90° 无穿越基本方向：仅返回端点', () => {
-    const pts = arcBoundingPoints([0, 0], 10, 0, 90);
+    const pts = arcBoundingPoints({ center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 90 });
     // 起点 [10, 0]、终点 [0, 10]，不应再有其它点
     expect(pts.length).toBe(2);
     expect(containsPoint(pts, [10, 0])).toBe(true);
@@ -70,7 +70,7 @@ describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
   });
 
   it('0°→180° 穿越 90°：含三个点（起点、90°、终点）', () => {
-    const pts = arcBoundingPoints([0, 0], 10, 0, 180);
+    const pts = arcBoundingPoints({ center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 180 });
     expect(pts.length).toBe(3);
     expect(containsPoint(pts, [10, 0])).toBe(true);
     expect(containsPoint(pts, [0, 10])).toBe(true); // 90° 投影
@@ -79,7 +79,7 @@ describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
 
   it('270°→90°（CCW 跨 360°）：穿越 0° 与 90°', () => {
     // 270° 起点 = [0, -10]；穿过 360°(=0°) → [10, 0]；再到 90° → [0, 10]
-    const pts = arcBoundingPoints([0, 0], 10, 270, 450);
+    const pts = arcBoundingPoints({ center: [0, 0], radius: 10, startAngleDeg: 270, endAngleDeg: 450 });
     // 起点 [0, -10], 0° → [10, 0], 90° → [0, 10], 终点（450°=90°）= [0, 10]
     // 终点与 90° 重合——实现可去重也可保留，先验证至少包含这 3 个不同的点
     expect(containsPoint(pts, [0, -10])).toBe(true);
@@ -88,7 +88,7 @@ describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
   });
 
   it('全圆 0°→360°：包含 4 个基本方向', () => {
-    const pts = arcBoundingPoints([0, 0], 10, 0, 360);
+    const pts = arcBoundingPoints({ center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 360 });
     expect(containsPoint(pts, [10, 0])).toBe(true);
     expect(containsPoint(pts, [0, 10])).toBe(true);
     expect(containsPoint(pts, [-10, 0])).toBe(true);
@@ -96,7 +96,7 @@ describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
   });
 
   it('偏移圆心 [5, 5], radius=3, 0°→180°：穿越 90°', () => {
-    const pts = arcBoundingPoints([5, 5], 3, 0, 180);
+    const pts = arcBoundingPoints({ center: [5, 5], radius: 3, startAngleDeg: 0, endAngleDeg: 180 });
     expect(containsPoint(pts, [8, 5])).toBe(true); // 0°
     expect(containsPoint(pts, [5, 8])).toBe(true); // 90°
     expect(containsPoint(pts, [2, 5])).toBe(true); // 180°
@@ -106,7 +106,7 @@ describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
     // 从 180° 逆向到 0°，经过 90° 反方向？不——sweep 由调用者把控；
     // 此处 bounding 只关心 [start, end] 区间扫到了哪些 90°*k。
     // start=180, end=0：归一化后区间是从 180° 一路下降到 0°，扫到 90°。
-    const pts = arcBoundingPoints([0, 0], 10, 180, 0);
+    const pts = arcBoundingPoints({ center: [0, 0], radius: 10, startAngleDeg: 180, endAngleDeg: 0 });
     expect(containsPoint(pts, [-10, 0])).toBe(true);
     expect(containsPoint(pts, [10, 0])).toBe(true);
     expect(containsPoint(pts, [0, 10])).toBe(true); // 90°
@@ -115,40 +115,65 @@ describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
 
 describe('arcAngleInRange', () => {
   it('含端点、区间外为假、整圆恒真', () => {
-    expect(arcAngleInRange(0, 90, 45)).toBe(true);
-    expect(arcAngleInRange(0, 90, 0)).toBe(true); // 起点
-    expect(arcAngleInRange(0, 90, 90)).toBe(true); // 终点
-    expect(arcAngleInRange(0, 90, 135)).toBe(false);
-    expect(arcAngleInRange(0, 360, 200)).toBe(true); // 整圆
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 45 })).toBe(true);
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 0 })).toBe(true); // 起点
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 90 })).toBe(true); // 终点
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 135 })).toBe(false);
+    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 360, angleDeg: 200 })).toBe(true); // 整圆
   });
 });
 
 describe('rayArc', () => {
   it('射线穿过整圆：两个正向参数，升序', () => {
-    const hits = rayArc([-5, 0], [1, 0], [0, 0], 2, 0, 360);
+    const hits = rayArc({
+      origin: [-5, 0],
+      dir: [1, 0],
+      center: [0, 0],
+      radius: 2,
+      startAngleDeg: 0,
+      endAngleDeg: 360,
+    });
     expect(hits.length).toBe(2);
     expect(hits[0]).toBeCloseTo(3, 9); // 命中 x=-2
     expect(hits[1]).toBeCloseTo(7, 9); // 命中 x=2
   });
 
   it('非单位方向按 origin + s * dir 的一般参数方程返回参数', () => {
-    const hits = rayArc([-5, 0], [2, 0], [0, 0], 2, 0, 360);
+    const hits = rayArc({
+      origin: [-5, 0],
+      dir: [2, 0],
+      center: [0, 0],
+      radius: 2,
+      startAngleDeg: 0,
+      endAngleDeg: 360,
+    });
     expect(hits.length).toBe(2);
     expect(hits[0]).toBeCloseTo(1.5, 9); // origin + 1.5 * [2, 0] = [-2, 0]
     expect(hits[1]).toBeCloseTo(3.5, 9); // origin + 3.5 * [2, 0] = [2, 0]
   });
 
   it('零方向没有正向射线交点', () => {
-    expect(rayArc([-5, 0], [0, 0], [0, 0], 2, 0, 360)).toEqual([]);
+    expect(
+      rayArc({ origin: [-5, 0], dir: [0, 0], center: [0, 0], radius: 2, startAngleDeg: 0, endAngleDeg: 360 }),
+    ).toEqual([]);
   });
 
   it('未命中（射线离圆心 > 半径）返回空', () => {
-    expect(rayArc([0, 5], [1, 0], [0, 0], 2, 0, 360)).toEqual([]);
+    expect(
+      rayArc({ origin: [0, 5], dir: [1, 0], center: [0, 0], radius: 2, startAngleDeg: 0, endAngleDeg: 360 }),
+    ).toEqual([]);
   });
 
   it('角度过滤：仅保留落在弧区间内的交点', () => {
     // 圆周交点角度 0(x=2，在 [0,90]) 与 180(x=-2，区间外) → 只留 x=2（s=7）
-    const hits = rayArc([-5, 0], [1, 0], [0, 0], 2, 0, 90);
+    const hits = rayArc({
+      origin: [-5, 0],
+      dir: [1, 0],
+      center: [0, 0],
+      radius: 2,
+      startAngleDeg: 0,
+      endAngleDeg: 90,
+    });
     expect(hits.length).toBe(1);
     expect(hits[0]).toBeCloseTo(7, 9);
   });

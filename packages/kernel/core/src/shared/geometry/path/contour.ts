@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcAngleInRange, arcEndPoint, intersect, point, rayArc } from '@retikz/math';
+import { arcAngleInRange, arcEndPoint, DEFAULT_EPSILON, intersect, point, rayArc } from '@retikz/math';
 
 import { alignAngleSweep, DEG_TO_RAD, normalizeSignedDegrees, RAD_TO_DEG } from '../angle';
 
@@ -16,7 +16,7 @@ import { alignAngleSweep, DEG_TO_RAD, normalizeSignedDegrees, RAD_TO_DEG } from 
  * 凸角 fillet 弧 sweep 与轮廓绕向同向、凹角反向；圆心恒在轮廓内侧（朝转向方向）。
  */
 
-const EPSILON = 1e-9;
+const EPSILON = DEFAULT_EPSILON;
 
 /** 直线段：从 from 到 to 的有向线段 */
 export type LineSegment = {
@@ -216,17 +216,25 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     const candidates: Array<Position> = [];
     const pushIntersections = (oa: Offset, ob: Offset): void => {
       if (oa.kind === 'line' && ob.kind === 'line') {
-        const p = intersect.lineLine(oa.point, [oa.point[0] + oa.dir[0], oa.point[1] + oa.dir[1]], ob.point, [
-          ob.point[0] + ob.dir[0],
-          ob.point[1] + ob.dir[1],
-        ]);
+        const p = intersect.lineLine({
+          a1: oa.point,
+          a2: [oa.point[0] + oa.dir[0], oa.point[1] + oa.dir[1]],
+          b1: ob.point,
+          b2: [ob.point[0] + ob.dir[0], ob.point[1] + ob.dir[1]],
+        });
         if (p) candidates.push(p);
       } else if (oa.kind === 'line' && ob.kind === 'circle') {
-        candidates.push(...intersect.lineCircle(oa.point, oa.dir, ob.center, ob.radius));
+        candidates.push(
+          ...intersect.lineCircle({ origin: oa.point, dir: oa.dir, center: ob.center, radius: ob.radius }),
+        );
       } else if (oa.kind === 'circle' && ob.kind === 'line') {
-        candidates.push(...intersect.lineCircle(ob.point, ob.dir, oa.center, oa.radius));
+        candidates.push(
+          ...intersect.lineCircle({ origin: ob.point, dir: ob.dir, center: oa.center, radius: oa.radius }),
+        );
       } else if (oa.kind === 'circle' && ob.kind === 'circle') {
-        candidates.push(...intersect.circleCircle(oa.center, oa.radius, ob.center, ob.radius));
+        candidates.push(
+          ...intersect.circleCircle({ centerA: oa.center, radiusA: oa.radius, centerB: ob.center, radiusB: ob.radius }),
+        );
       }
     };
     pushIntersections(offA, offB);
@@ -351,7 +359,16 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
   let bestErr = Infinity;
   for (const cand of candidates) {
     const angle = Math.atan2(cand[1] - seg.center[1], cand[0] - seg.center[0]) * RAD_TO_DEG;
-    if (!arcAngleInRange(seg.startAngle, seg.endAngle, angle, 1e-6)) continue;
+    if (
+      !arcAngleInRange({
+        startAngleDeg: seg.startAngle,
+        endAngleDeg: seg.endAngle,
+        angleDeg: angle,
+        toleranceDeg: 1e-6,
+      })
+    ) {
+      continue;
+    }
     // 切点到 fillet 圆心距离应 ≈ radius
     const err = Math.abs(Math.hypot(cand[0] - filletCenter[0], cand[1] - filletCenter[1]) - radius);
     if (err < bestErr) {
@@ -462,7 +479,10 @@ const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cm
     return;
   }
   const originalSweep = Math.abs(seg.endAngle - seg.startAngle);
-  if (originalSweep >= 360 - 1e-9 && point.length([start[0] - end[0], start[1] - end[1]]) < 1e-9) {
+  if (
+    originalSweep >= 360 - DEFAULT_EPSILON &&
+    point.length([start[0] - end[0], start[1] - end[1]]) < DEFAULT_EPSILON
+  ) {
     const adjusted = alignAngleSweep(seg.startAngle, seg.endAngle, seg.counterClockwise ?? false);
     cmds.push({
       kind: 'arc',
@@ -519,17 +539,24 @@ export const boundaryFromContour = (
     const ay = a[1] - rayOrigin[1];
     const s = (ax * -ey - -ex * ay) / det;
     const t = (dir[0] * ay - ax * dir[1]) / det;
-    if (s <= 1e-9 || s >= best) return;
-    if (t >= -1e-9 && t <= 1 + 1e-9) best = s;
+    if (s <= DEFAULT_EPSILON || s >= best) return;
+    if (t >= -DEFAULT_EPSILON && t <= 1 + DEFAULT_EPSILON) best = s;
   };
 
   const considerArc = (center: Position, radius: number, startAngle: number, endAngle: number, ccw: boolean): void => {
     // 把 (start, end) 规范成与 ccw 一致的有向区间（end 落在 start 同向的 [0,360) 内），
     //   再喂 rayArc——arcAngleInRange 据 end−start 的符号判扫描方向，必须与 ccw 自洽。
     const aligned = alignAngleSweep(startAngle, endAngle, ccw);
-    const hits = rayArc(rayOrigin, dir, center, radius, aligned.start, aligned.end);
+    const hits = rayArc({
+      origin: rayOrigin,
+      dir,
+      center,
+      radius,
+      startAngleDeg: aligned.start,
+      endAngleDeg: aligned.end,
+    });
     for (const s of hits) {
-      if (s > 1e-9 && s < best) best = s;
+      if (s > DEFAULT_EPSILON && s < best) best = s;
     }
   };
 

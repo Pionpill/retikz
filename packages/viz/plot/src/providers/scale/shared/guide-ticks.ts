@@ -1,6 +1,7 @@
 import type { ScalarValue } from '@retikz/data';
 
 import { coerceTimestamp } from '@retikz/data';
+import { DEFAULT_EPSILON } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
@@ -88,7 +89,7 @@ const numberIntervalTicks = (scale: PositionScale, step: number, anchor: number 
   const base = anchor ?? lo;
   const values: Array<number> = [];
   const first = base + Math.ceil((lo - base) / step) * step;
-  const epsilon = Math.abs(step) * 1e-9;
+  const epsilon = Math.abs(step) * DEFAULT_EPSILON;
   for (let value = first; value <= hi + epsilon; value += step) {
     if (values.length >= MAX_INTERVAL_TICKS) {
       throw new Error(`lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`);
