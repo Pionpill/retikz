@@ -14,7 +14,7 @@ export const FieldDefSchema = z
     order: z
       .union([z.enum(FieldOrderMode), z.array(z.union([z.string(), z.number()])).min(1)])
       .optional()
-      .describe('Category order; omitted or data keeps first appearance'),
+      .describe('Category order; omitted means appearance order'),
   })
   .describe('Field declaration for type, format, and category order');
 

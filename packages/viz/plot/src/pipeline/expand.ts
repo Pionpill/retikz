@@ -968,7 +968,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
 
   /**
    * 解析某 role 的有效 order（解析 + 三道判定的两道：非分类 throw / 冲突 throw）
-   * @description 收集该 role 各绑定字段的非默认 order（!=='data'）：非分类字段配 order → throw；
+   * @description 收集该 role 各绑定字段的非默认 order（!=='appearance'）：非分类字段配 order → throw；
    *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
    */
   const resolveRoleOrder = (

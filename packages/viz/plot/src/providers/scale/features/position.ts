@@ -395,7 +395,7 @@ export type CategoryOrder = NonNullable<FieldDef['order']>;
 
 /**
  * 按 order 计算有序的分类域：在 inferCategoryDomain 去重保序基础上再排
- * @description order='data'/undefined → 现状出现序去重；'ascending'/'descending' → 全数值按数值比、否则统一 String localeCompare（descending 反序）；
+ * @description order='appearance'/undefined → 现状出现序去重；'ascending'/'descending' → 全数值按数值比、否则统一 String localeCompare（descending 反序）；
  *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）。
  */
 export const orderedCategoryDomain = (

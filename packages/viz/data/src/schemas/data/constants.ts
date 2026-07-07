@@ -14,7 +14,7 @@ export const DataFieldType = {
 /** 分类字段顺序策略。 */
 export const FieldOrderMode = {
   /** 按绑定数据里的首次出现顺序排列分类值；对应 IR 字面量仍为 `data`。 */
-  Appearance: 'data',
+  Appearance: 'appearance',
   /** 按分类值升序排列；数值用数值比较，其余用字符串比较。 */
   Ascending: 'ascending',
   /** 按分类值降序排列；数值用数值比较，其余用字符串比较。 */

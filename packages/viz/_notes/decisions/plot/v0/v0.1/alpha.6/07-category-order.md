@@ -10,17 +10,17 @@
 
 **不复活 `ordinal` 类型**（那会让类型集重新膨胀、且与「3 类简单心智」决策冲突）。改用一个 **`FieldDef.order` 参数**：既给出顺序，又**由它是否设置来判定该分类是否有序**——一个参数解决「有序性」与「具体顺序」两件事。
 
-## 决策：`FieldDef` 加可选 `order`（`'data' | 'ascending' | 'descending' | Array`），`order ≠ 'data'` 即视为有序，驱动 categorical 域排序
+## 决策：`FieldDef` 加可选 `order`（`'appearance' | 'ascending' | 'descending' | Array`），`order ≠ 'appearance'` 即视为有序，驱动 categorical 域排序
 
 `order` 进 `data.model`、JSON 可序列化。scale 域解析（band/point 位置 + ordinal 颜色）读该字段的 `order` 决定类别顺序；`order` 非默认即表示「这个分类有序」（供后续有序图例 / 顺序色板）。
 
 ```ts
 // FieldDefSchema 加：
 //   order: z.union([
-//     z.enum(['data', 'ascending', 'descending']),
+//     z.enum(['appearance', 'ascending', 'descending']),
 //     z.array(z.union([z.string(), z.number()])).min(1),
 //   ]).optional()
-//   .describe('Category order for a categorical field: data appearance (default), ascending/descending sort, or an explicit value list. A non-default order marks the field as ordered')
+//   .describe('Category order for a categorical field: appearance order (default), ascending/descending sort, or an explicit value list. A non-default order marks the field as ordered')
 ```
 
 DSL：
@@ -31,7 +31,7 @@ DSL：
   model={[
     { name: 'size', type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // 显式有序
     { name: 'grade', type: 'categorical', order: 'ascending' }, // 升序排序
-    { name: 'city', type: 'categorical' }, // 缺省 'data'：无序、按出现序
+    { name: 'city', type: 'categorical' }, // 缺省 'appearance'：无序、按出现序
   ]}
 >
   {/* … */}
@@ -40,10 +40,10 @@ DSL：
 
 语义：
 
-- **`'data'`（默认）**：数据出现序去重（即现状），无序。
+- **`'appearance'`（默认）**：数据出现序去重（即现状），无序。
 - **`'ascending' / 'descending'`**：对去重后的类别排序——全数值按数值比，否则按字符串 locale 比；该字段视为有序。
 - **`Array`**：显式类别顺序作域；数据中出现、但不在数组里的值 → **追加到末尾**（见待决策点），该字段视为有序。
-- **有序性 = `order` 非 `'data'`**：不另加 `ordered` 布尔——参数本身判定有序，符合「通过参数判断是否有序」。
+- **有序性 = `order` 非 `'appearance'`**：不另加 `ordered` 布尔——参数本身判定有序，符合「通过参数判断是否有序」。
 
 ### order 如何落到 scale（cross-review #2，钉死）
 

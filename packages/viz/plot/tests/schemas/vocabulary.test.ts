@@ -28,7 +28,7 @@ describe('schema vocabulary constants', () => {
       'outside-quantile-band',
       'top',
     ]);
-    expect(Object.values(FieldOrderMode).sort()).toEqual(['ascending', 'data', 'descending']);
+    expect(Object.values(FieldOrderMode).sort()).toEqual(['appearance', 'ascending', 'descending']);
   });
 
   it('uses the shared vocabulary values in transform schema parsing', () => {

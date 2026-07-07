@@ -72,7 +72,7 @@ describe('FieldDef.order — schema 接受 / 拒绝（ADR-07）', () => {
   });
 
   it('enum_order_accepted_by_schema', () => {
-    for (const order of ['data', 'ascending', 'descending'] as const) {
+    for (const order of ['appearance', 'ascending', 'descending'] as const) {
       const def = { name: 'grade', type: 'categorical', order };
       expect(FieldDefSchema.parse(def)).toEqual(def);
     }
@@ -145,7 +145,7 @@ describe('FieldDef.order — 排序枚举（ADR-07）', () => {
 
 describe('FieldDef.order — 默认与边界（ADR-07）', () => {
   it('default_data_order_preserved', () => {
-    // 不写 order（缺省 'data'）→ 出现序，与现状逐字等价
+    // 不写 order（缺省 'appearance'）→ 出现序，与现状逐字等价
     const noOrder = bandSpec(
       [
         { name: 'cat', type: 'categorical' },
@@ -155,7 +155,7 @@ describe('FieldDef.order — 默认与边界（ADR-07）', () => {
     );
     const explicitData = bandSpec(
       [
-        { name: 'cat', type: 'categorical', order: 'data' },
+        { name: 'cat', type: 'categorical', order: 'appearance' },
         { name: 'val', type: 'continuous' },
       ],
       [{ type: 'linear', name: 'yv' }],
@@ -169,7 +169,7 @@ describe('FieldDef.order — 默认与边界（ADR-07）', () => {
     };
     const a = firstLayer(noOrder, rows);
     const b = firstLayer(explicitData, rows);
-    // 'data' 与缺省等价：两布局 node 位置逐一相同（出现序 c,a,b 而非排序后）
+    // 'appearance' 与缺省等价：两布局 node 位置逐一相同（出现序 c,a,b 而非排序后）
     const ax = a.children.map(c => ((c as IRNode).position as [number, number])[0]);
     const bx = b.children.map(c => ((c as IRNode).position as [number, number])[0]);
     expect(ax).toEqual(bx);
