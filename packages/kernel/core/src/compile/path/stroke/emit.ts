@@ -249,6 +249,7 @@ export const emitPathPrimitive = (
         ...(toGen !== undefined ? { to: toGen } : {}),
         round,
         resolveTargetParam: value => refPointOfTarget(value as IRTarget, namespaceStack, scopeChain) ?? undefined,
+        irPath: `${irPath}.children[${i}]`,
       });
 
       // 段起点：generator 首命令非 move 时补一个 move（与 lastEnd 相同则复用游标）

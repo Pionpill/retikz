@@ -38,6 +38,7 @@ import {
 } from '../node';
 import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
 import { resolvePosition } from '../position';
+import { parseProviderPayload } from '../provider-payload';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
 import { applyTransformChain, projectLayoutToGlobal } from '../transform';
@@ -99,7 +100,14 @@ export const compileChildrenToPrimitives = (
       optionName: 'pathKinds',
     });
     const optionsValue = definition.optionsSchema
-      ? definition.optionsSchema.parse(path.kindOptions ?? {})
+      ? parseProviderPayload({
+          capability: 'path kind',
+          providerName: kind,
+          irPath: `${irPath}.kindOptions`,
+          payloadName: 'options',
+          schema: definition.optionsSchema,
+          value: path.kindOptions ?? {},
+        })
       : (path.kindOptions ?? {});
     const emitOptions = {
       onWarn: runtime.context.onWarn,
@@ -191,6 +199,7 @@ export const compileChildrenToPrimitives = (
         shapes: runtime.context.shapes,
         boundaries: runtime.context.boundaries,
         resolveBetweenGlobal: refPointOfTarget,
+        irPath: nodeIrPath,
         texLowering: {
           lowerTex: runtime.context.lowerTex,
           warn: (code, message) => runtime.context.onWarn({ code, message, path: nodeIrPath }),

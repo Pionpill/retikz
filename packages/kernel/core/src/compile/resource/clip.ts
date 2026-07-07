@@ -3,6 +3,7 @@ import type { IRClipSpec } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry';
 import { JsonObjectSchema } from '../../schemas';
+import { parseProviderPayload } from '../provider-payload';
 
 export type ClipRegistry = {
   register: (clip: IRClipSpec) => string;
@@ -162,14 +163,14 @@ export const createClipRegistry = (
   const resolveShape = (clip: IRClipSpec): ClipShape => {
     const kind = clipKindOf(clip);
     const definition = providerDefinitionOf(definitions, kind, { capability: 'clip', optionName: 'clips' });
-    const parsed = (() => {
-      try {
-        return definition.schema.parse(clip);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        throw new Error(`Clip '${kind}' failed schema validation: ${message}`, { cause: error });
-      }
-    })();
+    const parsed = parseProviderPayload({
+      capability: 'clip',
+      providerName: kind,
+      irPath: 'clip',
+      payloadName: 'schema',
+      schema: definition.schema,
+      value: clip,
+    });
     JsonObjectSchema.parse(parsed);
     return guardAndRoundShape(definition.resolve(parsed, { round, resolve: resolveShape }), round);
   };

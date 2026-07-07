@@ -120,4 +120,23 @@ describe('Path kind registry', () => {
 
     expect(prim.stroke).toBe('gold');
   });
+
+  it('custom_path_kind_options_error_contains_provider_and_ir_path', () => {
+    const highlight = definePathKind({
+      schema: z.object({ kind: z.literal('highlight') }),
+      optionsSchema: z.object({ stroke: z.string().min(1) }).strict(),
+      compile: context => context.emitStroke(context.path),
+    });
+    const ir = scene([
+      {
+        type: 'path',
+        kind: 'highlight',
+        kindOptions: { stroke: 42 },
+        children: steps,
+      },
+    ] as IRScene['children']);
+
+    expect(() => compileToScene(ir, { pathKinds: [highlight] })).toThrow(/path kind 'highlight'/);
+    expect(() => compileToScene(ir, { pathKinds: [highlight] })).toThrow(/children\[0\]\.path\.kindOptions/);
+  });
 });

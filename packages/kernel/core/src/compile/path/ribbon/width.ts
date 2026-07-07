@@ -4,6 +4,7 @@ import type { RibbonLike } from './types';
 
 import { providerDefinitionOf } from '../../../providers/registry';
 import { JsonObjectSchema } from '../../../schemas';
+import { parseProviderPayload } from '../../provider-payload';
 import { DEFAULT_RIBBON_SAMPLES } from './types';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
@@ -38,6 +39,7 @@ export const widthFunction = (
   width: IRRibbonWidth,
   profiles: ReadonlyMap<string, RibbonWidthProfileDefinition>,
   totalLength: number,
+  irPath = 'ribbon.width',
 ): ((offset: number) => number) => {
   if (typeof width === 'number') {
     return () => assertFiniteWidth(width, 'number');
@@ -69,8 +71,32 @@ export const widthFunction = (
     optionName: 'ribbonWidthProfiles',
   });
   const rawParams = width.params ?? {};
-  const params = profile.paramsSchema ? profile.paramsSchema.parse(rawParams) : JsonObjectSchema.parse(rawParams);
-  JsonObjectSchema.parse(params);
+  const paramsPath = `${irPath}.params`;
+  const params = profile.paramsSchema
+    ? parseProviderPayload({
+        capability: 'ribbon width profile',
+        providerName: width.name,
+        irPath: paramsPath,
+        payloadName: 'params',
+        schema: profile.paramsSchema,
+        value: rawParams,
+      })
+    : parseProviderPayload({
+        capability: 'ribbon width profile',
+        providerName: width.name,
+        irPath: paramsPath,
+        payloadName: 'params',
+        schema: JsonObjectSchema,
+        value: rawParams,
+      });
+  parseProviderPayload({
+    capability: 'ribbon width profile',
+    providerName: width.name,
+    irPath: paramsPath,
+    payloadName: 'params',
+    schema: JsonObjectSchema,
+    value: params,
+  });
   return offset =>
     assertFiniteWidth(
       profile.widthAt({ offset, length: totalLength, params }),
@@ -86,9 +112,15 @@ export const centerlineWidthFunction = (
   ribbon: RibbonLike,
   profiles: ReadonlyMap<string, RibbonWidthProfileDefinition>,
   totalLength: number,
+  irPath?: string,
 ): ((offset: number) => number) => {
   if (ribbon.width !== undefined) {
-    return widthFunction(ribbon.width, profiles, totalLength);
+    return widthFunction(
+      ribbon.width,
+      profiles,
+      totalLength,
+      irPath === undefined ? undefined : `${irPath}.ribbon.width`,
+    );
   }
   const startWidth = ribbon.start?.width;
   const endWidth = ribbon.end?.width;
