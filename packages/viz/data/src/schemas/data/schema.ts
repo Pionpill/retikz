@@ -10,7 +10,7 @@ export const FieldFormatSchema = z
   );
 
 export const FieldDefSchema = z
-  .object({
+  .strictObject({
     name: z.string().min(1).describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
     type: z
       .enum(DataFieldType)
@@ -39,7 +39,7 @@ export const DataModelSchema = z
   );
 
 export const DataRefSchema = z
-  .object({
+  .strictObject({
     reference: z
       .string()
       .min(1)

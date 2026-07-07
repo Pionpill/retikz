@@ -17,7 +17,7 @@ import {
 } from './constants';
 
 export const SortTransformSchema = z
-  .object({
+  .strictObject({
     kind: z.literal(DataTransform.Sort).describe('Discriminator: reorder rows by a field'),
     field: z.string().min(1).describe('Field path the rows are ordered by'),
     order: z.enum(DataSortOrder).optional().describe('Sort direction; default ascending'),

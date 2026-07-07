@@ -132,6 +132,7 @@ Control: <human-directed|llm-autonomous>
 
 - IR 必须 100% JSON 可序列化，禁止函数、ReactNode、class 实例。
 - Zod schema 是单一真源，TS 类型用 `z.infer`；schema 字段 `.describe(...)` 用英文描述契约，不写 renderer 实现细节。
+- 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - 由 IR schema object 推导出的公开数据类型命名为 `IRXxx`；由 const object enum + `ValueOf` 推导出的取值 union 命名为 `XxxValue`；Definition / registry 类型命名为 `XxxDefinition`。
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`。
 - 新增 DSL / IR 能力前先归类：Kernel 进 core IR；Sugar 不进 IR，编译期展开为 Kernel；Tier 2 拥有高层 IR，并经 lowering 下沉到 core。
