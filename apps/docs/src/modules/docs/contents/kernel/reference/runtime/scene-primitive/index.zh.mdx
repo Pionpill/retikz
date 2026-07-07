@@ -34,10 +34,10 @@ Scene primitive 是 `compileToScene` 的输出合同：IR 经过布局后不再�
 
 图元级视觉效果只挂在可渲染主几何 primitive 上：
 
-| 字段        | 适用 primitive                        | 说明                                                                                 |
-| ----------- | ------------------------------------- | ------------------------------------------------------------------------------------ |
-| `shadow?`   | `RectPrim` / `EllipsePrim` / `PathPrim` | 已解析的 `ResolvedDropShadow`；renderer 需要物化为目标平台的投影能力                 |
-| `blendMode?` | `RectPrim` / `EllipsePrim` / `PathPrim` | `BlendModeValue`；renderer 需要映射为目标平台的混合模式                              |
+| 字段         | 适用 primitive                          | 说明                                                                 |
+| ------------ | --------------------------------------- | -------------------------------------------------------------------- |
+| `shadow?`    | `RectPrim` / `EllipsePrim` / `PathPrim` | 已解析的 `ResolvedDropShadow`；renderer 需要物化为目标平台的投影能力 |
+| `blendMode?` | `RectPrim` / `EllipsePrim` / `PathPrim` | `BlendModeValue`；renderer 需要映射为目标平台的混合模式              |
 
 `TextPrim` 不支持图元级 `shadow` / `blendMode`。`GroupPrim` 目前只表达 `transforms`、`clipRef`、`children` 以及通用的 `id` / `meta` / `animations`，不支持 group-level effect。视觉效果不改变 primitive 的命中区域；需要交互时仍以 `id` / `meta` 和外部 hit-test / hydration 层为准。
 
@@ -76,7 +76,7 @@ renderer 不需要重新决定文字布局，只需要按 `TextPrim` 的锚点�
 
 | Field          | 类型                     | 说明                                                                                                |
 | -------------- | ------------------------ | --------------------------------------------------------------------------------------------------- |
-| `shape`        | `ArrowShapeValue`         | 形状名；已解析后渲染不依赖，标识 / 调试用（保留）                                                   |
+| `shape`        | `ArrowShapeValue`        | 形状名；已解析后渲染不依赖，标识 / 调试用（保留）                                                   |
 | `baseSize`     | `number`                 | marker viewBox 边长；adapter 据此推 viewBox `0 0 baseSize baseSize` 与 refY = baseSize/2            |
 | `refX`         | `number`                 | 线接触点（marker refX）；hollow 已在 compile 阶段减 lineWidth/2                                     |
 | `markerWidth`  | `number`                 | 已解析尖长 =（`length ?? def.defaultLength`）× scale                                                |

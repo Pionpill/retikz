@@ -1,4 +1,5 @@
-import type { ExternalDatasets, PlotSpec } from '@retikz/plot';
+import type { ExternalDatasets } from '@retikz/data';
+import type { PlotSpec } from '@retikz/plot';
 
 import { lowerPlots } from '@retikz/plot';
 import { Layout } from '@retikz/react';

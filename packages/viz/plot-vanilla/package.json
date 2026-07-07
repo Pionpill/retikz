@@ -60,6 +60,7 @@
   },
   "dependencies": {
     "@retikz/core": "workspace:*",
+    "@retikz/data": "workspace:*",
     "@retikz/plot": "workspace:*",
     "@retikz/vanilla": "workspace:*"
   },

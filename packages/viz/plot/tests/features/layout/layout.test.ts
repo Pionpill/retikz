@@ -102,7 +102,9 @@ describe('plot label layout', () => {
 
     const plainCarrier = plotAreaCarrierOf(plain);
     const decoratedCarrier = plotAreaCarrierOf(decorated);
-    expect((decoratedCarrier.position as [number, number])[1]).toBeGreaterThan((plainCarrier.position as [number, number])[1]);
+    expect((decoratedCarrier.position as [number, number])[1]).toBeGreaterThan(
+      (plainCarrier.position as [number, number])[1],
+    );
     expect(nodeHeight(decoratedCarrier)).toBeLessThan(nodeHeight(plainCarrier));
     expect(allNodes(decorated).some(node => node.text === 'Monthly Revenue')).toBe(true);
   });
@@ -132,13 +134,19 @@ describe('plot label layout', () => {
         {
           type: 'text',
           role: 'title',
-          text: ['Quarterly Conversion Rate', { text: 'Internal funnel data', opacity: 0.62, font: { size: 12, weight: 500 } }],
+          text: [
+            'Quarterly Conversion Rate',
+            { text: 'Internal funnel data', opacity: 0.62, font: { size: 12, weight: 500 } },
+          ],
           placement: { kind: 'side', side: 'top', placement: 'midway', padding: 10 },
           font: { size: 18, weight: 700 },
         },
       ],
     });
-    const scene = compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots({ d: rows }, { width: 420, height: 260 }) });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [spec] },
+      { composites: lowerPlots({ d: rows }, { width: 420, height: 260 }) },
+    );
     const title = flattenPrimitives(scene.primitives).find(
       primitive =>
         primitive.type === 'text' &&

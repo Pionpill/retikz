@@ -47,7 +47,8 @@ const makeContext = (
   clipIdFor: (id: string) => string;
   shadowIdFor: (shadow: IRDropShadow) => string;
 } => {
-  const arrowMarkerIdFor = (spec: ResolvedArrowEndSpec): string => `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
+  const arrowMarkerIdFor = (spec: ResolvedArrowEndSpec): string =>
+    `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
   const paintIdFor = (id: string): string => `retikz-paint-${idPrefix}-${id}`;
   const clipIdFor = (id: string): string => `retikz-clip-${idPrefix}-${id}`;
   const shadowIdFor = (shadow: IRDropShadow): string => `retikz-shadow-${idPrefix}-${shadowHash(shadow)}`;

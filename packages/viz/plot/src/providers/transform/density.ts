@@ -1,9 +1,9 @@
+import type { ExternalRow, TransformContext } from '@retikz/data';
+
+import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import { type TransformContext } from '../../contract';
-import { type DensityTransform, type ExternalRow } from '../../schemas';
-import { quantileOfSorted } from '../statistics/helpers';
-import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from './shared';
+import type { DensityTransform } from '../../schemas';
 
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;
 const DENSITY_EXTENT_BANDWIDTH_FACTOR = 3;
@@ -13,6 +13,18 @@ const standardDeviationOf = (values: ReadonlyArray<number>): number => {
   const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
   const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1);
   return Math.sqrt(variance);
+};
+
+/** 在已排序数值数组上按线性插值计算分位点。 */
+const quantileOfSorted = (sorted: Array<number>, p: number): number => {
+  if (sorted.length === 0) return 0;
+  if (sorted.length === 1) return sorted[0];
+  const index = (sorted.length - 1) * p;
+  const lo = Math.floor(index);
+  const hi = Math.ceil(index);
+  if (lo === hi) return sorted[lo];
+  const weight = index - lo;
+  return sorted[lo] * (1 - weight) + sorted[hi] * weight;
 };
 
 const silvermanBandwidthOf = (sortedValues: Array<number>): number => {

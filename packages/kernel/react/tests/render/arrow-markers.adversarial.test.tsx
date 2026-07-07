@@ -1,4 +1,4 @@
-﻿import type { PathCommand,ResolvedArrowEndSpec } from '@retikz/core';
+﻿import type { PathCommand, ResolvedArrowEndSpec } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';

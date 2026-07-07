@@ -1,4 +1,4 @@
-import type { IRPaintSpec } from '@retikz/plot';
+import type { IRPaintSpec } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 

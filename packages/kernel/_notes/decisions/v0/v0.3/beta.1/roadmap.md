@@ -17,27 +17,27 @@ v0.3 的主功能线已经在 alpha.1～alpha.5 落地：renderer 架构出关�
 
 ## 进度看板
 
-| # | 标题 | level | 工作量 | 状态 | 备注 |
-|---|---|---|---|---|---|
-| 1 | 新增 `stealth` 空心箭头，并合并 SVG↔Canvas parity demo / test | visible | 中 | ✅ 完成 | 已补 `openStealth` 内置箭头、core/render/react 回归测试与 Arrow 页面 SVG / Canvas 对照 demo。 |
-| 2 | 补 Canvas 动画触发桥 | visible | 中-大 | ✅ 完成 | Canvas 已接入 `{ onEvent }` hydration bridge 与 `visible` 视口触发；React / vanilla 入口复用同一组 render hydration helper。 |
-| 3 | 增加可选 Node Canvas / `@napi-rs/canvas` 服务端导出入口 | visible | 中-大 | ✅ 完成 | 已新增 `@retikz/render/canvas-node` 子路径、可选 peer 依赖与 Node 图片 buffer 导出测试 / 文档。 |
-| 4 | 提升文档站 ComponentPreview 的 vanilla 代码视图 | visible | 中 | ✅ 完成 | vanilla codegen 已补 `arc` / `circlePath` / `ellipsePath` 常见 way；不可等价 step 退回 raw IR，避免伪造 builder 代码。 |
-| 5 | 修复“官方只提供 React adapter”等过时文档与包描述 | visible | 小 | ✅ 完成 | 已刷新 core/render/react/vanilla 包描述与 about / Source Code Guide 中的当前能力面。 |
-| 6 | 升级 / 对齐 Vite 配置并移除不必要包 | internal | 小-中 | ✅ 完成 | 7 个库包已改用 Vite 8 `resolve.tsconfigPaths`，并移除 `vite-tsconfig-paths` catalog、devDependency 与 lockfile 记录。 |
-| 7 | `outerSep` 对齐 TikZ outer sep（parity，⚠️ breaking on `margin>0`） | visible | 中 | 🔨 已实现待提交 | border 类 anchor（compass / 角度 / 自动连线）统一外扩 margin 并计入布局占位 / scope bbox；缺省 0 故零 margin 用法不变。core + 测试（+12 case）+ 文档（概念 / 组件 / 扩展）全绿；改动留工作树待人工提交（与用户并行 WIP 同文件，未代提交）。 |
+| #   | 标题                                                                | level    | 工作量 | 状态            | 备注                                                                                                                                                                                                                                        |
+| --- | ------------------------------------------------------------------- | -------- | ------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 新增 `stealth` 空心箭头，并合并 SVG↔Canvas parity demo / test       | visible  | 中     | ✅ 完成         | 已补 `openStealth` 内置箭头、core/render/react 回归测试与 Arrow 页面 SVG / Canvas 对照 demo。                                                                                                                                               |
+| 2   | 补 Canvas 动画触发桥                                                | visible  | 中-大  | ✅ 完成         | Canvas 已接入 `{ onEvent }` hydration bridge 与 `visible` 视口触发；React / vanilla 入口复用同一组 render hydration helper。                                                                                                                |
+| 3   | 增加可选 Node Canvas / `@napi-rs/canvas` 服务端导出入口             | visible  | 中-大  | ✅ 完成         | 已新增 `@retikz/render/canvas-node` 子路径、可选 peer 依赖与 Node 图片 buffer 导出测试 / 文档。                                                                                                                                             |
+| 4   | 提升文档站 ComponentPreview 的 vanilla 代码视图                     | visible  | 中     | ✅ 完成         | vanilla codegen 已补 `arc` / `circlePath` / `ellipsePath` 常见 way；不可等价 step 退回 raw IR，避免伪造 builder 代码。                                                                                                                      |
+| 5   | 修复“官方只提供 React adapter”等过时文档与包描述                    | visible  | 小     | ✅ 完成         | 已刷新 core/render/react/vanilla 包描述与 about / Source Code Guide 中的当前能力面。                                                                                                                                                        |
+| 6   | 升级 / 对齐 Vite 配置并移除不必要包                                 | internal | 小-中  | ✅ 完成         | 7 个库包已改用 Vite 8 `resolve.tsconfigPaths`，并移除 `vite-tsconfig-paths` catalog、devDependency 与 lockfile 记录。                                                                                                                       |
+| 7   | `outerSep` 对齐 TikZ outer sep（parity，⚠️ breaking on `margin>0`） | visible  | 中     | 🔨 已实现待提交 | border 类 anchor（compass / 角度 / 自动连线）统一外扩 margin 并计入布局占位 / scope bbox；缺省 0 故零 margin 用法不变。core + 测试（+12 case）+ 文档（概念 / 组件 / 扩展）全绿；改动留工作树待人工提交（与用户并行 WIP 同文件，未代提交）。 |
 
 ## ADR / 决策草案
 
-| ADR | 对应 TODO | 主题 | 状态 |
-|---|---|---|---|
-| [01](./01-stealth-hollow-arrow-parity.md) | TODO-1 | `stealth` 空心箭头 + SVG / Canvas parity demo | Accepted |
-| [02](./02-canvas-animation-trigger-bridge.md) | TODO-2 | Canvas 动画触发桥 | Accepted |
-| [03](./03-node-canvas-export.md) | TODO-3 | 可选 Node Canvas 服务端导出入口 | Accepted |
-| [04](./04-component-preview-vanilla-codegen.md) | TODO-4 | ComponentPreview vanilla 代码视图补齐 | Accepted |
-| [05](./05-docs-package-surface-refresh.md) | TODO-5 | 文档与包描述当前能力面刷新 | Accepted |
-| [06](./06-vite-tsconfig-paths-cleanup.md) | TODO-6 | Vite tsconfig paths 原生化与依赖清理 | Accepted |
-| [07](./07-outer-sep-tikz-parity.md) | TODO-7 | `outerSep` 对齐 TikZ outer sep（外推 border anchor + 计入占位） | Accepted |
+| ADR                                             | 对应 TODO | 主题                                                            | 状态     |
+| ----------------------------------------------- | --------- | --------------------------------------------------------------- | -------- |
+| [01](./01-stealth-hollow-arrow-parity.md)       | TODO-1    | `stealth` 空心箭头 + SVG / Canvas parity demo                   | Accepted |
+| [02](./02-canvas-animation-trigger-bridge.md)   | TODO-2    | Canvas 动画触发桥                                               | Accepted |
+| [03](./03-node-canvas-export.md)                | TODO-3    | 可选 Node Canvas 服务端导出入口                                 | Accepted |
+| [04](./04-component-preview-vanilla-codegen.md) | TODO-4    | ComponentPreview vanilla 代码视图补齐                           | Accepted |
+| [05](./05-docs-package-surface-refresh.md)      | TODO-5    | 文档与包描述当前能力面刷新                                      | Accepted |
+| [06](./06-vite-tsconfig-paths-cleanup.md)       | TODO-6    | Vite tsconfig paths 原生化与依赖清理                            | Accepted |
+| [07](./07-outer-sep-tikz-parity.md)             | TODO-7    | `outerSep` 对齐 TikZ outer sep（外推 border anchor + 计入占位） | Accepted |
 
 ## 执行约束
 

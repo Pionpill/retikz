@@ -1,6 +1,5 @@
+import { DataModelSchema, DataRefSchema, ScalarValueSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
-
-import { DataModelSchema, DataRefSchema, ScalarValueSchema } from '../../src/schemas/data';
 
 describe('DataRefSchema / DataModelSchema / ScalarValueSchema (ADR-02)', () => {
   // Happy path

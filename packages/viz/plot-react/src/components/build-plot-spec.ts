@@ -1,15 +1,12 @@
-﻿import type {
+﻿import type { IRAxisScale, IRBoxSize, IRPaintSpec } from '@retikz/core';
+import type { DataModel, ExternalRow } from '@retikz/data';
+import type {
   AxisGuide,
   Channel,
   CoordinateOperation,
-  DataModel,
   Encoding,
-  ExternalRow,
   Guide,
   IntervalBounds,
-  IRAxisScale,
-  IRBoxSize,
-  IRPaintSpec,
   Mark,
   MarkGeometryLabelList,
   MarkNodeLabel,
@@ -38,6 +35,7 @@
 import type { TextProps } from '@retikz/react';
 import type { ReactElement, ReactNode } from 'react';
 
+import { DataFieldType } from '@retikz/data';
 import {
   CoordinateOperationSchema,
   IntervalBoundKind,
@@ -47,7 +45,6 @@ import {
   PLOT_NAMESPACE,
   PlotComposite,
   PlotCoordinate,
-  PlotFieldType,
   PlotGuide,
   PlotMark,
   PlotScale,
@@ -669,9 +666,7 @@ const recordResolveLabel = (
 };
 
 /** 把 x/y 字段装成位置 encoding（x/y 是唯一位置通道；polar 下坐标系把 x→angle、y→radius 重解释） */
-const canonicalGeometryLabel = (
-  label: PathMarkProps['label'] | RelationMarkProps['label'],
-): MarkGeometryLabelList =>
+const canonicalGeometryLabel = (label: PathMarkProps['label'] | RelationMarkProps['label']): MarkGeometryLabelList =>
   MarkGeometryLabelListSchema.parse(label);
 
 const canonicalReferenceLabel = (props: ReferenceMarkProps): MarkNodeLabelList | MarkGeometryLabelList => {
@@ -846,23 +841,24 @@ const scaffoldTracksOf = (
   children: ReactNode,
 ): Array<ScaffoldTrackSpec> => {
   const tracks: Array<ScaffoldTrackSpec> = [...(propTracks ?? [])];
-  const appendChildTracks = (node: ReactNode): void => Children.forEach(node, child => {
-    if (!isValidElement(child)) return;
-    if (child.type === Fragment) {
-      appendChildTracks((child.props as { children?: ReactNode }).children);
-      return;
-    }
-    if (child.type === Track) {
-      const props = child.props as ScaffoldTrackSpec & { children?: ReactNode };
-      tracks.push({
-        id: props.id,
-        band: props.band,
-        ...(props.view !== undefined ? { view: props.view } : {}),
-        ...(props.coordinate !== undefined ? { coordinate: props.coordinate } : {}),
-        ...(props.order !== undefined ? { order: props.order } : {}),
-      });
-    }
-  });
+  const appendChildTracks = (node: ReactNode): void =>
+    Children.forEach(node, child => {
+      if (!isValidElement(child)) return;
+      if (child.type === Fragment) {
+        appendChildTracks((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      if (child.type === Track) {
+        const props = child.props as ScaffoldTrackSpec & { children?: ReactNode };
+        tracks.push({
+          id: props.id,
+          band: props.band,
+          ...(props.view !== undefined ? { view: props.view } : {}),
+          ...(props.coordinate !== undefined ? { coordinate: props.coordinate } : {}),
+          ...(props.order !== undefined ? { order: props.order } : {}),
+        });
+      }
+    });
   appendChildTracks(children);
   if (tracks.length === 0) {
     throw new Error(`buildPlotSpec: <Scaffold id="${scaffoldId}"> requires at least one track`);
@@ -1049,20 +1045,19 @@ const collectInto = (
         spacing,
         resolve,
         children: facetChildren,
-      } =
-        child.props as {
-          id: string;
-          row?: string | NonNullable<FacetGridSpec['row']>;
-          column?: string | NonNullable<FacetGridSpec['column']>;
-          empty?: FacetGridSpec['empty'];
-          coordinate?: FacetGridSpec['coordinate'];
-          view?: string;
-          viewIdTemplate?: string;
-          header?: FacetGridSpec['header'];
-          spacing?: CompositionSpec['spacing'];
-          resolve?: CompositionSpec['resolve'];
-          children?: ReactNode;
-        };
+      } = child.props as {
+        id: string;
+        row?: string | NonNullable<FacetGridSpec['row']>;
+        column?: string | NonNullable<FacetGridSpec['column']>;
+        empty?: FacetGridSpec['empty'];
+        coordinate?: FacetGridSpec['coordinate'];
+        view?: string;
+        viewIdTemplate?: string;
+        header?: FacetGridSpec['header'];
+        spacing?: CompositionSpec['spacing'];
+        resolve?: CompositionSpec['resolve'];
+        children?: ReactNode;
+      };
       into.facets.push({
         kind: 'facet',
         id,
@@ -1080,17 +1075,25 @@ const collectInto = (
       return;
     }
     if (child.type === Scaffold) {
-      const { id, coordinate, sharedRoles, frame, tracks, spacing, resolve, children: scaffoldChildren } =
-        child.props as {
-          id: string;
-          coordinate?: SharedScaffoldSpec['coordinate'];
-          sharedRoles: SharedScaffoldSpec['sharedRoles'];
-          frame?: SharedScaffoldSpec['frame'];
-          tracks?: Array<ScaffoldTrackSpec>;
-          spacing?: CompositionSpec['spacing'];
-          resolve?: CompositionSpec['resolve'];
-          children?: ReactNode;
-        };
+      const {
+        id,
+        coordinate,
+        sharedRoles,
+        frame,
+        tracks,
+        spacing,
+        resolve,
+        children: scaffoldChildren,
+      } = child.props as {
+        id: string;
+        coordinate?: SharedScaffoldSpec['coordinate'];
+        sharedRoles: SharedScaffoldSpec['sharedRoles'];
+        frame?: SharedScaffoldSpec['frame'];
+        tracks?: Array<ScaffoldTrackSpec>;
+        spacing?: CompositionSpec['spacing'];
+        resolve?: CompositionSpec['resolve'];
+        children?: ReactNode;
+      };
       into.scaffolds.push({
         kind: 'tracks',
         id,
@@ -1561,8 +1564,21 @@ const collectInto = (
     } else if (child.type === ReferenceMark) {
       collectReference(child.props as ReferenceMarkProps, into, styleContext);
     } else if (child.type === RelationMark) {
-      const { id, kind, coordinateView, transform, layer, source, target, label, style, path, ribbon, color, channels } =
-        child.props as RelationMarkProps;
+      const {
+        id,
+        kind,
+        coordinateView,
+        transform,
+        layer,
+        source,
+        target,
+        label,
+        style,
+        path,
+        ribbon,
+        color,
+        channels,
+      } = child.props as RelationMarkProps;
       const colorEnc = colorChannel(color, undefined);
       const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
       into.marks.push({
@@ -1582,8 +1598,23 @@ const collectInto = (
       });
       recordColor(into, colorEnc);
     } else if (child.type === Axis) {
-      const { dimension, scale, line, ticks, crossing, tickLabels, grid, coordinateView, facetId, scaffoldId, trackId, placement, title, layer, id } =
-        child.props as AxisProps;
+      const {
+        dimension,
+        scale,
+        line,
+        ticks,
+        crossing,
+        tickLabels,
+        grid,
+        coordinateView,
+        facetId,
+        scaffoldId,
+        trackId,
+        placement,
+        title,
+        layer,
+        id,
+      } = child.props as AxisProps;
       if (scale !== undefined) {
         into.scales.push({ dimension, type: scale });
       }
@@ -1645,7 +1676,7 @@ const buildColorScale = (
     const typeByField = new Map(model.map(field => [field.name, field.type] as const));
     const anyContinuous = colorFields.some(field => {
       const type = typeByField.get(field);
-      return type === PlotFieldType.Continuous || type === PlotFieldType.Temporal;
+      return type === DataFieldType.Continuous || type === DataFieldType.Temporal;
     });
     if (anyContinuous) return { type: PlotScale.Sequential, name: AUTO_COLOR };
   }
@@ -1664,11 +1695,7 @@ const continuousPositionScaleOptions = (options: PositionScaleOptions | undefine
   ...(options?.singleValueSpan !== undefined ? { singleValueSpan: options.singleValueSpan } : {}),
 });
 
-const buildPositionScale = (
-  name: string,
-  type: PositionScaleType,
-  options?: ScaleProps,
-): PlotScaleSpec => {
+const buildPositionScale = (name: string, type: PositionScaleType, options?: ScaleProps): PlotScaleSpec => {
   const scaleOptions = continuousPositionScaleOptions(isContinuousScaleProps(options) ? options : undefined);
   switch (type) {
     case 'linear':
@@ -2173,7 +2200,8 @@ const normalizeAxisBindings = (
   const hasXAxisBinding = marks.some(mark => mark.xAxisId !== undefined);
   const hasYAxisBinding = marks.some(mark => mark.yAxisId !== undefined);
   const hasAxisBinding = hasXAxisBinding || hasYAxisBinding;
-  const hasTopologyBinding = marks.some(mark => mark.facetId !== undefined || mark.trackId !== undefined) ||
+  const hasTopologyBinding =
+    marks.some(mark => mark.facetId !== undefined || mark.trackId !== undefined) ||
     guides.some(guide => guide.facetId !== undefined || guide.scaffoldId !== undefined || guide.trackId !== undefined);
   const hasTopologyDeclarations = facets.length > 0 || scaffolds.length > 0;
 
@@ -2277,7 +2305,8 @@ const normalizeAxisBindings = (
     if (!yAxisIds.includes(axisId)) yAxisIds.push(axisId);
   }
 
-  const explicitComposition = composition !== undefined ? fillCompositionScaleBindings(composition, coordinate) : undefined;
+  const explicitComposition =
+    composition !== undefined ? fillCompositionScaleBindings(composition, coordinate) : undefined;
   if (explicitComposition !== undefined) {
     const viewIds = new Set([
       ...(explicitComposition.views ?? []).map(view => view.id),

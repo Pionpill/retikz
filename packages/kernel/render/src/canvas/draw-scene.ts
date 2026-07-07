@@ -731,12 +731,22 @@ const drawPrim = (
               w: p.width,
               h: p.height,
             });
-            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, p.dashOffset, options, resources, {
-              x: p.x,
-              y: p.y,
-              w: p.width,
-              h: p.height,
-            });
+            strokeCurrentPath(
+              ctx,
+              p.stroke,
+              p.strokeOpacity,
+              p.strokeWidth,
+              p.dashPattern,
+              p.dashOffset,
+              options,
+              resources,
+              {
+                x: p.x,
+                y: p.y,
+                w: p.width,
+                h: p.height,
+              },
+            );
           }),
         ),
       );
@@ -760,12 +770,22 @@ const drawPrim = (
               w: 2 * p.rx,
               h: 2 * p.ry,
             });
-            strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, p.dashOffset, options, resources, {
-              x: p.cx - p.rx,
-              y: p.cy - p.ry,
-              w: 2 * p.rx,
-              h: 2 * p.ry,
-            });
+            strokeCurrentPath(
+              ctx,
+              p.stroke,
+              p.strokeOpacity,
+              p.strokeWidth,
+              p.dashPattern,
+              p.dashOffset,
+              options,
+              resources,
+              {
+                x: p.cx - p.rx,
+                y: p.cy - p.ry,
+                w: 2 * p.rx,
+                h: 2 * p.ry,
+              },
+            );
             if (shouldRestore) ctx.restore();
           }),
         ),

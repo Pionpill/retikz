@@ -5,10 +5,11 @@
 > 关联：[`v0.4 roadmap`](../roadmap.md) · [`core-design.md §7 AI 一等公民`](../../../../../../../notes/architecture/core-design.md) · `compile/compile.ts`（`options.lowerMath` 注入）· `compile/node.ts`（内容路径）· `ir/text.ts`（行内容模型）· `primitive/{group,path}.ts`
 
 > **✅ 完工对账（2026-06-19）**：alpha.5（E1 + E2 + E3）全部落地。**最终实现形态以 [ADR-03](./03-inline-math-runs.md) 为真源**，与本设计稿有两处偏离，对账如下：
+>
 > 1. **命名**：本稿草拟的 `node.math` / `lowerMath` / `MATH_*` 最终落地为 `tex` 命名——文本里的 `$...$`（inline）/ `$$...$$`（display）/ 显式 `{ runs }`、`options.lowerTex`、warn `TEX_LOWERER_MISSING` / `TEX_INVALID` / `TEXT_TEX_PARSE_ERROR`。
 > 2. **统一模型**：E1/E2 曾引入「公式作 node 内容」`node.tex` + `<TexNode>`，E3（ADR-03）在**同一未发布周期内**将其收敛为「公式 = 文本里的 math run」，`node.tex` / `<TexNode>` / 内容 `displayMode` 一并移除（未随任何 release 发布）。独立公式 = 内容为单个 `$$...$$` 的 node、带框公式 = 该 node 配 shape，A/B 由 C 吸收。
 > 3. 解析在 **compile 期**（gated on `lowerTex` 注入），原始字符串留 IR；新增共享 `compile/text-layout.ts` 混排布局，node text / node label / edge label 复用。
-> 下方 §接入机制 / §子项 是**设计阶段记录**，`node.math` / `lowerMath` 等措辞保留原貌、不回改，以本对账 + ADR-03 为最终口径。验收（见文末）全过：core/tex/react/vanilla `tsc` + 全仓 lint + 全测试绿、三端一致、文档（tex 包页 + karl-circle）同步。
+>    下方 §接入机制 / §子项 是**设计阶段记录**，`node.math` / `lowerMath` 等措辞保留原貌、不回改，以本对账 + ADR-03 为最终口径。验收（见文末）全过：core/tex/react/vanilla `tsc` + 全仓 lint + 全测试绿、三端一致、文档（tex 包页 + karl-circle）同步。
 
 ## 定位
 
@@ -18,11 +19,11 @@ alpha.5 给 retikz 补上**数学排版**——一个 TikZ-inspired 库的旗舰
 
 ## 子项（3 ADR，A 是地基，B/C 消费）
 
-| # | 子项 | 代号 | ADR | 状态 |
-|---|---|---|---|---|
-| E1 | `@retikz/tex` 包（core 分组）+ `lowerMath` 引擎 + `node.math` 内容（独立公式 A） | E | [ADR-01](./01-tex-package-and-node-math.md) | ✅ Accepted（已实现 + 文档 + changelog；core schema/compile + `packages/kernel/tex` 引擎，真实 mathjax-full 集成验证；React 公式走 `<Node>` children 对象） |
-| E2 | 带框公式（B）——`node.math` + 任意 shape 容器 | E | [ADR-02](./02-node-embedded-math.md) | ✅ Accepted（经 E1 统一内容路径落地，几乎零增量；B 行为由 `node-math` 测试覆盖） |
-| E3 | 行内 text+math 混排（C）——`IRLineSpec` run 序列 + `$...$` | E | [ADR-03](./03-inline-math-runs.md) | ✅ Accepted（v0.4.0-alpha.5，2026-06-19：`{ runs }` + `$...$`/`$$...$$`（compile 期 gated）+ 共享 `compile/text-layout.ts`；node text / node label / edge label 全覆盖。两处偏离：`$$..$$`=display、并把 E1/E2 的 `node.tex`/`<TexNode>` 收敛进文本 runs 全统一） |
+| #   | 子项                                                                             | 代号 | ADR                                         | 状态                                                                                                                                                                                                                                                              |
+| --- | -------------------------------------------------------------------------------- | ---- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1  | `@retikz/tex` 包（core 分组）+ `lowerMath` 引擎 + `node.math` 内容（独立公式 A） | E    | [ADR-01](./01-tex-package-and-node-math.md) | ✅ Accepted（已实现 + 文档 + changelog；core schema/compile + `packages/kernel/tex` 引擎，真实 mathjax-full 集成验证；React 公式走 `<Node>` children 对象）                                                                                                       |
+| E2  | 带框公式（B）——`node.math` + 任意 shape 容器                                     | E    | [ADR-02](./02-node-embedded-math.md)        | ✅ Accepted（经 E1 统一内容路径落地，几乎零增量；B 行为由 `node-math` 测试覆盖）                                                                                                                                                                                  |
+| E3  | 行内 text+math 混排（C）——`IRLineSpec` run 序列 + `$...$`                        | E    | [ADR-03](./03-inline-math-runs.md)          | ✅ Accepted（v0.4.0-alpha.5，2026-06-19：`{ runs }` + `$...$`/`$$...$$`（compile 期 gated）+ 共享 `compile/text-layout.ts`；node text / node label / edge label 全覆盖。两处偏离：`$$..$$`=display、并把 E1/E2 的 `node.tex`/`<TexNode>` 收敛进文本 runs 全统一） |
 
 ## 接入机制（2026-06-16 拍板；route 2 激进 + 多 LLM 评审后定稿）
 

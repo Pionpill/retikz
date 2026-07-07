@@ -23,12 +23,12 @@ ADR-02/03 让 SVG/Canvas **有能力**播放（给数据 / 给时刻就能出帧
 
 ### trigger 落地（SVG WAAPI + Canvas 通用）
 
-| trigger | SVG runtime 行为 | Canvas runtime 行为（本批） |
-|---|---|---|
-| `load` | 挂载即播（CSS 自播） | rAF 立即起、逐帧施加 |
-| `visible` | `IntersectionObserver` 进视口才播（WAAPI） | **本批不 per-track 接 IO**：auto 时钟不施加该 track，渲染 base（后续补 canvas 视口接线） |
-| `manual` | 不自动播；WAAPI 句柄 `{ play, pause, seek }` | **本批 auto 时钟不施加该 track**（渲染 base）；scene 级 `view.animation` 句柄控制 auto track 的时钟（per-track manual canvas 后续） |
-| `{ onEvent }` | 桥水合：事件名经 alpha.3 委托绑定，命中即播（WAAPI） | **本批不施加**（渲染 base，后续补 canvas 事件接线） |
+| trigger       | SVG runtime 行为                                     | Canvas runtime 行为（本批）                                                                                                         |
+| ------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `load`        | 挂载即播（CSS 自播）                                 | rAF 立即起、逐帧施加                                                                                                                |
+| `visible`     | `IntersectionObserver` 进视口才播（WAAPI）           | **本批不 per-track 接 IO**：auto 时钟不施加该 track，渲染 base（后续补 canvas 视口接线）                                            |
+| `manual`      | 不自动播；WAAPI 句柄 `{ play, pause, seek }`         | **本批 auto 时钟不施加该 track**（渲染 base）；scene 级 `view.animation` 句柄控制 auto track 的时钟（per-track manual canvas 后续） |
+| `{ onEvent }` | 桥水合：事件名经 alpha.3 委托绑定，命中即播（WAAPI） | **本批不施加**（渲染 base，后续补 canvas 事件接线）                                                                                 |
 
 **Canvas trigger 关键约束（本批）**：Canvas 是 scene 级共享 rAF 时钟、逐帧重绘整个 scene；要避免「同元素的 manual track 随 load track 一起跑」，Canvas 渲染层（`applyPrimAnimations`）**按 `isAutoplayTrigger` 过滤——只施加 `load`/缺省 track**，`visible`/`manual`/`{onEvent}` 一律渲染 base。它们的 per-track canvas 触发（需 per-track 子时钟 / 视口·事件接线）列为后续。SVG 端因有逐元素 DOM，trigger 全支持（不受此约束）。
 
@@ -72,7 +72,6 @@ ADR-02/03 让 SVG/Canvas **有能力**播放（给数据 / 给时刻就能出帧
 - **sugar 动词**（`fadeIn` 等）：react + 共享 parser，后续。
 - **数据过渡 / morph**（`view.update(nextIr,{transition})` 的 diff + morph）：runtime + Tier 2，[v0.3 roadmap §动画 B](../roadmap.md)。
 - **完整 timeline / sequence DSL**：本 ADR 只共享时钟 + per-track delay。
-
 
 > 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:_notes/decisions/core/v0/v0.3/alpha.5/04-runtime-control.md`（封板全文）。

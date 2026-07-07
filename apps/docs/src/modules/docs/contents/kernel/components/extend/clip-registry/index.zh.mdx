@@ -14,29 +14,27 @@ Clip Registry 和其它编译期 registry 遵循同一条规则：IR 里只保�
 自定义裁剪区的 spec 仍然是纯数据：
 
 ```tsx
-<Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
-  {/* children */}
-</Scope>
+<Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>{/* children */}</Scope>
 ```
 
 `ClipDefinition` 校验这段数据，并把它解析成 Scene 已经认识的渲染无关 clip shape。definition 本身不进入 IR。
 
-| 写法 | 查找方式 | 适用场景 |
-| --- | --- | --- |
-| `rect` / `circle` / `ellipse` / `polygon` | 内置 clip provider | 简单结构化裁剪 |
-| `path` | 内置 clip provider | 路径式裁剪，支持 `fillRule` |
-| `compound` | 内置 clip provider | 递归组合内置和自定义裁剪区 |
-| 自定义 `kind` | 自定义 clip provider | 领域 mask 或可复用裁剪词汇 |
+| 写法                                      | 查找方式             | 适用场景                    |
+| ----------------------------------------- | -------------------- | --------------------------- |
+| `rect` / `circle` / `ellipse` / `polygon` | 内置 clip provider   | 简单结构化裁剪              |
+| `path`                                    | 内置 clip provider   | 路径式裁剪，支持 `fillRule` |
+| `compound`                                | 内置 clip provider   | 递归组合内置和自定义裁剪区  |
+| 自定义 `kind`                             | 自定义 clip provider | 领域 mask 或可复用裁剪词汇  |
 
 自定义 provider 不能复用内置名；同一个数组里重复注册同名 provider 也会在注册期报错。
 
 ## ClipDefinition
 
-| 字段 | 作用 | 必填 / 可选 |
-| --- | --- | --- |
-| `kind` | Registry key，`clip.kind` 通过它引用 provider | 必填 |
-| `schema` | zod schema；编译期校验完整自定义 clip 对象 | 必填 |
-| `resolve` | 把校验后的 spec 转成内置 clip shape | 必填 |
+| 字段      | 作用                                          | 必填 / 可选 |
+| --------- | --------------------------------------------- | ----------- |
+| `kind`    | Registry key，`clip.kind` 通过它引用 provider | 必填        |
+| `schema`  | zod schema；编译期校验完整自定义 clip 对象    | 必填        |
+| `resolve` | 把校验后的 spec 转成内置 clip shape           | 必填        |
 
 `resolve` 接收 `(spec, context)`。`context.round` 用当前编译精度做稳定舍入；`context.resolve` 可以让 provider 复用另一段 clip spec，并重新走同一个 registry。
 
@@ -56,7 +54,7 @@ const roundedRectClip: ClipDefinition = defineClip({
     height: z.number().positive(),
     radius: z.number().nonnegative(),
   }),
-  resolve: (spec) => {
+  resolve: spec => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [spec.x + spec.radius, spec.y] },
       // 在这里补齐圆角矩形的 path commands。

@@ -1,4 +1,4 @@
-﻿import { BoxSpacingSchema, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
+import { BoxSpacingSchema, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { AxisScaleSchema, BoxSizeSchema } from '@retikz/core';
 import {
@@ -48,9 +48,7 @@ const markBase = {
     .string()
     .min(1)
     .optional()
-    .describe(
-      'Coordinate view id this mark is projected through; omit to use the plot composition default view',
-    ),
+    .describe('Coordinate view id this mark is projected through; omit to use the plot composition default view'),
   transform: MarkTransformSchema.optional().describe(
     'Optional mark-local transform pipeline applied after the plot root transform',
   ),
@@ -155,7 +153,6 @@ export const RelationPathSpecificOptionsSchema = PathBaseSchema.pick({
   lineCap: true,
   lineJoin: true,
   roundedCorners: true,
-  thickness: true,
   rotate: true,
   scale: true,
   marks: true,
@@ -587,9 +584,9 @@ const corePathStyle = {
   thickness: PathThicknessStyleSchema.optional().describe(
     'Core Path thickness: field-bound datum channel or constant preset',
   ),
-  marks: PathBaseSchema.shape.marks.optional().describe(
-    'Static core Path marks placed along the lowered path; use endpoint marks for arrows',
-  ),
+  marks: PathBaseSchema.shape.marks
+    .optional()
+    .describe('Static core Path marks placed along the lowered path; use endpoint marks for arrows'),
   dashPattern: NodeDashPatternStyleSchema.optional().describe(
     'Core Path dashPattern: field-bound datum channel or constant number array',
   ),

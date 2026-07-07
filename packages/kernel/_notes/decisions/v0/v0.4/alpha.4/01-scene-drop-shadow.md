@@ -62,5 +62,4 @@ shadow: z.union([z.enum(ShadowPreset), DropShadowSchema]).optional();
 - 测试：`packages/kernel/core/tests/ir/effects-schema.test.ts`、`tests/compile/{node,path}-shadow.test.ts`、`packages/kernel/render/tests/svg-effects.test.ts`、`packages/kernel/react/tests/string-react-parity.test.tsx`。
 - 文档：`apps/docs/src/contents/kernel/components/effects/shadow/`。
 
-
 > 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.4/01-scene-drop-shadow.md`（封板全文）。

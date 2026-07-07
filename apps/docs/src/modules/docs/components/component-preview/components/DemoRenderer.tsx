@@ -46,7 +46,9 @@ export const DemoRenderer: FC<DemoRendererProps> = props => {
       </RendererModeProvider>
     );
   }
-  return <RendererModeProvider mode={rendererMode}>{applyRendererMode(Component({}), rendererMode)}</RendererModeProvider>;
+  return (
+    <RendererModeProvider mode={rendererMode}>{applyRendererMode(Component({}), rendererMode)}</RendererModeProvider>
+  );
 };
 
 /** 把一段 SVG 字符串注入渲染区。 */

@@ -12,14 +12,14 @@ beta.1 = **最后一个改名 / 破坏窗口**：rc 起公开 API（schema 字�
 
 ## 进度看板
 
-| # | 标题 | level | 工作量 | 状态 | 备注 |
-|---|---|---|---|---|---|
-| 1 | core 注释 / `.describe()` renderer-中立 sweep（alpha.7–9 新文件） | internal | 中 | ✅ 6df1db5 | 新文件已遵循 adapter-example 约定；仅清 arrows/patterns 的"历史 SVG 等价"措辞（兼违历史阶段引用铁律） |
-| 2 | unbuilder round-trip 补 alpha.7–9 新增 IR 形态 | internal | 中 | ✅ da9f37e | **发现真 bug**：unbuilder path 分支手写漏 rotate/scale/marks → 改用 `pickDefined(PATH_FIELDS)` 修；generator 无 React DSL（IR-only）断言抛错 |
-| 3 | `makeRound` `-0` 归一 | visible | 小 | ✅ 58d87c2 | `r===0?0:r`，保 round-trip Object.is 稳定 |
-| 4 | **删 `<TikZ>` deprecated alias** | breaking | 小-中 | ✅ f885255 / 9aad4c1 | 删 export + dev warn + AST 白名单 + RetikzPreview；4 测试迁移；mdx 失实描述更新；parser.test 迁移 |
-| 5 | IR discriminator 命名约定文档化 | internal | 小 | ✅ (本提交) | 写进根 AGENTS「IR / Schema 风格」：实体 / paint = `type`，子变体（step/transform/clip/resource）= `kind`；**不改代码** |
-| 6 | schema 字段名 / `.describe()` 全量审查 | — | 中 | ✅ 审完无改 | alpha.7–9 新字段遵循既有约定（`cx/cy/rx/ry` 同 EllipsePrim、`t` 同 AnchorRef、`outAngle/inAngle/looseness` TikZ vocab、`viewBox/pin` 全词）；`marks.pos`（纯 0..1）与 StepLabel.position（含 keyword）概念近似但语义不同，保留——无破坏性 rename 必要 |
+| #   | 标题                                                              | level    | 工作量 | 状态                 | 备注                                                                                                                                                                                                                                                 |
+| --- | ----------------------------------------------------------------- | -------- | ------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | core 注释 / `.describe()` renderer-中立 sweep（alpha.7–9 新文件） | internal | 中     | ✅ 6df1db5           | 新文件已遵循 adapter-example 约定；仅清 arrows/patterns 的"历史 SVG 等价"措辞（兼违历史阶段引用铁律）                                                                                                                                                |
+| 2   | unbuilder round-trip 补 alpha.7–9 新增 IR 形态                    | internal | 中     | ✅ da9f37e           | **发现真 bug**：unbuilder path 分支手写漏 rotate/scale/marks → 改用 `pickDefined(PATH_FIELDS)` 修；generator 无 React DSL（IR-only）断言抛错                                                                                                         |
+| 3   | `makeRound` `-0` 归一                                             | visible  | 小     | ✅ 58d87c2           | `r===0?0:r`，保 round-trip Object.is 稳定                                                                                                                                                                                                            |
+| 4   | **删 `<TikZ>` deprecated alias**                                  | breaking | 小-中  | ✅ f885255 / 9aad4c1 | 删 export + dev warn + AST 白名单 + RetikzPreview；4 测试迁移；mdx 失实描述更新；parser.test 迁移                                                                                                                                                    |
+| 5   | IR discriminator 命名约定文档化                                   | internal | 小     | ✅ (本提交)          | 写进根 AGENTS「IR / Schema 风格」：实体 / paint = `type`，子变体（step/transform/clip/resource）= `kind`；**不改代码**                                                                                                                               |
+| 6   | schema 字段名 / `.describe()` 全量审查                            | —        | 中     | ✅ 审完无改          | alpha.7–9 新字段遵循既有约定（`cx/cy/rx/ry` 同 EllipsePrim、`t` 同 AnchorRef、`outAngle/inAngle/looseness` TikZ vocab、`viewBox/pin` 全词）；`marks.pos`（纯 0..1）与 StepLabel.position（含 keyword）概念近似但语义不同，保留——无破坏性 rename 必要 |
 
 ### 候选（待评估，可能推 beta.2 或单列）
 

@@ -7,11 +7,11 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ## 函数
 
-| API                | Signature                                     | 用途                                                                    |
-| ------------------ | --------------------------------------------- | ----------------------------------------------------------------------- |
+| API                | Signature                                          | 用途                                                                    |
+| ------------------ | -------------------------------------------------- | ----------------------------------------------------------------------- |
 | `compileToScene`   | `(ir: IRScene, options?: CompileOptions) => Scene` | 主编译入口；处理 node / coordinate / path，输出 primitive 列表和 layout |
-| `computeLayout`    | `(points, padding, round) => Layout`          | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用            |
-| `fallbackMeasurer` | `(text, font) => TextMetrics`                 | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底                       |
+| `computeLayout`    | `(points, padding, round) => Layout`               | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用            |
+| `fallbackMeasurer` | `(text, font) => TextMetrics`                      | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底                       |
 
 `compileToScene` 分两步：先按 IR 顺序布局 node / coordinate 并注册 id，再按原始 children 顺序发出 primitive。这样路径可以引用任意已经注册的 node / coordinate，最终渲染顺序仍保持用户写入顺序。
 
@@ -21,39 +21,39 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### 宿主能力
 
-| Option        | Type                    | Default                                     | 说明                                                    |
-| ------------- | ----------------------- | ------------------------------------------- | ------------------------------------------------------- |
-| `measureText` | `TextMeasurer`          | `fallbackMeasurer`                          | 注入文字度量函数；React adapter 使用浏览器能力          |
-| `lowerTex`    | `LowerTex`              | `undefined`                                 | 注入公式渲染能力；未注入或解析失败时会 warning 并降级   |
-| `onWarn`      | `(warning) => void`     | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning                              |
+| Option        | Type                | Default                                     | 说明                                                  |
+| ------------- | ------------------- | ------------------------------------------- | ----------------------------------------------------- |
+| `measureText` | `TextMeasurer`      | `fallbackMeasurer`                          | 注入文字度量函数；React adapter 使用浏览器能力        |
+| `lowerTex`    | `LowerTex`          | `undefined`                                 | 注入公式渲染能力；未注入或解析失败时会 warning 并降级 |
+| `onWarn`      | `(warning) => void` | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning                            |
 
 ### 布局与输出
 
-| Option         | Type     | Default | 说明                                                                    |
-| -------------- | -------- | ------- | ----------------------------------------------------------------------- |
-| `padding`      | `number` | `10`    | layout 外围留白，单位为 user units                                      |
-| `precision`    | `number` | `2`     | 输出 Scene primitive / path d / layout 的小数位；内部几何保持 double 精度 |
-| `nodeDistance` | `number` | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                           |
-| `labelDistance` | `number` | `12`  | `Node.label.distance` 未设置时，节点 label 与节点边界的默认距离 |
-| `fontSize` | `number` | `16` | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号 |
+| Option          | Type     | Default | 说明                                                                      |
+| --------------- | -------- | ------- | ------------------------------------------------------------------------- |
+| `padding`       | `number` | `10`    | layout 外围留白，单位为 user units                                        |
+| `precision`     | `number` | `2`     | 输出 Scene primitive / path d / layout 的小数位；内部几何保持 double 精度 |
+| `nodeDistance`  | `number` | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                             |
+| `labelDistance` | `number` | `12`    | `Node.label.distance` 未设置时，节点 label 与节点边界的默认距离           |
+| `fontSize`      | `number` | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号       |
 
 ### 扩展注册表
 
-| Option                | Type                                          | Default | 说明                                                                                  |
-| --------------------- | --------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
-| `shapes`              | `ReadonlyArray<ShapeDefinition>`              | `—`     | 注入自定义节点形状。见 [自定义形状](/kernel/components/extend/shape-registry)         |
-| `boundaries`          | `ReadonlyArray<BoundaryDefinition>`           | `—`     | 注入自定义连接面。见 [自定义连接面](/kernel/components/extend/boundary-registry)       |
-| `clips`               | `ReadonlyArray<ClipDefinition>`               | `—`     | 注入自定义裁剪区。见 [自定义裁剪区](/kernel/components/extend/clip-registry)           |
-| `arrows`              | `ReadonlyArray<ArrowDefinition>`              | `—`     | 注入自定义箭头。见 [自定义箭头](/kernel/components/extend/custom-arrow)                |
-| `patterns`            | `ReadonlyArray<PatternDefinition>`            | `—`     | 注入自定义填充图案。见 [自定义图案](/kernel/components/extend/custom-pattern)          |
+| Option                | Type                                          | Default | 说明                                                                                                  |
+| --------------------- | --------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `shapes`              | `ReadonlyArray<ShapeDefinition>`              | `—`     | 注入自定义节点形状。见 [自定义形状](/kernel/components/extend/shape-registry)                         |
+| `boundaries`          | `ReadonlyArray<BoundaryDefinition>`           | `—`     | 注入自定义连接面。见 [自定义连接面](/kernel/components/extend/boundary-registry)                      |
+| `clips`               | `ReadonlyArray<ClipDefinition>`               | `—`     | 注入自定义裁剪区。见 [自定义裁剪区](/kernel/components/extend/clip-registry)                          |
+| `arrows`              | `ReadonlyArray<ArrowDefinition>`              | `—`     | 注入自定义箭头。见 [自定义箭头](/kernel/components/extend/custom-arrow)                               |
+| `patterns`            | `ReadonlyArray<PatternDefinition>`            | `—`     | 注入自定义填充图案。见 [自定义图案](/kernel/components/extend/custom-pattern)                         |
 | `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | `—`     | 注入自定义曲线生成器；core 内置 `parabola`。见 [路径生成器](/kernel/components/extend/path-generator) |
-| `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | `—`     | 注入自定义 path kind provider                                                          |
-| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | `—`     | 注入 ribbon 宽度 profile；core 内置 `bulge`，profile 函数不进入 IR                     |
+| `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | `—`     | 注入自定义 path kind provider                                                                         |
+| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | `—`     | 注入 ribbon 宽度 profile；core 内置 `bulge`，profile 函数不进入 IR                                    |
 
 ### 组合展开
 
-| Option              | Type                                 | Default | 说明                                                                          |
-| ------------------- | ------------------------------------ | ------- | ----------------------------------------------------------------------------- |
+| Option              | Type                                 | Default | 说明                                                                         |
+| ------------------- | ------------------------------------ | ------- | ---------------------------------------------------------------------------- |
 | `composites`        | `ReadonlyArray<CompositeDefinition>` | `—`     | 注入 Tier 2 composite 展开逻辑；未注册时发 `COMPOSITE_NOT_REGISTERED` 并跳过 |
 | `maxCompositeDepth` | `number`                             | `32`    | composite 嵌套展开的最大深度；超限或成环会 throw                             |
 
@@ -94,7 +94,7 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `DUPLICATE_NODE_ID`             | 同一命名空间帧内重复 id；后定义覆盖先定义（last-wins）                                      |
 | `COMPOSITE_NOT_REGISTERED`      | composite 节点的 `namespace.type` 未注册，跳过该节点                                        |
 | `ANIMATION_INVALID_PROPERTY`    | 动画 track 的 property 非法（如 scene-root 非 viewBox 属性），该 track 丢弃                 |
-| `ARC_MISSING_RADIUS`            | arc step 缺 `radius`，整条 path 跳过；`radius` 可为数字圆弧或 `{ x, y }` 椭圆弧                    |
+| `ARC_MISSING_RADIUS`            | arc step 缺 `radius`，整条 path 跳过；`radius` 可为数字圆弧或 `{ x, y }` 椭圆弧             |
 | `PARTIAL_ARC_NEEDS_BOTH_ANGLES` | circlePath / ellipsePath 部分弧需同时给 `startAngle` 与 `endAngle`，否则按完整圆 / 椭圆处理 |
 | `PARTIAL_ARC_CLOSED_INVALID`    | 带角度的部分圆 / 椭圆不能用 `closed:'closed'`，退回 `'chord'`                               |
 

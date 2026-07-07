@@ -14,14 +14,14 @@ path 的 `way` 由 `stepsToWay` 从 `path.children` 反推。现状覆盖：`mov
 
 `vanilla` 的 `draw(way)` 内部就是 core 的 `parseWay`，与 React `<Draw way>` 共用同一正向语法。所以「能否反推成 way」**取决于 `parseWay` 是否有对应正向算子**，不能一概而论：
 
-| step kind | `parseWay` 有正向算子？ | 反推目标 | 处理 |
-|---|---|---|---|
-| `arc` | ✅ `WayArcOp` | `{ arc: { startAngle, endAngle, radius } }` | **本 ADR 补逆映射** |
-| `circlePath` | ✅ `WayCircleOp` | `{ circle: { radius } }` | **本 ADR 补逆映射** |
-| `ellipsePath` | ✅ `WayEllipseOp` | `{ ellipse: { radiusX, radiusY } }` | **本 ADR 补逆映射** |
-| `bend`(out/in angle) | ⚠️ 部分（`bend` 算子当前只反推 direction 形态） | 评估扩 `WayBendOp` 反推 | 视成本，可后置 |
-| `rectangle` | ❌ 不在 way 语法 | —— | **IR-direct fallback** |
-| `generator` | ❌ 不在 way 语法 | —— | **IR-direct fallback** |
+| step kind            | `parseWay` 有正向算子？                         | 反推目标                                    | 处理                   |
+| -------------------- | ----------------------------------------------- | ------------------------------------------- | ---------------------- |
+| `arc`                | ✅ `WayArcOp`                                   | `{ arc: { startAngle, endAngle, radius } }` | **本 ADR 补逆映射**    |
+| `circlePath`         | ✅ `WayCircleOp`                                | `{ circle: { radius } }`                    | **本 ADR 补逆映射**    |
+| `ellipsePath`        | ✅ `WayEllipseOp`                               | `{ ellipse: { radiusX, radiusY } }`         | **本 ADR 补逆映射**    |
+| `bend`(out/in angle) | ⚠️ 部分（`bend` 算子当前只反推 direction 形态） | 评估扩 `WayBendOp` 反推                     | 视成本，可后置         |
+| `rectangle`          | ❌ 不在 way 语法                                | ——                                          | **IR-direct fallback** |
+| `generator`          | ❌ 不在 way 语法                                | ——                                          | **IR-direct fallback** |
 
 arc/circle/ellipse 是 infix 形状算子：**以上一项为圆心、不消耗下一项、不产 `to`**。所以逆映射就是在序列里插一个算子对象 frag（`stepsToWay` 现成的 per-step push 模型直接适配）。
 

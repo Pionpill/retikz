@@ -18,13 +18,13 @@ v0.1 beta 阶段：**持续优化 + 不考虑兼容性，rc 才冻结公开 API*
 
 ## 进度看板
 
-| # | 标题 | 状态 | 工作量 | 优先级 |
-|---|---|---|---|---|
-| 1 | [Scene `ViewBox` → `Layout` 抽象（去 SVG 命名）](./01-scene-viewbox-to-layout.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（core Scene + react adapter + tests + docs） | P1 |
-| 2 | [`<TikZ>` → `<TikZ>` 组件改名（与 TikZ 原品牌大小写一致）](./02-tikz-to-tikz-component.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（公开组件名 + 全 mdx + 测试） | P1 |
-| 3 | [core endpoint arrow split 命名中性化](./03-endpoint-arrow-split-neutral.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 小（core internal helper + tests 文案） | P1 |
-| 4 | [arrow shrink 几何从 SVG viewBox/refX 语义中抽离](./04-arrow-geometry-neutral.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（core/react arrow geometry 对齐 + tests） | P1 |
-| 5 | [Path 线型命名对齐 TikZ 术语](./05-path-dash-pattern-naming.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中到大（`strokeDasharray` → `dashPattern: Array<number>` breaking + docs） | P2 |
+| #   | 标题                                                                                       | 状态                               | 工作量                                                                     | 优先级 |
+| --- | ------------------------------------------------------------------------------------------ | ---------------------------------- | -------------------------------------------------------------------------- | ------ |
+| 1   | [Scene `ViewBox` → `Layout` 抽象（去 SVG 命名）](./01-scene-viewbox-to-layout.md)          | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（core Scene + react adapter + tests + docs）                            | P1     |
+| 2   | [`<TikZ>` → `<TikZ>` 组件改名（与 TikZ 原品牌大小写一致）](./02-tikz-to-tikz-component.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（公开组件名 + 全 mdx + 测试）                                           | P1     |
+| 3   | [core endpoint arrow split 命名中性化](./03-endpoint-arrow-split-neutral.md)               | ✅ 完成（人工裁定跳过多 LLM 评估） | 小（core internal helper + tests 文案）                                    | P1     |
+| 4   | [arrow shrink 几何从 SVG viewBox/refX 语义中抽离](./04-arrow-geometry-neutral.md)          | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（core/react arrow geometry 对齐 + tests）                               | P1     |
+| 5   | [Path 线型命名对齐 TikZ 术语](./05-path-dash-pattern-naming.md)                            | ✅ 完成（人工裁定跳过多 LLM 评估） | 中到大（`strokeDasharray` → `dashPattern: Array<number>` breaking + docs） | P2     |
 
 > beta.1 原推延的 ADR-05 / 06b / 07 / 11 已在 beta.1 内补完（详 `v0.1-beta.1.md` 看板 ✅），beta.2 仅剩本 2 条 BREAKING 命名抽象。
 
@@ -100,13 +100,13 @@ type Scene = {
 import { Tikz, Node, Path } from '@retikz/react';
 <Tikz width={300} height={200}>
   <Node id="A" position={[0, 0]} />
-</Tikz>
+</Tikz>;
 
 // 新（beta.2）
 import { TikZ, Node, Path } from '@retikz/react';
 <TikZ width={300} height={200}>
   <Node id="A" position={[0, 0]} />
-</TikZ>
+</TikZ>;
 ```
 
 File rename: `packages/react/src/kernel/Tikz.tsx` -> `TikZ.tsx`; `TikzProps` -> `TikZProps`; `Tikz` component -> `TikZ`.

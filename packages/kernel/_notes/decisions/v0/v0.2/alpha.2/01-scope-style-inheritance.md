@@ -28,10 +28,10 @@ retikz 现状缺第 2 套：只有 `stroke` / `fill` / `textColor` 分项、**�
 
 ### 决策细节（拍板的 WHY）
 
-- **优先级链**（每个色 / 样式分项，就近）：`元素显式分项 > 元素 color > every-X 分项 > every-X color > scope 级联分项 > scope color > 内置`（scope 那几档沿 scope 链就近、内层整体压外层）。即元素自身意图整体优先于外层任何来源，每个来源内分项盖主色。非色字段（strokeWidth / shape / font / dash / minimum* …）不参与主色，只走 `元素显式 > every-X > scope 级联(若共享字段) > 内置`。
+- **优先级链**（每个色 / 样式分项，就近）：`元素显式分项 > 元素 color > every-X 分项 > every-X color > scope 级联分项 > scope color > 内置`（scope 那几档沿 scope 链就近、内层整体压外层）。即元素自身意图整体优先于外层任何来源，每个来源内分项盖主色。非色字段（strokeWidth / shape / font / dash / minimum\* …）不参与主色，只走 `元素显式 > every-X > scope 级联(若共享字段) > 内置`。
 - **主色展开**：同源内若某分项色（stroke/fill/textColor，arrow 的 color）未在同源显式给，取该源的 `color`（同源内分项覆盖主色）。
 - **颜色级联**（= TikZ current color）：容器已解析 `color` 下传子元素色默认 —— node.color → 内部文字 + 边 label；path.color → stroke + arrow + step label。
-- **级联 graphic state 字段集**（7）：`color + stroke + fill + strokeWidth + opacity + fillOpacity + drawOpacity` 级联到全部元素。node 形状专属（shape / minimum* / inner* / outer* / scale / 文本类）只进 `nodeDefault`，path 专属（dashPattern / lineCap …）只进 `pathDefault`。dash 因 node 与 path 命名不同不进级联、各走自己 default。
+- **级联 graphic state 字段集**（7）：`color + stroke + fill + strokeWidth + opacity + fillOpacity + drawOpacity` 级联到全部元素。node 形状专属（shape / minimum* / inner* / outer\* / scale / 文本类）只进 `nodeDefault`，path 专属（dashPattern / lineCap …）只进 `pathDefault`。dash 因 node 与 path 命名不同不进级联、各走自己 default。
 - **per-field 合并**：按存在性 merge（`!== undefined`），缺省让位、显式 `none`/`0`/`false` 截断；内置默认 fold 末尾补；禁 schema `.default()`。
 - **opacity 替换不复合**（TikZ 默认）：逐元素解析，compile 不落 scope `<g opacity>`；元素内 label×元素 opacity 相乘是另一轴。
 - **`resetStyle`**（`boolean | ('node'|'path'|'label'|'arrow')[]`）：只切 **scope 继承轴**（外层级联 graphic state + every-X 默认）、只朝外，正交于 transforms / localNamespace / scope.id bbox。**不碰实例-host 轴** —— label / arrow 仍跟随**所属 path/node 的已解析颜色**（结构关系、非 scope 继承），避免脱离其线/节点成"孤岛"。`resetStyle=true` 把 scope 通道归零后 host-following 照常流动归零值（线 baseline 黑、label/arrow 跟着黑、仍不孤岛）；想让 label 真脱离线色 → 元素级显式 `textColor`（或未来 `'initial'`），不归 resetStyle。

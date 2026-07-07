@@ -1,21 +1,21 @@
-﻿# retikz 内部文档地图
+# retikz 内部文档地图
 
 面向项目内部协作，不面向终端用户。用户文档放在 `apps/docs/`。
 
 ## 当前结构
 
-| 目录 | 内容 | 生命周期 |
-| --- | --- | --- |
-| [`architecture/`](./architecture) | 全仓长期架构真源。只放跨包原则、IR / Scene / schema 等底层契约。 | 永久；重大架构调整直接更新原文。 |
-| [`reports/`](./reports) | 只读审计、阶段性 review 报告。 | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
+| 目录                              | 内容                                                             | 生命周期                                     |
+| --------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
+| [`architecture/`](./architecture) | 全仓长期架构真源。只放跨包原则、IR / Scene / schema 等底层契约。 | 永久；重大架构调整直接更新原文。             |
+| [`reports/`](./reports)           | 只读审计、阶段性 review 报告。                                   | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
 
 包或发布组专属文档已经下沉到对应目录：
 
-| 目录 | 内容 |
-| --- | --- |
+| 目录                                                      | 内容                                                                                 |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | [`../packages/kernel/_notes/`](../packages/kernel/_notes) | kernel 发布组（`@retikz/math/core/render/react/vanilla/tex`）的 roadmap、ADR、分析。 |
-| [`../packages/viz/_notes/`](../packages/viz/_notes) | `@retikz/plot` 发布组的架构、roadmap、ADR、分析。 |
-| [`../apps/eval/_notes/`](../apps/eval/_notes) | eval 应用的评测设计、语料与 runner 方案。 |
+| [`../packages/viz/_notes/`](../packages/viz/_notes)       | `@retikz/plot` 发布组的架构、roadmap、ADR、分析。                                    |
+| [`../apps/eval/_notes/`](../apps/eval/_notes)             | eval 应用的评测设计、语料与 runner 方案。                                            |
 
 ## 写到哪里
 
@@ -45,8 +45,8 @@
 
 - [`plot notes`](../packages/viz/_notes/README.md)：plot 发布组内部文档入口。
 - [`plot-design.md`](../packages/viz/_notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
-- [`plot v0 roadmap`](../packages/viz/_notes/decisions/v0/roadmap.md)：plot v0 总路线。
-- [`plot v0.1 roadmap`](../packages/viz/_notes/decisions/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
+- [`plot v0 roadmap`](../packages/viz/_notes/decisions/plot/v0/roadmap.md)：plot v0 总路线。
+- [`plot v0.1 roadmap`](../packages/viz/_notes/decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`plot compare analysis`](../packages/viz/_notes/analysis/plot-compare-analysis.md)：plot 横向对比。
 - [`plot rendering performance`](../packages/viz/_notes/analysis/plot-rendering-performance.md)：plot 渲染性能分析。
 

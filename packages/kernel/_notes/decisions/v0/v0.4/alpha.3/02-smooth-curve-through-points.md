@@ -45,9 +45,7 @@ export const SmoothStepSchema = z
       'Edge label attached to the generated curve; positioned along the produced cubic commands by Bezier parameter (same as curve / cubic step labels).',
     ),
   })
-  .describe(
-    'Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.',
-  );
+  .describe('Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.');
 ```
 
 理由：

@@ -1,63 +1,11 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
+
+import { resolveFieldPath } from '@retikz/data';
 
 import type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
-import type { ExternalRow } from '../schemas';
-
-import { resolveFieldPath } from '../providers/data';
 
 export type { DatumIdRegistrar, ProvenanceContext } from '../contract/provenance';
-
-/**
- * 行级源序标记：ingest 时给每行打 `row[SOURCE_INDEX]=i`，跨 transform（object spread / sort）存活
- * @description Symbol 键不进 JSON.stringify、不被 resolveFieldPath（字符串路径）看见，stack 的 `{...row}` 会拷贝
- *   可枚举 symbol 属性、sort 仅重排保留行对象，故源序在派生 / 重排后仍可回指（best-effort）。
- */
-export const SOURCE_INDEX = Symbol('retikz.plot.sourceIndex');
-
-/** 读一行的源序标记（未打标记 → undefined） */
-export const readSourceIndex = (row: ExternalRow): number | undefined => {
-  const value: unknown = Reflect.get(row, SOURCE_INDEX);
-  return typeof value === 'number' ? value : undefined;
-};
-
-/**
- * 组级源序标记：改行数 transform（bin / summarize）给每个输出行打 `row[SOURCE_INDICES]=[...]`
- * @description 聚合 / 分箱产出的一行代表一组源行，故其 provenance 是「源行索引集合」而非单 sourceIndex。
- *   Symbol 键不进 JSON、不被 resolveFieldPath 看见；仅在源行已 tagSourceIndex（provenance 开）时由 transform 填充。
- */
-export const SOURCE_INDICES = Symbol('retikz.plot.sourceIndices');
-
-/** 读一行的组级源序标记（未打标记 → undefined）；bin / summarize 输出行的组级 provenance */
-export const readSourceIndices = (row: ExternalRow): Array<number> | undefined => {
-  const value: unknown = Reflect.get(row, SOURCE_INDICES);
-  return Array.isArray(value) && value.every((v): v is number => typeof v === 'number') ? value : undefined;
-};
-
-/** 取一组行的源行索引集合；仅 provenance 开启且源行已 tagSourceIndex 时非空。 */
-export const readSourceIndicesOf = (rows: Array<ExternalRow>): Array<number> => {
-  const out: Array<number> = [];
-  for (const row of rows) {
-    const index = readSourceIndex(row);
-    if (index !== undefined) out.push(index);
-  }
-  return out;
-};
-
-/**
- * 给改行数 transform 的输出行打组级源序标记。
- * @description 成员行没有 sourceIndex（provenance 未开或生成行）时原样返回；Symbol 键不会进入 JSON IR。
- */
-export const withGroupProvenance = (row: ExternalRow, members: Array<ExternalRow>): ExternalRow => {
-  const indices = readSourceIndicesOf(members);
-  return indices.length > 0 ? { ...row, [SOURCE_INDICES]: indices } : row;
-};
-
-/**
- * 给每行打源序标记（仅 provenance 开时调用，避免默认产物/行为变化）
- * @description object spread 拷贝可枚举 symbol 属性，故 transform 管线后标记仍在；resolveFieldPath / JSON 都忽略它。
- */
-export const tagSourceIndex = (rows: Array<ExternalRow>): Array<ExternalRow> =>
-  rows.map((row, index) => ({ ...row, [SOURCE_INDEX]: index }));
 
 /**
  * 把任意值转成 id 路径段：String() 后把 '.' 换成 '_'（'.' 是 plot-local 命名分隔符，会产生路径歧义）

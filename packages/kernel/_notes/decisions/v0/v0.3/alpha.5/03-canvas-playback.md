@@ -31,14 +31,14 @@ Canvas 是**即时模式**——画完即忘，没有 SVG 那种 retained DOM �
 
 ### property → Canvas 应用
 
-| property | Canvas 应用 |
-|---|---|
-| `opacity` | `ctx.globalAlpha` 乘 |
-| `fill` / `stroke` | 覆盖该 prim 的填充 / 描边色（oklch lerp 出的色） |
-| `strokeWidth` | `ctx.lineWidth` |
+| property                                                  | Canvas 应用                                                                                                                                                               |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `opacity`                                                 | `ctx.globalAlpha` 乘                                                                                                                                                      |
+| `fill` / `stroke`                                         | 覆盖该 prim 的填充 / 描边色（oklch lerp 出的色）                                                                                                                          |
+| `strokeWidth`                                             | `ctx.lineWidth`                                                                                                                                                           |
 | `translateX/Y` / `rotate` / `scale` / `scaleX` / `scaleY` | 绘制前 `ctx.translate/rotate/scale`（支点取 track `origin`——命名 anchor 折算成 prim boundary 点 / `[x,y]` 直用，缺省几何中心；scaleX/scaleY 传非均匀 `ctx.scale(sx,sy)`） |
-| `pathDraw`（0..1） | 按路径总弧长截 `0..p` 段绘制（几何 lerp 部分路径；`setLineDash` 或 sub-path 重建） |
-| `viewBox`（scene 根·镜头） | 时刻 t 的 `[x,y,w,h]` 替换静态 layout 取景 → 重算 meet-fit 映射矩阵（复用 alpha.1 的 meet-fit） |
+| `pathDraw`（0..1）                                        | 按路径总弧长截 `0..p` 段绘制（几何 lerp 部分路径；`setLineDash` 或 sub-path 重建）                                                                                        |
+| `viewBox`（scene 根·镜头）                                | 时刻 t 的 `[x,y,w,h]` 替换静态 layout 取景 → 重算 meet-fit 映射矩阵（复用 alpha.1 的 meet-fit）                                                                           |
 
 ### 自定义 property 插值器注册表（落地 ADR-01 预留的口）
 
@@ -69,7 +69,6 @@ Canvas 是 JS 插值的天然落点（vs SVG 受限于 CSS/WAAPI），故**自�
 - **SVG 播放**：ADR-02。
 - **sugar 动词**：react + 共享 parser，后续。
 - **数据过渡 / morph**：runtime + Tier 2。
-
 
 > 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:_notes/decisions/core/v0/v0.3/alpha.5/03-canvas-playback.md`（封板全文）。

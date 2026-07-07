@@ -28,14 +28,14 @@ rc 是公开 API 冻结后的验收窗口。目标是让外部用户能从 npm �
 
 ## 分级
 
-| Level | 范围 | 允许程度 | 验证 |
-| --- | --- | --- | --- |
-| docs | `apps/docs/**`、导航、i18n、demo、changelog、迁移指南 | 主路径 | docs typecheck / build + 页面确认 |
-| bugfix | 不改变公开契约的 core / react / plot bug 修复 | 允许 | 回归测试 + lint / tsc / test |
-| packaging | metadata、exports、tarball、安装 smoke | 允许 | build + dry-run + 外部安装验证 |
-| compat-risk | 可观察行为调整但声称兼容 | 谨慎，需人工裁定 | 回归测试 + changelog / 用户影响说明 |
-| breaking | 公开 API / IR schema / 组件名 / prop 名 / export 变化 | 禁止 | halt |
-| feature | 新公开能力 / 新 schema 字段 / 新 DSL 行为 | 禁止 | halt |
+| Level       | 范围                                                  | 允许程度         | 验证                                |
+| ----------- | ----------------------------------------------------- | ---------------- | ----------------------------------- |
+| docs        | `apps/docs/**`、导航、i18n、demo、changelog、迁移指南 | 主路径           | docs typecheck / build + 页面确认   |
+| bugfix      | 不改变公开契约的 core / react / plot bug 修复         | 允许             | 回归测试 + lint / tsc / test        |
+| packaging   | metadata、exports、tarball、安装 smoke                | 允许             | build + dry-run + 外部安装验证      |
+| compat-risk | 可观察行为调整但声称兼容                              | 谨慎，需人工裁定 | 回归测试 + changelog / 用户影响说明 |
+| breaking    | 公开 API / IR schema / 组件名 / prop 名 / export 变化 | 禁止             | halt                                |
+| feature     | 新公开能力 / 新 schema 字段 / 新 DSL 行为             | 禁止             | halt                                |
 
 ## 标准流程
 

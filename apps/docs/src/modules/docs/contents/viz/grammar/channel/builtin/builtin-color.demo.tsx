@@ -1,6 +1,6 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
-import { PlotFieldType } from '@retikz/plot';
+import { DataFieldType } from '@retikz/data';
 import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
 
 const rows = [
@@ -33,15 +33,15 @@ const Demo: FC = () => (
   <Plot
     data={rows}
     model={[
-      { name: 'x', type: PlotFieldType.Continuous },
-      { name: 'xFill', type: PlotFieldType.Continuous },
-      { name: 'xText', type: PlotFieldType.Continuous },
-      { name: 'y', type: PlotFieldType.Continuous },
-      { name: 'colorKey', type: PlotFieldType.Categorical },
-      { name: 'fillKey', type: PlotFieldType.Categorical },
-      { name: 'strokeKey', type: PlotFieldType.Categorical },
-      { name: 'textKey', type: PlotFieldType.Categorical },
-      { name: 'tag', type: PlotFieldType.Categorical },
+      { name: 'x', type: DataFieldType.Continuous },
+      { name: 'xFill', type: DataFieldType.Continuous },
+      { name: 'xText', type: DataFieldType.Continuous },
+      { name: 'y', type: DataFieldType.Continuous },
+      { name: 'colorKey', type: DataFieldType.Categorical },
+      { name: 'fillKey', type: DataFieldType.Categorical },
+      { name: 'strokeKey', type: DataFieldType.Categorical },
+      { name: 'textKey', type: DataFieldType.Categorical },
+      { name: 'tag', type: DataFieldType.Categorical },
     ]}
     width={560}
     height={260}

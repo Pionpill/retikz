@@ -17,24 +17,24 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 ## 文件分层
 
-| 文件 | 职责 |
-| --- | --- |
-| `schemas/<capability>/constants.ts` | 本 schema 私有 const object enum、关键字常量 |
-| `schemas/<capability>/schema.ts` | Zod schema、`.describe(...)`、必要 refinement |
-| `schemas/<capability>/types.ts` | 由 schema / const object 派生的 TS 类型 |
-| `shared/` | 跨 schema / contract / providers / compile 复用的词汇与纯工具 |
+| 文件                                | 职责                                                          |
+| ----------------------------------- | ------------------------------------------------------------- |
+| `schemas/<capability>/constants.ts` | 本 schema 私有 const object enum、关键字常量                  |
+| `schemas/<capability>/schema.ts`    | Zod schema、`.describe(...)`、必要 refinement                 |
+| `schemas/<capability>/types.ts`     | 由 schema / const object 派生的 TS 类型                       |
+| `shared/`                           | 跨 schema / contract / providers / compile 复用的词汇与纯工具 |
 
 不要把 IR schema 放到 `contract` / `providers` / `compile`。新增 shared 内容先读 `standard-shared`。
 
 ## 命名
 
-| 格式 | 用途 |
-| --- | --- |
-| `XxxSchema` | 完整契约 schema |
+| 格式            | 用途                                                               |
+| --------------- | ------------------------------------------------------------------ |
+| `XxxSchema`     | 完整契约 schema                                                    |
 | `XxxBaseSchema` | 可复用字段契约；用于 default schema、kind schema 或最终 refinement |
-| `IRXxx` | 由 IR schema object 派生的公开 JSON 数据类型 |
-| `XxxValue` | 由 const object enum + `ValueOf` 派生的取值 union，不加 `IR` |
-| `XxxInput` | 只有输入形态确实不同于存储形态时使用 |
+| `IRXxx`         | 由 IR schema object 派生的公开 JSON 数据类型                       |
+| `XxxValue`      | 由 const object enum + `ValueOf` 派生的取值 union，不加 `IR`       |
+| `XxxInput`      | 只有输入形态确实不同于存储形态时使用                               |
 
 ## LLM 友好契约
 

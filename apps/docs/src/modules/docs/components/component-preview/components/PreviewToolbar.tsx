@@ -20,7 +20,12 @@ export const PreviewToolbar: FC<PreviewToolbarProps> = props => {
   const { children, className } = props;
 
   return (
-    <div className={cn('flex items-center gap-1 rounded-md border bg-background/95 p-1 shadow-sm backdrop-blur', className)}>
+    <div
+      className={cn(
+        'flex items-center gap-1 rounded-md border bg-background/95 p-1 shadow-sm backdrop-blur',
+        className,
+      )}
+    >
       {children}
     </div>
   );
@@ -64,10 +69,7 @@ export const PreviewToolbarSeparator: FC<PreviewToolbarSeparatorProps> = props =
   const { orientation = 'vertical', className } = props;
 
   return (
-    <Separator
-      orientation={orientation}
-      className={cn(orientation === 'vertical' ? 'h-5' : 'w-full', className)}
-    />
+    <Separator orientation={orientation} className={cn(orientation === 'vertical' ? 'h-5' : 'w-full', className)} />
   );
 };
 

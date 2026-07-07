@@ -1,6 +1,7 @@
 import type { IRChild } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 
-import type { ExternalRow, Mark, MarkOperation } from '../schemas';
+import type { Mark, MarkOperation } from '../schemas';
 import type { MarkLoweringContext } from './anchor';
 import type { ChannelDefinitionKindValue, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';

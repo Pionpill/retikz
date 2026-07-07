@@ -62,40 +62,56 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
 });
 
 describe('[lower-tex] MathJax integration', () => {
-  it('renders a simple formula and a fraction', async () => {
-    const engine = await createMathJaxEngine();
-    const lower = createLowerTex(engine);
-    const x = lower({ tex: 'x' }, { fontSize: 14 });
-    expect(x).not.toBeNull();
-    expect(x!.commands.length).toBeGreaterThan(0);
-    expect(x!.width).toBeGreaterThan(0);
-    expect(x!.height).toBeGreaterThan(0);
+  it(
+    'renders a simple formula and a fraction',
+    async () => {
+      const engine = await createMathJaxEngine();
+      const lower = createLowerTex(engine);
+      const x = lower({ tex: 'x' }, { fontSize: 14 });
+      expect(x).not.toBeNull();
+      expect(x!.commands.length).toBeGreaterThan(0);
+      expect(x!.width).toBeGreaterThan(0);
+      expect(x!.height).toBeGreaterThan(0);
 
-    const frac = lower({ tex: '\\frac{a}{b}', displayMode: true }, { fontSize: 14 });
-    expect(frac).not.toBeNull();
-    expect(frac!.commands.length).toBeGreaterThan(x!.commands.length);
-  }, MATHJAX_INTEGRATION_TIMEOUT);
+      const frac = lower({ tex: '\\frac{a}{b}', displayMode: true }, { fontSize: 14 });
+      expect(frac).not.toBeNull();
+      expect(frac!.commands.length).toBeGreaterThan(x!.commands.length);
+    },
+    MATHJAX_INTEGRATION_TIMEOUT,
+  );
 
-  it('returns null for syntax errors that MathJax marks as merror', async () => {
-    const engine = await createMathJaxEngine();
-    const lower = createLowerTex(engine);
-    expect(lower({ tex: '{', displayMode: false }, { fontSize: 14 })).toBeNull();
-  }, MATHJAX_INTEGRATION_TIMEOUT);
+  it(
+    'returns null for syntax errors that MathJax marks as merror',
+    async () => {
+      const engine = await createMathJaxEngine();
+      const lower = createLowerTex(engine);
+      expect(lower({ tex: '{', displayMode: false }, { fontSize: 14 })).toBeNull();
+    },
+    MATHJAX_INTEGRATION_TIMEOUT,
+  );
 
-  it('returns null for undefined control sequences', async () => {
-    const engine = await createMathJaxEngine();
-    const lower = createLowerTex(engine);
-    expect(lower({ tex: '\\nonexistentcmd', displayMode: false }, { fontSize: 14 })).toBeNull();
-  }, MATHJAX_INTEGRATION_TIMEOUT);
+  it(
+    'returns null for undefined control sequences',
+    async () => {
+      const engine = await createMathJaxEngine();
+      const lower = createLowerTex(engine);
+      expect(lower({ tex: '\\nonexistentcmd', displayMode: false }, { fontSize: 14 })).toBeNull();
+    },
+    MATHJAX_INTEGRATION_TIMEOUT,
+  );
 
-  it('works end to end through compileToScene', async () => {
-    const lowerTex = createLowerTex(await createMathJaxEngine());
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [{ type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' }],
-    };
-    const scene = compileToScene(ir, { lowerTex });
-    expect(JSON.stringify(scene.primitives)).toContain('"fillRule":"evenodd"');
-  }, MATHJAX_INTEGRATION_TIMEOUT);
+  it(
+    'works end to end through compileToScene',
+    async () => {
+      const lowerTex = createLowerTex(await createMathJaxEngine());
+      const ir: IRScene = {
+        version: 1,
+        type: 'scene',
+        children: [{ type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' }],
+      };
+      const scene = compileToScene(ir, { lowerTex });
+      expect(JSON.stringify(scene.primitives)).toContain('"fillRule":"evenodd"');
+    },
+    MATHJAX_INTEGRATION_TIMEOUT,
+  );
 });

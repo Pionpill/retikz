@@ -22,14 +22,14 @@ alpha.3 把 shape 从「闭合枚举」推进到「可注册、可第三方注�
 
 **做**：
 
-| 项 | 说明 |
-|---|---|
-| `ShapeDefinition` 接口 | 四方法 `circumscribe` / `boundaryPoint` / `anchor` / `emit`，操作外接 `Rect` |
-| `BUILTIN_SHAPES` 注册表 | 内置 4 shape 改造为注册项 |
-| `CompileOptions.shapes` 注入面 | 运行时注入第三方 shape；同名覆盖内置（onWarn 发 warning） |
+| 项                              | 说明                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| `ShapeDefinition` 接口          | 四方法 `circumscribe` / `boundaryPoint` / `anchor` / `emit`，操作外接 `Rect`      |
+| `BUILTIN_SHAPES` 注册表         | 内置 4 shape 改造为注册项                                                         |
+| `CompileOptions.shapes` 注入面  | 运行时注入第三方 shape；同名覆盖内置（onWarn 发 warning）                         |
 | `NodeSchema.shape` 开放为字符串 | `z.string().min(1)`；`BuiltinShapeName`（Record key）与 `NodeShape`（开放名）分离 |
-| compile 5 分发点查表 | `switch(shape)` → registry lookup |
-| 未知 shape 诊断 | compile throw 列出可用名 |
+| compile 5 分发点查表            | `switch(shape)` → registry lookup                                                 |
+| 未知 shape 诊断                 | compile throw 列出可用名                                                          |
 
 **不做**（写进 ADR §范围外）：
 
@@ -62,20 +62,20 @@ export type ShapeDefinition = {
 
 ## IR / schema 改动清单
 
-| 改动 | 文件 | Level | 说明 |
-|---|---|---|---|
-| `NodeSchema.shape` → 开放 string | `ir/node.ts` | **red** | `z.string().min(1).optional()` + describe（**不用** `z.union([nativeEnum, string])`——string 已覆盖 enum，union 无校验意义、误导）；校验只保非空、未注册名 compile 期拒 |
-| `BuiltinShapeName` / `NodeShape` 类型分离 | `ir/node.ts` | **red** | `BuiltinShapeName = ValueOf<typeof NODE_SHAPES>`（Record key）；`NodeShape = BuiltinShapeName \| (string & {})`（开放名，保内置补全）——禁 `Record<NodeShape,...>` 退化 |
-| `ShapeDefinition` / `ShapeStyle` 类型 | `shapes/types.ts`（新建） | **red** | 四方法接口 + emit 视觉样式子集 |
-| 内置 4 shape 注册项 | `shapes/{rectangle,circle,ellipse,diamond}.ts`（新建） | **red** | assemble geometry ops + circumscribe + emit |
-| `BUILTIN_SHAPES` + barrel | `shapes/index.ts`（新建） | **red** | `Record<BuiltinShapeName, ShapeDefinition>` + re-export `ShapeDefinition`/`ShapeStyle`/`Rect`/`Position`/`worldToLocal`/`localToWorld` |
-| `CompileOptions.shapes` 注入 + 解析 | `compile/compile.ts` | **red** | 有效表 = `{...BUILTIN_SHAPES, ...options.shapes}`；覆盖经 onWarn 发 `SHAPE_OVERRIDES_BUILTIN`（不门控 NODE_ENV，用户 onWarn 始终收到）；未知 shape throw-only |
-| 5 分发点查表 | `compile/node.ts` | **red** | switch → registry；emit*Shape 搬进 shape def；NodeLayout `shape`→`shapeName: string` + 加**必填** `shapeDef`；删 `*Of`/`unrotated` |
-| synthetic layout 挂 rectangle shapeDef | `compile/compile.ts`（`zeroSizeRectAt`）/ `compile/scope.ts`（`registerScopeAsLayout`） | **red** | coordinate 占位 / scope.id bbox 不经查表，必须显式 `shapeDef: BUILTIN_SHAPES.rectangle`（使 `shapeDef` 必填、免兜底分支扩散） |
-| 未知 anchor 错误信息 | `compile/anchor-cache.ts` | **red** | `anchor` 返回 undefined → throw 含 shape 名；computeAnchor 逻辑不变 |
-| `worldToLocal`/`localToWorld` 提升公开 | `geometry/_transform.ts` | **red** | 脱 `_` 内部前缀，供第三方 shape 作者 |
-| 公开 API 导出 | `core/src/index.ts` | **red** | `ShapeDefinition`/`ShapeStyle`/`BUILTIN_SHAPES`/`BuiltinShapeName`/`worldToLocal`/`localToWorld` |
-| ZodSchema reference + 自定义 shape 章节 | `apps/docs/**` | **green** | shape 字段描述 + Shape Registry 教程（**显著提示** emit 收 rotate=0 rect、boundaryPoint/anchor 收带 rotate rect） |
+| 改动                                      | 文件                                                                                    | Level     | 说明                                                                                                                                                                   |
+| ----------------------------------------- | --------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NodeSchema.shape` → 开放 string          | `ir/node.ts`                                                                            | **red**   | `z.string().min(1).optional()` + describe（**不用** `z.union([nativeEnum, string])`——string 已覆盖 enum，union 无校验意义、误导）；校验只保非空、未注册名 compile 期拒 |
+| `BuiltinShapeName` / `NodeShape` 类型分离 | `ir/node.ts`                                                                            | **red**   | `BuiltinShapeName = ValueOf<typeof NODE_SHAPES>`（Record key）；`NodeShape = BuiltinShapeName \| (string & {})`（开放名，保内置补全）——禁 `Record<NodeShape,...>` 退化 |
+| `ShapeDefinition` / `ShapeStyle` 类型     | `shapes/types.ts`（新建）                                                               | **red**   | 四方法接口 + emit 视觉样式子集                                                                                                                                         |
+| 内置 4 shape 注册项                       | `shapes/{rectangle,circle,ellipse,diamond}.ts`（新建）                                  | **red**   | assemble geometry ops + circumscribe + emit                                                                                                                            |
+| `BUILTIN_SHAPES` + barrel                 | `shapes/index.ts`（新建）                                                               | **red**   | `Record<BuiltinShapeName, ShapeDefinition>` + re-export `ShapeDefinition`/`ShapeStyle`/`Rect`/`Position`/`worldToLocal`/`localToWorld`                                 |
+| `CompileOptions.shapes` 注入 + 解析       | `compile/compile.ts`                                                                    | **red**   | 有效表 = `{...BUILTIN_SHAPES, ...options.shapes}`；覆盖经 onWarn 发 `SHAPE_OVERRIDES_BUILTIN`（不门控 NODE_ENV，用户 onWarn 始终收到）；未知 shape throw-only          |
+| 5 分发点查表                              | `compile/node.ts`                                                                       | **red**   | switch → registry；emit*Shape 搬进 shape def；NodeLayout `shape`→`shapeName: string` + 加**必填** `shapeDef`；删 `*Of`/`unrotated`                                     |
+| synthetic layout 挂 rectangle shapeDef    | `compile/compile.ts`（`zeroSizeRectAt`）/ `compile/scope.ts`（`registerScopeAsLayout`） | **red**   | coordinate 占位 / scope.id bbox 不经查表，必须显式 `shapeDef: BUILTIN_SHAPES.rectangle`（使 `shapeDef` 必填、免兜底分支扩散）                                          |
+| 未知 anchor 错误信息                      | `compile/anchor-cache.ts`                                                               | **red**   | `anchor` 返回 undefined → throw 含 shape 名；computeAnchor 逻辑不变                                                                                                    |
+| `worldToLocal`/`localToWorld` 提升公开    | `geometry/_transform.ts`                                                                | **red**   | 脱 `_` 内部前缀，供第三方 shape 作者                                                                                                                                   |
+| 公开 API 导出                             | `core/src/index.ts`                                                                     | **red**   | `ShapeDefinition`/`ShapeStyle`/`BUILTIN_SHAPES`/`BuiltinShapeName`/`worldToLocal`/`localToWorld`                                                                       |
+| ZodSchema reference + 自定义 shape 章节   | `apps/docs/**`                                                                          | **green** | shape 字段描述 + Shape Registry 教程（**显著提示** emit 收 rotate=0 rect、boundaryPoint/anchor 收带 rotate rect）                                                      |
 
 **判级**：跨级取最高 = **red**，走 Spec-First TDD。绿色文档独立 commit、走简化路径。
 

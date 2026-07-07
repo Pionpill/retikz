@@ -26,7 +26,7 @@ From the inside out, the layers are: the content box innermost, then the inner f
 | Shape        | `shape.circumscribe` and `shape.emit`                                | The visible outline                                                                  |
 | Bounding box | Shape enclosing the inner frame (visual envelope, excludes `margin`) | Base for rendering/clipping; plus `margin` it becomes the layout footprint / viewBox |
 | Boundary     | `boundary`, following shape by default                               | The surface border anchors attach to (automatic / named direction / angle)           |
-| Anchor       | Web direction / angle / shape-specific / edge point                   | Precise points other primitives can reference                                        |
+| Anchor       | Web direction / angle / shape-specific / edge point                  | Precise points other primitives can reference                                        |
 
 Reading the figure follows the compile order:
 
@@ -48,8 +48,8 @@ The innermost gray block is the content box, the middle dashed ring is the inner
 
 The inner frame answers "how large must this node be at minimum" and is the starting point for all later geometry: the shape circumscribes it, and connections and anchors ultimately land on boundaries derived from it. Even an empty-text node has an inner frame — padding and minimum size keep it from collapsing to a point.
 
-| Prop                 | Changes                                                              | Result                                                                                                         |
-| -------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Prop      | Changes                                     | Result                                                                                                         |
+| --------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `padding` | Distance from content to shape              | Shape grows, bounding box grows                                                                                |
 | `margin`  | Outer offset around the connection boundary | Shape stays the same; all border anchors and path endpoints move out, and the layout footprint includes margin |
 
@@ -86,11 +86,11 @@ The **boundary** answers one question: when a path connects to this Node automat
 
 When a Node borrows another boundary, retikz lays that boundary over the current Node's visual bounding box; it does not call the borrowed shape's `circumscribe` again. For example, `boundary="circle"` uses the longer half-axis of the current bounding box as its radius. It may extend beyond the footprint, but it still does not participate in layout.
 
-| Setting                    | Changes                                                            | Does not change                             |
-| -------------------------- | ------------------------------------------------------------------ | ------------------------------------------- |
-| `shape`                    | Visible outline, bounding box, shape anchors                       | Center semantics                            |
+| Setting                    | Changes                                                                    | Does not change                             |
+| -------------------------- | -------------------------------------------------------------------------- | ------------------------------------------- |
+| `shape`                    | Visible outline, bounding box, shape anchors                               | Center semantics                            |
 | `boundary`                 | The surface border anchors (automatic / named direction / angle) attach to | Visual node, bounding box, layout footprint |
-| Per-edge boundary override | Current path endpoint                                              | Node defaults                               |
+| Per-edge boundary override | Current path endpoint                                                      | Node defaults                               |
 
 So the bounding box is the visual envelope used for rendering (plus `margin` it becomes the layout footprint), while the boundary is closer to a connection hit surface — neither is the drawn shell.
 
@@ -110,7 +110,7 @@ Anchors are the stable points that a Node exposes to other primitives. Paths, po
 | Direction       | `top`, `right`, `bottom-left`        | Common connections and layout         |
 | Angle           | `'A.35'` / `{ id: 'A', anchor: 35 }` | Intersecting a ray with the boundary  |
 | Shape-specific  | star tips, sector arc endpoints      | Semantic points on complex shapes     |
-| Edge proportion | `{ side: 'top', fraction: 0.25 }`           | Tables, lanes, frame edges            |
+| Edge proportion | `{ side: 'top', fraction: 0.25 }`    | Tables, lanes, frame edges            |
 
 <ComponentPreview name="anchors" size="lg" hideCode />
 
@@ -126,10 +126,10 @@ IR / schema directional anchors keep one canonical vocabulary: `top` / `right` /
 
 The built-in [`shape`](/kernel/components/node) types share this naming, but the connection surface resolves in two families: circle / ellipse land on the real curve, while every other shape (including the polygon-preset diamond, plus star / sector / arc which have no standard direction implementation of their own) lands on the corresponding direction of the visual bounding box (AABB) — matching TikZ taking a polygon's direction anchors on its bbox:
 
-|                            | rectangle                              | circle           | ellipse                  | diamond (polygon)   |
-| -------------------------- | -------------------------------------- | ---------------- | ------------------------ | ------------------- |
-| `top` & 4 cardinals        | Edge midpoints (= AABB edge midpoints) | Circle perimeter | Ellipse axis ends        | AABB edge midpoints |
-| `top-right` & 4 diagonals  | The 4 corners                          | Perimeter at 45° | Ellipse parametric t=π/4 | AABB corners        |
+|                           | rectangle                              | circle           | ellipse                  | diamond (polygon)   |
+| ------------------------- | -------------------------------------- | ---------------- | ------------------------ | ------------------- |
+| `top` & 4 cardinals       | Edge midpoints (= AABB edge midpoints) | Circle perimeter | Ellipse axis ends        | AABB edge midpoints |
+| `top-right` & 4 diagonals | The 4 corners                          | Perimeter at 45° | Ellipse parametric t=π/4 | AABB corners        |
 
 When a node has `rotate`, the center plus the 8 directional anchors rotate with it.
 

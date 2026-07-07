@@ -1,4 +1,4 @@
-import type { IRPaintSpec } from '@retikz/plot';
+import type { IRPaintSpec } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Axis, PathMark, Plot } from '@retikz/plot-react';

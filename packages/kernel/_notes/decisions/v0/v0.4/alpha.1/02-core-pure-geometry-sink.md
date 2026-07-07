@@ -20,15 +20,15 @@ core 正向依赖 `@retikz/math`（`workspace:*`），math 不反依赖 core。�
 
 ### 2. 下沉切面 = 函数粒度
 
-| core 模块 | 下沉 math | 留 core |
-| --- | --- | --- |
-| `point` | 向量运算（add/sub/scale/length/normalize/shiftToward/equal）| `toPolar` / `equalPolar`（→ ADR-03） |
-| `transform` | localToWorld / worldToLocal / CenteredShape（整体） | — |
-| `edge` | `lerpPoint`（= math `lerp`） | `Side` / `EDGE_ENDS` / `edgeAngleDeg` / `polylineViaVertex` |
-| `arc` | 全文件（决策 4） | — |
-| `contour` | 私有 intersectLineLine / intersectLineCircle / intersectCircleCircle（改用 math `intersect`） | `filletContour` / `contourCommands` / `ContourCommand` / 私有 `footOnLine`（fillet 内部用） |
-| `circle/ellipse/rect/diamond` | —（首切只改 import） | center / contains / boundaryPoint / anchor / edgePoint 整体留 core |
-| `polar` / `anchor` | — | 整体留 core（polar=IR、anchor=TikZ 语义） |
+| core 模块                     | 下沉 math                                                                                     | 留 core                                                                                     |
+| ----------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `point`                       | 向量运算（add/sub/scale/length/normalize/shiftToward/equal）                                  | `toPolar` / `equalPolar`（→ ADR-03）                                                        |
+| `transform`                   | localToWorld / worldToLocal / CenteredShape（整体）                                           | —                                                                                           |
+| `edge`                        | `lerpPoint`（= math `lerp`）                                                                  | `Side` / `EDGE_ENDS` / `edgeAngleDeg` / `polylineViaVertex`                                 |
+| `arc`                         | 全文件（决策 4）                                                                              | —                                                                                           |
+| `contour`                     | 私有 intersectLineLine / intersectLineCircle / intersectCircleCircle（改用 math `intersect`） | `filletContour` / `contourCommands` / `ContourCommand` / 私有 `footOnLine`（fillet 内部用） |
+| `circle/ellipse/rect/diamond` | —（首切只改 import）                                                                          | center / contains / boundaryPoint / anchor / edgePoint 整体留 core                          |
+| `polar` / `anchor`            | —                                                                                             | 整体留 core（polar=IR、anchor=TikZ 语义）                                                   |
 
 ### 3. 公开面 = core re-export，上层零改动
 

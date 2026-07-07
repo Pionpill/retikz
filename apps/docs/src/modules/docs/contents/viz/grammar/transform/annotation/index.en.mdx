@@ -1,68 +1,43 @@
 ---
-title: Row Annotations
-description: Row annotations keep every detail row while adding fields derived from groups, row order, or statistical context.
+title: Stacking & Shares
+description: Stacking and share transforms preserve detail rows while adding plot-specific stack intervals or normalized share fields.
 ---
 
-Row annotations are for charts that still draw detail rows, but each row needs more context. They do not collapse many rows into one row and they do not discard source rows; the output can still feed points, paths, intervals, or custom marks directly.
+This group contains plot-registered row-preserving drawing transforms. Marks still draw detail rows, but each row receives extra fields for visual layout. These transforms do not reduce groups or discard original rows.
 
-| kind        | Row count | Common output                                          |
-| ----------- | --------- | ------------------------------------------------------ |
-| `stack`     | N → N     | `y0` / `y1`                                            |
-| `normalize` | N → N     | A ratio field, or the original field overwritten       |
-| `annotate`  | N → N     | Group mean, median, extrema, or other statistic fields |
+Group statistic broadcasting is a data capability; see [Data Transforms / annotate](/viz/data/transform#annotate).
 
-## Stack
+| kind        | rows   | common output                     |
+| ----------- | ------ | --------------------------------- |
+| `stack`     | N -> N | `y0` / `y1`                       |
+| `normalize` | N -> N | Share fields or overwritten input |
 
-`stack` accumulates values within each `x` group and series, adding a lower and upper bound to every row. By default it writes `y0` / `y1`, which `IntervalMark` can consume as an extent.
+## stack
+
+`stack` accumulates values within each `x` group by series, adding lower and upper bounds to every row. The default output is `y0` / `y1`, matching `IntervalMark` interval consumption.
 
 <ComponentPreview name="transform-stack" sourceFiles={['transform-stack.data.ts']} />
 
-The automatic stack used by `<IntervalMark stack>` / `<IntervalMark angle>` is only a shortcut. When an equivalent explicit `stack` already exists in the pipeline, the shortcut is suppressed to avoid stacking twice.
+`<IntervalMark stack>` / `<IntervalMark angle>` auto-stacking is shorthand. When a matching explicit `stack` already exists in the pipeline, auto-stacking is suppressed to avoid stacking twice.
 
-| prop                      | Type      | Default      | Notes                                                   |
-| ------------------------- | --------- | ------------ | ------------------------------------------------------- |
-| `x`                       | `string?` | Single group | Group key; rows with the same value accumulate together |
-| `y`                       | `string`  | —            | Numeric field to accumulate                             |
-| `groupBy`                 | `string?` | Row order    | Series field; first appearance decides segment order    |
-| `startField` / `endField` | `string?` | `y0` / `y1`  | Output bound fields                                     |
+| prop                      | type      | default        | description                                           |
+| ------------------------- | --------- | -------------- | ----------------------------------------------------- |
+| `x`                       | `string?` | one group      | Group key; values stack within the same key           |
+| `y`                       | `string`  | —              | Numeric field to accumulate                           |
+| `groupBy`                 | `string?` | data row order | Series field; appearance order controls segment order |
+| `startField` / `endField` | `string?` | `y0` / `y1`    | Output bound field names                              |
 
-## Normalize
+## normalize
 
-`normalize` divides each row's value by the total of its group. `basis` can be `fraction` (0 to 1) or `percent` (0 to 100); when `as` is omitted, the input field is overwritten.
+`normalize` divides each row's value by the total of its group, yielding a within-group share. `basis` can be `fraction` (0 to 1) or `percent` (0 to 100); when `as` is omitted, the input field is overwritten.
 
 <ComponentPreview name="transform-normalize" sourceFiles={['transform-normalize.data.ts']} />
 
-Normalize plus stack is a percentage stack: first convert each group to shares, then stack those shares.
+Normalize followed by stack gives a percent stack: first convert every group to shares, then stack those shares.
 
-| prop      | Type                       | Default          | Notes                                       |
-| --------- | -------------------------- | ---------------- | ------------------------------------------- |
-| `field`   | `string`                   | —                | Numeric field to convert to a share         |
-| `groupBy` | `Array<string>?`           | One global group | Grouping keys; composite keys are supported |
-| `basis`   | `'fraction' \| 'percent'?` | `'fraction'`     | Output scale                                |
-| `as`      | `string?`                  | Overwrite input  | Output field name                           |
-
-## Annotate
-
-`annotate` groups rows, computes reducer metrics or selector-picked representative values, and broadcasts those fields back onto every row in the group. Use it when detail rows need group-level context such as mean lines, median bands, or threshold overlays.
-
-<ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
-
-The example writes each store's average revenue into `storeMean`. Points still draw the raw `revenue`; the path reads the broadcast mean.
-Available reducers and selectors are covered in [Statistic Operations](/viz/grammar/transform/statistics); `annotate` only decides to broadcast their results back onto detail rows.
-
-| prop        | Type                                         | Default          | Notes                                                                                                                                                            |
-| ----------- | -------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `groupBy`   | `Array<string>?`                             | One global group | Grouping keys; composite keys are supported                                                                                                                      |
-| `metrics`   | `Array<Reducer>?`                            | —                | Statistic fields broadcast to every row                                                                                                                          |
-| `selectors` | `Array<{ selector: Selector; as: string }>?` | —                | Representative values broadcast to every row; `min` / `max` / `top` / `bottom` read the selector's `by` field, while other selectors broadcast the selected rank |
-
-Common reducer / selector form:
-
-```tsx
-<Transform
-  kind="annotate"
-  groupBy={['store']}
-  metrics={[{ op: 'mean', field: 'revenue', as: 'storeMean' }]}
-  selectors={[{ selector: { op: 'max', by: 'revenue' }, as: 'storeMax' }]}
-/>
-```
+| prop      | type                       | default          | description                         |
+| --------- | -------------------------- | ---------------- | ----------------------------------- |
+| `field`   | `string`                   | —                | Numeric field to normalize          |
+| `groupBy` | `Array<string>?`           | one global group | Group keys; supports composite keys |
+| `basis`   | `'fraction' \| 'percent'?` | `'fraction'`     | Output scale                        |
+| `as`      | `string?`                  | overwrite input  | Output field name                   |

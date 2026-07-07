@@ -18,27 +18,28 @@ description: retikz 示例页规范：`apps/docs/src/contents/<module>/examples/
 
 示例页是 **retikz 能力综合 showcase**——以经典 / 实用图表为载体，**循序渐进教读者用 retikz 能力**。与现有三种 section 的边界：
 
-| Section | 服务什么 |
-| --- | --- |
-| `concepts/` | 抽象概念（坐标系 / anchor / 分层） |
-| `components/` | 单组件 API 字典 + 该组件自身的多个 demo |
+| Section                 | 服务什么                                    |
+| ----------------------- | ------------------------------------------- |
+| `concepts/`             | 抽象概念（坐标系 / anchor / 分层）          |
+| `components/`           | 单组件 API 字典 + 该组件自身的多个 demo     |
 | `examples/`（本 skill） | 多组件 + 多能力**组合成完整图**，按 step 教 |
 
 **不是**什么：
+
 - 不是 TikZ 迁移指南（正文不主动比 TikZ；TikZ 关系只在写法差异极大、TikZ 老用户可能困惑时才用 `<Comparison>` 提一下）
 - 不是组件 API 字典（具体 API 用法请用 markdown link 跳到 components/）
 - 不是 final-result 摆图秀（重点是教过程，不是炫成品）
 
 ## 单页骨架（6 段固定）
 
-| 顺序 | section | 要点 |
-| --- | --- | --- |
-| 1 | `## 引言` | frontmatter 后 2-3 句说明目的；hero 复用最后一个 step demo |
-| 2 | `## Prompt` | 用 `<ExamplePrompt short="..." detailed={...} />` |
-| 3 | `## 过程` | 每步 `### Step N：<主题>`，累加式 `<ComponentPreview>`，H3 进 TOC |
-| 4 | `## 能力` | 组件 link + 在图中角色 + step 锚链接 |
-| 5 | `## 限制` | 只列本例触到的 gap；为空可省略 |
-| 6 | `## 扩展阅读` | 进阶、优化、相关组件/概念；无合适内容可省略 |
+| 顺序 | section       | 要点                                                              |
+| ---- | ------------- | ----------------------------------------------------------------- |
+| 1    | `## 引言`     | frontmatter 后 2-3 句说明目的；hero 复用最后一个 step demo        |
+| 2    | `## Prompt`   | 用 `<ExamplePrompt short="..." detailed={...} />`                 |
+| 3    | `## 过程`     | 每步 `### Step N：<主题>`，累加式 `<ComponentPreview>`，H3 进 TOC |
+| 4    | `## 能力`     | 组件 link + 在图中角色 + step 锚链接                              |
+| 5    | `## 限制`     | 只列本例触到的 gap；为空可省略                                    |
+| 6    | `## 扩展阅读` | 进阶、优化、相关组件/概念；无合适内容可省略                       |
 
 `title` / `description` 仍写在 frontmatter；正文不要再写 H1。
 
@@ -55,15 +56,15 @@ description: retikz 示例页规范：`apps/docs/src/contents/<module>/examples/
 
 ## Demo 文件约定
 
-| 项 | 规则 |
-| --- | --- |
-| 形态 | **累加式**——第 N 个 demo = 前 N-1 step 的全部内容 + 本 step 新增 |
-| 命名 | `<example-id>-NN-<theme>.demo.tsx`，NN 两位 0 补齐（如 `karl-circle-01-circle.demo.tsx`） |
-| 双语 | **按文本是否实际不同**判断：通用数学 / 公式 / 符号 label（`sin α` / `f(x)` / `α`）单 `.demo.tsx`；含本地化散文 / 解释性文本的 step 才分 `.zh.demo.tsx` / `.en.demo.tsx` |
-| Helpers | **默认内联**在每个 demo，保证独立可读；demo 体量过大、或多步共用同一套基础设施时，按下文「多文件 demo」拆成子文件（`sourceFiles` 会一并展示，不再被隐藏） |
-| Hero 复用 | 引言里 hero `<ComponentPreview>` 复用最后一个 step 的 demo（不另起 `-final` 文件） |
+| 项         | 规则                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 形态       | **累加式**——第 N 个 demo = 前 N-1 step 的全部内容 + 本 step 新增                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 命名       | `<example-id>-NN-<theme>.demo.tsx`，NN 两位 0 补齐（如 `karl-circle-01-circle.demo.tsx`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 双语       | **按文本是否实际不同**判断：通用数学 / 公式 / 符号 label（`sin α` / `f(x)` / `α`）单 `.demo.tsx`；含本地化散文 / 解释性文本的 step 才分 `.zh.demo.tsx` / `.en.demo.tsx`                                                                                                                                                                                                                                                                                                                                                                                           |
+| Helpers    | **默认内联**在每个 demo，保证独立可读；demo 体量过大、或多步共用同一套基础设施时，按下文「多文件 demo」拆成子文件（`sourceFiles` 会一并展示，不再被隐藏）                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Hero 复用  | 引言里 hero `<ComponentPreview>` 复用最后一个 step 的 demo（不另起 `-final` 文件）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | 颜色字面值 | demo 里的 `stroke` / `fill` / `bg` 等 **必须用字面量颜色**——优先命名色，默认用 `darkorange` 做强调；只有一张图里需要两个以上并列示例，或明确要做对比时才用 `dodgerblue`；若同图已经用了 `darkorange` + `dodgerblue` 仍需要第三个强调色，再用 `darkviolet`。`red` / `green` 只保留给错误 / 成功语义，灰阶只保留 `gray` / `lightgray` / `dimgray`，并尽量不用 `black` / `white`；只有需要精确对齐时才用 hex / oklch。不能用 `var(--border)` / `var(--background)` 等 CSS 自定义属性。预览工具条可下载 SVG，CSS var 在新上下文里无定义 → fallback 成黑，下载后图变样 |
-| DSL 选择 | **默认用 Sugar `<Draw way={[...]}>`，不用 Kernel `<Path><Step /></Path>`**。`way` 数组 1 行就能表达 line / curve / cubic / bend / step (fold) / cycle / label，比 Kernel 的多行 children 更短、与 components/draw/* 例子风格一致。例外：示例**本身**就是教 `<Path>` / `<Step>` Kernel 用法、或需要 fill + 闭合（`DrawWay.Cycle`）的填充形状 |
+| DSL 选择   | **默认用 Sugar `<Draw way={[...]}>`，不用 Kernel `<Path><Step /></Path>`**。`way` 数组 1 行就能表达 line / curve / cubic / bend / step (fold) / cycle / label，比 Kernel 的多行 children 更短、与 components/draw/\* 例子风格一致。例外：示例**本身**就是教 `<Path>` / `<Step>` Kernel 用法、或需要 fill + 闭合（`DrawWay.Cycle`）的填充形状                                                                                                                                                                                                                      |
 
 累加式意味着代码会复制，但读者在任意 step 打开源码都能拿到可运行完整版本；复杂例子再用多文件 demo 分担体量。
 
@@ -71,10 +72,10 @@ description: retikz 示例页规范：`apps/docs/src/contents/<module>/examples/
 
 默认每个 demo 内联自包含（见上）。当 demo 体量过大、或多步共用同一套基础设施（自定义形状 / 布局 / 端点表）时，把内容拆成**子文件**，由 `<ComponentPreview sourceFiles={[...]}>` 一并展示。`sourceFiles` 里**主 demo 自己不用列**（由 `name` 自动加载），只列附加子文件。子文件分两类：
 
-| 类别 | 命名 | 用途 | diff |
-| --- | --- | --- | --- |
-| 步内子文件 | `<主demo名>.<subName>.tsx`（**无 `.demo`**，如 `ohms-law-circuit-02-shapes.elements.tsx`） | 只属于某一步、随步演进 | 自动（见下） |
-| 共享子文件 | 独立名 `<name>.tsx`（如 `circuitShapes.tsx`） | 跨多步复用、基本不变的基础设施 | 不 diff |
+| 类别       | 命名                                                                                       | 用途                           | diff         |
+| ---------- | ------------------------------------------------------------------------------------------ | ------------------------------ | ------------ |
+| 步内子文件 | `<主demo名>.<subName>.tsx`（**无 `.demo`**，如 `ohms-law-circuit-02-shapes.elements.tsx`） | 只属于某一步、随步演进         | 自动（见下） |
+| 共享子文件 | 独立名 `<name>.tsx`（如 `circuitShapes.tsx`）                                              | 跨多步复用、基本不变的基础设施 | 不 diff      |
 
 - 子文件是**纯源码**（不渲染），用普通 `.tsx` / `.ts`，**不要带 `.demo.tsx`**——带了会被当成可渲染 demo（要求 default 导出 FC、并去算 IR）。
 - 步内子文件以**所属步的主 demo 名**为前缀，`<subName>` 在各步间保持稳定（如各步都叫 `.elements.tsx`），这是自动 diff 配对的钥匙。
@@ -105,6 +106,7 @@ description: retikz 示例页规范：`apps/docs/src/contents/<module>/examples/
 ## Prompt 节
 
 每个示例页都有一个 `## Prompt` 节，让读者：
+
 1. 看到「这张图用一段自然语言怎么说」
 2. 一键发送站内 AI 对话面板预填 prompt 跑 LLM
 3. 或一键复制带 retikz 上下文的可移植 prompt，粘到任意外部 AI 工具
@@ -158,10 +160,10 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 
 容易混淆的几个点：
 
-| 写在哪 | 内容 |
-| --- | --- |
-| `components/draw/overview` 的 `## 例子` 节 | 围绕 `<Draw>` 单组件的多种能力（直线 / 曲线 / 箭头 / 折角…）的小 demo，每个 demo 几行 |
-| `examples/karl-circle` 整页 | 用 `<Draw>` + `<Node>` + `<Coordinate>` + `<Path>` 等多个组件组合出一张完整图，循序渐进教过程 |
+| 写在哪                                     | 内容                                                                                          |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `components/draw/overview` 的 `## 例子` 节 | 围绕 `<Draw>` 单组件的多种能力（直线 / 曲线 / 箭头 / 折角…）的小 demo，每个 demo 几行         |
+| `examples/karl-circle` 整页                | 用 `<Draw>` + `<Node>` + `<Coordinate>` + `<Path>` 等多个组件组合出一张完整图，循序渐进教过程 |
 
 简单判断：单组件能讲完 → 组件页 Examples 子节；多个组件协同 → 示例页。
 
@@ -169,14 +171,14 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 
 示例 demo 写 edge 默认用 `<Draw way={[...]}>`，不要嵌 `<Path><Step /></Path>`。速查：
 
-| 需求 | way 形态 |
-| --- | --- |
-| 直线 | `['A', 'B']` |
-| 折角 | `['A', '|-', 'B']` / `['A', '-|', 'B']` |
-| 二次 / 三次曲线 | `['A', { curve: [cx, cy] }, 'B']` / `{ cubic: [[c1x,c1y],[c2x,c2y]] }` |
-| bend | `['A', { bend: 'right', angle: 45 }, 'B']` |
-| label | `['A', { label: 'midway' }, 'B']` 或 `{ label: { text, position, side } }` |
-| 闭合填充 | `['A', 'B', 'C', DrawWay.Cycle]` |
+| 需求            | way 形态                                                                   |
+| --------------- | -------------------------------------------------------------------------- | ------------------- | -------- |
+| 直线            | `['A', 'B']`                                                               |
+| 折角            | `['A', '                                                                   | -', 'B']`/`['A', '- | ', 'B']` |
+| 二次 / 三次曲线 | `['A', { curve: [cx, cy] }, 'B']` / `{ cubic: [[c1x,c1y],[c2x,c2y]] }`     |
+| bend            | `['A', { bend: 'right', angle: 45 }, 'B']`                                 |
+| label           | `['A', { label: 'midway' }, 'B']` 或 `{ label: { text, position, side } }` |
+| 闭合填充        | `['A', 'B', 'C', DrawWay.Cycle]`                                           |
 
 端点优先写 node id 字符串，编译期自动按 toward 方向裁到节点边框；裸坐标不会 auto-clip。
 

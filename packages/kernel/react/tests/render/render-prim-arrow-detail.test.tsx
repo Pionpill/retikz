@@ -1,4 +1,4 @@
-﻿import type { MarkerPrimitive, PathPrim,ResolvedArrowEndSpec } from '@retikz/core';
+﻿import type { MarkerPrimitive, PathPrim, ResolvedArrowEndSpec } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';

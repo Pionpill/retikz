@@ -137,11 +137,11 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 最后一层装饰——一次性演示 `dashPattern` / `arrow` 在起点 / 边标注。它的作用是补气质，不是改变结构，所以放在最后最顺。
 
-| 装饰                             | Draw 配置                                                      | way 算子                                                                    |
-| -------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 青色虚线推荐路径                 | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 段连续 `{ curve }` infix，前置 `{ label: 'recommended' }` 给第 1 段挂标注 |
+| 装饰                              | Draw 配置                                                      | way 算子                                                                    |
+| --------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 青色虚线推荐路径                  | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 段连续 `{ curve }` infix，前置 `{ label: 'recommended' }` 给第 1 段挂标注 |
 | 短虚线「more bottom」提示（2 条） | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[4,4]}` | way `[起点, 终点]` 两坐标即可                                               |
-| 红 X 装饰（2 条交叉线）          | `stroke="#ff0000"` + `strokeWidth={4}`                         | 同上                                                                        |
+| 红 X 装饰（2 条交叉线）           | `stroke="#ff0000"` + `strokeWidth={4}`                         | 同上                                                                        |
 
 ```tsx
 <Draw
@@ -173,7 +173,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 | [Draw](/kernel/components/draw/overview)      | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
 | [Way 算子](/kernel/components/draw/way)       | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                                  | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
 | [Node](/kernel/components/node/overview)      | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                       | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
-| [AtPosition](/kernel/concepts/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'bottom', of: prevId }` + 全局 `nodeDistance`）                                                                 | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
+| [AtPosition](/kernel/concepts/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'bottom', of: prevId }` + 全局 `nodeDistance`）                                                                | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
 
 ## 限制
 

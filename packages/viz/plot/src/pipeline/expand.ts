@@ -1,39 +1,50 @@
-import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
+﻿import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
+import type {
+  AnyRowSelectorDefinition,
+  AnyStatisticsReducerDefinition,
+  AnyTransformDefinition,
+  FieldFormatDefinition,
+  ResolveField,
+  TransformContext,
+} from '@retikz/data';
+import type { DataFieldTypeMap, DataFieldTypeValue, ExternalDatasets, ExternalRow } from '@retikz/data';
 
 import { defineComposite, JsonObjectSchema } from '@retikz/core';
+import { applyTransforms, DEFAULT_TRANSFORM_CONTEXT, tagSourceIndex } from '@retikz/data';
+import {
+  applyFieldResolver,
+  assertAllValuesValid,
+  normalizeRows,
+  resolveFieldPath,
+  resolveFieldTypes,
+  validateBoundData,
+} from '@retikz/data';
+import { collectFormatFields, resolveFormatRegistry } from '@retikz/data';
+import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
+import { DataFieldType, FieldOrderMode } from '@retikz/data';
 
 import type {
   AnchorIdGenerator,
   AnyChannelDefinition,
   AnyCoordinateDefinition,
   AnyMarkDefinition,
-  AnyRowSelectorDefinition,
   AnyScaleDefinition,
-  AnyStatisticsReducerDefinition,
-  AnyTransformDefinition,
   CoordinateFrame,
   DimensionRole,
-  FieldFormatDefinition,
   PositionScale,
-  ResolveField,
   ResolveLabel,
   TickSet,
-  TransformContext,
 } from '../contract';
 import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
   Channel,
   CoordinateOperation,
-  ExternalDatasets,
-  ExternalRow,
   Guide,
   IntervalMark,
   LegendChannelValue,
   LegendGuide,
   MarkOperation,
-  PlotFieldTypeMap,
-  PlotFieldTypeValue,
   PlotSpec,
   ScaleOperation,
   TransformOperation,
@@ -45,51 +56,37 @@ import type { DatumIdRegistrar, ProvenanceContext } from './provenance';
 import { isBuiltinScaleOperation } from '../contract';
 import { resolveAxisGuideTokens, resolveLegendGuideTokens, resolvePlotTheme } from '../providers';
 import {
-  applyFieldResolver,
-  applyTransforms,
-  assertAllValuesValid,
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   buildProportionalIntervals,
-  channelKindsForMark,
-  channelValue,
-  collectFormatFields,
   createPositionChannelDefinitions,
-  DEFAULT_TRANSFORM_CONTEXT,
   defaultOriginAxisTickSideOf,
   deriveScale,
   lowerMark,
   makeColorSchemeResolver,
-  normalizeRows,
   orderedCategoryDomain,
   proportionalIntervalDomainValues,
   resolveChannelRegistry,
   resolveCoordinateRegistry,
-  resolveFieldPath,
-  resolveFieldTypes,
-  resolveFormatRegistry,
   resolveGuideTicks,
   resolveIntervalBound,
   resolveLinearScale,
   resolveMarkChannels,
   resolveMarkRegistry,
+  resolvePlotTransformRegistry,
   resolvePositionScale,
-  resolveRowSelectorRegistry,
   resolveScaleRegistry,
   resolveSqrtScale,
-  resolveStatisticsReducerRegistry,
-  resolveTransformRegistry,
   scaleTicks,
-  validateBoundData,
 } from '../providers';
+import { channelValue } from '../providers/channel/shared';
+import { channelKindsForMark } from '../providers/mark';
 import { LegendSymbolFit } from '../schemas';
 import {
   AxisGridApplyTo,
-  FieldOrderMode,
   IntervalBoundKind,
   isBuiltinMark,
   PathClosureKind,
-  PlotFieldType,
   PlotGuide,
   PlotLayerZIndex,
   PlotMark,
@@ -100,7 +97,7 @@ import { createAnchorRegistry } from './anchors';
 import { lowerPlotLabels, resolveLabelReserve } from './decoration-layout';
 import { lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from './layout';
-import { createDatumIdRegistrar, rootMeta, slug, tagSourceIndex } from './provenance';
+import { createDatumIdRegistrar, rootMeta, slug } from './provenance';
 import { collectSourceFields } from './source-fields';
 
 /**
@@ -167,11 +164,7 @@ const defaultColorOf = (colors: ReadonlyArray<string>, markIndex: number): strin
   return colors[markIndex % colors.length];
 };
 
-const plotBackgroundNode = (
-  width: number,
-  height: number,
-  fill: string | undefined,
-): IRNode | null =>
+const plotBackgroundNode = (width: number, height: number, fill: string | undefined): IRNode | null =>
   fill === undefined
     ? null
     : {
@@ -260,8 +253,7 @@ export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeR
       (arrangement): arrangement is SharedScaffold => arrangement.kind === 'tracks',
     );
     const explicitScopes: Array<CoordinateScopeRegistryEntry> = (node.composition.views ?? []).map(view => {
-      const placement =
-        view.placement === undefined || view.placement.kind !== 'slot' ? view.placement : undefined;
+      const placement = view.placement === undefined || view.placement.kind !== 'slot' ? view.placement : undefined;
       return {
         id: view.id,
         coordinate: view.coordinate,
@@ -296,13 +288,10 @@ export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeR
   };
 };
 
-export const coordinateScopeIdOf = (
-  operation: { coordinateView?: string },
-  defaultScope: string,
-): string => operation.coordinateView ?? defaultScope;
+export const coordinateScopeIdOf = (operation: { coordinateView?: string }, defaultScope: string): string =>
+  operation.coordinateView ?? defaultScope;
 
-const axisGuideScopeIdOf = (guide: AxisGuide, defaultScope: string): string =>
-  guide.coordinateView ?? defaultScope;
+const axisGuideScopeIdOf = (guide: AxisGuide, defaultScope: string): string => guide.coordinateView ?? defaultScope;
 
 const compositionAxisPolicyOf = (
   resolve: CompositionResolve | undefined,
@@ -320,7 +309,9 @@ const compositionGridPlacementOf = (
   resolve: CompositionResolve | undefined,
   context: { hasFacets: boolean; hasScaffolds: boolean },
   dimension: DimensionRole,
-): string => resolve?.grid?.[dimension] ?? (context.hasFacets || context.hasScaffolds ? AxisGridApplyTo.All : AxisGridApplyTo.Local);
+): string =>
+  resolve?.grid?.[dimension] ??
+  (context.hasFacets || context.hasScaffolds ? AxisGridApplyTo.All : AxisGridApplyTo.Local);
 
 const mergeCompositionLayout = (
   base: CompositionLayout | undefined,
@@ -377,7 +368,11 @@ const withAxisGapOffsets = (guides: ReadonlyArray<Guide>, axisGap: number | unde
     if (key === null) return guide;
     const index = counts.get(key) ?? 0;
     counts.set(key, index + 1);
-    if (index === 0 && (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin')) return guide;
+    if (
+      index === 0 &&
+      (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin')
+    )
+      return guide;
     if (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin') {
       return {
         ...guide,
@@ -467,10 +462,7 @@ const facetDimensionsOf = (dimension: FacetDimension | undefined): Array<FacetDi
   return Array.isArray(dimension) ? dimension : [dimension];
 };
 
-const facetTupleOf = (
-  row: ExternalRow,
-  dimension: FacetDimension | undefined,
-): FacetTuple | undefined => {
+const facetTupleOf = (row: ExternalRow, dimension: FacetDimension | undefined): FacetTuple | undefined => {
   const dimensions = facetDimensionsOf(dimension);
   if (dimensions.length === 0) return undefined;
   return dimensions.map(item => facetValueOf(row, item.field));
@@ -488,10 +480,7 @@ const facetPanelTupleOf = (value: FacetPanelValue): FacetTuple => {
 
 const facetValueKey = (value: FacetTuple | undefined): string => (value === undefined ? '' : JSON.stringify(value));
 
-const orderedFacetValues = (
-  dimension: FacetDimensionItem,
-  rows: ReadonlyArray<ExternalRow>,
-): Array<FacetScalar> => {
+const orderedFacetValues = (dimension: FacetDimensionItem, rows: ReadonlyArray<ExternalRow>): Array<FacetScalar> => {
   const out: Array<FacetScalar> = [];
   const seen = new Set<string>();
   const add = (value: FacetScalar): void => {
@@ -524,11 +513,7 @@ const orderedFacetTuples = (
 const slugFacetValue = (value: FacetTuple | undefined): string =>
   value === undefined ? '' : value.map(item => slug(item)).join('.');
 
-const defaultFacetPanelId = (
-  facet: FacetGrid,
-  row: FacetTuple | undefined,
-  column: FacetTuple | undefined,
-): string => {
+const defaultFacetPanelId = (facet: FacetGrid, row: FacetTuple | undefined, column: FacetTuple | undefined): string => {
   const rowKey = row === undefined ? '_' : slugFacetValue(row);
   const columnKey = column === undefined ? '_' : slugFacetValue(column);
   return `${facet.id}.panel.${rowKey}.${columnKey}`;
@@ -593,13 +578,10 @@ const orderedFacetPanelValuesByIndex = (
     if (values.has(index)) continue;
     values.set(index, facetPanelTupleOf(dimension === 'column' ? panel.column : panel.row));
   }
-  return [...values.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([index, tuple]) => ({ index, tuple }));
+  return [...values.entries()].sort(([a], [b]) => a - b).map(([index, tuple]) => ({ index, tuple }));
 };
 
-const facetLabelGroupKey = (tuple: FacetTuple, level: number): string =>
-  JSON.stringify(tuple.slice(0, level + 1));
+const facetLabelGroupKey = (tuple: FacetTuple, level: number): string => JSON.stringify(tuple.slice(0, level + 1));
 
 const buildFacetLabelGroups = (
   panels: ReadonlyArray<FacetPanel>,
@@ -817,8 +799,8 @@ export type ResolveFrameParams = {
   node: PlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
-  /** 用户源字段 → PlotFieldTypeValue；供 type-driven scale 派生与兼容校验 */
-  fieldTypes: PlotFieldTypeMap;
+  /** 用户源字段 → DataFieldTypeValue；供 type-driven scale 派生与兼容校验 */
+  fieldTypes: DataFieldTypeMap;
   /** 整图宽（user units） */
   width: number;
   /** 整图高（user units） */
@@ -872,7 +854,8 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
     params.roleMarkDataViews?.[role] ?? markDataViews;
   const registry = resolveCoordinateScopeRegistry(node);
-  const coordinateOperation = node.coordinate ?? registry.scopes.find(scope => scope.id === registry.defaultScope)?.coordinate;
+  const coordinateOperation =
+    node.coordinate ?? registry.scopes.find(scope => scope.id === registry.defaultScope)?.coordinate;
   if (coordinateOperation === undefined) {
     throw new Error(`lowerPlots: default coordinate view "${registry.defaultScope}" is not registered`);
   }
@@ -963,8 +946,8 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const roleFieldTypes = (
     role: DimensionRole,
     pick: (mark: MarkOperation) => Channel | undefined,
-  ): Array<PlotFieldTypeValue> => {
-    const types: Array<PlotFieldTypeValue> = [];
+  ): Array<DataFieldTypeValue> => {
+    const types: Array<DataFieldTypeValue> = [];
     for (const mark of node.marks) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
         continue;
@@ -1000,7 +983,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const order = fieldOrders.get(channel.field);
       if (order === undefined || order === FieldOrderMode.Data) continue;
       const type = fieldTypes.get(channel.field);
-      if (type !== undefined && type !== PlotFieldType.Categorical) {
+      if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new Error(
           `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,
         );
@@ -1122,7 +1105,7 @@ const collectChannelDescriptors = (
   channelCtx: {
     node: PlotSpec;
     rows: Array<ExternalRow>;
-    fieldTypes: PlotFieldTypeMap;
+    fieldTypes: DataFieldTypeMap;
     scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
     resolveColorScheme: (name: string) => (t: number) => string;
     palette: ReturnType<typeof resolvePlotTheme>['palette'];
@@ -1204,7 +1187,7 @@ const niceNumericTicks = (
 
 const legendRampTickScale = (
   domain: readonly [number, number],
-  fieldType: PlotFieldTypeValue | undefined,
+  fieldType: DataFieldTypeValue | undefined,
 ): PositionScale => {
   const scale = resolveLinearScale({ domain: [domain[0], domain[1]] }, [], [0, 1]);
   return {
@@ -1212,7 +1195,7 @@ const legendRampTickScale = (
     domain: () => [domain[0], domain[1]],
     bandwidth: 0,
     ticks: count => scaleTicks(scale, count),
-    tickKind: fieldType === PlotFieldType.Temporal ? 'time' : 'number',
+    tickKind: fieldType === DataFieldType.Temporal ? 'time' : 'number',
     range: () => [0, 1],
     setRange: () => {},
   };
@@ -1548,7 +1531,7 @@ export const prepareRows = (
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
 ): {
-  fieldTypes: PlotFieldTypeMap;
+  fieldTypes: DataFieldTypeMap;
   normalized: Array<ExternalRow>;
   transformRegistry: Map<string, AnyTransformDefinition>;
   transformContext: TransformContext;
@@ -1556,7 +1539,7 @@ export const prepareRows = (
   markRegistry: Map<string, AnyMarkDefinition>;
 } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
+  const transformRegistry = resolvePlotTransformRegistry(options.transformDefinitions);
   const transformContext: TransformContext = {
     ...DEFAULT_TRANSFORM_CONTEXT,
     statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.statisticsReducerDefinitions),
@@ -1731,7 +1714,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   };
   const assertTrackRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scopeId: string): void => {
     if (!roles.has(role)) {
-      throw new Error(`lowerPlots: coordinate view "${scopeId}" track band role "${role}" is not supported by its coordinate`);
+      throw new Error(
+        `lowerPlots: coordinate view "${scopeId}" track band role "${role}" is not supported by its coordinate`,
+      );
     }
   };
   const roleRangeOf = (
@@ -1791,10 +1776,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const axisGridSelectorOf = (guide: AxisGuide): GridTargetSelector | undefined =>
     typeof guide.grid === 'object' ? guide.grid.select : undefined;
   const facetScalarKey = (value: FacetScalar): string => JSON.stringify(value);
-  const scalarSelectorIncludes = (
-    values: FacetPanelValue,
-    value: FacetPanelValue,
-  ): boolean => {
+  const scalarSelectorIncludes = (values: FacetPanelValue, value: FacetPanelValue): boolean => {
     if (values === undefined) return true;
     if (value === undefined) return false;
     const selectorValues = Array.isArray(values) ? values : [values];
@@ -1861,7 +1843,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (!isAxisGuide(guide)) continue;
       const sourceScope = scopeById.get(axisGuideScopeIdOf(guide, coordinateScopes.defaultScope));
       if (sourceScope === undefined) continue;
-      if (axisGridApplyToOf(guide, scopeResolveOf(sourceScope), compositionPolicyContext) !== AxisGridApplyTo.Selected) continue;
+      if (axisGridApplyToOf(guide, scopeResolveOf(sourceScope), compositionPolicyContext) !== AxisGridApplyTo.Selected)
+        continue;
       const count = coordinateScopes.scopes.filter(scope => axisGridTargetsScope(guide, scope)).length;
       if (count === 0) {
         throw new Error(`lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target scope`);
@@ -1957,11 +1940,13 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     }
     const scopedArrangement = scopeArrangementOf(scope);
     const scopedLayout = scopeLayoutOf(scope);
-    const rawScopedGuides = (scopedArrangement === undefined ? allGuidesWithCompositionGap : allGuides).filter(guide => {
-      if (!isAxisGuide(guide)) return true;
-      if (axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) !== scope.id) return false;
-      return axisPolicyFor(scopeResolveOf(scope), compositionPolicyContext, guide.dimension) !== 'none';
-    });
+    const rawScopedGuides = (scopedArrangement === undefined ? allGuidesWithCompositionGap : allGuides).filter(
+      guide => {
+        if (!isAxisGuide(guide)) return true;
+        if (axisGuideScopeIdOf(guide, coordinateScopes.defaultScope) !== scope.id) return false;
+        return axisPolicyFor(scopeResolveOf(scope), compositionPolicyContext, guide.dimension) !== 'none';
+      },
+    );
     const scopedGuides = withoutAxisGrid(
       scopedArrangement === undefined ? rawScopedGuides : withAxisGapOffsets(rawScopedGuides, scopedLayout?.axisGap),
     );
@@ -2065,7 +2050,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       ? Math.max(0, ...facets.map(facet => (facet.header?.row === true ? facetDimensionsOf(facet.row).length : 0)))
       : 0;
     const columnFacetLevelCount = facetLabelsEnabled
-      ? Math.max(0, ...facets.map(facet => (facet.header?.column === true ? facetDimensionsOf(facet.column).length : 0)))
+      ? Math.max(
+          0,
+          ...facets.map(facet => (facet.header?.column === true ? facetDimensionsOf(facet.column).length : 0)),
+        )
       : 0;
     const facetLabelBandSize =
       facetLabelsEnabled && (rowFacetLevelCount > 0 || columnFacetLevelCount > 0)
@@ -2138,7 +2126,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
                 width: group.span * panelWidth + Math.max(0, group.span - 1) * panelGap,
                 height: facetLabelBandSize,
               };
-              labels.push(makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect, undefined));
+              labels.push(
+                makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect, undefined),
+              );
             }
           }
           for (let level = rowLevels - 1; level >= 0; level -= 1) {
@@ -2150,7 +2140,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
                 width: facetLabelBandSize,
                 height: group.span * panelHeight + Math.max(0, group.span - 1) * panelGap,
               };
-              labels.push(makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect, -90));
+              labels.push(
+                makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect, -90),
+              );
             }
           }
           return labels;
@@ -2202,9 +2194,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       withoutAxisGrid(facetGuides.filter(guide => keepOuterSharedAxisForPanel(guide, panel)));
     const facetGridGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
       facetGuides.flatMap(guide =>
-        isAxisGuide(guide) && axisGridTargetsFacetPanel(guide, panel)
-          ? [withEnabledAxisGrid(guide, undefined)]
-          : [],
+        isAxisGuide(guide) && axisGridTargetsFacetPanel(guide, panel) ? [withEnabledAxisGrid(guide, undefined)] : [],
       );
     for (const guide of facetGuides) {
       if (!isAxisGuide(guide)) continue;
@@ -2218,7 +2208,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (!hasSelectedTarget) continue;
       const count = panels.filter(panel => axisGridTargetsFacetPanel(guide, panel)).length;
       if (count === 0) {
-        throw new Error(`lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target facet panel`);
+        throw new Error(
+          `lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target facet panel`,
+        );
       }
     }
 

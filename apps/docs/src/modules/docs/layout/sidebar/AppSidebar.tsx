@@ -25,9 +25,13 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
   const { t } = useTranslation();
   const params = useParams<'moduleId'>();
   const moduleId = moduleIdProp ?? params.moduleId;
-  const sections = getSectionsByModule(moduleId);
+  const resolvedModuleId = moduleId ?? 'core';
+  const sections = getSectionsByModule(resolvedModuleId);
 
-  const categories = useMemo(() => buildSidebarCategories(t, sections), [t, sections]);
+  const categories = useMemo(
+    () => buildSidebarCategories(t, resolvedModuleId, sections),
+    [t, resolvedModuleId, sections],
+  );
 
   return (
     <aside
@@ -44,7 +48,7 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
       )}
     >
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <AppSidebarMenu categories={categories} moduleId={moduleId ?? 'core'} />
+        <AppSidebarMenu categories={categories} moduleId={resolvedModuleId} />
       </div>
     </aside>
   );

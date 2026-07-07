@@ -1,8 +1,8 @@
+import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../../src/providers';
 import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../../src/providers';
-import { coerceTimestamp, inferCategoryDomain } from '../../../src/providers';
 import { type ScaleOperation } from '../../../src/schemas';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。
@@ -32,7 +32,11 @@ describe('resolveLinearScale (ADR-02 d3-scale)', () => {
   });
 
   it('scale_domain_padding_object_targets_sides', () => {
-    const scale = resolvePositionScale({ type: 'linear', name: 'x', domainPadding: { lower: 0.25 } }, [10, 20], [0, 100]);
+    const scale = resolvePositionScale(
+      { type: 'linear', name: 'x', domainPadding: { lower: 0.25 } },
+      [10, 20],
+      [0, 100],
+    );
     expect(scale.domain()).toEqual([7.5, 20]);
   });
 
@@ -230,7 +234,11 @@ describe('resolveTimeScale / coerceTimestamp (ADR-06, UTC)', () => {
   });
 
   it('time_domain_inferred_from_values', () => {
-    const pos = resolvePositionScale({ type: 'time', name: 'x', domainPadding: 0 }, ['2024-01-01', '2024-12-31'], [0, 100]);
+    const pos = resolvePositionScale(
+      { type: 'time', name: 'x', domainPadding: 0 },
+      ['2024-01-01', '2024-12-31'],
+      [0, 100],
+    );
     expect(pos.coordinate('2024-01-01')).toBeCloseTo(0, 6);
     expect(pos.coordinate('2024-12-31')).toBeCloseTo(100, 6);
   });

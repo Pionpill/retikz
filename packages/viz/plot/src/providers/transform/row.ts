@@ -1,9 +1,17 @@
+import type { ExternalRow } from '@retikz/data';
+
+import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import type { DeriveIntervalTransform, ExternalRow, JitterTransform, NormalizeTransform, SortTransform, StackOffsetValue, StackTransform } from '../../schemas';
+import type {
+  DeriveIntervalTransform,
+  JitterTransform,
+  NormalizeTransform,
+  StackOffsetValue,
+  StackTransform,
+} from '../../schemas';
 
-import { PlotSortOrder, StackOffset as StackOffsetMode } from '../../schemas';
-import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
+import { StackOffset as StackOffsetMode } from '../../schemas';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值。 */
 export const DEFAULT_START_FIELD = 'y0';
@@ -16,12 +24,6 @@ export const DEFAULT_DERIVE_END_FIELD = 'y1';
 /** jitter 默认被扰动字段名：连续数值位置字段。 */
 export const DEFAULT_JITTER_X_FIELD = 'x';
 export const DEFAULT_JITTER_Y_FIELD = 'y';
-
-/** 稳定排序：按字段升 / 降序；等键保持原序。 */
-export const applySort = (rows: Array<ExternalRow>, operation: SortTransform): Array<ExternalRow> => {
-  const direction = operation.order === PlotSortOrder.Descending ? -1 : 1;
-  return [...rows].sort((a, b) => direction * compareRowsByFieldPath(a, b, operation.field));
-};
 
 /**
  * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]。

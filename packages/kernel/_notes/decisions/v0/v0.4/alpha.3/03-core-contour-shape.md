@@ -4,7 +4,7 @@
 
 - 状态：Accepted（2026-06-16 收尾：builtin `contour` shape 已实现 + 文档同步 + 评审/对账通过；自动按 AABB 中心居中、compass anchor 回退 AABB、`boundaryPoint` 精确。plot 侧消费归 plot alpha.11）
 - 决策日期：2026-06-15
-- 发起方：plot（Tier 2），消费方需求见 [plot v0.1 roadmap alpha.11](../../../../../../viz/_notes/decisions/v0/v0.1/roadmap.md)
+- 发起方：plot（Tier 2），消费方需求见 [plot v0.1 roadmap alpha.11](../../../../../../viz/_notes/decisions/plot/v0/v0.1/roadmap.md)
 - 关联：[alpha.3 roadmap](./roadmap.md) · [alpha.3 ADR-01 任意折线圆角（同享 contour fillet 引擎）](./01-polyline-rounded-corners.md) · [plot-design §8.3 mark 几何 × coordinate](../../../../../../viz/_notes/architecture/plot-design.md) · [plot-design §8.1 id 绑定与可连接性](../../../../../../viz/_notes/architecture/plot-design.md) · core `geometry/contour.ts` · core `shapes/polygon.ts`
 
 ## 背景
@@ -29,7 +29,7 @@ IR 层**零改动**：`ir/shape.ts` 的 `ShapeRefSchema.type` 已是开放字符
 ```ts
 type ContourParams = {
   /** 闭合顶点环（局部系，任意原点——core 按 points 的 AABB 中心自动归一化对齐到 Node position），≥3，隐式闭合；段间直线 */
-  points: Array<Position>;       // Position = [number, number]
+  points: Array<Position>; // Position = [number, number]
   /** 逐顶点统一 fillet 半径（user units，可选，逐角夹紧）；省略 / 0 = 尖角。复用 rounded-contour */
   cornerRadius?: number;
 };

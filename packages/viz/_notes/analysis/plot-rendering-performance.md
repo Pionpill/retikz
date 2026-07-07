@@ -8,14 +8,14 @@
 
 探查 `packages/viz/plot/src/lower/mark.ts` 的下沉逻辑，每种 mark 把 N 个数据点下沉成的 Tier 1 节点 / 编译后 Scene primitive：
 
-| mark | N 数据点 → Tier 1 | 编译后 Scene primitive | 量级 | 备注 |
-|---|---|---|---|---|
-| point / 散点 | N 个 `circle` Node | **N 个 `EllipsePrim`** | O(N) | `POINT_SIZE=10`；color encoding 仅分到 O(色数) 个 scope，图元仍 N |
-| interval / 柱 | N 个 `rectangle` Node | **N 个 `RectPrim`** | O(N) | dodge/stack 总数仍 O(N) |
-| sector / 饼 | N 个 `sector` Node | N 个 `PathPrim` | O(N) | N 通常很小（分片数），非性能点 |
-| line / 折线 | 1 条 Path（N 步） | 1 个 `PathPrim`（N 段） | O(N) 步 | 多 series → S 条 path，步数合计仍 N |
-| area / 面积 | 1 条 Path（2N+1 步） | 1 个 `PathPrim` | O(N) | 上沿 + 下沿回边 |
-| **axis / grid / label** | O(ticks) | O(ticks) | **恒定** | **与 N 无关**——刻度线合并成 1 条 Path，标签 O(ticks) 个 text |
+| mark                    | N 数据点 → Tier 1     | 编译后 Scene primitive  | 量级     | 备注                                                              |
+| ----------------------- | --------------------- | ----------------------- | -------- | ----------------------------------------------------------------- |
+| point / 散点            | N 个 `circle` Node    | **N 个 `EllipsePrim`**  | O(N)     | `POINT_SIZE=10`；color encoding 仅分到 O(色数) 个 scope，图元仍 N |
+| interval / 柱           | N 个 `rectangle` Node | **N 个 `RectPrim`**     | O(N)     | dodge/stack 总数仍 O(N)                                           |
+| sector / 饼             | N 个 `sector` Node    | N 个 `PathPrim`         | O(N)     | N 通常很小（分片数），非性能点                                    |
+| line / 折线             | 1 条 Path（N 步）     | 1 个 `PathPrim`（N 段） | O(N) 步  | 多 series → S 条 path，步数合计仍 N                               |
+| area / 面积             | 1 条 Path（2N+1 步）  | 1 个 `PathPrim`         | O(N)     | 上沿 + 下沿回边                                                   |
+| **axis / grid / label** | O(ticks)              | O(ticks)                | **恒定** | **与 N 无关**——刻度线合并成 1 条 Path，标签 O(ticks) 个 text      |
 
 源：`lowerPoint` (`mark.ts:122`)、`lowerInterval` (`mark.ts:151`)、`lowerSector` (`mark.ts:231`)、`lowerLine` (`mark.ts:340`)、`lowerArea` (`mark.ts:392`)、guide `lowerCartesianGuide` (`guide.ts:80`)。
 
@@ -34,12 +34,12 @@ export const drawScene = (ctx, scene, options) => {
 
 特征：**纯顺序遍历、每图元独立 save/restore、零 batching、动画整帧全量重绘（无 dirty-rect）、hit-test 逐图元 `isPointInPath`**。由此：
 
-| 场景 | 经验拐点 | 原因 |
-|---|---|---|
-| 静态一次性渲染 | ~5 万图元内可接受（几十 ms） | 只画一次 |
-| 动画 / 交互 60fps | **~5k–10k 图元开始掉帧** | 每帧 N 次 save/restore + N 次 fill，16.6ms 预算耗尽 |
-| hit-test（pointer 事件） | O(N) / 次 | 逆 z-order 逐图元 `isPointInPath`，高频事件叠加 |
-| **IR 编译 / 序列化** | **N=10万 时 IR ≈ 5MB JSON** | `compileToScene` 走 O(N)；**这是独立的一道墙，换渲染后端不解决** |
+| 场景                     | 经验拐点                     | 原因                                                             |
+| ------------------------ | ---------------------------- | ---------------------------------------------------------------- |
+| 静态一次性渲染           | ~5 万图元内可接受（几十 ms） | 只画一次                                                         |
+| 动画 / 交互 60fps        | **~5k–10k 图元开始掉帧**     | 每帧 N 次 save/restore + N 次 fill，16.6ms 预算耗尽              |
+| hit-test（pointer 事件） | O(N) / 次                    | 逆 z-order 逐图元 `isPointInPath`，高频事件叠加                  |
+| **IR 编译 / 序列化**     | **N=10万 时 IR ≈ 5MB JSON**  | `compileToScene` 走 O(N)；**这是独立的一道墙，换渲染后端不解决** |
 
 最后一行最关键：**IR 体积 / 编译墙是 CPU 侧的、与渲染后端无关**——WebGL 救不了它，只有 plot 侧聚合能救（见 §3.2）。
 
@@ -76,18 +76,18 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 
 按 `packages/kernel/core/src/primitive/*.ts` 的 primitive 契约逐项评估（探查确认无任何现存 webgl/gpu 占位代码，仅 canvas/svg 两后端）：
 
-| primitive | GPU 难度 | 方案 | plot 相关性 |
-|---|---|---|---|
-| Rect / Ellipse | 易 | instancing（pos/size/r + cornerRadius 走 SDF） | **数据层热点** |
-| Path 折线（move/line） | 易 | indexed polyline | **数据层热点** |
-| Linear gradient | 易 | 顶点插值 / LUT 纹理 | series 填充 |
-| Path 贝塞尔（quad/cubic） | 中 | tessellation（CPU 抽稀线段 / Lyon / Pathfinder） | area 曲线、平滑线 |
-| Path arc/ellipseArc | 中 | 中心参数化便于 GPU 逼近 | sector、polar |
-| dash / linejoin / arrow | 中 | 屏幕空间 dash + 预生成 marker mesh | 网格虚线、箭头 |
-| Radial gradient | 中 | fragment shader（Canvas 仅圆形，GPU 可椭圆） | 少用 |
-| Clip：rect/circle | 易 | scissor / discard | panel 裁剪 |
-| Clip：polygon | 中 | stencil buffer | 少用 |
-| **Text** | **难** | SDF/MSDF atlas + 编译期字形收集 | **O(ticks) 不吃 N → hybrid 中留 2D，不上 GPU** |
+| primitive                 | GPU 难度 | 方案                                             | plot 相关性                                    |
+| ------------------------- | -------- | ------------------------------------------------ | ---------------------------------------------- |
+| Rect / Ellipse            | 易       | instancing（pos/size/r + cornerRadius 走 SDF）   | **数据层热点**                                 |
+| Path 折线（move/line）    | 易       | indexed polyline                                 | **数据层热点**                                 |
+| Linear gradient           | 易       | 顶点插值 / LUT 纹理                              | series 填充                                    |
+| Path 贝塞尔（quad/cubic） | 中       | tessellation（CPU 抽稀线段 / Lyon / Pathfinder） | area 曲线、平滑线                              |
+| Path arc/ellipseArc       | 中       | 中心参数化便于 GPU 逼近                          | sector、polar                                  |
+| dash / linejoin / arrow   | 中       | 屏幕空间 dash + 预生成 marker mesh               | 网格虚线、箭头                                 |
+| Radial gradient           | 中       | fragment shader（Canvas 仅圆形，GPU 可椭圆）     | 少用                                           |
+| Clip：rect/circle         | 易       | scissor / discard                                | panel 裁剪                                     |
+| Clip：polygon             | 中       | stencil buffer                                   | 少用                                           |
+| **Text**                  | **难**   | SDF/MSDF atlas + 编译期字形收集                  | **O(ticks) 不吃 N → hybrid 中留 2D，不上 GPU** |
 
 要点：plot 的高基数图元全部落在「易」档，唯一的「难」档（文字）在 hybrid 架构里根本不进 GPU。这是结论 §3.3 成立的技术依据。
 
@@ -118,15 +118,15 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 
 ### A. 三者的根本区别 = 抽象层级（你跟谁对话、谁负责变像素）
 
-| | Canvas 2D | WebGL (1/2) | WebGPU |
-|---|---|---|---|
-| 抽象层级 | 高：命令式 2D 绘图 | 低：GPU 光栅化管线 | 低：现代 GPU 管线 |
-| 你描述的是 | 「画一个圆 / 一段文字 / 一条贝塞尔」 | 「这堆三角形顶点 + 这段 shader」 | 同 WebGL，但管线/资源显式化 |
-| 内建图形概念 | 有（圆/矩形/路径/**文字**/渐变均一等公民） | **无**（只有三角形/点/线，圆和文字都得自己造） | 无 |
-| 可编程性 | 不可编程 | GLSL shader | WGSL shader + **真 compute** |
-| 编程模型 | 状态机 + 即时命令，每帧重发 | 全局状态机 + 显式 buffer/texture/program | command encoder + pipeline state + bind group（CPU 开销低、可多线程录命令） |
-| 底层 | 浏览器实现（多为 Skia，**可能本身就 GPU 加速**，对你透明） | OpenGL ES | Vulkan/Metal/D3D12，**不再基于 OpenGL** |
-| 擅长 | 矢量质量、文字、中等图元数、开发简单 | 海量同质几何（instancing）、自定义效果、3D | 同 WebGL + 更低开销 + compute |
+|              | Canvas 2D                                                  | WebGL (1/2)                                    | WebGPU                                                                      |
+| ------------ | ---------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------- |
+| 抽象层级     | 高：命令式 2D 绘图                                         | 低：GPU 光栅化管线                             | 低：现代 GPU 管线                                                           |
+| 你描述的是   | 「画一个圆 / 一段文字 / 一条贝塞尔」                       | 「这堆三角形顶点 + 这段 shader」               | 同 WebGL，但管线/资源显式化                                                 |
+| 内建图形概念 | 有（圆/矩形/路径/**文字**/渐变均一等公民）                 | **无**（只有三角形/点/线，圆和文字都得自己造） | 无                                                                          |
+| 可编程性     | 不可编程                                                   | GLSL shader                                    | WGSL shader + **真 compute**                                                |
+| 编程模型     | 状态机 + 即时命令，每帧重发                                | 全局状态机 + 显式 buffer/texture/program       | command encoder + pipeline state + bind group（CPU 开销低、可多线程录命令） |
+| 底层         | 浏览器实现（多为 Skia，**可能本身就 GPU 加速**，对你透明） | OpenGL ES                                      | Vulkan/Metal/D3D12，**不再基于 OpenGL**                                     |
+| 擅长         | 矢量质量、文字、中等图元数、开发简单                       | 海量同质几何（instancing）、自定义效果、3D     | 同 WebGL + 更低开销 + compute                                               |
 
 一句话：**canvas 2d 是「我描述要画的图形，浏览器负责怎么变像素」；webgl/webgpu 是「我直接驱动 GPU 管线，自己把一切表达成三角形和着色器」。** WebGPU 是 WebGL 的继任者（WebGL 已封顶不再演进）。
 
@@ -136,10 +136,10 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 
 `<canvas>` 元素本质是一块**位图后备存储**；无论挂 2d / webgl / webgpu，最终都往这块像素缓冲写值。GPU 管线终点就是 framebuffer（一组像素），"光栅化"即把几何转成像素片段。故三者均为**分辨率相关的位图**：
 
-| | 输出 | 缩放 | 可访问性/可选中 | 单元素可操作 |
-|---|---|---|---|---|
-| **SVG** | 矢量（DOM） | 无限清晰 | ✅ | ✅（每元素是 DOM） |
-| canvas / webgl / webgpu | **位图** | 会糊 | ❌ | ❌ |
+|                         | 输出        | 缩放     | 可访问性/可选中 | 单元素可操作       |
+| ----------------------- | ----------- | -------- | --------------- | ------------------ |
+| **SVG**                 | 矢量（DOM） | 无限清晰 | ✅              | ✅（每元素是 DOM） |
+| canvas / webgl / webgpu | **位图**    | 会糊     | ❌              | ❌                 |
 
 推论：retikz「印刷级矢量」身份的本命是 **SVG**；canvas/webgl/webgpu 都在位图侧，定位是「性能/规模/效果」而非矢量质量——这正是 §7「不为 core diagram 场景做 GPU」的依据。缓和手段：GPU 可用 **SDF/MSDF** 让文字/简单形状在一定缩放内"接近矢量清晰"（hybrid 中若在 GPU 上画文字的标准做法），但本质仍是位图近似，不是真矢量。
 
@@ -149,13 +149,13 @@ plot 的 color grouping 在 IR 层已把同色图元归到 `scope.nodeDefault`�
 
 开源范本（按贴近 retikz 度排）：
 
-| 项目 | 分层做法 | 对 retikz 的参考价值 |
-|---|---|---|
-| **Plotly.js** | **同图内：轴/标注/文字走 SVG，海量数据点走 WebGL**（`scattergl` vs `scatter`） | **最贴近的标杆**——几乎就是本文建议的 hybrid（数据层 GPU + 轴文字留矢量）的现成实现，立项前应精读其 `scattergl` |
-| deck.gl (Uber) | Layer 架构：WebGL/WebGPU 画地理数据，文字走 SDF `TextLayer` 或 DOM | 「图层 = 不同渲染后端」的架构范式 |
-| Mapbox GL / MapLibre | WebGL 底图+矢量瓦片 + DOM/canvas 叠加控件标签 | hybrid 的工业级稳态 |
-| ECharts + ECharts-GL | 普通图走 zrender canvas，大数据/3D 走 WebGL 扩展 | 「按需分后端」思路 |
-| Three.js + CSS2D/3DRenderer | 官方把 DOM 文字/HTML 叠加到 WebGL 3D 场景 | 文字 overlay 的官方范式 |
-| sigma.js / cosmos / regl-scatterplot | GPU 数据层 + DOM/canvas 标签层 | 大规模图/散点的 hybrid |
+| 项目                                 | 分层做法                                                                       | 对 retikz 的参考价值                                                                                           |
+| ------------------------------------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| **Plotly.js**                        | **同图内：轴/标注/文字走 SVG，海量数据点走 WebGL**（`scattergl` vs `scatter`） | **最贴近的标杆**——几乎就是本文建议的 hybrid（数据层 GPU + 轴文字留矢量）的现成实现，立项前应精读其 `scattergl` |
+| deck.gl (Uber)                       | Layer 架构：WebGL/WebGPU 画地理数据，文字走 SDF `TextLayer` 或 DOM             | 「图层 = 不同渲染后端」的架构范式                                                                              |
+| Mapbox GL / MapLibre                 | WebGL 底图+矢量瓦片 + DOM/canvas 叠加控件标签                                  | hybrid 的工业级稳态                                                                                            |
+| ECharts + ECharts-GL                 | 普通图走 zrender canvas，大数据/3D 走 WebGL 扩展                               | 「按需分后端」思路                                                                                             |
+| Three.js + CSS2D/3DRenderer          | 官方把 DOM 文字/HTML 叠加到 WebGL 3D 场景                                      | 文字 overlay 的官方范式                                                                                        |
+| sigma.js / cosmos / regl-scatterplot | GPU 数据层 + DOM/canvas 标签层                                                 | 大规模图/散点的 hybrid                                                                                         |
 
 结论：hybrid 不仅可行，是处理「海量数据 + 要文字」的**行业标准答案**；Plotly.js 已把「SVG 轴文字 + WebGL 数据点」走通。retikz 的 Scene 本就 renderer-agnostic，同一份 Scene 按图元类型/图层分流到不同后端，做同样分层在架构上更顺（不改 Scene 契约，见 §5）。

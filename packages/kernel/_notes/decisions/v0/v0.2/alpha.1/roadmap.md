@@ -12,12 +12,12 @@ Q2 决策：retikz 只引入 `<Scope>` 一个 IR 一等基元，Scene Tier 3 `Gr
 
 ## 进度看板
 
-| # | 标题 | 状态 | 工作量 | 优先级 |
-|---|---|---|---|---|
-| 1 | [Scope IR schema + compile 下沉到 GroupPrim](./01-scope-ir-and-compile.md)（含 `scope.id` 字段 + PolarTranslate 第 4 transform 变体） | ✅ Accepted | 大 | P0 |
-| 2 | [nodeIndex / anchor 跨 scope 解析](./02-node-index-anchor-resolution.md)（id 冲突共享命名空间 + 前向引用） | ✅ Accepted | 中 | P0 |
-| 3 | [scope.id 注册 synthetic bbox layout](./03-scope-id-bounding-box.md)（scope 作为整体引用目标，对应 TikZ `local bounding box`） | ✅ Accepted | 中 | P0 |
-| 4 | [scope 下相对定位语义](./04-relative-position-in-scope.md) | ✅ Accepted | 中 | P0 |
+| #   | 标题                                                                                                                                  | 状态        | 工作量 | 优先级 |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------ | ------ |
+| 1   | [Scope IR schema + compile 下沉到 GroupPrim](./01-scope-ir-and-compile.md)（含 `scope.id` 字段 + PolarTranslate 第 4 transform 变体） | ✅ Accepted | 大     | P0     |
+| 2   | [nodeIndex / anchor 跨 scope 解析](./02-node-index-anchor-resolution.md)（id 冲突共享命名空间 + 前向引用）                            | ✅ Accepted | 中     | P0     |
+| 3   | [scope.id 注册 synthetic bbox layout](./03-scope-id-bounding-box.md)（scope 作为整体引用目标，对应 TikZ `local bounding box`）        | ✅ Accepted | 中     | P0     |
+| 4   | [scope 下相对定位语义](./04-relative-position-in-scope.md)                                                                            | ✅ Accepted | 中     | P0     |
 
 ---
 

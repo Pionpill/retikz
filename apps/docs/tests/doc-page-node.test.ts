@@ -21,6 +21,13 @@ describe('resolveDocPageNode', () => {
     expect(node.target?.id).toBe('overview');
   });
 
+  it('解析分组文档页面', () => {
+    const node = resolveDocPageNode({ moduleId: 'viz', sectionId: 'data', pageId: null });
+    expect(node.section?.id).toBe('data');
+    expect(node.target?.id).toBe('data');
+    expect(node.target?.label).toBe('viz.dataFlow');
+  });
+
   it('缺失页面时返回空 target', () => {
     const node = resolveDocPageNode({ moduleId: 'kernel', sectionId: 'missing', pageId: 'missing' });
     expect(node.target).toBeUndefined();

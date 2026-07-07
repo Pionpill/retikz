@@ -3,7 +3,7 @@ title: Custom scales
 description: For the long tail the 15 built-ins don't cover (brand ramps, domain-specific mappings, custom binning…), register a runtime definition with defineScale and inject it via scaleDefinitions; custom palettes go through colorSchemes.
 ---
 
-For the long tail the built-in positional / color scales don't cover (brand color ramps, domain-specific mappings, custom binning…), register a runtime definition with `defineScale` and inject it via `scaleDefinitions`. It is the same pattern as `defineCoordinate` for coordinates and `defineTransform` for transforms: the IR stores only the plain-JSON op `{ type, name, ...config }`; the functions live in the runtime definition and never enter the IR.
+For the long tail the built-in positional / color scales don't cover (brand color ramps, domain-specific mappings, custom binning…), register a runtime definition with `defineScale` and inject it via `scaleDefinitions`. It is the same pattern as `defineCoordinate` for coordinates: the IR stores only the plain-JSON op `{ type, name, ...config }`; the functions live in the runtime definition and never enter the IR.
 
 ## Two families
 

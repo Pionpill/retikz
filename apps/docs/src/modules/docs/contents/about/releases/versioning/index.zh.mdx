@@ -45,13 +45,13 @@ rc 阶段再收窄一层——公开 API 不再破坏，npm dist-tag 使用 `nex
 
 ## peerDependencies
 
-| 包                | peer                                      | 版本         |
-| ----------------- | ----------------------------------------- | ------------ |
-| `@retikz/react`   | `react` / `react-dom`                     | `>=18`       |
-| `@retikz/core`    | （无）                                    | —            |
-| `@retikz/math`    | （无）                                    | —            |
-| `@retikz/render`  | `@napi-rs/canvas`（仅 Node 导出入口可选） | catalog 管理 |
-| `@retikz/vanilla` | （无）                                    | —            |
+| 包                | peer                                                      | 版本                |
+| ----------------- | --------------------------------------------------------- | ------------------- |
+| `@retikz/react`   | `react` / `react-dom`                                     | `>=18`              |
+| `@retikz/core`    | （无）                                                    | —                   |
+| `@retikz/math`    | （无）                                                    | —                   |
+| `@retikz/render`  | `@napi-rs/canvas`（仅 Node 导出入口可选）                 | catalog 管理        |
+| `@retikz/vanilla` | （无）                                                    | —                   |
 | `@retikz/tex`     | `mathjax-full`（可选）<br />`react` / `react-dom`（可选） | catalog<br />`>=18` |
 
 升 React 主版本通常发 MINOR；只有当新版本不兼容老 API 时才升 MAJOR。

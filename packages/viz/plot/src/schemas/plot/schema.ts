@@ -1,8 +1,8 @@
-﻿import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+import { DataRefSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
-import { DataRefSchema } from '../data';
 import { GuideSchema } from '../guide';
 import { BoxPaddingSchema, PlotLabelSchema, PlotLayoutSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
@@ -225,10 +225,7 @@ export const CoordinateArrangementSchema = z
 
 export const CoordinateCompositionSchema = z
   .object({
-    defaultView: z
-      .string()
-      .min(1)
-      .describe('Coordinate view id used when a mark or axis guide omits coordinateView'),
+    defaultView: z.string().min(1).describe('Coordinate view id used when a mark or axis guide omits coordinateView'),
     views: z
       .array(CoordinateViewSchema)
       .optional()
@@ -273,9 +270,7 @@ export const CoordinateCompositionSchema = z
       }
     }
     const overlayTargetOf = new Map(
-      views.flatMap(view =>
-        view.placement?.kind === 'overlay' ? [[view.id, view.placement.target] as const] : [],
-      ),
+      views.flatMap(view => (view.placement?.kind === 'overlay' ? [[view.id, view.placement.target] as const] : [])),
     );
     for (const view of views) {
       const visiting = new Set<string>();
@@ -419,11 +414,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
   type: z
     .literal(PlotComposite.Plot)
     .describe('Composite type within the plot namespace: the top-level grammar-of-graphics spec node'),
-  id: z
-    .string()
-    .min(1)
-    .optional()
-    .describe('Optional plot handle used as the outer scope id and anchor target'),
+  id: z.string().min(1).optional().describe('Optional plot handle used as the outer scope id and anchor target'),
   data: DataRefSchema.describe(
     'Data binding: a named reference to an externally-supplied dataset plus an optional data model. The dataset values never enter the IR; they are injected at compile time via lowerPlots(datasets).',
   ),

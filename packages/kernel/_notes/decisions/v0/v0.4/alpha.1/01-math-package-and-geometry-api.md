@@ -27,15 +27,15 @@
 
 ### 3. 子模块布局（首切只开 `geometry/`）
 
-| 文件 | 导出 |
-| --- | --- |
-| `point.ts` | `Position`、`DEFAULT_EPSILON`、`point`（add/sub/scale/dot/cross/length/normalize/shiftToward/equal）、`lerp` |
-| `transform.ts` | `CenteredShape`、`localToWorld`、`worldToLocal` |
-| `arc.ts` | arcEndPoint / arcAngleInRange / rayArc / ellipseArcPoint / arcBoundingPoints / ellipseArcBoundingPoints |
-| `intersect.ts` | `intersect`（lineLine / lineCircle / circleCircle / segmentSegment）；`rayArc` 留 `arc` 模块 |
-| `triangle.ts` | `Circle` 类型、`triangle`（incircle / circumcircle） |
-| `polygon.ts` | `polygon`（containsPoint） |
-| `hull.ts` | `convexHull` |
+| 文件           | 导出                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------ |
+| `point.ts`     | `Position`、`DEFAULT_EPSILON`、`point`（add/sub/scale/dot/cross/length/normalize/shiftToward/equal）、`lerp` |
+| `transform.ts` | `CenteredShape`、`localToWorld`、`worldToLocal`                                                              |
+| `arc.ts`       | arcEndPoint / arcAngleInRange / rayArc / ellipseArcPoint / arcBoundingPoints / ellipseArcBoundingPoints      |
+| `intersect.ts` | `intersect`（lineLine / lineCircle / circleCircle / segmentSegment）；`rayArc` 留 `arc` 模块                 |
+| `triangle.ts`  | `Circle` 类型、`triangle`（incircle / circumcircle）                                                         |
+| `polygon.ts`   | `polygon`（containsPoint）                                                                                   |
+| `hull.ts`      | `convexHull`                                                                                                 |
 
 `curve/`（贝塞尔求交）、`matrix/`（伪三维）首切不建。
 

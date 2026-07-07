@@ -12,11 +12,11 @@
 
 ## 进度看板
 
-| # | ADR | 标题 | 依赖 | 工作量 | 优先级 | 状态 |
-|---|---|---|---|---|---|---|
-| T1 | [ADR-01](./01-math-package-and-geometry-api.md) | 新建 `@retikz/math` 包 + 首切几何 API | — | 大 | P0 | ✅ 已实现 |
-| T2 | [ADR-02](./02-core-pure-geometry-sink.md) | core 纯几何下沉 + 公开面 re-export | T1 | 中 | P0 | ✅ 已实现 |
-| T3 | [ADR-03](./03-point-polar-surface-fix.md) | `point` 公开面修正：toPolar/equalPolar 迁 polar | T1 | 小 | P0 | ✅ 已实现 |
+| #   | ADR                                             | 标题                                            | 依赖 | 工作量 | 优先级 | 状态      |
+| --- | ----------------------------------------------- | ----------------------------------------------- | ---- | ------ | ------ | --------- |
+| T1  | [ADR-01](./01-math-package-and-geometry-api.md) | 新建 `@retikz/math` 包 + 首切几何 API           | —    | 大     | P0     | ✅ 已实现 |
+| T2  | [ADR-02](./02-core-pure-geometry-sink.md)       | core 纯几何下沉 + 公开面 re-export              | T1   | 中     | P0     | ✅ 已实现 |
+| T3  | [ADR-03](./03-point-polar-surface-fix.md)       | `point` 公开面修正：toPolar/equalPolar 迁 polar | T1   | 小     | P0     | ✅ 已实现 |
 
 实现序：**T1 先**（build math 底座）→ **T2 + T3 并行**（均 core 侧，依赖 T1；T3 可并入 T2 实现窗口）。本 milestone 已按该顺序落地，保留本段作为执行记录。
 

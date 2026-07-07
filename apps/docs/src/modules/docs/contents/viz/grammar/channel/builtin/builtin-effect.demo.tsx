@@ -1,6 +1,6 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
-import { PlotFieldType } from '@retikz/plot';
+import { DataFieldType } from '@retikz/data';
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
 
 const rows = [
@@ -20,10 +20,10 @@ const Demo: FC = () => (
   <Plot
     data={rows}
     model={[
-      { name: 'x', type: PlotFieldType.Continuous },
-      { name: 'y', type: PlotFieldType.Continuous },
-      { name: 'group', type: PlotFieldType.Categorical },
-      { name: 'diameter', type: PlotFieldType.Continuous },
+      { name: 'x', type: DataFieldType.Continuous },
+      { name: 'y', type: DataFieldType.Continuous },
+      { name: 'group', type: DataFieldType.Categorical },
+      { name: 'diameter', type: DataFieldType.Continuous },
     ]}
     width={420}
     height={260}

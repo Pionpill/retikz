@@ -34,10 +34,10 @@ Shape primitives share common visual fields such as `fill`, `fillOpacity`, `stro
 
 Element-level visual effects only live on renderable main geometry primitives:
 
-| Field       | Applies to                            | Notes                                                                 |
-| ----------- | ------------------------------------- | --------------------------------------------------------------------- |
-| `shadow?`   | `RectPrim` / `EllipsePrim` / `PathPrim` | Resolved `ResolvedDropShadow`; renderers materialize it as a platform shadow |
-| `blendMode?` | `RectPrim` / `EllipsePrim` / `PathPrim` | `BlendModeValue`; renderers map it to the target platform's blend mode |
+| Field        | Applies to                              | Notes                                                                        |
+| ------------ | --------------------------------------- | ---------------------------------------------------------------------------- |
+| `shadow?`    | `RectPrim` / `EllipsePrim` / `PathPrim` | Resolved `ResolvedDropShadow`; renderers materialize it as a platform shadow |
+| `blendMode?` | `RectPrim` / `EllipsePrim` / `PathPrim` | `BlendModeValue`; renderers map it to the target platform's blend mode       |
 
 `TextPrim` does not support element-level `shadow` / `blendMode`. `GroupPrim` currently only carries `transforms`, `clipRef`, `children`, and the common `id` / `meta` / `animations`; it has no group-level effect fields. Visual effects do not change a primitive's hit area; interaction should still use `id` / `meta` plus an external hit-test / hydration layer.
 
@@ -76,7 +76,7 @@ Coordinates use user units. Angles follow the screen-coordinate convention: `0 =
 
 | Field          | Type                     | Notes                                                                                                                                |
 | -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `shape`        | `ArrowShapeValue`         | Shape name; rendering no longer depends on it after resolution — kept for identity / debugging                                       |
+| `shape`        | `ArrowShapeValue`        | Shape name; rendering no longer depends on it after resolution — kept for identity / debugging                                       |
 | `baseSize`     | `number`                 | Marker viewBox side length; the adapter derives viewBox `0 0 baseSize baseSize` and refY = baseSize/2                                |
 | `refX`         | `number`                 | Line contact point (marker refX); hollow shapes already subtract lineWidth/2 during compile                                          |
 | `markerWidth`  | `number`                 | Resolved tip length = (`length ?? def.defaultLength`) × scale                                                                        |

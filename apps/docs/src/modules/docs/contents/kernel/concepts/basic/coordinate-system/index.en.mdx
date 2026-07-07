@@ -47,13 +47,13 @@ Angles follow screen-coordinate direction: `0°` points right, `90°` points dow
 
 ## Which Form to Use
 
-| Goal                                              | Prefer                         |
-| ------------------------------------------------- | ------------------------------ |
-| Reproduce existing SVG / fixed sketch coordinates | `[x, y]`                       |
-| Circular, sector, or radial layouts               | `{ origin, angle, radius }`    |
-| Place around another primitive by side            | `{ direction, of, distance? }` |
-| Apply arbitrary 2D offset from a base             | `{ of, offset }`               |
-| Place at a proportional point between two targets | `{ between: [A, B], fraction }`       |
+| Goal                                              | Prefer                          |
+| ------------------------------------------------- | ------------------------------- |
+| Reproduce existing SVG / fixed sketch coordinates | `[x, y]`                        |
+| Circular, sector, or radial layouts               | `{ origin, angle, radius }`     |
+| Place around another primitive by side            | `{ direction, of, distance? }`  |
+| Apply arbitrary 2D offset from a base             | `{ of, offset }`                |
+| Place at a proportional point between two targets | `{ between: [A, B], fraction }` |
 
 This page explains the coordinate context; the full position vocabulary lives in [Positioning](/kernel/concepts/basic/position).
 

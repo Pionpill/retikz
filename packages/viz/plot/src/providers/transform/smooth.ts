@@ -1,9 +1,9 @@
+import type { ExternalRow, TransformContext } from '@retikz/data';
+
+import { groupRowsByFields, linearSamplesOf, resolveFieldPath } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import { type TransformContext } from '../../contract';
-import { type ExternalRow, type SmoothTransform } from '../../schemas';
-import { resolveFieldPath } from '../data';
-import { groupRowsByFields, linearSamplesOf } from './shared';
+import type { SmoothTransform } from '../../schemas';
 
 const DEFAULT_SMOOTH_SAMPLE_COUNT = 64;
 

@@ -3,7 +3,7 @@
 > 目的：把 `@retikz/plot` 放进主流绘图库的坐标系里，看清现状差距与未来定位，为 roadmap 取舍提供参照。
 > 范围：聚焦「图表层 / 绘图库」能力，不评 R 生态、不评业务图表美观度。
 > 评分：公平客观、不迎合 retikz，标杆库在其强项给满分；retikz 现状按 **v0.1-alpha.12** 已落地能力打分（registry 三联 defineMark/Transform/Scale/Coordinate 全套扩展 + 6 mark / 7 transform / 13 scale + 19 配色 / 5 坐标系 / locator 定位 API 均已落地；facet / 动画 / 交互 UI 仍未实现），**目标 = 现有架构（core IR / Scene / Tier 2 分层）的能力上限**（受架构取舍约束，大数据性能等非目标维度即便做满也不高）。
-> 版本：v0.1 · 日期：2026-06-06 · 关联：[`plot v0.1 roadmap`](../decisions/v0/v0.1/roadmap.md) · [`plot-design.md`](../architecture/plot-design.md) · [`core-design.md`](../../../../notes/architecture/core-design.md)
+> 版本：v0.1 · 日期：2026-06-06 · 关联：[`plot v0.1 roadmap`](../decisions/plot/v0/v0.1/roadmap.md) · [`plot-design.md`](../architecture/plot-design.md) · [`core-design.md`](../../../../notes/architecture/core-design.md)
 
 ## 评分口径
 
@@ -15,37 +15,37 @@
 
 > ⚠️ **备注**：本表仅用于 `@retikz/plot` **开发阶段的内部评审参照**；评分由 LLM 生成、主观成分较大，**不可作为真实产品选型或对外的产品对比依据**。
 
-| 分类 | 对比项 | ggplot2 | Vega-Lite | Observable Plot | Highcharts | ECharts | Recharts | AntV G2 | VChart | retikz 现状 | retikz 目标 | 备注 |
-|---|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|---|
-| 能力 | 图表类型覆盖 | 7 | 7 | 6 | 9 | 9 | 5 | 8 | 9 | 4 | 7 | 补：已有 point/path/region/interval/link/reference 6 mark，跨笛卡尔/极/三元可组合出柱/线/面/散点/饼/环/雷达/热力/桑基/参考线；缺 boxplot/candlestick/geo/graph 等专用图 |
-| | 坐标系种类 | 7 | 5 | 4 | 5 | 7 | 4 | 8 | 7 | 6 | 7 | 已落地 cartesian2D/1D + polar2D/1D + ternary 5 种且 defineCoordinate 可扩展；缺 geo/parallel（G2 的 polar/theta/parallel/radial/helix 是同赛道最全参照） |
-| | 交互 | 1 | 7 | 4 | 9 | 9 | 5 | 9 | 9 | 2 | 7 | 补：现仅 locator 定位 API（datum/series resolve，与 lowering 同投影 parity），无 hover/tooltip/缩放/选择 UI；依托 core 水合补足，学 G2 / VChart 交互动画 |
-| | 动画 / 过渡 | 1 | 3 | 2 | 7 | 9 | 5 | 8 | 9 | 1 | 5 | 补：复用 core 动画 track 做数据更新过渡；VChart 把动画/叙事做成卖点，是高线参照 |
-| | 组合 / 分面 | 9 | 9 | 7 | 3 | 5 | 3 | 9 | 6 | 3 | 7 | 补：现仅 marks 数组多层组合，facet 未实现；用 scope-aware IR 落 facet / 小多图（v0.5），学 ggplot facet 与 G2 rect/list/circle facet |
-| | **能力 · 平均** | **5.0** | **6.2** | **4.6** | **6.6** | **7.8** | **4.4** | **8.4** | **8.0** | **3.2** | **6.6** | 主线：交互 + 图表类型 + facet 是三大补足项；G2/VChart 在能力广度上全面领先现状 |
-| 图形语法 | 真·图形语法 | 10 | 9 | 8 | 1 | 3 | 3 | 9 | 5 | 7 | 9 | 补：data/transform/scale/coordinate/mark/guide 六件套均落地且 defineXxx 可扩展（alpha.12）；缺 facet / layer 继承 / 更丰富 guide。G2 v5 是 JS 阵营最完整真 GoG |
-| | 声明式可序列化 spec | 3 | 10 | 3 | 6 | 6 | 1 | 6 | 6 | 8 | 9 | 守：IR 不混函数 / accessor 红线，operation/definition 二分让自定义扩展也不污染 IR；G2/VChart 的 spec 掺 encoder/回调，序列化纯度不及 retikz |
-| | 可组合性 | 9 | 7 | 7 | 3 | 5 | 5 | 8 | 5 | 5 | 7 | 补：学 ggplot2 `+` 图层范式 / G2 composite view / Observable Plot mark 数组，做更优雅的组合 API |
-| | **图形语法 · 平均** | **7.3** | **8.7** | **6.0** | **3.3** | **4.7** | **3.0** | **7.7** | **5.3** | **6.7** | **8.3** | 主线：丰富 GoG 四件套，守可序列化纯度逼近 Vega-Lite；G2 是同赛道最强真 GoG 对手 |
-| 性能 | 大数据量渲染 | 3 | 3 | 3 | 7 | 10 | 1 | 6 | 9 | 3 | 5 | 取舍：非赛道，Canvas 后端兜底即可，不追 ECharts / VChart WebGL |
-| | 包体积 / 底座轻量 | — | 3 | 4 | 5 | 5 | 5 | 4 | 4 | 7 | 6 | 守：plot 层按需引 d3 模块，core 仍仅 zod；G2(AntV G)/VChart(VRender) 底座偏重 |
-| | **性能 · 平均** | **3.0** | **3.0** | **3.5** | **6.0** | **7.5** | **3.0** | **5.0** | **6.5** | **5.0** | **5.5** | 主线：守轻量，性能不追赛道 |
-| API 设计 | 易用性 / 上手曲线 | 7 | 7 | 8 | 7 | 5 | 7 | 5 | 7 | 5 | 7 | 补：学 Observable Plot 智能默认 + `@retikz/chart` preset 层降门槛；G2 v5 语法上手成本偏高 |
-| | 类型安全 | — | 5 | 5 | 7 | 5 | 7 | 6 | 7 | 8 | 9 | 守：`z.infer` 单源 + 禁 `any`；contract 层 defineXxx 泛型化让自定义扩展也强类型；alpha 期收敛 public API |
-| | 框架集成 | — | 7 | 6 | 7 | 7 | 4 | 7 | 8 | 6 | 7 | 补：补 Vue / Svelte adapter，复用框架无关 IR；VChart 多框架 + 跨端是高线 |
-| | **API 设计 · 平均** | **7.0** | **6.3** | **6.3** | **7.0** | **5.7** | **6.0** | **6.0** | **7.3** | **6.3** | **7.7** | 主线：智能默认 + preset + 扩框架 |
-| 渲染器 | 后端多样性 | 5 | 5 | 2 | 5 | 7 | 1 | 9 | 8 | 5 | 7 | 校正：后端数量非 retikz 强项——G2(Canvas/SVG/WebGL/Skia) 最全，retikz 现仅 SVG+Canvas；plot 层不自造后端 |
-| | renderer-agnostic / 后端可插拔 | 3 | 5 | 2 | 3 | 5 | 1 | 7 | 7 | 7 | 9 | 守：retikz 解耦边界是**可序列化 IR**，G2/VChart 解耦边界是运行时 scenegraph（换得了 renderer，存不下可移植描述） |
-| | SSR / 无头渲染 | — | 5 | 4 | 5 | 5 | 4 | 6 | 7 | 7 | 7 | 守：保持 vanilla `renderToSvgString` framework-free SSR 路径 |
-| | **渲染器 · 平均** | **4.0** | **5.0** | **2.7** | **4.3** | **5.7** | **2.0** | **7.3** | **7.3** | **6.3** | **7.7** | 主线：渲染优势不在「后端多」（G2/VChart 更多），在「解耦边界是可序列化 IR」 |
-| AI | LLM 生成友好 | 3 | 10 | 4 | 5 | 5 | 3 | 5 | 6 | 6 | 9 | 补：建图表样例生态 + 真实生成验证，学 Vega-Lite 靠语料坐稳 LLM 出图标准；VChart 有 VMind AI 出图 |
-| | schema / 契约可喂给 LLM | 1 | 7 | 3 | 3 | 3 | 1 | 3 | 3 | 8 | 9 | 守：每字段 `.describe`，沉淀 schema→tool definition 工具链；G2/VChart spec 无一等可喂 schema |
-| | AI 原生 / 自我纠错 | 1 | 5 | 2 | 1 | 1 | 1 | 3 | 5 | 5 | 8 | 补：建评测集 + zod 错误回喂的自动修复闭环；VChart 靠 VMind 部分闭环 |
-| | **AI · 平均** | **1.7** | **7.3** | **3.0** | **3.0** | **3.0** | **1.7** | **3.7** | **4.7** | **6.3** | **8.7** | 主线：守 schema 契约领先，补语料与自纠闭环 |
-| 人群体验 | 新手学习（上手门槛） | 6 | 6 | 8 | 7 | 5 | 8 | 5 | 7 | 4 | 7 | 补：`@retikz/chart` preset 层降门槛，学 Recharts / Observable Plot 的好 API；语法驱动天生上手贵（G2 同病） |
-| | 日常出图（高频效率） | 8 | 7 | 8 | 8 | 7 | 6 | 7 | 8 | 4 | 7 | 补：6 mark + 5 坐标系 + 13 scale 已能覆盖常见图，仍缺默认美观与开箱省心；学成熟库 / ggplot |
-| | 深度使用（抽象 / 全面 / 可嵌入） | 9 | 8 | 7 | 6 | 7 | 4 | 8 | 7 | 7 | 9 | 守 + 补：defineMark/Transform/Scale/Coordinate 全套可扩展 + 后端中立 + 可连接图元，深度/可嵌入已显著起来（alpha.12） |
-| | **人群体验 · 平均** | **7.7** | **7.0** | **7.7** | **7.0** | **6.3** | **6.0** | **6.7** | **7.3** | **5.0** | **7.7** | 主线：preset 补新手 / 日常，守深度用户强项 |
+| 分类     | 对比项                           | ggplot2 | Vega-Lite | Observable Plot | Highcharts | ECharts | Recharts | AntV G2 | VChart  | retikz 现状 | retikz 目标 | 备注                                                                                                                                                                    |
+| -------- | -------------------------------- | :-----: | :-------: | :-------------: | :--------: | :-----: | :------: | :-----: | :-----: | :---------: | :---------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 能力     | 图表类型覆盖                     |    7    |     7     |        6        |     9      |    9    |    5     |    8    |    9    |      4      |      7      | 补：已有 point/path/region/interval/link/reference 6 mark，跨笛卡尔/极/三元可组合出柱/线/面/散点/饼/环/雷达/热力/桑基/参考线；缺 boxplot/candlestick/geo/graph 等专用图 |
+|          | 坐标系种类                       |    7    |     5     |        4        |     5      |    7    |    4     |    8    |    7    |      6      |      7      | 已落地 cartesian2D/1D + polar2D/1D + ternary 5 种且 defineCoordinate 可扩展；缺 geo/parallel（G2 的 polar/theta/parallel/radial/helix 是同赛道最全参照）                |
+|          | 交互                             |    1    |     7     |        4        |     9      |    9    |    5     |    9    |    9    |      2      |      7      | 补：现仅 locator 定位 API（datum/series resolve，与 lowering 同投影 parity），无 hover/tooltip/缩放/选择 UI；依托 core 水合补足，学 G2 / VChart 交互动画                |
+|          | 动画 / 过渡                      |    1    |     3     |        2        |     7      |    9    |    5     |    8    |    9    |      1      |      5      | 补：复用 core 动画 track 做数据更新过渡；VChart 把动画/叙事做成卖点，是高线参照                                                                                         |
+|          | 组合 / 分面                      |    9    |     9     |        7        |     3      |    5    |    3     |    9    |    6    |      3      |      7      | 补：现仅 marks 数组多层组合，facet 未实现；用 scope-aware IR 落 facet / 小多图（v0.5），学 ggplot facet 与 G2 rect/list/circle facet                                    |
+|          | **能力 · 平均**                  | **5.0** |  **6.2**  |     **4.6**     |  **6.6**   | **7.8** | **4.4**  | **8.4** | **8.0** |   **3.2**   |   **6.6**   | 主线：交互 + 图表类型 + facet 是三大补足项；G2/VChart 在能力广度上全面领先现状                                                                                          |
+| 图形语法 | 真·图形语法                      |   10    |     9     |        8        |     1      |    3    |    3     |    9    |    5    |      7      |      9      | 补：data/transform/scale/coordinate/mark/guide 六件套均落地且 defineXxx 可扩展（alpha.12）；缺 facet / layer 继承 / 更丰富 guide。G2 v5 是 JS 阵营最完整真 GoG          |
+|          | 声明式可序列化 spec              |    3    |    10     |        3        |     6      |    6    |    1     |    6    |    6    |      8      |      9      | 守：IR 不混函数 / accessor 红线，operation/definition 二分让自定义扩展也不污染 IR；G2/VChart 的 spec 掺 encoder/回调，序列化纯度不及 retikz                             |
+|          | 可组合性                         |    9    |     7     |        7        |     3      |    5    |    5     |    8    |    5    |      5      |      7      | 补：学 ggplot2 `+` 图层范式 / G2 composite view / Observable Plot mark 数组，做更优雅的组合 API                                                                         |
+|          | **图形语法 · 平均**              | **7.3** |  **8.7**  |     **6.0**     |  **3.3**   | **4.7** | **3.0**  | **7.7** | **5.3** |   **6.7**   |   **8.3**   | 主线：丰富 GoG 四件套，守可序列化纯度逼近 Vega-Lite；G2 是同赛道最强真 GoG 对手                                                                                         |
+| 性能     | 大数据量渲染                     |    3    |     3     |        3        |     7      |   10    |    1     |    6    |    9    |      3      |      5      | 取舍：非赛道，Canvas 后端兜底即可，不追 ECharts / VChart WebGL                                                                                                          |
+|          | 包体积 / 底座轻量                |    —    |     3     |        4        |     5      |    5    |    5     |    4    |    4    |      7      |      6      | 守：plot 层按需引 d3 模块，core 仍仅 zod；G2(AntV G)/VChart(VRender) 底座偏重                                                                                           |
+|          | **性能 · 平均**                  | **3.0** |  **3.0**  |     **3.5**     |  **6.0**   | **7.5** | **3.0**  | **5.0** | **6.5** |   **5.0**   |   **5.5**   | 主线：守轻量，性能不追赛道                                                                                                                                              |
+| API 设计 | 易用性 / 上手曲线                |    7    |     7     |        8        |     7      |    5    |    7     |    5    |    7    |      5      |      7      | 补：学 Observable Plot 智能默认 + `@retikz/chart` preset 层降门槛；G2 v5 语法上手成本偏高                                                                               |
+|          | 类型安全                         |    —    |     5     |        5        |     7      |    5    |    7     |    6    |    7    |      8      |      9      | 守：`z.infer` 单源 + 禁 `any`；contract 层 defineXxx 泛型化让自定义扩展也强类型；alpha 期收敛 public API                                                                |
+|          | 框架集成                         |    —    |     7     |        6        |     7      |    7    |    4     |    7    |    8    |      6      |      7      | 补：补 Vue / Svelte adapter，复用框架无关 IR；VChart 多框架 + 跨端是高线                                                                                                |
+|          | **API 设计 · 平均**              | **7.0** |  **6.3**  |     **6.3**     |  **7.0**   | **5.7** | **6.0**  | **6.0** | **7.3** |   **6.3**   |   **7.7**   | 主线：智能默认 + preset + 扩框架                                                                                                                                        |
+| 渲染器   | 后端多样性                       |    5    |     5     |        2        |     5      |    7    |    1     |    9    |    8    |      5      |      7      | 校正：后端数量非 retikz 强项——G2(Canvas/SVG/WebGL/Skia) 最全，retikz 现仅 SVG+Canvas；plot 层不自造后端                                                                 |
+|          | renderer-agnostic / 后端可插拔   |    3    |     5     |        2        |     3      |    5    |    1     |    7    |    7    |      7      |      9      | 守：retikz 解耦边界是**可序列化 IR**，G2/VChart 解耦边界是运行时 scenegraph（换得了 renderer，存不下可移植描述）                                                        |
+|          | SSR / 无头渲染                   |    —    |     5     |        4        |     5      |    5    |    4     |    6    |    7    |      7      |      7      | 守：保持 vanilla `renderToSvgString` framework-free SSR 路径                                                                                                            |
+|          | **渲染器 · 平均**                | **4.0** |  **5.0**  |     **2.7**     |  **4.3**   | **5.7** | **2.0**  | **7.3** | **7.3** |   **6.3**   |   **7.7**   | 主线：渲染优势不在「后端多」（G2/VChart 更多），在「解耦边界是可序列化 IR」                                                                                             |
+| AI       | LLM 生成友好                     |    3    |    10     |        4        |     5      |    5    |    3     |    5    |    6    |      6      |      9      | 补：建图表样例生态 + 真实生成验证，学 Vega-Lite 靠语料坐稳 LLM 出图标准；VChart 有 VMind AI 出图                                                                        |
+|          | schema / 契约可喂给 LLM          |    1    |     7     |        3        |     3      |    3    |    1     |    3    |    3    |      8      |      9      | 守：每字段 `.describe`，沉淀 schema→tool definition 工具链；G2/VChart spec 无一等可喂 schema                                                                            |
+|          | AI 原生 / 自我纠错               |    1    |     5     |        2        |     1      |    1    |    1     |    3    |    5    |      5      |      8      | 补：建评测集 + zod 错误回喂的自动修复闭环；VChart 靠 VMind 部分闭环                                                                                                     |
+|          | **AI · 平均**                    | **1.7** |  **7.3**  |     **3.0**     |  **3.0**   | **3.0** | **1.7**  | **3.7** | **4.7** |   **6.3**   |   **8.7**   | 主线：守 schema 契约领先，补语料与自纠闭环                                                                                                                              |
+| 人群体验 | 新手学习（上手门槛）             |    6    |     6     |        8        |     7      |    5    |    8     |    5    |    7    |      4      |      7      | 补：`@retikz/chart` preset 层降门槛，学 Recharts / Observable Plot 的好 API；语法驱动天生上手贵（G2 同病）                                                              |
+|          | 日常出图（高频效率）             |    8    |     7     |        8        |     8      |    7    |    6     |    7    |    8    |      4      |      7      | 补：6 mark + 5 坐标系 + 13 scale 已能覆盖常见图，仍缺默认美观与开箱省心；学成熟库 / ggplot                                                                              |
+|          | 深度使用（抽象 / 全面 / 可嵌入） |    9    |     8     |        7        |     6      |    7    |    4     |    8    |    7    |      7      |      9      | 守 + 补：defineMark/Transform/Scale/Coordinate 全套可扩展 + 后端中立 + 可连接图元，深度/可嵌入已显著起来（alpha.12）                                                    |
+|          | **人群体验 · 平均**              | **7.7** |  **7.0**  |     **7.7**     |  **7.0**   | **6.3** | **6.0**  | **6.7** | **7.3** |   **5.0**   |   **7.7**   | 主线：preset 补新手 / 日常，守深度用户强项                                                                                                                              |
 
 > **分组均值慎读**：均值为等权、且对维度选取高度敏感（本表偏重图形语法 / 渲染架构 / AI 等 retikz 结构强项），故不压成单一总分。retikz 现状低分（交互 2、动画 1、facet 3）是阶段性而非结构性；较高分（renderer-agnostic 7、schema 契约 8、类型安全 8、深度使用 7）是结构性优势，源于核心架构（registry 三联 + operation/definition 二分）而非堆功能。看分组趋势（如能力维度现状 3.2）比看总分可靠，结构优势 ≠ 整体成熟度。
 
@@ -53,19 +53,19 @@
 
 > 口径：只评 retikz plot 现状，不再横向比较各库；**功能完整度**看内置能力是否足够覆盖常见图表语义，**拓展性**看该层是否有一等 definition / registry / schema contract，以及扩展是否仍能保持 IR 可序列化。分数仍为 10 分制，现状按 alpha.12 已落地能力估算。
 
-| 图形语法层级 | 功能完整度 | 拓展性 | 现状判断 | 主要缺口 / 下一步 |
-|---|:--:|:--:|---|---|
-| Data / 数据入口 | 5 | 6 | 能承载结构化数据并进入 plot spec，但更多是“数据作为输入”而非成熟 dataflow 层 | 数据集命名、跨 mark 共享、派生数据复用、异步 / 流式数据都还不是一等模型 |
-| Transform / 数据变换 | 6 | 9 | 已有 7 类 transform，且 `defineTransform` 让内置与自定义同机制 | 需要补更完整的统计变换、窗口变换、bin / density 等常见图表数据流能力 |
-| Scale / 尺度与配色 | 7 | 9 | 13 scale + 19 配色已能覆盖多数常见图，`defineScale` 拓展路径清楚 | 需要继续打磨默认值、domain 推断、legend/axis 联动与主题化体验 |
-| Coordinate / 坐标系 | 6 | 9 | 5 种坐标系已覆盖 cartesian / polar / ternary 主干，`defineCoordinate` 是强拓展点 | 缺 geo、parallel、radial/helix 等更偏专用或高阶的坐标变体 |
-| Mark / 几何图元 | 6 | 9 | 6 mark 已能组合出柱、线、面、散点、饼环、热力、桑基、参考线等基础图 | 缺 boxplot、candlestick、geo shape、graph edge/node 等专用 mark 家族 |
-| Encoding / Channel | 5 | 7 | 已能把字段映射到位置、颜色、形状等视觉变量，是 mark 组合的核心胶水 | channel contract 与 guide / scale / mark 的联动还需收敛，复杂 channel 复用能力不足 |
-| Guide / 轴与图例 | 4 | 5 | 有 guide 概念，但成熟度低于 data / scale / coordinate / mark 主干 | 需要补 axis / legend 的布局、主题、格式化、交互状态与自动推断 |
-| Layer / Composition / Facet | 3 | 6 | 现状主要是 marks 数组多层组合；scope-aware IR 给 facet 留了位置 | facet、小多图、layer 继承、共享 scale / guide 还未形成完整语法 |
-| Selection / Interaction | 2 | 5 | locator API 已给 datum/series resolve 打地基，但还不是完整交互语法 | hover、tooltip、brush、zoom、selection state、事件到 IR / runtime 的契约仍缺 |
-| Lowering / IR 边界 | 7 | 9 | Tier 2 plot 可下沉到 core Kernel，IR / Scene 仍保持 renderer-agnostic 和可序列化 | 需要继续验证复杂图表 lowering 后的可调试性、source map / locator parity 和文档化 |
-| **均值** | **5.1** | **7.4** | 现状是“功能成熟度中等偏早、拓展性明显先行”的结构 | 短期补功能广度，长期守住 operation/definition 二分与可序列化边界 |
+| 图形语法层级                | 功能完整度 | 拓展性  | 现状判断                                                                         | 主要缺口 / 下一步                                                                  |
+| --------------------------- | :--------: | :-----: | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Data / 数据入口             |     5      |    6    | 能承载结构化数据并进入 plot spec，但更多是“数据作为输入”而非成熟 dataflow 层     | 数据集命名、跨 mark 共享、派生数据复用、异步 / 流式数据都还不是一等模型            |
+| Transform / 数据变换        |     6      |    9    | 已有 7 类 transform，且 `defineTransform` 让内置与自定义同机制                   | 需要补更完整的统计变换、窗口变换、bin / density 等常见图表数据流能力               |
+| Scale / 尺度与配色          |     7      |    9    | 13 scale + 19 配色已能覆盖多数常见图，`defineScale` 拓展路径清楚                 | 需要继续打磨默认值、domain 推断、legend/axis 联动与主题化体验                      |
+| Coordinate / 坐标系         |     6      |    9    | 5 种坐标系已覆盖 cartesian / polar / ternary 主干，`defineCoordinate` 是强拓展点 | 缺 geo、parallel、radial/helix 等更偏专用或高阶的坐标变体                          |
+| Mark / 几何图元             |     6      |    9    | 6 mark 已能组合出柱、线、面、散点、饼环、热力、桑基、参考线等基础图              | 缺 boxplot、candlestick、geo shape、graph edge/node 等专用 mark 家族               |
+| Encoding / Channel          |     5      |    7    | 已能把字段映射到位置、颜色、形状等视觉变量，是 mark 组合的核心胶水               | channel contract 与 guide / scale / mark 的联动还需收敛，复杂 channel 复用能力不足 |
+| Guide / 轴与图例            |     4      |    5    | 有 guide 概念，但成熟度低于 data / scale / coordinate / mark 主干                | 需要补 axis / legend 的布局、主题、格式化、交互状态与自动推断                      |
+| Layer / Composition / Facet |     3      |    6    | 现状主要是 marks 数组多层组合；scope-aware IR 给 facet 留了位置                  | facet、小多图、layer 继承、共享 scale / guide 还未形成完整语法                     |
+| Selection / Interaction     |     2      |    5    | locator API 已给 datum/series resolve 打地基，但还不是完整交互语法               | hover、tooltip、brush、zoom、selection state、事件到 IR / runtime 的契约仍缺       |
+| Lowering / IR 边界          |     7      |    9    | Tier 2 plot 可下沉到 core Kernel，IR / Scene 仍保持 renderer-agnostic 和可序列化 | 需要继续验证复杂图表 lowering 后的可调试性、source map / locator parity 和文档化   |
+| **均值**                    |  **5.1**   | **7.4** | 现状是“功能成熟度中等偏早、拓展性明显先行”的结构                                 | 短期补功能广度，长期守住 operation/definition 二分与可序列化边界                   |
 
 结论：从图形语法分层看，retikz 的强项不是“每层功能都已成熟”，而是 **transform / scale / coordinate / mark / lowering 这些核心层的拓展契约已经先搭起来**。低分集中在 guide、facet、interaction 和 channel 联动，这些决定用户日常出图与复杂图表表达力；若后续补齐时仍沿用 definition / registry / 可序列化 operation 的同一套机制，目标形态会更接近 Vega-Lite 的 spec 纯度，同时保留 G2 式可扩展语法的灵活性。
 
@@ -73,19 +73,19 @@
 
 > 口径：单元格为 **功能完整度 / 拓展性**。功能完整度看内置语法与常见图表覆盖，拓展性看用户能否以稳定机制新增语法能力。这里的 Vega 指 **Vega-Lite**，Observable Plot 按 D3 团队的 Plot API 计，VChart 按 VisActor 的 VGrammar + VChart 组合能力计。
 
-| 图形语法层级 | ggplot2 | Vega-Lite | Observable Plot | AntV G2 | VChart | retikz 现状 | 关键判断 |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
-| Data / 数据入口 | 8/7 | 8/6 | 7/5 | 8/7 | 8/7 | 5/6 | 成熟库都有更自然的数据集、分组和派生数据语义；retikz 现状仍偏“输入数据”而非完整 dataflow |
-| Transform / Stat | 9/8 | 8/5 | 7/5 | 8/8 | 8/7 | 6/9 | ggplot2 统计变换最成熟；retikz 内置数量还少，但 `defineTransform` 的扩展契约强 |
-| Scale / 尺度 | 9/8 | 9/6 | 7/5 | 8/8 | 8/7 | 7/9 | retikz 已有可用基础，拓展性接近 G2；短板在自动推断、guide 联动和默认体验 |
-| Coordinate / 坐标 | 8/7 | 6/5 | 5/4 | 9/8 | 8/7 | 6/9 | G2 坐标系最全；retikz 种类少于 G2/VChart，但 `defineCoordinate` 保留了高扩展上限 |
-| Mark / Geom | 9/8 | 8/5 | 8/6 | 9/8 | 9/7 | 6/9 | ggplot2/G2/VChart 专用图元更全；retikz mark 家族少，但自定义 mark 与内置同机制 |
-| Encoding / Channel | 8/7 | 9/6 | 8/5 | 9/8 | 8/7 | 5/7 | Vega-Lite 与 G2 的 channel 语义更完整；retikz 需要继续收敛 channel、scale、guide、mark 的联动契约 |
-| Guide / Axis / Legend | 8/6 | 8/5 | 6/4 | 8/7 | 8/7 | 4/5 | retikz guide 明显早期；成熟库优势在布局、格式化、主题、自动推断与交互状态 |
-| Layer / Composition / Facet | 10/8 | 9/6 | 7/5 | 9/8 | 7/6 | 3/6 | ggplot2 facet 与 G2 composite view 是高线；retikz 目前只有多 mark 组合，facet 仍是核心 gap |
-| Selection / Interaction | 2/3 | 7/5 | 4/4 | 9/8 | 9/8 | 2/5 | G2/VChart 在交互语法和运行时能力领先；retikz 只有 locator 地基，还缺 selection grammar |
-| Spec / IR 边界 | 3/4 | 10/5 | 3/4 | 6/8 | 6/7 | 8/9 | retikz 的可序列化 IR + operation/definition 二分是最强差异点；Vega-Lite spec 最纯但用户扩展弱 |
-| **均值** | **7.4/6.6** | **8.2/5.4** | **6.2/4.7** | **8.3/7.8** | **7.9/7.0** | **5.2/7.4** | retikz 横向位置很清楚：功能成熟度仍落后，拓展性已经进入 G2/VChart 这一档 |
+| 图形语法层级                |   ggplot2   |  Vega-Lite  | Observable Plot |   AntV G2   |   VChart    | retikz 现状 | 关键判断                                                                                          |
+| --------------------------- | :---------: | :---------: | :-------------: | :---------: | :---------: | :---------: | ------------------------------------------------------------------------------------------------- |
+| Data / 数据入口             |     8/7     |     8/6     |       7/5       |     8/7     |     8/7     |     5/6     | 成熟库都有更自然的数据集、分组和派生数据语义；retikz 现状仍偏“输入数据”而非完整 dataflow          |
+| Transform / Stat            |     9/8     |     8/5     |       7/5       |     8/8     |     8/7     |     6/9     | ggplot2 统计变换最成熟；retikz 内置数量还少，但 `defineTransform` 的扩展契约强                    |
+| Scale / 尺度                |     9/8     |     9/6     |       7/5       |     8/8     |     8/7     |     7/9     | retikz 已有可用基础，拓展性接近 G2；短板在自动推断、guide 联动和默认体验                          |
+| Coordinate / 坐标           |     8/7     |     6/5     |       5/4       |     9/8     |     8/7     |     6/9     | G2 坐标系最全；retikz 种类少于 G2/VChart，但 `defineCoordinate` 保留了高扩展上限                  |
+| Mark / Geom                 |     9/8     |     8/5     |       8/6       |     9/8     |     9/7     |     6/9     | ggplot2/G2/VChart 专用图元更全；retikz mark 家族少，但自定义 mark 与内置同机制                    |
+| Encoding / Channel          |     8/7     |     9/6     |       8/5       |     9/8     |     8/7     |     5/7     | Vega-Lite 与 G2 的 channel 语义更完整；retikz 需要继续收敛 channel、scale、guide、mark 的联动契约 |
+| Guide / Axis / Legend       |     8/6     |     8/5     |       6/4       |     8/7     |     8/7     |     4/5     | retikz guide 明显早期；成熟库优势在布局、格式化、主题、自动推断与交互状态                         |
+| Layer / Composition / Facet |    10/8     |     9/6     |       7/5       |     9/8     |     7/6     |     3/6     | ggplot2 facet 与 G2 composite view 是高线；retikz 目前只有多 mark 组合，facet 仍是核心 gap        |
+| Selection / Interaction     |     2/3     |     7/5     |       4/4       |     9/8     |     9/8     |     2/5     | G2/VChart 在交互语法和运行时能力领先；retikz 只有 locator 地基，还缺 selection grammar            |
+| Spec / IR 边界              |     3/4     |    10/5     |       3/4       |     6/8     |     6/7     |     8/9     | retikz 的可序列化 IR + operation/definition 二分是最强差异点；Vega-Lite spec 最纯但用户扩展弱     |
+| **均值**                    | **7.4/6.6** | **8.2/5.4** |   **6.2/4.7**   | **8.3/7.8** | **7.9/7.0** | **5.2/7.4** | retikz 横向位置很清楚：功能成熟度仍落后，拓展性已经进入 G2/VChart 这一档                          |
 
 ## 结论：结构优势 / gap / 取舍
 

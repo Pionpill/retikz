@@ -7,14 +7,14 @@ description: retikz 源码导览：kernel 组六包清单，以及 core / React 
 
 retikz 的官方仓库当前维护六个 kernel 组包：
 
-| 包                                                                                        | 角色                                                                                                  | 当前状态 |
-| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------- |
+| 包                                                                                               | 角色                                                                                                  | 当前状态 |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | -------- |
 | [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math)       | 零依赖纯计算几何（向量 / 仿射 / arc / 求交 / 圆 / 凸包）；core 的计算底座，被 core 依赖               | 官方维护 |
 | [`@retikz/core`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core)       | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM                                         | 官方维护 |
 | [`@retikz/render`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/render)   | renderer-neutral 的 Scene 输出层：SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具 | 官方维护 |
 | [`@retikz/react`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react)     | React adapter：JSX 组件编译成 IR，再通过 SVG 或 Canvas 渲染                                           | 官方维护 |
 | [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | 无框架 runtime：builder 函数、SVG / Canvas mount、水合、动画控制与 SVG string 输出                    | 官方维护 |
-| [`@retikz/tex`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/tex)         | 可选 LaTeX 公式接入：MathJax SVG 字形路径 lowering 到 renderer-agnostic Scene                        | 官方维护 |
+| [`@retikz/tex`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/tex)         | 可选 LaTeX 公式接入：MathJax SVG 字形路径 lowering 到 renderer-agnostic Scene                         | 官方维护 |
 
 Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR 仍然是 universal 的，新框架 adapter 可以复用 `@retikz/core` 与 `@retikz/render` 的大部分 renderer 能力，只需要补自己的组件桥接层与必要的文字度量。
 
@@ -32,15 +32,15 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 
 ### 包结构
 
-| 模块                                                                                                                                                                                                | 职责                                                                                                                                                                                                                                       |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`schemas/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas)                                                                                                       | IR schema（zod）——position / node / coordinate / path / step / scope / paint / clip / scene 全部 zod 定义                                                                                                                                  |
-| [`shared/geometry/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/shared/geometry)                                                                                         | core 内可复用几何 helper——rect / circle / ellipse / diamond / polar / contour / bend / segment；向量 / 仿射 / arc / 求交等纯计算原语已下沉 [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math)，core 从其 re-export |
-| [`contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                                                                                           | Scene 数据模型——渲染目标无关的图元、资源表、marker 与 clip；`primitive/` 只保留兼容 re-export                                                                                                                                                |
-| [`compile/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile)                                                                                                       | IR → Scene 编译器——节点布局、路径解析、样式级联、资源收集、layout 计算                                                                                                                                                                     |
-| [`parsers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parsers)                                                                                                       | DSL → IR 解析器——目前覆盖 Sugar `way` 数组与 target 字符串                                                                                                                                                                                 |
-| [`contract/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/providers) | v0.2 扩展面——自定义形状、箭头、图案 motif 与路径生成器                                                                                                                                                                                     |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                                                                                      | 公开 API surface——所有 adapter 只能 import 这一个文件                                                                                                                                                                                      |
+| 模块                                                                                                                                                                                                          | 职责                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`schemas/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas)                                                                                                            | IR schema（zod）——position / node / coordinate / path / step / scope / paint / clip / scene 全部 zod 定义                                                                                                                                                  |
+| [`shared/geometry/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/shared/geometry)                                                                                            | core 内可复用几何 helper——rect / circle / ellipse / diamond / polar / contour / bend / segment；向量 / 仿射 / arc / 求交等纯计算原语已下沉 [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math)，core 从其 re-export |
+| [`contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                                                                                              | Scene 数据模型——渲染目标无关的图元、资源表、marker 与 clip；`primitive/` 只保留兼容 re-export                                                                                                                                                              |
+| [`compile/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile)                                                                                                            | IR → Scene 编译器——节点布局、路径解析、样式级联、资源收集、layout 计算                                                                                                                                                                                     |
+| [`parsers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parsers)                                                                                                            | DSL → IR 解析器——目前覆盖 Sugar `way` 数组与 target 字符串                                                                                                                                                                                                 |
+| [`contract/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/providers) | v0.2 扩展面——自定义形状、箭头、图案 motif 与路径生成器                                                                                                                                                                                                     |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                                                                                           | 公开 API surface——所有 adapter 只能 import 这一个文件                                                                                                                                                                                                      |
 
 ### 推荐阅读顺序
 
@@ -89,8 +89,8 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 
 ### 包结构
 
-| 模块                                                                                          | 职责                                                                                                                                                       |
-| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 模块                                                                                                 | 职责                                                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | Kernel JSX 组件——`<Layout>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>` / `<Scope>`，加 `builder`（JSX → IR）与 `unbuilder`（IR → JSX）桥 |
 | [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX 组件——`<Draw way={[...]}>`、`<EdgeLabel>` 与形状 sugar；编译期展开为 Kernel，不引入新能力                                                        |
 | [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | Scene → SVG element——`renderPrim`、`paintDefs`、`clipDefs`、`arrowMarkers`、`browser-measurer`、SVG viewBox 格式化                                         |
@@ -130,30 +130,30 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 | --------------------------------------- | ----------------------------------------------------------------- |
 | `kernel/*.tsx` 组件（声明 displayName） | 各框架的组件等价物（声明组件类型识别符）                          |
 | `kernel/builder.ts`（JSX → IR）         | 各框架 children / vnode → IR 的 bridge                            |
-| `render/render-prim.tsx` + defs 组件     | 把 Scene primitive 与 resources 转为框架原生元素                  |
+| `render/render-prim.tsx` + defs 组件    | 把 Scene primitive 与 resources 转为框架原生元素                  |
 | `render/browser-measurer.ts`            | 浏览器 / SSR / Native 各自的 measurer（实现 `TextMeasurer` 即可） |
 
 `@retikz/core` 的 IR、`compileToScene`、`shared/geometry` helper、`contract/scene` 类型一律复用，不需要重写。
 
 ## 关键文件速查
 
-| 想查什么               | 看哪里                                                                                                                            |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| IR 顶层结构            | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)               |
-| 节点字段               | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)                 |
-| Path / Step 类型       | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                      |
-| 极坐标 / 相对定位      | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)              |
-| Scene primitive 类型   | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                    |
-| 编译流水线             | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)           |
-| 文字度量接口           | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) |
+| 想查什么               | 看哪里                                                                                                                                    |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| IR 顶层结构            | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)    |
+| 节点字段               | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)      |
+| Path / Step 类型       | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                         |
+| 极坐标 / 相对定位      | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)                 |
+| Scene primitive 类型   | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                     |
+| 编译流水线             | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)              |
+| 文字度量接口           | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts)    |
 | boundaryPoint / anchor | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) 等 |
-| core 公开 API          | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                           |
-| React 顶层管道         | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Layout.tsx)             |
-| JSX → IR 桥            | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/builder.ts)             |
-| Scene → SVG element    | [`react/render/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/render-prim.tsx)     |
-| react 公开 API         | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                           |
+| core 公开 API          | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                              |
+| React 顶层管道         | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Layout.tsx)              |
+| JSX → IR 桥            | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/builder.ts)              |
+| Scene → SVG element    | [`react/render/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/render-prim.tsx)    |
+| react 公开 API         | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                            |
 
 ## 相关阅读
 
 - 项目立项主张 / IR 居中设计：[core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md)
-- ADR 决策档案：[packages/kernel/_notes/decisions/](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/_notes/decisions)
+- ADR 决策档案：[packages/kernel/\_notes/decisions/](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/_notes/decisions)

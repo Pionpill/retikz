@@ -7,6 +7,7 @@ import type { Lang } from '@/i18n';
 import type { Page } from '@/modules/docs/data';
 
 import { getSectionsByModule, modules } from '@/modules/docs/data';
+import { buildDocPath } from '@/modules/docs/layout';
 
 import { type IndexedPage, type SearchIndex } from './search-index';
 
@@ -84,6 +85,18 @@ export const useSearchEntries = (searchIndex: SearchIndex, lang: Lang): Array<Se
       for (const section of sections) {
         const ungrouped = !section.id || !section.label;
         const sectionLabel = section.label ? String(t(section.label)) : undefined;
+        if (section.document && section.id && section.label) {
+          const path = buildDocPath(m.id, section.id, null);
+          const pageLabel = String(t(section.label));
+          const indexed = searchIndex[path]?.[lang];
+          out.push({
+            path,
+            label: pageLabel,
+            moduleLabel,
+            sectionLabel,
+            fields: buildFields(pageLabel, indexed),
+          });
+        }
         const walk = (pages: Array<Page>, parent: { id: string; label: string } | null) => {
           for (const page of pages) {
             const pageLabel = String(t(page.label));

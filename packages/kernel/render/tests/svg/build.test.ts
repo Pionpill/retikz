@@ -134,7 +134,9 @@ describe('buildMarkerPrim —— marker primitive → SvgNode', () => {
     expect(node.attrs.transform).toBe('translate(2 3) rotate(45)');
     expect(node.children).toHaveLength(1);
     expect((node.children as Array<{ tag: string; attrs: Record<string, unknown> }>)[0].tag).toBe('path');
-    expect((node.children as Array<{ tag: string; attrs: Record<string, unknown> }>)[0].attrs['stroke-dashoffset']).toBe(2);
+    expect(
+      (node.children as Array<{ tag: string; attrs: Record<string, unknown> }>)[0].attrs['stroke-dashoffset'],
+    ).toBe(2);
   });
 });
 

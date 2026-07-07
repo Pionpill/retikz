@@ -39,23 +39,40 @@
 
 /** 内置可动画属性通道（renderer 无关；DrawWay 风格，裸字面量第一形态）。property 字段开放（见下），这里只是内置集 + 自动补全锚 */
 export const AnimationProperty = {
-  Opacity: 'opacity', Fill: 'fill', Stroke: 'stroke', StrokeWidth: 'strokeWidth',
-  TranslateX: 'translateX', TranslateY: 'translateY', Rotate: 'rotate',
-  Scale: 'scale',         // 均匀缩放
-  ScaleX: 'scaleX', ScaleY: 'scaleY',  // 非均匀缩放（柱状图从基线长出等）；支点见 track.origin
-  PathDraw: 'pathDraw',   // 0..1 路径画出进度（SVG→pathLength+dashoffset、Canvas→几何 lerp）
-  ViewBox: 'viewBox',     // 镜头：仅 scene 根级，value 为 [x,y,w,h]
+  Opacity: 'opacity',
+  Fill: 'fill',
+  Stroke: 'stroke',
+  StrokeWidth: 'strokeWidth',
+  TranslateX: 'translateX',
+  TranslateY: 'translateY',
+  Rotate: 'rotate',
+  Scale: 'scale', // 均匀缩放
+  ScaleX: 'scaleX',
+  ScaleY: 'scaleY', // 非均匀缩放（柱状图从基线长出等）；支点见 track.origin
+  PathDraw: 'pathDraw', // 0..1 路径画出进度（SVG→pathLength+dashoffset、Canvas→几何 lerp）
+  ViewBox: 'viewBox', // 镜头：仅 scene 根级，value 为 [x,y,w,h]
 } as const;
 export type BuiltinAnimationProperty = ValueOf<typeof AnimationProperty>;
 /** 属性名：内置 ∪ 任意自定义字符串（`& {}` 保内置自动补全，同 NodeShape 范式）；自定义属性由后续 renderer 注册插值器解释 */
 export type AnimationPropertyRef = BuiltinAnimationProperty | (string & {});
 
 /** 缓动具名预设（CSS 同名）；easing 字段 = 具名 ∪ cubic-bezier 四元组 ∪ 自定义注册名（开放） */
-export const AnimationEasing = { Linear:'linear', Ease:'ease', EaseIn:'ease-in', EaseOut:'ease-out', EaseInOut:'ease-in-out' } as const;
+export const AnimationEasing = {
+  Linear: 'linear',
+  Ease: 'ease',
+  EaseIn: 'ease-in',
+  EaseOut: 'ease-out',
+  EaseInOut: 'ease-in-out',
+} as const;
 
 /** 重复方向 / 填充模式（抄 WAAPI / CSS，闭合枚举、不扩展） */
-export const AnimationDirection = { Normal:'normal', Reverse:'reverse', Alternate:'alternate', AlternateReverse:'alternate-reverse' } as const;
-export const AnimationFill = { None:'none', Forwards:'forwards', Backwards:'backwards', Both:'both' } as const;
+export const AnimationDirection = {
+  Normal: 'normal',
+  Reverse: 'reverse',
+  Alternate: 'alternate',
+  AlternateReverse: 'alternate-reverse',
+} as const;
+export const AnimationFill = { None: 'none', Forwards: 'forwards', Backwards: 'backwards', Both: 'both' } as const;
 
 // EasingSchema = z.union([ z.string().min(1), z.tuple([num,num,num,num]) ])  // 具名/自定义名 ∪ cubic-bezier
 // KeyframeSchema = { at: 0..1, value: JsonValue, easing? }   // value 基础类型 = 任意 JSON（兑现自定义通道）；内置 property 由下方 superRefine 收窄
@@ -91,13 +108,13 @@ export const AnimationFill = { None:'none', Forwards:'forwards', Backwards:'back
 
 5 个 `ScenePrimitive` 成员各加 `animations?: Array<IRAnimationTrack>`（与既有 `id?` / `meta?` 并列）；`Scene` 顶层加 `animations?`（镜头）。compile 在既有「stamp `id` / `meta`」处紧贴着多 stamp `animations`：
 
-| 载体 | `id` / `meta` 落点 | `animations` 落点（同点） |
-|---|---|---|
-| 纯几何 Node | 每个平铺 shape 图元 | 同（多 shape 各一份；transform/opacity 复制后视觉等价于动 group） |
-| 文本 / rotate Node | 单层 GroupPrim | 同 GroupPrim |
-| Path | PathPrim | 同 PathPrim |
-| Scope | GroupPrim | 同 GroupPrim |
-| scene 根（镜头） | —（id/meta 无根级） | `Scene.animations`（viewBox property） |
+| 载体               | `id` / `meta` 落点  | `animations` 落点（同点）                                         |
+| ------------------ | ------------------- | ----------------------------------------------------------------- |
+| 纯几何 Node        | 每个平铺 shape 图元 | 同（多 shape 各一份；transform/opacity 复制后视觉等价于动 group） |
+| 文本 / rotate Node | 单层 GroupPrim      | 同 GroupPrim                                                      |
+| Path               | PathPrim            | 同 PathPrim                                                       |
+| Scope              | GroupPrim           | 同 GroupPrim                                                      |
+| scene 根（镜头）   | —（id/meta 无根级） | `Scene.animations`（viewBox property）                            |
 
 compile 不解释 tracks、不施加关键帧——产出的 Scene 即 settled 静态图 + 挂着的播放数据。**纯透传，零新增遍历**（在 meta stamp 旁加一行）。
 
@@ -157,7 +174,6 @@ compile 不解释 tracks、不施加关键帧——产出的 Scene 即 settled �
 - **along-path 运动（`moveAlong`）/ clip 动画（`wipeIn`）**：需路径采样 / clip 关键帧几何，另案 ADR。
 - **数据过渡 / 形变（enter/update/exit + `pathMorph`）**：runtime + Tier 2（plot），core 不背（[v0.3 roadmap §动画 B](../roadmap.md)）。
 - **per-property 能力表**：本批 all-or-nothing per-renderer，能力表接口留位。
-
 
 > 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:_notes/decisions/core/v0/v0.3/alpha.5/01-timeline-animation-ir.md`（封板全文）。

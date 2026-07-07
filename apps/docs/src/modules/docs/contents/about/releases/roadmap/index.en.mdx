@@ -9,42 +9,42 @@ The roadmap is a **goal list, not a promise** — it adjusts with community feed
 
 **kernel v0.4.0-alpha.8** — the v0.4 alpha wrap-up release; it adds no runtime API and aligns versions, roadmap, changelog, and completeness-evaluation boundaries.
 
-| Item                      | Status                   |
-| ------------------------- | ------------------------ |
-| `@retikz/math` / `tex`    | ✅ In kernel lockstep     |
-| path / ribbon / provider  | ✅ Landed through alpha.7 |
-| docs / changelog          | ✅ alpha.8 wrap-up notes synced |
-| interaction               | 🧭 Covered by completeness evaluation; implementation stays for v0.5 discussion |
+| Item                     | Status                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| `@retikz/math` / `tex`   | ✅ In kernel lockstep                                                           |
+| path / ribbon / provider | ✅ Landed through alpha.7                                                       |
+| docs / changelog         | ✅ alpha.8 wrap-up notes synced                                                 |
+| interaction              | 🧭 Covered by completeness evaluation; implementation stays for v0.5 discussion |
 
 ## Short Term: After Alpha.8
 
 After alpha.8, the work should stay split into three tracks: v0.5 for vertical mechanism exploration, v0.4 beta / rc for stabilization, and longer-term items waiting for stronger design pull.
 
-| Track | Candidate | Content |
-| ----- | --------- | ------- |
-| v0.5 alpha | headless interaction | Core provides target / intent / manifest contracts; tooltip / select UI and state machines stay in adapters or userland |
-| v0.5 alpha | Progressive / JSON Patch | Incremental rendering, AI step updates, local SVG / Canvas update strategies |
-| v0.4 beta / rc | beta hardening | Add no capability; focus API review, install validation, and docs audit |
-| Longer term | P3D / scope enrichment / blur-mask-layer | Pseudo-3D, `boundingShape` polygon / ellipse / padding, and visual-layer capabilities wait for stronger design pull |
+| Track          | Candidate                                | Content                                                                                                                 |
+| -------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| v0.5 alpha     | headless interaction                     | Core provides target / intent / manifest contracts; tooltip / select UI and state machines stay in adapters or userland |
+| v0.5 alpha     | Progressive / JSON Patch                 | Incremental rendering, AI step updates, local SVG / Canvas update strategies                                            |
+| v0.4 beta / rc | beta hardening                           | Add no capability; focus API review, install validation, and docs audit                                                 |
+| Longer term    | P3D / scope enrichment / blur-mask-layer | Pseudo-3D, `boundingShape` polygon / ellipse / padding, and visual-layer capabilities wait for stronger design pull     |
 
 ## Current v0.4 Shape
 
 Kernel v0.4 has landed several base mechanisms that other layers can reuse.
 
-| Goal              | Content                                                                                             |
-| ----------------- | --------------------------------------------------------------------------------------------------- |
-| `@retikz/math`    | Zero-dependency geometry: vectors, affine transforms, arcs, intersections, hulls, minimal enclosing circles |
-| `@retikz/tex`     | MathJax SVG lowering through `lowerTex`, with `$...$` / `{ runs }` inside text                      |
-| Scene visuals     | `shadow` / `blendMode` plus existing `zIndex` as renderer-agnostic visual foundations               |
-| Path kind / ribbon | `Path.kind` provider and `kind="ribbon"` relation paths                                             |
-| Provider contract | Unified registry model for shape / boundary / clip / path kind / composite extension surfaces       |
+| Goal               | Content                                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `@retikz/math`     | Zero-dependency geometry: vectors, affine transforms, arcs, intersections, hulls, minimal enclosing circles |
+| `@retikz/tex`      | MathJax SVG lowering through `lowerTex`, with `$...$` / `{ runs }` inside text                              |
+| Scene visuals      | `shadow` / `blendMode` plus existing `zIndex` as renderer-agnostic visual foundations                       |
+| Path kind / ribbon | `Path.kind` provider and `kind="ribbon"` relation paths                                                     |
+| Provider contract  | Unified registry model for shape / boundary / clip / path kind / composite extension surfaces               |
 
 ## Long term
 
-| Topic | Where                                                                          |
-| ----- | ------------------------------------------------------------------------------ |
-| v0.4 beta / rc | API review, install validation, docs and changelog audit                 |
-| v1+   | Domain packages such as `plot` / `viz` / `flow`, plus the broader ecosystem    |
+| Topic          | Where                                                                       |
+| -------------- | --------------------------------------------------------------------------- |
+| v0.4 beta / rc | API review, install validation, docs and changelog audit                    |
+| v1+            | Domain packages such as `plot` / `viz` / `flow`, plus the broader ecosystem |
 
 ## Not on the roadmap
 

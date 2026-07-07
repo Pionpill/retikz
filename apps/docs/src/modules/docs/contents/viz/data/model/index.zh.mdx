@@ -1,0 +1,321 @@
+---
+title: 数据模型
+description: 用 model 声明字段契约，并把真实数据按字段映射、解析格式和校验规则接入 canonical 行。
+---
+
+一张图有两类输入：**配置**（画什么——mark / 坐标系 / 比例尺）和**数据**（画哪些值）。retikz 把两者分开：数据**不进**图的配置（IR），而是在编译时单独传入。这让同一份配置可以复用到不同数据上。
+
+<ComponentAlert
+  title="为什么数据不进 IR？"
+  description="数据通常比图表配置大得多；把每行数据塞进 IR 会让 JSON 与持久化内容迅速膨胀，难以 diff、复用和维护。配置与数据也天然解耦：IR 只描述图怎么画，数据在编译时按 model 接入；只要字段契约能对应，同一份配置就可以切换到另一份数据源。"
+/>
+
+最简单的用法：把数据行数组交给 `<Plot data>`，mark 用字段名引用列。
+
+```tsx
+<Plot data={rows}>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+字段名是**路径**，所以嵌套数据（如 MongoDB 文档 / 接口返回的 JSON）也能直接用：`x="user.address.city"` 会逐级取到叶子值。叶子必须是标量（字符串 / 数字 / 布尔 / 时间），不能是对象或数组。
+
+字段解析会先查整段字段名是否是行上的直接 key，再按 `.` 下钻。因此 `user.age` 既可以指嵌套路径，也可以作为规范化后的逻辑字段名存在。编译准备阶段会把字段解析成 canonical 值（规范化值：解析、归一后写回逻辑字段名的标准值）并写回逻辑字段名，后续 transform、scale、mark 都读取这份结果。
+
+## 声明字段类型
+
+字段类型通过 `<Plot model>` 声明。`model` 是字段契约：`month` 是时间还是普通字符串、`revenue` 是连续数值还是分类，都会影响比例尺选择、坐标轴格式、图例派生和数据校验。未声明 `model` 时，retikz 会按数据样本**自动推断字段类型**。
+
+字段类型与默认推断：
+
+| 类型          | 含义           | 例子               | 默认推断与显式声明场景                                                                         |
+| ------------- | -------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
+| `continuous`  | 连续可度量数值 | 销量、价格、温度   | 默认：样本值是有限 number 或 bigint<br />显式：数字串、数值枚举、编号、状态码要改成连续或分类  |
+| `temporal`    | 日期 / 时间    | 日期、时间戳       | 默认：`Date` 或无歧义 ISO 日期 / 时间字符串<br />显式：非默认日期格式、无时区时间              |
+| `categorical` | 离散类别       | 国家、颜色名、评级 | 默认：其余字符串、布尔值、混合类型或无法判断字段<br />显式：需要固定分类顺序或控制轴与图例顺序 |
+
+想覆盖默认推断、解析非默认格式，或让配置脱离数据也能自描述时，就自定义 `model`。每个字段声明可以包含这些配置：
+
+| 字段     | 作用                                                           |
+| -------- | -------------------------------------------------------------- |
+| `name`   | 逻辑字段名，也是 mark / transform 引用的名字                   |
+| `type`   | 测量类型；省略时从数据推断                                     |
+| `format` | 声明式解析格式，如 `slashDate` / `percent`；见下方「解析格式」 |
+| `order`  | 分类字段的类别顺序；只对 `categorical` 有效                    |
+
+下面的左右对比使用同一份漏斗数据：左图不声明 `model`，数值 `stage` 被推断成连续 x 轴；右图把 `stage` 声明为分类字段，并用 `format: 'percent'` 把百分比字符串解析成连续数值。
+
+<ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />
+
+**声明 model = 严格模式**：mark / transform 引用的每个数据字段都必须在 model 里列出，拼错字段名会**立刻报错**，而不是画出一张空图。这里的引用不只包括 `x` / `y` / `z`，也包括 `color`、`series`、mark 的 `order`、点图的 `size` / `opacity` / `shape`，以及 transform 输入字段。model 中字段名不能重复，重复声明同样会报错。
+
+不声明 `model` 时，字段类型走上面的默认推断，适合快速试画。
+
+**`type` 可选——部分声明**：字段类型可省略，只写 `{ name }`。这样该字段仍然进入严格模式，也保留可移植的字段契约；只有类型留给数据推断。适合「大部分字段一目了然、只有少数要点名」的场景：数值枚举写 `type`，非默认日期 / 百分比写 `format`，其余留空。
+
+```tsx
+<Plot
+  data={sales}
+  model={[
+    { name: 'createdAt', format: 'slashDate' }, // '2024/01/01' → temporal
+    { name: 'statusCode', type: 'categorical' }, // 数值枚举，点名为分类
+    { name: 'revenue' }, // 仅 name → 推断 continuous
+  ]}
+>
+  {/* … */}
+</Plot>
+```
+
+省略 `type` 的字段要到 lowering 时看数据才能定类型；写了 `format` 的字段由格式蕴含类型，例如 `format: 'percent'` 会把字段当作 `continuous`。如果要让 spec 不看数据也完全自描述（LLM 友好 / 完全可移植），就把 `type` 或 `format` 填清楚。
+
+<ComponentAlert
+  title="推断是尽力而为，model 才是契约"
+  description="不声明 model（或字段省略 type / format）时类型靠抽样猜测：时间只认无歧义的 ISO 格式（YYYY-MM-DD、带时区的 ISO datetime，含空格分隔的 SQL 时间戳如 '2024-01-01 12:00:00Z'），'2024/01/01'、无时区时间不会被当成时间；裸数字串也不会被自动当成 continuous。bigint 会推断为 continuous，但只有安全整数能归一化。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model；非默认存储格式再加 format 或 resolveField。"
+/>
+
+## 类型驱动的比例尺
+
+声明了字段类型后，位置通道（x / y，以及 ternary 的 x / y / z）**不必再手写比例尺**：retikz 按类型自动选，`continuous`→线性、`temporal`→时间轴、`categorical`→分类带。颜色通道同样受字段类型影响：连续 / 时间字段派生连续色阶，分类字段派生离散颜色。详细映射与覆盖规则见[比例尺](/viz/grammar/scale)。
+
+下面三张图都没有写任何比例尺配置：`continuous` 字段派生线性轴，`temporal` 字段派生时间轴，`categorical` 字段派生分类带轴。
+
+<ComponentPreview name="data-model" size="xxxl" sourceFiles={['data-model.data.ts']} />
+
+## 分类顺序
+
+`categorical` 字段默认按**数据出现顺序**排类别，轴和图例都会跟着这个顺序。想控制顺序——比如尺码该按 `S → M → L → XL`，而不是数据里碰巧出现的次序——给字段一个 `order`：
+
+下面两张图使用同一份尺码数据：左图按数据出现序显示，右图通过 `order` 固定为业务顺序 `S → M → L → XL`。
+
+<ComponentPreview name="data-model-order" sourceFiles={['data-model-order.data.ts']} />
+
+这里的 `order` 排的是**分类域**：轴刻度、图例和分类颜色会按它走；它不会重排数据行，也不会改变折线连接顺序。要重排行，用[数据变换里的排序](/viz/data/transform#排序-sort)。
+
+| `order`                        | 效果                                             |
+| ------------------------------ | ------------------------------------------------ |
+| 不写 / `'data'`                | 按数据出现序（默认）                             |
+| `'ascending'` / `'descending'` | 对类别排序：全数值按数值比，否则按字符串         |
+| `Array`（如 `['S','M','L']`）  | 以数组为顺序；数据里有、数组没有的类别追加到末尾 |
+
+规则：
+
+- **挂在字段上，位置与颜色同序**：同一字段既作 x 轴（band）又作颜色（ordinal）时，两处类别顺序一致。
+- **只对 categorical 有效**：给 `continuous` / `temporal` 字段写 `order` 会**报错**（顺序对连续值 / 时间没有意义）。
+- **显式比例尺 domain 优先**：若比例尺自己写了 `domain`，以它为准，`order` 被忽略。
+- 写了**非默认** `order`（排序或显式数组）就表示「这个分类有序」——retikz 三类字段里没有「有序类别」专门类型，有序性靠这个参数表达。
+
+## 换数据源
+
+数据不进配置（IR），所以同一份 `<Plot>` 配置能换着数据源用。字段完全同名时，不写 model 也能快速试画；但要跨接口、跨文件长期复用，声明 model 才有明确的逻辑字段契约。换数据源有三种对接方式：
+
+### 同名同类型
+
+最轻量的换源方式是保持同一份字段契约：新旧数据都叫 `month` / `revenue`，并且 `month` 仍然是时间、`revenue` 仍然是连续数值。这时 mark、轴、比例尺、颜色、排序和校验都不用改，只替换 `<Plot data>`。
+
+这适合后端接口版本稳定、只切换筛选条件 / 时间范围 / 环境数据的场景。比如同一个销售图，可以在「实际值」和「预测值」之间切换；只要字段契约不变，图表配置就能复用。
+
+<ComponentPreview name="processing-same" sourceFiles={['processing-same.data.ts']} />
+
+如果字段名换了，进入下一节用 `fieldMap`；如果字段名没换但存储格式变了（例如 ISO 日期变成 `YYYY/MM/DD`），看后面的「解析格式」。
+
+### 字段名不同
+
+数据里字段名和配置里的逻辑名对不上时，给一份 `fieldMap`（逻辑名 → 数据里的实际路径），配置不动：
+
+```tsx
+// 数据里叫 period / amount，配置里仍用 month / revenue
+<Plot
+  data={rows}
+  model={[
+    { name: 'month', type: 'temporal' },
+    { name: 'revenue', type: 'continuous' },
+  ]}
+  fieldMap={{ month: 'period', revenue: 'amount' }}
+>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`fieldMap` 只做改名（值不变换，计算交给 transform）；它必须配合 model 使用——没有 model 就没有「逻辑字段」可映射。右侧可以是嵌套路径，如 `pricing.amount`。Plot 会先从真实路径取值，再把解析后的值写回 `revenue` 这样的逻辑字段名，所以后续 transform / scale / mark 仍然只写逻辑字段。
+
+下面两张图共用同一份逻辑配置：左图数据字段已经叫 `month` / `revenue`，右图数据来自另一套接口，实际字段叫 `period` / `amount`，用 `fieldMap` 接回同一个 model。
+
+<ComponentPreview name="processing-source" sourceFiles={['processing-source.data.ts']} />
+
+### 存储格式不同但类型相同
+
+同一个 `temporal` 字段，数据里是 `Date` 对象、ISO 字符串还是毫秒时间戳，都能正确读；`continuous` 字段是数字、bigint 安全整数还是严格数字串（`"120"`）也都认。无需任何额外配置。非默认的存储格式（如 `'2024/01/01'`、epoch 秒、`'50%'`、带千分位的数字串）走下面的解析。
+
+下面右图故意混用了 `Date`、epoch 毫秒、ISO 字符串，以及数字 / 数字串。因为字段类型仍然是 `temporal` + `continuous`，同一份 model 就能完成规范化。
+
+<ComponentPreview name="processing-storage" sourceFiles={['processing-storage.data.ts']} />
+
+## 解析格式
+
+内置解析只认固定形态：`temporal` 收 `Date` / 毫秒 / 严格 ISO，`continuous` 收数字 / 严格数字串。词表外的格式需要你点名怎么解析——常见格式用声明式 `format`，真正任意的逻辑用 `resolveField` 兜底。
+
+| 场景               | 写法                                      | 进 IR                  |
+| ------------------ | ----------------------------------------- | ---------------------- |
+| 默认格式           | 只写 `type` / 省略解析                    | 是                     |
+| 常见非默认格式     | 在 `model` 字段上写内置 `format`          | 是                     |
+| 可复用的自定义格式 | `defineFieldFormat` + `formatDefinitions` | 是，IR 只存格式名串    |
+| 任意运行时逻辑     | `resolveField`                            | 否，函数只在运行时使用 |
+
+### 声明式解析格式
+
+碰上 `'2024/01/01'`、epoch 秒、`'50%'` 这类常见的非默认格式，不必动用函数——给字段一个声明式 `format`，它**进 IR、可序列化、LLM 也能生成**：
+
+```tsx
+<Plot
+  data={rows}
+  model={[
+    { name: 'createdAt', type: 'temporal', format: 'slashDate' }, // '2024/01/01' → 时间
+    { name: 'ts', type: 'temporal', format: 'epochSeconds' }, // 1700000000 → 毫秒
+    { name: 'ratio', type: 'continuous', format: 'percent' }, // '50%' → 0.5
+  ]}
+>
+  {/* … */}
+</Plot>
+```
+
+下面的右图用同一组业务字段接入报表数据：日期是 `YYYY/MM/DD`，比例是百分比字符串。`format` 把它们先规范化，再交给时间轴和线性轴。
+
+<ComponentPreview name="processing-format" sourceFiles={['processing-format.data.ts']} />
+
+可选的 `format`（每个绑定一种类型）：
+
+| `format`       | 适用类型   | 解析                              |
+| -------------- | ---------- | --------------------------------- |
+| `iso`          | temporal   | 严格 ISO（等价不写）              |
+| `epochSeconds` | temporal   | epoch 秒 → 毫秒                   |
+| `epochMillis`  | temporal   | epoch 毫秒                        |
+| `slashDate`    | temporal   | 严格 `YYYY/MM/DD`（按 UTC 零点）  |
+| `numberString` | continuous | 宽松数字串（容空白 / 千分位逗号） |
+| `percent`      | continuous | 百分比串 `'50%'` → 0.5            |
+
+规则：
+
+- **format 蕴含 type**：写了 `format` 就可省略 `type`——`{ name: 'ratio', format: 'percent' }` 自动当 continuous，不会被推断成分类。
+- **必须与 type 兼容**：format 绑定的类型与你写的 `type` 冲突（如 `{ type: 'continuous', format: 'slashDate' }`）会**报清晰错误**，不静默。
+- `slashDate` 只认严格 `YYYY/MM/DD`；`DD/MM/YYYY`、`MM/DD/YYYY` 这类有地区歧义的布局不收（避免同一串在不同环境解析成不同日期）。
+- 解析优先级：`resolveField` 的 `parse` > 声明式 `format`（内置或自定义）> 内置默认。
+
+### 自定义解析
+
+内置 `format` 词表之外，常见且可复用的格式用 `defineFieldFormat` 注册成具名格式；一次性、按数据源分支的任意解析用 `resolveField`。
+
+可复用格式仍然通过字符串进入 model。下面的 `wan` 解析中文报表里常见的“万”单位，图形配置里只保存 `format: 'wan'`，真正的解析函数由运行时 definition 注入。
+
+<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+
+需要按数据源写分支、读取多个原始字段或临时兜底时，用 `resolveField`。它是运行时函数，不进入 IR；适合应用代码里统一复用，不适合随 JSON 配置持久化。
+
+<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
+
+解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和自定义解析都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
+
+## 校验脏数据
+
+文档型 / 异构数据常有缺字段、类型不一的行。retikz 的处理是**跳过、不伪造、不静默画错**：
+
+下面右图里 `Feb` 是无法解析的字符串、`Mar` 缺值、`May` 是 `null`。默认 `invalid="skip"` 会跳过这些柱；开发或数据准入时，再打开校验让它们直接报错。
+
+<ComponentPreview name="processing-invalid" sourceFiles={['processing-invalid.data.ts']} />
+
+| 情形                              | 行为                                            |
+| --------------------------------- | ----------------------------------------------- |
+| 某行缺这个字段                    | 跳过该数据点（异构数据常态，不报错）            |
+| 叶子是对象 / 数组（非标量）       | 跳过该数据点（绝不把对象塞进图）                |
+| 同类型不同存储格式                | 自动转换（见上「换数据源」）                    |
+| 字段是 `bigint`（如数据库 int64） | 自动转 number（仅安全整数；超出范围按非法处理） |
+| 路径中途是数组（需展开）          | 暂不支持自动展开，请先在数据层 flatten          |
+
+校验选项按“多严格”选择：
+
+| 配置                    | 检查方式           | 适合场景                            |
+| ----------------------- | ------------------ | ----------------------------------- |
+| 默认 / `invalid="skip"` | 不报错，非法点跳过 | 生产图容忍少量脏数据                |
+| `validateData`          | 抽样检查绑定字段   | 开发期排查空图 / 字段映射错误       |
+| `invalid="error"`       | 全量检查参与字段   | 数据准入、测试、需要 fail-loud 的图 |
+
+校验发生在解析 / 归一化之后，只检查当前图真正参与的字段。默认「跳过」可能让你对着一张空图摸不着头脑。打开 `validateData` 让 retikz **抽样**校验、有问题直接报错，并指出**哪个字段、多少非法 / 缺失**（如 `field "x": 3/100 invalid`），把「为什么图是空的」变成明确提示：
+
+```tsx
+<Plot data={rows} model={[...]} validateData>
+  {/* 字段缺失 / 全部无法转换 → 编译期报错，而非空图 */}
+</Plot>
+```
+
+要更严的**全量**校验，给 `invalid="error"`——图里实际用到的字段里任一非法值（含缺字段、无法转换、超范围 bigint）都立刻报错并指明字段，而不是抽样：
+
+```tsx
+<Plot data={rows} model={[...]} invalid="error">
+  {/* 任一参与字段有非法值 → 报错并指明字段 */}
+</Plot>
+```
+
+`invalid` 默认是 `'skip'`（上表的「跳过」行为）：非法点跳过、但**整行仍保留**，照常参与 stack / 排序等数据变换；`'error'` 只检查图里实际引用的字段，不波及其它脏列。
+
+## 字段接入流程
+
+字段接入发生在 mark lowering 之前，目标是把不同来源、不同存储格式的外部行变成统一的 canonical 行。后续 transform、scale、mark 和 locator 都只读这份结果。
+
+| 顺序 | 处理                                                                                                                  |
+| ---- | --------------------------------------------------------------------------------------------------------------------- |
+| 1    | 收集当前配置引用的字段，得到本次真正需要处理的字段集合                                                                |
+| 2    | 用 `fieldMap` 把逻辑字段对齐到真实数据路径；没有映射时，真实路径等于逻辑字段名                                        |
+| 3    | 解析字段类型：`resolveField.type` 优先，其次 model / format / 自动推断                                                |
+| 4    | 解析字段值：`resolveField.parse` 优先，其次声明式 `format`（内置或 `formatDefinitions` 注册的自定义），最后走内置转换 |
+| 5    | 把解析后的值写回 canonical 行的逻辑字段名，供后续阶段统一读取                                                         |
+| 6    | 按 `validateData` / `invalid` 对参与字段做抽样或全量校验                                                              |
+
+`model` 和 `format` 会进入 PlotSpec，适合随图形配置持久化。`fieldMap` 虽然是可序列化映射，但属于 lowering 选项，按数据集 reference 注入，不写进 PlotSpec；`resolveField` 是函数，只在运行时参与编译。如果要复用 `resolveField` 这类逻辑，需要在应用代码里复用同一个 resolver，而不是期待它被写进 IR。
+
+## 技术原理
+
+`model` 只保存字段契约、不保存数据行。lowering 前，Plot 把配置里实际引用的字段**收集、校验、定类型**，整理成一份字段元信息，供比例尺、坐标轴、图例和校验共用。
+
+<ComponentPreview name="data-model-pipeline" size="sm" hideCode />
+
+确定类型的优先级是「显式 `type` > `format` 蕴含 > 数据推断」，`categorical` 的 `order` 一并存进元信息。真实数据仍在编译时传入、不写进 IR——这也是同一份配置能换数据源复用的基础。
+
+### 自动推断字段类型
+
+字段既没写 `type` 也没写 `format` 时，retikz 按数据样本推断，分两步。
+
+**第一步，逐值判类**：扫描该字段的样本值，每个值先单独定一个类型。
+
+| 样本值                                                | 判为             |
+| ----------------------------------------------------- | ---------------- |
+| `Date` 实例                                           | `temporal`       |
+| ISO 日期 / 时间字符串                                 | `temporal`       |
+| 有限 `number`、`bigint`                               | `continuous`     |
+| 其它字符串、布尔值                                    | `categorical`    |
+| `null` / `undefined`、`NaN` / `Infinity`、对象 / 数组 | 跳过，不计入样本 |
+
+ISO 只认无歧义格式：`YYYY-MM-DD`，以及带时区的日期时间（`T` 或空格分隔、且必须带 `Z` 或 `±HH:MM`，如 `2024-01-01 12:00:00Z`）。`2024/01/01`、无时区时间、裸数字串都不算。
+
+**第二步，整字段归类**：最多扫描前 1000 行、取前 100 个有效样本，再按样本汇总定字段类型。
+
+- 样本**全部**是 temporal → 字段为 `temporal`
+- 样本**全部**是 continuous → 字段为 `continuous`
+- 否则（类型混合、全是 categorical、或没有有效样本）→ `categorical`
+
+也就是说：只要有一个值不是时间 / 数值，整个字段就退回 `categorical`；空字段或全是空值的字段也默认 `categorical`。声明 `model` 的字段优先用 `type`，其次由 `format` 蕴含类型，最后才轮到这套推断。
+
+### 类型派生 scale
+
+字段类型确定后，**省略 scale 配置**的通道按类型派生默认比例尺。
+
+**位置通道**（x / y / z，坐标系没给该通道显式 scale 时）：
+
+| 字段类型                   | 派生 scale       |
+| -------------------------- | ---------------- |
+| `continuous`               | `linear`         |
+| `temporal`                 | `time`           |
+| `categorical`              | `band`           |
+| 无字段绑定（如全常量通道） | `linear`（兜底） |
+
+同一位置通道绑定的字段类型必须一致；省略 scale 又混用了多种类型会报错，提示显式声明 scale。若字段带非默认 `order` 且派生出 `band` / `point`，分类域按 `order` 排。
+
+**颜色通道**：分类字段缺省时合成 `ordinal`（离散、一类一色）；连续 / 时间字段不自动派生，须显式引用 `sequential` / `diverging` / `quantize` / `threshold` / `quantile` 色阶，且只用于按 datum 取色的图元（散点 / 柱 / 扇形），line / area 会报错。完整颜色派生与配色见[比例尺](/viz/grammar/scale)。

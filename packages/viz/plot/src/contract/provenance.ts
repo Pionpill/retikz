@@ -1,4 +1,4 @@
-import type { ExternalRow } from '../schemas';
+import type { ExternalRow } from '@retikz/data';
 
 /**
  * provenance 下沉上下文：贯穿 expand -> mark -> guide，承载 plotId / dataReference / 各开关。

@@ -1,6 +1,8 @@
-﻿import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 
-import type { ExternalRow, Mark, PointMark } from '../../../schemas';
+import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope } from '@retikz/core';
+
+import type { Mark, PointMark } from '../../../schemas';
 import type { MarkPaint } from '../shared';
 
 import {

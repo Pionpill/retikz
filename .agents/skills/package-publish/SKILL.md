@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: "发布或准备发布 retikz npm 包时使用。覆盖版本号 bump、结构化 changelog、roadmap 状态、验证、dry-run、tag / npm publish / push 授权、发版前 ADR 检查与预 bump。当前发布组：kernel 组 6 包，viz plot 组 3 包。"
+description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bump、结构化 changelog、roadmap 状态、验证、dry-run、tag / npm publish / push 授权、发版前 ADR 检查与预 bump。当前发布组：kernel 组 6 包，viz 组 4 包。'
 ---
 
 # 发布 retikz 包
@@ -19,10 +19,10 @@ description: "发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 
 当前 package manifest 是真源。若下表与 `package.json` 不一致，先查 manifest 并修本 skill。
 
-| 组 | 包 | 发布顺序 | tag |
-| --- | --- | --- | --- |
-| kernel | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/vanilla`, `@retikz/react`, `@retikz/tex` | math -> core -> render -> vanilla -> react -> tex | `v<version>` |
-| viz | `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react` | plot -> plot-vanilla -> plot-react | `plot-v<version>` |
+| 组     | 包                                                                                                  | 发布顺序                                          | tag               |
+| ------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------- |
+| kernel | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/vanilla`, `@retikz/react`, `@retikz/tex` | math -> core -> render -> vanilla -> react -> tex | `v<version>`      |
+| viz    | `@retikz/data`, `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react`                        | data -> plot -> plot-vanilla -> plot-react        | `plot-v<version>` |
 
 不发布：`@retikz/docs`、`@retikz/eval` 是 private app。
 

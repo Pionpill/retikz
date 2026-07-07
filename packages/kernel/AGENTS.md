@@ -4,14 +4,14 @@
 
 ## 包职责
 
-| 包 | 职责 |
-| --- | --- |
-| `@retikz/math` | 零依赖纯计算几何：向量、仿射、arc、求交、圆、多边形、凸包等；被 core 依赖，不写 IR / zod / class |
-| `@retikz/core` | renderer-agnostic IR + Scene 编译器；运行时依赖限于 `zod` + `@retikz/math` |
-| `@retikz/render` | Scene 到渲染后端，提供 `./svg`、`./canvas`、hydration、animation 等能力 |
-| `@retikz/react` | React adapter：Kernel + Sugar JSX，对接 render |
-| `@retikz/vanilla` | framework-free runtime / SSR 入口 |
-| `@retikz/tex` | 可选 LaTeX 公式接入：MathJax SVG 到 renderer-agnostic 字形路径，经 core 的 `lowerTex` 注入 |
+| 包                | 职责                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| `@retikz/math`    | 零依赖纯计算几何：向量、仿射、arc、求交、圆、多边形、凸包等；被 core 依赖，不写 IR / zod / class |
+| `@retikz/core`    | renderer-agnostic IR + Scene 编译器；运行时依赖限于 `zod` + `@retikz/math`                       |
+| `@retikz/render`  | Scene 到渲染后端，提供 `./svg`、`./canvas`、hydration、animation 等能力                          |
+| `@retikz/react`   | React adapter：Kernel + Sugar JSX，对接 render                                                   |
+| `@retikz/vanilla` | framework-free runtime / SSR 入口                                                                |
+| `@retikz/tex`     | 可选 LaTeX 公式接入：MathJax SVG 到 renderer-agnostic 字形路径，经 core 的 `lowerTex` 注入       |
 
 依赖方向：`math` 被 `core` 消费；`render` 消费 `core`；`react` / `vanilla` 消费 `core` 与 `render`；`tex` 消费 `core`。不要让 core 反依赖公式、React、Vanilla 或具体渲染后端。
 

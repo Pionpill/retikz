@@ -62,7 +62,17 @@ type AnimationTrack = {
   direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // 缺省 normal
   fill?: 'none' | 'forwards' | 'backwards' | 'both'; // 活动区间外取值，缺省 forwards
   trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // 缺省 load
-  origin?: 'center' | 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | [number, number]; // scale / scaleX|Y / rotate 的支点，缺省几何中心
+  origin?:
+    | 'center'
+    | 'top'
+    | 'right'
+    | 'bottom'
+    | 'left'
+    | 'top-right'
+    | 'top-left'
+    | 'bottom-right'
+    | 'bottom-left'
+    | [number, number]; // scale / scaleX|Y / rotate 的支点，缺省几何中心
 };
 ```
 
@@ -78,14 +88,14 @@ type AnimationTrack = {
   一图集齐：fadeIn / scaleIn / grow / slideIn 四个节点、growUp 两根柱子、drawOn 一条路径。
 </span>
 
-| 动画      | 说明                                                                     | 专有项                                                                           |
-| --------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `fadeIn`  | 透明度 0→1，最常用的入场                                                 | —（仅公共项）                                                                    |
-| `scaleIn` | 均匀缩放 `from`→1，绕支点弹入                                            | `from`（起始缩放，缺省 `0.8`，末帧恒为 `1`）、`origin`（缩放支点，缺省几何中心） |
-| `grow`    | `scaleIn` 的 `from: 0` 别名，从无到有放大                                | `origin`（同 `scaleIn`）                                                         |
-| `growUp`  | `scaleY` 0→1，支点底边——柱状图从基线长出                                 | `origin`（缺省 `'bottom'` 底边中点；也可写其它 canonical anchor 或 `[x, y]`）   |
-| `slideIn` | `translateX`/`translateY` `offset`→0，从偏移滑回原位                      | `axis`（`'x'`→`translateX` / `'y'`→`translateY`，缺省 `'x'`）、`offset`（起始位移，缺省 `-20`，末帧恒为 `0`） |
-| `drawOn`  | `pathDraw` 0→1，描边沿路径逐渐画出；仅对**有描边**的 `<Path>` / 形状有效 | —（仅公共项）                                                                    |
+| 动画      | 说明                                                                     | 专有项                                                                                                        |
+| --------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `fadeIn`  | 透明度 0→1，最常用的入场                                                 | —（仅公共项）                                                                                                 |
+| `scaleIn` | 均匀缩放 `from`→1，绕支点弹入                                            | `from`（起始缩放，缺省 `0.8`，末帧恒为 `1`）、`origin`（缩放支点，缺省几何中心）                              |
+| `grow`    | `scaleIn` 的 `from: 0` 别名，从无到有放大                                | `origin`（同 `scaleIn`）                                                                                      |
+| `growUp`  | `scaleY` 0→1，支点底边——柱状图从基线长出                                 | `origin`（缺省 `'bottom'` 底边中点；也可写其它 canonical anchor 或 `[x, y]`）                                 |
+| `slideIn` | `translateX`/`translateY` `offset`→0，从偏移滑回原位                     | `axis`（`'x'`→`translateX` / `'y'`→`translateY`，缺省 `'x'`）、`offset`（起始位移，缺省 `-20`，末帧恒为 `0`） |
+| `drawOn`  | `pathDraw` 0→1，描边沿路径逐渐画出；仅对**有描边**的 `<Path>` / 形状有效 | —（仅公共项）                                                                                                 |
 
 ## 强调与循环
 

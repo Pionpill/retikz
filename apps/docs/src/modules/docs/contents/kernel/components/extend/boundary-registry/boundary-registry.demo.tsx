@@ -11,7 +11,8 @@ const horizontalPorts: BoundaryDefinition = defineBoundary({
   name: 'horizontal-ports',
   paramsSchema: z.strictObject({}),
   boundaryPoint: (rect, toward) => {
-    const terminal: Position = toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y];
+    const terminal: Position =
+      toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y];
     return terminal;
   },
   anchor: (rect, name) => {

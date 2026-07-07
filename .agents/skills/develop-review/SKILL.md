@@ -9,13 +9,13 @@ description: Use when auditing a retikz module or subsystem read-only to find be
 
 ## 边界
 
-| 场景 | 用哪个 skill |
-| --- | --- |
-| 横向审一个模块，找 beta TODO 候选 | develop-review |
-| 固定 commit / PR / diff 多模型评审 | cross-review |
-| 为疑似 bug 写测试坐实 | cross-test |
-| 已登记 TODO 要修 | flow-beta |
-| 新功能 / 新 IR / 新公开字段 | flow-alpha / develop-design |
+| 场景                               | 用哪个 skill                |
+| ---------------------------------- | --------------------------- |
+| 横向审一个模块，找 beta TODO 候选  | develop-review              |
+| 固定 commit / PR / diff 多模型评审 | cross-review                |
+| 为疑似 bug 写测试坐实              | cross-test                  |
+| 已登记 TODO 要修                   | flow-beta                   |
+| 新功能 / 新 IR / 新公开字段        | flow-alpha / develop-design |
 
 ## 启动前
 
@@ -78,12 +78,15 @@ notes/reports/develop-review-YYYY-MM-DD-<module>.md
 ## 结论概览
 
 ## BLOCKING
+
 | # | 位置 | 维度 | 问题 | 建议改法 | 预估 Level | 坐实出口 |
 
 ## WARNING
+
 | # | 位置 | 维度 | 观察 | 建议改法 | 预估 Level | 坐实出口 |
 
 ## INFO
+
 | # | 位置 | 维度 | 观察 |
 
 ## 横向发现

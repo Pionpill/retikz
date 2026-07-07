@@ -1,13 +1,17 @@
+import type { ExternalRow, TransformContext } from '@retikz/data';
+
+import {
+  applyReducerOperation,
+  applySelectorOperation,
+  finiteFieldValuesOf,
+  groupRowsByFields,
+  ReducerOperationKind,
+  resolveFieldPath,
+} from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 
-import type { AnnotateSelector, AnnotateTransform, BinTransform, ExternalRow, RelateTransform, SelectTransform, SummarizeTransform } from '../../schemas';
-
-import { type TransformContext } from '../../contract';
-import { ReducerOperationKind } from '../../schemas';
-import { resolveFieldPath } from '../data';
-import { applyReducerOperation, applySelectorOperation } from '../statistics';
-import { finiteFieldValuesOf, groupRowsByFields } from './shared';
+import type { BinTransform, RelateTransform } from '../../schemas';
 
 /** bin 默认输出字段名，对齐 IntervalMark 的区间消费方。 */
 const DEFAULT_BIN_START_FIELD = 'binStart';
@@ -23,10 +27,10 @@ export const binOutputFields = (operation: BinTransform): { startField: string; 
   endField: operation.endField ?? DEFAULT_BIN_END_FIELD,
 });
 
+/** bin 指标列表；缺省时用 count 指标产生默认频数列。 */
 export const binMetricOperations = (operation: BinTransform): NonNullable<BinTransform['metrics']> =>
   operation.metrics ?? [{ op: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
 
-/** 取一组行某字段的有限数值；规约只看有限值。 */
 /** 由策略计算分箱边界；count / step / thresholds 三策略互斥。 */
 const binEdges = (operation: BinTransform, values: Array<number>): Array<number> => {
   const strategies = [
@@ -79,28 +83,6 @@ const applyReducerMetrics = (
   return out;
 };
 
-const selectorValueFieldOf = (selector: AnnotateSelector['selector']): string | undefined => {
-  if (!('by' in selector)) return undefined;
-  const field = selector.by;
-  return typeof field === 'string' ? field : undefined;
-};
-
-const applySelectorAnnotations = (
-  rows: Array<ExternalRow>,
-  operation: AnnotateTransform,
-  context: TransformContext,
-): ExternalRow => {
-  const out: ExternalRow = {};
-  for (const annotation of operation.selectors ?? []) {
-    const selections = applySelectorOperation(rows, annotation.selector, context);
-    if (selections.length === 0) continue;
-    const selection = selections[0];
-    const field = selectorValueFieldOf(annotation.selector);
-    out[annotation.as] = field === undefined ? selection.rank : resolveFieldPath(selection.row, field);
-  }
-  return out;
-};
-
 /**
  * bin：连续 field 分箱，输出每箱一行，包含空箱。
  * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；metrics 缺省输出 binCount。
@@ -143,49 +125,6 @@ export const applyBin = (
     return context.groupProvenance(out, members);
   });
 };
-
-/** summarize：按 groupBy 分组并执行多个 reducer，每组输出一行。 */
-export const applySummarize = (
-  rows: Array<ExternalRow>,
-  operation: SummarizeTransform,
-  context: TransformContext,
-): Array<ExternalRow> =>
-  groupRowsByFields(rows, operation.groupBy).map(group =>
-    context.groupProvenance(
-      {
-        ...group.values,
-        ...applyReducerMetrics(group.rows, operation.metrics, context),
-      },
-      group.rows,
-    ),
-  );
-
-/** select：按 groupBy 分组并输出 selector 选中的原始行。 */
-export const applySelect = (
-  rows: Array<ExternalRow>,
-  operation: SelectTransform,
-  context: TransformContext,
-): Array<ExternalRow> =>
-  groupRowsByFields(rows, operation.groupBy).flatMap(group =>
-    applySelectorOperation(group.rows, operation.selector, context).map(selection => ({
-      ...selection.row,
-      ...(operation.rankAs !== undefined && selection.rank !== undefined ? { [operation.rankAs]: selection.rank } : {}),
-    })),
-  );
-
-/** annotate：按 groupBy 分组，把 reducer 结果回填到组内每一行。 */
-export const applyAnnotate = (
-  rows: Array<ExternalRow>,
-  operation: AnnotateTransform,
-  context: TransformContext,
-): Array<ExternalRow> =>
-  groupRowsByFields(rows, operation.groupBy).flatMap(group => {
-    const metricFields =
-      operation.metrics === undefined ? {} : applyReducerMetrics(group.rows, operation.metrics, context);
-    const selectorFields =
-      operation.selectors === undefined ? {} : applySelectorAnnotations(group.rows, operation, context);
-    return group.rows.map(row => ({ ...row, ...metricFields, ...selectorFields }));
-  });
 
 const capitalize = (value: string): string => `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 

@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · [v0.3 roadmap §Alpha 切分](../roadmap.md) · [core-design.md §7 AI 友好](../../../../../../../notes/architecture/core-design.md) · **范式参照**：[v0.3-alpha.2 ADR-01 Tier 2 支撑](../alpha.2/01-tier2-support.md)（passthrough + 注册表）、core path generator（`pathGenerators/types.ts` + `pathGenerators/define.ts` + `compile/path/index.ts` 双护栏，与本 ADR 同构问题的现成范式）· 消费方：[ADR-02 circle/ellipse](./02-circle-ellipse.md) · [ADR-03 arc/sector](./03-arc-sector.md) · [ADR-04 rectangle/polygon](./04-rectangle-polygon.md) · [ADR-05 star](./05-star.md) · 下游：[plot v0.1-alpha.4](../../../../../../viz/_notes/decisions/v0/v0.1/roadmap.md)
+- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · [v0.3 roadmap §Alpha 切分](../roadmap.md) · [core-design.md §7 AI 友好](../../../../../../../notes/architecture/core-design.md) · **范式参照**：[v0.3-alpha.2 ADR-01 Tier 2 支撑](../alpha.2/01-tier2-support.md)（passthrough + 注册表）、core path generator（`pathGenerators/types.ts` + `pathGenerators/define.ts` + `compile/path/index.ts` 双护栏，与本 ADR 同构问题的现成范式）· 消费方：[ADR-02 circle/ellipse](./02-circle-ellipse.md) · [ADR-03 arc/sector](./03-arc-sector.md) · [ADR-04 rectangle/polygon](./04-rectangle-polygon.md) · [ADR-05 star](./05-star.md) · 下游：[plot v0.1-alpha.4](../../../../../../viz/_notes/decisions/plot/v0/v0.1/roadmap.md)
 
 ## 背景
 
@@ -26,7 +26,9 @@ export const ShapeRefSchema = z
     type: z
       .string()
       .min(1)
-      .describe('Shape name; built-in or registered via CompileOptions.shapes. Unregistered names are rejected at compile time.'),
+      .describe(
+        'Shape name; built-in or registered via CompileOptions.shapes. Unregistered names are rejected at compile time.',
+      ),
     params: JsonObjectSchema.optional().describe(
       'JSON-only parameter object for parametric shapes (e.g. sector { innerRadius, outerRadius, startAngle, endAngle }). Must be a plain JSON object (validated by JsonObjectSchema); the registered shape validates its own field shape via paramsSchema. Omitted for parameterless shapes.',
     ),
@@ -34,12 +36,11 @@ export const ShapeRefSchema = z
   .describe('Shape reference: type name + optional JSON params, validated at compile time by the registered shape.');
 
 // packages/kernel/core/src/ir/node.ts —— shape 字段：裸 string（无参，向后兼容）或 {type, params?}
-shape: z
-  .union([z.string().min(1), ShapeRefSchema])
+shape: z.union([z.string().min(1), ShapeRefSchema])
   .optional()
   .describe(
     'Node visual shape: a bare name string (parameterless, e.g. "rectangle") or `{ type, params }` carrying a JSON params object (e.g. `{ type:"sector", params:{ innerRadius, outerRadius, startAngle, endAngle } }`). Built-in or registered via CompileOptions.shapes; unregistered type rejected at compile time. Defaults to "rectangle".',
-  )
+  );
 ```
 
 **注册侧（擦除注册表 + `defineShape<T>` 定义点类型安全）：**
@@ -49,7 +50,11 @@ shape: z
 type ShapeDefinitionInput<TParams extends IRJsonObject> = {
   /** params 的 zod schema；类型约束输出 JSON-safe（双 parse 才是真护栏，见编译期） */
   paramsSchema: z.ZodType<TParams>;
-  circumscribe: (innerHalfWidth: number, innerHalfHeight: number, params: TParams) => { halfWidth: number; halfHeight: number };
+  circumscribe: (
+    innerHalfWidth: number,
+    innerHalfHeight: number,
+    params: TParams,
+  ) => { halfWidth: number; halfHeight: number };
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
   edgePoint?: (rect: Rect, side: 'north' | 'south' | 'east' | 'west', t: number, params: TParams) => Position;
@@ -59,9 +64,8 @@ type ShapeDefinitionInput<TParams extends IRJsonObject> = {
 export type ShapeDefinition = ShapeDefinitionInput<IRJsonObject>;
 
 // packages/kernel/core/src/shapes/define.ts（新建）—— 定义点 typed，返回擦除形态进 registry（唯一受控 cast）
-export const defineShape = <TParams extends IRJsonObject>(
-  def: ShapeDefinitionInput<TParams>,
-): ShapeDefinition => def as unknown as ShapeDefinition;
+export const defineShape = <TParams extends IRJsonObject>(def: ShapeDefinitionInput<TParams>): ShapeDefinition =>
+  def as unknown as ShapeDefinition;
 ```
 
 registry 同构 `Record<string, ShapeDefinition>`，无逆变；类型安全在 `defineShape<SectorParams>({...})` 的定义点（函数签名 typed），擦除的单点 cast 封在 `defineShape` 内，**形状实现者不 cast**。
@@ -70,10 +74,10 @@ registry 同构 `Record<string, ShapeDefinition>`，无逆变；类型安全在 
 
 ```ts
 // shape: string → 规范化为 { type, params: {} }；object → 原样
-const { type, params = {} } = normalizeShape(node.shape);   // 'rectangle' ≡ { type:'rectangle', params:{} }
-const def = lookupShape(type, options.shapes);              // 未注册 → throw（沿用 unregistered shape 语义）
-const parsed = def.paramsSchema.parse(params);             // 第一道：形状字段校验
-JsonObjectSchema.parse(parsed);                            // 第二道：JSON-safe 护栏（拦 function/undefined）
+const { type, params = {} } = normalizeShape(node.shape); // 'rectangle' ≡ { type:'rectangle', params:{} }
+const def = lookupShape(type, options.shapes); // 未注册 → throw（沿用 unregistered shape 语义）
+const parsed = def.paramsSchema.parse(params); // 第一道：形状字段校验
+JsonObjectSchema.parse(parsed); // 第二道：JSON-safe 护栏（拦 function/undefined）
 // 喂进 circumscribe / boundaryPoint / anchor / emit（参数现可信任）
 ```
 

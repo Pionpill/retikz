@@ -3,16 +3,17 @@
 > 起新 ADR：`cp _template.md v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NN-<slug>.md`
 > 例：`cp _template.md v0/v0.1/alpha.1/01-foo.md`
 > 目录约定：
+>
 > - 一级 = MAJOR 版本号（`v0/` / `v1/`）
 > - 二级 = MINOR 版本号（`v0.1/` / `v0.2/`）
 > - 三级 = 版本通道节点（`alpha.1/` / `beta.1/` / `rc.1/` / `v0.1/` 表稳定）
 > - PATCH 不开目录（patch 仅修 bug，不写 ADR）
-> NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.1 是 01-08，alpha.2 从 01 重新起计；跨 milestone 引用带前缀：`alpha.1 ADR-01`
-> slug 用 kebab-case
-> **plot 版本线独立**：`@retikz/plot` 有自身演进节奏，**不与 core 版本号对齐**——它只消费 core 能力、不反向依赖，里程碑由「所需 core 能力是否就绪」gating（见 [plot-design §13](../architecture/plot-design.md)）。
-> 模板对应 [`develop-design`](../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
-> 路径假设实例位于 `packages/viz/_notes/decisions/<MAJOR>/<MAJOR>.<MINOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
-> **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
+>   NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.1 是 01-08，alpha.2 从 01 重新起计；跨 milestone 引用带前缀：`alpha.1 ADR-01`
+>   slug 用 kebab-case
+>   **plot 版本线独立**：`@retikz/plot` 有自身演进节奏，**不与 core 版本号对齐**——它只消费 core 能力、不反向依赖，里程碑由「所需 core 能力是否就绪」gating（见 [plot-design §13](../architecture/plot-design.md)）。
+>   模板对应 [`develop-design`](../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
+>   路径假设实例位于 `packages/viz/_notes/decisions/<MAJOR>/<MAJOR>.<MINOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
+>   **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
@@ -93,10 +94,10 @@
 
 ### Schema 改动
 
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `packages/viz/plot/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
-| ... | ... | ... | ... | ... | ... |
+| 文件                                | 操作         | 字段名         | 类型         | 默认值           | describe 中文摘要 |
+| ----------------------------------- | ------------ | -------------- | ------------ | ---------------- | ----------------- |
+| `packages/viz/plot/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话>          |
+| ...                                 | ...          | ...            | ...          | ...              | ...               |
 
 每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**——发现需要改 → 回本 ADR 加条 / 开新 ADR。
 
@@ -116,6 +117,7 @@
 - ...
 
 偏离白名单的改动需要：
+
 - 加新条目到本 ADR 的"实现契约 → 文件 scope"段，并自我注解"为什么扩展 scope"
 - 或开新 ADR
 

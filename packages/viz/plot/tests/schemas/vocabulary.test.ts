@@ -1,17 +1,11 @@
+﻿import { FieldOrderMode } from '@retikz/data';
+import { DataSortOrder, ReducerOperationKind, RowSelectorTie, SelectorOp } from '@retikz/data';
+import { TransformSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
-
-import {
-  FieldOrderMode,
-  PlotSortOrder,
-  ReducerOperationKind,
-  RowSelectorTie,
-  SelectorOp,
-  TransformSchema,
-} from '../../src/schemas';
 
 describe('schema vocabulary constants', () => {
   it('exports plot transform and data vocabularies as const objects', () => {
-    expect(Object.values(PlotSortOrder).sort()).toEqual(['ascending', 'descending']);
+    expect(Object.values(DataSortOrder).sort()).toEqual(['ascending', 'descending']);
     expect(Object.values(RowSelectorTie).sort()).toEqual(['all', 'first', 'last']);
     expect(Object.values(ReducerOperationKind).sort()).toEqual([
       'count',

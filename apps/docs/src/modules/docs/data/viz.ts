@@ -19,17 +19,19 @@ export const vizSection: Array<Section> = [
     pages: [{ id: 'plot', label: 'viz.compPlot' }],
   },
   {
-    id: 'grammar',
-    label: 'viz.grammar',
+    id: 'data',
+    label: 'viz.dataFlow',
+    document: true,
     pages: [
-      {
-        id: 'data',
-        label: 'viz.data',
-        children: [
-          { id: 'model', label: 'viz.dataModel' },
-          { id: 'processing', label: 'viz.dataProcessing' },
-        ],
-      },
+      { id: 'model', label: 'viz.dataModel' },
+      { id: 'transform', label: 'viz.dataTransform' },
+      { id: 'provenance', label: 'viz.dataProvenance' },
+    ],
+  },
+  {
+    id: 'grammar',
+    label: 'viz.drawingGrammar',
+    pages: [
       {
         id: 'channel',
         label: 'viz.grammarChannel',
@@ -86,14 +88,11 @@ export const vizSection: Array<Section> = [
           { id: 'legend', label: 'viz.compLegend' },
         ],
       },
-      { id: 'provenance', label: 'viz.grammarProvenance' },
       {
         id: 'extend',
         label: 'viz.grammarExtend',
         children: [
-          { id: 'data', label: 'viz.grammarExtendData' },
           { id: 'channel', label: 'viz.grammarExtendChannel' },
-          { id: 'transform', label: 'viz.grammarExtendTransform' },
           { id: 'mark', label: 'viz.grammarExtendMark' },
           { id: 'scale', label: 'viz.grammarExtendScale' },
           { id: 'coordinate', label: 'viz.grammarExtendCoordinate' },

@@ -1,7 +1,7 @@
+import { PlotBuiltinTransformSchema, TransformSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { PlotSpecSchema } from '../../src/schemas';
-import { BuiltinTransformSchema, TransformSchema } from '../../src/schemas/transform';
 
 describe('TransformSchema sort / stack', () => {
   // Happy path
@@ -32,7 +32,7 @@ describe('TransformSchema sort / stack', () => {
 
   // 错误路径
   it('builtin_transform_unknown_kind_rejected', () => {
-    expect(() => BuiltinTransformSchema.parse({ kind: 'filter', field: 'm' })).toThrow();
+    expect(() => PlotBuiltinTransformSchema.parse({ kind: 'filter', field: 'm' })).toThrow();
   });
 
   it('sort_missing_field_rejected', () => {
@@ -483,7 +483,7 @@ describe('SmoothTransformSchema', () => {
       xAs: 'trendX',
       yAs: 'trendY',
     };
-    expect(BuiltinTransformSchema.parse(operation)).toEqual(operation);
+    expect(PlotBuiltinTransformSchema.parse(operation)).toEqual(operation);
   });
 
   it.each([

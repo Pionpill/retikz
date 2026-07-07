@@ -20,8 +20,7 @@ partway 端点用一套**自包含、排除 path-relative** 的 `AbsoluteTarget`
 核心数据结构（字面即决策，完整字段 + 英文 describe 见 `core/src/ir/position/between-position.ts`）：
 
 ```ts
-export type IRAbsoluteTarget =
-  | IRPosition | PolarPosition | IRNodeTarget | IROffsetPosition | IRBetweenPosition;
+export type IRAbsoluteTarget = IRPosition | PolarPosition | IRNodeTarget | IROffsetPosition | IRBetweenPosition;
 export type IRBetweenPosition = { between: [IRAbsoluteTarget, IRAbsoluteTarget]; t: number };
 ```
 

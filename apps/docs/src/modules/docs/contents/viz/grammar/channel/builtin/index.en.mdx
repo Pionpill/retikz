@@ -5,15 +5,15 @@ description: Explains plot built-in channels by channel type, channel value form
 
 Built-in channels are easiest to read by intent, not by the lower-level `Node` / `Path` / `Scope` surface. In React DSL, a channel appears as a mark prop such as `<PointMark x="gdp" color="region" />`; the mark then decides which channels land on the core elements it produces.
 
-| Type             | Channels                                                                               | Meaning                                        |
-| ---------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Position         | `x` / `y`<br />`z`                                                                     | Fields determine coordinate roles              |
-| Style            | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`            | Color, opacity, size, and shape                |
-| Node geometry    | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                              | Node size, spacing, and transforms             |
-| Text             | `text`<br />`label`                                                                    | Text inside nodes and labels attached to nodes |
-| Paths           | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern`             | Path stroke, caps, joins, corners, and dashes  |
-| Effects          | `shadow`<br />`blendMode`                                                              | Shadows and compositing                        |
-| Other            | `zIndex` / `order`<br />`series`                                                       | Drawing order, ordering, and series splitting  |
+| Type          | Channels                                                                     | Meaning                                        |
+| ------------- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
+| Position      | `x` / `y`<br />`z`                                                           | Fields determine coordinate roles              |
+| Style         | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`  | Color, opacity, size, and shape                |
+| Node geometry | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                     | Node size, spacing, and transforms             |
+| Text          | `text`<br />`label`                                                          | Text inside nodes and labels attached to nodes |
+| Paths         | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern` | Path stroke, caps, joins, corners, and dashes  |
+| Effects       | `shadow`<br />`blendMode`                                                    | Shadows and compositing                        |
+| Other         | `zIndex` / `order`<br />`series`                                             | Drawing order, ordering, and series splitting  |
 
 ## Position
 
@@ -50,11 +50,11 @@ This demo binds `opacity`, `fillOpacity`, and `strokeOpacity` in separate groups
 
 <ComponentPreview name="builtin-opacity" size="md" />
 
-| Channel       | Channel Value                                                       | Meaning         | Delivery / guide                                                                           |
-| ------------- | ------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
-| `opacity`     | Field: `opacity = "field"`<br />Constant: `opacity = {0.45}`        | Overall opacity | `IRScope.opacity`, `IRNode.opacity`, or `IRPath.opacity`; field values support ramp legend |
-| `fillOpacity` | Field: `fillOpacity = "field"`<br />Constant: `fillOpacity = {0.7}` | Fill opacity    | scope / node / path fill opacity                                                           |
-| `strokeOpacity` | Field: `strokeOpacity = "field"`<br />Constant: `strokeOpacity = {0.7}` | Stroke opacity  | scope / node / path stroke opacity                                                           |
+| Channel         | Channel Value                                                           | Meaning         | Delivery / guide                                                                           |
+| --------------- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
+| `opacity`       | Field: `opacity = "field"`<br />Constant: `opacity = {0.45}`            | Overall opacity | `IRScope.opacity`, `IRNode.opacity`, or `IRPath.opacity`; field values support ramp legend |
+| `fillOpacity`   | Field: `fillOpacity = "field"`<br />Constant: `fillOpacity = {0.7}`     | Fill opacity    | scope / node / path fill opacity                                                           |
+| `strokeOpacity` | Field: `strokeOpacity = "field"`<br />Constant: `strokeOpacity = {0.7}` | Stroke opacity  | scope / node / path stroke opacity                                                         |
 
 ### Size
 
@@ -82,12 +82,12 @@ Node geometry channels control the node's own size constraints, spacing, corner 
 
 <ComponentPreview name="builtin-node-geometry" size="md" />
 
-| Channel                                                          | Channel Value                                                        | Meaning                 | Delivery                   |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------- | -------------------------- |
-| `minimumSize`              | Field: `minimumSize = "field"`<br />Constant: `minimumSize = {54}` | Node size constraints   | core node size fields      |
-| `padding` / `margin`                                                                                                                                                                                                        | Field: `padding = "field"`<br />Constant: `padding = {8}` / `padding = {{ x: 8, y: 4 }}` | Node spacing            | core node spacing fields   |
-| `cornerRadius`                                                   | Field: `cornerRadius = "field"`<br />Constant: `cornerRadius = {8}`  | Rectangle corner radius | core node `cornerRadius`   |
-| `rotate` / `scale`                      | Field: `rotate = "field"`<br />Constant: `rotate = {18}`             | Node transform hints    | core node transform fields |
+| Channel              | Channel Value                                                                            | Meaning                 | Delivery                   |
+| -------------------- | ---------------------------------------------------------------------------------------- | ----------------------- | -------------------------- |
+| `minimumSize`        | Field: `minimumSize = "field"`<br />Constant: `minimumSize = {54}`                       | Node size constraints   | core node size fields      |
+| `padding` / `margin` | Field: `padding = "field"`<br />Constant: `padding = {8}` / `padding = {{ x: 8, y: 4 }}` | Node spacing            | core node spacing fields   |
+| `cornerRadius`       | Field: `cornerRadius = "field"`<br />Constant: `cornerRadius = {8}`                      | Rectangle corner radius | core node `cornerRadius`   |
+| `rotate` / `scale`   | Field: `rotate = "field"`<br />Constant: `rotate = {18}`                                 | Node transform hints    | core node transform fields |
 
 ## Text
 
@@ -110,9 +110,9 @@ Text channels split into two groups: visible text inside a node, and labels atta
 
 <ComponentPreview name="builtin-text-label" size="md" />
 
-| Channel                                           | Channel Value                                                             | Meaning          | Delivery               |
-| ------------------------------------------------- | ------------------------------------------------------------------------- | ---------------- | ---------------------- |
-| `label`                                           | Field: `label = "field"`                                                  | Datum host label | core node `label`      |
+| Channel                                           | Channel Value                                                           | Meaning          | Delivery               |
+| ------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- | ---------------------- |
+| `label`                                           | Field: `label = "field"`                                                | Datum host label | core node `label`      |
 | `labelPosition` / `labelDistance`<br />`labelPin` | Constant: `labelPosition = "top"`<br />Constant: `labelDistance = {16}` | Label layout     | core node label fields |
 
 ## Paths

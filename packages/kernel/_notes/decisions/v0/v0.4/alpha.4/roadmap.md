@@ -8,10 +8,10 @@
 
 alpha.4 是 v0.4「纵向底座深化」里的 **Scene 视觉层增量**：给 Scene 图元加两块 renderer-agnostic 的视觉属性——**drop shadow（投影）** 与 **blend mode（混合模式）**。Scene 只描述意图，各 renderer 翻译成原生 API：
 
-| 能力 | SVG | 浏览器 Canvas | Node 位图（@napi-rs/canvas） |
-| --- | --- | --- | --- |
-| shadow | `<feDropShadow>` filter | `ctx.shadow{OffsetX,OffsetY,Blur,Color}` | 同 Canvas（待核） |
-| blend | `mix-blend-mode` | `ctx.globalCompositeOperation` | 同 Canvas（待核） |
+| 能力   | SVG                     | 浏览器 Canvas                            | Node 位图（@napi-rs/canvas） |
+| ------ | ----------------------- | ---------------------------------------- | ---------------------------- |
+| shadow | `<feDropShadow>` filter | `ctx.shadow{OffsetX,OffsetY,Blur,Color}` | 同 Canvas（待核）            |
+| blend  | `mix-blend-mode`        | `ctx.globalCompositeOperation`           | 同 Canvas（待核）            |
 
 三端都有原生对应 → 守 Scene「全后端一致、无 backend-only 特性」红线（`primitive/scene.ts`）。属纵向底座（core Scene schema + render emit），非 extension 词汇。
 
@@ -21,10 +21,10 @@ alpha.4 是 v0.4「纵向底座深化」里的 **Scene 视觉层增量**：给 S
 
 ## 子项
 
-| # | 子项 | 代号 | ADR | 状态 |
-|---|---|---|---|---|
-| F1 | drop shadow（投影） | F | [ADR-01](./01-scene-drop-shadow.md) | ✅ Accepted（已实现 + 文档 + changelog；跨后端裁剪/校准修复 + Contract Auditor 对账完成） |
-| F2 | blend mode（混合模式） | F | [ADR-02](./02-blend-mode.md) | ✅ Accepted（已实现 + 文档 + changelog；跨端 parity 指令级断言 + Contract Auditor 对账完成） |
+| #   | 子项                   | 代号 | ADR                                 | 状态                                                                                         |
+| --- | ---------------------- | ---- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
+| F1  | drop shadow（投影）    | F    | [ADR-01](./01-scene-drop-shadow.md) | ✅ Accepted（已实现 + 文档 + changelog；跨后端裁剪/校准修复 + Contract Auditor 对账完成）    |
+| F2  | blend mode（混合模式） | F    | [ADR-02](./02-blend-mode.md)        | ✅ Accepted（已实现 + 文档 + changelog；跨端 parity 指令级断言 + Contract Auditor 对账完成） |
 
 两子项独立、可并行；共享同一条接线骨架（`ShapeStyle` / 各 drawable primitive 加字段 → compile 透传 → SVG `buildPrimRaw` / Canvas `drawPrim` 翻译）。
 

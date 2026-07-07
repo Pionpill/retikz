@@ -21,11 +21,11 @@
 
 `closed` 三模式：
 
-| 值 | 含义 | 合法场景 |
-|---|---|---|
-| `'closed'` | 完整闭合（整圆 / 整椭圆） | 仅无角度时（默认） |
-| `'chord'` | 弦闭合（直线连弧两端点 → 半圆 / 弓形） | 有角度时默认 |
-| `'open'` | 不闭合（纯弧线，等价 `<Arc>`） | 有角度时可选 |
+| 值         | 含义                                   | 合法场景           |
+| ---------- | -------------------------------------- | ------------------ |
+| `'closed'` | 完整闭合（整圆 / 整椭圆）              | 仅无角度时（默认） |
+| `'chord'`  | 弦闭合（直线连弧两端点 → 半圆 / 弓形） | 有角度时默认       |
+| `'open'`   | 不闭合（纯弧线，等价 `<Arc>`）         | 有角度时可选       |
 
 > wedge（经圆心闭合 = 扇形）**不在此**——那是 `<Sector>` 的形态（[ADR-01](./01-arc-center-and-elliptical.md)）。`<Circle>` 带角度只做 chord / open。
 
@@ -40,11 +40,11 @@
 
 `arcStart = ellipseArcEndPoint(center, rx, ry, startAngle)`、`arcEnd = …endAngle`（圆 rx=ry=radius）。compile 分流的关键是「画完笔位（penOverride）」三模式各异——它决定后续 step / arrow endpoint 从哪续：
 
-| 模式 | 触发 | 画完笔位 | 收尾 |
-|---|---|---|---|
-| full（closed） | 无角度 | **center**（TikZ circle 回圆心，原行为） | 全 sweep ellipseArc(0→360) |
-| open | 有角度 + closed=open | **arcEnd**（停弧终点，等价 `<Arc>`） | 无 close |
-| chord | 有角度 + closed=chord | **arcStart**（close 后 lastEnd=subPathStart） | `emitClose()`（Z 画 arcEnd→arcStart 弦 + 收口） |
+| 模式           | 触发                  | 画完笔位                                      | 收尾                                            |
+| -------------- | --------------------- | --------------------------------------------- | ----------------------------------------------- |
+| full（closed） | 无角度                | **center**（TikZ circle 回圆心，原行为）      | 全 sweep ellipseArc(0→360)                      |
+| open           | 有角度 + closed=open  | **arcEnd**（停弧终点，等价 `<Arc>`）          | 无 close                                        |
+| chord          | 有角度 + closed=chord | **arcStart**（close 后 lastEnd=subPathStart） | `emitClose()`（Z 画 arcEnd→arcStart 弦 + 收口） |
 
 三模式 bbox 都不能再用整圆四点（partial 只取区间内 90°·k 轴向点 + 端点）；full 维持原行为，整圆 / 整椭圆输出逐字节不变。
 

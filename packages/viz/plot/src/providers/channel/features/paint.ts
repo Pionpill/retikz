@@ -1,16 +1,18 @@
-import type { IRPaintSpec } from '@retikz/core';
+﻿import type { IRPaintSpec } from '@retikz/core';
+import type { DataFieldTypeMap } from '@retikz/data';
 
 import { PaintSpecSchema } from '@retikz/core';
+import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
+import { DataFieldType, FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';
 import type { ChannelPaletteContext } from '../../../contract';
-import type { Channel, MarkOperation, PlotFieldTypeMap, PlotSpec, ScaleOperation } from '../../../schemas';
+import type { Channel, MarkOperation, PlotSpec, ScaleOperation } from '../../../schemas';
 import type { CategoryOrder } from '../../scale';
 
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
-import { FieldOrderMode, PlotFieldType, PlotScale } from '../../../schemas';
-import { coerceTimestamp, resolveFieldPath } from '../../data';
+import { PlotScale } from '../../../schemas';
 import { orderedCategoryDomain, resolveChannelScale } from '../../scale';
 
 export type ColorChannelDefinitionOptions = {
@@ -63,7 +65,7 @@ export const makeColorChannelDefinition = (
       const field = channel.field;
       const colorFieldType = ctx.fieldTypes.get(field);
       if (
-        (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) &&
+        (colorFieldType === DataFieldType.Continuous || colorFieldType === DataFieldType.Temporal) &&
         channel.scale === undefined
       ) {
         throw new Error(
@@ -114,7 +116,7 @@ export const makeColorChannelDefinition = (
 
 const colorResolveContext = (
   node: PlotSpec,
-  fieldTypes: PlotFieldTypeMap,
+  fieldTypes: DataFieldTypeMap,
   field: string,
   resolveColorScheme: (name: string) => (t: number) => string,
   palette: ChannelPaletteContext | undefined,
