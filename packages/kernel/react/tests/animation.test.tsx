@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IRAnimationTrack } from '@retikz/core';
+import type { IRAnimationTrack, IRScene } from '@retikz/core';
 
 import { createRef } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -124,6 +124,24 @@ describe('preset 集成', () => {
     expect(style).not.toBeNull();
     expect(style!.textContent).toContain('@keyframes');
     expect(style!.textContent).toContain('translate('); // 镜头 group transform
+  });
+
+  it('<Layout ir animations> appends animations prop to the IR root', async () => {
+    const irAnimation = cameraTo({ from: [0, 0, 100, 100], to: [10, 10, 80, 80] });
+    const propAnimation = cameraTo({ from: [0, 0, 100, 100], to: [25, 25, 50, 50] });
+    const ir: IRScene = {
+      type: 'scene',
+      version: 1,
+      viewBox: { x: 0, y: 0, width: 100, height: 100 },
+      animations: [irAnimation],
+      children: [{ type: 'node', id: 'a', position: [0, 0], fill: 'red', minimumSize: 2 }],
+    };
+
+    const c = await mount(<Layout width={100} height={100} ir={ir} animations={[propAnimation]} />);
+    const style = c.querySelector('style');
+    if (style === null) throw new Error('Expected Layout to emit animation style element.');
+    const keyframes = style.textContent.match(/@keyframes/g) ?? [];
+    expect(keyframes).toHaveLength(2);
   });
 });
 

@@ -413,8 +413,11 @@ export const Layout: FC<LayoutProps> = props => {
     const base = built.ir;
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
     const withViewBox = viewBox !== undefined ? { ...base, viewBox } : base;
-    // animations prop 注入 IR 根（镜头，cameraTo）；缺省保留 base 自带
-    return rootAnimations !== undefined ? { ...withViewBox, animations: rootAnimations } : withViewBox;
+    // animations prop 注入 IR 根（镜头，cameraTo）；缺省保留 base 自带，并用追加语义兼容 `ir` prop
+    if (rootAnimations === undefined) return withViewBox;
+    const animations =
+      withViewBox.animations !== undefined ? [...withViewBox.animations, ...rootAnimations] : rootAnimations;
+    return { ...withViewBox, animations };
   }, [built, viewBox, rootAnimations]);
   // 可嵌入贡献按 namespace 聚合成 composite 定义，再拼接用户显式 composites（用户优先级后置、可覆盖语义由 compile 决定）
   const aggregatedComposites = useMemo(() => {
