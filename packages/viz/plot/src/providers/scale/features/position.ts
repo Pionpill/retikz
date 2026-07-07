@@ -403,7 +403,7 @@ export const orderedCategoryDomain = (
   order: CategoryOrder | undefined,
 ): Array<string | number> => {
   const deduped = inferCategoryDomain(values);
-  if (order === undefined || order === FieldOrderMode.Data) return deduped;
+  if (order === undefined || order === FieldOrderMode.Appearance) return deduped;
   if (order === FieldOrderMode.Ascending || order === FieldOrderMode.Descending) {
     const allNumber = deduped.every(value => typeof value === 'number');
     const sorted = [...deduped].sort((a, b) =>

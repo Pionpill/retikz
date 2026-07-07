@@ -1,5 +1,3 @@
-﻿import type { ValueOf } from '@retikz/core';
-
 /**
  * 内置字段值解析格式名。
  * @description 这些名字只声明内置 FieldFormatDefinition 的注册键；schema 只校验非空字符串，具体格式是否存在由 format registry 在 lowering 时解析。
@@ -19,12 +17,5 @@ export const DataFieldFormat = {
   Percent: 'percent',
 } as const;
 
-/** 内置字段值解析格式名取值。 */
-export type DataFieldFormatValue = ValueOf<typeof DataFieldFormat>;
-
 /** 内置格式名集合；用于初始化 registry 与阻止自定义 definition 覆盖内置格式。 */
 export const BUILTIN_FIELD_FORMATS: ReadonlySet<string> = new Set<string>(Object.values(DataFieldFormat));
-
-/** 是否内置格式名（收窄到 DataFieldFormatValue）。 */
-export const isBuiltinFieldFormat = (format: string): format is DataFieldFormatValue =>
-  BUILTIN_FIELD_FORMATS.has(format);

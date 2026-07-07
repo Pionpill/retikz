@@ -982,7 +982,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
-      if (order === undefined || order === FieldOrderMode.Data) continue;
+      if (order === undefined || order === FieldOrderMode.Appearance) continue;
       const type = fieldTypes.get(channel.field);
       if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new Error(
