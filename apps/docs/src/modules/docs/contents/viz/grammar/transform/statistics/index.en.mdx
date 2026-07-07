@@ -1,149 +1,44 @@
 ---
-title: Statistic Operations
-description: Reducers and selectors are the shared statistical primitives behind transforms: they compute statistic values, choose representative rows, and power extensible structures such as parameterized quantile bands.
+title: Density & Trend
+description: Density and trend are plot-registered sampled-statistic transforms that turn raw samples into rows drawn as curves or areas by PathMark.
 ---
 
-Statistic operations are not a new pipeline stage. They live inside existing transforms: reducers compute statistic values, while selectors choose representative rows. That lets `summarize`, `annotate`, `bin`, `select`, and `relate` reuse one statistical layer instead of baking special fields into each chart shape.
+Some statistics do not return one value per group; they generate a batch of sampled rows. `density` reads one continuous field and emits `xAs` / `densityAs` fields from KDE. `smooth` reads `(x, y)` samples and emits predicted `xAs` / `yAs` fields from a regression model. Both produce ordinary rows, then `PathMark` draws curves or areas.
 
-| Operation | Returns        | Reused by                        | Good for                                      |
-| --------- | -------------- | -------------------------------- | --------------------------------------------- |
-| reducer   | Field fragment | `bin` / `summarize` / `annotate` | Counts, means, quantile bands, risk scores    |
-| selector  | Source rows    | `select` / `annotate` / `relate` | Extremes, top-N, outliers, relation endpoints |
+General reducers / selectors, `summarize`, `select`, and custom transform definitions are documented under [Data Transforms](/viz/data/transform).
 
-## Full Transforms
-
-Some statistics generate a new sampled row set, so they do not fit inside a reducer or selector. `density` reads one continuous field and uses KDE to emit `xAs` / `densityAs` fields; `smooth` reads `(x, y)` samples and uses a regression model to emit `xAs` / `yAs` prediction fields. Both output ordinary rows, then let `PathMark` draw the curve or area.
-
-### Density
+## density
 
 <ComponentPreview name="transform-density" sourceFiles={['transform-density.data.ts']} />
 
-| prop                | Type                                                            | Default               | Notes                                                        |
-| ------------------- | --------------------------------------------------------------- | --------------------- | ------------------------------------------------------------ |
-| `field`             | `string`                                                        | —                     | One-dimensional continuous field used for density estimation |
-| `groupBy`           | `Array<string>?`                                                | One global group      | Estimate density independently per group                     |
-| `bandwidth`         | `{ kind: 'silverman' }`<br />`{ kind: 'value'; value: number }` | `silverman`           | KDE bandwidth; explicit values must be positive              |
-| `sampleCount`       | `number?`                                                       | `64`                  | Number of sample points emitted per group, at least 2        |
-| `extent`            | `[number, number]?`                                             | Padded observed range | Sampling interval                                            |
-| `xAs` / `densityAs` | `string`                                                        | —                     | Output fields for sample position and density value          |
+| prop                | type                                                            | default       | description                                  |
+| ------------------- | --------------------------------------------------------------- | ------------- | -------------------------------------------- |
+| `field`             | `string`                                                        | —             | One-dimensional continuous field to estimate |
+| `groupBy`           | `Array<string>?`                                                | one global group | Estimate density per group                |
+| `bandwidth`         | `{ kind: 'silverman' }`<br />`{ kind: 'value'; value: number }` | `silverman`   | KDE bandwidth; explicit values must be positive |
+| `sampleCount`       | `number?`                                                       | `64`          | Number of sampled output rows per group; at least 2 |
+| `extent`            | `[number, number]?`                                             | expanded observed range | Sampling interval                 |
+| `xAs` / `densityAs` | `string`                                                        | —             | Output fields for sample position and density |
 
-`density` emits ordinary rows. Use `PathMark` for a density curve; use the same `PathMark` with `closure={{ kind: 'baseline' }}` and `fill` for an area. Do not add a dedicated density mark for this layer.
+`density` outputs ordinary rows. Draw a density curve with `PathMark`; draw a density area with the same `PathMark` plus `closure={{ kind: 'baseline' }}` and `fill`. Do not add a dedicated mark just for density.
 
-### Smooth
+## smooth
 
-`smooth` fits `(x, y)` samples from scatter plots or time series into sampled trend-line rows. alpha.13 only supports `{ kind: 'linear' }`, and the default extent does not extrapolate; the output rows are usually connected by `PathMark` with `order`.
+`smooth` fits `(x, y)` samples from a scatterplot or time series into sampled trend-line rows. The first method is `{ kind: 'linear' }`; it does not extrapolate unless you provide `extent`. Output rows usually go to `PathMark` with `order`.
 
 <ComponentPreview name="transform-smooth" sourceFiles={['transform-smooth.data.ts']} />
 
-| prop          | Type                  | Default                 | Notes                                                            |
-| ------------- | --------------------- | ----------------------- | ---------------------------------------------------------------- |
-| `x` / `y`     | `string`              | —                       | Regression input fields                                          |
-| `groupBy`     | `Array<string>?`      | One global group        | Fit a separate trend line per group                              |
-| `method`      | `{ kind: 'linear' }?` | `linear`                | Smoothing method; the first pass only supports linear regression |
-| `sampleCount` | `number?`             | `64`                    | Number of predicted sample points emitted per group, at least 2  |
-| `extent`      | `[number, number]?`   | Finite observed x range | Sampling interval; pass an explicit extent to extrapolate        |
-| `xAs` / `yAs` | `string`              | —                       | Output fields for predicted sample position and y value          |
+| prop          | type                  | default              | description                                  |
+| ------------- | --------------------- | -------------------- | -------------------------------------------- |
+| `x` / `y`     | `string`              | —                    | Regression input fields                      |
+| `groupBy`     | `Array<string>?`      | one global group     | Fit a separate trend per group               |
+| `method`      | `{ kind: 'linear' }?` | `linear`             | Smoothing method; first release supports linear regression only |
+| `sampleCount` | `number?`             | `64`                 | Number of predicted samples per group; at least 2 |
+| `extent`      | `[number, number]?`   | finite observed x range | Sampling interval; explicit values can extrapolate |
+| `xAs` / `yAs` | `string`              | —                    | Output fields for predicted x and y values   |
 
-`smooth` fails loudly for inputs that cannot be fitted: each group needs at least two finite `(x, y)` pairs, and x cannot be constant. Keep the raw points and the trend line as separate mark layers: points read the source data, while the trend line reads rows generated by `smooth`.
+`smooth` fails loudly for non-fit inputs: every group needs at least two finite `(x, y)` points, and x cannot be constant. Keep original points and the trend line as separate mark layers: points read source data, while the trend line reads rows generated by `smooth`.
 
-## Reducers
+## Relationship To Data Flow
 
-A reducer receives a group of rows and returns the fields to write onto a summary row or annotation row. It answers “what statistic does this group have?” without deciding whether the outer transform preserves rows or emits new rows.
-
-| op              | Input                         | Output    | Notes                           |
-| --------------- | ----------------------------- | --------- | ------------------------------- |
-| `count`         | Row group                     | `as`      | Number of rows                  |
-| `sum` / `mean`  | `field`                       | `as`      | Sum or average                  |
-| `median`        | `field`                       | `as`      | Median value                    |
-| `min` / `max`   | `field`                       | `as`      | Finite numeric extrema          |
-| `extent`        | `field`                       | `as`      | `[min, max]`                    |
-| `quantile`      | `field` / `p`                 | `as`      | One quantile point              |
-| `quantile-band` | `field` / `lowerP` / `upperP` | `outputs` | Parameterized quantile interval |
-
-The same reducer can appear in several transforms. In `summarize.metrics`, it collapses each group into one row. In `annotate.metrics`, it broadcasts the statistic back to every row in the group. In `bin.metrics`, it reduces each bin independently.
-
-## Selectors
-
-A selector receives a group of rows and returns selected source rows plus an optional rank. Use it when the output still needs original ids, labels, or anchor fields, because the result row is copied from source data rather than synthesized as a statistic object.
-
-| op                      | Input                         | Output      | Notes                                        |
-| ----------------------- | ----------------------------- | ----------- | -------------------------------------------- |
-| `min` / `max`           | `by`                          | Source row  | Row with smallest or largest numeric value   |
-| `first` / `last`        | `orderBy?`                    | Source row  | First or last row in current or sorted order |
-| `top` / `bottom`        | `by` / `n`                    | Source rows | Top or bottom N rows                         |
-| `nth`                   | `orderBy` / `index`           | Source row  | Zero-based row after ordering                |
-| `outside-quantile-band` | `field` / `lowerP` / `upperP` | Source rows | Rows outside a quantile interval             |
-
-`select` emits the selected rows directly. `annotate.selectors` broadcasts representative values back onto detail rows. `relate` runs source and target selectors, then projects endpoint fields into relation rows.
-
-## Quantile Bands
-
-`quantile-band` uses `lowerP` and `upperP` to define any quantile interval; it is not fixed to `q1` / `q3`. `outputs` explicitly names every derived field, so the same reducer can express box plots, central 80% bands, outlier fences, business bands, or other summaries.
-
-```tsx
-<Transform
-  kind="summarize"
-  groupBy={['group']}
-  metrics={[
-    {
-      op: 'quantile-band',
-      field: 'value',
-      lowerP: 0.1,
-      upperP: 0.9,
-      outputs: {
-        lower: 'p10',
-        upper: 'p90',
-        points: [{ p: 0.5, as: 'p50' }],
-        spread: 'p80Spread',
-      },
-    },
-  ]}
-/>
-```
-
-`whisker` is an optional strategy, not the interval itself. `{ kind: 'minMax' }` emits finite min/max values. `{ kind: 'spread', factor: 1.5 }` derives fences from `(upper - lower) * factor`, then emits the whiskers inside those fences.
-
-| outputs field               | Role                                                  |
-| --------------------------- | ----------------------------------------------------- |
-| `lower` / `upper`           | Required interval boundaries                          |
-| `points`                    | Optional extra quantile points, such as median or p95 |
-| `spread`                    | Optional `upper - lower`                              |
-| `lowerFence` / `upperFence` | Optional fences from spread whiskers                  |
-| `whiskerMin` / `whiskerMax` | Optional min/max or in-fence whiskers                 |
-| `min` / `max` / `count`     | Optional finite extrema and count                     |
-
-## Outside Selection
-
-`outside-quantile-band` is a selector, so it emits source rows. `boundary: { kind: 'band' }` selects rows below `lowerP` or above `upperP`; `boundary: { kind: 'spread', factor }` first derives fences from the interval spread, then selects rows outside those fences.
-
-```tsx
-<Transform
-  kind="select"
-  groupBy={['group']}
-  selector={{
-    op: 'outside-quantile-band',
-    field: 'value',
-    lowerP: 0.25,
-    upperP: 0.75,
-    boundary: { kind: 'spread', factor: 1.5 },
-  }}
-  rankAs="outlierRank"
-/>
-```
-
-For drawing outlier points, prefer the selector: selected rows keep their original coordinates, labels, and datum provenance. For drawing a statistical band, prefer the `quantile-band` reducer: it emits group-level interval fields.
-
-## Extensions
-
-When adding a new statistic value, prefer `defineStatisticsReducer`. When adding a new representative-row rule, prefer `defineRowSelector`. Register a full `defineTransform` only when the input/output row shape does not fit an existing transform.
-
-Definitions do not enter JSON IR. The IR only stores `{ op, ...config }`; runtime definitions are injected through `<Plot statisticsReducerDefinitions={...}>` or `<Plot rowSelectorDefinitions={...}>`.
-
-| definition          | Declares                                                    | In IR |
-| ------------------- | ----------------------------------------------------------- | ----- |
-| `schema`            | Validates `{ op, ...config }` and extracts the registry key | No    |
-| `inputFields`       | Source fields read by strict model validation               | No    |
-| `outputFields`      | Derived fields excluded from strict model validation        | No    |
-| `reduce` / `select` | Runtime calculation                                         | No    |
-
-See [Custom Transforms](/viz/grammar/extend/transform) for extension examples.
+`density` and `smooth` stay under Drawing Grammar because their main output is sampled fields consumed by plot curves / areas. They still run on data canonical rows and follow data-layer parsing, validation, and provenance rules.

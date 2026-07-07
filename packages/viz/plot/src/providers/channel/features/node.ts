@@ -1,4 +1,5 @@
 ﻿import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
+import type { DataFieldTypeMap,ExternalRow } from '@retikz/data';
 
 import {
   AxisScaleSchema,
@@ -10,6 +11,8 @@ import {
   JsonValueSchema,
   ShapeRefSchema,
 } from '@retikz/core';
+import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type {
@@ -19,19 +22,16 @@ import type {
   NodeChannelDefinition,
 } from '../../../contract';
 import type {
-  ExternalRow,
   LinearScale,
   MarkOperation,
   OrdinalScale,
-  PlotFieldTypeMap,
   PlotSpec,
   ScaledMarkValueType,
   SqrtScale,
 } from '../../../schemas';
 
 import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
-import { PlotFieldType, PlotScale } from '../../../schemas';
-import { inferCategoryDomain, resolveFieldPath } from '../../data';
+import { PlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveOrdinalScale, resolveSqrtScale } from '../../scale';
 import { makeMarkValueResolver } from '../shared';
 
@@ -128,7 +128,7 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
 export const makeNumericNodeResolver = (
   node: PlotSpec,
   rows: Array<ExternalRow>,
-  fieldTypes: PlotFieldTypeMap,
+  fieldTypes: DataFieldTypeMap,
   pick: (mark: MarkOperation) => ScaledMarkValueType<number> | undefined,
   channelName: string,
   options: NumericNodeResolverOptions = {},
@@ -139,7 +139,7 @@ export const makeNumericNodeResolver = (
     if (!channel) return undefined;
     const source = makeMarkValueResolver<number>(channel, fieldTypes, {
       channelName,
-      expectedFieldType: PlotFieldType.Continuous,
+      expectedFieldType: DataFieldType.Continuous,
       parse: value => (isFiniteNumber(value) ? value : undefined),
       constants: 'skip',
     });
@@ -290,7 +290,7 @@ export const resolveShapeChannel = (
     }
     const field = channel.value;
     const fieldType = fieldTypes.get(field);
-    if (fieldType !== undefined && fieldType !== PlotFieldType.Categorical) {
+    if (fieldType !== undefined && fieldType !== DataFieldType.Categorical) {
       throw new Error(`lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`);
     }
     const values = rows.map(row => resolveFieldPath(row, field));

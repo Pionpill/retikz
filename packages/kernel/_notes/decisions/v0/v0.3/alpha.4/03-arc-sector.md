@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · 依赖：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)（nested params + defineShape + 双护栏 + circumscribe 返回精确 AABB） · 下游：[plot v0.1-alpha.4](../../../../../../viz/_notes/decisions/v0/v0.1/roadmap.md)（polar bar→sector）· 文档页：`apps/docs/src/contents/kernel/components/shapes/arc-sector/`
+- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · 依赖：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)（nested params + defineShape + 双护栏 + circumscribe 返回精确 AABB） · 下游：[plot v0.1-alpha.4](../../../../../../viz/_notes/decisions/plot/v0/v0.1/roadmap.md)（polar bar→sector）· 文档页：`apps/docs/src/contents/kernel/components/shapes/arc-sector/`
 
 > **依赖 ADR-01**：按 01 接口实现；与 02/04/05 并发。本形状是 plot polar 闭环的 core 侧前置——plot bar 在极坐标下沉为**可连接 sector Node**（plot 选 (i) 投影整形路线）。
 

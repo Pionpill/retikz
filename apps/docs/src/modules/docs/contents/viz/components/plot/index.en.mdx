@@ -161,8 +161,8 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | -------------------- | -------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `data`               | `Array<Row>`                                 | —                  | Raw data rows (composition DSL entry); data never enters the IR                                                                                                                                    |
 | `children`           | `ReactNode`                                  | —                  | Mark / guide / scale children (composition DSL entry)                                                                                                                                              |
-| `model`              | `DataModel`                                  | —                  | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/viz/grammar/data/model)                                                  |
-| `fieldMap`           | `Record<string, string>`                     | —                  | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/viz/grammar/data/processing)                                                |
+| `model`              | `DataModel`                                  | —                  | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/viz/data/model)                                                  |
+| `fieldMap`           | `Record<string, string>`                     | —                  | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Data Model](/viz/data/model)                                                |
 | `coordinate`         | see [Coordinates](/viz/grammar/coordinate) | cartesian2D        | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default                                                            |
 | `composition`        | `PlotSpec['composition']`                    | —                  | Low-level coordinate composition config with `defaultView`, `views`, `arrangements`, `spacing`, and `resolve`. Mutually exclusive with `coordinate`; everyday JSX usually uses axis ids, `<Facet>`, and `<Scaffold>` sugar |
 | `colors`             | `Array<string>`                              | `schemeCategory10` | Compatibility palette shorthand. Used for categorical / series / sector defaults only when the matching `theme.palette` slots are omitted                                                                 |
@@ -188,6 +188,6 @@ In addition, `renderer` / `className` / `style` pass through to the underlying `
 - [Marks](/viz/grammar/mark) — line / point / bar / sector / area
 - [Axis](/viz/grammar/guide/axis) — ticks, labels, grid, polar dimensions
 - [Legend](/viz/grammar/guide/legend) — guides and local style for non-positional channels
-- [Data Model](/viz/grammar/data/model) — `model` field types and type-driven derivation
-- [Processing](/viz/grammar/data/processing) — `fieldMap`, validation, custom parsing
+- [Data Model](/viz/data/model) — `model` field types and type-driven derivation
+- [Data Model](/viz/data/model) — `fieldMap`, validation, custom parsing
 - [Custom Channels](/viz/grammar/extend/channel) — `channelDefinitions` and `encoding.channels`

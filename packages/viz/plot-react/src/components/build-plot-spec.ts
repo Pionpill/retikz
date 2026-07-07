@@ -1,15 +1,12 @@
-﻿import type {
+﻿import type { IRAxisScale, IRBoxSize, IRPaintSpec } from '@retikz/core';
+import type { DataModel, ExternalRow } from '@retikz/data';
+import type {
   AxisGuide,
   Channel,
   CoordinateOperation,
-  DataModel,
   Encoding,
-  ExternalRow,
   Guide,
   IntervalBounds,
-  IRAxisScale,
-  IRBoxSize,
-  IRPaintSpec,
   Mark,
   MarkGeometryLabelList,
   MarkNodeLabel,
@@ -38,6 +35,7 @@
 import type { TextProps } from '@retikz/react';
 import type { ReactElement, ReactNode } from 'react';
 
+import { DataFieldType } from '@retikz/data';
 import {
   CoordinateOperationSchema,
   IntervalBoundKind,
@@ -47,7 +45,6 @@ import {
   PLOT_NAMESPACE,
   PlotComposite,
   PlotCoordinate,
-  PlotFieldType,
   PlotGuide,
   PlotMark,
   PlotScale,
@@ -1645,7 +1642,7 @@ const buildColorScale = (
     const typeByField = new Map(model.map(field => [field.name, field.type] as const));
     const anyContinuous = colorFields.some(field => {
       const type = typeByField.get(field);
-      return type === PlotFieldType.Continuous || type === PlotFieldType.Temporal;
+      return type === DataFieldType.Continuous || type === DataFieldType.Temporal;
     });
     if (anyContinuous) return { type: PlotScale.Sequential, name: AUTO_COLOR };
   }

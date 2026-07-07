@@ -576,7 +576,7 @@ polar       圆点 @ (r,θ)     扇形（环楔）
 - **(i) mark 坐标无关 + coordinate 投影整形**：mark 在归一化空间出形（bar 出单位矩形），coordinate 把归一化区间 / 边投影成坐标系几何。**加新坐标系 O(1)**（所有 mark 自动适配），近 ggplot `coord_*`。落地分两条：**区间 / 离散 mark**（bar / point）经 coordinate 把归一化区间映射成**参数化 shape 参数**，下沉成 **core 参数化可连接 Node**（bar→`sector`、point→`circle`、cartesian 下 bar→`rectangle`；core v0.3-alpha.4 已补齐 `sector` / `arc` 参数化 shape）——精确几何 + 可连接（anchor）+ 省 IR，优于纯采样 Path；**连续 mark**（line / area）跨多数据点、无参数化形态，仍由 coordinate 逐点投影成 **Path**（直边采样弯成弧），连接靠 datum 锚点。
 - **(ii) mark 自带每坐标系几何分支**：bar 内写死「笛卡尔→矩形、极坐标→扇形」。直白，但**等于把 N×M 矩阵塞进逻辑**，加新坐标系 = O(N_marks)，近 Vega 分立的 `rect` / `arc` mark。
 
-**决策已定为 (i)**（2026-06-06）：core v0.3-alpha.4 补齐参数化可连接 `sector` / `arc` shape 后，(i) 不再受限于「采样弯曲 Path」——区间 mark 下沉成参数化可连接 Node（见上），连续 mark 仍走投影点 Path。alpha.1~alpha.3 的 lowering 已遵守「不把笛卡尔假设写死进 mark」（保持坐标系投影是可替换中间层），(i) 在 alpha.4 polar 落地。详见 [plot v0.1 roadmap](../decisions/v0/v0.1/roadmap.md) alpha.4。
+**决策已定为 (i)**（2026-06-06）：core v0.3-alpha.4 补齐参数化可连接 `sector` / `arc` shape 后，(i) 不再受限于「采样弯曲 Path」——区间 mark 下沉成参数化可连接 Node（见上），连续 mark 仍走投影点 Path。alpha.1~alpha.3 的 lowering 已遵守「不把笛卡尔假设写死进 mark」（保持坐标系投影是可替换中间层），(i) 在 alpha.4 polar 落地。详见 [plot v0.1 roadmap](../decisions/plot/v0/v0.1/roadmap.md) alpha.4。
 
 例子：
 
@@ -744,7 +744,7 @@ intent
 
 `@retikz/plot` 有自身独立的版本演进，**不与 core 版本号对齐**；它只消费 core 能力、不反向依赖，因此每个里程碑由「所需 core 能力是否就绪」gating。模块名见 §11，首批细节见 §12。
 
-> ⚠️ **版本主题真源以 [plot v0 roadmap](../decisions/v0/roadmap.md) 为准**：路线已重组——**v0.1 承载整套图形语法（GoG 8 组件）**，beta 阶段抽出最小 `@retikz/data` 并稳定化；**v0.2 聚焦交互能力 + layout transform / structured visualization**，并与 chart v0.1 并行迭代；**v0.3 聚焦渐进式 AI 生成 + 跨域复合**。下文 §13.1~§13.6 是早期里程碑设计草案，**版本编号已过时**（原按 v0.1–v0.5 多 minor 设想），保留作各组件的**设计参考**；实际 alpha 序列见 [v0.1/roadmap](../decisions/v0/v0.1/roadmap.md)。
+> ⚠️ **版本主题真源以 [plot v0 roadmap](../decisions/plot/v0/roadmap.md) 为准**：路线已重组——**v0.1 承载整套图形语法（GoG 8 组件）**，beta 阶段抽出最小 `@retikz/data` 并稳定化；**v0.2 聚焦交互能力 + layout transform / structured visualization**，并与 chart v0.1 并行迭代；**v0.3 聚焦渐进式 AI 生成 + 跨域复合**。下文 §13.1~§13.6 是早期里程碑设计草案，**版本编号已过时**（原按 v0.1–v0.5 多 minor 设想），保留作各组件的**设计参考**；实际 alpha 序列见 [v0.1/roadmap](../decisions/plot/v0/v0.1/roadmap.md)。
 
 当前主线：GoG 基座 → 交互 + layout transform → 渐进式 AI + 跨域复合。
 
@@ -832,7 +832,7 @@ intent
 
 ## 16. 架构权衡：固有软肋与处置
 
-> 记于 2026-06-07。本节列**做完功能也甩不掉的架构性软肋**（非功能缺口），及各自处置决策。处置 backlog 同步在 [plot v0 roadmap「后续处理」段](../decisions/v0/roadmap.md)。
+> 记于 2026-06-07。本节列**做完功能也甩不掉的架构性软肋**（非功能缺口），及各自处置决策。处置 backlog 同步在 [plot v0 roadmap「后续处理」段](../decisions/plot/v0/roadmap.md)。
 
 最大卖点（§15：下沉到可连接、JSON、后端中立的通用图元）与最大软肋（大数据、响应式交互、动态布局）是**同一决策的两面**。
 

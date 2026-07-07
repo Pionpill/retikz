@@ -54,7 +54,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 图元局部变换
 
-`transform` 写在 PathMark 上时，只改变这条路径层看到的数据。下面的点层保留每个渠道的原始值，深色路径层先按 `day` 聚合出 `totalValue`，再用聚合后的行连成总量趋势。
+`transform` 写在 PathMark 上时，只改变这条路径层看到的数据。下面的点层保留每个渠道的原始值，深色路径层只在当前图元内执行 `smooth`，再把采样出的趋势行连成路径。
 
 <ComponentPreview name="line-transform" sourceFiles={['line-transform.data.ts']} />
 

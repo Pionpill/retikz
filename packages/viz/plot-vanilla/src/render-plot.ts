@@ -1,4 +1,5 @@
-import type { ExternalDatasets, LowerPlotsOptions, PlotSpec } from '@retikz/plot';
+import type { ExternalDatasets } from '@retikz/data';
+import type { LowerPlotsOptions, PlotSpec } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
 import { lowerPlots, PlotSpecSchema } from '@retikz/plot';

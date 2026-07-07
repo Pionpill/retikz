@@ -1,0 +1,46 @@
+---
+title: 数据流
+description: 数据流说明 @retikz/data 提供的数据模型、字段处理、数据变换与来源追踪；真实数据不进入 IR，而是在编译时接入。
+---
+
+数据流是 `@retikz/data` 负责的纯数据处理层：声明字段模型、把外部数据整理成 canonical 行、运行数据变换，并保留可追踪的来源信息。它不关心最后由 plot、table 还是 geo 消费；下游模块只读取已经整理好的数据结果。
+
+真实数据本身**不进入 IR**。配置只描述“读哪些字段、字段是什么类型、怎么解析和变换”；数据行在编译或运行数据管线时传入，只有 `model`、`format`、transform operation 这类可序列化契约会持久化。于是同一份配置能复用到不同数据源，也便于序列化与 AI 生成。
+
+<ComponentPreview name="data-pipeline" size="sm" hideCode />
+
+## 处理链路
+
+数据管线会先收集当前配置真正用到的字段，再把外部行整理成 canonical 行（规范化行：字段对齐、解析、类型归一后写回逻辑字段名的标准行）。后续数据变换、plot scale / mark、table 视图或 geo 投影都读取这份规范化结果，而不是反复直接读原始数据。
+
+| 步骤         | 做什么                                                              | 主要配置                             |
+| ------------ | ------------------------------------------------------------------- | ------------------------------------ |
+| 数据引用     | 选择当前视图使用哪份外部数据，数据本身不进入 IR                     | `data` / `data.reference`            |
+| 字段契约     | 确定逻辑字段名、类型、分类顺序与声明式格式；未声明时按样本推断      | `model`                              |
+| 源字段对齐   | 把逻辑字段映射到真实数据路径，支持字段改名与嵌套路径                | `fieldMap` / `fieldMaps`             |
+| 解析与归一化 | 按 `resolveField`、`format`、内置规则解析值，并写回逻辑字段名       | `resolveField` / `format` / 字段类型 |
+| 数据校验     | 对参与字段做抽样或全量校验，决定非法值跳过还是报错                  | `validateData` / `invalid`           |
+| 变换与消费   | 数据变换改写 canonical 行；plot 的通道、scale、mark 读取结果 | `sort` / `summarize` / channel props |
+
+`model`、`format` 和数据变换 operation 是可序列化契约；`fieldMap` 可按数据集 reference 注入；`resolveField`、自定义 parser 和自定义 transform 函数只在运行时参与处理，不进入 IR。需要自定义字段格式或字段解析时，见[数据模型](/viz/data/model)。
+
+## 通道消费
+
+数据层只负责把外部行整理成 canonical 行（规范化行）。字段或常量如何进入 plot 的 `x` / `y` / `color` / `size` / `text`，由[绘图语法的通道](/viz/grammar/channel)分组说明。
+
+## 章节内容
+
+<div className="grid gap-3 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/model">
+    <strong>数据模型</strong>
+    <span>声明字段类型、格式、分类顺序，并处理字段映射、解析与校验。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform">
+    <strong>数据变换</strong>
+    <span>说明 sort、summarize、select、annotate 与自定义 transform。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/provenance">
+    <strong>来源追踪</strong>
+    <span>说明 transform 后如何保留 source index、derived 标记与 lineage。</span>
+  </LinkedCard>
+</div>

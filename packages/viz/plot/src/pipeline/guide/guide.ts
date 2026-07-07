@@ -1,4 +1,5 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+import type { ScalarValue } from '@retikz/data';
 import type { Position } from '@retikz/math';
 
 import { arcEndPoint } from '@retikz/math';
@@ -14,7 +15,7 @@ import type {
   TickSet,
 } from '../../contract';
 import type { ResolvedLegendGuideTokens } from '../../providers';
-import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue, ScalarValue } from '../../schemas';
+import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
 import type { Rect } from '../../shared';
 import type { ProvenanceContext } from '../provenance';
 

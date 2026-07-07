@@ -2,7 +2,7 @@
 
 - 状态：Accepted MVP（2026-06-15 人工签字：适配器注册形态 = 组件静态属性）
 - 记录日期：2026-06-13（2026-06-15 升级）
-- 关联：[v0.4 路线讨论](../roadmap.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方 / 硬依赖本文档）](../../../../../../viz/_notes/decisions/v0/v0.1/alpha.10/02-plot-composable.md) · [core v0.3-alpha.2 ADR-01 Tier2 支持（composite 展开机制）](../../v0.3/alpha.2/01-tier2-support.md) · [core-design.md §7 AI 一等公民](../../../../../../../notes/architecture/core-design.md) · [plot-design §7 多坐标组合](../../../../../../viz/_notes/architecture/plot-design.md)
+- 关联：[v0.4 路线讨论](../roadmap.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方 / 硬依赖本文档）](../../../../../../viz/_notes/decisions/plot/v0/v0.1/alpha.10/02-plot-composable.md) · [core v0.3-alpha.2 ADR-01 Tier2 支持（composite 展开机制）](../../v0.3/alpha.2/01-tier2-support.md) · [core-design.md §7 AI 一等公民](../../../../../../../notes/architecture/core-design.md) · [plot-design §7 多坐标组合](../../../../../../viz/_notes/architecture/plot-design.md)
 
 ## 背景
 

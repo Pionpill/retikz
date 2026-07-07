@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   IRChild,
   IRCoordinate,
   IRNodeLabel,
@@ -9,9 +9,11 @@
   IRStepLabel,
   IRTarget,
 } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
+
+import { resolveFieldPath } from '@retikz/data';
 
 import type {
-  ExternalRow,
   MarkValueType,
   PlotTargetRef,
   RelationMark,
@@ -29,7 +31,6 @@ import {
   type MarkLoweringContext,
 } from '../../../contract';
 import { PlotMark, RelationGeometryKind } from '../../../schemas';
-import { resolveFieldPath } from '../../data';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,

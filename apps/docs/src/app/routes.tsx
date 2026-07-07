@@ -9,6 +9,7 @@ import { AppLayout } from './AppLayout';
 
 /** section + 它的首页 -> 完整 URL（无分组时跳过 sectionId 段） */
 const firstPageUrl = (moduleId: string, section: Section): string => {
+  if (section.document && section.id) return `/${moduleId}/${section.id}`;
   const firstPage = section.pages[0];
   return section.label && section.id ? `/${moduleId}/${section.id}/${firstPage.id}` : `/${moduleId}/${firstPage.id}`;
 };
@@ -21,10 +22,12 @@ const ModuleRedirect = () => {
   const { moduleId } = useParams<'moduleId'>();
   if (!moduleId || !modules.some(m => m.id === moduleId)) return <Navigate to="/" replace />;
   const sections = getSectionsByModule(moduleId);
-  if (sections.length === 0 || sections[0].pages.length === 0) {
+  if (sections.length === 0) return <Navigate to="/" replace />;
+  const firstSection = sections[0];
+  if (!firstSection.document && firstSection.pages.length === 0) {
     return <Navigate to="/" replace />;
   }
-  return <Navigate to={firstPageUrl(moduleId, sections[0])} replace />;
+  return <Navigate to={firstPageUrl(moduleId, firstSection)} replace />;
 };
 
 /**
@@ -44,7 +47,10 @@ const TwoSegResolver = () => {
   }
 
   const grouped = sections.find(s => s.label && s.id === firstSeg);
-  if (grouped) return <Navigate to={firstPageUrl(moduleId, grouped)} replace />;
+  if (grouped) {
+    if (grouped.document) return <DocPage />;
+    return <Navigate to={firstPageUrl(moduleId, grouped)} replace />;
+  }
 
   return <Navigate to={`/${moduleId}`} replace />;
 };

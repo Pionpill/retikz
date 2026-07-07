@@ -1,8 +1,8 @@
-﻿import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+import { DataRefSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
-import { DataRefSchema } from '../data';
 import { GuideSchema } from '../guide';
 import { BoxPaddingSchema, PlotLabelSchema, PlotLayoutSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';

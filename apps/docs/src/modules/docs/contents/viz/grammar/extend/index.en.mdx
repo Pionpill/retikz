@@ -1,48 +1,36 @@
 ---
 title: Extending
-description: Extend the graphics grammar by registering long-tail field parsing, channels, transforms, scales, coordinates, and marks into the same plot lowering flow.
+description: Extend the drawing grammar by registering long-tail channels, scales, coordinates, and marks into the same plot lowering flow.
 ---
 
-This group covers how to **extend** Plot's graphics grammar. The built-ins cover common charts; when you need a new field format, channel, statistical step, scale, coordinate projection, or mark, runtime-injected definitions reuse the same parsing, validation, and lowering flow as built-in capabilities.
+This group covers how to **extend** Plot's drawing grammar. The built-ins cover common charts; when you need a new channel, scale, coordinate projection, or mark, runtime-injected definitions reuse the same parsing, validation, and lowering flow as built-in plot capabilities.
+
+Data formats, field parsing, and data transforms belong to [Data Flow](/viz/data): custom field formats are documented under [Data Model](/viz/data/model), and custom transform / reducer / selector definitions are documented under [Data Transforms](/viz/data/transform). Plot can consume those data capabilities, but they are no longer part of this drawing-grammar extension group.
 
 > Extension definitions are host capabilities and do not enter Plot IR directly. The IR stores only serializable types, names, field bindings, and JSON config; functions, projections, evaluators, and lowerers are injected through `<Plot>` props or vanilla options.
 
 ## What each part covers
 
-| Topic              | Extends                                                   | Reach for it when                                                                                     |
-| ------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Custom Data        | Field formats and field parsing functions                 | Your source has values like `1.2万`, percentages, nested fields, or one-off parsing logic             |
-| Custom Channels    | Position / mark / scope / node / path channel definitions | You need a new `encoding.channels.<name>` that lands data on a custom visual surface                  |
-| Custom Transforms  | Transform, reducer, and selector definitions              | You need special statistics, row derivation, representative row selection, or cross-source processing |
-| Custom Marks       | Mark definitions                                          | You need a new geometry layer that projects rows through the frame and assembles core IR              |
-| Custom Scales      | Scale definitions and named color schemes                 | You need brand ramps, domain mappings, or value mappings beyond the built-in scales                   |
-| Custom Coordinates | Coordinate definitions                                    | You need new position roles, projections, custom axes, or special spaces                              |
+| Topic              | Extends                                                   | Reach for it when                                                                 |
+| ------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Custom Channels    | Position / mark / scope / node / path channel definitions | You need a new `encoding.channels.<name>` that lands data on a custom visual surface |
+| Custom Marks       | Mark definitions                                          | You need a new geometry layer that projects rows through the frame and assembles core IR |
+| Custom Scales      | Scale definitions and named color schemes                 | You need brand ramps, domain mappings, or value mappings beyond the built-in scales |
+| Custom Coordinates | Coordinate definitions                                    | You need new position roles, projections, custom axes, or special spaces          |
 
 ## Three Boundaries
 
-- **Data stays separate from IR**: real rows, parser functions, and evaluators do not enter IR; PlotSpec only records field contracts and serializable config.
+- **Data and drawing are separate layers**: real rows, parsers, and data transforms belong to Data Flow; PlotSpec records drawing-related field bindings and serializable config.
 - **Built-ins and custom definitions share one mechanism**: custom definitions do not use private patch points; they register, parse, validate, and consume through the same path as built-ins.
 - **Lowering still returns to core**: custom coordinates and marks can decide how geometry is generated, but the final output should still be core Node / Path / Coordinate / Scope primitives.
 
 ## In This Section
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/grammar/extend/data">
-    <span className="font-semibold">Custom Data</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register field formats or parse external rows with runtime functions.
-    </span>
-  </LinkedCard>
   <LinkedCard href="/viz/grammar/extend/channel">
     <span className="font-semibold">Custom Channels</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Declare new channel definitions and reuse the existing binding and delivery path.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/grammar/extend/transform">
-    <span className="font-semibold">Custom Transforms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register whole transforms or extend reducer / selector sub-operations.
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/grammar/extend/mark">

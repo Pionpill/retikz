@@ -1,6 +1,10 @@
-import { type AnyMarkDefinition, type AnyTransformDefinition, type TransformContext } from '../contract';
-import { createFieldCollector } from '../providers';
-import { collectMarkFields, collectTransformFields, resolveMarkRegistry, resolveTransformRegistry } from '../providers';
+﻿import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
+
+import { collectTransformFields } from '@retikz/data';
+
+import { type AnyMarkDefinition } from '../contract';
+import { collectMarkFields, resolveMarkRegistry, resolvePlotTransformRegistry } from '../providers';
+import { createFieldCollector } from '../providers/channel/shared';
 import { type MarkOperation, type PlotSpec, type TransformOperation } from '../schemas';
 
 const markTransformOf = (mark: MarkOperation): Array<TransformOperation> | undefined =>
@@ -9,7 +13,7 @@ const markTransformOf = (mark: MarkOperation): Array<TransformOperation> | undef
 /** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验。 */
 export const collectSourceFields = (
   spec: PlotSpec,
-  transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry(),
+  transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolvePlotTransformRegistry(),
   markRegistry: ReadonlyMap<string, AnyMarkDefinition> = resolveMarkRegistry(),
   transformContext?: TransformContext,
 ): Set<string> => {

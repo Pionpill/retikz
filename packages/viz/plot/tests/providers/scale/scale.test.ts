@@ -1,8 +1,8 @@
+import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../../src/providers';
 import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../../src/providers';
-import { coerceTimestamp, inferCategoryDomain } from '../../../src/providers';
 import { type ScaleOperation } from '../../../src/schemas';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。

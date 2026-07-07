@@ -1,6 +1,7 @@
 import type { IRCoordinate, IRTarget } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 
-import type { AnchorIdSpec, ExternalRow } from '../schemas';
+import type { AnchorIdSpec } from '../schemas';
 import type { MarkProvenance } from './provenance';
 
 export type AnchorIdGeneratorContext = {

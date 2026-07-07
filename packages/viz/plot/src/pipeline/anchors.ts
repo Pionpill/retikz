@@ -1,9 +1,11 @@
 import type { IRCoordinate } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
+
+import { resolveFieldPath } from '@retikz/data';
 
 import type { AnchorIdGenerator, AnchorOwner, AnchorRegistry } from '../contract';
-import type { AnchorIdSpec, ExternalRow } from '../schemas';
+import type { AnchorIdSpec } from '../schemas';
 
-import { resolveFieldPath } from '../providers';
 import { slug } from './provenance';
 
 const ownerText = (owner: AnchorOwner): string => {

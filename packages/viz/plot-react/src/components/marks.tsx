@@ -1,10 +1,5 @@
 ﻿import type {
-  AnchorIdSpec,
-  BlendModeStyle,
   BlendModeValue,
-  Channel,
-  ExternalRow,
-  IntervalBounds,
   IRAxisScale,
   IRBoundary,
   IRBoxSize,
@@ -15,6 +10,15 @@
   IRPathScale,
   IRShapeRef,
   JsonValue,
+  NodeTextAlignValue,
+  ShadowPresetValue,
+} from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
+import type {
+  AnchorIdSpec,
+  BlendModeStyle,
+  Channel,
+  IntervalBounds,
   MarkGeometryLabelInput,
   MarkNodeLabelInput,
   MarkValueType,
@@ -27,7 +31,6 @@
   NodeFontStyle,
   NodePositiveNumberStyle,
   NodeTextAlignStyle,
-  NodeTextAlignValue,
   PathClosure,
   PathCurveValue,
   PathFillRuleStyle,
@@ -50,7 +53,6 @@
   RelationPathSpecificOptions,
   RelationPrimitiveStyle,
   RelationRibbonOptions,
-  ShadowPresetValue,
   ShadowStyle,
   Transform,
 } from '@retikz/plot';

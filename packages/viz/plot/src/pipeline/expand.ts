@@ -1,39 +1,55 @@
-import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
+﻿import type { CompositeDefinition, IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
+import type {
+  AnyRowSelectorDefinition,
+  AnyStatisticsReducerDefinition,
+  AnyTransformDefinition,
+  FieldFormatDefinition,
+  ResolveField,
+  TransformContext,
+} from '@retikz/data';
+import type {
+  DataFieldTypeMap,
+  DataFieldTypeValue,
+  ExternalDatasets,
+  ExternalRow,
+} from '@retikz/data';
 
 import { defineComposite, JsonObjectSchema } from '@retikz/core';
+import { applyTransforms, DEFAULT_TRANSFORM_CONTEXT, tagSourceIndex } from '@retikz/data';
+import {
+  applyFieldResolver,
+  assertAllValuesValid,
+  normalizeRows,
+  resolveFieldPath,
+  resolveFieldTypes,
+  validateBoundData,
+} from '@retikz/data';
+import { collectFormatFields, resolveFormatRegistry } from '@retikz/data';
+import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
+import { DataFieldType,FieldOrderMode } from '@retikz/data';
 
 import type {
   AnchorIdGenerator,
   AnyChannelDefinition,
   AnyCoordinateDefinition,
   AnyMarkDefinition,
-  AnyRowSelectorDefinition,
   AnyScaleDefinition,
-  AnyStatisticsReducerDefinition,
-  AnyTransformDefinition,
   CoordinateFrame,
   DimensionRole,
-  FieldFormatDefinition,
   PositionScale,
-  ResolveField,
   ResolveLabel,
   TickSet,
-  TransformContext,
 } from '../contract';
 import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
   Channel,
   CoordinateOperation,
-  ExternalDatasets,
-  ExternalRow,
   Guide,
   IntervalMark,
   LegendChannelValue,
   LegendGuide,
   MarkOperation,
-  PlotFieldTypeMap,
-  PlotFieldTypeValue,
   PlotSpec,
   ScaleOperation,
   TransformOperation,
@@ -45,51 +61,37 @@ import type { DatumIdRegistrar, ProvenanceContext } from './provenance';
 import { isBuiltinScaleOperation } from '../contract';
 import { resolveAxisGuideTokens, resolveLegendGuideTokens, resolvePlotTheme } from '../providers';
 import {
-  applyFieldResolver,
-  applyTransforms,
-  assertAllValuesValid,
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   buildProportionalIntervals,
-  channelKindsForMark,
-  channelValue,
-  collectFormatFields,
   createPositionChannelDefinitions,
-  DEFAULT_TRANSFORM_CONTEXT,
   defaultOriginAxisTickSideOf,
   deriveScale,
   lowerMark,
   makeColorSchemeResolver,
-  normalizeRows,
   orderedCategoryDomain,
   proportionalIntervalDomainValues,
   resolveChannelRegistry,
   resolveCoordinateRegistry,
-  resolveFieldPath,
-  resolveFieldTypes,
-  resolveFormatRegistry,
   resolveGuideTicks,
   resolveIntervalBound,
   resolveLinearScale,
   resolveMarkChannels,
   resolveMarkRegistry,
+  resolvePlotTransformRegistry,
   resolvePositionScale,
-  resolveRowSelectorRegistry,
   resolveScaleRegistry,
   resolveSqrtScale,
-  resolveStatisticsReducerRegistry,
-  resolveTransformRegistry,
   scaleTicks,
-  validateBoundData,
 } from '../providers';
+import { channelValue } from '../providers/channel/shared';
+import { channelKindsForMark } from '../providers/mark';
 import { LegendSymbolFit } from '../schemas';
 import {
   AxisGridApplyTo,
-  FieldOrderMode,
   IntervalBoundKind,
   isBuiltinMark,
   PathClosureKind,
-  PlotFieldType,
   PlotGuide,
   PlotLayerZIndex,
   PlotMark,
@@ -100,7 +102,7 @@ import { createAnchorRegistry } from './anchors';
 import { lowerPlotLabels, resolveLabelReserve } from './decoration-layout';
 import { lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from './layout';
-import { createDatumIdRegistrar, rootMeta, slug, tagSourceIndex } from './provenance';
+import { createDatumIdRegistrar, rootMeta, slug } from './provenance';
 import { collectSourceFields } from './source-fields';
 
 /**
@@ -817,8 +819,8 @@ export type ResolveFrameParams = {
   node: PlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
-  /** 用户源字段 → PlotFieldTypeValue；供 type-driven scale 派生与兼容校验 */
-  fieldTypes: PlotFieldTypeMap;
+  /** 用户源字段 → DataFieldTypeValue；供 type-driven scale 派生与兼容校验 */
+  fieldTypes: DataFieldTypeMap;
   /** 整图宽（user units） */
   width: number;
   /** 整图高（user units） */
@@ -963,8 +965,8 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const roleFieldTypes = (
     role: DimensionRole,
     pick: (mark: MarkOperation) => Channel | undefined,
-  ): Array<PlotFieldTypeValue> => {
-    const types: Array<PlotFieldTypeValue> = [];
+  ): Array<DataFieldTypeValue> => {
+    const types: Array<DataFieldTypeValue> = [];
     for (const mark of node.marks) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
         continue;
@@ -1000,7 +1002,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const order = fieldOrders.get(channel.field);
       if (order === undefined || order === FieldOrderMode.Data) continue;
       const type = fieldTypes.get(channel.field);
-      if (type !== undefined && type !== PlotFieldType.Categorical) {
+      if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new Error(
           `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,
         );
@@ -1122,7 +1124,7 @@ const collectChannelDescriptors = (
   channelCtx: {
     node: PlotSpec;
     rows: Array<ExternalRow>;
-    fieldTypes: PlotFieldTypeMap;
+    fieldTypes: DataFieldTypeMap;
     scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
     resolveColorScheme: (name: string) => (t: number) => string;
     palette: ReturnType<typeof resolvePlotTheme>['palette'];
@@ -1204,7 +1206,7 @@ const niceNumericTicks = (
 
 const legendRampTickScale = (
   domain: readonly [number, number],
-  fieldType: PlotFieldTypeValue | undefined,
+  fieldType: DataFieldTypeValue | undefined,
 ): PositionScale => {
   const scale = resolveLinearScale({ domain: [domain[0], domain[1]] }, [], [0, 1]);
   return {
@@ -1212,7 +1214,7 @@ const legendRampTickScale = (
     domain: () => [domain[0], domain[1]],
     bandwidth: 0,
     ticks: count => scaleTicks(scale, count),
-    tickKind: fieldType === PlotFieldType.Temporal ? 'time' : 'number',
+    tickKind: fieldType === DataFieldType.Temporal ? 'time' : 'number',
     range: () => [0, 1],
     setRange: () => {},
   };
@@ -1548,7 +1550,7 @@ export const prepareRows = (
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
 ): {
-  fieldTypes: PlotFieldTypeMap;
+  fieldTypes: DataFieldTypeMap;
   normalized: Array<ExternalRow>;
   transformRegistry: Map<string, AnyTransformDefinition>;
   transformContext: TransformContext;
@@ -1556,7 +1558,7 @@ export const prepareRows = (
   markRegistry: Map<string, AnyMarkDefinition>;
 } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
+  const transformRegistry = resolvePlotTransformRegistry(options.transformDefinitions);
   const transformContext: TransformContext = {
     ...DEFAULT_TRANSFORM_CONTEXT,
     statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.statisticsReducerDefinitions),

@@ -9,13 +9,11 @@ const Demo: FC = () => (
     <PointMark x="region" y="orders" fill="#94a3b8" opacity={0.35} minimumSize={6} />
     <PointMark
       x="region"
-      y="totalOrders"
-      size="totalOrders"
+      y="orders"
+      size="orders"
       color="region"
-      label="region"
-      transform={[
-        { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'orders', as: 'totalOrders' }] },
-      ]}
+      label="rep"
+      transform={[{ kind: 'jitter', axis: 'y', yField: 'orders', amount: 1.2, seed: 12 }]}
     />
     <Axis dimension="x" />
     <Axis dimension="y" grid />

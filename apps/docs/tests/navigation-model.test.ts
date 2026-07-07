@@ -11,6 +11,7 @@ const sections: Array<Section> = [
   {
     id: 'guide',
     label: 'common.notFound',
+    document: true,
     pages: [
       {
         id: 'group',
@@ -28,6 +29,7 @@ describe('layout utils', () => {
   it('按 sidebar 顺序拍平叶子页', () => {
     expect(flattenLeaves('kernel', sections).map(node => node.path)).toEqual([
       '/kernel/intro',
+      '/kernel/guide',
       '/kernel/guide/group/a',
       '/kernel/guide/group/b',
     ]);
@@ -35,9 +37,10 @@ describe('layout utils', () => {
 
   it('构建 sidebar 分类并保留 ungrouped 标记', () => {
     const t = ((key: string) => key) as TFunction;
-    const categories = buildSidebarCategories(t, sections);
+    const categories = buildSidebarCategories(t, 'kernel', sections);
     expect(categories[0]?.ungrouped).toBe(true);
     expect(categories[1]?.value).toBe('guide');
+    expect(categories[1]?.path).toBe('/kernel/guide');
     expect(categories[1]?.modules[0]?.children?.map(child => child.value)).toEqual(['a', 'b']);
   });
 });

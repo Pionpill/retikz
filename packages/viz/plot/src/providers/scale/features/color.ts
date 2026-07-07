@@ -1,3 +1,5 @@
+﻿import { inferCategoryDomain } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import {
   scaleLinear as d3ScaleLinear,
@@ -22,14 +24,12 @@ import { defineScale } from '../../../contract';
 import {
   DivergingColorScaleSchema,
   OrdinalScaleSchema,
-  PlotFieldType,
   PlotScale,
   QuantileColorScaleSchema,
   QuantizeColorScaleSchema,
   SequentialColorScaleSchema,
   ThresholdColorScaleSchema,
 } from '../../../schemas';
-import { inferCategoryDomain } from '../../data';
 import {
   builtinColorSchemeInterpolator,
   DEFAULT_PLOT_COLORS,
@@ -286,7 +286,7 @@ export const discretizedBins = (
 
 /** 建 channel 取值用的数值序列：temporal 字段过 coerceTimestamp，其余取有限数。 */
 const numericValuesOf = (values: Array<unknown>, ctx: ChannelResolveContext): Array<number> => {
-  const toNumber = ctx.fieldType === PlotFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
+  const toNumber = ctx.fieldType === DataFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
   return values.map(toNumber).filter((value): value is number => value !== null);
 };
 
@@ -294,7 +294,7 @@ const continuousColorOf = (
   ctx: ChannelResolveContext,
   evaluate: ColorScaleEvaluator,
 ): ((value: unknown) => string | undefined) => {
-  const toNumber = ctx.fieldType === PlotFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
+  const toNumber = ctx.fieldType === DataFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
   return value => {
     const numeric = toNumber(value);
     return numeric === null ? undefined : evaluate(numeric);
@@ -321,7 +321,7 @@ const ordinalScaleDefinition = defineScale<OrdinalScale>({
   family: 'channel',
   schema: OrdinalScaleSchema,
   // ordinal 接分类与未知（旧 makeColorResolver 把 undefined 字段类型当分类走 ordinal）
-  isFieldCompatible: fieldType => fieldType === undefined || fieldType === PlotFieldType.Categorical,
+  isFieldCompatible: fieldType => fieldType === undefined || fieldType === DataFieldType.Categorical,
   resolve: (def, values, ctx) => {
     // range 缺省取 plot 默认调色板（与旧 withPlotColorRange 一致）；domain 缺省按数据序去重
     const withPalette: OrdinalScale =
@@ -341,7 +341,7 @@ const ordinalScaleDefinition = defineScale<OrdinalScale>({
 const sequentialScaleDefinition = defineScale<SequentialColorScale>({
   family: 'channel',
   schema: SequentialColorScaleSchema,
-  isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
+  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
   resolve: (def, values, ctx) => {
     const numeric = numericValuesOf(values, ctx);
     const themedDef = withSequentialTheme(def, ctx);
@@ -361,7 +361,7 @@ const divergingScaleDefinition = defineScale<DivergingColorScale>({
   family: 'channel',
   schema: DivergingColorScaleSchema,
   // diverging 中点对时间无意义 → 仅接连续数值，拒 temporal（与旧 makeColorResolver temporal+diverging fail-loud 对齐）
-  isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous,
+  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous,
   resolve: (def, values, ctx) => {
     const numeric = numericValuesOf(values, ctx);
     const themedDef = withDivergingTheme(def, ctx);
@@ -393,7 +393,7 @@ const discretizedResolution = (
 const quantizeScaleDefinition = defineScale<QuantizeColorScale>({
   family: 'channel',
   schema: QuantizeColorScaleSchema,
-  isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
+  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
   resolve: (def, values, ctx) => {
     const themedDef = withSequentialTheme(def, ctx);
     return discretizedResolution(
@@ -409,7 +409,7 @@ const quantizeScaleDefinition = defineScale<QuantizeColorScale>({
 const thresholdScaleDefinition = defineScale<ThresholdColorScale>({
   family: 'channel',
   schema: ThresholdColorScaleSchema,
-  isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
+  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
   resolve: (def, values, ctx) => {
     const themedDef = withSequentialTheme(def, ctx);
     return discretizedResolution(
@@ -425,7 +425,7 @@ const thresholdScaleDefinition = defineScale<ThresholdColorScale>({
 const quantileScaleDefinition = defineScale<QuantileColorScale>({
   family: 'channel',
   schema: QuantileColorScaleSchema,
-  isFieldCompatible: fieldType => fieldType === PlotFieldType.Continuous || fieldType === PlotFieldType.Temporal,
+  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
   resolve: (def, values, ctx) => {
     const themedDef = withSequentialTheme(def, ctx);
     return discretizedResolution(

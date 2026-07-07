@@ -1,6 +1,6 @@
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
-import { PlotFieldType } from '@retikz/plot';
+import { DataFieldType } from '@retikz/data';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
 const rows = [
@@ -14,10 +14,10 @@ const Demo: FC = () => (
   <Plot
     data={rows}
     model={[
-      { name: 'step', type: PlotFieldType.Continuous },
-      { name: 'up', type: PlotFieldType.Continuous },
-      { name: 'down', type: PlotFieldType.Continuous },
-      { name: 'both', type: PlotFieldType.Continuous },
+      { name: 'step', type: DataFieldType.Continuous },
+      { name: 'up', type: DataFieldType.Continuous },
+      { name: 'down', type: DataFieldType.Continuous },
+      { name: 'both', type: DataFieldType.Continuous },
     ]}
     width={420}
     height={250}

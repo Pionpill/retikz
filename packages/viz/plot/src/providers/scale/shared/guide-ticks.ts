@@ -1,11 +1,13 @@
+import type { ScalarValue } from '@retikz/data';
+
+import { coerceTimestamp } from '@retikz/data';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
 import type { PositionScale, TickSet } from '../../../contract';
-import type { GuideTickTimeUnitValue, ScalarValue } from '../../../schemas';
+import type { GuideTickTimeUnitValue } from '../../../schemas';
 
 import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../../schemas';
-import { coerceTimestamp } from '../../data';
 
 const MAX_INTERVAL_TICKS = 10_000;
 

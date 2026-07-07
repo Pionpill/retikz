@@ -1,4 +1,7 @@
+import type { ExternalRow } from '@retikz/data';
+
 import { type IRChild, type IRNode, type IRNodeLabel, type IRScope } from '@retikz/core';
+import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 import { arcEndPoint, isFiniteNumber } from '@retikz/math';
 
 import type {
@@ -15,19 +18,19 @@ import type {
   PositionScale,
 } from '../../../contract';
 import type { PolarCoordinateFrame } from '../../../contract';
-import type { ExternalRow, IntervalBound, IntervalMark, Mark } from '../../../schemas';
+import type { IntervalBound, IntervalMark, Mark } from '../../../schemas';
 import type { CartesianCoordinateFrame } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { IntervalBoundKind, PlotCoordinate, PlotMark } from '../../../schemas';
+import { channelValue } from '../../channel/shared';
 import {
   isCartesianCoordinateFrame,
   isGenericCoordinateFrame,
   isPolarCoordinateFrame,
   isTernary2DCoordinateFrame,
 } from '../../coordinate';
-import { channelValue, inferCategoryDomain, resolveFieldPath } from '../../data';
 import { cellGeometryNode, cellLayer } from '../private';
 import { channelForRole } from '../shared';
 import {

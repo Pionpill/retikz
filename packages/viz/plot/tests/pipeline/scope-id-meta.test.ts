@@ -1,13 +1,13 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
+import { SOURCE_INDEX } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
 import type { PlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { SOURCE_INDEX } from '../../src/pipeline/provenance';
 import { PlotSpecSchema } from '../../src/schemas';
 
 /**

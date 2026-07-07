@@ -1,4 +1,4 @@
-﻿import { BoxSpacingSchema, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
+import { BoxSpacingSchema, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { AxisScaleSchema, BoxSizeSchema } from '@retikz/core';
 import {

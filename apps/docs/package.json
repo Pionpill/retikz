@@ -14,6 +14,7 @@
   "dependencies": {
     "@mdx-js/mdx": "catalog:",
     "@retikz/core": "workspace:*",
+    "@retikz/data": "workspace:*",
     "@retikz/plot": "workspace:*",
     "@retikz/plot-react": "workspace:*",
     "@retikz/plot-vanilla": "workspace:*",

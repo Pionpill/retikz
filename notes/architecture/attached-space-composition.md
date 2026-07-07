@@ -1,7 +1,7 @@
 # 空间贴附与复用长期计划
 
 > **状态：长期计划，当前不实现。** 本文记录复杂复合可视化所需的底层能力，用于后续 core / plot 架构演进时对齐方向。
-> 关联：[`core-design.md`](./core-design.md) · `packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/decisions/v0/v0.1/alpha.14/09-composition-api-structure.md`。
+> 关联：[`core-design.md`](./core-design.md) · `packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/decisions/plot/v0/v0.1/alpha.14/09-composition-api-structure.md`。
 
 ---
 
