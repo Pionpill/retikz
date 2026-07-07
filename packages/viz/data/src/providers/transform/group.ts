@@ -12,6 +12,7 @@ import { resolveFieldPath } from '../data';
 import { applyReducerOperation, applySelectorOperation } from '../statistics';
 import { groupRowsByFields } from './shared';
 
+/** 对一组 rows 执行多个 reducer，并把每个 reducer 输出字段合并为同一行片段。 */
 export const applyReducerMetrics = (
   rows: Array<ExternalRow>,
   metrics: ReadonlyArray<ReducerOperation>,
@@ -22,12 +23,14 @@ export const applyReducerMetrics = (
   return out;
 };
 
+/** 从 selector operation 中取出可回填的数值字段；rank-only selector 返回 undefined。 */
 const selectorValueFieldOf = (selector: AnnotateSelector['selector']): string | undefined => {
   if (!('by' in selector)) return undefined;
   const field = selector.by;
   return typeof field === 'string' ? field : undefined;
 };
 
+/** 执行 annotate selector 并产出要广播到组内每一行的字段片段。 */
 const applySelectorAnnotations = (
   rows: Array<ExternalRow>,
   operation: AnnotateTransform,
@@ -44,7 +47,7 @@ const applySelectorAnnotations = (
   return out;
 };
 
-/** summarize：按 groupBy 分组并执行多个 reducer，每组输出一行。 */
+/** summarize transform：按 groupBy 分组并执行多个 reducer，每组输出一行。 */
 export const applySummarize = (
   rows: Array<ExternalRow>,
   operation: SummarizeTransform,
@@ -60,7 +63,7 @@ export const applySummarize = (
     ),
   );
 
-/** select：按 groupBy 分组并输出 selector 选中的原始行。 */
+/** select transform：按 groupBy 分组并输出 selector 选中的原始行。 */
 export const applySelect = (
   rows: Array<ExternalRow>,
   operation: SelectTransform,
@@ -73,7 +76,7 @@ export const applySelect = (
     })),
   );
 
-/** annotate：按 groupBy 分组，把 reducer 结果回填到组内每一行。 */
+/** annotate transform：按 groupBy 分组，把 reducer / selector 结果回填到组内每一行。 */
 export const applyAnnotate = (
   rows: Array<ExternalRow>,
   operation: AnnotateTransform,

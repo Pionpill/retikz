@@ -6,7 +6,7 @@ import { DataFieldType } from '../../schemas';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）
- * @description 先查 exact own key（归一化后的 canonical 行把逻辑名 `user.age` 写成扁平 key，须命中它而非下钻原始嵌套值），
+ * @description 先查 exact own key（归一化后的行把逻辑名 `user.age` 写成扁平 key，须命中它而非下钻原始嵌套值），
  *   未命中再按点路径下钻（原始嵌套数据 / MongoDB 文档）。两者兼容：原始行无字面点键时退化为纯下钻。
  */
 export const resolveFieldPath = (row: ExternalRow, path: string): unknown => {
@@ -19,7 +19,7 @@ export const resolveFieldPath = (row: ExternalRow, path: string): unknown => {
   return current;
 };
 
-/** 按字段路径比较两行（数值升序，否则字符串序）——line 的连接顺序 */
+/** 按字段路径比较两行；有限数值按数值升序比较，其余按字符串序比较。 */
 export const compareRowsByFieldPath = (a: ExternalRow, b: ExternalRow, path: string): number => {
   const va = resolveFieldPath(a, path);
   const vb = resolveFieldPath(b, path);
@@ -29,14 +29,17 @@ export const compareRowsByFieldPath = (a: ExternalRow, b: ExternalRow, path: str
 
 /**
  * 字段类型自动推断的内部采样上限。
- * @description 当前不支持外部自定义；需要稳定语义时应在 data.model 显式声明字段 type。
+ * @description 采样上限保证推断成本有界；需要稳定语义时应在 data.model 显式声明字段 type。
  */
 const MAX_SCAN_ROWS = 1000;
-/** 字段类型自动推断最多采集的可分类样本数；当前不支持外部自定义。 */
+/** 字段类型自动推断最多采集的非空样本数。 */
 const MAX_SAMPLE_VALUES = 100;
+/** 严格 ISO 日期字面量；用于 temporal 自动推断。 */
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+/** 带时间部分的 ISO 日期时间字面量；用于 temporal 自动推断。 */
 const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
+/** 判断字符串是否符合 data 层内置 temporal 自动推断的 ISO 日期 / 日期时间形态。 */
 export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(value) || ISO_DATETIME_RE.test(value);
 
 /**
@@ -84,7 +87,10 @@ export const inferFieldType = (rows: Array<ExternalRow>, path: string): DataFiel
       : DataFieldType.Categorical;
 };
 
-/** 把源字段解析成字段名到类型的映射，供 type-driven scale / coercion 消费。 */
+/**
+ * 解析源字段测量类型映射。
+ * @description data.model 声明时执行 strict 字段引用校验；字段未声明 type 时仍从绑定数据采样推断。
+ */
 export const resolveFieldTypes = (
   model: DataModel | undefined,
   rows: Array<ExternalRow>,

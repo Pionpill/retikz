@@ -2,7 +2,7 @@
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
   RowSelection,
-  StatisticsReducerContext,
+  TransformContext,
 } from '../../contract';
 
 import { extractStatisticOperation } from '../../contract';
@@ -13,7 +13,7 @@ import { BUILTIN_ROW_SELECTORS } from './selectors';
 export { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 export { BUILTIN_ROW_SELECTORS } from './selectors';
 
-/** 合并内置与自定义统计 reducer 定义，并检查 op 冲突。 */
+/** 合并内置与自定义统计 reducer 定义，并集中检查 op 冲突。 */
 export const resolveStatisticsReducerRegistry = (
   custom?: ReadonlyArray<AnyStatisticsReducerDefinition>,
 ): Map<string, AnyStatisticsReducerDefinition> => {
@@ -27,7 +27,7 @@ export const resolveStatisticsReducerRegistry = (
   return registry;
 };
 
-/** 合并内置与自定义 row selector 定义，并检查 op 冲突。 */
+/** 合并内置与自定义 row selector 定义，并集中检查 op 冲突。 */
 export const resolveRowSelectorRegistry = (
   custom?: ReadonlyArray<AnyRowSelectorDefinition>,
 ): Map<string, AnyRowSelectorDefinition> => {
@@ -41,11 +41,11 @@ export const resolveRowSelectorRegistry = (
   return registry;
 };
 
-/** 用定义 schema 收窄 reducer operation。 */
+/** 用 definition schema 收窄 reducer operation；调用 reduce 前必须先解析。 */
 const parseReducerOperation = (definition: AnyStatisticsReducerDefinition, operation: ReducerOperation): never =>
   definition.schema.parse(operation) as never;
 
-/** 用定义 schema 收窄 selector operation。 */
+/** 用 definition schema 收窄 selector operation；调用 select 前必须先解析。 */
 const parseSelectorOperation = (definition: AnyRowSelectorDefinition, operation: SelectorOperation): never =>
   definition.schema.parse(operation) as never;
 
@@ -95,11 +95,11 @@ export const reducerOutputFields = (
   return definition.outputFields?.(parseReducerOperation(definition, operation)) ?? [];
 };
 
-/** 对一组 rows 执行 reducer operation。 */
+/** 对一组 rows 执行 reducer operation，并允许 context 注入自定义 reducer registry。 */
 export const applyReducerOperation = (
   rows: Array<ExternalRow>,
   operation: ReducerOperation,
-  context: StatisticsReducerContext,
+  context: TransformContext,
 ): ExternalRow => {
   const registry = context.statisticsReducerRegistry ?? resolveStatisticsReducerRegistry();
   const definition = reducerDefinitionOf(operation, registry);
@@ -115,11 +115,11 @@ export const selectorInputFields = (
   return definition.inputFields?.(parseSelectorOperation(definition, operation)) ?? [];
 };
 
-/** 对一组 rows 执行 selector operation。 */
+/** 对一组 rows 执行 selector operation，并允许 context 注入自定义 selector registry。 */
 export const applySelectorOperation = (
   rows: Array<ExternalRow>,
   operation: SelectorOperation,
-  context: Pick<StatisticsReducerContext, 'rowSelectorRegistry'>,
+  context: Pick<TransformContext, 'rowSelectorRegistry'>,
 ): Array<RowSelection> => {
   const registry = context.rowSelectorRegistry ?? resolveRowSelectorRegistry();
   const definition = selectorDefinitionOf(operation, registry);

@@ -2,6 +2,7 @@
 
 import { DataFieldType, FieldOrderMode } from './constants';
 
+/** 字段解析格式名 schema；具体 parser 在运行时通过 FieldFormatDefinition registry 解析。 */
 export const FieldFormatSchema = z
   .string()
   .min(1)
@@ -9,6 +10,7 @@ export const FieldFormatSchema = z
     'Field value-parsing format name. It is resolved against the FieldFormatDefinition registry at lowering time; built-in and custom formats share the same lookup path',
   );
 
+/** 单个字段声明 schema；用于描述逻辑字段名、测量类型、格式和分类顺序。 */
 export const FieldDefSchema = z
   .strictObject({
     name: z.string().min(1).describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
@@ -32,12 +34,14 @@ export const FieldDefSchema = z
     'One field declaration: a field name, optionally its measurement type (inferred from data when omitted) and a declarative value-parsing format',
   );
 
+/** 数据模型 schema；IR 中可选携带，用于 strict 字段引用校验和 type-driven scale 派生。 */
 export const DataModelSchema = z
   .array(FieldDefSchema)
   .describe(
     'Optional external data field declarations. Declared names enable strict reference checking; declared types drive scale selection, while omitted types are inferred from the bound dataset.',
   );
 
+/** 数据引用 schema；IR 只记录外部数据集名称，不存储实际行数据。 */
 export const DataRefSchema = z
   .strictObject({
     reference: z
@@ -50,6 +54,7 @@ export const DataRefSchema = z
   })
   .describe('Data binding stored in the IR: a named dataset reference plus an optional model. Carries no data values.');
 
+/** 标量值 schema；字段路径叶子和常量 channel 共用的 JSON 值域。 */
 export const ScalarValueSchema = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
   .describe(

@@ -8,7 +8,7 @@ import { DataSortOrder, OutsideQuantileBandSelectorOperationSchema, RowSelectorT
 import { resolveFieldPath } from '../data';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
 
-/** 按 top/bottom 的第 N 名阈值处理边界并列行。 */
+/** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略。 */
 const selectTopBottomRows = (
   ranked: Array<ExternalRow>,
   operation: { by: string; n: number; tie?: RowSelectorTieValue },
@@ -32,7 +32,7 @@ const selectTopBottomRows = (
   return selected;
 };
 
-/** `min` selector：选择数值最小的原始行。 */
+/** min selector definition：选择数值最小的原始行。 */
 const minSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Min),
@@ -61,7 +61,7 @@ const minSelectorDefinition = defineRowSelector({
   },
 });
 
-/** `max` selector：选择数值最大的原始行。 */
+/** max selector definition：选择数值最大的原始行。 */
 const maxSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Max),
@@ -90,7 +90,7 @@ const maxSelectorDefinition = defineRowSelector({
   },
 });
 
-/** `first` selector：选择当前顺序或稳定排序后的首行。 */
+/** first selector definition：选择输入顺序或稳定排序后的首行。 */
 const firstSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.First),
@@ -106,7 +106,7 @@ const firstSelectorDefinition = defineRowSelector({
   },
 });
 
-/** `last` selector：选择当前顺序或稳定排序后的末行。 */
+/** last selector definition：选择输入顺序或稳定排序后的末行。 */
 const lastSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Last),
@@ -122,7 +122,7 @@ const lastSelectorDefinition = defineRowSelector({
   },
 });
 
-/** `top` selector：按数值字段选择前 N 行。 */
+/** top selector definition：按数值字段选择前 N 行。 */
 const topSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Top),
@@ -138,7 +138,7 @@ const topSelectorDefinition = defineRowSelector({
   },
 });
 
-/** `bottom` selector：按数值字段选择后 N 行。 */
+/** bottom selector definition：按数值字段选择后 N 行。 */
 const bottomSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Bottom),
@@ -154,7 +154,7 @@ const bottomSelectorDefinition = defineRowSelector({
   },
 });
 
-/** `nth` selector：按稳定排序选择指定零基下标行。 */
+/** nth selector definition：按稳定排序选择指定零基下标行。 */
 const nthSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Nth),
@@ -168,7 +168,7 @@ const nthSelectorDefinition = defineRowSelector({
   },
 });
 
-/** `outside-quantile-band` selector：选择参数化分位区间或 spread fence 外的原始行。 */
+/** outside-quantile-band selector definition：选择参数化分位区间或 spread fence 外的原始行。 */
 const outsideQuantileBandSelectorDefinition = defineRowSelector({
   schema: OutsideQuantileBandSelectorOperationSchema,
   inputFields: operation => [operation.field],
@@ -184,7 +184,7 @@ const outsideQuantileBandSelectorDefinition = defineRowSelector({
   },
 });
 
-/** 内置 row selector 定义集合。 */
+/** 内置 row selector 定义集合；内置与自定义 selector 共享同一 registry 分派流程。 */
 export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = [
   minSelectorDefinition,
   maxSelectorDefinition,

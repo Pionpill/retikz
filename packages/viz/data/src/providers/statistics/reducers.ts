@@ -16,7 +16,7 @@ import {
   valuesWithin,
 } from './helpers';
 
-/** `count` reducer：统计组内行数。 */
+/** count reducer definition：统计组内行数，不读取源字段。 */
 const countReducerDefinition = defineStatisticsReducer({
   schema: z.object({
     op: z.literal(ReducerOperationKind.Count),
@@ -26,7 +26,7 @@ const countReducerDefinition = defineStatisticsReducer({
   reduce: (rows, operation) => ({ [operation.as]: rows.length }),
 });
 
-/** `sum` reducer：对有限数值求和。 */
+/** sum reducer definition：读取一个数值字段并输出有限值之和。 */
 const sumReducerDefinition = defineStatisticsReducer({
   schema: z.object({
     op: z.literal(ReducerOperationKind.Sum),
@@ -40,7 +40,7 @@ const sumReducerDefinition = defineStatisticsReducer({
   }),
 });
 
-/** `mean` reducer：对有限数值求平均。 */
+/** mean reducer definition：读取一个数值字段并输出有限值平均数。 */
 const meanReducerDefinition = defineStatisticsReducer({
   schema: z.object({
     op: z.literal(ReducerOperationKind.Mean),
@@ -55,7 +55,7 @@ const meanReducerDefinition = defineStatisticsReducer({
   },
 });
 
-/** `median` reducer：计算有限数值中位数。 */
+/** median reducer definition：读取一个数值字段并输出有限值中位数。 */
 const medianReducerDefinition = defineStatisticsReducer({
   schema: z.object({
     op: z.literal(ReducerOperationKind.Median),
@@ -67,7 +67,7 @@ const medianReducerDefinition = defineStatisticsReducer({
   reduce: (rows, operation) => ({ [operation.as]: medianOf(finiteFieldValuesOf(rows, operation.field)) }),
 });
 
-/** `min` reducer：计算有限数值最小值。 */
+/** min reducer definition：读取一个数值字段并输出有限值最小值。 */
 const minReducerDefinition = defineStatisticsReducer({
   schema: z.object({
     op: z.literal(ReducerOperationKind.Min),
@@ -82,7 +82,7 @@ const minReducerDefinition = defineStatisticsReducer({
   },
 });
 
-/** `max` reducer：计算有限数值最大值。 */
+/** max reducer definition：读取一个数值字段并输出有限值最大值。 */
 const maxReducerDefinition = defineStatisticsReducer({
   schema: z.object({
     op: z.literal(ReducerOperationKind.Max),
@@ -97,7 +97,7 @@ const maxReducerDefinition = defineStatisticsReducer({
   },
 });
 
-/** `extent` reducer：输出有限数值的 `[min, max]` 范围。 */
+/** extent reducer definition：读取一个数值字段并输出有限值 `[min, max]` 范围。 */
 const extentReducerDefinition = defineStatisticsReducer({
   schema: z.object({
     op: z.literal(ReducerOperationKind.Extent),
@@ -112,7 +112,7 @@ const extentReducerDefinition = defineStatisticsReducer({
   },
 });
 
-/** `quantile` reducer：输出单个分位点。 */
+/** quantile reducer definition：读取一个数值字段并输出单个分位点。 */
 const quantileReducerDefinition = defineStatisticsReducer({
   schema: z.object({
     op: z.literal(ReducerOperationKind.Quantile),
@@ -127,7 +127,7 @@ const quantileReducerDefinition = defineStatisticsReducer({
   }),
 });
 
-/** `quantile-band` reducer：输出参数化分位区间及可选 whisker 字段。 */
+/** quantile-band reducer definition：读取一个数值字段并输出参数化分位区间及可选 whisker 字段。 */
 const quantileBandReducerDefinition = defineStatisticsReducer({
   schema: QuantileBandReducerOperationSchema,
   inputFields: operation => [operation.field],
@@ -185,7 +185,7 @@ const quantileBandReducerDefinition = defineStatisticsReducer({
   },
 });
 
-/** 内置统计 reducer 定义集合。 */
+/** 内置统计 reducer 定义集合；内置与自定义 reducer 共享同一 registry 分派流程。 */
 export const BUILTIN_STATISTICS_REDUCERS: ReadonlyArray<AnyStatisticsReducerDefinition> = [
   countReducerDefinition,
   sumReducerDefinition,

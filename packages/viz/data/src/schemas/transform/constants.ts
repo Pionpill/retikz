@@ -1,8 +1,8 @@
 ﻿import type { ValueOf } from '@retikz/core';
 
 /**
- * transform 类型关键字（暴露给用户；裸 `'sort'` 等字符串同样可用）
- * @description 数据变换 operation 的判别字段，成员里写 z.literal(DataTransform.x)。
+ * transform operation kind 关键字。
+ * @description 数据变换 operation 的判别字段；schema、provider definition 与 registry 诊断共用这些稳定取值。
  */
 export const DataTransform = {
   /** 按字段排序 */
@@ -15,19 +15,19 @@ export const DataTransform = {
   Annotate: 'annotate',
 } as const;
 
-/** transform 类型 */
+/** transform operation kind 取值。 */
 export type DataTransformValue = ValueOf<typeof DataTransform>;
 
-/** data 排序方向。 */
+/** data 排序方向关键字。 */
 export const DataSortOrder = {
   Ascending: 'ascending',
   Descending: 'descending',
 } as const;
 
-/** data 排序方向值。 */
+/** data 排序方向取值。 */
 export type DataSortOrderValue = ValueOf<typeof DataSortOrder>;
 
-/** 内置统计 reducer operation 关键字。 */
+/** 内置统计 reducer operation op 关键字。 */
 export const ReducerOperationKind = {
   Count: 'count',
   Sum: 'sum',
@@ -40,10 +40,10 @@ export const ReducerOperationKind = {
   QuantileBand: 'quantile-band',
 } as const;
 
-/** 内置统计 reducer operation 关键字值。 */
+/** 内置统计 reducer operation op 取值。 */
 export type ReducerOperationKindValue = ValueOf<typeof ReducerOperationKind>;
 
-/** 读取 numeric field 的内置统计 reducer operation 关键字。 */
+/** 读取 numeric field 的内置统计 reducer operation op 子集。 */
 export const FieldReducerOperationKind = {
   Sum: ReducerOperationKind.Sum,
   Mean: ReducerOperationKind.Mean,
@@ -53,10 +53,10 @@ export const FieldReducerOperationKind = {
   Extent: ReducerOperationKind.Extent,
 } as const;
 
-/** 读取 numeric field 的内置统计 reducer operation 关键字值。 */
+/** 读取 numeric field 的内置统计 reducer operation op 取值。 */
 export type FieldReducerOperationKindValue = ValueOf<typeof FieldReducerOperationKind>;
 
-/** 内置 row selector operation 关键字。 */
+/** 内置 row selector operation op 关键字。 */
 export const SelectorOp = {
   Min: 'min',
   Max: 'max',
@@ -68,34 +68,34 @@ export const SelectorOp = {
   OutsideQuantileBand: 'outside-quantile-band',
 } as const;
 
-/** 内置 row selector operation 关键字值。 */
+/** 内置 row selector operation op 取值。 */
 export type SelectorOpValue = ValueOf<typeof SelectorOp>;
 
-/** 按数值字段取极值的 row selector operation 关键字。 */
+/** 按数值字段取极值的 row selector operation op 子集。 */
 export const MinMaxSelectorOp = {
   Min: SelectorOp.Min,
   Max: SelectorOp.Max,
 } as const;
 
-/** 按数值字段取极值的 row selector operation 关键字值。 */
+/** 按数值字段取极值的 row selector operation op 取值。 */
 export type MinMaxSelectorOpValue = ValueOf<typeof MinMaxSelectorOp>;
 
-/** 按当前或显式顺序取行的 row selector operation 关键字。 */
+/** 按现有顺序或显式排序取行的 row selector operation op 子集。 */
 export const FirstLastSelectorOp = {
   First: SelectorOp.First,
   Last: SelectorOp.Last,
 } as const;
 
-/** 按当前或显式顺序取行的 row selector operation 关键字值。 */
+/** 按现有顺序或显式排序取行的 row selector operation op 取值。 */
 export type FirstLastSelectorOpValue = ValueOf<typeof FirstLastSelectorOp>;
 
-/** 按排序名次取行的 row selector operation 关键字。 */
+/** 按排序名次取行的 row selector operation op 子集。 */
 export const TopBottomSelectorOp = {
   Top: SelectorOp.Top,
   Bottom: SelectorOp.Bottom,
 } as const;
 
-/** 按排序名次取行的 row selector operation 关键字值。 */
+/** 按排序名次取行的 row selector operation op 取值。 */
 export type TopBottomSelectorOpValue = ValueOf<typeof TopBottomSelectorOp>;
 
 /** row selector 平局处理策略。 */
@@ -108,13 +108,13 @@ export const RowSelectorTie = {
 /** row selector 平局处理策略值。 */
 export type RowSelectorTieValue = ValueOf<typeof RowSelectorTie>;
 
-/** 内置 transform kind 集：供自定义 transform operation 排除内置判别串。 */
+/** 内置 transform kind 集合；供 external passthrough 排除内置判别串。 */
 export const BUILTIN_TRANSFORM_KINDS = new Set<string>(Object.values(DataTransform));
 
-/** 内置统计 reducer operation key 集合。 */
+/** 内置统计 reducer operation op 集合；供 external passthrough 排除内置判别串。 */
 export const BUILTIN_REDUCER_OPERATION_KINDS = new Set<string>(Object.values(ReducerOperationKind));
 
-/** 内置 row selector operation key 集合。 */
+/** 内置 row selector operation op 集合；供 external passthrough 排除内置判别串。 */
 export const BUILTIN_SELECTOR_OPS = new Set<string>(Object.values(SelectorOp));
 
 /** 已删除的旧 transform kind：不允许被 external passthrough 静默接住。 */

@@ -16,6 +16,7 @@ import {
   TopBottomSelectorOp,
 } from './constants';
 
+/** sort transform schema；稳定地按单个字段重排行，并保持相等键的原始顺序。 */
 export const SortTransformSchema = z
   .strictObject({
     kind: z.literal(DataTransform.Sort).describe('Discriminator: reorder rows by a field'),
@@ -24,11 +25,13 @@ export const SortTransformSchema = z
   })
   .describe('Sort transform: stable reorder of the data rows by one field');
 
+/** transform 分组键 schema；缺省或空数组表示全局单组。 */
 export const GroupBySchema = z
   .array(z.string().min(1))
   .optional()
   .describe('Grouping key fields; omitted or an empty array means all rows belong to one global group');
 
+/** row selector 排序规则 schema；用于 first / last / nth 等代表行选择。 */
 export const OrderBySchema = z
   .object({
     field: z.string().min(1).describe('Field path used to order rows'),
@@ -37,6 +40,7 @@ export const OrderBySchema = z
   .strict()
   .describe('Ordering rule used by row selectors');
 
+/** count reducer operation schema；只输出组内行数，不读取字段。 */
 const CountReducerOperationSchema = z
   .object({
     op: z.literal(ReducerOperationKind.Count).describe('Reducer discriminator: count rows in the group'),
@@ -45,6 +49,7 @@ const CountReducerOperationSchema = z
   .strict()
   .describe('Count reducer operation');
 
+/** 字段统计 reducer operation schema；覆盖 sum / mean / median / min / max / extent。 */
 const FieldReducerOperationSchema = z
   .object({
     op: z.enum(FieldReducerOperationKind).describe('Reducer discriminator: numeric group statistic'),
@@ -54,6 +59,7 @@ const FieldReducerOperationSchema = z
   .strict()
   .describe('Field reducer operation');
 
+/** quantile reducer operation schema；输出指定概率位置的单个分位点。 */
 const QuantileReducerOperationSchema = z
   .object({
     op: z.literal(ReducerOperationKind.Quantile).describe('Reducer discriminator: numeric quantile within the group'),
@@ -64,6 +70,7 @@ const QuantileReducerOperationSchema = z
   .strict()
   .describe('Quantile reducer operation');
 
+/** quantile-band reducer 额外分位点输出 schema。 */
 export const QuantileBandPointOutputSchema = z
   .object({
     p: z
@@ -76,6 +83,7 @@ export const QuantileBandPointOutputSchema = z
   .strict()
   .describe('Quantile-band point output');
 
+/** quantile-band reducer whisker 策略 schema。 */
 export const QuantileBandWhiskerSpecSchema = z
   .discriminatedUnion('kind', [
     z
@@ -100,6 +108,7 @@ export const QuantileBandWhiskerSpecSchema = z
   ])
   .describe('Quantile-band whisker strategy');
 
+/** quantile-band reducer 输出字段映射 schema；所有输出字段名必须唯一。 */
 export const QuantileBandOutputsSchema = z
   .object({
     lower: z.string().min(1).describe('Output field for the lower quantile band boundary'),
@@ -159,6 +168,7 @@ export const QuantileBandOutputsSchema = z
   })
   .describe('Quantile-band output field mapping');
 
+/** quantile-band reducer operation schema；用于一次计算区间、分位点、spread 与 whisker 派生字段。 */
 export const QuantileBandReducerOperationSchema = z
   .object({
     op: z
@@ -179,6 +189,7 @@ export const QuantileBandReducerOperationSchema = z
   })
   .describe('Quantile-band reducer operation');
 
+/** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 op，具体契约由运行时 definition 提供。 */
 const ExternalReducerOperationSchema = z
   .object({
     op: z
@@ -202,6 +213,7 @@ const ExternalReducerOperationSchema = z
   })
   .describe('Externally registered reducer operation validated by a runtime StatisticsReducerDefinition');
 
+/** 内置统计 reducer operation schema。 */
 export const BuiltinReducerOperationSchema = z
   .union([
     CountReducerOperationSchema,
@@ -211,10 +223,12 @@ export const BuiltinReducerOperationSchema = z
   ])
   .describe('Built-in statistic reducer operation');
 
+/** 统计 reducer operation schema；包含内置 op 与外部注册 op passthrough。 */
 export const ReducerOperationSchema = z
   .union([BuiltinReducerOperationSchema, ExternalReducerOperationSchema])
   .describe('Statistic reducer operation used by summarize, annotate, and host-defined transforms');
 
+/** 列出 reducer operation 产出的字段名及其 schema path，用于重复输出字段诊断。 */
 const reducerOutputFieldsOf = (
   operation: z.infer<typeof ReducerOperationSchema>,
 ): Array<{ field: string; path: Array<string | number> }> => {
@@ -246,6 +260,7 @@ const reducerOutputFieldsOf = (
   return [];
 };
 
+/** reducer metrics schema；同一 metrics 数组内的输出字段名必须唯一。 */
 export const ReducerMetricsSchema = z
   .array(ReducerOperationSchema)
   .min(1)
@@ -266,6 +281,7 @@ export const ReducerMetricsSchema = z
   })
   .describe('One or more reducer metrics; output field names must be unique within the transform');
 
+/** min / max selector operation schema；按数值字段选极值行。 */
 const MinMaxSelectorOperationSchema = z
   .object({
     op: z
@@ -277,6 +293,7 @@ const MinMaxSelectorOperationSchema = z
   .strict()
   .describe('Min/max row selector operation');
 
+/** first / last selector operation schema；按输入顺序或显式 orderBy 取首尾行。 */
 const FirstLastSelectorOperationSchema = z
   .object({
     op: z.enum(FirstLastSelectorOp).describe('Selector discriminator: choose the first or last row'),
@@ -289,6 +306,7 @@ const FirstLastSelectorOperationSchema = z
   .strict()
   .describe('First/last row selector operation');
 
+/** top / bottom selector operation schema；按数值字段排名并选择 N 行。 */
 const TopBottomSelectorOperationSchema = z
   .object({
     op: z.enum(TopBottomSelectorOp).describe('Selector discriminator: choose top or bottom N rows by a numeric field'),
@@ -299,6 +317,7 @@ const TopBottomSelectorOperationSchema = z
   .strict()
   .describe('Top/bottom row selector operation');
 
+/** nth selector operation schema；按显式 orderBy 选择零基下标行。 */
 const NthSelectorOperationSchema = z
   .object({
     op: z.literal(SelectorOp.Nth).describe('Selector discriminator: choose a zero-based ordered row index'),
@@ -308,6 +327,7 @@ const NthSelectorOperationSchema = z
   .strict()
   .describe('Nth row selector operation');
 
+/** outside-quantile-band selector 边界策略 schema。 */
 export const OutsideQuantileBandBoundarySpecSchema = z
   .discriminatedUnion('kind', [
     z
@@ -336,6 +356,7 @@ export const OutsideQuantileBandBoundarySpecSchema = z
   ])
   .describe('Outside quantile-band boundary strategy');
 
+/** outside-quantile-band selector operation schema；选择分位区间或 spread fence 外的原始行。 */
 export const OutsideQuantileBandSelectorOperationSchema = z
   .object({
     op: z
@@ -355,6 +376,7 @@ export const OutsideQuantileBandSelectorOperationSchema = z
   })
   .describe('Outside quantile-band row selector operation');
 
+/** 外部 row selector operation schema；只校验 JSON 形态和非内置 op，具体契约由运行时 definition 提供。 */
 const ExternalSelectorOperationSchema = z
   .object({
     op: z
@@ -378,6 +400,7 @@ const ExternalSelectorOperationSchema = z
   })
   .describe('Externally registered selector operation validated by a runtime RowSelectorDefinition');
 
+/** 内置 row selector operation schema。 */
 export const BuiltinSelectorOperationSchema = z
   .union([
     MinMaxSelectorOperationSchema,
@@ -388,10 +411,12 @@ export const BuiltinSelectorOperationSchema = z
   ])
   .describe('Built-in row selector operation');
 
+/** row selector operation schema；包含内置 op 与外部注册 op passthrough。 */
 export const SelectorOperationSchema = z
   .union([BuiltinSelectorOperationSchema, ExternalSelectorOperationSchema])
   .describe('Row selector operation used by select, annotate, and host-defined transforms');
 
+/** summarize transform schema；按 groupBy 分组并输出 reducer metrics 行。 */
 export const SummarizeTransformSchema = z
   .object({
     kind: z.literal(DataTransform.Summarize).describe('Discriminator: summarize groups into statistic rows'),
@@ -401,6 +426,7 @@ export const SummarizeTransformSchema = z
   .strict()
   .describe('Summarize transform: group rows and emit one row per group with reducer metric fields');
 
+/** select transform schema；按 groupBy 分组后输出 selector 选中的原始行。 */
 export const SelectTransformSchema = z
   .object({
     kind: z.literal(DataTransform.Select).describe('Discriminator: select representative source rows per group'),
@@ -413,6 +439,7 @@ export const SelectTransformSchema = z
     'Select transform: choose representative original rows per group while preserving source row fields and provenance',
   );
 
+/** annotate transform selector 回填配置 schema。 */
 export const AnnotateSelectorSchema = z
   .object({
     selector: SelectorOperationSchema.describe('Row selector applied to each group'),
@@ -421,6 +448,7 @@ export const AnnotateSelectorSchema = z
   .strict()
   .describe('Selector annotation operation broadcast to every source row in the group');
 
+/** annotate transform schema；保留输入行并追加 reducer / selector 派生字段。 */
 export const AnnotateTransformSchema = z
   .object({
     kind: z.literal(DataTransform.Annotate).describe('Discriminator: annotate each input row with group statistics'),
@@ -443,6 +471,7 @@ export const AnnotateTransformSchema = z
   })
   .describe('Annotate transform: preserve input rows and append group statistics or selector metadata');
 
+/** 内置 data transform schema；以 kind 判别 sort / summarize / select / annotate。 */
 export const BuiltinTransformSchema = z
   .discriminatedUnion('kind', [
     SortTransformSchema,
@@ -452,6 +481,7 @@ export const BuiltinTransformSchema = z
   ])
   .describe('Built-in data transform operation applied by the shared data pipeline');
 
+/** 外部 transform operation schema；只校验 JSON 形态和非保留 kind，具体契约由运行时 definition 提供。 */
 const ExternalTransformSchema = z
   .object({
     kind: z
@@ -479,10 +509,12 @@ const ExternalTransformSchema = z
     'Externally registered transform operation: kind is any non-reserved identifier; its config is validated at lowering time against the matching TransformDefinition supplied via options.transformDefinitions',
   );
 
+/** data transform operation schema；包含内置 kind 与外部注册 kind passthrough。 */
 export const TransformSchema = z
   .union([BuiltinTransformSchema, ExternalTransformSchema])
   .describe(
     'Data transform operation: built-in transform configs plus externally registered kind passthrough operations validated by a runtime TransformDefinition',
   );
 
+/** transform operation schema 的兼容别名；runtime definition 用它表达单个 operation 契约。 */
 export const TransformOperationSchema = TransformSchema;

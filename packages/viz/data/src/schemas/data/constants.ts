@@ -1,7 +1,7 @@
 ﻿import type { ValueOf } from '@retikz/core';
 
 /**
- * 字段类型关键字（暴露给用户；成员值即字段类型串，裸字面量 `'continuous'` 同样可用）
+ * 字段测量类型关键字。
  * @description 字段测量种类；驱动 lowering 的缺省推断、type-driven scale 选型与 guide 格式化。
  */
 export const DataFieldType = {
@@ -13,15 +13,18 @@ export const DataFieldType = {
   Temporal: 'temporal',
 } as const;
 
-/** 字段测量类型 */
+/** 字段测量类型取值。 */
 export type DataFieldTypeValue = ValueOf<typeof DataFieldType>;
 
-/** categorical field order modes. */
+/**
+ * 分类字段顺序策略。
+ * @description `data` 保留首次出现顺序；ascending / descending 对分类值排序；显式数组顺序由 schema 字段承载。
+ */
 export const FieldOrderMode = {
   Data: 'data',
   Ascending: 'ascending',
   Descending: 'descending',
 } as const;
 
-/** categorical field order mode value. */
+/** 分类字段顺序策略取值。 */
 export type FieldOrderModeValue = ValueOf<typeof FieldOrderMode>;
