@@ -1,11 +1,18 @@
 # @retikz/plot-vanilla
 
-Framework-free bindings for [`@retikz/plot`](../plot) — the Tier 2 grammar-of-graphics layer of retikz.
+Framework-free bindings and authoring helpers for [`@retikz/plot`](../plot) — the Tier 2 grammar-of-graphics layer of retikz.
 
-`renderPlot(spec, datasets, options?)` lowers a data-free Plot IR (plus an externally-supplied dataset)
-to core IR and renders it to an SVG string via [`@retikz/vanilla`](../../kernel/vanilla)'s
-`renderToSvgString` — zero DOM, suitable for SSR / build-time generation.
+`@retikz/plot` remains the source of truth for Plot IR schemas, extension contracts, and `lowerPlots`.
+This package provides two framework-free entrypoints:
+
+- `plotBuilder(config).build()` assembles a plain `PlotSpec` from chainable mark, guide, axis,
+  legend, facet, and scaffold helpers. Builder-only fields are expanded before `build()` returns
+  and do not enter Plot IR.
+- `renderPlot(spec, datasets, options?)` lowers a data-free Plot IR plus externally supplied
+  datasets to core IR, then renders it to an SVG string via
+  [`@retikz/vanilla`](../../kernel/vanilla)'s `renderToSvgString`.
 
 Data never enters the IR — it is injected at compile time via `lowerPlots`.
+Both entrypoints avoid DOM globals and are suitable for SSR / build-time generation.
 
 See the [retikz docs site](https://pionpill.github.io/retikz/) for usage.

@@ -6,6 +6,7 @@ import { lowerPlots, PlotSpecSchema } from '@retikz/plot';
 import { Text } from '@retikz/react';
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
+import { ZodError } from 'zod';
 
 import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../../src/components/guides';
@@ -437,6 +438,26 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
+  it('does not invoke unknown function components while collecting plot label children', () => {
+    const ThrowingWrapper: FC = () => {
+      throw new Error('wrapper component must not run during buildPlotSpec');
+    };
+
+    const spec = buildPlotSpec(
+      <>
+        <TitleLabel>
+          Monthly Revenue
+          <ThrowingWrapper />
+        </TitleLabel>
+        <PathMark x="month" y="revenue" />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.labels?.[0]).toMatchObject({ type: 'text', role: 'title', text: 'Monthly Revenue' });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
   it('rejects plot labels with both text prop and children', () => {
     expect(() =>
       buildPlotSpec(
@@ -460,10 +481,8 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(spec.marks).toHaveLength(1);
   });
 
-  it('无 mark 子节点 → marks 为空 → PlotSpecSchema(.min(1)) 拒绝', () => {
-    const spec = buildPlotSpec(<></>, '__plot');
-    expect(spec.marks).toHaveLength(0);
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+  it('无 mark 子节点 → buildPlotSpec fail-loud 抛 schema 错误', () => {
+    expect(() => buildPlotSpec(<></>, '__plot')).toThrow(ZodError);
   });
 
   // alpha.10：薄 Plot guide 装配（无默认 / 显式）

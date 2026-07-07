@@ -166,6 +166,11 @@ const withPlotTheme = (spec: PlotSpec, theme: PlotSpec['theme'] | undefined): Pl
   ...(theme !== undefined ? { theme } : {}),
 });
 
+const withPlotLayout = (spec: PlotSpec, layout: PlotSpec['layout'] | undefined): PlotSpec => ({
+  ...spec,
+  ...(layout !== undefined ? { layout } : {}),
+});
+
 const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
   for (const [key, child] of Object.entries(value)) {
@@ -216,7 +221,7 @@ const resolvePlotRuntime = (
   // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
-    spec = withPlotTheme(withPlotColors(props.spec, props.colors), props.theme);
+    spec = withPlotLayout(withPlotTheme(withPlotColors(props.spec, props.colors), props.theme), props.layout);
     datasets = props.data;
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
