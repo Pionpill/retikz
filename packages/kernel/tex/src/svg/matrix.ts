@@ -25,32 +25,47 @@ export const apply = (m: Matrix, x: number, y: number): [number, number] => [
 /**
  * 解析 SVG `transform` 属性值为单一矩阵（支持 translate / scale / matrix，按出现顺序左乘累积）
  * @description MathJax SVG 仅用 `scale(1,-1)`（全局 y 翻转）+ `translate(x,y)`（字形偏移）；matrix 一并支持兜底。
- *   无 / 空 → 单位阵。
+ *   无 / 空 → 单位阵。未知函数或 malformed 参数会抛错，由上层降级为 null，避免静默错位。
  */
 export const parseTransform = (value: string | undefined): Matrix => {
-  if (!value) return IDENTITY;
+  const source = value?.trim();
+  if (!source) return IDENTITY;
   let m: Matrix = IDENTITY;
-  const re = /(translate|scale|matrix)\s*\(([^)]*)\)/g;
+  const re = /([a-zA-Z][\w-]*)\s*\(([^)]*)\)/g;
   let hit: RegExpExecArray | null;
-  while ((hit = re.exec(value)) !== null) {
+  let cursor = 0;
+  while ((hit = re.exec(source)) !== null) {
+    if (source.slice(cursor, hit.index).trim().length > 0) {
+      throw new Error(`Unsupported SVG transform syntax: ${source}`);
+    }
     const fn = hit[1];
     const args = hit[2]
       .split(/[\s,]+/)
       .map(s => s.trim())
       .filter(s => s.length > 0)
       .map(Number);
-    if (args.some(Number.isNaN)) continue;
+    if (args.some(arg => !Number.isFinite(arg))) {
+      throw new Error(`Invalid SVG transform argument: ${hit[0]}`);
+    }
     let local: Matrix;
     if (fn === 'translate') {
+      if (args.length < 1 || args.length > 2) throw new Error(`Invalid translate transform: ${hit[0]}`);
       local = [1, 0, 0, 1, args[0] ?? 0, args[1] ?? 0];
     } else if (fn === 'scale') {
+      if (args.length < 1 || args.length > 2) throw new Error(`Invalid scale transform: ${hit[0]}`);
       const sx = args[0] ?? 1;
       local = [sx, 0, 0, args[1] ?? sx, 0, 0];
-    } else {
-      if (args.length < 6) continue;
+    } else if (fn === 'matrix') {
+      if (args.length !== 6) throw new Error(`Invalid matrix transform: ${hit[0]}`);
       local = [args[0], args[1], args[2], args[3], args[4], args[5]];
+    } else {
+      throw new Error(`Unsupported SVG transform: ${fn}`);
     }
     m = multiply(m, local);
+    cursor = re.lastIndex;
+  }
+  if (source.slice(cursor).trim().length > 0) {
+    throw new Error(`Unsupported SVG transform syntax: ${source}`);
   }
   return m;
 };

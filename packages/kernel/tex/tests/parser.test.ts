@@ -122,6 +122,21 @@ describe('[parse-svg] parseMathJaxSvg', () => {
     expect(parseMathJaxSvg('<svg><path d="M0 0"></path></svg>', 14)).toBeNull();
   });
 
+  it('未知 transform 不静默按 identity 解析', () => {
+    const s = '<svg viewBox="0 0 100 100"><g transform="rotate(90)"><path d="M0 0 L5 0"></path></g></svg>';
+    expect(parseMathJaxSvg(s, 1000)).toBeNull();
+  });
+
+  it('transform 参数为 NaN 时返回 null', () => {
+    const s = '<svg viewBox="0 0 100 100"><g transform="translate(foo,20)"><path d="M0 0 L5 0"></path></g></svg>';
+    expect(parseMathJaxSvg(s, 1000)).toBeNull();
+  });
+
+  it('matrix transform 参数不足时返回 null', () => {
+    const s = '<svg viewBox="0 0 100 100"><g transform="matrix(1 0 0)"><path d="M0 0 L5 0"></path></g></svg>';
+    expect(parseMathJaxSvg(s, 1000)).toBeNull();
+  });
+
   it('空（无 path）→ 合法零尺寸结果（非 null）', () => {
     const r = parseMathJaxSvg('<svg viewBox="0 0 0 0"></svg>', 14);
     expect(r).not.toBeNull();
