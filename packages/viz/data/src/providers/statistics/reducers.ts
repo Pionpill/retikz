@@ -122,7 +122,9 @@ const quantileReducerDefinition = defineStatisticsReducer({
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
-  reduce: (rows, operation) => ({ [operation.as]: quantileOf(finiteFieldValuesOf(rows, operation.field), operation.p) }),
+  reduce: (rows, operation) => ({
+    [operation.as]: quantileOf(finiteFieldValuesOf(rows, operation.field), operation.p),
+  }),
 });
 
 /** `quantile-band` reducer：输出参数化分位区间及可选 whisker 字段。 */

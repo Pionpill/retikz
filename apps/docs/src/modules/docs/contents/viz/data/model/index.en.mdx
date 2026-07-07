@@ -36,12 +36,12 @@ Field types and default inference:
 
 Customize `model` when you need to override inference, parse non-default storage formats, or make the config self-describing without the data. Each field declaration can contain:
 
-| Field    | Purpose                                                                                                       |
-| -------- | ------------------------------------------------------------------------------------------------------------- |
-| `name`   | logical field name, also the name referenced by marks / transforms                                            |
-| `type`   | measurement type; omitted fields are inferred from data                                                       |
+| Field    | Purpose                                                                                |
+| -------- | -------------------------------------------------------------------------------------- |
+| `name`   | logical field name, also the name referenced by marks / transforms                     |
+| `type`   | measurement type; omitted fields are inferred from data                                |
 | `format` | declarative parsing format, such as `slashDate` / `percent`; see Parsing Formats below |
-| `order`  | category order for categorical fields                                                                         |
+| `order`  | category order for categorical fields                                                  |
 
 The side-by-side demo below uses one funnel dataset. The left chart has no `model`, so numeric `stage` is inferred as a continuous x axis. The right chart declares `stage` as categorical, and parses percent strings into continuous values with `format: 'percent'`.
 

@@ -75,7 +75,8 @@ export const irJsonOverrides: Record<string, string | undefined> = import.meta.g
   },
 );
 
-export const buildKey = (segments: Array<string>, name: string) => `../../contents/${segments.join('/')}/${name}.demo.tsx`;
+export const buildKey = (segments: Array<string>, name: string) =>
+  `../../contents/${segments.join('/')}/${name}.demo.tsx`;
 export const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
   `../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
 export const buildSourceFileKey = (segments: Array<string>, filename: string) =>

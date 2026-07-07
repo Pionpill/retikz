@@ -11,12 +11,12 @@ v0 是 retikz 走向 1.0 前的验证期：证明它可以成为一个实用的�
 
 ## 版本主题
 
-| 版本 | 主题 | 说明 |
-| --- | --- | --- |
-| v0.1 | 架构确认，基础能力 | 确立 core IR、Scene primitives、React DSL、Node / Path / Coordinate 基础、箭头、标签、填充、相对定位、文档站结构与第一条稳定发布线。 |
-| v0.2 | 能力完善，支持扩展 | 补齐 Scope、样式继承、shape registry、结构化 target、Layout 命名、path shape sugar、paint resources、文本换行、pin、自定义箭头、path generator、path transform、marking、clipping、viewBox override、partway positioning 等能力。 |
+| 版本 | 主题                           | 说明                                                                                                                                                                                                                                                      |
+| ---- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.1 | 架构确认，基础能力             | 确立 core IR、Scene primitives、React DSL、Node / Path / Coordinate 基础、箭头、标签、填充、相对定位、文档站结构与第一条稳定发布线。                                                                                                                      |
+| v0.2 | 能力完善，支持扩展             | 补齐 Scope、样式继承、shape registry、结构化 target、Layout 命名、path shape sugar、paint resources、文本换行、pin、自定义箭头、path generator、path transform、marking、clipping、viewBox override、partway positioning 等能力。                         |
 | v0.3 | renderer 架构 + runtime + 交互 | renderer 拆分进 `@retikz/render`（子路径 `./svg` / `./canvas`）、新增 `@retikz/vanilla` 原生 runtime、React 双渲染模式、水合（SVG + Canvas 统一事件绑定）、Tier 2 支撑（可注册 composite 展开管线，`@retikz/plot` 为首个消费者）、时间轴动画（alpha.4）。 |
-| v1+ | 领域包与更广生态 | plot（已起步，独立 `plot/` 版本线）/ graph / flow / math / advanced shape packs、更多 renderer / adapter、工具链与编辑体验放到核心契约稳定之后。 |
+| v1+  | 领域包与更广生态               | plot（已起步，独立 `plot/` 版本线）/ graph / flow / math / advanced shape packs、更多 renderer / adapter、工具链与编辑体验放到核心契约稳定之后。                                                                                                          |
 
 ## 参考来源
 

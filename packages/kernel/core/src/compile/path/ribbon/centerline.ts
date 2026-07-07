@@ -1,5 +1,7 @@
 import type { Vector2 } from '@retikz/math';
 
+import { point, vector2 } from '@retikz/math';
+
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../../contract';
 import type { IRPath, IRPosition, IRRibbonDirection, IRStep } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
@@ -7,6 +9,7 @@ import type { NamespaceStack } from '../../namespace';
 import type { TextMeasurer } from '../../text';
 import type { RibbonEmitOptions, RibbonSegment, RibbonSegmentInput } from './types';
 
+import { isPositionTuple } from '../../../shared';
 import {
   arcSegmentSample,
   cubicSegmentSample,
@@ -14,9 +17,8 @@ import {
   lineSegmentSample,
   polar,
   quadSegmentSample,
-  vector2,
 } from '../../../shared/geometry';
-import { emitPathPrimitive } from '../emit';
+import { emitPathPrimitive } from '../stroke';
 
 const LENGTH_SUBDIVISIONS = 16;
 
@@ -34,41 +36,19 @@ const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRP
   throw new Error(`Ribbon centerline command "${command.kind}" has no current point; start with a move step.`);
 };
 
-/** 两个 IR 点之间的欧氏距离。 */
-export const distance = (a: IRPosition, b: IRPosition): number => {
-  const dx = b[0] - a[0];
-  const dy = b[1] - a[1];
-  return Math.hypot(dx, dy);
-};
-
-/** 从 origin 沿单位方向前进指定长度。 */
-export const pointOnDirection = (origin: IRPosition, direction: Vector2, length: number): IRPosition => [
-  origin[0] + direction[0] * length,
-  origin[1] + direction[1] * length,
-];
-
-/** 从 origin 沿单位方向反向退回指定长度。 */
-export const pointAgainstDirection = (origin: IRPosition, direction: Vector2, length: number): IRPosition => [
-  origin[0] - direction[0] * length,
-  origin[1] - direction[1] * length,
-];
-
 /** 校验并归一化 ribbon 方向向量；零向量或非有限值直接报错。 */
 export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
-  const length = Math.hypot(vector[0], vector[1]);
-  if (!Number.isFinite(length) || length <= 0) {
+  const normalized = vector2.normalizeOrNull(vector);
+  if (normalized === null) {
     throw new Error(`Ribbon ${source} direction must be a finite nonzero vector.`);
   }
-  return [vector[0] / length, vector[1] / length];
+  return normalized;
 };
-
-/** 由切线求左法线（屏幕坐标系下保持统一方向）。 */
-export const normalOf = (tangent: Vector2): Vector2 => [-tangent[1], tangent[0]];
 
 /** 把端点切线翻到与参考切线同侧，避免首尾横截面左右侧反转。 */
 export const alignTangentNormal = (tangent: Vector2, reference: Vector2): Vector2 => {
-  const normal = normalOf(tangent);
-  const referenceNormal = normalOf(reference);
+  const normal = vector2.normal(tangent);
+  const referenceNormal = vector2.normal(reference);
   return normal[0] * referenceNormal[0] + normal[1] * referenceNormal[1] < 0 ? [-tangent[0], -tangent[1]] : tangent;
 };
 
@@ -109,7 +89,7 @@ export const directionToTangent = (
   if (typeof direction === 'number') {
     return vector2.fromAngleDegrees(direction);
   }
-  if (Array.isArray(direction)) {
+  if (isPositionTuple(direction)) {
     return normalizeVector(vector2.fromPosition(direction), source);
   }
   try {
@@ -127,18 +107,15 @@ export const estimateLength = (sampleAt: (t: number) => SegmentSample): number =
   let prev = sampleAt(0).point;
   for (let i = 1; i <= LENGTH_SUBDIVISIONS; i += 1) {
     const curr = sampleAt(i / LENGTH_SUBDIVISIONS).point;
-    total += distance(prev, curr);
+    total += point.distance(prev, curr);
     prev = curr;
   }
   return total;
 };
 
-/** 判断采样点是否为有限坐标。 */
-export const finitePoint = (p: IRPosition): boolean => Number.isFinite(p[0]) && Number.isFinite(p[1]);
-
 /** 控制柄长度兜底：退化控制点用兜底长度，避免端点方向覆盖时生成零柄。 */
 export const controlHandleLength = (anchor: IRPosition, control: IRPosition, fallback: number): number => {
-  const handle = distance(anchor, control);
+  const handle = point.distance(anchor, control);
   return handle > 0 ? handle : fallback;
 };
 
@@ -165,7 +142,7 @@ export const commandsToSegmentInputs = (
       case 'line': {
         const from = assertCursor(cursor, command);
         const to = command.to;
-        if (distance(from, to) > 0) inputs.push({ kind: 'line', from, to });
+        if (point.distance(from, to) > 0) inputs.push({ kind: 'line', from, to });
         cursor = to;
         break;
       }
@@ -263,19 +240,19 @@ const segmentToSampler = ({
   }
   if (input.kind === 'quad') {
     if ((isFirst && endpointTangents.start) || (isLast && endpointTangents.end)) {
-      const fallback = distance(input.from, input.to) / 3;
+      const fallback = point.distance(input.from, input.to) / 3;
       const control1Length = (controlHandleLength(input.from, input.control, fallback) * 2) / 3;
       const control2Length = (controlHandleLength(input.to, input.control, fallback) * 2) / 3;
       const control1 =
         isFirst && endpointTangents.start
-          ? pointOnDirection(input.from, endpointTangents.start, control1Length)
+          ? point.along(input.from, endpointTangents.start, control1Length)
           : ([
               input.from[0] + ((input.control[0] - input.from[0]) * 2) / 3,
               input.from[1] + ((input.control[1] - input.from[1]) * 2) / 3,
             ] satisfies IRPosition);
       const control2 =
         isLast && endpointTangents.end
-          ? pointAgainstDirection(input.to, endpointTangents.end, control2Length)
+          ? point.against(input.to, endpointTangents.end, control2Length)
           : ([
               input.to[0] + ((input.control[0] - input.to[0]) * 2) / 3,
               input.to[1] + ((input.control[1] - input.to[1]) * 2) / 3,
@@ -285,18 +262,14 @@ const segmentToSampler = ({
     return (t: number): SegmentSample => quadSegmentSample(input.from, input.control, input.to, t);
   }
   if (input.kind === 'cubic') {
-    const fallback = distance(input.from, input.to) / 3;
+    const fallback = point.distance(input.from, input.to) / 3;
     const control1 =
       isFirst && endpointTangents.start
-        ? pointOnDirection(
-            input.from,
-            endpointTangents.start,
-            controlHandleLength(input.from, input.control1, fallback),
-          )
+        ? point.along(input.from, endpointTangents.start, controlHandleLength(input.from, input.control1, fallback))
         : input.control1;
     const control2 =
       isLast && endpointTangents.end
-        ? pointAgainstDirection(input.to, endpointTangents.end, controlHandleLength(input.to, input.control2, fallback))
+        ? point.against(input.to, endpointTangents.end, controlHandleLength(input.to, input.control2, fallback))
         : input.control2;
     return (t: number): SegmentSample => cubicSegmentSample(input.from, control1, control2, input.to, t);
   }

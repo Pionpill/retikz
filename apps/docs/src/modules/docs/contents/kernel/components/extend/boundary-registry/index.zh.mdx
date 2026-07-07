@@ -15,12 +15,12 @@ Boundary Registry 和 [自定义形状](/kernel/components/extend/shape-registry
 
 除了 `shape` 这个保留值，其他 `boundary` 名字会先查 Boundary Registry；如果找不到，再 fallback 到 Shape Registry。这个 fallback 保留了旧能力：你仍然可以写 `boundary="ellipse"` 让一个矩形节点按椭圆连线。但新的推荐写法是：只负责连接面的逻辑放进 `BoundaryDefinition`。
 
-| 写法 | 查找顺序 | 适用场景 |
-| --- | --- | --- |
-| 不写 / `shape` | 节点视觉 shape | 默认行为 |
-| `circle` / `rectangle` / `ellipse` | 内置 boundary provider | 复用常见连接面 |
-| 自定义名字 | boundary provider → shape fallback | 业务端口、语义连接面 |
-| `{ type, params }` | 同上，并把 params 传给 provider | 带参数的连接面 |
+| 写法                               | 查找顺序                           | 适用场景             |
+| ---------------------------------- | ---------------------------------- | -------------------- |
+| 不写 / `shape`                     | 节点视觉 shape                     | 默认行为             |
+| `circle` / `rectangle` / `ellipse` | 内置 boundary provider             | 复用常见连接面       |
+| 自定义名字                         | boundary provider → shape fallback | 业务端口、语义连接面 |
+| `{ type, params }`                 | 同上，并把 params 传给 provider    | 带参数的连接面       |
 
 `boundary` 仍然是 JSON-safe 的 IR 字段；`BoundaryDefinition` 含函数，不进入 IR。
 
@@ -28,12 +28,12 @@ Boundary Registry 和 [自定义形状](/kernel/components/extend/shape-registry
 
 一个连接面只负责“线接在哪里”和“这个连接面有哪些锚点”。它不参与节点尺寸计算，也不绘制任何图元；这些仍然由节点自己的 `shape` 负责。
 
-| 字段 | 作用 | 必填 · 可选 |
-| --- | --- | --- |
-| `name` | Registry key；IR 的 `boundary` 通过它引用 provider | 必填 |
-| `paramsSchema` | zod schema；编译期校验 `boundary.params` | 必填 |
-| `boundaryPoint` | 从节点中心朝 `toward` 发射射线时，返回连线应停下的点 | 必填 |
-| `anchor` | 返回具名锚点坐标；未知名字返回 `undefined` | 可选 |
+| 字段            | 作用                                                 | 必填 · 可选 |
+| --------------- | ---------------------------------------------------- | ----------- |
+| `name`          | Registry key；IR 的 `boundary` 通过它引用 provider   | 必填        |
+| `paramsSchema`  | zod schema；编译期校验 `boundary.params`             | 必填        |
+| `boundaryPoint` | 从节点中心朝 `toward` 发射射线时，返回连线应停下的点 | 必填        |
+| `anchor`        | 返回具名锚点坐标；未知名字返回 `undefined`           | 可选        |
 
 `rect` 是节点视觉 shape 已经算好的外接框，包含中心点、宽高和可选旋转；`params` 是 `paramsSchema` 校验后的纯 JSON 对象。连接面不重新决定节点大小，所以不会有 `circumscribe` / `emit`。
 
@@ -71,9 +71,7 @@ const horizontalPorts: BoundaryDefinition = defineBoundary({
   name: 'horizontal-ports',
   paramsSchema: z.strictObject({}),
   boundaryPoint: (rect, toward) => {
-    return toward[0] < rect.x
-      ? [rect.x - rect.width / 2, rect.y]
-      : [rect.x + rect.width / 2, rect.y];
+    return toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y];
   },
   anchor: (rect, name) => {
     if (name === 'input') return [rect.x - rect.width / 2, rect.y];

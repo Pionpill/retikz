@@ -1,18 +1,13 @@
 import type { Vector2 } from '@retikz/math';
 
+import { point } from '@retikz/math';
+
 import type { IRPosition, IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 
 import { resolvePosition } from '../../position';
 
 const ARC_CAP_POINT_COUNT = 8;
-
-/** 端帽辅助距离计算。 */
-const distance = (a: IRPosition, b: IRPosition): number => {
-  const dx = b[0] - a[0];
-  const dy = b[1] - a[1];
-  return Math.hypot(dx, dy);
-};
 
 export type RoundedArcPointsInput = {
   center: IRPosition;
@@ -46,7 +41,7 @@ export const roundedArcPoints = ({
   if (midpointDot(alternateDelta) > midpointDot(delta)) {
     delta = alternateDelta;
   }
-  const radius = distance(center, from);
+  const radius = point.distance(center, from);
   const points: Array<IRPosition> = [];
   for (let i = 1; i <= ARC_CAP_POINT_COUNT; i += 1) {
     const angle = start + (delta * i) / ARC_CAP_POINT_COUNT;
@@ -101,8 +96,8 @@ export const arcCapPoints = ({
     throw new Error(`Ribbon ${endpoint} arc cap center could not be resolved.`);
   }
   const center: IRPosition = [round(resolvedCenter[0]), round(resolvedCenter[1])];
-  assertArcCapRadius({ actual: distance(center, from), expected: cap.radius, endpoint, side: 'first' });
-  assertArcCapRadius({ actual: distance(center, to), expected: cap.radius, endpoint, side: 'second' });
+  assertArcCapRadius({ actual: point.distance(center, from), expected: cap.radius, endpoint, side: 'first' });
+  assertArcCapRadius({ actual: point.distance(center, to), expected: cap.radius, endpoint, side: 'second' });
 
   const start = Math.atan2(from[1] - center[1], from[0] - center[0]);
   const end = Math.atan2(to[1] - center[1], to[0] - center[0]);

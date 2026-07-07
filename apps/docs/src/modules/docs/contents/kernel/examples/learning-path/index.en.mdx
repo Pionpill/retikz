@@ -137,11 +137,11 @@ The last target is the node id `'data-scientist'`, which retikz auto-anchors to 
 
 The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge label in one pass. It is there to add character, not to change the structure, so it belongs at the end.
 
-| Decoration                     | Draw config                                                    | way operators                                                                                        |
-| ------------------------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Cyan dashed recommended path   | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 consecutive `{ curve }` infix; a `{ label: 'recommended' }` prefix attaches the label to segment 1 |
+| Decoration                      | Draw config                                                    | way operators                                                                                        |
+| ------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Cyan dashed recommended path    | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 consecutive `{ curve }` infix; a `{ label: 'recommended' }` prefix attaches the label to segment 1 |
 | "more bottom" short dashed (×2) | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[4,4]}` | way `[start, end]` — just two coordinates                                                            |
-| Red X decoration (×2 crossing) | `stroke="#ff0000"` + `strokeWidth={4}`                         | Same as top                                                                                        |
+| Red X decoration (×2 crossing)  | `stroke="#ff0000"` + `strokeWidth={4}`                         | Same as top                                                                                          |
 
 ```tsx
 <Draw
@@ -173,7 +173,7 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 | [Draw](/kernel/components/draw/overview)      | All 12 connectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
 | [Way operators](/kernel/components/draw/way)  | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                    | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
 | [Node](/kernel/components/node/overview)      | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                             | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
-| [AtPosition](/kernel/concepts/basic/position) | Tight intra-stack stacking (`{ direction: 'bottom', of: prevId }` + global `nodeDistance`)                                                                                        | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
+| [AtPosition](/kernel/concepts/basic/position) | Tight intra-stack stacking (`{ direction: 'bottom', of: prevId }` + global `nodeDistance`)                                                                                       | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
 
 ## Limitations
 

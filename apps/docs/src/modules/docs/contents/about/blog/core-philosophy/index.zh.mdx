@@ -50,20 +50,20 @@ IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输�
 
 底层是 **Step**，12 种 kind 覆盖全部路径动作：
 
-| kind          | 参数                                                                 | 语义                                                    |
-| ------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
-| `move`        | `to`                                                                 | 移动游标，不绘制                                        |
-| `line`        | `to`, `label?`                                                       | 直线                                                    |
-| `step`        | `via`, `to`, `label?`                                                | 折角（一个直角中间点）                                  |
-| `cycle`       | —                                                                    | 闭合回起点                                              |
-| `curve`       | `to`, `control`, `label?`                                            | 二次 Bézier                                             |
-| `cubic`       | `to`, `control1`, `control2`, `label?`                               | 三次 Bézier                                             |
-| `bend`        | `to`, `bendDirection?` / `outAngle?` `inAngle?`, `looseness?`        | 弧线简记（bend 角或 out/in 角，支持自环；编译为 cubic） |
-| `arc`         | `startAngle`, `endAngle`, `radius`（数字或 `{ x, y }`）, `center?` | 圆 / 椭圆弧（默认游标为圆心，可显式 `center`）          |
-| `circlePath`  | `radius`, `startAngle?`, `endAngle?`, `closed?`                      | 整圆或部分弧（chord / sector / open）                   |
-| `ellipsePath` | `radius`, `startAngle?`, `endAngle?`, `closed?`          | 整椭圆或部分弧                                          |
-| `rectangle`   | `from`, `to`, `cornerRadius?`                                        | 轴对齐矩形（两对角，自包含）                            |
-| `generator`   | `name`, `to?`, `params`                                              | 委托内置或注册的路径生成器（内置 parabola，自定义 sin…） |
+| kind          | 参数                                                               | 语义                                                     |
+| ------------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
+| `move`        | `to`                                                               | 移动游标，不绘制                                         |
+| `line`        | `to`, `label?`                                                     | 直线                                                     |
+| `step`        | `via`, `to`, `label?`                                              | 折角（一个直角中间点）                                   |
+| `cycle`       | —                                                                  | 闭合回起点                                               |
+| `curve`       | `to`, `control`, `label?`                                          | 二次 Bézier                                              |
+| `cubic`       | `to`, `control1`, `control2`, `label?`                             | 三次 Bézier                                              |
+| `bend`        | `to`, `bendDirection?` / `outAngle?` `inAngle?`, `looseness?`      | 弧线简记（bend 角或 out/in 角，支持自环；编译为 cubic）  |
+| `arc`         | `startAngle`, `endAngle`, `radius`（数字或 `{ x, y }`）, `center?` | 圆 / 椭圆弧（默认游标为圆心，可显式 `center`）           |
+| `circlePath`  | `radius`, `startAngle?`, `endAngle?`, `closed?`                    | 整圆或部分弧（chord / sector / open）                    |
+| `ellipsePath` | `radius`, `startAngle?`, `endAngle?`, `closed?`                    | 整椭圆或部分弧                                           |
+| `rectangle`   | `from`, `to`, `cornerRadius?`                                      | 轴对齐矩形（两对角，自包含）                             |
+| `generator`   | `name`, `to?`, `params`                                            | 委托内置或注册的路径生成器（内置 parabola，自定义 sin…） |
 
 挑这 12 个是反复砍出来的——TikZ 原生几十条 path 动作，绝大多数能由这 12 种组合表达。kind 多了 LLM 学习成本涨、新增 adapter 实现成本涨；少了 sugar 层兜不住。
 

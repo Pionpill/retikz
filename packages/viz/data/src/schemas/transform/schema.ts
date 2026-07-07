@@ -294,10 +294,7 @@ const TopBottomSelectorOperationSchema = z
     op: z.enum(TopBottomSelectorOp).describe('Selector discriminator: choose top or bottom N rows by a numeric field'),
     by: z.string().min(1).describe('Numeric field used for ranking'),
     n: z.number().int().positive().describe('Number of rows selected per group'),
-    tie: z
-      .enum(RowSelectorTie)
-      .optional()
-      .describe('Tie-breaking strategy around the Nth row; default first'),
+    tie: z.enum(RowSelectorTie).optional().describe('Tie-breaking strategy around the Nth row; default first'),
   })
   .strict()
   .describe('Top/bottom row selector operation');
@@ -446,9 +443,13 @@ export const AnnotateTransformSchema = z
   })
   .describe('Annotate transform: preserve input rows and append group statistics or selector metadata');
 
-
 export const BuiltinTransformSchema = z
-  .discriminatedUnion('kind', [SortTransformSchema, SummarizeTransformSchema, SelectTransformSchema, AnnotateTransformSchema])
+  .discriminatedUnion('kind', [
+    SortTransformSchema,
+    SummarizeTransformSchema,
+    SelectTransformSchema,
+    AnnotateTransformSchema,
+  ])
   .describe('Built-in data transform operation applied by the shared data pipeline');
 
 const ExternalTransformSchema = z

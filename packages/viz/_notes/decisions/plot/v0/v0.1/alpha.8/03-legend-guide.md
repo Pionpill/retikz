@@ -10,13 +10,13 @@ alpha.7 把全部非位置通道（color / size / opacity / shape）收口成真
 
 legend 是 GoG 一等 guide（plot-design §3.9）：与 axis 并列、由 scale 派生、最终 lowering 成 core Node/Path/Scope。不同 scale 形态对应不同 legend 形态：
 
-| scale | legend 形态 |
-|---|---|
-| ordinal（分类色）/ shape | 离散 swatch 列表（色块/形状 + 标签） |
-| sequential / diverging（连续色） | 连续色带 ramp + 刻度 |
-| quantize / threshold / quantile | 分箱 swatch（每档一块 + 区间标签） |
-| size | 梯度符号（graduated symbols：几个代表性大小圈 + 值） |
-| opacity | 梯度透明度条 |
+| scale                            | legend 形态                                          |
+| -------------------------------- | ---------------------------------------------------- |
+| ordinal（分类色）/ shape         | 离散 swatch 列表（色块/形状 + 标签）                 |
+| sequential / diverging（连续色） | 连续色带 ramp + 刻度                                 |
+| quantize / threshold / quantile  | 分箱 swatch（每档一块 + 区间标签）                   |
+| size                             | 梯度符号（graduated symbols：几个代表性大小圈 + 值） |
+| opacity                          | 梯度透明度条                                         |
 
 四个评审 P1/P2 要点必须在本 ADR 钉死：
 
@@ -56,11 +56,11 @@ export const LegendChannel = { Color: 'color', Size: 'size', Opacity: 'opacity',
 // lower/channel.ts —— 概念伪码（resolver 双产出）
 export type ScaleDescriptor = {
   channel: LegendChannelType;
-  scaleType: ScaleType;                 // 'ordinal' | 'sequential' | 'sqrt' | 'quantize' …
+  scaleType: ScaleType; // 'ordinal' | 'sequential' | 'sqrt' | 'quantize' …
   domain: ReadonlyArray<number | string>;
   range: ReadonlyArray<number | string>; // 色串 / 半径 / 不透明度 / shape 名
-  field?: string;                        // 绑定字段（legend 标题缺省）
-  fieldType?: FieldType;                 // 标签 formatter 选型（决策 ⑨）
+  field?: string; // 绑定字段（legend 标题缺省）
+  fieldType?: FieldType; // 标签 formatter 选型（决策 ⑨）
 };
 // makeSizeResolver(...) → { of: SizeOf, descriptor: ScaleDescriptor }（domain=[0,maxPositive], range=[MIN,MAX]_RADIUS）
 ```
@@ -87,7 +87,6 @@ export type ScaleDescriptor = {
   - **P2 legend.scale 类型守卫**：`legend.scale` 此前只校验存在、不校验是 color scale，`scale: 'x'`（位置 linear）会落空 ordinal 出空图例。已加 `COLOR_SCALE_TYPES` 守卫——color legend 绑非颜色 scale（位置 linear/band/point/time/log/pow/sqrt）即 fail-loud（了结原 adversarial 第一关 legend.scale WARNING，不再 backlog）。
 - **占位落地为固定带宽**：决策 ⑩ 写「`estimateLabelWidth` + swatch 尺寸估」，实际 `legendReserveOf` 用固定 `LEGEND_BAND_EXTENT` 在对应边预留，不按标签长度估——长标签可能溢出（plot-design §13.1 允许）。后续可按标签宽细化。
 - **ramp 刻度域取配置 domain（contract-audit W2 修）**：连续 ramp 的取色 / 刻度域显式 `domain` 优先（sequential `[min,max]`、diverging `[low,high]`），与实绘取色同基准；缺省回退数据 extent。早期曾固定取数据 extent，致显式 domain 时图例刻度与颜色错位，已修 + 回归测试。
-
 
 ## 不在本 ADR 范围
 

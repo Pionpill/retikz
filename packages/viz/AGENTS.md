@@ -4,12 +4,12 @@
 
 ## 当前包
 
-| 包 | 职责 |
-| --- | --- |
-| `@retikz/data` | viz 通用数据层：数据模型、字段解析、数据通道基础、transform schema / definition / registry / apply pipeline |
-| `@retikz/plot` | Tier 2 GoG 可视化层：Plot IR、scale / coordinate / mark / guide、plot lowering；数据层能力来自 `@retikz/data` |
-| `@retikz/plot-react` | plot 的 React adapter，把 props / children 组装成 plot spec 并交给底层 lowering |
-| `@retikz/plot-vanilla` | plot 的 framework-free / SSR adapter |
+| 包                     | 职责                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `@retikz/data`         | viz 通用数据层：数据模型、字段解析、数据通道基础、transform schema / definition / registry / apply pipeline   |
+| `@retikz/plot`         | Tier 2 GoG 可视化层：Plot IR、scale / coordinate / mark / guide、plot lowering；数据层能力来自 `@retikz/data` |
+| `@retikz/plot-react`   | plot 的 React adapter，把 props / children 组装成 plot spec 并交给底层 lowering                               |
+| `@retikz/plot-vanilla` | plot 的 framework-free / SSR adapter                                                                          |
 
 未来的 chart / table / geo 等边界只在 ADR 或 roadmap 明确后落包；AGENTS 不为未存在包保留详细规则。
 

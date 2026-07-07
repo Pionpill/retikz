@@ -31,13 +31,13 @@ root scope 是 `localNamespace`（alpha.1 就位）。core 语义（[scope schem
 
 ### 命名与绑定层级（§8.1）
 
-| 下沉元素 | core 落点 | id（句柄）| meta（来源标签，仅 `provenance` 开时写）|
-|---|---|---|---|
-| **root** | 外层 `Scope`（`localNamespace`，已有）| `Scope.id = node.id`（外部句柄，**现状即绑**）| `{ source:'plot', dataReference }` |
-| **mark 层** | 每 mark 一个图层 `Scope` | 用户给 `mark.id` → `<plotId>.<markId>`；缺省合成 `<plotId>.mark.<markIndex>` | `{ source:'plot', layer:'mark', mark:<type>, markIndex }` |
-| **series（仅 line/area）** | 每条 series 一条 `Path`（现状结构）| `<plotId>.series.<seriesValueSlug>` | `{ …, series:<value> }`（写在 `Path.meta`）|
-| **datum**（opt-in）| 可见 mark 的 `Node`（point / interval / sector）| `<plotId>.datum.<idFieldValue>`（配 `datumIdField` 时）| 见下「datum 来源标识」（per-datum，`provenance` 开时）|
-| **guide 层** | 轴 / 网格 `Scope`（`guide.id` 已绑）| 用户 `guide.id`（仅 **axis** 层）→ `<plotId>.<guideId>`；缺省 / **grid** 层 → `<plotId>.<axis\|grid>.<dimension>`（grid 恒用结构 id，避免与 axis 的用户句柄撞） | `{ source:'plot', layer:'axis'\|'grid', dimension }` |
+| 下沉元素                   | core 落点                                        | id（句柄）                                                                                                                                                      | meta（来源标签，仅 `provenance` 开时写）                  |
+| -------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **root**                   | 外层 `Scope`（`localNamespace`，已有）           | `Scope.id = node.id`（外部句柄，**现状即绑**）                                                                                                                  | `{ source:'plot', dataReference }`                        |
+| **mark 层**                | 每 mark 一个图层 `Scope`                         | 用户给 `mark.id` → `<plotId>.<markId>`；缺省合成 `<plotId>.mark.<markIndex>`                                                                                    | `{ source:'plot', layer:'mark', mark:<type>, markIndex }` |
+| **series（仅 line/area）** | 每条 series 一条 `Path`（现状结构）              | `<plotId>.series.<seriesValueSlug>`                                                                                                                             | `{ …, series:<value> }`（写在 `Path.meta`）               |
+| **datum**（opt-in）        | 可见 mark 的 `Node`（point / interval / sector） | `<plotId>.datum.<idFieldValue>`（配 `datumIdField` 时）                                                                                                         | 见下「datum 来源标识」（per-datum，`provenance` 开时）    |
+| **guide 层**               | 轴 / 网格 `Scope`（`guide.id` 已绑）             | 用户 `guide.id`（仅 **axis** 层）→ `<plotId>.<guideId>`；缺省 / **grid** 层 → `<plotId>.<axis\|grid>.<dimension>`（grid 恒用结构 id，避免与 axis 的用户句柄撞） | `{ source:'plot', layer:'axis'\|'grid', dimension }`      |
 
 **series 只在 line/area 有结构落点（P1 评审修正）**：现 lowering 对 point/interval/sector **按 color 分子 Scope（样式分层），不按 `mark.series` 分**（[colorGroupedScope](../../../../../../plot/src/providers/mark/shared/common.ts)）；只有 line/area 多系列才是「每 series 一条 Path」（[path mark provider](../../../../../../plot/src/providers/mark/features/path.ts)）。故 v0.1：
 
@@ -109,7 +109,6 @@ meta = {
 - **provenance 启用判定收口在 expand**：`provenance / datumProvenance / datumIdField` 任一开即启用（后两者蕴含 provenance），统一在 `expandPlot` 判定。
 - **guide id 默认形 + axis-only 用户句柄**：见上表 guide 行（用户 `guide.id` 仅挂 axis 层、grid 恒结构 id）。
 - **datum-id 注册器提升到 plot 级（cross-review 修复）**：原实现每 mark 各自建注册器，同图多个 datum-bearing mark（如 point + bar）+ 同 `datumIdField` 会各自生成 `<plotId>.datum.<值>` → 同命名空间撞 id。改为 **plot 级共享注册器**（`expandPlot` 建一次、贯穿所有 mark），跨 mark 重复 id 同样 **fail loud**（与单 mark 内重复一致）——一个 plot 内多 datum mark 想绑 id 须用不同字段/值消歧。
-
 
 ## 不在本 ADR 范围
 

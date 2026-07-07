@@ -9,9 +9,7 @@ import { ellipseShape, rectangle } from '../../src/providers/shape';
 const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
 const registry = [rectangle, ellipseShape];
 
-const resolveContext = (
-  overrides: Partial<ResolveBoundaryContext> = {},
-): ResolveBoundaryContext => ({
+const resolveContext = (overrides: Partial<ResolveBoundaryContext> = {}): ResolveBoundaryContext => ({
   visualDef: rectangle,
   visualRect,
   visualParams: {},

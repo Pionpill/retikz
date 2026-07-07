@@ -63,7 +63,6 @@ type AxisGuideSpec = {
 3. 顶层 `coordinate` 作为 shorthand 保留，可以让现有单图 spec 不需要整体迁移；但多 scope 场景统一走 `composition`，避免双真源。
 4. `placement` 只保留最小判别外形，具体 `panel` 排布、`overlay` 轴侧、`track` 带宽和共享 scaffold 在后续 ADR 中定义，避免 ADR-01 过早把 polar 或 facet 细节写死。
 
-
 ## 不在本 ADR 范围
 
 - 不定义 facet row / column、panel key、空 panel、共享 / 独立 domain 策略。

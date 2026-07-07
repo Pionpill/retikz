@@ -1,6 +1,13 @@
 import type { ExternalRow, TransformContext } from '@retikz/data';
 
-import { applyReducerOperation, applySelectorOperation, finiteFieldValuesOf, groupRowsByFields, ReducerOperationKind, resolveFieldPath } from '@retikz/data';
+import {
+  applyReducerOperation,
+  applySelectorOperation,
+  finiteFieldValuesOf,
+  groupRowsByFields,
+  ReducerOperationKind,
+  resolveFieldPath,
+} from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 

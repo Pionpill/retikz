@@ -85,10 +85,7 @@ export const flattenLeaves = (moduleId: string, sections: Array<Section>): Array
   return acc;
 };
 
-const mapSidebarChildren = (
-  t: TFunction,
-  children?: Array<SubPage>,
-): Array<SidebarSubModuleData> | undefined =>
+const mapSidebarChildren = (t: TFunction, children?: Array<SubPage>): Array<SidebarSubModuleData> | undefined =>
   children?.map(child => ({
     value: child.id,
     label: t(child.label),

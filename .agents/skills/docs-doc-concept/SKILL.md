@@ -14,21 +14,21 @@ description: retikz 概念页规范：`apps/docs/src/contents/<module>/concepts/
 
 不归本 skill：
 
-| 页 | 去哪 |
-| --- | --- |
+| 页                                                                         | 去哪                                                                                                       |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | 分组落地页（带 children，如 `concepts/design`、`concepts/basic-concepts`） | [`docs-doc-group`](../docs-doc-group/SKILL.md)——它们是「职责一览表 + LinkedCard 子项」骨架，不是概念叶子页 |
-| 入口页（`introduction` / `get-start`） | `docs-doc-principle` 的「入口页例外」节 |
-| 配图的 `stroke="none"` / 配色 / y 轴 / 双语拆分等画法 | [`docs-figure-draw`](../docs-figure-draw/SKILL.md) |
+| 入口页（`introduction` / `get-start`）                                     | `docs-doc-principle` 的「入口页例外」节                                                                    |
+| 配图的 `stroke="none"` / 配色 / y 轴 / 双语拆分等画法                      | [`docs-figure-draw`](../docs-figure-draw/SKILL.md)                                                         |
 
 ## 定位
 
 概念页讲**抽象概念 / 心智模型 / 架构**——读者不是来查 API，是来「搞懂这套模型怎么运作、什么时候该用哪一层」。与其它 section 的边界：
 
-| Section | 服务什么 |
-| --- | --- |
-| `components/` | 单组件 API 字典 + 该组件的 demo |
-| `examples/` | 多组件组合成完整图，按 step 教 |
-| `reference/` | schema 字段查询入口 |
+| Section                 | 服务什么                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| `components/`           | 单组件 API 字典 + 该组件的 demo                                                       |
+| `examples/`             | 多组件组合成完整图，按 step 教                                                        |
+| `reference/`            | schema 字段查询入口                                                                   |
 | `concepts/`（本 skill） | 模块的抽象概念 / 心智模型 / 架构（core: 坐标系·anchor·分层；plot: scale·encoding；…） |
 
 **不是**什么：
@@ -41,12 +41,12 @@ description: retikz 概念页规范：`apps/docs/src/contents/<module>/concepts/
 
 概念页**不绑定 core 的术语**。动笔前先识别**当前模块的核心模型**，再用它组织页面——同一套写法服务所有模块：
 
-| 模块类型 | 概念页重点 | 该模块的内部模型（示例） |
-| --- | --- | --- |
-| core / 基础绘图 | 图元、坐标、关系、渲染链路 | Node / Path / Anchor、IR / Scene / compile |
-| plot / 图表语义 | 数据到视觉的映射 | scale / domain / encoding / mark / axis / lowering |
-| renderer / runtime | 输出目标与执行行为 | backend / animation / hydration / measurement |
-| 扩展 / composite | 上层抽象如何下沉到底层能力 | lowering / adapter / registry |
+| 模块类型           | 概念页重点                 | 该模块的内部模型（示例）                           |
+| ------------------ | -------------------------- | -------------------------------------------------- |
+| core / 基础绘图    | 图元、坐标、关系、渲染链路 | Node / Path / Anchor、IR / Scene / compile         |
+| plot / 图表语义    | 数据到视觉的映射           | scale / domain / encoding / mark / axis / lowering |
+| renderer / runtime | 输出目标与执行行为         | backend / animation / hydration / measurement      |
+| 扩展 / composite   | 上层抽象如何下沉到底层能力 | lowering / adapter / registry                      |
 
 本 skill 后文出现的 IR / Scene / Sugar / Kernel / anchor 等都是 **core 语境下的举例**，不是规则本身——换模块时替换成该模块对应的模型词。
 
@@ -56,14 +56,14 @@ description: retikz 概念页规范：`apps/docs/src/contents/<module>/concepts/
 
 概念页**没有固定段序**（不像示例页的 6 段）；按概念拆 H2，顺序因主题而异。下面是一份**推荐小节菜单**——按需取用、不强凑：
 
-| 小节类型 | 作用 | 语料里的例子 |
-| --- | --- | --- |
-| 总览 / 一张图看懂 | 开篇给一张全局图或职责框架表 | `primitive-model` 的「一张图看懂」、`layers` 的 hero 管线图 |
-| 子概念分节 | 每个 H2 讲一个子概念 | `coordinate-system` 的 笛卡尔 / 极坐标 / user units / viewBox |
-| 选择 / 决策 | 帮读者在变体间选 | 「怎么选择」「选择建议」「什么时候手写 viewBox」 |
-| 边界 / 区别 | 和相邻概念划清界限 | `composite`「与 Sugar 的区别」、`primitive-model`「和扩展形状的关系」 |
-| 约束 / 陷阱 | 易错点、硬性要求 | `position`「前向引用要求」、`animation`「触发与降级」 |
-| 延伸阅读 | LinkedCard 网格收尾 | `layers`「延伸阅读」 |
+| 小节类型          | 作用                         | 语料里的例子                                                          |
+| ----------------- | ---------------------------- | --------------------------------------------------------------------- |
+| 总览 / 一张图看懂 | 开篇给一张全局图或职责框架表 | `primitive-model` 的「一张图看懂」、`layers` 的 hero 管线图           |
+| 子概念分节        | 每个 H2 讲一个子概念         | `coordinate-system` 的 笛卡尔 / 极坐标 / user units / viewBox         |
+| 选择 / 决策       | 帮读者在变体间选             | 「怎么选择」「选择建议」「什么时候手写 viewBox」                      |
+| 边界 / 区别       | 和相邻概念划清界限           | `composite`「与 Sugar 的区别」、`primitive-model`「和扩展形状的关系」 |
+| 约束 / 陷阱       | 易错点、硬性要求             | `position`「前向引用要求」、`animation`「触发与降级」                 |
+| 延伸阅读          | LinkedCard 网格收尾          | `layers`「延伸阅读」                                                  |
 
 开头约定：
 
@@ -88,22 +88,22 @@ H2 进右侧 TOC；同一概念下的细分点用 H3。
 
 概念页**优先用能解释模型的图**，多数是 `<ComponentPreview hideCode>` 自绘的叙述插图（看懂概念，不是复制源码）。但 `hideCode` 不是死规则，按图的性质定：
 
-| 图的性质 | hideCode | 例 |
-| --- | --- | --- |
-| 架构 / 模型 / 流程图 | 默认 `true`（隐藏代码） | 分层管线、依赖图、anchor 结构 |
-| 用户可直接书写的概念语法 | 可 `false`，让读者看写法 | 坐标 / 定位语法、plot 的 encoding 写法 |
-| 结果解释型（可视化模块常见） | demo code 与图并列 | plot 的 scale / mark 效果，代码 + 渲染结果对照 |
+| 图的性质                     | hideCode                 | 例                                             |
+| ---------------------------- | ------------------------ | ---------------------------------------------- |
+| 架构 / 模型 / 流程图         | 默认 `true`（隐藏代码）  | 分层管线、依赖图、anchor 结构                  |
+| 用户可直接书写的概念语法     | 可 `false`，让读者看写法 | 坐标 / 定位语法、plot 的 encoding 写法         |
+| 结果解释型（可视化模块常见） | demo code 与图并列       | plot 的 scale / mark 效果，代码 + 渲染结果对照 |
 
 **多画图、图文结合**——概念页是 retikz 的活体演示，一个抽象概念配一张图，往往胜过三段文字。判断一页概念文档好不好，先看它有没有把模型「画」出来。配图风格走**学术、简约**（节点默认无描边、克制用色、不堆装饰）——细则见 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)。
 
 哪种概念配哪种图（图型通用，例子是 core 口味，换模块照搬图型即可）：
 
-| 概念 | 图型 |
-| --- | --- |
-| 分层 / 管线 / 编译 / lowering 流程 | 横向或纵向流水线，箭头表数据流 |
-| 包 / 依赖关系 | 依赖图（实线主依赖、虚线次依赖） |
-| 单实体结构（core anchor / boundary、plot mark 等） | 单个实体放大 + 锚点 / 通道标注 |
-| 引用 / 关系 / 数据→视觉映射 | 靠 id 连线的关系图 / 编码映射图 |
+| 概念                                               | 图型                             |
+| -------------------------------------------------- | -------------------------------- |
+| 分层 / 管线 / 编译 / lowering 流程                 | 横向或纵向流水线，箭头表数据流   |
+| 包 / 依赖关系                                      | 依赖图（实线主依赖、虚线次依赖） |
+| 单实体结构（core anchor / boundary、plot mark 等） | 单个实体放大 + 锚点 / 通道标注   |
+| 引用 / 关系 / 数据→视觉映射                        | 靠 id 连线的关系图 / 编码映射图  |
 
 硬约束：
 
@@ -115,12 +115,12 @@ H2 进右侧 TOC；同一概念下的细分点用 H3。
 
 概念页是表格密集型，四类主力表（列名通用，不绑模块）：
 
-| 类型 | 列 | 用途 |
-| --- | --- | --- |
-| 模型表 | 概念 / 角色 / 影响 | 摆清一套模型里各部分的职责 |
-| 决策表 | 场景 / 推荐 / 原因 | 帮读者在变体间选 |
+| 类型   | 列                             | 用途                                          |
+| ------ | ------------------------------ | --------------------------------------------- |
+| 模型表 | 概念 / 角色 / 影响             | 摆清一套模型里各部分的职责                    |
+| 决策表 | 场景 / 推荐 / 原因             | 帮读者在变体间选                              |
 | 映射表 | 用户写法 / 内部模型 / 输出效果 | 把「写什么」对到「内部怎么表示 / 渲染出什么」 |
-| 对照表 | 概念 A / 概念 B / 何时用 | 划清相邻概念边界 |
+| 对照表 | 概念 A / 概念 B / 何时用       | 划清相邻概念边界                              |
 
 宽度沿用 principle：≤3 列、单元格 ≤12 中文字；过长用 `<br />` 软断或拆段；cell 内 `|` 写 `\|`。
 
@@ -176,15 +176,15 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 
 ## 与其它 doc-skill 的分工
 
-| 任务 | skill |
-| --- | --- |
+| 任务                                  | skill                                                  |
+| ------------------------------------- | ------------------------------------------------------ |
 | 通用规则 / 三处协同 / 双语 / 页型分流 | [`docs-doc-principle`](../docs-doc-principle/SKILL.md) |
-| 概念页结构与写法（本 skill） | `docs-doc-concept` |
-| 叙述性插图画法 | [`docs-figure-draw`](../docs-figure-draw/SKILL.md) |
-| 组件 API 页 | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
-| 示例 step 页 | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
-| 分组落地页 | [`docs-doc-group`](../docs-doc-group/SKILL.md) |
-| schema 词典页 | `docs-doc-principle` 的「Reference 词典页」节 |
+| 概念页结构与写法（本 skill）          | `docs-doc-concept`                                     |
+| 叙述性插图画法                        | [`docs-figure-draw`](../docs-figure-draw/SKILL.md)     |
+| 组件 API 页                           | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
+| 示例 step 页                          | [`docs-doc-example`](../docs-doc-example/SKILL.md)     |
+| 分组落地页                            | [`docs-doc-group`](../docs-doc-group/SKILL.md)         |
+| schema 词典页                         | `docs-doc-principle` 的「Reference 词典页」节          |
 
 ## 常见错误（概念页特有）
 

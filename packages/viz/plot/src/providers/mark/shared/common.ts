@@ -1,4 +1,13 @@
-import type { IRChild, IRGeometryLabel, IRNode, IRNodeDefault, IRNodeLabel, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
+import type {
+  IRChild,
+  IRGeometryLabel,
+  IRNode,
+  IRNodeDefault,
+  IRNodeLabel,
+  IRPaintSpec,
+  IRPath,
+  IRScope,
+} from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
 import { readSourceIndex, readSourceIndices } from '@retikz/data';

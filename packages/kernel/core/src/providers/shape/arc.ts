@@ -11,16 +11,11 @@ import { createCache, localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLoca
 import { pathPrimitiveStyle } from './style';
 
 const arcParamsSchema = z.strictObject({
-  radius: z
-    .number()
-    .positive()
-    .describe('Arc radius in user units.'),
+  radius: z.number().positive().describe('Arc radius in user units.'),
   startAngle: z
     .number()
     .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
-  endAngle: z
-    .number()
-    .describe('End angle in degrees; swept from startAngle in screen space.'),
+  endAngle: z.number().describe('End angle in degrees; swept from startAngle in screen space.'),
   close: z
     .boolean()
     .optional()

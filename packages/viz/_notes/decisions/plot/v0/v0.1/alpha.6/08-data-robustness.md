@@ -55,7 +55,6 @@
 - **`invalid` 检查范围 = spec 参与的用户源字段**（cross-review #5）：`collectUserSourceFields(spec)`，不全表扫。
 - **`'skip'` 不删行、写哨兵**（cross-review #5）：归一化阶段对非法值写 NaN/undefined、保留整行供 transform（stack/sort）；下游 mark 跳非法几何。`'error'` 在 `validateBoundData`（transform 前）全量校验参与字段。
 
-
 ## 影响
 
 - **lowering**：`expand.ts` prepareRows 去门控（恒归一化）+ `invalid:'error'` 在 `validateBoundData` 对 `collectUserSourceFields` 全量校验；`coerce.ts` `coerceNumber` 认 safe-integer bigint（超出→NaN 走 invalid 策略）、`validateBoundData` 出字段级计数；`infer.ts` `classify` 认 bigint→continuous。

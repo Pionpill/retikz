@@ -13,10 +13,10 @@ description: 把 retikz 文档站 blog mdx 转成可贴到掘金/公众号等外
 
 ## 输入与输出
 
-| 项 | 内容 |
-|---|---|
-| 输入 | `apps/docs/src/contents/blog/<section>/<slug>/index.<lang>.mdx`（`lang` ∈ `zh` / `en`，默认 `zh`） |
-| 输出根 | `.markdown/<slug>/`（仓库根下的隐藏目录，**不进 git**，加 `.gitignore`） |
+| 项       | 内容                                                                                                                                          |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 输入     | `apps/docs/src/contents/blog/<section>/<slug>/index.<lang>.mdx`（`lang` ∈ `zh` / `en`，默认 `zh`）                                            |
+| 输出根   | `.markdown/<slug>/`（仓库根下的隐藏目录，**不进 git**，加 `.gitignore`）                                                                      |
 | 输出文件 | `content.md`（正文） + `<demo-name>.svg`（每个 ComponentPreview 一份）<br />双语并行时 `content.zh.md` / `content.en.md` 并存，SVG 共用同目录 |
 
 输出目录**扁平**——所有 SVG 与 `content.md` 同级，方便整目录拖到掘金编辑器或一次性上传图床。
@@ -55,11 +55,11 @@ retikz demo 里若用了 CSS var（如 `var(--foreground)`、`hsl(var(--primary)
 
 抓 SVG 前**扫一眼 demo 源码**：
 
-| 模式 | 状态 |
-|---|---|
-| 字面色 `red` / `dodgerblue` / `darkorange` / `darkviolet` / `gray` / `lightgray` / `dimgray` / `#ef4444` / `oklch(0.55 0.16 145)` | ✅ 离线可用 |
-| `var(--foreground)` / `hsl(var(--primary))` 等 token | ❌ 离线变黑 |
-| `currentColor` | ⚠️ 取决于 SVG 外层是否有 color；下载后通常变黑 |
+| 模式                                                                                                                              | 状态                                           |
+| --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 字面色 `red` / `dodgerblue` / `darkorange` / `darkviolet` / `gray` / `lightgray` / `dimgray` / `#ef4444` / `oklch(0.55 0.16 145)` | ✅ 离线可用                                    |
+| `var(--foreground)` / `hsl(var(--primary))` 等 token                                                                              | ❌ 离线变黑                                    |
+| `currentColor`                                                                                                                    | ⚠️ 取决于 SVG 外层是否有 color；下载后通常变黑 |
 
 发现 token / currentColor——回去把 demo 改字面色（学 `unit-circle.zh.demo.tsx` 顶部的 `HELP_LINE` / `SIN_COLOR` 等本地常量）再抓。这一改顺带利好原 demo 在离线场景下的复用能力，应当顺手提 PR。
 
@@ -69,15 +69,15 @@ retikz demo 里若用了 CSS var（如 `var(--foreground)`、`hsl(var(--primary)
 
 输入是 mdx，输出是平台通吃的 markdown。逐类改：
 
-| 源 | 输出 |
-| --- | --- |
-| frontmatter `---...---` | 删除；`title` 提为 `#`，`description` 提为引用段；`date/tags` 放文末平台元数据 |
-| `<ComponentPreview name="X" ... />` | `![10-30 字 alt](./X.svg)`；alt 取附近点题句；同名复用同一 SVG |
-| 站内 `/core/...`、`/blog/...` 链接 | 前缀 `https://pionpill.github.io/retikz/`；外部链接原样保留 |
-| 站内 UI 表述 | 加“retikz 官方文档站”限定，如 Ask AI、侧边栏、搜索、TOC、demo 卡片 |
-| `<Comparison>` | 把对比要点一句话内联到正文 |
-| `<ZodSchema>` / `<ExamplePrompt>` | blog 不该出现；回去让作者修 mdx，不在转换器硬转 |
-| `<br />`、代码块语言标识 | 保留 |
+| 源                                  | 输出                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------ |
+| frontmatter `---...---`             | 删除；`title` 提为 `#`，`description` 提为引用段；`date/tags` 放文末平台元数据 |
+| `<ComponentPreview name="X" ... />` | `![10-30 字 alt](./X.svg)`；alt 取附近点题句；同名复用同一 SVG                 |
+| 站内 `/core/...`、`/blog/...` 链接  | 前缀 `https://pionpill.github.io/retikz/`；外部链接原样保留                    |
+| 站内 UI 表述                        | 加“retikz 官方文档站”限定，如 Ask AI、侧边栏、搜索、TOC、demo 卡片             |
+| `<Comparison>`                      | 把对比要点一句话内联到正文                                                     |
+| `<ZodSchema>` / `<ExamplePrompt>`   | blog 不该出现；回去让作者修 mdx，不在转换器硬转                                |
+| `<br />`、代码块语言标识            | 保留                                                                           |
 
 不要凭印象改 base URL；只用 `https://pionpill.github.io/retikz/`。
 
@@ -163,9 +163,9 @@ rg '\]\(/(blog|core|about)/' .markdown/<slug>/content.md
 
 文章双语都要发时，zh / en 分别转换。SVG 按 demo 语言抓，同目录时按需重命名避免覆盖：
 
-| 模式 | 输出 |
-|---|---|
-| 纯几何 demo（无文字差异，单 `.demo.tsx`） | 共用一份 `X.svg` |
+| 模式                                              | 输出                                                                |
+| ------------------------------------------------- | ------------------------------------------------------------------- |
+| 纯几何 demo（无文字差异，单 `.demo.tsx`）         | 共用一份 `X.svg`                                                    |
 | 文字 demo（双语 `.zh.demo.tsx` / `.en.demo.tsx`） | 两份独立 `X.zh.svg` / `X.en.svg`，content.{zh,en}.md 各自引用对应版 |
 
 判断方式：看 demo 文件存不存在 `.<lang>.demo.tsx` 副本——存在则双语 SVG 不同，分文件名；不存在则共用单 SVG。
@@ -183,11 +183,11 @@ rg '\]\(/(blog|core|about)/' .markdown/<slug>/content.md
 
 ## 与 docs-doc-blog 的关系
 
-| | docs-doc-blog | 本 skill |
-|---|---|---|
-| 用途 | 在 mdx 里**写**一篇符合规范的 blog 文章 | 把已写好的 mdx **转**为外站可贴 markdown |
-| 触发时机 | 起一篇新 blog / 改正文 | 文章定稿 / 要发到掘金 / 公众号时 |
-| 输入 / 输出 | 输入需求与提纲，输出 `index.{zh,en}.mdx` + `<name>.demo.tsx` | 输入 mdx + demo，输出 `.markdown/<slug>/content.md` + SVG |
-| 关键不变量 | ComponentPreview 前后点题句、`## 引用` 节、frontmatter 4 字段 | 依赖以上不变量做转换；缺哪条**回去**让作者补，本 skill 不补 |
+|             | docs-doc-blog                                                 | 本 skill                                                    |
+| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------- |
+| 用途        | 在 mdx 里**写**一篇符合规范的 blog 文章                       | 把已写好的 mdx **转**为外站可贴 markdown                    |
+| 触发时机    | 起一篇新 blog / 改正文                                        | 文章定稿 / 要发到掘金 / 公众号时                            |
+| 输入 / 输出 | 输入需求与提纲，输出 `index.{zh,en}.mdx` + `<name>.demo.tsx`  | 输入 mdx + demo，输出 `.markdown/<slug>/content.md` + SVG   |
+| 关键不变量  | ComponentPreview 前后点题句、`## 引用` 节、frontmatter 4 字段 | 依赖以上不变量做转换；缺哪条**回去**让作者补，本 skill 不补 |
 
 docs-doc-blog 是写作端的规范，本 skill 是发布端的规范，**不替代**——一篇文章可能只写不发（站内自足就行）；要发就过本 skill。

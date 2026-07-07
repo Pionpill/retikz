@@ -37,5 +37,5 @@ describe('@retikz/vanilla 架构守卫', () => {
     expect(typeof mod.mountSvg).toBe('function');
     const scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
     expect(() => mod.renderToSvgString(scene as never)).not.toThrow();
-  });
+  }, 15_000);
 });

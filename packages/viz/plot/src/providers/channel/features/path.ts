@@ -1,7 +1,8 @@
 ﻿import type { IRPathScale, JsonValue } from '@retikz/core';
-import type { DataFieldTypeMap,ExternalRow } from '@retikz/data';
+import type { PathThicknessValue } from '@retikz/core';
+import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 
-import { DropShadowSchema, JsonValueSchema, PathScaleSchema } from '@retikz/core';
+import { DropShadowSchema, JsonValueSchema, parsePathThickness, PathScaleSchema, PathThickness } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -181,7 +182,11 @@ const pathNumericChannels: {
 const lineCapValues = new Set(['butt', 'round', 'square']);
 const lineJoinValues = new Set(['miter', 'round', 'bevel']);
 const fillRuleValues = new Set(['nonzero', 'evenodd']);
-const thicknessValues = new Set(['ultraThin', 'veryThin', 'thin', 'semithick', 'thick', 'veryThick', 'ultraThick']);
+const thicknessValues = new Set<PathThicknessValue>(Object.values(PathThickness));
+const pathThicknessValue = (value: unknown): PathThicknessValue | undefined =>
+  typeof value === 'string' && thicknessValues.has(value as PathThicknessValue)
+    ? (value as PathThicknessValue)
+    : undefined;
 const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
 const blendModeValues = new Set([
   'normal',
@@ -243,12 +248,13 @@ const directPathChannels = {
       path.fillRule = value;
     },
   ),
-  thickness: defineSimplePathChannel<string>(
+  thickness: defineSimplePathChannel<PathThicknessValue>(
     'thickness',
     { outputKind: 'symbol', palette: [...thicknessValues] },
-    value => (typeof value === 'string' && thicknessValues.has(value) ? value : undefined),
+    pathThicknessValue,
     (path, value) => {
-      path.thickness = value as never;
+      const parsed = parsePathThickness({ strokeWidth: path.strokeWidth, thickness: value });
+      if (parsed.strokeWidth !== undefined) path.strokeWidth = parsed.strokeWidth;
     },
   ),
   dashPattern: defineSimplePathChannel<Array<number>>(

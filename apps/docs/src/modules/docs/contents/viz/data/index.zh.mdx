@@ -13,14 +13,14 @@ description: 数据流说明 @retikz/data 提供的数据模型、字段处理�
 
 数据管线会先收集当前配置真正用到的字段，再把外部行整理成 canonical 行（规范化行：字段对齐、解析、类型归一后写回逻辑字段名的标准行）。后续数据变换、plot scale / mark、table 视图或 geo 投影都读取这份规范化结果，而不是反复直接读原始数据。
 
-| 步骤         | 做什么                                                              | 主要配置                             |
-| ------------ | ------------------------------------------------------------------- | ------------------------------------ |
-| 数据引用     | 选择当前视图使用哪份外部数据，数据本身不进入 IR                     | `data` / `data.reference`            |
-| 字段契约     | 确定逻辑字段名、类型、分类顺序与声明式格式；未声明时按样本推断      | `model`                              |
-| 源字段对齐   | 把逻辑字段映射到真实数据路径，支持字段改名与嵌套路径                | `fieldMap` / `fieldMaps`             |
-| 解析与归一化 | 按 `resolveField`、`format`、内置规则解析值，并写回逻辑字段名       | `resolveField` / `format` / 字段类型 |
-| 数据校验     | 对参与字段做抽样或全量校验，决定非法值跳过还是报错                  | `validateData` / `invalid`           |
-| 变换与消费   | 数据变换改写 canonical 行；plot 的通道、scale、mark 读取结果 | `sort` / `summarize` / channel props |
+| 步骤         | 做什么                                                         | 主要配置                             |
+| ------------ | -------------------------------------------------------------- | ------------------------------------ |
+| 数据引用     | 选择当前视图使用哪份外部数据，数据本身不进入 IR                | `data` / `data.reference`            |
+| 字段契约     | 确定逻辑字段名、类型、分类顺序与声明式格式；未声明时按样本推断 | `model`                              |
+| 源字段对齐   | 把逻辑字段映射到真实数据路径，支持字段改名与嵌套路径           | `fieldMap` / `fieldMaps`             |
+| 解析与归一化 | 按 `resolveField`、`format`、内置规则解析值，并写回逻辑字段名  | `resolveField` / `format` / 字段类型 |
+| 数据校验     | 对参与字段做抽样或全量校验，决定非法值跳过还是报错             | `validateData` / `invalid`           |
+| 变换与消费   | 数据变换改写 canonical 行；plot 的通道、scale、mark 读取结果   | `sort` / `summarize` / channel props |
 
 `model`、`format` 和数据变换 operation 是可序列化契约；`fieldMap` 可按数据集 reference 注入；`resolveField`、自定义 parser 和自定义 transform 函数只在运行时参与处理，不进入 IR。需要自定义字段格式或字段解析时，见[数据模型](/viz/data/model)。
 

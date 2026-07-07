@@ -14,14 +14,14 @@ v0.1 的 viz 三包采用 lockstep 发布，plot 本体、React adapter、Vanill
 
 公开 authoring 表面对齐抽象 mark，而不是旧图表形状：
 
-| 新表面 | 取代 | 说明 |
-| --- | --- | --- |
-| `<PointMark>` | `<PointMark>` + `<TextMark>` | `text` / `format` / `dx` / `dy` 表达文本 point |
-| `<PathMark>` | `<LineMark>` | 一维轨迹 |
-| `<RegionMark>` | `<AreaMark>` | 二维区域 |
-| `<IntervalMark>` | `<BarMark>` + `<RectMark>` | 统一柱、饼、环、histogram、heatmap、stack、dodge 等区间形态 |
-| `<LinkMark>` | `<RibbonMark>` | 早期关系形态，后续由 ADR-13 supersede |
-| `<ReferenceMark>` | `<RuleMark>` | 参考线 / 参考带 |
+| 新表面            | 取代                         | 说明                                                        |
+| ----------------- | ---------------------------- | ----------------------------------------------------------- |
+| `<PointMark>`     | `<PointMark>` + `<TextMark>` | `text` / `format` / `dx` / `dy` 表达文本 point              |
+| `<PathMark>`      | `<LineMark>`                 | 一维轨迹                                                    |
+| `<RegionMark>`    | `<AreaMark>`                 | 二维区域                                                    |
+| `<IntervalMark>`  | `<BarMark>` + `<RectMark>`   | 统一柱、饼、环、histogram、heatmap、stack、dodge 等区间形态 |
+| `<LinkMark>`      | `<RibbonMark>`               | 早期关系形态，后续由 ADR-13 supersede                       |
+| `<ReferenceMark>` | `<RuleMark>`                 | 参考线 / 参考带                                             |
 
 `build-plot-spec` 负责把 React 便捷 props 展开为抽象 PlotSpec：`angle`、`stack`、`series`、`x0/x1`、双 band 等都编译为标准 transform + interval `bounds`，不引入平行 IR。
 

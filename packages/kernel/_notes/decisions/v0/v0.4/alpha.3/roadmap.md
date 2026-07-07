@@ -17,11 +17,11 @@ alpha.3 是 v0.4「纵向底座深化」的 **core 几何 / 路径能力增量**
 
 ## 子项
 
-| # | 子项 | 代号 / 来源 | ADR | 状态 |
-|---|---|---|---|---|
-| B1 | 任意折线圆角 `roundedCorners` | B1 | [ADR-01](./01-polyline-rounded-corners.md) | ✅ **Accepted**（实现 + 文档 + changelog + 对账完成） |
-| B2 | 过点平滑曲线 `smooth` step | B2 | [ADR-02](./02-smooth-curve-through-points.md) | ✅ **Accepted**（实现 + 文档 + changelog + 对账完成） |
-| S | 任意轮廓 `contour` shape | plot → core 跨包请求 | [ADR-03](./03-core-contour-shape.md) | ✅ **Accepted**（实现 + 文档 + changelog + 对账完成；plot 侧消费归 plot alpha.11） |
+| #   | 子项                          | 代号 / 来源          | ADR                                           | 状态                                                                               |
+| --- | ----------------------------- | -------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| B1  | 任意折线圆角 `roundedCorners` | B1                   | [ADR-01](./01-polyline-rounded-corners.md)    | ✅ **Accepted**（实现 + 文档 + changelog + 对账完成）                              |
+| B2  | 过点平滑曲线 `smooth` step    | B2                   | [ADR-02](./02-smooth-curve-through-points.md) | ✅ **Accepted**（实现 + 文档 + changelog + 对账完成）                              |
+| S   | 任意轮廓 `contour` shape      | plot → core 跨包请求 | [ADR-03](./03-core-contour-shape.md)          | ✅ **Accepted**（实现 + 文档 + changelog + 对账完成；plot 侧消费归 plot alpha.11） |
 
 > 进度（2026-06-16，收尾完成）：三 ADR 均按 develop-implement Spec-First TDD 落地（每项「🚧 spec → ✨ 实现」两段提交），两轮多 LLM 评审 + develop-wrapup Contract Auditor 四方对账（ADR / changelog / docs / 代码）通过、零 BLOCKING。core/math/react/vanilla 全套测试 + 全包 tsc + 全仓 lint 全绿；docs（zh/en + demo）+ `changelog.ts` v0.4 块已同步；三 ADR 翻 **Accepted**。剩余可选：develop-test 深度对抗加固。**未 push**；是否发 alpha.4 / 发版由用户定（走 package-publish）。
 

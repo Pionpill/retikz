@@ -86,7 +86,6 @@ describe('Drawable shared style resolution', () => {
             lineCap: 'round',
             lineJoin: 'round',
             roundedCorners: 5,
-            thickness: 'ultraThick',
           },
           children: [ribbon()],
         },

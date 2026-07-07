@@ -7,10 +7,7 @@ export const AtPositionSchema = z
     direction: z
       .enum(Anchor)
       .describe('Canonical direction from the referenced node toward this node, in visual convention.'),
-    of: z
-      .string()
-      .min(1)
-      .describe('Referenced node or coordinate id; must already be defined.'),
+    of: z.string().min(1).describe('Referenced node or coordinate id; must already be defined.'),
     distance: z
       .number()
       .positive()

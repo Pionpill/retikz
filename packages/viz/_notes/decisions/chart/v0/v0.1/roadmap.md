@@ -32,8 +32,8 @@ chart 不封装 table；geo-backed chart type 等 geo 边界决策后再定。
 
 ## Milestones
 
-| Milestone | 主题 | 模块 / 产出 | 状态 |
-| --- | --- | --- | --- |
+| Milestone          | 主题                                      | 模块 / 产出                                                                                                                                                                | 状态   |
+| ------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | chart v0.1-alpha.1 | **ChartSpec + lowerChartSpec + 三包表面** | 新增 `@retikz/chart` 的 ChartSpec schema 与 lowerChartSpec；新增 `@retikz/chart-react` `<Chart>` 与 `@retikz/chart-vanilla` builder；首批常规 chart type lower 成 PlotSpec | 待起草 |
 
 ## 版本与发布组

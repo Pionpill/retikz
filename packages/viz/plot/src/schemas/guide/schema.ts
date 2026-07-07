@@ -36,14 +36,18 @@ import {
 
 const AxisAutoPlacementSchema = z
   .object({
-    kind: z.literal(AxisPlacementKind.Auto).describe('Placement discriminator: infer the axis position from the coordinate system and dimension'),
+    kind: z
+      .literal(AxisPlacementKind.Auto)
+      .describe('Placement discriminator: infer the axis position from the coordinate system and dimension'),
   })
   .strict()
   .describe('Automatic axis placement');
 
 const AxisSidePlacementSchema = z
   .object({
-    kind: z.literal(AxisPlacementKind.Side).describe('Placement discriminator: place the axis on a cardinal side of the plot area'),
+    kind: z
+      .literal(AxisPlacementKind.Side)
+      .describe('Placement discriminator: place the axis on a cardinal side of the plot area'),
     side: z.enum(AxisCardinalSide).describe('Cardinal side of the plot area: top, right, bottom, or left'),
     offset: z
       .number()
@@ -56,7 +60,9 @@ const AxisSidePlacementSchema = z
 
 const AxisEdgePlacementSchema = z
   .object({
-    kind: z.literal(AxisPlacementKind.Edge).describe('Placement discriminator: place the axis on a coordinate-native edge'),
+    kind: z
+      .literal(AxisPlacementKind.Edge)
+      .describe('Placement discriminator: place the axis on a coordinate-native edge'),
     edge: z.string().min(1).describe('Coordinate-native edge id; interpreted by the active coordinate definition'),
     offset: z
       .number()
@@ -71,20 +77,31 @@ export const AxisGuideValueSchema = z.union([z.string(), z.number()]).describe('
 
 const AxisOriginPlacementSchema = z
   .object({
-    kind: z.literal(AxisPlacementKind.Origin).describe('Placement discriminator: place the axis at a cross-dimension data value'),
-    origin: AxisGuideValueSchema.optional().describe('Cross-dimension data value where this axis baseline is placed; omit = 0'),
-    tickSide: z.enum(AxisCardinalSide).optional().describe('Side where ticks, tick labels, and title are placed relative to the origin axis'),
-    offset: z
-      .number()
+    kind: z
+      .literal(AxisPlacementKind.Origin)
+      .describe('Placement discriminator: place the axis at a cross-dimension data value'),
+    origin: AxisGuideValueSchema.optional().describe(
+      'Cross-dimension data value where this axis baseline is placed; omit = 0',
+    ),
+    tickSide: z
+      .enum(AxisCardinalSide)
       .optional()
-      .describe('Additional offset from the projected origin toward tickSide; omit = 0'),
+      .describe('Side where ticks, tick labels, and title are placed relative to the origin axis'),
+    offset: z.number().optional().describe('Additional offset from the projected origin toward tickSide; omit = 0'),
   })
   .strict()
   .describe('Cartesian origin axis placement');
 
 export const AxisPlacementSchema = z
-  .discriminatedUnion('kind', [AxisAutoPlacementSchema, AxisSidePlacementSchema, AxisEdgePlacementSchema, AxisOriginPlacementSchema])
-  .describe('Axis placement mode: automatic coordinate default, cardinal plot-area side, coordinate-native edge, or cartesian origin');
+  .discriminatedUnion('kind', [
+    AxisAutoPlacementSchema,
+    AxisSidePlacementSchema,
+    AxisEdgePlacementSchema,
+    AxisOriginPlacementSchema,
+  ])
+  .describe(
+    'Axis placement mode: automatic coordinate default, cardinal plot-area side, coordinate-native edge, or cartesian origin',
+  );
 
 const OpacitySchema = z.number().min(0).max(1).describe('Opacity fraction in [0, 1]');
 const NonNegativeFiniteSchema = z.number().nonnegative();
@@ -95,7 +112,8 @@ const textBlockHasContent = (value: unknown): boolean => {
   if (!Array.isArray(value)) return false;
   return value.some(line => {
     if (typeof line === 'string') return line.length > 0;
-    if (line && typeof line === 'object' && 'text' in line && typeof line.text === 'string') return line.text.length > 0;
+    if (line && typeof line === 'object' && 'text' in line && typeof line.text === 'string')
+      return line.text.length > 0;
     if (line && typeof line === 'object' && 'runs' in line && Array.isArray(line.runs)) {
       return line.runs.some((run: unknown) => {
         if (!run || typeof run !== 'object') return false;
@@ -126,10 +144,7 @@ export const GuideLineStyleSchema = z
       .min(1)
       .optional()
       .describe('Guide line dash pattern lengths in user units'),
-    dashOffset: z
-      .number()
-      .optional()
-      .describe('Guide line dash offset in user units'),
+    dashOffset: z.number().optional().describe('Guide line dash offset in user units'),
   })
   .strict()
   .describe('Shared guide line style fields mapped to core path vocabulary');
@@ -164,7 +179,10 @@ export const GuideTickIntervalSchema = z
       .object({
         kind: z.literal(GuideTickIntervalKind.Number).describe('Numeric fixed-step tick interval'),
         step: z.number().positive().describe('Positive numeric step between candidate ticks'),
-        anchor: z.number().optional().describe('Numeric alignment anchor; omit to align from the scale domain lower bound'),
+        anchor: z
+          .number()
+          .optional()
+          .describe('Numeric alignment anchor; omit to align from the scale domain lower bound'),
       })
       .strict(),
     z
@@ -205,7 +223,9 @@ export const GuideTickSourceSchema = z
       .array(z.union([z.string(), z.number()]))
       .min(1)
       .optional()
-      .describe('Explicit guide tick values. Continuous scales accept numbers; time scales also accept ISO-like strings'),
+      .describe(
+        'Explicit guide tick values. Continuous scales accept numbers; time scales also accept ISO-like strings',
+      ),
     interval: GuideTickIntervalSchema.optional().describe(
       'Fixed-interval candidate tick source. Used when values are omitted and before falling back to count',
     ),
@@ -236,7 +256,9 @@ const AxisLineExtentSchema = z
   ])
   .describe('Axis baseline extent along the bound dimension');
 
-const AxisArrowEndSchema = z.union([z.boolean(), ArrowEndDetailSchema]).describe('Axis arrow endpoint switch or visual detail');
+const AxisArrowEndSchema = z
+  .union([z.boolean(), ArrowEndDetailSchema])
+  .describe('Axis arrow endpoint switch or visual detail');
 
 const AxisLineArrowSchema = z
   .object({
@@ -258,7 +280,9 @@ const AxisLineArrowSchema = z
   .describe('Axis endpoint arrows keyed by negative / positive axis direction');
 
 export const AxisLineSchema = AxisLineStyleSchema.extend({
-  extent: AxisLineExtentSchema.optional().describe('Axis baseline extent; omit or plotArea spans the visible plot area'),
+  extent: AxisLineExtentSchema.optional().describe(
+    'Axis baseline extent; omit or plotArea spans the visible plot area',
+  ),
   arrow: AxisLineArrowSchema.optional().describe('Axis endpoint arrows by negative / positive direction'),
 })
   .strict()
@@ -272,7 +296,10 @@ export const AxisTickDensitySchema = z
         kind: z.literal(AxisTickDensityKind.Sample).describe('Deterministically sample candidate ticks'),
         maxCount: z.number().int().positive().optional().describe('Hard upper bound for visible ticks'),
         minGap: NonNegativeFiniteSchema.optional().describe('Minimum projected gap between adjacent visible ticks'),
-        preserveEnds: z.boolean().optional().describe('Whether to always preserve first and last candidate ticks; omit = true'),
+        preserveEnds: z
+          .boolean()
+          .optional()
+          .describe('Whether to always preserve first and last candidate ticks; omit = true'),
       })
       .strict()
       .superRefine((density, ctx) => {
@@ -293,7 +320,9 @@ const AxisTickEndpointPolicySchema = z
     z
       .object({
         hideWhenArrow: z.boolean().optional().describe('Hide endpoint ticks near axis arrows; omit = true'),
-        distance: NonNegativeFiniteSchema.optional().describe('Endpoint distance threshold in user units; omit = derived from arrow and tick size'),
+        distance: NonNegativeFiniteSchema.optional().describe(
+          'Endpoint distance threshold in user units; omit = derived from arrow and tick size',
+        ),
         affect: z.enum(AxisTickEndpointAffect).optional().describe('Which tick artifacts are hidden; omit = mark'),
       })
       .strict(),
@@ -304,7 +333,10 @@ const AxisTickLineMarkSchema = z
   .object({
     kind: z.literal(AxisTickMarkKind.Line).describe('Line tick mark'),
     length: NonNegativeFiniteSchema.optional().describe('Line tick length in user units'),
-    line: z.union([z.literal(false), GuideLineStyleSchema]).optional().describe('Line tick style; false hides line marks'),
+    line: z
+      .union([z.literal(false), GuideLineStyleSchema])
+      .optional()
+      .describe('Line tick style; false hides line marks'),
   })
   .strict()
   .describe('Line tick mark configuration');
@@ -313,7 +345,9 @@ const AxisTickShapeMarkBase = {
   size: NonNegativeFiniteSchema.optional().describe('Uniform shape tick size in user units'),
   width: NonNegativeFiniteSchema.optional().describe('Shape tick width; overrides size for width'),
   height: NonNegativeFiniteSchema.optional().describe('Shape tick height; overrides size for height'),
-  offset: NonNegativeFiniteSchema.optional().describe('Shape center offset along the tick normal; omit = half effective size'),
+  offset: NonNegativeFiniteSchema.optional().describe(
+    'Shape center offset along the tick normal; omit = half effective size',
+  ),
   orientation: z.enum(AxisTickShapeOrientation).optional().describe('Shape tick rotation strategy; omit = fixed'),
   rotate: z.number().optional().describe('Additional rotation in degrees'),
   fill: PaintValueSchema.optional().describe('Shape tick fill paint'),
@@ -356,7 +390,9 @@ export const AxisTicksSchema = z
       .describe('Tick line style; false hides tick marks but leaves labels available'),
     density: AxisTickDensitySchema.optional().describe('Visible tick density strategy; omit = all candidate ticks'),
     endpoint: AxisTickEndpointPolicySchema.optional().describe('Endpoint tick hiding policy near axis arrows'),
-    mark: AxisTickMarkSchema.optional().describe('Unified tick mark slot; omit uses length / line shorthand as a line mark'),
+    mark: AxisTickMarkSchema.optional().describe(
+      'Unified tick mark slot; omit uses length / line shorthand as a line mark',
+    ),
   })
   .strict()
   .superRefine((ticks, ctx) => {
@@ -380,7 +416,10 @@ export const AxisTicksSchema = z
 export const AxisTickLabelAutoRotateSchema = z
   .object({
     angles: z.array(z.number()).min(1).optional().describe('Candidate label rotation angles in degrees'),
-    recoverWhenFailed: z.boolean().optional().describe('Whether to fall back to the original angle when all candidates overlap; omit = true'),
+    recoverWhenFailed: z
+      .boolean()
+      .optional()
+      .describe('Whether to fall back to the original angle when all candidates overlap; omit = true'),
   })
   .strict()
   .describe('Axis tick label auto-rotation strategy');
@@ -388,15 +427,23 @@ export const AxisTickLabelAutoRotateSchema = z
 export const AxisTickLabelAutoHideSchema = z
   .object({
     strategy: z.enum(AxisTickLabelHideStrategy).optional().describe('Overlap hiding strategy; omit = greedy'),
-    preserveEnds: z.boolean().optional().describe('Whether first and last labels should be preserved when possible; omit = true'),
-    separation: NonNegativeFiniteSchema.optional().describe('Minimum separation between label boxes in user units; omit = 0'),
+    preserveEnds: z
+      .boolean()
+      .optional()
+      .describe('Whether first and last labels should be preserved when possible; omit = true'),
+    separation: NonNegativeFiniteSchema.optional().describe(
+      'Minimum separation between label boxes in user units; omit = 0',
+    ),
   })
   .strict()
   .describe('Axis tick label overlap hiding strategy');
 
 export const AxisTickLabelBoundsSchema = z
   .object({
-    overflow: z.enum(AxisTickLabelOverflow).optional().describe('How labels outside the axis span are handled; omit = flush'),
+    overflow: z
+      .enum(AxisTickLabelOverflow)
+      .optional()
+      .describe('How labels outside the axis span are handled; omit = flush'),
     tolerance: NonNegativeFiniteSchema.optional().describe('Overflow tolerance in user units; omit = 1'),
   })
   .strict()
@@ -407,10 +454,24 @@ export const AxisTickLabelLayoutSchema = z
     z.literal(false),
     z
       .object({
-        rotate: z.union([z.literal(false), AxisTickLabelAutoRotateSchema]).optional().describe('Auto-rotation strategy; false disables auto rotation'),
-        hide: z.union([z.literal(false), AxisTickLabelAutoHideSchema]).optional().describe('Overlap hiding strategy; false keeps all labels'),
-        bounds: z.union([z.literal(false), AxisTickLabelBoundsSchema]).optional().describe('Axis-span boundary strategy; false disables boundary handling'),
-        sampleSize: z.number().int().positive().optional().describe('Number of labels sampled while choosing auto rotation'),
+        rotate: z
+          .union([z.literal(false), AxisTickLabelAutoRotateSchema])
+          .optional()
+          .describe('Auto-rotation strategy; false disables auto rotation'),
+        hide: z
+          .union([z.literal(false), AxisTickLabelAutoHideSchema])
+          .optional()
+          .describe('Overlap hiding strategy; false keeps all labels'),
+        bounds: z
+          .union([z.literal(false), AxisTickLabelBoundsSchema])
+          .optional()
+          .describe('Axis-span boundary strategy; false disables boundary handling'),
+        sampleSize: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe('Number of labels sampled while choosing auto rotation'),
       })
       .strict(),
   ])
@@ -422,7 +483,9 @@ export const AxisTickLabelsSchema = z
     gap: z.number().nonnegative().optional().describe('Gap between tick end and tick label center, in user units'),
     rotate: z.number().optional().describe('Tick label rotation in degrees around the label center'),
     anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
-    layout: AxisTickLabelLayoutSchema.optional().describe('Adaptive tick label rotation, hiding, and boundary handling'),
+    layout: AxisTickLabelLayoutSchema.optional().describe(
+      'Adaptive tick label rotation, hiding, and boundary handling',
+    ),
     ...GuideTextStyleSchema.shape,
   })
   .strict()
@@ -439,7 +502,9 @@ const AxisTitleAnchorBaselineSchema = z.enum(['top', 'middle', 'bottom']);
 const AxisTitleAnchorObjectSchema = z
   .object({
     align: AxisTitleAnchorAlignSchema.optional().describe('Horizontal title anchor relative to the axis direction'),
-    baseline: AxisTitleAnchorBaselineSchema.optional().describe('Vertical title baseline hint reserved for text renderers'),
+    baseline: AxisTitleAnchorBaselineSchema.optional().describe(
+      'Vertical title baseline hint reserved for text renderers',
+    ),
   })
   .strict()
   .superRefine((anchor, ctx) => {
@@ -482,7 +547,10 @@ const AxisTitleLayoutSchema = z
         reserveSpace: z.boolean().optional().describe('Whether this title should participate in layout reservation'),
         avoidTickLabels: z.boolean().optional().describe('Whether auto layout should avoid tick label bands'),
         avoidLineMarks: z.boolean().optional().describe('Whether auto layout should avoid axis line endpoint marks'),
-        overflow: z.enum(AxisTickLabelOverflow).optional().describe('How title overflow near axis endpoints is handled'),
+        overflow: z
+          .enum(AxisTickLabelOverflow)
+          .optional()
+          .describe('How title overflow near axis endpoints is handled'),
       })
       .strict(),
   ])
@@ -494,8 +562,14 @@ const AxisCrossingSchema = z
     z
       .object({
         value: AxisGuideValueSchema.optional().describe('Axis value treated as the crossing value; omit = 0'),
-        tick: z.enum(AxisCrossingTickPolicy).optional().describe('Whether to render the tick mark at the crossing value; omit = show'),
-        label: z.enum(AxisCrossingLabelPolicy).optional().describe('How to render the tick label at the crossing value; omit = show'),
+        tick: z
+          .enum(AxisCrossingTickPolicy)
+          .optional()
+          .describe('Whether to render the tick mark at the crossing value; omit = show'),
+        label: z
+          .enum(AxisCrossingLabelPolicy)
+          .optional()
+          .describe('How to render the tick label at the crossing value; omit = show'),
         corner: z.enum(AxisCrossingCorner).optional().describe('Corner used when label is corner; omit = bottom-left'),
       })
       .strict()
@@ -514,8 +588,14 @@ const AxisCrossingSchema = z
 export const AxisTitleSchema = z
   .object({
     text: AxisTitleTextSchema.describe('Axis title text block'),
-    padding: z.number().nonnegative().optional().describe('Padding from the tick label band to the title center, in user units'),
-    placement: AxisTitlePlacementSchema.optional().describe('Axis title position along the axis baseline; omit = midway'),
+    padding: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Padding from the tick label band to the title center, in user units'),
+    placement: AxisTitlePlacementSchema.optional().describe(
+      'Axis title position along the axis baseline; omit = midway',
+    ),
     orientation: z.enum(AxisTitleOrientation).optional().describe('Axis title rotation strategy; omit = auto'),
     rotate: z.number().optional().describe('Axis title rotation in degrees around the title center'),
     anchor: AxisTitleAnchorSchema.optional().describe('Axis title anchor relative to the title position'),
@@ -531,17 +611,38 @@ export const LegendGuideStyleSchema = z
     swatchSize: z.number().positive().optional().describe('Legend swatch baseline size in user units'),
     swatchGap: z.number().nonnegative().optional().describe('Gap between a legend swatch and its label, in user units'),
     entryGap: z.number().nonnegative().optional().describe('Gap between adjacent legend entries, in user units'),
-    titleGap: z.number().nonnegative().optional().describe('Gap between legend title and the first entry, in user units'),
+    titleGap: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Gap between legend title and the first entry, in user units'),
     rampLength: z.number().positive().optional().describe('Continuous legend ramp long edge length in user units'),
-    rampThickness: z.number().positive().optional().describe('Continuous legend ramp short edge thickness in user units'),
-    symbolSize: z.number().positive().optional().describe('Target visual box size for symbol-like legend entries; omit = swatchSize'),
-    symbolScale: z.number().positive().optional().describe('Scale factor applied to legend symbols after the fit strategy; omit = 1'),
-    symbolFit: z.enum(LegendSymbolFit).optional().describe('How size legend symbols map descriptor radius into the legend symbol box; omit = fit'),
+    rampThickness: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Continuous legend ramp short edge thickness in user units'),
+    symbolSize: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Target visual box size for symbol-like legend entries; omit = swatchSize'),
+    symbolScale: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Scale factor applied to legend symbols after the fit strategy; omit = 1'),
+    symbolFit: z
+      .enum(LegendSymbolFit)
+      .optional()
+      .describe('How size legend symbols map descriptor radius into the legend symbol box; omit = fit'),
     title: GuideTextStyleSchema.optional().describe('Legend title text style'),
     label: GuideTextStyleSchema.optional().describe('Legend entry label text style'),
   })
   .strict()
-  .describe('Legend visual style tokens. Semantic fields such as position, orient, ticks, and tick label format stay on the legend guide root');
+  .describe(
+    'Legend visual style tokens. Semantic fields such as position, orient, ticks, and tick label format stay on the legend guide root',
+  );
 
 const FacetTargetValueSchema = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
@@ -595,19 +696,14 @@ export const GuideTargetSelectorSchema = z
   .describe('Axis grid target selector for coordinate views, facet panels, and shared tracks');
 
 const AxisGridProjectionShape = {
-    applyTo: z
-      .enum(AxisGridApplyTo)
-      .optional()
-      .describe('Where this axis grid is projected; omit to use composition.resolve.grid or arrangement defaults'),
-    select: GuideTargetSelectorSchema.optional().describe(
-      'Explicit target selector; required when applyTo is selected',
-    ),
+  applyTo: z
+    .enum(AxisGridApplyTo)
+    .optional()
+    .describe('Where this axis grid is projected; omit to use composition.resolve.grid or arrangement defaults'),
+  select: GuideTargetSelectorSchema.optional().describe('Explicit target selector; required when applyTo is selected'),
 } as const;
 
-const refineAxisGridProjection = (
-  grid: { applyTo?: string; select?: unknown },
-  ctx: z.RefinementCtx,
-): void => {
+const refineAxisGridProjection = (grid: { applyTo?: string; select?: unknown }, ctx: z.RefinementCtx): void => {
   if (grid.applyTo === AxisGridApplyTo.Selected && grid.select === undefined) {
     ctx.addIssue({
       code: 'custom',
@@ -626,15 +722,23 @@ const refineAxisGridProjection = (
 
 const AxisGridSourceShape = {
   ticks: GuideTickSourceSchema.optional().describe('Grid tick source. Omit to reuse the visible axis ticks'),
-  density: AxisTickDensitySchema.optional().describe('Visible grid tick density strategy; omit = all candidate grid ticks'),
-  bandPosition: NormalizedRatioSchema.optional().describe('Position inside a band scale used by grid lines; omit = 0.5'),
+  density: AxisTickDensitySchema.optional().describe(
+    'Visible grid tick density strategy; omit = all candidate grid ticks',
+  ),
+  bandPosition: NormalizedRatioSchema.optional().describe(
+    'Position inside a band scale used by grid lines; omit = 0.5',
+  ),
 } as const;
 
 const AxisMinorGridSchema = z
   .object({
     ticks: GuideTickSourceSchema.describe('Minor grid tick source'),
-    density: AxisTickDensitySchema.optional().describe('Visible minor grid tick density strategy; omit = all candidate minor ticks'),
-    bandPosition: NormalizedRatioSchema.optional().describe('Position inside a band scale used by minor grid lines; omit = parent bandPosition or 0.5'),
+    density: AxisTickDensitySchema.optional().describe(
+      'Visible minor grid tick density strategy; omit = all candidate minor ticks',
+    ),
+    bandPosition: NormalizedRatioSchema.optional().describe(
+      'Position inside a band scale used by minor grid lines; omit = parent bandPosition or 0.5',
+    ),
     ...AxisGridLineStyleSchema.shape,
   })
   .strict()
@@ -650,7 +754,10 @@ export const AxisGridComponentSchema = z
   .object({
     ...AxisGridProjectionShape,
     ...AxisGridSourceShape,
-    minor: z.union([z.literal(false), AxisMinorGridSchema]).optional().describe('Minor grid line configuration; false disables minor grid'),
+    minor: z
+      .union([z.literal(false), AxisMinorGridSchema])
+      .optional()
+      .describe('Minor grid line configuration; false disables minor grid'),
     ...AxisGridLineStyleSchema.shape,
   })
   .strict()
@@ -668,18 +775,12 @@ export const AxisGuideSchema = z
       .describe(
         'Coordinate position role this axis visualizes; resolved against the active CoordinateDefinition.roles at lowering time, not a fixed screen orientation',
       ),
-    id: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Optional guide handle used as the axis scope id and anchor target'),
+    id: z.string().min(1).optional().describe('Optional guide handle used as the axis scope id and anchor target'),
     coordinateView: z
       .string()
       .min(1)
       .optional()
-      .describe(
-        'Coordinate view id this axis is bound to; omit to use the plot composition default view',
-      ),
+      .describe('Coordinate view id this axis is bound to; omit to use the plot composition default view'),
     layer: PlotLayerSchema.optional().describe(
       'Semantic plot layer override applied to the generated axis scope; axis grid keeps the grid layer',
     ),

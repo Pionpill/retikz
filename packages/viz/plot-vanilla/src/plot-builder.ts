@@ -1,6 +1,14 @@
 import type { AxisGuide, CoordinateOperation, Guide, MarkOperation, PlotSpec, ScaleOperation } from '@retikz/plot';
 
-import { PLOT_NAMESPACE, PlotComposite, PlotCoordinate, PlotGuide, PlotMark, PlotScale, PlotSpecSchema } from '@retikz/plot';
+import {
+  PLOT_NAMESPACE,
+  PlotComposite,
+  PlotCoordinate,
+  PlotGuide,
+  PlotMark,
+  PlotScale,
+  PlotSpecSchema,
+} from '@retikz/plot';
 
 type CompositionSpec = NonNullable<PlotSpec['composition']>;
 type CoordinateViewSpec = NonNullable<CompositionSpec['views']>[number];
@@ -377,7 +385,8 @@ const normalizeAxisBindings = (
   const hasXAxisBinding = marks.some(mark => mark.xAxisId !== undefined);
   const hasYAxisBinding = marks.some(mark => mark.yAxisId !== undefined);
   const hasAxisBinding = hasXAxisBinding || hasYAxisBinding;
-  const hasTopologyBinding = marks.some(mark => mark.facetId !== undefined || mark.trackId !== undefined) ||
+  const hasTopologyBinding =
+    marks.some(mark => mark.facetId !== undefined || mark.trackId !== undefined) ||
     guides.some(guide => guide.facetId !== undefined || guide.scaffoldId !== undefined || guide.trackId !== undefined);
   const hasTopologyDeclarations = facets.length > 0 || scaffolds.length > 0;
 

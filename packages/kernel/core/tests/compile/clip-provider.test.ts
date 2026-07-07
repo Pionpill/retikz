@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ClipDefinition, IRClipSpec,IRScene } from '../../src';
+import type { ClipDefinition, IRClipSpec, IRScene } from '../../src';
 
 import { compileToScene, defineClip } from '../../src';
 
@@ -69,9 +69,9 @@ describe('clip providers', () => {
   });
 
   it('custom clip kind is rejected at compile time when no provider is registered', () => {
-    expect(() =>
-      compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 })),
-    ).toThrow(/options\.clips/i);
+    expect(() => compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 }))).toThrow(
+      /options\.clips/i,
+    );
   });
 
   it('custom clip cannot override builtin clip kinds', () => {

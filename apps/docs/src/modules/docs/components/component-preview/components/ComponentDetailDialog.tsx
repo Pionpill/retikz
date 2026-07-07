@@ -182,11 +182,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
         {hasCode ? (
           <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
-              <DialogDemoPane
-                align={align}
-                paneRef={paneRef}
-                controlLayer={controlLayer}
-              >
+              <DialogDemoPane align={align} paneRef={paneRef} controlLayer={controlLayer}>
                 {demoContent}
               </DialogDemoPane>
             </ResizablePanel>
@@ -219,11 +215,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
           </ResizablePanelGroup>
         ) : (
           <div className="min-h-0 flex-1">
-            <DialogDemoPane
-              align={align}
-              paneRef={paneRef}
-              controlLayer={controlLayer}
-            >
+            <DialogDemoPane align={align} paneRef={paneRef} controlLayer={controlLayer}>
               {demoContent}
             </DialogDemoPane>
           </div>

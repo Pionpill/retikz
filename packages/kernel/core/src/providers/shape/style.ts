@@ -45,9 +45,7 @@ type RectPrimitiveStyle = Pick<
   | 'blendMode'
 >;
 
-const withoutCornerRadius = (
-  style: ShapeStylePassthrough,
-): Omit<ShapeStylePassthrough, 'cornerRadius'> => {
+const withoutCornerRadius = (style: ShapeStylePassthrough): Omit<ShapeStylePassthrough, 'cornerRadius'> => {
   const passthroughStyle = { ...style };
   delete passthroughStyle.cornerRadius;
   return passthroughStyle;

@@ -23,19 +23,12 @@ const SALES: Array<ExternalRow> = [
 
 describe('data transform runtime', () => {
   it('keeps shared sort output stable and leaves host-only transforms to host registries', () => {
-    const sorted = applyTransforms(
-      [
-        { m: 3 },
-        { m: 1 },
-        { m: 2 },
-      ],
-      [{ kind: 'sort', field: 'm' }],
-    );
+    const sorted = applyTransforms([{ m: 3 }, { m: 1 }, { m: 2 }], [{ kind: 'sort', field: 'm' }]);
 
     expect(sorted.map(row => row.m)).toEqual([1, 2, 3]);
-    expect(() =>
-      applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]),
-    ).toThrow(/not registered/);
+    expect(() => applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }])).toThrow(
+      /not registered/,
+    );
   });
 
   it('executes custom transform through the same registry', () => {
@@ -65,9 +58,7 @@ describe('data transform runtime', () => {
       apply: rows => rows,
     });
 
-    expect(() =>
-      applyTransforms([{ value: 1 }], [{ kind: 'missing', value: 1 }]),
-    ).toThrow(/not registered/);
+    expect(() => applyTransforms([{ value: 1 }], [{ kind: 'missing', value: 1 }])).toThrow(/not registered/);
     expect(() => resolveTransformRegistry([custom, custom])).toThrow(/duplicate transform registration/);
   });
 

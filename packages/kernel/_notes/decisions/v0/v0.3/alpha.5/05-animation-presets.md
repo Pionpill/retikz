@@ -37,21 +37,22 @@ node('a').animations([fadeIn(), spin()])                      // vanilla builder
 
 公共 options：`type AnimationPresetOptions = { duration?: number; delay?: number; easing?: EasingName | CubicBezier; trigger?: AnimationTrigger | { onEvent: string } }`。各 preset 在此基础上加专有项；**默认值 = 配方表「默认 timing」列**：
 
-| preset | 签名 | 产出 track（核心） | 默认 |
-|---|---|---|---|
-| `fadeIn` | `(opts?) ` | `opacity` `[0→1]` | duration 400, ease-out |
-| `drawOn` | `(opts?)` | `pathDraw` `[0→1]` | duration 600, ease-in-out |
-| `scaleIn` | `(opts?: {from?; origin?} & base)` | `scale` `[from→1]` + origin | from 0.8, ease-out, duration 400 |
-| `grow` | `(opts?)` | = `scaleIn({ from: 0, ...opts })` | from 0 |
-| `growUp` | `(opts?: {origin?} & base)` | `scaleY` `[0→1]`, origin | origin 'south', duration 500, ease-out |
-| `slideIn` | `(opts?: {axis?:'x'|'y'; offset?} & base)` | `translateX\|Y` `[offset→0]` | axis 'x', offset −20, ease-out, duration 400 |
-| `colorShift` | `(opts: {to; from?; channel?:'fill'\|'stroke'} & base)` | `fill\|stroke` `[from→to]` | channel 'fill', ease-in-out, duration 400 |
-| `cameraTo` | `(opts: {from; to} & base)` | `viewBox` `[from→to]`（scene 根） | duration 800, ease-in-out |
-| `pulse` | `(opts?: {peak?; origin?} & base)` | `scale` `[1→peak→1]`, iterations ∞ | peak 1.1, duration 1000, ease-in-out |
-| `spin` | `(opts?: {origin?} & base)` | `rotate` `[0→360]`, iterations ∞, linear | duration 1000 |
-| `loop` | `(track, opts?: {iterations?; direction?})` | 包装：`{...track, iterations:'infinite', direction?}` | iterations ∞ |
+| preset       | 签名                                                    | 产出 track（核心）                                    | 默认                                      |
+| ------------ | ------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------- | -------------------------------------------- |
+| `fadeIn`     | `(opts?) `                                              | `opacity` `[0→1]`                                     | duration 400, ease-out                    |
+| `drawOn`     | `(opts?)`                                               | `pathDraw` `[0→1]`                                    | duration 600, ease-in-out                 |
+| `scaleIn`    | `(opts?: {from?; origin?} & base)`                      | `scale` `[from→1]` + origin                           | from 0.8, ease-out, duration 400          |
+| `grow`       | `(opts?)`                                               | = `scaleIn({ from: 0, ...opts })`                     | from 0                                    |
+| `growUp`     | `(opts?: {origin?} & base)`                             | `scaleY` `[0→1]`, origin                              | origin 'south', duration 500, ease-out    |
+| `slideIn`    | `(opts?: {axis?:'x'                                     | 'y'; offset?} & base)`                                | `translateX\|Y` `[offset→0]`              | axis 'x', offset −20, ease-out, duration 400 |
+| `colorShift` | `(opts: {to; from?; channel?:'fill'\|'stroke'} & base)` | `fill\|stroke` `[from→to]`                            | channel 'fill', ease-in-out, duration 400 |
+| `cameraTo`   | `(opts: {from; to} & base)`                             | `viewBox` `[from→to]`（scene 根）                     | duration 800, ease-in-out                 |
+| `pulse`      | `(opts?: {peak?; origin?} & base)`                      | `scale` `[1→peak→1]`, iterations ∞                    | peak 1.1, duration 1000, ease-in-out      |
+| `spin`       | `(opts?: {origin?} & base)`                             | `rotate` `[0→360]`, iterations ∞, linear              | duration 1000                             |
+| `loop`       | `(track, opts?: {iterations?; direction?})`             | 包装：`{...track, iterations:'infinite', direction?}` | iterations ∞                              |
 
 补充约定：
+
 - **必填无默认**：`colorShift.to`、`cameraTo.from` / `cameraTo.to`（factory 纯函数拿不到「当前 layout」，故 `cameraTo` 两端都须显式；不像配方表写「from 默认当前 layout」——那是后续 `<Layout>` 层若注入才可能，本 ADR 先要求显式，见下）。
 - intro 系列**末帧 = base**（settled 不变量）：`fadeIn` 末帧 opacity 1、`scaleIn` 末帧 scale 1、`growUp` 末帧 scaleY 1——降级即见完整图。`pulse`/`spin` 用 `alternate`/整圈，无须末帧=base。
 - `easing` 缺省由各 preset 给（非全局 linear），与配方表一致。
@@ -91,7 +92,6 @@ stagger(tracks: Array<IRAnimationTrack>, stepMs: number, startMs = 0): Array<IRA
 - **完整 timeline / sequence DSL**：本 ADR 只 per-track + `stagger` helper。
 - **renderer 播放 / 降级**：已由 ADR-02/03/04 提供，本 ADR 不碰。
 - **ADR-04 后续项**（SVG `{at:t}` 截帧、react canvas rAF、manual `ref` 句柄）：与本 ADR 正交。
-
 
 > 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:_notes/decisions/core/v0/v0.3/alpha.5/05-animation-presets.md`（封板全文）。

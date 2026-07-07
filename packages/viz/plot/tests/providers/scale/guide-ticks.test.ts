@@ -36,7 +36,12 @@ describe('resolveGuideTicks interval and density', () => {
     const scale = scaleOf('time', [start, end], [start, end]);
     const ticks = resolveGuideTicks(scale, { interval: { kind: 'time', unit: 'month', step: 1 } }, { format: '%Y-%m' });
 
-    expect(ticks.values).toEqual([Date.UTC(2026, 0, 1), Date.UTC(2026, 1, 1), Date.UTC(2026, 2, 1), Date.UTC(2026, 3, 1)]);
+    expect(ticks.values).toEqual([
+      Date.UTC(2026, 0, 1),
+      Date.UTC(2026, 1, 1),
+      Date.UTC(2026, 2, 1),
+      Date.UTC(2026, 3, 1),
+    ]);
     expect(ticks.labels).toEqual(['2026-01', '2026-02', '2026-03', '2026-04']);
   });
 
@@ -51,21 +56,31 @@ describe('resolveGuideTicks interval and density', () => {
   it('tick_source_priority_prefers_values_then_interval_then_count', () => {
     const scale = scaleOf('number', [0, 100], [0, 50, 100]);
 
-    expect(resolveGuideTicks(scale, { values: [7, 9], interval: { kind: 'number', step: 10 }, count: 1 }).values).toEqual([7, 9]);
-    expect(resolveGuideTicks(scale, { interval: { kind: 'number', step: 25 }, count: 1 }).values).toEqual([0, 25, 50, 75, 100]);
+    expect(
+      resolveGuideTicks(scale, { values: [7, 9], interval: { kind: 'number', step: 10 }, count: 1 }).values,
+    ).toEqual([7, 9]);
+    expect(resolveGuideTicks(scale, { interval: { kind: 'number', step: 25 }, count: 1 }).values).toEqual([
+      0, 25, 50, 75, 100,
+    ]);
   });
 
   it('density_max_count_and_min_gap_sample_visible_ticks', () => {
     const ticks = { values: [0, 5, 10, 15, 20, 25], labels: ['0', '5', '10', '15', '20', '25'] };
 
-    expect(resolveVisibleGuideTicks(ticks, { density: { kind: 'sample', maxCount: 3 } }, Number).values).toHaveLength(3);
-    expect(resolveVisibleGuideTicks(ticks, { density: { kind: 'sample', minGap: 12 } }, Number).values).toEqual([0, 15, 25]);
+    expect(resolveVisibleGuideTicks(ticks, { density: { kind: 'sample', maxCount: 3 } }, Number).values).toHaveLength(
+      3,
+    );
+    expect(resolveVisibleGuideTicks(ticks, { density: { kind: 'sample', minGap: 12 } }, Number).values).toEqual([
+      0, 15, 25,
+    ]);
   });
 
   it('interval_kind_mismatch_fails_loud', () => {
     const scale = scaleOf('number', [0, 10], [0, 10]);
 
-    expect(() => resolveGuideTicks(scale, { interval: { kind: 'time', unit: 'day' } })).toThrow(/time guide tick interval/);
+    expect(() => resolveGuideTicks(scale, { interval: { kind: 'time', unit: 'day' } })).toThrow(
+      /time guide tick interval/,
+    );
   });
 
   it('interval_generation_has_a_candidate_limit', () => {

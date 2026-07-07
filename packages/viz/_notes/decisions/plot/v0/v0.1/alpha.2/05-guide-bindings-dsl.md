@@ -46,6 +46,7 @@
 ---
 
 > **实现指针**：level `red`（动 `react/src/index.ts` 公开 API 加 DSL 组件）、无 IR schema 改动（装配现有 guide IR，产出过 `PlotSpecSchema` 校验）。三包 lockstep：react 出组件、vanilla 文档示例带 `guides`、docs 出带轴 demo。
+>
 > - 用户 API 与示例见文档站 plot introduction 页（`<Axis dimension grid tickCount tickLabels id>` / `<Plot bare>` / `fontSize` / `margin`，react + vanilla 两视图）。
 > - 真源以代码为准：`Axis` / `AxisProps`（`react/src/components/guides.tsx`）、`collectGuides` / `DEFAULT_GUIDES` / bare 装配（`react/src/components/buildPlotSpec.ts`）、`bare` + 透传（`react/src/Plot.tsx`）、导出（`react/src/components/index.ts` / `react/src/index.ts`）；vanilla `renderPlot` 无改动（已支持任意 spec）。
 > - 测试见 `react/tests/components/`（默认全套 / 显式所得 / `grid` prop / bare 空 guides / 字段对齐 / 产物过 schema / 端到端渲出轴线 + 刻度文字 + y 网格 / bare 等价无 guides 几何）。

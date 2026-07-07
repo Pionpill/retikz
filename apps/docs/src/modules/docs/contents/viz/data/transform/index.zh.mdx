@@ -9,12 +9,12 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 
 ## 能力一览
 
-| kind        | 行数  | 数据语义                             | 常见消费者                 |
-| ----------- | ----- | ------------------------------------ | -------------------------- |
-| `sort`      | N → N | 按字段稳定重排行                     | 折线顺序、堆叠前置整理     |
-| `summarize` | N → G | 按组生成统计行                       | 分组柱、汇总表、统计摘要   |
-| `select`    | N → K | 按组选择原始代表行                   | 极值点、top-N、异常样本    |
-| `annotate`  | N → N | 把组统计或代表值广播回每一条明细行   | 均值线、阈值标签、上下文层 |
+| kind        | 行数       | 数据语义                            | 常见消费者                 |
+| ----------- | ---------- | ----------------------------------- | -------------------------- |
+| `sort`      | N → N      | 按字段稳定重排行                    | 折线顺序、堆叠前置整理     |
+| `summarize` | N → G      | 按组生成统计行                      | 分组柱、汇总表、统计摘要   |
+| `select`    | N → K      | 按组选择原始代表行                  | 极值点、top-N、异常样本    |
+| `annotate`  | N → N      | 把组统计或代表值广播回每一条明细行  | 均值线、阈值标签、上下文层 |
 | custom      | 取决于定义 | 由 `defineTransform` 注册运行时逻辑 | 业务专用派生或长尾数据形态 |
 
 这些 operation 本身是 JSON 可序列化配置；真正的运行函数来自 data 包内置定义或运行时注入的 definition。变换读取字段会参与 model 校验，变换产出的字段不需要提前写进 model。
@@ -96,9 +96,9 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 
 `summarize`、`annotate` 和 plot 注册的 `bin` 会复用 reducer；`select`、`annotate` 和 plot 注册的 `relate` 会复用 selector。
 
-| 子算子   | 返回什么 | 典型 op                                                                 |
-| -------- | -------- | ----------------------------------------------------------------------- |
-| reducer  | 字段片段 | `count` / `sum` / `mean` / `median` / `min` / `max` / `quantile-band`   |
+| 子算子   | 返回什么 | 典型 op                                                                               |
+| -------- | -------- | ------------------------------------------------------------------------------------- |
+| reducer  | 字段片段 | `count` / `sum` / `mean` / `median` / `min` / `max` / `quantile-band`                 |
 | selector | 原始行   | `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band` |
 
 `quantile-band` 用 `lowerP` 和 `upperP` 定义任意分位区间，不固定成 q1 / q3。`outside-quantile-band` 是 selector，所以它输出原始行，适合保留 id、标签和 provenance。

@@ -20,7 +20,7 @@ import { drawScene } from '@retikz/render/canvas'; // 既有，零改动
 
 const canvas = createCanvas(width, height);
 const ctx = canvas.getContext('2d');
-drawScene(ctx, scene);          // 同浏览器，alpha.5 时可传 { time } 截帧
+drawScene(ctx, scene); // 同浏览器，alpha.5 时可传 { time } 截帧
 return await canvas.encode('png'); // Buffer
 ```
 

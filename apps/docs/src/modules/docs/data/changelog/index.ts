@@ -13,13 +13,7 @@ export const changelogPageDescription: Localized = {
   en: 'Release history for this module by minor version, newest first; click a version for that version’s detailed per-package changes.',
 };
 
-export const changelog: Array<Release> = [
-  kernelV04,
-  kernelV03,
-  vizV01,
-  kernelV02,
-  kernelV01,
-];
+export const changelog: Array<Release> = [kernelV04, kernelV03, vizV01, kernelV02, kernelV01];
 
 /** 文档模块 id → changelog 包组：kernel / viz 模块各对应同名包组 */
 const MODULE_GROUP = new Map<string, 'kernel' | 'viz' | 'other'>([

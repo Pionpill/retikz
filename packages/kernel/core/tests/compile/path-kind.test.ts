@@ -84,7 +84,9 @@ describe('Path kind registry', () => {
 
   it('throws for unknown path kinds until a provider is registered', () => {
     expect(() =>
-      compileToScene(scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IRScene['children'])),
+      compileToScene(
+        scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IRScene['children']),
+      ),
     ).toThrow(/Unknown path kind 'missing'/);
   });
 

@@ -31,35 +31,35 @@ kernel alpha.7 采用同样原则: **registry 机制统一，key 来源按能力
 
 这类能力在 IR 中只是一个字符串引用，definition 自身必须携带 `name` 作为 registry key。
 
-| 能力 | IR 引用 | Definition key | 说明 |
-| --- | --- | --- | --- |
-| Shape | `node.shape` | `ShapeDefinition.name` | `paramsSchema` / geometry / emit 运行时注入，不进 IR |
-| Boundary | `node.boundary` / target `boundary` | `BoundaryDefinition.name` | `boundary` 优先查一等连接面 provider；查不到再 fallback 到已注册 shape |
-| Arrow | `arrowDetail.shape` | `ArrowDefinition.name` | 保留 IR 字段语义，definition name 作为注册项真源 |
-| Pattern | pattern 引用字段 | `PatternDefinition.name` | 不为统一而强行改 IR 字段名；只要求它指向 definition name |
-| Path generator | generator step `name` | `PathGeneratorDefinition.name` | generator operation 仍保存 JSON params |
-| Ribbon width profile | ribbon width profile 引用 | `RibbonWidthProfileDefinition.name` | profile 函数运行时注入，不进 IR |
+| 能力                 | IR 引用                             | Definition key                      | 说明                                                                   |
+| -------------------- | ----------------------------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| Shape                | `node.shape`                        | `ShapeDefinition.name`              | `paramsSchema` / geometry / emit 运行时注入，不进 IR                   |
+| Boundary             | `node.boundary` / target `boundary` | `BoundaryDefinition.name`           | `boundary` 优先查一等连接面 provider；查不到再 fallback 到已注册 shape |
+| Arrow                | `arrowDetail.shape`                 | `ArrowDefinition.name`              | 保留 IR 字段语义，definition name 作为注册项真源                       |
+| Pattern              | pattern 引用字段                    | `PatternDefinition.name`            | 不为统一而强行改 IR 字段名；只要求它指向 definition name               |
+| Path generator       | generator step `name`               | `PathGeneratorDefinition.name`      | generator operation 仍保存 JSON params                                 |
+| Ribbon width profile | ribbon width profile 引用           | `RibbonWidthProfileDefinition.name` | profile 函数运行时注入，不进 IR                                        |
 
 ### Operation Provider
 
 这类能力在 IR 中有完整 operation object，registry key 应绑定 discriminant literal 或 namespace，而不是另设一个可能漂移的 `name`。
 
-| 能力 | IR operation | Registry key | 说明 |
-| --- | --- | --- | --- |
-| Path kind | `IRPath.kind` + kind-specific options | schema literal `kind` | 对齐 plot scale / transform 的 schema-keyed definition |
-| Composite | `{ namespace, type, ...payload }` | `${namespace}.${type}` | 保留 namespace 防撞；schema 校验 payload，不再让内置走特殊入口 |
-| Clip | `Scope.clip.kind` + kind-specific fields | schema literal `kind` | clip 是一等 operation provider；内置与自定义 kind 走同一 registry，compile 解析为 renderer-agnostic `ResolvedClipShape` |
+| 能力      | IR operation                             | Registry key           | 说明                                                                                                                    |
+| --------- | ---------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Path kind | `IRPath.kind` + kind-specific options    | schema literal `kind`  | 对齐 plot scale / transform 的 schema-keyed definition                                                                  |
+| Composite | `{ namespace, type, ...payload }`        | `${namespace}.${type}` | 保留 namespace 防撞；schema 校验 payload，不再让内置走特殊入口                                                          |
+| Clip      | `Scope.clip.kind` + kind-specific fields | schema literal `kind`  | clip 是一等 operation provider；内置与自定义 kind 走同一 registry，compile 解析为 renderer-agnostic `ResolvedClipShape` |
 
 ## 决策列表
 
-| ADR | 状态 | 主题 | 说明 |
-| --- | --- | --- | --- |
-| [ADR-01](./01-provider-registry-contract.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Provider registry contract | 统一 array 输入、Map resolve、builtin-first、duplicate throw、unknown 诊断、测试矩阵与错误消息格式 |
-| [ADR-02](./02-provider-key-contract.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Provider key contract | 区分 string reference provider 与 operation provider；明确 `name`、schema literal、`namespace.type` 三种 key 来源 |
-| [ADR-03](./03-capability-provider-migration.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Capability migration | 迁移 shape / arrow / pattern / path generator / path kind / ribbon width profile / composite 到统一 provider 模型 |
-| [ADR-04](./04-adapter-surface-and-docs.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Adapter surface and docs | React / Vanilla provider 透传改成数组定义；文档新增 provider authoring 总览与扩展示例 |
-| [ADR-05](./05-boundary-provider-contract.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Boundary provider contract | 新增一等 BoundaryDefinition / CompileOptions.boundaries；lookup 先 boundary provider，后 shape fallback，并保留默认 `shape` 语义 |
-| [ADR-06](./06-clip-provider-contract.md) | Accepted（2026-07-03 收尾确认，已实现） | Clip provider contract | `Scope.clip.kind` 成为一等 ClipDefinition registry key；内置与 custom clip 同机制解析，并补齐 path / compound resolved clip |
+| ADR                                             | 状态                                               | 主题                       | 说明                                                                                                                             |
+| ----------------------------------------------- | -------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-01](./01-provider-registry-contract.md)    | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Provider registry contract | 统一 array 输入、Map resolve、builtin-first、duplicate throw、unknown 诊断、测试矩阵与错误消息格式                               |
+| [ADR-02](./02-provider-key-contract.md)         | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Provider key contract      | 区分 string reference provider 与 operation provider；明确 `name`、schema literal、`namespace.type` 三种 key 来源                |
+| [ADR-03](./03-capability-provider-migration.md) | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Capability migration       | 迁移 shape / arrow / pattern / path generator / path kind / ribbon width profile / composite 到统一 provider 模型                |
+| [ADR-04](./04-adapter-surface-and-docs.md)      | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Adapter surface and docs   | React / Vanilla provider 透传改成数组定义；文档新增 provider authoring 总览与扩展示例                                            |
+| [ADR-05](./05-boundary-provider-contract.md)    | Accepted（2026-06-29 人工签字，2026-07-03 已实现） | Boundary provider contract | 新增一等 BoundaryDefinition / CompileOptions.boundaries；lookup 先 boundary provider，后 shape fallback，并保留默认 `shape` 语义 |
+| [ADR-06](./06-clip-provider-contract.md)        | Accepted（2026-07-03 收尾确认，已实现）            | Clip provider contract     | `Scope.clip.kind` 成为一等 ClipDefinition registry key；内置与 custom clip 同机制解析，并补齐 path / compound resolved clip      |
 
 ## 设计约束
 

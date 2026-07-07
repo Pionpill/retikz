@@ -3,13 +3,7 @@ import type { z } from 'zod';
 import type { ValueOf } from '../../shared';
 import type { IRJsonObject } from '../json';
 import type { ClipFillRule } from './constants';
-import type {
-  CircleClipSchema,
-  EllipseClipSchema,
-  PathClipSchema,
-  PolygonClipSchema,
-  RectClipSchema,
-} from './schema';
+import type { CircleClipSchema, EllipseClipSchema, PathClipSchema, PolygonClipSchema, RectClipSchema } from './schema';
 
 /** 裁切路径填充规则取值 */
 export type ClipFillRuleValue = ValueOf<typeof ClipFillRule>;

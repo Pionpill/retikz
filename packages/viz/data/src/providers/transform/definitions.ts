@@ -1,10 +1,5 @@
 ﻿import type { AnyTransformDefinition } from '../../contract';
-import type {
-  AnnotateTransform,
-  SelectTransform,
-  SortTransform,
-  SummarizeTransform,
-} from '../../schemas';
+import type { AnnotateTransform, SelectTransform, SortTransform, SummarizeTransform } from '../../schemas';
 
 import { defineTransform, extractTransformKind } from '../../contract';
 import {
@@ -14,11 +9,7 @@ import {
   SummarizeTransformSchema,
 } from '../../schemas';
 import { reducerInputFields, reducerOutputFields, selectorInputFields } from '../statistics';
-import {
-  applyAnnotate,
-  applySelect,
-  applySummarize,
-} from './group';
+import { applyAnnotate, applySelect, applySummarize } from './group';
 import { applySort } from './row';
 
 const sortTransformDefinition = defineTransform<SortTransform>({

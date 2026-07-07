@@ -11,26 +11,16 @@ import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPositi
 export const GeometryLabelSchema = z
   .object({
     ...createLabelVisualStyleShape({
-      textColor: "Label text color; falls back to label defaults, path color, then currentColor.",
+      textColor: 'Label text color; falls back to label defaults, path color, then currentColor.',
       opacity: 'Label-only opacity, multiplied with the owning path opacity.',
       font: 'Label font overrides. Missing fields inherit from scope label defaults.',
     }),
     text: LabelTextContentSchema,
     position: z
-      .union([
-        z.enum(GeometryLabelPosition),
-        NormalizedFractionSchema,
-      ])
+      .union([z.enum(GeometryLabelPosition), NormalizedFractionSchema])
       .optional()
-      .describe(
-        'Position along the step: keyword or normalized number. Parameter meaning follows the step kind.',
-      ),
-    side: z
-      .enum(Side)
-      .optional()
-      .describe(
-        'Canonical side relative to the label anchor. Default `top`.',
-      ),
+      .describe('Position along the step: keyword or normalized number. Parameter meaning follows the step kind.'),
+    side: z.enum(Side).optional().describe('Canonical side relative to the label anchor. Default `top`.'),
     sloped: z
       .boolean()
       .optional()
@@ -132,21 +122,13 @@ export const BendStepSchema = z
       .describe(
         'Bend side relative to the from-to direction. Use with bendAngle unless outAngle and inAngle are provided.',
       ),
-    bendAngle: AngleDegreesSchema
-      .gt(-180)
-      .lt(180)
-      .optional()
-      .describe('Bend angle in degrees. Omitted fields use 30.'),
-    outAngle: AngleDegreesSchema
-      .optional()
-      .describe(
-        'Outgoing tangent angle in degrees at the start point. With `inAngle`, takes precedence over bendDirection and bendAngle.',
-      ),
-    inAngle: AngleDegreesSchema
-      .optional()
-      .describe(
-        'Incoming tangent angle in degrees at the end point. Used with `outAngle` for explicit tangent control.',
-      ),
+    bendAngle: AngleDegreesSchema.gt(-180).lt(180).optional().describe('Bend angle in degrees. Omitted fields use 30.'),
+    outAngle: AngleDegreesSchema.optional().describe(
+      'Outgoing tangent angle in degrees at the start point. With `inAngle`, takes precedence over bendDirection and bendAngle.',
+    ),
+    inAngle: AngleDegreesSchema.optional().describe(
+      'Incoming tangent angle in degrees at the end point. Used with `outAngle` for explicit tangent control.',
+    ),
     looseness: z
       .number()
       .positive()
@@ -201,15 +183,15 @@ const ArcStepBaseSchema = z
       .describe(
         'Arc segment sweeping from startAngle to endAngle around a center. Use radius as a number or `{ x, y }`.',
       ),
-    startAngle: AngleDegreesSchema
-      .describe(
-        'Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.',
-      ),
-    endAngle: AngleDegreesSchema.describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
-    radius: StepRadiusSchema
-      .describe(
-        'Arc radius. Number creates a circular arc; `{ x, y }` creates an elliptical arc.',
-      ),
+    startAngle: AngleDegreesSchema.describe(
+      'Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.',
+    ),
+    endAngle: AngleDegreesSchema.describe(
+      'Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle',
+    ),
+    radius: StepRadiusSchema.describe(
+      'Arc radius. Number creates a circular arc; `{ x, y }` creates an elliptical arc.',
+    ),
     center: TargetSchema.optional().describe('Explicit arc center. Omitted fields use the current cursor as center.'),
     label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
   })
@@ -228,18 +210,13 @@ const CirclePathStepBaseSchema = z
       .describe(
         'Circle centered at the cursor. Without angles, emits a full circle; with angles, emits a partial arc closed by `closed`.',
       ),
-    radius: z
-      .number()
-      .positive()
-      .describe('Circle radius in user units'),
-    startAngle: AngleDegreesSchema
-      .optional()
-      .describe(
-        'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
-      ),
-    endAngle: AngleDegreesSchema
-      .optional()
-      .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
+    radius: z.number().positive().describe('Circle radius in user units'),
+    startAngle: AngleDegreesSchema.optional().describe(
+      'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
+    ),
+    endAngle: AngleDegreesSchema.optional().describe(
+      'Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.',
+    ),
     closed: z
       .enum(PathCloseMode)
       .optional()
@@ -266,14 +243,10 @@ const EllipsePathStepBaseSchema = z
         'Ellipse centered at the cursor. Without angles, emits a full ellipse; with angles, emits a partial arc closed by `closed`.',
       ),
     radius: StepAnisotropicRadiusSchema.describe('Ellipse radius object `{ x, y }` in user units.'),
-    startAngle: AngleDegreesSchema
-      .optional()
-      .describe(
-        'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
-      ),
-    endAngle: AngleDegreesSchema
-      .optional()
-      .describe('Partial-ellipse end angle in degrees.'),
+    startAngle: AngleDegreesSchema.optional().describe(
+      'Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.',
+    ),
+    endAngle: AngleDegreesSchema.optional().describe('Partial-ellipse end angle in degrees.'),
     closed: z
       .enum(PathCloseMode)
       .optional()
@@ -356,9 +329,7 @@ export const GeneratorStepSchema = z
       'Edge label attached to the generated segment; positioned along the produced commands.',
     ),
   })
-  .describe(
-    'Generator action: produce a sub-path by invoking a built-in or registered path generator.',
-  );
+  .describe('Generator action: produce a sub-path by invoking a built-in or registered path generator.');
 
 export const StepSchema = z
   .discriminatedUnion('kind', [

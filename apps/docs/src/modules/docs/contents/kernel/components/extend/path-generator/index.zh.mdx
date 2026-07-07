@@ -23,7 +23,7 @@ React 里用 `<Step kind="generator" name="..." params={...} />` 写 generator s
 
 | 字段           | 类型                          | 描述                                                                       |
 | -------------- | ----------------------------- | -------------------------------------------------------------------------- |
-| `name`         | `string`                      | 注册名；generator step 的 `name` 按这个名字查找 definition |
+| `name`         | `string`                      | 注册名；generator step 的 `name` 按这个名字查找 definition                 |
 | `paramsSchema` | `ZodType<IRJsonObject>`       | params 的 zod schema；类型约束输出 JSON-safe（运行时另有第二道护栏，见下） |
 | `generate`     | `(ctx) => Array<PathCommand>` | 据 ctx 产低层路径命令（line / quad / cubic / move…），不再走 step 编译     |
 | `targetParams` | `Array<string>`               | 哪些 params **顶层 key** 是 Target，compile 先 resolve 成世界坐标          |

@@ -3,7 +3,7 @@ import type { DataFieldTypeMap } from '@retikz/data';
 
 import { PaintSpecSchema } from '@retikz/core';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
-import { DataFieldType,FieldOrderMode } from '@retikz/data';
+import { DataFieldType, FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';

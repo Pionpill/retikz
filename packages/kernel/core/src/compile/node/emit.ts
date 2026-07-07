@@ -1,16 +1,12 @@
-﻿import type {
-  GroupPrim,
-  ResolvedShapeStyle,
-  ScenePrimitive,
-} from '../../contract';
+﻿import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive } from '../../contract';
 import type { IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../resource';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
 import { toAlphabeticBaselineY } from '../text';
-import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './label-geometry';
-import { DEFAULT_LINE_HEIGHT_FACTOR } from './text';
+import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
+import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './label/geometry';
 
 /** 空 shape params。 */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
@@ -177,11 +173,7 @@ const emitNodeLabelContentPrimitive = (
 };
 
 /** 发出节点附属 label 图元。 */
-const emitNodeLabelPrimitives = (
-  layout: NodeLayout,
-  label: NodeLabelLayout,
-  round: Round,
-): Array<ScenePrimitive> => {
+const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, round: Round): Array<ScenePrimitive> => {
   const labelCenterPosition = labelCenter(layout, label);
   const [lx, ly] = labelCenterPosition;
   const primitives: Array<ScenePrimitive> = [];

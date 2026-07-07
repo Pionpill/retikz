@@ -62,7 +62,12 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
     legend: { rampLength: 120, label: { textColor: '#475569' } },
   }}
 >
-  <Legend channel="color" ticks={{ count: 4 }} tickLabels={{ format: '~s' }} style={{ title: { font: { weight: 600 } } }} />
+  <Legend
+    channel="color"
+    ticks={{ count: 4 }}
+    tickLabels={{ format: '~s' }}
+    style={{ title: { font: { weight: 600 } } }}
+  />
 </Plot>
 ```
 
@@ -72,16 +77,16 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 ## API
 
-| 属性         | 类型                                        | 默认值        | 描述                                                       |
-| ------------ | ------------------------------------------- | ------------- | ---------------------------------------------------------- |
-| `channel`    | `'color' \| 'size' \| 'opacity' \| 'shape'` | —             | 图例解释哪个非位置通道；形态由绑定 scale 类型决定         |
-| `scale`      | `string?`                                   | —             | 同一通道被多个 scale 驱动时指定 scale name；省略表示唯一 scale |
-| `title`      | `string \| TextBlock?`                      | 无            | 图例标题内容；复用 core 文本节点的 text-block 形态         |
-| `position`   | `'right' \| 'left' \| 'top' \| 'bottom'`    | `'right'`     | 图例所在边；该边会预留图例带                              |
-| `orient`     | `'vertical' \| 'horizontal'`                | 按 `position` | 条目排布方向；左右默认 vertical，上下默认 horizontal       |
+| 属性         | 类型                                        | 默认值        | 描述                                                                 |
+| ------------ | ------------------------------------------- | ------------- | -------------------------------------------------------------------- |
+| `channel`    | `'color' \| 'size' \| 'opacity' \| 'shape'` | —             | 图例解释哪个非位置通道；形态由绑定 scale 类型决定                    |
+| `scale`      | `string?`                                   | —             | 同一通道被多个 scale 驱动时指定 scale name；省略表示唯一 scale       |
+| `title`      | `string \| TextBlock?`                      | 无            | 图例标题内容；复用 core 文本节点的 text-block 形态                   |
+| `position`   | `'right' \| 'left' \| 'top' \| 'bottom'`    | `'right'`     | 图例所在边；该边会预留图例带                                         |
+| `orient`     | `'vertical' \| 'horizontal'`                | 按 `position` | 条目排布方向；左右默认 vertical，上下默认 horizontal                 |
 | `ticks`      | `{ count?; values? }`                       | scale 默认    | 连续 ramp 的刻度来源；显式 `values` 优先于 `count`，离散 swatch 忽略 |
-| `tickLabels` | `false \| { format? }`                      | `true`        | 用 `false` 隐藏标签，或用声明式 format 格式化 ramp 刻度标签 |
-| `style`      | `LegendGuideStyle?`                         | theme legend  | 本地图例视觉 token：swatch / ramp 尺寸、间距、标题和标签文本样式 |
+| `tickLabels` | `false \| { format? }`                      | `true`        | 用 `false` 隐藏标签，或用声明式 format 格式化 ramp 刻度标签          |
+| `style`      | `LegendGuideStyle?`                         | theme legend  | 本地图例视觉 token：swatch / ramp 尺寸、间距、标题和标签文本样式     |
 
 ## 相关
 

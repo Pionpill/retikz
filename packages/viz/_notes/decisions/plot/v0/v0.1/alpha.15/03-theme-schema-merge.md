@@ -41,8 +41,8 @@ type PlotTheme = {
 局部 guide 覆盖走专门 resolver：
 
 ```ts
-resolveAxisGuideTokens(resolvedTheme.axis, axisGuide)
-resolveLegendGuideTokens(resolvedTheme.legend, legendGuide.style)
+resolveAxisGuideTokens(resolvedTheme.axis, axisGuide);
+resolveLegendGuideTokens(resolvedTheme.legend, legendGuide.style);
 ```
 
 这两个 resolver 只合并 token 字段。`ticks.count`、`ticks.values`、`tickLabels.format`、`title.text`、`grid.applyTo`、`grid.select`、legend `position`、`orient`、`ticks`、`tickLabels` 等语义字段不进入 token merge，也不应该出现在 theme schema 里。

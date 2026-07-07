@@ -85,12 +85,12 @@ type CompositionGuidePolicySpec = {
 
 这是 breaking schema change：`composition.guidePolicy.grid` 从 alpha.14 schema 中移除，不保留 `none | perScope | shared` 别名。迁移关系为：
 
-| 旧写法 | 新写法 |
-| --- | --- |
-| `guidePolicy.grid: 'none'` | 删除 axis 上的 `grid`，或写 `grid: false` |
-| `guidePolicy.grid: 'perScope'` | `guidePolicy.gridPlacement: 'self'`，axis 写 `grid: true` |
-| `guidePolicy.grid: 'shared'` | `guidePolicy.gridPlacement: 'sharedRole'`，axis 写 `grid: true` |
-| 只让某个 track / facet 有 grid | axis 写 `grid: { applyTo: 'selected', select: ... }` |
+| 旧写法                         | 新写法                                                          |
+| ------------------------------ | --------------------------------------------------------------- |
+| `guidePolicy.grid: 'none'`     | 删除 axis 上的 `grid`，或写 `grid: false`                       |
+| `guidePolicy.grid: 'perScope'` | `guidePolicy.gridPlacement: 'self'`，axis 写 `grid: true`       |
+| `guidePolicy.grid: 'shared'`   | `guidePolicy.gridPlacement: 'sharedRole'`，axis 写 `grid: true` |
+| 只让某个 track / facet 有 grid | axis 写 `grid: { applyTo: 'selected', select: ... }`            |
 
 ## 不在本 ADR 范围
 

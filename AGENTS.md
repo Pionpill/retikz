@@ -57,13 +57,15 @@ pnpm dev:docs
 默认只验证当前或受影响 workspace；跨包公共契约、发布前、CI 复现或用户明确要求时才扩大到全仓。
 
 ```bash
+pnpm exec prettier --write <changed-files-or-scope>
 pnpm --filter <pkg> exec eslint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
 pnpm --filter <pkg> exec vitest run [test-file]
 ```
 
+- 改完内容先用 Prettier 格式化相关文件或目录，再按改动类型继续验证。
 - 改 `*.ts` / `*.tsx` / `*.json` / 配置等结构化文件：先跑受影响包 `eslint --fix`，再跑对应 `tsc --noEmit` 和必要测试。
-- 只改纯 MDX 正文、表格、站内链接：至少跑 `git diff --check`，并验证关键链接 / 页面可访问。
+- 只改纯 MDX 正文、表格、站内链接：先跑 Prettier，再至少跑 `git diff --check`，并验证关键链接 / 页面可访问。
 - 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 docs skills 的分级规则验证，通常需要 docs 包类型检查。
 - 类型检查只用 `tsc --noEmit`。不要在 packages 下运行会 emit 的 `tsc` / `tsc -b`；若已污染源码树，先清理生成物。
 - ESLint / TS 报错要修干净。不要用 `eslint-disable`、`@ts-ignore`、`as any` 绕过；确实不可避时写最小作用域和原因。

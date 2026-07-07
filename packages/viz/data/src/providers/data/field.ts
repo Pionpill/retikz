@@ -1,6 +1,6 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { DataFieldTypeMap, DataFieldTypeValue,DataModel, ExternalRow } from '../../schemas';
+import type { DataFieldTypeMap, DataFieldTypeValue, DataModel, ExternalRow } from '../../schemas';
 
 import { DataFieldType } from '../../schemas';
 

@@ -1,8 +1,4 @@
-﻿import type {
-  BoundaryDefinition,
-  ShapeDefinition,
-  Transform,
-} from '../../contract';
+﻿import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type { IRLabelDefault, IRNode } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
@@ -18,10 +14,10 @@ import { resolvePosition } from '../position';
 import { resolveShadow } from '../style';
 import { resolveFontSize } from '../text';
 import { resolveAxisScale, resolveBoxSize, resolveBoxSpacing } from './box';
-import { layoutNodeContent } from './content';
-import { layoutNodeLabels } from './label-layout';
+import { layoutNodeContent } from './content/layout';
+import { DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './content/text';
+import { layoutNodeLabels } from './label/layout';
 import { resolveNodeShape } from './shape';
-import { DEFAULT_LINE_HEIGHT_FACTOR, resolveDashPattern } from './text';
 
 const DEFAULT_PADDING = 8;
 

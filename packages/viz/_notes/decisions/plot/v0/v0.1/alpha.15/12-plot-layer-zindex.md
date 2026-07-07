@@ -53,16 +53,16 @@ type PlotLabel = {
 
 默认层级固定如下：
 
-| 默认 zIndex | 层 | 当前元素 |
-|---:|---|---|
-| -1000 | background | `plotBackgroundNode` |
-| -300 | grid | axis major / minor grid scope |
-| 0 | mark | point、path、interval、reference、relation、custom mark layer |
-| 200 | axis | axis line、tick mark、tick label、axis title |
-| 300 | facet label | facet row / column header |
-| 400 | plot label | title、caption、source、note、custom text |
-| 500 | legend | legend title、swatch、ramp、legend labels |
-| 900 | interaction | hover、selection、brush、crosshair 等后续交互层预留 |
+| 默认 zIndex | 层          | 当前元素                                                      |
+| ----------: | ----------- | ------------------------------------------------------------- |
+|       -1000 | background  | `plotBackgroundNode`                                          |
+|        -300 | grid        | axis major / minor grid scope                                 |
+|           0 | mark        | point、path、interval、reference、relation、custom mark layer |
+|         200 | axis        | axis line、tick mark、tick label、axis title                  |
+|         300 | facet label | facet row / column header                                     |
+|         400 | plot label  | title、caption、source、note、custom text                     |
+|         500 | legend      | legend title、swatch、ramp、legend labels                     |
+|         900 | interaction | hover、selection、brush、crosshair 等后续交互层预留           |
 
 语义固定如下：
 

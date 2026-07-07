@@ -8,7 +8,7 @@ import type {
 } from 'd3-scale';
 
 import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
-import { DataFieldType,FieldOrderMode } from '@retikz/data';
+import { DataFieldType, FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import { extent as d3Extent } from 'd3-array';
 import {
@@ -505,7 +505,11 @@ const linearScaleDefinition = defineScale<LinearScale>({
   allowsBaseline: true,
   resolve: (def, values, range) =>
     linearPositionScale(
-      resolveLinearScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+      resolveLinearScale(
+        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
+        values.filter(isFiniteNumber),
+        range,
+      ),
     ),
 });
 
@@ -516,7 +520,11 @@ const logScaleDefinition = defineScale<LogScale>({
   allowsBaseline: false,
   resolve: (def, values, range) =>
     continuousPositionScale(
-      resolveLogScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+      resolveLogScale(
+        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
+        values.filter(isFiniteNumber),
+        range,
+      ),
       value => isFiniteNumber(value) && value > 0,
     ),
 });
@@ -532,7 +540,11 @@ const powScaleDefinition = defineScale<PowScale>({
       ? isFiniteNumber
       : (value: unknown): boolean => isFiniteNumber(value) && value >= 0;
     return continuousPositionScale(
-      resolvePowScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+      resolvePowScale(
+        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
+        values.filter(isFiniteNumber),
+        range,
+      ),
       isValidInput,
     );
   },
@@ -545,7 +557,11 @@ const sqrtScaleDefinition = defineScale<SqrtScale>({
   allowsBaseline: false,
   resolve: (def, values, range) =>
     continuousPositionScale(
-      resolveSqrtScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+      resolveSqrtScale(
+        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
+        values.filter(isFiniteNumber),
+        range,
+      ),
       value => isFiniteNumber(value) && value >= 0,
     ),
 });
@@ -559,7 +575,11 @@ const symlogScaleDefinition = defineScale<SymlogScale>({
   // symlog 全域有定义（含零 / 负），输入仅需有限数，沿用默认 isFiniteNumber 守门
   resolve: (def, values, range) =>
     continuousPositionScale(
-      resolveSymlogScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+      resolveSymlogScale(
+        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
+        values.filter(isFiniteNumber),
+        range,
+      ),
     ),
 });
 
@@ -571,7 +591,11 @@ const radialScaleDefinition = defineScale<RadialScale>({
   allowsBaseline: true,
   resolve: (def, values, range) =>
     continuousPositionScale(
-      resolveRadialScale({ ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 }, values.filter(isFiniteNumber), range),
+      resolveRadialScale(
+        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
+        values.filter(isFiniteNumber),
+        range,
+      ),
     ),
 });
 

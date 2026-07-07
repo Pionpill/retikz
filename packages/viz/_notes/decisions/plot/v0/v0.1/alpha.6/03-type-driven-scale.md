@@ -21,22 +21,22 @@ ADR-01 已产出「用户源字段 → `FieldType`」类型 `Map`。本 ADR 用�
 
 **(2) 默认映射（FieldType → scaleType）**：
 
-| FieldType | 位置通道（x/y/angle/radius） | 非位置 color 通道 |
-|---|---|---|
-| quantitative | `linear` | （连续色 = sequential，**留 alpha.8**） |
-| temporal | `time` | （留 alpha.8） |
-| nominal / ordinal | `band`（折线/散点退化为 `point` 由 mark 提示，沿用现 `scaleX`） | `ordinal`（分类配色） |
-| proportion | `linear`，domain 默认 `[0,1]` | （留 alpha.8） |
+| FieldType         | 位置通道（x/y/angle/radius）                                    | 非位置 color 通道                       |
+| ----------------- | --------------------------------------------------------------- | --------------------------------------- |
+| quantitative      | `linear`                                                        | （连续色 = sequential，**留 alpha.8**） |
+| temporal          | `time`                                                          | （留 alpha.8）                          |
+| nominal / ordinal | `band`（折线/散点退化为 `point` 由 mark 提示，沿用现 `scaleX`） | `ordinal`（分类配色）                   |
+| proportion        | `linear`，domain 默认 `[0,1]`                                   | （留 alpha.8）                          |
 
 本轮 color 派生只覆盖 **nominal/ordinal → ordinal**；quantitative/temporal 的连续色阶随 alpha.8 color gradient 接入。
 
 **(3) 类型 ↔ scale 兼容校验（fail-loud）**：显式声明的 scale 与 bound 字段 `FieldType` 不兼容 → 清晰报错，**不强转**：
 
-| 字段类型 | 兼容 scale |
-|---|---|
+| 字段类型                  | 兼容 scale                            |
+| ------------------------- | ------------------------------------- |
 | quantitative / proportion | linear（位置）、ordinal（不可作位置） |
-| temporal | time |
-| nominal / ordinal | band / point（位置）、ordinal（颜色） |
+| temporal                  | time                                  |
+| nominal / ordinal         | band / point（位置）、ordinal（颜色） |
 
 如 `nominal` 字段配 `linear`、`temporal` 配 `band` → 抛 `scale "<name>" (linear) incompatible with field "<f>" (nominal)`。
 
@@ -48,7 +48,6 @@ ADR-01 已产出「用户源字段 → `FieldType`」类型 `Map`。本 ADR 用�
 2. **显式优先 + 向后兼容**：已声明 scale 的 spec 行为逐字不变；派生只在缺省时介入。
 3. **fail-loud 不强转**：nominal 配 linear 多半是 spec 错误，强转会出无意义图——早炸早好（对齐 ADR-01/02 fail-loud 基调）。
 4. **复用现成刻度**：guide 格式化不新写，只按类型路由到 `timeTicks`/`categoryTicks`/`scaleTicks`。
-
 
 ## 不在本 ADR 范围
 

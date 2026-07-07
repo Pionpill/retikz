@@ -71,14 +71,14 @@ Data + Transform + Channel(Encoding):
 
 Dimension 描述字段的语义类型，不等于视觉坐标轴。常见维度：
 
-| 类型 | 含义 | 例子 |
-|---|---|---|
-| quantitative | 连续数值 | revenue、age |
-| temporal | 时间 | date、startTime、endTime |
-| nominal | 无序分类 | country、owner |
-| ordinal | 有序分类 | rank、stage |
-| interval | 区间 | start/end、low/high |
-| proportion | 归一比例 | pie value、ternary a/b/c |
+| 类型         | 含义     | 例子                     |
+| ------------ | -------- | ------------------------ |
+| quantitative | 连续数值 | revenue、age             |
+| temporal     | 时间     | date、startTime、endTime |
+| nominal      | 无序分类 | country、owner           |
+| ordinal      | 有序分类 | rank、stage              |
+| interval     | 区间     | start/end、low/high      |
+| proportion   | 归一比例 | pie value、ternary a/b/c |
 
 维度数量不是看图形占据几何空间几维，而是看有多少独立数据变量参与空间定位或空间区间生成。
 
@@ -126,13 +126,13 @@ CoordinateSystem 定义一组 scale 如何组合为局部坐标空间。**坐标
 
 首批可考虑：
 
-| 坐标系 | 通道 | 典型结果 |
-|---|---|---|
-| cartesian1D | x | rug、timeline、histogram 的一维底座（一维直线，scale 可 log/time 等） |
-| polar1D | angle | 环形 / 周期数据（钟面、星期轮）；一维圆周 |
-| cartesian2D | x / y | line、scatter、bar、area、heatmap、gantt |
-| polar2D | angle / radius | radar、rose、polar bar、pie、donut |
-| ternary2D | a / b / c | 三元图，约束三维投影到二维 |
+| 坐标系      | 通道           | 典型结果                                                              |
+| ----------- | -------------- | --------------------------------------------------------------------- |
+| cartesian1D | x              | rug、timeline、histogram 的一维底座（一维直线，scale 可 log/time 等） |
+| polar1D     | angle          | 环形 / 周期数据（钟面、星期轮）；一维圆周                             |
+| cartesian2D | x / y          | line、scatter、bar、area、heatmap、gantt                              |
+| polar2D     | angle / radius | radar、rose、polar bar、pie、donut                                    |
+| ternary2D   | a / b / c      | 三元图，约束三维投影到二维                                            |
 
 > 命名注：早期草拟过 `linear1D`，已改 `cartesian1D`——坐标系名描述空间几何而非 scale，「linear」错误暗示仅线性 scale（实际一维直线轴同样可配 log / time）。一维有直线（cartesian1D）/ 圆周（polar1D）两种载体，分别是 cartesian2D / polar2D 的降维。详见 alpha.9。
 
@@ -167,17 +167,17 @@ Mark 是数据在坐标系中的几何显现。Mark 应比传统 chart type 更�
 
 首批 mark 可以按几何语义分：
 
-| Mark | 语义 | 例子 |
-|---|---|---|
-| point | 单条记录的位置 | scatter、dot plot |
-| line | 有序点之间的连接关系 | line chart、radar line |
-| area | 线与 baseline / 另一条线之间的区域 | area chart |
-| interval / bar | 从 baseline 到 value 或 start/end 的区间 | bar、gantt |
-| rect | 二维格子区域 | heatmap |
-| sector | 极坐标角度 / 半径区间 | pie、donut、rose |
-| rule | 参考线 / 阈值线 | average line |
-| text | 数据标签 | label |
-| ribbon | 两个端点集合之间的带状关系 | sankey / alluvial 流量、跨 scope connector |
+| Mark           | 语义                                     | 例子                                       |
+| -------------- | ---------------------------------------- | ------------------------------------------ |
+| point          | 单条记录的位置                           | scatter、dot plot                          |
+| line           | 有序点之间的连接关系                     | line chart、radar line                     |
+| area           | 线与 baseline / 另一条线之间的区域       | area chart                                 |
+| interval / bar | 从 baseline 到 value 或 start/end 的区间 | bar、gantt                                 |
+| rect           | 二维格子区域                             | heatmap                                    |
+| sector         | 极坐标角度 / 半径区间                    | pie、donut、rose                           |
+| rule           | 参考线 / 阈值线                          | average line                               |
+| text           | 数据标签                                 | label                                      |
+| ribbon         | 两个端点集合之间的带状关系               | sankey / alluvial 流量、跨 scope connector |
 
 同一个 mark 在不同坐标系下可形成不同俗名：
 
@@ -392,10 +392,10 @@ Geo API 是否独立成 `@retikz/geo` 尚待后续 ADR 决定。地图类可视�
 框架绑定按表达层各自发包，不设统一 viz adapter：
 
 ```tsx
-import { Plot } from "@retikz/plot-react";
-import { Chart } from "@retikz/chart-react";
-import { Table } from "@retikz/table-react";
-import { Geo } from "@retikz/geo-react";
+import { Plot } from '@retikz/plot-react';
+import { Chart } from '@retikz/chart-react';
+import { Table } from '@retikz/table-react';
+import { Geo } from '@retikz/geo-react';
 ```
 
 绑定包只负责把框架 authoring 表面装配成对应 spec 并委托底层包；不复制 data transform、plot grammar / layout、chart preset、table layout 或 geo projection 逻辑。
@@ -424,12 +424,12 @@ import { Geo } from "@retikz/geo-react";
 - 能力层 / 封装层 → 基名：`data`（共享数据层）、`plot`（坐标语法底层，含 layout transform）、`chart`（plot 之上的友好封装）、`table`（表格可视化底层）、`geo`（地图可视化候选底层）。
 - 框架绑定 → 由各表达层各自发 `-react` / `-vanilla` 包，避免统一 adapter 拉入无关依赖。
 
-| 层级 | core 逻辑 | react | vanilla |
-|---|---|---|---|
-| 共享数据层 | `@retikz/data` | — | — |
-| 坐标语法底层 | `@retikz/plot` | `@retikz/plot-react` | `@retikz/plot-vanilla` |
-| 图表封装层 | `@retikz/chart` | `@retikz/chart-react` | `@retikz/chart-vanilla` |
-| 表格可视化底层 | `@retikz/table` | `@retikz/table-react` | `@retikz/table-vanilla` |
+| 层级               | core 逻辑             | react                       | vanilla                       |
+| ------------------ | --------------------- | --------------------------- | ----------------------------- |
+| 共享数据层         | `@retikz/data`        | —                           | —                             |
+| 坐标语法底层       | `@retikz/plot`        | `@retikz/plot-react`        | `@retikz/plot-vanilla`        |
+| 图表封装层         | `@retikz/chart`       | `@retikz/chart-react`       | `@retikz/chart-vanilla`       |
+| 表格可视化底层     | `@retikz/table`       | `@retikz/table-react`       | `@retikz/table-vanilla`       |
 | 地图可视化候选底层 | `@retikz/geo`（候选） | `@retikz/geo-react`（候选） | `@retikz/geo-vanilla`（候选） |
 
 **禁止**把层级塞进后缀（如 `@retikz/plot-chart`）。`plot-react` / `chart-react` / `table-react` / `geo-react` 这类 per-module adapter 是长期形态，不再由 viz adapter 收敛。
@@ -661,19 +661,19 @@ intent
 
 ### 11.1 模块清单
 
-| 管线阶段 | 模块 | 职责 |
-|---|---|---|
-| —    | `ir` / `schema`   | Plot IR 类型 + zod schema（JSON 可序列化），所有模块的输入输出契约 |
-| 1    | `transform`       | filter / sort、groupBy / aggregate、bin、stack、cumulative sum、dodge、derive interval |
-| 2    | `encoding`        | 通道声明与解析；位置通道 / 非位置通道分流（§1） |
-| 3    | `scale`           | domain → range：linear / log / pow / time、band / point、ordinal / color / size；nice / clamp / ticks |
-| 4    | `coordinate`      | 默认 cartesian + polar，可注册自定义；polar / ternary 投影几何 |
-| 5    | `mark`            | point / line / area / interval(bar) / rect / sector / rule / text / ribbon；曲线插值与 path 生成 |
-| 5    | `relation`        | order / group / series / stack / dodge / connect / facet |
-| 6    | `guide`           | axis / grid / tick / tick-label / legend / reference line / band |
-| 7    | `scope` / `layer` | z-order 分层、多坐标 scope、semantic anchor（bbox / plotArea / series / datum，见 §7） |
-| 8    | `lowering`        | Plot IR → core IR（Scope / Node / Path / Step / Coordinate）；plot 不自带 renderer（§8） |
-| 横切 | `theme`（可选）    | 调色板、默认样式（series 配色等） |
+| 管线阶段 | 模块              | 职责                                                                                                  |
+| -------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
+| —        | `ir` / `schema`   | Plot IR 类型 + zod schema（JSON 可序列化），所有模块的输入输出契约                                    |
+| 1        | `transform`       | filter / sort、groupBy / aggregate、bin、stack、cumulative sum、dodge、derive interval                |
+| 2        | `encoding`        | 通道声明与解析；位置通道 / 非位置通道分流（§1）                                                       |
+| 3        | `scale`           | domain → range：linear / log / pow / time、band / point、ordinal / color / size；nice / clamp / ticks |
+| 4        | `coordinate`      | 默认 cartesian + polar，可注册自定义；polar / ternary 投影几何                                        |
+| 5        | `mark`            | point / line / area / interval(bar) / rect / sector / rule / text / ribbon；曲线插值与 path 生成      |
+| 5        | `relation`        | order / group / series / stack / dodge / connect / facet                                              |
+| 6        | `guide`           | axis / grid / tick / tick-label / legend / reference line / band                                      |
+| 7        | `scope` / `layer` | z-order 分层、多坐标 scope、semantic anchor（bbox / plotArea / series / datum，见 §7）                |
+| 8        | `lowering`        | Plot IR → core IR（Scope / Node / Path / Step / Coordinate）；plot 不自带 renderer（§8）              |
+| 横切     | `theme`（可选）   | 调色板、默认样式（series 配色等）                                                                     |
 
 `ir` / `scale` / `guide` / `lowering` 是常被忽略却必备的模块——没有 `guide` 画不出轴与图例，没有 `lowering` 图停在内存里无法渲染，没有 `scale` 位置与颜色都无从映射。「数学计算」不单列为模块：数据层聚合归 `transform`、通道映射与 ticks 归 `scale`、投影与曲线几何归 `coordinate` / `mark` 各自承担。
 
@@ -804,23 +804,23 @@ intent
 
 五者的设计立场：
 
-| 库 | 范式本质 |
-| --- | --- |
-| **ggplot2** | Wilkinson 分层语法的 R 实现，统计图形优先；底层绑 grid grob 树 |
-| **Vega / Vega-Lite** | 声明式 JSON 语法 + 编译管线(VL→Vega) + 响应式 dataflow + 视图组合代数 + 交互语法(selection)；底层私有 scenegraph |
-| **Observable Plot** | D3 团队的 mark-based 图形语法，智能默认极强、mark/transform/facet 丰富；但 options 含函数 → 不可序列化、SVG 单后端、故意不做极坐标；retikz 最近的同类（JS 里比 Vega-Lite 轻的 GoG） |
-| **Highcharts** | **不是**图形语法——图表类型目录(`chart.type` 选型 + 深层 options)，series 为中心的配置库；直接生成 SVG |
-| **retikz/plot** | 声明式 JSON 语法 + 编译管线，但**下沉目标是一套用户可见、可手写、可组合的通用绘图语法(Tier 1 Kernel)**，而非私有 scenegraph（即 §8 lowering） |
+| 库                   | 范式本质                                                                                                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ggplot2**          | Wilkinson 分层语法的 R 实现，统计图形优先；底层绑 grid grob 树                                                                                                                      |
+| **Vega / Vega-Lite** | 声明式 JSON 语法 + 编译管线(VL→Vega) + 响应式 dataflow + 视图组合代数 + 交互语法(selection)；底层私有 scenegraph                                                                    |
+| **Observable Plot**  | D3 团队的 mark-based 图形语法，智能默认极强、mark/transform/facet 丰富；但 options 含函数 → 不可序列化、SVG 单后端、故意不做极坐标；retikz 最近的同类（JS 里比 Vega-Lite 轻的 GoG） |
+| **Highcharts**       | **不是**图形语法——图表类型目录(`chart.type` 选型 + 深层 options)，series 为中心的配置库；直接生成 SVG                                                                               |
+| **retikz/plot**      | 声明式 JSON 语法 + 编译管线，但**下沉目标是一套用户可见、可手写、可组合的通用绘图语法(Tier 1 Kernel)**，而非私有 scenegraph（即 §8 lowering）                                       |
 
 核心维度：
 
-| 维度 | ggplot2 | Vega-Lite | Observable Plot | Highcharts | retikz/plot |
-| --- | --- | --- | --- | --- | --- |
-| 真·图形语法 | ✅ | ✅ + 组合代数 | ✅ | ❌ 配置目录 | ✅ |
-| 最低层 | grid grob（私有） | scenegraph（私有） | SVG DOM（D3） | SVG DOM | **Tier 1 通用图元（公开/可手写/可组合）** |
-| 序列化/声明 | ❌ R 对象+闭包 | ✅ JSON | ❌ JS options 带函数/accessor | △ JS config 带函数 | ✅ JSON（§3.1 数据不进 IR） |
-| 渲染后端中立 | ❌ grid | ✅ SVG/Canvas | ❌ 仅 SVG | ❌ SVG | ✅ SVG/Canvas/SSR（后端只懂图元、chart 语义透明） |
-| 图元可被连接/嵌入更大图解 | ❌ 终端产物 | ❌ | ❌ 终端 SVG | ❌ | ✅ **每个柱/点是可连接 Node**（§7 / §8.1） |
+| 维度                      | ggplot2           | Vega-Lite          | Observable Plot               | Highcharts         | retikz/plot                                       |
+| ------------------------- | ----------------- | ------------------ | ----------------------------- | ------------------ | ------------------------------------------------- |
+| 真·图形语法               | ✅                | ✅ + 组合代数      | ✅                            | ❌ 配置目录        | ✅                                                |
+| 最低层                    | grid grob（私有） | scenegraph（私有） | SVG DOM（D3）                 | SVG DOM            | **Tier 1 通用图元（公开/可手写/可组合）**         |
+| 序列化/声明               | ❌ R 对象+闭包    | ✅ JSON            | ❌ JS options 带函数/accessor | △ JS config 带函数 | ✅ JSON（§3.1 数据不进 IR）                       |
+| 渲染后端中立              | ❌ grid           | ✅ SVG/Canvas      | ❌ 仅 SVG                     | ❌ SVG             | ✅ SVG/Canvas/SSR（后端只懂图元、chart 语义透明） |
+| 图元可被连接/嵌入更大图解 | ❌ 终端产物       | ❌                 | ❌ 终端 SVG                   | ❌                 | ✅ **每个柱/点是可连接 Node**（§7 / §8.1）        |
 
 管线分段高度同源（retikz 多出末段 `scope → lowering`，即 Tier 2 落回 Tier 1，§4 / §8）：
 
@@ -841,7 +841,7 @@ intent
 代码核对于 `packages/viz/plot/src/lower/`：
 
 1. **高基数性能天花板**：散点/柱每行下沉成**一个 `IRNode`**（`mark.ts` `lowerPoint` / `intervalRect`），IR 体积 O(数据点数) 个重对象 → Scene O(N) primitive → SVG O(N) DOM。「一切可见物是 Node」直接与「大数据合批渲染」相冲（可连接 ⊥ 合批）。
-   - *已缓解的一半*：颜色不逐 node 写，按色分组到 O(色数) 子 Scope（`colorGroupedScope`），样式不是 O(N)；但 node 数量仍 O(行数)。§8.1 风险备注已点出 datum 逐点绑 id 的同类问题（locator 不预注册即对此的缓解）。
+   - _已缓解的一半_：颜色不逐 node 写，按色分组到 O(色数) 子 Scope（`colorGroupedScope`），样式不是 O(N)；但 node 数量仍 O(行数)。§8.1 风险备注已点出 datum 逐点绑 id 的同类问题（locator 不预注册即对此的缓解）。
 2. **JSON 可序列化 IR 的物理代价**：禁 typed-array（数值只能 `number[]`/对象，内存/GC 重于 Float64Array）；禁 function（**无 in-spec escape hatch**，自定义 mark/stat 只能改包源码，不能像 Vega 在 spec 塞表达式/lambda）。这是 §3.1「数据不进 IR」+ IR 全 JSON-safe 的必然代价。
 3. **批量急切编译、无响应式/增量**：`compileToScene` 是 spec → 整张 IR → 整张 Scene 的一次性纯函数；改一点数据 → 重跑整条管线。对比 Vega 细粒度响应式。v0.3（§13.4）的数据过滤型交互会撞墙。
 4. **像素尺寸 lower 期钉死**：`lowerPlots` 必须知道 `width/height`（`expand.ts`），scale range 即像素区间 `[0,width]`。plot 不能参与 intrinsic sizing；响应式 resize = 整张重 lower（SVG `viewBox`+CSS 那种纯浏览器缩放默认拿不到）。
@@ -850,14 +850,14 @@ intent
 
 ### 16.2 处置决策（2026-06-07 定）
 
-| # | 软肋 | 处置 | 关键约束 |
-| --- | --- | --- | --- |
-| 1 | O(N) Node 物化 | **配置化：不需连接时不物化 N 个 Node，下沉成一个稠密 primitive**（`{type:'points', positions:number[][], style}` / 多段 Path） | **「可连接」与「物化成独立 Node」绑成同一开关**——关连接 ⟺ 发稠密 primitive，*不是*只摘 id（只摘 id 几乎不省成本）。需补 core 一个 Tier 1 稠密原语（即第 6 条「补 core」实例）。现实上限：到 Vega-Canvas 档（几万点），到不了 boost WebGL 百万点档 |
-| 2 | JSON IR 物理代价 | typed-array 收益**跟随 #1**（稠密 primitive 的扁平数组即收益）；in-spec 函数**永不做**（自觉取舍），扩展点在创作层（§5.3 Plot API 组件 / 新 mark 包） | 后续只增内置 mark/stat，不开放 spec 内函数 |
-| 3 | 无响应式/增量 | 后续性能阶段处理（§13.4 交互前） | 守住「纯函数 + 稳定 identity 可得」——provenance 的 `transformedIndex`/`sourceIndex`/id 已是 diff 的稳定 key，后续别让任何环节破坏它。**展示类交互（hover/tooltip/高亮/选区）用 locator + overlay，不重 lower**；只有数据过滤型交互才需重 lower |
-| 4 | 像素尺寸耦合 | 双机制：**viewBox 等比缩放兜底**（免费、纯 resize 不重 lower，代价文字等比缩放）+ **debounce 重 lower**（要文字不变、布局重排时） | API/文档讲清「resize 是等比缩放还是重排」 |
-| 5 | 无文字度量 | 后续处理；最终形态 = **`measureText` 作为编译期 option/capability 注入**（像 `width/height` 一样是选项、不是 IR 内容，不破坏 JSON-IR 原则；Vega 同法） | metrics 永不进 IR；别走两遍渲染回灌，别长期停在「字符数×fontSize」估算 |
-| 6 | Tier1/Tier2 门控 | 不处理——这是设计原则（§1 / §9） | 守纪律：缺能力**下沉补 core**，不在 plot 绕开自造（AGENTS.md 已成硬规） |
+| #   | 软肋             | 处置                                                                                                                                                   | 关键约束                                                                                                                                                                                                                                          |
+| --- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | O(N) Node 物化   | **配置化：不需连接时不物化 N 个 Node，下沉成一个稠密 primitive**（`{type:'points', positions:number[][], style}` / 多段 Path）                         | **「可连接」与「物化成独立 Node」绑成同一开关**——关连接 ⟺ 发稠密 primitive，*不是*只摘 id（只摘 id 几乎不省成本）。需补 core 一个 Tier 1 稠密原语（即第 6 条「补 core」实例）。现实上限：到 Vega-Canvas 档（几万点），到不了 boost WebGL 百万点档 |
+| 2   | JSON IR 物理代价 | typed-array 收益**跟随 #1**（稠密 primitive 的扁平数组即收益）；in-spec 函数**永不做**（自觉取舍），扩展点在创作层（§5.3 Plot API 组件 / 新 mark 包）  | 后续只增内置 mark/stat，不开放 spec 内函数                                                                                                                                                                                                        |
+| 3   | 无响应式/增量    | 后续性能阶段处理（§13.4 交互前）                                                                                                                       | 守住「纯函数 + 稳定 identity 可得」——provenance 的 `transformedIndex`/`sourceIndex`/id 已是 diff 的稳定 key，后续别让任何环节破坏它。**展示类交互（hover/tooltip/高亮/选区）用 locator + overlay，不重 lower**；只有数据过滤型交互才需重 lower    |
+| 4   | 像素尺寸耦合     | 双机制：**viewBox 等比缩放兜底**（免费、纯 resize 不重 lower，代价文字等比缩放）+ **debounce 重 lower**（要文字不变、布局重排时）                      | API/文档讲清「resize 是等比缩放还是重排」                                                                                                                                                                                                         |
+| 5   | 无文字度量       | 后续处理；最终形态 = **`measureText` 作为编译期 option/capability 注入**（像 `width/height` 一样是选项、不是 IR 内容，不破坏 JSON-IR 原则；Vega 同法） | metrics 永不进 IR；别走两遍渲染回灌，别长期停在「字符数×fontSize」估算                                                                                                                                                                            |
+| 6   | Tier1/Tier2 门控 | 不处理——这是设计原则（§1 / §9）                                                                                                                        | 守纪律：缺能力**下沉补 core**，不在 plot 绕开自造（AGENTS.md 已成硬规）                                                                                                                                                                           |
 
 ### 16.3 处置后仍逆风的边界（定位声明）
 

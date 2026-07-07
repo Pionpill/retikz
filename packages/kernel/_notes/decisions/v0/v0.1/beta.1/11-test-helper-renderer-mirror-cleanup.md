@@ -19,7 +19,7 @@
 
 绝大多数 `pathCommandsToD(...)` 调用原意是检查命令序列正确性，改成断言 commands 数组深 equal；极少数 readable snapshot 风格的字符串断言迁到 `react/tests/render/path-d-builder.test.tsx`（真实 `buildPathD` 产出 SVG 字符串、与字符串期望比较——SVG 输出契约的正确归口）。完工后删除两个镜像 helper。
 
-被否决的备选：(B) 把 helper 升级为直接 `import { buildPathD } from react adapter——会创建 `@retikz/core` → `@retikz/react` 的反向依赖（core AGENTS.md 硬禁）；(C) 不动——风险持续。
+被否决的备选：(B) 把 helper 升级为直接 `import { buildPathD } from react adapter——会创建 `@retikz/core`→`@retikz/react` 的反向依赖（core AGENTS.md 硬禁）；(C) 不动——风险持续。
 
 理由：与 alpha.5 ADR-01 根本意图一致（core 守结构化契约、SVG 输出契约由 adapter 测试守）；不引入反向依赖。
 

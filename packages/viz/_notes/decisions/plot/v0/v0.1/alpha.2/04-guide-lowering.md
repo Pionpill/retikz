@@ -48,6 +48,7 @@ guide 的 `grid` 子属性意味着**一个 axis 可能同时产两组几何、�
 ---
 
 > **实现指针**：level `red`（动 `plot/src/lower/**`，下沉 core IR 契约边界）、无 IR schema 改动（消费 [ADR-01](./01-guide-ir.md) guide IR、产 core IR）。
+>
 > - 真源以代码为准：`lowerGuide` / `GuideContext` / `LoweredGuide`（`plot/src/lower/guide.ts`）、编排 grid→mark→axis + `assertUniqueAxisDimension` + 按维度预算 ticks（`plot/src/lower/expand.ts`）；消费 core `IRScope`/`IRPath`/`IRStep`/`IRNode`（仅产不改 core），样式字段名以 core schema 为准（`font.size` / `drawOpacity` / `stroke:'none'`）。
 > - 测试见 `plot/tests/lower/guide.test.ts`（轴层结构、x/y 网格线、`tickLabels:false` 无 label、id→scope.id、刻度像素 = 投影器映射、样式上提、`duplicate_axis_dimension_rejected`）与 `plot/tests/lower/lowerPlots.test.ts`（端到端 z-order + compile 带 guide 的 scene）。
 > - 完整原文（lowerGuide 草案 / 下沉规则表 / 待决策点 / 测试象限）见本文件 git 历史。

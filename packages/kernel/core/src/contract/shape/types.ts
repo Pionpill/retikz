@@ -1,17 +1,15 @@
 ﻿import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
-import type {
-  IRGraphicStyle,
-  IRJsonObject,
-  IRPathBase,
-  ResolvedDropShadow,
-} from '../../schemas';
+import type { IRGraphicStyle, IRJsonObject, IRPathBase, ResolvedDropShadow } from '../../schemas';
 import type { AnchorValue, Rect, SideValue } from '../../shared';
 import type { PaintValue, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段。 */
-type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'fillOpacity' | 'strokeWidth' | 'strokeOpacity' | 'opacity' | 'blendMode'>;
+type ResolvedShapeStyleFields = Pick<
+  IRGraphicStyle,
+  'fillOpacity' | 'strokeWidth' | 'strokeOpacity' | 'opacity' | 'blendMode'
+>;
 
 /** Shape provider 接收到的命名 anchor：标准方位名或 shape 自定义扩展名。 */
 export type ShapeAnchorName = AnchorValue | (string & {});
@@ -123,7 +121,12 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
   /**
    * 生成轴对齐 rect 内的视觉 primitive。
    */
-  emit: (rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
+  emit: (
+    rect: Rect,
+    style: ResolvedShapeStyle,
+    round: (n: number) => number,
+    params: TParams,
+  ) => Iterable<ScenePrimitive>;
   /**
    * 返回 node scale 后的 params。
    * @description 适用于 params 含角度等非长度字段的 shape。

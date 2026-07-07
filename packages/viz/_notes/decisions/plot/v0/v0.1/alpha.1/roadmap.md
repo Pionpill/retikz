@@ -44,16 +44,16 @@
 
 ## ADR 清单
 
-| ADR | 主题 | Level | 依赖 | 状态 |
-|---|---|---|---|---|
-| [01](./01-plot-spec-root.md) | Plot 根节点（`plot` composite 节点 + 数据引用 + JSON 透传，含 anchor / scope 预留 `id` / `meta`） | red | 02-05、前置 setup | Accepted |
-| [02](./02-plot-data.md) | Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约；**数据不进 IR**） | red | 前置 setup（core `ValueOf`） | Accepted |
-| [03](./03-plot-scale.md) | Plot 比例尺（LinearScale + Scale union） | red | 前置 setup | Accepted |
-| [04](./04-plot-coordinate.md) | Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定） | red | 前置 setup | Accepted |
-| [05](./05-plot-encoding-mark.md) | Plot 编码与图元（Channel / Encoding + Point / Line / Mark union） | red | ADR-02 | Accepted |
-| [06](./06-plot-lowering.md) | 最薄 lowering 纵向闭环（lowerPlots：单 mark · linear · cartesian，Plot IR + 数据 → core IR） | red | ADR-01~05 | Accepted |
-| [07](./07-plot-bindings.md) | 框架绑定脚手架 + 薄包装（`@retikz/plot-react` `<Plot spec data/>` + `@retikz/plot-vanilla` `renderPlot`） | red | ADR-06 | Accepted |
-| [08](./08-plot-react-dsl.md) | React 组合 DSL（`<Plot>` + `<LineMark>` / `<PointMark>` + builder，自动推断 scale / coordinate） | red | ADR-07 | Accepted |
+| ADR                              | 主题                                                                                                      | Level | 依赖                         | 状态     |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------- | ----- | ---------------------------- | -------- |
+| [01](./01-plot-spec-root.md)     | Plot 根节点（`plot` composite 节点 + 数据引用 + JSON 透传，含 anchor / scope 预留 `id` / `meta`）         | red   | 02-05、前置 setup            | Accepted |
+| [02](./02-plot-data.md)          | Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约；**数据不进 IR**）                            | red   | 前置 setup（core `ValueOf`） | Accepted |
+| [03](./03-plot-scale.md)         | Plot 比例尺（LinearScale + Scale union）                                                                  | red   | 前置 setup                   | Accepted |
+| [04](./04-plot-coordinate.md)    | Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定）                                        | red   | 前置 setup                   | Accepted |
+| [05](./05-plot-encoding-mark.md) | Plot 编码与图元（Channel / Encoding + Point / Line / Mark union）                                         | red   | ADR-02                       | Accepted |
+| [06](./06-plot-lowering.md)      | 最薄 lowering 纵向闭环（lowerPlots：单 mark · linear · cartesian，Plot IR + 数据 → core IR）              | red   | ADR-01~05                    | Accepted |
+| [07](./07-plot-bindings.md)      | 框架绑定脚手架 + 薄包装（`@retikz/plot-react` `<Plot spec data/>` + `@retikz/plot-vanilla` `renderPlot`） | red   | ADR-06                       | Accepted |
+| [08](./08-plot-react-dsl.md)     | React 组合 DSL（`<Plot>` + `<LineMark>` / `<PointMark>` + builder，自动推断 scale / coordinate）          | red   | ADR-07                       | Accepted |
 
 > alpha.1 已实现并提交：setup（`@retikz/plot` + `@retikz/plot-react` + `@retikz/plot-vanilla` 脚手架）+ 01-08；plot 58 + plot-react 13 + plot-vanilla 5 test 全绿。文档 introduction 页已用 `<Plot>` 组合 DSL 写可读 demo（不再用 `<Layout ir composites>`）。待决策点均按各 ADR「倾向」锁定实现。changelog 推迟到 plot 首发 publish 时按 01-08 整体补（plot 独立版本线，走 package-publish）。
 > **ADR-07/08（框架绑定）**：原计划 v0.3，现按「三包 lockstep」提前到 alpha.1（见 [plot v0.1 roadmap 拆分策略](../roadmap.md)）；交互能力仍留 v0.3。

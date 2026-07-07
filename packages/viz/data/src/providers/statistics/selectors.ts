@@ -147,9 +147,7 @@ const bottomSelectorDefinition = defineRowSelector({
 const nthSelectorDefinition = defineRowSelector({
   schema: z.object({
     op: z.literal(SelectorOp.Nth),
-    orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() }))
-      .min(1),
+    orderBy: z.array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() })).min(1),
     index: z.number().int().nonnegative(),
   }),
   inputFields: operation => operation.orderBy.map(order => order.field),

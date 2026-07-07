@@ -12,12 +12,12 @@ rc.1 先处理核心文档结构、组件页拆分与发布候选验收。rc.2 �
 
 > 状态更新 2026-05-17：TODO-2 / 3 / 4 已落地；TODO-1 基础设施 + 首例（Karl 单位圆）就绪，更多场景示例由维护者按需续加。
 
-| # | 标题 | 状态 | 工作量 | 优先级 | 关键提交 |
-| --- | --- | --- | --- | --- | --- |
-| 1 | 新增 Examples / Recipes section | 进行中（铺例中） | 中 | P0 | `59b9702` 分组首例 / `c666602` 规范重写 + `InlineMarkdown` |
-| 2 | 搜索索引增强 | 已完成 | 中 | P1 | `746849f` mdx 正文索引 + 命中高亮与 snippet |
-| 3 | AI 对话输入框重构 v4.2：线框风 + 上下分离 + Detail/Settings popover + 润色 + 语音 | 已完成 | 大 | P1 | `74e7c03` Copilot 风格重构 / `8c911b2` v4.2 落实施 / `1fc6092` picker icon-only + tooltip 收尾；移动端 Sheet（`14e45fe`）+ 拖拽变宽（`4ebaaed`）顺带 |
-| 4 | AI 回复中渲染 retikz 图：ComponentPreview 抽核心 + ` ```retikz-ir` / ` ```retikz-tsx` 双协议 | 已完成 | 大 | P1 | `9ea242f` 4-1 抽 `ComponentRender` / `24f9081` 4-2 `jsx-to-ir` / `6270b1c` 4-3 `RetikzPreview` / `81b63b9` 4-4 `AiChatMessage` 识别围栏 / `171e89a` 4-5 `DiagramFormatPicker` + `composeSystem` 协议 / `53223a3` 4-6 i18n 收尾 |
+| #   | 标题                                                                                         | 状态             | 工作量 | 优先级 | 关键提交                                                                                                                                                                                                                       |
+| --- | -------------------------------------------------------------------------------------------- | ---------------- | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | 新增 Examples / Recipes section                                                              | 进行中（铺例中） | 中     | P0     | `59b9702` 分组首例 / `c666602` 规范重写 + `InlineMarkdown`                                                                                                                                                                     |
+| 2   | 搜索索引增强                                                                                 | 已完成           | 中     | P1     | `746849f` mdx 正文索引 + 命中高亮与 snippet                                                                                                                                                                                    |
+| 3   | AI 对话输入框重构 v4.2：线框风 + 上下分离 + Detail/Settings popover + 润色 + 语音            | 已完成           | 大     | P1     | `74e7c03` Copilot 风格重构 / `8c911b2` v4.2 落实施 / `1fc6092` picker icon-only + tooltip 收尾；移动端 Sheet（`14e45fe`）+ 拖拽变宽（`4ebaaed`）顺带                                                                           |
+| 4   | AI 回复中渲染 retikz 图：ComponentPreview 抽核心 + ` ```retikz-ir` / ` ```retikz-tsx` 双协议 | 已完成           | 大     | P1     | `9ea242f` 4-1 抽 `ComponentRender` / `24f9081` 4-2 `jsx-to-ir` / `6270b1c` 4-3 `RetikzPreview` / `81b63b9` 4-4 `AiChatMessage` 识别围栏 / `171e89a` 4-5 `DiagramFormatPicker` + `composeSystem` 协议 / `53223a3` 4-6 i18n 收尾 |
 
 ---
 
@@ -210,7 +210,7 @@ input 整体分三段，**header / footer 都脱离主 card，独立排在上下
 
 ---
 
-## TODO-4 — AI 回复中渲染 retikz 图：ComponentPreview 抽核心 + ```retikz-ir / ```retikz-tsx 双协议
+## TODO-4 — AI 回复中渲染 retikz 图：ComponentPreview 抽核心 + `retikz-ir / `retikz-tsx 双协议
 
 ### 问题
 
@@ -310,11 +310,11 @@ AI 回复里两种 fenced block 触发图渲染：
 
 三档（枚举值与 fenced lang 对齐，picker label 保留口语 "JSX"）：
 
-| 枚举值 | picker label | 默认 | 含义 | 拼进 system prompt 的指令（中/英对应） |
-|----|----|------|------|------|
-| `auto` | Auto | ✓ | 让 AI 自选 | 「需要画图时，简单几何用 ```retikz-tsx，复杂 / 嵌套深的拓扑用 ```retikz-ir。」 |
-| `ir`   | IR  |   | 强制 IR | 「需要画图时只输出 ```retikz-ir，不要给 TSX。」 |
-| `tsx`  | JSX |   | 强制 JSX/TSX | 「需要画图时只输出 ```retikz-tsx，不要给 IR JSON。」 |
+| 枚举值 | picker label | 默认 | 含义         | 拼进 system prompt 的指令（中/英对应）                                     |
+| ------ | ------------ | ---- | ------------ | -------------------------------------------------------------------------- |
+| `auto` | Auto         | ✓    | 让 AI 自选   | 「需要画图时，简单几何用 `retikz-tsx，复杂 / 嵌套深的拓扑用 `retikz-ir。」 |
+| `ir`   | IR           |      | 强制 IR      | 「需要画图时只输出 ```retikz-ir，不要给 TSX。」                            |
+| `tsx`  | JSX          |      | 强制 JSX/TSX | 「需要画图时只输出 ```retikz-tsx，不要给 IR JSON。」                       |
 
 实现：抄 `AiChatInputContextModePicker` 的 Popover + 文字按钮样式（与 ModelPicker 同型）。icon 走 Lucide `Shapes`（备选 `GitBranch` / `Sparkles`，待定）。
 

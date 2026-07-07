@@ -4,7 +4,17 @@ import { AnchorRefSchema, NodeTargetSchema, TargetSchema } from '../../../src/sc
 
 describe('AnchorRefSchema：命名 / 角度 / 边上比例点', () => {
   it('接受 9 个 canonical 命名 anchor', () => {
-    for (const name of ['center', 'top', 'right', 'bottom', 'left', 'top-right', 'top-left', 'bottom-right', 'bottom-left']) {
+    for (const name of [
+      'center',
+      'top',
+      'right',
+      'bottom',
+      'left',
+      'top-right',
+      'top-left',
+      'bottom-right',
+      'bottom-left',
+    ]) {
       expect(() => AnchorRefSchema.parse(name)).not.toThrow();
     }
   });

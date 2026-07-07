@@ -43,6 +43,7 @@ notes/reports/develop-completeness-YYYY-MM-DD-<module>.md
 
 ```md
 ## 能力矩阵
+
 | 能力面 | 现状简述 | 内置功能 | 扩展功能 | 整体评价 | 优化方向 |
 ```
 
@@ -68,10 +69,15 @@ notes/reports/develop-completeness-YYYY-MM-DD-<module>.md
 覆盖率声明：
 
 ## 结论概览
+
 ## 能力矩阵
+
 ## 关键缺口
+
 | # | 优先级 | 能力面 | 缺口 | 为什么影响完备性 | 建议补齐方式 | 坐实依据 |
+
 ## 建议排期
+
 ## 不建议纳入当前模块
 ```
 

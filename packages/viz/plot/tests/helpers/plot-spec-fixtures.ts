@@ -89,7 +89,11 @@ export const histogramData: ExternalDatasets = {
   s: [{ m: 0 }, { m: 1 }, { m: 3 }, { m: 5 }, { m: 8 }, { m: 9 }],
 };
 
-export const createHistogramSpec = (reference = 's', scales: CartesianScaleNames = { x: 'x', y: 'y' }, step = 2): PlotSpec => ({
+export const createHistogramSpec = (
+  reference = 's',
+  scales: CartesianScaleNames = { x: 'x', y: 'y' },
+  step = 2,
+): PlotSpec => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference },
@@ -155,7 +159,9 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensitySpe
         order: 'densityX',
         closure: { kind: 'baseline', baseline: 0 },
         fill: { kind: 'constant', value: '#60a5fa' },
-        ...(options.fillOpacity == null ? {} : { fillOpacity: { kind: 'constant' as const, value: options.fillOpacity } }),
+        ...(options.fillOpacity == null
+          ? {}
+          : { fillOpacity: { kind: 'constant' as const, value: options.fillOpacity } }),
         encoding: {
           x: { field: 'densityX' },
           y: { field: 'density' },
@@ -272,7 +278,10 @@ export const boxplotOutside: Transform = {
   },
 };
 
-export const createBoxplotCompositionSpec = (reference = 'samples', scales: CartesianScaleNames = { x: 'x', y: 'y' }): PlotSpec => ({
+export const createBoxplotCompositionSpec = (
+  reference = 'samples',
+  scales: CartesianScaleNames = { x: 'x', y: 'y' },
+): PlotSpec => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference },

@@ -27,15 +27,15 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 ## ADR 索引
 
-| ADR | 主题 | 目标 | 状态 |
-| --- | --- | --- | --- |
-| ADR-01 | **RelationMark ribbon geometry kind** | 在 `RelationMark` 内新增 `kind="ribbon"`，复用 source / target / anchorId / transform，把关系 rows 下沉为 core `Path kind="ribbon"`；Sankey layout 不进入本轮 | [Accepted](./01-relation-ribbon.md) |
-| ADR-02 | **quantile-band statistics + boxplot composition** | 新增参数化 quantile-band reducer 与 outside-quantile-band selector；boxplot 只是 0.25/0.75 band + 0.5 point + spread fence 的组合实例 | [Accepted](./02-quantile-band-boxplot.md) |
-| ADR-03 | **density transform + density-area** | 新增内置 `density` transform，KDE 输出采样 rows；几何消费走 `PathMark` baseline closure，不新增 density mark | [Accepted](./03-density-transform.md) |
-| ADR-04 | **smooth / regression transform** | 新增内置 `smooth` transform，首轮只做 deterministic linear regression；输出预测线采样 rows，置信区间顺延 | [Accepted](./04-smooth-regression.md) |
-| ADR-05 | **stat-geom structural surface + docs** | 收敛 React / Vanilla 薄适配、docs 信息架构与示例，证明三条统计薄片都能按 transform + abstract marks 表达；不做 chart 级便利 API | [Accepted](./05-stat-geom-surface.md) |
-| ADR-06 | **sector explode / pull decision** | 新增 `IntervalMark.pull` 作为 polar sector 静态径向偏移；anchor / locator 跟随同一几何，交互 explode 顺延 | [Accepted](./06-sector-explode-pull.md) |
-| ADR-07 | **mark label surface follows core label hosts** | 让 Point / Interval / Path / Reference / Relation 共用 `MarkLabelSchema`，按 node 或 geometry host 投递到 core label；同步 mark demos 不再用纯文字 PointMark 绕开 label | [Accepted](./07-mark-label-surface.md) |
+| ADR    | 主题                                               | 目标                                                                                                                                                                    | 状态                                      |
+| ------ | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| ADR-01 | **RelationMark ribbon geometry kind**              | 在 `RelationMark` 内新增 `kind="ribbon"`，复用 source / target / anchorId / transform，把关系 rows 下沉为 core `Path kind="ribbon"`；Sankey layout 不进入本轮           | [Accepted](./01-relation-ribbon.md)       |
+| ADR-02 | **quantile-band statistics + boxplot composition** | 新增参数化 quantile-band reducer 与 outside-quantile-band selector；boxplot 只是 0.25/0.75 band + 0.5 point + spread fence 的组合实例                                   | [Accepted](./02-quantile-band-boxplot.md) |
+| ADR-03 | **density transform + density-area**               | 新增内置 `density` transform，KDE 输出采样 rows；几何消费走 `PathMark` baseline closure，不新增 density mark                                                            | [Accepted](./03-density-transform.md)     |
+| ADR-04 | **smooth / regression transform**                  | 新增内置 `smooth` transform，首轮只做 deterministic linear regression；输出预测线采样 rows，置信区间顺延                                                                | [Accepted](./04-smooth-regression.md)     |
+| ADR-05 | **stat-geom structural surface + docs**            | 收敛 React / Vanilla 薄适配、docs 信息架构与示例，证明三条统计薄片都能按 transform + abstract marks 表达；不做 chart 级便利 API                                         | [Accepted](./05-stat-geom-surface.md)     |
+| ADR-06 | **sector explode / pull decision**                 | 新增 `IntervalMark.pull` 作为 polar sector 静态径向偏移；anchor / locator 跟随同一几何，交互 explode 顺延                                                               | [Accepted](./06-sector-explode-pull.md)   |
+| ADR-07 | **mark label surface follows core label hosts**    | 让 Point / Interval / Path / Reference / Relation 共用 `MarkLabelSchema`，按 node 或 geometry host 投递到 core label；同步 mark demos 不再用纯文字 PointMark 绕开 label | [Accepted](./07-mark-label-surface.md)    |
 
 > 建议文件名：`01-relation-ribbon.md`、`02-quantile-band-boxplot.md`、`03-density-transform.md`、`04-smooth-regression.md`、`05-stat-geom-surface.md`、`06-sector-explode-pull.md`、`07-mark-label-surface.md`。
 

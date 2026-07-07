@@ -25,8 +25,7 @@ const importDeclarations = (file: string): Array<string> =>
     match => match[0],
   );
 
-const importSource = (declaration: string): string | undefined =>
-  declaration.match(/\sfrom\s+['"]([^'"]+)['"]/)?.[1];
+const importSource = (declaration: string): string | undefined => declaration.match(/\sfrom\s+['"]([^'"]+)['"]/)?.[1];
 
 type OwnerRef = {
   root: string;
@@ -239,10 +238,7 @@ describe('core layer import boundaries', () => {
 
   it('canonical anchor consumers do not reintroduce alias vocabularies or normalize helpers', () => {
     const scannedRoots = ['shared', 'schemas', 'contract', 'providers', 'compile'].map(root => join(SRC_ROOT, root));
-    const forbiddenPatterns = [
-      /\b(?:Compass|Tikz|Web)(?:Anchor|Side|Corner)\w*\b/u,
-      /\bnormalize(?:Anchor|Side)\b/u,
-    ];
+    const forbiddenPatterns = [/\b(?:Compass|Tikz|Web)(?:Anchor|Side|Corner)\w*\b/u, /\bnormalize(?:Anchor|Side)\b/u];
 
     const offenders = scannedRoots.flatMap(root =>
       tsFiles(root).flatMap(file => {

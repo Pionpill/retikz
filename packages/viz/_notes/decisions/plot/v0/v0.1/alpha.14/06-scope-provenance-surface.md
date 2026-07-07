@@ -60,7 +60,6 @@ React / Vanilla 只提供两类薄壳：
 3. adapters 同构透传，保持 `@retikz/plot` 是 schema 真源。
 4. address string 只是 locator 便捷入口，结构化 opts 才是 AI / 工具调用的主入口。
 
-
 ## 不在本 ADR 范围
 
 - 不实现 tooltip、hover、brush、linked highlighting。

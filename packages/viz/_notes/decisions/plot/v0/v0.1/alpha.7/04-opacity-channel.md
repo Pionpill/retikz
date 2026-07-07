@@ -16,12 +16,31 @@ core node 已支持不透明度（`opacity` 整节点 0..1 / `fillOpacity` 仅�
 
 ```ts
 // ir/encoding.ts —— opacity channel（value ∈ [0,1]）
-export const OpacityChannelSchema = z.object({
-  field: z.string().min(1).optional().describe('Data path bound to opacity; continuous, mapped through a linear scale to [minOpacity, 1]'),
-  value: z.number().min(0).max(1).optional().describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
-  scale: z.string().min(1).optional().describe('Optional linear-scale name (only with field); omitted → a default opacity scale is synthesized'),
-}).refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'opacity channel must set exactly one of field / value' })
-  .describe('Opacity channel (PointMark only): field → glyph opacity via a linear scale; value → a constant opacity that bypasses the scale');
+export const OpacityChannelSchema = z
+  .object({
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path bound to opacity; continuous, mapped through a linear scale to [minOpacity, 1]'),
+    value: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
+    scale: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Optional linear-scale name (only with field); omitted → a default opacity scale is synthesized'),
+  })
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'opacity channel must set exactly one of field / value',
+  })
+  .describe(
+    'Opacity channel (PointMark only): field → glyph opacity via a linear scale; value → a constant opacity that bypasses the scale',
+  );
 // PointEncodingSchema 扩成 { ...Encoding, size?, opacity? }（shape 见 ADR-05）
 ```
 
@@ -35,7 +54,6 @@ export const OpacityChannelSchema = z.object({
 1. **复用 resolver**：opacity 是 ADR-02 resolver 的直接消费者（continuous → linear），边际成本低。
 2. **与 size 同口径**：PointMark 专属、per-datum、point-only，保持 alpha.7 通道的一致心智。
 3. **core 现成**：落 core node opacity，不需要补 core。
-
 
 ## 不在本 ADR 范围
 

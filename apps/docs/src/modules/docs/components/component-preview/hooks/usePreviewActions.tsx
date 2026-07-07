@@ -2,7 +2,13 @@ import type { RefObject } from 'react';
 
 import { useState } from 'react';
 
-import type { PreviewAction, PreviewActionState, PreviewControlContext, PreviewControlSlot, RendererMode } from '../types';
+import type {
+  PreviewAction,
+  PreviewActionState,
+  PreviewControlContext,
+  PreviewControlSlot,
+  RendererMode,
+} from '../types';
 
 import { ANIM_PAUSE_ID, buildAnimationActions } from '../animation-actions';
 

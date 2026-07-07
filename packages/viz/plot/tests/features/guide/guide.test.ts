@@ -54,7 +54,8 @@ const ctx: GuideContext = {
   fontSize: 11,
 };
 
-const nodeChildren = (layer: IRScope): Array<IRNode> => layer.children.filter(child => child.type === 'node') as Array<IRNode>;
+const nodeChildren = (layer: IRScope): Array<IRNode> =>
+  layer.children.filter(child => child.type === 'node') as Array<IRNode>;
 
 const nodeByText = (layer: IRScope, text: string): IRNode => {
   const node = nodeChildren(layer).find(child => child.text === text);
@@ -110,10 +111,7 @@ describe('lowerGuide (ADR-04)', () => {
   });
 
   it('explicit_y_axis_title_rotation_is_preserved', () => {
-    const { axisLayer } = lowerGuide(
-      { type: 'axis', dimension: 'y', title: { text: 'Revenue', rotate: 0 } },
-      ctx,
-    );
+    const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y', title: { text: 'Revenue', rotate: 0 } }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'Revenue');
 
     expect(title.rotate).toBe(0);
@@ -141,20 +139,14 @@ describe('lowerGuide (ADR-04)', () => {
   });
 
   it('axis_title_at_end_places_x_title_near_positive_axis_end', () => {
-    const { axisLayer } = lowerGuide(
-      { type: 'axis', dimension: 'x', title: { text: 'x', placement: 'at-end' } },
-      ctx,
-    );
+    const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', title: { text: 'x', placement: 'at-end' } }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'x');
 
     expect((title.position as [number, number])[0]).toBe(440);
   });
 
   it('axis_title_ratio_placement_samples_baseline_from_negative_to_positive', () => {
-    const { axisLayer } = lowerGuide(
-      { type: 'axis', dimension: 'x', title: { text: 'x', placement: 0.4 } },
-      ctx,
-    );
+    const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', title: { text: 'x', placement: 0.4 } }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'x');
 
     expect((title.position as [number, number])[0]).toBe(200);
@@ -162,7 +154,17 @@ describe('lowerGuide (ADR-04)', () => {
 
   it('axis_title_padding_shift_and_anchor_lower_to_title_node', () => {
     const { axisLayer } = lowerGuide(
-      { type: 'axis', dimension: 'x', title: { text: 'x', padding: 10, placement: 'at-end', shift: { along: -6, normal: 2 }, anchor: { align: 'end' } } },
+      {
+        type: 'axis',
+        dimension: 'x',
+        title: {
+          text: 'x',
+          padding: 10,
+          placement: 'at-end',
+          shift: { along: -6, normal: 2 },
+          anchor: { align: 'end' },
+        },
+      },
       ctx,
     );
     const title = nodeByText(axisLayer as IRScope, 'x');
@@ -173,10 +175,7 @@ describe('lowerGuide (ADR-04)', () => {
   });
 
   it('axis_title_at_end_places_y_title_near_visual_top', () => {
-    const { axisLayer } = lowerGuide(
-      { type: 'axis', dimension: 'y', title: { text: 'y', placement: 'at-end' } },
-      ctx,
-    );
+    const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y', title: { text: 'y', placement: 'at-end' } }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'y');
 
     expect((title.position as [number, number])[1]).toBe(10);
@@ -202,7 +201,14 @@ describe('lowerGuide (ADR-04)', () => {
           project: () => null,
           projectRoles: () => null,
           projectPolar: () => null,
-          projectCell: () => ({ kind: 'sector', center: [100, 100], innerRadius: 0, outerRadius: 1, startAngle: 0, endAngle: 1 }),
+          projectCell: () => ({
+            kind: 'sector',
+            center: [100, 100],
+            innerRadius: 0,
+            outerRadius: 1,
+            startAngle: 0,
+            endAngle: 1,
+          }),
         },
         angularTicks: { values: [], labels: [] },
       },
@@ -232,7 +238,14 @@ describe('lowerGuide (ADR-04)', () => {
           project: () => null,
           projectRoles: () => null,
           projectPolar: () => null,
-          projectCell: () => ({ kind: 'sector', center: [100, 100], innerRadius: 0, outerRadius: 1, startAngle: 0, endAngle: 1 }),
+          projectCell: () => ({
+            kind: 'sector',
+            center: [100, 100],
+            innerRadius: 0,
+            outerRadius: 1,
+            startAngle: 0,
+            endAngle: 1,
+          }),
         },
         angularTicks: { values: [], labels: [] },
       },
@@ -262,7 +275,14 @@ describe('lowerGuide (ADR-04)', () => {
           project: () => null,
           projectRoles: () => null,
           projectPolar: () => null,
-          projectCell: () => ({ kind: 'sector', center: [100, 100], innerRadius: 0, outerRadius: 1, startAngle: 0, endAngle: 1 }),
+          projectCell: () => ({
+            kind: 'sector',
+            center: [100, 100],
+            innerRadius: 0,
+            outerRadius: 1,
+            startAngle: 0,
+            endAngle: 1,
+          }),
         },
         radialTicks: { values: [], labels: [] },
       },
@@ -277,7 +297,11 @@ describe('lowerGuide (ADR-04)', () => {
       { type: 'axis', dimension: 'x', title: { text: 'x', placement: 'at-end' } },
       {
         ...ctx,
-        ternaryVertices: [[50, 0], [0, 100], [100, 100]],
+        ternaryVertices: [
+          [50, 0],
+          [0, 100],
+          [100, 100],
+        ],
         ternaryTicks: { values: [0, 1], labels: ['0', '1'] },
       },
     );
@@ -297,7 +321,12 @@ describe('lowerGuide (ADR-04)', () => {
       },
       { roleScales: { u: scale } },
     );
-    const { axisLayer } = lowerCustomAxis(frame, { type: 'axis', dimension: 'u', title: { text: 'u', placement: 'at-end' } }, 11, undefined);
+    const { axisLayer } = lowerCustomAxis(
+      frame,
+      { type: 'axis', dimension: 'u', title: { text: 'u', placement: 'at-end' } },
+      11,
+      undefined,
+    );
     const title = nodeByText(axisLayer as IRScope, 'u');
 
     expect((title.position as [number, number])[0]).toBeCloseTo(100, 6);
@@ -432,7 +461,14 @@ describe('lowerGuide (ADR-04)', () => {
           project: () => null,
           projectRoles: () => null,
           projectPolar: () => null,
-          projectCell: () => ({ kind: 'sector', center: [100, 100], innerRadius: 0, outerRadius: 1, startAngle: 0, endAngle: 1 }),
+          projectCell: () => ({
+            kind: 'sector',
+            center: [100, 100],
+            innerRadius: 0,
+            outerRadius: 1,
+            startAngle: 0,
+            endAngle: 1,
+          }),
         },
         angularTicks: { values: [], labels: [] },
       },
@@ -454,7 +490,11 @@ describe('lowerGuide (ADR-04)', () => {
       },
       {
         ...ctx,
-        ternaryVertices: [[50, 0], [0, 100], [100, 100]],
+        ternaryVertices: [
+          [50, 0],
+          [0, 100],
+          [100, 100],
+        ],
         ternaryTicks: { values: [0, 1], labels: ['0', '1'] },
       },
     );
@@ -613,11 +653,16 @@ describe('lowerGuide (ADR-04)', () => {
         type: 'axis',
         dimension: 'x',
         tickLabels: false,
-        ticks: { values: [0], mark: { kind: 'custom', shape: { type: 'polygon', params: { sides: 5 } }, width: 8, height: 6 } },
+        ticks: {
+          values: [0],
+          mark: { kind: 'custom', shape: { type: 'polygon', params: { sides: 5 } }, width: 8, height: 6 },
+        },
       },
       ctx,
     );
-    const node = ((axisLayer as IRScope).children as Array<IRPath | IRNode>).find((child): child is IRNode => child.type === 'node');
+    const node = ((axisLayer as IRScope).children as Array<IRPath | IRNode>).find(
+      (child): child is IRNode => child.type === 'node',
+    );
 
     expect(node?.shape).toEqual({ type: 'polygon', params: { sides: 5 } });
     expect(node?.fill).toBe('currentColor');
@@ -732,7 +777,11 @@ describe('lowerGuide (ADR-04)', () => {
       },
       {
         ...ctx,
-        ternaryVertices: [[0, 100], [100, 100], [50, 0]],
+        ternaryVertices: [
+          [0, 100],
+          [100, 100],
+          [50, 0],
+        ],
         ternaryTicks: { values: [0.5], labels: ['50%'] },
       },
     );
@@ -895,7 +944,17 @@ describe('lowerGuide (ADR-04)', () => {
 
   it('non_cartesian_axis_rejects_structural_line_geometry', () => {
     expect(() =>
-      lowerGuide({ type: 'axis', dimension: 'x', line: { arrow: { positive: true } } }, { ...ctx, ternaryVertices: [[0, 0], [1, 0], [0, 1]] }),
+      lowerGuide(
+        { type: 'axis', dimension: 'x', line: { arrow: { positive: true } } },
+        {
+          ...ctx,
+          ternaryVertices: [
+            [0, 0],
+            [1, 0],
+            [0, 1],
+          ],
+        },
+      ),
     ).toThrow(/axis line/);
   });
 
@@ -957,19 +1016,22 @@ describe('lowerGuide (ADR-04)', () => {
   });
 
   it('ternary_axis_rejects_custom_tick_source_or_density', () => {
-    const specOf = (ticks: { count?: number; density?: { kind: 'sample'; maxCount: number } }) => PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'sales' },
-      scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
-        { type: 'linear', name: 'z' },
-      ],
-      coordinate: { type: 'ternary2D' },
-      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, z: { field: 'revenue' } } }],
-      guides: [{ type: 'axis', dimension: 'x', ticks }],
-    });
+    const specOf = (ticks: { count?: number; density?: { kind: 'sample'; maxCount: number } }) =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'sales' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+          { type: 'linear', name: 'z' },
+        ],
+        coordinate: { type: 'ternary2D' },
+        marks: [
+          { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, z: { field: 'revenue' } } },
+        ],
+        guides: [{ type: 'axis', dimension: 'x', ticks }],
+      });
 
     expect(() => expandOf(specOf({ density: { kind: 'sample', maxCount: 3 } }))).toThrow(/ternary2D axis/);
     expect(() => expandOf(specOf({ count: 3 }))).toThrow(/ternary2D axis/);

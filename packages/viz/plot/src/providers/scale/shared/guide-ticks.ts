@@ -28,7 +28,9 @@ export type GuideTickSourceInput = {
       }
     | { kind: typeof GuideTickIntervalKind.Category; step: number; offset?: number };
   /** 候选 tick 到可见 tick 的抽样策略。 */
-  density?: { kind: typeof AxisTickDensityKind.All } | { kind: typeof AxisTickDensityKind.Sample; maxCount?: number; minGap?: number; preserveEnds?: boolean };
+  density?:
+    | { kind: typeof AxisTickDensityKind.All }
+    | { kind: typeof AxisTickDensityKind.Sample; maxCount?: number; minGap?: number; preserveEnds?: boolean };
 };
 
 /** axis guide 的刻度标签格式化配置。 */
@@ -42,7 +44,9 @@ const normalizeExplicitTick = (scale: PositionScale, value: string | number): Sc
   if (scale.tickKind === 'time') {
     const stamp = coerceTimestamp(value);
     if (stamp === null) {
-      throw new Error(`lowerPlots: time guide tick value must be an epoch millisecond or ISO-like string (got "${value}")`);
+      throw new Error(
+        `lowerPlots: time guide tick value must be an epoch millisecond or ISO-like string (got "${value}")`,
+      );
     }
     return stamp;
   }
@@ -53,7 +57,12 @@ const normalizeExplicitTick = (scale: PositionScale, value: string | number): Sc
   return value;
 };
 
-const formatLabel = (scale: PositionScale, format: string | undefined, value: ScalarValue, fallback: string): string => {
+const formatLabel = (
+  scale: PositionScale,
+  format: string | undefined,
+  value: ScalarValue,
+  fallback: string,
+): string => {
   if (format === undefined || scale.tickKind === undefined || scale.tickKind === 'category') return fallback;
   if (scale.tickKind === 'time') return d3UtcFormat(format)(new Date(Number(value)));
   return d3Format(format)(Number(value));
@@ -71,7 +80,9 @@ const intervalDomain = (scale: PositionScale): [number, number] => {
 
 const numberIntervalTicks = (scale: PositionScale, step: number, anchor: number | undefined): Array<number> => {
   if (scale.tickKind !== 'number') {
-    throw new Error(`lowerPlots: number guide tick interval requires a numeric scale (got "${scale.tickKind ?? 'unknown'}")`);
+    throw new Error(
+      `lowerPlots: number guide tick interval requires a numeric scale (got "${scale.tickKind ?? 'unknown'}")`,
+    );
   }
   const [lo, hi] = intervalDomain(scale);
   const base = anchor ?? lo;
@@ -112,11 +123,7 @@ const addUtcMonths = (stamp: number, months: number): number => {
   );
 };
 
-const addTimeInterval = (
-  stamp: number,
-  unit: GuideTickTimeUnitValue,
-  step: number,
-): number => {
+const addTimeInterval = (stamp: number, unit: GuideTickTimeUnitValue, step: number): number => {
   if (unit in TIME_UNIT_MS) return stamp + TIME_UNIT_MS[unit as keyof typeof TIME_UNIT_MS] * step;
   if (unit === GuideTickTimeUnit.Month) return addUtcMonths(stamp, step);
   if (unit === GuideTickTimeUnit.Quarter) return addUtcMonths(stamp, step * 3);
@@ -130,12 +137,16 @@ const timeIntervalTicks = (
   anchor: string | number | undefined,
 ): Array<number> => {
   if (scale.tickKind !== 'time') {
-    throw new Error(`lowerPlots: time guide tick interval requires a time scale (got "${scale.tickKind ?? 'unknown'}")`);
+    throw new Error(
+      `lowerPlots: time guide tick interval requires a time scale (got "${scale.tickKind ?? 'unknown'}")`,
+    );
   }
   const [lo, hi] = intervalDomain(scale);
   const anchorStamp = anchor === undefined ? lo : coerceTimestamp(anchor);
   if (anchorStamp === null) {
-    throw new Error(`lowerPlots: time guide tick interval anchor must be an epoch millisecond or ISO-like string (got "${anchor}")`);
+    throw new Error(
+      `lowerPlots: time guide tick interval anchor must be an epoch millisecond or ISO-like string (got "${anchor}")`,
+    );
   }
   let value = anchorStamp;
   let guard = 0;
@@ -177,9 +188,15 @@ const timeIntervalTicks = (
   return values;
 };
 
-const categoryIntervalTicks = (scale: PositionScale, step: number, offset: number | undefined): Array<string | number> => {
+const categoryIntervalTicks = (
+  scale: PositionScale,
+  step: number,
+  offset: number | undefined,
+): Array<string | number> => {
   if (scale.tickKind !== 'category') {
-    throw new Error(`lowerPlots: category guide tick interval requires a category scale (got "${scale.tickKind ?? 'unknown'}")`);
+    throw new Error(
+      `lowerPlots: category guide tick interval requires a category scale (got "${scale.tickKind ?? 'unknown'}")`,
+    );
   }
   const values = scale
     .domain()
@@ -191,9 +208,13 @@ const categoryIntervalTicks = (scale: PositionScale, step: number, offset: numbe
   return values;
 };
 
-const resolveIntervalValues = (scale: PositionScale, source: NonNullable<GuideTickSourceInput['interval']>): Array<ScalarValue> => {
+const resolveIntervalValues = (
+  scale: PositionScale,
+  source: NonNullable<GuideTickSourceInput['interval']>,
+): Array<ScalarValue> => {
   if (source.kind === GuideTickIntervalKind.Number) return numberIntervalTicks(scale, source.step, source.anchor);
-  if (source.kind === GuideTickIntervalKind.Time) return timeIntervalTicks(scale, source.unit, source.step ?? 1, source.anchor);
+  if (source.kind === GuideTickIntervalKind.Time)
+    return timeIntervalTicks(scale, source.unit, source.step ?? 1, source.anchor);
   return categoryIntervalTicks(scale, source.step, source.offset);
 };
 

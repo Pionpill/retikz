@@ -158,7 +158,6 @@ type AxisGuideSpec = {
 4. `header` 从 guide policy 中拆出来后，多层 facet label 分组更自然，后续可以加 formatter / style，而不污染 axis / grid 策略。
 5. 删除 alias 能防止 docs、schema、adapter 同时维护两套写法。0.x 阶段应优先把长期模型修正到位。
 
-
 ## 数据流
 
 1. React / Vanilla adapter 收集 `<Axis>`、`<Mark>`、`<Facet>`、`<Scaffold>`、`<Track>` 的上下文。

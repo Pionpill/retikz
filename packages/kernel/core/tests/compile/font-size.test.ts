@@ -17,7 +17,9 @@ const collectTexts = (primitives: Array<ScenePrimitive>): Array<TextPrim> => {
 const lineText = (line: string | TextLine): string => (typeof line === 'string' ? line : line.text);
 
 const findText = (scene: ReturnType<typeof compileToScene>, text: string): TextPrim => {
-  const primitive = collectTexts(scene.primitives).find(candidate => candidate.lines.some(line => lineText(line) === text));
+  const primitive = collectTexts(scene.primitives).find(candidate =>
+    candidate.lines.some(line => lineText(line) === text),
+  );
   expect(primitive).toBeDefined();
   return primitive!;
 };
@@ -98,7 +100,7 @@ describe('compile font size presets and relative units', () => {
     };
 
     const text = findText(compileToScene(ir), 'line');
-    expect((text.lines[0]).fontSize).toBe(9);
+    expect(text.lines[0].fontSize).toBe(9);
   });
 
   it('applies existing node scale after resolving presets', () => {

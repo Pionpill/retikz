@@ -14,12 +14,12 @@ ADR-15 把 transform 提升为所有 mark 的公共数据视图能力，但内�
 
 transform 仍是唯一统计入口；mark 只消费 transform 后的 rows。内置统计收敛为四个通用 transform 家族：
 
-| transform | 语义 | 输出 |
-| --- | --- | --- |
-| `summarize` | 按组规约并计算 reducer metrics | 一组一行 |
-| `select` | 按组选择代表原始行 | 被选中的原始行 |
-| `annotate` | 按组计算统计并回填到每个原始行 | 保持行数 |
-| `relate` | 按组选择 source / target 并投影为 relation rows | source-target 派生行 |
+| transform   | 语义                                            | 输出                 |
+| ----------- | ----------------------------------------------- | -------------------- |
+| `summarize` | 按组规约并计算 reducer metrics                  | 一组一行             |
+| `select`    | 按组选择代表原始行                              | 被选中的原始行       |
+| `annotate`  | 按组计算统计并回填到每个原始行                  | 保持行数             |
+| `relate`    | 按组选择 source / target 并投影为 relation rows | source-target 派生行 |
 
 `ReducerOperation` 与 `SelectorOperation` 成为共享统计子算子。`summarize` / `annotate` / `bin` 复用 reducer；`select` / `relate` 复用 selector。`difference` / `ratio` 等 source-target 二元计算属于 pair measure，不混入 group reducer。
 

@@ -4,18 +4,18 @@
 
 ## 当前结构
 
-| 目录 | 内容 | 生命周期 |
-| --- | --- | --- |
-| [`architecture/`](./architecture) | 全仓长期架构真源。只放跨包原则、IR / Scene / schema 等底层契约。 | 永久；重大架构调整直接更新原文。 |
-| [`reports/`](./reports) | 只读审计、阶段性 review 报告。 | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
+| 目录                              | 内容                                                             | 生命周期                                     |
+| --------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
+| [`architecture/`](./architecture) | 全仓长期架构真源。只放跨包原则、IR / Scene / schema 等底层契约。 | 永久；重大架构调整直接更新原文。             |
+| [`reports/`](./reports)           | 只读审计、阶段性 review 报告。                                   | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
 
 包或发布组专属文档已经下沉到对应目录：
 
-| 目录 | 内容 |
-| --- | --- |
+| 目录                                                      | 内容                                                                                 |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | [`../packages/kernel/_notes/`](../packages/kernel/_notes) | kernel 发布组（`@retikz/math/core/render/react/vanilla/tex`）的 roadmap、ADR、分析。 |
-| [`../packages/viz/_notes/`](../packages/viz/_notes) | `@retikz/plot` 发布组的架构、roadmap、ADR、分析。 |
-| [`../apps/eval/_notes/`](../apps/eval/_notes) | eval 应用的评测设计、语料与 runner 方案。 |
+| [`../packages/viz/_notes/`](../packages/viz/_notes)       | `@retikz/plot` 发布组的架构、roadmap、ADR、分析。                                    |
+| [`../apps/eval/_notes/`](../apps/eval/_notes)             | eval 应用的评测设计、语料与 runner 方案。                                            |
 
 ## 写到哪里
 

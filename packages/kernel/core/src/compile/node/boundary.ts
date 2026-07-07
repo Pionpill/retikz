@@ -1,10 +1,6 @@
 ﻿import type { Position } from '@retikz/math';
 
-import type {
-  BoundaryAnchorName,
-  BoundaryDefinition,
-  ShapeDefinition,
-} from '../../contract';
+import type { BoundaryAnchorName, BoundaryDefinition, ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
@@ -35,10 +31,7 @@ export type ResolveBoundaryContext = {
   boundaryRegistry?: ProviderCollection<BoundaryDefinition>;
 };
 
-const providerOf = <TDefinition>(
-  registry: ProviderCollection<TDefinition>,
-  key: string,
-): TDefinition | undefined =>
+const providerOf = <TDefinition>(registry: ProviderCollection<TDefinition>, key: string): TDefinition | undefined =>
   Array.isArray(registry)
     ? registry.find(item => item.name === key)
     : (registry as ReadonlyMap<string, TDefinition>).get(key);
@@ -53,13 +46,7 @@ export const resolveBoundary = (
   boundary: IRBoundary | undefined,
   context: ResolveBoundaryContext,
 ): { def: ResolvedBoundaryDefinition; rect: Rect; params: IRJsonObject } => {
-  const {
-    visualDef,
-    visualRect,
-    visualParams,
-    shapeRegistry,
-    boundaryRegistry = resolveBoundaryRegistry(),
-  } = context;
+  const { visualDef, visualRect, visualParams, shapeRegistry, boundaryRegistry = resolveBoundaryRegistry() } = context;
   if (boundary === undefined || boundary === SELF) {
     return { def: visualDef, rect: visualRect, params: visualParams };
   }
@@ -78,10 +65,8 @@ export const resolveBoundary = (
   );
 };
 
-export const fallbackBoundaryAnchor = (
-  rect: Rect,
-  name: string,
-): ReturnType<ShapeDefinition['anchor']> => (isDirectionalAnchor(name) ? rectOps.anchor(rect, name) : undefined);
+export const fallbackBoundaryAnchor = (rect: Rect, name: string): ReturnType<ShapeDefinition['anchor']> =>
+  isDirectionalAnchor(name) ? rectOps.anchor(rect, name) : undefined;
 
 /** 连接面的稳定字符串判别（anchor cache key 用） */
 export const boundaryKey = (boundary: IRBoundary | undefined): string => {

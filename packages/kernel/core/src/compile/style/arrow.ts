@@ -74,10 +74,7 @@ type ResolveArrowMarkContext = {
   masterColor: string | undefined;
 };
 
-const resolveArrowMark = (
-  mark: IRArrowMark,
-  { pos, stack, masterColor }: ResolveArrowMarkContext,
-): IRArrowMark => {
+const resolveArrowMark = (mark: IRArrowMark, { pos, stack, masterColor }: ResolveArrowMarkContext): IRArrowMark => {
   const detail = resolveArrowDetail(undefined, stack, masterColor);
   if (detail === undefined) return mark;
   const { start, end, ...top } = detail;

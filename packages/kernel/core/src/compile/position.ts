@@ -1,10 +1,18 @@
 import { arcEndPoint } from '@retikz/math';
 
 import type { Transform } from '../contract';
-import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../schemas';
+import type { IRBetweenPosition, IRPosition, IRResolvablePosition } from '../schemas';
 import type { NamespaceStack } from './namespace';
 
-import { AnchorUnitVectorByAnchor } from '../shared';
+import {
+  AnchorUnitVectorByAnchor,
+  isAtPositionLike,
+  isBetweenPositionLike,
+  isNodeTargetLike,
+  isOffsetPositionLike,
+  isPolarPositionLike,
+  isPositionTuple,
+} from '../shared';
 import { DEFAULT_NODE_DISTANCE } from './constants';
 import { inverseTransformChain } from './transform';
 
@@ -27,20 +35,29 @@ export type ResolvePositionContext = {
   resolveBetweenGlobal?: ResolveBetweenGlobal;
 };
 
+/** 从 position referent 中提取诊断用节点 id；只读输入，不解析 namespace。 */
+export const nodeIdFromPositionReferent = (ref: unknown): string | undefined =>
+  typeof ref === 'string' ? ref : nodeIdFromResolvableTarget(ref);
+
+/** 从可解析 target / position 形态中提取一个代表性节点 id，供 unresolved warning 使用。 */
+export const nodeIdFromResolvableTarget = (target: unknown): string | undefined => {
+  if (isNodeTargetLike(target)) return target.id;
+  if (isBetweenPositionLike(target)) {
+    return nodeIdFromResolvableTarget(target.between[0]) ?? nodeIdFromResolvableTarget(target.between[1]);
+  }
+  if (isOffsetPositionLike(target) || isAtPositionLike(target)) return nodeIdFromPositionReferent(target.of);
+  if (isPolarPositionLike(target)) {
+    return nodeIdFromPositionReferent(target.origin);
+  }
+  return undefined;
+};
+
 /**
  * 把 IR 位置解析为笛卡尔坐标。
  * @description `scopeChain` 非空时返回当前 scope 局部坐标；解析失败返回 null。
  */
-export const resolvePosition = (
-  pos: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | IRBetweenPosition | string,
-  context: ResolvePositionContext,
-): IRPosition | null => {
-  const {
-    namespaceStack,
-    nodeDistance = DEFAULT_NODE_DISTANCE,
-    scopeChain = [],
-    resolveBetweenGlobal,
-  } = context;
+export const resolvePosition = (pos: IRResolvablePosition, context: ResolvePositionContext): IRPosition | null => {
+  const { namespaceStack, nodeDistance = DEFAULT_NODE_DISTANCE, scopeChain = [], resolveBetweenGlobal } = context;
   if (typeof pos === 'string') {
     const node = namespaceStack.lookup(pos);
     if (!node) return null;
@@ -48,8 +65,8 @@ export const resolvePosition = (
     const global: IRPosition = [node.rect.x, node.rect.y];
     return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
   }
-  if (Array.isArray(pos)) return pos;
-  if ('direction' in pos) {
+  if (isPositionTuple(pos)) return [pos[0], pos[1]];
+  if (isAtPositionLike(pos)) {
     const ref = namespaceStack.lookup(pos.of);
     if (!ref) return null;
     const refGlobal: IRPosition = [ref.rect.x, ref.rect.y];
@@ -58,12 +75,12 @@ export const resolvePosition = (
     const [dx, dy] = AnchorUnitVectorByAnchor[pos.direction];
     return [refLocal[0] + dx * distance, refLocal[1] + dy * distance];
   }
-  if ('offset' in pos) {
+  if (isOffsetPositionLike(pos)) {
     const base = resolvePosition(pos.of, context);
     if (!base) return null;
     return [base[0] + pos.offset[0], base[1] + pos.offset[1]];
   }
-  if ('between' in pos) {
+  if (isBetweenPositionLike(pos)) {
     if (!resolveBetweenGlobal) return null;
     const global = resolveBetweenGlobal(pos, namespaceStack, scopeChain);
     if (!global) return null;

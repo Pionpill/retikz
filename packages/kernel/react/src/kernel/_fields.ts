@@ -67,7 +67,6 @@ export const PATH_FIELDS = [
   'lineCap',
   'lineJoin',
   'roundedCorners',
-  'thickness',
   'opacity',
   'fillOpacity',
   'strokeOpacity',

@@ -17,26 +17,26 @@ v0.1 收尾两版分工（详见 `v0/roadmap.md` "拆分原则"）：
 
 ## 进度看板
 
-| # | 标题 | 状态 | 工作量 | 优先级 |
-|---|---|---|---|---|
-| 1 | `FontSchema` 抽到 `ir/font.ts` | ✅ 完成（a254e09） | 小 | P1 |
-| 2 | `LineSpec` / `NodeText` 抽到 `ir/text.ts` | ✅ 完成（a254e09） | 小 | P1 |
-| 3 | core 注释 / `.describe()` 去 SVG-imposing 语言 | ✅ 完成（0949079） | 中 | P1 |
-| 4 | `StepProps` 拆 10 个命名子类型 | ✅ 完成（2445b8b） | 中 | P1 |
-| 5 | polar 角度方向 schema describe 修正 | ✅ 完成（b7c01cb） | 小 | P0（bug） |
-| 6 | versioning mdx 相对链接死链修 | ✅ 完成（b7c01cb） | 极小 | P0（bug） |
-| 7 | `polar.fromPosition` delegate `point.toPolar`（去重） | ✅ 完成（b7c01cb） | 极小 | P3 |
-| 8 | geometry 4 shape `localToWorld`/`worldToLocal` 抽 `_transform.ts` + 死 `*Anchor` 类型清理 | ✅ 完成（42a6c67） | 小 | P1 |
-| 9 | 公开 type `TextLine` / `PathCommand` / `Transform` 字段 JSDoc 补 + 拆 named type | ✅ 完成（2445b8b，与 #4 合并） | 小-中 | P1 |
-| 10 | unbuilder round-trip 补 alpha.5 新增形态（OffsetPosition / AtPosition / `arrowDetail` / 7 keyword `position`） | ✅ 完成（21bfcb9） | 中 | P1 |
-| 11 | `compile/path.ts` 拆目录 + `findPrev` O(n²)→O(n) + `THICKNESS_TO_WIDTH` 与 enum 互锁 | ✅ 完成（step 1 守门 `73725c8` / step 2 拆 `7cf245a` / step 3 perf `007fcd4` / step 4 互锁 `e6b234a`） | 中-大 | P2 |
-| 12 | `_builder.ts` ↔ `_unbuilder.ts` 镜像字段表化（`NODE_FIELDS as const` + `AssertEqual` 互锁） | ✅ 完成（`f6e0dca` builder + `7fb7957` _fields.ts 共享 + unbuilder） | 中 | P2 |
-| 13 | `_builder.ts` 60 处 `as` cast 收敛到顶层 | ✅ 完成（`f6e0dca` typed buildXxxFromProps + 顶层 cast 收敛） | 中 | P2 |
-| 14 | `CompileOptions.onWarn` 收集器：路径解析 silent fail → 显式 warning | ✅ 完成（9f21775） | 中 | P0 |
-| 15 | 边界测试补：`parseWay` 形状算子错误路径 / `view-box` NaN-Infinity / `fallbackMeasurer` 极端值 / `buildPathD`/`buildTransform` throw message 契约 / 多 `<Tikz>` 实例 marker id 隔离 e2e | ✅ 完成（0a0bc74，含 schema .finite() 让 cross-test 全过） | 中 | P2 |
-| 16 | 改名 + 命名清理（`NodeTextSchema`→`TextBlockSchema`、`_builder` / `_unbuilder` 去 `_` 前缀、`renderPrim.tsx` 公开签名 `ctx`→`context`） | ✅ 完成（b9eb378，beta 不考虑兼容性纳入 NodeTextSchema 改名） | 小-中 | P2，**含 BREAKING** |
-| 17 | arrow marker `stableSpecKey` 字段表与 `ArrowEndSpec` 类型互锁 | ✅ 完成（ea9a58a） | 小 | P1 |
-| 18 | core 测试 helper 去除 renderer mirror 漂移风险 | ✅ 完成（`6235835` 74 处 + 2 处 buildTransform 全迁移；删 helpers/path-d.ts / transform.ts；新建 path-command-factory.ts） | 中（74 处 `pathCommandsToD` / 8 文件） | P2 |
+| #   | 标题                                                                                                                                                                                   | 状态                                                                                                                       | 工作量                                 | 优先级              |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------- |
+| 1   | `FontSchema` 抽到 `ir/font.ts`                                                                                                                                                         | ✅ 完成（a254e09）                                                                                                         | 小                                     | P1                  |
+| 2   | `LineSpec` / `NodeText` 抽到 `ir/text.ts`                                                                                                                                              | ✅ 完成（a254e09）                                                                                                         | 小                                     | P1                  |
+| 3   | core 注释 / `.describe()` 去 SVG-imposing 语言                                                                                                                                         | ✅ 完成（0949079）                                                                                                         | 中                                     | P1                  |
+| 4   | `StepProps` 拆 10 个命名子类型                                                                                                                                                         | ✅ 完成（2445b8b）                                                                                                         | 中                                     | P1                  |
+| 5   | polar 角度方向 schema describe 修正                                                                                                                                                    | ✅ 完成（b7c01cb）                                                                                                         | 小                                     | P0（bug）           |
+| 6   | versioning mdx 相对链接死链修                                                                                                                                                          | ✅ 完成（b7c01cb）                                                                                                         | 极小                                   | P0（bug）           |
+| 7   | `polar.fromPosition` delegate `point.toPolar`（去重）                                                                                                                                  | ✅ 完成（b7c01cb）                                                                                                         | 极小                                   | P3                  |
+| 8   | geometry 4 shape `localToWorld`/`worldToLocal` 抽 `_transform.ts` + 死 `*Anchor` 类型清理                                                                                              | ✅ 完成（42a6c67）                                                                                                         | 小                                     | P1                  |
+| 9   | 公开 type `TextLine` / `PathCommand` / `Transform` 字段 JSDoc 补 + 拆 named type                                                                                                       | ✅ 完成（2445b8b，与 #4 合并）                                                                                             | 小-中                                  | P1                  |
+| 10  | unbuilder round-trip 补 alpha.5 新增形态（OffsetPosition / AtPosition / `arrowDetail` / 7 keyword `position`）                                                                         | ✅ 完成（21bfcb9）                                                                                                         | 中                                     | P1                  |
+| 11  | `compile/path.ts` 拆目录 + `findPrev` O(n²)→O(n) + `THICKNESS_TO_WIDTH` 与 enum 互锁                                                                                                   | ✅ 完成（step 1 守门 `73725c8` / step 2 拆 `7cf245a` / step 3 perf `007fcd4` / step 4 互锁 `e6b234a`）                     | 中-大                                  | P2                  |
+| 12  | `_builder.ts` ↔ `_unbuilder.ts` 镜像字段表化（`NODE_FIELDS as const` + `AssertEqual` 互锁）                                                                                            | ✅ 完成（`f6e0dca` builder + `7fb7957` \_fields.ts 共享 + unbuilder）                                                      | 中                                     | P2                  |
+| 13  | `_builder.ts` 60 处 `as` cast 收敛到顶层                                                                                                                                               | ✅ 完成（`f6e0dca` typed buildXxxFromProps + 顶层 cast 收敛）                                                              | 中                                     | P2                  |
+| 14  | `CompileOptions.onWarn` 收集器：路径解析 silent fail → 显式 warning                                                                                                                    | ✅ 完成（9f21775）                                                                                                         | 中                                     | P0                  |
+| 15  | 边界测试补：`parseWay` 形状算子错误路径 / `view-box` NaN-Infinity / `fallbackMeasurer` 极端值 / `buildPathD`/`buildTransform` throw message 契约 / 多 `<Tikz>` 实例 marker id 隔离 e2e | ✅ 完成（0a0bc74，含 schema .finite() 让 cross-test 全过）                                                                 | 中                                     | P2                  |
+| 16  | 改名 + 命名清理（`NodeTextSchema`→`TextBlockSchema`、`_builder` / `_unbuilder` 去 `_` 前缀、`renderPrim.tsx` 公开签名 `ctx`→`context`）                                                | ✅ 完成（b9eb378，beta 不考虑兼容性纳入 NodeTextSchema 改名）                                                              | 小-中                                  | P2，**含 BREAKING** |
+| 17  | arrow marker `stableSpecKey` 字段表与 `ArrowEndSpec` 类型互锁                                                                                                                          | ✅ 完成（ea9a58a）                                                                                                         | 小                                     | P1                  |
+| 18  | core 测试 helper 去除 renderer mirror 漂移风险                                                                                                                                         | ✅ 完成（`6235835` 74 处 + 2 处 buildTransform 全迁移；删 helpers/path-d.ts / transform.ts；新建 path-command-factory.ts） | 中（74 处 `pathCommandsToD` / 8 文件） | P2                  |
 
 ---
 
@@ -58,12 +58,12 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ### 改动清单
 
-| 改动 | 文件 |
-|---|---|
-| 新建 `ir/font.ts`：搬迁 `FontSchema` + `IRFont` 派生类型 + 关联 JSDoc | `packages/kernel/core/src/ir/font.ts`（新文件） |
-| 从 `node.ts` 删 `FontSchema` 定义 + `IRFont` 类型；改为 `import { FontSchema } from './font'`；`IRFont` 不再在 node.ts 中重复声明 | `packages/kernel/core/src/ir/node.ts` |
-| barrel 加 `export * from './font'` | `packages/kernel/core/src/ir/index.ts` |
-| 公开 API 不需要改 | `packages/kernel/core/src/index.ts`（已 re-export `FontSchema` / `IRFont`，链路自动跟随） |
+| 改动                                                                                                                              | 文件                                                                                      |
+| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 新建 `ir/font.ts`：搬迁 `FontSchema` + `IRFont` 派生类型 + 关联 JSDoc                                                             | `packages/kernel/core/src/ir/font.ts`（新文件）                                           |
+| 从 `node.ts` 删 `FontSchema` 定义 + `IRFont` 类型；改为 `import { FontSchema } from './font'`；`IRFont` 不再在 node.ts 中重复声明 | `packages/kernel/core/src/ir/node.ts`                                                     |
+| barrel 加 `export * from './font'`                                                                                                | `packages/kernel/core/src/ir/index.ts`                                                    |
+| 公开 API 不需要改                                                                                                                 | `packages/kernel/core/src/index.ts`（已 re-export `FontSchema` / `IRFont`，链路自动跟随） |
 
 ### 验证项
 
@@ -86,10 +86,10 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 `node.ts` 目前还住着两个**非 node-specific** 的文本结构原语：
 
-| schema | 内容 | 真的"node 专属"吗 |
-|---|---|---|
-| `LineSpecSchema` | 单行文字（`text` + 可选 `fill` / `opacity` / `font` 覆盖） | 否——通用样式化文本行 |
-| `NodeTextSchema` | `string \| Array<LineSpec>` 多行包装 | 名字带 Node，结构不 node-specific——就是个"文本块" |
+| schema           | 内容                                                       | 真的"node 专属"吗                                 |
+| ---------------- | ---------------------------------------------------------- | ------------------------------------------------- |
+| `LineSpecSchema` | 单行文字（`text` + 可选 `fill` / `opacity` / `font` 覆盖） | 否——通用样式化文本行                              |
+| `NodeTextSchema` | `string \| Array<LineSpec>` 多行包装                       | 名字带 Node，结构不 node-specific——就是个"文本块" |
 
 未来潜在复用点：
 
@@ -117,12 +117,12 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ### 改动清单
 
-| 改动 | 文件 |
-|---|---|
-| 新建 `ir/text.ts`：搬迁 `LineSpecSchema` + `IRLineSpec` + `NodeTextSchema` + 关联 JSDoc；`LineSpec` 内部 `import { FontSchema } from './font'` | `packages/kernel/core/src/ir/text.ts`（新文件） |
-| 从 `node.ts` 删两个 schema 的定义；改为 `import { LineSpecSchema, NodeTextSchema } from './text'`；`IRLineSpec` 不再在 node.ts 中重复声明 | `packages/kernel/core/src/ir/node.ts` |
-| barrel 加 `export * from './text'` | `packages/kernel/core/src/ir/index.ts` |
-| 公开 API 不需要改 | `packages/kernel/core/src/index.ts`（已 re-export `LineSpecSchema` / `IRLineSpec` / `NodeTextSchema`，链路自动跟随） |
+| 改动                                                                                                                                           | 文件                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 新建 `ir/text.ts`：搬迁 `LineSpecSchema` + `IRLineSpec` + `NodeTextSchema` + 关联 JSDoc；`LineSpec` 内部 `import { FontSchema } from './font'` | `packages/kernel/core/src/ir/text.ts`（新文件）                                                                      |
+| 从 `node.ts` 删两个 schema 的定义；改为 `import { LineSpecSchema, NodeTextSchema } from './text'`；`IRLineSpec` 不再在 node.ts 中重复声明      | `packages/kernel/core/src/ir/node.ts`                                                                                |
+| barrel 加 `export * from './text'`                                                                                                             | `packages/kernel/core/src/ir/index.ts`                                                                               |
+| 公开 API 不需要改                                                                                                                              | `packages/kernel/core/src/index.ts`（已 re-export `LineSpecSchema` / `IRLineSpec` / `NodeTextSchema`，链路自动跟随） |
 
 ### 前置依赖
 
@@ -186,21 +186,21 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 注释 / `.describe(...)` 应**渲染器中性，只描述 IR / Scene 语义**：
 
-| 旧（SVG-imposing） | 新（中性） |
-|---|---|
-| "对应 SVG `<ellipse>`" | "椭圆原语（cx/cy 圆心，rx/ry 半径）" |
-| "SVG stroke-opacity" | "描边透明度 0~1" |
-| "SVG stroke-dasharray 模式" | "描边 dash 模式字符串（如 '4 2'，与 SVG/CSS `stroke-dasharray` 同格式）" |
-| "SVG fill-rule" | "填充规则（nonzero / evenodd）" |
-| "SVG stroke-linecap" | "描边端点形状（butt / round / square）" |
-| "SVG stroke-linejoin" | "描边拐角形状（miter / round / bevel）" |
-| "SVG path M / L / Z / Q / C / A" | "move（不绘） / line / close / quad Bezier / cubic Bezier / arc" |
-| "`<tspan>`" | "单行 / 行级内容" |
-| "renderer 每行画 `<tspan>`" | "renderer 按 lineHeight 堆叠多行" |
-| "SVG textAnchor" | "文字对齐锚点（start / middle / end）" |
-| "SVG y-down" / "SVG y-down CW" | "screen y-down" / "y-down 屏幕坐标系" |
-| "SVG marker" | "箭头 marker（renderer 端实现）" |
-| "SVG viewBox 数值四元组" | "viewBox 数值四元组 `[x, y, w, h]`（与 SVG `viewBox` 同语义）" |
+| 旧（SVG-imposing）               | 新（中性）                                                               |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| "对应 SVG `<ellipse>`"           | "椭圆原语（cx/cy 圆心，rx/ry 半径）"                                     |
+| "SVG stroke-opacity"             | "描边透明度 0~1"                                                         |
+| "SVG stroke-dasharray 模式"      | "描边 dash 模式字符串（如 '4 2'，与 SVG/CSS `stroke-dasharray` 同格式）" |
+| "SVG fill-rule"                  | "填充规则（nonzero / evenodd）"                                          |
+| "SVG stroke-linecap"             | "描边端点形状（butt / round / square）"                                  |
+| "SVG stroke-linejoin"            | "描边拐角形状（miter / round / bevel）"                                  |
+| "SVG path M / L / Z / Q / C / A" | "move（不绘） / line / close / quad Bezier / cubic Bezier / arc"         |
+| "`<tspan>`"                      | "单行 / 行级内容"                                                        |
+| "renderer 每行画 `<tspan>`"      | "renderer 按 lineHeight 堆叠多行"                                        |
+| "SVG textAnchor"                 | "文字对齐锚点（start / middle / end）"                                   |
+| "SVG y-down" / "SVG y-down CW"   | "screen y-down" / "y-down 屏幕坐标系"                                    |
+| "SVG marker"                     | "箭头 marker（renderer 端实现）"                                         |
+| "SVG viewBox 数值四元组"         | "viewBox 数值四元组 `[x, y, w, h]`（与 SVG `viewBox` 同语义）"           |
 
 **保留 SVG 名字作为"格式标识"的情况**（不是"为 SVG 准备"，而是"与该标准格式兼容"）：
 
@@ -209,13 +209,13 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ### 改动清单
 
-| 改动 | 文件 |
-|---|---|
-| 改 primitive/ 注释 | `ellipse.ts` / `rect.ts` / `view-box.ts` / `text.ts`（`group.ts` / `path.ts` 已被 alpha.5 TODO-6 重写覆盖） |
-| 改 compile/ 注释 | `node.ts`（compile/path.ts 大部分随 alpha.5 TODO-6 重写） |
-| 改 ir/ JSDoc + `.describe(...)` | `node.ts` / `path/path.ts` / `path/step.ts` |
-| 改 geometry/ 注释 | `bend.ts` "SVG y-down" → "screen y-down" |
-| 不动 | `parseWay.ts`（TikZ 对照保留 SVG 引用）、`primitive/scene.ts`（已正确表述）、`geometry/arc.ts`（alpha.5 TODO-5 已规划挪出） |
+| 改动                            | 文件                                                                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 改 primitive/ 注释              | `ellipse.ts` / `rect.ts` / `view-box.ts` / `text.ts`（`group.ts` / `path.ts` 已被 alpha.5 TODO-6 重写覆盖）                 |
+| 改 compile/ 注释                | `node.ts`（compile/path.ts 大部分随 alpha.5 TODO-6 重写）                                                                   |
+| 改 ir/ JSDoc + `.describe(...)` | `node.ts` / `path/path.ts` / `path/step.ts`                                                                                 |
+| 改 geometry/ 注释               | `bend.ts` "SVG y-down" → "screen y-down"                                                                                    |
+| 不动                            | `parseWay.ts`（TikZ 对照保留 SVG 引用）、`primitive/scene.ts`（已正确表述）、`geometry/arc.ts`（alpha.5 TODO-5 已规划挪出） |
 
 ### 前置依赖
 
@@ -255,33 +255,66 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ```ts
 export type MoveStepProps = {
-  kind: 'move'
-  to: IRTarget
-}
+  kind: 'move';
+  to: IRTarget;
+};
 
 export type LineStepProps = {
-  kind?: 'line'      // 默认，可省
-  to: IRTarget
-  label?: IRStepLabel
-  children?: ReactNode
-}
+  kind?: 'line'; // 默认，可省
+  to: IRTarget;
+  label?: IRStepLabel;
+  children?: ReactNode;
+};
 
 export type FoldStepProps = {
-  kind: 'step'       // IR 端 FoldStep 的 kind 字面量沿用 'step'
-  via: '-|' | '|-'
-  to: IRTarget
-  label?: IRStepLabel
-  children?: ReactNode
-}
+  kind: 'step'; // IR 端 FoldStep 的 kind 字面量沿用 'step'
+  via: '-|' | '|-';
+  to: IRTarget;
+  label?: IRStepLabel;
+  children?: ReactNode;
+};
 
-export type CycleStepProps = { kind: 'cycle' }
+export type CycleStepProps = { kind: 'cycle' };
 
-export type CurveStepProps = { kind: 'curve'; control: IRControlPoint; to: IRTarget; label?: IRStepLabel; children?: ReactNode }
-export type CubicStepProps = { kind: 'cubic'; control1: IRControlPoint; control2: IRControlPoint; to: IRTarget; label?: IRStepLabel; children?: ReactNode }
-export type BendStepProps = { kind: 'bend'; bendDirection: 'left' | 'right'; bendAngle?: number; to: IRTarget; label?: IRStepLabel; children?: ReactNode }
-export type ArcStepProps = { kind: 'arc'; startAngle: number; endAngle: number; radius: number; label?: IRStepLabel; children?: ReactNode }
-export type CirclePathStepProps = { kind: 'circlePath'; radius: number; label?: IRStepLabel; children?: ReactNode }
-export type EllipsePathStepProps = { kind: 'ellipsePath'; radiusX: number; radiusY: number; label?: IRStepLabel; children?: ReactNode }
+export type CurveStepProps = {
+  kind: 'curve';
+  control: IRControlPoint;
+  to: IRTarget;
+  label?: IRStepLabel;
+  children?: ReactNode;
+};
+export type CubicStepProps = {
+  kind: 'cubic';
+  control1: IRControlPoint;
+  control2: IRControlPoint;
+  to: IRTarget;
+  label?: IRStepLabel;
+  children?: ReactNode;
+};
+export type BendStepProps = {
+  kind: 'bend';
+  bendDirection: 'left' | 'right';
+  bendAngle?: number;
+  to: IRTarget;
+  label?: IRStepLabel;
+  children?: ReactNode;
+};
+export type ArcStepProps = {
+  kind: 'arc';
+  startAngle: number;
+  endAngle: number;
+  radius: number;
+  label?: IRStepLabel;
+  children?: ReactNode;
+};
+export type CirclePathStepProps = { kind: 'circlePath'; radius: number; label?: IRStepLabel; children?: ReactNode };
+export type EllipsePathStepProps = {
+  kind: 'ellipsePath';
+  radiusX: number;
+  radiusY: number;
+  label?: IRStepLabel;
+  children?: ReactNode;
+};
 
 export type StepProps =
   | MoveStepProps
@@ -293,34 +326,34 @@ export type StepProps =
   | BendStepProps
   | ArcStepProps
   | CirclePathStepProps
-  | EllipsePathStepProps
+  | EllipsePathStepProps;
 ```
 
 每个子类型独立 export，方便用户 `Pick<BendStepProps, 'bendDirection'>` 或写 wrapper（如 `BezierStep = (props: CurveStepProps | CubicStepProps) => ...`）；IDE hover 一次只显示一个变体。
 
 ### 命名对照 IR
 
-| IR (`@retikz/core`) | React props (`@retikz/react`) | kind 字面量 |
-|---|---|---|
-| `IRMoveStep` | `MoveStepProps` | `'move'` |
-| `IRLineStep` | `LineStepProps` | `'line'`（默认可省） |
-| `IRFoldStep` | `FoldStepProps` | `'step'` |
-| `IRCycleStep` | `CycleStepProps` | `'cycle'` |
-| `IRCurveStep` | `CurveStepProps` | `'curve'` |
-| `IRCubicStep` | `CubicStepProps` | `'cubic'` |
-| `IRBendStep` | `BendStepProps` | `'bend'` |
-| `IRArcStep` | `ArcStepProps` | `'arc'` |
-| `IRCirclePathStep` | `CirclePathStepProps` | `'circlePath'` |
-| `IREllipsePathStep` | `EllipsePathStepProps` | `'ellipsePath'` |
+| IR (`@retikz/core`) | React props (`@retikz/react`) | kind 字面量          |
+| ------------------- | ----------------------------- | -------------------- |
+| `IRMoveStep`        | `MoveStepProps`               | `'move'`             |
+| `IRLineStep`        | `LineStepProps`               | `'line'`（默认可省） |
+| `IRFoldStep`        | `FoldStepProps`               | `'step'`             |
+| `IRCycleStep`       | `CycleStepProps`              | `'cycle'`            |
+| `IRCurveStep`       | `CurveStepProps`              | `'curve'`            |
+| `IRCubicStep`       | `CubicStepProps`              | `'cubic'`            |
+| `IRBendStep`        | `BendStepProps`               | `'bend'`             |
+| `IRArcStep`         | `ArcStepProps`                | `'arc'`              |
+| `IRCirclePathStep`  | `CirclePathStepProps`         | `'circlePath'`       |
+| `IREllipsePathStep` | `EllipsePathStepProps`        | `'ellipsePath'`      |
 
 ### 改动清单
 
-| 改动 | 文件 |
-|---|---|
-| 切分 10 个子类型 + 重组 union | `packages/react/src/kernel/Step.tsx` |
-| 公开 API 导出 10 个子类型 + 保留原 `StepProps` | `packages/react/src/index.ts` |
-| 可选：分支文件化（若 Step.tsx 仍嫌长） | 暂不拆文件——10 个 type 加起来 ~50 行，单文件可控；拆文件先记入栈区 |
-| 测试 | 现有 `react/tests/kernel/_builder.test.tsx` / `Draw.test.tsx` 用例不变（运行时形态等价）；可选加一组"子类型可独立 import"smoke test |
+| 改动                                           | 文件                                                                                                                                |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 切分 10 个子类型 + 重组 union                  | `packages/react/src/kernel/Step.tsx`                                                                                                |
+| 公开 API 导出 10 个子类型 + 保留原 `StepProps` | `packages/react/src/index.ts`                                                                                                       |
+| 可选：分支文件化（若 Step.tsx 仍嫌长）         | 暂不拆文件——10 个 type 加起来 ~50 行，单文件可控；拆文件先记入栈区                                                                  |
+| 测试                                           | 现有 `react/tests/kernel/_builder.test.tsx` / `Draw.test.tsx` 用例不变（运行时形态等价）；可选加一组"子类型可独立 import"smoke test |
 
 ### 是否破坏性
 
@@ -407,12 +440,12 @@ export type StepProps =
 
 ### 改动清单
 
-| 改动 | 文件 |
-|---|---|
-| 新建共享 helper | `packages/kernel/core/src/geometry/_transform.ts` |
-| 4 文件改为 import 共享 helper、删本地实现 | `geometry/{rect,circle,ellipse,diamond}.ts` |
-| 三个 `*Anchor` 类型 → alias 到 `RectAnchor` | `geometry/{circle,ellipse,diamond}.ts` |
-| barrel 不动 | `geometry/index.ts` |
+| 改动                                        | 文件                                              |
+| ------------------------------------------- | ------------------------------------------------- |
+| 新建共享 helper                             | `packages/kernel/core/src/geometry/_transform.ts` |
+| 4 文件改为 import 共享 helper、删本地实现   | `geometry/{rect,circle,ellipse,diamond}.ts`       |
+| 三个 `*Anchor` 类型 → alias 到 `RectAnchor` | `geometry/{circle,ellipse,diamond}.ts`            |
+| barrel 不动                                 | `geometry/index.ts`                               |
 
 ### 验证项
 
@@ -536,12 +569,12 @@ export type StepProps =
 ### 建议方案
 
 ```ts
-const NODE_FIELDS = ['id', 'shape', 'rotate', /* ... */] as const;
+const NODE_FIELDS = ['id', 'shape', 'rotate' /* ... */] as const;
 
 // 编译期校验字段表覆盖 IRNode 所有 key（漏一个就报错）
 type _NodeFieldsCheck = AssertEqual<
-  typeof NODE_FIELDS[number],
-  Exclude<keyof IRNode, 'type' | 'text' | 'position' | 'label'>  // 特化字段单独处理
+  (typeof NODE_FIELDS)[number],
+  Exclude<keyof IRNode, 'type' | 'text' | 'position' | 'label'> // 特化字段单独处理
 >;
 
 const ir = pickDefined(props, NODE_FIELDS);
@@ -592,6 +625,7 @@ const reactProps = pickDefined(ir, NODE_FIELDS);
 `packages/kernel/core/src/compile/path.ts` 在路径解析失败时 **20+ 处 silent `return null`**（line 132/144/169/181/399/448/451/462/582/586/601/667/677/687/696/709/720/775），`compile.ts:96` 的调用方 `if (result)` 跳过——用户写 `<Path><Step to="bogusId"/></Path>` **整个 path 静默消失、控制台零信息**。
 
 同病：
+
 - `compile/position.ts` 三处 `return null`
 - `_builder.ts:42` "non-string `<Text>` children 静默跳过"
 - `_builder.ts:154` "多个 `<EdgeLabel>` 取首个其余静默丢"
@@ -613,19 +647,20 @@ CompileOptions.onWarn?: (w: CompileWarning) => void;
 ```
 
 所有 silent fail 点改成 `onWarn(...)` 后再 return null。默认行为：
+
 - dev 模式（`process.env.NODE_ENV !== 'production'`）`console.warn`
 - 生产环境无 callback 时静默（兼容旧行为）
 - 测试 / 用户可注入自己的 logger
 
 ### 改动清单
 
-| 改动 | 文件 |
-|---|---|
-| 加 `CompileOptions.onWarn` + `CompileWarning` 类型 | `packages/kernel/core/src/compile/compile.ts` |
-| 20+ 个 `return null` 点加 `onWarn(...)` | `packages/kernel/core/src/compile/path.ts` |
-| 3 个 `return null` 点加 `onWarn(...)` | `packages/kernel/core/src/compile/position.ts` |
-| 公开 API 加 `CompileWarning` export | `packages/kernel/core/src/index.ts` |
-| 测试 | core 加新测试组：构造错误 IR → 验 `onWarn` 收到对应 code + path |
+| 改动                                               | 文件                                                            |
+| -------------------------------------------------- | --------------------------------------------------------------- |
+| 加 `CompileOptions.onWarn` + `CompileWarning` 类型 | `packages/kernel/core/src/compile/compile.ts`                   |
+| 20+ 个 `return null` 点加 `onWarn(...)`            | `packages/kernel/core/src/compile/path.ts`                      |
+| 3 个 `return null` 点加 `onWarn(...)`              | `packages/kernel/core/src/compile/position.ts`                  |
+| 公开 API 加 `CompileWarning` export                | `packages/kernel/core/src/index.ts`                             |
+| 测试                                               | core 加新测试组：构造错误 IR → 验 `onWarn` 收到对应 code + path |
 
 ### 风险
 
@@ -716,10 +751,10 @@ const ARROW_END_SPEC_KEY_FIELDS = [
 
 ### 改动清单
 
-| 改动 | 文件 |
-|---|---|
-| 新增 `ARROW_END_SPEC_KEY_FIELDS`，`stableSpecKey` 改为遍历字段表 | `packages/react/src/kernel/Tikz.tsx` |
-| 加类型互锁工具（可局部声明，不必公开） | `packages/react/src/kernel/Tikz.tsx` |
+| 改动                                                              | 文件                                                   |
+| ----------------------------------------------------------------- | ------------------------------------------------------ |
+| 新增 `ARROW_END_SPEC_KEY_FIELDS`，`stableSpecKey` 改为遍历字段表  | `packages/react/src/kernel/Tikz.tsx`                   |
+| 加类型互锁工具（可局部声明，不必公开）                            | `packages/react/src/kernel/Tikz.tsx`                   |
 | 保留现有 marker hash 测试；补 1 条“全部 spec 字段参与 hash”的测试 | `packages/react/tests/kernel/Tikz-arrow-hash.test.tsx` |
 
 ### 风险
@@ -754,12 +789,12 @@ const ARROW_END_SPEC_KEY_FIELDS = [
 
 ### 改动清单
 
-| 改动 | 文件 |
-|---|---|
-| 统计并替换 core 测试中可结构化断言的 `pathCommandsToD` 调用 | `packages/kernel/tests/**/*.test.ts` |
-| 统计并替换 core 测试中可结构化断言的 transform helper 调用 | `packages/kernel/tests/**/*.test.ts` |
-| 删除或收窄 test helper 的职责说明 | `packages/kernel/tests/helpers/path-d.ts` / `packages/kernel/tests/helpers/transform.ts` |
-| 如仍需 SVG 输出契约，迁到 React render 测试 | `packages/react/tests/render/*` |
+| 改动                                                        | 文件                                                                                     |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 统计并替换 core 测试中可结构化断言的 `pathCommandsToD` 调用 | `packages/kernel/tests/**/*.test.ts`                                                     |
+| 统计并替换 core 测试中可结构化断言的 transform helper 调用  | `packages/kernel/tests/**/*.test.ts`                                                     |
+| 删除或收窄 test helper 的职责说明                           | `packages/kernel/tests/helpers/path-d.ts` / `packages/kernel/tests/helpers/transform.ts` |
+| 如仍需 SVG 输出契约，迁到 React render 测试                 | `packages/react/tests/render/*`                                                          |
 
 ### 风险
 

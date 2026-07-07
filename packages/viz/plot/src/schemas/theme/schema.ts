@@ -14,7 +14,9 @@ const ThemeAxisTicksSchema = z
     mark: AxisTickMarkSchema.optional().describe('Axis tick mark visual default'),
   })
   .strict()
-  .describe('Theme defaults for axis tick marks. Tick source and density are guide semantics and are not accepted here');
+  .describe(
+    'Theme defaults for axis tick marks. Tick source and density are guide semantics and are not accepted here',
+  );
 
 const ThemeAxisTickLabelsSchema = z
   .union([
@@ -49,7 +51,9 @@ export const PlotAxisThemeSchema = z
     ticks: ThemeAxisTicksSchema.optional().describe('Axis tick mark default style'),
     tickLabels: ThemeAxisTickLabelsSchema.optional().describe('Axis tick label default style'),
     title: ThemeAxisTitleSchema.optional().describe('Axis title default style'),
-    grid: AxisGridLineStyleSchema.optional().describe('Axis grid line default style. It does not enable grid by itself'),
+    grid: AxisGridLineStyleSchema.optional().describe(
+      'Axis grid line default style. It does not enable grid by itself',
+    ),
   })
   .strict()
   .describe('Plot theme defaults for axis visual tokens');

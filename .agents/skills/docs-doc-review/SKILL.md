@@ -85,21 +85,26 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 
 ```md
 BLOCKING（必须修）：
+
 - [结构] apps/docs/src/contents/.../index.zh.mdx:42
   问题：...
   为什么影响读者：...
   建议：...
 
 WARNING（建议修）：
+
 - [读者视角] ...
 
 INFO（做得好的地方 / 可保留）：
+
 - ...
 
 建议补充的 demo / 图示：
+
 - ...
 
 结论：
+
 - 通过 / 不通过
 ```
 

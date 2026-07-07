@@ -15,16 +15,16 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 
 所有 docs 改动都**先读本 skill** 拿通用规则，再按页型分流到专门 skill：
 
-| 页型 | 路径 | 分流到 |
-| --- | --- | --- |
-| 组件页 | `contents/<module>/components/**` | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
-| 示例页 | `contents/<module>/examples/**` | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
-| 分组落地页 | 带 children 的分组节点（`components/node`、`reference/schema` 等） | [`docs-doc-group`](../docs-doc-group/SKILL.md) |
-| 概念页 | `contents/<module>/concepts/**` 叶子页 | [`docs-doc-concept`](../docs-doc-concept/SKILL.md) |
-| 入口页 | `introduction` / `get-start` | 本 skill 的「入口页例外」节 |
-| Reference 词典页 | `contents/<module>/reference/**` | 本 skill 的「Reference 词典页」节 |
-| 博客文章 | `contents/blog/**` | [`docs-doc-blog`](../docs-doc-blog/SKILL.md)（差异较大，blog skill 独立成体；通用规则仍继承本 skill） |
-| 文档评审 | 任意文档初稿 / 改稿 / demo 补充后 | [`docs-doc-review`](../docs-doc-review/SKILL.md) |
+| 页型             | 路径                                                               | 分流到                                                                                                |
+| ---------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| 组件页           | `contents/<module>/components/**`                                  | [`docs-doc-component`](../docs-doc-component/SKILL.md)                                                |
+| 示例页           | `contents/<module>/examples/**`                                    | [`docs-doc-example`](../docs-doc-example/SKILL.md)                                                    |
+| 分组落地页       | 带 children 的分组节点（`components/node`、`reference/schema` 等） | [`docs-doc-group`](../docs-doc-group/SKILL.md)                                                        |
+| 概念页           | `contents/<module>/concepts/**` 叶子页                             | [`docs-doc-concept`](../docs-doc-concept/SKILL.md)                                                    |
+| 入口页           | `introduction` / `get-start`                                       | 本 skill 的「入口页例外」节                                                                           |
+| Reference 词典页 | `contents/<module>/reference/**`                                   | 本 skill 的「Reference 词典页」节                                                                     |
+| 博客文章         | `contents/blog/**`                                                 | [`docs-doc-blog`](../docs-doc-blog/SKILL.md)（差异较大，blog skill 独立成体；通用规则仍继承本 skill） |
+| 文档评审         | 任意文档初稿 / 改稿 / demo 补充后                                  | [`docs-doc-review`](../docs-doc-review/SKILL.md)                                                      |
 
 本 skill 也直接覆盖：i18n 改 key、改菜单、改正文、加 demo 这类"对页结构无大改"的杂活。
 
@@ -77,11 +77,11 @@ apps/docs/src/
 
 ## 漏改对照
 
-| 漏掉 | 现象 |
-| --- | --- |
-| i18n key | TS 编译失败：`label` 类型不匹配 `I18nKey` |
-| mdx 文件 | URL 直访进入 not found / 占位状态，或当前语言回退到另一份正文 |
-| data 注册 | 侧边栏看不到；URL 直访 → "页面不存在" |
+| 漏掉                               | 现象                                                                    |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| i18n key                           | TS 编译失败：`label` 类型不匹配 `I18nKey`                               |
+| mdx 文件                           | URL 直访进入 not found / 占位状态，或当前语言回退到另一份正文           |
+| data 注册                          | 侧边栏看不到；URL 直访 → "页面不存在"                                   |
 | index.zh.mdx / index.en.mdx 缺一份 | 切到该语言时回退到另一份；普通文档要补齐；blog 的 en 可按 blog 规则选填 |
 
 ## 中英规则
@@ -108,13 +108,13 @@ apps/docs/src/
 - **标题简写**：H2 / H3 优先用短标题，表达主题即可；限定条件、适用场景和解释放到正文首句或表格里，不要堆进标题。
 - **生僻词首次标注**：非常见词汇（如 `canonical 行` / `lowering` / `bbox` / `IR` 等）在一页中**首次**出现时，就近括注中文含义或一句话解释，让读者无需跳页就能跟上；同一页后续出现不再重复。跨页是独立文档，每页各自在首次出现处标注。
 
-| 内容 | 优先形式 |
-| --- | --- |
-| 用法 / 效果 | `<ComponentPreview>` |
-| API / 配置 / 命令 | 代码块或表格 |
-| 对比 / 状态映射 | 表格 |
-| 步骤 / 并列要点 | 列表 |
-| 必要的“为什么” | 短段落 |
+| 内容              | 优先形式             |
+| ----------------- | -------------------- |
+| 用法 / 效果       | `<ComponentPreview>` |
+| API / 配置 / 命令 | 代码块或表格         |
+| 对比 / 状态映射   | 表格                 |
+| 步骤 / 并列要点   | 列表                 |
+| 必要的“为什么”    | 短段落               |
 
 如果一页包含多个彼此隔离、没有递进逻辑的条目（例如多个 transform、多个策略、多个变体），按条目组织内容。每个条目里就近放用途说明、demo、关键配置 / API 表和注意事项；只有跨条目的公共机制才单独成节。
 
@@ -175,10 +175,10 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 两种用法区分：
 
-| 用途 | hideCode | 例 |
-| --- | --- | --- |
-| **演示组件用法**（"`<Node>` 长这样、props 这样配") | `false`（默认） | components/* 下每页的用例 demo |
-| **叙述性插图**（架构图、流程图、概念示意——retikz 当配图工具用） | `true` | introduction / concepts 页里画 IR pipeline、anchor 体系、坐标系等 |
+| 用途                                                            | hideCode        | 例                                                                |
+| --------------------------------------------------------------- | --------------- | ----------------------------------------------------------------- |
+| **演示组件用法**（"`<Node>` 长这样、props 这样配")              | `false`（默认） | components/\* 下每页的用例 demo                                   |
+| **叙述性插图**（架构图、流程图、概念示意——retikz 当配图工具用） | `true`          | introduction / concepts 页里画 IR pipeline、anchor 体系、坐标系等 |
 
 判断方法：用户看到这张图是想"复制源码学怎么写"还是"看懂这个概念"——前者保留源码、后者 `hideCode`。
 
@@ -196,11 +196,11 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 边界：
 
-| 用途 | 规则 |
-| --- | --- |
-| 叙述性插图 | 走 `docs-figure-draw`，`hideCode`，Node 可 `stroke="none"` |
-| 位置 / 关系用法演示 | 保留 Node 默认外框，Node 也是 demo 主体 |
-| Node 视觉特性演示 | 按组件页主题自由设计 |
+| 用途                | 规则                                                       |
+| ------------------- | ---------------------------------------------------------- |
+| 叙述性插图          | 走 `docs-figure-draw`，`hideCode`，Node 可 `stroke="none"` |
+| 位置 / 关系用法演示 | 保留 Node 默认外框，Node 也是 demo 主体                    |
+| Node 视觉特性演示   | 按组件页主题自由设计                                       |
 
 ## 文档宽度限制
 
@@ -212,11 +212,11 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 ## 阅读时间与页面类型
 
-| 页面类型 | 例子 | 阅读时间约束 | 处理方式 |
-| --- | --- | --- | --- |
-| 教程类文章 | `core/get-start`、线性 tutorial、迁移步骤、`examples/*` | **尽量 ≤ 10 分钟，且不可超过 15 分钟** | 超过 10 分钟先压缩叙述 / 拆步骤；接近 15 分钟必须拆页或改成多篇 guide |
-| 字典类文章 | `components/*`、组件 API 页、能力查阅页 | **尽量 ≤ 15 分钟；特殊情况下可超过** | 超过 15 分钟时必须有清晰 TOC、主题分组、API 表和可跳读小节；若多个主题互不依赖，优先拆子页 |
-| Reference / Schema | `core/reference/schema/*` | 不按完整阅读时间限制 | 以查询效率为准：字段表完整、锚点稳定、中英文结构一致 |
+| 页面类型           | 例子                                                    | 阅读时间约束                           | 处理方式                                                                                   |
+| ------------------ | ------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 教程类文章         | `core/get-start`、线性 tutorial、迁移步骤、`examples/*` | **尽量 ≤ 10 分钟，且不可超过 15 分钟** | 超过 10 分钟先压缩叙述 / 拆步骤；接近 15 分钟必须拆页或改成多篇 guide                      |
+| 字典类文章         | `components/*`、组件 API 页、能力查阅页                 | **尽量 ≤ 15 分钟；特殊情况下可超过**   | 超过 15 分钟时必须有清晰 TOC、主题分组、API 表和可跳读小节；若多个主题互不依赖，优先拆子页 |
+| Reference / Schema | `core/reference/schema/*`                               | 不按完整阅读时间限制                   | 以查询效率为准：字段表完整、锚点稳定、中英文结构一致                                       |
 
 页面同时承担教程 + 字典时，先保证教程主线在 10 分钟内；额外查阅放 Reference / API / 子页。
 
@@ -238,10 +238,10 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 当前常见点路径：
 
-| 父 schema.字段 | 嵌套 schema | 子字段 |
-| --- | --- | --- |
-| `NodeSchema.font` | FontSchema | family, size, weight, style |
-| 8 个 step variant 的 `label`（Line / Fold / Curve / Cubic / Bend / Arc / CirclePath / EllipsePath） | StepLabelSchema | text, position, side |
+| 父 schema.字段                                                                                      | 嵌套 schema     | 子字段                      |
+| --------------------------------------------------------------------------------------------------- | --------------- | --------------------------- |
+| `NodeSchema.font`                                                                                   | FontSchema      | family, size, weight, style |
+| 8 个 step variant 的 `label`（Line / Fold / Curve / Cubic / Bend / Arc / CirclePath / EllipsePath） | StepLabelSchema | text, position, side        |
 
 加新 schema：
 
@@ -253,35 +253,35 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 ## 与 shadcn 的差异
 
-| | shadcn/ui | retikz |
-| --- | --- | --- |
-| Demo 引用组件 | `<ComponentPreview name=...>` + `<ComponentSource name=...>` | 仅 `<ComponentPreview name=...>`（合二为一） |
-| Demo 文件名 | `<name>-demo.tsx` | `<name>.demo.tsx`（**点号**后缀） |
-| Demo 位置 | 集中在 `registry/` | mdx **同级目录** |
-| Demo 形态 | 任意 React 组件 | `default export` 的**纯 FC**，**不能用 hooks**（IR 视图会调用一次该组件） |
-| 双语 | 单语言 | 同目录 `index.zh.mdx` + `index.en.mdx` |
-| 代码 Tab | React 源码 | React 源码 + IR JSON + Vanilla builder 代码（IR / Vanilla 均自动算） |
+|               | shadcn/ui                                                    | retikz                                                                    |
+| ------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Demo 引用组件 | `<ComponentPreview name=...>` + `<ComponentSource name=...>` | 仅 `<ComponentPreview name=...>`（合二为一）                              |
+| Demo 文件名   | `<name>-demo.tsx`                                            | `<name>.demo.tsx`（**点号**后缀）                                         |
+| Demo 位置     | 集中在 `registry/`                                           | mdx **同级目录**                                                          |
+| Demo 形态     | 任意 React 组件                                              | `default export` 的**纯 FC**，**不能用 hooks**（IR 视图会调用一次该组件） |
+| 双语          | 单语言                                                       | 同目录 `index.zh.mdx` + `index.en.mdx`                                    |
+| 代码 Tab      | React 源码                                                   | React 源码 + IR JSON + Vanilla builder 代码（IR / Vanilla 均自动算）      |
 
 `ComponentPreview` 常用 props：
 
-| prop | 用法 |
-| --- | --- |
-| `name` | 同级 `<name>.demo.tsx` 的 stem，必填；语言版优先 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx` |
-| `size` | 渲染区高度：`xs` / `sm` / `md` / `lg` / `xl` / `xxl` / `xxxl`，默认 `md` |
-| `hideCode` | 叙述性插图开；演示组件用法保持默认 |
-| `sourceFiles` | 额外展示的同级源码文件，如 `.data.ts` / helper；示例页多文件 diff 见 `docs-doc-example` |
-| `diffFrom` | 示例页 step 对比上一份 demo 的 React 源码新增行 |
-| `interactive` | demo 确需 hooks / 异步时才开；默认跳过静态 IR / Vanilla 视图，可配 `previewIR` 或 `<name>.ir.json` 恢复 IR 视图 |
-| `replayable` / `actions` / `overlays` | 动画或自定义工具才用；普通文档不要碰 |
+| prop                                  | 用法                                                                                                            |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `name`                                | 同级 `<name>.demo.tsx` 的 stem，必填；语言版优先 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx`                    |
+| `size`                                | 渲染区高度：`xs` / `sm` / `md` / `lg` / `xl` / `xxl` / `xxxl`，默认 `md`                                        |
+| `hideCode`                            | 叙述性插图开；演示组件用法保持默认                                                                              |
+| `sourceFiles`                         | 额外展示的同级源码文件，如 `.data.ts` / helper；示例页多文件 diff 见 `docs-doc-example`                         |
+| `diffFrom`                            | 示例页 step 对比上一份 demo 的 React 源码新增行                                                                 |
+| `interactive`                         | demo 确需 hooks / 异步时才开；默认跳过静态 IR / Vanilla 视图，可配 `previewIR` 或 `<name>.ir.json` 恢复 IR 视图 |
+| `replayable` / `actions` / `overlays` | 动画或自定义工具才用；普通文档不要碰                                                                            |
 
 ### 代码视图：React / IR / Vanilla
 
 `ComponentPreview` 默认展示三套视图：
 
-| 视图 | 来源 |
-| --- | --- |
-| React | `<name>.demo.tsx` 原文 |
-| IR | 静态执行 demo 后由 `buildPreviewIR` 派生 |
+| 视图    | 来源                                                                  |
+| ------- | --------------------------------------------------------------------- |
+| React   | `<name>.demo.tsx` 原文                                                |
+| IR      | 静态执行 demo 后由 `buildPreviewIR` 派生                              |
 | Vanilla | 从同一份 IR 自动 codegen；需要更地道写法时用 `<name>.vanilla.ts` 覆盖 |
 
 不要为了“只演示 React”省掉 Vanilla 视图。`interactive` demo（hooks / 异步）是例外：默认只保留 React；若需要 IR Tab，可 `export const previewIR` 或提供 `<name>.ir.json`。
@@ -290,18 +290,18 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 数据来源和取数逻辑不要内联在 `.demo.tsx`，统一抽到同级 `.data` 文件，并通过 `sourceFiles` 展示。每个 demo 默认拥有自己的 data 文件；不要把多个 demo 的数据集混在一个共享 `.data.ts` 里。只有确实是同一个数据集被多个 demo 共同讲解时，才允许共享，并在命名上表达清楚它是共享数据。
 
-| 场景 | 规则 |
-| --- | --- |
-| 单数据集 | `<demo>.data.ts` |
-| 多数据集 | `<demo>.<dataset>.data.ts` |
-| 接线 | `.demo.tsx` import 数据；mdx 写 `sourceFiles={['<demo>.data.ts']}` |
-| 写死数据 | 普通 `export const`，React 与 `<name>.vanilla.ts` 可共用 |
+| 场景     | 规则                                                                  |
+| -------- | --------------------------------------------------------------------- |
+| 单数据集 | `<demo>.data.ts`                                                      |
+| 多数据集 | `<demo>.<dataset>.data.ts`                                            |
+| 接线     | `.demo.tsx` import 数据；mdx 写 `sourceFiles={['<demo>.data.ts']}`    |
+| 写死数据 | 普通 `export const`，React 与 `<name>.vanilla.ts` 可共用              |
 | 远程数据 | React hook 放 `.data.ts`；vanilla 远程取数单独文件，不共用 React hook |
 
 ## MDX 可用元素
 
 - GFM markdown（表格、列表、引用、链接、围栏代码块）全部支持
-- 围栏代码块带语言后会上语法高亮；写 `` ```tsx showLineNumbers `` 开行号
+- 围栏代码块带语言后会上语法高亮；写 ` ```tsx showLineNumbers ` 开行号
 - 行内 `<a href>`：`/` 开头自动走 react-router `<Link>`；`http(s)://` 开头自动 `target="_blank"`
 - 自定义 JSX：
   - `<ComponentPreview ... />` —— 组件 / 示例 / 概念页 demo 都用
@@ -314,27 +314,27 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 `ComponentAlert` 用于把正文里的提示 / 警告 / 错误用法从普通段落中分离出来。它不承载长篇教程，不替代 `<Comparison>`，也不替代真实 demo；如果提示内容超过 2-3 句，优先拆成正文小节或表格。
 
-| type | 用途 |
-| --- | --- |
-| `tip` | 提示、用法建议、文档阅读顺序、文档建议 |
-| `warn` | 警告、非规范用法、组件错误用法、性能 / 内存问题 |
-| `error` | 错误、明确错误用法 |
+| type    | 用途                                            |
+| ------- | ----------------------------------------------- |
+| `tip`   | 提示、用法建议、文档阅读顺序、文档建议          |
+| `warn`  | 警告、非规范用法、组件错误用法、性能 / 内存问题 |
+| `error` | 错误、明确错误用法                              |
 
 ## Quick Reference
 
-| 任务 | 改动 | 也要读 |
-| --- | --- | --- |
-| 加叶子页 | i18n × 2 + `contents/.../index.{zh,en}.mdx` + 在 `data/<module>.ts` 注册 `{ id, label }` | 按页型分流 |
-| 改正文 | `contents/.../index.{zh,en}.mdx`（双语都要；blog 例外按 blog skill） | — |
-| 改菜单 / 标题文案 | `i18n/locales/{zh,en}.json`（双语都要） | — |
-| 加一个 demo | 同级写 `<name>.demo.tsx` + 在 mdx 里 `<ComponentPreview name="<name>" />` | — |
-| 加菜单图标 | `data/kernel.ts` 的 `Page.icon`（仅一级 Page 支持） | — |
-| 新建 module | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间 | — |
-| 加分组节点 | 父节点加 `children` + 写分组落地页 `index.{zh,en}.mdx` | [`docs-doc-group`](../docs-doc-group/SKILL.md) |
-| 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径） | — |
-| 写 TikZ 对照 | 用 `<Comparison target="tikz">` 包起来，不写进普通正文 | — |
-| 加组件页 | — | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
-| 加示例页 | — | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
+| 任务                | 改动                                                                                     | 也要读                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 加叶子页            | i18n × 2 + `contents/.../index.{zh,en}.mdx` + 在 `data/<module>.ts` 注册 `{ id, label }` | 按页型分流                                             |
+| 改正文              | `contents/.../index.{zh,en}.mdx`（双语都要；blog 例外按 blog skill）                     | —                                                      |
+| 改菜单 / 标题文案   | `i18n/locales/{zh,en}.json`（双语都要）                                                  | —                                                      |
+| 加一个 demo         | 同级写 `<name>.demo.tsx` + 在 mdx 里 `<ComponentPreview name="<name>" />`                | —                                                      |
+| 加菜单图标          | `data/kernel.ts` 的 `Page.icon`（仅一级 Page 支持）                                      | —                                                      |
+| 新建 module         | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间                    | —                                                      |
+| 加分组节点          | 父节点加 `children` + 写分组落地页 `index.{zh,en}.mdx`                                   | [`docs-doc-group`](../docs-doc-group/SKILL.md)         |
+| 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径）      | —                                                      |
+| 写 TikZ 对照        | 用 `<Comparison target="tikz">` 包起来，不写进普通正文                                   | —                                                      |
+| 加组件页            | —                                                                                        | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
+| 加示例页            | —                                                                                        | [`docs-doc-example`](../docs-doc-example/SKILL.md)     |
 
 ## Common Mistakes
 
@@ -358,13 +358,13 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 按改动类型选择最小有效验证，不要把纯 MDX 文案改动一律升级成完整类型检查：
 
-| 改动类型 | 最小验证 |
-| --- | --- |
+| 改动类型                                                                                         | 最小验证                                                                                    |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | 只改 MDX 正文、表格、说明文字、站内链接；不改 import、demo、data、i18n、sidebar、schema registry | `git diff --check` + 打开页面或请求关键路由 / 链接 200；可跳过 eslint / tsc，并在汇报中说明 |
-| 新增 / 修改页面结构、frontmatter、MDX 组件调用、`LinkedCard`、TOC 相关标题 | `git diff --check` + 浏览器打开页面，确认中英、TOC、菜单和关键链接 |
-| 新增 / 修改 demo、data、helper、`sourceFiles`、MDX import | `pnpm --filter @retikz/docs exec tsc --noEmit` + 浏览器确认 demo 渲染正常 |
-| 修改 `apps/docs/src/data`、`apps/docs/src/i18n`、schema registry、Reference `<ZodSchema>` | `pnpm --filter @retikz/docs exec tsc --noEmit` + 对应路由 / schema 块可访问 |
-| 需要验证 CI 或站点产物等价路径 | `pnpm --filter @retikz/docs build` |
+| 新增 / 修改页面结构、frontmatter、MDX 组件调用、`LinkedCard`、TOC 相关标题                       | `git diff --check` + 浏览器打开页面，确认中英、TOC、菜单和关键链接                          |
+| 新增 / 修改 demo、data、helper、`sourceFiles`、MDX import                                        | `pnpm --filter @retikz/docs exec tsc --noEmit` + 浏览器确认 demo 渲染正常                   |
+| 修改 `apps/docs/src/data`、`apps/docs/src/i18n`、schema registry、Reference `<ZodSchema>`        | `pnpm --filter @retikz/docs exec tsc --noEmit` + 对应路由 / schema 块可访问                 |
+| 需要验证 CI 或站点产物等价路径                                                                   | `pnpm --filter @retikz/docs build`                                                          |
 
 如果 `tsc` 被无关的未提交源码改动挡住，不要为了文档提交顺手修无关范围；记录阻塞文件和错误，继续完成当前文档验证。
 
@@ -372,12 +372,12 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 写完文档（含改动 / 新页）后**逐条复核所有超链接是否可达**，TS / build / 自动测试都挡不住，断链一旦出现是用户体验灾难。重点检查：
 
-| 类别 | 检查方法 |
-| --- | --- |
-| **页内锚链接**（`#xxx`） | 每一条都跳得到对应 H1-H3；CJK / 含 `+ - ° :` 的标题别手写 slug，用 github-slugger 跑一下：`cd apps/docs && node -e "import('github-slugger').then(({default:S})=>console.log(new S().slug('<标题>')))"` |
-| **站内路径**（`/core/...`） | 路径段必须命中 `data/<module>.ts` 里实际注册的 `{ id }` —— 改名 / 重组目录后所有外部文档 link 一起改；最简单做法是搜全仓 `rg "/core/old-path"` |
-| **GitHub URL** | 仓库根 / branch / 路径都对（默认 `main`）；本地复制 GitHub URL 时容易把 `blob/<commit>/...` 黏进去——必须改回 `blob/main/...` |
-| **能力节 step 锚** | 示例页能力节第三列每个 `[N](#<H3-slug>)` 都要跳到对应 step H3，slug 与 github-slugger 输出一致 |
-| **components/ 跳转** | 每条 `[X](/core/components/...)` 都落到现有页 —— 组件改名 / 移位时一起改 |
+| 类别                        | 检查方法                                                                                                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **页内锚链接**（`#xxx`）    | 每一条都跳得到对应 H1-H3；CJK / 含 `+ - ° :` 的标题别手写 slug，用 github-slugger 跑一下：`cd apps/docs && node -e "import('github-slugger').then(({default:S})=>console.log(new S().slug('<标题>')))"` |
+| **站内路径**（`/core/...`） | 路径段必须命中 `data/<module>.ts` 里实际注册的 `{ id }` —— 改名 / 重组目录后所有外部文档 link 一起改；最简单做法是搜全仓 `rg "/core/old-path"`                                                          |
+| **GitHub URL**              | 仓库根 / branch / 路径都对（默认 `main`）；本地复制 GitHub URL 时容易把 `blob/<commit>/...` 黏进去——必须改回 `blob/main/...`                                                                            |
+| **能力节 step 锚**          | 示例页能力节第三列每个 `[N](#<H3-slug>)` 都要跳到对应 step H3，slug 与 github-slugger 输出一致                                                                                                          |
+| **components/ 跳转**        | 每条 `[X](/core/components/...)` 都落到现有页 —— 组件改名 / 移位时一起改                                                                                                                                |
 
 zh 和 en 两份 mdx **分别**检查（很多链接在两边目标 slug 不同）。改完批量改动后用浏览器开页直接挨个点是最稳的兜底。

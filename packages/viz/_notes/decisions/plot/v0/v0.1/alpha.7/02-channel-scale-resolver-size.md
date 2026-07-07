@@ -23,12 +23,35 @@ size 的感知语义（已拍板 ①③）：**仅作用 PointMark**，是 **rad
 
 ```ts
 // ir/encoding.ts —— size 专属 channel（value 限数值）+ PointMark 专属 encoding
-export const SizeChannelSchema = z.object({
-  field: z.string().min(1).optional().describe('Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale'),
-  value: z.number().finite().nonnegative().optional().describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
-  scale: z.string().min(1).optional().describe('Optional sqrt-scale name (only meaningful with field); omitted → a default radius (sqrt) scale is synthesized'),
-}).refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'size channel must set exactly one of field / value' })
-  .describe('Size channel (PointMark only): field → glyph radius via a sqrt scale; value → a constant final radius (px) that bypasses the scale');
+export const SizeChannelSchema = z
+  .object({
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale',
+      ),
+    value: z
+      .number()
+      .finite()
+      .nonnegative()
+      .optional()
+      .describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
+    scale: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Optional sqrt-scale name (only meaningful with field); omitted → a default radius (sqrt) scale is synthesized',
+      ),
+  })
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'size channel must set exactly one of field / value',
+  })
+  .describe(
+    'Size channel (PointMark only): field → glyph radius via a sqrt scale; value → a constant final radius (px) that bypasses the scale',
+  );
 
 // PointMark 专属 encoding：位置 + 样式(color) + size
 export const PointEncodingSchema = EncodingSchema.extend({
@@ -54,7 +77,6 @@ export const PointEncodingSchema = EncodingSchema.extend({
 本轮通道集（position / size / color）是**内置 curated 集**，IR 层为闭集——对齐 [plot-design §11](../../../../../architecture/plot-design.md)「`coordinate` / `mark` / `scale`（通道同理）走**注册表**、不写死枚举」的**「先内置，后开放自定义」**策略。本 ADR 的**通用通道→scale resolver 即未来 `ChannelDefinition` 注册表的内部接缝**：resolver 参数化「该通道接受的 scale 族 + 默认派生 + lower 到哪个 core 视觉属性」，将来注册表只是把这组参数从内置常量改为运行时注入。
 
 注册表对外开放时沿用 core 的**「配置 / 数据 / 函数」三分**（plot-design §6）——自定义通道定义**带函数、经 `CompileOptions` / `lowerPlots` options 运行时注入、不进 JSON IR**（IR 按通道名引用，函数定义运行时给），与 core 自定义 `shape`（IR 写名、几何函数注入）同构。硬约束：任何非位置通道终须 lower 到 core 已有视觉属性（fill / stroke / strokeWidth / opacity / shape 参数…），不能凭空发明 core 不识别的视觉效果（那要先补 core）。**现在就要任意视觉控制**的用户掉到 **Kernel**（`<Node>` / `<Path>`，直接写 core IR）——retikz 版的「Vega-Lite → Vega」逃生舱。本轮**只留接缝、不开放注册**。
-
 
 ## 不在本 ADR 范围
 

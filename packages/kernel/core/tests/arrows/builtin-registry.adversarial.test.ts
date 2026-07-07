@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type {
-  ArrowDefinition,
-  PathCommand,
-  PathPrim,
-  ScenePrimitive,
-} from '../../src/contract';
+import type { ArrowDefinition, PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -65,10 +60,7 @@ const allCoords = (commands: Array<PathCommand>): Array<number> => {
 
 const allFinite = (xs: Array<number>): boolean => xs.every(Number.isFinite);
 
-const compileArrow = (
-  detail: Record<string, unknown>,
-  arrows: Record<string, TestArrowDefinition>,
-) =>
+const compileArrow = (detail: Record<string, unknown>, arrows: Record<string, TestArrowDefinition>) =>
   compileToScene(horizontalPathIR('->', detail), {
     arrows: Object.entries(arrows).map(([name, definition]) => ({ ...definition, name })),
     onWarn: () => {},

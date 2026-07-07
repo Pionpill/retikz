@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IRNodeTarget,IRScene } from '../../src/schemas';
+import type { IRNodeTarget, IRScene } from '../../src/schemas';
 import type { Rect } from '../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../src/compile/compile';

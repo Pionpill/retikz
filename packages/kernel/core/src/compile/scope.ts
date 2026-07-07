@@ -31,7 +31,12 @@ export type LowerScopeTransformsContext = {
   onUnresolved?: (failed: IRTransform) => void;
 };
 
-/** 把 IR transform 归一为 Scene transform；引用解析失败时返回 null。 */
+/**
+ * 将 scope transform 的 translate-like IR 变体 lowered 为 Scene transform。
+ *
+ * @description 该步骤依赖当前 namespace，因此保留在 traversal 编译过程中执行；输出只包含 renderer
+ * 可直接消费的 `translate` / `rotate` / `scale` 形态。引用解析失败时返回 null。
+ */
 export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
   context: LowerScopeTransformsContext,

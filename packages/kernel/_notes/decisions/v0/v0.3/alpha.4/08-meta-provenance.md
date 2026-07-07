@@ -31,7 +31,7 @@ roadmap 早有伏笔（[v0.3 §AI 增量渲染预留](../roadmap.md)：「IR / l
 // 三处 NodeSchema / ScopeSchema / PathSchema 用同一段 describe（英文）：
 meta: JsonObjectSchema.optional().describe(
   'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
-)
+);
 ```
 
 - **`Node.meta`**（`src/ir/node.ts`）、**`Path.meta`**（`src/ir/path/path.ts`）、**`Scope.meta`**（`src/ir/scope.ts`）三处加同款可选字段。
@@ -48,12 +48,12 @@ meta: JsonObjectSchema.optional().describe(
 
 compile 在已有的「把 user `id` stamp 到 emit 图元」处，**紧贴着多 stamp 一个 `meta`**（取自同一 IR 元素）：
 
-| 载体 | emit 形态 | `id` 现状落点（alpha.3） | `meta` 落点（本 ADR，同点） |
-|---|---|---|---|
+| 载体                             | emit 形态                 | `id` 现状落点（alpha.3）                                    | `meta` 落点（本 ADR，同点）                       |
+| -------------------------------- | ------------------------- | ----------------------------------------------------------- | ------------------------------------------------- |
 | 纯几何 Node（不含文本 / rotate） | 平铺 shape 图元（可多个） | 每个 shape 图元（多 shape 共享同 id；label / pin 不 stamp） | 每个 shape 图元（同款复制；label / pin 不 stamp） |
-| 文本 / rotate Node | 单层 `GroupPrim` 包 | `GroupPrim`（子图元不重复 stamp） | 同 `GroupPrim` |
-| Path | `PathPrim` | `PathPrim` | 同 `PathPrim` |
-| Scope | `GroupPrim` | `GroupPrim` | 同 `GroupPrim` |
+| 文本 / rotate Node               | 单层 `GroupPrim` 包       | `GroupPrim`（子图元不重复 stamp）                           | 同 `GroupPrim`                                    |
+| Path                             | `PathPrim`                | `PathPrim`                                                  | 同 `PathPrim`                                     |
+| Scope                            | `GroupPrim`               | `GroupPrim`                                                 | 同 `GroupPrim`                                    |
 
 - **落点与 `id` 逐一对齐**——`meta` 不引入任何新的遍历 / 落点判断，只在 `if (layout.id !== undefined) …` 这类既有 stamp 分支旁边加 `if (node.meta !== undefined) prim.meta = node.meta`（按载体取 `layout` / `child` 上携带的 meta）。
 - **多平铺图元复制 `meta`**：与 `id` 一致（一个纯几何 Node emit 多个 shape 图元时各带一份 `meta`）——provenance 冗余无害，且让任一被命中的子图元都能反查来源。

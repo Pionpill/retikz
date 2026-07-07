@@ -1,10 +1,9 @@
-import type { TextLine } from '../../contract';
-import type { IRLineSpec } from '../../schemas';
-import type { FontSpec, LaidLine, LineLayoutContext } from '../text';
-import type { NodeTextLayoutContext } from './types';
+import type { TextLine } from '../../../contract';
+import type { IRLineSpec } from '../../../schemas';
+import type { FontSpec, LaidLine, LineLayoutContext } from '../../text';
+import type { NodeTextLayoutContext } from '../types';
 
-import { CompileWarningCode } from '../constants';
-import { layoutInlineLine, resolveFontSize, resolveLineRuns } from '../text';
+import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
 import { wrapText } from './text';
 
 /** 节点正文布局输入。 */
@@ -58,15 +57,13 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   if (rawLines) {
-    const resolved = rawLines.map(spec => resolveLineRuns(spec, texGatingOn));
-    resolved.forEach(r => {
-      if (r.warn) {
-        inlineWarn(
-          CompileWarningCode.TextTexParseError,
-          'Unbalanced `$` in node text; the trailing fragment is kept literal.',
-        );
-      }
-    });
+    const resolved = rawLines.map(spec =>
+      resolveLineRunsWithWarning(spec, {
+        gatingOn: texGatingOn,
+        warn: inlineWarn,
+        warningMessage: 'Unbalanced `$` in node text; the trailing fragment is kept literal.',
+      }),
+    );
     const anyMixed = rawLines.some(spec => typeof spec === 'object' && 'runs' in spec);
     const anyMath = resolved.some(r => r.hasMath);
     if (anyMath || anyMixed) {

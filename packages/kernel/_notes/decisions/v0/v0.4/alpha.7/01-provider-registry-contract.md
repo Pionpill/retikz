@@ -51,7 +51,6 @@ const shapes = resolveProviderRegistry({
 2. 禁止覆盖 builtin 能最大化设计收敛期的可诊断性；需要替换内置行为时应显式设计新名字或新 ADR。
 3. `Map` 输出让 compile lookup 的语义统一，避免 `Record` 原型键、own-property 检查和排序诊断在各能力里重复实现。
 
-
 ## 不在本 ADR 范围
 
 - 各 capability 的具体字段迁移由 [ADR-03](./03-capability-provider-migration.md) 处理。

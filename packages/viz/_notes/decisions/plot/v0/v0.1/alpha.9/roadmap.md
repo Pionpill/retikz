@@ -85,13 +85,13 @@ alpha.9 的结构性核心与 alpha.4 同构——**再逼一次 frame 抽象**�
 > ADR-01~04 **Accepted + 已实现**（Spec-First TDD：tests-first → 实现 → adversarial bug hunt + contract audit；BLOCKING「ternary 和上溢」已修并升回归）。三包 + 文档四方一致、坐标系族 milestone 可交付。决策点 ①~⑦ + ①b 已在各 ADR「决策」段落定。
 > **ADR-05（Proposed，follow-on 扩展）**：把 alpha.9 时段做的实验性 custom coordinate（next-plot spike）正式化，并立**单 role 轴标架契约 `frameAlong`**——曲线轴现在就用、3D / 多 plot 组合 / 法丛只留缝。同 alpha.4/9 的 coordinate-frame 结构线；经一轮 develop-design 多 LLM 评审（P0×2 / P1×2 / P2×1 全采纳）。状态待 develop-wrapup 翻 Accepted。
 
-| ADR | 主题 | Level | 依赖 | 状态 |
-|---|---|---|---|---|
-| [01](./01-coordinate-frame-roles.md) | coordinate frame N 通道泛化 + **位置 encoding 角色化**（x/y 转可选 + 按 coordinate 校验必填角色集，评审 P1）+ 每坐标系合法 dimension 集契约 + guide 维度校验（修 cross-review P2） | red | — | Accepted |
-| [02](./02-cartesian1d.md) | **一维坐标系族**：cartesian1D（直线，单维 + 塌缩维基线；rug/timeline）+ **polar1D（圆周，单角向 + 固定半径；环形/周期，复用 alpha.4 角向投影）**+ 1D 轴 / 角向 1D 轴 guide；histogram 留 alpha.12；mark 矩阵 point 为主 | red | ADR-01 | Accepted |
-| [03](./03-ternary2d.md) | ternary2D 坐标系 + 三角轴 guide（**加 a/b/c 位置角色通道** + 重心投影 + 自动归一化 + 三角轴 / 三向网格；取 continuous 字段，proportion 已并入 continuous；mark 矩阵 point 为主） | red | ADR-01 | Accepted |
-| [04](./04-dsl-docs.md) | 三包 DSL + 文档露出（`coordinate="cartesian1D"`/`"ternary2D"`、PointMark x/y 可选 + a/b/c、1D/三角轴表面；react + vanilla + docs demo；端到端验收） | red | ADR-01–03 | Accepted |
-| [05](./05-coordinate-chart-frame.md) | **坐标系 = 可报局部标架（`frameAlong`）的 chart**：正式化实验性 custom coordinate + 立单 role 轴标架契约（曲线轴吃 `frameAlong`、缺则数值回落）；`createCustomFrame` 定稿 options 对象；3D / 多 plot 组合 / 法丛只留缝 | red | ADR-01 | Proposed |
+| ADR                                  | 主题                                                                                                                                                                                                                    | Level | 依赖      | 状态     |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------- | -------- |
+| [01](./01-coordinate-frame-roles.md) | coordinate frame N 通道泛化 + **位置 encoding 角色化**（x/y 转可选 + 按 coordinate 校验必填角色集，评审 P1）+ 每坐标系合法 dimension 集契约 + guide 维度校验（修 cross-review P2）                                      | red   | —         | Accepted |
+| [02](./02-cartesian1d.md)            | **一维坐标系族**：cartesian1D（直线，单维 + 塌缩维基线；rug/timeline）+ **polar1D（圆周，单角向 + 固定半径；环形/周期，复用 alpha.4 角向投影）**+ 1D 轴 / 角向 1D 轴 guide；histogram 留 alpha.12；mark 矩阵 point 为主 | red   | ADR-01    | Accepted |
+| [03](./03-ternary2d.md)              | ternary2D 坐标系 + 三角轴 guide（**加 a/b/c 位置角色通道** + 重心投影 + 自动归一化 + 三角轴 / 三向网格；取 continuous 字段，proportion 已并入 continuous；mark 矩阵 point 为主）                                        | red   | ADR-01    | Accepted |
+| [04](./04-dsl-docs.md)               | 三包 DSL + 文档露出（`coordinate="cartesian1D"`/`"ternary2D"`、PointMark x/y 可选 + a/b/c、1D/三角轴表面；react + vanilla + docs demo；端到端验收）                                                                     | red   | ADR-01–03 | Accepted |
+| [05](./05-coordinate-chart-frame.md) | **坐标系 = 可报局部标架（`frameAlong`）的 chart**：正式化实验性 custom coordinate + 立单 role 轴标架契约（曲线轴吃 `frameAlong`、缺则数值回落）；`createCustomFrame` 定稿 options 对象；3D / 多 plot 组合 / 法丛只留缝  | red   | ADR-01    | Proposed |
 
 ## 贯穿原则落点
 

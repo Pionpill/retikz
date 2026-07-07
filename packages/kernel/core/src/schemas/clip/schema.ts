@@ -40,7 +40,10 @@ export const EllipseClipSchema = z
 export const PolygonClipSchema = z
   .object({
     kind: z.literal('polygon').describe('Discriminator for polygon clip regions.'),
-    points: z.array(z.tuple([z.number(), z.number()])).min(3).describe('Polygon vertices as [x, y] tuples.'),
+    points: z
+      .array(z.tuple([z.number(), z.number()]))
+      .min(3)
+      .describe('Polygon vertices as [x, y] tuples.'),
   })
   .describe('Polygon clip region.');
 

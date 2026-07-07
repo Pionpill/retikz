@@ -45,6 +45,7 @@ mark 投影从整图 range 改为 plot area range（改 alpha.1 `expand.ts`）�
 ---
 
 > **实现指针**：level `red`（动 `plot/src/lower/**`）、非 breaking（无 guides 投影逐字不变）。
+>
 > - 真源以代码为准：`computePlotArea` / `Rect` / `Margins` / `estimateLabelWidth` / `DEFAULT_FONT_SIZE` / `AXIS_TICK_LENGTH` / `AXIS_LABEL_GAP`（`plot/src/lower/layout.ts`）；mark 投影改 plot area + 编排顺序 + `LowerPlotsOptions.fontSize`/`margin`（`plot/src/lower/expand.ts`）；投影器（`plot/src/lower/project.ts`）。`margin`/`fontSize` 是运行时选项（TS 类型，非 zod、不进 IR）。
 > - 测试见 `plot/tests/lower/layout.test.ts`（无轴 margin 全 0、有轴缩进、y label 越长 left 越大、margin 逐边覆盖、超尺寸抛错）与 `plot/tests/lower/lowerPlots.test.ts`（守 alpha.1 无 guides 投影 + 有 guides 落 plot area）。
 > - 完整原文（草案代码 / 待决策点 / 测试象限）见本文件 git 历史。

@@ -36,21 +36,21 @@ node 文本现状：`text` 是单行 string 或多行 `LineSpec[]`（`ir/text.ts
 
 alpha.7 只做 **Paint 基础**，避免与 text-wrap + pin 叠在一起失控：
 
-| 阶段 | 内容 | 本段 |
-| --- | --- | --- |
-| **基础（本段）** | solid string 兼容 + linear / radial gradient + renderer-agnostic 资源表骨架 | ✅ |
-| 顺延（另段 / 后续切片） | pattern（斜线 / 网点）、image（href / 坐标系 / SSR 内联） | ⏭ 单独 ADR 占位 |
+| 阶段                    | 内容                                                                        | 本段             |
+| ----------------------- | --------------------------------------------------------------------------- | ---------------- |
+| **基础（本段）**        | solid string 兼容 + linear / radial gradient + renderer-agnostic 资源表骨架 | ✅               |
+| 顺延（另段 / 后续切片） | pattern（斜线 / 网点）、image（href / 坐标系 / SSR 内联）                   | ⏭ 单独 ADR 占位 |
 
 ### IR 改动清单
 
-| 改动 | 文件 | 形态 |
-| --- | --- | --- |
-| 新增 `PaintSpec`（gradient 基础） | 新 `ir/paint.ts` | `{ type: 'linearGradient' \| 'radialGradient', stops, ... }`（纯 JSON） |
-| `fill` 升 union | `ir/node.ts` / `ir/path/path.ts` / `ir/scope.ts` | `z.union([z.string(), PaintSpecSchema])`；`string` 仍纯色 |
-| Scene 加资源表 | `primitive/scene.ts` | `resources?: Array<SceneResource>`；`SceneResource` = discriminated `{ kind:'paint' } \| { kind:'clip' }…`（评审 P1：alpha.9 加 clip 不再破契约） |
-| primitive `fill` 升 `PaintValue` | `primitive/{rect,ellipse,path}.ts` | `fill?: PaintValue` = `string`(纯色) ∪ `{ kind:'resourceRef', id }` ∪ `{ kind:'contextStroke' }`（继承描边，供 alpha.8 arrow；评审 P2） |
-| compile 收集 / 去重 / 派 id | 新 `compile/paint.ts` | 扫场景把 `PaintSpec` 收进资源表，primitive 写 `fillRef` |
-| adapter 物化 | `react/src/render/`（新 `defs.tsx` + `renderPrim.tsx`） | 资源表 → `<defs>`，`fillRef` → `fill="url(#id)"` |
+| 改动                              | 文件                                                    | 形态                                                                                                                                              |
+| --------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 新增 `PaintSpec`（gradient 基础） | 新 `ir/paint.ts`                                        | `{ type: 'linearGradient' \| 'radialGradient', stops, ... }`（纯 JSON）                                                                           |
+| `fill` 升 union                   | `ir/node.ts` / `ir/path/path.ts` / `ir/scope.ts`        | `z.union([z.string(), PaintSpecSchema])`；`string` 仍纯色                                                                                         |
+| Scene 加资源表                    | `primitive/scene.ts`                                    | `resources?: Array<SceneResource>`；`SceneResource` = discriminated `{ kind:'paint' } \| { kind:'clip' }…`（评审 P1：alpha.9 加 clip 不再破契约） |
+| primitive `fill` 升 `PaintValue`  | `primitive/{rect,ellipse,path}.ts`                      | `fill?: PaintValue` = `string`(纯色) ∪ `{ kind:'resourceRef', id }` ∪ `{ kind:'contextStroke' }`（继承描边，供 alpha.8 arrow；评审 P2）           |
+| compile 收集 / 去重 / 派 id       | 新 `compile/paint.ts`                                   | 扫场景把 `PaintSpec` 收进资源表，primitive 写 `fillRef`                                                                                           |
+| adapter 物化                      | `react/src/render/`（新 `defs.tsx` + `renderPrim.tsx`） | 资源表 → `<defs>`，`fillRef` → `fill="url(#id)"`                                                                                                  |
 
 ### `PaintSpec` schema（草案，ADR 固化）
 
@@ -62,21 +62,23 @@ const GradientStopSchema = z.object({
   opacity: z.number().min(0).max(1).optional(),
 });
 
-export const PaintSpecSchema = z.discriminatedUnion('type', [
-  z.object({
-    type: z.literal('linearGradient'),
-    stops: z.array(GradientStopSchema).min(2),
-    // 方向：角度（度，polar 约定）或两端点（objectBoundingBox 0..1）；ADR 二选一
-    angle: z.number().finite().optional(),
-  }),
-  z.object({
-    type: z.literal('radialGradient'),
-    stops: z.array(GradientStopSchema).min(2),
-    // 中心 / 半径（objectBoundingBox 0..1）；缺省居中
-    center: z.tuple([z.number(), z.number()]).optional(),
-    radius: z.number().positive().optional(),
-  }),
-]).describe('Paint server spec (gradient); solid color stays a plain string on `fill`');
+export const PaintSpecSchema = z
+  .discriminatedUnion('type', [
+    z.object({
+      type: z.literal('linearGradient'),
+      stops: z.array(GradientStopSchema).min(2),
+      // 方向：角度（度，polar 约定）或两端点（objectBoundingBox 0..1）；ADR 二选一
+      angle: z.number().finite().optional(),
+    }),
+    z.object({
+      type: z.literal('radialGradient'),
+      stops: z.array(GradientStopSchema).min(2),
+      // 中心 / 半径（objectBoundingBox 0..1）；缺省居中
+      center: z.tuple([z.number(), z.number()]).optional(),
+      radius: z.number().positive().optional(),
+    }),
+  ])
+  .describe('Paint server spec (gradient); solid color stays a plain string on `fill`');
 
 export type IRPaintSpec = z.infer<typeof PaintSpecSchema>;
 ```
@@ -90,14 +92,13 @@ core **不**产 `<defs>`。改为：
 
 /** primitive 上的 paint 取值词汇表（评审 P2：alpha.8 arrow 颜色继承依赖此处先定稳） */
 export type PaintValue =
-  | string                              // 纯色（任意 CSS color；含 var() 走 inline style）
+  | string // 纯色（任意 CSS color；含 var() 走 inline style）
   | { kind: 'resourceRef'; id: string } // 指向资源表（gradient / 后续 pattern·image）
-  | { kind: 'contextStroke' };          // 继承所在元素描边（adapter → SVG context-stroke）
+  | { kind: 'contextStroke' }; // 继承所在元素描边（adapter → SVG context-stroke）
 
 /** 资源表元素：discriminated，alpha.9 直接加 'clip' 分支、不再破契约（评审 P1） */
-export type SceneResource =
-  | { kind: 'paint'; id: string; spec: IRPaintSpec };
-  // alpha.9 追加： | { kind: 'clip'; id: string; region: ClipRegion }
+export type SceneResource = { kind: 'paint'; id: string; spec: IRPaintSpec };
+// alpha.9 追加： | { kind: 'clip'; id: string; region: ClipRegion }
 
 export type Scene = {
   primitives: Array<ScenePrimitive>;
@@ -123,8 +124,8 @@ export type Scene = {
 
 ### IR 改动
 
-| 改动 | 文件 | 形态 |
-| --- | --- | --- |
+| 改动                           | 文件         | 形态                                                                                                                                 |
+| ------------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `NodeSchema` 加 `maxTextWidth` | `ir/node.ts` | `z.number().positive().optional()`——折行阈值（user units）；超过才折行、短文本盒收缩（类比 TikZ `text width` 但非固定宽，评审 P2#2） |
 
 ### compile 折行

@@ -28,12 +28,21 @@ type Cell = { primary: [number, number]; secondary: [number, number] };
 // frame 投影 cell 的产物：闭式快路 ⊕ contour 兜底（判别 union）
 type CellGeometry =
   | { kind: 'rect'; position: [number, number]; width: number; height: number }
-  | { kind: 'sector'; center: [number, number]; innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }
+  | {
+      kind: 'sector';
+      center: [number, number];
+      innerRadius: number;
+      outerRadius: number;
+      startAngle: number;
+      endAngle: number;
+    }
   | { kind: 'contour'; points: Array<[number, number]> };
 
 // 可选方法：实现了才支持 cell 类 mark（interval / rect / sector）。
 // cartesian→rect、polar→sector（闭式快路）；曲线 / 自定义 frame 自行返回 contour；缺则 fail-loud。
-interface CoordinateFrame { projectCell?(cell: Cell): CellGeometry }
+interface CoordinateFrame {
+  projectCell?(cell: Cell): CellGeometry;
+}
 ```
 
 `CellGeometry` → core IR 统一装配（mark 侧单路径替换旧三分支）：rect → `Node{position, minimumWidth, minimumHeight}` + rectangle 样式；sector → `Node{position: center, shape:{type:'sector', params}}`（两者与旧 `barStyle` / `sectorNode` 产物逐字节等价）；contour → `Node{position: points AABB 中心, shape:{type:'contour', params:{points}}}`（position 取 AABB 中心使 datum anchor 落几何中心）。
@@ -58,7 +67,6 @@ contour 不是引擎自动产物，而是**曲线 frame 在自己的 `projectCel
 - **production 曲线坐标系出柱的具体例子**（拱形 x 轴 / 螺旋等给 `projectCell` 的实现）：gate 于具体 custom frame 落地，需求驱动。本 ADR 只交付契约 + cartesian2D/polar2D 内建 `projectCell` + `densifyCellContour` helper + 测试专用曲线 frame 验证 contour 全链路。
 - **柱圆角（cornerRadius）prop**：core `rectangle` / `contour` 都支持，但 mark 层是否暴露「圆角柱」是样式议题，归 Theme（alpha.15）。
 - **小 IR 优化**：contour 兜底是 O(顶点) IR，不解决 plot-design §16.1 软肋 #1（高基数 O(N) Node）。
-
 
 实现指针：契约与 `densifyCellContour` 在 `packages/viz/plot/src/lower/project.ts`（`Cell` / `CellGeometry` / `projectCell`）；mark 单路径装配在 `packages/viz/plot/src/lower/mark.ts`；锚点同源在 `packages/viz/plot/src/lower/anchor.ts`；core `contour` shape 在 `packages/kernel/core/src/shapes/contour-shape.ts`。测试在 `packages/viz/plot/tests/lower/cell-geometry.test.ts`（含回归基线、三态装配、曲线 frame contour、AABB 中心、fail-loud、连接性、locator parity），回归基线另见同目录 `mark`/`anchor`/`sector` 相关测试。
 

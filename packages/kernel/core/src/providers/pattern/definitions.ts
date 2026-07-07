@@ -1,8 +1,4 @@
-import type {
-  MarkerPrimitive,
-  PatternDefinition,
-  PatternEmitContext,
-} from '../../contract';
+import type { MarkerPrimitive, PatternDefinition, PatternEmitContext } from '../../contract';
 import type { BuiltinPatternName } from '../../schemas';
 
 import { definePattern } from '../../contract';
@@ -12,10 +8,7 @@ import { defineBuiltinProviderArray } from '../registry';
 const DEFAULT_PATTERN_SIZE = 8;
 const DEFAULT_STROKE_WIDTH = 1;
 
-const withBackground = (
-  context: PatternEmitContext,
-  motif: ReadonlyArray<MarkerPrimitive>,
-): Array<MarkerPrimitive> =>
+const withBackground = (context: PatternEmitContext, motif: ReadonlyArray<MarkerPrimitive>): Array<MarkerPrimitive> =>
   context.background === undefined
     ? [...motif]
     : [{ type: 'rect', x: 0, y: 0, width: context.size, height: context.size, fill: context.background }, ...motif];

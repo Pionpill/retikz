@@ -28,9 +28,11 @@
 
 - **① size 作用域 = S1（仅 PointMark）**：本轮 `size` 只定义为**散点 glyph 的视觉尺寸通道**，不泛化到 line strokeWidth / bar width / area。通道语义写成 **radius scale**；落到 core 时再换算成当前 circle node 的实际尺寸字段——**IR 用户不感知 `minimumSize` / `sqrt2` 这类实现细节**。line/area/bar/sector 的 size 语义明确顺延。
 - **② log baseline = L1（log/pow/sqrt 仅 point/line）**：bar/area + log/pow/sqrt **fail-loud**。错误信息**覆盖三种非线性 scale**（原签字版只写 log，评审 P2 指出 sqrt+bar 报「log scale…」别扭，故泛化）：
+
   > `nonlinear continuous scale (log/pow/sqrt) cannot be used with interval/area because their baseline includes 0; use point/line or wait for explicit positive baseline support`
 
   理由：bar/area 的 `baseline=0` 是结构语义（`lower/expand.ts` 把 baseline 注入 domain、area baseline 默认 0），log/幂轴里「从 0 起的柱/面积」概念别扭。需要时后续再做 L2（显式正 baseline）。
+
 - **③ size domain 边界契约**：默认 domain `[0, maxPositive]`；**若无正值 → 所有点用最小半径**（不崩、不报错）；**若只有一个正值 → 该值映射到 range 上界**；**负值一律 fail-loud**；**显式 domain 含负数 → 拒绝**。size channel 的 `value` 常量限 number。**负值校验落在 size channel / size scale resolver**——`lower/coerce.ts` **不改**全局 continuous 语义（负值对 continuous 字段本身合法，只对 size 通道非法）；size consumer 读 canonical value 后做**通道级**负值校验（评审 P1）。
 - **④ color × series 收口规则（B/C）**：
   - **point / bar / sector**：按 **datum** 着色，**不**引入 series 语义；
@@ -89,13 +91,13 @@
 
 ## ADR 清单
 
-| ADR | 主题 | Level | 依赖 | 状态 |
-|---|---|---|---|---|
-| [01](./01-continuous-scale-family.md) | 连续 scale 家族 log / pow / sqrt（L1：仅 point/line，bar/area fail-loud；公开 scale 家族**不含** size/radius type） | red | — | Accepted |
-| [02](./02-channel-scale-resolver-size.md) | 通道→scale 通用抽象 + size 通道（仅 PointMark，radius scale，③边界契约；size 默认派生到 01 的 sqrt；不进全局 StyleEncoding、`value` 限 number） | red | ADR-01 | Accepted |
-| [03](./03-color-series.md) | color 真通道收口 + series 一等化（④B/C 规则 + categorical fail-loud + continuous/temporal color fail-loud + 修单系列静默丢弃 + 隐式拆等价性） | red | ADR-02 | Accepted |
-| [04](./04-opacity-channel.md) | opacity 通道（仅 PointMark，⑤：continuous → linear [minOpacity,1]、常量 ∈ [0,1]、越界 fail-loud；落 core node 不透明度） | red | ADR-02 | Accepted |
-| [05](./05-shape-channel.md) | shape 通道（仅 PointMark，⑥：categorical → glyph 集（默认 shape 调色板）→ core node shape；连续/时间 fail-loud） | red | ADR-02 | Accepted |
+| ADR                                       | 主题                                                                                                                                            | Level | 依赖   | 状态     |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | -------- |
+| [01](./01-continuous-scale-family.md)     | 连续 scale 家族 log / pow / sqrt（L1：仅 point/line，bar/area fail-loud；公开 scale 家族**不含** size/radius type）                             | red   | —      | Accepted |
+| [02](./02-channel-scale-resolver-size.md) | 通道→scale 通用抽象 + size 通道（仅 PointMark，radius scale，③边界契约；size 默认派生到 01 的 sqrt；不进全局 StyleEncoding、`value` 限 number） | red   | ADR-01 | Accepted |
+| [03](./03-color-series.md)                | color 真通道收口 + series 一等化（④B/C 规则 + categorical fail-loud + continuous/temporal color fail-loud + 修单系列静默丢弃 + 隐式拆等价性）   | red   | ADR-02 | Accepted |
+| [04](./04-opacity-channel.md)             | opacity 通道（仅 PointMark，⑤：continuous → linear [minOpacity,1]、常量 ∈ [0,1]、越界 fail-loud；落 core node 不透明度）                        | red   | ADR-02 | Accepted |
+| [05](./05-shape-channel.md)               | shape 通道（仅 PointMark，⑥：categorical → glyph 集（默认 shape 调色板）→ core node shape；连续/时间 fail-loud）                                | red   | ADR-02 | Accepted |
 
 ## 贯穿原则落点
 

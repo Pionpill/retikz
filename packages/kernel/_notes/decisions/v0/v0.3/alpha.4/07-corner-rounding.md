@@ -57,12 +57,12 @@ cornerRadius: z
 
 ### 各形状轮廓
 
-| 形状 | 轮廓段 | 接缝类型 |
-|---|---|---|
-| rectangle | 4 × Line | line-line ×4 |
-| polygon | `sides` × Line | line-line × sides |
-| star | `2×points` × Line（凸尖 + 凹角都倒） | line-line × 2points |
-| sector（环楔） | innerArc + radial Line + outerArc + radial Line | line-arc ×4 |
+| 形状                   | 轮廓段                                            | 接缝类型                        |
+| ---------------------- | ------------------------------------------------- | ------------------------------- |
+| rectangle              | 4 × Line                                          | line-line ×4                    |
+| polygon                | `sides` × Line                                    | line-line × sides               |
+| star                   | `2×points` × Line（凸尖 + 凹角都倒）              | line-line × 2points             |
+| sector（环楔）         | innerArc + radial Line + outerArc + radial Line   | line-arc ×4                     |
 | sector（pie，inner=0） | radial Line + outerArc + radial Line（交于 apex） | apex line-line ×1 + line-arc ×2 |
 
 **轮廓方向 + 凹凸角 fillet（star 非凸，最易翻车）**：所有形状轮廓**统一按固定绕向构造**（约定 CW，与各形状现有 emit 顶点顺序一致），fillet 据此判内外——

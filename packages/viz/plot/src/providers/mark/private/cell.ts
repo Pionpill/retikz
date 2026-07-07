@@ -57,7 +57,11 @@ export const cellLayer = (
  */
 export const cellGeometryNode = (geometry: CellGeometry): IRNode | null => {
   if (geometry.kind === 'rect') {
-    return { type: 'node', position: geometry.position, minimumSize: { width: geometry.width, height: geometry.height } };
+    return {
+      type: 'node',
+      position: geometry.position,
+      minimumSize: { width: geometry.width, height: geometry.height },
+    };
   }
   if (geometry.kind === 'sector') {
     return {

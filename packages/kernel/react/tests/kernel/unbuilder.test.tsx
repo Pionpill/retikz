@@ -1,4 +1,4 @@
-﻿import type { IRChild, IRPathBase,IRScene } from '@retikz/core';
+﻿import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
 import { CURRENT_IR_VERSION } from '@retikz/core';
@@ -528,14 +528,14 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('thickness 语义档位双向保留', () => {
+    it('strokeWidth 数值双向保留', () => {
       const ir: IRScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
         children: [
           {
             type: 'path',
-            thickness: 'veryThick',
+            strokeWidth: 3,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },

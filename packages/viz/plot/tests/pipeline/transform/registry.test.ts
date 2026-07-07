@@ -90,7 +90,9 @@ const pointSpec = (transform: PlotSpec['transform']): PlotSpec =>
 describe('transform registry (alpha.12 ADR-06)', () => {
   it('builtin_registry_contains_all_transform_kinds', () => {
     const registry = resolvePlotTransformRegistry();
-    expect([...registry.keys()].sort()).toEqual([...Object.values(DataTransform), ...Object.values(PlotTransform)].sort());
+    expect([...registry.keys()].sort()).toEqual(
+      [...Object.values(DataTransform), ...Object.values(PlotTransform)].sort(),
+    );
   });
 
   it('define_transform_preserves_schema_and_extracts_kind', () => {

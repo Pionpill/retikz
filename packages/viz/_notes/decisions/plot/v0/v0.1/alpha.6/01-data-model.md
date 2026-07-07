@@ -30,20 +30,20 @@
 ```ts
 export const DataFieldType = {
   Quantitative: 'quantitative', // 连续可度量数值 → linear
-  Nominal: 'nominal',           // 无序分类 → band/point(位置) · ordinal(颜色)
-  Ordinal: 'ordinal',           // 有序分类 → 保序离散
-  Temporal: 'temporal',         // 日期/时间戳 → time
-  Proportion: 'proportion',     // 归一比例 [0,1]（pie value / ternary a/b/c）→ linear domain [0,1]
+  Nominal: 'nominal', // 无序分类 → band/point(位置) · ordinal(颜色)
+  Ordinal: 'ordinal', // 有序分类 → 保序离散
+  Temporal: 'temporal', // 日期/时间戳 → time
+  Proportion: 'proportion', // 归一比例 [0,1]（pie value / ternary a/b/c）→ linear domain [0,1]
 } as const;
 export type FieldType = ValueOf<typeof DataFieldType>;
 ```
 
 **(2) 字段分类（strict 校验范围的关键，评审 P1）**：lowering 里的字段引用分三类，**只有「用户源字段」参与 model strict 校验与类型解析**：
 
-| 类别 | 来源 | 例 | 参与 model strict？ |
-|---|---|---|---|
-| **用户源字段** | 引用外部数据集 | encoding `x.field` / `y.field` / `color.field` + mark `order` / `series` + **transform 输入** `Sort.field` / `Stack.x` / `Stack.y` / `Stack.groupBy` | ✅ 校验 + 解析 |
-| **transform 输出 / 内部派生字段** | transform / lowering 合成 | `Stack.startField` / `endField`、mark `y0Field` / `y1Field`、sector `startField` / `endField`（默认 `y0`/`y1`）；未来 aggregate 输出 | ❌（不来自源、类型已知 = 数值） |
+| 类别                              | 来源                      | 例                                                                                                                                                   | 参与 model strict？             |
+| --------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **用户源字段**                    | 引用外部数据集            | encoding `x.field` / `y.field` / `color.field` + mark `order` / `series` + **transform 输入** `Sort.field` / `Stack.x` / `Stack.y` / `Stack.groupBy` | ✅ 校验 + 解析                  |
+| **transform 输出 / 内部派生字段** | transform / lowering 合成 | `Stack.startField` / `endField`、mark `y0Field` / `y1Field`、sector `startField` / `endField`（默认 `y0`/`y1`）；未来 aggregate 输出                 | ❌（不来自源、类型已知 = 数值） |
 
 派生 / 输出字段不来自源、类型已知，**不**对 model 校验。「用户源字段集」= 扫所有 mark 的 encoding `field` + `order` + `series` + 所有 transform 的输入字段（`Sort.field` / `Stack.x` / `Stack.y` / `Stack.groupBy`）；**排除**常量 `value` 通道、transform 输出（`startField`/`endField`）、mark/sector 的 `y0Field`/`y1Field`/`startField`/`endField` 等派生引用。
 
@@ -78,7 +78,6 @@ export type FieldType = ValueOf<typeof DataFieldType>;
 4. **推断守 AI 友好**：LLM 生成 spec 常省 model，全推断让其仍正确；`proportion` 不自动推断避免把普通数值误当比例。
 5. **fail-loud**：声明 model 却引用不存在字段是 spec bug，早炸早好（对齐 alpha.5 `datumIdField` 风格）。
 6. **temporal 用正则 guard 而非裸 `Date.parse`**：`Date.parse('5')` 在多数引擎返回有效值，会把数值误判时间——必须收窄（也与 ADR-02 temporal coercion 的 guard 保持一致）。
-
 
 ## 不在本 ADR 范围
 

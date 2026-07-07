@@ -31,16 +31,16 @@ IR / schema
 
 Core 绘图完备至少覆盖八类能力面。每类能力都可以独立演进，但必须共享同一条 IR -> Scene / manifest 管线。
 
-| 能力面 | 目标 | 不属于 core 的情况 |
-| --- | --- | --- |
-| Primitive / Scene | 定义后端中立的最小可渲染图元。 | SVG-only / Canvas-only 私有能力；某个 renderer 的快捷 API。 |
-| Geometry | 提供纯函数几何计算和图形构造基础。 | 单一 domain 的 layout 算法；依赖 DOM / renderer 的测量逻辑。 |
-| Target / Coordinate | 支持节点、锚点、边界、局部坐标和命名引用。 | plot scale、geo projection、domain-specific 坐标变换。 |
-| Transform | 表达图形空间变换并保持结构化输出。 | 数据变换、统计变换、动画运行时状态机。 |
-| Constraint / Layout | 承载跨图形通用的定位和约束求解。 | flow / graph / table 等领域布局策略。 |
-| Style / Resource | 表达通用样式、paint、marker、pattern、clip 等资源。 | 某后端独有滤镜或无法诊断降级的视觉效果。 |
-| Composition | 用 scope、group、zIndex、meta 等组合复杂图形。 | 上层私有节点树或不可持久化的运行时组合结构。 |
-| Interaction | 表达 JSON-safe 的交互目标、命中区域、tooltip / selection intent、role 与 provenance 关联。 | tooltip 浮层 UI、选中状态机、hover 样式、DOM 事件 handler、键盘策略、框选 / 拖拽编辑器。 |
+| 能力面              | 目标                                                                                       | 不属于 core 的情况                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Primitive / Scene   | 定义后端中立的最小可渲染图元。                                                             | SVG-only / Canvas-only 私有能力；某个 renderer 的快捷 API。                              |
+| Geometry            | 提供纯函数几何计算和图形构造基础。                                                         | 单一 domain 的 layout 算法；依赖 DOM / renderer 的测量逻辑。                             |
+| Target / Coordinate | 支持节点、锚点、边界、局部坐标和命名引用。                                                 | plot scale、geo projection、domain-specific 坐标变换。                                   |
+| Transform           | 表达图形空间变换并保持结构化输出。                                                         | 数据变换、统计变换、动画运行时状态机。                                                   |
+| Constraint / Layout | 承载跨图形通用的定位和约束求解。                                                           | flow / graph / table 等领域布局策略。                                                    |
+| Style / Resource    | 表达通用样式、paint、marker、pattern、clip 等资源。                                        | 某后端独有滤镜或无法诊断降级的视觉效果。                                                 |
+| Composition         | 用 scope、group、zIndex、meta 等组合复杂图形。                                             | 上层私有节点树或不可持久化的运行时组合结构。                                             |
+| Interaction         | 表达 JSON-safe 的交互目标、命中区域、tooltip / selection intent、role 与 provenance 关联。 | tooltip 浮层 UI、选中状态机、hover 样式、DOM 事件 handler、键盘策略、框选 / 拖拽编辑器。 |
 
 这些能力面是检测维度，不是目录结构要求。具体实现仍按 `schemas / contract / providers / compile / shared` 分层。
 

@@ -58,6 +58,7 @@ DSL 表面（`<BarMark stack>` 自动装配 stack transform）见 [ADR-07](./07-
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/**` transform schema + PlotSpec 槽位 + `src/lower/**` 管线段）、非 breaking（`transform?` optional，rows 流向从「直用」变「先 transform」）。
+>
 > - 真源以代码为准：`DataTransform` / `SortTransformSchema` / `StackTransformSchema` / `TransformSchema`（`packages/viz/plot/src/ir/transform.ts`）、`applyTransforms` + sort / stack 实现（`packages/viz/plot/src/lower/transform.ts`，复用 alpha.1 `compareByPath` / `channelValue` / `isFiniteNumber`）；`expandPlot`（`src/lower/expand.ts`）取 rows 后插入 transform 段。`@retikz/plot` 公开 `TransformSchema` / 子 schema / `DataTransform`。
 > - 测试见 `packages/viz/plot/tests/ir/transform.schema.test.ts`（accept/reject、unknown kind 拒）与 `tests/lower/transform.test.ts`（sort 升 / 降 / 稳定；stack 派生 y0/y1、首段 y0=0、单 / 多系列、空 rows、缺字段按 0 计入、自定义输出字段；多 op 管线顺序；stack 喂 y 域推断）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。

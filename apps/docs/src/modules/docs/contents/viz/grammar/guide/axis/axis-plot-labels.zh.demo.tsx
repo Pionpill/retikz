@@ -15,9 +15,14 @@ const Demo: FC = () => (
     layout={{ autoPadding: true }}
     theme={{ labelText: { textColor: '#0f172a' } }}
   >
-    <TitleLabel placement={{ kind: 'side', side: 'top', placement: 'midway', padding: 10 }} font={{ size: 18, weight: 700 }}>
+    <TitleLabel
+      placement={{ kind: 'side', side: 'top', placement: 'midway', padding: 10 }}
+      font={{ size: 18, weight: 700 }}
+    >
       季度转化率
-      <Text opacity={0.62} font={{ size: 12, weight: 500 }}>内部漏斗数据</Text>
+      <Text opacity={0.62} font={{ size: 12, weight: 500 }}>
+        内部漏斗数据
+      </Text>
     </TitleLabel>
     <CaptionLabel
       text="来源：内部漏斗数据"

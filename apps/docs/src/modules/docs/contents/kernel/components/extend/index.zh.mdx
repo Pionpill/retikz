@@ -12,8 +12,8 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
 | 主题           | 扩展什么                                                                                   | 何时用                                                                                                |
 | -------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | 自定义形状     | 注册新的节点形状（`ShapeDefinition` + `CompileOptions.shapes`）                            | 内置 6 注册形状 + 2 preset 之外要 cylinder / cloud 等（hexagon 已可用内置 `polygon{ sides:6 }` 表达） |
-| 自定义连接面   | 注册新的节点连接面（`BoundaryDefinition` + `CompileOptions.boundaries`）                   | 节点视觉形状不变，但连线只应接到语义端口、圆形外轮廓或其它独立连接面时                              |
-| 自定义裁剪区   | 注册新的 scope 裁剪区（`ClipDefinition` + `CompileOptions.clips`）                         | Scope 裁剪需要可复用的命名 mask、path clip 或业务视窗时                                             |
+| 自定义连接面   | 注册新的节点连接面（`BoundaryDefinition` + `CompileOptions.boundaries`）                   | 节点视觉形状不变，但连线只应接到语义端口、圆形外轮廓或其它独立连接面时                                |
+| 自定义裁剪区   | 注册新的 scope 裁剪区（`ClipDefinition` + `CompileOptions.clips`）                         | Scope 裁剪需要可复用的命名 mask、path clip 或业务视窗时                                               |
 | 自定义箭头     | 注册新的箭头样式（`defineArrow` / `ArrowDefinition` + `CompileOptions.arrows`）            | 需要 bracket / 业务箭头等新端点样式                                                                   |
 | 自定义图案     | 注册新的填充图案（`definePattern` / `PatternDefinition` + `CompileOptions.patterns`）      | 需要 cross / 条纹 / 特殊 motif                                                                        |
 | 自定义路径     | 注册新的 Path kind（`definePathKind` / `PathKindDefinition` + `CompileOptions.pathKinds`） | 需要把整条 Path 当作高亮、双线、业务关系或其它关系形态处理                                            |
@@ -39,11 +39,15 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend/boundary-registry">
     <span className="font-semibold">自定义连接面</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入只影响连线端点的 BoundaryDefinition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      注册 / 注入只影响连线端点的 BoundaryDefinition
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend/clip-registry">
     <span className="font-semibold">自定义裁剪区</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入控制 scope 裁剪区的 ClipDefinition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      注册 / 注入控制 scope 裁剪区的 ClipDefinition
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/extend/custom-arrow">
     <span className="font-semibold">自定义箭头</span>

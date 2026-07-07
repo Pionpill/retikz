@@ -49,10 +49,10 @@ v0.1 的**收尾里程碑**：把 alpha.1 起就埋好的 **anchor / scope 预�
 
 ## ADR 清单
 
-| ADR | 主题 | Level | 依赖 | 状态 |
-|---|---|---|---|---|
-| [01](./01-scope-id-meta.md) | scope-aware id 绑定 + meta 透传（mark → `Scope.id`、line/area series → `Path.id`、datum opt-in → `Node.id` + 各级 `meta`；`<plotId>.` plot-local 前缀；`provenance` 总开关默认关→等价 alpha.4、per-datum + datumIdField 独立 opt-in；datum index = transformed/source；抽出可复用 frame；react/vanilla 转发 option） | red | core ADR-08（已回灌）| Accepted |
-| [02](./02-datum-locator.md) | datum locator 命中预演（逻辑地址 → 位置/元素的确定性正向解析纯函数，复用 01 frame，不逐点预注册；与 lowering 产物位置一致性断言）| red | ADR-01 | Accepted |
+| ADR                         | 主题                                                                                                                                                                                                                                                                                                                 | Level | 依赖                  | 状态     |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------------- | -------- |
+| [01](./01-scope-id-meta.md) | scope-aware id 绑定 + meta 透传（mark → `Scope.id`、line/area series → `Path.id`、datum opt-in → `Node.id` + 各级 `meta`；`<plotId>.` plot-local 前缀；`provenance` 总开关默认关→等价 alpha.4、per-datum + datumIdField 独立 opt-in；datum index = transformed/source；抽出可复用 frame；react/vanilla 转发 option） | red   | core ADR-08（已回灌） | Accepted |
+| [02](./02-datum-locator.md) | datum locator 命中预演（逻辑地址 → 位置/元素的确定性正向解析纯函数，复用 01 frame，不逐点预注册；与 lowering 产物位置一致性断言）                                                                                                                                                                                    | red   | ADR-01                | Accepted |
 
 > ✅ **2026-06-07 alpha.5 封口**：ADR-01/02 全部 `Accepted`；绿灯关（`@retikz/plot` **368** 测试 + `plot-react` 59 + `plot-vanilla` 10 + 三包 tsc + eslint + docs build）全过；三轮对抗已留痕——Bug Hunter（修 datumProvenance 蕴含 bug + 3 回归）、Contract Auditor（四方对账无 BLOCKER）、**封口后多 LLM cross-review**（修 3 BLOCKING：anchor placement 收成单一真源除 dodge/stack/polar-dodge 漂移、datum-id 提升 plot 级 fail-loud、locator 与 lowering fail-loud 对齐 + 6 回归）；changelog（三包，双语）已入库。暂不发版。
 >

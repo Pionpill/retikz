@@ -97,26 +97,26 @@ React 里的 `<RelationMark>` 本身不渲染 DOM；`<Plot>` 构造 `PlotSpec` �
 
 ### 图元 API
 
-| 分类   | 属性                 | 类型                                                 | 默认值                 | 描述                                                                                                                         |
-| ------ | -------------------- | ---------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 目标   | `source`             | `PlotTargetRef`                                      | 必填                   | 关系起点，可以是 direct id、generated anchor id 或 projected coordinate                                                      |
-|        | `target`             | `PlotTargetRef`                                      | 必填                   | 关系终点，结构同 `source`                                                                                                    |
-| 数据   | `transform`          | `Array<Transform>?`                                  | -                      | mark 局部 transform 管线，用于从 plot rows 派生当前关系层的 rows；各类型见下方变化 API                                       |
-| 几何   | `kind`               | `'path' / 'ribbon'`                                  | `path`                 | 选择每一行关系降低成默认 Path 还是 `kind: 'ribbon'` 的 Path                                                                  |
-| 标签   | `label`              | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?` | -                      | 整条关系几何的标签；path / ribbon 都降低到 core `Path.label`，内容写在 `content.field` / `content.value`                     |
-| 路径   | `path.via`           | `Array<PlotTargetRef>`                               | -                      | 默认 route 下的中间点；每个投影点会生成 core `Coordinate`                                                                    |
-|        | `path.route`         | `Array<RelationRouteStep>`                           | -                      | 显式 step 序列；最后一个 step 省略 `to` 时默认指向 `target`                                                                  |
-|        | `path.routing`       | `RelationRoutingSpec?`                               | `line`                 | 算法路由策略：`line`、`bend` 或 `orthogonal`；与 `path.route` 互斥                                                           |
-|        | `path.route[].label` | `RelationStepLabel?`                                 | -                      | 当前 step 的路径标签，优先级高于 `path.label` shorthand                                                                      |
-|        | `path.label`         | `RelationStepLabel?`                                 | -                      | 便捷路径标签，落到默认路径或最后一个可绘制 route step；默认 `sloped: true`                                         |
-|        | `path.options`       | `RelationPathSpecificOptions?`                       | -                      | path-only 选项，例如 `marks`、`dashPattern`、`roundedCorners`、`lineCap`、`lineJoin`                 |
-| Ribbon | `ribbon.width`       | `MarkValue<number>`                                  | `kind="ribbon"` 时必填 | source 侧宽度；省略 `endWidth` 时也是整条带宽                                                                                |
-|        | `ribbon.endWidth`    | `MarkValue<number>?`                                 | -                      | target 侧宽度，用于渐变宽度 ribbon                                                                                           |
-|        | `ribbon.options`     | `RelationRibbonSpecificOptions?`                     | -                      | ribbon-only 选项：`align`、`samples`、`sampling` 和渐变宽度 `interpolation`                                                  |
+| 分类   | 属性                 | 类型                                                 | 默认值                 | 描述                                                                                                                           |
+| ------ | -------------------- | ---------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 目标   | `source`             | `PlotTargetRef`                                      | 必填                   | 关系起点，可以是 direct id、generated anchor id 或 projected coordinate                                                        |
+|        | `target`             | `PlotTargetRef`                                      | 必填                   | 关系终点，结构同 `source`                                                                                                      |
+| 数据   | `transform`          | `Array<Transform>?`                                  | -                      | mark 局部 transform 管线，用于从 plot rows 派生当前关系层的 rows；各类型见下方变化 API                                         |
+| 几何   | `kind`               | `'path' / 'ribbon'`                                  | `path`                 | 选择每一行关系降低成默认 Path 还是 `kind: 'ribbon'` 的 Path                                                                    |
+| 标签   | `label`              | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?` | -                      | 整条关系几何的标签；path / ribbon 都降低到 core `Path.label`，内容写在 `content.field` / `content.value`                       |
+| 路径   | `path.via`           | `Array<PlotTargetRef>`                               | -                      | 默认 route 下的中间点；每个投影点会生成 core `Coordinate`                                                                      |
+|        | `path.route`         | `Array<RelationRouteStep>`                           | -                      | 显式 step 序列；最后一个 step 省略 `to` 时默认指向 `target`                                                                    |
+|        | `path.routing`       | `RelationRoutingSpec?`                               | `line`                 | 算法路由策略：`line`、`bend` 或 `orthogonal`；与 `path.route` 互斥                                                             |
+|        | `path.route[].label` | `RelationStepLabel?`                                 | -                      | 当前 step 的路径标签，优先级高于 `path.label` shorthand                                                                        |
+|        | `path.label`         | `RelationStepLabel?`                                 | -                      | 便捷路径标签，落到默认路径或最后一个可绘制 route step；默认 `sloped: true`                                                     |
+|        | `path.options`       | `RelationPathSpecificOptions?`                       | -                      | path-only 选项，例如 `marks`、`dashPattern`、`roundedCorners`、`lineCap`、`lineJoin`                                           |
+| Ribbon | `ribbon.width`       | `MarkValue<number>`                                  | `kind="ribbon"` 时必填 | source 侧宽度；省略 `endWidth` 时也是整条带宽                                                                                  |
+|        | `ribbon.endWidth`    | `MarkValue<number>?`                                 | -                      | target 侧宽度，用于渐变宽度 ribbon                                                                                             |
+|        | `ribbon.options`     | `RelationRibbonSpecificOptions?`                     | -                      | ribbon-only 选项：`align`、`samples`、`sampling` 和渐变宽度 `interpolation`                                                    |
 | 样式   | `style`              | `RelationPrimitiveStyle?`                            | -                      | 共享样式：`color`、`fill`、`fillOpacity`、`stroke`、`strokeWidth`、`strokeOpacity`、`opacity`、`shadow`、`blendMode`、`zIndex` |
-|        | `color`              | `FieldName?`                                         | -                      | 字段驱动的关系颜色通道                                                                                                       |
-| 通用   | `id`                 | `string?`                                            | -                      | 可选 mark 句柄，用于图层 id、错误信息和运行时定位                                                                            |
-| 自定义 | `channels`           | `Record<string, Channel>`                            | -                      | 自定义通道入口，交给注册的 channel definition 解析                                                                           |
+|        | `color`              | `FieldName?`                                         | -                      | 字段驱动的关系颜色通道                                                                                                         |
+| 通用   | `id`                 | `string?`                                            | -                      | 可选 mark 句柄，用于图层 id、错误信息和运行时定位                                                                              |
+| 自定义 | `channels`           | `Record<string, Channel>`                            | -                      | 自定义通道入口，交给注册的 channel definition 解析                                                                             |
 
 path-only 字段放在 `path.options`，path 和 ribbon 都能复用的字段放在 `style`。这样 `strokeWidth`、`fillOpacity`、`opacity`、`fill`、`stroke` 有同一个位置，而箭头和路径路由不会混进 ribbon 配置。
 

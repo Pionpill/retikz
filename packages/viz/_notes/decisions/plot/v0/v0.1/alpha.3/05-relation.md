@@ -64,6 +64,7 @@ export type ArrangementType = ValueOf<typeof PlotArrangement>;
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/mark.ts` 字段 + `plot/src/lower/**` 多系列几何）、非 breaking（字段全 optional，省略即退化单系列）。
+>
 > - 真源以代码为准：`PlotArrangement` / `ArrangementType` 与 line / interval 的 `series` / `arrangement` / `y0Field` / `y1Field`（`packages/viz/plot/src/ir/mark.ts`，导出在 `ir/index.ts`）；多系列分子 Scope、dodge 切子带（宽 `bandwidth/K`、中心偏移）、stack 读 y0/y1 的几何在 `packages/viz/plot/src/lower/mark.ts`，series + color 解析与 y 域上界由 `packages/viz/plot/src/lower/expand.ts` 传入。复用 [ADR-01](./01-band-scale.md) `inferCategoryDomain` / `bandwidth`、消费 [ADR-03](./03-transform.md) stack y0/y1、[ADR-04](./04-color-scale.md) 子 Scope 着色。
 > - 测试见 `packages/viz/plot/tests/ir/mark.schema.test.ts`（series / arrangement schema、bad value 拒、line `arrangement` 静默 strip）与 `packages/viz/plot/tests/lower/lowerPlots.test.ts`（dodge 子带宽 = bandwidth/K + 偏移、stack 段衔接、多线分组各一色、缺系列对齐留空、series 省略退化单系列、stack 缺 y0/y1 抛错、端到端消费 transform）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。

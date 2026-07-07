@@ -84,7 +84,6 @@ type AxisGuideSpec = {
 3. 明确“不测量文字”，保持 lowering 纯计算和 renderer-agnostic。
 4. `AxisGuide.title` 放在 guide 上，因为 title 属于某根 axis，而不是 coordinate scope。
 
-
 ## 不在本 ADR 范围
 
 - 不做自动文字测量和 label collision avoidance。

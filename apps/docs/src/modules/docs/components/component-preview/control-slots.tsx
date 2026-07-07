@@ -186,7 +186,11 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
           </div>
           {!isSmallPreview && <PreviewToolbarSeparator orientation="horizontal" className="hidden md:block" />}
           <div className="flex gap-0.5">
-            <PreviewToolbarButton label="Zoom in" disabled={transform.scale >= ZOOM_MAX} onClick={() => zoomBy(ZOOM_FACTOR)}>
+            <PreviewToolbarButton
+              label="Zoom in"
+              disabled={transform.scale >= ZOOM_MAX}
+              onClick={() => zoomBy(ZOOM_FACTOR)}
+            >
               <ZoomIn className="size-3.5" />
             </PreviewToolbarButton>
             <PreviewToolbarButton
@@ -218,7 +222,10 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
                 <RotateCcw className="size-3.5" />
               </PreviewToolbarButton>
             )}
-            <PreviewToolbarButton label={downloadLabel} onClick={() => downloadPreviewImage(ctx.renderPane, name, rendererMode)}>
+            <PreviewToolbarButton
+              label={downloadLabel}
+              onClick={() => downloadPreviewImage(ctx.renderPane, name, rendererMode)}
+            >
               <Download className="size-3.5" />
             </PreviewToolbarButton>
             <PreviewToolbarButton label="Maximize" className="hidden md:inline-flex" onClick={onMaximize}>

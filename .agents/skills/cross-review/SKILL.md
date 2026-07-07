@@ -21,11 +21,11 @@ description: retikz 多 LLM 交叉评审技能。把一段固定范围的代码�
 
 启动时先探测本机有哪些可用 CLI（不同机器不同），常见：
 
-| 评审员 | 调用 | 说明 |
-|---|---|---|
-| **codex**（外部主力） | `codex exec review ...` / `codex exec ...` | OpenAI Codex CLI，有专门的 `exec review` 子命令，原生支持按 commit / base 分支 / 未提交改动评审。可用 `-m <model>` 切不同模型，跑多次即多视角。 |
-| **claude -p**（headless 独立一路） | `claude -p --model <model> "<prompt>"` | Claude headless print 模式，独立上下文；本机没有就跳过。 |
-| ~~copilot~~ | — | 本机的 `copilot` 是 VS Code 内置版，无法独立 CLI 运行，**不用**。 |
+| 评审员                             | 调用                                       | 说明                                                                                                                                            |
+| ---------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **codex**（外部主力）              | `codex exec review ...` / `codex exec ...` | OpenAI Codex CLI，有专门的 `exec review` 子命令，原生支持按 commit / base 分支 / 未提交改动评审。可用 `-m <model>` 切不同模型，跑多次即多视角。 |
+| **claude -p**（headless 独立一路） | `claude -p --model <model> "<prompt>"`     | Claude headless print 模式，独立上下文；本机没有就跳过。                                                                                        |
+| ~~copilot~~                        | —                                          | 本机的 `copilot` 是 VS Code 内置版，无法独立 CLI 运行，**不用**。                                                                               |
 
 探测命令：
 
@@ -37,12 +37,12 @@ for c in codex claude; do command -v $c >/dev/null && echo "available: $c"; done
 
 ## 输入：四种范围
 
-| 范围 | 用户怎么给 | 解析成 |
-|---|---|---|
-| **commit / range** | commit hash，或 `A..B`、`HEAD~3..HEAD` | codex `--commit <SHA>`；range 见下方说明 |
-| **版本代码**（tag / 分支） | tag 名、分支名、版本号 | codex `--base <base-branch>`（评审目标相对 base 的改动）；或 checkout 该版本后按固定块评审 |
-| **固定代码块** | 文件 / 目录 / 函数路径，或直接贴的代码片段 | 通用 `codex exec -s read-only` + 只读评审 prompt（见下） |
-| **工作区当前改动** | “评审我现在的改动” | codex `--uncommitted`（staged + unstaged + untracked） |
+| 范围                       | 用户怎么给                                 | 解析成                                                                                     |
+| -------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **commit / range**         | commit hash，或 `A..B`、`HEAD~3..HEAD`     | codex `--commit <SHA>`；range 见下方说明                                                   |
+| **版本代码**（tag / 分支） | tag 名、分支名、版本号                     | codex `--base <base-branch>`（评审目标相对 base 的改动）；或 checkout 该版本后按固定块评审 |
+| **固定代码块**             | 文件 / 目录 / 函数路径，或直接贴的代码片段 | 通用 `codex exec -s read-only` + 只读评审 prompt（见下）                                   |
+| **工作区当前改动**         | “评审我现在的改动”                         | codex `--uncommitted`（staged + unstaged + untracked）                                     |
 
 若用户没指定范围，先问清要评审什么；不要默认全仓——多模型全仓评审又慢又发散，价值低。
 
@@ -63,38 +63,45 @@ for c in codex claude; do command -v $c >/dev/null && echo "available: $c"; done
 ### 通用代码 review 点
 
 **正确性**
+
 - 边界条件：`0` / 负数 / `NaN` / `Infinity` / 空数组 / 角度跨 360 / 极大极小值
 - 错误处理：失败时是抛错、warning 还是 silent no-op，哪个合适；错误信息能否定位到具体字段 / id / step / path（可诊断性），而非模糊报错或静默
 - 引用解析：未定义 id、自引用、引用顺序、coordinate 与 node 同名、anchor 拼写错误
 - 顺序敏感 / 重复调用 / 多功能组合下行为是否仍可预测
 
 **类型安全**
+
 - 无 `as any` / `@ts-ignore` / `@ts-expect-error` / 非必要 `!` 绕过；让 zod / IR / 第三方真实类型穿透到调用点
 - TS 类型用 `z.infer` 派生不手写（单一真源，避免与 schema 漂移）；由 IR schema object 推导出的公开数据类型命名为 `IRXxx`，由 const object enum + `ValueOf` 推导出的取值 union 命名为 `XxxValue`
 - IR 100% JSON 可序列化：schema 里不出现 `z.any()` / `z.unknown()` / 函数 / `ReactNode`
 
 **分层与架构**
+
 - Kernel / Sugar / Tier 2 归属是否正确（有 data 数组 / 算法 / 改变节点数或拓扑的参数 → Tier 2，不该当 Sugar）
 - 子组遇 core 能力不足是否绕开 core 自造平行机制，而非把通用能力补进 core
 - Sugar 是否保持与手写 Kernel 完全等价的 IR
 - discriminator 字段 `type`（顶层实体 / paint 变体）vs `kind`（类型内部子变体）用法是否符合约定
 
 **一致性**
+
 - react 与 vanilla 两套 authoring 入口同能力是否产**同一 IR**（一致性漂移是高价值 bug）
 - 用户可见改动是否在同一改动集同步 zh / en 文档 + demo（zh 是 source of truth）
 - 默认值是否符合 TikZ / SVG 用户直觉，是否惊讶且文档未说明
 
 **可维护性 / 简洁性**
+
 - DRY：是否重复实现了本可复用的现有工具；是否有死代码 / 未使用的导出
 - 单一职责：函数过长 / 文件过大 / 一个单元干太多事、边界不清
 - 魔法数字、散落常量；命名是否表意
 - 注释只解释「为什么」不复述代码；**不引用 ADR / 历史阶段**（编号会随重排 rot，且会进 LLM definition 成噪声）
 
 **性能**
+
 - 不必要的重复计算 / O(n²) / 在 render 中重建对象 / 热路径缺 memo
 - 模块级缓存、`useId`、marker dedup 等共享状态是否正确、有无泄漏或非确定性
 
 **可测试性**
+
 - 纯函数边界是否清晰、是否便于测试；关键行为有无锁定测试；新增 / 改动行为是否缺回归测试
 
 ## 工作流
@@ -201,11 +208,11 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 
 ## 评审员阵容
 
-| 评审员 | 模型 | 厂商 | 结果 |
-|---|---|---|---|
-| codex | <model> | OpenAI | ok / 失败原因 |
-| codex | <model2> | OpenAI | ok |
-| claude -p | <model> | Anthropic | ok |
+| 评审员    | 模型     | 厂商      | 结果          |
+| --------- | -------- | --------- | ------------- |
+| codex     | <model>  | OpenAI    | ok / 失败原因 |
+| codex     | <model2> | OpenAI    | ok            |
+| claude -p | <model>  | Anthropic | ok            |
 
 多样性说明：<是否跨厂商；若仅同厂商不同模型，写明局限>
 
@@ -217,18 +224,18 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 
 ## BLOCKING（真实缺陷，需修）
 
-| # | 位置(文件:行) | 问题 | 提出模型 | 共识/单点 | 主 AI 裁决 |
-|---|---|---|---|---|---|
+| #   | 位置(文件:行) | 问题 | 提出模型 | 共识/单点 | 主 AI 裁决 |
+| --- | ------------- | ---- | -------- | --------- | ---------- |
 
 ## WARNING（不一定是 bug，但伤害体验/可维护性）
 
-| # | 位置 | 观察 | 提出模型 | 共识/单点 | 建议动作 |
-|---|---|---|---|---|---|
+| #   | 位置 | 观察 | 提出模型 | 共识/单点 | 建议动作 |
+| --- | ---- | ---- | -------- | --------- | -------- |
 
 ## INFO（低优先级 / 一致认为没问题 / 清理点）
 
-| # | 位置 | 观察 | 提出模型 |
-|---|---|---|---|
+| #   | 位置 | 观察 | 提出模型 |
+| --- | ---- | ---- | -------- |
 
 ## 模型分歧明细
 
@@ -238,7 +245,7 @@ git status --short    # 应与评审前一致；codex/claude 评审不应改任�
 
 - 建议立即修：…
 - 建议转 cross-test 写测试坐实：…
-- 建议记入 plan / _notes/decisions TODO：…
+- 建议记入 plan / \_notes/decisions TODO：…
 - 误报 / 已剔除（附原因）：…
 ```
 

@@ -38,7 +38,7 @@ export type LineLayoutContext = {
 };
 
 /** run 自身 opacity 与宿主 opacity 相乘（任一缺省取另一个） */
-const combineOpacity = (run?: number, host?: number): number | undefined =>
+export const combineOpacity = (run?: number, host?: number): number | undefined =>
   run !== undefined ? (host !== undefined ? run * host : run) : host;
 
 /** 一行混排的布局结果 */
@@ -84,6 +84,22 @@ export const resolveLineRuns = (
           },
   );
   return { runs, hasMath: parsed.hasMath, warn: parsed.warn };
+};
+
+/** resolveLineRuns 的诊断包装：保留各个宿主自定义的 warning 文案。 */
+export const resolveLineRunsWithWarning = (
+  spec: IRLineSpec,
+  context: {
+    gatingOn: boolean;
+    warn: (code: CompileWarningCodeValue, message: string) => void;
+    warningMessage: string;
+  },
+): { runs: Array<IRInlineRun>; hasMath: boolean; warn: boolean } => {
+  const resolved = resolveLineRuns(spec, context.gatingOn);
+  if (resolved.warn) {
+    context.warn(CompileWarningCode.TextTexParseError, context.warningMessage);
+  }
+  return resolved;
 };
 
 type TextPiece = {

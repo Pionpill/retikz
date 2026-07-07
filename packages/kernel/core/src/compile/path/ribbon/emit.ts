@@ -3,9 +3,10 @@ import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
+import type { PathPrimitiveEmitResult } from '../types';
 import type { RibbonEmitOptions, RibbonLike } from './types';
 
-import { emitLabelPrimitive, tForLabelPosition } from '../label';
+import { emitLabelPrimitive, tForLabelPosition } from '../host';
 import {
   commandsToSegmentInputs,
   directionToTangent,
@@ -50,13 +51,8 @@ export type EmitRibbonPrimitiveContext = {
 export const emitRibbonPrimitive = (
   path: IRPathBase,
   context: EmitRibbonPrimitiveContext,
-): { primitives: Array<ScenePrimitive>; boundsPoints: Array<IRPosition> } | null => {
-  const {
-    namespaceStack,
-    round,
-    measureText,
-    options = {},
-  } = context;
+): PathPrimitiveEmitResult | null => {
+  const { namespaceStack, round, measureText, options = {} } = context;
   if (path.ribbon === undefined) {
     throw new Error('Ribbon path requires a `ribbon` options object.');
   }

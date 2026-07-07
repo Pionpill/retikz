@@ -17,11 +17,11 @@
 
 迁移后的 owner 边界：
 
-| Owner | 职责 |
-| --- | --- |
-| `@retikz/data` | 数据模型、字段路径、fieldMap、coerce / format、statistics reducer / row selector、transform contract / registry / pipeline、行 provenance。 |
-| `@retikz/plot` | GoG 语义、scale / coordinate / mark / guide / locator / theme / composition、plot lowering，以及 channel / label / mark-local 组合逻辑。 |
-| `@retikz/plot-react` / `@retikz/plot-vanilla` | adapter authoring surface；需要数据类型时直接依赖 `@retikz/data`。 |
+| Owner                                         | 职责                                                                                                                                        |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@retikz/data`                                | 数据模型、字段路径、fieldMap、coerce / format、statistics reducer / row selector、transform contract / registry / pipeline、行 provenance。 |
+| `@retikz/plot`                                | GoG 语义、scale / coordinate / mark / guide / locator / theme / composition、plot lowering，以及 channel / label / mark-local 组合逻辑。    |
+| `@retikz/plot-react` / `@retikz/plot-vanilla` | adapter authoring surface；需要数据类型时直接依赖 `@retikz/data`。                                                                          |
 
 `@retikz/data` 不提供 `<Transform>` 组件，也不创建 `@retikz/data-react`。React / Vanilla 宿主继续在自己的 adapter 中决定如何收集数据 transform 声明。
 

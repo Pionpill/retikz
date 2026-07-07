@@ -31,11 +31,7 @@ describe("compile path: 'arc'", () => {
         { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
         { type: 'step', kind: 'line', to: [50, 50] },
       ]),
-    ).toEqual([
-      move([10, 0]),
-      arc([0, 0], 10, 0, 90),
-      line([50, 50]),
-    ]);
+    ).toEqual([move([10, 0]), arc([0, 0], 10, 0, 90), line([50, 50])]);
   });
 
   it('arc 圆心带偏移（move 到 [5,5]）', () => {

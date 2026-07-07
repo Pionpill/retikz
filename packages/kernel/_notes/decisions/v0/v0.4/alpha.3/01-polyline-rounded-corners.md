@@ -50,5 +50,4 @@ roundedCorners: z
 - **过点平滑曲线**——[ADR-02](./02-smooth-curve-through-points.md)。
 - **装饰 motif**（波浪 / 花括号 / 弹簧）——roadmap B4，归 extension，另议。
 
-
 > 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.3/01-polyline-rounded-corners.md`（封板全文）。

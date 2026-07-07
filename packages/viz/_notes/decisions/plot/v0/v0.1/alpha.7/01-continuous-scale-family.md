@@ -24,7 +24,11 @@
 ```ts
 // ir/scale.ts —— PlotScale 追加成员（沿 DrawWay 风格，裸 'log' 同样可用）
 export const PlotScale = {
-  Linear: 'linear', Band: 'band', Point: 'point', Ordinal: 'ordinal', Time: 'time',
+  Linear: 'linear',
+  Band: 'band',
+  Point: 'point',
+  Ordinal: 'ordinal',
+  Time: 'time',
   /** 对数：连续对数映射 y = m·log_base(x) + b；domain / value 必须全正（0 与负值 fail-loud） */
   Log: 'log',
   /** 幂：连续幂映射 y = m·x^exponent + b */
@@ -50,7 +54,6 @@ export const PlotScale = {
 1. **sqrt 单一真源**：size 通道与显式 sqrt 轴共用一个 `PlotScale.Sqrt`，不重复实现、IR 可序列化、对 LLM 暴露裸 `'sqrt'`。
 2. **L1 最薄且 fail-loud**：bar/area 的 baseline 0 是结构语义，不是改个数能绕过；与其默默产 NaN/-∞，不如清晰报错，后续真有 log 柱需求再做 L2（显式正 baseline）。
 3. **沿 LinearScale 风格 + d3-scale**：复用已有 scale lowering 路径（alpha.2 起 d3-scale），新增成本集中在 schema + 选型分支。
-
 
 ## 不在本 ADR 范围
 

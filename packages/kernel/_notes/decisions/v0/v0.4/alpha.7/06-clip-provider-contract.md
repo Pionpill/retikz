@@ -77,7 +77,6 @@ compile 阶段不再直接 `switch (clip.kind)`。`createClipRegistry(round, cli
 3. renderer 只能消费纯 JSON Scene。让 provider 在 compile 阶段解析成 `ResolvedClipShape`，可以保持 renderer-agnostic，不引入 SVG-only raw path 或 Canvas callback。
 4. 新增 `path` / `compound` 后，custom provider 不再被四种内置几何限制，完整覆盖任意曲线与复合裁剪区域。
 
-
 ## 不在本 ADR 范围
 
 - 不支持 renderer-specific raw SVG `<clipPath>` / raw `d` 字符串；路径必须使用结构化 `PathCommand`。

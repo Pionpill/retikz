@@ -6,13 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 
-import type {
-  AlignKey,
-  ComponentRenderSource,
-  PreviewAction,
-  RendererMode,
-  SizeKey,
-} from './types';
+import type { AlignKey, ComponentRenderSource, PreviewAction, RendererMode, SizeKey } from './types';
 import type { PreviewIR } from './utils';
 
 import { ComponentRender } from './ComponentRender';

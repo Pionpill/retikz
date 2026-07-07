@@ -164,7 +164,7 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/ker
 | `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | Fill rule                                                                                                                                                                              |
 | `opacity`        | `number`                                                                                       | —              | Whole-path opacity, 0..1                                                                                                                                                               |
 | `fillOpacity`    | `number`                                                                                       | —              | Fill-only opacity, 0..1                                                                                                                                                                |
-| `strokeOpacity`    | `number`                                                                                       | —              | Stroke-only opacity, 0..1                                                                                                                                                              |
+| `strokeOpacity`  | `number`                                                                                       | —              | Stroke-only opacity, 0..1                                                                                                                                                              |
 | `zIndex`         | `number` (integer)                                                                             | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`)                      |
 
 <Comparison target="tikz" title="Style Naming">
@@ -188,15 +188,15 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/ker
 
 ### StepLabel
 
-| Field       | Type                                                  | Default    | Description                                                                                                                                                                            |
-| ----------- | ----------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`      | `string`                                              | —          | Label text (single line)                                                                                                                                                               |
-| `position`  | one of 7 keywords or `number` (0..1)                  | `'midway'` | Normalized position t along the segment; keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1) |
-| `side`      | `'top' \| 'bottom' \| 'left' \| 'right'`              | `'top'` | Edge-label side relative to segment direction. Compass aliases `north` / `south` / `east` / `west` are accepted |
-| `sloped`    | `boolean`                                             | `false`   | Whether to rotate along the segment tangent |
-| `textColor` | `string`                                              | —          | Label text color; falls back to scope `labelDefault` → host path master color → currentColor                                                                                           |
-| `opacity`   | `number`                                              | —          | Label-only opacity 0..1; multiplied with the owning path opacity                                                                                                                       |
-| `font`      | `object`                                              | —          | Label font overrides (family / size / weight / style)                                                                                                                                  |
+| Field       | Type                                     | Default    | Description                                                                                                                                                                            |
+| ----------- | ---------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`      | `string`                                 | —          | Label text (single line)                                                                                                                                                               |
+| `position`  | one of 7 keywords or `number` (0..1)     | `'midway'` | Normalized position t along the segment; keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1) |
+| `side`      | `'top' \| 'bottom' \| 'left' \| 'right'` | `'top'`    | Edge-label side relative to segment direction. Compass aliases `north` / `south` / `east` / `west` are accepted                                                                        |
+| `sloped`    | `boolean`                                | `false`    | Whether to rotate along the segment tangent                                                                                                                                            |
+| `textColor` | `string`                                 | —          | Label text color; falls back to scope `labelDefault` → host path master color → currentColor                                                                                           |
+| `opacity`   | `number`                                 | —          | Label-only opacity 0..1; multiplied with the owning path opacity                                                                                                                       |
+| `font`      | `object`                                 | —          | Label font overrides (family / size / weight / style)                                                                                                                                  |
 
 ## Related
 

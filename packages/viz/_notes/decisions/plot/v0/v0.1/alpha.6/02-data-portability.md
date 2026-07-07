@@ -25,8 +25,8 @@
 **(2) 绑定期 `fieldMaps`（解决需求 2）**：`lowerPlots` 的 options 增 `fieldMaps`，逻辑名 → 物理路径，**不进 IR**：
 
 ```ts
-type FieldMap = Record<string, string>;             // 逻辑字段名 → 物理数据路径('a.b.c')
-type FieldMaps = Record<string, FieldMap>;          // 数据集 reference → 该集的字段映射
+type FieldMap = Record<string, string>; // 逻辑字段名 → 物理数据路径('a.b.c')
+type FieldMaps = Record<string, FieldMap>; // 数据集 reference → 该集的字段映射
 // LowerPlotsOptions 增： fieldMaps?: FieldMaps
 
 lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' } } });
@@ -36,18 +36,19 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 解析：物理路径 = `fieldMaps[ref]?.[logical] ?? logical`（缺省恒等）。**映射值只允许非空路径串**（支持 `a.b.c`）——不支持函数、不支持数组展开、不做计算（值变换留 alpha.12 transform/derive）。
 
 **`fieldMaps` 校验（fail-loud）**：
+
 - **仅在声明 `model` 时可用**（评审 P1）：无 `model` 却传 fieldMaps → throw（无逻辑字段契约，改名无所指）；
 - `fieldMaps[ref]` 的**逻辑名必须在该 plot 的 `data.model`** → 否则 throw；
 - `ref` **须在 `datasets`** → 否则 throw；datasets 里未被本 plot 用到的 ref 不管。
 
 **(3) 按 DataFieldType 值强制 / coercion（解决需求 3）**：每个 `DataFieldType` 配一套「原始 JS 值 → 规范值」强制，路径取值后、喂 scale 前统一：
 
-| DataFieldType | 接受的 JS 表示 | 规范化为 | 非法值 |
-|---|---|---|---|
-| quantitative | `number` / **严格数字串**（trimmed 十进制 / 科学计数；**拒** 空串·`Infinity`·`NaN`·hex·带单位串） | `number` | → NaN，跳过 |
-| proportion | 同 quantitative；**越界 [0,1] 原样保留**（不 clamp、不跳过；clamp 交 ADR-03 scale option） | `number` | → NaN，跳过 |
-| temporal | `Date` / epoch `number` / 严格 ISO 串 | epoch ms（**扩展** `coerceTimestamp`：现实现不收 `Date`、裸 `Date.parse` 过宽，需加 `Date` 分支 + 与 ADR-01 一致的严格 ISO guard） | → null，跳过 |
-| nominal / ordinal | `string` / `number` | string key（`String(v)`） | 其余跳过 |
+| DataFieldType     | 接受的 JS 表示                                                                                    | 规范化为                                                                                                                           | 非法值       |
+| ----------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| quantitative      | `number` / **严格数字串**（trimmed 十进制 / 科学计数；**拒** 空串·`Infinity`·`NaN`·hex·带单位串） | `number`                                                                                                                           | → NaN，跳过  |
+| proportion        | 同 quantitative；**越界 [0,1] 原样保留**（不 clamp、不跳过；clamp 交 ADR-03 scale option）        | `number`                                                                                                                           | → NaN，跳过  |
+| temporal          | `Date` / epoch `number` / 严格 ISO 串                                                             | epoch ms（**扩展** `coerceTimestamp`：现实现不收 `Date`、裸 `Date.parse` 过宽，需加 `Date` 分支 + 与 ADR-01 一致的严格 ISO guard） | → null，跳过 |
+| nominal / ordinal | `string` / `number`                                                                               | string key（`String(v)`）                                                                                                          | 其余跳过     |
 
 非法值沿用 alpha.1「→ NaN/null 跳过该 datum」语义，不报错。
 
@@ -68,17 +69,16 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 
 retikz「数据不进 IR、外部数据是任意可嵌套 JS」（plot-design §3.1）意味着**关系型二维表与文档型（MongoDB / 嵌套 JSON）一视同仁**：encoding `field`（及 `fieldMaps` 物理路径）是点路径 accessor，`resolveFieldPath` 逐段下钻。逻辑模型 + fieldMaps 把「逻辑字段 → 嵌套文档路径」打通（`fieldMaps: { city: 'address.city' }`）。约束只有一条：**路径叶子必须是标量**（`ScalarValueSchema`）。文档型数据的失败模式与处理：
 
-| 情形 | 行为（错误处理方案） |
-|---|---|
-| 嵌套对象路径 `a.b.c` | `resolveFieldPath` 逐段解析到标量叶子 ✓（已支持） |
-| 字段缺失（异构文档某行没该字段） | 路径 → `undefined` → coerce → null/NaN → **跳过该 datum**，不报错（异构文档常态） |
-| 叶子是非标量（object / array） | coerce 判为非法 → **跳过**，**绝不 `String(obj)`**（ingest 归一化是唯一 coerce 点，order / compare 也读 canonical，根治 `"[object Object]"` 脏值） |
-| 路径中途穿过数组（`items.price`，items 是数组） | 返回 `undefined` → 跳过；**数组 unwind / flatten 不在 alpha.6**（属 transform，alpha.12），不静默瞎猜、文档明示「需先 flatten」 |
-| 同字段跨文档 JS 类型不一（schemaless） | 按 resolved `FieldType` coerce：能强制则用、不能则跳过（需求 3 的本质） |
-| strict 模式下大量被跳过 | 可选 `validateData`（见待决策点）抽样校验、fail-loud 提示「字段缺失 / 非标量 / 类型不符比例过高」，把「静默空图」变「明确报错」 |
+| 情形                                            | 行为（错误处理方案）                                                                                                                               |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 嵌套对象路径 `a.b.c`                            | `resolveFieldPath` 逐段解析到标量叶子 ✓（已支持）                                                                                                  |
+| 字段缺失（异构文档某行没该字段）                | 路径 → `undefined` → coerce → null/NaN → **跳过该 datum**，不报错（异构文档常态）                                                                  |
+| 叶子是非标量（object / array）                  | coerce 判为非法 → **跳过**，**绝不 `String(obj)`**（ingest 归一化是唯一 coerce 点，order / compare 也读 canonical，根治 `"[object Object]"` 脏值） |
+| 路径中途穿过数组（`items.price`，items 是数组） | 返回 `undefined` → 跳过；**数组 unwind / flatten 不在 alpha.6**（属 transform，alpha.12），不静默瞎猜、文档明示「需先 flatten」                    |
+| 同字段跨文档 JS 类型不一（schemaless）          | 按 resolved `FieldType` coerce：能强制则用、不能则跳过（需求 3 的本质）                                                                            |
+| strict 模式下大量被跳过                         | 可选 `validateData`（见待决策点）抽样校验、fail-loud 提示「字段缺失 / 非标量 / 类型不符比例过高」，把「静默空图」变「明确报错」                    |
 
 要点：**非标量叶子与数组路径都收敛到「跳过 + 不伪造」**，配合可选 `validateData` 让「为什么图是空的」可诊断——这是文档型数据的主要错误处理保证。
-
 
 ## 不在本 ADR 范围
 

@@ -15,7 +15,17 @@ describe('parseNodeTarget node 模式（无 .）', () => {
 
 describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
   it('9 个 canonical 方位 anchor 全识别 → { id, anchor }', () => {
-    for (const name of ['center', 'top', 'right', 'bottom', 'left', 'top-right', 'top-left', 'bottom-right', 'bottom-left']) {
+    for (const name of [
+      'center',
+      'top',
+      'right',
+      'bottom',
+      'left',
+      'top-right',
+      'top-left',
+      'bottom-right',
+      'bottom-left',
+    ]) {
       expect(parseNodeTarget(`A.${name}`)).toEqual({ id: 'A', anchor: name });
     }
   });

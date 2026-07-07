@@ -38,7 +38,7 @@ core 已补齐稳定的 stroke dash offset 能力，语义上与 `dashPattern` �
 - `packages/kernel/core/src/schemas/node/schema.ts`：Node leader / border 已有 `dashOffset`。
 - `packages/kernel/core/src/contract/scene/path.ts`：Scene Path primitive 已有 `dashOffset`。
 - `packages/kernel/core/src/contract/scene/{rect,ellipse,marker}.ts`：Scene 可描边 primitive 已有 `dashOffset`。
-- `packages/kernel/core/src/compile/path/emit.ts`：Path lowering 已透传 `dashOffset`。
+- `packages/kernel/core/src/compile/path/stroke/emit.ts`：Path lowering 已透传 `dashOffset`。
 - `packages/kernel/core/src/compile/node/**`：Node layout / outline / pin 已透传 `dashOffset`。
 
 ## 与 plot 的关系

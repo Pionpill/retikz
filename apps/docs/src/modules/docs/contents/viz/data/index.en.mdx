@@ -13,14 +13,14 @@ Real data **does not enter IR**. Config only records which fields to read, what 
 
 The data pipeline first collects the fields actually used by the current config, then turns external rows into canonical rows (normalized rows where fields are mapped, parsed, type-normalized, and written back under logical field names). Later data transforms, plot scales / marks, table views, or geo projections read that normalized result instead of repeatedly reading raw data.
 
-| Step              | What it does                                                                                                  | Main config                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Data reference    | Select the external dataset for this view; rows themselves stay out of IR                                     | `data` / `data.reference`             |
-| Field contract    | Define logical field names, types, category order, and declarative formats; infer from samples when omitted   | `model`                               |
-| Source mapping    | Map logical fields to real data paths, including renamed fields and nested paths                              | `fieldMap` / `fieldMaps`              |
-| Parse / normalize | Parse values through `resolveField`, `format`, and built-ins, then write results under logical field names    | `resolveField` / `format` / field type |
-| Validation        | Sample-check or fully check participating fields, and decide whether invalid values skip or throw             | `validateData` / `invalid`            |
-| Transform and use | Data transforms rewrite canonical rows; plot channels, scales, and marks read the result                     | `sort` / `summarize` / channel props  |
+| Step              | What it does                                                                                                | Main config                            |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Data reference    | Select the external dataset for this view; rows themselves stay out of IR                                   | `data` / `data.reference`              |
+| Field contract    | Define logical field names, types, category order, and declarative formats; infer from samples when omitted | `model`                                |
+| Source mapping    | Map logical fields to real data paths, including renamed fields and nested paths                            | `fieldMap` / `fieldMaps`               |
+| Parse / normalize | Parse values through `resolveField`, `format`, and built-ins, then write results under logical field names  | `resolveField` / `format` / field type |
+| Validation        | Sample-check or fully check participating fields, and decide whether invalid values skip or throw           | `validateData` / `invalid`             |
+| Transform and use | Data transforms rewrite canonical rows; plot channels, scales, and marks read the result                    | `sort` / `summarize` / channel props   |
 
 `model`, `format`, and data transform operations are serializable contracts. `fieldMap` can be injected by dataset reference. Function options such as `resolveField`, custom parsers, and custom transform runners participate only at runtime and do not enter IR. See [Data Model](/viz/data/model) when you need custom field formats or field parsing.
 

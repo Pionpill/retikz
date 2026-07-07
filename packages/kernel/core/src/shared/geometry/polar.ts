@@ -2,6 +2,7 @@ import type { Position } from '@retikz/math';
 
 import type { SharedPolarPosition } from '../position';
 
+import { isPositionTuple } from '../position';
 import { DEG_TO_RAD, RAD_TO_DEG } from './angle';
 
 /*
@@ -27,7 +28,7 @@ export const polar = {
       throw new Error(
         'polar.toPosition: cannot resolve string origin (node id) without node context; use the Scene compiler',
       );
-    } else if (Array.isArray(p.origin)) {
+    } else if (isPositionTuple(p.origin)) {
       origin = p.origin;
     } else {
       origin = polar.toPosition(p.origin);
@@ -51,8 +52,8 @@ export const polar = {
    * @param precision 小数点后位数；默认 2
    */
   equal: (a: Position | SharedPolarPosition, b: Position | SharedPolarPosition, precision = 2): boolean => {
-    const aCart = Array.isArray(a) ? a : polar.toPosition(a);
-    const bCart = Array.isArray(b) ? b : polar.toPosition(b);
+    const aCart = isPositionTuple(a) ? a : polar.toPosition(a);
+    const bCart = isPositionTuple(b) ? b : polar.toPosition(b);
     const factor = 10 ** precision;
     return (
       Math.round(aCart[0] * factor) === Math.round(bCart[0] * factor) &&

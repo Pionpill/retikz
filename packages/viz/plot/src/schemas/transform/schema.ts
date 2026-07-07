@@ -136,7 +136,9 @@ export const RelateTransformSchema = z
       .describe('Optional pair measures derived from selected source and target rows'),
   })
   .strict()
-  .describe('Relate transform: select source and target rows per group and emit relation rows consumable by RelationMark');
+  .describe(
+    'Relate transform: select source and target rows per group and emit relation rows consumable by RelationMark',
+  );
 
 export const NormalizeTransformSchema = z
   .object({

@@ -9,13 +9,13 @@ description: 坐标系决定数据值如何投影到画布：二维负责平面�
 
 ## 职责一览
 
-| 主题           | 坐标系                          | 职责                            | 适合场景                         |
-| -------------- | ------------------------------- | ------------------------------- | -------------------------------- |
-| 二维坐标系     | `cartesian2D` / `polar2D`       | 处理常规 x/y 图与极坐标图       | 柱、折线、面积、饼图、环图、雷达 |
-| 一维坐标系     | `cartesian1D` / `polar1D`       | 只投影一个位置通道              | rug、timeline、周期事件点        |
-| 三元坐标系     | `ternary2D`                     | 把 x/y/z 三分量投影到三角形     | 成分比例、三方此消彼长的数据     |
-| 自定义坐标系   | `{ type: 'bridge', ...config }` | 用运行时定义接入自己的投影      | 曲线轴、特殊空间、实验性投影     |
-| 坐标组合       | `composition`                   | 在一张图里组织多个坐标 scope    | 双轴叠加、分面、共享轨道         |
+| 主题         | 坐标系                          | 职责                         | 适合场景                         |
+| ------------ | ------------------------------- | ---------------------------- | -------------------------------- |
+| 二维坐标系   | `cartesian2D` / `polar2D`       | 处理常规 x/y 图与极坐标图    | 柱、折线、面积、饼图、环图、雷达 |
+| 一维坐标系   | `cartesian1D` / `polar1D`       | 只投影一个位置通道           | rug、timeline、周期事件点        |
+| 三元坐标系   | `ternary2D`                     | 把 x/y/z 三分量投影到三角形  | 成分比例、三方此消彼长的数据     |
+| 自定义坐标系 | `{ type: 'bridge', ...config }` | 用运行时定义接入自己的投影   | 曲线轴、特殊空间、实验性投影     |
+| 坐标组合     | `composition`                   | 在一张图里组织多个坐标 scope | 双轴叠加、分面、共享轨道         |
 
 ## 章节内容
 
@@ -34,9 +34,7 @@ description: 坐标系决定数据值如何投影到画布：二维负责平面�
   </LinkedCard>
   <LinkedCard href="/viz/grammar/coordinate/ternary">
     <span className="font-semibold">三元坐标系</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      x / y / z 三通道自动归一化后投影到三角形
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">x / y / z 三通道自动归一化后投影到三角形</span>
   </LinkedCard>
   <LinkedCard href="/viz/grammar/coordinate/composition">
     <span className="font-semibold">坐标组合</span>

@@ -55,7 +55,6 @@ export type CompileOptions = {
 2. 保留 shape fallback 能兼容现有 `boundary: "star"` / `boundary: { type: "polygon", params }` 的表达力。
 3. lookup 优先级明确后，用户可以用同名 boundary 覆盖连接面语义，而不影响同名视觉 shape 的绘制与布局。
 
-
 ## 不在本 ADR 范围
 
 - 不新增 renderer primitive 或视觉 shape。

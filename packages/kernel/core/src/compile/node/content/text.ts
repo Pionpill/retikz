@@ -1,4 +1,4 @@
-import type { FontSpec, TextMeasurer } from '../text';
+import type { FontSpec, TextMeasurer } from '../../text';
 
 /** 行高倍率。 */
 export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;

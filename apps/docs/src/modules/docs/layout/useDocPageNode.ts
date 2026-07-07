@@ -22,9 +22,7 @@ export type DocPageNode = {
 export const resolveDocPageNode = (loc: DocLocation | null): DocPageNode => {
   if (!loc) return { sections: [] };
   const sections = getSectionsByModule(loc.moduleId);
-  const section = loc.sectionId
-    ? sections.find(item => item.id === loc.sectionId)
-    : sections.find(item => !item.label);
+  const section = loc.sectionId ? sections.find(item => item.id === loc.sectionId) : sections.find(item => !item.label);
   if (loc.pageId === null) {
     const target =
       section?.document && section.id && section.label ? { id: section.id, label: section.label } : undefined;

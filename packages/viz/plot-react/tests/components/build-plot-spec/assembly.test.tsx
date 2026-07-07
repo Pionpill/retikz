@@ -359,7 +359,9 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     const spec = buildPlotSpec(
       <>
         <TitleLabel>
-          <Text fill="#0f172a" font={{ weight: 'bold' }}>Monthly Revenue</Text>
+          <Text fill="#0f172a" font={{ weight: 'bold' }}>
+            Monthly Revenue
+          </Text>
           <Text opacity={0.65}>Internal view</Text>
         </TitleLabel>
         <PathMark x="month" y="revenue" />
@@ -485,12 +487,27 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     const spec = buildPlotSpec(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="y" ticks={{ count: 5 }} crossing={{ value: 0, tick: 'hide', label: 'hide' }} tickLabels={false} grid id="yA" />
+        <Axis
+          dimension="y"
+          ticks={{ count: 5 }}
+          crossing={{ value: 0, tick: 'hide', label: 'hide' }}
+          tickLabels={false}
+          grid
+          id="yA"
+        />
       </>,
       '__plot',
     );
     expect(spec.guides).toEqual([
-      { type: 'axis', dimension: 'y', ticks: { count: 5 }, crossing: { value: 0, tick: 'hide', label: 'hide' }, tickLabels: false, grid: true, id: 'yA' },
+      {
+        type: 'axis',
+        dimension: 'y',
+        ticks: { count: 5 },
+        crossing: { value: 0, tick: 'hide', label: 'hide' },
+        tickLabels: false,
+        grid: true,
+        id: 'yA',
+      },
     ]);
   });
 

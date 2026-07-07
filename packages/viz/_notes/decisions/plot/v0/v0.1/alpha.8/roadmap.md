@@ -90,11 +90,11 @@
 
 > 3 ADR **全部实现 + Accepted**（2026-06-08）。每条走完 flow-alpha 五阶段（spec → 实现 → adversarial 自测 → 文档 → 收尾），两道对抗关（Bug Hunter + Contract Auditor）发现的 BLOCKING / WARNING 已全修 + 回归测试。决策点 ①~⑩ 已落实，实现期偏差记入各 ADR「实现校准」段。changelog / 发版交 next 分支。验证：plot / react / vanilla 三关全绿。
 
-| ADR | 主题 | Level | 依赖 | 状态 |
-|---|---|---|---|---|
-| [01](./01-continuous-color-scale.md) | 连续色阶 sequential / diverging（continuous/temporal color → 色带；scheme 词表 + 可选 range；line/area 连续 color 仍 fail-loud、无 path gradient；React type-driven 派生入口；了结 alpha.7 color fail-loud） | red | — | Accepted |
-| [02](./02-discretization-scale.md) | 离散化 scale quantize / threshold / quantile（连续 domain → 离散 color 档；复用 01 scheme/range schema；threshold 断点强校验；quantile 数据分位） | red | ADR-01 | Accepted |
-| [03](./03-legend-guide.md) | legend guide（GuideSchema 升 union；target = channel + 可选 scale；resolver 暴露可复用 descriptor；估算布局 + 占位；显式 Legend 不抑制默认 axes；标签复用 axis formatter） | red | ADR-01/02 + alpha.7 非位置 scale | Accepted |
+| ADR                                  | 主题                                                                                                                                                                                                         | Level | 依赖                             | 状态     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- | -------------------------------- | -------- |
+| [01](./01-continuous-color-scale.md) | 连续色阶 sequential / diverging（continuous/temporal color → 色带；scheme 词表 + 可选 range；line/area 连续 color 仍 fail-loud、无 path gradient；React type-driven 派生入口；了结 alpha.7 color fail-loud） | red   | —                                | Accepted |
+| [02](./02-discretization-scale.md)   | 离散化 scale quantize / threshold / quantile（连续 domain → 离散 color 档；复用 01 scheme/range schema；threshold 断点强校验；quantile 数据分位）                                                            | red   | ADR-01                           | Accepted |
+| [03](./03-legend-guide.md)           | legend guide（GuideSchema 升 union；target = channel + 可选 scale；resolver 暴露可复用 descriptor；估算布局 + 占位；显式 Legend 不抑制默认 axes；标签复用 axis formatter）                                   | red   | ADR-01/02 + alpha.7 非位置 scale | Accepted |
 
 ## 贯穿原则落点
 

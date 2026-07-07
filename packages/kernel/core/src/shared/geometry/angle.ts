@@ -38,7 +38,11 @@ export const normalizeAngleRange = (startAngle: number, endAngle: number): Angle
 };
 
 /** 调整 endAngle，使 start -> end 沿指定方向扫描且跨度不超过一整圈。 */
-export const alignAngleSweep = (start: number, end: number, counterClockwise: boolean): { start: number; end: number } => {
+export const alignAngleSweep = (
+  start: number,
+  end: number,
+  counterClockwise: boolean,
+): { start: number; end: number } => {
   const sweep = end - start;
   if (sweep === 0) return { start, end: start };
   if (Math.abs(sweep) === 360) return { start, end: start + (counterClockwise ? -360 : 360) };

@@ -26,11 +26,16 @@
 DSL：
 
 ```tsx
-<Plot data={rows} model={[
-  { name: 'size',  type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // 显式有序
-  { name: 'grade', type: 'categorical', order: 'ascending' },           // 升序排序
-  { name: 'city',  type: 'categorical' },                               // 缺省 'data'：无序、按出现序
-]}>{/* … */}</Plot>
+<Plot
+  data={rows}
+  model={[
+    { name: 'size', type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // 显式有序
+    { name: 'grade', type: 'categorical', order: 'ascending' }, // 升序排序
+    { name: 'city', type: 'categorical' }, // 缺省 'data'：无序、按出现序
+  ]}
+>
+  {/* … */}
+</Plot>
 ```
 
 语义：
@@ -61,7 +66,6 @@ DSL：
 - **`order` 配非 categorical 字段 → fail-loud**（cross-review #3）：`order` 是 public schema 行为，不能留到实现期再选。`order` 只允许 resolved type 为 `categorical` 的字段；配 `continuous` / `temporal` → lowering **报错**（不静默忽略——忽略会让用户误以为排序生效，与 retikz fail-loud 取向冲突）。schema 层无法拦（type 可推断、可省），故在 lowering 解析 order→域时校验。
 - **多字段同 role 冲突 order → fail-loud**：见上「order 如何落到 scale」。
 - **显式 scale domain 压过 order**：见上。
-
 
 ## 影响
 

@@ -8,7 +8,7 @@ import type {
   ResolvedPatternTile,
   SceneResource,
 } from '../../src/contract';
-import type { IRPaintSpec,IRScene } from '../../src/schemas';
+import type { IRPaintSpec, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 
@@ -92,7 +92,7 @@ describe('ADV — 极端 / 非正 size', () => {
   it('size_huge_overflow：size=1e308 + emit 做 size×1e10 溢出 Infinity 坐标 → finite 栅栏抛', () => {
     const overflowPattern: PatternDefinition = {
       name: 'overflowPattern',
-emit: ({ size }): Array<MarkerPrimitive> => [{ type: 'rect', x: 0, y: 0, width: size * 1e10, height: size }],
+      emit: ({ size }): Array<MarkerPrimitive> => [{ type: 'rect', x: 0, y: 0, width: size * 1e10, height: size }],
     };
     expect(() =>
       compilePattern(
@@ -118,7 +118,7 @@ describe('ADV — emit 产物栅栏', () => {
   it('motif_nonfinite_coords：custom emit 产 NaN 坐标 → finite 栅栏抛（含 pattern 名）', () => {
     const nanPattern: PatternDefinition = {
       name: 'nanPattern',
-emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 0, ry: 1, fill: 'red' }],
+      emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 0, ry: 1, fill: 'red' }],
     };
     expect(() =>
       compilePattern({ kind: 'pattern', shape: 'nanmotif' }, { patterns: [{ ...nanPattern, name: 'nanmotif' }] }),
@@ -153,9 +153,9 @@ emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 
     const fnPattern = {
       emit: () => [{ type: 'rect', x: 0, y: 0, width: 4, height: 4, fill: 'red', onClick: () => 1 }],
     } as unknown as PatternDefinition;
-    expect(() => compilePattern({ kind: 'pattern', shape: 'fn' }, { patterns: [{ ...fnPattern, name: 'fn' }] })).toThrow(
-      /function/i,
-    );
+    expect(() =>
+      compilePattern({ kind: 'pattern', shape: 'fn' }, { patterns: [{ ...fnPattern, name: 'fn' }] }),
+    ).toThrow(/function/i);
   });
 
   it('empty_motif：emit 返回 [] → 空 tile，不崩', () => {
@@ -168,7 +168,7 @@ emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 
   it('emit_throws：emit 内部 throw → 包成含 pattern 名 + cause 的清晰错', () => {
     const throwPattern: PatternDefinition = {
       name: 'throwPattern',
-emit: () => {
+      emit: () => {
         throw new Error('internal boom xyz123');
       },
     };
@@ -213,7 +213,7 @@ describe('ADV — dedup / override / 交叉', () => {
   it('override_geometry_takes_effect：覆盖内置 lines 几何 → tile 真按覆盖 def 变（内置名走注册表）', () => {
     const customLines: PatternDefinition = {
       name: 'customLines',
-defaultSize: 8,
+      defaultSize: 8,
       emit: ({ size, color }): Array<MarkerPrimitive> => [
         {
           type: 'path',

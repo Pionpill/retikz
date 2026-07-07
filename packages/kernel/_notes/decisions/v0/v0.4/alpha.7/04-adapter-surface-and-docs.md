@@ -48,7 +48,6 @@ docs 新增 provider authoring 总览，说明：
 2. 文档总览能把 alpha.7 的破坏性改动转化成清晰 authoring 心智。
 3. docs 先讲机制，再讲具体 shape / path kind 示例，更适合 LLM 和用户生成自定义 provider。
 
-
 ## 不在本 ADR 范围
 
 - 不实现 provider registry 迁移本身；由 ADR-03 处理。

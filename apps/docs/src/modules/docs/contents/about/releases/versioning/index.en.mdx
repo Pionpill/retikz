@@ -45,13 +45,13 @@ rc narrows the work again: public APIs no longer break, and npm uses the `next` 
 
 ## peerDependencies
 
-| Package           | peer                                           | Version         |
-| ----------------- | ---------------------------------------------- | --------------- |
-| `@retikz/react`   | `react` / `react-dom`                          | `>=18`          |
-| `@retikz/core`    | (none)                                         | —               |
-| `@retikz/math`    | (none)                                         | —               |
-| `@retikz/render`  | `@napi-rs/canvas` (optional, Node export only) | catalog-managed |
-| `@retikz/vanilla` | (none)                                         | —               |
+| Package           | peer                                                            | Version             |
+| ----------------- | --------------------------------------------------------------- | ------------------- |
+| `@retikz/react`   | `react` / `react-dom`                                           | `>=18`              |
+| `@retikz/core`    | (none)                                                          | —                   |
+| `@retikz/math`    | (none)                                                          | —                   |
+| `@retikz/render`  | `@napi-rs/canvas` (optional, Node export only)                  | catalog-managed     |
+| `@retikz/vanilla` | (none)                                                          | —                   |
 | `@retikz/tex`     | `mathjax-full` (optional)<br />`react` / `react-dom` (optional) | catalog<br />`>=18` |
 
 Bumping React's major version usually ships as a MINOR; we only bump MAJOR when the new React version is incompatible with our old API.

@@ -252,7 +252,8 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const angleRangeOverride = ctx.roleRangeOverrides?.x;
     if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
-      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
+      ? (ctx.collectAxisTicks('x') ??
+        resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
       : undefined;
     const layoutAngularTicks = angularAxis
       ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
@@ -271,7 +272,8 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radiusRangeOverride = ctx.roleRangeOverrides?.y;
     if (radiusRangeOverride !== undefined) radiusScale.setRange([radiusRangeOverride[0], radiusRangeOverride[1]]);
     const radialTicks: TickSet | undefined = radialAxis
-      ? (ctx.collectAxisTicks('y') ?? resolveGuideTicks(radiusScale, radialAxis.ticks, radialAxis.tickLabels || undefined))
+      ? (ctx.collectAxisTicks('y') ??
+        resolveGuideTicks(radiusScale, radialAxis.ticks, radialAxis.tickLabels || undefined))
       : undefined;
     const visibleAngularTicks = angularAxis
       ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
@@ -332,7 +334,8 @@ const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
     const angleRangeOverride = ctx.roleRangeOverrides?.x;
     if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
-      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
+      ? (ctx.collectAxisTicks('x') ??
+        resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
       : undefined;
     const visibleAngularTicks = angularAxis
       ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))

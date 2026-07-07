@@ -9,7 +9,7 @@
 塑造决策的硬约束：
 
 - alpha.1/alpha.2 的 scale 只有 **linear**——连续数值 `[min,max] → [r0,r1]`。柱状图的 x 轴是**分类**的（「一月 / 二月 / 三月」而非连续数轴）：每个类别占一段等宽的「band」，柱画在 band 里、宽度 = band 宽。这正是 grammar of graphics 的 **band scale**（plot-design §3.4 列 band / point）；d3-scale 的 `scaleBand` 现成提供 `domain（类别数组）→ range`、`bandwidth()`、`step()`、`paddingInner/Outer`。其姊妹 `scalePoint`（band 的退化：bandwidth=0、类别落在点上）用于「分类轴上的折线 / 散点」。
-- band 与 linear 在三处语义不同，逼出一层抽象：① **域推断**——linear 的域 = 数值 extent，band 的域 = 按数据出现顺序去重的类别序列（非排序、非 min/max）；② **投影**——`scaleBand()(value)` 返回 band *起点*，点 / 线要居中、柱要占满，不能像 linear 那样把 d3 scale 直接当 `(value)=>number`；③ **guide**——linear 走 `scale.ticks(count)` + nice，band = 每类别一刻度落 band 中心、标签 = 类别串、无 nice / 无数值格式化。
+- band 与 linear 在三处语义不同，逼出一层抽象：① **域推断**——linear 的域 = 数值 extent，band 的域 = 按数据出现顺序去重的类别序列（非排序、非 min/max）；② **投影**——`scaleBand()(value)` 返回 band _起点_，点 / 线要居中、柱要占满，不能像 linear 那样把 d3 scale 直接当 `(value)=>number`；③ **guide**——linear 走 `scale.ticks(count)` + nice，band = 每类别一刻度落 band 中心、标签 = 类别串、无 nice / 无数值格式化。
 
 本 ADR 定 band / point 的 **scale IR + lowering 解析 + projector 抽象 + guide 适配**；不含柱几何（[ADR-02](./02-interval-mark.md)）、分组 / 堆叠（[ADR-05](./05-relation.md)）。
 
@@ -54,6 +54,7 @@ export type ScaleType = ValueOf<typeof PlotScale>;
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/**` scale schema + `src/lower/**` PositionScale / projector 契约边界）、非 breaking（linear 经 `PositionScale` 后投影 / 刻度与 alpha.2 逐字相等）。
+>
 > - 真源以代码为准：`ScaleSchema` / `BandScaleSchema` / `PointScaleSchema` / `CategoryValueSchema` / `PlotScale`（`plot/src/ir/scale.ts`）；`PositionScale` / `inferCategoryDomain` / band·point resolver（`plot/src/lower/scale.ts`）；projector 改吃 `PositionScale.coordinate`、`axisValues` 按 scale.type 分流（`plot/src/lower/project.ts` / `expand.ts`）。`scaleBand` / `scalePoint` 复用 alpha.2 已引入的 d3-scale。对外 barrel 公开 `BandScaleSchema` / `PointScaleSchema` / `CategoryValueSchema`，`PlotScale` 增成员；对 core 无影响（band/point 在 lowering 内部，IR 仍纯 JSON）。
 > - 被消费：[ADR-02](./02-interval-mark.md) 用 `bandwidth` 定柱宽、`coordinate` 定柱位；[ADR-05](./05-relation.md) dodge 在 band 内切子带；guide lowering 复用 `PositionScale.ticks`。
 > - 测试见 `plot/tests/ir/scale.schema.test.ts`（band/point accept/reject、padding 越界、domain 元素校验）与 `plot/tests/lower/scale.test.ts`（分类域保序去重 / 过滤非标量、band coordinate 居中、bandwidth 取值、band 刻度落中心、linear 经 PositionScale 逐字等价），及 `plot/tests/lower/lowerPlots.test.ts`（守 linear 向后兼容）。

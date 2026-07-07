@@ -1,4 +1,4 @@
-﻿import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
+﻿import { arcEndPoint, ellipseArcPoint, point } from '@retikz/math';
 
 import type {
   ArrowDefinition,
@@ -7,13 +7,16 @@ import type {
   MarkerPrimitive,
   PathCommand,
   ResolvedArrowEndSpec,
-} from '../../contract';
-import type { IRArrowMark, IRPosition } from '../../schemas';
+} from '../../../contract';
+import type { IRArrowMark, IRPosition } from '../../../schemas';
 
-import { providerDefinitionOf } from '../../providers/registry';
-import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
-import { validateMarkerPrimitives } from '../resource';
-import { shiftToward } from './anchor';
+import { providerDefinitionOf } from '../../../providers/registry';
+import {
+  ARROW_MARKER_DEFAULT_SIZE,
+  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
+  DEFAULT_ARROW_SHAPE,
+} from '../../../schemas';
+import { validateMarkerPrimitives } from '../../resource';
 
 /** 已解析 arrow registry：内置 8 + 注入 */
 export type ResolvedArrowRegistry = ReadonlyMap<string, ArrowDefinition>;
@@ -103,7 +106,11 @@ const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
 };
 
 /** 调用 arrow emit，并校验 marker 产物。 */
-const emitArrowMarkerPrimitives = (shape: string, def: ArrowDefinition, ctx: ArrowEmitContext): Array<MarkerPrimitive> => {
+const emitArrowMarkerPrimitives = (
+  shape: string,
+  def: ArrowDefinition,
+  ctx: ArrowEmitContext,
+): Array<MarkerPrimitive> => {
   if (typeof def.emit !== 'function') {
     throw new Error(`Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`);
   }
@@ -255,15 +262,15 @@ const endpointOf = (cmd: PathCommand): IRPosition | null => {
 type SetEndpointInput = {
   commands: Array<PathCommand>;
   index: number;
-  point: IRPosition;
+  endpoint: IRPosition;
   round: (n: number) => number;
 };
 
 /** 改写一个 PathCommand 的 endpoint（用于 shrink） */
-const setEndpoint = ({ commands, index, point, round }: SetEndpointInput): void => {
+const setEndpoint = ({ commands, index, endpoint, round }: SetEndpointInput): void => {
   const cmd = commands[index];
   if (cmd.kind === 'close') return;
-  const rp: [number, number] = [round(point[0]), round(point[1])];
+  const rp: [number, number] = [round(endpoint[0]), round(endpoint[1])];
   if (cmd.kind === 'move' || cmd.kind === 'line') {
     commands[index] = { ...cmd, to: rp };
   } else if (cmd.kind === 'quad') {
@@ -283,10 +290,7 @@ export type ApplyArrowShrinksContext = {
 };
 
 /** 按箭头收缩量改写 path 首尾端点。 */
-export const applyArrowShrinks = (
-  commands: Array<PathCommand>,
-  context: ApplyArrowShrinksContext,
-): void => {
+export const applyArrowShrinks = (commands: Array<PathCommand>, context: ApplyArrowShrinksContext): void => {
   const { shrinkStart, shrinkEnd, strokeWidth, round } = context;
   if (shrinkStart !== 0) {
     // 找首个 move 与其后第一个有 endpoint 的命令
@@ -297,8 +301,8 @@ export const applyArrowShrinks = (
       if (cur.kind === 'move' && nextIdx >= 0) {
         const nextPt = endpointOf(commands[nextIdx]);
         if (nextPt) {
-          const shifted = shiftToward([cur.to[0], cur.to[1]], nextPt, shrinkStart * strokeWidth);
-          setEndpoint({ commands, index: firstIdx, point: shifted, round });
+          const shifted = point.shiftToward([cur.to[0], cur.to[1]], nextPt, shrinkStart * strokeWidth);
+          setEndpoint({ commands, index: firstIdx, endpoint: shifted, round });
         }
       }
     }
@@ -319,8 +323,8 @@ export const applyArrowShrinks = (
         const curPt = endpointOf(commands[lastIdx]);
         const prevPt = endpointOf(commands[prevIdx]);
         if (curPt && prevPt) {
-          const shifted = shiftToward(curPt, prevPt, shrinkEnd * strokeWidth);
-          setEndpoint({ commands, index: lastIdx, point: shifted, round });
+          const shifted = point.shiftToward(curPt, prevPt, shrinkEnd * strokeWidth);
+          setEndpoint({ commands, index: lastIdx, endpoint: shifted, round });
         }
       }
     }

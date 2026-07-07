@@ -6,10 +6,10 @@
   ResolvedArrowEndSpec,
   ScenePrimitive,
   Transform,
-} from '../../contract';
-import type { SegmentSample } from '../../shared/geometry';
+} from '../../../contract';
+import type { SegmentSample } from '../../../shared/geometry';
 
-import { RAD_TO_DEG } from '../../shared/geometry';
+import { RAD_TO_DEG } from '../../../shared/geometry';
 
 const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
   typeof value === 'string' ? value : contextStroke;

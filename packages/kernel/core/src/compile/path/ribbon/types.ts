@@ -3,7 +3,7 @@
 import type { RibbonWidthProfileDefinition } from '../../../contract';
 import type { IRPathBase, IRPathRibbonOptions, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { EmitPathWarnHook } from '../types';
+import type { PathEmitOptions } from '../types';
 
 /**
  * ribbon 编译期归一化后的输入
@@ -83,7 +83,7 @@ export type RibbonCrossSection = {
 };
 
 /** ribbon emit 额外需要的上下文。 */
-export type RibbonEmitOptions = EmitPathWarnHook & {
+export type RibbonEmitOptions = PathEmitOptions & {
   /**
    * ribbon 宽度 profile 注册表。
    * @default 空 Map

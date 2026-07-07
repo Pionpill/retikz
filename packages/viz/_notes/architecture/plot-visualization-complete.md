@@ -34,17 +34,17 @@ Plot IR / schema
 
 Plot 可视化完备至少覆盖九类能力面。每类能力都可以独立演进，但必须共享同一条 Plot IR -> core IR -> interaction metadata 管线。
 
-| 能力面 | 目标 | 不属于 plot 的情况 |
-| --- | --- | --- |
-| Data | 描述数据引用、数据模型、字段路径和外部数据注入边界。 | 数据库接入、权限治理、业务数据源 SDK。 |
-| Transform | 把原始数据变成可绘制数据视图。 | core 几何变换；UI 运行时状态变更。 |
-| Encoding / Channel | 把字段、常量或派生值绑定到视觉通道。 | renderer 私有样式补丁；chart type 内部隐式映射。 |
-| Scale | 把数据域映射到视觉范围或视觉值。 | 坐标系本身；core 图形 transform。 |
-| Coordinate | 消费位置通道，把 scale 后的值解析到绘图空间。 | 通用 core target / anchor 语义；地理底图系统。 |
-| Mark | 定义数据在坐标空间中的几何显现。 | chart type preset；只服务单个 demo 的几何拼装。 |
-| Guide | 生成 axis、grid、legend、label 等解释性结构。 | 文档说明文字；上层 UI 控件。 |
-| Layer / Lowering | 组织图层、scope、provenance，并下沉到 core IR。 | 独立 renderer、平行 scene graph、adapter 私有树。 |
-| Interaction | 定义 tooltip、hover、selection、brush、linked highlighting 等交互语义所需的 datum identity、locator、命中索引、状态映射和诊断边界。 | React / DOM / SVG 私有事件绑定；renderer 私有 hit-test；大数据 dashboard 的高频过滤 dataflow。 |
+| 能力面             | 目标                                                                                                                                | 不属于 plot 的情况                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Data               | 描述数据引用、数据模型、字段路径和外部数据注入边界。                                                                                | 数据库接入、权限治理、业务数据源 SDK。                                                         |
+| Transform          | 把原始数据变成可绘制数据视图。                                                                                                      | core 几何变换；UI 运行时状态变更。                                                             |
+| Encoding / Channel | 把字段、常量或派生值绑定到视觉通道。                                                                                                | renderer 私有样式补丁；chart type 内部隐式映射。                                               |
+| Scale              | 把数据域映射到视觉范围或视觉值。                                                                                                    | 坐标系本身；core 图形 transform。                                                              |
+| Coordinate         | 消费位置通道，把 scale 后的值解析到绘图空间。                                                                                       | 通用 core target / anchor 语义；地理底图系统。                                                 |
+| Mark               | 定义数据在坐标空间中的几何显现。                                                                                                    | chart type preset；只服务单个 demo 的几何拼装。                                                |
+| Guide              | 生成 axis、grid、legend、label 等解释性结构。                                                                                       | 文档说明文字；上层 UI 控件。                                                                   |
+| Layer / Lowering   | 组织图层、scope、provenance，并下沉到 core IR。                                                                                     | 独立 renderer、平行 scene graph、adapter 私有树。                                              |
+| Interaction        | 定义 tooltip、hover、selection、brush、linked highlighting 等交互语义所需的 datum identity、locator、命中索引、状态映射和诊断边界。 | React / DOM / SVG 私有事件绑定；renderer 私有 hit-test；大数据 dashboard 的高频过滤 dataflow。 |
 
 这些能力面是检测维度，不是必须一一对应目录。具体实现仍按 `schemas / contract / providers / features / pipeline` 分层。
 

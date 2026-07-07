@@ -181,7 +181,11 @@ describe('Shape registry — boundary', () => {
   });
 
   it('default_rectangle_when_shape_absent: no shape → RectPrim', () => {
-    const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+    };
     expect(findByType(compileToScene(ir).primitives, 'rect')).toBeDefined();
   });
 
@@ -326,7 +330,11 @@ describe('Shape registry — interaction', () => {
         };
       },
     };
-    const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] };
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+    };
     expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] })).toThrow(
       /duplicate shape registration: "rectangle"/,
     );

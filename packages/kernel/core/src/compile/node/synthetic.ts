@@ -84,10 +84,13 @@ export const createScopePlaceholderLayout = (
   context: SyntheticLayoutRegistryContext = {},
 ): NodeLayout => {
   const globalOrigin: IRPosition = scopeChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], scopeChain);
-  return createSyntheticRectangleLayout({
-    id,
-    rect: { x: globalOrigin[0], y: globalOrigin[1], width: 0, height: 0, rotate: 0 },
-  }, context);
+  return createSyntheticRectangleLayout(
+    {
+      id,
+      rect: { x: globalOrigin[0], y: globalOrigin[1], width: 0, height: 0, rotate: 0 },
+    },
+    context,
+  );
 };
 
 /** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout。 */

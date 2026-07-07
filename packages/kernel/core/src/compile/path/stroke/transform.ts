@@ -1,16 +1,9 @@
-import { boundsCenter, boundsOf } from '@retikz/math';
+import { boundsCenter, boundsOf, isFinitePoint } from '@retikz/math';
 
-import type { Transform } from '../../contract';
-import type { IRPathScale, IRPosition } from '../../schemas';
+import type { Transform } from '../../../contract';
+import type { IRPathScale, IRPosition } from '../../../schemas';
 
-import { applyTransformChain } from '../transform';
-
-/** 有限数 */
-const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
-
-/** 有限坐标点 `[number, number]` */
-const isFinitePoint = (pt: unknown): boolean =>
-  Array.isArray(pt) && pt.length >= 2 && isFiniteNum(pt[0]) && isFiniteNum(pt[1]);
+import { applyTransformChain } from '../../transform';
 
 /** 一组点的 axis-aligned 包围盒中心 */
 export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
@@ -28,12 +21,7 @@ export type BuildPathTransformsInput = {
 };
 
 /** 把 path 的 rotate / scale 编译为绕 bbox 中心的 transforms。 */
-export const buildPathTransforms = ({
-  rotate,
-  scale,
-  center,
-  round,
-}: BuildPathTransformsInput): Array<Transform> => {
+export const buildPathTransforms = ({ rotate, scale, center, round }: BuildPathTransformsInput): Array<Transform> => {
   const out: Array<Transform> = [];
   if (rotate !== undefined) {
     out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });

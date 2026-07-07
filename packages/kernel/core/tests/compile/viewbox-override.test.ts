@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRChild,IRScene } from '../../src';
+import type { IRChild, IRScene } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
 import { computeLayout, createRound } from '../../src/compile/scene';

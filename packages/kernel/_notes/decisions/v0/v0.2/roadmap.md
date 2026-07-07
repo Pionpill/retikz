@@ -12,14 +12,14 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 
 ## 六段 alpha 节奏
 
-| 子版本 | 主题 | TikZ 对应 | 看板文件 | ADR 目录 |
-|---|---|---|---|---|
-| **v0.2.0-alpha.1** | `<Scope>` IR 容器 + 局部 transform | `\begin{scope}` | [`alpha.1/roadmap.md`](./alpha.1/roadmap.md) | [`alpha.1/`](./alpha.1) |
-| v0.2.0-alpha.2 | 样式继承：`nodeDefault` / `pathDefault` 挂 Scope **+ Scope 直接挂 Node 样式子集 + StepLabel 样式字段扩展（`textColor` / `opacity` / `font`）** | `every <X>/.style` + `\begin{scope}[draw=red, line width=2pt]` + `every label/.style` | 开工前另起 | 开工前另起 |
-| v0.2.0-alpha.3 | ShapeRegistry：打开 NodeShape 枚举 + `ShapeDefinition` 接口 | `\pgfdeclareshape` + libraries | [`alpha.3/roadmap.md`](./alpha.3/roadmap.md) | [`alpha.3/`](./alpha.3) |
-| v0.2.0-alpha.4 | **compile IR 顺序回归 + emit 层增强**：占位槽回填恢复 IR 顺序（A）+ 显式 `zIndex` + 带文本 Node 包 `<g>` + Node label `rotate`（B） | （A 内部 bug 修复；B 浏览器原生 stacking / DOM 钩子，TikZ 无直接对应） | [`alpha.4/roadmap.md`](./alpha.4/roadmap.md) | [`alpha.4/`](./alpha.4) |
-| v0.2.0-alpha.5 | Path-level shape sugar（Circle / Ellipse / Arc / Sector / Rectangle / Grid + 对应 IR step 扩张） | `\draw circle [radius=R]` / `\draw (0,0) grid (3,2)` 等 | [`v0.2-alpha.5.md`](./alpha.5/roadmap.md) | 开工前另起 |
-| v0.2.0-alpha.6 | 结构化 Target / Anchor（path target → 对象 IR + 字符串 sugar 兼容）**+ 并入 `<TikZ>` → `<Layout>` 顶层容器命名整理（`<TikZ>` 保留 deprecated alias）** | `(A.north)` / `(A.30)` / `(A.north east)` 的对象化对应 + retikz 自身 DSL 整理 | [`v0.2-alpha.6.md`](./alpha.6/roadmap.md) | 开工前另起 |
+| 子版本             | 主题                                                                                                                                                   | TikZ 对应                                                                             | 看板文件                                     | ADR 目录                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- | -------------------------------------------- | ----------------------- |
+| **v0.2.0-alpha.1** | `<Scope>` IR 容器 + 局部 transform                                                                                                                     | `\begin{scope}`                                                                       | [`alpha.1/roadmap.md`](./alpha.1/roadmap.md) | [`alpha.1/`](./alpha.1) |
+| v0.2.0-alpha.2     | 样式继承：`nodeDefault` / `pathDefault` 挂 Scope **+ Scope 直接挂 Node 样式子集 + StepLabel 样式字段扩展（`textColor` / `opacity` / `font`）**         | `every <X>/.style` + `\begin{scope}[draw=red, line width=2pt]` + `every label/.style` | 开工前另起                                   | 开工前另起              |
+| v0.2.0-alpha.3     | ShapeRegistry：打开 NodeShape 枚举 + `ShapeDefinition` 接口                                                                                            | `\pgfdeclareshape` + libraries                                                        | [`alpha.3/roadmap.md`](./alpha.3/roadmap.md) | [`alpha.3/`](./alpha.3) |
+| v0.2.0-alpha.4     | **compile IR 顺序回归 + emit 层增强**：占位槽回填恢复 IR 顺序（A）+ 显式 `zIndex` + 带文本 Node 包 `<g>` + Node label `rotate`（B）                    | （A 内部 bug 修复；B 浏览器原生 stacking / DOM 钩子，TikZ 无直接对应）                | [`alpha.4/roadmap.md`](./alpha.4/roadmap.md) | [`alpha.4/`](./alpha.4) |
+| v0.2.0-alpha.5     | Path-level shape sugar（Circle / Ellipse / Arc / Sector / Rectangle / Grid + 对应 IR step 扩张）                                                       | `\draw circle [radius=R]` / `\draw (0,0) grid (3,2)` 等                               | [`v0.2-alpha.5.md`](./alpha.5/roadmap.md)    | 开工前另起              |
+| v0.2.0-alpha.6     | 结构化 Target / Anchor（path target → 对象 IR + 字符串 sugar 兼容）**+ 并入 `<TikZ>` → `<Layout>` 顶层容器命名整理（`<TikZ>` 保留 deprecated alias）** | `(A.north)` / `(A.30)` / `(A.north east)` 的对象化对应 + retikz 自身 DSL 整理         | [`v0.2-alpha.6.md`](./alpha.6/roadmap.md)    | 开工前另起              |
 
 **依赖关系**：
 
@@ -48,11 +48,11 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 - **ScenePrimitive 渲染无关**（`scene.ts`：不允许 SVG-only 特性）：Paint / clip 等"资源"由 core 产 renderer-agnostic **资源表**（去重 + 稳定 id）+ primitive 挂 `paintRef` / `clipRef`，**`<defs>` / `<clipPath>` 物化只在 React SVG adapter**（见 alpha.7 / alpha.9）。
 - **端点类型避免 schema 递归**：partway 等新定位的端点用自包含的 `AbsoluteTarget`，排除 path-relative，不让 `PositionSchema` ↔ `TargetSchema` 成环（见 alpha.9）。
 
-| 子版本 | 主题 | 含 | gap 段 | 状态 |
-|---|---|---|---|---|
-| **v0.2.0-alpha.7** | Node 能力完善 | text width 自动换行 + pin 引脚 + 填充服务 Paint（纯色 / 渐变 / 图案 / 图片，图案·图片实现期一并做） | §1 Node | ✅ 完工 |
-| **v0.2.0-alpha.8** | Path / Step 能力完善 | 自定义 arrow（ArrowDefinition）+ 路径生成器（PathGeneratorDefinition）+ 图案（PatternDefinition）三注册面 + 路径整体变换（rotate/scale）+ out/in·self-loop + 中段 marking | §2·§3 | ✅ 完工 |
-| **v0.2.0-alpha.9** | Scene / Position 能力完善 | clip 裁切 + 自定义 viewBox override + 比例 partway 定位 | §5·§6 | ✅ 完工 |
+| 子版本             | 主题                      | 含                                                                                                                                                                        | gap 段  | 状态    |
+| ------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
+| **v0.2.0-alpha.7** | Node 能力完善             | text width 自动换行 + pin 引脚 + 填充服务 Paint（纯色 / 渐变 / 图案 / 图片，图案·图片实现期一并做）                                                                       | §1 Node | ✅ 完工 |
+| **v0.2.0-alpha.8** | Path / Step 能力完善      | 自定义 arrow（ArrowDefinition）+ 路径生成器（PathGeneratorDefinition）+ 图案（PatternDefinition）三注册面 + 路径整体变换（rotate/scale）+ out/in·self-loop + 中段 marking | §2·§3   | ✅ 完工 |
+| **v0.2.0-alpha.9** | Scene / Position 能力完善 | clip 裁切 + 自定义 viewBox override + 比例 partway 定位                                                                                                                   | §5·§6   | ✅ 完工 |
 
 > A 清单（text-wrap / 填充服务 / clip / 单 path 变换 / pin）落位：text-wrap·pin·填充服务 → Node 段（alpha.7）；单 path 变换 → Path 段（alpha.8）；clip → Scene 段（alpha.9）。能力补全阶段 alpha.7–9 至此覆盖 gap §1–6 全部值得做的项（§4 Coordinate 已 ✅）。
 
@@ -62,11 +62,11 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 
 **三块能力**：
 
-| 子项 | gap 现状 | 目标 | 落点 |
-|---|---|---|---|
-| text width 自动换行 | ❌ 仅手动分行 | 给定宽度自动折行（复用现有文本测量；西文按词、CJK 按字断行） | core 文本布局 |
-| pin 引脚 | ❌ | label + 引线：复用 label 的方向 / 角度 / distance 体系，加引线样式 + 端点锚定（可复用 alpha.6 anchor / edgePoint 解析） | core Node label |
-| 填充服务 Paint | ⚠️ 仅单色 | `fill` 扩为 `string \| PaintSpec`：纯色 / 线性·径向渐变 / 图案 pattern / 图片 image | core IR **契约级**（fill 所到之处：Node / Path 闭合区 / rect·ellipse prim，及 Scope `fill` / `nodeDefault.fill` 级联） |
+| 子项                | gap 现状      | 目标                                                                                                                    | 落点                                                                                                                   |
+| ------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| text width 自动换行 | ❌ 仅手动分行 | 给定宽度自动折行（复用现有文本测量；西文按词、CJK 按字断行）                                                            | core 文本布局                                                                                                          |
+| pin 引脚            | ❌            | label + 引线：复用 label 的方向 / 角度 / distance 体系，加引线样式 + 端点锚定（可复用 alpha.6 anchor / edgePoint 解析） | core Node label                                                                                                        |
+| 填充服务 Paint      | ⚠️ 仅单色     | `fill` 扩为 `string \| PaintSpec`：纯色 / 线性·径向渐变 / 图案 pattern / 图片 image                                     | core IR **契约级**（fill 所到之处：Node / Path 闭合区 / rect·ellipse prim，及 Scope `fill` / `nodeDefault.fill` 级联） |
 
 **填充服务要点**（契约级、最重，建议作为本段主线先行；评审 P1/P2 修订）：
 
@@ -95,14 +95,14 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 
 承接 `tikz-gap-analysis §2 Path`（历史分析已删除） + §3 Step（Path 与 Step 同体，一段处理）。五块能力，**自定义 arrow 与路径生成器注册面是两块大的，其余为低成本搭车项**。
 
-| 子项 | gap 现状 | 目标 | 落点 |
-|---|---|---|---|
-| **自定义 arrow** | 固定 7 枚举（`ARROW_SHAPES`），定义散在 compile 几何（`arrow-geometry.ts`）+ render SVG（`arrowMarkers.tsx`）两处 | `ArrowDefinition` + `CompileOptions.arrows` 注册面；`arrowDetail.shape` 开放为 `z.string()`；内置 7 降注册项（无特权）；marker 几何改 renderer-agnostic primitive | core IR + compile + render |
-| **路径生成器注册面** | 无——曲线 step kind 全 core 写死 | `PathGeneratorDefinition` + `CompileOptions.pathGenerators`；IR 新增 `{ kind: 'generator', name, to?, params }`；parabola / sin-cos / 二次方程曲线等由外部包注册，**core 不内置任何具体曲线** | core IR + compile |
-| **pattern 注册面** | alpha.7 pattern motif 固定 enum（lines/dots/grid，react 写死） | `PatternDefinition` + `CompileOptions.patterns`；`pattern.shape` 开放为 string，内置 3 motif 降注册项；tile 几何复用 ArrowDefinition 的 `MarkerPrimitive` emit + contextStroke（详 [`v0.2-alpha.8.md §第二部分补`](./alpha.8/roadmap.md)） | core IR + render |
-| **out/in 曲线 + self-loop** | 仅 `bend` 子集，无任意出入角、无自环 | `bend` step 加 `outAngle` / `inAngle` / `looseness`（或新 step），编译成 `cubic`；`from == to` 退化为 self-loop（默认环大小 + 出入角撑开） | core IR + compile |
-| 路径整体变换 | 无——单 path 转需包 `<Scope>` | Path schema 加 `rotate` / `scale`，解析出的 primitive 包 `GroupPrim`（复用 Scope transform 机器） | core IR + compile |
-| 中段 marking | 仅文字 label | 沿路径 t 处放定向 marker——**复用 `segment.ts` 的 point + tangent（与 `sloped` label 同源，闭式 O(1)、编译期一次、天然按需）** + 复用箭头 marker 系统 | core IR + compile |
+| 子项                        | gap 现状                                                                                                          | 目标                                                                                                                                                                                                                                       | 落点                       |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| **自定义 arrow**            | 固定 7 枚举（`ARROW_SHAPES`），定义散在 compile 几何（`arrow-geometry.ts`）+ render SVG（`arrowMarkers.tsx`）两处 | `ArrowDefinition` + `CompileOptions.arrows` 注册面；`arrowDetail.shape` 开放为 `z.string()`；内置 7 降注册项（无特权）；marker 几何改 renderer-agnostic primitive                                                                          | core IR + compile + render |
+| **路径生成器注册面**        | 无——曲线 step kind 全 core 写死                                                                                   | `PathGeneratorDefinition` + `CompileOptions.pathGenerators`；IR 新增 `{ kind: 'generator', name, to?, params }`；parabola / sin-cos / 二次方程曲线等由外部包注册，**core 不内置任何具体曲线**                                              | core IR + compile          |
+| **pattern 注册面**          | alpha.7 pattern motif 固定 enum（lines/dots/grid，react 写死）                                                    | `PatternDefinition` + `CompileOptions.patterns`；`pattern.shape` 开放为 string，内置 3 motif 降注册项；tile 几何复用 ArrowDefinition 的 `MarkerPrimitive` emit + contextStroke（详 [`v0.2-alpha.8.md §第二部分补`](./alpha.8/roadmap.md)） | core IR + render           |
+| **out/in 曲线 + self-loop** | 仅 `bend` 子集，无任意出入角、无自环                                                                              | `bend` step 加 `outAngle` / `inAngle` / `looseness`（或新 step），编译成 `cubic`；`from == to` 退化为 self-loop（默认环大小 + 出入角撑开）                                                                                                 | core IR + compile          |
+| 路径整体变换                | 无——单 path 转需包 `<Scope>`                                                                                      | Path schema 加 `rotate` / `scale`，解析出的 primitive 包 `GroupPrim`（复用 Scope transform 机器）                                                                                                                                          | core IR + compile          |
+| 中段 marking                | 仅文字 label                                                                                                      | 沿路径 t 处放定向 marker——**复用 `segment.ts` 的 point + tangent（与 `sloped` label 同源，闭式 O(1)、编译期一次、天然按需）** + 复用箭头 marker 系统                                                                                       | core IR + compile          |
 
 **自定义 arrow 要点**（依赖 alpha.7 Paint）：
 
@@ -132,11 +132,11 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 
 承接 `tikz-gap-analysis §5 定位`（历史分析已删除） + §6 Scene。三块能力，均低中成本，是能力补全阶段收尾段。
 
-| 子项 | gap 现状 | 目标 | 落点 |
-|---|---|---|---|
-| **clip 裁切** | ❌ | 裁剪区域机制：区域内可见、外裁掉（SVG `clipPath`）；Scope / primitive 级 | core IR + compile + render |
-| **自定义 viewBox override** | ❌ 全自动、无逃生口 | Layout / Scene 加可选 `viewBox` / `boundingBox` 字段，覆盖自动算的范围（固定尺寸 / 裁剪 / 多图对齐 / 排除溢出） | core compile + react `formatViewBox` |
-| **比例 partway 定位** | ⚠️ 仅加法 `OffsetPosition` | 结构化定位 `{ between: [A, B], t }`：A、B 复用 alpha.6 Target 解析，`lerp(A, B, t)`（复用 `_edge.ts` lerpPoint） | core IR + compile |
+| 子项                        | gap 现状                   | 目标                                                                                                             | 落点                                 |
+| --------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| **clip 裁切**               | ❌                         | 裁剪区域机制：区域内可见、外裁掉（SVG `clipPath`）；Scope / primitive 级                                         | core IR + compile + render           |
+| **自定义 viewBox override** | ❌ 全自动、无逃生口        | Layout / Scene 加可选 `viewBox` / `boundingBox` 字段，覆盖自动算的范围（固定尺寸 / 裁剪 / 多图对齐 / 排除溢出）  | core compile + react `formatViewBox` |
+| **比例 partway 定位**       | ⚠️ 仅加法 `OffsetPosition` | 结构化定位 `{ between: [A, B], t }`：A、B 复用 alpha.6 Target 解析，`lerp(A, B, t)`（复用 `_edge.ts` lerpPoint） | core IR + compile                    |
 
 **clip 要点**（评审 P1 修订）：
 
@@ -185,11 +185,11 @@ next 分支并入 main 的 v0.1 rc.2 全量改动后，alpha.1 的 4 篇 ADR 已
 
 **B. emit 层增强**（承接 roadmap 三处提案，建在 A 之上）：
 
-| 子项 | 说明 |
-| --- | --- |
-| 显式 `zIndex` | Node / Path / **Scope** 加可选 `zIndex: number`（scope 整体作 stacking 单位，Coordinate 不加；zIndex 不进 every-X 默认通道）；从 raw child 读、`Map<ScenePrimitive,number>` 旁路记录、**sealSink 后**稳定排序（同值保持 IR 顺序）；占位永不入 Map；Group 内独立 stacking |
-| 带文本 Node 输出始终包 `<g>` | `layout.lines` 非空时 `emitNodePrimitives` 走 group 分支（无旋转 group 无 transform）；纯几何 Node 保持平铺 |
-| Node label `rotate` 字段 | `NodeLabelSchema` 加 `rotate?: 'none' \| 'radial' \| 'tangent' \| number` + `keepUpright?: boolean`；label TextPrim 包进 GroupPrim，rotate 中心 = label 自身中心 `[lx, ly]`；**rotated Node 上 label 坐标空间是 ADR 硬前置**（双重旋转 latent bug，详 alpha.4 plan §待定 0） |
+| 子项                         | 说明                                                                                                                                                                                                                                                                         |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 显式 `zIndex`                | Node / Path / **Scope** 加可选 `zIndex: number`（scope 整体作 stacking 单位，Coordinate 不加；zIndex 不进 every-X 默认通道）；从 raw child 读、`Map<ScenePrimitive,number>` 旁路记录、**sealSink 后**稳定排序（同值保持 IR 顺序）；占位永不入 Map；Group 内独立 stacking     |
+| 带文本 Node 输出始终包 `<g>` | `layout.lines` 非空时 `emitNodePrimitives` 走 group 分支（无旋转 group 无 transform）；纯几何 Node 保持平铺                                                                                                                                                                  |
+| Node label `rotate` 字段     | `NodeLabelSchema` 加 `rotate?: 'none' \| 'radial' \| 'tangent' \| number` + `keepUpright?: boolean`；label TextPrim 包进 GroupPrim，rotate 中心 = label 自身中心 `[lx, ly]`；**rotated Node 上 label 坐标空间是 ADR 硬前置**（双重旋转 latent bug，详 alpha.4 plan §待定 0） |
 
 ### alpha.5 设计预想：Path-level shape sugar
 
@@ -236,19 +236,20 @@ next 分支并入 main 的 v0.1 rc.2 全量改动后，alpha.1 的 4 篇 ADR 已
 
 Scope 直接挂 Node 样式属性（与 `nodeDefault` / `pathDefault` 配合），实现 TikZ `\begin{scope}[draw=red, line width=2pt]` 这种 scope-level 样式默认值。**Scope 接受 Node 的样式相关 props 子集，文本相关 props 不接受**：
 
-| 类别 | 字段 | Scope 是否接受 |
-|---|---|---|
-| 描边 | `stroke` / `strokeWidth` / `dashed` / `dotted` / `dashArray` / `drawOpacity` | ✅ |
-| 填充 | `fill` / `fillOpacity` | ✅ |
-| 整体 | `opacity` | ✅ |
-| 形状 | `shape` / `roundedCorners` / `minimumWidth` / `minimumHeight` / `minimumSize` | ✅（作为默认值） |
-| 间距 | `innerXSep` / `innerYSep` / `outerSep` / `padding` / `margin` | ✅ |
-| 缩放 | `scale` / `xScale` / `yScale` | ❌（与 `transforms` 的 `scale` 变体重复，避免双概念） |
-| 旋转 | `rotate` | ❌（同上，与 `transforms` 的 `rotate` 重复） |
-| 位置 | `position` | ❌（Scope 用 `transforms` 表达位置，Node 的 `position` 不适用） |
-| 文本 | `text` / `align` / `lineHeight` / `font` / `textColor` / `label` | ❌ |
+| 类别 | 字段                                                                          | Scope 是否接受                                                  |
+| ---- | ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 描边 | `stroke` / `strokeWidth` / `dashed` / `dotted` / `dashArray` / `drawOpacity`  | ✅                                                              |
+| 填充 | `fill` / `fillOpacity`                                                        | ✅                                                              |
+| 整体 | `opacity`                                                                     | ✅                                                              |
+| 形状 | `shape` / `roundedCorners` / `minimumWidth` / `minimumHeight` / `minimumSize` | ✅（作为默认值）                                                |
+| 间距 | `innerXSep` / `innerYSep` / `outerSep` / `padding` / `margin`                 | ✅                                                              |
+| 缩放 | `scale` / `xScale` / `yScale`                                                 | ❌（与 `transforms` 的 `scale` 变体重复，避免双概念）           |
+| 旋转 | `rotate`                                                                      | ❌（同上，与 `transforms` 的 `rotate` 重复）                    |
+| 位置 | `position`                                                                    | ❌（Scope 用 `transforms` 表达位置，Node 的 `position` 不适用） |
+| 文本 | `text` / `align` / `lineHeight` / `font` / `textColor` / `label`              | ❌                                                              |
 
 设计取舍：
+
 - **文本相关一律不接受**：scope 是分组容器不是文字载体；如果允许 `<Scope text="...">` 会让 IR / DSL 语义双重化（容器又是文字节点？）。如果真要在 scope 上挂说明性文字，应当用 `<Coordinate>` + 显式 `<Node>` 表达
 - **位置相关不接受**：scope 的视觉位置完全由 `transforms` 表达，引入 `position` 会有"位置由哪个字段决定"的歧义
 - **形状 / 间距 / 描边 / 填充接受**：这些是 TikZ scope option 最常用的样式继承场景；alpha.2 设计为"scope 直接挂的样式 = scope 内子节点的默认值"（具体优先级：子节点显式 > scope 显式 > scope 的 `nodeDefault` > 内置默认）

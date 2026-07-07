@@ -7,6 +7,7 @@
   IRPath,
   IRScope,
   IRViewBox,
+  PathThicknessValue,
   WayDSL,
 } from '@retikz/core';
 
@@ -16,8 +17,8 @@ export type Child = IRChild;
 /** node 的 config：从 IRNode 派生，剔除判别符 type 与 positional id。 */
 export type NodeConfig = Omit<IRNode, 'type' | 'id'>;
 
-/** draw 的 config：从 IRPath 派生，剔除 type 与由 way 生成的 children。 */
-export type DrawConfig = Omit<IRPath, 'type' | 'children'>;
+/** draw 的 config：从 IRPath 派生，剔除 type 与由 way 生成的 children；`thickness` 是 builder 语法糖，会解析成 `strokeWidth`。 */
+export type DrawConfig = Omit<IRPath, 'type' | 'children'> & { thickness?: PathThicknessValue };
 
 /** coordinate 的 config：从 IRCoordinate 派生，剔除 type 与 positional id。 */
 export type CoordinateConfig = Omit<IRCoordinate, 'type' | 'id'>;

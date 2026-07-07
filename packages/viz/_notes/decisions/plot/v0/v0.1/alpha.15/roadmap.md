@@ -15,20 +15,20 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 
 ## ADR 索引
 
-| ADR | 主题 | 目标 | 状态 |
-| --- | --- | --- | --- |
-| ADR-01 | **axis domain padding and tick strategy** | 为连续 / 时间位置 scale 增加 domain 弹性、按 scale family 区分单值 domain 退化策略、tick 显式控制与 `nice` 顺序；解决点贴边和 tick 不可控问题 | Accepted |
-| ADR-02 | **axis guide structure and style tokens** | 细化 line、ticks、tickLabels、title、grid 部件槽位的样式与几何 token；替换 guide lowering 中的硬编码常量 | Accepted |
-| ADR-03 | **plot theme schema and merge priority** | 新增 JSON-safe `PlotSpec.theme`，定义 built-in theme、spec theme、guide local override 的合并顺序和默认 token 结构 | Accepted |
-| ADR-04 | **legend, palette, and guide family theme** | 收敛 categorical / sequential / diverging palette、series / sector 默认配色、legend swatch / ramp / label / title 样式 | Accepted |
-| ADR-05 | **axis line advanced geometry** | 为 cartesian axis line 增加 lineCap、baseline extent、positive / negative 方向箭头与 origin placement；箭头样式复用 core ArrowEndDetail，theme 不接结构字段 | Accepted（已实现） |
-| ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density | Accepted（已实现） |
-| ADR-07 | **axis tick label adaptive layout** | 为 axis tick label 增加自适应旋转、重叠省略与边界处理；允许用户关闭旋转、省略或全部自适应，且不改变 tick / grid / mark 同源语义 | Accepted（已实现） |
-| ADR-08 | **axis title layout and anchor strategy** | 为 axis title 统一复用 core position 关键字，`gap` 改名为 `padding`，并补齐 shift、结构化 anchor 与 title layout 避让策略 | Accepted（已实现） |
-| ADR-09 | **axis grid source and style strategy** | 为 axis grid 增加独立 tick source、density、minor grid、bandPosition 与 lineCap；默认层级由 ADR-12 的全局 layer / zIndex 模型统一处理 | Accepted |
-| ADR-10 | **plot decoration layout and placement strategy** | 用 LayoutClaim 统一整图标题、caption、source note、legend、axis title / labels 等 decoration 的占位、placement 与避让；明确静态文案公开归 `labels`，scale-bound 文本仍归 guide | Accepted（首轮实现） |
-| ADR-11 | **legend size symbol layout and scaling strategy** | 为 size legend 增加 `symbolSize`、`symbolScale`、`symbolFit`，默认把大半径符号压入图例 symbol 盒子，并让 legend 条目按最终符号尺寸预留空间 | Accepted（首轮实现） |
-| ADR-12 | **plot layer and zIndex strategy** | 明确 background、grid、mark、axis、facet label、plot label、legend 与后续 interaction 的默认层级；Plot lowering 复用 core scope `zIndex`，并用 `layer.zIndex` 区分图层级排序与 datum/path 级 `mark.zIndex` | Accepted（已实现） |
+| ADR    | 主题                                               | 目标                                                                                                                                                                                                       | 状态                 |
+| ------ | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| ADR-01 | **axis domain padding and tick strategy**          | 为连续 / 时间位置 scale 增加 domain 弹性、按 scale family 区分单值 domain 退化策略、tick 显式控制与 `nice` 顺序；解决点贴边和 tick 不可控问题                                                              | Accepted             |
+| ADR-02 | **axis guide structure and style tokens**          | 细化 line、ticks、tickLabels、title、grid 部件槽位的样式与几何 token；替换 guide lowering 中的硬编码常量                                                                                                   | Accepted             |
+| ADR-03 | **plot theme schema and merge priority**           | 新增 JSON-safe `PlotSpec.theme`，定义 built-in theme、spec theme、guide local override 的合并顺序和默认 token 结构                                                                                         | Accepted             |
+| ADR-04 | **legend, palette, and guide family theme**        | 收敛 categorical / sequential / diverging palette、series / sector 默认配色、legend swatch / ramp / label / title 样式                                                                                     | Accepted             |
+| ADR-05 | **axis line advanced geometry**                    | 为 cartesian axis line 增加 lineCap、baseline extent、positive / negative 方向箭头与 origin placement；箭头样式复用 core ArrowEndDetail，theme 不接结构字段                                                | Accepted（已实现）   |
+| ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density                                                          | Accepted（已实现）   |
+| ADR-07 | **axis tick label adaptive layout**                | 为 axis tick label 增加自适应旋转、重叠省略与边界处理；允许用户关闭旋转、省略或全部自适应，且不改变 tick / grid / mark 同源语义                                                                            | Accepted（已实现）   |
+| ADR-08 | **axis title layout and anchor strategy**          | 为 axis title 统一复用 core position 关键字，`gap` 改名为 `padding`，并补齐 shift、结构化 anchor 与 title layout 避让策略                                                                                  | Accepted（已实现）   |
+| ADR-09 | **axis grid source and style strategy**            | 为 axis grid 增加独立 tick source、density、minor grid、bandPosition 与 lineCap；默认层级由 ADR-12 的全局 layer / zIndex 模型统一处理                                                                      | Accepted             |
+| ADR-10 | **plot decoration layout and placement strategy**  | 用 LayoutClaim 统一整图标题、caption、source note、legend、axis title / labels 等 decoration 的占位、placement 与避让；明确静态文案公开归 `labels`，scale-bound 文本仍归 guide                             | Accepted（首轮实现） |
+| ADR-11 | **legend size symbol layout and scaling strategy** | 为 size legend 增加 `symbolSize`、`symbolScale`、`symbolFit`，默认把大半径符号压入图例 symbol 盒子，并让 legend 条目按最终符号尺寸预留空间                                                                 | Accepted（首轮实现） |
+| ADR-12 | **plot layer and zIndex strategy**                 | 明确 background、grid、mark、axis、facet label、plot label、legend 与后续 interaction 的默认层级；Plot lowering 复用 core scope `zIndex`，并用 `layer.zIndex` 区分图层级排序与 datum/path 级 `mark.zIndex` | Accepted（已实现）   |
 
 > 建议文件名：`01-axis-domain-tick-strategy.md`、`02-axis-guide-style.md`、`03-theme-schema-merge.md`、`04-legend-palette-guide-theme.md`、`05-axis-line-advanced.md`、`06-axis-tick-marker-density.md`、`07-axis-tick-label-layout.md`、`08-axis-title-layout.md`、`09-axis-grid-source-and-style.md`、`10-plot-decoration-layout.md`、`11-legend-size-symbol-layout.md`、`12-plot-layer-zindex.md`。
 

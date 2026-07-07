@@ -1,8 +1,8 @@
-# ADR-01: Font Size Presets And Relative Units
+# ADR-07: Font Size Presets And Relative Units
 
 - 状态：Accepted
 - 决策日期：2026-07-06
-- 关联：[v0.4 roadmap](../roadmap.md) / [alpha.8 roadmap](../alpha.8/roadmap.md)
+- 关联：[alpha.8 roadmap](./roadmap.md) / [v0.4 roadmap](../roadmap.md)
 
 ## 背景
 
@@ -55,22 +55,22 @@ TikZ / LaTeX 风格字号不进入 core schema。上层包如需支持 `small` /
 
 默认 `fontSize = 16`。
 
-| Web preset | 比例 | 默认值 |
-| --- | ---: | ---: |
-| `2xs` | `0.625rem` | `10` |
-| `xs` | `0.75rem` | `12` |
-| `sm` | `0.875rem` | `14` |
-| `base` | `1rem` | `16` |
-| `lg` | `1.125rem` | `18` |
-| `xl` | `1.25rem` | `20` |
-| `2xl` | `1.5rem` | `24` |
-| `3xl` | `1.875rem` | `30` |
-| `4xl` | `2.25rem` | `36` |
-| `5xl` | `3rem` | `48` |
-| `6xl` | `3.75rem` | `60` |
-| `7xl` | `4.5rem` | `72` |
-| `8xl` | `6rem` | `96` |
-| `9xl` | `8rem` | `128` |
+| Web preset |       比例 | 默认值 |
+| ---------- | ---------: | -----: |
+| `2xs`      | `0.625rem` |   `10` |
+| `xs`       |  `0.75rem` |   `12` |
+| `sm`       | `0.875rem` |   `14` |
+| `base`     |     `1rem` |   `16` |
+| `lg`       | `1.125rem` |   `18` |
+| `xl`       |  `1.25rem` |   `20` |
+| `2xl`      |   `1.5rem` |   `24` |
+| `3xl`      | `1.875rem` |   `30` |
+| `4xl`      |  `2.25rem` |   `36` |
+| `5xl`      |     `3rem` |   `48` |
+| `6xl`      |  `3.75rem` |   `60` |
+| `7xl`      |   `4.5rem` |   `72` |
+| `8xl`      |     `6rem` |   `96` |
+| `9xl`      |     `8rem` |  `128` |
 
 ## API 示例
 
@@ -103,8 +103,9 @@ compileToScene(ir, {
 - 不根据浏览器 computed style 解析字号。
 - 不增加字号取整选项。
 - 不改变字体度量模型；`measureText` 仍接收解析后的 number。
+
 ---
 
-> **实现指针**：本 ADR 已随 kernel v0.4-alpha.9 Accepted 落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
+> **实现指针**：本 ADR 已随 kernel v0.4-alpha.8 Accepted 落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
 
-> 🔖 压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.9/01-font-size-presets-and-relative-units.md`。
+> 🔖 压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.4/alpha.8/07-font-size-presets-and-relative-units.md`。

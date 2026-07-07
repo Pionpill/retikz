@@ -1,4 +1,4 @@
-﻿import type { IRPath, WayDSL } from '@retikz/core';
+﻿import type { IRPath, PathThicknessValue, WayDSL } from '@retikz/core';
 import type { FC } from 'react';
 
 import { parseWay } from '@retikz/core';
@@ -33,8 +33,8 @@ export type DrawProps = {
   shadow?: IRPath['shadow'];
   /** 混合模式（CSS `mix-blend-mode`）：与下方已绘内容按 W3C 分离公式混合 */
   blendMode?: IRPath['blendMode'];
-  /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
-  thickness?: IRPath['thickness'];
+  /** 语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
+  thickness?: PathThicknessValue;
   /**
    * 路径级箭头方向
    * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头

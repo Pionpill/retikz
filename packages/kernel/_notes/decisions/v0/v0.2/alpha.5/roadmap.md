@@ -22,13 +22,13 @@
 
 ## IR 改动清单
 
-| 改动 | 涉及 sugar | 字段 / 形态 |
-| --- | --- | --- |
-| `arc` step 加 `radiusX` / `radiusY`（与 `radius` 三互斥） | Arc / Sector 椭圆形态 | 给 `radius` 时等同 X=Y；给 `radiusX/Y` 时优先；schema 校验互斥 |
-| `circlePath` step 加 `startAngle` / `endAngle` / `sweepAngle` / `closed` | Circle 部分裁剪 | 三角键求二；`closed: 'closed' \| 'chord' \| 'open'`，不给角度时强制 `'closed'`、给角度时默认 `'chord'` |
-| `ellipsePath` step 加同上字段 | Ellipse 部分裁剪 | 同上 |
-| 新增 `rectangle` IR step | Rectangle | 字段 `from` / `to` / `roundedCorners?`；闭合自带，不需要外挂 cycle |
-| 不需要新 step | Sector / Grid | Sector 派发待 ADR（见 §`<Sector>`：`move→arc→line→cycle` / `arc` 显式 center / 新增 `sector` step 三选一）；Grid 展开多 Path。候选 RegularPolygon / Star 同属无需新 step，见 §候选追加 |
+| 改动                                                                     | 涉及 sugar            | 字段 / 形态                                                                                                                                                                            |
+| ------------------------------------------------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `arc` step 加 `radiusX` / `radiusY`（与 `radius` 三互斥）                | Arc / Sector 椭圆形态 | 给 `radius` 时等同 X=Y；给 `radiusX/Y` 时优先；schema 校验互斥                                                                                                                         |
+| `circlePath` step 加 `startAngle` / `endAngle` / `sweepAngle` / `closed` | Circle 部分裁剪       | 三角键求二；`closed: 'closed' \| 'chord' \| 'open'`，不给角度时强制 `'closed'`、给角度时默认 `'chord'`                                                                                 |
+| `ellipsePath` step 加同上字段                                            | Ellipse 部分裁剪      | 同上                                                                                                                                                                                   |
+| 新增 `rectangle` IR step                                                 | Rectangle             | 字段 `from` / `to` / `roundedCorners?`；闭合自带，不需要外挂 cycle                                                                                                                     |
+| 不需要新 step                                                            | Sector / Grid         | Sector 派发待 ADR（见 §`<Sector>`：`move→arc→line→cycle` / `arc` 显式 center / 新增 `sector` step 三选一）；Grid 展开多 Path。候选 RegularPolygon / Star 同属无需新 step，见 §候选追加 |
 
 ### `arc` step 字段策略（决策 A）
 
@@ -40,22 +40,23 @@ ArcStepSchema = z.object({
   endAngle: z.number(),
   radius: z.number().positive(),
   label: StepLabelSchema.optional(),
-})
+});
 
 // v0.2 改后（三互斥）
-ArcStepSchema = z.object({
-  kind: z.literal('arc'),
-  startAngle: z.number(),
-  endAngle: z.number(),
-  // 以下三选一：radius 单值 = 圆弧；radiusX/Y 双值 = 椭圆弧
-  radius: z.number().positive().optional(),
-  radiusX: z.number().positive().optional(),
-  radiusY: z.number().positive().optional(),
-  label: StepLabelSchema.optional(),
-}).refine(
-  (s) => (s.radius !== undefined) !== (s.radiusX !== undefined && s.radiusY !== undefined),
-  { message: 'arc step requires either radius or both radiusX and radiusY' },
-)
+ArcStepSchema = z
+  .object({
+    kind: z.literal('arc'),
+    startAngle: z.number(),
+    endAngle: z.number(),
+    // 以下三选一：radius 单值 = 圆弧；radiusX/Y 双值 = 椭圆弧
+    radius: z.number().positive().optional(),
+    radiusX: z.number().positive().optional(),
+    radiusY: z.number().positive().optional(),
+    label: StepLabelSchema.optional(),
+  })
+  .refine(s => (s.radius !== undefined) !== (s.radiusX !== undefined && s.radiusY !== undefined), {
+    message: 'arc step requires either radius or both radiusX and radiusY',
+  });
 ```
 
 ### `circlePath` / `ellipsePath` 部分裁剪字段
@@ -68,11 +69,11 @@ CirclePathStepSchema = z.object({
   // 可选：不给画完整圆；给了画部分（半圆 / 1/4 圆等）
   startAngle: z.number().optional(),
   endAngle: z.number().optional(),
-  sweepAngle: z.number().optional(),  // 三键求二（startAngle/endAngle/sweepAngle）
+  sweepAngle: z.number().optional(), // 三键求二（startAngle/endAngle/sweepAngle）
   closed: z.enum(['closed', 'chord', 'open']).optional(),
   // closed 默认值：无角度 → 'closed'（完整圆，原行为）；有角度 → 'chord'
   label: StepLabelSchema.optional(),
-})
+});
 // ellipsePath 同结构，radius → radiusX/radiusY
 ```
 
@@ -89,9 +90,9 @@ RectangleStepSchema = z.object({
   kind: z.literal('rectangle'),
   from: TargetSchema,
   to: TargetSchema,
-  roundedCorners: z.number().nonnegative().optional(),  // 单值，四角同半径；缺省 = 直角
+  roundedCorners: z.number().nonnegative().optional(), // 单值，四角同半径；缺省 = 直角
   label: StepLabelSchema.optional(),
-})
+});
 ```
 
 为什么新加 step 而非在 sugar 层拼 `move + 4 line + cycle`：
@@ -107,12 +108,12 @@ RectangleStepSchema = z.object({
 
 ### `<Circle>`
 
-| 形态 | prop |
-| --- | --- |
-| center + radius | `{ center, radius }` |
-| center + diameter | `{ center, diameter }`（sugar 算 `radius = diameter/2`） |
-| 直径两端 | `{ from, to }`（圆心 = midpoint，半径 = 距离/2） |
-| 包围盒两角 | `{ corner1, corner2 }`（圆心 = midpoint，半径 = min(\|dx\|, \|dy\|)/2） |
+| 形态              | prop                                                                    |
+| ----------------- | ----------------------------------------------------------------------- |
+| center + radius   | `{ center, radius }`                                                    |
+| center + diameter | `{ center, diameter }`（sugar 算 `radius = diameter/2`）                |
+| 直径两端          | `{ from, to }`（圆心 = midpoint，半径 = 距离/2）                        |
+| 包围盒两角        | `{ corner1, corner2 }`（圆心 = midpoint，半径 = min(\|dx\|, \|dy\|)/2） |
 
 **可选部分裁剪 prop**（不给画完整圆）：`startAngle` / `endAngle` / `sweepAngle` 三键求二。带角度时默认 chord 闭合（半圆 / 弓形）。想要扇形用 `<Sector>`，想要纯弧线用 `<Arc>`。
 
@@ -120,11 +121,11 @@ RectangleStepSchema = z.object({
 
 ### `<Ellipse>`
 
-| 形态 | prop |
-| --- | --- |
-| center + 两半径 | `{ center, radiusX, radiusY }` |
+| 形态            | prop                               |
+| --------------- | ---------------------------------- |
+| center + 两半径 | `{ center, radiusX, radiusY }`     |
 | center + 两直径 | `{ center, diameterX, diameterY }` |
-| 包围盒两角 | `{ corner1, corner2 }`（内切椭圆） |
+| 包围盒两角      | `{ corner1, corner2 }`（内切椭圆） |
 
 **可选部分裁剪**：同 Circle。派发同 Circle，step 换 `ellipsePath`。
 
@@ -132,10 +133,10 @@ prop 字段名沿用 IR step 字段名（`radiusX` / `radiusY`，不是 `xRadius
 
 ### `<Arc>`
 
-| 形态 | prop |
-| --- | --- |
-| center + 圆弧（radius） | `{ center, radius, startAngle, endAngle }` 或 `{ center, radius, startAngle, sweepAngle }` 或 `{ center, radius, endAngle, sweepAngle }` |
-| center + 椭圆弧（双半径） | `{ center, radiusX, radiusY, ...角度键 }` |
+| 形态                      | prop                                                                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| center + 圆弧（radius）   | `{ center, radius, startAngle, endAngle }` 或 `{ center, radius, startAngle, sweepAngle }` 或 `{ center, radius, endAngle, sweepAngle }` |
+| center + 椭圆弧（双半径） | `{ center, radiusX, radiusY, ...角度键 }`                                                                                                |
 
 **Arc 必给角度**——与 Circle/Ellipse 带角度的区别 = **不闭合**（纯弧线）。
 
@@ -143,10 +144,10 @@ prop 字段名沿用 IR step 字段名（`radiusX` / `radiusY`，不是 `xRadius
 
 ### `<Sector>`（扇形）
 
-| 形态 | prop |
-| --- | --- |
-| center + 圆 + 角度 | `{ center, radius, startAngle, endAngle }` 三键求二 |
-| center + 椭圆 + 角度 | `{ center, radiusX, radiusY, ...角度键 }` |
+| 形态                 | prop                                                |
+| -------------------- | --------------------------------------------------- |
+| center + 圆 + 角度   | `{ center, radius, startAngle, endAngle }` 三键求二 |
+| center + 椭圆 + 角度 | `{ center, radiusX, radiusY, ...角度键 }`           |
 
 **wedge 闭合**（经圆心）——这是 Sector 的唯一形态；想要 chord 闭合用 `<Circle>` 带角度即可。
 
@@ -160,12 +161,12 @@ prop 字段名沿用 IR step 字段名（`radiusX` / `radiusY`，不是 `xRadius
 
 ### `<Rectangle>`
 
-| 形态 | prop |
-| --- | --- |
-| 两角 | `{ corner1, corner2 }` |
-| 中心 + 宽高 | `{ center, width, height }` |
-| 中心 + 边长（正方形） | `{ center, side }` |
-| 一角 + 宽高 | `{ corner1, width, height }` |
+| 形态                  | prop                         |
+| --------------------- | ---------------------------- |
+| 两角                  | `{ corner1, corner2 }`       |
+| 中心 + 宽高           | `{ center, width, height }`  |
+| 中心 + 边长（正方形） | `{ center, side }`           |
+| 一角 + 宽高           | `{ corner1, width, height }` |
 
 **可选**：`roundedCorners?: number`（单值，四角同半径；缺省直角）——沿用 Node / IR `rectangle` step 同名字段，不另起 `borderRadius`。
 
@@ -173,9 +174,9 @@ prop 字段名沿用 IR step 字段名（`radiusX` / `radiusY`，不是 `xRadius
 
 ### `<Grid>`
 
-| 形态 | prop |
-| --- | --- |
-| 两角 | `{ corner1, corner2 }` |
+| 形态        | prop                        |
+| ----------- | --------------------------- |
+| 两角        | `{ corner1, corner2 }`      |
 | 中心 + 尺寸 | `{ center, width, height }` |
 
 **步长 prop**（三个都支持，简化形态优先）：
@@ -196,10 +197,10 @@ prop 字段名沿用 IR step 字段名（`radiusX` / `radiusY`，不是 `xRadius
 
 #### `<RegularPolygon>`
 
-| 形态 | prop |
-| --- | --- |
-| 中心 + 外接圆半径 + 边数 | `{ center, radius, sides }` |
-| 中心 + 边长 + 边数 | `{ center, sideLength, sides }`（sugar 由边长反算外接半径） |
+| 形态                     | prop                                                        |
+| ------------------------ | ----------------------------------------------------------- |
+| 中心 + 外接圆半径 + 边数 | `{ center, radius, sides }`                                 |
+| 中心 + 边长 + 边数       | `{ center, sideLength, sides }`（sugar 由边长反算外接半径） |
 
 可选 `rotate?: number`（整体起始角，缺省一顶点朝某约定方向，ADR 定）。`sides >= 3` 否则报错。
 
@@ -207,9 +208,9 @@ prop 字段名沿用 IR step 字段名（`radiusX` / `radiusY`，不是 `xRadius
 
 #### `<Star>`
 
-| 形态 | prop |
-| --- | --- |
-| 中心 + 外/内半径 + 角数 | `{ center, outerRadius, innerRadius, points }` |
+| 形态                                 | prop                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| 中心 + 外/内半径 + 角数              | `{ center, outerRadius, innerRadius, points }`                            |
 | 中心 + 外半径 + 角数（内半径按比例） | `{ center, outerRadius, points, innerRatio? }`（缺省比例 ADR 定，如 0.5） |
 
 `points >= 2` 否则报错。可选 `rotate?: number` 同上。派发：`2·points` 个顶点交替外 / 内半径 `line` + `cycle`。
@@ -249,11 +250,11 @@ const Hexagon: FC<{ center: [number, number]; radius: number }> = ({ center, rad
 
 **与 Shape Registry 的分工**（两条独立扩展轴，别混）：
 
-| | Path 级 sugar | Node 级 Shape Registry（alpha.3 已落） |
-| --- | --- | --- |
-| 扩展方式 | 写返回 kernel JSX 的 React FC | `CompileOptions.shapes` 注入 `ShapeDefinition` |
-| 注册 | **零注册** | 显式注入 core |
-| 适用 | 装饰性纯路径（hexagon / star / spiral / bracket…） | 可连接节点（有 id / anchor / 边贴边界 / 含文本） |
+|          | Path 级 sugar                                            | Node 级 Shape Registry（alpha.3 已落）                   |
+| -------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| 扩展方式 | 写返回 kernel JSX 的 React FC                            | `CompileOptions.shapes` 注入 `ShapeDefinition`           |
+| 注册     | **零注册**                                               | 显式注入 core                                            |
+| 适用     | 装饰性纯路径（hexagon / star / spiral / bracket…）       | 可连接节点（有 id / anchor / 边贴边界 / 含文本）         |
 | 为何如此 | 产出普通 `<Path>`，kernel 本就会编译，无 core 钩子可注册 | shape 几何要在编译期算 boundary / anchor / layout / emit |
 
 **用户 sugar 必须守的约束**（均非人为限制——前 3 条源自 builder 行为，第 4 条源自 IR 边界）：
@@ -275,13 +276,13 @@ const Hexagon: FC<{ center: [number, number]; radius: number }> = ({ center, rad
 
 Path 级 sugar 与 Node shape（`shape="..."` + `ShapeDefinition`）共享「形状轮廓」这一几何内核，但**职责与参数化不同**——不是干净的子集关系。
 
-| | sugar shape（`<Circle>` …） | Node shape（`shape="circle"` + `ShapeDefinition`） |
-| --- | --- | --- |
-| 本质 | 一段**绘制**（path 图元） | 一个**可连接对象** |
-| 尺寸来源 | 用户**显式给参数**（radius / sides / angle） | 从**文本 + padding 反推** layout |
-| 数学量 | 只要 outline | outline + **anchor + boundaryPoint + layout** |
-| 输出 primitive | PathPrim（`<path>`） | EllipsePrim / RectPrim … + GroupPrim（含 text） |
-| 有无 | 无 text / anchor / boundary / id | 全有，边贴边界、可被 path 引用 |
+|                | sugar shape（`<Circle>` …）                  | Node shape（`shape="circle"` + `ShapeDefinition`） |
+| -------------- | -------------------------------------------- | -------------------------------------------------- |
+| 本质           | 一段**绘制**（path 图元）                    | 一个**可连接对象**                                 |
+| 尺寸来源       | 用户**显式给参数**（radius / sides / angle） | 从**文本 + padding 反推** layout                   |
+| 数学量         | 只要 outline                                 | outline + **anchor + boundaryPoint + layout**      |
+| 输出 primitive | PathPrim（`<path>`）                         | EllipsePrim / RectPrim … + GroupPrim（含 text）    |
+| 有无           | 无 text / anchor / boundary / id             | 全有，边贴边界、可被 path 引用                     |
 
 > 现状佐证：circle **Node** emit `EllipsePrim`（`<ellipse>`；`geometry/circle.ts` 仅有 `anchor` / `boundaryPoint` / `contains`、无 outline 生成）；sugar `<Circle>` 走 IR `circlePath` → `PathPrim`。同一个圆两边连输出 primitive 都不同，目前零共享。
 
