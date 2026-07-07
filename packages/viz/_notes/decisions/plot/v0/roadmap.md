@@ -36,16 +36,16 @@
 
 经典 grammar of graphics（Wilkinson / ggplot 分层语法）的 8 组件，retikz 全部纳入 v0.1；**交互 / 动画不在 8 组件内**，属 v0.1 之后的能力轴。
 
-| GoG 组件 | retikz 概念 | alpha.1–5 最小骨架 | 阶段二补全（alpha.6+） |
-| --- | --- | --- | --- |
-| **Data** 数据 | `data.ref` + `data.model` + field accessor | ref / accessor ✓ | **数据模型（字段语义类型层）** |
-| **Aesthetics** 美学映射 | encoding 通道 | position(x/y) ✓、color 半成品 | **size / opacity / shape + color 真通道 + series 一等化** |
-| **Geometry** 几何对象 | mark | point/line/area/bar/sector ✓ | **rect / rule / text / ribbon / boxplot** |
-| **Statistics** 统计变换 | transform | sort/groupBy/stack ✓ | **bin / aggregate / density / smooth / quartile** |
-| **Scales** 标度 | scale | linear/band/time/ordinal ✓ | **log/pow/sqrt/quantize/threshold/color gradient + type-driven 选型**（横切 Data/Aesthetics 两轮，非独立 alpha） |
-| **Coordinates** 坐标系统 | coordinate | cartesian2D / polar2D ✓ | **cartesian1D / polar1D / ternary2D**（地图坐标是否独立为 geo domain 仍待决策，也可能作为 plot projection / layout 扩展） |
-| **Coordinate composition** 坐标复合（含 Facets） | coordinate scope / facet / shared scaffold（复用 core `Scope`） | — | **全新：分面小多图 + 同 panel 多坐标轴 / 多 scale 叠加 + 共享坐标骨架的 tracks / rings / lanes** |
-| **Theme** 主题样式 | theme | — | **全新：标题 / 字体 / 背景 / 网格 / 图例外观 / 调色板** |
+| GoG 组件                                         | retikz 概念                                                     | alpha.1–5 最小骨架            | 阶段二补全（alpha.6+）                                                                                                    |
+| ------------------------------------------------ | --------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Data** 数据                                    | `data.ref` + `data.model` + field accessor                      | ref / accessor ✓              | **数据模型（字段语义类型层）**                                                                                            |
+| **Aesthetics** 美学映射                          | encoding 通道                                                   | position(x/y) ✓、color 半成品 | **size / opacity / shape + color 真通道 + series 一等化**                                                                 |
+| **Geometry** 几何对象                            | mark                                                            | point/line/area/bar/sector ✓  | **rect / rule / text / ribbon / boxplot**                                                                                 |
+| **Statistics** 统计变换                          | transform                                                       | sort/groupBy/stack ✓          | **bin / aggregate / density / smooth / quartile**                                                                         |
+| **Scales** 标度                                  | scale                                                           | linear/band/time/ordinal ✓    | **log/pow/sqrt/quantize/threshold/color gradient + type-driven 选型**（横切 Data/Aesthetics 两轮，非独立 alpha）          |
+| **Coordinates** 坐标系统                         | coordinate                                                      | cartesian2D / polar2D ✓       | **cartesian1D / polar1D / ternary2D**（地图坐标是否独立为 geo domain 仍待决策，也可能作为 plot projection / layout 扩展） |
+| **Coordinate composition** 坐标复合（含 Facets） | coordinate scope / facet / shared scaffold（复用 core `Scope`） | —                             | **全新：分面小多图 + 同 panel 多坐标轴 / 多 scale 叠加 + 共享坐标骨架的 tracks / rings / lanes**                          |
+| **Theme** 主题样式                               | theme                                                           | —                             | **全新：标题 / 字体 / 背景 / 网格 / 图例外观 / 调色板**                                                                   |
 
 阶段二把 8 组件按依赖拆成 **alpha.6–9 / 11–15**（薄片拆，每 alpha 一个可渲染薄片，延续「纵向薄片 + 三包 lockstep」）——**每个 alpha 具体做什么见内层 [v0.1/roadmap](./v0.1/roadmap.md) Milestones**（本外层只到版本 / 组件粒度，不复述 alpha 细节）。
 
@@ -88,13 +88,13 @@ plot 聚焦坐标语法本身：transform / encoding / scale / coordinate / mark
 > 来源：[`plot-design.md §15~§16`](../../../architecture/plot-design.md)（与 ggplot/Vega/Highcharts 对比 + 6 条固有软肋复盘，2026-06-07）。
 > 这些是「做完功能也甩不掉」的**架构性**软肋，非功能缺口。处置已定向，落地多在 **v0.1 之后的能力轴**（交互 / 性能），少数随阶段二语法轮（guide·legend 增强）。每条的关键约束以 plot-design §16.2 为准。
 
-| # | 软肋 | 处置方向 | 落地节点 |
-| --- | --- | --- | --- |
-| 1 | 散点/柱每行下沉成一个 `IRNode` → O(N) 物化、大数据天花板 | 配置化：**不需连接时不物化 N 个 Node，下沉成一个稠密 primitive**（`{type:'points', positions, style}` / 多段 Path）。**「可连接」与「物化成独立 Node」绑同一开关**，不是只摘 id。需先补 core 一个 Tier 1 稠密原语 | v0.1 之后·性能；core 原语走 `next-core` |
-| 2 | JSON IR 无 typed-array / 无 in-spec 函数 | typed-array 收益**跟随 #1**（稠密 primitive 扁平数组）；in-spec 函数**永不做**，扩展点在创作层（组件 / 新 mark 包） | 随 #1；函数扩展不排期 |
-| 3 | 批量急切编译、无响应式/增量 | 后续性能阶段处理。守住「纯函数 + 稳定 identity」（alpha.5 `transformedIndex`/`sourceIndex`/id 即 diff key，勿破坏）。**展示类交互用 locator+overlay 不重 lower**，仅数据过滤型交互需重 lower | v0.1 之后·交互 |
-| 4 | 像素尺寸 lower 期钉死、响应式 resize = 重 lower | viewBox 等比缩放兜底（免费）+ 必要时 debounce 重 lower（要 reflow 时）；API 讲清两种语义 | v0.1 之后（按需） |
-| 5 | 纯函数 lowering 无文字度量 → tick/legend 排版上限 | 最终形态 = `measureText` 作**编译期 option/capability 注入**（不进 IR，不破坏 JSON 原则）；勿走两遍渲染回灌、勿长期停在估算 | alpha.6 / alpha.8（数据模型 / 通道带来的 guide·legend 增强） |
-| 6 | Tier1/Tier2 门控、表达力受 Kernel 词汇量限 | **不处理——设计原则**。守纪律：缺能力下沉补 core，不在 plot 绕开自造 | 持续 |
+| #   | 软肋                                                     | 处置方向                                                                                                                                                                                                          | 落地节点                                                     |
+| --- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 1   | 散点/柱每行下沉成一个 `IRNode` → O(N) 物化、大数据天花板 | 配置化：**不需连接时不物化 N 个 Node，下沉成一个稠密 primitive**（`{type:'points', positions, style}` / 多段 Path）。**「可连接」与「物化成独立 Node」绑同一开关**，不是只摘 id。需先补 core 一个 Tier 1 稠密原语 | v0.1 之后·性能；core 原语走 `next-core`                      |
+| 2   | JSON IR 无 typed-array / 无 in-spec 函数                 | typed-array 收益**跟随 #1**（稠密 primitive 扁平数组）；in-spec 函数**永不做**，扩展点在创作层（组件 / 新 mark 包）                                                                                               | 随 #1；函数扩展不排期                                        |
+| 3   | 批量急切编译、无响应式/增量                              | 后续性能阶段处理。守住「纯函数 + 稳定 identity」（alpha.5 `transformedIndex`/`sourceIndex`/id 即 diff key，勿破坏）。**展示类交互用 locator+overlay 不重 lower**，仅数据过滤型交互需重 lower                      | v0.1 之后·交互                                               |
+| 4   | 像素尺寸 lower 期钉死、响应式 resize = 重 lower          | viewBox 等比缩放兜底（免费）+ 必要时 debounce 重 lower（要 reflow 时）；API 讲清两种语义                                                                                                                          | v0.1 之后（按需）                                            |
+| 5   | 纯函数 lowering 无文字度量 → tick/legend 排版上限        | 最终形态 = `measureText` 作**编译期 option/capability 注入**（不进 IR，不破坏 JSON 原则）；勿走两遍渲染回灌、勿长期停在估算                                                                                       | alpha.6 / alpha.8（数据模型 / 通道带来的 guide·legend 增强） |
+| 6   | Tier1/Tier2 门控、表达力受 Kernel 词汇量限               | **不处理——设计原则**。守纪律：缺能力下沉补 core，不在 plot 绕开自造                                                                                                                                               | 持续                                                         |
 
 **定位边界（自觉取舍，非缺陷）**：#1~#5 落实后，定位内架构风险基本覆盖；**仍逆风的唯一组合是「大数据 + 重度数据过滤型交互」同时要**（百万点 + 60fps brush/zoom-filter）——这不是 retikz/plot 的定位（publication/图解层，非大数据强交互 dashboard）。明确划为「不支持/逆风」，不作「待修」。详见 [plot-design §16.3](../../../architecture/plot-design.md)。

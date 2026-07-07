@@ -10,13 +10,13 @@ v0.3 已从「core + react」扩成四个 core 相关包：`@retikz/core`、`@re
 
 但多处文档与包描述仍停在旧能力面。封版前扫到的**具体陈旧字符串**（不会致代码错误，但伤封版观感与 npm 第一印象）：
 
-| 位置 | 现状（陈旧） | 问题 |
-|---|---|---|
-| `packages/kernel/core/package.json` | `"retikz v0.1 core: ..."` | 版本标签停在 v0.1 |
-| `packages/kernel/react/package.json` | `"...Kernel/Sugar JSX components and SVG renderer."` | 只提 SVG，漏 Canvas |
-| `packages/kernel/vanilla/package.json` | `"...mount Scene/IR to SVG DOM, or render to SVG string for SSR."` | 漏 `mountCanvas` / `hydrate` / 动画 |
-| `apps/docs/.../source-code-guide/index.zh.mdx:15` | 「目前官方只提供 React adapter……Canvas / SSR…交由社区或后续推进」 | render 已出 Canvas、vanilla 已出 SSR，表述自相矛盾 |
-| `.../source-code-guide/index.en.mdx:15` | "Only the React adapter is officially provided today. … Canvas / SSR / … left to the community" | 同上（en/zh 同步错） |
+| 位置                                              | 现状（陈旧）                                                                                    | 问题                                               |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `packages/kernel/core/package.json`               | `"retikz v0.1 core: ..."`                                                                       | 版本标签停在 v0.1                                  |
+| `packages/kernel/react/package.json`              | `"...Kernel/Sugar JSX components and SVG renderer."`                                            | 只提 SVG，漏 Canvas                                |
+| `packages/kernel/vanilla/package.json`            | `"...mount Scene/IR to SVG DOM, or render to SVG string for SSR."`                              | 漏 `mountCanvas` / `hydrate` / 动画                |
+| `apps/docs/.../source-code-guide/index.zh.mdx:15` | 「目前官方只提供 React adapter……Canvas / SSR…交由社区或后续推进」                               | render 已出 Canvas、vanilla 已出 SSR，表述自相矛盾 |
+| `.../source-code-guide/index.en.mdx:15`           | "Only the React adapter is officially provided today. … Canvas / SSR / … left to the community" | 同上（en/zh 同步错）                               |
 
 注：`@retikz/render` 的 description 当前是准确的（`SVG (descriptor / string) and Canvas 2D. Subpath exports per backend`），无需改——避免「为改而改」。
 

@@ -6,10 +6,10 @@
 
 ## 进度看板
 
-| # | 子项 | ADR | 状态 |
-|---|---|---|---|
-| S | scope 多态 bbox（MVP: rectangle + circle） | [ADR-02](./02-scope-polymorphic-bbox.md) | ✅ 已实现并同步 changelog |
-| E | 可嵌入 Tier2 in `<Layout>` | [ADR-01](./01-embeddable-tier2-in-layout.md) | ✅ 已实现并同步 changelog |
+| #   | 子项                                       | ADR                                          | 状态                      |
+| --- | ------------------------------------------ | -------------------------------------------- | ------------------------- |
+| S   | scope 多态 bbox（MVP: rectangle + circle） | [ADR-02](./02-scope-polymorphic-bbox.md)     | ✅ 已实现并同步 changelog |
+| E   | 可嵌入 Tier2 in `<Layout>`                 | [ADR-01](./01-embeddable-tier2-in-layout.md) | ✅ 已实现并同步 changelog |
 
 ## S — scope 多态 bounding shape（MVP）
 

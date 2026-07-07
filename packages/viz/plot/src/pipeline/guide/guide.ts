@@ -46,11 +46,17 @@ const DEG_TO_RAD = Math.PI / 180;
 /** 一段直线（首尾两点） */
 type Segment = [readonly [number, number], readonly [number, number]];
 
-type GuideLineStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>> & {
+type GuideLineStyle = Partial<
+  Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
+> & {
   drawOpacity?: number;
 };
-type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>>;
-type GuideTextStyle = Partial<Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>>;
+type GuidePathStyle = Partial<
+  Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
+>;
+type GuideTextStyle = Partial<
+  Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>
+>;
 
 const lineStyleProps = (style: GuideLineStyle | undefined): GuidePathStyle => ({
   ...(style?.stroke !== undefined ? { stroke: style.stroke } : {}),
@@ -128,7 +134,10 @@ const axisTickLineMarkOf = (guide: AxisGuide): { length: number; line: GuidePath
   const mark = guide.ticks?.mark;
   if (mark === false) return false;
   if (mark === undefined) {
-    return { length: guide.ticks?.length ?? AXIS_TICK_LENGTH, line: guide.ticks?.line === false ? false : lineStyleProps(guide.ticks?.line) };
+    return {
+      length: guide.ticks?.length ?? AXIS_TICK_LENGTH,
+      line: guide.ticks?.line === false ? false : lineStyleProps(guide.ticks?.line),
+    };
   }
   if (mark.kind !== AxisTickMarkKind.Line) return null;
   return { length: mark.length ?? AXIS_TICK_LENGTH, line: mark.line === false ? false : lineStyleProps(mark.line) };
@@ -267,10 +276,15 @@ const shiftedAxisTitlePosition = (
 ): [number, number] => {
   const along = shift?.along ?? 0;
   const outward = shift?.normal ?? 0;
-  return [position[0] + tangent[0] * along + normal[0] * outward, position[1] + tangent[1] * along + normal[1] * outward];
+  return [
+    position[0] + tangent[0] * along + normal[0] * outward,
+    position[1] + tangent[1] * along + normal[1] * outward,
+  ];
 };
 
-const axisTitleAnchorAlignTokenOf = (anchor: AxisTitleAnchorValue | undefined): 'start' | 'center' | 'end' | undefined => {
+const axisTitleAnchorAlignTokenOf = (
+  anchor: AxisTitleAnchorValue | undefined,
+): 'start' | 'center' | 'end' | undefined => {
   if (anchor === undefined || anchor === AxisTitleAnchor.Auto) return undefined;
   if (typeof anchor === 'string') return anchor;
   return anchor.align;
@@ -416,7 +430,12 @@ const tickLabelBoxOf = (node: IRNode, index: number, fontSize: number, rotate: n
 const tickLabelBoxesOf = (nodes: ReadonlyArray<IRNode>, fontSize: number, rotate: number): Array<TickLabelBox> =>
   nodes.map((node, index) => tickLabelBoxOf(node, index, fontSize, rotate));
 
-const tickLabelBoxesOverlap = (a: TickLabelBox, b: TickLabelBox, axis: TickLabelLayoutAxis, separation: number): boolean => {
+const tickLabelBoxesOverlap = (
+  a: TickLabelBox,
+  b: TickLabelBox,
+  axis: TickLabelLayoutAxis,
+  separation: number,
+): boolean => {
   const xOverlap = a.x0 - separation < b.x1 && a.x1 + separation > b.x0;
   const yOverlap = a.y0 - separation < b.y1 && a.y1 + separation > b.y0;
   if (axis === 'x') return xOverlap;
@@ -425,9 +444,14 @@ const tickLabelBoxesOverlap = (a: TickLabelBox, b: TickLabelBox, axis: TickLabel
 };
 
 const hasTickLabelOverlap = (boxes: ReadonlyArray<TickLabelBox>, axis: TickLabelLayoutAxis, separation = 0): boolean =>
-  boxes.some((box, index) => boxes.slice(0, index).some(previous => tickLabelBoxesOverlap(previous, box, axis, separation)));
+  boxes.some((box, index) =>
+    boxes.slice(0, index).some(previous => tickLabelBoxesOverlap(previous, box, axis, separation)),
+  );
 
-const sampleTickLabelBoxes = (boxes: ReadonlyArray<TickLabelBox>, sampleSize: number | undefined): Array<TickLabelBox> => {
+const sampleTickLabelBoxes = (
+  boxes: ReadonlyArray<TickLabelBox>,
+  sampleSize: number | undefined,
+): Array<TickLabelBox> => {
   if (sampleSize === undefined || boxes.length <= sampleSize) return [...boxes];
   if (sampleSize === 1) return [boxes[0]];
   const last = boxes.length - 1;
@@ -491,7 +515,11 @@ const applyTickLabelBounds = (
   const [lo, hi] = range[0] <= range[1] ? [range[0], range[1]] : [range[1], range[0]];
   if (overflow === AxisTickLabelOverflow.Hide) {
     return boxes
-      .filter(box => (axis === 'x' ? box.x0 >= lo - tolerance && box.x1 <= hi + tolerance : box.y0 >= lo - tolerance && box.y1 <= hi + tolerance))
+      .filter(box =>
+        axis === 'x'
+          ? box.x0 >= lo - tolerance && box.x1 <= hi + tolerance
+          : box.y0 >= lo - tolerance && box.y1 <= hi + tolerance,
+      )
       .map(box => box.node);
   }
   return boxes.map(box => flushTickLabelBounds(box, axis, range));
@@ -507,7 +535,8 @@ const hideGreedyTickLabels = (
   const kept: Array<TickLabelBox> = preserveEnds ? [boxes[0]] : [];
   const last = preserveEnds ? boxes[boxes.length - 1] : undefined;
   for (const box of boxes.slice(preserveEnds ? 1 : 0, preserveEnds ? -1 : undefined)) {
-    const conflicts = kept.some(keptBox => tickLabelBoxesOverlap(keptBox, box, axis, separation)) ||
+    const conflicts =
+      kept.some(keptBox => tickLabelBoxesOverlap(keptBox, box, axis, separation)) ||
       (last !== undefined && tickLabelBoxesOverlap(last, box, axis, separation));
     if (!conflicts) kept.push(box);
   }
@@ -523,7 +552,9 @@ const hideParityTickLabels = (
 ): Array<IRNode> => {
   if (!hasTickLabelOverlap(boxes, axis, separation)) return boxes.map(box => box.node);
   for (let stride = 2; stride < boxes.length; stride *= 2) {
-    const picked = boxes.filter((_box, index) => index % stride === 0 || (preserveEnds && (index === 0 || index === boxes.length - 1)));
+    const picked = boxes.filter(
+      (_box, index) => index % stride === 0 || (preserveEnds && (index === 0 || index === boxes.length - 1)),
+    );
     if (!hasTickLabelOverlap(picked, axis, separation)) return picked.map(box => box.node);
   }
   return hideGreedyTickLabels(boxes, axis, preserveEnds, separation);
@@ -541,7 +572,8 @@ const applyTickLabelHide = (
   const preserveEnds = hide?.preserveEnds ?? true;
   const separation = hide?.separation ?? 0;
   const boxes = tickLabelBoxesOf(nodes, options.fontSize, rotate);
-  if (strategy === AxisTickLabelHideStrategy.Parity) return hideParityTickLabels(boxes, options.axis, preserveEnds, separation);
+  if (strategy === AxisTickLabelHideStrategy.Parity)
+    return hideParityTickLabels(boxes, options.axis, preserveEnds, separation);
   return hideGreedyTickLabels(boxes, options.axis, preserveEnds, separation);
 };
 
@@ -564,7 +596,7 @@ const layoutTickLabelNodes = (
   options: TickLabelLayoutOptions,
 ): Array<IRNode> => {
   if (nodes.length === 0) return [];
-  const token = axisTickLabelsTokenOf(guide) ?? ({});
+  const token = axisTickLabelsTokenOf(guide) ?? {};
   const layout = token.layout;
   if (layout === false) {
     const rotate = token.rotate ?? 0;
@@ -580,20 +612,27 @@ const layoutTickLabelNodes = (
     .map(node => alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal));
   if (nodes.length === 1) return rotated;
   const visible = applyTickLabelHide(rotated, layoutObject, options, rotate);
-  return applyTickLabelBounds(tickLabelBoxesOf(visible, options.fontSize, rotate), options.axis, options.axisRange, layoutObject);
+  return applyTickLabelBounds(
+    tickLabelBoxesOf(visible, options.fontSize, rotate),
+    options.axis,
+    options.axisRange,
+    layoutObject,
+  );
 };
 
 const axisTitleOf = (
   guide: AxisGuide,
-): ({
-  text: IRNode['text'];
-  padding?: number;
-  placement?: AxisTitlePlacementValue;
-  orientation?: AxisTitleOrientationValue;
-  anchor?: AxisTitleAnchorValue;
-  shift?: AxisTitleShiftValue;
-  layout?: AxisTitleLayoutValue;
-} & GuideTextStyle) | null => {
+):
+  | ({
+      text: IRNode['text'];
+      padding?: number;
+      placement?: AxisTitlePlacementValue;
+      orientation?: AxisTitleOrientationValue;
+      anchor?: AxisTitleAnchorValue;
+      shift?: AxisTitleShiftValue;
+      layout?: AxisTitleLayoutValue;
+    } & GuideTextStyle)
+  | null => {
   if (guide.title === undefined) return null;
   if (typeof guide.title === 'string') return { text: guide.title };
   return {
@@ -615,9 +654,7 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
     .map(line => {
       if (typeof line === 'string') return line;
       if ('text' in line) return line.text;
-      return line.runs
-        .map(run => ('text' in run ? run.text : run.tex))
-        .join('');
+      return line.runs.map(run => ('text' in run ? run.text : run.tex)).join('');
     })
     .join('\n');
 };
@@ -635,11 +672,7 @@ const axisMinorGridTokenOf = (grid: AxisGridToken | undefined): AxisMinorGridTok
 const axisGridStyleOf = (grid: AxisGridToken | AxisMinorGridToken | undefined): GuidePathStyle | undefined =>
   grid === undefined ? undefined : lineStyleProps(grid);
 
-const gridCoordinateOf = (
-  scale: PositionScale,
-  value: ScalarValue,
-  bandPosition: number | undefined,
-): number => {
+const gridCoordinateOf = (scale: PositionScale, value: ScalarValue, bandPosition: number | undefined): number => {
   const coordinate = scale.coordinate(value);
   if (!Number.isFinite(coordinate) || !Number.isFinite(scale.bandwidth) || scale.bandwidth <= 0) return coordinate;
   return coordinate + ((bandPosition ?? 0.5) - 0.5) * scale.bandwidth;
@@ -667,7 +700,10 @@ const filterOverlappingGridTicks = (
     .filter(value => Number.isFinite(value));
   const indices = ticks.values
     .map((value, index) => ({ index, projected: coordinate(value) }))
-    .filter(({ projected }) => !referenceCoordinates.some(referenceProjected => Math.abs(referenceProjected - projected) <= 1e-6))
+    .filter(
+      ({ projected }) =>
+        !referenceCoordinates.some(referenceProjected => Math.abs(referenceProjected - projected) <= 1e-6),
+    )
     .map(({ index }) => index);
   return {
     values: indices.map(index => ticks.values[index]),
@@ -752,13 +788,14 @@ const cartesianAxisSideOf = (guide: AxisGuide, isX: boolean): CartesianAxisSide 
 };
 
 const axisPlacementOffsetOf = (guide: AxisGuide): number =>
-  guide.placement?.kind === AxisPlacementKind.Side || guide.placement?.kind === AxisPlacementKind.Edge || guide.placement?.kind === AxisPlacementKind.Origin
+  guide.placement?.kind === AxisPlacementKind.Side ||
+  guide.placement?.kind === AxisPlacementKind.Edge ||
+  guide.placement?.kind === AxisPlacementKind.Origin
     ? (guide.placement.offset ?? 0)
     : 0;
 
 /** y 轴标题默认旋转：让文字局部顶部朝向轴线。 */
-const cartesianYAxisTitleRotateOf = (side: CartesianAxisSide): number =>
-  side === AxisCardinalSide.Right ? -90 : 90;
+const cartesianYAxisTitleRotateOf = (side: CartesianAxisSide): number => (side === AxisCardinalSide.Right ? -90 : 90);
 
 /**
  * 极坐标点投影的窄返回值 helper。
@@ -851,8 +888,14 @@ const lowerCartesianGuide = (
           [axisX, top],
         ];
   })();
-  const axisRange: readonly [number, number] = isX ? [axisLine[0][0], axisLine[1][0]] : [axisLine[0][1], axisLine[1][1]];
-  const tickEntries = ticks.values.map((value, index) => ({ value, label: ticks.labels[index], projected: project.coordinate(value) }));
+  const axisRange: readonly [number, number] = isX
+    ? [axisLine[0][0], axisLine[1][0]]
+    : [axisLine[0][1], axisLine[1][1]];
+  const tickEntries = ticks.values.map((value, index) => ({
+    value,
+    label: ticks.labels[index],
+    projected: project.coordinate(value),
+  }));
   const visibleTickMarkEntries = tickEntries.filter(entry => {
     if (shouldHideCrossingTickMark(guide, entry.value)) return false;
     return !shouldHideEndpointTickMark(guide, entry.projected, axisRange, tickLength);
@@ -906,11 +949,7 @@ const lowerCartesianGuide = (
             }
             return isX
               ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
-              : [
-                  axisX +
-                    tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2),
-                  p,
-                ];
+              : [axisX + tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2), p];
           })();
           const node: IRNode = { type: 'node', position, text, ...tickLabelStyle };
           if (isCornerLabel) {
@@ -921,11 +960,11 @@ const lowerCartesianGuide = (
         });
         return [
           ...layoutTickLabelNodes(guide, layoutLabels, {
-          fontSize,
-          mode: isX ? 'cartesian-x' : 'cartesian-y',
-          axis: isX ? 'x' : 'y',
-          axisRange: isX ? [left, right] : [top, bottom],
-          sideNormal: isX ? [0, tickDirection] : [tickDirection, 0],
+            fontSize,
+            mode: isX ? 'cartesian-x' : 'cartesian-y',
+            axis: isX ? 'x' : 'y',
+            axisRange: isX ? [left, right] : [top, bottom],
+            sideNormal: isX ? [0, tickDirection] : [tickDirection, 0],
           }),
           ...cornerLabels,
         ];
@@ -956,30 +995,32 @@ const lowerCartesianGuide = (
     const titleStyle = axisTitleTextStyleOf(title, axisTangent);
     return { type: 'node', position, text: title.text, ...titleStyle, ...(rotate !== undefined ? { rotate } : {}) };
   })();
-  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...tickShapeNodes, ...labels];
+  const axisChildren: Array<IRPath | IRNode> = [
+    ...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>),
+    ...tickShapeNodes,
+    ...labels,
+  ];
   if (titleNode) axisChildren.push(titleNode);
-  const axisLayer: IRScope | null = axisChildren.length > 0
-    ? (() => {
-        return {
-        type: 'scope',
-        ...guideScopeProps(guide, 'axis', context),
-        pathDefault: { stroke: 'currentColor' },
-        nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
-        children: axisChildren,
-        };
-      })()
-    : null;
+  const axisLayer: IRScope | null =
+    axisChildren.length > 0
+      ? (() => {
+          return {
+            type: 'scope',
+            ...guideScopeProps(guide, 'axis', context),
+            pathDefault: { stroke: 'currentColor' },
+            nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
+            children: axisChildren,
+          };
+        })()
+      : null;
 
   // ---- 网格层（grid:true 才出）----
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
     const grid = axisGridTokenOf(guide);
     const majorBandPosition = grid?.bandPosition;
-    const majorTicks = resolveAxisGridTicks(
-      project,
-      ticks,
-      grid,
-      value => gridCoordinateOf(project, value, majorBandPosition),
+    const majorTicks = resolveAxisGridTicks(project, ticks, grid, value =>
+      gridCoordinateOf(project, value, majorBandPosition),
     );
     const gridSegments: Array<Segment> = majorTicks.values.map(value => {
       const p = gridCoordinateOf(project, value, majorBandPosition);
@@ -996,33 +1037,32 @@ const lowerCartesianGuide = (
     const gridPath = segmentsToPath(gridSegments, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
-    const minorTicks = minorGrid === undefined
-      ? null
-      : filterOverlappingGridTicks(
-          resolveAxisGridTicks(
-            project,
-            ticks,
-            minorGrid,
+    const minorTicks =
+      minorGrid === undefined
+        ? null
+        : filterOverlappingGridTicks(
+            resolveAxisGridTicks(project, ticks, minorGrid, value =>
+              gridCoordinateOf(project, value, minorBandPosition),
+            ),
+            majorTicks,
             value => gridCoordinateOf(project, value, minorBandPosition),
-          ),
-          majorTicks,
-          value => gridCoordinateOf(project, value, minorBandPosition),
-          value => gridCoordinateOf(project, value, majorBandPosition),
-        );
-    const minorSegments: Array<Segment> = minorTicks === null
-      ? []
-      : minorTicks.values.map(value => {
-          const p = gridCoordinateOf(project, value, minorBandPosition);
-          return isX
-            ? [
-                [p, top],
-                [p, bottom],
-              ]
-            : [
-                [left, p],
-                [right, p],
-              ];
-        });
+            value => gridCoordinateOf(project, value, majorBandPosition),
+          );
+    const minorSegments: Array<Segment> =
+      minorTicks === null
+        ? []
+        : minorTicks.values.map(value => {
+            const p = gridCoordinateOf(project, value, minorBandPosition);
+            return isX
+              ? [
+                  [p, top],
+                  [p, bottom],
+                ]
+              : [
+                  [left, p],
+                  [right, p],
+                ];
+          });
     const minorGridPath = segmentsToPath(minorSegments, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
     const gridChildren = [gridPath, minorGridPath].filter((path): path is IRPath => path !== null);
     if (gridChildren.length > 0) {
@@ -1081,10 +1121,7 @@ const lowerAngularAxis = (
   // ---- 轴层 ----
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const theta = scale.coordinate(value);
-    return [
-      finitePolarPoint(frame.center, theta, outer),
-      finitePolarPoint(frame.center, theta, outer + tickLength),
-    ];
+    return [finitePolarPoint(frame.center, theta, outer), finitePolarPoint(frame.center, theta, outer + tickLength)];
   });
   const tickShapePlacements: Array<TickShapePlacement> = ticks.values.map(value => {
     const theta = scale.coordinate(value);
@@ -1105,11 +1142,7 @@ const lowerAngularAxis = (
         guide,
         ticks.values.map((value, index): IRNode => {
           const theta = scale.coordinate(value);
-          const position = finitePolarPoint(
-            frame.center,
-            theta,
-            outer + tickLength + tickLabelGap + fontSize / 2,
-          );
+          const position = finitePolarPoint(frame.center, theta, outer + tickLength + tickLabelGap + fontSize / 2);
           return { type: 'node', position, text: ticks.labels[index], ...tickLabelStyle };
         }),
         { fontSize, mode: 'generic', axis: 'both' },
@@ -1121,10 +1154,7 @@ const lowerAngularAxis = (
     const titleAngle = frame.startAngle + (frame.endAngle - frame.startAngle) * placementRatio;
     const titleRadians = titleAngle * DEG_TO_RAD;
     const tangentSign = frame.endAngle >= frame.startAngle ? 1 : -1;
-    const axisTangent: [number, number] = [
-      -Math.sin(titleRadians) * tangentSign,
-      Math.cos(titleRadians) * tangentSign,
-    ];
+    const axisTangent: [number, number] = [-Math.sin(titleRadians) * tangentSign, Math.cos(titleRadians) * tangentSign];
     const axisNormal: [number, number] = [Math.cos(titleRadians), Math.sin(titleRadians)];
     const rotate = axisTitleRotateOf(title, undefined, axisTangent);
     const basePosition = finitePolarPoint(
@@ -1155,11 +1185,8 @@ const lowerAngularAxis = (
   if (guide.grid) {
     const grid = axisGridTokenOf(guide);
     const majorBandPosition = grid?.bandPosition;
-    const majorTicks = resolveAxisGridTicks(
-      scale,
-      ticks,
-      grid,
-      value => gridCoordinateOf(scale, value, majorBandPosition),
+    const majorTicks = resolveAxisGridTicks(scale, ticks, grid, value =>
+      gridCoordinateOf(scale, value, majorBandPosition),
     );
     const spokes: Array<Segment> = majorTicks.values.map(value => {
       const theta = gridCoordinateOf(scale, value, majorBandPosition);
@@ -1168,25 +1195,25 @@ const lowerAngularAxis = (
     const gridPath = segmentsToPath(spokes, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
-    const minorTicks = minorGrid === undefined
-      ? null
-      : filterOverlappingGridTicks(
-          resolveAxisGridTicks(
-            scale,
-            ticks,
-            minorGrid,
+    const minorTicks =
+      minorGrid === undefined
+        ? null
+        : filterOverlappingGridTicks(
+            resolveAxisGridTicks(scale, ticks, minorGrid, value => gridCoordinateOf(scale, value, minorBandPosition)),
+            majorTicks,
             value => gridCoordinateOf(scale, value, minorBandPosition),
-          ),
-          majorTicks,
-          value => gridCoordinateOf(scale, value, minorBandPosition),
-          value => gridCoordinateOf(scale, value, majorBandPosition),
-        );
-    const minorSpokes: Array<Segment> = minorTicks === null
-      ? []
-      : minorTicks.values.map(value => {
-          const theta = gridCoordinateOf(scale, value, minorBandPosition);
-          return [finitePolarPoint(frame.center, theta, frame.innerRadius), finitePolarPoint(frame.center, theta, outer)];
-        });
+            value => gridCoordinateOf(scale, value, majorBandPosition),
+          );
+    const minorSpokes: Array<Segment> =
+      minorTicks === null
+        ? []
+        : minorTicks.values.map(value => {
+            const theta = gridCoordinateOf(scale, value, minorBandPosition);
+            return [
+              finitePolarPoint(frame.center, theta, frame.innerRadius),
+              finitePolarPoint(frame.center, theta, outer),
+            ];
+          });
     const minorGridPath = segmentsToPath(minorSpokes, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
     const gridChildren = [gridPath, minorGridPath].filter((path): path is IRPath => path !== null);
     if (gridChildren.length > 0) {
@@ -1239,7 +1266,11 @@ const lowerRadialAxis = (
   const tickShapePlacements: Array<TickShapePlacement> = ticks.values.map(value => {
     const radius = scale.coordinate(value);
     const point = finitePolarPoint(frame.center, baseAngle, radius);
-    return { point, normal: [-tangent[0], -tangent[1]], tangent: [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)] };
+    return {
+      point,
+      normal: [-tangent[0], -tangent[1]],
+      tangent: [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)],
+    };
   });
   const axisLineStyle = axisLineStyleOf(guide);
   const tickLineStyle = axisTickLineStyleOf(guide);
@@ -1250,13 +1281,13 @@ const lowerRadialAxis = (
     ? layoutTickLabelNodes(
         guide,
         ticks.values.map((value, index): IRNode => {
-        const radius = scale.coordinate(value);
-        const point = finitePolarPoint(frame.center, baseAngle, radius);
-        const text = ticks.labels[index];
-        // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
-        const offset = tickLength + tickLabelGap + fontSize / 2;
-        const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
-        return { type: 'node', position, text, ...tickLabelStyle };
+          const radius = scale.coordinate(value);
+          const point = finitePolarPoint(frame.center, baseAngle, radius);
+          const text = ticks.labels[index];
+          // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
+          const offset = tickLength + tickLabelGap + fontSize / 2;
+          const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
+          return { type: 'node', position, text, ...tickLabelStyle };
         }),
         { fontSize, mode: 'generic', axis: 'both' },
       )
@@ -1270,7 +1301,10 @@ const lowerRadialAxis = (
     const axisNormal: [number, number] = [-tangent[0], -tangent[1]];
     const rotate = axisTitleRotateOf(title, undefined, axisTangent);
     const offset = tickLength + tickLabelGap + fontSize + (title.padding ?? labelGap) + fontSize / 2;
-    const basePosition: [number, number] = [titlePoint[0] + axisNormal[0] * offset, titlePoint[1] + axisNormal[1] * offset];
+    const basePosition: [number, number] = [
+      titlePoint[0] + axisNormal[0] * offset,
+      titlePoint[1] + axisNormal[1] * offset,
+    ];
     const titleStyle = axisTitleTextStyleOf(title, axisTangent);
     labels.push({
       type: 'node',
@@ -1281,53 +1315,58 @@ const lowerRadialAxis = (
     });
   }
 
-  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...tickShapeNodes, ...labels];
-  const axisLayer: IRScope | null = axisChildren.length > 0
-    ? {
-        type: 'scope',
-        ...guideScopeProps(guide, 'axis', context),
-        pathDefault: { stroke: 'currentColor' },
-        nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
-        children: axisChildren,
-      }
-    : null;
+  const axisChildren: Array<IRPath | IRNode> = [
+    ...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>),
+    ...tickShapeNodes,
+    ...labels,
+  ];
+  const axisLayer: IRScope | null =
+    axisChildren.length > 0
+      ? {
+          type: 'scope',
+          ...guideScopeProps(guide, 'axis', context),
+          pathDefault: { stroke: 'currentColor' },
+          nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
+          children: axisChildren,
+        }
+      : null;
 
   // ---- 网格层（grid:true → 每径向刻度一个同心圆环）----
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
     const grid = axisGridTokenOf(guide);
     const majorBandPosition = grid?.bandPosition;
-    const majorTicks = resolveAxisGridTicks(
-      scale,
-      ticks,
-      grid,
-      value => gridCoordinateOf(scale, value, majorBandPosition),
+    const majorTicks = resolveAxisGridTicks(scale, ticks, grid, value =>
+      gridCoordinateOf(scale, value, majorBandPosition),
     );
     const rings: Array<IRPath> = majorTicks.values
       .map(value => gridCoordinateOf(scale, value, majorBandPosition))
       .filter(radius => Number.isFinite(radius) && radius > 0)
-      .map(radius => ({ ...arcPath(frame, radius), ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }) }));
+      .map(radius => ({
+        ...arcPath(frame, radius),
+        ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }),
+      }));
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
-    const minorTicks = minorGrid === undefined
-      ? null
-      : filterOverlappingGridTicks(
-          resolveAxisGridTicks(
-            scale,
-            ticks,
-            minorGrid,
+    const minorTicks =
+      minorGrid === undefined
+        ? null
+        : filterOverlappingGridTicks(
+            resolveAxisGridTicks(scale, ticks, minorGrid, value => gridCoordinateOf(scale, value, minorBandPosition)),
+            majorTicks,
             value => gridCoordinateOf(scale, value, minorBandPosition),
-          ),
-          majorTicks,
-          value => gridCoordinateOf(scale, value, minorBandPosition),
-          value => gridCoordinateOf(scale, value, majorBandPosition),
-        );
-    const minorRings: Array<IRPath> = minorTicks === null
-      ? []
-      : minorTicks.values
-          .map(value => gridCoordinateOf(scale, value, minorBandPosition))
-          .filter(radius => Number.isFinite(radius) && radius > 0)
-          .map(radius => ({ ...arcPath(frame, radius), ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }) }));
+            value => gridCoordinateOf(scale, value, majorBandPosition),
+          );
+    const minorRings: Array<IRPath> =
+      minorTicks === null
+        ? []
+        : minorTicks.values
+            .map(value => gridCoordinateOf(scale, value, minorBandPosition))
+            .filter(radius => Number.isFinite(radius) && radius > 0)
+            .map(radius => ({
+              ...arcPath(frame, radius),
+              ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }),
+            }));
     const gridChildren = [...rings, ...minorRings];
     if (gridChildren.length > 0) {
       gridLayer = {
@@ -1399,7 +1438,10 @@ const lowerTernaryGuide = (
   const tickShapePlacements: Array<TickShapePlacement> = [];
   const tickLabelNodes: Array<IRNode> = [];
   const axisTangentLength = Math.hypot(apex[0] - baseP[0], apex[1] - baseP[1]) || 1;
-  const axisTangent: [number, number] = [(apex[0] - baseP[0]) / axisTangentLength, (apex[1] - baseP[1]) / axisTangentLength];
+  const axisTangent: [number, number] = [
+    (apex[0] - baseP[0]) / axisTangentLength,
+    (apex[1] - baseP[1]) / axisTangentLength,
+  ];
   ticks.values.forEach((value, index) => {
     const t = Number(value);
     const point = lerp2(baseP, apex, t);
@@ -1416,7 +1458,11 @@ const lowerTernaryGuide = (
       });
     }
   });
-  const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, { fontSize, mode: 'generic', axis: 'both' });
+  const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, {
+    fontSize,
+    mode: 'generic',
+    axis: 'both',
+  });
   const title = axisTitleOf(guide);
   if (title !== null) {
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
@@ -1439,16 +1485,21 @@ const lowerTernaryGuide = (
   const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
-  const axisChildren: Array<IRPath | IRNode> = [...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>), ...tickShapeNodes, ...labels];
-  const axisLayer: IRScope | null = axisChildren.length > 0
-    ? {
-        type: 'scope',
-        ...guideScopeProps(guide, 'axis', context),
-        pathDefault: { stroke: 'currentColor' },
-        nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
-        children: axisChildren,
-      }
-    : null;
+  const axisChildren: Array<IRPath | IRNode> = [
+    ...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>),
+    ...tickShapeNodes,
+    ...labels,
+  ];
+  const axisLayer: IRScope | null =
+    axisChildren.length > 0
+      ? {
+          type: 'scope',
+          ...guideScopeProps(guide, 'axis', context),
+          pathDefault: { stroke: 'currentColor' },
+          nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
+          children: axisChildren,
+        }
+      : null;
 
   // ---- 网格层（grid:true → 内部刻度处平行 0 边的等值线）----
   let gridLayer: IRScope | null = null;
@@ -1464,13 +1515,14 @@ const lowerTernaryGuide = (
     }
     const gridPath = segmentsToPath(isoSegments, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
     const minorGrid = axisMinorGridTokenOf(grid);
-    const minorTicks = minorGrid === undefined
-      ? null
-      : filterOverlappingGridTicks(
-          resolveAxisGridTicks(gridScale, ticks, minorGrid, value => Number(value)),
-          majorTicks,
-          value => Number(value),
-        );
+    const minorTicks =
+      minorGrid === undefined
+        ? null
+        : filterOverlappingGridTicks(
+            resolveAxisGridTicks(gridScale, ticks, minorGrid, value => Number(value)),
+            majorTicks,
+            value => Number(value),
+          );
     const minorIsoSegments: Array<Segment> = [];
     if (minorTicks !== null) {
       for (const value of minorTicks.values) {
@@ -1594,7 +1646,11 @@ export const lowerCustomAxis = (
       });
     }
   }
-  const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, { fontSize, mode: 'generic', axis: 'both' });
+  const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, {
+    fontSize,
+    mode: 'generic',
+    axis: 'both',
+  });
   const title = axisTitleOf(guide);
   if (title !== null) {
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
@@ -1768,8 +1824,16 @@ const legendTextNode = (node: IRNode): IRNode => ({
  */
 export const lowerLegend = (input: LegendInput): IRScope => {
   const { fontSize, band, orient } = input;
-  const { swatchSize, swatchGap, entryGap, titleGap, rampLength, rampThickness, title: titleStyle, label: labelStyle } =
-    input.style;
+  const {
+    swatchSize,
+    swatchGap,
+    entryGap,
+    titleGap,
+    rampLength,
+    rampThickness,
+    title: titleStyle,
+    label: labelStyle,
+  } = input.style;
   const children: Array<IRNode> = [];
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;

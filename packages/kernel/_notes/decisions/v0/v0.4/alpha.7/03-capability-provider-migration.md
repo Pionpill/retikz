@@ -41,7 +41,6 @@ export type CompileOptions = {
 2. `CompileOptions` 是用户入口，统一形态能显著降低自定义能力的学习成本。
 3. compile 只消费 resolve 后 registry，能让 renderer / adapter 不理解 provider 细节。
 
-
 ## 不在本 ADR 范围
 
 - 不新增新的 provider capability。

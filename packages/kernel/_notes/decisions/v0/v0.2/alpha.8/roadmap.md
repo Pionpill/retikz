@@ -91,7 +91,7 @@ export type ArrowEmitContext = {
 ```ts
 // marker 局部几何：path / ellipse / rect / group；禁 text、禁外部资源引用、禁 arrow 字段
 export type MarkerPrimitive =
-  | MarkerPathPrim          // path：fill 仅 string | { kind:'contextStroke' }，无 arrowStart/End、无 resourceRef
+  | MarkerPathPrim // path：fill 仅 string | { kind:'contextStroke' }，无 arrowStart/End、无 resourceRef
   | MarkerEllipsePrim
   | MarkerRectPrim
   | { type: 'group'; transforms?: Array<Transform>; children: Array<MarkerPrimitive> };
@@ -100,13 +100,13 @@ export type MarkerPrimitive =
 
 ### 三处配套改动（对齐 alpha.3 开放 node.shape 先例）
 
-| 改动 | 文件 | 形态 |
-| --- | --- | --- |
-| `arrowDetail.shape` 开放为 string | `ir/path/arrow.ts:43` | `z.nativeEnum(ARROW_SHAPES)` → `z.string()`；未注册名编译期 throw |
-| `CompileOptions.arrows` 注入 | `compile/compile.ts:94` | `arrows?: Record<string, ArrowDefinition>`；有效表 = `{ ...BUILTIN_ARROWS, ...arrows }`，同名覆盖发 warn（仿 `SHAPE_OVERRIDES_BUILTIN`） |
-| 内置 7 降注册项 | 新 `arrows/`（仿 `shapes/`） | `BUILTIN_ARROWS: Record<string, ArrowDefinition>`；7 内置无特权 |
-| compile 查表算 shrink | `compile/path/arrow-geometry.ts` / `shrink.ts` | 不再 `switch(shape)`，改读 `def` 的 `lineContactX` / `tipX` 等 |
-| render 用 def.emit | `react/src/render/arrowMarkers.tsx` | 不再 `switch(shape)`，把 `def.emit(ctx)` 的 primitive 塞进 `<marker>` |
+| 改动                              | 文件                                           | 形态                                                                                                                                     |
+| --------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `arrowDetail.shape` 开放为 string | `ir/path/arrow.ts:43`                          | `z.nativeEnum(ARROW_SHAPES)` → `z.string()`；未注册名编译期 throw                                                                        |
+| `CompileOptions.arrows` 注入      | `compile/compile.ts:94`                        | `arrows?: Record<string, ArrowDefinition>`；有效表 = `{ ...BUILTIN_ARROWS, ...arrows }`，同名覆盖发 warn（仿 `SHAPE_OVERRIDES_BUILTIN`） |
+| 内置 7 降注册项                   | 新 `arrows/`（仿 `shapes/`）                   | `BUILTIN_ARROWS: Record<string, ArrowDefinition>`；7 内置无特权                                                                          |
+| compile 查表算 shrink             | `compile/path/arrow-geometry.ts` / `shrink.ts` | 不再 `switch(shape)`，改读 `def` 的 `lineContactX` / `tipX` 等                                                                           |
+| render 用 def.emit                | `react/src/render/arrowMarkers.tsx`            | 不再 `switch(shape)`，把 `def.emit(ctx)` 的 primitive 塞进 `<marker>`                                                                    |
 
 ### 颜色继承（核心难点，依赖 alpha.7 Paint）
 
@@ -136,10 +136,10 @@ export type PathGeneratorDefinition = {
 };
 
 export type PathGeneratorContext = {
-  from: Position;                 // 当前游标（世界系）
-  to?: Position;                  // step 带 target 时 resolve 后的终点
-  params: Record<string, unknown>;       // paramsSchema 校验后
-  resolvedTargets: Record<string, Position>;  // targetParams resolve 后
+  from: Position; // 当前游标（世界系）
+  to?: Position; // step 带 target 时 resolve 后的终点
+  params: Record<string, unknown>; // paramsSchema 校验后
+  resolvedTargets: Record<string, Position>; // targetParams resolve 后
   round: (n: number) => number;
 };
 ```
@@ -154,7 +154,9 @@ export const GeneratorStepSchema = z.object({
   kind: z.literal('generator'),
   name: z.string().min(1).describe('Registered path generator name; unregistered → compile throw'),
   to: TargetSchema.optional().describe('Optional destination (passed to generator as ctx.to)'),
-  params: JsonObjectSchema.describe('Generator params; JSON-only (IR serializable). External paramsSchema refines this.'),
+  params: JsonObjectSchema.describe(
+    'Generator params; JSON-only (IR serializable). External paramsSchema refines this.',
+  ),
   label: StepLabelSchema.optional(),
 });
 // StepSchema union 追加 GeneratorStepSchema
@@ -187,7 +189,13 @@ export const GeneratorStepSchema = z.object({
     /** tile 几何：局部 tile 坐标系产 MarkerPrimitive（与 ArrowDefinition.emit 同窄子集、同 contextStroke 颜色继承） */
     emit: (ctx: PatternEmitContext) => Iterable<MarkerPrimitive>;
   };
-  export type PatternEmitContext = { size: number; color: PaintValue; background?: string; lineWidth: number; round: (n: number) => number };
+  export type PatternEmitContext = {
+    size: number;
+    color: PaintValue;
+    background?: string;
+    lineWidth: number;
+    round: (n: number) => number;
+  };
   ```
 - compile：**零改动**——`createPaintRegistry`（alpha.7）已按 JSON 去重任意 `PaintSpec`，pattern 自定义 motif 自动进资源表 + 拿 resourceRef；只是 react 物化 `<pattern>` 时改为查 `{ ...BUILTIN_PATTERNS, ...patterns }` 取 `def.emit` 而非写死 switch。
 - 颜色继承：`PatternEmitContext.color` 复用 `PaintValue`（含 `currentColor`），与 arrow 同。

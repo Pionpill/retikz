@@ -14,11 +14,11 @@
 
 这三种正是 d3 / GoG 的三个离散化 scale：
 
-| scale | 切分依据 | d3 | 典型 |
-|---|---|---|---|
-| **quantize** | domain 等宽切 N 段 | `scaleQuantize` | 均匀分布的连续量 |
-| **threshold** | 用户自定义断点 | `scaleThreshold` | 业务阈值 / 告警 |
-| **quantile** | 数据分位（每档样本数相等） | `scaleQuantile` | 偏斜数据 / 抗离群 |
+| scale         | 切分依据                   | d3               | 典型              |
+| ------------- | -------------------------- | ---------------- | ----------------- |
+| **quantize**  | domain 等宽切 N 段         | `scaleQuantize`  | 均匀分布的连续量  |
+| **threshold** | 用户自定义断点             | `scaleThreshold` | 业务阈值 / 告警   |
+| **quantile**  | 数据分位（每档样本数相等） | `scaleQuantile`  | 偏斜数据 / 抗离群 |
 
 同类库：Vega-Lite `bin` + `quantize/quantile/threshold`；ggplot2 `scale_*_steps`（分箱渐变）/ `cut` + 离散色；Observable Plot `color: { type: 'quantize'|'quantile'|'threshold' }`。
 
@@ -71,7 +71,6 @@ export const PlotScale = {
 - **quantile 显式 domain = schema strip（非硬抛）**：决策⑤原写「给显式 domain → fail-loud」，落地为 `QuantileColorScaleSchema` 不定义 `domain` 字段、由 `z.object` 默认 strip（与全仓 scale schema 均裸 `z.object` 风格一致，不给 quantile 单独 `.strict()`）。效果是显式 domain 被静默剥离、lowering 不读、分位纯由数据定——目的达成（用户 domain 不生效），但形式是 strip 而非抛错。
 - **count×range 一致性也 fail-loud**：除 threshold 的 `range.length === breakpoints.length + 1`，quantize/quantile 在 **`count` 显式且 ≠ `range.length`** 时也 fail-loud（与 threshold 对称，修 adversarial WARNING；只给 range 省 count 仍宽容，档数 = range.length）。
 - **数值字段 `.finite()`**：`breakpoints` / quantize `domain`（及 ADR-01 sequential/diverging `domain`）的数值改 `z.number().finite()`，parse 期拒 `Infinity`/`-Infinity`（修 adversarial BLOCKING：裸 `z.number()` 放过 Infinity，既过 schema 又破坏 JSON round-trip）。
-
 
 ## 不在本 ADR 范围
 

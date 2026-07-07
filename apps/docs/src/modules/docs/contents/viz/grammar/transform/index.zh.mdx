@@ -11,13 +11,13 @@ plot 的变换运行在[数据流](/viz/data)整理出的 canonical 行之后、
 
 ## 职责一览
 
-| 分类       | plot 注册的成员                  | 行数    | 适合场景                         |
-| ---------- | -------------------------------- | ------- | -------------------------------- |
-| 区间与抖动 | `derive-interval` / `jitter`     | N → N   | 甘特条、非零基线柱、散点抖开     |
-| 堆叠与占比 | `stack` / `normalize`            | N → N   | 堆叠柱、堆叠面积、百分比堆叠     |
-| 分箱统计   | `bin`                            | N → B   | 直方图、箱线图统计字段组合       |
-| 采样统计   | `density` / `smooth`             | N → S   | 密度曲线、密度面积、趋势线       |
-| 行配对     | `relate`                         | N → P   | 从 source / target 行生成关系字段 |
+| 分类       | plot 注册的成员              | 行数  | 适合场景                          |
+| ---------- | ---------------------------- | ----- | --------------------------------- |
+| 区间与抖动 | `derive-interval` / `jitter` | N → N | 甘特条、非零基线柱、散点抖开      |
+| 堆叠与占比 | `stack` / `normalize`        | N → N | 堆叠柱、堆叠面积、百分比堆叠      |
+| 分箱统计   | `bin`                        | N → B | 直方图、箱线图统计字段组合        |
+| 采样统计   | `density` / `smooth`         | N → S | 密度曲线、密度面积、趋势线        |
+| 行配对     | `relate`                     | N → P | 从 source / target 行生成关系字段 |
 
 这些变换的输出仍然是普通数据行。变换产生的字段（如 `y0` / `y1`、`binStart` / `binEnd`、`density`、`sourceId` / `targetId`）不需要提前写进 model；被变换读取的输入字段仍然要走数据模型和校验。
 
@@ -65,7 +65,9 @@ plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-loc
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/grammar/transform/row">
     <span className="font-semibold">派生与抖动</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">按单行字段补出区间，或在数据空间做确定性抖点。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      按单行字段补出区间，或在数据空间做确定性抖点。
+    </span>
   </LinkedCard>
   <LinkedCard href="/viz/grammar/transform/annotation">
     <span className="font-semibold">堆叠与占比</span>
@@ -73,7 +75,9 @@ plot 级 transform 会影响整张图的 scale、guide 和所有 mark。mark-loc
   </LinkedCard>
   <LinkedCard href="/viz/grammar/transform/summary">
     <span className="font-semibold">分箱与统计图层</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">把明细行变成直方图区间，或组合成箱线图统计层。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      把明细行变成直方图区间，或组合成箱线图统计层。
+    </span>
   </LinkedCard>
   <LinkedCard href="/viz/grammar/transform/statistics">
     <span className="font-semibold">密度与趋势</span>

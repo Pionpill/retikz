@@ -41,10 +41,22 @@ IR 语义定义为：**`blendMode` 让该图元与「同一 Scene 内在它之�
 ```ts
 // ir/effects.ts（与 DropShadow 同文件）
 export const BlendMode = {
-  Normal: 'normal', Multiply: 'multiply', Screen: 'screen', Overlay: 'overlay',
-  Darken: 'darken', Lighten: 'lighten', ColorDodge: 'color-dodge', ColorBurn: 'color-burn',
-  HardLight: 'hard-light', SoftLight: 'soft-light', Difference: 'difference', Exclusion: 'exclusion',
-  Hue: 'hue', Saturation: 'saturation', Color: 'color', Luminosity: 'luminosity',
+  Normal: 'normal',
+  Multiply: 'multiply',
+  Screen: 'screen',
+  Overlay: 'overlay',
+  Darken: 'darken',
+  Lighten: 'lighten',
+  ColorDodge: 'color-dodge',
+  ColorBurn: 'color-burn',
+  HardLight: 'hard-light',
+  SoftLight: 'soft-light',
+  Difference: 'difference',
+  Exclusion: 'exclusion',
+  Hue: 'hue',
+  Saturation: 'saturation',
+  Color: 'color',
+  Luminosity: 'luminosity',
 } as const;
 export type BlendModeValue = ValueOf<typeof BlendMode>;
 ```

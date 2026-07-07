@@ -48,20 +48,20 @@ runtime 继续维护 `IdClockRegistry`：
 
 每帧对每个 prim：
 
-| track 触发类型 | 喂给 `evaluateTrack` 的时间 | 未满足时 |
-|---|---|---|
-| `load` / 缺省（autoplay） | 该 id 的 effective time（无 entry 时等同 master time） | —— |
-| `manual` / `visible` / `{ onEvent }` | 该 id 的 effective time | `includeNonAutoplay=false` → 跳过，渲染 base |
+| track 触发类型                       | 喂给 `evaluateTrack` 的时间                            | 未满足时                                     |
+| ------------------------------------ | ------------------------------------------------------ | -------------------------------------------- |
+| `load` / 缺省（autoplay）            | 该 id 的 effective time（无 entry 时等同 master time） | ——                                           |
+| `manual` / `visible` / `{ onEvent }` | 该 id 的 effective time                                | `includeNonAutoplay=false` → 跳过，渲染 base |
 
 `evaluateTrack`（alpha.5 ADR-03 共享引擎）零改动；`applyPrimAnimations` 不新增 trackKey 参数，继续吃 `includeNonAutoplay`。如后续确实需要同一 id 下多条 `manual` track 彼此独立启动，再单独升级 `resolvePrimAnimation` / `applyPrimAnimations` 的 per-track API，不能在本批暗改。
 
 ### 3. 三类触发源的接线
 
-| trigger | Canvas 激活来源（本 ADR 落地） | 复用 |
-|---|---|---|
-| `manual` | handler context 的 `ctx.animation.play(id?)` / `restart(id?)` 激活该 id；`view.animation` / React `animationRef` 仍是 scene 级 clock，不在本 ADR 中改成 per-id API | 现有 `createCanvasIdAnimationControls` + alpha.5 scene clock |
-| `{ onEvent }` | hydration 事件委托命中 id → 自动激活该 id 的 onEvent track，再调用用户 handler | alpha.3 事件委托绑定（与 SVG 桥同一事件源） |
-| `visible` | runtime 用 meet-fit 矩阵把 prim 几何盒映射到 canvas client rect，做视口相交判定（rAF 内或 scroll/resize 触发）；命中即激活 | alpha.1 meet-fit 矩阵 |
+| trigger       | Canvas 激活来源（本 ADR 落地）                                                                                                                                     | 复用                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| `manual`      | handler context 的 `ctx.animation.play(id?)` / `restart(id?)` 激活该 id；`view.animation` / React `animationRef` 仍是 scene 级 clock，不在本 ADR 中改成 per-id API | 现有 `createCanvasIdAnimationControls` + alpha.5 scene clock |
+| `{ onEvent }` | hydration 事件委托命中 id → 自动激活该 id 的 onEvent track，再调用用户 handler                                                                                     | alpha.3 事件委托绑定（与 SVG 桥同一事件源）                  |
+| `visible`     | runtime 用 meet-fit 矩阵把 prim 几何盒映射到 canvas client rect，做视口相交判定（rAF 内或 scroll/resize 触发）；命中即激活                                         | alpha.1 meet-fit 矩阵                                        |
 
 `manual` 的 per-id 控制优先落在 handler context（`ctx.animation`）这一既有水合面；组件外命令式控制仍通过 scene 级 `animationRef` / `view.animation` 驱动整图 clock。本批不新增 `view.animation.forId(...)` 之类顶层 API，避免把 beta parity 修复扩大成新公开面。
 

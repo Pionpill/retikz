@@ -21,15 +21,18 @@
 
 ```ts
 // ir/data.ts：type 必填 → 可选
-type: z.nativeEnum(DataFieldType).optional()
-  .describe('Field measurement type; omit to infer from the bound dataset at lowering')
+type: z.nativeEnum(DataFieldType)
+  .optional()
+  .describe('Field measurement type; omit to infer from the bound dataset at lowering');
 
 // lower/validate.ts resolveFieldTypes（model 分支重写）：
-const declaredNames = new Set(model.map(f => f.name));                 // strict 按 name
+const declaredNames = new Set(model.map(f => f.name)); // strict 按 name
 const declaredTypes = new Map(model.flatMap(f => (f.type ? [[f.name, f.type] as const] : [])));
 for (const field of userSourceFields) {
   if (!declaredNames.has(field)) {
-    throw new Error(`lowerPlots: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`);
+    throw new Error(
+      `lowerPlots: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`,
+    );
   }
   map.set(field, declaredTypes.get(field) ?? inferFieldType(rows, field)); // 声明优先、否则推断
 }
@@ -47,7 +50,6 @@ for (const field of userSourceFields) {
 
 - **削弱「model 不看数据就能校验 / 派生」**：带 `type` 的字段仍 data-free；**name-only 字段需 lowering 时拿数据推断**。`DataModelSchema` 的 describe（"...scale-type inference without seeing the data"）改成「仅对显式 `type` 的字段成立；name-only 字段在 lowering 时按数据推断」。
 - **削弱 LLM / spec 自描述**：name-only 字段的类型不在 spec 里、依赖运行时数据。要让 LLM 不看数据就全懂、spec 完全可移植，仍应填全 `type`——本特性是 **opt-in 的部分类型化**，不鼓励都省。
-
 
 ## 不在本 ADR 范围
 

@@ -163,9 +163,7 @@ describe('coordinate composition registry schema', () => {
   it('compat_mark_coordinate_scope_must_reference_implicit_default_scope', () => {
     const spec = {
       ...coordinateShorthandSpec,
-      marks: [
-        { type: 'point', coordinateView: 'missing', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
-      ],
+      marks: [{ type: 'point', coordinateView: 'missing', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
     };
     expect(() => parsePlotSpec(spec)).toThrow(/coordinateView/);
   });

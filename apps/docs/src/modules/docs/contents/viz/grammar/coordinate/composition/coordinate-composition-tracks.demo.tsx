@@ -10,15 +10,7 @@ const Demo: FC = () => (
       <Axis dimension="x" grid title="trading day" />
       <Track id="trend" band={{ role: 'y', start: 0, end: 0.28 }}>
         <Axis dimension="y" title="trend" />
-        <PathMark
-          x="day"
-          y="trend"
-          order="day"
-          stroke="#f97316"
-          strokeWidth={2.5}
-          lineCap="round"
-          lineJoin="round"
-        />
+        <PathMark x="day" y="trend" order="day" stroke="#f97316" strokeWidth={2.5} lineCap="round" lineJoin="round" />
       </Track>
       <Track id="drawdown" band={{ role: 'y', start: 0.36, end: 0.64 }}>
         <Axis dimension="y" title="drawdown" />
@@ -30,27 +22,11 @@ const Demo: FC = () => (
           fill="rgba(148, 163, 184, 0.32)"
           stroke="none"
         />
-        <PathMark
-          x="day"
-          y="drawdown"
-          order="day"
-          stroke="#64748b"
-          strokeWidth={2}
-          lineCap="round"
-          lineJoin="round"
-        />
+        <PathMark x="day" y="drawdown" order="day" stroke="#64748b" strokeWidth={2} lineCap="round" lineJoin="round" />
       </Track>
       <Track id="signal" band={{ role: 'y', start: 0.72, end: 1 }}>
         <Axis dimension="y" title="signal" />
-        <PathMark
-          x="day"
-          y="signal"
-          order="day"
-          stroke="#0891b2"
-          strokeWidth={2}
-          lineCap="round"
-          lineJoin="round"
-        />
+        <PathMark x="day" y="signal" order="day" stroke="#0891b2" strokeWidth={2} lineCap="round" lineJoin="round" />
         <PointMark x="day" y="signal" fill="#ecfeff" stroke="#0891b2" strokeWidth={1.5} size={7} />
       </Track>
     </Scaffold>

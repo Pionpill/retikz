@@ -6,9 +6,9 @@ v0.1 目标是在 beta.1 建立独立包边界：`@retikz/data` 接管 plot 内�
 
 ## Milestones
 
-| Milestone | 目标 | ADR |
-| --- | --- | --- |
-| beta.1 | 迁出 plot 数据层，建立 `@retikz/data` schema / contract / providers / pipeline 边界 | [`beta.1`](./beta.1/roadmap.md) |
+| Milestone | 目标                                                                                | ADR                             |
+| --------- | ----------------------------------------------------------------------------------- | ------------------------------- |
+| beta.1    | 迁出 plot 数据层，建立 `@retikz/data` schema / contract / providers / pipeline 边界 | [`beta.1`](./beta.1/roadmap.md) |
 
 ## 验证策略
 

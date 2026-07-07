@@ -51,6 +51,7 @@
 ---
 
 > **实现指针**（施工契约已封板压缩，原文见 git）：level `red`、四包 lockstep、非 breaking（新增项均 additive）。
+>
 > - 实现 commit `75e2c933..978b4c41`（core → render → vanilla → react → adversarial 修复）。
 > - 用户 API / 交互 demo 见文档站「参考 / 渲染器 / 水合」页 + Path 组件页 API 表 `id` 行（react 事件 props `onClick`… / vanilla `hydrate` / `mountCanvas` / `<Layout handlers>` 两套写法）。
 > - 真源以代码为准：`IRPath.id`（`core/src/ir/path/path.ts`）、`ScenePrimitive.id`（`core/src/primitive/*`）、`RetikzEvent` / `hitTest` / `createHydrationController`（`render/src/{hydration,canvas}`）、`hydrate` / `mountCanvas`（`vanilla/src`）；测试在四包 `tests/`（scene-id stamp、path-id round-trip、hitTest 逆 z-order / stroke-only、enter/leave 合成、collectHydrationHandlers、renderer-parity、ssr-then-hydrate）。

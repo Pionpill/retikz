@@ -9,14 +9,14 @@ Provenance is a data-layer capability. It does not create plot node ids and does
 
 ## What It Records
 
-| field              | meaning                                                        | typical source                    |
-| ------------------ | -------------------------------------------------------------- | --------------------------------- |
-| `sourceIndex`      | Row index in the original dataset, only when one row is traceable | Field processing, `sort`, `select` |
-| `sourceIndexes`    | Several original row indexes for grouped or aggregated output  | `summarize`, `annotate`           |
-| `transformedIndex` | Row index in the current transform output                      | Every transform stage             |
-| `derived`          | Whether the row was produced by statistics, sampling, or projection | `summarize`, plot-registered `bin` |
-| `operation`        | Transform kind or processing stage that produced the row       | `sort` / `summarize` / custom     |
-| `lineage`          | Lightweight chain info when several stages need to preserve source history | Multi-transform pipelines |
+| field              | meaning                                                                    | typical source                     |
+| ------------------ | -------------------------------------------------------------------------- | ---------------------------------- |
+| `sourceIndex`      | Row index in the original dataset, only when one row is traceable          | Field processing, `sort`, `select` |
+| `sourceIndexes`    | Several original row indexes for grouped or aggregated output              | `summarize`, `annotate`            |
+| `transformedIndex` | Row index in the current transform output                                  | Every transform stage              |
+| `derived`          | Whether the row was produced by statistics, sampling, or projection        | `summarize`, plot-registered `bin` |
+| `operation`        | Transform kind or processing stage that produced the row                   | `sort` / `summarize` / custom      |
+| `lineage`          | Lightweight chain info when several stages need to preserve source history | Multi-transform pipelines          |
 
 These fields are debugging and consumer metadata. They do not change values, scale inference, or mark geometry. The data layer only promises to preserve traceability when it is valid, and to avoid inventing a single source when the row is derived from several sources.
 
@@ -24,23 +24,23 @@ These fields are debugging and consumer metadata. They do not change values, sca
 
 Different transform shapes preserve provenance differently:
 
-| transform shape                       | provenance meaning                                      |
-| ------------------------------------- | ------------------------------------------------------- |
-| Row-preserving rewrite such as `sort` | The row still comes from the same source row; keep `sourceIndex` |
-| Representative selection such as `select` | The output row is an original selected row; keep `sourceIndex` |
-| Group summary such as `summarize`     | The output row comes from a group; record `sourceIndexes` |
-| Statistical annotation such as `annotate` | Detail rows keep their own `sourceIndex` and can carry group-stat sources |
-| Custom transform                      | The definition declares whether provenance can be preserved or synthesized |
+| transform shape                           | provenance meaning                                                         |
+| ----------------------------------------- | -------------------------------------------------------------------------- |
+| Row-preserving rewrite such as `sort`     | The row still comes from the same source row; keep `sourceIndex`           |
+| Representative selection such as `select` | The output row is an original selected row; keep `sourceIndex`             |
+| Group summary such as `summarize`         | The output row comes from a group; record `sourceIndexes`                  |
+| Statistical annotation such as `annotate` | Detail rows keep their own `sourceIndex` and can carry group-stat sources  |
+| Custom transform                          | The definition declares whether provenance can be preserved or synthesized |
 
 This avoids pretending that a statistical row came from one arbitrary source row. A grouped sum is not one order; it is a derived result from a set of orders.
 
 ## Downstream Consumers
 
-| consumer | use |
-| -------- | --- |
+| consumer | use                                                                                                                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | plot     | Carry provenance into mark metadata for tooltips, locators, or debugging tools; plot-specific datum ids and anchors are still documented under [Drawing Grammar](/viz/grammar) |
-| table    | Explain source counts and trace-back entries beside summary, filtered, or outlier rows |
-| geo      | Explain which original spatial records contributed to aggregated regions, grids, or samples |
+| table    | Explain source counts and trace-back entries beside summary, filtered, or outlier rows                                                                                         |
+| geo      | Explain which original spatial records contributed to aggregated regions, grids, or samples                                                                                    |
 
 If you only need to bind plot `x` / `y` / `color`, you usually do not handle provenance directly. It is extra data for debugging, interaction, and cross-module explanation.
 
@@ -48,11 +48,11 @@ If you only need to bind plot `x` / `y` / `color`, you usually do not handle pro
 
 Custom transforms should declare provenance behavior explicitly:
 
-| case | recommendation |
-| ---- | -------------- |
-| One input row maps to one output row | Copy input provenance and update `transformedIndex` |
-| Several rows reduce to one row | Store the source collection instead of a single `sourceIndex` |
-| Sampling or simulated rows | Mark the row as `derived` and record `operation` |
-| Source cannot be traced reliably | Omit source fields instead of faking traceability |
+| case                                 | recommendation                                                |
+| ------------------------------------ | ------------------------------------------------------------- |
+| One input row maps to one output row | Copy input provenance and update `transformedIndex`           |
+| Several rows reduce to one row       | Store the source collection instead of a single `sourceIndex` |
+| Sampling or simulated rows           | Mark the row as `derived` and record `operation`              |
+| Source cannot be traced reliably     | Omit source fields instead of faking traceability             |
 
 That lets downstream modules know whether a row can be traced, how many original rows contributed to it, and whether the lineage passed through derived data without understanding the custom algorithm.

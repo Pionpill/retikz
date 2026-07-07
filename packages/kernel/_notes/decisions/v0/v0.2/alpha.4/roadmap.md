@@ -34,12 +34,12 @@
 
 全部集中在 `packages/kernel/core/src/compile/compile.ts`：
 
-| 位置 | 现状 | 问题 |
-|---|---|---|
-| `compile.ts:243-245`（node 分支） | `for (const prim of emitNodePrimitives(layout, round)) sink.push(prim)` | ✅ node Pass 1 **直接** push 到当前 `sink`，位置正确 |
-| `compile.ts:356-360`（path 分支） | path 仅 `pathsAccumulator.push({ path, irPath, scopeChain })`，**不**在 `sink` 占位 | path 在本层 `sink` 里**没有落点**，Pass 2 解析后无处可回填 |
-| `compile.ts:187-205`（`resolvePendingPaths`） | `for (const prim of result.primitives) primitives.push(prim)`（line 198） | path primitive **一律 push 顶层 `primitives`**，与它声明所在的 `sink` 无关、与同层 node 的相对位置无关 |
-| `compile.ts:367-369`（顶层收尾） | `processChildren(...)` 跑完**所有** node 后才 `resolvePendingPaths(rootPaths)` | 顶层所有 path 在所有 node 之后批量 resolve → 全部追加到 `primitives` 末尾 |
+| 位置                                          | 现状                                                                                | 问题                                                                                                   |
+| --------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `compile.ts:243-245`（node 分支）             | `for (const prim of emitNodePrimitives(layout, round)) sink.push(prim)`             | ✅ node Pass 1 **直接** push 到当前 `sink`，位置正确                                                   |
+| `compile.ts:356-360`（path 分支）             | path 仅 `pathsAccumulator.push({ path, irPath, scopeChain })`，**不**在 `sink` 占位 | path 在本层 `sink` 里**没有落点**，Pass 2 解析后无处可回填                                             |
+| `compile.ts:187-205`（`resolvePendingPaths`） | `for (const prim of result.primitives) primitives.push(prim)`（line 198）           | path primitive **一律 push 顶层 `primitives`**，与它声明所在的 `sink` 无关、与同层 node 的相对位置无关 |
+| `compile.ts:367-369`（顶层收尾）              | `processChildren(...)` 跑完**所有** node 后才 `resolvePendingPaths(rootPaths)`      | 顶层所有 path 在所有 node 之后批量 resolve → 全部追加到 `primitives` 末尾                              |
 
 > `compile.ts:183` / `compile.ts:353` 的注释「path primitive 一律 push 到顶层 `primitives`」正是本回归的**设计来源**——理由写的是「端点已是全局坐标，不能进 GroupPrim 否则被 scope.transform 二次 apply」。这个理由对 **transform 链非空**的 scope 内 path 仍成立（见下 §设计 的取舍），但被错误地推广到了**顶层 / transform-free** 的 path 上，那里根本没有 GroupPrim 二次 apply 的风险。A 部分修复就是把「无 transform → 回填本层 sink」从「有 transform → hoist 顶层」里拆出来。
 
@@ -58,10 +58,10 @@ node 之所以正确，是因为它在 Pass 1 就**带位置直接** push 到 si
 
 按 path 的 `scopeChain`（该 path 所属 scope 的累积 transform 链）分两种落点：
 
-| 情况 | `scopeChain` | 落点 | 理由 |
-|---|---|---|---|
-| 顶层 path / transform-free scope 内 path | `[]`（空） | **回填本层 `sink` 的占位槽** | 端点是全局坐标，但该 sink（顶层 `primitives` 或无 transform 的 `GroupPrim.children`）不会二次 apply transform → 安全且保住同层 z-order |
-| transformed scope 内 path | 非空 | **维持 hoist 到顶层 `primitives`**（现有行为，append） | 端点已含 scope transform（全局坐标），进 transformed `GroupPrim` 会被二次 apply → 必须留在顶层；其跨 frame z-order 仍可能偏离 IR 顺序，本段不修 |
+| 情况                                     | `scopeChain` | 落点                                                   | 理由                                                                                                                                            |
+| ---------------------------------------- | ------------ | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 顶层 path / transform-free scope 内 path | `[]`（空）   | **回填本层 `sink` 的占位槽**                           | 端点是全局坐标，但该 sink（顶层 `primitives` 或无 transform 的 `GroupPrim.children`）不会二次 apply transform → 安全且保住同层 z-order          |
+| transformed scope 内 path                | 非空         | **维持 hoist 到顶层 `primitives`**（现有行为，append） | 端点已含 scope transform（全局坐标），进 transformed `GroupPrim` 会被二次 apply → 必须留在顶层；其跨 frame z-order 仍可能偏离 IR 顺序，本段不修 |
 
 > `scopeChain` 在 Pass 1 path 分支即已知（就是当前 `chain`），故「占位 vs hoist」在 Pass 1 当场可判：`chain` 空才 push 占位，否则照旧只入 `pathsAccumulator` 走 hoist。
 
@@ -110,7 +110,9 @@ Pass 1 path 分支（`compile.ts:356`）：
 ```ts
 for (const item of pending) {
   const result = emitPathPrimitive(item.path, nameStack, round, measureText, {
-    onWarn, irPath: item.irPath, scopeChain: item.scopeChain,
+    onWarn,
+    irPath: item.irPath,
+    scopeChain: item.scopeChain,
   });
   if (item.slot) {
     const idx = item.slot.sink.indexOf(item.slot.placeholder); // 按引用定位，免索引漂移
@@ -268,9 +270,9 @@ const stableSortByZIndex = (arr: Array<ScenePrimitive>): void => {
 
 **两个排序落点**（都在对应 sink 的 **sealSink 之后**）：
 
-| sink | 排序时机 |
-|---|---|
-| 顶层 `primitives` | `resolvePendingPaths(rootPaths)` + 顶层 sealSink 之后、返回 Scene 之前 |
+| sink                      | 排序时机                                                                                           |
+| ------------------------- | -------------------------------------------------------------------------------------------------- |
+| 顶层 `primitives`         | `resolvePendingPaths(rootPaths)` + 顶层 sealSink 之后、返回 Scene 之前                             |
 | 每个 scope 的 `innerSink` | `resolvePendingPaths(innerPaths)` + innerSink sealSink 之后、构造 `GroupPrim`（赋 `children`）之前 |
 
 > 实现期：A 在「构造 GroupPrim / 返回 Scene 前」已把内部类型收窄成 `Array<ScenePrimitive>`，本段把 `stableSortByZIndex(...)` 紧接那次收窄之后即可。若 A 把 sealSink 抽成函数，则在其返回值上排序；若 sealSink 是原地断言（同数组引用），则在断言之后对该数组原地排序。
@@ -401,13 +403,7 @@ const RAD_TO_DEG = 180 / Math.PI;
  * @description radial = atan2(label中心 − node中心)；tangent = radial + 90；number = 原值；none/缺省 = 0。
  *   keepUpright 时把"偏离正立 > 90°"的角度翻 180° 保阅读方向。
  */
-const resolveLabelRotateDeg = (
-  lab: NodeLabelLayout,
-  lx: number,
-  ly: number,
-  cx: number,
-  cy: number,
-): number => {
+const resolveLabelRotateDeg = (lab: NodeLabelLayout, lx: number, ly: number, cx: number, cy: number): number => {
   const mode = lab.rotate;
   if (mode === undefined || mode === 'none') return 0;
   let deg: number;
@@ -435,57 +431,57 @@ const resolveLabelRotateDeg = (
 
 ### A. compile IR 顺序回归（`packages/kernel/core/src/compile/compile.ts`，走 Spec-First TDD，**red**）
 
-| 改动 | 位置 | 说明 |
-|---|---|---|
-| `PendingPath` 加 `slot?` 字段 | `compile.ts:127-134` | 记回填目标 sink + 占位 marker（内部类型） |
-| 占位类型 + 构造 | `compile.ts`（模块私有） | `PathPlaceholder` + `InternalScenePrimitive` + `makePathPlaceholder()`；公开 `ScenePrimitive` 不变 |
-| Pass 1 path 分支 push 占位 | `compile.ts:351-361` | `chain` 空 → push 占位并记 `slot`；非空 → 照旧只入 accumulator |
-| `resolvePendingPaths` 改回填 | `compile.ts:187-205` | 有 `slot` → `splice` 替换（失败移除占位）；无 `slot` → 维持 push 顶层 |
-| scope 内 resolve 时机硬约束 | `compile.ts:335` 附近 | `resolvePendingPaths(innerPaths)` 早于 `isPrunable` 判定 |
-| sealSink：末端无残留断言 + 收窄 | 构造 `GroupPrim` / 返回 `Scene` 前 | dev 递归断言无 `path-placeholder` 残留，收窄回 `Array<ScenePrimitive>` |
-| 注释订正 | `compile.ts:183` / `:353` | 「一律 push 顶层」改为「`chain` 空回填本层 sink、非空才 hoist」 |
+| 改动                            | 位置                               | 说明                                                                                               |
+| ------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `PendingPath` 加 `slot?` 字段   | `compile.ts:127-134`               | 记回填目标 sink + 占位 marker（内部类型）                                                          |
+| 占位类型 + 构造                 | `compile.ts`（模块私有）           | `PathPlaceholder` + `InternalScenePrimitive` + `makePathPlaceholder()`；公开 `ScenePrimitive` 不变 |
+| Pass 1 path 分支 push 占位      | `compile.ts:351-361`               | `chain` 空 → push 占位并记 `slot`；非空 → 照旧只入 accumulator                                     |
+| `resolvePendingPaths` 改回填    | `compile.ts:187-205`               | 有 `slot` → `splice` 替换（失败移除占位）；无 `slot` → 维持 push 顶层                              |
+| scope 内 resolve 时机硬约束     | `compile.ts:335` 附近              | `resolvePendingPaths(innerPaths)` 早于 `isPrunable` 判定                                           |
+| sealSink：末端无残留断言 + 收窄 | 构造 `GroupPrim` / 返回 `Scene` 前 | dev 递归断言无 `path-placeholder` 残留，收窄回 `Array<ScenePrimitive>`                             |
+| 注释订正                        | `compile.ts:183` / `:353`          | 「一律 push 顶层」改为「`chain` 空回填本层 sink、非空才 hoist」                                    |
 
 ### B. IR / schema（`packages/kernel`）
 
-| 改动 | 位置 | 说明 |
-|---|---|---|
-| `NodeSchema` 加 `zIndex` | `ir/node.ts` `label` 字段后 | `z.number().int().finite().optional()` |
-| `PathSchema` 加 `zIndex` | `ir/path/path.ts` `drawOpacity` 后 / `children` 前 | 同上，describe 改 path |
-| `ScopeSchema` 加 `zIndex` + `IRScope` 类型同步 | `ir/scope.ts` `resetStyle` 后 / `children` 前 + 手写 `IRScope` type | scope 整体作 stacking 单位；`IRScope` 是手写类型须一并加 `zIndex?: number` |
-| `NodeDefaultSchema` / `PathDefaultSchema` omit 加 `zIndex` | `ir/scope.ts:19-25` / `:31-36` | zIndex 不进 every-X 默认通道（定位非样式）；`.strict()` 拒 `nodeDefault.zIndex` |
-| `NodeLabelSchema` 加 `rotate` + `keepUpright` | `ir/node.ts:72` `font` 后 | union enum + number / boolean |
+| 改动                                                       | 位置                                                                | 说明                                                                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `NodeSchema` 加 `zIndex`                                   | `ir/node.ts` `label` 字段后                                         | `z.number().int().finite().optional()`                                          |
+| `PathSchema` 加 `zIndex`                                   | `ir/path/path.ts` `drawOpacity` 后 / `children` 前                  | 同上，describe 改 path                                                          |
+| `ScopeSchema` 加 `zIndex` + `IRScope` 类型同步             | `ir/scope.ts` `resetStyle` 后 / `children` 前 + 手写 `IRScope` type | scope 整体作 stacking 单位；`IRScope` 是手写类型须一并加 `zIndex?: number`      |
+| `NodeDefaultSchema` / `PathDefaultSchema` omit 加 `zIndex` | `ir/scope.ts:19-25` / `:31-36`                                      | zIndex 不进 every-X 默认通道（定位非样式）；`.strict()` 拒 `nodeDefault.zIndex` |
+| `NodeLabelSchema` 加 `rotate` + `keepUpright`              | `ir/node.ts:72` `font` 后                                           | union enum + number / boolean                                                   |
 
 ### B. compile（`packages/kernel`）
 
-| 改动 | 位置 | 说明 |
-|---|---|---|
-| `emitNodePrimitives` 带文本包 `<g>` | `compile/node.ts:437-451` | `needsGroup = rotateDeg !== 0 \|\| lines !== undefined` |
-| `emitNodePrimitives` label rotate | `compile/node.ts:415-436` | label TextPrim 包进绕自身中心的 rotate group |
-| `resolveLabelRotateDeg` + `RAD_TO_DEG` | `compile/node.ts` 模块私有 | radial / tangent / number / keepUpright |
-| `NodeLabelLayout` 加 `rotate` / `keepUpright` | `compile/node.ts:103-115` | 透传字段 |
-| `layoutNode` label 标准化补 `rotate` / `keepUpright` | `compile/node.ts:312-326` | 从 IR label 透传 |
-| import 补 `GroupPrim` | `compile/node.ts:4` | 末端构造 group 用 |
-| `zIndexOf` Map | `compile/compile.ts` compileToScene 顶部 | primitive → zIndex（key 仅 real ScenePrimitive） |
-| node 分支 tag zIndex | A 改造后的 node push 处 | push 时 `zIndexOf.set(prim, child.zIndex)` |
-| scope 分支 tag zIndex | A 构造 scope GroupPrim、`sink.push(group)` 之后 | `zIndexOf.set(group, child.zIndex)`；scope 整体一个单位 |
-| `PendingPath` 加 `zIndex?` | 与 A 的 `slot?` 并列 | raw `child.zIndex` |
-| path 分支记 `pending.zIndex` | A 的占位 push 处 | **不给占位打标**（占位非 `ScenePrimitive`） |
-| `resolvePendingPaths` 复制 zIndex 到 real prim | A 改造后的 slot/hoist 分支 | splice 后 / hoist push 后给 real prim 打标；占位永不入 `zIndexOf` |
-| `stableSortByZIndex` helper | compileToScene 内 | decorate-sort；签名收 `Array<ScenePrimitive>` |
-| 顶层排序 | 顶层 sealSink 之后、返回 Scene 之前 | `stableSortByZIndex(primitives)` |
-| scope `innerSink` 排序 | innerSink sealSink 之后 / `GroupPrim` 构造前 | `stableSortByZIndex(innerSink)` |
+| 改动                                                 | 位置                                            | 说明                                                              |
+| ---------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
+| `emitNodePrimitives` 带文本包 `<g>`                  | `compile/node.ts:437-451`                       | `needsGroup = rotateDeg !== 0 \|\| lines !== undefined`           |
+| `emitNodePrimitives` label rotate                    | `compile/node.ts:415-436`                       | label TextPrim 包进绕自身中心的 rotate group                      |
+| `resolveLabelRotateDeg` + `RAD_TO_DEG`               | `compile/node.ts` 模块私有                      | radial / tangent / number / keepUpright                           |
+| `NodeLabelLayout` 加 `rotate` / `keepUpright`        | `compile/node.ts:103-115`                       | 透传字段                                                          |
+| `layoutNode` label 标准化补 `rotate` / `keepUpright` | `compile/node.ts:312-326`                       | 从 IR label 透传                                                  |
+| import 补 `GroupPrim`                                | `compile/node.ts:4`                             | 末端构造 group 用                                                 |
+| `zIndexOf` Map                                       | `compile/compile.ts` compileToScene 顶部        | primitive → zIndex（key 仅 real ScenePrimitive）                  |
+| node 分支 tag zIndex                                 | A 改造后的 node push 处                         | push 时 `zIndexOf.set(prim, child.zIndex)`                        |
+| scope 分支 tag zIndex                                | A 构造 scope GroupPrim、`sink.push(group)` 之后 | `zIndexOf.set(group, child.zIndex)`；scope 整体一个单位           |
+| `PendingPath` 加 `zIndex?`                           | 与 A 的 `slot?` 并列                            | raw `child.zIndex`                                                |
+| path 分支记 `pending.zIndex`                         | A 的占位 push 处                                | **不给占位打标**（占位非 `ScenePrimitive`）                       |
+| `resolvePendingPaths` 复制 zIndex 到 real prim       | A 改造后的 slot/hoist 分支                      | splice 后 / hoist push 后给 real prim 打标；占位永不入 `zIndexOf` |
+| `stableSortByZIndex` helper                          | compileToScene 内                               | decorate-sort；签名收 `Array<ScenePrimitive>`                     |
+| 顶层排序                                             | 顶层 sealSink 之后、返回 Scene 之前             | `stableSortByZIndex(primitives)`                                  |
+| scope `innerSink` 排序                               | innerSink sealSink 之后 / `GroupPrim` 构造前    | `stableSortByZIndex(innerSink)`                                   |
 
 ### B. React（`packages/react`）
 
-| 改动 | 位置 | 说明 |
-|---|---|---|
-| `NODE_FIELDS` 加 `'zIndex'` | `kernel/_fields.ts:7-37` | **互锁强制**：不加 `_NodeFieldsCheck` TS 编译失败 |
-| `PATH_FIELDS` 加 `'zIndex'` | `kernel/_fields.ts:51-66` | **互锁强制**：同上 |
-| `SCOPE_FIELDS` 加 `'zIndex'` | `kernel/_fields.ts:80-96` | **互锁强制**：不加 `_ScopeFieldsCheck` TS 编译失败 |
-| `NodeProps` 加 `zIndex?` | `kernel/Node.tsx:89` 附近 | JSDoc 注明栈序语义 |
-| `PathProps` 加 `zIndex?` | `kernel/Path.tsx:40` 附近 | 同上 |
-| `ScopeProps` 加 `zIndex?` | `kernel/Scope.tsx:45` 附近 | `zIndex?: IRScope['zIndex']`；JSDoc 注明 scope 整体栈序 |
-| unbuilder **path 分支**加 `zIndex: child.zIndex` | `kernel/unbuilder.ts:114-131` | path 分支手写字段、**不走 PATH_FIELDS**，必须手补 |
+| 改动                                             | 位置                          | 说明                                                    |
+| ------------------------------------------------ | ----------------------------- | ------------------------------------------------------- |
+| `NODE_FIELDS` 加 `'zIndex'`                      | `kernel/_fields.ts:7-37`      | **互锁强制**：不加 `_NodeFieldsCheck` TS 编译失败       |
+| `PATH_FIELDS` 加 `'zIndex'`                      | `kernel/_fields.ts:51-66`     | **互锁强制**：同上                                      |
+| `SCOPE_FIELDS` 加 `'zIndex'`                     | `kernel/_fields.ts:80-96`     | **互锁强制**：不加 `_ScopeFieldsCheck` TS 编译失败      |
+| `NodeProps` 加 `zIndex?`                         | `kernel/Node.tsx:89` 附近     | JSDoc 注明栈序语义                                      |
+| `PathProps` 加 `zIndex?`                         | `kernel/Path.tsx:40` 附近     | 同上                                                    |
+| `ScopeProps` 加 `zIndex?`                        | `kernel/Scope.tsx:45` 附近    | `zIndex?: IRScope['zIndex']`；JSDoc 注明 scope 整体栈序 |
+| unbuilder **path 分支**加 `zIndex: child.zIndex` | `kernel/unbuilder.ts:114-131` | path 分支手写字段、**不走 PATH_FIELDS**，必须手补       |
 
 > **node / scope round-trip 自动**：`nodePropsFromIR`（`unbuilder.ts:14`）/ `buildNodeFromProps`（`builder.ts:103`）走 `pickDefined(_, NODE_FIELDS)`；`scopePropsFromIR`（`unbuilder.ts:146`）/ `buildScopeFromProps`（`builder.ts:293`）走 `pickDefined(_, SCOPE_FIELDS)`——加进字段表即两端同步。**唯独 path 例外**：unbuilder path 分支是手写 createElement、不走 PATH_FIELDS，须手补 `zIndex`（见上）。**label rotate 自动**：`label` 整体透传（`builder.ts:111` / `unbuilder.ts:18`），`rotate` / `keepUpright` 随 `IRNodeLabel` 进出，React 端零改动。
 
@@ -540,10 +536,13 @@ import type { GroupPrim, ScenePrimitive } from '../../src/primitive';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
 const node = (position: [number, number], zIndex?: number): IR['children'][number] => ({
-  type: 'node', position, ...(zIndex !== undefined && { zIndex }),
+  type: 'node',
+  position,
+  ...(zIndex !== undefined && { zIndex }),
 });
 const line = (to: [number, number], zIndex?: number): IR['children'][number] => ({
-  type: 'path', ...(zIndex !== undefined && { zIndex }),
+  type: 'path',
+  ...(zIndex !== undefined && { zIndex }),
   children: [
     { type: 'step', kind: 'move', to: [0, 0] },
     { type: 'step', kind: 'line', to },
@@ -573,10 +572,7 @@ describe('compile zIndex 稳定排序', () => {
   });
 
   it('scope 内独立排序，不跨 group 比较', () => {
-    const ir = scene([
-      node([100, 0], 9),
-      { type: 'scope', children: [node([0, 0]), line([10, 0], 5), node([20, 0])] },
-    ]);
+    const ir = scene([node([100, 0], 9), { type: 'scope', children: [node([0, 0]), line([10, 0], 5), node([20, 0])] }]);
     const result = compileToScene(ir, silent);
     expect(result.primitives.map(p => p.type)).toEqual(['group', 'rect']);
     const group = result.primitives.find((p): p is GroupPrim => p.type === 'group')!;
@@ -585,11 +581,7 @@ describe('compile zIndex 稳定排序', () => {
 
   it('scope.zIndex 让整组作为一个单位在父层排序', () => {
     // scope（含一个 node）默认会排在 z=0 的兄弟之间；给 scope zIndex=5 → 整组浮到末尾
-    const ir = scene([
-      node([0, 0]),
-      { type: 'scope', zIndex: 5, children: [node([10, 0], 0)] },
-      node([20, 0]),
-    ]);
+    const ir = scene([node([0, 0]), { type: 'scope', zIndex: 5, children: [node([10, 0], 0)] }, node([20, 0])]);
     const result = compileToScene(ir, silent);
     // scope 的 group（z=5）排到两个顶层 node（z=0）之后
     expect(result.primitives.map(p => p.type)).toEqual(['rect', 'rect', 'group']);
@@ -685,7 +677,9 @@ describe('Node label rotate', () => {
   });
 
   it('rotate 数字 → label 包绕自身中心的 rotate group', () => {
-    const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 30 } }]);
+    const ir = scene([
+      { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 30 } },
+    ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
     if (rot.kind !== 'rotate') throw new Error('expected rotate');
@@ -696,7 +690,9 @@ describe('Node label rotate', () => {
   });
 
   it("radial：position='right'（+x 方向）→ 角度 ≈ 0", () => {
-    const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 'radial' } }]);
+    const ir = scene([
+      { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 'radial' } },
+    ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
     if (rot.kind !== 'rotate') throw new Error('expected rotate');
@@ -704,7 +700,9 @@ describe('Node label rotate', () => {
   });
 
   it("tangent = radial + 90：position='right' → ≈ 90", () => {
-    const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 'tangent' } }]);
+    const ir = scene([
+      { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 'tangent' } },
+    ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
     if (rot.kind !== 'rotate') throw new Error('expected rotate');
@@ -712,7 +710,14 @@ describe('Node label rotate', () => {
   });
 
   it("keepUpright：position='left'（radial≈180）翻 180 → ≈ 0", () => {
-    const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'left', rotate: 'radial', keepUpright: true } }]);
+    const ir = scene([
+      {
+        type: 'node',
+        position: [0, 0],
+        text: 'A',
+        label: { text: 'L', position: 'left', rotate: 'radial', keepUpright: true },
+      },
+    ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
     if (rot.kind !== 'rotate') throw new Error('expected rotate');

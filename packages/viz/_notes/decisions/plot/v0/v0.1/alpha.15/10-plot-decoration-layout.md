@@ -30,17 +30,16 @@ type PlotLayout = {
   };
 };
 
-type PlotLabel =
-  | {
-      type: 'text';
-      id?: string;
-      role?: 'title' | 'caption' | 'note' | 'source' | 'custom';
-      text: TextBlock;
-      placement?: LayoutPlacement;
-      reserveSpace?: boolean;
-      priority?: number;
-      overflow?: 'allow' | 'hide' | 'flush' | 'shift' | 'ellipsis';
-    } & GuideTextStyle;
+type PlotLabel = {
+  type: 'text';
+  id?: string;
+  role?: 'title' | 'caption' | 'note' | 'source' | 'custom';
+  text: TextBlock;
+  placement?: LayoutPlacement;
+  reserveSpace?: boolean;
+  priority?: number;
+  overflow?: 'allow' | 'hide' | 'flush' | 'shift' | 'ellipsis';
+} & GuideTextStyle;
 
 type LayoutPlacement =
   | {
@@ -98,16 +97,16 @@ type LayoutClaim = {
 
 默认优先级：
 
-| 对象 | owner | 默认 priority | reserveSpace |
-|---|---|---:|---|
-| plot title | plot | 900 | true |
-| subtitle | plot | 850 | true |
-| caption / source | plot | 700 | true |
-| legend | legend | 650 | true |
-| axis title | axis | 600 | true |
-| tick labels | axis | 550 | true |
-| annotation / custom note | annotation | 400 | false |
-| watermark / point decoration | plot | 100 | false |
+| 对象                         | owner      | 默认 priority | reserveSpace |
+| ---------------------------- | ---------- | ------------: | ------------ |
+| plot title                   | plot       |           900 | true         |
+| subtitle                     | plot       |           850 | true         |
+| caption / source             | plot       |           700 | true         |
+| legend                       | legend     |           650 | true         |
+| axis title                   | axis       |           600 | true         |
+| tick labels                  | axis       |           550 | true         |
+| annotation / custom note     | annotation |           400 | false        |
+| watermark / point decoration | plot       |           100 | false        |
 
 理由：
 

@@ -192,7 +192,11 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
           defaultView: 'default',
           views: [
             { id: 'default', coordinate: { type: 'cartesian2D' } },
-            { id: 'temperature', coordinate: { type: 'cartesian2D' }, placement: { kind: 'overlay', target: 'default' } },
+            {
+              id: 'temperature',
+              coordinate: { type: 'cartesian2D' },
+              placement: { kind: 'overlay', target: 'default' },
+            },
             { id: 'rainfall', coordinate: { type: 'cartesian2D' }, placement: { kind: 'overlay', target: 'default' } },
           ],
         },

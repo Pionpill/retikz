@@ -31,14 +31,14 @@ source extent
 
 scale family 算法固定如下：
 
-| scale family | 单值 fallback | padding 算法 | invariant |
-| --- | --- | --- | --- |
-| `linear` / `symlog` | `[v - span / 2, v + span / 2]` | 以数值 span 做加法扩展：`[lo - span * lower, hi + span * upper]` | 可跨零 |
-| `time` | `[v - span / 2, v + span / 2]`，`span` 单位为 epoch ms | 以 epoch ms span 做加法扩展，再转回 Date scale 消费 | 可跨 epoch 0 |
-| `log` | 在 log 空间扩展：`[v / base^(span / 2), v * base^(span / 2)]`；默认 log span 为 1 个 base order，显式 `singleValueSpan` 表示 log10/log-base 空间 span | 在 log 空间按比例扩展；非正 source domain 先 fail-loud，不通过 padding 修正 | padded lower 必须 `> 0` |
-| `sqrt` / `radial` | `[max(0, v - span / 2), v + span / 2]`；若上界等于下界，则退到 `[0, span]` | 以数值 span 做加法扩展，lower 端 clamp 到 `0` | padded lower 必须 `>= 0` |
-| `pow` integer exponent | 同 `linear` | 同 `linear` | 可跨零 |
-| `pow` non-integer exponent | 同 `sqrt` | 同 `sqrt` | padded lower 必须 `>= 0` |
+| scale family               | 单值 fallback                                                                                                                                         | padding 算法                                                                | invariant                |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------ |
+| `linear` / `symlog`        | `[v - span / 2, v + span / 2]`                                                                                                                        | 以数值 span 做加法扩展：`[lo - span * lower, hi + span * upper]`            | 可跨零                   |
+| `time`                     | `[v - span / 2, v + span / 2]`，`span` 单位为 epoch ms                                                                                                | 以 epoch ms span 做加法扩展，再转回 Date scale 消费                         | 可跨 epoch 0             |
+| `log`                      | 在 log 空间扩展：`[v / base^(span / 2), v * base^(span / 2)]`；默认 log span 为 1 个 base order，显式 `singleValueSpan` 表示 log10/log-base 空间 span | 在 log 空间按比例扩展；非正 source domain 先 fail-loud，不通过 padding 修正 | padded lower 必须 `> 0`  |
+| `sqrt` / `radial`          | `[max(0, v - span / 2), v + span / 2]`；若上界等于下界，则退到 `[0, span]`                                                                            | 以数值 span 做加法扩展，lower 端 clamp 到 `0`                               | padded lower 必须 `>= 0` |
+| `pow` integer exponent     | 同 `linear`                                                                                                                                           | 同 `linear`                                                                 | 可跨零                   |
+| `pow` non-integer exponent | 同 `sqrt`                                                                                                                                             | 同 `sqrt`                                                                   | padded lower 必须 `>= 0` |
 
 `domainPadding` 的 object 形态必须至少写 `lower` 或 `upper` 之一；缺省侧按 `0` 处理。数字形态等价于 `{ lower: value, upper: value }`。
 

@@ -24,22 +24,22 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 每次启动先确认执行模式，人工未明示前不进 stage、不建 worktree、不动文件。
 
-| 模式 | 适用 |
-| --- | --- |
-| 单条 | 一次 1 条 ADR，在当前 worktree 跑完 5 阶段后停止 |
+| 模式          | 适用                                                        |
+| ------------- | ----------------------------------------------------------- |
+| 单条          | 一次 1 条 ADR，在当前 worktree 跑完 5 阶段后停止            |
 | 批量 worktree | 一次多条 ADR，每条独立 worktree + 分支；适合用户离线 review |
 
 含“批量 / 一次跑完 / 离线 / 睡觉 / 健身”或 ≥2 个 ADR 编号时，先呈现候选 ADR、推荐布局和 base 分支，等人工确认。长任务启动时同时询问：ADR / plan 写完是否派子 agent review，代码写完是否派子 agent review。
 
 ## 5 阶段
 
-| # | 阶段 | 子 skill | 通过条件 |
-| --- | --- | --- | --- |
-| 1 | 设计 | `develop-design` | ADR 草案含实现契约段，人工 ack，不默认提交 |
-| 2 | 实现 | `develop-implement` | spec test / lint / tsc / 必要测试全过 |
-| 3 | 自测 | `develop-test` | Adversarial Bug Hunter 的 BLOCKING 清空 |
-| 4 | 文档 | `develop-document` | 用户可见能力有 zh/en 文档、demo、API 表 |
-| 5 | 收尾 | `develop-wrapup` | ADR 压缩为长期决策记录，changelog 草稿、ADR Accepted、roadmap 勾选、人工授权 commit |
+| #   | 阶段 | 子 skill            | 通过条件                                                                            |
+| --- | ---- | ------------------- | ----------------------------------------------------------------------------------- |
+| 1   | 设计 | `develop-design`    | ADR 草案含实现契约段，人工 ack，不默认提交                                          |
+| 2   | 实现 | `develop-implement` | spec test / lint / tsc / 必要测试全过                                               |
+| 3   | 自测 | `develop-test`      | Adversarial Bug Hunter 的 BLOCKING 清空                                             |
+| 4   | 文档 | `develop-document`  | 用户可见能力有 zh/en 文档、demo、API 表                                             |
+| 5   | 收尾 | `develop-wrapup`    | ADR 压缩为长期决策记录，changelog 草稿、ADR Accepted、roadmap 勾选、人工授权 commit |
 
 文档不是可选项。用户可见功能必须补 docs；完工汇报先给文档页和访问路由，再讲代码。
 
@@ -47,11 +47,11 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 以 ADR 的“文件 scope”段为准，命中最高级即采用：
 
-| Level | 触发范围 |
-| --- | --- |
-| red | `packages/kernel/core/src/schemas/**`、`packages/kernel/core/src/compile/**`、`packages/*/*/src/index.ts`、public API / IR schema / compile 核心 |
-| yellow | `packages/kernel/react/src/{kernel,sugar,render}/**`、`packages/kernel/core/src/parsers/**`、adapter 行为 |
-| green | `apps/docs/**`、`**/*.test.ts`、`**/*.md`、配置文件 |
+| Level  | 触发范围                                                                                                                                         |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| red    | `packages/kernel/core/src/schemas/**`、`packages/kernel/core/src/compile/**`、`packages/*/*/src/index.ts`、public API / IR schema / compile 核心 |
+| yellow | `packages/kernel/react/src/{kernel,sugar,render}/**`、`packages/kernel/core/src/parsers/**`、adapter 行为                                        |
+| green  | `apps/docs/**`、`**/*.test.ts`、`**/*.md`、配置文件                                                                                              |
 
 red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接实现并按受影响模块验证。跨级 ADR 取最高 level。
 

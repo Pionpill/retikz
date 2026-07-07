@@ -33,7 +33,10 @@ const ARROW_END_SPEC_KEY_FIELDS = [
 ] as const satisfies ReadonlyArray<keyof ResolvedArrowEndSpec>;
 
 // 类型层完备性互锁：字段表必须覆盖 ResolvedArrowEndSpec 除 `shape` 外的所有 key（漏 / 多 字段 TS 报错）
-type _KeyFieldsCheck = AssertEqual<(typeof ARROW_END_SPEC_KEY_FIELDS)[number], Exclude<keyof ResolvedArrowEndSpec, 'shape'>>;
+type _KeyFieldsCheck = AssertEqual<
+  (typeof ARROW_END_SPEC_KEY_FIELDS)[number],
+  Exclude<keyof ResolvedArrowEndSpec, 'shape'>
+>;
 const _assertKeyFieldsCheck: _KeyFieldsCheck = true;
 void _assertKeyFieldsCheck;
 

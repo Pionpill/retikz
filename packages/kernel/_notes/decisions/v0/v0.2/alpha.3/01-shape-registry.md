@@ -24,8 +24,8 @@ shape 只承担**真正多态**的 4 件事（`circumscribe` / `boundaryPoint` /
 
 ```ts
 // core/src/ir/node.ts —— 内置名（Record key 用）与开放名分离
-export type BuiltinShapeName = ValueOf<typeof NODE_SHAPES>;   // 'rectangle' | 'circle' | 'ellipse' | 'diamond'
-export type NodeShape = BuiltinShapeName | (string & {});     // 开放名；`& {}` 保内置名 IDE 自动补全
+export type BuiltinShapeName = ValueOf<typeof NODE_SHAPES>; // 'rectangle' | 'circle' | 'ellipse' | 'diamond'
+export type NodeShape = BuiltinShapeName | (string & {}); // 开放名；`& {}` 保内置名 IDE 自动补全
 // schema 开放为任意非空字符串（校验不门控内置名；未注册名 compile 期拒）
 NodeSchema.shape = z.string().min(1).optional();
 ```

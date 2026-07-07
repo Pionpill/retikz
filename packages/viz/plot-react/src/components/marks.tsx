@@ -304,17 +304,17 @@ export type IntervalMarkProps = MarkTransformProps &
 
 export type RelationMarkProps = MarkTransformProps &
   CoordinateScopeProps & {
-  id?: string;
-  kind?: RelationGeometryKindValue;
-  source: PlotTargetRef;
-  target: PlotTargetRef;
-  label?: MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
-  style?: RelationPrimitiveStyle;
-  path?: RelationPathGeometryInput;
-  ribbon?: RelationRibbonOptions;
-  color?: FieldName;
-  channels?: Record<string, ExtensionChannelProp>;
-};
+    id?: string;
+    kind?: RelationGeometryKindValue;
+    source: PlotTargetRef;
+    target: PlotTargetRef;
+    label?: MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
+    style?: RelationPrimitiveStyle;
+    path?: RelationPathGeometryInput;
+    ribbon?: RelationRibbonOptions;
+    color?: FieldName;
+    channels?: Record<string, ExtensionChannelProp>;
+  };
 
 type ReferenceMarkLabel =
   | MarkNodeLabelInput

@@ -1,12 +1,7 @@
 ﻿import type { IRNode, IRPath, IRScope, JsonValue, ValueOf } from '@retikz/core';
 import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow, ScalarValue } from '@retikz/data';
 
-import type {
-  Channel,
-  LegendChannelValue,
-  MarkOperation,
-  PlotSpec,
-} from '../schemas';
+import type { Channel, LegendChannelValue, MarkOperation, PlotSpec } from '../schemas';
 import type { DimensionRole } from './coordinate';
 import type { AnyScaleDefinition, ChannelScaleResolution } from './scale';
 

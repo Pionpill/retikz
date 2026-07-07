@@ -186,7 +186,11 @@ describe('lowerPlots (ADR-06)', () => {
       marks: [
         {
           type: 'point',
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'region', scale: 'regionColor' } },
+          encoding: {
+            x: { field: 'month' },
+            y: { field: 'revenue' },
+            color: { field: 'region', scale: 'regionColor' },
+          },
         },
       ],
       guides: [
@@ -445,18 +449,14 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
   });
 
   it('bar_width_is_bandwidth_equal', () => {
-    const widths = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
-      n => nodeWidth(n),
-    );
+    const widths = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => nodeWidth(n));
     expect(widths.every(w => w > 0)).toBe(true);
     expect(widths[0]).toBeCloseTo(widths[1], 6);
     expect(widths[1]).toBeCloseTo(widths[2], 6);
   });
 
   it('bar_height_reflects_value', () => {
-    const heights = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
-      n => nodeHeight(n),
-    );
+    const heights = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => nodeHeight(n));
     // revenue 10/14/9 → 第二根最高、第三根最矮
     expect(heights[1]).toBeGreaterThan(heights[0]);
     expect(heights[2]).toBeLessThan(heights[0]);
@@ -466,7 +466,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     // 无 guides → plot area 满，baseline y(0)=300：正值柱底 center + height/2 ≈ 300
     for (const node of firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>) {
       const cy = (node.position as [number, number])[1];
-      expect(cy + (nodeHeight(node)) / 2).toBeCloseTo(300, 6);
+      expect(cy + nodeHeight(node) / 2).toBeCloseTo(300, 6);
     }
   });
 

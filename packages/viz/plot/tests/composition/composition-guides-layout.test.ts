@@ -92,8 +92,20 @@ const overlaySpec = {
     { type: 'interval', coordinateView: 'rain', encoding: { x: { field: 'day' }, y: { field: 'rainfall' } } },
   ],
   guides: [
-    { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' }, title: 'Temperature' },
-    { type: 'axis', dimension: 'y', coordinateView: 'rain', placement: { kind: 'side', side: 'left' }, title: 'Rainfall' },
+    {
+      type: 'axis',
+      dimension: 'y',
+      coordinateView: 'temp',
+      placement: { kind: 'side', side: 'left' },
+      title: 'Temperature',
+    },
+    {
+      type: 'axis',
+      dimension: 'y',
+      coordinateView: 'rain',
+      placement: { kind: 'side', side: 'left' },
+      title: 'Rainfall',
+    },
   ],
 };
 
@@ -127,9 +139,7 @@ const lanesSpec = {
     { type: 'point', coordinateView: 'events', encoding: { x: { field: 'eventX' }, y: { field: 'eventY' } } },
     { type: 'point', coordinateView: 'volume', encoding: { x: { field: 'volumeX' }, y: { field: 'volumeY' } } },
   ],
-  guides: [
-    { type: 'axis', dimension: 'x', coordinateView: 'events', grid: true },
-  ],
+  guides: [{ type: 'axis', dimension: 'x', coordinateView: 'events', grid: true }],
 };
 
 const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
@@ -291,7 +301,13 @@ describe('composition guides layout lowering', () => {
     const spec = {
       ...overlaySpec,
       guides: [
-        { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' }, title: longTitle },
+        {
+          type: 'axis',
+          dimension: 'y',
+          coordinateView: 'temp',
+          placement: { kind: 'side', side: 'left' },
+          title: longTitle,
+        },
       ],
     };
     const outer = expandOf(parsePlotSpec(spec), { weather: weatherRows });
@@ -453,7 +469,8 @@ describe('composition guides layout lowering', () => {
     };
     const withGap = markLayersOf(expandOf(parsePlotSpec(lanesSpec), { lanes: laneRows }));
     const withoutGap = markLayersOf(expandOf(parsePlotSpec(noGapSpec), { lanes: laneRows }));
-    const withGapDistance = Math.min(...allNodes(withGap[0]).map(node => (node.position as [number, number])[1])) -
+    const withGapDistance =
+      Math.min(...allNodes(withGap[0]).map(node => (node.position as [number, number])[1])) -
       Math.max(...allNodes(withGap[1]).map(node => (node.position as [number, number])[1]));
     const withoutGapDistance =
       Math.min(...allNodes(withoutGap[0]).map(node => (node.position as [number, number])[1])) -
@@ -507,7 +524,8 @@ describe('composition guides layout lowering', () => {
     });
     const withGap = markLayersOf(expandOf(PlotSpecSchema.parse(directLanesSpec), { lanes: laneRows }));
     const withoutGap = markLayersOf(expandOf(noGapSpec, { lanes: laneRows }));
-    const withGapDistance = Math.min(...allNodes(withGap[0]).map(node => (node.position as [number, number])[1])) -
+    const withGapDistance =
+      Math.min(...allNodes(withGap[0]).map(node => (node.position as [number, number])[1])) -
       Math.max(...allNodes(withGap[1]).map(node => (node.position as [number, number])[1]));
     const withoutGapDistance =
       Math.min(...allNodes(withoutGap[0]).map(node => (node.position as [number, number])[1])) -

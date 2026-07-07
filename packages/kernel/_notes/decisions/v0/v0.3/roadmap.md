@@ -39,12 +39,12 @@ Vanilla runtime 面向两个场景：
 
 ## 包拆分目标
 
-| 包                | v0.3 职责                                                                                                    | 不做                                                                  | 依赖项                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------ |
-| `@retikz/core`    | 继续提供 IR、zod schema、Scene primitive、资源表、`compileToScene`、几何与 parser                            | 不依赖 React / DOM / SVG / Canvas；不做 renderer 专属布局             | `zod`                                                  |
-| `@retikz/render`  | 新包，渲染后端命名空间；子路径 `./svg`（Scene → SVG descriptor / 字符串）、`./canvas`（Scene → Canvas 2D），后续 `./webgl`；承接现有 React 包中的 SVG 渲染核心 | 不负责 JSX DSL；不重新编译 IR；子路径后端互不依赖（svg 不走 canvas、canvas 不走 SVG 中转） | `@retikz/core`，`csstype`[type] |
-| `@retikz/vanilla` | 新包，framework-free runtime；提供 DOM 挂载、Canvas 挂载、SSR 字符串渲染等普通 JS 入口                       | 不提供组件 DSL；不绑定任何 UI 框架；不复制 render 内核 | `@retikz/core`，`@retikz/render`        |
-| `@retikz/react`   | React Kernel / Sugar 组件、IR builder、`Layout` runtime；对接 `@retikz/render/svg` 与 `@retikz/render/canvas` 两套渲染模式 | 不内置 SVG renderer 细节；不复制 Canvas 绘制逻辑                      | `@retikz/core`，`@retikz/render`，React |
+| 包                | v0.3 职责                                                                                                                                                      | 不做                                                                                       | 依赖项                                  |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------- |
+| `@retikz/core`    | 继续提供 IR、zod schema、Scene primitive、资源表、`compileToScene`、几何与 parser                                                                              | 不依赖 React / DOM / SVG / Canvas；不做 renderer 专属布局                                  | `zod`                                   |
+| `@retikz/render`  | 新包，渲染后端命名空间；子路径 `./svg`（Scene → SVG descriptor / 字符串）、`./canvas`（Scene → Canvas 2D），后续 `./webgl`；承接现有 React 包中的 SVG 渲染核心 | 不负责 JSX DSL；不重新编译 IR；子路径后端互不依赖（svg 不走 canvas、canvas 不走 SVG 中转） | `@retikz/core`，`csstype`[type]         |
+| `@retikz/vanilla` | 新包，framework-free runtime；提供 DOM 挂载、Canvas 挂载、SSR 字符串渲染等普通 JS 入口                                                                         | 不提供组件 DSL；不绑定任何 UI 框架；不复制 render 内核                                     | `@retikz/core`，`@retikz/render`        |
+| `@retikz/react`   | React Kernel / Sugar 组件、IR builder、`Layout` runtime；对接 `@retikz/render/svg` 与 `@retikz/render/canvas` 两套渲染模式                                     | 不内置 SVG renderer 细节；不复制 Canvas 绘制逻辑                                           | `@retikz/core`，`@retikz/render`，React |
 
 > 包名 `@retikz/vanilla` 作为当前首选命名；若后续 ADR 评审认为更合适，仍可再调整。`@retikz/svg` / `@retikz/canvas` 已合并为 `@retikz/render`（子路径后端，见 [alpha.1 ADR-05](./alpha.1/05-renderer-repackage.md)）。
 
@@ -178,14 +178,14 @@ alpha.2 把 v0.2 起的 **Tier 2 / Composite** 接入面（core-design §4.3：d
 
 ### 需要提前具备的能力
 
-| 能力                      | 作用                               | 说明                                                                                      |
-| ------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- |
-| 坐标化层支持              | 承载多坐标系图表                   | 让 `Scope` / local coordinate 的使用方式更适合 plot 的 coordinate scope、axis、panel 结构 |
-| Data / scale 接入面       | 让 plot 能带数据和映射             | 预留 dataRef、scale registry、encoding 之类的接入点，但不把 chart type 塞进 core          |
-| Layer / z-order 语义      | 组织 guide、mark、annotation       | plot 需要稳定的层次叠加与可控顺序，继续复用现有 IR 顺序和 `zIndex` 语义                   |
+| 能力                      | 作用                               | 说明                                                                                       |
+| ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| 坐标化层支持              | 承载多坐标系图表                   | 让 `Scope` / local coordinate 的使用方式更适合 plot 的 coordinate scope、axis、panel 结构  |
+| Data / scale 接入面       | 让 plot 能带数据和映射             | 预留 dataRef、scale registry、encoding 之类的接入点，但不把 chart type 塞进 core           |
+| Layer / z-order 语义      | 组织 guide、mark、annotation       | plot 需要稳定的层次叠加与可控顺序，继续复用现有 IR 顺序和 `zIndex` 语义                    |
 | 可注册的展开管线          | 让 Tier 2 type 下沉成 Tier 1       | 把 `lowerComposites` 钩子泛化成「Tier 2 type → 展开函数」注册表，domain 包注册各自展开逻辑 |
-| Anchor / locator 语义     | 让 guide、label、annotation 可引用 | plot 会大量依赖 axis、panel、datum、series 的定位与锚点引用                               |
-| Text / guide / paint 基础 | 让图表能画出来                     | axis label、legend、grid、series fill、highlight region 都会用到现有基础能力              |
+| Anchor / locator 语义     | 让 guide、label、annotation 可引用 | plot 会大量依赖 axis、panel、datum、series 的定位与锚点引用                                |
+| Text / guide / paint 基础 | 让图表能画出来                     | axis label、legend、grid、series fill、highlight region 都会用到现有基础能力               |
 
 ### 这部分不做什么
 
@@ -295,12 +295,12 @@ SSR / 静态先渲染出图，客户端把用户 handler 绑回图元——函�
 
 ### 后续分段（重新设计）
 
-| 子版本         | 主题                | 内容                                                                                                                                                                                                                                    | 依赖 / 待决策                                                                                    |
-| -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| v0.3.0-alpha.4 | shape 参数化泛化 | `Node.shape` 从 Rect-only 升为「type + 自定义 params」可注册扩展（passthrough + 泛型 `ShapeDefinition<TParams>` + 编译期 `paramsSchema.parse`）；内置形状参数化：circle/ellipse、arc/sector、rectangle/polygon、star（`diamond` ≡ polygon 别名）。详见 [v0.3-alpha.4 roadmap](./alpha.4/roadmap.md) | ADR-01 架构先行，02-05 各形状并发 |
+| 子版本         | 主题                       | 内容                                                                                                                                                                                                                                                                                                     | 依赖 / 待决策                                             |
+| -------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| v0.3.0-alpha.4 | shape 参数化泛化           | `Node.shape` 从 Rect-only 升为「type + 自定义 params」可注册扩展（passthrough + 泛型 `ShapeDefinition<TParams>` + 编译期 `paramsSchema.parse`）；内置形状参数化：circle/ellipse、arc/sector、rectangle/polygon、star（`diamond` ≡ polygon 别名）。详见 [v0.3-alpha.4 roadmap](./alpha.4/roadmap.md)      | ADR-01 架构先行，02-05 各形状并发                         |
 | v0.3.0-alpha.5 | 时间轴动画（§动画 A 转正） | 元素 `animations?: Array<AnimationTrack>`（renderer 无关 property 枚举 + 归一化关键帧 + `trigger`）；SVG 走 WAAPI、`trigger:'load'` emit CSS `@keyframes`（零 JS / SSR）；Canvas `drawScene(…, { time })` + runtime rAF + 共享时钟编排；`drawOn` / `fadeIn` 等 sugar；静态截帧 `{ at: t }`。详见 §动画 A | core IR schema 扩展；多 track 共享时钟；layout 按静止态算 |
-| v0.3.0-beta.1  | 体验加固 | 文档 demo、**SVG↔Canvas 对照 / parity 测试**（原 alpha.4 残值）、Node canvas / `@napi-rs` 服务端导出、包体与 public API 清理、release | — |
-| v0.3.0-rc.1 | 发布候选（API 冻结） | 公开 API 冻结：IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更，到 0.3.0 stable 只接 bug fix。承 beta.2（行为对齐 + zod v4）、beta.3（未发布预 bump）之后，core 组 src 自 beta.2 起零功能改动；dist-tag `next`。 | — |
+| v0.3.0-beta.1  | 体验加固                   | 文档 demo、**SVG↔Canvas 对照 / parity 测试**（原 alpha.4 残值）、Node canvas / `@napi-rs` 服务端导出、包体与 public API 清理、release                                                                                                                                                                    | —                                                         |
+| v0.3.0-rc.1    | 发布候选（API 冻结）       | 公开 API 冻结：IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更，到 0.3.0 stable 只接 bug fix。承 beta.2（行为对齐 + zod v4）、beta.3（未发布预 bump）之后，core 组 src 自 beta.2 起零功能改动；dist-tag `next`。                                                                     | —                                                         |
 
 每段保持一个可验证闭环;切分可在开工前微调。
 

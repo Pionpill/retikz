@@ -22,10 +22,7 @@ import { buildIntervalContext, datumAnchor, intervalCellGeometry } from '../../p
 import { isBuiltinMark, PlotMark } from '../../schemas';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { lowerPlots, prepareRows, resolveFrame } from '../expand';
-import {
-  createDatumIdRegistrar,
-  datumMeta,
-} from '../provenance';
+import { createDatumIdRegistrar, datumMeta } from '../provenance';
 
 type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 

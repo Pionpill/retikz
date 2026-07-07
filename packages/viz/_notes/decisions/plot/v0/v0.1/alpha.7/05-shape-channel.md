@@ -16,11 +16,25 @@ core node 内置 4 形状：`rectangle` / `circle` / `ellipse` / `diamond`（`ci
 
 ```ts
 // ir/encoding.ts —— shape channel（value = core shape 名；本轮不开放显式 scale 引用）
-export const ShapeChannelSchema = z.object({
-  field: z.string().min(1).optional().describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
-  value: z.string().min(1).optional().describe('Constant glyph shape name — a core / registered node shape (mutually exclusive with field)'),
-}).refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'shape channel must set exactly one of field / value' })
-  .describe('Shape channel (PointMark only): field → glyph shape via the built-in shape palette; value → a constant core shape name');
+export const ShapeChannelSchema = z
+  .object({
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
+    value: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Constant glyph shape name — a core / registered node shape (mutually exclusive with field)'),
+  })
+  .refine(c => (c.field === undefined) !== (c.value === undefined), {
+    message: 'shape channel must set exactly one of field / value',
+  })
+  .describe(
+    'Shape channel (PointMark only): field → glyph shape via the built-in shape palette; value → a constant core shape name',
+  );
 // PointEncodingSchema 扩成 { ...Encoding, size?, opacity?, shape? }
 ```
 
@@ -35,7 +49,6 @@ export const ShapeChannelSchema = z.object({
 1. **与 color 同构**：分类 → 离散输出，复用 ADR-02 resolver 的 ordinal 路径，shape 只是把 range 从颜色换成 shape 名。
 2. **PointMark 专属是本质**：形状只对 glyph 有意义，进 PointEncoding 天然正确。
 3. **core 现成 shape 名**：落 core 内置 shape，不补 core。
-
 
 ## 不在本 ADR 范围
 

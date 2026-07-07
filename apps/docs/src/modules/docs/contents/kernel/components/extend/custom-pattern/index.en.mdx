@@ -17,11 +17,11 @@ If you only want to get a pattern working first, implement `emit`; `defaultSize`
 
 A `PatternDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it at the definition site with `definePattern({...})` so custom patterns follow the same extension style as shapes, arrows, and path generators:
 
-| Field         | Type                                 | Default  | Description                                                             |
-| ------------- | ------------------------------------ | -------- | ----------------------------------------------------------------------- |
+| Field         | Type                                 | Default  | Description                                                                                                |
+| ------------- | ------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------- |
 | `name`        | `string`                             | Required | Registry name; `pattern.shape` looks up this motif by name, and built-in name collisions fail registration |
-| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | required | Produces motif geometry in the tile-local coordinate system (`0..size`) |
-| `defaultSize` | `number`                             | `8`      | Default tile period (user units); overridden by `pattern.size`          |
+| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | required | Produces motif geometry in the tile-local coordinate system (`0..size`)                                    |
+| `defaultSize` | `number`                             | `8`      | Default tile period (user units); overridden by `pattern.size`                                             |
 
 The `PatternEmitContext` passed to `emit`:
 

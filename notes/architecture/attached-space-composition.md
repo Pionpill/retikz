@@ -79,12 +79,12 @@ mainFacet
 
 这个模型中有四类概念：
 
-| 概念 | 职责 | 所属层 |
-|---|---|---|
-| View | 一个可被引用的局部坐标视图；attached view 仍是普通 view | plot |
-| ViewGroup | 多个 view 的集合，例如分面行、分面列、轨道组、union 结果 | plot |
-| RegionHandle | 可复用的空间句柄数据模型，例如 bbox、band、angle span | core 提供模型与索引，plot 生成 domain handle |
-| SemanticHandle | 可追踪的语义句柄，例如 facet key、track id、数据 lineage | core 提供容器，plot 写入语义 |
+| 概念           | 职责                                                     | 所属层                                       |
+| -------------- | -------------------------------------------------------- | -------------------------------------------- |
+| View           | 一个可被引用的局部坐标视图；attached view 仍是普通 view  | plot                                         |
+| ViewGroup      | 多个 view 的集合，例如分面行、分面列、轨道组、union 结果 | plot                                         |
+| RegionHandle   | 可复用的空间句柄数据模型，例如 bbox、band、angle span    | core 提供模型与索引，plot 生成 domain handle |
+| SemanticHandle | 可追踪的语义句柄，例如 facet key、track id、数据 lineage | core 提供容器，plot 写入语义                 |
 
 `composition.arrangements` 仍然负责基础拓扑生成器，例如 facet / tracks。overlay 属于 `views[].placement`，不是 arrangement。空间贴附能力不应继续塞进 arrangement，而应作为新的 attachment 层，表达“普通 view / element 如何贴到已有空间句柄”。
 

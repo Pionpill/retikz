@@ -76,9 +76,6 @@ export {
 export type { ColorSchemeResolver, PlotColorSchemeValue } from './providers';
 export { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './providers';
 // Mark extension surface: factory + types from contract; registry helpers from providers.
-export type {
-  AnyMarkDefinition,
-  MarkDefinition,
-} from './contract';
+export type { AnyMarkDefinition, MarkDefinition } from './contract';
 export { defineMark } from './contract';
 export { resolveMarkRegistry } from './providers';

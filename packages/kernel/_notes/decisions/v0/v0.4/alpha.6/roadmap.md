@@ -14,15 +14,15 @@ alpha.6 聚焦来自 plot / viz 的关系图底座需求：可变宽度带状关
 
 ## 决策列表
 
-| ADR | 状态 | 主题 | 说明 |
-| --- | --- | --- | --- |
-| [ADR-01](./01-ribbon.md) | 被 ADR-07 收敛 | Ribbon 可变宽度路径 | 宽度规则与 lowering 落地，但独立 `type: "ribbon"` 公开形态被 ADR-07 收敛为 `Path.kind="ribbon"` |
-| [ADR-02](./02-ribbon-boundary-and-alignment.md) | 被 ADR-07 收敛 | Ribbon 边界与对齐增强 | 单侧对齐、端面、显式 upper/lower 边界与采样能力落地，挂载在 `Path.ribbon` 参数对象下 |
-| [ADR-03](./03-ribbon-arc-cap.md) | 被 ADR-07 收敛 | Ribbon 自定义圆弧端帽 | 圆弧端帽能力落地，作为 `Path.ribbon.start/end.cap` 的一种结构化 cap |
-| [ADR-04](./04-node-label-inside-placement.md) | 已接受 | Node label 内侧 placement | `Node.label` 增加 `placement: "outside" \| "inside"` 与 `{ boundary, fraction }` position，支持边界上的自定义标签位置 |
-| [ADR-05](./05-ribbon-label.md) | 被 ADR-07 收敛 | Ribbon host label | host label 能力落地，但公开字段收敛为共享的 `Path.label`，不保留 ribbon 专用 label API |
-| [ADR-06](./06-path-ribbon-shared-contract.md) | 被 ADR-07 收敛 | Path / Ribbon 共享 drawable 契约 | 共享样式 / 元数据 schema 落地，并由 ADR-07 改名为 `DrawableStyleSchema` / `DrawableMetaSchema` |
-| [ADR-07](./07-path-kind-registry.md) | 已接受 | Path kind registry 与 Ribbon 合并 | 移除独立 `IRRibbon`；Ribbon 表示为 `type: "path", kind: "ribbon"` 与 `ribbon` 参数对象，并让 `Path.kind` 通过一等 provider contract 扩展 |
+| ADR                                             | 状态           | 主题                              | 说明                                                                                                                                     |
+| ----------------------------------------------- | -------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-01](./01-ribbon.md)                        | 被 ADR-07 收敛 | Ribbon 可变宽度路径               | 宽度规则与 lowering 落地，但独立 `type: "ribbon"` 公开形态被 ADR-07 收敛为 `Path.kind="ribbon"`                                          |
+| [ADR-02](./02-ribbon-boundary-and-alignment.md) | 被 ADR-07 收敛 | Ribbon 边界与对齐增强             | 单侧对齐、端面、显式 upper/lower 边界与采样能力落地，挂载在 `Path.ribbon` 参数对象下                                                     |
+| [ADR-03](./03-ribbon-arc-cap.md)                | 被 ADR-07 收敛 | Ribbon 自定义圆弧端帽             | 圆弧端帽能力落地，作为 `Path.ribbon.start/end.cap` 的一种结构化 cap                                                                      |
+| [ADR-04](./04-node-label-inside-placement.md)   | 已接受         | Node label 内侧 placement         | `Node.label` 增加 `placement: "outside" \| "inside"` 与 `{ boundary, fraction }` position，支持边界上的自定义标签位置                    |
+| [ADR-05](./05-ribbon-label.md)                  | 被 ADR-07 收敛 | Ribbon host label                 | host label 能力落地，但公开字段收敛为共享的 `Path.label`，不保留 ribbon 专用 label API                                                   |
+| [ADR-06](./06-path-ribbon-shared-contract.md)   | 被 ADR-07 收敛 | Path / Ribbon 共享 drawable 契约  | 共享样式 / 元数据 schema 落地，并由 ADR-07 改名为 `DrawableStyleSchema` / `DrawableMetaSchema`                                           |
+| [ADR-07](./07-path-kind-registry.md)            | 已接受         | Path kind registry 与 Ribbon 合并 | 移除独立 `IRRibbon`；Ribbon 表示为 `type: "path", kind: "ribbon"` 与 `ribbon` 参数对象，并让 `Path.kind` 通过一等 provider contract 扩展 |
 
 ## 验收清单
 

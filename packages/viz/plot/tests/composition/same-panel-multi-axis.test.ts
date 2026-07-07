@@ -137,7 +137,7 @@ const nodeHeight = (node: IRNode): number => {
 };
 
 const pathYValues = (path: IRPath): Array<number> =>
-  path.children.flatMap(step => ('to' in step && Array.isArray(step.to) ? [(step.to)[1]] : []));
+  path.children.flatMap(step => ('to' in step && Array.isArray(step.to) ? [step.to[1]] : []));
 
 const spanOf = (values: ReadonlyArray<number>): number => Math.max(...values) - Math.min(...values);
 

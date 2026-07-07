@@ -14,24 +14,24 @@ SVG 后端的特殊性：它有**两套互斥的播放载体**——**CSS `@keyf
 
 ### 两种 emit 模式（按 `track.trigger`）
 
-| trigger | 载体 | SSR 字符串 | 说明 |
-|---|---|---|---|
-| `'load'`（缺省） | **CSS `@keyframes`** | ✅ 自播、零 JS | `buildSvgDocument` 收集所有 load-track → 一个 `<style>`：per-track `@keyframes` + 给目标元素挂 `animation: <name> <dur> <easing> <delay> <iter> <dir> <fill>` |
-| `'visible'` / `'manual'` / `{onEvent}` | **WAAPI 描述** | ❌（需 JS） | descriptor 上挂结构化 animation 规格；runtime（`mountSvg` / react）读它调 `element.animate(keyframes, timing)` + 按 trigger 接 IntersectionObserver / API / 事件 |
+| trigger                                | 载体                 | SSR 字符串     | 说明                                                                                                                                                             |
+| -------------------------------------- | -------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'load'`（缺省）                       | **CSS `@keyframes`** | ✅ 自播、零 JS | `buildSvgDocument` 收集所有 load-track → 一个 `<style>`：per-track `@keyframes` + 给目标元素挂 `animation: <name> <dur> <easing> <delay> <iter> <dir> <fill>`    |
+| `'visible'` / `'manual'` / `{onEvent}` | **WAAPI 描述**       | ❌（需 JS）    | descriptor 上挂结构化 animation 规格；runtime（`mountSvg` / react）读它调 `element.animate(keyframes, timing)` + 按 trigger 接 IntersectionObserver / API / 事件 |
 
 - **能力边界（明确写进文档）**：`renderToSvgString`（SSR）只把 **load-track** 编进 CSS 自播；`visible`/`manual`/`onEvent` 的 track 在 SSR 字符串里**不播**（descriptor 仍带规格，等 runtime 挂载后 WAAPI 接管）。交互触发器必须走 DOM 挂载路径。
 - 同一元素可混挂多条 track（部分 load→CSS、部分交互→WAAPI），互不干扰。
 
 ### property → SVG 映射
 
-| AnimationProperty | SVG 落点 |
-|---|---|
-| `opacity` | `opacity` |
-| `fill` / `stroke` | `fill` / `stroke`（颜色，见下 oklch） |
-| `strokeWidth` | `stroke-width` |
-| `translateX` / `translateY` / `rotate` / `scale` / `scaleX` / `scaleY` | `transform`（合成；支点取 track `origin`——命名 anchor 折算成元素 boundary 上的点 / `[x,y]` 直用，缺省几何中心；映射成 `transform-box` + `transform-origin` 或绕支点的 translate-scale-translate 复合） |
-| `pathDraw`（0..1） | `pathLength=1` + `stroke-dasharray` + `stroke-dashoffset`（1→0 画出）；仅对有描边的 path/shape 有效，无描边 → warn+skip |
-| `viewBox`（scene 根·镜头） | **包一层 `<g transform>` 动 transform**（不动 `<svg viewBox>` 属性——CSS/WAAPI 都能动 transform、动不了 viewBox 属性）：每关键帧的 `[x,y,w,h]` 相对静态 `layout` 折算成 `scale + translate`，动这个合成 transform |
+| AnimationProperty                                                      | SVG 落点                                                                                                                                                                                                         |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `opacity`                                                              | `opacity`                                                                                                                                                                                                        |
+| `fill` / `stroke`                                                      | `fill` / `stroke`（颜色，见下 oklch）                                                                                                                                                                            |
+| `strokeWidth`                                                          | `stroke-width`                                                                                                                                                                                                   |
+| `translateX` / `translateY` / `rotate` / `scale` / `scaleX` / `scaleY` | `transform`（合成；支点取 track `origin`——命名 anchor 折算成元素 boundary 上的点 / `[x,y]` 直用，缺省几何中心；映射成 `transform-box` + `transform-origin` 或绕支点的 translate-scale-translate 复合）           |
+| `pathDraw`（0..1）                                                     | `pathLength=1` + `stroke-dasharray` + `stroke-dashoffset`（1→0 画出）；仅对有描边的 path/shape 有效，无描边 → warn+skip                                                                                          |
+| `viewBox`（scene 根·镜头）                                             | **包一层 `<g transform>` 动 transform**（不动 `<svg viewBox>` 属性——CSS/WAAPI 都能动 transform、动不了 viewBox 属性）：每关键帧的 `[x,y,w,h]` 相对静态 `layout` 折算成 `scale + translate`，动这个合成 transform |
 
 ### oklch 颜色插值（roadmap 定）
 
@@ -64,7 +64,6 @@ SVG 后端的特殊性：它有**两套互斥的播放载体**——**CSS `@keyf
 - **自定义 property 的插值器**：SVG 只认内置 property→CSS/SVG 映射；自定义 property 的通用插值（JS 算）在 Canvas（ADR-03）/ runtime 更自然，本 ADR 对未映射自定义 property 一律 warn+skip。
 - **sugar 动词**（`fadeIn` / `drawOn` …）：`@retikz/react` + 共享 parser，后续 ADR。
 - **多 track 共享时钟编排的 runtime 实现**：本 ADR 只保证 CSS/WAAPI 各 track 用同一 t0（load 时刻）+ per-track delay；跨元素显式 sequence 由 runtime（ADR-04）。
-
 
 > 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:_notes/decisions/core/v0/v0.3/alpha.5/02-svg-playback.md`（封板全文）。

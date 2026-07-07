@@ -21,12 +21,13 @@ ADR-02 已经把 `grid` 收进 axis 的部件槽位，明确 grid 是 axis 的�
 ```ts
 type AxisGrid = boolean | AxisGridOptions;
 
-type AxisGridOptions = AxisGridProjection & AxisGridLineStyle & {
-  ticks?: GuideTickSource;
-  density?: AxisTickDensity;
-  bandPosition?: number;
-  minor?: false | AxisMinorGridOptions;
-};
+type AxisGridOptions = AxisGridProjection &
+  AxisGridLineStyle & {
+    ticks?: GuideTickSource;
+    density?: AxisTickDensity;
+    bandPosition?: number;
+    minor?: false | AxisMinorGridOptions;
+  };
 
 type AxisMinorGridOptions = AxisGridLineStyle & {
   ticks: GuideTickSource;

@@ -1,6 +1,6 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { DataSortOrderValue,ExternalRow, OrderBy } from '../../schemas';
+import type { DataSortOrderValue, ExternalRow, OrderBy } from '../../schemas';
 
 import { DataSortOrder } from '../../schemas';
 import { resolveFieldPath } from '../data';

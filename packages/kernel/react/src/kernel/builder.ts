@@ -260,7 +260,8 @@ const buildPathMarksFromProps = (props: PathProps): IRPathBase['marks'] | undefi
   const marks: NonNullable<IRPathBase['marks']> = [];
   const arrow = props.arrow;
   if (arrow !== undefined && arrow !== 'none') {
-    if (arrow === '<-' || arrow === '<->') marks.push({ pos: 0, mark: arrowMarkFromDetail(props.arrowDetail, 'start') });
+    if (arrow === '<-' || arrow === '<->')
+      marks.push({ pos: 0, mark: arrowMarkFromDetail(props.arrowDetail, 'start') });
     if (arrow === '->' || arrow === '<->') marks.push({ pos: 1, mark: arrowMarkFromDetail(props.arrowDetail, 'end') });
   }
   if (props.marks !== undefined) marks.push(...props.marks);

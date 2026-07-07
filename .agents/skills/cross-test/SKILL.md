@@ -63,27 +63,27 @@ description: retikz 交叉测试 / 缺陷挖掘技能。用于基于 packages �
 
 优先从以下维度找边缘场景：
 
-| 攻击面 | 例子 |
-|---|---|
-| JSON/IR 契约 | `JSON.stringify` / `JSON.parse` 后 schema parse 是否等价；额外字段 / 缺字段 / 错类型报错是否可诊断 |
-| 数值边界 | `0`、负数、`NaN`、`Infinity`、极小/极大值、角度跨 360、空数组 |
-| 引用解析 | 未定义 id、自引用、引用顺序、coordinate 与 node 同名、anchor 拼写错误 |
-| 顺序敏感 | path 首段不是 move、cycle 后继续画、多个 sub-path + arrow、多个 `<Layout>` 同页 |
-| 组合行为 | label + sloped + arrow + bend；at/offset/polar 嵌套；scale/rotate/sep 叠加 |
-| Sugar 等价 | `<Draw way={...}>` 是否等价于手写 `<Path><Step /></Path>` |
-| Builder/Unbuilder | `convertIRToReactNode` → `convertReactNodeToIR` round-trip 是否保真 |
-| Renderer 适配 | Scene primitive 到 SVG 的 id、marker、transform、path d、text line stacking |
-| 错误信息 | throw / zod error 是否包含足够定位信息，而不是 silent no-op 或模糊错误 |
-| 重复调用 | 模块级缓存、`useId`、marker dedup、browser measurer canvas 复用 |
+| 攻击面            | 例子                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| JSON/IR 契约      | `JSON.stringify` / `JSON.parse` 后 schema parse 是否等价；额外字段 / 缺字段 / 错类型报错是否可诊断 |
+| 数值边界          | `0`、负数、`NaN`、`Infinity`、极小/极大值、角度跨 360、空数组                                      |
+| 引用解析          | 未定义 id、自引用、引用顺序、coordinate 与 node 同名、anchor 拼写错误                              |
+| 顺序敏感          | path 首段不是 move、cycle 后继续画、多个 sub-path + arrow、多个 `<Layout>` 同页                    |
+| 组合行为          | label + sloped + arrow + bend；at/offset/polar 嵌套；scale/rotate/sep 叠加                         |
+| Sugar 等价        | `<Draw way={...}>` 是否等价于手写 `<Path><Step /></Path>`                                          |
+| Builder/Unbuilder | `convertIRToReactNode` → `convertReactNodeToIR` round-trip 是否保真                                |
+| Renderer 适配     | Scene primitive 到 SVG 的 id、marker、transform、path d、text line stacking                        |
+| 错误信息          | throw / zod error 是否包含足够定位信息，而不是 silent no-op 或模糊错误                             |
+| 重复调用          | 模块级缓存、`useId`、marker dedup、browser measurer canvas 复用                                    |
 
 ### 3. 写测试策略
 
 按确认度分三类处理：
 
-| 类别 | 做法 |
-|---|---|
-| 确认 bug | 写正式测试，允许当前 fail；测试名说明用户场景与期望 |
-| 疑似 bug | 先写最小 exploratory test 或用现有测试 helper 复现，再决定是否正式化 |
+| 类别         | 做法                                                                  |
+| ------------ | --------------------------------------------------------------------- |
+| 确认 bug     | 写正式测试，允许当前 fail；测试名说明用户场景与期望                   |
+| 疑似 bug     | 先写最小 exploratory test 或用现有测试 helper 复现，再决定是否正式化  |
 | 用户体验改进 | 不强行写 fail test；记录为 WARNING / TODO，必要时补“当前行为锁定”测试 |
 
 测试落点遵循现有布局：
@@ -179,7 +179,7 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 
 ### 报告模板
 
-```md
+````md
 # Cross Test Report: <scope>
 
 日期：YYYY-MM-DD
@@ -195,13 +195,14 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 ## 新增 / 草拟测试
 
 | 文件 | 测试名 | 目的 | 当前结果 |
-|---|---|---|---|
+| ---- | ------ | ---- | -------- |
 
 ## 运行结果
 
 ```bash
 <实际运行的命令>
 ```
+````
 
 结果摘要：
 
@@ -212,17 +213,17 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 ## BLOCKING
 
 | case | 触发输入 | 期望行为 | 实际行为 | 证据 | 后续动作 |
-|---|---|---|---|---|---|
+| ---- | -------- | -------- | -------- | ---- | -------- |
 
 ## WARNING
 
 | case | 观察 | 用户影响 | 建议动作 |
-|---|---|---|---|
+| ---- | ---- | -------- | -------- |
 
 ## INFO
 
 | case | 观察 |
-|---|---|
+| ---- | ---- |
 
 ## 用户视角评估
 
@@ -238,7 +239,8 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 - 已追加 plan TODO：
 - 建议进入 alpha 的破坏性候选：
 - 暂不处理及原因：
-```
+
+````
 
 若没有发现问题，也必须明确写：
 
@@ -250,7 +252,7 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 ## WARNING
 
 无。
-```
+````
 
 ## 用户视角评估清单
 

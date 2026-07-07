@@ -17,15 +17,15 @@ alpha.8 是 v0.4 的 alpha 收口版本。原始目标是把 alpha.1-alpha.7 已
 
 ## 决策列表
 
-| ADR | 状态 | 主题 | 说明 |
-| --- | --- | --- | --- |
-| [ADR-01](./01-drawing-complete-alpha4-closeout.md) | Accepted | Drawing complete × alpha.4 收口审计 | 总审计与分流索引，确认 alpha.4 图元级 effect 无阻塞问题，并把 interaction / group effect / docs reference 分拆到后续 ADR。 |
-| [ADR-02](./02-headless-interaction-boundary.md) | Accepted | Headless interaction manifest 边界登记 | 明确现有 hydration / hit-test 不是缺失；缺口是 core 缺 JSON-safe target / role / intent / hit-area manifest，进入 v0.5 候选。 |
-| [ADR-03](./03-group-scope-effect-boundary.md) | Accepted | Group / Scope 级视觉效果延期边界 | 保持 alpha.4 图元级 shadow / blend 语义，登记 group effect / blend isolation / offscreen composite 为独立后续设计。 |
-| [ADR-04](./04-scene-primitive-reference-closeout.md) | Accepted | ScenePrimitive reference 与发布文案收口 | alpha.8 已完成 docs-only reference / changelog 对账，不回写 alpha.4 历史 ADR。 |
-| [ADR-05](./05-stroke-dash-offset.md) | Accepted | Stroke dash offset | 补齐 `dashPattern` 配套的 `dashOffset` 通用描边字段，覆盖 IR / Scene / renderer / adapter / docs。 |
-| [ADR-06](./06-builtin-path-generator-ribbon-profile.md) | Accepted | Builtin path generator and ribbon width profile | 为 `pathGenerators` 增加内置 `parabola`，为 `ribbonWidthProfiles` 增加内置 `bulge`，并同步测试与文档。 |
-| [ADR-07](./07-font-size-presets-and-relative-units.md) | Accepted | Font size presets and relative units | 扩展 core 字号契约，支持 Web preset 与 `em` / `rem` 相对单位。 |
+| ADR                                                     | 状态     | 主题                                            | 说明                                                                                                                          |
+| ------------------------------------------------------- | -------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-01](./01-drawing-complete-alpha4-closeout.md)      | Accepted | Drawing complete × alpha.4 收口审计             | 总审计与分流索引，确认 alpha.4 图元级 effect 无阻塞问题，并把 interaction / group effect / docs reference 分拆到后续 ADR。    |
+| [ADR-02](./02-headless-interaction-boundary.md)         | Accepted | Headless interaction manifest 边界登记          | 明确现有 hydration / hit-test 不是缺失；缺口是 core 缺 JSON-safe target / role / intent / hit-area manifest，进入 v0.5 候选。 |
+| [ADR-03](./03-group-scope-effect-boundary.md)           | Accepted | Group / Scope 级视觉效果延期边界                | 保持 alpha.4 图元级 shadow / blend 语义，登记 group effect / blend isolation / offscreen composite 为独立后续设计。           |
+| [ADR-04](./04-scene-primitive-reference-closeout.md)    | Accepted | ScenePrimitive reference 与发布文案收口         | alpha.8 已完成 docs-only reference / changelog 对账，不回写 alpha.4 历史 ADR。                                                |
+| [ADR-05](./05-stroke-dash-offset.md)                    | Accepted | Stroke dash offset                              | 补齐 `dashPattern` 配套的 `dashOffset` 通用描边字段，覆盖 IR / Scene / renderer / adapter / docs。                            |
+| [ADR-06](./06-builtin-path-generator-ribbon-profile.md) | Accepted | Builtin path generator and ribbon width profile | 为 `pathGenerators` 增加内置 `parabola`，为 `ribbonWidthProfiles` 增加内置 `bulge`，并同步测试与文档。                        |
+| [ADR-07](./07-font-size-presets-and-relative-units.md)  | Accepted | Font size presets and relative units            | 扩展 core 字号契约，支持 Web preset 与 `em` / `rem` 相对单位。                                                                |
 
 ## 范围
 
@@ -66,8 +66,8 @@ alpha.8 是 v0.4 的 alpha 收口版本。原始目标是把 alpha.1-alpha.7 已
 
 alpha.8 发布后，下一轮讨论应把候选拆成三层：
 
-| 层级 | 候选 | 说明 |
-| --- | --- | --- |
-| v0.5 alpha | headless interaction、Progressive IR / JSON Patch、incremental compile | 仍属于纵向机制探索，需先做 ADR；交互和用户操作场景要评估 IR diff、bailout、局部重编译与 concurrent 调度。 |
-| v0.4 beta / rc | API 复核、安装验收、docs / changelog 对账 | 不新增能力，面向稳定化。 |
-| 更长期 | P3D、scope polygon / ellipse / padding、blur / mask / layer | 需要更强需求牵引或跨包设计，不随 v0.4 收口发布。 |
+| 层级           | 候选                                                                   | 说明                                                                                                      |
+| -------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| v0.5 alpha     | headless interaction、Progressive IR / JSON Patch、incremental compile | 仍属于纵向机制探索，需先做 ADR；交互和用户操作场景要评估 IR diff、bailout、局部重编译与 concurrent 调度。 |
+| v0.4 beta / rc | API 复核、安装验收、docs / changelog 对账                              | 不新增能力，面向稳定化。                                                                                  |
+| 更长期         | P3D、scope polygon / ellipse / padding、blur / mask / layer            | 需要更强需求牵引或跨包设计，不随 v0.4 收口发布。                                                          |

@@ -74,9 +74,9 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
     expect(spec.composition?.arrangements?.[0]).toMatchObject({
       kind: 'tracks',
       coordinate: {
-      type: 'polar2D',
-      angle: '__angle',
-      radius: '__radius',
+        type: 'polar2D',
+        angle: '__angle',
+        radius: '__radius',
       },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();

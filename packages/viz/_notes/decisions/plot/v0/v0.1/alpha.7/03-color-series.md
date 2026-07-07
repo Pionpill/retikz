@@ -24,10 +24,10 @@ color 通道名义上是「真 scale 通道」，实则半成品，且 color 与
 
 **(2) B/C color×series 收口规则**：
 
-| mark 类 | 着色 | series 语义 |
-|---|---|---|
-| point / bar / sector | 按 **datum** 着色 | 不引入 series（已能按 datum 分色）|
-| line / area（path）| 按 **series** 着色 | path 是整体图元，按 series 上色 |
+| mark 类              | 着色               | series 语义                        |
+| -------------------- | ------------------ | ---------------------------------- |
+| point / bar / sector | 按 **datum** 着色  | 不引入 series（已能按 datum 分色） |
+| line / area（path）  | 按 **series** 着色 | path 是整体图元，按 series 上色    |
 
 - **line/area 无显式 `series` 且有 categorical `color.field`** → **隐式按 color 拆 series**（修单系列静默丢弃）；
 - **显式 `series` + `color.field` 并存** 且**同一 series 内 color 不恒定** → **fail-loud**；
@@ -50,7 +50,6 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 1. **修债且不过界**：隐式拆只发生在 path mark（line/area）、只认 categorical color——既消灭「单系列 color 静默丢弃」，又把「显式 series 一等」守住，不滑向 ggplot 全自动分组。
 2. **真通道名副其实**：连续/temporal color fail-loud，杜绝数值字段被错当分类调色；连续色阶按计划留 alpha.8。
 3. **locator 安全**：隐式拆等价显式 series，alpha.5 接通的 datum 定位不被新行为破坏。
-
 
 ## 不在本 ADR 范围
 

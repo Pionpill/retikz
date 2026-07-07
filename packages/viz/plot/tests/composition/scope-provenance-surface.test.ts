@@ -98,7 +98,10 @@ const trackSpec = {
 const parsePlotSpec = (spec: unknown): PlotSpec => PlotSpecSchema.parse(spec);
 
 const expandOf = (spec: PlotSpec): IRScope => {
-  const [definition] = lowerPlots({ weather: weatherRows }, { width: 480, height: 300, provenance: true, datumProvenance: true });
+  const [definition] = lowerPlots(
+    { weather: weatherRows },
+    { width: 480, height: 300, provenance: true, datumProvenance: true },
+  );
   return definition.expand(spec) as IRScope;
 };
 
@@ -156,7 +159,11 @@ describe('scope provenance surface lowering', () => {
 
 describe('scope provenance surface locator', () => {
   it('locator_by_coordinate_view_disambiguates_same_index', () => {
-    const locator = createPlotLocator(parsePlotSpec(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(
+      parsePlotSpec(overlaySpec),
+      { weather: weatherRows },
+      { width: 480, height: 300 },
+    );
     const temp = locator.datum(0, { coordinateView: 'temp' });
     const rain = locator.datum(0, { coordinateView: 'rain' });
     expect(temp?.meta.coordinateView).toBe('temp');
@@ -180,7 +187,11 @@ describe('scope provenance surface locator', () => {
   });
 
   it('root_and_view_addresses_resolve', () => {
-    const locator = createPlotLocator(parsePlotSpec(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(
+      parsePlotSpec(overlaySpec),
+      { weather: weatherRows },
+      { width: 480, height: 300 },
+    );
     expect(locator.resolve('weather.datum.0')?.meta.transformedIndex).toBe(0);
     expect(locator.resolve('weather.view.rain.datum.0')?.meta.coordinateView).toBe('rain');
     expect(locator.resolve('weather.scope.rain.datum.0')).toBeNull();

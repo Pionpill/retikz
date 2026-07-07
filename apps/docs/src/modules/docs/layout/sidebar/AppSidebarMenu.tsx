@@ -60,8 +60,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                   </button>
                 ) : (
                   <h4 className="mb-1.5 px-3 text-xs font-medium text-muted-foreground">{category.label}</h4>
-                )
-              )}
+                ))}
               <ul className="flex flex-col gap-0.5">
                 {category.modules.map(module => {
                   const modulePath = category.ungrouped

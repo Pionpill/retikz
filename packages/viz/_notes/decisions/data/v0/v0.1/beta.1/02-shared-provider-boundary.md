@@ -17,15 +17,15 @@ ADR-01 把 plot 中的数据 schema、字段解析、format、statistics、trans
 
 保留在 data 的能力：
 
-| 能力 | 保留理由 |
-| --- | --- |
-| `ExternalRow` / `ExternalDatasets` / `DataRef` / `DataModel` / `ScalarValue` | 数据模型与数据引用，是所有 viz 宿主的输入边界。 |
-| 字段路径解析、字段类型推断、`fieldMap`、canonical row normalize、coerce、validate | ingest 与字段读取底座，plot / table / geo 都需要。 |
-| field format registry 与内置 format | 字段解析格式，不依赖图形几何或 plot mark。 |
-| provenance helper 与 `TransformContext.groupProvenance` | 数据行来源追踪，可服务 locator、table row drilldown、geo feature 回指。 |
-| transform contract、registry resolver、apply pipeline | 数据流编排能力；宿主通过 definitions 注入自己的内置项。 |
-| `sort` / `summarize` / `select` / `annotate` | 通用行排序、汇总、代表行选择和统计回填。 |
-| statistics reducer / row selector registry | 通用统计子算子，可被 data transform 与宿主 transform 复用。 |
+| 能力                                                                              | 保留理由                                                                |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `ExternalRow` / `ExternalDatasets` / `DataRef` / `DataModel` / `ScalarValue`      | 数据模型与数据引用，是所有 viz 宿主的输入边界。                         |
+| 字段路径解析、字段类型推断、`fieldMap`、canonical row normalize、coerce、validate | ingest 与字段读取底座，plot / table / geo 都需要。                      |
+| field format registry 与内置 format                                               | 字段解析格式，不依赖图形几何或 plot mark。                              |
+| provenance helper 与 `TransformContext.groupProvenance`                           | 数据行来源追踪，可服务 locator、table row drilldown、geo feature 回指。 |
+| transform contract、registry resolver、apply pipeline                             | 数据流编排能力；宿主通过 definitions 注入自己的内置项。                 |
+| `sort` / `summarize` / `select` / `annotate`                                      | 通用行排序、汇总、代表行选择和统计回填。                                |
+| statistics reducer / row selector registry                                        | 通用统计子算子，可被 data transform 与宿主 transform 复用。             |
 
 移出 data、由 plot 自行注册的能力：`stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density`、`smooth`。
 

@@ -43,13 +43,13 @@
 
 ### 1.3 灵感来源与差异
 
-| 库 | 借鉴 | 差异 |
-|---|---|---|
-| Recharts | React 组件 = 图元的思路 | 粒度更低，做通用图元而非 chart 元 |
-| TikZ | 命名节点 / 路径动作 / anchor 体系 | 浏览器原生，无 LaTeX |
-| Vega-Lite | DSL → IR → renderer 三段式 | DSL 用 JSX 而非 JSON |
-| react-flow | React-first + 节点/边持久化 | 通用图元 + 跨框架 |
-| D3 | 平台底层，让 domain 包开花 | 提供组件式 API，不强求命令式 |
+| 库         | 借鉴                              | 差异                              |
+| ---------- | --------------------------------- | --------------------------------- |
+| Recharts   | React 组件 = 图元的思路           | 粒度更低，做通用图元而非 chart 元 |
+| TikZ       | 命名节点 / 路径动作 / anchor 体系 | 浏览器原生，无 LaTeX              |
+| Vega-Lite  | DSL → IR → renderer 三段式        | DSL 用 JSX 而非 JSON              |
+| react-flow | React-first + 节点/边持久化       | 通用图元 + 跨框架                 |
+| D3         | 平台底层，让 domain 包开花        | 提供组件式 API，不强求命令式      |
 
 ---
 
@@ -77,27 +77,27 @@
 
 ### 2.2 三个层
 
-| 层 | 责任 | 形态 |
-|---|---|---|
-| **Kernel** | 用户能用的最底层 React 原语，与 IR 一一对应 | `<Path>`、`<Step>`、`<Node>`、`<Anchor>`、`<Scope>` |
-| **Sugar** | Kernel 的语法糖，render 时纯函数展开为 Kernel 树 | `<Draw way={[...]} />` |
-| **持久化** | 不是单独一层，是 IR 的固有属性 | JSON 序列化 IR |
+| 层         | 责任                                             | 形态                                                |
+| ---------- | ------------------------------------------------ | --------------------------------------------------- |
+| **Kernel** | 用户能用的最底层 React 原语，与 IR 一一对应      | `<Path>`、`<Step>`、`<Node>`、`<Anchor>`、`<Scope>` |
+| **Sugar**  | Kernel 的语法糖，render 时纯函数展开为 Kernel 树 | `<Draw way={[...]} />`                              |
+| **持久化** | 不是单独一层，是 IR 的固有属性                   | JSON 序列化 IR                                      |
 
 **关键约束：Sugar 不引入新能力**。任何 Sugar 能表达的，Kernel 都能表达。这条线一旦破了，分层就假了。
 
 ### 2.3 与现有图表库的架构对比
 
-| 库 | 通用图元 | DSL+IR 分层 | JSON 持久化 | React 组合 | 跨框架 | AI 原生 |
-|---|---|---|---|---|---|---|
-| Recharts | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Visx | ✅ 部分 | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Highcharts / ECharts / Chart.js | ❌ | ❌ | ✅ | 第三方包 | ✅ | 中 |
-| Vega-Lite | ✅ | ✅ | ✅ | 第三方包 | ✅ | 高 |
-| Mermaid | ❌ | ✅ | DSL 即持久化 | ❌ | ✅ | 高 |
-| react-flow | ✅ 节点-边 | 部分 | ✅ | ✅ | ❌ | 中 |
-| drawio | ✅ | ✅ XML | ✅ | ❌ | ✅ | 中 |
-| D3 | ✅ 极底层 | ❌ | ❌ | ❌ | ✅ | 低 |
-| **retikz** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 库                              | 通用图元   | DSL+IR 分层 | JSON 持久化  | React 组合 | 跨框架 | AI 原生 |
+| ------------------------------- | ---------- | ----------- | ------------ | ---------- | ------ | ------- |
+| Recharts                        | ❌         | ❌          | ❌           | ✅         | ❌     | ❌      |
+| Visx                            | ✅ 部分    | ❌          | ❌           | ✅         | ❌     | ❌      |
+| Highcharts / ECharts / Chart.js | ❌         | ❌          | ✅           | 第三方包   | ✅     | 中      |
+| Vega-Lite                       | ✅         | ✅          | ✅           | 第三方包   | ✅     | 高      |
+| Mermaid                         | ❌         | ✅          | DSL 即持久化 | ❌         | ✅     | 高      |
+| react-flow                      | ✅ 节点-边 | 部分        | ✅           | ✅         | ❌     | 中      |
+| drawio                          | ✅         | ✅ XML      | ✅           | ❌         | ✅     | 中      |
+| D3                              | ✅ 极底层  | ❌          | ❌           | ❌         | ✅     | 低      |
+| **retikz**                      | ✅         | ✅          | ✅           | ✅         | ✅     | ✅      |
 
 最后一行能填满的库目前不存在。这是先进性所在，也是项目压力所在——架构干净需要持续投入才能兑现。
 
@@ -110,6 +110,7 @@
 **IR 是给机器存/传/算的**：结构化、无歧义、JSON 序列化、不依赖任何框架。
 
 特征：
+
 - 每个概念有且仅有一种表达
 - 完整：能恢复语言全部语义
 - 与运行时解耦
@@ -165,20 +166,25 @@ Kernel 是用户能用的最底层 React 原语，与 IR 一一对应。约 5–
 
 ```tsx
 // tagged template
-{tikz`
+{
+  tikz`
   \node (A) at (0,0) {Hello};
   \node (B) at (3,1) {World};
   \draw[->, dashed] (A) -| (B);
-`}
+`;
+}
 
 // 或以字符串属性传入
-<Tikz src={`
+<Tikz
+  src={`
   \\node (A) at (0,0) {Hello};
   \\draw[->] (A) -- (B);
-`} />
+`}
+/>;
 ```
 
 支持范围由"TikZ-Browser 兼容子集规范"约束（v3.x 启动时定义），核心要求：
+
 - **正向兼容**：retikz 支持的 TikZ 代码，粘贴到 LaTeX `\begin{tikzpicture}...\end{tikzpicture}` 中能直接编译
 - **反向导出**：`@retikz/codec` 提供 IR → TikZ 源码导出，用户可以在浏览器画完直接贴进论文
 - **明确不支持的**：依赖 LaTeX 运行时的功能（`\foreach` + 宏、自定义 `\newcommand`、`calc` 库高级表达式、需要 LaTeX 字体引擎的精确文本度量）会清晰报错或降级
@@ -192,14 +198,14 @@ Kernel 是用户能用的最底层 React 原语，与 IR 一一对应。约 5–
 
 #### Sugar vs Tier 2 三维度对比
 
-| 维度 | Sugar | Tier 2 (Composite) |
-|---|---|---|
-| **是否持久化进 IR** | ❌ IR 构建时就展平为 Kernel | ✅ 高层节点形态进 IR |
-| **展开时机** | adapter builder 同步调用（React render 之前） | core `compileToScene` 内，via `lowerComposites` 钩子 |
-| **展开实现位置** | adapter（`packages/react/src/sugar/`）或 core parser（共享纯函数） | 独立 domain 包（`@retikz/plot` 等）提供 `lowerXxx: (ir) => ir` |
-| **core 是否认识** | 认识（kernel/sugar 都是 retikz 自家概念） | **不认识** —— core 看到 passthrough 节点（`IRComposite`：`namespace` + `type` 两级路由），由 `lowerComposites` 据注册表解释 |
-| **跨 adapter 复用** | 弱（adapter-bound） | ✅ 强（所有 adapter 共享同一份 lowering） |
-| **典型例子** | `<Draw way={['A', '-\|', 'B']}>` / 字符串 `'+dx,dy'` / `cycle` 关键字 | `<Axis>` / `<Plot>` / `<Tree>` / `<Network>` |
+| 维度                | Sugar                                                                 | Tier 2 (Composite)                                                                                                          |
+| ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **是否持久化进 IR** | ❌ IR 构建时就展平为 Kernel                                           | ✅ 高层节点形态进 IR                                                                                                        |
+| **展开时机**        | adapter builder 同步调用（React render 之前）                         | core `compileToScene` 内，via `lowerComposites` 钩子                                                                        |
+| **展开实现位置**    | adapter（`packages/react/src/sugar/`）或 core parser（共享纯函数）    | 独立 domain 包（`@retikz/plot` 等）提供 `lowerXxx: (ir) => ir`                                                              |
+| **core 是否认识**   | 认识（kernel/sugar 都是 retikz 自家概念）                             | **不认识** —— core 看到 passthrough 节点（`IRComposite`：`namespace` + `type` 两级路由），由 `lowerComposites` 据注册表解释 |
+| **跨 adapter 复用** | 弱（adapter-bound）                                                   | ✅ 强（所有 adapter 共享同一份 lowering）                                                                                   |
+| **典型例子**        | `<Draw way={['A', '-\|', 'B']}>` / 字符串 `'+dx,dy'` / `cycle` 关键字 | `<Axis>` / `<Plot>` / `<Tree>` / `<Network>`                                                                                |
 
 #### 三条判定测试（任一 Yes 即 Tier 2）
 
@@ -294,11 +300,11 @@ Tier 2 解决了"高层 chart schema 简洁 vs Kernel 表达精确"的矛盾：
 
 #### 目录归属速查
 
-| 归类 | 代码住在哪 |
-|---|---|
-| Kernel 组件 | `packages/react/src/kernel/` |
-| Sugar 组件 + 解析器 | `packages/react/src/sugar/`（React DSL） + `packages/kernel/core/src/parsers/`（共享 pure 解析） |
-| Tier 2 IR + 下沉 + 组件 | 独立包（`packages/viz/`、`packages/flow/` 等），**不进 core** |
+| 归类                    | 代码住在哪                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| Kernel 组件             | `packages/react/src/kernel/`                                                                     |
+| Sugar 组件 + 解析器     | `packages/react/src/sugar/`（React DSL） + `packages/kernel/core/src/parsers/`（共享 pure 解析） |
+| Tier 2 IR + 下沉 + 组件 | 独立包（`packages/viz/`、`packages/flow/` 等），**不进 core**                                    |
 
 ### 4.4 IR Schema
 
@@ -317,21 +323,30 @@ Tier 2 解决了"高层 chart schema 简洁 vs Kernel 表达精确"的矛盾：
   "type": "scene",
   "children": [
     {
-      "type": "node", "id": "A", "position": [0, 0], "fill": "lightblue",
+      "type": "node",
+      "id": "A",
+      "position": [0, 0],
+      "fill": "lightblue",
       "children": [{ "type": "text", "value": "Hello" }]
     },
     {
-      "type": "node", "id": "B", "position": [3, 1],
+      "type": "node",
+      "id": "B",
+      "position": [3, 1],
       "children": [{ "type": "text", "value": "World" }]
     },
     {
-      "type": "path", "stroke": "black", "strokeType": "dashed",
+      "type": "path",
+      "stroke": "black",
+      "strokeType": "dashed",
       "children": [
         { "type": "step", "kind": "move", "to": "A" },
-        { "type": "step", "kind": "fold", "via": "-|", "to": "B",
-          "children": [
-            { "type": "label", "at": "midway", "above": true, "text": "edge" }
-          ]
+        {
+          "type": "step",
+          "kind": "fold",
+          "via": "-|",
+          "to": "B",
+          "children": [{ "type": "label", "at": "midway", "above": true, "text": "edge" }]
         }
       ]
     }
@@ -402,6 +417,7 @@ Scene 必须是**矢量图形的最大公约子集**，不向任何特定 render
 ```
 
 **强制约束**：
+
 - `@retikz/core` 内 `import` 任何 React 相关代码 = bug
 - CI 加一条：`node -e 'require("@retikz/core")'` 在零 React 环境必须能加载
 - React adapter 写完发现超过 100 行 → 说明 Scene 抽象不够下沉，回 core 补
@@ -430,6 +446,7 @@ Scene 必须是**矢量图形的最大公约子集**，不向任何特定 render
 ```
 
 **为什么 Canvas 不通过 SVG 中转？**
+
 - 性能：原生 Canvas 调用 `ctx.fillRect / ctx.stroke / ...` 远快于解析 SVG 字符串再翻译
 - 质量：SVG → Canvas 转换器（如 canvg）在文字、渐变、滤镜上有微妙差异，二次转换会放大问题
 - 能力：原生 Canvas 才能用 `getImageData` / hit-testing / 高频动画 / blend mode 等 Canvas 特有能力
@@ -496,11 +513,11 @@ function renderToSVGString(ir: IR): string {
 
 ### 6.2 一致性的三层
 
-| 层 | 怎么保证 |
-|---|---|
+| 层                             | 怎么保证                                     |
+| ------------------------------ | -------------------------------------------- |
 | **语义一致**：同 IR → 同 Scene | 所有 adapter 共享 `compileToScene`，自动保证 |
-| **视觉一致**：同 SVG → 同像素 | SVG 标准严格，跨平台 99% 一致 |
-| **像素级一致**：含文字测量 | 字体度量是真问题，见 6.3 |
+| **视觉一致**：同 SVG → 同像素  | SVG 标准严格，跨平台 99% 一致                |
+| **像素级一致**：含文字测量     | 字体度量是真问题，见 6.3                     |
 
 ### 6.3 文字测量问题（重要）
 
@@ -626,6 +643,7 @@ text DSL 采用 TikZ 原生语法（§4.2 / §1.3）对 AI 而言是**白送的�
 不允许 domain 包搞自己的 IR 或自己的 renderer。
 
 理由：
+
 - 持久化只有一份格式
 - renderer 自动支持所有 domain
 - 跨包互操作免费（flow 里嵌 plot 是 trivial）
@@ -635,7 +653,8 @@ text DSL 采用 TikZ 原生语法（§4.2 / §1.3）对 AI 而言是**白送的�
 
 ```json
 {
-  "type": "node", "id": "d1",
+  "type": "node",
+  "id": "d1",
   "position": [3, 2],
   "meta": {
     "domain": "flow",
@@ -653,18 +672,19 @@ text DSL 采用 TikZ 原生语法（§4.2 / §1.3）对 AI 而言是**白送的�
 
 #### Layout 算法住在 domain 包
 
-| domain | 典型布局 |
-|---|---|
-| flow | dagre / elkjs（DAG） |
-| plot | d3-scale |
-| mind | d3-hierarchy |
-| network | d3-force |
+| domain  | 典型布局             |
+| ------- | -------------------- |
+| flow    | dagre / elkjs（DAG） |
+| plot    | d3-scale             |
+| mind    | d3-hierarchy         |
+| network | d3-force             |
 
 **core 只提供"给坐标我画"的能力**，dagre / elkjs 这种重量级依赖绝不能进 core。
 
 ### 8.2 第一个 domain 包：flow（v1.x）
 
 为什么先做 flow 不先做 plot：
+
 - 直接对应 TikZ 招牌能力（流程图）
 - 范围有界（5–10 种节点形状 + DAG 布局覆盖 80%）
 - 验证 meta 扩展点设计
@@ -691,6 +711,7 @@ domain 包尽量是纯函数（输出 IR），不绑 React。需要框架组件�
 ### v0.x：重写起步（只做 core + react adapter）
 
 里程碑：
+
 - [ ] 用 zod 定义 IR schema（单一来源），导出 TS 类型 + JSON Schema
 - [ ] 拍板 4.1 的待决项（via / target / step naming）
 - [ ] kernel 组件 `<Path>` `<Step>` `<Node>` `<Anchor>` `<Scope>`
@@ -702,6 +723,7 @@ domain 包尽量是纯函数（输出 IR），不绑 React。需要框架组件�
 - [ ] 文档站迁移（`apps/docs`）
 
 不做：
+
 - ❌ 多框架
 - ❌ SSR
 - ❌ domain 包
@@ -739,30 +761,30 @@ domain 包尽量是纯函数（输出 IR），不绑 React。需要框架组件�
 
 ## 10. 已决策清单
 
-| 决策 | 内容 | 节 |
-|---|---|---|
-| **第一设计原则** | **AI 友好优先于其他所有维度，是 retikz 的核心竞争力** | **1.2** |
-| 项目定位 | AI-native + TikZ 风格通用绘图，非 chart 库 | 1 |
-| IR 居中 | 所有 DSL / AI 输入翻 IR；所有 renderer 读 IR | 2 |
-| Sugar 不引入新能力 | 否则分层假 | 2 |
-| 单 `<Step>` 组件 | 不拆 `<Move>` `<Line>` `<Close>` | 4.1 |
-| `kind` 默认 `'line'` | 高频默认 | 4.1 |
-| Sugar 是 render-time parser | 不走 babel 插件 | 4.2 |
-| **Text DSL 采用 TikZ 原生语法（兼容子集）** | 不自创 TikZ-lite，复用 TikZ 二十年生态 + LLM 训练数据红利 | 4.2 |
-| IR schema 形态：混合 | 树为主，需要时挂 id | 4.3 |
-| **Schema 工具选 zod** | 同时产 TS 类型 + JSON Schema；AI SDK 生态默认选 | 4.3 / 7.2 |
-| JSON Schema 一等公民 | 同源生成 TS 类型 + Schema | 4.3 |
-| Core 必须零依赖、零框架 | 跨平台前提 | 5.1 |
-| Adapter 模式 | core + 各框架 50 行 adapter | 6.1 |
-| **Canvas 走原生路径** | 直接 Scene → Canvas，不经 SVG 中转；PNG/JPEG/WebP 由 canvas.toBlob 导出 | 5.3 |
-| **Scene 是渲染目标无关的最大公约子集** | 不向 SVG / Canvas 任一方倾斜；SVG-only / Canvas-only 特性禁止进入 Scene | 4.4 |
-| AI 走 IR 不走 DSL | structured output 友好 | 7.1 |
-| 增量编辑用 JSON Patch | LLM 友好 | 7.3 |
-| Domain 包编译到 core IR | 不搞 domain-IR | 8.1 |
-| IR 节点带 `meta` 扩展点 | 保留 domain 语义 | 8.1 |
-| Layout 算法住 domain 包 | dagre/elkjs 不进 core | 8.1 |
-| 先做 flow 不先做 plot | flow 范围有界，plot 是另一个重量级项目 | 8.2 |
-| Text DSL 远期再做 | v0/v1 不做 | 4.2 |
+| 决策                                        | 内容                                                                    | 节        |
+| ------------------------------------------- | ----------------------------------------------------------------------- | --------- |
+| **第一设计原则**                            | **AI 友好优先于其他所有维度，是 retikz 的核心竞争力**                   | **1.2**   |
+| 项目定位                                    | AI-native + TikZ 风格通用绘图，非 chart 库                              | 1         |
+| IR 居中                                     | 所有 DSL / AI 输入翻 IR；所有 renderer 读 IR                            | 2         |
+| Sugar 不引入新能力                          | 否则分层假                                                              | 2         |
+| 单 `<Step>` 组件                            | 不拆 `<Move>` `<Line>` `<Close>`                                        | 4.1       |
+| `kind` 默认 `'line'`                        | 高频默认                                                                | 4.1       |
+| Sugar 是 render-time parser                 | 不走 babel 插件                                                         | 4.2       |
+| **Text DSL 采用 TikZ 原生语法（兼容子集）** | 不自创 TikZ-lite，复用 TikZ 二十年生态 + LLM 训练数据红利               | 4.2       |
+| IR schema 形态：混合                        | 树为主，需要时挂 id                                                     | 4.3       |
+| **Schema 工具选 zod**                       | 同时产 TS 类型 + JSON Schema；AI SDK 生态默认选                         | 4.3 / 7.2 |
+| JSON Schema 一等公民                        | 同源生成 TS 类型 + Schema                                               | 4.3       |
+| Core 必须零依赖、零框架                     | 跨平台前提                                                              | 5.1       |
+| Adapter 模式                                | core + 各框架 50 行 adapter                                             | 6.1       |
+| **Canvas 走原生路径**                       | 直接 Scene → Canvas，不经 SVG 中转；PNG/JPEG/WebP 由 canvas.toBlob 导出 | 5.3       |
+| **Scene 是渲染目标无关的最大公约子集**      | 不向 SVG / Canvas 任一方倾斜；SVG-only / Canvas-only 特性禁止进入 Scene | 4.4       |
+| AI 走 IR 不走 DSL                           | structured output 友好                                                  | 7.1       |
+| 增量编辑用 JSON Patch                       | LLM 友好                                                                | 7.3       |
+| Domain 包编译到 core IR                     | 不搞 domain-IR                                                          | 8.1       |
+| IR 节点带 `meta` 扩展点                     | 保留 domain 语义                                                        | 8.1       |
+| Layout 算法住 domain 包                     | dagre/elkjs 不进 core                                                   | 8.1       |
+| 先做 flow 不先做 plot                       | flow 范围有界，plot 是另一个重量级项目                                  | 8.2       |
+| Text DSL 远期再做                           | v0/v1 不做                                                              | 4.2       |
 
 ## 11. 待决策清单（架构层面）
 
@@ -770,20 +792,20 @@ domain 包尽量是纯函数（输出 IR），不绑 React。需要框架组件�
 
 ## 12. 明确反对清单
 
-| 反对 | 原因 | 节 |
-|---|---|---|
-| ❌ IR 类型里塞 `ReactNode` / `Ref` / 函数 children | 跨平台、SSR、Canvas、跨语言全封死 | 4.3 |
-| ❌ 用 XML 做持久化 | LLM / TS / DB 都不友好；和 SVG 混淆 | 4.3 |
-| ❌ 默认用纯扁平 IR | 人/LLM/Git 都偏好树 | 4.3 |
-| ❌ Sugar 引入新能力 | 分层立刻假 | 2.2 |
-| ❌ Domain 包搞自己的 IR | 持久化 / renderer / AI 接入全部碎裂 | 8.1 |
-| ❌ Core 依赖 React / DOM / runtime API | 跨平台前提 | 5.1 |
-| ❌ Adapter 自己做布局 | Scene 抽象目的就是消除这种重复 | 6.1 |
-| ❌ Canvas renderer 通过解析 SVG 字符串实现 | 性能差、二次转换损失质量、丧失 Canvas 原生能力 | 5.3 |
+| 反对                                               | 原因                                                 | 节  |
+| -------------------------------------------------- | ---------------------------------------------------- | --- |
+| ❌ IR 类型里塞 `ReactNode` / `Ref` / 函数 children | 跨平台、SSR、Canvas、跨语言全封死                    | 4.3 |
+| ❌ 用 XML 做持久化                                 | LLM / TS / DB 都不友好；和 SVG 混淆                  | 4.3 |
+| ❌ 默认用纯扁平 IR                                 | 人/LLM/Git 都偏好树                                  | 4.3 |
+| ❌ Sugar 引入新能力                                | 分层立刻假                                           | 2.2 |
+| ❌ Domain 包搞自己的 IR                            | 持久化 / renderer / AI 接入全部碎裂                  | 8.1 |
+| ❌ Core 依赖 React / DOM / runtime API             | 跨平台前提                                           | 5.1 |
+| ❌ Adapter 自己做布局                              | Scene 抽象目的就是消除这种重复                       | 6.1 |
+| ❌ Canvas renderer 通过解析 SVG 字符串实现         | 性能差、二次转换损失质量、丧失 Canvas 原生能力       | 5.3 |
 | ❌ PNG/JPEG/WebP 通过 SVG → resvg/sharp 管道做主路 | 应通过 Canvas 原生 toBlob 导出；SVG → 栅格化只作备选 | 5.3 |
-| ❌ Scene 携带 SVG-only 或 Canvas-only 特性 | 一旦进入，对应 renderer 路径就废了 | 4.4 |
-| ❌ Babel 插件做 sugar 编译 | 维护多打包器版本成本巨大 | 4.2 |
-| ❌ 短期硬刚 ECharts | 生态成熟度差距是数量级的 | 1.2 |
+| ❌ Scene 携带 SVG-only 或 Canvas-only 特性         | 一旦进入，对应 renderer 路径就废了                   | 4.4 |
+| ❌ Babel 插件做 sugar 编译                         | 维护多打包器版本成本巨大                             | 4.2 |
+| ❌ 短期硬刚 ECharts                                | 生态成熟度差距是数量级的                             | 1.2 |
 
 ---
 
@@ -808,16 +830,16 @@ domain 包尽量是纯函数（输出 IR），不绑 React。需要框架组件�
 
 ## 14. 项目可行性评估
 
-| 维度 | 评分 | 注释 |
-|---|---|---|
-| 架构先进性 | 🟢 9/10 | 业内罕见的完整分层，理论最优 |
-| 解决问题真实性 | 🟢 8/10 | "通用图元 + React + 持久化"市场空白真实 |
-| 技术可实现性 | 🟢 8/10 | 全是组合已知方案，无需发明 |
-| chart 赛道竞争力 | 🟡 4/10 | 难赢 ECharts/Highcharts |
-| diagram 赛道竞争力 | 🟢 7/10 | drawio 老旧、react-flow 不通用，有空间 |
-| AI 赛道竞争力 | 🟢 8/10 | 起跑线接近 Mermaid，潜在更强 |
-| 生态成熟度 | 🔴 2/10 | 起步阶段 |
-| 个人/小团队可执行性 | 🟡 5/10 | 必须严格控范围 |
+| 维度                | 评分    | 注释                                    |
+| ------------------- | ------- | --------------------------------------- |
+| 架构先进性          | 🟢 9/10 | 业内罕见的完整分层，理论最优            |
+| 解决问题真实性      | 🟢 8/10 | "通用图元 + React + 持久化"市场空白真实 |
+| 技术可实现性        | 🟢 8/10 | 全是组合已知方案，无需发明              |
+| chart 赛道竞争力    | 🟡 4/10 | 难赢 ECharts/Highcharts                 |
+| diagram 赛道竞争力  | 🟢 7/10 | drawio 老旧、react-flow 不通用，有空间  |
+| AI 赛道竞争力       | 🟢 8/10 | 起跑线接近 Mermaid，潜在更强            |
+| 生态成熟度          | 🔴 2/10 | 起步阶段                                |
+| 个人/小团队可执行性 | 🟡 5/10 | 必须严格控范围                          |
 
 **结论：架构先进真，市场不确定真。是高潜力高风险项目，需要 3–5 年持续投入才能兑现。**
 
@@ -830,4 +852,4 @@ domain 包尽量是纯函数（输出 IR），不绑 React。需要框架组件�
 
 ---
 
-*本文档来自 2026-04-26 的架构讨论。后续如有重大架构调整，请更新本文档而不是另起新文。*
+_本文档来自 2026-04-26 的架构讨论。后续如有重大架构调整，请更新本文档而不是另起新文。_

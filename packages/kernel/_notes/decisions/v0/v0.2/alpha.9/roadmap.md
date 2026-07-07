@@ -44,27 +44,28 @@ TikZ `\useasboundingbox` 用指定区域当包围盒、覆盖自动范围。用�
 // ir/position/absolute-target.ts（新）—— 自包含、无 path-relative、无环
 export const AbsoluteTargetSchema: z.ZodType = z.lazy(() =>
   z.union([
-    PositionSchema,                // [x, y]
-    PolarPositionSchema,           // 极坐标
-    NodeTargetSchema,              // { id, anchor?, offset? }（对象引用，alpha.6 主契约）
-    AbsoluteOffsetPositionSchema,  // { of, offset } —— of 为对象（见下，禁 legacy 字符串）
-    BetweenPositionSchema,         // { between, t } —— 可嵌套
+    PositionSchema, // [x, y]
+    PolarPositionSchema, // 极坐标
+    NodeTargetSchema, // { id, anchor?, offset? }（对象引用，alpha.6 主契约）
+    AbsoluteOffsetPositionSchema, // { of, offset } —— of 为对象（见下，禁 legacy 字符串）
+    BetweenPositionSchema, // { between, t } —— 可嵌套
   ]),
 );
 
 // AbsoluteOffsetPosition：of 不复用 legacy OffsetPositionSchema（其 of 仍含 z.string().min(1)，
 // 见 offset-position.ts:8——会把 core 字符串节点引用绕回端点，违 alpha.6 对象主契约；评审 P1#3）
 export const AbsoluteOffsetPositionSchema = z.object({
-  of: z.union([PositionSchema, PolarPositionSchema, NodeTargetSchema]),  // 对象 / 字面量，无字符串
+  of: z.union([PositionSchema, PolarPositionSchema, NodeTargetSchema]), // 对象 / 字面量，无字符串
   offset: z.tuple([z.number().finite(), z.number().finite()]),
 });
 
 // ir/position/between-position.ts（新）
-export const BetweenPositionSchema = z.object({
-  between: z.tuple([AbsoluteTargetSchema, AbsoluteTargetSchema])
-    .describe('Two absolute endpoints A, B'),
-  t: z.number().describe('Proportion from A to B; 0 = A, 1 = B (extrapolation t<0 / t>1: ADR)'),
-}).describe('Partway point: lerp(A, B, t). Endpoints are AbsoluteTarget (no path-relative).');
+export const BetweenPositionSchema = z
+  .object({
+    between: z.tuple([AbsoluteTargetSchema, AbsoluteTargetSchema]).describe('Two absolute endpoints A, B'),
+    t: z.number().describe('Proportion from A to B; 0 = A, 1 = B (extrapolation t<0 / t>1: ADR)'),
+  })
+  .describe('Partway point: lerp(A, B, t). Endpoints are AbsoluteTarget (no path-relative).');
 
 export type IRAbsoluteTarget = z.infer<typeof AbsoluteTargetSchema>;
 export type IRBetweenPosition = z.infer<typeof BetweenPositionSchema>;
@@ -97,7 +98,7 @@ core **不**产 `<clipPath>`。复用 alpha.7 的 Scene 资源表机制：
 export type ClipResource = {
   id: string;
   /** 渲染无关的裁剪区域描述（rect / path 命令 / 引用某 shape 边界） */
-  region: ClipRegion;   // 形态 ADR 定
+  region: ClipRegion; // 形态 ADR 定
 };
 // Scene.resources 容纳 PaintResource | ClipResource（discriminated）
 ```

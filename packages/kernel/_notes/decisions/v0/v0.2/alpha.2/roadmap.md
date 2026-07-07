@@ -23,15 +23,15 @@ StepLabel 同窗口补 `textColor` / `opacity` / `font`（见 ADR-02）。
 
 Scope 上有三组样式表面 + 一个屏障：
 
-| 组 | 字段 | 作用 |
-|---|---|---|
+| 组                       | 字段                                                                                                        | 作用                                                               |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | **① 级联 graphic state** | `color`（主色）+ 跨类共享分项 `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | 级联到 scope 内**全部元素**（= TikZ scope option / current color） |
-| **② 四通道 every-X** | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 按元素类型分发默认（= TikZ every X），扁平独立 |
-| **③ 屏障** | `resetStyle: boolean \| ('node'\|'path'\|'label'\|'arrow')[]` | 切外层对应通道继承 |
+| **② 四通道 every-X**     | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                                             | 按元素类型分发默认（= TikZ every X），扁平独立                     |
+| **③ 屏障**               | `resetStyle: boolean \| ('node'\|'path'\|'label'\|'arrow')[]`                                               | 切外层对应通道继承                                                 |
 
 主色 `color` 同时加到 **Node / Path** 元素本身（贴 TikZ 元素级 `color=`；ADR-02 的"path color=红 → label 红"需要 `path.color`）。
 
-**为什么不是"Scope 直挂 Node 样式窄子集"**（早稿方案，已弃）：那把 node 形状字段（shape/minimum*）也铺到 Scope，且没法表达"颜色跟随"。TikZ 的真实模型是**主色（跟随）+ every-X（每类默认）两套正交**——node 形状专属字段进 `nodeDefault`，跨类共享的色 / 线宽走级联，颜色跟随归主色。详见 [ADR-01 §背景](./01-scope-style-inheritance.md)。
+**为什么不是"Scope 直挂 Node 样式窄子集"**（早稿方案，已弃）：那把 node 形状字段（shape/minimum\*）也铺到 Scope，且没法表达"颜色跟随"。TikZ 的真实模型是**主色（跟随）+ every-X（每类默认）两套正交**——node 形状专属字段进 `nodeDefault`，跨类共享的色 / 线宽走级联，颜色跟随归主色。详见 [ADR-01 §背景](./01-scope-style-inheritance.md)。
 
 ## 样式继承机制
 
@@ -59,7 +59,7 @@ ArrowDefaultSchema = ArrowDetailSchema                                       // 
 （scope 各档沿 scope 链就近优先：内层整体压外层）
 ```
 
-非色字段（strokeWidth / shape / font / dash / minimum* …）不参与主色，只走 `元素显式 > every-X > scope 级联(若共享) > 内置`。
+非色字段（strokeWidth / shape / font / dash / minimum\* …）不参与主色，只走 `元素显式 > every-X > scope 级联(若共享) > 内置`。
 
 ### 嵌套解析（compile 维护 style frame 栈）
 
@@ -90,17 +90,17 @@ for S in stack 外→内：
 
 ## IR / schema 改动清单
 
-| 改动 | 文件 | Level | 说明 |
-|---|---|---|---|
-| 4 派生 schema（NodeDefault / PathDefault / LabelDefault / ArrowDefault） | `ir/scope.ts` | **red** | 各从对应 schema `.omit()` 派生（单一真源） |
-| `ScopeSchema` 加级联 graphic state（color + stroke/fill/strokeWidth/opacity/fillOpacity/drawOpacity） | `ir/scope.ts` | **red** | 级联到全部元素；全 optional、禁 `.default()` |
-| `ScopeSchema` 加 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | `ir/scope.ts` | **red** | 四通道 every-X，扁平独立 |
-| `ScopeSchema` 加 `resetStyle: boolean \| ('node'\|'path'\|'label'\|'arrow')[]` | `ir/scope.ts` | **red** | 朝外继承屏障 |
-| `NodeSchema` / `PathSchema` 加 `color` | `ir/node.ts` / `ir/path/path.ts` | **red** | 主色；分项未单设则随它（动既有元素 schema，较宽） |
-| `StepLabelSchema` 加 `textColor` / `opacity` / `font` | `ir/path/step.ts` | **red** | 加在 `text`/`position`/`side` 后；零破坏（ADR-02） |
-| 主色展开 + 颜色级联 + 四通道 fold + resetStyle | `compile/**` | **red** | 编译期解析每元素最终样式 |
-| label 渲染回退链 | `compile/path/label.ts` | **red** | `fill: 'currentColor'` 改 `textColor ?? labelDefault ?? 宿主 path 主色 ?? currentColor`；font 回退链 |
-| ZodSchema reference 同步 | `apps/docs/.../reference/schema/**` | **green** | Scope 新字段 + Node/Path `color` + 8 step variant `label.*` 描述 |
+| 改动                                                                                                  | 文件                                | Level     | 说明                                                                                                 |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| 4 派生 schema（NodeDefault / PathDefault / LabelDefault / ArrowDefault）                              | `ir/scope.ts`                       | **red**   | 各从对应 schema `.omit()` 派生（单一真源）                                                           |
+| `ScopeSchema` 加级联 graphic state（color + stroke/fill/strokeWidth/opacity/fillOpacity/drawOpacity） | `ir/scope.ts`                       | **red**   | 级联到全部元素；全 optional、禁 `.default()`                                                         |
+| `ScopeSchema` 加 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                      | `ir/scope.ts`                       | **red**   | 四通道 every-X，扁平独立                                                                             |
+| `ScopeSchema` 加 `resetStyle: boolean \| ('node'\|'path'\|'label'\|'arrow')[]`                        | `ir/scope.ts`                       | **red**   | 朝外继承屏障                                                                                         |
+| `NodeSchema` / `PathSchema` 加 `color`                                                                | `ir/node.ts` / `ir/path/path.ts`    | **red**   | 主色；分项未单设则随它（动既有元素 schema，较宽）                                                    |
+| `StepLabelSchema` 加 `textColor` / `opacity` / `font`                                                 | `ir/path/step.ts`                   | **red**   | 加在 `text`/`position`/`side` 后；零破坏（ADR-02）                                                   |
+| 主色展开 + 颜色级联 + 四通道 fold + resetStyle                                                        | `compile/**`                        | **red**   | 编译期解析每元素最终样式                                                                             |
+| label 渲染回退链                                                                                      | `compile/path/label.ts`             | **red**   | `fill: 'currentColor'` 改 `textColor ?? labelDefault ?? 宿主 path 主色 ?? currentColor`；font 回退链 |
+| ZodSchema reference 同步                                                                              | `apps/docs/.../reference/schema/**` | **green** | Scope 新字段 + Node/Path `color` + 8 step variant `label.*` 描述                                     |
 
 **判级**：跨级取最高 = **red**，走 Spec-First TDD。绿色文档独立 commit、走 stage 4 简化路径。
 

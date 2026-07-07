@@ -33,10 +33,10 @@
 
 ## ADR 清单
 
-| ADR | 主题 | Level | 依赖 | 状态 |
-| --- | --- | --- | --- | --- |
-| [01](./01-plot-thin-container.md) | **退化 `<Plot>` 为薄容器**：移除 cartesian2D 默认轴注入、保留 scale/coord 推断、删除 `bare` / `scaleX` / `scaleY`、新增 `<Scale>` 与 `colors`；breaking + demo 迁移 | red | — | Accepted |
-| [02](./02-plot-composable.md) | **让 `<Plot>` 可被组合**：单 svg 多坐标信息图——PlotSpec 自描述尺寸 + plot lowering 暴露外部可见面板 anchor（bbox + plotArea，gated on id）；`<Plot>` 改可嵌入、直接作 core `<Layout>` 子组件（嵌入态不自渲染、lower 时处理）；组合 MVP 从早期跨域组合规划前移 | red | 01 + core-react 机制 | Accepted |
+| ADR                               | 主题                                                                                                                                                                                                                                                          | Level | 依赖                 | 状态     |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------- | -------- |
+| [01](./01-plot-thin-container.md) | **退化 `<Plot>` 为薄容器**：移除 cartesian2D 默认轴注入、保留 scale/coord 推断、删除 `bare` / `scaleX` / `scaleY`、新增 `<Scale>` 与 `colors`；breaking + demo 迁移                                                                                           | red   | —                    | Accepted |
+| [02](./02-plot-composable.md)     | **让 `<Plot>` 可被组合**：单 svg 多坐标信息图——PlotSpec 自描述尺寸 + plot lowering 暴露外部可见面板 anchor（bbox + plotArea，gated on id）；`<Plot>` 改可嵌入、直接作 core `<Layout>` 子组件（嵌入态不自渲染、lower 时处理）；组合 MVP 从早期跨域组合规划前移 | red   | 01 + core-react 机制 | Accepted |
 
 > 两 ADR 同一主题线：**Plot 作为容器的角色**。01 把 `<Plot>` 降成薄绘图块（角色单一），02 顺势让薄块「可被嵌入与组合」进同一张 svg。02 是组合 MVP（plot-design §7 L1+L2），属于 v0.1 提前落地的局部复合能力——L1（自描述尺寸 + 可嵌入）不依赖 Coordinate composition，可独立先行；v0.3 收口跨域复合 + attached-space composition。装饰逻辑去向（供 chart v0.1 复用）见 ADR-01。
 

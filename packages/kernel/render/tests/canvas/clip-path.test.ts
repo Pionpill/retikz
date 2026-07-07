@@ -54,11 +54,7 @@ describe('canvas clip path shapes', () => {
         { kind: 'rect', x: 0, y: 0, width: 20, height: 20 },
         {
           kind: 'path',
-          commands: [
-            { kind: 'move', to: [5, 5] },
-            { kind: 'line', to: [15, 5] },
-            { kind: 'close' },
-          ],
+          commands: [{ kind: 'move', to: [5, 5] }, { kind: 'line', to: [15, 5] }, { kind: 'close' }],
         },
       ],
     };

@@ -7,9 +7,9 @@ This group contains plot-registered row-preserving drawing transforms. Marks sti
 
 Group statistic broadcasting is a data capability; see [Data Transforms / annotate](/viz/data/transform#annotate).
 
-| kind        | rows   | common output                    |
-| ----------- | ------ | -------------------------------- |
-| `stack`     | N -> N | `y0` / `y1`                      |
+| kind        | rows   | common output                     |
+| ----------- | ------ | --------------------------------- |
+| `stack`     | N -> N | `y0` / `y1`                       |
 | `normalize` | N -> N | Share fields or overwritten input |
 
 ## stack
@@ -20,12 +20,12 @@ Group statistic broadcasting is a data capability; see [Data Transforms / annota
 
 `<IntervalMark stack>` / `<IntervalMark angle>` auto-stacking is shorthand. When a matching explicit `stack` already exists in the pipeline, auto-stacking is suppressed to avoid stacking twice.
 
-| prop                      | type      | default        | description                                 |
-| ------------------------- | --------- | -------------- | ------------------------------------------- |
-| `x`                       | `string?` | one group      | Group key; values stack within the same key |
-| `y`                       | `string`  | —              | Numeric field to accumulate                 |
+| prop                      | type      | default        | description                                           |
+| ------------------------- | --------- | -------------- | ----------------------------------------------------- |
+| `x`                       | `string?` | one group      | Group key; values stack within the same key           |
+| `y`                       | `string`  | —              | Numeric field to accumulate                           |
 | `groupBy`                 | `string?` | data row order | Series field; appearance order controls segment order |
-| `startField` / `endField` | `string?` | `y0` / `y1`    | Output bound field names                    |
+| `startField` / `endField` | `string?` | `y0` / `y1`    | Output bound field names                              |
 
 ## normalize
 
@@ -35,9 +35,9 @@ Group statistic broadcasting is a data capability; see [Data Transforms / annota
 
 Normalize followed by stack gives a percent stack: first convert every group to shares, then stack those shares.
 
-| prop      | type                       | default       | description                         |
-| --------- | -------------------------- | ------------- | ----------------------------------- |
-| `field`   | `string`                   | —             | Numeric field to normalize          |
+| prop      | type                       | default          | description                         |
+| --------- | -------------------------- | ---------------- | ----------------------------------- |
+| `field`   | `string`                   | —                | Numeric field to normalize          |
 | `groupBy` | `Array<string>?`           | one global group | Group keys; supports composite keys |
-| `basis`   | `'fraction' \| 'percent'?` | `'fraction'`  | Output scale                        |
-| `as`      | `string?`                  | overwrite input | Output field name                 |
+| `basis`   | `'fraction' \| 'percent'?` | `'fraction'`     | Output scale                        |
+| `as`      | `string?`                  | overwrite input  | Output field name                   |

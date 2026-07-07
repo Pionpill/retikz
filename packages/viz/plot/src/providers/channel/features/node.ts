@@ -1,5 +1,5 @@
 ﻿import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
-import type { DataFieldTypeMap,ExternalRow } from '@retikz/data';
+import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 
 import {
   AxisScaleSchema,

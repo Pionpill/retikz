@@ -5,9 +5,9 @@ description: Binning and stat layers show how plot cuts continuous fields into h
 
 This page covers only plot-registered statistical drawing capabilities. General group summaries and representative-row selection live under [Data Transforms](/viz/data/transform): `summarize` generates grouped statistic rows, and `select` preserves representative original rows.
 
-| capability | output rows | common use |
-| ---------- | ----------- | ---------- |
-| `bin`      | one row per interval | Histograms, distribution overviews |
+| capability             | output rows                            | common use                                  |
+| ---------------------- | -------------------------------------- | ------------------------------------------- |
+| `bin`                  | one row per interval                   | Histograms, distribution overviews          |
 | Stat-layer composition | Several marks consume statistic fields | Boxplots, outlier points, statistical bands |
 
 ## bin
@@ -18,15 +18,15 @@ This page covers only plot-registered statistical drawing capabilities. General 
 
 `IntervalMark` reads `x0` / `x1` for bin edges, drawing adjacent histogram bars on a continuous x axis. `y` reads `binCount` or a custom metric field for height.
 
-| prop                      | type                | default               | description                                  |
-| ------------------------- | ------------------- | --------------------- | -------------------------------------------- |
-| `field`                   | `string`            | —                     | Continuous source field to bin               |
-| `count`                   | `number?`           | `10`                  | Target bin count; mutually exclusive with `step` / `thresholds` |
-| `step`                    | `number?`           | —                     | Fixed bin width; mutually exclusive with `count` / `thresholds` |
+| prop                      | type                | default               | description                                                            |
+| ------------------------- | ------------------- | --------------------- | ---------------------------------------------------------------------- |
+| `field`                   | `string`            | —                     | Continuous source field to bin                                         |
+| `count`                   | `number?`           | `10`                  | Target bin count; mutually exclusive with `step` / `thresholds`        |
+| `step`                    | `number?`           | —                     | Fixed bin width; mutually exclusive with `count` / `thresholds`        |
 | `thresholds`              | `Array<number>?`    | —                     | Explicit internal boundaries; mutually exclusive with `count` / `step` |
-| `extent`                  | `[number, number]?` | observed min/max      | Override the binning domain                  |
-| `metrics`                 | `Array<Reducer>?`   | `count -> binCount`   | Per-bin statistics, reusing data reducers    |
-| `startField` / `endField` | `string?`           | `binStart` / `binEnd` | Output edge field names                      |
+| `extent`                  | `[number, number]?` | observed min/max      | Override the binning domain                                            |
+| `metrics`                 | `Array<Reducer>?`   | `count -> binCount`   | Per-bin statistics, reusing data reducers                              |
+| `startField` / `endField` | `string?`           | `binStart` / `binEnd` | Output edge field names                                                |
 
 ## Stat-Layer Composition
 

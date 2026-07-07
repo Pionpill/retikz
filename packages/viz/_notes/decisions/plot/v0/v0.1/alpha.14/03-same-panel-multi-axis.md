@@ -33,8 +33,7 @@ const AxisCardinalSide = {
 
 type AxisCardinalSideValue = ValueOf<typeof AxisCardinalSide>;
 
-type CoordinateScopePlacement =
-  | { kind: 'overlay'; target: string; zIndex?: number };
+type CoordinateScopePlacement = { kind: 'overlay'; target: string; zIndex?: number };
 
 type AxisPlacementSpec =
   | { kind: 'auto' }
@@ -56,7 +55,7 @@ type AxisGuideSpec = {
 3. axis guide 的 `placement` 决定 axis 放置方式。`{ kind: 'auto' }` 或省略时由 coordinate definition 根据 dimension 推断；`{ kind: 'side' }` 只用于支持 cardinal side 的坐标系；`{ kind: 'edge' }` 给 ternary / custom coordinate 这类“非上下左右”的 native axis edge 使用。
 4. cartesian2D 中 `x` 只允许 top / bottom，`y` 只允许 left / right；ternary2D 的 `x` / `y` / `z` 默认走三角形三条 native edge，不把 `y` 强行压到 left / right。对 ternary 显式 cardinal side 应 fail-loud，提示使用 auto 或 coordinate-native edge。
 5. 同一 `coordinateScope + dimension + placement key` 不允许重复 axis；同 dimension 但不同 scope 或不同 placement 可以共存。
-5. grid 默认只来自 target scope 或显式 `grid: true` 的 guide；多个 overlay grid 的合并 / 避让策略由 ADR-05 统一。
+6. grid 默认只来自 target scope 或显式 `grid: true` 的 guide；多个 overlay grid 的合并 / 避让策略由 ADR-05 统一。
 
 理由：
 
@@ -65,7 +64,6 @@ type AxisGuideSpec = {
 3. `zIndex` 只约束同 panel mark 顺序，不变成通用 layout 系统。
 4. 使用 ADR-01 的 `coordinateScope`，mark / guide / locator 都能共享同一个 scope identity。
 5. axis placement 不是裸四方向字段，避免把 cartesian 的 left/right/top/bottom 泄漏到 ternary / polar / custom coordinate。
-
 
 ## 不在本 ADR 范围
 

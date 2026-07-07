@@ -12,15 +12,15 @@ ADR-06 处理的是 ticks 本身：候选 tick source、visible tick density、t
 
 同类库大多把 axis label 视为独立能力。Vega / Vega-Lite 提供固定角度、label bound、flush、overlap 策略和 label limit；Observable Plot 提供 `tickRotate`，并把 axis label 看作 text mark 组合；ECharts 的 FAQ 推荐通过 `axisLabel.interval` 和 `axisLabel.rotate` 处理空间不足；Highcharts 有 `autoRotation`，会先旋转再移除部分 label；Chart.js 有 `autoSkip`、`minRotation`、`maxRotation`、`sampleSize` 和 `maxTicksLimit`；G2 提供 transform / `labelAutoRotate` / `labelAutoHide` / `labelAutoEllipsis` / `labelAutoWrap` 等能力。
 
-| 能力 | Vega / Vega-Lite | Observable Plot | ECharts | Highcharts | Chart.js | G2 | retikz 处理 |
-|---|---:|---:|---:|---:|---:|---:|---|
-| 固定旋转 | `labelAngle` | `tickRotate` | `axisLabel.rotate` | labels rotation | `minRotation/maxRotation` | `labelTransform` / rotate transform | 已有 `rotate`，保留 |
-| 自动旋转 | 间接通过配置 / 编译默认 | 无显式自动 | FAQ 倾向手动 rotate | `autoRotation` | 自动旋转到 `maxRotation` | `labelAutoRotate` | 新增 |
-| 自动省略 / 隐藏 | `labelOverlap` parity / greedy | 主要靠 ticks / spacing | `axisLabel.interval` | autoRotation 后会删部分 label | `autoSkip` | `labelAutoHide` | 新增 |
-| 首尾保留 | `labelFlush` / bound 相关 | 手动 | `showMinLabel/showMaxLabel` | 自动 | `includeBounds` | keepHeader / keepTail | 新增 |
-| 边界溢出 | `labelBound` / `labelFlush` | margins / text mark | overflow 类配置 | overflow justify/remove | labelOffset 注明会裁剪风险 | transform | 新增简化版 |
-| 省略号 / 换行 | `labelLimit` | text `lineWidth` 可 wrap | overflow / width 类配置 | wrap by disabling autoRotation | 无通用自动换行 | autoEllipsis / autoWrap | 延后，不在本 ADR |
-| 函数 formatter / 表达式 | `labelExpr` | `tickFormat` 可函数 | formatter 可函数 | formatter | callback | labelFormatter 可函数 | 不进 PlotSpec IR |
+| 能力                    |               Vega / Vega-Lite |          Observable Plot |                     ECharts |                     Highcharts |                   Chart.js |                                  G2 | retikz 处理         |
+| ----------------------- | -----------------------------: | -----------------------: | --------------------------: | -----------------------------: | -------------------------: | ----------------------------------: | ------------------- |
+| 固定旋转                |                   `labelAngle` |             `tickRotate` |          `axisLabel.rotate` |                labels rotation |  `minRotation/maxRotation` | `labelTransform` / rotate transform | 已有 `rotate`，保留 |
+| 自动旋转                |        间接通过配置 / 编译默认 |               无显式自动 |         FAQ 倾向手动 rotate |                 `autoRotation` |   自动旋转到 `maxRotation` |                   `labelAutoRotate` | 新增                |
+| 自动省略 / 隐藏         | `labelOverlap` parity / greedy |   主要靠 ticks / spacing |        `axisLabel.interval` |  autoRotation 后会删部分 label |                 `autoSkip` |                     `labelAutoHide` | 新增                |
+| 首尾保留                |      `labelFlush` / bound 相关 |                     手动 | `showMinLabel/showMaxLabel` |                           自动 |            `includeBounds` |               keepHeader / keepTail | 新增                |
+| 边界溢出                |    `labelBound` / `labelFlush` |      margins / text mark |             overflow 类配置 |        overflow justify/remove | labelOffset 注明会裁剪风险 |                           transform | 新增简化版          |
+| 省略号 / 换行           |                   `labelLimit` | text `lineWidth` 可 wrap |     overflow / width 类配置 | wrap by disabling autoRotation |             无通用自动换行 |             autoEllipsis / autoWrap | 延后，不在本 ADR    |
+| 函数 formatter / 表达式 |                    `labelExpr` |      `tickFormat` 可函数 |            formatter 可函数 |                      formatter |                   callback |               labelFormatter 可函数 | 不进 PlotSpec IR    |
 
 资料来源：[Vega axes](https://vega.github.io/vega/docs/axes/)、[Vega-Lite axis](https://vega.github.io/vega-lite/docs/axis.html)、[Observable Plot axis mark](https://observablehq.com/plot/marks/axis)、[ECharts axisLabel changelog](https://echarts.apache.org/zh/changelog.html)、[Highcharts axis labels autoRotation](https://api.highcharts.com/highcharts/xAxis.labels.autoRotation)、[Chart.js common tick options](https://www.chartjs.org/docs/latest/axes/cartesian/_common_ticks.html)、[G2 axis](https://g2.antv.antgroup.com/en/manual/component/axis)。
 

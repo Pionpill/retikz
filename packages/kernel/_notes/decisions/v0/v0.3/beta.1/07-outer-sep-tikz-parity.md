@@ -77,6 +77,7 @@ emitNodePrimitives(layout, …)                                                 
 - **形状专属命名 anchor（tip-N 等）随 outer sep 外推**：有意偏离严格 TikZ，保持 feature point 贴视觉 shape。
 - **缺省值改为 `0.5×线宽`**：保持 0。
 - **per-edge `margin` 覆盖**（端点级 outer sep）：顺延，先做 node 级。
+
 ---
 
 > **实现指针**：本 ADR 已随 kernel v0.3-beta.1 落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。

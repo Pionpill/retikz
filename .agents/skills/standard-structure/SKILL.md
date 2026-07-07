@@ -13,14 +13,14 @@ retikz 模块按“shared → schemas → contract → providers → pipeline/co
 
 ## 按需加载
 
-| 改动内容 | 读取 |
-| --- | --- |
-| `shared/`、通用词汇、纯函数、无状态映射、工具类型 | `standard-shared` |
-| `schemas/`、Zod schema、IR 类型、`.describe(...)`、`.superRefine(...)` | `standard-schema` |
-| `contract/`、`XxxDefinition`、`defineXxx()`、作者侧 API、context | `standard-contract` |
-| `providers/`、内置 definition、registry resolver、`BUILTIN_*`、保留名诊断 | `standard-providers` |
-| `pipeline/` / `compile/`、lowering、registry 消费、options、`ResolvedXxx` | `standard-pipeline-compile` |
-| `parsers/`、字符串 / DSL / Sugar shorthand 解析为 IR 节点或片段 | 本 skill；若改变 IR 形态再读 `standard-schema` |
+| 改动内容                                                                  | 读取                                           |
+| ------------------------------------------------------------------------- | ---------------------------------------------- |
+| `shared/`、通用词汇、纯函数、无状态映射、工具类型                         | `standard-shared`                              |
+| `schemas/`、Zod schema、IR 类型、`.describe(...)`、`.superRefine(...)`    | `standard-schema`                              |
+| `contract/`、`XxxDefinition`、`defineXxx()`、作者侧 API、context          | `standard-contract`                            |
+| `providers/`、内置 definition、registry resolver、`BUILTIN_*`、保留名诊断 | `standard-providers`                           |
+| `pipeline/` / `compile/`、lowering、registry 消费、options、`ResolvedXxx` | `standard-pipeline-compile`                    |
+| `parsers/`、字符串 / DSL / Sugar shorthand 解析为 IR 节点或片段           | 本 skill；若改变 IR 形态再读 `standard-schema` |
 
 define-registry 能力通常跨多层：先读本总纲判断 scope，再只加载本次会改到的层级 skill。
 
@@ -44,14 +44,14 @@ shared/schemas <- parsers
 
 ## 共性文件
 
-| 文件 | 职责 |
-| --- | --- |
-| `constants.ts` | 稳定常量、const object enum、关键字集合、查表数据 |
-| `types.ts` | 导出类型、由 constants / schema 派生的类型 |
-| `utils.ts` | 纯函数 helper；不得承载状态和层级副作用 |
-| `define.ts` | 作者侧 define helper；contract 层常见 |
-| `registry.ts` | registry 合并、按 key 查找、重复 key 诊断；providers 层常见 |
-| `index.ts` | barrel 导出；不写业务逻辑 |
+| 文件           | 职责                                                        |
+| -------------- | ----------------------------------------------------------- |
+| `constants.ts` | 稳定常量、const object enum、关键字集合、查表数据           |
+| `types.ts`     | 导出类型、由 constants / schema 派生的类型                  |
+| `utils.ts`     | 纯函数 helper；不得承载状态和层级副作用                     |
+| `define.ts`    | 作者侧 define helper；contract 层常见                       |
+| `registry.ts`  | registry 合并、按 key 查找、重复 key 诊断；providers 层常见 |
+| `index.ts`     | barrel 导出；不写业务逻辑                                   |
 
 简单能力可合并文件；一旦职责混杂，按上表拆开。
 

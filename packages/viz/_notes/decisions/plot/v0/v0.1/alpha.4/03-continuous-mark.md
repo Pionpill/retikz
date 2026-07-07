@@ -60,11 +60,11 @@ schema 草案（详见实现契约）：
 ```ts
 // ir/mark.ts —— describe 英文
 export const AreaMarkSchema = z.object({
-  type: z.literal(PlotMark.Area),       // 'area'
-  order: z.string().min(1).optional(),  // connection order field (data order if omitted)
+  type: z.literal(PlotMark.Area), // 'area'
+  order: z.string().min(1).optional(), // connection order field (data order if omitted)
   series: z.string().min(1).optional(), // split into one area per series
-  baseline: z.number().optional(),      // baseline value the area fills down to; default 0
-  closed: z.boolean().optional(),       // connect last point back to first; default false
+  baseline: z.number().optional(), // baseline value the area fills down to; default 0
+  closed: z.boolean().optional(), // connect last point back to first; default false
   ...markBase,
 });
 // LineMarkSchema 加  closed: z.boolean().optional()   // radar polygon when polar + closed

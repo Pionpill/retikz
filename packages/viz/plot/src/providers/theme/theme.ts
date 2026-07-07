@@ -5,10 +5,14 @@ import type { AxisGuide, LegendGuide, PlotTheme } from '../../schemas';
 import { LegendSymbolFit } from '../../schemas';
 import { DEFAULT_PLOT_COLORS, PlotColorScheme } from '../scale/shared';
 
-type GuidePathStyle = Partial<Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>> & {
+type GuidePathStyle = Partial<
+  Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
+> & {
   drawOpacity?: number;
 };
-type GuideTextStyle = Partial<Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>>;
+type GuideTextStyle = Partial<
+  Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>
+>;
 type AxisTicksToken = NonNullable<AxisGuide['ticks']>;
 type AxisTitleToken = Exclude<NonNullable<AxisGuide['title']>, string>;
 type AxisGridToken = Exclude<NonNullable<AxisGuide['grid']>, boolean>;
@@ -152,7 +156,8 @@ const mergeAxisTicks = (
   if (theme === undefined) return local;
   const themeMark = theme.mark;
   const lineMarkFromShorthand = (): AxisTicksToken['mark'] => {
-    const themeLineMark = themeMark !== undefined && themeMark !== false && themeMark.kind === 'line' ? themeMark : undefined;
+    const themeLineMark =
+      themeMark !== undefined && themeMark !== false && themeMark.kind === 'line' ? themeMark : undefined;
     const line =
       local?.line === false
         ? false
@@ -238,14 +243,27 @@ const mergeAxisGrid = (
 export const resolveAxisGuideTokens = (theme: ResolvedPlotTheme, guide: AxisGuide): AxisGuide => ({
   ...guide,
   ...(theme.axis.line !== undefined
-    ? { line: guide.line === false ? false : guide.line === undefined ? theme.axis.line : mergePathStyle(theme.axis.line === false ? undefined : theme.axis.line, guide.line) }
+    ? {
+        line:
+          guide.line === false
+            ? false
+            : guide.line === undefined
+              ? theme.axis.line
+              : mergePathStyle(theme.axis.line === false ? undefined : theme.axis.line, guide.line),
+      }
     : {}),
-  ...(theme.axis.ticks !== undefined || guide.ticks !== undefined ? { ticks: mergeAxisTicks(theme.axis.ticks, guide.ticks) } : {}),
+  ...(theme.axis.ticks !== undefined || guide.ticks !== undefined
+    ? { ticks: mergeAxisTicks(theme.axis.ticks, guide.ticks) }
+    : {}),
   ...(theme.axis.tickLabels !== undefined || guide.tickLabels !== undefined
     ? { tickLabels: mergeAxisTickLabels(theme.axis.tickLabels, guide.tickLabels) }
     : {}),
-  ...(theme.axis.title !== undefined || guide.title !== undefined ? { title: mergeAxisTitle(theme.axis.title, guide.title) } : {}),
-  ...(theme.axis.grid !== undefined || guide.grid !== undefined ? { grid: mergeAxisGrid(theme.axis.grid, guide.grid) } : {}),
+  ...(theme.axis.title !== undefined || guide.title !== undefined
+    ? { title: mergeAxisTitle(theme.axis.title, guide.title) }
+    : {}),
+  ...(theme.axis.grid !== undefined || guide.grid !== undefined
+    ? { grid: mergeAxisGrid(theme.axis.grid, guide.grid) }
+    : {}),
 });
 
 /**

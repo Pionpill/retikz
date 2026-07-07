@@ -66,14 +66,14 @@ type HydrationAnimationControls = {
 
 字段来源与 renderer 差异（`id → Array<prim>` 索引：Map 一个 id 到**全部**同 id 图元，geometry 取并集）：
 
-| 字段 | SVG | Canvas |
-|---|---|---|
-| `id` / `meta` | Scene 按 id 索引（meta 取首个同 id 图元，同 id 共享）（**双后端一致**） | 同 |
-| `geometry` | 同 id 全部图元的**并集 bbox** + 中心（双后端一致） | 同 |
-| `element` | 被点中的那片 `[data-retikz-id]` DOM 元素 | `null`（无逐元素 DOM；用 `root` + `point`） |
-| `point` | 事件坐标（必要时逆 viewBox） | 已有 `clientToScene` 逆 meet-fit |
-| `root` | svg root | `<canvas>` |
-| `animation` | **per-id 强**：见下「动画 owner 标记」——查 `[data-retikz-id="<id>"]` **与** `[data-retikz-animation-owner="<id>"]` 全部命中元素的 `getAnimations()`，覆盖 CSS / WAAPI / transform-wrapper / 文本 group | **coarse**：scene 级单 rAF 时钟，per-id 控制为后续；本批 `restart` 走整图重渲染、其余降级 |
+| 字段          | SVG                                                                                                                                                                                                    | Canvas                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `id` / `meta` | Scene 按 id 索引（meta 取首个同 id 图元，同 id 共享）（**双后端一致**）                                                                                                                                | 同                                                                                        |
+| `geometry`    | 同 id 全部图元的**并集 bbox** + 中心（双后端一致）                                                                                                                                                     | 同                                                                                        |
+| `element`     | 被点中的那片 `[data-retikz-id]` DOM 元素                                                                                                                                                               | `null`（无逐元素 DOM；用 `root` + `point`）                                               |
+| `point`       | 事件坐标（必要时逆 viewBox）                                                                                                                                                                           | 已有 `clientToScene` 逆 meet-fit                                                          |
+| `root`        | svg root                                                                                                                                                                                               | `<canvas>`                                                                                |
+| `animation`   | **per-id 强**：见下「动画 owner 标记」——查 `[data-retikz-id="<id>"]` **与** `[data-retikz-animation-owner="<id>"]` 全部命中元素的 `getAnimations()`，覆盖 CSS / WAAPI / transform-wrapper / 文本 group | **coarse**：scene 级单 rAF 时钟，per-id 控制为后续；本批 `restart` 走整图重渲染、其余降级 |
 
 ### 动画 owner 标记（评审 P1-1：transform / camera wrapper 没有 data-retikz-id）
 
@@ -110,8 +110,8 @@ vanilla 还有 SSR 后的独立入口 `hydrate(root, { handlers })`——它**�
   meta={{ series: 'sales', i: 3 }}
   animations={[{ ...pulse(), trigger: 'manual' }]}
   onClick={(event, context) => {
-    console.log(context.meta);        // { series:'sales', i:3 }
-    context.animation.restart();      // 点一下重播本节点的 pulse
+    console.log(context.meta); // { series:'sales', i:3 }
+    context.animation.restart(); // 点一下重播本节点的 pulse
   }}
 />
 ```
@@ -122,7 +122,12 @@ vanilla 还有 SSR 后的独立入口 `hydrate(root, { handlers })`——它**�
 const view = mountSvg(container, ir);
 view.hydrate({
   handlers: {
-    bar3: { click: (event, context) => { console.log(context.meta); context.animation.restart(); } },
+    bar3: {
+      click: (event, context) => {
+        console.log(context.meta);
+        context.animation.restart();
+      },
+    },
   },
 });
 
@@ -143,7 +148,6 @@ hydrate(root, { handlers, scene: toScene(ir) });
 - **handler 改 IR / 触发重渲染**：那是 react state / vanilla `view.update(ir)` 的职责，不进 context（context 是只读 runtime + 动画控制，不背数据层）。
 - **新事件类型**：沿用 alpha.3 的 `RetikzEvent` 集，不在此扩。
 - **handler 返回值语义**（如返回 false 阻止默认）：暂不引入，handler 仍 `void`；要 preventDefault 用 `event`。
-
 
 > 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.3/alpha.5/06-hydration-context.md`（封板全文）。

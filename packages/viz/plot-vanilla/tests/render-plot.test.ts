@@ -109,9 +109,9 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('polar 环图 spec（innerRadius）→ SVG 含 path（透传不崩）', () => {
-    expect(renderPlot(createPolarPieSpec('share', undefined, 0.5), polarShareData, { width: 360, height: 360 })).toContain(
-      '<path',
-    );
+    expect(
+      renderPlot(createPolarPieSpec('share', undefined, 0.5), polarShareData, { width: 360, height: 360 }),
+    ).toContain('<path');
   });
 
   it('polar pulled sector spec → SVG 含 path', () => {

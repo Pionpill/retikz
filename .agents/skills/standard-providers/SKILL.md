@@ -18,15 +18,15 @@ description: Use when changing retikz providers layer code, builtin definitions,
 
 ## 组织与命名
 
-| 形态 | 规则 |
-| --- | --- |
-| `providers/<capability>/definitions.ts` | 内置 definition 集合，或组装各内置项 |
-| `providers/<capability>/registry.ts` | `resolveXxxRegistry()`、索引 map、重复 key / 保留名诊断 |
-| `providers/<capability>/<builtin>.ts` | 复杂内置项的单独实现 |
-| `BUILTIN_XXXS` | 内置 definition 数组或集合 |
-| `BUILTIN_XXX_DEFINITIONS_BY_<KEY>` | 按真实 discriminator 建索引 map |
-| `RESERVED_XXX_<KEYS>` / `REMOVED_XXX_<KEYS>` | 保留名和已移除名诊断依据 |
-| `xxxDefinitionOf()` | 按 key 查询 definition |
+| 形态                                         | 规则                                                    |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `providers/<capability>/definitions.ts`      | 内置 definition 集合，或组装各内置项                    |
+| `providers/<capability>/registry.ts`         | `resolveXxxRegistry()`、索引 map、重复 key / 保留名诊断 |
+| `providers/<capability>/<builtin>.ts`        | 复杂内置项的单独实现                                    |
+| `BUILTIN_XXXS`                               | 内置 definition 数组或集合                              |
+| `BUILTIN_XXX_DEFINITIONS_BY_<KEY>`           | 按真实 discriminator 建索引 map                         |
+| `RESERVED_XXX_<KEYS>` / `REMOVED_XXX_<KEYS>` | 保留名和已移除名诊断依据                                |
+| `xxxDefinitionOf()`                          | 按 key 查询 definition                                  |
 
 `<KEY>` 后缀必须匹配真实 discriminator，不要 `kind` / `name` 混用。
 

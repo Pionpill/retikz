@@ -17,29 +17,37 @@ description: composition 让一张 Plot 同时表达双轴、分面和共享轨�
 
 多 y 轴适合 x 位置相同、y 单位不同的图。下面的天气例子里，温度使用默认 y 轴，降雨量绑定到右侧 y 轴。
 
-<ComponentPreview name="coordinate-composition-scopes" sourceFiles={['coordinate-composition-scopes.data.ts']} size="md" />
+<ComponentPreview
+  name="coordinate-composition-scopes"
+  sourceFiles={['coordinate-composition-scopes.data.ts']}
+  size="md"
+/>
 
 `rainfall` 是额外 y 轴的 `id`。temperature 折线省略 `yAxisId`，rainfall 折线和点用 `yAxisId="rainfall"` 选择右侧轴。
 
-| 写法 | 作用 |
-| --- | --- |
-| `<Axis id="rainfall" dimension="y">` | 声明降雨量这根额外 y 轴 |
-| `yAxisId="rainfall"` | 让 mark 使用降雨量轴 |
-| `placement={{ kind: 'side', side: 'right' }}` | 把额外 y 轴放到右侧 |
+| 写法                                          | 作用                    |
+| --------------------------------------------- | ----------------------- |
+| `<Axis id="rainfall" dimension="y">`          | 声明降雨量这根额外 y 轴 |
+| `yAxisId="rainfall"`                          | 让 mark 使用降雨量轴    |
+| `placement={{ kind: 'side', side: 'right' }}` | 把额外 y 轴放到右侧     |
 
 ### 多 x 轴
 
 多 x 轴适合 y 度量相同，但横向刻度有两套解释的图。下面的例子底部显示“发布第几天”，顶部显示“日历日期”；两条线共享 y 轴。
 
-<ComponentPreview name="coordinate-composition-x-axis" sourceFiles={['coordinate-composition-x-axis.data.ts']} size="md" />
+<ComponentPreview
+  name="coordinate-composition-x-axis"
+  sourceFiles={['coordinate-composition-x-axis.data.ts']}
+  size="md"
+/>
 
 `calendar` 是额外 x 轴的 `id`。completed 折线使用默认 x 轴，forecast 折线和点用 `xAxisId="calendar"` 选择上方轴。
 
-| 写法 | 作用 |
-| --- | --- |
-| `<Axis id="calendar" dimension="x">` | 声明日历日期这根额外 x 轴 |
-| `xAxisId="calendar"` | 让 mark 使用日历日期轴 |
-| `placement={{ kind: 'side', side: 'top' }}` | 把额外 x 轴放到上方 |
+| 写法                                        | 作用                      |
+| ------------------------------------------- | ------------------------- |
+| `<Axis id="calendar" dimension="x">`        | 声明日历日期这根额外 x 轴 |
+| `xAxisId="calendar"`                        | 让 mark 使用日历日期轴    |
+| `placement={{ kind: 'side', side: 'top' }}` | 把额外 x 轴放到上方       |
 
 ## 分面
 
@@ -49,7 +57,11 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 只传 `column` 时，facet 会生成一行多列面板。下面的例子按 `segment` 拆成三列，所有面板默认共享 x / y domain，所以不同面板的折线高度可以直接比较。
 
-<ComponentPreview name="coordinate-composition-facet-basic" sourceFiles={['coordinate-composition-facet-basic.data.ts']} size="md" />
+<ComponentPreview
+  name="coordinate-composition-facet-basic"
+  sourceFiles={['coordinate-composition-facet-basic.data.ts']}
+  size="md"
+/>
 
 这个 demo 里只有一个 `<Facet column="segment">`。`Axis`、`PathMark` 和 `PointMark` 都写在 `<Facet>` 内部，所以它们会自动进入每个 segment 面板，不需要再写 `facetId`。
 
@@ -57,7 +69,11 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 分面默认会把同一个坐标 role 的 domain 跨面板同步。下面两个面板分别覆盖 `0-100` 和 `0-50`，但右侧面板仍然使用整体的 `0-100` y domain，因此高度可以和左侧直接比较。
 
-<ComponentPreview name="coordinate-composition-facet-shared-scale" sourceFiles={['coordinate-composition-facet-shared-scale.data.ts']} size="md" />
+<ComponentPreview
+  name="coordinate-composition-facet-shared-scale"
+  sourceFiles={['coordinate-composition-facet-shared-scale.data.ts']}
+  size="md"
+/>
 
 这个例子没有写 `resolve.scale`，因为共享 domain 是默认逻辑。想让右侧 `0-50` 面板铺满自己的高度时，才需要把 y 设置为 `independent`。
 
@@ -65,7 +81,11 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 `row` 和 `column` 可以接收字段数组，用多个字段共同决定同一个方向上的面板层级。下面的例子列方向先按 `region` 分组、再按 `channel` 拆分；行方向先按 `business` 分组、再按 `metric` 拆分。
 
-<ComponentPreview name="coordinate-composition-facet-multilevel" sourceFiles={['coordinate-composition-facet-multilevel.data.ts']} size="lg" />
+<ComponentPreview
+  name="coordinate-composition-facet-multilevel"
+  sourceFiles={['coordinate-composition-facet-multilevel.data.ts']}
+  size="lg"
+/>
 
 数组顺序就是分面层级顺序。打开 `header={{ row: true, column: true }}` 后，内层 label 会贴近面板，外层 label 会按连续相同的上层值自动合并。
 
@@ -73,7 +93,11 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 同时传 `row` 和 `column` 时，facet 会生成二维网格。下面的图按 `region` 拆列、按 `channel` 拆行；`Axis grid` 仍然由轴自己声明，facet 默认会把这根轴的 grid 画到每个面板里。
 
-<ComponentPreview name="coordinate-composition-facet" sourceFiles={['coordinate-composition-facet.data.ts']} size="lg" />
+<ComponentPreview
+  name="coordinate-composition-facet"
+  sourceFiles={['coordinate-composition-facet.data.ts']}
+  size="lg"
+/>
 
 这里的 `<Facet row="channel" column="region">` 决定面板矩阵。`grid` 仍然写在 `<Axis dimension="x">` / `<Axis dimension="y">` 上，facet 只负责把这些 guide 投放到每个面板。
 
@@ -81,7 +105,11 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 默认情况下，空面板会被丢弃；默认 scale domain 会跨所有面板共享。下面的例子显式保留空面板，并让 y 轴在每个面板内独立计算，适合量级差异很大的分组。
 
-<ComponentPreview name="coordinate-composition-facet-independent" sourceFiles={['coordinate-composition-facet-independent.data.ts']} size="lg" />
+<ComponentPreview
+  name="coordinate-composition-facet-independent"
+  sourceFiles={['coordinate-composition-facet-independent.data.ts']}
+  size="lg"
+/>
 
 `empty="show"` 会保留 order 中列出的空面板；`resolve={{ scale: { y: 'independent' } }}` 让每个面板各自计算 y domain。x 轴仍然共享，方便按月份对齐阅读。
 
@@ -89,22 +117,22 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 表里的 `FacetValue` 表示 `string | number | boolean | null`。
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `id` | `string` | 必填 | facet 身份，供 `facetId` 引用 |
-| `row` | `string`<br />`FacetDimension`<br />`FacetDimension[]` | 省略 | 拆行字段；数组表示多层行分面 |
-| `column` | `string`<br />`FacetDimension`<br />`FacetDimension[]` | 省略 | 拆列字段；数组表示多层列分面 |
-| `FacetDimension` | `{ field: string; order?: FacetValue[] }` | - | 一层分面字段及其可选排序 |
-| `row.order`<br />`column.order` | `FacetValue[]` | 数据首次出现顺序 | 面板顺序；未列出的值按首次出现追加 |
-| `facetId` | `string` | 省略 | 显式让容器外的 mark / axis 进入 facet 面板 |
-| `empty` | `'drop' \| 'show'` | `'drop'` | 空面板是丢弃还是保留 |
-| `resolve.scale` | `Record<string, 'shared' \| 'independent' \| 'synchronized'>` | 未写 role 为 `'shared'` | 控制同 role 的 domain 如何跨面板解析 |
-| `resolve.axis` | `Record<string, 'local' \| 'outer' \| 'none'>` | `outer` | 轴留在每个面板内、收敛到外侧，或隐藏该 role 的轴 |
-| `resolve.grid` | `Record<string, 'local' \| 'all' \| 'none'>` | `all` | `Axis grid` 默认投放目标；facet 中通常投到每个面板 |
-| `spacing.panelGap` | `number` | `0` | 面板间距，单位是用户坐标单位 |
-| `spacing.axisGap` | `number` | `0` | 面板与外侧轴之间的距离 |
-| `spacing.labelGap` | `number` | `0` | 分面 label 与面板或轴之间的距离 |
-| `header.row`<br />`header.column` | `boolean` | `false` | 是否输出对应方向的分面 label；多层分面会按层级自动分组 |
+| 属性                              | 类型                                                          | 默认值                  | 描述                                                   |
+| --------------------------------- | ------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ |
+| `id`                              | `string`                                                      | 必填                    | facet 身份，供 `facetId` 引用                          |
+| `row`                             | `string`<br />`FacetDimension`<br />`FacetDimension[]`        | 省略                    | 拆行字段；数组表示多层行分面                           |
+| `column`                          | `string`<br />`FacetDimension`<br />`FacetDimension[]`        | 省略                    | 拆列字段；数组表示多层列分面                           |
+| `FacetDimension`                  | `{ field: string; order?: FacetValue[] }`                     | -                       | 一层分面字段及其可选排序                               |
+| `row.order`<br />`column.order`   | `FacetValue[]`                                                | 数据首次出现顺序        | 面板顺序；未列出的值按首次出现追加                     |
+| `facetId`                         | `string`                                                      | 省略                    | 显式让容器外的 mark / axis 进入 facet 面板             |
+| `empty`                           | `'drop' \| 'show'`                                            | `'drop'`                | 空面板是丢弃还是保留                                   |
+| `resolve.scale`                   | `Record<string, 'shared' \| 'independent' \| 'synchronized'>` | 未写 role 为 `'shared'` | 控制同 role 的 domain 如何跨面板解析                   |
+| `resolve.axis`                    | `Record<string, 'local' \| 'outer' \| 'none'>`                | `outer`                 | 轴留在每个面板内、收敛到外侧，或隐藏该 role 的轴       |
+| `resolve.grid`                    | `Record<string, 'local' \| 'all' \| 'none'>`                  | `all`                   | `Axis grid` 默认投放目标；facet 中通常投到每个面板     |
+| `spacing.panelGap`                | `number`                                                      | `0`                     | 面板间距，单位是用户坐标单位                           |
+| `spacing.axisGap`                 | `number`                                                      | `0`                     | 面板与外侧轴之间的距离                                 |
+| `spacing.labelGap`                | `number`                                                      | `0`                     | 分面 label 与面板或轴之间的距离                        |
+| `header.row`<br />`header.column` | `boolean`                                                     | `false`                 | 是否输出对应方向的分面 label；多层分面会按层级自动分组 |
 
 ## 共享轨道
 
@@ -112,7 +140,11 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 ### 笛卡尔轨道
 
-<ComponentPreview name="coordinate-composition-tracks" sourceFiles={['coordinate-composition-tracks.data.ts']} size="lg" />
+<ComponentPreview
+  name="coordinate-composition-tracks"
+  sourceFiles={['coordinate-composition-tracks.data.ts']}
+  size="lg"
+/>
 
 这个例子里三条 track 共用 `trading day` 的 x 位置。共享的 x 轴直接写在 `<Scaffold>` 里；`trend` 画普通折线，`drawdown` 用 baseline closure 画面积，`signal` 画带点折线。
 
@@ -120,7 +152,11 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 ### 极坐标轨道
 
-<ComponentPreview name="coordinate-composition-tracks-polar" sourceFiles={['coordinate-composition-tracks-polar.data.ts']} size="lg" />
+<ComponentPreview
+  name="coordinate-composition-tracks-polar"
+  sourceFiles={['coordinate-composition-tracks-polar.data.ts']}
+  size="lg"
+/>
 
 共享轨道也可以放在 `polar2D` 下。这里 `x` 被坐标系解释为角向 role，`y` 被解释为径向 role；`sharedRoles={['x']}` 让多条径向 track 共用同一组角度刻度，而各自使用不同的半径 band。
 
@@ -128,31 +164,31 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 ### API
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `Scaffold.id` | `string` | 必填 | Scaffold 容器身份，供显式 `scaffoldId` 以及生成 track view |
-| `Scaffold.sharedRoles` | `Array<string>` | 必填 | 由 Scaffold 容器统一管理的坐标 role，例如共享 `x` |
-| `Scaffold.coordinate` | `CoordinateOperation` | 继承 `<Plot coordinate>` | Scaffold 容器使用的坐标系 |
-| `Scaffold.frame` | `'shared' \| 'independent'` | `'shared'` | track 是否共享 Scaffold 的 frame |
-| `Track.id` | `string` | 必填 | track 身份，供 `trackId` 引用 |
-| `Track.band` | `{ role: string; start: number; end: number }` | 必填 | track 在非共享 role 上占用的比例区间，`start` / `end` 取 `0` 到 `1` |
-| `Track.order` | `number` | 声明顺序 | track 排序提示 |
-| `trackId` | `string` | 省略 | 显式让容器外的 mark / axis 进入某条 track |
-| `scaffoldId` | `string` | 省略 | 显式让容器外的 axis 绑定整套 Scaffold，常用于共享轴 |
-| `resolve.axis` | `Record<string, 'local' \| 'outer' \| 'none'>` | `outer` | 轴留在每条 track 内、收敛到外侧，或隐藏该 role 的轴 |
-| `resolve.grid` | `Record<string, 'local' \| 'all' \| 'none'>` | `all` | `Axis grid` 默认投放目标；共享轨道中通常投到同 role 的所有 track |
-| `spacing.trackGap` | `number` | `0` | track 之间的间距，单位是用户坐标单位 |
-| `spacing.axisGap` | `number` | `0` | track 与外侧轴之间的距离 |
-| `spacing.labelGap` | `number` | `0` | track label 与绘图区之间的距离 |
+| 属性                   | 类型                                           | 默认值                   | 描述                                                                |
+| ---------------------- | ---------------------------------------------- | ------------------------ | ------------------------------------------------------------------- |
+| `Scaffold.id`          | `string`                                       | 必填                     | Scaffold 容器身份，供显式 `scaffoldId` 以及生成 track view          |
+| `Scaffold.sharedRoles` | `Array<string>`                                | 必填                     | 由 Scaffold 容器统一管理的坐标 role，例如共享 `x`                   |
+| `Scaffold.coordinate`  | `CoordinateOperation`                          | 继承 `<Plot coordinate>` | Scaffold 容器使用的坐标系                                           |
+| `Scaffold.frame`       | `'shared' \| 'independent'`                    | `'shared'`               | track 是否共享 Scaffold 的 frame                                    |
+| `Track.id`             | `string`                                       | 必填                     | track 身份，供 `trackId` 引用                                       |
+| `Track.band`           | `{ role: string; start: number; end: number }` | 必填                     | track 在非共享 role 上占用的比例区间，`start` / `end` 取 `0` 到 `1` |
+| `Track.order`          | `number`                                       | 声明顺序                 | track 排序提示                                                      |
+| `trackId`              | `string`                                       | 省略                     | 显式让容器外的 mark / axis 进入某条 track                           |
+| `scaffoldId`           | `string`                                       | 省略                     | 显式让容器外的 axis 绑定整套 Scaffold，常用于共享轴                 |
+| `resolve.axis`         | `Record<string, 'local' \| 'outer' \| 'none'>` | `outer`                  | 轴留在每条 track 内、收敛到外侧，或隐藏该 role 的轴                 |
+| `resolve.grid`         | `Record<string, 'local' \| 'all' \| 'none'>`   | `all`                    | `Axis grid` 默认投放目标；共享轨道中通常投到同 role 的所有 track    |
+| `spacing.trackGap`     | `number`                                       | `0`                      | track 之间的间距，单位是用户坐标单位                                |
+| `spacing.axisGap`      | `number`                                       | `0`                      | track 与外侧轴之间的距离                                            |
+| `spacing.labelGap`     | `number`                                       | `0`                      | track label 与绘图区之间的距离                                      |
 
 ## 怎么选择
 
-| 场景 | 推荐结构 |
-| --- | --- |
-| 一条折线 + 一组柱，共享 x 但 y 单位不同 | 双轴 |
-| 按地区 / 类别拆成多列或多行 | 分面 |
-| 几个指标沿同一时间轴上下对齐 | 共享轨道 |
-| 几张图只是摆在同一个大画布里 | 父级 `<Layout>` 里放多个 `<Plot>`，不用 composition |
+| 场景                                    | 推荐结构                                            |
+| --------------------------------------- | --------------------------------------------------- |
+| 一条折线 + 一组柱，共享 x 但 y 单位不同 | 双轴                                                |
+| 按地区 / 类别拆成多列或多行             | 分面                                                |
+| 几个指标沿同一时间轴上下对齐            | 共享轨道                                            |
+| 几张图只是摆在同一个大画布里            | 父级 `<Layout>` 里放多个 `<Plot>`，不用 composition |
 
 ## 延伸阅读
 

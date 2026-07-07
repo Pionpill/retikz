@@ -14,10 +14,10 @@
 
 ## ADR 清单
 
-| ADR | 主题 | Level | 依赖 | 状态 |
-| --- | --- | --- | --- | --- |
-| 01 | **interaction runtime contract**：locator / provenance 的 runtime 消费、事件回调、overlay scope、交互状态与 PlotSpec JSON-safe 边界 | red | v0.1 alpha.5 / alpha.14 / alpha.15 | 待起草 |
-| 02 | **layout transform registry**：结构化布局算法的 definition / registry、输入输出 rows、derived field 命名、与普通 transform / mark 的边界 | red | v0.1 stat / mark / composition | 待起草 |
+| ADR | 主题                                                                                                                                     | Level | 依赖                               | 状态   |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----- | ---------------------------------- | ------ |
+| 01  | **interaction runtime contract**：locator / provenance 的 runtime 消费、事件回调、overlay scope、交互状态与 PlotSpec JSON-safe 边界      | red   | v0.1 alpha.5 / alpha.14 / alpha.15 | 待起草 |
+| 02  | **layout transform registry**：结构化布局算法的 definition / registry、输入输出 rows、derived field 命名、与普通 transform / mark 的边界 | red   | v0.1 stat / mark / composition     | 待起草 |
 
 > 旧的 `01-chart-layering.md` 是 2026-06-13 的 chart 草案，已被新的「chart v0.1 独立路线 + Tier 3 ChartSpec」取代；保留为 superseded 历史文件，不再作为本 milestone 输入。
 

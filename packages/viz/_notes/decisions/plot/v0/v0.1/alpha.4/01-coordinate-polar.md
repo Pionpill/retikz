@@ -60,21 +60,21 @@ export type CoordinateFrame = CartesianFrame | PolarFrame;
 
 export type CartesianFrame = {
   type: 'cartesian2D';
-  plotArea: Rect;                 // 绘图区矩形（= guide frame）
-  primary: PositionScale;         // x（水平）
-  secondary: PositionScale;       // y（垂直）
+  plotArea: Rect; // 绘图区矩形（= guide frame）
+  primary: PositionScale; // x（水平）
+  secondary: PositionScale; // y（垂直）
   project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
 };
 
 export type PolarFrame = {
   type: 'polar2D';
-  center: [number, number];       // 圆心（屏幕坐标）
-  innerRadius: number;            // user units（环图内半径，0 = 实心）
-  outerRadius: number;            // user units（可用外半径）
-  startAngle: number;             // 度（角向 range 起）
-  endAngle: number;               // 度（角向 range 止）
-  primary: PositionScale;         // angle（range = [startAngle, endAngle] 度）
-  secondary: PositionScale;       // radius（range = [innerRadius, outerRadius]）
+  center: [number, number]; // 圆心（屏幕坐标）
+  innerRadius: number; // user units（环图内半径，0 = 实心）
+  outerRadius: number; // user units（可用外半径）
+  startAngle: number; // 度（角向 range 起）
+  endAngle: number; // 度（角向 range 止）
+  primary: PositionScale; // angle（range = [startAngle, endAngle] 度）
+  secondary: PositionScale; // radius（range = [innerRadius, outerRadius]）
   project: (angleValue: unknown, radiusValue: unknown) => [number, number] | null;
 };
 ```
@@ -87,11 +87,11 @@ polar2D 的 schema 草案（详见实现契约 § Schema 改动）：
 // ir/coordinate.ts —— describe 一律英文
 export const Polar2DSchema = z.object({
   type: z.literal(PlotCoordinate.Polar2D),
-  angle: z.string().min(1),    // scale name driving the angle role
-  radius: z.string().min(1),   // scale name driving the radius role
-  startAngle: z.number().default(0),    // degrees; 0 = +x, sweeps toward +y (screen y-down), matching core polar
-  endAngle: z.number().default(360),    // degrees; full circle by default
-  innerRadius: z.number().min(0).lt(1).default(0),  // donut hole as a fraction of outer radius; 0 = solid
+  angle: z.string().min(1), // scale name driving the angle role
+  radius: z.string().min(1), // scale name driving the radius role
+  startAngle: z.number().default(0), // degrees; 0 = +x, sweeps toward +y (screen y-down), matching core polar
+  endAngle: z.number().default(360), // degrees; full circle by default
+  innerRadius: z.number().min(0).lt(1).default(0), // donut hole as a fraction of outer radius; 0 = solid
 });
 // CoordinateSchema = z.discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema])
 

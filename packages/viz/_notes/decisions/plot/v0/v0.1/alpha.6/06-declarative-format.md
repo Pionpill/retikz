@@ -49,11 +49,16 @@ export type FieldFormat = ValueOf<typeof DataFieldFormat>;
 DSL：
 
 ```tsx
-<Plot data={rows} model={[
-  { name: 'createdAt', type: 'temporal', format: 'slashDate' },   // '2024/01/01' → epoch ms
-  { name: 'ts',        type: 'temporal', format: 'epochSeconds' },// 1700000000 → *1000
-  { name: 'ratio',     type: 'continuous', format: 'percent' },   // '50%' → 0.5
-]}>{/* … */}</Plot>
+<Plot
+  data={rows}
+  model={[
+    { name: 'createdAt', type: 'temporal', format: 'slashDate' }, // '2024/01/01' → epoch ms
+    { name: 'ts', type: 'temporal', format: 'epochSeconds' }, // 1700000000 → *1000
+    { name: 'ratio', type: 'continuous', format: 'percent' }, // '50%' → 0.5
+  ]}
+>
+  {/* … */}
+</Plot>
 ```
 
 理由：
@@ -67,7 +72,6 @@ DSL：
 
 - **`slashDate` 只收严格 `YYYY/MM/DD`**：按 **UTC 零点**转 epoch ms。`DD/MM/YYYY`、`MM/DD/YYYY` 地区歧义布局**不收**——留 phase 2 完整 pattern 串（`'%d/%m/%Y'`）显式指定，避免「同一 `01/02/2024` 在不同环境解析成不同日期」的隐式歧义。（cross-review #6）
 - **`format` 蕴含 `type`、冲突 fail-loud**：见上「决策」段；不存在「写了 format 却被推断成 categorical」的失效路径。（cross-review #1）
-
 
 ## 影响
 

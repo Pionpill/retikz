@@ -23,7 +23,7 @@ PlotSpec 顶层加 `guides`（可选数组），与 `marks` 对称——guide �
 
 ```ts
 // plot/src/ir/guide.ts
-export const PlotGuide = { Axis: 'axis' } as const;       // 派生 GuideType
+export const PlotGuide = { Axis: 'axis' } as const; // 派生 GuideType
 export const GuideDimension = { X: 'x', Y: 'y' } as const; // 定位维度（非固定屏幕方向；polar 等扩展 radius/angle）
 ```
 
@@ -69,6 +69,7 @@ export const GuideDimension = { X: 'x', Y: 'y' } as const; // 定位维度（非
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking（alpha.1 不带 guides 的 spec 仍合法）。
+>
 > - 真源以代码为准：`AxisGuideSchema` / `GuideSchema` / `PlotGuide` / `GuideDimension`（`plot/src/ir/guide.ts`）、`PlotSpecSchema.guides` 槽位（`plot/src/ir/plot.ts`）、包导出（`plot/src/ir/index.ts`）。
 > - 测试见 `plot/tests/ir/guide.schema.test.ts` 与 `plot/tests/ir/plot-spec.schema.test.ts`（合法/缺字段/非法 dimension/tickCount/grid 拒绝、guides JSON round-trip、与 marks 共存）。
 > - 完整原文（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。

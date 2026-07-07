@@ -114,11 +114,7 @@ describe('ClipDefs — 裁剪区物化为 clipPath', () => {
           { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
           {
             kind: 'path',
-            commands: [
-              { kind: 'move', to: [5, 5] },
-              { kind: 'line', to: [20, 5] },
-              { kind: 'close' },
-            ],
+            commands: [{ kind: 'move', to: [5, 5] }, { kind: 'line', to: [20, 5] }, { kind: 'close' }],
           },
         ],
       }),

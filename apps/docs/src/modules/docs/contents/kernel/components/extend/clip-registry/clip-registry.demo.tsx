@@ -19,7 +19,7 @@ type RoundedRectClipSpec = z.infer<typeof roundedRectClipSchema>;
 const roundedRectClip: ClipDefinition = defineClip<RoundedRectClipSpec>({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
-  resolve: (spec) => {
+  resolve: spec => {
     const x = spec.x;
     const y = spec.y;
     const right = spec.x + spec.width;
@@ -45,8 +45,20 @@ const roundedRectClip: ClipDefinition = defineClip<RoundedRectClipSpec>({
 const Demo: FC = () => (
   <Layout width={430} height={220} clips={[roundedRectClip]}>
     <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
-      <Node position={[-88, -8]} shape="circle" minimumSize={{ width: 160, height: 160 }} fill="skyblue" stroke="none" />
-      <Node position={[84, 8]} shape="circle" minimumSize={{ width: 170, height: 170 }} fill="darkorange" stroke="none" />
+      <Node
+        position={[-88, -8]}
+        shape="circle"
+        minimumSize={{ width: 160, height: 160 }}
+        fill="skyblue"
+        stroke="none"
+      />
+      <Node
+        position={[84, 8]}
+        shape="circle"
+        minimumSize={{ width: 170, height: 170 }}
+        fill="darkorange"
+        stroke="none"
+      />
       <Node
         position={[0, 0]}
         text="custom clip"

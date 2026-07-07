@@ -17,7 +17,9 @@ import {
 import { estimateLabelWidth } from './layout';
 
 type TextLabel = Extract<PlotLabel, { type: 'text' }>;
-type TextStyle = Partial<Pick<IRNode, 'align' | 'font' | 'lineHeight' | 'maxTextWidth' | 'opacity' | 'rotate' | 'textColor'>>;
+type TextStyle = Partial<
+  Pick<IRNode, 'align' | 'font' | 'lineHeight' | 'maxTextWidth' | 'opacity' | 'rotate' | 'textColor'>
+>;
 
 type ResolvedTextLabel = {
   label: TextLabel;
@@ -67,7 +69,11 @@ const textBlockLines = (text: IRTextBlock): Array<string> => {
   });
 };
 
-const textBoundsOf = (text: IRTextBlock, fontSize: number, maxTextWidth: number | undefined): { width: number; height: number } => {
+const textBoundsOf = (
+  text: IRTextBlock,
+  fontSize: number,
+  maxTextWidth: number | undefined,
+): { width: number; height: number } => {
   const lines = textBlockLines(text);
   const lineHeight = fontSize * 1.2;
   const rawWidth = lines.length === 0 ? 0 : Math.max(...lines.map(line => estimateLabelWidth(line, fontSize)));
@@ -117,7 +123,8 @@ const resolveLabels = (input: LabelLayoutInput): Array<ResolvedTextLabel> =>
     const textStyle = mergeTextStyle(input.textStyle, textLabel);
     const fontSize = textFontSizeOf(textLabel, input.textStyle, input.fontSize);
     const placement = textLabel.placement ?? defaultPlacementOf(textLabel);
-    const padding = placement.kind === LayoutPlacementKind.Side ? (placement.padding ?? defaultPaddingOf(textLabel)) : 0;
+    const padding =
+      placement.kind === LayoutPlacementKind.Side ? (placement.padding ?? defaultPaddingOf(textLabel)) : 0;
     return {
       label: textLabel,
       placement,
@@ -159,7 +166,9 @@ const targetRectOf = (
 ): Rect => {
   const target = placement.target ?? LayoutPlacementTarget.Frame;
   if (target === LayoutPlacementTarget.View) {
-    throw new Error('lowerPlots: label placement target "view" is reserved for composition view layout and is not implemented yet');
+    throw new Error(
+      'lowerPlots: label placement target "view" is reserved for composition view layout and is not implemented yet',
+    );
   }
   if (target === LayoutPlacementTarget.PlotArea) return input.plotArea;
   return { x: 0, y: 0, width: input.width, height: input.height };
@@ -183,7 +192,9 @@ const sidePositionOf = (item: ResolvedTextLabel, rect: Rect): [number, number] =
   const halfWidth = item.bounds.width / 2;
   const halfHeight = item.bounds.height / 2;
   if (item.placement.side === AxisCardinalSide.Top) {
-    const y = outward ? rect.y - item.padding - halfHeight - shiftNormal : rect.y + item.padding + halfHeight + shiftNormal;
+    const y = outward
+      ? rect.y - item.padding - halfHeight - shiftNormal
+      : rect.y + item.padding + halfHeight + shiftNormal;
     return [rect.x + rect.width * ratio + shiftAlong, y];
   }
   if (item.placement.side === AxisCardinalSide.Bottom) {
@@ -193,7 +204,9 @@ const sidePositionOf = (item: ResolvedTextLabel, rect: Rect): [number, number] =
     return [rect.x + rect.width * ratio + shiftAlong, y];
   }
   if (item.placement.side === AxisCardinalSide.Left) {
-    const x = outward ? rect.x - item.padding - halfWidth - shiftNormal : rect.x + item.padding + halfWidth + shiftNormal;
+    const x = outward
+      ? rect.x - item.padding - halfWidth - shiftNormal
+      : rect.x + item.padding + halfWidth + shiftNormal;
     return [x, rect.y + rect.height * ratio + shiftAlong];
   }
   const x = outward
@@ -228,26 +241,26 @@ export const lowerPlotLabels = (input: LowerLabelsInput): Array<IRScope> => {
     groups.set(zIndex, [...(groups.get(zIndex) ?? []), item]);
   }
   return Array.from(groups, ([zIndex, group]) => ({
-      type: 'scope',
-      zIndex,
-      meta: { source: 'plot', layer: 'decoration' },
-      nodeDefault: { fill: 'none', stroke: 'none', padding: 0 },
-      children: group.map(item => {
-        const ratio = placementRatioOf(item.placement);
-        const node: IRNode = {
-          type: 'node',
-          position: labelPositionOf(item, input),
-          text: item.label.text,
-          align: item.textStyle.align ?? autoAlignOf(item.placement.anchor, ratio),
-          meta: labelMetaOf(item.label),
-          ...(item.textStyle.font !== undefined ? { font: item.textStyle.font } : {}),
-          ...(item.textStyle.textColor !== undefined ? { textColor: item.textStyle.textColor } : {}),
-          ...(item.textStyle.opacity !== undefined ? { opacity: item.textStyle.opacity } : {}),
-          ...(item.textStyle.lineHeight !== undefined ? { lineHeight: item.textStyle.lineHeight } : {}),
-          ...(item.textStyle.maxTextWidth !== undefined ? { maxTextWidth: item.textStyle.maxTextWidth } : {}),
-          ...(item.textStyle.rotate !== undefined ? { rotate: item.textStyle.rotate } : {}),
-        };
-        return node;
-      }),
-    }));
+    type: 'scope',
+    zIndex,
+    meta: { source: 'plot', layer: 'decoration' },
+    nodeDefault: { fill: 'none', stroke: 'none', padding: 0 },
+    children: group.map(item => {
+      const ratio = placementRatioOf(item.placement);
+      const node: IRNode = {
+        type: 'node',
+        position: labelPositionOf(item, input),
+        text: item.label.text,
+        align: item.textStyle.align ?? autoAlignOf(item.placement.anchor, ratio),
+        meta: labelMetaOf(item.label),
+        ...(item.textStyle.font !== undefined ? { font: item.textStyle.font } : {}),
+        ...(item.textStyle.textColor !== undefined ? { textColor: item.textStyle.textColor } : {}),
+        ...(item.textStyle.opacity !== undefined ? { opacity: item.textStyle.opacity } : {}),
+        ...(item.textStyle.lineHeight !== undefined ? { lineHeight: item.textStyle.lineHeight } : {}),
+        ...(item.textStyle.maxTextWidth !== undefined ? { maxTextWidth: item.textStyle.maxTextWidth } : {}),
+        ...(item.textStyle.rotate !== undefined ? { rotate: item.textStyle.rotate } : {}),
+      };
+      return node;
+    }),
+  }));
 };

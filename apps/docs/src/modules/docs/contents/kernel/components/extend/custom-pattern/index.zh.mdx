@@ -17,11 +17,11 @@ description: pattern.shape 是开放字符串；内置 lines / dots / grid 之�
 
 `PatternDefinition` 是普通对象(不进 IR、可由工厂返回);推荐在定义点用 `definePattern({...})` 包一层，让自定义图案与 shape / arrow / path generator 的扩展写法保持一致:
 
-| 字段          | 类型                                 | 默认值 | 描述                                               |
-| ------------- | ------------------------------------ | ------ | -------------------------------------------------- |
+| 字段          | 类型                                 | 默认值 | 描述                                                             |
+| ------------- | ------------------------------------ | ------ | ---------------------------------------------------------------- |
 | `name`        | `string`                             | 必填   | 注册名；`pattern.shape` 按这个名字查找 motif，且不能与内置名冲突 |
-| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | 必填   | 在局部 tile 坐标系(`0..size`)产 motif 几何         |
-| `defaultSize` | `number`                             | `8`    | tile 周期默认(user units);用户 `pattern.size` 覆盖 |
+| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | 必填   | 在局部 tile 坐标系(`0..size`)产 motif 几何                       |
+| `defaultSize` | `number`                             | `8`    | tile 周期默认(user units);用户 `pattern.size` 覆盖               |
 
 `emit` 拿到的 `PatternEmitContext`:
 

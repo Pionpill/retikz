@@ -17,16 +17,16 @@ plot 仍然需要这些 transform：堆叠、分箱、归一化区间、relation
 
 plot 自行注册的 transform：
 
-| transform | plot 归属理由 |
-| --- | --- |
-| `stack` | 产出 baseline 区间，服务 stacked interval / area / sector 等 plot geometry。 |
-| `bin` | 产出 bin 边界与默认 count，服务 histogram、binned interval、heatmap 等 plot stat geometry。 |
-| `normalize` | 服务 percentage stacking / share chart。 |
-| `derive-interval` | 把单值或双字段派生成 mark 可消费的区间边界。 |
-| `relate` | 产出 relation rows，服务 relation mark anchor 与 routing。 |
-| `jitter` | 对位置字段施加确定性视觉抖动。 |
-| `density` | KDE 采样输出服务 density path / area。 |
-| `smooth` | regression / trend 采样输出服务 smooth path。 |
+| transform         | plot 归属理由                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| `stack`           | 产出 baseline 区间，服务 stacked interval / area / sector 等 plot geometry。                |
+| `bin`             | 产出 bin 边界与默认 count，服务 histogram、binned interval、heatmap 等 plot stat geometry。 |
+| `normalize`       | 服务 percentage stacking / share chart。                                                    |
+| `derive-interval` | 把单值或双字段派生成 mark 可消费的区间边界。                                                |
+| `relate`          | 产出 relation rows，服务 relation mark anchor 与 routing。                                  |
+| `jitter`          | 对位置字段施加确定性视觉抖动。                                                              |
+| `density`         | KDE 采样输出服务 density path / area。                                                      |
+| `smooth`          | regression / trend 采样输出服务 smooth path。                                               |
 
 `resolvePlotTransformRegistry` 复用 data 的 registry 能力，把 data 默认内置项、plot 内置项与用户 `options.transformDefinitions` 同路注册。消费侧不得写“如果 kind 是 stack/bin 就走 plot switch，否则走 data registry”的旁路。
 

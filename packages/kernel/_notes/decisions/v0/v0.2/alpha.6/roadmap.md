@@ -13,18 +13,19 @@ path target 现状是 6 分支 union（`packages/kernel/core/src/ir/path/target.
 ```ts
 // 现状
 export const TargetSchema = z.union([
-  PositionSchema,                  // [x, y] 笛卡尔
-  PolarPositionSchema,             // { origin?, angle, radius }
-  z.string().min(1),               // 节点 id：'A' / 'A.north' / 'A.30'
-  RelativeTargetSchema,            // { relative: [dx, dy] }
-  RelativeAccumulateTargetSchema,  // { relativeAccumulate: [dx, dy] }
-  OffsetPositionSchema,            // { of, offset: [dx, dy] }
+  PositionSchema, // [x, y] 笛卡尔
+  PolarPositionSchema, // { origin?, angle, radius }
+  z.string().min(1), // 节点 id：'A' / 'A.north' / 'A.30'
+  RelativeTargetSchema, // { relative: [dx, dy] }
+  RelativeAccumulateTargetSchema, // { relativeAccumulate: [dx, dy] }
+  OffsetPositionSchema, // { of, offset: [dx, dy] }
 ]);
 ```
 
 痛点：节点引用的 anchor 语义全藏在字符串里——schema 只看到 `string`，无法约束 anchor 枚举 / 角度 / 边上比例点 / offset；`.` 分隔符把"节点 id 不能含点"这种解析细节暴露给用户；LLM 生成时只能盲拼字符串，错了只能报"字符串解析失败"而非结构化诊断。
 
 解析逻辑现在分两处：
+
 - `packages/kernel/core/src/compile/parseTarget.ts:24-38` `parseNodeRef(s)` —— 编译期把 `'A.north'` 拆成三态 `{ kind:'node'|'anchor'|'angle', ... }`
 - `packages/kernel/core/src/parsers/parseTargetSugar.ts:10-21` `parseTargetSugar(input)` —— react / Draw 端只解析 `'+dx,dy'` / `'++dx,dy'` 相对偏移，节点 id 字符串原样透传给 core
 
@@ -35,6 +36,7 @@ export const TargetSchema = z.union([
 `<TikZ>`（`packages/react/src/kernel/TikZ.tsx:110`）是 React 顶层渲染容器，**没有 displayName**（不是 kernel marker，builder 不靠它识别），职责是"收集 DSL/IR → 编译布局 → 交给当前 renderer 输出 SVG"。`Layout` 更贴近这个抽象，不把用户理解锁死在 SVG / LaTeX TikZ 语境。
 
 改动面（探查实测）：
+
 - react：`TikZ.tsx` 组件 + `TikZProps` 类型 + `kernel/index.ts` / `src/index.ts` 导出
 - docs demo.tsx：**171 个文件 / 175 处** `<TikZ>`（100% 的 demo 都用）
 - docs mdx 内联：**66 处** `<TikZ>`
@@ -53,15 +55,15 @@ export const TargetSchema = z.union([
 
 ### IR 改动清单
 
-| 改动 | 文件 | 形态 |
-| --- | --- | --- |
-| 新增 `AnchorRefSchema` | `ir/path/target.ts`（或新 `ir/path/anchor.ts`） | 命名 anchor（复用 `RECT_ANCHORS` 9 名）∪ 数字角度 ∪ `{ side, t }` 边上比例点 |
-| 新增 `NodeTargetSchema` | `ir/path/target.ts` | `{ id, anchor?, offset? }` —— 对象主契约 |
-| `TargetSchema` union 改对象唯一 | `ir/path/target.ts` | union 加 `NodeTargetSchema`，**删 `z.string().min(1)` 分支**（决策 2） |
-| `parseNodeRef` → `parseNodeTarget` 并搬层 | 新 `parsers/parseNodeTarget.ts`（删 `compile/parseTarget.ts`） | 返回 `NodeTarget` 对象（单一真源，仅 React DSL 层消费） |
-| `ShapeDefinition` 加 `edgePoint?` | `shapes/types.ts` | 可选方法解释 `{ side, t }`；内置 4 shape 必实现 |
-| anchor-cache 加 `resolveEdgePoint` | `compile/anchor-cache.ts` | `{ side, t }` 结果缓存（key = `${side}:${t}`） |
-| `{ side, t }` 真实边界几何 | 新 `geometry/_edge.ts`（`EDGE_ENDS`）+ `geometry/{rect,circle,ellipse,diamond}.ts` | rect 直边 / circle·ellipse 周长弧段 / diamond 斜边（带 rotate / local→world） |
+| 改动                                      | 文件                                                                               | 形态                                                                          |
+| ----------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 新增 `AnchorRefSchema`                    | `ir/path/target.ts`（或新 `ir/path/anchor.ts`）                                    | 命名 anchor（复用 `RECT_ANCHORS` 9 名）∪ 数字角度 ∪ `{ side, t }` 边上比例点  |
+| 新增 `NodeTargetSchema`                   | `ir/path/target.ts`                                                                | `{ id, anchor?, offset? }` —— 对象主契约                                      |
+| `TargetSchema` union 改对象唯一           | `ir/path/target.ts`                                                                | union 加 `NodeTargetSchema`，**删 `z.string().min(1)` 分支**（决策 2）        |
+| `parseNodeRef` → `parseNodeTarget` 并搬层 | 新 `parsers/parseNodeTarget.ts`（删 `compile/parseTarget.ts`）                     | 返回 `NodeTarget` 对象（单一真源，仅 React DSL 层消费）                       |
+| `ShapeDefinition` 加 `edgePoint?`         | `shapes/types.ts`                                                                  | 可选方法解释 `{ side, t }`；内置 4 shape 必实现                               |
+| anchor-cache 加 `resolveEdgePoint`        | `compile/anchor-cache.ts`                                                          | `{ side, t }` 结果缓存（key = `${side}:${t}`）                                |
+| `{ side, t }` 真实边界几何                | 新 `geometry/_edge.ts`（`EDGE_ENDS`）+ `geometry/{rect,circle,ellipse,diamond}.ts` | rect 直边 / circle·ellipse 周长弧段 / diamond 斜边（带 rotate / local→world） |
 
 ### `AnchorRef` / `NodeTarget` schema
 
@@ -74,20 +76,22 @@ const NAMED_ANCHORS = Object.values(RECT_ANCHORS) as [string, ...string[]];
 
 export const AnchorRefSchema = z
   .union([
-    z.enum(NAMED_ANCHORS),                 // 'center' / 'north' / ... / 'south-west'
-    z.number().finite(),                    // 角度 anchor（同 PolarPosition 度数约定；禁 NaN/Infinity）
+    z.enum(NAMED_ANCHORS), // 'center' / 'north' / ... / 'south-west'
+    z.number().finite(), // 角度 anchor（同 PolarPosition 度数约定；禁 NaN/Infinity）
     z.object({
       side: z.enum(['north', 'south', 'east', 'west']),
       // 边上比例点：t=0/1 端点见 EDGE_ENDS（north/south = 西→东，east/west = 北→南）
-      t: z.number().min(0).max(1),         // min/max 已隐式拒 NaN/Infinity
+      t: z.number().min(0).max(1), // min/max 已隐式拒 NaN/Infinity
     }),
   ])
-  .describe('Anchor reference: named anchor, angle in degrees, or proportional point { side, t } on the real shape boundary');
+  .describe(
+    'Anchor reference: named anchor, angle in degrees, or proportional point { side, t } on the real shape boundary',
+  );
 
 export const NodeTargetSchema = z
   .object({
     id: z.string().min(1),
-    anchor: AnchorRefSchema.optional(),       // 缺省 = 自动贴边界（同旧 'A' shorthand）
+    anchor: AnchorRefSchema.optional(), // 缺省 = 自动贴边界（同旧 'A' shorthand）
     // 世界系平移，在 anchor / 边点解析后叠加；不随节点 rotate 旋转（见决策 3）
     offset: z.tuple([z.number().finite(), z.number().finite()]).optional(),
   })
@@ -105,12 +109,14 @@ export const TargetSchema = z
   .union([
     PositionSchema,
     PolarPositionSchema,
-    NodeTargetSchema,                // 节点 / Coordinate 引用：唯一契约（不再有字符串形态）
+    NodeTargetSchema, // 节点 / Coordinate 引用：唯一契约（不再有字符串形态）
     RelativeTargetSchema,
     RelativeAccumulateTargetSchema,
     OffsetPositionSchema,
   ])
-  .describe('Path endpoint: Cartesian [x, y], polar, node target object { id, anchor?, offset? }, relative offset, or offset position');
+  .describe(
+    'Path endpoint: Cartesian [x, y], polar, node target object { id, anchor?, offset? }, relative offset, or offset position',
+  );
 ```
 
 > union 内 `NodeTargetSchema`（key `id`）与 `OffsetPositionSchema`（key `of`）/ `RelativeTargetSchema`（key `relative`）无 key 冲突，zod 判别无歧义。`arc` step 的 `center?`、`rectangle` step 的 `from`/`to`（`ir/path/step.ts:208,277-278`）共用 `TargetSchema`，**自动获得对象形态**，无需逐 step 改。
@@ -163,10 +169,13 @@ export const refPointOfTarget = (target, nameStack, scopeChain = []) => {
     if (!node) return null;
     const a = target.anchor;
     const base =
-      a === undefined        ? [node.rect.x, node.rect.y] :        // 自动 → 中心（refPoint 用）
-      typeof a === 'number'  ? resolveAnchor(node, String(a)) :     // 角度
-      typeof a === 'string'  ? resolveAnchor(node, a) :             // 命名
-                               resolveEdgePoint(node, a.side, a.t); // { side, t } 边上比例点
+      a === undefined
+        ? [node.rect.x, node.rect.y] // 自动 → 中心（refPoint 用）
+        : typeof a === 'number'
+          ? resolveAnchor(node, String(a)) // 角度
+          : typeof a === 'string'
+            ? resolveAnchor(node, a) // 命名
+            : resolveEdgePoint(node, a.side, a.t); // { side, t } 边上比例点
     return target.offset ? [base[0] + target.offset[0], base[1] + target.offset[1]] : base;
   }
 
@@ -195,12 +204,12 @@ const isRelative = (t: IRTarget): boolean =>
 
 **决策 1（review 确认）**：`{ side, t }` 表示**真实 shape 边界**上的点，不是外接矩形边。
 
-| shape | side 的"边" | t=0 → t=1 方向 |
-| --- | --- | --- |
-| rectangle | 矩形四条直边 | north/south：西→东；east/west：北→南 |
-| circle / ellipse | 该侧可见**周长弧段**参数化（非外接矩形边） | 同上（沿弧段，端点为相邻象限分界） |
-| diamond | 菱形四条可见斜边 | 同上（沿斜边） |
-| 自定义 shape | **不强制**——`edgePoint?` 可选；不实现时收到 `{ side, t }` 编译期抛明确错 | — |
+| shape            | side 的"边"                                                              | t=0 → t=1 方向                       |
+| ---------------- | ------------------------------------------------------------------------ | ------------------------------------ |
+| rectangle        | 矩形四条直边                                                             | north/south：西→东；east/west：北→南 |
+| circle / ellipse | 该侧可见**周长弧段**参数化（非外接矩形边）                               | 同上（沿弧段，端点为相邻象限分界）   |
+| diamond          | 菱形四条可见斜边                                                         | 同上（沿斜边）                       |
+| 自定义 shape     | **不强制**——`edgePoint?` 可选；不实现时收到 `{ side, t }` 编译期抛明确错 | —                                    |
 
 内置 rectangle / circle / ellipse / diamond **必须实现** `edgePoint`。
 
@@ -231,8 +240,8 @@ export const EDGE_ENDS = {
 
 // geometry/rect.ts：矩形四直边线性插值
 export const rectEdgePoint = (rect: Rect, side: Side, t: number): Position => {
-  const [a, b] = EDGE_ENDS[side];      // 如 north → ['north-west', 'north-east']
-  return lerp(rectAnchor(rect, a), rectAnchor(rect, b), t);  // 复用现有 9-anchor，已含 localToWorld
+  const [a, b] = EDGE_ENDS[side]; // 如 north → ['north-west', 'north-east']
+  return lerp(rectAnchor(rect, a), rectAnchor(rect, b), t); // 复用现有 9-anchor，已含 localToWorld
 };
 
 // geometry/circle.ts / ellipse.ts：该侧周长弧段参数化（端点 = 相邻象限分界角，按 t 在弧上取角度）

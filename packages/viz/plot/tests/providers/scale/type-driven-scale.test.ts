@@ -8,7 +8,10 @@ import type { PlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { deriveScale } from '../../../src/providers';
-import { assertScaleFieldCompatible as assertScaleFieldCompatibleOp, resolveScaleRegistry } from '../../../src/providers';
+import {
+  assertScaleFieldCompatible as assertScaleFieldCompatibleOp,
+  resolveScaleRegistry,
+} from '../../../src/providers';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参。

@@ -140,9 +140,7 @@ export const resolvePaddedDomain = (options: ResolvePaddedDomainOptions): [numbe
   if (clampLowerZero) assertNonNegative(source, options.scaleName, options.family, 'source');
 
   const expanded =
-    source[0] === source[1]
-      ? expandAdditiveSingleValue(source[0], options.singleValueSpan, clampLowerZero)
-      : source;
+    source[0] === source[1] ? expandAdditiveSingleValue(source[0], options.singleValueSpan, clampLowerZero) : source;
   const padded = applyAdditivePadding(
     expanded,
     paddingSides(options.domainPadding, options.explicitDomain, options.defaultDomainPadding ?? 0),

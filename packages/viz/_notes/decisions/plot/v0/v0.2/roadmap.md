@@ -23,8 +23,8 @@ v0.2 默认消费这层共享数据语义；plot 专属的统计 transform、lay
 
 ## Milestones
 
-| Milestone | 主题 | 模块 / 产出 | 状态 |
-| --- | --- | --- | --- |
+| Milestone                            | 主题                                                     | 模块 / 产出                                                                                                                            | 状态   |
+| ------------------------------------ | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | [v0.2-alpha.1](./alpha.1/roadmap.md) | **interaction foundation + layout transform foundation** | 接通 locator / provenance runtime 消费、交互事件与 overlay 基础；建立 plot layout transform registry 与首批结构化布局的输入 / 输出契约 | 草拟中 |
 
 后续 alpha 依需求拆分：

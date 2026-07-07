@@ -21,7 +21,8 @@ const textBlockHasContent = (value: unknown): boolean => {
   if (!Array.isArray(value)) return false;
   return value.some(line => {
     if (typeof line === 'string') return line.length > 0;
-    if (line && typeof line === 'object' && 'text' in line && typeof line.text === 'string') return line.text.length > 0;
+    if (line && typeof line === 'object' && 'text' in line && typeof line.text === 'string')
+      return line.text.length > 0;
     if (line && typeof line === 'object' && 'runs' in line && Array.isArray(line.runs)) {
       return line.runs.some((run: unknown) => {
         if (!run || typeof run !== 'object') return false;
@@ -93,7 +94,9 @@ const SideLayoutPlacementSchema = z
 
 const PointLayoutPlacementSchema = z
   .object({
-    kind: z.literal(LayoutPlacementKind.Point).describe('Placement discriminator: place the decoration at a normalized point'),
+    kind: z
+      .literal(LayoutPlacementKind.Point)
+      .describe('Placement discriminator: place the decoration at a normalized point'),
     target: z.enum(LayoutPlacementTarget).optional().describe('Target frame used by this placement; omit = frame'),
     view: z.string().min(1).optional().describe('Coordinate view id when target is view'),
     x: NormalizedRatioSchema.describe('Normalized x position inside the target frame'),
@@ -118,14 +121,27 @@ export const LayoutPlacementSchema = z
 
 export const PlotLayoutSchema = z
   .object({
-    mode: z.enum(PlotLayoutMode).optional().describe('Layout mode: auto reserves decoration space; fixed keeps explicit padding only'),
+    mode: z
+      .enum(PlotLayoutMode)
+      .optional()
+      .describe('Layout mode: auto reserves decoration space; fixed keeps explicit padding only'),
     autoPadding: z.boolean().optional().describe('Whether visible labels may expand outer padding; omit = true'),
     padding: BoxPaddingSchema.optional().describe('Outer padding applied before automatic label reservation'),
-    maxIterations: z.number().int().positive().max(5).optional().describe('Maximum deterministic layout stabilization iterations; omit = 3'),
+    maxIterations: z
+      .number()
+      .int()
+      .positive()
+      .max(5)
+      .optional()
+      .describe('Maximum deterministic layout stabilization iterations; omit = 3'),
     collision: z
       .object({
         strategy: z.enum(LayoutCollisionStrategy).optional().describe('How unresolved layout collisions are handled'),
-        padding: z.number().nonnegative().optional().describe('Minimum padding between colliding layout boxes in user units'),
+        padding: z
+          .number()
+          .nonnegative()
+          .optional()
+          .describe('Minimum padding between colliding layout boxes in user units'),
       })
       .strict()
       .optional()
@@ -140,7 +156,9 @@ const PlotTextLabelSchema = z
     id: z.string().min(1).optional().describe('Optional label id used for stable output metadata'),
     role: z.enum(PlotLabelRole).optional().describe('Semantic text label role used for defaults and priority'),
     text: PlotLabelTextSchema.describe('Label text block'),
-    layer: PlotLayerSchema.optional().describe('Semantic plot layer override applied to this generated plot label scope'),
+    layer: PlotLayerSchema.optional().describe(
+      'Semantic plot layer override applied to this generated plot label scope',
+    ),
     placement: LayoutPlacementSchema.optional().describe('Label placement; omit to derive from role'),
     reserveSpace: z.boolean().optional().describe('Whether this label participates in layout reservation'),
     priority: z.number().optional().describe('Collision priority; higher priority labels are preserved first'),

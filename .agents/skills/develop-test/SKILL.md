@@ -36,11 +36,11 @@ Bug Hunter 只做三件事：
 
 ## 处理结果
 
-| 结果 | 处理 |
-| --- | --- |
+| 结果     | 处理                                             |
+| -------- | ------------------------------------------------ |
 | BLOCKING | 提升为正式回归测试，回实现阶段修；修完重跑本阶段 |
-| WARNING | 主 AI 判断本 ADR 内修还是记 backlog / roadmap |
-| INFO | 作为 wrapup changelog 或汇报素材 |
+| WARNING  | 主 AI 判断本 ADR 内修还是记 backlog / roadmap    |
+| INFO     | 作为 wrapup changelog 或汇报素材                 |
 
 同一 BLOCKING 最多修 3 轮；仍不收敛则 halt 给人工。
 

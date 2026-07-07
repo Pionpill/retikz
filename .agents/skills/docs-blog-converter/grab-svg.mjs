@@ -38,7 +38,10 @@ if (!values.url || !values.out || !values.demos) {
 
 const URL = values.url;
 const OUT_DIR = values.out;
-const DEMO_NAMES = values.demos.split(',').map(s => s.trim()).filter(Boolean);
+const DEMO_NAMES = values.demos
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
 const PORT = Number(values.port);
 
 const BROWSER_CANDIDATES = {
@@ -52,50 +55,71 @@ const BROWSER_CANDIDATES = {
     '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   ],
-  linux: [
-    '/usr/bin/microsoft-edge',
-    '/usr/bin/google-chrome',
-    '/usr/bin/chromium',
-  ],
+  linux: ['/usr/bin/microsoft-edge', '/usr/bin/google-chrome', '/usr/bin/chromium'],
 };
 const browser = (BROWSER_CANDIDATES[platform()] ?? []).find(p => existsSync(p));
 if (!browser) {
-  console.error(`未找到 Edge / Chrome，平台 ${platform()}，候选路径全不存在。把可用浏览器加进 BROWSER_CANDIDATES 或装一个 Chromium 系浏览器`);
+  console.error(
+    `未找到 Edge / Chrome，平台 ${platform()}，候选路径全不存在。把可用浏览器加进 BROWSER_CANDIDATES 或装一个 Chromium 系浏览器`,
+  );
   process.exit(1);
 }
 
 const userDataDir = mkdtempSync(join(tmpdir(), 'cdp-blog-'));
-const proc = spawn(browser, [
-  '--headless=new',
-  `--remote-debugging-port=${PORT}`,
-  `--user-data-dir=${userDataDir}`,
-  '--no-first-run',
-  '--no-default-browser-check',
-  '--disable-extensions',
-  '--disable-gpu',
-  '--window-size=1600,1200',
-  'about:blank',
-], { stdio: 'ignore', detached: false });
+const proc = spawn(
+  browser,
+  [
+    '--headless=new',
+    `--remote-debugging-port=${PORT}`,
+    `--user-data-dir=${userDataDir}`,
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-extensions',
+    '--disable-gpu',
+    '--window-size=1600,1200',
+    'about:blank',
+  ],
+  { stdio: 'ignore', detached: false },
+);
 
 const cleanup = () => {
-  try { proc.kill('SIGKILL'); } catch {}
-  try { rmSync(userDataDir, { recursive: true, force: true }); } catch {}
+  try {
+    proc.kill('SIGKILL');
+  } catch {}
+  try {
+    rmSync(userDataDir, { recursive: true, force: true });
+  } catch {}
 };
 process.on('exit', cleanup);
-process.on('SIGINT', () => { cleanup(); process.exit(1); });
-
-const getJson = (path) => new Promise((resolve, reject) => {
-  http.get(`http://localhost:${PORT}${path}`, res => {
-    let data = '';
-    res.on('data', c => (data += c));
-    res.on('end', () => { try { resolve(JSON.parse(data)); } catch (e) { reject(e); } });
-  }).on('error', reject);
+process.on('SIGINT', () => {
+  cleanup();
+  process.exit(1);
 });
+
+const getJson = path =>
+  new Promise((resolve, reject) => {
+    http
+      .get(`http://localhost:${PORT}${path}`, res => {
+        let data = '';
+        res.on('data', c => (data += c));
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(e);
+          }
+        });
+      })
+      .on('error', reject);
+  });
 
 const waitDebugger = async () => {
   for (let i = 0; i < 60; i++) {
-    try { return await getJson('/json/version'); }
-    catch { await new Promise(r => setTimeout(r, 300)); }
+    try {
+      return await getJson('/json/version');
+    } catch {
+      await new Promise(r => setTimeout(r, 300));
+    }
   }
   throw new Error('浏览器调试端口未就绪');
 };
@@ -110,11 +134,14 @@ const main = async () => {
   if (!tab) throw new Error('找不到可用 tab');
 
   const ws = new WebSocket(tab.webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
+  await new Promise((resolve, reject) => {
+    ws.onopen = resolve;
+    ws.onerror = reject;
+  });
 
   let nextId = 1;
   const inflight = new Map();
-  ws.onmessage = (ev) => {
+  ws.onmessage = ev => {
     const msg = JSON.parse(ev.data);
     if (msg.id && inflight.has(msg.id)) {
       const { resolve, reject } = inflight.get(msg.id);
@@ -160,7 +187,9 @@ const main = async () => {
 
   console.log(`[grab] found ${svgs.length} SVG(s) on page; expected ${DEMO_NAMES.length}`);
   if (svgs.length < DEMO_NAMES.length) {
-    throw new Error(`SVG 数量不够（拿到 ${svgs.length}、需要 ${DEMO_NAMES.length}）——页面可能没渲染完，把上面的 setTimeout 加大再试`);
+    throw new Error(
+      `SVG 数量不够（拿到 ${svgs.length}、需要 ${DEMO_NAMES.length}）——页面可能没渲染完，把上面的 setTimeout 加大再试`,
+    );
   }
   if (svgs.length > DEMO_NAMES.length) {
     console.warn(`[grab] 多出 ${svgs.length - DEMO_NAMES.length} 个 SVG，按顺序取前 ${DEMO_NAMES.length} 个`);
@@ -175,4 +204,9 @@ const main = async () => {
   ws.close();
 };
 
-main().then(() => process.exit(0)).catch(err => { console.error(err); process.exit(1); });
+main()
+  .then(() => process.exit(0))
+  .catch(err => {
+    console.error(err);
+    process.exit(1);
+  });

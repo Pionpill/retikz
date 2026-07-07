@@ -30,7 +30,9 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
 
   it('guide_layer_rejects_fractional_zindex_and_unknown_fields', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', layer: { zIndex: 1.5 } })).toThrow();
-    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', layer: { zIndex: 1, order: 2 } })).toThrow();
+    expect(() =>
+      LegendGuideSchema.parse({ type: 'legend', channel: 'color', layer: { zIndex: 1, order: 2 } }),
+    ).toThrow();
   });
 
   it('legend_style_accepts_size_symbol_layout_tokens', () => {
@@ -125,7 +127,14 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
 
   // 交互
   it('guide_roundtrip', () => {
-    const guide = { type: 'axis', dimension: 'y', ticks: { count: 4 }, grid: true, tickLabels: { format: '.1f' }, id: 'yA' };
+    const guide = {
+      type: 'axis',
+      dimension: 'y',
+      ticks: { count: 4 },
+      grid: true,
+      tickLabels: { format: '.1f' },
+      id: 'yA',
+    };
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 
@@ -143,7 +152,9 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
 
   it('axis_line_dash_offset_rejects_non_finite_values', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.NaN } })).toThrow();
-    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.POSITIVE_INFINITY } })).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.POSITIVE_INFINITY } }),
+    ).toThrow();
   });
 
   it('axis_line_accepts_advanced_geometry', () => {
@@ -313,8 +324,12 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
   });
 
   it('axis_ticks_reject_invalid_density_interval_and_mark_conflicts', () => {
-    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { density: { kind: 'sample' } } })).toThrow();
-    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { interval: { kind: 'number', step: 0 } } })).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { density: { kind: 'sample' } } }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { interval: { kind: 'number', step: 0 } } }),
+    ).toThrow();
     expect(() =>
       AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { mark: { kind: 'line' }, length: 4 } }),
     ).toThrow();

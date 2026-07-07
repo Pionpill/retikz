@@ -382,7 +382,7 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     const [first, second] = symbols;
     expect(first).toBeDefined();
     expect(second).toBeDefined();
-    const yGap = Math.abs(((second).position as [number, number])[1] - ((first).position as [number, number])[1]);
+    const yGap = Math.abs((second.position as [number, number])[1] - (first.position as [number, number])[1]);
     expect(yGap).toBeGreaterThanOrEqual((nodeMinimumSide(first) + nodeMinimumSide(second)) / 2 + 6);
   });
 
@@ -739,7 +739,12 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-au
     const labels = labelsOf(legend as IRScope);
 
     expect(labels.map(node => node.text)).toEqual(['2026-01-01', '2026-01-03']);
-    expect(labels.map(node => node.position as [number, number]).flat().every(Number.isFinite)).toBe(true);
+    expect(
+      labels
+        .map(node => node.position as [number, number])
+        .flat()
+        .every(Number.isFinite),
+    ).toBe(true);
   });
 });
 

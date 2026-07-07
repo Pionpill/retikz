@@ -14,14 +14,14 @@
 
 底层 mark 收敛为 6 个抽象数据几何 mark，并通过 mark registry 分发 lowering 行为：
 
-| 抽象 mark | IR `type` | 收编旧形态 | 语义 |
-| --- | --- | --- | --- |
-| Point | `point` | `point` + `text` | 坐标元组上的 glyph / 文本锚点 |
-| Path | `path` | `line` | 有序点构成的一维轨迹 |
-| Region | `region` | `area` | 边界围出的可填充区域 |
-| Interval | `interval` | `interval` + `sector` + `rect` | 正交区间积，经坐标系投影成柱、cell、扇区等 |
-| Link | `link` | `ribbon` | source-target 关系几何的早期方向 |
-| Reference | `reference` | `rule` | 固定位置或区间的参考约束 |
+| 抽象 mark | IR `type`   | 收编旧形态                     | 语义                                       |
+| --------- | ----------- | ------------------------------ | ------------------------------------------ |
+| Point     | `point`     | `point` + `text`               | 坐标元组上的 glyph / 文本锚点              |
+| Path      | `path`      | `line`                         | 有序点构成的一维轨迹                       |
+| Region    | `region`    | `area`                         | 边界围出的可填充区域                       |
+| Interval  | `interval`  | `interval` + `sector` + `rect` | 正交区间积，经坐标系投影成柱、cell、扇区等 |
+| Link      | `link`      | `ribbon`                       | source-target 关系几何的早期方向           |
+| Reference | `reference` | `rule`                         | 固定位置或区间的参考约束                   |
 
 `sector`、`rect`、`text` 删除；`line` / `area` / `rule` / `ribbon` 分别改名为 `path` / `region` / `reference` / `link`。由于本里程碑仍处 0.x 收敛期，不保留旧别名。
 

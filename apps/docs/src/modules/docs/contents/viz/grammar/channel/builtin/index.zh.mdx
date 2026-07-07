@@ -5,15 +5,15 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 内置通道优先按“你想控制什么”理解，而不是按底层 `Node` / `Path` / `Scope` 分类。通道在 React DSL 里表现为 mark props，例如 `<PointMark x="gdp" color="region" />`；mark 再决定哪些通道会落到自己产出的 core 元素上。
 
-| 类型       | 通道                                                                                   | 说明                             |
-| ---------- | -------------------------------------------------------------------------------------- | -------------------------------- |
-| 位置       | `x` / `y`<br />`z`                                                                     | 字段决定坐标角色                 |
-| 样式       | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`            | 颜色、透明度、大小和形状         |
-| 节点几何   | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                              | node 尺寸、间距和变换            |
-| 文本       | `text`<br />`label`                                                                    | 节点内文本和节点外 label         |
-| 路径 | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern` | 路径描边、端点、连接、圆角和虚线 |
-| 效果       | `shadow`<br />`blendMode`                                                              | 阴影和混合模式                   |
-| 其他       | `zIndex` / `order`<br />`series`                                                       | 绘制顺序、排序和系列拆分         |
+| 类型     | 通道                                                                         | 说明                             |
+| -------- | ---------------------------------------------------------------------------- | -------------------------------- |
+| 位置     | `x` / `y`<br />`z`                                                           | 字段决定坐标角色                 |
+| 样式     | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`  | 颜色、透明度、大小和形状         |
+| 节点几何 | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                     | node 尺寸、间距和变换            |
+| 文本     | `text`<br />`label`                                                          | 节点内文本和节点外 label         |
+| 路径     | `strokeWidth` / `lineCap` / `lineJoin`<br />`roundedCorners` / `dashPattern` | 路径描边、端点、连接、圆角和虚线 |
+| 效果     | `shadow`<br />`blendMode`                                                    | 阴影和混合模式                   |
+| 其他     | `zIndex` / `order`<br />`series`                                             | 绘制顺序、排序和系列拆分         |
 
 ## 位置
 
@@ -50,11 +50,11 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 <ComponentPreview name="builtin-opacity" size="md" />
 
-| 通道          | 通道值                                                         | 含义       | 落点 / 图例                                                                     |
-| ------------- | -------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------- |
-| `opacity`     | 字段：`opacity = "field"`<br />常量：`opacity = {0.45}`        | 整体透明度 | `IRScope.opacity`、`IRNode.opacity` 或 `IRPath.opacity`；字段值支持 ramp legend |
-| `fillOpacity` | 字段：`fillOpacity = "field"`<br />常量：`fillOpacity = {0.7}` | 填充透明度 | scope / node / path fill opacity                                                |
-| `strokeOpacity` | 字段：`strokeOpacity = "field"`<br />常量：`strokeOpacity = {0.7}` | 描边透明度 | scope / node / path stroke opacity                                                |
+| 通道            | 通道值                                                             | 含义       | 落点 / 图例                                                                     |
+| --------------- | ------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------- |
+| `opacity`       | 字段：`opacity = "field"`<br />常量：`opacity = {0.45}`            | 整体透明度 | `IRScope.opacity`、`IRNode.opacity` 或 `IRPath.opacity`；字段值支持 ramp legend |
+| `fillOpacity`   | 字段：`fillOpacity = "field"`<br />常量：`fillOpacity = {0.7}`     | 填充透明度 | scope / node / path fill opacity                                                |
+| `strokeOpacity` | 字段：`strokeOpacity = "field"`<br />常量：`strokeOpacity = {0.7}` | 描边透明度 | scope / node / path stroke opacity                                              |
 
 ### 大小
 
@@ -82,12 +82,12 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 <ComponentPreview name="builtin-node-geometry" size="md" />
 
-| 通道                                                             | 通道值                                                          | 含义          | 落点                       |
-| ---------------------------------------------------------------- | --------------------------------------------------------------- | ------------- | -------------------------- |
-| `minimumSize`              | 字段：`minimumSize = "field"`<br />常量：`minimumSize = {54}` | node 尺寸约束 | core node size fields      |
-| `padding` / `margin`                                                                                                                                                                                                        | 字段：`padding = "field"`<br />常量：`padding = {8}` / `padding = {{ x: 8, y: 4 }}` | node 内外间距 | core node spacing fields   |
-| `cornerRadius`                                                   | 字段：`cornerRadius = "field"`<br />常量：`cornerRadius = {8}`  | 矩形圆角      | core node `cornerRadius`   |
-| `rotate` / `scale`                      | 字段：`rotate = "field"`<br />常量：`rotate = {18}`             | node 变换提示 | core node transform fields |
+| 通道                 | 通道值                                                                              | 含义          | 落点                       |
+| -------------------- | ----------------------------------------------------------------------------------- | ------------- | -------------------------- |
+| `minimumSize`        | 字段：`minimumSize = "field"`<br />常量：`minimumSize = {54}`                       | node 尺寸约束 | core node size fields      |
+| `padding` / `margin` | 字段：`padding = "field"`<br />常量：`padding = {8}` / `padding = {{ x: 8, y: 4 }}` | node 内外间距 | core node spacing fields   |
+| `cornerRadius`       | 字段：`cornerRadius = "field"`<br />常量：`cornerRadius = {8}`                      | 矩形圆角      | core node `cornerRadius`   |
+| `rotate` / `scale`   | 字段：`rotate = "field"`<br />常量：`rotate = {18}`                                 | node 变换提示 | core node transform fields |
 
 ## 文本
 
@@ -110,9 +110,9 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 <ComponentPreview name="builtin-text-label" size="md" />
 
-| 通道                                              | 通道值                                                            | 含义            | 落点                   |
-| ------------------------------------------------- | ----------------------------------------------------------------- | --------------- | ---------------------- |
-| `label`                                           | 字段：`label = "field"`                                           | datum host 标签 | core node `label`      |
+| 通道                                              | 通道值                                                          | 含义            | 落点                   |
+| ------------------------------------------------- | --------------------------------------------------------------- | --------------- | ---------------------- |
+| `label`                                           | 字段：`label = "field"`                                         | datum host 标签 | core node `label`      |
 | `labelPosition` / `labelDistance`<br />`labelPin` | 常量：`labelPosition = "top"`<br />常量：`labelDistance = {16}` | label 布局      | core node label fields |
 
 ## 路径

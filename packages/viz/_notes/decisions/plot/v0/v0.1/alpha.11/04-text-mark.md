@@ -54,6 +54,7 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 `label` 顶层 string（React `label="revenue"` / `text="label"`）默认按字段解析，与 x/y/color 一致。`MarkLabelSchema.position` 缺省 `above`、`distance` 缺省 12、`pin` 缺省 false（对齐 core）；`TextMark.dx/dy` 缺省 0。
 
 理由：
+
 1. **几何零新增、与 point 同源**：两档下沉位置都复用已验证、坐标系无关的 `datumAnchor → frame.projectRoles`，不引入新坐标系分支、不碰 `project.ts` / `anchor.ts` 几何。
 2. **优先挂宿主 Node `label`、兜底才新建——守 §8.1 且不重造轮子**：边框相对定位 / distance / 引线由 core 原生承担，零新建 Node、IR 体积不随标签增长；无宿主自由文本才退到 `Node{text}`。
 3. **JSON IR 约束下的三层 + 运行时一层**：声明层 `field` / `value` / `format` 都 JSON 安全、AI 可生成、可序列化往返；完全自定义走运行时 `resolveLabel` 逃生舱。

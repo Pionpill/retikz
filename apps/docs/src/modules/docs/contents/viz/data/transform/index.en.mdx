@@ -9,12 +9,12 @@ Plot-only drawing transforms stay in [Drawing Grammar transforms](/viz/grammar/t
 
 ## Capabilities
 
-| kind        | Row count | Data meaning                             | Common consumers                          |
-| ----------- | --------- | ---------------------------------------- | ----------------------------------------- |
-| `sort`      | N -> N    | Stablely reorder rows by a field         | Line order, pre-stack preparation         |
-| `summarize` | N -> G    | Generate one statistical row per group   | Grouped bars, summary tables, statistics  |
-| `select`    | N -> K    | Select representative original rows      | Extremes, top-N, outlier samples          |
-| `annotate`  | N -> N    | Broadcast group stats or representatives | Mean lines, threshold labels, context layers |
+| kind        | Row count            | Data meaning                                  | Common consumers                                   |
+| ----------- | -------------------- | --------------------------------------------- | -------------------------------------------------- |
+| `sort`      | N -> N               | Stablely reorder rows by a field              | Line order, pre-stack preparation                  |
+| `summarize` | N -> G               | Generate one statistical row per group        | Grouped bars, summary tables, statistics           |
+| `select`    | N -> K               | Select representative original rows           | Extremes, top-N, outlier samples                   |
+| `annotate`  | N -> N               | Broadcast group stats or representatives      | Mean lines, threshold labels, context layers       |
 | custom      | definition-dependent | Runtime logic registered by `defineTransform` | Domain-specific derivation or long-tail row shapes |
 
 The operations are JSON-serializable config. The implementation function comes from data built-ins or runtime-injected definitions. Input fields read by a transform participate in model validation; fields produced by a transform do not need to be declared in the model ahead of time.
@@ -38,10 +38,10 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 <ComponentPreview name="transform-summarize" sourceFiles={['transform-summarize.data.ts']} />
 
-| prop      | type             | default      | description                                         |
-| --------- | ---------------- | ------------ | --------------------------------------------------- |
-| `groupBy` | `Array<string>?` | one global group | Group key fields; supports composite keys        |
-| `metrics` | `Array<Reducer>` | —            | Group statistics; every reducer must declare `as`   |
+| prop      | type             | default          | description                                       |
+| --------- | ---------------- | ---------------- | ------------------------------------------------- |
+| `groupBy` | `Array<string>?` | one global group | Group key fields; supports composite keys         |
+| `metrics` | `Array<Reducer>` | —                | Group statistics; every reducer must declare `as` |
 
 ```tsx
 <Transform
@@ -77,10 +77,10 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 <ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
 
-| prop        | type                                         | default          | description                                                                                                     |
-| ----------- | -------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
-| `groupBy`   | `Array<string>?`                             | one global group | Group key fields; supports composite keys                                                                       |
-| `metrics`   | `Array<Reducer>?`                            | —                | Statistical metrics to broadcast to every row                                                                   |
+| prop        | type                                         | default          | description                                                                                                         |
+| ----------- | -------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `groupBy`   | `Array<string>?`                             | one global group | Group key fields; supports composite keys                                                                           |
+| `metrics`   | `Array<Reducer>?`                            | —                | Statistical metrics to broadcast to every row                                                                       |
 | `selectors` | `Array<{ selector: Selector; as: string }>?` | —                | Representative values to broadcast; `min` / `max` / `top` / `bottom` read selector `by`, other selectors fill ranks |
 
 ```tsx
@@ -96,9 +96,9 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 `summarize`, `annotate`, and plot-registered `bin` reuse reducers. `select`, `annotate`, and plot-registered `relate` reuse selectors.
 
-| sub-operator | returns        | typical ops                                                             |
-| ------------ | -------------- | ----------------------------------------------------------------------- |
-| reducer      | field fragment | `count` / `sum` / `mean` / `median` / `min` / `max` / `quantile-band`   |
+| sub-operator | returns        | typical ops                                                                           |
+| ------------ | -------------- | ------------------------------------------------------------------------------------- |
+| reducer      | field fragment | `count` / `sum` / `mean` / `median` / `min` / `max` / `quantile-band`                 |
 | selector     | original rows  | `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band` |
 
 `quantile-band` uses `lowerP` and `upperP` for arbitrary quantile intervals instead of hard-coding q1 / q3. `outside-quantile-band` is a selector, so it outputs original rows and preserves ids, labels, and provenance.
@@ -113,9 +113,9 @@ When the input / output row shape does not fit an existing transform, register a
 
 <ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
 
-| definition field | declares                                          | enters IR |
-| ---------------- | ------------------------------------------------- | --------- |
-| `schema`         | Validates `{ kind, ...config }` and reads the key | No        |
-| `inputFields`    | Source fields read by the transform and model validation | No |
-| `outputFields`   | Derived fields excluded from strict model checks  | No        |
-| `transform`      | Runtime row-processing logic                      | No        |
+| definition field | declares                                                 | enters IR |
+| ---------------- | -------------------------------------------------------- | --------- |
+| `schema`         | Validates `{ kind, ...config }` and reads the key        | No        |
+| `inputFields`    | Source fields read by the transform and model validation | No        |
+| `outputFields`   | Derived fields excluded from strict model checks         | No        |
+| `transform`      | Runtime row-processing logic                             | No        |

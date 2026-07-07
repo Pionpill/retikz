@@ -16,10 +16,10 @@ core v0.3-alpha.4 已补齐参数化可连接 `sector` shape（params `{ innerRa
 
 两类「扇形」语义需分清（都下沉 core `sector`，但角 / 径来源不同）：
 
-| 俗名 | mark | 角度来源 | 半径来源 |
-|---|---|---|---|
+| 俗名                              | mark                     | 角度来源                  | 半径来源                     |
+| --------------------------------- | ------------------------ | ------------------------- | ---------------------------- |
 | 径向柱 / 玫瑰图（rose / coxcomb） | **interval**（polar 下） | band 切分（类别等分角带） | baseline→value（半径编码值） |
-| 饼图 / 环图（pie / donut） | **sector**（新 mark） | value 累积（累积角界） | 常量（内→外半径满铺） |
+| 饼图 / 环图（pie / donut）        | **sector**（新 mark）    | value 累积（累积角界）    | 常量（内→外半径满铺）        |
 
 关键分层约束（plot-design §3.3 / §13.1）：**饼图的「value → 累积角界」是 transform 阶段职责**，发生在 scale / coordinate / mark 之前——与 alpha.3 堆叠柱「stack transform 产 y0/y1、interval mark 读 y0/y1」完全同构。绝不在 sector mark 内建累积（否则 transform 分层破裂、与 stack 重复造轮子）。
 
@@ -68,10 +68,10 @@ schema 草案（详见实现契约）：
 ```ts
 // ir/mark.ts —— describe 英文
 export const SectorMarkSchema = z.object({
-  type: z.literal(PlotMark.Sector),     // 'sector'
-  startField: z.string().min(1).optional(),  // cumulative lower-bound field (matches transform startField; default "y0")
-  endField: z.string().min(1).optional(),    // cumulative upper-bound field (default "y1")
-  ...markBase,                                // id + encoding（color 区分扇片）
+  type: z.literal(PlotMark.Sector), // 'sector'
+  startField: z.string().min(1).optional(), // cumulative lower-bound field (matches transform startField; default "y0")
+  endField: z.string().min(1).optional(), // cumulative upper-bound field (default "y1")
+  ...markBase, // id + encoding（color 区分扇片）
 });
 // MarkSchema = z.discriminatedUnion('type', [Point, Line, Interval, Sector])
 

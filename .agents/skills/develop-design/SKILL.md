@@ -37,13 +37,13 @@ packages/viz/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.
 
 实现契约段必须完整：
 
-| 项 | 要求 |
-| --- | --- |
-| Level | `red` / `yellow` / `green`，判级见 `flow-alpha` |
-| Schema 改动 | 文件 / 操作 / 字段名 / 类型 / 默认值 / describe；无改动写“无” |
-| 文件 scope | 白名单列出允许触碰的文件或目录；偏离需要人工确认 |
-| 测试象限 | happy / 边界 / 错误路径 / 交互；kernel 红黄改动通常不少于 9 case，plot 可按 milestone roadmap 的规则按复杂度裁剪 |
-| 依赖现有元素 | 引用、扩展或修改的现有 IR / API / 工具，并说明用途 |
+| 项           | 要求                                                                                                             |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Level        | `red` / `yellow` / `green`，判级见 `flow-alpha`                                                                  |
+| Schema 改动  | 文件 / 操作 / 字段名 / 类型 / 默认值 / describe；无改动写“无”                                                    |
+| 文件 scope   | 白名单列出允许触碰的文件或目录；偏离需要人工确认                                                                 |
+| 测试象限     | happy / 边界 / 错误路径 / 交互；kernel 红黄改动通常不少于 9 case，plot 可按 milestone roadmap 的规则按复杂度裁剪 |
+| 依赖现有元素 | 引用、扩展或修改的现有 IR / API / 工具，并说明用途                                                               |
 
 新增或修改 authoring API 时，ADR 必须同时考虑 React 与 Vanilla 两套入口；若某套不适用，在“不在范围”写明理由。
 

@@ -55,7 +55,6 @@ IR 保存完整 operation object，registry key 从 operation discriminant 或 n
 2. operation provider 的 key 应和 IR discriminant 绑定，避免 `definition.name` 与 schema literal 双真源漂移。
 3. composite 保留 namespace 防撞，对齐 plot 的 namespace 设计和 core Tier 2 lowering 模型。
 
-
 ## 不在本 ADR 范围
 
 - registry duplicate / unknown 的统一错误行为由 [ADR-01](./01-provider-registry-contract.md) 处理。

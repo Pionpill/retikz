@@ -69,9 +69,7 @@ const allScopes = (child: IRChild): Array<IRScope> => {
 };
 
 const facetPanelsOf = (scope: IRScope): Array<IRScope> =>
-  scope.children
-    .filter(isScope)
-    .filter(child => child.meta?.source === 'plot' && child.meta.layer === 'facetPanel');
+  scope.children.filter(isScope).filter(child => child.meta?.source === 'plot' && child.meta.layer === 'facetPanel');
 
 const facetLabelsOf = (scope: IRScope): Array<IRScope> =>
   allScopes(scope).filter(child => child.meta?.source === 'plot' && child.meta.layer === 'facetLabel');
@@ -178,7 +176,9 @@ describe('facet grid data routing schema', () => {
       ...baseFacetSpec,
       composition: {
         ...baseFacetSpec.composition,
-        arrangements: [facetArrangement({ id: 'region', column: { field: 'region' }, resolve: { scale: { y: 'free' } } })],
+        arrangements: [
+          facetArrangement({ id: 'region', column: { field: 'region' }, resolve: { scale: { y: 'free' } } }),
+        ],
       },
     };
     expect(() => parsePlotSpec(spec)).toThrow();

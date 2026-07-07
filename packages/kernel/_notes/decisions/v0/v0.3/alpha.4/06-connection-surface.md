@@ -24,13 +24,13 @@
 
 连接面影响的 anchor 分两类——**boundary 类**（未命名自动求交 + 数字角度 anchor `anchor:30`，本质都走 `boundaryPoint(toward)`）与 **compass 类**（9 个 rect 方位名 north/east/…）：
 
-| boundary 取值 | boundary 类（自动求交 + 数字角度 anchor） | compass（north/east…·compile 层统一） | 形状专属锚点（tip-N / outer-arc-mid） | edgePoint |
-|---|---|---|---|---|
-| `'shape'`（默认·保留字） | 节点自身 `boundaryPoint` | AABB 矩形 anchor | 自身 | 自身 |
-| `'circle'`（保留字·真圆） | 真圆求交（r = max 半轴） | 真圆 anchor | 自身 | 自身 |
-| `'rectangle'` | rectangle.boundaryPoint(AABB) | AABB 矩形 anchor | 自身 | 自身 |
-| `'ellipse'` | ellipse.boundaryPoint(AABB) | ellipse.anchor(AABB) | 自身 | 自身 |
-| `{type, params}` / 自定义注册名 | 该 shape.boundaryPoint(AABB) | 该 shape.anchor(AABB) | 自身 | 自身 |
+| boundary 取值                   | boundary 类（自动求交 + 数字角度 anchor） | compass（north/east…·compile 层统一） | 形状专属锚点（tip-N / outer-arc-mid） | edgePoint |
+| ------------------------------- | ----------------------------------------- | ------------------------------------- | ------------------------------------- | --------- |
+| `'shape'`（默认·保留字）        | 节点自身 `boundaryPoint`                  | AABB 矩形 anchor                      | 自身                                  | 自身      |
+| `'circle'`（保留字·真圆）       | 真圆求交（r = max 半轴）                  | 真圆 anchor                           | 自身                                  | 自身      |
+| `'rectangle'`                   | rectangle.boundaryPoint(AABB)             | AABB 矩形 anchor                      | 自身                                  | 自身      |
+| `'ellipse'`                     | ellipse.boundaryPoint(AABB)               | ellipse.anchor(AABB)                  | 自身                                  | 自身      |
+| `{type, params}` / 自定义注册名 | 该 shape.boundaryPoint(AABB)              | 该 shape.anchor(AABB)                 | 自身                                  | 自身      |
 
 **兼容性（精确表述，非笼统「零变更」）**：默认 `'shape'` 下——
 
@@ -60,12 +60,12 @@ export const BoundarySchema = z
 // packages/kernel/core/src/ir/node.ts —— 新增字段，缺省 'shape'
 boundary: BoundarySchema.optional().describe(
   'Default connection surface for edges meeting this node (see BoundarySchema). Defaults to "shape" (use the visual shape). Per-edge overridable via the edge endpoint `boundary` field.',
-)
+);
 
 // packages/kernel/core/src/ir/path/target.ts —— NodeTargetSchema 加 boundary（单边覆盖 node.boundary）
 boundary: BoundarySchema.optional().describe(
   'Per-edge override of the target node connection surface for THIS endpoint only; omitted = the node\'s boundary (default "shape"). Effective only where a connection surface is meaningful: path-endpoint auto-clip (no explicit anchor) and this endpoint\'s compass / angle anchor. In toward-less reference contexts (between endpoints, offset `of`, node center) it is a no-op.',
-)
+);
 ```
 
 **保留字常量（暴露给用户，`DrawWay` 风格，裸字面量仍第一形态）：**

@@ -15,12 +15,12 @@ Omitting `boundary`, or writing `boundary="shape"`, means "use the node's own `s
 
 For any value other than the reserved `shape`, retikz first checks the Boundary Registry; if nothing matches, it falls back to the Shape Registry. That fallback preserves the existing behavior: a rectangular node can still use `boundary="ellipse"` to connect as an ellipse. The recommended new shape is to put connection-only logic in a `BoundaryDefinition`.
 
-| Syntax | Lookup | Use case |
-| --- | --- | --- |
-| omitted / `shape` | visual shape | Default behavior |
-| `circle` / `rectangle` / `ellipse` | built-in boundary provider | Reuse common surfaces |
-| custom name | boundary provider → shape fallback | Domain ports, semantic surfaces |
-| `{ type, params }` | same lookup, params passed to the provider | Parametric surfaces |
+| Syntax                             | Lookup                                     | Use case                        |
+| ---------------------------------- | ------------------------------------------ | ------------------------------- |
+| omitted / `shape`                  | visual shape                               | Default behavior                |
+| `circle` / `rectangle` / `ellipse` | built-in boundary provider                 | Reuse common surfaces           |
+| custom name                        | boundary provider → shape fallback         | Domain ports, semantic surfaces |
+| `{ type, params }`                 | same lookup, params passed to the provider | Parametric surfaces             |
 
 `boundary` stays a JSON-safe IR field; `BoundaryDefinition` contains functions and never enters the IR.
 
@@ -28,12 +28,12 @@ For any value other than the reserved `shape`, retikz first checks the Boundary 
 
 A boundary only answers "where should the line attach" and "which anchors does this surface expose." It does not affect node sizing and does not draw primitives; those still belong to the node's own `shape`.
 
-| Field | Purpose | Required / Optional |
-| --- | --- | --- |
-| `name` | Registry key referenced by IR `boundary` | Required |
-| `paramsSchema` | zod schema validating `boundary.params` at compile time | Required |
-| `boundaryPoint` | Given a ray from the node center toward `toward`, returns the point where the path should stop | Required |
-| `anchor` | Returns a named anchor coordinate; unknown names return `undefined` | Optional |
+| Field           | Purpose                                                                                        | Required / Optional |
+| --------------- | ---------------------------------------------------------------------------------------------- | ------------------- |
+| `name`          | Registry key referenced by IR `boundary`                                                       | Required            |
+| `paramsSchema`  | zod schema validating `boundary.params` at compile time                                        | Required            |
+| `boundaryPoint` | Given a ray from the node center toward `toward`, returns the point where the path should stop | Required            |
+| `anchor`        | Returns a named anchor coordinate; unknown names return `undefined`                            | Optional            |
 
 `rect` is the already-laid-out visual shape rectangle, including center, size, and optional rotation; `params` is the JSON object validated by `paramsSchema`. A boundary does not re-decide node size, so there is no `circumscribe` or `emit`.
 
@@ -71,9 +71,7 @@ const horizontalPorts: BoundaryDefinition = defineBoundary({
   name: 'horizontal-ports',
   paramsSchema: z.strictObject({}),
   boundaryPoint: (rect, toward) => {
-    return toward[0] < rect.x
-      ? [rect.x - rect.width / 2, rect.y]
-      : [rect.x + rect.width / 2, rect.y];
+    return toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y];
   },
   anchor: (rect, name) => {
     if (name === 'input') return [rect.x - rect.width / 2, rect.y];

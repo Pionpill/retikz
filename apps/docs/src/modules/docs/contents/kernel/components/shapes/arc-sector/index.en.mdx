@@ -24,9 +24,9 @@ import { Arc, Sector } from '@retikz/react';
 
 `<Arc>` draws an open arc by default. It is useful for curved arrows, ring markers, and decorative strokes.
 
-| Form                                                 | Best for       |
-| ---------------------------------------------------- | -------------- |
-| `{ center, radius, startAngle, endAngle }`           | Circular arc   |
+| Form                                       | Best for       |
+| ------------------------------------------ | -------------- |
+| `{ center, radius, startAngle, endAngle }` | Circular arc   |
 | `{ center, radius, startAngle, endAngle }` | Elliptical arc |
 
 Angles start from +x; `90` points downward on screen. Angles take any two of `startAngle` / `endAngle` / `sweepAngle`, e.g. `{ startAngle: 30, sweepAngle: 90 }`. `center` accepts any target (node id / polar / Cartesian).
@@ -59,12 +59,12 @@ Arcs are open by default; pass `close` to turn the arc into a fillable region:
 
 `<Sector>` starts from the center, draws an arc, then closes back to the center. Add `innerRadius` for a hollow circular sector; for an elliptical hollow sector, use `innerRadiusX` + `innerRadiusY`.
 
-| Form                                                 | Best for                 |
-| ---------------------------------------------------- | ------------------------ |
-| `{ center, radius, startAngle, endAngle }`           | Circular sector          |
+| Form                                       | Best for                 |
+| ------------------------------------------ | ------------------------ |
+| `{ center, radius, startAngle, endAngle }` | Circular sector          |
 | `{ center, radius, startAngle, endAngle }` | Elliptical sector        |
-| add `innerRadius`                                    | Hollow circular sector   |
-| add `innerRadiusX` + `innerRadiusY`                  | Hollow elliptical sector |
+| add `innerRadius`                          | Hollow circular sector   |
+| add `innerRadiusX` + `innerRadiusY`        | Hollow elliptical sector |
 
 <ComponentPreview name="sector-basic" size="sm" />
 
@@ -84,25 +84,25 @@ A filled sector's center is the cursor, so `center` can take a node id (or polar
 
 ### API Reference
 
-| Component  | Combination                               | Meaning                                         |
-| ---------- | ----------------------------------------- | ----------------------------------------------- |
-| `<Arc>`    | `center` + `radius` + angles              | Circular arc (open by default; angles required) |
-|            | `center` + `radius` + angles | Elliptical arc                                  |
-| `<Sector>` | `center` + `radius` + angles              | Circular sector (angles required)               |
-|            | `center` + `radius` + angles | Elliptical sector                               |
-|            | + `innerRadius?`                          | Hollow circular sector                          |
-|            | + `innerRadiusX?` + `innerRadiusY?`       | Hollow elliptical sector                        |
+| Component  | Combination                         | Meaning                                         |
+| ---------- | ----------------------------------- | ----------------------------------------------- |
+| `<Arc>`    | `center` + `radius` + angles        | Circular arc (open by default; angles required) |
+|            | `center` + `radius` + angles        | Elliptical arc                                  |
+| `<Sector>` | `center` + `radius` + angles        | Circular sector (angles required)               |
+|            | `center` + `radius` + angles        | Elliptical sector                               |
+|            | + `innerRadius?`                    | Hollow circular sector                          |
+|            | + `innerRadiusX?` + `innerRadiusY?` | Hollow elliptical sector                        |
 
 Shared props (forwarded to the underlying `<Path>`):
 
-| Prop               | Type                                                                      | Applies to          | Notes                                                                    |
-| ------------------ | ------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------ |
-| angles             | `startAngle` / `endAngle` / `sweepAngle`                                  | Arc / Sector        | Any two, in degrees; `0`=+x, `90`=screen-down                            |
-| `center`           | target                                                                    | Arc / filled Sector | Node id / polar / Cartesian; a hollow Sector must use a literal `[x, y]` |
-| `close`            | `'open' \| 'chord' \| 'sector'`                                           | Arc                 | Closing mode, defaults to `'open'`                                       |
-| `label`            | edge-label object                                                         | Arc / Sector        | Positioned along the arc, `position` defaults to `midway`                |
-| `rotate` / `scale` | `number` / `{ x, y }`                                                     | Arc / Sector        | Whole-shape transform around the bounding-box center                     |
-| `marks`            | `{ pos, mark }[]`                                                         | Arc / Sector        | Mid-path direction markers along the path                                |
+| Prop               | Type                                                                                     | Applies to          | Notes                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------ |
+| angles             | `startAngle` / `endAngle` / `sweepAngle`                                                 | Arc / Sector        | Any two, in degrees; `0`=+x, `90`=screen-down                            |
+| `center`           | target                                                                                   | Arc / filled Sector | Node id / polar / Cartesian; a hollow Sector must use a literal `[x, y]` |
+| `close`            | `'open' \| 'chord' \| 'sector'`                                                          | Arc                 | Closing mode, defaults to `'open'`                                       |
+| `label`            | edge-label object                                                                        | Arc / Sector        | Positioned along the arc, `position` defaults to `midway`                |
+| `rotate` / `scale` | `number` / `{ x, y }`                                                                    | Arc / Sector        | Whole-shape transform around the bounding-box center                     |
+| `marks`            | `{ pos, mark }[]`                                                                        | Arc / Sector        | Mid-path direction markers along the path                                |
 | visual             | `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `fill` / `opacity` … | Arc / Sector        | Forwards the full `<Path>` visual prop set                               |
 
 ## As a node shape

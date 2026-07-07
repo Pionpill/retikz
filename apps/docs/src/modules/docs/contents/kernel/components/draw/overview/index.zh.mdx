@@ -155,7 +155,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `stroke`         | `string`                                                                                       | `currentColor` | 描边色                                                                                                                                         |
 | `strokeWidth`    | `number`                                                                                       | `1`            | 描边宽度                                                                                                                                       |
 | `dashPattern`    | `Array<number>`                                                                                | —              | dash / gap 长度序列，如 `[4, 2]`                                                                                                               |
-| `dashOffset`     | `number`                                                                                       | —              | 虚线起点偏移，单位同路径 user units                                                                                                             |
+| `dashOffset`     | `number`                                                                                       | —              | 虚线起点偏移，单位同路径 user units                                                                                                            |
 | `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | 描边端点形状                                                                                                                                   |
 | `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                               |
 | `roundedCorners` | `number`                                                                                       | —              | 折线 line-line 接缝**几何**圆角半径（TikZ `rounded corners=`）；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/kernel/components/draw/path) |
@@ -166,7 +166,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | 填充规则                                                                                                                                       |
 | `opacity`        | `number`                                                                                       | —              | 整 path 透明度 0..1                                                                                                                            |
 | `fillOpacity`    | `number`                                                                                       | —              | 仅 fill 透明度 0..1                                                                                                                            |
-| `strokeOpacity`    | `number`                                                                                       | —              | 仅 stroke 透明度 0..1                                                                                                                          |
+| `strokeOpacity`  | `number`                                                                                       | —              | 仅 stroke 透明度 0..1                                                                                                                          |
 | `zIndex`         | `number`（整数）                                                                               | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`）                                                              |
 
 <Comparison target="tikz" title="样式命名">
@@ -190,15 +190,15 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 ### StepLabel
 
-| 字段        | 类型                                                  | 默认值     | 描述                                                                                                                                                          |
-| ----------- | ----------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`      | `string`                                              | —          | 标注文本（单行）                                                                                                                                              |
-| `position`  | 7 keyword 之一 或 `number`（0..1）                    | `'midway'` | 段上归一化位置 t；keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1） |
-| `side`      | `'top' \| 'bottom' \| 'left' \| 'right'`              | `'top'` | 边标注相对段方向的侧；也接受 compass 别名 `north` / `south` / `east` / `west` |
-| `sloped`    | `boolean`                                             | `false`   | 是否沿切线旋转贴线 |
-| `textColor` | `string`                                              | —          | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 → currentColor                                                                                     |
-| `opacity`   | `number`                                              | —          | 标签独立透明度 0..1；与所属 path opacity 相乘                                                                                                                 |
-| `font`      | `object`                                              | —          | 标签字体覆盖（family / size / weight / style）                                                                                                                |
+| 字段        | 类型                                     | 默认值     | 描述                                                                                                                                                          |
+| ----------- | ---------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`      | `string`                                 | —          | 标注文本（单行）                                                                                                                                              |
+| `position`  | 7 keyword 之一 或 `number`（0..1）       | `'midway'` | 段上归一化位置 t；keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1） |
+| `side`      | `'top' \| 'bottom' \| 'left' \| 'right'` | `'top'`    | 边标注相对段方向的侧；也接受 compass 别名 `north` / `south` / `east` / `west`                                                                                 |
+| `sloped`    | `boolean`                                | `false`    | 是否沿切线旋转贴线                                                                                                                                            |
+| `textColor` | `string`                                 | —          | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 → currentColor                                                                                     |
+| `opacity`   | `number`                                 | —          | 标签独立透明度 0..1；与所属 path opacity 相乘                                                                                                                 |
+| `font`      | `object`                                 | —          | 标签字体覆盖（family / size / weight / style）                                                                                                                |
 
 ## 相关
 

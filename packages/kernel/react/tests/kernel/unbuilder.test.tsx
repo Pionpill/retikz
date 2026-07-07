@@ -1,4 +1,4 @@
-﻿import type { IRChild, IRPathBase,IRScene } from '@retikz/core';
+﻿import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
 import { CURRENT_IR_VERSION } from '@retikz/core';

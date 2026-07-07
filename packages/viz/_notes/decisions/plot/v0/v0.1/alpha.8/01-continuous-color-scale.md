@@ -26,8 +26,14 @@ alpha.7 [ADR-03](../alpha.7/03-color-series.md) 把 color 收口成真通道，�
 ```ts
 // ir/scale.ts —— PlotScale 追加（沿 DrawWay 风格，裸 'sequential' 同样可用）
 export const PlotScale = {
-  Linear: 'linear', Band: 'band', Point: 'point', Ordinal: 'ordinal', Time: 'time',
-  Log: 'log', Pow: 'pow', Sqrt: 'sqrt',
+  Linear: 'linear',
+  Band: 'band',
+  Point: 'point',
+  Ordinal: 'ordinal',
+  Time: 'time',
+  Log: 'log',
+  Pow: 'pow',
+  Sqrt: 'sqrt',
   /** 连续顺序色阶：单调量 domain → 单方向色带（低→高），continuous/temporal color 主力 */
   Sequential: 'sequential',
   /** 连续发散色阶：有中点的量 domain → 两侧异色色带（中点淡），盈亏 / 偏离均值 */
@@ -63,7 +69,6 @@ export const PlotScale = {
 2. **scheme 词表 = 可序列化 + LLM 友好**：命名 scheme 进 IR、裸字面量可写，`range` 给逃生；不把 interpolator 函数塞进 IR（违反「IR 100% JSON 可序列化」）。
 3. **拆两成员**：sequential / diverging 语义不同（单调 vs 有中点），分开判别比「一个 type + midpoint 开关」对 LLM 与 `.describe` 都更清晰；diverging 复用 sequential 的 interpolator 机制、只是三段 domain。
 4. **守 mark 边界**：line/area 连续色 fail-loud，不偷偷做半成品 path gradient。
-
 
 ## 不在本 ADR 范围
 

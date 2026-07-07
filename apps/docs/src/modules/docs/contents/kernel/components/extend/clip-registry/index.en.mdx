@@ -14,29 +14,27 @@ The Clip Registry follows the same rule as the other compile-time registries: th
 A custom clip spec is still plain data:
 
 ```tsx
-<Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
-  {/* children */}
-</Scope>
+<Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>{/* children */}</Scope>
 ```
 
 The `ClipDefinition` validates that data and resolves it into one of the renderer-agnostic clip shapes that Scene already understands. The definition never enters IR.
 
-| Syntax | Lookup | Use case |
-| --- | --- | --- |
-| `rect` / `circle` / `ellipse` / `polygon` | built-in clip provider | Simple structured clipping |
-| `path` | built-in clip provider | Path-like clipping, including `fillRule` |
-| `compound` | built-in clip provider | Combine built-in and custom clips recursively |
-| custom `kind` | custom clip provider | Domain masks or reusable clip vocabulary |
+| Syntax                                    | Lookup                 | Use case                                      |
+| ----------------------------------------- | ---------------------- | --------------------------------------------- |
+| `rect` / `circle` / `ellipse` / `polygon` | built-in clip provider | Simple structured clipping                    |
+| `path`                                    | built-in clip provider | Path-like clipping, including `fillRule`      |
+| `compound`                                | built-in clip provider | Combine built-in and custom clips recursively |
+| custom `kind`                             | custom clip provider   | Domain masks or reusable clip vocabulary      |
 
 Custom providers cannot reuse built-in names, and duplicate custom names fail at registration time.
 
 ## ClipDefinition
 
-| Field | Purpose | Required / Optional |
-| --- | --- | --- |
-| `kind` | Registry key referenced by `clip.kind` | Required |
-| `schema` | zod schema validating the full custom clip object at compile time | Required |
-| `resolve` | Converts the validated spec into a built-in clip shape | Required |
+| Field     | Purpose                                                           | Required / Optional |
+| --------- | ----------------------------------------------------------------- | ------------------- |
+| `kind`    | Registry key referenced by `clip.kind`                            | Required            |
+| `schema`  | zod schema validating the full custom clip object at compile time | Required            |
+| `resolve` | Converts the validated spec into a built-in clip shape            | Required            |
 
 `resolve` receives `(spec, context)`. `context.round` applies compile precision when a provider wants stable rounded values, and `context.resolve` lets a provider reuse another clip spec by going back through the same registry.
 
@@ -56,7 +54,7 @@ const roundedRectClip: ClipDefinition = defineClip({
     height: z.number().positive(),
     radius: z.number().nonnegative(),
   }),
-  resolve: (spec) => {
+  resolve: spec => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [spec.x + spec.radius, spec.y] },
       // Build the remaining rounded-rectangle path commands here.

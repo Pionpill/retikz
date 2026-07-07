@@ -1,13 +1,6 @@
 ﻿import { FieldOrderMode } from '@retikz/data';
-import {
-  DataSortOrder,
-  ReducerOperationKind,
-  RowSelectorTie,
-  SelectorOp,
-} from '@retikz/data';
-import {
-  TransformSchema,
-} from '@retikz/plot';
+import { DataSortOrder, ReducerOperationKind, RowSelectorTie, SelectorOp } from '@retikz/data';
+import { TransformSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 describe('schema vocabulary constants', () => {

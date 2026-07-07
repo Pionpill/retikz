@@ -45,15 +45,15 @@ scope 子树产出任何 primitive，或带有 `transforms` / `id` / `clip` 之�
 
 5 个 translate 变体一一镜像 `<Node position>` 的 5 种形态（笛卡尔 / 极坐标 / 方向相对 / 偏移 / 两端点比例）。
 
-| kind                | 字段                           | 语义                                                                                    |
-| ------------------- | ------------------------------ | --------------------------------------------------------------------------------------- |
-| `translate`         | `{ x, y }`                     | 笛卡尔平移，user units                                                                  |
-| `polar-translate`   | `{ origin?, angle, radius }`   | 极坐标平移，`origin` 为 `id` / `[x,y]` / `PolarPosition`，缺省 = 原点                   |
-| `at-translate`      | `{ direction, of, distance? }` | 落到 referent 节点的某方向 distance 处，`distance` 缺省走 `<Layout nodeDistance>`       |
-| `offset-translate`  | `{ of, offset? }`              | scope 原点 = referent 全局坐标 + `[dx, dy]`，`offset` 缺省 = `[0, 0]`                   |
-| `between-translate` | `{ between, fraction }`               | scope 原点 = 两个端点按 `fraction` 插值的位置，端点支持坐标 / 节点引用 / offset / 嵌套 between |
-| `rotate`            | `{ degrees, cx?, cy? }`        | 旋转 degrees 度，`cx/cy` 缺省 = scope 局部原点                                          |
-| `scale`             | `{ x, y? }`                    | 缩放，`y` 缺省 = `x`（等比）                                                            |
+| kind                | 字段                           | 语义                                                                                           |
+| ------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `translate`         | `{ x, y }`                     | 笛卡尔平移，user units                                                                         |
+| `polar-translate`   | `{ origin?, angle, radius }`   | 极坐标平移，`origin` 为 `id` / `[x,y]` / `PolarPosition`，缺省 = 原点                          |
+| `at-translate`      | `{ direction, of, distance? }` | 落到 referent 节点的某方向 distance 处，`distance` 缺省走 `<Layout nodeDistance>`              |
+| `offset-translate`  | `{ of, offset? }`              | scope 原点 = referent 全局坐标 + `[dx, dy]`，`offset` 缺省 = `[0, 0]`                          |
+| `between-translate` | `{ between, fraction }`        | scope 原点 = 两个端点按 `fraction` 插值的位置，端点支持坐标 / 节点引用 / offset / 嵌套 between |
+| `rotate`            | `{ degrees, cx?, cy? }`        | 旋转 degrees 度，`cx/cy` 缺省 = scope 局部原点                                                 |
+| `scale`             | `{ x, y? }`                    | 缩放，`y` 缺省 = `x`（等比）                                                                   |
 
 数组顺序应用——第 0 个是最外层（最后作用到局部点），最后一个是最内层（最先作用），与 SVG transform list 语义一致。`transforms: [translate, rotate]` 等价 SVG `transform="translate(...) rotate(...)"`：rotate 先作用、translate 后作用；compile 展平 / 下沉细节详见 § 技术原理 §「transforms 展平到 Scene」。
 
@@ -335,7 +335,7 @@ IR 7 变体在 compile 阶段统一压成 Scene 3 变体（Cartesian translate /
 | `polar-translate`   | `resolvePosition` 解出 origin 全局点 + (angle, radius) → Cartesian (x, y)        | `translate(x, y)`         |
 | `at-translate`      | `resolvePosition` 解出 referent 全局点 + direction + distance → Cartesian (x, y) | `translate(x, y)`         |
 | `offset-translate`  | `resolvePosition` 解出 referent 全局点 + (dx, dy) → Cartesian (x, y)             | `translate(x, y)`         |
-| `between-translate` | `resolvePosition` 解出两端点全局点并按 `fraction` 插值 → Cartesian (x, y)               | `translate(x, y)`         |
+| `between-translate` | `resolvePosition` 解出两端点全局点并按 `fraction` 插值 → Cartesian (x, y)        | `translate(x, y)`         |
 | `rotate`            | 直接透传                                                                         | `rotate(degrees, cx, cy)` |
 | `scale`             | 直接透传                                                                         | `scale(x, y)`             |
 
@@ -383,7 +383,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 | `strokeWidth`    | `number`                  | —             | 级联默认描边宽度                                                                                                                                                                                                              |
 | `opacity`        | `number`                  | —             | 级联默认整体透明度 0~1（嵌套替换、不复合）                                                                                                                                                                                    |
 | `fillOpacity`    | `number`                  | —             | 级联默认填充透明度 0~1                                                                                                                                                                                                        |
-| `strokeOpacity`    | `number`                  | —             | 级联默认描边透明度 0~1                                                                                                                                                                                                        |
+| `strokeOpacity`  | `number`                  | —             | 级联默认描边透明度 0~1                                                                                                                                                                                                        |
 | `nodeDefault`    | `object`                  | —             | node 默认样式（形状 / 间距 / 色等），作用于 scope 内每个 node                                                                                                                                                                 |
 | `pathDefault`    | `object`                  | —             | path-like 默认样式；Path 使用完整字段，Ribbon 只使用共享几何样式字段；箭头走 `arrowDefault`                                                                                                                                   |
 | `labelDefault`   | `object`                  | —             | label 默认样式（node label + step label 共享）                                                                                                                                                                                |

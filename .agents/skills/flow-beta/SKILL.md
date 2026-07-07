@@ -21,21 +21,21 @@ description: Use when retikz beta-stage roadmap TODO work needs refactoring, ren
 
 ## 阶段
 
-| # | 阶段 | 执行 | 通过条件 |
-| --- | --- | --- | --- |
-| 1 | 实现 | `develop-implement` 简化路径 | 受影响模块 lint / tsc / 测试全过 |
-| 2 | 评估 / 自审 | 本 skill 按用户选择调度 | BLOCKING 清空，WARNING 经人工裁决 |
-| 3 | 收尾 | `develop-wrapup` 简化路径 | roadmap TODO 标完成；breaking / visible 按需 changelog；人工授权 commit |
+| #   | 阶段        | 执行                         | 通过条件                                                                |
+| --- | ----------- | ---------------------------- | ----------------------------------------------------------------------- |
+| 1   | 实现        | `develop-implement` 简化路径 | 受影响模块 lint / tsc / 测试全过                                        |
+| 2   | 评估 / 自审 | 本 skill 按用户选择调度      | BLOCKING 清空，WARNING 经人工裁决                                       |
+| 3   | 收尾        | `develop-wrapup` 简化路径    | roadmap TODO 标完成；breaking / visible 按需 changelog；人工授权 commit |
 
 beta 不开新功能 ADR，不走 alpha 的设计 / adversarial 自测 / 必选文档阶段。用户可见改动仍按 docs skills 补文档。
 
 ## 判级
 
-| Level | 范围 | 收尾要求 |
-| --- | --- | --- |
-| internal | 内部搬迁、私有重命名、注释、类型层重构，不改 public surface | commit message 说明即可 |
-| visible | 错误信息、默认行为、性能或 docs 变化，用户可观察但不改 public export | 视影响写 changelog / docs |
-| breaking | public API、schema 字段、组件名、公开 type / 函数签名变化 | 必写 BREAKING changelog + 迁移路径 |
+| Level    | 范围                                                                 | 收尾要求                           |
+| -------- | -------------------------------------------------------------------- | ---------------------------------- |
+| internal | 内部搬迁、私有重命名、注释、类型层重构，不改 public surface          | commit message 说明即可            |
+| visible  | 错误信息、默认行为、性能或 docs 变化，用户可观察但不改 public export | 视影响写 changelog / docs          |
+| breaking | public API、schema 字段、组件名、公开 type / 函数签名变化            | 必写 BREAKING changelog + 迁移路径 |
 
 beta 允许 breaking；rc 起禁止。
 
@@ -57,10 +57,10 @@ beta 的核心风险是重构回归和 breaking 漏迁移。派子 agent / 外�
 
 评估角色：
 
-| 角色 | 何时必跑 | 关注点 |
-| --- | --- | --- |
-| 等价性审计 | 所有 level | 未声明回归、public surface 漏迁移、schema / 默认值变化、测试弱化 |
-| 收益审计 | breaking / visible 必跑，internal 可选 | 是否真的解决 TODO、是否过度工程、是否更贴合项目惯例 |
+| 角色       | 何时必跑                               | 关注点                                                           |
+| ---------- | -------------------------------------- | ---------------------------------------------------------------- |
+| 等价性审计 | 所有 level                             | 未声明回归、public surface 漏迁移、schema / 默认值变化、测试弱化 |
+| 收益审计   | breaking / visible 必跑，internal 可选 | 是否真的解决 TODO、是否过度工程、是否更贴合项目惯例              |
 
 用户也可手动跑评估并把结论贴回。主 AI 合并为 BLOCKING / WARNING / INFO：
 

@@ -175,8 +175,12 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     const yTicks: TickSet | undefined = yAxis
       ? (ctx.collectAxisTicks('y') ?? resolveGuideTicks(yScale, yAxis.ticks, yAxis.tickLabels || undefined))
       : undefined;
-    const layoutXTicks = xAxis ? resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value)) : undefined;
-    const layoutYTicks = yAxis ? resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value)) : undefined;
+    const layoutXTicks = xAxis
+      ? resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value))
+      : undefined;
+    const layoutYTicks = yAxis
+      ? resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
+      : undefined;
 
     const computed = computePlotArea(
       ctx.width,
@@ -199,8 +203,12 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     if (xRangeOverride !== undefined) xScale.setRange([xRangeOverride[0], xRangeOverride[1]]);
     if (yRangeOverride !== undefined) yScale.setRange([yRangeOverride[0], yRangeOverride[1]]);
     const frame = createCartesianCoordinate(xScale, yScale);
-    const visibleXTicks = xAxis ? resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value)) : undefined;
-    const visibleYTicks = yAxis ? resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value)) : undefined;
+    const visibleXTicks = xAxis
+      ? resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value))
+      : undefined;
+    const visibleYTicks = yAxis
+      ? resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
+      : undefined;
 
     const [xRangeStart, xRangeEnd] = xScale.range();
     const [yRangeStart, yRangeEnd] = yScale.range();
@@ -246,7 +254,9 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
     const ticks: TickSet | undefined = axis
       ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(scale, axis.ticks, axis.tickLabels || undefined))
       : undefined;
-    const layoutTicks = axis ? resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value)) : undefined;
+    const layoutTicks = axis
+      ? resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value))
+      : undefined;
     const computed = computePlotArea(
       ctx.width,
       ctx.height,
@@ -266,7 +276,9 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
     if (rangeOverride !== undefined) scale.setRange([rangeOverride[0], rangeOverride[1]]);
     const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
     const frame = createCartesian1DCoordinate(scale, orientation, baseline);
-    const visibleTicks = axis ? resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value)) : undefined;
+    const visibleTicks = axis
+      ? resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value))
+      : undefined;
 
     const guideContext: GuideContext = {
       plotArea,

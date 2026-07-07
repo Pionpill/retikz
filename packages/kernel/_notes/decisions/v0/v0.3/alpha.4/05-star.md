@@ -19,9 +19,13 @@ export const star = defineShape({
     points: z.number().int().min(3).describe('Number of star points (≥3).'),
     innerRadius: z.number().finite().positive().describe('Inner (notch) radius in user units.'),
     outerRadius: z.number().finite().positive().describe('Outer (tip) radius in user units; must be > innerRadius.'),
-    rotate: z.number().finite().optional().describe('Shape self-rotation in degrees; default 0 (first tip at polar 0°=+x). Composes with Node.rotate.'),
+    rotate: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Shape self-rotation in degrees; default 0 (first tip at polar 0°=+x). Composes with Node.rotate.'),
   }),
-  circumscribe: (_hw, _hh, p) => starGeometry(p).aabbHalfAxes,   // 据顶点 + rotate 算精确 AABB
+  circumscribe: (_hw, _hh, p) => starGeometry(p).aabbHalfAxes, // 据顶点 + rotate 算精确 AABB
   // boundaryPoint / anchor / emit 共用同一 starGeometry(p)（单一真源，保坐标一致）
 });
 ```

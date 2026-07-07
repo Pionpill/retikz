@@ -3,7 +3,7 @@
 - 状态：Superseded（迁往 `chart/v0/v0.1` 路线）
 - 决策日期：2026-06-13
 - 关联：[plot v0.2-alpha.1 roadmap](./roadmap.md) · [plot v0.2 roadmap](../roadmap.md) · [plot v0 roadmap §定位](../../roadmap.md) · [前置：v0.1-alpha.10 薄 Plot ADR-01](../../v0.1/alpha.10/01-plot-thin-container.md) · [plot-design §2 / §11](../../../../../architecture/plot-design.md)
-> 2026-07-05 更新：本文是旧版 plot v0.2 chart 草案，已被新的版本规划取代。chart 仍是 Tier 3 封装层，但拥有 JSON-safe `ChartSpec`，并在独立 `chart/v0/v0.1` 路线中 lower 成 PlotSpec；plot v0.2 改为交互能力 + layout transform 主线。本文保留为 superseded 历史记录，不再作为实现输入。
+  > 2026-07-05 更新：本文是旧版 plot v0.2 chart 草案，已被新的版本规划取代。chart 仍是 Tier 3 封装层，但拥有 JSON-safe `ChartSpec`，并在独立 `chart/v0/v0.1` 路线中 lower 成 PlotSpec；plot v0.2 改为交互能力 + layout transform 主线。本文保留为 superseded 历史记录，不再作为实现输入。
 
 ## 背景
 
@@ -26,7 +26,9 @@ v0 roadmap 现已明确 `@retikz/chart` / `@retikz/chart-react` / `@retikz/chart
 ```ts
 // packages/viz/chart/src/decorate.ts （示意）
 /** 框架无关：裸 PlotSpec（marks + scale/coord）→ 装饰完整 PlotSpec（默认轴/图例/网格 + theme） */
-export const decorateChartSpec = (spec: PlotSpec, options?: ChartDecorateOptions): PlotSpec => { /* 复用 decorateDefaultGuides + theme 注入 */ };
+export const decorateChartSpec = (spec: PlotSpec, options?: ChartDecorateOptions): PlotSpec => {
+  /* 复用 decorateDefaultGuides + theme 注入 */
+};
 ```
 
 **(2) 新增 chart-react / chart-vanilla 绑定**。`@retikz/chart-react` 的 `<Chart>` 与 `@retikz/chart-vanilla` 的 chart builder 都是**薄绑定**：收集 children/config → 调 `decorateChartSpec` → 委托 plot 的 `<Plot>` / builder 或 compile path 渲染。`<Chart>` props ≈ `<Plot>` 的 DSL props（data / model / coordinate / scaleX…）+ 叠加 `title` / `theme`。plot-react / plot-vanilla 继续只暴露 plot authoring 表面；chart 的新手友好表面在 chart 三包内。

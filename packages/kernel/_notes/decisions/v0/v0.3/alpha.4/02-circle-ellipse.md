@@ -26,12 +26,14 @@ export const ellipse = defineShape({
     circumscribe: z
       .enum(['proportional', 'equal'])
       .optional()
-      .describe('Circumscription policy from the inner content box: "proportional" (per-axis ×√2, ellipse) or "equal" (isotropic, circle: r = diagonal half-length). Default "proportional".'),
+      .describe(
+        'Circumscription policy from the inner content box: "proportional" (per-axis ×√2, ellipse) or "equal" (isotropic, circle: r = diagonal half-length). Default "proportional".',
+      ),
   }),
   circumscribe: (hw, hh, params) =>
     params.circumscribe === 'equal'
-      ? { halfWidth: Math.hypot(hw, hh), halfHeight: Math.hypot(hw, hh) }   // 等轴
-      : { halfWidth: hw * Math.SQRT2, halfHeight: hh * Math.SQRT2 },        // 比例（现状）
+      ? { halfWidth: Math.hypot(hw, hh), halfHeight: Math.hypot(hw, hh) } // 等轴
+      : { halfWidth: hw * Math.SQRT2, halfHeight: hh * Math.SQRT2 }, // 比例（现状）
   // boundaryPoint / anchor / edgePoint / emit 复用现有 ellipse 几何（不分支）
   // ...
 });

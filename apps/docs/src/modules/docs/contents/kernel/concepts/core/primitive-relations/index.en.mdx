@@ -18,9 +18,9 @@ Start with the difference between the two modes. The two groups bottom have iden
 
 The left group uses plain ids (`'T'`), so endpoints land on the target's left / right border by source direction; the right group locks to `'T.top'`, so endpoints pin to the top-edge midpoint no matter where the source is. **Prefer auto by default** — it lets connections adapt to the layout; lock only when a line must leave a specific side, align with a layout, or replicate an existing diagram.
 
-| Mode            | Syntax                         | Endpoint behavior                    | Best for                                    |
-| --------------- | ------------------------------ | ------------------------------------ | ------------------------------------------- |
-| Dynamic attach  | `'T'` / `{ id: 'T' }`          | Picks a border by relative direction | Flowcharts, DAGs, ordinary relation lines   |
+| Mode            | Syntax                       | Endpoint behavior                    | Best for                                    |
+| --------------- | ---------------------------- | ------------------------------------ | ------------------------------------------- |
+| Dynamic attach  | `'T'` / `{ id: 'T' }`        | Picks a border by relative direction | Flowcharts, DAGs, ordinary relation lines   |
 | Locked position | `'T.top'` / `{ id, anchor }` | Fixed, ignores direction             | Fixed exit side, layout alignment, replicas |
 
 ### Dynamic attach
@@ -42,7 +42,7 @@ To lock onto a specific position, a path target uses the **object form** `{ id, 
 | anchor omitted    | `{ id: 'A' }`: dynamic attach (same as plain id)                                                                                          |
 | named anchor      | `{ id: 'A', anchor: 'top' }`: a Web anchor name; compass names such as `north` remain aliases                                             |
 | angle anchor      | `{ id: 'A', anchor: 30 }`: visual border point at the given degree                                                                        |
-| edge proportional | `{ id: 'A', anchor: { side: 'top', fraction: 0.25 } }`                                                                                           |
+| edge proportional | `{ id: 'A', anchor: { side: 'top', fraction: 0.25 } }`                                                                                    |
 | anchor + offset   | `{ id: 'A', anchor: 'left', offset: [-4, 0] }`: resolve the point, then add a world-space `[dx, dy]` (not rotated by the node's `rotate`) |
 
 The anchor naming rules and geometric meanings all live in the [primitive model · anchors](/kernel/concepts/kernel/primitive-model); here only one thing matters: named / angle / edge-proportional anchors are **fixed in place**, unaffected by neighbor step direction (only auto mode adjusts dynamically). The three groups bottom: rectangle / ellipse use generic Web anchors, while star uses its own `tip-N`:

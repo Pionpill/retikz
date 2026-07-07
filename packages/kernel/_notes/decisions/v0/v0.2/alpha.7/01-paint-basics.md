@@ -18,9 +18,9 @@
 ```ts
 // PaintValue —— 任何 paint 属性的取值，fill / stroke 共用（不绑定 fill，alpha.8 arrow stroke 也用）
 type PaintValue =
-  | string                              // 纯色（任意 CSS color；含 var() 走 inline style）
+  | string // 纯色（任意 CSS color；含 var() 走 inline style）
   | { kind: 'resourceRef'; id: string } // 指向资源表（gradient / pattern / image）
-  | { kind: 'contextStroke' };          // 继承所在元素描边（adapter → SVG context-stroke；alpha.8 arrow 用）
+  | { kind: 'contextStroke' }; // 继承所在元素描边（adapter → SVG context-stroke；alpha.8 arrow 用）
 
 // SceneResource —— discriminated，便于后续加分支不破契约
 type SceneResource = { kind: 'paint'; id: string; spec: IRPaintSpec };

@@ -22,8 +22,8 @@ jobs:
           REPO: ${{ github.repository }}
           HEAD_BRANCH: main
           BASE_BRANCH: next
-          PR_TITLE: "chore: sync main into next"
-          PR_BODY: "Automated branch sync after main was updated. Merge this PR to propagate stable release or hotfix commits into next."
+          PR_TITLE: 'chore: sync main into next'
+          PR_BODY: 'Automated branch sync after main was updated. Merge this PR to propagate stable release or hotfix commits into next.'
         run: |
           set -euo pipefail
 
@@ -69,8 +69,8 @@ jobs:
           REPO: ${{ github.repository }}
           HEAD_BRANCH: next
           BASE_BRANCH: ${{ matrix.base }}
-          PR_TITLE: "chore: sync next into ${{ matrix.base }}"
-          PR_BODY: "Automated branch sync after next was updated. Merge this PR to propagate integrated changes into the downstream working branch."
+          PR_TITLE: 'chore: sync next into ${{ matrix.base }}'
+          PR_BODY: 'Automated branch sync after next was updated. Merge this PR to propagate integrated changes into the downstream working branch.'
         run: |
           set -euo pipefail
 

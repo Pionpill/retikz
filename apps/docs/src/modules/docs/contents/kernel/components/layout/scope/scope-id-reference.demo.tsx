@@ -26,13 +26,7 @@ const Demo: FC = () => (
     </Scope>
     {/* cluster bbox 灰虚线框：把 scope.id 作为整体的视觉边界画出来 */}
     <Draw
-      way={[
-        'cluster.top-left',
-        'cluster.top-right',
-        'cluster.bottom-right',
-        'cluster.bottom-left',
-        'cluster.top-left',
-      ]}
+      way={['cluster.top-left', 'cluster.top-right', 'cluster.bottom-right', 'cluster.bottom-left', 'cluster.top-left']}
       stroke="gray"
       dashPattern={[4, 3]}
     />

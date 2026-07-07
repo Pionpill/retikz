@@ -1,4 +1,4 @@
-﻿import type { DataFieldTypeValue,ExternalRow } from '@retikz/data';
+﻿import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
 
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
