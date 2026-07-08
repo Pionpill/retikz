@@ -21,10 +21,9 @@ import {
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
 
-import type { VanillaRuntimeMeta } from './spec';
+import type { VanillaRuntimeMeta } from '../spec';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
 
-import { isFigure } from './builder/is-figure';
 import { EMPTY_RUNTIME_META, toSceneResult } from './to-scene';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
@@ -35,15 +34,13 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
 };
 
 /**
- * 把 IR / Scene / Figure 挂成真实 `<canvas>` DOM（无框架浏览器 runtime，对齐 `mountSvg`）
- * @description 收 `Figure` 时 delegate 给 `figure.mountCanvas`（与 mountSvg→`figure.mount` 对称）。收 IR 时
- *   `toScene` compile、收 Scene 直用。位图按「名义显示尺寸」
+ * 把 IR / Scene / plain spec 挂成真实 `<canvas>` DOM（无框架浏览器 runtime，对齐 `mountSvg`）
+ * @description 输入会先归一成 Scene，再按「名义显示尺寸」
  *   `output.width` / `output.height`（均为有限数值时）× dpr 开、否则回退内容边界；`renderToCanvas` 再把 Scene 内容 meet-fit
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
  *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全。
  */
 export const mountCanvas = (container: Element, input: RenderInput, options: MountCanvasOptions = {}): CanvasView => {
-  if (isFigure(input)) return input.mountCanvas(container, options);
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountCanvas: container must be a DOM Element.');
   }

@@ -2,11 +2,10 @@ import type { CompileOptions, Scene } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 
-import type { VanillaRuntimeMeta } from './spec';
+import type { VanillaRuntimeMeta } from '../spec';
 import type { CommonOptions, RenderInput } from './types';
 
-import { FIGURE_RENDER_OPTIONS, isFigure } from './builder/is-figure';
-import { isVanillaFigureSpec, normalizeFigureSpec } from './spec';
+import { isVanillaFigureSpec, normalizeFigureSpec } from '../spec';
 
 /** 空 runtime metadata，用于非 plain spec 输入。 */
 export const EMPTY_RUNTIME_META: VanillaRuntimeMeta = {
@@ -26,15 +25,11 @@ export type SceneResult = {
 
 /**
  * 入参归一成 `Scene`
- * @description 已是 `Scene`（有 `primitives`）直接用；`Figure` 先合并自身 config 与调用点 options，再取 `.ir`；
+ * @description 已是 `Scene`（有 `primitives`）直接用；plain spec 先规范化成 IR；
  *   否则当 `IRScene` 经 `compileToScene` 编译。`options.compile` 原样透传（`measureText` 缺省时 core 回退
  *   `fallbackMeasurer`，Node 下确定可跑）。
  */
 export const toSceneResult = (input: RenderInput, options: CommonOptions): SceneResult => {
-  if (isFigure(input)) {
-    const compileOptions = input[FIGURE_RENDER_OPTIONS](options);
-    return { scene: compileToScene(input.ir, toCompileOptions(compileOptions)), runtimeMeta: EMPTY_RUNTIME_META };
-  }
   if ('primitives' in input) return { scene: input, runtimeMeta: EMPTY_RUNTIME_META };
   if (isVanillaFigureSpec(input)) {
     const normalized = normalizeFigureSpec(input, {

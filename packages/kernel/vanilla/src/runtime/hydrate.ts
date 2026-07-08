@@ -20,7 +20,7 @@ import type { HydrateOptions, HydrationHandle } from './types';
  *   在 `root` 上挂根级委托：事件经 `closest('[data-retikz-id]')` 反查图元 id，命中即以 `(event, context)` 触发对应
  *   handler；`pointerEnter` / `pointerLeave` 由控制器经 `pointermove` + 命中 id 状态机合成。返回 `{ dispose }` 解绑。
  *
- *   **context 能力分两档**：传 `options.scene`（可经 `toScene(ir)` 得到）→ 富 context——`meta` / `geometry` 经 Scene 按 id
+ *   **context 能力分两档**：传 `options.scene`（可经 `compileToScene(ir)` 得到）→ 富 context——`meta` / `geometry` 经 Scene 按 id
  *   聚合查询、`point` 逆 meet-fit、`animation` 经 `data-retikz-id` / `data-retikz-animation-owner` 双查
  *   `getAnimations()` per-id 控制；不传 → 最小 context——`id` + `element` + `root` + `renderer`，`point` 退 `getScreenCTM`
  *   （浏览器有效、jsdom 为 null），`meta` / `geometry` / `scene` undefined、`animation` no-op。SSR 后要富 context 须把

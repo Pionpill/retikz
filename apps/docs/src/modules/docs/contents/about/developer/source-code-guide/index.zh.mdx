@@ -13,7 +13,7 @@ retikz 的官方仓库当前维护六个 kernel 组包：
 | [`@retikz/core`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core)       | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM                                         | 官方维护 |
 | [`@retikz/render`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/render)   | renderer-neutral 的 Scene 输出层：SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具 | 官方维护 |
 | [`@retikz/react`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react)     | React adapter：JSX 组件编译成 IR，再通过 SVG 或 Canvas 渲染                                           | 官方维护 |
-| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | 无框架 runtime：builder 函数、SVG / Canvas mount、水合、动画控制与 SVG string 输出                    | 官方维护 |
+| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | 无框架 runtime：plain spec helper、SVG / Canvas mount、水合、动画控制与 SVG string 输出               | 官方维护 |
 | [`@retikz/tex`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/tex)         | 可选 LaTeX 公式接入：MathJax SVG 字形路径 lowering 到 renderer-agnostic Scene                         | 官方维护 |
 
 Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR 仍然是 universal 的，新框架 adapter 可以复用 `@retikz/core` 与 `@retikz/render` 的大部分 renderer 能力，只需要补自己的组件桥接层与必要的文字度量。

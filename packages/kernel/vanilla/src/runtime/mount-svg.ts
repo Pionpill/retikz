@@ -12,10 +12,9 @@ import {
 } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
 
-import type { VanillaRuntimeMeta } from './spec';
+import type { VanillaRuntimeMeta } from '../spec';
 import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, VanillaView } from './types';
 
-import { isFigure } from './builder/is-figure';
 import { DEFAULT_ID_PREFIX } from './constants';
 import { applyAttrs, svgNodeToDom } from './svg-node-to-dom';
 import { EMPTY_RUNTIME_META, toSceneResult } from './to-scene';
@@ -23,14 +22,12 @@ import { EMPTY_RUNTIME_META, toSceneResult } from './to-scene';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
- * 把 IR / Scene / Figure 挂成真实 SVG DOM（无框架浏览器 runtime）
- * @description 收 `Figure` 时 delegate 给 `figure.mount`（Figure 自持 config，call-site options 覆盖）。收
- *   IR/Scene 时：`toScene`（收 ir 时 compile）→ `buildSvgDocument`（`@retikz/render/svg`）→ 物化进**稳定复用**的 root
+ * 把 IR / Scene / plain spec 挂成真实 SVG DOM（无框架浏览器 runtime）
+ * @description 输入会先归一成 Scene，再经 `@retikz/render/svg` 生成 SVG 描述并物化进**稳定复用**的 root
  *   `<svg>`；`output.width` / `output.height` 若给则写回根（`@retikz/render/svg` 只产 viewBox，显示尺寸是 adapter 本分）。`update`
  *   原地重渲染、root 元素 identity 跨 update 不变、不失效。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全。
  */
 export const mountSvg = (container: Element, input: RenderInput, options: MountOptions = {}): VanillaView => {
-  if (isFigure(input)) return input.mount(container, options);
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountSvg: container must be a DOM Element.');
   }

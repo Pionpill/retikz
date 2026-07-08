@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
+import type { HydrationContext } from '@retikz/render/hydration';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { HydrationContext } from '../src';
 
 import { mountCanvas } from '../src';
 

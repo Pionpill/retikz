@@ -3,7 +3,7 @@ import type { IRScene } from '@retikz/core';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { legacyFigure as figure, mountCanvas, node } from '../src';
+import { mountCanvas } from '../src';
 
 /**
  * @retikz/vanilla mountCanvas（无框架 canvas 直挂，jsdom 环境）
@@ -111,43 +111,5 @@ describe('@retikz/vanilla mountCanvas', () => {
 
   it('mount-canvas-null-container：非 Element 容器 → 可诊断 throw', () => {
     expect(() => mountCanvas(null as never, idIr)).toThrow(/container/i);
-  });
-
-  // Figure 也有交互式 mountCanvas，且 standalone mountCanvas 收 Figure 时 delegate 给它（与 mountSvg→figure.mount 对称）
-  it('figure-mountCanvas：Figure.mountCanvas 挂出交互式 CanvasView（hydrate / update / clientToScene）', () => {
-    const container = document.createElement('div');
-    const fig = figure({ output: { width: 100, height: 100 } }, [
-      node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 }, fill: '#0a0' }),
-    ]);
-    const view = fig.mountCanvas(container);
-    expect(view.root).toBeInstanceOf(HTMLCanvasElement);
-    expect(typeof view.hydrate).toBe('function');
-    expect(typeof view.clientToScene).toBe('function');
-    expect(container.querySelector('canvas')).toBe(view.root);
-  });
-
-  it('mount-canvas-figure-delegates：standalone mountCanvas 收 Figure → delegate figure.mountCanvas', () => {
-    const container = document.createElement('div');
-    const fig = figure({ output: { width: 100, height: 100 } }, [
-      node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 } }),
-    ]);
-    const view = mountCanvas(container, fig);
-    expect(view.root).toBeInstanceOf(HTMLCanvasElement);
-    expect(container.querySelector('canvas')).toBe(view.root);
-  });
-
-  it('mount-canvas-update-figure：CanvasView.update 接收 Figure 并带上 Figure 编译配置', () => {
-    const container = document.createElement('div');
-    const view = mountCanvas(container, idIr);
-    const root = view.root;
-    const initialWidth = root.width;
-    const fig = figure({ compile: { padding: 80 } }, [
-      node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 }, fill: '#0a0' }),
-    ]);
-
-    expect(() => view.update(fig)).not.toThrow();
-    expect(view.root).toBe(root);
-    expect(container.querySelectorAll('canvas').length).toBe(1);
-    expect(view.root.width).toBeGreaterThan(initialWidth);
   });
 });

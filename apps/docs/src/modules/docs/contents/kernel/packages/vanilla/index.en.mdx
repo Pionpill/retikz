@@ -86,29 +86,6 @@ const spec = figure({
 });
 ```
 
-## Migration
-
-The old imperative `figure().node().draw()` shape remains available as `legacyFigure` for migration and compatibility. New docs, examples, and performance features use plain spec.
-
-```ts
-import { legacyFigure } from '@retikz/vanilla';
-
-const legacy = legacyFigure()
-  .node('a', { position: [0, 0] })
-  .node('b', { position: [120, 0] })
-  .draw(['a', 'b']);
-```
-
-New code expresses the same structure as a plain spec:
-
-```ts
-import { figure, node, path } from '@retikz/vanilla';
-
-const spec = figure({
-  children: [node('a', { position: [0, 0] }), node('b', { position: [120, 0] }), path('edge', { way: ['a', 'b'] })],
-});
-```
-
 ## API Summary
 
 | API                   | Kind   | Description                              |

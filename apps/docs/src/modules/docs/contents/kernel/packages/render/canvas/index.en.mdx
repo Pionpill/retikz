@@ -28,7 +28,7 @@ const view = mountCanvas(container, ir);
 // view.root is the <canvas>; view.update(next) repaints; view.dispose() unmounts
 ```
 
-The input matches SVG — a `Scene`, `IR`, or `Figure`; `devicePixelRatio` defaults to `globalThis.devicePixelRatio` (falling back to 1), so high-DPI screens stay crisp automatically.
+The input matches SVG: a `Scene`, `IR`, or vanilla plain spec. `devicePixelRatio` defaults to `globalThis.devicePixelRatio` (falling back to 1), so high-DPI screens stay crisp automatically.
 
 ## Adding interaction to a Canvas figure
 

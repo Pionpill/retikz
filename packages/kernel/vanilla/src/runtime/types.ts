@@ -2,13 +2,10 @@ import type { CompileOptions, IRScene, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 
-import type { Figure } from './figure';
-import type { AnyVanillaTier2Adapter, VanillaFigureSpec, VanillaRuntimeMeta } from './spec';
+import type { AnyVanillaTier2Adapter, VanillaFigureSpec, VanillaRuntimeMeta } from '../spec';
 
-export type { AnimationControls } from '@retikz/render/animation';
-
-/** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene`、Vanilla plain spec，或 legacy `Figure`。 */
-export type RenderInput = Scene | IRScene | VanillaFigureSpec | Figure;
+/** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla plain spec。 */
+export type RenderInput = Scene | IRScene | VanillaFigureSpec;
 
 /** 输出资源与显示尺寸选项。 */
 export type VanillaOutputOptions = {
@@ -46,7 +43,7 @@ export type VanillaCanvasOptions = {
 
 /**
  * 两个入口共享的选项
- * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / plain spec / legacy Figure 时传给
+ * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / plain spec 时传给
  *   `compileToScene`；`animation` 控制 SVG / Canvas runtime 动画；`adapters` 只参与 plain spec normalization。
  */
 export type CommonOptions = {
@@ -98,7 +95,7 @@ export type HydrationHandle = {
 export type HydrateOptions = {
   /** id → 事件名 → handler 的注册表（透传给 `@retikz/render/hydration` 控制器） */
   handlers: HydrationHandlers;
-  /** 富 context 来源 Scene（仅 standalone `hydrate` 用；不传则最小 context）；可经 `toScene(ir)` 得到 */
+  /** 富 context 来源 Scene（仅 standalone `hydrate` 用；不传则最小 context）；可经 `compileToScene(ir)` 得到 */
   scene?: Scene;
   /** standalone `hydrate` 的渲染后端（缺省 `'svg'`）；决定 context.renderer 与 element 定位口径 */
   renderer?: 'svg' | 'canvas';

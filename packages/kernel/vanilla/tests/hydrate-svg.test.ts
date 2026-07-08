@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
+import type { HydrationContext } from '@retikz/render/hydration';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
-
-import type { HydrationContext } from '../src';
 
 import { hydrate, mountSvg, renderToSvgString } from '../src';
 

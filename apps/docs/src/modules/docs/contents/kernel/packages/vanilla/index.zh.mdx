@@ -86,29 +86,6 @@ const spec = figure({
 });
 ```
 
-## 迁移
-
-旧的命令式 `figure().node().draw()` 形态保留为 `legacyFigure`，只用于迁移和兼容。新文档、新示例和后续性能能力都以 plain spec 为主。
-
-```ts
-import { legacyFigure } from '@retikz/vanilla';
-
-const legacy = legacyFigure()
-  .node('a', { position: [0, 0] })
-  .node('b', { position: [120, 0] })
-  .draw(['a', 'b']);
-```
-
-新写法把同一结构表达为 plain spec：
-
-```ts
-import { figure, node, path } from '@retikz/vanilla';
-
-const spec = figure({
-  children: [node('a', { position: [0, 0] }), node('b', { position: [120, 0] }), path('edge', { way: ['a', 'b'] })],
-});
-```
-
 ## API 摘要
 
 | API                   | 类型   | 说明                               |

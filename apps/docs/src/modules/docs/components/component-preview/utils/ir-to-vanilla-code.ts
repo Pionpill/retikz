@@ -205,7 +205,7 @@ const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   if (ribbon === undefined) return rawIrChildCode(path, indent, 'missing ribbon options');
 
   if (ribbon.mode === 'boundary') {
-    return rawIrChildCode(path, indent, 'boundary ribbon has no vanilla builder shorthand');
+    return rawIrChildCode(path, indent, 'boundary ribbon has no vanilla plain spec shorthand');
   }
   if (path.children === undefined) {
     return rawIrChildCode(path, indent, 'missing ribbon centerline');
@@ -253,7 +253,7 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
   return `[\n${lines.join('\n')}\n${pad(indent)}]`;
 };
 
-const BUILDER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope'];
+const HELPER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope'];
 
 export const irToVanillaCode = (ir: IRScene): string => {
   const ctx: Ctx = { used: new Set(['figure']), usesDrawWay: false };
@@ -267,8 +267,8 @@ export const irToVanillaCode = (ir: IRScene): string => {
     childrenStr,
   );
 
-  const builders = BUILDER_ORDER.filter(name => ctx.used.has(name));
-  const imports = [`import { ${builders.join(', ')} } from '@retikz/vanilla';`];
+  const helpers = HELPER_ORDER.filter(name => ctx.used.has(name));
+  const imports = [`import { ${helpers.join(', ')} } from '@retikz/vanilla';`];
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
 
   return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n`;

@@ -4,7 +4,7 @@ import type { IRScene, Scene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { legacyFigure as figure, mountSvg, node, renderToSvgString } from '../src';
+import { mountSvg, renderToSvgString } from '../src';
 
 /**
  * @retikz/vanilla mountSvg（无框架浏览器 DOM，jsdom 环境）
@@ -33,21 +33,6 @@ describe('@retikz/vanilla mountSvg', () => {
     expect(view.root).toBe(r1); // 元素恒等、未被替换
     expect(c.querySelectorAll('svg').length).toBe(1); // 没多挂一个
     expect(view.root.getAttribute('viewBox')).not.toBe(vb1); // root attrs 已更新
-  });
-
-  it('view-update-figure：update 接收 Figure 并带上 Figure 编译配置', () => {
-    const c = document.createElement('div');
-    const baseFigure = figure([node('next', { position: [0, 0], text: 'NEXT' })]);
-    const view = mountSvg(c, baseFigure);
-    const root = view.root;
-    const viewBoxBefore = root.getAttribute('viewBox');
-    const next = figure({ compile: { padding: 50 } }, [node('next', { position: [0, 0], text: 'NEXT' })]);
-
-    expect(() => view.update(next)).not.toThrow();
-    expect(view.root).toBe(root);
-    expect(c.querySelectorAll('svg').length).toBe(1);
-    expect(view.root.textContent).toContain('NEXT');
-    expect(view.root.getAttribute('viewBox')).not.toBe(viewBoxBefore);
   });
 
   it('idprefix-ssr-mount-parity：同 idPrefix 下 SSR 串与 DOM 的资源 id 一致', () => {

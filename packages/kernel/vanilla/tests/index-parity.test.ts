@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import * as vanilla from '../src';
 
 /**
- * 入口边界：vanilla 只导出自身 runtime / spec / legacy builder，不转手导出 core 能力。
+ * 入口边界：vanilla 只导出自身 runtime / spec，不转手导出 core 能力。
  */
 describe('@retikz/vanilla 入口边界', () => {
   it('own-runtime-and-spec：自身公开值挂在命名空间上', () => {
@@ -21,10 +21,15 @@ describe('@retikz/vanilla 入口边界', () => {
       'scope',
       'embed',
       'VanillaLayerCache',
-      'legacyFigure',
-      'draw',
     ] as const) {
       expect(vanilla[name]).toBeDefined();
+    }
+  });
+
+  it('no-legacy-builder：不再导出旧命令式 builder 或内部 Figure 协议', () => {
+    const namespace = vanilla as Record<string, unknown>;
+    for (const name of ['legacyFigure', 'draw', 'FIGURE_BRAND', 'FIGURE_RENDER_OPTIONS', 'toScene']) {
+      expect(namespace[name]).toBeUndefined();
     }
   });
 

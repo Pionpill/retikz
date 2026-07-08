@@ -48,11 +48,8 @@ mount(document.querySelector('#diagram')!, spec);
 - Runtime: `renderToSvgString`, `mount`, `mountSvg`, `mountCanvas`, `hydrate`
 - Views: `VanillaView` from `mountSvg` exposes `root`, `update`, `hydrate`, `dispose`, and `animation`; `CanvasView` from `mountCanvas` also exposes `clientToScene`
 - Plain spec: `figure` / `layer` / `node` / `path` / `coordinate` / `scope` / `embed`, plus `VanillaTier2Adapter` for explicit Tier 2 embedding
-- Legacy builder: `legacyFigure` and `draw` remain available for migration, but new docs and new features use plain spec
-- Hydration: `HydrationHandlers`, `HydrationContext`, `HydrationHandler`, `RetikzEventValue`, and related runtime types
-- Animation runtime: `AnimationControls`, custom easing / animation-property types, and `view.animation`
 
-Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`.
+Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`. Hydration and animation runtime helper types should be imported from `@retikz/render`.
 
 ## Docs
 
