@@ -2,7 +2,7 @@
 
 import * as DataPublic from '@retikz/data';
 import { DataFieldFormat, defineFieldFormat, resolveFormatRegistry } from '@retikz/data';
-import { DataModelSchema, FieldDefSchema } from '@retikz/data';
+import { DataModelSchema, FieldDefinitionSchema } from '@retikz/data';
 import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
@@ -99,14 +99,14 @@ describe('FieldDef.format（ADR-06）— 错误路径', () => {
 
   it('unregistered_format_fails_at_lowering', () => {
     // 开放后 schema 接受任意非内置格式串（视作自定义名）；未注册的格式在 lowering fail-loud
-    expect(() => FieldDefSchema.parse({ name: 'v', type: 'continuous', format: 'comma' })).not.toThrow();
+    expect(() => FieldDefinitionSchema.parse({ name: 'v', type: 'continuous', format: 'comma' })).not.toThrow();
     const spec = specWithField({ name: 'v', type: 'continuous', format: 'comma' });
     expect(() => parseFirst(spec, { d: [{ v: '1,500', y: 1 }] }, 'v')).toThrow(/not registered/);
   });
 
   it('empty_format_rejected_by_schema', () => {
     // 空串既非内置、也不是合法自定义名 → schema 拒
-    expect(() => FieldDefSchema.parse({ name: 'v', type: 'continuous', format: '' })).toThrow();
+    expect(() => FieldDefinitionSchema.parse({ name: 'v', type: 'continuous', format: '' })).toThrow();
   });
 });
 
