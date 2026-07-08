@@ -1,5 +1,6 @@
 ﻿import { z } from 'zod';
 
+import type { DataLineageRecorder } from './lineage';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
 
 import { type ExternalRow, type TransformOperation } from '../schemas';
@@ -21,6 +22,8 @@ export type TransformContext = {
   statisticsReducerRegistry?: ReadonlyMap<string, AnyStatisticsReducerDefinition>;
   /** row selector registry；缺省时使用内置 selector。 */
   rowSelectorRegistry?: ReadonlyMap<string, AnyRowSelectorDefinition>;
+  /** data lineage recorder；缺省时不记录 transform / reducer / selector 事件。 */
+  lineage?: DataLineageRecorder;
 };
 
 /**

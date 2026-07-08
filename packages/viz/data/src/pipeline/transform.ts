@@ -1,10 +1,17 @@
 import { JsonObjectSchema } from '@retikz/core';
 
-import type { AnyTransformDefinition, FieldCollector, TransformContext } from '../contract';
+import type {
+  AnyTransformDefinition,
+  DataLineageOptions,
+  DataLineageRun,
+  FieldCollector,
+  TransformContext,
+} from '../contract';
 import type { ExternalRow, TransformOperation } from '../schemas';
 
 import { resolveTransformRegistry } from '../providers';
-import { readSourceIndex, readSourceIndices, withGroupProvenance } from './provenance';
+import { createDataLineageRecorder } from './lineage';
+import { readSourceIndex, readSourceIndices, tagSourceIndex, withGroupProvenance } from './provenance';
 
 /** 默认 transform 上下文：使用 data provenance symbol 标记，不把来源信息写进 JSON IR。 */
 export const DEFAULT_TRANSFORM_CONTEXT: TransformContext = {
@@ -64,4 +71,63 @@ export const applyTransforms = (
     const definition = transformDefinitionOf(operation, registry);
     return definition.apply(acc, parseTransformOperation(definition, operation), context);
   }, rows);
+};
+
+/** applyTransformsWithLineage 的运行时选项。 */
+export type ApplyTransformsWithLineageOptions = {
+  /** transform registry；缺省时使用 data 内置 registry。 */
+  registry?: ReadonlyMap<string, AnyTransformDefinition>;
+  /** transform context 增量；缺省 helper 会自动补齐。 */
+  context?: Partial<TransformContext>;
+  /** lineage 开关；缺省等价于 `{}`，只记录轻量 source / step。 */
+  lineage?: DataLineageOptions;
+};
+
+/** applyTransformsWithLineage 的运行结果。 */
+export type ApplyTransformsWithLineageResult = {
+  /** transform 后的数据行。 */
+  rows: Array<ExternalRow>;
+  /** 本次 transform 运行的 lineage 事件。 */
+  lineage: DataLineageRun;
+};
+
+/**
+ * 按声明顺序执行 transform，并返回运行时 lineage。
+ * @description 该入口不改变 TransformOperation schema；lineage 只通过返回值暴露，不写入 JSON IR。
+ */
+export const applyTransformsWithLineage = (
+  rows: Array<ExternalRow>,
+  operations?: Array<TransformOperation>,
+  options: ApplyTransformsWithLineageOptions = {},
+): ApplyTransformsWithLineageResult => {
+  const lineage = createDataLineageRecorder(options.lineage ?? {});
+  const context: TransformContext = {
+    ...DEFAULT_TRANSFORM_CONTEXT,
+    ...options.context,
+    lineage,
+  };
+  const registry = options.registry ?? resolveTransformRegistry();
+  const inputRows = tagSourceIndex(rows);
+  lineage.recordSource(inputRows);
+
+  if (!operations || operations.length === 0) return { rows: inputRows, lineage };
+
+  const out = operations.reduce((acc, operation, operationIndex) => {
+    const definition = transformDefinitionOf(operation, registry);
+    const parsed = parseTransformOperation(definition, operation);
+    const inputFields = definition.inputFields?.(parsed, context) ?? [];
+    const outputFields = definition.outputFields?.(parsed, context) ?? [];
+    const outputRows = definition.apply(acc, parsed, context);
+    lineage.recordTransformStep({
+      operationIndex,
+      operation,
+      inputRows: acc,
+      outputRows,
+      inputFields,
+      outputFields,
+    });
+    return outputRows;
+  }, inputRows);
+
+  return { rows: out, lineage };
 };

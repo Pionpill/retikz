@@ -107,6 +107,24 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
 
+## Lineage
+
+Use `applyTransformsWithLineage` instead of `applyTransforms` when a host needs to explain the data computation chain. It executes the same transform definitions and returns runtime-only lineage events; those events do not enter JSON IR and are not written back into data rows.
+
+```ts
+const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
+  lineage: {
+    fieldFlow: true,
+    reducerOperations: true,
+    rowSamples: { maxRows: 5, fields: ['region', 'revenue', 'total'] },
+  },
+});
+```
+
+The default `lineage: {}` records only the necessary summary: source-index summary, transform order, input / output row counts, and field sets. `rowSamples`, `calculationDetails`, reducer details, and selector details are independent opt-ins. Sample switches must provide `maxRows` and a non-empty `fields` whitelist so the runtime never copies whole rows by default.
+
+When `lineage.sink` is provided, events stream to the callback and are not retained in the returned `lineage.events` by default. Set `retainEvents: true` when a host needs both streaming and the returned event array.
+
 ## Custom Transforms
 
 When the input / output row shape does not fit an existing transform, register a runtime definition with `defineTransform`. Definitions do not enter JSON IR; IR stores only `{ kind, ...config }`, and runtime definition sets provide the implementation.

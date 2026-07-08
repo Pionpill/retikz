@@ -107,6 +107,24 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 
 上面的箱线图没有专用 `BoxPlotMark`。data transform 负责产出箱体、中位数、须线和区间外原始点；plot 只用 `IntervalMark`、`ReferenceMark` 和 `PointMark` 消费这些字段。
 
+## lineage
+
+需要解释数据计算链路时，用 `applyTransformsWithLineage` 代替 `applyTransforms`。它仍然执行同一组 transform definition，但会额外返回 runtime-only 的 lineage 事件；这些事件不会写进 JSON IR，也不会写回数据行。
+
+```ts
+const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
+  lineage: {
+    fieldFlow: true,
+    reducerOperations: true,
+    rowSamples: { maxRows: 5, fields: ['region', 'revenue', 'total'] },
+  },
+});
+```
+
+默认 `lineage: {}` 只记录必要摘要：source index 摘要、transform 顺序、输入 / 输出行数和字段集合。`rowSamples`、`calculationDetails`、reducer / selector 详情都要独立打开；样本类开关必须给 `maxRows` 和非空 `fields`，避免默认复制整行数据。
+
+如果传入 `lineage.sink`，事件会流式发送给回调，默认不再保留到返回值的 `lineage.events`。需要同时流式消费和返回事件数组时，显式设置 `retainEvents: true`。
+
 ## 自定义 transform
 
 输入 / 输出行结构不属于现有 transform 形态时，用 `defineTransform` 注册完整运行时 definition。definition 不进入 JSON IR；IR 只保存 `{ kind, ...config }`，运行时通过 transform definition 集合注入执行逻辑。

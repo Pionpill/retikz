@@ -103,7 +103,15 @@ export const applyReducerOperation = (
 ): ExternalRow => {
   const registry = context.statisticsReducerRegistry ?? resolveStatisticsReducerRegistry();
   const definition = reducerDefinitionOf(operation, registry);
-  return definition.reduce(rows, parseReducerOperation(definition, operation), context);
+  const parsed = parseReducerOperation(definition, operation);
+  const out = definition.reduce(rows, parsed, context);
+  context.lineage?.recordReducerOperation({
+    operation,
+    rows,
+    inputFields: definition.inputFields?.(parsed) ?? [],
+    outputFields: definition.outputFields?.(parsed) ?? [],
+  });
+  return out;
 };
 
 /** 收集 selector 会读取的源字段。 */
@@ -119,9 +127,17 @@ export const selectorInputFields = (
 export const applySelectorOperation = (
   rows: Array<ExternalRow>,
   operation: SelectorOperation,
-  context: Pick<TransformContext, 'rowSelectorRegistry'>,
+  context: TransformContext,
 ): Array<RowSelection> => {
   const registry = context.rowSelectorRegistry ?? resolveRowSelectorRegistry();
   const definition = selectorDefinitionOf(operation, registry);
-  return definition.select(rows, parseSelectorOperation(definition, operation));
+  const parsed = parseSelectorOperation(definition, operation);
+  const out = definition.select(rows, parsed);
+  context.lineage?.recordSelectorOperation({
+    operation,
+    rows,
+    selectedRows: out.map(selection => selection.row),
+    inputFields: definition.inputFields?.(parsed) ?? [],
+  });
+  return out;
 };
