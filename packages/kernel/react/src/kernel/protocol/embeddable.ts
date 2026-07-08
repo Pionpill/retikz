@@ -1,23 +1,23 @@
 import type { CompositeDefinition, IRChild } from '@retikz/core';
 
-/** 嵌入贡献的外部数据集表：reference 键 → 任意载荷（不进 IR；core 不解释语义） */
+/** 嵌入组件可附带的外部数据集表：reference 键 → 任意载荷 */
 export type EmbeddableDatasets = Record<string, unknown>;
 
-/** 一个可嵌入 Tier2 子组件经 adapter 静态贡献的内容 */
+/** 一个可嵌入 Tier2 子组件对图形声明的贡献内容 */
 export type EmbeddableContribution = {
   node: IRChild;
   datasets: EmbeddableDatasets;
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<CompositeDefinition>;
 };
 
-/** 可嵌入 Tier2 适配器（domain 提供，core 定接口；core 不 import 任何 domain） */
+/** 可嵌入 Tier2 适配器，用于让高层领域组件接入 `<Layout>` */
 export type EmbeddableTier2Adapter<TProps = Record<string, unknown>> = {
   displayName: string;
   namespace: string;
   contribute: (props: TProps) => EmbeddableContribution;
 };
 
-/** 内部：buildIR 收集的（按 namespace 分组前的）单条贡献记录 */
+/** 单个可嵌入组件贡献记录，用于后续按 namespace 合并数据集 */
 export type EmbeddableContributionRecord = {
   namespace: string;
   datasets: EmbeddableDatasets;
@@ -45,17 +45,16 @@ export const isEmbeddableMarked = (type: unknown): boolean => asMaybeEmbeddable(
 
 /**
  * 解析一个元素的可嵌入适配器。
- * @description 优先用显式 embeddables 列表按 displayName 匹配（逃生舱 / 测试注入 / 覆盖），
- *   否则读组件静态属性：isTier2Embeddable===true 时返回 embeddableAdapter；
- *   有标记但缺 adapter → fail-loud throw（错误信息带组件名）；都没有 → 返回 null（非可嵌入，调用方按 Sugar 处理）。
+ * @description 优先用显式 `adapters` 列表按 displayName 匹配；否则读取组件上的可嵌入静态属性。
+ *   组件声明自己可嵌入但缺少 adapter 时会抛出带组件名的错误；普通组件返回 null。
  */
 export const resolveEmbeddableAdapter = (
   type: unknown,
   displayName: string | undefined,
-  embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
+  adapters?: ReadonlyArray<EmbeddableTier2Adapter>,
 ): EmbeddableTier2Adapter | null => {
-  if (embeddables && displayName !== undefined) {
-    const matched = embeddables.find(entry => entry.displayName === displayName);
+  if (adapters && displayName !== undefined) {
+    const matched = adapters.find(entry => entry.displayName === displayName);
     if (matched) return matched;
   }
 

@@ -14,9 +14,9 @@ export type PathProps = HydrationEventProps & {
   label?: IRPath['label'];
   /** 路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定 */
   id?: IRPath['id'];
-  /** provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer）。须为 JSON 可序列化对象 */
+  /** 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象 */
   meta?: IRPath['meta'];
-  /** 时间轴动画 tracks（raw track；drawOn 等 sugar 动词为后续）：透传进 emit 的 Scene 图元，renderer 播放或降级到静态。不参与布局 */
+  /** 路径级时间轴动画；渲染端播放或降级为静态，不参与布局 */
   animations?: IRPath['animations'];
   /** 主色（TikZ `color=`）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke） */
   color?: IRPath['color'];
@@ -60,7 +60,7 @@ export type PathProps = HydrationEventProps & {
   fillOpacity?: IRPath['fillOpacity'];
   /** 仅 stroke 透明度 0~1（TikZ `stroke opacity`） */
   strokeOpacity?: IRPath['strokeOpacity'];
-  /** 主路径投影（仅作用于主 PathPrim，不含 step label / marks / endpoint arrows）；预设字符串或对象（显式字段覆盖 preset） */
+  /** 主路径投影；不影响 step label、沿线标记或端点箭头。预设字符串或对象均可，显式字段覆盖 preset */
   shadow?: IRPath['shadow'];
   /** 主路径混合模式（与下方已绘内容混合，W3C 分离模式）；不含 step label / marks / arrows。省略 / `normal` = 普通 source-over */
   blendMode?: IRPath['blendMode'];
@@ -85,7 +85,8 @@ export type PathProps = HydrationEventProps & {
 };
 
 /**
- * Path 容器——本身不渲染。children 扫描阶段读出其中的 <Step /> 构造 IRPath。
+ * Path 用一组 `<Step>` 声明路径。
+ * @description 本组件自身不渲染 DOM；最终路径由 `<Layout>` 根据 step 序列、样式、箭头和标记输出。
  */
 export const Path: FC<PathProps> = () => null;
 Path.displayName = TIKZ_PATH;

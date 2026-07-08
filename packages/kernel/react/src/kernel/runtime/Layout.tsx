@@ -139,16 +139,16 @@ export type LayoutProps = ScopeStyleProps & {
   className?: string;
   /** 透传到 svg 元素的内联样式 */
   style?: CSSProperties;
-  /** 渲染目标；缺省为 SVG，设为 canvas 时用同一份 Scene 绘制到 `<canvas>` */
+  /** 渲染目标；缺省为 SVG，设为 canvas 时用同一份图形数据绘制到 `<canvas>` */
   renderer?: 'svg' | 'canvas';
   /**
-   * 是否播放动画（缺省 true）；`false` → 渲染 base 静态图（不 emit CSS/WAAPI）
+   * 是否播放动画（缺省 true）；`false` 时渲染动画终态的静态图
    * @description SVG 模式：`load` track 经内联 `<style>` CSS 自播、交互 track 经 WAAPI 桥按 trigger 驱动；
    *   `animate={false}` 走 settled 静态。
    */
   animate?: boolean;
   /**
-   * 静态截帧时刻（毫秒）；给定时渲染「定格在该时刻」的静态图（不播放、不 emit 动画）
+   * 静态截帧时刻（毫秒）；给定时渲染「定格在该时刻」的静态图
    * @description SVG：各 track 在该时刻的值烘焙成静态属性 / transform；Canvas：按该时刻画一帧、不起 rAF。覆盖 `animate`。
    */
   snapshotAt?: number;
@@ -159,9 +159,9 @@ export type LayoutProps = ScopeStyleProps & {
    */
   animationRef?: Ref<AnimationControls | null>;
   /**
-   * scene 根（镜头）时间轴动画 tracks（`viewBox` property）；注入构造出的 IR 根 `animations`
-   * @description 配 `cameraTo()` preset：`<Layout animations={[cameraTo({ from, to })]}>`。元素级动画走各元素
-   *   的 `animations` prop（非此 prop）。与直接传 `ir` prop 并用时，本 prop 追加到该 IR 根。
+   * 全图时间轴动画 tracks（如 `viewBox` 镜头动画）
+   * @description 配 `cameraTo()` preset：`<Layout animations={[cameraTo({ from, to })]}>`。元素级动画写在各元素
+   *   的 `animations` prop 上；与直接传 `ir` prop 并用时，本 prop 追加到整张图。
    */
   animations?: Array<IRAnimationTrack>;
   /**
@@ -171,16 +171,15 @@ export type LayoutProps = ScopeStyleProps & {
    */
   easings?: EasingRegistry;
   /**
-   * 自定义动画属性通道插值器（兑现动画扩展口）：通道名 → { interpolate, applyCanvas }
+   * 自定义动画属性通道插值器：通道名 → { interpolate, applyCanvas }
    * @description 让 `property` 用内置之外的名字（如 `blur`）。**当前仅 Canvas 生效**（`renderer="canvas"`）；
    *   SVG 无内置映射 → 告警并跳过该 track（渲染 base）。
    */
   animationProperties?: AnimationPropertyRegistry;
   /**
    * SVG `<defs>` 资源 id 前缀，覆盖默认的 `useId()` 派生值
-   * @description marker / paint / clip 的 id 与 `url(#...)` 引用共用此前缀确保多实例不撞。缺省回退剥冒号的
-   *   `useId()`（纯 React 用户无感）。SSR→客户端水合需 id 逐字一致时：服务端 `renderToSvgString(scene,
-   *   { idPrefix })` 与客户端 `<Layout idPrefix>` 传同一前缀即可对齐。
+   * @description marker / paint / clip 的 id 与 `url(#...)` 引用共用此前缀确保多实例不撞。缺省使用 React 生成的稳定 id。
+   *   SSR 到客户端水合需要 id 逐字一致时，服务端渲染和客户端 `<Layout idPrefix>` 传同一前缀即可对齐。
    */
   idPrefix?: string;
   /**
@@ -195,56 +194,53 @@ export type LayoutProps = ScopeStyleProps & {
    */
   fontSize?: number;
   /**
-   * 运行时注入的第三方 / 自定义 shape（透传给 `compileToScene` 的 `CompileOptions.shapes`）
-   * @description IR 或 `<Node shape="...">` 只保存 shape 名字或 `{ type, params }`；definition 在这里注入。
-   *   内置名碰撞会在注册期 throw，未知 shape 在编译期 throw。
+   * 运行时注入的第三方 / 自定义节点形状。
+   * @description `<Node shape="...">` 写 shape 名字或 `{ type, params }`，具体形状定义通过本 prop 注册。
+   *   与内置或自定义同名会报错；引用未注册形状也会报错。
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
-   * 运行时注入的第三方 / 自定义 connection surface（透传给 `compileToScene` 的 `CompileOptions.boundaries`）
-   * @description IR 里 `boundary` 仍只写字符串名或 `{ type, params }`；定义在此注入。查不到时再 fallback 到 shapes。
+   * 运行时注入的第三方 / 自定义连接面。
+   * @description `<Node boundary="...">` 写 boundary 名字或 `{ type, params }`，具体连接面定义通过本 prop 注册。
+   *   未注册时会回退到同名 shape 边界。
    */
   boundaries?: ReadonlyArray<BoundaryDefinition>;
-  /** Runtime clip providers passed through to `compileToScene`. */
+  /** 运行时注入的第三方 / 自定义裁剪区；`<Scope clip={{ kind: '...' }}>` 可引用这些定义。 */
   clips?: ReadonlyArray<ClipDefinition>;
   /**
-   * 运行时注入的第三方 / 自定义 arrow（透传给 `compileToScene` 的 `CompileOptions.arrows`）
-   * @description IR 里 `<Path arrowDetail={{ shape: '...' }}>` 仍只写字符串名；定义在此注入。emit-in-compile：
-   *   compile 调 `def.emit` 产 marker 几何进 `ResolvedArrowEndSpec`，react adapter 只物化、不需 arrows 表。
-   *   与内置或自定义同名会在注册期 throw，未注册 shape 在 compile 阶段报错。
+   * 运行时注入的第三方 / 自定义箭头。
+   * @description `<Path arrowDetail={{ shape: '...' }}>` 写箭头名，具体箭头定义通过本 prop 注册。
+   *   与内置或自定义同名会报错；引用未注册箭头也会报错。
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /**
-   * 运行时注入的第三方 / 自定义 pattern motif（透传给 `compileToScene` 的 `CompileOptions.patterns`）
-   * @description IR 里 `fill={{ kind: 'pattern', shape: '...' }}` 仍只写字符串名；motif 定义在此注入。
-   *   emit-in-compile：compile 调 `def.emit` 产 motif 几何进 `SceneResource.tile`，react adapter 只物化、
-   *   不需要 patterns 表；内置名碰撞会在注册期 throw，未知 pattern 在编译期 throw。
+   * 运行时注入的第三方 / 自定义填充图案。
+   * @description `fill={{ kind: 'pattern', shape: '...' }}` 写 pattern 名，具体图案定义通过本 prop 注册。
+   *   与内置或自定义同名会报错；引用未注册 pattern 也会报错。
    */
   patterns?: ReadonlyArray<PatternDefinition>;
   /**
-   * 运行时注入的第三方 / 自定义 path generator（透传给 `compileToScene` 的 `CompileOptions.pathGenerators`）
-   * @description IR 里 generator step 仍只写字符串 `name`；曲线生成器定义在此注入。core 不内置任何曲线；
-   *   未注册名编译期 throw（错误列出可用名）。`params` 经 generator 的 paramsSchema + JsonObjectSchema 双 parse 守 JSON 可序列化
+   * 运行时注入的第三方 / 自定义路径生成器。
+   * @description `<Step kind="generator" name="...">` 写生成器名，具体生成逻辑通过本 prop 注册。
+   *   未注册名会报错；`params` 必须是 JSON 可序列化对象。
    */
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /**
-   * 运行时注入的第三方 / 自定义 Path kind provider（透传给 `compileToScene` 的 `CompileOptions.pathKinds`）
-   * @description IR 里只保存 `kind` / `kindOptions`；provider 定义在这里注入，并接管整条 Path 的编译。
+   * 运行时注入的第三方 / 自定义 Path kind。
+   * @description `<Path kind="...">` 写路径类型名，具体整条路径的生成逻辑通过本 prop 注册。
    */
   pathKinds?: ReadonlyArray<PathKindDefinition>;
-  /** Runtime ribbon width profiles passed through to `compileToScene`. */
+  /** 运行时注入的 ribbon 宽度 profile；ribbon path 可按名称引用这些宽度曲线。 */
   ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /**
-   * 运行时注入的 Tier 2 composite 展开逻辑（透传给 `compileToScene` 的 `CompileOptions.composites`）
-   * @description IR 里含 namespace 的 tier2 节点经此注册表在 compile 第一步展开成 Tier 1；core 无内置，
-   *   未注册 namespace/type → 警告并跳过。展开始终在 core，不在 React 层。
+   * 运行时注入的 Tier 2 composite 展开逻辑。
+   * @description 带 `namespace` / `type` 的高层节点通过本 prop 注册并展开；未注册时会发出 warning 并跳过。
    */
   composites?: ReadonlyArray<CompositeDefinition>;
   /**
-   * 运行时注入的公式渲染能力（透传给 `compileToScene` 的 `CompileOptions.lowerTex`）
-   * @description `<Node tex>` / `<Node>{{ tex }}</Node>` 公式编译时调它把 LaTeX → 字形路径 + bbox；由 `@retikz/tex`
-   *   的 `createLowerTex(await createMathJaxEngine())` 提供，应用自行在 effect 里启动 MathJax 后传入。缺省时带公式
-   *   的节点降级 + 警告，不崩。
+   * 运行时注入的公式渲染能力。
+   * @description `<Node>` 文本中的 `$...$`、`$$...$$` 或显式 tex run 会通过它转成可渲染字形。
+   *   通常由 `@retikz/tex` 提供；缺省时公式内容会按降级规则处理并发出 warning。
    */
   lowerTex?: LowerTex;
   /**
@@ -308,10 +304,8 @@ const useSvgRootBinding = (
 
 /**
  * <Layout> 顶层容器
- * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ `compileToScene` 得 Scene →
- *   `@retikz/render/svg` 的 `buildSvgDocument` 产中性 `SvgNode` 描述树（含 `<defs>` 与按需 dedup 的 `<marker>` /
- *   paint / clip 资源，id 用 `idPrefix` 派生）→ `svgToReact` 映射成 React 元素。Scene→SVG 逻辑单一数据源在
- *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
+ * @description children 模式写 Kernel / Sugar JSX；`ir` 模式直接传入 JSON IR。组件负责计算图形尺寸、
+ *   选择 SVG 或 Canvas 输出、绑定事件水合和动画控制。
  */
 export const Layout: FC<LayoutProps> = props => {
   const {

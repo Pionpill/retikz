@@ -13,7 +13,7 @@ import { TIKZ_STEP } from '../protocol';
 
 /**
  * React DSL 层的 target 类型：core 对象 `IRTarget` + 字符串 shorthand（`'A'` / `'A.north'` / `'A.30'` / `'+dx,dy'`）
- * @description core IRTarget 已对象化（无字符串分支）；字符串 shorthand 仅活在 React DSL，builder 经 parseTargetSugar eager 转对象后才入 IR
+ * @description 对象形态适合精确描述节点锚点、坐标和相对位移；字符串 shorthand 适合手写 JSX 时快速引用常见目标。
  */
 export type DslTarget = IRTarget | string;
 
@@ -234,7 +234,7 @@ export type StepProps =
 
 /**
  * Step 是 DSL 标记组件——本身不渲染
- * @description 必须作为 `<Path>` 的直接子节点出现，由 `<Path>` 的 children 扫描读出
+ * @description 声明路径中的一个动作，例如移动、连线、曲线、圆弧、闭合或生成器片段。
  */
 export const Step: FC<StepProps> = () => null;
 Step.displayName = TIKZ_STEP;

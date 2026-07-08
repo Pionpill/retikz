@@ -1,11 +1,8 @@
 import type { IRScope } from '@retikz/core';
 
 /**
- * Scope 级联样式 props 子集——`<Scope>` 与 `<Layout>` 共用同一份定义，避免两处漂移
- * @description 取 IRScope 的「级联样式」通道（graphic state + 四通道 every-X），**不含**容器 / 命名空间 /
- *   局部变换语义字段（`id` / `localNamespace` / `transforms` / `resetStyle` / `zIndex` / `clip`）——这些挂在
- *   顶层 `<Layout>` 上要么无意义、要么语义易混，故不在此暴露。
- *   `<Layout>` 设任一字段时把 children 包进合成根 `<Scope>`，编译产物 = 用户手写一层根 `<Scope>` 的同一 IR。
+ * Scope 与 Layout 可共用的级联样式 props。
+ * @description 用于设置局部或全图默认样式；不包含 id、命名空间、变换、裁剪等容器语义字段。
  */
 export type ScopeStyleProps = {
   /** 级联主色（TikZ scope `color=`）；内部元素 stroke / fill / 文字未单设则随它，并级联到边 label / 箭头 */

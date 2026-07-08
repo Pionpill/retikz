@@ -12,21 +12,19 @@ import { TIKZ_SCOPE } from '../protocol';
 export type ScopeProps = ScopeStyleProps &
   HydrationEventProps & {
     /**
-     * 可选 scope 引用 id；设值则注册一个 synthetic rectangle bbox 节点到父 namespace frame
-     * @description 该 bbox 节点供外部 path / position 把整个 scope 当矩形 referent 引用
-     *   （`scope.id` / `scope.id.<anchor>` / `scope.id.<deg>` 走与普通 rectangle Node 一致的 anchor 取值）；
-     *   始终注册在父 frame，不受 `localNamespace` 影响——它是 scope 对外的句柄
+     * 可选 scope 引用 id；设值后可把整个 scope 的包络当作引用目标。
+     * @description 外部 path / position 可用 `scope.id` / `scope.id.<anchor>` / `scope.id.<deg>` 引用该包络；
+     *   这个外部句柄不受 `localNamespace` 影响。
      */
     id?: string;
     /**
      * 是否创建本地命名空间；true 时子节点 id 不向父 frame 传播（外部不可见）
-     * @description compile 进入本 scope 时 push 一个独立 namespace frame，子节点 id 只在本 frame 可见、
-     *   出场即弹出；外部无法引用子节点 id（`scope.id` 句柄仍在父 frame 可见，不受影响）
+     * @description 子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用。
      */
     localNamespace?: boolean;
     /**
-     * 局部 transform 列表；数组顺序应用（与 Scene `GroupPrim.transforms` / SVG transform list 一致）
-     * @description 支持 7 变体（translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale）；5 个 translate 变体由 compile 阶段下沉为 Cartesian translate
+     * 局部 transform 列表；数组顺序应用，与 SVG transform list 一致。
+     * @description 支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale。
      */
     transforms?: Array<IRTransformInput>;
     /** 继承屏障：切外层对应通道继承（true 全切 / 数组按 'node'|'path'|'label'|'arrow' 切） */
@@ -37,9 +35,9 @@ export type ScopeProps = ScopeStyleProps &
     clip?: IRScope['clip'];
     /** scope id 注册的 synthetic 包络形状（受控枚举 'rectangle' | 'circle'，非 Node shape 那种开放 shape 引用）；缺省为 'rectangle'（AABB） */
     boundingShape?: IRScope['boundingShape'];
-    /** provenance 元数据：原样透传进本 scope emit 的 GroupPrim，renderer 忽略、不参与布局、不下传子元素；典型由 Tier 2 lowering 注入（标记 series / layer 层）。须为 JSON 可序列化对象 */
+    /** 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局，也不下传给子元素。须为 JSON 可序列化对象 */
     meta?: IRScope['meta'];
-    /** 时间轴动画 tracks（作用于 scope group；raw track）：透传进 emit 的 GroupPrim，renderer 播放或降级到静态。不参与布局、不下传子元素 */
+    /** scope 整体的时间轴动画；渲染端播放或降级为静态，不参与布局，也不下传给子元素 */
     animations?: IRScope['animations'];
     /** scope 子节点：嵌套 Node / Path / Coordinate / Scope */
     children?: ReactNode;
@@ -47,7 +45,7 @@ export type ScopeProps = ScopeStyleProps &
 
 /**
  * Scope 容器组件——TikZ `\begin{scope}[...]...\end{scope}` 同义
- * @description IR 一等基元（不是 Sugar），emit 对应的 IRScope；compile 时下沉为 Scene `GroupPrim`；由 <TikZ> builder 在 children 扫描阶段读出 props 构造 IR
+ * @description 给一组节点 / 路径提供局部样式、命名空间、变换、裁剪和引用包络。
  */
 export const Scope: FC<ScopeProps> = () => null;
 Scope.displayName = TIKZ_SCOPE;

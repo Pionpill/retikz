@@ -583,7 +583,7 @@ const buildPathFromProps = (props: PathProps): IRChild => {
 };
 
 /**
- * 扫描 <TikZ> 直接 children
+ * 扫描 React DSL children
  * @description Kernel marker（Node / Path / Coordinate）走对应 typed builder；React.Fragment 递归展开 children；其余函数式组件视为 Sugar，同步调用拿 Kernel JSX 递归展开；非函数静默跳过。`as` cast 仅在此顶层一次——子函数全走 typed signature
  */
 const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChild> => {
@@ -696,7 +696,7 @@ export const buildIRWithContributions = (
 };
 
 /**
- * 把 <TikZ> 的 children 同步翻译为 IR
- * @description 纯函数，不依赖 effect/state；render 阶段即可直接使用；委托 buildIRWithContributions 并丢弃贡献
+ * 把 React DSL children 同步翻译为 JSON IR
+ * @description 纯函数，不依赖 effect/state；适合在编辑器、持久化、服务端渲染或测试场景中复用 JSX 输入。
  */
 export const buildIR = (children: ReactNode): IRScene => buildIRWithContributions(children).ir;

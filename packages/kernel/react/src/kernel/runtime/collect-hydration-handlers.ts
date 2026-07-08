@@ -49,14 +49,9 @@ const mergeElement = (registry: HydrationHandlers, id: unknown, handlers: Elemen
 };
 
 /**
- * 与 `readSceneChildren` 同源遍历 children，按各元素自身的 id 收 handler
- * @description 与 builder 的 `readSceneChildren` 逐分支对齐：穿透 `Fragment`；`<Scope>` 是容器，递归其 children
- *   捕获内层 id-bearing 元素；`<Node>` / `<Path>` / `<Coordinate>` 是叶子（children 为 Step / Text / Label，无事件
- *   挂点），不递归；其余函数式组件视为 Sugar / wrapper，同步展开后递归（覆盖带 displayName 的自定义 wrapper）。
- *   id + handler props 始终读自**元素自身**——Sugar 的 `on<Event>` 写在 Sugar 元素上（不向展开后的 Kernel 透传），
- *   `id` 则经 pickPathVisual 透传给底层挂点，故事件归属与挂点 id 一致；展开后的内层元素无 handler、不重复注册。
- *   可嵌入 Tier2 子组件先在上方 `mergeElement` 捕获其自身的 id + `on<Event>`，但其内部由 composite lowering 管理，
- *   绝不调用 / 递归该组件（避免 render 阶段触发其 hook / 副作用——这正是本特性要修的崩溃）。非元素静默跳过。
+ * 从 React DSL children 收集元素事件 handler
+ * @description 带 `id` 且声明了 `on<Event>` 的元素会注册为水合事件挂点；`<Scope>` 和普通函数式 Sugar 会继续读取子元素。
+ *   带 handler 但无 `id` 的元素会在开发环境告警并跳过；重复 `id` 会合并不同事件，同一事件以后出现者覆盖。
  */
 const visit = (
   registry: HydrationHandlers,
@@ -97,12 +92,9 @@ const visit = (
 };
 
 /**
- * 与 `buildIR` 同源遍历 children，按元素 `id` 收集水合 handler props
- * @description 穿透 `Fragment`、同步展开 Sugar（与 builder 的 `readSceneChildren` 一致），把各元素上的
- *   `on<Event>` props 按其 `id` 收成 `{ [id]: { click, pointerEnter, ... } }`（prop 名经 `EVENT_PROP_TO_NAME`
- *   翻译为 RetikzEventValue）。规则：带 handler 但无 `id` → dev warn + 跳过；重复 `id` → dev warn，同 id 合并不同事件、
- *   同事件后者覆盖；Sugar 元素的 handler 归到其承载 `id` 的挂点。可嵌入 Tier2 子组件只捕获其自身挂点的
- *   handler、不被调用 / 递归（与 builder 同源）。函数 / handler 绝不进 IR，只活在 runtime 注册表。
+ * 按元素 `id` 收集水合 handler props
+ * @description 返回 `{ [id]: { click, pointerEnter, ... } }` 注册表，供 `<Layout>` 在渲染后绑定事件。
+ *   带 handler 但无 `id` 会跳过并在开发环境告警；重复 `id` 会合并不同事件，同一事件以后出现者覆盖。
  */
 export const collectHydrationHandlers = (
   children: ReactNode,

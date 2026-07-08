@@ -33,9 +33,8 @@ const PATH_VISUAL_KEYS = [
 /**
  * 从 sugar props 拣出视觉 props 透传给底层 `<Path>`
  *
- * @description `id` / `meta` / `animations` 透传给底层 `<Path>`：id 是水合挂点（让 emit 的 Scene 图元带
- *   `data-retikz-id`，事件 handler 才能定位），meta / animations 是 path 级 IR 字段。事件 `on<Event>` props
- *   不在此白名单——它们留在 sugar 元素上，由 collectHydrationHandlers 读取并按同一 id 归挂。
+ * @description `id` / `meta` / `animations` 透传给底层 `<Path>`；事件 `on<Event>` props 留在 sugar 元素上，
+ *   仍按同一个 id 绑定。
  */
 export const pickPathVisual = (props: object): PathVisualProps => {
   const src = props as Record<string, unknown>;

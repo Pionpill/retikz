@@ -16,7 +16,7 @@ export type TextProps = {
 
 /**
  * Text 是 Node 内的"行级"标记组件——本身不渲染
- * @description 由 buildIR 在扫描 Node children 时识别为 LineSpec；与字符串 children 平等参与（字符串按 `'\n'` 拆纯样式行，`<Text>` 一次贡献一行带样式行），保持 JSX 顺序
+ * @description 声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行。
  */
 export const Text: FC<TextProps> = () => null;
 Text.displayName = TIKZ_TEXT;

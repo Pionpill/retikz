@@ -60,7 +60,8 @@ export type DrawProps = {
 
 /**
  * Sugar 组件——展开为等价的 <Path><Step.../></Path> Kernel 子树
- * @description way 数组解析委托给 core 的 parseWay，保证"Sugar 不引入新能力"；本组件由 <TikZ> builder 在 IR 构造阶段同步调用获取 Kernel JSX，不在 React render 调用栈上，因此不能使用 React hooks（useState / useMemo / useEffect 等会抛 "Invalid hook call"）
+ * @description 用 way 数组按顺序声明移动、连线、折角、曲线、闭合、圆弧和边标注；能力与手写 `<Path>` /
+ *   `<Step>` 等价，不额外引入新的路径语义。
  */
 export const Draw: FC<DrawProps> = props => {
   const {

@@ -28,9 +28,9 @@ export type NodeProps = HydrationEventProps & {
   shape?: IRNode['shape'];
   /** 连接面：边与本节点相交时使用的边界形状（TikZ `connect as`）；默认 'shape'（沿用视觉形状）；'circle' = 真圆；其它已注册 shape 名或 `{ type, params }` = 借用该 shape 边界 */
   boundary?: IRBoundary;
-  /** provenance 元数据：原样透传进本节点 emit 的 Scene 图元，renderer 忽略、不参与布局；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer）。须为 JSON 可序列化对象 */
+  /** 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象 */
   meta?: IRNode['meta'];
-  /** 时间轴动画 tracks（raw track；fadeIn / scaleIn 等 sugar 动词为后续）：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局 */
+  /** 元素级时间轴动画；每条 track 描述一个可动画属性，渲染端播放或降级为静态，不参与布局 */
   animations?: IRNode['animations'];
   /**
    * 节点中心位置
@@ -110,8 +110,9 @@ export type NodeProps = HydrationEventProps & {
 };
 
 /**
- * Node 是 DSL 标记组件——本身不渲染任何 React 元素
- * @description 由 <TikZ> 在 children 扫描阶段读出 props 构造 IR，再由 compileToScene + renderPrim 产出最终 SVG
+ * Node 声明一个可引用的节点。
+ * @description 声明一个带位置、文本、形状和样式的可引用节点；组件自身不渲染 DOM，最终由 `<Layout>` 输出到
+ *   SVG 或 Canvas。
  */
 export const Node: FC<NodeProps> = () => null;
 Node.displayName = TIKZ_NODE;

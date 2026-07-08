@@ -4,7 +4,7 @@
  * Kernel 组件：<Layout> <Node> <Path> <Step> <Text> <Coordinate> <Scope>
  * Sugar 组件：<Draw> <EdgeLabel> + 形状 <Circle> <Ellipse> <Arc> <Sector> <Rectangle> <Grid> <RegularPolygon> <Star>
  *
- * 渲染管道：buildIR → compileToScene → renderPrim → SVG
+ * `<Layout>` 可直接渲染 Kernel / Sugar JSX，也可接收持久化后的 JSON IR，并输出 SVG 或 Canvas。
  */
 
 export type { HydrationEventProps, RendererMode, RendererModeProviderProps } from './kernel';
@@ -37,7 +37,7 @@ export type {
   CubicStepProps,
   CurveStepProps,
   CycleStepProps,
-  /** React DSL target：core `IRTarget` 对象 + 字符串 shorthand（仅 DSL 层，eager 转对象后入 IR） */
+  /** React DSL target：结构化 target 对象或字符串 shorthand（如 `'A'` / `'A.north'` / `'+dx,dy'`） */
   DslTarget,
   EllipsePathStepProps,
   FoldStepProps,
@@ -172,7 +172,7 @@ export type {
   EasingRegistry,
 } from '@retikz/render/animation';
 
-// React 节点 ↔ IR 桥接：buildIR 内部名保留，对外以 convertReactNodeToIR 暴露（命名 pattern 给后续多框架 adapter 留位）
+// React JSX → JSON IR，适合编辑器、持久化或跨运行时传递。
 export { buildIR as convertReactNodeToIR } from './kernel/adapter';
-// IR JSON → Kernel element 树（带 key、不裹 TikZ/Fragment 外壳）；Sugar 不可逆——只产 <Node/>/<Path/>/<Step/> 三件套
+// JSON IR → Kernel element 树；Sugar 简写会还原为等价的 Kernel 组件。
 export { convertIRToReactNode } from './kernel/adapter';
