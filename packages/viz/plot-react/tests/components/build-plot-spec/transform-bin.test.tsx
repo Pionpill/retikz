@@ -1,4 +1,4 @@
-import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
+﻿import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { createHistogramSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
@@ -56,14 +56,14 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
         <Transform
           kind="summarize"
           groupBy={['region']}
-          metrics={[{ op: 'sum', field: 'revenue', as: 'totalRevenue' }]}
+          metrics={[{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }]}
         />
         <IntervalMark x="region" y="totalRevenue" />
       </>,
       '__plot',
     );
     expect(spec.transform).toEqual([
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }] },
     ]);
     // 普通分类柱（x band）
     expect(spec.marks[0]).toMatchObject({
@@ -74,10 +74,12 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
 
   it('plot_transforms_option_direct_pass', () => {
     const spec = buildPlotSpec(<IntervalMark x="region" y="total" />, '__plot', {
-      transforms: [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] }],
+      transforms: [
+        { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
+      ],
     });
     expect(spec.transform).toEqual([
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
     ]);
   });
 
@@ -110,7 +112,7 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
         <Transform
           kind="summarize"
           groupBy={['month', 'product']}
-          metrics={[{ op: 'sum', field: 'revenue', as: 'total' }]}
+          metrics={[{ kind: 'sum', field: 'revenue', as: 'total' }]}
         />
         <IntervalMark x="month" y="total" series="product" stack />
       </>,

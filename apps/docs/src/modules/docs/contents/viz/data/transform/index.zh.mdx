@@ -107,9 +107,9 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 
 上面的箱线图没有专用 `BoxPlotMark`。data transform 负责产出箱体、中位数、须线和区间外原始点；plot 只用 `IntervalMark`、`ReferenceMark` 和 `PointMark` 消费这些字段。
 
-## lineage
+## 链路追踪
 
-需要解释数据计算链路时，用 `applyTransformsWithLineage` 代替 `applyTransforms`。它仍然执行同一组 transform definition，但会额外返回 runtime-only 的 lineage 事件；这些事件不会写进 JSON IR，也不会写回数据行。
+需要解释数据计算链路时，用 `applyTransformsWithLineage` 代替 `applyTransforms`。它仍然执行同一组 transform definition，但会额外返回运行时链路事件；这些事件不会写进 JSON IR，也不会写回数据行。
 
 ```ts
 const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {

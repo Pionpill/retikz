@@ -84,6 +84,33 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toMatch(/<svg[^>]*\sheight="200"/);
   });
 
+  it('传入 lineage 配置时返回 SVG 与运行时图元链路', () => {
+    const result = renderPlot(spec, data, {
+      width: 480,
+      height: 300,
+      lineage: {
+        scaleMappings: true,
+        layoutContext: true,
+        rowValues: { maxRows: 1, fields: ['revenue'] },
+        hostMetadata: { query: true },
+      },
+      hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'v1' },
+    });
+
+    expect(result.svg).toContain('<svg');
+    expect(result.lineage.dataReference).toBe('sales');
+    expect(result.lineage.hostMetadata).toEqual({ queryId: 'q-sales', datasetVersion: 'v1' });
+    expect(result.lineage.marks[0]?.rowValues).toEqual([{ revenue: 10 }]);
+    expect(result.lineage.scales?.map(scale => scale.name)).toEqual(['x', 'y']);
+    expect(result.lineage.layout).toMatchObject({ coordinateType: 'cartesian2D', hasComposition: false });
+  });
+
+  it('lineage=false 时保持原有 SVG 字符串返回值', () => {
+    const svg = renderPlot(spec, data, { width: 480, height: 300, lineage: false });
+    expect(typeof svg).toBe('string');
+    expect(svg).toContain('<svg');
+  });
+
   // 柱状 / 堆叠柱 SSR
   it('柱状 spec 渲出矩形（<rect>）', () => {
     const barSpec: PlotSpec = {
@@ -402,7 +429,9 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'o' },
-      transform: [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] }],
+      transform: [
+        { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
+      ],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },

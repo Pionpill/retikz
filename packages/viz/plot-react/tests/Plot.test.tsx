@@ -1,5 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { PlotSpec } from '@retikz/plot';
+import type { PlotLineageRun, PlotSpec } from '@retikz/plot';
 
 import { lowerPlots } from '@retikz/plot';
 import { Layout } from '@retikz/react';
@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 
-import { Axis, IntervalMark, PathMark, Plot, PointMark } from '../src';
+import { Axis, IntervalMark, PathMark, Plot, PointMark, resolvePlotLineage } from '../src';
 
 const spec: PlotSpec = {
   namespace: 'plot',
@@ -162,6 +162,41 @@ describe('<Plot spec data> 薄包装', () => {
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('<ellipse');
+  });
+
+  it('resolvePlotLineage 复用 <Plot> props 并按配置返回运行时图元链路', () => {
+    const lineage = resolvePlotLineage({
+      spec,
+      data,
+      width: 480,
+      height: 300,
+      lineage: {
+        scaleMappings: true,
+        layoutContext: true,
+        rowValues: { maxRows: 1, fields: ['revenue'] },
+        hostMetadata: { query: true },
+      },
+      hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'v1' },
+    });
+
+    expect(lineage).toMatchObject<Partial<PlotLineageRun>>({
+      dataReference: 'sales',
+      hostMetadata: { queryId: 'q-sales', datasetVersion: 'v1' },
+    });
+    expect(lineage?.marks[0]?.encoding).toContainEqual({ channel: 'x', field: 'month' });
+    expect(lineage?.marks[0]?.rowValues).toEqual([{ revenue: 10 }]);
+    expect(lineage?.scales?.map(scale => scale.name)).toEqual(['x', 'y']);
+    expect(lineage?.scales?.find(scale => scale.name === 'x')?.channels).toContainEqual({
+      markIndex: 0,
+      channel: 'x',
+      field: 'month',
+    });
+    expect(lineage?.layout).toMatchObject({ coordinateType: 'cartesian2D', hasComposition: false });
+  });
+
+  it('lineage=false 时 React 链路解析保持关闭', () => {
+    const lineage = resolvePlotLineage({ spec, data, width: 480, height: 300, lineage: false });
+    expect(lineage).toBeUndefined();
   });
 
   it('嵌入态默认使用 id 作为 DSL 数据集引用，显式 dataRef 可共享数据源', () => {

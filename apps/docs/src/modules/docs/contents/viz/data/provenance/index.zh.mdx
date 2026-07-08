@@ -46,30 +46,83 @@ provenance 常见有三类消费者：
 
 如果只需要在 plot 里绑定 `x` / `y` / `color`，不需要手动处理 provenance；它是给调试、交互和跨模块解释用的附加数据。
 
-## plot mark lineage
+## 图元链路
 
-需要解释某个 mark 如何由数据和绘图语义生成时，用 `lowerPlotWithLineage` 代替 `lowerPlots`。它复用同一条 plot lowering 管线，额外返回 runtime-only 的 `lineage` artifact；这份链路不会写入 PlotSpec，也不会塞进 Scene meta。
+需要解释某个图元如何由数据和绘图语义生成时，React 侧仍然按普通 `<Plot>` 写图；宿主需要审计或检查面板时，在 `<Plot>` 上传入链路追踪配置并接收运行时图元链路产物。这份链路不会写入 PlotSpec，也不会塞进 Scene meta。
 
-```ts
-const { children, lineage } = lowerPlotWithLineage(spec, datasets, {
-  lineage: {
-    scaleMappings: true,
-    layoutContext: true,
-    rowValues: { maxRows: 5, fields: ['region', 'revenue'] },
-    hostMetadata: { query: true, ai: { promptReference: true, planReference: true } },
-  },
-  hostLineageMetadata: {
-    queryId: 'sales.q1',
-    datasetVersion: 'sales@2026-07-08',
-    aiPlanId: 'plan-42',
-    promptHash: 'prompt-hash',
-  },
-});
+```tsx
+import { useCallback, useMemo, useState } from 'react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
+import type { PlotLineageOptions, PlotLineageRun } from '@retikz/plot';
+
+export function SalesPlot({ sales, queryId }: { sales: Array<Record<string, unknown>>; queryId: string }) {
+  const [, setAuditLineage] = useState<PlotLineageRun | null>(null);
+  const lineage = useMemo<PlotLineageOptions>(
+    () => ({
+      scaleMappings: true,
+      layoutContext: true,
+      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
+      hostMetadata: { query: true },
+    }),
+    [],
+  );
+  const handleLineage = useCallback((run: PlotLineageRun) => {
+    setAuditLineage(run);
+  }, []);
+
+  return (
+    <Plot
+      id="salesPlot"
+      data={sales}
+      width={420}
+      height={260}
+      lineage={lineage}
+      hostLineageMetadata={{ queryId, datasetVersion: 'sales-v3' }}
+      onLineage={handleLineage}
+    >
+      <IntervalMark id="revenueBars" x="region" y="revenue" color="month" />
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
+    </Plot>
+  );
+}
 ```
 
-默认 `lineage: {}` 只记录必要摘要：data source / transform step、mark identity、mark encoding，以及 root transform 与 mark-local transform 的分段。`scaleMappings`、`layoutContext`、`locatorAnchors`、`rowValues` 和 `hostMetadata` 都是独立开关；`rowValues` 必须给 `maxRows` 与非空 `fields` 白名单，避免默认复制整行数据。`scaleMappings` 记录的是 `spec.scales` 中声明的 scale 与 mark channel 绑定，不把 lowering 内部派生的临时 scale 当成稳定契约。
+Vanilla / SSR 侧用同一组配置传给 `renderPlot`；不传链路配置时仍返回 SVG 字符串，传入对象后返回 `{ svg, lineage }`。
 
-lineage lowering 会复用同一组 transform definition，并为了保持 `lowerPlots` 返回形状不变而独立执行链路记录。因此自定义 transform 必须和普通 lowering 一样保持确定性、无外部副作用；随机或有状态 transform 需要由宿主先固化输入数据或在自定义 definition 内自行记录额外审计信息。
+```ts
+import { plotBuilder, renderPlot } from '@retikz/plot-vanilla';
+
+const spec = plotBuilder({
+  data: { reference: 'sales' },
+  scales: [
+    { type: 'band', name: 'x' },
+    { type: 'linear', name: 'y' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+})
+  .interval({ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } })
+  .build();
+
+const { svg, lineage } = renderPlot(
+  spec,
+  { sales },
+  {
+    width: 420,
+    height: 260,
+    lineage: {
+      scaleMappings: true,
+      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
+      hostMetadata: { query: true },
+    },
+    hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'sales-v3' },
+  },
+);
+```
+
+默认链路配置 `lineage: {}` 只记录必要摘要：data source / transform step、mark identity、mark encoding，以及 root transform 与 mark-local transform 的分段。`scaleMappings`、`layoutContext`、`locatorAnchors`、`rowValues` 和 `hostMetadata` 都是独立开关；`rowValues` 必须给 `maxRows` 与非空 `fields` 白名单，避免默认复制整行数据。`scaleMappings` 记录的是 `spec.scales` 中声明的 scale 与 mark channel 绑定，不把 lowering 内部派生的临时 scale 当成稳定契约。
+
+链路下沉会复用同一组 transform definition，并为了保持 `lowerPlots` 返回形状不变而独立执行链路记录。因此自定义 transform 必须和普通 lowering 一样保持确定性、无外部副作用；随机或有状态 transform 需要由宿主先固化输入数据或在自定义 definition 内自行记录额外审计信息。
 
 需要把交互命中的 datum 反查到来源时，用 `createPlotLineageLocator`。它在原 locator anchor 之外返回 datum 的 `markIndex`、`transformedIndex` 与 source identity 摘要，适合做 tooltip、AI 解释面板或审计入口。
 

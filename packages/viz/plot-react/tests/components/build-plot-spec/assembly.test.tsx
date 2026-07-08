@@ -255,8 +255,8 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     const transform: Array<RelateTransform> = [
       {
         kind: 'relate',
-        source: { selector: { op: 'min', by: 'value' }, fields: { id: 'id' } },
-        target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+        source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
+        target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
         measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
       },
     ];

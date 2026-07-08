@@ -1,14 +1,22 @@
 import type { DataModel, ExternalDatasets, ExternalRow } from '@retikz/data';
-import type { LowerPlotsOptions, PlotSpec, TransformOperation } from '@retikz/plot';
+import type {
+  LowerPlotsOptions,
+  PlotHostLineageMetadata,
+  PlotLineageOptions,
+  PlotLineageRun,
+  PlotSpec,
+  TransformOperation,
+} from '@retikz/plot';
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { lowerPlots, PlotSpecSchema } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage } from '@retikz/plot';
 import { Layout } from '@retikz/react';
+import { useEffect, useRef } from 'react';
 
-import type { CoordinateInput, MarkTransformShortcutDefinition, ResolveLabelMap } from './components';
+import type { CoordinateInput, MarkTransformShortcutDefinition } from './components';
 
-import { buildPlotSpec, resolveLabelOf } from './components';
+import { resolvePlotRuntime } from './plot-runtime';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
 export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> & {
@@ -21,7 +29,22 @@ export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
 export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer'> &
   PlotPanelProps &
-  LowerPlotsOptions;
+  LowerPlotsOptions &
+  PlotLineageProps;
+
+/** React adapter 暴露的运行时图元链路 props。 */
+export type PlotLineageProps = {
+  /**
+   * 图元链路记录开关。
+   * @description `false` 表示关闭；传对象时沿用 `@retikz/plot` 的独立开关。省略时只有 `onLineage`
+   *   或 `resolvePlotLineage` 触发运行时链路计算，并使用最小默认摘要。
+   */
+  lineage?: false | PlotLineageOptions;
+  /** 宿主侧查询 / AI / 权限 metadata；只有 `lineage.hostMetadata` 打开对应开关时才会透传。 */
+  hostLineageMetadata?: PlotHostLineageMetadata;
+  /** 渲染后接收 runtime-only 图元链路产物；不会把链路写入 PlotSpec 或 Scene meta。 */
+  onLineage?: (lineage: PlotLineageRun) => void;
+};
 
 export type PlotColorProps = {
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
@@ -78,114 +101,6 @@ export type PlotDslProps = PlotCommonProps &
 /** <Plot> props：spec 入口与组合 DSL 入口二选一（按 spec/children 分流） */
 export type PlotProps = PlotSpecProps | PlotDslProps;
 
-/** 组合 DSL 内部固定的数据集名（用户不可见） */
-const DSL_DATA_REF = '__plot';
-
-const embeddedDataRefs = new WeakMap<Array<ExternalRow>, string>();
-let embeddedDataRefSeed = 0;
-
-const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
-  const existing = embeddedDataRefs.get(rows);
-  if (existing !== undefined) return existing;
-  const next = `${DSL_DATA_REF}_${embeddedDataRefSeed}`;
-  embeddedDataRefSeed += 1;
-  embeddedDataRefs.set(rows, next);
-  return next;
-};
-
-const lowerPlotOptionsOf = (
-  props: PlotProps,
-  effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
-  collectedResolveLabel: ResolveLabelMap | undefined,
-): LowerPlotsOptions => {
-  const {
-    width,
-    height,
-    fontSize,
-    margin,
-    provenance,
-    datumProvenance,
-    datumIdField,
-    validateData,
-    resolveField,
-    resolveLabel,
-    invalid,
-    coordinates,
-    transformDefinitions,
-    statisticsReducerDefinitions,
-    rowSelectorDefinitions,
-    scaleDefinitions,
-    channelDefinitions,
-    colorSchemes,
-    markDefinitions,
-    formatDefinitions,
-  } = props;
-  // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
-  const mergedResolveLabel =
-    collectedResolveLabel !== undefined || resolveLabel !== undefined
-      ? { ...collectedResolveLabel, ...resolveLabel }
-      : undefined;
-  return {
-    width,
-    height,
-    fontSize,
-    margin,
-    provenance,
-    datumProvenance,
-    datumIdField,
-    fieldMaps: effectiveFieldMaps,
-    validateData,
-    resolveField,
-    resolveLabel: mergedResolveLabel,
-    invalid,
-    coordinates,
-    transformDefinitions,
-    statisticsReducerDefinitions,
-    rowSelectorDefinitions,
-    scaleDefinitions,
-    channelDefinitions,
-    colorSchemes,
-    markDefinitions,
-    formatDefinitions,
-  };
-};
-
-const withIntrinsicSize = (spec: PlotSpec, width: number | undefined, height: number | undefined): PlotSpec => ({
-  ...spec,
-  ...(spec.width === undefined && width !== undefined ? { width } : {}),
-  ...(spec.height === undefined && height !== undefined ? { height } : {}),
-});
-
-const withPlotColors = (spec: PlotSpec, colors: Array<string> | undefined): PlotSpec => ({
-  ...spec,
-  ...(colors !== undefined ? { colors } : {}),
-});
-
-const withPlotTheme = (spec: PlotSpec, theme: PlotSpec['theme'] | undefined): PlotSpec => ({
-  ...spec,
-  ...(theme !== undefined ? { theme } : {}),
-});
-
-const withPlotLayout = (spec: PlotSpec, layout: PlotSpec['layout'] | undefined): PlotSpec => ({
-  ...spec,
-  ...(layout !== undefined ? { layout } : {}),
-});
-
-const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
-  for (const [key, child] of Object.entries(value)) {
-    const path = prefix ? `${prefix}.${key}` : key;
-    into.add(path);
-    collectRowFields(child, into, path);
-  }
-};
-
-const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
-  const fields = new Set<string>();
-  for (const row of rows) collectRowFields(row, fields);
-  return fields;
-};
-
 const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
   const { x, y, transforms, zIndex, clip } = props;
   const panelTransforms =
@@ -201,57 +116,6 @@ const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContri
     children: [node],
   };
   return scope as EmbeddableContribution['node'];
-};
-
-const resolvePlotRuntime = (
-  props: PlotProps,
-  options: { embedded?: boolean } = {},
-): { spec: PlotSpec; datasets: ExternalDatasets; lowerOptions: LowerPlotsOptions } => {
-  const dataRef = !props.spec
-    ? (props.dataRef ??
-      (options.embedded && props.id !== undefined
-        ? props.id
-        : options.embedded
-          ? embeddedDataRefFor(props.data)
-          : DSL_DATA_REF))
-    : DSL_DATA_REF;
-  let spec: PlotSpec;
-  let datasets: ExternalDatasets;
-  let effectiveFieldMaps = props.fieldMaps;
-  // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
-  let collectedResolveLabel: ResolveLabelMap | undefined;
-  if (props.spec) {
-    spec = withPlotLayout(withPlotTheme(withPlotColors(props.spec, props.colors), props.theme), props.layout);
-    datasets = props.data;
-  } else {
-    // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
-    // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
-    spec = buildPlotSpec(props.children, dataRef, {
-      id: props.id,
-      width: props.width,
-      height: props.height,
-      coordinate: props.coordinate,
-      composition: props.composition,
-      model: props.model,
-      dataFieldNames: dataFieldNamesOf(props.data),
-      colors: props.colors,
-      theme: props.theme,
-      layout: props.layout,
-      transforms: props.dataTransforms,
-      markTransformShortcuts: props.markTransformShortcuts,
-      deferPositionScaleInference: props.model === undefined,
-    });
-    collectedResolveLabel = resolveLabelOf(spec);
-    datasets = { [dataRef]: props.data };
-    if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
-  }
-  // 入口校验：非法 spec（缺判别字段等）抛清晰 ZodError，而非落到 core 内部崩
-  const validated = PlotSpecSchema.parse(withIntrinsicSize(spec, props.width, props.height));
-  return {
-    spec: validated,
-    datasets,
-    lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps, collectedResolveLabel),
-  };
 };
 
 const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
@@ -278,8 +142,25 @@ type EmbeddablePlotComponent = FC<PlotProps> & {
  *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
  */
 export const Plot: EmbeddablePlotComponent = props => {
-  const { width, height, className, style, renderer } = props;
+  const { width, height, className, style, renderer, onLineage } = props;
+  const notifiedLineageKey = useRef<string>();
   const { spec, datasets, lowerOptions } = resolvePlotRuntime(props);
+  const lineage =
+    onLineage === undefined || props.lineage === false
+      ? undefined
+      : lowerPlotWithLineage(spec, datasets, {
+          ...lowerOptions,
+          lineage: props.lineage ?? {},
+          hostLineageMetadata: props.hostLineageMetadata,
+        }).lineage;
+  const lineageKey = lineage === undefined ? undefined : JSON.stringify(lineage);
+
+  useEffect(() => {
+    if (lineage === undefined || lineageKey === undefined || onLineage === undefined) return;
+    if (notifiedLineageKey.current === lineageKey) return;
+    notifiedLineageKey.current = lineageKey;
+    onLineage(lineage);
+  }, [lineage, lineageKey, onLineage]);
 
   return (
     <Layout
