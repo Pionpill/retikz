@@ -46,6 +46,33 @@ provenance 常见有三类消费者：
 
 如果只需要在 plot 里绑定 `x` / `y` / `color`，不需要手动处理 provenance；它是给调试、交互和跨模块解释用的附加数据。
 
+## plot mark lineage
+
+需要解释某个 mark 如何由数据和绘图语义生成时，用 `lowerPlotWithLineage` 代替 `lowerPlots`。它复用同一条 plot lowering 管线，额外返回 runtime-only 的 `lineage` artifact；这份链路不会写入 PlotSpec，也不会塞进 Scene meta。
+
+```ts
+const { children, lineage } = lowerPlotWithLineage(spec, datasets, {
+  lineage: {
+    scaleMappings: true,
+    layoutContext: true,
+    rowValues: { maxRows: 5, fields: ['region', 'revenue'] },
+    hostMetadata: { query: true, ai: { promptReference: true, planReference: true } },
+  },
+  hostLineageMetadata: {
+    queryId: 'sales.q1',
+    datasetVersion: 'sales@2026-07-08',
+    aiPlanId: 'plan-42',
+    promptHash: 'prompt-hash',
+  },
+});
+```
+
+默认 `lineage: {}` 只记录必要摘要：data source / transform step、mark identity、mark encoding，以及 root transform 与 mark-local transform 的分段。`scaleMappings`、`layoutContext`、`locatorAnchors`、`rowValues` 和 `hostMetadata` 都是独立开关；`rowValues` 必须给 `maxRows` 与非空 `fields` 白名单，避免默认复制整行数据。`scaleMappings` 记录的是 `spec.scales` 中声明的 scale 与 mark channel 绑定，不把 lowering 内部派生的临时 scale 当成稳定契约。
+
+lineage lowering 会复用同一组 transform definition，并为了保持 `lowerPlots` 返回形状不变而独立执行链路记录。因此自定义 transform 必须和普通 lowering 一样保持确定性、无外部副作用；随机或有状态 transform 需要由宿主先固化输入数据或在自定义 definition 内自行记录额外审计信息。
+
+需要把交互命中的 datum 反查到来源时，用 `createPlotLineageLocator`。它在原 locator anchor 之外返回 datum 的 `markIndex`、`transformedIndex` 与 source identity 摘要，适合做 tooltip、AI 解释面板或审计入口。
+
 ## 自定义定义
 
 自定义 transform 应尽量显式声明 provenance 行为：

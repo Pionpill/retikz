@@ -44,6 +44,33 @@ This avoids pretending that a statistical row came from one arbitrary source row
 
 If you only need to bind plot `x` / `y` / `color`, you usually do not handle provenance directly. It is extra data for debugging, interaction, and cross-module explanation.
 
+## Plot Mark Lineage
+
+Use `lowerPlotWithLineage` instead of `lowerPlots` when a host needs to explain how a mark was produced from data and plot semantics. It uses the same plot lowering pipeline and returns an additional runtime-only `lineage` artifact. That lineage does not enter PlotSpec and is not written into Scene metadata.
+
+```ts
+const { children, lineage } = lowerPlotWithLineage(spec, datasets, {
+  lineage: {
+    scaleMappings: true,
+    layoutContext: true,
+    rowValues: { maxRows: 5, fields: ['region', 'revenue'] },
+    hostMetadata: { query: true, ai: { promptReference: true, planReference: true } },
+  },
+  hostLineageMetadata: {
+    queryId: 'sales.q1',
+    datasetVersion: 'sales@2026-07-08',
+    aiPlanId: 'plan-42',
+    promptHash: 'prompt-hash',
+  },
+});
+```
+
+The default `lineage: {}` records only the necessary summary: data source / transform steps, mark identity, mark encoding, and the split between root transforms and mark-local transforms. `scaleMappings`, `layoutContext`, `locatorAnchors`, `rowValues`, and `hostMetadata` are independent switches. `rowValues` must provide `maxRows` and a non-empty `fields` whitelist so the runtime never copies whole rows by default. `scaleMappings` records declared scales from `spec.scales` and their mark-channel bindings; internally derived temporary scales are not part of this stable contract.
+
+Lineage lowering reuses the same transform definitions and runs its own recording pass so the existing `lowerPlots` return shape stays unchanged. Custom transforms therefore need to be deterministic and side-effect free, just as they do for ordinary lowering. Hosts that use random or stateful transforms should freeze the input data first or record additional audit data inside the custom definition.
+
+Use `createPlotLineageLocator` when an interaction needs to trace a hit datum back to its source. It returns the original locator anchor plus the datum `markIndex`, `transformedIndex`, and source identity summary for tooltips, AI explanation panels, or audit entry points.
+
 ## Custom Definitions
 
 Custom transforms should declare provenance behavior explicitly:
