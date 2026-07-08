@@ -182,7 +182,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 判断方法：用户看到这张图是想"复制源码学怎么写"还是"看懂这个概念"——前者保留源码、后者 `hideCode`。
 
-**画叙述性插图时的具体惯例**（`stroke="none"` 当文字锚点、连线靠 id、宽度限制、双语 demo 拆分条件、模板代码等）走专门的 [`docs-figure-draw`](../docs-figure-draw/SKILL.md) skill；本文只管"什么时候用哪种"，不重复画法细节。
+**画叙述性插图时的基础契约**（`stroke="none"` 当文字锚点、连线靠 id、宽度限制、双语 demo 拆分条件、验证规则等）走专门的 [`docs-figure-contract`](../docs-figure-contract/SKILL.md) skill；解释功能实现逻辑的图再读 [`docs-figure-logic`](../docs-figure-logic/SKILL.md)。本文只管"什么时候用哪种"，不重复画法细节。
 
 ## 演示位置 / 关系类 demo
 
@@ -196,11 +196,11 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 边界：
 
-| 用途                | 规则                                                       |
-| ------------------- | ---------------------------------------------------------- |
-| 叙述性插图          | 走 `docs-figure-draw`，`hideCode`，Node 可 `stroke="none"` |
-| 位置 / 关系用法演示 | 保留 Node 默认外框，Node 也是 demo 主体                    |
-| Node 视觉特性演示   | 按组件页主题自由设计                                       |
+| 用途                | 规则                                                           |
+| ------------------- | -------------------------------------------------------------- |
+| 叙述性插图          | 走 `docs-figure-contract`，`hideCode`，Node 可 `stroke="none"` |
+| 位置 / 关系用法演示 | 保留 Node 默认外框，Node 也是 demo 主体                        |
+| Node 视觉特性演示   | 按组件页主题自由设计                                           |
 
 ## 文档宽度限制
 

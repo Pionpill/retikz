@@ -1,6 +1,6 @@
 ---
 name: docs-doc-group
-description: retikz 文档站「分组落地页」写法——带 children 的分组节点（如 components/node、components/draw、reference/schema、reference/runtime）自己的 index.{zh,en}.mdx。结构：介绍分组作用 + 可选配图 + 职责表（组件家族用 类型 Sugar/Kernel 列；参考家族换成 主题/何时查阅）+ LinkedCard 子页索引。分组页是家族视角 / 导航 hub，不复述子页（overview 等）的完整 API。通用规则见 docs-doc-principle，配图走 docs-figure-draw。retikz 专用。
+description: retikz 文档站「分组落地页」写法——带 children 的分组节点（如 components/node、components/draw、reference/schema、reference/runtime）自己的 index.{zh,en}.mdx。结构：介绍分组作用 + 可选配图 + 职责表（组件家族用 类型 Sugar/Kernel 列；参考家族换成 主题/何时查阅）+ LinkedCard 子页索引。分组页是家族视角 / 导航 hub，不复述子页（overview 等）的完整 API。通用规则见 docs-doc-principle，配图走 docs-figure-contract。retikz 专用。
 ---
 
 # 分组落地页写法
@@ -9,7 +9,7 @@ description: retikz 文档站「分组落地页」写法——带 children 的�
 
 - 给一个**带 children 的分组节点**（`data/<module>.ts` 里有 `children` 的 Page / SubPage）写它自己的落地页：`contents/<module>/<...>/<group>/index.{zh,en}.mdx`
 - 现有分组：`components/node`、`components/draw`、`reference/schema`、`reference/runtime`
-- 动手前**先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则；配图细节走 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)
+- 动手前**先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则；配图细节走 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)
 
 分组页是新手的导航入口，不是维护者的目录索引。导言先解释“这一组帮你解决哪类问题、应该从哪页开始读”，再列成员职责；不要默认读者已经知道 Kernel / Sugar / Reference / runtime 这些分层术语。
 
@@ -103,7 +103,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 | 参考家族（runtime）     | 管线示意：`JSX → IR → Scene → 渲染目标`，灰注各 API 在哪起作用              |
 | 参考家族（schema）      | 可省；schema 是数据形状，表 + 卡足够                                        |
 
-图一律走 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)：`hideCode`、备注灰色（关键字 `gray`）且置于被标注元素**下方**、强调色用 `darkorange`、纯技术 label 用单文件。
+图一律走 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)：`hideCode`、备注灰色（关键字 `gray`）且置于被标注元素**下方**、强调色用 `darkorange`、纯技术 label 用单文件。
 
 ## Common Mistakes
 

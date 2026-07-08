@@ -153,7 +153,7 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 仍服从 principle 的「文字精简、表格 / 列表 / 代码块优先」规则。本节常用的几种表达：
 
 - **概念性插图**：`<ComponentPreview hideCode>` 当叙述图，**用 retikz 自绘逻辑图**，别引第三方截图 / Mermaid / draw.io
-  - **风格：学术 + 简单 + Node 无 border**（即 `stroke="none"`，参 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)）—— 让节点退到背景、把视觉焦点留给关系线 / 标签 / 区域分组；与"演示用法"类 demo 的视觉口径区分（用法 demo 的 Node 保留默认外框，机制图的 Node 是文字锚点）
+  - **风格：学术 + 简单 + Node 无 border**（即 `stroke="none"`，参 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)）—— 让节点退到背景、把视觉焦点留给关系线 / 标签 / 区域分组；与"演示用法"类 demo 的视觉口径区分（用法 demo 的 Node 保留默认外框，机制图的 Node 是文字锚点）
   - 多用箭头 / 虚线 / 浅色区域分块表达"流程 / 包含 / 隔离 / 投影"等抽象语义；不要追求像素级精确，节点位置以"读懂关系"为准
 - **边界 case demo**：`<ComponentPreview>`（带源码）演示「这样写会被拒 / 这样写才能工作」
 - **机制表**：3 列以内说清 `输入 → compile 行为 → 用户可见效果`

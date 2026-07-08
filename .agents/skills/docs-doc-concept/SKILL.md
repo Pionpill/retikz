@@ -1,6 +1,6 @@
 ---
 name: docs-doc-concept
-description: retikz 概念页规范：`apps/docs/src/contents/<module>/concepts/**` 叶子页——先讲为什么需要、再给模块内心智模型、图文结合、内部模型按模块语境解释（core 的 IR/Scene 只是一例）、保持当前版本、延伸阅读。适用 core / plot / renderer 等各模块。通用规则见 docs-doc-principle，画法见 docs-figure-draw。retikz 专用。
+description: retikz 概念页规范：`apps/docs/src/contents/<module>/concepts/**` 叶子页——先讲为什么需要、再给模块内心智模型、图文结合、内部模型按模块语境解释（core 的 IR/Scene 只是一例）、保持当前版本、延伸阅读。适用 core / plot / renderer 等各模块。通用规则见 docs-doc-principle，画法见 docs-figure-contract。retikz 专用。
 ---
 
 # 概念类文档写法
@@ -10,7 +10,7 @@ description: retikz 概念页规范：`apps/docs/src/contents/<module>/concepts/
 - 在 `apps/docs/src/contents/<module>/concepts/**` 下加 / 改**叶子概念页**（如 core 的坐标系 / anchor / 分层；plot 的 scale / encoding / mark；renderer 的 backend / animation……）
 - 动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
 
-本 skill 只覆盖**概念页特有**的页面结构与写法。其它一切（三处协同、双语、写作风格、Comparison、宽度、不引外链等）以 principle 为准；**配图画法**走 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)，本 skill 不重复画法细节。
+本 skill 只覆盖**概念页特有**的页面结构与写法。其它一切（三处协同、双语、写作风格、Comparison、宽度、不引外链等）以 principle 为准；**配图画法**走 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)，本 skill 不重复画法细节。
 
 不归本 skill：
 
@@ -18,7 +18,7 @@ description: retikz 概念页规范：`apps/docs/src/contents/<module>/concepts/
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | 分组落地页（带 children，如 `concepts/design`、`concepts/basic-concepts`） | [`docs-doc-group`](../docs-doc-group/SKILL.md)——它们是「职责一览表 + LinkedCard 子项」骨架，不是概念叶子页 |
 | 入口页（`introduction` / `get-start`）                                     | `docs-doc-principle` 的「入口页例外」节                                                                    |
-| 配图的 `stroke="none"` / 配色 / y 轴 / 双语拆分等画法                      | [`docs-figure-draw`](../docs-figure-draw/SKILL.md)                                                         |
+| 配图的 `stroke="none"` / 配色 / y 轴 / 双语拆分等画法                      | [`docs-figure-contract`](../docs-figure-contract/SKILL.md)                                                 |
 
 ## 定位
 
@@ -94,7 +94,7 @@ H2 进右侧 TOC；同一概念下的细分点用 H3。
 | 用户可直接书写的概念语法     | 可 `false`，让读者看写法 | 坐标 / 定位语法、plot 的 encoding 写法         |
 | 结果解释型（可视化模块常见） | demo code 与图并列       | plot 的 scale / mark 效果，代码 + 渲染结果对照 |
 
-**多画图、图文结合**——概念页是 retikz 的活体演示，一个抽象概念配一张图，往往胜过三段文字。判断一页概念文档好不好，先看它有没有把模型「画」出来。配图风格走**学术、简约**（节点默认无描边、克制用色、不堆装饰）——细则见 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)。
+**多画图、图文结合**——概念页是 retikz 的活体演示，一个抽象概念配一张图，往往胜过三段文字。判断一页概念文档好不好，先看它有没有把模型「画」出来。配图风格走**学术、简约**（节点默认无描边、克制用色、不堆装饰）——细则见 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)。
 
 哪种概念配哪种图（图型通用，例子是 core 口味，换模块照搬图型即可）：
 
@@ -109,7 +109,7 @@ H2 进右侧 TOC；同一概念下的细分点用 H3。
 
 - **图必须和正文绑定**——正文要引用图里的标注（如「箭头上 `anchors` 代表的依赖」），否则图是孤儿
 - **流程图善用 edge label**——`<Draw>` 的 `{ label: { text, side, textColor } }` 在箭头中点标注每段处理 / 中间产物
-- **画法细节全部交给 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)**：`stroke="none"` 当文字锚点、配色、y 轴朝下、宽度自适应、双语拆分条件、模板代码——本 skill 不重复
+- **画法细节全部交给 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)**：`stroke="none"` 当文字锚点、配色、y 轴朝下、宽度自适应、双语拆分条件、验证规则——本 skill 不重复
 
 ## 表格优先
 
@@ -176,22 +176,22 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 
 ## 与其它 doc-skill 的分工
 
-| 任务                                  | skill                                                  |
-| ------------------------------------- | ------------------------------------------------------ |
-| 通用规则 / 三处协同 / 双语 / 页型分流 | [`docs-doc-principle`](../docs-doc-principle/SKILL.md) |
-| 概念页结构与写法（本 skill）          | `docs-doc-concept`                                     |
-| 叙述性插图画法                        | [`docs-figure-draw`](../docs-figure-draw/SKILL.md)     |
-| 组件 API 页                           | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
-| 示例 step 页                          | [`docs-doc-example`](../docs-doc-example/SKILL.md)     |
-| 分组落地页                            | [`docs-doc-group`](../docs-doc-group/SKILL.md)         |
-| schema 词典页                         | `docs-doc-principle` 的「Reference 词典页」节          |
+| 任务                                  | skill                                                      |
+| ------------------------------------- | ---------------------------------------------------------- |
+| 通用规则 / 三处协同 / 双语 / 页型分流 | [`docs-doc-principle`](../docs-doc-principle/SKILL.md)     |
+| 概念页结构与写法（本 skill）          | `docs-doc-concept`                                         |
+| 叙述性插图画法                        | [`docs-figure-contract`](../docs-figure-contract/SKILL.md) |
+| 组件 API 页                           | [`docs-doc-component`](../docs-doc-component/SKILL.md)     |
+| 示例 step 页                          | [`docs-doc-example`](../docs-doc-example/SKILL.md)         |
+| 分组落地页                            | [`docs-doc-group`](../docs-doc-group/SKILL.md)             |
+| schema 词典页                         | `docs-doc-principle` 的「Reference 词典页」节              |
 
 ## 常见错误（概念页特有）
 
 - **概念页当 API 字典写** —— 堆 props / 字段表是 `components/` / `reference/` 的活；概念页讲模型，具体 API 用 link 跳出去
 - **小节光有文字、不配图** —— 结构 / 流程 / 关系类概念默认要配叙述图；通篇纯文字 + 表格是概念页的失败信号
 - **图是孤儿** —— 插了架构图但正文不引用图里的标注；图必须被正文「指认」
-- **配图过度装饰 / 滥用彩色** —— 节点乱描边、整图铺色、加阴影圆角；概念图要学术、简约（细则见 `docs-figure-draw`）
+- **配图过度装饰 / 滥用彩色** —— 节点乱描边、整图铺色、加阴影圆角；概念图要学术、简约（细则见 `docs-figure-contract`）
 - **配图给了源码（漏 `hideCode`）** —— 概念页配图是「看懂概念」，显源码会被误当成「复制学写」的 demo
 - **钉版本号** —— 「v0.2 的 Scope」「v0.3 新增」；描述当前能力，不钉历史阶段
 - **陈旧能力面** —— 改概念页没顺手扫「仅 SVG / 只 React / vX 的」类过期定性
