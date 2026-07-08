@@ -3,11 +3,11 @@ import type { Position } from '@retikz/math';
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../src/shared/geometry/rect';
+import type { Rect } from '../../../src/shared/geometry/rect';
 
-import { sector } from '../../src/providers/shape';
-import { sectorGeometry, sectorPolarPoint } from '../../src/providers/shape/sector-geometry';
-import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
+import { sector } from '../../../src/providers/shape';
+import { sectorGeometry, sectorPolarPoint } from '../../../src/providers/shape/sector-geometry';
+import { localToWorld, worldToLocal } from '../../../src/shared/geometry/transform';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;

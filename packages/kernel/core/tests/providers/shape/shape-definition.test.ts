@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { PathCommand, ResolvedShapeStyle, ScenePrimitive, ShapeDefinition } from '../../src/contract';
-import type { Rect } from '../../src/shared/geometry/rect';
+import type { PathCommand, ResolvedShapeStyle, ScenePrimitive, ShapeDefinition } from '../../../src/contract';
+import type { Rect } from '../../../src/shared/geometry/rect';
 
-import { defineShape } from '../../src/contract';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
-import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
+import { defineShape } from '../../../src/contract';
+import { BUILTIN_SHAPES } from '../../../src/providers/shape';
+import { localToWorld, worldToLocal } from '../../../src/shared/geometry/transform';
 
 const SQRT2 = Math.SQRT2;
 const id = (n: number): number => n;

@@ -3,14 +3,14 @@ import type { Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ScenePrimitive, ShapeDefinition } from '../../src/contract';
-import type { IRJsonObject, IRScene } from '../../src/schemas';
-import type { Rect } from '../../src/shared/geometry';
+import type { ScenePrimitive, ShapeDefinition } from '../../../src/contract';
+import type { IRJsonObject, IRScene } from '../../../src/schemas';
+import type { Rect } from '../../../src/shared/geometry';
 
-import { compileToScene } from '../../src/compile/compile';
-import { defineShape } from '../../src/contract';
-import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
-import { flattenPrims } from '../helpers/flatten';
+import { compileToScene } from '../../../src/compile/compile';
+import { defineShape } from '../../../src/contract';
+import { NodeSchema, ShapeRefSchema } from '../../../src/schemas';
+import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,

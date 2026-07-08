@@ -2,9 +2,9 @@ import type { Position } from '@retikz/math';
 
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../src/shared/geometry/rect';
+import type { Rect } from '../../../src/shared/geometry/rect';
 
-import { star } from '../../src/providers/shape';
+import { star } from '../../../src/providers/shape';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;

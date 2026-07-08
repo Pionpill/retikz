@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IRNodeTarget, IRScene } from '../../src/schemas';
-import type { Rect } from '../../src/shared/geometry/rect';
+import type { PathPrim, ScenePrimitive } from '../../../src/contract';
+import type { IRNodeTarget, IRScene } from '../../../src/schemas';
+import type { Rect } from '../../../src/shared/geometry/rect';
 
-import { compileToScene } from '../../src/compile/compile';
-import { NamespaceStack } from '../../src/compile/namespace';
-import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../src/compile/node';
-import * as core from '../../src/index';
-import { BUILTIN_SHAPES, star } from '../../src/providers/shape';
-import { BoundaryKeyword, BoundarySchema } from '../../src/schemas/boundary';
-import { NodeSchema } from '../../src/schemas/node';
-import { NodeTargetSchema } from '../../src/schemas/path/target';
+import { compileToScene } from '../../../src/compile/compile';
+import { NamespaceStack } from '../../../src/compile/namespace';
+import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
+import * as core from '../../../src/index';
+import { BUILTIN_SHAPES, star } from '../../../src/providers/shape';
+import { BoundaryKeyword, BoundarySchema } from '../../../src/schemas/boundary';
+import { NodeSchema } from '../../../src/schemas/node';
+import { NodeTargetSchema } from '../../../src/schemas/path/target';
 
 describe('BoundarySchema', () => {
   it('parses reserved keywords and registered names', () => {

@@ -9,7 +9,7 @@ import {
   foldSegmentSample,
   lineSegmentSample,
   quadSegmentSample,
-} from '../../src/shared/geometry/path';
+} from '../../../../src/shared/geometry/path';
 
 const NEAR = DEFAULT_EPSILON;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { polar } from '../../src/shared/geometry/polar';
+import { polar } from '../../../src/shared/geometry/polar';
 
 describe('polar.toPosition 极坐标 → 笛卡尔', () => {
   it('angle=0 → +x 方向', () => {

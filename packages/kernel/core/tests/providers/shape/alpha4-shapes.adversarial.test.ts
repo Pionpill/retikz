@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
+import type { ScenePrimitive } from '../../../src/contract';
+import type { IRScene } from '../../../src/schemas';
 
-import { compileToScene } from '../../src/compile/compile';
-import { arc, polygon, sector, star } from '../../src/providers/shape';
-import { NodeSchema, ShapeRefSchema } from '../../src/schemas';
-import { normalizeAngleRange } from '../../src/shared';
-import { flattenPrims } from '../helpers/flatten';
+import { compileToScene } from '../../../src/compile/compile';
+import { arc, polygon, sector, star } from '../../../src/providers/shape';
+import { NodeSchema, ShapeRefSchema } from '../../../src/schemas';
+import { normalizeAngleRange } from '../../../src/shared';
+import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
