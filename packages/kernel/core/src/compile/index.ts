@@ -5,7 +5,9 @@ export type { FontSpec, LoweredTex, LowerTex, TextMeasurer, TextMetrics } from '
 export { fallbackMeasurer } from './text';
 export type {
   CompileCompositeOptions,
+  CompiledNodeLayout,
   CompileHostOptions,
+  CompileLayoutObserver,
   CompileLayoutOptions,
   CompileOptions,
   CompileProviderOptions,

@@ -1,12 +1,12 @@
 ﻿---
 title: 几何算法
-description: 求交、三角形内 / 外接圆、点在多边形、凸包、样条曲线的完整签名——core 未转出，直接从 @retikz/math 导入。
+description: 求交、圆 / 三角形算法、点在多边形、凸包、样条曲线的完整签名——core 未转出，直接从 @retikz/math 导入。
 ---
 
 这些是 `@retikz/core` **未** re-export 的高阶计算，直接从 `@retikz/math` 导入：
 
 ```ts
-import { intersect, triangle, polygon, convexHull, curve } from '@retikz/math';
+import { intersect, circle, triangle, polygon, convexHull, curve } from '@retikz/math';
 ```
 
 退化输入不抛错：求交返回 `null` / `[]`，三角形圆退化返回 `null`。容差为朴素 `DEFAULT_EPSILON = 1e-9`（类型见[几何原语](/kernel/packages/math/primitives)）。
@@ -16,6 +16,27 @@ import { intersect, triangle, polygon, convexHull, curve } from '@retikz/math';
 ```ts
 /** 圆：圆心 + 半径 */
 type Circle = { center: Position; radius: number };
+
+type LineLineInput = {
+  a1: Position;
+  a2: Position;
+  b1: Position;
+  b2: Position;
+};
+
+type LineCircleInput = {
+  origin: Position;
+  dir: Position;
+  center: Position;
+  radius: number;
+};
+
+type CircleCircleInput = {
+  centerA: Position;
+  radiusA: number;
+  centerB: Position;
+  radiusB: number;
+};
 ```
 
 ## intersect 求交
@@ -24,16 +45,16 @@ type Circle = { center: Position; radius: number };
 
 ```ts
 // 两条无限直线（各由两点定）；平行 / 共线 → null
-intersect.lineLine(a1: Position, a2: Position, b1: Position, b2: Position): Position | null;
+intersect.lineLine(input: LineLineInput): Position | null;
 
 // 两线段；不相交 / 平行 / 共线（含重叠）→ null
-intersect.segmentSegment(a1: Position, a2: Position, b1: Position, b2: Position): Position | null;
+intersect.segmentSegment(input: LineLineInput): Position | null;
 
 // 直线（origin + 方向 dir，dir 不必单位化）∩ 圆；0 / 2 个交点
-intersect.lineCircle(origin: Position, dir: Position, center: Position, radius: number): Array<Position>;
+intersect.lineCircle(input: LineCircleInput): Array<Position>;
 
 // 圆 ∩ 圆；相离 / 内含 / 重合 → []
-intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Array<Position>;
+intersect.circleCircle(input: CircleCircleInput): Array<Position>;
 ```
 
 | 函数             | 返回 / 退化                                                                    |
@@ -50,9 +71,18 @@ intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Arra
 返回 `Circle`；三点共线（面积≈0）→ `null`。
 
 ```ts
-triangle.circumcircle(a: Position, b: Position, c: Position): Circle | null;  // 外接圆（过三顶点）
-triangle.incircle(a: Position, b: Position, c: Position): Circle | null;      // 内切圆（与三边相切）
+triangle.circumCircle(a: Position, b: Position, c: Position): Circle | null;  // 外接圆（过三顶点）
+triangle.inCircle(a: Position, b: Position, c: Position): Circle | null;      // 内切圆（与三边相切）
 ```
+
+## circle 圆算法
+
+```ts
+// Welzl 迭代式；空点集 → null，单点 → 半径 0 的圆
+circle.minimalEnclosing(points: Array<Position>, epsilon?: number): Circle | null;
+```
+
+`circle.minimalEnclosing` 返回覆盖全部输入点的最小圆。它的计算结果确定，复杂度为时间最坏 `O(n^3)`、空间 `O(1)`。
 
 ## polygon 点在多边形
 

@@ -64,10 +64,7 @@ export const boundsOf = (points: ReadonlyArray<Position>): AxisAlignedBounds | u
 };
 
 /** 合并两个轴对齐外接范围。 */
-export const mergeBounds = (
-  a: AxisAlignedBounds | undefined,
-  b: AxisAlignedBounds | undefined,
-): AxisAlignedBounds | undefined => {
+export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisAlignedBounds | undefined => {
   if (a === undefined) return b === undefined ? undefined : { ...b };
   if (b === undefined) return { ...a };
   return {

@@ -11,14 +11,20 @@ import { drawScene } from '../../src/canvas';
  * ADR-03 Canvas 动画播放：drawScene({time}) 逐帧应用 opacity/transform/pathDraw/自定义；无 time = 现状；
  *   自定义未注册 / pathDraw 无描边 warn；camera viewBox 叠 ctx 变换。
  */
-type Call = { name: string; args: Array<unknown> };
+type Call = { name: string; args: Array<unknown>; globalAlpha: number };
 type SpyCtx = CanvasRenderingContext2D & { calls: Array<Call> };
 const createCtx = (): SpyCtx => {
   const calls: Array<Call> = [];
+  const stack: Array<{ globalAlpha: number }> = [];
   const rec =
     (name: string) =>
     (...args: Array<unknown>) => {
-      calls.push({ name, args });
+      if (name === 'save') stack.push({ globalAlpha: ctx.globalAlpha });
+      if (name === 'restore') {
+        const snapshot = stack.pop();
+        if (snapshot) ctx.globalAlpha = snapshot.globalAlpha;
+      }
+      calls.push({ name, args, globalAlpha: ctx.globalAlpha });
     };
   const ctx = {
     calls,
@@ -173,6 +179,31 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     expect(apply).toHaveBeenCalledTimes(1);
     expect(apply.mock.calls[0][2]).toBeCloseTo(2); // 中点值
   });
+  it('group opacity track wraps child drawing in ctx.globalAlpha', () => {
+    const fade: IRAnimationTrack = {
+      property: 'opacity',
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+      duration: 400,
+    };
+    const ctx = createCtx();
+    drawScene(
+      ctx,
+      scene([
+        {
+          type: 'group',
+          animations: [fade],
+          children: [rect()],
+        },
+      ]),
+      { time: 200 },
+    );
+    const fillCall = ctx.calls.find(c => c.name === 'fill');
+    expect(fillCall?.globalAlpha).toBeCloseTo(0.5);
+    expect(ctx.globalAlpha).toBe(1);
+  });
 });
 
 describe('边界', () => {
@@ -282,6 +313,56 @@ describe('降级', () => {
     };
     drawScene(createCtx(), scene([rect({ animations: [draw] })]), { time: 200, warnUnsupported: warn });
     expect(warn).toHaveBeenCalledWith(expect.objectContaining({ feature: 'animation' }));
+  });
+  it('group fill/stroke/strokeWidth/pathDraw tracks warn and skip unsupported channels', () => {
+    const warn = vi.fn();
+    const tracks: Array<IRAnimationTrack> = [
+      {
+        property: 'fill',
+        keyframes: [
+          { at: 0, value: '#000' },
+          { at: 1, value: '#fff' },
+        ],
+        duration: 400,
+      },
+      {
+        property: 'stroke',
+        keyframes: [
+          { at: 0, value: '#000' },
+          { at: 1, value: '#fff' },
+        ],
+        duration: 400,
+      },
+      {
+        property: 'strokeWidth',
+        keyframes: [
+          { at: 0, value: 1 },
+          { at: 1, value: 3 },
+        ],
+        duration: 400,
+      },
+      {
+        property: 'pathDraw',
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 1 },
+        ],
+        duration: 400,
+      },
+    ];
+    drawScene(createCtx(), scene([{ type: 'group', animations: tracks, children: [rect()] }]), {
+      time: 200,
+      warnUnsupported: warn,
+    });
+    const messages = warn.mock.calls.map(call => String(call[0].message));
+    expect(messages).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('group property "fill"'),
+        expect.stringContaining('group property "stroke"'),
+        expect.stringContaining('group property "strokeWidth"'),
+        expect.stringContaining('pathDraw'),
+      ]),
+    );
   });
 });
 

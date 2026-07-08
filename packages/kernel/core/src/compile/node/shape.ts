@@ -4,6 +4,7 @@ import type { IRJsonObject, IRNode, IRShapeRef, JsonValue } from '../../schemas'
 
 import { providerDefinitionOf } from '../../providers/registry';
 import { BuiltinShape, JsonObjectSchema } from '../../schemas';
+import { parseProviderPayload } from '../provider-payload';
 
 /** 节点 shape 解析输入。 */
 export type ResolveNodeShapeInput = {
@@ -15,6 +16,8 @@ export type ResolveNodeShapeInput = {
   scaleX: number;
   /** y 轴缩放。 */
   scaleY: number;
+  /** 当前 node 的 IR 路径，用于 provider payload 诊断。 */
+  irPath?: string;
 };
 
 /** 节点 shape 解析结果。 */
@@ -59,11 +62,26 @@ const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
 
 /** 解析节点 shape definition 和随节点缩放后的 params。 */
 export const resolveNodeShape = (input: ResolveNodeShapeInput): ResolvedNodeShape => {
-  const { node, shapes, scaleX, scaleY } = input;
+  const { node, shapes, scaleX, scaleY, irPath = 'node' } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
+  const shapeParamsPath = `${irPath}.shape.params`;
   const shapeDef = providerDefinitionOf(shapes, shapeName, { capability: 'shape', optionName: 'shapes' });
-  JsonObjectSchema.parse(rawShapeParams);
-  const parsedShapeParams: IRJsonObject = shapeDef.paramsSchema.parse(rawShapeParams);
+  parseProviderPayload({
+    capability: 'shape',
+    providerName: shapeName,
+    irPath: shapeParamsPath,
+    payloadName: 'params',
+    schema: JsonObjectSchema,
+    value: rawShapeParams,
+  });
+  const parsedShapeParams: IRJsonObject = parseProviderPayload({
+    capability: 'shape',
+    providerName: shapeName,
+    irPath: shapeParamsPath,
+    payloadName: 'params',
+    schema: shapeDef.paramsSchema,
+    value: rawShapeParams,
+  });
   const mergedShapeParams: IRJsonObject =
     shapeName === 'rectangle' && node.cornerRadius !== undefined && !('cornerRadius' in parsedShapeParams)
       ? { ...parsedShapeParams, cornerRadius: node.cornerRadius }

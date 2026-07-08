@@ -41,6 +41,7 @@ const boundaryContextOf = (layout: NodeLayout): ResolveBoundaryContext => ({
   visualParams: layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
   shapeRegistry: layout.shapes,
   boundaryRegistry: layout.boundaries ?? resolveBoundaryRegistry(),
+  irPath: layout.irPath,
 });
 
 /** 取节点 shape 在 toward 方向的附着点。 */

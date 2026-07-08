@@ -76,16 +76,6 @@ const sectorSegments = (rect: Rect, geo: SectorGeometry, params: SectorParams): 
   ];
 };
 
-const sectorGeometryCache = new WeakMap<SectorParams, SectorGeometry>();
-
-const getSectorGeometry = (params: SectorParams): SectorGeometry => {
-  const cached = sectorGeometryCache.get(params);
-  if (cached !== undefined) return cached;
-  const geo = sectorGeometry(params);
-  sectorGeometryCache.set(params, geo);
-  return geo;
-};
-
 const createSectorContour = (
   rect: Rect,
   params: SectorParams,
@@ -94,7 +84,7 @@ const createSectorContour = (
   segments: Array<ContourSegment>;
   fillets: Array<FilletSolution>;
 } => {
-  const geo = getSectorGeometry(params);
+  const geo = sectorGeometry(params);
   const segments = sectorSegments(rect, geo, params);
   return {
     geo,
@@ -111,10 +101,10 @@ const createSectorContour = (
 export const sector = defineShape<SectorParams>({
   name: 'sector',
   paramsSchema: sectorParamsSchema,
-  circumscribe: (_hw, _hh, params) => getSectorGeometry(params).aabbHalfAxes,
+  circumscribe: (_hw, _hh, params) => sectorGeometry(params).aabbHalfAxes,
   // position = 圆心 apex；AABB 中心相对 apex 的偏移 = −apexOffset（apexOffset 是 apex 相对 AABB 中心）
   circumscribeOffset: (params): Position => {
-    const { apexOffset } = getSectorGeometry(params);
+    const { apexOffset } = sectorGeometry(params);
     return [-apexOffset[0], -apexOffset[1]];
   },
   boundaryPoint: (rect: Rect, toward: Position, params): Position => {
@@ -125,7 +115,7 @@ export const sector = defineShape<SectorParams>({
     return hit ?? originWorld;
   },
   anchor: (rect: Rect, name: ShapeAnchorName, params): Position | undefined => {
-    const geo = getSectorGeometry(params);
+    const geo = sectorGeometry(params);
     const { innerRadius, outerRadius } = params;
     const { start, end, mid } = geo.range;
     switch (name) {

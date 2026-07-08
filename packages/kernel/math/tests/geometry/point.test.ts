@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Position, Vector2 } from '../../src/geometry/point';
+import type { Position, Vector2 } from '../../src';
 
-import { isFiniteNumber, isInfiniteNumber, lerp, point, vector2 } from '../../src/geometry/point';
+import { isFiniteNumber, isFinitePoint, isInfiniteNumber, lerp, point, vector2 } from '../../src';
 
 describe('point 向量运算', () => {
   it('区分 finite / infinite number', () => {
@@ -16,6 +16,13 @@ describe('point 向量运算', () => {
     expect(isInfiniteNumber(-Infinity)).toBe(true);
     expect(isInfiniteNumber(NaN)).toBe(false);
     expect(isInfiniteNumber(1)).toBe(false);
+  });
+
+  it('isFinitePoint 只接受精确二维 finite 元组', () => {
+    expect(isFinitePoint([1, 2])).toBe(true);
+    expect(isFinitePoint([1, 2, 3])).toBe(false);
+    expect(isFinitePoint([Number.NaN, 2])).toBe(false);
+    expect(isFinitePoint([1, Infinity])).toBe(false);
   });
 
   it('add / sub / scale', () => {

@@ -54,13 +54,11 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
   });
 
   it('start 子对象不含 start/end 字段自身（不递归）', () => {
-    // ArrowEndDetailSchema 不含 start / end —— 写了直接被 zod 删（strict 才会拒；当前用 strip）
-    // 这里保证 schema 能 parse + 字段不被保留
-    const parsed = ArrowEndDetailSchema.parse({
+    const parsed = ArrowEndDetailSchema.safeParse({
       shape: 'normal',
       start: { shape: 'stealth' },
     });
-    expect((parsed as Record<string, unknown>).start).toBeUndefined();
+    expect(parsed.success).toBe(false);
   });
 });
 
@@ -125,6 +123,15 @@ describe('ArrowDetailSchema：错误路径', () => {
 
   it('end 子对象的 opacity > 1 也拒绝（继承顶层 schema 限制）', () => {
     expect(ArrowDetailSchema.safeParse({ end: { opacity: 2 } }).success).toBe(false);
+  });
+
+  it('未知字段拒绝：顶层 typo 不被静默剥离', () => {
+    expect(ArrowDetailSchema.safeParse({ shape: 'stealth', lenght: 10 }).success).toBe(false);
+  });
+
+  it('未知字段拒绝：start/end 子对象 typo 不被静默剥离', () => {
+    expect(ArrowDetailSchema.safeParse({ start: { shape: 'stealth', lenght: 10 } }).success).toBe(false);
+    expect(ArrowDetailSchema.safeParse({ end: { shape: 'stealth', opacityy: 0.4 } }).success).toBe(false);
   });
 });
 

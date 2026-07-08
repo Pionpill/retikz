@@ -269,6 +269,34 @@ describe('Shape registry — error path', () => {
     expect(NodeSchema.safeParse({ type: 'node', shape: '', position: [0, 0] }).success).toBe(false);
   });
 
+  it('custom_shape_params_error_contains_provider_and_ir_path', () => {
+    const strictShape = defineShape({
+      name: 'scaledBox',
+      paramsSchema: z.strictObject({ scale: z.number().positive() }),
+      circumscribe: (hw, hh, params) => ({ halfWidth: hw * params.scale, halfHeight: hh * params.scale }),
+      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
+      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      *emit(rect, style): Iterable<ScenePrimitive> {
+        yield {
+          type: 'rect',
+          x: rect.x - rect.width / 2,
+          y: rect.y - rect.height / 2,
+          width: rect.width,
+          height: rect.height,
+          stroke: style.stroke ?? 'currentColor',
+        };
+      },
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', shape: { type: 'scaledBox', params: { scale: 'wide' } }, position: [0, 0] }],
+    };
+
+    expect(() => compileToScene(ir, { shapes: [strictShape] })).toThrow(/shape 'scaledBox'/);
+    expect(() => compileToScene(ir, { shapes: [strictShape] })).toThrow(/children\[0\]\.node\.shape\.params/);
+  });
+
   it('custom_shape_anchor_only_center: canonical anchor (top) 通过 AABB 上提不再 throw', () => {
     // canonical 名（top / bottom / right / left / center / top-right / top-left / bottom-right / bottom-left）
     // 在 anchorOf 内上提为 rectangle AABB，所有自定义 shape 自动获得 canonical anchor。

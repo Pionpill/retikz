@@ -1,5 +1,7 @@
 import type { Position } from '@retikz/math';
 
+import { DEFAULT_EPSILON } from '@retikz/math';
+
 import type { AnchorValue, SideValue } from '../anchor';
 
 import { Anchor, Side } from '../anchor';
@@ -43,7 +45,7 @@ export const diamond = {
   contains: (d: Diamond, p: Position): boolean => {
     if (d.halfA === 0 || d.halfB === 0) return false; // 退化菱形（零半轴）：避免除零产 NaN
     const [lx, ly] = worldToLocal(d, p);
-    return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + 1e-9;
+    return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + DEFAULT_EPSILON;
   },
   /** 8 个标准方位 anchor：top/bottom/right/left=顶点，四个 corner=边中点；center 请用 `diamond.center()` */
   anchor: (d: Diamond, name: AnchorValue): Position => {

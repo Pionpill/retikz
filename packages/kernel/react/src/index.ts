@@ -81,7 +81,17 @@ export type {
 } from '@retikz/render/hydration';
 
 // 透传 core 的 way 关键字常量与字面量类型，方便 react 用户单包 import
-export type { WayCycle, WayDSL, WayItem, WayLabel, WayLabelOp, WayRelativeItem, WayVia } from '@retikz/core';
+export type {
+  CompiledNodeLayout,
+  CompileLayoutObserver,
+  WayCycle,
+  WayDSL,
+  WayItem,
+  WayLabel,
+  WayLabelOp,
+  WayRelativeItem,
+  WayVia,
+} from '@retikz/core';
 export { DrawWay } from '@retikz/core';
 
 // 结构化 Target / Anchor 对象形态：用户写对象 target 时有类型

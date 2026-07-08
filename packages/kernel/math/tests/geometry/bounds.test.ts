@@ -11,7 +11,7 @@ import {
   isPositiveBoundsRect,
   mergeBounds,
   rectToBounds,
-} from '../../src/geometry/bounds';
+} from '../../src';
 
 describe('bounds geometry helpers', () => {
   it('returns undefined for an empty point set', () => {

@@ -17,7 +17,7 @@ import type { CanvasView, MountCanvasOptions, MountOptions, RenderToStringOption
 
 import { coordinate } from './builder/coordinate';
 import { draw } from './builder/draw';
-import { FIGURE_BRAND } from './builder/is-figure';
+import { FIGURE_BRAND, FIGURE_RENDER_OPTIONS } from './builder/is-figure';
 import { node } from './builder/node';
 import { scope } from './builder/scope';
 import { FIGURE_ROOT_STYLE_FIELDS } from './builder/types';
@@ -34,6 +34,7 @@ import { toScene } from './to-scene';
  */
 export type Figure = {
   readonly [FIGURE_BRAND]: true;
+  readonly [FIGURE_RENDER_OPTIONS]: (options?: MountOptions) => MountOptions;
   readonly ir: IRScene;
   mount: (container: Element, options?: MountOptions) => VanillaView;
   mountCanvas: (container: Element, options?: MountCanvasOptions) => CanvasView;
@@ -79,6 +80,7 @@ export const createFigure = (config: FigureConfig, children: Array<Child>): Figu
 
   const fig: Figure = {
     [FIGURE_BRAND]: true,
+    [FIGURE_RENDER_OPTIONS]: renderOptions,
     get ir(): IRScene {
       // 任一根样式字段携带指令 → 把 children 包进一层合成根 <Scope>，等价用户手写一层根 scope（全缺省时不包）
       const rootStyle = pickRootStyle(config);

@@ -7,6 +7,15 @@ export type MathJaxSvgEngine = {
   convert: (tex: string, options: { display: boolean }) => string;
 };
 
+/**
+ * `createMathJaxEngine` 的配置项
+ * @description `packages` 会透传给 MathJax TeX input，默认只启用 `base` 包。
+ */
+export type MathJaxEngineOptions = {
+  /** MathJax TeX input packages。@default ['base'] */
+  packages?: Array<string>;
+};
+
 type LiteAdaptor = { outerHTML: (node: unknown) => string };
 type MathDocument = { convert: (tex: string, options: { display: boolean }) => unknown };
 type MathjaxModule = {
@@ -25,7 +34,7 @@ type HandlerModule = { RegisterHTMLHandler: (adaptor: LiteAdaptor) => void };
  *   `mathjax-full` 仍是 optional peer：tex 库构建已将其 external，未安装时 import 失败 → 下方 catch 抛带安装提示
  *   的错误（同 `@napi-rs/canvas` optional peer 口径）。startup 异步故本工厂 async；引擎 `convert` 同步。
  */
-export const createMathJaxEngine = async (options?: { packages?: Array<string> }): Promise<MathJaxSvgEngine> => {
+export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promise<MathJaxSvgEngine> => {
   let mods: {
     mj: MathjaxModule;
     tex: TexModule;

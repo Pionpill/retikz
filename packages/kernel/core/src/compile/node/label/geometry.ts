@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcEndPoint } from '@retikz/math';
+import { arcEndPoint, DEFAULT_EPSILON } from '@retikz/math';
 
 import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../../schemas';
 import type { NodeLabelLayout, NodeLayout } from '../types';
@@ -96,11 +96,11 @@ export const labelBoxEdgeToward = ({ center, border, halfWidth, halfHeight }: La
   const dx = border[0] - center[0];
   const dy = border[1] - center[1];
   const len = Math.hypot(dx, dy);
-  if (len < 1e-9) return center;
+  if (len < DEFAULT_EPSILON) return center;
   const ux = dx / len;
   const uy = dy / len;
-  const sx = Math.abs(ux) > 1e-9 ? halfWidth / Math.abs(ux) : Number.POSITIVE_INFINITY;
-  const sy = Math.abs(uy) > 1e-9 ? halfHeight / Math.abs(uy) : Number.POSITIVE_INFINITY;
+  const sx = Math.abs(ux) > DEFAULT_EPSILON ? halfWidth / Math.abs(ux) : Number.POSITIVE_INFINITY;
+  const sy = Math.abs(uy) > DEFAULT_EPSILON ? halfHeight / Math.abs(uy) : Number.POSITIVE_INFINITY;
   const s = Math.min(sx, sy, len); // 不越过 border 本身
   return [center[0] + ux * s, center[1] + uy * s];
 };

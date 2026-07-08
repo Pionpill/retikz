@@ -4,5 +4,6 @@ export * from './box';
 export * from './emit';
 export * from './label/geometry';
 export * from './layout';
+export * from './layout-metrics';
 export * from './synthetic';
 export * from './types';

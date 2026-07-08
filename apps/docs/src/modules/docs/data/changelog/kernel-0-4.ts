@@ -9,14 +9,14 @@ export const kernelV04: Release = {
       version: 'v0.4',
       description: {
         zh: '新包：零依赖纯计算几何（向量 / 仿射 / arc 原语 / 求交 / 三角形内外接圆 / 点在多边形 / 凸包 / 最小外接圆 / 曲线）。纯函数 + 普通对象，零 IR、零 zod、不写 class；被 core 正向依赖、与 core 组同 lockstep。',
-        en: 'New zero-dependency pure-geometry package: vectors / affine / arc / intersections / triangle in-&-circumcircle / point-in-polygon / convex hull / min enclosing circle / curves. No IR / zod / class.',
+        en: 'New zero-dependency pure-geometry package: vectors / affine / arc / intersections / triangle in-circle / circum-circle helpers / point-in-polygon / convex hull / min enclosing circle / curves. No IR / zod / class.',
       },
       highlights: [
         {
           label: { zh: '纯几何 API', en: 'Pure geometry API' },
           content: {
-            zh: '命名空间风格 `point` / `transform` / `arc` / `intersect` / `triangle` / `polygon` / `convexHull` / `enclose`；core 几何的单一真源（`Position` / `DEFAULT_EPSILON` 迁此）。',
-            en: 'Namespace-style `point` / `transform` / `arc` / `intersect` / `triangle` / `polygon` / `convexHull` / `enclose`; the single source of truth for core geometry (`Position` / `DEFAULT_EPSILON` moved here).',
+            zh: '命名空间风格 `point` / `transform` / `arc` / `intersect` / `circle` / `triangle` / `polygon` / `convexHull`；core 几何的单一真源（`Position` / `DEFAULT_EPSILON` 迁此）。',
+            en: 'Namespace-style `point` / `transform` / `arc` / `intersect` / `circle` / `triangle` / `polygon` / `convexHull`; the single source of truth for core geometry (`Position` / `DEFAULT_EPSILON` moved here).',
           },
         },
       ],
@@ -34,8 +34,8 @@ export const kernelV04: Release = {
           version: 'alpha.2',
           date: '2026-06-15',
           summary: {
-            zh: '新增 `minimalEnclosingCircle`（Welzl）——点集最小外接圆，供 core scope 的 circle 包络。',
-            en: 'Adds `minimalEnclosingCircle` (Welzl) — the minimal enclosing circle of a point set, powering core’s circle scope envelope.',
+            zh: '新增 `circle.minimalEnclosing`（Welzl）——点集最小外接圆，供 core scope 的 circle 包络。',
+            en: 'Adds `circle.minimalEnclosing` (Welzl) — the minimal enclosing circle of a point set, powering core’s circle scope envelope.',
           },
           items: [],
         },
@@ -44,7 +44,7 @@ export const kernelV04: Release = {
           date: '2026-06-14',
           summary: {
             zh: '新建 `@retikz/math` 包：core 纯几何（向量 / 仿射 / arc 原语 / 私有求交）下沉至此，新增三角形内外接圆 / 点在多边形 / 凸包等能力。',
-            en: 'New `@retikz/math` package: core’s pure geometry (vectors / affine / arc primitives / private intersections) sinks here, plus new triangle in-&-circumcircle / point-in-polygon / convex hull.',
+            en: 'New `@retikz/math` package: core’s pure geometry (vectors / affine / arc primitives / private intersections) sinks here, plus new triangle in-circle / circum-circle helpers / point-in-polygon / convex hull.',
           },
           items: [],
         },

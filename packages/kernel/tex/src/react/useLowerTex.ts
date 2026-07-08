@@ -2,10 +2,10 @@ import type { LowerTex } from '@retikz/core';
 
 import { useEffect, useState } from 'react';
 
-import type { MathJaxSvgEngine } from '../mathjax/engine';
+import type { MathJaxSvgEngine } from '../mathjax';
 
-import { createLowerTex } from '../lower/lower-tex';
-import { createMathJaxEngine } from '../mathjax/engine';
+import { createLowerTex } from '../lower';
+import { createMathJaxEngine } from '../mathjax';
 
 let enginePromise: Promise<MathJaxSvgEngine> | undefined;
 

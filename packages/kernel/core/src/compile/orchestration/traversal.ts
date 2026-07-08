@@ -27,6 +27,7 @@ import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
 import { NamespaceStack } from '../namespace';
 import {
+  computeCompiledNodeLayout,
   createScopeCircleLayout,
   createScopePlaceholderLayout,
   createScopeRectangleLayout,
@@ -38,6 +39,7 @@ import {
 } from '../node';
 import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
 import { resolvePosition } from '../position';
+import { parseProviderPayload } from '../provider-payload';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
 import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
 import { applyTransformChain, projectLayoutToGlobal } from '../transform';
@@ -63,6 +65,7 @@ export const compileChildrenToPrimitives = (
       measureText: context.measureText,
       lowerTex: context.lowerTex,
       onWarn: context.onWarn,
+      onNodeLayout: context.onNodeLayout,
       round: context.round,
       nodeDistance: context.nodeDistance,
       labelDistance: context.labelDistance,
@@ -99,7 +102,14 @@ export const compileChildrenToPrimitives = (
       optionName: 'pathKinds',
     });
     const optionsValue = definition.optionsSchema
-      ? definition.optionsSchema.parse(path.kindOptions ?? {})
+      ? parseProviderPayload({
+          capability: 'path kind',
+          providerName: kind,
+          irPath: `${irPath}.kindOptions`,
+          payloadName: 'options',
+          schema: definition.optionsSchema,
+          value: path.kindOptions ?? {},
+        })
       : (path.kindOptions ?? {});
     const emitOptions = {
       onWarn: runtime.context.onWarn,
@@ -191,12 +201,14 @@ export const compileChildrenToPrimitives = (
         shapes: runtime.context.shapes,
         boundaries: runtime.context.boundaries,
         resolveBetweenGlobal: refPointOfTarget,
+        irPath: nodeIrPath,
         texLowering: {
           lowerTex: runtime.context.lowerTex,
           warn: (code, message) => runtime.context.onWarn({ code, message, path: nodeIrPath }),
         },
       },
     );
+    runtime.context.onNodeLayout?.(computeCompiledNodeLayout(layout, scopeChain));
     const globalLayout = scopeChain.length === 0 ? layout : projectLayoutToGlobal(layout, scopeChain);
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);

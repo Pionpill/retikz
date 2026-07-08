@@ -2,7 +2,7 @@ import type { ExternalRow } from '@retikz/data';
 
 import { type IRChild, type IRNode, type IRNodeLabel, type IRScope } from '@retikz/core';
 import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
-import { arcEndPoint, isFiniteNumber } from '@retikz/math';
+import { arcEndPoint, DEFAULT_EPSILON, isFiniteNumber } from '@retikz/math';
 
 import type {
   Cell,
@@ -265,7 +265,7 @@ const boundOutputInterval = (
 /**
  * interval mark 某行 → 正交 cell（lowering 摆放与 locator 锚点的共享单一真源；坐标系无关）。
  * @description primary = bounds.x、secondary = bounds.y 各经 boundOutputInterval 解析。任一非有限 → null（跳过该行）；
- *   polar 下 primary（角度）或 secondary（半径）跨度退化（< 1e-9）→ null（与旧 sector / radial bar 守卫一致）。
+ *   polar 下 primary（角度）或 secondary（半径）跨度退化（< DEFAULT_EPSILON）→ null（与旧 sector / radial bar 守卫一致）。
  */
 export const intervalCell = (
   mark: IntervalMark,
@@ -286,8 +286,8 @@ export const intervalCell = (
   );
   if (secondary === null) return null;
   if (frame.type === PlotCoordinate.Polar2D) {
-    if (Math.abs(primary[1] - primary[0]) < 1e-9) return null;
-    if (Math.abs(secondary[1] - secondary[0]) < 1e-9) return null;
+    if (Math.abs(primary[1] - primary[0]) < DEFAULT_EPSILON) return null;
+    if (Math.abs(secondary[1] - secondary[0]) < DEFAULT_EPSILON) return null;
   }
   return { intervals: { x: primary, y: secondary } };
 };

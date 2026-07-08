@@ -840,7 +840,7 @@ const drawPrim = (
     case 'text':
       withOpacity(ctx, p.opacity, () => drawText(ctx, p, options));
       break;
-    case 'group':
+    case 'group': {
       ctx.save();
       for (const transform of p.transforms ?? []) applyTransform(ctx, transform);
       if (p.clipRef !== undefined) {
@@ -851,9 +851,13 @@ const drawPrim = (
           warnUnsupported(options, 'clip', `Canvas renderer: clip resource "${p.clipRef}" not found; clip is skipped.`);
         }
       }
-      for (const child of p.children) drawPrim(ctx, child, options, resources);
+      const groupOpacity = 'opacity' in p && typeof p.opacity === 'number' ? p.opacity : undefined;
+      withOpacity(ctx, groupOpacity, () => {
+        for (const child of p.children) drawPrim(ctx, child, options, resources);
+      });
       ctx.restore();
       break;
+    }
   }
   ctx.restore();
 };

@@ -1,6 +1,12 @@
 {
   "name": "@retikz/data",
   "version": "0.1.0-beta.2",
+  "retikz": {
+    "domain": "viz",
+    "releaseGroup": "data",
+    "layer": "foundation",
+    "publishable": true
+  },
   "description": "retikz data layer: JSON-serializable data models, field resolution, and transform pipeline for visualization packages.",
   "type": "module",
   "author": "Pionpill",
@@ -57,8 +63,8 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@retikz/core": "workspace:*",
-    "@retikz/math": "workspace:*",
+    "@retikz/core": "workspace:^",
+    "@retikz/math": "workspace:^",
     "d3-format": "catalog:",
     "d3-time-format": "catalog:",
     "zod": "catalog:"

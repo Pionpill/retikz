@@ -8,7 +8,7 @@ import {
   ReducerOperationKind,
   resolveFieldPath,
 } from '@retikz/data';
-import { isFiniteNumber } from '@retikz/math';
+import { DEFAULT_EPSILON, isFiniteNumber } from '@retikz/math';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 
 import type { BinTransform, RelateTransform } from '../../schemas';
@@ -55,7 +55,7 @@ const binEdges = (operation: BinTransform, values: Array<number>): Array<number>
   if (operation.step !== undefined) {
     const step = operation.step;
     const span = domainMax - domainMin;
-    const binCount = Math.max(1, Math.ceil(span / step - 1e-9));
+    const binCount = Math.max(1, Math.ceil(span / step - DEFAULT_EPSILON));
     const edges = Array.from({ length: binCount + 1 }, (_, i) => domainMin + i * step);
     if (edges[binCount] < domainMax) edges[binCount] = domainMax;
     return edges;

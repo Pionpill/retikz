@@ -1,3 +1,4 @@
+import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -10,7 +11,7 @@ import {
   quadSegmentSample,
 } from '../../src/shared/geometry/path';
 
-const NEAR = 1e-9;
+const NEAR = DEFAULT_EPSILON;
 
 describe('lineSegmentSample', () => {
   it('t=0 / 0.5 / 1 落在 from / 中点 / to，切线沿 from→to 方向', () => {

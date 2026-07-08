@@ -14,6 +14,7 @@ import type { WaapiDescriptor } from './waapi';
 
 import { classifyProperty, isAutoplayTrigger, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
 import { evaluateTrack } from '../../animation/evaluate';
+import { toSafeSvgToken } from '../safe-token';
 import { easingToCss, expandTrack, iterationsToCss, transformValue } from './shared';
 import { buildWaapiDescriptor } from './waapi';
 
@@ -102,7 +103,8 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
   const onWarn = options.onWarn ?? ((message: string) => console.warn(`[retikz/svg] ${message}`));
   const rules: Array<string> = [];
   let seq = 0;
-  const nextName = (kind: 'k' | 'c'): string => `retikz-${options.idPrefix}-${kind}${seq++}`;
+  const idPrefix = toSafeSvgToken(options.idPrefix);
+  const nextName = (kind: 'k' | 'c'): string => `retikz-${idPrefix}-${kind}${seq++}`;
 
   /**
    * 处理 transform 通道：每条 track 包一层 `<g>`（load→CSS class、交互→WAAPI data）

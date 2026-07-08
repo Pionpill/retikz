@@ -3,6 +3,7 @@ import type { IRChild, IRScene } from '../../schemas';
 import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';
+import { parseProviderPayload } from '../provider-payload';
 
 /** composite 嵌套展开最大深度。 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
@@ -45,7 +46,14 @@ export const lowerComposites = (
           `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${maxDepth} levels at ${path} (cyclic or runaway expand?)`,
         );
       }
-      const parsed = definition.schema.parse(child); // 精确校验 + 强类型（含 default 填充）
+      const parsed = parseProviderPayload({
+        capability: 'composite',
+        providerName: key,
+        irPath: path,
+        payloadName: 'payload',
+        schema: definition.schema,
+        value: child,
+      }); // 精确校验 + 强类型（含 default 填充）
       const produced = definition.expand(parsed);
       const list = Array.isArray(produced) ? produced : [produced];
       // 展开产物可能仍含 tier2，继续展开。

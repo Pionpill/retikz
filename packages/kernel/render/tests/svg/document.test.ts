@@ -100,6 +100,35 @@ describe('buildSvgDocument —— 交互', () => {
     expect(a1).not.toContain('retikz-paint-b-');
     expect(b1).not.toContain('retikz-paint-a-');
   });
+
+  it('unsafe idPrefix is normalized before resource ids and url fragments are emitted', () => {
+    const gradient: SceneResource = {
+      kind: 'paint',
+      id: 'paint-1',
+      spec: {
+        kind: 'linearGradient',
+        stops: [
+          { offset: 0, color: '#000' },
+          { offset: 1, color: '#fff' },
+        ],
+      },
+    };
+    const rect: RectPrim = {
+      type: 'rect',
+      x: 0,
+      y: 0,
+      width: 5,
+      height: 5,
+      fill: { kind: 'resourceRef', id: 'paint-1' },
+    };
+    const unsafePrefix = 'bad prefix:foo.bar)';
+    const out = renderToSvgString({ primitives: [rect], layout, resources: [gradient] }, { idPrefix: unsafePrefix });
+    const id = out.match(/id="(retikz-paint-[^"]+)"/)?.[1];
+    expect(id).toBeDefined();
+    expect(id).toMatch(/^[A-Za-z_][A-Za-z0-9_-]*$/);
+    expect(out).toContain(`url(#${id})`);
+    expect(out).not.toContain(unsafePrefix);
+  });
 });
 
 describe('renderToSvgString —— 尺寸注入', () => {

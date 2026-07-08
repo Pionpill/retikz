@@ -57,6 +57,8 @@ export type NodeTextLayoutContext = {
 };
 
 export type NodeLayout = {
+  /** 构建本 layout 的 IR 路径。 */
+  irPath?: string;
   /** 节点 id。 */
   id?: string;
   /** 节点形状名。 */

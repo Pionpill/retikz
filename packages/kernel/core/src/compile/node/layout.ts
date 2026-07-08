@@ -45,6 +45,8 @@ export type LayoutNodeContext = {
   resolveBetweenGlobal?: ResolveBetweenGlobal;
   /** TeX 降级上下文。 */
   texLowering?: TexLoweringContext;
+  /** 当前 node 的 IR 路径，用于 provider payload 诊断。 */
+  irPath?: string;
 };
 
 export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout => {
@@ -60,12 +62,13 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     boundaries = resolveBoundaryRegistry(),
     resolveBetweenGlobal,
     texLowering,
+    irPath,
   } = context;
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const { x: sx, y: sy } = resolveAxisScale(node.scale, 1);
   const fontScale = Math.min(sx, sy);
-  const { shapeName, shapeDef, shapeParams } = resolveNodeShape({ node, shapes, scaleX: sx, scaleY: sy });
+  const { shapeName, shapeDef, shapeParams } = resolveNodeShape({ node, shapes, scaleX: sx, scaleY: sy, irPath });
 
   const baseFontSize = resolveFontSize(node.font?.size, {
     rootFontSize,
@@ -151,6 +154,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
   });
 
   return {
+    irPath,
     id: node.id,
     shapeName,
     shapeDef,

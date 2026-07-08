@@ -32,7 +32,7 @@ const Diagram = () => {
 
 <ComponentAlert
   title="需要注入 lowerTex"
-  description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 toScene/renderToString）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。"
+  description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 toScene/renderToSvgString）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。"
 />
 
 ## 行内与 display 公式
@@ -80,16 +80,16 @@ const Diagram = () => {
 
 ## Vanilla
 
-`createMathJaxEngine`（await 启动）→ `createLowerTex` → 注入 `toScene` / `renderToString` 的 `lowerTex`；节点文本照常写 `$...$`：
+`createMathJaxEngine(options?)`（await 启动）→ `createLowerTex` → 注入 `toScene` / `renderToSvgString` 的 `lowerTex`；节点文本照常写 `$...$`。`options.packages` 会透传给 MathJax TeX input，默认是 `['base']`：
 
 ```ts
-import { figure, node, renderToString } from '@retikz/vanilla';
+import { figure, node, renderToSvgString } from '@retikz/vanilla';
 import { createMathJaxEngine, createLowerTex } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
 const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })]);
 
-const svg = renderToString(fig, { lowerTex });
+const svg = renderToSvgString(fig, { lowerTex });
 ```
 
 ## 语法
@@ -103,9 +103,9 @@ const svg = renderToString(fig, { lowerTex });
 
 ## API 参考
 
-| API                                  | 类型                                     | 描述                                                                                      |
-| ------------------------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `useLowerTex`（`@retikz/tex/react`） | `() => LowerTex \| undefined`            | React hook：启动 MathJax，返回可注入 `<Layout lowerTex>` 的函数；未就绪时为 `undefined`。 |
-| `createMathJaxEngine`                | `() => Promise<MathJaxSvgEngine>`        | 创建 MathJax SVG 引擎。                                                                   |
-| `createLowerTex`                     | `(engine) => LowerTex`                   | 把引擎转换成 core 的 `lowerTex` 注入函数，按 `fontSize\|display\|tex` 缓存。              |
-| `LowerTex`（`@retikz/core`）         | `(content, style) => LoweredTex \| null` | core 注入点类型；失败返回 `null`，compile 发出 `TEX_INVALID`。                            |
+| API                                  | 类型                                      | 描述                                                                                      |
+| ------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `useLowerTex`（`@retikz/tex/react`） | `() => LowerTex \| undefined`             | React hook：启动 MathJax，返回可注入 `<Layout lowerTex>` 的函数；未就绪时为 `undefined`。 |
+| `createMathJaxEngine`                | `(options?) => Promise<MathJaxSvgEngine>` | 创建 MathJax SVG 引擎；`packages` 透传给 MathJax TeX input，默认 `['base']`。             |
+| `createLowerTex`                     | `(engine) => LowerTex`                    | 把引擎转换成 core 的 `lowerTex` 注入函数，按 `fontSize\|display\|tex` 缓存。              |
+| `LowerTex`（`@retikz/core`）         | `(content, style) => LoweredTex \| null`  | core 注入点类型；失败返回 `null`，compile 发出 `TEX_INVALID`。                            |

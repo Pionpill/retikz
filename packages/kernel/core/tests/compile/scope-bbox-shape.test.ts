@@ -1,4 +1,4 @@
-import { minimalEnclosingCircle } from '@retikz/math';
+import { circle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
@@ -68,7 +68,7 @@ describe('createScopeCircleLayout 单元测试', () => {
       [60, 0],
       [30, 40],
     ];
-    const mec = minimalEnclosingCircle([...corners]);
+    const mec = circle.minimalEnclosing([...corners]);
     expect(mec).not.toBeNull();
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: corners, fallbackOrigin: [0, 0] });
     const diameter = mec!.radius * 2;
@@ -120,7 +120,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
       [50, 80],
     ];
     const cornerPoints = nodePositions; // 0×0 node → 4 角点即 node 中心点（collapsed），直接用中心点
-    const mec = minimalEnclosingCircle([...cornerPoints]);
+    const mec = circle.minimalEnclosing([...cornerPoints]);
     expect(mec).not.toBeNull();
     const ir = scene([
       {

@@ -1,6 +1,7 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { ChildSchema } from '@retikz/core';
+import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -358,7 +359,7 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
 
     expect(symbols.length).toBeGreaterThanOrEqual(2);
     expect(swatches.every(node => node.shape === 'circle')).toBe(true);
-    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(14 + 1e-9);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(14 + DEFAULT_EPSILON);
     expect(symbols.every(node => node.stroke === 'none')).toBe(true);
     expect(symbols.every(node => node.strokeWidth === 0)).toBe(true);
   });
@@ -369,7 +370,7 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     const symbols = sizeSymbolNodesOf(legend as IRScope);
 
     expect(symbols.length).toBeGreaterThanOrEqual(2);
-    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + 1e-9);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + DEFAULT_EPSILON);
   });
 
   it('size_legend_preserve_keeps_descriptor_radius_and_reserves_space', () => {
@@ -396,7 +397,7 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     const symbols = sizeSymbolNodesOf(legend as IRScope);
 
     expect(symbols.length).toBeGreaterThanOrEqual(2);
-    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + 1e-9);
+    expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + DEFAULT_EPSILON);
   });
 });
 

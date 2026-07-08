@@ -5,6 +5,7 @@ import type { IRPosition, IRStep } from '../../../schemas';
 
 import { providerDefinitionOf } from '../../../providers/registry';
 import { JsonObjectSchema } from '../../../schemas';
+import { parseProviderPayload } from '../../provider-payload';
 
 const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
 
@@ -63,16 +64,32 @@ export const lowerGeneratorStepToCommands = (args: {
   to?: IRPosition;
   round: (n: number) => number;
   resolveTargetParam: (value: unknown) => IRPosition | undefined;
+  irPath: string;
 }): Array<PathCommand> => {
-  const { step, from, to, round, resolveTargetParam } = args;
+  const { step, from, to, round, resolveTargetParam, irPath } = args;
   const generators = args.generators ?? EMPTY_PATH_GENERATORS;
   const def = providerDefinitionOf(generators, step.name, {
     capability: 'path generator',
     optionName: 'pathGenerators',
   });
 
-  const parsed = def.paramsSchema.parse(step.params);
-  JsonObjectSchema.parse(parsed);
+  const paramsPath = `${irPath}.params`;
+  const parsed = parseProviderPayload({
+    capability: 'path generator',
+    providerName: step.name,
+    irPath: paramsPath,
+    payloadName: 'params',
+    schema: def.paramsSchema,
+    value: step.params,
+  });
+  parseProviderPayload({
+    capability: 'path generator',
+    providerName: step.name,
+    irPath: paramsPath,
+    payloadName: 'params',
+    schema: JsonObjectSchema,
+    value: parsed,
+  });
   const paramsObj = parsed as Record<string, unknown>;
 
   const resolvedTargets: Record<string, IRPosition> = {};

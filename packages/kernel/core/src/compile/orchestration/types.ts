@@ -50,6 +50,7 @@ export type TraversalContext = Pick<
   | 'measureText'
   | 'lowerTex'
   | 'onWarn'
+  | 'onNodeLayout'
   | 'round'
   | 'nodeDistance'
   | 'labelDistance'

@@ -166,7 +166,8 @@ describe('lowerComposites — 错误路径', () => {
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 123 as unknown as string }],
     };
-    expect(() => compileToScene(ir, { composites: [labeledBox] })).toThrow();
+    expect(() => compileToScene(ir, { composites: [labeledBox] })).toThrow(/composite 'example\.labeledBox'/);
+    expect(() => compileToScene(ir, { composites: [labeledBox] })).toThrow(/children\[0\]/);
   });
 });
 
