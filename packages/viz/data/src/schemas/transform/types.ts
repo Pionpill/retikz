@@ -5,12 +5,12 @@ import type {
   DataSortOrder,
   DataTransform,
   FieldReducerOperationKind,
-  FirstLastSelectorOp,
-  MinMaxSelectorOp,
+  FirstLastSelectorOperationKind,
+  MinMaxSelectorOperationKind,
   ReducerOperationKind,
   RowSelectorTie,
-  SelectorOp,
-  TopBottomSelectorOp,
+  SelectorOperationKind,
+  TopBottomSelectorOperationKind,
 } from './constants';
 import type {
   AnnotateSelectorSchema,
@@ -34,23 +34,23 @@ export type DataTransformValue = ValueOf<typeof DataTransform>;
 /** data 排序方向取值。 */
 export type DataSortOrderValue = ValueOf<typeof DataSortOrder>;
 
-/** 内置统计 reducer operation op 取值。 */
+/** 内置统计 reducer operation kind 取值。 */
 export type ReducerOperationKindValue = ValueOf<typeof ReducerOperationKind>;
 
-/** 读取 numeric field 的内置统计 reducer operation op 取值。 */
+/** 读取 numeric field 的内置统计 reducer operation kind 取值。 */
 export type FieldReducerOperationKindValue = ValueOf<typeof FieldReducerOperationKind>;
 
-/** 内置 row selector operation op 取值。 */
-export type SelectorOpValue = ValueOf<typeof SelectorOp>;
+/** 内置 row selector operation kind 取值。 */
+export type SelectorOperationKindValue = ValueOf<typeof SelectorOperationKind>;
 
-/** 按数值字段取极值的 row selector operation op 取值。 */
-export type MinMaxSelectorOpValue = ValueOf<typeof MinMaxSelectorOp>;
+/** 按数值字段取极值的 row selector operation kind 取值。 */
+export type MinMaxSelectorOperationKindValue = ValueOf<typeof MinMaxSelectorOperationKind>;
 
-/** 按现有顺序或显式排序取行的 row selector operation op 取值。 */
-export type FirstLastSelectorOpValue = ValueOf<typeof FirstLastSelectorOp>;
+/** 按现有顺序或显式排序取行的 row selector operation kind 取值。 */
+export type FirstLastSelectorOperationKindValue = ValueOf<typeof FirstLastSelectorOperationKind>;
 
-/** 按排序名次取行的 row selector operation op 取值。 */
-export type TopBottomSelectorOpValue = ValueOf<typeof TopBottomSelectorOp>;
+/** 按排序名次取行的 row selector operation kind 取值。 */
+export type TopBottomSelectorOperationKindValue = ValueOf<typeof TopBottomSelectorOperationKind>;
 
 /** row selector 平局处理策略值。 */
 export type RowSelectorTieValue = ValueOf<typeof RowSelectorTie>;

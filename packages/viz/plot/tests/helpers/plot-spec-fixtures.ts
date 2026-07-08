@@ -250,7 +250,7 @@ export const boxplotSummary: Transform = {
   groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
   metrics: [
     {
-      op: 'quantile-band',
+      kind: 'quantile-band',
       field: 'value',
       lowerP: 0.25,
       upperP: 0.75,
@@ -270,7 +270,7 @@ export const boxplotOutside: Transform = {
   kind: 'select',
   groupBy: ['group'],
   selector: {
-    op: 'outside-quantile-band',
+    kind: 'outside-quantile-band',
     field: 'value',
     lowerP: 0.25,
     upperP: 0.75,

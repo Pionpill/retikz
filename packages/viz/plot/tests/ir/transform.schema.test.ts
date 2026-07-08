@@ -128,7 +128,7 @@ describe('TransformSchema external operations', () => {
 
 describe('BinTransformSchema', () => {
   it('bin_count_strategy_valid', () => {
-    const t = { kind: 'bin', field: 'measurement', count: 20, metrics: [{ op: 'count', as: 'binCount' }] };
+    const t = { kind: 'bin', field: 'measurement', count: 20, metrics: [{ kind: 'count', as: 'binCount' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -151,7 +151,7 @@ describe('BinTransformSchema', () => {
       nice: false,
       startField: 'lo',
       endField: 'hi',
-      metrics: [{ op: 'mean', field: 'weight', as: 'avg' }],
+      metrics: [{ kind: 'mean', field: 'weight', as: 'avg' }],
     };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
@@ -182,7 +182,7 @@ describe('BinTransformSchema', () => {
       kind: 'bin',
       field: 'measurement',
       thresholds: [1, 2, 3],
-      metrics: [{ op: 'sum', field: 'w', as: 'totalWeight' }],
+      metrics: [{ kind: 'sum', field: 'w', as: 'totalWeight' }],
     };
     const round = TransformSchema.parse(JSON.parse(JSON.stringify(t)));
     expect(round).toEqual(t);
@@ -195,9 +195,9 @@ describe('Statistical transform algebra schema', () => {
       kind: 'summarize',
       groupBy: ['region'],
       metrics: [
-        { op: 'mean', field: 'revenue', as: 'avgRevenue' },
-        { op: 'median', field: 'revenue', as: 'medianRevenue' },
-        { op: 'count', as: 'orders' },
+        { kind: 'mean', field: 'revenue', as: 'avgRevenue' },
+        { kind: 'median', field: 'revenue', as: 'medianRevenue' },
+        { kind: 'count', as: 'orders' },
       ],
     };
     expect(TransformSchema.parse(operation)).toEqual(operation);
@@ -208,7 +208,7 @@ describe('Statistical transform algebra schema', () => {
       TransformSchema.parse({
         kind: 'summarize',
         groupBy: ['region'],
-        metrics: [{ op: 'mean', field: 'revenue' }],
+        metrics: [{ kind: 'mean', field: 'revenue' }],
       }),
     ).toThrow();
   });
@@ -218,7 +218,7 @@ describe('Statistical transform algebra schema', () => {
       TransformSchema.parse({
         kind: 'select',
         groupBy: ['series'],
-        selector: { op: 'max' },
+        selector: { kind: 'max' },
       }),
     ).toThrow();
   });
@@ -227,8 +227,8 @@ describe('Statistical transform algebra schema', () => {
     const operation = {
       kind: 'relate',
       groupBy: ['series'],
-      source: { selector: { op: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
-      target: { selector: { op: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+      source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+      target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
       measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel' }],
     };
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
@@ -240,26 +240,13 @@ describe('Statistical transform algebra schema', () => {
       field: 'measurement',
       step: 10,
       metrics: [
-        { op: 'count', as: 'binCount' },
-        { op: 'mean', field: 'weight', as: 'binMean' },
+        { kind: 'count', as: 'binCount' },
+        { kind: 'mean', field: 'weight', as: 'binMean' },
       ],
     };
     expect(TransformSchema.parse(operation)).toEqual(operation);
     expect(() =>
       TransformSchema.parse({ kind: 'bin', field: 'measurement', reduce: 'sum', reduceField: 'weight' }),
-    ).toThrow();
-  });
-
-  it('old_aggregate_and_derive_relation_rejected', () => {
-    expect(() =>
-      TransformSchema.parse({ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }),
-    ).toThrow();
-    expect(() =>
-      TransformSchema.parse({
-        kind: 'derive-relation',
-        source: { select: 'min', by: 'value', fields: { id: 'id' } },
-        target: { select: 'max', by: 'value', fields: { id: 'id' } },
-      }),
     ).toThrow();
   });
 });
@@ -269,23 +256,23 @@ describe('SummarizeTransformSchema', () => {
     const t = {
       kind: 'summarize',
       groupBy: ['region'],
-      metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }],
+      metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
     };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('summarize_count_valid', () => {
-    const t = { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'count', as: 'count' }] };
+    const t = { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ kind: 'count', as: 'count' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('summarize_global_group_valid', () => {
-    const t = { kind: 'summarize', metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }] };
+    const t = { kind: 'summarize', metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('summarize_empty_groupby_valid', () => {
-    const t = { kind: 'summarize', groupBy: [], metrics: [{ op: 'sum', field: 'r', as: 'total' }] };
+    const t = { kind: 'summarize', groupBy: [], metrics: [{ kind: 'sum', field: 'r', as: 'total' }] };
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -294,7 +281,7 @@ describe('SummarizeTransformSchema', () => {
       TransformSchema.parse({
         kind: 'summarize',
         groupBy: 'region',
-        metrics: [{ op: 'sum', field: 'r', as: 'total' }],
+        metrics: [{ kind: 'sum', field: 'r', as: 'total' }],
       }),
     ).toThrow();
   });
@@ -305,15 +292,19 @@ describe('SummarizeTransformSchema', () => {
         kind: 'summarize',
         groupBy: ['r'],
         metrics: [
-          { op: 'sum', field: 'x', as: 'value' },
-          { op: 'mean', field: 'x', as: 'value' },
+          { kind: 'sum', field: 'x', as: 'value' },
+          { kind: 'mean', field: 'x', as: 'value' },
         ],
       }),
     ).toThrow();
   });
 
   it('summarize_json_roundtrip_equivalent', () => {
-    const t = { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'mean', field: 'revenue', as: 'avgRevenue' }] };
+    const t = {
+      kind: 'summarize',
+      groupBy: ['region'],
+      metrics: [{ kind: 'mean', field: 'revenue', as: 'avgRevenue' }],
+    };
     const round = TransformSchema.parse(JSON.parse(JSON.stringify(t)));
     expect(round).toEqual(t);
   });

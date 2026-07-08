@@ -12,7 +12,7 @@ This page covers only plot-registered statistical drawing capabilities. General 
 
 ## bin
 
-`bin` cuts a continuous field into intervals and outputs one row per bin. Output rows include the bin lower bound, upper bound, and metric fields. The default metric is `{ op: 'count', as: 'binCount' }`.
+`bin` cuts a continuous field into intervals and outputs one row per bin. Output rows include the bin lower bound, upper bound, and metric fields. The default metric is `{ kind: 'count', as: 'binCount' }`.
 
 <ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
 

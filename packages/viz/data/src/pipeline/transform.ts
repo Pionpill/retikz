@@ -1,10 +1,10 @@
 import { JsonObjectSchema } from '@retikz/core';
 
-import type { AnyTransformDefinition, FieldCollector, TransformContext } from '../../contract';
-import type { ExternalRow, TransformOperation } from '../../schemas';
+import type { AnyTransformDefinition, FieldCollector, TransformContext } from '../contract';
+import type { ExternalRow, TransformOperation } from '../schemas';
 
-import { resolveTransformRegistry } from '../../providers';
-import { readSourceIndex, readSourceIndices, withGroupProvenance } from '../provenance';
+import { resolveTransformRegistry } from '../providers';
+import { readSourceIndex, readSourceIndices, withGroupProvenance } from './provenance';
 
 /** 默认 transform 上下文：使用 data provenance symbol 标记，不把来源信息写进 JSON IR。 */
 export const DEFAULT_TRANSFORM_CONTEXT: TransformContext = {

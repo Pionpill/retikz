@@ -1,5 +1,5 @@
 ﻿import { FieldOrderMode } from '@retikz/data';
-import { DataSortOrder, ReducerOperationKind, RowSelectorTie, SelectorOp } from '@retikz/data';
+import { DataSortOrder, ReducerOperationKind, RowSelectorTie, SelectorOperationKind } from '@retikz/data';
 import { TransformSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -18,7 +18,7 @@ describe('schema vocabulary constants', () => {
       'quantile-band',
       'sum',
     ]);
-    expect(Object.values(SelectorOp).sort()).toEqual([
+    expect(Object.values(SelectorOperationKind).sort()).toEqual([
       'bottom',
       'first',
       'last',
@@ -36,7 +36,7 @@ describe('schema vocabulary constants', () => {
       TransformSchema.parse({
         kind: 'select',
         selector: {
-          op: SelectorOp.Top,
+          kind: SelectorOperationKind.Top,
           by: 'value',
           n: 1,
           tie: RowSelectorTie.All,
@@ -45,7 +45,7 @@ describe('schema vocabulary constants', () => {
     ).toEqual({
       kind: 'select',
       selector: {
-        op: 'top',
+        kind: 'top',
         by: 'value',
         n: 1,
         tie: 'all',

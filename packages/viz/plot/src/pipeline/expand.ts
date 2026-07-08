@@ -746,13 +746,13 @@ export type LowerPlotsOptions = {
    */
   transformDefinitions?: Array<AnyTransformDefinition>;
   /**
-   * 自定义统计 reducer definition 数组（运行时函数，不进 IR）：summarize / annotate / bin 的 `{op:<customOp>, ...config}` 据此校验并规约。
-   * @description 内置 reducer 恒可用；自定义 op 未注册 / op 冲突会 fail-loud。
+   * 自定义统计 reducer definition 数组（运行时函数，不进 IR）：summarize / annotate / bin 的 `{kind:<customKind>, ...config}` 据此校验并规约。
+   * @description 内置 reducer 恒可用；自定义 kind 未注册 / kind 冲突会 fail-loud。
    */
   statisticsReducerDefinitions?: Array<AnyStatisticsReducerDefinition>;
   /**
-   * 自定义 row selector definition 数组（运行时函数，不进 IR）：select / annotate / relate 的 `{op:<customOp>, ...config}` 据此校验并选择代表行。
-   * @description 内置 selector 恒可用；自定义 op 未注册 / op 冲突会 fail-loud。
+   * 自定义 row selector definition 数组（运行时函数，不进 IR）：select / annotate / relate 的 `{kind:<customKind>, ...config}` 据此校验并选择代表行。
+   * @description 内置 selector 恒可用；自定义 kind 未注册 / kind 冲突会 fail-loud。
    */
   rowSelectorDefinitions?: Array<AnyRowSelectorDefinition>;
   /**

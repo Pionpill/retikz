@@ -19,7 +19,7 @@ describe('transform schema', () => {
       TransformSchema.parse({
         kind: 'summarize',
         groupBy: ['month'],
-        metrics: [{ op: 'count', as: 'rows', extra: true }],
+        metrics: [{ kind: 'count', as: 'rows', extra: true }],
       }),
     ).toThrow();
 

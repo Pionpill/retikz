@@ -48,9 +48,9 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
   kind="summarize"
   groupBy={['region']}
   metrics={[
-    { op: 'sum', field: 'revenue', as: 'total' },
-    { op: 'median', field: 'revenue', as: 'median' },
-    { op: 'count', as: 'orders' },
+    { kind: 'sum', field: 'revenue', as: 'total' },
+    { kind: 'median', field: 'revenue', as: 'median' },
+    { kind: 'count', as: 'orders' },
   ]}
 />
 ```
@@ -68,7 +68,7 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 | `rankAs`   | `string?`        | —        | 可选，把一基 rank 写入该字段 |
 
 ```tsx
-<Transform kind="select" groupBy={['region']} selector={{ op: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
+<Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
 ```
 
 ## 统计标注 annotate
@@ -87,8 +87,8 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 <Transform
   kind="annotate"
   groupBy={['store']}
-  metrics={[{ op: 'mean', field: 'revenue', as: 'storeMean' }]}
-  selectors={[{ selector: { op: 'max', by: 'revenue' }, as: 'storeMax' }]}
+  metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}
+  selectors={[{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }]}
 />
 ```
 
@@ -96,7 +96,7 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 
 `summarize`、`annotate` 和 plot 注册的 `bin` 会复用 reducer；`select`、`annotate` 和 plot 注册的 `relate` 会复用 selector。
 
-| 子算子   | 返回什么 | 典型 op                                                                               |
+| 子算子   | 返回什么 | 典型 kind                                                                             |
 | -------- | -------- | ------------------------------------------------------------------------------------- |
 | reducer  | 字段片段 | `count` / `sum` / `mean` / `median` / `min` / `max` / `quantile-band`                 |
 | selector | 原始行   | `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band` |

@@ -858,7 +858,7 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_path_accepts_local_transform', () => {
     const m = {
       type: 'path',
-      transform: [{ kind: 'summarize', groupBy: ['series'], metrics: [{ op: 'sum', field: 'value', as: 'total' }] }],
+      transform: [{ kind: 'summarize', groupBy: ['series'], metrics: [{ kind: 'sum', field: 'value', as: 'total' }] }],
       order: 'series',
       encoding: { x: { field: 'series' }, y: { field: 'total' } },
     };

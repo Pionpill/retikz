@@ -416,8 +416,8 @@ describe('RelationMark and anchorId lowering', () => {
           transform: [
             {
               kind: 'relate',
-              source: { selector: { op: 'min', by: 'value' }, fields: { id: 'id' } },
-              target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+              source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
+              target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
               measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
             },
           ],
@@ -459,8 +459,8 @@ describe('RelationMark and anchorId lowering', () => {
           transform: [
             {
               kind: 'relate',
-              source: { selector: { op: 'first' }, fields: { x: 'x', y: 'value' } },
-              target: { selector: { op: 'last' }, fields: { x: 'x', y: 'value' } },
+              source: { selector: { kind: 'first' }, fields: { x: 'x', y: 'value' } },
+              target: { selector: { kind: 'last' }, fields: { x: 'x', y: 'value' } },
             },
           ],
           source: { project: { x: 'sourceX', y: 'sourceY' } },
@@ -490,8 +490,8 @@ describe('RelationMark and anchorId lowering', () => {
           transform: [
             {
               kind: 'relate',
-              source: { selector: { op: 'first' }, fields: { x: 'x', y: 'value' } },
-              target: { selector: { op: 'last' }, fields: { x: 'x', y: 'value' } },
+              source: { selector: { kind: 'first' }, fields: { x: 'x', y: 'value' } },
+              target: { selector: { kind: 'last' }, fields: { x: 'x', y: 'value' } },
               measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
             },
           ],

@@ -13,30 +13,30 @@ import { BUILTIN_ROW_SELECTORS } from './selectors';
 export { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 export { BUILTIN_ROW_SELECTORS } from './selectors';
 
-/** 合并内置与自定义统计 reducer 定义，并集中检查 op 冲突。 */
+/** 合并内置与自定义统计 reducer 定义，并集中检查 kind 冲突。 */
 export const resolveStatisticsReducerRegistry = (
   custom?: ReadonlyArray<AnyStatisticsReducerDefinition>,
 ): Map<string, AnyStatisticsReducerDefinition> => {
   const registry = new Map<string, AnyStatisticsReducerDefinition>();
   for (const def of BUILTIN_STATISTICS_REDUCERS) registry.set(extractStatisticOperation(def.schema), def);
   for (const def of custom ?? []) {
-    const op = extractStatisticOperation(def.schema);
-    if (registry.has(op)) throw new Error(`data: duplicate statistics reducer registration: "${op}"`);
-    registry.set(op, def);
+    const kind = extractStatisticOperation(def.schema);
+    if (registry.has(kind)) throw new Error(`data: duplicate statistics reducer registration: "${kind}"`);
+    registry.set(kind, def);
   }
   return registry;
 };
 
-/** 合并内置与自定义 row selector 定义，并集中检查 op 冲突。 */
+/** 合并内置与自定义 row selector 定义，并集中检查 kind 冲突。 */
 export const resolveRowSelectorRegistry = (
   custom?: ReadonlyArray<AnyRowSelectorDefinition>,
 ): Map<string, AnyRowSelectorDefinition> => {
   const registry = new Map<string, AnyRowSelectorDefinition>();
   for (const def of BUILTIN_ROW_SELECTORS) registry.set(extractStatisticOperation(def.schema), def);
   for (const def of custom ?? []) {
-    const op = extractStatisticOperation(def.schema);
-    if (registry.has(op)) throw new Error(`data: duplicate row selector registration: "${op}"`);
-    registry.set(op, def);
+    const kind = extractStatisticOperation(def.schema);
+    if (registry.has(kind)) throw new Error(`data: duplicate row selector registration: "${kind}"`);
+    registry.set(kind, def);
   }
   return registry;
 };
@@ -54,10 +54,10 @@ const reducerDefinitionOf = (
   operation: ReducerOperation,
   registry: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
 ): AnyStatisticsReducerDefinition => {
-  const definition = registry.get(operation.op);
+  const definition = registry.get(operation.kind);
   if (definition === undefined) {
     throw new Error(
-      `data: reducer op "${operation.op}" is not registered; pass a StatisticsReducerDefinition via options.statisticsReducerDefinitions`,
+      `data: reducer kind "${operation.kind}" is not registered; pass a StatisticsReducerDefinition via options.statisticsReducerDefinitions`,
     );
   }
   return definition;
@@ -68,10 +68,10 @@ const selectorDefinitionOf = (
   operation: SelectorOperation,
   registry: ReadonlyMap<string, AnyRowSelectorDefinition> = resolveRowSelectorRegistry(),
 ): AnyRowSelectorDefinition => {
-  const definition = registry.get(operation.op);
+  const definition = registry.get(operation.kind);
   if (definition === undefined) {
     throw new Error(
-      `data: selector op "${operation.op}" is not registered; pass a RowSelectorDefinition via options.rowSelectorDefinitions`,
+      `data: selector kind "${operation.kind}" is not registered; pass a RowSelectorDefinition via options.rowSelectorDefinitions`,
     );
   }
   return definition;

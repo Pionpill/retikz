@@ -19,8 +19,8 @@ const Demo: FC = () => (
       transform={[
         {
           kind: 'relate',
-          source: { selector: { op: 'min', by: 'value' }, fields: { id: 'id' } },
-          target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+          source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
+          target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
           measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
         },
       ]}

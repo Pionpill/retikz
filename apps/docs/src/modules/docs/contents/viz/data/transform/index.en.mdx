@@ -48,9 +48,9 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
   kind="summarize"
   groupBy={['region']}
   metrics={[
-    { op: 'sum', field: 'revenue', as: 'total' },
-    { op: 'median', field: 'revenue', as: 'median' },
-    { op: 'count', as: 'orders' },
+    { kind: 'sum', field: 'revenue', as: 'total' },
+    { kind: 'median', field: 'revenue', as: 'median' },
+    { kind: 'count', as: 'orders' },
   ]}
 />
 ```
@@ -68,7 +68,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 | `rankAs`   | `string?`        | —                | Optional one-based rank field on output rows |
 
 ```tsx
-<Transform kind="select" groupBy={['region']} selector={{ op: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
+<Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
 ```
 
 ## annotate
@@ -87,8 +87,8 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 <Transform
   kind="annotate"
   groupBy={['store']}
-  metrics={[{ op: 'mean', field: 'revenue', as: 'storeMean' }]}
-  selectors={[{ selector: { op: 'max', by: 'revenue' }, as: 'storeMax' }]}
+  metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}
+  selectors={[{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }]}
 />
 ```
 
