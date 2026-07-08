@@ -3,7 +3,7 @@
 import type { DataLineageRecorder } from './lineage';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
 
-import { type ExternalRow, type TransformOperation } from '../schemas';
+import { type ExternalRow, type Transform } from '../schemas';
 
 /**
  * transform apply 上下文。
@@ -28,17 +28,17 @@ export type TransformContext = {
 
 /**
  * transform runtime definition。
- * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 TransformOperation。
+ * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 Transform。
  */
-export type TransformDefinition<TTransformOperation extends TransformOperation = TransformOperation> = {
+export type TransformDefinition<TTransform extends Transform = Transform> = {
   /** 完整 transform operation schema；必须含非空 z.literal('kind') 供 registry 提取注册键。 */
-  schema: z.ZodType<TTransformOperation>;
+  schema: z.ZodType<TTransform>;
   /** 该 transform 消费的源字段名；参与 data.model strict 校验。 */
-  inputFields?: (operation: TTransformOperation, context: TransformContext) => Array<string>;
+  inputFields?: (operation: TTransform, context: TransformContext) => Array<string>;
   /** 该 transform 产出的派生字段名；从 data.model strict 校验的源字段集中排除。 */
-  outputFields?: (operation: TTransformOperation, context: TransformContext) => Array<string>;
+  outputFields?: (operation: TTransform, context: TransformContext) => Array<string>;
   /** 执行 transform；必须纯且确定；改行数且代表源行集合时要用 context.groupProvenance 保留 provenance。 */
-  apply: (rows: Array<ExternalRow>, operation: TTransformOperation, context: TransformContext) => Array<ExternalRow>;
+  apply: (rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>;
 };
 
 /**
@@ -46,16 +46,16 @@ export type TransformDefinition<TTransformOperation extends TransformOperation =
  * @description 保留 schema / inputFields / outputFields / apply 之间的泛型关联；内置与自定义 transform 都经同一 registry 入口分派。
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook。
  */
-export const defineTransform = <TTransformOperation extends TransformOperation>(
-  def: TransformDefinition<TTransformOperation>,
-): TransformDefinition<TTransformOperation> => def;
+export const defineTransform = <TTransform extends Transform>(
+  def: TransformDefinition<TTransform>,
+): TransformDefinition<TTransform> => def;
 
 /**
  * registry 内部使用的宽类型。
  * @description registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄。
  */
 export type AnyTransformDefinition = Omit<
-  TransformDefinition<TransformOperation>,
+  TransformDefinition<Transform>,
   'schema' | 'inputFields' | 'outputFields' | 'apply'
 > & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 kind 并执行 parse。 */

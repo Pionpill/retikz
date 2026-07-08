@@ -1,4 +1,4 @@
-import type { ExternalRow, ReducerOperation, SelectorOperation, TransformOperation } from '../schemas';
+import type { ExternalRow, ReducerOperation, SelectorOperation, Transform } from '../schemas';
 
 /** 数据来源索引摘要模式。 */
 export type DataSourceIdentityMode = 'summary' | 'full';
@@ -170,7 +170,7 @@ export type DataLineageTransformStepInput = {
   /** transform 在声明数组中的下标。 */
   operationIndex: number;
   /** transform operation。 */
-  operation: TransformOperation;
+  operation: Transform;
   /** 输入行。 */
   inputRows: Array<ExternalRow>;
   /** 输出行。 */
