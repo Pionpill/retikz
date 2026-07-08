@@ -12,7 +12,7 @@ import type {
 /** 内置坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;
 
-/** 坐标系 operation（内置 ∪ 自定义 type passthrough） */
+/** 坐标系 operation（内置 ∪ 自定义 type 开放配置） */
 export type CoordinateOperation = z.infer<typeof CoordinateOperationSchema>;
 
 /** 一维直线坐标系（cartesian1D） */

@@ -218,10 +218,10 @@ export type RelationMark = z.infer<typeof RelationMarkSchema>;
 /** 内置 mark 声明。 */
 export type Mark = z.infer<typeof MarkSchema>;
 
-/** custom mark operation（自定义 type passthrough，由 runtime MarkDefinition 解释） */
+/** custom mark operation（自定义 type 开放配置，由 runtime MarkDefinition 解释） */
 export type CustomMark = z.infer<typeof CustomMarkSchema>;
 
-/** mark operation（内置 ∪ 自定义 type passthrough） */
+/** mark operation（内置 ∪ 自定义 type 开放配置） */
 export type MarkOperation = z.infer<typeof MarkOperationSchema>;
 
 /** mark operation 是否内置；把放宽后的 union 收窄回精确内置 Mark，供 lowering 内置专属几何分支门控。 */

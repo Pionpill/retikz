@@ -470,7 +470,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .array(MarkOperationSchema)
     .min(1)
     .describe(
-      'Mark layers, drawn in array order (stable z-order); built-in mark configs or custom type passthrough validated by a runtime MarkDefinition',
+      'Mark layers, drawn in array order (stable z-order); built-in mark configs or custom type open config validated by a runtime MarkDefinition',
     ),
   guides: z
     .array(GuideSchema)

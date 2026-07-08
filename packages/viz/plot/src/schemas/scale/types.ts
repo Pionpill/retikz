@@ -76,5 +76,5 @@ export type Scale = z.infer<typeof ScaleSchema>;
 /** 自定义 scale operation（运行时由 ScaleDefinition 精确校验并解析；type 排除内置） */
 export type CustomScale = z.infer<typeof CustomScaleSchema>;
 
-/** scale operation（内置精确 13-union ∪ 自定义 type passthrough） */
+/** scale operation（内置精确 13-union ∪ 自定义 type 开放配置） */
 export type ScaleOperation = z.infer<typeof ScaleOperationSchema>;

@@ -165,7 +165,7 @@ export const QuantileBandReducerOperationSchema = z
 
 /** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供。 */
 const ExternalReducerOperationSchema = z
-  .object({
+  .looseObject({
     kind: z
       .string()
       .min(1)
@@ -174,7 +174,6 @@ const ExternalReducerOperationSchema = z
       })
       .describe('Discriminator: custom reducer kind'),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -197,7 +196,7 @@ export const BuiltinReducerOperationSchema = z
   ])
   .describe('Built-in statistic reducer operation');
 
-/** 统计 reducer operation schema；包含内置 kind 与外部注册 kind passthrough。 */
+/** 统计 reducer operation schema；包含内置 kind 与外部注册 kind 开放配置对象。 */
 export const ReducerOperationSchema = z
   .union([BuiltinReducerOperationSchema, ExternalReducerOperationSchema])
   .describe('Built-in or custom reducer operation');
@@ -336,7 +335,7 @@ export const OutsideQuantileBandSelectorOperationSchema = z
 
 /** 外部 row selector operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供。 */
 const ExternalSelectorOperationSchema = z
-  .object({
+  .looseObject({
     kind: z
       .string()
       .min(1)
@@ -345,7 +344,6 @@ const ExternalSelectorOperationSchema = z
       })
       .describe('Discriminator: custom selector kind'),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -369,7 +367,7 @@ export const BuiltinSelectorOperationSchema = z
   ])
   .describe('Built-in row selector operation');
 
-/** row selector operation schema；包含内置 kind 与外部注册 kind passthrough。 */
+/** row selector operation schema；包含内置 kind 与外部注册 kind 开放配置对象。 */
 export const SelectorOperationSchema = z
   .union([BuiltinSelectorOperationSchema, ExternalSelectorOperationSchema])
   .describe('Built-in or custom row selector operation');
@@ -435,7 +433,7 @@ export const BuiltinTransformSchema = z
 
 /** 外部 transform operation schema；只校验 JSON 形态和非保留 kind，具体契约由运行时 definition 提供。 */
 const ExternalTransformSchema = z
-  .object({
+  .looseObject({
     kind: z
       .string()
       .min(1)
@@ -444,7 +442,6 @@ const ExternalTransformSchema = z
       })
       .describe('Discriminator: custom transform kind'),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -457,7 +454,7 @@ const ExternalTransformSchema = z
   })
   .describe('Custom transform operation with JSON config');
 
-/** data transform operation schema；包含内置 kind 与外部注册 kind passthrough。 */
+/** data transform operation schema；包含内置 kind 与外部注册 kind 开放配置对象。 */
 export const TransformSchema = z
   .union([BuiltinTransformSchema, ExternalTransformSchema])
   .describe('Built-in or custom data transform operation');

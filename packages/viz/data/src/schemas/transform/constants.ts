@@ -113,11 +113,11 @@ export const RowSelectorTie = {
   All: 'all',
 } as const;
 
-/** transform operation 保留 kind 集合；供 external passthrough 排除内置判别串。 */
+/** transform operation 保留 kind 集合；供 external 开放配置排除内置判别串。 */
 export const RESERVED_TRANSFORM_KINDS = new Set<string>(Object.values(DataTransform));
 
-/** 统计 reducer operation 保留 kind 集合；供 external passthrough 排除内置判别串。 */
+/** 统计 reducer operation 保留 kind 集合；供 external 开放配置排除内置判别串。 */
 export const RESERVED_REDUCER_OPERATION_KINDS = new Set<string>(Object.values(ReducerOperationKind));
 
-/** row selector operation 保留 kind 集合；供 external passthrough 排除内置判别串。 */
+/** row selector operation 保留 kind 集合；供 external 开放配置排除内置判别串。 */
 export const RESERVED_SELECTOR_OPERATION_KINDS = new Set<string>(Object.values(SelectorOperationKind));

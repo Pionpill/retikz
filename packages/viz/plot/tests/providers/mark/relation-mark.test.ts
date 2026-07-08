@@ -247,7 +247,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'B', anchor: 'left' } });
   });
 
-  it('lowers generated source-target anchors to a core Path with labels and path marks passthrough', () => {
+  it('lowers generated source-target anchors to a core Path with labels and path mark config', () => {
     const root = expandOf(
       baseSpec([
         { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },

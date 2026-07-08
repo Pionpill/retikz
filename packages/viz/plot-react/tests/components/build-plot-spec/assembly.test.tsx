@@ -221,7 +221,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     });
   });
 
-  it('relation mark assembles source-target refs, top-level label, path passthrough, and color channel', () => {
+  it('relation mark assembles source-target refs, top-level label, path config, and color channel', () => {
     const spec = buildPlotSpec(
       <>
         <PointMark x="x" y="y" anchorId={{ prefix: 'pt', field: 'id' }} />

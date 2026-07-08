@@ -1123,7 +1123,7 @@ export const MarkSchema = z
   );
 
 export const CustomMarkSchema = z
-  .object({
+  .looseObject({
     type: z
       .string()
       .min(1)
@@ -1150,7 +1150,6 @@ export const CustomMarkSchema = z
       'Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks',
     ),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -1168,5 +1167,5 @@ export const CustomMarkSchema = z
 export const MarkOperationSchema = z
   .union([MarkSchema, CustomMarkSchema])
   .describe(
-    'Mark operation union: built-in mark configs plus custom type passthrough operations validated by a runtime MarkDefinition',
+    'Mark operation union: built-in mark configs plus custom type open config operations validated by a runtime MarkDefinition',
   );

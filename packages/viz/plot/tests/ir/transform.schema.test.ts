@@ -86,7 +86,7 @@ describe('TransformSchema external operations', () => {
     expect(() => TransformSchema.parse({ kind: 'bin' })).toThrow();
   });
 
-  it('external_kind_passthrough_valid', () => {
+  it('external_kind_open_config_valid', () => {
     const operation = { kind: 'regression', x: 'year', y: 'value', degree: 1 };
     expect(TransformSchema.parse(operation)).toEqual(operation);
   });

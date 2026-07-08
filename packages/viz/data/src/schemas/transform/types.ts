@@ -91,7 +91,7 @@ export type AnnotateTransform = z.infer<typeof AnnotateTransformSchema>;
 /** 内置 transform operation（sort / summarize / select / annotate）。 */
 export type BuiltinTransform = z.infer<typeof BuiltinTransformSchema>;
 
-/** transform operation（内置 ∪ 外部注册 kind passthrough）。 */
+/** transform operation（内置 ∪ 外部注册 kind 开放配置）。 */
 export type Transform = z.infer<typeof TransformSchema>;
 
 /** transform 管线 operation；定义对象在运行时用 schema 精确收窄。 */

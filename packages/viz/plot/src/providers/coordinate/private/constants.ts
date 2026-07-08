@@ -16,7 +16,7 @@ export const BUILTIN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
 
 /**
  * 按 type 索引的内置坐标系元数据。
- * @description 主要供 schema passthrough 与 lowering 判断某个 coordinate operation 是否命中内置 definition；
+ * @description 主要供 schema 开放配置识别与 lowering 判断某个 coordinate operation 是否命中内置 definition；
  *   自定义 definition 不写入此表，而是在每次 lowering 时通过 resolveCoordinateRegistry 合并。
  */
 export const BUILTIN_COORDINATE_DEFINITIONS_BY_TYPE: ReadonlyMap<string, AnyCoordinateDefinition> = new Map(

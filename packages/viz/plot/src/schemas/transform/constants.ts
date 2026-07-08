@@ -38,5 +38,5 @@ export const StackOffset = {
 /** stack baseline offset 策略值。 */
 export type StackOffsetValue = ValueOf<typeof StackOffset>;
 
-/** plot 内置 transform kind 集：用于外部 transform passthrough 排除 plot 内置判别串。 */
+/** plot 内置 transform kind 集：用于外部 transform 开放配置排除 plot 内置判别串。 */
 export const BUILTIN_PLOT_TRANSFORM_KINDS = new Set<string>(Object.values(PlotTransform));
