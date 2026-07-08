@@ -3,9 +3,9 @@ import type { IRScene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { MathJaxSvgEngine } from '../src';
+import type { MathJaxSvgEngine } from '../../src';
 
-import { createLowerTex, createMathJaxEngine } from '../src';
+import { createLowerTex, createMathJaxEngine } from '../../src';
 
 const MATHJAX_INTEGRATION_TIMEOUT = 15_000;
 
