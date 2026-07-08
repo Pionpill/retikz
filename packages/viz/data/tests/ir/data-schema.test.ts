@@ -19,6 +19,11 @@ describe('data schema', () => {
     expect(() => DataRefSchema.parse({ values: [{ x: 1 }] })).toThrow();
   });
 
+  it('rejects unknown keys on public data schema objects', () => {
+    expect(() => DataModelSchema.parse([{ name: 'month', tyep: DataFieldType.Categorical }])).toThrow();
+    expect(() => DataRefSchema.parse({ reference: 'sales', values: [{ x: 1 }] })).toThrow();
+  });
+
   it('rejects non JSON scalar values', () => {
     expect(ScalarValueSchema.parse('A')).toBe('A');
     expect(() => ScalarValueSchema.parse(() => 1)).toThrow();

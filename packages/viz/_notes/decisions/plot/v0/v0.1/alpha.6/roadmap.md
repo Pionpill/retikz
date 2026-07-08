@@ -84,7 +84,7 @@
 - **`FieldDef.type` 可选**：声明 name 即进 strict 契约，type 缺省按数据推断；strict 按 name 守、不被削弱。优先级 `resolveField.type > model.type > infer`。（ADR-05）
 - **`resolveField` 逃生舱**：运行时函数 `(field, ctx) => { type?, parse? }`，不进 IR；不绕过 strict；parse-only 须有类型来源；render/locator 经 `prepareRows` 同源。（ADR-04）
 - **声明式 `format` 词表**：`FieldDef.format`（closed 枚举，进 IR、可序列化）覆盖常见非默认格式；优先级 `resolveField.parse > format > 内置`；完整 date pattern 串留 phase 2。（ADR-06）
-- **`FieldDef.order`**：`'data' | 'ascending' | 'descending' | Array`；非默认即有序；挂 FieldDef 故位置(band)与颜色(ordinal)同序；scale 级显式 domain 留后续。（ADR-07）
+- **`FieldDef.order`**：`'appearance' | 'ascending' | 'descending' | Array`；非默认即有序；挂 FieldDef 故位置(band)与颜色(ordinal)同序；scale 级显式 domain 留后续。（ADR-07）
 - **数据健壮性**：恒归一化（去「仅 model/resolver 命中」门控，下游单一 canonical 路径）；`LowerPlotsOptions.invalid: 'skip'|'error'` + validateData 字段级 invalid/missing 报告；bigint 进 ingest（转 number）但不进 IR 标量。（ADR-08）
 
 ## 贯穿原则落点

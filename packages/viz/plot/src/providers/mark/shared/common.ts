@@ -23,8 +23,7 @@ import type {
   MarkProvenance,
 } from '../../../contract';
 
-import { ChannelDefinitionKind } from '../../../contract';
-import { datumMeta, markLayerId, markLayerMeta } from '../../../pipeline';
+import { ChannelDefinitionKind, datumMeta, markLayerId, markLayerMeta } from '../../../contract';
 import {
   type AnchorIdSpec,
   type IntervalMark,

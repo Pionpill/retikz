@@ -1,8 +1,8 @@
 import type { ExternalRow } from '../schemas';
 
 /**
- * 行级源序标记：ingest 时给每行打 `row[SOURCE_INDEX]=i`，跨 transform（object spread / sort）存活。
- * @description Symbol 键不进 JSON.stringify、不被 resolveFieldPath（字符串路径）看见。
+ * 行级源序标记。
+ * @description 数据进入 pipeline 时给每行打 `row[SOURCE_INDEX]=i`；Symbol 键不进 JSON.stringify，也不会被字符串路径解析读取。
  */
 export const SOURCE_INDEX = Symbol('retikz.data.sourceIndex');
 
@@ -14,7 +14,7 @@ export const readSourceIndex = (row: ExternalRow): number | undefined => {
 
 /**
  * 组级源序标记：改行数 transform 给每个输出行打 `row[SOURCE_INDICES]=[...]`。
- * @description 聚合 / 分箱产出的一行代表一组源行，故 provenance 是源行索引集合。
+ * @description 聚合 / 分箱等输出行可代表一组源行，故 provenance 记录源行索引集合。
  */
 export const SOURCE_INDICES = Symbol('retikz.data.sourceIndices');
 
@@ -45,7 +45,7 @@ export const withGroupProvenance = (row: ExternalRow, members: Array<ExternalRow
 
 /**
  * 给每行打源序标记。
- * @description object spread 拷贝可枚举 symbol 属性，故 transform 管线后标记仍在；resolveFieldPath / JSON 都忽略它。
+ * @description object spread 会保留可枚举 symbol 属性，transform 管线后标记仍可读取；resolveFieldPath / JSON 都忽略它。
  */
 export const tagSourceIndex = (rows: Array<ExternalRow>): Array<ExternalRow> =>
   rows.map((row, index) => ({ ...row, [SOURCE_INDEX]: index }));

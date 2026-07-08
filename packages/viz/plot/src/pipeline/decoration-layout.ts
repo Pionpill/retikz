@@ -3,7 +3,7 @@ import type { IRJsonObject, IRNode, IRScope, IRTextBlock } from '@retikz/core';
 import { GeometryLabelPosition } from '@retikz/core';
 
 import type { PlotLabel, PlotLayout } from '../schemas';
-import type { Margins, Rect } from './layout';
+import type { Margins, Rect } from '../shared';
 
 import { AxisCardinalSide } from '../schemas';
 import { PlotLayerZIndex } from '../schemas/layer';
@@ -14,7 +14,7 @@ import {
   PlotLabelRole,
   PlotLayoutMode,
 } from '../schemas/layout';
-import { estimateLabelWidth } from './layout';
+import { estimateLabelWidth } from '../shared';
 
 type TextLabel = Extract<PlotLabel, { type: 'text' }>;
 type TextStyle = Partial<

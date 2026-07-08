@@ -7,17 +7,19 @@ import { DataFieldType } from '../../schemas';
 import { coerceValue } from './coerce';
 import { resolveFieldPath } from './field';
 
+/** 把自定义 parser 返回值收窄到 data 层可消费的字段规范值。 */
 const asParsedValue = (value: ParsedFieldValue): ParsedFieldValue =>
   typeof value === 'string' || typeof value === 'number' ? value : undefined;
 
+/** 判断 coercion / parser 结果是否满足指定字段测量类型的有效值域。 */
 const isCoercedValid = (value: unknown, type: DataFieldTypeValue): boolean => {
   if (type === DataFieldType.Categorical) return value !== undefined && value !== null;
   return isFiniteNumber(value);
 };
 
 /**
- * ingest 归一化：把每行用户源字段按 fieldMap 解析，再按 DataFieldTypeValue coerce 成 canonical 行。
- * @description 下游 transform / scale / mark / locator 统一读取 canonical 字段，避免二次 coercion。
+ * 归一化绑定数据行。
+ * @description 每个逻辑字段先经 fieldMap 映射到物理路径，再通过自定义 parser 或内置 coercion 写回规范化字段；下游 transform / scale / mark / locator 统一读取规范化字段，避免二次 coercion。
  */
 export const normalizeRows = (
   rows: Array<ExternalRow>,
@@ -36,11 +38,12 @@ export const normalizeRows = (
     return canonical;
   });
 
+/** 判断原始数据值是否缺失；缺失与非法值在诊断中分别计数。 */
 const isMissingRaw = (raw: unknown): boolean => raw === undefined || raw === null;
 
 /**
  * 抽样校验绑定数据：每个用户源字段在样本里至少有一个可 coercion 的值，否则 fail-loud。
- * @description validateData 开启时调用，用字段级 invalid / missing 计数解释空图原因。
+ * @description validateData 开启时调用，用字段级 invalid / missing 计数解释空图原因；该阶段读取原始绑定数据。
  */
 export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: DataFieldTypeMap, sampleRows: number): void => {
   const limit = Math.min(rows.length, sampleRows);
@@ -67,8 +70,8 @@ export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: DataFiel
 };
 
 /**
- * 全量严格校验 normalized canonical 值，任一坏值即 fail-loud。
- * @description invalid:'error' 使用；读取已过 parser / coerce 的 canonical 值。
+ * 全量严格校验规范化字段值，任一坏值即 fail-loud。
+ * @description invalid:'error' 使用；该阶段读取已过 parser / coercion 的规范化字段。
  */
 export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes: DataFieldTypeMap): void => {
   for (const [logical, type] of fieldTypes) {

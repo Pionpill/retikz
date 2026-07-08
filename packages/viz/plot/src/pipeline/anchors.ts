@@ -6,7 +6,7 @@ import { resolveFieldPath } from '@retikz/data';
 import type { AnchorIdGenerator, AnchorOwner, AnchorRegistry } from '../contract';
 import type { AnchorIdSpec } from '../schemas';
 
-import { slug } from './provenance';
+import { slug } from '../contract';
 
 const ownerText = (owner: AnchorOwner): string => {
   const id = owner.markId === undefined ? '' : ` id="${owner.markId}"`;

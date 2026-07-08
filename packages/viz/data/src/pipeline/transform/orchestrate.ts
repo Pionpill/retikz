@@ -13,7 +13,7 @@ export const DEFAULT_TRANSFORM_CONTEXT: TransformContext = {
   groupProvenance: withGroupProvenance,
 };
 
-/** 解析并校验单个 transform operation；返回可安全喂给 definition 的宽类型。 */
+/** 解析并校验单个 transform operation；返回可安全传给对应 definition 的宽类型。 */
 const parseTransformOperation = (definition: AnyTransformDefinition, operation: TransformOperation): never => {
   JsonObjectSchema.parse(operation);
   const parsed = definition.schema.parse(operation) as never;

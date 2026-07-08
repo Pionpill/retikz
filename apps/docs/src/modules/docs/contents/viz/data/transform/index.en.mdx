@@ -105,7 +105,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 <ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
 
-The boxplot above has no dedicated `BoxPlotMark`. Data data transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
+The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
 
 ## Custom Transforms
 
@@ -113,9 +113,9 @@ When the input / output row shape does not fit an existing transform, register a
 
 <ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
 
-| definition field | declares                                                 | enters IR |
-| ---------------- | -------------------------------------------------------- | --------- |
-| `schema`         | Validates `{ kind, ...config }` and reads the key        | No        |
-| `inputFields`    | Source fields read by the transform and model validation | No        |
-| `outputFields`   | Derived fields excluded from strict model checks         | No        |
-| `transform`      | Runtime row-processing logic                             | No        |
+| definition field | declares                                                     | enters IR |
+| ---------------- | ------------------------------------------------------------ | --------- |
+| `schema`         | Validates `{ kind, ...config }` and reads the key            | No        |
+| `inputFields`    | Source fields read by the transform and model validation     | No        |
+| `outputFields`   | Derived fields excluded from strict model checks             | No        |
+| `apply`          | Runtime row processing: `(rows, operation, context) => rows` | No        |

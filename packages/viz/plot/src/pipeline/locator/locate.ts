@@ -13,16 +13,17 @@ import type {
   PlotLocatorOptions,
   ResolvedAnchor,
 } from '../../contract';
+import type { ProvenanceContext } from '../../contract';
 import type { Mark, MarkOperation, PlotSpec, TransformOperation } from '../../schemas';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
-import type { ProvenanceContext } from '../provenance';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
+import { datumMeta } from '../../contract';
 import { buildIntervalContext, datumAnchor, intervalCellGeometry } from '../../providers';
 import { isBuiltinMark, PlotMark } from '../../schemas';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { lowerPlots, prepareRows, resolveFrame } from '../expand';
-import { createDatumIdRegistrar, datumMeta } from '../provenance';
+import { createDatumIdRegistrar } from '../provenance';
 
 type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 

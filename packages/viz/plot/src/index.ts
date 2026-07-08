@@ -22,9 +22,9 @@ export {
   densifyCellContour,
   extractCoordinateType,
 } from './contract';
-export { createPlotLocator } from './pipeline';
-export * from './pipeline/expand';
-export * from './pipeline/layout';
+export type { LowerPlotsOptions } from './pipeline/expand';
+export { lowerPlots } from './pipeline/expand';
+export { createPlotLocator } from './pipeline/locator';
 export { resolveCoordinateRegistry } from './providers';
 export * from './schemas';
 // Built-in scale resolve* builders are internal lowering helpers; expose the

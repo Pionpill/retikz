@@ -12,12 +12,14 @@ import { reducerInputFields, reducerOutputFields, selectorInputFields } from '..
 import { applyAnnotate, applySelect, applySummarize } from './group';
 import { applySort } from './row';
 
+/** 内置 sort transform definition；读取排序字段并稳定重排输入行。 */
 const sortTransformDefinition = defineTransform<SortTransform>({
   schema: SortTransformSchema,
   inputFields: operation => [operation.field],
   apply: (rows, operation) => applySort(rows, operation),
 });
 
+/** 内置 summarize transform definition；声明 groupBy 与 reducer 输入字段，并输出 reducer 派生字段。 */
 const summarizeTransformDefinition = defineTransform<SummarizeTransform>({
   schema: SummarizeTransformSchema,
   inputFields: (operation, context) => [
@@ -29,6 +31,7 @@ const summarizeTransformDefinition = defineTransform<SummarizeTransform>({
   apply: (rows, operation, context) => applySummarize(rows, operation, context),
 });
 
+/** 内置 select transform definition；声明 groupBy 与 selector 输入字段，并可输出 rankAs 字段。 */
 const selectTransformDefinition = defineTransform<SelectTransform>({
   schema: SelectTransformSchema,
   inputFields: (operation, context) => [
@@ -39,6 +42,7 @@ const selectTransformDefinition = defineTransform<SelectTransform>({
   apply: (rows, operation, context) => applySelect(rows, operation, context),
 });
 
+/** 内置 annotate transform definition；声明 groupBy、reducer、selector 输入字段，并输出全部回填字段。 */
 const annotateTransformDefinition = defineTransform<AnnotateTransform>({
   schema: AnnotateTransformSchema,
   inputFields: (operation, context) => [
