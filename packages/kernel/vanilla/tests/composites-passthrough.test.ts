@@ -8,8 +8,7 @@ import { renderToSvgString } from '../src';
 
 /**
  * @retikz/vanilla composites 透传（SSR / 构建期）
- * @description CommonOptions = { idPrefix, width, height } & CompileOptions，composites 随 CompileOptions
- *   自动透传给 compileToScene；展开在 core。
+ * @description CommonOptions.compile 承载 core CompileOptions；composites 随 compile 自动透传给 compileToScene；展开在 core。
  */
 const labeledBox = defineComposite({
   namespace: 'example',
@@ -30,7 +29,7 @@ const ir: IRScene = {
 
 describe('@retikz/vanilla composites 透传', () => {
   it('renderToSvgString 透传 composites → 渲染出 rect', () => {
-    expect(renderToSvgString(ir, { composites: [labeledBox] })).toContain('<rect');
+    expect(renderToSvgString(ir, { compile: { composites: [labeledBox] } })).toContain('<rect');
   });
 
   it('未注入对应 composite → 跳过该节点（不抛、不渲染 rect）', () => {

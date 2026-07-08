@@ -257,7 +257,7 @@ view.invalidate('chart');
 - `update-keeps-root-identity`：`view.update(nextSpec)` 后 SVG / Canvas root identity 不变，当前阶段允许整图重绘。
 - `hydrate-after-update-uses-current-scene`：先 `view.hydrate()` 再 `view.update(nextSpec)`，handler context 读取更新后的 Scene / geometry。
 - `layer-cache-does-not-change-draw-order`：混用 static / dynamic layer 时，视觉顺序仍按 `zIndex ?? 0` 升序 + 同值保持 spec 顺序稳定。
-- `provider-options-pass-through`：plain spec render options 中的 `shapes` / `pathKinds` / `patterns` / `composites` 等 provider surface 继续同名透传到 core compile，且显式 `composites` 在 adapter composites 之后拼接。
+- `provider-options-pass-through`：plain spec render options 中的 `compile.shapes` / `compile.pathKinds` / `compile.patterns` / `compile.composites` 等 provider surface 透传到 core compile，且显式 `compile.composites` 在 adapter composites 之后拼接。
 
 ### 依赖的现有元素
 

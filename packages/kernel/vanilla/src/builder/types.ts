@@ -65,14 +65,21 @@ export const FIGURE_ROOT_STYLE_FIELDS = [
 
 /**
  * figure 的 config。
- * @description viewBox/animations 注入 IR 根；width/height/idPrefix 交给 adapter；其余编译参数来自 core CompileOptions。
+ * @description viewBox/animations 注入 IR 根；output 交给 adapter；style 会落成隐式根 scope；compile 只在渲染入口调用
+ *   `compileToScene` 时使用。
  */
 export type FigureConfig = {
-  width?: number;
-  height?: number;
   viewBox?: IRViewBox;
-  idPrefix?: string;
   /** scene 根时间轴动画 tracks。 */
   animations?: Array<IRAnimationTrack>;
-} & FigureRootStyle &
-  CompileOptions;
+  /** 全图根级级联样式，设置后会把 children 包进一层合成根 scope。 */
+  style?: FigureRootStyle;
+  /** 输出资源与显示尺寸选项。 */
+  output?: {
+    idPrefix?: string;
+    width?: number;
+    height?: number;
+  };
+  /** core compile 选项；输入已是 Scene 时忽略。 */
+  compile?: CompileOptions;
+};

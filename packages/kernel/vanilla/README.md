@@ -20,7 +20,7 @@ const svg = renderToSvgString(ir);
 
 // browser
 mountSvg(document.querySelector('#diagram')!, ir);
-mountCanvas(document.querySelector('#canvas-diagram')!, ir, { width: 640, height: 360 });
+mountCanvas(document.querySelector('#canvas-diagram')!, ir, { output: { width: 640, height: 360 } });
 ```
 
 ## Plain spec
@@ -50,8 +50,9 @@ mount(document.querySelector('#diagram')!, spec);
 - Plain spec: `figure` / `layer` / `node` / `path` / `coordinate` / `scope` / `embed`, plus `VanillaTier2Adapter` for explicit Tier 2 embedding
 - Legacy builder: `legacyFigure` and `draw` remain available for migration, but new docs and new features use plain spec
 - Hydration: `HydrationHandlers`, `HydrationContext`, `HydrationHandler`, `RetikzEventValue`, and related runtime types
-- Animation: `blink`, `fadeIn`, `drawOn`, `loop`, `stagger`, `AnimationControls`, custom easing / animation-property types, and `view.animation`
-- Extension registrars: `defineArrow`, `defineBoundary`, `defineClip`, `definePattern`, `definePathGenerator`, `definePathKind`, `defineRibbonWidthProfile`, plus their definition / context types
+- Animation runtime: `AnimationControls`, custom easing / animation-property types, and `view.animation`
+
+Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`.
 
 ## Docs
 

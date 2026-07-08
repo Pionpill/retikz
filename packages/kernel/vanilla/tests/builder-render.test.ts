@@ -8,12 +8,12 @@ import { draw } from '../src/builder/draw';
 import { figure } from '../src/builder/figure';
 import { node } from '../src/builder/node';
 
-/** 自定义 shape：复用 builtin 定义、注册成新名 'hexagon'，仅验 figure({shapes}) 把表透传进 compileToScene */
+/** 自定义 shape：复用 builtin 定义、注册成新名 'hexagon'，仅验 figure({compile:{shapes}}) 把表透传进 compileToScene */
 const hexagon = { ...BUILTIN_SHAPES.rectangle, name: 'hexagon' };
 
 describe('@retikz/vanilla builder ↔ render 管线', () => {
-  it('width-height-emitted：figure({width,height}) 的 toSvgString/mount 根 <svg> 带 width/height', () => {
-    const fig = figure({ width: 400, height: 300 }, [node('a', { position: [0, 0], text: 'A' })]);
+  it('width-height-emitted：figure({output:{width,height}}) 的 toSvgString/mount 根 <svg> 带 width/height', () => {
+    const fig = figure({ output: { width: 400, height: 300 } }, [node('a', { position: [0, 0], text: 'A' })]);
     const str = fig.toSvgString();
     expect(str).toMatch(/<svg[^>]*\bwidth="400"/);
     expect(str).toMatch(/<svg[^>]*\bheight="300"/);
@@ -30,8 +30,8 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
     expect(str).not.toMatch(/<svg[^>]*\bwidth=/);
   });
 
-  it('options-call-wins：figure({idPrefix:a}).toSvgString({idPrefix:b}) 用 b', () => {
-    const fig = figure({ idPrefix: 'aaa' }, [
+  it('options-call-wins：figure({output:{idPrefix:a}}).toSvgString({output:{idPrefix:b}}) 用 b', () => {
+    const fig = figure({ output: { idPrefix: 'aaa' } }, [
       node('a', {
         position: [0, 0],
         shape: 'rectangle',
@@ -45,13 +45,13 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
         },
       }),
     ]);
-    const out = fig.toSvgString({ idPrefix: 'bbb' });
+    const out = fig.toSvgString({ output: { idPrefix: 'bbb' } });
     expect(out).toContain('retikz-paint-bbb-');
     expect(out).not.toContain('retikz-paint-aaa-');
   });
 
   it('stroke-paint：vanilla draw() 结构化 stroke paint → SVG stroke url + paint defs', () => {
-    const fig = figure({ width: 120, height: 80 }, [
+    const fig = figure({ output: { width: 120, height: 80 } }, [
       draw(
         [
           [0, 0],
@@ -70,7 +70,7 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
         },
       ),
     ]);
-    const out = fig.toSvgString({ idPrefix: 'stroke' });
+    const out = fig.toSvgString({ output: { idPrefix: 'stroke' } });
     expect(out).toContain('retikz-paint-stroke-');
     expect(out).toMatch(/<path[^>]*stroke="url\(#retikz-paint-stroke-paint-1\)"/);
   });
@@ -89,7 +89,7 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
   });
 
   it('figure-feeds-standalone：mountSvg/renderToSvgString 直接接受 Figure', () => {
-    const fig = figure({ width: 120, height: 90 }, [node('a', { position: [0, 0], text: 'A' })]);
+    const fig = figure({ output: { width: 120, height: 90 } }, [node('a', { position: [0, 0], text: 'A' })]);
     const c = document.createElement('div');
     const view = mountSvg(c, fig);
     expect(c.querySelector('svg')).toBe(view.root);
@@ -99,7 +99,7 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
 
   it('figure-hyperscript-mount：figure(opts, [...]).mount 挂出 SVG DOM', () => {
     const c = document.createElement('div');
-    figure({ width: 200, height: 150 }, [
+    figure({ output: { width: 200, height: 150 } }, [
       node('a', { position: [0, 0], text: 'A' }),
       node('b', { position: [80, 0], text: 'B' }),
       draw(['a', 'b'], { marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
@@ -108,9 +108,9 @@ describe('@retikz/vanilla builder ↔ render 管线', () => {
     expect(c.querySelector('text, rect, g, path')).not.toBeNull();
   });
 
-  it('custom-shape-passthrough：figure({shapes}) 把 shape 表透传进 compileToScene（未注册抛、注册后不抛）', () => {
+  it('custom-shape-passthrough：figure({compile:{shapes}}) 把 shape 表透传进 compileToScene（未注册抛、注册后不抛）', () => {
     const mk = (shapes?: Array<typeof hexagon>): string =>
-      figure({ width: 100, height: 100, ...(shapes ? { shapes } : {}) }, [
+      figure({ output: { width: 100, height: 100 }, ...(shapes ? { compile: { shapes } } : {}) }, [
         node('a', { position: [0, 0], shape: 'hexagon', minimumSize: { width: 40, height: 40 }, fill: '#0a0' }),
       ]).toSvgString();
     expect(() => mk()).toThrow(/hexagon/i); // 未注册 → compileToScene 抛

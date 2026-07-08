@@ -286,7 +286,7 @@ describe('@retikz/vanilla plain spec', () => {
     const canvasContainer = document.createElement('div');
 
     const svgView = mount(svgContainer, spec);
-    const canvasView = mount(canvasContainer, spec, { renderer: 'canvas', width: 100, height: 100 });
+    const canvasView = mount(canvasContainer, spec, { renderer: 'canvas', output: { width: 100, height: 100 } });
 
     expect(svgView.root.tagName.toLowerCase()).toBe('svg');
     expect(canvasView.root.tagName.toLowerCase()).toBe('canvas');

@@ -44,6 +44,26 @@ const view = mount(document.querySelector('#diagram')!, spec);
 
 `view.update(nextSpec)` still rerenders the whole figure today, but the root element identity stays stable. The plain spec keeps layer and identity metadata so future `patch` / `invalidate` can work at a smaller boundary.
 
+## Options Shape
+
+Render options are grouped by the stage that consumes them:
+
+```ts
+renderToSvgString(spec, {
+  output: { width: 640, height: 360, idPrefix: 'flow' },
+  compile: { composites, measureText },
+  animation: { enabled: false, snapshotAt: 1000 },
+});
+
+mount(canvasRoot, spec, {
+  renderer: 'canvas',
+  output: { width: 640, height: 360 },
+  canvas: { devicePixelRatio: 2 },
+});
+```
+
+`figure()` describes the figure. `output` controls display size and resource ids, `compile` injects core compile capabilities, `animation` controls playback or snapshots, and `canvas` is only for the Canvas backend.
+
 ## Layers And Embeds
 
 `layer(id, options, children)` is an authoring boundary. `cache` is a runtime hint and does not enter core IR. `zIndex` only orders the layer stack; equal values keep declaration order.

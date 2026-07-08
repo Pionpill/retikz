@@ -32,7 +32,7 @@ const Diagram = () => {
 
 <ComponentAlert
   title="需要注入 lowerTex"
-  description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 toScene/renderToSvgString）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。"
+  description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 compile.lowerTex）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。"
 />
 
 ## 行内与 display 公式
@@ -80,7 +80,7 @@ const Diagram = () => {
 
 ## Vanilla
 
-`createMathJaxEngine(options?)`（await 启动）→ `createLowerTex` → 注入 `toScene` / `renderToSvgString` 的 `lowerTex`；节点文本照常写 `$...$`。`options.packages` 会透传给 MathJax TeX input，默认是 `['base']`：
+`createMathJaxEngine(options?)`（await 启动）→ `createLowerTex` → 注入 vanilla `compile.lowerTex`；节点文本照常写 `$...$`。`options.packages` 会透传给 MathJax TeX input，默认是 `['base']`：
 
 ```ts
 import { figure, node, renderToSvgString } from '@retikz/vanilla';
@@ -91,7 +91,7 @@ const spec = figure({
   children: [node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })],
 });
 
-const svg = renderToSvgString(spec, { lowerTex });
+const svg = renderToSvgString(spec, { compile: { lowerTex } });
 ```
 
 ## 语法

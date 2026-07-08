@@ -10,33 +10,55 @@ export type { AnimationControls } from '@retikz/render/animation';
 /** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene`、Vanilla plain spec，或 legacy `Figure`。 */
 export type RenderInput = Scene | IRScene | VanillaFigureSpec | Figure;
 
-/**
- * 两个入口共享的选项
- * @description `idPrefix`：SVG 资源 id 前缀，确定性（SSR↔客户端一致），缺省 `'r'`。`width`/`height`：写回根
- *   `<svg>` 的显示尺寸（adapter 职责，`@retikz/render/svg` 只产 viewBox）；缺省不写、由 CSS/容器定。其余继承 core
- *   `CompileOptions`（`measureText` / `shapes` / `boundaries` / `arrows` / `patterns` / `pathGenerators` / `composites` / `lowerTex` /
- *   `padding` / `precision` / `nodeDistance` / `fontSize` / `onWarn` / `onNodeLayout`）——收 `ir` 时透传给
- *   `compileToScene`，收 `scene` 时忽略。
- */
-export type CommonOptions = {
+/** 输出资源与显示尺寸选项。 */
+export type VanillaOutputOptions = {
+  /** SVG 资源 id 前缀；SSR 与客户端挂载应使用同一值。 */
   idPrefix?: string;
+  /** 根 SVG / Canvas 的显示宽度；缺省由 viewBox 或容器决定。 */
   width?: number;
+  /** 根 SVG / Canvas 的显示高度；缺省由 viewBox 或容器决定。 */
   height?: number;
+};
+
+/** 动画渲染选项。 */
+export type VanillaAnimationOptions = {
   /**
    * 是否播放动画（缺省 true）；`false` → 渲染 base 静态图（不 emit CSS/WAAPI、Canvas 不起 rAF）
-   * @description runtime 据 `{animate:false}` 或 `prefers-reduced-motion` 走静态路径，不起任何动画。
+   * @description runtime 据 `{ animation: { enabled: false } }` 或 `prefers-reduced-motion` 走静态路径，不起任何动画。
    */
-  animate?: boolean;
+  enabled?: boolean;
   /**
    * 静态截帧时刻（毫秒）；给定时渲染「定格在该时刻」的静态图（不播放、不 emit 动画），SSR 海报帧 / 缩略图用
-   * @description SVG 后端把各 track 在该时刻的值烘焙成静态属性 / transform（复用 `evaluateTrack`）；覆盖 `animate`。
+   * @description SVG 后端把各 track 在该时刻的值烘焙成静态属性 / transform（复用 `evaluateTrack`）；覆盖 `enabled`。
    */
   snapshotAt?: number;
   /** 自定义 easing 注册表（透传 renderer / runtime） */
   easings?: EasingRegistry;
+};
+
+/** Canvas 专属 runtime 选项。 */
+export type VanillaCanvasOptions = {
+  /** 设备像素比；缺省读 `globalThis.devicePixelRatio`、再回退 1（镜像 react CanvasHost） */
+  devicePixelRatio?: number;
+  /** 自定义 property 插值器注册表（透传 drawScene；自定义动画通道用） */
+  animationProperties?: AnimationPropertyRegistry;
+};
+
+/**
+ * 两个入口共享的选项
+ * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / plain spec / legacy Figure 时传给
+ *   `compileToScene`；`animation` 控制 SVG / Canvas runtime 动画；`adapters` 只参与 plain spec normalization。
+ */
+export type CommonOptions = {
+  /** 输出资源与显示尺寸选项。 */
+  output?: VanillaOutputOptions;
+  /** core compile 选项；输入已是 Scene 时忽略。 */
+  compile?: CompileOptions;
+  /** runtime 动画选项。 */
+  animation?: VanillaAnimationOptions;
   /** 可嵌入 Tier2 adapter 列表，仅 plain spec normalization 使用。 */
   adapters?: ReadonlyArray<AnyVanillaTier2Adapter>;
-} & CompileOptions;
+};
 
 export type RenderToStringOptions = CommonOptions;
 export type MountOptions = CommonOptions;
@@ -118,8 +140,6 @@ export type CanvasView = {
 
 /** `mountCanvas` 选项：继承 SSR / compile 公共项，外加 canvas 显示 / dpr 透传 */
 export type MountCanvasOptions = CommonOptions & {
-  /** 设备像素比；缺省读 `globalThis.devicePixelRatio`、再回退 1（镜像 react CanvasHost） */
-  devicePixelRatio?: number;
-  /** 自定义 property 插值器注册表（透传 drawScene；自定义动画通道用） */
-  animationProperties?: AnimationPropertyRegistry;
+  /** Canvas 专属 runtime 选项。 */
+  canvas?: VanillaCanvasOptions;
 };

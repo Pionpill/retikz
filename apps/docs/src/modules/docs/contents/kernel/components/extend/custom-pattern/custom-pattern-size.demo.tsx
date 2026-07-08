@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { definePattern, Layout, Node } from '@retikz/react';
+import { definePattern } from '@retikz/core';
+import { Layout, Node } from '@retikz/react';
 
 /**
  * 同一个 motif、不同 tile 周期：`pattern.size` 覆盖 def 的 defaultSize，控制图案疏密。

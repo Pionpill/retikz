@@ -41,7 +41,7 @@ describe('@retikz/vanilla mountSvg', () => {
     const view = mountSvg(c, baseFigure);
     const root = view.root;
     const viewBoxBefore = root.getAttribute('viewBox');
-    const next = figure({ padding: 50 }, [node('next', { position: [0, 0], text: 'NEXT' })]);
+    const next = figure({ compile: { padding: 50 } }, [node('next', { position: [0, 0], text: 'NEXT' })]);
 
     expect(() => view.update(next)).not.toThrow();
     expect(view.root).toBe(root);
@@ -72,9 +72,9 @@ describe('@retikz/vanilla mountSvg', () => {
       ],
     };
     const scene = compileToScene(ir);
-    const str = renderToSvgString(scene, { idPrefix: 'fig' });
+    const str = renderToSvgString(scene, { output: { idPrefix: 'fig' } });
     const c = document.createElement('div');
-    mountSvg(c, scene, { idPrefix: 'fig' });
+    mountSvg(c, scene, { output: { idPrefix: 'fig' } });
     const domHtml = c.querySelector('svg')!.outerHTML;
     expect(str).toContain('retikz-paint-fig-');
     expect(domHtml).toContain('retikz-paint-fig-');

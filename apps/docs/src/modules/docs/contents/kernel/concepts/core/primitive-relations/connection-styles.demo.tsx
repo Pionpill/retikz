@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Draw, DrawWay, Layout, Node } from '@retikz/react';
+import { DrawWay } from '@retikz/core';
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 连线方式：直线 / 曲线 / 折线

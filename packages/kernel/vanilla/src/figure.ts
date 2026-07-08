@@ -52,38 +52,39 @@ export type Figure = {
  *   留着只会让 figure 无谓包一层空合成根 `<Scope>`、改变 IR / Scene 拓扑却无视觉差异。标量通道的 falsy-但-defined
  *   值（`strokeWidth: 0` / `opacity: 0`）是有意义样式、保留（镜像 react `pickScopeStyle`）。
  */
-const pickRootStyle = (config: FigureConfig): Partial<FigureRootStyle> => {
+const pickRootStyle = (style: FigureRootStyle | undefined): Partial<FigureRootStyle> => {
   const picked: Partial<FigureRootStyle> = {};
+  if (style === undefined) return picked;
   for (const key of FIGURE_ROOT_STYLE_FIELDS) {
-    const value = config[key];
+    const value = style[key];
     if (value === undefined) continue;
     if (typeof value === 'object' && Object.keys(value).length === 0) continue;
-    // key 与 value 同源自 config[key]，但循环里 TS 无法把二者关联——按字段表逐字段赋值，类型安全由字段表保证
+    // key 与 value 同源自 style[key]，但循环里 TS 无法把二者关联——按字段表逐字段赋值，类型安全由字段表保证
     Object.assign(picked, { [key]: value });
   }
   return picked;
 };
 
+const mergeRenderOptions = (config: FigureConfig, callSite?: MountOptions): MountOptions => ({
+  ...callSite,
+  ...(config.output || callSite?.output ? { output: { ...config.output, ...callSite?.output } } : {}),
+  ...(config.compile || callSite?.compile ? { compile: { ...config.compile, ...callSite?.compile } } : {}),
+});
+
 /** figure() 的内部入口：装配 Figure（持 config + children，方法闭包其上） */
 export const createFigure = (config: FigureConfig, children: Array<Child>): Figure => {
   /**
-   * call-site options 覆盖 figure 存的 config（call-site wins）：viewBox / animations / 根样式已并进 ir，
-   * 这些 IR-only 字段从下发的 render options 剔除；其余（width/height/idPrefix + 全套 CompileOptions）全透传。
+   * call-site options 覆盖 figure 存的 config（call-site wins）：viewBox / animations / 根样式只参与 IR 装配；
+   * output / compile 作为渲染环境下发。
    */
-  const renderOptions = (callSite?: MountOptions): MountOptions => {
-    const merged: FigureConfig = { ...config, ...callSite };
-    delete merged.viewBox;
-    delete merged.animations;
-    for (const key of FIGURE_ROOT_STYLE_FIELDS) delete merged[key];
-    return merged;
-  };
+  const renderOptions = (callSite?: MountOptions): MountOptions => mergeRenderOptions(config, callSite);
 
   const fig: Figure = {
     [FIGURE_BRAND]: true,
     [FIGURE_RENDER_OPTIONS]: renderOptions,
     get ir(): IRScene {
       // 任一根样式字段携带指令 → 把 children 包进一层合成根 <Scope>，等价用户手写一层根 scope（全缺省时不包）
-      const rootStyle = pickRootStyle(config);
+      const rootStyle = pickRootStyle(config.style);
       const rootChildren: Array<Child> =
         Object.keys(rootStyle).length > 0 ? [{ type: 'scope', ...rootStyle, children }] : children;
       return {
@@ -106,14 +107,7 @@ export const createFigure = (config: FigureConfig, children: Array<Child>): Figu
     },
     toCanvas(canvas, options) {
       // figure 的 compile 选项（shapes/measureText…）走 toScene；canvas RenderOptions 是独立一套，原样透传
-      const compile: FigureConfig = { ...config };
-      delete compile.viewBox;
-      delete compile.idPrefix;
-      delete compile.width;
-      delete compile.height;
-      delete compile.animations;
-      for (const key of FIGURE_ROOT_STYLE_FIELDS) delete compile[key];
-      const scene = toScene(fig.ir, compile);
+      const scene = toScene(fig.ir, { compile: config.compile });
       renderToCanvas(canvas, scene, options ?? {});
     },
     node(...args) {

@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { cameraTo, Layout, Node } from '@retikz/react';
+import { cameraTo } from '@retikz/core';
+import { Layout, Node } from '@retikz/react';
 
 // 镜头：从全景 [0,0,200,200] 推到右下角 [110,110,80,80]（挂 Layout，scene 根 viewBox track）
 const Demo: FC = () => (

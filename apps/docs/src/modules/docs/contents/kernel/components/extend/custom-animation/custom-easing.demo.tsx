@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Layout, Node, scaleIn } from '@retikz/react';
+import { scaleIn } from '@retikz/core';
+import { Layout, Node } from '@retikz/react';
 
 // 注册一个带回弹的自定义缓动 'spring'（cubic-bezier y>1 → 越过 1 再落回），preset 用 easing:'spring' 即生效
 const Demo: FC = () => (

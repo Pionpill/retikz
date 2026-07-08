@@ -241,7 +241,7 @@ const boxIr: IRScene = {
 describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () => {
   it('coord-mapping：受限容器 letterbox 下 client 坐标经逆 fit → 正确 Scene 点', () => {
     const container = document.createElement('div');
-    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     // Scene 中心 (50,50) → client (RECT_LEFT+50+50, RECT_TOP+50)
     const { clientX, clientY } = sceneToClient(50, 50);
     const scene = view.clientToScene(clientX, clientY);
@@ -252,7 +252,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
   it('hydrate-hit：client 坐标 → 坐标映射 + hitTest 命中正确图元 id → handler 触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     const onClick = vi.fn();
     view.hydrate({ handlers: { box: { click: onClick } } });
 
@@ -281,7 +281,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     };
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, metaBoxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, metaBoxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     let context: HydrationContext | undefined;
     view.hydrate({
       handlers: {
@@ -313,7 +313,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
   it('hydrate-miss：client 坐标落 letterbox 黑边（Scene 外）→ 不触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     const onClick = vi.fn();
     view.hydrate({ handlers: { box: { click: onClick } } });
 
@@ -329,7 +329,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
   it('enter-on-pointermove：pointermove 进入 canvas 图元 → pointerEnter 触发一次（双模等价、不依赖 relatedTarget）', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     const onEnter = vi.fn();
     view.hydrate({ handlers: { box: { pointerEnter: onEnter } } });
 
@@ -357,7 +357,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
   it('enter-leave-on-pointermove：跨图元（box → 黑边）→ box 的 leave 触发一次', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     const onLeave = vi.fn();
     view.hydrate({ handlers: { box: { pointerLeave: onLeave } } });
 
@@ -377,7 +377,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
   it('dispose-detaches：view.hydrate 的 dispose 后点击不再触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     const onClick = vi.fn();
     const handle = view.hydrate({ handlers: { box: { click: onClick } } });
     handle.dispose();
@@ -420,7 +420,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     };
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, ir, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, ir, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     view.hydrate({ handlers: {} });
     expect(rafSpy).not.toHaveBeenCalled();
 
@@ -438,7 +438,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     // 初始 scene 无任何动画 track
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     view.hydrate({ handlers: {} });
 
     const { clientX, clientY } = sceneToClient(50, 50);
@@ -482,7 +482,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
   it('dispose-view-detaches-hydration：view.dispose 后未手动 dispose 的水合也解绑、点击不再触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     const onClick = vi.fn();
     view.hydrate({ handlers: { box: { click: onClick } } });
     const root = view.root;

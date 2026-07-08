@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
+import type { HydrationContext } from '@retikz/render/hydration';
+
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { HydrationContext } from '../src';
 
 import { Layout, Node } from '../src';
 

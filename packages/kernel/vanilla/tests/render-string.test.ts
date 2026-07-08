@@ -1,13 +1,11 @@
-import type { IRScene } from '@retikz/core';
+import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 
-import { compileToScene } from '@retikz/core';
+import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { BoundaryDefinition, ClipDefinition } from '../src';
-
-import { defineBoundary, defineClip, renderToSvgString } from '../src';
+import { renderToSvgString } from '../src';
 
 /**
  * @retikz/vanilla renderToSvgString（SSR / 构建期，node 环境，无 DOM）
@@ -84,7 +82,7 @@ describe('@retikz/vanilla renderToSvgString', () => {
     const b = renderToSvgString(nodeIr);
     expect(a).toBe(b); // 同输入逐字一致 → 确定性（fallbackMeasurer）
     // 注入更宽的度量器 → 节点尺寸变 → 输出不同（证明 measureText 真生效、ir contract 完整）
-    const wide = renderToSvgString(nodeIr, { measureText: () => ({ width: 999, height: 40 }) });
+    const wide = renderToSvgString(nodeIr, { compile: { measureText: () => ({ width: 999, height: 40 }) } });
     expect(wide).not.toBe(a);
   });
 
@@ -99,18 +97,18 @@ describe('@retikz/vanilla renderToSvgString', () => {
     const sized = svgRenderToString(scene, { idPrefix: 'r', width: 200, height: 100 });
     expect(sized).toMatch(/^<svg width="200" height="100" viewBox=/);
     // vanilla 透传到 render，输出与 render 逐字一致
-    expect(renderToSvgString(scene, { width: 200, height: 100 })).toBe(sized);
+    expect(renderToSvgString(scene, { output: { width: 200, height: 100 } })).toBe(sized);
     // 缺省时根 <svg> 不带 size（直接以 viewBox 开头；内层 rect 自带 width 不算）
     expect(renderToSvgString(scene)).toMatch(/^<svg viewBox=/);
   });
   it('passes boundary providers to compile options', () => {
     expect(() => renderToSvgString(boundaryIr)).toThrow(/options\.boundaries/i);
-    expect(renderToSvgString(boundaryIr, { boundaries: [fixedBoundary()] })).toMatch(/^<svg/);
+    expect(renderToSvgString(boundaryIr, { compile: { boundaries: [fixedBoundary()] } })).toMatch(/^<svg/);
   });
 
   it('passes clip providers to compile options', () => {
     expect(() => renderToSvgString(clipIr)).toThrow(/options\.clips/i);
-    const svg = renderToSvgString(clipIr, { clips: [circleFrameClip()] });
+    const svg = renderToSvgString(clipIr, { compile: { clips: [circleFrameClip()] } });
     expect(svg).toContain('<clipPath');
     expect(svg).toContain('clip-rule="evenodd"');
   });

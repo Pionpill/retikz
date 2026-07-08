@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -77,7 +77,7 @@ describe('@retikz/vanilla mountCanvas', () => {
 
   it('mount-canvas-bitmap-dpr：名义尺寸 × dpr 开位图（dpr=2 → 位图 = 2×CSS）', () => {
     const container = document.createElement('div');
-    const view = mountCanvas(container, idIr, { width: 200, height: 150 });
+    const view = mountCanvas(container, idIr, { output: { width: 200, height: 150 } });
     // 名义 200×150、dpr=2 → 位图 400×300
     expect(view.root.width).toBe(400);
     expect(view.root.height).toBe(300);
@@ -87,7 +87,7 @@ describe('@retikz/vanilla mountCanvas', () => {
 
   it('mount-canvas-draws-scene：渲染链路被走（drawScene 的 setTransform 被调）', () => {
     const container = document.createElement('div');
-    mountCanvas(container, idIr, { width: 100, height: 100 });
+    mountCanvas(container, idIr, { output: { width: 100, height: 100 } });
     expect(recorded).toContain('setTransform');
   });
 
@@ -116,7 +116,7 @@ describe('@retikz/vanilla mountCanvas', () => {
   // Figure 也有交互式 mountCanvas，且 standalone mountCanvas 收 Figure 时 delegate 给它（与 mountSvg→figure.mount 对称）
   it('figure-mountCanvas：Figure.mountCanvas 挂出交互式 CanvasView（hydrate / update / clientToScene）', () => {
     const container = document.createElement('div');
-    const fig = figure({ width: 100, height: 100 }, [
+    const fig = figure({ output: { width: 100, height: 100 } }, [
       node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 }, fill: '#0a0' }),
     ]);
     const view = fig.mountCanvas(container);
@@ -128,7 +128,7 @@ describe('@retikz/vanilla mountCanvas', () => {
 
   it('mount-canvas-figure-delegates：standalone mountCanvas 收 Figure → delegate figure.mountCanvas', () => {
     const container = document.createElement('div');
-    const fig = figure({ width: 100, height: 100 }, [
+    const fig = figure({ output: { width: 100, height: 100 } }, [
       node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 } }),
     ]);
     const view = mountCanvas(container, fig);
@@ -141,7 +141,7 @@ describe('@retikz/vanilla mountCanvas', () => {
     const view = mountCanvas(container, idIr);
     const root = view.root;
     const initialWidth = root.width;
-    const fig = figure({ padding: 80 }, [
+    const fig = figure({ compile: { padding: 80 } }, [
       node('a', { position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 }, fill: '#0a0' }),
     ]);
 

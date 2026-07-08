@@ -38,7 +38,7 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
  * 把 IR / Scene / Figure 挂成真实 `<canvas>` DOM（无框架浏览器 runtime，对齐 `mountSvg`）
  * @description 收 `Figure` 时 delegate 给 `figure.mountCanvas`（与 mountSvg→`figure.mount` 对称）。收 IR 时
  *   `toScene` compile、收 Scene 直用。位图按「名义显示尺寸」
- *   `width`/`height`（均为有限数值时）× dpr 开、否则回退内容边界；`renderToCanvas` 再把 Scene 内容 meet-fit
+ *   `output.width` / `output.height`（均为有限数值时）× dpr 开、否则回退内容边界；`renderToCanvas` 再把 Scene 内容 meet-fit
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
  *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全。
  */
@@ -49,9 +49,12 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   }
 
   const canvas = document.createElement('canvas');
-  const ratio = resolveDevicePixelRatio(options.devicePixelRatio);
-  // 动画总关：{animate:false} 或 prefers-reduced-motion → 不起 rAF、只画 base 静态
-  const animate = options.animate !== false && !prefersReducedMotion();
+  const output = options.output ?? {};
+  const animation = options.animation ?? {};
+  const canvasOptions = options.canvas ?? {};
+  const ratio = resolveDevicePixelRatio(canvasOptions.devicePixelRatio);
+  // 动画总关：{animation:{enabled:false}} 或 prefers-reduced-motion → 不起 rAF、只画 base 静态
+  const animate = animation.enabled !== false && !prefersReducedMotion();
   let clock: AnimationControls | undefined;
   // per-id 虚拟时钟登记表：ctx.animation 的 per-id 控制经它给各 id 叠加独立 offset / pause / active / stop
   const registry: IdClockRegistry = createIdClockRegistry();
@@ -79,8 +82,8 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
     renderToCanvas(canvas, currentScene, {
       devicePixelRatio: ratio,
       time,
-      easings: options.easings,
-      animationProperties: options.animationProperties,
+      easings: animation.easings,
+      animationProperties: canvasOptions.animationProperties,
       resolvePrimAnimation: id => resolvePrim(id, time),
     });
   };
@@ -139,25 +142,25 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
     currentScene = scene;
     currentRuntimeMeta = runtimeMeta;
     const hasNominalSize =
-      typeof options.width === 'number' &&
-      Number.isFinite(options.width) &&
-      typeof options.height === 'number' &&
-      Number.isFinite(options.height);
-    const bitmapWidth = hasNominalSize ? (options.width as number) : scene.layout.width;
-    const bitmapHeight = hasNominalSize ? (options.height as number) : scene.layout.height;
+      typeof output.width === 'number' &&
+      Number.isFinite(output.width) &&
+      typeof output.height === 'number' &&
+      Number.isFinite(output.height);
+    const bitmapWidth = hasNominalSize ? (output.width as number) : scene.layout.width;
+    const bitmapHeight = hasNominalSize ? (output.height as number) : scene.layout.height;
     canvas.width = Math.max(1, Math.round(bitmapWidth * ratio));
     canvas.height = Math.max(1, Math.round(bitmapHeight * ratio));
-    if (options.width !== undefined) canvas.style.width = `${options.width}px`;
-    if (options.height !== undefined) canvas.style.height = `${options.height}px`;
+    if (output.width !== undefined) canvas.style.width = `${output.width}px`;
+    if (output.height !== undefined) canvas.style.height = `${output.height}px`;
     canvas.style.objectFit = 'contain';
-    // 截帧（snapshotAt 给定）：按该时刻烘焙一帧、不起 rAF（定格），覆盖 animate（镜像 react CanvasHost）。
-    // snapshotAt 来自 mount options、view 生命周期内恒定，故此分支下 clock / visible bridge 始终不建。
-    if (options.snapshotAt !== undefined) {
+    // 截帧（animation.snapshotAt 给定）：按该时刻烘焙一帧、不起 rAF（定格），覆盖 animation.enabled。
+    // animation.snapshotAt 来自 mount options、view 生命周期内恒定，故此分支下 clock / visible bridge 始终不建。
+    if (animation.snapshotAt !== undefined) {
       renderToCanvas(canvas, scene, {
         devicePixelRatio: ratio,
-        time: options.snapshotAt,
-        easings: options.easings,
-        animationProperties: options.animationProperties,
+        time: animation.snapshotAt,
+        easings: animation.easings,
+        animationProperties: canvasOptions.animationProperties,
       });
       return;
     }
@@ -172,8 +175,8 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
           renderToCanvas(canvas, currentScene, {
             devicePixelRatio: ratio,
             time,
-            easings: options.easings,
-            animationProperties: options.animationProperties,
+            easings: animation.easings,
+            animationProperties: canvasOptions.animationProperties,
             resolvePrimAnimation: id => resolvePrim(id, time),
           }),
       });

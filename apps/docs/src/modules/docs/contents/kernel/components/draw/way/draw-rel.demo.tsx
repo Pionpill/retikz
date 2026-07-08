@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Draw, DrawWay, Layout } from '@retikz/react';
+import { DrawWay } from '@retikz/core';
+import { Draw, Layout } from '@retikz/react';
 
 /**
  * `{ position, type }` sugar 对象 vs 裸字符串

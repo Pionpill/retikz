@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Draw, Layout, Node, pulse } from '@retikz/react';
+import { pulse } from '@retikz/core';
+import { Draw, Layout, Node } from '@retikz/react';
 import { useState } from 'react';
 
 const GetStartStep4: FC = () => {

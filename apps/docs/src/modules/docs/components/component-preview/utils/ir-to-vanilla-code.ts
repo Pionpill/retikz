@@ -268,8 +268,8 @@ export const irToVanillaCode = (ir: IRScene): string => {
   );
 
   const builders = BUILDER_ORDER.filter(name => ctx.used.has(name));
-  if (ctx.usesDrawWay) builders.push('DrawWay');
   const imports = [`import { ${builders.join(', ')} } from '@retikz/vanilla';`];
+  if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
 
   return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n`;
 };

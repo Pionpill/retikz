@@ -10,7 +10,7 @@ import { node } from '../src/builder/node';
 describe('@retikz/vanilla figure() — IR 装配', () => {
   it('figure-ir：hyperscript 把 children 装进 { version:1, type:scene }', () => {
     const marks = [{ pos: 1, mark: { kind: 'arrow' as const } }];
-    const fig = figure({ width: 400, height: 300 }, [
+    const fig = figure({ output: { width: 400, height: 300 } }, [
       node('a', { position: [0, 0], text: 'A' }),
       draw(['a', 'b'], { marks }),
     ]);
@@ -20,7 +20,7 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
   });
 
   it('figure-viewbox：config.viewBox → IR.viewBox；width/height 不进 IR', () => {
-    const fig = figure({ width: 400, height: 300, viewBox: { x: 0, y: 0, width: 100, height: 80 } });
+    const fig = figure({ output: { width: 400, height: 300 }, viewBox: { x: 0, y: 0, width: 100, height: 80 } });
     expect(fig.ir.viewBox).toEqual({ x: 0, y: 0, width: 100, height: 80 });
     expect('width' in fig.ir).toBe(false);
     expect('height' in fig.ir).toBe(false);
@@ -28,13 +28,13 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
 
   it('hyperscript-eq-fluent：同图两路 ir 相等', () => {
     const marks = [{ pos: 1, mark: { kind: 'arrow' as const } }];
-    const hyper = figure({ width: 400, height: 300 }, [
+    const hyper = figure({ output: { width: 400, height: 300 } }, [
       node('a', { position: [0, 0], text: 'A' }),
       draw(['a', 'b'], { marks }),
       draw(['a', 'b'], { kind: 'ribbon', ribbon: { width: 3 } }),
       coordinate('mid', { position: [60, 40] }),
     ]);
-    const fluent = figure({ width: 400, height: 300 })
+    const fluent = figure({ output: { width: 400, height: 300 } })
       .node('a', { position: [0, 0], text: 'A' })
       .draw(['a', 'b'], { marks })
       .draw(['a', 'b'], { kind: 'ribbon', ribbon: { width: 3 } })
@@ -62,7 +62,7 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
   });
 
   it('figure-root-style：根级级联样式 → children 包进一层合成根 <Scope>（透传样式字段）', () => {
-    const fig = figure({ color: 'red', nodeDefault: { fill: '#eee' } }, [
+    const fig = figure({ style: { color: 'red', nodeDefault: { fill: '#eee' } } }, [
       node('a', { position: [0, 0] }),
       node('b', { position: [1, 0] }),
     ]);
@@ -77,12 +77,12 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
   });
 
   it('figure-root-style-empty-default：空对象 default 不携带样式指令 → 不包合成 scope', () => {
-    const fig = figure({ nodeDefault: {} }, [node('a', { position: [0, 0] })]);
+    const fig = figure({ style: { nodeDefault: {} } }, [node('a', { position: [0, 0] })]);
     expect(fig.ir.children).toEqual([node('a', { position: [0, 0] })]);
   });
 
   it('figure-root-style-falsy-scalar：strokeWidth=0 是有意义样式 → 仍包合成 scope', () => {
-    const fig = figure({ strokeWidth: 0 }, [node('a', { position: [0, 0] })]);
+    const fig = figure({ style: { strokeWidth: 0 } }, [node('a', { position: [0, 0] })]);
     expect(fig.ir.children[0]).toMatchObject({ type: 'scope', strokeWidth: 0 });
   });
 

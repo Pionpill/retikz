@@ -44,6 +44,26 @@ const view = mount(document.querySelector('#diagram')!, spec);
 
 `view.update(nextSpec)` 当前仍是整图重渲染，但 root 元素 identity 保持稳定。plain spec 会保留 layer 和 identity metadata，为后续 `patch` / `invalidate` 做准备。
 
+## 选项结构
+
+渲染入口的选项按消费阶段分组：
+
+```ts
+renderToSvgString(spec, {
+  output: { width: 640, height: 360, idPrefix: 'flow' },
+  compile: { composites, measureText },
+  animation: { enabled: false, snapshotAt: 1000 },
+});
+
+mount(canvasRoot, spec, {
+  renderer: 'canvas',
+  output: { width: 640, height: 360 },
+  canvas: { devicePixelRatio: 2 },
+});
+```
+
+`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas 后端使用。
+
 ## 分层与嵌入
 
 `layer(id, options, children)` 是 authoring 边界。`cache` 是 runtime hint，不进入 core IR；`zIndex` 只决定 layer stack 排序，相同值保持声明顺序。

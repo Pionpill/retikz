@@ -4,11 +4,11 @@ import { parsePathThickness, parseWay } from '@retikz/core';
 
 import type { VanillaChildSpec, VanillaEmbedSpec, VanillaFigureSpec, VanillaLayerSpec } from './types';
 
-/** Vanilla figure helper input. */
+/** Vanilla 图形辅助函数的输入配置。 */
 export type VanillaFigureInput = Pick<VanillaFigureSpec, 'id' | 'viewBox' | 'animations'> &
   ({ children?: Array<VanillaChildSpec>; layers?: never } | { layers: Array<VanillaLayerSpec>; children?: never });
 
-/** Vanilla node plain spec helper。 */
+/** Vanilla 节点普通规格辅助函数。 */
 type NodeFn = {
   (): IRNode;
   (id: string): IRNode;
@@ -29,26 +29,26 @@ export const node: NodeFn = (
   } as IRNode;
 };
 
-/** Vanilla coordinate plain spec helper。 */
+/** Vanilla 坐标普通规格辅助函数。 */
 export const coordinate = (id: string, config: Omit<IRCoordinate, 'type' | 'id'>): IRCoordinate => ({
   type: 'coordinate',
   id,
   ...config,
 });
 
-/** Vanilla path helper 的配置。 */
+/** Vanilla 路径辅助函数的配置。 */
 export type VanillaPathConfig = Omit<IRPath, 'type' | 'id' | 'children'> & {
-  /** Path id，作为公开 identity。 */
+  /** 路径 id，作为公开身份标识。 */
   id?: string;
-  /** TikZ-like way shorthand。 */
+  /** TikZ 风格的路径走向简写。 */
   way: WayDSL;
-  /** Path stroke width sugar。 */
+  /** 路径描边宽度语法糖。 */
   thickness?: PathThicknessValue;
 };
 
 type AnonymousVanillaPathConfig = Omit<VanillaPathConfig, 'id'>;
 
-/** Vanilla path plain spec helper。 */
+/** Vanilla 路径普通规格辅助函数。 */
 type PathFn = {
   (id: string, config: AnonymousVanillaPathConfig): IRPath;
   (config: AnonymousVanillaPathConfig): IRPath;
@@ -72,14 +72,14 @@ export const path: PathFn = (
   };
 };
 
-/** Vanilla scope plain spec helper。 */
+/** Vanilla 作用域普通规格辅助函数。 */
 export const scope = (config: Omit<IRScope, 'type' | 'children'>, children: Array<VanillaChildSpec>): IRScope => ({
   type: 'scope',
   ...config,
   children: children as Array<IRChild>,
 });
 
-/** Vanilla layer plain spec helper。 */
+/** Vanilla 分层普通规格辅助函数。 */
 export const layer = (
   id: string,
   optionsOrChildren: Omit<VanillaLayerSpec, 'type' | 'id' | 'children'> | Array<VanillaChildSpec>,
@@ -90,7 +90,7 @@ export const layer = (
   return { type: 'layer', id, ...options, children: layerChildren };
 };
 
-/** Vanilla Tier2 embed plain spec helper。 */
+/** Vanilla Tier2 嵌入节点普通规格辅助函数。 */
 export const embed = <TProps = Record<string, unknown>>(
   kind: string,
   id: string,
@@ -102,7 +102,7 @@ export const embed = <TProps = Record<string, unknown>>(
   props,
 });
 
-/** Vanilla figure plain spec helper。 */
+/** Vanilla 图形普通规格辅助函数。 */
 export const figure = (input?: VanillaFigureInput | Array<VanillaChildSpec>): VanillaFigureSpec => {
   if (Array.isArray(input)) return { type: 'figure', version: 1, children: input };
   const base = {
