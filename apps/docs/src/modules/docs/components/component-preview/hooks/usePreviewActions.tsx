@@ -10,7 +10,7 @@ import type {
   RendererMode,
 } from '../types';
 
-import { ANIM_PAUSE_ID, buildAnimationActions } from '../animation-actions';
+import { ANIM_PAUSE_ID, buildAnimationSlots } from '../control-slots';
 
 export type PreviewActionsState = {
   replayNonce: number;
@@ -50,7 +50,7 @@ export const usePreviewActions = (options: UsePreviewActionsOptions): PreviewAct
     value: id => actionValues[id],
     setValue: (id, value) => setActionValues(prev => ({ ...prev, [id]: value })),
   };
-  const builtinSlots = animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : [];
+  const builtinSlots = animated ? buildAnimationSlots(toolState[ANIM_PAUSE_ID] ?? false) : [];
   const slots: Array<PreviewControlSlot> = [...builtinSlots, ...(actions ?? [])];
   const previewActionState = {
     values: actionValues,
