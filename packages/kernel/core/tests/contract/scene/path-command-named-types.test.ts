@@ -9,7 +9,7 @@ import type {
   MovePathCommand,
   PathCommand,
   QuadPathCommand,
-} from '../../src';
+} from '../../../src';
 
 describe('PathCommand named types', () => {
   it('每个 named type 的 kind 字面量与命名对照一致', () => {

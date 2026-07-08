@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import type { CompileOptions } from '../../src/compile/compile';
+import type { CompileOptions } from '../../../src/compile/compile';
 import type {
   ArrowDefinition,
   MarkerEllipsePrim,
@@ -10,15 +10,15 @@ import type {
   PathPrim,
   ResolvedArrowEndSpec,
   ScenePrimitive,
-} from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
+} from '../../../src/contract';
+import type { IRScene } from '../../../src/schemas';
 
-import { compileToScene } from '../../src/compile/compile';
-import { defineArrow } from '../../src/contract';
-import { BUILTIN_ARROWS } from '../../src/providers/arrow';
-import { PathSchema } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
-import { flattenPrims } from '../helpers/flatten';
+import { compileToScene } from '../../../src/compile/compile';
+import { defineArrow } from '../../../src/contract';
+import { BUILTIN_ARROWS } from '../../../src/providers/arrow';
+import { PathSchema } from '../../../src/schemas';
+import { arrowMarks } from '../../helpers/arrow-marks';
+import { flattenPrims } from '../../helpers/flatten';
 
 /** 水平直线 path（end 箭头作用在末端 [100,0]，start 作用在首端 [0,0]）的 IR 工厂 */
 const horizontalPathIR = (arrow: '->' | '<-' | '<->', detail: Record<string, unknown> = {}): IRScene => ({

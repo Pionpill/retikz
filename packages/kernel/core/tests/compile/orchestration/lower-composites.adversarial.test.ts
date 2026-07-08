@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileWarning, IRScene, ScenePrimitive } from '../src';
+import type { CompileWarning, IRScene, ScenePrimitive } from '../../../src';
 
-import { compileToScene, CompositeBaseSchema, defineComposite } from '../src';
-import { flattenPrims } from './helpers/flatten';
+import { compileToScene, CompositeBaseSchema, defineComposite } from '../../../src';
+import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,

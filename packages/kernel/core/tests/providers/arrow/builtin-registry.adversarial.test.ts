@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ArrowDefinition, PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
+import type { ArrowDefinition, PathCommand, PathPrim, ScenePrimitive } from '../../../src/contract';
+import type { IRScene } from '../../../src/schemas';
 
-import { compileToScene } from '../../src/compile/compile';
-import { PathSchema } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
-import { flattenPrims } from '../helpers/flatten';
+import { compileToScene } from '../../../src/compile/compile';
+import { PathSchema } from '../../../src/schemas';
+import { arrowMarks } from '../../helpers/arrow-marks';
+import { flattenPrims } from '../../helpers/flatten';
 
 type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
 

@@ -1,14 +1,14 @@
 ﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileOptions } from '../../src/compile/compile';
-import type { BoundaryDefinition, ScenePrimitive } from '../../src/contract';
-import type { IRBoundary, IRScene } from '../../src/schemas';
+import type { CompileOptions } from '../../../src/compile/compile';
+import type { BoundaryDefinition, ScenePrimitive } from '../../../src/contract';
+import type { IRBoundary, IRScene } from '../../../src/schemas';
 
-import { compileToScene } from '../../src/compile/compile';
-import { defineBoundary, defineShape } from '../../src/contract';
-import { BoundarySchema } from '../../src/schemas/boundary';
-import { flattenPrims } from '../helpers/flatten';
+import { compileToScene } from '../../../src/compile/compile';
+import { defineBoundary, defineShape } from '../../../src/contract';
+import { BoundarySchema } from '../../../src/schemas/boundary';
+import { flattenPrims } from '../../helpers/flatten';
 
 const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, number] => {
   const node = {

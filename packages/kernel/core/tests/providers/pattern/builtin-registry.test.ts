@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import type { CompileOptions } from '../../src/compile/compile';
+import type { CompileOptions } from '../../../src/compile/compile';
 import type {
   MarkerEllipsePrim,
   MarkerPathPrim,
@@ -10,13 +10,13 @@ import type {
   PatternEmitContext,
   ResolvedPatternTile,
   SceneResource,
-} from '../../src/contract';
-import type { IRPaintSpec, IRScene } from '../../src/schemas';
+} from '../../../src/contract';
+import type { IRPaintSpec, IRScene } from '../../../src/schemas';
 
-import { compileToScene } from '../../src/compile/compile';
-import { definePattern } from '../../src/contract';
-import { BUILTIN_PATTERNS } from '../../src/providers/pattern';
-import { PaintSpecSchema } from '../../src/schemas';
+import { compileToScene } from '../../../src/compile/compile';
+import { definePattern } from '../../../src/contract';
+import { BUILTIN_PATTERNS } from '../../../src/providers/pattern';
+import { PaintSpecSchema } from '../../../src/schemas';
 
 /** 含一个 pattern fill node 的 IR 工厂 */
 const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IRScene => ({
