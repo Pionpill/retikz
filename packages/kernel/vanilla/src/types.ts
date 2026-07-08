@@ -3,11 +3,12 @@ import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } fro
 import type { HydrationHandlers } from '@retikz/render/hydration';
 
 import type { Figure } from './figure';
+import type { AnyVanillaTier2Adapter, VanillaFigureSpec, VanillaRuntimeMeta } from './spec';
 
 export type { AnimationControls } from '@retikz/render/animation';
 
-/** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene`，或命令式 builder 的 `Figure`。 */
-export type RenderInput = Scene | IRScene | Figure;
+/** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene`、Vanilla plain spec，或 legacy `Figure`。 */
+export type RenderInput = Scene | IRScene | VanillaFigureSpec | Figure;
 
 /**
  * 两个入口共享的选项
@@ -33,6 +34,8 @@ export type CommonOptions = {
   snapshotAt?: number;
   /** 自定义 easing 注册表（透传 renderer / runtime） */
   easings?: EasingRegistry;
+  /** 可嵌入 Tier2 adapter 列表，仅 plain spec normalization 使用。 */
+  adapters?: ReadonlyArray<AnyVanillaTier2Adapter>;
 } & CompileOptions;
 
 export type RenderToStringOptions = CommonOptions;
@@ -54,6 +57,8 @@ export type VanillaView = {
   hydrate: (options: HydrateOptions) => HydrationHandle;
   /** 动画播放控制句柄（scene 含动画且未降级时存在）：play / pause / seek；manual trigger 经此驱动 */
   animation?: AnimationControls;
+  /** 当前 plain spec normalization metadata；IR / Scene 输入时为空 metadata。 */
+  readonly runtimeMeta: VanillaRuntimeMeta;
 };
 
 /** `hydrate` / `view.hydrate` 返回的解绑句柄 */
@@ -107,6 +112,8 @@ export type CanvasView = {
   clientToScene: (clientX: number, clientY: number) => ScenePoint;
   /** 动画播放控制句柄（scene 含动画且未降级时存在）：rAF 时钟的 play / pause / seek */
   animation?: AnimationControls;
+  /** 当前 plain spec normalization metadata；IR / Scene 输入时为空 metadata。 */
+  readonly runtimeMeta: VanillaRuntimeMeta;
 };
 
 /** `mountCanvas` 选项：继承 SSR / compile 公共项，外加 canvas 显示 / dpr 透传 */

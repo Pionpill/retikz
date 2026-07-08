@@ -21,10 +21,11 @@ import {
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
 
+import type { VanillaRuntimeMeta } from './spec';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
 
 import { isFigure } from './builder/is-figure';
-import { toScene } from './to-scene';
+import { EMPTY_RUNTIME_META, toSceneResult } from './to-scene';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
 const resolveDevicePixelRatio = (override: number | undefined): number => {
@@ -58,6 +59,7 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
+  let currentRuntimeMeta: VanillaRuntimeMeta = EMPTY_RUNTIME_META;
 
   // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
   // listener），update 换图后必须按新 scene 重建、否则陈旧；view.dispose 时统一解绑全部未手动 dispose 的水合。
@@ -133,8 +135,9 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   };
 
   const renderInto = (next: RenderInput): void => {
-    const scene = toScene(next, options);
+    const { scene, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
+    currentRuntimeMeta = runtimeMeta;
     const hasNominalSize =
       typeof options.width === 'number' &&
       Number.isFinite(options.width) &&
@@ -293,6 +296,9 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
     clientToScene,
     get animation() {
       return clock;
+    },
+    get runtimeMeta() {
+      return currentRuntimeMeta;
     },
   };
 };

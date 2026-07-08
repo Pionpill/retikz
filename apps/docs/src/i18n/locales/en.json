@@ -62,6 +62,7 @@
     "effectsShadow": "Shadow",
     "effectsBlend": "Blend",
     "effectsAnimation": "Animation",
+    "pkgVanilla": "Vanilla Runtime",
     "pkgTex": "Math Typesetting",
     "pkgMath": "Computational Geometry",
     "pkgMathPrimitives": "Primitives",

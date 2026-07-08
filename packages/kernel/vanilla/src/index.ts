@@ -1,12 +1,15 @@
 /**
- * @retikz/vanilla 公开 API —— framework-free runtime / SSR 入口 + 命令式 builder
+ * @retikz/vanilla 公开 API —— framework-free runtime / SSR 入口 + plain spec helpers
  *
  * 无框架 / SSR 的 runtime 门面：组合 `@retikz/render/svg`（descriptor / 字符串）与 `@retikz/render/canvas`（后置），
- * 不自维护第二套 Scene→输出内核。`renderToSvgString` 走 SSR（零 DOM）；`mountSvg` 走浏览器 DOM 挂载。
- * `figure`/`node`/`draw`/`coordinate`/`scope` 是命令式 builder：用具名图元 + 自定义 shape 构图、产同一份 IR。
+ * 不自维护第二套 Scene→输出内核。`renderToSvgString` 走 SSR（零 DOM）；`mount` / `mountSvg` / `mountCanvas`
+ * 走浏览器挂载。`figure` / `layer` / `node` / `path` / `coordinate` / `scope` / `embed` 是 plain spec helper；
+ * 旧命令式 builder 仅以 `legacyFigure` / `draw` 形态保留迁移入口。
  * 模块顶层不触碰任何 DOM 全局——`import` 在纯 Node 下安全。
  */
 export { hydrate } from './hydrate';
+export type { MountRenderer, MountUnifiedOptions } from './mount';
+export { mount } from './mount';
 export { mountCanvas } from './mount-canvas';
 export { mountSvg } from './mount-svg';
 export { renderToSvgString } from './render-to-svg-string';
@@ -88,12 +91,9 @@ export {
   defineRibbonWidthProfile,
 } from '@retikz/core';
 // 动画扩展类型（构造 mountCanvas 的 animationProperties / easings 用，re-export 自 render）
-export { coordinate } from './builder/coordinate';
 export { draw } from './builder/draw';
-export { figure } from './builder/figure';
-export { node } from './builder/node';
+export { figure as legacyFigure } from './builder/figure';
 export type { ScopeBuilder } from './builder/scope';
-export { scope } from './builder/scope';
 export type {
   Child,
   CoordinateConfig,
@@ -105,6 +105,19 @@ export type {
   Way,
 } from './builder/types';
 export type { Figure } from './figure';
+export type {
+  VanillaChildSpec,
+  VanillaEmbedContext,
+  VanillaEmbedSpec,
+  VanillaFigureSpec,
+  VanillaLayerCacheValue,
+  VanillaLayerMeta,
+  VanillaLayerSpec,
+  VanillaRuntimeMeta,
+  VanillaTier2Adapter,
+  VanillaTier2Contribution,
+} from './spec';
+export { coordinate, embed, figure, layer, node, path, scope, VanillaLayerCache } from './spec';
 export type {
   AnimationControls,
   CanvasView,

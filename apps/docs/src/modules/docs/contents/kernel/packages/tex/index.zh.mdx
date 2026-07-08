@@ -87,9 +87,11 @@ import { figure, node, renderToSvgString } from '@retikz/vanilla';
 import { createMathJaxEngine, createLowerTex } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
-const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })]);
+const spec = figure({
+  children: [node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })],
+});
 
-const svg = renderToSvgString(fig, { lowerTex });
+const svg = renderToSvgString(spec, { lowerTex });
 ```
 
 ## 语法

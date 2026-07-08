@@ -115,6 +115,7 @@ export const kernelSection: Array<Section> = [
     id: 'packages',
     label: 'kernel.packages',
     pages: [
+      { id: 'vanilla', label: 'kernel.pkgVanilla' },
       { id: 'tex', label: 'kernel.pkgTex' },
       {
         id: 'math',

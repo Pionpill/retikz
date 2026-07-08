@@ -12,12 +12,13 @@ import {
 } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
 
+import type { VanillaRuntimeMeta } from './spec';
 import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, VanillaView } from './types';
 
 import { isFigure } from './builder/is-figure';
 import { DEFAULT_ID_PREFIX } from './constants';
 import { applyAttrs, svgNodeToDom } from './svg-node-to-dom';
-import { toScene } from './to-scene';
+import { EMPTY_RUNTIME_META, toSceneResult } from './to-scene';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -39,12 +40,14 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
   const animate = options.animate !== false && !prefersReducedMotion();
   let animationControls: AnimationControls | undefined;
   let currentScene: Scene;
+  let currentRuntimeMeta: VanillaRuntimeMeta = EMPTY_RUNTIME_META;
   // 存活水合的解绑句柄：view.dispose 时统一解绑（未手动 dispose 的水合也随 view 卸载干净）
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: RenderInput): void => {
-    const scene: Scene = toScene(next, options);
+    const { scene, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
+    currentRuntimeMeta = runtimeMeta;
     const doc = buildSvgDocument(scene, {
       idPrefix,
       animate,
@@ -110,6 +113,9 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
     },
     get animation() {
       return animationControls;
+    },
+    get runtimeMeta() {
+      return currentRuntimeMeta;
     },
   };
 };
