@@ -2,9 +2,9 @@ import type { IRAnimationTrack, PathPrim, RectPrim, Scene, ScenePrimitive } from
 
 import { describe, expect, it } from 'vitest';
 
-import type { SvgNode } from '../../src/svg/types';
+import type { SvgNode } from '../../../src/svg/types';
 
-import { buildSvgFragment, renderToSvgString } from '../../src/svg';
+import { buildSvgFragment, renderToSvgString } from '../../../src/svg';
 
 /**
  * ADR-02 SVG 动画播放：load→CSS @keyframes（SSR 零 JS）+ 交互→WAAPI 描述；property→SVG 映射；camera→group transform；

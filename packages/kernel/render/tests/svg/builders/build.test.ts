@@ -2,10 +2,10 @@ import type { GroupPrim, MarkerPrimitive, PaintResource, RectPrim, ScenePrimitiv
 
 import { describe, expect, it } from 'vitest';
 
-import { collectArrowSpecs } from '../../src/svg/builders/arrow-collect';
-import { buildMarkerPrim } from '../../src/svg/builders/marker-prim';
-import { buildPaintDef } from '../../src/svg/builders/paint-defs';
-import { buildPrim } from '../../src/svg/builders/prim';
+import { collectArrowSpecs } from '../../../src/svg/builders/arrow-collect';
+import { buildMarkerPrim } from '../../../src/svg/builders/marker-prim';
+import { buildPaintDef } from '../../../src/svg/builders/paint-defs';
+import { buildPrim } from '../../../src/svg/builders/prim';
 
 describe('buildPrim —— primitive → SvgNode', () => {
   it('prim-rect-to-node：rect → tag/kebab/SVG 真名属性，无 React camelCase', () => {

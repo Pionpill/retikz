@@ -2,7 +2,7 @@ import type { MarkerPrimitive } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildMarkerPrim } from '../../src/svg/builders/marker-prim';
+import { buildMarkerPrim } from '../../../src/svg/builders/marker-prim';
 
 /**
  * marker group 的 transforms 必须落到 SVG `<g>` 的 transform 属性——锁定 SVG 与 Canvas 后端
