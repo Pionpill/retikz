@@ -3,10 +3,10 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { VanillaTier2Adapter } from '../src';
+import type { VanillaTier2Adapter } from '../../src';
 
-import { embed, figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '../src';
-import { normalizeFigureSpec } from '../src/spec';
+import { embed, figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '../../src';
+import { normalizeFigureSpec } from '../../src/spec';
 
 const boxComposite = defineComposite({
   namespace: 'fixture',

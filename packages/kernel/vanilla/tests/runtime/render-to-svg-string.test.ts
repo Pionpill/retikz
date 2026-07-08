@@ -5,7 +5,7 @@ import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { renderToSvgString } from '../src';
+import { renderToSvgString } from '../../src';
 
 /**
  * @retikz/vanilla renderToSvgString（SSR / 构建期，node 环境，无 DOM）

@@ -3,7 +3,7 @@ import type { IRScene } from '@retikz/core';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mountCanvas } from '../src';
+import { mountCanvas } from '../../src';
 
 /**
  * @retikz/vanilla mountCanvas（无框架 canvas 直挂，jsdom 环境）

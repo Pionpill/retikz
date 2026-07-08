@@ -5,7 +5,7 @@ import type { HydrationContext } from '@retikz/render/hydration';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { hydrate, mountSvg, renderToSvgString } from '../src';
+import { hydrate, mountSvg, renderToSvgString } from '../../src';
 
 /**
  * @retikz/vanilla hydrate（SVG 水合，jsdom 环境）

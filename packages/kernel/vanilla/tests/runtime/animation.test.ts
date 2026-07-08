@@ -3,7 +3,7 @@ import type { IRScene } from '@retikz/core';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mountCanvas, mountSvg, renderToSvgString } from '../src';
+import { mountCanvas, mountSvg, renderToSvgString } from '../../src';
 
 /**
  * runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；

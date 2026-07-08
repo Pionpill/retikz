@@ -4,7 +4,7 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { renderToSvgString } from '../src';
+import { renderToSvgString } from '../../src';
 
 /**
  * @retikz/vanilla composites 透传（SSR / 构建期）
