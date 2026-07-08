@@ -10,8 +10,8 @@ import { z } from 'zod';
 import type { EmbeddableTier2Adapter } from '../../src';
 
 import { collectHydrationHandlers } from '../../src';
-import { buildIRWithContributions } from '../../src/kernel/builder';
-import { Layout } from '../../src/kernel/Layout';
+import { Layout } from '../../src/kernel';
+import { buildIRWithContributions } from '../../src/kernel/adapter';
 
 /**
  * 端到端回归护栏：可嵌入 Tier2 子组件的函数体在静态遍历期间「绝不被调用 / 渲染」。

@@ -1,10 +1,9 @@
 import type { IRScope, IRTransformInput } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import type { ScopeStyleProps } from './_fields';
-import type { HydrationEventProps } from './event-props';
+import type { HydrationEventProps, ScopeStyleProps } from '../protocol';
 
-import { TIKZ_SCOPE } from './_displayNames';
+import { TIKZ_SCOPE } from '../protocol';
 
 /**
  * <Scope> 组件的 props

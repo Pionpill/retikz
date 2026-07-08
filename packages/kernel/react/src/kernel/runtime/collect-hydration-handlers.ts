@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 
 import { Children, Fragment, isValidElement } from 'react';
 
-import type { EmbeddableTier2Adapter } from './embeddable';
-import type { HydrationEventPropName } from './event-props';
+import type { EmbeddableTier2Adapter } from '../protocol';
+import type { HydrationEventPropName } from '../protocol';
 
-import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } from './_displayNames';
-import { resolveEmbeddableAdapter } from './embeddable';
-import { EVENT_PROP_TO_NAME } from './event-props';
+import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } from '../protocol';
+import { resolveEmbeddableAdapter } from '../protocol';
+import { EVENT_PROP_TO_NAME } from '../protocol';
 
 /** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEventValue → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {

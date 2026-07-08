@@ -3,15 +3,15 @@ import type { ReactNode } from 'react';
 
 import { createElement } from 'react';
 
-import type { NodeProps } from './Node';
-import type { ScopeProps } from './Scope';
+import type { NodeProps } from '../components';
+import type { ScopeProps } from '../components';
 
-import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS } from './_fields';
-import { Coordinate } from './Coordinate';
-import { Node } from './Node';
-import { Path } from './Path';
-import { Scope } from './Scope';
-import { Step } from './Step';
+import { Coordinate } from '../components';
+import { Node } from '../components';
+import { Path } from '../components';
+import { Scope } from '../components';
+import { Step } from '../components';
+import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS } from './fields';
 
 /**
  * IR 'node' child → NodeProps；过滤 undefined 字段，不污染 React DevTools 显示

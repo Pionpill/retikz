@@ -1,9 +1,9 @@
-﻿import type { IRArrowDetail, IRPath, PathThicknessValue } from '@retikz/core';
+import type { IRArrowDetail, IRPath, PathThicknessValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import type { HydrationEventProps } from './event-props';
+import type { HydrationEventProps } from '../protocol';
 
-import { TIKZ_PATH } from './_displayNames';
+import { TIKZ_PATH } from '../protocol';
 
 export type PathArrowDirectionValue = 'none' | '->' | '<-' | '<->';
 

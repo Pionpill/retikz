@@ -1,10 +1,10 @@
-﻿import { DrawWay } from '@retikz/core';
+import { DrawWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { buildIR } from '../../src/kernel/builder';
-import { Path } from '../../src/kernel/Path';
-import { Step } from '../../src/kernel/Step';
-import { Draw } from '../../src/sugar/Draw';
+import { Path } from '../../src/kernel';
+import { Step } from '../../src/kernel';
+import { buildIR } from '../../src/kernel/adapter';
+import { Draw } from '../../src/sugar';
 
 /**
  * Draw 是 Sugar：调一次它得到 <Path><Step.../></Path> 子树。

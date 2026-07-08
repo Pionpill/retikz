@@ -62,6 +62,27 @@ shared/schemas <- parsers
 
 简单能力可合并文件；一旦职责混杂，按上表拆开。
 
+## React DSL 目录范式
+
+`@retikz/react` 的 DSL 代码按 owner 拆分：
+
+```text
+kernel/
+  components/  Kernel DSL 标记组件
+  protocol/    displayName、水合事件、embeddable 等跨 owner 共享协议
+  adapter/     JSX ↔ IR 转换逻辑：builder / unbuilder / 字段表
+  runtime/     Layout 运行时、hydration 收集、renderer mode 接线
+sugar/         同步展开为 Kernel 的 Sugar 组件，可再按 path / shapes 分组
+render/        React 宿主渲染接线，可再按 svg / canvas / text 分组
+```
+
+- 用户可用 React 组件文件用 `PascalCase.tsx`；非组件纯逻辑用 `kebab-case.ts`。
+- 内部 helper 用语义名，不用 `_xxx.ts`；例如 `fields.ts`、`display-names.ts`、`shape-helpers.ts`。
+- 每个 owner 目录放 `index.ts` barrel，只导出当前 owner 的稳定 API。
+- `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
+- `kernel/adapter` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime` 或 `sugar`。
+- `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 `render`；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`；`render` 不依赖 `kernel/runtime`。
+
 ## 导入导出
 
 - 目录级 `index.ts` 导出当前目录稳定 API；默认 `export *`，需要裁剪公共面或避免冲突时才精选导出。

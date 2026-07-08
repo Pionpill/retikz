@@ -1,7 +1,7 @@
 import { fallbackMeasurer } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { browserMeasurer } from '../../src/render/browser-measurer';
+import { browserMeasurer } from '../../src/render/text';
 
 /**
  * 验证 node 环境下 browserMeasurer 降级到 fallbackMeasurer

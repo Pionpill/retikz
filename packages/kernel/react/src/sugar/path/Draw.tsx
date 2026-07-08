@@ -1,12 +1,12 @@
-﻿import type { IRPath, PathThicknessValue, WayDSL } from '@retikz/core';
+import type { IRPath, PathThicknessValue, WayDSL } from '@retikz/core';
 import type { FC } from 'react';
 
 import { parseWay } from '@retikz/core';
 
-import type { PathProps } from '../kernel/Path';
+import type { PathProps } from '../../kernel/components';
 
-import { Path } from '../kernel/Path';
-import { Step } from '../kernel/Step';
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
 
 /** <Draw> 组件的 props */
 export type DrawProps = {

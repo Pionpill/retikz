@@ -2,8 +2,8 @@ import type { PathCommand, Transform } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildPathD } from '../../src/render/path-d-builder';
-import { buildTransform } from '../../src/render/transform-builder';
+import { buildPathD } from '../../src/render/svg';
+import { buildTransform } from '../../src/render/svg';
 
 /**
  * builder 层的破坏视角补强测试。

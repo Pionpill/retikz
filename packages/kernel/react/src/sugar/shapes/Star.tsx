@@ -1,10 +1,10 @@
 import type { FC } from 'react';
 
-import type { PathVisualProps } from './_shared';
+import type { PathVisualProps } from './shape-helpers';
 
-import { Path } from '../kernel/Path';
-import { Step } from '../kernel/Step';
-import { pickPathVisual, requireXY, starVertices } from './_shared';
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
+import { pickPathVisual, requireXY, starVertices } from './shape-helpers';
 
 /** `<Star>` 形态：中心 + 外/内半径（或外半径 + 内半径比例）+ 角数 */
 export type StarProps = PathVisualProps & {

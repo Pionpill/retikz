@@ -9,7 +9,7 @@ import { z } from 'zod';
 import type { EmbeddableTier2Adapter } from '../../src';
 
 import { Node } from '../../src';
-import { Layout } from '../../src/kernel/Layout';
+import { Layout } from '../../src/kernel';
 
 /**
  * <Layout> 可嵌入 Tier2 聚合：按 namespace 合并 datasets、产 composite、喂 compile

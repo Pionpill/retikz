@@ -9,7 +9,7 @@ import type {
 } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import { TIKZ_STEP } from './_displayNames';
+import { TIKZ_STEP } from '../protocol';
 
 /**
  * React DSL 层的 target 类型：core 对象 `IRTarget` + 字符串 shorthand（`'A'` / `'A.north'` / `'A.30'` / `'+dx,dy'`）

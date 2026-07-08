@@ -1,9 +1,9 @@
-﻿import type { MarkerPrimitive, PathCommand, ResolvedArrowEndSpec } from '@retikz/core';
+import type { MarkerPrimitive, PathCommand, ResolvedArrowEndSpec } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { ArrowMarker } from '../../src/render/arrow-markers';
+import { ArrowMarker } from '../../src/render/svg';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
@@ -27,7 +27,7 @@ const spec = (overrides: Partial<ResolvedArrowEndSpec> = {}): ResolvedArrowEndSp
   ...overrides,
 });
 
-const render = (s: ResolvedArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as unknown as AnyEl;
+const render = (s: ResolvedArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as AnyEl;
 
 /** 取物化 marker 的 children（数组形态） */
 const innerEls = (el: AnyEl): Array<AnyEl> => {

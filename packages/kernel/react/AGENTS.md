@@ -23,12 +23,29 @@
 
 ```text
 src/index.ts   公开 API，显式 named export
-kernel/        Kernel 组件、builder/unbuilder、hydration handler 收集、renderer mode context
-sugar/         Sugar 组件与同步展开 helper
-render/        浏览器渲染接线：SvgNode -> ReactElement、CanvasHost、browser measurer、viewBox 等
+kernel/        React DSL Kernel：组件、JSX ↔ IR adapter、Layout runtime
+sugar/         Sugar 组件与同步展开 helper，可按 path / shapes 分组
+render/        React 宿主渲染接线，可按 svg / canvas / text 分组
 ```
 
 新增模块时按职责放置；不要在 `render/` 外写浏览器特化逻辑。
+
+`kernel/` 内部按 owner 拆分：
+
+```text
+components/  Kernel DSL 标记组件：Layout 之外的 Node / Path / Step / Scope / Coordinate / Text
+protocol/    displayName、水合事件 props、embeddable 协议等跨 owner 共享契约
+adapter/     JSX ↔ IR 转换逻辑：builder / unbuilder / 字段透传表
+runtime/     Layout、hydration handler 收集、renderer mode 接线
+```
+
+- 用户可用 React 组件文件用 `PascalCase.tsx`；非组件纯逻辑用 `kebab-case.ts`。
+- 内部 helper 用语义名，不用 `_xxx.ts`；例如 `fields.ts`、`display-names.ts`、`shape-helpers.ts`。
+- 每个 owner 目录用 `index.ts` barrel 收口；`src/index.ts` 继续显式 named export。
+- `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
+- `kernel/adapter` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime` 或 `sugar`。
+- `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 `render`；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`。
+- `render` 不依赖 `kernel/runtime`；浏览器全局只允许在 `render/` 下出现。
 
 ## Kernel 组件
 

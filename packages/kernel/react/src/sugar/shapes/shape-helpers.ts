@@ -1,4 +1,4 @@
-﻿import type { PathProps } from '../kernel/Path';
+import type { PathProps } from '../../kernel/components';
 
 /**
  * sugar 组件共用的视觉 props

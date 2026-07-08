@@ -1,10 +1,10 @@
 import type { IRStepAnisotropicRadius, IRTarget } from '@retikz/core';
 import type { FC } from 'react';
 
-import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './_shared';
+import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './shape-helpers';
 
-import { Path } from '../kernel/Path';
-import { Step } from '../kernel/Step';
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
 import {
   adjustShapeBox,
   boxCenter,
@@ -14,7 +14,7 @@ import {
   pickPathVisual,
   requireXY,
   resolveAngles,
-} from './_shared';
+} from './shape-helpers';
 
 /** Ellipse sugar 的 props */
 export type EllipseProps = PathVisualProps &

@@ -1,10 +1,10 @@
-﻿import type { FC, ReactElement } from 'react';
+import type { FC, ReactElement } from 'react';
 
-import type { PathVisualProps } from './_shared';
+import type { PathVisualProps } from './shape-helpers';
 
-import { Path } from '../kernel/Path';
-import { Step } from '../kernel/Step';
-import { pickPathVisual, requireXY } from './_shared';
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
+import { pickPathVisual, requireXY } from './shape-helpers';
 
 type BorderRenderOrder = 'before' | 'after';
 

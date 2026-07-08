@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatViewBox } from '../../src/render/view-box';
+import { formatViewBox } from '../../src/render/svg';
 
 describe('formatViewBox', () => {
   it('4 个字段按 `x y width height` 顺序拼接，空格分隔', () => {

@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   IRAtPosition,
   IRAtPositionInput,
   IRAxisScale,
@@ -17,9 +17,9 @@
 } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import type { HydrationEventProps } from './event-props';
+import type { HydrationEventProps } from '../protocol';
 
-import { TIKZ_NODE } from './_displayNames';
+import { TIKZ_NODE } from '../protocol';
 
 /** <Node> 组件的 props */
 export type NodeProps = HydrationEventProps & {

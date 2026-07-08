@@ -1,10 +1,10 @@
 import type { FC } from 'react';
 
-import type { PathVisualProps } from './_shared';
+import type { PathVisualProps } from './shape-helpers';
 
-import { Path } from '../kernel/Path';
-import { Step } from '../kernel/Step';
-import { pickPathVisual, regularPolygonVertices, requireXY } from './_shared';
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
+import { pickPathVisual, regularPolygonVertices, requireXY } from './shape-helpers';
 
 /** `<RegularPolygon>` 形态：中心 + 外接圆半径（或边长）+ 边数 */
 export type RegularPolygonProps = PathVisualProps & {

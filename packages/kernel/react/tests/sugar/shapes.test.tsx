@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildIR } from '../../src/kernel/builder';
-import { Path } from '../../src/kernel/Path';
-import { Step } from '../../src/kernel/Step';
-import { polarXY, regularPolygonVertices, starVertices } from '../../src/sugar/_shared';
-import { Arc } from '../../src/sugar/Arc';
-import { Circle } from '../../src/sugar/Circle';
-import { Ellipse } from '../../src/sugar/Ellipse';
-import { Grid } from '../../src/sugar/Grid';
-import { Rectangle } from '../../src/sugar/Rectangle';
-import { RegularPolygon } from '../../src/sugar/RegularPolygon';
-import { Sector } from '../../src/sugar/Sector';
-import { Star } from '../../src/sugar/Star';
+import { Path } from '../../src/kernel';
+import { Step } from '../../src/kernel';
+import { buildIR } from '../../src/kernel/adapter';
+import { Arc } from '../../src/sugar';
+import { Circle } from '../../src/sugar';
+import { Ellipse } from '../../src/sugar';
+import { Grid } from '../../src/sugar';
+import { Rectangle } from '../../src/sugar';
+import { RegularPolygon } from '../../src/sugar';
+import { Sector } from '../../src/sugar';
+import { Star } from '../../src/sugar';
+import { polarXY, regularPolygonVertices, starVertices } from '../../src/sugar/shapes/shape-helpers';
 
 const ir = (jsx: React.ReactNode) => buildIR(jsx);
 

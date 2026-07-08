@@ -6,7 +6,7 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node } from '../../src';
-import { buildIR } from '../../src/kernel/builder';
+import { buildIR } from '../../src/kernel/adapter';
 
 /**
  * 水合：JSX 模式下 `handlers` prop 被忽略（契约）

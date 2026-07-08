@@ -3,7 +3,7 @@ import type { SceneResource } from '@retikz/core';
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { PaintDefs } from '../../src/render/paint-defs';
+import { PaintDefs } from '../../src/render/svg';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 

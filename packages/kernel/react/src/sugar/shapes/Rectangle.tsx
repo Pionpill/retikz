@@ -1,11 +1,11 @@
 import type { IRTarget } from '@retikz/core';
 import type { FC } from 'react';
 
-import type { PathVisualProps } from './_shared';
+import type { PathVisualProps } from './shape-helpers';
 
-import { Path } from '../kernel/Path';
-import { Step } from '../kernel/Step';
-import { pickPathVisual, requireXY } from './_shared';
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
+import { pickPathVisual, requireXY } from './shape-helpers';
 
 /** `<Rectangle>` 形态：四选一定两对角 */
 export type RectangleProps = PathVisualProps & {

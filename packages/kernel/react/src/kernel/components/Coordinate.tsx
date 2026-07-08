@@ -8,7 +8,7 @@ import type {
 } from '@retikz/core';
 import type { FC } from 'react';
 
-import { TIKZ_COORDINATE } from './_displayNames';
+import { TIKZ_COORDINATE } from '../protocol';
 
 /** <Coordinate> 组件的 props */
 export type CoordinateProps = {

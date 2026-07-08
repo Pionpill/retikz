@@ -122,8 +122,8 @@ The shared trait is that they involve algorithmic decisions (dagre layout, auto-
 
 `@retikz/react` is currently the only shipped adapter, and the whole architecture insists it stay "thin":
 
-- The top-level `<Layout>` container (`packages/kernel/react/src/kernel/Layout.tsx`) does three things only: receive an `ir` prop or `useMemo(buildIR(children))`, call `compileToScene`, and translate Scene primitives into `<svg>` children.
-- The builder (`packages/kernel/react/src/kernel/builder.ts`) does synchronous JSX → IR conversion, using a shared field table (`NODE_FIELDS` / `PATH_FIELDS`) and component `displayName` to recognize types; it doesn't call hooks and isn't part of the React render call stack.
+- The top-level `<Layout>` container (`packages/kernel/react/src/kernel/runtime/Layout.tsx`) does three things only: receive an `ir` prop or `useMemo(buildIR(children))`, call `compileToScene`, and translate Scene primitives into `<svg>` children.
+- The builder (`packages/kernel/react/src/kernel/adapter/builder.ts`) does synchronous JSX → IR conversion, using a shared field table (`NODE_FIELDS` / `PATH_FIELDS`) and component `displayName` to recognize types; it doesn't call hooks and isn't part of the React render call stack.
 - Text measurement uses `browserMeasurer` (canvas.measureText), injected into compile as a `TextMeasurer` — later SSR adapters can swap in satori / sharp etc., with zero changes to compile itself.
 
 The goal of this layer is **adding a new adapter in the future should take roughly 50 lines of translation code**. SSR translates to SVG strings, Canvas to ctx calls, PDF to PDFKit commands — all sharing the same Scene primitives. The zero-dependency principle lands here: CI enforces that `@retikz/core` loads in a React-free environment, and packages/kernel's dependency allowlist contains only `zod`.

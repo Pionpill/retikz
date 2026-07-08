@@ -1,16 +1,16 @@
-﻿import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { buildIR } from '../../src/kernel/builder';
-import { Coordinate } from '../../src/kernel/Coordinate';
-import { Node } from '../../src/kernel/Node';
-import { Path } from '../../src/kernel/Path';
-import { Scope } from '../../src/kernel/Scope';
-import { Step } from '../../src/kernel/Step';
-import { Text } from '../../src/kernel/Text';
-import { Draw } from '../../src/sugar/Draw';
-import { EdgeLabel } from '../../src/sugar/EdgeLabel';
+import { Coordinate } from '../../src/kernel';
+import { Node } from '../../src/kernel';
+import { Path } from '../../src/kernel';
+import { Scope } from '../../src/kernel';
+import { Step } from '../../src/kernel';
+import { Text } from '../../src/kernel';
+import { buildIR } from '../../src/kernel/adapter';
+import { Draw } from '../../src/sugar';
+import { EdgeLabel } from '../../src/sugar';
 
 describe('buildIR', () => {
   it('单个 <Node> → IR scene', () => {

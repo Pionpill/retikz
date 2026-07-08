@@ -20,16 +20,16 @@ import type { ReactElement, ReactNode } from 'react';
 import { CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
-import type { EdgeLabelProps } from '../sugar/EdgeLabel';
-import type { ScopeStyleProps } from './_fields';
-import type { CoordinateProps } from './Coordinate';
-import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from './embeddable';
-import type { NodeProps } from './Node';
-import type { PathProps } from './Path';
-import type { ScopeProps } from './Scope';
-import type { StepProps } from './Step';
-import type { TextProps } from './Text';
+import type { CoordinateProps } from '../components';
+import type { NodeProps } from '../components';
+import type { PathProps } from '../components';
+import type { ScopeProps } from '../components';
+import type { StepProps } from '../components';
+import type { TextProps } from '../components';
+import type { ScopeStyleProps } from '../protocol';
+import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from '../protocol';
 
+import { Scope } from '../components';
 import {
   getDisplayName,
   TIKZ_COORDINATE,
@@ -39,12 +39,18 @@ import {
   TIKZ_SCOPE,
   TIKZ_STEP,
   TIKZ_TEXT,
-} from './_displayNames';
-import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS, SCOPE_STYLE_FIELDS } from './_fields';
-import { resolveEmbeddableAdapter } from './embeddable';
-import { Scope } from './Scope';
+} from '../protocol';
+import { resolveEmbeddableAdapter } from '../protocol';
+import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS, SCOPE_STYLE_FIELDS } from './fields';
 
-// NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 _fields.ts 与 unbuilder 共享
+// NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 fields.ts 与 unbuilder 共享
+
+type EdgeLabelElementProps = {
+  position?: IRStepLabelInput['position'];
+  side?: IRStepLabelInput['side'];
+  sloped?: IRStepLabelInput['sloped'];
+  children?: unknown;
+};
 
 /**
  * 判定一个函数 type 是否为 React class 组件
@@ -306,7 +312,7 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
         }
         return;
       }
-      const props = child.props as EdgeLabelProps;
+      const props = child.props as EdgeLabelElementProps;
       if (typeof props.children !== 'string') return;
       if (result !== undefined) {
         if (process.env.NODE_ENV !== 'production') {

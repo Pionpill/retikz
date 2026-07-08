@@ -1,9 +1,9 @@
-﻿import type { MarkerPrimitive, PathPrim, ResolvedArrowEndSpec } from '@retikz/core';
+import type { MarkerPrimitive, PathPrim, ResolvedArrowEndSpec } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { renderPrim } from '../../src/render/render-prim';
+import { renderPrim } from '../../src/render/svg';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 

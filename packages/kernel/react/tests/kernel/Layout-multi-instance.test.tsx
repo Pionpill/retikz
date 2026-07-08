@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { Layout } from '../../src/kernel/Layout';
-import { Path } from '../../src/kernel/Path';
-import { Step } from '../../src/kernel/Step';
+import { Layout } from '../../src/kernel';
+import { Path } from '../../src/kernel';
+import { Step } from '../../src/kernel';
 
 /**
  * 多 `<Layout>` 实例的 marker id 隔离

@@ -1,14 +1,14 @@
-﻿import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
+import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
 import { CURRENT_IR_VERSION } from '@retikz/core';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../src/kernel/_displayNames';
-import { buildIR } from '../../src/kernel/builder';
-import { convertIRToReactNode } from '../../src/kernel/unbuilder';
-import { Draw } from '../../src/sugar/Draw';
+import { buildIR } from '../../src/kernel/adapter';
+import { convertIRToReactNode } from '../../src/kernel/adapter';
+import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../src/kernel/protocol';
+import { Draw } from '../../src/sugar';
 
 const emptyScene: IRScene = {
   version: CURRENT_IR_VERSION,

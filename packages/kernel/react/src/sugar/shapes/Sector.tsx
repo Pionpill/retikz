@@ -1,12 +1,12 @@
 import type { IRStepAnisotropicRadius, IRStepLabelInput } from '@retikz/core';
 import type { FC, ReactElement } from 'react';
 
-import type { DslTarget } from '../kernel/Step';
-import type { AngleInput, PathVisualProps } from './_shared';
+import type { DslTarget } from '../../kernel/components';
+import type { AngleInput, PathVisualProps } from './shape-helpers';
 
-import { Path } from '../kernel/Path';
-import { Step } from '../kernel/Step';
-import { pickPathVisual, polarXY, requireXY, resolveAngles } from './_shared';
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
+import { pickPathVisual, polarXY, requireXY, resolveAngles } from './shape-helpers';
 
 /**
  * `<Sector>` 形态：扇形（wedge 经圆心闭合）；圆 / 椭圆；必给角度（三选二）。

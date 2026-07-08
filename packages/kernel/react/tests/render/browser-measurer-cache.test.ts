@@ -10,7 +10,7 @@ describe('browser-measurer 模块级 canvas 单例', () => {
     const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     const createElementSpy = vi.spyOn(document, 'createElement');
     try {
-      const { browserMeasurer } = await import('../../src/render/browser-measurer');
+      const { browserMeasurer } = await import('../../src/render/text');
       browserMeasurer('a', { size: 12 });
       browserMeasurer('bc', { size: 14 });
       browserMeasurer('def', { size: 16 });

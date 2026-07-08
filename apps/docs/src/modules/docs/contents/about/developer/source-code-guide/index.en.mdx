@@ -89,37 +89,37 @@ Keep these constraints in mind when reading core; they explain why some implemen
 
 ### Package Layout
 
-| Module                                                                                               | Responsibility                                                                                                                                                            |
-| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | Kernel JSX components — `<Layout>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>` / `<Scope>`, plus `builder` (JSX → IR) and `unbuilder` (IR → JSX) bridges |
-| [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX components — `<Draw way={[...]}>`, `<EdgeLabel>`, and shape sugar; expand into Kernel at compile time, introduce no new capabilities                            |
-| [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | Scene → SVG elements — `renderPrim`, `paintDefs`, `clipDefs`, `arrowMarkers`, `browser-measurer`, SVG viewBox formatting                                                  |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) | Public API surface — Kernel + Sugar components and the `convertReactNodeToIR` / `convertIRToReactNode` bridges                                                            |
+| Module                                                                                               | Responsibility                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | React DSL Kernel — `components` hold marker components, `protocol` holds shared recognition contracts, `adapter` bridges JSX ↔ IR, and `runtime` hosts `<Layout>` plus hydration wiring |
+| [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX components — `path` holds `<Draw>` / `<EdgeLabel>`, and `shapes` holds shape sugar; all expand into Kernel at compile time and introduce no new capabilities                  |
+| [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | React host rendering wiring — `svg`, `canvas`, and `text` split SVG elements, CanvasHost, and the browser measurer                                                                      |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) | Public API surface — Kernel + Sugar components and the `convertReactNodeToIR` / `convertIRToReactNode` bridges                                                                          |
 
 ### Recommended Reading Order
 
 1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) — Public API**<br />
    See which Kernel / Sugar components, types, and bridges are exposed. `WayDSL` and related constants from core are re-exported here so React users can import from a single package.
 
-2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Layout.tsx) — Top-level orchestrator**<br />
+2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx) — Top-level orchestrator**<br />
    `<Layout>` is the entry point of the whole pipeline: children → `buildIR` → `compileToScene` → `renderPrim` → `<svg>`. One file gives you the adapter's overall shape.
 
-3. **[`kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/builder.ts) — JSX → IR**<br />
-   Dispatches by child `displayName` to construct IRNode / IRPath / IRStep / IRScope, etc. The companion [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/unbuilder.ts) goes the other way (IR → React element tree), useful for editor / AI workflows that "feed IR, render components".
+3. **[`kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/builder.ts) — JSX → IR**<br />
+   Dispatches by child `displayName` to construct IRNode / IRPath / IRStep / IRScope, etc. The companion [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/unbuilder.ts) goes the other way (IR → React element tree), useful for editor / AI workflows that "feed IR, render components".
 
-4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Step.tsx) etc. — Kernel components**<br />
+4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Step.tsx) etc. — Kernel components**<br />
    These components don't render anything themselves — they only declare a `displayName` and hand props to `builder`. Read one and you've read them all.
 
-5. **[`render/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/render-prim.tsx) — Scene → SVG element**<br />
+5. **[`render/svg/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/svg/render-prim.tsx) — Scene → SVG element**<br />
    Dispatches by primitive `type` to `<rect>` / `<ellipse>` / `<text>` / `<path>` / `<g>`; paint / clip / marker resources are materialized by sibling defs components. This layer is the main rewrite surface when porting to another framework.
 
-6. **[`render/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/browser-measurer.ts) — Text measurer injection**<br />
+6. **[`render/text/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/text/browser-measurer.ts) — Text measurer injection**<br />
    A canvas-`measureText`-based `TextMeasurer`, injected into `compileToScene` via `CompileOptions.measureText`. When there's no document (SSR), it falls back to core's `fallbackMeasurer` automatically.
 
-7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/sugar/Draw.tsx) — Sugar expansion**<br />
+7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/sugar/path/Draw.tsx) — Sugar expansion**<br />
    `<Draw way={[...]}>` internally calls [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parsers/way.ts) (from core) to obtain a step array, then renders Kernel `<Path><Step/></Path>`. Sugar introduces no new capabilities; everything expands to Kernel.
 
-8. **Shape components in [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar) (optional)**<br />
+8. **Shape components in [`sugar/shapes/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar/shapes) (optional)**<br />
    `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<Grid>` / `<RegularPolygon>` / `<Star>` are Sugar too: they expand common geometry idioms into equivalent `<Path>` declarations.
 
 ### Mapping when writing a new adapter
@@ -130,8 +130,8 @@ If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter ma
 | ------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `kernel/*.tsx` components (declare `displayName`) | Equivalent component types in your framework (with a recognizable marker)           |
 | `kernel/builder.ts` (JSX → IR)                    | A children / vnode → IR bridge for your framework                                   |
-| `render/render-prim.tsx` + defs components        | Mapping Scene primitives and resources to your framework's native elements          |
-| `render/browser-measurer.ts`                      | A measurer for your environment (browser / SSR / Native) — implement `TextMeasurer` |
+| `render/svg/render-prim.tsx` + defs components    | Mapping Scene primitives and resources to your framework's native elements          |
+| `render/text/browser-measurer.ts`                 | A measurer for your environment (browser / SSR / Native) — implement `TextMeasurer` |
 
 `@retikz/core`'s IR, `compileToScene`, `shared/geometry` helpers, and `contract/scene` types are reused unchanged — no need to rewrite them.
 
@@ -148,9 +148,9 @@ If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter ma
 | Text measurement contract | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts)              |
 | boundaryPoint / anchor    | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) and siblings |
 | core public API           | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                        |
-| React top-level pipeline  | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/Layout.tsx)                        |
-| JSX → IR bridge           | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/builder.ts)                        |
-| Scene → SVG element       | [`react/render/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/render-prim.tsx)              |
+| React top-level pipeline  | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx)                |
+| JSX → IR bridge           | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/builder.ts)                |
+| Scene → SVG element       | [`react/render/svg/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/svg/render-prim.tsx)      |
 | react public API          | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                                      |
 
 ## Further Reading

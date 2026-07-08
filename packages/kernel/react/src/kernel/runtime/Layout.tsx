@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -32,13 +32,10 @@ import {
 import { buildSvgDocument } from '@retikz/render/svg';
 import { cloneElement, useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
-import type { ScopeStyleProps } from './_fields';
-import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from './embeddable';
+import type { EmbeddableContributionRecord, EmbeddableTier2Adapter, ScopeStyleProps } from '../protocol';
 
-import { browserMeasurer } from '../render/browser-measurer';
-import { CanvasHost } from '../render/canvas-host';
-import { svgToReact } from '../render/svg-to-react';
-import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from './builder';
+import { browserMeasurer, CanvasHost, svgToReact } from '../../render';
+import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from '../adapter';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
 

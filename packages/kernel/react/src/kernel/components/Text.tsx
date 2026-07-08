@@ -1,7 +1,7 @@
 import type { IRFont } from '@retikz/core';
 import type { FC } from 'react';
 
-import { TIKZ_TEXT } from './_displayNames';
+import { TIKZ_TEXT } from '../protocol';
 
 /** <Text> 组件的 props——Node 多行文本里给某一行带覆盖样式 */
 export type TextProps = {

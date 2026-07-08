@@ -5,9 +5,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { EmbeddableTier2Adapter } from '../../src';
 
-import { buildIR, buildIRWithContributions } from '../../src/kernel/builder';
-import { Node } from '../../src/kernel/Node';
-import { Scope } from '../../src/kernel/Scope';
+import { Node } from '../../src/kernel';
+import { Scope } from '../../src/kernel';
+import { buildIR, buildIRWithContributions } from '../../src/kernel/adapter';
 
 /** 可嵌入 fixture 的 props 形状 */
 type FixtureProps = { id: string; data: unknown };

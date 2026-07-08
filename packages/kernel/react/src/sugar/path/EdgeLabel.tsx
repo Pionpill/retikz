@@ -1,7 +1,7 @@
 import type { IRStepLabelInput } from '@retikz/core';
 import type { FC } from 'react';
 
-import { TIKZ_EDGE_LABEL } from '../kernel/_displayNames';
+import { TIKZ_EDGE_LABEL } from '../../kernel/protocol';
 
 /** <EdgeLabel> 组件的 props */
 export type EdgeLabelProps = {

@@ -1,9 +1,9 @@
-﻿import type { PathCommand, ResolvedArrowEndSpec } from '@retikz/core';
+import type { PathCommand, ResolvedArrowEndSpec } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { ArrowMarker } from '../../src/render/arrow-markers';
+import { ArrowMarker } from '../../src/render/svg';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
@@ -25,7 +25,7 @@ const spec = (overrides: Partial<ResolvedArrowEndSpec> = {}): ResolvedArrowEndSp
   ...overrides,
 });
 
-const render = (s: ResolvedArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as unknown as AnyEl;
+const render = (s: ResolvedArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as AnyEl;
 
 describe('arrow marker arc 物化', () => {
   it('marker path 用 arc 命令 → 物化出 SVG A 段（不再静默丢）', () => {

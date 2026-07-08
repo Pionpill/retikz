@@ -1,12 +1,12 @@
 import type { IRStepLabelInput, IRStepRadius } from '@retikz/core';
 import type { FC } from 'react';
 
-import type { DslTarget } from '../kernel/Step';
-import type { AngleInput, PathVisualProps } from './_shared';
+import type { DslTarget } from '../../kernel/components';
+import type { AngleInput, PathVisualProps } from './shape-helpers';
 
-import { Path } from '../kernel/Path';
-import { Step } from '../kernel/Step';
-import { pickPathVisual, resolveAngles } from './_shared';
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
+import { pickPathVisual, resolveAngles } from './shape-helpers';
 
 /**
  * `<Arc>` 形态：圆弧（radius number）/ 椭圆弧（radius {x,y}）；必给角度（startAngle / endAngle / sweepAngle 三选二）。

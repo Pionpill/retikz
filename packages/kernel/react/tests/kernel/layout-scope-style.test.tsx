@@ -17,11 +17,11 @@ import { SceneSchema } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { ScopeStyleProps } from '../../src/kernel/_fields';
+import type { ScopeStyleProps } from '../../src/kernel/protocol';
 
 import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../src';
-import { buildIR, wrapRootScope } from '../../src/kernel/builder';
-import { Path } from '../../src/kernel/Path';
+import { Path } from '../../src/kernel';
+import { buildIR, wrapRootScope } from '../../src/kernel/adapter';
 
 // --- helpers ---------------------------------------------------------------
 

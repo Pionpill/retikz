@@ -1,9 +1,9 @@
-﻿import type { GroupPrim, PathPrim, RectPrim, ResolvedArrowEndSpec, ScenePrimitive, TextPrim } from '@retikz/core';
+import type { GroupPrim, PathPrim, RectPrim, ResolvedArrowEndSpec, ScenePrimitive, TextPrim } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { renderPrim } from '../../src/render/render-prim';
+import { renderPrim } from '../../src/render/svg';
 
 /** 测试在 node env 跑，不实际挂载——只检查返回的 React element 类型 / props 是否正确 */
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;

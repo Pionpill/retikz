@@ -27,7 +27,7 @@ describe('browserMeasurer 默认字体族', () => {
       );
 
     try {
-      const { browserMeasurer } = await import('../../src/render/browser-measurer');
+      const { browserMeasurer } = await import('../../src/render/text');
       browserMeasurer('abc', { size: 14 });
 
       expect(context.font).toBe('normal normal 14px Inter, sans-serif');
@@ -58,7 +58,7 @@ describe('browserMeasurer 默认字体族', () => {
       );
 
     try {
-      const { browserMeasurer } = await import('../../src/render/browser-measurer');
+      const { browserMeasurer } = await import('../../src/render/text');
       browserMeasurer('abc', { size: 14, family: 'monospace' });
 
       expect(context.font).toBe('normal normal 14px monospace');
