@@ -5,7 +5,6 @@ import { buildArrowMarker } from '@retikz/render/svg';
 
 import { svgToReact } from './svg-to-react';
 
-/** `<ArrowMarker>` 组件 props */
 export type ArrowMarkerProps = {
   /** marker 元素 id，用于 path markerStart / markerEnd 引用 */
   id: string;

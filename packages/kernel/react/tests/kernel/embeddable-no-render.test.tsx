@@ -26,7 +26,6 @@ import { buildIRWithContributions } from '../../src/kernel/adapter';
  *   在此路径下被完整覆盖。
  */
 
-/** 可嵌入 fixture 的 props 形状 */
 type FixtureProps = { id: string; data: unknown };
 
 /** 可嵌入 fixture 组件类型：函数组件 + 可嵌入静态标记 */

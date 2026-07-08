@@ -109,7 +109,6 @@ const aggregateEmbeddableComposites = (
 };
 
 /**
- * <Layout> 组件的 props
  * @description 含 {@link ScopeStyleProps} 级联样式子集——设任一样式 prop 时把 children 包进合成根 `<Scope>`，
  *   等价于用户手写一层根 `<Scope>`（编译产物同一 IR）。内层 `<Scope>` / 图元显式属性照常级联覆盖。
  *   与直接传 `ir` prop 并用时样式 props 被忽略（dev 警告）。

@@ -58,7 +58,6 @@ const loadImage = (href: string, onReady: () => void): HTMLImageElement | null =
   return entry.loaded ? img : null;
 };
 
-/** CanvasHost 组件 props */
 export type CanvasHostProps = {
   /** 已编译 Scene */
   scene: Scene;

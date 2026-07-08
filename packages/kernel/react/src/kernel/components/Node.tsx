@@ -21,7 +21,6 @@ import type { HydrationEventProps } from '../protocol';
 
 import { TIKZ_NODE } from '../protocol';
 
-/** <Node> 组件的 props */
 export type NodeProps = HydrationEventProps & {
   /** 节点 id；其他 Path/Draw 通过这个 id 引用本节点 */
   id?: string;

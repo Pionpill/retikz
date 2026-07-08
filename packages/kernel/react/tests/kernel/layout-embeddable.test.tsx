@@ -17,7 +17,6 @@ import { Layout } from '../../src/kernel';
  *   Layout 按 namespace 合并 datasets（同 ref 异引用 fail-loud）、每组调一次 makeComposites、与显式 composites 拼接喂 compileToScene。
  */
 
-/** 可嵌入 fixture 的 props 形状 */
 type FixtureProps = { id: string; data: unknown };
 
 /** 可嵌入 fixture 组件类型：函数组件 + 可嵌入静态标记 */

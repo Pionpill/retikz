@@ -8,7 +8,6 @@ import type { PathProps } from '../../kernel/components';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
 
-/** <Draw> 组件的 props */
 export type DrawProps = {
   /**
    * way 数组 DSL

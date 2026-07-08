@@ -7,7 +7,6 @@ import { TIKZ_PATH } from '../protocol';
 
 export type PathArrowDirectionValue = 'none' | '->' | '<-' | '<->';
 
-/** <Path> 组件的 props */
 export type PathProps = HydrationEventProps & {
   kind?: IRPath['kind'];
   kindOptions?: IRPath['kindOptions'];

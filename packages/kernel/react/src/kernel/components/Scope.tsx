@@ -6,7 +6,6 @@ import type { HydrationEventProps, ScopeStyleProps } from '../protocol';
 import { TIKZ_SCOPE } from '../protocol';
 
 /**
- * <Scope> 组件的 props
  * @description 级联样式子集（graphic state + 四通道 every-X）抽到共享 {@link ScopeStyleProps}，与 `<Layout>` 复用；
  *   本类型额外带容器 / 命名空间 / 局部变换 / 屏障 / 栈序 / 裁剪等 scope 专属字段
  */

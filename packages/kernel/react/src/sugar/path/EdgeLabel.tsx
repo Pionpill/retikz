@@ -3,7 +3,6 @@ import type { FC } from 'react';
 
 import { TIKZ_EDGE_LABEL } from '../../kernel/protocol';
 
-/** <EdgeLabel> 组件的 props */
 export type EdgeLabelProps = {
   /** 段上位置（TikZ `midway` / `near start` / `near end`），缺省 'midway' */
   position?: IRStepLabelInput['position'];

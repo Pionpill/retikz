@@ -17,7 +17,6 @@ import {
   resolveAngles,
 } from './shape-helpers';
 
-/** Circle sugar 的 props */
 export type CircleProps = PathVisualProps &
   AngleInput &
   BoxAdjustmentProps & {

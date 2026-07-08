@@ -215,7 +215,6 @@ export type GeneratorStepProps = {
 };
 
 /**
- * `<Step>` 组件的 props（13 种 step kind 的 discriminated union）
  * @description 十三种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
  */
 export type StepProps =

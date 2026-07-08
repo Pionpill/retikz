@@ -16,7 +16,6 @@ import {
   resolveAngles,
 } from './shape-helpers';
 
-/** Ellipse sugar 的 props */
 export type EllipseProps = PathVisualProps &
   AngleInput &
   BoxAdjustmentProps & {

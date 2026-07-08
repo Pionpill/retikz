@@ -10,7 +10,6 @@ import type { FC } from 'react';
 
 import { TIKZ_COORDINATE } from '../protocol';
 
-/** <Coordinate> 组件的 props */
 export type CoordinateProps = {
   /** 占位节点的 id；其它 path / node `at.of` 通过这个 id 引用 */
   id: string;
