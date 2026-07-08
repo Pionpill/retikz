@@ -23,7 +23,7 @@ import {
   type MarkLoweringContext,
   type MarkProvenance,
 } from '../../../contract';
-import { seriesPathMeta, slug } from '../../../pipeline';
+import { seriesPathMeta, slug } from '../../../contract';
 import { PathClosureKind, PathCurve, PlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import {

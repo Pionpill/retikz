@@ -603,10 +603,10 @@ importers:
   packages/viz/data:
     dependencies:
       '@retikz/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/core
       '@retikz/math':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/math
       d3-format:
         specifier: 'catalog:'
@@ -643,13 +643,13 @@ importers:
   packages/viz/plot:
     dependencies:
       '@retikz/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/core
       '@retikz/data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../data
       '@retikz/math':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/math
       d3-array:
         specifier: 'catalog:'
@@ -704,16 +704,16 @@ importers:
   packages/viz/plot-react:
     dependencies:
       '@retikz/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/core
       '@retikz/data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../data
       '@retikz/plot':
         specifier: workspace:*
         version: link:../plot
       '@retikz/react':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/react
     devDependencies:
       '@types/node':
@@ -753,16 +753,16 @@ importers:
   packages/viz/plot-vanilla:
     dependencies:
       '@retikz/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/core
       '@retikz/data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../data
       '@retikz/plot':
         specifier: workspace:*
         version: link:../plot
       '@retikz/vanilla':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
       '@types/node':

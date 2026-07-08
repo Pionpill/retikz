@@ -10,7 +10,7 @@ import { DataFieldFormat } from './constants';
 /** 严格 YYYY/MM/DD 斜杠日期：四位年 / 两位月 / 两位日，分隔符必须是 `/`。 */
 const SLASH_DATE_RE = /^(\d{4})\/(\d{2})\/(\d{2})$/;
 
-/** 严格 slashDate -> UTC 零点 epoch ms；不匹配严格布局 -> NaN。 */
+/** 将严格 slashDate 转为 UTC 零点 epoch ms；布局或日历日期非法时返回 NaN。 */
 const parseSlashDate = (raw: unknown): number => {
   if (typeof raw !== 'string') return NaN;
   const match = SLASH_DATE_RE.exec(raw.trim());
@@ -18,10 +18,14 @@ const parseSlashDate = (raw: unknown): number => {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  return Date.UTC(year, month - 1, day);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  date.setUTCHours(0, 0, 0, 0);
+  const stamp = date.getTime();
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? stamp : NaN;
 };
 
-/** 数值 / 数值串 -> number；epoch 秒 / 毫秒缩放共用，非有限或空串 -> NaN。 */
+/** 将数值 / 数值串解析为有限数值；epoch 秒 / 毫秒格式共用，非有限或空串返回 NaN。 */
 const toEpochNumber = (raw: unknown): number => {
   if (typeof raw === 'number') return isFiniteNumber(raw) ? raw : NaN;
   if (typeof raw === 'string') {
@@ -55,36 +59,42 @@ const parsePercent = (raw: unknown): number => {
   return isFiniteNumber(parsed) ? parsed / 100 : NaN;
 };
 
+/** ISO temporal 内置格式；复用默认 temporal coercion。 */
 const isoFormat = defineFieldFormat({
   name: DataFieldFormat.Iso,
   impliedType: DataFieldType.Temporal,
   parse: raw => coerceValue(raw, DataFieldType.Temporal),
 });
 
+/** epochSeconds temporal 内置格式；把秒级时间戳放大为 epoch ms。 */
 const epochSecondsFormat = defineFieldFormat({
   name: DataFieldFormat.EpochSeconds,
   impliedType: DataFieldType.Temporal,
   parse: raw => toEpochNumber(raw) * 1000,
 });
 
+/** epochMillis temporal 内置格式；把有限数值直接视为 epoch ms。 */
 const epochMillisFormat = defineFieldFormat({
   name: DataFieldFormat.EpochMillis,
   impliedType: DataFieldType.Temporal,
   parse: raw => toEpochNumber(raw),
 });
 
+/** slashDate temporal 内置格式；只接受 YYYY/MM/DD 并按 UTC 零点解释。 */
 const slashDateFormat = defineFieldFormat({
   name: DataFieldFormat.SlashDate,
   impliedType: DataFieldType.Temporal,
   parse: parseSlashDate,
 });
 
+/** numberString continuous 内置格式；接受带千分位逗号的宽松数字串。 */
 const numberStringFormat = defineFieldFormat({
   name: DataFieldFormat.NumberString,
   impliedType: DataFieldType.Continuous,
   parse: parseNumberString,
 });
 
+/** percent continuous 内置格式；把百分比字面量转换为比例数值。 */
 const percentFormat = defineFieldFormat({
   name: DataFieldFormat.Percent,
   impliedType: DataFieldType.Continuous,

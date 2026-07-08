@@ -88,7 +88,7 @@ export const makeColorChannelDefinition = (
         scaleOperation.domain === undefined
       ) {
         const order = fieldOrders.get(field);
-        if (order !== undefined && order !== FieldOrderMode.Data)
+        if (order !== undefined && order !== FieldOrderMode.Appearance)
           scaleOperation = { ...scaleOperation, domain: orderedCategoryDomain(rawValues, order) };
       }
       const resolution = resolveChannelScale(

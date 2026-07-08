@@ -2,7 +2,15 @@
 
 import type { ExternalRow } from '../../src';
 
-import { coerceValue, DataFieldType, normalizeRows, resolveFieldPath, resolveFieldTypes } from '../../src';
+import {
+  coerceValue,
+  DataFieldFormat,
+  DataFieldType,
+  normalizeRows,
+  resolveFieldPath,
+  resolveFieldTypes,
+  resolveFormatRegistry,
+} from '../../src';
 
 describe('data field runtime', () => {
   it('resolves exact dotted keys before nested paths', () => {
@@ -34,5 +42,19 @@ describe('data field runtime', () => {
 
   it('returns undefined for missing categorical values', () => {
     expect(coerceValue(undefined, DataFieldType.Categorical)).toBeUndefined();
+  });
+
+  it('parses slashDate only when the value is a real YYYY/MM/DD calendar date', () => {
+    const slashDate = resolveFormatRegistry().get(DataFieldFormat.SlashDate);
+    const earlyDate = new Date(0);
+    earlyDate.setUTCFullYear(1, 0, 1);
+    earlyDate.setUTCHours(0, 0, 0, 0);
+
+    expect(slashDate?.parse('0001/01/01')).toBe(earlyDate.getTime());
+    expect(slashDate?.parse('2024/02/29')).toBe(Date.UTC(2024, 1, 29));
+    expect(Number.isNaN(slashDate?.parse('2023/02/29'))).toBe(true);
+    expect(Number.isNaN(slashDate?.parse('2024/13/01'))).toBe(true);
+    expect(Number.isNaN(slashDate?.parse('2024/01/32'))).toBe(true);
+    expect(Number.isNaN(slashDate?.parse('2024/00/00'))).toBe(true);
   });
 });

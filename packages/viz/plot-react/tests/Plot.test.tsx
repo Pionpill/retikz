@@ -75,6 +75,20 @@ describe('<Plot spec data> 薄包装', () => {
     expect(() => renderToStaticMarkup(<Plot spec={malformed} data={{}} width={480} height={300} />)).toThrow(ZodError);
   });
 
+  it('spec 入口 layout props 会合并进 spec 并参与 schema 校验', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <Plot
+          spec={spec}
+          data={data}
+          width={480}
+          height={300}
+          layout={{ autoPadding: 'yes' } as unknown as PlotSpec['layout']}
+        />,
+      ),
+    ).toThrow(ZodError);
+  });
+
   it('几何与手写 <Layout ir composites> 一致（证明薄包装不引入额外语义）', () => {
     const viaPlot = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} />);
     const viaLayout = renderToStaticMarkup(

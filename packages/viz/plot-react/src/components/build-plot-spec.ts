@@ -981,9 +981,6 @@ const collectLabelChildLines = (children: ReactNode): Array<PlotLabelLine> => {
         }
         return;
       }
-      if (typeof node.type === 'function') {
-        visit((node.type as (props: unknown) => ReactNode)(node.props));
-      }
     }
   };
   visit(children);
@@ -2583,7 +2580,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     guides: normalizedAxisBinding.guides,
   };
   // 旁路记录 resolveLabel（运行时函数、不进 IR）：resolvePlotRuntime 据返回的 spec 取出注入 lowerPlots options
-  const parsed = normalizedAxisBinding.marks.length === 0 ? spec : PlotSpecSchema.parse(spec);
+  const parsed = PlotSpecSchema.parse(spec);
   if (Object.keys(collected.resolveLabels).length > 0) resolveLabelBySpec.set(parsed, collected.resolveLabels);
   return parsed;
 };

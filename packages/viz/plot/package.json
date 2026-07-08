@@ -1,6 +1,12 @@
 {
   "name": "@retikz/plot",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
+  "retikz": {
+    "domain": "viz",
+    "releaseGroup": "plot",
+    "layer": "feature",
+    "publishable": true
+  },
   "description": "retikz plot (Tier 2): JSON-serializable grammar-of-graphics Plot IR that lowers to @retikz/core.",
   "type": "module",
   "author": "Pionpill",
@@ -58,9 +64,9 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@retikz/core": "workspace:*",
-    "@retikz/data": "workspace:*",
-    "@retikz/math": "workspace:*",
+    "@retikz/core": "workspace:^",
+    "@retikz/data": "workspace:^",
+    "@retikz/math": "workspace:^",
     "d3-array": "catalog:",
     "d3-format": "catalog:",
     "d3-scale": "catalog:",

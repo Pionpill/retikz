@@ -35,6 +35,7 @@ import type {
   ResolveLabel,
   TickSet,
 } from '../contract';
+import type { DatumIdRegistrar, ProvenanceContext } from '../contract';
 import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
   AxisGuide,
@@ -49,11 +50,11 @@ import type {
   ScaleOperation,
   TransformOperation,
 } from '../schemas';
+import type { LegendReserve, Margins, Rect } from '../shared';
 import type { LegendEntry, LegendInput } from './guide';
-import type { LegendReserve, Margins, Rect } from './layout';
-import type { DatumIdRegistrar, ProvenanceContext } from './provenance';
 
 import { isBuiltinScaleOperation } from '../contract';
+import { rootMeta, slug } from '../contract';
 import { resolveAxisGuideTokens, resolveLegendGuideTokens, resolvePlotTheme } from '../providers';
 import {
   assertBaselineScaleCompatible,
@@ -93,11 +94,11 @@ import {
   PlotScale,
   PlotSpecSchema,
 } from '../schemas';
+import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../shared';
 import { createAnchorRegistry } from './anchors';
 import { lowerPlotLabels, resolveLabelReserve } from './decoration-layout';
 import { lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
-import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from './layout';
-import { createDatumIdRegistrar, rootMeta, slug } from './provenance';
+import { createDatumIdRegistrar } from './provenance';
 import { collectSourceFields } from './source-fields';
 
 /**
@@ -967,7 +968,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
 
   /**
    * 解析某 role 的有效 order（解析 + 三道判定的两道：非分类 throw / 冲突 throw）
-   * @description 收集该 role 各绑定字段的非默认 order（!=='data'）：非分类字段配 order → throw；
+   * @description 收集该 role 各绑定字段的非默认 order（!=='appearance'）：非分类字段配 order → throw；
    *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
    */
   const resolveRoleOrder = (
@@ -981,7 +982,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
-      if (order === undefined || order === FieldOrderMode.Data) continue;
+      if (order === undefined || order === FieldOrderMode.Appearance) continue;
       const type = fieldTypes.get(channel.field);
       if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new Error(

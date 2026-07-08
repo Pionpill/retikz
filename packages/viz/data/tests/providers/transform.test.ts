@@ -108,4 +108,50 @@ describe('data transform runtime', () => {
       expect.objectContaining({ month: 'Feb', revenueRange: 2 }),
     ]);
   });
+
+  it('uses tie last for the final threshold row in top and bottom selectors', () => {
+    const rows: Array<ExternalRow> = [
+      { id: 'A', score: 10 },
+      { id: 'B', score: 9 },
+      { id: 'C', score: 9 },
+      { id: 'D', score: 8 },
+    ];
+
+    expect(
+      applyTransforms(rows, [{ kind: 'select', selector: { op: 'top', by: 'score', n: 2 } }]).map(row => row.id),
+    ).toEqual(['A', 'B']);
+    expect(
+      applyTransforms(rows, [{ kind: 'select', selector: { op: 'top', by: 'score', n: 2, tie: 'last' } }]).map(
+        row => row.id,
+      ),
+    ).toEqual(['A', 'C']);
+    expect(
+      applyTransforms(rows, [{ kind: 'select', selector: { op: 'top', by: 'score', n: 2, tie: 'all' } }]).map(
+        row => row.id,
+      ),
+    ).toEqual(['A', 'B', 'C']);
+
+    const bottomRows: Array<ExternalRow> = [
+      { id: 'A', score: 1 },
+      { id: 'B', score: 2 },
+      { id: 'C', score: 2 },
+      { id: 'D', score: 3 },
+    ];
+
+    expect(
+      applyTransforms(bottomRows, [{ kind: 'select', selector: { op: 'bottom', by: 'score', n: 2 } }]).map(
+        row => row.id,
+      ),
+    ).toEqual(['A', 'B']);
+    expect(
+      applyTransforms(bottomRows, [{ kind: 'select', selector: { op: 'bottom', by: 'score', n: 2, tie: 'last' } }]).map(
+        row => row.id,
+      ),
+    ).toEqual(['A', 'C']);
+    expect(
+      applyTransforms(bottomRows, [{ kind: 'select', selector: { op: 'bottom', by: 'score', n: 2, tie: 'all' } }]).map(
+        row => row.id,
+      ),
+    ).toEqual(['A', 'B', 'C']);
+  });
 });
