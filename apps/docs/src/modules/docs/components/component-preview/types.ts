@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 /** 预览区平移 / 缩放状态。 */
 export type Transform = { x: number; y: number; scale: number };
 
-/** 源码视图切换：React 源码 / IR JSON / Vanilla builder 代码。 */
+/** 源码视图切换：React 源码 / IR JSON / Vanilla plain spec 代码。 */
 export type SourceView = 'react' | 'ir' | 'vanilla';
 
 /** demo 渲染目标：SVG DOM 或 Canvas 2D。 */
@@ -21,13 +21,13 @@ export type PreviewControlPlacement =
   | 'bottom-center'
   | 'bottom-end';
 
-/** 预览区控制插槽共享上下文。 */
-export type PreviewControlContext = {
-  /** 重挂载渲染子树，用于重播 CSS / Canvas / WAAPI 动画。 */
-  replay: () => void;
+/** 预览控制运行时，由宿主卡片或弹窗提供给控制插槽。 */
+export type PreviewControlRuntime = {
+  /** 重新挂载演示子树。 */
+  remount: () => void;
   /** 当前渲染目标。 */
   rendererMode: RendererMode;
-  /** 渲染区 DOM，用于读取 svg / canvas / animation。 */
+  /** 渲染区 DOM，用于读取 svg / canvas / animation 状态。 */
   renderPane: HTMLElement | null;
   /** 预览区是否处于 hover 状态。 */
   hovered: boolean;
@@ -52,10 +52,9 @@ export type PreviewControlSlot = {
   /** 插槽在预览区九宫格中的位置。 */
   placement?: PreviewControlPlacement;
   /** 根据当前预览上下文渲染插槽内容。 */
-  render: (ctx: PreviewControlContext) => ReactNode;
+  render: (runtime: PreviewControlRuntime) => ReactNode;
 };
 
-/** 兼容旧 previewActions 命名，后续可单独重命名。 */
 /** 预览控件选项。 */
 export type PreviewControlOption = {
   /** 写入预览状态的值。 */
@@ -87,16 +86,13 @@ export type PreviewInputControlConfig = {
 /** 常见预览控件的声明式配置。 */
 export type PreviewControlConfig = PreviewSelectControlConfig | PreviewInputControlConfig;
 
-export type PreviewActionContext = PreviewControlContext;
-export type PreviewAction = PreviewControlSlot;
-
-/** 自定义预览插槽共享值状态。 */
-export type PreviewActionState = {
+/** 自定义预览控件的共享值状态。 */
+export type PreviewControlState = {
   values: Record<string, string>;
   setValue: (id: string, value: string) => void;
 };
 
-/** 渲染区垂直对齐档位。 */
+/** 演示区垂直对齐档位。 */
 export type AlignKey = 'center' | 'start' | 'end';
 
 /** 预览区高度档位。 */

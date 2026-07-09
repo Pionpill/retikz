@@ -10,7 +10,7 @@ import type {
   AlignKey,
   ComponentRenderSource,
   DiffMode,
-  PreviewAction,
+  PreviewControlSlot,
   RendererMode,
   SizeKey,
   UnifiedDiff,
@@ -18,9 +18,10 @@ import type {
 
 import { ComponentDetailDialog, DemoRenderer, PreviewControlSlotLayer, SourceCodePanel } from './components';
 import { alignClass, sizeClass } from './constants';
-import { PreviewActionStateContext } from './context';
-import { buildPreviewToolSlots } from './control-slots';
-import { usePanZoom, usePreviewActions, useSourceViews } from './hooks';
+import { PreviewControlStateContext } from './context';
+import { ANIMATION_PAUSED_CONTROL_ID, buildAnimationControlSlots, buildPreviewToolSlots } from './controls';
+import { usePanZoom, useSourceViews } from './hooks';
+import { usePreviewControlRuntime } from './runtime';
 import { buildAskAiPrompt, filterDiffByMode, findPrecedingHeading } from './utils';
 
 export type { ComponentRenderSource } from './types';
@@ -29,30 +30,27 @@ export type { ComponentRenderSource } from './types';
 const PREVIEW_MAX_LINES = 3;
 
 export type ComponentRenderProps = {
-  /** demo 标识（仅用于 Dialog header 显示） */
+  /** demo 标识，仅用于 Dialog header 显示。 */
   name: string;
   Component: FC;
-  /** 代码区视图集合；缺省时整段代码面板与 Dialog 右栏都不渲染 */
+  /** 代码区视图集合；缺省时整段代码面板与 Dialog 右栏都不渲染。 */
   source?: ComponentRenderSource;
-  /** 渲染区垂直对齐，默认 center */
+  /** 渲染区垂直对齐，默认 center。 */
   align?: AlignKey;
-  /** 渲染区高度档位（xs / sm / md / lg / xl），默认 `md` */
+  /** 渲染区高度档位，默认 `md`。 */
   size?: SizeKey;
-  /** 透传到 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等 */
+  /** 透传给 demo 渲染区父级 div 的 className。 */
   componentClassName?: string;
-  /** 是否显示右侧工具条的 Ask AI 按钮，默认 true；在 AI 面板内（如 RetikzPreview）渲染时关掉避免自指 */
+  /** 是否显示右侧工具栏的 Ask AI 按钮。 */
   showAskAi?: boolean;
-  /** 交互式 demo（含 hooks / 异步）：真渲染 `<Component/>`，隐藏 svg/canvas 切换；IR / Vanilla 视图由调用方置空后自动消失 */
+  /** 交互型 demo：真渲染 `<Component />`。 */
   interactive?: boolean;
-  /** demo 含动画：自动装配内置动画工具（重播 / 播放暂停 / 停止）到左上角动作栏 */
+  /** demo 含动画：自动装配内置动画工具。 */
   animated?: boolean;
-  /** 自定义动作按钮（追加在内置工具之后，渲染在左上角动作栏） */
-  actions?: Array<PreviewAction>;
-  /** 自定义预览控制插槽，优先于兼容用的 actions。 */
-  controlSlots?: Array<PreviewAction>;
-  /** 自定义动作栏是否常驻显示；默认 true */
-  actionsAlwaysVisible?: boolean;
-  /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
+  /** 自定义预览控制插槽。 */
+  controlSlots?: Array<PreviewControlSlot>;
+  /** 自定义预览控件层是否常驻显示，默认 `true`。 */
+  controlsAlwaysVisible?: boolean;
 };
 
 /** 演示卡核心。 */
@@ -67,9 +65,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     showAskAi = true,
     interactive,
     animated = false,
-    actions,
     controlSlots,
-    actionsAlwaysVisible = true,
+    controlsAlwaysVisible = true,
   } = props;
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [sourceFileIndex, setSourceFileIndex] = useState(0);
@@ -149,17 +146,14 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   };
 
   const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
-  const resolvedControlSlots = controlSlots ?? actions;
-
-  const { replayNonce, controlCtx, slots, previewActionState } = usePreviewActions({
-    animated,
-    actions: resolvedControlSlots,
+  const { remountKey, runtime, controlState } = usePreviewControlRuntime({
     rendererMode,
     renderPaneRef,
     hovered: isPreviewHovered,
     pinned: toolbarPinned,
     expanded: isMaximized,
   });
+  const animationControlSlots = animated ? buildAnimationControlSlots(runtime.active(ANIMATION_PAUSED_CONTROL_ID)) : [];
   const previewToolSlots = buildPreviewToolSlots({
     transform,
     isTransformed,
@@ -180,7 +174,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
       <div
         className={cn(
-          'group/preview relative flex w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
+          'group/preview relative flex w-full justify-center overflow-hidden p-6 select-none sm:p-10',
           sizeClass[effectiveSize],
           alignClass[align],
           dragEnabled && 'touch-none',
@@ -196,26 +190,26 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         <div
           ref={renderPaneRef}
           className={cn(
-            'flex items-center justify-center max-w-full max-h-full [&>canvas]:max-w-full [&>canvas]:max-h-full [&>svg]:max-w-full [&>svg]:max-h-full',
+            'flex max-h-full max-w-full items-center justify-center [&>canvas]:max-h-full [&>canvas]:max-w-full [&>svg]:max-h-full [&>svg]:max-w-full',
             !isDragging && 'transition-transform duration-150',
           )}
           style={{ transform: transformStyle }}
         >
-          <Fragment key={replayNonce}>
-            <PreviewActionStateContext.Provider value={previewActionState}>
+          <Fragment key={remountKey}>
+            <PreviewControlStateContext.Provider value={controlState}>
               {activeRender ? (
                 activeRender(rendererMode)
               ) : (
                 <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
               )}
-            </PreviewActionStateContext.Provider>
+            </PreviewControlStateContext.Provider>
           </Fragment>
         </div>
         <PreviewControlSlotLayer
-          slots={[...slots, ...previewToolSlots]}
-          ctx={controlCtx}
+          slots={[...animationControlSlots, ...(controlSlots ?? []), ...previewToolSlots]}
+          runtime={runtime}
           pinned={toolbarPinned}
-          alwaysVisible={actionsAlwaysVisible && (resolvedControlSlots?.length ?? 0) > 0}
+          alwaysVisible={controlsAlwaysVisible && (controlSlots?.length ?? 0) > 0}
         />
       </div>
       {hasCode ? (
@@ -255,8 +249,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         toggleRendererMode={toggleRendererMode}
         interactive={interactive}
         animated={animated}
-        controlSlots={resolvedControlSlots}
-        actionsAlwaysVisible={actionsAlwaysVisible}
+        controlSlots={controlSlots}
+        controlsAlwaysVisible={controlsAlwaysVisible}
         sourceFileIndex={activeFileIndex}
         onSourceFileIndexChange={setSourceFileIndex}
       />

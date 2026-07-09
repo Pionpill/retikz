@@ -6,7 +6,8 @@ description: 给节点 / 路径 / 镜头按时间打关键帧——入场、强�
 动画让固定图元**按时间从一个样子过渡到另一个样子**：淡入、画线、放大、旋转、变色、镜头推拉。你不用手写关键帧——调一个 **preset 工厂**（`fadeIn()` / `spin()` …）得到一条动画描述，挂到元素的 `animations` 数组即可。
 
 ```tsx
-import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
+import { fadeIn, scaleIn } from '@retikz/core';
+import { Layout, Node } from '@retikz/react';
 
 <Node position={[0, 0]} animations={[fadeIn(), scaleIn()]}>
   hi

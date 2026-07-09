@@ -131,7 +131,7 @@ const nodeCode = (node: IRNode, indent: number, ctx: Ctx): string => {
   const cfg = formatObject(config, indent);
   if (node.id !== undefined)
     return hasConfig ? `node(${formatString(node.id)}, ${cfg})` : `node(${formatString(node.id)})`;
-  return hasConfig ? `node(${cfg})` : 'node()';
+  return hasConfig ? `node(${cfg})` : 'node({})';
 };
 
 const coordinateCode = (coord: IRCoordinate, indent: number, ctx: Ctx): string => {
@@ -181,7 +181,7 @@ const isWayRepresentableStep = (step: IRStep): boolean => {
 const rawIrChildCode = (child: IRChild, indent: number, reason: string): string =>
   `/* ${reason}; raw IR child, switch to IR view for structure. */ ${formatObject(child, indent)}`;
 
-const drawCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
+const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   if (path.kind === 'ribbon') return ribbonCode(path, indent, ctx);
   if (path.children === undefined) {
     return rawIrChildCode(path, indent, 'missing path steps');
@@ -189,11 +189,15 @@ const drawCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   if (!path.children.every(isWayRepresentableStep)) {
     return rawIrChildCode(path, indent, 'not vanilla way sugar');
   }
-  ctx.used.add('draw');
-  const config = stripKeys(path, ['type', 'children']);
+  ctx.used.add('path');
+  const id = path.id;
+  const config = stripKeys(path, ['type', 'children', 'id']);
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
-  const hasConfig = Object.keys(config).length > 0;
-  return hasConfig ? `draw(${wayStr}, ${formatObject(config, indent)})` : `draw(${wayStr})`;
+  const pathConfig = formatObject({ way: path.children.length === 0 ? [] : `__WAY__`, ...config }, indent).replace(
+    "'__WAY__'",
+    wayStr,
+  );
+  return id !== undefined ? `path(${formatString(id)}, ${pathConfig})` : `path(${pathConfig})`;
 };
 
 const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
@@ -201,7 +205,7 @@ const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   if (ribbon === undefined) return rawIrChildCode(path, indent, 'missing ribbon options');
 
   if (ribbon.mode === 'boundary') {
-    return rawIrChildCode(path, indent, 'boundary ribbon has no vanilla builder shorthand');
+    return rawIrChildCode(path, indent, 'boundary ribbon has no vanilla plain spec shorthand');
   }
   if (path.children === undefined) {
     return rawIrChildCode(path, indent, 'missing ribbon centerline');
@@ -209,10 +213,15 @@ const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   if (!path.children.every(isWayRepresentableStep)) {
     return rawIrChildCode(path, indent, 'not vanilla way sugar');
   }
-  ctx.used.add('draw');
-  const config = stripKeys(path, ['type', 'children']);
+  ctx.used.add('path');
+  const id = path.id;
+  const config = stripKeys(path, ['type', 'children', 'id']);
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
-  return `draw(${wayStr}, ${formatObject(config, indent)})`;
+  const pathConfig = formatObject({ way: path.children.length === 0 ? [] : `__WAY__`, ...config }, indent).replace(
+    "'__WAY__'",
+    wayStr,
+  );
+  return id !== undefined ? `path(${formatString(id)}, ${pathConfig})` : `path(${pathConfig})`;
 };
 
 const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
@@ -232,7 +241,7 @@ const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
     case 'coordinate':
       return coordinateCode(child, indent, ctx);
     case 'path':
-      return drawCode(child, indent, ctx);
+      return pathCode(child, indent, ctx);
     case 'scope':
       return scopeCode(child, indent, ctx);
   }
@@ -244,18 +253,22 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
   return `[\n${lines.join('\n')}\n${pad(indent)}]`;
 };
 
-const BUILDER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'draw', 'coordinate', 'scope'];
+const HELPER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope'];
 
 export const irToVanillaCode = (ir: IRScene): string => {
   const ctx: Ctx = { used: new Set(['figure']), usesDrawWay: false };
   const childrenStr = childListCode(ir.children, 0, ctx);
-  const configStr = ir.viewBox ? formatObject({ viewBox: ir.viewBox }, 0) : null;
-  const hasChildren = ir.children.length > 0;
-  const figureArgs =
-    configStr !== null ? (hasChildren ? `${configStr}, ${childrenStr}` : configStr) : hasChildren ? childrenStr : '';
+  const figureConfig = {
+    ...(ir.viewBox ? { viewBox: ir.viewBox } : {}),
+    children: ir.children,
+  };
+  const figureArgs = formatObject({ ...figureConfig, children: '__CHILDREN__' }, 0).replace(
+    "'__CHILDREN__'",
+    childrenStr,
+  );
 
-  const builders = BUILDER_ORDER.filter(name => ctx.used.has(name));
-  const imports = [`import { ${builders.join(', ')} } from '@retikz/vanilla';`];
+  const helpers = HELPER_ORDER.filter(name => ctx.used.has(name));
+  const imports = [`import { ${helpers.join(', ')} } from '@retikz/vanilla';`];
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
 
   return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n`;

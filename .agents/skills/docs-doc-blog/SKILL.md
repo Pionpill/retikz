@@ -137,7 +137,7 @@ retikz blog 默认走「作者讲 → AI 写」的双人协作，AI 不替作者
 
 ## 视觉
 
-- **所有图都 retikz 自绘**：`<ComponentPreview hideCode>` + 同级 `<name>.demo.tsx`；详细惯例去读 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)
+- **所有图都 retikz 自绘**：`<ComponentPreview hideCode>` + 同级 `<name>.demo.tsx`；详细惯例去读 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)
 - **禁 `<img>` 截图 / Mermaid / Excalidraw / draw.io**——blog 站和 docs 站共用 retikz 活体演示的属性
 - **禁 GIF / 视频**：增加资源权重 + 程序员通常更愿读静态图 + 维护成本高
 - 表格沿用 640px 宽度限制——超出靠 `<br />` 软断或压缩措辞

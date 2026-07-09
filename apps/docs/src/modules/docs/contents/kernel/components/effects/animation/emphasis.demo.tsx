@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { blink, colorShift, flash, Layout, loop, Node, pulse, slideIn, spin, wiggle } from '@retikz/react';
+import { blink, colorShift, flash, loop, pulse, slideIn, spin, wiggle } from '@retikz/core';
+import { Layout, Node } from '@retikz/react';
 
 // 强调与循环合集：flash / blink / wiggle 强调，pulse / spin 循环，loop 包装 slideIn，colorShift 变色
 const Demo: FC = () => (

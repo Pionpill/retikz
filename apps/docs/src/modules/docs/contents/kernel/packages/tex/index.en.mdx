@@ -32,7 +32,7 @@ const Diagram = () => {
 
 <ComponentAlert
   title="lowerTex injection required"
-  description="$...$ is only parsed when lowerTex is injected (React via Layout, vanilla via toScene/renderToSvgString); without it a $ stays literal (existing text with $ is unchanged), and content carrying math degrades to no formula with a diagnosable warning instead of crashing."
+  description="$...$ is only parsed when lowerTex is injected (React via Layout, vanilla via compile.lowerTex); without it a $ stays literal (existing text with $ is unchanged), and content carrying math degrades to no formula with a diagnosable warning instead of crashing."
 />
 
 ## Inline vs display
@@ -80,16 +80,18 @@ If you would rather not use the `useLowerTex` hook, build `lowerTex` yourself fr
 
 ## Vanilla
 
-`createMathJaxEngine(options?)` (await) → `createLowerTex` → inject `lowerTex` into `toScene` / `renderToSvgString`; node text uses `$...$` as usual. `options.packages` is passed to MathJax TeX input and defaults to `['base']`:
+`createMathJaxEngine(options?)` (await) → `createLowerTex` → inject it as vanilla `compile.lowerTex`; node text uses `$...$` as usual. `options.packages` is passed to MathJax TeX input and defaults to `['base']`:
 
 ```ts
 import { figure, node, renderToSvgString } from '@retikz/vanilla';
 import { createMathJaxEngine, createLowerTex } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
-const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })]);
+const spec = figure({
+  children: [node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })],
+});
 
-const svg = renderToSvgString(fig, { lowerTex });
+const svg = renderToSvgString(spec, { compile: { lowerTex } });
 ```
 
 ## Syntax

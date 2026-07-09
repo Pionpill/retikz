@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Draw, DrawWay, Layout, Node, Scope } from '@retikz/react';
+import { DrawWay } from '@retikz/core';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 /**
  * 分组连接：引用 Scope 的合成边界

@@ -1,0 +1,98 @@
+---
+title: 无框架入口
+description: 用 plain spec 在 React 之外组织图形，并把同一份描述渲染成 SVG、Canvas 或 SSR 字符串。
+---
+
+`@retikz/vanilla` 是无框架入口：不需要 JSX，也不需要 React runtime。你用 plain spec 描述图形，再交给 `mount`、`mountSvg`、`mountCanvas` 或 `renderToSvgString` 渲染。
+
+这层只做 adapter。几何、路径、复合展开和渲染能力仍来自 `@retikz/core` 与 `@retikz/render`。
+
+## 基本写法
+
+```ts
+import { figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '@retikz/vanilla';
+
+const spec = figure({
+  id: 'flow',
+  layers: [
+    layer('main', { cache: VanillaLayerCache.Static }, [
+      node('a', { position: [0, 0], text: 'A' }),
+      node('b', { position: [120, 0], text: 'B' }),
+      path('edge', {
+        way: ['a', 'b'],
+        marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      }),
+    ]),
+  ],
+});
+
+const svg = renderToSvgString(spec);
+const view = mount(document.querySelector('#diagram')!, spec);
+```
+
+`figure({ children })` 是单层图的简写；需要缓存、局部失效或未来增量更新时，用 `layers` 明确分层。
+
+## Runtime 入口
+
+| API                 | 用途                                 | 返回                         |
+| ------------------- | ------------------------------------ | ---------------------------- |
+| `renderToSvgString` | SSR / 构建期产 `<svg>` 字符串        | `string`                     |
+| `mount`             | 按 `renderer` 挂载 SVG 或 Canvas     | `VanillaView` / `CanvasView` |
+| `mountSvg`          | 显式挂载 SVG DOM                     | `VanillaView`                |
+| `mountCanvas`       | 显式挂载 Canvas                      | `CanvasView`                 |
+| `hydrate`           | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationHandle`            |
+
+`view.update(nextSpec)` 当前仍是整图重渲染，但 root 元素 identity 保持稳定。plain spec 会保留 layer 和 identity metadata，为后续 `patch` / `invalidate` 做准备。
+
+## 选项结构
+
+渲染入口的选项按消费阶段分组：
+
+```ts
+renderToSvgString(spec, {
+  output: { width: 640, height: 360, idPrefix: 'flow' },
+  compile: { composites, measureText },
+  animation: { enabled: false, snapshotAt: 1000 },
+});
+
+mount(canvasRoot, spec, {
+  renderer: 'canvas',
+  output: { width: 640, height: 360 },
+  canvas: { devicePixelRatio: 2 },
+});
+```
+
+`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas 后端使用。
+
+## 分层与嵌入
+
+`layer(id, options, children)` 是 authoring 边界。`cache` 是 runtime hint，不进入 core IR；`zIndex` 只决定 layer stack 排序，相同值保持声明顺序。
+
+Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它只按 `kind` 找到注入的 adapter，把 props 静态 lower 成 core IR child、datasets 和 composite definitions。
+
+```ts
+import { embed, figure, layer } from '@retikz/vanilla';
+
+const spec = figure({
+  layers: [
+    layer('chart', [
+      embed('my-chart', 'sales', {
+        dataRef: 'sales',
+        x: 'month',
+        y: 'value',
+      }),
+    ]),
+  ],
+});
+```
+
+## API 摘要
+
+| API                   | 类型   | 说明                               |
+| --------------------- | ------ | ---------------------------------- |
+| `figure`              | helper | 构造 plain spec 根对象             |
+| `layer`               | helper | 构造分层边界                       |
+| `node` / `coordinate` | helper | 构造具名或匿名节点、坐标点         |
+| `path`                | helper | 构造 path，`way` 复用 Draw way DSL |
+| `embed`               | helper | 构造 Tier 2 嵌入节点               |
+| `VanillaTier2Adapter` | type   | 定义 `embed()` 的 lowering 适配器  |

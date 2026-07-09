@@ -58,6 +58,7 @@ describe('compile source structure', () => {
       'boundaryKey',
       'boundaryPointOf',
       'boxInsets',
+      'computeCompiledNodeLayout',
       'createScopeCircleLayout',
       'createScopePlaceholderLayout',
       'createScopeRectangleLayout',

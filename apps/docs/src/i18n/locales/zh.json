@@ -62,6 +62,7 @@
     "effectsShadow": "阴影",
     "effectsBlend": "混合",
     "effectsAnimation": "动画",
+    "pkgVanilla": "无框架入口",
     "pkgTex": "数学公式",
     "pkgMath": "计算几何",
     "pkgMathPrimitives": "几何原语",

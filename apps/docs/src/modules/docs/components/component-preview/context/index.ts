@@ -1,2 +1,2 @@
 export * from './useDemoLocationContext';
-export * from './usePreviewActionContext';
+export * from './usePreviewControlContext';

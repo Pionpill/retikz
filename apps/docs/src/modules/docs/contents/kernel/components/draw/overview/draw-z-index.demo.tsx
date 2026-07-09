@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Draw, DrawWay, Layout } from '@retikz/react';
+import { DrawWay } from '@retikz/core';
+import { Draw, Layout } from '@retikz/react';
 
 /**
  * Draw zIndex 显式栈序

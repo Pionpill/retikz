@@ -5,13 +5,13 @@ import { PathCurve } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
-import { usePreviewActionValue } from '@/modules/docs/components';
+import { usePreviewControlValue } from '@/modules/docs/components';
 
 import { closureRadar, closureTrend } from './line-closure.data';
-import { PATH_CURVE_ACTION_ID } from './line-curve.actions';
+import { PATH_CURVE_CONTROL_ID } from './line-curve.controls';
 
 const Demo: FC = () => {
-  const curve = usePreviewActionValue(PATH_CURVE_ACTION_ID, PathCurve.Linear) as PathCurveValue;
+  const curve = usePreviewControlValue(PATH_CURVE_CONTROL_ID, PathCurve.Linear) as PathCurveValue;
   return (
     <Layout width={620} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
       <Plot data={closureTrend} width={300} height={230} x={0} y={35}>

@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Layout, Node, pulse } from '@retikz/react';
+import { pulse } from '@retikz/core';
+import { Layout, Node } from '@retikz/react';
 import { useState } from 'react';
 
 /**

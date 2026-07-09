@@ -1,0 +1,702 @@
+import type {
+  IRArrowMark,
+  IRChild,
+  IRLineSpec,
+  IRNode,
+  IRNodeLabel,
+  IRNodeLabelInput,
+  IRPathBase,
+  IRScene,
+  IRScope,
+  IRStep,
+  IRStepLabel,
+  IRStepLabelInput,
+  IRTarget,
+  IRTransform,
+  IRTransformInput,
+} from '@retikz/core';
+import type { ReactElement, ReactNode } from 'react';
+
+import { CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar } from '@retikz/core';
+import { Children, createElement, Fragment, isValidElement } from 'react';
+
+import type { CoordinateProps } from '../components';
+import type { NodeProps } from '../components';
+import type { PathProps } from '../components';
+import type { ScopeProps } from '../components';
+import type { StepProps } from '../components';
+import type { TextProps } from '../components';
+import type { ScopeStyleProps } from '../protocol';
+import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from '../protocol';
+
+import { Scope } from '../components';
+import {
+  getDisplayName,
+  TIKZ_COORDINATE,
+  TIKZ_EDGE_LABEL,
+  TIKZ_NODE,
+  TIKZ_PATH,
+  TIKZ_SCOPE,
+  TIKZ_STEP,
+  TIKZ_TEXT,
+} from '../protocol';
+import { resolveEmbeddableAdapter } from '../protocol';
+import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS, SCOPE_STYLE_FIELDS } from './fields';
+
+// NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 fields.ts 与 unbuilder 共享
+
+type EdgeLabelElementProps = {
+  position?: IRStepLabelInput['position'];
+  side?: IRStepLabelInput['side'];
+  sloped?: IRStepLabelInput['sloped'];
+  children?: unknown;
+};
+
+/**
+ * 判定一个函数 type 是否为 React class 组件
+ * @description React class 组件原型上带 `isReactComponent` 标记；据此区分，避免把 class 当普通函数直接调用
+ */
+const isClassComponent = (type: unknown): boolean =>
+  typeof type === 'function' &&
+  (type as { prototype?: { isReactComponent?: unknown } }).prototype?.isReactComponent !== undefined;
+
+/** 取元素 type 的可读名称用于诊断信息（函数 / class 取 displayName 或 name，其余回退 String） */
+const componentLabel = (type: unknown): string => {
+  if (typeof type === 'string') return type;
+  if (typeof type === 'function') {
+    const fn = type as { displayName?: string; name?: string };
+    return fn.displayName ?? fn.name ?? 'Unknown';
+  }
+  if (type !== null && typeof type === 'object') {
+    const obj = type as { displayName?: string };
+    return obj.displayName ?? 'Unknown';
+  }
+  return String(type);
+};
+
+/**
+ * 把 <Text> 元素的 props + children 串解析为 IRLineSpec 对象形式
+ * @description children 接受 string / number（number 当文本，对齐 React 渲染）；其它类型静默跳过此 <Text> 元素
+ */
+const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
+  const props = el.props as TextProps;
+  if (typeof props.children !== 'string' && typeof props.children !== 'number') {
+    return undefined;
+  }
+  const text = String(props.children);
+  if (props.fill === undefined && props.opacity === undefined && props.font === undefined) {
+    return text;
+  }
+  return {
+    text,
+    fill: props.fill,
+    opacity: props.opacity,
+    font: props.font,
+  };
+};
+
+/**
+ * 收集 Node children 中的行（当前行缓冲模型，对齐 React 文本渲染）
+ * @description 顺序遍历，维护一个当前行文本缓冲：字符串首段 append、每遇 `'\n'` flush 成一行并起新行；
+ *   number 当文本 append（与相邻 inline 同一行拼接，不另起行）；boolean / null / undefined 跳过（React 渲染为空）；
+ *   `<Text>` 元素先 flush 缓冲再独立成一行（保留 styled-line 行为）；数组沿用同一缓冲递归（相邻 inline 跨数组项也拼接）；
+ *   `React.Fragment` 透明展开其 children（沿用同一缓冲，与裸数组同义）；其余函数式组件同步调用后递归其返回值
+ *   （与 `readSceneChildren` 一致，让条件分支返回的 `<Text>` 段不被静默丢弃）；其它类型跳过；遍历结束 flush 残余缓冲
+ */
+const isEscapedAt = (text: string, index: number): boolean => {
+  let slashCount = 0;
+  for (let i = index - 1; i >= 0 && text[i] === '\\'; i -= 1) slashCount += 1;
+  return slashCount % 2 === 1;
+};
+
+const splitChildTextLines = (text: string): Array<string> => {
+  const lines: Array<string> = [];
+  let start = 0;
+  let inDisplayTex = false;
+  for (let i = 0; i < text.length; i += 1) {
+    if (text[i] === '$' && text[i + 1] === '$' && !isEscapedAt(text, i)) {
+      inDisplayTex = !inDisplayTex;
+      i += 1;
+      continue;
+    }
+    if (text[i] === '\n' && !inDisplayTex) {
+      lines.push(text.slice(start, i));
+      start = i + 1;
+    }
+  }
+  lines.push(text.slice(start));
+  return lines;
+};
+
+const collectChildLines = (children: unknown): Array<IRLineSpec> => {
+  const out: Array<IRLineSpec> = [];
+  let buffer = '';
+  let bufferActive = false;
+  const flush = (): void => {
+    if (bufferActive) out.push(buffer);
+    buffer = '';
+    bufferActive = false;
+  };
+  const append = (chunk: string): void => {
+    buffer += chunk;
+    bufferActive = true;
+  };
+  const visit = (node: unknown): void => {
+    if (typeof node === 'string') {
+      const parts = splitChildTextLines(node);
+      append(parts[0]);
+      for (let i = 1; i < parts.length; i += 1) {
+        flush();
+        append(parts[i]);
+      }
+      return;
+    }
+    if (typeof node === 'number') {
+      append(String(node));
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const c of node) visit(c);
+      return;
+    }
+    if (isValidElement(node)) {
+      if (node.type === Fragment) {
+        visit((node.props as { children?: ReactNode }).children);
+        return;
+      }
+      if (getDisplayName(node) === TIKZ_TEXT) {
+        const spec = textElementToLineSpec(node);
+        if (spec !== undefined) {
+          flush();
+          out.push(spec);
+        }
+        return;
+      }
+      if (typeof node.type === 'function') {
+        visit((node.type as (p: unknown) => ReactNode)(node.props));
+      }
+    }
+  };
+  visit(children);
+  flush();
+  return out;
+};
+
+/**
+ * Node 文本读取顺序
+ * @description `props.text` 显式优先直接透传 IR；否则取 `props.children`（字符串按 `'\n'` 拆行）
+ */
+const readNodeText = (props: NodeProps): IRNode['text'] => {
+  if (typeof props.text === 'string') return props.text;
+  if (Array.isArray(props.text)) return props.text;
+  const lines = collectChildLines(props.children);
+  if (lines.length === 0) return undefined;
+  if (lines.length === 1 && typeof lines[0] === 'string') return lines[0];
+  return lines;
+};
+
+const normalizePositionInput = (position: NodeProps['position'] | CoordinateProps['position']): IRNode['position'] => {
+  return position;
+};
+
+const normalizeNodeLabelPositionInput = (
+  position: IRNodeLabelInput['position'],
+): IRNodeLabel['position'] | undefined => {
+  if (position === undefined) return undefined;
+  if (typeof position !== 'string') {
+    return position;
+  }
+  if (position === 'center') return position;
+  return position;
+};
+
+const normalizeNodeLabelInput = (label: IRNodeLabelInput): IRNodeLabel => {
+  const { position: rawPosition, ...rest } = label;
+  const out: IRNodeLabel = { ...rest, text: label.text };
+  const position = normalizeNodeLabelPositionInput(rawPosition);
+  if (position !== undefined) out.position = position;
+  return out;
+};
+
+const normalizeNodeLabelsInput = (label: NodeProps['label']): IRNode['label'] => {
+  if (label === undefined) return undefined;
+  return Array.isArray(label) ? label.map(normalizeNodeLabelInput) : normalizeNodeLabelInput(label);
+};
+
+const normalizeStepLabelInput = (label: IRStepLabelInput): IRStepLabel => {
+  const { side: rawSide, ...rest } = label;
+  const out: IRStepLabel = { ...rest, text: label.text };
+  if (rawSide !== undefined) out.side = rawSide;
+  return out;
+};
+
+const normalizeTransformInput = (transform: IRTransformInput): IRTransform => {
+  return transform;
+};
+
+const normalizeTransformsInput = (transforms: ScopeProps['transforms']): IRScope['transforms'] => {
+  if (transforms === undefined) return undefined;
+  return transforms.map(normalizeTransformInput);
+};
+
+const arrowMarkFromDetail = (detail: PathProps['arrowDetail'], endpoint: 'start' | 'end'): IRArrowMark => {
+  const top = detail ?? {};
+  const side = endpoint === 'start' ? top.start : top.end;
+  const mark: IRArrowMark = { kind: 'arrow' };
+  const shape = side?.shape ?? top.shape;
+  if (shape !== undefined) mark.shape = shape;
+  const scale = side?.scale ?? top.scale;
+  if (scale !== undefined) mark.scale = scale;
+  const length = side?.length ?? top.length;
+  if (length !== undefined) mark.length = length;
+  const width = side?.width ?? top.width;
+  if (width !== undefined) mark.width = width;
+  const color = side?.color ?? top.color;
+  if (color !== undefined) mark.color = color;
+  const fill = side?.fill ?? top.fill;
+  if (fill !== undefined) mark.fill = fill;
+  const opacity = side?.opacity ?? top.opacity;
+  if (opacity !== undefined) mark.opacity = opacity;
+  const lineWidth = side?.lineWidth ?? top.lineWidth;
+  if (lineWidth !== undefined) mark.lineWidth = lineWidth;
+  return mark;
+};
+
+const buildPathMarksFromProps = (props: PathProps): IRPathBase['marks'] | undefined => {
+  const marks: NonNullable<IRPathBase['marks']> = [];
+  const arrow = props.arrow;
+  if (arrow !== undefined && arrow !== 'none') {
+    if (arrow === '<-' || arrow === '<->')
+      marks.push({ pos: 0, mark: arrowMarkFromDetail(props.arrowDetail, 'start') });
+    if (arrow === '->' || arrow === '<->') marks.push({ pos: 1, mark: arrowMarkFromDetail(props.arrowDetail, 'end') });
+  }
+  if (props.marks !== undefined) marks.push(...props.marks);
+  return marks.length > 0 ? marks : undefined;
+};
+
+/**
+ * `<Node>` props → IRChild
+ * @description NODE_FIELDS 字段表透传纯字段；text / position / label 特化字段独立处理。
+ *   公式经文本里的 `$...$` / `$$...$$`（注入 lowerTex 时编译期解析）或显式 `text={[{ runs }]}`，不再有独立 tex 字段
+ */
+const buildNodeFromProps = (props: NodeProps): IRChild => {
+  const text = readNodeText(props);
+  const ir: IRChild = {
+    type: 'node',
+    position: normalizePositionInput(props.position),
+    ...pickDefined(props, NODE_FIELDS),
+  };
+  if (text !== undefined) ir.text = text;
+  if (props.label !== undefined) ir.label = normalizeNodeLabelsInput(props.label);
+  return ir;
+};
+
+/**
+ * 扫描 Step children，把首个 <EdgeLabel> 翻译为 IRStepLabel
+ * @description 非字符串 children 静默跳过；多个 <EdgeLabel> 取首个、其余 dev 下 warn（与水合重复 id 诊断一致）；
+ *   `React.Fragment` 透明展开 children、其余函数式组件同步调用后递归其返回值（与 `readSceneChildren` 一致），
+ *   让条件分支返回的 `<EdgeLabel>` 也能被发现
+ */
+const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
+  let result: IRStepLabel | undefined;
+  const visit = (node: ReactNode): void => {
+    Children.forEach(node, child => {
+      if (!isValidElement(child)) return;
+      if (child.type === Fragment) {
+        visit((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      if (getDisplayName(child) !== TIKZ_EDGE_LABEL) {
+        if (typeof child.type === 'function') {
+          visit((child.type as (p: unknown) => ReactNode)(child.props));
+        }
+        return;
+      }
+      const props = child.props as EdgeLabelElementProps;
+      if (typeof props.children !== 'string') return;
+      if (result !== undefined) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[retikz] <Step> 含多个 <EdgeLabel>，仅首个生效、其余被忽略。');
+        }
+        return;
+      }
+      const out: IRStepLabel = { text: props.children };
+      if (props.position !== undefined) out.position = props.position;
+      if (props.side !== undefined) out.side = props.side;
+      if (props.sloped !== undefined) out.sloped = props.sloped;
+      result = out;
+    });
+  };
+  visit(children);
+  return result;
+};
+
+/** Step kinds 中可挂 label 的子集（move / cycle 除外） */
+type LabelableStepProps = Extract<StepProps, { label?: IRStepLabelInput; children?: ReactNode }>;
+
+/**
+ * 解析 Step 的 label 来源
+ * @description prop `label` 优先于 sugar `<EdgeLabel>` child；都缺省时返回 undefined
+ */
+const resolveStepLabel = (props: LabelableStepProps): IRStepLabel | undefined => {
+  if (props.label !== undefined) return normalizeStepLabelInput(props.label);
+  return readEdgeLabel(props.children);
+};
+
+/**
+ * 扫描 <Path> children 收集 <Step> 序列
+ * @description 至少 2 段（例外：单个自包含 rectangle step 自带两对角，可独立成 path）；首段不是 move 时强制改为 move；cycle/arc/circlePath/ellipsePath 首段降级到 (0,0)；
+ *   `React.Fragment` 透明展开 children、其余函数式组件同步调用后递归其返回值（与 `readSceneChildren` 一致），
+ *   让 `{cond ? <>...</> : <>...</>}` 等条件分支返回的多个 `<Step>` 平铺进同一序列、不被静默丢弃
+ */
+const readPathChildren = (children: ReactNode): Array<IRStep> => {
+  const out: Array<IRStep> = [];
+  const visitStep = (child: ReactElement): void => {
+    if (getDisplayName(child) !== TIKZ_STEP) {
+      if (typeof child.type === 'function') {
+        visit((child.type as (p: unknown) => ReactNode)(child.props));
+      }
+      return;
+    }
+    const props = child.props as StepProps;
+    const kind = props.kind ?? 'line';
+    if (kind === 'cycle') {
+      out.push({ type: 'step', kind: 'cycle' });
+      return;
+    }
+    const label = kind === 'move' ? undefined : resolveStepLabel(props as LabelableStepProps);
+    if (kind === 'fold') {
+      const p = props as Extract<StepProps, { kind: 'fold' }>;
+      const step: Extract<IRStep, { kind: 'fold' }> = {
+        type: 'step',
+        kind: 'fold',
+        via: p.via,
+        to: parseTargetSugar(p.to),
+      };
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'curve') {
+      const p = props as Extract<StepProps, { kind: 'curve' }>;
+      const step: Extract<IRStep, { kind: 'curve' }> = {
+        type: 'step',
+        kind: 'curve',
+        to: parseTargetSugar(p.to),
+        control: p.control,
+      };
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'cubic') {
+      const p = props as Extract<StepProps, { kind: 'cubic' }>;
+      const step: Extract<IRStep, { kind: 'cubic' }> = {
+        type: 'step',
+        kind: 'cubic',
+        to: parseTargetSugar(p.to),
+        control1: p.control1,
+        control2: p.control2,
+      };
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'bend') {
+      const p = props as Extract<StepProps, { kind: 'bend' }>;
+      const step: Extract<IRStep, { kind: 'bend' }> = {
+        type: 'step',
+        kind: 'bend',
+        to: parseTargetSugar(p.to),
+      };
+      if (p.bendDirection !== undefined) step.bendDirection = p.bendDirection;
+      if (p.bendAngle !== undefined) step.bendAngle = p.bendAngle;
+      if (p.outAngle !== undefined) step.outAngle = p.outAngle;
+      if (p.inAngle !== undefined) step.inAngle = p.inAngle;
+      if (p.looseness !== undefined) step.looseness = p.looseness;
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'arc') {
+      const p = props as Extract<StepProps, { kind: 'arc' }>;
+      const step: Extract<IRStep, { kind: 'arc' }> = {
+        type: 'step',
+        kind: 'arc',
+        startAngle: p.startAngle,
+        endAngle: p.endAngle,
+        radius: p.radius,
+      };
+      if (p.center !== undefined) step.center = parseTargetSugar(p.center);
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'circlePath') {
+      const p = props as Extract<StepProps, { kind: 'circlePath' }>;
+      const step: Extract<IRStep, { kind: 'circlePath' }> = {
+        type: 'step',
+        kind: 'circlePath',
+        radius: p.radius,
+      };
+      if (p.startAngle !== undefined) step.startAngle = p.startAngle;
+      if (p.endAngle !== undefined) step.endAngle = p.endAngle;
+      if (p.closed !== undefined) step.closed = p.closed;
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'ellipsePath') {
+      const p = props as Extract<StepProps, { kind: 'ellipsePath' }>;
+      const step: Extract<IRStep, { kind: 'ellipsePath' }> = {
+        type: 'step',
+        kind: 'ellipsePath',
+        radius: p.radius,
+      };
+      if (p.startAngle !== undefined) step.startAngle = p.startAngle;
+      if (p.endAngle !== undefined) step.endAngle = p.endAngle;
+      if (p.closed !== undefined) step.closed = p.closed;
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'rectangle') {
+      const p = props as Extract<StepProps, { kind: 'rectangle' }>;
+      const step: Extract<IRStep, { kind: 'rectangle' }> = {
+        type: 'step',
+        kind: 'rectangle',
+        from: parseTargetSugar(p.from),
+        to: parseTargetSugar(p.to),
+      };
+      if (p.cornerRadius !== undefined) step.cornerRadius = p.cornerRadius;
+      out.push(step);
+      return;
+    }
+    if (kind === 'smooth') {
+      const p = props as Extract<StepProps, { kind: 'smooth' }>;
+      const step: Extract<IRStep, { kind: 'smooth' }> = {
+        type: 'step',
+        kind: 'smooth',
+        points: p.points.map(parseTargetSugar),
+      };
+      if (p.tension !== undefined) step.tension = p.tension;
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'generator') {
+      const p = props as Extract<StepProps, { kind: 'generator' }>;
+      const step: Extract<IRStep, { kind: 'generator' }> = {
+        type: 'step',
+        kind: 'generator',
+        name: p.name,
+        params: p.params,
+      };
+      if (p.to !== undefined) step.to = parseTargetSugar(p.to);
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
+    if (kind === 'move') {
+      const p = props as Extract<StepProps, { kind: 'move' }>;
+      out.push({ type: 'step', kind: 'move', to: parseTargetSugar(p.to) });
+      return;
+    }
+    // line（默认）
+    const p = props as Extract<StepProps, { kind?: 'line' }>;
+    const step: Extract<IRStep, { kind: 'line' }> = {
+      type: 'step',
+      kind: 'line',
+      to: parseTargetSugar(p.to),
+    };
+    if (label) step.label = label;
+    out.push(step);
+  };
+  const visit = (node: ReactNode): void => {
+    Children.forEach(node, child => {
+      if (!isValidElement(child)) return;
+      if (child.type === Fragment) {
+        visit((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      visitStep(child);
+    });
+  };
+  visit(children);
+  // rectangle 自带 from/to 两对角、不依赖游标，单独成 path 合法；不抛错、也不被下方 move 替换
+  const soloSelfContained = out.length === 1 && out[0].kind === 'rectangle';
+  if (out.length < 2 && !soloSelfContained) {
+    throw new Error('<Path> requires at least 2 <Step> children');
+  }
+  if (!soloSelfContained && out[0].kind !== 'move') {
+    const first = out[0];
+    // 无显式终点的首段（cycle / arc / circlePath / ellipsePath 等不带 `to`）降级到原点 (0,0)；
+    // 带 `to` 的首段（line / fold / curve / cubic / bend）保留其终点
+    const firstTo = 'to' in first ? first.to : undefined;
+    const fallbackTo: IRTarget = firstTo ?? [0, 0];
+    out[0] = { type: 'step', kind: 'move', to: fallbackTo };
+  }
+  return out;
+};
+
+/** `<Coordinate>` props → IRChild（占位节点，无视觉） */
+const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
+  type: 'coordinate',
+  id: props.id,
+  position: normalizePositionInput(props.position),
+});
+
+/**
+ * buildIR 递归扫描期透传的可嵌入贡献累加上下文
+ * @description contributions 在整棵树共享同一数组、跨 scope 平铺收集；embeddables 为显式注入的适配器列表（逃生舱 / 测试）
+ */
+type BuildContext = {
+  contributions: Array<EmbeddableContributionRecord>;
+  embeddables?: ReadonlyArray<EmbeddableTier2Adapter>;
+};
+
+/** `<Scope>` props → IRScope；样式 / 容器字段走 SCOPE_FIELDS 透传，children 递归扫描走 readSceneChildren（透传贡献上下文） */
+const buildScopeFromProps = (props: ScopeProps, ctx?: BuildContext): IRScope => {
+  const scopeFields = pickDefined(props, SCOPE_FIELDS) as Omit<IRScope, 'type' | 'children' | 'transforms'>;
+  const scope: IRScope = {
+    type: 'scope',
+    ...scopeFields,
+    children: readSceneChildren(props.children, ctx),
+  };
+  if (props.transforms !== undefined) scope.transforms = normalizeTransformsInput(props.transforms);
+  return scope;
+};
+
+/** `<Path>` props → IRChild；step 序列由 readPathChildren 收集 */
+const buildPathFromProps = (props: PathProps): IRChild => {
+  const path: IRChild = {
+    type: 'path',
+    ...pickDefined(props, PATH_FIELDS),
+    ...parsePathThickness(props),
+  };
+  const marks = buildPathMarksFromProps(props);
+  if (marks !== undefined) path.marks = marks;
+  if (props.children !== undefined) {
+    path.children = readPathChildren(props.children);
+  }
+  return path;
+};
+
+/**
+ * 扫描 React DSL children
+ * @description Kernel marker（Node / Path / Coordinate）走对应 typed builder；React.Fragment 递归展开 children；其余函数式组件视为 Sugar，同步调用拿 Kernel JSX 递归展开；非函数静默跳过。`as` cast 仅在此顶层一次——子函数全走 typed signature
+ */
+const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChild> => {
+  const out: Array<IRChild> = [];
+  Children.forEach(children, child => {
+    if (!isValidElement(child)) return;
+    // React.Fragment：透明容器，递归解开 children 让 .map() 内 <>...</> 平铺到 TikZ 子级
+    if (child.type === Fragment) {
+      const fragChildren = (child.props as { children?: ReactNode }).children;
+      for (const ir of readSceneChildren(fragChildren, ctx)) {
+        out.push(ir);
+      }
+      return;
+    }
+    const name = getDisplayName(child);
+    switch (name) {
+      case TIKZ_NODE:
+        out.push(buildNodeFromProps(child.props as NodeProps));
+        return;
+      case TIKZ_PATH:
+        out.push(buildPathFromProps(child.props as PathProps));
+        return;
+      case TIKZ_COORDINATE:
+        out.push(buildCoordinateFromProps(child.props as CoordinateProps));
+        return;
+      case TIKZ_SCOPE:
+        out.push(buildScopeFromProps(child.props as ScopeProps, ctx));
+        return;
+    }
+    if (typeof child.type === 'function') {
+      // class 组件有 render 方法在原型上；当函数直接调用会抛难懂的 TypeError，提前给出清晰错误
+      if (isClassComponent(child.type)) {
+        throw new Error(
+          `[retikz] <Layout> children 含类组件 <${componentLabel(child.type)}>。Kernel / Sugar 组件必须是函数组件——把它改写成函数组件，或在其内部返回 Kernel JSX。`,
+        );
+      }
+      // 可嵌入 Tier2：经 adapter 静态贡献 IR 节点 + datasets + composites 工厂；不调用组件本身（避免 hook / 副作用）。
+      // resolveEmbeddableAdapter 在「标记但缺 adapter」时 fail-loud throw（即便 ctx 缺省的公开 buildIR 路径也会抛）
+      const adapter = resolveEmbeddableAdapter(child.type, getDisplayName(child), ctx?.embeddables);
+      if (adapter) {
+        const contribution = adapter.contribute(child.props);
+        out.push(contribution.node);
+        ctx?.contributions.push({
+          namespace: adapter.namespace,
+          datasets: contribution.datasets,
+          makeComposites: contribution.makeComposites,
+        });
+        return;
+      }
+      const expanded = (child.type as (p: unknown) => ReactNode)(child.props);
+      for (const ir of readSceneChildren(expanded, ctx)) {
+        out.push(ir);
+      }
+      return;
+    }
+    // 走到这里说明是 react adapter 不认识的元素：宿主标签（'div' 等字符串 type）、memo / forwardRef /
+    // context Provider 等包装组件（type 是对象，不是函数）。它们不会产出 IR，静默丢弃会让用户图元莫名缺失——dev 下提示
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        `[retikz] <Layout> children 含无法识别的元素 <${componentLabel(child.type)}>，已忽略。只有 Kernel 组件（Node / Path / Coordinate / Scope）、Sugar 函数组件、以及 React.Fragment 会被翻译进 IR；memo / forwardRef / Context.Provider 等包装组件不被穿透。`,
+      );
+    }
+  });
+  return out;
+};
+
+/**
+ * 拣出真正携带样式指令的根样式字段
+ * @description 在 `pickDefined`（仅取 `!== undefined`）基础上，再剔除**空对象的四通道 default**
+ *   （`nodeDefault={{}}` / `pathDefault={{}}` 等）——空 default 不携带任何样式指令，留着只会让 `<Layout>`
+ *   无谓地包一层空合成 `<Scope>`、改变 IR / Scene 拓扑却无视觉差异（避免无谓的空 scope）。
+ *   标量通道的 falsy-但-defined 值（`strokeWidth={0}` / `opacity={0}`）是有意义的样式、保留。
+ */
+export const pickScopeStyle = (style: ScopeStyleProps): Partial<ScopeStyleProps> => {
+  const picked = pickDefined(style, SCOPE_STYLE_FIELDS);
+  for (const key of SCOPE_STYLE_FIELDS) {
+    const value = picked[key];
+    // 四通道 default 是对象；标量通道是 string / number。空对象 default 无样式指令、剔除
+    if (typeof value === 'object' && Object.keys(value).length === 0) {
+      delete picked[key];
+    }
+  }
+  return picked;
+};
+
+/**
+ * 按需把 children 包进合成根 `<Scope>` 承载全图级联默认样式（`<Layout>` 顶层样式 props 的落地）
+ * @description 至少一个字段真正携带样式指令时才包一层合成 `<Scope>`（字段经 `pickScopeStyle` 透传）；
+ *   全缺省 / 仅空 default 时原样返回 children，保持 IR 形态与改动前逐字段一致（round-trip 稳定、不引入空 scope）。
+ *   合成 scope 经 buildIR 产出标准 IRScope 节点，走既有 cascade，行为与用户手写 `<Scope>` 完全一致。
+ *   用 createElement 而非 JSX 以留在非组件模块（避免 react-refresh 报「组件文件混出函数」）
+ */
+export const wrapRootScope = (children: ReactNode, style: ScopeStyleProps): ReactNode => {
+  const picked = pickScopeStyle(style);
+  if (Object.keys(picked).length === 0) return children;
+  return createElement(Scope, picked, children);
+};
+
+/**
+ * buildIR + 收集可嵌入 Tier2 贡献（Layout 用）；公开 buildIR 丢弃 contributions、签名不变
+ * @description 在递归扫描期透传共享累加上下文，可嵌入子组件经 adapter 贡献 IR 节点同时把 datasets / composites 工厂平铺收集到 contributions
+ */
+export const buildIRWithContributions = (
+  children: ReactNode,
+  embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
+): { ir: IRScene; contributions: Array<EmbeddableContributionRecord> } => {
+  const contributions: Array<EmbeddableContributionRecord> = [];
+  const sceneChildren = readSceneChildren(children, { contributions, embeddables });
+  return { ir: { version: CURRENT_IR_VERSION, type: 'scene', children: sceneChildren }, contributions };
+};
+
+/**
+ * 把 React DSL children 同步翻译为 JSON IR
+ * @description 纯函数，不依赖 effect/state；适合在编辑器、持久化、服务端渲染或测试场景中复用 JSX 输入。
+ */
+export const buildIR = (children: ReactNode): IRScene => buildIRWithContributions(children).ir;

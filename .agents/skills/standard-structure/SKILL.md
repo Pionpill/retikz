@@ -39,6 +39,7 @@ shared/schemas <- parsers
 
 - 整体 JSDoc 写功能视角：让读者先知道函数、类、类型负责什么，不从实现过程、内部步骤或历史背景开头。
 - 细节 JSDoc 可说明实现细节，但仍从功能目的出发简短描述；不要复述代码逐行做了什么。
+- React / Vanilla 等面向开发者使用的公开 JSDoc，主要描述功能、使用契约、默认值和可观察行为；验收标准是用户能看懂怎么用，不写 builder / emit / Scene primitive / renderer 物化等实现细节，也不按 LLM 理解优化。
 
 | 标签           | 用法                                           | 不写什么                              |
 | -------------- | ---------------------------------------------- | ------------------------------------- |
@@ -61,6 +62,27 @@ shared/schemas <- parsers
 | `index.ts`     | barrel 导出；不写业务逻辑                                   |
 
 简单能力可合并文件；一旦职责混杂，按上表拆开。
+
+## React DSL 目录范式
+
+`@retikz/react` 的 DSL 代码按 owner 拆分：
+
+```text
+kernel/
+  components/  Kernel DSL 标记组件
+  protocol/    displayName、水合事件、embeddable 等跨 owner 共享协议
+  adapter/     JSX ↔ IR 转换逻辑：builder / unbuilder / 字段表
+  runtime/     Layout 运行时、hydration 收集、renderer mode 接线
+sugar/         同步展开为 Kernel 的 Sugar 组件，可再按 path / shapes 分组
+render/        React 宿主渲染接线，可再按 svg / canvas / text 分组
+```
+
+- 用户可用 React 组件文件用 `PascalCase.tsx`；非组件纯逻辑用 `kebab-case.ts`。
+- 内部 helper 用语义名，不用 `_xxx.ts`；例如 `fields.ts`、`display-names.ts`、`shape-helpers.ts`。
+- 每个 owner 目录放 `index.ts` barrel，只导出当前 owner 的稳定 API。
+- `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
+- `kernel/adapter` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime` 或 `sugar`。
+- `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 `render`；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`；`render` 不依赖 `kernel/runtime`。
 
 ## 导入导出
 

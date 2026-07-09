@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Draw, DrawWay, Layout, Node } from '@retikz/react';
+import { DrawWay } from '@retikz/core';
+import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * way 末尾 `DrawWay.Cycle` 闭合

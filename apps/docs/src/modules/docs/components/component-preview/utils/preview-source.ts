@@ -1,6 +1,6 @@
 import type { ComponentSourceFile } from '../types';
 
-import { buildSourceFileKey, filenameFromKey, langOfFilename, localSourceFiles } from '../registry';
+import { buildSourceFileKey, filenameFromKey, langOfFilename, localSourceFiles } from '../registry-runtime';
 import { computeUnifiedDiff } from './diff';
 
 /** 构建 React 源码视图文件列表。 */
