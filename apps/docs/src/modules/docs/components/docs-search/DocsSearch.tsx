@@ -50,19 +50,21 @@ export const DocsSearch: FC<DocsSearchProps> = props => {
       >
         <Search className="size-4" />
       </Button>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         className={cn(
-          'hidden h-8 w-48 cursor-pointer items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 lg:inline-flex xl:w-64',
+          'hidden w-48 cursor-pointer justify-start gap-2 bg-transparent text-muted-foreground hover:text-accent-foreground lg:inline-flex xl:w-64',
           className,
         )}
       >
         <Search className="size-4 shrink-0" />
         <span className="flex-1 truncate text-left">{t('common.searchPlaceholder')}</span>
         <Shortcut keys={['mod', 'K']} className="tracking-normal" />
-      </button>
+      </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="overflow-hidden p-0 sm:max-w-lg">
           <DialogHeader className="sr-only">

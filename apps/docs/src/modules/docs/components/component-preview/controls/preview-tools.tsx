@@ -6,120 +6,23 @@ import {
   Download,
   Hand,
   Maximize2,
-  Pause,
-  Play,
   RotateCcw,
-  Square,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
 
-import type { PreviewControlConfig, PreviewControlSlot, RendererMode, SizeKey, Transform } from './types';
+import type { PreviewControlSlot, RendererMode, SizeKey, Transform } from '../types';
 
-import { downloadPreviewImage } from './commands';
-import { RendererModeButton } from './components/parts';
+import { downloadPreviewImage } from '../commands';
+import { RendererModeButton } from '../components/parts';
 import {
   PreviewToolbar,
   PreviewToolbarButton,
-  PreviewToolbarInput,
-  PreviewToolbarSelect,
   PreviewToolbarSeparator,
   PreviewToolbarToggleGroup,
-} from './components/PreviewToolbar';
-import { SIZE_KEYS } from './constants';
-import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './hooks';
-
-export const ANIM_PAUSE_ID = 'anim-paused';
-
-const paneAnimations = (pane: HTMLElement | null): Array<Animation> =>
-  pane ? pane.getAnimations({ subtree: true }) : [];
-
-const SIZE_VALUE_SET: ReadonlySet<string> = new Set<SizeKey>(SIZE_KEYS);
-
-/** 构建内置动画控制插槽。 */
-export const buildAnimationSlots = (isPaused: boolean): Array<PreviewControlSlot> => [
-  {
-    id: 'animation-controls',
-    placement: 'top-start',
-    render: ctx => (
-      <PreviewToolbar>
-        <PreviewToolbarButton
-          label="Replay"
-          onClick={() => {
-            ctx.setActive(ANIM_PAUSE_ID, false);
-            ctx.replay();
-          }}
-        >
-          <RotateCcw className="size-3.5" />
-        </PreviewToolbarButton>
-        <PreviewToolbarButton
-          label={isPaused ? 'Play' : 'Pause'}
-          pressed={isPaused}
-          onClick={() => {
-            const animations = paneAnimations(ctx.renderPane);
-            if (ctx.active(ANIM_PAUSE_ID)) {
-              animations.forEach(animation => animation.play());
-              ctx.setActive(ANIM_PAUSE_ID, false);
-            } else {
-              animations.forEach(animation => animation.pause());
-              ctx.setActive(ANIM_PAUSE_ID, true);
-            }
-          }}
-        >
-          {isPaused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
-        </PreviewToolbarButton>
-        <PreviewToolbarButton
-          label="Stop"
-          onClick={() => {
-            paneAnimations(ctx.renderPane).forEach(animation => animation.cancel());
-            ctx.setActive(ANIM_PAUSE_ID, false);
-          }}
-        >
-          <Square className="size-3.5" />
-        </PreviewToolbarButton>
-      </PreviewToolbar>
-    ),
-  },
-];
-
-/** 将声明式配置转换成预览控制插槽。 */
-export const buildConfiguredControlSlots = (
-  configs: Array<PreviewControlConfig> | undefined,
-): Array<PreviewControlSlot> => {
-  if (configs === undefined || configs.length === 0) return [];
-
-  return configs.map(config => ({
-    id: config.id,
-    placement: config.placement ?? 'top-start',
-    render: ctx => {
-      const value = ctx.value(config.id) ?? config.defaultValue;
-
-      if (config.kind === 'select') {
-        return (
-          <PreviewToolbar>
-            <PreviewToolbarSelect
-              label={config.label}
-              value={value}
-              options={config.options}
-              onValueChange={nextValue => ctx.setValue(config.id, nextValue)}
-            />
-          </PreviewToolbar>
-        );
-      }
-
-      return (
-        <PreviewToolbar>
-          <PreviewToolbarInput
-            label={config.label}
-            value={value}
-            placeholder={config.placeholder}
-            onValueChange={nextValue => ctx.setValue(config.id, nextValue)}
-          />
-        </PreviewToolbar>
-      );
-    },
-  }));
-};
+} from '../components/PreviewToolbar';
+import { SIZE_KEYS } from '../constants';
+import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from '../hooks';
 
 export type BuildPreviewToolSlotsOptions = {
   transform: Transform;
@@ -136,6 +39,8 @@ export type BuildPreviewToolSlotsOptions = {
   rendererMode: RendererMode;
   toggleRendererMode: () => void;
 };
+
+const SIZE_VALUE_SET: ReadonlySet<string> = new Set<SizeKey>(SIZE_KEYS);
 
 /** 构建预览区右下角通用工具插槽。 */
 export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Array<PreviewControlSlot> => {
@@ -161,7 +66,7 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
     {
       id: 'preview-tools',
       placement: 'bottom-end',
-      render: ctx => (
+      render: runtime => (
         <PreviewToolbar className="flex-col">
           <div className={isSmallPreview ? 'hidden' : 'hidden grid-cols-3 gap-0.5 md:grid'}>
             <span />
@@ -224,7 +129,7 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
             )}
             <PreviewToolbarButton
               label={downloadLabel}
-              onClick={() => downloadPreviewImage(ctx.renderPane, name, rendererMode)}
+              onClick={() => downloadPreviewImage(runtime.renderPane, name, rendererMode)}
             >
               <Download className="size-3.5" />
             </PreviewToolbarButton>

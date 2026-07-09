@@ -2,12 +2,12 @@ import { PathCurve } from '@retikz/plot';
 
 import type { PreviewControlConfig } from '@/modules/docs/components';
 
-export const PATH_CURVE_ACTION_ID = 'path-curve';
+export const PATH_CURVE_CONTROL_ID = 'path-curve';
 
 export const lineCurveControls = [
   {
     kind: 'select',
-    id: PATH_CURVE_ACTION_ID,
+    id: PATH_CURVE_CONTROL_ID,
     label: '连接方式',
     defaultValue: PathCurve.Linear,
     options: [

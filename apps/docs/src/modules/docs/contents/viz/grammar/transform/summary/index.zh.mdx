@@ -12,7 +12,7 @@ description: 分箱与统计图层说明 plot 如何把连续字段切成直方�
 
 ## 分箱 bin
 
-`bin` 把连续字段切成区间，每个区间产出一行。输出行包含箱下界、箱上界和 metric 字段；默认 metric 是 `{ op: 'count', as: 'binCount' }`。
+`bin` 把连续字段切成区间，每个区间产出一行。输出行包含箱下界、箱上界和 metric 字段；默认 metric 是 `{ kind: 'count', as: 'binCount' }`。
 
 <ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
 

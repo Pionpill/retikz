@@ -4,7 +4,12 @@ import type { AnyRowSelectorDefinition } from '../../contract';
 import type { ExternalRow, RowSelectorTieValue } from '../../schemas';
 
 import { defineRowSelector } from '../../contract';
-import { DataSortOrder, OutsideQuantileBandSelectorOperationSchema, RowSelectorTie, SelectorOp } from '../../schemas';
+import {
+  DataSortOrder,
+  OutsideQuantileBandSelectorOperationSchema,
+  RowSelectorTie,
+  SelectorOperationKind,
+} from '../../schemas';
 import { resolveFieldPath } from '../data';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
 
@@ -35,7 +40,7 @@ const selectTopBottomRows = (
 /** min selector definition：选择数值最小的原始行。 */
 const minSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal(SelectorOp.Min),
+    kind: z.literal(SelectorOperationKind.Min),
     by: z.string().min(1),
     tie: z.enum(RowSelectorTie).optional(),
   }),
@@ -64,7 +69,7 @@ const minSelectorDefinition = defineRowSelector({
 /** max selector definition：选择数值最大的原始行。 */
 const maxSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal(SelectorOp.Max),
+    kind: z.literal(SelectorOperationKind.Max),
     by: z.string().min(1),
     tie: z.enum(RowSelectorTie).optional(),
   }),
@@ -93,7 +98,7 @@ const maxSelectorDefinition = defineRowSelector({
 /** first selector definition：选择输入顺序或稳定排序后的首行。 */
 const firstSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal(SelectorOp.First),
+    kind: z.literal(SelectorOperationKind.First),
     orderBy: z
       .array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() }))
       .min(1)
@@ -109,7 +114,7 @@ const firstSelectorDefinition = defineRowSelector({
 /** last selector definition：选择输入顺序或稳定排序后的末行。 */
 const lastSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal(SelectorOp.Last),
+    kind: z.literal(SelectorOperationKind.Last),
     orderBy: z
       .array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() }))
       .min(1)
@@ -125,7 +130,7 @@ const lastSelectorDefinition = defineRowSelector({
 /** top selector definition：按数值字段选择前 N 行。 */
 const topSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal(SelectorOp.Top),
+    kind: z.literal(SelectorOperationKind.Top),
     by: z.string().min(1),
     n: z.number().int().positive(),
     tie: z.enum(RowSelectorTie).optional(),
@@ -141,7 +146,7 @@ const topSelectorDefinition = defineRowSelector({
 /** bottom selector definition：按数值字段选择后 N 行。 */
 const bottomSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal(SelectorOp.Bottom),
+    kind: z.literal(SelectorOperationKind.Bottom),
     by: z.string().min(1),
     n: z.number().int().positive(),
     tie: z.enum(RowSelectorTie).optional(),
@@ -157,7 +162,7 @@ const bottomSelectorDefinition = defineRowSelector({
 /** nth selector definition：按稳定排序选择指定零基下标行。 */
 const nthSelectorDefinition = defineRowSelector({
   schema: z.object({
-    op: z.literal(SelectorOp.Nth),
+    kind: z.literal(SelectorOperationKind.Nth),
     orderBy: z.array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() })).min(1),
     index: z.number().int().nonnegative(),
   }),

@@ -7,12 +7,14 @@ import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
 
-import type { AlignKey, ComponentRenderSource, PreviewAction, RendererMode } from '../types';
+import type { AlignKey, ComponentRenderSource, PreviewControlSlot, RendererMode } from '../types';
 
 import { HighlightCode } from '../../highlight-code';
 import { alignClass } from '../constants';
-import { PreviewActionStateContext } from '../context';
-import { usePanZoom, usePreviewActions, useSourceViews } from '../hooks';
+import { PreviewControlStateContext } from '../context';
+import { ANIMATION_PAUSED_CONTROL_ID, buildAnimationControlSlots } from '../controls';
+import { usePanZoom, useSourceViews } from '../hooks';
+import { usePreviewControlRuntime } from '../runtime';
 import { filterDiffByMode } from '../utils';
 import { DemoRenderer } from './DemoRenderer';
 import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './parts';
@@ -21,30 +23,27 @@ import { PreviewControlSlotLayer } from './PreviewControlSlotLayer';
 export type ComponentDetailDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** demo 文件名（用于 header 标识） */
+  /** demo 文件名，用于 header 标识。 */
   name: string;
   Component: FC;
-  /** 代码区视图集合；缺省 / 双字段都空时退化为单 panel 仅显示渲染区 */
+  /** 代码区视图集合；缺省时退化为仅显示渲染区。 */
   source?: ComponentRenderSource;
   align: AlignKey;
-  /** 当前渲染目标 */
+  /** 当前渲染目标。 */
   rendererMode: RendererMode;
-  /** 切换当前渲染目标 */
+  /** 切换当前渲染目标。 */
   toggleRendererMode: () => void;
-  /** 交互式 demo：真渲染 `<Component/>`，隐藏 svg/canvas 切换 */
+  /** 交互型 demo：真渲染 `<Component />`。 */
   interactive?: boolean;
-  /** demo 含动画：装配内置动画工具（重播 / 播放暂停 / 停止） */
+  /** demo 含动画：装配内置动画工具。 */
   animated?: boolean;
-  /** 自定义动作按钮 */
-  actions?: Array<PreviewAction>;
-  /** 自定义预览控制插槽，优先于兼容用的 actions。 */
-  controlSlots?: Array<PreviewAction>;
-  /** 自定义动作栏是否常驻显示；默认 true */
-  actionsAlwaysVisible?: boolean;
-  /** 渲染区内常驻浮层 */
-  /** 当前 React 源码文件序号，与卡片内源码面板共享 */
+  /** 自定义预览控制插槽。 */
+  controlSlots?: Array<PreviewControlSlot>;
+  /** 自定义预览控件层是否常驻显示，默认 `true`。 */
+  controlsAlwaysVisible?: boolean;
+  /** 当前 React 源码文件序号，与卡片内源码面板共享。 */
   sourceFileIndex: number;
-  /** 切换 React 源码文件时同步回卡片层 */
+  /** 切换 React 源码文件时同步回卡片层。 */
   onSourceFileIndexChange: (index: number) => void;
 };
 
@@ -57,9 +56,9 @@ const DOT_PATTERN_STYLE: React.CSSProperties = {
 type DialogDemoPaneProps = {
   align: AlignKey;
   children: ReactNode;
-  /** 渲染区 DOM ref（供动画工具 getAnimations） */
+  /** 渲染区 DOM ref，供动画工具读取。 */
   paneRef?: Ref<HTMLDivElement>;
-  /** 左上角动作栏（重播 / 播放暂停 / 停止 …），渲染在 relative 容器内 */
+  /** 左上角控制层。 */
   controlLayer?: ReactNode;
 };
 
@@ -67,6 +66,7 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
   const { align, children, paneRef, controlLayer } = props;
   const { isDragging, transformStyle, beginDrag } = usePanZoom();
   const dragCursor = isDragging ? 'cursor-grabbing' : 'cursor-grab';
+
   return (
     <div
       style={DOT_PATTERN_STYLE}
@@ -106,9 +106,8 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
     toggleRendererMode,
     interactive,
     animated = false,
-    actions,
     controlSlots,
-    actionsAlwaysVisible = true,
+    controlsAlwaysVisible = true,
     sourceFileIndex,
     onSourceFileIndexChange,
   } = props;
@@ -126,32 +125,31 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   const hasCode = views.length > 0;
 
   const paneRef = useRef<HTMLDivElement>(null);
-  const resolvedControlSlots = controlSlots ?? actions;
-  const { replayNonce, controlCtx, slots, previewActionState } = usePreviewActions({
-    animated,
-    actions: resolvedControlSlots,
+  const { remountKey, runtime, controlState } = usePreviewControlRuntime({
     rendererMode,
     renderPaneRef: paneRef,
     hovered: true,
     pinned: true,
     expanded: open,
   });
+  const animationControlSlots = animated ? buildAnimationControlSlots(runtime.active(ANIMATION_PAUSED_CONTROL_ID)) : [];
+  const slots = [...animationControlSlots, ...(controlSlots ?? [])];
   const controlLayer = (
     <PreviewControlSlotLayer
       slots={slots}
-      ctx={controlCtx}
-      alwaysVisible={actionsAlwaysVisible || (resolvedControlSlots?.length ?? 0) === 0}
+      runtime={runtime}
+      alwaysVisible={controlsAlwaysVisible || (controlSlots?.length ?? 0) === 0}
     />
   );
   const demoContent = (
-    <Fragment key={replayNonce}>
-      <PreviewActionStateContext.Provider value={previewActionState}>
+    <Fragment key={remountKey}>
+      <PreviewControlStateContext.Provider value={controlState}>
         {activeRender ? (
           activeRender(rendererMode)
         ) : (
           <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
         )}
-      </PreviewActionStateContext.Provider>
+      </PreviewControlStateContext.Provider>
     </Fragment>
   );
 

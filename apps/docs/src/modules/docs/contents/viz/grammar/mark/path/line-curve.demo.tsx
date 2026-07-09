@@ -4,14 +4,14 @@ import type { FC } from 'react';
 import { PathCurve } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
-import { usePreviewActionValue } from '@/modules/docs/components';
+import { usePreviewControlValue } from '@/modules/docs/components';
 
-import { PATH_CURVE_ACTION_ID } from './line-curve.actions';
+import { PATH_CURVE_CONTROL_ID } from './line-curve.controls';
 import { curveSamples } from './line-curve.data';
 
 /** 连接方式：左侧笛卡尔、右侧极坐标，共用一个 curve 值。 */
 const Demo: FC = () => {
-  const curve = usePreviewActionValue(PATH_CURVE_ACTION_ID, PathCurve.Linear) as PathCurveValue;
+  const curve = usePreviewControlValue(PATH_CURVE_CONTROL_ID, PathCurve.Linear) as PathCurveValue;
   return (
     <div className="grid w-full max-w-3xl grid-cols-1 items-center gap-4 sm:grid-cols-2">
       <Plot data={curveSamples} width={340} height={240} style={{ maxWidth: '100%', height: 'auto' }}>

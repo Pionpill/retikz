@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 
 import { cn } from '@/lib';
 
-import type { PreviewControlContext, PreviewControlPlacement, PreviewControlSlot } from '../types';
+import type { PreviewControlPlacement, PreviewControlRuntime, PreviewControlSlot } from '../types';
 
 const DEFAULT_PLACEMENT: PreviewControlPlacement = 'top-start';
 
@@ -22,14 +22,14 @@ const PLACEMENT_CLASS: Record<PreviewControlPlacement, string> = {
 
 export type PreviewControlSlotLayerProps = {
   slots: Array<PreviewControlSlot>;
-  ctx: PreviewControlContext;
+  runtime: PreviewControlRuntime;
   pinned?: boolean;
   alwaysVisible?: boolean;
 };
 
 /** 将预览控制插槽渲染到预览区九宫格位置。 */
 export const PreviewControlSlotLayer: FC<PreviewControlSlotLayerProps> = props => {
-  const { slots, ctx, pinned, alwaysVisible } = props;
+  const { slots, runtime, pinned, alwaysVisible } = props;
   const groups = useMemo(() => {
     const next = new Map<PreviewControlPlacement, Array<PreviewControlSlot>>();
     for (const slot of slots) {
@@ -57,7 +57,7 @@ export const PreviewControlSlotLayer: FC<PreviewControlSlotLayerProps> = props =
           onTouchStart={event => event.stopPropagation()}
         >
           {group.map(slot => (
-            <div key={slot.id}>{slot.render(ctx)}</div>
+            <div key={slot.id}>{slot.render(runtime)}</div>
           ))}
         </div>
       ))}

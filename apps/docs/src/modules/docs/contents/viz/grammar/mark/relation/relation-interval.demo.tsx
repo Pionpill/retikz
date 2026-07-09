@@ -25,8 +25,8 @@ const Demo: FC = () => (
         {
           kind: 'relate',
           groupBy: ['pair'],
-          source: { selector: { op: 'min', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
-          target: { selector: { op: 'max', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value' } },
+          source: { selector: { kind: 'min', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
+          target: { selector: { kind: 'max', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value' } },
           measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
         },
       ]}
@@ -54,8 +54,8 @@ const Demo: FC = () => (
         {
           kind: 'relate',
           groupBy: ['pair'],
-          source: { selector: { op: 'min', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
-          target: { selector: { op: 'max', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value' } },
+          source: { selector: { kind: 'min', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value', viaY: 'routeY' } },
+          target: { selector: { kind: 'max', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value' } },
           measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
         },
       ]}

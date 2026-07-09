@@ -6,10 +6,10 @@ import { type ExternalRow, type ReducerOperation, type SelectorOperation } from 
 
 /**
  * 统计 reducer 运行时定义。
- * @description 定义对象只存在于运行时，不进入 JSON IR；IR 只保存 `{ op, ...config }` 形态的 ReducerOperation。
+ * @description 定义对象只存在于运行时，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 ReducerOperation。
  */
 export type StatisticsReducerDefinition<TReducerOperation extends ReducerOperation = ReducerOperation> = {
-  /** 完整 reducer operation schema；必须含非空 z.literal('op') 供注册表提取注册键。 */
+  /** 完整 reducer operation schema；必须含非空 z.literal('kind') 供注册表提取注册键。 */
   schema: z.ZodType<TReducerOperation>;
   /** 该 reducer 消费的源字段名；参与 data.model strict 校验。 */
   inputFields?: (operation: TReducerOperation) => Array<string>;
@@ -52,7 +52,7 @@ export type RowSelection = {
  * @description selector 是统计子算子，供 `select` / `annotate` / `relate` 复用；定义对象不进入 JSON IR。
  */
 export type RowSelectorDefinition<TSelectorOperation extends SelectorOperation = SelectorOperation> = {
-  /** 完整 selector operation schema；必须含非空 z.literal('op') 供注册表提取注册键。 */
+  /** 完整 selector operation schema；必须含非空 z.literal('kind') 供注册表提取注册键。 */
   schema: z.ZodType<TSelectorOperation>;
   /** 该 selector 消费的源字段名；参与 data.model strict 校验。 */
   inputFields?: (operation: TSelectorOperation) => Array<string>;
@@ -81,15 +81,15 @@ export type AnyRowSelectorDefinition = {
 
 /**
  * 从统计子算子定义 schema 中提取注册键。
- * @description reducer 与 row selector 都以 `op` 作为 registry discriminator；schema 必须把它声明成非空字面量。
+ * @description reducer 与 row selector 都以 `kind` 作为 registry discriminator；schema 必须把它声明成非空字面量。
  */
 export const extractStatisticOperation = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {
-    throw new Error('data: statistic registration schema must be a ZodObject with a literal op field');
+    throw new Error('data: statistic registration schema must be a ZodObject with a literal kind field');
   }
-  const opSchema = schema.shape.op;
-  if (!(opSchema instanceof z.ZodLiteral) || typeof opSchema.value !== 'string' || opSchema.value.length === 0) {
-    throw new Error('data: statistic registration schema must declare op as a non-empty z.literal string');
+  const kindSchema = schema.shape.kind;
+  if (!(kindSchema instanceof z.ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
+    throw new Error('data: statistic registration schema must declare kind as a non-empty z.literal string');
   }
-  return opSchema.value;
+  return kindSchema.value;
 };

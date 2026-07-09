@@ -190,7 +190,9 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
   // alpha.12 ADR-16：bin / summarize 输入字段进、派生输出字段不进
   it('bin_inputs_in_outputs_out', () => {
     const spec = buildSpec({
-      transform: [{ kind: 'bin', field: 'measurement', metrics: [{ op: 'sum', field: 'weight', as: 'totalWeight' }] }],
+      transform: [
+        { kind: 'bin', field: 'measurement', metrics: [{ kind: 'sum', field: 'weight', as: 'totalWeight' }] },
+      ],
       marks: [
         {
           type: 'interval',
@@ -211,7 +213,7 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
 
   it('bin_custom_output_fields_not_collected', () => {
     const spec = buildSpec({
-      transform: [{ kind: 'bin', field: 'm', startField: 'lo', endField: 'hi', metrics: [{ op: 'count', as: 'n' }] }],
+      transform: [{ kind: 'bin', field: 'm', startField: 'lo', endField: 'hi', metrics: [{ kind: 'count', as: 'n' }] }],
       marks: [
         { type: 'interval', bounds: { x: { kind: 'extent', from: 'lo', to: 'hi' } }, encoding: { y: { field: 'n' } } },
       ],
@@ -226,7 +228,11 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
   it('summarize_inputs_in_output_out', () => {
     const spec = buildSpec({
       transform: [
-        { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+        {
+          kind: 'summarize',
+          groupBy: ['region', 'product'],
+          metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+        },
       ],
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
     });
@@ -240,7 +246,7 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
 
   it('summarize_count_output_not_collected', () => {
     const spec = buildSpec({
-      transform: [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'count' }] }],
+      transform: [{ kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] }],
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'count' } } }],
     });
     const fields = collectSourceFields(spec);

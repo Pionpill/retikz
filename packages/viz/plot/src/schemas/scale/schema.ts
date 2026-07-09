@@ -455,7 +455,7 @@ export const ScaleSchema = z
   );
 
 export const CustomScaleSchema = z
-  .object({
+  .looseObject({
     type: z
       .string()
       .min(1)
@@ -470,7 +470,6 @@ export const CustomScaleSchema = z
       .min(1)
       .describe('Scale name; referenced by a coordinate role or a non-positional channel scale ref'),
   })
-  .passthrough()
   .describe(
     'Custom scale op: type is any non-built-in identifier plus a name; its config is validated at lowering time against the matching ScaleDefinition supplied via options.scaleDefinitions',
   );
@@ -478,5 +477,5 @@ export const CustomScaleSchema = z
 export const ScaleOperationSchema = z
   .union([ScaleSchema, CustomScaleSchema])
   .describe(
-    'Scale operation union: built-in scale configs plus custom type passthrough operations validated by a runtime ScaleDefinition at lowering',
+    'Scale operation union: built-in scale configs plus custom type open config operations validated by a runtime ScaleDefinition at lowering',
   );

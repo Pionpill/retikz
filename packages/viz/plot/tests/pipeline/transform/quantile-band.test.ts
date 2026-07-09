@@ -14,7 +14,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
       groupBy: ['group'],
       metrics: [
         {
-          op: 'quantile-band',
+          kind: 'quantile-band',
           field: 'value',
           lowerP: 0.25,
           upperP: 0.75,
@@ -42,7 +42,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
       kind: 'select',
       groupBy: ['group'],
       selector: {
-        op: 'outside-quantile-band',
+        kind: 'outside-quantile-band',
         field: 'value',
         lowerP: 0.1,
         upperP: 0.9,
@@ -60,7 +60,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
         kind: 'summarize',
         metrics: [
           {
-            op: 'quantile-band',
+            kind: 'quantile-band',
             field: 'value',
             lowerP: 0.8,
             upperP: 0.2,
@@ -74,7 +74,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
       TransformSchema.parse({
         kind: 'select',
         selector: {
-          op: 'outside-quantile-band',
+          kind: 'outside-quantile-band',
           field: 'value',
           lowerP: 0.9,
           upperP: 0.9,
@@ -89,7 +89,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
         kind: 'summarize',
         metrics: [
           {
-            op: 'quantile-band',
+            kind: 'quantile-band',
             field: 'value',
             lowerP: 0.25,
             upperP: 0.75,
@@ -106,9 +106,9 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
       TransformSchema.parse({
         kind: 'summarize',
         metrics: [
-          { op: 'mean', field: 'value', as: 'boxLow' },
+          { kind: 'mean', field: 'value', as: 'boxLow' },
           {
-            op: 'quantile-band',
+            kind: 'quantile-band',
             field: 'value',
             lowerP: 0.25,
             upperP: 0.75,
@@ -125,7 +125,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
         kind: 'summarize',
         metrics: [
           {
-            op: 'quantile-band',
+            kind: 'quantile-band',
             field: 'value',
             lowerP: 0.25,
             upperP: 0.75,
@@ -140,7 +140,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
       TransformSchema.parse({
         kind: 'select',
         selector: {
-          op: 'outside-quantile-band',
+          kind: 'outside-quantile-band',
           field: 'value',
           lowerP: 0.25,
           upperP: 0.75,
@@ -170,7 +170,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
         groupBy: ['group'],
         metrics: [
           {
-            op: 'quantile-band',
+            kind: 'quantile-band',
             field: 'value',
             lowerP: 0.25,
             upperP: 0.75,
@@ -228,7 +228,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
         groupBy: ['group'],
         metrics: [
           {
-            op: 'quantile-band',
+            kind: 'quantile-band',
             field: 'value',
             lowerP: 0.1,
             upperP: 0.9,
@@ -253,7 +253,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
         groupBy: ['group'],
         metrics: [
           {
-            op: 'quantile-band',
+            kind: 'quantile-band',
             field: 'value',
             lowerP: 0.25,
             upperP: 0.75,
@@ -279,7 +279,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
           groupBy: ['group'],
           metrics: [
             {
-              op: 'quantile-band',
+              kind: 'quantile-band',
               field: 'value',
               lowerP: 0.25,
               upperP: 0.75,
@@ -309,7 +309,13 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
       {
         kind: 'select',
         groupBy: ['group'],
-        selector: { op: 'outside-quantile-band', field: 'value', lowerP: 0.2, upperP: 0.8, boundary: { kind: 'band' } },
+        selector: {
+          kind: 'outside-quantile-band',
+          field: 'value',
+          lowerP: 0.2,
+          upperP: 0.8,
+          boundary: { kind: 'band' },
+        },
         rankAs: 'rank',
       },
     ]);
@@ -336,7 +342,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
           kind: 'select',
           groupBy: ['group'],
           selector: {
-            op: 'outside-quantile-band',
+            kind: 'outside-quantile-band',
             field: 'value',
             lowerP: 0.25,
             upperP: 0.75,
@@ -359,7 +365,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
         groupBy: ['group'],
         metrics: [
           {
-            op: 'quantile-band',
+            kind: 'quantile-band',
             field: 'value',
             lowerP: 0.25,
             upperP: 0.75,
@@ -393,7 +399,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
           groupBy: ['group'],
           metrics: [
             {
-              op: 'quantile-band',
+              kind: 'quantile-band',
               field: 'value',
               lowerP: 0.25,
               upperP: 0.75,

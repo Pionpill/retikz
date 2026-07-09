@@ -35,8 +35,8 @@ source / target 使用的 selector 与 `select` 共用同一套[数据变换统�
   transform={[
     {
       kind: 'relate',
-      source: { selector: { op: 'min', by: 'value' }, fields: { id: 'id' } },
-      target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+      source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
+      target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
       measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
     },
   ]}

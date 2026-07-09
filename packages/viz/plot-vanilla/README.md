@@ -13,6 +13,9 @@ This package provides two framework-free entrypoints:
   [`@retikz/vanilla`](../../kernel/vanilla)'s `renderToSvgString`.
 
 Data never enters the IR — it is injected at compile time via `lowerPlots`.
+Passing `lineage: { ... }` to `renderPlot` switches the return value to `{ svg, lineage }`, so SSR
+hosts can keep the SVG output and the runtime plot mark lineage artifact together. Omitting lineage,
+or passing `lineage: false`, preserves the original SVG string return value.
 Both entrypoints avoid DOM globals and are suitable for SSR / build-time generation.
 
 See the [retikz docs site](https://pionpill.github.io/retikz/) for usage.

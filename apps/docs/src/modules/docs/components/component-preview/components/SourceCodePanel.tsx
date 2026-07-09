@@ -12,8 +12,8 @@ import type { ComponentSourceFile, DiffLineKind, DiffMode, SourceLang, SourceVie
 import { HighlightCode } from '../../highlight-code';
 import { CopyButton, SourceViewBar, ToolbarIconButton } from './parts';
 
-/** 已 View Code 之后默认折叠状态下的代码区高度上限（按 ~15 行 x 1.5em line-height + 一点点 padding 算）。 */
-const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[15rem] [&_pre]:overflow-y-auto';
+/** 已 View Code 之后默认折叠状态下的代码区高度上限（15 行代码高度，跟随 pre 的 1.5 line-height）。 */
+const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[calc(15*1.5em)] [&_pre]:overflow-y-auto';
 /** 触发「展开/收起」按钮的最小行数门槛。 */
 const COLLAPSE_THRESHOLD_LINES = 10;
 

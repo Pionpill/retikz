@@ -1,7 +1,7 @@
 import type { IRScene, PathKindDefinition } from '@retikz/core';
 import type { FC, ReactElement, ReactNode } from 'react';
 
-import { convertReactNodeToIR, Layout, Scope } from '@retikz/react';
+import { convertReactNodeToIR, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
 import { createElement, isValidElement } from 'react';
 
 const COMPONENT_EXPANSION_LIMIT = 16;
@@ -22,7 +22,7 @@ const resolvePreviewRootElement = (
 ): ReactElement<PreviewRootProps> | null => {
   if (!isValidElement(node)) return null;
   const element = node as ReactElement<FunctionComponentProps>;
-  if (element.type === Layout || typeof element.type !== 'function' || depth <= 0) {
+  if (element.type === Layout || isEmbeddableMarked(element.type) || typeof element.type !== 'function' || depth <= 0) {
     return element as ReactElement<PreviewRootProps>;
   }
   const component = element.type as (props: FunctionComponentProps) => ReactNode;
@@ -62,12 +62,13 @@ export type PreviewIR = {
 export const buildPreviewIR = (Component: FC): PreviewIR => {
   const rootElement = resolvePreviewRootElement(Component({}));
   const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
-  let childNode = props.children;
+  const isEmbeddableRoot = isEmbeddableMarked(rootElement?.type);
+  let childNode = isEmbeddableRoot ? rootElement : props.children;
   if (props.ir === undefined) {
     const styleProps = Object.fromEntries(
       Object.entries(props).filter(([key, value]) => !LAYOUT_OWN_PROPS.has(key) && value !== undefined),
     );
-    if (Object.keys(styleProps).length > 0) {
+    if (!isEmbeddableRoot && Object.keys(styleProps).length > 0) {
       childNode = createElement(Scope, styleProps, props.children);
     }
   }

@@ -45,5 +45,6 @@ export {
   Track,
   Transform,
 } from './components';
-export type { PlotDslProps, PlotPanelProps, PlotProps, PlotSpecProps } from './Plot';
+export type { PlotDslProps, PlotLineageProps, PlotPanelProps, PlotProps, PlotSpecProps } from './Plot';
 export { Plot } from './Plot';
+export { resolvePlotLineage } from './plot-runtime';

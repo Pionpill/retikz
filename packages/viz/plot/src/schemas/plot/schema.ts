@@ -1,5 +1,5 @@
 import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
-import { DataRefSchema } from '@retikz/data';
+import { DataReferenceSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
@@ -415,7 +415,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .literal(PlotComposite.Plot)
     .describe('Composite type within the plot namespace: the top-level grammar-of-graphics spec node'),
   id: z.string().min(1).optional().describe('Optional plot handle used as the outer scope id and anchor target'),
-  data: DataRefSchema.describe(
+  data: DataReferenceSchema.describe(
     'Data binding: a named reference to an externally-supplied dataset plus an optional data model. The dataset values never enter the IR; they are injected at compile time via lowerPlots(datasets).',
   ),
   transform: z
@@ -470,7 +470,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .array(MarkOperationSchema)
     .min(1)
     .describe(
-      'Mark layers, drawn in array order (stable z-order); built-in mark configs or custom type passthrough validated by a runtime MarkDefinition',
+      'Mark layers, drawn in array order (stable z-order); built-in mark configs or custom type open config validated by a runtime MarkDefinition',
     ),
   guides: z
     .array(GuideSchema)

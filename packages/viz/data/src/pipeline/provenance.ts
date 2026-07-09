@@ -28,6 +28,11 @@ export const readSourceIndices = (row: ExternalRow): Array<number> | undefined =
 export const readSourceIndicesOf = (rows: Array<ExternalRow>): Array<number> => {
   const out: Array<number> = [];
   for (const row of rows) {
+    const group = readSourceIndices(row);
+    if (group !== undefined) {
+      out.push(...group);
+      continue;
+    }
     const index = readSourceIndex(row);
     if (index !== undefined) out.push(index);
   }

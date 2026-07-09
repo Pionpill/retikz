@@ -2,6 +2,7 @@ export * from './anchor';
 export * from './channel';
 export * from './coordinate';
 export * from './guide';
+export * from './lineage';
 export * from './locator';
 export * from './mark';
 export * from './provenance';

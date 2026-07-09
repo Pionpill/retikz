@@ -247,7 +247,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'B', anchor: 'left' } });
   });
 
-  it('lowers generated source-target anchors to a core Path with labels and path marks passthrough', () => {
+  it('lowers generated source-target anchors to a core Path with labels and path mark config', () => {
     const root = expandOf(
       baseSpec([
         { type: 'point', anchorId: { prefix: 'pt', field: 'id' }, encoding: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -416,8 +416,8 @@ describe('RelationMark and anchorId lowering', () => {
           transform: [
             {
               kind: 'relate',
-              source: { selector: { op: 'min', by: 'value' }, fields: { id: 'id' } },
-              target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+              source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
+              target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
               measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
             },
           ],
@@ -459,8 +459,8 @@ describe('RelationMark and anchorId lowering', () => {
           transform: [
             {
               kind: 'relate',
-              source: { selector: { op: 'first' }, fields: { x: 'x', y: 'value' } },
-              target: { selector: { op: 'last' }, fields: { x: 'x', y: 'value' } },
+              source: { selector: { kind: 'first' }, fields: { x: 'x', y: 'value' } },
+              target: { selector: { kind: 'last' }, fields: { x: 'x', y: 'value' } },
             },
           ],
           source: { project: { x: 'sourceX', y: 'sourceY' } },
@@ -490,8 +490,8 @@ describe('RelationMark and anchorId lowering', () => {
           transform: [
             {
               kind: 'relate',
-              source: { selector: { op: 'first' }, fields: { x: 'x', y: 'value' } },
-              target: { selector: { op: 'last' }, fields: { x: 'x', y: 'value' } },
+              source: { selector: { kind: 'first' }, fields: { x: 'x', y: 'value' } },
+              target: { selector: { kind: 'last' }, fields: { x: 'x', y: 'value' } },
               measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
             },
           ],

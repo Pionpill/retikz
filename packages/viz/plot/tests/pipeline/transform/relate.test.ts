@@ -9,8 +9,8 @@ import { TransformSchema } from '../../../src/schemas';
 describe('relate transform', () => {
   const operation = {
     kind: 'relate',
-    source: { selector: { op: 'min', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
-    target: { selector: { op: 'max', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
+    source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
+    target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
     measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
   };
 
@@ -22,8 +22,8 @@ describe('relate transform', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'relate',
-        source: { selector: { op: 'min' }, fields: { id: 'id' } },
-        target: { selector: { op: 'max', by: 'value' }, fields: { id: 'id' } },
+        source: { selector: { kind: 'min' }, fields: { id: 'id' } },
+        target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
       }),
     ).toThrow();
   });
@@ -32,8 +32,8 @@ describe('relate transform', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'relate',
-        source: { selector: { op: 'first' }, fields: {} },
-        target: { selector: { op: 'last' }, fields: { id: 'id' } },
+        source: { selector: { kind: 'first' }, fields: {} },
+        target: { selector: { kind: 'last' }, fields: { id: 'id' } },
       }),
     ).toThrow();
   });
@@ -90,8 +90,8 @@ describe('relate transform', () => {
         {
           kind: 'relate',
           groupBy: ['group'],
-          source: { selector: { op: 'max', by: 'value', tie: 'last' }, fields: { id: 'id' } },
-          target: { selector: { op: 'first' }, fields: { id: 'id' } },
+          source: { selector: { kind: 'max', by: 'value', tie: 'last' }, fields: { id: 'id' } },
+          target: { selector: { kind: 'first' }, fields: { id: 'id' } },
         },
       ],
       resolvePlotTransformRegistry(),

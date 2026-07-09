@@ -229,20 +229,20 @@ describe('applyBin (alpha.12 ADR-01)', () => {
       { m: 8, w: 5 },
     ];
     const sum = applyTransforms(rows, [
-      { kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'sum', field: 'w', as: 'total' }] },
+      { kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'sum', field: 'w', as: 'total' }] },
     ]);
     // [0,5): w 10,20 → 30；[5,10]: w 5 → 5
     expect(sum.map(r => r.total)).toEqual([30, 5]);
     const mean = applyTransforms(rows, [
-      { kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'mean', field: 'w', as: 'avg' }] },
+      { kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'mean', field: 'w', as: 'avg' }] },
     ]);
     expect(mean.map(r => r.avg)).toEqual([15, 5]);
     const min = applyTransforms(rows, [
-      { kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'min', field: 'w', as: 'min' }] },
+      { kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'min', field: 'w', as: 'min' }] },
     ]);
     expect(min.map(r => r.min)).toEqual([10, 5]);
     const max = applyTransforms(rows, [
-      { kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'max', field: 'w', as: 'max' }] },
+      { kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'max', field: 'w', as: 'max' }] },
     ]);
     expect(max.map(r => r.max)).toEqual([20, 5]);
   });
@@ -251,7 +251,7 @@ describe('applyBin (alpha.12 ADR-01)', () => {
     // step 从域下界（观测 min = 0）平铺 → [0,5]
     const out = applyTransforms(
       [{ m: 0 }],
-      [{ kind: 'bin', field: 'm', step: 5, startField: 'lo', endField: 'hi', metrics: [{ op: 'count', as: 'n' }] }],
+      [{ kind: 'bin', field: 'm', step: 5, startField: 'lo', endField: 'hi', metrics: [{ kind: 'count', as: 'n' }] }],
     );
     expect(out[0]).toMatchObject({ lo: 0, hi: 5, n: 1 });
     expect(out[0]).not.toHaveProperty('binStart');
@@ -271,7 +271,7 @@ describe('applyBin (alpha.12 ADR-01)', () => {
 
   it('bin_metric_sum_missing_field_fail_loud', () => {
     expect(() =>
-      applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', step: 5, metrics: [{ op: 'sum', as: 'sum' }] }]),
+      applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'sum', as: 'sum' }] }]),
     ).toThrow();
   });
 
@@ -329,7 +329,7 @@ describe('applySummarize (alpha.12 ADR-16)', () => {
 
   it('summarize_groupby_sum', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
     ]);
     expect(out.length).toBe(2);
     expect(out[0]).toMatchObject({ region: 'N', total: 8 });
@@ -338,13 +338,15 @@ describe('applySummarize (alpha.12 ADR-16)', () => {
 
   it('summarize_requires_explicit_as', () => {
     expect(() =>
-      applyTransforms(ORDERS, [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue' }] }]),
+      applyTransforms(ORDERS, [
+        { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue' }] },
+      ]),
     ).toThrow();
   });
 
   it('summarize_multikey_composite', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'sum', field: 'revenue', as: 't' }] },
+      { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ kind: 'sum', field: 'revenue', as: 't' }] },
     ]);
     // 复合键：N/A, N/B, S/A
     expect(out.length).toBe(3);
@@ -357,7 +359,7 @@ describe('applySummarize (alpha.12 ADR-16)', () => {
 
   it('summarize_count_no_field', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'count' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] },
     ]);
     // count 需显式 as、值 = 组行数
     expect(out[0]).toMatchObject({ region: 'N', count: 2 });
@@ -366,23 +368,23 @@ describe('applySummarize (alpha.12 ADR-16)', () => {
 
   it('summarize_mean_min_max', () => {
     const mean = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'mean', field: 'revenue', as: 'v' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'mean', field: 'revenue', as: 'v' }] },
     ]);
     expect(mean[0].v).toBe(4); // N: (3+5)/2
     expect(mean[1].v).toBe(3); // S: (2+4)/2
     const min = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'min', field: 'revenue', as: 'v' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'min', field: 'revenue', as: 'v' }] },
     ]);
     expect(min.map(r => r.v)).toEqual([3, 2]);
     const max = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'max', field: 'revenue', as: 'v' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'max', field: 'revenue', as: 'v' }] },
     ]);
     expect(max.map(r => r.v)).toEqual([5, 4]);
   });
 
   it('summarize_changes_row_count', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'count' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] },
     ]);
     expect(out.length).not.toBe(ORDERS.length);
     expect(out.length).toBe(2);
@@ -390,14 +392,14 @@ describe('applySummarize (alpha.12 ADR-16)', () => {
 
   it('summarize_missing_field_fail_loud', () => {
     expect(() =>
-      applyTransforms(ORDERS, [{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', as: 'total' }] }]),
+      applyTransforms(ORDERS, [{ kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', as: 'total' }] }]),
     ).toThrow();
   });
 
   it('summarize_group_level_provenance_source_indices', () => {
     const tagged = tagSourceIndex(ORDERS); // 0,1,2,3
     const out = applyTransforms(tagged, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 't' }] },
+      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 't' }] },
     ]);
     expect(readSourceIndices(out[0])).toEqual([0, 1]); // N
     expect(readSourceIndices(out[1])).toEqual([2, 3]); // S
@@ -406,7 +408,7 @@ describe('applySummarize (alpha.12 ADR-16)', () => {
   // 交互：summarize（改行数）后接 stack（保行数）
   it('summarize_then_stack_chain', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+      { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
       { kind: 'stack', x: 'region', y: 'total', groupBy: 'product' },
     ]);
     // 聚合 → N/A=3,N/B=5,S/A=6；按 region stack：N: A[0,3] B[3,8]；S: A[0,6]
