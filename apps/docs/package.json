@@ -19,6 +19,7 @@
     "@retikz/plot-react": "workspace:*",
     "@retikz/plot-vanilla": "workspace:*",
     "@retikz/react": "workspace:*",
+    "@retikz/render": "workspace:*",
     "@retikz/tex": "workspace:*",
     "acorn": "^8.16.0",
     "acorn-jsx": "^5.3.2",

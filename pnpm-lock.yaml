@@ -262,6 +262,9 @@ importers:
       '@retikz/react':
         specifier: workspace:*
         version: link:../../packages/kernel/react
+      '@retikz/render':
+        specifier: workspace:*
+        version: link:../../packages/kernel/render
       '@retikz/tex':
         specifier: workspace:*
         version: link:../../packages/kernel/tex

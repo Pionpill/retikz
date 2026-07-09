@@ -17,8 +17,7 @@ describe('irToVanillaCode', () => {
     const code = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]));
     expect(code).toContain("from '@retikz/vanilla'");
     expect(code).toContain('figure(');
-    // 无 viewBox → 省略空 config，直接 figure(children)
-    expect(code).toContain('const fig = figure([');
+    expect(code).toContain('const fig = figure({ children: [');
   });
 
   it('node-codegen：具名 / 匿名 / 字段映射', () => {
@@ -35,7 +34,7 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("coordinate('m', { position: [60, 40] })");
   });
 
-  it('draw-way-line：move+line steps → draw([t0, t1])', () => {
+  it('path-way-line：move+line steps → path({ way })', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -48,7 +47,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
-    expect(code).toContain("draw([[0, 0], [50, 50]], { arrow: '->' })");
+    expect(code).toContain("path({ way: [[0, 0], [50, 50]], arrow: '->' })");
   });
 
   it('draw-way-fold-cycle：fold(-|) + cycle → 字面量 + DrawWay.Cycle + core import', () => {
@@ -129,7 +128,7 @@ describe('irToVanillaCode', () => {
     expect(withVb).toContain('viewBox: { x: 0, y: 0, width: 100, height: 80 }');
 
     const noVb = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0] }]));
-    expect(noVb).toContain('figure([');
+    expect(noVb).toContain('figure({ children: [');
     expect(noVb).not.toContain('figure({}');
   });
 
@@ -151,7 +150,7 @@ describe('irToVanillaCode', () => {
 
   it('empty-scene：空 children + 无 config → figure()，不抛', () => {
     expect(() => irToVanillaCode(ir([]))).not.toThrow();
-    expect(irToVanillaCode(ir([]))).toContain('const fig = figure();');
+    expect(irToVanillaCode(ir([]))).toContain('const fig = figure({ children: [] });');
   });
 });
 

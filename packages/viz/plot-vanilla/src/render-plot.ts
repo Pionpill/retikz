@@ -18,5 +18,5 @@ export const renderPlot = (spec: PlotSpec, data: ExternalDatasets, options: Lowe
     { version: 1, type: 'scene', children: [validated] },
     { composites: lowerPlots(data, options) },
   );
-  return renderToSvgString(scene, { width: options.width, height: options.height });
+  return renderToSvgString(scene, { output: { width: options.width, height: options.height } });
 };

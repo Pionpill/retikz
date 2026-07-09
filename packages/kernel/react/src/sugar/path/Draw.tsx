@@ -1,0 +1,159 @@
+import type { IRPath, PathThicknessValue, WayDSL } from '@retikz/core';
+import type { FC } from 'react';
+
+import { parseWay } from '@retikz/core';
+
+import type { PathProps } from '../../kernel/components';
+
+import { Path } from '../../kernel/components';
+import { Step } from '../../kernel/components';
+
+export type DrawProps = {
+  /**
+   * way 数组 DSL
+   * @description 节点 id / 笛卡尔 / 极坐标 / 相对偏移 `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` / 折角算子 `'-|'` `'|-'`（或 `DrawWay.Hv`/`DrawWay.Vh`）/ 闭合 `DrawWay.Cycle` / 曲线算子 `{ curve | cubic | bend }`（infix）/ 形状算子 `{ arc | circle | ellipse }`（infix，以"上一项"为圆心，不消耗下一项）/ 边标注算子 `{ label }`（infix，修饰下一段）
+   */
+  way: WayDSL;
+  /** 描边色，省略时用 currentColor */
+  stroke?: IRPath['stroke'];
+  /** 描边宽度，省略时为 1 */
+  strokeWidth?: IRPath['strokeWidth'];
+  /** 描边 dash pattern（如 [4, 2]） */
+  dashPattern?: IRPath['dashPattern'];
+  /** 描边 dash offset。 */
+  dashOffset?: IRPath['dashOffset'];
+  /** 端点形状（TikZ `line cap`） */
+  lineCap?: IRPath['lineCap'];
+  /** 拐点形状（TikZ `line join`，仅描边视觉） */
+  lineJoin?: IRPath['lineJoin'];
+  /** 折线 line-line 接缝几何圆角半径（TikZ `rounded corners=`，改几何，区别于 `lineJoin`） */
+  roundedCorners?: IRPath['roundedCorners'];
+  /** 投影：预设字符串（`'sm'`…`'2xl'`）或 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`（显式字段覆盖 preset） */
+  shadow?: IRPath['shadow'];
+  /** 混合模式（CSS `mix-blend-mode`）：与下方已绘内容按 W3C 分离公式混合 */
+  blendMode?: IRPath['blendMode'];
+  /** 语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
+  thickness?: PathThicknessValue;
+  /**
+   * 路径级箭头方向
+   * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头
+   */
+  arrow?: PathProps['arrow'];
+  /**
+   * 箭头详细配置
+   * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override。空心 shape 上 `fill` silent no-op
+   */
+  arrowDetail?: PathProps['arrowDetail'];
+  /** 闭合区域填充色，省略 = 不填充。配合 way 末尾的 `DrawWay.Cycle` 画填充形状 */
+  fill?: IRPath['fill'];
+  /** 填充规则：`'nonzero'`（默认）/ `'evenodd'` */
+  fillRule?: IRPath['fillRule'];
+  /** 整 path 透明度 0~1 */
+  opacity?: IRPath['opacity'];
+  /** 仅 fill 透明度 0~1 */
+  fillOpacity?: IRPath['fillOpacity'];
+  /** 仅 stroke 透明度 0~1（TikZ `stroke opacity`） */
+  strokeOpacity?: IRPath['strokeOpacity'];
+  /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效 */
+  zIndex?: IRPath['zIndex'];
+};
+
+/**
+ * Sugar 组件——展开为等价的 <Path><Step.../></Path> Kernel 子树
+ * @description 用 way 数组按顺序声明移动、连线、折角、曲线、闭合、圆弧和边标注；能力与手写 `<Path>` /
+ *   `<Step>` 等价，不额外引入新的路径语义。
+ */
+export const Draw: FC<DrawProps> = props => {
+  const {
+    way,
+    stroke,
+    strokeWidth,
+    dashPattern,
+    dashOffset,
+    lineCap,
+    lineJoin,
+    roundedCorners,
+    shadow,
+    blendMode,
+    thickness,
+    arrow,
+    arrowDetail,
+    fill,
+    fillRule,
+    opacity,
+    fillOpacity,
+    strokeOpacity,
+    zIndex,
+  } = props;
+  const steps = parseWay(way);
+
+  return (
+    <Path
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      dashPattern={dashPattern}
+      dashOffset={dashOffset}
+      lineCap={lineCap}
+      lineJoin={lineJoin}
+      roundedCorners={roundedCorners}
+      shadow={shadow}
+      blendMode={blendMode}
+      thickness={thickness}
+      arrow={arrow}
+      arrowDetail={arrowDetail}
+      fill={fill}
+      fillRule={fillRule}
+      opacity={opacity}
+      fillOpacity={fillOpacity}
+      strokeOpacity={strokeOpacity}
+      zIndex={zIndex}
+    >
+      {steps.map((s, i) => {
+        if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;
+        if (s.kind === 'move') return <Step key={i} kind="move" to={s.to} />;
+        if (s.kind === 'fold') return <Step key={i} kind="fold" via={s.via} to={s.to} label={s.label} />;
+        if (s.kind === 'curve') return <Step key={i} kind="curve" to={s.to} control={s.control} label={s.label} />;
+        if (s.kind === 'cubic')
+          return <Step key={i} kind="cubic" to={s.to} control1={s.control1} control2={s.control2} label={s.label} />;
+        if (s.kind === 'bend') {
+          if (s.bendAngle !== undefined) {
+            return (
+              <Step
+                key={i}
+                kind="bend"
+                to={s.to}
+                bendDirection={s.bendDirection}
+                bendAngle={s.bendAngle}
+                label={s.label}
+              />
+            );
+          }
+          return <Step key={i} kind="bend" to={s.to} bendDirection={s.bendDirection} label={s.label} />;
+        }
+        if (s.kind === 'arc') {
+          return (
+            <Step
+              key={i}
+              kind="arc"
+              startAngle={s.startAngle}
+              endAngle={s.endAngle}
+              radius={s.radius}
+              label={s.label}
+            />
+          );
+        }
+        if (s.kind === 'circlePath') {
+          return <Step key={i} kind="circlePath" radius={s.radius} label={s.label} />;
+        }
+        if (s.kind === 'ellipsePath') {
+          return <Step key={i} kind="ellipsePath" radius={s.radius} label={s.label} />;
+        }
+        if (s.kind === 'line') {
+          return <Step key={i} kind="line" to={s.to} label={s.label} />;
+        }
+        // parseWay 不产 rectangle step（way DSL 无该算子）；穷举兜底
+        return null;
+      })}
+    </Path>
+  );
+};

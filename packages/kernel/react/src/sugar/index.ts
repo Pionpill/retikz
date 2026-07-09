@@ -1,11 +1,2 @@
-export type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './_shared';
-export * from './Arc';
-export * from './Circle';
-export * from './Draw';
-export * from './EdgeLabel';
-export * from './Ellipse';
-export * from './Grid';
-export * from './Rectangle';
-export * from './RegularPolygon';
-export * from './Sector';
-export * from './Star';
+export * from './path';
+export * from './shapes';

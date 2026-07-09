@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Circle, Draw, DrawWay, Layout, Node, Rectangle } from '@retikz/react';
+import { DrawWay } from '@retikz/core';
+import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
 
 const FONT = { size: 10 };
 const RECT = { fill: 'none', stroke: 'darkorange', strokeWidth: 2 } as const;

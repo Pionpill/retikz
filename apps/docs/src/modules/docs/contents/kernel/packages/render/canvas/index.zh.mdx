@@ -28,7 +28,7 @@ const view = mountCanvas(container, ir);
 // view.root 是 <canvas>;view.update(next) 重绘;view.dispose() 卸载
 ```
 
-入参和 SVG 一致——接收 `Scene`、`IR` 或 `Figure`;`devicePixelRatio` 缺省读 `globalThis.devicePixelRatio`、再回退 1,高清屏自动清晰。
+入参和 SVG 一致——接收 `Scene`、`IR` 或 vanilla plain spec；`devicePixelRatio` 缺省读 `globalThis.devicePixelRatio`、再回退 1,高清屏自动清晰。
 
 ## 给 Canvas 图加交互
 

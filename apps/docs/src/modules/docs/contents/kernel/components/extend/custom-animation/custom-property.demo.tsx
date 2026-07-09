@@ -1,5 +1,5 @@
 import type { IRAnimationTrack } from '@retikz/core';
-import type { AnimationPropertyDefinition } from '@retikz/react';
+import type { AnimationPropertyDefinition } from '@retikz/render/animation';
 import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';

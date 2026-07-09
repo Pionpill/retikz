@@ -94,7 +94,7 @@ retikz 拆成四个发布包，从框架无关的底层到面向用户的入口�
 | `@retikz/core`    | IR、`compileToScene` 编译器、Scene 契约；零 React / 零 DOM                      | `zod`         |
 | `@retikz/render`  | 渲染后端：`./svg`（Scene → SVG 描述 / 字符串）、`./canvas`（Scene → Canvas 2D） | core          |
 | `@retikz/react`   | React adapter：JSX 构建 IR，`<Layout renderer>` 选 svg / canvas 后端            | core · render |
-| `@retikz/vanilla` | 无框架 runtime / SSR：挂载到 DOM 或产 SVG 字符串，附命令式 builder              | core · render |
+| `@retikz/vanilla` | 无框架 runtime / SSR：用 plain spec 挂载到 DOM 或产 SVG 字符串                  | core · render |
 
 `@retikz/render` 把原本在 `@retikz/react` 里的 SVG 渲染核心抽出来，和新增的 Canvas 后端合并成独立包；`@retikz/react` 与 `@retikz/vanilla` 都不再各自维护渲染逻辑，只组合 render 的后端。
 

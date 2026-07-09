@@ -70,7 +70,7 @@ export const RendererModeButton: FC<RendererModeButtonProps> = props => {
 const VIEW_META: Record<SourceView, { label: string; text: string; icon: ReactNode }> = {
   react: { label: 'React source', text: 'React', icon: <ReactIcon className="size-3.5" /> },
   ir: { label: 'IR JSON', text: 'IR', icon: <JsonIcon className="size-3.5" /> },
-  vanilla: { label: 'Vanilla builder code', text: 'Vanilla', icon: <Braces className="size-3.5" /> },
+  vanilla: { label: 'Vanilla plain spec code', text: 'Vanilla', icon: <Braces className="size-3.5" /> },
 };
 
 const DATA_FILE_PATTERN = /\.data\.tsx?$/;

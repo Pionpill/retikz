@@ -7,7 +7,7 @@
     "layer": "adapter",
     "publishable": true
   },
-  "description": "Framework-free retikz runtime: mount SVG/Canvas, hydrate interactions, control animations, or render SVG strings for SSR.",
+  "description": "Framework-free retikz runtime: author plain specs, mount SVG/Canvas, hydrate interactions, control animations, or render SVG strings for SSR.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",

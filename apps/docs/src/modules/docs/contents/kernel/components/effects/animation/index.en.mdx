@@ -6,7 +6,8 @@ description: Keyframe nodes, paths, and the camera over time with named presets 
 Animation transitions a static figure **from one look to another over time**: fade in, draw a line, scale up, spin, shift color, pan the camera. You don't hand-write keyframes — call a **preset factory** (`fadeIn()` / `spin()` …) to get an animation descriptor and attach it to an element's `animations` array.
 
 ```tsx
-import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
+import { fadeIn, scaleIn } from '@retikz/core';
+import { Layout, Node } from '@retikz/react';
 
 <Node position={[0, 0]} animations={[fadeIn(), scaleIn()]}>
   hi

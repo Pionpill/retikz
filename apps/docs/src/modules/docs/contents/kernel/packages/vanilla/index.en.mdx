@@ -1,0 +1,98 @@
+---
+title: Vanilla Runtime
+description: Author figures outside React with a plain spec, then render the same description to SVG, Canvas, or an SSR string.
+---
+
+`@retikz/vanilla` is the framework-free entry. It does not require JSX or a React runtime. You describe a figure as a plain spec, then render it with `mount`, `mountSvg`, `mountCanvas`, or `renderToSvgString`.
+
+This package is only an adapter. Geometry, paths, composite lowering, and rendering still come from `@retikz/core` and `@retikz/render`.
+
+## Basic Shape
+
+```ts
+import { figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '@retikz/vanilla';
+
+const spec = figure({
+  id: 'flow',
+  layers: [
+    layer('main', { cache: VanillaLayerCache.Static }, [
+      node('a', { position: [0, 0], text: 'A' }),
+      node('b', { position: [120, 0], text: 'B' }),
+      path('edge', {
+        way: ['a', 'b'],
+        marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      }),
+    ]),
+  ],
+});
+
+const svg = renderToSvgString(spec);
+const view = mount(document.querySelector('#diagram')!, spec);
+```
+
+`figure({ children })` is the shorthand for a single-layer figure. Use `layers` when you need caching, local invalidation, or future incremental updates.
+
+## Runtime Entries
+
+| API                 | Purpose                                   | Returns                      |
+| ------------------- | ----------------------------------------- | ---------------------------- |
+| `renderToSvgString` | Produce an `<svg>` string for SSR         | `string`                     |
+| `mount`             | Mount SVG or Canvas by `renderer`         | `VanillaView` / `CanvasView` |
+| `mountSvg`          | Mount an SVG DOM explicitly               | `VanillaView`                |
+| `mountCanvas`       | Mount a Canvas explicitly                 | `CanvasView`                 |
+| `hydrate`           | Bind handlers to SSR / existing SVG roots | `HydrationHandle`            |
+
+`view.update(nextSpec)` still rerenders the whole figure today, but the root element identity stays stable. The plain spec keeps layer and identity metadata so future `patch` / `invalidate` can work at a smaller boundary.
+
+## Options Shape
+
+Render options are grouped by the stage that consumes them:
+
+```ts
+renderToSvgString(spec, {
+  output: { width: 640, height: 360, idPrefix: 'flow' },
+  compile: { composites, measureText },
+  animation: { enabled: false, snapshotAt: 1000 },
+});
+
+mount(canvasRoot, spec, {
+  renderer: 'canvas',
+  output: { width: 640, height: 360 },
+  canvas: { devicePixelRatio: 2 },
+});
+```
+
+`figure()` describes the figure. `output` controls display size and resource ids, `compile` injects core compile capabilities, `animation` controls playback or snapshots, and `canvas` is only for the Canvas backend.
+
+## Layers And Embeds
+
+`layer(id, options, children)` is an authoring boundary. `cache` is a runtime hint and does not enter core IR. `zIndex` only orders the layer stack; equal values keep declaration order.
+
+Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a core IR child, datasets, and composite definitions.
+
+```ts
+import { embed, figure, layer } from '@retikz/vanilla';
+
+const spec = figure({
+  layers: [
+    layer('chart', [
+      embed('my-chart', 'sales', {
+        dataRef: 'sales',
+        x: 'month',
+        y: 'value',
+      }),
+    ]),
+  ],
+});
+```
+
+## API Summary
+
+| API                   | Kind   | Description                              |
+| --------------------- | ------ | ---------------------------------------- |
+| `figure`              | helper | Builds the plain spec root               |
+| `layer`               | helper | Builds a layer boundary                  |
+| `node` / `coordinate` | helper | Builds named or anonymous nodes / points |
+| `path`                | helper | Builds a path; `way` reuses Draw way DSL |
+| `embed`               | helper | Builds a Tier 2 embed node               |
+| `VanillaTier2Adapter` | type   | Defines lowering for `embed()`           |

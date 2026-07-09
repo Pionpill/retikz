@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { definePathKind, Layout, Node, Path, Step } from '@retikz/react';
+import { definePathKind } from '@retikz/core';
+import { Layout, Node, Path, Step } from '@retikz/react';
 import { z } from 'zod';
 
 const HighlightOptionsSchema = z

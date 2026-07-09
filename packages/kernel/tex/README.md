@@ -41,7 +41,7 @@ const engine = await createMathJaxEngine({ packages: ['base'] });
 const lowerTex = createLowerTex(engine);
 
 const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b}=c$' })]);
-const svg = renderToSvgString(fig, { lowerTex });
+const svg = renderToSvgString(fig, { compile: { lowerTex } });
 ```
 
 `createMathJaxEngine(options?)` defaults to `packages: ['base']`. Pass additional MathJax TeX packages only when the app needs them.
