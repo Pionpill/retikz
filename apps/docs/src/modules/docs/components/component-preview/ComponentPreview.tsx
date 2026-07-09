@@ -6,27 +6,31 @@ import { useTranslation } from 'react-i18next';
 
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 
-import type { AlignKey, ComponentRenderSource, PreviewAction, RendererMode, SizeKey } from './types';
+import type {
+  AlignKey,
+  ComponentRenderSource,
+  PreviewControlConfig,
+  PreviewControlSlot,
+  RendererMode,
+  SizeKey,
+} from './types';
 import type { PreviewIR } from './utils';
 
 import { ComponentRender } from './ComponentRender';
 import { RawSvgFrame } from './components';
 import { useDemoLocationContext } from './context';
-import { buildConfiguredControlSlots } from './control-slots';
+import { buildConfiguredControlSlots } from './controls';
+import { buildControlsKey, controlModules, resolvePreviewControls } from './registry';
 import {
-  actionModules,
-  buildActionsKey,
   buildIrJsonKey,
   buildVanillaKey,
   demoModules,
   demoSources,
   irJsonOverrides,
   resolveDemoKey,
-  resolvePreviewActions,
-  resolvePreviewControls,
   vanillaModules,
   vanillaOverrides,
-} from './registry';
+} from './registry-runtime';
 import {
   buildPreviewIR,
   buildReactSourceFiles,
@@ -43,25 +47,22 @@ export type ComponentPreviewProps = {
   align?: AlignKey;
   /** 渲染区高度档位，默认 `md`。 */
   size?: SizeKey;
-  /** 透传到 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等 */
+  /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等。 */
   componentClassName?: string;
-  /** 隐藏底部「View Code / 源码 / IR」面板与 Dialog 右栏，只保留 demo 渲染区——用于叙述性插图 */
+  /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;
   /** 与 demo 一起展示的附加源码文件，路径相对当前页面目录。 */
   sourceFiles?: Array<string | { file: string; diffFrom: string }>;
   /** 作为 React 源码 diff baseline 的 demo id。 */
   diffFrom?: string;
-  /** 交互式 demo，跳过静态 IR / Vanilla 派生。 */
+  /** 交互型 demo，跳过静态 IR / Vanilla 派生。 */
   interactive?: boolean;
-  /** 强制显 / 隐内置动画工具；省略时自动判定。 */
+  /** 强制显示 / 隐藏内置动画工具；省略时自动判定。 */
   replayable?: boolean;
-  /** 自定义动作按钮（渲染在渲染区左上角动作栏，追加在内置工具后） */
-  actions?: Array<PreviewAction>;
-  /** 自定义预览控制插槽，优先于兼容用的 actions。 */
-  controlSlots?: Array<PreviewAction>;
-  /** 自定义动作栏是否常驻显示；默认 true */
-  actionsAlwaysVisible?: boolean;
-  /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
+  /** 自定义预览控制插槽，优先于 demo 模块声明控件。 */
+  controlSlots?: Array<PreviewControlSlot>;
+  /** 自定义预览控件层是否常驻显示；默认 true。 */
+  controlsAlwaysVisible?: boolean;
 };
 
 /** MDX 内的演示卡入口。 */
@@ -76,9 +77,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     diffFrom,
     interactive = false,
     replayable,
-    actions,
     controlSlots,
-    actionsAlwaysVisible = true,
+    controlsAlwaysVisible = true,
   } = props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
@@ -90,9 +90,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;
   const Component = mod?.default;
-  const actionModule = segments ? actionModules[buildActionsKey(segments, name)] : undefined;
-  const moduleActions = mod?.previewActions ?? resolvePreviewActions(actionModule);
-  const moduleControls = mod?.previewControls ?? resolvePreviewControls(actionModule);
+  const controlModule = segments ? controlModules[buildControlsKey(segments, name)] : undefined;
+  const moduleControls = mod?.previewControls ?? resolvePreviewControls(controlModule);
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
@@ -113,8 +112,9 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
         };
       }
     }
-    if (interactive)
+    if (interactive) {
       return { previewIr: null, irJson: exportedPreviewIR !== undefined ? formatIR(exportedPreviewIR) : '' };
+    }
     try {
       const previewIr = buildPreviewIR(Component);
       return { previewIr, irJson: formatIR(previewIr.ir) };
@@ -203,8 +203,11 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       };
 
   const animated = replayable ?? (previewIr !== null && irHasAnimations(previewIr.ir));
-  const configuredControlSlots = buildConfiguredControlSlots(moduleControls);
-  const resolvedControlSlots = controlSlots ?? actions ?? [...configuredControlSlots, ...(moduleActions ?? [])];
+  const controlConfigs = moduleControls?.filter((control): control is PreviewControlConfig => 'kind' in control) ?? [];
+  const moduleControlSlots =
+    moduleControls?.filter((control): control is PreviewControlSlot => 'render' in control) ?? [];
+  const configuredControlSlots = buildConfiguredControlSlots(controlConfigs);
+  const resolvedControlSlots = controlSlots ?? [...configuredControlSlots, ...moduleControlSlots];
 
   return (
     <ComponentRender
@@ -217,7 +220,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       interactive={interactive}
       animated={animated}
       controlSlots={resolvedControlSlots}
-      actionsAlwaysVisible={actionsAlwaysVisible}
+      controlsAlwaysVisible={controlsAlwaysVisible}
     />
   );
 };

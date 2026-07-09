@@ -4,20 +4,21 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildConfiguredControlSlots,
-  buildPreviewToolSlots,
   DemoRenderer,
   PreviewControlSlotLayer,
   RendererModeButton,
 } from '../../src/modules/docs/components/component-preview';
+import { buildAnimationControlSlots } from '../../src/modules/docs/components/component-preview/controls/animation-controls';
+import { buildConfiguredControlSlots } from '../../src/modules/docs/components/component-preview/controls/configured-controls';
+import { buildPreviewToolSlots } from '../../src/modules/docs/components/component-preview/controls/preview-tools';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
 const WrappedLayout: FC = () => <Layout width={40} height={20} />;
 const WrappedDemo: FC = () => <WrappedLayout />;
 const noop = () => {};
-const previewControlCtx = {
-  replay: noop,
+const previewControlRuntime = {
+  remount: noop,
   rendererMode: 'svg' as const,
   renderPane: null,
   hovered: false,
@@ -93,22 +94,7 @@ describe('PreviewControlSlotLayer', () => {
       toggleRendererMode: noop,
     });
     const markup = renderToStaticMarkup(
-      <PreviewControlSlotLayer
-        slots={slots}
-        pinned
-        ctx={{
-          replay: noop,
-          rendererMode: 'canvas',
-          renderPane: null,
-          hovered: false,
-          pinned: true,
-          expanded: false,
-          active: () => false,
-          setActive: noop,
-          value: () => undefined,
-          setValue: noop,
-        }}
-      />,
+      <PreviewControlSlotLayer slots={slots} pinned runtime={{ ...previewControlRuntime, rendererMode: 'canvas' }} />,
     );
 
     expect(markup).toContain('aria-label="Download PNG"');
@@ -129,7 +115,9 @@ describe('PreviewControlSlotLayer', () => {
       },
     ]);
 
-    const markup = renderToStaticMarkup(<PreviewControlSlotLayer slots={slots} pinned ctx={previewControlCtx} />);
+    const markup = renderToStaticMarkup(
+      <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
+    );
 
     expect(markup).toContain('aria-label="标记样式"');
     expect(markup).toContain('圆点');
@@ -146,10 +134,35 @@ describe('PreviewControlSlotLayer', () => {
       },
     ]);
 
-    const markup = renderToStaticMarkup(<PreviewControlSlotLayer slots={slots} pinned ctx={previewControlCtx} />);
+    const markup = renderToStaticMarkup(
+      <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
+    );
 
     expect(markup).toContain('aria-label="标记大小"');
     expect(markup).toContain('value="6"');
     expect(markup).toContain('placeholder="输入大小"');
+  });
+});
+
+describe('animation control slots', () => {
+  it('渲染动画重播 / pause / stop 控制', () => {
+    const slots = buildAnimationControlSlots(false);
+    const markup = renderToStaticMarkup(
+      <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
+    );
+
+    expect(markup).toContain('aria-label="Replay"');
+    expect(markup).toContain('aria-label="Pause"');
+    expect(markup).toContain('aria-label="Stop"');
+  });
+
+  it('暂停态渲染 Play 控制', () => {
+    const slots = buildAnimationControlSlots(true);
+    const markup = renderToStaticMarkup(
+      <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
+    );
+
+    expect(markup).toContain('aria-label="Play"');
+    expect(markup).not.toContain('aria-label="Pause"');
   });
 });

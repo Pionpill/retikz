@@ -1,0 +1,1 @@
+export { lineCurveControls as lineClosureControls } from './line-curve.controls';
