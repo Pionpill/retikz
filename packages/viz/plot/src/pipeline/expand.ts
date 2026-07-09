@@ -2169,6 +2169,15 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (guide.dimension === 'y') return panel.columnIndex === 0;
       return panel.rowIndex === 0 && panel.columnIndex === 0;
     };
+    const axisConsumesFacetPanelLayout = (guide: Guide, panel: FacetPanel): boolean => {
+      if (!isAxisGuide(guide)) return true;
+      const resolve = arrangementResolveOf(panel.facet);
+      const policy = axisPolicyFor(resolve, { hasFacets: true, hasScaffolds: false }, guide.dimension);
+      if (policy !== 'outerShared') return true;
+      const sharing = resolve?.scale?.[guide.dimension] ?? 'shared';
+      if (sharing === 'independent') return true;
+      return guide.dimension !== 'x';
+    };
     const selectorMatchesFacetPanel = (selector: GridTargetSelector, panel: FacetPanel): boolean => {
       if (selector.view !== undefined) {
         const views = Array.isArray(selector.view) ? selector.view : [selector.view];
@@ -2193,6 +2202,12 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     };
     const facetAxisGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
       withoutAxisGrid(facetGuides.filter(guide => keepOuterSharedAxisForPanel(guide, panel)));
+    const facetFrameGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
+      withoutAxisGrid(
+        facetGuides.filter(
+          guide => keepOuterSharedAxisForPanel(guide, panel) && axisConsumesFacetPanelLayout(guide, panel),
+        ),
+      );
     const facetGridGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
       facetGuides.flatMap(guide =>
         isAxisGuide(guide) && axisGridTargetsFacetPanel(guide, panel) ? [withEnabledAxisGrid(guide, undefined)] : [],
@@ -2217,6 +2232,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
     const panelScopes: Array<IRScope> = panels.map(panel => {
       const panelAxisGuides = facetAxisGuidesForPanel(panel);
+      const panelFrameGuides = facetFrameGuidesForPanel(panel);
       const panelMarkDataViews: Array<MarkDataView> = node.marks.map(mark => ({
         mark,
         rows: resolveMarkRows(mark, panel.rows, transformRegistry, transformContext),
@@ -2230,7 +2246,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
         composition: undefined,
         marks: node.marks,
-        guides: panelAxisGuides,
+        guides: panelFrameGuides,
       };
       const panelLayout = arrangementLayoutOf(panel.facet);
       const frameResolution = resolveFrame({
@@ -2248,6 +2264,25 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         markDataViews,
         roleMarkDataViews,
       });
+      const axisResolution =
+        panelAxisGuides.length === panelFrameGuides.length
+          ? frameResolution
+          : resolveFrame({
+              node: { ...panelNode, guides: panelAxisGuides },
+              rows: panel.rows,
+              fieldTypes,
+              width: panelWidth,
+              height: panelHeight,
+              fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+              margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+              labelGap: panelLayout?.labelGap,
+              plotAreaOverride: frameResolution.plotArea,
+              provenance,
+              coordinates: options.coordinates,
+              scaleRegistry,
+              markDataViews,
+              roleMarkDataViews,
+            });
       const panelGridGuides = facetGridGuidesForPanel(panel);
       const gridResolution =
         panelGridGuides.length > 0
@@ -2308,7 +2343,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         children: [
           ...(gridResolution?.gridLayers ?? []).map(layer => withScopeContext(layer, panelContext) as IRScope),
           ...markLayers,
-          ...frameResolution.axisLayers.map(layer => withScopeContext(layer, panelContext) as IRScope),
+          ...axisResolution.axisLayers.map(layer => withScopeContext(layer, panelContext) as IRScope),
         ],
       };
       const translateX = rowLabelWidth + panel.columnIndex * panelStrideX;

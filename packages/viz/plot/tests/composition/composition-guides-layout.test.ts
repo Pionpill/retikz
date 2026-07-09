@@ -181,6 +181,11 @@ const gridLayersOf = (scope: IRScope): Array<IRScope> =>
 const markLayersOf = (scope: IRScope): Array<IRScope> =>
   allScopes(scope).filter(child => child.meta?.source === 'plot' && child.meta.layer === 'mark');
 
+const nodeYSpanOf = (scope: IRScope): number => {
+  const ys = allNodes(scope).map(node => (node.position as [number, number])[1]);
+  return Math.max(...ys) - Math.min(...ys);
+};
+
 describe('composition guides layout schema', () => {
   it('layout_and_guide_policy_round_trip', () => {
     const parsed = parsePlotSpec(JSON.parse(JSON.stringify(facetSpec)));
@@ -259,6 +264,43 @@ describe('composition guides layout lowering', () => {
     const outer = expandOf(parsePlotSpec(facetSpec), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
     expect(yAxes).toHaveLength(1);
+  });
+
+  it('outer_shared_x_axis_does_not_shrink_last_row_facet_data_viewport', () => {
+    const rows = ['a', 'b', 'c'].flatMap(row => [
+      { row, month: 0, revenue: 0 },
+      { row, month: 1, revenue: 100 },
+    ]);
+    const spec = {
+      ...facetSpec,
+      composition: {
+        ...facetSpec.composition,
+        arrangements: [
+          {
+            kind: 'facet',
+            id: 'rowFacet',
+            view: 'root',
+            row: { field: 'row', order: ['a', 'b', 'c'] },
+            resolve: { scale: { x: 'shared', y: 'shared' }, axis: { x: 'outer', y: 'outer' }, grid: { y: 'local' } },
+          },
+        ],
+        resolve: undefined,
+      },
+      guides: [
+        { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, title: 'Month' },
+        { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, title: 'Revenue' },
+      ],
+    };
+
+    const outer = expandOf(parsePlotSpec(spec), { sales: rows });
+    const panels = panelScopesOf(outer);
+    const spans = panels.map(panel => nodeYSpanOf(markLayersOf(panel)[0]));
+    const xAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'x');
+
+    expect(xAxes).toHaveLength(1);
+    expect(spans).toHaveLength(3);
+    expect(spans[1]).toBeCloseTo(spans[0], 6);
+    expect(spans[2]).toBeCloseTo(spans[0], 6);
   });
 
   it('independent_scale_facet_keeps_per_panel_axis_under_outer_shared_policy', () => {
