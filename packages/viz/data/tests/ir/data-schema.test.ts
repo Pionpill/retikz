@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import { DataFieldType, DataModelSchema, DataRefSchema, ScalarValueSchema } from '../../src';
+import { DataFieldType, DataModelSchema, DataReferenceSchema, ScalarValueSchema } from '../../src';
 
 describe('data schema', () => {
   it('parses data model and survives JSON round-trip', () => {
@@ -15,13 +15,13 @@ describe('data schema', () => {
   });
 
   it('parses data reference without embedding runtime rows', () => {
-    expect(DataRefSchema.parse({ reference: 'sales' })).toEqual({ reference: 'sales' });
-    expect(() => DataRefSchema.parse({ values: [{ x: 1 }] })).toThrow();
+    expect(DataReferenceSchema.parse({ reference: 'sales' })).toEqual({ reference: 'sales' });
+    expect(() => DataReferenceSchema.parse({ values: [{ x: 1 }] })).toThrow();
   });
 
   it('rejects unknown keys on public data schema objects', () => {
     expect(() => DataModelSchema.parse([{ name: 'month', tyep: DataFieldType.Categorical }])).toThrow();
-    expect(() => DataRefSchema.parse({ reference: 'sales', values: [{ x: 1 }] })).toThrow();
+    expect(() => DataReferenceSchema.parse({ reference: 'sales', values: [{ x: 1 }] })).toThrow();
   });
 
   it('rejects non JSON scalar values', () => {

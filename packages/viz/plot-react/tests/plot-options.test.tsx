@@ -1,4 +1,4 @@
-import type { ExternalDatasets } from '@retikz/data';
+﻿import type { ExternalDatasets } from '@retikz/data';
 import type { PlotSpec } from '@retikz/plot';
 
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -73,7 +73,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
         width={480}
         height={300}
         dataTransforms={[
-          { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
+          { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
         ]}
       >
         <IntervalMark x="region" y="total" />
@@ -89,7 +89,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
         data={orders}
         width={480}
         height={300}
-        dataTransforms={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'count', as: 'n' }] }]}
+        dataTransforms={[{ kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'count', as: 'n' }] }]}
       >
         <IntervalMark x="region" y="n" />
       </Plot>,

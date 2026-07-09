@@ -239,7 +239,7 @@ describe('CoordinateOperationSchema coordinate registry 占位（alpha.12 ADR-05
     expect(CoordinateOperationSchema.parse(operation)).toEqual(operation);
   });
 
-  it('CoordinateOperationSchema 内置 type 仍走精确 schema 校验，不被自定义 passthrough 吞掉', () => {
+  it('CoordinateOperationSchema 内置 type 仍走精确 schema 校验，不被自定义开放配置吞掉', () => {
     expect(() => CoordinateOperationSchema.parse({ type: 'cartesian2D', x: 1, y: 'ys' })).toThrow();
     expect(() =>
       CoordinateOperationSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 2 }),

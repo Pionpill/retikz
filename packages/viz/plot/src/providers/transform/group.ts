@@ -29,7 +29,7 @@ export const binOutputFields = (operation: BinTransform): { startField: string; 
 
 /** bin 指标列表；缺省时用 count 指标产生默认频数列。 */
 export const binMetricOperations = (operation: BinTransform): NonNullable<BinTransform['metrics']> =>
-  operation.metrics ?? [{ op: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
+  operation.metrics ?? [{ kind: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
 
 /** 由策略计算分箱边界；count / step / thresholds 三策略互斥。 */
 const binEdges = (operation: BinTransform, values: Array<number>): Array<number> => {

@@ -1,6 +1,6 @@
 import type { IRNode, IRScope } from '@retikz/core';
 
-import { DataModelSchema, FieldDefSchema } from '@retikz/data';
+import { DataModelSchema, FieldDefinitionSchema } from '@retikz/data';
 import { schemeCategory10 as d3SchemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
 
@@ -68,13 +68,13 @@ const bandCategorySequence = (layer: IRScope, rows: Array<Record<string, unknown
 describe('FieldDef.order — schema 接受 / 拒绝（ADR-07）', () => {
   it('explicit_array_order_accepted_by_schema', () => {
     const def = { name: 'size', type: 'categorical', order: ['S', 'M', 'L', 'XL'] };
-    expect(FieldDefSchema.parse(def)).toEqual(def);
+    expect(FieldDefinitionSchema.parse(def)).toEqual(def);
   });
 
   it('enum_order_accepted_by_schema', () => {
     for (const order of ['appearance', 'ascending', 'descending'] as const) {
       const def = { name: 'grade', type: 'categorical', order };
-      expect(FieldDefSchema.parse(def)).toEqual(def);
+      expect(FieldDefinitionSchema.parse(def)).toEqual(def);
     }
   });
 });
@@ -258,8 +258,8 @@ describe('FieldDef.order — 错误契约（ADR-07 fail-loud）', () => {
   });
 
   it('empty_array_order_rejected', () => {
-    // order:[] 被 FieldDefSchema.parse 拒（.min(1)）—— zod parse 错误路径
-    expect(() => FieldDefSchema.parse({ name: 'cat', type: 'categorical', order: [] })).toThrow();
+    // order:[] 被 FieldDefinitionSchema.parse 拒（.min(1)）—— zod parse 错误路径
+    expect(() => FieldDefinitionSchema.parse({ name: 'cat', type: 'categorical', order: [] })).toThrow();
     // 整 model 内含空数组 order 同样被拒
     expect(() => DataModelSchema.parse([{ name: 'cat', type: 'categorical', order: [] }])).toThrow();
   });

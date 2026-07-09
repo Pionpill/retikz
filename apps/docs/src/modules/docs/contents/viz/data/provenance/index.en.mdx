@@ -44,6 +44,86 @@ This avoids pretending that a statistical row came from one arbitrary source row
 
 If you only need to bind plot `x` / `y` / `color`, you usually do not handle provenance directly. It is extra data for debugging, interaction, and cross-module explanation.
 
+## Plot Mark Lineage
+
+Author the chart with the normal React `<Plot>` entry. When a host needs an audit or inspector panel, pass lineage options to `<Plot>` and receive the runtime-only plot mark lineage artifact. That lineage does not enter PlotSpec and is not written into Scene metadata.
+
+```tsx
+import { useCallback, useMemo, useState } from 'react';
+import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
+import type { PlotLineageOptions, PlotLineageRun } from '@retikz/plot';
+
+export function SalesPlot({ sales, queryId }: { sales: Array<Record<string, unknown>>; queryId: string }) {
+  const [, setAuditLineage] = useState<PlotLineageRun | null>(null);
+  const lineage = useMemo<PlotLineageOptions>(
+    () => ({
+      scaleMappings: true,
+      layoutContext: true,
+      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
+      hostMetadata: { query: true },
+    }),
+    [],
+  );
+  const handleLineage = useCallback((run: PlotLineageRun) => {
+    setAuditLineage(run);
+  }, []);
+
+  return (
+    <Plot
+      id="salesPlot"
+      data={sales}
+      width={420}
+      height={260}
+      lineage={lineage}
+      hostLineageMetadata={{ queryId, datasetVersion: 'sales-v3' }}
+      onLineage={handleLineage}
+    >
+      <IntervalMark id="revenueBars" x="region" y="revenue" color="month" />
+      <Axis dimension="x" />
+      <Axis dimension="y" grid />
+    </Plot>
+  );
+}
+```
+
+Vanilla / SSR uses the same options through `renderPlot`. Without lineage options it still returns an SVG string; with an object it returns `{ svg, lineage }`.
+
+```ts
+import { plotBuilder, renderPlot } from '@retikz/plot-vanilla';
+
+const spec = plotBuilder({
+  data: { reference: 'sales' },
+  scales: [
+    { type: 'band', name: 'x' },
+    { type: 'linear', name: 'y' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+})
+  .interval({ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'revenue' } } })
+  .build();
+
+const { svg, lineage } = renderPlot(
+  spec,
+  { sales },
+  {
+    width: 420,
+    height: 260,
+    lineage: {
+      scaleMappings: true,
+      rowValues: { maxRows: 3, fields: ['region', 'revenue'] },
+      hostMetadata: { query: true },
+    },
+    hostLineageMetadata: { queryId: 'q-sales', datasetVersion: 'sales-v3' },
+  },
+);
+```
+
+The default `lineage: {}` records only the necessary summary: data source / transform steps, mark identity, mark encoding, and the split between root transforms and mark-local transforms. `scaleMappings`, `layoutContext`, `locatorAnchors`, `rowValues`, and `hostMetadata` are independent switches. `rowValues` must provide `maxRows` and a non-empty `fields` whitelist so the runtime never copies whole rows by default. `scaleMappings` records declared scales from `spec.scales` and their mark-channel bindings; internally derived temporary scales are not part of this stable contract.
+
+Lineage lowering reuses the same transform definitions and runs its own recording pass so the existing `lowerPlots` return shape stays unchanged. Custom transforms therefore need to be deterministic and side-effect free, just as they do for ordinary lowering. Hosts that use random or stateful transforms should freeze the input data first or record additional audit data inside the custom definition.
+
+Use `createPlotLineageLocator` when an interaction needs to trace a hit datum back to its source. It returns the original locator anchor plus the datum `markIndex`, `transformedIndex`, and source identity summary for tooltips, AI explanation panels, or audit entry points.
+
 ## Custom Definitions
 
 Custom transforms should declare provenance behavior explicitly:

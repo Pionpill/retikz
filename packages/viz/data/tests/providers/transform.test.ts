@@ -67,7 +67,7 @@ describe('data transform runtime', () => {
       {
         kind: 'summarize',
         groupBy: ['month'],
-        metrics: [{ op: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
       },
     ]);
 
@@ -78,7 +78,7 @@ describe('data transform runtime', () => {
   it('uses custom statistics reducer registry from transform context', () => {
     const range = defineStatisticsReducer({
       schema: z.object({
-        op: z.literal('range'),
+        kind: z.literal('range'),
         field: z.string().min(1),
         as: z.string().min(1),
       }),
@@ -96,7 +96,7 @@ describe('data transform runtime', () => {
         {
           kind: 'summarize',
           groupBy: ['month'],
-          metrics: [{ op: 'range', field: 'revenue', as: 'revenueRange' }],
+          metrics: [{ kind: 'range', field: 'revenue', as: 'revenueRange' }],
         },
       ],
       undefined,
@@ -118,15 +118,15 @@ describe('data transform runtime', () => {
     ];
 
     expect(
-      applyTransforms(rows, [{ kind: 'select', selector: { op: 'top', by: 'score', n: 2 } }]).map(row => row.id),
+      applyTransforms(rows, [{ kind: 'select', selector: { kind: 'top', by: 'score', n: 2 } }]).map(row => row.id),
     ).toEqual(['A', 'B']);
     expect(
-      applyTransforms(rows, [{ kind: 'select', selector: { op: 'top', by: 'score', n: 2, tie: 'last' } }]).map(
+      applyTransforms(rows, [{ kind: 'select', selector: { kind: 'top', by: 'score', n: 2, tie: 'last' } }]).map(
         row => row.id,
       ),
     ).toEqual(['A', 'C']);
     expect(
-      applyTransforms(rows, [{ kind: 'select', selector: { op: 'top', by: 'score', n: 2, tie: 'all' } }]).map(
+      applyTransforms(rows, [{ kind: 'select', selector: { kind: 'top', by: 'score', n: 2, tie: 'all' } }]).map(
         row => row.id,
       ),
     ).toEqual(['A', 'B', 'C']);
@@ -139,19 +139,19 @@ describe('data transform runtime', () => {
     ];
 
     expect(
-      applyTransforms(bottomRows, [{ kind: 'select', selector: { op: 'bottom', by: 'score', n: 2 } }]).map(
+      applyTransforms(bottomRows, [{ kind: 'select', selector: { kind: 'bottom', by: 'score', n: 2 } }]).map(
         row => row.id,
       ),
     ).toEqual(['A', 'B']);
     expect(
-      applyTransforms(bottomRows, [{ kind: 'select', selector: { op: 'bottom', by: 'score', n: 2, tie: 'last' } }]).map(
-        row => row.id,
-      ),
+      applyTransforms(bottomRows, [
+        { kind: 'select', selector: { kind: 'bottom', by: 'score', n: 2, tie: 'last' } },
+      ]).map(row => row.id),
     ).toEqual(['A', 'C']);
     expect(
-      applyTransforms(bottomRows, [{ kind: 'select', selector: { op: 'bottom', by: 'score', n: 2, tie: 'all' } }]).map(
-        row => row.id,
-      ),
+      applyTransforms(bottomRows, [
+        { kind: 'select', selector: { kind: 'bottom', by: 'score', n: 2, tie: 'all' } },
+      ]).map(row => row.id),
     ).toEqual(['A', 'B', 'C']);
   });
 });

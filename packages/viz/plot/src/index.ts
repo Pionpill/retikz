@@ -15,6 +15,27 @@ export type {
   DimensionRole,
 } from './contract';
 export type { PlotFacetLocatorOptions, PlotLocator, PlotLocatorOptions, ResolvedAnchor } from './contract';
+export type {
+  PlotDatumLineage,
+  PlotHostLineageMetadata,
+  PlotHostLineageMetadataOptions,
+  PlotLayoutLineage,
+  PlotLineageEncodingField,
+  PlotLineageLocator,
+  PlotLineageLowerResult,
+  PlotLineageOptions,
+  PlotLineageResolvedAnchor,
+  PlotLineageRun,
+  PlotLineageTransformScope,
+  PlotLocatorAnchorLineage,
+  PlotLocatorQueryLineage,
+  PlotMarkDataLineage,
+  PlotMarkLineage,
+  PlotRowValueOptions,
+  PlotScaleChannelLineage,
+  PlotScaleLineage,
+  PlotSeriesLineage,
+} from './contract';
 export {
   cellInterval,
   createCoordinateFrame,
@@ -24,6 +45,8 @@ export {
 } from './contract';
 export type { LowerPlotsOptions } from './pipeline/expand';
 export { lowerPlots } from './pipeline/expand';
+export type { PlotLineageLowerOptions } from './pipeline/lineage';
+export { createPlotLineageLocator, lowerPlotWithLineage } from './pipeline/lineage';
 export { createPlotLocator } from './pipeline/locator';
 export { resolveCoordinateRegistry } from './providers';
 export * from './schemas';

@@ -2,18 +2,18 @@
 import { z } from 'zod';
 
 import {
-  BUILTIN_REDUCER_OPERATION_KINDS,
-  BUILTIN_SELECTOR_OPS,
   DataSortOrder,
   DataTransform,
   FieldReducerOperationKind,
-  FirstLastSelectorOp,
-  MinMaxSelectorOp,
+  FirstLastSelectorOperationKind,
+  MinMaxSelectorOperationKind,
   ReducerOperationKind,
+  RESERVED_REDUCER_OPERATION_KINDS,
+  RESERVED_SELECTOR_OPERATION_KINDS,
   RESERVED_TRANSFORM_KINDS,
   RowSelectorTie,
-  SelectorOp,
-  TopBottomSelectorOp,
+  SelectorOperationKind,
+  TopBottomSelectorOperationKind,
 } from './constants';
 
 /** sort transform schema；稳定地按单个字段重排行，并保持相等键的原始顺序。 */
@@ -43,7 +43,7 @@ export const OrderBySchema = z
 /** count reducer operation schema；只输出组内行数，不读取字段。 */
 const CountReducerOperationSchema = z
   .object({
-    op: z.literal(ReducerOperationKind.Count).describe('Discriminator: count reducer'),
+    kind: z.literal(ReducerOperationKind.Count).describe('Discriminator: count reducer'),
     as: z.string().min(1).describe('Output field'),
   })
   .strict()
@@ -52,7 +52,7 @@ const CountReducerOperationSchema = z
 /** 字段统计 reducer operation schema；覆盖 sum / mean / median / min / max / extent。 */
 const FieldReducerOperationSchema = z
   .object({
-    op: z.enum(FieldReducerOperationKind).describe('Discriminator: numeric reducer'),
+    kind: z.enum(FieldReducerOperationKind).describe('Discriminator: numeric reducer'),
     field: z.string().min(1).describe('Numeric source field'),
     as: z.string().min(1).describe('Output field'),
   })
@@ -62,7 +62,7 @@ const FieldReducerOperationSchema = z
 /** quantile reducer operation schema；输出指定概率位置的单个分位点。 */
 const QuantileReducerOperationSchema = z
   .object({
-    op: z.literal(ReducerOperationKind.Quantile).describe('Discriminator: quantile reducer'),
+    kind: z.literal(ReducerOperationKind.Quantile).describe('Discriminator: quantile reducer'),
     field: z.string().min(1).describe('Numeric source field'),
     p: z.number().min(0).max(1).describe('Quantile probability'),
     as: z.string().min(1).describe('Output field'),
@@ -149,7 +149,7 @@ export const QuantileBandOutputsSchema = z
 /** quantile-band reducer operation schema；用于一次计算区间、分位点、spread 与 whisker 派生字段。 */
 export const QuantileBandReducerOperationSchema = z
   .object({
-    op: z.literal(ReducerOperationKind.QuantileBand).describe('Discriminator: quantile-band reducer'),
+    kind: z.literal(ReducerOperationKind.QuantileBand).describe('Discriminator: quantile-band reducer'),
     field: z.string().min(1).describe('Numeric source field'),
     lowerP: z.number().min(0).max(1).describe('Lower quantile probability'),
     upperP: z.number().min(0).max(1).describe('Upper quantile probability'),
@@ -163,18 +163,17 @@ export const QuantileBandReducerOperationSchema = z
   })
   .describe('Quantile-band reducer operation');
 
-/** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 op，具体契约由运行时 definition 提供。 */
+/** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供。 */
 const ExternalReducerOperationSchema = z
-  .object({
-    op: z
+  .looseObject({
+    kind: z
       .string()
       .min(1)
-      .refine(op => !BUILTIN_REDUCER_OPERATION_KINDS.has(op), {
-        message: 'external reducer op must not collide with a built-in reducer op',
+      .refine(operationKind => !RESERVED_REDUCER_OPERATION_KINDS.has(operationKind), {
+        message: 'external reducer kind must not collide with a built-in reducer kind',
       })
-      .describe('Discriminator: custom reducer op'),
+      .describe('Discriminator: custom reducer kind'),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -197,7 +196,7 @@ export const BuiltinReducerOperationSchema = z
   ])
   .describe('Built-in statistic reducer operation');
 
-/** 统计 reducer operation schema；包含内置 op 与外部注册 op passthrough。 */
+/** 统计 reducer operation schema；包含内置 kind 与外部注册 kind 开放配置对象。 */
 export const ReducerOperationSchema = z
   .union([BuiltinReducerOperationSchema, ExternalReducerOperationSchema])
   .describe('Built-in or custom reducer operation');
@@ -206,7 +205,7 @@ export const ReducerOperationSchema = z
 const reducerOutputFieldsOf = (
   operation: z.infer<typeof ReducerOperationSchema>,
 ): Array<{ field: string; path: Array<string | number> }> => {
-  if (operation.op === ReducerOperationKind.QuantileBand) {
+  if (operation.kind === ReducerOperationKind.QuantileBand) {
     const quantileBandOperation = QuantileBandReducerOperationSchema.parse(operation);
     const fields: Array<{ field: string; path: Array<string | number> }> = [
       { field: quantileBandOperation.outputs.lower, path: ['outputs', 'lower'] },
@@ -258,7 +257,7 @@ export const ReducerMetricsSchema = z
 /** min / max selector operation schema；按数值字段选极值行。 */
 const MinMaxSelectorOperationSchema = z
   .object({
-    op: z.enum(MinMaxSelectorOp).describe('Discriminator: min/max row selector'),
+    kind: z.enum(MinMaxSelectorOperationKind).describe('Discriminator: min/max row selector'),
     by: z.string().min(1).describe('Numeric ranking field'),
     tie: z.enum(RowSelectorTie).optional().describe('Tie-breaking strategy; default first'),
   })
@@ -268,7 +267,7 @@ const MinMaxSelectorOperationSchema = z
 /** first / last selector operation schema；按输入顺序或显式 orderBy 取首尾行。 */
 const FirstLastSelectorOperationSchema = z
   .object({
-    op: z.enum(FirstLastSelectorOp).describe('Discriminator: first/last row selector'),
+    kind: z.enum(FirstLastSelectorOperationKind).describe('Discriminator: first/last row selector'),
     orderBy: z
       .array(OrderBySchema)
       .min(1)
@@ -281,7 +280,7 @@ const FirstLastSelectorOperationSchema = z
 /** top / bottom selector operation schema；按数值字段排名并选择 N 行。 */
 const TopBottomSelectorOperationSchema = z
   .object({
-    op: z.enum(TopBottomSelectorOp).describe('Discriminator: top/bottom row selector'),
+    kind: z.enum(TopBottomSelectorOperationKind).describe('Discriminator: top/bottom row selector'),
     by: z.string().min(1).describe('Numeric ranking field'),
     n: z.number().int().positive().describe('Selected row count'),
     tie: z.enum(RowSelectorTie).optional().describe('Tie-breaking strategy; default first'),
@@ -292,7 +291,7 @@ const TopBottomSelectorOperationSchema = z
 /** nth selector operation schema；按显式 orderBy 选择零基下标行。 */
 const NthSelectorOperationSchema = z
   .object({
-    op: z.literal(SelectorOp.Nth).describe('Discriminator: nth row selector'),
+    kind: z.literal(SelectorOperationKind.Nth).describe('Discriminator: nth row selector'),
     orderBy: z.array(OrderBySchema).min(1).describe('Ordering before selection'),
     index: z.number().int().nonnegative().describe('Zero-based row index'),
   })
@@ -321,7 +320,7 @@ export const OutsideQuantileBandBoundarySpecSchema = z
 /** outside-quantile-band selector operation schema；选择分位区间或 spread fence 外的原始行。 */
 export const OutsideQuantileBandSelectorOperationSchema = z
   .object({
-    op: z.literal(SelectorOp.OutsideQuantileBand).describe('Discriminator: outside-band selector'),
+    kind: z.literal(SelectorOperationKind.OutsideQuantileBand).describe('Discriminator: outside-band selector'),
     field: z.string().min(1).describe('Numeric source field'),
     lowerP: z.number().min(0).max(1).describe('Lower quantile probability'),
     upperP: z.number().min(0).max(1).describe('Upper quantile probability'),
@@ -334,18 +333,17 @@ export const OutsideQuantileBandSelectorOperationSchema = z
   })
   .describe('Outside quantile-band row selector operation');
 
-/** 外部 row selector operation schema；只校验 JSON 形态和非内置 op，具体契约由运行时 definition 提供。 */
+/** 外部 row selector operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供。 */
 const ExternalSelectorOperationSchema = z
-  .object({
-    op: z
+  .looseObject({
+    kind: z
       .string()
       .min(1)
-      .refine(op => !BUILTIN_SELECTOR_OPS.has(op), {
-        message: 'external selector op must not collide with a built-in selector op',
+      .refine(operationKind => !RESERVED_SELECTOR_OPERATION_KINDS.has(operationKind), {
+        message: 'external selector kind must not collide with a built-in selector kind',
       })
-      .describe('Discriminator: custom selector op'),
+      .describe('Discriminator: custom selector kind'),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -369,7 +367,7 @@ export const BuiltinSelectorOperationSchema = z
   ])
   .describe('Built-in row selector operation');
 
-/** row selector operation schema；包含内置 op 与外部注册 op passthrough。 */
+/** row selector operation schema；包含内置 kind 与外部注册 kind 开放配置对象。 */
 export const SelectorOperationSchema = z
   .union([BuiltinSelectorOperationSchema, ExternalSelectorOperationSchema])
   .describe('Built-in or custom row selector operation');
@@ -435,7 +433,7 @@ export const BuiltinTransformSchema = z
 
 /** 外部 transform operation schema；只校验 JSON 形态和非保留 kind，具体契约由运行时 definition 提供。 */
 const ExternalTransformSchema = z
-  .object({
+  .looseObject({
     kind: z
       .string()
       .min(1)
@@ -444,7 +442,6 @@ const ExternalTransformSchema = z
       })
       .describe('Discriminator: custom transform kind'),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -457,7 +454,7 @@ const ExternalTransformSchema = z
   })
   .describe('Custom transform operation with JSON config');
 
-/** data transform operation schema；包含内置 kind 与外部注册 kind passthrough。 */
+/** data transform operation schema；包含内置 kind 与外部注册 kind 开放配置对象。 */
 export const TransformSchema = z
   .union([BuiltinTransformSchema, ExternalTransformSchema])
   .describe('Built-in or custom data transform operation');

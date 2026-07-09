@@ -139,7 +139,7 @@ export const Ternary2DSchema = z
 const RESERVED_CUSTOM_COORDINATE_TYPES = new Set<string>([...BUILTIN_COORDINATE_TYPES, 'custom']);
 
 export const CustomCoordinateSchema = z
-  .object({
+  .looseObject({
     type: z
       .string()
       .min(1)
@@ -150,7 +150,6 @@ export const CustomCoordinateSchema = z
         'Discriminator: custom coordinate operation type; must be a non-empty, non-built-in identifier registered through options.coordinates',
       ),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -172,5 +171,5 @@ export const CoordinateSchema = z
 export const CoordinateOperationSchema = z
   .union([CoordinateSchema, CustomCoordinateSchema])
   .describe(
-    'Coordinate operation union: built-in coordinate configs plus custom type passthrough operations validated by a runtime CoordinateDefinition',
+    'Coordinate operation union: built-in coordinate configs plus custom type open config operations validated by a runtime CoordinateDefinition',
   );

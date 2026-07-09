@@ -48,9 +48,9 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
   kind="summarize"
   groupBy={['region']}
   metrics={[
-    { op: 'sum', field: 'revenue', as: 'total' },
-    { op: 'median', field: 'revenue', as: 'median' },
-    { op: 'count', as: 'orders' },
+    { kind: 'sum', field: 'revenue', as: 'total' },
+    { kind: 'median', field: 'revenue', as: 'median' },
+    { kind: 'count', as: 'orders' },
   ]}
 />
 ```
@@ -68,7 +68,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 | `rankAs`   | `string?`        | —                | Optional one-based rank field on output rows |
 
 ```tsx
-<Transform kind="select" groupBy={['region']} selector={{ op: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
+<Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
 ```
 
 ## annotate
@@ -87,8 +87,8 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 <Transform
   kind="annotate"
   groupBy={['store']}
-  metrics={[{ op: 'mean', field: 'revenue', as: 'storeMean' }]}
-  selectors={[{ selector: { op: 'max', by: 'revenue' }, as: 'storeMax' }]}
+  metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}
+  selectors={[{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }]}
 />
 ```
 
@@ -106,6 +106,24 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 <ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
 
 The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
+
+## Lineage
+
+Use `applyTransformsWithLineage` instead of `applyTransforms` when a host needs to explain the data computation chain. It executes the same transform definitions and returns runtime-only lineage events; those events do not enter JSON IR and are not written back into data rows.
+
+```ts
+const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
+  lineage: {
+    fieldFlow: true,
+    reducerOperations: true,
+    rowSamples: { maxRows: 5, fields: ['region', 'revenue', 'total'] },
+  },
+});
+```
+
+The default `lineage: {}` records only the necessary summary: source-index summary, transform order, input / output row counts, and field sets. `rowSamples`, `calculationDetails`, reducer details, and selector details are independent opt-ins. Sample switches must provide `maxRows` and a non-empty `fields` whitelist so the runtime never copies whole rows by default.
+
+When `lineage.sink` is provided, events stream to the callback and are not retained in the returned `lineage.events` by default. Set `retainEvents: true` when a host needs both streaming and the returned event array.
 
 ## Custom Transforms
 

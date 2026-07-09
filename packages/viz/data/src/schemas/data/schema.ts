@@ -6,7 +6,7 @@ import { DataFieldType, FieldOrderMode } from './constants';
 export const FieldFormatSchema = z.string().min(1).describe('Field value-parsing format name; built-in or custom');
 
 /** 单个字段声明 schema；用于描述逻辑字段名、测量类型、格式和分类顺序。 */
-export const FieldDefSchema = z
+export const FieldDefinitionSchema = z
   .strictObject({
     name: z.string().min(1).describe('Field name or dotted path'),
     type: z.enum(DataFieldType).optional().describe('Field measurement type; omitted means infer from data'),
@@ -19,10 +19,10 @@ export const FieldDefSchema = z
   .describe('Field declaration for type, format, and category order');
 
 /** 数据模型 schema；IR 中可选携带，用于 strict 字段引用校验和 type-driven scale 派生。 */
-export const DataModelSchema = z.array(FieldDefSchema).describe('External data field declarations');
+export const DataModelSchema = z.array(FieldDefinitionSchema).describe('External data field declarations');
 
 /** 数据引用 schema；IR 只记录外部数据集名称，不存储实际行数据。 */
-export const DataRefSchema = z
+export const DataReferenceSchema = z
   .strictObject({
     reference: z.string().min(1).describe('External dataset name; data values stay outside the IR'),
     model: DataModelSchema.optional().describe('Optional field declarations'),

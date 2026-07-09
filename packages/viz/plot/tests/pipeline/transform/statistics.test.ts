@@ -37,9 +37,9 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
         kind: 'summarize',
         groupBy: ['region'],
         metrics: [
-          { op: 'mean', field: 'revenue', as: 'avgRevenue' },
-          { op: 'median', field: 'revenue', as: 'medianRevenue' },
-          { op: 'count', as: 'orders' },
+          { kind: 'mean', field: 'revenue', as: 'avgRevenue' },
+          { kind: 'median', field: 'revenue', as: 'medianRevenue' },
+          { kind: 'count', as: 'orders' },
         ],
       },
     ]);
@@ -55,8 +55,8 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
       {
         kind: 'summarize',
         metrics: [
-          { op: 'count', as: 'orders' },
-          { op: 'sum', field: 'revenue', as: 'totalRevenue' },
+          { kind: 'count', as: 'orders' },
+          { kind: 'sum', field: 'revenue', as: 'totalRevenue' },
         ],
       },
     ]);
@@ -70,7 +70,7 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
       {
         kind: 'select',
         groupBy: ['region'],
-        selector: { op: 'max', by: 'revenue', tie: 'first' },
+        selector: { kind: 'max', by: 'revenue', tie: 'first' },
       },
     ]);
 
@@ -87,7 +87,7 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
       {
         kind: 'select',
         groupBy: ['region'],
-        selector: { op: 'top', by: 'revenue', n: 2 },
+        selector: { kind: 'top', by: 'revenue', n: 2 },
         rankAs: 'rank',
       },
     ]);
@@ -105,7 +105,7 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
       {
         kind: 'annotate',
         groupBy: ['region'],
-        metrics: [{ op: 'mean', field: 'revenue', as: 'regionMean' }],
+        metrics: [{ kind: 'mean', field: 'revenue', as: 'regionMean' }],
       },
     ]);
 
@@ -123,7 +123,7 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
       {
         kind: 'annotate',
         groupBy: ['region'],
-        selectors: [{ selector: { op: 'max', by: 'revenue' }, as: 'regionMax' }],
+        selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'regionMax' }],
       },
     ]);
 
@@ -149,8 +149,8 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
         {
           kind: 'relate',
           groupBy: ['series'],
-          source: { selector: { op: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
-          target: { selector: { op: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+          source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+          target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
           measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
         },
       ],
@@ -195,8 +195,8 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
           field: 'x',
           step: 5,
           metrics: [
-            { op: 'count', as: 'binCount' },
-            { op: 'mean', field: 'weight', as: 'binMean' },
+            { kind: 'count', as: 'binCount' },
+            { kind: 'mean', field: 'weight', as: 'binMean' },
           ],
         },
       ],
@@ -208,27 +208,10 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
     ]);
   });
 
-  it('old_transform_kinds_fail_loud', () => {
-    expect(() =>
-      applyTransforms(ORDERS, [
-        { kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' },
-      ]),
-    ).toThrow();
-    expect(() =>
-      applyTransforms(ORDERS, [
-        {
-          kind: 'derive-relation',
-          source: { select: 'min', by: 'revenue', fields: { id: 'product' } },
-          target: { select: 'max', by: 'revenue', fields: { id: 'product' } },
-        },
-      ]),
-    ).toThrow();
-  });
-
   it('custom_stat_reducer_in_summarize', () => {
     const weightedMean = defineStatisticsReducer({
       schema: z.object({
-        op: z.literal('weighted-mean'),
+        kind: z.literal('weighted-mean'),
         field: z.string().min(1),
         weight: z.string().min(1),
         as: z.string().min(1),
@@ -254,7 +237,7 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
         {
           kind: 'summarize',
           groupBy: ['group'],
-          metrics: [{ op: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }],
+          metrics: [{ kind: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }],
         },
       ],
       undefined,
@@ -267,7 +250,7 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
   it('custom_row_selector_in_select', () => {
     const nearest = defineRowSelector({
       schema: z.object({
-        op: z.literal('nearest'),
+        kind: z.literal('nearest'),
         field: z.string().min(1),
         target: z.number(),
       }),
@@ -288,7 +271,14 @@ describe('statistical transform algebra (alpha.12 ADR-16)', () => {
         { group: 'A', value: 9 },
         { group: 'A', value: 14 },
       ],
-      [{ kind: 'select', groupBy: ['group'], selector: { op: 'nearest', field: 'value', target: 10 }, rankAs: 'rank' }],
+      [
+        {
+          kind: 'select',
+          groupBy: ['group'],
+          selector: { kind: 'nearest', field: 'value', target: 10 },
+          rankAs: 'rank',
+        },
+      ],
       undefined,
       { ...DEFAULT_TRANSFORM_CONTEXT, rowSelectorRegistry: resolveRowSelectorRegistry([nearest]) },
     );

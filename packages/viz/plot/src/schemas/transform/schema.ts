@@ -390,7 +390,7 @@ export const PlotBuiltinTransformSchema = z
   .describe('Built-in plot transform operation applied through the shared data pipeline');
 
 const ExternalTransformSchema = z
-  .object({
+  .looseObject({
     kind: z
       .string()
       .min(1)
@@ -401,7 +401,6 @@ const ExternalTransformSchema = z
         'Discriminator: externally registered transform operation kind; must be a non-empty, non-reserved identifier registered through options.transformDefinitions',
       ),
   })
-  .passthrough()
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -419,7 +418,7 @@ const ExternalTransformSchema = z
 export const TransformSchema = z
   .union([DataBuiltinTransformSchema, PlotBuiltinTransformSchema, ExternalTransformSchema])
   .describe(
-    'Plot transform operation: shared data transforms, plot-only built-ins, plus externally registered kind passthrough operations validated by a runtime TransformDefinition',
+    'Plot transform operation: shared data transforms, plot-only built-ins, plus externally registered open config operations validated by a runtime TransformDefinition',
   );
 
 export const TransformOperationSchema = TransformSchema;
