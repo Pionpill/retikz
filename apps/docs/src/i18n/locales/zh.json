@@ -152,8 +152,8 @@
     "compRelationMark": "关系",
     "compAxis": "坐标轴",
     "compLegend": "图例",
-    "examples": "图表",
-    "exampleLineScatter": "折线与散点",
+    "examples": "示例",
+    "exampleIteration": "迭代分析",
     "reference": "参考",
     "refPlotIr": "Plot IR",
     "refLowering": "下沉"

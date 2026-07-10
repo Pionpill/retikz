@@ -386,6 +386,89 @@ describe('facet grid data routing lowering', () => {
     expect(translateOf(firstPanel as IRScope).x).toBe(66);
   });
 
+  it('facet_header_label_style_controls_row_rotation', () => {
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        arrangements: [
+          facetArrangement({
+            id: 'channel',
+            row: { field: 'channel', order: ['online', 'store'] },
+            header: {
+              row: {
+                rotate: 0,
+                maxTextWidth: 84,
+                font: { size: 11 },
+                textColor: '#334155',
+              },
+            },
+          }),
+        ],
+      },
+    };
+
+    const parsed = parsePlotSpec(spec);
+    const outer = expandOf(parsed);
+    const rowLabelNodes = facetLabelsOf(outer)
+      .filter(label => label.meta?.dimension === 'row')
+      .flatMap(allNodes);
+
+    expect(rowLabelNodes.map(node => node.text)).toEqual(['online', 'store']);
+    expect(rowLabelNodes.map(node => node.rotate)).toEqual([0, 0]);
+    expect(rowLabelNodes.map(node => node.maxTextWidth)).toEqual([84, 84]);
+    expect(rowLabelNodes.map(node => node.textColor)).toEqual(['#334155', '#334155']);
+  });
+
+  it('facet_dimension_labels_override_header_text_blocks', () => {
+    const spec = {
+      ...baseFacetSpec,
+      composition: {
+        ...baseFacetSpec.composition,
+        arrangements: [
+          facetArrangement({
+            id: 'channel',
+            row: {
+              field: 'channel',
+              order: ['online', 'store'],
+              labels: [
+                {
+                  value: 'online',
+                  label: [
+                    { text: 'online', fill: '#0ea5e9', font: { size: 13, weight: 700 } },
+                    { text: '24 commits', fill: '#64748b', font: { size: 9 } },
+                  ],
+                },
+              ],
+            },
+            header: {
+              row: {
+                rotate: 0,
+                font: { size: 10 },
+                textColor: '#334155',
+              },
+            },
+          }),
+        ],
+      },
+    };
+
+    const parsed = parsePlotSpec(spec);
+    const outer = expandOf(parsed);
+    const rowLabelNodes = facetLabelsOf(outer)
+      .filter(label => label.meta?.dimension === 'row')
+      .flatMap(allNodes);
+
+    expect(rowLabelNodes.map(node => node.text)).toEqual([
+      [
+        { text: 'online', fill: '#0ea5e9', font: { size: 13, weight: 700 } },
+        { text: '24 commits', fill: '#64748b', font: { size: 9 } },
+      ],
+      'store',
+    ]);
+    expect(rowLabelNodes.map(node => node.textColor)).toEqual(['#334155', '#334155']);
+  });
+
   it('row_column_facet_treats_width_height_as_total_chart_size', () => {
     const rows = [
       { region: 'north', channel: 'online', month: 1, revenue: 58 },

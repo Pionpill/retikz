@@ -1681,12 +1681,17 @@ const buildColorScale = (
 };
 
 type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'point'> }>;
-type PositionScaleOptions = Pick<ContinuousScaleProps, 'domain' | 'domainPadding' | 'singleValueSpan'>;
+type PositionScaleOptions = Pick<
+  ContinuousScaleProps,
+  'base' | 'constant' | 'domain' | 'domainPadding' | 'singleValueSpan'
+>;
 
 const isContinuousScaleProps = (options: ScaleProps | undefined): options is ContinuousScaleProps =>
   options !== undefined && options.type !== 'point';
 
 const continuousPositionScaleOptions = (options: PositionScaleOptions | undefined): PositionScaleOptions => ({
+  ...(options?.base !== undefined ? { base: options.base } : {}),
+  ...(options?.constant !== undefined ? { constant: options.constant } : {}),
   ...(options?.domain !== undefined ? { domain: options.domain } : {}),
   ...(options?.domainPadding !== undefined ? { domainPadding: options.domainPadding } : {}),
   ...(options?.singleValueSpan !== undefined ? { singleValueSpan: options.singleValueSpan } : {}),

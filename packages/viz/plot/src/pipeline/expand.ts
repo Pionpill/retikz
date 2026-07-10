@@ -199,6 +199,7 @@ type SharedScaffold = Extract<CoordinateArrangement, { kind: 'tracks' }>;
 type ScaffoldTrack = SharedScaffold['tracks'][number];
 type CompositionLayout = NonNullable<CompositionSpec['spacing']>;
 type CompositionResolve = NonNullable<CompositionSpec['resolve']>;
+type FacetHeaderLabelStyle = Exclude<NonNullable<NonNullable<FacetGrid['header']>['row']>, boolean>;
 type CompositionAxisPolicyValue = 'perScope' | 'outerShared' | 'none';
 
 const relationTargetRoleValues = (
@@ -434,6 +435,25 @@ type FacetTuple = Array<FacetScalar>;
 type FacetPanelValue = FacetScalar | FacetTuple | undefined;
 type FacetLabelDimension = 'row' | 'column';
 
+const isFacetHeaderVisible = (facet: FacetGrid, dimension: FacetLabelDimension): boolean => {
+  const header = facet.header?.[dimension];
+  return header !== undefined && header !== false;
+};
+
+const facetHeaderLabelStyleOf = (
+  facet: FacetGrid,
+  dimension: FacetLabelDimension,
+): FacetHeaderLabelStyle | undefined => {
+  const header = facet.header?.[dimension];
+  return header && typeof header === 'object' ? header : undefined;
+};
+
+const facetHeaderLabelRotateOf = (facet: FacetGrid, dimension: FacetLabelDimension): number | undefined => {
+  const style = facetHeaderLabelStyleOf(facet, dimension);
+  if (style?.rotate !== undefined) return style.rotate;
+  return dimension === 'row' ? -90 : undefined;
+};
+
 type FacetPanel = {
   id: string;
   facet: FacetGrid;
@@ -608,7 +628,25 @@ const buildFacetLabelGroups = (
   }));
 };
 
-const facetLabelTextOf = (value: FacetScalar): string => String(value);
+const facetDimensionItemOf = (
+  facet: FacetGrid,
+  dimension: FacetLabelDimension,
+  level: number,
+): FacetDimensionItem | undefined => {
+  const dimensions = facetDimensionsOf(dimension === 'column' ? facet.column : facet.row);
+  return dimensions[level];
+};
+
+const facetLabelTextOf = (
+  facet: FacetGrid,
+  dimension: FacetLabelDimension,
+  level: number,
+  value: FacetScalar,
+): IRNode['text'] => {
+  const item = facetDimensionItemOf(facet, dimension, level);
+  const label = item?.labels?.find(candidate => JSON.stringify(candidate.value) === JSON.stringify(value));
+  return label?.label ?? String(value);
+};
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验。 */
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
@@ -2046,14 +2084,19 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
     const facetLayout = arrangementLayoutOf(facets[0]);
     const panelGap = facetLayout?.panelGap ?? 0;
-    const facetLabelsEnabled = facets.some(facet => facet.header?.row === true || facet.header?.column === true);
+    const facetLabelsEnabled = facets.some(
+      facet => isFacetHeaderVisible(facet, 'row') || isFacetHeaderVisible(facet, 'column'),
+    );
     const rowFacetLevelCount = facetLabelsEnabled
-      ? Math.max(0, ...facets.map(facet => (facet.header?.row === true ? facetDimensionsOf(facet.row).length : 0)))
+      ? Math.max(
+          0,
+          ...facets.map(facet => (isFacetHeaderVisible(facet, 'row') ? facetDimensionsOf(facet.row).length : 0)),
+        )
       : 0;
     const columnFacetLevelCount = facetLabelsEnabled
       ? Math.max(
           0,
-          ...facets.map(facet => (facet.header?.column === true ? facetDimensionsOf(facet.column).length : 0)),
+          ...facets.map(facet => (isFacetHeaderVisible(facet, 'column') ? facetDimensionsOf(facet.column).length : 0)),
         )
       : 0;
     const facetLabelBandSize =
@@ -2084,8 +2127,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       span: number,
       value: FacetScalar,
       rect: Rect,
-      rotate: number | undefined,
     ): IRScope => {
+      const style = facetHeaderLabelStyleOf(facet, dimension);
+      const rotate = facetHeaderLabelRotateOf(facet, dimension);
+      const maxTextWidth = style?.maxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
@@ -2105,9 +2150,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
           {
             type: 'node',
             position,
-            text: facetLabelTextOf(value),
-            rotate,
-            maxTextWidth: Math.max(1, (rotate === undefined ? rect.width : rect.height) - 8),
+            text: facetLabelTextOf(facet, dimension, level, value),
+            ...style,
+            ...(rotate !== undefined ? { rotate } : {}),
+            maxTextWidth,
           },
         ],
       };
@@ -2127,9 +2173,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
                 width: group.span * panelWidth + Math.max(0, group.span - 1) * panelGap,
                 height: facetLabelBandSize,
               };
-              labels.push(
-                makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect, undefined),
-              );
+              labels.push(makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect));
             }
           }
           for (let level = rowLevels - 1; level >= 0; level -= 1) {
@@ -2141,9 +2185,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
                 width: facetLabelBandSize,
                 height: group.span * panelHeight + Math.max(0, group.span - 1) * panelGap,
               };
-              labels.push(
-                makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect, -90),
-              );
+              labels.push(makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect));
             }
           }
           return labels;

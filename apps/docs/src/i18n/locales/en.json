@@ -152,8 +152,8 @@
     "compRelationMark": "RelationMark",
     "compAxis": "Axis",
     "compLegend": "Legend",
-    "examples": "Charts",
-    "exampleLineScatter": "Line & Scatter",
+    "examples": "Examples",
+    "exampleIteration": "Iteration Analysis",
     "reference": "Reference",
     "refPlotIr": "Plot IR",
     "refLowering": "Lowering"

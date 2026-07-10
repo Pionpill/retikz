@@ -9,11 +9,6 @@ export const vizSection: Array<Section> = [
     ],
   },
   {
-    id: 'examples',
-    label: 'viz.examples',
-    pages: [{ id: 'line-scatter', label: 'viz.exampleLineScatter' }],
-  },
-  {
     id: 'components',
     label: 'viz.components',
     pages: [{ id: 'plot', label: 'viz.compPlot' }],
@@ -99,6 +94,11 @@ export const vizSection: Array<Section> = [
         ],
       },
     ],
+  },
+  {
+    id: 'examples',
+    label: 'viz.examples',
+    pages: [{ id: 'iteration', label: 'viz.exampleIteration' }],
   },
   {
     id: 'reference',
