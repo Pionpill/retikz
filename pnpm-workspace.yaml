@@ -23,8 +23,8 @@ catalog:
   '@types/react': ~18.2
   '@types/react-dom': ~18.2
   '@types/react-syntax-highlighter': ^15.5.13
-  '@vitest/coverage-v8': ^4.1.5
-  '@vitejs/plugin-react': ^6.0.1
+  '@vitest/coverage-v8': ^4.1.10
+  '@vitejs/plugin-react': ^6.0.3
   ai: ^6.0.204
   class-variance-authority: 0.7.1
   clsx: ^2.1.1
@@ -68,6 +68,6 @@ catalog:
   typescript-eslint: ^8.59.0
   vite: ^8.0.10
   vite-plugin-dts: ^4.5.4
-  vitest: ^4.1.5
+  vitest: ^4.1.10
   zod: ^4.4.3
   zustand: ^5.0.12

@@ -111,14 +111,23 @@ pnpm --filter @retikz/core exec vitest run <test-file>
 pnpm --filter @retikz/react exec vitest run <test-file>
 ```
 
-若测试稳定，再跑对应包；不要把局部 cross-test 扩大成全仓 lint / test / recursive tsc，除非用户明确要求：
+若本轮范围明确且改动较小，测试稳定后优先按包运行 `test:changed`，并继续做类型检查：
 
 ```bash
-pnpm --filter @retikz/core exec vitest run
-pnpm --filter @retikz/react exec vitest run
+pnpm --filter @retikz/core test:changed
+pnpm --filter @retikz/react test:changed
 pnpm --filter @retikz/core exec tsc --noEmit
 pnpm --filter @retikz/react exec tsc --noEmit
 ```
+
+仅在大范围重构或功能大改时运行受影响模块的全量测试：
+
+```bash
+pnpm --filter @retikz/core test:run
+pnpm --filter @retikz/react test:run
+```
+
+不要把局部 cross-test 扩大成全仓 lint / test / recursive tsc，除非用户明确要求。
 
 如果写了代码或测试文件，按 `AGENTS.md` 要求跑对应包 ESLint 自动修复：
 

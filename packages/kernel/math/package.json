@@ -59,7 +59,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests"
   },
   "devDependencies": {
     "@types/node": "catalog:",

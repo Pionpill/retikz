@@ -57,6 +57,10 @@ export default defineConfig({
   // `// @vitest-environment jsdom` 局部切到 DOM。
   test: {
     environment: 'node',
+    experimental: {
+      fsModuleCache: true,
+    },
     include: ['tests/**/*.test.{ts,tsx}'],
+    pool: 'threads',
   },
 });
