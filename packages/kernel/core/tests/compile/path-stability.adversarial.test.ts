@@ -6,7 +6,7 @@ import type { Scene } from '../../src/contract';
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
 
-/** 递归收集 Scene 里所有数值坐标（commands / transforms / layout），判 finite */
+/** 递归收集 Scene 里的数值坐标（commands / transforms / layout），用于检查是否有限。 */
 const collectNumbers = (value: unknown, out: Array<number> = []): Array<number> => {
   if (typeof value === 'number') {
     out.push(value);

@@ -5,7 +5,7 @@ import type { IRScene } from '../../../src/schemas';
 import { compileToScene } from '../../../src/compile/compile';
 import { findPathPrim } from './helpers';
 
-describe('alpha.3 P2：lineCap / lineJoin', () => {
+describe('lineCap / lineJoin', () => {
   it('lineCap 透传到 PathPrim.strokeLinecap', () => {
     const ir: IRScene = {
       version: 1,

@@ -6,7 +6,7 @@ import type { HydrationHandlers } from '../../src/hydration';
 import { createHydrationController, locateSvg } from '../../src/hydration';
 
 /**
- * ADR-01 水合：renderer 无关控制器（根级委托 + enter/leave 合成 + dispose）
+ * 水合 renderer 无关控制器：根级委托 + enter/leave 合成 + dispose。
  * @description SVG 路径用 locateSvg（closest data-retikz-id）做定位。构造带挂点的真实 DOM，dispatch DOM 事件，
  *   断言对应 handler 触发 / enter-leave 合成 / rightClick(contextmenu) 映射 / dispose 解绑。
  *   stub 阶段 createHydrationController 空实现，断言此刻预期 fail。

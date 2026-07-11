@@ -10,8 +10,8 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((p): p is PathPrim => p.type === 'path');
 
 /**
- * 对 arrow + arc 末端这类边界场景的回归测试。
- * 历史背景：alpha.4 的实现用字符串 PathOp / shrink 逻辑能 cover arc 末端；alpha.5 改 commands 后 setEndpoint 仅识别 move/line/quad/cubic，arc 末端 shrink 不再生效。我们仍保证不抛错、不输出畸形 d；shrink 不生效的场景仅 hollow shape + arc 末端这一极小用例，可后续 ADR 兜底
+ * 验证 arrow + arc 末端的最小稳定性：编译不抛错，且保留有限值的结构化 arc 命令。
+ * @remarks 当前不保证 arc 端点收缩与 marker 切线朝向；两项留待独立正确性修复。
  */
 describe('arrow + arc 末端：编译不挂', () => {
   it('arc 单段 + arrow="->" 不抛错（端点 shrink 走 fallback）', () => {

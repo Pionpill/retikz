@@ -16,7 +16,7 @@ import type { VanillaRuntimeMeta } from '../spec';
 import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, VanillaView } from './types';
 
 import { DEFAULT_ID_PREFIX } from './constants';
-import { applyAttrs, svgNodeToDom } from './svg-node-to-dom';
+import { applyAttrs, svgNodeToDom } from './svg-dom';
 import { EMPTY_RUNTIME_META, toSceneResult } from './to-scene';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';

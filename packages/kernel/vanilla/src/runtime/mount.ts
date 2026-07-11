@@ -18,6 +18,7 @@ type MountFn = {
   (container: Element, input: RenderInput, options?: MountUnifiedOptions): VanillaView;
 };
 
+/** 按 renderer 把输入挂载为 SVG 或 Canvas view；缺省使用 SVG。 */
 export const mount: MountFn = ((
   container: Element,
   input: RenderInput,

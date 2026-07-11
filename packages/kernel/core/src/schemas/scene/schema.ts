@@ -7,7 +7,8 @@ import { CompositeNodeSchema } from '../composite';
 import { CoordinateSchema } from '../coordinate';
 import { NodeSchema } from '../node';
 import { PathSchema } from '../path';
-import { __registerChildSchema, ScopeSchema } from '../scope';
+import { registerRecursiveChildSchema } from '../recursive';
+import { ScopeSchema } from '../scope';
 
 export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
   z.union([
@@ -20,11 +21,10 @@ export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
   ]),
 );
 
-// 把 ChildSchema 注册回 scope.ts 让 ScopeSchema.children 能延迟解析此 schema（解决双向依赖）
-__registerChildSchema(ChildSchema);
+registerRecursiveChildSchema(ChildSchema);
 
 export const ViewBoxSchema = z
-  .object({
+  .strictObject({
     x: z.number().describe('ViewBox left-top x'),
     y: z.number().describe('ViewBox left-top y'),
     width: z.number().positive().describe('ViewBox width in user units.'),
@@ -33,7 +33,7 @@ export const ViewBoxSchema = z
   .describe('Explicit viewBox overriding auto-computed layout bounds.');
 
 export const SceneSchema = z
-  .object({
+  .strictObject({
     type: z.literal('scene').describe('Discriminator marking this object as the root scene'),
     version: z.literal(1).describe('IR major version number; bump only on breaking schema changes'),
     children: z

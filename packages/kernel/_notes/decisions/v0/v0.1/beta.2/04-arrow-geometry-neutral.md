@@ -42,6 +42,6 @@ core `computeShrink` 由 `(tipX - lineContactX) * effectiveLength / baseSize` �
 
 ---
 
-> **实现指针**：level `green`（内部几何组织 + 注释，无公开 API / schema 变更，箭头 shrink 数值保持等价）。真源以代码为准——箭头几何注册表与契约类型 `core/src/arrows/{index,types}.ts`、`computeShrink`（`core/src/compile/path/shrink.ts`）、React/SVG 映射 `react/src/render/arrowMarkers.tsx`。测试在 `core/tests/compile/`（`path-arrow-detail.test.ts` / `path-arrow-detail-adversarial.test.ts`）与 `react/tests/render/`（`renderPrim-arrow-detail.test.tsx`）。完整原文（实现契约 / 测试象限 9 case）见本文件 git 历史。
+> **实现指针**：level `green`（内部几何组织 + 注释，无公开 API / schema 变更，箭头 shrink 数值保持等价）。真源以代码为准——箭头几何注册表与契约类型 `core/src/arrows/{index,types}.ts`、`computeShrink`（`core/src/compile/path/shrink.ts`）、React/SVG 映射 `react/src/render/arrowMarkers.tsx`。测试在 `core/tests/compile/`（`path-arrow-detail.test.ts` / `arrow-detail-adversarial.test.ts`）与 `react/tests/render/svg/`（`arrow-detail.test.tsx`）。完整原文（实现契约 / 测试象限 9 case）见本文件 git 历史。
 
 > 🔖 封板压缩 commit `f3282d91`；压缩前完整施工蓝图 = `git show f3282d91^:_notes/decisions/core/v0/v0.1/beta.2/04-arrow-geometry-neutral.md`。

@@ -22,4 +22,10 @@ describe('core public compile exports', () => {
     expect(lowerTex).toBeUndefined();
     expect(measureText).toBeUndefined();
   });
+
+  it('不暴露递归 schema 注册内部能力', () => {
+    expect('__registerChildSchema' in core).toBe(false);
+    expect('registerRecursiveChildSchema' in core).toBe(false);
+    expect('getRecursiveChildSchema' in core).toBe(false);
+  });
 });

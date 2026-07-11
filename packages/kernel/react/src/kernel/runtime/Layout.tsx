@@ -34,7 +34,10 @@ import { cloneElement, useCallback, useEffect, useId, useMemo, useRef } from 're
 
 import type { EmbeddableContributionRecord, EmbeddableTier2Adapter, ScopeStyleProps } from '../protocol';
 
-import { browserMeasurer, CanvasHost, svgToReact } from '../../render';
+import { usePrefersReducedMotion } from '../../render/animation';
+import { CanvasHost } from '../../render/canvas';
+import { svgToReact } from '../../render/svg';
+import { browserMeasurer } from '../../render/text';
 import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from '../adapter';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
@@ -340,7 +343,8 @@ export const Layout: FC<LayoutProps> = props => {
     embeddables,
     handlers,
   } = props;
-  const animate = animateProp !== false;
+  const reducedMotion = usePrefersReducedMotion();
+  const animate = animateProp !== false && !reducedMotion;
   const {
     color,
     stroke,

@@ -7,7 +7,7 @@ import type { SvgNode } from '../../../src/svg/types';
 import { buildSvgFragment, renderToSvgString } from '../../../src/svg';
 
 /**
- * ADR-02 SVG 动画播放：load→CSS @keyframes（SSR 零 JS）+ 交互→WAAPI 描述；property→SVG 映射；camera→group transform；
+ * SVG 动画播放：load→CSS @keyframes（SSR 零 JS）+ 交互→WAAPI 描述；property→SVG 映射；camera→group transform；
  *   {animate:false} 降级；pathDraw/自定义 property/自定义 easing 降级 warn；oklch 预采样；确定性。
  */
 const layout = { x: 0, y: 0, width: 100, height: 100 };
