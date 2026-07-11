@@ -12,21 +12,17 @@ import type {
   SelectorOperationKind,
   TopBottomSelectorOperationKind,
 } from './constants';
+import type { QuantileBandReducerOperationSchema, ReducerMetricsSchema, ReducerOperationSchema } from './reducer';
 import type {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
   BuiltinTransformSchema,
-  OrderBySchema,
-  OutsideQuantileBandSelectorOperationSchema,
-  QuantileBandReducerOperationSchema,
-  ReducerMetricsSchema,
-  ReducerOperationSchema,
-  SelectorOperationSchema,
   SelectTransformSchema,
   SortTransformSchema,
   SummarizeTransformSchema,
   TransformSchema,
 } from './schema';
+import type { OrderBySchema, OutsideQuantileBandSelectorOperationSchema, SelectorOperationSchema } from './selector';
 
 /** transform operation kind 取值。 */
 export type DataTransformValue = ValueOf<typeof DataTransform>;
