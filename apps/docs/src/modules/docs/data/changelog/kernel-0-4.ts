@@ -22,6 +22,15 @@ export const kernelV04: Release = {
       ],
       subVersions: [
         {
+          version: 'beta.2',
+          date: '2026-07-11',
+          summary: {
+            zh: '修正 `intersect.lineCircle` 的退化方向判断：短但有效的方向向量现在与其单位化写法得到相同交点，不再因向量缩放误返回空结果。',
+            en: 'Fixes degenerate-direction detection in `intersect.lineCircle`: short but valid direction vectors now produce the same intersections as their normalized form instead of incorrectly returning no hits.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.3',
           date: '2026-06-16',
           summary: {
@@ -81,6 +90,23 @@ export const kernelV04: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'beta.2',
+          date: '2026-07-11',
+          summary: {
+            zh: '收紧 Scene 输入边界：`SceneSchema` / `ViewBoxSchema` 现在拒绝未知字段，并从 `@retikz/core` 顶层入口移除误暴露的内部递归 schema 注册器。',
+            en: 'Tightens Scene input boundaries: `SceneSchema` / `ViewBoxSchema` now reject unknown fields, and the accidentally exposed recursive-schema registrar is removed from the `@retikz/core` root entry.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：Scene schema 闭合', en: 'BREAKING: closed Scene schemas' },
+              content: {
+                zh: '依赖 Zod 静默剥离 Scene 或 viewBox 未知字段的调用应改为传入合法字段；外部代码不应调用内部 `__registerChildSchema`，请直接删除相关调用。',
+                en: 'Callers that relied on Zod silently stripping unknown Scene or viewBox fields must pass only valid fields. External calls to the internal `__registerChildSchema` should be removed.',
+              },
+            },
+          ],
+        },
         {
           version: 'beta.1',
           date: '2026-07-07',

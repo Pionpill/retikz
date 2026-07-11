@@ -164,7 +164,7 @@ const ref = useRef<AnimationControls | null>(null);
 
 ### Static snapshot (`snapshot` / `snapshotAt`)
 
-Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`) to render **a single frame frozen at that time**: no playback, no emitted animation — the value of each **autoplay track** (`trigger: 'load'` / omitted) at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
+Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`) to render **a single frame frozen at that time**: no playback, no emitted animation — the value of each **autoplay track** (`trigger: 'load'` / omitted) at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
 
 <ComponentPreview name="snapshot" size="xs" />
 

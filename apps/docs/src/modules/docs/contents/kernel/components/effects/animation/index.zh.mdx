@@ -164,7 +164,7 @@ const ref = useRef<AnimationControls | null>(null);
 
 ### 静态截帧（`snapshot` / `snapshotAt`）
 
-给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把**自动播 track**（`trigger: 'load'` / 缺省）在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
+给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把**自动播 track**（`trigger: 'load'` / 缺省）在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
 
 <ComponentPreview name="snapshot" size="xs" />
 
