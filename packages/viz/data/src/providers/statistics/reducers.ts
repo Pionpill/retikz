@@ -1,10 +1,8 @@
-import { z } from 'zod';
-
 import type { AnyStatisticsReducerDefinition } from '../../contract';
 import type { ExternalRow } from '../../schemas';
 
 import { defineStatisticsReducer } from '../../contract';
-import { QuantileBandReducerOperationSchema, ReducerOperationKind } from '../../schemas';
+import { BuiltinReducerOperationSchemas } from '../../schemas';
 import { finiteFieldValuesOf } from '../transform';
 import {
   finiteExtentOf,
@@ -18,21 +16,14 @@ import {
 
 /** count reducer definition：统计组内行数，不读取源字段。 */
 const countReducerDefinition = defineStatisticsReducer({
-  schema: z.object({
-    kind: z.literal(ReducerOperationKind.Count),
-    as: z.string().min(1),
-  }),
+  schema: BuiltinReducerOperationSchemas.Count,
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => ({ [operation.as]: rows.length }),
 });
 
 /** sum reducer definition：读取一个数值字段并输出有限值之和。 */
 const sumReducerDefinition = defineStatisticsReducer({
-  schema: z.object({
-    kind: z.literal(ReducerOperationKind.Sum),
-    field: z.string().min(1),
-    as: z.string().min(1),
-  }),
+  schema: BuiltinReducerOperationSchemas.Sum,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => ({
@@ -42,11 +33,7 @@ const sumReducerDefinition = defineStatisticsReducer({
 
 /** mean reducer definition：读取一个数值字段并输出有限值平均数。 */
 const meanReducerDefinition = defineStatisticsReducer({
-  schema: z.object({
-    kind: z.literal(ReducerOperationKind.Mean),
-    field: z.string().min(1),
-    as: z.string().min(1),
-  }),
+  schema: BuiltinReducerOperationSchemas.Mean,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
@@ -57,11 +44,7 @@ const meanReducerDefinition = defineStatisticsReducer({
 
 /** median reducer definition：读取一个数值字段并输出有限值中位数。 */
 const medianReducerDefinition = defineStatisticsReducer({
-  schema: z.object({
-    kind: z.literal(ReducerOperationKind.Median),
-    field: z.string().min(1),
-    as: z.string().min(1),
-  }),
+  schema: BuiltinReducerOperationSchemas.Median,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => ({ [operation.as]: medianOf(finiteFieldValuesOf(rows, operation.field)) }),
@@ -69,11 +52,7 @@ const medianReducerDefinition = defineStatisticsReducer({
 
 /** min reducer definition：读取一个数值字段并输出有限值最小值。 */
 const minReducerDefinition = defineStatisticsReducer({
-  schema: z.object({
-    kind: z.literal(ReducerOperationKind.Min),
-    field: z.string().min(1),
-    as: z.string().min(1),
-  }),
+  schema: BuiltinReducerOperationSchemas.Min,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
@@ -84,11 +63,7 @@ const minReducerDefinition = defineStatisticsReducer({
 
 /** max reducer definition：读取一个数值字段并输出有限值最大值。 */
 const maxReducerDefinition = defineStatisticsReducer({
-  schema: z.object({
-    kind: z.literal(ReducerOperationKind.Max),
-    field: z.string().min(1),
-    as: z.string().min(1),
-  }),
+  schema: BuiltinReducerOperationSchemas.Max,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
@@ -99,11 +74,7 @@ const maxReducerDefinition = defineStatisticsReducer({
 
 /** extent reducer definition：读取一个数值字段并输出有限值 `[min, max]` 范围。 */
 const extentReducerDefinition = defineStatisticsReducer({
-  schema: z.object({
-    kind: z.literal(ReducerOperationKind.Extent),
-    field: z.string().min(1),
-    as: z.string().min(1),
-  }),
+  schema: BuiltinReducerOperationSchemas.Extent,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
@@ -114,12 +85,7 @@ const extentReducerDefinition = defineStatisticsReducer({
 
 /** quantile reducer definition：读取一个数值字段并输出单个分位点。 */
 const quantileReducerDefinition = defineStatisticsReducer({
-  schema: z.object({
-    kind: z.literal(ReducerOperationKind.Quantile),
-    field: z.string().min(1),
-    p: z.number().min(0).max(1),
-    as: z.string().min(1),
-  }),
+  schema: BuiltinReducerOperationSchemas.Quantile,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => ({
@@ -129,7 +95,7 @@ const quantileReducerDefinition = defineStatisticsReducer({
 
 /** quantile-band reducer definition：读取一个数值字段并输出参数化分位区间及可选 whisker 字段。 */
 const quantileBandReducerDefinition = defineStatisticsReducer({
-  schema: QuantileBandReducerOperationSchema,
+  schema: BuiltinReducerOperationSchemas.QuantileBand,
   inputFields: operation => [operation.field],
   outputFields: operation => {
     const outputs: Array<string> = [

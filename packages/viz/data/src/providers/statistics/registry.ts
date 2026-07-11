@@ -1,4 +1,6 @@
-﻿import type {
+﻿import { JsonObjectSchema } from '@retikz/core';
+
+import type {
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
   RowSelection,
@@ -7,6 +9,7 @@
 
 import { extractStatisticOperation } from '../../contract';
 import { type ExternalRow, type ReducerOperation, type SelectorOperation } from '../../schemas';
+import { ReducerOperationSchema, SelectorOperationSchema } from '../../schemas';
 import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 import { BUILTIN_ROW_SELECTORS } from './selectors';
 
@@ -41,13 +44,21 @@ export const resolveRowSelectorRegistry = (
   return registry;
 };
 
-/** 用 definition schema 收窄 reducer operation；调用 reduce 前必须先解析。 */
-const parseReducerOperation = (definition: AnyStatisticsReducerDefinition, operation: ReducerOperation): never =>
-  definition.schema.parse(operation) as never;
+/** 依次用公开契约与 definition schema 收窄 reducer operation，并保证解析结果仍可 JSON 序列化。 */
+const parseReducerOperation = (definition: AnyStatisticsReducerDefinition, operation: ReducerOperation): never => {
+  const publicOperation = ReducerOperationSchema.parse(operation);
+  const parsed = definition.schema.parse(publicOperation) as never;
+  JsonObjectSchema.parse(parsed);
+  return parsed;
+};
 
-/** 用 definition schema 收窄 selector operation；调用 select 前必须先解析。 */
-const parseSelectorOperation = (definition: AnyRowSelectorDefinition, operation: SelectorOperation): never =>
-  definition.schema.parse(operation) as never;
+/** 依次用公开契约与 definition schema 收窄 selector operation，并保证解析结果仍可 JSON 序列化。 */
+const parseSelectorOperation = (definition: AnyRowSelectorDefinition, operation: SelectorOperation): never => {
+  const publicOperation = SelectorOperationSchema.parse(operation);
+  const parsed = definition.schema.parse(publicOperation) as never;
+  JsonObjectSchema.parse(parsed);
+  return parsed;
+};
 
 /** 从注册表解析 reducer 定义；缺失时给出注入入口提示。 */
 const reducerDefinitionOf = (
