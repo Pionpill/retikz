@@ -242,6 +242,13 @@ export const kernelV04: Release = {
                 en: 'Import `buildPathD`, `buildTransform`, and `formatViewBox` from `@retikz/render/svg`. `CanvasHost`, defs wrappers, `renderPrim`, `svgToReact`, and the browser measurer are no longer public from `@retikz/react`; applications should keep using `<Layout renderer="svg" | "canvas">`, while custom renderers should use the public `@retikz/render` API.',
               },
             },
+            {
+              label: { zh: '减少动态效果后端对齐', en: 'Reduced-motion backend parity' },
+              content: {
+                zh: 'React SVG（默认 renderer）现在与 React Canvas、Vanilla SVG / Canvas 一样响应系统 `prefers-reduced-motion`，并在偏好变化时即时切换到完整静止态。',
+                en: 'React SVG, the default renderer, now respects `prefers-reduced-motion` like React Canvas and Vanilla SVG / Canvas, switching immediately to the complete resting state when the preference changes.',
+              },
+            },
           ],
         },
         {

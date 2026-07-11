@@ -18,7 +18,7 @@ import { Layout, Node } from '@retikz/react';
 
 <ComponentAlert
   title="Last frame = resting state, so it degrades"
-  description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, users who prefer reduced motion, or animate={false} simply render that resting state — you see the complete final figure, not the possibly-transparent starting point. Exception: the React + SVG (default renderer) path currently does not respond to prefers-reduced-motion and still plays under reduced motion; only vanilla and React Canvas degrade on it."
+  description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, users who prefer reduced motion, or animate={false} make React SVG / Canvas and Vanilla render that resting state — you see the complete final figure, not the possibly-transparent starting point."
 />
 
 ## All animations
@@ -160,7 +160,7 @@ const ref = useRef<AnimationControls | null>(null);
 
 `animationRef` / vanilla `view.animation` is the scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/kernel/packages/render/hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
 
-**When it doesn't play** (all three converge to the resting state): you pass `animate={false}`, the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. Degradation never throws and never drops the figure — it renders the complete resting figure and emits a diagnosable warning. Exception: `prefers-reduced-motion` degradation currently applies only on the vanilla and React Canvas paths; **the React + SVG (default renderer) path does not check `prefers-reduced-motion`**, so under reduced motion the default usage still plays. To degrade there, pass `animate={false}` explicitly or switch to Canvas.
+**When it doesn't play**: you pass `animate={false}`, the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. React SVG / Canvas and Vanilla all converge to the resting state; degradation never throws or drops the figure.
 
 ### Static snapshot (`snapshot` / `snapshotAt`)
 

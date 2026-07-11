@@ -34,6 +34,7 @@ import { cloneElement, useCallback, useEffect, useId, useMemo, useRef } from 're
 
 import type { EmbeddableContributionRecord, EmbeddableTier2Adapter, ScopeStyleProps } from '../protocol';
 
+import { usePrefersReducedMotion } from '../../render/animation';
 import { CanvasHost } from '../../render/canvas';
 import { svgToReact } from '../../render/svg';
 import { browserMeasurer } from '../../render/text';
@@ -342,7 +343,8 @@ export const Layout: FC<LayoutProps> = props => {
     embeddables,
     handlers,
   } = props;
-  const animate = animateProp !== false;
+  const reducedMotion = usePrefersReducedMotion();
+  const animate = animateProp !== false && !reducedMotion;
   const {
     color,
     stroke,
