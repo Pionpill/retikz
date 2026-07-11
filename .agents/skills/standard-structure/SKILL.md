@@ -50,6 +50,10 @@ shared/schemas <- parsers
 
 涉及算法选择、时间复杂度或空间复杂度时，用 `@remarks` 备注复杂度，不放进主 `@description`。
 
+## 文件命名
+
+- `packages/**` 下 `*.ts` / `*.js` / `*.tsx` 的 kebab-case 文件名通常组合 1–2 个语义词，确需时可用 3 个，禁止超过 3 个；`.test` / `.demo` / `.data` / 语言标记等工具后缀不计入词数。
+
 ## 共性文件
 
 | 文件           | 职责                                                        |

@@ -213,7 +213,7 @@ view.invalidate('chart');
 - `packages/kernel/vanilla/src/builder/**`（迁移为 legacy sugar 或删除）
 - `packages/kernel/vanilla/src/figure.ts`（迁移为 legacy sugar 或删除）
 - `packages/kernel/vanilla/src/to-scene.ts`
-- `packages/kernel/vanilla/src/render-to-svg-string.ts`
+- `packages/kernel/vanilla/src/runtime/render-svg.ts`
 - `packages/kernel/vanilla/src/mount-svg.ts`
 - `packages/kernel/vanilla/src/mount-canvas.ts`
 - `packages/kernel/vanilla/src/hydrate.ts`
