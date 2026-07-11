@@ -346,6 +346,15 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'beta.2',
+          date: '2026-07-11',
+          summary: {
+            zh: '`useLowerTex` 现在保留 MathJax 初始化原始错误、同次失败只报告一次，并在后续挂载时重试。',
+            en: '`useLowerTex` now preserves the original MathJax startup error, reports each shared failure once, and retries on a later mount.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.5',
           date: '2026-06-17',
           summary: {

@@ -29,7 +29,7 @@ export const Diagram = () => {
 };
 ```
 
-`useLowerTex()` starts MathJax asynchronously and returns `LowerTex | undefined`. While it is `undefined`, core treats formula-bearing text as missing a lowerer and emits its normal diagnostics instead of crashing.
+`useLowerTex()` starts MathJax asynchronously and returns `LowerTex | undefined`. While it is `undefined`, core treats formula-bearing text as missing a lowerer and emits its normal diagnostics instead of crashing. If MathJax startup fails, the hook reports the original error to `console.error` once for that shared attempt and clears the failed cache, so a later mount can retry.
 
 ## Vanilla / core injection
 
@@ -61,6 +61,7 @@ Parser helpers such as `parseMathJaxSvg`, `parsePathD`, and `parseTransform` are
 ## Failure semantics
 
 - Missing `mathjax-full` makes `createMathJaxEngine()` reject with an install hint.
+- `useLowerTex()` reports that startup error once per shared attempt and retries when a later mount requests the engine.
 - MathJax `<merror>` output lowers to `null`.
 - Engine conversion or SVG parsing failures lower to `null`; core then reports `TEX_INVALID`.
 - Unsupported or malformed SVG transforms are treated as parser failures instead of silently applying identity transforms.
