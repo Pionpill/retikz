@@ -1,5 +1,3 @@
-import type { ValueOf } from '@retikz/core';
-
 /**
  * 内置命名配色方案名。
  * @description 这些名字只声明内置 color scheme resolver 的注册键；schema 只校验非空字符串，具体 scheme 是否存在由 lowering 的 color scheme resolver 解析。
@@ -48,9 +46,6 @@ export const PlotColorScheme = {
   /** diverging 光谱（红—橙—黄—绿—蓝） */
   Spectral: 'spectral',
 } as const;
-
-/** 内置命名配色方案名。 */
-export type PlotColorSchemeValue = ValueOf<typeof PlotColorScheme>;
 
 /** 内置配色方案名集合；用于内置 resolver 与自定义 resolver 分流。 */
 export const BUILTIN_COLOR_SCHEMES: ReadonlySet<string> = new Set<string>(Object.values(PlotColorScheme));

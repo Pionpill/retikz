@@ -37,7 +37,7 @@ description: 比例尺（scale）把数据值映射成视觉量。按产出分�
 </Plot>
 ```
 
-polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。`Axis.scale` 支持 `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial` 这类位置 scale 快捷类型；要调对数底、幂指数、symlog 常数等更细参数时，写完整 spec 的 `scales`。
+polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。`Axis.scale` 支持 `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial` 这类位置 scale 快捷类型。`log` 默认以 10 为底，需要自然对数时写 `<Scale dimension="y" type="log" base={Math.E} />`；`symlog` 的线性区宽度可用 `constant` 调整。幂指数等其它细参数仍写在完整 spec 的 `scales` 中。
 
 连续位置 scale 推断 domain 时会默认在上下界各留 5% 弹性，避免只有一个点或极值点贴到笛卡尔坐标系边角。需要精确贴边时写 `domainPadding={0}`；只想放大一侧时写对象：
 

@@ -1,5 +1,5 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
-import type { ScalarValue } from '@retikz/data';
+import type { IRDataScalarValue } from '@retikz/data';
 import type { Position } from '@retikz/math';
 
 import { arcEndPoint } from '@retikz/math';
@@ -122,7 +122,7 @@ type AxisTickMarkToken = Exclude<NonNullable<AxisTicksToken['mark']>, false>;
 type AxisShapeTickMarkToken = Exclude<AxisTickMarkToken, { kind: 'line' }>;
 type AxisCrossingToken = Exclude<NonNullable<AxisGuide['crossing']>, false>;
 type AxisTickEndpointPolicyToken = Exclude<NonNullable<AxisTicksToken['endpoint']>, false>;
-type AxisGuideValue = ScalarValue;
+type AxisGuideValue = IRDataScalarValue;
 type AxisTitleToken = Exclude<NonNullable<AxisGuide['title']>, string>;
 type AxisTitlePlacementValue = NonNullable<AxisTitleToken['placement']>;
 type AxisTitleOrientationValue = NonNullable<AxisTitleToken['orientation']>;
@@ -672,7 +672,7 @@ const axisMinorGridTokenOf = (grid: AxisGridToken | undefined): AxisMinorGridTok
 const axisGridStyleOf = (grid: AxisGridToken | AxisMinorGridToken | undefined): GuidePathStyle | undefined =>
   grid === undefined ? undefined : lineStyleProps(grid);
 
-const gridCoordinateOf = (scale: PositionScale, value: ScalarValue, bandPosition: number | undefined): number => {
+const gridCoordinateOf = (scale: PositionScale, value: IRDataScalarValue, bandPosition: number | undefined): number => {
   const coordinate = scale.coordinate(value);
   if (!Number.isFinite(coordinate) || !Number.isFinite(scale.bandwidth) || scale.bandwidth <= 0) return coordinate;
   return coordinate + ((bandPosition ?? 0.5) - 0.5) * scale.bandwidth;
@@ -682,7 +682,7 @@ const resolveAxisGridTicks = (
   scale: PositionScale,
   fallbackTicks: TickSet,
   options: AxisGridTickOptions | undefined,
-  coordinate: (value: ScalarValue) => number,
+  coordinate: (value: IRDataScalarValue) => number,
 ): TickSet => {
   const candidateTicks = options?.ticks === undefined ? fallbackTicks : resolveGuideTicks(scale, options.ticks);
   if (options?.density === undefined) return candidateTicks;
@@ -692,8 +692,8 @@ const resolveAxisGridTicks = (
 const filterOverlappingGridTicks = (
   ticks: TickSet,
   reference: TickSet,
-  coordinate: (value: ScalarValue) => number,
-  referenceCoordinate: (value: ScalarValue) => number = coordinate,
+  coordinate: (value: IRDataScalarValue) => number,
+  referenceCoordinate: (value: IRDataScalarValue) => number = coordinate,
 ): TickSet => {
   const referenceCoordinates = reference.values
     .map(value => referenceCoordinate(value))

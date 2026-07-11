@@ -1,4 +1,4 @@
-import type { DataModel } from '@retikz/data';
+import type { IRDataModel } from '@retikz/data';
 import type { FC } from 'react';
 
 import { defineFieldFormat } from '@retikz/data';
@@ -24,7 +24,7 @@ const wan = defineFieldFormat({
 });
 
 // revenue 省略 type：format 'wan' 的 impliedType 让它当 continuous；'1.2万' 经 parse 规范化成 12000
-const model: DataModel = [
+const model: IRDataModel = [
   { name: 'month', type: 'temporal' },
   { name: 'revenue', format: 'wan' },
 ];

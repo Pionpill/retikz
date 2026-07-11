@@ -76,4 +76,30 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x' });
     expect(spec.scales).toEqual([{ type: 'time', name: '__x' }]);
   });
+
+  it('显式 log <Scale> 会把 base 转发到 PlotSpec', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PathMark x="month" y="revenue" />
+        <Scale dimension="y" type="log" base={Math.E} />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.scales).toContainEqual({ type: 'log', name: '__y', base: Math.E });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('显式 symlog <Scale> 会把 constant 转发到 PlotSpec', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PathMark x="month" y="revenue" />
+        <Scale dimension="y" type="symlog" constant={50} />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.scales).toContainEqual({ type: 'symlog', name: '__y', constant: 50 });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
 });

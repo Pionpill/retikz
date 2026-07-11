@@ -61,60 +61,107 @@ import type { FC } from 'react';
 /** 数据字段名或字段路径；例如 `month` / `user.age`，用于 React DSL 的数据通道 props。 */
 export type FieldName = string;
 
+/** mark 样式值输入：字段名、直接常量或显式的字段 / 常量绑定。 */
 export type MarkValueProp<T> = FieldName | T | MarkValueType<T>;
+
+/** 路径端点样式。 */
 export type LineCapValue = 'butt' | 'round' | 'square';
+
+/** 路径折点连接样式。 */
 export type LineJoinValue = 'miter' | 'round' | 'bevel';
+
+/** 路径填充规则。 */
 export type FillRuleValue = 'nonzero' | 'evenodd';
+
+/** 路径预设粗细。 */
 export type ThicknessValue = 'ultraThin' | 'veryThin' | 'thin' | 'semithick' | 'thick' | 'veryThick' | 'ultraThick';
+
+/** 节点形状通道值：内置 / 自定义形状名或完整形状引用。 */
 export type NodeShapeChannelValue = string | IRShapeRef;
+
+/** 扩展通道属性：字段名、JSON 常量、通道绑定或显式 mark 值。 */
 export type ExtensionChannelProp = FieldName | JsonValue | Channel | MarkValueType<JsonValue>;
 
+/** 所有 mark 共享的局部数据变换与语义图层属性。 */
 export type MarkTransformProps = {
+  /** 只作用于当前 mark 数据视图的变换链。 */
   transform?: Array<Transform>;
   /** 语义图层覆盖；控制该 mark 外层 scope 在 plot 内的 zIndex。 */
   layer?: PlotLayer;
 };
 
+/** mark 绑定组合坐标视图的共享属性。 */
 export type CoordinateScopeProps = {
+  /** 直接绑定的坐标视图 id。 */
   coordinateView?: string;
+  /** 分面声明 id；构建 PlotSpec 时展开为对应坐标视图。 */
   facetId?: string;
+  /** 共享轨道 id；构建 PlotSpec 时展开为对应坐标视图。 */
   trackId?: string;
 };
 
+/** 可通过通道逐 datum 下发到 core Node 的样式属性。 */
 export type CoreNodeChannelProps = {
+  /** 文本水平对齐方式。 */
   align?: MarkValueProp<NodeTextAlignValue> | NodeTextAlignStyle;
+  /** 文本行高。 */
   lineHeight?: MarkValueProp<number> | NodePositiveNumberStyle;
+  /** 文本最大宽度。 */
   maxTextWidth?: MarkValueProp<number> | NodePositiveNumberStyle;
+  /** 节点圆角半径。 */
   cornerRadius?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+  /** 节点缩放值或轴向缩放配置。 */
   scale?: MarkValueProp<number | IRAxisScale> | NodeAxisScaleStyle;
+  /** 节点内边距。 */
   padding?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
+  /** 节点外边距。 */
   margin?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
+  /** 是否使用虚线描边。 */
   dashed?: MarkValueProp<boolean> | NodeBooleanStyle;
+  /** 是否使用点线描边。 */
   dotted?: MarkValueProp<boolean> | NodeBooleanStyle;
+  /** 自定义描边间隔。 */
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
+  /** 字体配置。 */
   font?: MarkValueProp<IRFont> | NodeFontStyle;
+  /** 节点边界策略。 */
   boundary?: MarkValueProp<IRBoundary> | NodeBoundaryStyle;
+  /** 节点阴影。 */
   shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
+  /** 节点混合模式。 */
   blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
 };
 
+/** 可通过通道逐 datum 下发到 core Path 的样式属性。 */
 export type CorePathChannelProps = {
+  /** 路径填充；字符串优先按字段名解析。 */
   fill?: FieldName | IRPaintSpec | PointFillStyle;
+  /** 路径描边；字符串优先按字段名解析。 */
   stroke?: FieldName | IRPaintSpec | PointStrokeStyle;
+  /** 描边透明度。 */
   strokeOpacity?: MarkValueProp<number> | PointOpacityStyle;
+  /** 路径绘制顺序提示。 */
   zIndex?: MarkValueProp<number> | PointZIndexStyle;
+  /** 路径旋转角度。 */
   rotate?: MarkValueProp<number> | PointNumberStyle;
+  /** 路径缩放配置。 */
   scale?: MarkValueProp<IRPathScale> | PathScaleStyle;
+  /** 路径填充规则。 */
   fillRule?: MarkValueProp<FillRuleValue> | PathFillRuleStyle;
+  /** 路径预设粗细。 */
   thickness?: MarkValueProp<ThicknessValue> | PathThicknessStyle;
+  /** 路径上的标记配置。 */
   marks?: RelationPathSpecificOptions['marks'];
+  /** 自定义描边间隔。 */
   dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
+  /** 路径阴影。 */
   shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
+  /** 路径混合模式。 */
   blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
 };
 
 /**
- * priority-1 宿主 datum label 扁平 props：给位置 mark（point / interval / path）加 datum 标签
+ * 宿主 datum label 扁平属性：给位置 mark（point / interval / path）添加最高优先级的 datum 标签。
  * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelDisplayFormat 进 IR（d3-format / d3-time-format 串）；
  *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）。
  */
@@ -222,8 +269,6 @@ export type PointMarkProps = MarkTransformProps &
     padding?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
     /** 最小视觉尺寸；size 通道逐 datum 优先 */
     minimumSize?: MarkValueProp<number | IRBoxSize> | NodeBoxSizeStyle;
-    /** 最小视觉宽度 */
-    /** 最小视觉高度 */
     /** 绘制顺序提示 */
     zIndex?: MarkValueProp<number> | PointZIndexStyle;
     /** 尺寸字段（数值）：→ size 通道，经 sqrt 半径 scale 映射成 glyph 半径（面积感知正确）；负值报错 */
@@ -276,13 +321,13 @@ export type IntervalMarkProps = MarkTransformProps &
     color?: FieldName;
     /** 系列字段：拆成多组 / 多系列柱；缺省单系列 */
     series?: FieldName;
-    /** Arrangement group field for dodge / stack / normalize-stack. */
+    /** 多系列排布的分组字段，供 dodge / stack / normalize-stack 使用。 */
     group?: FieldName;
-    /** Multi-series interval arrangement. */
+    /** 多系列区间的并排、堆叠或百分比堆叠策略。 */
     arrangement?: 'dodge' | 'stack' | 'normalize-stack';
-    /** Stack transform baseline offset for arrangement="stack". */
+    /** arrangement="stack" 使用的堆叠基线策略。 */
     stackOffset?: 'zero' | 'normalize' | 'diverging' | 'center' | 'overlap';
-    /** Percentage stack shortcut, equivalent to arrangement="normalize-stack". */
+    /** 百分比堆叠简写，等价于 arrangement="normalize-stack"。 */
     percent?: boolean;
     /** 多系列时是否堆叠（true=stack，自动 stack transform + bounds.y=extent）；否则并排（dodge，bounds.x=band{group}） */
     stack?: boolean;
@@ -293,26 +338,37 @@ export type IntervalMarkProps = MarkTransformProps &
     strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
     fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
     opacity?: MarkValueProp<number> | PointOpacityStyle;
-    /** Angular gap in degrees for polar sector / donut interval cells. */
+    /** 极坐标扇区或环形区间之间的角度间隔。 */
     padAngle?: number;
-    /** Static radial visual offset for polar sector cells. */
+    /** 极坐标扇区沿半径方向的静态视觉偏移。 */
     pull?: MarkValueProp<number> | PointNonnegativeNumberStyle;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
     anchorId?: AnchorIdSpec;
   };
 
+/** <RelationMark> props：连接两个目标的路径或 ribbon 关系图层。 */
 export type RelationMarkProps = MarkTransformProps &
   CoordinateScopeProps & {
+    /** 可选 mark 句柄，用于生成稳定的关系图层 id。 */
     id?: string;
+    /** 关系几何类型。 */
     kind?: RelationGeometryKindValue;
+    /** 关系起点引用。 */
     source: PlotTargetRef;
+    /** 关系终点引用。 */
     target: PlotTargetRef;
+    /** 关系几何上的标签。 */
     label?: MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
+    /** 关系 primitive 的视觉样式。 */
     style?: RelationPrimitiveStyle;
+    /** 路径关系的几何配置。 */
     path?: RelationPathGeometryInput;
+    /** ribbon 关系的宽度与轮廓配置。 */
     ribbon?: RelationRibbonOptions;
+    /** 驱动关系颜色的字段名。 */
     color?: FieldName;
+    /** 扩展通道绑定；字符串值按字段名处理。 */
     channels?: Record<string, ExtensionChannelProp>;
   };
 
@@ -338,13 +394,13 @@ export type ReferenceMarkProps = MarkTransformProps &
     x?: number | FieldName;
     /** 水平参考的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
     y?: number | FieldName;
-    /** Ternary / z-role region lower bound; only used with kind="region" when the coordinate consumes z. */
+    /** 三元坐标 z role 的区域下界；仅 kind="region" 且坐标系消费 z 时使用。 */
     z?: number | FieldName;
     /** 竖直 band 上界（与 x 配对 → x∈[x,xTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
     xTo?: number | FieldName;
     /** 水平 band 上界（与 y 配对 → y∈[y,yTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
     yTo?: number | FieldName;
-    /** Ternary / z-role region upper bound paired with z. */
+    /** 与 z 配对的三元坐标 z role 区域上界。 */
     zTo?: number | FieldName;
     /** 对侧维部分长度起点字段（与 extentToField 成对）；缺 → 满铺对侧轴域 */
     extentField?: FieldName;
@@ -356,7 +412,7 @@ export type ReferenceMarkProps = MarkTransformProps &
     strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
     fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
     opacity?: MarkValueProp<number> | PointOpacityStyle;
-    /** Extension channel bindings forwarded to `encoding.channels`; string values are field names. */
+    /** 转发到 `encoding.channels` 的扩展通道绑定；字符串值按字段名处理。 */
     channels?: Record<string, ExtensionChannelProp>;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
@@ -377,5 +433,5 @@ export const IntervalMark: FC<IntervalMarkProps> = () => null;
 /** 参考标注（阈值线 / 容差带）图层声明组件 */
 export const ReferenceMark: FC<ReferenceMarkProps> = () => null;
 
-/** source-target relation path 图层声明组件 */
+/** 起点到终点的关系路径图层声明组件。 */
 export const RelationMark: FC<RelationMarkProps> = () => null;

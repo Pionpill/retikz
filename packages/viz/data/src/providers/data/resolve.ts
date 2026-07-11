@@ -1,5 +1,5 @@
-﻿import type { FieldResolution, ParsedFieldValue, ResolveField } from '../../contract';
-import type { DataFieldTypeMap, DataModel } from '../../schemas';
+﻿import type { DataFieldTypeMap, FieldResolution, ParsedFieldValue, ResolveField } from '../../contract';
+import type { IRDataModel } from '../../schemas';
 
 /**
  * 在已解析的基础类型上叠加 resolveField：类型覆盖、per-field parser 收集和命中标记。
@@ -8,7 +8,7 @@ import type { DataFieldTypeMap, DataModel } from '../../schemas';
 export const applyFieldResolver = (
   baseTypes: DataFieldTypeMap,
   userSourceFields: Set<string>,
-  model: DataModel | undefined,
+  model: IRDataModel | undefined,
   dataReference: string,
   fieldMap: Record<string, string> | undefined,
   resolveField: ResolveField | undefined,

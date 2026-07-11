@@ -5,7 +5,7 @@ import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { TransformOperation } from '../../../src/schemas';
+import type { Transform } from '../../../src/schemas';
 
 import { resolvePlotTransformRegistry } from '../../../src/providers';
 
@@ -13,7 +13,7 @@ const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
 
 const applyTransforms = (
   rows: Array<ExternalRow>,
-  operations?: Array<TransformOperation>,
+  operations?: Array<Transform>,
   registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
   context?: TransformContext,
 ): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);

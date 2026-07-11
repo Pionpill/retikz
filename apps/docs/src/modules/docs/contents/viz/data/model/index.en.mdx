@@ -43,6 +43,17 @@ Customize `model` when you need to override inference, parse non-default storage
 | `format` | declarative parsing format, such as `slashDate` / `percent`; see Parsing Formats below |
 | `order`  | category order for categorical fields                                                  |
 
+## TypeScript Types
+
+Schema-derived data types use the `IRData` owner prefix so they stay distinct from core and plot IR types. The old `FieldDef`, `DataModel`, `DataRef`, and `ScalarValue` names have been removed without compatibility aliases.
+
+| Concept           | Type                    | Schema                  |
+| ----------------- | ----------------------- | ----------------------- |
+| Field declaration | `IRDataFieldDefinition` | `FieldDefinitionSchema` |
+| Data model        | `IRDataModel`           | `DataModelSchema`       |
+| Data reference    | `IRDataReference`       | `DataReferenceSchema`   |
+| Scalar domain     | `IRDataScalarValue`     | `ScalarValueSchema`     |
+
 The side-by-side demo below uses one funnel dataset. The left chart has no `model`, so numeric `stage` is inferred as a continuous x axis. The right chart declares `stage` as categorical, and parses percent strings into continuous values with `format: 'percent'`.
 
 <ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />

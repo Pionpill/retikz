@@ -280,6 +280,14 @@ describe('plot lineage runtime', () => {
     ).toThrow(/rowValues.fields/);
   });
 
+  it.each([0.5, 1.5, NaN, Infinity])('rejects rowValues.maxRows=%s', maxRows => {
+    expect(() =>
+      lowerPlotWithLineage(pointSpec(), datasets, {
+        lineage: { rowValues: { maxRows, fields: ['region'] } },
+      }),
+    ).toThrow(/rowValues\.maxRows must be a positive integer/);
+  });
+
   it('keeps unknown transform errors aligned with lowerPlots', () => {
     const spec = {
       ...pointSpec(),

@@ -1,16 +1,11 @@
-﻿import { z } from 'zod';
-
-import type { AnyRowSelectorDefinition } from '../../contract';
-import type { ExternalRow, RowSelectorTieValue } from '../../schemas';
+﻿import type { AnyRowSelectorDefinition } from '../../contract';
+import type { RowSelectorTieValue } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { defineRowSelector } from '../../contract';
-import {
-  DataSortOrder,
-  OutsideQuantileBandSelectorOperationSchema,
-  RowSelectorTie,
-  SelectorOperationKind,
-} from '../../schemas';
+import { BuiltinSelectorOperationSchemas, DataSortOrder, RowSelectorTie } from '../../schemas';
 import { resolveFieldPath } from '../data';
+import { freezeDefinitions } from '../shared';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
 
 /** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略。 */
@@ -39,11 +34,7 @@ const selectTopBottomRows = (
 
 /** min selector definition：选择数值最小的原始行。 */
 const minSelectorDefinition = defineRowSelector({
-  schema: z.object({
-    kind: z.literal(SelectorOperationKind.Min),
-    by: z.string().min(1),
-    tie: z.enum(RowSelectorTie).optional(),
-  }),
+  schema: BuiltinSelectorOperationSchemas.Min,
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Ascending);
@@ -68,11 +59,7 @@ const minSelectorDefinition = defineRowSelector({
 
 /** max selector definition：选择数值最大的原始行。 */
 const maxSelectorDefinition = defineRowSelector({
-  schema: z.object({
-    kind: z.literal(SelectorOperationKind.Max),
-    by: z.string().min(1),
-    tie: z.enum(RowSelectorTie).optional(),
-  }),
+  schema: BuiltinSelectorOperationSchemas.Max,
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Descending);
@@ -97,13 +84,7 @@ const maxSelectorDefinition = defineRowSelector({
 
 /** first selector definition：选择输入顺序或稳定排序后的首行。 */
 const firstSelectorDefinition = defineRowSelector({
-  schema: z.object({
-    kind: z.literal(SelectorOperationKind.First),
-    orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() }))
-      .min(1)
-      .optional(),
-  }),
+  schema: BuiltinSelectorOperationSchemas.First,
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
   select: (rows, operation) => {
     const ordered = orderRows(rows, operation.orderBy);
@@ -113,13 +94,7 @@ const firstSelectorDefinition = defineRowSelector({
 
 /** last selector definition：选择输入顺序或稳定排序后的末行。 */
 const lastSelectorDefinition = defineRowSelector({
-  schema: z.object({
-    kind: z.literal(SelectorOperationKind.Last),
-    orderBy: z
-      .array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() }))
-      .min(1)
-      .optional(),
-  }),
+  schema: BuiltinSelectorOperationSchemas.Last,
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
   select: (rows, operation) => {
     const ordered = orderRows(rows, operation.orderBy);
@@ -129,12 +104,7 @@ const lastSelectorDefinition = defineRowSelector({
 
 /** top selector definition：按数值字段选择前 N 行。 */
 const topSelectorDefinition = defineRowSelector({
-  schema: z.object({
-    kind: z.literal(SelectorOperationKind.Top),
-    by: z.string().min(1),
-    n: z.number().int().positive(),
-    tie: z.enum(RowSelectorTie).optional(),
-  }),
+  schema: BuiltinSelectorOperationSchemas.Top,
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Descending);
@@ -145,12 +115,7 @@ const topSelectorDefinition = defineRowSelector({
 
 /** bottom selector definition：按数值字段选择后 N 行。 */
 const bottomSelectorDefinition = defineRowSelector({
-  schema: z.object({
-    kind: z.literal(SelectorOperationKind.Bottom),
-    by: z.string().min(1),
-    n: z.number().int().positive(),
-    tie: z.enum(RowSelectorTie).optional(),
-  }),
+  schema: BuiltinSelectorOperationSchemas.Bottom,
   inputFields: operation => [operation.by],
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Ascending);
@@ -161,11 +126,7 @@ const bottomSelectorDefinition = defineRowSelector({
 
 /** nth selector definition：按稳定排序选择指定零基下标行。 */
 const nthSelectorDefinition = defineRowSelector({
-  schema: z.object({
-    kind: z.literal(SelectorOperationKind.Nth),
-    orderBy: z.array(z.object({ field: z.string().min(1), order: z.enum(DataSortOrder).optional() })).min(1),
-    index: z.number().int().nonnegative(),
-  }),
+  schema: BuiltinSelectorOperationSchemas.Nth,
   inputFields: operation => operation.orderBy.map(order => order.field),
   select: (rows, operation) => {
     const ordered = orderRows(rows, operation.orderBy);
@@ -175,7 +136,7 @@ const nthSelectorDefinition = defineRowSelector({
 
 /** outside-quantile-band selector definition：选择参数化分位区间或 spread fence 外的原始行。 */
 const outsideQuantileBandSelectorDefinition = defineRowSelector({
-  schema: OutsideQuantileBandSelectorOperationSchema,
+  schema: BuiltinSelectorOperationSchemas.OutsideQuantileBand,
   inputFields: operation => [operation.field],
   select: (rows, operation) => {
     const stats = quantileBandStatsOf(rows, operation.field, operation.lowerP, operation.upperP);
@@ -190,7 +151,7 @@ const outsideQuantileBandSelectorDefinition = defineRowSelector({
 });
 
 /** 内置 row selector 定义集合；内置与自定义 selector 共享同一 registry 分派流程。 */
-export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = [
+export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = freezeDefinitions([
   minSelectorDefinition,
   maxSelectorDefinition,
   firstSelectorDefinition,
@@ -199,4 +160,4 @@ export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = [
   bottomSelectorDefinition,
   nthSelectorDefinition,
   outsideQuantileBandSelectorDefinition,
-] as ReadonlyArray<AnyRowSelectorDefinition>;
+]);

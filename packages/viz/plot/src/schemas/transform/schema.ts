@@ -420,5 +420,3 @@ export const TransformSchema = z
   .describe(
     'Plot transform operation: shared data transforms, plot-only built-ins, plus externally registered open config operations validated by a runtime TransformDefinition',
   );
-
-export const TransformOperationSchema = TransformSchema;

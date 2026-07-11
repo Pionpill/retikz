@@ -11,13 +11,14 @@ import type { CartesianCoordinateFrame } from '../../../src/providers';
 import type { IntervalMark, PlotSpec } from '../../../src/schemas';
 
 import {
+  cellGeometryAnchor,
   createCoordinateFrame,
   defineCoordinate,
   densifyCellContour,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
 } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { buildIntervalContext, cellGeometryAnchor, datumAnchor } from '../../../src/providers';
+import { buildIntervalContext, datumAnchor } from '../../../src/providers';
 import { lowerMark } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate, createTernary2DCoordinate } from '../../../src/providers';
 import { isBuiltinMark, PlotSpecSchema } from '../../../src/schemas';

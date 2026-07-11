@@ -1,11 +1,11 @@
 import type {
-  AnnotateSelector,
-  AnnotateTransform,
-  ExternalRow,
-  ReducerOperation,
-  SelectTransform,
-  SummarizeTransform,
+  IRDataAnnotateSelector,
+  IRDataAnnotateTransform,
+  IRDataReducerOperation,
+  IRDataSelectTransform,
+  IRDataSummarizeTransform,
 } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { type TransformContext } from '../../contract';
 import { resolveFieldPath } from '../data';
@@ -15,7 +15,7 @@ import { groupRowsByFields } from './shared';
 /** 对一组 rows 执行多个 reducer，并把每个 reducer 输出字段合并为同一行片段。 */
 export const applyReducerMetrics = (
   rows: Array<ExternalRow>,
-  metrics: ReadonlyArray<ReducerOperation>,
+  metrics: ReadonlyArray<IRDataReducerOperation>,
   context: TransformContext,
 ): ExternalRow => {
   const out: ExternalRow = {};
@@ -24,7 +24,7 @@ export const applyReducerMetrics = (
 };
 
 /** 从 selector operation 中取出可回填的数值字段；rank-only selector 返回 undefined。 */
-const selectorValueFieldOf = (selector: AnnotateSelector['selector']): string | undefined => {
+const selectorValueFieldOf = (selector: IRDataAnnotateSelector['selector']): string | undefined => {
   if (!('by' in selector)) return undefined;
   const field = selector.by;
   return typeof field === 'string' ? field : undefined;
@@ -33,7 +33,7 @@ const selectorValueFieldOf = (selector: AnnotateSelector['selector']): string | 
 /** 执行 annotate selector 并产出要广播到组内每一行的字段片段。 */
 const applySelectorAnnotations = (
   rows: Array<ExternalRow>,
-  operation: AnnotateTransform,
+  operation: IRDataAnnotateTransform,
   context: TransformContext,
 ): ExternalRow => {
   const out: ExternalRow = {};
@@ -50,7 +50,7 @@ const applySelectorAnnotations = (
 /** summarize transform：按 groupBy 分组并执行多个 reducer，每组输出一行。 */
 export const applySummarize = (
   rows: Array<ExternalRow>,
-  operation: SummarizeTransform,
+  operation: IRDataSummarizeTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
   groupRowsByFields(rows, operation.groupBy).map(group =>
@@ -66,7 +66,7 @@ export const applySummarize = (
 /** select transform：按 groupBy 分组并输出 selector 选中的原始行。 */
 export const applySelect = (
   rows: Array<ExternalRow>,
-  operation: SelectTransform,
+  operation: IRDataSelectTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
   groupRowsByFields(rows, operation.groupBy).flatMap(group =>
@@ -79,7 +79,7 @@ export const applySelect = (
 /** annotate transform：按 groupBy 分组，把 reducer / selector 结果回填到组内每一行。 */
 export const applyAnnotate = (
   rows: Array<ExternalRow>,
-  operation: AnnotateTransform,
+  operation: IRDataAnnotateTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
   groupRowsByFields(rows, operation.groupBy).flatMap(group => {

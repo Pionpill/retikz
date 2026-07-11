@@ -1,5 +1,3 @@
-import type { ValueOf } from '@retikz/core';
-
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 z.enum）。
@@ -19,9 +17,6 @@ export const PlotMark = {
   /** 特殊 mark / reference：固定位置 / 区间的参考约束（阈值线 / 容差带） */
   Reference: 'reference',
 } as const;
-
-/** mark 类型 */
-export type PlotMarkValue = ValueOf<typeof PlotMark>;
 
 /**
  * PathMark 相邻点连接方式。
@@ -63,16 +58,10 @@ export const PathClosureKind = {
   Stack: 'stack',
 } as const;
 
-/** PathMark 闭合策略 */
-export type PathClosureKindValue = ValueOf<typeof PathClosureKind>;
-
 export const RelationGeometryKind = {
   Path: 'path',
   Ribbon: 'ribbon',
 } as const;
-
-/** RelationMark 几何子类型值 */
-export type RelationGeometryKindValue = ValueOf<typeof RelationGeometryKind>;
 
 /**
  * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）
@@ -90,9 +79,6 @@ export const IntervalBoundKind = {
   /** 满铺该 role 的坐标域（极坐标 inner→outer 半径；饼 / 环半径方向） */
   Full: 'full',
 } as const;
-
-/** interval 单维区间来源 */
-export type IntervalBoundKindValue = ValueOf<typeof IntervalBoundKind>;
 
 export const MarkValueKind = {
   /** 从数据字段解析视觉值 */

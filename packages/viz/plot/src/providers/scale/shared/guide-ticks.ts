@@ -1,4 +1,4 @@
-import type { ScalarValue } from '@retikz/data';
+import type { IRDataScalarValue } from '@retikz/data';
 
 import { coerceTimestamp } from '@retikz/data';
 import { DEFAULT_EPSILON } from '@retikz/math';
@@ -40,7 +40,7 @@ export type GuideTickLabelFormatInput = {
   format?: string;
 };
 
-const normalizeExplicitTick = (scale: PositionScale, value: string | number): ScalarValue => {
+const normalizeExplicitTick = (scale: PositionScale, value: string | number): IRDataScalarValue => {
   if (scale.tickKind === 'category') return value;
   if (scale.tickKind === 'time') {
     const stamp = coerceTimestamp(value);
@@ -61,7 +61,7 @@ const normalizeExplicitTick = (scale: PositionScale, value: string | number): Sc
 const formatLabel = (
   scale: PositionScale,
   format: string | undefined,
-  value: ScalarValue,
+  value: IRDataScalarValue,
   fallback: string,
 ): string => {
   if (format === undefined || scale.tickKind === undefined || scale.tickKind === 'category') return fallback;
@@ -212,7 +212,7 @@ const categoryIntervalTicks = (
 const resolveIntervalValues = (
   scale: PositionScale,
   source: NonNullable<GuideTickSourceInput['interval']>,
-): Array<ScalarValue> => {
+): Array<IRDataScalarValue> => {
   if (source.kind === GuideTickIntervalKind.Number) return numberIntervalTicks(scale, source.step, source.anchor);
   if (source.kind === GuideTickIntervalKind.Time)
     return timeIntervalTicks(scale, source.unit, source.step ?? 1, source.anchor);
@@ -271,7 +271,7 @@ const pickSampleIndices = (indices: ReadonlyArray<number>, maxCount: number, pre
 export const resolveVisibleGuideTicks = (
   ticks: TickSet,
   source: GuideTickSourceInput | undefined,
-  coordinate: (value: ScalarValue) => number,
+  coordinate: (value: IRDataScalarValue) => number,
 ): TickSet => {
   const density = source?.density;
   if (density === undefined || density.kind === AxisTickDensityKind.All || ticks.values.length <= 1) return ticks;

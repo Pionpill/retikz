@@ -19,6 +19,18 @@ plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/tr
 
 这些 operation 本身是 JSON 可序列化配置；真正的运行函数来自 data 包内置定义或运行时注入的 definition。变换读取字段会参与 model 校验，变换产出的字段不需要提前写进 model。
 
+## TypeScript 类型
+
+transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`ReducerOperation`、`SelectorOperation` 等类型名已删除，不提供兼容别名；JSON operation 写法不变。
+
+| 范围       | 类型                                                                                                  |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| 整体 union | `IRDataTransform`、`IRDataBuiltinTransform`                                                           |
+| 内置变换   | `IRDataSortTransform`、`IRDataSummarizeTransform`、`IRDataSelectTransform`、`IRDataAnnotateTransform` |
+| reducer    | `IRDataReducerOperation`、`IRDataReducerMetrics`、`IRDataQuantileBandReducerOperation`                |
+| selector   | `IRDataSelectorOperation`、`IRDataOutsideQuantileBandSelectorOperation`                               |
+| 嵌套配置   | `IRDataOrderBy`、`IRDataAnnotateSelector`                                                             |
+
 ## 排序 sort
 
 `sort` 按一个字段稳定重排行。等值时保留原始相对顺序，适合在折线连接、时间序列展示或后续分组处理前固定行序。

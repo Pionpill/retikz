@@ -7,7 +7,7 @@ import type {
   DataSourceIdentityOptions,
   DataValueSampleOptions,
 } from '../contract';
-import type { ExternalRow } from '../schemas';
+import type { ExternalRow } from '../shared';
 
 import { resolveFieldPath } from '../providers';
 import { readSourceIndex, readSourceIndices } from './provenance';
@@ -45,13 +45,13 @@ const normalizeSampleOptions = (
   label: string,
 ): false | DataValueSampleOptions => {
   if (value === undefined || value === false) return false;
-  if (!Number.isFinite(value.maxRows) || value.maxRows <= 0) {
-    throw new Error(`data lineage: ${label}.maxRows must be a positive finite number`);
+  if (!Number.isInteger(value.maxRows) || value.maxRows < 1) {
+    throw new Error(`data lineage: ${label}.maxRows must be a positive integer`);
   }
   if (!Array.isArray(value.fields) || value.fields.length === 0) {
     throw new Error(`data lineage: ${label}.fields must be a non-empty field whitelist`);
   }
-  return { maxRows: Math.floor(value.maxRows), fields: [...value.fields] };
+  return { maxRows: value.maxRows, fields: [...value.fields] };
 };
 
 /** 解析 source identity 开关；默认 summary + 固定上限。 */
@@ -62,10 +62,10 @@ const normalizeSourceIdentityOptions = (
   if (value === true || value === undefined) return { mode: 'summary', maxIndices: DEFAULT_SOURCE_IDENTITY_LIMIT };
   const mode = value.mode ?? 'summary';
   const maxIndices = value.maxIndices ?? DEFAULT_SOURCE_IDENTITY_LIMIT;
-  if (!Number.isFinite(maxIndices) || maxIndices <= 0) {
-    throw new Error('data lineage: sourceIdentity.maxIndices must be a positive finite number');
+  if (!Number.isInteger(maxIndices) || maxIndices < 1) {
+    throw new Error('data lineage: sourceIdentity.maxIndices must be a positive integer');
   }
-  return { mode, maxIndices: Math.floor(maxIndices) };
+  return { mode, maxIndices };
 };
 
 /** 归一化 lineage 开关默认值。 */

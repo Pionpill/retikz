@@ -1,5 +1,3 @@
-import type { ValueOf } from '@retikz/core';
-
 /**
  * 坐标系类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'cartesian2D'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(PlotCoordinate.x)（不用 z.enum）；命名按空间几何 + 维度。
@@ -17,9 +15,6 @@ export const PlotCoordinate = {
   Ternary2D: 'ternary2D',
 } as const;
 
-/** 坐标系类型 */
-export type PlotCoordinateValue = ValueOf<typeof PlotCoordinate>;
-
 /**
  * cartesian1D 轴向关键字（暴露给用户；裸字面量 `'horizontal'` 同样可用）
  * @description 决定一维直线沿哪个屏幕轴铺：horizontal 沿 x（基线在底）、vertical 沿 y（基线在左）；省略默认 horizontal（lowering 给）
@@ -30,9 +25,6 @@ export const Cartesian1DOrientation = {
   /** 垂直：数据沿 y 轴线，塌缩维基线在左边 */
   Vertical: 'vertical',
 } as const;
-
-/** cartesian1D 轴向 */
-export type Cartesian1DOrientationType = ValueOf<typeof Cartesian1DOrientation>;
 
 /** 内置坐标系 type 集：供自定义 coordinate operation 排除内置判别串。 */
 export const BUILTIN_COORDINATE_TYPES = new Set<string>(Object.values(PlotCoordinate));

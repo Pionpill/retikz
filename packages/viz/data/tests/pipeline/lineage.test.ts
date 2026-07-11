@@ -175,6 +175,30 @@ describe('data lineage runtime', () => {
     ).toThrow(/rowSamples.fields/);
   });
 
+  it.each([0.5, 1.5, NaN, Infinity])('rejects rowSamples.maxRows=%s', maxRows => {
+    expect(() =>
+      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+        lineage: { rowSamples: { maxRows, fields: ['month'] } },
+      }),
+    ).toThrow(/rowSamples\.maxRows must be a positive integer/);
+  });
+
+  it('rejects a fractional calculationDetails.maxRows', () => {
+    expect(() =>
+      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+        lineage: { calculationDetails: { maxRows: 1.5, fields: ['month'] } },
+      }),
+    ).toThrow(/calculationDetails\.maxRows must be a positive integer/);
+  });
+
+  it.each([0.5, 1.5, NaN, Infinity])('rejects sourceIdentity.maxIndices=%s', maxIndices => {
+    expect(() =>
+      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+        lineage: { sourceIdentity: { maxIndices } },
+      }),
+    ).toThrow(/sourceIdentity\.maxIndices must be a positive integer/);
+  });
+
   it('records custom transform steps through the shared registry', () => {
     const doubleRevenue = defineTransform({
       schema: z.object({

@@ -1,5 +1,7 @@
+import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
+import type { PlotScale } from './constants';
 import type {
   BandScaleSchema,
   CategoryValueSchema,
@@ -21,6 +23,9 @@ import type {
   ThresholdColorScaleSchema,
   TimeScaleSchema,
 } from './schema';
+
+/** scale 类型 */
+export type PlotScaleValue = ValueOf<typeof PlotScale>;
 
 /** 分类标量：类别取值 */
 export type CategoryValue = z.infer<typeof CategoryValueSchema>;
