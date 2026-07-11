@@ -91,6 +91,8 @@ render/        React 宿主渲染接线，可再按 svg / canvas / text 分组
 ## 导入导出
 
 - 目录级 `index.ts` 导出当前目录稳定 API；默认 `export *`，需要裁剪公共面或避免冲突时才精选导出。
+- 包根 `index.ts` 默认用 `export *` 聚合允许公开的一级 owner barrel；一级 owner barrel 决定哪些子 owner 可以继续向上暴露。
+- 不需要公开的模块不得进入向上 barrel；owner 内通过相邻路径或私有子 barrel 导入，不得为测试或复用便利转发到包根。
 - 消费方从拥有者 barrel 导入；不要从非拥有者模块转手 export 其它层内容。
 - 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
 - 同一文件中同 kind（type 或 value）且同 source 的 named import 必须合并为一条；type/value 因 lint 规则保持分离。
