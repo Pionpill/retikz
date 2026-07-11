@@ -1,5 +1,3 @@
-import type { ValueOf } from '@retikz/core';
-
 /** plot 基础 namespace。 */
 export const PLOT_NAMESPACE = 'plot';
 
@@ -9,9 +7,6 @@ export const PlotComposite = {
   Plot: 'plot',
 } as const;
 
-/** plot composite 类型。 */
-export type PlotCompositeValue = ValueOf<typeof PlotComposite>;
-
 /** 分面空面板生成策略。 */
 export const FacetEmptyPolicy = {
   /** 只生成至少包含一行数据的面板。 */
@@ -20,9 +15,6 @@ export const FacetEmptyPolicy = {
   Show: 'show',
 } as const;
 
-/** 分面空面板生成策略取值。 */
-export type FacetEmptyPolicyValue = ValueOf<typeof FacetEmptyPolicy>;
-
 /** 分面 scale domain 共享模式。 */
 export const FacetScaleSharing = {
   /** 使用所有分面面板的数据训练对应 role 的 scale。 */
@@ -30,9 +22,6 @@ export const FacetScaleSharing = {
   /** 使用每个面板自己的局部数据训练对应 role 的 scale。 */
   Independent: 'independent',
 } as const;
-
-/** 分面 scale domain 共享模式取值。 */
-export type FacetScaleSharingValue = ValueOf<typeof FacetScaleSharing>;
 
 /** 坐标组合中的比例尺解析模式。 */
 export const CompositionScaleResolve = {
@@ -44,9 +33,6 @@ export const CompositionScaleResolve = {
   Synchronized: 'synchronized',
 } as const;
 
-/** 坐标组合中的比例尺解析模式取值。 */
-export type CompositionScaleResolveValue = ValueOf<typeof CompositionScaleResolve>;
-
 /** 坐标组合中的坐标轴输出模式。 */
 export const CompositionAxisResolve = {
   /** 在坐标轴绑定的坐标视图上绘制。 */
@@ -56,9 +42,6 @@ export const CompositionAxisResolve = {
   /** 不输出该角色的坐标轴。 */
   None: 'none',
 } as const;
-
-/** 坐标组合中的坐标轴输出模式取值。 */
-export type CompositionAxisResolveValue = ValueOf<typeof CompositionAxisResolve>;
 
 /** 坐标组合中的网格投放模式。 */
 export const CompositionGridResolve = {
@@ -70,9 +53,6 @@ export const CompositionGridResolve = {
   None: 'none',
 } as const;
 
-/** 坐标组合中的网格投放模式取值。 */
-export type CompositionGridResolveValue = ValueOf<typeof CompositionGridResolve>;
-
 /** 轨道组合结构的 frame 共享模式。 */
 export const ScaffoldFrameMode = {
   /** 共享基础组合结构 frame 和 bounding box。 */
@@ -80,6 +60,3 @@ export const ScaffoldFrameMode = {
   /** 复用轨道组合结构注册表，但每个轨道独立解析 frame。 */
   Independent: 'independent',
 } as const;
-
-/** 轨道组合结构的 frame 共享模式取值。 */
-export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;

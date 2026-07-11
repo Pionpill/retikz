@@ -1,5 +1,3 @@
-import type { ValueOf } from '@retikz/core';
-
 /**
  * scale 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'linear'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(PlotScale.x)（不用 z.enum）。
@@ -36,9 +34,6 @@ export const PlotScale = {
   /** 分位离散化：按数据分位切 count 档（每档样本数约等）→ 离散 color 档（偏斜数据 / 抗离群） */
   Quantile: 'quantile',
 } as const;
-
-/** scale 类型 */
-export type PlotScaleValue = ValueOf<typeof PlotScale>;
 
 /** 内置 scale type 集；供 CustomScaleSchema 排除内置判别串（模块常量，非 zod） */
 export const BUILTIN_SCALE_TYPES = new Set<string>(Object.values(PlotScale));

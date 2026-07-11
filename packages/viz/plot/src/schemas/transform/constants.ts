@@ -1,6 +1,4 @@
-﻿import type { ValueOf } from '@retikz/core';
-
-/**
+﻿/**
  * plot-only transform 类型关键字。
  * @description 这些 transform 直接服务 plot mark / geometry / stat layer，由 plot 自行注册到 data transform pipeline。
  */
@@ -23,9 +21,6 @@ export const PlotTransform = {
   Smooth: 'smooth',
 } as const;
 
-/** plot-only transform 类型。 */
-export type PlotTransformValue = ValueOf<typeof PlotTransform>;
-
 /** stack baseline offset 策略。 */
 export const StackOffset = {
   /** 从 0 开始按系列顺序累加各段，生成普通堆叠区间。 */
@@ -39,9 +34,6 @@ export const StackOffset = {
   /** 不累加各段，使每段都生成从 0 到自身值的重叠区间。 */
   Overlap: 'overlap',
 } as const;
-
-/** stack baseline offset 策略值。 */
-export type StackOffsetValue = ValueOf<typeof StackOffset>;
 
 /** plot 内置 transform kind 集：用于外部 transform 开放配置排除 plot 内置判别串。 */
 export const BUILTIN_PLOT_TRANSFORM_KINDS = new Set<string>(Object.values(PlotTransform));
