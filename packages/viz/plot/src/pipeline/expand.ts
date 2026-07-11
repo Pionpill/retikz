@@ -48,7 +48,7 @@ import type {
   MarkOperation,
   PlotSpec,
   ScaleOperation,
-  TransformOperation,
+  Transform,
 } from '../schemas';
 import type { LegendReserve, Margins, Rect } from '../shared';
 import type { LegendEntry, LegendInput } from './guide';
@@ -1523,7 +1523,7 @@ const resolveMarkRows = (
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
 ): Array<ExternalRow> => {
-  const transform = (mark as { transform?: Array<TransformOperation> }).transform;
+  const transform = (mark as { transform?: Array<Transform> }).transform;
   if (transform === undefined) return rows;
   return applyTransforms(rows, transform, transformRegistry, transformContext);
 };

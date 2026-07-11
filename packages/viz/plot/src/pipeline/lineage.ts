@@ -22,7 +22,7 @@ import type {
   PlotScaleLineage,
   PlotSeriesLineage,
 } from '../contract';
-import type { MarkOperation, PlotSpec, ScaleOperation, TransformOperation } from '../schemas';
+import type { MarkOperation, PlotSpec, ScaleOperation, Transform } from '../schemas';
 import type { LowerPlotsOptions } from './expand';
 
 import { lowerPlots, prepareRows } from './expand';
@@ -144,7 +144,7 @@ const markEncodingFields = (mark: MarkOperation): PlotMarkLineage['encoding'] =>
 };
 
 /** 取 operation kind 列表。 */
-const operationKindsOf = (operations: Array<TransformOperation> | undefined): Array<string> =>
+const operationKindsOf = (operations: Array<Transform> | undefined): Array<string> =>
   operations?.map(operation => operation.kind) ?? [];
 
 /** 按字段白名单裁剪 mark rows。 */
@@ -287,7 +287,7 @@ const buildPlotLineage = (
       : hostMetadataOf(lineageOptions.hostMetadata, options.hostLineageMetadata);
 
   spec.marks.forEach((mark, markIndex) => {
-    const transform = (mark as { transform?: Array<TransformOperation> }).transform;
+    const transform = (mark as { transform?: Array<Transform> }).transform;
     const markResult =
       transform === undefined
         ? { rows: root.rows, lineage: { events: [] } satisfies DataLineageRun }

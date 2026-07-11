@@ -28,10 +28,15 @@ export type PlotTransformValue = ValueOf<typeof PlotTransform>;
 
 /** stack baseline offset 策略。 */
 export const StackOffset = {
+  /** 从 0 开始按系列顺序累加各段，生成普通堆叠区间。 */
   Zero: 'zero',
+  /** 按组总和缩放各段后从 0 累加，使整组堆叠范围归一到 0..1。 */
   Normalize: 'normalize',
+  /** 从 0 开始分别累加正值与负值，使两类区间向基线两侧延伸。 */
   Diverging: 'diverging',
+  /** 按系列顺序累加各段，并将整组堆叠范围以 0 为中心放置。 */
   Center: 'center',
+  /** 不累加各段，使每段都生成从 0 到自身值的重叠区间。 */
   Overlap: 'overlap',
 } as const;
 

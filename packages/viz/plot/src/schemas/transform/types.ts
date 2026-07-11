@@ -58,6 +58,3 @@ export type PlotBuiltinTransform = z.infer<typeof PlotBuiltinTransformSchema>;
 
 /** plot transform operation（data 内置 ∪ plot 内置 ∪ 外部注册 kind 开放配置）。 */
 export type Transform = z.infer<typeof TransformSchema>;
-
-/** plot transform 管线 operation；定义对象在运行时用 schema 精确收窄。 */
-export type TransformOperation = Transform;
