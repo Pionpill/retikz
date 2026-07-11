@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { evaluateTrack } from '../../src/animation/evaluate';
 
 /**
- * ADR-03 共享插值引擎 evaluateTrack：数值 / 颜色 oklch / viewBox 分量插值；delay / iteration / direction / fill；
+ * 共享插值引擎 evaluateTrack：数值 / 颜色 oklch / viewBox 分量插值；delay / iteration / direction / fill；
  *   自定义插值器；活动区间外返回 null（caller 用 base）。
  */
 const num = (over: Partial<IRAnimationTrack> = {}): IRAnimationTrack => ({

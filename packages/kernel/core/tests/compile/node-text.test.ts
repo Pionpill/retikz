@@ -202,7 +202,7 @@ describe('Node multi-line text', () => {
     }
   });
 
-  it('不传 text 时不 emit TextPrim（保留 alpha.1 行为）', () => {
+  it('不传 text 时不 emit TextPrim', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

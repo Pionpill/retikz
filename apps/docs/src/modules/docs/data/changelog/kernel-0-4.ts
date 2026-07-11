@@ -9,7 +9,7 @@ export const kernelV04: Release = {
       version: 'v0.4',
       description: {
         zh: '新包：零依赖纯计算几何（向量 / 仿射 / arc 原语 / 求交 / 三角形内外接圆 / 点在多边形 / 凸包 / 最小外接圆 / 曲线）。纯函数 + 普通对象，零 IR、零 zod、不写 class；被 core 正向依赖、与 core 组同 lockstep。',
-        en: 'New zero-dependency pure-geometry package: vectors / affine / arc / intersections / triangle in-circle / circum-circle helpers / point-in-polygon / convex hull / min enclosing circle / curves. No IR / zod / class.',
+        en: 'New zero-dependency geometry package: vectors, affine transforms, arcs, intersections, triangle circles, point-in-polygon, convex hull, enclosing circles, and curves. No IR, Zod, or classes.',
       },
       highlights: [
         {
