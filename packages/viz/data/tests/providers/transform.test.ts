@@ -154,4 +154,54 @@ describe('data transform runtime', () => {
       ]).map(row => row.id),
     ).toEqual(['A', 'B', 'C']);
   });
+
+  it('keeps missing order values last for ascending and descending selectors', () => {
+    const rows: Array<ExternalRow> = [
+      { id: 'missing-undefined' },
+      { id: 'two', value: 2 },
+      { id: 'one', value: 1 },
+      { id: 'missing-null', value: null },
+    ];
+
+    expect(
+      applyTransforms(rows, [
+        {
+          kind: 'select',
+          selector: { kind: 'first', orderBy: [{ field: 'value', order: 'descending' }] },
+        },
+      ])[0]?.id,
+    ).toBe('two');
+    expect(
+      applyTransforms(rows, [
+        {
+          kind: 'select',
+          selector: { kind: 'nth', orderBy: [{ field: 'value', order: 'descending' }], index: 1 },
+        },
+      ])[0]?.id,
+    ).toBe('one');
+    expect(
+      applyTransforms(rows, [
+        {
+          kind: 'select',
+          selector: { kind: 'last', orderBy: [{ field: 'value', order: 'descending' }] },
+        },
+      ])[0]?.id,
+    ).toBe('missing-null');
+    expect(
+      applyTransforms(rows, [
+        {
+          kind: 'select',
+          selector: { kind: 'first', orderBy: [{ field: 'value', order: 'ascending' }] },
+        },
+      ])[0]?.id,
+    ).toBe('one');
+    expect(
+      applyTransforms(rows, [
+        {
+          kind: 'select',
+          selector: { kind: 'last', orderBy: [{ field: 'value', order: 'ascending' }] },
+        },
+      ])[0]?.id,
+    ).toBe('missing-null');
+  });
 });
