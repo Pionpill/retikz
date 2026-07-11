@@ -2,7 +2,7 @@ import type { PathCommand } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildPathD } from '../../../src/render/svg';
+import { buildPathD } from '../../src/svg';
 
 describe('buildPathD: 单 kind 构造', () => {
   it('move → "M x y"', () => {

@@ -228,6 +228,23 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'beta.2',
+          date: '2026-07-11',
+          summary: {
+            zh: '`@retikz/react` 包根只聚合 Kernel / Sugar 公共 owner，不再转发仅供 `<Layout>` 内部接线和测试使用的 renderer internals；SVG / Canvas 运行行为不变。',
+            en: 'The `@retikz/react` root now aggregates only the public Kernel and Sugar owners instead of forwarding renderer internals used by `<Layout>` wiring and tests; SVG and Canvas behavior is unchanged.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：移除 renderer internals', en: 'BREAKING: renderer internals removed' },
+              content: {
+                zh: '`buildPathD`、`buildTransform`、`formatViewBox` 改从 `@retikz/render/svg` 导入。`CanvasHost`、defs wrapper、`renderPrim`、`svgToReact`、browser measurer 不再由 `@retikz/react` 公开；应用继续使用 `<Layout renderer="svg"｜"canvas">`，自定义 renderer 改用 `@retikz/render` 的公开 API。',
+                en: 'Import `buildPathD`, `buildTransform`, and `formatViewBox` from `@retikz/render/svg`. `CanvasHost`, defs wrappers, `renderPrim`, `svgToReact`, and the browser measurer are no longer public from `@retikz/react`; applications should keep using `<Layout renderer="svg" | "canvas">`, while custom renderers should use the public `@retikz/render` API.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.6',
           date: '2026-06-28',
           summary: {

@@ -2,7 +2,7 @@ import type { Transform } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildTransform } from '../../../src/render/svg';
+import { buildTransform } from '../../src/svg';
 
 describe('buildTransform: 单 kind', () => {
   it('translate → "translate(x y)"', () => {
