@@ -41,7 +41,7 @@ const parseFirst = (
   return normalized[0][logical];
 };
 
-describe('FieldDef.format 解析行为（ADR-06）— happy path', () => {
+describe('IRDataFieldDefinition.format 解析行为 — happy path', () => {
   it('slashdate_parses_utc', () => {
     // 严格 YYYY/MM/DD 按 UTC 零点 → epoch ms
     const spec = specWithField({ name: 'v', type: 'temporal', format: DataFieldFormat.SlashDate });
@@ -62,7 +62,7 @@ describe('FieldDef.format 解析行为（ADR-06）— happy path', () => {
   });
 });
 
-describe('FieldDef.format 解析行为（ADR-06）— 边界', () => {
+describe('IRDataFieldDefinition.format 解析行为 — 边界', () => {
   it('format_omitted_equals_builtin', () => {
     // 不写 format → 与现状内置 coerce 逐字等价（严格 ISO temporal / 严格数字串 continuous）
     const spec = specWithField({ name: 'v', type: 'temporal' });
@@ -90,7 +90,7 @@ describe('FieldDef.format 解析行为（ADR-06）— 边界', () => {
   });
 });
 
-describe('FieldDef.format（ADR-06）— 错误路径', () => {
+describe('IRDataFieldDefinition.format — 错误路径', () => {
   it('format_type_mismatch_throws', () => {
     // 显式 continuous + format 蕴含 temporal（epochSeconds）冲突 → lowering fail-loud
     const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.EpochSeconds });
@@ -110,7 +110,7 @@ describe('FieldDef.format（ADR-06）— 错误路径', () => {
   });
 });
 
-describe('FieldDef.format 自定义格式（ADR-09）', () => {
+describe('IRDataFieldDefinition.format 自定义格式', () => {
   /** 千分位分隔的金额串：'1.234,56' → 1234.56（欧式小数逗号），演示自定义 continuous 解析。 */
   const currencyFormat: FieldFormatDefinition = defineFieldFormat({
     name: 'currency',
@@ -205,7 +205,7 @@ describe('FieldDef.format 自定义格式（ADR-09）', () => {
   });
 });
 
-describe('FieldDef.format（ADR-06）— 交互', () => {
+describe('IRDataFieldDefinition.format — 交互', () => {
   it('resolveField_parse_overrides_format', () => {
     // 同字段既有 format 又有 resolveField.parse → 用 parse（优先级 resolveField > format）
     const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.Percent });

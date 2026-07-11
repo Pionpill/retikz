@@ -1,4 +1,4 @@
-﻿import type { DataFieldTypeValue, ScalarValue } from '@retikz/data';
+﻿import type { DataFieldTypeValue, IRDataScalarValue } from '@retikz/data';
 
 import { z } from 'zod';
 
@@ -7,7 +7,7 @@ import type { Scale, ScaleOperation } from '../schemas';
 import { BUILTIN_SCALE_TYPES } from '../schemas';
 
 /** 刻度值 + 标签集（axis 与同维 grid 复用同一份）。 */
-export type TickSet = { values: Array<ScalarValue>; labels: Array<string> };
+export type TickSet = { values: Array<IRDataScalarValue>; labels: Array<string> };
 
 /** position scale 的刻度值族，用于 guide 标签格式化。 */
 export type PositionTickKind = 'number' | 'time' | 'category';
@@ -22,7 +22,7 @@ export type PositionScale = {
   /** 数据值 → 坐标（连续=scale(value)；band=band 中心；point=点位）；非法值返回 NaN，调用方据此跳过 */
   coordinate: (value: unknown) => number;
   /** 当前输入域；连续 scale 返回 [min, max]，分类 scale 返回类别序列。 */
-  domain: () => ReadonlyArray<ScalarValue>;
+  domain: () => ReadonlyArray<IRDataScalarValue>;
   /** band 宽（连续 / point = 0；band = scale.bandwidth()）；getter 反映 setRange 后的最新值 */
   readonly bandwidth: number;
   /** 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位） */
@@ -67,7 +67,7 @@ export type ChannelScaleResolution = {
   /** legend 形态：ramp（连续色带）/ swatch（离散块）——替代「legend 按 scaleType 闭集判 form」 */
   legendForm: 'ramp' | 'swatch';
   /** ramp：数值 domain [lo, hi]；ordinal：类别序；discretized：未用（看 edges） */
-  domain: ReadonlyArray<ScalarValue>;
+  domain: ReadonlyArray<IRDataScalarValue>;
   /** 档色 / 端点色（legend 与实绘同源） */
   range: ReadonlyArray<string>;
   /** discretized（quantize / threshold / quantile）档间内部边界；ramp / ordinal 省略 */

@@ -1,4 +1,4 @@
-import type { ExternalRow, ReducerOperation, SelectorOperation, Transform } from '../schemas';
+import type { ExternalRow, IRDataReducerOperation, IRDataSelectorOperation, IRDataTransform } from '../schemas';
 
 /** 数据来源索引摘要模式。 */
 export type DataSourceIdentityMode = 'summary' | 'full';
@@ -106,7 +106,7 @@ export type DataLineageReducerEvent = {
   /** reducer kind。 */
   operationKind: string;
   /** reducer operation 配置摘要；只包含 JSON-safe operation 字段，不包含行值。 */
-  operation: ReducerOperation;
+  operation: IRDataReducerOperation;
   /** definition 声明的输入字段。 */
   inputFields: Array<string>;
   /** definition 声明的输出字段。 */
@@ -126,7 +126,7 @@ export type DataLineageSelectorEvent = {
   /** selector kind。 */
   operationKind: string;
   /** selector operation 配置摘要；只包含 JSON-safe operation 字段，不包含行值。 */
-  operation: SelectorOperation;
+  operation: IRDataSelectorOperation;
   /** definition 声明的输入字段。 */
   inputFields: Array<string>;
   /** selector 本次消费的行数。 */
@@ -170,7 +170,7 @@ export type DataLineageTransformStepInput = {
   /** transform 在声明数组中的下标。 */
   operationIndex: number;
   /** transform operation。 */
-  operation: Transform;
+  operation: IRDataTransform;
   /** 输入行。 */
   inputRows: Array<ExternalRow>;
   /** 输出行。 */
@@ -184,7 +184,7 @@ export type DataLineageTransformStepInput = {
 /** reducer 记录输入。 */
 export type DataLineageReducerInput = {
   /** reducer operation。 */
-  operation: ReducerOperation;
+  operation: IRDataReducerOperation;
   /** reducer 本次消费的行。 */
   rows: Array<ExternalRow>;
   /** definition 声明的输入字段。 */
@@ -196,7 +196,7 @@ export type DataLineageReducerInput = {
 /** selector 记录输入。 */
 export type DataLineageSelectorInput = {
   /** selector operation。 */
-  operation: SelectorOperation;
+  operation: IRDataSelectorOperation;
   /** selector 本次消费的行。 */
   rows: Array<ExternalRow>;
   /** selector 选中的行。 */

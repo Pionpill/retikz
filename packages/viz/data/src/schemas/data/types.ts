@@ -20,16 +20,16 @@ export type FieldOrderModeValue = ValueOf<typeof FieldOrderMode>;
 export type FieldFormatValue = z.infer<typeof FieldFormatSchema>;
 
 /** 字段声明：逻辑字段名、可选测量类型、可选解析格式和可选分类顺序。 */
-export type FieldDef = z.infer<typeof FieldDefinitionSchema>;
+export type IRDataFieldDefinition = z.infer<typeof FieldDefinitionSchema>;
 
 /** 数据模型：IR 内可选字段声明数组，用于 strict 引用校验与 type-driven 推断。 */
-export type DataModel = z.infer<typeof DataModelSchema>;
+export type IRDataModel = z.infer<typeof DataModelSchema>;
 
 /** IR 数据槽位：具名数据集引用与可选模型；真实数据值由宿主运行时注入。 */
-export type DataRef = z.infer<typeof DataReferenceSchema>;
+export type IRDataReference = z.infer<typeof DataReferenceSchema>;
 
 /** 标量值：字段路径解析叶子、scale 映射输入和 channel 常量字面量的共同 JSON 域。 */
-export type ScalarValue = z.infer<typeof ScalarValueSchema>;
+export type IRDataScalarValue = z.infer<typeof ScalarValueSchema>;
 
 /** 逻辑字段名到字段测量类型的运行时映射；由 data.model、自动推断和 resolver 合成，不进入 IR。 */
 export type DataFieldTypeMap = Map<string, DataFieldTypeValue>;

@@ -1,5 +1,5 @@
 ﻿import type { IRAxisScale, IRBoxSize, IRPaintSpec } from '@retikz/core';
-import type { DataModel, ExternalRow } from '@retikz/data';
+import type { ExternalRow, IRDataModel } from '@retikz/data';
 import type {
   AxisGuide,
   Channel,
@@ -142,7 +142,7 @@ export type BuildPlotSpecOptions = {
   coordinate?: CoordinateInput;
   composition?: PlotSpec['composition'];
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
-  model?: DataModel;
+  model?: IRDataModel;
   /**
    * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
    * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark shortcut stack（B4 去重）。
@@ -1666,7 +1666,7 @@ const collectInto = (
  */
 const buildColorScale = (
   colorFields: Array<string>,
-  model: DataModel | undefined,
+  model: IRDataModel | undefined,
   colors: Array<string> | undefined,
 ): PlotScaleSpec => {
   if (model !== undefined) {

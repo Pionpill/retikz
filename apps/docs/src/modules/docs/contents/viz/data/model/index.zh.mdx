@@ -43,6 +43,17 @@ description: 用 model 声明字段契约，并把真实数据按字段映射、
 | `format` | 声明式解析格式，如 `slashDate` / `percent`；见下方「解析格式」 |
 | `order`  | 分类字段的类别顺序；只对 `categorical` 有效                    |
 
+## TypeScript 类型
+
+data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、plot 的 IR 类型区分。旧的 `FieldDef`、`DataModel`、`DataRef`、`ScalarValue` 已删除，不提供兼容别名。
+
+| 概念     | 类型                    | schema                  |
+| -------- | ----------------------- | ----------------------- |
+| 字段声明 | `IRDataFieldDefinition` | `FieldDefinitionSchema` |
+| 数据模型 | `IRDataModel`           | `DataModelSchema`       |
+| 数据引用 | `IRDataReference`       | `DataReferenceSchema`   |
+| 标量值域 | `IRDataScalarValue`     | `ScalarValueSchema`     |
+
 下面的左右对比使用同一份漏斗数据：左图不声明 `model`，数值 `stage` 被推断成连续 x 轴；右图把 `stage` 声明为分类字段，并用 `format: 'percent'` 把百分比字符串解析成连续数值。
 
 <ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />

@@ -1,6 +1,6 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { DataFieldTypeMap, DataFieldTypeValue, DataModel, ExternalRow } from '../../schemas';
+import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow, IRDataModel } from '../../schemas';
 
 import { DataFieldType } from '../../schemas';
 
@@ -92,7 +92,7 @@ export const inferFieldType = (rows: Array<ExternalRow>, path: string): DataFiel
  * @description data.model 声明时执行 strict 字段引用校验；字段未声明 type 时仍从绑定数据采样推断。
  */
 export const resolveFieldTypes = (
-  model: DataModel | undefined,
+  model: IRDataModel | undefined,
   rows: Array<ExternalRow>,
   sourceFields: Set<string>,
 ): DataFieldTypeMap => {

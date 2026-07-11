@@ -3,7 +3,7 @@
 import type { DataLineageRecorder } from './lineage';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
 
-import { type ExternalRow, type Transform } from '../schemas';
+import { type ExternalRow, type IRDataTransform } from '../schemas';
 
 /**
  * transform apply 上下文。
@@ -28,9 +28,9 @@ export type TransformContext = {
 
 /**
  * transform runtime definition。
- * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 Transform。
+ * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 IRDataTransform。
  */
-export type TransformDefinition<TTransform extends Transform = Transform> = {
+export type TransformDefinition<TTransform extends IRDataTransform = IRDataTransform> = {
   /** 完整 transform operation schema；必须含非空 z.literal('kind') 供 registry 提取注册键。 */
   schema: z.ZodType<TTransform>;
   /** 该 transform 消费的源字段名；参与 data.model strict 校验。 */
@@ -46,7 +46,7 @@ export type TransformDefinition<TTransform extends Transform = Transform> = {
  * @description 保留 schema / inputFields / outputFields / apply 之间的泛型关联；内置与自定义 transform 都经同一 registry 入口分派。
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook。
  */
-export const defineTransform = <TTransform extends Transform>(
+export const defineTransform = <TTransform extends IRDataTransform>(
   def: TransformDefinition<TTransform>,
 ): TransformDefinition<TTransform> => def;
 
@@ -55,7 +55,7 @@ export const defineTransform = <TTransform extends Transform>(
  * @description registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄。
  */
 export type AnyTransformDefinition = Omit<
-  TransformDefinition<Transform>,
+  TransformDefinition<IRDataTransform>,
   'schema' | 'inputFields' | 'outputFields' | 'apply'
 > & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 kind 并执行 parse。 */

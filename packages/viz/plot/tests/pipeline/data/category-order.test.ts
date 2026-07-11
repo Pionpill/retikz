@@ -65,7 +65,7 @@ const bandCategorySequence = (layer: IRScope, rows: Array<Record<string, unknown
   return out;
 };
 
-describe('FieldDef.order — schema 接受 / 拒绝（ADR-07）', () => {
+describe('IRDataFieldDefinition.order — schema 接受 / 拒绝', () => {
   it('explicit_array_order_accepted_by_schema', () => {
     const def = { name: 'size', type: 'categorical', order: ['S', 'M', 'L', 'XL'] };
     expect(FieldDefinitionSchema.parse(def)).toEqual(def);
@@ -79,7 +79,7 @@ describe('FieldDef.order — schema 接受 / 拒绝（ADR-07）', () => {
   });
 });
 
-describe('FieldDef.order — 显式数组域（ADR-07 happy path）', () => {
+describe('IRDataFieldDefinition.order — 显式数组域', () => {
   it('explicit_array_order', () => {
     // order:['S','M','L'] → band 域按数组序，与数据出现序无关
     const spec = bandSpec(
@@ -100,7 +100,7 @@ describe('FieldDef.order — 显式数组域（ADR-07 happy path）', () => {
   });
 });
 
-describe('FieldDef.order — 排序枚举（ADR-07）', () => {
+describe('IRDataFieldDefinition.order — 排序枚举', () => {
   it('ascending_sorts_numeric', () => {
     // 全数值类别 + order:'ascending' → 按数值升序（10 在 2 之后，而非字符串序）
     const spec = bandSpec(
@@ -143,7 +143,7 @@ describe('FieldDef.order — 排序枚举（ADR-07）', () => {
   });
 });
 
-describe('FieldDef.order — 默认与边界（ADR-07）', () => {
+describe('IRDataFieldDefinition.order — 默认与边界', () => {
   it('default_data_order_preserved', () => {
     // 不写 order（缺省 'appearance'）→ 出现序，与现状逐字等价
     const noOrder = bandSpec(
@@ -211,7 +211,7 @@ describe('FieldDef.order — 默认与边界（ADR-07）', () => {
   });
 });
 
-describe('FieldDef.order — 错误契约（ADR-07 fail-loud）', () => {
+describe('IRDataFieldDefinition.order — 错误契约', () => {
   it('order_on_continuous_throws', () => {
     // order 配 continuous 字段 → lowering fail-loud（cross-review #3）
     const spec = PlotSpecSchema.parse({
@@ -265,7 +265,7 @@ describe('FieldDef.order — 错误契约（ADR-07 fail-loud）', () => {
   });
 });
 
-describe('FieldDef.order — 交互（ADR-07）', () => {
+describe('IRDataFieldDefinition.order — 交互', () => {
   it('order_applies_to_position_and_color', () => {
     // 同一有序字段 cat 既作 x(band) 又作 color(ordinal) → 两处类别序一致
     const spec = PlotSpecSchema.parse({
@@ -392,7 +392,7 @@ describe('FieldDef.order — 交互（ADR-07）', () => {
   });
 });
 
-describe('FieldDef.order — JSON round-trip（ADR-07 必测）', () => {
+describe('IRDataFieldDefinition.order — JSON round-trip', () => {
   it('order_json_roundtrip', () => {
     // 含 order（含 Array 形态）的 model JSON.parse(JSON.stringify()) 后 schema parse 等价
     const model = DataModelSchema.parse([

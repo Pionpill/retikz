@@ -30,12 +30,19 @@ export const vizV01: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-07',
+          date: '2026-07-11',
           summary: {
-            zh: '收紧 data IR 校验与统计 selector 边界，修正日期解析和 top / bottom 并列处理。',
-            en: 'Tightens data IR validation and statistic selector boundaries, with fixes for date parsing and top / bottom tie handling.',
+            zh: '收紧 data IR 与统计 selector 边界，统一 schema 派生公开类型命名，并修正日期解析和 top / bottom 并列处理。',
+            en: 'Tightens data IR and statistic selector boundaries, unifies schema-derived public type names, and fixes date parsing plus top / bottom tie handling.',
           },
           items: [
+            {
+              label: { zh: 'IRDataXxx 公开类型命名', en: 'Owner-qualified IRDataXxx types' },
+              content: {
+                zh: '`FieldDef`、`DataModel`、`DataRef`、`Transform` 等 schema 派生类型统一改为 `IRDataXxx`，旧名不保留兼容别名；JSON schema 与运行时行为不变。',
+                en: 'Schema-derived types such as `FieldDef`, `DataModel`, `DataRef`, and `Transform` now use owner-qualified `IRDataXxx` names without compatibility aliases; JSON schemas and runtime behavior are unchanged.',
+              },
+            },
             {
               label: { zh: 'DataRef / FieldDef / Sort 严格校验', en: 'Strict DataRef / FieldDef / Sort validation' },
               content: {

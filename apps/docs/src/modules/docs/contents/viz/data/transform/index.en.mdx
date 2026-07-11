@@ -19,6 +19,18 @@ Plot-only drawing transforms stay in [Drawing Grammar transforms](/viz/grammar/t
 
 The operations are JSON-serializable config. The implementation function comes from data built-ins or runtime-injected definitions. Input fields read by a transform participate in model validation; fields produced by a transform do not need to be declared in the model ahead of time.
 
+## TypeScript Types
+
+Types inferred from transform schemas use the `IRDataXxx` convention. The old `Transform`, `ReducerOperation`, and `SelectorOperation` names have been removed without compatibility aliases; JSON operation shapes are unchanged.
+
+| Scope         | Types                                                                                                 |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| Overall union | `IRDataTransform`, `IRDataBuiltinTransform`                                                           |
+| Built-ins     | `IRDataSortTransform`, `IRDataSummarizeTransform`, `IRDataSelectTransform`, `IRDataAnnotateTransform` |
+| Reducers      | `IRDataReducerOperation`, `IRDataReducerMetrics`, `IRDataQuantileBandReducerOperation`                |
+| Selectors     | `IRDataSelectorOperation`, `IRDataOutsideQuantileBandSelectorOperation`                               |
+| Nested config | `IRDataOrderBy`, `IRDataAnnotateSelector`                                                             |
+
 ## sort
 
 `sort` stablely reorders rows by a field. Equal values keep their original relative order, which is useful before line connection, time-series display, or later grouped processing.

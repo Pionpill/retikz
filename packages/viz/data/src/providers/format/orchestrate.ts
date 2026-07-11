@@ -1,5 +1,5 @@
 ﻿import type { FieldFormatDefinition, ParsedFieldValue } from '../../contract';
-import type { DataFieldTypeMap, DataModel } from '../../schemas';
+import type { DataFieldTypeMap, IRDataModel } from '../../schemas';
 
 import { resolveFormatRegistry } from './definitions';
 
@@ -9,7 +9,7 @@ import { resolveFormatRegistry } from './definitions';
  *   format 未注册 / 与显式 type 冲突均 fail-loud，避免静默把自定义值误判为缺失。
  */
 export const collectFormatFields = (
-  model: DataModel | undefined,
+  model: IRDataModel | undefined,
   baseTypes: DataFieldTypeMap,
   userSourceFields: Set<string>,
   registry: ReadonlyMap<string, FieldFormatDefinition> = resolveFormatRegistry(),

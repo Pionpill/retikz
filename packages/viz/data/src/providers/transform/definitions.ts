@@ -1,5 +1,10 @@
 ﻿import type { AnyTransformDefinition } from '../../contract';
-import type { AnnotateTransform, SelectTransform, SortTransform, SummarizeTransform } from '../../schemas';
+import type {
+  IRDataAnnotateTransform,
+  IRDataSelectTransform,
+  IRDataSortTransform,
+  IRDataSummarizeTransform,
+} from '../../schemas';
 
 import { defineTransform, extractTransformKind } from '../../contract';
 import {
@@ -13,14 +18,14 @@ import { applyAnnotate, applySelect, applySummarize } from './group';
 import { applySort } from './row';
 
 /** 内置 sort transform definition；读取排序字段并稳定重排输入行。 */
-const sortTransformDefinition = defineTransform<SortTransform>({
+const sortTransformDefinition = defineTransform<IRDataSortTransform>({
   schema: SortTransformSchema,
   inputFields: operation => [operation.field],
   apply: (rows, operation) => applySort(rows, operation),
 });
 
 /** 内置 summarize transform definition；声明 groupBy 与 reducer 输入字段，并输出 reducer 派生字段。 */
-const summarizeTransformDefinition = defineTransform<SummarizeTransform>({
+const summarizeTransformDefinition = defineTransform<IRDataSummarizeTransform>({
   schema: SummarizeTransformSchema,
   inputFields: (operation, context) => [
     ...(operation.groupBy ?? []),
@@ -32,7 +37,7 @@ const summarizeTransformDefinition = defineTransform<SummarizeTransform>({
 });
 
 /** 内置 select transform definition；声明 groupBy 与 selector 输入字段，并可输出 rankAs 字段。 */
-const selectTransformDefinition = defineTransform<SelectTransform>({
+const selectTransformDefinition = defineTransform<IRDataSelectTransform>({
   schema: SelectTransformSchema,
   inputFields: (operation, context) => [
     ...(operation.groupBy ?? []),
@@ -43,7 +48,7 @@ const selectTransformDefinition = defineTransform<SelectTransform>({
 });
 
 /** 内置 annotate transform definition；声明 groupBy、reducer、selector 输入字段，并输出全部回填字段。 */
-const annotateTransformDefinition = defineTransform<AnnotateTransform>({
+const annotateTransformDefinition = defineTransform<IRDataAnnotateTransform>({
   schema: AnnotateTransformSchema,
   inputFields: (operation, context) => [
     ...(operation.groupBy ?? []),

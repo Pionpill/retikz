@@ -1,6 +1,6 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { DataSortOrderValue, ExternalRow, OrderBy } from '../../schemas';
+import type { DataSortOrderValue, ExternalRow, IRDataOrderBy } from '../../schemas';
 
 import { DataSortOrder } from '../../schemas';
 import { resolveFieldPath } from '../data';
@@ -104,7 +104,7 @@ export const valuesWithin = (values: Array<number>, lower: number, upper: number
   values.filter(value => value >= lower && value <= upper);
 
 /** 按 orderBy 稳定排序 rows；未传排序规则时返回浅拷贝。 */
-export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<OrderBy>): Array<ExternalRow> => {
+export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<IRDataOrderBy>): Array<ExternalRow> => {
   if (orderBy === undefined || orderBy.length === 0) return [...rows];
   return rows
     .map((row, index) => ({ row, index }))
