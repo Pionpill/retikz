@@ -5,6 +5,7 @@ import type { ExternalRow } from '../../shared';
 import { defineRowSelector } from '../../contract';
 import { BuiltinSelectorOperationSchemas, DataSortOrder, RowSelectorTie } from '../../schemas';
 import { resolveFieldPath } from '../data';
+import { freezeDefinitions } from '../shared';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
 
 /** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略。 */
@@ -150,7 +151,7 @@ const outsideQuantileBandSelectorDefinition = defineRowSelector({
 });
 
 /** 内置 row selector 定义集合；内置与自定义 selector 共享同一 registry 分派流程。 */
-export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = [
+export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = freezeDefinitions([
   minSelectorDefinition,
   maxSelectorDefinition,
   firstSelectorDefinition,
@@ -159,4 +160,4 @@ export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = [
   bottomSelectorDefinition,
   nthSelectorDefinition,
   outsideQuantileBandSelectorDefinition,
-] as ReadonlyArray<AnyRowSelectorDefinition>;
+]);

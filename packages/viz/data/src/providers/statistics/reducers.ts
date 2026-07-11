@@ -3,6 +3,7 @@ import type { ExternalRow } from '../../shared';
 
 import { defineStatisticsReducer } from '../../contract';
 import { BuiltinReducerOperationSchemas } from '../../schemas';
+import { freezeDefinitions } from '../shared';
 import { finiteFieldValuesOf } from '../transform';
 import {
   finiteExtentOf,
@@ -152,7 +153,7 @@ const quantileBandReducerDefinition = defineStatisticsReducer({
 });
 
 /** 内置统计 reducer 定义集合；内置与自定义 reducer 共享同一 registry 分派流程。 */
-export const BUILTIN_STATISTICS_REDUCERS: ReadonlyArray<AnyStatisticsReducerDefinition> = [
+export const BUILTIN_STATISTICS_REDUCERS: ReadonlyArray<AnyStatisticsReducerDefinition> = freezeDefinitions([
   countReducerDefinition,
   sumReducerDefinition,
   meanReducerDefinition,
@@ -162,4 +163,4 @@ export const BUILTIN_STATISTICS_REDUCERS: ReadonlyArray<AnyStatisticsReducerDefi
   extentReducerDefinition,
   quantileReducerDefinition,
   quantileBandReducerDefinition,
-] as ReadonlyArray<AnyStatisticsReducerDefinition>;
+]);

@@ -5,6 +5,7 @@ import type { FieldFormatDefinition } from '../../contract';
 import { defineFieldFormat } from '../../contract';
 import { DataFieldType } from '../../schemas';
 import { coerceValue } from '../data';
+import { createReadonlyMap, freezeDefinitions } from '../shared';
 import { DataFieldFormat } from './constants';
 
 /** 严格 YYYY/MM/DD 斜杠日期：四位年 / 两位月 / 两位日，分隔符必须是 `/`。 */
@@ -102,22 +103,24 @@ const percentFormat = defineFieldFormat({
 });
 
 /** 内置字段解析格式 definition 列表；内置 6 个与自定义格式共享同一 registry 分派流程。 */
-export const BUILTIN_FORMATS: ReadonlyArray<FieldFormatDefinition> = [
+export const BUILTIN_FORMATS: ReadonlyArray<FieldFormatDefinition> = freezeDefinitions([
   isoFormat,
   epochSecondsFormat,
   epochMillisFormat,
   slashDateFormat,
   numberStringFormat,
   percentFormat,
-];
+]);
+
+/** 默认格式 registry 的私有稳定索引；公开只读视图与每次 resolver 副本均从此生成。 */
+const BUILTIN_FORMAT_REGISTRY = new Map(BUILTIN_FORMATS.map(def => [def.name, def] as const));
 
 /**
- * 按 name 索引的内置格式 definition。
- * @description 作为 format registry 的内置初始化来源，也供诊断与测试确认内置覆盖；自定义 definition 不写入此表，而是在每次 lowering 时合并。
+ * 按 name 索引的内置格式 definition 只读视图。
+ * @description 供诊断与测试确认内置覆盖；默认 resolver 使用私有稳定索引，自定义 definition 不写入此视图。
  */
-export const BUILTIN_FORMAT_DEFINITIONS_BY_NAME: ReadonlyMap<string, FieldFormatDefinition> = new Map(
-  BUILTIN_FORMATS.map(def => [def.name, def] as const),
-);
+export const BUILTIN_FORMAT_DEFINITIONS_BY_NAME: ReadonlyMap<string, FieldFormatDefinition> =
+  createReadonlyMap(BUILTIN_FORMAT_REGISTRY);
 
 /**
  * 解析字段格式 registry。
@@ -126,7 +129,7 @@ export const BUILTIN_FORMAT_DEFINITIONS_BY_NAME: ReadonlyMap<string, FieldFormat
 export const resolveFormatRegistry = (
   custom?: ReadonlyArray<FieldFormatDefinition>,
 ): Map<string, FieldFormatDefinition> => {
-  const registry = new Map(BUILTIN_FORMAT_DEFINITIONS_BY_NAME);
+  const registry = new Map(BUILTIN_FORMAT_REGISTRY);
   for (const def of custom ?? []) {
     if (def.name.length === 0) {
       throw new Error('data: field format name must be a non-empty string');

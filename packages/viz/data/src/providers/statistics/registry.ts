@@ -11,18 +11,28 @@ import type { ExternalRow } from '../../shared';
 
 import { extractStatisticOperation } from '../../contract';
 import { ReducerOperationSchema, SelectorOperationSchema } from '../../schemas';
+import { createReadonlyMap } from '../shared';
 import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 import { BUILTIN_ROW_SELECTORS } from './selectors';
 
 export { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 export { BUILTIN_ROW_SELECTORS } from './selectors';
 
+/** 默认 statistics reducer registry 的私有稳定索引。 */
+const BUILTIN_STATISTICS_REDUCER_REGISTRY = createReadonlyMap(
+  BUILTIN_STATISTICS_REDUCERS.map(def => [extractStatisticOperation(def.schema), def] as const),
+);
+
+/** 默认 row selector registry 的私有稳定索引。 */
+const BUILTIN_ROW_SELECTOR_REGISTRY = createReadonlyMap(
+  BUILTIN_ROW_SELECTORS.map(def => [extractStatisticOperation(def.schema), def] as const),
+);
+
 /** 合并内置与自定义统计 reducer 定义，并集中检查 kind 冲突。 */
 export const resolveStatisticsReducerRegistry = (
   custom?: ReadonlyArray<AnyStatisticsReducerDefinition>,
 ): Map<string, AnyStatisticsReducerDefinition> => {
-  const registry = new Map<string, AnyStatisticsReducerDefinition>();
-  for (const def of BUILTIN_STATISTICS_REDUCERS) registry.set(extractStatisticOperation(def.schema), def);
+  const registry = new Map(BUILTIN_STATISTICS_REDUCER_REGISTRY);
   for (const def of custom ?? []) {
     const kind = extractStatisticOperation(def.schema);
     if (registry.has(kind)) throw new Error(`data: duplicate statistics reducer registration: "${kind}"`);
@@ -35,8 +45,7 @@ export const resolveStatisticsReducerRegistry = (
 export const resolveRowSelectorRegistry = (
   custom?: ReadonlyArray<AnyRowSelectorDefinition>,
 ): Map<string, AnyRowSelectorDefinition> => {
-  const registry = new Map<string, AnyRowSelectorDefinition>();
-  for (const def of BUILTIN_ROW_SELECTORS) registry.set(extractStatisticOperation(def.schema), def);
+  const registry = new Map(BUILTIN_ROW_SELECTOR_REGISTRY);
   for (const def of custom ?? []) {
     const kind = extractStatisticOperation(def.schema);
     if (registry.has(kind)) throw new Error(`data: duplicate row selector registration: "${kind}"`);

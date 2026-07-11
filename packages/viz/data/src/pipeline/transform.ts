@@ -15,11 +15,11 @@ import { createDataLineageRecorder } from './lineage';
 import { readSourceIndex, readSourceIndices, tagSourceIndex, withGroupProvenance } from './provenance';
 
 /** 默认 transform 上下文：使用 data provenance symbol 标记，不把来源信息写进 JSON IR。 */
-export const DEFAULT_TRANSFORM_CONTEXT: TransformContext = {
+export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.freeze({
   readSourceIndex,
   readSourceIndices,
   groupProvenance: withGroupProvenance,
-};
+});
 
 /** 解析并校验单个 transform operation；返回可安全传给对应 definition 的宽类型。 */
 const parseTransformOperation = (definition: AnyTransformDefinition, operation: IRDataTransform): never => {
