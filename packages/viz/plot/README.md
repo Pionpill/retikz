@@ -1,13 +1,18 @@
 # @retikz/plot
 
-retikz Tier 2 plot package: a JSON-serializable, grammar-of-graphics **Plot IR** that
-lowers to `@retikz/core` (Scope / Node / Path / Step / Coordinate) via the core
-`CompileOptions.composites` hook.
+`@retikz/plot` is retikz's Tier 2 visualization package. It defines a
+JSON-serializable, grammar-of-graphics **Plot IR** and lowers that IR to
+`@retikz/core` primitives through the core composite pipeline.
 
-- **Data lives outside the IR.** The IR holds a named data reference (`data.reference`) plus an
-  optional data model; the dataset values are injected at compile time through
-  `lowerPlots(datasets)`.
-- Authoring surface for v0.1 is the Plot IR object + lowering; framework bindings
-  (React / vanilla) come later.
+- **Data stays outside the IR.** A plot stores a named data reference
+  (`data.reference`) and an optional data model; dataset values are supplied to
+  `lowerPlots(datasets)` at compile time.
+- `@retikz/data` owns the shared JSON data models, field resolution, and transform
+  pipeline used by visualization packages.
+- `@retikz/plot-react` provides the `<Plot>` component and JSX authoring DSL.
+- `@retikz/plot-vanilla` provides `plotBuilder()` and `renderPlot()` for
+  framework-free and server-side rendering workflows.
 
-See `../_notes/architecture/plot-design.md` and `../_notes/decisions/` for design and ADRs.
+See the [plot architecture](https://github.com/Pionpill/retikz/blob/next-viz/packages/viz/_notes/architecture/plot-design.md)
+and [plot design decisions](https://github.com/Pionpill/retikz/tree/next-viz/packages/viz/_notes/decisions/plot)
+for the underlying model and design rationale.

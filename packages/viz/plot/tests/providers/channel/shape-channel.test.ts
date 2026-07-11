@@ -49,7 +49,7 @@ const pointSpec = (
     marks: [{ type: 'point', ...(shape ? { shape } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
-describe('shape channel (alpha.7 ADR-05)', () => {
+describe('shape channel 类别映射', () => {
   it('shape_field_maps_categories_to_palette', () => {
     const data = [
       { x: 0, y: 0, g: 'A' },
@@ -84,7 +84,7 @@ describe('shape channel (alpha.7 ADR-05)', () => {
     expect(nodes.every(n => shapeOf(n) === undefined)).toBe(true);
   });
 
-  // 閿欒璺緞锛歝ontinuous / temporal fail-loud
+  // continuous / temporal 字段必须 fail-loud。
   it('shape_continuous_field_fails_loud', () => {
     const data = [
       { x: 0, y: 0, v: 1.5 },
@@ -105,7 +105,7 @@ describe('shape channel (alpha.7 ADR-05)', () => {
     );
   });
 
-  // 浜や簰锛歴hape + color + size 鍏卞瓨
+  // shape、color 与 size 可以同时生效。
   it('shape_with_color_and_size_coexist', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
