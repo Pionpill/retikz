@@ -8,13 +8,13 @@ export type DataSourceIdentityMode = 'summary' | 'full';
 export type DataSourceIdentityOptions = {
   /** summary 只记录 count + 前 maxIndices 个索引；full 只允许显式开启。 */
   mode?: DataSourceIdentityMode;
-  /** summary 模式下保留的 sourceIndices 前缀长度。 */
+  /** summary 模式下保留的 sourceIndices 前缀长度，必须为正整数。 */
   maxIndices?: number;
 };
 
 /** 记录行值样本的安全白名单选项。 */
 export type DataValueSampleOptions = {
-  /** 最大记录行数，必须为正有限数。 */
+  /** 最大记录行数，必须为正整数。 */
   maxRows: number;
   /** 允许记录值的字段白名单，必须非空；不允许省略后记录整行。 */
   fields: Array<string>;
