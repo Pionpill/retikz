@@ -12,6 +12,8 @@ import {
   QuantileBandPointOutputSchema,
   QuantileBandReducerOperationSchema,
   QuantileBandWhiskerSpecSchema,
+  ReducerOperationSchema,
+  SelectorOperationSchema,
   SelectTransformSchema,
   SummarizeTransformSchema,
   TransformOperationSchema,
@@ -89,6 +91,8 @@ describe('transform schema', () => {
 
   it('rejects invalid built-in transform shape at schema boundary', () => {
     expect(() => TransformSchema.parse({ kind: 'sort', field: '' })).toThrow();
+    expect(ReducerOperationSchema.safeParse({ kind: 'sum' }).success).toBe(false);
+    expect(SelectorOperationSchema.safeParse({ kind: 'min' }).success).toBe(false);
   });
 
   it('rejects unknown keys on built-in transforms without blocking external config', () => {

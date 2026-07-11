@@ -4,8 +4,9 @@ import type { FieldFormatDefinition } from '../../contract';
 
 import { defineFieldFormat } from '../../contract';
 import { DataFieldType } from '../../schemas';
+import { createReadonlyMap } from '../../shared';
 import { coerceValue } from '../data';
-import { createReadonlyMap, freezeDefinitions } from '../shared';
+import { freezeDefinitions } from '../shared';
 import { DataFieldFormat } from './constants';
 
 /** 严格 YYYY/MM/DD 斜杠日期：四位年 / 两位月 / 两位日，分隔符必须是 `/`。 */

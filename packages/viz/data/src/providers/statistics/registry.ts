@@ -11,7 +11,7 @@ import type { ExternalRow } from '../../shared';
 
 import { extractStatisticOperation } from '../../contract';
 import { ReducerOperationSchema, SelectorOperationSchema } from '../../schemas';
-import { createReadonlyMap } from '../shared';
+import { createReadonlyMap } from '../../shared';
 import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 import { BUILTIN_ROW_SELECTORS } from './selectors';
 
