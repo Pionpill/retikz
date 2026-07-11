@@ -7,7 +7,8 @@ import type {
   FieldCollector,
   TransformContext,
 } from '../contract';
-import type { ExternalRow, IRDataTransform } from '../schemas';
+import type { IRDataTransform } from '../schemas';
+import type { ExternalRow } from '../shared';
 
 import { resolveTransformRegistry } from '../providers';
 import { createDataLineageRecorder } from './lineage';

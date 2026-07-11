@@ -1,9 +1,9 @@
 ﻿import { z } from 'zod';
 
+import type { IRDataTransform } from '../schemas';
+import type { ExternalRow } from '../shared';
 import type { DataLineageRecorder } from './lineage';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
-
-import { type ExternalRow, type IRDataTransform } from '../schemas';
 
 /**
  * transform apply 上下文。

@@ -1,5 +1,6 @@
 ﻿import type { AnyRowSelectorDefinition } from '../../contract';
-import type { ExternalRow, RowSelectorTieValue } from '../../schemas';
+import type { RowSelectorTieValue } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { defineRowSelector } from '../../contract';
 import { BuiltinSelectorOperationSchemas, DataSortOrder, RowSelectorTie } from '../../schemas';

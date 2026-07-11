@@ -1,4 +1,5 @@
-import type { ExternalRow, IRDataReducerOperation, IRDataSelectorOperation, IRDataTransform } from '../schemas';
+import type { IRDataReducerOperation, IRDataSelectorOperation, IRDataTransform } from '../schemas';
+import type { ExternalRow } from '../shared';
 
 /** 数据来源索引摘要模式。 */
 export type DataSourceIdentityMode = 'summary' | 'full';

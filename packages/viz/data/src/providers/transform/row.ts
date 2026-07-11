@@ -1,4 +1,5 @@
-﻿import type { ExternalRow, IRDataSortTransform } from '../../schemas';
+﻿import type { IRDataSortTransform } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { DataSortOrder } from '../../schemas';
 import { compareRowsByFieldPath } from '../data';

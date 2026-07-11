@@ -1,5 +1,5 @@
-﻿import type { FieldFormatDefinition, ParsedFieldValue } from '../../contract';
-import type { DataFieldTypeMap, IRDataModel } from '../../schemas';
+﻿import type { DataFieldTypeMap, FieldFormatDefinition, ParsedFieldValue } from '../../contract';
+import type { IRDataModel } from '../../schemas';
 
 import { resolveFormatRegistry } from './definitions';
 

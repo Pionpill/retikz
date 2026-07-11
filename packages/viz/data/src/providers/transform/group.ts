@@ -1,11 +1,11 @@
 import type {
-  ExternalRow,
   IRDataAnnotateSelector,
   IRDataAnnotateTransform,
   IRDataReducerOperation,
   IRDataSelectTransform,
   IRDataSummarizeTransform,
 } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { type TransformContext } from '../../contract';
 import { resolveFieldPath } from '../data';

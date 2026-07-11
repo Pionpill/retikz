@@ -7,7 +7,7 @@ import type {
   DataSourceIdentityOptions,
   DataValueSampleOptions,
 } from '../contract';
-import type { ExternalRow } from '../schemas';
+import type { ExternalRow } from '../shared';
 
 import { resolveFieldPath } from '../providers';
 import { readSourceIndex, readSourceIndices } from './provenance';

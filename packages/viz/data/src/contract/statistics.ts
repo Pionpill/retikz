@@ -1,8 +1,8 @@
 ﻿import { z } from 'zod';
 
+import type { IRDataReducerOperation, IRDataSelectorOperation } from '../schemas';
+import type { ExternalRow } from '../shared';
 import type { TransformContext } from './transform';
-
-import { type ExternalRow, type IRDataReducerOperation, type IRDataSelectorOperation } from '../schemas';
 
 /**
  * 统计 reducer 运行时定义。

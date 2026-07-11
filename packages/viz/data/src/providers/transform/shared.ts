@@ -1,6 +1,6 @@
 import { isFiniteNumber } from '@retikz/math';
 
-import type { ExternalRow } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { resolveFieldPath } from '../data';
 

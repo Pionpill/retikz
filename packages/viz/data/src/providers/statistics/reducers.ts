@@ -1,5 +1,5 @@
 import type { AnyStatisticsReducerDefinition } from '../../contract';
-import type { ExternalRow } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { defineStatisticsReducer } from '../../contract';
 import { BuiltinReducerOperationSchemas } from '../../schemas';
