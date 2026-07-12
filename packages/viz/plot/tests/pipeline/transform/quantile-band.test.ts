@@ -7,7 +7,7 @@ import { createFieldCollector } from '../../../src/providers/channel/shared';
 import { TransformSchema } from '../../../src/schemas';
 import { PlotSpecSchema } from '../../../src/schemas/plot';
 
-describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
+describe('quantile-band statistics schema (contract)', () => {
   it('accepts quantile-band reducer and preserves JSON round trip', () => {
     const operation = {
       kind: 'summarize',
@@ -151,7 +151,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
   });
 });
 
-describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
+describe('quantile-band statistics behavior (contract)', () => {
   const rows = [
     { group: 'A', value: 0 },
     { group: 'A', value: 2 },

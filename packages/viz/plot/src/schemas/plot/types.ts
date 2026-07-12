@@ -34,4 +34,4 @@ export type CompositionGridResolveValue = ValueOf<typeof CompositionGridResolve>
 export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
 
 /** Plot IR 根节点（plot composite 节点） */
-export type PlotSpec = z.infer<typeof PlotSpecSchema>;
+export type IRPlotSpec = z.infer<typeof PlotSpecSchema>;

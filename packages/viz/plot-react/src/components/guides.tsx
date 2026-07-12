@@ -1,4 +1,4 @@
-import type { AxisGuide, LegendGuide } from '@retikz/plot';
+import type { IRPlotAxisGuide, IRPlotLegendGuide } from '@retikz/plot';
 import type { FC } from 'react';
 
 import type { PositionScaleType } from './scales';
@@ -13,23 +13,23 @@ export type AxisProps = {
   /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <Scale dimension={dimension} type={scale} /> */
   scale?: PositionScaleType;
   /** 轴线样式；false 隐藏轴线但保留 ticks / labels / grid。 */
-  line?: AxisGuide['line'];
+  line?: IRPlotAxisGuide['line'];
   /** 刻度来源和刻度线样式；grid 复用同一批 ticks。 */
-  ticks?: AxisGuide['ticks'];
+  ticks?: IRPlotAxisGuide['ticks'];
   /** 轴线交叉值处的 tick / label 冲突策略。 */
-  crossing?: AxisGuide['crossing'];
+  crossing?: IRPlotAxisGuide['crossing'];
   /** 刻度标签开关、格式化和文本样式；false 隐藏刻度标签，缺省显示。 */
-  tickLabels?: AxisGuide['tickLabels'];
+  tickLabels?: IRPlotAxisGuide['tickLabels'];
   /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */
-  grid?: AxisGuide['grid'];
+  grid?: IRPlotAxisGuide['grid'];
   coordinateView?: string;
   facetId?: string;
   scaffoldId?: string;
   trackId?: string;
-  placement?: AxisGuide['placement'];
-  title?: AxisGuide['title'];
+  placement?: IRPlotAxisGuide['placement'];
+  title?: IRPlotAxisGuide['title'];
   /** 语义图层覆盖；控制坐标轴外层 scope 在 plot 内的 zIndex。 */
-  layer?: AxisGuide['layer'];
+  layer?: IRPlotAxisGuide['layer'];
   /** 可选 guide 句柄，用于稳定标识生成的坐标轴。 */
   id?: string;
 };
@@ -47,19 +47,19 @@ export type LegendProps = {
   /** 消歧 scale name（同通道被多个 scale 驱动时指定；省略 = 该通道唯一 scale，多于一个且省略 → lowering fail-loud） */
   scale?: string;
   /** 图例标题；支持字符串、多行文本和 styled text block */
-  title?: LegendGuide['title'];
+  title?: IRPlotLegendGuide['title'];
   /** 图例位置（预留带所在边）；缺省 = right */
   position?: 'right' | 'left' | 'top' | 'bottom';
   /** 条目排布方向；省略 = 按 position（左右→vertical、上下→horizontal） */
   orient?: 'vertical' | 'horizontal';
   /** 连续色带刻度来源；离散图例忽略 tick source */
-  ticks?: LegendGuide['ticks'];
+  ticks?: IRPlotLegendGuide['ticks'];
   /** 是否出 swatch / 刻度旁标签，以及连续 ramp 的标签格式；缺省 = true */
-  tickLabels?: LegendGuide['tickLabels'];
+  tickLabels?: IRPlotLegendGuide['tickLabels'];
   /** 图例本地视觉 token；覆盖 Plot theme.legend */
-  style?: LegendGuide['style'];
+  style?: IRPlotLegendGuide['style'];
   /** 语义图层覆盖；控制图例外层 scope 在 plot 内的 zIndex。 */
-  layer?: LegendGuide['layer'];
+  layer?: IRPlotLegendGuide['layer'];
 };
 
 /**

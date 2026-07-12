@@ -11,7 +11,7 @@ const gradientPaint = {
   ],
 };
 
-describe('MarkSchema (ADR-05)', () => {
+describe('MarkSchema (contract)', () => {
   // Happy path
   it('mark_point_valid', () => {
     const m = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
@@ -85,7 +85,7 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(point)).toEqual(point);
   });
 
-  // ADR-02：interval(bar)
+  // contract：interval(bar)
   it('mark_interval_valid', () => {
     const m = { type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
@@ -100,7 +100,7 @@ describe('MarkSchema (ADR-05)', () => {
     expect(() => MarkSchema.parse({ type: 'interval' })).toThrow();
   });
 
-  // ADR-05：relation（series / bounds）
+  // contract：relation（series / bounds）
   it('mark_interval_series_dodge_valid', () => {
     const m = {
       type: 'interval',
@@ -131,7 +131,7 @@ describe('MarkSchema (ADR-05)', () => {
     ).toThrow();
   });
 
-  // alpha.12 ADR-01：histogram 连续 x 区间柱（extent bound）
+  // contract：histogram 连续 x 区间柱（extent bound）
   it('mark_interval_extent_histogram_valid', () => {
     const m = {
       type: 'interval',
@@ -156,7 +156,7 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  // ADR-02：sector(pie / donut) → interval (extent×full)
+  // contract：sector(pie / donut) → interval (extent×full)
   it('mark_sector_valid', () => {
     const m = {
       type: 'interval',
@@ -260,7 +260,7 @@ describe('MarkSchema (ADR-05)', () => {
 
   // 错误路径：baseline 必须有限（.finite 防 Infinity 破坏 JSON round-trip）
 
-  // ADR-03：path 加 closed（雷达多边形）
+  // contract：path 加 closed（雷达多边形）
   it('mark_path_closed_valid', () => {
     const m = { type: 'path', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
@@ -331,7 +331,7 @@ describe('MarkSchema (ADR-05)', () => {
     ).toThrow();
   });
 
-  // alpha.7 ADR-02：size 通道仅 PointMark
+  // contract：size 通道仅 PointMark
   it('mark_point_with_size_field_valid', () => {
     const m = {
       type: 'point',
@@ -359,7 +359,7 @@ describe('MarkSchema (ADR-05)', () => {
     expect((parsed.encoding as { size?: unknown }).size).toEqual({ field: 'p' });
   });
 
-  // alpha.7 ADR-04：opacity 通道仅 PointMark
+  // contract：opacity 通道仅 PointMark
   it('mark_point_with_opacity_valid', () => {
     const m = {
       type: 'point',
@@ -377,7 +377,7 @@ describe('MarkSchema (ADR-05)', () => {
     expect((parsed.encoding as { opacity?: unknown }).opacity).toEqual({ field: 'd' });
   });
 
-  // alpha.7 ADR-05：shape 通道仅 PointMark
+  // contract：shape 通道仅 PointMark
   it('mark_point_with_shape_valid', () => {
     const m = {
       type: 'point',
@@ -457,7 +457,7 @@ describe('MarkSchema (ADR-05)', () => {
     expect((parsed.encoding as { shape?: unknown }).shape).toEqual({ field: 'cat' });
   });
 
-  // alpha.11 ADR-02：rect(heatmap) → interval (band×band)
+  // contract：rect(heatmap) → interval (band×band)
   it('mark_rect_with_color_valid', () => {
     const m = {
       type: 'interval',
@@ -526,7 +526,7 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
-  // alpha.11 ADR-03：reference(参考线 / 阈值带) mark
+  // contract：reference(参考线 / 阈值带) mark
   it('mark_reference_horizontal_constant_valid', () => {
     const m = { type: 'reference', encoding: { y: { value: 80 }, color: { value: 'crimson' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
@@ -638,7 +638,7 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
-  // alpha.11 ADR-04：text → point (encoding.text) + 位置 mark label
+  // contract：text → point (encoding.text) + 位置 mark label
   it('mark_text_union_discriminates', () => {
     const parsed = MarkSchema.parse({
       type: 'point',

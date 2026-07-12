@@ -3,27 +3,27 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-01 polar 投影 lowering 测试。
+ * contract polar 投影 lowering 测试。
  * 断言 lowerPlots 产出的 core IR（node position / 结构），不碰内部 CoordinateFrame 方法。
- * 投影约定（ADR §2）：θ=angleScale(angleValue) 度、r=radiusScale(radiusValue)，
+ * 投影约定：θ=angleScale(angleValue) 度、r=radiusScale(radiusValue)，
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]；0°=+x、90°=+y（屏幕 y 向下）。
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 /** 第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 取一个 point 图层里所有 node 的 position（point 无 color 时为单层 nodeDefault + 裸 node） */
@@ -33,7 +33,7 @@ const positionsOf = (layer: IRScope): Array<[number, number]> =>
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 /** 角向 a / 径向 r，均线性；用裸 x/y 通道（复用语义）或显式 angle/radius 通道 */
-const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record<string, unknown>> = {}): PlotSpec =>
+const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record<string, unknown>> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -46,7 +46,7 @@ const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record
     marks: [{ type: 'point', encoding }],
   });
 
-describe('lowerPlots polar 投影几何 (ADR-01)', () => {
+describe('lowerPlots polar 投影几何 (contract)', () => {
   // Happy path
   it('polar_point_angle0_radiusmax_lands_right_of_center', () => {
     // 角向 domain 显式 [0,360]，行 angle=0 → θ=startAngle=0°；径向 domain [0,10]、值=10 → r=outerRadius
@@ -219,7 +219,7 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
     expect(distinctX.size).toBeGreaterThan(1);
   });
 
-  // 边界：非有限值跳过（守 alpha.1 语义）
+  // 边界：非有限值跳过。
   it('non_finite_radius_skipped', () => {
     const rows = [
       { theta: 0, value: 5 },
@@ -314,7 +314,7 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
     expect(() => expandOf(spec, { d: [{ cat: 'A', value: 1 }] }, opts)).toThrow(/ordinal/);
   });
 
-  // ADR-01（alpha.9）：位置通道完整性从 schema 转 coordinate 级 lowering 校验——
+  // 位置通道完整性由 coordinate 级 lowering 校验——
   // x/y 在 parse 期合法（可选），缺角色在 lowering fail-loud（polar2D / cartesian2D 都需 x+y）。
   it('polar_encoding_missing_y_fails_loud_at_lowering', () => {
     const spec = PlotSpecSchema.parse({
@@ -345,13 +345,13 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
 });
 
 // 回归：cartesian2D point 产物与既有行为一致（frame 重构零行为改变）
-describe('lowerPlots cartesian 回归 (ADR-01)', () => {
+describe('lowerPlots cartesian 回归 (contract)', () => {
   const SALES = [
     { month: 0, revenue: 10 },
     { month: 1, revenue: 14 },
     { month: 2, revenue: 9 },
   ];
-  const cartPointSpec: PlotSpec = PlotSpecSchema.parse({
+  const cartPointSpec: IRPlotSpec = PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },

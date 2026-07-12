@@ -1,7 +1,7 @@
 ﻿import type { IRNode, IRPath, IRScope, JsonValue, ValueOf } from '@retikz/core';
 import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow, IRDataScalarValue } from '@retikz/data';
 
-import type { Channel, LegendChannelValue, MarkOperation, PlotSpec } from '../schemas';
+import type { IRPlotChannel, IRPlotMarkOperation, IRPlotSpec, LegendChannelValue } from '../schemas';
 import type { DimensionRole } from './coordinate';
 import type { AnyScaleDefinition, ChannelScaleResolution } from './scale';
 
@@ -53,7 +53,7 @@ export type ChannelDefinitionKindValue = ValueOf<typeof ChannelDefinitionKind>;
 /** Node 通道交付上下文：definition 可据 mark / row / point 形态决定是否落值。 */
 export type NodeChannelDeliveryContext = {
   /** 正在下沉的 mark。 */
-  mark: MarkOperation;
+  mark: IRPlotMarkOperation;
   /** 当前数据行。 */
   row: ExternalRow;
   /** point mark 的具体 node 形态；文本点和 glyph 点的可写样式不同。 */
@@ -73,7 +73,7 @@ export type NodeChannelDelivery = {
 /** Path 通道交付上下文：definition 可据 mark / row / path 形态决定是否落值。 */
 export type PathChannelDeliveryContext = {
   /** 正在下沉的 mark。 */
-  mark: MarkOperation;
+  mark: IRPlotMarkOperation;
   /** 当前数据行；series / 聚合 path 暂以代表行传入。 */
   row: ExternalRow;
 };
@@ -91,7 +91,7 @@ export type PathChannelDelivery = {
 /** Scope 通道交付上下文：definition 可据 mark / layer rows 决定如何设置整层默认值。 */
 export type ScopeChannelDeliveryContext = {
   /** 正在下沉的 mark。 */
-  mark: MarkOperation;
+  mark: IRPlotMarkOperation;
   /** 当前 mark 使用的数据行。 */
   rows: ReadonlyArray<ExternalRow>;
 };
@@ -122,7 +122,7 @@ export type MarkChannels = {
 };
 
 /** addChannel 接受的通道形态：普通 channel 或 MarkValueType 的字段 / 常量引用。 */
-export type FieldChannel = Channel | { kind: 'field' | 'constant'; value: unknown };
+export type FieldChannel = IRPlotChannel | { kind: 'field' | 'constant'; value: unknown };
 
 /** 字段收集器：把 mark / transform 声明中引用外部数据源的字段加入集合。 */
 export type FieldCollector = {
@@ -180,7 +180,7 @@ export type ChannelOutputSpace =
 
 /** 通道解析上下文：spec + 规整后的数据行 + 字段类型表。 */
 export type ChannelContext = {
-  node: PlotSpec;
+  node: IRPlotSpec;
   rows: Array<ExternalRow>;
   fieldTypes: DataFieldTypeMap;
   scaleRegistry?: ReadonlyMap<string, AnyScaleDefinition>;
@@ -216,7 +216,7 @@ export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
 };
 
 /** 读取某 mark 上某通道绑定的统一入口。 */
-export type ChannelBindingResolver = (mark: MarkOperation) => Channel | undefined;
+export type ChannelBindingResolver = (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
 
 /** 通道 definition 的公共基座。 */
 export type BaseChannelDefinition<TKind extends ChannelDefinitionKindValue> = {
@@ -239,7 +239,7 @@ export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
   typeof ChannelDefinitionKind.Mark
 > & {
   /** 建逐 mark 解析器（行→通道值 + 可选 legend descriptor）。 */
-  resolve: (ctx: ChannelContext) => (mark: MarkOperation) => MarkChannelResolution<T> | undefined;
+  resolve: (ctx: ChannelContext) => (mark: IRPlotMarkOperation) => MarkChannelResolution<T> | undefined;
 };
 
 /**
@@ -254,7 +254,7 @@ export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
   /** legend 形态（size→梯度气泡 / opacity→ramp / shape→symbol）；无 legend 的通道省略。 */
   legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
   /** 建逐 mark 解析器（行→通道值 + 可选 legend descriptor）。 */
-  resolve: (ctx: NodeChannelContext) => (mark: MarkOperation) => ChannelResolution<T> | undefined;
+  resolve: (ctx: NodeChannelContext) => (mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
   /**
    * 把逐行解析值落到 core IRNode 的既有属性。
    * @description 不写 position / 几何；新渲染能力应先下沉到 core。
@@ -275,7 +275,7 @@ export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = Base
   /** legend 形态；无 legend 的通道省略。 */
   legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
   /** 建逐 mark 解析器（整层共享值 + 可选 legend descriptor）。 */
-  resolve: (ctx: ScopeChannelContext) => (mark: MarkOperation) => ScopeChannelResolution<T> | undefined;
+  resolve: (ctx: ScopeChannelContext) => (mark: IRPlotMarkOperation) => ScopeChannelResolution<T> | undefined;
   /** 把解析值落到 core IRScope 的既有属性或 every-X 默认。 */
   deliver: (scope: IRScope, value: T, context: ScopeChannelDeliveryContext) => void;
 };
@@ -293,7 +293,7 @@ export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
   /** legend 形态（opacity→ramp / strokeWidth→size）；无 legend 的通道省略。 */
   legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
   /** 建逐 mark 解析器（行→通道值 + 可选 legend descriptor）。 */
-  resolve: (ctx: PathChannelContext) => (mark: MarkOperation) => ChannelResolution<T> | undefined;
+  resolve: (ctx: PathChannelContext) => (mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
   /** 把逐行解析值落到 core IRPath 的既有属性。 */
   deliver: (path: IRPath, value: T, context: PathChannelDeliveryContext) => void;
 };
@@ -333,14 +333,14 @@ export type AnyChannelDefinition =
   | {
       channel: string;
       kind: typeof ChannelDefinitionKind.Mark;
-      resolve: (ctx: ChannelContext) => (mark: MarkOperation) => MarkChannelResolution<ChannelValue> | undefined;
+      resolve: (ctx: ChannelContext) => (mark: IRPlotMarkOperation) => MarkChannelResolution<ChannelValue> | undefined;
     }
   | {
       channel: string;
       kind: typeof ChannelDefinitionKind.Node;
       output: ChannelOutputSpace;
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-      resolve: (ctx: NodeChannelContext) => (mark: MarkOperation) => ChannelResolution<ChannelValue> | undefined;
+      resolve: (ctx: NodeChannelContext) => (mark: IRPlotMarkOperation) => ChannelResolution<ChannelValue> | undefined;
       deliver: (node: IRNode, value: never, context: NodeChannelDeliveryContext) => void;
     }
   | {
@@ -348,7 +348,9 @@ export type AnyChannelDefinition =
       kind: typeof ChannelDefinitionKind.Scope;
       output: ChannelOutputSpace;
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-      resolve: (ctx: ScopeChannelContext) => (mark: MarkOperation) => ScopeChannelResolution<ChannelValue> | undefined;
+      resolve: (
+        ctx: ScopeChannelContext,
+      ) => (mark: IRPlotMarkOperation) => ScopeChannelResolution<ChannelValue> | undefined;
       deliver: (scope: IRScope, value: never, context: ScopeChannelDeliveryContext) => void;
     }
   | {
@@ -356,6 +358,6 @@ export type AnyChannelDefinition =
       kind: typeof ChannelDefinitionKind.Path;
       output: ChannelOutputSpace;
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-      resolve: (ctx: PathChannelContext) => (mark: MarkOperation) => ChannelResolution<ChannelValue> | undefined;
+      resolve: (ctx: PathChannelContext) => (mark: IRPlotMarkOperation) => ChannelResolution<ChannelValue> | undefined;
       deliver: (path: IRPath, value: never, context: PathChannelDeliveryContext) => void;
     };

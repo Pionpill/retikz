@@ -6,27 +6,35 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { CustomMark, PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { defineMark } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { EncodingSchema, PlotSpecSchema, TransformSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
+const DotMarkSchema = z.looseObject({
+  type: z.literal('dot'),
+  encoding: EncodingSchema.optional(),
+  transform: z.array(TransformSchema).optional(),
+});
+
+type DotMark = z.infer<typeof DotMarkSchema>;
+
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
-const groupPointSpec = (): PlotSpec =>
+const groupPointSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -63,8 +71,8 @@ const doubleTransform = defineTransform({
 });
 
 const recorderMark = (record: { rows: Array<ExternalRow> }) =>
-  defineMark<CustomMark>({
-    type: 'dot',
+  defineMark<DotMark>({
+    schema: DotMarkSchema,
     collectFields: (mark, fields) => {
       fields.addChannel(mark.encoding?.x);
       fields.addChannel(mark.encoding?.y);

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../src/schemas';
@@ -59,11 +59,11 @@ const compositionSpec = {
   ],
 };
 
-const parsePlotSpec = (spec: unknown): PlotSpec => PlotSpecSchema.parse(spec);
+const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
 
-const parsedCompositionSpec = (): PlotSpec => parsePlotSpec(compositionSpec);
+const parsedCompositionSpec = (): IRPlotSpec => parsePlotSpec(compositionSpec);
 
-const expandOf = (spec: PlotSpec): IRScope => {
+const expandOf = (spec: IRPlotSpec): IRScope => {
   const [definition] = lowerPlots({ sales: rows }, { width: 480, height: 300 });
   return definition.expand(spec) as IRScope;
 };

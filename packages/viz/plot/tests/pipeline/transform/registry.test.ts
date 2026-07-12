@@ -8,7 +8,7 @@ import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
@@ -58,7 +58,7 @@ const groupSumDefinition = defineTransform({
 });
 
 const compile = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   definitions = [doubleDefinition],
 ) =>
@@ -67,7 +67,7 @@ const compile = (
     { composites: lowerPlots(datasets, { transformDefinitions: definitions }) },
   );
 
-const pointSpec = (transform: PlotSpec['transform']): PlotSpec =>
+const pointSpec = (transform: IRPlotSpec['transform']): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -87,7 +87,7 @@ const pointSpec = (transform: PlotSpec['transform']): PlotSpec =>
     marks: [{ type: 'point', encoding: { x: { field: 'x2' }, y: { field: 'y' } } }],
   });
 
-describe('transform registry (alpha.12 ADR-06)', () => {
+describe('transform registry (contract)', () => {
   it('builtin_registry_contains_all_transform_kinds', () => {
     const registry = resolvePlotTransformRegistry();
     expect([...registry.keys()].sort()).toEqual(

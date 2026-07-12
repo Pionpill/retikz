@@ -1,4 +1,4 @@
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
@@ -14,7 +14,7 @@ describe('buildPlotSpec polar coordinate / sector / area / closed / angle·radiu
     const spec = buildPlotSpec(<IntervalMark x="month" y="amount" color="month" />, '__plot', {
       coordinate: 'polar2D',
     });
-    const expected: PlotSpec = {
+    const expected: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },
@@ -106,7 +106,7 @@ describe('buildPlotSpec polar coordinate / sector / area / closed / angle·radiu
 
   it('radar_equivalence：<PathMark> + polar 默认闭合 → point 角向', () => {
     const spec = buildPlotSpec(<PathMark x="dim" y="value" />, '__plot', { coordinate: 'polar2D' });
-    const expected: PlotSpec = {
+    const expected: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },

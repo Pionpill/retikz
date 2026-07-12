@@ -30,7 +30,7 @@ const ORDERS: Array<ExternalRow> = [
   { region: 'S', product: 'A', revenue: 4 },
 ];
 
-describe('statistical transform algebra (alpha.12 ADR-16)', () => {
+describe('statistical transform algebra (contract)', () => {
   it('summarize_multiple_metrics', () => {
     const out = applyTransforms(ORDERS, [
       {

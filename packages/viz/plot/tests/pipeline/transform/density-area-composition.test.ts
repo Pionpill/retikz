@@ -3,7 +3,7 @@ import type { IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -11,7 +11,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
@@ -20,12 +20,12 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
-describe('density area composition (alpha.13 ADR-03)', () => {
+describe('density area composition (contract)', () => {
   const samples = [
     { group: 'A', value: 0 },
     { group: 'A', value: 4 },

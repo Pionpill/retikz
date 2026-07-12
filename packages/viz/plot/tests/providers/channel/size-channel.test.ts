@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../../src/providers';
@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -21,7 +21,7 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -50,7 +50,7 @@ const radiusOf = (node: IRNode): number | undefined => {
 const pointSpec = (
   size: { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number } | undefined,
   extraScales: Array<Record<string, unknown>> = [],
-): PlotSpec =>
+): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',

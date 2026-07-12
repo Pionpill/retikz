@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -73,13 +73,13 @@ const SALES = [
 // ── lowering 侧 helper（找 lowered datum Node 作 parity 对照）────────────
 
 /** 用 lowerPlots 把 spec 展成外层 plot scope */
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（无 guides 时即外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 datum Node（无 color 时直接子；有 color 时藏在子 Scope 里）——渲染序 */
@@ -108,7 +108,7 @@ const sectorParams = (
 // ── spec 工厂（沿用 scope-id-meta SALES 风格）──────────────────────────
 
 /** band-x interval(bar) spec；可带 root id */
-const barSpec = (over: { id?: string } = {}): PlotSpec =>
+const barSpec = (over: { id?: string } = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -123,7 +123,7 @@ const barSpec = (over: { id?: string } = {}): PlotSpec =>
   });
 
 /** linear point spec；可带 root id */
-const pointSpec = (over: { id?: string } = {}): PlotSpec =>
+const pointSpec = (over: { id?: string } = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -138,7 +138,7 @@ const pointSpec = (over: { id?: string } = {}): PlotSpec =>
   });
 
 /** 饼图 sector spec（stack transform 产累积界 → sector mark） */
-const pieSpec = (over: { id?: string } = {}): PlotSpec =>
+const pieSpec = (over: { id?: string } = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -621,7 +621,7 @@ describe('datum locator transform registry parity', () => {
 // =====================================================================
 describe('datum locator — anchor parity and fail-loud', () => {
   // dodge：2 系列分组柱（band-x，series 切等分子带）
-  const dodgeSpec = (): PlotSpec =>
+  const dodgeSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -649,7 +649,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
   ];
 
   // stack：带 stack transform 的堆叠柱（派生 y0/y1）
-  const stackSpec = (): PlotSpec =>
+  const stackSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -678,7 +678,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
   ];
 
   // polar dodge：极坐标 2 系列 interval（径向柱 / 玫瑰，子角带）
-  const polarDodgeSpec = (): PlotSpec =>
+  const polarDodgeSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',

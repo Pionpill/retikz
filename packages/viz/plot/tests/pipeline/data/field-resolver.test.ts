@@ -5,14 +5,14 @@ import { applyFieldResolver, normalizeRows } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots, prepareRows } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
-/** cartesian point spec，model 可选（部分声明走 ADR-05），无 scales → 走 type-driven 派生 */
-const pointSpec = (model?: Array<{ name: string; type?: string }>): PlotSpec =>
+/** cartesian point spec，model 可选（部分声明走 contract），无 scales → 走 type-driven 派生 */
+const pointSpec = (model?: Array<{ name: string; type?: string }>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -24,7 +24,7 @@ const pointSpec = (model?: Array<{ name: string; type?: string }>): PlotSpec =>
 
 const parseSlashDate = (raw: unknown): ParsedFieldValue => Date.parse(String(raw).replaceAll('/', '-'));
 
-describe('applyFieldResolver — 类型覆盖 + parser 收集（ADR-04）', () => {
+describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', () => {
   it('apply_resolver_overrides_type_collects_parse', () => {
     const base = new Map([['x', DataFieldType.Continuous]]);
     const parse = (raw: unknown): ParsedFieldValue => Number(raw);
@@ -86,7 +86,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（ADR-04）', () =
   });
 });
 
-describe('normalizeRows — 自定义 parser（ADR-04）', () => {
+describe('normalizeRows — 自定义 parser（contract）', () => {
   it('parser_overrides_builtin_coerce', () => {
     const out = normalizeRows(
       [{ x: '2024/01/01' }],
@@ -118,7 +118,7 @@ describe('normalizeRows — 自定义 parser（ADR-04）', () => {
   });
 });
 
-describe('prepareRows — resolveField 集成（ADR-04）', () => {
+describe('prepareRows — resolveField 集成（contract）', () => {
   it('custom_date_parse', () => {
     const spec = pointSpec([{ name: 'x', type: 'temporal' }, { name: 'y' }]);
     const rows = [{ x: '2024/01/01', y: 10 }];
@@ -208,7 +208,7 @@ describe('prepareRows — resolveField 集成（ADR-04）', () => {
   });
 });
 
-describe('render ⟺ locator parity + scale 兼容（ADR-04 / 评审 P2）', () => {
+describe('render ⟺ locator parity + scale 兼容', () => {
   const spec = pointSpec([{ name: 'x', type: 'temporal' }, { name: 'y' }]);
   const resolveField: ResolveField = field => (field === 'x' ? { type: 'temporal', parse: parseSlashDate } : undefined);
   const datasets = {

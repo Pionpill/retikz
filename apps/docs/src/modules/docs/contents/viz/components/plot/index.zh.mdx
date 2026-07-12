@@ -168,9 +168,9 @@ lowering 不是 `<Plot>` 私有逻辑，而是注册进 core 编译管线的一�
 | `model`              | `IRDataModel`                        | —                  | 数据模型（字段名 + 类型）；启用 strict 校验和 type-driven scale / guide 派生，见 [数据模型](/viz/data/model)                                                           |
 | `fieldMap`           | `Record<string, string>`             | —                  | 逻辑字段名 → 数据里的实际路径；需配合 `model`，只改名、不变换值，见 [数据模型](/viz/data/model)                                                                        |
 | `coordinate`         | 见 [坐标系](/viz/grammar/coordinate) | cartesian2D        | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置                                                                                 |
-| `composition`        | `PlotSpec['composition']`            | —                  | 底层坐标组合配置，包含 `defaultView`、`views`、`arrangements`、`spacing`、`resolve`；与 `coordinate` 二选一。日常 JSX 优先用 axis id、`<Facet>`、`<Scaffold>` 等 sugar |
+| `composition`        | `IRPlotSpec['composition']`          | —                  | 底层坐标组合配置，包含 `defaultView`、`views`、`arrangements`、`spacing`、`resolve`；与 `coordinate` 二选一。日常 JSX 优先用 axis id、`<Facet>`、`<Scaffold>` 等 sugar |
 | `colors`             | `Array<string>`                      | `schemeCategory10` | 兼容调色板 shorthand。只在对应 `theme.palette` 槽位省略时，用于 categorical / series / sector 默认配色                                                                 |
-| `theme`              | `PlotSpec['theme']`                  | 内置主题           | JSON-safe 视觉默认，覆盖 background、typography、axis、legend、palette。本地 `<Axis>` / `<Legend>` 字段覆盖对应 theme token；scale 和 tick 语义不进 theme              |
+| `theme`              | `IRPlotSpec['theme']`                | 内置主题           | JSON-safe 视觉默认，覆盖 background、typography、axis、legend、palette。本地 `<Axis>` / `<Legend>` 字段覆盖对应 theme token；scale 和 tick 语义不进 theme              |
 | `id`                 | `string`                             | —                  | 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入式未显式 `dataRef` 时也作为默认数据集引用                                                                         |
 | `dataRef`            | `string`                             | —                  | DSL 入口的数据集引用名；多张 Plot 共享同一数据源时可显式设为同名                                                                                                       |
 | `width`              | `number`                             | —                  | 外框宽度（含轴与标签）；也写入 PlotSpec 自描述尺寸                                                                                                                     |
@@ -182,7 +182,7 @@ lowering 不是 `<Plot>` 私有逻辑，而是注册进 core 编译管线的一�
 | `fontSize`           | `number?`                            | —                  | 兼容刻度标签字号；新样式优先通过 axis / theme token 配置                                                                                                               |
 | `margin`             | `{ top?; right?; bottom?; left? }`   | —                  | 覆盖四周留白                                                                                                                                                           |
 | `channelDefinitions` | `Array<AnyChannelDefinition>`        | —                  | 自定义通道运行时定义；配合 spec 里的 `encoding.channels` 使用，见 [自定义通道](/viz/grammar/extend/channel)                                                            |
-| `spec`               | `PlotSpec`                           | —                  | spec 入口：已构造好的 Plot IR root；与 `children` 二选一                                                                                                               |
+| `spec`               | `IRPlotSpec`                         | —                  | spec 入口：已构造好的 Plot IR root；与 `children` 二选一                                                                                                               |
 
 此外，`renderer` / `className` / `style` 会透传给底层 `<Layout>`，分别用于选择渲染后端、附加类名和内联样式。
 

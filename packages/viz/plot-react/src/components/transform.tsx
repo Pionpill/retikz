@@ -1,4 +1,4 @@
-import type { TransformOperation } from '@retikz/plot';
+import type { IRPlotTransform } from '@retikz/plot';
 import type { FC } from 'react';
 
 /**
@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   props 即 IR transform operation（JSON 可序列化），由 <Plot> 同步内省装进 spec.transform。改行数与保行数 transform
  *   统一经此声明，显式可排序、可复用——不再走 mark-prop 自动装配（<IntervalMark bin> 等不识别）。
  */
-export type TransformProps = TransformOperation;
+export type TransformProps = IRPlotTransform;
 
 /**
  * 通用数据 transform 声明组件

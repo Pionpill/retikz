@@ -3,7 +3,7 @@ import type { ExternalRow, TransformContext } from '@retikz/data';
 import { groupRowsByFields, linearSamplesOf, resolveFieldPath } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import type { SmoothTransform } from '../../schemas';
+import type { IRPlotSmoothTransform } from '../../schemas';
 
 const DEFAULT_SMOOTH_SAMPLE_COUNT = 64;
 
@@ -48,7 +48,7 @@ const linearModelOf = (pairs: Array<SmoothPair>): LinearModel => {
   return { intercept, slope };
 };
 
-const sampleExtentOf = (operation: SmoothTransform, pairs: Array<SmoothPair>): [number, number] => {
+const sampleExtentOf = (operation: IRPlotSmoothTransform, pairs: Array<SmoothPair>): [number, number] => {
   if (operation.extent !== undefined) return operation.extent;
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
@@ -59,18 +59,20 @@ const sampleExtentOf = (operation: SmoothTransform, pairs: Array<SmoothPair>): [
   return [min, max];
 };
 
-export const smoothInputFields = (operation: SmoothTransform): Array<string> => [
+/** 返回 smooth transform 读取的源字段。 */
+export const smoothInputFields = (operation: IRPlotSmoothTransform): Array<string> => [
   operation.x,
   operation.y,
   ...(operation.groupBy ?? []),
 ];
 
-export const smoothOutputFields = (operation: SmoothTransform): Array<string> => [operation.xAs, operation.yAs];
+/** 返回 smooth transform 写出的派生字段。 */
+export const smoothOutputFields = (operation: IRPlotSmoothTransform): Array<string> => [operation.xAs, operation.yAs];
 
 /** smooth：首轮只做普通最小二乘线性回归，每组输出 sampleCount 个预测点。 */
 export const applySmooth = (
   rows: Array<ExternalRow>,
-  operation: SmoothTransform,
+  operation: IRPlotSmoothTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
   groupRowsByFields(rows, operation.groupBy).flatMap(group => {

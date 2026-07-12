@@ -1,6 +1,6 @@
 import type { IRScope } from '@retikz/core';
 
-import type { AxisGuide } from '../schemas';
+import type { IRPlotAxisGuide } from '../schemas';
 import type { Rect } from '../shared';
 import type { PolarCoordinateFrame, TernaryVertices } from './coordinate';
 import type { ProvenanceContext } from './provenance';
@@ -53,4 +53,4 @@ export type LoweredGuide = {
 };
 
 /** guide 下沉函数签名，供 coordinate contract 暴露给 provider resolve context。 */
-export type GuideLowerer = (guide: AxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;
+export type GuideLowerer = (guide: IRPlotAxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;

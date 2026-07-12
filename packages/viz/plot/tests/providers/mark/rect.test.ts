@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IntervalMark, PlotSpec } from '../../../src/schemas';
+import type { IRPlotIntervalMark, IRPlotSpec } from '../../../src/schemas';
 
 import { type Cell } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -15,8 +15,8 @@ import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/p
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-02（alpha.11）：rect mark（heatmap 双 band 正交 cell）下沉契约测试。
- * 验证 cartesian 双 band cell 几何（复用 ADR-01 projectCell rect 快路）、值→color 分子 Scope、
+ * Rect mark（heatmap 双 band 正交 cell）下沉契约测试。
+ * 验证 cartesian 双 band cell 几何（复用 contract projectCell rect 快路）、值→color 分子 Scope、
  * 缺 color 回退默认填充、y 非 band fail-loud、polar / 1D / ternary 下 fail-loud、rect + interval 共存。
  */
 
@@ -26,12 +26,12 @@ const WIDTH = 400;
 const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
@@ -97,13 +97,13 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
   };
 };
 
-const rectMark = (color?: string): IntervalMark => ({
+const rectMark = (color?: string): IRPlotIntervalMark => ({
   type: 'interval',
   encoding: { x: { field: 'rk' }, y: { field: 'ck' }, ...(color ? { color: { field: color, scale: 'heat' } } : {}) },
   bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
 });
 
-const heatmapSpec = (color?: string): PlotSpec =>
+const heatmapSpec = (color?: string): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',

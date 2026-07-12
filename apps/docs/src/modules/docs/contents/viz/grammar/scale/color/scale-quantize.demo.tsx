@@ -1,4 +1,4 @@
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 import type { FC } from 'react';
 
 import { Plot } from '@retikz/plot-react';
@@ -6,7 +6,7 @@ import { Plot } from '@retikz/plot-react';
 import { stations } from './scale-discretization.data';
 
 /** quantize 5 档：连续 density 经 spec 入口显式离散化 color scale，等宽切 5 段、每档一色（blues 采样） */
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'd' },

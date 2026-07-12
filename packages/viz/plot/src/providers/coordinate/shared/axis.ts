@@ -1,4 +1,4 @@
-import type { AxisCardinalSideValue, AxisGuide } from '../../../schemas';
+import type { AxisCardinalSideValue, IRPlotAxisGuide } from '../../../schemas';
 
 import { AxisCardinalSide, AxisPlacementKind } from '../../../schemas';
 
@@ -19,7 +19,7 @@ export const defaultOriginAxisTickSideOf = (dimension: string): AxisCardinalSide
  *   roleOf 让不同坐标系在“IR 维度名”和“坐标角色名”之间做一次局部映射。
  */
 export const assertUniqueAxisDimension = (
-  guides: ReadonlyArray<AxisGuide>,
+  guides: ReadonlyArray<IRPlotAxisGuide>,
   roleOf: AxisRoleOf = dimension => dimension,
 ): void => {
   const seen = new Set<string>();
@@ -35,7 +35,7 @@ export const assertUniqueAxisDimension = (
 };
 
 /** axis placement 的归一化 key；offset 是同一 key 上的几何位移，不参与唯一性。 */
-export const axisPlacementKeyOf = (guide: AxisGuide, roleOf: AxisRoleOf = dimension => dimension): string => {
+export const axisPlacementKeyOf = (guide: IRPlotAxisGuide, roleOf: AxisRoleOf = dimension => dimension): string => {
   const role = roleOf(guide.dimension);
   const placement = guide.placement;
   if (placement === undefined || placement.kind === AxisPlacementKind.Auto) return `${role}:auto`;
@@ -51,7 +51,7 @@ export const axisPlacementKeyOf = (guide: AxisGuide, roleOf: AxisRoleOf = dimens
  * @description 同一 role 可放在不同 side / edge；完全相同 placement key 才视为重复。
  */
 export const assertUniqueAxisPlacement = (
-  guides: ReadonlyArray<AxisGuide>,
+  guides: ReadonlyArray<IRPlotAxisGuide>,
   roleOf: AxisRoleOf = dimension => dimension,
 ): void => {
   const seen = new Set<string>();

@@ -1,4 +1,4 @@
-import type { PlotSpec, RelateTransform, RelationRoutingSpec } from '@retikz/plot';
+import type { IRPlotRelateTransform, IRPlotRelationRoutingSpec, IRPlotSpec } from '@retikz/plot';
 import type { TextProps } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -16,10 +16,10 @@ import { IntervalMark, PathMark, PointMark, RelationMark } from '../../../src/co
 const ShadowText: FC<TextProps> = () => null;
 ShadowText.displayName = Text.displayName;
 
-describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
-  it('单 line：装配出等价手写 PlotSpec（薄 Plot：无默认 guides）', () => {
+describe('buildPlotSpec 装配', () => {
+  it('单 line：装配出等价手写 IRPlotSpec（薄 Plot：无默认 guides）', () => {
     const spec = buildPlotSpec(<PathMark x="month" y="revenue" order="month" />, '__plot');
-    const expected: PlotSpec = {
+    const expected: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },
@@ -39,7 +39,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(spec.marks).toEqual([{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }]);
   });
 
-  it('point size 字段 → size 通道（alpha.7 ADR-02）', () => {
+  it('point size 字段 → size 通道', () => {
     const spec = buildPlotSpec(<PointMark x="lng" y="lat" size="pop" />, '__plot', {
       dataFieldNames: new Set(['pop']),
     });
@@ -50,7 +50,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     });
   });
 
-  it('point opacity 字段 → opacity 通道（alpha.7 ADR-04）', () => {
+  it('point opacity 字段 → opacity 通道', () => {
     const spec = buildPlotSpec(<PointMark x="x" y="y" opacity="density" />, '__plot', {
       dataFieldNames: new Set(['density']),
     });
@@ -99,7 +99,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(spec.labels?.[0]).toMatchObject({ role: 'title', layer: { zIndex: 430 } });
   });
 
-  it('point shape 字段 → shape 通道（alpha.7 ADR-05）', () => {
+  it('point shape 字段 → shape 通道', () => {
     const spec = buildPlotSpec(<PointMark x="x" y="y" shape="category" />, '__plot', {
       dataFieldNames: new Set(['category']),
     });
@@ -252,7 +252,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   });
 
   it('relation mark forwards mark-scoped transform and routing strategy', () => {
-    const transform: Array<RelateTransform> = [
+    const transform: Array<IRPlotRelateTransform> = [
       {
         kind: 'relate',
         source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
@@ -260,7 +260,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
         measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
       },
     ];
-    const routing: RelationRoutingSpec = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };
+    const routing: IRPlotRelationRoutingSpec = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };
     const spec = buildPlotSpec(
       <RelationMark
         transform={transform}
@@ -485,7 +485,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(() => buildPlotSpec(<></>, '__plot')).toThrow(ZodError);
   });
 
-  // alpha.10：薄 Plot guide 装配（无默认 / 显式）
+  // 薄 Plot guide 装配（无默认 / 显式）
   it('dsl_no_axis_no_guides：无 <Axis> → guides 为空（薄 Plot 不补默认轴）', () => {
     const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
     expect(spec.guides).toEqual([]);

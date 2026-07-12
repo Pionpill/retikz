@@ -1,7 +1,7 @@
 ﻿import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
 
 import { defineScopeChannel } from '../../../contract';
-import { type MarkOperation, type ScaledMarkValueType } from '../../../schemas';
+import { type IRPlotMarkOperation, type ScaledMarkValueType } from '../../../schemas';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 
 const isScaledMarkValue = <T>(value: unknown): value is ScaledMarkValueType<T> =>
@@ -10,7 +10,7 @@ const isScaledMarkValue = <T>(value: unknown): value is ScaledMarkValueType<T> =
   ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant') &&
   'value' in value;
 
-const pickConstantStyleChannel = <T>(mark: MarkOperation, channel: string): T | undefined => {
+const pickConstantStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): T | undefined => {
   const value = (mark as Record<string, unknown>)[channel];
   if (!isScaledMarkValue<T>(value) || value.kind !== 'constant') return undefined;
   return value.value;
@@ -33,6 +33,7 @@ const numericScopeChannel = (
     deliver,
   });
 
+/** 允许直接交付到 core Scope 的内置通道名集合。 */
 export const BUILTIN_SCOPE_CHANNELS = {
   strokeWidth: numericScopeChannel(
     'strokeWidth',
@@ -67,6 +68,7 @@ export const BUILTIN_SCOPE_CHANNELS = {
 
 const eraseScopeChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
+/** 内置 Scope 通道 definition 集合。 */
 export const SCOPE_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_SCOPE_CHANNELS).map(def =>
   eraseScopeChannelDefinition(def),
 );

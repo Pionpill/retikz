@@ -1,5 +1,5 @@
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
-import type { LowerPlotsOptions, PlotLineageRun, PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot';
 
 import { lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
 
@@ -9,7 +9,7 @@ import type { PlotProps } from './Plot';
 import { buildPlotSpec, resolveLabelOf } from './components';
 
 type PlotRuntime = {
-  spec: PlotSpec;
+  spec: IRPlotSpec;
   datasets: ExternalDatasets;
   lowerOptions: LowerPlotsOptions;
 };
@@ -86,23 +86,23 @@ const lowerPlotOptionsOf = (
   };
 };
 
-const withIntrinsicSize = (spec: PlotSpec, width: number | undefined, height: number | undefined): PlotSpec => ({
+const withIntrinsicSize = (spec: IRPlotSpec, width: number | undefined, height: number | undefined): IRPlotSpec => ({
   ...spec,
   ...(spec.width === undefined && width !== undefined ? { width } : {}),
   ...(spec.height === undefined && height !== undefined ? { height } : {}),
 });
 
-const withPlotColors = (spec: PlotSpec, colors: Array<string> | undefined): PlotSpec => ({
+const withPlotColors = (spec: IRPlotSpec, colors: Array<string> | undefined): IRPlotSpec => ({
   ...spec,
   ...(colors !== undefined ? { colors } : {}),
 });
 
-const withPlotTheme = (spec: PlotSpec, theme: PlotSpec['theme'] | undefined): PlotSpec => ({
+const withPlotTheme = (spec: IRPlotSpec, theme: IRPlotSpec['theme'] | undefined): IRPlotSpec => ({
   ...spec,
   ...(theme !== undefined ? { theme } : {}),
 });
 
-const withPlotLayout = (spec: PlotSpec, layout: PlotSpec['layout'] | undefined): PlotSpec => ({
+const withPlotLayout = (spec: IRPlotSpec, layout: IRPlotSpec['layout'] | undefined): IRPlotSpec => ({
   ...spec,
   ...(layout !== undefined ? { layout } : {}),
 });
@@ -132,7 +132,7 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
           ? embeddedDataRefFor(props.data)
           : DSL_DATA_REF))
     : DSL_DATA_REF;
-  let spec: PlotSpec;
+  let spec: IRPlotSpec;
   let datasets: ExternalDatasets;
   let effectiveFieldMaps = props.fieldMaps;
   // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给

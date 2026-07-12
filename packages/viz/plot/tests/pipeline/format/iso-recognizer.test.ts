@@ -4,7 +4,7 @@ import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { prepareRows } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -17,7 +17,7 @@ const inferOne = (values: Array<unknown>): string =>
   );
 
 /** 构造引用逻辑字段 `v` 的最小 spec（绑 x），取 prepareRows 后 normalized[0].v */
-const specWithField = (field: { name: string } & Record<string, unknown>): PlotSpec =>
+const specWithField = (field: { name: string } & Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -31,7 +31,7 @@ const specWithField = (field: { name: string } & Record<string, unknown>): PlotS
   });
 
 const parseFirst = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = {},
 ): unknown => {
@@ -40,7 +40,7 @@ const parseFirst = (
   return normalized[0].v;
 };
 
-describe('ISO 识别器扩宽（ADR-09）— happy path', () => {
+describe('ISO 识别器扩宽（contract）— happy path', () => {
   it('space_tz_inferred_temporal', () => {
     // 空格分隔 + Z 时区（SQL 时间戳）→ 推断 temporal
     expect(inferOne(['2024-01-01 12:00:00Z', '2024-06-30 08:30:00Z'])).toBe(DataFieldType.Temporal);
@@ -58,7 +58,7 @@ describe('ISO 识别器扩宽（ADR-09）— happy path', () => {
   });
 });
 
-describe('ISO 识别器扩宽（ADR-09）— 边界', () => {
+describe('ISO 识别器扩宽（contract）— 边界', () => {
   it('date_only_unchanged', () => {
     // 纯日期正则不动，仍 temporal
     expect(isIsoDateString('2024-01-01')).toBe(true);
@@ -78,7 +78,7 @@ describe('ISO 识别器扩宽（ADR-09）— 边界', () => {
   });
 });
 
-describe('ISO 识别器扩宽（ADR-09）— 错误路径（歧义形态仍拒）', () => {
+describe('ISO 识别器扩宽（contract）— 错误路径（歧义形态仍拒）', () => {
   it('no_timezone_space_rejected', () => {
     // 无时区（本地歧义）→ 非 temporal、不解析
     expect(isIsoDateString('2024-01-01 12:00:00')).toBe(false);
@@ -99,7 +99,7 @@ describe('ISO 识别器扩宽（ADR-09）— 错误路径（歧义形态仍拒�
   });
 });
 
-describe('ISO 识别器扩宽（ADR-09）— 交互（经 lowering / format）', () => {
+describe('ISO 识别器扩宽（contract）— 交互（经 lowering / format）', () => {
   it('declared_temporal_space_value_parses', () => {
     // 声明 temporal + 空格带时区值 → 经 lowering 得正确 epoch ms
     const spec = specWithField({ name: 'v', type: 'temporal' });

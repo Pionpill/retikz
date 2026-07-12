@@ -104,10 +104,10 @@ Axes are drawn above marks by default, but below legends and plot-level labels. 
 
 `layout` and `labels` are `<Plot>`-level fields, not `<Axis>` props:
 
-| Field    | Type                                                                                                 | Default     | Description                                                                                                                                      |
-| -------- | ---------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `layout` | `{ mode?, autoPadding?, padding?, maxIterations?, collision? }`                                      | auto layout | Controls whether plot labels reserve space automatically; `mode:'fixed'` or `autoPadding:false` places text without shrinking the plot area      |
-| `labels` | `Array<{ type:'text', role?, text, placement?, reserveSpace?, priority?, overflow?, ...textStyle }>` | `[]`        | Static plot text; `role:'title'/'caption'/'source'` reserves space by default, while `role:'note'` and `kind:'point'` only place text by default |
+| Field    | Type                                                                           | Default     | Description                                                                                                                                      |
+| -------- | ------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `layout` | `{ mode?, autoPadding?, padding? }`                                            | auto layout | Controls whether plot labels reserve space automatically; `mode:'fixed'` or `autoPadding:false` places text without shrinking the plot area      |
+| `labels` | `Array<{ type:'text', role?, text, placement?, reserveSpace?, ...textStyle }>` | `[]`        | Static plot text; `role:'title'/'caption'/'source'` reserves space by default, while `role:'note'` and `kind:'point'` only place text by default |
 
 Legend `style` also controls size legend symbols. By default, `symbolFit:'fit'` keeps size symbols inside the `symbolSize` box so large radius values do not overlap neighboring legend entries. Use `symbolFit:'preserve'` when the legend must keep the rendered radius.
 

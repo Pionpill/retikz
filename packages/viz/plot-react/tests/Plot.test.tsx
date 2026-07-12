@@ -1,5 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { PlotLineageRun, PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec, PlotLineageRun } from '@retikz/plot';
 
 import { lowerPlots } from '@retikz/plot';
 import { Layout } from '@retikz/react';
@@ -9,7 +9,7 @@ import { ZodError } from 'zod';
 
 import { Axis, IntervalMark, PathMark, Plot, PointMark, resolvePlotLineage } from '../src';
 
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'sales' },
@@ -71,7 +71,7 @@ describe('<Plot spec data> 薄包装', () => {
 
   it('非法 spec（缺判别字段）→ 抛清晰 ZodError，不落到 core 内部崩', () => {
     // 模拟运行时拿到的残缺 spec（如 LLM 生成漏字段）
-    const malformed = {} as unknown as PlotSpec;
+    const malformed = {} as unknown as IRPlotSpec;
     expect(() => renderToStaticMarkup(<Plot spec={malformed} data={{}} width={480} height={300} />)).toThrow(ZodError);
   });
 
@@ -83,7 +83,7 @@ describe('<Plot spec data> 薄包装', () => {
           data={data}
           width={480}
           height={300}
-          layout={{ autoPadding: 'yes' } as unknown as PlotSpec['layout']}
+          layout={{ autoPadding: 'yes' } as unknown as IRPlotSpec['layout']}
         />,
       ),
     ).toThrow(ZodError);

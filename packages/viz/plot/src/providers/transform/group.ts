@@ -11,7 +11,7 @@ import {
 import { DEFAULT_EPSILON, isFiniteNumber } from '@retikz/math';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 
-import type { BinTransform, RelateTransform } from '../../schemas';
+import type { IRPlotBinTransform, IRPlotRelateTransform } from '../../schemas';
 
 /** bin 默认输出字段名，对齐 IntervalMark 的区间消费方。 */
 const DEFAULT_BIN_START_FIELD = 'binStart';
@@ -22,17 +22,17 @@ const DEFAULT_BIN_COUNT_FIELD = 'binCount';
 const DEFAULT_BIN_COUNT = 10;
 
 /** bin 的边界输出字段名，validate 剔除派生字段时复用。 */
-export const binOutputFields = (operation: BinTransform): { startField: string; endField: string } => ({
+export const binOutputFields = (operation: IRPlotBinTransform): { startField: string; endField: string } => ({
   startField: operation.startField ?? DEFAULT_BIN_START_FIELD,
   endField: operation.endField ?? DEFAULT_BIN_END_FIELD,
 });
 
 /** bin 指标列表；缺省时用 count 指标产生默认频数列。 */
-export const binMetricOperations = (operation: BinTransform): NonNullable<BinTransform['metrics']> =>
+export const binMetricOperations = (operation: IRPlotBinTransform): NonNullable<IRPlotBinTransform['metrics']> =>
   operation.metrics ?? [{ kind: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
 
 /** 由策略计算分箱边界；count / step / thresholds 三策略互斥。 */
-const binEdges = (operation: BinTransform, values: Array<number>): Array<number> => {
+const binEdges = (operation: IRPlotBinTransform, values: Array<number>): Array<number> => {
   const strategies = [
     operation.count !== undefined,
     operation.step !== undefined,
@@ -75,7 +75,7 @@ const binEdges = (operation: BinTransform, values: Array<number>): Array<number>
 
 const applyReducerMetrics = (
   rows: Array<ExternalRow>,
-  metrics: ReadonlyArray<NonNullable<BinTransform['metrics']>[number]>,
+  metrics: ReadonlyArray<NonNullable<IRPlotBinTransform['metrics']>[number]>,
   context: TransformContext,
 ): ExternalRow => {
   const out: ExternalRow = {};
@@ -89,7 +89,7 @@ const applyReducerMetrics = (
  */
 export const applyBin = (
   rows: Array<ExternalRow>,
-  operation: BinTransform,
+  operation: IRPlotBinTransform,
   context: TransformContext,
 ): Array<ExternalRow> => {
   if (rows.length === 0) return [];
@@ -128,12 +128,13 @@ export const applyBin = (
 
 const capitalize = (value: string): string => `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 
+/** 返回 relation endpoint 投影写出的目标字段名。 */
 export const relationEndpointOutputField = (prefix: 'source' | 'target', suffix: string): string =>
   `${prefix}${capitalize(suffix)}`;
 
 const endpointFieldsOf = (
   prefix: 'source' | 'target',
-  projection: RelateTransform['source'],
+  projection: IRPlotRelateTransform['source'],
   row: ExternalRow,
 ): ExternalRow => {
   const out: ExternalRow = {};
@@ -143,7 +144,11 @@ const endpointFieldsOf = (
   return out;
 };
 
-const pairMeasureFieldsOf = (operation: RelateTransform, source: ExternalRow, target: ExternalRow): ExternalRow => {
+const pairMeasureFieldsOf = (
+  operation: IRPlotRelateTransform,
+  source: ExternalRow,
+  target: ExternalRow,
+): ExternalRow => {
   const out: ExternalRow = {};
   for (const measure of operation.measures ?? []) {
     const sourceValue = Number(resolveFieldPath(source, measure.field));
@@ -161,7 +166,7 @@ const pairMeasureFieldsOf = (operation: RelateTransform, source: ExternalRow, ta
 /** relate：按 groupBy 选择 source / target 行并输出 relation rows。 */
 export const applyRelate = (
   rows: Array<ExternalRow>,
-  operation: RelateTransform,
+  operation: IRPlotRelateTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
   groupRowsByFields(rows, operation.groupBy).flatMap(group => {

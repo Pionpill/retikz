@@ -15,46 +15,46 @@
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type {
-  AnchorIdSpec,
-  BlendModeStyle,
-  Channel,
-  IntervalBounds,
+  IRPlotAnchorIdSpec,
+  IRPlotBlendModeStyle,
+  IRPlotChannel,
+  IRPlotIntervalBounds,
+  IRPlotLayer,
+  IRPlotNodeAxisScaleStyle,
+  IRPlotNodeBooleanStyle,
+  IRPlotNodeBoundaryStyle,
+  IRPlotNodeBoxSizeStyle,
+  IRPlotNodeBoxSpacingStyle,
+  IRPlotNodeDashPatternStyle,
+  IRPlotNodeFontStyle,
+  IRPlotNodePositiveNumberStyle,
+  IRPlotNodeTextAlignStyle,
+  IRPlotPathClosure,
+  IRPlotPathFillRuleStyle,
+  IRPlotPathScaleStyle,
+  IRPlotPathThicknessStyle,
+  IRPlotPointColorStyle,
+  IRPlotPointFillStyle,
+  IRPlotPointNonnegativeNumberStyle,
+  IRPlotPointNumberStyle,
+  IRPlotPointOpacityStyle,
+  IRPlotPointShapeStyle,
+  IRPlotPointSizeStyle,
+  IRPlotPointStrokeStyle,
+  IRPlotPointStrokeWidthStyle,
+  IRPlotPointZIndexStyle,
+  IRPlotRelationPathSpecificOptions,
+  IRPlotRelationPrimitiveStyle,
+  IRPlotRelationRibbonOptions,
+  IRPlotShadowStyle,
+  IRPlotTargetRef,
+  IRPlotTransform,
   MarkGeometryLabelInput,
   MarkNodeLabelInput,
   MarkValueType,
-  NodeAxisScaleStyle,
-  NodeBooleanStyle,
-  NodeBoundaryStyle,
-  NodeBoxSizeStyle,
-  NodeBoxSpacingStyle,
-  NodeDashPatternStyle,
-  NodeFontStyle,
-  NodePositiveNumberStyle,
-  NodeTextAlignStyle,
-  PathClosure,
   PathCurveValue,
-  PathFillRuleStyle,
-  PathScaleStyle,
-  PathThicknessStyle,
-  PlotLayer,
-  PlotTargetRef,
-  PointColorStyle,
-  PointFillStyle,
-  PointNonnegativeNumberStyle,
-  PointNumberStyle,
-  PointOpacityStyle,
-  PointShapeStyle,
-  PointSizeStyle,
-  PointStrokeStyle,
-  PointStrokeWidthStyle,
-  PointZIndexStyle,
   RelationGeometryKindValue,
   RelationPathGeometryInput,
-  RelationPathSpecificOptions,
-  RelationPrimitiveStyle,
-  RelationRibbonOptions,
-  ShadowStyle,
-  Transform,
 } from '@retikz/plot';
 import type { FC } from 'react';
 
@@ -80,14 +80,14 @@ export type ThicknessValue = 'ultraThin' | 'veryThin' | 'thin' | 'semithick' | '
 export type NodeShapeChannelValue = string | IRShapeRef;
 
 /** 扩展通道属性：字段名、JSON 常量、通道绑定或显式 mark 值。 */
-export type ExtensionChannelProp = FieldName | JsonValue | Channel | MarkValueType<JsonValue>;
+export type ExtensionChannelProp = FieldName | JsonValue | IRPlotChannel | MarkValueType<JsonValue>;
 
 /** 所有 mark 共享的局部数据变换与语义图层属性。 */
 export type MarkTransformProps = {
   /** 只作用于当前 mark 数据视图的变换链。 */
-  transform?: Array<Transform>;
+  transform?: Array<IRPlotTransform>;
   /** 语义图层覆盖；控制该 mark 外层 scope 在 plot 内的 zIndex。 */
-  layer?: PlotLayer;
+  layer?: IRPlotLayer;
 };
 
 /** mark 绑定组合坐标视图的共享属性。 */
@@ -103,61 +103,61 @@ export type CoordinateScopeProps = {
 /** 可通过通道逐 datum 下发到 core Node 的样式属性。 */
 export type CoreNodeChannelProps = {
   /** 文本水平对齐方式。 */
-  align?: MarkValueProp<NodeTextAlignValue> | NodeTextAlignStyle;
+  align?: MarkValueProp<NodeTextAlignValue> | IRPlotNodeTextAlignStyle;
   /** 文本行高。 */
-  lineHeight?: MarkValueProp<number> | NodePositiveNumberStyle;
+  lineHeight?: MarkValueProp<number> | IRPlotNodePositiveNumberStyle;
   /** 文本最大宽度。 */
-  maxTextWidth?: MarkValueProp<number> | NodePositiveNumberStyle;
+  maxTextWidth?: MarkValueProp<number> | IRPlotNodePositiveNumberStyle;
   /** 节点圆角半径。 */
-  cornerRadius?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+  cornerRadius?: MarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
   /** 节点缩放值或轴向缩放配置。 */
-  scale?: MarkValueProp<number | IRAxisScale> | NodeAxisScaleStyle;
+  scale?: MarkValueProp<number | IRAxisScale> | IRPlotNodeAxisScaleStyle;
   /** 节点内边距。 */
-  padding?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
+  padding?: MarkValueProp<number | IRBoxSpacing> | IRPlotNodeBoxSpacingStyle;
   /** 节点外边距。 */
-  margin?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
+  margin?: MarkValueProp<number | IRBoxSpacing> | IRPlotNodeBoxSpacingStyle;
   /** 是否使用虚线描边。 */
-  dashed?: MarkValueProp<boolean> | NodeBooleanStyle;
+  dashed?: MarkValueProp<boolean> | IRPlotNodeBooleanStyle;
   /** 是否使用点线描边。 */
-  dotted?: MarkValueProp<boolean> | NodeBooleanStyle;
+  dotted?: MarkValueProp<boolean> | IRPlotNodeBooleanStyle;
   /** 自定义描边间隔。 */
-  dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
+  dashPattern?: MarkValueProp<Array<number>> | IRPlotNodeDashPatternStyle;
   /** 字体配置。 */
-  font?: MarkValueProp<IRFont> | NodeFontStyle;
+  font?: MarkValueProp<IRFont> | IRPlotNodeFontStyle;
   /** 节点边界策略。 */
-  boundary?: MarkValueProp<IRBoundary> | NodeBoundaryStyle;
+  boundary?: MarkValueProp<IRBoundary> | IRPlotNodeBoundaryStyle;
   /** 节点阴影。 */
-  shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
+  shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | IRPlotShadowStyle;
   /** 节点混合模式。 */
-  blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
+  blendMode?: MarkValueProp<BlendModeValue> | IRPlotBlendModeStyle;
 };
 
 /** 可通过通道逐 datum 下发到 core Path 的样式属性。 */
 export type CorePathChannelProps = {
   /** 路径填充；字符串优先按字段名解析。 */
-  fill?: FieldName | IRPaintSpec | PointFillStyle;
+  fill?: FieldName | IRPaintSpec | IRPlotPointFillStyle;
   /** 路径描边；字符串优先按字段名解析。 */
-  stroke?: FieldName | IRPaintSpec | PointStrokeStyle;
+  stroke?: FieldName | IRPaintSpec | IRPlotPointStrokeStyle;
   /** 描边透明度。 */
-  strokeOpacity?: MarkValueProp<number> | PointOpacityStyle;
+  strokeOpacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
   /** 路径绘制顺序提示。 */
-  zIndex?: MarkValueProp<number> | PointZIndexStyle;
+  zIndex?: MarkValueProp<number> | IRPlotPointZIndexStyle;
   /** 路径旋转角度。 */
-  rotate?: MarkValueProp<number> | PointNumberStyle;
+  rotate?: MarkValueProp<number> | IRPlotPointNumberStyle;
   /** 路径缩放配置。 */
-  scale?: MarkValueProp<IRPathScale> | PathScaleStyle;
+  scale?: MarkValueProp<IRPathScale> | IRPlotPathScaleStyle;
   /** 路径填充规则。 */
-  fillRule?: MarkValueProp<FillRuleValue> | PathFillRuleStyle;
+  fillRule?: MarkValueProp<FillRuleValue> | IRPlotPathFillRuleStyle;
   /** 路径预设粗细。 */
-  thickness?: MarkValueProp<ThicknessValue> | PathThicknessStyle;
+  thickness?: MarkValueProp<ThicknessValue> | IRPlotPathThicknessStyle;
   /** 路径上的标记配置。 */
-  marks?: RelationPathSpecificOptions['marks'];
+  marks?: IRPlotRelationPathSpecificOptions['marks'];
   /** 自定义描边间隔。 */
-  dashPattern?: MarkValueProp<Array<number>> | NodeDashPatternStyle;
+  dashPattern?: MarkValueProp<Array<number>> | IRPlotNodeDashPatternStyle;
   /** 路径阴影。 */
-  shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | ShadowStyle;
+  shadow?: MarkValueProp<ShadowPresetValue | IRDropShadow> | IRPlotShadowStyle;
   /** 路径混合模式。 */
-  blendMode?: MarkValueProp<BlendModeValue> | BlendModeStyle;
+  blendMode?: MarkValueProp<BlendModeValue> | IRPlotBlendModeStyle;
 };
 
 /**
@@ -212,22 +212,22 @@ export type PathMarkProps = MarkTransformProps &
     color?: FieldName;
     label?: MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
     resolveLabel?: (row: ExternalRow) => string;
-    strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
-    opacity?: MarkValueProp<number> | PointOpacityStyle;
+    strokeWidth?: MarkValueProp<number> | IRPlotPointStrokeWidthStyle;
+    opacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
     lineCap?: FieldName | LineCapValue | MarkValueType<LineCapValue>;
     lineJoin?: FieldName | LineJoinValue | MarkValueType<LineJoinValue>;
-    roundedCorners?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+    roundedCorners?: MarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
     /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；cartesian 缺省 false，polar2D 缺省 true */
     closed?: boolean;
     /** 是否跨过缺失 / 无效点继续连接；缺省 false 时会切成多个 core Path */
     connectNulls?: boolean;
     /** 构建闭合路径：cycle 首尾闭合，baseline 回到基线，stack 回到逐行基线字段；是否填充由 fill 控制 */
-    closure?: PathClosure;
+    closure?: IRPlotPathClosure;
     /** 相邻点连接方式；缺省 linear */
     curve?: PathCurveValue;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
-    anchorId?: AnchorIdSpec;
+    anchorId?: IRPlotAnchorIdSpec;
     /** 扩展通道绑定，会转发到 `encoding.channels`；字符串值按字段名处理。 */
     channels?: Record<string, ExtensionChannelProp>;
   };
@@ -251,32 +251,32 @@ export type PointMarkProps = MarkTransformProps &
     /** 三元坐标第三分量字段；ternary2D 下与 x / y 一起使用 */
     z?: FieldName;
     /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
-    color?: FieldName | PointColorStyle;
-    textColor?: FieldName | PointColorStyle;
+    color?: FieldName | IRPlotPointColorStyle;
+    textColor?: FieldName | IRPlotPointColorStyle;
     /** 填充：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
-    fill?: FieldName | IRPaintSpec | PointFillStyle;
+    fill?: FieldName | IRPaintSpec | IRPlotPointFillStyle;
     /** 描边颜色：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
-    stroke?: FieldName | IRPaintSpec | PointStrokeStyle;
+    stroke?: FieldName | IRPaintSpec | IRPlotPointStrokeStyle;
     /** 描边宽度：字符串优先按数据字段解析，数字为常量糖；需要显式控制时用 `{ kind, value }` */
-    strokeWidth?: FieldName | number | PointStrokeWidthStyle;
+    strokeWidth?: FieldName | number | IRPlotPointStrokeWidthStyle;
     /** 填充透明度：字符串按字段解析，数字为常量糖 */
-    fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
+    fillOpacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 描边透明度：字符串按字段解析，数字为常量糖 */
-    strokeOpacity?: MarkValueProp<number> | PointOpacityStyle;
+    strokeOpacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 旋转角度：字符串按字段解析，数字为常量糖 */
-    rotate?: MarkValueProp<number> | PointNumberStyle;
+    rotate?: MarkValueProp<number> | IRPlotPointNumberStyle;
     /** node padding：字符串按字段解析，数字或对象为常量糖 */
-    padding?: MarkValueProp<number | IRBoxSpacing> | NodeBoxSpacingStyle;
+    padding?: MarkValueProp<number | IRBoxSpacing> | IRPlotNodeBoxSpacingStyle;
     /** 最小视觉尺寸；size 通道逐 datum 优先 */
-    minimumSize?: MarkValueProp<number | IRBoxSize> | NodeBoxSizeStyle;
+    minimumSize?: MarkValueProp<number | IRBoxSize> | IRPlotNodeBoxSizeStyle;
     /** 绘制顺序提示 */
-    zIndex?: MarkValueProp<number> | PointZIndexStyle;
+    zIndex?: MarkValueProp<number> | IRPlotPointZIndexStyle;
     /** 尺寸字段（数值）：→ size 通道，经 sqrt 半径 scale 映射成 glyph 半径（面积感知正确）；负值报错 */
-    size?: FieldName | number | PointSizeStyle;
+    size?: FieldName | number | IRPlotPointSizeStyle;
     /** 不透明度：字符串按字段解析，数字为常量糖 */
-    opacity?: MarkValueProp<number> | PointOpacityStyle;
+    opacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 形状字段（分类）：→ shape 通道，按类别映射到 glyph 调色板（circle/rectangle/diamond）；连续/时间字段报错 */
-    shape?: FieldName | NodeShapeChannelValue | PointShapeStyle;
+    shape?: FieldName | NodeShapeChannelValue | IRPlotPointShapeStyle;
     /** 文本内容字段名：给定则该 point 下沉为无边框带文本的 Node（吸收旧 text mark），否则散点 glyph */
     text?: FieldName;
     /** 文本格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 text 字段同用 */
@@ -287,7 +287,7 @@ export type PointMarkProps = MarkTransformProps &
     dy?: number;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
-    anchorId?: AnchorIdSpec;
+    anchorId?: IRPlotAnchorIdSpec;
   };
 
 /**
@@ -332,19 +332,19 @@ export type IntervalMarkProps = MarkTransformProps &
     /** 多系列时是否堆叠（true=stack，自动 stack transform + bounds.y=extent）；否则并排（dodge，bounds.x=band{group}） */
     stack?: boolean;
     /** 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱 */
-    bounds?: IntervalBounds;
-    fill?: FieldName | IRPaintSpec | PointFillStyle;
-    stroke?: FieldName | IRPaintSpec | PointStrokeStyle;
-    strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
-    fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
-    opacity?: MarkValueProp<number> | PointOpacityStyle;
+    bounds?: IRPlotIntervalBounds;
+    fill?: FieldName | IRPaintSpec | IRPlotPointFillStyle;
+    stroke?: FieldName | IRPaintSpec | IRPlotPointStrokeStyle;
+    strokeWidth?: MarkValueProp<number> | IRPlotPointStrokeWidthStyle;
+    fillOpacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
+    opacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 极坐标扇区或环形区间之间的角度间隔。 */
     padAngle?: number;
     /** 极坐标扇区沿半径方向的静态视觉偏移。 */
-    pull?: MarkValueProp<number> | PointNonnegativeNumberStyle;
+    pull?: MarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
-    anchorId?: AnchorIdSpec;
+    anchorId?: IRPlotAnchorIdSpec;
   };
 
 /** <RelationMark> props：连接两个目标的路径或 ribbon 关系图层。 */
@@ -355,17 +355,17 @@ export type RelationMarkProps = MarkTransformProps &
     /** 关系几何类型。 */
     kind?: RelationGeometryKindValue;
     /** 关系起点引用。 */
-    source: PlotTargetRef;
+    source: IRPlotTargetRef;
     /** 关系终点引用。 */
-    target: PlotTargetRef;
+    target: IRPlotTargetRef;
     /** 关系几何上的标签。 */
     label?: MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
     /** 关系 primitive 的视觉样式。 */
-    style?: RelationPrimitiveStyle;
+    style?: IRPlotRelationPrimitiveStyle;
     /** 路径关系的几何配置。 */
     path?: RelationPathGeometryInput;
     /** ribbon 关系的宽度与轮廓配置。 */
-    ribbon?: RelationRibbonOptions;
+    ribbon?: IRPlotRelationRibbonOptions;
     /** 驱动关系颜色的字段名。 */
     color?: FieldName;
     /** 扩展通道绑定；字符串值按字段名处理。 */
@@ -409,9 +409,9 @@ export type ReferenceMarkProps = MarkTransformProps &
     /** 颜色：数字 / 颜色串常量 → value（line→stroke / band→fill）；字段名 → field（per-datum 按色分组） */
     color?: string;
     label?: ReferenceMarkLabel;
-    strokeWidth?: MarkValueProp<number> | PointStrokeWidthStyle;
-    fillOpacity?: MarkValueProp<number> | PointOpacityStyle;
-    opacity?: MarkValueProp<number> | PointOpacityStyle;
+    strokeWidth?: MarkValueProp<number> | IRPlotPointStrokeWidthStyle;
+    fillOpacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
+    opacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 转发到 `encoding.channels` 的扩展通道绑定；字符串值按字段名处理。 */
     channels?: Record<string, ExtensionChannelProp>;
     /** 可选 mark 句柄（预留 scope/anchor） */

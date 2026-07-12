@@ -3,13 +3,13 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-02（alpha.9）一维坐标系族 lowering 测试：cartesian1D（直线）+ polar1D（圆周）。
+ * 一维坐标系族 lowering 契约测试：cartesian1D（直线）+ polar1D（圆周）。
  * 经公开 lowerPlots 断言 core IR node position：
  *   cartesian1D 单维投影落基线轴 + orientation；polar1D 角向投影落固定半径圆周 + radius / 半环；
  *   mark 矩阵 point 为主（interval/sector/area fail-loud）；缺单维通道 / 非法维度 fail-loud；1D×color 仍工作。
@@ -17,12 +17,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
@@ -32,8 +32,8 @@ const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const dist = (a: [number, number], b: [number, number]): number => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
-describe('cartesian1D 直线坐标系 (ADR-02)', () => {
-  const rugSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+describe('cartesian1D 直线坐标系 (contract)', () => {
+  const rugSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -106,7 +106,7 @@ describe('cartesian1D 直线坐标系 (ADR-02)', () => {
     expect(() => expandOf(spec, { d: [{ cat: 'A', v: 3 }] }, opts)).toThrow(/cartesian1D|not supported|interval/i);
   });
 
-  // 错误路径：缺单维通道 → fail-loud（ADR-01 必填角色校验）
+  // 错误路径：缺单维通道 → fail-loud（contract 必填角色校验）
   it('cartesian1d_missing_x_fails_loud', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -150,11 +150,11 @@ describe('cartesian1D 直线坐标系 (ADR-02)', () => {
   });
 });
 
-describe('polar1D 圆周坐标系 (ADR-02)', () => {
+describe('polar1D 圆周坐标系 (contract)', () => {
   // 布局：480×300、无角向轴 → 圆心 [240,150]、outerRadius 150
   const CENTER: [number, number] = [240, 150];
 
-  const ringSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+  const ringSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',

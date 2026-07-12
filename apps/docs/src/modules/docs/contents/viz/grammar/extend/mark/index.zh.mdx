@@ -21,14 +21,14 @@ description: 自定义图元把下沉函数留在运行时：IR 只保存自定�
 
 ## 定义契约
 
-| 字段            | 必填 | 作用                                                                                                      |
-| --------------- | ---- | --------------------------------------------------------------------------------------------------------- |
-| `type`          | 必填 | 注册键 = IR 判别串；必须是非内置标识符（不能撞 `point` / `path` / `interval` / `reference` / `relation`） |
-| `lower`         | 必填 | 把当前图元 + 数据行 + `frame` + 通道 resolver 下沉成 core IR；无可绘制内容返回 `null`                     |
-| `collectFields` | 可选 | 登记这个图元读取的源字段；strict model 据此校验，避免把字段误判为缺失                                     |
-| `buildCell`     | 可选 | 区间类图元的 per-row cell 构造入口（内置 `interval` 走这条；普通 glyph 不需要）                           |
+| 字段            | 必填 | 作用                                                                                                 |
+| --------------- | ---- | ---------------------------------------------------------------------------------------------------- |
+| `schema`        | 必填 | 完整 operation schema；`type` 必须是非空 `z.literal(...)`，其值就是注册键，且不能撞内置图元          |
+| `lower`         | 必填 | 接收 schema 解析后的图元 + 数据行 + `frame` + 通道 resolver，下沉成 core IR；无可绘制内容返回 `null` |
+| `collectFields` | 可选 | 接收同一 schema 契约下的图元并登记源字段；strict model 据此校验，避免把字段误判为缺失                |
+| `buildCell`     | 可选 | 区间类图元的 per-row cell 构造入口（内置 `interval` 走这条；普通 glyph 不需要）                      |
 
-用 `defineMark<MyMark>` 显式给出自己的 operation 类型，`lower` / `collectFields` 里就能拿到精确的图元形态（不写则默认内置 `Mark`）。
+用 `defineMark<MyMark>` 显式给出 schema 推导的 operation 类型，`lower` / `collectFields` 里就能拿到精确的图元形态。lowering 会先确认 operation 是 JSON object，再用 definition schema 解析，非法配置不会进入行为回调。
 
 ## 三层边界
 

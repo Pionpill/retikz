@@ -14,13 +14,13 @@ import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 
 import type {
+  IRPlotRelationMark,
+  IRPlotRelationPrimitiveStyle,
+  IRPlotRelationRouteStep,
+  IRPlotRelationRoutingSpec,
+  IRPlotRelationStepLabel,
+  IRPlotTargetRef,
   MarkValueType,
-  PlotTargetRef,
-  RelationMark,
-  RelationPrimitiveStyle,
-  RelationRouteStep,
-  RelationRoutingSpec,
-  RelationStepLabel,
 } from '../../../schemas';
 
 import {
@@ -30,7 +30,7 @@ import {
   type MarkDefinition,
   type MarkLoweringContext,
 } from '../../../contract';
-import { PlotMark, RelationGeometryKind } from '../../../schemas';
+import { RelationGeometryKind, RelationMarkSchema } from '../../../schemas';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,
@@ -47,7 +47,7 @@ type ResolvedTarget = {
   coordinates: Array<IRCoordinate>;
 };
 
-const targetOwner = (mark: RelationMark, ctx: MarkLoweringContext, transformedIndex: number, role: string) => ({
+const targetOwner = (mark: IRPlotRelationMark, ctx: MarkLoweringContext, transformedIndex: number, role: string) => ({
   markType: mark.type,
   markId: mark.id,
   markIndex: ctx.markIndex,
@@ -56,7 +56,7 @@ const targetOwner = (mark: RelationMark, ctx: MarkLoweringContext, transformedIn
 });
 
 const relationGeneratedCoordinateId = (
-  mark: RelationMark,
+  mark: IRPlotRelationMark,
   ctx: MarkLoweringContext,
   transformedIndex: number,
   role: string,
@@ -65,7 +65,7 @@ const relationGeneratedCoordinateId = (
   return ctx.plotId === undefined ? base : `${ctx.plotId}.${base}`;
 };
 
-const targetExtras = (ref: PlotTargetRef): Omit<IRNodeTarget, 'id'> => {
+const targetExtras = (ref: IRPlotTargetRef): Omit<IRNodeTarget, 'id'> => {
   const boundary = ref.boundary === true ? 'shape' : ref.boundary === false ? undefined : ref.boundary;
   return {
     ...(ref.anchor !== undefined ? { anchor: ref.anchor } : {}),
@@ -78,8 +78,8 @@ const shiftedPoint = (position: [number, number], offset: [number, number] | und
   offset === undefined ? position : [position[0] + offset[0], position[1] + offset[1]];
 
 const resolveProjectedTarget = (
-  mark: RelationMark,
-  ref: Extract<PlotTargetRef, { project: Record<string, string> }>,
+  mark: IRPlotRelationMark,
+  ref: Extract<IRPlotTargetRef, { project: Record<string, string> }>,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
@@ -125,8 +125,8 @@ const resolveProjectedTarget = (
 };
 
 const resolveTarget = (
-  mark: RelationMark,
-  ref: PlotTargetRef,
+  mark: IRPlotRelationMark,
+  ref: IRPlotTargetRef,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
@@ -146,7 +146,7 @@ const resolveTarget = (
   return { target: { id, ...targetExtras(ref) }, coordinates: [] };
 };
 
-const anchorInputMissing = (ref: PlotTargetRef, row: ExternalRow): boolean => {
+const anchorInputMissing = (ref: IRPlotTargetRef, row: ExternalRow): boolean => {
   const anchorId = 'anchorId' in ref ? ref.anchorId : undefined;
   if (anchorId === undefined) return false;
   if (anchorId.field !== undefined) return resolveFieldPath(row, anchorId.field) === undefined;
@@ -170,17 +170,17 @@ const resolveMarkValue = <T>(value: MarkValueType<T> | undefined, row: ExternalR
 };
 
 const relationStyleValue = (
-  style: RelationPrimitiveStyle | undefined,
-  key: keyof RelationPrimitiveStyle,
+  style: IRPlotRelationPrimitiveStyle | undefined,
+  key: keyof IRPlotRelationPrimitiveStyle,
   row: ExternalRow,
 ): unknown =>
   resolveMarkValue(
-    (style as Partial<Record<keyof RelationPrimitiveStyle, MarkValueType<unknown>>> | undefined)?.[key],
+    (style as Partial<Record<keyof IRPlotRelationPrimitiveStyle, MarkValueType<unknown>>> | undefined)?.[key],
     row,
   );
 
 const relationPrimitiveStyle = (
-  mark: RelationMark,
+  mark: IRPlotRelationMark,
   row: ExternalRow,
   colorOf: ((row: ExternalRow) => string | undefined) | undefined,
   defaultColor: string | undefined,
@@ -205,7 +205,7 @@ const relationPrimitiveStyle = (
   return out;
 };
 
-const resolveLabel = (label: RelationStepLabel | undefined, row: ExternalRow): IRStepLabel | undefined => {
+const resolveLabel = (label: IRPlotRelationStepLabel | undefined, row: ExternalRow): IRStepLabel | undefined => {
   if (label === undefined) return undefined;
   const text = label.text;
   if (typeof text === 'object' && 'field' in text) {
@@ -288,7 +288,7 @@ const horizontalRibbonEndpointDirection = (source: IRTarget, target: IRTarget): 
 };
 
 const bendRoute = (
-  routing: Extract<RelationRoutingSpec, { kind: 'bend' }>,
+  routing: Extract<IRPlotRelationRoutingSpec, { kind: 'bend' }>,
   targets: Array<IRTarget>,
 ): Array<IRStep> => [
   { type: 'step', kind: 'move', to: targets[0] },
@@ -330,7 +330,7 @@ const applyOrthogonalLabel = (
 };
 
 const orthogonalRoute = (
-  routing: Extract<RelationRoutingSpec, { kind: 'orthogonal' }>,
+  routing: Extract<IRPlotRelationRoutingSpec, { kind: 'orthogonal' }>,
   targets: Array<IRTarget>,
   label: IRStepLabel | undefined,
 ): Array<IRStep> => {
@@ -359,7 +359,7 @@ const orthogonalRoute = (
 };
 
 const routedSteps = (
-  routing: RelationRoutingSpec | undefined,
+  routing: IRPlotRelationRoutingSpec | undefined,
   source: IRTarget,
   via: Array<IRTarget>,
   target: IRTarget,
@@ -371,7 +371,7 @@ const routedSteps = (
   return orthogonalRoute(routing, targets, label);
 };
 
-const routeStepToIr = (step: RelationRouteStep, target: IRTarget, row: ExternalRow): IRStep => {
+const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: ExternalRow): IRStep => {
   const label = resolveLabel(step.label, row);
   switch (step.kind) {
     case 'move':
@@ -417,7 +417,7 @@ const routeStepToIr = (step: RelationRouteStep, target: IRTarget, row: ExternalR
 };
 
 const explicitRoute = (
-  mark: RelationMark,
+  mark: IRPlotRelationMark,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
@@ -447,8 +447,9 @@ const explicitRoute = (
   return { steps: applyStepLabel(steps, resolveLabel(mark.path?.label, row)), coordinates };
 };
 
+/** 把 relation mark 下沉为 path 或 ribbon core IR。 */
 export const lowerRelation = (
-  mark: RelationMark,
+  mark: IRPlotRelationMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
@@ -511,7 +512,7 @@ export const lowerRelation = (
       for (let index = 0; index < (mark.path?.via?.length ?? 0); index += 1) {
         const via = resolveTarget(
           mark,
-          mark.path?.via?.[index] as PlotTargetRef,
+          mark.path?.via?.[index] as IRPlotTargetRef,
           row,
           frame,
           ctx,
@@ -554,22 +555,23 @@ export const lowerRelation = (
   return attachMarkLayer({ type: 'scope', children }, mark, ctx?.provenance);
 };
 
-const collectTargetFields = (ref: PlotTargetRef, fields: FieldCollector): void => {
+const collectTargetFields = (ref: IRPlotTargetRef, fields: FieldCollector): void => {
   const anchorId = 'anchorId' in ref ? ref.anchorId : undefined;
   collectAnchorIdFields(anchorId, fields);
   if ('project' in ref) Object.values(ref.project).forEach(field => fields.addField(field));
 };
 
-const collectLabelFields = (label: RelationStepLabel | undefined, fields: FieldCollector): void => {
+const collectLabelFields = (label: IRPlotRelationStepLabel | undefined, fields: FieldCollector): void => {
   if (label !== undefined && typeof label.text === 'object' && 'field' in label.text) fields.addField(label.text.field);
 };
 
-const collectRelationStyleFields = (style: RelationPrimitiveStyle | undefined, fields: FieldCollector): void => {
+const collectRelationStyleFields = (style: IRPlotRelationPrimitiveStyle | undefined, fields: FieldCollector): void => {
   for (const value of Object.values(style ?? {})) fields.addChannel(value);
 };
 
-export const relationMarkDefinition: MarkDefinition<RelationMark> = {
-  type: PlotMark.Relation,
+/** 内置 relation mark definition。 */
+export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
+  schema: RelationMarkSchema,
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields) => {
     collectTargetFields(mark.source, fields);

@@ -1,10 +1,10 @@
 import type { ExternalDatasets } from '@retikz/data';
 import type {
+  IRPlotSpec,
   LowerPlotsOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
   PlotLineageRun,
-  PlotSpec,
 } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
@@ -31,21 +31,21 @@ export type RenderPlotLineageOptions = LowerPlotsOptions & {
 export type RenderPlotLineageResult = {
   /** SSR 渲染得到的 SVG 字符串。 */
   svg: string;
-  /** runtime-only 图元链路产物，不写入 PlotSpec 或 Scene meta。 */
+  /** runtime-only 图元链路产物，不写入 IRPlotSpec 或 Scene meta。 */
   lineage: PlotLineageRun;
 };
 
 /** renderPlot 调用签名。 */
 export type RenderPlot = {
-  (spec: PlotSpec, data: ExternalDatasets, options: RenderPlotLineageOptions): RenderPlotLineageResult;
-  (spec: PlotSpec, data: ExternalDatasets, options?: RenderPlotOptions): string;
+  (spec: IRPlotSpec, data: ExternalDatasets, options: RenderPlotLineageOptions): RenderPlotLineageResult;
+  (spec: IRPlotSpec, data: ExternalDatasets, options?: RenderPlotOptions): string;
 };
 
 const isLineageOptions = (options: RenderPlotOptions | RenderPlotLineageOptions): options is RenderPlotLineageOptions =>
   options.lineage !== undefined && options.lineage !== false;
 
 const renderPlotImpl = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   data: ExternalDatasets,
   options: RenderPlotOptions | RenderPlotLineageOptions = {},
 ): string | RenderPlotLineageResult => {

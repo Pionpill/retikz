@@ -175,8 +175,8 @@ export const vizV01: Release = {
           version: 'beta.2',
           date: '2026-07-07',
           summary: {
-            zh: '收窄 plot 顶层导出，并把 provenance / layout 相关 helper 归到稳定 owner，降低 deep import 误用风险。',
-            en: 'Narrows the plot root exports and moves provenance / layout helpers under stable owners, reducing accidental deep-import reliance.',
+            zh: '收窄 plot 顶层导出与未实现的 layout 契约，并把 provenance / layout 相关 helper 归到稳定 owner，降低误用风险。',
+            en: 'Narrows plot root exports and unimplemented layout contracts, while moving provenance / layout helpers under stable owners to reduce misuse.',
           },
           items: [
             {
@@ -191,6 +191,33 @@ export const vizV01: Release = {
               content: {
                 zh: 'mark / guide 来源 meta、稳定 id 与 datum id 登记逻辑由 contract owner 提供，内置 mark 与外部扩展复用同一来源契约。',
                 en: 'Mark / guide source meta, stable ids, and datum-id registration now come from the contract owner, so builtin marks and external extensions share the same provenance contract.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：IRPlotXxx 公开类型命名', en: 'BREAKING: Owner-qualified IRPlotXxx types' },
+              content: {
+                zh: '`PlotSpec`、`MarkOperation`、`ScaleOperation`、`CoordinateOperation`、`Guide`、`Transform` 等 schema 派生公开类型统一改为 `IRPlotXxx`，旧名不保留兼容别名；schema 与运行时 JSON 值不变。',
+                en: 'Schema-derived public types such as `PlotSpec`, `MarkOperation`, `ScaleOperation`, `CoordinateOperation`, `Guide`, and `Transform` now use owner-qualified `IRPlotXxx` names without compatibility aliases; schemas and runtime JSON values are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：mark definition 必须声明 schema',
+                en: 'BREAKING: Mark definitions require schemas',
+              },
+              content: {
+                zh: '`defineMark` 现在接收带 `schema` 的 definition；schema 的 `type` literal 作为注册键，lowering 会在字段收集和下沉前校验 JSON operation，非法自定义配置不再进入行为回调。',
+                en: '`defineMark` definitions now require a `schema`; its literal `type` is the registry key, and lowering validates the JSON operation before field collection and lowering so invalid custom config never reaches behavior callbacks.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：收回未实现的 decoration layout 字段',
+                en: 'BREAKING: Unimplemented decoration layout fields withdrawn',
+              },
+              content: {
+                zh: 'Plot layout 暂不接受 `maxIterations`、`collision`、label `priority` / `overflow` 或 `placement.target:"view"`；当前稳定契约保留 frame / plotArea 定位、基础占位与 autoPadding，完整 solver 延后到 v0.2。',
+                en: 'Plot layout no longer accepts `maxIterations`, `collision`, label `priority` / `overflow`, or `placement.target:"view"`. The stable contract keeps frame / plotArea placement, basic reservation, and autoPadding; the complete solver moves to v0.2.',
               },
             },
           ],

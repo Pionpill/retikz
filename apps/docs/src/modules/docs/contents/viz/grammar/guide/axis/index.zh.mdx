@@ -102,10 +102,10 @@ polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向
 
 `layout` 和 `labels` 是 `<Plot>` 级字段，不属于 `<Axis>`：
 
-| 字段     | 类型                                                                                                 | 默认值   | 描述                                                                                                           |
-| -------- | ---------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
-| `layout` | `{ mode?, autoPadding?, padding?, maxIterations?, collision? }`                                      | 自动布局 | 控制整图 labels 是否参与自动预留；`mode:'fixed'` 或 `autoPadding:false` 会放置文案但不自动收缩 plot area       |
-| `labels` | `Array<{ type:'text', role?, text, placement?, reserveSpace?, priority?, overflow?, ...textStyle }>` | `[]`     | 整图静态文案；`role:'title'/'caption'/'source'` 默认参与预留，`role:'note'` 和 `kind:'point'` 默认只定位不占位 |
+| 字段     | 类型                                                                           | 默认值   | 描述                                                                                                           |
+| -------- | ------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `layout` | `{ mode?, autoPadding?, padding? }`                                            | 自动布局 | 控制整图 labels 是否参与自动预留；`mode:'fixed'` 或 `autoPadding:false` 会放置文案但不自动收缩 plot area       |
+| `labels` | `Array<{ type:'text', role?, text, placement?, reserveSpace?, ...textStyle }>` | `[]`     | 整图静态文案；`role:'title'/'caption'/'source'` 默认参与预留，`role:'note'` 和 `kind:'point'` 默认只定位不占位 |
 
 图例的 `style` 也可以控制 size 图例的符号尺寸。默认 `symbolFit:'fit'` 会把 size 符号压入 `symbolSize` 盒子，避免大半径点遮挡图例条目；需要保留实绘半径时再显式使用 `symbolFit:'preserve'`。
 

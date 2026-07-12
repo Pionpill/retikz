@@ -10,7 +10,12 @@ import type {
   PositionScale,
   TickSet,
 } from '../../../contract';
-import type { Cartesian1DCoordinate, Cartesian1DOrientationType, Coordinate, ScaleOperation } from '../../../schemas';
+import type {
+  Cartesian1DOrientationType,
+  IRPlotCartesian1DCoordinate,
+  IRPlotCoordinate,
+  IRPlotScaleOperation,
+} from '../../../schemas';
 import type { Rect } from '../../../shared';
 
 import { cellInterval } from '../../../contract';
@@ -25,13 +30,13 @@ import { computePlotArea } from '../../../shared';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
-type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
+type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
 
 /** 空刻度集：某维度无 axis 时给 GuideContext 的占位。 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
 /** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理）。 */
-const hasExplicitContinuousRange = (def: ScaleOperation): boolean =>
+const hasExplicitContinuousRange = (def: IRPlotScaleOperation): boolean =>
   (def.type === PlotScale.Linear ||
     def.type === PlotScale.Log ||
     def.type === PlotScale.Pow ||
@@ -44,7 +49,7 @@ const hasExplicitContinuousRange = (def: ScaleOperation): boolean =>
 /**
  * 二维笛卡尔运行时坐标帧。
  * @description 由 IR 坐标配置和 x/y scale 解析得到，lowering 阶段通过它把数据通道值投影成屏幕坐标。
- *   该类型描述可执行的投影能力，不等同于 `ir/coordinate` 中的 JSON schema 类型。
+ *   该类型描述可执行的投影能力，不等同于 schemas 层的 JSON IR 类型。
  */
 export type CartesianCoordinateFrame = {
   /** 判别字段：2D 笛卡尔 */
@@ -237,7 +242,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
   },
 };
 
-const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinate> = {
+const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoordinate> = {
   schema: Cartesian1DSchema,
   roles: ['x'],
   resolve: (coordinate, ctx) => {

@@ -51,7 +51,7 @@ export const MarkChannelEncodingSchema = z
       'Color channel (non-positional): maps a field through an ordinal / color scale to the mark fill / stroke',
     ),
     channels: z
-      .record(z.string(), ChannelSchema)
+      .record(z.string().min(1), ChannelSchema)
       .optional()
       .describe(
         'Extension channel bindings: a map of registered channel name to field / constant binding, resolved by a ChannelDefinition supplied via options.channelDefinitions. A key colliding with a built-in channel name fails loud at lowering',
@@ -147,7 +147,7 @@ export const ShapeChannelSchema = z
   );
 
 export const TextChannelSchema = z
-  .object({
+  .strictObject({
     field: z
       .string()
       .min(1)
@@ -166,7 +166,6 @@ export const TextChannelSchema = z
         'Optional JSON-safe display format string (d3-format for numeric fields / d3-time-format for temporal fields) applied to the field value before stringification; only meaningful together with field. A runtime resolveLabel(row) escape hatch (injected via options, never in the IR) overrides this for fully custom templates',
       ),
   })
-  .strict()
   .refine(c => (c.field === undefined) !== (c.value === undefined), {
     message: 'text channel must set exactly one of `field` or `value`',
   })
@@ -192,7 +191,7 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
 );
 
 export const MarkLabelContentSchema = z
-  .object({
+  .strictObject({
     field: z
       .string()
       .min(1)
@@ -209,7 +208,6 @@ export const MarkLabelContentSchema = z
         'Optional JSON-safe display format string applied to a field value before stringification; only meaningful together with field',
       ),
   })
-  .strict()
   .refine(c => (c.field === undefined) !== (c.value === undefined), {
     message: 'label content must set exactly one of `field` or `value`',
   })
@@ -224,11 +222,10 @@ const nodeLabelShape = omitText(NodeLabelSchema.shape);
 const geometryLabelShape = omitText(GeometryLabelSchema.shape);
 
 export const MarkNodeLabelSchema = z
-  .object({
+  .strictObject({
     ...nodeLabelShape,
     content: MarkLabelContentSchema.describe('Node label content binding (field / value / displayFormat)'),
   })
-  .strict()
   .superRefine((label, ctx) => {
     if (label.placement === 'inside' && label.pin) {
       ctx.addIssue({
@@ -243,11 +240,10 @@ export const MarkNodeLabelSchema = z
   );
 
 export const MarkGeometryLabelSchema = z
-  .object({
+  .strictObject({
     ...geometryLabelShape,
     content: MarkLabelContentSchema.describe('Geometry label content binding (field / value / displayFormat)'),
   })
-  .strict()
   .describe(
     'Plot label attached to a path-like GeometryLabel host; all geometry fields are inherited from core GeometryLabelSchema',
   );

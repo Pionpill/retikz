@@ -1,4 +1,11 @@
-import type { AxisGuide, CoordinateOperation, Guide, MarkOperation, PlotSpec, ScaleOperation } from '@retikz/plot';
+import type {
+  IRPlotAxisGuide,
+  IRPlotCoordinateOperation,
+  IRPlotGuide,
+  IRPlotMarkOperation,
+  IRPlotScaleOperation,
+  IRPlotSpec,
+} from '@retikz/plot';
 
 import {
   PLOT_NAMESPACE,
@@ -10,7 +17,7 @@ import {
   PlotSpecSchema,
 } from '@retikz/plot';
 
-type CompositionSpec = NonNullable<PlotSpec['composition']>;
+type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
 type CoordinateViewSpec = NonNullable<CompositionSpec['views']>[number];
 type ArrangementSpec = NonNullable<CompositionSpec['arrangements']>[number];
 type FacetGridSpec = Extract<ArrangementSpec, { kind: 'facet' }>;
@@ -21,18 +28,18 @@ type FacetDimensionInput = string | NonNullable<FacetGridSpec['row']>;
  * plotBuilder 的入口配置。
  *
  * @description
- * 基本字段与 plain `PlotSpec` 保持一致，但 `marks` / `guides` 可以额外携带
+ * 基本字段与 plain `IRPlotSpec` 保持一致，但 `marks` / `guides` 可以额外携带
  * builder-only 的轴、facet 与 scaffold 绑定字段。调用 `build()` 时这些字段会先被展开成
- * 普通 `PlotSpec` 的 `composition`、`coordinateView`、`scales` 与 guides，再交给
+ * 普通 `IRPlotSpec` 的 `composition`、`coordinateView`、`scales` 与 guides，再交给
  * `PlotSpecSchema` 校验；它们不会进入 Plot IR，也不会被 `renderPlot` 直接消费。
  */
-export type PlotBuilderConfig = Omit<PlotSpec, 'namespace' | 'type' | 'marks' | 'guides'> & {
+export type PlotBuilderConfig = Omit<IRPlotSpec, 'namespace' | 'type' | 'marks' | 'guides'> & {
   /**
    * 初始 mark 列表。
    *
    * @description
    * mark 可以使用 `xAxisId`、`yAxisId`、`facetId` 或 `trackId` 这类 builder-only
-   * 绑定字段；`build()` 会把它们转换为普通 PlotSpec 里的 coordinate view 关系。
+   * 绑定字段；`build()` 会把它们转换为普通 IRPlotSpec 里的 coordinate view 关系。
    */
   marks?: Array<AxisBoundMarkOperation>;
   /**
@@ -58,20 +65,20 @@ type GuideBindingProps = {
   trackId?: string;
 };
 
-type AxisBoundGuide = Guide & GuideBindingProps;
-type AxisBoundMarkOperation = MarkOperation & MarkBindingProps;
-type AxisBoundPathMark = Extract<MarkOperation, { type: typeof PlotMark.Path }> & MarkBindingProps;
-type AxisBoundPointMark = Extract<MarkOperation, { type: typeof PlotMark.Point }> & MarkBindingProps;
-type AxisBoundIntervalMark = Extract<MarkOperation, { type: typeof PlotMark.Interval }> & MarkBindingProps;
-type AxisBoundAxisGuide = Extract<Guide, { type: typeof PlotGuide.Axis }> & GuideBindingProps;
-type AxisBoundLegendGuide = Extract<Guide, { type: typeof PlotGuide.Legend }> & GuideBindingProps;
+type AxisBoundGuide = IRPlotGuide & GuideBindingProps;
+type AxisBoundMarkOperation = IRPlotMarkOperation & MarkBindingProps;
+type AxisBoundPathMark = Extract<IRPlotMarkOperation, { type: typeof PlotMark.Path }> & MarkBindingProps;
+type AxisBoundPointMark = Extract<IRPlotMarkOperation, { type: typeof PlotMark.Point }> & MarkBindingProps;
+type AxisBoundIntervalMark = Extract<IRPlotMarkOperation, { type: typeof PlotMark.Interval }> & MarkBindingProps;
+type AxisBoundAxisGuide = Extract<IRPlotGuide, { type: typeof PlotGuide.Axis }> & GuideBindingProps;
+type AxisBoundLegendGuide = Extract<IRPlotGuide, { type: typeof PlotGuide.Legend }> & GuideBindingProps;
 
 /**
  * facet 布局的 builder 输入。
  *
  * @description
  * 该类型是 `plotBuilder().facet(...)` 的轻量写法：`row` / `column` 可直接写字段名，
- * `view` 可省略并由 builder 生成。`build()` 会把它展开为 plain `PlotSpec.composition`
+ * `view` 可省略并由 builder 生成。`build()` 会把它展开为 plain `IRPlotSpec.composition`
  * 的 facet arrangement，输入中的便捷字段不会进入 Plot IR。
  */
 export type BuilderFacetInput = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'column'> & {
@@ -92,7 +99,7 @@ export type BuilderFacetInput = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'c
  *
  * @description
  * 该类型是 `plotBuilder().scaffold(...)` 的共享轨道写法。`coordinate` 可省略并在
- * `build()` 时继承默认 cartesian 配置；最终会被展开为 plain `PlotSpec.composition`
+ * `build()` 时继承默认 cartesian 配置；最终会被展开为 plain `IRPlotSpec.composition`
  * 的 tracks arrangement，builder-only 字段不会进入 Plot IR。
  */
 export type BuilderScaffoldInput = Omit<SharedScaffoldSpec, 'kind' | 'coordinate'> & {
@@ -115,12 +122,12 @@ type CollectedScaffold = SharedScaffoldSpec & {
 };
 
 /**
- * framework-free 的 PlotSpec builder。
+ * framework-free 的 IRPlotSpec builder。
  *
  * @description
  * `PlotBuilder` 提供链式 authoring surface，方便在无 React / SSR 场景中组织 mark、
  * guide、axis、legend、facet 与 scaffold。所有便捷绑定字段都会在 `build()` 前展开为
- * plain `PlotSpec`；输出结果只包含标准 Plot IR 字段，可继续交给 `renderPlot(spec, datasets)`
+ * plain `IRPlotSpec`；输出结果只包含标准 Plot IR 字段，可继续交给 `renderPlot(spec, datasets)`
  * 或 `lowerPlots` 使用。
  */
 export type PlotBuilder = {
@@ -135,9 +142,9 @@ export type PlotBuilder = {
   /** 追加 interval mark。 */
   interval: (mark: AxisBoundIntervalMark) => PlotBuilder;
   /** 追加 reference mark。 */
-  reference: (mark: Extract<MarkOperation, { type: typeof PlotMark.Reference }>) => PlotBuilder;
+  reference: (mark: Extract<IRPlotMarkOperation, { type: typeof PlotMark.Reference }>) => PlotBuilder;
   /** 追加 relation mark。 */
-  relation: (mark: Extract<MarkOperation, { type: typeof PlotMark.Relation }>) => PlotBuilder;
+  relation: (mark: Extract<IRPlotMarkOperation, { type: typeof PlotMark.Relation }>) => PlotBuilder;
   /** 追加 axis guide，并支持 builder-only 的拓扑绑定字段。 */
   axis: (guide: AxisBoundAxisGuide) => PlotBuilder;
   /** 追加 legend guide。 */
@@ -147,22 +154,22 @@ export type PlotBuilder = {
   /** 声明 shared scaffold 布局，并允许 mark / guide 通过 `trackId` / `scaffoldId` 绑定。 */
   scaffold: (scaffold: BuilderScaffoldInput) => PlotBuilder;
   /**
-   * 生成 schema-valid 的 plain `PlotSpec`。
+   * 生成 schema-valid 的 plain `IRPlotSpec`。
    *
    * @description
    * 该方法会移除 `xAxisId`、`yAxisId`、`facetId`、`trackId`、`scaffoldId`
    * 等 builder-only 字段，并把它们展开为标准 Plot IR 的 scale、composition 与
    * coordinate view 关系。
    */
-  build: () => PlotSpec;
+  build: () => IRPlotSpec;
 };
 
 type NormalizedAxisBinding = {
-  marks: Array<MarkOperation>;
-  guides: Array<Guide>;
-  scales: Array<ScaleOperation>;
-  coordinate?: CoordinateOperation;
-  composition?: PlotSpec['composition'];
+  marks: Array<IRPlotMarkOperation>;
+  guides: Array<IRPlotGuide>;
+  scales: Array<IRPlotScaleOperation>;
+  coordinate?: IRPlotCoordinateOperation;
+  composition?: IRPlotSpec['composition'];
 };
 
 const AUTO_X = '__x';
@@ -172,12 +179,12 @@ const DEFAULT_AXIS_SCOPE = 'default';
 const yAxisScaleNameOf = (axisId: string): string => `__y.${axisId}`;
 const xAxisScaleNameOf = (axisId: string): string => `__x.${axisId}`;
 
-const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
+const isAxisGuide = (guide: IRPlotGuide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis;
 
 const isPositionMark = (mark: AxisBoundMarkOperation): boolean =>
   mark.type === PlotMark.Path || mark.type === PlotMark.Point || mark.type === PlotMark.Interval;
 
-const stripMarkBindings = (mark: AxisBoundMarkOperation): MarkOperation => {
+const stripMarkBindings = (mark: AxisBoundMarkOperation): IRPlotMarkOperation => {
   const rest = { ...mark };
   delete rest.xAxisId;
   delete rest.yAxisId;
@@ -186,7 +193,7 @@ const stripMarkBindings = (mark: AxisBoundMarkOperation): MarkOperation => {
   return rest;
 };
 
-const stripGuideBindings = (guide: AxisBoundGuide): Guide => {
+const stripGuideBindings = (guide: AxisBoundGuide): IRPlotGuide => {
   const rest = { ...guide };
   delete rest.facetId;
   delete rest.scaffoldId;
@@ -194,12 +201,12 @@ const stripGuideBindings = (guide: AxisBoundGuide): Guide => {
   return rest;
 };
 
-const withMarkScope = (mark: AxisBoundMarkOperation, coordinateView: string | undefined): MarkOperation => {
+const withMarkScope = (mark: AxisBoundMarkOperation, coordinateView: string | undefined): IRPlotMarkOperation => {
   const stripped = stripMarkBindings(mark);
   return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
 };
 
-const withGuideScope = (guide: AxisBoundGuide, coordinateView: string | undefined): Guide => {
+const withGuideScope = (guide: AxisBoundGuide, coordinateView: string | undefined): IRPlotGuide => {
   const stripped = stripGuideBindings(guide);
   if (!isAxisGuide(stripped)) return stripped;
   return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
@@ -243,23 +250,23 @@ const facetDimensionOf = (
 };
 
 const insertAxisBindingScales = (
-  scales: ReadonlyArray<ScaleOperation>,
+  scales: ReadonlyArray<IRPlotScaleOperation>,
   xAxisIds: ReadonlyArray<string>,
   yAxisIds: ReadonlyArray<string>,
-): Array<ScaleOperation> => {
+): Array<IRPlotScaleOperation> => {
   const hasXBinding = xAxisIds.length > 0;
   const hasYBinding = yAxisIds.length > 0;
   const baseXScale = scales.find(scale => scale.name === AUTO_X) ?? { type: PlotScale.Linear, name: AUTO_X };
   const baseYScale = scales.find(scale => scale.name === AUTO_Y) ?? { type: PlotScale.Linear, name: AUTO_Y };
-  const xScales: Array<ScaleOperation> = xAxisIds.map(axisId => ({
+  const xScales: Array<IRPlotScaleOperation> = xAxisIds.map(axisId => ({
     ...baseXScale,
     name: xAxisScaleNameOf(axisId),
   }));
-  const yScales: Array<ScaleOperation> = yAxisIds.map(axisId => ({
+  const yScales: Array<IRPlotScaleOperation> = yAxisIds.map(axisId => ({
     ...baseYScale,
     name: yAxisScaleNameOf(axisId),
   }));
-  const out: Array<ScaleOperation> = [];
+  const out: Array<IRPlotScaleOperation> = [];
   let insertedX = false;
   let insertedY = false;
   for (const scale of scales) {
@@ -287,11 +294,11 @@ const insertAxisBindingScales = (
 };
 
 const ensureCartesianScales = (
-  scales: ReadonlyArray<ScaleOperation>,
-  coordinate: CoordinateOperation,
-): Array<ScaleOperation> => {
+  scales: ReadonlyArray<IRPlotScaleOperation>,
+  coordinate: IRPlotCoordinateOperation,
+): Array<IRPlotScaleOperation> => {
   if (coordinate.type !== PlotCoordinate.Cartesian2D) return [...scales];
-  const out: Array<ScaleOperation> = [...scales];
+  const out: Array<IRPlotScaleOperation> = [...scales];
   const x = typeof coordinate.x === 'string' ? coordinate.x : AUTO_X;
   const y = typeof coordinate.y === 'string' ? coordinate.y : AUTO_Y;
   if (!out.some(scale => scale.name === x)) out.unshift({ type: PlotScale.Linear, name: x });
@@ -300,9 +307,9 @@ const ensureCartesianScales = (
 };
 
 const fillCoordinateScaleBindings = (
-  input: CoordinateOperation,
-  defaults: CoordinateOperation,
-): CoordinateOperation => {
+  input: IRPlotCoordinateOperation,
+  defaults: IRPlotCoordinateOperation,
+): IRPlotCoordinateOperation => {
   if (input.type !== defaults.type) return input;
   if (input.type === PlotCoordinate.Cartesian2D && defaults.type === PlotCoordinate.Cartesian2D) {
     return {
@@ -336,7 +343,7 @@ const fillCoordinateScaleBindings = (
 const buildTopologyComposition = (
   facets: ReadonlyArray<CollectedFacet>,
   scaffolds: ReadonlyArray<CollectedScaffold>,
-  coordinate: CoordinateOperation,
+  coordinate: IRPlotCoordinateOperation,
 ): {
   composition: CompositionSpec;
   facetViewById: Map<string, string>;
@@ -397,10 +404,10 @@ const buildTopologyComposition = (
 };
 
 const normalizeTopologyBindings = (
-  baseScales: ReadonlyArray<ScaleOperation>,
+  baseScales: ReadonlyArray<IRPlotScaleOperation>,
   marks: ReadonlyArray<AxisBoundMarkOperation>,
   guides: ReadonlyArray<AxisBoundGuide>,
-  coordinate: CoordinateOperation,
+  coordinate: IRPlotCoordinateOperation,
   facets: ReadonlyArray<CollectedFacet>,
   scaffolds: ReadonlyArray<CollectedScaffold>,
 ): NormalizedAxisBinding => {
@@ -492,9 +499,9 @@ const normalizeAxisBindings = (
   }
 
   const axes = guides.filter(isAxisGuide);
-  const xAxesById = new Map<string, AxisGuide>();
-  const yAxesById = new Map<string, AxisGuide>();
-  const axesById = new Map<string, AxisGuide>();
+  const xAxesById = new Map<string, IRPlotAxisGuide>();
+  const yAxesById = new Map<string, IRPlotAxisGuide>();
+  const axesById = new Map<string, IRPlotAxisGuide>();
   const seenAxisKeys = new Set<string>();
   const seenBindingScopeIds = new Map<string, string>();
   for (const axis of axes) {
@@ -650,12 +657,12 @@ const normalizeAxisBindings = (
 };
 
 /**
- * 创建 framework-free 的 PlotSpec builder。
+ * 创建 framework-free 的 IRPlotSpec builder。
  *
  * @description
  * 适合在非 React、SSR 或构建期生成图表规格。`plotBuilder(config).build()` 的返回值是
- * plain `PlotSpec`；builder-only 字段只在 build 阶段参与展开，不会进入 IR。渲染时仍使用
- * `renderPlot(spec, datasets, options?)`，它只消费已经 build 出来的 `PlotSpec` 与外部数据集。
+ * plain `IRPlotSpec`；builder-only 字段只在 build 阶段参与展开，不会进入 IR。渲染时仍使用
+ * `renderPlot(spec, datasets, options?)`，它只消费已经 build 出来的 `IRPlotSpec` 与外部数据集。
  */
 export const plotBuilder = (config: PlotBuilderConfig): PlotBuilder => {
   const marks: Array<AxisBoundMarkOperation> = [...(config.marks ?? [])];

@@ -3,7 +3,7 @@ import type { IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -11,7 +11,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
@@ -19,10 +19,10 @@ const expandOf = (
   return def.expand(spec) as IRScope;
 };
 
-const layerOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, index: number): IRScope =>
+const layerOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, index: number): IRScope =>
   expandOf(spec, datasets, opts).children[index] as IRScope;
 
-describe('stat-geom composition surface (alpha.13 ADR-05)', () => {
+describe('stat-geom composition surface (contract)', () => {
   const boxRows = [
     { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 1 },
     { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 2 },

@@ -3,7 +3,7 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { DEFAULT_PLOT_COLORS } from '../../../src/providers';
@@ -11,12 +11,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 const collectPaths = (layer: IRScope): Array<IRPath> => {
@@ -46,7 +46,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 建 spec：x/y linear + ordinal 色 scale，单 mark */
-const specOf = (mark: Record<string, unknown>): PlotSpec =>
+const specOf = (mark: Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -67,7 +67,7 @@ const SERIES_DATA = [
   { t: 1, v: 4, city: 'Y' },
 ];
 
-describe('color × series · B/C 收口（alpha.7 ADR-03）', () => {
+describe('color × series · B/C 收口（contract）', () => {
   // Happy path：多系列 line 显式 series → 每系列一条着色线
   it('explicit_series_line_splits_and_colors', () => {
     const spec = specOf({
@@ -221,7 +221,7 @@ describe('plot colors default palette', () => {
   });
 });
 
-describe('color 类型兼容校验（alpha.7 ADR-03）', () => {
+describe('color 类型兼容校验（contract）', () => {
   it('continuous_color_field_fails_loud', () => {
     const spec = specOf({
       type: 'point',
@@ -255,7 +255,7 @@ describe('color 类型兼容校验（alpha.7 ADR-03）', () => {
   });
 });
 
-describe('series + color 冲突（alpha.7 ADR-03）', () => {
+describe('series + color 冲突（contract）', () => {
   it('color_not_constant_within_series_fails_loud', () => {
     // series=city 但 color=shade 在同一 city 内多值 → fail-loud
     const spec = specOf({

@@ -1,4 +1,4 @@
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 
 import { AxisGridApplyTo, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
@@ -8,8 +8,8 @@ import { Axis } from '../../../src/components/guides';
 import { IntervalMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 
-describe('buildPlotSpec alpha.14 ADR-06 composition adapter surface', () => {
-  const composition: NonNullable<PlotSpec['composition']> = {
+describe('buildPlotSpec composition adapter surface', () => {
+  const composition: NonNullable<IRPlotSpec['composition']> = {
     defaultView: 'temp',
     views: [
       { id: 'temp', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } },

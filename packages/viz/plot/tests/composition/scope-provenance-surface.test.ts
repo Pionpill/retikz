@@ -2,7 +2,7 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { createPlotLocator, lowerPlots } from '../../src';
 import { PlotSpecSchema } from '../../src/schemas';
@@ -95,9 +95,9 @@ const trackSpec = {
   guides: [{ type: 'axis', dimension: 'x', coordinateView: 'rain', grid: true }],
 };
 
-const parsePlotSpec = (spec: unknown): PlotSpec => PlotSpecSchema.parse(spec);
+const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
 
-const expandOf = (spec: PlotSpec): IRScope => {
+const expandOf = (spec: IRPlotSpec): IRScope => {
   const [definition] = lowerPlots(
     { weather: weatherRows },
     { width: 480, height: 300, provenance: true, datumProvenance: true },

@@ -38,17 +38,17 @@ import type {
 import type { DatumIdRegistrar, ProvenanceContext } from '../contract';
 import type { CategoryOrder, ScaleDescriptor } from '../providers';
 import type {
-  AxisGuide,
-  Channel,
-  CoordinateOperation,
-  Guide,
-  IntervalMark,
+  IRPlotAxisGuide,
+  IRPlotChannel,
+  IRPlotCoordinateOperation,
+  IRPlotGuide,
+  IRPlotIntervalMark,
+  IRPlotLegendGuide,
+  IRPlotMarkOperation,
+  IRPlotScaleOperation,
+  IRPlotSpec,
+  IRPlotTransform,
   LegendChannelValue,
-  LegendGuide,
-  MarkOperation,
-  PlotSpec,
-  ScaleOperation,
-  Transform,
 } from '../schemas';
 import type { LegendReserve, Margins, Rect } from '../shared';
 import type { LegendEntry, LegendInput } from './guide';
@@ -60,6 +60,8 @@ import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   buildProportionalIntervals,
+  channelKindsForMark,
+  channelValue,
   createPositionChannelDefinitions,
   defaultOriginAxisTickSideOf,
   deriveScale,
@@ -80,8 +82,6 @@ import {
   resolveSqrtScale,
   scaleTicks,
 } from '../providers';
-import { channelValue } from '../providers/channel/shared';
-import { channelKindsForMark } from '../providers/mark';
 import { LegendSymbolFit } from '../schemas';
 import {
   AxisGridApplyTo,
@@ -107,9 +107,9 @@ import { collectSourceFields } from './source-fields';
  *   extent → 取两字段（histogram 箱边 / 堆叠 y0,y1 / 累积饼角 start,end）；full → 不贡献（满铺坐标域）。
  */
 const intervalRoleValues = (
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   axis: 'primary' | 'secondary',
-  pick: (mark: MarkOperation) => Channel | undefined,
+  pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
   rows: Array<ExternalRow>,
 ): Array<unknown> => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
@@ -123,7 +123,7 @@ const intervalRoleValues = (
 };
 
 /** interval mark 在某 role 是否需把 baseline 0 纳入连续域（span / extent 值轴含 0；band / full 不需） */
-const intervalContributesBaseline = (mark: IntervalMark, axis: 'primary' | 'secondary'): boolean => {
+const intervalContributesBaseline = (mark: IRPlotIntervalMark, axis: 'primary' | 'secondary'): boolean => {
   const bound = resolveIntervalBound(mark, axis === 'primary' ? 'x' : 'y');
   return (
     bound.kind === IntervalBoundKind.Span ||
@@ -132,19 +132,19 @@ const intervalContributesBaseline = (mark: IntervalMark, axis: 'primary' | 'seco
   );
 };
 
-const intervalBoundConsumesRoleChannel = (mark: IntervalMark, role: DimensionRole): boolean => {
+const intervalBoundConsumesRoleChannel = (mark: IRPlotIntervalMark, role: DimensionRole): boolean => {
   const bound = resolveIntervalBound(mark, role);
   return bound.kind === IntervalBoundKind.Band || bound.kind === IntervalBoundKind.Span;
 };
 
 const intervalProportionalAxisTicks = (
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   role: DimensionRole,
   rows: Array<ExternalRow>,
 ): TickSet | undefined => {
   const bound = resolveIntervalBound(mark, role);
   if (bound.kind !== IntervalBoundKind.Proportional) return undefined;
-  const channel = (mark.encoding as Record<string, Channel | undefined>)[role];
+  const channel = (mark.encoding as Record<string, IRPlotChannel | undefined>)[role];
   if (channel?.field === undefined) return undefined;
   const intervals = buildProportionalIntervals(bound.field, rows);
   const values: TickSet['values'] = [];
@@ -182,12 +182,13 @@ const plotBackgroundNode = (width: number, height: number, fill: string | undefi
 const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
   child.type === 'coordinate' ? child : { ...child, zIndex };
 
+/** 单个图元及其当前可见数据行的 lowering 视图。 */
 export type MarkDataView = {
-  mark: MarkOperation;
+  mark: IRPlotMarkOperation;
   rows: Array<ExternalRow>;
 };
 
-type CompositionSpec = NonNullable<PlotSpec['composition']>;
+type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
 type CoordinateView = NonNullable<CompositionSpec['views']>[number];
 type CoordinateViewPlacement = NonNullable<CoordinateView['placement']>;
 type CoordinateScopePlacement =
@@ -203,7 +204,7 @@ type FacetHeaderLabelStyle = Exclude<NonNullable<NonNullable<FacetGrid['header']
 type CompositionAxisPolicyValue = 'perScope' | 'outerShared' | 'none';
 
 const relationTargetRoleValues = (
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   role: DimensionRole,
   rows: Array<ExternalRow>,
 ): Array<unknown> => {
@@ -221,23 +222,25 @@ const relationTargetRoleValues = (
 };
 
 /** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined。 */
-const markEncoding = (mark: MarkOperation): Record<string, Channel | undefined> | undefined =>
-  (mark as { encoding?: Record<string, Channel | undefined> }).encoding;
+const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotChannel | undefined> | undefined =>
+  (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding;
 
 /** guide 谓词：按 type 判别串收窄成 axis / legend 子集 */
-const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
-const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === PlotGuide.Legend;
+const isAxisGuide = (guide: IRPlotGuide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis;
+const isLegendGuide = (guide: IRPlotGuide): guide is IRPlotLegendGuide => guide.type === PlotGuide.Legend;
 
 const DEFAULT_COORDINATE_SCOPE_ID = 'default';
 
+/** 坐标视图 registry 中归一化后的单个视图条目。 */
 export type CoordinateScopeRegistryEntry = {
   id: string;
-  coordinate: CoordinateOperation;
+  coordinate: IRPlotCoordinateOperation;
   placement?: CoordinateScopePlacement;
   scaffold?: string;
   track?: string;
 };
 
+/** plot 内坐标视图及默认视图的解析结果。 */
 export type CoordinateScopeRegistry = {
   defaultScope: string;
   scopes: Array<CoordinateScopeRegistryEntry>;
@@ -249,7 +252,8 @@ const trackViewIdOf = (arrangement: SharedScaffold, track: ScaffoldTrack): strin
   return template.replaceAll('{arrangement}', arrangement.id).replaceAll('{track}', track.id);
 };
 
-export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeRegistry => {
+/** 解析 plot 的坐标简写或 composition 为统一坐标视图 registry。 */
+export const resolveCoordinateScopeRegistry = (node: IRPlotSpec): CoordinateScopeRegistry => {
   if (node.composition !== undefined) {
     const scaffolds = (node.composition.arrangements ?? []).filter(
       (arrangement): arrangement is SharedScaffold => arrangement.kind === 'tracks',
@@ -290,10 +294,12 @@ export const resolveCoordinateScopeRegistry = (node: PlotSpec): CoordinateScopeR
   };
 };
 
+/** 返回图元或 guide 应路由到的坐标视图 id。 */
 export const coordinateScopeIdOf = (operation: { coordinateView?: string }, defaultScope: string): string =>
   operation.coordinateView ?? defaultScope;
 
-const axisGuideScopeIdOf = (guide: AxisGuide, defaultScope: string): string => guide.coordinateView ?? defaultScope;
+const axisGuideScopeIdOf = (guide: IRPlotAxisGuide, defaultScope: string): string =>
+  guide.coordinateView ?? defaultScope;
 
 const compositionAxisPolicyOf = (
   resolve: CompositionResolve | undefined,
@@ -351,7 +357,7 @@ const mergeCompositionResolve = (
   };
 };
 
-const axisGapKeyOf = (guide: AxisGuide): string | null => {
+const axisGapKeyOf = (guide: IRPlotAxisGuide): string | null => {
   const placement = guide.placement;
   if (placement === undefined || placement.kind === 'auto') return null;
   if (placement.kind === 'side') return `side:${placement.side}`;
@@ -361,7 +367,7 @@ const axisGapKeyOf = (guide: AxisGuide): string | null => {
   return `edge:${placement.edge}`;
 };
 
-const withAxisGapOffsets = (guides: ReadonlyArray<Guide>, axisGap: number | undefined): Array<Guide> => {
+const withAxisGapOffsets = (guides: ReadonlyArray<IRPlotGuide>, axisGap: number | undefined): Array<IRPlotGuide> => {
   if (axisGap === undefined || axisGap === 0) return [...guides];
   const counts = new Map<string, number>();
   return guides.map(guide => {
@@ -388,10 +394,10 @@ const withAxisGapOffsets = (guides: ReadonlyArray<Guide>, axisGap: number | unde
   });
 };
 
-const withoutAxisGrid = (guides: ReadonlyArray<Guide>): Array<Guide> =>
+const withoutAxisGrid = (guides: ReadonlyArray<IRPlotGuide>): Array<IRPlotGuide> =>
   guides.map(guide => (isAxisGuide(guide) && guide.grid !== undefined ? { ...guide, grid: false } : guide));
 
-const withEnabledAxisGrid = (guide: AxisGuide, coordinateView: string | undefined): AxisGuide => ({
+const withEnabledAxisGrid = (guide: IRPlotAxisGuide, coordinateView: string | undefined): IRPlotAxisGuide => ({
   ...guide,
   ...(coordinateView !== undefined ? { coordinateView } : {}),
   grid: guide.grid === undefined || guide.grid === false ? true : guide.grid,
@@ -659,7 +665,7 @@ const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']
 const assertKnownPositionEncodingRoles = (
   coordinateType: string,
   roles: ReadonlyArray<DimensionRole>,
-  marks: ReadonlyArray<MarkOperation>,
+  marks: ReadonlyArray<IRPlotMarkOperation>,
 ): void => {
   const roleSet = new Set<string>(roles);
   for (const mark of marks) {
@@ -684,7 +690,7 @@ const assertKnownPositionEncodingRoles = (
 const assertValidGuideDimensions = (
   coordinateType: string,
   roles: ReadonlyArray<DimensionRole>,
-  axisGuides: Array<AxisGuide>,
+  axisGuides: Array<IRPlotAxisGuide>,
 ): void => {
   const valid = roles;
   for (const guide of axisGuides) {
@@ -703,7 +709,7 @@ const assertValidGuideDimensions = (
 const assertRequiredPositionChannels = (
   coordinateType: string,
   roles: ReadonlyArray<DimensionRole>,
-  marks: ReadonlyArray<MarkOperation>,
+  marks: ReadonlyArray<IRPlotMarkOperation>,
 ): void => {
   const required = roles;
   for (const mark of marks) {
@@ -713,7 +719,7 @@ const assertRequiredPositionChannels = (
     if (mark.type === PlotMark.Reference || mark.type === PlotMark.Relation) continue;
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
     if (mark.type === PlotMark.Interval) {
-      const encoding = mark.encoding as Record<string, Channel | undefined>;
+      const encoding = mark.encoding as Record<string, IRPlotChannel | undefined>;
       for (const channel of required) {
         if (!intervalBoundConsumesRoleChannel(mark, channel)) continue;
         if (encoding[channel] === undefined) {
@@ -725,7 +731,7 @@ const assertRequiredPositionChannels = (
       continue;
     }
     // point / path：所有必填位置角色都要对应 encoding 通道
-    const encoding = mark.encoding as Record<string, Channel | undefined>;
+    const encoding = mark.encoding as Record<string, IRPlotChannel | undefined>;
     for (const channel of required) {
       if (encoding[channel] === undefined) {
         throw new Error(
@@ -795,7 +801,7 @@ export type LowerPlotsOptions = {
   rowSelectorDefinitions?: Array<AnyRowSelectorDefinition>;
   /**
    * 自定义 scale definition 数组（运行时函数，不进 IR）：spec.scales 的 `{type:<customType>, name, ...config}` 据此校验并解析。
-   * @description 内置 13 个 scale 恒可用；自定义 type 未注册 / type 冲突会 fail-loud。position 族喂 coordinate 投影 + guide，channel 族喂 color 通道 + legend。
+   * @description 内置 scale 恒可用；自定义 type 未注册 / type 冲突会 fail-loud。position 族喂 coordinate 投影 + guide，channel 族喂 color 通道 + legend。
    */
   scaleDefinitions?: Array<AnyScaleDefinition>;
   /**
@@ -815,7 +821,7 @@ export type LowerPlotsOptions = {
   markDefinitions?: Array<AnyMarkDefinition>;
   /**
    * 自定义字段解析格式 definition 数组（运行时函数，不进 IR）：data.model 的 `{name, format:<customName>}` 据此解析。
-   * @description 内置 6 个 format 恒可用；自定义 name 未注册 / name 冲突会 fail-loud。definition 给出 impliedType（覆盖推断 / 冲突校验）与 parse（原始值 → canonical）。
+   * @description 内置 format 恒可用；自定义 name 未注册 / name 冲突会 fail-loud。definition 给出 impliedType（覆盖推断 / 冲突校验）与 parse（原始值 → canonical）。
    */
   formatDefinitions?: Array<FieldFormatDefinition>;
 };
@@ -835,7 +841,7 @@ export type CoordinateFrameResolution = {
 /** resolveFrame 入参：投影 + guide 下沉所需的全部上下文（pure，无副作用，locator 复用同一投影） */
 export type ResolveFrameParams = {
   /** plot IR 根节点（取 coordinate / guides） */
-  node: PlotSpec;
+  node: IRPlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
   /** 用户源字段 → DataFieldTypeValue；供 type-driven scale 派生与兼容校验 */
@@ -860,7 +866,7 @@ export type ResolveFrameParams = {
   provenance?: ProvenanceContext;
   /** 自定义坐标系 definition 数组（运行时函数，不进 IR）；coordinate {type:<customType>, ...config} 据此解析投影 */
   coordinates?: Array<AnyCoordinateDefinition>;
-  /** scale registry（内置 13 + 自定义 scaleDefinitions）；position 投影 / channel 取色 / compat 共用单一真源，保 locator parity */
+  /** scale registry（内置 + 自定义 scaleDefinitions）；position 投影 / channel 取色 / compat 共用单一真源，保 locator parity */
   scaleRegistry: Map<string, AnyScaleDefinition>;
   /** 每个 mark 实际使用的数据视图；普通 mark 用全图 rows，relation 可使用 mark-scoped transform rows。 */
   markDataViews?: Array<MarkDataView>;
@@ -921,7 +927,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const collectValues = (
     role: DimensionRole,
     axis: 'primary' | 'secondary' | undefined,
-    pick: (mark: MarkOperation) => Channel | undefined,
+    pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
     includeBaseline: boolean,
   ): Array<unknown> => {
     const out: Array<unknown> = [];
@@ -984,7 +990,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   // 某角色（跨所有 mark）绑定字段的全部类型——多 mark 共用一角色时须校验 / 派生全部，不能只看首个
   const roleFieldTypes = (
     role: DimensionRole,
-    pick: (mark: MarkOperation) => Channel | undefined,
+    pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
   ): Array<DataFieldTypeValue> => {
     const types: Array<DataFieldTypeValue> = [];
     for (const mark of node.marks) {
@@ -1011,7 +1017,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
    */
   const resolveRoleOrder = (
     role: DimensionRole,
-    pick: (mark: MarkOperation) => Channel | undefined,
+    pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
   ): CategoryOrder | undefined => {
     const found: Array<CategoryOrder> = [];
     for (const mark of node.marks) {
@@ -1044,13 +1050,13 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   const resolveScaleForRole = (
     role: DimensionRole,
     scaleName: string | undefined,
-    pick: (mark: MarkOperation) => Channel | undefined,
+    pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
     values: Array<unknown>,
-  ): ScaleOperation => {
+  ): IRPlotScaleOperation => {
     const types = roleFieldTypes(role, pick);
     // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
     const order = resolveRoleOrder(role, pick);
-    let def: ScaleOperation;
+    let def: IRPlotScaleOperation;
     if (scaleName !== undefined) {
       const found = scaleByName.get(scaleName);
       if (!found) throw new Error(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
@@ -1093,7 +1099,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     role: DimensionRole,
     scaleName: string | undefined,
     values: Array<unknown>,
-  ): ScaleOperation => resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
+  ): IRPlotScaleOperation => resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
 
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
   const legendReserve = legendReserveOf((node.guides ?? []).filter(isLegendGuide));
@@ -1126,6 +1132,19 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     rows,
     marks: node.marks,
   });
+  if (resolution.frame.type !== coordinateOperation.type) {
+    throw new Error(
+      `lowerPlots: coordinate definition "${coordinateOperation.type}" returned frame type "${resolution.frame.type}"; frame type must match the registered coordinate type`,
+    );
+  }
+  if (
+    resolution.frame.roles.length !== roles.length ||
+    resolution.frame.roles.some((role, index) => role !== roles[index])
+  ) {
+    throw new Error(
+      `lowerPlots: coordinate definition "${coordinateOperation.type}" returned frame roles [${resolution.frame.roles.join(', ')}]; frame roles must match definition roles [${roles.join(', ')}]`,
+    );
+  }
   return {
     frame: resolution.frame,
     gridLayers: resolution.gridLayers,
@@ -1140,9 +1159,9 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
  *   legend 据 scale name 消歧；未具名的默认 scale 用 channel/field/type 签名区分。
  */
 const collectChannelDescriptors = (
-  node: PlotSpec,
+  node: IRPlotSpec,
   channelCtx: {
-    node: PlotSpec;
+    node: IRPlotSpec;
     rows: Array<ExternalRow>;
     fieldTypes: DataFieldTypeMap;
     scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
@@ -1172,9 +1191,9 @@ const collectChannelDescriptors = (
 };
 
 const selectLegendDescriptor = (
-  guide: LegendGuide,
+  guide: IRPlotLegendGuide,
   descriptors: ReadonlyArray<ScaleDescriptor>,
-  scaleByName: ReadonlyMap<string, ScaleOperation>,
+  scaleByName: ReadonlyMap<string, IRPlotScaleOperation>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
 ): ScaleDescriptor | undefined => {
   const matched = descriptors.filter(
@@ -1242,7 +1261,7 @@ const legendRampTickScale = (
 
 const legendRampTicks = (
   descriptor: ScaleDescriptor,
-  guide: LegendGuide,
+  guide: IRPlotLegendGuide,
   domain: readonly [number, number],
 ): Array<{ offset: number; label: string }> => {
   const scale = legendRampTickScale(domain, descriptor.fieldType);
@@ -1295,7 +1314,7 @@ type LegendBaseInput = {
  */
 const resolveColorLegend = (
   descriptor: ScaleDescriptor,
-  guide: LegendGuide,
+  guide: IRPlotLegendGuide,
   baseInput: LegendBaseInput,
   showLabels: boolean,
 ): LegendInput => {
@@ -1363,7 +1382,7 @@ const LEGEND_CONTENT_GAP = 24;
  * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
  * @description 喂 computePlotArea 在对应边收窄 plotArea；估算式占位、不测量。
  */
-const legendReserveOf = (legendGuides: Array<LegendGuide>): LegendReserve => {
+const legendReserveOf = (legendGuides: Array<IRPlotLegendGuide>): LegendReserve => {
   const reserve: { right: number; left: number; top: number; bottom: number } = {
     right: 0,
     left: 0,
@@ -1381,7 +1400,7 @@ const legendReserveOf = (legendGuides: Array<LegendGuide>): LegendReserve => {
  * @description gutter 由 computePlotArea 在对应边按 legendReserveOf 让出；此处把每个 legend 摆进其所在边的带。
  */
 const reserveLegendBands = (
-  legendGuides: Array<LegendGuide>,
+  legendGuides: Array<IRPlotLegendGuide>,
   width: number,
   height: number,
   plotArea: Rect,
@@ -1429,9 +1448,9 @@ const reserveLegendBands = (
  *   每个 legend 下沉成稳定 'legend' 前缀 id 的独立 scope，落在传入的预留带内。
  */
 const buildLegendLayers = (
-  node: PlotSpec,
+  node: IRPlotSpec,
   channelDescriptors: ReadonlyArray<ScaleDescriptor>,
-  legendGuides: Array<LegendGuide>,
+  legendGuides: Array<IRPlotLegendGuide>,
   fontSize: number,
   bands: Array<Rect>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
@@ -1518,12 +1537,12 @@ const buildLegendLayers = (
 };
 
 const resolveMarkRows = (
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   rows: Array<ExternalRow>,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
 ): Array<ExternalRow> => {
-  const transform = (mark as { transform?: Array<Transform> }).transform;
+  const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
   if (transform === undefined) return rows;
   return applyTransforms(rows, transform, transformRegistry, transformContext);
 };
@@ -1533,7 +1552,7 @@ const resolveMarkRows = (
  * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity。
  */
 export const validateFieldMaps = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: ExternalDatasets,
   fieldMaps: LowerPlotsOptions['fieldMaps'],
 ): void => {
@@ -1565,7 +1584,7 @@ export const validateFieldMaps = (
  *   恒归一化：无论有无 model / resolver，总按解析出的 fieldTypes 跑 normalizeRows，下游统一读 canonical。
  */
 export const prepareRows = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
@@ -1621,7 +1640,7 @@ export const prepareRows = (
  * @description 编排：校验 ref/scale → 收集轴值 → 建归一化 scale → 建投影器（resolveFrame）→ 各 mark 下沉 → 包 localNamespace Scope。
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id。
  */
-const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
+const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
   const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
   const height = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
@@ -1700,7 +1719,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     textStyle: resolvedTheme.labelText,
   });
   const scopedLabelReserve = node.composition === undefined ? labelReserve : undefined;
-  const allGuides: Array<Guide> = (node.guides ?? []).map(guide =>
+  const allGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide =>
     isAxisGuide(guide) ? resolveAxisGuideTokens(resolvedTheme, guide) : guide,
   );
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
@@ -1737,7 +1756,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     dimension: DimensionRole,
   ): string => compositionGridPlacementOf(resolve, context, dimension);
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
-  const rolesOf = (coordinate: CoordinateOperation): ReadonlySet<DimensionRole> => {
+  const rolesOf = (coordinate: IRPlotCoordinateOperation): ReadonlySet<DimensionRole> => {
     const definition = coordinateRegistry.get(coordinate.type);
     if (definition === undefined) {
       throw new Error(
@@ -1801,10 +1820,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     entries.push(scope);
     trackScopesByScaffold.set(scope.placement.scaffold, entries);
   }
-  type AxisGridConfig = Exclude<NonNullable<AxisGuide['grid']>, boolean>;
+  type AxisGridConfig = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
   type GridTargetSelector = NonNullable<AxisGridConfig['select']>;
   const axisGridApplyToOf = (
-    guide: AxisGuide,
+    guide: IRPlotAxisGuide,
     resolve: CompositionResolve | undefined,
     context: { hasFacets: boolean; hasScaffolds: boolean },
   ): string | null => {
@@ -1812,7 +1831,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     if (guide.grid === true) return gridPlacementFor(resolve, context, guide.dimension);
     return guide.grid.applyTo ?? gridPlacementFor(resolve, context, guide.dimension);
   };
-  const axisGridSelectorOf = (guide: AxisGuide): GridTargetSelector | undefined =>
+  const axisGridSelectorOf = (guide: IRPlotAxisGuide): GridTargetSelector | undefined =>
     typeof guide.grid === 'object' ? guide.grid.select : undefined;
   const facetScalarKey = (value: FacetScalar): string => JSON.stringify(value);
   const scalarSelectorIncludes = (values: FacetPanelValue, value: FacetPanelValue): boolean => {
@@ -1862,7 +1881,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     }
     return false;
   };
-  const axisGridTargetsScope = (guide: AxisGuide, scope: CoordinateScopeRegistryEntry): boolean => {
+  const axisGridTargetsScope = (guide: IRPlotAxisGuide, scope: CoordinateScopeRegistryEntry): boolean => {
     const sourceScope = scopeById.get(axisGuideScopeIdOf(guide, coordinateScopes.defaultScope));
     if (sourceScope === undefined) return false;
     const applyTo = axisGridApplyToOf(guide, scopeResolveOf(sourceScope), compositionPolicyContext);
@@ -1873,7 +1892,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const selector = axisGridSelectorOf(guide);
     return selector !== undefined && selectorMatchesScope(selector, scope);
   };
-  const gridGuidesForScope = (scope: CoordinateScopeRegistryEntry): Array<AxisGuide> =>
+  const gridGuidesForScope = (scope: CoordinateScopeRegistryEntry): Array<IRPlotAxisGuide> =>
     allGuides.flatMap(guide =>
       isAxisGuide(guide) && axisGridTargetsScope(guide, scope) ? [withEnabledAxisGrid(guide, scope.id)] : [],
     );
@@ -1903,7 +1922,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const scaffoldMarkDataViews = markDataViews.filter(view =>
       scaffoldScopeIds.has(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope)),
     );
-    const scaffoldNode: PlotSpec = {
+    const scaffoldNode: IRPlotSpec = {
       ...node,
       coordinate: scaffold.coordinate,
       composition: undefined,
@@ -1990,7 +2009,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       scopedArrangement === undefined ? rawScopedGuides : withAxisGapOffsets(rawScopedGuides, scopedLayout?.axisGap),
     );
     const scopedGridGuides = gridGuidesForScope(scope);
-    const scopedNode: PlotSpec = {
+    const scopedNode: IRPlotSpec = {
       ...node,
       coordinate: scope.coordinate,
       composition: undefined,
@@ -2197,7 +2216,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       ),
       facetLayout?.axisGap,
     );
-    const keepOuterSharedAxisForPanel = (guide: Guide, panel: FacetPanel): boolean => {
+    const keepOuterSharedAxisForPanel = (guide: IRPlotGuide, panel: FacetPanel): boolean => {
       const resolve = arrangementResolveOf(panel.facet);
       if (!isAxisGuide(guide)) return true;
       const policy = axisPolicyFor(resolve, { hasFacets: true, hasScaffolds: false }, guide.dimension);
@@ -2211,7 +2230,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (guide.dimension === 'y') return panel.columnIndex === 0;
       return panel.rowIndex === 0 && panel.columnIndex === 0;
     };
-    const axisConsumesFacetPanelLayout = (guide: Guide, panel: FacetPanel): boolean => {
+    const axisConsumesFacetPanelLayout = (guide: IRPlotGuide, panel: FacetPanel): boolean => {
       if (!isAxisGuide(guide)) return true;
       const resolve = arrangementResolveOf(panel.facet);
       const policy = axisPolicyFor(resolve, { hasFacets: true, hasScaffolds: false }, guide.dimension);
@@ -2231,7 +2250,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       const columnMatches = scalarSelectorIncludes(selector.facet.column, panel.column);
       return facetMatches && rowMatches && columnMatches;
     };
-    const axisGridTargetsFacetPanel = (guide: AxisGuide, panel: FacetPanel): boolean => {
+    const axisGridTargetsFacetPanel = (guide: IRPlotAxisGuide, panel: FacetPanel): boolean => {
       const applyTo = axisGridApplyToOf(guide, arrangementResolveOf(panel.facet), {
         hasFacets: true,
         hasScaffolds: false,
@@ -2242,15 +2261,15 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       const selector = axisGridSelectorOf(guide);
       return selector !== undefined && selectorMatchesFacetPanel(selector, panel);
     };
-    const facetAxisGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
+    const facetAxisGuidesForPanel = (panel: FacetPanel): Array<IRPlotGuide> =>
       withoutAxisGrid(facetGuides.filter(guide => keepOuterSharedAxisForPanel(guide, panel)));
-    const facetFrameGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
+    const facetFrameGuidesForPanel = (panel: FacetPanel): Array<IRPlotGuide> =>
       withoutAxisGrid(
         facetGuides.filter(
           guide => keepOuterSharedAxisForPanel(guide, panel) && axisConsumesFacetPanelLayout(guide, panel),
         ),
       );
-    const facetGridGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
+    const facetGridGuidesForPanel = (panel: FacetPanel): Array<IRPlotGuide> =>
       facetGuides.flatMap(guide =>
         isAxisGuide(guide) && axisGridTargetsFacetPanel(guide, panel) ? [withEnabledAxisGrid(guide, undefined)] : [],
       );
@@ -2283,7 +2302,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
         if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
       }
-      const panelNode: PlotSpec = {
+      const panelNode: IRPlotSpec = {
         ...node,
         coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
         composition: undefined,
@@ -2566,6 +2585,6 @@ export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOption
     namespace: 'plot',
     type: 'plot',
     schema: PlotSpecSchema,
-    expand: (node: PlotSpec) => expandPlot(node, datasets, options),
+    expand: (node: IRPlotSpec) => expandPlot(node, datasets, options),
   }),
 ];

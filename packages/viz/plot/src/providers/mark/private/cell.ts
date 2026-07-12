@@ -4,7 +4,7 @@ import type { CellGeometry, ChannelValueResolver } from '../../../contract';
 import type { MarkPaint } from '../shared';
 
 import { cellGeometryAnchor } from '../../../contract';
-import { type Mark } from '../../../schemas';
+import { type IRPlotMark } from '../../../schemas';
 import { colorGroupedScope, constantNodeStyleOverrides, DEFAULT_FILL } from '../shared';
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumSize 即真实柱尺寸）。 */
@@ -29,7 +29,7 @@ const shapeStyle = (fill: MarkPaint, stroke: MarkPaint | undefined): IRNodeDefau
 /** 某 geometry kind 对应的 node 样式工厂（rect → 矩形 barStyle；sector / contour → shapeStyle）。 */
 export const styleForGeometry = (
   kind: CellGeometry['kind'],
-  mark: Mark,
+  mark: IRPlotMark,
 ): ((fill: MarkPaint, stroke?: MarkPaint) => IRNodeDefault) => {
   const base = kind === 'rect' ? barStyle : shapeStyle;
   return (fill, stroke) => ({ ...base(fill, stroke), ...constantNodeStyleOverrides(mark) });
@@ -39,7 +39,7 @@ export const styleForGeometry = (
 export const cellLayer = (
   placed: Array<{ color: string | undefined; node: IRNode }>,
   kind: CellGeometry['kind'],
-  mark: Mark,
+  mark: IRPlotMark,
   colorOf: ChannelValueResolver<string> | undefined,
   defaultFill: MarkPaint = DEFAULT_FILL,
   defaultStroke?: MarkPaint,

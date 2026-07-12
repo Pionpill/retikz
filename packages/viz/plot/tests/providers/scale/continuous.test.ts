@@ -4,7 +4,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -14,7 +14,7 @@ const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 const polarOpts: LowerPlotsOptions = { width: 400, height: 400 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -24,7 +24,7 @@ const expandOf = (
 
 /** 取得第一个 mark 图层 Scope，也就是外层 plot Scope 的第一个子 Scope。 */
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -63,7 +63,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     { month: 1, revenue: 14 },
     { month: 2, revenue: 9 },
   ];
-  const areaSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+  const areaSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -229,7 +229,7 @@ describe('lowerPlots 笛卡尔折线回归', () => {
     { month: 1, revenue: 14 },
     { month: 2, revenue: 9 },
   ];
-  const lineSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+  const lineSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -299,7 +299,7 @@ describe('lowerPlots path closure cartesian', () => {
     { x: 1, y: 14, y0: 1, y1: 4 },
     { x: 2, y: 12, y0: 2, y1: 6 },
   ];
-  const pathSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+  const pathSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -412,7 +412,7 @@ describe('lowerPlots 极坐标折线采样', () => {
     { a: 0, r: 5 },
     { a: 9, r: 10 },
   ];
-  const polarLineSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+  const polarLineSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -503,7 +503,7 @@ describe('lowerPlots 雷达图', () => {
     { dim: 'range', value: 2 },
     { dim: 'cost', value: 4 },
   ];
-  const radarSpec = (): PlotSpec =>
+  const radarSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -556,7 +556,7 @@ describe('lowerPlots 极坐标面积路径', () => {
     { dim: 'b', y0: 0, y1: 8 },
     { dim: 'c', y0: 0, y1: 6 },
   ];
-  const polarAreaSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+  const polarAreaSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -575,7 +575,7 @@ describe('lowerPlots 极坐标面积路径', () => {
         },
       ],
     });
-  const polarStackSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+  const polarStackSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',

@@ -1,4 +1,4 @@
-import type { LogScale, SymlogScale } from '@retikz/plot';
+import type { IRPlotLogScale, IRPlotSymlogScale } from '@retikz/plot';
 import type { FC } from 'react';
 
 /** 位置 scale 可配置的坐标维度 */
@@ -32,7 +32,7 @@ type ContinuousScaleProps = ScaleBaseProps & {
         /** 对数位置 scale。 */
         type: 'log';
         /** 对数底数；省略时为 10。 */
-        base?: LogScale['base'];
+        base?: IRPlotLogScale['base'];
         constant?: never;
       }
     | {
@@ -40,7 +40,7 @@ type ContinuousScaleProps = ScaleBaseProps & {
         type: 'symlog';
         base?: never;
         /** 线性区宽度常数；省略时为 1。 */
-        constant?: SymlogScale['constant'];
+        constant?: IRPlotSymlogScale['constant'];
       }
     | {
         /** 除 log / symlog 外的连续位置 scale。 */

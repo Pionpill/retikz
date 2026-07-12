@@ -8,19 +8,21 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';
 import type { ChannelPaletteContext } from '../../../contract';
-import type { Channel, MarkOperation, PlotSpec, ScaleOperation } from '../../../schemas';
+import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation, IRPlotSpec } from '../../../schemas';
 import type { CategoryOrder } from '../../scale';
 
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
 import { PlotScale } from '../../../schemas';
 import { orderedCategoryDomain, resolveChannelScale } from '../../scale';
 
+/** 颜色通道 definition 的名称、取值与图例配置。 */
 export type ColorChannelDefinitionOptions = {
   channel: string;
-  pick: (mark: MarkOperation) => Channel | undefined;
+  pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
   constantPaint?: boolean;
 };
 
+/** plot 通道可下沉到 core 的颜色或 paint 值。 */
 export type PlotPaint = string | IRPaintSpec;
 
 const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec: boolean): PlotPaint => {
@@ -49,7 +51,7 @@ export const makeColorChannelDefinition = (
     for (const field of ctx.node.data.model ?? []) {
       if (field.order !== undefined) fieldOrders.set(field.name, field.order);
     }
-    return (mark: MarkOperation) => {
+    return (mark: IRPlotMarkOperation) => {
       const channel = options.pick(mark);
       if (!channel) return undefined;
       if (channel.value !== undefined) {
@@ -72,7 +74,7 @@ export const makeColorChannelDefinition = (
           `lowerPlots: continuous/temporal ${options.channel} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`,
         );
       }
-      let scaleOperation: ScaleOperation;
+      let scaleOperation: IRPlotScaleOperation;
       if (channel.scale !== undefined) {
         const found = scaleByName.get(channel.scale);
         if (!found)
@@ -115,7 +117,7 @@ export const makeColorChannelDefinition = (
 });
 
 const colorResolveContext = (
-  node: PlotSpec,
+  node: IRPlotSpec,
   fieldTypes: DataFieldTypeMap,
   field: string,
   resolveColorScheme: (name: string) => (t: number) => string,
@@ -130,13 +132,14 @@ const colorResolveContext = (
   defaultDivergingScheme: palette?.diverging,
 });
 
+/** 内置 paint 通道 definition 的按名称索引类型。 */
 export type BuiltinPaintChannels = {
   color: MarkChannelDefinition<PlotPaint>;
   fill: MarkChannelDefinition<PlotPaint>;
   stroke: MarkChannelDefinition<PlotPaint>;
 };
 
-const markValueChannel = (value: unknown): Channel | undefined => {
+const markValueChannel = (value: unknown): IRPlotChannel | undefined => {
   if (value === undefined) return undefined;
   if (value === null || typeof value !== 'object') return undefined;
   const candidate = value as { kind?: unknown; value?: unknown; scale?: unknown };
@@ -145,12 +148,12 @@ const markValueChannel = (value: unknown): Channel | undefined => {
       field: String(candidate.value),
       ...(typeof candidate.scale === 'string' ? { scale: candidate.scale } : {}),
     };
-  if (candidate.kind === 'constant') return { value: candidate.value as Channel['value'] };
+  if (candidate.kind === 'constant') return { value: candidate.value as IRPlotChannel['value'] };
   return undefined;
 };
 
-const encodingChannel = (mark: MarkOperation, channel: string): Channel | undefined =>
-  (mark as { encoding?: Record<string, Channel | undefined> }).encoding?.[channel];
+const encodingChannel = (mark: IRPlotMarkOperation, channel: string): IRPlotChannel | undefined =>
+  (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding?.[channel];
 
 /** 创建内置 paint channel definitions。 */
 export const createBuiltinPaintChannels = (): BuiltinPaintChannels => ({

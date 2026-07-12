@@ -3,7 +3,7 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -11,13 +11,13 @@ import { PlotSpecSchema } from '../../../src/schemas';
 /** 笛卡尔默认画布：x [0,..]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 /** 深度收集图层内所有 point node（连续色按色分组到子 Scope，fill 落在子 Scope.nodeDefault） */
@@ -70,7 +70,7 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
 };
 
 /** 建单 point mark 的 cartesian spec，x/y linear + 给定连续色 scale，color 引用之 */
-const pointSpec = (colorScale: Record<string, unknown>): PlotSpec =>
+const pointSpec = (colorScale: Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -90,7 +90,7 @@ const pointSpec = (colorScale: Record<string, unknown>): PlotSpec =>
     ],
   });
 
-describe('连续色 · sequential 求值（alpha.8 ADR-01）', () => {
+describe('连续色 · sequential 求值（contract）', () => {
   // Happy path：数值字段 + point → 各点按 viridis 取色，端点对色带两端，互异
   it('sequential 连续字段各点取色且端点异色', () => {
     const data = [
@@ -146,7 +146,7 @@ describe('连续色 · sequential 求值（alpha.8 ADR-01）', () => {
   });
 });
 
-describe('连续色 · diverging 求值（alpha.8 ADR-01）', () => {
+describe('连续色 · diverging 求值（contract）', () => {
   // Happy path：domain [-100,0,100] → 中点 0 取淡色、两端异色
   it('diverging 中点淡色两端异色', () => {
     const data = [
@@ -196,7 +196,7 @@ describe('连续色 · diverging 求值（alpha.8 ADR-01）', () => {
   });
 });
 
-describe('连续色 · domain 推断与退化（alpha.8 ADR-01）', () => {
+describe('连续色 · domain 推断与退化（contract）', () => {
   // 边界：省略 domain → 从数据取 [min,max]（端点仍异色）
   it('sequential 省略 domain 从数据推断 [min,max]', () => {
     const data = [
@@ -233,8 +233,8 @@ describe('连续色 · domain 推断与退化（alpha.8 ADR-01）', () => {
   });
 });
 
-describe('连续色 · fail-loud 守卫（alpha.8 ADR-01）', () => {
-  const pathColorSpec = (markType: 'line' | 'area'): PlotSpec =>
+describe('连续色 · fail-loud 守卫（contract）', () => {
+  const pathColorSpec = (markType: 'line' | 'area'): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -320,7 +320,7 @@ describe('连续色 · fail-loud 守卫（alpha.8 ADR-01）', () => {
   });
 });
 
-describe('连续色 · temporal sequential（alpha.8 ADR-01）', () => {
+describe('连续色 · temporal sequential（contract）', () => {
   // 交互：时间字段经 sequential（时间戳当连续量）→ 时间渐变色，不 fail-loud
   it('temporal + sequential 时间渐变取色', () => {
     const spec = PlotSpecSchema.parse({
@@ -353,9 +353,9 @@ describe('连续色 · temporal sequential（alpha.8 ADR-01）', () => {
   });
 });
 
-describe('连续色 · 非有限 domain 端点 fail-loud（ADR-01 越界一致性，自 adversarial B1 提升）', () => {
+describe('连续色 · 非有限 domain 端点 fail-loud（contract 越界一致性）', () => {
   // 非有限 domain 端点会被 scale schema 的 number 校验静态拦截；此处刻意绕过静态校验，验证 lowering 期的纵深防御（resolve* finite 守卫）。
-  const infinitySpec = (colorScale: Record<string, unknown>): PlotSpec =>
+  const infinitySpec = (colorScale: Record<string, unknown>): IRPlotSpec =>
     ({
       namespace: 'plot',
       type: 'plot',
@@ -373,7 +373,7 @@ describe('连续色 · 非有限 domain 端点 fail-loud（ADR-01 越界一致�
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },
       ],
-    }) as PlotSpec;
+    }) as IRPlotSpec;
   const data = [
     { x: 0, y: 0, v: 1 },
     { x: 1, y: 1, v: 1e9 },
@@ -395,7 +395,7 @@ describe('连续色 · 非有限 domain 端点 fail-loud（ADR-01 越界一致�
   });
 });
 
-describe('连续色 · 回归：categorical 仍走 ordinal（alpha.8 ADR-01）', () => {
+describe('连续色 · 回归：categorical 仍走 ordinal（contract）', () => {
   // 交互：categorical color 字段仍可正常着色（连续色阶不影响分类路径）
   it('categorical 字段不受连续色阶影响', () => {
     const spec = PlotSpecSchema.parse({
