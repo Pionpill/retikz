@@ -22,7 +22,7 @@
 ## 目录职责
 
 ```text
-src/index.ts   公开 API，显式 named export
+src/index.ts   公开 API，只聚合允许公开的一级 owner barrel
 kernel/        React DSL Kernel：组件、JSX ↔ IR adapter、Layout runtime
 sugar/         Sugar 组件与同步展开 helper，可按 path / shapes 分组
 render/        React 宿主渲染接线，可按 svg / canvas / text 分组
@@ -41,7 +41,7 @@ runtime/     Layout、hydration handler 收集、renderer mode 接线
 
 - 用户可用 React 组件文件用 `PascalCase.tsx`；非组件纯逻辑用 `kebab-case.ts`。
 - 内部 helper 用语义名，不用 `_xxx.ts`；例如 `fields.ts`、`display-names.ts`、`shape-helpers.ts`。
-- 每个 owner 目录用 `index.ts` barrel 收口；`src/index.ts` 继续显式 named export。
+- 每个 owner 目录用 `index.ts` barrel 收口；`src/index.ts` 只聚合允许进入包公共面的一级 owner。
 - `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
 - `kernel/adapter` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime` 或 `sugar`。
 - `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 `render`；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`。
@@ -72,10 +72,12 @@ runtime/     Layout、hydration handler 收集、renderer mode 接线
 
 ## 公开 API
 
-- `src/index.ts` 用显式 named export，不用 `export *`。
+- `src/index.ts` 默认用 `export *` 聚合允许公开的一级 owner barrel，不在根入口维护显式导出清单。
+- 一级 owner barrel 决定哪些子 owner 可以继续向上暴露；被选中的公共子 owner barrel 仍默认用 `export *`。
+- 不需要公开的模块不得进入一级 owner barrel；owner 内通过相邻路径或私有子 barrel 导入。
+- 不得为了测试入口或复用便利，把 renderer / internal helper 转发到 `@retikz/react` 顶层。
 - 导出所有用户可能派生 wrapper 的 prop 类型。
 - 可透传 core 常量 / 类型，避免 react 用户必须额外从 core import。
-- 下划线开头的内部模块不导出。
 
 ## 测试
 

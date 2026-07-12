@@ -11,7 +11,7 @@ import { flattenPrims } from '../../helpers/flatten';
 type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
 
 /**
- * Arrow Registry（ADR-01）对抗回归
+ * Arrow Registry 对抗回归。
  * @description 来自 Adversarial Bug Hunter 的边角输入；坏 def（NaN / 0 baseSize / 缺字段 / emit 异常 /
  *   绕窄子集注入 text·resourceRef·函数）现在都被 compile 运行时栅栏拦下、抛含 shape 名的清晰错（便于
  *   第三方 / LLM 自修），不放任 NaN 污染 path 坐标或非 JSON 值偷进 Scene。可接受的边角（极大但有限 /

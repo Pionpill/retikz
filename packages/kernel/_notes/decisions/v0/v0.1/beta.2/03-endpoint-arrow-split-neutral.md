@@ -34,6 +34,6 @@ helper 命名与注释改为 endpoint arrows / path endpoints 语义；core 输�
 
 ---
 
-> **实现指针**：level `green`（仅改 core 内部 helper 命名与注释，IR / Scene / 运行时不变）。真源以代码为准——`splitSubPathsForEndpointArrows`（`core/src/compile/path/split.ts`，经 `core/src/compile/path/index.ts` 调用）。测试在 `core/tests/compile/`（`path.test.ts` / `path-adr03.adversarial.test.ts`）。完整原文（实现契约 / 测试象限 9 case）见本文件 git 历史。
+> **实现指针**：level `green`（仅改 core 内部 helper 命名与注释，IR / Scene / 运行时不变）。真源以代码为准——`splitSubPathsForEndpointArrows`（`core/src/compile/path/split.ts`，经 `core/src/compile/path/index.ts` 调用）。测试在 `core/tests/compile/`（`path.test.ts` / `path-stability.adversarial.test.ts`）。完整原文（实现契约 / 测试象限 9 case）见本文件 git 历史。
 
 > 🔖 封板压缩 commit `f3282d91`；压缩前完整施工蓝图 = `git show f3282d91^:_notes/decisions/core/v0/v0.1/beta.2/03-endpoint-arrow-split-neutral.md`。

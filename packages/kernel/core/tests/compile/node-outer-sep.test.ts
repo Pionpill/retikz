@@ -197,7 +197,7 @@ describe('margin：交互', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], margin: 10, boundary }],
     });
-    // 借用连接面只改连接点求交，绝不改布局占位（ADR-07 §6）
+    // 借用连接面只改连接点求交，绝不改布局占位。
     expect(compileToScene(mk('circle')).layout).toEqual(compileToScene(mk('shape')).layout);
   });
 });

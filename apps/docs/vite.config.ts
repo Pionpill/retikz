@@ -62,6 +62,10 @@ export default defineConfig(({ command }) => ({
   },
   test: {
     environment: 'node',
+    experimental: {
+      fsModuleCache: true,
+    },
     include: ['tests/**/*.test.{ts,tsx}'],
+    pool: 'threads',
   },
 }));

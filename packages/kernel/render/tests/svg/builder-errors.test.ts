@@ -2,8 +2,7 @@ import type { PathCommand, Transform } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildPathD } from '../../../src/render/svg';
-import { buildTransform } from '../../../src/render/svg';
+import { buildPathD, buildTransform } from '../../src/svg';
 
 describe('buildPathD throw message contract', () => {
   it('未知 PathCommand kind → throw + message 含 kind 字面量', () => {

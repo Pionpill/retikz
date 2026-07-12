@@ -35,5 +35,12 @@ export default defineConfig({
       ],
     },
   },
-  test: { environment: 'node', include: ['tests/**/*.test.{ts,tsx}'] },
+  test: {
+    environment: 'node',
+    experimental: {
+      fsModuleCache: true,
+    },
+    include: ['tests/**/*.test.{ts,tsx}'],
+    pool: 'threads',
+  },
 });

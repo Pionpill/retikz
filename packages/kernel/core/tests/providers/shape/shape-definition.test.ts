@@ -143,7 +143,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   });
 });
 
-describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实边界（ADR-02）', () => {
+describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实边界', () => {
   const r: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
   it('直边 / 周长类 shape（rectangle / ellipse）实现 edgePoint', () => {

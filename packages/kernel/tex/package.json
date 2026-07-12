@@ -71,7 +71,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests"
   },
   "dependencies": {
     "@retikz/core": "workspace:*"
@@ -91,8 +92,10 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "mathjax-full": "catalog:",
     "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",

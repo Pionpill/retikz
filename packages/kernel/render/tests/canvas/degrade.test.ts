@@ -117,7 +117,7 @@ describe('canvas 降级与边界规格', () => {
         .map(file => readFileSync(file, 'utf8'))
         .join('\n');
 
-    // canvas 后端不得导入 svg、不走 SVG 字符串中转（ADR-02 并列 renderer、不走 SVG 中转）
+    // Canvas 与 SVG 是并列 renderer；Canvas 后端不得导入 SVG 或走字符串中转。
     const canvasSrc = readSrc('src/canvas');
     expect(canvasSrc).not.toContain('render/svg');
     expect(canvasSrc).not.toContain('../svg');

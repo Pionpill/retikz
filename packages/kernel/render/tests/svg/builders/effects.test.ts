@@ -26,7 +26,7 @@ const arrowEndSpec: ResolvedArrowEndSpec = {
 };
 
 /**
- * ADR-01 / ADR-02 render 层（SVG 后端）：
+ * SVG 后端效果：
  *   shadow → `<filter><feDropShadow>` def + 几何 `filter="url(#...)"`；
  *   blendMode → 几何 `style="mix-blend-mode:..."`。
  */
@@ -178,7 +178,7 @@ describe('[svg-effects] blend mode', () => {
     };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
     expect(out).toContain('mix-blend-mode:multiply');
-    // 不引入 isolation（ADR-02 跨端语义）
+    // 不引入 isolation，保持跨端语义。
     expect(out).not.toContain('isolation');
   });
 

@@ -35,6 +35,12 @@ const Diagram = () => {
   description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 compile.lowerTex）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。"
 />
 
+<ComponentAlert
+  type="error"
+  title="MathJax 初始化失败会保留原始错误"
+  description="useLowerTex 会把缺少 mathjax-full 等初始化错误写入 console.error；同一次共享初始化只报告一次。失败缓存会清空，后续重新挂载会再次尝试，成功前返回值仍为 undefined。"
+/>
+
 ## 行内与 display 公式
 
 `$...$` 用 inline 度量，贴着文字基线；`$$...$$` 用 display 度量（分式 / 求和 / 积分等更舒展）。一个 node 的内容整体就是一个 `$$...$$` 时，它等价于一块独立公式，按字形 bbox 定尺寸：

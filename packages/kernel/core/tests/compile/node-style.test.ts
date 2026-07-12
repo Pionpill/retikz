@@ -22,7 +22,7 @@ const findShapePath = (ir: IRScene): PathPrim | undefined =>
 const findText = (ir: IRScene): TextPrim | undefined =>
   flattenPrims(compileToScene(ir).primitives).find((p): p is TextPrim => p.type === 'text');
 
-describe('Node 颜色 / 不透明度 (alpha.2)', () => {
+describe('Node 颜色 / 不透明度', () => {
   it('textColor 透传到 TextPrim.fill', () => {
     const ir: IRScene = {
       version: 1,
@@ -100,7 +100,7 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
   });
 });
 
-describe('Node 描边样式 (alpha.2)', () => {
+describe('Node 描边样式', () => {
   it('dashed → dashPattern 默认 [4, 2]', () => {
     const ir: IRScene = {
       version: 1,
@@ -146,7 +146,7 @@ describe('Node 描边样式 (alpha.2)', () => {
   });
 });
 
-describe('Node 尺寸约束 (alpha.2)', () => {
+describe('Node 尺寸约束', () => {
   it('cornerRadius → RectPrim.cornerRadius', () => {
     const ir: IRScene = {
       version: 1,
@@ -270,7 +270,7 @@ describe('Node 尺寸约束 (alpha.2)', () => {
   });
 });
 
-describe('Node 缩放 (alpha.2)', () => {
+describe('Node 缩放', () => {
   it('scale=2 同时放大 bbox 与字号', () => {
     const base: IRScene = {
       version: 1,

@@ -9,7 +9,7 @@ export const kernelV04: Release = {
       version: 'v0.4',
       description: {
         zh: '新包：零依赖纯计算几何（向量 / 仿射 / arc 原语 / 求交 / 三角形内外接圆 / 点在多边形 / 凸包 / 最小外接圆 / 曲线）。纯函数 + 普通对象，零 IR、零 zod、不写 class；被 core 正向依赖、与 core 组同 lockstep。',
-        en: 'New zero-dependency pure-geometry package: vectors / affine / arc / intersections / triangle in-circle / circum-circle helpers / point-in-polygon / convex hull / min enclosing circle / curves. No IR / zod / class.',
+        en: 'New zero-dependency geometry package: vectors, affine transforms, arcs, intersections, triangle circles, point-in-polygon, convex hull, enclosing circles, and curves. No IR, Zod, or classes.',
       },
       highlights: [
         {
@@ -21,6 +21,15 @@ export const kernelV04: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'beta.2',
+          date: '2026-07-11',
+          summary: {
+            zh: '修正 `intersect.lineCircle` 的退化方向判断：短但有效的方向向量现在与其单位化写法得到相同交点，不再因向量缩放误返回空结果。',
+            en: 'Fixes degenerate-direction detection in `intersect.lineCircle`: short but valid direction vectors now produce the same intersections as their normalized form instead of incorrectly returning no hits.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.3',
           date: '2026-06-16',
@@ -81,6 +90,23 @@ export const kernelV04: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'beta.2',
+          date: '2026-07-11',
+          summary: {
+            zh: '收紧 Scene 输入边界：`SceneSchema` / `ViewBoxSchema` 现在拒绝未知字段，并从 `@retikz/core` 顶层入口移除误暴露的内部递归 schema 注册器。',
+            en: 'Tightens Scene input boundaries: `SceneSchema` / `ViewBoxSchema` now reject unknown fields, and the accidentally exposed recursive-schema registrar is removed from the `@retikz/core` root entry.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：Scene schema 闭合', en: 'BREAKING: closed Scene schemas' },
+              content: {
+                zh: '依赖 Zod 静默剥离 Scene 或 viewBox 未知字段的调用应改为传入合法字段；外部代码不应调用内部 `__registerChildSchema`，请直接删除相关调用。',
+                en: 'Callers that relied on Zod silently stripping unknown Scene or viewBox fields must pass only valid fields. External calls to the internal `__registerChildSchema` should be removed.',
+              },
+            },
+          ],
+        },
         {
           version: 'beta.1',
           date: '2026-07-07',
@@ -202,6 +228,30 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'beta.2',
+          date: '2026-07-11',
+          summary: {
+            zh: '`@retikz/react` 包根只聚合 Kernel / Sugar 公共 owner，不再转发仅供 `<Layout>` 内部接线和测试使用的 renderer internals；SVG / Canvas 运行行为不变。',
+            en: 'The `@retikz/react` root now aggregates only the public Kernel and Sugar owners instead of forwarding renderer internals used by `<Layout>` wiring and tests; SVG and Canvas behavior is unchanged.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：移除 renderer internals', en: 'BREAKING: renderer internals removed' },
+              content: {
+                zh: '`buildPathD`、`buildTransform`、`formatViewBox` 改从 `@retikz/render/svg` 导入。`CanvasHost`、defs wrapper、`renderPrim`、`svgToReact`、browser measurer 不再由 `@retikz/react` 公开；应用继续使用 `<Layout renderer="svg"｜"canvas">`，自定义 renderer 改用 `@retikz/render` 的公开 API。',
+                en: 'Import `buildPathD`, `buildTransform`, and `formatViewBox` from `@retikz/render/svg`. `CanvasHost`, defs wrappers, `renderPrim`, `svgToReact`, and the browser measurer are no longer public from `@retikz/react`; applications should keep using `<Layout renderer="svg" | "canvas">`, while custom renderers should use the public `@retikz/render` API.',
+              },
+            },
+            {
+              label: { zh: '减少动态效果后端对齐', en: 'Reduced-motion backend parity' },
+              content: {
+                zh: 'React SVG（默认 renderer）现在与 React Canvas、Vanilla SVG / Canvas 一样响应系统 `prefers-reduced-motion`，并在偏好变化时即时切换到完整静止态。',
+                en: 'React SVG, the default renderer, now respects `prefers-reduced-motion` like React Canvas and Vanilla SVG / Canvas, switching immediately to the complete resting state when the preference changes.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.6',
           date: '2026-06-28',
           summary: {
@@ -295,6 +345,15 @@ export const kernelV04: Release = {
       },
       highlights: [],
       subVersions: [
+        {
+          version: 'beta.2',
+          date: '2026-07-11',
+          summary: {
+            zh: '`useLowerTex` 现在保留 MathJax 初始化原始错误、同次失败只报告一次，并在后续挂载时重试。',
+            en: '`useLowerTex` now preserves the original MathJax startup error, reports each shared failure once, and retries on a later mount.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.5',
           date: '2026-06-17',

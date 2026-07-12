@@ -45,6 +45,48 @@ describe('compile source structure', () => {
     expect(source('src/compile/path/stroke/commands.ts')).toContain('export const createPathCommandEmitter');
   });
 
+  it('stroke path emit delegates cursor state without exposing it from the barrel', () => {
+    const emit = source('src/compile/path/stroke/emit.ts');
+    const barrel = source('src/compile/path/stroke/index.ts');
+
+    expect(emit).toContain('createStrokeCursor');
+    expect(source('src/compile/path/stroke/cursor.ts')).toContain('export const createStrokeCursor');
+    expect(barrel).not.toContain('./cursor');
+  });
+
+  it('stroke path emit delegates sampling without exposing it from the barrel', () => {
+    const emit = source('src/compile/path/stroke/emit.ts');
+    const barrel = source('src/compile/path/stroke/index.ts');
+
+    expect(emit).toContain('createStrokeSamplingCollector');
+    expect(source('src/compile/path/stroke/sampling.ts')).toContain('export const createStrokeSamplingCollector');
+    expect(barrel).not.toContain('./sampling');
+  });
+
+  it('stroke path emit delegates shape steps without exposing them from the barrel', () => {
+    const emit = source('src/compile/path/stroke/emit.ts');
+    const barrel = source('src/compile/path/stroke/index.ts');
+
+    expect(emit).toContain('lowerShapeStep');
+    for (const kind of ['generator', 'cycle', 'rectangle', 'arc', 'circlePath', 'ellipsePath', 'smooth']) {
+      expect(emit).not.toContain(`if (step.kind === '${kind}')`);
+    }
+    expect(source('src/compile/path/stroke/shapes.ts')).toContain('export const lowerShapeStep');
+    expect(barrel).not.toContain('./shapes');
+  });
+
+  it('stroke path emit delegates segment steps without exposing them from the barrel', () => {
+    const emit = source('src/compile/path/stroke/emit.ts');
+    const barrel = source('src/compile/path/stroke/index.ts');
+
+    expect(emit).toContain('lowerSegmentStep');
+    for (const kind of ['line', 'curve', 'cubic', 'bend', 'fold']) {
+      expect(emit).not.toContain(`if (step.kind === '${kind}')`);
+    }
+    expect(source('src/compile/path/stroke/segments.ts')).toContain('export const lowerSegmentStep');
+    expect(barrel).not.toContain('./segments');
+  });
+
   it('node compile implementation is directory based', () => {
     expect(() => source('src/compile/node.ts')).toThrow();
     expect(source('src/compile/node/index.ts')).toContain("export * from './layout';");
