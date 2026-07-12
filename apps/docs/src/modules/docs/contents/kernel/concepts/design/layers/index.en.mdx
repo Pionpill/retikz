@@ -85,7 +85,7 @@ Sugar expansion is called synchronously by the builder, so it must not depend on
 
 ## Packages
 
-The Kernel group consists of six lockstep npm packages under `packages/kernel`. Dependency arrows point from consumers to capability providers: `@retikz/math` is the zero-dependency computational foundation, `@retikz/core` defines IR and compilation semantics on top of it, and the remaining packages connect to core by responsibility.
+The Kernel group consists of six lockstep npm packages under `packages/kernel`. Arrows point from capability providers to consumers: solid lines form the primary build chain, while gray dashed lines show direct cross-layer dependencies. `@retikz/math` is the zero-dependency computational foundation, `@retikz/core` defines IR and compilation semantics on top of it, and the remaining packages connect to core by responsibility.
 
 <ComponentPreview files="layers-packages" size="sm" hideCode />
 

@@ -85,7 +85,7 @@ Sugar 的展开逻辑由 builder 同步调用，不能依赖 React hooks 或异�
 
 ## 包结构
 
-Kernel 组由 `packages/kernel` 下六个同步发版的 npm 包组成。依赖箭头从使用方指向能力提供方：`@retikz/math` 是零依赖计算底座，`@retikz/core` 在其上定义 IR 与编译语义，其余包按职责接入 core。
+Kernel 组由 `packages/kernel` 下六个同步发版的 npm 包组成。图中箭头从能力提供方指向使用方：实线串起主要构建链，灰色虚线补充跨层的直接依赖。`@retikz/math` 是零依赖计算底座，`@retikz/core` 在其上定义 IR 与编译语义，其余包按职责接入 core。
 
 <ComponentPreview files="layers-packages" size="sm" hideCode />
 
