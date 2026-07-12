@@ -8,7 +8,7 @@ const GetStartStep4: FC = () => {
   const [count, setCount] = useState(0);
 
   return (
-    <Layout width={420} height={120}>
+    <Layout width={420} height={120} animate={true}>
       <Node
         id="a"
         position={[0, 0]}
@@ -26,10 +26,10 @@ const GetStartStep4: FC = () => {
       <Node id="c" position={[200, 0]}>
         C
       </Node>
-      <Draw way={['a', 'b']} />
-      <Draw way={['b', 'c']} />
+      <Draw way={['a', 'b']} arrow="->" />
+      <Draw way={['b', 'c']} arrow="->" />
       <Node id="hint" position={[100, 45]} stroke="none" textColor="gray">
-        clicks: {count}
+        点击次数：{count}
       </Node>
     </Layout>
   );
