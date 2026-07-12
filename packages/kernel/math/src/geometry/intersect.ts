@@ -56,7 +56,7 @@ const lineCircle = ({ origin, dir, center, radius }: LineCircleInput): Array<Pos
   const ox = origin[0] - center[0];
   const oy = origin[1] - center[1];
   const a = dir[0] * dir[0] + dir[1] * dir[1];
-  if (a < DEFAULT_EPSILON) return [];
+  if (a <= DEFAULT_EPSILON * DEFAULT_EPSILON) return [];
   const b = 2 * (ox * dir[0] + oy * dir[1]);
   const c = ox * ox + oy * oy - radius * radius;
   const disc = b * b - 4 * a * c;

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { hitTest } from '../../src/canvas';
 
 /**
- * ADR-01 水合：Canvas hitTest（逆 z-order + fill/stroke 区分 + group 祖先 id）
+ * Canvas 水合 hitTest：逆 z-order + fill/stroke 区分 + group 祖先 id。
  * @description hitTest 无逐图元 DOM，靠把每个图元几何重建进一个 2D context 后调 isPointInPath /
  *   isPointInStroke 点测。本测试注入一个「几何忠实」的 2D context 充当原生 canvas：记录子路径并按
  *   even-odd / nonzero 射线法回答 isPointInPath、按点到线段距离回答 isPointInStroke——只提供 canvas 原语，

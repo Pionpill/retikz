@@ -155,7 +155,7 @@ describe('resolveAnchor 数字角度支持负号 / 小数', () => {
   });
 });
 
-describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
+describe('resolveEdgePoint 边上比例点', () => {
   it('rect top t=0.5 = 上边中点', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
     const p = resolveEdgePoint(layout, 'top', 0.5);

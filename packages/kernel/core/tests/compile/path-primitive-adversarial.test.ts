@@ -11,7 +11,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((p): p is PathPrim => p.type === 'path');
 
 /**
- * ADR-01 测试象限对应的补强测试。
+ * Path primitive 边界与错误路径的补强测试。
  * 关注点不与 path.test.ts 的回归测试重叠——这里专门挖 commands / transforms 切换后的边界
  */
 describe('PathPrim.commands：结构化形态约束', () => {

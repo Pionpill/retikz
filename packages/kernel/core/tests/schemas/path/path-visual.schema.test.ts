@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ArrowMarkSchema, BendStepSchema, PathScaleSchema, PathSchema } from '../../../src/schemas';
 
-/** 构造一条最小合法 path（两 step），便于叠加被测字段 */
+/** 构造一条最小合法 path（两 step），用于叠加被测字段。 */
 const basePath = (extra: Record<string, unknown>) => ({
   type: 'path' as const,
   children: [

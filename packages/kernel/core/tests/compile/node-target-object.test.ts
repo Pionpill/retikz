@@ -111,7 +111,7 @@ describe('错误路径', () => {
   });
 });
 
-describe('Coordinate（零尺寸）anchor 退化（ADR-01 决策细节 #10）', () => {
+describe('Coordinate（零尺寸）anchor 退化', () => {
   /** 编一条 line 到 target、终点（场景含 id='c' 的零尺寸 Coordinate 在 (50,50)） */
   const coordEnd = (target: IRTarget): [number, number] => {
     const ir: IRScene = {

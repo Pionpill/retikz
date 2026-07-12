@@ -61,7 +61,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests"
   },
   "dependencies": {
     "@retikz/core": "workspace:^",

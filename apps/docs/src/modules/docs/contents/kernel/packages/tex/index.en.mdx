@@ -35,6 +35,12 @@ const Diagram = () => {
   description="$...$ is only parsed when lowerTex is injected (React via Layout, vanilla via compile.lowerTex); without it a $ stays literal (existing text with $ is unchanged), and content carrying math degrades to no formula with a diagnosable warning instead of crashing."
 />
 
+<ComponentAlert
+  type="error"
+  title="MathJax startup preserves the original error"
+  description="useLowerTex writes startup errors such as a missing mathjax-full installation to console.error, once per shared attempt. It clears the failed cache so a later mount retries; the return value remains undefined until startup succeeds."
+/>
+
 ## Inline vs display
 
 `$...$` uses inline metrics and sits on the text baseline; `$$...$$` uses display metrics (roomier fractions / sums / integrals). When a node's entire content is one `$$...$$`, it is equivalent to a standalone formula block, sized by the glyph bbox:

@@ -74,7 +74,7 @@ describe('emitNodePrimitives：带文本 Node 包 <g>', () => {
     expect(texts.length).toBe(2);
   });
 
-  it('带文本 Node 设 zIndex → 整个 group 作为一个单位排序（与 ADR-02 交互）', () => {
+  it('带文本 Node 设 zIndex → 整个 group 作为一个单位排序', () => {
     const ir = scene([
       { type: 'node', position: [0, 0], text: 'A', zIndex: 5 },
       { type: 'node', position: [20, 0] }, // 纯几何 rect，默认 0

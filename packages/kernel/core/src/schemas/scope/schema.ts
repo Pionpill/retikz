@@ -1,17 +1,12 @@
 import { z } from 'zod';
 
-import type { IRComposite } from '../composite';
-import type { IRCoordinate } from '../coordinate';
-import type { IRNode } from '../node';
-import type { IRPathBase } from '../path';
-import type { IRScope } from './types';
-
 import { AnimationTrackSchema } from '../animation';
 import { ClipSpecSchema } from '../clip';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import { NodeSchema } from '../node';
 import { ArrowDetailSchema, PathBaseSchema } from '../path';
+import { getRecursiveChildSchema } from '../recursive';
 import { CascadingGraphicStyleSchema, CssColorSchema, OpacitySchema } from '../style';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
@@ -57,15 +52,6 @@ export const LabelDefaultSchema = z
   .describe('Default style applied to node labels and step labels in this scope.');
 
 export const ArrowDefaultSchema = ArrowDetailSchema;
-
-// ChildSchema 完成定义后才被实际触达（schema 层与文件层都不形成 hard 循环依赖）。
-type ScopeChild = IRNode | IRPathBase | IRCoordinate | IRScope | IRComposite;
-
-let childSchemaRef: z.ZodType<ScopeChild> | null = null;
-
-export const __registerChildSchema = (schema: z.ZodType<ScopeChild>): void => {
-  childSchemaRef = schema;
-};
 
 export const ScopeSchema = z
   .object({
@@ -128,14 +114,7 @@ export const ScopeSchema = z
         'Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.',
       ),
     children: z
-      .array(
-        z.lazy(() => {
-          if (!childSchemaRef) {
-            throw new Error('ScopeSchema: ChildSchema not registered yet; ensure scene.ts loaded');
-          }
-          return childSchemaRef;
-        }),
-      )
+      .array(z.lazy(() => getRecursiveChildSchema()))
       .describe('Scope children: nested nodes, paths, coordinates, scopes, or composites.'),
   })
   .strict()

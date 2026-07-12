@@ -19,7 +19,36 @@ const INLINE_MAX = 60;
 
 const isIdentifier = (key: string): boolean => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key);
 
-const formatString = (s: string): string => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+const escapeStringCharacter = (character: string): string => {
+  switch (character) {
+    case '\\':
+      return '\\\\';
+    case "'":
+      return "\\'";
+    case '\b':
+      return '\\b';
+    case '\t':
+      return '\\t';
+    case '\n':
+      return '\\n';
+    case '\v':
+      return '\\v';
+    case '\f':
+      return '\\f';
+    case '\r':
+      return '\\r';
+  }
+  const code = character.charCodeAt(0);
+  return code <= 0xff ? `\\x${code.toString(16).padStart(2, '0')}` : `\\u${code.toString(16).padStart(4, '0')}`;
+};
+
+const formatString = (value: string): string =>
+  `'${Array.from(value, character => {
+    const code = character.charCodeAt(0);
+    return character === '\\' || character === "'" || code <= 0x1f || code === 0x2028 || code === 0x2029
+      ? escapeStringCharacter(character)
+      : character;
+  }).join('')}'`;
 
 const stripKeys = (obj: Record<string, unknown>, keys: ReadonlyArray<string>): Record<string, unknown> => {
   const copy: Record<string, unknown> = { ...obj };
@@ -233,7 +262,7 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
 
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   if ('namespace' in child) {
-    return `null /* Tier 2 composite "${child.namespace}.${child.type}"，经 IR 直喂 */`;
+    throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
   switch (child.type) {
     case 'node':
@@ -260,6 +289,7 @@ export const irToVanillaCode = (ir: IRScene): string => {
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {
     ...(ir.viewBox ? { viewBox: ir.viewBox } : {}),
+    ...(ir.animations ? { animations: ir.animations } : {}),
     children: ir.children,
   };
   const figureArgs = formatObject({ ...figureConfig, children: '__CHILDREN__' }, 0).replace(

@@ -16,6 +16,7 @@ type NodeFn = {
   (config: Omit<IRNode, 'type' | 'id'>): IRNode;
 };
 
+/** 创建 Vanilla 节点 IR；支持空配置、id 简写与完整配置。 */
 export const node: NodeFn = (
   idOrConfig?: string | Omit<IRNode, 'type' | 'id'>,
   maybeConfig?: Omit<IRNode, 'type' | 'id'>,
@@ -54,6 +55,7 @@ type PathFn = {
   (config: AnonymousVanillaPathConfig): IRPath;
 };
 
+/** 从 way DSL 创建 Vanilla 路径 IR，并解析路径粗细语法糖。 */
 export const path: PathFn = (
   idOrConfig: string | AnonymousVanillaPathConfig,
   maybeConfig?: AnonymousVanillaPathConfig,

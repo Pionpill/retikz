@@ -54,13 +54,15 @@ pnpm dev:docs
 
 ## 验证策略
 
-默认只验证当前或受影响 workspace；跨包公共契约、发布前、CI 复现或用户明确要求时才扩大到全仓。
+默认只验证当前或受影响 workspace；跨包公共契约、发布前、CI 复现或用户明确要求时才扩大到全仓。日常校验中，范围明确且改动较小时优先运行受影响包的 `test:changed`；仅在大范围重构或功能大改时运行受影响模块的全量测试。
 
 ```bash
 pnpm exec prettier --write <changed-files-or-scope>
 pnpm --filter <pkg> exec eslint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
-pnpm --filter <pkg> exec vitest run [test-file]
+pnpm --filter <pkg> test:changed
+pnpm --filter <pkg> exec vitest run <test-file>
+pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 ```
 
 - 改完内容先用 Prettier 格式化相关文件或目录，再按改动类型继续验证。

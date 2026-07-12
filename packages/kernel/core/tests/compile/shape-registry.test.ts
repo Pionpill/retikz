@@ -260,7 +260,7 @@ describe('Shape registry — error path', () => {
     };
     expect(() => compileToScene(ir)).toThrow(/Unknown shape 'cloud'/);
     // circle 是内置 shape preset，不在 provider 注册表（裸 'circle' 由 compile 解析到 ellipse，不走查表）
-    // 注册表含 polygon（ADR-04）：排序后落在 ellipse 与 rectangle 之间
+    // 注册表含 polygon：排序后落在 ellipse 与 rectangle 之间。
     expect(() => compileToScene(ir)).toThrow(/ellipse, polygon, rectangle/);
   });
 

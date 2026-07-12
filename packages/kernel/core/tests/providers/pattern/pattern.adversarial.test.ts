@@ -13,7 +13,7 @@ import type { IRPaintSpec, IRScene } from '../../../src/schemas';
 import { compileToScene } from '../../../src/compile/compile';
 
 /**
- * Pattern 注册面（ADR-04 emit-in-compile）对抗回归
+ * Pattern 注册面 emit-in-compile 对抗回归。
  *
  * 来自 Bug Hunter 的边角 IR / pattern def。`compileToScene` 直接消费 IR、不再跑 zod schema，故
  * size / lineWidth / rotation 的 number / positive 校验在手搓 IR 时被绕过——现在 compile 是唯一关口，

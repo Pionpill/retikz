@@ -82,6 +82,11 @@ describe('ViewBoxSchema 拒绝退化 / 非法形态', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: '200', height: 200 });
     expect(parsed.success).toBe(false);
   });
+
+  it('未知字段拒绝', () => {
+    const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: 200, height: 200, padding: 10 });
+    expect(parsed.success).toBe(false);
+  });
 });
 
 describe('SceneSchema 带 / 不带 viewBox', () => {
@@ -151,5 +156,15 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       viewBox: { x: -100, y: -100, width: 200, height: 200 },
     });
     expect(parsed.version).toBe(1);
+  });
+
+  it('场景根对象的未知字段拒绝', () => {
+    const parsed = SceneSchema.safeParse({
+      version: 1,
+      type: 'scene',
+      children: [],
+      metadata: {},
+    });
+    expect(parsed.success).toBe(false);
   });
 });

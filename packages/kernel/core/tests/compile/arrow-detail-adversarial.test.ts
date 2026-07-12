@@ -38,7 +38,7 @@ const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined
 
 /**
  * Adversarial / bug hunter 测试
- * @description 攻击 ADR-03 4 项决策细节的边缘 case + ADR 测试象限的错误路径
+ * @description 攻击箭头视觉配置的边缘 case 与错误路径。
  */
 
 describe('adv 1: 字段名 = arrowDetail（旧字段 arrowShape 不偷偷生效）', () => {

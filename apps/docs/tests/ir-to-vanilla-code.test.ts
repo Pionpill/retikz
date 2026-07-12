@@ -201,4 +201,39 @@ describe('irToVanillaCode fallback', () => {
     expect(centeredArc).not.toContain('{ arc:');
     expect(partialCircle).not.toContain('{ circle:');
   });
+
+  it('保留 scene 根动画', () => {
+    const code = irToVanillaCode({
+      ...ir([]),
+      animations: [
+        {
+          property: 'viewBox',
+          keyframes: [
+            { at: 0, value: [0, 0, 100, 100] },
+            { at: 1, value: [50, 50, 40, 40] },
+          ],
+          duration: 600,
+        },
+      ],
+    });
+
+    expect(code).toContain('animations: [');
+    expect(code).toContain("property: 'viewBox'");
+    expect(code).toContain('duration: 600');
+  });
+
+  it('转义多行与控制字符为合法单引号字符串', () => {
+    const code = irToVanillaCode(
+      ir([{ type: 'node', id: 'label', position: [0, 0], text: "line 1\nline 2\t'\\\u2028" }]),
+    );
+
+    expect(code).toContain("text: 'line 1\\nline 2\\t\\'\\\\\\u2028'");
+    expect(code).not.toContain('line 1\nline 2');
+  });
+
+  it('不把 Tier 2 composite 静默转换成 null', () => {
+    expect(() => irToVanillaCode(ir([{ namespace: 'plot', type: 'plot' }]))).toThrow(
+      'Cannot generate Vanilla code for Tier 2 composite "plot.plot".',
+    );
+  });
 });
