@@ -130,10 +130,7 @@ describe('ComponentPreview localized controls', () => {
     await i18n.changeLanguage('en');
 
     try {
-      const props = renderPreview(
-        ['viz', 'grammar', 'mark', 'path'],
-        <ComponentPreview files={{ file: 'line-curve' }} />,
-      );
+      const props = renderPreview(['viz', 'grammar', 'mark', 'path'], <ComponentPreview files="line-curve" />);
       const control = props.controlSlots?.[0];
 
       expect(control).toBeDefined();
@@ -185,10 +182,7 @@ describe('ComponentPreview files source', () => {
     const props = renderPreview(
       ['kernel', 'examples', 'ohms-law-circuit'],
       <ComponentPreview
-        files={[
-          { file: 'circuit-01-meters' },
-          { file: 'circuit-01-meters.meter.tsx', diffFrom: 'circuit-01-meters.meter.tsx' },
-        ]}
+        files={['circuit-01-meters', { file: 'circuit-01-meters.meter.tsx', diffFrom: 'circuit-01-meters.meter.tsx' }]}
       />,
     );
 
@@ -202,7 +196,7 @@ describe('ComponentPreview files source', () => {
     const props = renderPreview(
       ['kernel', 'examples', 'ohms-law-circuit'],
       <ComponentPreview
-        files={[{ file: 'circuit-01-meters', diffFrom: 'circuit-01-meters' }, { file: 'circuit-01-meters.meter.tsx' }]}
+        files={[{ file: 'circuit-01-meters', diffFrom: 'circuit-01-meters' }, 'circuit-01-meters.meter.tsx']}
       />,
     );
 

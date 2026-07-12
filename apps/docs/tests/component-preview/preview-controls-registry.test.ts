@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
+  AlignKey,
   ComponentPreviewCardProps,
   ComponentPreviewProps,
   ComponentRenderSource,
   DiffLineKind,
+  PreviewActionSlot,
   PreviewControlConfig,
+  PreviewControlPlacement,
+  PreviewControlRuntime,
+  PreviewControlSlot,
   PreviewSourceConfig,
+  RendererMode,
+  SizeKey,
 } from '../../src/modules/docs/components/component-preview';
 
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
@@ -78,6 +85,13 @@ describe('preview controls registry', () => {
       source: ComponentRenderSource;
       diff: DiffLineKind;
       config: PreviewControlConfig;
+      controlPlacement: PreviewControlPlacement;
+      controlRuntime: PreviewControlRuntime;
+      controlSlot: PreviewControlSlot;
+      actionSlot: PreviewActionSlot;
+      rendererMode: RendererMode;
+      align: AlignKey;
+      size: SizeKey;
       sourceConfig: PreviewSourceConfig;
     };
     expect(typeSurface).toBeTypeOf('object');

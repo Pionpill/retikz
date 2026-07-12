@@ -35,7 +35,7 @@ describe('ComponentPreview files 配置', () => {
   it('将非空 tuple 的第一项作为主 demo，其余项复制为附加文件', () => {
     const files = [
       { file: 'ohms-law-circuit-04-measurement-cells', diffFrom: 'ohms-law-circuit-03-placement' },
-      { file: 'circuitShapes.tsx' },
+      'circuitShapes.tsx',
       { file: 'circuit-01-meters.meter.tsx', diffFrom: 'circuit-00-base.meter.tsx' },
     ] as const satisfies ComponentPreviewFiles;
 
