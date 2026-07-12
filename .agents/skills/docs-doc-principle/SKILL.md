@@ -264,12 +264,19 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 `ComponentPreview` 常用 props：
 
-| prop                                                | 用法                                                                                                           |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `files`                                             | string 指定主 demo；数组项默认写 string，只有需要 `diffFrom` 时才写对象；第一项是主 demo，其余项是附加源码文件 |
-| `size`                                              | 渲染区高度：`xs` / `sm` / `md` / `lg` / `xl` / `xxl` / `xxxl`，默认 `md`                                       |
-| `hideCode`                                          | 叙述性插图开；演示组件用法保持默认                                                                             |
-| `replayable` / `controlSlots` / `dialogActionSlots` | 动画或自定义工具才用；普通文档不要碰                                                                           |
+| prop            | 用法                                                                                                           |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `files`         | string 指定主 demo；数组项默认写 string，只有需要 `diffFrom` 时才写对象；第一项是主 demo，其余项是附加源码文件 |
+| `size`          | 渲染区高度：`xs` / `sm` / `md` / `lg` / `xl` / `xxl` / `xxxl`，默认 `md`                                       |
+| `hideCode`      | 叙述性插图开；演示组件用法保持默认                                                                             |
+| `controls`      | 可选控制配置：`name` 复用 controls、`animation` 覆盖自动动画控件、`slots` 追加局部插槽；普通文档保持自动默认   |
+| `dialogActions` | 仅全屏 header 需要额外动作时使用                                                                               |
+
+- 需要强制显示动画控件时写 `controls={{ animation: true }}`；不需要覆盖时省略 `animation`，继续自动判定。
+- `controls.name` 三态：省略时使用主 demo controls（优先 demo module `previewControls`，否则读取同名 `*.controls.ts`）；string 复用指定 controls；`false` 同时禁用两种来源。
+- `PreviewControlSlot.visibility` 必须显式写 `hover` 或 `always`；不要再从宿主统一控制可见性。
+- animation 与预览宿主工具使用 `hover`；作为 demo 参数的 select / input 通常使用 `always`。
+- 局部 `controls.slots` 与共享 controls 追加组合；id 必须全局唯一。替换 animation 时先写 `animation: false`。
 
 ### 代码视图：React / IR / Vanilla
 

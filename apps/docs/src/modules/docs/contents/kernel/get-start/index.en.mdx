@@ -29,7 +29,7 @@ You can also open the AI panel from the top AI button and ask about the current 
 
 ## A Minimal Example
 
-<ComponentPreview files="get-start-step-4" size="xs" replayable />
+<ComponentPreview files="get-start-step-4" size="xs" controls={{ animation: true }} />
 
 We'll build this diagram in 4 steps. Click **View Code** under any preview to inspect the source and the corresponding IR JSON.
 
@@ -65,7 +65,7 @@ Three nodes joined by two lines — the static structure now matches the example
 
 A figure can also respond to user input. Add `animations` to describe animation tracks, then add an `onClick` callback. The callback's second argument, `context`, carries the current element information and animation controls; calling `context.animation.restart()` replays the animation from the event.
 
-<ComponentPreview files="get-start-step-4" size="xs" replayable />
+<ComponentPreview files="get-start-step-4" size="xs" controls={{ animation: true }} />
 
 This animation uses `trigger: 'manual'`, so it does not autoplay. It waits for the click callback, and the callback can update your React state at the same time.
 
