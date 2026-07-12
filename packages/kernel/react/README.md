@@ -39,7 +39,7 @@ Switch the backend with one prop — same JSX, same IR:
 
 - Kernel: `Layout` / `Node` / `Path` / `Step` / `Text` / `Coordinate` / `Scope`
 - Sugar: `Draw` and the shape components (`Circle` / `Rectangle` / `Grid` / …)
-- IR interop: `convertReactNodeToIR` / `convertIRToReactNode`
+- IR interop: `convertReactNodeToIR` / `convertIRToReactNode`; the reverse conversion preserves Tier 1 structure and accepts composite definitions to lower Tier 2 IR into equivalent Kernel JSX
 - Re-exported from core: `DrawWay`, target/anchor types, and extension definitions/helpers such as `defineArrow`, `defineBoundary`, `defineClip`, `definePattern`, `definePathGenerator`, `definePathKind`, and `defineRibbonWidthProfile`
 
 ## Docs

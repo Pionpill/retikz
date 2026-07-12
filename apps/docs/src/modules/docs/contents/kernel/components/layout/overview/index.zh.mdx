@@ -71,10 +71,10 @@ import { Layout } from '@retikz/react';
 
 <ComponentPreview files="layout-from-ir" size="xs" />
 
-需要在 DSL 与 IR 之间互转时，配 `convertReactNodeToIR` / `convertIRToReactNode` 做双向桥：
+需要在 DSL 与 IR 之间互转时，配 `convertReactNodeToIR` / `convertIRToReactNode` 做双向桥。Tier 1 IR 往返后保持结构等价；Tier 2 composite 会先按传入的 `composites` definitions 展开，因此往返结果与展开后的 Kernel IR 语义等价，不会还原成原始自定义组件：
 
 ```tsx
-import { Layout, Node, convertReactNodeToIR } from '@retikz/react';
+import { Layout, Node, convertIRToReactNode, convertReactNodeToIR } from '@retikz/react';
 
 const ir = convertReactNodeToIR(
   <Node id="a" position={[0, 0]}>
@@ -83,7 +83,13 @@ const ir = convertReactNodeToIR(
 );
 // 序列化、传 LLM、存数据库……
 <Layout ir={ir} width={200} height={80} />;
+
+const kernelChildren = convertIRToReactNode(tier2IR, {
+  composites: [panelDefinition],
+});
 ```
+
+Tier 2 缺少对应 definition、payload 不合法或递归展开超限时，`convertIRToReactNode` 会直接抛错，并在错误中保留 composite key 与 IR 路径，避免静默丢失节点。
 
 `ir` 与 `children` 互斥；同时传时优先 `ir`。
 

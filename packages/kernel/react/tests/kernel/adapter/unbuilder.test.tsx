@@ -1,9 +1,10 @@
 import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
-import { CURRENT_IR_VERSION } from '@retikz/core';
+import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel } from '@retikz/core';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import { buildIR } from '../../../src/kernel/adapter';
 import { convertIRToReactNode } from '../../../src/kernel/adapter';
@@ -15,6 +16,43 @@ const emptyScene: IRScene = {
   type: 'scene',
   children: [],
 };
+
+const PanelSchema = CompositeBaseSchema.extend({
+  namespace: z.literal('demo'),
+  type: z.literal('panel'),
+  id: z.string(),
+});
+
+/** demo.panel → 同 id 的 Tier 1 node。 */
+const panelComposite = defineComposite({
+  namespace: 'demo',
+  type: 'panel',
+  schema: PanelSchema,
+  expand: panel => ({ type: 'node', id: panel.id, position: [0, 0], text: panel.id }),
+});
+
+/** demo.path → 带 steps 的 Tier 1 path。 */
+const pathComposite = defineComposite({
+  namespace: 'demo',
+  type: 'path',
+  schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('path') }),
+  expand: () => ({
+    type: 'path',
+    stroke: '#123456',
+    children: [
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'line', to: [10, 20] },
+    ],
+  }),
+});
+
+/** demo.loop → 自身，用于深度错误透传。 */
+const loopComposite = defineComposite({
+  namespace: 'demo',
+  type: 'loop',
+  schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('loop') }),
+  expand: () => ({ namespace: 'demo', type: 'loop' }),
+});
 
 /** 把 ReactNode 收成 ReactElement 数组，过滤掉 null/string 等非 element 项 */
 const toElements = (node: ReturnType<typeof convertIRToReactNode>): Array<ReactElement> => {
@@ -1143,5 +1181,68 @@ describe('convertIRToReactNode', () => {
       children: [{ type: 'bogus' } as unknown as IRChild],
     };
     expect(() => convertIRToReactNode(badIR)).toThrow(/convertIRToReactNode: unknown IR child type/);
+  });
+
+  it('Tier 2 composite 经 definitions lowering 后生成等价 Kernel JSX', () => {
+    const ir: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [{ namespace: 'demo', type: 'panel', id: 'panel-a' }],
+    };
+    const options = { composites: [panelComposite] };
+
+    expect(buildIR(convertIRToReactNode(ir, options))).toEqual(lowerIRToKernel(ir, options));
+  });
+
+  it('scope 内 composite lowering 后保留 scope 与 path children', () => {
+    const ir: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          id: 'group',
+          color: '#abcdef',
+          children: [{ namespace: 'demo', type: 'path' }],
+        },
+      ],
+    };
+    const options = { composites: [pathComposite] };
+
+    expect(buildIR(convertIRToReactNode(ir, options))).toEqual(lowerIRToKernel(ir, options));
+  });
+
+  it('缺失 composite definition 时错误保留 key 与 IR path', () => {
+    const ir: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [{ namespace: 'demo', type: 'panel', id: 'missing' }],
+    };
+
+    expect(() => convertIRToReactNode(ir)).toThrow(/^convertIRToReactNode:.*demo\.panel.*children\[0\]/);
+  });
+
+  it('invalid composite payload 错误保留 provider 与 path', () => {
+    const ir: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [{ namespace: 'demo', type: 'panel', id: 123 as unknown as string }],
+    };
+
+    expect(() => convertIRToReactNode(ir, { composites: [panelComposite] })).toThrow(
+      /^convertIRToReactNode:.*demo\.panel.*children\[0\]/,
+    );
+  });
+
+  it('composite depth 错误经 unbuilder 前缀包装且不产生部分 JSX', () => {
+    const ir: IRScene = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [{ namespace: 'demo', type: 'loop' }],
+    };
+
+    expect(() => convertIRToReactNode(ir, { composites: [loopComposite], maxCompositeDepth: 1 })).toThrow(
+      /^convertIRToReactNode:.*COMPOSITE_NEST_TOO_DEEP/,
+    );
   });
 });

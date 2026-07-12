@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import type { CompositeDefinition } from '@retikz/core';
+
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -140,6 +142,41 @@ describe('@retikz/vanilla plain spec', () => {
     expect(makeComposites).toHaveBeenCalledTimes(1);
     expect(makeComposites).toHaveBeenCalledWith({ shared: sharedData });
     expect(svg).toContain('<rect');
+  });
+
+  it('embed-special-reference：特殊原型键同引用复用并作为 own property 传给 maker', () => {
+    const sharedData = { rows: [1] };
+    const makeComposites = vi.fn<(mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>>(() => [
+      boxComposite,
+    ]);
+    const adapter: VanillaTier2Adapter<{ text: string; data: object }> = {
+      kind: 'special-reference',
+      namespace: 'fixture',
+      lower: props => ({
+        node: { namespace: 'fixture', type: 'box', text: props.text },
+        datasets: Object.fromEntries([
+          ['__proto__', props.data],
+          ['toString', props.data],
+        ]),
+        makeComposites,
+      }),
+    };
+    const spec = figure({
+      layers: [
+        layer('chart', [
+          embed('special-reference', 'a', { text: 'A', data: sharedData }),
+          embed('special-reference', 'b', { text: 'B', data: sharedData }),
+        ]),
+      ],
+    });
+
+    normalizeFigureSpec(spec, { adapters: [adapter] });
+
+    const merged = makeComposites.mock.calls[0][0];
+    expect(Object.hasOwn(merged, '__proto__')).toBe(true);
+    expect(Object.hasOwn(merged, 'toString')).toBe(true);
+    expect(merged.__proto__).toBe(sharedData);
+    expect(merged.toString).toBe(sharedData);
   });
 
   it('embed-output-identities：adapter 输出 id 必须从 embed id 派生并进入 identityIndex', () => {

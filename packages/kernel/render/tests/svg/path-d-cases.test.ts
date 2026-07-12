@@ -84,7 +84,7 @@ describe('buildPathD: 单 kind 构造', () => {
     expect(buildPathD(commands)).toBe('M 0 10 A 10 10 0 0 0 10 0');
   });
 
-  it('arc counterClockwise=true 强制 sweep=0（与端角差无关）', () => {
+  it('arc counterClockwise=true 强制逆时针扫描并对齐为长弧', () => {
     const commands: Array<PathCommand> = [
       {
         kind: 'arc',
@@ -95,7 +95,7 @@ describe('buildPathD: 单 kind 构造', () => {
         counterClockwise: true,
       },
     ];
-    expect(buildPathD(commands)).toBe('M 10 0 A 10 10 0 0 0 0 10');
+    expect(buildPathD(commands)).toBe('M 10 0 A 10 10 0 1 0 0 10');
   });
 
   it('ellipseArc 不同 rx/ry → SVG A 命令 rx 与 ry 不同', () => {

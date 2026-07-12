@@ -119,7 +119,7 @@ After collecting every contribution, `<Layout>` groups them by `namespace`:
 | Step                | Behavior                                                                                                                                            |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Merge datasets      | `datasets` of the same namespace merge into one; the same `reference` appearing twice **must be the same object identity**, otherwise it fails loud |
-| Call makeComposites | called once per namespace with the merged datasets, producing that domain's composites                                                              |
+| Call makeComposites | the same namespace must reuse one function; it is called once with merged datasets, otherwise aggregation fails loud                                |
 | Assemble            | results across namespaces concat, then merge with the user's explicit `composites` prop, all fed to compile                                         |
 
 In other words, embeddable Tier 2 wires the lowering path above into `<Layout>`'s declarative surface: composites solve "how a Tier 2 _node_ lowers", while the embeddable adapter solves "how a Tier 2 _component_ delivers that node and its expand logic into a shared `<Layout>`". Data always stays out of IR and is injected at compile through composites — exactly like the `composites` prop, and like how `<Plot>` works standalone.

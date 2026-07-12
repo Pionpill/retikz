@@ -94,6 +94,103 @@ describe('drawScene 箭头 marker', () => {
     expect(context.calls.find(c => c.name === 'rotate')?.args[0]).toBeCloseTo(Math.atan2(30, 30));
   });
 
+  it('arrow-arc-end：圆弧末端 marker 使用终点切线', () => {
+    const context = createSpyCanvasContext();
+    const scene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 60 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [40, 20] },
+            { kind: 'arc', center: [20, 20], radius: 20, startAngle: 0, endAngle: 90 },
+          ],
+          stroke: '#000',
+          arrowEnd: stealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, scene);
+
+    expect(context.calls.some(c => c.name === 'translate' && c.args[0] === 20 && c.args[1] === 40)).toBe(true);
+    expect(context.calls.find(c => c.name === 'rotate')?.args[0]).toBeCloseTo(Math.PI);
+  });
+
+  it('arrow-arc-start：圆弧起点 marker 使用反向起点切线', () => {
+    const context = createSpyCanvasContext();
+    const scene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 60 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [40, 20] },
+            { kind: 'arc', center: [20, 20], radius: 20, startAngle: 0, endAngle: 90 },
+          ],
+          stroke: '#000',
+          arrowStart: stealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, scene);
+
+    expect(context.calls.some(c => c.name === 'translate' && c.args[0] === 40 && c.args[1] === 20)).toBe(true);
+    expect(context.calls.find(c => c.name === 'rotate')?.args[0]).toBeCloseTo((Math.PI * 3) / 2);
+  });
+
+  it('arrow-ellipse-end：旋转椭圆弧末端 marker 使用旋转后的切线', () => {
+    const context = createSpyCanvasContext();
+    const scene: Scene = {
+      layout: { x: 0, y: 0, width: 40, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [10, 28] },
+            {
+              kind: 'ellipseArc',
+              center: [10, 20],
+              radiusX: 8,
+              radiusY: 4,
+              rotation: 90,
+              startAngle: 0,
+              endAngle: 90,
+            },
+          ],
+          stroke: '#000',
+          arrowEnd: stealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, scene);
+
+    expect(context.calls.some(c => c.name === 'translate' && c.args[0] === 6 && c.args[1] === 20)).toBe(true);
+    expect(context.calls.find(c => c.name === 'rotate')?.args[0]).toBeCloseTo(-Math.PI / 2);
+  });
+
+  it('arrow-arc-first：没有 move 时仍从圆弧几何起点定位起点 marker', () => {
+    const context = createSpyCanvasContext();
+    const scene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 60 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [{ kind: 'arc', center: [20, 20], radius: 20, startAngle: 0, endAngle: 90 }],
+          stroke: '#000',
+          arrowStart: stealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, scene);
+
+    expect(context.calls.some(c => c.name === 'translate' && c.args[0] === 40 && c.args[1] === 20)).toBe(true);
+    expect(context.calls.find(c => c.name === 'rotate')?.args[0]).toBeCloseTo((Math.PI * 3) / 2);
+  });
+
   it('arrow-marker-isolated-strokestyle：空心 marker 描边不继承 path 的 lineCap / lineJoin（如 SVG defs marker）', () => {
     const context = createSpyCanvasContext();
     const hollowSpec = {

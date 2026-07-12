@@ -5,7 +5,7 @@ description: '@retikz/plot 是基于 composite 机制做出的第一个 Tier 2 �
 
 上一页讲的 composite 是**机制**:core 提供注册面和展开管线,但不内置任何高层节点。`@retikz/plot` 就是用这套机制做出来的第一个 **Tier 2 领域包**,也就是 retikz 的图表层。
 
-它把「一张图」声明成一份 **Plot IR**(坐标系、比例尺、把哪个字段画成点还是线),数据单独喂入,再由 `lowerPlots`——也就是 core `lowerComposites` 钩子的具体实现——把 IR + 数据展开成 core 的 node / path,交给现有 renderer。core 不认识任何 chart 类型,plot 的全部语义都装在这个独立包里。
+它把「一张图」声明成一份 **Plot IR**(坐标系、比例尺、把哪个字段画成点还是线),数据单独喂入。`lowerPlots` 根据数据生成 plot 的 composite definitions,core 的 composite lowering 阶段再把 Plot IR 展开成 node / path,交给现有 renderer。core 不认识任何 chart 类型,plot 的全部语义都装在这个独立包里。
 
 `@retikz/plot-react` 把这套包成一个 `<Plot>` 组件:
 

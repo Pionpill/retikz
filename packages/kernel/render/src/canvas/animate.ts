@@ -77,7 +77,10 @@ export const applyPrimAnimations = (
     if (!isAutoplayTrigger(track) && !context.includeNonAutoplay) continue;
     const cls = classifyProperty(track.property);
     if (cls === 'custom') {
-      const def = context.animationProperties?.[track.property];
+      const def =
+        context.animationProperties !== undefined && Object.hasOwn(context.animationProperties, track.property)
+          ? context.animationProperties[track.property]
+          : undefined;
       if (!def) {
         context.warn(
           `Canvas animation: custom property "${track.property}" is not registered; skipping (rendering base).`,

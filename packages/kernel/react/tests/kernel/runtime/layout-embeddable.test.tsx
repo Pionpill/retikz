@@ -1,4 +1,5 @@
 import type { CompositeDefinition } from '@retikz/core';
+import type { Mock } from 'vitest';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { type FC } from 'react';
@@ -18,6 +19,8 @@ import { Layout } from '../../../src/kernel';
  */
 
 type FixtureProps = { id: string; data: unknown };
+type MakeComposites = (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
+type MakeCompositesMock = Mock<MakeComposites>;
 
 /** 可嵌入 fixture 组件类型：函数组件 + 可嵌入静态标记 */
 type EmbeddableFixture = FC<FixtureProps> & {
@@ -54,10 +57,17 @@ const makeFixture = (
     displayName?: string;
     datasets?: Record<string, unknown>;
     marked?: boolean;
+    makeComposites?: MakeCompositesMock;
   } = {},
-): { Fixture: EmbeddableFixture; makeComposites: ReturnType<typeof vi.fn> } => {
-  const { namespace = 'demo', displayName = 'DemoFixture', datasets, marked = true } = options;
-  const makeComposites = vi.fn(() => [makePanelComposite(namespace)]);
+): { Fixture: EmbeddableFixture; makeComposites: MakeCompositesMock } => {
+  const {
+    namespace = 'demo',
+    displayName = 'DemoFixture',
+    datasets,
+    marked = true,
+    makeComposites: suppliedMake,
+  } = options;
+  const makeComposites: MakeCompositesMock = suppliedMake ?? vi.fn(() => [makePanelComposite(namespace)]);
   const adapter: EmbeddableTier2Adapter<FixtureProps> = {
     displayName,
     namespace,
@@ -113,6 +123,42 @@ describe('<Layout> 可嵌入 Tier2 聚合', () => {
     expect(sharedMake).toHaveBeenCalledWith(expect.objectContaining({ a: [1, 2], b: [3, 4] }));
     expect(svg).toContain('data-retikz-id="panel-one"');
     expect(svg).toContain('data-retikz-id="panel-two"');
+  });
+
+  it('特殊原型键 dataset reference：同引用复用并作为 own property 传给 maker', () => {
+    const shared = { rows: [1, 2] };
+    const datasets = Object.fromEntries([
+      ['__proto__', shared],
+      ['toString', shared],
+    ]);
+    const { Fixture, makeComposites } = makeFixture({ datasets });
+
+    renderToStaticMarkup(
+      <Layout width={100} height={100}>
+        <Fixture id="one" data={null} />
+        <Fixture id="two" data={null} />
+      </Layout>,
+    );
+
+    const merged = makeComposites.mock.calls[0][0];
+    expect(Object.hasOwn(merged, '__proto__')).toBe(true);
+    expect(Object.hasOwn(merged, 'toString')).toBe(true);
+    expect(merged.__proto__).toBe(shared);
+    expect(merged.toString).toBe(shared);
+  });
+
+  it('同 namespace 使用不同 makeComposites → render fail-loud', () => {
+    const first = makeFixture({ namespace: 'demo', displayName: 'FirstMaker' });
+    const second = makeFixture({ namespace: 'demo', displayName: 'SecondMaker' });
+
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout width={100} height={100}>
+          <first.Fixture id="first" data={null} />
+          <second.Fixture id="second" data={null} />
+        </Layout>,
+      ),
+    ).toThrow(/demo.*multiple makeComposites/i);
   });
 
   it('不同 namespace 两个可嵌入子组件 → 每个 namespace 的 makeComposites 各调一次、两结果都生效', () => {
@@ -173,8 +219,19 @@ describe('<Layout> 可嵌入 Tier2 聚合', () => {
   });
 
   it('同 namespace 同 reference 不同对象引用 → render 抛错（fail-loud）', () => {
-    const fixA = makeFixture({ namespace: 'demo', displayName: 'A', datasets: { shared: { x: 1 } } });
-    const fixB = makeFixture({ namespace: 'demo', displayName: 'B', datasets: { shared: { x: 1 } } });
+    const makeComposites = vi.fn(() => [makePanelComposite('demo')]);
+    const fixA = makeFixture({
+      namespace: 'demo',
+      displayName: 'A',
+      datasets: { shared: { x: 1 } },
+      makeComposites,
+    });
+    const fixB = makeFixture({
+      namespace: 'demo',
+      displayName: 'B',
+      datasets: { shared: { x: 1 } },
+      makeComposites,
+    });
     expect(() =>
       renderToStaticMarkup(
         <Layout width={100} height={100}>
@@ -187,8 +244,9 @@ describe('<Layout> 可嵌入 Tier2 聚合', () => {
 
   it('同 namespace 同 reference 同对象引用 → 不抛、正常渲染', () => {
     const shared = { x: 1 };
-    const fixA = makeFixture({ namespace: 'demo', displayName: 'A', datasets: { shared } });
-    const fixB = makeFixture({ namespace: 'demo', displayName: 'B', datasets: { shared } });
+    const makeComposites = vi.fn(() => [makePanelComposite('demo')]);
+    const fixA = makeFixture({ namespace: 'demo', displayName: 'A', datasets: { shared }, makeComposites });
+    const fixB = makeFixture({ namespace: 'demo', displayName: 'B', datasets: { shared }, makeComposites });
     expect(() =>
       renderToStaticMarkup(
         <Layout width={100} height={100}>

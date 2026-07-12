@@ -119,7 +119,7 @@ Panel.embeddableAdapter = {
 | 步骤              | 行为                                                                                                     |
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
 | 合并 datasets     | 同 namespace 的 `datasets` 并成一份；同一 `reference` 在两处出现时**必须是同一对象引用**，否则 fail-loud |
-| 调 makeComposites | 每个 namespace 用合并后的 datasets 调一次，得到该 domain 的 composite                                    |
+| 调 makeComposites | 同 namespace 必须复用同一函数；用合并后的 datasets 调一次，否则 fail-loud                                |
 | 拼装              | 各 namespace 的结果 concat，再与用户显式 `composites` prop 合并，一起交 compile                          |
 
 也就是说，可嵌入 Tier2 把上文的 lowering 链路接到了 `<Layout>` 的声明式表面：composite 解决「Tier2 _节点_ 怎么下沉」，可嵌入 adapter 解决「Tier2 _组件_ 怎么把这个节点和它的展开逻辑交进共享的 `<Layout>`」。数据始终留在 IR 之外，在 compile 期经 composite 注入——和 `composites` prop、和 `<Plot>` 单独使用时的做法一致。

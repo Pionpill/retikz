@@ -50,7 +50,7 @@ describe('buildPathD 对抗：浮点 / 360° / 退化', () => {
     expect(buildPathD(commands)).toContain('A 5 5 0 1 1');
   });
 
-  it('arc counterClockwise=true 即使 startAngle<endAngle 也 sweep=0', () => {
+  it('arc counterClockwise=true 且 startAngle<endAngle 时编码逆时针长弧', () => {
     const commands: Array<PathCommand> = [
       {
         kind: 'arc',
@@ -61,8 +61,7 @@ describe('buildPathD 对抗：浮点 / 360° / 退化', () => {
         counterClockwise: true,
       },
     ];
-    // sweep=0
-    expect(buildPathD(commands)).toBe('M 5 0 A 5 5 0 0 0 0 5');
+    expect(buildPathD(commands)).toBe('M 5 0 A 5 5 0 1 0 0 5');
   });
 
   it('arc 端角刚好相等（zero arc）→ largeArc=0, sweep=1，端点重合不出错', () => {

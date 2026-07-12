@@ -1,6 +1,6 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
 
-import type { HydrationHandlers, RetikzEventValue } from './events';
+import type { ElementHandlers, HydrationHandlers, RetikzEventValue } from './events';
 
 import { geometryOf } from './context';
 import { RetikzEvent } from './events';
@@ -41,12 +41,11 @@ export const withCanvasAnimationEventHandlers = (
   scene: Scene,
   handlers: HydrationHandlers | undefined,
 ): HydrationHandlers => {
-  const merged: HydrationHandlers = {};
-  for (const [id, elementHandlers] of Object.entries(handlers ?? {})) {
-    merged[id] = { ...elementHandlers };
-  }
+  const merged = new Map<string, ElementHandlers>(
+    Object.entries(handlers ?? {}).map(([id, elementHandlers]) => [id, { ...elementHandlers }]),
+  );
   for (const [id, events] of collectCanvasAnimationEventTriggers(scene)) {
-    const target = merged[id] ?? {};
+    const target = merged.get(id) ?? {};
     for (const eventName of events) {
       const userHandler = target[eventName];
       target[eventName] = (event, context) => {
@@ -54,9 +53,9 @@ export const withCanvasAnimationEventHandlers = (
         userHandler?.(event, context);
       };
     }
-    merged[id] = target;
+    merged.set(id, target);
   }
-  return merged;
+  return Object.fromEntries(merged);
 };
 
 /** Scene 中含 `visible` trigger 的 id 集合 */

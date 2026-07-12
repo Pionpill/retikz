@@ -7,12 +7,12 @@ import type { CommonOptions, RenderInput } from './types';
 
 import { isVanillaFigureSpec, normalizeFigureSpec } from '../spec';
 
-/** 空 runtime metadata，用于非 plain spec 输入。 */
-export const EMPTY_RUNTIME_META: VanillaRuntimeMeta = {
+/** 为非 plain spec 输入创建独立的空 runtime metadata。 */
+export const createEmptyRuntimeMeta = (): VanillaRuntimeMeta => ({
   layers: [],
   identityIndex: new Map(),
   parentIndex: new Map(),
-};
+});
 
 /** 从 vanilla runtime options 中取出 core compile options。 */
 const toCompileOptions = (options: CommonOptions): CompileOptions => ({ ...(options.compile ?? {}) });
@@ -30,7 +30,7 @@ export type SceneResult = {
  *   `fallbackMeasurer`，Node 下确定可跑）。
  */
 export const toSceneResult = (input: RenderInput, options: CommonOptions): SceneResult => {
-  if ('primitives' in input) return { scene: input, runtimeMeta: EMPTY_RUNTIME_META };
+  if ('primitives' in input) return { scene: input, runtimeMeta: createEmptyRuntimeMeta() };
   if (isVanillaFigureSpec(input)) {
     const normalized = normalizeFigureSpec(input, {
       adapters: options.adapters,
@@ -39,7 +39,7 @@ export const toSceneResult = (input: RenderInput, options: CommonOptions): Scene
     const compileOptions = { ...toCompileOptions(options), composites: normalized.composites };
     return { scene: compileToScene(normalized.ir, compileOptions), runtimeMeta: normalized.runtimeMeta };
   }
-  return { scene: compileToScene(input, toCompileOptions(options)), runtimeMeta: EMPTY_RUNTIME_META };
+  return { scene: compileToScene(input, toCompileOptions(options)), runtimeMeta: createEmptyRuntimeMeta() };
 };
 
 export const toScene = (input: RenderInput, options: CommonOptions): Scene => toSceneResult(input, options).scene;

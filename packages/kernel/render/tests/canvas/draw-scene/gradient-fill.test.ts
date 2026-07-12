@@ -1,11 +1,202 @@
 import type { Scene } from '@retikz/core';
 
+import { createCanvas } from '@napi-rs/canvas';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../../src/canvas';
 import { createSpyCanvasContext } from './helpers';
 
 describe('drawScene 渐变填充', () => {
+  it('non-square radial gradient uses unit coordinates under the bbox transform', () => {
+    const context = createSpyCanvasContext();
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 80 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'r-unit',
+          spec: {
+            kind: 'radialGradient',
+            stops: [
+              { offset: 0, color: '#fff' },
+              { offset: 1, color: '#000' },
+            ],
+          },
+        },
+      ],
+      primitives: [{ type: 'rect', x: 10, y: 20, width: 80, height: 40, fill: { kind: 'resourceRef', id: 'r-unit' } }],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    expect(context.calls.find(call => call.name === 'transform')?.args).toEqual([80, 0, 0, 40, 10, 20]);
+    expect(context.calls.find(call => call.name === 'createRadialGradient')?.args).toEqual([
+      0.5, 0.5, 0, 0.5, 0.5, 0.5,
+    ]);
+    expect(context.calls.some(call => call.name === 'createPattern')).toBe(false);
+  });
+
+  it('rasterizes equal normalized radial distances to matching colors on a non-square bbox', () => {
+    const canvas = createCanvas(100, 60);
+    const context = canvas.getContext('2d');
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 60 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'radial-raster',
+          spec: {
+            kind: 'radialGradient',
+            stops: [
+              { offset: 0, color: '#ffffff' },
+              { offset: 1, color: '#000000' },
+            ],
+          },
+        },
+      ],
+      primitives: [
+        { type: 'rect', x: 10, y: 10, width: 80, height: 40, fill: { kind: 'resourceRef', id: 'radial-raster' } },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    const horizontal = context.getImageData(70, 30, 1, 1).data[0];
+    const vertical = context.getImageData(50, 40, 1, 1).data[0];
+    expect(Math.abs(horizontal - vertical)).toBeLessThanOrEqual(3);
+    expect(horizontal).toBeGreaterThan(110);
+    expect(horizontal).toBeLessThan(145);
+  });
+
+  it('diagonal linear gradient is also created in the unit bbox', () => {
+    const context = createSpyCanvasContext();
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 80 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'l-unit',
+          spec: {
+            kind: 'linearGradient',
+            angle: 45,
+            stops: [
+              { offset: 0, color: '#fff' },
+              { offset: 1, color: '#000' },
+            ],
+          },
+        },
+      ],
+      primitives: [{ type: 'rect', x: 10, y: 20, width: 80, height: 40, fill: { kind: 'resourceRef', id: 'l-unit' } }],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    expect(context.calls.find(call => call.name === 'transform')?.args).toEqual([80, 0, 0, 40, 10, 20]);
+    const args = context.calls.find(call => call.name === 'createLinearGradient')?.args as Array<number>;
+    expect(args[0]).toBeCloseTo(0.14644661);
+    expect(args[1]).toBeCloseTo(0.14644661);
+    expect(args[2]).toBeCloseTo(0.85355339);
+    expect(args[3]).toBeCloseTo(0.85355339);
+  });
+
+  it('uses the true path geometry bbox for gradient mapping', () => {
+    const context = createSpyCanvasContext();
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 220, height: 120 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'path-radial',
+          spec: {
+            kind: 'radialGradient',
+            stops: [
+              { offset: 0, color: '#fff' },
+              { offset: 1, color: '#000' },
+            ],
+          },
+        },
+      ],
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'quad', control: [100, 100], to: [200, 0] },
+          ],
+          fill: { kind: 'resourceRef', id: 'path-radial' },
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    expect(context.calls.find(call => call.name === 'transform')?.args).toEqual([200, 0, 0, 50, 0, 0]);
+  });
+
+  it('appends the local bbox transform without resetting the parent CTM', () => {
+    const context = createSpyCanvasContext();
+    context.setTransform(2, 0, 0, 3, 5, 7);
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 80 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'parent-ctm',
+          spec: {
+            kind: 'radialGradient',
+            stops: [
+              { offset: 0, color: '#fff' },
+              { offset: 1, color: '#000' },
+            ],
+          },
+        },
+      ],
+      primitives: [
+        { type: 'rect', x: 10, y: 20, width: 80, height: 40, fill: { kind: 'resourceRef', id: 'parent-ctm' } },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    expect(context.calls.filter(call => call.name === 'setTransform')).toHaveLength(1);
+    expect(context.calls.find(call => call.name === 'transform')?.args).toEqual([80, 0, 0, 40, 10, 20]);
+    expect(context.getTransform()).toMatchObject({ a: 2, b: 0, c: 0, d: 3, e: 5, f: 7 });
+  });
+
+  it.each(['linearGradient', 'radialGradient', 'conicGradient'] as const)(
+    'skips %s fill for a degenerate bbox with one paint warning',
+    kind => {
+      const context = createSpyCanvasContext();
+      const warnings: Array<string> = [];
+      const s: Scene = {
+        layout: { x: 0, y: 0, width: 20, height: 20 },
+        resources: [
+          {
+            kind: 'paint',
+            id: 'degenerate',
+            spec: {
+              kind,
+              stops: [
+                { offset: 0, color: '#fff' },
+                { offset: 1, color: '#000' },
+              ],
+            },
+          },
+        ],
+        primitives: [
+          { type: 'rect', x: 0, y: 0, width: 0, height: 10, fill: { kind: 'resourceRef', id: 'degenerate' } },
+        ],
+      };
+
+      drawScene(context as unknown as CanvasRenderingContext2D, s, {
+        warnUnsupported: warning => warnings.push(warning.feature),
+      });
+
+      expect(context.calls.some(call => call.name.startsWith('create') && call.name.includes('Gradient'))).toBe(false);
+      expect(warnings).toEqual(['paint']);
+    },
+  );
+
   it('linear-gradient：rect 线性渐变按 bbox + angle 映射 createLinearGradient + addColorStop', () => {
     const context = createSpyCanvasContext();
     const warnings: Array<string> = [];
@@ -31,8 +222,9 @@ describe('drawScene 渐变填充', () => {
       warnUnsupported: w => warnings.push(w.feature),
     });
 
-    // angle 缺省 0（左→右）：bbox(0,0,100,50) → 渐变线 (0,25)→(100,25)
-    expect(context.calls.find(c => c.name === 'createLinearGradient')?.args).toEqual([0, 25, 100, 25]);
+    // gradient 在单位方框创建，再由 bbox transform 映射到 (0,0,100,50)
+    expect(context.calls.find(c => c.name === 'transform')?.args).toEqual([100, 0, 0, 50, 0, 0]);
+    expect(context.calls.find(c => c.name === 'createLinearGradient')?.args).toEqual([0, 0.5, 1, 0.5]);
     expect(context.calls.filter(c => c.name === 'addColorStop').map(c => c.args)).toEqual([
       [0, '#f00'],
       [1, '#00f'],
@@ -64,9 +256,11 @@ describe('drawScene 渐变填充', () => {
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
-    // angle 90（+y 屏幕下）：渐变线 (50,0)→(50,50)
-    const call = context.calls.find(c => c.name === 'createLinearGradient');
-    expect((call?.args as Array<number>).map(n => Math.round(n))).toEqual([50, 0, 50, 50]);
+    const args = context.calls.find(c => c.name === 'createLinearGradient')?.args as Array<number>;
+    expect(args[0]).toBeCloseTo(0.5);
+    expect(args[1]).toBeCloseTo(0);
+    expect(args[2]).toBeCloseTo(0.5);
+    expect(args[3]).toBeCloseTo(1);
   });
 
   it('radial-gradient：rect 径向渐变映射 createRadialGradient（中心 bbox 相对、半径 cover）', () => {
@@ -91,8 +285,7 @@ describe('drawScene 渐变填充', () => {
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
-    // center 默认 (0.5,0.5) → (40,40)，radius 默认 0.5 → 0.5*max(80,80)=40
-    expect(context.calls.find(c => c.name === 'createRadialGradient')?.args).toEqual([40, 40, 0, 40, 40, 40]);
+    expect(context.calls.find(c => c.name === 'createRadialGradient')?.args).toEqual([0.5, 0.5, 0, 0.5, 0.5, 0.5]);
     expect(context.calls.filter(c => c.name === 'addColorStop').length).toBe(2);
   });
 
@@ -121,7 +314,7 @@ describe('drawScene 渐变填充', () => {
 
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
-    expect(context.calls.find(c => c.name === 'createConicGradient')?.args).toEqual([-Math.PI / 2, 30, 40]);
+    expect(context.calls.find(c => c.name === 'createConicGradient')?.args).toEqual([-Math.PI / 2, 0.25, 0.5]);
     expect(context.calls.filter(c => c.name === 'addColorStop').map(c => c.args)).toEqual([
       [0, '#ff0'],
       [0.5, '#06c'],

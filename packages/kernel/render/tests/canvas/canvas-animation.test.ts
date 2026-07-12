@@ -301,6 +301,27 @@ describe('降级', () => {
     expect(warn).toHaveBeenCalledWith(expect.objectContaining({ feature: 'animation' }));
   });
 
+  it('原型成员名 custom property 在普通空注册表中仍按未注册项 warn + skip', () => {
+    const warn = vi.fn();
+    const inheritedName: IRAnimationTrack = {
+      property: 'toString',
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+      duration: 400,
+    };
+
+    expect(() =>
+      drawScene(createCtx(), scene([rect({ animations: [inheritedName] })]), {
+        time: 200,
+        animationProperties: {},
+        warnUnsupported: warn,
+      }),
+    ).not.toThrow();
+    expect(warn).toHaveBeenCalledWith(expect.objectContaining({ feature: 'animation' }));
+  });
+
   it('pathDraw 挂无描边元素 → warn + skip', () => {
     const warn = vi.fn();
     const draw: IRAnimationTrack = {

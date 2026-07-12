@@ -16,9 +16,18 @@ import type {
 
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
 
-import { commandEndpoint, firstLineDy, gradientLineFromAngle, parseHexColor, pathControlPoints } from '../shared';
+import {
+  commandArcStart,
+  commandEndpoint,
+  commandEndTangent,
+  commandStartTangent,
+  firstLineDy,
+  parseHexColor,
+  pathBounds,
+} from '../shared';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
+import { buildGradientStrokeStyle, fillObjectGradient } from './gradient-paint';
 import { applyClip, applyTransform, buildPath, DEG_TO_RAD, roundedRectPath } from './path-geometry';
 
 const warnUnsupported = (options: DrawOptions, feature: UnsupportedCanvasFeature, message: string): void => {
@@ -78,7 +87,9 @@ type BBox = { x: number; y: number; w: number; h: number };
 /** Scene 资源按 id 索引（fill resourceRef 查表） */
 type ResourceMap = ReadonlyMap<string, SceneResource>;
 
-type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
+type DrawState = {
+  gradientPatterns: Map<string, CanvasPattern>;
+};
 
 /**
  * 把 hex / rgb(a) 颜色乘上 alpha 转成 rgba 串；无法正则解析则返回 undefined
@@ -191,67 +202,12 @@ const applyStopAlpha = (
   return color;
 };
 
-/**
- * 据 gradient spec + 被填充图元 bbox 构建 CanvasGradient
- * @description objectBoundingBox(0..1) → 绝对坐标：linear 过中心沿 angle（polar，0=+x / 90=+y 屏幕下）取长度 1；
- *   radial 圆形近似（canvas 不支持椭圆渐变）半径 = radius × max(w,h)（cover 观感）。stop 颜色解析 currentColor + 烘焙 opacity。
- */
-const buildGradient = (
-  ctx: CanvasRenderingContext2D,
-  spec: GradientSpec,
-  bbox: BBox,
-  options: DrawOptions,
-): CanvasGradient | undefined => {
-  let gradient: CanvasGradient;
-  if (spec.kind === 'linearGradient') {
-    const line = gradientLineFromAngle(spec.angle);
-    gradient = ctx.createLinearGradient(
-      bbox.x + line.x1 * bbox.w,
-      bbox.y + line.y1 * bbox.h,
-      bbox.x + line.x2 * bbox.w,
-      bbox.y + line.y2 * bbox.h,
-    );
-  } else if (spec.kind === 'radialGradient') {
-    const [cx, cy] = spec.center ?? [0.5, 0.5];
-    const acx = bbox.x + cx * bbox.w;
-    const acy = bbox.y + cy * bbox.h;
-    gradient = ctx.createRadialGradient(acx, acy, 0, acx, acy, (spec.radius ?? 0.5) * Math.max(bbox.w, bbox.h));
-  } else {
-    const createConicGradient = (
-      ctx as { createConicGradient?: (startAngle: number, x: number, y: number) => CanvasGradient }
-    ).createConicGradient;
-    if (typeof createConicGradient !== 'function') {
-      warnUnsupported(
-        options,
-        'paint',
-        'Canvas renderer does not support conicGradient paint on this host; paint is skipped.',
-      );
-      return undefined;
-    }
-    const [cx, cy] = spec.center ?? [0.5, 0.5];
-    gradient = createConicGradient.call(
-      ctx,
-      ((spec.angle ?? 0) * Math.PI) / 180,
-      bbox.x + cx * bbox.w,
-      bbox.y + cy * bbox.h,
-    );
-  }
-  for (const stop of spec.stops) {
-    gradient.addColorStop(
-      stop.offset,
-      applyStopAlpha(resolveColor(stop.color, options) ?? stop.color, stop.opacity, options.resolveCssColor),
-    );
-  }
-  return gradient;
-};
-
 const resolvePaintStyle = (
   ctx: CanvasRenderingContext2D,
   paint: PaintValue | undefined,
   contextStroke: string | undefined,
   options: DrawOptions,
   resources: ResourceMap,
-  bbox: BBox,
 ): string | CanvasGradient | CanvasPattern | undefined => {
   if (paint === undefined) return undefined;
   if (typeof paint === 'string') return paint === 'none' ? undefined : resolveColor(paint, options);
@@ -259,9 +215,6 @@ const resolvePaintStyle = (
   const resource = resources.get(paint.id);
   if (resource !== undefined && resource.kind === 'paint') {
     const spec = resource.spec;
-    if (spec.kind === 'linearGradient' || spec.kind === 'radialGradient' || spec.kind === 'conicGradient') {
-      return buildGradient(ctx, spec, bbox, options);
-    }
     if (spec.kind === 'pattern' && resource.tile !== undefined) {
       const pattern = buildPattern(ctx, resource.tile, options);
       if (pattern !== undefined) return pattern;
@@ -334,19 +287,31 @@ const fillCurrentPath = (
 ): void => {
   if (fill !== undefined && typeof fill !== 'string' && fill.kind === 'resourceRef') {
     const resource = resources.get(fill.id);
-    if (resource !== undefined && resource.kind === 'paint' && resource.spec.kind === 'image') {
-      fillImage(ctx, resource.spec, bbox, fillOpacity, options);
-      return;
+    if (resource !== undefined && resource.kind === 'paint') {
+      if (resource.spec.kind === 'image') {
+        fillImage(ctx, resource.spec, bbox, fillOpacity, options);
+        return;
+      }
+      if (
+        resource.spec.kind === 'linearGradient' ||
+        resource.spec.kind === 'radialGradient' ||
+        resource.spec.kind === 'conicGradient'
+      ) {
+        fillObjectGradient({
+          ctx,
+          spec: resource.spec,
+          bbox,
+          fillOpacity,
+          drawFill: () => ctx.fill(fillRule),
+          resolveStopColor: (color, opacity) =>
+            applyStopAlpha(resolveColor(color, options) ?? color, opacity, options.resolveCssColor),
+          warn: message => warnUnsupported(options, 'paint', message),
+        });
+        return;
+      }
     }
   }
-  const fillStyle = resolvePaintStyle(
-    ctx,
-    fill,
-    typeof stroke === 'string' ? stroke : undefined,
-    options,
-    resources,
-    bbox,
-  );
+  const fillStyle = resolvePaintStyle(ctx, fill, typeof stroke === 'string' ? stroke : undefined, options, resources);
   if (fillStyle === undefined) return;
   if (fillOpacity !== undefined) {
     ctx.save();
@@ -367,8 +332,37 @@ const strokeCurrentPath = (
   options: DrawOptions,
   resources: ResourceMap,
   bbox: BBox,
+  state: DrawState,
 ): void => {
-  const strokeStyle = resolvePaintStyle(ctx, stroke, undefined, options, resources, bbox);
+  let strokeStyle: string | CanvasGradient | CanvasPattern | undefined;
+  let gradientHandled = false;
+  if (stroke !== undefined && typeof stroke !== 'string' && stroke.kind === 'resourceRef') {
+    const resource = resources.get(stroke.id);
+    if (
+      resource?.kind === 'paint' &&
+      (resource.spec.kind === 'linearGradient' ||
+        resource.spec.kind === 'radialGradient' ||
+        resource.spec.kind === 'conicGradient')
+    ) {
+      gradientHandled = true;
+      const miterLimit = Number.isFinite(ctx.miterLimit) ? ctx.miterLimit : 10;
+      const effectiveStrokeWidth = strokeWidth ?? ctx.lineWidth;
+      const outset = (effectiveStrokeWidth / 2) * (ctx.lineJoin === 'miter' ? miterLimit : 1);
+      strokeStyle = buildGradientStrokeStyle({
+        ctx,
+        spec: resource.spec,
+        bbox,
+        createOffscreen: options.createOffscreen,
+        outset,
+        cache: state.gradientPatterns,
+        cacheKey: stroke.id,
+        resolveStopColor: (color, opacity) =>
+          applyStopAlpha(resolveColor(color, options) ?? color, opacity, options.resolveCssColor),
+        warn: message => warnUnsupported(options, 'paint', message),
+      });
+    }
+  }
+  if (!gradientHandled) strokeStyle = resolvePaintStyle(ctx, stroke, undefined, options, resources);
   if (strokeStyle === undefined) return;
   if (strokeOpacity !== undefined) ctx.save();
   ctx.strokeStyle = strokeStyle;
@@ -438,70 +432,62 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
 
 type Point = [number, number];
 
-const vecSub = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1]];
+type DrawableCommand = Exclude<PathCommand, { kind: 'move' | 'close' }>;
 
-const isZeroVec = (v: Point): boolean => v[0] === 0 && v[1] === 0;
+type DrawableSegment = {
+  command: DrawableCommand;
+  from: Point;
+};
+
+const drawableSegments = (commands: ReadonlyArray<PathCommand>): Array<DrawableSegment> => {
+  const segments: Array<DrawableSegment> = [];
+  let cursor: Point | null = null;
+  let subpathStart: Point | null = null;
+
+  for (const command of commands) {
+    if (command.kind === 'move') {
+      cursor = [command.to[0], command.to[1]];
+      subpathStart = cursor;
+      continue;
+    }
+    if (command.kind === 'close') {
+      cursor = subpathStart;
+      continue;
+    }
+
+    const from = cursor ?? (command.kind === 'arc' || command.kind === 'ellipseArc' ? commandArcStart(command) : null);
+    if (from) segments.push({ command, from });
+    cursor = commandEndpoint(command);
+    if (subpathStart === null && from) subpathStart = from;
+  }
+
+  return segments;
+};
 
 /**
  * 末端箭头定位：终点 + 入射切线角（指向终点的方向）
- * @description 带箭头的 path 末段恒为 line/cubic，故 cubic 用 to−control2、line/quad 退化为弦向；
- *   arc/ellipseArc 不会作为带箭头 path 末段，统一退化为前一端点的弦向。无法判向则角度取 0。
+ * @description 使用最后一条可绘制命令的几何终点与解析切线；无法判向则角度取 0。
  */
 const endArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
-  let lastIdx = -1;
-  for (let i = commands.length - 1; i >= 0; i--) {
-    if (commands[i].kind !== 'close') {
-      lastIdx = i;
-      break;
-    }
-  }
-  if (lastIdx < 0) return null;
-  const cmd = commands[lastIdx];
-  const vertex = commandEndpoint(cmd);
+  const segment = drawableSegments(commands).at(-1);
+  if (!segment) return null;
+  const vertex = commandEndpoint(segment.command);
   if (!vertex) return null;
-  let prevIdx = lastIdx - 1;
-  while (prevIdx >= 0 && commands[prevIdx].kind === 'close') prevIdx--;
-  const prev = prevIdx >= 0 ? commandEndpoint(commands[prevIdx]) : null;
-  let dir: Point | null = null;
-  if (cmd.kind === 'cubic') {
-    dir = vecSub(vertex, cmd.control2);
-    if (isZeroVec(dir)) dir = vecSub(vertex, cmd.control1);
-  } else if (cmd.kind === 'quad') {
-    dir = vecSub(vertex, cmd.control);
-  }
-  if ((dir === null || isZeroVec(dir)) && prev) dir = vecSub(vertex, prev);
-  const angle = dir !== null && !isZeroVec(dir) ? Math.atan2(dir[1], dir[0]) : 0;
+  const tangent = commandEndTangent(segment.command, segment.from);
+  const angle = tangent ? Math.atan2(tangent[1], tangent[0]) : 0;
   return { vertex, angle };
 };
 
 /**
  * 起点箭头定位：起点 + 离开切线角的反向（对应 SVG `orient="auto-start-reverse"`）
- * @description 起点后首段恒为 line/cubic，cubic 用 control1−起点、line/quad 退化为弦向；无法判向则角度取 0。
+ * @description 使用第一条可绘制命令的几何起点与解析切线；无法判向则角度取 0。
  */
 const startArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
-  if (commands.length === 0) return null;
-  let baseIdx = commands.findIndex(c => c.kind === 'move');
-  if (baseIdx < 0) baseIdx = 0;
-  const vertex = commandEndpoint(commands[baseIdx]);
-  if (!vertex) return null;
-  let nextIdx = baseIdx + 1;
-  while (nextIdx < commands.length && commands[nextIdx].kind === 'close') nextIdx++;
-  const next = nextIdx < commands.length ? commands[nextIdx] : undefined;
-  let dir: Point | null = null;
-  if (next) {
-    if (next.kind === 'cubic') {
-      dir = vecSub(next.control1, vertex);
-      if (isZeroVec(dir)) dir = vecSub(next.control2, vertex);
-    } else if (next.kind === 'quad') {
-      dir = vecSub(next.control, vertex);
-    }
-    if (dir === null || isZeroVec(dir)) {
-      const nextPt = commandEndpoint(next);
-      if (nextPt) dir = vecSub(nextPt, vertex);
-    }
-  }
-  const angle = dir !== null && !isZeroVec(dir) ? Math.atan2(dir[1], dir[0]) + Math.PI : 0;
-  return { vertex, angle };
+  const segment = drawableSegments(commands).at(0);
+  if (!segment) return null;
+  const tangent = commandStartTangent(segment.command, segment.from);
+  const angle = tangent ? Math.atan2(tangent[1], tangent[0]) + Math.PI : 0;
+  return { vertex: segment.from, angle };
 };
 
 /** marker-local fill 取值 → canvas 颜色：contextStroke 解析为线的 stroke（缺省回退当前 strokeStyle） */
@@ -682,27 +668,12 @@ const drawArrowMarker = (
   ctx.restore();
 };
 
-/** path commands 的轴对齐包围盒（曲线用控制点 / 弧用半径外接，gradient 映射够用；点集与 hydration 聚合几何共用 pathControlPoints） */
-const pathBBox = (commands: ReadonlyArray<PathCommand>): BBox => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const [x, y] of pathControlPoints(commands)) {
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-  }
-  if (minX > maxX) return { x: 0, y: 0, w: 0, h: 0 };
-  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
-};
-
 const drawPrim = (
   ctx: CanvasRenderingContext2D,
   p: ScenePrimitive,
   options: DrawOptions,
   resources: ResourceMap,
+  state: DrawState,
 ): void => {
   ctx.save();
   // 动画：把该 prim 的 tracks 在「有效时刻」应用到 ctx（transform / dash）并取覆盖后的 prim（opacity / 色 / 线宽）。
@@ -746,6 +717,7 @@ const drawPrim = (
                 w: p.width,
                 h: p.height,
               },
+              state,
             );
           }),
         ),
@@ -785,6 +757,7 @@ const drawPrim = (
                 w: 2 * p.rx,
                 h: 2 * p.ry,
               },
+              state,
             );
             if (shouldRestore) ctx.restore();
           }),
@@ -798,7 +771,7 @@ const drawPrim = (
             buildPath(ctx, p.commands);
             if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
             if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
-            const bbox = pathBBox(p.commands);
+            const bbox = pathBounds(p.commands);
             fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, bbox);
             strokeCurrentPath(
               ctx,
@@ -810,6 +783,7 @@ const drawPrim = (
               options,
               resources,
               bbox,
+              state,
             );
             if (p.arrowStart || p.arrowEnd) {
               const strokeWidth = p.strokeWidth ?? 1;
@@ -853,7 +827,7 @@ const drawPrim = (
       }
       const groupOpacity = 'opacity' in p && typeof p.opacity === 'number' ? p.opacity : undefined;
       withOpacity(ctx, groupOpacity, () => {
-        for (const child of p.children) drawPrim(ctx, child, options, resources);
+        for (const child of p.children) drawPrim(ctx, child, options, resources, state);
       });
       ctx.restore();
       break;
@@ -865,12 +839,13 @@ const drawPrim = (
 /** 绘制已编译 Scene 到 Canvas 2D context */
 export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: DrawOptions = {}): void => {
   const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
+  const state: DrawState = { gradientPatterns: new Map() };
   // 镜头：给定 time 且 scene 根有 viewBox track 时，先叠一层取景变换（包住全部 prim）
   const hasCamera = options.time !== undefined && (scene.animations ?? []).some(t => t.property === 'viewBox');
   if (hasCamera) {
     ctx.save();
     applySceneCamera(ctx, scene, options.time as number, options.easings);
   }
-  for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources);
+  for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources, state);
   if (hasCamera) ctx.restore();
 };

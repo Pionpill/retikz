@@ -93,6 +93,29 @@ describe('Canvas animation trigger helpers', () => {
     expect(restart).toHaveBeenCalledWith('box');
   });
 
+  it('preserves special-key ids without writing animation handlers to Object.prototype', () => {
+    const specialId = '__proto__';
+    const user = vi.fn();
+    const restart = vi.fn();
+    const specialScene: Scene = {
+      ...scene,
+      primitives: scene.primitives.map(primitive => ({ ...primitive, id: specialId })),
+    };
+    const handlers: HydrationHandlers = Object.fromEntries([[specialId, { click: user }]]);
+
+    try {
+      const merged = withCanvasAnimationEventHandlers(specialScene, handlers);
+
+      expect(Object.hasOwn(merged, specialId)).toBe(true);
+      expect(Object.hasOwn(Object.prototype, 'click')).toBe(false);
+      merged[specialId].click?.(new MouseEvent('click'), { ...context(restart), id: specialId, scene: specialScene });
+      expect(restart).toHaveBeenCalledWith(specialId);
+      expect(user).toHaveBeenCalledTimes(1);
+    } finally {
+      delete (Object.prototype as { click?: unknown }).click;
+    }
+  });
+
   it('maps an id bbox through meet-fit and detects viewport intersection', () => {
     const canvas = document.createElement('canvas');
     vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
