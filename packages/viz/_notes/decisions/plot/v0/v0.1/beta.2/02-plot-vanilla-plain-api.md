@@ -322,7 +322,7 @@ const spec = plot({
 
 - `PlotSpecSchema`、`PlotSpec`、`MarkOperation`、`Guide`（`packages/viz/plot/src/schemas/**`）——复用并保持 schema 真源，不新增平行 IR。
 - `buildPlotSpec()`（`packages/viz/plot-react/src/components/build-plot-spec.ts`）——保留 JSX 收集与 React sugar，替换重复 binding normalization。
-- `lowerPlots()`、`LowerPlotsOptions`（`packages/viz/plot/src/pipeline/expand.ts`）——adapter 和 `renderPlot()` 继续复用唯一 lowering 真源。
+- `lowerPlots()`、`LowerPlotsOptions`（`packages/viz/plot/src/pipeline/expand/`）——adapter 和 `renderPlot()` 继续复用唯一 lowering 真源。
 - `VanillaEmbedSpec`、`VanillaTier2Adapter`、`embed()`、`figure()`、`layer()`（`packages/kernel/vanilla/src/spec/**`）——复用 kernel vanilla plain spec 与 Tier2 嵌入协议。
 - `compileToScene()`（`@retikz/core`）与 `renderToSvgString()`（`@retikz/vanilla`）——`renderPlot()` 继续使用，不改 core compile / renderer。
 - `lowerPlotWithLineage()`（`packages/viz/plot/src/pipeline/lineage.ts`）——仅由现有 `renderPlot()` lineage 重载消费，本 ADR 不优化。

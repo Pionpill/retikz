@@ -89,5 +89,5 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 - **line / area 的顶点级具名锚点**：本 ADR `datum(i)` 给 line/area 顶点位置但不绑具名 id；逐顶点可连接锚点留后续。
 - **series bbox / 外接锚点**：本 ADR series 锚点取 centroid；bbox 留后续。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/features/interaction/locate.ts`、`packages/viz/plot/src/providers/mark/`、`packages/viz/plot/src/pipeline/expand.ts` 与 `packages/viz/plot/src/index.ts` public export，测试见 `packages/viz/plot/tests/features/interaction/locate.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/features/interaction/locate.ts`、`packages/viz/plot/src/providers/mark/`、`packages/viz/plot/src/pipeline/expand/` 与 `packages/viz/plot/src/index.ts` public export，测试见 `packages/viz/plot/tests/features/interaction/locate.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.5/02-datum-locator.md`（封板全文）。

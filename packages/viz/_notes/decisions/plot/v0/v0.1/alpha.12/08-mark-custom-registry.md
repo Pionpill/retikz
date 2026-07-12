@@ -19,7 +19,7 @@ Plot IR 增加 custom mark passthrough，`PlotSpec.marks` 接收 `MarkOperation`
 - `defineMark`
 - `options.markDefinitions`
 
-lowering 不再在所有阶段假设 mark 一定是内置 union 成员。`pipeline/expand.ts`、`interaction/locate.ts` 等对 mark 的读取改为类型无关访问：共享 encoding 的 x/y 仍参与 scale 推断；真正下沉时由 registry 找到 definition 并调用其 lower 逻辑。
+lowering 不再在所有阶段假设 mark 一定是内置 union 成员。`pipeline/expand/`、`interaction/locate.ts` 等对 mark 的读取改为类型无关访问：共享 encoding 的 x/y 仍参与 scale 推断；真正下沉时由 registry 找到 definition 并调用其 lower 逻辑。
 
 自定义 mark 的 runtime 逻辑不进入 IR。IR 只保存 `{ type, ...config }`。
 
@@ -39,7 +39,7 @@ lowering 不再在所有阶段假设 mark 一定是内置 union 成员。`pipeli
 - `packages/viz/plot/src/contract/mark.ts`
 - `packages/viz/plot/src/providers/mark/**`
 - `packages/viz/plot/src/schemas/mark/**`
-- `packages/viz/plot/src/pipeline/expand.ts`
+- `packages/viz/plot/src/pipeline/expand/`
 - `packages/viz/plot/src/features/interaction/locate.ts`
 
 验证覆盖：
