@@ -120,6 +120,33 @@ describe('transform schema', () => {
     ).toBe(false);
   });
 
+  it('limits annotate to selectors that return at most one row', () => {
+    const accepted = [
+      { kind: 'min', by: 'value' },
+      { kind: 'max', by: 'value', tie: 'last' },
+      { kind: 'first' },
+      { kind: 'last', orderBy: [{ field: 'value' }] },
+      { kind: 'nth', orderBy: [{ field: 'value' }], index: 1 },
+      { kind: 'top', by: 'value', n: 1 },
+      { kind: 'bottom', by: 'value', n: 1, tie: 'last' },
+    ];
+    const rejected = [
+      { kind: 'min', by: 'value', tie: 'all' },
+      { kind: 'max', by: 'value', tie: 'all' },
+      { kind: 'top', by: 'value', n: 2 },
+      { kind: 'top', by: 'value', n: 1, tie: 'all' },
+      { kind: 'outside-quantile-band', field: 'value', lowerP: 0.25, upperP: 0.75 },
+      { kind: 'custom-selector', field: 'value' },
+    ];
+
+    for (const selector of accepted) {
+      expect(AnnotateSelectorSchema.safeParse({ selector, as: 'annotation' }).success).toBe(true);
+    }
+    for (const selector of rejected) {
+      expect(AnnotateSelectorSchema.safeParse({ selector, as: 'annotation' }).success).toBe(false);
+    }
+  });
+
   it('rejects unknown keys on built-in transforms without blocking external config', () => {
     expect(() => TransformSchema.parse({ kind: 'sort', field: 'month', oder: 'descending' })).toThrow();
     expect(() =>

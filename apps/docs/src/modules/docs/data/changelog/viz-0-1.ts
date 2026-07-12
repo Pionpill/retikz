@@ -58,6 +58,16 @@ export const vizV01: Release = {
               },
             },
             {
+              label: {
+                zh: 'BREAKING：annotate selector 收紧为单行',
+                en: 'BREAKING: Annotate selectors are single-row',
+              },
+              content: {
+                zh: '`annotate.selectors` 只接受至多选中一行的内置 selector：min / max、first / last / nth，以及 `n: 1` 的 top / bottom；`tie="all"`、多行 top / bottom、outside-quantile-band 与自定义 selector 改用 `select`，自定义单值广播改写成 reducer。',
+                en: '`annotate.selectors` now accepts only built-in selectors that choose at most one row: min / max, first / last / nth, and top / bottom with `n: 1`. Move `tie="all"`, multi-row top / bottom, outside-quantile-band, and custom selectors to `select`; express custom scalar broadcasts as reducers.',
+              },
+            },
+            {
               label: { zh: 'IRDataXxx 公开类型命名', en: 'Owner-qualified IRDataXxx types' },
               content: {
                 zh: '`FieldDef`、`DataModel`、`DataRef`、`Transform` 等 schema 派生类型统一改为 `IRDataXxx`，旧名不保留兼容别名；JSON schema 与运行时行为不变。',

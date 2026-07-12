@@ -91,13 +91,15 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 `annotate` 先按 `groupBy` 分组，再把 reducer 结果或 selector 选中的代表值回填到组内每一行。它适合在明细点旁边画组均值线、组中位数带、分组阈值等上下文层。
 
+selector 标注只接受至多选中一行的内置规则：`min` / `max`、`first` / `last` / `nth`，以及固定 `n: 1` 的 `top` / `bottom`。平局策略可用默认的 `first` 或 `last`，不能用 `all`；多行选择、`outside-quantile-band` 和自定义 selector 应改用 `select`，需要广播自定义单值时改写成 reducer。
+
 <ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
 
-| prop        | 类型                                         | 默认值   | 说明                                                                                                              |
-| ----------- | -------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
-| `groupBy`   | `Array<string>?`                             | 全局单组 | 分组键，支持复合键                                                                                                |
-| `metrics`   | `Array<Reducer>?`                            | —        | 要广播回每行的统计指标                                                                                            |
-| `selectors` | `Array<{ selector: Selector; as: string }>?` | —        | 要广播回每行的代表行取值；`min` / `max` / `top` / `bottom` 读取 selector 的 `by` 字段，其余 selector 回填选中名次 |
+| prop        | 类型                             | 默认值   | 说明                   |
+| ----------- | -------------------------------- | -------- | ---------------------- |
+| `groupBy`   | `Array<string>?`                 | 全局单组 | 分组键，支持复合键     |
+| `metrics`   | `Array<Reducer>?`                | —        | 要广播回每行的统计指标 |
+| `selectors` | `Array<IRDataAnnotateSelector>?` | —        | 广播单行代表值         |
 
 ```tsx
 <Transform
@@ -110,7 +112,7 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 ## reducer 与 selector
 
-`summarize`、`annotate` 和 plot 注册的 `bin` 会复用 reducer；`select`、`annotate` 和 plot 注册的 `relate` 会复用 selector。
+`summarize`、`annotate` 和 plot 注册的 `bin` 会复用 reducer；`select`、`annotate` 和 plot 注册的 `relate` 会复用 selector。`select` 可使用完整 selector 集合，`annotate` 只使用上面的单行子集。
 
 | 子算子   | 返回什么 | 典型 kind                                                                             |
 | -------- | -------- | ------------------------------------------------------------------------------------- |

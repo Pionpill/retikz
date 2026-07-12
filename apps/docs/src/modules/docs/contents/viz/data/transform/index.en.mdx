@@ -91,13 +91,15 @@ Output names must be unique within one operation: summarize reducer outputs cann
 
 `annotate` groups rows first, then broadcasts reducer results or selected representative values back to every row in the group. It is useful for group mean lines, median bands, thresholds, or other contextual layers around detail rows.
 
+Selector annotations accept only built-in rules that select at most one row: `min` / `max`, `first` / `last` / `nth`, and `top` / `bottom` with `n: 1`. Tie handling may use the default `first` or `last`, but not `all`. Use `select` for multi-row selection, `outside-quantile-band`, or custom selectors; express a custom scalar annotation as a reducer.
+
 <ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
 
-| prop        | type                                         | default          | description                                                                                                         |
-| ----------- | -------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `groupBy`   | `Array<string>?`                             | one global group | Group key fields; supports composite keys                                                                           |
-| `metrics`   | `Array<Reducer>?`                            | —                | Statistical metrics to broadcast to every row                                                                       |
-| `selectors` | `Array<{ selector: Selector; as: string }>?` | —                | Representative values to broadcast; `min` / `max` / `top` / `bottom` read selector `by`, other selectors fill ranks |
+| prop        | type                             | default          | description                                   |
+| ----------- | -------------------------------- | ---------------- | --------------------------------------------- |
+| `groupBy`   | `Array<string>?`                 | one global group | Group key fields; supports composite keys     |
+| `metrics`   | `Array<Reducer>?`                | —                | Statistical metrics to broadcast to every row |
+| `selectors` | `Array<IRDataAnnotateSelector>?` | —                | Broadcast one representative                  |
 
 ```tsx
 <Transform
@@ -110,7 +112,7 @@ Output names must be unique within one operation: summarize reducer outputs cann
 
 ## Reducers And Selectors
 
-`summarize`, `annotate`, and plot-registered `bin` reuse reducers. `select`, `annotate`, and plot-registered `relate` reuse selectors.
+`summarize`, `annotate`, and plot-registered `bin` reuse reducers. `select`, `annotate`, and plot-registered `relate` reuse selectors. `select` accepts the complete selector set, while `annotate` uses only the single-row subset above.
 
 | sub-operator | returns        | typical ops                                                                           |
 | ------------ | -------------- | ------------------------------------------------------------------------------------- |
