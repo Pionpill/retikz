@@ -31,13 +31,13 @@ import { Arc, Sector } from '@retikz/react';
 
 角度从 +x 方向开始；`90` 指向屏幕下方。角度三选二：`startAngle` / `endAngle` / `sweepAngle`（扫掠角）任给两个即可，例如 `{ startAngle: 30, sweepAngle: 90 }`。`center` 接任意 target（节点 id / 极坐标 / 笛卡尔）。
 
-<ComponentPreview name="arc-basic" size="sm" />
+<ComponentPreview files="arc-basic" size="sm" />
 
 #### 视觉属性
 
 `<Arc>` 透传整套 `<Path>` 视觉属性：`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `marks` / `opacity` / `rotate` / `scale` 等。常见的有箭头弧（`arrow="->"`）、虚线弧（`dashPattern` / `dashOffset`）和中段方向标记（`marks`，朝向随切线）。
 
-<ComponentPreview name="arc-visual" size="sm" />
+<ComponentPreview files="arc-visual" size="sm" />
 
 #### 闭合方式
 
@@ -49,7 +49,7 @@ import { Arc, Sector } from '@retikz/react';
 | `'chord'`       | 两端点连弦闭合，成弓形 |
 | `'sector'`      | 两端连回圆心，成扇形   |
 
-<ComponentPreview name="arc-close" size="sm" />
+<ComponentPreview files="arc-close" size="sm" />
 
 #### 弧上标注
 
@@ -66,7 +66,7 @@ import { Arc, Sector } from '@retikz/react';
 | 加 `innerRadius`                           | 空心圆扇形   |
 | 加 `innerRadiusX` + `innerRadiusY`         | 空心椭圆扇形 |
 
-<ComponentPreview name="sector-basic" size="sm" />
+<ComponentPreview files="sector-basic" size="sm" />
 
 #### 圆心接节点、扇区标注
 
@@ -74,13 +74,13 @@ import { Arc, Sector } from '@retikz/react';
 
 > 空心扇形（给了内半径）需要计算内 / 外弧端点，`center` 仍须 literal 笛卡尔 `[x, y]`。
 
-<ComponentPreview name="sector-label" size="sm" />
+<ComponentPreview files="sector-label" size="sm" />
 
 #### 整体变换
 
 `rotate` / `scale` 透传到 `<Path>`，把整条扇形绕包围盒中心变换（免包 `<Scope>`）。`rotate` 让轴对齐椭圆扇形倾斜——这是目前画"斜椭圆扇形"的方式。
 
-<ComponentPreview name="sector-transform" size="sm" />
+<ComponentPreview files="sector-transform" size="sm" />
 
 ### API 参考
 
@@ -127,11 +127,11 @@ import { Node } from '@retikz/react';
 | sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | 环楔；`innerRadius:0` 为实心扇片  |
 | arc    | `{ radius, startAngle, endAngle, close? }`           | 单半径弧；`close:true` 闭合成弓形 |
 
-<ComponentPreview name="node-arc-sector" size="md" />
+<ComponentPreview files="node-arc-sector" size="md" />
 
 给 sector 的 `params.cornerRadius` 一个正数，会把环楔四个拐角（两条直边与内外弧的接缝）磨成圆角，省略 / `0` 是硬角。倒角是连接感知的：朝外弧方向的连线端点会落在圆角后的轮廓上。
 
-<ComponentPreview name="node-sector-corner-radius" size="md" />
+<ComponentPreview files="node-sector-corner-radius" size="md" />
 
 除节点的中心与 8 个方位 anchor（`center` / `top` …）外，这两个形状还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：
 

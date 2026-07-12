@@ -38,47 +38,47 @@ Use `<Step>` when you need exact control over Kernel path actions: multiple `mov
 
 The path below draws A→B with one `move` + `line`, then lifts the pen with another `move` to draw an independent line:
 
-<ComponentPreview name="step-basic" size="xs" />
+<ComponentPreview files="step-basic" size="xs" />
 
 ### Fold
 
 `kind="fold"` inserts a single right-angle corner between cursor and target. A flow-chart staple:
 
-<ComponentPreview name="step-fold" size="sm" />
+<ComponentPreview files="step-fold" size="sm" />
 
 ### Closing (cycle)
 
 `kind="cycle"` closes the current sub-path back to the most recent `move` target, matching SVG path `Z`. `cycle` carries **no** `to` field (the destination is implicit). Saves writing one explicit endpoint vs. drawing a `line` back to the start:
 
-<ComponentPreview name="step-cycle" size="sm" />
+<ComponentPreview files="step-cycle" size="sm" />
 
 ### Quadratic curve
 
 `kind="curve"` draws a quadratic Bezier with one control point, matching SVG path `Q`. A Bezier curve does not have to pass through the control point; the control point acts more like a handle that pulls the segment from start to end. The farther it is from the straight line, the stronger the bend. Control points currently use Cartesian `[x, y]`:
 
-<ComponentPreview name="step-curve" size="xs" />
+<ComponentPreview files="step-curve" size="xs" />
 
 ### Cubic curve
 
 `kind="cubic"` draws a cubic Bezier with two control points, matching SVG path `C`. `control1` shapes the direction as the curve leaves the start; `control2` shapes the direction as it approaches the end. Because both ends can be controlled separately, this is useful for S-shaped curves and complex connectors:
 
-<ComponentPreview name="step-cubic" size="xs" />
+<ComponentPreview files="step-cubic" size="xs" />
 
 ### Bend (arc shorthand)
 
 `kind="bend"` is shorthand for an arced connection: say whether the segment bends left or right while looking from start to end, plus an angle. The compiler computes control points and lowers it to a cubic Bezier. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
 
-<ComponentPreview name="step-bend" size="md" />
+<ComponentPreview files="step-bend" size="md" />
 
 ### Smooth curve through points (smooth)
 
 `kind="smooth"` draws a smooth curve **through a list of points** — no need to hand-compute Bézier control points for each segment when drawing a data polyline, a streamline, or a free curve. It takes no `to`; instead it takes `points`: the current **cursor is the implicit first knot**, the curve starts at the cursor and passes through each point in `points` in order, and the cursor ends at the last point (so a preceding `move` or other step must set the cursor, otherwise the path is skipped with a `PATH_TOO_SHORT` warning, same as `line` / `curve` as the first step). It is compiled to a chain of cubic Béziers via centripetal Catmull-Rom. Below, the same set of points drawn as `smooth` (steelblue) versus a point-to-point `line` polyline (gray):
 
-<ComponentPreview name="step-smooth" size="sm" />
+<ComponentPreview files="step-smooth" size="sm" />
 
 `tension` tunes the curve's slackness (TikZ `tension`): the default 1 is the standard centripetal Catmull-Rom, `<1` pulls the curve tauter (closer to a polyline), and `>1` makes it loopier. Whatever the value, the curve always passes through every point — only the per-segment tangent length changes:
 
-<ComponentPreview name="step-smooth-tension" size="sm" />
+<ComponentPreview files="step-smooth-tension" size="sm" />
 
 <ComponentAlert
   title="Vanilla form"
@@ -89,7 +89,7 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 `to` also accepts the **`{ of, offset }`** form — a base point plus an arbitrary `(dx, dy)`. `of` has three shapes — node id, Cartesian literal, or PolarPosition (recursive polar) — symmetric with `<Node position>`'s offset form:
 
-<ComponentPreview name="step-offset-target" size="sm" />
+<ComponentPreview files="step-offset-target" size="sm" />
 
 ### Relative coordinates (relative / relativeAccumulate)
 
@@ -100,31 +100,31 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+1,0" />`); the React adapter rewrites them in place to the matching IR objects. In the demo below, the two paths have identical step sequences and only the target form differs — the solid line (relative) traces an L, while the dashed line (relativeAccumulate) climbs a staircase:
 
-<ComponentPreview name="step-relative" size="sm" />
+<ComponentPreview files="step-relative" size="sm" />
 
 ### Arc
 
 `kind="arc"` draws an arc by start / end angle and radius — centered on the **cursor** by default, or on an explicit `center` (anchored independently of the cursor). Radius is one of two forms: `radius` for a circular arc, `radius={{ x, y }}` for an elliptical arc. It describes "sweep from this angle to that angle", needs no `to`, and is useful for angle marks, circle fragments, or geometric guides. Angles follow the retikz polar convention: 0° points to +x, 90° is visually downward. The pen ends at the arc's endpoint:
 
-<ComponentPreview name="step-arc" size="sm" />
+<ComponentPreview files="step-arc" size="sm" />
 
 ### Circle
 
 `kind="circlePath"` uses the **cursor as center** and draws a circle by `radius`. Without angles it draws a fully closed circle — the pen returns to the center after closing, useful for endpoint dots, circular node borders, etc. With `startAngle` + `endAngle` it draws a **partial circle** (half circle / segment), closed per `closed`: `'chord'` (default) / `'sector'` (connect to the center into a wedge) / `'open'` (pure unclosed arc):
 
-<ComponentPreview name="step-circle" size="xs" />
+<ComponentPreview files="step-circle" size="xs" />
 
 ### Ellipse
 
 `kind="ellipsePath"` uses the **cursor as center** and draws an ellipse by `radius={{ x, y }}`. Without angles it draws a fully closed ellipse — the pen returns to the center, and when `radius.x === radius.y` it degenerates into a circle. As with circlePath, `startAngle` + `endAngle` draw a **partial ellipse**, closed per `closed` (`'chord'` default / `'sector'` / `'open'`):
 
-<ComponentPreview name="step-ellipse" size="sm" />
+<ComponentPreview files="step-ellipse" size="sm" />
 
 ### Rectangle
 
 `kind="rectangle"` uses `from` and `to` as opposite corners of an axis-aligned rectangle; optional `cornerRadius` rounds the corners. Unlike `line`, it does not depend on the current cursor, which keeps it close to TikZ `(a) rectangle (b)`. For everyday rectangles prefer the `<Rectangle>` sugar in [Rectangle](/kernel/components/shapes/rectangle); use this low-level kind when authoring IR-like step sequences or mixing it with other step kinds.
 
-<ComponentPreview name="step-rectangle" size="sm" />
+<ComponentPreview files="step-rectangle" size="sm" />
 
 ### Edge label
 
@@ -139,13 +139,13 @@ Attach a `label` to a `<Step>` to drop a single line of text near the segment's 
 
 Two equivalent forms — the prop form `<Step label={{...}} />`, or the sugar form `<Step><EdgeLabel>...</EdgeLabel></Step>` (needs `import { EdgeLabel } from '@retikz/react'`); **the prop wins when both are set**. `'move'` / `'cycle'` / `'rectangle'` cannot carry a label — move doesn't draw, cycle is a close marker, and rectangle has no label field, so any label on them is silently dropped:
 
-<ComponentPreview name="step-label" />
+<ComponentPreview files="step-label" />
 
 #### Label color and font
 
 An edge label's color follows the owning path's **master `color`** — with `<Path color>` the label is auto-colored to match; setting only `stroke` (no `color`) does not, so the label keeps its default color. Use `textColor` to override explicitly, and `font` / `opacity` for smaller / faded secondary labels:
 
-<ComponentPreview name="step-label-color" size="sm" />
+<ComponentPreview files="step-label-color" size="sm" />
 
 A scope `labelDefault` gives a whole group of labels a shared default (see [Scope style inheritance](/kernel/components/layout/scope)); inheritance order: label explicit > `labelDefault` > host path master color > currentColor.
 
@@ -183,43 +183,43 @@ One set of t markers per kind below (`t=0.25` vs `midway`), confirming the geome
 
 **Line**
 
-<ComponentPreview name="edge-label-on-line" size="md" />
+<ComponentPreview files="edge-label-on-line" size="md" />
 
 **Fold**
 
 For fold, t is split by intermediate points rather than weighted by leg length; `A -| B` below shows keyword positions, and `A |- B` shows numeric positions.
 
-<ComponentPreview name="edge-label-on-fold" size="md" />
+<ComponentPreview files="edge-label-on-fold" size="md" />
 
 **Quadratic Bezier (curve)**
 
-<ComponentPreview name="edge-label-on-curve" size="sm" />
+<ComponentPreview files="edge-label-on-curve" size="sm" />
 
 **Cubic Bezier (cubic)**
 
-<ComponentPreview name="edge-label-on-cubic" size="sm" />
+<ComponentPreview files="edge-label-on-cubic" size="sm" />
 
 **Bend**
 
-<ComponentPreview name="edge-label-on-bend" size="sm" />
+<ComponentPreview files="edge-label-on-bend" size="sm" />
 
 **Arc**
 
-<ComponentPreview name="edge-label-on-arc" />
+<ComponentPreview files="edge-label-on-arc" />
 
 **Circle (circlePath)**
 
-<ComponentPreview name="edge-label-on-circle" size="lg" />
+<ComponentPreview files="edge-label-on-circle" size="lg" />
 
 **Ellipse (ellipsePath)**
 
-<ComponentPreview name="edge-label-on-ellipse" size="sm" />
+<ComponentPreview files="edge-label-on-ellipse" size="sm" />
 
 ### Styling
 
 `<Step>` itself has no stroke-related visual props — styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `dashPattern` / `dashOffset`:
 
-<ComponentPreview name="step-styling" size="sm" />
+<ComponentPreview files="step-styling" size="sm" />
 
 <Comparison target="tikz" title="Step and TikZ Path Syntax">
 

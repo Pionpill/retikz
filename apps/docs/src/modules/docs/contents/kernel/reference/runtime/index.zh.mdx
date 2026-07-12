@@ -5,7 +5,7 @@ description: 运行时参考——把 IR 编译成渲染目标无关绘制模型
 
 这一分组是从 IR 到画面的运行时管线。`compile` 是入口，吃 IR、吐出渲染目标无关的 Scene Primitive；Primitive 是那份与具体渲染器无关的绘制模型；Parser 是把 Sugar 输入转成 IR 片段的纯函数。自己驱动编译、写自定义渲染器、或复用 Sugar 解析逻辑时看这里。
 
-<ComponentPreview name="runtime-flow" size="sm" hideCode />
+<ComponentPreview files="runtime-flow" size="sm" hideCode />
 
 > 这里是参考层，不是组件文档；写图请从 [组件](/kernel/components/layout) 开始。
 

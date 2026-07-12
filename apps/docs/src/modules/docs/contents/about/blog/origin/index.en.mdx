@@ -9,7 +9,7 @@ tags: [design, origin]
 
 Here's the signature example from retikz v0.1—a unit circle, axes, ticks, a shaded wedge, sin / cos / tan curves, and an annotated info box, all in one figure:
 
-<ComponentPreview name="unit-circle" size="lg" />
+<ComponentPreview files="unit-circle" size="lg" />
 
 This is the final figure from the [karl-circle example](/kernel/examples/karl-circle). The example page breaks it into 7 progressive steps, starting from a single circle and building up.
 
@@ -94,7 +94,7 @@ shadcn / tailwindcss / recharts were all things I systematically learned during 
 
 v0.1 flipped the architecture inside out. At the center is an IR (a JSON-serialized graph description). All inputs (Sugar JSX / Kernel JSX / future text DSL / AI) translate to IR; all outputs (React + SVG / pure SVG / Canvas / Native / PDF) start from Scene:
 
-<ComponentPreview name="ir-centric" hideCode />
+<ComponentPreview files="ir-centric" hideCode />
 
 This architecture came out of extensive AI discussions—for instance, the iron rule "Sugar introduces no new capabilities" was settled only after long back-and-forth on "what happens to cross-platform support if Sugar can express things Kernel can't?"
 
@@ -134,11 +134,11 @@ Two concrete examples show what "prompt-driven remixing" looks like.
 
 The **Ask AI** button on any demo card sends the current figure to the in-site AI. Tweak the [karl-circle example](/kernel/examples/karl-circle)'s prompt with one extra line — "draw all six trig functions: add sec / csc / cot by their geometric definitions" — and the model adds a tangent line (carrying both sec and csc) plus a horizontal top tangent (cot), and expands the info card to six formulas:
 
-<ComponentPreview name="unit-circle-six" hideCode size="xxl" />
+<ComponentPreview files="unit-circle-six" hideCode size="xxl" />
 
 The [AI Expert Roadmap example](/kernel/examples/learning-path) is another comprehensive piece — a pixel-perfect retikz replica of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s intro.svg cover, exercising the RoadmapNode abstraction + AtPosition tight stacking + Draw way's line / curve / dashPattern / arrow / label combo:
 
-<ComponentPreview name="ai-roadmap" hideCode size="lg" />
+<ComponentPreview files="ai-roadmap" hideCode size="lg" />
 
 ## Looking Ahead
 
@@ -149,7 +149,7 @@ v0.1 delivered core + IR + Scene compiler. Going forward, v1.x / v2.x will push 
 
 Per the current roadmap, here's roughly how v0.1 onward is paced:
 
-<ComponentPreview name="roadmap" hideCode />
+<ComponentPreview files="roadmap" hideCode />
 
 Each version has its own theme—v0.2 adds Scope and Shape Registry, v0.3 advances renderer/runtime, Canvas, and animation runtime work, v0.4 can evaluate incremental rendering, Progressive IR, and more complex decorations, and domain packages continue after that. AI compatibility is solidified at every step.
 

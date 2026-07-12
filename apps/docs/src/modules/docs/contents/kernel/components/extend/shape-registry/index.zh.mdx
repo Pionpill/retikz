@@ -271,19 +271,19 @@ const scene = compileToScene(ir, { shapes: [createPolygonShape('hexagon', 6)] })
 
 `createPolygonShape(name, n)` 返回一个普通的 `ShapeDefinition` 对象。调用侧传入不同 `name`，就能把同一套几何逻辑注册成多个互不冲突的 shape。
 
-<ComponentPreview name="custom-shape" size="sm" />
+<ComponentPreview files="custom-shape" size="sm" />
 
 ### 带参形状：参数走 nested params
 
 上面的工厂把边数固化在闭包里，每种边数都要单独注册一个名字。把参数写进 `params` 而非 factory 闭包后，同一个注册形状 `ngon` 就能按 `{ type, params }` 生成不同变体——`{ sides: 3 }` 是三角、`{ sides: 5 }` 是五边、`{ sides: 6 }` 是六边，而参数随 IR 持久化（裸字符串只能表达无参形状）。每个计算函数末位都拿到已校验的 `params`，几何统一基于 `params.sides`。最右一个节点是 `scale={2}` 的六边形：`scaleParams` 原样返回 params，让 `sides` 这类计数不被 node `scale` 缩坏——它只放大节点尺寸，边数仍是 6：
 
-<ComponentPreview name="ngon" size="sm" />
+<ComponentPreview files="ngon" size="sm" />
 
 ### 多 primitive：子程序框
 
 `emit` 可以一次返回多个图元。下面的子程序框由一个外框和左右两条竖线组成，所以它返回 3 个 primitive。它的外轮廓仍然是矩形，因此 `circumscribe` / `boundaryPoint` / `anchor` 可以直接复用内置 rectangle：
 
-<ComponentPreview name="subroutine" size="xs" />
+<ComponentPreview files="subroutine" size="xs" />
 
 ### 语义端点：二极管
 
@@ -291,7 +291,7 @@ const scene = compileToScene(ir, { shapes: [createPolygonShape('hexagon', 6)] })
 
 这个例子的 `boundaryPoint` 会先判断 `toward` 在局部坐标里位于左侧还是右侧，再返回对应端点。`anchor` 也额外提供了 `input` / `output` 这两个语义锚点：
 
-<ComponentPreview name="diode" size="sm" />
+<ComponentPreview files="diode" size="sm" />
 
 ## 实现清单
 

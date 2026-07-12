@@ -11,7 +11,7 @@ retikz turns the DSL (React components or Vanilla JS) into IR first, then compil
   description="This chapter explains retikz's lower-level build chain. If you only want to draw your first figure, start with Get Started and the component docs, then come back when you need the IR / Scene boundary."
 />
 
-<ComponentPreview name="layers-pipeline" size="sm" hideCode />
+<ComponentPreview files="layers-pipeline" size="sm" hideCode />
 
 ## Three Layers
 
@@ -64,7 +64,7 @@ The adapter collects this JSX into IR. `@retikz/core` resolves positions, comput
 
 `@retikz/core` compiles in two passes, then finalizes the Scene. The text on each arrow marks the intermediate product handed to the next stage:
 
-<ComponentPreview name="layers-compile" size="xs" hideCode />
+<ComponentPreview files="layers-compile" size="xs" hideCode />
 
 - **layout nodes**: resolve each node / coordinate position, measure text, compute the bounding box and anchors per shape, and register them by name.
 - **resolve paths**: nodes settle first so paths can look up their endpoints from the name table and expand into path commands (`d`) — exactly the dependency the `anchors` arrow stands for.
@@ -87,7 +87,7 @@ Sugar expansion is called synchronously by the builder, so it must not depend on
 
 These three layers are split across four npm packages under `packages/kernel`, all built on top of `@retikz/core`. Solid arrows point to the primary build dependency; dashed arrows show that react / vanilla also depend on core directly.
 
-<ComponentPreview name="layers-packages" size="sm" hideCode />
+<ComponentPreview files="layers-packages" size="sm" hideCode />
 
 | Package           | Responsibility                                          | Depends on    |
 | ----------------- | ------------------------------------------------------- | ------------- |

@@ -8,7 +8,9 @@ import type { Transform } from '../types';
 export const PAN_STEP = 24;
 /** 缩放因子：放大 ×1.2 / 缩小 ÷1.2 */
 export const ZOOM_FACTOR = 1.2;
+/** 最小缩放比例。 */
 export const ZOOM_MIN = 0.25;
+/** 最大缩放比例。 */
 export const ZOOM_MAX = 4;
 
 /** 双指几何与距离仅用到 clientX / clientY，DOM Touch 与 React Touch 都满足 */

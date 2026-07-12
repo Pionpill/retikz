@@ -9,7 +9,7 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 
 ## 模型解剖
 
-<ComponentPreview name="node-model-layers" size="md" hideCode />
+<ComponentPreview files="node-model-layers" size="md" hideCode />
 
 <ComponentAlert
   type="tip"
@@ -30,7 +30,7 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 
 读这张图的顺序也就是编译顺序：
 
-<ComponentPreview name="node-model-pipeline" size="xs" hideCode />
+<ComponentPreview files="node-model-pipeline" size="xs" hideCode />
 
 外接框只包住 shape 的渲染结果，不含 `margin`。`margin` 是连接面外的一层偏移：它把**所有 border 锚点**（自动连线端点、显式 `.top` / `.30`）外推，节点在 viewBox / 布局里也按外推后的范围占位——视觉 shape 本身不变。
 
@@ -42,7 +42,7 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 - **内框**：在内容盒外加上 `padding`，再与 `minimumSize`取较大者，得到传给 shape 的基础半轴——对矩形节点来说，它就是画出来的 shape。
 - **外框**：在内框外再加 `margin`。它不改变视觉 shape，而是把节点的连接 / 引用边界外推——所有 border 锚点（自动连线端点和显式 `.top` 这类）都落在这一圈上，节点的布局占位 / viewBox 也按这一圈算。
 
-<ComponentPreview name="node-frames" size="md" hideCode />
+<ComponentPreview files="node-frames" size="md" hideCode />
 
 最内灰块是内容盒，中间虚线是内框（矩形节点的 shape），最外虚线是外框（border 锚点与连线端点停靠的外边界）。两道间距分别是 `padding`（撑在内容盒与 shape 之间、把 shape 顶大）和 `margin`（留在 shape 与外边界之间——shape 不变，但锚点 / 连线端点整体外移、布局占位也含它）。
 
@@ -64,7 +64,7 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 | 文本容器形状 | 文字 + padding + 最小尺寸 | rectangle、circle、ellipse、polygon、diamond |
 | 参数驱动形状 | shape params 自己决定几何 | sector、arc、star                            |
 
-<ComponentPreview name="shapes" size="md" hideCode />
+<ComponentPreview files="shapes" size="md" hideCode />
 
 灰块是内容盒、虚线是内框，这五个文本容器形状共享同一个内框，shape 以内框为准画出不同轮廓：rectangle 即内框，其余把它包得更大（circle / diamond 分别是 ellipse / polygon 的 preset）。参数驱动形状（sector / arc / star）的几何来自 params，不走这套内框逻辑。
 
@@ -76,7 +76,7 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 外接框（bounding box）和连接面（boundary）都是 shape 之外的一层包围面，但分工不同：外接框管布局与渲染占位，连接面管自动连线贴到哪。默认两者都跟随 shape，只有显式改 `boundary` 时才分开。
 
-<ComponentPreview name="bbox-boundary" size="sm" hideCode />
+<ComponentPreview files="bbox-boundary" size="sm" hideCode />
 
 两个节点是同一个 polygon shape（六边形）、同一个内框（最内虚线）和外接框（灰色虚线矩形），两侧完全相同。左边 `boundary="shape"`（默认），自动连线贴到多边形边缘；右边 `boundary="circle"`，连线改贴到蓝色虚线圆——注意这个圆可以伸出外接框。改 boundary 只挪 border 锚点贴的连接面，不动 shape、内框、外接框，也不动布局占位。
 
@@ -96,7 +96,7 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 `margin` 与连接面正交，二者一起定出外边界：**连接面定它的形状**（贴 shape，或借 circle / rectangle），**`margin` 定连接面离节点内部多远**。换句话说，`margin` 就是「连接面 ↔ 内部 shape」之间那段间距的旋钮——调大它，连接面连同所有 border 锚点、自动连线端点会一起离开 shape，相当于给整个节点套一圈连接留白；缺省 0 时连接面紧贴 shape。这段间距在[盒模型](#盒模型)的外框图里就是 `margin` 那一圈。
 
-<ComponentPreview name="margin-boundary-gap" size="md" hideCode />
+<ComponentPreview files="margin-boundary-gap" size="md" hideCode />
 
 每列从内到外三层：最内灰块是文本区（内容盒），currentColor 实线是 shape（内框，矩形节点画出来的就是它），虚线是连接面（boundary），灰点是落在连接面上的命名方位锚点。左、中是默认 `boundary="shape"`：`margin` 越大，连接面连同锚点离 shape 越远，shape 和文本区都不变。右是 `boundary="circle"`：`margin` 同样把连接面从 shape 推开（圆半径 = 较长半轴 + `margin`），但外边界的**形状**由 `boundary` 决定。中、右 `margin` 相同、boundary 不同——正好印证「`margin` 定多远、连接面定形状」。
 
@@ -112,7 +112,7 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 | shape 专属点 | star 的尖角、sector 的圆弧端点       | 复杂形状的语义连接       |
 | 边比例点     | `{ side: 'top', fraction: 0.25 }`    | 表格、泳道、框图边缘定位 |
 
-<ComponentPreview name="anchors" size="lg" hideCode />
+<ComponentPreview files="anchors" size="lg" hideCode />
 
 上排都用最常见的矩形：左边是固定的 8 个方位 anchor（外加 `center`）；右边是角度 anchor（`A.30`，沿 30° 射线打到边界）和边比例 anchor（`{ side: 'top', fraction: 0.25 }`，top 边左→右取 1/4 处）。下排是几种自带 shape 专属点的非矩形形状：star 的 `tip-N` 尖角（另有 `notch-N` 凹角）、sector 的 `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`、arc 的 `start` / `arc-mid` / `end`。这些专属点用对象形态引用，如 `{ id: 'A', anchor: 'tip-0' }`。
 

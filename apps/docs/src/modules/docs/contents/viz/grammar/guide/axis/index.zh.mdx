@@ -11,7 +11,7 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 
 最小结构是在 `<Plot>` 里显式列出要画的 x / y 轴。下面的 demo 里，y 轴加了网格和目标刻度数；源码、IR 和 Vanilla 写法都可以在 demo 面板里切换查看。
 
-<ComponentPreview name="axis-cartesian" sourceFiles={['axis-cartesian.data.ts']} />
+<ComponentPreview files={['axis-cartesian', 'axis-cartesian.data.ts']} />
 
 ## 例子
 
@@ -19,19 +19,19 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 
 轴标题属于 `<Axis>`，因为它跟随某个 scale 的方向和位置。整张图的标题、说明这类静态文案用 `<TitleLabel>`、`<CaptionLabel>` 声明；内容可以写在 `text` prop，也可以像 core 的 `<Node>` 一样用 `<Text>` 子元素组织多行样式，并由 `layout.autoPadding` 决定是否自动预留空间。
 
-<ComponentPreview name="axis-plot-labels" sourceFiles={['axis-plot-labels.data.ts']} />
+<ComponentPreview files={['axis-plot-labels', 'axis-plot-labels.data.ts']} />
 
 ### 样式槽位
 
 `line` 控制轴线；`ticks` 控制刻度来源、长度和刻度线样式；`tickLabels` 控制刻度文字是否显示和文字样式；`title` 是轴标题，支持字符串或结构化文本；`grid` 可以是布尔值，也可以带线条样式与独立刻度来源。`dashOffset` 与 `dashPattern` 配合时，可以调整虚线起点。
 
-<ComponentPreview name="axis-style-slots" sourceFiles={['axis-style-slots.data.ts']} />
+<ComponentPreview files={['axis-style-slots', 'axis-style-slots.data.ts']} />
 
 ### 网格来源
 
 默认情况下，`grid: true` 会复用当前轴的可见 tick。需要轴上只显示少量刻度、但背景网格更密时，可以给 `grid.ticks` 单独配置 `values`、`interval` 或 `count`；`grid.density` 只抽稀网格，不会改变轴 tick。`grid.minor` 用来画次网格，和主网格重合的位置会自动跳过。
 
-<ComponentPreview name="axis-grid-source" sourceFiles={['axis-grid-source.data.ts']} />
+<ComponentPreview files={['axis-grid-source', 'axis-grid-source.data.ts']} />
 
 ### 刻度密度
 
@@ -43,7 +43,7 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 | `density`  | `{ kind:'all' }` / `{ kind:'sample', maxCount?, minGap?, preserveEnds? }`                                                                       | 从候选 tick 中抽稀可见 tick |
 | `mark`     | `false` / `{ kind:'line', length?, line? }` / `{ kind:'circle' \| 'square' \| 'triangle' \| 'diamond', ... }` / `{ kind:'custom', shape, ... }` | 控制刻度标记外观            |
 
-<ComponentPreview name="axis-tick-density" sourceFiles={['axis-tick-density.data.ts']} />
+<ComponentPreview files={['axis-tick-density', 'axis-tick-density.data.ts']} />
 
 ### 刻度文字避让
 
@@ -56,7 +56,7 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 | `layout.bounds`     | `false` / `{ overflow:'allow' \| 'hide' \| 'flush', tolerance? }`         | 处理首尾文字超出轴范围的情况                            |
 | `layout.sampleSize` | `number`                                                                  | 限制自动旋转估算时扫描的 label 数量                     |
 
-<ComponentPreview name="axis-tick-label-layout" sourceFiles={['axis-tick-label-layout.data.ts']} />
+<ComponentPreview files={['axis-tick-label-layout', 'axis-tick-label-layout.data.ts']} />
 
 ### 原点轴
 
@@ -71,13 +71,13 @@ cartesian 下可以让轴线穿过另一维的指定值。`placement.kind="origi
 | `title.placement`   | `'at-start'` / `'near-start'` / `'midway'` / `'near-end'` / `'at-end'` / `0..1` | 沿轴线从负方向到正方向放置标题                                                                 |
 | `title.orientation` | `'auto'` / `'horizontal'` / `'axis'`                                            | 控制标题旋转；数学坐标系常用 `horizontal` 让 y 标题正向显示                                    |
 
-<ComponentPreview name="axis-math-origin" sourceFiles={['axis-math-origin.data.ts']} />
+<ComponentPreview files={['axis-math-origin', 'axis-math-origin.data.ts']} />
 
 ### polar 轴
 
 polar 下用 `dimension="x"`（角向刻度标签）和 `dimension="y"`（径向刻度 + 同心环网格）。雷达 / 极坐标图常两条一起用。
 
-<ComponentPreview name="axis-polar" sourceFiles={['axis-polar.data.ts']} />
+<ComponentPreview files={['axis-polar', 'axis-polar.data.ts']} />
 
 <p className="text-sm text-muted-foreground">x 轴在 polar 中标角向维度，y 轴加 grid 画同心环。</p>
 

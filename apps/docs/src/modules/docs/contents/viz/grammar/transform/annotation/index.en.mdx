@@ -16,7 +16,7 @@ Group statistic broadcasting is a data capability; see [Data Transforms / annota
 
 `stack` accumulates values within each `x` group by series, adding lower and upper bounds to every row. The default output is `y0` / `y1`, matching `IntervalMark` interval consumption.
 
-<ComponentPreview name="transform-stack" sourceFiles={['transform-stack.data.ts']} />
+<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} />
 
 `<IntervalMark stack>` / `<IntervalMark angle>` auto-stacking is shorthand. When a matching explicit `stack` already exists in the pipeline, auto-stacking is suppressed to avoid stacking twice.
 
@@ -31,7 +31,7 @@ Group statistic broadcasting is a data capability; see [Data Transforms / annota
 
 `normalize` divides each row's value by the total of its group, yielding a within-group share. `basis` can be `fraction` (0 to 1) or `percent` (0 to 100); when `as` is omitted, the input field is overwritten.
 
-<ComponentPreview name="transform-normalize" sourceFiles={['transform-normalize.data.ts']} />
+<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} />
 
 Normalize followed by stack gives a percent stack: first convert every group to shares, then stack those shares.
 

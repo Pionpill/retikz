@@ -9,7 +9,7 @@ tags: [设计, 起点]
 
 先看 retikz v0.1 版本的标志性例子——单位圆 + 坐标轴 + 刻度 + 阴影楔形 + `sin / cos / tan` 函数线 + 一个带标注的信息框，全在一张图：
 
-<ComponentPreview name="unit-circle" size="lg" />
+<ComponentPreview files="unit-circle" size="lg" />
 
 这是 [karl-circle 示例](/kernel/examples/karl-circle)的最终图。示例页把它拆成 7 步演进，从一个圆开始一步步搭出来。
 
@@ -94,7 +94,7 @@ shadcn / tailwindcss / recharts 这几个其实都是重做 v0.1 期间才系统
 
 v0.1 把架构整个翻过来——核心是一份 IR（JSON 序列化的图描述），所有输入（Sugar JSX / Kernel JSX / 未来的 text DSL / AI）都翻译成 IR，所有输出（React + SVG / 纯 SVG / Canvas / Native / PDF）都从 Scene 出发：
 
-<ComponentPreview name="ir-centric" hideCode />
+<ComponentPreview files="ir-centric" hideCode />
 
 这套架构是和 AI 深入讨论得出的结论——比如「Sugar 不引入新能力」这条铁律，最初是反复推敲「Sugar 能表达 Kernel 表达不了的东西的话，跨平台会怎样」才定下来的。
 
@@ -134,11 +134,11 @@ v0.1 把架构整个翻过来——核心是一份 IR（JSON 序列化的图描�
 
 任何 demo 卡片右上角的 **Ask AI** 都把当前图喂给站内 AI——把 [karl-circle 示例](/kernel/examples/karl-circle) 的 prompt 加一句「画齐六个三角函数：把 sec / csc / cot 也按几何定义画出来」，模型在原图基础上加一条切线（同时承担 sec / csc 两段）+ 一条顶部水平切线（cot），右侧信息框扩到 6 个公式：
 
-<ComponentPreview name="unit-circle-six" hideCode size="xxl" />
+<ComponentPreview files="unit-circle-six" hideCode size="xxl" />
 
 [AI 专家路线图示例](/kernel/examples/learning-path) 则是另一个综合例——按坐标 1:1 复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面，演示 RoadmapNode 抽象 + AtPosition 紧贴堆叠 + Draw way 的 line / curve / dashPattern / arrow / label 一套组合：
 
-<ComponentPreview name="ai-roadmap" hideCode size="lg" />
+<ComponentPreview files="ai-roadmap" hideCode size="lg" />
 
 ## 未来畅想
 
@@ -149,7 +149,7 @@ v0.1 落了 core + IR + Scene 编译器；接下来 v1.x / v2.x 想往两个方�
 
 按目前路线图，v0.1 到未来大概是这样推进：
 
-<ComponentPreview name="roadmap" hideCode />
+<ComponentPreview files="roadmap" hideCode />
 
 每个版本各有命题——v0.2 加 Scope 与 Shape Registry，v0.3 推进 renderer/runtime、Canvas 与动画运行时，v0.4 再评估增量渲染、Progressive IR 与更复杂的 decorations，1.x 之后继续扩展 domain 包。每一步把 AI 适配做扎实。
 

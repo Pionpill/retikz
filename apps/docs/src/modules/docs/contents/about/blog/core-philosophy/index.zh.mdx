@@ -7,7 +7,7 @@ tags: [架构, 设计]
 
 ## 三层架构
 
-<ComponentPreview name="pipeline" hideCode />
+<ComponentPreview files="pipeline" hideCode />
 
 四路输入——Sugar JSX、Kernel JSX、远期的 Text DSL、AI / LLM——最终都翻成同一份 IR；IR 编译成 Scene 后，由各 adapter 分流到 React + SVG、纯 SVG 字符串、Canvas（再栅格化为 PNG / JPEG / WebP）、Native（Skia / RN）或 PDF。IR 与"持久化 / 编辑"之间是双向箭头：它是可读写的持久层，所有用户编辑、AI patch、序列化保存都在这一层完成。
 

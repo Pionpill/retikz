@@ -8,10 +8,12 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib';
 
-import { ToolbarIconButton } from './parts';
+import { ToolbarIconButton } from '../components';
 
 export type PreviewToolbarProps = {
+  /** 工具栏内容。 */
   children: ReactNode;
+  /** 容器附加样式。 */
   className?: string;
 };
 
@@ -32,12 +34,19 @@ export const PreviewToolbar: FC<PreviewToolbarProps> = props => {
 };
 
 export type PreviewToolbarButtonProps = {
+  /** 无障碍标签。 */
   label: string;
+  /** 鼠标提示，默认复用标签。 */
   title?: string;
+  /** 当前是否处于按下状态。 */
   pressed?: boolean;
+  /** 当前是否禁用。 */
   disabled?: boolean;
+  /** 按钮附加样式。 */
   className?: string;
+  /** 按钮图标或内容。 */
   children: ReactNode;
+  /** 点击按钮时执行的动作。 */
   onClick: () => void;
 };
 
@@ -60,7 +69,9 @@ export const PreviewToolbarButton: FC<PreviewToolbarButtonProps> = props => {
 };
 
 export type PreviewToolbarSeparatorProps = {
+  /** 分隔线方向。 */
   orientation?: 'horizontal' | 'vertical';
+  /** 分隔线附加样式。 */
   className?: string;
 };
 
@@ -102,15 +113,22 @@ const useReleaseSelectDocumentLock = (open: boolean): void => {
 };
 
 export type PreviewToolbarSelectOption = {
+  /** 写入 runtime 的选项值。 */
   value: string;
+  /** 展示给用户的选项文本。 */
   label: string;
 };
 
 export type PreviewToolbarSelectProps = {
+  /** 选择器无障碍标签。 */
   label: string;
+  /** 当前选项值。 */
   value: string;
+  /** 可选值集合。 */
   options: Array<PreviewToolbarSelectOption>;
+  /** 选择器附加样式。 */
   className?: string;
+  /** 选项变化回调。 */
   onValueChange: (value: string) => void;
 };
 
@@ -149,10 +167,15 @@ export const PreviewToolbarSelect: FC<PreviewToolbarSelectProps> = props => {
 };
 
 export type PreviewToolbarInputProps = {
+  /** 输入框无障碍标签。 */
   label: string;
+  /** 当前输入值。 */
   value: string;
+  /** 空值提示。 */
   placeholder?: string;
+  /** 输入框附加样式。 */
   className?: string;
+  /** 输入值变化回调。 */
   onValueChange: (value: string) => void;
 };
 
@@ -173,15 +196,22 @@ export const PreviewToolbarInput: FC<PreviewToolbarInputProps> = props => {
 };
 
 export type PreviewToolbarToggleOption = {
+  /** 写入 runtime 的选项值。 */
   value: string;
+  /** 展示给用户的选项文本。 */
   label: string;
 };
 
 export type PreviewToolbarToggleGroupProps = {
+  /** 切换组无障碍标签。 */
   label: string;
+  /** 当前选项值。 */
   value: string;
+  /** 可选值集合。 */
   options: Array<PreviewToolbarToggleOption>;
+  /** 切换组附加样式。 */
   className?: string;
+  /** 选项变化回调。 */
   onValueChange: (value: string) => void;
 };
 

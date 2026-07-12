@@ -35,7 +35,7 @@ The plainest way to anchor "a named point" is to fake an empty `<Node>` with `st
 
 The most common pattern: name a virtual center, then have multiple nodes position around it and multiple paths terminate at it.
 
-<ComponentPreview name="coordinate-as-anchor" size="md" />
+<ComponentPreview files="coordinate-as-anchor" size="md" />
 
 The four nodes above all use `position={{ of: 'hub', ... }}` to reference the same hub; moving hub moves the whole arrangement. Without a coordinate, each `of` would have to be replaced with absolute coordinates and each path would need `[0, 0]` literals — repetitive and unrenameable.
 
@@ -43,19 +43,19 @@ The four nodes above all use `position={{ of: 'hub', ... }}` to reference the sa
 
 In flow charts, multiple paths often converge at a virtual point — that point isn't a real node (no rectangle / no text), but it needs an id so several `way`s can route through it.
 
-<ComponentPreview name="coordinate-fold-junction" size="sm" />
+<ComponentPreview files="coordinate-fold-junction" size="sm" />
 
 ### Offset positioning chain
 
 Use `{ of, offset }` to derive one coordinate from another — drive the whole group from a single root, and moving the root drags everything along. Lower coupling than hand-writing each absolute coordinate:
 
-<ComponentPreview name="coordinate-offset-chain" size="sm" />
+<ComponentPreview files="coordinate-offset-chain" size="sm" />
 
 ### Proportional partway positioning
 
 `{ between: [A, B], fraction }` takes a point along the A→B segment at proportion `fraction` (0..1) — `lerp(A, B, fraction)`, matching TikZ `($(A)!t!(B)$)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
 
-<ComponentPreview name="coordinate-between" size="xs" />
+<ComponentPreview files="coordinate-between" size="xs" />
 
 > `fraction` is strict [0,1] (extrapolation not yet supported); when an endpoint references an undefined node, Coordinate / Node position resolution throws while a path `Step.to` warns and skips — the same as other positioning forms.
 

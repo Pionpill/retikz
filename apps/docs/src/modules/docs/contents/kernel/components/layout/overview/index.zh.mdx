@@ -40,13 +40,13 @@ import { Layout } from '@retikz/react';
 
 ### 基础
 
-<ComponentPreview name="layout-basic" size="xs" />
+<ComponentPreview files="layout-basic" size="xs" />
 
 ### 全图默认样式
 
 `<Layout>` 直接接受 [`<Scope>`](/kernel/components/layout/scope) 的级联样式子集（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`）。设了任一样式 prop，Layout 会把 children 包进一个**隐式根 `<Scope>`**，省掉每张图都套一层根 `<Scope>` 的样板。内层 `<Scope>` 与图元显式属性照常级联覆盖。
 
-<ComponentPreview name="layout-scope-style" size="sm" />
+<ComponentPreview files="layout-scope-style" size="sm" />
 
 ```tsx
 // 给整张图设默认样式：不用再手写嵌套 <Scope>
@@ -69,7 +69,7 @@ import { Layout } from '@retikz/react';
 
 `<Layout>` 接受 `ir` prop——直接把一段已持久化的 IR JSON 渲染成图，**不写一行 JSX children**。来源不限：LLM 生成、JSON 编辑器、URL 反序列化、数据库存档都可以。
 
-<ComponentPreview name="layout-from-ir" size="xs" />
+<ComponentPreview files="layout-from-ir" size="xs" />
 
 需要在 DSL 与 IR 之间互转时，配 `convertReactNodeToIR` / `convertIRToReactNode` 做双向桥：
 
@@ -91,7 +91,7 @@ const ir = convertReactNodeToIR(
 
 默认 `viewBox` 由内容自动算（AABB + padding）。传 `viewBox={{ x, y, width, height }}` 显式定死视框——固定尺寸、故意裁剪、多图对齐、排除溢出都靠它。有 viewBox 则覆盖自动算、忽略 padding；`width` / `height` 必须 > 0。
 
-<ComponentPreview name="layout-viewbox" size="md" />
+<ComponentPreview files="layout-viewbox" size="md" />
 
 ### 渲染后端（SVG / Canvas）
 

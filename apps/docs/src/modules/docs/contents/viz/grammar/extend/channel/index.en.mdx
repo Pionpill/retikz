@@ -9,7 +9,7 @@ In the React DSL, custom channel bindings live on the mark's `channels` prop, fo
 
 The demo below defines `intensity`: it reads the `score` field, maps values into `[0.3, 1]`, then delivers the result to core `IRNode.opacity`. The definition does not check `mark.type`; whether a mark consumes Node / Path / Scope channels belongs to the mark definition.
 
-<ComponentPreview name="custom-channel" size="md" />
+<ComponentPreview files="custom-channel" size="md" />
 
 The definition is runtime capability. Built-in and custom channels are merged into one registry, then routed by definition kind into the position / mark / scope / node / path consumption path.
 

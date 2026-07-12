@@ -9,7 +9,7 @@ Color scales map a data value to a color, consumed by the `color` channel. By in
 
 Bind `color` to a categorical field and `<Plot>` derives `ordinal` — one discrete color per category. It is also how multi-series coloring works: without an explicit series, a categorical color field implicitly splits the data into multiple series.
 
-<ComponentPreview name="scale-ordinal" sourceFiles={['scale-ordinal.data.ts']} />
+<ComponentPreview files={['scale-ordinal', 'scale-ordinal.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   color bound to categorical city → ordinal; each city takes one color, implicitly split into two lines.
@@ -51,7 +51,7 @@ A sequential scale is a **continuous** band (smooth gradient). But many cases wa
 
 Each bin's color reuses the named schemes above — N discrete colors are sampled at evenly spaced points along one continuous band (e.g. `scheme: 'blues'` sampled into 5 bins); or give a `range` array to override the scheme, where the array length is the bin count.
 
-<ComponentPreview name="scale-quantize" sourceFiles={['scale-discretization.data.ts']} />
+<ComponentPreview files={['scale-quantize', 'scale-discretization.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   quantize, 5 bins: continuous density cut into 5 equal-width bins, each taking one sampled color off blues.

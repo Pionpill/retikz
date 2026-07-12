@@ -9,7 +9,7 @@ description: 动画的缓动曲线与属性通道都开放——注册自定义 
 
 `<Layout easings={{ 名字: 曲线 }}>` 注册缓动；preset 或 track 的 `easing` 写该名字即生效：
 
-<ComponentPreview name="custom-easing" size="xs" />
+<ComponentPreview files="custom-easing" size="xs" />
 
 ```tsx
 <Layout easings={{ spring: [0.34, 1.56, 0.64, 1] }}>
@@ -30,7 +30,7 @@ description: 动画的缓动曲线与属性通道都开放——注册自定义 
 
 `property` 也开放：注册一个通道名 + 它的插值器与应用方式，就能动内置之外的属性（如 `blur` 滤镜）。与缓动不同，自定义属性通道用 `AnimationPropertyDefinition`——它要同时定义插值与后端落地，单个值表达不了。下面注册 `blur` 并做一个入场去焦（点左上角 ↺ 重播）：
 
-<ComponentPreview name="custom-property" size="xs" />
+<ComponentPreview files="custom-property" size="xs" />
 
 `AnimationPropertyDefinition`：
 

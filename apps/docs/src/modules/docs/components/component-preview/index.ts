@@ -1,7 +1,13 @@
-export * from './ComponentPreview';
-export * from './ComponentRender';
-export * from './components';
-export * from './context';
-export * from './registry';
-export * from './types';
-export * from './utils';
+export type { ComponentPreviewProps } from './ComponentPreview';
+export { ComponentPreview } from './ComponentPreview';
+export type { ComponentPreviewCardProps } from './ComponentPreviewCard';
+export { ComponentPreviewCard } from './ComponentPreviewCard';
+export type {
+  ComponentPreviewFile,
+  ComponentPreviewFiles,
+  ComponentRenderSource,
+  DiffLineKind,
+  PreviewControlConfig,
+  PreviewSourceConfig,
+} from './types';
+export { formatIR } from './utils';

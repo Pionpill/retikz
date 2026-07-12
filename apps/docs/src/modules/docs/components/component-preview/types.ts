@@ -55,6 +55,14 @@ export type PreviewControlSlot = {
   render: (runtime: PreviewControlRuntime) => ReactNode;
 };
 
+/** 预览动作插槽。 */
+export type PreviewActionSlot = {
+  /** 稳定 id。 */
+  id: string;
+  /** 根据当前预览运行时渲染动作内容。 */
+  render: (runtime: PreviewControlRuntime) => ReactNode;
+};
+
 /** 预览控件选项。 */
 export type PreviewControlOption = {
   /** 写入预览状态的值。 */
@@ -98,6 +106,28 @@ export type AlignKey = 'center' | 'start' | 'end';
 /** 预览区高度档位。 */
 export type SizeKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | 'xxxl';
 
+/** ComponentPreview 使用的单个源码文件对象配置。 */
+export type ComponentPreviewFileConfig = {
+  /** 主 demo id 或相对当前页面目录的附加源码文件名。 */
+  file: string;
+  /** 当前文件使用的 diff baseline。 */
+  diffFrom?: string;
+};
+
+/** ComponentPreview 使用的单个源码文件输入。 */
+export type ComponentPreviewFile = string | ComponentPreviewFileConfig;
+
+/** ComponentPreview 的主 demo 与附加源码文件配置。 */
+export type ComponentPreviewFiles =
+  | ComponentPreviewFile
+  | readonly [ComponentPreviewFile, ...Array<ComponentPreviewFile>];
+
+/** demo 模块声明的源码派生能力。 */
+export type PreviewSourceConfig = {
+  /** 是否允许直接执行 demo 以自动派生 IR。 @default true */
+  deriveIR?: boolean;
+};
+
 /** unified diff 中单行的种类：未变 / 新增 / 删除。 */
 export type DiffLineKind = 'context' | 'added' | 'removed';
 
@@ -128,6 +158,8 @@ export type ComponentSourceFile = {
 export type SourceViewData = {
   /** 该视图的源码文件。 */
   files: Array<ComponentSourceFile>;
+  /** 该视图固定使用的渲染目标；缺省时跟随预览面板的局部选择。 */
+  rendererMode?: RendererMode;
   /** 用对应 runtime 渲染该视图的产物；缺省则复用 React demo 渲染。 */
   render?: (mode: RendererMode) => ReactNode;
 };

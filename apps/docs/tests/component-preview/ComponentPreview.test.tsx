@@ -5,7 +5,8 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import i18n from '@/i18n';
-import { ComponentPreview, DemoLocationContext } from '@/modules/docs/components';
+import { ComponentPreview } from '@/modules/docs/components';
+import { DemoLocationContext } from '@/modules/docs/components/component-preview/context';
 
 /**
  * 切页失步误报回归：旧 MDX 内容在过渡窗口里仍挂载，而实时路由已指向新页。
@@ -32,7 +33,7 @@ const renderAtRoute = (path: string, node: ReactNode): string =>
 
 describe('ComponentPreview demo 目录解析（切页失步回归）', () => {
   it('无 DemoLocationContext 时按实时路由目录解析（基线）', () => {
-    const html = renderAtRoute('/core/components/pageA', <ComponentPreview name={MISSING} />);
+    const html = renderAtRoute('/core/components/pageA', <ComponentPreview files={MISSING} />);
     expect(html).toContain(`contents/core/components/pageA/${MISSING}.demo.tsx`);
   });
 
@@ -40,7 +41,7 @@ describe('ComponentPreview demo 目录解析（切页失步回归）', () => {
     const html = renderAtRoute(
       '/core/components/pageA',
       <DemoLocationContext.Provider value={['core', 'components', 'pageB']}>
-        <ComponentPreview name={MISSING} />
+        <ComponentPreview files={MISSING} />
       </DemoLocationContext.Provider>,
     );
     // 内容属于 pageB、路由已切到 pageA：目录必须取 context 的 pageB

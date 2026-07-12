@@ -9,7 +9,7 @@ An [animation](/kernel/components/effects/animation)'s `easing` and `property` a
 
 `<Layout easings={{ name: curve }}>` registers an easing; a preset's or track's `easing` referencing that name takes effect:
 
-<ComponentPreview name="custom-easing" size="xs" />
+<ComponentPreview files="custom-easing" size="xs" />
 
 ```tsx
 <Layout easings={{ spring: [0.34, 1.56, 0.64, 1] }}>
@@ -30,7 +30,7 @@ There is **no** `EasingDefinition` — a cubic-bezier tuple or a function value 
 
 `property` is open too: register a channel name plus its interpolator and how to apply it, and you can animate properties beyond the built-ins (e.g. a `blur` filter). Unlike easing, a custom property channel uses `AnimationPropertyDefinition` — it must define both interpolation and backend application, which a single value can't express. Below registers `blur` and runs a focus-in entrance (click ↺ at the top-left to replay):
 
-<ComponentPreview name="custom-property" size="xs" />
+<ComponentPreview files="custom-property" size="xs" />
 
 `AnimationPropertyDefinition`:
 

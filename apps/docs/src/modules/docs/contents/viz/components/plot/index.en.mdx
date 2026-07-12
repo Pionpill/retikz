@@ -27,7 +27,7 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 `coordinate` decides how one `<Plot>` projects data internally. It defaults to `cartesian2D`; the same data can switch to `polar2D`, so the same field mappings are interpreted in another coordinate system.
 
-<ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+<ComponentPreview files={['plot-coordinate', 'plot-cartesian.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">Left: cartesian bars; right: the same data as polar2D radial bars.</p>
 
@@ -58,7 +58,7 @@ When one chart needs multiple coordinate regions, everyday JSX does not need a h
 
 Default scales come from field values and mark types: numbers use continuous axes, ordinary strings use categorical positions, and ISO dates use time axes. Inferred continuous positional domains leave 5% breathing room by default. To request log axes, square-root axes, a manual domain, or `domainPadding={0}`, add a `<Scale>` child to override the relevant dimension.
 
-<ComponentPreview name="plot-scale" sourceFiles={['plot-scale.data.ts']} size="md" />
+<ComponentPreview files={['plot-scale', 'plot-scale.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">
   Left: the default linear y axis compresses early points near the bottom; right: an explicit log y axis spreads the
@@ -69,7 +69,7 @@ Default scales come from field values and mark types: numbers use continuous axe
 
 `theme` controls visual defaults for one `<Plot>`: background, guide typography, axis / grid tokens, legend tokens, and palette. Prefer `theme.palette` for new code. The older `colors` prop remains a shorthand for categorical / series / sector palettes when those theme slots are omitted.
 
-<ComponentPreview name="plot-colors" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+<ComponentPreview files={['plot-colors', 'plot-cartesian.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">
   Left: built-in palette and guide defaults; right: a local theme changes palette, background, grid, and axis label
@@ -106,7 +106,7 @@ Theme merges only visual tokens. Scale domains, `domainPadding`, explicit tick v
 
 Real data often uses field names that differ from the chart's logical names. `model` declares the logical fields and their types, while `fieldMap` maps those logical fields to actual data paths; marks always reference the logical names.
 
-<ComponentPreview name="plot-field-map" sourceFiles={['plot-field-map.data.ts']} size="sm" />
+<ComponentPreview files={['plot-field-map', 'plot-field-map.data.ts']} size="sm" />
 
 <p className="text-sm text-muted-foreground">
   The data rows use period / amount; the chart still writes date / visits.
@@ -116,7 +116,7 @@ Real data often uses field names that differ from the chart's logical names. `mo
 
 One parent `<Layout>` can contain several `<Plot>` panels. Each chart uses its own `width` / `height` for the outer box, then `x` / `y` or `transforms` positions that panel inside the parent canvas; the parent only carries and composes panels, without participating in each chart's scale inference.
 
-<ComponentPreview name="plot-panels" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+<ComponentPreview files={['plot-panels', 'plot-cartesian.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">
   Left: a cartesian line chart; right: a cartesian bar chart inside the same Layout.
@@ -135,7 +135,7 @@ One parent `<Layout>` can contain several `<Plot>` panels. Each chart uses its o
 
 When chart configuration comes from persisted JSON or an external generator, pass `spec` directly. Data is still injected separately through the `data` table, not written into the PlotSpec.
 
-<ComponentPreview name="plot-spec-entry" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+<ComponentPreview files={['plot-spec-entry', 'plot-cartesian.data.ts']} size="sm" />
 
 <p className="text-sm text-muted-foreground">
   The spec entry skips JSX child collection and sends the PlotSpec straight to lowering.

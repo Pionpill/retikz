@@ -15,7 +15,7 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 
 把 `[x, y]` 当成 retikz 的基础坐标形态会更容易理解后续规则：极坐标不是独立渲染语义，它只是另一种写位置的方式，最终仍会落成一个 `[x, y]` 点。
 
-<ComponentPreview name="coordinate-system" size="md" hideCode />
+<ComponentPreview files="coordinate-system" size="md" hideCode />
 
 如果你在照着数学图或 TikZ 教程改写，常见规则是：数学里的“向上”在 retikz 里通常要写成负 y，例如 `[0, -80]`。
 
@@ -23,7 +23,7 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 
 极坐标写成 `{ origin?, angle, radius }`：先解析 origin，再沿某个角度走一段半径。它适合圆形布局、径向标注、围绕某个节点摆一圈元素，或表达“从这个点旋转偏移一段距离”。
 
-<ComponentPreview name="polar-coordinate" size="md" hideCode />
+<ComponentPreview files="polar-coordinate" size="md" hideCode />
 
 | 字段     | 含义                                                             |
 | -------- | ---------------------------------------------------------------- |
@@ -61,7 +61,7 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 
 `viewBox` 决定 `<Layout>` 看到哪一块 user-unit 世界；`width` / `height` 决定这块世界在页面上显示多大。
 
-<ComponentPreview name="viewbox" size="md" hideCode />
+<ComponentPreview files="viewbox" size="md" hideCode />
 
 左边是完整的 user units 世界，虚线框是 `viewBox` 选中的窗口，它被映射成右边按 `width` / `height` 渲染的画面。
 

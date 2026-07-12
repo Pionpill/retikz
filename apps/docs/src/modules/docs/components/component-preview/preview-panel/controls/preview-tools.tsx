@@ -11,32 +11,47 @@ import {
   ZoomOut,
 } from 'lucide-react';
 
-import type { PreviewControlSlot, RendererMode, SizeKey, Transform } from '../types';
+import type { PreviewControlSlot, RendererMode, SizeKey, Transform } from '../../types';
 
+import { SIZE_KEYS } from '../../constants';
 import { downloadPreviewImage } from '../commands';
-import { RendererModeButton } from '../components/parts';
 import {
   PreviewToolbar,
   PreviewToolbarButton,
   PreviewToolbarSeparator,
   PreviewToolbarToggleGroup,
-} from '../components/PreviewToolbar';
-import { SIZE_KEYS } from '../constants';
-import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from '../hooks';
+} from '../PreviewToolbar';
+import { RendererModeButton } from '../RendererModeButton';
+import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from '../usePanZoom';
 
 export type BuildPreviewToolSlotsOptions = {
+  /** 当前平移与缩放状态。 */
   transform: Transform;
+  /** 当前是否存在非默认变换。 */
   isTransformed: boolean;
+  /** 按像素增量平移预览。 */
   panBy: (dx: number, dy: number) => void;
+  /** 按比例缩放预览。 */
   zoomBy: (factor: number) => void;
+  /** 重置平移与缩放。 */
   resetTransform: () => void;
+  /** 当前是否允许拖拽。 */
   dragEnabled: boolean;
+  /** 切换拖拽状态。 */
   toggleDrag: () => void;
+  /** 打开放大布局。 */
   onMaximize: () => void;
+  /** 当前预览尺寸。 */
   size: SizeKey;
+  /** 调整预览尺寸。 */
   onSizeChange: (next: SizeKey) => void;
+  /** 下载文件名。 */
   name: string;
+  /** 当前渲染模式。 */
   rendererMode: RendererMode;
+  /** 当前内容是否锁定渲染模式。 */
+  rendererModeFixed?: boolean;
+  /** 切换渲染模式。 */
   toggleRendererMode: () => void;
 };
 
@@ -57,6 +72,7 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
     onSizeChange,
     name,
     rendererMode,
+    rendererModeFixed,
     toggleRendererMode,
   } = options;
   const downloadLabel = rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
@@ -136,7 +152,11 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
             <PreviewToolbarButton label="Maximize" className="hidden md:inline-flex" onClick={onMaximize}>
               <Maximize2 className="size-3.5" />
             </PreviewToolbarButton>
-            <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />
+            <RendererModeButton
+              rendererMode={rendererMode}
+              disabled={rendererModeFixed}
+              onToggle={toggleRendererMode}
+            />
           </div>
           <PreviewToolbarSeparator orientation="horizontal" />
           <PreviewToolbarToggleGroup

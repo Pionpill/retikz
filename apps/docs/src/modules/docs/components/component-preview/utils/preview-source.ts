@@ -1,6 +1,6 @@
-import type { ComponentSourceFile } from '../types';
+import type { ComponentPreviewFileConfig, ComponentSourceFile } from '../types';
 
-import { buildSourceFileKey, filenameFromKey, langOfFilename, localSourceFiles } from '../registry-runtime';
+import { buildSourceFileKey, filenameFromKey, langOfFilename, localSourceFiles } from '../registry';
 import { computeUnifiedDiff } from './diff';
 
 /** 构建 React 源码视图文件列表。 */
@@ -9,7 +9,7 @@ export type BuildReactSourceFilesInput = {
   name: string;
   segments: Array<string>;
   rawSource: string;
-  sourceFiles?: Array<string | { file: string; diffFrom: string }>;
+  sourceFiles: Array<ComponentPreviewFileConfig>;
   diffFrom?: string;
   baselineRawSource?: string;
   hideCode: boolean;
@@ -23,16 +23,15 @@ export const buildReactSourceFiles = (input: BuildReactSourceFilesInput): Array<
     !hideCode && baselineRawSource !== undefined
       ? computeUnifiedDiff(baselineRawSource.replace(/\n$/, ''), trimmedSource)
       : undefined;
-  const extraSourceFiles: Array<ComponentSourceFile> = (sourceFiles ?? []).map(entry => {
-    const filename = typeof entry === 'string' ? entry : entry.file;
+  const extraSourceFiles: Array<ComponentSourceFile> = sourceFiles.map(entry => {
+    const filename = entry.file;
     const rawSourceFile = localSourceFiles[buildSourceFileKey(segments, filename)];
     const code = rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`;
     const baselineFilename =
-      typeof entry !== 'string'
-        ? entry.diffFrom
-        : diffFrom !== undefined && filename.startsWith(`${name}.`)
-          ? `${diffFrom}.${filename.slice(name.length + 1)}`
-          : undefined;
+      entry.diffFrom ??
+      (diffFrom !== undefined && filename.startsWith(`${name}.`)
+        ? `${diffFrom}.${filename.slice(name.length + 1)}`
+        : undefined);
     if (baselineFilename === undefined) return { filename, code, lang: langOfFilename(filename) };
     const baselineRaw = localSourceFiles[buildSourceFileKey(segments, baselineFilename)];
     const diff =

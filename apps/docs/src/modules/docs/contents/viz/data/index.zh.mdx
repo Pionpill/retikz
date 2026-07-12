@@ -7,7 +7,7 @@ description: 数据流说明 @retikz/data 提供的数据模型、字段处理�
 
 真实数据本身**不进入 IR**。配置只描述“读哪些字段、字段是什么类型、怎么解析和变换”；数据行在编译或运行数据管线时传入，只有 `model`、`format`、transform operation 这类可序列化契约会持久化。于是同一份配置能复用到不同数据源，也便于序列化与 AI 生成。
 
-<ComponentPreview name="data-pipeline" size="sm" hideCode />
+<ComponentPreview files="data-pipeline" size="sm" hideCode />
 
 ## 处理链路
 

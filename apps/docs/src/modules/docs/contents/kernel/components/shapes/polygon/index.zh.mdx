@@ -28,7 +28,7 @@ import { RegularPolygon } from '@retikz/react';
 | `{ center, radius, sides }`     | 已知外接半径 |
 | `{ center, sideLength, sides }` | 已知边长     |
 
-<ComponentPreview name="regular-polygon-basic" size="xs" />
+<ComponentPreview files="regular-polygon-basic" size="xs" />
 
 ### API 参考
 
@@ -57,11 +57,11 @@ import { Node } from '@retikz/react';
 
 `diamond` 是 4 边、顶点落在上下左右四个方向的预设，可直接写裸字符串 `shape="diamond"`，等价于 `{ type:'polygon', params:{ sides:4, rotate:0 } }`。
 
-<ComponentPreview name="node-polygon" size="sm" />
+<ComponentPreview files="node-polygon" size="sm" />
 
 给 `params.cornerRadius` 一个正数就能把每个顶点磨成圆角，省略或 `0` 是直角。倒角是连接感知的：连线端点会落在圆角弧上，而不是已经被磨掉的尖角。
 
-<ComponentPreview name="node-polygon-corner-radius" size="sm" />
+<ComponentPreview files="node-polygon-corner-radius" size="sm" />
 
 连线端点贴多边形边，节点的中心与 8 个方位 anchor（`center` / `top` …）照常可用。完整的 `<Node>` 属性见 [Node](/kernel/components/node/overview)。
 

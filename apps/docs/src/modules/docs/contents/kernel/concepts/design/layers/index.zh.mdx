@@ -11,7 +11,7 @@ retikz 把用户写下的 DSL（React 组件或 Vanilla JS 写法）先转成 IR
   description="本章主要解释 retikz 的底层构建链路；如果你只是想先画出一张图，可以先读快速开始和组件文档，需要理解 IR / Scene 边界时再回来。"
 />
 
-<ComponentPreview name="layers-pipeline" size="sm" hideCode />
+<ComponentPreview files="layers-pipeline" size="sm" hideCode />
 
 ## 三层模型
 
@@ -64,7 +64,7 @@ Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` 
 
 `@retikz/core` 分两趟编译，再收尾输出 Scene。图中箭头上的文字标注了每一趟交给下一趟的中间产物：
 
-<ComponentPreview name="layers-compile" size="xs" hideCode />
+<ComponentPreview files="layers-compile" size="xs" hideCode />
 
 - **layout nodes**：解析每个 node / coordinate 的坐标，度量文字，按形状算出包围盒与锚点，登记进命名表。
 - **resolve paths**：节点先就位，路径才能从命名表查到端点，展开成路径命令（`d`）；这正是箭头上 `anchors` 代表的依赖。
@@ -87,7 +87,7 @@ Sugar 的展开逻辑由 builder 同步调用，不能依赖 React hooks 或异�
 
 这三层能力被拆进 `packages/kernel` 下的四个 npm 包，全部以 `@retikz/core` 为底座。实线指向主要构建依赖，虚线表示 react / vanilla 也直接依赖 core。
 
-<ComponentPreview name="layers-packages" size="sm" hideCode />
+<ComponentPreview files="layers-packages" size="sm" hideCode />
 
 | 包                | 职责                                           | 依赖          |
 | ----------------- | ---------------------------------------------- | ------------- |

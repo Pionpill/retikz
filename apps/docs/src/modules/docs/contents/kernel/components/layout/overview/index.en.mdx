@@ -40,13 +40,13 @@ import { Layout } from '@retikz/react';
 
 ### Basic
 
-<ComponentPreview name="layout-basic" size="xs" />
+<ComponentPreview files="layout-basic" size="xs" />
 
 ### Whole-figure Default Style
 
 `<Layout>` directly accepts the same cascade style subset as [`<Scope>`](/kernel/components/layout/scope) (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`). When any style prop is set, Layout wraps its children in an **implicit root `<Scope>`**, removing the boilerplate of nesting one root `<Scope>` on every figure. Inner `<Scope>` and explicit primitive props still cascade over it as usual.
 
-<ComponentPreview name="layout-scope-style" size="sm" />
+<ComponentPreview files="layout-scope-style" size="sm" />
 
 ```tsx
 // Set defaults for the whole figure — no nested <Scope> needed
@@ -69,7 +69,7 @@ The exact wrapping condition, and what happens when combined with the `ir` prop,
 
 `<Layout>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
 
-<ComponentPreview name="layout-from-ir" size="xs" />
+<ComponentPreview files="layout-from-ir" size="xs" />
 
 When you need to convert between the DSL and IR, pair with `convertReactNodeToIR` / `convertIRToReactNode` for a two-way bridge:
 
@@ -91,7 +91,7 @@ const ir = convertReactNodeToIR(
 
 By default the `viewBox` is auto-computed from content (AABB + padding). Pass `viewBox={{ x, y, width, height }}` to pin it explicitly — for fixed size, deliberate clipping, multi-figure alignment, or excluding overflow. When set it overrides the auto computation and ignores padding; `width` / `height` must be > 0.
 
-<ComponentPreview name="layout-viewbox" size="md" />
+<ComponentPreview files="layout-viewbox" size="md" />
 
 ### Render Backend (SVG / Canvas)
 

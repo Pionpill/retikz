@@ -16,7 +16,7 @@ description: 派生与抖动保持输入行数不变，只按单行字段补出�
 
 `derive-interval` 给每一行独立算出一个区间。它不看其它行，适合甘特条、显式区间、非零基线柱。
 
-<ComponentPreview name="transform-derive-interval" sourceFiles={['transform-derive-interval.data.ts']} />
+<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} />
 
 它和 `stack` 都默认产出 `y0` / `y1`，但语义不同：`derive-interval` 是单行派生，`stack` 是跨行累积。
 
@@ -31,7 +31,7 @@ description: 派生与抖动保持输入行数不变，只按单行字段补出�
 
 `jitter` 给连续数值位置字段加一个伪随机偏移，把重叠散点抖开。偏移发生在数据空间、进入比例尺之前；`seed` 是整数，确保 SSR 和浏览器 hydration 得到一致结果。
 
-<ComponentPreview name="transform-jitter" sourceFiles={['transform-jitter.data.ts']} />
+<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} />
 
 当前 `jitter` 只作用于连续数值字段。分类 band 内部的屏幕空间抖动不属于这层 transform。
 

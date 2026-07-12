@@ -5,10 +5,16 @@ import { PathCurve } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
-import { usePreviewControlValue } from '@/modules/docs/components';
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+import { usePreviewControlValue } from '@/modules/docs/components/component-preview/context';
 
 import { closureRadar, closureTrend } from './line-closure.data';
 import { PATH_CURVE_CONTROL_ID } from './line-curve.controls';
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
 
 const Demo: FC = () => {
   const curve = usePreviewControlValue(PATH_CURVE_CONTROL_ID, PathCurve.Linear) as PathCurveValue;

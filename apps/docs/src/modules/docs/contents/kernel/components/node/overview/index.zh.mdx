@@ -21,7 +21,7 @@ import { Node } from '@retikz/react';
 
 ### 基础
 
-<ComponentPreview name="node-basic" size="xs" />
+<ComponentPreview files="node-basic" size="xs" />
 
 先按图元角色选择写法：流程图节点通常用默认 rectangle + `padding`；纯文字标签用 `stroke="none"` / `fill="none"`；按钮感节点加 `cornerRadius` + `minimumSize`；说明框适合多行 `text` + `align="left"`；如果只需要一个可被引用的点，而不需要可见形状，用 [Coordinate](/kernel/components/node/coordinate) 更合适。
 
@@ -41,7 +41,7 @@ import { Node } from '@retikz/react';
 
 </Comparison>
 
-<ComponentPreview name="node-at-relative" size="sm" />
+<ComponentPreview files="node-at-relative" size="sm" />
 
 #### 偏移定位
 
@@ -59,7 +59,7 @@ import { Node } from '@retikz/react';
 
 </Comparison>
 
-<ComponentPreview name="node-offset-position" size="sm" />
+<ComponentPreview files="node-offset-position" size="sm" />
 
 #### 比例定位
 
@@ -82,9 +82,9 @@ import { Node } from '@retikz/react';
 
 按"尺寸从哪来"分两类：**文本容器形状**（rectangle / circle / ellipse / polygon / diamond）边界包住「文字 + padding」、尺寸由文字驱动；**params 驱动的几何形状**（sector / arc / star）尺寸由半径 / 角度定、不依赖文字，可当作可连接的图形 glyph。
 
-<ComponentPreview name="node-shapes" size="md" />
+<ComponentPreview files="node-shapes" size="md" />
 
-<ComponentPreview name="node-shape-params" size="md" />
+<ComponentPreview files="node-shape-params" size="md" />
 
 每种形状的参数、anchor 和示例见对应形状页：
 
@@ -114,13 +114,13 @@ import { Node } from '@retikz/react';
 
 同一五角星分设四种连接面，各引一条边从左下 45° 斜贴上来——`shape` 落在星形真实轮廓（最内）、`rectangle` 顶到外接盒角（最外）、`circle` / `ellipse` 居中（近正方节点下两者接近）。斜向才看得出区别：竖直 / 水平轴向上椭圆与矩形必然同点、圆又取较长半轴，三者会重合：
 
-<ComponentPreview name="node-boundary-surfaces" size="sm" />
+<ComponentPreview files="node-boundary-surfaces" size="sm" />
 
 连接面**不改节点占位**：节点的包围盒、视觉形状、布局位置都不变，只改"边在哪贴、标准方位锚点怎么解析"。形状专属锚点（如星形的 `tip-0`）和边上比例点始终走视觉形状，不受 `boundary` 影响。
 
 下例五角星 `boundary="circle"`：默认实线连到外接圆上；端点写 `boundary="shape"` 的虚线则改贴真实尖端。
 
-<ComponentPreview name="node-boundary" size="sm" />
+<ComponentPreview files="node-boundary" size="sm" />
 
 单条边想覆盖目标节点的 `boundary` 时，在 path 端点对象写 `boundary`——只影响这一个端点，取值同节点 `boundary`。详见 [Path](/kernel/components/draw/path) 的端点 `boundary` 说明。
 
@@ -130,13 +130,13 @@ import { Node } from '@retikz/react';
 
 `font` 是嵌套对象 `{ family?, size?, weight?, style? }`——粗体 / 斜体 / 字族都在一个字段里设：
 
-<ComponentPreview name="node-font" size="xs" />
+<ComponentPreview files="node-font" size="xs" />
 
 #### 多行文本
 
 `text` 可以是字符串，也可以是字符串数组（一元素一行）。字符串里的 `'\n'` 是硬换行——一个字符串也能渲染成多行。`align` 控制多行块内各行水平对齐方式（`'start'` / `'middle'`（默认）/ `'end'`），`lineHeight` 控制相邻行的间距，未设走 `font.size × 1.2`。
 
-<ComponentPreview name="node-multiline" size="xs" />
+<ComponentPreview files="node-multiline" size="xs" />
 
 > 选数组而非 `'\n'` 字符串：JSON 友好（无 escape 困扰）；行级属性扩展空间预留。
 
@@ -166,7 +166,7 @@ Line 2`}</Node>;
 
 `maxTextWidth` 给文本设一个**折行阈值**（user units）：超过阈值才折行（西文按词、CJK 按字），短文本盒宽收缩到实际内容、不撑满。它**不是固定段落宽**——这点与 TikZ `text width` 不同。
 
-<ComponentPreview name="node-max-text-width" size="sm" />
+<ComponentPreview files="node-max-text-width" size="sm" />
 
 > 一个不可断的长词（无空白的长串）超过阈值时按整体溢出，不强行截断。
 
@@ -177,13 +177,13 @@ Line 2`}</Node>;
 1. **`text` 数组里混 LineSpec 对象**——AI / JSON 友好，schema 直接表达
 2. **`<Text>` 子元素**——JSX 写起来顺手；详见 [Text 章节](/kernel/components/node/text)
 
-<ComponentPreview name="node-styled-lines" size="xs" />
+<ComponentPreview files="node-styled-lines" size="xs" />
 
 > 块级 `align` / `lineHeight` 不能行级覆盖（多行块整体属性）。
 
 多行文本套到不同 shape 上，外接边界沿用各自 shape 多态规则（外接圆 / 外接椭圆 / 多边形外接）：
 
-<ComponentPreview name="node-multiline-shapes" size="xs" />
+<ComponentPreview files="node-multiline-shapes" size="xs" />
 
 ### 节点标签
 
@@ -195,11 +195,11 @@ Line 2`}</Node>;
 
 </Comparison>
 
-<ComponentPreview name="node-label-basic" size="xs" />
+<ComponentPreview files="node-label-basic" size="xs" />
 
 `distance` 控制标签从节点边界继续向外推开的距离，单位仍是 retikz user units；省略时默认为 `12`。例如 `position: 'top', distance: 20` 会从节点上边界继续向上放置标签。
 
-<ComponentPreview name="node-label-distance" size="xs" />
+<ComponentPreview files="node-label-distance" size="xs" />
 
 #### 内侧与边界比例
 
@@ -209,13 +209,13 @@ Line 2`}</Node>;
 - `fraction` 是边界上的 0..1 比例位置，缺省 `0.5`
 - `placement: 'inside'` 不能和 `pin` 同时使用；需要引线时请保持外侧标签
 
-<ComponentPreview name="node-label-inside" size="sm" />
+<ComponentPreview files="node-label-inside" size="sm" />
 
 #### 朝向
 
 `label.rotate` 让标签文字绕**自身中心**自旋：`'radial'` 沿"节点中心 → 标签中心"方向、`'tangent'` 取其切向（radial + 90°）、数字为显式角度（度）；`keepUpright` 在文字会倒置时翻 180° 保持可读。`rotate` 只改朝向，不改由 `position` / `distance` 决定的位置。
 
-<ComponentPreview name="node-label-rotate" size="sm" />
+<ComponentPreview files="node-label-rotate" size="sm" />
 
 #### 引脚
 
@@ -227,7 +227,7 @@ Line 2`}</Node>;
 
 </Comparison>
 
-<ComponentPreview name="node-pin" size="md" />
+<ComponentPreview files="node-pin" size="md" />
 
 ### 尺寸与变换
 
@@ -240,7 +240,7 @@ Line 2`}</Node>;
 
 多数节点只需要写 `padding={N}`。当水平留白和垂直留白需要不同数值时，改用 `padding={{ x, y }}`；只有单边需要特殊处理时才写 `left` / `right` / `top` / `bottom`。
 
-<ComponentPreview name="node-sep" size="xs" />
+<ComponentPreview files="node-sep" size="xs" />
 
 <Comparison target="tikz" title="间距命名">
 
@@ -254,25 +254,25 @@ retikz 的间距字段现在只保留 CSS 风格命名。TikZ 的 `inner sep` �
 - `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
 - `scale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
 
-<ComponentPreview name="node-size-constraints" size="xs" />
+<ComponentPreview files="node-size-constraints" size="xs" />
 
 #### 旋转
 
 `rotate` 绕节点中心旋转；连线会跟着新边界点贴：
 
-<ComponentPreview name="node-rotated" size="xs" />
+<ComponentPreview files="node-rotated" size="xs" />
 
 #### 栈序（zIndex）
 
 默认渲染层叠 = 声明顺序（SVG 只认绘制顺序）。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。例如把某个高亮节点 `zIndex={10}` 浮到所有连线之上，而不必把它挪到 JSX 末尾。`<Path>` / `<Scope>` 同样支持 `zIndex`（scope 的 `zIndex` 作用于整组在父层的位置，不影响 scope 内部相对栈序）。
 
-<ComponentPreview name="node-z-index" size="sm" />
+<ComponentPreview files="node-z-index" size="sm" />
 
 ### 样式
 
 `fill` / `stroke` / `strokeWidth` 等样式 prop 控制单个节点的观感：
 
-<ComponentPreview name="node-styled" size="xs" />
+<ComponentPreview files="node-styled" size="xs" />
 
 #### 颜色 / 不透明度
 
@@ -280,7 +280,7 @@ retikz 的间距字段现在只保留 CSS 风格命名。TikZ 的 `inner sep` �
 - `opacity`——整节点 0~1（同时作用于 shape + text）
 - `fillOpacity` / `strokeOpacity`——分别只透明填充或描边
 
-<ComponentPreview name="node-color-opacity" size="xs" />
+<ComponentPreview files="node-color-opacity" size="xs" />
 
 #### 渐变填充与描边
 
@@ -291,26 +291,26 @@ retikz 的间距字段现在只保留 CSS 风格命名。TikZ 的 `inner sep` �
 - 锥形：`{ kind: 'conicGradient', center?, angle?, stops }`——围绕 `center` 按角度插值，用于极坐标 / 扇区类色带
 - `stops`：`{ offset (0..1), color, opacity? }` 数组，至少 2 个；`color` 可用 `currentColor`
 
-<ComponentPreview name="node-paint" size="sm" />
+<ComponentPreview files="node-paint" size="sm" />
 
 节点外框也能用渐变描边，`strokeWidth`、`strokeOpacity`、`dashPattern`、`dashOffset` 等描边样式照常生效：
 
-<ComponentPreview name="node-stroke-paint" size="sm" />
+<ComponentPreview files="node-stroke-paint" size="sm" />
 
 `stop` 的 `opacity` 可做"实色 → 透明"渐隐；`color` 用 `currentColor` 让渐变跟随元素 `color`、随主题切换：
 
-<ComponentPreview name="node-paint-stops" size="sm" />
+<ComponentPreview files="node-paint-stops" size="sm" />
 
 `fill` 还接 **图案 pattern** 和 **图片 image**：
 
 - 图案：`{ kind:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }`——`color` 缺省 `currentColor`、`size` 是 tile 周期、`rotation` 旋转整片
 - 图片：`{ kind:'image', href, fit? }`——`href` 为 URL（含 data URI），`fit`：`cover`（默认）/ `contain` / `fill`
 
-<ComponentPreview name="node-pattern-image" size="sm" />
+<ComponentPreview files="node-pattern-image" size="sm" />
 
 `href` 接任意外部图片 URL（http(s)）或 data URI；`fit` 控制图片如何映射到形状盒——同一张外部横图（`picsum.photos`，320×200）按三种 fit 填进方形盒：
 
-<ComponentPreview name="node-image-fit" size="sm" />
+<ComponentPreview files="node-image-fit" size="sm" />
 
 > `fit` 按形状盒归一计算：方形盒时与 CSS `object-fit` 一致；强非方形盒下 cover/contain 为近似（按归一方形而非真实长宽比）。源图与盒同形（都方/都横）时三种 fit 视觉无差异。
 >
@@ -320,7 +320,7 @@ retikz 的间距字段现在只保留 CSS 风格命名。TikZ 的 `inner sep` �
 
 `dashed` / `dotted` 是预设；`dashPattern` 是显式 dash/gap 长度序列（优先级：`dashPattern` > `dashed` > `dotted`），`dashOffset` 可移动虚线节奏起点：
 
-<ComponentPreview name="node-stroke-style" size="xs" />
+<ComponentPreview files="node-stroke-style" size="xs" />
 
 ## API 参考
 
