@@ -29,7 +29,7 @@ Use `domainPadding={0}` to restore edge-to-edge behavior, or `domainPadding={{ l
 
 When data spans several orders of magnitude, a linear axis crushes the small values against the bottom. A log axis (`<Scale dimension="y" type="log" />`) gives every magnitude equal height, so small values stay legible. The default base is 10; set `base={Math.E}` for the natural logarithm. `base` must be greater than 1. Both charts use the same yearly user counts.
 
-<ComponentPreview name="scale-linear-log" sourceFiles={['scale-continuous.data.ts']} />
+<ComponentPreview files={['scale-linear-log', 'scale-continuous.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   Left: default linear, early years hug the floor; right: just add <code>{'<Scale dimension="y" type="log" />'}</code>{' '}
@@ -40,7 +40,7 @@ When data spans several orders of magnitude, a linear axis crushes the small val
 
 `<Scale dimension="y" type="sqrt" />` maps by square root, taming the visual exaggeration of large values; it is also the default scale for the `size` channel (point radius), so a dot's **area** stays proportional to the data.
 
-<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
+<ComponentPreview files={['scale-sqrt', 'scale-continuous.data.ts']} />
 
 ## Point / line only
 
@@ -56,7 +56,7 @@ When data spans several orders of magnitude, a linear axis crushes the small val
 
 `log` cannot handle zero or negatives, yet profit/loss, temperature deltas, and growth rates often cross zero _and_ span magnitudes. `<Scale dimension="y" type="symlog" />` uses a **symmetric log** — a linear region near zero with logarithmic tails on either side — so zero and negative values are defined. The width of the linear region is set by `constant` (default `1`; raise it to keep more of the center linear). On the positive side, `constant={50}` is equivalent to `ln(1 + x / 50)`. Like `log` / `sqrt` / `pow`, `symlog` is a non-linear scale and applies to point / line only.
 
-<ComponentPreview name="scale-symlog" sourceFiles={['scale-symlog.data.ts']} />
+<ComponentPreview files={['scale-symlog', 'scale-symlog.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   The same zero-crossing monthly net cash flow. Left: default linear, the near-zero months collapse onto the 0 line;
@@ -67,7 +67,7 @@ When data spans several orders of magnitude, a linear axis crushes the small val
 
 `radial` maps a value to a radius such that the **area** of a sector / ring (not the radius length) stays proportional to the value — exactly how a polar rose chart (Nightingale chart) encodes magnitude. It is a square-root-style mapping, but unlike `sqrt` it starts from a 0 baseline and is meant for the radius value axis, so it **is** allowed with interval / path-closure marks (rose-chart sectors or closed areas), whereas `sqrt` is not.
 
-<ComponentPreview name="scale-radial" sourceFiles={['scale-radial.data.ts']} />
+<ComponentPreview files={['scale-radial', 'scale-radial.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   Polar coordinate + <code>IntervalMark</code> draws one sector per season, radius on a radial scale: each sector's area
@@ -78,7 +78,7 @@ When data spans several orders of magnitude, a linear axis crushes the small val
 
 A temporal field (`temporal`) defaults to `time` on positional channels. It is a continuous mapping at heart, but ticks land on **human-readable time boundaries** (month starts, quarters, whole hours…) rather than evenly-spaced numbers, and labels are formatted as time instead of treating dates as raw numbers. Declare the field as `temporal` in the model and x goes through the time scale automatically — no `<Scale>` by hand.
 
-<ComponentPreview name="scale-time" sourceFiles={['scale-time.data.ts']} />
+<ComponentPreview files={['scale-time', 'scale-time.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   date declared as temporal → x goes through time; ticks land on quarter boundaries, labels are formatted as time.
@@ -97,7 +97,7 @@ A categorical field (`categorical`) has no continuous numeric order; the positio
 
 Declare the field as `categorical` and the positional channel defaults to `band`: each category gets an equal slot, with the bar centered in it.
 
-<ComponentPreview name="scale-band" sourceFiles={['scale-band.data.ts']} />
+<ComponentPreview files={['scale-band', 'scale-band.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   segment declared as categorical → x goes through band; five plan tiers split into equal slots.

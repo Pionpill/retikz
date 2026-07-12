@@ -5,10 +5,16 @@ import { PathCurve } from '@retikz/plot';
 import { Axis, Legend, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
-import { usePreviewControlValue } from '@/modules/docs/components';
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+import { usePreviewControlValue } from '@/modules/docs/components/component-preview/context';
 
 import { PATH_CURVE_CONTROL_ID } from './line-curve.controls';
 import { stackArea } from './line-stack-area.data';
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
 
 const Demo: FC = () => {
   const curve = usePreviewControlValue(PATH_CURVE_CONTROL_ID, PathCurve.Linear) as PathCurveValue;

@@ -21,7 +21,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 
 笛卡尔坐标是最直接的位置写法：`[x, y]` 表示画布上的一个点。x 向右增大，y 向下增大；因此 `[120, 40]` 表示从原点向右 120、向下 40。适合少量手工摆放、复刻已有 SVG 坐标，或作为其它定位表达的基准点。
 
-<ComponentPreview name="positioning-cartesian" size="xs" />
+<ComponentPreview files="positioning-cartesian" size="xs" />
 
 ## 极坐标
 
@@ -43,7 +43,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 
 下面 6 个节点以 `O` 为极点、半径 80、角度从 0 到 300 每 60° 一个，画出常见的圆形布局：
 
-<ComponentPreview name="positioning-polar" size="md" />
+<ComponentPreview files="positioning-polar" size="md" />
 
 `origin` 还可以**嵌套**——例如 `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` 表示"从 a 向右 30 再向下 20"（90° 朝屏幕下方）。这种链式表达在画径向 / 局部偏移时很顺手。
 
@@ -51,7 +51,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 
 `<Step>` / `<Draw>` 的 target 还接受**字符串**，表示引用同一 `<Layout>` 内的节点 id。这是 React DSL 的便捷写法；需要指定 anchor、偏移或连接面时，用对象形式 `{ id, anchor?, offset?, boundary? }`：
 
-<ComponentPreview name="positioning-id-ref" size="xs" />
+<ComponentPreview files="positioning-id-ref" size="xs" />
 
 线段的实际起止点由 retikz 自动算——见 [图元关系](/kernel/concepts/kernel/primitive-relations)。
 
@@ -66,7 +66,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 <Node id="b" position={{ direction: 'right', of: 'a', distance: 80 }}>B</Node>
 ```
 
-<ComponentPreview name="positioning-relative" size="md" />
+<ComponentPreview files="positioning-relative" size="md" />
 
 `direction` 接 8 个视觉方向：`top` / `bottom` / `left` / `right` / `top-left` / `top-right` / `bottom-left` / `bottom-right`。省略 `distance` 时走 `<Layout nodeDistance>`，再回退到 `24`。
 
@@ -79,7 +79,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 <Node id="note" position={{ of: 'a', offset: [40, -24] }}>note</Node>
 ```
 
-<ComponentPreview name="positioning-offset" size="sm" />
+<ComponentPreview files="positioning-offset" size="sm" />
 
 它比相对定位更自由：当你要表达"A 右边 40、上方 24"这类非 8 方向关系时，用偏移定位更直接。
 
@@ -93,7 +93,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 <Coordinate id="mid" position={{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }} />
 ```
 
-<ComponentPreview name="positioning-between" size="xs" />
+<ComponentPreview files="positioning-between" size="xs" />
 
 `between` 的两个端点是自包含的 absolute target：可用笛卡尔、极坐标、节点 / Coordinate 引用对象（`{ id: 'a' }`）、偏移定位，或继续嵌套 `{ between, fraction }`。它不接受 path-relative target（`relative` / `relativeAccumulate`），因为比例定位必须能独立解析。
 
@@ -105,7 +105,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 <Draw way={[[0, 0], { relativeAccumulate: [40, 0] }, { relativeAccumulate: [0, 30] }]} />
 ```
 
-<ComponentPreview name="positioning-path-relative" size="sm" />
+<ComponentPreview files="positioning-path-relative" size="sm" />
 
 它们只属于 path target，不用于 `<Node>.position` / `<Coordinate>.position`。如果要摆放实体，请用笛卡尔、极坐标、相对定位、偏移定位或比例定位。
 

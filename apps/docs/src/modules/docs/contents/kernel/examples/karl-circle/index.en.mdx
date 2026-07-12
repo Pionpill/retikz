@@ -9,7 +9,7 @@ This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) —
 
 The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have also seen the three most beginner-friendly sugars: [Circle](/kernel/components/shapes/circle-ellipse) / [Grid](/kernel/components/helpers/grid) / [Sector](/kernel/components/shapes/arc-sector). They shorten the hand-written Path / Step pieces, while [Draw](/kernel/components/draw/overview) / [Coordinate](/kernel/components/node/coordinate) / [Node](/kernel/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
 
-<ComponentPreview name="karl-circle-07-info" size="lg" interactive />
+<ComponentPreview files="karl-circle-07-info" size="lg" />
 
 If you are coming from TikZ, watch five differences in this page: retikz coordinates grow downward on y; circle / grid / sector now have dedicated sugar; projections / intersections are currently hand-computed or named with Coordinate; `foreach`-style repeated primitives are usually generated with React `.map()`; and formulas are no longer plain-text fallbacks but LaTeX written as [@retikz/tex](/kernel/packages/tex) `$...$` / `$$...$$` inline math (text-with-math and per-run color both supported).
 
@@ -59,20 +59,20 @@ Send the prompt bottom to the AI chat panel — the LLM will produce retikz IR /
 
 Minimal start — one circle centered at the origin. Use [Circle](/kernel/components/shapes/circle-ellipse) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle” at a glance. `lineCap="round"` softens the line endpoints.
 
-<ComponentPreview name="karl-circle-01-circle" size="lg" />
+<ComponentPreview files="karl-circle-01-circle" size="lg" />
 
 ### Step 2 — Axes + endpoint labels + named anchors
 
 x and y axes use [Draw](/kernel/components/draw/overview) with `arrow="->"` to get arrow-tipped segments. The `x` / `y` labels at the axis ends are now written as [@retikz/tex](/kernel/packages/tex) `$x$` / `$y$` inline formulas (`$...$` inside a [Node](/kernel/components/node/overview)'s text), rendering math-italic letters (`stroke="none"` hides the default border). This is the first formula on the page, so **from this step on every demo calls `useLowerTex()` to start MathJax and injects `<Layout lowerTex>`**; without it `$...$` stays literal and math content degrades silently instead of crashing. [Coordinate](/kernel/components/node/coordinate) names the two endpoints (`x-axis` / `y-axis`) so later steps could reference them by id string — this example doesn't end up using them, but we keep them for fidelity to TikZ's `coordinate(x axis)` idiom.
 
-<ComponentPreview name="karl-circle-02-axes" diffFrom="karl-circle-01-circle" size="lg" interactive />
+<ComponentPreview files={{ file: 'karl-circle-02-axes', diffFrom: 'karl-circle-01-circle' }} size="lg" />
 
 ### Step 3 — Grid + ticks
 
 The background grid now uses [Grid](/kernel/components/helpers/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/kernel/components/node/overview) per tick, its text written as `$-\frac{1}{2}$` and friends; `−1/2` / `1/2` are no longer the plain string `-1/2` but real rendered fractions. The label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid” instead of “assemble 10 lines.”
 retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
 
-<ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" interactive />
+<ComponentPreview files={{ file: 'karl-circle-03-ticks', diffFrom: 'karl-circle-02-axes' }} size="lg" />
 
 ### Step 4 — 30° wedge + α label
 
@@ -80,7 +80,7 @@ The wedge is the trickiest step. Use [Sector](/kernel/components/shapes/arc-sect
 
 The α label is written as the `$\alpha$` inline formula (a real Greek letter) at a polar position (`{ angle, radius }`) — `{ angle: -15, radius: 22 }` places it visually centered in the wedge (a negative angle points toward the top of the screen). Its color comes from the node's `textColor` (the whole formula follows `textColor`; for per-segment colors see the `runs` in Step 7).
 
-<ComponentPreview name="karl-circle-04-wedge" diffFrom="karl-circle-03-ticks" size="lg" interactive />
+<ComponentPreview files={{ file: 'karl-circle-04-wedge', diffFrom: 'karl-circle-03-ticks' }} size="lg" />
 
 ### Step 5 — sin α red line + cos α dodgerblue line
 
@@ -88,7 +88,7 @@ The α label is written as the `$\alpha$` inline formula (a real Greek letter) a
 
 Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet — geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
 
-<ComponentPreview name="karl-circle-05-sin-cos" diffFrom="karl-circle-04-wedge" size="lg" interactive />
+<ComponentPreview files={{ file: 'karl-circle-05-sin-cos', diffFrom: 'karl-circle-04-wedge' }} size="lg" />
 
 ### Step 6 — tan α darkorange line + auxiliary ray
 
@@ -96,7 +96,7 @@ The tan line goes from (1, 0) up to (1, tan30°). The original uses TikZ's `name
 
 The pattern here — multiple [Draw](/kernel/components/draw/overview)s coordinating through shared named anchors — is retikz's standard way to wire up a multi-segment figure.
 
-<ComponentPreview name="karl-circle-06-tan" diffFrom="karl-circle-05-sin-cos" size="lg" interactive />
+<ComponentPreview files={{ file: 'karl-circle-06-tan', diffFrom: 'karl-circle-05-sin-cos' }} size="lg" />
 
 ### Step 7 — Right-hand multi-color info box
 
@@ -104,7 +104,7 @@ Finally, mirroring the [TikZ tutorial](https://tikz.dev/tutorial)'s "information
 
 The frame is just this node's own `shape="rectangle"` + `dashed` + `stroke="lightgray"` + `cornerRadius` (no fill, visible in both themes), auto-sized to the content bbox with `align="left"` — one node is both the mixed text+formula block and its frame.
 
-<ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" interactive />
+<ComponentPreview files={{ file: 'karl-circle-07-info', diffFrom: 'karl-circle-06-tan' }} size="lg" />
 
 ## Capabilities
 

@@ -1,12 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import type { RendererMode } from '../../src/modules/docs/components/component-preview';
-import type { PreviewControlRuntimeState } from '../../src/modules/docs/components/component-preview/runtime';
+import type { PreviewControlRuntimeState } from '../../src/modules/docs/components/component-preview/preview-panel';
+import type { RendererMode } from '../../src/modules/docs/components/component-preview/types';
 
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import * as previewContextExports from '../../src/modules/docs/components/component-preview/context';
-import { usePreviewControlRuntime } from '../../src/modules/docs/components/component-preview/runtime';
+import { usePreviewControlRuntime } from '../../src/modules/docs/components/component-preview/preview-panel';
 
 type ProbeProps = {
   rendererMode: RendererMode;

@@ -18,7 +18,7 @@ The two-step split exists because an event handler is a function and cannot be s
 
 Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the element has an `id`. The handler signature is `(event, context) => void`: the first arg is the native DOM `Event`, the second `context` is a renderer-agnostic runtime context (see [bottom](#the-handler-context)). The old `event => …` form that only uses `event` keeps working.
 
-<ComponentPreview name="hydration-click" size="md" interactive />
+<ComponentPreview files="hydration-click" size="md" />
 
 <p className="text-center text-sm text-muted-foreground">
   Click the orange node to toggle the highlight; the counter next to it ticks up.
@@ -127,7 +127,7 @@ The handler's second arg `context` fills in "the semantic element that was hit" 
 
 **Triggering animation from a callback**: give an element a `trigger: 'manual'` animation (no autoplay, waits for a command), then call `context.animation.restart()` inside the handler to replay it on click:
 
-<ComponentPreview name="hydration-context" size="md" interactive />
+<ComponentPreview files="hydration-context" size="md" />
 
 ```tsx
 import { pulse } from '@retikz/core';

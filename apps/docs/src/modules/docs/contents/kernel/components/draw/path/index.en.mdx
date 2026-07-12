@@ -47,25 +47,25 @@ import { Path, Step } from '@retikz/react';
 
 ### Polyline
 
-<ComponentPreview name="path-basic" size="xs" />
+<ComponentPreview files="path-basic" size="xs" />
 
 ### Fold
 
 `<Step kind="fold" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
 
-<ComponentPreview name="path-fold" size="md" />
+<ComponentPreview files="path-fold" size="md" />
 
 ### Closing (cycle)
 
 `<Step kind="cycle" />` closes the current path back to the most recent `move` target — saves writing one explicit endpoint vs. a `line` back to the start. Compiles to SVG path `Z`:
 
-<ComponentPreview name="path-cycle" size="sm" />
+<ComponentPreview files="path-cycle" size="sm" />
 
 ### Filling
 
 `fill` colors the closed region (default `'none'` — stroke only, backward compatible); `fillRule` controls how self-intersecting / nested sub-paths fill (`'nonzero'` default / `'evenodd'` for ring & hole shapes). Pairs with `cycle`:
 
-<ComponentPreview name="path-fill" size="sm" />
+<ComponentPreview files="path-fill" size="sm" />
 
 ### Arrows
 
@@ -86,25 +86,25 @@ When an endpoint references a node (the `{ id }` object form, or an id inside a 
 
 Below, two edges target the same five-pointed star (no node `boundary` set) and each picks its connection surface at the endpoint: the solid edge clips to the real tips by default, the dashed edge uses `boundary="circle"` to clip to the circumscribed circle — the surface is decided per edge.
 
-<ComponentPreview name="path-boundary" size="sm" />
+<ComponentPreview files="path-boundary" size="sm" />
 
 ### Styling
 
 `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` match `<Draw>`:
 
-<ComponentPreview name="path-dashed" size="xs" />
+<ComponentPreview files="path-dashed" size="xs" />
 
 #### Dash offset
 
 `dashOffset` shifts only where the dash rhythm starts; it does not change the `dashPattern`. The three lines below all use `[18, 10]` and only vary the offset:
 
-<ComponentPreview name="path-dash-offset" size="xs" />
+<ComponentPreview files="path-dash-offset" size="xs" />
 
 #### Gradient stroke
 
 Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `strokeOpacity`, and other stroke styles still apply to the line itself.
 
-<ComponentPreview name="path-stroke-paint" size="sm" />
+<ComponentPreview files="path-stroke-paint" size="sm" />
 
 If a gradient-stroked path also has arrows, give `arrowDetail.color` or the endpoint `color` an explicit solid color; marker geometry cannot inherit a resource-backed stroke.
 
@@ -118,7 +118,7 @@ If a gradient-stroked path also has arrows, give `arrowDetail.color` or the endp
 
 </Comparison>
 
-<ComponentPreview name="path-line-style" />
+<ComponentPreview files="path-line-style" />
 
 #### Semantic thickness preset
 
@@ -130,7 +130,7 @@ These presets reuse TikZ names from `ultra thin` through `ultra thick`; retikz e
 
 </Comparison>
 
-<ComponentPreview name="path-thickness" size="md" />
+<ComponentPreview files="path-thickness" size="md" />
 
 #### Opacity
 
@@ -138,13 +138,13 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 
 `strokeOpacity` uses the same stroke-opacity naming as Scene primitives, and matches the stroke-only opacity field on `<Node>`.
 
-<ComponentPreview name="path-opacity" />
+<ComponentPreview files="path-opacity" />
 
 #### Stacking order (zIndex)
 
 By default stacking = declaration order. `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). The two filled rectangles below are declared dodgerblue-then-red (red on top by default); setting `zIndex={1}` on the earlier dodgerblue path lifts it above the red one:
 
-<ComponentPreview name="path-z-index" size="sm" />
+<ComponentPreview files="path-z-index" size="sm" />
 
 ### Curves and transforms
 
@@ -152,29 +152,29 @@ By default stacking = declaration order. `zIndex` overrides it explicitly: highe
 
 Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accepts `outAngle` / `inAngle` for the start out-angle and end in-angle to draw asymmetric curves (TikZ `out=` / `in=`); `looseness` tunes the control-point distance (default ≈1). **out/in take precedence over `bendDirection`.** When `from == to` (same node / same coordinate) it degenerates into a **self-loop** — the prime use case for out/in (a state-machine self transition), which a symmetric bend cannot draw.
 
-<ComponentPreview name="path-outin-loop" size="sm" />
+<ComponentPreview files="path-outin-loop" size="sm" />
 
 #### Whole-path transform (rotate / scale)
 
 `rotate` (degrees) / `scale` (a number for uniform, or `{ x, y }` for non-uniform) transform the whole path around its **bounding-box center**, sparing a wrapping `<Scope transforms>` for a single path. The order is a hard contract: path endpoints resolve first, arrow shrink is computed on the **untransformed** geometry, then everything is wrapped in a group — so arrow direction follows the transform correctly without misalignment.
 
-<ComponentPreview name="path-transform" size="sm" />
+<ComponentPreview files="path-transform" size="sm" />
 
 #### Mid-path marks
 
 `marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/extend/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`** (TikZ semantics, same as endpoint arrows): the thicker the line, the larger the mark.
 
-<ComponentPreview name="path-marks" size="xs" />
+<ComponentPreview files="path-marks" size="xs" />
 
 #### Rounded corners (roundedCorners)
 
 `roundedCorners` rounds every **line↔line joint** of the path with a tangent arc of the same radius — handy for flowcharts, routing, and polyline connections where you want soft corners instead of sharp ones. Omitted = sharp corners everywhere (behavior unchanged). The first / last endpoint stays sharp; a joint whose neighbor is a curve / arc / Bézier / fold stays sharp too. When the radius is too large it is **clamped per joint** to what the adjacent segment lengths allow. After a `cycle` close, the closing joint is rounded as well.
 
-<ComponentPreview name="path-rounded-corners" size="sm" />
+<ComponentPreview files="path-rounded-corners" size="sm" />
 
 `roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.) The contrast bottom uses a very thick stroke: the top path uses `lineJoin="round"` (only the stroke is rounded, the centerline stays sharp), the bottom uses `roundedCorners` (the centerline itself is an arc):
 
-<ComponentPreview name="path-rounded-vs-linejoin" size="sm" />
+<ComponentPreview files="path-rounded-vs-linejoin" size="sm" />
 
 <Comparison target="tikz" title="roundedCorners">
 
@@ -197,45 +197,45 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 Centerline mode offsets both sides of the open path by `width` and emits a closed Path primitive. `stroke` outlines the band boundary; it does not draw the centerline.
 
-<ComponentPreview name="ribbon-basic" size="xs" />
+<ComponentPreview files="ribbon-basic" size="xs" />
 
 #### Width and interpolation
 
 `width` can be fixed, split across start/end endpoints, or expressed as `kind: 'stops'` along the path. `interpolation` controls how width changes between those values.
 
-<ComponentPreview name="ribbon-interpolation" size="md" />
+<ComponentPreview files="ribbon-interpolation" size="md" />
 
-<ComponentPreview name="ribbon-width-stops" size="xs" />
+<ComponentPreview files="ribbon-width-stops" size="xs" />
 
 The built-in `bulge` profile uses `base` for both endpoint widths and `peak` for the midpoint width; when `peak` is smaller than `base`, the middle narrows instead.
 
-<ComponentPreview name="ribbon-width-profile" size="xs" />
+<ComponentPreview files="ribbon-width-profile" size="xs" />
 
 #### Label placement
 
 Ribbon labels use the same GeometryLabel contract. `position` accepts keywords or a numeric `0..1` offset; `side` keeps the same default outside distance as Path labels; `placement="inside"` places the label inside the band, and `sloped: true` rotates along the centerline tangent.
 
-<ComponentPreview name="ribbon-label" size="sm" />
+<ComponentPreview files="ribbon-label" size="sm" />
 
 #### Endpoints and caps
 
 `start` / `end` configure endpoint width, direction, and cap. `align` controls where the centerline sits inside the band width, and `samples` can switch complex curves to sampled construction.
 
-<ComponentPreview name="ribbon-direction" size="md" />
+<ComponentPreview files="ribbon-direction" size="md" />
 
-<ComponentPreview name="ribbon-align-cap" size="md" />
+<ComponentPreview files="ribbon-align-cap" size="md" />
 
 #### Precomputed boundaries
 
 When a layout algorithm has already computed both sides, use `ribbon.mode = 'boundary'` and provide `upper` / `lower` as two open step sequences. This mode does not need `children`, and it does not accept `width`.
 
-<ComponentPreview name="ribbon-boundary" size="sm" />
+<ComponentPreview files="ribbon-boundary" size="sm" />
 
 #### Styling
 
 Ribbon is a closed area, so styling focuses on `fill`, outline `stroke`, opacity, shadows, and blend modes. `pathDefault` forwards the Path-shared drawable style fields to ribbon kind; arrows, dashes, line caps, and other stroke-only semantics belong to the default `stroke` kind.
 
-<ComponentPreview name="ribbon-style" size="md" />
+<ComponentPreview files="ribbon-style" size="md" />
 
 ## API Reference
 

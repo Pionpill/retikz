@@ -11,7 +11,7 @@ It brings a mature vocabulary of nodes, paths, and anchors into the browser thro
 
 This diagram does one small thing: it places two named nodes, then uses one arrowed `Draw` to connect them. It shows retikz's basic flow: place reusable points first, then stitch primitives together with path relationships.
 
-<ComponentPreview name="minimal-example" size="xs" />
+<ComponentPreview files="minimal-example" size="xs" />
 
 `@retikz/core` has a simple mental model: first describe **what each primitive is**, then describe **the connections and geometry between primitives**.
 
@@ -38,7 +38,7 @@ AI-friendliness shapes every layer of the design: schemas keep their hierarchy a
 
 ## IR at the Center
 
-<ComponentPreview name="ir-centric" hideCode />
+<ComponentPreview files="ir-centric" hideCode />
 
 Every input form (JSX / DSL / AI) compiles to the same IR; every output form (renderer) reads from it.
 **Persistence, cross-platform support, and AI integration aren't separate features — they're the same dividend paid by an IR-centric model.**
@@ -89,7 +89,7 @@ Sugar only simplifies common authoring. It does not enter the IR or add capabili
 
 The Kernel group currently contains six lockstep-versioned packages, spanning the zero-dependency computation base, rendering, framework entries, and optional formula support:
 
-<ComponentPreview name="package-viz" size="md" hideCode />
+<ComponentPreview files="package-viz" size="md" hideCode />
 
 Solid lines show primary build dependencies; dashed lines show secondary direct dependencies. `math` provides pure computational geometry, `core` defines the graphics contract, `render` provides rendering backends, `react` / `vanilla` provide authoring entries, and `tex` plugs formula rendering into core.
 

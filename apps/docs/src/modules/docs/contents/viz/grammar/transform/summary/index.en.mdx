@@ -14,7 +14,7 @@ This page covers only plot-registered statistical drawing capabilities. General 
 
 `bin` cuts a continuous field into intervals and outputs one row per bin. Output rows include the bin lower bound, upper bound, and metric fields. The default metric is `{ kind: 'count', as: 'binCount' }`.
 
-<ComponentPreview name="transform-histogram" sourceFiles={['transform-histogram.data.ts']} />
+<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} />
 
 `IntervalMark` reads `x0` / `x1` for bin edges, drawing adjacent histogram bars on a continuous x axis. `y` reads `binCount` or a custom metric field for height.
 

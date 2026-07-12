@@ -5,7 +5,7 @@ import { Layout } from '@retikz/react';
 import { useMemo } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { buildPreviewIR } from '../../src/modules/docs/components/component-preview';
+import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 
 const hookedEmbeddableAdapter: EmbeddableTier2Adapter = {
   displayName: 'HookedEmbeddable',

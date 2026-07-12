@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import type { PreviewControlConfig, PreviewControlSlot, SourceLang } from './types';
+import type { PreviewControlConfig, PreviewControlSlot, PreviewSourceConfig, SourceLang } from '../types';
 
 /**
  * 收集 contents 下全部 demo 模块与源码字符串。
@@ -13,17 +13,20 @@ export const demoModules: Record<
       default: FC;
       previewIR?: IRScene;
       previewControls?: Array<PreviewControlConfig | PreviewControlSlot>;
+      previewSource?: PreviewSourceConfig;
     }
   | undefined
 > = import.meta.glob<{
   default: FC;
   previewIR?: IRScene;
   previewControls?: Array<PreviewControlConfig | PreviewControlSlot>;
-}>('../../contents/**/*.demo.tsx', { eager: true });
+  previewSource?: PreviewSourceConfig;
+}>('../../contents/**/*.demo.tsx', { base: '../', eager: true });
 
 export const demoSources: Record<string, string | undefined> = import.meta.glob<string>(
   '../../contents/**/*.demo.tsx',
   {
+    base: '../',
     query: '?raw',
     import: 'default',
     eager: true,
@@ -33,6 +36,7 @@ export const demoSources: Record<string, string | undefined> = import.meta.glob<
 export const localSourceFiles: Record<string, string | undefined> = import.meta.glob<string>(
   ['../../contents/**/*.{ts,tsx}', '!../../contents/**/*.demo.tsx'],
   {
+    base: '../',
     query: '?raw',
     import: 'default',
     eager: true,
@@ -43,6 +47,7 @@ export const localSourceFiles: Record<string, string | undefined> = import.meta.
 export const vanillaOverrides: Record<string, string | undefined> = import.meta.glob<string>(
   '../../contents/**/*.vanilla.ts',
   {
+    base: '../',
     query: '?raw',
     import: 'default',
     eager: true,
@@ -53,6 +58,7 @@ export const vanillaOverrides: Record<string, string | undefined> = import.meta.
 export const vanillaModules: Record<string, { svg?: unknown } | undefined> = import.meta.glob(
   '../../contents/**/*.vanilla.ts',
   {
+    base: '../',
     eager: true,
   },
 );
@@ -61,6 +67,7 @@ export const vanillaModules: Record<string, { svg?: unknown } | undefined> = imp
 export const irJsonOverrides: Record<string, string | undefined> = import.meta.glob<string>(
   '../../contents/**/*.ir.json',
   {
+    base: '../',
     query: '?raw',
     import: 'default',
     eager: true,

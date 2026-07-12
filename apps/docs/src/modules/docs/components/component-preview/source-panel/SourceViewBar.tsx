@@ -1,15 +1,6 @@
-import {
-  Braces,
-  Brush,
-  Check,
-  ChevronDown,
-  Copy,
-  Database,
-  FileCode2,
-  FileSymlink,
-  LineDotRightHorizontal,
-} from 'lucide-react';
-import { type ComponentProps, type FC, type ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
+
+import { Braces, Check, ChevronDown, Database, FileCode2, FileSymlink } from 'lucide-react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -22,50 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib';
 
-import type { ComponentSourceFile, RendererMode, SourceView } from '../types';
-
-/** 工具条小型 icon button。 */
-export type ToolbarIconButtonProps = Omit<ComponentProps<'button'>, 'aria-label'> & {
-  label: string;
-  pressed?: boolean;
-};
-
-export const ToolbarIconButton: FC<ToolbarIconButtonProps> = props => {
-  const { label, pressed, className, children, ...rest } = props;
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={pressed}
-      className={cn(
-        buttonVariants({ variant: pressed ? 'secondary' : 'ghost', size: 'icon' }),
-        'size-7 cursor-pointer rounded-sm text-muted-foreground',
-        className,
-      )}
-      {...rest}
-    >
-      {children}
-    </button>
-  );
-};
-
-/** 渲染模式切换按钮 */
-export type RendererModeButtonProps = {
-  rendererMode: RendererMode;
-  onToggle: () => void;
-  className?: string;
-};
-
-export const RendererModeButton: FC<RendererModeButtonProps> = props => {
-  const { rendererMode, onToggle, className } = props;
-  const isCanvas = rendererMode === 'canvas';
-  const label = isCanvas ? 'Canvas renderer' : 'SVG renderer';
-  return (
-    <ToolbarIconButton label={label} title={label} pressed={isCanvas} onClick={onToggle} className={className}>
-      {isCanvas ? <Brush className="size-3.5" /> : <LineDotRightHorizontal className="size-3.5" />}
-    </ToolbarIconButton>
-  );
-};
+import type { ComponentSourceFile, SourceView } from '../types';
 
 const VIEW_META: Record<SourceView, { label: string; text: string; icon: ReactNode }> = {
   react: { label: 'React source', text: 'React', icon: <ReactIcon className="size-3.5" /> },
@@ -75,30 +23,32 @@ const VIEW_META: Record<SourceView, { label: string; text: string; icon: ReactNo
 
 const DATA_FILE_PATTERN = /\.data\.tsx?$/;
 
-const FileKindIcon: FC<{ filename: string; isMain?: boolean; className?: string }> = ({
-  filename,
-  isMain,
-  className,
-}) =>
-  DATA_FILE_PATTERN.test(filename) ? (
-    <Database className={className} />
-  ) : isMain ? (
-    <FileCode2 className={className} />
-  ) : (
-    <FileSymlink className={className} />
-  );
+type FileKindIconProps = {
+  filename: string;
+  isMain?: boolean;
+  className?: string;
+};
+
+const FileKindIcon: FC<FileKindIconProps> = props => {
+  const { filename, isMain, className } = props;
+
+  if (DATA_FILE_PATTERN.test(filename)) return <Database className={className} />;
+  if (isMain) return <FileCode2 className={className} />;
+  return <FileSymlink className={className} />;
+};
 
 type ViewButtonProps = {
   target: SourceView;
   active: boolean;
   onClick: () => void;
-  /** 在 ButtonGroup 内（与文件下拉拼接）时用 outline 描边以接缝；独立时 active=outline、inactive=ghost */
+  /** 是否与文件选择器组成按钮组。 */
   grouped?: boolean;
 };
 
 const ViewButton: FC<ViewButtonProps> = props => {
   const { target, active, onClick, grouped } = props;
   const meta = VIEW_META[target];
+
   return (
     <Button
       type="button"
@@ -127,6 +77,7 @@ type FileMenuProps = {
 const FileMenu: FC<FileMenuProps> = props => {
   const { files, activeFileIndex, onFileChange } = props;
   const activeFile = files.at(activeFileIndex) ?? files[0];
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
@@ -163,20 +114,23 @@ const FileMenu: FC<FileMenuProps> = props => {
   );
 };
 
-/** 源码视图切换条。 */
+/** 源码视图切换条属性。 */
 export type SourceViewBarProps = {
-  /** 可用视图（外部已按 react→vanilla→ir 排好） */
+  /** 可用视图。 */
   views: ReadonlyArray<SourceView>;
-  /** 当前视图 */
+  /** 当前视图。 */
   view: SourceView;
-  onViewChange: (next: SourceView) => void;
-  /** 当前视图的源码文件 */
+  /** 切换当前视图。 */
+  onViewChange: (view: SourceView) => void;
+  /** 当前视图下的源码文件。 */
   files: ReadonlyArray<ComponentSourceFile>;
-  /** 当前文件下标 */
+  /** 当前源码文件下标。 */
   activeFileIndex: number;
+  /** 切换当前源码文件。 */
   onFileChange: (index: number) => void;
 };
 
+/** 源码视图与文件切换条。 */
 export const SourceViewBar: FC<SourceViewBarProps> = props => {
   const { views, view, onViewChange, files, activeFileIndex, onFileChange } = props;
   const showViews = views.length > 1;
@@ -202,22 +156,5 @@ export const SourceViewBar: FC<SourceViewBarProps> = props => {
         return <ViewButton key={target} target={target} active={active} onClick={() => onViewChange(target)} />;
       })}
     </div>
-  );
-};
-
-/** 复制按钮。 */
-export type CopyButtonProps = {
-  copied: boolean;
-  onCopy: () => void;
-  className?: string;
-  title?: string;
-};
-
-export const CopyButton: FC<CopyButtonProps> = props => {
-  const { copied, onCopy, className, title } = props;
-  return (
-    <ToolbarIconButton label={copied ? 'Copied' : 'Copy'} title={title} onClick={onCopy} className={className}>
-      {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-    </ToolbarIconButton>
   );
 };

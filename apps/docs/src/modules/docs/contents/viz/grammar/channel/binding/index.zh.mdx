@@ -16,13 +16,13 @@ description: 通道绑定描述字段或常量如何进入 x、y、color、size�
 
 ## 字段到通道
 
-<ComponentPreview name="data-channel" sourceFiles={['data-channel.data.ts']} />
+<ComponentPreview files={['data-channel', 'data-channel.data.ts']} />
 
 同一行数据可以同时绑定到多个通道：`gdp` 决定横向位置，`life` 决定纵向位置，`region` 决定颜色，`population` 决定点半径，`abbr` 决定文字标注。通道读取的是数据准备阶段得到的 canonical 值（规范化值：`fieldMap`、`format`、`resolveField` 都已生效后写回逻辑字段名的标准值），然后 Plot 再按字段类型和显式 scale 配置派生比例尺。
 
 ## 通道使用
 
-<ComponentPreview name="channel-usage" />
+<ComponentPreview files="channel-usage" />
 
 Plot 的 GOG 层会各自消费自己理解的通道。上面的例子里，`PathMark` 使用 `x` / `y` / `order` / `series` / `color` / `strokeWidth` 生成两条折线；`PointMark` 使用同一批数据行里的 `x` / `y` / `color` / `size` / `shape` 生成散点。`Axis` 消费位置通道派生出的坐标尺度，`Legend` 消费颜色和尺寸通道派生出的 guide 信息。
 

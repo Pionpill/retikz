@@ -11,7 +11,7 @@ description: AI 原生的通用绘图库——用 React 组件或 Vanilla plain 
 
 这张图只做一件最小的事：放两个命名节点，再用一条带箭头的 `Draw` 把它们连起来。它说明 retikz 的基本顺序是先摆可引用的点，再用路径关系把图元串起来。
 
-<ComponentPreview name="minimal-example" size="xs" />
+<ComponentPreview files="minimal-example" size="xs" />
 
 `@retikz/core` 最重要的心智模型只有两层：先描述**图元是什么**，再描述**图元之间的连接与几何关系**。
 
@@ -38,7 +38,7 @@ AI 友好会贯穿每一层设计：schema 的层级与判别字段保持清晰�
 
 ## IR 居中
 
-<ComponentPreview name="ir-centric" hideCode />
+<ComponentPreview files="ir-centric" hideCode />
 
 所有输入方式（JSX / DSL / AI）都翻成同一份 IR；所有输出方式（renderer）都从 IR 出发。
 **持久化、跨平台和 AI 接入并不是彼此独立的能力，而是 IR 居中带来的同一份红利。**
@@ -89,7 +89,7 @@ Sugar 只简化常见写法，不进入 IR，也不增加 Kernel 无法表达的
 
 Kernel 组目前包含六个同版本发布的包，从零依赖计算底座到渲染、框架入口与可选公式能力逐层协作：
 
-<ComponentPreview name="package-viz" size="md" hideCode />
+<ComponentPreview files="package-viz" size="md" hideCode />
 
 实线表示主要构建依赖，虚线表示次要直接依赖。`math` 提供纯计算几何，`core` 定义图形契约，`render` 提供渲染后端，`react` / `vanilla` 提供作者入口，`tex` 通过 core 的注入能力接入公式渲染。
 

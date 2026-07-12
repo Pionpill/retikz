@@ -4,6 +4,12 @@ import { pulse } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { useState } from 'react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
 const GetStartStep4: FC = () => {
   const [count, setCount] = useState(0);
 

@@ -40,41 +40,41 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 `x` / `y` 决定路径经过哪些点，`order` 决定这些点的连接顺序。左侧是二维笛卡尔坐标，右侧是二维极坐标，用同一组数据对比位置通道在不同坐标系下的投影。
 
-<ComponentPreview name="line-basic" sourceFiles={['line-basic.data.ts']} />
+<ComponentPreview files={['line-basic', 'line-basic.data.ts']} />
 
 ### 系列属性
 
 给 `series` 一个字段，数据会先按该字段拆成多组，每组下沉为一条 core Path。这个例子显式按 `city` 拆分，左侧看多系列折线，右侧看同一组系列在极坐标下形成的线框。
 
-<ComponentPreview name="line-series" sourceFiles={['line-series.data.ts']} />
+<ComponentPreview files={['line-series', 'line-series.data.ts']} />
 
 不写 `series`、只给 `color` 一个分类字段时，PathMark 也会按该字段隐式拆系列。这个例子换成另一组数据，突出“颜色字段本身就是系列字段”的紧凑写法。
 
-<ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
+<ComponentPreview files={['line-color-split', 'line-series.data.ts']} />
 
 ### 图元局部变换
 
 `transform` 写在 PathMark 上时，只改变这条路径层看到的数据。下面的点层保留每个渠道的原始值，深色路径层只在当前图元内执行 `smooth`，再把采样出的趋势行连成路径。
 
-<ComponentPreview name="line-transform" sourceFiles={['line-transform.data.ts']} />
+<ComponentPreview files={['line-transform', 'line-transform.data.ts']} />
 
 ### 填充与描边
 
 `stroke` 和 `fill` 都可以写成 `IRPaintSpec`。左侧把线性渐变用在描边上；右侧先用 `closure={{ kind: 'baseline' }}` 生成可填充面积层，再把渐变交给 `fill`，最后叠一条只描边的 PathMark 作为上边界。
 
-<ComponentPreview name="line-paint" sourceFiles={['line-basic.data.ts']} />
+<ComponentPreview files={['line-paint', 'line-basic.data.ts']} />
 
 ### 几何属性
 
 `closed` 会让末点回连首点。在 `polar2D` 下，PathMark 默认闭合；左侧省略 `closed` 也会形成雷达线框，右侧显式写 `closed={false}` 才会保持开放路径。
 
-<ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
+<ComponentPreview files={['line-radar', 'line-radar.data.ts']} />
 
 ### 连接方式
 
 `curve` 控制相邻点之间如何连接。左侧是二维笛卡尔坐标，右侧是二维极坐标；切换连接方式时，两边会同步更新。极坐标下不额外设置内部半径，PathMark 会按角向和径向位置直接投影。`monotoneX` / `monotoneY` 依赖投影后的屏幕 x / y 单调，在 polar2D 下会自动降级为 `linear`，避免闭合区域产生过长控制柄。
 
-<ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} interactive size="md" />
+<ComponentPreview files={['line-curve', 'line-curve.data.ts']} size="md" />
 
 | 值           | 说明     | 表现                                                              |
 | ------------ | -------- | ----------------------------------------------------------------- |
@@ -93,25 +93,13 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 `closure` 只让 PathMark 闭合成可填充路径，不会自动开启填充。`stroke` 默认开启，写 `stroke="none"` 可以关闭边框线；`fill` 默认关闭，写具体颜色或 paint 后才填充内容。左侧的面积效果由两层 PathMark 组合：一层 `baseline + fill + stroke="none"` 负责填充，另一层普通 path 负责上边界描边；右侧使用 `cycle + fill` 填充雷达多边形。左上角可以切换 `curve`，默认是直线连接；baseline / stack 的回程下边界也会使用同一个连接方式。
 
-<ComponentPreview
-  name="line-closure"
-  controlsName="line-curve"
-  sourceFiles={['line-closure.data.ts']}
-  interactive
-  size="md"
-/>
+<ComponentPreview files={['line-closure', 'line-closure.data.ts']} controlsName="line-curve" size="md" />
 
 `baseline` 省略时会跟随值轴：0 落在值轴 domain 内就使用 0；如果显式 domain 不包含 0，例如 `[30, 80]`，则使用离 0 最近的 domain 边界 30。需要固定到其它值时再显式传 `closure={{ kind: 'baseline', baseline: ... }}`。
 
 堆叠面积可以把上边界绑定到 `y`，再把下边界字段交给 `closure.baselineField`。这个字段可以来自 stack transform，也可以像示例一样来自预先算好的 `y0` / `y1`；示例同样用填充层和描边层组合出面积图效果。设置 `curve` 时，上下两条边界都会按同一种方式连接。
 
-<ComponentPreview
-  name="line-stack-area"
-  controlsName="line-curve"
-  sourceFiles={['line-stack-area.data.ts']}
-  interactive
-  size="md"
-/>
+<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} controlsName="line-curve" size="md" />
 
 ### 路径中断
 
@@ -119,7 +107,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 这个例子里 `Yasin` 的 2019 年数据缺失，因此线和填充都会在 2018 到 2020 之间断开。确实需要跨过缺口连接时，再显式设置 `connectNulls`。
 
-<ComponentPreview name="line-interruption" sourceFiles={['line-interruption.data.ts']} size="md" />
+<ComponentPreview files={['line-interruption', 'line-interruption.data.ts']} size="md" />
 
 ## 技术原理
 

@@ -69,35 +69,35 @@ Array order is application order — the 0-th entry is the outermost (applied la
 
 Cartesian translate is the most common form — the cluster of nodes + paths share one shift:
 
-<ComponentPreview name="scope-translate-basic" size="xs" />
+<ComponentPreview files="scope-translate-basic" size="xs" />
 
 Polar applies a polar offset:
 
-<ComponentPreview name="scope-polar-translate" size="xs" />
+<ComponentPreview files="scope-polar-translate" size="xs" />
 
 At uses direction-relative (`direction` + referent + optional `distance`):
 
-<ComponentPreview name="scope-at-translate" size="xs" />
+<ComponentPreview files="scope-at-translate" size="xs" />
 
 Offset applies an arbitrary `[dx, dy]`:
 
-<ComponentPreview name="scope-offset-translate" size="xs" />
+<ComponentPreview files="scope-offset-translate" size="xs" />
 
 Between places the scope at a proportional point between two endpoints:
 
-<ComponentPreview name="scope-between-translate" size="xs" />
+<ComponentPreview files="scope-between-translate" size="xs" />
 
 ### Rotate and scale
 
 `rotate` rotates around the scope's local origin by `degrees`; `scale` is uniform or per-axis — node sizes, font sizes, spacing, and path endpoint boundary clip all align with the scope's visual dimensions:
 
-<ComponentPreview name="scope-rotate-scale" size="sm" />
+<ComponentPreview files="scope-rotate-scale" size="sm" />
 
 #### Recipe: orbit + self-rotation facing the center
 
 A bare `polar-translate` only moves the scope's origin — it does **not** rotate the local frame, so animating its angle keeps the scope content's orientation fixed ("like a satellite drifting along the orbit"). To make the scope also self-rotate so its front always faces the center ("tidal lock"), chain a `rotate(angle + 180)`:
 
-<ComponentPreview name="scope-orbit-facing-hub" size="md" />
+<ComponentPreview files="scope-orbit-facing-hub" size="md" />
 
 Chain application order: in `[t0, t1]` the **last** element is applied first (innermost), so `rotate` runs first to align local +x toward hub, then `polar-translate` pushes the origin to the orbital position. The `+ 180` flips scope's +x from "pointing outward" to "pointing at hub"; drop it to face outward (front away from center).
 
@@ -105,17 +105,17 @@ Chain application order: in `[t0, t1]` the **last** element is applied first (in
 
 A scope can contain another scope — outer scope positions the cluster, inner scope positions children within; no depth limit:
 
-<ComponentPreview name="scope-nested-compose" size="xs" />
+<ComponentPreview files="scope-nested-compose" size="xs" />
 
 ### Cross-scope references
 
 Child node ids register into the global nodeIndex by default, and outer path endpoints / `at.of` can reference them:
 
-<ComponentPreview name="scope-cross-reference" size="xs" />
+<ComponentPreview files="scope-cross-reference" size="xs" />
 
 Append `.<anchor>` / `.<deg>` to the id for the node's visual border point (computed on the global rect with accumulated rotate / scale):
 
-<ComponentPreview name="scope-anchor-cross" size="sm" />
+<ComponentPreview files="scope-anchor-cross" size="sm" />
 
 Note that Web anchors (`top` / `bottom-left`, the 8 directions) resolve on the node's **bounding box (AABB)** by default, not the shape outline — so on the circular `hub`, `bottom-left` lands at the bounding box's bottom-left corner, **outside** the circle; only the 4 edge midpoints (`top` / `right` / `bottom` / `left`) actually sit on the circle. To hug the shape outline itself, use an angle anchor `.<deg>` (e.g. `hub.225` for the southwest point on the circle), or set `boundary="circle"` so standard direction anchors follow the circle. Compass names such as `north` / `south-west` remain accepted input aliases.
 
@@ -123,15 +123,15 @@ Note that Web anchors (`top` / `bottom-left`, the 8 directions) resolve on the n
 
 When `<Scope id="cluster">` is set, external paths can use `'cluster'` / `'cluster.<anchor>'` / `'cluster.<deg>'` to reference the scope's visual boundary — same as a normal rectangle node:
 
-<ComponentPreview name="scope-id-reference" size="sm" />
+<ComponentPreview files="scope-id-reference" size="sm" />
 
 When nested, each scope.id keeps its own bbox:
 
-<ComponentPreview name="scope-id-nested" size="sm" />
+<ComponentPreview files="scope-id-nested" size="sm" />
 
 scope.id can also be a `polar.origin` / `at.of` / `offset.of` referent (resolves to bbox center):
 
-<ComponentPreview name="scope-id-referent" size="md" />
+<ComponentPreview files="scope-id-referent" size="md" />
 
 bbox compute timing / nesting rules / which layouts contribute are in § How it works §「scope.id synthetic bbox」.
 
@@ -139,7 +139,7 @@ bbox compute timing / nesting rules / which layouts contribute are in § How it 
 
 `boundingShape` makes the scope.id handle take an envelope of the given shape instead of the default axis-aligned rectangle (AABB). Omitted / `'rectangle'` is unchanged; `'circle'` takes the **minimal enclosing circle** of the subtree point set — `cluster.<anchor>` / `cluster.<deg>` and connecting endpoints all land on the **circle**, which suits round / polar panels:
 
-<ComponentPreview name="scope-bounding-shape" size="sm" />
+<ComponentPreview files="scope-bounding-shape" size="sm" />
 
 `boundingShape` is a controlled enum: only `'rectangle'` (default) and `'circle'` are accepted — the schema rejects any other value at parse time. `'polygon'` / `'ellipse'` are deferred because each needs its own minimal-enclosing algorithm; this is intentionally a closed set rather than the open shape reference Node `shape` / `boundary` use.
 
@@ -147,15 +147,15 @@ bbox compute timing / nesting rules / which layouts contribute are in § How it 
 
 Inside a scope, `<Node>` / `<Coordinate>` / `<Path>` `Step.to` using polar / at / offset resolve the referent globally, while the relative part rotates / scales with the current scope:
 
-<ComponentPreview name="scope-position-polar-in-rotate" size="sm" />
+<ComponentPreview files="scope-position-polar-in-rotate" size="sm" />
 
 `direction: 'right'` is the **current scope's local** right — after the scope rotates 90°, "right" visually becomes "down":
 
-<ComponentPreview name="scope-position-at-cross-scope" size="sm" />
+<ComponentPreview files="scope-position-at-cross-scope" size="sm" />
 
 `offset: [40, 0]` is measured in scope local; after `scale(2)`, the visual offset becomes (80, 0):
 
-<ComponentPreview name="scope-position-offset-with-scale" size="sm" />
+<ComponentPreview files="scope-position-offset-with-scale" size="sm" />
 
 Detailed projection formula / edge cases (nested polar / scope translate / scale=0 / path step.to) are in § How it works §「Relative positioning projection」.
 
@@ -169,15 +169,15 @@ Detailed projection formula / edge cases (nested polar / scope translate / scale
   description="localNamespace introduces a namespace stack: inside-out lookup makes id resolution depend on nesting depth, shadowing silently masks same-named outer ids, and outside code can no longer reference the isolated inner ids. Unless you are genuinely doing subdiagram reuse / templating, prefer giving ids distinct names (e.g. a prefix) rather than leaning on localNamespace to dodge name clashes."
 />
 
-<ComponentPreview name="scope-local-namespace-basic" size="xs" />
+<ComponentPreview files="scope-local-namespace-basic" size="xs" />
 
 Nested localNamespace forms a stack of namespace frames; an inner path's id lookup walks from inner to outer:
 
-<ComponentPreview name="scope-local-namespace-nested" size="xs" />
+<ComponentPreview files="scope-local-namespace-nested" size="xs" />
 
 The same id across different frames is not a conflict; inside-out lookup automatically shadows outer ids:
 
-<ComponentPreview name="scope-local-namespace-shadowing" size="sm" />
+<ComponentPreview files="scope-local-namespace-shadowing" size="sm" />
 
 inside-out / shadowing / scope.id-registers-in-parent-frame semantics are in § How it works §「Namespace stack and lookup」.
 
@@ -185,7 +185,7 @@ inside-out / shadowing / scope.id-registers-in-parent-frame semantics are in § 
 
 A duplicate id in the same frame triggers a `DUPLICATE_NODE_ID` warning and the later definition overrides the earlier one (last-wins, **does not throw**):
 
-<ComponentPreview name="scope-duplicate-id-warn" size="xs" />
+<ComponentPreview files="scope-duplicate-id-warn" size="xs" />
 
 Trigger conditions / cross-frame behavior / v0.1 comparison are in § How it works §「Duplicate id and conflict handling」.
 
@@ -197,7 +197,7 @@ A scope doubles as a style-default anchor, exposing three style surfaces to its 
 
 `<Scope color>` cascades the current color to every inner element — node border / text, path stroke / arrow / edge label all default to it; individual fields (`stroke` / `fill` / `textColor`) override the master when set explicitly:
 
-<ComponentPreview name="scope-style-cascade" size="xs" />
+<ComponentPreview files="scope-style-cascade" size="xs" />
 
 The master color also tints node `fill`; the anchor nodes top set `fill="white"` to cut that fill so their text stays readable. What follows the color is the **master `color`**, not `stroke` — `<Path color>` colors the label / arrow too, while `<Path stroke>` only paints the line and leaves the label unchanged.
 
@@ -205,13 +205,13 @@ The master color also tints node `fill`; the anchor nodes top set `fill="white"`
 
 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` each attach defaults to one element family, flat and independent. `nodeDefault` carries node-only fields like shape / spacing (a bare `color` can't reach `shape` — use `nodeDefault`); `pathDefault` applies to Path and passes its shared geometry style fields to Ribbon; arrows go through the separate `arrowDefault`, so `pathDefault` excludes them:
 
-<ComponentPreview name="scope-style-typed-defaults" size="xs" />
+<ComponentPreview files="scope-style-typed-defaults" size="xs" />
 
 #### resetStyle inheritance barrier
 
 `resetStyle` cuts the outer scope's inheritance (master-color cascade + typed defaults) back to the built-in baseline; the scope's own values and inner scopes still apply. `true` cuts all; pass a channel array (`['node' | 'path' | 'label' | 'arrow']`) to cut per type:
 
-<ComponentPreview name="scope-style-reset" size="xs" />
+<ComponentPreview files="scope-style-reset" size="xs" />
 
 `resetStyle` only cuts the scope inheritance, **not the structural relation between an element and its host** — labels / arrows still follow their owning path / node's resolved color: `resetStyle={['label']}` only ignores the outer `labelDefault`, the label still follows its line. Priority chain / master-color expansion / opacity-does-not-compound details are in § How it works §「Style inheritance resolution」.
 
@@ -225,7 +225,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 `zIndex` positions the **whole scope** (the `GroupPrim` it compiles to) among its siblings in the parent layer; it **does not affect the relative stacking of children inside the scope**. The two node clusters bottom overlap and are declared A-then-B (group B on top by default); setting `zIndex={1}` on the earlier A group lifts the entire group top B:
 
-<ComponentPreview name="scope-z-index" size="sm" />
+<ComponentPreview files="scope-z-index" size="sm" />
 
 ### Clipping
 
@@ -235,7 +235,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
 ```
 
-<ComponentPreview name="scope-clip" size="md" />
+<ComponentPreview files="scope-clip" size="md" />
 
 ## How it works
 
@@ -249,7 +249,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 A scope does **not** introduce a namespace boundary by default — child node / coordinate / nested scope.id ids all register into the current top frame; ids from multiple stacked scopes flow up to the `<Layout>` root frame, and outer paths can reference them directly. Only `localNamespace: true` makes the scope push its own frame and isolate the subtree.
 
-<ComponentPreview name="scope-namespace-stack" hideCode />
+<ComponentPreview files="scope-namespace-stack" hideCode />
 
 <Comparison target="tikz" title="Default namespace behavior">
 

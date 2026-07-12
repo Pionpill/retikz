@@ -9,7 +9,7 @@ description: 用 channelDefinitions 注册新的通道 definition，让自定义
 
 下面的 demo 定义了 `intensity`：它读取 `score` 字段，把数值映射到 `[0.3, 1]`，再交付给 core `IRNode.opacity`。definition 不判断 `mark.type`；某个 mark 是否消费 Node / Path / Scope 通道，由 mark definition 自己声明。
 
-<ComponentPreview name="custom-channel" size="md" />
+<ComponentPreview files="custom-channel" size="md" />
 
 definition 是运行时能力。内置通道和自定义通道合并进同一个 registry，再按 definition kind 统一进入 position / mark / scope / node / path 的消费路径。
 

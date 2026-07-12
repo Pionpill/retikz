@@ -11,13 +11,13 @@ In React, write a generator step with `<Step kind="generator" name="..." params=
 
 `parabola` is the built-in path generator in core: `from → to` plus a top-level Target `control` as the control point, producing one quadratic Bézier. It requires `step.to`; omitting it throws at compile time.
 
-<ComponentPreview name="path-generator-parabola" size="xs" />
+<ComponentPreview files="path-generator-parabola" size="xs" />
 
 ## Registering a custom generator
 
 To add your own curve, create a definition with `definePathGenerator`, then inject it through `CompileOptions.pathGenerators` or `<Layout pathGenerators>`.
 
-<ComponentPreview name="path-generator-sin" size="xs" />
+<ComponentPreview files="path-generator-sin" size="xs" />
 
 A `PathGeneratorDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it in `definePathGenerator` for a best-effort registration-time meta-check:
 

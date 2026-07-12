@@ -9,7 +9,7 @@ description: retikz 的图表层：用 Plot IR 描述图表语义，把数据单
 
 ## core + 图形语法
 
-<ComponentPreview name="plot-grammar-parts" size="md" hideCode />
+<ComponentPreview files="plot-grammar-parts" size="md" hideCode />
 
 plot 的本质是 **core + 图形语法**。core 提供最终能渲染的节点、路径、Scope 和 Scene；plot 不另造一套渲染器，而是在 core 之上增加“字段如何变成图形”的语法层。
 
@@ -21,7 +21,7 @@ plot 的本质是 **core + 图形语法**。core 提供最终能渲染的节点�
 
 ## Plot IR 居中
 
-<ComponentPreview name="plot-ir-centric" size="md" hideCode />
+<ComponentPreview files="plot-ir-centric" size="md" hideCode />
 
 Plot 的中心不是一份巨大的数据表，而是一份描述图表语义的 Plot IR。组件、手写 spec 或 AI 都先形成同一份 IR；真实数据在下沉时才和 IR 汇合，经 `lowerPlots` 变成 core 能理解的节点与路径。
 

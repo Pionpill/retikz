@@ -4,10 +4,16 @@ import { pulse } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import { useState } from 'react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
 /**
  * 水合 context demo：handler 第二参 context 读 meta + 命令式触发动画
  * @description 节点带 `trigger:'manual'` 的 pop 动画（pulse 单次、不自播）；点击经 `context.animation.restart()`
- *   重播本节点动画，并经 `context.meta` 取 provenance 显示。含 hooks → ComponentPreview 须开 `interactive`。
+ *   重播本节点动画，并经 `context.meta` 取 provenance 显示。含 hooks，故模块禁用自动 IR 派生。
  */
 const Demo: FC = () => {
   const [last, setLast] = useState('—');

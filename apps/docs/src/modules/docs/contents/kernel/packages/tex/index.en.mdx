@@ -45,7 +45,7 @@ const Diagram = () => {
 
 `$...$` uses inline metrics and sits on the text baseline; `$$...$$` uses display metrics (roomier fractions / sums / integrals). When a node's entire content is one `$$...$$`, it is equivalent to a standalone formula block, sized by the glyph bbox:
 
-<ComponentPreview name="tex-standalone" interactive />
+<ComponentPreview files="tex-standalone" />
 
 ## Inline text + math
 
@@ -70,19 +70,19 @@ For **per-segment color / style**, use explicit `runs`: each run is `{ text, fil
 
 A node can carry a multiline LaTeX environment (inside one `$$...$$`) and remain a single bbox / connection target:
 
-<ComponentPreview name="tex-multiline" interactive />
+<ComponentPreview files="tex-multiline" />
 
 ## Framed formulas
 
 Give a math-bearing `<Node>` a `shape` to get a framed formula. The container is sized by the formula bbox, padding, and minimum size; the frame uses the node's regular `fill` / `stroke` / `cornerRadius`:
 
-<ComponentPreview name="tex-framed" interactive />
+<ComponentPreview files="tex-framed" />
 
 ## Manual injection
 
 If you would rather not use the `useLowerTex` hook, build `lowerTex` yourself from the `@retikz/tex` main entry (`createMathJaxEngine` + `createLowerTex`) and pass it to `<Layout lowerTex>`:
 
-<ComponentPreview name="tex-manual-react" interactive />
+<ComponentPreview files="tex-manual-react" />
 
 ## Vanilla
 

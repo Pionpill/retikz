@@ -69,35 +69,35 @@ scope 子树产出任何 primitive，或带有 `transforms` / `id` / `clip` 之�
 
 笛卡尔 translate 是最常用形态——整组节点 + path 共享一层 shift：
 
-<ComponentPreview name="scope-translate-basic" size="xs" />
+<ComponentPreview files="scope-translate-basic" size="xs" />
 
 polar 用极坐标偏移：
 
-<ComponentPreview name="scope-polar-translate" size="xs" />
+<ComponentPreview files="scope-polar-translate" size="xs" />
 
 at 用方向相对（`direction` + referent + 可选 `distance`）：
 
-<ComponentPreview name="scope-at-translate" size="xs" />
+<ComponentPreview files="scope-at-translate" size="xs" />
 
 offset 用任意 `[dx, dy]` 落点：
 
-<ComponentPreview name="scope-offset-translate" size="xs" />
+<ComponentPreview files="scope-offset-translate" size="xs" />
 
 between 用两个端点的比例点落点：
 
-<ComponentPreview name="scope-between-translate" size="xs" />
+<ComponentPreview files="scope-between-translate" size="xs" />
 
 ### 旋转与缩放
 
 `rotate` 绕 scope 局部原点旋转 degrees 度；`scale` 等比 / 分轴缩放，组内节点尺寸 + 字号 + 间距 + path 端点 boundary clip 都按 scope 视觉尺寸对齐：
 
-<ComponentPreview name="scope-rotate-scale" size="sm" />
+<ComponentPreview files="scope-rotate-scale" size="sm" />
 
 #### Recipe：轨道 + 自转朝向中心
 
 单 `polar-translate` 只平移 scope 原点、**不旋转**坐标系——动画过程 scope 内容朝向恒定，"像沿圆轨自由飘浮的卫星"。要让 scope 自身随轨道角度旋转（"潮汐锁定"，前方始终对准圆心），chain 一个 `rotate(angle + 180)`：
 
-<ComponentPreview name="scope-orbit-facing-hub" size="md" />
+<ComponentPreview files="scope-orbit-facing-hub" size="md" />
 
 chain 应用顺序：数组 `[t0, t1]` 里 `t1` 先生效（innermost），所以先 `rotate` 把局部 +x 转到指向 hub 的方向，再 `polar-translate` 推到轨道位置。`+ 180` 让 scope 的 +x 从"指外"翻转到"指 hub"；想让 +x 指外（前方背离圆心），去掉 `+ 180` 即可。
 
@@ -105,17 +105,17 @@ chain 应用顺序：数组 `[t0, t1]` 里 `t1` 先生效（innermost），所�
 
 scope 内可以再放 scope——外层定位 cluster，内层再定位 cluster 内的子组；嵌套深度无限制：
 
-<ComponentPreview name="scope-nested-compose" size="xs" />
+<ComponentPreview files="scope-nested-compose" size="xs" />
 
 ### 跨 scope 引用
 
 scope 内 node id 默认注册到全局 nodeIndex，外部 path 端点 / `at.of` 都能引用：
 
-<ComponentPreview name="scope-cross-reference" size="xs" />
+<ComponentPreview files="scope-cross-reference" size="xs" />
 
 引用 id 后追加 `.<anchor>` / `.<deg>` 取节点视觉边界点（含累积 rotate / scale 后的全局边界）：
 
-<ComponentPreview name="scope-anchor-cross" size="sm" />
+<ComponentPreview files="scope-anchor-cross" size="sm" />
 
 注意 Web 方位锚（`top` / `bottom-left` 等 8 方位）默认取节点**外接矩形（AABB）**的边 / 角点，不是形状轮廓——所以圆形节点 `hub` 的 `bottom-left` 落在外接框左下角、在圆**外**；只有 `top` / `right` / `bottom` / `left` 4 个边中点正好压在圆周上。要贴形状轮廓本身，用角度锚 `.<deg>`（如 `hub.225` 取圆周上西南方向的点），或给节点设 `boundary="circle"` 让标准方位锚改走圆边界。`north` / `south-west` 这类 compass 名仍可作为输入别名。
 
@@ -123,15 +123,15 @@ scope 内 node id 默认注册到全局 nodeIndex，外部 path 端点 / `at.of`
 
 `<Scope id="cluster">` 设值后，外部可用 `'cluster'` / `'cluster.<anchor>'` / `'cluster.<deg>'` 引用整个 scope 的视觉边界——与普通 rectangle 节点一致：
 
-<ComponentPreview name="scope-id-reference" size="sm" />
+<ComponentPreview files="scope-id-reference" size="sm" />
 
 嵌套时每层 scope.id 各算各的 bbox：
 
-<ComponentPreview name="scope-id-nested" size="sm" />
+<ComponentPreview files="scope-id-nested" size="sm" />
 
 scope.id 也可作为 `polar.origin` / `at.of` / `offset.of` referent（取 bbox 中心）：
 
-<ComponentPreview name="scope-id-referent" size="md" />
+<ComponentPreview files="scope-id-referent" size="md" />
 
 bbox 计算时机 / 嵌套规则 / 哪些 layout 参与详见 § 技术原理 §「scope.id synthetic bbox」。
 
@@ -139,7 +139,7 @@ bbox 计算时机 / 嵌套规则 / 哪些 layout 参与详见 § 技术原理 §
 
 `boundingShape` 让 scope.id 句柄按指定形状取包络，而非默认的轴对齐矩形（AABB）。缺省 / `'rectangle'` 逐字不变；`'circle'` 取子树点集的**最小外接圆**——`cluster.<anchor>` / `cluster.<deg>` 与连线端点都落在**圆周**上，适合圆形 / polar 面板的连接：
 
-<ComponentPreview name="scope-bounding-shape" size="sm" />
+<ComponentPreview files="scope-bounding-shape" size="sm" />
 
 `boundingShape` 是受控枚举：只接受 `'rectangle'`（默认）与 `'circle'`，枚举外的值由 schema 在 parse 边界直接拒绝。`'polygon'` / `'ellipse'` 缓做（各需独立的最小外接算法）；这是有意设计为闭集，而非 Node `shape` / `boundary` 那种开放 shape 引用。
 
@@ -147,15 +147,15 @@ bbox 计算时机 / 嵌套规则 / 哪些 layout 参与详见 § 技术原理 §
 
 scope 内 node / coordinate / path step.to 用 polar / at / offset 时，referent 取全局、relative 跟着当前 scope rotate / scale 走：
 
-<ComponentPreview name="scope-position-polar-in-rotate" size="sm" />
+<ComponentPreview files="scope-position-polar-in-rotate" size="sm" />
 
 `direction: 'right'` 是**当前 scope 局部**的 right——scope rotate 90° 后视觉变 down：
 
-<ComponentPreview name="scope-position-at-cross-scope" size="sm" />
+<ComponentPreview files="scope-position-at-cross-scope" size="sm" />
 
 `offset: [40, 0]` 在 scope 局部度量；scope `scale(2)` 后视觉偏移 (80, 0)：
 
-<ComponentPreview name="scope-position-offset-with-scale" size="sm" />
+<ComponentPreview files="scope-position-offset-with-scale" size="sm" />
 
 具体投影公式 / 边界 case（嵌套 polar / scope translate / scale=0 / path step.to）详见 § 技术原理 §「scope 下相对定位投影」。
 
@@ -169,15 +169,15 @@ scope 内 node / coordinate / path step.to 用 polar / at / offset 时，referen
   description="localNamespace 引入命名空间栈：inside-out lookup 让 id 解析依赖嵌套层级、shadowing 会悄悄遮蔽外层同名 id、外部也无法再引用被隔离的内部 id。除非确实在做子图复用 / 模板化，否则优先给 id 起可区分的名字（如加前缀），别靠 localNamespace 回避命名冲突。"
 />
 
-<ComponentPreview name="scope-local-namespace-basic" size="xs" />
+<ComponentPreview files="scope-local-namespace-basic" size="xs" />
 
 嵌套 localNamespace 形成栈式命名空间，最内层 path 引用 id 时从内向外 lookup：
 
-<ComponentPreview name="scope-local-namespace-nested" size="xs" />
+<ComponentPreview files="scope-local-namespace-nested" size="xs" />
 
 同名 id 在不同 frame 内不算冲突；inside-out lookup 自动让内层 shadowing 外层：
 
-<ComponentPreview name="scope-local-namespace-shadowing" size="sm" />
+<ComponentPreview files="scope-local-namespace-shadowing" size="sm" />
 
 inside-out / shadowing / scope.id 落父 frame 的语义详见 § 技术原理 §「命名空间栈与 lookup」。
 
@@ -185,7 +185,7 @@ inside-out / shadowing / scope.id 落父 frame 的语义详见 § 技术原理 �
 
 同 frame 重复 id 触发 `DUPLICATE_NODE_ID` warn + 后定义覆盖前定义（last-wins，**不抛错**）：
 
-<ComponentPreview name="scope-duplicate-id-warn" size="xs" />
+<ComponentPreview files="scope-duplicate-id-warn" size="xs" />
 
 触发条件 / 跨 frame 行为 / v0.1 对比详见 § 技术原理 §「重复 id 与冲突处理」。
 
@@ -197,7 +197,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 `<Scope color>` 把当前色下传给内部全部元素——节点边 / 文字、path stroke / 箭头 / 边标注都默认随它；分项（`stroke` / `fill` / `textColor`）显式给则覆盖主色：
 
-<ComponentPreview name="scope-style-cascade" size="xs" />
+<ComponentPreview files="scope-style-cascade" size="xs" />
 
 主色同样会染节点 `fill`；上例锚点节点显式 `fill="white"` 截断填充让文字可读。颜色跟随的是**主色 `color`** 而非 `stroke`——`<Path color>` 标注 / 箭头同色，`<Path stroke>` 只染线、标注不跟。
 
@@ -205,13 +205,13 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 各给一类元素挂默认样式，扁平独立、互不干涉。`nodeDefault` 含形状 / 间距等节点专属字段（直接写 `color` 染不到 `shape`，得走 `nodeDefault`）；`pathDefault` 会作用到 Path，也会把共享几何样式字段传给 Ribbon；箭头走独立 `arrowDefault`，`pathDefault` 不含箭头：
 
-<ComponentPreview name="scope-style-typed-defaults" size="xs" />
+<ComponentPreview files="scope-style-typed-defaults" size="xs" />
 
 #### resetStyle 继承屏障
 
 `resetStyle` 切外层 scope 的继承（主色级联 + 四类默认），回内置基线；本 scope 自己的值 + 内层照常生效。`true` 全切，或传通道数组（`['node' | 'path' | 'label' | 'arrow']`）按类切：
 
-<ComponentPreview name="scope-style-reset" size="xs" />
+<ComponentPreview files="scope-style-reset" size="xs" />
 
 `resetStyle` 只切 scope 的继承、**不碰元素与宿主的结构关系**——label / arrow 仍跟所属 path / node 的已解析颜色：`resetStyle={['label']}` 只忽略外层 `labelDefault`、label 仍跟它的线。优先级链 / 主色展开 / opacity 不复合等详见 § 技术原理 §「样式继承解析」。
 
@@ -225,7 +225,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 `zIndex` 作用于 **scope 整体**（它编译出的 `GroupPrim`）在父层的上下位置，**不影响 scope 内部子元素的相对栈序**。下面两组节点簇重叠、声明顺序 A 先 B 后（默认 B 整组压上），给先声明的 A 组设 `zIndex={1}` 即可把整组浮到 B 组之上：
 
-<ComponentPreview name="scope-z-index" size="sm" />
+<ComponentPreview files="scope-z-index" size="sm" />
 
 ### clip 裁切
 
@@ -235,7 +235,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
 ```
 
-<ComponentPreview name="scope-clip" size="md" />
+<ComponentPreview files="scope-clip" size="md" />
 
 ## 技术原理
 
@@ -249,7 +249,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 scope 默认**不引入命名空间边界**——子 node / coordinate / 嵌套 scope.id 全部注册到当前栈顶 frame；多层 scope 串起来 id 仍汇到 `<Layout>` 根 frame，外部 path 可直接引用。`localNamespace: true` 才让 scope 推一个子 frame、隔离子树 id。
 
-<ComponentPreview name="scope-namespace-stack" hideCode />
+<ComponentPreview files="scope-namespace-stack" hideCode />
 
 <Comparison target="tikz" title="命名空间默认行为">
 

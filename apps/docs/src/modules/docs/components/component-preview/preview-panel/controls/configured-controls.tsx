@@ -1,6 +1,6 @@
-import type { PreviewControlConfig, PreviewControlSlot } from '../types';
+import type { PreviewControlConfig, PreviewControlSlot } from '../../types';
 
-import { PreviewToolbar, PreviewToolbarInput, PreviewToolbarSelect } from '../components/PreviewToolbar';
+import { PreviewToolbar, PreviewToolbarInput, PreviewToolbarSelect } from '../PreviewToolbar';
 
 /** 将声明式配置转换成预览控制插槽。 */
 export const buildConfiguredControlSlots = (

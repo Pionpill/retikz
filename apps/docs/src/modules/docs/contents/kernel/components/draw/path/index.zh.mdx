@@ -47,25 +47,25 @@ import { Path, Step } from '@retikz/react';
 
 ### 折线
 
-<ComponentPreview name="path-basic" size="xs" />
+<ComponentPreview files="path-basic" size="xs" />
 
 ### 折角
 
 `<Step kind="fold" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
 
-<ComponentPreview name="path-fold" size="md" />
+<ComponentPreview files="path-fold" size="md" />
 
 ### 闭合
 
 `<Step kind="cycle" />` 把当前路径闭合回最近一次 `move` 的起点——比手动 `line` 回起点少写一个端点，对应 SVG 路径的 `Z`：
 
-<ComponentPreview name="path-cycle" size="sm" />
+<ComponentPreview files="path-cycle" size="sm" />
 
 ### 填充
 
 `fill` 给闭合区域填色（缺省 `'none'` = 仅描边，向后兼容）；`fillRule` 控制自交 / 嵌套子路径的填充规则（`'nonzero'` 默认 / `'evenodd'` 环形孔洞场景）。配合 cycle 步使用：
 
-<ComponentPreview name="path-fill" size="sm" />
+<ComponentPreview files="path-fill" size="sm" />
 
 ### 箭头
 
@@ -86,25 +86,25 @@ import { Path, Step } from '@retikz/react';
 
 下例同一五角星（未设节点 `boundary`），两条边各自在端点选连接面：实线默认贴真实尖端，虚线 `boundary="circle"` 改贴外接圆——连接面由边自己决定。
 
-<ComponentPreview name="path-boundary" size="sm" />
+<ComponentPreview files="path-boundary" size="sm" />
 
 ### 样式
 
 `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` 与 `<Draw>` 完全一致：
 
-<ComponentPreview name="path-dashed" size="xs" />
+<ComponentPreview files="path-dashed" size="xs" />
 
 #### 虚线起点
 
 `dashOffset` 只移动虚线节奏的起点，不改变 `dashPattern` 本身。下例三条线共用 `[18, 10]`，只改变 offset：
 
-<ComponentPreview name="path-dash-offset" size="xs" />
+<ComponentPreview files="path-dash-offset" size="xs" />
 
 #### 渐变描边
 
 `stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。
 
-<ComponentPreview name="path-stroke-paint" size="sm" />
+<ComponentPreview files="path-stroke-paint" size="sm" />
 
 带箭头的路径如果用渐变描边，需要给 `arrowDetail.color` 或端点 `color` 一个显式纯色；箭头 marker 不能继承资源型描边。
 
@@ -118,7 +118,7 @@ import { Path, Step } from '@retikz/react';
 
 </Comparison>
 
-<ComponentPreview name="path-line-style" />
+<ComponentPreview files="path-line-style" />
 
 #### 语义 stroke 档位
 
@@ -130,7 +130,7 @@ import { Path, Step } from '@retikz/react';
 
 </Comparison>
 
-<ComponentPreview name="path-thickness" size="md" />
+<ComponentPreview files="path-thickness" size="md" />
 
 #### 透明度
 
@@ -138,13 +138,13 @@ import { Path, Step } from '@retikz/react';
 
 `strokeOpacity` 使用与 Scene primitive 一致的描边透明字段名，并与 `<Node>` 的描边透明字段保持一致。
 
-<ComponentPreview name="path-opacity" />
+<ComponentPreview files="path-opacity" />
 
 #### 栈序（zIndex）
 
 默认层叠 = 声明顺序。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。下面两个填充矩形声明顺序蓝先红后（默认红压上），给先声明的蓝色 path 设 `zIndex={1}` 即可把它抬到红色之上：
 
-<ComponentPreview name="path-z-index" size="sm" />
+<ComponentPreview files="path-z-index" size="sm" />
 
 ### 曲线与变换
 
@@ -152,29 +152,29 @@ import { Path, Step } from '@retikz/react';
 
 `<Step kind="bend">` 除对称的 `bendDirection` + `bendAngle` 外，还可用 `outAngle` / `inAngle` 指定起点出射角与终点入射角，画非对称曲线（对应 TikZ `out=` / `in=`）；`looseness` 调控制点距离（松紧，缺省 ≈1）。**out/in 给定时优先于 `bendDirection`**。当 `from == to`（同节点 / 同坐标）时退化为**自环**——这是 out/in 最大价值场景（状态机自跳转），对称 bend 画不出。
 
-<ComponentPreview name="path-outin-loop" size="sm" />
+<ComponentPreview files="path-outin-loop" size="sm" />
 
 #### 整体变换（rotate / scale）
 
 `rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。变换顺序有硬契约：path 端点先 resolve、箭头 shrink 在**未变换的几何**上算，最后整体包进 group——故箭头方向随变换正确、不错位。
 
-<ComponentPreview name="path-transform" size="sm" />
+<ComponentPreview files="path-transform" size="sm" />
 
 #### 中段标记（marks）
 
 `marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/extend/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**（TikZ 语义）：线越粗、标记越大。
 
-<ComponentPreview name="path-marks" size="xs" />
+<ComponentPreview files="path-marks" size="xs" />
 
 #### 折线圆角（roundedCorners）
 
 `roundedCorners` 给整条 path 的每个 **line↔line 内拐角**倒一个半径相同的圆角弧——画流程图、布线、折线连接时把硬尖角磨圆。缺省 / 省略 = 全尖角（行为不变）。首点 / 末点保持尖；接缝一侧是曲线 / 弧 / 贝塞尔 / 折角（`fold`）时该接缝也保持尖。半径过大时按相邻段长**逐拐角夹紧**到可行最大值。`cycle` 闭合后，闭合接缝也参与倒圆。
 
-<ComponentPreview name="path-rounded-corners" size="sm" />
+<ComponentPreview files="path-rounded-corners" size="sm" />
 
 `roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。（注：step 边标注 `label` 当前仍定位在该 step 自身线段上，不随接缝倒角缩短重算。）下例用很粗的描边对照——上方 `lineJoin="round"`（只磨描边、中心线仍尖），下方 `roundedCorners`（中心线本身就是圆弧）：
 
-<ComponentPreview name="path-rounded-vs-linejoin" size="sm" />
+<ComponentPreview files="path-rounded-vs-linejoin" size="sm" />
 
 <Comparison target="tikz" title="roundedCorners">
 
@@ -197,45 +197,45 @@ import { Path, Step } from '@retikz/react';
 
 中心线模式会把开放路径两侧按 `width` 偏移，生成闭合 Path primitive。`stroke` 描的是流带外轮廓，不会绘制中心线。
 
-<ComponentPreview name="ribbon-basic" size="xs" />
+<ComponentPreview files="ribbon-basic" size="xs" />
 
 #### 宽度与插值
 
 `width` 可以是固定值、起末端宽度，或 `kind: 'stops'` 的沿路径宽度表；`interpolation` 控制宽度变化方式。
 
-<ComponentPreview name="ribbon-interpolation" size="md" />
+<ComponentPreview files="ribbon-interpolation" size="md" />
 
-<ComponentPreview name="ribbon-width-stops" size="xs" />
+<ComponentPreview files="ribbon-width-stops" size="xs" />
 
 内置 `bulge` profile 用 `base` 表示两端宽度、`peak` 表示中点宽度；`peak` 小于 `base` 时会变成中间收窄。
 
-<ComponentPreview name="ribbon-width-profile" size="xs" />
+<ComponentPreview files="ribbon-width-profile" size="xs" />
 
 #### 标签位置
 
 Ribbon label 使用同一套 GeometryLabel 契约。`position` 支持关键字或 `0..1` 数值；`side` 默认像普通 Path label 一样带固定外侧距离；`placement="inside"` 可把标签放入带状面内部，`sloped: true` 会沿中心线切线旋转。
 
-<ComponentPreview name="ribbon-label" size="sm" />
+<ComponentPreview files="ribbon-label" size="sm" />
 
 #### 端点与端帽
 
 `start` / `end` 可以配置端点宽度、方向和 cap。`align` 决定中心线在带宽中的对齐位置，`samples` 可让复杂曲线走采样构造。
 
-<ComponentPreview name="ribbon-direction" size="md" />
+<ComponentPreview files="ribbon-direction" size="md" />
 
-<ComponentPreview name="ribbon-align-cap" size="md" />
+<ComponentPreview files="ribbon-align-cap" size="md" />
 
 #### 预计算边界
 
 当布局算法已经算好上下边界时，用 `ribbon.mode = 'boundary'`，并把 `upper` / `lower` 写成两条开放 step 序列。该模式不需要 `children`，也不会接受 `width`。
 
-<ComponentPreview name="ribbon-boundary" size="sm" />
+<ComponentPreview files="ribbon-boundary" size="sm" />
 
 #### 样式
 
 Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、阴影和混合模式。`pathDefault` 会把 Path 共享的 drawable 样式传给 ribbon kind；箭头、虚线、lineCap 等 stroke-only 语义只属于默认 `stroke` kind。
 
-<ComponentPreview name="ribbon-style" size="md" />
+<ComponentPreview files="ribbon-style" size="md" />
 
 ## API 参考
 

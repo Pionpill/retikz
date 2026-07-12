@@ -45,13 +45,13 @@ Under `polar2D`, the coordinate system reinterprets the same props: `y` is a con
 
 `y={60}` is a constant axis value, producing one horizontal threshold line across the full x domain. This example maps to the constant form of `x` / `y` in the API table.
 
-<ComponentPreview name="rule-threshold" sourceFiles={['rule-threshold.data.ts']} />
+<ComponentPreview files={['rule-threshold', 'rule-threshold.data.ts']} />
 
 ### Upper Bound Props
 
 Add `yTo` and ReferenceMark turns from a line into a filled band. Bands are usually declared before data marks, so points, bars, or paths are drawn on top.
 
-<ComponentPreview name="rule-band" sourceFiles={['rule-threshold.data.ts']} />
+<ComponentPreview files={['rule-band', 'rule-threshold.data.ts']} />
 
 `xTo` mirrors `yTo`: with `x` bound, use `xTo` for a vertical band. The upper bound must match the bound axis, otherwise construction or lowering throws.
 
@@ -59,19 +59,19 @@ Add `yTo` and ReferenceMark turns from a line into a filled band. Bands are usua
 
 `kind="region"` turns ReferenceMark from a one-axis constraint into a coordinate cell region. In cartesian coordinates it draws a rectangle; under polar coordinates the same `x` / `xTo` / `y` / `yTo` pair becomes an angle interval plus a radius interval, producing an annular sector; under ternary coordinates, `x` / `xTo`, `y` / `yTo`, and `z` / `zTo` bound a component range inside the simplex.
 
-<ComponentPreview name="rule-region" sourceFiles={['rule-region.data.ts']} />
+<ComponentPreview files={['rule-region', 'rule-region.data.ts']} />
 
 ### Field Axis Value and Color
 
 `y="threshold"` is a field axis value, so each data row produces one reference line. In that form, `color="tier"` is interpreted as a color field and grouped by category.
 
-<ComponentPreview name="rule-per-datum" sourceFiles={['rule-per-datum.data.ts']} />
+<ComponentPreview files={['rule-per-datum', 'rule-per-datum.data.ts']} />
 
 ### Reference Layers
 
 ReferenceMark can be layered with other marks as an independent reference layer. In the example below, the point layer shows raw sample scores, while the reference layer uses constant `y={72}` for a target line. When you need a mean, quantile, or representative row from data transforms, start with [Data Transforms](/viz/data/transform), then bind the produced fields to ReferenceMark.
 
-<ComponentPreview name="rule-transform" sourceFiles={['rule-transform.data.ts']} />
+<ComponentPreview files={['rule-transform', 'rule-transform.data.ts']} />
 
 Constant references use color strings such as `color="crimson"`; field references use field names such as `color="tier"`. Both are strings at the React props layer, and assembly decides whether they become a constant color value or a color channel from whether `x` / `y` is a number or field.
 

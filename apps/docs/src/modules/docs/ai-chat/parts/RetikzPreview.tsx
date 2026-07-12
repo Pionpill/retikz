@@ -12,7 +12,7 @@ import type { ComponentRenderSource } from '@/modules/docs/components';
 import { Button } from '@/components/ui/button';
 import { parseRetikzJsx } from '@/lib';
 import { cn } from '@/lib';
-import { CodeBlock, ComponentRender, formatIR } from '@/modules/docs/components';
+import { CodeBlock, ComponentPreviewCard, formatIR } from '@/modules/docs/components';
 
 import { formatZodError } from '../retikz-validation';
 
@@ -115,13 +115,13 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
   }
   return (
     <RetikzRenderErrorBoundary key={source} format={format} source={source}>
-      <ComponentRender
+      <ComponentPreviewCard
         name={`retikz-${format}`}
         Component={resolved.Component}
         source={resolved.renderSource}
         align="center"
         size="sm"
-        componentClassName="min-w-0 [&_svg]:max-w-full [&_svg]:h-auto"
+        previewClassName="min-w-0 [&_svg]:max-w-full [&_svg]:h-auto"
         showAskAi={false}
       />
     </RetikzRenderErrorBoundary>

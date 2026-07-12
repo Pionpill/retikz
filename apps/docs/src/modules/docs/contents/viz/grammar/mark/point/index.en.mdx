@@ -39,13 +39,13 @@ This is why PointMark usually does not need coordinate-specific adapters. The co
 
 `x` / `y` define the anchor for each row. The left plot uses cartesian2D, and the right plot uses polar2D; the same fields become different geometry under different coordinates.
 
-<ComponentPreview name="point-position" sourceFiles={['point-api.data.ts']} />
+<ComponentPreview files={['point-position', 'point-api.data.ts']} />
 
 ### Mark-Local Transforms
 
 `transform` can live directly on the current PointMark. In the example below, the gray points still read the original rows, while the colored bubble layer runs `jitter` only inside this mark and slightly spreads overlapping `orders` points along y.
 
-<ComponentPreview name="point-transform" sourceFiles={['point-transform.data.ts']} />
+<ComponentPreview files={['point-transform', 'point-transform.data.ts']} />
 
 ### Style Props
 
@@ -53,19 +53,19 @@ This is why PointMark usually does not need coordinate-specific adapters. The co
 
 Node style props such as `stroke`, `strokeWidth`, `opacity`, `fillOpacity`, and `rotate` can all bind to data fields. At the component layer, strings and numbers are syntax sugar: a string becomes `{ kind: 'field', value: FieldName }` when it matches a data field; if it does not match a field but is a valid constant, it becomes `{ kind: 'constant', value }`; otherwise it is skipped with a warning. Use the explicit form when you need to remove ambiguity.
 
-<ComponentPreview name="point-style" sourceFiles={['point-api.data.ts']} />
+<ComponentPreview files={['point-style', 'point-api.data.ts']} />
 
 ### Paint Styles
 
 Besides solid colors, `fill` / `stroke` can take `IRPaintSpec` objects. Constant paint lowers into the core `Node` default style; use `color` or field-bound paint when the color should be data-driven.
 
-<ComponentPreview name="point-paint" sourceFiles={['point-api.data.ts']} />
+<ComponentPreview files={['point-paint', 'point-api.data.ts']} />
 
 ### Text Props
 
 For text attached to dots, prefer `label`: it writes to the core `Node.label` on each point, so a single `PointMark` can draw the dot and its label. `labelPosition`, `labelDistance`, and `labelPin` mirror core Node label placement, spacing, and leader lines. `text` is a different mode: it replaces the point itself with a borderless text Node, useful when the mark itself should be text. `dx` / `dy` apply a small screen-space offset.
 
-<ComponentPreview name="point-text" sourceFiles={['point-api.data.ts']} />
+<ComponentPreview files={['point-text', 'point-api.data.ts']} />
 
 ### Different Coordinates
 
@@ -75,13 +75,13 @@ The examples below focus on how coordinates interpret position roles: PointMark 
 
 1D coordinates consume only `x`. In cartesian1D it lands on a straight axis; in polar1D the same values land on a ring.
 
-<ComponentPreview name="point-coordinate-1d" sourceFiles={['point-coordinates.data.ts']} />
+<ComponentPreview files={['point-coordinate-1d', 'point-coordinates.data.ts']} />
 
 #### Ternary: Ternary Plot
 
 Ternary coordinates consume `x` / `y` / `z`, normalize each row, and project the result into a triangle.
 
-<ComponentPreview name="point-coordinate-ternary" sourceFiles={['point-coordinates.data.ts']} />
+<ComponentPreview files={['point-coordinate-ternary', 'point-coordinates.data.ts']} />
 
 ## How It Works
 

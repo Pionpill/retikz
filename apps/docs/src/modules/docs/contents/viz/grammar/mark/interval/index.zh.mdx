@@ -47,17 +47,13 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 `width` 是比例宽度快捷入口：它把非负数值字段累加成 band role 上的连续区间，因此柱宽可以表达另一项度量，`y` 仍然控制高度。若同时写 `x`，该字段会作为每段比例区间中心处的轴标签。
 
-<ComponentPreview name="bar-position" sourceFiles={['bar-basic.data.ts']} interactive />
+<ComponentPreview files={['bar-position', 'bar-basic.data.ts']} />
 
 ### 连续区间
 
 `x0` / `x1` 是连续区间写法。下面左侧直方图先用 bin transform 产出 `binStart` / `binEnd`，再由 IntervalMark 把它们作为 `bounds.x=extent(x0,x1)`；右侧示例使用 `width` 表达按 GDP 比例分配的柱宽，并用 `x` 显示国家标签。
 
-<ComponentPreview
-  name="interval-histogram"
-  sourceFiles={['interval-histogram.data.ts', 'bar-variable-width.data.ts']}
-  interactive
-/>
+<ComponentPreview files={['interval-histogram', 'interval-histogram.data.ts', 'bar-variable-width.data.ts']} />
 
 ### 区间属性
 
@@ -65,40 +61,40 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 缺少 `color` 时，同一套双 band 区间会画成固定网格；它仍然是 IntervalMark，只是没有把单元格值映射成填充色。
 
-<ComponentPreview name="rect-bounds" sourceFiles={['rect-heatmap.data.ts', 'rect-grid.data.ts']} interactive />
+<ComponentPreview files={['rect-bounds', 'rect-heatmap.data.ts', 'rect-grid.data.ts']} />
 
 ### 系列属性
 
 `arrangement` 控制多系列区间如何放进同一个分类槽：`dodge` 并排、`stack` 堆叠、`normalize-stack` 百分比堆叠。`group` 是编排字段，决定子带或堆叠段；`color` 是着色字段，可以与 `group` 相同，也可以单独指定。`series` 仍可作为兼容快捷写法：未写 `group` / `color` 时，它会同时作为默认编排字段和颜色字段。
 `arrangement="stack"` 可配 `stackOffset`：`zero` 从 0 累加，`normalize` 把每个分类堆叠归一到 0..1，`diverging` 正负分离，`center` 居中，`overlap` 让每段都从 0 起画。若需要百分比堆叠，直接写 `percent` 或 `arrangement="normalize-stack"`，它会先把分类内值归一化到 0..100，再堆叠。
 
-<ComponentPreview name="bar-series" sourceFiles={['bar-grouped.data.ts']} interactive />
+<ComponentPreview files={['bar-series', 'bar-grouped.data.ts']} />
 
 ### 图元局部变换
 
 IntervalMark 也可以直接通过自己的 `transform` 获取派生字段。下面的灰点展示门店原始收入，柱层只在当前图元内执行 `derive-interval`，把每行 `revenue` 派生成从 0 到收入值的区间。
 
-<ComponentPreview name="bar-transform" sourceFiles={['bar-transform.data.ts']} />
+<ComponentPreview files={['bar-transform', 'bar-transform.data.ts']} />
 
 ### 角度属性
 
 同一个 `x` / `y` 区间切到 `coordinate="polar2D"` 后，`x` band 会被解释成角向 band，`y` span 会被解释成半径方向长度。
 
-<ComponentPreview name="bar-radial" size="sm" sourceFiles={['bar-radial.data.ts']} />
+<ComponentPreview files={['bar-radial', 'bar-radial.data.ts']} size="sm" />
 
 `angle` 是饼图 / 环图的便捷入口：它会把份额字段累积成角向 extent，半径方向使用 full。环图不是新的 mark，只是 polar 坐标系配置了 `innerRadius`。
 
-<ComponentPreview name="bar-pie-donut" size="sm" sourceFiles={['bar-pie.data.ts']} interactive />
+<ComponentPreview files={['bar-pie-donut', 'bar-pie.data.ts']} size="sm" />
 
 `pull` 是极坐标扇区的静态径向偏移，单位是画布 user units。数字会作为常量作用到所有扇区，字符串会绑定数据字段；它只对 polar sector 有效，不是 hover / selected 之类的交互状态。
 
-<ComponentPreview name="interval-pull" size="sm" sourceFiles={['interval-pull.data.ts']} interactive />
+<ComponentPreview files={['interval-pull', 'interval-pull.data.ts']} size="sm" />
 
 ### 样式属性
 
 IntervalMark 的视觉样式会下沉到每个 cell 的 core `Node`。常用入口包括 `cornerRadius`、`stroke`、`strokeWidth`、`fillOpacity`、`shadow` 和标签样式；极坐标 sector 还可以用 `padAngle` 留出真实角向间隔，用 `pull` 沿扇区中线外移。左侧是笛卡尔柱，右侧是同一份数据切到极坐标后的圆角环形图。
 
-<ComponentPreview name="bar-style" sourceFiles={['bar-basic.data.ts']} interactive />
+<ComponentPreview files={['bar-style', 'bar-basic.data.ts']} />
 
 ## 技术原理
 

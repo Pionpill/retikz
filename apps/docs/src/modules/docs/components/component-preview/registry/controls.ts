@@ -1,8 +1,9 @@
-import type { PreviewControlConfig, PreviewControlSlot } from './types';
+import type { PreviewControlConfig, PreviewControlSlot } from '../types';
 
 export const controlModules: Record<string, Record<string, unknown> | undefined> = import.meta.glob<
   Record<string, unknown>
 >(['../../contents/**/*.controls.ts', '../../contents/**/*.zh.controls.ts', '../../contents/**/*.en.controls.ts'], {
+  base: '../',
   eager: true,
 });
 

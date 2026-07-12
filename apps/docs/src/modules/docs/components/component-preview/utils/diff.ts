@@ -1,63 +1,53 @@
-import type { DiffLineKind, DiffMode, UnifiedDiff } from '../types';
+import type { DiffLineKind, UnifiedDiff } from '../types';
 
-/** 按 mode 过滤 unified diff。 */
-export const filterDiffByMode = (diff: UnifiedDiff, mode: Exclude<DiffMode, 'off'>): UnifiedDiff => {
-  if (mode === 'full') return diff;
-  const lines = diff.code.split('\n');
-  const skipKind: DiffLineKind = mode === 'added' ? 'removed' : 'added';
-  const outLines: Array<string> = [];
-  const outKinds: Array<DiffLineKind> = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (diff.lineKinds[i] === skipKind) continue;
-    outLines.push(lines[i]);
-    outKinds.push(diff.lineKinds[i]);
-  }
-  return { code: outLines.join('\n'), lineKinds: outKinds };
-};
-
-/** 按行对比两段源码，生成 unified diff。 */
+/** 按行对比两段源码并生成 unified diff。 */
 export const computeUnifiedDiff = (baseline: string, current: string): UnifiedDiff => {
-  const a = baseline.split('\n');
-  const b = current.split('\n');
-  const m = a.length;
-  const n = b.length;
+  const baselineLines = baseline.split('\n');
+  const currentLines = current.split('\n');
+  const baselineLength = baselineLines.length;
+  const currentLength = currentLines.length;
 
-  const lcs: Array<Array<number>> = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
-  for (let i = m - 1; i >= 0; i--) {
-    for (let j = n - 1; j >= 0; j--) {
-      lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+  const lcs: Array<Array<number>> = Array.from({ length: baselineLength + 1 }, () =>
+    new Array<number>(currentLength + 1).fill(0),
+  );
+  for (let baselineIndex = baselineLength - 1; baselineIndex >= 0; baselineIndex--) {
+    for (let currentIndex = currentLength - 1; currentIndex >= 0; currentIndex--) {
+      lcs[baselineIndex][currentIndex] =
+        baselineLines[baselineIndex] === currentLines[currentIndex]
+          ? lcs[baselineIndex + 1][currentIndex + 1] + 1
+          : Math.max(lcs[baselineIndex + 1][currentIndex], lcs[baselineIndex][currentIndex + 1]);
     }
   }
 
   const outLines: Array<string> = [];
   const outKinds: Array<DiffLineKind> = [];
-  let i = 0;
-  let j = 0;
-  while (i < m && j < n) {
-    if (a[i] === b[j]) {
-      outLines.push(b[j]);
+  let baselineIndex = 0;
+  let currentIndex = 0;
+  while (baselineIndex < baselineLength && currentIndex < currentLength) {
+    if (baselineLines[baselineIndex] === currentLines[currentIndex]) {
+      outLines.push(currentLines[currentIndex]);
       outKinds.push('context');
-      i++;
-      j++;
-    } else if (lcs[i + 1][j] >= lcs[i][j + 1]) {
-      outLines.push(a[i]);
+      baselineIndex++;
+      currentIndex++;
+    } else if (lcs[baselineIndex + 1][currentIndex] >= lcs[baselineIndex][currentIndex + 1]) {
+      outLines.push(baselineLines[baselineIndex]);
       outKinds.push('removed');
-      i++;
+      baselineIndex++;
     } else {
-      outLines.push(b[j]);
+      outLines.push(currentLines[currentIndex]);
       outKinds.push('added');
-      j++;
+      currentIndex++;
     }
   }
-  while (i < m) {
-    outLines.push(a[i]);
+  while (baselineIndex < baselineLength) {
+    outLines.push(baselineLines[baselineIndex]);
     outKinds.push('removed');
-    i++;
+    baselineIndex++;
   }
-  while (j < n) {
-    outLines.push(b[j]);
+  while (currentIndex < currentLength) {
+    outLines.push(currentLines[currentIndex]);
     outKinds.push('added');
-    j++;
+    currentIndex++;
   }
 
   return { code: outLines.join('\n'), lineKinds: outKinds };

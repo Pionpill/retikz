@@ -30,7 +30,7 @@ import { Rectangle } from '@retikz/react';
 | `{ center, side }`           | Square                 |
 | `{ corner1, width, height }` | Expand from one corner |
 
-<ComponentPreview name="rectangle-basic" size="sm" />
+<ComponentPreview files="rectangle-basic" size="sm" />
 
 ### API Reference
 
@@ -61,7 +61,7 @@ import { Node } from '@retikz/react';
 
 Round the corners with the top-level `cornerRadius`, or with `shape={{ type:'rectangle', params:{ cornerRadius } }}` (params win when both are present). The rounding is connection-aware: connection endpoints land on the fillet arc rather than the sharp corner that has been rounded away.
 
-<ComponentPreview name="node-rectangle" size="sm" />
+<ComponentPreview files="node-rectangle" size="sm" />
 
 Connection endpoints snap to the rectangle edge, and the node's center plus 8 directional anchors (`center` / `top` …) still apply. For the full `<Node>` props see [Node](/kernel/components/node/overview).
 

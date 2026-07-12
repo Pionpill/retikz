@@ -11,13 +11,13 @@ React 里用 `<Step kind="generator" name="..." params={...} />` 写 generator s
 
 `parabola` 是 core 内置 path generator：`from → to` 加一个顶层 Target `control` 作控制点，产一段二次贝塞尔。它要求 step 写 `to`，缺失时编译期报错。
 
-<ComponentPreview name="path-generator-parabola" size="xs" />
+<ComponentPreview files="path-generator-parabola" size="xs" />
 
 ## 注册自定义生成器
 
 要加入自己的曲线，仍用 `definePathGenerator` 创建 definition，再通过 `CompileOptions.pathGenerators` 或 `<Layout pathGenerators>` 注入。
 
-<ComponentPreview name="path-generator-sin" size="xs" />
+<ComponentPreview files="path-generator-sin" size="xs" />
 
 `PathGeneratorDefinition` 是普通对象（不进 IR，可由工厂返回），建议用 `definePathGenerator` 包一层（注册时 best-effort 元校验）：
 
