@@ -129,6 +129,3 @@ const ExternalTransformSchema = z
 export const TransformSchema = z
   .union([BuiltinTransformSchema, ExternalTransformSchema])
   .describe('Built-in or custom data transform operation');
-
-/** transform operation schema 的兼容别名；runtime definition 用它表达单个 operation 契约。 */
-export const TransformOperationSchema = TransformSchema;

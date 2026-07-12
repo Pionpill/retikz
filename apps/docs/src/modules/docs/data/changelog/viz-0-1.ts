@@ -37,6 +37,13 @@ export const vizV01: Release = {
           },
           items: [
             {
+              label: { zh: 'BREAKING：transform schema 入口收口', en: 'BREAKING: Consolidated transform schema entry' },
+              content: {
+                zh: '移除与 `TransformSchema` 完全相同的 `TransformOperationSchema` 公共别名；原有导入直接改为 `TransformSchema`，schema 行为不变。',
+                en: 'Removes the public `TransformOperationSchema` alias, which was identical to `TransformSchema`; replace existing imports with `TransformSchema`. Schema behavior is unchanged.',
+              },
+            },
+            {
               label: { zh: 'IRDataXxx 公开类型命名', en: 'Owner-qualified IRDataXxx types' },
               content: {
                 zh: '`FieldDef`、`DataModel`、`DataRef`、`Transform` 等 schema 派生类型统一改为 `IRDataXxx`，旧名不保留兼容别名；JSON schema 与运行时行为不变。',

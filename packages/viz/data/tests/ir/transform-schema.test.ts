@@ -16,7 +16,6 @@ import {
   SelectorOperationSchema,
   SelectTransformSchema,
   SummarizeTransformSchema,
-  TransformOperationSchema,
   TransformSchema,
 } from '../../src';
 
@@ -84,9 +83,9 @@ const closedObjectSchemaCases: Array<{
 
 describe('transform schema', () => {
   it('parses transform operation and survives JSON round-trip', () => {
-    const operation = TransformOperationSchema.parse({ kind: 'sort', field: 'month', order: 'ascending' });
+    const operation = TransformSchema.parse({ kind: 'sort', field: 'month', order: 'ascending' });
 
-    expect(TransformOperationSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
+    expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
   it('rejects invalid built-in transform shape at schema boundary', () => {
