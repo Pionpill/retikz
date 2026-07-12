@@ -14,6 +14,7 @@ export const buildAnimationControlSlots = (): Array<PreviewControlSlot> => [
   {
     id: 'animation-controls',
     placement: 'top-start',
+    visibility: 'hover',
     render: runtime => {
       const isPaused = runtime.active(ANIMATION_PAUSED_CONTROL_ID);
 

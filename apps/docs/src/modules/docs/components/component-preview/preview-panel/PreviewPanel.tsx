@@ -21,8 +21,6 @@ export type PreviewPanelProps = {
   activeRender?: (rendererMode: RendererMode) => ReactNode;
   /** 针对当前面板 runtime 求值的控制定义。 */
   controlSlots?: Array<PreviewControlSlot>;
-  /** 控制层是否始终可见。 */
-  controlsAlwaysVisible?: boolean;
   /** 面板容器附加样式。 */
   className?: string;
   /** 渲染区域附加样式。 */
@@ -40,7 +38,6 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
     Component,
     activeRender,
     controlSlots = [],
-    controlsAlwaysVisible,
     className,
     renderPaneClassName,
     style,
@@ -91,12 +88,7 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
           </PreviewControlStateContext.Provider>
         </Fragment>
       </div>
-      <PreviewControlSlotLayer
-        slots={controlSlots}
-        runtime={runtime}
-        pinned={toolbarPinned}
-        alwaysVisible={controlsAlwaysVisible}
-      />
+      <PreviewControlSlotLayer slots={controlSlots} runtime={runtime} pinned={toolbarPinned} />
     </div>
   );
 };

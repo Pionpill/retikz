@@ -1,16 +1,57 @@
-import type { ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
+import { fadeIn } from '@retikz/core';
+import { Layout, Node } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentPreviewCardProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
-import type { PreviewControlRuntime } from '../../src/modules/docs/components/component-preview/types';
+import type {
+  PreviewControlRuntime,
+  PreviewControlSlot,
+} from '../../src/modules/docs/components/component-preview/types';
 
 import i18n from '../../src/i18n';
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import { ComponentPreview } from '../../src/modules/docs/components/component-preview/ComponentPreview';
 import { DemoLocationContext } from '../../src/modules/docs/components/component-preview/context';
-import { PreviewControlSlotLayer } from '../../src/modules/docs/components/component-preview/preview-panel';
+import { buildKey, demoModules, demoSources } from '../../src/modules/docs/components/component-preview/registry';
+
+const RegistryAnimatedDemo: FC = () => (
+  <Layout width={40} height={20}>
+    <Node id="animated" position={[0, 0]} animations={[fadeIn()]} />
+  </Layout>
+);
+
+const fixtureSegments = ['kernel', 'components', 'test'];
+
+const replaceRegistryValue = <T,>(record: Record<string, T | undefined>, key: string, value: T): (() => void) => {
+  const hadOwnValue = Object.hasOwn(record, key);
+  const previousValue = record[key];
+  record[key] = value;
+
+  return () => {
+    if (hadOwnValue) record[key] = previousValue;
+    else delete record[key];
+  };
+};
+
+const installDemoRegistryFixture = (
+  name: string,
+  previewControls: NonNullable<(typeof demoModules)[string]>['previewControls'],
+): (() => void) => {
+  const key = buildKey(fixtureSegments, name);
+  const restoreModule = replaceRegistryValue(demoModules, key, {
+    default: RegistryAnimatedDemo,
+    previewControls,
+  });
+  const restoreSource = replaceRegistryValue(demoSources, key, 'export default RegistryAnimatedDemo;');
+
+  return () => {
+    restoreSource();
+    restoreModule();
+  };
+};
 
 const capture = vi.hoisted(() => {
   let props: ComponentPreviewCardProps | null = null;
@@ -104,26 +145,84 @@ describe('ComponentPreview localized controls', () => {
     expect(props).not.toHaveProperty('interactive');
   });
 
-  it('动画控制定义先于自定义控制定义', () => {
+  it('自动合并 animation provider 与局部 slots', () => {
+    const localSlot: PreviewControlSlot = {
+      id: 'local-control',
+      visibility: 'always',
+      render: () => <button aria-label="Local control" />,
+    };
     const props = renderPreview(
       ['viz', 'grammar', 'mark', 'path'],
-      <ComponentPreview
-        files="line-basic"
-        replayable
-        controlSlots={[
-          {
-            id: 'custom-control',
-            render: () => <button aria-label="Custom control" />,
-          },
-        ]}
-      />,
-    );
-    const markup = renderToStaticMarkup(
-      <PreviewControlSlotLayer slots={props.controlSlots ?? []} pinned runtime={previewControlRuntime} />,
+      <ComponentPreview files="line-basic" controls={{ animation: true, slots: [localSlot] }} />,
     );
 
-    expect(markup.indexOf('aria-label="Replay"')).toBeGreaterThanOrEqual(0);
-    expect(markup.indexOf('aria-label="Custom control"')).toBeGreaterThan(markup.indexOf('aria-label="Replay"'));
+    expect(props.controlSlots?.map(slot => slot.id)).toEqual(['animation-controls', 'local-control']);
+  });
+
+  it('按 provider、configured config、demo raw slot、local slot 顺序组合真实预览 controls', () => {
+    const moduleSlot: PreviewControlSlot = {
+      id: 'module-raw-slot',
+      visibility: 'always',
+      render: () => <button aria-label="Module raw slot" />,
+    };
+    const localSlot: PreviewControlSlot = {
+      id: 'local-slot',
+      visibility: 'always',
+      render: () => <button aria-label="Local slot" />,
+    };
+    const restore = installDemoRegistryFixture('control-order-fixture', [
+      {
+        kind: 'input',
+        id: 'configured-config',
+        label: 'Configured config',
+        defaultValue: 'fixture',
+        visibility: 'hover',
+      },
+      moduleSlot,
+    ]);
+
+    try {
+      const props = renderPreview(
+        fixtureSegments,
+        <ComponentPreview files="control-order-fixture" controls={{ slots: [localSlot] }} />,
+      );
+
+      expect(props.controlSlots?.map(slot => slot.id)).toEqual([
+        'animation-controls',
+        'configured-config',
+        'module-raw-slot',
+        'local-slot',
+      ]);
+      expect(props.controlSlots?.find(slot => slot.id === 'configured-config')?.visibility).toBe('hover');
+    } finally {
+      restore();
+    }
+  });
+
+  it('拒绝 configured config 与 demo raw slot 的中间 group 重复 id', () => {
+    const duplicateSlot: PreviewControlSlot = {
+      id: 'duplicate-middle-slot',
+      visibility: 'always',
+      render: () => <button aria-label="Duplicate middle slot" />,
+    };
+    const restore = installDemoRegistryFixture('control-duplicate-fixture', [
+      {
+        kind: 'input',
+        id: duplicateSlot.id,
+        label: 'Duplicate config',
+        defaultValue: 'fixture',
+        visibility: 'hover',
+      },
+      duplicateSlot,
+    ]);
+
+    try {
+      expect(() => renderPreview(fixtureSegments, <ComponentPreview files="control-duplicate-fixture" />)).toThrow(
+        'Duplicate preview control slot id: "duplicate-middle-slot".',
+      );
+    } finally {
+      restore();
+    }
   });
 
   it('英文页面使用英文声明式 controls', async () => {
@@ -149,7 +248,7 @@ describe('ComponentPreview localized controls', () => {
     try {
       const props = renderPreview(
         ['viz', 'grammar', 'mark', 'path'],
-        <ComponentPreview files="line-basic" controlsName="line-curve" />,
+        <ComponentPreview files="line-basic" controls={{ name: 'line-curve' }} />,
       );
       const control = props.controlSlots?.[0];
 
@@ -160,6 +259,30 @@ describe('ComponentPreview localized controls', () => {
     } finally {
       await i18n.changeLanguage('zh');
     }
+  });
+
+  it('可通过 name=false 禁用内容 controls', () => {
+    const props = renderPreview(
+      ['viz', 'grammar', 'mark', 'path'],
+      <ComponentPreview files="line-curve" controls={{ name: false }} />,
+    );
+
+    expect(props.controlSlots?.map(slot => slot.id)).not.toContain('path-curve');
+  });
+
+  it('拒绝局部 slot 与内容 controls 使用重复 id', () => {
+    const localSlot: PreviewControlSlot = {
+      id: 'path-curve',
+      visibility: 'always',
+      render: () => <button aria-label="Duplicate control" />,
+    };
+
+    expect(() =>
+      renderPreview(
+        ['viz', 'grammar', 'mark', 'path'],
+        <ComponentPreview files="line-curve" controls={{ slots: [localSlot] }} />,
+      ),
+    ).toThrow('Duplicate preview control slot id: "path-curve".');
   });
 });
 

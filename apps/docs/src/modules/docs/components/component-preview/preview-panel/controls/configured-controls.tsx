@@ -11,6 +11,7 @@ export const buildConfiguredControlSlots = (
   return configs.map(config => ({
     id: config.id,
     placement: config.placement ?? 'top-start',
+    visibility: config.visibility ?? 'always',
     render: runtime => {
       const value = runtime.value(config.id) ?? config.defaultValue;
 
