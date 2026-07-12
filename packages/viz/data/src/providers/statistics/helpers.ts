@@ -1,6 +1,7 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { DataSortOrderValue, ExternalRow, OrderBy } from '../../schemas';
+import type { DataSortOrderValue, IRDataOrderBy } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { DataSortOrder } from '../../schemas';
 import { resolveFieldPath } from '../data';
@@ -8,12 +9,17 @@ import { resolveFieldPath } from '../data';
 /** quantile-band spread whisker 的默认倍率。 */
 const DEFAULT_QUANTILE_BAND_SPREAD_FACTOR = 1.5;
 
-/** 比较排序字段值；空值稳定排到末尾。 */
-const compareValues = (left: unknown, right: unknown): number => {
+/** 按指定方向比较排序字段值；空值不参与方向翻转并稳定排到末尾。 */
+const compareValues = (left: unknown, right: unknown, order: DataSortOrderValue | undefined): number => {
+  const leftMissing = left === undefined || left === null;
+  const rightMissing = right === undefined || right === null;
+  if (leftMissing || rightMissing) {
+    if (leftMissing && rightMissing) return 0;
+    return leftMissing ? 1 : -1;
+  }
   if (left === right) return 0;
-  if (left === undefined || left === null) return 1;
-  if (right === undefined || right === null) return -1;
-  return left < right ? -1 : 1;
+  const compared = left < right ? -1 : 1;
+  return order === DataSortOrder.Descending ? -compared : compared;
 };
 
 /** 提取一组 rows 中某字段的有限数值，并保留原始行引用。 */
@@ -99,18 +105,18 @@ export const valuesWithin = (values: Array<number>, lower: number, upper: number
   values.filter(value => value >= lower && value <= upper);
 
 /** 按 orderBy 稳定排序 rows；未传排序规则时返回浅拷贝。 */
-export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<OrderBy>): Array<ExternalRow> => {
+export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<IRDataOrderBy>): Array<ExternalRow> => {
   if (orderBy === undefined || orderBy.length === 0) return [...rows];
   return rows
     .map((row, index) => ({ row, index }))
     .sort((left, right) => {
       for (const order of orderBy) {
-        const direction = order.order === DataSortOrder.Descending ? -1 : 1;
         const compared = compareValues(
           resolveFieldPath(left.row, order.field),
           resolveFieldPath(right.row, order.field),
+          order.order,
         );
-        if (compared !== 0) return compared * direction;
+        if (compared !== 0) return compared;
       }
       return left.index - right.index;
     })

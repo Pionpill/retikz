@@ -117,22 +117,23 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 表里的 `FacetValue` 表示 `string | number | boolean | null`。
 
-| 属性                              | 类型                                                          | 默认值                  | 描述                                                   |
-| --------------------------------- | ------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ |
-| `id`                              | `string`                                                      | 必填                    | facet 身份，供 `facetId` 引用                          |
-| `row`                             | `string`<br />`FacetDimension`<br />`FacetDimension[]`        | 省略                    | 拆行字段；数组表示多层行分面                           |
-| `column`                          | `string`<br />`FacetDimension`<br />`FacetDimension[]`        | 省略                    | 拆列字段；数组表示多层列分面                           |
-| `FacetDimension`                  | `{ field: string; order?: FacetValue[] }`                     | -                       | 一层分面字段及其可选排序                               |
-| `row.order`<br />`column.order`   | `FacetValue[]`                                                | 数据首次出现顺序        | 面板顺序；未列出的值按首次出现追加                     |
-| `facetId`                         | `string`                                                      | 省略                    | 显式让容器外的 mark / axis 进入 facet 面板             |
-| `empty`                           | `'drop' \| 'show'`                                            | `'drop'`                | 空面板是丢弃还是保留                                   |
-| `resolve.scale`                   | `Record<string, 'shared' \| 'independent' \| 'synchronized'>` | 未写 role 为 `'shared'` | 控制同 role 的 domain 如何跨面板解析                   |
-| `resolve.axis`                    | `Record<string, 'local' \| 'outer' \| 'none'>`                | `outer`                 | 轴留在每个面板内、收敛到外侧，或隐藏该 role 的轴       |
-| `resolve.grid`                    | `Record<string, 'local' \| 'all' \| 'none'>`                  | `all`                   | `Axis grid` 默认投放目标；facet 中通常投到每个面板     |
-| `spacing.panelGap`                | `number`                                                      | `0`                     | 面板间距，单位是用户坐标单位                           |
-| `spacing.axisGap`                 | `number`                                                      | `0`                     | 面板与外侧轴之间的距离                                 |
-| `spacing.labelGap`                | `number`                                                      | `0`                     | 分面 label 与面板或轴之间的距离                        |
-| `header.row`<br />`header.column` | `boolean`                                                     | `false`                 | 是否输出对应方向的分面 label；多层分面会按层级自动分组 |
+| 属性                              | 类型                                                                                               | 默认值                  | 描述                                                      |
+| --------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------- |
+| `id`                              | `string`                                                                                           | 必填                    | facet 身份，供 `facetId` 引用                             |
+| `row`                             | `string`<br />`FacetDimension`<br />`FacetDimension[]`                                             | 省略                    | 拆行字段；数组表示多层行分面                              |
+| `column`                          | `string`<br />`FacetDimension`<br />`FacetDimension[]`                                             | 省略                    | 拆列字段；数组表示多层列分面                              |
+| `FacetDimension`                  | `{ field: string; order?: FacetValue[]; labels?: Array<{ value: FacetValue; label: TextBlock }> }` | -                       | 一层分面字段、可选排序和分面 label 文本覆盖               |
+| `row.order`<br />`column.order`   | `FacetValue[]`                                                                                     | 数据首次出现顺序        | 面板顺序；未列出的值按首次出现追加                        |
+| `row.labels`<br />`column.labels` | `Array<{ value: FacetValue; label: TextBlock }>`                                                   | `String(value)`         | 按分面值覆盖 header label；`TextBlock` 支持多行和逐行样式 |
+| `facetId`                         | `string`                                                                                           | 省略                    | 显式让容器外的 mark / axis 进入 facet 面板                |
+| `empty`                           | `'drop' \| 'show'`                                                                                 | `'drop'`                | 空面板是丢弃还是保留                                      |
+| `resolve.scale`                   | `Record<string, 'shared' \| 'independent' \| 'synchronized'>`                                      | 未写 role 为 `'shared'` | 控制同 role 的 domain 如何跨面板解析                      |
+| `resolve.axis`                    | `Record<string, 'local' \| 'outer' \| 'none'>`                                                     | `outer`                 | 轴留在每个面板内、收敛到外侧，或隐藏该 role 的轴          |
+| `resolve.grid`                    | `Record<string, 'local' \| 'all' \| 'none'>`                                                       | `all`                   | `Axis grid` 默认投放目标；facet 中通常投到每个面板        |
+| `spacing.panelGap`                | `number`                                                                                           | `0`                     | 面板间距，单位是用户坐标单位                              |
+| `spacing.axisGap`                 | `number`                                                                                           | `0`                     | 面板与外侧轴之间的距离                                    |
+| `spacing.labelGap`                | `number`                                                                                           | `0`                     | 分面 label 与面板或轴之间的距离                           |
+| `header.row`<br />`header.column` | `boolean`                                                                                          | `false`                 | 是否输出对应方向的分面 label；多层分面会按层级自动分组    |
 
 ## 共享轨道
 

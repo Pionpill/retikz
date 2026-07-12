@@ -1,7 +1,14 @@
 import type { IRBoxSpacing, IRStepLabelInput, ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
-import type { MarkValueKind, PathCurve } from './constants';
+import type {
+  IntervalBoundKind,
+  MarkValueKind,
+  PathClosureKind,
+  PathCurve,
+  PlotMark,
+  RelationGeometryKind,
+} from './constants';
 import type {
   AnchorIdSpecSchema,
   BlendModeStyleSchema,
@@ -54,6 +61,9 @@ import type {
 import { BUILTIN_MARK_TYPES } from './constants';
 
 export type { IRBoxSpacing };
+
+/** mark 类型 */
+export type PlotMarkValue = ValueOf<typeof PlotMark>;
 
 /** point mark（散点 + 文本标签） */
 export type PointMark = z.infer<typeof PointMarkSchema>;
@@ -142,11 +152,17 @@ export type PathScaleStyle = z.infer<typeof PathScaleStyleSchema>;
 /** PathMark 相邻点连接方式。 */
 export type PathCurveValue = ValueOf<typeof PathCurve>;
 
+/** PathMark 闭合策略 */
+export type PathClosureKindValue = ValueOf<typeof PathClosureKind>;
+
 /** PathMark 闭合策略配置。 */
 export type PathClosure = z.infer<typeof PathClosureSchema>;
 
 /** path mark（折线 / 轮廓） */
 export type PathMark = z.infer<typeof PathMarkSchema>;
+
+/** interval 单维区间来源 */
+export type IntervalBoundKindValue = ValueOf<typeof IntervalBoundKind>;
 
 /** interval 单维区间来源 */
 export type IntervalBound = z.infer<typeof IntervalBoundSchema>;
@@ -187,6 +203,9 @@ export type MarkTransform = z.infer<typeof MarkTransformSchema>;
 
 /** relation mark 的数据派生变换声明。 */
 export type RelationTransform = z.infer<typeof RelationTransformSchema>;
+
+/** RelationMark 几何子类型值 */
+export type RelationGeometryKindValue = ValueOf<typeof RelationGeometryKind>;
 
 /** relation mark 的路由策略声明。 */
 export type RelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;

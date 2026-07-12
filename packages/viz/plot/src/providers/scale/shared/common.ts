@@ -27,7 +27,7 @@ import {
 } from 'd3-scale-chromatic';
 
 import type { TickSet } from '../../../contract';
-import type { PlotColorSchemeValue } from './constants';
+import type { PlotColorSchemeValue } from './types';
 
 import { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './constants';
 

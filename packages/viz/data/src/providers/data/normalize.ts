@@ -1,7 +1,8 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { ParsedFieldValue } from '../../contract';
-import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow } from '../../schemas';
+import type { DataFieldTypeMap, ParsedFieldValue } from '../../contract';
+import type { DataFieldTypeValue } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 import { DataFieldType } from '../../schemas';
 import { coerceValue } from './coerce';

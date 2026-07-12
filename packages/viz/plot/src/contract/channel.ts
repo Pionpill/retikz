@@ -1,5 +1,5 @@
 ﻿import type { IRNode, IRPath, IRScope, JsonValue, ValueOf } from '@retikz/core';
-import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow, ScalarValue } from '@retikz/data';
+import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow, IRDataScalarValue } from '@retikz/data';
 
 import type { Channel, LegendChannelValue, MarkOperation, PlotSpec } from '../schemas';
 import type { DimensionRole } from './coordinate';
@@ -144,9 +144,9 @@ export type ScaleDescriptor = {
   /** 绑定 scale 的 type 串。 */
   scaleType: string;
   /** 域：连续 = [min, max]、分类 = 类别序、离散化 = 边界 / 类别。 */
-  domain: ReadonlyArray<ScalarValue>;
+  domain: ReadonlyArray<IRDataScalarValue>;
   /** 值域：色串 / 半径 / 不透明度 / shape 名。 */
-  range: ReadonlyArray<ScalarValue>;
+  range: ReadonlyArray<IRDataScalarValue>;
   /** 绑定字段名；常量通道无字段。 */
   field?: string;
   /** 绑定字段类型；常量 / 类型未知时省略。 */

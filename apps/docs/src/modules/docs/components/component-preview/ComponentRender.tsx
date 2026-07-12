@@ -22,7 +22,7 @@ import { PreviewControlStateContext } from './context';
 import { ANIMATION_PAUSED_CONTROL_ID, buildAnimationControlSlots, buildPreviewToolSlots } from './controls';
 import { usePanZoom, useSourceViews } from './hooks';
 import { usePreviewControlRuntime } from './runtime';
-import { buildAskAiPrompt, filterDiffByMode, findPrecedingHeading } from './utils';
+import { buildAskAiPrompt, filterDiffByMode, findPrecedingHeading, resolvePreviewCodeVisible } from './utils';
 
 export type { ComponentRenderSource } from './types';
 
@@ -103,7 +103,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
   const globalDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
   const globalRendererMode = useComponentPreviewStore(s => s.rendererMode);
-  const isCodeVisible = localIsCodeVisible ?? globalHideCode;
+  const isCodeVisible = resolvePreviewCodeVisible(globalHideCode, localIsCodeVisible);
   const isExpanded = localIsExpanded ?? globalIsExpand;
   const dragEnabled = localDragEnabled ?? globalDragEnabled;
   const rendererMode = localRendererMode ?? globalRendererMode;

@@ -10,10 +10,10 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 | 类型     | 用于                  | 说明                                                    |
 | -------- | --------------------- | ------------------------------------------------------- |
 | `linear` | 连续数值              | 等距线性映射（默认）                                    |
-| `log`    | 跨数量级的正数        | 对数映射；仅 point / line                               |
+| `log`    | 跨数量级的正数        | 对数映射；`base` 默认 10；仅 point / line               |
 | `sqrt`   | 面积感知              | 平方根映射；仅 point / line（`size` 通道默认用它）      |
 | `pow`    | 自定义幂              | 幂映射（需 `exponent`，写完整 spec 用）                 |
-| `symlog` | 跨零 / 含负的宽幅数据 | 对称对数：近零线性、尾部对数；仅 point / line           |
+| `symlog` | 跨零 / 含负的宽幅数据 | 对称对数；`constant` 默认 1；仅 point / line            |
 | `radial` | 极坐标 / 玫瑰图半径   | 径向：输出半径使面积正比于值；可作 interval / area 值轴 |
 | `time`   | 时间字段              | 连续时间映射；刻度落人类可读时间边界                    |
 | `band`   | 分类（柱状）          | 每个类别占等宽一格，图元落格中央并可铺满格宽            |
@@ -27,7 +27,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 ## 线性 vs 对数
 
-数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`<Scale dimension="y" type="log" />`），每个数量级占等高，小值也看得清。两张图喂的是同一份逐年用户量。
+数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`<Scale dimension="y" type="log" />`），每个数量级占等高，小值也看得清。默认底数为 10；需要自然对数时设置 `base={Math.E}`，且 `base` 必须大于 1。两张图喂的是同一份逐年用户量。
 
 <ComponentPreview name="scale-linear-log" sourceFiles={['scale-continuous.data.ts']} />
 
@@ -53,7 +53,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 ## 对称对数
 
-`log` 不能处理零和负值，但盈亏、温差、增长率这类数据常常跨零又跨数量级。`<Scale dimension="y" type="symlog" />` 用**对称对数**——近零是一段线性区、两侧尾部才转对数，所以零和负值都有定义。线性区宽度由 `constant` 调（缺省 `1`，调大让更多中段保持线性）。和 `log` / `sqrt` / `pow` 一样，`symlog` 是非线性 scale，只作用 point / line。
+`log` 不能处理零和负值，但盈亏、温差、增长率这类数据常常跨零又跨数量级。`<Scale dimension="y" type="symlog" />` 用**对称对数**——近零是一段线性区、两侧尾部才转对数，所以零和负值都有定义。线性区宽度由 `constant` 调（缺省 `1`，调大让更多中段保持线性）；例如正数区间设置 `constant={50}` 时，映射等价于 `ln(1 + x / 50)`。和 `log` / `sqrt` / `pow` 一样，`symlog` 是非线性 scale，只作用 point / line。
 
 <ComponentPreview name="scale-symlog" sourceFiles={['scale-symlog.data.ts']} />
 

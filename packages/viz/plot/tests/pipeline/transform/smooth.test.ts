@@ -5,7 +5,7 @@ import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { TransformOperation } from '../../../src/schemas';
+import type { Transform } from '../../../src/schemas';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
@@ -17,7 +17,7 @@ const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
 
 const applyTransforms = (
   rows: Array<ExternalRow>,
-  operations?: Array<TransformOperation>,
+  operations?: Array<Transform>,
   registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
   context?: TransformContext,
 ): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);

@@ -37,7 +37,7 @@ See [Data Model](/viz/data/model) for how to declare field types. The long tail 
 </Plot>
 ```
 
-Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases are accepted. `Axis.scale` supports the positional shortcuts `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial`. For finer control — log base, power exponent, symlog constant — write the full spec `scales`.
+Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases are accepted. `Axis.scale` supports the positional shortcuts `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial`. A `log` scale uses base 10 by default; use `<Scale dimension="y" type="log" base={Math.E} />` for the natural logarithm. Use `constant` to tune a `symlog` scale's linear region. Other fine-grained options, such as a power exponent, still belong in the full spec `scales`.
 
 When a continuous positional scale infers its domain, it leaves 5% padding on both ends by default so a single point or an extreme value does not sit directly on a cartesian corner. Use `domainPadding={0}` when the domain must touch the edge exactly, or target one side with an object:
 

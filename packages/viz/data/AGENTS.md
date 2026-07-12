@@ -24,7 +24,7 @@ pipeline/     数据流编排，消费 providers / contract
 ```bash
 pnpm --filter @retikz/data exec eslint . --fix
 pnpm --filter @retikz/data exec tsc --noEmit
-pnpm --filter @retikz/data exec vitest run
+pnpm --filter @retikz/data test:changed
 ```
 
-跨包迁移还需运行消费方包的同类验证。
+跨包迁移还需运行消费方包的同类验证；模块全量测试按根 AGENTS 的验证分级执行。

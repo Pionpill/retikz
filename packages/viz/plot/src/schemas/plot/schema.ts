@@ -1,9 +1,9 @@
-import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+import { CompositeBaseSchema, JsonObjectSchema, TextBlockSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
-import { GuideSchema } from '../guide';
+import { GuideSchema, GuideTextStyleSchema } from '../guide';
 import { BoxPaddingSchema, PlotLabelSchema, PlotLayoutSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
@@ -104,6 +104,13 @@ const FacetValueSchema = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
   .describe('JSON-safe scalar facet value used in facet ordering and panel keys');
 
+const FacetLabelOverrideSchema = z
+  .strictObject({
+    value: FacetValueSchema.describe('Facet value whose generated header label is overridden'),
+    label: TextBlockSchema.describe('Display text block used for this facet value in generated headers'),
+  })
+  .describe('Display label override for one facet value');
+
 const FacetDimensionSchema = z
   .object({
     field: z.string().min(1).describe('Data field path used to split rows into facet panels'),
@@ -111,6 +118,10 @@ const FacetDimensionSchema = z
       .array(FacetValueSchema)
       .optional()
       .describe('Explicit facet value order; values not listed are appended in first-seen order'),
+    labels: z
+      .array(FacetLabelOverrideSchema)
+      .optional()
+      .describe('Optional display labels for facet values; unmatched values fall back to String(value)'),
   })
   .strict()
   .describe('Facet dimension bound to a data field');
@@ -119,13 +130,25 @@ const FacetDimensionInputSchema = z
   .union([FacetDimensionSchema, z.array(FacetDimensionSchema).min(1)])
   .describe('One or more facet dimensions bound to data fields');
 
-const FacetHeaderSchema = z
+const FacetHeaderLabelSchema = z
   .object({
-    row: z.boolean().optional().describe('Whether generated row labels are visible'),
-    column: z.boolean().optional().describe('Whether generated column labels are visible'),
+    ...GuideTextStyleSchema.shape,
+    rotate: z.number().optional().describe('Facet label rotation in degrees around the label center'),
   })
   .strict()
-  .describe('Facet header visibility');
+  .describe('Facet header label text style');
+
+const FacetHeaderLabelInputSchema = z
+  .union([z.boolean(), FacetHeaderLabelSchema])
+  .describe('Facet label visibility or text style');
+
+const FacetHeaderSchema = z
+  .object({
+    row: FacetHeaderLabelInputSchema.optional().describe('Whether generated row labels are visible or styled'),
+    column: FacetHeaderLabelInputSchema.optional().describe('Whether generated column labels are visible or styled'),
+  })
+  .strict()
+  .describe('Facet header visibility and text style');
 
 export const FacetArrangementSchema = z
   .object({

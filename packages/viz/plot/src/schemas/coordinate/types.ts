@@ -1,5 +1,7 @@
+import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
+import type { Cartesian1DOrientation, PlotCoordinate } from './constants';
 import type {
   Cartesian1DSchema,
   CoordinateOperationSchema,
@@ -8,6 +10,12 @@ import type {
   Polar1DSchema,
   Ternary2DSchema,
 } from './schema';
+
+/** 坐标系类型 */
+export type PlotCoordinateValue = ValueOf<typeof PlotCoordinate>;
+
+/** cartesian1D 轴向 */
+export type Cartesian1DOrientationType = ValueOf<typeof Cartesian1DOrientation>;
 
 /** 内置坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;

@@ -1,6 +1,33 @@
+import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
+import type {
+  LayoutAnchor,
+  LayoutCollisionStrategy,
+  LayoutPlacementKind,
+  LayoutPlacementTarget,
+  PlotLabelOverflow,
+  PlotLabelRole,
+  PlotLabelType,
+  PlotLayoutMode,
+} from './constants';
 import type { LayoutPlacementSchema, PlotLabelSchema, PlotLayoutSchema } from './schema';
+
+export type PlotLayoutModeValue = ValueOf<typeof PlotLayoutMode>;
+
+export type LayoutCollisionStrategyValue = ValueOf<typeof LayoutCollisionStrategy>;
+
+export type LayoutPlacementTargetValue = ValueOf<typeof LayoutPlacementTarget>;
+
+export type LayoutPlacementKindValue = ValueOf<typeof LayoutPlacementKind>;
+
+export type PlotLabelTypeValue = ValueOf<typeof PlotLabelType>;
+
+export type PlotLabelRoleValue = ValueOf<typeof PlotLabelRole>;
+
+export type PlotLabelOverflowValue = ValueOf<typeof PlotLabelOverflow>;
+
+export type LayoutAnchorValue = ValueOf<typeof LayoutAnchor>;
 
 /** Plot 全局布局策略。 */
 export type PlotLayout = z.infer<typeof PlotLayoutSchema>;

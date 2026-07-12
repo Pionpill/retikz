@@ -1,4 +1,4 @@
-﻿import type { FieldDef } from '@retikz/data';
+﻿import type { IRDataFieldDefinition } from '@retikz/data';
 import type {
   ScaleBand as D3ScaleBand,
   ScaleContinuousNumeric as D3ScaleContinuousNumeric,
@@ -390,8 +390,8 @@ const DEFAULT_BAND_PADDING_INNER = 0.1;
 /** point scale 默认外缝（占 step 比例）；对齐 d3 scalePoint 默认，首尾各留半步 */
 const DEFAULT_POINT_PADDING = 0.5;
 
-/** FieldDef.order 的取值类型（单一真源派生自 schema，避免手写第二份） */
-export type CategoryOrder = NonNullable<FieldDef['order']>;
+/** IRDataFieldDefinition.order 的取值类型（单一真源派生自 schema，避免手写第二份） */
+export type CategoryOrder = NonNullable<IRDataFieldDefinition['order']>;
 
 /**
  * 按 order 计算有序的分类域：在 inferCategoryDomain 去重保序基础上再排

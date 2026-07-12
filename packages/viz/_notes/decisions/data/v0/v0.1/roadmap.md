@@ -9,6 +9,7 @@ v0.1 目标是在 beta.1 建立独立包边界：`@retikz/data` 接管 plot 内�
 | Milestone | 目标                                                                                | ADR                             |
 | --------- | ----------------------------------------------------------------------------------- | ------------------------------- |
 | beta.1    | 迁出 plot 数据层，建立 `@retikz/data` schema / contract / providers / pipeline 边界 | [`beta.1`](./beta.1/roadmap.md) |
+| beta.2    | 收紧 data IR / statistics 边界，公开类型统一为 `IRDataXxx`                          | [`beta.2`](./beta.2/roadmap.md) |
 
 ## 验证策略
 

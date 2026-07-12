@@ -20,7 +20,7 @@ import { ComponentRender } from './ComponentRender';
 import { RawSvgFrame } from './components';
 import { useDemoLocationContext } from './context';
 import { buildConfiguredControlSlots } from './controls';
-import { buildControlsKey, controlModules, resolvePreviewControls } from './registry';
+import { controlModules, resolveControlsKey, resolvePreviewControls } from './registry';
 import {
   buildIrJsonKey,
   buildVanillaKey,
@@ -43,6 +43,8 @@ import {
 export type ComponentPreviewProps = {
   /** demo 文件名（不含 `.demo.tsx` 后缀），相对当前 mdx 同级目录解析 */
   name: string;
+  /** 复用同目录下另一 demo 的 controls；默认与 `name` 相同。 */
+  controlsName?: string;
   /** 渲染区垂直对齐，默认 center */
   align?: AlignKey;
   /** 渲染区高度档位，默认 `md`。 */
@@ -69,6 +71,7 @@ export type ComponentPreviewProps = {
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const {
     name,
+    controlsName,
     align = 'center',
     size = 'md',
     componentClassName,
@@ -90,7 +93,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;
   const Component = mod?.default;
-  const controlModule = segments ? controlModules[buildControlsKey(segments, name)] : undefined;
+  const controlKey = segments ? resolveControlsKey(segments, controlsName ?? name, lang) : null;
+  const controlModule = controlKey ? controlModules[controlKey] : undefined;
   const moduleControls = mod?.previewControls ?? resolvePreviewControls(controlModule);
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
@@ -133,7 +137,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const vanillaCode = useMemo(() => {
     if (!Component || hideCode) return '';
     if (vanillaOverride !== undefined) return vanillaOverride.replace(/\n$/, '');
-    if (interactive || !irState.previewIr) return '';
+    if (interactive || !irState.previewIr || irHasComposite(irState.previewIr.ir)) return '';
     try {
       return irToVanillaCode(irState.previewIr.ir);
     } catch (err) {

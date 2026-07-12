@@ -1,3 +1,4 @@
+import type { LogScale, SymlogScale } from '@retikz/plot';
 import type { FC } from 'react';
 
 /** 位置 scale 可配置的坐标维度 */
@@ -20,15 +21,34 @@ type ScaleBaseProps = {
 
 /** 连续位置 scale props。 */
 type ContinuousScaleProps = ScaleBaseProps & {
-  /** 连续位置 scale 类型；更细的 range / base / constant 等参数走 spec 入口 */
-  type: ContinuousPositionScaleType;
   /** 显式数值 / 时间 domain；省略时从绑定数据推断。 */
   domain?: [number, number];
   /** 额外值域留白；推断 domain 默认 0.05，显式 domain 默认 0。 */
   domainPadding?: DomainPaddingInput;
   /** 单值 domain 展开跨度；省略时按 scale 类型默认。 */
   singleValueSpan?: number;
-};
+} & (
+    | {
+        /** 对数位置 scale。 */
+        type: 'log';
+        /** 对数底数；省略时为 10。 */
+        base?: LogScale['base'];
+        constant?: never;
+      }
+    | {
+        /** 对称对数位置 scale。 */
+        type: 'symlog';
+        base?: never;
+        /** 线性区宽度常数；省略时为 1。 */
+        constant?: SymlogScale['constant'];
+      }
+    | {
+        /** 除 log / symlog 外的连续位置 scale。 */
+        type: Exclude<ContinuousPositionScaleType, 'log' | 'symlog'>;
+        base?: never;
+        constant?: never;
+      }
+  );
 
 /** 分类点位 scale props。 */
 type PointScaleProps = ScaleBaseProps & {

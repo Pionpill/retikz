@@ -3,10 +3,10 @@ import type { ParsedFieldValue } from './data';
 
 /**
  * 字段解析格式 runtime definition。
- * @description definition 是运行时对象，不进 JSON IR；IR 只在 FieldDef.format 保存格式名。
+ * @description definition 是运行时对象，不进 JSON IR；IR 只在 IRDataFieldDefinition.format 保存格式名。
  */
 export type FieldFormatDefinition = {
-  /** 注册键 = IR 中 FieldDef.format 字符串；必须非空，且不与内置格式名冲突。 */
+  /** 注册键 = IR 中 IRDataFieldDefinition.format 字符串；必须非空，且不与内置格式名冲突。 */
   name: string;
   /** 该格式唯一蕴含的字段测量类型；字段省略 type 时由它覆盖推断。 */
   impliedType: DataFieldTypeValue;

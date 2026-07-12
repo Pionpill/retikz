@@ -1,5 +1,7 @@
+import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
+import type { PlotTransform, StackOffset } from './constants';
 import type {
   BinTransformSchema,
   DensityBandwidthSpecSchema,
@@ -16,6 +18,12 @@ import type {
   StackTransformSchema,
   TransformSchema,
 } from './schema';
+
+/** plot-only transform 类型。 */
+export type PlotTransformValue = ValueOf<typeof PlotTransform>;
+
+/** stack baseline offset 策略值。 */
+export type StackOffsetValue = ValueOf<typeof StackOffset>;
 
 /** 堆叠变换（跨行累积区间，保行数）。 */
 export type StackTransform = z.infer<typeof StackTransformSchema>;
@@ -58,6 +66,3 @@ export type PlotBuiltinTransform = z.infer<typeof PlotBuiltinTransformSchema>;
 
 /** plot transform operation（data 内置 ∪ plot 内置 ∪ 外部注册 kind 开放配置）。 */
 export type Transform = z.infer<typeof TransformSchema>;
-
-/** plot transform 管线 operation；定义对象在运行时用 schema 精确收窄。 */
-export type TransformOperation = Transform;

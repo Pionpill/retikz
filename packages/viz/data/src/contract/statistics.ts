@@ -1,14 +1,14 @@
 ﻿import { z } from 'zod';
 
+import type { IRDataReducerOperation, IRDataSelectorOperation } from '../schemas';
+import type { ExternalRow } from '../shared';
 import type { TransformContext } from './transform';
-
-import { type ExternalRow, type ReducerOperation, type SelectorOperation } from '../schemas';
 
 /**
  * 统计 reducer 运行时定义。
- * @description 定义对象只存在于运行时，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 ReducerOperation。
+ * @description 定义对象只存在于运行时，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 IRDataReducerOperation。
  */
-export type StatisticsReducerDefinition<TReducerOperation extends ReducerOperation = ReducerOperation> = {
+export type StatisticsReducerDefinition<TReducerOperation extends IRDataReducerOperation = IRDataReducerOperation> = {
   /** 完整 reducer operation schema；必须含非空 z.literal('kind') 供注册表提取注册键。 */
   schema: z.ZodType<TReducerOperation>;
   /** 该 reducer 消费的源字段名；参与 data.model strict 校验。 */
@@ -24,7 +24,7 @@ export type StatisticsReducerDefinition<TReducerOperation extends ReducerOperati
  * @description 保留 schema / inputFields / outputFields / reduce 之间的泛型关联；内置与自定义 reducer 都经同一 registry 入口分派。
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook。
  */
-export const defineStatisticsReducer = <TReducerOperation extends ReducerOperation>(
+export const defineStatisticsReducer = <TReducerOperation extends IRDataReducerOperation>(
   def: StatisticsReducerDefinition<TReducerOperation>,
 ): StatisticsReducerDefinition<TReducerOperation> => def;
 
@@ -51,7 +51,7 @@ export type RowSelection = {
  * row selector 运行时定义。
  * @description selector 是统计子算子，供 `select` / `annotate` / `relate` 复用；定义对象不进入 JSON IR。
  */
-export type RowSelectorDefinition<TSelectorOperation extends SelectorOperation = SelectorOperation> = {
+export type RowSelectorDefinition<TSelectorOperation extends IRDataSelectorOperation = IRDataSelectorOperation> = {
   /** 完整 selector operation schema；必须含非空 z.literal('kind') 供注册表提取注册键。 */
   schema: z.ZodType<TSelectorOperation>;
   /** 该 selector 消费的源字段名；参与 data.model strict 校验。 */
@@ -65,7 +65,7 @@ export type RowSelectorDefinition<TSelectorOperation extends SelectorOperation =
  * @description 保留 schema / inputFields / select 之间的泛型关联；内置与自定义 selector 都经同一 registry 入口分派。
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook。
  */
-export const defineRowSelector = <TSelectorOperation extends SelectorOperation>(
+export const defineRowSelector = <TSelectorOperation extends IRDataSelectorOperation>(
   def: RowSelectorDefinition<TSelectorOperation>,
 ): RowSelectorDefinition<TSelectorOperation> => def;
 

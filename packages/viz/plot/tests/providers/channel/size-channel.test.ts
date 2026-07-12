@@ -26,7 +26,7 @@ const firstLayer = (
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
-/** 娣卞害鏀堕泦鍥惧眰鍐呮墍鏈?node锛堟棤 color 鐩存帴瀛愩€佹湁 color 钘忓瓙 Scope锛?*/
+/** 深度收集图层内所有 Node；颜色分组时 Node 可能位于子 Scope。 */
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
   const walk = (children: ReadonlyArray<unknown>): void => {
@@ -40,7 +40,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-/** node 鐨?minimumSize锛坧er-node 鍗婂緞鎹㈢畻缁撴灉锛? radius 脳 鈭?锛?*/
+/** 读取 Node.minimumSize；它等于逐节点半径乘以 √2。 */
 const sizeOf = (node: IRNode): number | undefined => (node as { minimumSize?: number }).minimumSize;
 const radiusOf = (node: IRNode): number | undefined => {
   const ms = sizeOf(node);
@@ -60,8 +60,8 @@ const pointSpec = (
     marks: [{ type: 'point', ...(size ? { size } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
-describe('size channel 路 radius geometry (alpha.7 ADR-02)', () => {
-  // Happy path锛歴qrt 鍗婂緞銆俤omain [0,16] range [MIN,MAX]锛歷=4 鈫?sqrt(4)/sqrt(16)=0.5 鈫?鍗婂緞 = MIN + 0.5*(MAX-MIN)
+describe('size channel 映射节点半径', () => {
+  // sqrt 半径映射：domain [0,16]、range [MIN,MAX] 时，v=4 映射到半程半径。
   it('size_field_maps_radius_by_sqrt', () => {
     const data = [
       { x: 0, y: 0, p: 0 },
@@ -70,13 +70,13 @@ describe('size channel 路 radius geometry (alpha.7 ADR-02)', () => {
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts));
     const radii = nodes.map(radiusOf);
-    expect(radii[0]).toBeCloseTo(SIZE_MIN_RADIUS, 6); // p=0 鈫?鍩熶笅鐣?鈫?MIN
-    expect(radii[2]).toBeCloseTo(SIZE_MAX_RADIUS, 6); // p=16 = maxPositive 鈫?MAX
+    expect(radii[0]).toBeCloseTo(SIZE_MIN_RADIUS, 6); // p=0 位于 domain 下界，映射到 MIN。
+    expect(radii[2]).toBeCloseTo(SIZE_MAX_RADIUS, 6); // p=16 是最大正值，映射到 MAX。
     const mid = SIZE_MIN_RADIUS + 0.5 * (SIZE_MAX_RADIUS - SIZE_MIN_RADIUS);
-    expect(radii[1]).toBeCloseTo(mid, 6); // p=4 鈫?sqrt 涓偣
+    expect(radii[1]).toBeCloseTo(mid, 6); // p=4 是 sqrt 映射的中点。
   });
 
-  // Happy path锛氬父閲?value = 鏈€缁堝崐寰勶紝缁曡繃 scale
+  // 常量 value 直接表示最终半径，不经过 scale。
   it('size_value_is_final_radius_bypassing_scale', () => {
     const data = [
       { x: 0, y: 0 },
@@ -86,7 +86,7 @@ describe('size channel 路 radius geometry (alpha.7 ADR-02)', () => {
     expect(nodes.every(n => radiusOf(n) !== undefined && Math.abs(radiusOf(n)! - 8) < 1e-6)).toBe(true);
   });
 
-  // Happy path锛歴ize + color 鐙珛鐢熸晥锛堝崐寰?per-node銆侀鑹叉寜鑹插垎缁勶級
+  // size 与 color 独立生效：半径逐节点解析，颜色按值分组。
   it('size_with_color_both_apply', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -117,7 +117,7 @@ describe('size channel 路 radius geometry (alpha.7 ADR-02)', () => {
   });
 });
 
-describe('size channel 路 boundaries (alpha.7 ADR-02 鈶?', () => {
+describe('size channel 边界输入', () => {
   it('no_positive_values_all_min_radius', () => {
     const data = [
       { x: 0, y: 0, p: 0 },
@@ -151,7 +151,7 @@ describe('size channel 路 boundaries (alpha.7 ADR-02 鈶?', () => {
   });
 });
 
-describe('size channel 路 errors (alpha.7 ADR-02)', () => {
+describe('size channel 错误输入', () => {
   it('negative_field_value_fails_loud', () => {
     const data = [
       { x: 0, y: 0, p: 1 },

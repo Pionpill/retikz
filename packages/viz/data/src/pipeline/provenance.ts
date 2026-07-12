@@ -1,4 +1,4 @@
-import type { ExternalRow } from '../schemas';
+import type { ExternalRow } from '../shared';
 
 /**
  * 行级源序标记。

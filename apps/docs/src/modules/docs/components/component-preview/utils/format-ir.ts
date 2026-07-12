@@ -1,12 +1,38 @@
-/**
- * 格式化 IR JSON
- * @description `JSON.stringify(_, null, 2)` 会把 `[0, 0]` 这种短数组拆 4 行；post-process 把不含嵌套的纯标量短数组压回单行（限 60 字符内，避免长数组内联反而难读）。
- */
-export const formatIR = (ir: unknown): string =>
-  JSON.stringify(ir, null, 2).replace(/\[\s*([^[\]{}]+?)\s*\]/g, (match, contents: string) => {
-    const inlined = `[${contents
-      .replace(/\s+/g, ' ')
-      .replace(/\s*,\s*/g, ', ')
-      .trim()}]`;
-    return inlined.length <= 60 ? inlined : match;
-  });
+type JsonScalar = string | number | boolean | null;
+type JsonValue = JsonScalar | Array<JsonValue> | { [key: string]: JsonValue };
+
+const INLINE_MAX = 60;
+const INDENT = '  ';
+
+const isScalar = (value: JsonValue): value is JsonScalar =>
+  value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+
+const formatJsonValue = (value: JsonValue, depth: number): string => {
+  const compact = JSON.stringify(value);
+  if (isScalar(value)) return compact;
+  if (Array.isArray(value) && value.every(isScalar)) {
+    const inline = `[${value.map(item => JSON.stringify(item)).join(', ')}]`;
+    if (inline.length <= INLINE_MAX) return inline;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    const indentation = INDENT.repeat(depth + 1);
+    const closingIndentation = INDENT.repeat(depth);
+    return `[\n${value.map(item => `${indentation}${formatJsonValue(item, depth + 1)}`).join(',\n')}\n${closingIndentation}]`;
+  }
+
+  const entries = Object.entries(value);
+  if (entries.length === 0) return '{}';
+  const indentation = INDENT.repeat(depth + 1);
+  const closingIndentation = INDENT.repeat(depth);
+  return `{\n${entries
+    .map(([key, item]) => `${indentation}${JSON.stringify(key)}: ${formatJsonValue(item, depth + 1)}`)
+    .join(',\n')}\n${closingIndentation}}`;
+};
+
+/** 格式化 IR JSON，并将较短的纯标量数组保留在单行。 */
+export const formatIR = (ir: unknown): string => {
+  const serialized = JSON.stringify(ir);
+  return formatJsonValue(JSON.parse(serialized) as JsonValue, 0);
+};
