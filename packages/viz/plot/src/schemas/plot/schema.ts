@@ -13,6 +13,8 @@ import {
   CompositionAxisResolve,
   CompositionGridResolve,
   CompositionScaleResolve,
+  CoordinateArrangementKind,
+  CoordinateViewPlacementKind,
   FacetEmptyPolicy,
   PLOT_NAMESPACE,
   PlotComposite,
@@ -52,13 +54,15 @@ export const CompositionResolveSchema = z
 
 const CoordinateViewRootPlacementSchema = z
   .strictObject({
-    kind: z.literal('root').describe('Placement kind: this view occupies the root plot area'),
+    kind: z.literal(CoordinateViewPlacementKind.Root).describe('Placement kind: this view occupies the root plot area'),
   })
   .describe('Root coordinate view placement');
 
 const CoordinateViewSlotPlacementSchema = z
   .strictObject({
-    kind: z.literal('slot').describe('Placement kind: this view occupies a named arrangement slot'),
+    kind: z
+      .literal(CoordinateViewPlacementKind.Slot)
+      .describe('Placement kind: this view occupies a named arrangement slot'),
     arrangement: z.string().min(1).describe('Arrangement id that owns this slot'),
     slot: z.string().min(1).describe('Slot key this view occupies inside the arrangement'),
   })
@@ -66,7 +70,9 @@ const CoordinateViewSlotPlacementSchema = z
 
 const CoordinateViewOverlayPlacementSchema = z
   .strictObject({
-    kind: z.literal('overlay').describe('Placement kind: this view overlays another coordinate view'),
+    kind: z
+      .literal(CoordinateViewPlacementKind.Overlay)
+      .describe('Placement kind: this view overlays another coordinate view'),
     target: z.string().min(1).describe('Target coordinate view id this view overlays'),
     zIndex: z
       .number()
@@ -143,7 +149,7 @@ const FacetHeaderSchema = z
 
 export const FacetArrangementSchema = z
   .strictObject({
-    kind: z.literal('facet').describe('Arrangement discriminator: data-driven facet panels'),
+    kind: z.literal(CoordinateArrangementKind.Facet).describe('Arrangement discriminator: data-driven facet panels'),
     id: z.string().min(1).describe('Stable facet arrangement id used to derive panel view ids and provenance'),
     view: z.string().min(1).describe('Template coordinate view used by generated facet panels'),
     row: FacetDimensionInputSchema.optional().describe(
@@ -206,7 +212,7 @@ const TrackHeaderSchema = z
 
 export const TrackArrangementSchema = z
   .strictObject({
-    kind: z.literal('tracks').describe('Arrangement discriminator: shared coordinate tracks'),
+    kind: z.literal(CoordinateArrangementKind.Tracks).describe('Arrangement discriminator: shared coordinate tracks'),
     id: z.string().min(1).describe('Stable track arrangement id used to derive track view ids and provenance'),
     coordinate: CoordinateOperationSchema.describe('Base coordinate operation owned by this track arrangement'),
     sharedRoles: z
@@ -262,14 +268,14 @@ export const CoordinateCompositionSchema = z
     }
     for (let index = 0; index < views.length; index += 1) {
       const view = views[index];
-      if (view.placement?.kind === 'overlay' && !ids.has(view.placement.target)) {
+      if (view.placement?.kind === CoordinateViewPlacementKind.Overlay && !ids.has(view.placement.target)) {
         ctx.addIssue({
           code: 'custom',
           path: ['views', index, 'placement', 'target'],
           message: `overlay target "${view.placement.target}" does not reference a registered coordinate view`,
         });
       }
-      if (view.placement?.kind === 'overlay' && view.placement.target === view.id) {
+      if (view.placement?.kind === CoordinateViewPlacementKind.Overlay && view.placement.target === view.id) {
         ctx.addIssue({
           code: 'custom',
           path: ['views', index, 'placement', 'target'],
@@ -278,7 +284,9 @@ export const CoordinateCompositionSchema = z
       }
     }
     const overlayTargetOf = new Map(
-      views.flatMap(view => (view.placement?.kind === 'overlay' ? [[view.id, view.placement.target] as const] : [])),
+      views.flatMap(view =>
+        view.placement?.kind === CoordinateViewPlacementKind.Overlay ? [[view.id, view.placement.target] as const] : [],
+      ),
     );
     for (const view of views) {
       const visiting = new Set<string>();
@@ -300,7 +308,10 @@ export const CoordinateCompositionSchema = z
     const arrangementIds = new Set<string>();
     const registeredViewIds = new Set(ids);
     const arrangementKinds = new Set((composition.arrangements ?? []).map(arrangement => arrangement.kind));
-    if (arrangementKinds.has('facet') && arrangementKinds.has('tracks')) {
+    if (
+      arrangementKinds.has(CoordinateArrangementKind.Facet) &&
+      arrangementKinds.has(CoordinateArrangementKind.Tracks)
+    ) {
       ctx.addIssue({
         code: 'custom',
         path: ['arrangements'],
@@ -323,14 +334,14 @@ export const CoordinateCompositionSchema = z
           message: `arrangement id "${arrangement.id}" conflicts with a registered coordinate view id`,
         });
       }
-      if (arrangement.kind === 'facet' && !ids.has(arrangement.view)) {
+      if (arrangement.kind === CoordinateArrangementKind.Facet && !ids.has(arrangement.view)) {
         ctx.addIssue({
           code: 'custom',
           path: ['arrangements', arrangementIndex, 'view'],
           message: `facet view "${arrangement.view}" does not reference a registered coordinate view`,
         });
       }
-      if (arrangement.kind === 'tracks') {
+      if (arrangement.kind === CoordinateArrangementKind.Tracks) {
         if (arrangement.sharedRoles.length === 0 && arrangement.frame === ScaffoldFrameMode.Independent) {
           ctx.addIssue({
             code: 'custom',
@@ -519,7 +530,7 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
         ? new Set([
             ...(spec.composition.views ?? []).map(view => view.id),
             ...(spec.composition.arrangements ?? []).flatMap(arrangement =>
-              arrangement.kind === 'tracks'
+              arrangement.kind === CoordinateArrangementKind.Tracks
                 ? arrangement.tracks.map(
                     track =>
                       track.view ??

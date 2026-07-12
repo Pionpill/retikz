@@ -22,7 +22,7 @@ import type { MarkPaint } from '../shared';
 
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { ChannelDefinitionKind } from '../../../contract';
-import { PlotMark, ReferenceMarkSchema } from '../../../schemas';
+import { PlotMark, ReferenceMarkKind, ReferenceMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import { isCartesianCoordinateFrame, isPolarCoordinateFrame, isTernary2DCoordinateFrame } from '../../coordinate';
 import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
@@ -52,9 +52,11 @@ const referencePathOptions = (mark: IRPlotReferenceMark): Partial<Pick<IRPath, '
 
 type ReferenceOrientation = 'x' | 'y';
 
-type ReferenceShape = { kind: 'axis'; orientation: ReferenceOrientation; band: boolean } | { kind: 'region' };
+type ReferenceShape =
+  | { kind: 'axis'; orientation: ReferenceOrientation; band: boolean }
+  | { kind: typeof ReferenceMarkKind.Region };
 
-const isReferenceRegion = (mark: IRPlotReferenceMark): boolean => mark.kind === 'region';
+const isReferenceRegion = (mark: IRPlotReferenceMark): boolean => mark.kind === ReferenceMarkKind.Region;
 
 /**
  * reference 取向：恰好绑 encoding.x（竖直）或 encoding.y（水平）之一；皆设 / 皆缺 → fail-loud。
@@ -137,7 +139,7 @@ const referenceShape = (mark: IRPlotReferenceMark): ReferenceShape => {
       'lowerPlots: reference region does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
     );
   }
-  return { kind: 'region' };
+  return { kind: ReferenceMarkKind.Region };
 };
 
 const referenceRegionUpperRaw = (mark: IRPlotReferenceMark, role: string): number | string | undefined => {
@@ -183,7 +185,7 @@ const referenceRegionScale = (role: string, frame: CoordinateFrame): PositionSca
  * reference 是否完全常量（单条 full-span line / band / region，不逐行）：边界均为 value/number、无 extent field。
  */
 const isReferenceConstant = (mark: IRPlotReferenceMark, shape: ReferenceShape, frame: CoordinateFrame): boolean => {
-  if (shape.kind === 'region') {
+  if (shape.kind === ReferenceMarkKind.Region) {
     for (const role of frame.roles) {
       referenceRegionRequireRole(mark, role, frame);
       if (mark.encoding[role].field !== undefined) return false;
@@ -303,7 +305,7 @@ const referenceRegionCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame:
 /** reference cell 形态（axis band / region）某行 → 正交 Cell；line 形态返回 null。 */
 export const referenceCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame: CoordinateFrame): Cell | null => {
   const shape = referenceShape(mark);
-  if (shape.kind === 'region') return referenceRegionCell(mark, row, frame);
+  if (shape.kind === ReferenceMarkKind.Region) return referenceRegionCell(mark, row, frame);
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return null;
   return shape.band ? referenceAxisBandCell(mark, row, frame, shape.orientation) : null;
 };
@@ -326,7 +328,7 @@ const lowerReference = (
       `lowerPlots: a constant reference cannot use a per-datum color field "${mark.encoding.color.field}"; use a constant color value, or bind a per-datum position field`,
     );
   }
-  const cellForm = shape.kind === 'region' || shape.band;
+  const cellForm = shape.kind === ReferenceMarkKind.Region || shape.band;
   const effectiveRows = referenceRows(mark, rows, shape, frame);
   const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? DEFAULT_FILL;
   const defaultStroke = channelDefaultOf<MarkPaint>(channels, 'stroke') ?? defaultColor ?? DEFAULT_FILL;
@@ -343,7 +345,7 @@ const lowerReference = (
     for (let transformedIndex = 0; transformedIndex < effectiveRows.length; transformedIndex++) {
       const row = effectiveRows[transformedIndex];
       const cell =
-        shape.kind === 'region'
+        shape.kind === ReferenceMarkKind.Region
           ? referenceRegionCell(mark, row, frame)
           : isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)
             ? referenceAxisBandCell(mark, row, frame, shape.orientation)
@@ -457,7 +459,7 @@ export const lowerReferenceLayer = (
 ): IRChild | null => {
   if (mark.type !== PlotMark.Reference) return null;
   const shape = referenceShape(mark);
-  if (shape.kind === 'region') {
+  if (shape.kind === ReferenceMarkKind.Region) {
     if (!hasProjectCell(frame)) {
       throw new Error(failLoudMessage(mark.type, frame.type));
     }

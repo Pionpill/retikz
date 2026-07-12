@@ -1,7 +1,15 @@
 import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
-import type { PlotTransform, StackOffset } from './constants';
+import type {
+  DensityBandwidthKind,
+  JitterAxis,
+  NormalizeBasis,
+  PairMeasureOperationKind,
+  PlotTransform,
+  SmoothMethodKind,
+  StackOffset,
+} from './constants';
 import type {
   BinTransformSchema,
   DensityBandwidthSpecSchema,
@@ -24,6 +32,21 @@ export type PlotTransformValue = ValueOf<typeof PlotTransform>;
 
 /** stack baseline offset 策略值。 */
 export type StackOffsetValue = ValueOf<typeof StackOffset>;
+
+/** 配对度量操作类型取值。 */
+export type PairMeasureOperationKindValue = ValueOf<typeof PairMeasureOperationKind>;
+
+/** 归一化结果的数值基准取值。 */
+export type NormalizeBasisValue = ValueOf<typeof NormalizeBasis>;
+
+/** jitter 作用轴取值。 */
+export type JitterAxisValue = ValueOf<typeof JitterAxis>;
+
+/** density 带宽策略类型取值。 */
+export type DensityBandwidthKindValue = ValueOf<typeof DensityBandwidthKind>;
+
+/** smooth 方法类型取值。 */
+export type SmoothMethodKindValue = ValueOf<typeof SmoothMethodKind>;
 
 /** 堆叠变换（跨行累积区间，保行数）。 */
 export type IRPlotStackTransform = z.infer<typeof StackTransformSchema>;

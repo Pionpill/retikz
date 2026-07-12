@@ -7,7 +7,11 @@ import type {
   PathClosureKind,
   PathCurve,
   PlotMark,
+  ReferenceMarkKind,
   RelationGeometryKind,
+  RelationOrthogonalLabelStep,
+  RelationRouteStepKind,
+  RelationRoutingKind,
 } from './constants';
 import type {
   AnchorIdSpecSchema,
@@ -72,7 +76,9 @@ export type IRPlotPointMark = z.infer<typeof PointMarkSchema>;
 export type MarkValueKindValue = ValueOf<typeof MarkValueKind>;
 
 /** mark 样式值；需要 scale 的属性在此基础上交叉 `{ scale?: string }` */
-export type MarkValueType<T> = { kind: 'field'; value: string } | { kind: 'constant'; value: T };
+export type MarkValueType<T> =
+  | { kind: typeof MarkValueKind.Field; value: string }
+  | { kind: typeof MarkValueKind.Constant; value: T };
 
 /** mark 样式值，字段变体可绑定 scale */
 export type ScaledMarkValueType<T> = MarkValueType<T> & { scale?: string };
@@ -206,6 +212,18 @@ export type IRPlotRelationTransform = z.infer<typeof RelationTransformSchema>;
 
 /** RelationMark 几何子类型值 */
 export type RelationGeometryKindValue = ValueOf<typeof RelationGeometryKind>;
+
+/** relation 显式路由支持的 core step 类型取值。 */
+export type RelationRouteStepKindValue = ValueOf<typeof RelationRouteStepKind>;
+
+/** relation 自动路由策略类型取值。 */
+export type RelationRoutingKindValue = ValueOf<typeof RelationRoutingKind>;
+
+/** relation 正交路由标签落点策略取值。 */
+export type RelationOrthogonalLabelStepValue = ValueOf<typeof RelationOrthogonalLabelStep>;
+
+/** reference mark 显式形态取值。 */
+export type ReferenceMarkKindValue = ValueOf<typeof ReferenceMarkKind>;
 
 /** relation mark 的路由策略声明。 */
 export type IRPlotRelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;

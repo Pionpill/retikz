@@ -26,6 +26,7 @@ import {
   AxisCrossingCorner,
   AxisCrossingLabelPolicy,
   AxisCrossingTickPolicy,
+  AxisLineExtentTarget,
   AxisPlacementKind,
   AxisTickEndpointAffect,
   AxisTickLabelHideStrategy,
@@ -89,7 +90,7 @@ const axisLineTokenOf = (guide: IRPlotAxisGuide): AxisLineToken | undefined =>
 const hasCartesianOnlyAxisLineGeometry = (guide: IRPlotAxisGuide): boolean => {
   const line = axisLineTokenOf(guide);
   if (line === undefined) return false;
-  return line.arrow !== undefined || (line.extent !== undefined && line.extent !== 'plotArea');
+  return line.arrow !== undefined || (line.extent !== undefined && line.extent !== AxisLineExtentTarget.PlotArea);
 };
 
 const assertNoCartesianOnlyAxisLineGeometry = (guide: IRPlotAxisGuide): void => {
@@ -869,7 +870,7 @@ const lowerCartesianGuide = (
   // ---- 轴层 ----
   const axisLine: Segment = (() => {
     const extent = axisLineToken?.extent;
-    if (extent !== undefined && extent !== 'plotArea') {
+    if (extent !== undefined && extent !== AxisLineExtentTarget.PlotArea) {
       const from = project.coordinate(extent.from);
       const to = project.coordinate(extent.to);
       return isX

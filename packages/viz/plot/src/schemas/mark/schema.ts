@@ -1,4 +1,13 @@
-import { BoxSpacingSchema, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
+import {
+  BendDirection,
+  BoxSpacingSchema,
+  FoldStepVia,
+  JsonObjectSchema,
+  PaintSpecSchema,
+  RibbonAlignment,
+  RibbonSamplingSchema,
+  RibbonTaperInterpolation,
+} from '@retikz/core';
 import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { AxisScaleSchema, BoxSizeSchema } from '@retikz/core';
 import {
@@ -27,7 +36,11 @@ import {
   PathClosureKind,
   PathCurve,
   PlotMark,
+  ReferenceMarkKind,
   RelationGeometryKind,
+  RelationOrthogonalLabelStep,
+  RelationRouteStepKind,
+  RelationRoutingKind,
 } from './constants';
 
 export const MarkTransformSchema = z
@@ -156,17 +169,15 @@ export const RelationPathSpecificOptionsSchema = PathBaseSchema.pick({
 
 export const RelationRouteStepSchema = z
   .strictObject({
-    kind: z
-      .enum(['move', 'line', 'fold', 'curve', 'cubic', 'bend'])
-      .describe('Core path step kind for this relation route segment'),
+    kind: z.enum(RelationRouteStepKind).describe('Core path step kind for this relation route segment'),
     to: PlotTargetRefSchema.optional().describe(
       'Target for this step; omitted on the last drawable step defaults to RelationMark.target',
     ),
-    via: z.enum(['-|', '|-']).optional().describe('Fold direction for kind=fold'),
+    via: z.enum(FoldStepVia).optional().describe('Fold direction for kind=fold'),
     control: PositionSchema.optional().describe('Quadratic Bezier control point for kind=curve'),
     control1: PositionSchema.optional().describe('First cubic Bezier control point for kind=cubic'),
     control2: PositionSchema.optional().describe('Second cubic Bezier control point for kind=cubic'),
-    bendDirection: z.enum(['left', 'right']).optional().describe('Bend direction for kind=bend'),
+    bendDirection: z.enum(BendDirection).optional().describe('Bend direction for kind=bend'),
     bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle for kind=bend'),
     outAngle: z.number().optional().describe('Outgoing angle for kind=bend'),
     inAngle: z.number().optional().describe('Incoming angle for kind=bend'),
@@ -177,14 +188,16 @@ export const RelationRouteStepSchema = z
 
 const RelationLineRoutingSchema = z
   .strictObject({
-    kind: z.literal('line').describe('Discriminator: connect source, via points, and target with straight line steps'),
+    kind: z
+      .literal(RelationRoutingKind.Line)
+      .describe('Discriminator: connect source, via points, and target with straight line steps'),
   })
   .describe('Line relation routing strategy');
 
 const RelationBendRoutingSchema = z
   .strictObject({
-    kind: z.literal('bend').describe('Discriminator: connect each segment with a core bend step'),
-    bendDirection: z.enum(['left', 'right']).optional().describe('Bend side relative to each relation segment'),
+    kind: z.literal(RelationRoutingKind.Bend).describe('Discriminator: connect each segment with a core bend step'),
+    bendDirection: z.enum(BendDirection).optional().describe('Bend side relative to each relation segment'),
     bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle in degrees for each relation segment'),
     outAngle: z.number().optional().describe('Outgoing angle in degrees for bend routing'),
     inAngle: z.number().optional().describe('Incoming angle in degrees for bend routing'),
@@ -195,14 +208,14 @@ const RelationBendRoutingSchema = z
 const RelationOrthogonalRoutingSchema = z
   .strictObject({
     kind: z
-      .literal('orthogonal')
+      .literal(RelationRoutingKind.Orthogonal)
       .describe('Discriminator: connect each segment with right-angle orthogonal line steps'),
     via: z
-      .enum(['-|', '|-'])
+      .enum(FoldStepVia)
       .optional()
       .describe('Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal'),
     labelStep: z
-      .enum(['main', 'last'])
+      .enum(RelationOrthogonalLabelStep)
       .optional()
       .describe('Which generated drawable step receives the shorthand relation label; default main'),
   })
@@ -854,7 +867,7 @@ export const ReferenceMarkSchema = z
         'Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval, or region for a bounded coordinate cell)',
       ),
     kind: z
-      .literal('region')
+      .literal(ReferenceMarkKind.Region)
       .optional()
       .describe(
         'Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band',
@@ -914,7 +927,10 @@ export const ReferenceMarkSchema = z
   .superRefine((mark, ctx) => {
     if (mark.label === undefined) return;
     const usesNodeHost =
-      mark.kind === 'region' || mark.xTo !== undefined || mark.yTo !== undefined || mark.zTo !== undefined;
+      mark.kind === ReferenceMarkKind.Region ||
+      mark.xTo !== undefined ||
+      mark.yTo !== undefined ||
+      mark.zTo !== undefined;
     const result = usesNodeHost
       ? MarkNodeLabelListSchema.safeParse(mark.label)
       : MarkGeometryLabelListSchema.safeParse(mark.label);
@@ -970,35 +986,18 @@ export const RelationPathGeometrySchema = z
   })
   .describe('Path geometry configuration for RelationMark');
 
-const RelationRibbonSamplingSchema = z
-  .union([
-    z.strictObject({
-      kind: z.literal('fixed').describe('Use a fixed number of cross-section samples'),
-      samples: z.number().int().min(2).max(512).describe('Number of cross-section samples'),
-    }),
-    z.strictObject({
-      kind: z.literal('adaptive').describe('Choose samples from path length and tolerance'),
-      tolerance: z.number().positive().describe('Approximate target segment length in user units'),
-      maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples'),
-    }),
-  ])
-  .describe('Ribbon boundary sampling strategy');
-
 export const RelationRibbonSpecificOptionsSchema = z
   .strictObject({
     interpolation: z
-      .enum(['linear', 'smooth'])
+      .enum(RibbonTaperInterpolation)
       .optional()
       .describe('Interpolation curve between start.width and end.width'),
-    align: z
-      .enum(['center', 'left', 'right'])
-      .optional()
-      .describe('Which side of the generated band stays on the centerline'),
+    align: z.enum(RibbonAlignment).optional().describe('Which side of the generated band stays on the centerline'),
     samples: z
       .union([z.boolean(), z.number().int().min(2).max(512)])
       .optional()
       .describe('Sampling shorthand for centerline lowering'),
-    sampling: RelationRibbonSamplingSchema.optional().describe('Explicit sampling strategy'),
+    sampling: RibbonSamplingSchema.optional().describe('Explicit sampling strategy'),
   })
   .superRefine((options, ctx) => {
     if (options.samples !== undefined && options.sampling !== undefined) {

@@ -35,5 +35,43 @@ export const StackOffset = {
   Overlap: 'overlap',
 } as const;
 
+/** 配对度量操作类型。 */
+export const PairMeasureOperationKind = {
+  /** 计算 target 与 source 的数值差。 */
+  Difference: 'difference',
+} as const;
+
+/** 归一化结果的数值基准。 */
+export const NormalizeBasis = {
+  /** 输出 0..1 范围的比例。 */
+  Fraction: 'fraction',
+  /** 输出 0..100 范围的百分比。 */
+  Percent: 'percent',
+} as const;
+
+/** jitter 作用轴。 */
+export const JitterAxis = {
+  /** 只扰动 x 字段。 */
+  X: 'x',
+  /** 只扰动 y 字段。 */
+  Y: 'y',
+  /** 同时扰动 x 与 y 字段。 */
+  Both: 'both',
+} as const;
+
+/** density 带宽策略类型。 */
+export const DensityBandwidthKind = {
+  /** 使用 Silverman 经验规则计算带宽。 */
+  Silverman: 'silverman',
+  /** 使用显式数值带宽。 */
+  Value: 'value',
+} as const;
+
+/** smooth 方法类型。 */
+export const SmoothMethodKind = {
+  /** 普通最小二乘线性回归。 */
+  Linear: 'linear',
+} as const;
+
 /** plot 内置 transform kind 集：用于外部 transform 开放配置排除 plot 内置判别串。 */
 export const BUILTIN_PLOT_TRANSFORM_KINDS = new Set<string>(Object.values(PlotTransform));

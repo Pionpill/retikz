@@ -25,6 +25,7 @@ import type {
 import type { IRPlotMarkOperation, IRPlotScaleOperation, IRPlotSpec, IRPlotTransform } from '../schemas';
 import type { LowerPlotsOptions } from './expand';
 
+import { CoordinateArrangementKind } from '../schemas';
 import { lowerPlots, prepareRows } from './expand';
 import { createPlotLocator } from './locator';
 
@@ -184,14 +185,14 @@ const layoutLineageOf = (spec: IRPlotSpec): NonNullable<PlotLineageLowerResult['
     | undefined;
   const coordinateViews = composition?.views?.map(view => view.id).filter((id): id is string => typeof id === 'string');
   const facets = composition?.arrangements
-    ?.filter(arrangement => arrangement.kind === 'facet')
+    ?.filter(arrangement => arrangement.kind === CoordinateArrangementKind.Facet)
     .flatMap(arrangement =>
       typeof arrangement.id === 'string' && typeof arrangement.view === 'string'
         ? [{ id: arrangement.id, view: arrangement.view }]
         : [],
     );
   const tracks = composition?.arrangements
-    ?.filter(arrangement => arrangement.kind === 'tracks')
+    ?.filter(arrangement => arrangement.kind === CoordinateArrangementKind.Tracks)
     .flatMap(arrangement =>
       typeof arrangement.id === 'string' && Array.isArray(arrangement.tracks)
         ? [{ id: arrangement.id, count: arrangement.tracks.length }]

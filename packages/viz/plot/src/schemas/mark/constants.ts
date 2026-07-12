@@ -63,6 +63,46 @@ export const RelationGeometryKind = {
   Ribbon: 'ribbon',
 } as const;
 
+/** relation 显式路由支持的 core step 类型。 */
+export const RelationRouteStepKind = {
+  /** 移动到目标但不绘制。 */
+  Move: 'move',
+  /** 绘制直线段。 */
+  Line: 'line',
+  /** 绘制正交折线段。 */
+  Fold: 'fold',
+  /** 绘制二次 Bezier 曲线。 */
+  Curve: 'curve',
+  /** 绘制三次 Bezier 曲线。 */
+  Cubic: 'cubic',
+  /** 绘制 bend 曲线。 */
+  Bend: 'bend',
+} as const;
+
+/** relation 自动路由策略类型。 */
+export const RelationRoutingKind = {
+  /** 以直线连接相邻目标。 */
+  Line: 'line',
+  /** 以 bend 曲线连接相邻目标。 */
+  Bend: 'bend',
+  /** 以正交折线连接相邻目标。 */
+  Orthogonal: 'orthogonal',
+} as const;
+
+/** relation 正交路由标签落点策略。 */
+export const RelationOrthogonalLabelStep = {
+  /** 放到最长的主线段。 */
+  Main: 'main',
+  /** 放到最后一个可绘制线段。 */
+  Last: 'last',
+} as const;
+
+/** reference mark 显式形态。 */
+export const ReferenceMarkKind = {
+  /** 使用所有坐标 role 的上下界生成区域。 */
+  Region: 'region',
+} as const;
+
 /**
  * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）
  * @description interval 各位置 role 的区间 [lo,hi] 怎么来：band（band 宽）/ span（baseline→值）/ extent（两字段区间）/ full（满域）。

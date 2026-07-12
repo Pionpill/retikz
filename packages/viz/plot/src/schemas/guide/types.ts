@@ -7,6 +7,7 @@ import type {
   AxisCrossingLabelPolicy,
   AxisCrossingTickPolicy,
   AxisGridApplyTo,
+  AxisLineExtentTarget,
   AxisPlacementKind,
   AxisTickDensityKind,
   AxisTickEndpointAffect,
@@ -15,6 +16,7 @@ import type {
   AxisTickMarkKind,
   AxisTickShapeOrientation,
   AxisTitleAnchor,
+  AxisTitleBaseline,
   AxisTitleOrientation,
   AxisTitlePlacementKeyword,
   GuideTickIntervalKind,
@@ -37,6 +39,9 @@ export type AxisCardinalSideValue = ValueOf<typeof AxisCardinalSide>;
 
 /** 坐标轴网格投放模式取值。 */
 export type AxisGridApplyToValue = ValueOf<typeof AxisGridApplyTo>;
+
+/** 坐标轴线范围关键字取值。 */
+export type AxisLineExtentTargetValue = ValueOf<typeof AxisLineExtentTarget>;
 
 /** 固定间隔 tick source kind 取值。 */
 export type GuideTickIntervalKindValue = ValueOf<typeof GuideTickIntervalKind>;
@@ -67,6 +72,9 @@ export type AxisTitlePlacementKeywordValue = ValueOf<typeof AxisTitlePlacementKe
 
 /** axis title 对齐锚点取值。 */
 export type AxisTitleAnchorValue = ValueOf<typeof AxisTitleAnchor>;
+
+/** axis title 纵向锚点取值。 */
+export type AxisTitleBaselineValue = ValueOf<typeof AxisTitleBaseline>;
 
 /** axis title 旋转策略取值。 */
 export type AxisTitleOrientationValue = ValueOf<typeof AxisTitleOrientation>;

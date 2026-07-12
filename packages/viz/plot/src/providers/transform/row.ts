@@ -11,7 +11,7 @@ import type {
   StackOffsetValue,
 } from '../../schemas';
 
-import { StackOffset } from '../../schemas';
+import { JitterAxis, NormalizeBasis, StackOffset } from '../../schemas';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值。 */
 export const DEFAULT_START_FIELD = 'y0';
@@ -117,7 +117,7 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRPlotStackTrans
  */
 export const applyNormalize = (rows: Array<ExternalRow>, operation: IRPlotNormalizeTransform): Array<ExternalRow> => {
   const outField = operation.as ?? operation.field;
-  const scale = operation.basis === 'percent' ? 100 : 1;
+  const scale = operation.basis === NormalizeBasis.Percent ? 100 : 1;
   const sums = new Map<string, number>();
   const keyOf = (row: ExternalRow): string =>
     operation.groupBy === undefined
@@ -185,13 +185,13 @@ const mulberry32 = (seed: number): (() => number) => {
  * @description 偏移发生在数据空间 pre-scale；非有限值保留原值，但仍消耗一次随机数保持行序确定性。
  */
 export const applyJitter = (rows: Array<ExternalRow>, operation: IRPlotJitterTransform): Array<ExternalRow> => {
-  const axis = operation.axis ?? 'x';
+  const axis = operation.axis ?? JitterAxis.X;
   const amount = operation.amount ?? 1;
   const seed = operation.seed ?? 0;
   const xField = operation.xField ?? DEFAULT_JITTER_X_FIELD;
   const yField = operation.yField ?? DEFAULT_JITTER_Y_FIELD;
-  const jitterX = axis === 'x' || axis === 'both';
-  const jitterY = axis === 'y' || axis === 'both';
+  const jitterX = axis === JitterAxis.X || axis === JitterAxis.Both;
+  const jitterY = axis === JitterAxis.Y || axis === JitterAxis.Both;
   const rng = mulberry32(seed);
   const offset = (): number => (rng() * 2 - 1) * amount;
   const perturb = (row: ExternalRow, field: string): unknown => {

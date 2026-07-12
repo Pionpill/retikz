@@ -53,6 +53,24 @@ export const CompositionGridResolve = {
   None: 'none',
 } as const;
 
+/** 坐标视图在组合结构中的放置方式。 */
+export const CoordinateViewPlacementKind = {
+  /** 占据根 plot area。 */
+  Root: 'root',
+  /** 占据 arrangement 的命名 slot。 */
+  Slot: 'slot',
+  /** 叠加到另一个坐标视图。 */
+  Overlay: 'overlay',
+} as const;
+
+/** 坐标组合结构类型。 */
+export const CoordinateArrangementKind = {
+  /** 数据驱动的分面面板。 */
+  Facet: 'facet',
+  /** 共享坐标的轨道组合。 */
+  Tracks: 'tracks',
+} as const;
+
 /** 轨道组合结构的 frame 共享模式。 */
 export const ScaffoldFrameMode = {
   /** 共享基础组合结构 frame 和 bounding box。 */

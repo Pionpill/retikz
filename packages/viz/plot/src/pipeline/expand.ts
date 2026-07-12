@@ -85,6 +85,8 @@ import {
 import { LegendSymbolFit } from '../schemas';
 import {
   AxisGridApplyTo,
+  CoordinateArrangementKind,
+  CoordinateViewPlacementKind,
   IntervalBoundKind,
   isBuiltinMark,
   PathClosureKind,
@@ -192,11 +194,11 @@ type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
 type CoordinateView = NonNullable<CompositionSpec['views']>[number];
 type CoordinateViewPlacement = NonNullable<CoordinateView['placement']>;
 type CoordinateScopePlacement =
-  | Exclude<CoordinateViewPlacement, { kind: 'slot' }>
+  | Exclude<CoordinateViewPlacement, { kind: typeof CoordinateViewPlacementKind.Slot }>
   | { kind: 'track'; scaffold: string; track: string };
 type CoordinateArrangement = NonNullable<CompositionSpec['arrangements']>[number];
-type FacetGrid = Extract<CoordinateArrangement, { kind: 'facet' }>;
-type SharedScaffold = Extract<CoordinateArrangement, { kind: 'tracks' }>;
+type FacetGrid = Extract<CoordinateArrangement, { kind: typeof CoordinateArrangementKind.Facet }>;
+type SharedScaffold = Extract<CoordinateArrangement, { kind: typeof CoordinateArrangementKind.Tracks }>;
 type ScaffoldTrack = SharedScaffold['tracks'][number];
 type CompositionLayout = NonNullable<CompositionSpec['spacing']>;
 type CompositionResolve = NonNullable<CompositionSpec['resolve']>;
@@ -256,10 +258,13 @@ const trackViewIdOf = (arrangement: SharedScaffold, track: ScaffoldTrack): strin
 export const resolveCoordinateScopeRegistry = (node: IRPlotSpec): CoordinateScopeRegistry => {
   if (node.composition !== undefined) {
     const scaffolds = (node.composition.arrangements ?? []).filter(
-      (arrangement): arrangement is SharedScaffold => arrangement.kind === 'tracks',
+      (arrangement): arrangement is SharedScaffold => arrangement.kind === CoordinateArrangementKind.Tracks,
     );
     const explicitScopes: Array<CoordinateScopeRegistryEntry> = (node.composition.views ?? []).map(view => {
-      const placement = view.placement === undefined || view.placement.kind !== 'slot' ? view.placement : undefined;
+      const placement =
+        view.placement === undefined || view.placement.kind !== CoordinateViewPlacementKind.Slot
+          ? view.placement
+          : undefined;
       return {
         id: view.id,
         coordinate: view.coordinate,
@@ -1701,10 +1706,10 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
   const compositionLayout = node.composition?.spacing;
   const compositionArrangements = node.composition?.arrangements ?? [];
   const compositionFacets = compositionArrangements.filter(
-    (arrangement): arrangement is FacetGrid => arrangement.kind === 'facet',
+    (arrangement): arrangement is FacetGrid => arrangement.kind === CoordinateArrangementKind.Facet,
   );
   const compositionScaffolds = compositionArrangements.filter(
-    (arrangement): arrangement is SharedScaffold => arrangement.kind === 'tracks',
+    (arrangement): arrangement is SharedScaffold => arrangement.kind === CoordinateArrangementKind.Tracks,
   );
   const compositionResolve = node.composition?.resolve;
   const compositionPolicyContext = {
@@ -1955,7 +1960,7 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
     }
     resolvingFrames.add(scope.id);
     const targetPlotArea =
-      scope.placement?.kind === 'overlay'
+      scope.placement?.kind === CoordinateViewPlacementKind.Overlay
         ? resolveScopedFrame(scopeById.get(scope.placement.target) ?? scope).plotArea
         : undefined;
     const trackPlacement = scope.placement?.kind === 'track' ? scope.placement : undefined;
@@ -2496,7 +2501,9 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
       const semanticLayer = withLayerZIndex(scopedLayer, mark.layer?.zIndex ?? PlotLayerZIndex.Mark);
       const declarationOrder = scopeOrderById.get(coordinateScopeId) ?? markIndex;
       const zIndex =
-        scope?.placement?.kind === 'overlay' ? (scope.placement.zIndex ?? declarationOrder) : declarationOrder;
+        scope?.placement?.kind === CoordinateViewPlacementKind.Overlay
+          ? (scope.placement.zIndex ?? declarationOrder)
+          : declarationOrder;
       return { layer: semanticLayer, markIndex, zIndex };
     })
     .filter((entry): entry is { layer: IRChild; markIndex: number; zIndex: number } => entry !== null);

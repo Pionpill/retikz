@@ -5,6 +5,8 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { IRPlotDensityTransform } from '../../schemas';
 
+import { DensityBandwidthKind } from '../../schemas';
+
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;
 const DENSITY_EXTENT_BANDWIDTH_FACTOR = 3;
 const GAUSSIAN_NORMALIZER = 1 / Math.sqrt(2 * Math.PI);
@@ -46,7 +48,7 @@ const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
 };
 
 const bandwidthOf = (operation: IRPlotDensityTransform, sortedValues: Array<number>): number => {
-  if (operation.bandwidth?.kind === 'value') return operation.bandwidth.value;
+  if (operation.bandwidth?.kind === DensityBandwidthKind.Value) return operation.bandwidth.value;
   return silvermanBandwidthOf(sortedValues);
 };
 

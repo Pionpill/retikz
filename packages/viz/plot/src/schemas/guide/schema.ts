@@ -17,6 +17,7 @@ import {
   AxisCrossingLabelPolicy,
   AxisCrossingTickPolicy,
   AxisGridApplyTo,
+  AxisLineExtentTarget,
   AxisPlacementKind,
   AxisTickDensityKind,
   AxisTickEndpointAffect,
@@ -25,6 +26,7 @@ import {
   AxisTickMarkKind,
   AxisTickShapeOrientation,
   AxisTitleAnchor,
+  AxisTitleBaseline,
   AxisTitleOrientation,
   GuideTickIntervalKind,
   GuideTickTimeUnit,
@@ -232,7 +234,7 @@ export const GuideTickLabelFormatSchema = z
 
 const AxisLineExtentSchema = z
   .union([
-    z.literal('plotArea'),
+    z.literal(AxisLineExtentTarget.PlotArea),
     z.strictObject({
       from: AxisGuideValueSchema.describe('Axis baseline negative-direction endpoint value'),
       to: AxisGuideValueSchema.describe('Axis baseline positive-direction endpoint value'),
@@ -467,7 +469,7 @@ const AxisTitlePlacementSchema = z
 
 const AxisTitleAnchorAlignSchema = z.enum([AxisTitleAnchor.Start, AxisTitleAnchor.Center, AxisTitleAnchor.End]);
 
-const AxisTitleAnchorBaselineSchema = z.enum(['top', 'middle', 'bottom']);
+const AxisTitleAnchorBaselineSchema = z.enum(AxisTitleBaseline);
 
 const AxisTitleAnchorObjectSchema = z
   .strictObject({

@@ -8,7 +8,16 @@ import {
 } from '@retikz/data';
 import { z } from 'zod';
 
-import { BUILTIN_PLOT_TRANSFORM_KINDS, PlotTransform, StackOffset } from './constants';
+import {
+  BUILTIN_PLOT_TRANSFORM_KINDS,
+  DensityBandwidthKind,
+  JitterAxis,
+  NormalizeBasis,
+  PairMeasureOperationKind,
+  PlotTransform,
+  SmoothMethodKind,
+  StackOffset,
+} from './constants';
 
 export const StackTransformSchema = z
   .object({
@@ -103,7 +112,7 @@ export const PairMeasureOperationSchema = z
     z
       .strictObject({
         op: z
-          .literal('difference')
+          .literal(PairMeasureOperationKind.Difference)
           .describe('Pair measure discriminator: compute target minus source for one numeric field'),
         field: z.string().min(1).describe('Numeric field read from the selected source and target rows'),
         as: z.string().min(1).describe('Output field for the numeric difference'),
@@ -148,7 +157,7 @@ export const NormalizeTransformSchema = z
         'Grouping key fields: rows sharing all these values form one normalization group (composite key); omit to normalize all rows against the global sum',
       ),
     basis: z
-      .enum(['fraction', 'percent'])
+      .enum(NormalizeBasis)
       .optional()
       .describe("Output scale: 'fraction' -> share in [0,1], 'percent' -> share in [0,100]; default 'fraction'"),
     as: z
@@ -204,7 +213,7 @@ export const JitterTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.Jitter).describe('Discriminator: deterministic positional jitter'),
     axis: z
-      .enum(['x', 'y', 'both'])
+      .enum(JitterAxis)
       .optional()
       .describe(
         "Which positional field(s) to perturb; default 'x'. The jittered field MUST be a continuous numeric field (v1 jitter is a pre-scale offset in data units)",
@@ -243,14 +252,14 @@ export const DensityBandwidthSpecSchema = z
     z
       .strictObject({
         kind: z
-          .literal('silverman')
+          .literal(DensityBandwidthKind.Silverman)
           .describe('Bandwidth strategy discriminator: compute Gaussian KDE bandwidth with Silverman rule of thumb'),
       })
       .describe('Silverman bandwidth strategy'),
     z
       .strictObject({
         kind: z
-          .literal('value')
+          .literal(DensityBandwidthKind.Value)
           .describe('Bandwidth strategy discriminator: use an explicit positive numeric bandwidth'),
         value: z.number().positive().describe('Explicit positive finite KDE bandwidth in source data units'),
       })
@@ -312,7 +321,9 @@ export const SmoothMethodSpecSchema = z
   .discriminatedUnion('kind', [
     z
       .strictObject({
-        kind: z.literal('linear').describe('Smooth method discriminator: ordinary least-squares linear regression'),
+        kind: z
+          .literal(SmoothMethodKind.Linear)
+          .describe('Smooth method discriminator: ordinary least-squares linear regression'),
       })
       .describe('Linear regression smooth method'),
   ])

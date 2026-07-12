@@ -41,6 +41,12 @@ export const AxisCardinalSide = {
   Left: 'left',
 } as const;
 
+/** 坐标轴线范围关键字。 */
+export const AxisLineExtentTarget = {
+  /** 使用完整 plot area 范围。 */
+  PlotArea: 'plotArea',
+} as const;
+
 /**
  * 坐标轴网格投放模式。
  * @description `local` 只投放到坐标轴绑定的坐标视图；`all` 投放到组合结构选中的坐标视图；`selected` 使用显式选择器。
@@ -154,6 +160,16 @@ export const AxisTitleAnchor = {
   Center: 'center',
   /** 沿轴线正方向一侧对齐。 */
   End: 'end',
+} as const;
+
+/** axis title 的纵向锚点。 */
+export const AxisTitleBaseline = {
+  /** 文本顶部对齐锚点。 */
+  Top: 'top',
+  /** 文本垂直居中对齐锚点。 */
+  Middle: 'middle',
+  /** 文本底部对齐锚点。 */
+  Bottom: 'bottom',
 } as const;
 
 /** axis title 旋转策略。 */

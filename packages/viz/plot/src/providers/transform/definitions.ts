@@ -24,6 +24,7 @@ import {
   BinTransformSchema,
   DensityTransformSchema,
   DeriveIntervalTransformSchema,
+  JitterAxis,
   JitterTransformSchema,
   NormalizeTransformSchema,
   RelateTransformSchema,
@@ -117,10 +118,10 @@ const relateTransformDefinition = defineTransform<IRPlotRelateTransform>({
 const jitterTransformDefinition = defineTransform<IRPlotJitterTransform>({
   schema: JitterTransformSchema,
   inputFields: operation => {
-    const axis = operation.axis ?? 'x';
+    const axis = operation.axis ?? JitterAxis.X;
     return [
-      axis === 'x' || axis === 'both' ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
-      axis === 'y' || axis === 'both' ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
+      axis === JitterAxis.X || axis === JitterAxis.Both ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
+      axis === JitterAxis.Y || axis === JitterAxis.Both ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
     ].filter((field): field is string => field !== undefined);
   },
   apply: (rows, operation) => applyJitter(rows, operation),
