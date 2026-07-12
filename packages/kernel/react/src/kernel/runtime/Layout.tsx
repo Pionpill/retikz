@@ -78,35 +78,37 @@ const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
 const aggregateEmbeddableComposites = (
   contributions: ReadonlyArray<EmbeddableContributionRecord>,
 ): Array<CompositeDefinition> => {
-  // 按 namespace 分组（保持首次出现顺序）：merged 合并 datasets，maker 取该组任一 makeComposites（同 namespace 等价）
+  // 按 namespace 分组（保持首次出现顺序）：merged 合并 datasets，同组必须复用同一个 maker。
   const order: Array<string> = [];
   const groups = new Map<
     string,
-    { merged: Record<string, unknown>; maker: (merged: Record<string, unknown>) => Array<CompositeDefinition> }
+    { merged: Map<string, unknown>; maker: (merged: Record<string, unknown>) => Array<CompositeDefinition> }
   >();
   for (const contribution of contributions) {
     const { namespace, datasets, makeComposites } = contribution;
     let group = groups.get(namespace);
     if (group === undefined) {
-      group = { merged: {}, maker: makeComposites };
+      group = { merged: new Map(), maker: makeComposites };
       groups.set(namespace, group);
       order.push(namespace);
+    } else if (group.maker !== makeComposites) {
+      throw new Error(`[retikz] <Layout>: namespace "${namespace}" received multiple makeComposites functions.`);
     }
-    for (const ref of Object.keys(datasets)) {
+    for (const [ref, value] of Object.entries(datasets)) {
       // 同 namespace 内同一 reference 复用必须指向同一对象引用，否则共享语义崩坏——fail-loud
-      if (ref in group.merged && group.merged[ref] !== datasets[ref]) {
+      if (group.merged.has(ref) && group.merged.get(ref) !== value) {
         throw new Error(
           `[retikz] <Layout>: 数据集 reference "${ref}" 在同一 namespace "${namespace}" 的多个可嵌入贡献中指向不同对象引用——共享同源数据请复用同一 data 对象。`,
         );
       }
-      group.merged[ref] = datasets[ref];
+      group.merged.set(ref, value);
     }
   }
   const out: Array<CompositeDefinition> = [];
   for (const namespace of order) {
     const group = groups.get(namespace);
     if (group === undefined) continue;
-    out.push(...group.maker(group.merged));
+    out.push(...group.maker(Object.fromEntries(group.merged)));
   }
   return out;
 };

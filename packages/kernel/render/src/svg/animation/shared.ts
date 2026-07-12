@@ -50,7 +50,7 @@ export const easingToCss = (
   if (easing === undefined) return 'linear';
   if (Array.isArray(easing)) return `cubic-bezier(${easing.join(', ')})`;
   if (CSS_NAMED_EASINGS.has(easing)) return easing;
-  const custom = registry?.[easing];
+  const custom = registry !== undefined && Object.hasOwn(registry, easing) ? registry[easing] : undefined;
   if (Array.isArray(custom)) return `cubic-bezier(${custom.join(', ')})`;
   if (typeof custom === 'function') {
     onWarn(

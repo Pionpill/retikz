@@ -98,28 +98,28 @@ const readIdentity = (child: IRChild): string | undefined =>
 const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): Array<CompositeDefinition> => {
   const groups = new Map<
     string,
-    { merged: Record<string, unknown>; maker: (merged: Record<string, unknown>) => Array<CompositeDefinition> }
+    { merged: Map<string, unknown>; maker: (merged: Record<string, unknown>) => Array<CompositeDefinition> }
   >();
   for (const contribution of contributions) {
     let group = groups.get(contribution.namespace);
     if (!group) {
-      group = { merged: {}, maker: contribution.makeComposites };
+      group = { merged: new Map(), maker: contribution.makeComposites };
       groups.set(contribution.namespace, group);
     } else if (group.maker !== contribution.makeComposites) {
       throw new Error(`vanilla spec namespace "${contribution.namespace}" received multiple makeComposites functions.`);
     }
     for (const [reference, value] of Object.entries(contribution.datasets)) {
       // 同一 namespace 下同名 reference 必须指向同一对象；否则 composite 生成器无法判断该用哪份数据。
-      if (reference in group.merged && group.merged[reference] !== value) {
+      if (group.merged.has(reference) && group.merged.get(reference) !== value) {
         throw new Error(
           `vanilla spec dataset reference conflict in namespace "${contribution.namespace}" for "${reference}".`,
         );
       }
-      group.merged[reference] = value;
+      group.merged.set(reference, value);
     }
   }
   const out: Array<CompositeDefinition> = [];
-  for (const group of groups.values()) out.push(...group.maker(group.merged));
+  for (const group of groups.values()) out.push(...group.maker(Object.fromEntries(group.merged)));
   return out;
 };
 

@@ -5,7 +5,7 @@ description: '@retikz/plot is the first Tier 2 domain package built on the compo
 
 The previous page covered the composite **mechanism**: core provides the registration surface and the expansion pipeline, but ships no high-level nodes of its own. `@retikz/plot` is the first **Tier 2 domain package** built on that mechanism — retikz's charting layer.
 
-It declares "a chart" as a **Plot IR** (coordinate system, scales, which field becomes a point or a line), feeds the data in separately, then lets `lowerPlots` — the concrete implementation of core's `lowerComposites` hook — expand the IR + data into core `node` / `path`, handed to the existing renderers. Core knows nothing about chart types; all of plot's semantics live in this standalone package.
+It declares "a chart" as a **Plot IR** (coordinate system, scales, which field becomes a point or a line) and feeds the data separately. `lowerPlots` builds plot composite definitions from that data; core's composite lowering stage then expands the Plot IR into `node` / `path` for the existing renderers. Core knows nothing about chart types; all of plot's semantics live in this standalone package.
 
 `@retikz/plot-react` wraps it into a single `<Plot>` component:
 

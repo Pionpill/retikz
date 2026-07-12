@@ -5,7 +5,7 @@ description: Tier 2 复合节点（composite）——domain 包在 Tier 1 之上
 
 retikz 的图元分两层：**Tier 1**（`node` / `path` / `coordinate` / `scope`，core 内置的基础图元）与 **Tier 2 复合节点（composite）**——domain 包（如 `@retikz/plot`）在 Tier 1 之上注册的高层节点。复合节点有自己完整的 zod schema、用 `namespace` + `type` 判别，在 compile 第一步经 lowering 展开成 Tier 1；之后布局 / anchor / renderer 全自动复用。core 不内置任何 composite，也不懂任何 chart / domain 语义。
 
-> composite 是**领域包在 core 之上的高层抽象**：core 提供注册面（`CompileOptions.composites`）与展开管线（`lowerComposites`），具体节点类型由 `@retikz/plot` 等独立包提供。
+> composite 是**领域包在 core 之上的高层抽象**：core 提供注册面（`CompileOptions.composites`），并通过公开的 `lowerIRToKernel` 管线展开节点；具体节点类型由 `@retikz/plot` 等独立包提供。
 
 ## 章节内容
 

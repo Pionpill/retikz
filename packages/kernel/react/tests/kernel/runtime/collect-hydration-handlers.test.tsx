@@ -25,6 +25,23 @@ describe('collectHydrationHandlers', () => {
     expect(handlers.a.click).toBe(click);
   });
 
+  it('特殊原型键 id：作为 own property 收集且不改变注册表原型', () => {
+    const protoClick = vi.fn();
+    const constructorClick = vi.fn();
+    const handlers = collectHydrationHandlers(
+      <Fragment>
+        <Node id="__proto__" position={[0, 0]} onClick={protoClick} />
+        <Node id="constructor" position={[1, 0]} onClick={constructorClick} />
+      </Fragment>,
+    );
+
+    expect(Object.getPrototypeOf(handlers)).toBe(Object.prototype);
+    expect(Object.hasOwn(handlers, '__proto__')).toBe(true);
+    expect(Object.hasOwn(handlers, 'constructor')).toBe(true);
+    expect(handlers.__proto__.click).toBe(protoClick);
+    expect(handlers['constructor'].click).toBe(constructorClick);
+  });
+
   it('穿透 Fragment + 多元素：各自按 id 收集', () => {
     const clickA = vi.fn();
     const clickB = vi.fn();

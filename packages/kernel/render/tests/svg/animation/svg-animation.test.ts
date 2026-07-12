@@ -362,6 +362,15 @@ describe('错误 / 降级', () => {
     expect(w.warnings.some(m => m.includes('spring'))).toBe(true);
     expect(String(findTag(out, 'style')!.children![0])).toContain('linear');
   });
+
+  it('原型成员名 easing 在普通空注册表中按未知名称降级', () => {
+    const w = collectWarns();
+    const track: IRAnimationTrack = { ...FADE, easing: 'toString' };
+    const out = buildSvgFragment(scene([rect({ animations: [track] })]), { idPrefix: 't', easings: {}, ...w });
+
+    expect(w.warnings).toContain('SVG animation: unknown easing "toString"; falling back to linear.');
+    expect(String(findTag(out, 'style')!.children![0])).toContain('linear');
+  });
 });
 
 describe('交互', () => {
