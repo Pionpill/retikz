@@ -6,6 +6,7 @@ import { expectTypeOf, it } from 'vitest';
 import type {
   DataFieldTypeMap,
   DataFieldTypeValue,
+  DataSourceIdentityModeValue,
   ExternalDatasets,
   ExternalRow,
   FieldFormatValue,
@@ -80,4 +81,5 @@ it('keeps runtime-only and value vocabulary outside the IRData naming family', (
   expectTypeOf<ExternalDatasets>().toEqualTypeOf<Record<string, Array<ExternalRow>>>();
   expectTypeOf<DataFieldTypeMap>().toEqualTypeOf<Map<string, DataFieldTypeValue>>();
   expectTypeOf<FieldFormatValue>().toEqualTypeOf<string>();
+  expectTypeOf<DataSourceIdentityModeValue>().toEqualTypeOf<'summary' | 'full'>();
 });

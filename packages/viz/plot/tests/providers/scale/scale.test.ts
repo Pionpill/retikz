@@ -151,6 +151,15 @@ describe('resolvePositionScale band / point (ADR-01)', () => {
     expect(scale.ticks().values).toEqual(['x', 'y']);
   });
 
+  it('band_skips_non_finite_category_values', () => {
+    const scale = resolvePositionScale(
+      { type: 'band', name: 'x' },
+      [Number.NaN, Infinity, -Infinity, 1, 'a'],
+      [0, 200],
+    );
+    expect(scale.ticks().values).toEqual([1, 'a']);
+  });
+
   it('band_unknown_category_nan', () => {
     const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b'] }, [], [0, 300]);
     expect(Number.isNaN(scale.coordinate('zzz'))).toBe(true);

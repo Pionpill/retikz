@@ -24,7 +24,23 @@ export const medianOf = (values: Array<number>): number => {
   if (values.length === 0) return NaN;
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+  if (sorted.length % 2 === 1) return sorted[middle];
+  const lower = sorted[middle - 1];
+  const upper = sorted[middle];
+  return Math.sign(lower) === Math.sign(upper) ? lower + (upper - lower) / 2 : lower / 2 + upper / 2;
+};
+
+/** 计算有限数值平均数；直接求和溢出时按最大绝对值缩放。 */
+export const meanOf = (values: Array<number>): number => {
+  if (values.length === 0) return NaN;
+  let sum = 0;
+  for (const value of values) sum += value;
+  if (Number.isFinite(sum)) return sum / values.length;
+  let scale = 0;
+  for (const value of values) scale = Math.max(scale, Math.abs(value));
+  let normalizedSum = 0;
+  for (const value of values) normalizedSum += value / scale;
+  return (normalizedSum / values.length) * scale;
 };
 
 /** 在已排序数值数组上按线性插值计算分位点。 */
@@ -47,11 +63,17 @@ export const quantileOf = (values: Array<number>, p: number): number =>
   );
 
 /** 计算有限数值范围；空集合的端点返回 NaN invalid sentinel。 */
-export const finiteExtentOf = (values: Array<number>): { min: number; max: number; count: number } => ({
-  min: values.length === 0 ? NaN : Math.min(...values),
-  max: values.length === 0 ? NaN : Math.max(...values),
-  count: values.length,
-});
+export const finiteExtentOf = (values: Array<number>): { min: number; max: number; count: number } => {
+  if (values.length === 0) return { min: NaN, max: NaN, count: 0 };
+  let min = values[0];
+  let max = values[0];
+  for (let index = 1; index < values.length; index++) {
+    const value = values[index];
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
+  return { min, max, count: values.length };
+};
 
 /** 解析 spread whisker 倍率；未传时使用 data 层默认倍率。 */
 export const spreadFactorOf = (factor: number | undefined): number => factor ?? DEFAULT_QUANTILE_BAND_SPREAD_FACTOR;

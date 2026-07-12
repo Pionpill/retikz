@@ -1,13 +1,23 @@
+import type { ValueOf } from '@retikz/core';
+
 import type { IRDataReducerOperation, IRDataSelectorOperation, IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
 
 /** 数据来源索引摘要模式。 */
-export type DataSourceIdentityMode = 'summary' | 'full';
+export const DataSourceIdentityMode = {
+  /** 只保留来源数量与受上限约束的索引前缀。 */
+  Summary: 'summary',
+  /** 显式保留完整来源索引。 */
+  Full: 'full',
+} as const;
+
+/** 数据来源索引摘要模式取值。 */
+export type DataSourceIdentityModeValue = ValueOf<typeof DataSourceIdentityMode>;
 
 /** 数据来源索引记录选项。 */
 export type DataSourceIdentityOptions = {
   /** summary 只记录 count + 前 maxIndices 个索引；full 只允许显式开启。 */
-  mode?: DataSourceIdentityMode;
+  mode?: DataSourceIdentityModeValue;
   /** summary 模式下保留的 sourceIndices 前缀长度，必须为正整数。 */
   maxIndices?: number;
 };
@@ -45,7 +55,7 @@ export type DataLineageOptions = {
 /** 数据来源索引摘要。 */
 export type DataSourceIdentity = {
   /** 记录模式；summary 是默认安全摘要，full 只在显式开启时出现。 */
-  mode: DataSourceIdentityMode;
+  mode: DataSourceIdentityModeValue;
   /** 来源索引总数。 */
   count: number;
   /** 记录的来源索引；summary 模式为 capped 前缀，full 模式为完整列表。 */

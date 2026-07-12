@@ -30,7 +30,7 @@ export const readSourceIndicesOf = (rows: Array<ExternalRow>): Array<number> => 
   for (const row of rows) {
     const group = readSourceIndices(row);
     if (group !== undefined) {
-      out.push(...group);
+      for (const index of group) out.push(index);
       continue;
     }
     const index = readSourceIndex(row);

@@ -24,6 +24,16 @@ describe('data schema', () => {
     expect(() => DataReferenceSchema.parse({ reference: 'sales', values: [{ x: 1 }] })).toThrow();
   });
 
+  it('rejects duplicate model fields at the schema boundary', () => {
+    const result = DataModelSchema.safeParse([{ name: 'value' }, { name: 'value' }]);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues).toEqual([
+      expect.objectContaining({ path: [1, 'name'], message: 'duplicate data model field "value"' }),
+    ]);
+  });
+
   it('rejects non JSON scalar values', () => {
     expect(ScalarValueSchema.parse('A')).toBe('A');
     expect(() => ScalarValueSchema.parse(() => 1)).toThrow();

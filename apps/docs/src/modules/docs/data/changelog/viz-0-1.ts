@@ -37,6 +37,13 @@ export const vizV01: Release = {
           },
           items: [
             {
+              label: { zh: 'BREAKING：lineage mode 类型规范化', en: 'BREAKING: Normalized lineage mode type' },
+              content: {
+                zh: '`DataSourceIdentityMode` 现在是包含 `Summary` / `Full` 的 const object enum；类型导入改为 `DataSourceIdentityModeValue`。运行时字面量仍是 `summary` / `full`，并会在 recorder 创建阶段拒绝非法 mode 与字段白名单成员。',
+                en: '`DataSourceIdentityMode` is now a const object enum with `Summary` / `Full`; type imports move to `DataSourceIdentityModeValue`. Runtime literals remain `summary` / `full`, and recorder creation now rejects invalid modes and field-whitelist members.',
+              },
+            },
+            {
               label: { zh: 'BREAKING：只读集合 helper 内收', en: 'BREAKING: Readonly collection helpers are internal' },
               content: {
                 zh: '`createReadonlyMap` 与 `createReadonlySet` 不再从 `@retikz/data` 包根导出；它们属于 registry 状态隔离的内部基础设施。外部代码应直接使用原生 `Map` / `Set`，或自行维护所需的只读视图。',
@@ -83,6 +90,13 @@ export const vizV01: Release = {
               content: {
                 zh: 'sort transform 与 selector 共用同一比较契约；`null`、`undefined`、`NaN` 和无穷值在升降序下都稳定排到有效值之后。',
                 en: 'Sort transforms and selectors now share one comparison contract; `null`, `undefined`, `NaN`, and infinities stay after valid values in both directions.',
+              },
+            },
+            {
+              label: { zh: '统计与大分组边界加固', en: 'Hardened statistics and large groups' },
+              content: {
+                zh: 'mean / median 在有限大数上不再因中间运算溢出；极值、quantile-band 与 provenance / lineage 不再把大数组展开成函数参数；分类域会跳过非有限数字，重复 model 字段在 schema 入口直接报错。',
+                en: 'Mean / median no longer overflow on finite large values; extrema, quantile-band, and provenance / lineage no longer expand large arrays into call arguments; category domains skip non-finite numbers, and duplicate model fields fail at the schema boundary.',
               },
             },
           ],

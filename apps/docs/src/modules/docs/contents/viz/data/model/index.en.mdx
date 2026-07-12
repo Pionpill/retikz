@@ -94,7 +94,7 @@ The three charts below declare no scale config at all: `continuous` fields deriv
 
 ## Category order: `order`
 
-A `categorical` field orders its categories by **data appearance** by default; axes and legends follow that order. To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
+A `categorical` field orders its categories by **data appearance** by default; axes and legends follow that order. `NaN` and positive or negative infinities are not valid categories and do not enter the domain. To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
 
 The two charts below use the same size data. The left chart follows data appearance order; the right chart fixes the business order `S → M → L → XL`.
 

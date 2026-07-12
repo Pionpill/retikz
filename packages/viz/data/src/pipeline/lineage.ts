@@ -9,8 +9,9 @@ import type {
 } from '../contract';
 import type { ExternalRow } from '../shared';
 
+import { DataSourceIdentityMode } from '../contract';
 import { resolveFieldPath } from '../providers';
-import { readSourceIndex, readSourceIndices } from './provenance';
+import { readSourceIndicesOf } from './provenance';
 
 const DEFAULT_SOURCE_IDENTITY_LIMIT = 20;
 
@@ -51,6 +52,11 @@ const normalizeSampleOptions = (
   if (!Array.isArray(value.fields) || value.fields.length === 0) {
     throw new Error(`data lineage: ${label}.fields must be a non-empty field whitelist`);
   }
+  value.fields.forEach((field, index) => {
+    if (typeof field !== 'string' || field.length === 0) {
+      throw new Error(`data lineage: ${label}.fields[${index}] must be a non-empty string`);
+    }
+  });
   return { maxRows: value.maxRows, fields: [...value.fields] };
 };
 
@@ -59,9 +65,14 @@ const normalizeSourceIdentityOptions = (
   value: DataLineageOptions['sourceIdentity'],
 ): false | Required<DataSourceIdentityOptions> => {
   if (value === false) return false;
-  if (value === true || value === undefined) return { mode: 'summary', maxIndices: DEFAULT_SOURCE_IDENTITY_LIMIT };
-  const mode = value.mode ?? 'summary';
+  if (value === true || value === undefined) {
+    return { mode: DataSourceIdentityMode.Summary, maxIndices: DEFAULT_SOURCE_IDENTITY_LIMIT };
+  }
+  const mode: unknown = value.mode ?? DataSourceIdentityMode.Summary;
   const maxIndices = value.maxIndices ?? DEFAULT_SOURCE_IDENTITY_LIMIT;
+  if (mode !== DataSourceIdentityMode.Summary && mode !== DataSourceIdentityMode.Full) {
+    throw new Error('data lineage: sourceIdentity.mode must be "summary" or "full"');
+  }
   if (!Number.isInteger(maxIndices) || maxIndices < 1) {
     throw new Error('data lineage: sourceIdentity.maxIndices must be a positive integer');
   }
@@ -89,29 +100,14 @@ const sampleRows = (rows: Array<ExternalRow>, options: DataValueSampleOptions): 
     return out;
   });
 
-/** 收集一批 row 携带的 sourceIndex / sourceIndices。 */
-const sourceIndicesOf = (rows: Array<ExternalRow>): Array<number> => {
-  const indices: Array<number> = [];
-  for (const row of rows) {
-    const group = readSourceIndices(row);
-    if (group !== undefined) {
-      indices.push(...group);
-      continue;
-    }
-    const index = readSourceIndex(row);
-    if (index !== undefined) indices.push(index);
-  }
-  return indices;
-};
-
 /** 生成来源索引摘要。 */
 const sourceIdentityOf = (
   rows: Array<ExternalRow>,
   options: false | Required<DataSourceIdentityOptions>,
 ): DataSourceIdentity | undefined => {
   if (options === false) return undefined;
-  const indices = sourceIndicesOf(rows);
-  const full = options.mode === 'full';
+  const indices = readSourceIndicesOf(rows);
+  const full = options.mode === DataSourceIdentityMode.Full;
   const visible = full ? indices : indices.slice(0, options.maxIndices);
   return {
     mode: options.mode,

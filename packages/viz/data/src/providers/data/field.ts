@@ -77,7 +77,7 @@ export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(valu
 export const inferCategoryDomain = (values: Array<unknown>): Array<string | number> => {
   const domain = new Set<string | number>();
   for (const value of values) {
-    if (typeof value !== 'string' && typeof value !== 'number') continue;
+    if (typeof value !== 'string' && !isFiniteNumber(value)) continue;
     domain.add(value);
   }
   return [...domain];
