@@ -13,7 +13,7 @@ In React projects, the plot entry package is `@retikz/plot-react`. It brings `@r
 
 This chart draws the same monthly revenue data with two mark layers: a line for the trend and points for each observation. `<Plot>` infers linear scales and a cartesian2D coordinate system; the x/y axes and y grid come from the explicit `<Axis>` children.
 
-<ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
+<ComponentPreview files={['line-scatter', 'line-scatter.data.ts']} />
 
 ## Build It Step By Step
 
@@ -96,7 +96,7 @@ Omit `<Axis>` when you only want the data marks, with no axes or grid:
 
 When x is a date, add `<Scale dimension="x" type="time" />` for that dimension — ticks land on time boundaries like whole months / years, and labels are formatted as time. The date field can be an ISO string or a millisecond timestamp.
 
-<ComponentPreview name="time-axis" sourceFiles={['time-axis.data.ts']} />
+<ComponentPreview files={['time-axis', 'time-axis.data.ts']} />
 
 ## Next
 

@@ -19,7 +19,7 @@ Built-in channels are easiest to read by intent, not by the lower-level `Node` /
 
 Position channels say which row fields participate in coordinate projection. `x` / `y` / `z` are not fixed screen directions; the coordinate system reinterprets them. `cartesian2D` treats `x` / `y` as horizontal / vertical, while `polar2D` treats them as angle / radius.
 
-<ComponentPreview name="builtin-position" size="md" />
+<ComponentPreview files="builtin-position" size="md" />
 
 | Channel | Channel Value        | Meaning                | Delivery        |
 | ------- | -------------------- | ---------------------- | --------------- |
@@ -35,7 +35,7 @@ Style channels control the visible appearance of a mark. Color, opacity, size, a
 
 This demo separates `color`, `fill`, `stroke`, and `textColor`: the left group shows semantic color, the middle group separates fill and stroke, and the right group shows text color.
 
-<ComponentPreview name="builtin-color" size="md" />
+<ComponentPreview files="builtin-color" size="md" />
 
 | Channel     | Channel Value                                                   | Meaning             | Delivery / guide                                                            |
 | ----------- | --------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------- |
@@ -48,7 +48,7 @@ This demo separates `color`, `fill`, `stroke`, and `textColor`: the left group s
 
 This demo binds `opacity`, `fillOpacity`, and `strokeOpacity` in separate groups. Overall opacity affects both fill and stroke, fill opacity only fades the interior, and stroke opacity only fades the outline.
 
-<ComponentPreview name="builtin-opacity" size="md" />
+<ComponentPreview files="builtin-opacity" size="md" />
 
 | Channel         | Channel Value                                                           | Meaning         | Delivery / guide                                                                           |
 | --------------- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
@@ -60,7 +60,7 @@ This demo binds `opacity`, `fillOpacity`, and `strokeOpacity` in separate groups
 
 The `size` channel is for quantitative magnitude. Field values default to a sqrt scale so perceived area is closer to the data difference.
 
-<ComponentPreview name="builtin-size" size="md" />
+<ComponentPreview files="builtin-size" size="md" />
 
 | Channel | Channel Value                                       | Meaning    | Delivery / guide                                                                 |
 | ------- | --------------------------------------------------- | ---------- | -------------------------------------------------------------------------------- |
@@ -70,7 +70,7 @@ The `size` channel is for quantitative magnitude. Field values default to a sqrt
 
 The `shape` channel is for categories. Categorical values map to built-in glyph shapes and can produce a symbol legend.
 
-<ComponentPreview name="builtin-shape" size="md" />
+<ComponentPreview files="builtin-shape" size="md" />
 
 | Channel | Channel Value                                              | Meaning     | Delivery / guide                                 |
 | ------- | ---------------------------------------------------------- | ----------- | ------------------------------------------------ |
@@ -80,7 +80,7 @@ The `shape` channel is for categories. Categorical values map to built-in glyph 
 
 Node geometry channels control the node's own size constraints, spacing, corner radius, and rotation. They are closer to core node properties than to color or size encoding.
 
-<ComponentPreview name="builtin-node-geometry" size="md" />
+<ComponentPreview files="builtin-node-geometry" size="md" />
 
 | Channel              | Channel Value                                                                            | Meaning                 | Delivery                   |
 | -------------------- | ---------------------------------------------------------------------------------------- | ----------------------- | -------------------------- |
@@ -97,7 +97,7 @@ Text channels split into two groups: visible text inside a node, and labels atta
 
 `text` makes a point mark produce text nodes. `textColor`, `align`, `lineHeight`, `maxTextWidth`, and `font` control the text node's layout and color.
 
-<ComponentPreview name="builtin-text-node" size="md" />
+<ComponentPreview files="builtin-text-node" size="md" />
 
 | Channel                                             | Channel Value                                                                                               | Meaning                                | Delivery                           |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------- |
@@ -108,7 +108,7 @@ Text channels split into two groups: visible text inside a node, and labels atta
 
 `label` does not replace node content. It attaches an outside label to the datum host node. `labelPosition`, `labelDistance`, and `labelPin` control placement and leader line.
 
-<ComponentPreview name="builtin-text-label" size="md" />
+<ComponentPreview files="builtin-text-label" size="md" />
 
 | Channel                                           | Channel Value                                                           | Meaning          | Delivery               |
 | ------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- | ---------------------- |
@@ -123,7 +123,7 @@ Path channels apply to marks that lower to core paths, such as line marks, relat
 
 This demo contrasts `strokeWidth`, `lineCap`, `lineJoin`, `roundedCorners`, and `dashPattern` across two lines.
 
-<ComponentPreview name="builtin-path-style" size="md" />
+<ComponentPreview files="builtin-path-style" size="md" />
 
 | Channel                                | Channel Value                                                           | Meaning             | Delivery / guide                                                            |
 | -------------------------------------- | ----------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------- |
@@ -136,7 +136,7 @@ This demo contrasts `strokeWidth`, `lineCap`, `lineJoin`, `roundedCorners`, and 
 
 Effect channels are shared visual hints. This demo uses more overlapping samples so `shadow` and `blendMode` are easier to see.
 
-<ComponentPreview name="builtin-effect" size="md" />
+<ComponentPreview files="builtin-effect" size="md" />
 
 | Channel     | Channel Value                                                                 | Meaning                 | Delivery                   |
 | ----------- | ----------------------------------------------------------------------------- | ----------------------- | -------------------------- |
@@ -148,7 +148,7 @@ Effect channels are shared visual hints. This demo uses more overlapping samples
 
 Other channels do not directly describe color, position, or path shape. They control drawing order, datum ordering, and series splitting.
 
-<ComponentPreview name="builtin-other" size="md" />
+<ComponentPreview files="builtin-other" size="md" />
 
 | Channel  | Channel Value                                           | Meaning                            | Delivery                                 |
 | -------- | ------------------------------------------------------- | ---------------------------------- | ---------------------------------------- |

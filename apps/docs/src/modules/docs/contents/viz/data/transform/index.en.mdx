@@ -37,7 +37,7 @@ Types inferred from transform schemas use the `IRDataXxx` convention. The old `T
 
 Keep it separate from [`order`](/viz/data/model#category-order) in the data model: `sort` reorders rows, while `order` reorders a categorical domain.
 
-<ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
+<ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
 
 | prop    | type                           | default       | description |
 | ------- | ------------------------------ | ------------- | ----------- |
@@ -48,7 +48,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 `summarize` groups by `groupBy`, then reduces each group into one output row through `metrics`. The output row keeps the group keys, and every reducer must declare an `as` field name.
 
-<ComponentPreview name="transform-summarize" sourceFiles={['transform-summarize.data.ts']} />
+<ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
 
 | prop      | type             | default          | description                                       |
 | --------- | ---------------- | ---------------- | ------------------------------------------------- |
@@ -71,7 +71,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 `select` runs a selector per group and outputs the selected original rows. It does not reduce values into new statistical objects, so it keeps original city names, ids, anchors, and other row fields while filtering to extremes or top-N rows.
 
-<ComponentPreview name="transform-select" sourceFiles={['transform-select.data.ts']} />
+<ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
 
 | prop       | type             | default          | description                                  |
 | ---------- | ---------------- | ---------------- | -------------------------------------------- |
@@ -87,7 +87,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 `annotate` groups rows first, then broadcasts reducer results or selected representative values back to every row in the group. It is useful for group mean lines, median bands, thresholds, or other contextual layers around detail rows.
 
-<ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
+<ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
 
 | prop        | type                                         | default          | description                                                                                                         |
 | ----------- | -------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -115,7 +115,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 `quantile-band` uses `lowerP` and `upperP` for arbitrary quantile intervals instead of hard-coding q1 / q3. `outside-quantile-band` is a selector, so it outputs original rows and preserves ids, labels, and provenance.
 
-<ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
+<ComponentPreview files={['transform-boxplot', 'transform-boxplot.data.ts']} />
 
 The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
 
@@ -141,7 +141,7 @@ When `lineage.sink` is provided, events stream to the callback and are not retai
 
 When the input / output row shape does not fit an existing transform, register a runtime definition with `defineTransform`. Definitions do not enter JSON IR; IR stores only `{ kind, ...config }`, and runtime definition sets provide the implementation.
 
-<ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
+<ComponentPreview files={['transform-custom', 'transform-custom.data.ts']} />
 
 | definition field | declares                                                     | enters IR |
 | ---------------- | ------------------------------------------------------------ | --------- |

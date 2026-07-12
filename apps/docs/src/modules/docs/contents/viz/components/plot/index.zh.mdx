@@ -27,7 +27,7 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 `coordinate` 决定单张 `<Plot>` 内部怎么投影数据。缺省是 `cartesian2D`；同一份数据也可以切到 `polar2D`，在另一套坐标系下解释同样的字段映射。
 
-<ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+<ComponentPreview files={['plot-coordinate', 'plot-cartesian.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">左：cartesian 柱图；右：同一份数据切成 polar2D 径向柱图。</p>
 
@@ -58,7 +58,7 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 默认 scale 来自字段值和 mark 类型：数字走连续轴，普通字符串走分类位置，ISO 日期走时间轴。连续位置轴推断 domain 时默认留 5% 弹性空间；需要对数轴、平方根轴、手动 domain 或 `domainPadding={0}` 时，在 `<Plot>` 里写 `<Scale>` 子组件覆盖对应维度。
 
-<ComponentPreview name="plot-scale" sourceFiles={['plot-scale.data.ts']} size="md" />
+<ComponentPreview files={['plot-scale', 'plot-scale.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">
   左：默认 linear y 轴，前几个点挤在底部；右：显式 log y 轴，同一组指数级数据被均匀展开。
@@ -68,7 +68,7 @@ import { Axis, IntervalMark, Plot } from '@retikz/plot-react';
 
 `theme` 控制单张 `<Plot>` 的视觉默认：背景、guide typography、axis / grid token、legend token 和 palette。新代码优先使用 `theme.palette`。旧的 `colors` prop 仍保留为 shorthand，只在对应 `theme.palette` 槽位省略时参与分类色、series 和 sector 的默认配色。
 
-<ComponentPreview name="plot-colors" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+<ComponentPreview files={['plot-colors', 'plot-cartesian.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">
   左：内置 palette 与 guide 默认；右：本地 theme 改了 palette、背景、网格和轴标签颜色。
@@ -104,7 +104,7 @@ Theme 只合并视觉 token。Scale domain、`domainPadding`、显式 tick 值�
 
 真实数据的字段名经常和图表里的逻辑字段名不同。`model` 声明图表需要的逻辑字段及类型，`fieldMap` 再把这些逻辑字段映射到真实数据路径；mark 始终引用逻辑名。
 
-<ComponentPreview name="plot-field-map" sourceFiles={['plot-field-map.data.ts']} size="sm" />
+<ComponentPreview files={['plot-field-map', 'plot-field-map.data.ts']} size="sm" />
 
 <p className="text-sm text-muted-foreground">数据里是 period / amount，图里仍写 date / visits。</p>
 
@@ -112,7 +112,7 @@ Theme 只合并视觉 token。Scale domain、`domainPadding`、显式 tick 值�
 
 同一个父级 `<Layout>` 可以放多张 `<Plot>`。每张图用自己的 `width` / `height` 决定外框，再用 `x` / `y` 或 `transforms` 在父画布中摆位；父级只负责承载和组合，不参与子图的 scale 推断。
 
-<ComponentPreview name="plot-panels" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+<ComponentPreview files={['plot-panels', 'plot-cartesian.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">左：cartesian 折线图；右：同一个 Layout 里的 cartesian 柱状图。</p>
 
@@ -129,7 +129,7 @@ Theme 只合并视觉 token。Scale domain、`domainPadding`、显式 tick 值�
 
 当图表配置来自持久化 JSON 或外部生成结果时，可以直接传 `spec`。数据仍然单独通过 `data` 表注入，不写进 PlotSpec。
 
-<ComponentPreview name="plot-spec-entry" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+<ComponentPreview files={['plot-spec-entry', 'plot-cartesian.data.ts']} size="sm" />
 
 <p className="text-sm text-muted-foreground">spec 入口跳过 JSX 子组件收集，直接把 PlotSpec 交给 lowering。</p>
 

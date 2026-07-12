@@ -30,7 +30,7 @@ import { Rectangle } from '@retikz/react';
 | `{ center, side }`           | 正方形             |
 | `{ corner1, width, height }` | 从一个角向右下展开 |
 
-<ComponentPreview name="rectangle-basic" size="sm" />
+<ComponentPreview files="rectangle-basic" size="sm" />
 
 ### API 参考
 
@@ -61,7 +61,7 @@ import { Node } from '@retikz/react';
 
 圆角既可以用顶层 `cornerRadius`，也可以写成 `shape={{ type:'rectangle', params:{ cornerRadius } }}`（两者并存时 params 优先）。倒角是连接感知的：连线端点会落在圆角弧上，而不是已被磨掉的尖角。
 
-<ComponentPreview name="node-rectangle" size="sm" />
+<ComponentPreview files="node-rectangle" size="sm" />
 
 连线端点贴矩形边，节点的中心与 8 个方位 anchor（`center` / `top` …）照常可用。完整的 `<Node>` 属性见 [Node](/kernel/components/node/overview)。
 

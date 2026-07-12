@@ -16,7 +16,7 @@ Row sorting is a data capability; see [Data Transforms / sort](/viz/data/transfo
 
 `derive-interval` computes an interval independently for each row. It does not inspect neighboring rows, so it fits Gantt bars, explicit intervals, and non-zero-baseline bars.
 
-<ComponentPreview name="transform-derive-interval" sourceFiles={['transform-derive-interval.data.ts']} />
+<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} />
 
 Both `derive-interval` and `stack` default to `y0` / `y1`, but their meaning differs: `derive-interval` is per-row derivation, while `stack` is cross-row accumulation.
 
@@ -31,7 +31,7 @@ Both `derive-interval` and `stack` default to `y0` / `y1`, but their meaning dif
 
 `jitter` adds a pseudo-random offset to continuous position fields so overlapping points spread apart. The offset happens in data space before scales; `seed` is an integer so SSR and browser hydration agree.
 
-<ComponentPreview name="transform-jitter" sourceFiles={['transform-jitter.data.ts']} />
+<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} />
 
 `jitter` currently applies only to continuous numeric fields. Screen-space jitter inside categorical bands is not part of this transform layer.
 

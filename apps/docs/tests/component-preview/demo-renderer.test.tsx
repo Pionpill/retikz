@@ -1,21 +1,41 @@
-﻿import { Layout } from '@retikz/react';
-import { type FC } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+﻿// @vitest-environment jsdom
+import type { FC } from 'react';
 
+import { Layout } from '@retikz/react';
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { act } from 'react-dom/test-utils';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import type {
+  PreviewControlRuntime,
+  PreviewControlSlot,
+} from '../../src/modules/docs/components/component-preview/types';
+
+import { buildAnimationControlSlots } from '../../src/modules/docs/components/component-preview/controls/animation-controls';
 import {
+  buildConfiguredControlSlots,
+  buildPreviewToolSlots,
   DemoRenderer,
   PreviewControlSlotLayer,
   RendererModeButton,
-} from '../../src/modules/docs/components/component-preview';
-import { buildAnimationControlSlots } from '../../src/modules/docs/components/component-preview/controls/animation-controls';
-import { buildConfiguredControlSlots } from '../../src/modules/docs/components/component-preview/controls/configured-controls';
-import { buildPreviewToolSlots } from '../../src/modules/docs/components/component-preview/controls/preview-tools';
+} from '../../src/modules/docs/components/component-preview/preview-panel';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
 const WrappedLayout: FC = () => <Layout width={40} height={20} />;
 const WrappedDemo: FC = () => <WrappedLayout />;
+const ExplicitSvgDemo: FC = () => <Layout width={40} height={20} renderer="svg" />;
+const SingleHookDemo: FC = () => {
+  const [first] = useState('single');
+  return <span>{first}</span>;
+};
+const DoubleHookDemo: FC = () => {
+  const [first] = useState('double');
+  const [second] = useState('hooks');
+  return <span>{`${first} ${second}`}</span>;
+};
 const noop = () => {};
 const previewControlRuntime = {
   remount: noop,
@@ -29,6 +49,15 @@ const previewControlRuntime = {
   value: () => undefined,
   setValue: noop,
 };
+
+const renderSlots = (slots: Array<PreviewControlSlot>, runtime: PreviewControlRuntime): string =>
+  renderToStaticMarkup(<PreviewControlSlotLayer slots={slots} pinned runtime={runtime} />);
+
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+
+afterEach(() => {
+  document.body.replaceChildren();
+});
 
 describe('DemoRenderer', () => {
   it('svg 模式保持 svg 输出', () => {
@@ -46,6 +75,29 @@ describe('DemoRenderer', () => {
     const markup = renderToStaticMarkup(<DemoRenderer Component={WrappedDemo} rendererMode="canvas" />);
     expect(markup).toContain('<canvas');
     expect(markup).not.toContain('<svg');
+  });
+
+  it('为不同 Hook 结构的 demo 保留独立组件边界', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    let renderError: unknown;
+
+    act(() => root.render(<DemoRenderer Component={SingleHookDemo} rendererMode="svg" />));
+    try {
+      act(() => root.render(<DemoRenderer Component={DoubleHookDemo} rendererMode="svg" />));
+    } catch (error) {
+      renderError = error;
+    }
+
+    expect(renderError).toBeUndefined();
+    act(() => root.unmount());
+  });
+
+  it('demo 显式 renderer 优先于 provider', () => {
+    const markup = renderToStaticMarkup(<DemoRenderer Component={ExplicitSvgDemo} rendererMode="canvas" />);
+    expect(markup).toContain('<svg');
+    expect(markup).not.toContain('<canvas');
   });
 });
 
@@ -145,24 +197,19 @@ describe('PreviewControlSlotLayer', () => {
 });
 
 describe('animation control slots', () => {
-  it('渲染动画重播 / pause / stop 控制', () => {
-    const slots = buildAnimationControlSlots(false);
-    const markup = renderToStaticMarkup(
-      <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
-    );
+  it('同一组定义按面板 runtime 渲染播放状态', () => {
+    const slots = buildAnimationControlSlots();
+    const pausedMarkup = renderSlots(slots, {
+      ...previewControlRuntime,
+      active: id => id === 'animation-paused',
+    });
+    const playingMarkup = renderSlots(slots, previewControlRuntime);
 
-    expect(markup).toContain('aria-label="Replay"');
-    expect(markup).toContain('aria-label="Pause"');
-    expect(markup).toContain('aria-label="Stop"');
-  });
-
-  it('暂停态渲染 Play 控制', () => {
-    const slots = buildAnimationControlSlots(true);
-    const markup = renderToStaticMarkup(
-      <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
-    );
-
-    expect(markup).toContain('aria-label="Play"');
-    expect(markup).not.toContain('aria-label="Pause"');
+    expect(pausedMarkup).toContain('aria-label="Replay"');
+    expect(pausedMarkup).toContain('aria-label="Play"');
+    expect(pausedMarkup).not.toContain('aria-label="Pause"');
+    expect(pausedMarkup).toContain('aria-label="Stop"');
+    expect(playingMarkup).toContain('aria-label="Pause"');
+    expect(playingMarkup).not.toContain('aria-label="Play"');
   });
 });

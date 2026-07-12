@@ -9,7 +9,7 @@ description: 颜色比例尺把数据值映射成颜色——分类一类一色�
 
 把 `color` 绑一个分类字段，`<Plot>` 自动派生 `ordinal`——每个类别离散取一色。它也是多系列的着色方式：没有显式 series 时，分类 color 字段会隐式把数据拆成多条系列。
 
-<ComponentPreview name="scale-ordinal" sourceFiles={['scale-ordinal.data.ts']} />
+<ComponentPreview files={['scale-ordinal', 'scale-ordinal.data.ts']} />
 
 <p className="text-sm text-muted-foreground">color 绑分类 city → ordinal；两城各取一色，隐式拆成两条折线。</p>
 
@@ -49,7 +49,7 @@ sequential 是**连续**色带（平滑渐变）。但很多场景要把连续�
 
 每档的颜色复用上面的命名 scheme——从一条连续色带上等距采 N 个点得到 N 个离散色（如 `scheme: 'blues'` 采 5 档）；也可用 `range` 直接给一组颜色覆盖 scheme，`range` 的长度即档数。
 
-<ComponentPreview name="scale-quantize" sourceFiles={['scale-discretization.data.ts']} />
+<ComponentPreview files={['scale-quantize', 'scale-discretization.data.ts']} />
 
 <p className="text-sm text-muted-foreground">quantize 5 档：连续 density 等宽切 5 段，每档取 blues 上的一个采样色。</p>
 

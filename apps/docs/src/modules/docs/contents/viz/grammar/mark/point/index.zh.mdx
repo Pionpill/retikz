@@ -39,13 +39,13 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 
 `x` / `y` 决定每行数据的锚点。左侧是笛卡尔二维坐标系，右侧是极坐标二维坐标系；同一组字段在不同坐标系下会被解释成不同的几何位置。
 
-<ComponentPreview name="point-position" sourceFiles={['point-api.data.ts']} />
+<ComponentPreview files={['point-position', 'point-api.data.ts']} />
 
 ### 图元局部变换
 
 `transform` 可以直接写在当前 PointMark 上。下面的灰点仍然使用原始行，彩色气泡层只在当前图元内执行 `jitter`，把重叠的 `orders` 点在 y 方向轻微抖开。
 
-<ComponentPreview name="point-transform" sourceFiles={['point-transform.data.ts']} />
+<ComponentPreview files={['point-transform', 'point-transform.data.ts']} />
 
 ### 样式属性
 
@@ -53,19 +53,19 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 
 `stroke`、`strokeWidth`、`opacity`、`fillOpacity`、`rotate` 等 Node 样式都支持字段绑定。组件层的字符串 / 数字是语法糖：如果有同名数据字段，字符串会变成 `{ kind: 'field', value: FieldName }`；如果没有字段但能作为合法常量使用，就变成 `{ kind: 'constant', value }`；否则会跳过并给出 warning。需要消除歧义时可以直接写显式形式。
 
-<ComponentPreview name="point-style" sourceFiles={['point-api.data.ts']} />
+<ComponentPreview files={['point-style', 'point-api.data.ts']} />
 
 ### 填充与描边
 
 `fill` / `stroke` 除纯色外也可以接 `IRPaintSpec`。常量样式会下沉到 core `Node` 的默认样式；如果需要按数据字段映射颜色，继续使用 `color` 或字段绑定形式。
 
-<ComponentPreview name="point-paint" sourceFiles={['point-api.data.ts']} />
+<ComponentPreview files={['point-paint', 'point-api.data.ts']} />
 
 ### 文本属性
 
 点上的文字优先使用 `label`：它会把文本挂到每个散点对应的 core `Node.label` 上，因此一层 `PointMark` 就能同时画点和显示标签。`labelPosition`、`labelDistance`、`labelPin` 对齐 core Node label 的方位、距离和引线能力。`text` 是另一种模式：它把点本身替换成无边框文本 Node，适合只画文字点而不画圆点的场景；`dx` / `dy` 用来做屏幕方向的微调。
 
-<ComponentPreview name="point-text" sourceFiles={['point-api.data.ts']} />
+<ComponentPreview files={['point-text', 'point-api.data.ts']} />
 
 ### 不同坐标系
 
@@ -75,13 +75,13 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 
 一维坐标系只消费 `x`。在直线坐标里它落到一条轴上，在极坐标里同一组值落到圆环上。
 
-<ComponentPreview name="point-coordinate-1d" sourceFiles={['point-coordinates.data.ts']} />
+<ComponentPreview files={['point-coordinate-1d', 'point-coordinates.data.ts']} />
 
 #### 三元：三元图
 
 三元坐标系消费 `x` / `y` / `z` 三个分量，并把每行数据归一化后投影到三角形内。
 
-<ComponentPreview name="point-coordinate-ternary" sourceFiles={['point-coordinates.data.ts']} />
+<ComponentPreview files={['point-coordinate-ternary', 'point-coordinates.data.ts']} />
 
 ## 技术原理
 

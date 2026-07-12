@@ -29,7 +29,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`<Scale dimension="y" type="log" />`），每个数量级占等高，小值也看得清。默认底数为 10；需要自然对数时设置 `base={Math.E}`，且 `base` 必须大于 1。两张图喂的是同一份逐年用户量。
 
-<ComponentPreview name="scale-linear-log" sourceFiles={['scale-continuous.data.ts']} />
+<ComponentPreview files={['scale-linear-log', 'scale-continuous.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   左：缺省 linear，前几年贴底；右：仅加 <code>{'<Scale dimension="y" type="log" />'}</code>，跨度铺开。
@@ -39,7 +39,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 `<Scale dimension="y" type="sqrt" />` 按平方根映射，弱化大值的视觉夸张；它也是 `size` 通道（散点半径）的默认 scale，让半径的**面积**正比于数据。
 
-<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
+<ComponentPreview files={['scale-sqrt', 'scale-continuous.data.ts']} />
 
 ## 只作用 point / line
 
@@ -55,7 +55,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 `log` 不能处理零和负值，但盈亏、温差、增长率这类数据常常跨零又跨数量级。`<Scale dimension="y" type="symlog" />` 用**对称对数**——近零是一段线性区、两侧尾部才转对数，所以零和负值都有定义。线性区宽度由 `constant` 调（缺省 `1`，调大让更多中段保持线性）；例如正数区间设置 `constant={50}` 时，映射等价于 `ln(1 + x / 50)`。和 `log` / `sqrt` / `pow` 一样，`symlog` 是非线性 scale，只作用 point / line。
 
-<ComponentPreview name="scale-symlog" sourceFiles={['scale-symlog.data.ts']} />
+<ComponentPreview files={['scale-symlog', 'scale-symlog.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   同一份跨零的逐月净现金流。左：缺省 linear，近零的几个月全贴在 0 线；右：换{' '}
@@ -66,7 +66,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 `radial` 把值映射成半径，且让**扇形 / 圆环的面积**（而非半径长度）正比于值——这正是极坐标玫瑰图（南丁格尔图）的编码方式。它是开方型映射，但与 `sqrt` 不同：`radial` 从 0 基线起算、专作半径值轴，因此**允许**配 interval / path closure（玫瑰图扇区或闭合面积），而 `sqrt` 不可。
 
-<ComponentPreview name="scale-radial" sourceFiles={['scale-radial.data.ts']} />
+<ComponentPreview files={['scale-radial', 'scale-radial.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   极坐标 + <code>IntervalMark</code> 画出每季一扇区，径向走 radial：扇区面积正比于降水量。
@@ -76,7 +76,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 时间字段（`temporal`）的位置通道默认走 `time`。它本质是连续映射，但刻度不取等距数值，而是落在**人类可读的时间边界**（月初、季度、整点……），标签也按时间格式化，而不是把日期当裸数字。把字段在 model 里声明为 `temporal`，x 就自动走 time scale，无需手写 `<Scale>`。
 
-<ComponentPreview name="scale-time" sourceFiles={['scale-time.data.ts']} />
+<ComponentPreview files={['scale-time', 'scale-time.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   date 声明为 temporal → x 自动走 time；刻度落季度边界，标签按时间格式化。
@@ -95,7 +95,7 @@ description: 位置比例尺把数据值映射成坐标 / 长度 / 半径——�
 
 声明字段为 `categorical` 后，位置通道默认走 `band`：每个类别等分一格，柱落在格中央。
 
-<ComponentPreview name="scale-band" sourceFiles={['scale-band.data.ts']} />
+<ComponentPreview files={['scale-band', 'scale-band.data.ts']} />
 
 <p className="text-sm text-muted-foreground">segment 声明为 categorical → x 自动走 band；五个套餐档等宽分格。</p>
 

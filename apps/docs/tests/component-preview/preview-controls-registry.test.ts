@@ -1,23 +1,67 @@
 import { describe, expect, it } from 'vitest';
 
+import type {
+  AlignKey,
+  ComponentPreviewCardProps,
+  ComponentPreviewProps,
+  ComponentRenderSource,
+  DiffLineKind,
+  PreviewActionSlot,
+  PreviewControlConfig,
+  PreviewControlPlacement,
+  PreviewControlRuntime,
+  PreviewControlSlot,
+  PreviewSourceConfig,
+  RendererMode,
+  SizeKey,
+} from '../../src/modules/docs/components/component-preview';
+
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
+import { ToolbarIconButton } from '../../src/modules/docs/components/component-preview/components';
+import { ToolbarIconButton as DirectToolbarIconButton } from '../../src/modules/docs/components/component-preview/components/ToolbarIconButton';
 import {
   buildControlsKey,
   buildLangControlsKey,
+  buildSourceFileKey,
   controlModules,
+  demoModules,
   resolveControlsKey,
+  resolveDemoKey,
   resolvePreviewControls,
-} from '../../src/modules/docs/components/component-preview';
+} from '../../src/modules/docs/components/component-preview/registry';
+import {
+  buildPreviewIR,
+  buildReactSourceFiles,
+  formatIR,
+  irToVanillaCode,
+} from '../../src/modules/docs/components/component-preview/utils';
+
+const privateExportKeys = [
+  'ComponentPreviewDialog',
+  'PreviewPanel',
+  'SourcePanel',
+  'usePreviewPanelState',
+  'useSourcePanelState',
+  'buildPreviewToolSlots',
+  'usePreviewControlRuntime',
+  'buildPreviewSource',
+  ['Component', 'Render'].join(''),
+  ['Component', 'Detail', 'Dialog'].join(''),
+];
 
 describe('preview controls registry', () => {
-  it('exports a localized controls key resolver', () => {
-    expect((componentPreviewExports as Record<string, unknown>).resolveControlsKey).toBeTypeOf('function');
+  it('从 registry owner 暴露本地化 controls key resolver', () => {
+    expect(resolveControlsKey).toBeTypeOf('function');
   });
 
-  it('exports the public registry helpers from the top-level barrel only', () => {
+  it('registry helper 不通过组件预览根 barrel 转发', () => {
     expect(buildControlsKey).toBeTypeOf('function');
     expect(controlModules).toBeTypeOf('object');
     expect(resolvePreviewControls).toBeTypeOf('function');
+    expect(componentPreviewExports).not.toHaveProperty('resolveControlsKey');
+    expect(componentPreviewExports).not.toHaveProperty('buildControlsKey');
+    expect(componentPreviewExports).not.toHaveProperty('controlModules');
+    expect(componentPreviewExports).not.toHaveProperty('resolvePreviewControls');
     expect(componentPreviewExports).not.toHaveProperty('demoModules');
     expect(componentPreviewExports).not.toHaveProperty('buildAnimationControlSlots');
     expect(componentPreviewExports).not.toHaveProperty('buildConfiguredControlSlots');
@@ -25,6 +69,47 @@ describe('preview controls registry', () => {
     expect(componentPreviewExports).not.toHaveProperty('ANIMATION_PAUSED_CONTROL_ID');
     expect(componentPreviewExports).not.toHaveProperty('buildAnimationSlots');
     expect(componentPreviewExports).not.toHaveProperty('ANIM_PAUSE_ID');
+  });
+
+  it('根 owner 只暴露真实跨 owner 消费所需的稳定入口', () => {
+    expect(componentPreviewExports.ComponentPreview).toBeTypeOf('function');
+    expect(componentPreviewExports.ComponentPreviewCard).toBeTypeOf('function');
+    expect(buildPreviewIR).toBeTypeOf('function');
+    expect(buildReactSourceFiles).toBeTypeOf('function');
+    expect(formatIR).toBeTypeOf('function');
+    expect(irToVanillaCode).toBeTypeOf('function');
+
+    const typeSurface = {} as {
+      preview: ComponentPreviewProps;
+      card: ComponentPreviewCardProps;
+      source: ComponentRenderSource;
+      diff: DiffLineKind;
+      config: PreviewControlConfig;
+      controlPlacement: PreviewControlPlacement;
+      controlRuntime: PreviewControlRuntime;
+      controlSlot: PreviewControlSlot;
+      actionSlot: PreviewActionSlot;
+      rendererMode: RendererMode;
+      align: AlignKey;
+      size: SizeKey;
+      sourceConfig: PreviewSourceConfig;
+    };
+    expect(typeSurface).toBeTypeOf('object');
+
+    expect(Object.keys(componentPreviewExports).sort()).toEqual([
+      'ComponentPreview',
+      'ComponentPreviewCard',
+      'formatIR',
+    ]);
+
+    for (const key of privateExportKeys) {
+      expect(componentPreviewExports).not.toHaveProperty(key);
+    }
+  });
+
+  it('保留 components 中立组件 owner', () => {
+    expect(ToolbarIconButton).toBeTypeOf('function');
+    expect(ToolbarIconButton).toBe(DirectToolbarIconButton);
   });
 
   it('uses .controls.ts keys', () => {
@@ -37,6 +122,21 @@ describe('preview controls registry', () => {
     expect(buildControlsKey(['viz', 'grammar', 'mark', 'path'], 'line-stack-area')).toBe(
       '../../contents/viz/grammar/mark/path/line-stack-area.controls.ts',
     );
+  });
+
+  it('通过同一 registry owner 暴露 contents key helper', () => {
+    expect(buildSourceFileKey(['kernel', 'components'], 'demo.data.ts')).toBe(
+      '../../contents/kernel/components/demo.data.ts',
+    );
+    expect(resolveDemoKey(['kernel', 'components', 'test'], '__missing__', 'zh')).toBe(
+      '../../contents/kernel/components/test/__missing__.demo.tsx',
+    );
+  });
+
+  it('从真实 demo 模块收集源码派生配置', () => {
+    const key = resolveDemoKey(['viz', 'grammar', 'mark', 'path'], 'line-curve', 'zh');
+
+    expect(demoModules[key]?.previewSource).toEqual({ deriveIR: false });
   });
 
   it('优先解析语言化 controls，并在缺失时回退通用文件', () => {

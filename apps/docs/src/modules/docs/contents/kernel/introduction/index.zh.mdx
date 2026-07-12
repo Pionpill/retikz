@@ -11,7 +11,7 @@ description: AI 原生的通用绘图库——React 组件描述图元、JSON IR
 
 这张图只做一件最小的事：放两个命名节点，再用一条带箭头的 `Draw` 把它们连起来。它说明 retikz 的基本顺序是先摆可引用的点，再用路径关系把图元串起来。
 
-<ComponentPreview name="minimal-example" size="xs" />
+<ComponentPreview files="minimal-example" size="xs" />
 
 ## 两个核心概念
 
@@ -44,7 +44,7 @@ retikz 选择 IR JSON 而非 JSX 作为 AI 接入的主接口，借力 OpenAI St
 
 ## IR 居中
 
-<ComponentPreview name="ir-centric" hideCode />
+<ComponentPreview files="ir-centric" hideCode />
 
 所有输入方式（JSX / DSL / AI）都翻成同一份 IR；所有输出方式（renderer）都从 IR 出发。
 **持久化、跨平台和 AI 接入并不是彼此独立的能力，而是 IR 居中带来的同一份红利。**
@@ -85,7 +85,7 @@ domain 包是 Kernel 之上 + 数据绑定 / 布局算法 / 默认样式的薄�
 
 retikz 拆成四个发布包，从框架无关的底层到面向用户的入口逐层叠加：
 
-<ComponentPreview name="package-viz" size="md" hideCode />
+<ComponentPreview files="package-viz" size="md" hideCode />
 
 实线是主构建链——右侧的包构建在左侧的包之上；虚线表示 `@retikz/react` / `@retikz/vanilla` 也直接消费 `@retikz/core` 的 IR。四个包同版本发布。
 

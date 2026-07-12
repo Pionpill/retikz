@@ -29,7 +29,7 @@ contents/<...>/<page>/
 MDX 中使用：
 
 ```mdx
-<ComponentPreview name="<figure-name>" hideCode />
+<ComponentPreview files="<figure-name>" hideCode />
 ```
 
 规则：

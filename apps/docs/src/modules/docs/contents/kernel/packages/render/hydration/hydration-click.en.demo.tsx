@@ -3,10 +3,16 @@ import type { FC } from 'react';
 import { Layout, Node } from '@retikz/react';
 import { useState } from 'react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
 /**
  * Hydration interaction demo: click a node to toggle highlight + count
  * @description A node needs an `id` before `onClick` can bind; the handler uses useState
- *   to change styling — it has hooks, so the mdx-side ComponentPreview must set `interactive`
+ *   to change styling, so module-level `previewSource` prevents execution outside React.
  */
 const Demo: FC = () => {
   const [active, setActive] = useState(false);

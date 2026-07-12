@@ -1,4 +1,4 @@
-import type { RendererMode } from '../types';
+import type { RendererMode } from '../../types';
 
 const downloadBlob = (blob: Blob, fileName: string): void => {
   const url = URL.createObjectURL(blob);

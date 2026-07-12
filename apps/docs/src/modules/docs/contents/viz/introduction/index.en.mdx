@@ -9,7 +9,7 @@ It is for cases where you want to draw structured data as charts while keeping r
 
 ## Core + Graphic Grammar
 
-<ComponentPreview name="plot-grammar-parts" size="md" hideCode />
+<ComponentPreview files="plot-grammar-parts" size="md" hideCode />
 
 plot is essentially **core + graphic grammar**. Core provides the renderable nodes, paths, scopes, and Scene contract; plot does not create a separate renderer. It adds a grammar layer above core for describing how data fields become visual marks.
 
@@ -21,7 +21,7 @@ plot is essentially **core + graphic grammar**. Core provides the renderable nod
 
 ## Plot IR at the Center
 
-<ComponentPreview name="plot-ir-centric" size="md" hideCode />
+<ComponentPreview files="plot-ir-centric" size="md" hideCode />
 
 The center of plot is not a large data table; it is a Plot IR document that describes chart semantics. Components, handwritten specs, and AI output all converge on that IR. The real data joins only during lowering, where `lowerPlots` turns the spec + data into core nodes and paths.
 

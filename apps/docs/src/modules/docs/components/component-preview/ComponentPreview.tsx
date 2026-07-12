@@ -1,6 +1,5 @@
 import type { FC } from 'react';
 
-import { Layout } from '@retikz/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -8,87 +7,77 @@ import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 
 import type {
   AlignKey,
-  ComponentRenderSource,
+  ComponentPreviewFiles,
+  PreviewActionSlot,
   PreviewControlConfig,
   PreviewControlSlot,
-  RendererMode,
   SizeKey,
 } from './types';
-import type { PreviewIR } from './utils';
 
-import { ComponentRender } from './ComponentRender';
-import { RawSvgFrame } from './components';
+import { ComponentPreviewCard } from './ComponentPreviewCard';
 import { useDemoLocationContext } from './context';
-import { buildConfiguredControlSlots } from './controls';
-import { controlModules, resolveControlsKey, resolvePreviewControls } from './registry';
+import { buildAnimationControlSlots } from './controls';
+import { buildConfiguredControlSlots } from './preview-panel';
 import {
   buildIrJsonKey,
   buildVanillaKey,
+  controlModules,
   demoModules,
   demoSources,
   irJsonOverrides,
+  resolveControlsKey,
   resolveDemoKey,
+  resolvePreviewControls,
   vanillaModules,
   vanillaOverrides,
-} from './registry-runtime';
-import {
-  buildPreviewIR,
-  buildReactSourceFiles,
-  formatIR,
-  irHasAnimations,
-  irHasComposite,
-  irToVanillaCode,
-} from './utils';
+} from './registry';
+import { buildPreviewSource } from './source-panel';
+import { irHasAnimations, normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
-  /** demo 文件名（不含 `.demo.tsx` 后缀），相对当前 mdx 同级目录解析 */
-  name: string;
-  /** 复用同目录下另一 demo 的 controls；默认与 `name` 相同。 */
+  /** 主 demo 与附加源码文件；主 demo id 不含 `.demo.tsx` 后缀。 */
+  files: ComponentPreviewFiles;
+  /** 复用同目录下另一 demo 的 controls；默认与主 demo 相同。 */
   controlsName?: string;
   /** 渲染区垂直对齐，默认 center */
   align?: AlignKey;
   /** 渲染区高度档位，默认 `md`。 */
   size?: SizeKey;
   /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等。 */
-  componentClassName?: string;
+  previewClassName?: string;
   /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;
-  /** 与 demo 一起展示的附加源码文件，路径相对当前页面目录。 */
-  sourceFiles?: Array<string | { file: string; diffFrom: string }>;
-  /** 作为 React 源码 diff baseline 的 demo id。 */
-  diffFrom?: string;
-  /** 交互型 demo，跳过静态 IR / Vanilla 派生。 */
-  interactive?: boolean;
   /** 强制显示 / 隐藏内置动画工具；省略时自动判定。 */
   replayable?: boolean;
-  /** 自定义预览控制插槽，优先于 demo 模块声明控件。 */
+  /** 自定义预览控制定义，优先于 demo 模块声明控件，并分别针对每个面板 runtime 求值。 */
   controlSlots?: Array<PreviewControlSlot>;
   /** 自定义预览控件层是否常驻显示；默认 true。 */
   controlsAlwaysVisible?: boolean;
+  /** 全屏弹窗 header 动作定义，使用弹窗自己的 runtime 求值。 */
+  dialogActionSlots?: Array<PreviewActionSlot>;
 };
 
 /** MDX 内的演示卡入口。 */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const {
-    name,
+    files,
     controlsName,
     align = 'center',
     size = 'md',
-    componentClassName,
+    previewClassName,
     hideCode = false,
-    sourceFiles,
-    diffFrom,
-    interactive = false,
     replayable,
     controlSlots,
     controlsAlwaysVisible = true,
+    dialogActionSlots,
   } = props;
+  const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
 
   const ctxSegments = useDemoLocationContext();
-  const segments = ctxSegments ?? (loc ? docPathSegments(loc) : null);
+  const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
   const key = segments ? resolveDemoKey(segments, name, lang) : null;
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;
@@ -101,49 +90,49 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
 
   const irJsonOverrideKey = segments ? buildIrJsonKey(segments, name) : null;
   const irJsonOverride = irJsonOverrideKey ? irJsonOverrides[irJsonOverrideKey] : undefined;
-  const exportedPreviewIR = mod?.previewIR;
-  const irState = useMemo<{ previewIr: PreviewIR | null; irJson: string }>(() => {
-    if (!Component || hideCode) return { previewIr: null, irJson: '' };
-    if (irJsonOverride !== undefined) {
-      const irJson = irJsonOverride.replace(/\n$/, '');
-      try {
-        const ir = JSON.parse(irJson) as PreviewIR['ir'];
-        return { previewIr: { ir, width: undefined, height: undefined }, irJson };
-      } catch (err) {
-        return {
-          previewIr: null,
-          irJson: `// Failed to parse IR override: ${err instanceof Error ? err.message : String(err)}`,
-        };
-      }
-    }
-    if (interactive) {
-      return { previewIr: null, irJson: exportedPreviewIR !== undefined ? formatIR(exportedPreviewIR) : '' };
-    }
-    try {
-      const previewIr = buildPreviewIR(Component);
-      return { previewIr, irJson: formatIR(previewIr.ir) };
-    } catch (err) {
-      return {
-        previewIr: null,
-        irJson: `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`,
-      };
-    }
-  }, [Component, hideCode, interactive, irJsonOverride, exportedPreviewIR]);
-
   const vanillaKey = segments ? buildVanillaKey(segments, name) : null;
   const vanillaOverride = vanillaKey ? vanillaOverrides[vanillaKey] : undefined;
   const vanillaModule = vanillaKey ? vanillaModules[vanillaKey] : undefined;
   const vanillaSvg = typeof vanillaModule?.svg === 'string' ? vanillaModule.svg : undefined;
-  const vanillaCode = useMemo(() => {
-    if (!Component || hideCode) return '';
-    if (vanillaOverride !== undefined) return vanillaOverride.replace(/\n$/, '');
-    if (interactive || !irState.previewIr || irHasComposite(irState.previewIr.ir)) return '';
-    try {
-      return irToVanillaCode(irState.previewIr.ir);
-    } catch (err) {
-      return `// Failed to generate vanilla code: ${err instanceof Error ? err.message : String(err)}`;
-    }
-  }, [Component, hideCode, vanillaOverride, interactive, irState]);
+  const previewSource = mod?.previewSource;
+  const exportedPreviewIR = mod?.previewIR;
+  const sourceResult = useMemo(
+    () =>
+      Component && key && segments && rawSource !== undefined
+        ? buildPreviewSource({
+            Component,
+            previewSource,
+            name,
+            key,
+            segments,
+            rawSource,
+            sourceFiles,
+            diffFrom,
+            baselineRawSource,
+            hideCode,
+            irJsonOverride,
+            exportedPreviewIR,
+            vanillaOverride,
+            vanillaSvg,
+          })
+        : { source: undefined, previewIr: null },
+    [
+      Component,
+      previewSource,
+      name,
+      key,
+      segments,
+      rawSource,
+      sourceFiles,
+      diffFrom,
+      baselineRawSource,
+      hideCode,
+      irJsonOverride,
+      exportedPreviewIR,
+      vanillaOverride,
+      vanillaSvg,
+    ],
+  );
 
   if (!loc) return null;
   if (!segments) return null;
@@ -157,74 +146,26 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     );
   }
 
-  const reactFiles = buildReactSourceFiles({
-    key,
-    name,
-    segments,
-    rawSource,
-    sourceFiles,
-    diffFrom,
-    baselineRawSource,
-    hideCode,
-  });
-  const extraSourceFiles = reactFiles.filter(file => !file.isMain);
-
-  const previewIr = irState.previewIr;
-  const source: ComponentRenderSource | undefined = hideCode
-    ? undefined
-    : {
-        react: { files: reactFiles },
-        ...(irState.irJson.length > 0
-          ? {
-              ir: {
-                files: [{ filename: `${name}.ir.json`, code: irState.irJson, lang: 'json' as const }],
-                render:
-                  previewIr !== null && !irHasComposite(previewIr.ir)
-                    ? (mode: RendererMode) => (
-                        <Layout
-                          ir={previewIr.ir}
-                          renderer={mode}
-                          width={previewIr.width}
-                          height={previewIr.height}
-                          pathKinds={previewIr.pathKinds}
-                        />
-                      )
-                    : undefined,
-              },
-            }
-          : {}),
-        ...(vanillaCode.length > 0
-          ? {
-              vanilla: {
-                files: [
-                  { filename: `${name}.vanilla.ts`, code: vanillaCode, lang: 'ts' as const },
-                  ...extraSourceFiles,
-                ],
-                render: vanillaSvg !== undefined ? () => <RawSvgFrame svg={vanillaSvg} /> : undefined,
-              },
-            }
-          : {}),
-      };
-
+  const previewIr = sourceResult.previewIr;
   const animated = replayable ?? (previewIr !== null && irHasAnimations(previewIr.ir));
   const controlConfigs = moduleControls?.filter((control): control is PreviewControlConfig => 'kind' in control) ?? [];
   const moduleControlSlots =
     moduleControls?.filter((control): control is PreviewControlSlot => 'render' in control) ?? [];
   const configuredControlSlots = buildConfiguredControlSlots(controlConfigs);
-  const resolvedControlSlots = controlSlots ?? [...configuredControlSlots, ...moduleControlSlots];
+  const contentControlSlots = controlSlots ?? [...configuredControlSlots, ...moduleControlSlots];
+  const resolvedControlSlots = [...(animated ? buildAnimationControlSlots() : []), ...contentControlSlots];
 
   return (
-    <ComponentRender
+    <ComponentPreviewCard
       name={name}
       Component={Component}
-      source={source}
+      source={sourceResult.source}
       align={align}
       size={size}
-      componentClassName={componentClassName}
-      interactive={interactive}
-      animated={animated}
+      previewClassName={previewClassName}
       controlSlots={resolvedControlSlots}
-      controlsAlwaysVisible={controlsAlwaysVisible}
+      controlsAlwaysVisible={controlsAlwaysVisible && contentControlSlots.length > 0}
+      dialogActionSlots={dialogActionSlots}
     />
   );
 };

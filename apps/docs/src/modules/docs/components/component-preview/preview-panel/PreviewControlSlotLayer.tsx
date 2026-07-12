@@ -21,9 +21,13 @@ const PLACEMENT_CLASS: Record<PreviewControlPlacement, string> = {
 };
 
 export type PreviewControlSlotLayerProps = {
+  /** 按定义顺序渲染的控制插槽。 */
   slots: Array<PreviewControlSlot>;
+  /** 接收插槽定义求值的当前面板 runtime。 */
   runtime: PreviewControlRuntime;
+  /** 是否固定显示控制层。 */
   pinned?: boolean;
+  /** 是否忽略 hover 状态始终显示控制层。 */
   alwaysVisible?: boolean;
 };
 

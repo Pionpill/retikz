@@ -46,17 +46,13 @@ IntervalMark is the low-level cell mark: it turns each data row into an orthogon
 `direction="horizontal"` swaps the bar roles: `x` still binds the numeric field, but it is interpreted as the length from `0` to the value; `y` binds the categorical field and is inferred as a band. Multi-series horizontal arrangement is handled by the arrangement API.
 `width` is the proportional-width shortcut: it accumulates a non-negative numeric field into contiguous intervals on the band role, so the bar width can represent another measure while `y` still controls height. When `x` is also provided, that field labels the center of each proportional interval on the axis.
 
-<ComponentPreview name="bar-position" sourceFiles={['bar-basic.data.ts']} interactive />
+<ComponentPreview files={['bar-position', 'bar-basic.data.ts']} />
 
 ### Continuous Intervals
 
 `x0` / `x1` are the continuous-interval form. The left histogram below first lets the bin transform produce `binStart` / `binEnd`, then IntervalMark uses them as `bounds.x=extent(x0,x1)`; the right example uses `width` to allocate bar width proportionally by GDP and `x` to show country labels.
 
-<ComponentPreview
-  name="interval-histogram"
-  sourceFiles={['interval-histogram.data.ts', 'bar-variable-width.data.ts']}
-  interactive
-/>
+<ComponentPreview files={['interval-histogram', 'interval-histogram.data.ts', 'bar-variable-width.data.ts']} />
 
 ### Bounds Prop
 
@@ -64,40 +60,40 @@ IntervalMark is the low-level cell mark: it turns each data row into an orthogon
 
 Without `color`, the same double-band interval draws a fixed grid. It is still IntervalMark; it just does not map a cell value to fill color.
 
-<ComponentPreview name="rect-bounds" sourceFiles={['rect-heatmap.data.ts', 'rect-grid.data.ts']} interactive />
+<ComponentPreview files={['rect-bounds', 'rect-heatmap.data.ts', 'rect-grid.data.ts']} />
 
 ### Series Props
 
 `arrangement` controls how multiple interval segments share one category slot: `dodge` places them side by side, `stack` accumulates them, and `normalize-stack` builds a percentage stack. `group` is the arrangement field used for sub-bands or stack segments; `color` is the visual color field and can be the same field or a separate one. `series` remains as a compatibility shortcut: when `group` / `color` are omitted, it acts as the default arrangement and color field.
 `arrangement="stack"` can use `stackOffset`: `zero` accumulates from 0, `normalize` scales each stack to 0..1, `diverging` separates positive and negative values, `center` centers the full stack, and `overlap` draws every segment from 0. For percentage stacks, use `percent` or `arrangement="normalize-stack"`; that path normalizes values within each category to 0..100 before stacking.
 
-<ComponentPreview name="bar-series" sourceFiles={['bar-grouped.data.ts']} interactive />
+<ComponentPreview files={['bar-series', 'bar-grouped.data.ts']} />
 
 ### Mark-Local Transforms
 
 IntervalMark can also derive fields through its own `transform`. The gray points show raw store revenue, while the bar layer runs `derive-interval` only inside this mark and turns each `revenue` value into an interval from 0 to that value.
 
-<ComponentPreview name="bar-transform" sourceFiles={['bar-transform.data.ts']} />
+<ComponentPreview files={['bar-transform', 'bar-transform.data.ts']} />
 
 ### Angle Prop
 
 The same `x` / `y` interval under `coordinate="polar2D"` maps the `x` band to an angular band and the `y` span to radial length.
 
-<ComponentPreview name="bar-radial" size="sm" sourceFiles={['bar-radial.data.ts']} />
+<ComponentPreview files={['bar-radial', 'bar-radial.data.ts']} size="sm" />
 
 `angle` is the shortcut for pies and donuts: it accumulates a share field into angular extents, and the radial role uses full. A donut is not a new mark; it is a polar coordinate with `innerRadius`.
 
-<ComponentPreview name="bar-pie-donut" size="sm" sourceFiles={['bar-pie.data.ts']} interactive />
+<ComponentPreview files={['bar-pie-donut', 'bar-pie.data.ts']} size="sm" />
 
 `pull` is a static radial offset for polar sectors, measured in canvas user units. A number applies the same offset to every sector, while a string binds a data field; it only applies to polar sector geometry and is not a hover / selected interaction state.
 
-<ComponentPreview name="interval-pull" size="sm" sourceFiles={['interval-pull.data.ts']} interactive />
+<ComponentPreview files={['interval-pull', 'interval-pull.data.ts']} size="sm" />
 
 ### Style Props
 
 IntervalMark visual styles lower onto the core `Node` for each cell. Common entries include `cornerRadius`, `stroke`, `strokeWidth`, `fillOpacity`, `shadow`, and label styling; polar sectors can also use `padAngle` for a real angular gap and `pull` to move along the sector midline. The left chart is cartesian, and the right chart switches the same data into a rounded polar donut.
 
-<ComponentPreview name="bar-style" sourceFiles={['bar-basic.data.ts']} interactive />
+<ComponentPreview files={['bar-style', 'bar-basic.data.ts']} />
 
 ## How It Works
 

@@ -21,7 +21,7 @@ import { Node, Path, Step } from '@retikz/react';
 
 The simplest form is a Tailwind-style preset string: `'sm'` / `'md'` / `'lg'` / `'xl'` / `'2xl'` / `'none'`. Larger steps push the shadow farther and softer. `'none'` means an explicit no-shadow (equivalent to omitting it).
 
-<ComponentPreview name="shadow-presets" size="sm" />
+<ComponentPreview files="shadow-presets" size="sm" />
 
 <span style={{ color: '#888' }}>The same white card at five preset steps.</span>
 
@@ -34,7 +34,7 @@ For precise control, use an object `{ preset?, offsetX?, offsetY?, blur?, color?
 
 Priority is always: **explicit field > preset > default**. The default color is translucent black `rgba(0,0,0,0.5)`; `opacity` (when given) multiplies onto the color's effective alpha.
 
-<ComponentPreview name="shadow-object" size="sm" />
+<ComponentPreview files="shadow-object" size="sm" />
 
 <span style={{ color: '#888' }}>
   Left: preset + recolor (md base, blue); right: a fully explicit shadow on a Path main path.
@@ -44,7 +44,7 @@ Priority is always: **explicit field > preset > default**. The default color is 
 
 `shadow` follows the primitive itself. A Node's text / label / pin are **separate primitives** and get no shadow — there is no "lift the whole card including its text" (this is an element-level effect, not a group-level one). But a Path's endpoint arrows belong to the main-path primitive and **cast a shadow together with it** (matching the native semantics of SVG's element-level filter / Canvas's single draw pass).
 
-<ComponentPreview name="shadow-primary-only" size="sm" />
+<ComponentPreview files="shadow-primary-only" size="sm" />
 
 <span style={{ color: '#888' }}>
   The shadow lands on the rectangle; the adjacent text and label are separate primitives with none.

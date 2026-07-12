@@ -7,7 +7,7 @@ Data flow is the pure data-processing layer owned by `@retikz/data`: declare fie
 
 Real data **does not enter IR**. Config only records which fields to read, what types they have, and which serializable processing / transform operations to run. Rows arrive at compile time or pipeline runtime; contracts such as `model`, `format`, and transform operations can be persisted. That keeps one config reusable across data sources, serializable, and AI-friendly.
 
-<ComponentPreview name="data-pipeline" size="sm" hideCode />
+<ComponentPreview files="data-pipeline" size="sm" hideCode />
 
 ## Pipeline
 

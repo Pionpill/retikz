@@ -31,7 +31,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 `color` bound to a categorical field → an ordinal color scale, one swatch per category. The x / y axes come from explicit `<Axis>`.
 
-<ComponentPreview name="legend-color-swatch" sourceFiles={['legend.data.ts']} />
+<ComponentPreview files={['legend-color-swatch', 'legend.data.ts']} />
 
 <p className="text-sm text-muted-foreground">One swatch per region; the legend sits in the reserved band on the right; x / y axes drawn by explicit `<Axis>`.</p>
 
@@ -39,7 +39,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 `color` bound to a continuous numeric field (declared `continuous` via `model`) → a sequential color scale, drawn as a smooth ramp + ticks. Use `ticks` for tick source and `tickLabels.format` for display format.
 
-<ComponentPreview name="legend-color-ramp" sourceFiles={['legend.data.ts']} />
+<ComponentPreview files={['legend-color-ramp', 'legend.data.ts']} />
 
 <p className="text-sm text-muted-foreground">Continuous values form a smooth ramp with a few tick values beside it.</p>
 
@@ -47,7 +47,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 `size` bound to a continuous field → radius via a square-root scale; the legend draws a few representative sizes as circles + values (graduated symbols). `position="bottom"` puts the legend at the bottom.
 
-<ComponentPreview name="legend-size" sourceFiles={['legend.data.ts']} />
+<ComponentPreview files={['legend-size', 'legend.data.ts']} />
 
 <p className="text-sm text-muted-foreground">
   A few representative sizes map size to value; the legend sits at the bottom.

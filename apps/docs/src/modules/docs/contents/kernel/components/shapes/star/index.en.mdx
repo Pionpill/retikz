@@ -28,7 +28,7 @@ import { Star } from '@retikz/react';
 | `{ center, outerRadius, innerRadius, points }` | Control both radii               |
 | `{ center, outerRadius, points, innerRatio? }` | Derive inner radius from a ratio |
 
-<ComponentPreview name="star-basic" size="sm" />
+<ComponentPreview files="star-basic" size="sm" />
 
 ### API Reference
 
@@ -63,11 +63,11 @@ import { Node } from '@retikz/react';
 
 > Node `star` constraints: `points` is an integer ≥ 3, and `outerRadius` must be > `innerRadius` (a compile-time refine throws otherwise). Note the minimums differ from the Sugar `<Star>`, which allows `points ≥ 2`.
 
-<ComponentPreview name="node-star" size="sm" />
+<ComponentPreview files="node-star" size="sm" />
 
 Give `params.cornerRadius` a positive number to round both the outer tips and the inner notches at once; omitting it or `0` keeps sharp corners. The rounding is connection-aware: an **auto-clipped** endpoint (no explicit anchor) aimed at a tip lands on the fillet arc, stopping short of the original point — whereas an explicit `tip-N` named anchor still resolves to the original sharp tip (fixed at the logical vertex, never moving inward with the fillet).
 
-<ComponentPreview name="node-star-corner-radius" size="md" />
+<ComponentPreview files="node-star-corner-radius" size="md" />
 
 Besides the node's center plus 8 directional anchors (`center` / `top` …), the star provides geometry-named anchors for precise connections via `{ id, anchor }`: `tip-N` (the Nth point) / `notch-N` (the Nth notch). These named anchors stay at the original tip / notch logical positions and do not move inward with `cornerRadius`. For the full `<Node>` props see [Node](/kernel/components/node/overview).
 

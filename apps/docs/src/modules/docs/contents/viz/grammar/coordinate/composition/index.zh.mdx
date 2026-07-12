@@ -17,11 +17,7 @@ description: composition 让一张 Plot 同时表达双轴、分面和共享轨�
 
 多 y 轴适合 x 位置相同、y 单位不同的图。下面的天气例子里，温度使用默认 y 轴，降雨量绑定到右侧 y 轴。
 
-<ComponentPreview
-  name="coordinate-composition-scopes"
-  sourceFiles={['coordinate-composition-scopes.data.ts']}
-  size="md"
-/>
+<ComponentPreview files={['coordinate-composition-scopes', 'coordinate-composition-scopes.data.ts']} size="md" />
 
 `rainfall` 是额外 y 轴的 `id`。temperature 折线省略 `yAxisId`，rainfall 折线和点用 `yAxisId="rainfall"` 选择右侧轴。
 
@@ -35,11 +31,7 @@ description: composition 让一张 Plot 同时表达双轴、分面和共享轨�
 
 多 x 轴适合 y 度量相同，但横向刻度有两套解释的图。下面的例子底部显示“发布第几天”，顶部显示“日历日期”；两条线共享 y 轴。
 
-<ComponentPreview
-  name="coordinate-composition-x-axis"
-  sourceFiles={['coordinate-composition-x-axis.data.ts']}
-  size="md"
-/>
+<ComponentPreview files={['coordinate-composition-x-axis', 'coordinate-composition-x-axis.data.ts']} size="md" />
 
 `calendar` 是额外 x 轴的 `id`。completed 折线使用默认 x 轴，forecast 折线和点用 `xAxisId="calendar"` 选择上方轴。
 
@@ -58,8 +50,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 只传 `column` 时，facet 会生成一行多列面板。下面的例子按 `segment` 拆成三列，所有面板默认共享 x / y domain，所以不同面板的折线高度可以直接比较。
 
 <ComponentPreview
-  name="coordinate-composition-facet-basic"
-  sourceFiles={['coordinate-composition-facet-basic.data.ts']}
+  files={['coordinate-composition-facet-basic', 'coordinate-composition-facet-basic.data.ts']}
   size="md"
 />
 
@@ -70,8 +61,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 分面默认会把同一个坐标 role 的 domain 跨面板同步。下面两个面板分别覆盖 `0-100` 和 `0-50`，但右侧面板仍然使用整体的 `0-100` y domain，因此高度可以和左侧直接比较。
 
 <ComponentPreview
-  name="coordinate-composition-facet-shared-scale"
-  sourceFiles={['coordinate-composition-facet-shared-scale.data.ts']}
+  files={['coordinate-composition-facet-shared-scale', 'coordinate-composition-facet-shared-scale.data.ts']}
   size="md"
 />
 
@@ -82,8 +72,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 `row` 和 `column` 可以接收字段数组，用多个字段共同决定同一个方向上的面板层级。下面的例子列方向先按 `region` 分组、再按 `channel` 拆分；行方向先按 `business` 分组、再按 `metric` 拆分。
 
 <ComponentPreview
-  name="coordinate-composition-facet-multilevel"
-  sourceFiles={['coordinate-composition-facet-multilevel.data.ts']}
+  files={['coordinate-composition-facet-multilevel', 'coordinate-composition-facet-multilevel.data.ts']}
   size="lg"
 />
 
@@ -93,11 +82,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 同时传 `row` 和 `column` 时，facet 会生成二维网格。下面的图按 `region` 拆列、按 `channel` 拆行；`Axis grid` 仍然由轴自己声明，facet 默认会把这根轴的 grid 画到每个面板里。
 
-<ComponentPreview
-  name="coordinate-composition-facet"
-  sourceFiles={['coordinate-composition-facet.data.ts']}
-  size="lg"
-/>
+<ComponentPreview files={['coordinate-composition-facet', 'coordinate-composition-facet.data.ts']} size="lg" />
 
 这里的 `<Facet row="channel" column="region">` 决定面板矩阵。`grid` 仍然写在 `<Axis dimension="x">` / `<Axis dimension="y">` 上，facet 只负责把这些 guide 投放到每个面板。
 
@@ -106,8 +91,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 默认情况下，空面板会被丢弃；默认 scale domain 会跨所有面板共享。下面的例子显式保留空面板，并让 y 轴在每个面板内独立计算，适合量级差异很大的分组。
 
 <ComponentPreview
-  name="coordinate-composition-facet-independent"
-  sourceFiles={['coordinate-composition-facet-independent.data.ts']}
+  files={['coordinate-composition-facet-independent', 'coordinate-composition-facet-independent.data.ts']}
   size="lg"
 />
 
@@ -141,11 +125,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 
 ### 笛卡尔轨道
 
-<ComponentPreview
-  name="coordinate-composition-tracks"
-  sourceFiles={['coordinate-composition-tracks.data.ts']}
-  size="lg"
-/>
+<ComponentPreview files={['coordinate-composition-tracks', 'coordinate-composition-tracks.data.ts']} size="lg" />
 
 这个例子里三条 track 共用 `trading day` 的 x 位置。共享的 x 轴直接写在 `<Scaffold>` 里；`trend` 画普通折线，`drawdown` 用 baseline closure 画面积，`signal` 画带点折线。
 
@@ -154,8 +134,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 ### 极坐标轨道
 
 <ComponentPreview
-  name="coordinate-composition-tracks-polar"
-  sourceFiles={['coordinate-composition-tracks-polar.data.ts']}
+  files={['coordinate-composition-tracks-polar', 'coordinate-composition-tracks-polar.data.ts']}
   size="lg"
 />
 

@@ -16,13 +16,13 @@ Internally, that becomes the mark's `encoding`: `x` and `y` are positional chann
 
 ## Fields To Channels
 
-<ComponentPreview name="data-channel" sourceFiles={['data-channel.data.ts']} />
+<ComponentPreview files={['data-channel', 'data-channel.data.ts']} />
 
 One row can feed several channels at once: `gdp` controls horizontal position, `life` controls vertical position, `region` controls color, `population` controls point radius, and `abbr` controls the text label. Channels read canonical values prepared by the data pipeline (the standardized values after `fieldMap`, `format`, and `resolveField` have been applied and written back under logical field names), then Plot derives scales from field types and explicit scale configuration.
 
 ## Channel Usage
 
-<ComponentPreview name="channel-usage" />
+<ComponentPreview files="channel-usage" />
 
 Plot GOG layers consume the channels they understand. In the example above, `PathMark` uses `x` / `y` / `order` / `series` / `color` / `strokeWidth` to create two lines. `PointMark` uses `x` / `y` / `color` / `size` / `shape` from the same rows to create points. `Axis` consumes the coordinate scales derived from position channels, while `Legend` consumes guide information derived from color and size channels.
 

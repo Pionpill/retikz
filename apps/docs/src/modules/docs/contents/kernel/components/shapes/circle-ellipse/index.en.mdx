@@ -35,7 +35,7 @@ The common form is `center + radius`. If you already have a rectangular area, yo
 | + `inset` / `outset`         | Shrink or expand the box before fitting                    |
 | + angles + `closed="sector"` | Draw a partial circle whose arc ends connect to the center |
 
-<ComponentPreview name="circle-basic" size="sm" />
+<ComponentPreview files="circle-basic" size="sm" />
 
 Ellipse works like Circle, but the radius is split into `radius: { x, y }`. It also supports `corner1 + corner2` and `box`.
 
@@ -48,7 +48,7 @@ Ellipse works like Circle, but the radius is split into `radius: { x, y }`. It a
 | + `inset` / `outset`               | Shrink or expand the box before fitting                     |
 | + angles + `closed="sector"`       | Draw a partial ellipse whose arc ends connect to the center |
 
-<ComponentPreview name="ellipse-basic" size="sm" />
+<ComponentPreview files="ellipse-basic" size="sm" />
 
 ### API Reference
 
@@ -88,7 +88,7 @@ import { Node } from '@retikz/react';
 
 The boundary circumscribes "text + padding": `circle` takes the circle that fits the text, `ellipse` takes the circumscribed ellipse (each axis × √2). The bare strings `"circle"` / `"ellipse"` need no extra parameters; `ellipse` also has one optional param `circumscribe` (`'proportional'` (default, each axis × √2) / `'equal'` (isotropic, radius = half the inner box diagonal)), and `circle` is exactly the `circumscribe:'equal'` preset of `ellipse`.
 
-<ComponentPreview name="node-circle-ellipse" size="sm" />
+<ComponentPreview files="node-circle-ellipse" size="sm" />
 
 Connection endpoints snap to the circle / ellipse edge, and the node's center plus 8 directional anchors (`center` / `top` …) still apply. For the full `<Node>` props (`position` / `fill` / `padding` / `label` …) see [Node](/kernel/components/node/overview).
 

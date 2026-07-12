@@ -11,7 +11,7 @@ It brings a mature vocabulary of nodes, paths, and anchors into the browser, exp
 
 This diagram does one small thing: it places two named nodes, then uses one arrowed `Draw` to connect them. It shows retikz's basic flow: place reusable points first, then stitch primitives together with path relationships.
 
-<ComponentPreview name="minimal-example" size="xs" />
+<ComponentPreview files="minimal-example" size="xs" />
 
 ## Two Core Concepts
 
@@ -44,7 +44,7 @@ retikz picks IR JSON over JSX as the primary AI interface, leveraging OpenAI Str
 
 ## IR at the Center
 
-<ComponentPreview name="ir-centric" hideCode />
+<ComponentPreview files="ir-centric" hideCode />
 
 Every input form (JSX / DSL / AI) compiles to the same IR; every output form (renderer) reads from it.
 **Persistence, cross-platform support, and AI integration aren't separate features — they're the same dividend paid by an IR-centric model.**
@@ -85,7 +85,7 @@ A domain package is a thin layer of data binding, layout algorithms, and default
 
 retikz ships as four packages, layered from the framework-agnostic base up to the user-facing entry points:
 
-<ComponentPreview name="package-viz" size="md" hideCode />
+<ComponentPreview files="package-viz" size="md" hideCode />
 
 Solid lines are the main build chain — packages on the right build on those on the left; dashed lines mark that `@retikz/react` / `@retikz/vanilla` also consume `@retikz/core`'s IR directly. All four ship at the same version.
 

@@ -15,7 +15,7 @@ When an authoring shortcut needs to prepare data automatically, do not hide that
 
 The `diamond` mark below projects each row into a diamond. It is registered in `markDefinitions`; a custom mark has **no dedicated React component**, so it is authored via the `<Plot spec={...}>` entry — write `{ type: 'diamond', ... }` directly in the `marks` array.
 
-<ComponentPreview name="mark-custom" sourceFiles={['mark-custom.data.ts']} />
+<ComponentPreview files={['mark-custom', 'mark-custom.data.ts']} />
 
 The third argument to `lower` is the coordinate `frame`. It projects each row's `x` / `y` through `frame.projectRoles` into a screen point, then assembles a core `Node` (`shape: 'diamond'`). The `frame` hides cartesian / polar differences: the mark just asks for a projected point; how the coordinate system interprets `x` / `y` is decided by the coordinate layer.
 

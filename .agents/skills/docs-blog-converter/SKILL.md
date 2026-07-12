@@ -23,7 +23,7 @@ description: 把 retikz 文档站 blog mdx 转成可贴到掘金/公众号等外
 
 ## 总流程
 
-1. 扫源 mdx 的 `<ComponentPreview name="...">`，按出现顺序去重。
+1. 扫源 mdx 的 `<ComponentPreview files=...>`：string 直接取值，object 取 `file`，array 取第一项后按前两种形式解析；得到主 demo id 后按出现顺序去重。
 2. 起 docs dev server，用脚本抓 SVG 到 `.markdown/<slug>/`。
 3. 把 mdx 重写成平台通吃 markdown。
 4. 落 `content.md`，本地预览和自检。
@@ -63,21 +63,21 @@ retikz demo 里若用了 CSS var（如 `var(--foreground)`、`hsl(var(--primary)
 
 发现 token / currentColor——回去把 demo 改字面色（学 `unit-circle.zh.demo.tsx` 顶部的 `HELP_LINE` / `SIN_COLOR` 等本地常量）再抓。这一改顺带利好原 demo 在离线场景下的复用能力，应当顺手提 PR。
 
-脚本不可用时兜底：浏览器打开文章页 → 每个 ComponentPreview 点 **Download SVG** → 挪到 `.markdown/<slug>/`，文件名用 `name` prop。
+脚本不可用时兜底：浏览器打开文章页 → 每个 ComponentPreview 点 **Download SVG** → 挪到 `.markdown/<slug>/`，文件名用 `files` 中的主 demo id。
 
 ## 正文重写（5 类改写）
 
 输入是 mdx，输出是平台通吃的 markdown。逐类改：
 
-| 源                                  | 输出                                                                           |
-| ----------------------------------- | ------------------------------------------------------------------------------ |
-| frontmatter `---...---`             | 删除；`title` 提为 `#`，`description` 提为引用段；`date/tags` 放文末平台元数据 |
-| `<ComponentPreview name="X" ... />` | `![10-30 字 alt](./X.svg)`；alt 取附近点题句；同名复用同一 SVG                 |
-| 站内 `/core/...`、`/blog/...` 链接  | 前缀 `https://pionpill.github.io/retikz/`；外部链接原样保留                    |
-| 站内 UI 表述                        | 加“retikz 官方文档站”限定，如 Ask AI、侧边栏、搜索、TOC、demo 卡片             |
-| `<Comparison>`                      | 把对比要点一句话内联到正文                                                     |
-| `<ZodSchema>` / `<ExamplePrompt>`   | blog 不该出现；回去让作者修 mdx，不在转换器硬转                                |
-| `<br />`、代码块语言标识            | 保留                                                                           |
+| 源                                   | 输出                                                                             |
+| ------------------------------------ | -------------------------------------------------------------------------------- |
+| frontmatter `---...---`              | 删除；`title` 提为 `#`，`description` 提为引用段；`date/tags` 放文末平台元数据   |
+| `<ComponentPreview files="X" ... />` | `![10-30 字 alt](./X.svg)`；object 取 `file`，array 解析第一项；同名复用同一 SVG |
+| 站内 `/core/...`、`/blog/...` 链接   | 前缀 `https://pionpill.github.io/retikz/`；外部链接原样保留                      |
+| 站内 UI 表述                         | 加“retikz 官方文档站”限定，如 Ask AI、侧边栏、搜索、TOC、demo 卡片               |
+| `<Comparison>`                       | 把对比要点一句话内联到正文                                                       |
+| `<ZodSchema>` / `<ExamplePrompt>`    | blog 不该出现；回去让作者修 mdx，不在转换器硬转                                  |
+| `<br />`、代码块语言标识             | 保留                                                                             |
 
 不要凭印象改 base URL；只用 `https://pionpill.github.io/retikz/`。
 
@@ -125,7 +125,7 @@ retikz demo 里若用了 CSS var（如 `var(--foreground)`、`hsl(var(--primary)
 ```bash
 # 输出目录结构
 ls .markdown/<slug>/
-# 期望：content.md + 每个 <ComponentPreview name="X"> 对应一份 X.svg
+# 期望：content.md + 每个 <ComponentPreview files=...> 的主 demo 对应一份 SVG
 ```
 
 正文自检：

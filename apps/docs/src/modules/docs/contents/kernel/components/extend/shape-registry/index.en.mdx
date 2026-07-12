@@ -271,19 +271,19 @@ In React, pass the same `shapes` table to `<Layout>`:
 
 A factory like `createPolygonShape(name, n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; when the two nodes are connected, the path endpoints stop on the actual hexagon boundary instead of the node center:
 
-<ComponentPreview name="custom-shape" size="sm" />
+<ComponentPreview files="custom-shape" size="sm" />
 
 ### Parametric shape: params go through nested params
 
 The factory top bakes the side count into a closure, so each side count needs its own registered name. By writing the parameter into `params` instead of a factory closure, a single registered shape `ngon` can produce different variants through `{ type, params }` — `{ sides: 3 }` is a triangle, `{ sides: 5 }` a pentagon, `{ sides: 6 }` a hexagon — and the parameter is persisted in the IR (a bare string can only express parameterless shapes). Every computation function receives the already-validated `params` as its last argument, and the geometry is driven uniformly by `params.sides`. The rightmost node is a hexagon with `scale={2}`: `scaleParams` returns params unchanged, so a count like `sides` is not corrupted by the node `scale` — only the node size grows while the side count stays 6:
 
-<ComponentPreview name="ngon" size="sm" />
+<ComponentPreview files="ngon" size="sm" />
 
 ### Multiple primitives: a subroutine box
 
 `emit` can return several drawing primitives at once. The subroutine box bottom consists of an outer frame and two vertical bars, so it returns 3 primitives. Its outer outline is still a rectangle, so `circumscribe` / `boundaryPoint` / `anchor` can reuse the built-in rectangle:
 
-<ComponentPreview name="subroutine" size="xs" />
+<ComponentPreview files="subroutine" size="xs" />
 
 ### Semantic terminals: a diode
 
@@ -291,7 +291,7 @@ Some shapes should not attach lines by intersecting a ray from the center with t
 
 In this example, `boundaryPoint` checks whether `toward` is on the left or right in local coordinates, then returns the matching terminal. `anchor` also exposes `input` / `output` as semantic anchors:
 
-<ComponentPreview name="diode" size="sm" />
+<ComponentPreview files="diode" size="sm" />
 
 ## Implementation checklist
 

@@ -35,7 +35,7 @@ apps/docs/src/
   contents/<moduleId>/<sectionId>/<pageId>[/<subPageId>]/
     index.zh.mdx          # 中文正文（必填）
     index.en.mdx          # 英文正文（必填）
-    <demo-name>.demo.tsx  # 被 <ComponentPreview name="..."> 引用（按需）
+    <demo-name>.demo.tsx  # 被 <ComponentPreview files="..."> 引用（按需）
   data/
     module.ts             # 顶层 module 列表（core / flow / plot）
     core.ts               # core module 的 sections + pages 树
@@ -166,7 +166,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 ## 图示一律 retikz 自绘
 
-文档里的**所有可视化示例都用 retikz 自身绘制**——同级 `<name>.demo.tsx` + `<ComponentPreview name="..." />`。
+文档里的**所有可视化示例都用 retikz 自身绘制**——同级 `<name>.demo.tsx` + `<ComponentPreview files="..." />`。
 
 - 禁止 `<img src="*.jpg|png|gif|svg" />`、截图、Mermaid、Excalidraw、draw.io 等第三方产物
 - 文档站既是教材也是 retikz 的活体演示，引第三方图等于自打脸
@@ -253,26 +253,23 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 ## 与 shadcn 的差异
 
-|               | shadcn/ui                                                    | retikz                                                                    |
-| ------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| Demo 引用组件 | `<ComponentPreview name=...>` + `<ComponentSource name=...>` | 仅 `<ComponentPreview name=...>`（合二为一）                              |
-| Demo 文件名   | `<name>-demo.tsx`                                            | `<name>.demo.tsx`（**点号**后缀）                                         |
-| Demo 位置     | 集中在 `registry/`                                           | mdx **同级目录**                                                          |
-| Demo 形态     | 任意 React 组件                                              | `default export` 的**纯 FC**，**不能用 hooks**（IR 视图会调用一次该组件） |
-| 双语          | 单语言                                                       | 同目录 `index.zh.mdx` + `index.en.mdx`                                    |
-| 代码 Tab      | React 源码                                                   | React 源码 + IR JSON + Vanilla builder 代码（IR / Vanilla 均自动算）      |
+|               | shadcn/ui                                                    | retikz                                                               |
+| ------------- | ------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Demo 引用组件 | `<ComponentPreview name=...>` + `<ComponentSource name=...>` | 仅 `<ComponentPreview files=...>`（合二为一）                        |
+| Demo 文件名   | `<name>-demo.tsx`                                            | `<name>.demo.tsx`（**点号**后缀）                                    |
+| Demo 位置     | 集中在 `registry/`                                           | mdx **同级目录**                                                     |
+| Demo 形态     | 任意 React 组件                                              | `default export` 的 FC；始终按正常 React 组件渲染                    |
+| 双语          | 单语言                                                       | 同目录 `index.zh.mdx` + `index.en.mdx`                               |
+| 代码 Tab      | React 源码                                                   | React 源码 + IR JSON + Vanilla builder 代码（IR / Vanilla 均自动算） |
 
 `ComponentPreview` 常用 props：
 
-| prop                                  | 用法                                                                                                            |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `name`                                | 同级 `<name>.demo.tsx` 的 stem，必填；语言版优先 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx`                    |
-| `size`                                | 渲染区高度：`xs` / `sm` / `md` / `lg` / `xl` / `xxl` / `xxxl`，默认 `md`                                        |
-| `hideCode`                            | 叙述性插图开；演示组件用法保持默认                                                                              |
-| `sourceFiles`                         | 额外展示的同级源码文件，如 `.data.ts` / helper；示例页多文件 diff 见 `docs-doc-example`                         |
-| `diffFrom`                            | 示例页 step 对比上一份 demo 的 React 源码新增行                                                                 |
-| `interactive`                         | demo 确需 hooks / 异步时才开；默认跳过静态 IR / Vanilla 视图，可配 `previewIR` 或 `<name>.ir.json` 恢复 IR 视图 |
-| `replayable` / `actions` / `overlays` | 动画或自定义工具才用；普通文档不要碰                                                                            |
+| prop                                                | 用法                                                                                                           |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `files`                                             | string 指定主 demo；数组项默认写 string，只有需要 `diffFrom` 时才写对象；第一项是主 demo，其余项是附加源码文件 |
+| `size`                                              | 渲染区高度：`xs` / `sm` / `md` / `lg` / `xl` / `xxl` / `xxxl`，默认 `md`                                       |
+| `hideCode`                                          | 叙述性插图开；演示组件用法保持默认                                                                             |
+| `replayable` / `controlSlots` / `dialogActionSlots` | 动画或自定义工具才用；普通文档不要碰                                                                           |
 
 ### 代码视图：React / IR / Vanilla
 
@@ -284,19 +281,19 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 | IR      | 静态执行 demo 后由 `buildPreviewIR` 派生                              |
 | Vanilla | 从同一份 IR 自动 codegen；需要更地道写法时用 `<name>.vanilla.ts` 覆盖 |
 
-不要为了“只演示 React”省掉 Vanilla 视图。`interactive` demo（hooks / 异步）是例外：默认只保留 React；若需要 IR Tab，可 `export const previewIR` 或提供 `<name>.ir.json`。
+不要为了“只演示 React”省掉 Vanilla 视图。静态 demo 默认自动派生 IR / Vanilla；使用 hooks、Effect、组件状态或预览 Context 的 demo 必须导出 `previewSource = { deriveIR: false }`，避免源码管线在 React 外执行。此类 demo 默认只保留 React；若需要 IR Tab，可 `export const previewIR` 或提供 `<name>.ir.json`，显式 IR 仍可继续生成 Vanilla。
 
 ### demo 数据文件
 
-数据来源和取数逻辑不要内联在 `.demo.tsx`，统一抽到同级 `.data` 文件，并通过 `sourceFiles` 展示。每个 demo 默认拥有自己的 data 文件；不要把多个 demo 的数据集混在一个共享 `.data.ts` 里。只有确实是同一个数据集被多个 demo 共同讲解时，才允许共享，并在命名上表达清楚它是共享数据。
+数据来源和取数逻辑不要内联在 `.demo.tsx`，统一抽到同级 `.data` 文件，并作为 `files` 的附加项展示。每个 demo 默认拥有自己的 data 文件；不要把多个 demo 的数据集混在一个共享 `.data.ts` 里。只有确实是同一个数据集被多个 demo 共同讲解时，才允许共享，并在命名上表达清楚它是共享数据。
 
-| 场景     | 规则                                                                  |
-| -------- | --------------------------------------------------------------------- |
-| 单数据集 | `<demo>.data.ts`                                                      |
-| 多数据集 | `<demo>.<dataset>.data.ts`                                            |
-| 接线     | `.demo.tsx` import 数据；mdx 写 `sourceFiles={['<demo>.data.ts']}`    |
-| 写死数据 | 普通 `export const`，React 与 `<name>.vanilla.ts` 可共用              |
-| 远程数据 | React hook 放 `.data.ts`；vanilla 远程取数单独文件，不共用 React hook |
+| 场景     | 规则                                                                   |
+| -------- | ---------------------------------------------------------------------- |
+| 单数据集 | `<demo>.data.ts`                                                       |
+| 多数据集 | `<demo>.<dataset>.data.ts`                                             |
+| 接线     | `.demo.tsx` import 数据；mdx 写 `files={['<demo>', '<demo>.data.ts']}` |
+| 写死数据 | 普通 `export const`，React 与 `<name>.vanilla.ts` 可共用               |
+| 远程数据 | React hook 放 `.data.ts`；vanilla 远程取数单独文件，不共用 React hook  |
 
 ## MDX 可用元素
 
@@ -327,7 +324,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 | 加叶子页            | i18n × 2 + `contents/.../index.{zh,en}.mdx` + 在 `data/<module>.ts` 注册 `{ id, label }` | 按页型分流                                             |
 | 改正文              | `contents/.../index.{zh,en}.mdx`（双语都要；blog 例外按 blog skill）                     | —                                                      |
 | 改菜单 / 标题文案   | `i18n/locales/{zh,en}.json`（双语都要）                                                  | —                                                      |
-| 加一个 demo         | 同级写 `<name>.demo.tsx` + 在 mdx 里 `<ComponentPreview name="<name>" />`                | —                                                      |
+| 加一个 demo         | 同级写 `<name>.demo.tsx` + 在 mdx 里 `<ComponentPreview files="<name>" />`               | —                                                      |
 | 加菜单图标          | `data/kernel.ts` 的 `Page.icon`（仅一级 Page 支持）                                      | —                                                      |
 | 新建 module         | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间                    | —                                                      |
 | 加分组节点          | 父节点加 `children` + 写分组落地页 `index.{zh,en}.mdx`                                   | [`docs-doc-group`](../docs-doc-group/SKILL.md)         |
@@ -339,9 +336,9 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 ## Common Mistakes
 
 - **mdx 顶部又写 `# 标题`** —— H1 走 frontmatter，再写一遍会出现两个标题
-- **demo 用 hooks** —— `ComponentPreview` 的 IR 视图会直接 `Component({})` 调用一次，hooks 在非渲染路径中会触发 React 错误
+- **hook demo 未导出 `previewSource`** —— 可见预览始终走正常 React，但源码管线默认会直接执行 demo 以派生 IR；必须导出 `{ deriveIR: false }` 禁止这次额外执行
 - **demo 文件名写成 `<name>-demo.tsx`** —— 我们用 `.demo.tsx`，glob 匹配不到，会显示 "Demo not found"
-- **`<ComponentPreview src=...>`** —— 沿用 shadcn 写法。我们的 prop 是 `name`，不接受 `src`
+- **`<ComponentPreview src=...>`** —— 沿用 shadcn 写法。我们的 prop 是 `files`，不接受 `src`
 - **`<ZodSchema>` 漏写嵌套字段点路径** —— `Node.font` / Step 各 variant 的 `label` 等嵌套 object 必须用 `'font.family'` / `'label.text'` 等点路径补完所有子字段中文，否则中文页该子行残留英文 `.describe()`
 - **`<ZodSchema>` 的 name 不在 registry** —— 渲染会显示 "Unknown schema" 红框；新加 schema 必须先在 `apps/docs/src/lib/schema-registry.ts` 注册
 - **只加一边 i18n** —— `en` 由 `I18nResources = typeof zh` 类型反向约束，少一个 key 就编译失败
@@ -362,7 +359,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | 只改 MDX 正文、表格、说明文字、站内链接；不改 import、demo、data、i18n、sidebar、schema registry | `git diff --check` + 打开页面或请求关键路由 / 链接 200；可跳过 eslint / tsc，并在汇报中说明 |
 | 新增 / 修改页面结构、frontmatter、MDX 组件调用、`LinkedCard`、TOC 相关标题                       | `git diff --check` + 浏览器打开页面，确认中英、TOC、菜单和关键链接                          |
-| 新增 / 修改 demo、data、helper、`sourceFiles`、MDX import                                        | `pnpm --filter @retikz/docs exec tsc --noEmit` + 浏览器确认 demo 渲染正常                   |
+| 新增 / 修改 demo、data、helper、`files`、MDX import                                              | `pnpm --filter @retikz/docs exec tsc --noEmit` + 浏览器确认 demo 渲染正常                   |
 | 修改 `apps/docs/src/data`、`apps/docs/src/i18n`、schema registry、Reference `<ZodSchema>`        | `pnpm --filter @retikz/docs exec tsc --noEmit` + 对应路由 / schema 块可访问                 |
 | 需要验证 CI 或站点产物等价路径                                                                   | `pnpm --filter @retikz/docs build`                                                          |
 
