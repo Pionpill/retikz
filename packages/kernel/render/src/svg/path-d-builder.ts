@@ -1,67 +1,68 @@
-import type { PathCommand } from '@retikz/core';
+import type { ArcPathCommand, EllipseArcPathCommand, PathCommand } from '@retikz/core';
 
 import { DEFAULT_EPSILON } from '@retikz/math';
 
-const DEG_TO_RAD = Math.PI / 180;
+import { commandArcStart, commandArcSweep, commandEndpoint, ellipseArcPointAt } from '../shared';
+
+type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
+type Point = [number, number];
 
 /** 默认 round：保留 2 位小数，配 compile/scene/precision 的默认 */
 const defaultRound = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * SVG `<path>` A 命令的 large-arc-flag 与 sweep-flag
- * @description largeArc：弧跨度 |Δ| > 180° 为 1；sweep：counterClockwise 为 true → 0；否则 endAngle >= startAngle 为 1（角度增加 = SVG 屏幕 CW）。|Δ|=180°/0° 时 largeArc=0
+ * @description largeArc：对齐后的弧跨度 |Δ| > 180° 为 1；sweep：屏幕坐标顺时针为 1、逆时针为 0。
  */
 const arcSvgFlags = (
   startAngleDeg: number,
   endAngleDeg: number,
-  counterClockwise: boolean,
+  direction: 1 | -1,
 ): { largeArc: 0 | 1; sweep: 0 | 1 } => {
   const delta = Math.abs(endAngleDeg - startAngleDeg);
   return {
     largeArc: delta > 180 ? 1 : 0,
-    sweep: counterClockwise ? 0 : endAngleDeg >= startAngleDeg ? 1 : 0,
+    sweep: direction === 1 ? 1 : 0,
   };
 };
 
-/** 椭圆 polar 投影：未旋转椭圆上 angle 处的点（与 polar.ts 同约定，y-down，CW=正） */
-const ellipsePointAt = (cx: number, cy: number, rx: number, ry: number, angleDeg: number): [number, number] => {
-  const rad = angleDeg * DEG_TO_RAD;
-  return [cx + Math.cos(rad) * rx, cy + Math.sin(rad) * ry];
+const arcPointAt = (command: ArcCommand, angleDeg: number): Point => {
+  if (command.kind === 'ellipseArc') return ellipseArcPointAt(command, angleDeg);
+  const angle = (angleDeg * Math.PI) / 180;
+  return [command.center[0] + Math.cos(angle) * command.radius, command.center[1] + Math.sin(angle) * command.radius];
 };
 
 /**
  * 把单个 ellipseArc 命令编码为 SVG d 片段（按需拆 360° 退化）
  * @description SVG A 命令在弧跨度 = 360° 时退化为零长（起点==终点 → 不画）；拆成两段半弧绕过。其他跨度直接一段。返回的字符串数组按序拼到 d
  */
-const ellipseArcTokens = (
-  center: [number, number],
-  rx: number,
-  ry: number,
-  startAngle: number,
-  endAngle: number,
-  rotation: number,
-  counterClockwise: boolean,
-  round: (n: number) => number,
-): Array<string> => {
+const ellipseArcTokens = (command: ArcCommand, round: (n: number) => number): Array<string> => {
+  const { start: startAngle, end: endAngle, direction } = commandArcSweep(command);
+  const rx = command.kind === 'arc' ? command.radius : command.radiusX;
+  const ry = command.kind === 'arc' ? command.radius : command.radiusY;
+  const rotation = command.kind === 'arc' ? 0 : (command.rotation ?? 0);
   const span = Math.abs(endAngle - startAngle);
   if (span >= 360 - DEFAULT_EPSILON) {
     // 拆两段半弧避 360° 退化
     const mid = startAngle + (endAngle - startAngle) / 2;
-    const midPt = ellipsePointAt(center[0], center[1], rx, ry, mid);
-    const endPt = ellipsePointAt(center[0], center[1], rx, ry, endAngle);
-    const flags1 = arcSvgFlags(startAngle, mid, counterClockwise);
-    const flags2 = arcSvgFlags(mid, endAngle, counterClockwise);
+    const midPt = arcPointAt(command, mid);
+    const endPt = arcPointAt(command, endAngle);
+    const flags1 = arcSvgFlags(startAngle, mid, direction);
+    const flags2 = arcSvgFlags(mid, endAngle, direction);
     return [
       `A ${round(rx)} ${round(ry)} ${round(rotation)} ${flags1.largeArc} ${flags1.sweep} ${round(midPt[0])} ${round(midPt[1])}`,
       `A ${round(rx)} ${round(ry)} ${round(rotation)} ${flags2.largeArc} ${flags2.sweep} ${round(endPt[0])} ${round(endPt[1])}`,
     ];
   }
-  const endPt = ellipsePointAt(center[0], center[1], rx, ry, endAngle);
-  const flags = arcSvgFlags(startAngle, endAngle, counterClockwise);
+  const endPt = arcPointAt(command, endAngle);
+  const flags = arcSvgFlags(startAngle, endAngle, direction);
   return [
     `A ${round(rx)} ${round(ry)} ${round(rotation)} ${flags.largeArc} ${flags.sweep} ${round(endPt[0])} ${round(endPt[1])}`,
   ];
 };
+
+const pointsEqual = (a: Point, b: Point): boolean =>
+  Math.abs(a[0] - b[0]) <= DEFAULT_EPSILON && Math.abs(a[1] - b[1]) <= DEFAULT_EPSILON;
 
 /**
  * PathCommand[] → SVG `<path>` d 字符串
@@ -73,61 +74,45 @@ export const buildPathD = (
 ): string => {
   if (commands.length === 0) return '';
   const tokens: Array<string> = [];
+  let cursor: Point | null = null;
+  let subpathStart: Point | null = null;
   for (const cmd of commands) {
     switch (cmd.kind) {
       case 'move':
         tokens.push(`M ${round(cmd.to[0])} ${round(cmd.to[1])}`);
+        cursor = cmd.to;
+        subpathStart = cmd.to;
         break;
       case 'line':
         tokens.push(`L ${round(cmd.to[0])} ${round(cmd.to[1])}`);
+        cursor = cmd.to;
         break;
       case 'quad':
         tokens.push(`Q ${round(cmd.control[0])} ${round(cmd.control[1])} ${round(cmd.to[0])} ${round(cmd.to[1])}`);
+        cursor = cmd.to;
         break;
       case 'cubic':
         tokens.push(
           `C ${round(cmd.control1[0])} ${round(cmd.control1[1])} ${round(cmd.control2[0])} ${round(cmd.control2[1])} ${round(cmd.to[0])} ${round(cmd.to[1])}`,
         );
+        cursor = cmd.to;
         break;
       case 'close':
         tokens.push('Z');
+        cursor = subpathStart;
         break;
-      case 'arc': {
-        const startPt = ellipsePointAt(cmd.center[0], cmd.center[1], cmd.radius, cmd.radius, cmd.startAngle);
-        // 第一段如果是 arc，需要先 move 到起点（path 起头单段调用场景）；
-        // 否则由上游显式 move 命令保证 cursor 在 startPt——这里仍主动 emit M 让 buildPathD 单独可用
-        if (tokens.length === 0) {
-          tokens.push(`M ${round(startPt[0])} ${round(startPt[1])}`);
-        }
-        const arcTokens = ellipseArcTokens(
-          cmd.center,
-          cmd.radius,
-          cmd.radius,
-          cmd.startAngle,
-          cmd.endAngle,
-          0,
-          cmd.counterClockwise ?? false,
-          round,
-        );
-        for (const t of arcTokens) tokens.push(t);
-        break;
-      }
+      case 'arc':
       case 'ellipseArc': {
-        const startPt = ellipsePointAt(cmd.center[0], cmd.center[1], cmd.radiusX, cmd.radiusY, cmd.startAngle);
-        if (tokens.length === 0) {
+        const startPt = commandArcStart(cmd);
+        if (cursor === null) {
           tokens.push(`M ${round(startPt[0])} ${round(startPt[1])}`);
+          subpathStart = startPt;
+        } else if (!pointsEqual(cursor, startPt)) {
+          tokens.push(`L ${round(startPt[0])} ${round(startPt[1])}`);
         }
-        const arcTokens = ellipseArcTokens(
-          cmd.center,
-          cmd.radiusX,
-          cmd.radiusY,
-          cmd.startAngle,
-          cmd.endAngle,
-          cmd.rotation ?? 0,
-          cmd.counterClockwise ?? false,
-          round,
-        );
+        const arcTokens = ellipseArcTokens(cmd, round);
         for (const t of arcTokens) tokens.push(t);
+        cursor = commandEndpoint(cmd);
         break;
       }
       default: {

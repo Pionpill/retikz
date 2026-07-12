@@ -31,7 +31,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 `color` 绑分类字段时会得到 ordinal 色阶，图例为每个类别画一个色块。x / y 轴由显式 `<Axis>` 画出。
 
-<ComponentPreview name="legend-color-swatch" sourceFiles={['legend.data.ts']} />
+<ComponentPreview files={['legend-color-swatch', 'legend.data.ts']} />
 
 <p className="text-sm text-muted-foreground">每个 region 一个色块；图例落在右侧预留带，x / y 轴由显式 `<Axis>` 画出。</p>
 
@@ -39,7 +39,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 `color` 绑连续数值字段时，需要在 `model` 声明为 `continuous`，图例会使用 sequential 色阶并画成平滑色带和刻度。用 `ticks` 控制刻度来源，用 `tickLabels.format` 控制显示格式。
 
-<ComponentPreview name="legend-color-ramp" sourceFiles={['legend.data.ts']} />
+<ComponentPreview files={['legend-color-ramp', 'legend.data.ts']} />
 
 <p className="text-sm text-muted-foreground">连续值连成一道色带，旁边标出几个格式化后的刻度值。</p>
 
@@ -47,7 +47,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 `size` 绑连续字段时会走平方根半径 scale，图例取几个代表值画成圆和标签。`position="bottom"` 把图例放到底部。
 
-<ComponentPreview name="legend-size" sourceFiles={['legend.data.ts']} />
+<ComponentPreview files={['legend-size', 'legend.data.ts']} />
 
 <p className="text-sm text-muted-foreground">几个代表大小标出尺寸到值的对应关系，图例摆在底部。</p>
 

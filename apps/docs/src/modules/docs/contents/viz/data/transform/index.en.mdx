@@ -39,7 +39,7 @@ Types inferred from transform schemas use the `IRDataXxx` convention. The old `T
 
 Keep it separate from [`order`](/viz/data/model#category-order) in the data model: `sort` reorders rows, while `order` reorders a categorical domain.
 
-<ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
+<ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
 
 | prop    | type                           | default       | description |
 | ------- | ------------------------------ | ------------- | ----------- |
@@ -52,7 +52,7 @@ Keep it separate from [`order`](/viz/data/model#category-order) in the data mode
 
 Output names must be unique within one operation: summarize reducer outputs cannot collide with `groupBy`, and annotate metric outputs cannot collide with selector `as` fields. The schema rejects conflicts instead of silently overwriting data.
 
-<ComponentPreview name="transform-summarize" sourceFiles={['transform-summarize.data.ts']} />
+<ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
 
 | prop      | type             | default          | description                                       |
 | --------- | ---------------- | ---------------- | ------------------------------------------------- |
@@ -75,7 +75,7 @@ Output names must be unique within one operation: summarize reducer outputs cann
 
 `select` runs a selector per group and outputs the selected original rows. It does not reduce values into new statistical objects, so it keeps original city names, ids, anchors, and other row fields while filtering to extremes or top-N rows.
 
-<ComponentPreview name="transform-select" sourceFiles={['transform-select.data.ts']} />
+<ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
 
 | prop       | type             | default          | description                                  |
 | ---------- | ---------------- | ---------------- | -------------------------------------------- |
@@ -93,7 +93,7 @@ Output names must be unique within one operation: summarize reducer outputs cann
 
 Selector annotations accept only built-in rules that select at most one row: `min` / `max`, `first` / `last` / `nth`, and `top` / `bottom` with `n: 1`. Tie handling may use the default `first` or `last`, but not `all`. Use `select` for multi-row selection, `outside-quantile-band`, or custom selectors; express a custom scalar annotation as a reducer.
 
-<ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
+<ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
 
 | prop        | type                             | default          | description                                   |
 | ----------- | -------------------------------- | ---------------- | --------------------------------------------- |
@@ -123,7 +123,7 @@ Selector annotations accept only built-in rules that select at most one row: `mi
 
 When a field has no finite numeric values, `sum` keeps the empty-sum identity `0` and `count` reports the group row count. `mean`, `median`, `min`, `max`, `extent`, `quantile`, and `quantile-band` have no defined statistic, so they return an invalid sentinel for downstream skip / error handling instead of fabricating zero.
 
-<ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
+<ComponentPreview files={['transform-boxplot', 'transform-boxplot.data.ts']} />
 
 The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; plot only consumes those fields with `IntervalMark`, `ReferenceMark`, and `PointMark`.
 
@@ -149,7 +149,7 @@ When `lineage.sink` is provided, events stream to the callback and are not retai
 
 When the input / output row shape does not fit an existing transform, register a runtime definition with `defineTransform`. Definitions do not enter JSON IR; IR stores only `{ kind, ...config }`, and runtime definition sets provide the implementation.
 
-<ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
+<ComponentPreview files={['transform-custom', 'transform-custom.data.ts']} />
 
 | definition field | declares                                                     | enters IR |
 | ---------------- | ------------------------------------------------------------ | --------- |

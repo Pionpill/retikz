@@ -35,7 +35,7 @@ import { Circle, Ellipse } from '@retikz/react';
 | + `inset` / `outset`         | 在原范围基础上先收缩或扩展再绘制                  |
 | + angles + `closed="sector"` | 画 1/4 圆、30° 圆这类连回圆心的残缺圆             |
 
-<ComponentPreview name="circle-basic" size="sm" />
+<ComponentPreview files="circle-basic" size="sm" />
 
 椭圆和圆很像，只是半径拆成了 `radius: { x, y }`。它也支持 `corner1 + corner2` 和 `box`。
 
@@ -48,7 +48,7 @@ import { Circle, Ellipse } from '@retikz/react';
 | + `inset` / `outset`               | 先收缩或扩展范围再画椭圆                          |
 | + angles + `closed="sector"`       | 画连回中心的部分椭圆                              |
 
-<ComponentPreview name="ellipse-basic" size="sm" />
+<ComponentPreview files="ellipse-basic" size="sm" />
 
 ### API 参考
 
@@ -88,7 +88,7 @@ import { Node } from '@retikz/react';
 
 边界自动外接「文字 + padding」：`circle` 取能容纳文字的外接圆，`ellipse` 取外接椭圆（各轴 × √2）。裸字符串 `"circle"` / `"ellipse"` 无需额外参数即可用；`ellipse` 另有一个可选参数 `circumscribe`（`'proportional'`（默认，各轴 × √2）/ `'equal'`（等轴，半径取内框对角线之半）），`circle` 即 `ellipse` 的 `circumscribe:'equal'` 预设。
 
-<ComponentPreview name="node-circle-ellipse" size="sm" />
+<ComponentPreview files="node-circle-ellipse" size="sm" />
 
 连线端点会自动贴到圆 / 椭圆的边上，节点的中心与 8 个方位 anchor（`center` / `top` …）照常可用。完整的 `<Node>` 属性（`position` / `fill` / `padding` / `label` …）见 [Node](/kernel/components/node/overview)。
 

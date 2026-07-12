@@ -27,7 +27,7 @@ const readElementHandlers = (props: Record<string, unknown>): ElementHandlers =>
  * @description 有 handler 但无 `id` → dev warn + 跳过；有 `id`：重复 id 时合并不同事件、同事件后者覆盖（并 dev warn）。
  *   无 handler 的元素（即使有 id）不进注册表——注册表只收真正绑了 handler 的挂点。
  */
-const mergeElement = (registry: HydrationHandlers, id: unknown, handlers: ElementHandlers): void => {
+const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handlers: ElementHandlers): void => {
   const eventNames = Object.keys(handlers);
   if (eventNames.length === 0) return;
   if (typeof id !== 'string' || id.length === 0) {
@@ -38,14 +38,15 @@ const mergeElement = (registry: HydrationHandlers, id: unknown, handlers: Elemen
     }
     return;
   }
-  if (!Object.hasOwn(registry, id)) {
-    registry[id] = { ...handlers };
+  const existing = registry.get(id);
+  if (existing === undefined) {
+    registry.set(id, { ...handlers });
     return;
   }
   if (process.env.NODE_ENV !== 'production') {
     console.warn(`[retikz] 水合：重复 id "${id}"——合并各元素的事件 handler，同一事件以后出现者覆盖先出现者。`);
   }
-  Object.assign(registry[id], handlers);
+  Object.assign(existing, handlers);
 };
 
 /**
@@ -54,7 +55,7 @@ const mergeElement = (registry: HydrationHandlers, id: unknown, handlers: Elemen
  *   带 handler 但无 `id` 的元素会在开发环境告警并跳过；重复 `id` 会合并不同事件，同一事件以后出现者覆盖。
  */
 const visit = (
-  registry: HydrationHandlers,
+  registry: Map<string, ElementHandlers>,
   children: ReactNode,
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
 ): void => {
@@ -100,7 +101,7 @@ export const collectHydrationHandlers = (
   children: ReactNode,
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
 ): HydrationHandlers => {
-  const registry: HydrationHandlers = {};
+  const registry = new Map<string, ElementHandlers>();
   visit(registry, children, embeddables);
-  return registry;
+  return Object.fromEntries(registry);
 };

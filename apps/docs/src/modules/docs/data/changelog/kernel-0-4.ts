@@ -92,10 +92,10 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-11',
+          date: '2026-07-12',
           summary: {
-            zh: '收紧 Scene 输入边界：`SceneSchema` / `ViewBoxSchema` 现在拒绝未知字段，并从 `@retikz/core` 顶层入口移除误暴露的内部递归 schema 注册器。',
-            en: 'Tightens Scene input boundaries: `SceneSchema` / `ViewBoxSchema` now reject unknown fields, and the accidentally exposed recursive-schema registrar is removed from the `@retikz/core` root entry.',
+            zh: '收紧 Scene 输入边界，并新增 `lowerIRToKernel`，让 adapter 可复用 core 的 composite lowering，把 Tier 2 IR 转成纯 Kernel IR。',
+            en: 'Tightens Scene input boundaries and adds `lowerIRToKernel`, allowing adapters to reuse core composite lowering and turn Tier 2 IR into pure Kernel IR.',
           },
           items: [
             {
@@ -103,6 +103,13 @@ export const kernelV04: Release = {
               content: {
                 zh: '依赖 Zod 静默剥离 Scene 或 viewBox 未知字段的调用应改为传入合法字段；外部代码不应调用内部 `__registerChildSchema`，请直接删除相关调用。',
                 en: 'Callers that relied on Zod silently stripping unknown Scene or viewBox fields must pass only valid fields. External calls to the internal `__registerChildSchema` should be removed.',
+              },
+            },
+            {
+              label: { zh: '公开 Tier 2 lowering', en: 'Public Tier 2 lowering' },
+              content: {
+                zh: '`lowerIRToKernel(ir, { composites, maxCompositeDepth })` 递归展开 composite 并返回可 JSON 序列化的 Tier 1 IR；缺少 definition 时携带 composite key 与 IR 路径直接抛错。`compileToScene` 原有的告警并跳过行为不变。',
+                en: '`lowerIRToKernel(ir, { composites, maxCompositeDepth })` recursively expands composites into JSON-serializable Tier 1 IR. Missing definitions throw with the composite key and IR path, while `compileToScene` keeps its existing warn-and-skip behavior.',
               },
             },
           ],
@@ -229,10 +236,10 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-11',
+          date: '2026-07-12',
           summary: {
-            zh: '`@retikz/react` 包根只聚合 Kernel / Sugar 公共 owner，不再转发仅供 `<Layout>` 内部接线和测试使用的 renderer internals；SVG / Canvas 运行行为不变。',
-            en: 'The `@retikz/react` root now aggregates only the public Kernel and Sugar owners instead of forwarding renderer internals used by `<Layout>` wiring and tests; SVG and Canvas behavior is unchanged.',
+            zh: '`@retikz/react` 收紧包根公共面，并让 `convertIRToReactNode` 通过 definitions 把 Tier 2 IR 还原为语义等价的 Kernel JSX。',
+            en: '`@retikz/react` narrows its root public surface and lets `convertIRToReactNode` lower Tier 2 IR through definitions into semantically equivalent Kernel JSX.',
           },
           items: [
             {
@@ -247,6 +254,13 @@ export const kernelV04: Release = {
               content: {
                 zh: 'React SVG（默认 renderer）现在与 React Canvas、Vanilla SVG / Canvas 一样响应系统 `prefers-reduced-motion`，并在偏好变化时即时切换到完整静止态。',
                 en: 'React SVG, the default renderer, now respects `prefers-reduced-motion` like React Canvas and Vanilla SVG / Canvas, switching immediately to the complete resting state when the preference changes.',
+              },
+            },
+            {
+              label: { zh: 'Tier 2 IR 反向转换', en: 'Tier 2 IR reverse conversion' },
+              content: {
+                zh: '`convertIRToReactNode(ir, { composites, maxCompositeDepth })` 现在先复用 core lowering，再生成 Kernel JSX。Tier 1 保持结构等价；Tier 2 往返结果与 lowering 后的 Kernel IR 等价。缺少 definition 或 payload 非法时会保留 key 与 IR 路径并抛错。',
+                en: '`convertIRToReactNode(ir, { composites, maxCompositeDepth })` now reuses core lowering before producing Kernel JSX. Tier 1 stays structurally equivalent, while Tier 2 roundtrips match the lowered Kernel IR. Missing definitions and invalid payloads throw with the key and IR path.',
               },
             },
           ],
@@ -302,11 +316,35 @@ export const kernelV04: Release = {
       pkg: '@retikz/vanilla',
       version: 'v0.4',
       description: {
-        zh: 'Vanilla DSL 跟进 core v0.4：`node` / `draw` config 经 `Omit<IR*>` 自动获得 `shadow` / `blendMode`、Path kind / ribbon 等核心字段。',
-        en: 'The vanilla DSL follows core v0.4: `node` / `draw` config get core fields such as `shadow` / `blendMode`, Path kind, and ribbon through `Omit<IR*>`.',
+        zh: 'Vanilla v0.4 以 plain spec 统一无框架作者模型和 runtime 入口，并为分层 metadata、Tier 2 adapter 与后续增量更新建立稳定边界。',
+        en: 'Vanilla v0.4 unifies framework-free authoring and runtime around plain specs, establishing stable boundaries for layer metadata, Tier 2 adapters, and future incremental updates.',
       },
       highlights: [],
       subVersions: [
+        {
+          version: 'beta.2',
+          date: '2026-07-12',
+          summary: {
+            zh: '以可结构化比较的 plain object spec 取代旧 `Figure` builder；新增统一 `mount`、layer metadata 和显式 Tier 2 adapter，并收紧 Vanilla 包根公共面。',
+            en: 'Replaces the old `Figure` builder with structurally comparable plain-object specs; adds unified `mount`, layer metadata, and explicit Tier 2 adapters while tightening the Vanilla root API.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：移除 Figure builder', en: 'BREAKING: Figure builder removed' },
+              content: {
+                zh: '原 `.node()` / `.draw()` / `.mount()` / `.toSvgString()` 链式写法改为 `figure({ children | layers })` 配合独立的 `mount()` / `renderToSvgString()`；`draw()` 改用与 core IR 对齐的 `path()`。旧 builder、内部品牌字段和 core 能力转发不再从 `@retikz/vanilla` 导出。',
+                en: 'Replace chained `.node()` / `.draw()` / `.mount()` / `.toSvgString()` calls with `figure({ children | layers })` plus standalone `mount()` / `renderToSvgString()`, and replace `draw()` with the core-IR-aligned `path()`. The old builder, internal brands, and forwarded core capabilities are no longer exported from `@retikz/vanilla`.',
+              },
+            },
+            {
+              label: { zh: 'Layer 与 Tier 2 边界', en: 'Layer and Tier 2 boundaries' },
+              content: {
+                zh: '`layer()` 保留 cache、顺序和 identity metadata 而不污染 core IR；`embed()` 通过显式 `VanillaTier2Adapter` 聚合 datasets 与 composite definitions。`view.update()` 当前仍整图重绘，但保持根元素 identity 与 live hydration context。',
+                en: '`layer()` preserves cache, ordering, and identity metadata without polluting core IR, while `embed()` aggregates datasets and composite definitions through an explicit `VanillaTier2Adapter`. `view.update()` still redraws the full figure, but preserves root identity and live hydration context.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.6',
           date: '2026-06-28',

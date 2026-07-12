@@ -209,7 +209,7 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
       ];
     }
     case 'path':
-      // path 叶子用控制点松包围（足够作聚合几何）；与 drawScene pathBBox 同口径，共用 pathControlPoints
+      // path 叶子保留控制点松包围（足够作 hydration 聚合几何）；gradient 映射另用精确 pathBounds
       return pathControlPoints(prim.commands);
     default:
       return [];

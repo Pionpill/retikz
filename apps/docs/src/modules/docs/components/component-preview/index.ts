@@ -1,7 +1,20 @@
-export * from './ComponentPreview';
-export * from './ComponentRender';
-export * from './components';
-export * from './context';
-export * from './registry';
-export * from './types';
-export * from './utils';
+export type { ComponentPreviewProps } from './ComponentPreview';
+export { ComponentPreview } from './ComponentPreview';
+export type { ComponentPreviewCardProps } from './ComponentPreviewCard';
+export { ComponentPreviewCard } from './ComponentPreviewCard';
+export type {
+  AlignKey,
+  ComponentPreviewFile,
+  ComponentPreviewFiles,
+  ComponentRenderSource,
+  DiffLineKind,
+  PreviewActionSlot,
+  PreviewControlConfig,
+  PreviewControlPlacement,
+  PreviewControlRuntime,
+  PreviewControlSlot,
+  PreviewSourceConfig,
+  RendererMode,
+  SizeKey,
+} from './types';
+export { formatIR } from './utils';

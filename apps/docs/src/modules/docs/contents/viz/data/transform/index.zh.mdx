@@ -39,7 +39,7 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 注意把它和数据模型里的 [`order`](/viz/data/model#分类顺序) 分开：`sort` 排的是数据行，`order` 排的是分类域。
 
-<ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
+<ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
 
 | prop    | 类型                           | 默认值        | 说明     |
 | ------- | ------------------------------ | ------------- | -------- |
@@ -52,7 +52,7 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 同一个 operation 内的输出名必须唯一：summarize 的 reducer 输出不能与 `groupBy` 重名，annotate 的 metric 输出与 selector `as` 也不能互相重名；冲突会在 schema 解析阶段直接报错。
 
-<ComponentPreview name="transform-summarize" sourceFiles={['transform-summarize.data.ts']} />
+<ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
 
 | prop      | 类型             | 默认值   | 说明                                   |
 | --------- | ---------------- | -------- | -------------------------------------- |
@@ -75,7 +75,7 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 `select` 按组运行 selector，并输出被选中的原始行。它不会把数值规约成新的统计值，适合保留城市名、id、锚点等原始字段，同时只保留组内极值或 top-N。
 
-<ComponentPreview name="transform-select" sourceFiles={['transform-select.data.ts']} />
+<ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
 
 | prop       | 类型             | 默认值   | 说明                         |
 | ---------- | ---------------- | -------- | ---------------------------- |
@@ -93,7 +93,7 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 selector 标注只接受至多选中一行的内置规则：`min` / `max`、`first` / `last` / `nth`，以及固定 `n: 1` 的 `top` / `bottom`。平局策略可用默认的 `first` 或 `last`，不能用 `all`；多行选择、`outside-quantile-band` 和自定义 selector 应改用 `select`，需要广播自定义单值时改写成 reducer。
 
-<ComponentPreview name="transform-annotate" sourceFiles={['transform-annotate.data.ts']} />
+<ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
 
 | prop        | 类型                             | 默认值   | 说明                   |
 | ----------- | -------------------------------- | -------- | ---------------------- |
@@ -123,7 +123,7 @@ selector 标注只接受至多选中一行的内置规则：`min` / `max`、`fir
 
 当字段没有任何有限数值时，`sum` 仍按空和返回 `0`，`count` 返回组内行数；`mean`、`median`、`min`、`max`、`extent`、`quantile` 与 `quantile-band` 没有可定义统计量，返回 invalid sentinel 交给下游 skip / error 策略处理，不会伪造成 0。
 
-<ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
+<ComponentPreview files={['transform-boxplot', 'transform-boxplot.data.ts']} />
 
 上面的箱线图没有专用 `BoxPlotMark`。data transform 负责产出箱体、中位数、须线和区间外原始点；plot 只用 `IntervalMark`、`ReferenceMark` 和 `PointMark` 消费这些字段。
 
@@ -149,7 +149,7 @@ const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
 
 输入 / 输出行结构不属于现有 transform 形态时，用 `defineTransform` 注册完整运行时 definition。definition 不进入 JSON IR；IR 只保存 `{ kind, ...config }`，运行时通过 transform definition 集合注入执行逻辑。
 
-<ComponentPreview name="transform-custom" sourceFiles={['transform-custom.data.ts']} />
+<ComponentPreview files={['transform-custom', 'transform-custom.data.ts']} />
 
 | definition 字段 | 负责声明                                              | 进入 IR |
 | --------------- | ----------------------------------------------------- | ------- |

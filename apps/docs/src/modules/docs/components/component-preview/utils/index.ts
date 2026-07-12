@@ -3,6 +3,6 @@ export * from './build-preview-ir';
 export * from './diff';
 export * from './format-ir';
 export * from './ir-to-vanilla-code';
+export * from './preview-files';
 export * from './preview-source';
-export * from './source-views';
 export * from './source-visibility';

@@ -21,7 +21,7 @@ composite 是「带语义的高层 IR 节点」。相比直接手写一堆 Tier 
 - **高层抽象，屏蔽底层**：用户与 LLM 只关心领域字段（数据、步骤、刻度），不关心坐标 / 连线 / 裁剪怎么算；底层 `expand` 实现可随时优化重构，只要 schema 契约不变，调用方 IR 不动。
 - **体积小，运行时展开**：composite 节点本身只存领域参数（下例的 pipeline 就是 `{ stages, arrows }` 两个短数组），序列化体积极小；真正的几何（框 / 连线 / 箭头 / 标签 / 边界裁剪）在 compile 期由 `expand` 现场生成。而这张图画的，正是 composite 自己经历的展开链路——`Tier 2 DSL → composite IR → core IR → 图形`，其中 `lower` 这一步（composite IR → core IR）正是本页主题：
 
-<ComponentPreview name="composite-pipeline" size="xs" hideCode />
+<ComponentPreview files="composite-pipeline" size="xs" hideCode />
 
 还有几条同等重要的优势：
 
@@ -33,7 +33,7 @@ composite 是「带语义的高层 IR 节点」。相比直接手写一堆 Tier 
 
 `defineComposite({ schema, expand })`：`schema` 继承 `CompositeBaseSchema`（定义必填的 `namespace` / `type`）再加领域字段；`expand` 收 schema 校验后的强类型节点、产 Tier 1。注册经 `CompileOptions.composites`（React 里 `<Layout composites={[...]}>`），节点经 IR 直传（`<Layout ir>`）。下例 `barChart` 据 `data` 数组展开成 N 根柱 + 基线：**节点数量由 `data.length` 决定、柱高经 `value/max` 缩放**——无法 1:1 反推、含算法，这正是该用 composite 而非 Sugar 的场景（见下方对照表）：
 
-<ComponentPreview name="composite-basic" size="sm" />
+<ComponentPreview files="composite-basic" size="sm" />
 
 | 字段     | 类型                             | 描述                                                                                                                                                              |
 | -------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -119,12 +119,12 @@ Panel.embeddableAdapter = {
 | 步骤              | 行为                                                                                                     |
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
 | 合并 datasets     | 同 namespace 的 `datasets` 并成一份；同一 `reference` 在两处出现时**必须是同一对象引用**，否则 fail-loud |
-| 调 makeComposites | 每个 namespace 用合并后的 datasets 调一次，得到该 domain 的 composite                                    |
+| 调 makeComposites | 同 namespace 必须复用同一函数；用合并后的 datasets 调一次，否则 fail-loud                                |
 | 拼装              | 各 namespace 的结果 concat，再与用户显式 `composites` prop 合并，一起交 compile                          |
 
 也就是说，可嵌入 Tier2 把上文的 lowering 链路接到了 `<Layout>` 的声明式表面：composite 解决「Tier2 _节点_ 怎么下沉」，可嵌入 adapter 解决「Tier2 _组件_ 怎么把这个节点和它的展开逻辑交进共享的 `<Layout>`」。数据始终留在 IR 之外，在 compile 期经 composite 注入——和 `composites` prop、和 `<Plot>` 单独使用时的做法一致。
 
-<ComponentPreview name="embeddable-flow" size="sm" hideCode />
+<ComponentPreview files="embeddable-flow" size="sm" hideCode />
 
 图中 `<Panel/>` props 被**静态读取**（不渲染组件）进 `contribute`，产出 `node`（进 IR）、`datasets`（虚线，留在 IR 之外）、`makeComposites`；`<Layout>` 按 namespace 汇总后并入 compile。
 

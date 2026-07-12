@@ -4,11 +4,17 @@ import { pulse } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import { useState } from 'react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
 /**
  * Hydration context demo: the handler's second arg reads meta + imperatively triggers animation
  * @description the node carries a `trigger:'manual'` pop (single-shot pulse, no autoplay); a click replays
  *   this node's animation via `context.animation.restart()` and reads provenance via `context.meta`. Uses hooks →
- *   ComponentPreview must enable `interactive`.
+ *   module-level `previewSource` disables automatic IR derivation.
  */
 const Demo: FC = () => {
   const [last, setLast] = useState('—');

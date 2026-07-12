@@ -83,7 +83,7 @@ Key convention: **the last frame (`at: 1`) equals the element's base (resting) s
 
 Intro animations **play once on load**, bringing an element from a transparent / offset / shrunk state to its final look. They are element animations attached to a `<Node>` / `<Path>` / `<Scope>`'s `animations`.
 
-<ComponentPreview name="entrance" size="md" />
+<ComponentPreview files="entrance" size="md" />
 
 <span style={{ color: '#888' }}>
   All in one: fadeIn / scaleIn / grow / slideIn nodes, two growUp bars, and one drawOn path.
@@ -102,7 +102,7 @@ Intro animations **play once on load**, bringing an element from a transparent /
 
 Emphasis animations **draw attention** — shift color, flash, rock; loop animations **play continuously** — pulse, spin, or wrap any track into an infinite loop. They are element animations. Emphasis often uses three frames `0 → 0.5 → 1` (with the last frame back at base, so one pass leaves the element unchanged); `flash` repeats twice by default, `wiggle` three times, while `blink` / `pulse` / `spin` use `iterations: 'infinite'` to run forever.
 
-<ComponentPreview name="emphasis" size="md" />
+<ComponentPreview files="emphasis" size="md" />
 
 <span style={{ color: '#888' }}>
   flash / blink / wiggle / pulse nodes, plus a spin bar, a loop slide, and a colorShift shape.
@@ -124,13 +124,13 @@ Camera and stagger are the two animations that act **on the whole, not on a sing
 
 `cameraTo({ from, to })`: animates the scene's viewbox `[x, y, w, h]` for pan / zoom. Attach it to `<Layout animations>` (the camera belongs to the scene root, not an element); both endpoints are explicit. It defaults to `duration` 800ms and `easing` `ease-in-out`, both overridable like the other common options. It expands to a single `viewBox`-channel track.
 
-<ComponentPreview name="camera" size="md" />
+<ComponentPreview files="camera" size="md" />
 
 <span style={{ color: '#888' }}>The camera pushes from the full view into the bottom-right corner.</span>
 
 `stagger(tracks, stepMs, startMs = 0)`: **rewrites each track's `delay` to `startMs + i×stepMs`** (overriding any existing `delay`) for a one-by-one entrance. The third argument `startMs` defaults to 0 and is the group's start offset. It choreographs the start times of element animations; it doesn't change any single animation's shape.
 
-<ComponentPreview name="stagger" size="sm" />
+<ComponentPreview files="stagger" size="sm" />
 
 <span style={{ color: '#888' }}>Three nodes with the same fadeIn, entering at 0 / 150 / 300ms.</span>
 
@@ -166,7 +166,7 @@ const ref = useRef<AnimationControls | null>(null);
 
 Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`) to render **a single frame frozen at that time**: no playback, no emitted animation — the value of each **autoplay track** (`trigger: 'load'` / omitted) at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
 
-<ComponentPreview name="snapshot" size="xs" />
+<ComponentPreview files="snapshot" size="xs" />
 
 ```tsx
 // grow (0→1, 300ms) frozen at 150ms ≈ half size

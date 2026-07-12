@@ -7,7 +7,7 @@ tags: [architecture, design]
 
 ## Three layers
 
-<ComponentPreview name="pipeline" hideCode />
+<ComponentPreview files="pipeline" hideCode />
 
 Four input paths — Sugar JSX, Kernel JSX, the future Text DSL, and AI / LLM — all translate into one and the same IR; IR is compiled into Scene, which adapters then route to React + SVG, pure SVG strings, Canvas (further rasterized to PNG / JPEG / WebP), Native (Skia / RN), or PDF. The arrow between IR and "persistence / edit" is bidirectional: IR is a read/write durable layer where user edits, AI patches, and serialization all live.
 

@@ -5,7 +5,13 @@ import { Layout, Node } from '@retikz/react';
 import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 import { useEffect, useState } from 'react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
 const formula = String.raw`$$\int_0^1 x^2\,dx = \frac{1}{3}$$`;
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
 
 const Demo: FC = () => {
   const [lowerTex, setLowerTex] = useState<LowerTex>();

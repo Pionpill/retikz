@@ -19,7 +19,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 位置通道声明数据行里的哪些字段参与坐标投影。`x` / `y` / `z` 不等于固定屏幕方向；坐标系会重新解释它们，例如 `cartesian2D` 把 `x` / `y` 当水平 / 垂直，`polar2D` 把它们当角度 / 半径。
 
-<ComponentPreview name="builtin-position" size="md" />
+<ComponentPreview files="builtin-position" size="md" />
 
 | 通道 | 通道值              | 含义         | 落点            |
 | ---- | ------------------- | ------------ | --------------- |
@@ -35,7 +35,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 这个 demo 把 `color`、`fill`、`stroke`、`textColor` 拆成三组点：左侧看语义主色，中间看填充色和描边色分离，右侧看文本颜色。
 
-<ComponentPreview name="builtin-color" size="md" />
+<ComponentPreview files="builtin-color" size="md" />
 
 | 通道        | 通道值                                                     | 含义       | 落点 / 图例                                                   |
 | ----------- | ---------------------------------------------------------- | ---------- | ------------------------------------------------------------- |
@@ -48,7 +48,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 这个 demo 左中右分别绑定 `opacity`、`fillOpacity`、`strokeOpacity`。整体透明度会同时影响填充和描边；填充透明度只弱化内部；描边透明度只弱化外框。
 
-<ComponentPreview name="builtin-opacity" size="md" />
+<ComponentPreview files="builtin-opacity" size="md" />
 
 | 通道            | 通道值                                                             | 含义       | 落点 / 图例                                                                     |
 | --------------- | ------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------- |
@@ -60,7 +60,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 `size` 通道适合表达数量大小。字段值默认走 sqrt scale，让面积感更接近数据差异。
 
-<ComponentPreview name="builtin-size" size="md" />
+<ComponentPreview files="builtin-size" size="md" />
 
 | 通道   | 通道值                                         | 含义       | 落点 / 图例                                                 |
 | ------ | ---------------------------------------------- | ---------- | ----------------------------------------------------------- |
@@ -70,7 +70,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 `shape` 通道适合表达分类。分类字段会映射到内置 glyph 形状，并可以生成 symbol legend。
 
-<ComponentPreview name="builtin-shape" size="md" />
+<ComponentPreview files="builtin-shape" size="md" />
 
 | 通道    | 通道值                                                | 含义       | 落点 / 图例                            |
 | ------- | ----------------------------------------------------- | ---------- | -------------------------------------- |
@@ -80,7 +80,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 节点几何通道控制 node 自身的尺寸约束、内边距、圆角和旋转。它们更像 core node 属性下沉，而不是数据可视化中的颜色或大小 encoding。
 
-<ComponentPreview name="builtin-node-geometry" size="md" />
+<ComponentPreview files="builtin-node-geometry" size="md" />
 
 | 通道                 | 通道值                                                                              | 含义          | 落点                       |
 | -------------------- | ----------------------------------------------------------------------------------- | ------------- | -------------------------- |
@@ -97,7 +97,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 `text` 会让 point mark 生成文本 node。`textColor`、`align`、`lineHeight`、`maxTextWidth`、`font` 控制这个文本 node 的排版和颜色。
 
-<ComponentPreview name="builtin-text-node" size="md" />
+<ComponentPreview files="builtin-text-node" size="md" />
 
 | 通道                                                | 通道值                                                                                             | 含义                         | 落点                                |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------- |
@@ -108,7 +108,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 `label` 不替代节点内容，而是给 datum host node 挂外侧标签。`labelPosition`、`labelDistance`、`labelPin` 决定标签的位置和引线。
 
-<ComponentPreview name="builtin-text-label" size="md" />
+<ComponentPreview files="builtin-text-label" size="md" />
 
 | 通道                                              | 通道值                                                          | 含义            | 落点                   |
 | ------------------------------------------------- | --------------------------------------------------------------- | --------------- | ---------------------- |
@@ -123,7 +123,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 这个 demo 用两条线对比 `strokeWidth`、`lineCap`、`lineJoin`、`roundedCorners` 和 `dashPattern` 对路径外观的影响。
 
-<ComponentPreview name="builtin-path-style" size="md" />
+<ComponentPreview files="builtin-path-style" size="md" />
 
 | 通道                                   | 通道值                                                             | 含义           | 落点 / 图例                                                  |
 | -------------------------------------- | ------------------------------------------------------------------ | -------------- | ------------------------------------------------------------ |
@@ -136,7 +136,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 效果通道是共享的视觉提示。这个 demo 使用更多重叠样本，让 `shadow` 和 `blendMode` 的叠加效果更容易看出来。
 
-<ComponentPreview name="builtin-effect" size="md" />
+<ComponentPreview files="builtin-effect" size="md" />
 
 | 通道        | 通道值                                                                   | 含义           | 落点                       |
 | ----------- | ------------------------------------------------------------------------ | -------------- | -------------------------- |
@@ -148,7 +148,7 @@ description: 按通道类型说明 plot 内置通道、通道值写法、底层�
 
 其他通道不直接描述颜色、位置或路径形状，而是控制绘制顺序、数据排序和系列拆分。
 
-<ComponentPreview name="builtin-other" size="md" />
+<ComponentPreview files="builtin-other" size="md" />
 
 | 通道     | 通道值                                             | 含义             | 落点                         |
 | -------- | -------------------------------------------------- | ---------------- | ---------------------------- |

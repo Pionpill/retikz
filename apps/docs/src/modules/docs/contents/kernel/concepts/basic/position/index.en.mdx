@@ -21,7 +21,7 @@ retikz uses a unified set of position expressions for entity placement and path 
 
 Cartesian coordinates are the most direct form: `[x, y]` names a point on the canvas. x grows to the right and y grows downward, so `[120, 40]` means 120 units right and 40 units down from the origin. Use this for small hand-placed diagrams, reproducing existing SVG coordinates, or providing a base point for other position forms.
 
-<ComponentPreview name="positioning-cartesian" size="xs" />
+<ComponentPreview files="positioning-cartesian" size="xs" />
 
 ## Polar
 
@@ -43,7 +43,7 @@ Polar coordinates describe a position as "start from a pole, follow an angle, th
 
 Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical radial layout:
 
-<ComponentPreview name="positioning-polar" size="md" />
+<ComponentPreview files="positioning-polar" size="md" />
 
 `origin` can be **nested** — e.g. `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` means "30 right of a, then 20 down" (90° points toward the bottom of the screen). Chained polar is handy for radial / local offsets.
 
@@ -51,7 +51,7 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 
 `<Step>` / `<Draw>` targets also accept a **string** to reference a node id inside the same `<Layout>`. This is React DSL shorthand; use the object form `{ id, anchor?, offset?, boundary? }` when you need an anchor, offset, or connection-surface override:
 
-<ComponentPreview name="positioning-id-ref" size="xs" />
+<ComponentPreview files="positioning-id-ref" size="xs" />
 
 The actual line endpoints are computed by retikz automatically — see [Primitive Relations](/kernel/concepts/kernel/primitive-relations).
 
@@ -66,7 +66,7 @@ Relative placement uses `{ direction, of, distance? }` to say "place this entity
 <Node id="b" position={{ direction: 'right', of: 'a', distance: 80 }}>B</Node>
 ```
 
-<ComponentPreview name="positioning-relative" size="md" />
+<ComponentPreview files="positioning-relative" size="md" />
 
 `direction` accepts 8 visual directions: `top` / `bottom` / `left` / `right` / `top-left` / `top-right` / `bottom-left` / `bottom-right`. When `distance` is omitted, retikz uses `<Layout nodeDistance>`, then falls back to `24`.
 
@@ -79,7 +79,7 @@ Offset placement uses `{ of, offset }`: resolve a base point first, then add `[d
 <Node id="note" position={{ of: 'a', offset: [40, -24] }}>note</Node>
 ```
 
-<ComponentPreview name="positioning-offset" size="sm" />
+<ComponentPreview files="positioning-offset" size="sm" />
 
 It is more flexible than directional placement. When you want "40 units right and 24 units up from A" rather than one of the 8 named directions, offset placement is the direct form.
 
@@ -93,7 +93,7 @@ Proportional placement takes a point along A → B: `t = 0` is A, `t = 1` is B, 
 <Coordinate id="mid" position={{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }} />
 ```
 
-<ComponentPreview name="positioning-between" size="xs" />
+<ComponentPreview files="positioning-between" size="xs" />
 
 The two `between` endpoints are self-contained absolute targets: Cartesian, polar, node / Coordinate reference objects (`{ id: 'a' }`), offset placement, or nested `{ between, fraction }`. They do not accept path-relative targets (`relative` / `relativeAccumulate`) because proportional placement must resolve independently.
 
@@ -105,7 +105,7 @@ Paths also support relative targets that are only valid in `<Step>.to` / `<Draw>
 <Draw way={[[0, 0], { relativeAccumulate: [40, 0] }, { relativeAccumulate: [0, 30] }]} />
 ```
 
-<ComponentPreview name="positioning-path-relative" size="sm" />
+<ComponentPreview files="positioning-path-relative" size="sm" />
 
 These forms are path targets only; they are not valid for `<Node>.position` / `<Coordinate>.position`. For entity placement, use Cartesian, polar, relative placement, offset placement, or proportional placement.
 

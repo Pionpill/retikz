@@ -21,7 +21,7 @@ A composite is a **high-level IR node carrying domain semantics**. Compared with
 - **High-level abstraction, hiding the low level**: users and LLMs care only about domain fields (data, steps, ticks), not how coordinates / connectors / clipping are computed; the underlying `expand` implementation can be optimized or refactored anytime, and as long as the schema contract holds, caller IR stays untouched.
 - **Small footprint, expanded at runtime**: a composite node stores only domain parameters (the pipeline below is just `{ stages, arrows }`, two short arrays), so it serializes tiny; the real geometry (boxes / connectors / arrows / labels / boundary clipping) is generated on the fly by `expand` at compile time. And what this diagram draws is the very expansion path a composite itself travels — `Tier 2 DSL → composite IR → core IR → diagram` — where the `lower` step (composite IR → core IR) is exactly this page's subject:
 
-<ComponentPreview name="composite-pipeline" size="xs" hideCode />
+<ComponentPreview files="composite-pipeline" size="xs" hideCode />
 
 A few more equally important advantages:
 
@@ -33,7 +33,7 @@ A few more equally important advantages:
 
 `defineComposite({ schema, expand })`: `schema` extends `CompositeBaseSchema` (which declares the required `namespace` / `type`) plus domain fields; `expand` receives the schema-validated, strongly-typed node and produces Tier 1. Register via `CompileOptions.composites` (in React, `<Layout composites={[...]}>`); the node enters via raw IR (`<Layout ir>`). The `barChart` below expands a `data` array into N bars plus a baseline: **the node count is driven by `data.length`, the bar heights scaled by `value/max`** — not 1:1 reversible and algorithmic, exactly the case for a composite rather than Sugar (see the table below):
 
-<ComponentPreview name="composite-basic" size="sm" />
+<ComponentPreview files="composite-basic" size="sm" />
 
 | Field    | Type                             | Description                                                                                                                                                                              |
 | -------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -119,12 +119,12 @@ After collecting every contribution, `<Layout>` groups them by `namespace`:
 | Step                | Behavior                                                                                                                                            |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Merge datasets      | `datasets` of the same namespace merge into one; the same `reference` appearing twice **must be the same object identity**, otherwise it fails loud |
-| Call makeComposites | called once per namespace with the merged datasets, producing that domain's composites                                                              |
+| Call makeComposites | the same namespace must reuse one function; it is called once with merged datasets, otherwise aggregation fails loud                                |
 | Assemble            | results across namespaces concat, then merge with the user's explicit `composites` prop, all fed to compile                                         |
 
 In other words, embeddable Tier 2 wires the lowering path above into `<Layout>`'s declarative surface: composites solve "how a Tier 2 _node_ lowers", while the embeddable adapter solves "how a Tier 2 _component_ delivers that node and its expand logic into a shared `<Layout>`". Data always stays out of IR and is injected at compile through composites — exactly like the `composites` prop, and like how `<Plot>` works standalone.
 
-<ComponentPreview name="embeddable-flow" size="sm" hideCode />
+<ComponentPreview files="embeddable-flow" size="sm" hideCode />
 
 In the figure, `<Panel/>` props are **read statically** (the component is not rendered) into `contribute`, which yields `node` (enters IR), `datasets` (dashed, kept out of IR), and `makeComposites`; `<Layout>` aggregates by namespace and feeds compile.
 

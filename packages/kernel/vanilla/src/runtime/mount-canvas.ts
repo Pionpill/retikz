@@ -24,7 +24,7 @@ import {
 import type { VanillaRuntimeMeta } from '../spec';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
 
-import { EMPTY_RUNTIME_META, toSceneResult } from './to-scene';
+import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
 const resolveDevicePixelRatio = (override: number | undefined): number => {
@@ -59,7 +59,7 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
-  let currentRuntimeMeta: VanillaRuntimeMeta = EMPTY_RUNTIME_META;
+  let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
 
   // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
   // listener），update 换图后必须按新 scene 重建、否则陈旧；view.dispose 时统一解绑全部未手动 dispose 的水合。

@@ -14,7 +14,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 ## 用法
 
-<ComponentPreview name="arrow-default" size="xs" />
+<ComponentPreview files="arrow-default" size="xs" />
 
 ```tsx
 <Draw way={['a', 'b']} arrow="->" />
@@ -35,7 +35,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 | `'diamond'` 实心菱形 | `'openDiamond'` 空心菱形 | UML 组合 / 聚合      |
 | `'circle'` 实心圆点  | `'openCircle'` 空心圆点  | 连接点 / 空心端点    |
 
-<ComponentPreview name="arrow-shapes" />
+<ComponentPreview files="arrow-shapes" />
 
 > 多节点路径（如 a → b → c）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头。
 
@@ -43,7 +43,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 `arrowDetail.start` / `arrowDetail.end` 子对象与顶层默认**逐字段合并**——缺省字段继承顶层，已填字段覆盖顶层。UML "组合 + 继承"用 `start.shape` + `end.shape` 表达：
 
-<ComponentPreview name="arrow-uneven" size="xs" />
+<ComponentPreview files="arrow-uneven" size="xs" />
 
 > **合并语义**：`start` / `end` 子对象的字段优先；子对象未填的字段回退到顶层默认；顶层未填的字段回退到内置默认。例：`arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → 起末都用 `stealth`，起端用红色，末端继承路径描边色。
 
@@ -53,7 +53,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 `color` 把箭头描边 / 实心填充改为指定颜色，不再继承路径描边色；`fill` 仅实心形状生效。`start.color` / `end.color` 同样支持单端覆盖——常用于"线浅色、箭头深色"或起末异色：
 
-<ComponentPreview name="arrow-color" size="xs" />
+<ComponentPreview files="arrow-color" size="xs" />
 
 > **空心形状会静默忽略 `fill`**：`shape ∈ { open / openStealth / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
 
@@ -63,13 +63,13 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 - `length` 控制箭头沿路径方向的长度（默认 6）
 - `width` 控制箭头垂直路径方向的宽度（默认 6）
 
-<ComponentPreview name="arrow-scale" size="sm" />
+<ComponentPreview files="arrow-scale" size="sm" />
 
 #### 半透明
 
 `opacity` 0..1，作用于箭头整体（独立于路径的 `opacity` / `strokeOpacity`）：
 
-<ComponentPreview name="arrow-opacity" size="xs" />
+<ComponentPreview files="arrow-opacity" size="xs" />
 
 ## API 参考
 

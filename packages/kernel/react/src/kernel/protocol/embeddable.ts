@@ -7,6 +7,7 @@ export type EmbeddableDatasets = Record<string, unknown>;
 export type EmbeddableContribution = {
   node: IRChild;
   datasets: EmbeddableDatasets;
+  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用。 */
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<CompositeDefinition>;
 };
 
@@ -21,6 +22,7 @@ export type EmbeddableTier2Adapter<TProps = Record<string, unknown>> = {
 export type EmbeddableContributionRecord = {
   namespace: string;
   datasets: EmbeddableDatasets;
+  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用。 */
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<CompositeDefinition>;
 };
 

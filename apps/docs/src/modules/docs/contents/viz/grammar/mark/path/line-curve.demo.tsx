@@ -4,10 +4,16 @@ import type { FC } from 'react';
 import { PathCurve } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
-import { usePreviewControlValue } from '@/modules/docs/components';
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+import { usePreviewControlValue } from '@/modules/docs/components/component-preview/context';
 
 import { PATH_CURVE_CONTROL_ID } from './line-curve.controls';
 import { curveSamples } from './line-curve.data';
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
 
 /** 连接方式：左侧笛卡尔、右侧极坐标，共用一个 curve 值。 */
 const Demo: FC = () => {

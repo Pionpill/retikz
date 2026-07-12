@@ -16,7 +16,7 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 `stack` 在每个 `x` 分组内按系列累加数值，给每行补出下界和上界。默认输出是 `y0` / `y1`，正好对接 `IntervalMark` 的区间消费方式。
 
-<ComponentPreview name="transform-stack" sourceFiles={['transform-stack.data.ts']} />
+<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} />
 
 `<IntervalMark stack>` / `<IntervalMark angle>` 的自动堆叠只是快捷写法；当管线里已经存在匹配的显式 `stack` 时，自动堆叠会被抑制，避免二次堆叠。
 
@@ -31,7 +31,7 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 `normalize` 把每行的数值除以所在组的总和，得到组内占比。`basis` 可以是 `fraction`（0 到 1）或 `percent`（0 到 100）；`as` 省略时原位覆盖输入字段。
 
-<ComponentPreview name="transform-normalize" sourceFiles={['transform-normalize.data.ts']} />
+<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} />
 
 normalize 和 stack 组合就是百分比堆叠：先把每组转成占比，再对占比做堆叠。
 

@@ -40,41 +40,41 @@ The presentation form mainly changes through three groups of props: position cha
 
 `x` / `y` decide which points the path visits, and `order` decides how those points connect. The left side uses cartesian2D and the right side uses polar2D, so the same data shows how position channels project under different coordinates.
 
-<ComponentPreview name="line-basic" sourceFiles={['line-basic.data.ts']} />
+<ComponentPreview files={['line-basic', 'line-basic.data.ts']} />
 
 ### Series Props
 
 Set `series` to a field and rows split into groups first; each group lowers into one core Path. This example explicitly splits by `city`: the left side is a multi-series line, and the right side shows the same series under polar coordinates.
 
-<ComponentPreview name="line-series" sourceFiles={['line-series.data.ts']} />
+<ComponentPreview files={['line-series', 'line-series.data.ts']} />
 
 With no `series`, giving `color` a categorical field also splits PathMark implicitly. This example uses a different dataset to make the compact “color is the series” form visually distinct from explicit `series`.
 
-<ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
+<ComponentPreview files={['line-color-split', 'line-series.data.ts']} />
 
 ### Mark-Local Transforms
 
 When `transform` is placed on PathMark, only that path layer sees the changed rows. The point layer below keeps the original channel values, while the dark path layer runs `smooth` only inside this mark and connects the sampled trend rows.
 
-<ComponentPreview name="line-transform" sourceFiles={['line-transform.data.ts']} />
+<ComponentPreview files={['line-transform', 'line-transform.data.ts']} />
 
 ### Paint Styles
 
 Both `stroke` and `fill` can be `IRPaintSpec` values. The left chart applies a linear gradient to the stroke; the right chart uses `closure={{ kind: 'baseline' }}` to create a fillable area layer, passes the gradient to `fill`, and then overlays a stroke-only PathMark for the upper outline.
 
-<ComponentPreview name="line-paint" sourceFiles={['line-basic.data.ts']} />
+<ComponentPreview files={['line-paint', 'line-basic.data.ts']} />
 
 ### Geometry Props
 
 `closed` connects the last point back to the first. Under `polar2D`, PathMark closes by default: the left side omits `closed` and still forms a radar outline, while the right side sets `closed={false}` to keep the path open.
 
-<ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
+<ComponentPreview files={['line-radar', 'line-radar.data.ts']} />
 
 ### Connection Type
 
 `curve` controls how adjacent points connect. The left side uses cartesian2D and the right side uses polar2D; when you switch the connection type, both sides update together. The polar plot does not set an inner radius, so PathMark projects angular and radial positions directly. Because `monotoneX` / `monotoneY` rely on monotonic projected screen x / y values, they fall back to `linear` under polar2D to avoid long control handles in closed areas.
 
-<ComponentPreview name="line-curve" sourceFiles={['line-curve.data.ts']} interactive size="md" />
+<ComponentPreview files={['line-curve', 'line-curve.data.ts']} size="md" />
 
 | Value        | Meaning                    | Behavior                                                                                                                   |
 | ------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -93,25 +93,13 @@ Both `stroke` and `fill` can be `IRPaintSpec` values. The left chart applies a l
 
 `closure` only closes PathMark into a fillable path; it does not enable filling by itself. `stroke` is on by default, and `stroke="none"` removes the border line; `fill` is off by default, and a concrete color or paint enables filling. The left area effect is composed from two PathMark layers: one `baseline + fill + stroke="none"` layer for the area, and one normal path layer for the upper outline. The right side uses `cycle + fill` to fill a radar polygon. Use the top-left control to switch `curve`; the default is a straight line. Baseline and stack return edges use the same connection curve.
 
-<ComponentPreview
-  name="line-closure"
-  controlsName="line-curve"
-  sourceFiles={['line-closure.data.ts']}
-  interactive
-  size="md"
-/>
+<ComponentPreview files={['line-closure', 'line-closure.data.ts']} controlsName="line-curve" size="md" />
 
 When `baseline` is omitted, it follows the value axis: use 0 when 0 is inside the value-axis domain; if an explicit domain excludes 0, such as `[30, 80]`, use the nearest domain edge, 30. Pass `closure={{ kind: 'baseline', baseline: ... }}` when the lower edge should be pinned to another value.
 
 For stacked areas, bind the upper boundary to `y` and pass the lower boundary field as `closure.baselineField`. The data can come from a stack transform or from precomputed `y0` / `y1` fields. The example uses the same fill-layer plus outline-layer composition for the area-chart effect. When `curve` is set, both boundaries use the same connection mode.
 
-<ComponentPreview
-  name="line-stack-area"
-  controlsName="line-curve"
-  sourceFiles={['line-stack-area.data.ts']}
-  interactive
-  size="md"
-/>
+<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} controlsName="line-curve" size="md" />
 
 ### Interrupted Paths
 
@@ -119,7 +107,7 @@ When a row cannot project into a valid point, PathMark breaks there by default a
 
 In this example, `Yasin` has no 2019 value, so both the outline and the filled area stop between 2018 and 2020. Set `connectNulls` explicitly when a chart should connect across gaps.
 
-<ComponentPreview name="line-interruption" sourceFiles={['line-interruption.data.ts']} size="md" />
+<ComponentPreview files={['line-interruption', 'line-interruption.data.ts']} size="md" />
 
 ## How It Works
 

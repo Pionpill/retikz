@@ -29,6 +29,10 @@ describe('数值线性 + easing', () => {
     const eased = evaluateTrack(num({ easing: 'ease-out' }), 200)?.value as number;
     expect(eased).toBeGreaterThan(50);
   });
+
+  it.each(['toString', 'constructor', 'valueOf'])('原型成员名 %s 未注册时按 linear 回退', easing => {
+    expect(evaluateTrack(num({ easing }), 200)?.value).toBe(50);
+  });
 });
 
 describe('颜色 oklch + viewBox 分量', () => {

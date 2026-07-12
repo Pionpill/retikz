@@ -57,9 +57,9 @@ const cubicBezier = (x1: number, y1: number, x2: number, y2: number): EasingFn =
 const resolveEasingFn = (easing: string | CubicBezier | undefined, registry: EasingRegistry | undefined): EasingFn => {
   if (easing === undefined || easing === 'linear') return LINEAR;
   if (Array.isArray(easing)) return cubicBezier(easing[0], easing[1], easing[2], easing[3]);
-  const named = NAMED_BEZIER[easing];
+  const named = Object.hasOwn(NAMED_BEZIER, easing) ? NAMED_BEZIER[easing] : undefined;
   if (named) return cubicBezier(named[0], named[1], named[2], named[3]);
-  const custom = registry?.[easing];
+  const custom = registry !== undefined && Object.hasOwn(registry, easing) ? registry[easing] : undefined;
   if (Array.isArray(custom)) return cubicBezier(custom[0], custom[1], custom[2], custom[3]);
   if (typeof custom === 'function') return custom;
   return LINEAR;

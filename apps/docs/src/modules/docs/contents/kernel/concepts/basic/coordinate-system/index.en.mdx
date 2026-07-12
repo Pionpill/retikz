@@ -15,7 +15,7 @@ Cartesian coordinates are written as `[x, y]`. Like SVG / Canvas, retikz uses sc
 
 It helps to treat `[x, y]` as retikz's base coordinate shape: polar coordinates are not a separate rendering semantics, only another way to write a position. They eventually become an `[x, y]` point.
 
-<ComponentPreview name="coordinate-system" size="md" hideCode />
+<ComponentPreview files="coordinate-system" size="md" hideCode />
 
 When translating a math diagram or TikZ tutorial, the common rule is: "up" usually becomes negative y in retikz, for example `[0, -80]`.
 
@@ -23,7 +23,7 @@ When translating a math diagram or TikZ tutorial, the common rule is: "up" usual
 
 Polar coordinates are written as `{ origin?, angle, radius }`: resolve the origin first, then move by a radius along an angle. They are useful for circular layouts, radial labels, placing elements around a node, or expressing a rotated offset from a local point.
 
-<ComponentPreview name="polar-coordinate" size="md" hideCode />
+<ComponentPreview files="polar-coordinate" size="md" hideCode />
 
 | Field    | Meaning                                                                                            |
 | -------- | -------------------------------------------------------------------------------------------------- |
@@ -61,7 +61,7 @@ This page explains the coordinate context; the full position vocabulary lives in
 
 `viewBox` decides which part of the user-unit world `<Layout>` sees; `width` / `height` decide how large that world appears on the page.
 
-<ComponentPreview name="viewbox" size="md" hideCode />
+<ComponentPreview files="viewbox" size="md" hideCode />
 
 The left side is the full user-unit world; the dashed frame is the window `viewBox` selects, which maps to the picture rendered at `width` / `height` on the right.
 

@@ -17,7 +17,7 @@ import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, Vanill
 
 import { DEFAULT_ID_PREFIX } from './constants';
 import { applyAttrs, svgNodeToDom } from './svg-dom';
-import { EMPTY_RUNTIME_META, toSceneResult } from './to-scene';
+import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -39,7 +39,7 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
   const animate = animation.enabled !== false && !prefersReducedMotion();
   let animationControls: AnimationControls | undefined;
   let currentScene: Scene;
-  let currentRuntimeMeta: VanillaRuntimeMeta = EMPTY_RUNTIME_META;
+  let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
   // 存活水合的解绑句柄：view.dispose 时统一解绑（未手动 dispose 的水合也随 view 卸载干净）
   const liveHydrationDisposers = new Set<() => void>();
 

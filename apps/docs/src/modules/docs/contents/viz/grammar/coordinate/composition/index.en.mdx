@@ -17,11 +17,7 @@ Each dimension starts with one default axis. An `<Axis dimension="x">` or `<Axis
 
 Multiple y-axes fit charts where x positions are shared but y units differ. In the weather example below, temperature uses the default y-axis and rainfall binds to the right-side y-axis.
 
-<ComponentPreview
-  name="coordinate-composition-scopes"
-  sourceFiles={['coordinate-composition-scopes.data.ts']}
-  size="md"
-/>
+<ComponentPreview files={['coordinate-composition-scopes', 'coordinate-composition-scopes.data.ts']} size="md" />
 
 `rainfall` is the id of the extra y-axis. The temperature line omits `yAxisId`; the rainfall line and points use `yAxisId="rainfall"` to choose the right-side axis.
 
@@ -35,11 +31,7 @@ Multiple y-axes fit charts where x positions are shared but y units differ. In t
 
 Multiple x-axes fit charts where the y metric is shared but horizontal positions have two interpretations. The example below shows elapsed release day at the bottom and calendar day at the top; both lines share the y-axis.
 
-<ComponentPreview
-  name="coordinate-composition-x-axis"
-  sourceFiles={['coordinate-composition-x-axis.data.ts']}
-  size="md"
-/>
+<ComponentPreview files={['coordinate-composition-x-axis', 'coordinate-composition-x-axis.data.ts']} size="md" />
 
 `calendar` is the id of the extra x-axis. The completed line uses the default x-axis; the forecast line and points use `xAxisId="calendar"` to choose the top axis.
 
@@ -58,8 +50,7 @@ A facet splits one chart into panels from data fields. The common JSX form place
 Passing only `column` creates one row of panels. This example splits the chart into three `segment` columns; by default every panel shares the x / y domains, so line heights can be compared across panels.
 
 <ComponentPreview
-  name="coordinate-composition-facet-basic"
-  sourceFiles={['coordinate-composition-facet-basic.data.ts']}
+  files={['coordinate-composition-facet-basic', 'coordinate-composition-facet-basic.data.ts']}
   size="md"
 />
 
@@ -70,8 +61,7 @@ This demo has a single `<Facet column="segment">`. `Axis`, `PathMark`, and `Poin
 By default, facets synchronize the domain for the same coordinate role across panels. The two panels below cover `0-100` and `0-50`, but the right panel still uses the overall `0-100` y domain, so its height can be compared directly with the left panel.
 
 <ComponentPreview
-  name="coordinate-composition-facet-shared-scale"
-  sourceFiles={['coordinate-composition-facet-shared-scale.data.ts']}
+  files={['coordinate-composition-facet-shared-scale', 'coordinate-composition-facet-shared-scale.data.ts']}
   size="md"
 />
 
@@ -82,8 +72,7 @@ This example does not set `resolve.scale`, because shared domains are the defaul
 `row` and `column` can receive an array of fields, so several fields define the panel hierarchy on the same direction. The example below groups columns by `region` first and then by `channel`; rows are grouped by `business` first and then by `metric`.
 
 <ComponentPreview
-  name="coordinate-composition-facet-multilevel"
-  sourceFiles={['coordinate-composition-facet-multilevel.data.ts']}
+  files={['coordinate-composition-facet-multilevel', 'coordinate-composition-facet-multilevel.data.ts']}
   size="lg"
 />
 
@@ -93,11 +82,7 @@ The array order is the facet hierarchy order. When `header={{ row: true, column:
 
 Passing both `row` and `column` creates a two-dimensional grid. The chart below splits columns by `region` and rows by `channel`; `Axis grid` is still declared by the axis itself, and facet defaults draw that grid inside every panel.
 
-<ComponentPreview
-  name="coordinate-composition-facet"
-  sourceFiles={['coordinate-composition-facet.data.ts']}
-  size="lg"
-/>
+<ComponentPreview files={['coordinate-composition-facet', 'coordinate-composition-facet.data.ts']} size="lg" />
 
 Here `<Facet row="channel" column="region">` defines the panel matrix. `grid` still belongs on `<Axis dimension="x">` / `<Axis dimension="y">`; the facet only projects those guides into each panel.
 
@@ -106,8 +91,7 @@ Here `<Facet row="channel" column="region">` defines the panel matrix. `grid` st
 Empty panels are dropped by default, and scale domains are shared across panels by default. The next example keeps empty panels and computes the y-axis independently inside each panel, which helps when groups differ by order of magnitude.
 
 <ComponentPreview
-  name="coordinate-composition-facet-independent"
-  sourceFiles={['coordinate-composition-facet-independent.data.ts']}
+  files={['coordinate-composition-facet-independent', 'coordinate-composition-facet-independent.data.ts']}
   size="lg"
 />
 
@@ -141,11 +125,7 @@ Shared tracks use one coordinate scaffold to manage several tracks. The common c
 
 ### Cartesian Tracks
 
-<ComponentPreview
-  name="coordinate-composition-tracks"
-  sourceFiles={['coordinate-composition-tracks.data.ts']}
-  size="lg"
-/>
+<ComponentPreview files={['coordinate-composition-tracks', 'coordinate-composition-tracks.data.ts']} size="lg" />
 
 Here all three tracks share the `trading day` x position. The shared x-axis is written directly in `<Scaffold>`; `trend` draws a line, `drawdown` uses baseline closure as an area, and `signal` draws a line with points.
 
@@ -154,8 +134,7 @@ Each track keeps its own y-axis and marks inside its own `<Track>`, so the track
 ### Polar Tracks
 
 <ComponentPreview
-  name="coordinate-composition-tracks-polar"
-  sourceFiles={['coordinate-composition-tracks-polar.data.ts']}
+  files={['coordinate-composition-tracks-polar', 'coordinate-composition-tracks-polar.data.ts']}
   size="lg"
 />
 

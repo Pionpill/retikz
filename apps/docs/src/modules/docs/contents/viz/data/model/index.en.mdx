@@ -56,7 +56,7 @@ Schema-derived data types use the `IRData` owner prefix so they stay distinct fr
 
 The side-by-side demo below uses one funnel dataset. The left chart has no `model`, so numeric `stage` is inferred as a continuous x axis. The right chart declares `stage` as categorical, and parses percent strings into continuous values with `format: 'percent'`.
 
-<ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />
+<ComponentPreview files={['data-model-custom', 'data-model-custom.data.ts']} />
 
 **Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** instead of drawing an empty chart. References include not only `x` / `y` / `z`, but also `color`, `series`, a mark's `order`, point `size` / `opacity` / `shape`, and transform input fields. Field names inside one model must be unique; duplicate declarations also throw.
 
@@ -90,7 +90,7 @@ Once field types are declared, positional channels (x / y, and ternary x / y / z
 
 The three charts below declare no scale config at all: `continuous` fields derive linear axes, `temporal` fields derive time axes, and `categorical` fields derive band axes.
 
-<ComponentPreview name="data-model" size="xxxl" sourceFiles={['data-model.data.ts']} />
+<ComponentPreview files={['data-model', 'data-model.data.ts']} size="xxxl" />
 
 ## Category order: `order`
 
@@ -98,7 +98,7 @@ A `categorical` field orders its categories by **data appearance** by default; a
 
 The two charts below use the same size data. The left chart follows data appearance order; the right chart fixes the business order `S → M → L → XL`.
 
-<ComponentPreview name="data-model-order" sourceFiles={['data-model-order.data.ts']} />
+<ComponentPreview files={['data-model-order', 'data-model-order.data.ts']} />
 
 This `order` sorts the **category domain**: axis ticks, legends, and categorical colors follow it. It does not reorder data rows or change the connection order of a line. To reorder rows, use [row sort](/viz/grammar/transform/row#sort).
 
@@ -127,7 +127,7 @@ The lightest source swap is to keep the same field contract: both datasets expos
 
 This fits stable API shapes where you only switch filters, time windows, or environments. For example, the same sales chart can show actuals or forecasts. As long as the field contract stays intact, the chart config is reused.
 
-<ComponentPreview name="processing-same" sourceFiles={['processing-same.data.ts']} />
+<ComponentPreview files={['processing-same', 'processing-same.data.ts']} />
 
 If the field names changed, use `fieldMap` in the next section. If the names stayed the same but storage formats changed (for example ISO dates became `YYYY/MM/DD`), use the parsing section below.
 
@@ -153,7 +153,7 @@ When the data's field names don't line up with the config's logical names, suppl
 
 Both charts below use the same logical config. The left data already has `month` / `revenue`; the right data comes from another feed where the fields are `period` / `amount`, so `fieldMap` binds it back to the same model.
 
-<ComponentPreview name="processing-source" sourceFiles={['processing-source.data.ts']} />
+<ComponentPreview files={['processing-source', 'processing-source.data.ts']} />
 
 ### Different storage formats, same type
 
@@ -161,7 +161,7 @@ A single `temporal` field reads correctly whether the data stores it as a `Date`
 
 The right-hand chart below deliberately mixes `Date`, epoch milliseconds, ISO strings, and numbers / numeric strings. Because the field types are still `temporal` + `continuous`, the same model normalizes them.
 
-<ComponentPreview name="processing-storage" sourceFiles={['processing-storage.data.ts']} />
+<ComponentPreview files={['processing-storage', 'processing-storage.data.ts']} />
 
 ## Parsing formats
 
@@ -193,7 +193,7 @@ For common non-default formats like `'2024/01/01'`, epoch seconds, or `'50%'`, y
 
 In the right-hand chart below, the same business fields come from report-shaped data: dates use `YYYY/MM/DD`, and ratios are percent strings. `format` normalizes both before they reach the time and linear axes.
 
-<ComponentPreview name="processing-format" sourceFiles={['processing-format.data.ts']} />
+<ComponentPreview files={['processing-format', 'processing-format.data.ts']} />
 
 Available `format` values (each binds to one type):
 
@@ -219,11 +219,11 @@ Beyond the built-in `format` vocabulary, common reusable formats can be register
 
 Reusable formats still enter the model as strings. The `wan` example below parses the Chinese reporting unit “万”; the chart config stores only `format: 'wan'`, while the runtime definition provides the parser.
 
-<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+<ComponentPreview files={['processing-custom-format', 'processing-custom-format.data.ts']} />
 
 Use `resolveField` when parsing needs per-source branches, multiple raw fields, or one-off fallback logic. It is a runtime function and does not enter IR; reuse it in application code instead of expecting JSON config to persist it.
 
-<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
+<ComponentPreview files={['processing-resolve', 'processing-resolve.data.ts']} />
 
 Custom parsers must return a canonical value consumable by the final field type: a finite number for `continuous` / `temporal`, or a string / finite number for `categorical`. Type mismatches, `NaN`, and infinities are normalized as invalid values instead of flowing into transforms as valid canonical data.
 
@@ -235,7 +235,7 @@ Document / heterogeneous data often has missing fields or mixed types across row
 
 In the right-hand chart below, `Feb` is an unparseable string, `Mar` is missing, and `May` is `null`. The default `invalid="skip"` skips those bars; in development or data intake, enable validation to turn the same rows into errors.
 
-<ComponentPreview name="processing-invalid" sourceFiles={['processing-invalid.data.ts']} />
+<ComponentPreview files={['processing-invalid', 'processing-invalid.data.ts']} />
 
 | Situation                                          | Behavior                                                                                     |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -290,7 +290,7 @@ Data processing runs before mark lowering. Its job is to turn external rows from
 
 `model` stores the field contract, not the data rows. Before lowering, Plot **collects, validates, and types** the fields actually referenced by the config, assembling one set of field metadata shared by scales, axes, legends, and validation.
 
-<ComponentPreview name="data-model-pipeline" size="sm" hideCode />
+<ComponentPreview files="data-model-pipeline" size="sm" hideCode />
 
 Type resolution follows the priority "explicit `type` > type implied by `format` > inference from data", and a `categorical` field's `order` is stored alongside. Real rows are still supplied at compile time and never written into IR — that is what keeps one config reusable across data sources.
 

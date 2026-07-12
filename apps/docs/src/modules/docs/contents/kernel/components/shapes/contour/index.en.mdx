@@ -37,7 +37,7 @@ import { Node } from '@retikz/react';
 
 `points` is a ring of **local-frame vertices** (at least 3, implicitly closed, with straight edges). You **do not need to pre-center** them — core normalizes by the points' AABB center and aligns the node's `position` to the geometric center of the contour. The two nodes bottom use the same shape, but the right one's points are all shifted by a fixed offset: after auto-centering they render identically.
 
-<ComponentPreview name="node-contour" size="sm" />
+<ComponentPreview files="node-contour" size="sm" />
 
 `cornerRadius` rounds **every vertex** uniformly (user units); omitted / `0` = sharp corners, clamped per corner to the largest non-self-intersecting radius — reusing the same fillet engine as `polygon` / `roundedCorners`.
 
@@ -45,7 +45,7 @@ import { Node } from '@retikz/react';
 
 The key value of `contour` is that it is **still a Node**: another `<Path>` / `<Draw>` can target it by id, and the endpoint snaps via `boundaryPoint` to the exact intersection on the contour edge (ray ∩ contour), not the bounding box.
 
-<ComponentPreview name="contour-connect" size="sm" />
+<ComponentPreview files="contour-connect" size="sm" />
 
 <ComponentAlert
   title="Anchors fall back to the AABB"

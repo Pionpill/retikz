@@ -4,6 +4,12 @@ import { Circle, Coordinate, Draw, Grid, Layout, Node } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 import { Fragment } from 'react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
 const Demo: FC = () => {
   const lowerTex = useLowerTex();
   return (

@@ -11,7 +11,7 @@ description: pattern.shape 是开放字符串；内置 lines / dots / grid 之�
 
 下面注册一个 `cross`——十字图案,与内置三种明显不同:
 
-<ComponentPreview name="custom-pattern-basic" size="xs" />
+<ComponentPreview files="custom-pattern-basic" size="xs" />
 
 如果你只想先跑通一个图案，最少实现 `emit` 就够了；`defaultSize` 只是给没有显式 `pattern.size` 时的默认周期。
 
@@ -43,7 +43,7 @@ motif 几何复用 [自定义箭头](/kernel/components/extend/custom-arrow) 的
 
 `pattern.size` 覆盖 `defaultSize` 控制图案疏密;`pattern.color` 覆盖 motif 主色,缺省 `currentColor` 跟随 svg color。相同 `pattern` spec 多处使用 → 去重为一个资源 / 一个 tile;`size` 不同 → 各自独立资源。
 
-<ComponentPreview name="custom-pattern-size" size="xs" />
+<ComponentPreview files="custom-pattern-size" size="xs" />
 
 <Comparison target="tikz" title="自定义图案">
 

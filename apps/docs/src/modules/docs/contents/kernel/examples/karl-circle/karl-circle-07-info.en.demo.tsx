@@ -4,9 +4,15 @@ import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/re
 import { useLowerTex } from '@retikz/tex/react';
 import { Fragment } from 'react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
 const COS30 = Math.cos((30 * Math.PI) / 180);
 const SIN30 = Math.sin((30 * Math.PI) / 180);
 const TAN30 = SIN30 / COS30;
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
 
 /** Right-hand info box: regular text + `$...$` formulas on each line, line names colored (mirrors tikz.dev/tutorial's information text) */
 const LEGEND = [

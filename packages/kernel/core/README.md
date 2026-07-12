@@ -27,6 +27,7 @@ Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.c
 ## Exports
 
 - `compileToScene` / `computeLayout` / `fallbackMeasurer` — IR → `Scene`
+- `lowerIRToKernel` — Tier 2 composite IR → JSON-serializable Tier 1 Kernel IR; accepts `composites` and `maxCompositeDepth`
 - IR & `Scene` zod schemas + inferred types
 - `parseWay` / `parseNodeTarget` / `parseTargetSugar` — pure parsers
 - `point` / `rect` / `circle` / `ellipse` / `diamond` / `polar` — geometry

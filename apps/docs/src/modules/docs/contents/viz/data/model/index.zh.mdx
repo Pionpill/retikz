@@ -56,7 +56,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 下面的左右对比使用同一份漏斗数据：左图不声明 `model`，数值 `stage` 被推断成连续 x 轴；右图把 `stage` 声明为分类字段，并用 `format: 'percent'` 把百分比字符串解析成连续数值。
 
-<ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />
+<ComponentPreview files={['data-model-custom', 'data-model-custom.data.ts']} />
 
 **声明 model = 严格模式**：mark / transform 引用的每个数据字段都必须在 model 里列出，拼错字段名会**立刻报错**，而不是画出一张空图。这里的引用不只包括 `x` / `y` / `z`，也包括 `color`、`series`、mark 的 `order`、点图的 `size` / `opacity` / `shape`，以及 transform 输入字段。model 中字段名不能重复，重复声明同样会报错。
 
@@ -90,7 +90,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 下面三张图都没有写任何比例尺配置：`continuous` 字段派生线性轴，`temporal` 字段派生时间轴，`categorical` 字段派生分类带轴。
 
-<ComponentPreview name="data-model" size="xxxl" sourceFiles={['data-model.data.ts']} />
+<ComponentPreview files={['data-model', 'data-model.data.ts']} size="xxxl" />
 
 ## 分类顺序
 
@@ -98,7 +98,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 下面两张图使用同一份尺码数据：左图按数据出现序显示，右图通过 `order` 固定为业务顺序 `S → M → L → XL`。
 
-<ComponentPreview name="data-model-order" sourceFiles={['data-model-order.data.ts']} />
+<ComponentPreview files={['data-model-order', 'data-model-order.data.ts']} />
 
 这里的 `order` 排的是**分类域**：轴刻度、图例和分类颜色会按它走；它不会重排数据行，也不会改变折线连接顺序。要重排行，用[数据变换里的排序](/viz/data/transform#排序-sort)。
 
@@ -125,7 +125,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 这适合后端接口版本稳定、只切换筛选条件 / 时间范围 / 环境数据的场景。比如同一个销售图，可以在「实际值」和「预测值」之间切换；只要字段契约不变，图表配置就能复用。
 
-<ComponentPreview name="processing-same" sourceFiles={['processing-same.data.ts']} />
+<ComponentPreview files={['processing-same', 'processing-same.data.ts']} />
 
 如果字段名换了，进入下一节用 `fieldMap`；如果字段名没换但存储格式变了（例如 ISO 日期变成 `YYYY/MM/DD`），看后面的「解析格式」。
 
@@ -151,7 +151,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 下面两张图共用同一份逻辑配置：左图数据字段已经叫 `month` / `revenue`，右图数据来自另一套接口，实际字段叫 `period` / `amount`，用 `fieldMap` 接回同一个 model。
 
-<ComponentPreview name="processing-source" sourceFiles={['processing-source.data.ts']} />
+<ComponentPreview files={['processing-source', 'processing-source.data.ts']} />
 
 ### 存储格式不同但类型相同
 
@@ -159,7 +159,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 下面右图故意混用了 `Date`、epoch 毫秒、ISO 字符串，以及数字 / 数字串。因为字段类型仍然是 `temporal` + `continuous`，同一份 model 就能完成规范化。
 
-<ComponentPreview name="processing-storage" sourceFiles={['processing-storage.data.ts']} />
+<ComponentPreview files={['processing-storage', 'processing-storage.data.ts']} />
 
 ## 解析格式
 
@@ -191,7 +191,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 下面的右图用同一组业务字段接入报表数据：日期是 `YYYY/MM/DD`，比例是百分比字符串。`format` 把它们先规范化，再交给时间轴和线性轴。
 
-<ComponentPreview name="processing-format" sourceFiles={['processing-format.data.ts']} />
+<ComponentPreview files={['processing-format', 'processing-format.data.ts']} />
 
 可选的 `format`（每个绑定一种类型）：
 
@@ -217,11 +217,11 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 可复用格式仍然通过字符串进入 model。下面的 `wan` 解析中文报表里常见的“万”单位，图形配置里只保存 `format: 'wan'`，真正的解析函数由运行时 definition 注入。
 
-<ComponentPreview name="processing-custom-format" sourceFiles={['processing-custom-format.data.ts']} />
+<ComponentPreview files={['processing-custom-format', 'processing-custom-format.data.ts']} />
 
 需要按数据源写分支、读取多个原始字段或临时兜底时，用 `resolveField`。它是运行时函数，不进入 IR；适合应用代码里统一复用，不适合随 JSON 配置持久化。
 
-<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
+<ComponentPreview files={['processing-resolve', 'processing-resolve.data.ts']} />
 
 自定义 parser 要直接返回最终字段类型可消费的 canonical 值：`continuous` / `temporal` 返回有限数值，`categorical` 返回字符串或有限数值。类型不匹配、`NaN` 或无穷值会按 invalid 值收口，不会作为合法 canonical 数据流入 transform。
 
@@ -233,7 +233,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 下面右图里 `Feb` 是无法解析的字符串、`Mar` 缺值、`May` 是 `null`。默认 `invalid="skip"` 会跳过这些柱；开发或数据准入时，再打开校验让它们直接报错。
 
-<ComponentPreview name="processing-invalid" sourceFiles={['processing-invalid.data.ts']} />
+<ComponentPreview files={['processing-invalid', 'processing-invalid.data.ts']} />
 
 | 情形                              | 行为                                            |
 | --------------------------------- | ----------------------------------------------- |
@@ -288,7 +288,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 `model` 只保存字段契约、不保存数据行。lowering 前，Plot 把配置里实际引用的字段**收集、校验、定类型**，整理成一份字段元信息，供比例尺、坐标轴、图例和校验共用。
 
-<ComponentPreview name="data-model-pipeline" size="sm" hideCode />
+<ComponentPreview files="data-model-pipeline" size="sm" hideCode />
 
 确定类型的优先级是「显式 `type` > `format` 蕴含 > 数据推断」，`categorical` 的 `order` 一并存进元信息。真实数据仍在编译时传入、不写进 IR——这也是同一份配置能换数据源复用的基础。
 

@@ -47,31 +47,31 @@ RelationMark is the low-level relationship path mark. It does not reinvent arrow
 
 Each scatter row declares both `id` and `target`. `PointMark` generates node ids with `anchorId`, and `RelationMark` joins those ids from the data fields. This example does not need `transform`: the relationship already exists in the raw rows, so RelationMark only resolves those fields into source / target paths.
 
-<ComponentPreview name="relation-scatter" sourceFiles={['relation-scatter.data.ts']} size="lg" />
+<ComponentPreview files={['relation-scatter', 'relation-scatter.data.ts']} size="lg" />
 
 ### Sankey Ribbon
 
 Sankey-style relations use the same `source` and `target` target refs, but set `kind="ribbon"` and provide `ribbon.width`. Shared paint lives in `style`, so the same relation mark can switch between path and ribbon geometry without moving fill, stroke, or opacity fields.
 
-<ComponentPreview name="relation-sankey" sourceFiles={['relation-sankey.data.ts']} size="lg" />
+<ComponentPreview files={['relation-sankey', 'relation-sankey.data.ts']} size="lg" />
 
 ### Bubble Relation
 
 Bubble charts often need to highlight one business relationship inside a broader distribution. This example uses 20 bubbles for the distribution, and the bubble layer generates reusable Node ids with `anchorId`. The relation layer does not hand-write an edge row; its `transform` runs `relate`: source selects the bubble with the largest `value`, target selects the bubble with the highest `y`, and the transform emits `sourceId`, `targetId`, and the path label. Source / target then reference those derived ids with `boundary`, so the connector stops at the bubble boundary.
 
-<ComponentPreview name="relation-bubble" sourceFiles={['relation-bubble.data.ts']} size="lg" />
+<ComponentPreview files={['relation-bubble', 'relation-bubble.data.ts']} size="lg" />
 
 ### Path Extremes
 
 The path mark draws 20 ordered points and registers each vertex with `anchorId`. This example also avoids a separate edge table: `RelationMark.transform` runs `relate` over the same points, selects the minimum `y` row as source and the maximum `y` row as target, then emits `sourceId`, `targetId`, and `deltaLabel`. Source / target connect to those derived vertex ids, and `path.routing={{ kind: 'bend' }}` draws the low-to-high relationship as a curve.
 
-<ComponentPreview name="relation-path-extremes" sourceFiles={['relation-path-extremes.data.ts']} size="lg" />
+<ComponentPreview files={['relation-path-extremes', 'relation-path-extremes.data.ts']} size="lg" />
 
 ### Interval Relation
 
 In a bar or interval chart, a relation can connect the tops of two interval elements to explain a handoff or difference between stages. This example keeps only before / after interval rows, not five handwritten relation lines. Two `RelationMark.transform` pipelines split decrease and increase groups: the decrease layer reads `decreaseOrder`, the increase layer reads `increaseOrder`, and both group by `pair` to emit source / target coordinates, the `sourceViaY` waypoint height, and `deltaLabel`. `path.routing={{ kind: 'orthogonal' }}` consumes those derived fields to draw the upward right-angle connector; decreases are red, increases are green.
 
-<ComponentPreview name="relation-interval" sourceFiles={['relation-interval.data.ts']} size="lg" />
+<ComponentPreview files={['relation-interval', 'relation-interval.data.ts']} size="lg" />
 
 ## How It Works
 

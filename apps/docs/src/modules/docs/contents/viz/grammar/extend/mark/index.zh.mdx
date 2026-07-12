@@ -15,7 +15,7 @@ description: 自定义图元把下沉函数留在运行时：IR 只保存自定�
 
 下面的 `diamond` 图元把每行投影成一个菱形。它在 `markDefinitions` 里注册；自定义图元**没有专属 React 组件**，所以用 `<Plot spec={...}>` 入口创作——`marks` 数组里直接写 `{ type: 'diamond', ... }`。
 
-<ComponentPreview name="mark-custom" sourceFiles={['mark-custom.data.ts']} />
+<ComponentPreview files={['mark-custom', 'mark-custom.data.ts']} />
 
 `lower` 拿到的第三个参数是坐标系 `frame`。它把每行的 `x` / `y` 经 `frame.projectRoles` 投成屏幕点，再装配 core `Node`（`shape: 'diamond'`）。`frame` 屏蔽了笛卡尔 / 极坐标的差异：图元只管要投影点，坐标系怎么解释 `x` / `y` 由 coordinate 层决定。
 

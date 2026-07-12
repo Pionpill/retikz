@@ -58,7 +58,7 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 
 ### 4. Demo 覆盖
 
-- 用户需要看到效果才能理解的功能，是否有 `<ComponentPreview name="..." />`
+- 用户需要看到效果才能理解的功能，是否有 `<ComponentPreview files="..." />`
 - 新 prop / 新字段 / 新组件是否至少有一个最小 demo；复杂能力是否拆成 2-3 个单主题 demo
 - demo 是否真展示了该能力，而不是只把 prop 写上但视觉上看不出差异
 - 含展示文本的 demo 是否 zh / en 双语文件并行；无展示文本时单文件即可

@@ -18,7 +18,7 @@ retikz 的图是先画出来、再加交互的：服务端或静态先渲染出�
 
 给 `<Node>` / `<Path>` / `<Scope>` 加 `on<事件>` props 即可——前提是元素有 `id`。handler 签名是 `(event, context) => void`：第一参是原生 DOM `Event`，第二参 `context` 是 renderer 无关的 runtime 上下文（见 [下文](#handler-的-context)）。只用 `event` 的旧式 `event => …` 写法照常工作。
 
-<ComponentPreview name="hydration-click" size="md" interactive />
+<ComponentPreview files="hydration-click" size="md" />
 
 <p className="text-center text-sm text-muted-foreground">点击橙色节点切换高亮，旁边的计数同步累加。</p>
 
@@ -125,7 +125,7 @@ handler 第二参 `context` 把「命中的那个语义元素」补齐成一个 
 
 **回调触发动画**：给图元配 `trigger: 'manual'` 的动画（不自播、等命令），handler 内 `context.animation.restart()` 即可点一下重播：
 
-<ComponentPreview name="hydration-context" size="md" interactive />
+<ComponentPreview files="hydration-context" size="md" />
 
 ```tsx
 import { pulse } from '@retikz/core';

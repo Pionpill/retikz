@@ -8,8 +8,7 @@ description: "A high-school Ohm's law circuit example: custom shapes, Scope dupl
 This page builds a textbook-style Ohm's law experiment circuit while showing how [Layout](/kernel/components/layout/overview), [Scope](/kernel/components/layout/scope), [Node](/kernel/components/node/overview), [Draw](/kernel/components/draw/overview), and the [Shape Registry](/kernel/components/extend/shape-registry) work together.
 
 <ComponentPreview
-  name="ohms-law-circuit-06-labels"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={['ohms-law-circuit-06-labels', 'circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
   size="sm"
 />
 
@@ -53,21 +52,20 @@ You can send the prompt bottom to the AI chat panel to draw a similar circuit. I
 
 The voltmeter and ammeter are a round meter head with a lead on each side, wiring only at the left/right terminals (the same idea as the "semantic terminals: diode" in the [Shape Registry](/kernel/components/extend/shape-registry)). Build it as a custom `circuit-meter` shape and flatten two of them (A / V) to start.
 
-<ComponentPreview name="circuit-01-meters" sourceFiles={['circuit-01-meters.meter.tsx']} size="xs" />
+<ComponentPreview files={['circuit-01-meters', 'circuit-01-meters.meter.tsx']} size="xs" />
 
 ### Step 2: Flatten the remaining custom symbols
 
 The battery, switch, resistor, and rheostat are not built into core either, so they are custom shapes in the [Shape Registry](/kernel/components/extend/shape-registry), collected in `circuitShapes.tsx`. They each expose only left-right terminals (the battery's long plate is the positive on the right, the short plate the negative on the left); the plates, contacts, rectangles, and arrow are all drawn inside the shape.
 
-<ComponentPreview name="ohms-law-circuit-02-custom-shapes" sourceFiles={['circuitShapes.tsx']} size="xs" />
+<ComponentPreview files={['ohms-law-circuit-02-custom-shapes', 'circuitShapes.tsx']} size="xs" />
 
 ### Step 3: Place the elements on the circuit
 
 Place the battery, switch, ammeter, and rheostat in their final positions — the resistors and voltmeters are left out for now, to be assembled in the next step. The battery stands on the left (rotated 90°), the switch and ammeter sit on the top row, and the rheostat on the bottom row.
 
 <ComponentPreview
-  name="ohms-law-circuit-03-placement"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={['ohms-law-circuit-03-placement', 'circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
   size="sm"
 />
 
@@ -76,9 +74,11 @@ Place the battery, switch, ammeter, and rheostat in their final positions — th
 A resistor plus a voltmeter right bottom it, with both ends joined by elbow polylines, all wrapped in one [Scope](/kernel/components/layout/scope) — that is a "measurement unit". The second one is not rewritten: a `Scope` `translate` duplicates it, changing only the id prefix. The diff highlights exactly these two newly added units.
 
 <ComponentPreview
-  name="ohms-law-circuit-04-measurement-cells"
-  diffFrom="ohms-law-circuit-03-placement"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={[
+    { file: 'ohms-law-circuit-04-measurement-cells', diffFrom: 'ohms-law-circuit-03-placement' },
+    'circuitShapes.tsx',
+    'circuit-01-meters.meter.tsx',
+  ]}
   size="sm"
 />
 
@@ -87,9 +87,11 @@ A resistor plus a voltmeter right bottom it, with both ends joined by elbow poly
 Once the elements are placed, use [Draw](/kernel/components/draw/overview) to connect them in order: battery top → switch → ammeter → R1 → down the right side → R2 → rheostat → back to the battery bottom. The wires run at right angles by giving explicit corner coordinates in the `way` array (e.g. `[160, 200]`, `[1040, 200]`), with the endpoints referencing element terminals (`{ id, anchor }`) instead of guessed coordinates — this example does not use the `|-` / `-|` elbow operators; it places the corner points by hand to form straight segments.
 
 <ComponentPreview
-  name="ohms-law-circuit-05-main-loop"
-  diffFrom="ohms-law-circuit-04-measurement-cells"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={[
+    { file: 'ohms-law-circuit-05-main-loop', diffFrom: 'ohms-law-circuit-04-measurement-cells' },
+    'circuitShapes.tsx',
+    'circuit-01-meters.meter.tsx',
+  ]}
   size="sm"
 />
 
@@ -98,9 +100,11 @@ Once the elements are placed, use [Draw](/kernel/components/draw/overview) to co
 Finish with the `E`, `S`, `R1` / `R2`, `U1` / `U2`, and rheostat-name text labels and the figure reads clearly (the A / V already live inside the meter heads). The rheostat name is the only localized text, written directly in the zh / en demos.
 
 <ComponentPreview
-  name="ohms-law-circuit-06-labels"
-  diffFrom="ohms-law-circuit-05-main-loop"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={[
+    { file: 'ohms-law-circuit-06-labels', diffFrom: 'ohms-law-circuit-05-main-loop' },
+    'circuitShapes.tsx',
+    'circuit-01-meters.meter.tsx',
+  ]}
   size="sm"
 />
 

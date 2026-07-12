@@ -68,7 +68,7 @@ export type VanillaTier2Contribution = {
   node: IRChild;
   /** 由引用键索引的外部数据集表；不进入 IR。 */
   datasets: Record<string, unknown>;
-  /** 合并同命名空间数据集后生成组合定义。 */
+  /** 合并同命名空间数据集后生成组合定义；同命名空间贡献必须稳定复用同一个函数引用。 */
   makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
 };
 

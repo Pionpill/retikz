@@ -1,5 +1,6 @@
 ﻿import type { CompositeDefinition } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
+import type { LoweredIRChild, LoweredIRScene } from '../types';
 import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';
@@ -10,6 +11,8 @@ export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
 
 type LowerOptions = {
   onWarn: (warning: CompileWarning) => void;
+  /** 未注册 composite 的 fail-loud 钩子；缺省继续走 compile warning + skip。 */
+  onUnregistered?: (key: string, path: string) => never;
   /**
    * composite 嵌套展开最大深度。
    * @default DEFAULT_MAX_COMPOSITE_DEPTH (32)
@@ -22,18 +25,19 @@ export const lowerComposites = (
   ir: IRScene,
   registry: ReadonlyMap<string, CompositeDefinition>,
   options: LowerOptions,
-): IRScene => {
-  const { onWarn, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
+): LoweredIRScene => {
+  const { onWarn, onUnregistered, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
 
-  const expandList = (children: Array<IRChild>, depth: number, path: string): Array<IRChild> =>
+  const expandList = (children: Array<IRChild>, depth: number, path: string): Array<LoweredIRChild> =>
     children.flatMap((child, index) => expandChild(child, depth, `${path}[${index}]`));
 
-  const expandChild = (child: IRChild, depth: number, path: string): Array<IRChild> => {
+  const expandChild = (child: IRChild, depth: number, path: string): Array<LoweredIRChild> => {
     if ('namespace' in child) {
       // tier2 composite 节点
       const key = `${child.namespace}.${child.type}`;
       const definition = registry.get(key);
       if (!definition) {
+        onUnregistered?.(key, path);
         onWarn({
           code: CompileWarningCode.CompositeNotRegistered,
           message: `No composite registered for '${key}'; the node is skipped.`,

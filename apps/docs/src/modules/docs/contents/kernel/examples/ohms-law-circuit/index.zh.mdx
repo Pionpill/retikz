@@ -8,8 +8,7 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 这一页用一张高中物理课本风的欧姆定律实验电路图，展示 [Layout](/kernel/components/layout/overview)、[Scope](/kernel/components/layout/scope)、[Node](/kernel/components/node/overview)、[Draw](/kernel/components/draw/overview) 和 [Shape Registry](/kernel/components/extend/shape-registry) 如何配合。
 
 <ComponentPreview
-  name="ohms-law-circuit-06-labels"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={['ohms-law-circuit-06-labels', 'circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
   size="sm"
 />
 
@@ -53,21 +52,20 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 
 电压表、电流表是一个圆形表头加左右两根引线，只在左右两个端点接线（和 [Shape Registry](/kernel/components/extend/shape-registry) 里的「语义端点：二极管」一个思路）。把它做成自定义形状 `circuit-meter`，先平铺两个（A / V）认识一下。
 
-<ComponentPreview name="circuit-01-meters" sourceFiles={['circuit-01-meters.meter.tsx']} size="xs" />
+<ComponentPreview files={['circuit-01-meters', 'circuit-01-meters.meter.tsx']} size="xs" />
 
 ### 步骤 2：平铺其余自定义符号
 
 电源、开关、电阻、滑动变阻器也不是 core 内置形状，用 [Shape Registry](/kernel/components/extend/shape-registry) 自定义，集中放在 `circuitShapes.tsx`。它们都只认左右两个端点（电源长板正极在右、短板负极在左）；极板、触点、矩形框、斜箭头都画在形状内部。
 
-<ComponentPreview name="ohms-law-circuit-02-custom-shapes" sourceFiles={['circuitShapes.tsx']} size="xs" />
+<ComponentPreview files={['ohms-law-circuit-02-custom-shapes', 'circuitShapes.tsx']} size="xs" />
 
 ### 步骤 3：将元件放到电路位置
 
 先把电源、开关、电流表、滑动变阻器摆到最终位置——电阻和电压表这一步先不画，留到下一步讲怎么组合。电源竖放在左侧（rotate 90），开关和电流表在上排，滑动变阻器在下排。
 
 <ComponentPreview
-  name="ohms-law-circuit-03-placement"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={['ohms-law-circuit-03-placement', 'circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
   size="sm"
 />
 
@@ -76,9 +74,11 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 一段电阻 + 正下方一个电压表，两端各用折线竖直相连，整组收进一个 [Scope](/kernel/components/layout/scope)——这就是一个「测量单元」。第二组不重写，直接用 `Scope` 的 `translate` 平移复制、只换 id 前缀。diff 高亮的正是新增的这两组单元。
 
 <ComponentPreview
-  name="ohms-law-circuit-04-measurement-cells"
-  diffFrom="ohms-law-circuit-03-placement"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={[
+    { file: 'ohms-law-circuit-04-measurement-cells', diffFrom: 'ohms-law-circuit-03-placement' },
+    'circuitShapes.tsx',
+    'circuit-01-meters.meter.tsx',
+  ]}
   size="sm"
 />
 
@@ -87,9 +87,11 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 元件就位后，用 [Draw](/kernel/components/draw/overview) 把它们依次连起来：电源顶端 → 开关 → 电流表 → R1 → 沿右侧竖线下来 → R2 → 滑动变阻器 → 回到电源底端。导线走横平竖直的拐角：在 `way` 数组里直接给出显式拐点坐标（如 `[160, 200]`、`[1040, 200]`），两端引用元件端点（`{ id, anchor }`）而不是手猜坐标——本例没有用 `|-` / `-|` 折角算子，而是手摆拐点连成直线段。
 
 <ComponentPreview
-  name="ohms-law-circuit-05-main-loop"
-  diffFrom="ohms-law-circuit-04-measurement-cells"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={[
+    { file: 'ohms-law-circuit-05-main-loop', diffFrom: 'ohms-law-circuit-04-measurement-cells' },
+    'circuitShapes.tsx',
+    'circuit-01-meters.meter.tsx',
+  ]}
   size="sm"
 />
 
@@ -98,9 +100,11 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 最后补上 `E`、`S`、`R1` / `R2`、`U1` / `U2` 和变阻器名等文字标注，图就读得通了（电流表 / 电压表的 A、V 已经写在表头里）。变阻器名是唯一需要本地化的文本，直接写在中英两份 demo 里。
 
 <ComponentPreview
-  name="ohms-law-circuit-06-labels"
-  diffFrom="ohms-law-circuit-05-main-loop"
-  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  files={[
+    { file: 'ohms-law-circuit-06-labels', diffFrom: 'ohms-law-circuit-05-main-loop' },
+    'circuitShapes.tsx',
+    'circuit-01-meters.meter.tsx',
+  ]}
   size="sm"
 />
 
