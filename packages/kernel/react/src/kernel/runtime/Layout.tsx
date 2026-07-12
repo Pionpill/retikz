@@ -20,7 +20,7 @@ import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { CSSProperties, FC, MutableRefObject, ReactElement, ReactNode, Ref } from 'react';
 
 import { compileToScene } from '@retikz/core';
-import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
+import { bindWaapiDescriptors, resolveAnimationEnabled, sceneHasAnimations } from '@retikz/render/animation';
 import {
   createContextBuilder,
   createHydrationController,
@@ -147,9 +147,9 @@ export type LayoutProps = ScopeStyleProps & {
   /** 渲染目标；缺省为 SVG，设为 canvas 时用同一份图形数据绘制到 `<canvas>` */
   renderer?: 'svg' | 'canvas';
   /**
-   * 是否播放动画（缺省 true）；`false` 时渲染动画终态的静态图
+   * 是否播放动画；未传时跟随系统减少动态效果偏好，显式 `true` / `false` 强制开关
    * @description SVG 模式：`load` track 经内联 `<style>` CSS 自播、交互 track 经 WAAPI 桥按 trigger 驱动；
-   *   `animate={false}` 走 settled 静态。
+   *   `animate={false}` 走 settled 静态。显式 `true` 会覆盖 `prefers-reduced-motion`。
    */
   animate?: boolean;
   /**
@@ -346,7 +346,7 @@ export const Layout: FC<LayoutProps> = props => {
     handlers,
   } = props;
   const reducedMotion = usePrefersReducedMotion();
-  const animate = animateProp !== false && !reducedMotion;
+  const animate = resolveAnimationEnabled(animateProp, reducedMotion);
   const {
     color,
     stroke,

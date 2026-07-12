@@ -111,4 +111,43 @@ describe('React SVG reduced motion', () => {
 
     expect(container.querySelector('style') === null).toBe(true);
   });
+
+  it('animate={true} 覆盖初始 reduced-motion', async () => {
+    stubReducedMotion(true);
+    const container = await mount(
+      <Layout width={100} height={100} animate={true}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="b" position={[20, 0]} stroke="#000" minimumSize={2} animations={MANUAL} />
+      </Layout>,
+    );
+
+    expect(container.querySelector('style')).not.toBeNull();
+    expect(animateSpy).toHaveBeenCalled();
+  });
+
+  it('animate={true} 不随系统偏好切换而关闭', async () => {
+    const reducedMotion = stubReducedMotion(false);
+    const container = await mount(
+      <Layout width={100} height={100} animate={true}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+      </Layout>,
+    );
+
+    await act(() => reducedMotion.setMatches(true));
+
+    expect(container.querySelector('style')).not.toBeNull();
+  });
+
+  it('animate={false} 不随系统偏好切换而开启', async () => {
+    const reducedMotion = stubReducedMotion(true);
+    const container = await mount(
+      <Layout width={100} height={100} animate={false}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+      </Layout>,
+    );
+
+    await act(() => reducedMotion.setMatches(false));
+
+    expect(container.querySelector('style')).toBeNull();
+  });
 });

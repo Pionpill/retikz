@@ -18,7 +18,7 @@ import { Layout, Node } from '@retikz/react';
 
 <ComponentAlert
   title="末帧 = 静止态，所以能降级"
-  description="入场类动画的最后一帧就是元素本来的样子（fadeIn 的末帧 = 不透明）。于是不支持动画的环境、用户开了「减少动态效果」、或你传 animate={false} 时，React SVG / Canvas 与 Vanilla 都直接渲染这个静止态——看到的是完整最终图，不是动画起点那个可能全透明的样子。"
+  description="入场类动画的最后一帧就是元素本来的样子（fadeIn 的末帧 = 不透明）。于是不支持动画的环境、未显式开关且用户开了「减少动态效果」、或你显式关闭动画时，React SVG / Canvas 与 Vanilla 都直接渲染这个静止态——看到的是完整最终图，不是动画起点那个可能全透明的样子。"
 />
 
 ## 全部动画一览
@@ -160,7 +160,21 @@ const ref = useRef<AnimationControls | null>(null);
 
 `animationRef` / vanilla `view.animation` 是 scene 级时钟句柄：SVG 控制整图交互动画的 WAAPI 句柄，Canvas 控制共享 rAF 时钟。handler 内要控制命中的具体图元时，用水合的 [`context.animation`](/kernel/packages/render/hydration#handler-的-context)，两后端都是 per-id 控制。
 
-**何时不播**：传 `animate={false}`、用户系统开了「减少动态效果」（`prefers-reduced-motion`）、或后端不支持动画。React SVG / Canvas 与 Vanilla 都会降级到静止态；降级时**不报错、不丢图**，渲染完整静止图。
+播放总开关是三态的。React 与 Vanilla 的写法不同，但优先级一致：
+
+| 意图     | React             | Vanilla                         |
+| -------- | ----------------- | ------------------------------- |
+| 跟随系统 | 省略 `animate`    | 省略 `animation.enabled`        |
+| 强制开启 | `animate={true}`  | `animation: { enabled: true }`  |
+| 强制关闭 | `animate={false}` | `animation: { enabled: false }` |
+
+<ComponentAlert
+  type="warn"
+  title="显式开启会覆盖系统偏好"
+  description="animate={true} 与 animation.enabled: true 即使在 prefers-reduced-motion 下也会播放。一般应用应省略开关来跟随系统，只在用户主动选择或必须展示动态效果时强制开启。"
+/>
+
+**何时不播**：显式关闭、未传开关且用户系统开了「减少动态效果」（`prefers-reduced-motion`），或后端不支持动画。React SVG / Canvas 与 Vanilla 都会降级到静止态；降级时**不报错、不丢图**，渲染完整静止图。
 
 ### 静态截帧（`snapshot` / `snapshotAt`）
 
@@ -177,7 +191,7 @@ const ref = useRef<AnimationControls | null>(null);
 </Layout>
 ```
 
-`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖 `animate`。交互触发的 track（`manual` / `visible` / `{ onEvent }`）在静态帧里**不参与定格**、停在 base（settled）——海报代表「加载后、尚未发生任何交互」的样子，两后端一致。
+`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖显式动画开关。交互触发的 track（`manual` / `visible` / `{ onEvent }`）在静态帧里**不参与定格**、停在 base（settled）——海报代表「加载后、尚未发生任何交互」的样子，两后端一致。
 
 ## 相关
 

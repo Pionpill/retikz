@@ -1,3 +1,4 @@
+import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import { renderToSvgString as buildSvgString } from '@retikz/render/svg';
 
 import type { RenderInput, RenderToStringOptions } from './types';
@@ -14,9 +15,10 @@ import { toScene } from './to-scene';
 export const renderToSvgString = (input: RenderInput, options: RenderToStringOptions = {}): string => {
   const output = options.output ?? {};
   const animation = options.animation ?? {};
+  const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   return buildSvgString(toScene(input, options), {
     idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
-    animate: animation.enabled,
+    animate,
     snapshotAt: animation.snapshotAt,
     easings: animation.easings,
     width: output.width,

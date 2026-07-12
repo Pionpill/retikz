@@ -20,8 +20,9 @@ export type VanillaOutputOptions = {
 /** 动画渲染选项。 */
 export type VanillaAnimationOptions = {
   /**
-   * 是否播放动画（缺省 true）；`false` → 渲染 base 静态图（不 emit CSS/WAAPI、Canvas 不起 rAF）
-   * @description runtime 据 `{ animation: { enabled: false } }` 或 `prefers-reduced-motion` 走静态路径，不起任何动画。
+   * 是否播放动画；未传时跟随系统减少动态效果偏好，显式 `true` / `false` 强制开关
+   * @description `false` 渲染 base 静态图（不 emit CSS/WAAPI、Canvas 不起 rAF）；显式 `true` 会覆盖
+   *   `prefers-reduced-motion`。
    */
   enabled?: boolean;
   /**

@@ -121,6 +121,31 @@ describe('mountSvg 动画', () => {
     const view = mountSvg(document.createElement('div'), loadIr);
     expect(view.root.querySelector('style')).toBeNull();
   });
+
+  it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true })),
+    );
+    const view = mountSvg(document.createElement('div'), loadIr, { animation: { enabled: true } });
+    expect(view.root.querySelector('style')).not.toBeNull();
+  });
+
+  it('renderToSvgString 缺省跟随 prefers-reduced-motion', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true })),
+    );
+    expect(renderToSvgString(loadIr)).not.toContain('@keyframes');
+  });
+
+  it('renderToSvgString 显式 enabled:true 覆盖 prefers-reduced-motion', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true })),
+    );
+    expect(renderToSvgString(loadIr, { animation: { enabled: true } })).toContain('@keyframes');
+  });
 });
 
 describe('SVG 静态截帧 {at:t}', () => {
@@ -153,6 +178,19 @@ describe('mountCanvas 动画', () => {
     });
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeUndefined();
+  });
+
+  it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true })),
+    );
+    const view = mountCanvas(document.createElement('div'), loadIr, {
+      output: { width: 100, height: 100 },
+      animation: { enabled: true },
+    });
+    expect(rafSpy).toHaveBeenCalled();
+    expect(view.animation).toBeDefined();
   });
 
   it('manual-only track → 不自动起 rAF，但有 view.animation 句柄；play() 起时钟', () => {
