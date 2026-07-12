@@ -31,6 +31,7 @@ v0.2 默认消费这层共享数据语义；plot 专属的统计 transform、lay
 
 - tooltip / hover / selection / brush / legend interaction；
 - transition / animation 与数据过滤型交互的重 lower 策略；
+- 增量 lowering / compile、共享解析上下文与分层物化、依赖失效模型，以及复用 Tier1 static / dynamic runtime 的按需渲染；v0.1 beta.2 只保留 plain spec、稳定 identity 与 owner 边界，不提前冻结 cache / patch API；
 - 全局 decoration layout solver：统一 `LayoutClaim`、稳定迭代、碰撞避让、优先级与溢出策略，并支持相对 coordinate view 定位；v0.1 beta.2 不提前公开未实现的 `maxIterations` / `collision` / `priority` / `overflow` / `target:'view'` 字段；
 - tree / network / word cloud / treemap / gauge / progress / pictogram 等 layout transform；
 - layout transform 与 chart type 的消费边界。
