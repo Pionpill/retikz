@@ -215,7 +215,7 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
     }
   });
 
-  // 刻度不沿辐条越出内 / 外端点（修：首尾刻度曾各多出 AXIS_TICK_LENGTH/2）
+  // 刻度不沿辐条越出内 / 外端点（修：首尾刻度曾各多出 DEFAULT_AXIS_TICK_LENGTH/2）
   it('radial_axis_ticks_do_not_overshoot_spoke_endpoints', () => {
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);

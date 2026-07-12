@@ -38,7 +38,7 @@ import {
   AxisTitlePlacementKeyword,
   PlotLayerZIndex,
 } from '../../schemas';
-import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
+import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
 const DEG_TO_RAD = Math.PI / 180;
@@ -135,12 +135,15 @@ const axisTickLineMarkOf = (guide: AxisGuide): { length: number; line: GuidePath
   if (mark === false) return false;
   if (mark === undefined) {
     return {
-      length: guide.ticks?.length ?? AXIS_TICK_LENGTH,
+      length: guide.ticks?.length ?? DEFAULT_AXIS_TICK_LENGTH,
       line: guide.ticks?.line === false ? false : lineStyleProps(guide.ticks?.line),
     };
   }
   if (mark.kind !== AxisTickMarkKind.Line) return null;
-  return { length: mark.length ?? AXIS_TICK_LENGTH, line: mark.line === false ? false : lineStyleProps(mark.line) };
+  return {
+    length: mark.length ?? DEFAULT_AXIS_TICK_LENGTH,
+    line: mark.line === false ? false : lineStyleProps(mark.line),
+  };
 };
 
 const axisShapeTickMarkOf = (guide: AxisGuide): AxisShapeTickMarkToken | null => {
@@ -159,7 +162,7 @@ const axisTickLengthOf = (guide: AxisGuide): number => {
   const line = axisTickLineMarkOf(guide);
   if (line !== null) return line === false ? 0 : line.length;
   const shape = axisShapeTickMarkOf(guide);
-  if (shape === null) return AXIS_TICK_LENGTH;
+  if (shape === null) return DEFAULT_AXIS_TICK_LENGTH;
   const size = shapeMarkSizeOf(shape);
   return size.offset + Math.max(size.width, size.height) / 2;
 };
@@ -362,7 +365,7 @@ const axisTickLabelStyleOf = (guide: AxisGuide): GuideTextStyle | false =>
   guide.tickLabels === false ? false : textStyleProps(guide.tickLabels);
 
 const axisTickLabelGapOf = (guide: AxisGuide): number =>
-  guide.tickLabels !== false ? (guide.tickLabels?.gap ?? AXIS_LABEL_GAP) : AXIS_LABEL_GAP;
+  guide.tickLabels !== false ? (guide.tickLabels?.gap ?? DEFAULT_AXIS_LABEL_GAP) : DEFAULT_AXIS_LABEL_GAP;
 
 type AxisTickLabelsToken = Exclude<NonNullable<AxisGuide['tickLabels']>, false>;
 type AxisTickLabelLayoutToken = NonNullable<AxisTickLabelsToken['layout']>;
@@ -829,7 +832,7 @@ const lowerCartesianGuide = (
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { plotArea, fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
+  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const left = plotArea.x;
   const right = plotArea.x + plotArea.width;
   const top = plotArea.y;
@@ -1099,7 +1102,7 @@ const arcPath = (frame: PolarCoordinateFrame, radius: number): IRPath => {
 
 /**
  * polar angular axis：外圆弧轴线 + 每角向刻度短径向刻度线 + 圆周外标签
- * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 AXIS_TICK_LENGTH 短线；
+ * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 DEFAULT_AXIS_TICK_LENGTH 短线；
  *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条。
  */
 const lowerAngularAxis = (
@@ -1109,7 +1112,7 @@ const lowerAngularAxis = (
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
+  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const ticks = ctx.angularTicks ?? { values: [], labels: [] };
   const scale = frame.primary;
   const outer = frame.outerRadius;
@@ -1241,7 +1244,7 @@ const lowerRadialAxis = (
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
+  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const ticks = ctx.radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
   const baseAngle = frame.startAngle;
@@ -1414,7 +1417,7 @@ const lowerTernaryGuide = (
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
+  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const ticks = ctx.ternaryTicks ?? { values: [], labels: [] };
   const tickLength = axisTickLengthOf(guide);
   const tickLabelGap = axisTickLabelGapOf(guide);
@@ -1586,7 +1589,7 @@ export const lowerCustomAxis = (
   const tickLabelGap = axisTickLabelGapOf(guide);
   const tickLabelStyle = axisTickLabelStyleOf(guide);
   const showLabels = tickLabelStyle !== false;
-  const labelGap = AXIS_LABEL_GAP;
+  const labelGap = DEFAULT_AXIS_LABEL_GAP;
 
   // 其它角色锚在各自 scale 首刻度（≈ domain 起点）；按 frame.roles 序拼 values 喂 projectRoles
   const anchorFor = (role: DimensionRole): unknown => {

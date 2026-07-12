@@ -10,11 +10,11 @@ export const DEFAULT_FONT_SIZE = 11;
 /** 数字字宽经验系数（字宽约等于 0.6em），用于无 measureText 时估算 label 像素宽。 */
 export const CHAR_WIDTH_FACTOR = 0.6;
 
-/** 刻度线长（user units）；axis 与 guide 复用。 */
-export const AXIS_TICK_LENGTH = 6;
+/** 默认刻度线长（user units）；axis 与 guide 复用。 */
+export const DEFAULT_AXIS_TICK_LENGTH = 6;
 
-/** 刻度线到 label 的间距（user units）；axis 与 guide 共用。 */
-export const AXIS_LABEL_GAP = 4;
+/** 默认刻度线到 label 的间距（user units）；axis 与 guide 共用。 */
+export const DEFAULT_AXIS_LABEL_GAP = 4;
 
 /** 矩形区域（绘图区 plot area 用）。 */
 export type Rect = {
@@ -111,11 +111,13 @@ export const computePlotArea = (
       (reserve.right ?? 0) +
       (layoutReserve.right ?? 0),
     bottom:
-      (input.hasXAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : 0) +
+      (input.hasXAxis ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + fontSize : 0) +
       (reserve.bottom ?? 0) +
       (layoutReserve.bottom ?? 0),
     left:
-      (input.hasYAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0) +
+      (input.hasYAxis
+        ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize)
+        : 0) +
       (reserve.left ?? 0) +
       (layoutReserve.left ?? 0),
   };
@@ -172,7 +174,9 @@ export const computePolarCoordinate = (
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
   // 角向标签贴外圈一圈，最坏在左右两侧吃掉一个最宽标签宽 + 一个字高（顶/底），故四向各按需预留
   const labelReserve = input.hasAngularAxis
-    ? Math.max(maxLabelWidth(input.angularLabels, fontSize), fontSize) + AXIS_TICK_LENGTH + AXIS_LABEL_GAP
+    ? Math.max(maxLabelWidth(input.angularLabels, fontSize), fontSize) +
+      DEFAULT_AXIS_TICK_LENGTH +
+      DEFAULT_AXIS_LABEL_GAP
     : 0;
   const explicit: Partial<Margins> = options.margin ?? {};
   const layoutReserve = options.reserve ?? {};
@@ -231,7 +235,7 @@ export const computeTernaryFrame = (
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
   // 三边刻度标签贴边一圈，按最宽标签估留白；无轴时也留一字高边距，避免顶点贴画布
   const reserve = input.hasAxis
-    ? maxLabelWidth(input.labels, fontSize) + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize
+    ? maxLabelWidth(input.labels, fontSize) + DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + fontSize
     : fontSize;
   const explicit: Partial<Margins> = options.margin ?? {};
   const layoutReserve = options.reserve ?? {};
