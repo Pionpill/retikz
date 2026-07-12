@@ -17,6 +17,7 @@ import {
   DEFAULT_ARROW_SHAPE,
 } from '../../../schemas';
 import { validateMarkerPrimitives } from '../../resource';
+import { arcCommandPointAt, trimArcEnd, trimArcStart } from './arc-shrink';
 
 /** 已解析 arrow registry：内置 8 + 注入 */
 export type ResolvedArrowRegistry = ReadonlyMap<string, ArrowDefinition>;
@@ -283,7 +284,16 @@ const setEndpoint = ({ commands, index, endpoint, round }: SetEndpointInput): vo
   } else if (cmd.kind === 'cubic') {
     commands[index] = { ...cmd, to: rp };
   }
-  // arc / ellipseArc 不参与 shrink——首末段都是 line/cubic（path-arrow 的 path 形态）
+};
+
+const isDrawableCommand = (command: PathCommand): boolean => command.kind !== 'move' && command.kind !== 'close';
+
+const precedingMoveIndex = (commands: ReadonlyArray<PathCommand>, commandIndex: number): number => {
+  for (let index = commandIndex - 1; index >= 0; index -= 1) {
+    if (commands[index].kind === 'move') return index;
+    if (isDrawableCommand(commands[index])) break;
+  }
+  return -1;
 };
 
 /** 箭头收缩改写所需上下文。 */
@@ -298,38 +308,51 @@ export type ApplyArrowShrinksContext = {
 export const applyArrowShrinks = (commands: Array<PathCommand>, context: ApplyArrowShrinksContext): void => {
   const { shrinkStart, shrinkEnd, strokeWidth, round } = context;
   if (shrinkStart !== 0) {
-    // 找首个 move 与其后第一个有 endpoint 的命令
-    const firstIdx = commands.findIndex(o => o.kind === 'move');
-    if (firstIdx >= 0) {
-      const cur = commands[firstIdx];
-      const nextIdx = commands.findIndex((o, idx) => idx > firstIdx && o.kind !== 'close');
-      if (cur.kind === 'move' && nextIdx >= 0) {
-        const nextPt = endpointOf(commands[nextIdx]);
-        if (nextPt) {
-          const shifted = point.shiftToward([cur.to[0], cur.to[1]], nextPt, shrinkStart * strokeWidth);
-          setEndpoint({ commands, index: firstIdx, endpoint: shifted, round });
+    const firstDrawableIndex = commands.findIndex(isDrawableCommand);
+    const moveIndex = precedingMoveIndex(commands, firstDrawableIndex);
+    if (firstDrawableIndex >= 0 && moveIndex >= 0) {
+      const command = commands[firstDrawableIndex];
+      if (command.kind === 'arc' || command.kind === 'ellipseArc') {
+        const trimmed = trimArcStart(command, shrinkStart * strokeWidth);
+        commands[firstDrawableIndex] = trimmed;
+        setEndpoint({
+          commands,
+          index: moveIndex,
+          endpoint: arcCommandPointAt(trimmed, trimmed.startAngle),
+          round,
+        });
+      } else {
+        const move = commands[moveIndex];
+        const nextPoint = endpointOf(command);
+        if (move.kind === 'move' && nextPoint) {
+          const shifted = point.shiftToward([move.to[0], move.to[1]], nextPoint, shrinkStart * strokeWidth);
+          setEndpoint({ commands, index: moveIndex, endpoint: shifted, round });
         }
       }
     }
   }
   if (shrinkEnd !== 0) {
-    // 末尾最后一个有 endpoint 的命令与其前最近的一个
-    let lastIdx = -1;
+    let lastDrawableIndex = -1;
     for (let i = commands.length - 1; i >= 0; i--) {
-      if (commands[i].kind !== 'close') {
-        lastIdx = i;
+      if (isDrawableCommand(commands[i])) {
+        lastDrawableIndex = i;
         break;
       }
     }
-    if (lastIdx > 0) {
-      let prevIdx = lastIdx - 1;
+    if (lastDrawableIndex >= 0) {
+      const command = commands[lastDrawableIndex];
+      if (command.kind === 'arc' || command.kind === 'ellipseArc') {
+        commands[lastDrawableIndex] = trimArcEnd(command, shrinkEnd * strokeWidth);
+        return;
+      }
+      let prevIdx = lastDrawableIndex - 1;
       while (prevIdx >= 0 && commands[prevIdx].kind === 'close') prevIdx--;
       if (prevIdx >= 0) {
-        const curPt = endpointOf(commands[lastIdx]);
+        const curPt = endpointOf(command);
         const prevPt = endpointOf(commands[prevIdx]);
         if (curPt && prevPt) {
           const shifted = point.shiftToward(curPt, prevPt, shrinkEnd * strokeWidth);
-          setEndpoint({ commands, index: lastIdx, endpoint: shifted, round });
+          setEndpoint({ commands, index: lastDrawableIndex, endpoint: shifted, round });
         }
       }
     }

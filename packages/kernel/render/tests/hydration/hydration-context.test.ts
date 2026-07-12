@@ -111,6 +111,35 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
     expect(geometry?.bbox.height).toBeCloseTo(40, 6);
   });
 
+  it('path 内旋转 ellipseArc 使用旋转后的保守投影 bbox', () => {
+    const scene: Scene = {
+      layout: { x: -20, y: -20, width: 40, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          id: 'arc',
+          commands: [
+            {
+              kind: 'ellipseArc',
+              center: [0, 0],
+              radiusX: 10,
+              radiusY: 2,
+              rotation: 90,
+              startAngle: 0,
+              endAngle: 360,
+            },
+          ],
+        },
+      ],
+    };
+
+    const geometry = geometryOf(scene, 'arc');
+    expect(geometry?.bbox.x).toBeCloseTo(-2, 8);
+    expect(geometry?.bbox.y).toBeCloseTo(-10, 8);
+    expect(geometry?.bbox.width).toBeCloseTo(4, 8);
+    expect(geometry?.bbox.height).toBeCloseTo(20, 8);
+  });
+
   it('无匹配 id → undefined', () => {
     const scene: Scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
     expect(geometryOf(scene, 'x')).toBeUndefined();

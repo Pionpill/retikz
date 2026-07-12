@@ -9,12 +9,36 @@ import { arrowMarks } from '../helpers/arrow-marks';
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((p): p is PathPrim => p.type === 'path');
 
-/**
- * 验证 arrow + arc 末端的最小稳定性：编译不抛错，且保留有限值的结构化 arc 命令。
- * @remarks 当前不保证 arc 端点收缩与 marker 切线朝向；两项留待独立正确性修复。
- */
-describe('arrow + arc 末端：编译不挂', () => {
-  it('arc 单段 + arrow="->" 不抛错（端点 shrink 走 fallback）', () => {
+const findArcCommand = (path: PathPrim) => path.commands.find(command => command.kind === 'arc');
+
+const findEllipseArcCommand = (path: PathPrim) => path.commands.find(command => command.kind === 'ellipseArc');
+
+const approximateEllipseArcLength = (
+  radiusX: number,
+  radiusY: number,
+  startAngle: number,
+  endAngle: number,
+): number => {
+  const segments = 20_000;
+  let total = 0;
+  let previous: [number, number] = [
+    radiusX * Math.cos((startAngle * Math.PI) / 180),
+    radiusY * Math.sin((startAngle * Math.PI) / 180),
+  ];
+  for (let index = 1; index <= segments; index += 1) {
+    const angle = startAngle + ((endAngle - startAngle) * index) / segments;
+    const current: [number, number] = [
+      radiusX * Math.cos((angle * Math.PI) / 180),
+      radiusY * Math.sin((angle * Math.PI) / 180),
+    ];
+    total += Math.hypot(current[0] - previous[0], current[1] - previous[1]);
+    previous = current;
+  }
+  return total;
+};
+
+describe('arrow + arc 端点收缩', () => {
+  it('按圆弧长度收缩末端，而不是保留原 endAngle', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -29,16 +53,45 @@ describe('arrow + arc 末端：编译不挂', () => {
         },
       ],
     };
-    expect(() => compileToScene(ir)).not.toThrow();
-    const p = findPathPrim(compileToScene(ir).primitives);
-    expect(p).toBeDefined();
-    expect(p?.arrowEnd?.shape).toBe('normal');
-    // 仍持有 arc PathCommand
-    expect(p?.commands.some(c => c.kind === 'arc')).toBe(true);
+    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const arc = findArcCommand(path);
+    const expectedAngle = 90 - (6 / 10) * (180 / Math.PI);
+
+    expect(path.arrowEnd?.shape).toBe('normal');
+    expect(arc?.endAngle).toBeCloseTo(expectedAngle, 8);
   });
 
-  it('arc 单段 + open shape arrow（hollow）：编译完成，arc 命令保留', () => {
-    // hollow shape 在 line/cubic 末端时会 shrink 端点；arc 末端这一边界不 shrink 也不抛错
+  it('收缩起点时同步改写 move 与 startAngle', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          marks: arrowMarks('<-', { shape: 'open' }),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', radius: 10, startAngle: 0, endAngle: 90 },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const arc = findArcCommand(path)!;
+    const move = path.commands.find(command => command.kind === 'move');
+    const expectedAngle = (5.25 / 10) * (180 / Math.PI);
+
+    expect(arc.startAngle).toBeCloseTo(expectedAngle, 8);
+    expect(move?.kind).toBe('move');
+    if (move?.kind === 'move') {
+      expect(move.to).toEqual([
+        Math.round(10 * Math.cos((expectedAngle * Math.PI) / 180) * 100) / 100,
+        Math.round(10 * Math.sin((expectedAngle * Math.PI) / 180) * 100) / 100,
+      ]);
+    }
+  });
+
+  it('按椭圆弧长度收缩末端', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -48,15 +101,63 @@ describe('arrow + arc 末端：编译不挂', () => {
           marks: arrowMarks('->', { shape: 'open' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', radius: { x: 20, y: 10 }, startAngle: 0, endAngle: 90 },
+          ],
+        },
+      ],
+    };
+
+    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const arc = findEllipseArcCommand(path)!;
+
+    expect(arc.endAngle).toBeLessThan(90);
+    expect(approximateEllipseArcLength(20, 10, arc.endAngle, 90)).toBeCloseTo(5.25, 5);
+  });
+
+  it('双端箭头在同一圆弧上分别向内收缩', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          marks: arrowMarks('<->', { shape: 'open' }),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'arc', radius: 10, startAngle: 0, endAngle: 90 },
           ],
         },
       ],
     };
-    expect(() => compileToScene(ir)).not.toThrow();
-    const p = findPathPrim(compileToScene(ir).primitives);
-    expect(p).toBeDefined();
-    expect(p?.arrowEnd?.shape).toBe('open');
+
+    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const arc = findArcCommand(path)!;
+
+    expect(arc.startAngle).toBeGreaterThan(0);
+    expect(arc.endAngle).toBeLessThan(90);
+    expect(arc.startAngle).toBeLessThan(arc.endAngle);
+  });
+
+  it('收缩量超过短弧长度时钳制为零长度弧', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          marks: arrowMarks('<->', { shape: 'open' }),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', radius: 1, startAngle: 0, endAngle: 10 },
+          ],
+        },
+      ],
+    };
+
+    const path = findPathPrim(compileToScene(ir).primitives)!;
+    const arc = findArcCommand(path)!;
+
+    expect(arc.startAngle).toBeCloseTo(arc.endAngle, 8);
   });
 });
 

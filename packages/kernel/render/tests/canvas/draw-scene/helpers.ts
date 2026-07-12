@@ -40,8 +40,10 @@ export type SpyCanvasContext = Pick<
   | 'rotate'
   | 'scale'
   | 'stroke'
+  | 'transform'
   | 'translate'
 > & {
+  canvas: HTMLCanvasElement;
   calls: Array<CanvasCall>;
   fillStyle: string | CanvasGradient | CanvasPattern;
   font: string;
@@ -53,12 +55,31 @@ export type SpyCanvasContext = Pick<
   strokeStyle: string | CanvasGradient | CanvasPattern;
   textAlign: CanvasTextAlign;
   textBaseline: CanvasTextBaseline;
+  getTransform: () => DOMMatrix;
 };
 
-export const createSpyCanvasContext = (): SpyCanvasContext => {
+type MatrixValues = { a: number; b: number; c: number; d: number; e: number; f: number };
+
+const multiplyMatrix = (left: MatrixValues, right: MatrixValues): MatrixValues => ({
+  a: left.a * right.a + left.c * right.b,
+  b: left.b * right.a + left.d * right.b,
+  c: left.a * right.c + left.c * right.d,
+  d: left.b * right.c + left.d * right.d,
+  e: left.a * right.e + left.c * right.f + left.e,
+  f: left.b * right.e + left.d * right.f + left.f,
+});
+
+export const createSpyCanvasContext = (width = 300, height = 150): SpyCanvasContext => {
   const calls: Array<CanvasCall> = [];
-  const stack: Array<Pick<SpyCanvasContext, 'font' | 'lineCap' | 'lineDashOffset' | 'lineJoin' | 'lineWidth'>> = [];
+  let matrix: MatrixValues = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  const stack: Array<
+    Pick<
+      SpyCanvasContext,
+      'fillStyle' | 'font' | 'globalAlpha' | 'lineCap' | 'lineDashOffset' | 'lineJoin' | 'lineWidth' | 'strokeStyle'
+    > & { matrix: MatrixValues }
+  > = [];
   const context = {
+    canvas: { width, height },
     calls,
     fillStyle: '#000',
     font: '',
@@ -76,16 +97,23 @@ export const createSpyCanvasContext = (): SpyCanvasContext => {
     (...args: Array<unknown>) => {
       if (name === 'save') {
         stack.push({
+          fillStyle: context.fillStyle,
           font: context.font,
+          globalAlpha: context.globalAlpha,
           lineCap: context.lineCap,
           lineDashOffset: context.lineDashOffset,
           lineJoin: context.lineJoin,
           lineWidth: context.lineWidth,
+          matrix: { ...matrix },
+          strokeStyle: context.strokeStyle,
         });
       }
       if (name === 'restore') {
         const snapshot = stack.pop();
-        if (snapshot) Object.assign(context, snapshot);
+        if (snapshot) {
+          matrix = snapshot.matrix;
+          Object.assign(context, snapshot);
+        }
       }
       calls.push({
         name,
@@ -138,18 +166,45 @@ export const createSpyCanvasContext = (): SpyCanvasContext => {
     fill: record('fill'),
     fillRect: record('fillRect'),
     fillText: record('fillText'),
+    getTransform: () => ({ ...matrix }) as DOMMatrix,
     lineTo: record('lineTo'),
     moveTo: record('moveTo'),
     quadraticCurveTo: record('quadraticCurveTo'),
     rect: record('rect'),
     restore: record('restore'),
-    rotate: record('rotate'),
+    rotate: (angle: number) => {
+      record('rotate')(angle);
+      matrix = multiplyMatrix(matrix, {
+        a: Math.cos(angle),
+        b: Math.sin(angle),
+        c: -Math.sin(angle),
+        d: Math.cos(angle),
+        e: 0,
+        f: 0,
+      });
+    },
     save: record('save'),
-    scale: record('scale'),
+    scale: (x: number, y: number) => {
+      record('scale')(x, y);
+      matrix = multiplyMatrix(matrix, { a: x, b: 0, c: 0, d: y, e: 0, f: 0 });
+    },
     setLineDash: record('setLineDash'),
-    setTransform: record('setTransform'),
+    setTransform: (...args: Array<unknown>) => {
+      record('setTransform')(...args);
+      if (args.length === 6 && args.every(value => typeof value === 'number')) {
+        const [a, b, c, d, e, f] = args;
+        matrix = { a, b, c, d, e, f };
+      }
+    },
     stroke: record('stroke'),
-    translate: record('translate'),
+    transform: (a: number, b: number, c: number, d: number, e: number, f: number) => {
+      record('transform')(a, b, c, d, e, f);
+      matrix = multiplyMatrix(matrix, { a, b, c, d, e, f });
+    },
+    translate: (x: number, y: number) => {
+      record('translate')(x, y);
+      matrix = multiplyMatrix(matrix, { a: 1, b: 0, c: 0, d: 1, e: x, f: y });
+    },
   });
 
   return context;
