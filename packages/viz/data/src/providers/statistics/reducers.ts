@@ -7,6 +7,7 @@ import { freezeDefinitions } from '../shared';
 import { finiteFieldValuesOf } from '../transform';
 import {
   finiteExtentOf,
+  meanOf,
   medianOf,
   quantileBandStatsOf,
   quantileOf,
@@ -39,7 +40,7 @@ const meanReducerDefinition = defineStatisticsReducer({
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length };
+    return { [operation.as]: meanOf(values) };
   },
 });
 
@@ -58,7 +59,7 @@ const minReducerDefinition = defineStatisticsReducer({
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : Math.min(...values) };
+    return { [operation.as]: finiteExtentOf(values).min };
   },
 });
 
@@ -69,7 +70,7 @@ const maxReducerDefinition = defineStatisticsReducer({
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : Math.max(...values) };
+    return { [operation.as]: finiteExtentOf(values).max };
   },
 });
 
@@ -80,7 +81,8 @@ const extentReducerDefinition = defineStatisticsReducer({
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? [0, 0] : [Math.min(...values), Math.max(...values)] };
+    const { min, max } = finiteExtentOf(values);
+    return { [operation.as]: [min, max] };
   },
 });
 

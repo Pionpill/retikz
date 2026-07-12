@@ -2,7 +2,7 @@ import type { ExternalRow } from '@retikz/data';
 
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope } from '@retikz/core';
 
-import type { Mark, PointMark } from '../../../schemas';
+import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
 import type { MarkPaint } from '../shared';
 
 import {
@@ -12,7 +12,7 @@ import {
   type MarkDefinition,
   type MarkLoweringContext,
 } from '../../../contract';
-import { PlotMark } from '../../../schemas';
+import { PlotMark, PointMarkSchema } from '../../../schemas';
 import {
   attachDatumAnchor,
   attachDatumLabel,
@@ -33,7 +33,7 @@ import {
 const POINT_SIZE = 10;
 
 /** 散点 node 样式（circle + padding0 + minimumSize；÷√2 补 circle 外接，使 POINT_SIZE 即真实直径）。 */
-const pointStyle = (fill: MarkPaint, mark: PointMark): IRNodeDefault => {
+const pointStyle = (fill: MarkPaint, mark: IRPlotPointMark): IRNodeDefault => {
   const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
   const minimumSize = mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined;
   const stroke = mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
@@ -58,7 +58,7 @@ const pointStyle = (fill: MarkPaint, mark: PointMark): IRNodeDefault => {
 };
 
 /** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill）。 */
-const textStyle = (textColor: string, mark: PointMark): IRNodeDefault => {
+const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
   const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
   const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
   const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
@@ -80,7 +80,7 @@ const textStyle = (textColor: string, mark: PointMark): IRNodeDefault => {
  *   否则 → circle glyph（size / opacity / shape 通道 per-datum、datum label 经 attachDatumLabel），样式走 pointStyle（fill）。
  */
 export const lowerPoint = (
-  mark: Mark,
+  mark: IRPlotMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
@@ -169,15 +169,16 @@ export const lowerPoint = (
 };
 
 /** 收集 point mark 独有的 mark-level 通道字段。 */
-const collectPointChannelFields = (mark: PointMark, fields: FieldCollector): void => {
+const collectPointChannelFields = (mark: IRPlotPointMark, fields: FieldCollector): void => {
   fields.addChannel(mark.color);
   fields.addChannel(mark.fill);
   fields.addChannel(mark.stroke);
   fields.addChannel(mark.encoding.text);
 };
 
-export const pointMarkDefinition: MarkDefinition<PointMark> = {
-  type: PlotMark.Point,
+/** 内置 point mark definition。 */
+export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
+  schema: PointMarkSchema,
   channelKinds: nodeChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);

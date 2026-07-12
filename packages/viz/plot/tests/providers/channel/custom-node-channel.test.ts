@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { AnyChannelDefinition } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -91,7 +91,7 @@ const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({
   channelDefinitions: defs,
 });
 
-const scatterSpec = (channels?: Record<string, unknown>): PlotSpec =>
+const scatterSpec = (channels?: Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -143,7 +143,7 @@ const scopesOf = (scope: IRScope): Array<IRScope> => {
 };
 
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -152,7 +152,7 @@ const firstLayer = (
 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -219,6 +219,16 @@ describe('custom node channel registry', () => {
     expect(() => lowerPlots({ d: rows }, opts([intensityChannel, intensityChannel]))[0].expand(scatterSpec())).toThrow(
       /duplicate custom channel/,
     );
+  });
+
+  it('empty_custom_channel_name_fails_loud', () => {
+    const bad = defineNodeChannel<number>({
+      channel: '',
+      output: { outputKind: 'number', range: [0, 1] },
+      resolve: () => () => undefined,
+      deliver: () => {},
+    });
+    expect(() => lowerPlots({ d: rows }, opts([bad]))[0].expand(scatterSpec())).toThrow(/non-empty channel name/);
   });
 
   // 交互：自定义通道 + 内置 size 同图各自生效（size→radius、intensity→opacity）

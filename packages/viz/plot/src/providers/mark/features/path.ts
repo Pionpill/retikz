@@ -10,7 +10,7 @@ import {
 } from '@retikz/core';
 import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 
-import type { Mark, PathClosure, PathCurveValue, PathMark } from '../../../schemas';
+import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark, PathCurveValue } from '../../../schemas';
 import type { PolarVertex } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 
@@ -24,7 +24,7 @@ import {
   type MarkProvenance,
 } from '../../../contract';
 import { seriesPathMeta, slug } from '../../../contract';
-import { PathClosureKind, PathCurve, PlotMark } from '../../../schemas';
+import { PathClosureKind, PathCurve, PathMarkSchema, PlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import {
   densifyPolarSegments,
@@ -51,7 +51,7 @@ import {
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）。
  * @description x/y 是唯一位置通道（坐标系决定其含义）。
  */
-export const resolveRolePosition = (mark: PathMark, row: ExternalRow): [unknown, unknown] => [
+export const resolveRolePosition = (mark: IRPlotPathMark, row: ExternalRow): [unknown, unknown] => [
   channelValue(mark.encoding.x, row),
   channelValue(mark.encoding.y, row),
 ];
@@ -298,6 +298,7 @@ const effectivePathCurve = (curve: PathCurveValue | undefined, frame: Coordinate
   return curve ?? PathCurve.Linear;
 };
 
+/** 按图元 order 字段稳定排序数据行。 */
 export const orderRows = (rows: Array<ExternalRow>, order: string | undefined): Array<ExternalRow> =>
   order ? [...rows].sort((a, b) => compareRowsByFieldPath(a, b, order)) : rows;
 
@@ -306,7 +307,7 @@ export const orderRows = (rows: Array<ExternalRow>, order: string | undefined): 
  * @description cartesian / polar 分类角轴 / closed 走弦（顶点直连）；polar 连续角轴段内采样弯弧。
  */
 export const buildOutlinePoints = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   ordered: Array<ExternalRow>,
   frame: CoordinateFrame,
   closed: boolean,
@@ -342,12 +343,17 @@ const pathDefaultBaseline = (frame: CoordinateFrame): number => {
   return Math.abs(min - ZERO_BASELINE) <= Math.abs(max - ZERO_BASELINE) ? min : max;
 };
 
-const pathClosureOf = (mark: PathMark): PathClosure | undefined => mark.closure;
+const pathClosureOf = (mark: IRPlotPathMark): IRPlotPathClosure | undefined => mark.closure;
 
 type PathRowSegment = Array<ExternalRow>;
 type PathStepSegment = { rows: PathRowSegment; steps: Array<IRStep> };
 
-const projectableTopPoint = (mark: PathMark, row: ExternalRow, frame: CoordinateFrame, closed: boolean): boolean => {
+const projectableTopPoint = (
+  mark: IRPlotPathMark,
+  row: ExternalRow,
+  frame: CoordinateFrame,
+  closed: boolean,
+): boolean => {
   const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
   if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed)
     return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
@@ -355,10 +361,10 @@ const projectableTopPoint = (mark: PathMark, row: ExternalRow, frame: Coordinate
 };
 
 const projectableClosurePoint = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   row: ExternalRow,
   frame: CoordinateFrame,
-  closure: PathClosure,
+  closure: IRPlotPathClosure,
   closed: boolean,
 ): boolean => {
   if (!projectableTopPoint(mark, row, frame, closed)) return false;
@@ -394,10 +400,10 @@ const splitRowsByProjectability = (
 };
 
 const pathRowSegments = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
-  closure: PathClosure | undefined,
+  closure: IRPlotPathClosure | undefined,
   closed: boolean,
 ): Array<PathRowSegment> => {
   const ordered = orderRows(rows, mark.order);
@@ -410,7 +416,7 @@ const pathRowSegments = (
 };
 
 const buildConstantBaselinePoints = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   ordered: Array<ExternalRow>,
   frame: CoordinateFrame,
   baseline: number,
@@ -424,7 +430,7 @@ const buildConstantBaselinePoints = (
     .reverse();
 
 const buildStackBaselinePoints = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   ordered: Array<ExternalRow>,
   frame: CoordinateFrame,
   baselineField: string,
@@ -438,10 +444,10 @@ const buildStackBaselinePoints = (
     .reverse();
 
 const buildClosureReturnPoints = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   ordered: Array<ExternalRow>,
   frame: CoordinateFrame,
-  closure: PathClosure,
+  closure: IRPlotPathClosure,
 ): Array<[number, number]> => {
   if (closure.kind === PathClosureKind.Baseline) {
     return buildConstantBaselinePoints(mark, ordered, frame, closure.baseline ?? pathDefaultBaseline(frame));
@@ -453,7 +459,7 @@ const buildClosureReturnPoints = (
 };
 
 const buildLineStepSegments = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   closed: boolean,
@@ -475,10 +481,10 @@ const returnCurveSteps = (points: ReadonlyArray<[number, number]>, curve: PathCu
 };
 
 const buildClosureStepSegment = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   segmentRows: PathRowSegment,
   frame: CoordinateFrame,
-  closure: PathClosure,
+  closure: IRPlotPathClosure,
   closed: boolean,
 ): PathStepSegment | null => {
   if (closure.kind === PathClosureKind.Cycle) {
@@ -505,10 +511,10 @@ const buildClosureStepSegment = (
 };
 
 const buildClosureStepSegments = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
-  closure: PathClosure,
+  closure: IRPlotPathClosure,
   closed: boolean,
 ): Array<PathStepSegment> =>
   pathRowSegments(mark, rows, frame, closure, closure.kind === PathClosureKind.Cycle ? true : closed).flatMap(
@@ -524,11 +530,12 @@ export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathSt
 /** path child 的可变形态（series 下沉时按需补 id / meta），直接复用 core IRPath 属性面。 */
 type IRPathChild = IRPath;
 
-const pathMarkOptions = (mark: PathMark): Partial<Pick<IRPath, 'marks'>> =>
+const pathMarkOptions = (mark: IRPlotPathMark): Partial<Pick<IRPath, 'marks'>> =>
   mark.marks === undefined ? {} : { marks: mark.marks };
 
+/** 按 series 分组并构造 path 图元序列。 */
 export const buildSeriesPaths = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   rows: Array<ExternalRow>,
   seriesField: string,
   buildSteps: SeriesPathBuilder,
@@ -580,8 +587,9 @@ export const buildSeriesPaths = (
   return paths;
 };
 
+/** 解析 path 图元在当前通道与默认值下使用的 paint。 */
 export const markPaintOf = (
-  mark: Mark,
+  mark: IRPlotMark,
   channels: MarkChannels,
   channel: 'fill' | 'stroke',
   rows: Array<ExternalRow>,
@@ -618,7 +626,7 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
  * @description 显式 mark.series 优先；无显式 series 但有 categorical color 字段 → 隐式按 color 拆系列。
  *   显式 series 与 color 字段并存且 color 在 series 内不恒定 → fail-loud。
  */
-export const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | undefined => {
+export const pathSeriesField = (mark: IRPlotMark, rows: Array<ExternalRow>): string | undefined => {
   if (mark.type !== PlotMark.Path) return undefined;
   const colorField = mark.encoding.color?.field;
   if (mark.series) {
@@ -630,7 +638,7 @@ export const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | 
 
 /** 折线（path mark）：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关）。 */
 const lowerPath = (
-  mark: Mark,
+  mark: IRPlotMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
@@ -696,7 +704,7 @@ const lowerPath = (
 
 /** path 图层下沉：仅 cartesian2D / polar2D 有上沿几何；其余坐标系 fail-loud + attachMarkLayer。 */
 const pathAnchorCoordinates = (
-  mark: PathMark,
+  mark: IRPlotPathMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   ctx: MarkLoweringContext | undefined,
@@ -720,8 +728,9 @@ const pathAnchorCoordinates = (
   return coordinates;
 };
 
+/** 把 path mark 与数据行下沉为 core IR 图层。 */
 export const lowerPathLayer = (
-  mark: Mark,
+  mark: IRPlotMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
@@ -746,7 +755,7 @@ export const lowerPathLayer = (
 };
 
 /** 收集 path mark 独有字段：连接顺序与 series 拆分。 */
-const collectPathMarkChannelFields = (mark: PathMark, fields: FieldCollector): void => {
+const collectPathMarkChannelFields = (mark: IRPlotPathMark, fields: FieldCollector): void => {
   fields.addFields(
     mark.order,
     mark.series,
@@ -754,8 +763,9 @@ const collectPathMarkChannelFields = (mark: PathMark, fields: FieldCollector): v
   );
 };
 
-export const pathMarkDefinition: MarkDefinition<PathMark> = {
-  type: PlotMark.Path,
+/** 内置 path mark definition。 */
+export const pathMarkDefinition: MarkDefinition<IRPlotPathMark> = {
+  schema: PathMarkSchema,
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);

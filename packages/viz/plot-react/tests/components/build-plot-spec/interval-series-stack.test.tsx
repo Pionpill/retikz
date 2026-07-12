@@ -1,4 +1,4 @@
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 
 import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
@@ -7,10 +7,10 @@ import { buildPlotSpec } from '../../../src/components/build-plot-spec';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 
-describe('buildPlotSpec ADR-07（IntervalMark / color / series / stack / Scale）', () => {
+describe('buildPlotSpec IntervalMark / color / series / stack / Scale', () => {
   it('barmark_equivalence_band_x', () => {
     const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" />, '__plot');
-    const expected: PlotSpec = {
+    const expected: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },

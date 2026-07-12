@@ -1,4 +1,4 @@
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 import type { FC } from 'react';
 
 import { defineScale } from '@retikz/plot';
@@ -31,7 +31,7 @@ const brandColor = defineScale({
 });
 
 // 自定义 scale 不参与 React 自动派生：经完整 spec 的 scales 引用，definition 走 scaleDefinitions 注入。
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'pts' },

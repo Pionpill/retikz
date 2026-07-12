@@ -8,9 +8,14 @@ import { DataFieldType } from '../../schemas';
 import { coerceValue } from './coerce';
 import { resolveFieldPath } from './field';
 
-/** 把自定义 parser 返回值收窄到 data 层可消费的字段规范值。 */
-const asParsedValue = (value: ParsedFieldValue): ParsedFieldValue =>
-  typeof value === 'string' || typeof value === 'number' ? value : undefined;
+/** 按最终字段类型把自定义 parser 输出收窄到 canonical 值域。 */
+const asParsedValue = (value: ParsedFieldValue, type: DataFieldTypeValue): ParsedFieldValue => {
+  if (type === DataFieldType.Categorical) {
+    return typeof value === 'string' || isFiniteNumber(value) ? value : undefined;
+  }
+  if (typeof value !== 'number') return undefined;
+  return isFiniteNumber(value) ? value : NaN;
+};
 
 /** 判断 coercion / parser 结果是否满足指定字段测量类型的有效值域。 */
 const isCoercedValid = (value: unknown, type: DataFieldTypeValue): boolean => {
@@ -34,7 +39,7 @@ export const normalizeRows = (
       const physical = fieldMap?.[logical] ?? logical;
       const raw = resolveFieldPath(row, physical);
       const parse = parsers?.get(logical);
-      canonical[logical] = parse ? asParsedValue(parse(raw)) : coerceValue(raw, type);
+      canonical[logical] = parse ? asParsedValue(parse(raw), type) : coerceValue(raw, type);
     }
     return canonical;
   });

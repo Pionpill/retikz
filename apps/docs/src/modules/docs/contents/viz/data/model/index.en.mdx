@@ -94,7 +94,7 @@ The three charts below declare no scale config at all: `continuous` fields deriv
 
 ## Category order: `order`
 
-A `categorical` field orders its categories by **data appearance** by default; axes and legends follow that order. To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
+A `categorical` field orders its categories by **data appearance** by default; axes and legends follow that order. `NaN` and positive or negative infinities are not valid categories and do not enter the domain. To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
 
 The two charts below use the same size data. The left chart follows data appearance order; the right chart fixes the business order `S → M → L → XL`.
 
@@ -224,6 +224,8 @@ Reusable formats still enter the model as strings. The `wan` example below parse
 Use `resolveField` when parsing needs per-source branches, multiple raw fields, or one-off fallback logic. It is a runtime function and does not enter IR; reuse it in application code instead of expecting JSON config to persist it.
 
 <ComponentPreview files={['processing-resolve', 'processing-resolve.data.ts']} />
+
+Custom parsers must return a canonical value consumable by the final field type: a finite number for `continuous` / `temporal`, or a string / finite number for `categorical`. Type mismatches, `NaN`, and infinities are normalized as invalid values instead of flowing into transforms as valid canonical data.
 
 Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and custom parsing only affect preparation; the mark still says `y="revenue"`.
 

@@ -2,21 +2,21 @@ import type { IRJsonObject, IRNode, IRScope, IRTextBlock } from '@retikz/core';
 
 import { GeometryLabelPosition } from '@retikz/core';
 
-import type { PlotLabel, PlotLayout } from '../schemas';
+import type { IRPlotLabel, IRPlotLayout } from '../schemas';
 import type { Margins, Rect } from '../shared';
 
-import { AxisCardinalSide } from '../schemas';
-import { PlotLayerZIndex } from '../schemas/layer';
 import {
+  AxisCardinalSide,
   LayoutAnchor,
   LayoutPlacementKind,
   LayoutPlacementTarget,
   PlotLabelRole,
+  PlotLayerZIndex,
   PlotLayoutMode,
-} from '../schemas/layout';
+} from '../schemas';
 import { estimateLabelWidth } from '../shared';
 
-type TextLabel = Extract<PlotLabel, { type: 'text' }>;
+type TextLabel = Extract<IRPlotLabel, { type: 'text' }>;
 type TextStyle = Partial<
   Pick<IRNode, 'align' | 'font' | 'lineHeight' | 'maxTextWidth' | 'opacity' | 'rotate' | 'textColor'>
 >;
@@ -31,8 +31,8 @@ type ResolvedTextLabel = {
 };
 
 type LabelLayoutInput = {
-  layout?: PlotLayout;
-  labels: ReadonlyArray<PlotLabel>;
+  layout?: IRPlotLayout;
+  labels: ReadonlyArray<IRPlotLabel>;
   fontSize: number;
   textStyle: TextStyle;
 };
@@ -135,7 +135,7 @@ const resolveLabels = (input: LabelLayoutInput): Array<ResolvedTextLabel> =>
     };
   });
 
-const reserveEnabled = (layout: PlotLayout | undefined): boolean =>
+const reserveEnabled = (layout: IRPlotLayout | undefined): boolean =>
   layout?.mode !== PlotLayoutMode.Fixed && layout?.autoPadding !== false;
 
 const addReserve = (reserve: Partial<Margins>, side: keyof Margins, value: number): Partial<Margins> => ({
@@ -143,6 +143,7 @@ const addReserve = (reserve: Partial<Margins>, side: keyof Margins, value: numbe
   [side]: (reserve[side] ?? 0) + value,
 });
 
+/** 计算 plot label 需要在各边预留的布局空间。 */
 export const resolveLabelReserve = (input: LabelLayoutInput): Partial<Margins> => {
   let reserve: Partial<Margins> = input.layout?.padding === undefined ? EMPTY_RESERVE : { ...input.layout.padding };
   if (!reserveEnabled(input.layout)) return reserve;
@@ -165,11 +166,6 @@ const targetRectOf = (
   input: Pick<LowerLabelsInput, 'height' | 'plotArea' | 'width'>,
 ): Rect => {
   const target = placement.target ?? LayoutPlacementTarget.Frame;
-  if (target === LayoutPlacementTarget.View) {
-    throw new Error(
-      'lowerPlots: label placement target "view" is reserved for composition view layout and is not implemented yet',
-    );
-  }
   if (target === LayoutPlacementTarget.PlotArea) return input.plotArea;
   return { x: 0, y: 0, width: input.width, height: input.height };
 };
@@ -232,6 +228,7 @@ const labelMetaOf = (label: TextLabel): IRJsonObject => ({
   ...(label.id !== undefined ? { id: label.id } : {}),
 });
 
+/** 把 plot 级文本标签下沉成 core IR 图层。 */
 export const lowerPlotLabels = (input: LowerLabelsInput): Array<IRScope> => {
   const items = resolveLabels(input);
   if (items.length === 0) return [];

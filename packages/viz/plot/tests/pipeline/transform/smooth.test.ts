@@ -5,7 +5,7 @@ import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { Transform } from '../../../src/schemas';
+import type { IRPlotTransform } from '../../../src/schemas';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
@@ -17,14 +17,14 @@ const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
 
 const applyTransforms = (
   rows: Array<ExternalRow>,
-  operations?: Array<Transform>,
+  operations?: Array<IRPlotTransform>,
   registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
   context?: TransformContext,
 ): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
 
 const smoothOperation = (operation: unknown) => TransformSchema.parse(operation);
 
-describe('smooth transform schema (alpha.13 ADR-04)', () => {
+describe('smooth transform schema (contract)', () => {
   it('accepts smooth transform and preserves JSON round trip', () => {
     const operation = {
       kind: 'smooth',
@@ -61,7 +61,7 @@ describe('smooth transform schema (alpha.13 ADR-04)', () => {
   });
 });
 
-describe('smooth transform behavior (alpha.13 ADR-04)', () => {
+describe('smooth transform behavior (contract)', () => {
   const rows: Array<ExternalRow> = [
     { series: 'A', time: 0, value: 1 },
     { series: 'A', time: 1, value: 3 },

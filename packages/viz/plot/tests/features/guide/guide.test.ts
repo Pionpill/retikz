@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PositionScale } from '../../../src/contract';
 import type { GuideContext } from '../../../src/contract';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { createCoordinateFrame } from '../../../src/contract';
 import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline';
@@ -63,7 +63,7 @@ const nodeByText = (layer: IRScope, text: string): IRNode => {
   return node as IRNode;
 };
 
-describe('lowerGuide (ADR-04)', () => {
+describe('lowerGuide (contract)', () => {
   // Happy path
   it('lower_axis_x_structure', () => {
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x' }, ctx);
@@ -1045,7 +1045,7 @@ const SALES = [
   { month: 2, revenue: 9 },
 ];
 
-const guidedSpec = (guides: Array<unknown>): PlotSpec =>
+const guidedSpec = (guides: Array<unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -1059,12 +1059,12 @@ const guidedSpec = (guides: Array<unknown>): PlotSpec =>
     guides,
   });
 
-const expandOf = (spec: PlotSpec): IRScope => {
+const expandOf = (spec: IRPlotSpec): IRScope => {
   const [def] = lowerPlots({ sales: SALES }, { width: 480, height: 300 });
   return def.expand(spec) as IRScope;
 };
 
-describe('lowerPlots guide orchestration (ADR-04)', () => {
+describe('lowerPlots guide orchestration (contract)', () => {
   it('zorder_grid_mark_axis', () => {
     const outer = expandOf(
       guidedSpec([

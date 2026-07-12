@@ -3,27 +3,27 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-01（alpha.9）coordinate frame N 通道泛化 + 位置 encoding 角色化 + 维度校验测试。
+ * Coordinate frame N 通道泛化、位置 encoding 角色化与维度校验测试。
  * 经公开 lowerPlots 断言（不戳内部 frame 方法）：
  *   - cartesian / polar 投影逐字不变（frame 加 roles/projectRoles 零回归）；
  *   - 缺必填位置角色 fail-loud（必填性下放 coordinate 级，承 encoding x/y 转可选）；
- *   - guide 维度按坐标系合法集校验、非法 dimension fail-loud（修 cross-review P2）。
+ *   - guide 维度按坐标系合法集校验，非法 dimension fail-loud。
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
@@ -31,7 +31,7 @@ const positionsOf = (layer: IRScope): Array<[number, number]> =>
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-describe('coordinate frame N 通道泛化回归 (ADR-01)', () => {
+describe('coordinate frame N 通道泛化回归 (contract)', () => {
   // Happy path：cartesian point 投影逐字不变（projectRoles=[x,y] 包装既有 project）
   it('cartesian_point_projection_unchanged', () => {
     const spec = PlotSpecSchema.parse({
@@ -92,8 +92,8 @@ describe('coordinate frame N 通道泛化回归 (ADR-01)', () => {
   });
 });
 
-describe('coordinate 必填角色校验 fail-loud (ADR-01)', () => {
-  const cartMissingY = (): PlotSpec =>
+describe('coordinate 必填角色校验 fail-loud (contract)', () => {
+  const cartMissingY = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -123,7 +123,7 @@ describe('coordinate 必填角色校验 fail-loud (ADR-01)', () => {
   });
 });
 
-describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
+describe('guide 维度校验 fail-loud', () => {
   // 错误路径：cartesian 下 dimension 'angle' 非法 → fail-loud（曾静默丢弃 / 杂散轴线）
   it('angle_dimension_rejected_by_coordinate_definition_roles', () => {
     const spec = PlotSpecSchema.parse({
@@ -175,7 +175,7 @@ describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
 
   // 边界：polar 下 x / y 合法；x 是角向，y 是径向
   it('polar_xy_dimensions_accepted', () => {
-    const makeSpec = (dimension: string): PlotSpec =>
+    const makeSpec = (dimension: string): IRPlotSpec =>
       PlotSpecSchema.parse({
         namespace: 'plot',
         type: 'plot',

@@ -40,6 +40,37 @@ export const vizV01: Release = {
           items: [
             esmOnlyChangeItem,
             {
+              label: { zh: 'BREAKING：lineage mode 类型规范化', en: 'BREAKING: Normalized lineage mode type' },
+              content: {
+                zh: '`DataSourceIdentityMode` 现在是包含 `Summary` / `Full` 的 const object enum；类型导入改为 `DataSourceIdentityModeValue`。运行时字面量仍是 `summary` / `full`，并会在 recorder 创建阶段拒绝非法 mode 与字段白名单成员。',
+                en: '`DataSourceIdentityMode` is now a const object enum with `Summary` / `Full`; type imports move to `DataSourceIdentityModeValue`. Runtime literals remain `summary` / `full`, and recorder creation now rejects invalid modes and field-whitelist members.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：只读集合 helper 内收', en: 'BREAKING: Readonly collection helpers are internal' },
+              content: {
+                zh: '`createReadonlyMap` 与 `createReadonlySet` 不再从 `@retikz/data` 包根导出；它们属于 registry 状态隔离的内部基础设施。外部代码应直接使用原生 `Map` / `Set`，或自行维护所需的只读视图。',
+                en: '`createReadonlyMap` and `createReadonlySet` are no longer exported from the `@retikz/data` package root; they are internal infrastructure for registry state isolation. External code should use native `Map` / `Set` instances or maintain its own readonly views.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：transform schema 入口收口', en: 'BREAKING: Consolidated transform schema entry' },
+              content: {
+                zh: '移除与 `TransformSchema` 完全相同的 `TransformOperationSchema` 公共别名；原有导入直接改为 `TransformSchema`，schema 行为不变。',
+                en: 'Removes the public `TransformOperationSchema` alias, which was identical to `TransformSchema`; replace existing imports with `TransformSchema`. Schema behavior is unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：annotate selector 收紧为单行',
+                en: 'BREAKING: Annotate selectors are single-row',
+              },
+              content: {
+                zh: '`annotate.selectors` 只接受至多选中一行的内置 selector：min / max、first / last / nth，以及 `n: 1` 的 top / bottom；`tie="all"`、多行 top / bottom、outside-quantile-band 与自定义 selector 改用 `select`，自定义单值广播改写成 reducer。',
+                en: '`annotate.selectors` now accepts only built-in selectors that choose at most one row: min / max, first / last / nth, and top / bottom with `n: 1`. Move `tie="all"`, multi-row top / bottom, outside-quantile-band, and custom selectors to `select`; express custom scalar broadcasts as reducers.',
+              },
+            },
+            {
               label: { zh: 'IRDataXxx 公开类型命名', en: 'Owner-qualified IRDataXxx types' },
               content: {
                 zh: '`FieldDef`、`DataModel`、`DataRef`、`Transform` 等 schema 派生类型统一改为 `IRDataXxx`，旧名不保留兼容别名；JSON schema 与运行时行为不变。',
@@ -58,6 +89,27 @@ export const vizV01: Release = {
               content: {
                 zh: 'slash 日期解析会拒绝溢出的年月日；top / bottom selector 的 `tie="all"` 与 `tie="last"` 对边界并列行使用同一套阈值逻辑。',
                 en: 'Slash-date parsing now rejects overflowing calendar dates; top / bottom selectors use the same threshold logic for boundary ties under `tie="all"` and `tie="last"`.',
+              },
+            },
+            {
+              label: { zh: '脏数据与输出冲突不再静默改值', en: 'Dirty data and output collisions fail safely' },
+              content: {
+                zh: '自定义 parser 输出会按字段类型收口；无有效数值的非恒等统计返回 invalid sentinel；summarize / annotate 的静态输出名冲突在 schema 阶段 fail-loud。',
+                en: 'Custom parser outputs are narrowed by field type; undefined non-identity statistics return invalid sentinels; summarize / annotate output-name collisions now fail loudly at the schema boundary.',
+              },
+            },
+            {
+              label: { zh: '排序统一 missing-last', en: 'Unified missing-last ordering' },
+              content: {
+                zh: 'sort transform 与 selector 共用同一比较契约；`null`、`undefined`、`NaN` 和无穷值在升降序下都稳定排到有效值之后。',
+                en: 'Sort transforms and selectors now share one comparison contract; `null`, `undefined`, `NaN`, and infinities stay after valid values in both directions.',
+              },
+            },
+            {
+              label: { zh: '统计与大分组边界加固', en: 'Hardened statistics and large groups' },
+              content: {
+                zh: 'mean / median 在有限大数上不再因中间运算溢出；极值、quantile-band 与 provenance / lineage 不再把大数组展开成函数参数；分类域会跳过非有限数字，重复 model 字段在 schema 入口直接报错。',
+                en: 'Mean / median no longer overflow on finite large values; extrema, quantile-band, and provenance / lineage no longer expand large arrays into call arguments; category domains skip non-finite numbers, and duplicate model fields fail at the schema boundary.',
               },
             },
           ],
@@ -126,8 +178,8 @@ export const vizV01: Release = {
           version: 'beta.2',
           date: '2026-07-07',
           summary: {
-            zh: '收窄 plot 顶层导出，并把 provenance / layout 相关 helper 归到稳定 owner，降低 deep import 误用风险。',
-            en: 'Narrows the plot root exports and moves provenance / layout helpers under stable owners, reducing accidental deep-import reliance.',
+            zh: '收窄 plot 顶层导出与未实现的 layout 契约，并把 provenance / layout 相关 helper 归到稳定 owner，降低误用风险。',
+            en: 'Narrows plot root exports and unimplemented layout contracts, while moving provenance / layout helpers under stable owners to reduce misuse.',
           },
           items: [
             esmOnlyChangeItem,
@@ -143,6 +195,33 @@ export const vizV01: Release = {
               content: {
                 zh: 'mark / guide 来源 meta、稳定 id 与 datum id 登记逻辑由 contract owner 提供，内置 mark 与外部扩展复用同一来源契约。',
                 en: 'Mark / guide source meta, stable ids, and datum-id registration now come from the contract owner, so builtin marks and external extensions share the same provenance contract.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：IRPlotXxx 公开类型命名', en: 'BREAKING: Owner-qualified IRPlotXxx types' },
+              content: {
+                zh: '`PlotSpec`、`MarkOperation`、`ScaleOperation`、`CoordinateOperation`、`Guide`、`Transform` 等 schema 派生公开类型统一改为 `IRPlotXxx`，旧名不保留兼容别名；schema 与运行时 JSON 值不变。',
+                en: 'Schema-derived public types such as `PlotSpec`, `MarkOperation`, `ScaleOperation`, `CoordinateOperation`, `Guide`, and `Transform` now use owner-qualified `IRPlotXxx` names without compatibility aliases; schemas and runtime JSON values are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：mark definition 必须声明 schema',
+                en: 'BREAKING: Mark definitions require schemas',
+              },
+              content: {
+                zh: '`defineMark` 现在接收带 `schema` 的 definition；schema 的 `type` literal 作为注册键，lowering 会在字段收集和下沉前校验 JSON operation，非法自定义配置不再进入行为回调。',
+                en: '`defineMark` definitions now require a `schema`; its literal `type` is the registry key, and lowering validates the JSON operation before field collection and lowering so invalid custom config never reaches behavior callbacks.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：收回未实现的 decoration layout 字段',
+                en: 'BREAKING: Unimplemented decoration layout fields withdrawn',
+              },
+              content: {
+                zh: 'Plot layout 暂不接受 `maxIterations`、`collision`、label `priority` / `overflow` 或 `placement.target:"view"`；当前稳定契约保留 frame / plotArea 定位、基础占位与 autoPadding，完整 solver 延后到 v0.2。',
+                en: 'Plot layout no longer accepts `maxIterations`, `collision`, label `priority` / `overflow`, or `placement.target:"view"`. The stable contract keeps frame / plotArea placement, basic reservation, and autoPadding; the complete solver moves to v0.2.',
               },
             },
           ],

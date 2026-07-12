@@ -1,7 +1,7 @@
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 import type { FC, ReactNode } from 'react';
 
-type CompositionSpec = NonNullable<PlotSpec['composition']>;
+type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
 type ArrangementSpec = NonNullable<CompositionSpec['arrangements']>[number];
 type FacetGridSpec = Extract<ArrangementSpec, { kind: 'facet' }>;
 type SharedScaffoldSpec = Extract<ArrangementSpec, { kind: 'tracks' }>;

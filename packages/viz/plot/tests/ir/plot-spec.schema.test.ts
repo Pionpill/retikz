@@ -14,14 +14,14 @@ const baseLine = {
   marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
 };
 
-describe('PlotSpecSchema (ADR-01)', () => {
+describe('PlotSpecSchema (contract)', () => {
   // Happy path
   it('plot_root_line_valid', () => {
     expect(PlotSpecSchema.parse(baseLine)).toEqual(baseLine);
   });
 
   it('plot_root_with_id_and_meta_valid', () => {
-    const spec = { ...baseLine, id: 'sales-chart', meta: { source: 'adr-01-example' } };
+    const spec = { ...baseLine, id: 'sales-chart', meta: { source: 'contract-example' } };
     expect(PlotSpecSchema.parse(spec)).toEqual(spec);
   });
 
@@ -35,6 +35,23 @@ describe('PlotSpecSchema (ADR-01)', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     };
     expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('plot_duplicate_scale_name_rejected_at_later_name_path', () => {
+    const result = PlotSpecSchema.safeParse({
+      ...baseLine,
+      scales: [
+        { type: 'linear', name: 'shared' },
+        { type: 'band', name: 'shared' },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues).toEqual(
+        expect.arrayContaining([expect.objectContaining({ path: ['scales', 1, 'name'] })]),
+      );
+    }
   });
 
   // 边界
@@ -132,8 +149,6 @@ describe('PlotSpecSchema (ADR-01)', () => {
         mode: 'auto',
         autoPadding: true,
         padding: { top: 4, right: 6, bottom: 8, left: 10 },
-        maxIterations: 3,
-        collision: { strategy: 'shift', padding: 2 },
       },
       labels: [
         {
@@ -170,8 +185,26 @@ describe('PlotSpecSchema (ADR-01)', () => {
     ).toThrow();
   });
 
-  it('plot_layout_max_iterations_upper_bound_rejected', () => {
-    expect(() => PlotSpecSchema.parse({ ...baseLine, layout: { maxIterations: 6 } })).toThrow();
+  it.each([
+    ['layout.maxIterations', { ...baseLine, layout: { maxIterations: 3 } }],
+    ['layout.collision', { ...baseLine, layout: { collision: { strategy: 'shift', padding: 2 } } }],
+    ['labels.priority', { ...baseLine, labels: [{ type: 'text', text: 'Title', priority: 10 }] }],
+    ['labels.overflow', { ...baseLine, labels: [{ type: 'text', text: 'Title', overflow: 'hide' }] }],
+    [
+      'labels.placement.target.view',
+      {
+        ...baseLine,
+        labels: [
+          {
+            type: 'text',
+            text: 'Title',
+            placement: { kind: 'point', target: 'view', view: 'main', x: 0.5, y: 0.5 },
+          },
+        ],
+      },
+    ],
+  ])('plot_unavailable_layout_field_%s_rejected', (_field, spec) => {
+    expect(PlotSpecSchema.safeParse(spec).success).toBe(false);
   });
 
   it('plot_label_text_must_not_be_empty', () => {

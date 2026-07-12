@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
 import { AxisGridApplyTo, PlotSpecSchema } from '../../src/schemas';
@@ -32,7 +32,7 @@ const laneRows = [
   { eventX: 1, eventY: 2, volumeX: 1, volumeY: 200 },
 ];
 
-const parsePlotSpec = (spec: unknown): PlotSpec => PlotSpecSchema.parse(spec);
+const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
 
 const facetSpec = {
   namespace: 'plot',
@@ -142,7 +142,7 @@ const lanesSpec = {
   guides: [{ type: 'axis', dimension: 'x', coordinateView: 'events', grid: true }],
 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [definition] = lowerPlots(datasets, { width: 480, height: 300, provenance: true });
   return definition.expand(spec) as IRScope;
 };

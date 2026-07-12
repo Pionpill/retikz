@@ -94,7 +94,7 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 ## 分类顺序
 
-`categorical` 字段默认按**数据出现顺序**排类别，轴和图例都会跟着这个顺序。想控制顺序——比如尺码该按 `S → M → L → XL`，而不是数据里碰巧出现的次序——给字段一个 `order`：
+`categorical` 字段默认按**数据出现顺序**排类别，轴和图例都会跟着这个顺序；`NaN` 与正负无穷值不是合法类别，不会进入分类域。想控制顺序——比如尺码该按 `S → M → L → XL`，而不是数据里碰巧出现的次序——给字段一个 `order`：
 
 下面两张图使用同一份尺码数据：左图按数据出现序显示，右图通过 `order` 固定为业务顺序 `S → M → L → XL`。
 
@@ -222,6 +222,8 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 需要按数据源写分支、读取多个原始字段或临时兜底时，用 `resolveField`。它是运行时函数，不进入 IR；适合应用代码里统一复用，不适合随 JSON 配置持久化。
 
 <ComponentPreview files={['processing-resolve', 'processing-resolve.data.ts']} />
+
+自定义 parser 要直接返回最终字段类型可消费的 canonical 值：`continuous` / `temporal` 返回有限数值，`categorical` 返回字符串或有限数值。类型不匹配、`NaN` 或无穷值会按 invalid 值收口，不会作为合法 canonical 数据流入 transform。
 
 解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和自定义解析都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
 

@@ -11,12 +11,12 @@ import {
 
 import type { AnyScaleDefinition, ChannelResolveContext, ChannelScaleResolution } from '../../../contract';
 import type {
-  DivergingColorScale,
-  OrdinalScale,
-  QuantileColorScale,
-  QuantizeColorScale,
-  SequentialColorScale,
-  ThresholdColorScale,
+  IRPlotDivergingColorScale,
+  IRPlotOrdinalScale,
+  IRPlotQuantileColorScale,
+  IRPlotQuantizeColorScale,
+  IRPlotSequentialColorScale,
+  IRPlotThresholdColorScale,
 } from '../../../schemas';
 import type { ColorScaleEvaluator, ColorSchemeResolver } from '../shared';
 
@@ -54,7 +54,7 @@ const DEFAULT_DISCRETE_BIN_COUNT = 5;
  *   返回 (category) => 输出串；非位置通道（color）消费。
  */
 export const resolveOrdinalScale = (
-  def: OrdinalScale | undefined,
+  def: IRPlotOrdinalScale | undefined,
   values: Array<unknown>,
 ): ((value: string | number) => string) => {
   const domain = def?.domain ?? inferCategoryDomain(values);
@@ -80,7 +80,7 @@ const discreteBinColors = (
  *   单值数据（min == max 推断）退化为常量取色（端点），不崩。
  */
 export const resolveSequentialColorScale = (
-  def: SequentialColorScale,
+  def: IRPlotSequentialColorScale,
   values: Array<number>,
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): ColorScaleEvaluator => {
@@ -115,7 +115,7 @@ export const resolveSequentialColorScale = (
  *   把 [low, mid, high] 映射到 interpolator 的 [0, 0.5, 1]。
  */
 export const resolveDivergingColorScale = (
-  def: DivergingColorScale,
+  def: IRPlotDivergingColorScale,
   values: Array<number>,
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): ColorScaleEvaluator => {
@@ -165,7 +165,7 @@ export const resolveDivergingColorScale = (
  *   range 显式给颜色数组、否则从 scheme 采 count 档。超出 domain 的值落首 / 末档（d3 clamp 语义）。
  */
 export const resolveQuantizeColorScale = (
-  def: QuantizeColorScale,
+  def: IRPlotQuantizeColorScale,
   values: Array<number>,
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): ColorScaleEvaluator => {
@@ -188,7 +188,7 @@ export const resolveQuantizeColorScale = (
  *   < 首断点落第 0 档、≥ 末断点落末档（d3 默认语义）。
  */
 export const resolveThresholdColorScale = (
-  def: ThresholdColorScale,
+  def: IRPlotThresholdColorScale,
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): ColorScaleEvaluator => {
   for (let index = 1; index < def.breakpoints.length; index++) {
@@ -217,7 +217,7 @@ export const resolveThresholdColorScale = (
  *   range 显式给颜色数组、否则从 scheme 采 count 档。
  */
 export const resolveQuantileColorScale = (
-  def: QuantileColorScale,
+  def: IRPlotQuantileColorScale,
   values: Array<number>,
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): ColorScaleEvaluator => {
@@ -252,7 +252,7 @@ const quantileAt = (sortedAscending: ReadonlyArray<number>, p: number): number =
  *   edges 是档间内部边界（长度 = binCount - 1）；colors 是各档色（range 显式则用、否则从 scheme 采）。
  */
 export const discretizedBins = (
-  def: QuantizeColorScale | ThresholdColorScale | QuantileColorScale,
+  def: IRPlotQuantizeColorScale | IRPlotThresholdColorScale | IRPlotQuantileColorScale,
   values: ReadonlyArray<number>,
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): { colors: Array<string>; edges: Array<number> } => {
@@ -317,14 +317,14 @@ const withDivergingTheme = <TDef extends { range?: unknown; scheme?: string }>(
     ? def
     : { ...def, scheme: ctx.defaultDivergingScheme };
 
-const ordinalScaleDefinition = defineScale<OrdinalScale>({
+const ordinalScaleDefinition = defineScale<IRPlotOrdinalScale>({
   family: 'channel',
   schema: OrdinalScaleSchema,
   // ordinal 接分类与未知（旧 makeColorResolver 把 undefined 字段类型当分类走 ordinal）
   isFieldCompatible: fieldType => fieldType === undefined || fieldType === DataFieldType.Categorical,
   resolve: (def, values, ctx) => {
     // range 缺省取 plot 默认调色板（与旧 withPlotColorRange 一致）；domain 缺省按数据序去重
-    const withPalette: OrdinalScale =
+    const withPalette: IRPlotOrdinalScale =
       def.range !== undefined ? def : ctx.defaultColors !== undefined ? { ...def, range: [...ctx.defaultColors] } : def;
     const ordinal = resolveOrdinalScale(withPalette, values);
     const domain = withPalette.domain ?? inferCategoryDomain(values);
@@ -338,7 +338,7 @@ const ordinalScaleDefinition = defineScale<OrdinalScale>({
   },
 });
 
-const sequentialScaleDefinition = defineScale<SequentialColorScale>({
+const sequentialScaleDefinition = defineScale<IRPlotSequentialColorScale>({
   family: 'channel',
   schema: SequentialColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
@@ -357,7 +357,7 @@ const sequentialScaleDefinition = defineScale<SequentialColorScale>({
   },
 });
 
-const divergingScaleDefinition = defineScale<DivergingColorScale>({
+const divergingScaleDefinition = defineScale<IRPlotDivergingColorScale>({
   family: 'channel',
   schema: DivergingColorScaleSchema,
   // diverging 中点对时间无意义 → 仅接连续数值，拒 temporal（与旧 makeColorResolver temporal+diverging fail-loud 对齐）
@@ -380,7 +380,7 @@ const divergingScaleDefinition = defineScale<DivergingColorScale>({
 
 const discretizedResolution = (
   scaleType: string,
-  def: QuantizeColorScale | ThresholdColorScale | QuantileColorScale,
+  def: IRPlotQuantizeColorScale | IRPlotThresholdColorScale | IRPlotQuantileColorScale,
   values: Array<unknown>,
   ctx: ChannelResolveContext,
   evaluate: ColorScaleEvaluator,
@@ -390,7 +390,7 @@ const discretizedResolution = (
   return { of: continuousColorOf(ctx, evaluate), legendForm: 'swatch', domain: [], range: colors, edges, scaleType };
 };
 
-const quantizeScaleDefinition = defineScale<QuantizeColorScale>({
+const quantizeScaleDefinition = defineScale<IRPlotQuantizeColorScale>({
   family: 'channel',
   schema: QuantizeColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
@@ -406,7 +406,7 @@ const quantizeScaleDefinition = defineScale<QuantizeColorScale>({
   },
 });
 
-const thresholdScaleDefinition = defineScale<ThresholdColorScale>({
+const thresholdScaleDefinition = defineScale<IRPlotThresholdColorScale>({
   family: 'channel',
   schema: ThresholdColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
@@ -422,7 +422,7 @@ const thresholdScaleDefinition = defineScale<ThresholdColorScale>({
   },
 });
 
-const quantileScaleDefinition = defineScale<QuantileColorScale>({
+const quantileScaleDefinition = defineScale<IRPlotQuantileColorScale>({
   family: 'channel',
   schema: QuantileColorScaleSchema,
   isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,

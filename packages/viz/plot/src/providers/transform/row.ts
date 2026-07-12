@@ -4,35 +4,38 @@ import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type {
-  DeriveIntervalTransform,
-  JitterTransform,
-  NormalizeTransform,
+  IRPlotDeriveIntervalTransform,
+  IRPlotJitterTransform,
+  IRPlotNormalizeTransform,
+  IRPlotStackTransform,
   StackOffsetValue,
-  StackTransform,
 } from '../../schemas';
 
-import { StackOffset as StackOffsetMode } from '../../schemas';
+import { JitterAxis, NormalizeBasis, StackOffset } from '../../schemas';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值。 */
 export const DEFAULT_START_FIELD = 'y0';
+/** stack transform 默认上界输出字段名。 */
 export const DEFAULT_END_FIELD = 'y1';
 
 /** derive-interval 默认输出字段名，对齐 interval y0Field / y1Field 与 sector startField / endField 消费方。 */
 export const DEFAULT_DERIVE_START_FIELD = 'y0';
+/** derive-interval transform 默认终点输出字段名。 */
 export const DEFAULT_DERIVE_END_FIELD = 'y1';
 
 /** jitter 默认被扰动字段名：连续数值位置字段。 */
 export const DEFAULT_JITTER_X_FIELD = 'x';
+/** jitter transform 默认 y 轴输出字段名。 */
 export const DEFAULT_JITTER_Y_FIELD = 'y';
 
 /**
  * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]。
  * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入，避免后续累计错位。
  */
-export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform): Array<ExternalRow> => {
+export const applyStack = (rows: Array<ExternalRow>, operation: IRPlotStackTransform): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_START_FIELD;
   const endField = operation.endField ?? DEFAULT_END_FIELD;
-  const offset: StackOffsetValue = operation.offset ?? StackOffsetMode.Zero;
+  const offset: StackOffsetValue = operation.offset ?? StackOffset.Zero;
   const groupByField = operation.groupBy;
   const seriesOrder =
     groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));
@@ -60,12 +63,12 @@ export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform):
     });
     const out = new Map<ExternalRow, [number, number]>();
 
-    if (offset === StackOffsetMode.Overlap) {
+    if (offset === StackOffset.Overlap) {
       ordered.forEach((row, index) => out.set(row, [0, values[index] ?? 0]));
       return out;
     }
 
-    if (offset === StackOffsetMode.Diverging) {
+    if (offset === StackOffset.Diverging) {
       let positive = 0;
       let negative = 0;
       ordered.forEach((row, index) => {
@@ -82,8 +85,8 @@ export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform):
     }
 
     const total = values.reduce((sum, value) => sum + value, 0);
-    const scale = offset === StackOffsetMode.Normalize ? (total === 0 ? 0 : 1 / total) : 1;
-    let cumulative = offset === StackOffsetMode.Center ? (-total * scale) / 2 : 0;
+    const scale = offset === StackOffset.Normalize ? (total === 0 ? 0 : 1 / total) : 1;
+    let cumulative = offset === StackOffset.Center ? (-total * scale) / 2 : 0;
     ordered.forEach((row, index) => {
       const segment = (values[index] ?? 0) * scale;
       const y0 = cumulative;
@@ -112,9 +115,9 @@ export const applyStack = (rows: Array<ExternalRow>, operation: StackTransform):
  * normalize：同组内各行 field / 组总和 -> 组内占比，保持行数。
  * @description groupBy 缺省时全行单组；basis percent 输出 0..100，组和为 0 时输出 0。
  */
-export const applyNormalize = (rows: Array<ExternalRow>, operation: NormalizeTransform): Array<ExternalRow> => {
+export const applyNormalize = (rows: Array<ExternalRow>, operation: IRPlotNormalizeTransform): Array<ExternalRow> => {
   const outField = operation.as ?? operation.field;
-  const scale = operation.basis === 'percent' ? 100 : 1;
+  const scale = operation.basis === NormalizeBasis.Percent ? 100 : 1;
   const sums = new Map<string, number>();
   const keyOf = (row: ExternalRow): string =>
     operation.groupBy === undefined
@@ -141,7 +144,7 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: NormalizeTra
  */
 export const applyDeriveInterval = (
   rows: Array<ExternalRow>,
-  operation: DeriveIntervalTransform,
+  operation: IRPlotDeriveIntervalTransform,
 ): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_DERIVE_START_FIELD;
   const endField = operation.endField ?? DEFAULT_DERIVE_END_FIELD;
@@ -181,14 +184,14 @@ const mulberry32 = (seed: number): (() => number) => {
  * jitter：给连续数值位置字段加确定性伪随机偏移，保持行数。
  * @description 偏移发生在数据空间 pre-scale；非有限值保留原值，但仍消耗一次随机数保持行序确定性。
  */
-export const applyJitter = (rows: Array<ExternalRow>, operation: JitterTransform): Array<ExternalRow> => {
-  const axis = operation.axis ?? 'x';
+export const applyJitter = (rows: Array<ExternalRow>, operation: IRPlotJitterTransform): Array<ExternalRow> => {
+  const axis = operation.axis ?? JitterAxis.X;
   const amount = operation.amount ?? 1;
   const seed = operation.seed ?? 0;
   const xField = operation.xField ?? DEFAULT_JITTER_X_FIELD;
   const yField = operation.yField ?? DEFAULT_JITTER_Y_FIELD;
-  const jitterX = axis === 'x' || axis === 'both';
-  const jitterY = axis === 'y' || axis === 'both';
+  const jitterX = axis === JitterAxis.X || axis === JitterAxis.Both;
+  const jitterY = axis === JitterAxis.Y || axis === JitterAxis.Both;
   const rng = mulberry32(seed);
   const offset = (): number => (rng() * 2 - 1) * amount;
   const perturb = (row: ExternalRow, field: string): unknown => {

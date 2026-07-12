@@ -12,7 +12,7 @@ import type {
   TernaryVertices,
   TickSet,
 } from '../../../contract';
-import type { Ternary2DCoordinate } from '../../../schemas';
+import type { IRPlotTernary2DCoordinate } from '../../../schemas';
 
 import { cellInterval } from '../../../contract';
 import { PlotCoordinate, PlotScale, Ternary2DSchema } from '../../../schemas';
@@ -156,7 +156,7 @@ export const createTernary2DCoordinate = (vertices: TernaryVertices): Ternary2DC
   };
 };
 
-const ternary2DCoordinateDefinition: CoordinateDefinition<Ternary2DCoordinate> = {
+const ternary2DCoordinateDefinition: CoordinateDefinition<IRPlotTernary2DCoordinate> = {
   schema: Ternary2DSchema,
   roles: ['x', 'y', 'z'],
   resolve: (coordinate, ctx) => {

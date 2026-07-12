@@ -2,6 +2,7 @@ import { JsonObjectSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import { ReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
+import { reducerOutputFieldsOf } from './output-fields';
 
 /** count reducer operation schema；只输出组内行数，不读取字段。 */
 const CountReducerOperationSchema = z
@@ -174,38 +175,6 @@ export const BuiltinReducerOperationSchema = z
 export const ReducerOperationSchema = z
   .union([BuiltinReducerOperationSchema, ExternalReducerOperationSchema])
   .describe('Built-in or custom reducer operation');
-
-/** 列出 reducer operation 产出的字段名及其 schema path，用于重复输出字段诊断。 */
-const reducerOutputFieldsOf = (
-  operation: z.infer<typeof ReducerOperationSchema>,
-): Array<{ field: string; path: Array<string | number> }> => {
-  if (operation.kind === ReducerOperationKind.QuantileBand) {
-    const quantileBandOperation = QuantileBandReducerOperationSchema.parse(operation);
-    const fields: Array<{ field: string; path: Array<string | number> }> = [
-      { field: quantileBandOperation.outputs.lower, path: ['outputs', 'lower'] },
-      { field: quantileBandOperation.outputs.upper, path: ['outputs', 'upper'] },
-    ];
-    quantileBandOperation.outputs.points?.forEach((point, pointIndex) =>
-      fields.push({ field: point.as, path: ['outputs', 'points', pointIndex, 'as'] }),
-    );
-    for (const key of [
-      'spread',
-      'lowerFence',
-      'upperFence',
-      'whiskerMin',
-      'whiskerMax',
-      'min',
-      'max',
-      'count',
-    ] as const) {
-      const field = quantileBandOperation.outputs[key];
-      if (field !== undefined) fields.push({ field, path: ['outputs', key] });
-    }
-    return fields;
-  }
-  if ('as' in operation && typeof operation.as === 'string') return [{ field: operation.as, path: ['as'] }];
-  return [];
-};
 
 /** reducer metrics schema；同一 metrics 数组内的输出字段名必须唯一。 */
 export const ReducerMetricsSchema = z

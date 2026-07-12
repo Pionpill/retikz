@@ -7,7 +7,7 @@ import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { prepareRows } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -16,7 +16,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
  * 构造一个引用单个逻辑字段 `v`（绑 x 通道）的最小 spec
  * @description format 的解析行为驱动 prepareRows → normalized 行；读 normalized[i].v 即拿到 canonical（已解析）值
  */
-const specWithField = (field: { name: string } & Record<string, unknown>): PlotSpec =>
+const specWithField = (field: { name: string } & Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -31,7 +31,7 @@ const specWithField = (field: { name: string } & Record<string, unknown>): PlotS
 
 /** 跑一次绑定准备，取首行 logical 字段的 canonical 值 */
 const parseFirst = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   logical: string,
   options: LowerPlotsOptions = {},

@@ -160,6 +160,7 @@ describe('data transform runtime', () => {
       { id: 'missing-undefined' },
       { id: 'two', value: 2 },
       { id: 'one', value: 1 },
+      { id: 'invalid-nan', value: Number.NaN },
       { id: 'missing-null', value: null },
     ];
 
@@ -203,5 +204,30 @@ describe('data transform runtime', () => {
         },
       ])[0]?.id,
     ).toBe('missing-null');
+  });
+
+  it('keeps missing and non-finite sort values last in both directions', () => {
+    const rows: Array<ExternalRow> = [
+      { id: 'missing-undefined' },
+      { id: 'two', value: 2 },
+      { id: 'invalid-nan', value: Number.NaN },
+      { id: 'one', value: 1 },
+      { id: 'missing-null', value: null },
+    ];
+
+    expect(applyTransforms(rows, [{ kind: 'sort', field: 'value' }]).map(row => row.id)).toEqual([
+      'one',
+      'two',
+      'missing-undefined',
+      'invalid-nan',
+      'missing-null',
+    ]);
+    expect(applyTransforms(rows, [{ kind: 'sort', field: 'value', order: 'descending' }]).map(row => row.id)).toEqual([
+      'two',
+      'one',
+      'missing-undefined',
+      'invalid-nan',
+      'missing-null',
+    ]);
   });
 });

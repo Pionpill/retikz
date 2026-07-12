@@ -1,15 +1,15 @@
 import type { PositionChannelDefinition } from '../../../contract';
 
 import { ChannelDefinitionKind } from '../../../contract';
-import { type Channel } from '../../../schemas';
+import { type IRPlotChannel } from '../../../schemas';
 
 /** 内置 position channel definition 的扩展形态。 */
 export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {
   pickWithOptions: () => PositionChannelDefinition['pick'];
 };
 
-const markEncoding = (mark: unknown): Record<string, Channel | undefined> | undefined =>
-  (mark as { encoding?: Record<string, Channel | undefined> }).encoding;
+const markEncoding = (mark: unknown): Record<string, IRPlotChannel | undefined> | undefined =>
+  (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding;
 
 const positionChannelDefinitionOf = (role: string): BuiltinPositionChannelDefinition => ({
   channel: role,

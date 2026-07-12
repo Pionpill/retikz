@@ -4,7 +4,7 @@ import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 
 import type { AnchorIdGenerator, AnchorOwner, AnchorRegistry } from '../contract';
-import type { AnchorIdSpec } from '../schemas';
+import type { IRPlotAnchorIdSpec } from '../schemas';
 
 import { slug } from '../contract';
 
@@ -30,6 +30,7 @@ const renderTemplate = (template: string, row: ExternalRow, owner: AnchorOwner, 
 
 const defaultPrefix = (owner: AnchorOwner): string => owner.markId ?? `mark.${owner.markIndex}`;
 
+/** 创建一次 plot lowering 使用的锚点注册表。 */
 export const createAnchorRegistry = (options: {
   plotId?: string;
   generators?: Record<string, AnchorIdGenerator>;
@@ -42,7 +43,7 @@ export const createAnchorRegistry = (options: {
     return options.plotId === undefined ? scoped : `${options.plotId}.${scoped}`;
   };
 
-  const makeId = (spec: AnchorIdSpec, row: ExternalRow, owner: AnchorOwner): string => {
+  const makeId = (spec: IRPlotAnchorIdSpec, row: ExternalRow, owner: AnchorOwner): string => {
     const prefix = spec.prefix ?? defaultPrefix(owner);
     if (spec.field !== undefined) {
       const raw = resolveFieldPath(row, spec.field);

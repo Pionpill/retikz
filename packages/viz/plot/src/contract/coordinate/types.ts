@@ -22,28 +22,22 @@ export type DimensionRole = string;
 export type CoordinateFrame = {
   /** 坐标系注册 type；内置用其判别串（如 `cartesian2D`），自定义用自己的 type（如 `bridge` / `sine`）。 */
   type: string;
-
   /** 位置角色序（消费哪些 mark 通道，按序喂 projectRoles） */
   roles: ReadonlyArray<DimensionRole>;
-
   /** 投影别名：2 通道便捷形态，委托 projectRoles；不适用时返回 null。 */
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
-
   /** N 通道投影：按 roles 序传值 → 屏幕点；非有限 → null（跳过） */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
-
   /**
    * 各角色的位置 scale（可选）：供 guide 画轴用——取该角色刻度、其余角色锚在各自 domain 起点，
    * 沿 projectRoles 密采样得曲线轴线 + 刻度点。不回传 → 该坐标系不画轴。
    */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
-
   /**
    * 某角色轴曲线在某点的局部标架（可选）：origin + 切向 ∂γ/∂role。
    * 曲线轴优先用它取精确切向；不回传 → guide 对 projectRoles 数值差分回落（现状行为）。
    */
   frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
-
   /**
    * 正交 cell → CellGeometry（可选）：实现了才支持 cell 类 mark（interval / sector / rect）。
    * @description 曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；
@@ -60,46 +54,32 @@ export type CoordinateFrame = {
 export type PolarCoordinateFrame = {
   /** 判别字段：2D 极坐标。 */
   type: typeof PlotCoordinate.Polar2D;
-
   /** 位置角色顺序（[angle, radius]）；mark 按此顺序取 encoding 通道值。 */
   roles: ReadonlyArray<DimensionRole>;
-
   /** 圆心（屏幕坐标）。 */
   center: Position;
-
   /** 内半径（user units，环图内半径；0 = 实心）。 */
   innerRadius: number;
-
   /** 外半径（user units，可用外半径）。 */
   outerRadius: number;
-
   /** 角向起始角（度，角向 range 起点）。 */
   startAngle: number;
-
   /** 角向终止角（度，角向 range 终点）。 */
   endAngle: number;
-
   /** 角向 scale 是否连续；连续时 path 可做段内采样。 */
   continuousAngle: boolean;
-
   /** angle 位置 scale（range = [startAngle, endAngle] 度）。 */
   primary: PositionScale;
-
   /** radius 位置 scale（range = [innerRadius, outerRadius]）。 */
   secondary: PositionScale;
-
   /** 按通用 coordinate contract 暴露各 role 的位置 scale。 */
   roleScales: Partial<Record<DimensionRole, PositionScale>>;
-
   /** 投影：[theta, radius] -> 屏幕点；任一非有限值返回 null。 */
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
-
   /** N 通道投影：按 roles 顺序传值，内部委托 project。 */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
-
   /** 把已映射的极坐标对（theta 度, radius user units）换算成屏幕点。 */
   projectPolar: (thetaDeg: number, radius: number) => Position | null;
-
   /** 正交 cell -> 环扇几何。 */
   projectCell: (cell: Cell) => CellGeometry;
 };
@@ -120,7 +100,6 @@ export type TernaryVertices = [Position, Position, Position];
 export type AxisFrame = {
   /** 该点屏幕坐标。 */
   origin: Position;
-
   /** 沿该角色轴曲线的切向。 */
   tangent: [number, number];
 };

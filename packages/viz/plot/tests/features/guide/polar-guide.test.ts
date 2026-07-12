@@ -3,24 +3,24 @@
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-04 polar guide lowering 测试。
+ * contract polar guide lowering 测试。
  * 断言 lowerPlots 产出的 core IR（scope 分层 + path step kind=arc/line + node text/position），
- * 不碰内部函数。投影约定（ADR-01 §2）：θ=angleScale(angleValue) 度、r=radiusScale(radiusValue)，
+ * 不碰内部函数。投影约定（contract §2）：θ=angleScale(angleValue) 度、r=radiusScale(radiusValue)，
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]；0°=+x、90°=+y（屏幕 y 向下）。
  * polar guide：angular axis = 外圆弧 + 角向刻度 + 圆周外标签；radial axis = 沿 startAngle 辐条 + 刻度 + 标签；
  *   radius grid = 同心环（arc）；angle grid = 圆心→外圆辐条（直段）。
- * z-order（沿用 alpha.2）：gridLayer 垫底 → markLayers → axisLayer 压顶。
+ * z-order：gridLayer 垫底 → markLayers → axisLayer 压顶。
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
@@ -69,7 +69,7 @@ const layersOf = (outer: IRScope): { children: Array<IRChild>; markIndex: number
 };
 
 /** angle 维 band scale + radius 维 linear scale 的 polar 折线 spec（角向轴=类别绕圈） */
-const polarSpec = (guides: Array<Record<string, unknown>>, extra: Record<string, unknown> = {}): PlotSpec =>
+const polarSpec = (guides: Array<Record<string, unknown>>, extra: Record<string, unknown> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -90,7 +90,7 @@ const ROWS = [
   { cat: 'D', value: 6 },
 ];
 
-describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
+describe('lowerPlots polar guide — angular axis (contract)', () => {
   // Happy path：角向轴 = 外圆弧 + 每类别角度刻度 + 圆周外 Node 标签
   it('angular_axis_produces_arc_axis_line', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
@@ -159,9 +159,9 @@ describe('lowerPlots polar guide — angular axis (ADR-04)', () => {
   });
 });
 
-describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
+describe('lowerPlots polar guide — radial axis (contract)', () => {
   /** 径向轴（linear）spec：dimension=y；用 linear 角向使刻度沿辐条 */
-  const radialSpec = (guides: Array<Record<string, unknown>>): PlotSpec =>
+  const radialSpec = (guides: Array<Record<string, unknown>>): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -215,7 +215,7 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
     }
   });
 
-  // 刻度不沿辐条越出内 / 外端点（修：首尾刻度曾各多出 AXIS_TICK_LENGTH/2）
+  // 刻度不沿辐条越出内 / 外端点（修：首尾刻度曾各多出 DEFAULT_AXIS_TICK_LENGTH/2）
   it('radial_axis_ticks_do_not_overshoot_spoke_endpoints', () => {
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
@@ -243,9 +243,9 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
   });
 });
 
-describe('lowerPlots polar guide — grid (ADR-04)', () => {
+describe('lowerPlots polar guide — grid (contract)', () => {
   /** 径向轴 grid（同心环）：linear radius + grid:true */
-  const radiusGridSpec: PlotSpec = PlotSpecSchema.parse({
+  const radiusGridSpec: IRPlotSpec = PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -286,7 +286,7 @@ describe('lowerPlots polar guide — grid (ADR-04)', () => {
   });
 
   /** 角向轴 grid（辐条）：band angle + grid:true */
-  const angleGridSpec: PlotSpec = PlotSpecSchema.parse({
+  const angleGridSpec: IRPlotSpec = PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -322,7 +322,7 @@ describe('lowerPlots polar guide — grid (ADR-04)', () => {
   });
 });
 
-describe('lowerPlots polar guide — z-order (ADR-04)', () => {
+describe('lowerPlots polar guide — z-order (contract)', () => {
   it('grid_below_mark_axis_above', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -351,7 +351,7 @@ describe('lowerPlots polar guide — z-order (ADR-04)', () => {
   });
 });
 
-describe('lowerPlots polar guide — 错误路径 (ADR-04)', () => {
+describe('lowerPlots polar guide — 错误路径 (contract)', () => {
   it('duplicate_angle_axis_throws', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -371,7 +371,7 @@ describe('lowerPlots polar guide — 错误路径 (ADR-04)', () => {
     expect(() => expandOf(spec, { d: ROWS }, opts)).toThrow(/duplicate axis/);
   });
 
-  // hybrid 别名：x 与 angle 都映射到角向角色 → 应按角色判重抛错（Bug Hunter ADR-04 W）
+  // hybrid 别名：x 与 angle 都映射到角向角色 → 应按角色判重抛错（Bug Hunter contract W）
   it('duplicate_angular_role_x_throws', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -392,9 +392,9 @@ describe('lowerPlots polar guide — 错误路径 (ADR-04)', () => {
   });
 });
 
-describe('lowerPlots cartesian guide 回归 (ADR-04)', () => {
+describe('lowerPlots cartesian guide 回归 (contract)', () => {
   // cartesian axis / grid 产物不变：直线轴（line/move，无 arc）
-  const cartGuidedSpec: PlotSpec = PlotSpecSchema.parse({
+  const cartGuidedSpec: IRPlotSpec = PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },

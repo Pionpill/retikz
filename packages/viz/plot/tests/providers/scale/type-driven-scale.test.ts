@@ -4,7 +4,7 @@ import { compileToScene } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { deriveScale } from '../../../src/providers';
@@ -23,7 +23,7 @@ const assertScaleFieldCompatible = (
   scaleName: string,
 ) => assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, scaleRegistry);
 
-const compile = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>) =>
+const compile = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
 
 /** cartesian spec，可选省略 coordinate 的 x/y 绑定（触发派生） */
@@ -31,7 +31,7 @@ const spec = (
   coordinate: Record<string, unknown>,
   model: Array<{ name: string; type: string }>,
   scales: Array<unknown> = [],
-): PlotSpec =>
+): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',

@@ -10,20 +10,21 @@ import {
 } from '@retikz/data';
 
 import type {
-  BinTransform,
-  DensityTransform,
-  DeriveIntervalTransform,
-  JitterTransform,
-  NormalizeTransform,
-  RelateTransform,
-  SmoothTransform,
-  StackTransform,
+  IRPlotBinTransform,
+  IRPlotDensityTransform,
+  IRPlotDeriveIntervalTransform,
+  IRPlotJitterTransform,
+  IRPlotNormalizeTransform,
+  IRPlotRelateTransform,
+  IRPlotSmoothTransform,
+  IRPlotStackTransform,
 } from '../../schemas';
 
 import {
   BinTransformSchema,
   DensityTransformSchema,
   DeriveIntervalTransformSchema,
+  JitterAxis,
   JitterTransformSchema,
   NormalizeTransformSchema,
   RelateTransformSchema,
@@ -46,7 +47,7 @@ import {
 } from './row';
 import { applySmooth, smoothInputFields, smoothOutputFields } from './smooth';
 
-const stackTransformDefinition = defineTransform<StackTransform>({
+const stackTransformDefinition = defineTransform<IRPlotStackTransform>({
   schema: StackTransformSchema,
   inputFields: operation => [
     operation.y,
@@ -57,7 +58,7 @@ const stackTransformDefinition = defineTransform<StackTransform>({
   apply: (rows, operation) => applyStack(rows, operation),
 });
 
-const binTransformDefinition = defineTransform<BinTransform>({
+const binTransformDefinition = defineTransform<IRPlotBinTransform>({
   schema: BinTransformSchema,
   inputFields: (operation, context) => [
     operation.field,
@@ -76,14 +77,14 @@ const binTransformDefinition = defineTransform<BinTransform>({
   apply: (rows, operation, context) => applyBin(rows, operation, context),
 });
 
-const normalizeTransformDefinition = defineTransform<NormalizeTransform>({
+const normalizeTransformDefinition = defineTransform<IRPlotNormalizeTransform>({
   schema: NormalizeTransformSchema,
   inputFields: operation => [operation.field, ...(operation.groupBy ?? [])],
   outputFields: operation => (operation.as !== undefined ? [operation.as] : []),
   apply: (rows, operation) => applyNormalize(rows, operation),
 });
 
-const deriveIntervalTransformDefinition = defineTransform<DeriveIntervalTransform>({
+const deriveIntervalTransformDefinition = defineTransform<IRPlotDeriveIntervalTransform>({
   schema: DeriveIntervalTransformSchema,
   inputFields: operation =>
     [operation.from, operation.startFrom, operation.endFrom].filter((field): field is string => field !== undefined),
@@ -94,7 +95,7 @@ const deriveIntervalTransformDefinition = defineTransform<DeriveIntervalTransfor
   apply: (rows, operation) => applyDeriveInterval(rows, operation),
 });
 
-const relateTransformDefinition = defineTransform<RelateTransform>({
+const relateTransformDefinition = defineTransform<IRPlotRelateTransform>({
   schema: RelateTransformSchema,
   inputFields: (operation, context) => [
     ...(operation.groupBy ?? []),
@@ -114,26 +115,26 @@ const relateTransformDefinition = defineTransform<RelateTransform>({
   apply: (rows, operation, context) => applyRelate(rows, operation, context),
 });
 
-const jitterTransformDefinition = defineTransform<JitterTransform>({
+const jitterTransformDefinition = defineTransform<IRPlotJitterTransform>({
   schema: JitterTransformSchema,
   inputFields: operation => {
-    const axis = operation.axis ?? 'x';
+    const axis = operation.axis ?? JitterAxis.X;
     return [
-      axis === 'x' || axis === 'both' ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
-      axis === 'y' || axis === 'both' ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
+      axis === JitterAxis.X || axis === JitterAxis.Both ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
+      axis === JitterAxis.Y || axis === JitterAxis.Both ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
     ].filter((field): field is string => field !== undefined);
   },
   apply: (rows, operation) => applyJitter(rows, operation),
 });
 
-const densityTransformDefinition = defineTransform<DensityTransform>({
+const densityTransformDefinition = defineTransform<IRPlotDensityTransform>({
   schema: DensityTransformSchema,
   inputFields: operation => densityInputFields(operation),
   outputFields: operation => densityOutputFields(operation),
   apply: (rows, operation, context) => applyDensity(rows, operation, context),
 });
 
-const smoothTransformDefinition = defineTransform<SmoothTransform>({
+const smoothTransformDefinition = defineTransform<IRPlotSmoothTransform>({
   schema: SmoothTransformSchema,
   inputFields: operation => smoothInputFields(operation),
   outputFields: operation => smoothOutputFields(operation),

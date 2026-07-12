@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -15,12 +15,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
 
-const specWithModel = (): PlotSpec =>
+const specWithModel = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -39,7 +39,7 @@ const specWithModel = (): PlotSpec =>
     marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
   });
 
-const specNoModel = (): PlotSpec =>
+const specNoModel = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -67,7 +67,7 @@ const doubleDefinition = defineTransform({
     })),
 });
 
-describe('coerceValue — 按 DataFieldType 值强制（ADR-02）', () => {
+describe('coerceValue — 按 DataFieldType 值强制（contract）', () => {
   it('continuous_number_and_strict_string', () => {
     expect(coerceValue(120, DataFieldType.Continuous)).toBe(120);
     expect(coerceValue('120', DataFieldType.Continuous)).toBe(120);
@@ -105,7 +105,7 @@ describe('coerceValue — 按 DataFieldType 值强制（ADR-02）', () => {
   });
 });
 
-describe('normalizeRows — ingest 归一化（ADR-02）', () => {
+describe('normalizeRows — ingest 归一化（contract）', () => {
   const fieldTypes = new Map([
     ['month', DataFieldType.Temporal],
     ['revenue', DataFieldType.Continuous],
@@ -134,7 +134,7 @@ describe('normalizeRows — ingest 归一化（ADR-02）', () => {
   });
 
   it('nested_logical_path_coerces', () => {
-    // 评审 P1：点路径逻辑名归一化写扁平 key，下游 resolveFieldPath exact-first 命中 coerced 值（不再读回原始嵌套字符串）
+    // 点路径逻辑名归一化写扁平 key，下游 resolveFieldPath exact-first 命中 coerced 值（不再读回原始嵌套字符串）
     const out = normalizeRows([{ user: { age: '42' } }], new Map([['user.age', DataFieldType.Continuous]]));
     expect(out[0]['user.age']).toBe(42);
     expect(resolveFieldPath(out[0], 'user.age')).toBe(42);
@@ -148,7 +148,7 @@ describe('normalizeRows — ingest 归一化（ADR-02）', () => {
   });
 });
 
-describe('coerce-before-transform（评审 P1 关键回归）', () => {
+describe('coerce-before-transform 关键回归', () => {
   it('numeric_string_stacks_correctly', () => {
     // 数字串先归一化成数值，再 stack 累加 → 得 8 而非 0
     const normalized = normalizeRows(
@@ -163,7 +163,7 @@ describe('coerce-before-transform（评审 P1 关键回归）', () => {
   });
 });
 
-describe('fieldMaps 校验（ADR-02 集成）', () => {
+describe('fieldMaps 校验（contract 集成）', () => {
   it('fieldmap_without_model_throws', () => {
     expect(() => compile(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(
       /requires data\.model/i,
@@ -204,7 +204,7 @@ describe('fieldMaps 校验（ADR-02 集成）', () => {
   });
 });
 
-describe('validateData（ADR-02）', () => {
+describe('validateData（contract）', () => {
   it('off_by_default_missing_field_no_throw', () => {
     // 默认不校验绑定数据：字段缺失只是空图，不抛
     expect(() => compile(specWithModel(), { d: [{ wrong: 1 }] })).not.toThrow();
@@ -215,7 +215,7 @@ describe('validateData（ADR-02）', () => {
   });
 });
 
-describe('locator fieldMaps parity（评审 P2）', () => {
+describe('locator fieldMaps parity', () => {
   it('locator_build_throws_like_render', () => {
     // 同 spec+options：render 抛 unknown logical field → locator build 也抛（不再静默返回结果）
     expect(() =>
@@ -234,8 +234,8 @@ describe('locator fieldMaps parity（评审 P2）', () => {
   });
 });
 
-describe('custom transform data portability（alpha.12 ADR-06）', () => {
-  const customSpec = (): PlotSpec =>
+describe('custom transform data portability（contract）', () => {
+  const customSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',

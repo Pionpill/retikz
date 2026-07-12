@@ -1,7 +1,7 @@
-import type { PlotLabel } from '@retikz/plot';
+import type { IRPlotLabel } from '@retikz/plot';
 import type { FC, ReactNode } from 'react';
 
-type TextPlotLabel = Extract<PlotLabel, { type: 'text' }>;
+type TextPlotLabel = Extract<IRPlotLabel, { type: 'text' }>;
 
 /** Plot 级文本标签内容；多行和富文本块复用 core TextBlock 契约。 */
 export type PlotLabelText = TextPlotLabel['text'];

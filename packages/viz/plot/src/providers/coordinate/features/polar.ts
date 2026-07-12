@@ -11,7 +11,7 @@ import type {
   PositionScale,
   TickSet,
 } from '../../../contract';
-import type { Coordinate, Polar1DCoordinate } from '../../../schemas';
+import type { IRPlotCoordinate, IRPlotPolar1DCoordinate } from '../../../schemas';
 
 import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
@@ -19,7 +19,7 @@ import { computePolarCoordinate } from '../../../shared';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
-type Polar2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Polar2D }>;
+type Polar2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Polar2D }>;
 
 /** 空刻度集：某维度无 axis 时给 GuideContext 的占位。 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -317,7 +317,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
   },
 };
 
-const polar1DCoordinateDefinition: CoordinateDefinition<Polar1DCoordinate> = {
+const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate> = {
   schema: Polar1DSchema,
   roles: ['x'],
   resolve: (coordinate, ctx) => {

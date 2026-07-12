@@ -5,7 +5,7 @@ import { SOURCE_INDEX } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../src/schemas';
@@ -18,7 +18,7 @@ import { PlotSpecSchema } from '../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
@@ -31,7 +31,7 @@ const contentScope = (outer: IRScope): IRScope =>
   outer.id !== undefined && outer.localNamespace !== true ? (outer.children[0] as IRScope) : outer;
 
 /** 取第一个 mark 图层 scope（内容 scope 的第一个子 scope） */
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   contentScope(expandOf(spec, datasets, options)).children[0] as IRScope;
 
 /** 递归收集 IRChild 树里所有带 meta 的元素（id 一并带出，便于断言） */
@@ -73,7 +73,7 @@ const SALES = [
 ];
 
 /** band-x interval(bar) spec；可带 root id / mark id */
-const barSpec = (over: { id?: string; markId?: string } = {}): PlotSpec =>
+const barSpec = (over: { id?: string; markId?: string } = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -94,7 +94,7 @@ const barSpec = (over: { id?: string; markId?: string } = {}): PlotSpec =>
   });
 
 /** linear point spec；可带 root id */
-const pointSpec = (over: { id?: string } = {}): PlotSpec =>
+const pointSpec = (over: { id?: string } = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',

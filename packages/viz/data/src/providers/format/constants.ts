@@ -1,4 +1,4 @@
-import { createReadonlySet } from '../../shared';
+import { createReadonlySet } from '../../shared/collections';
 
 /**
  * 内置字段值解析格式名。

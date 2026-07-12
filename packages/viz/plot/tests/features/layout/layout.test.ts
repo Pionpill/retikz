@@ -3,7 +3,7 @@ import type { IRChild, IRNode, IRScope, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -13,7 +13,7 @@ const rows = [
   { x: 10, y: 8 },
 ];
 
-const baseSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+const baseSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -32,7 +32,7 @@ const baseSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
     ...extra,
   });
 
-const expandOf = (spec: PlotSpec): IRScope => {
+const expandOf = (spec: IRPlotSpec): IRScope => {
   const [definition] = lowerPlots({ d: rows }, { width: 480, height: 300 });
   return definition.expand(spec) as IRScope;
 };

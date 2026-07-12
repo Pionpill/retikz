@@ -1,5 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
 import { lowerPlots } from '@retikz/plot';
@@ -23,7 +23,7 @@ import {
 } from '../../plot/tests/helpers/plot-spec-fixtures';
 import { renderPlot } from '../src';
 
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'sales' },
@@ -65,7 +65,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('非法 spec（缺判别字段）→ 抛清晰 ZodError，不落到 core 内部崩', () => {
-    const malformed = {} as unknown as PlotSpec;
+    const malformed = {} as unknown as IRPlotSpec;
     expect(() => renderPlot(malformed, {}, { width: 480, height: 300 })).toThrow(ZodError);
   });
 
@@ -113,7 +113,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
 
   // 柱状 / 堆叠柱 SSR
   it('柱状 spec 渲出矩形（<rect>）', () => {
-    const barSpec: PlotSpec = {
+    const barSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -155,13 +155,13 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(renderPlot(createPolarRadialBarSpec(), polarShareData, { width: 360, height: 360 })).toContain('<path');
   });
 
-  // 1D / ternary 坐标系 PlotSpec → renderPlot 透传（vanilla 直接消费 core IR，与 react 对等）
+  // 1D / ternary 坐标系 IRPlotSpec → renderPlot 透传（vanilla 直接消费 core IR，与 react 对等）
   const samples: ExternalDatasets = {
     samples: [{ v: 1 }, { v: 5 }, { v: 9 }],
   };
 
   it('cartesian1D rug spec → SVG 含散点 glyph（<ellipse）', () => {
-    const rugSpec: PlotSpec = {
+    const rugSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'samples' },
@@ -175,7 +175,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('polar1D 环形点 spec → SVG 含散点 glyph', () => {
-    const ringSpec: PlotSpec = {
+    const ringSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'hours' },
@@ -193,7 +193,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('ternary2D 三元散点 spec → SVG 含散点 + 三角轴 path', () => {
-    const ternarySpec: PlotSpec = {
+    const ternarySpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'soils' },
@@ -233,7 +233,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { rk: 'r1', ck: 'c1', v: 3 },
       ],
     };
-    const heatmapSpec: PlotSpec = {
+    const heatmapSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -273,7 +273,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { day: 'Tue', hour: 'AM' },
       ],
     };
-    const gridSpec: PlotSpec = {
+    const gridSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'grid' },
@@ -302,7 +302,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { name: 'C', score: 92 },
       ],
     };
-    const ruleSpec: PlotSpec = {
+    const ruleSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'scores' },
@@ -334,7 +334,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { threshold: 90, category: 'high' },
       ],
     };
-    const perDatumSpec: PlotSpec = {
+    const perDatumSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -358,7 +358,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
 
   // text mark / datum label SSR，纯 spec 驱动贯通三包
   it('vanilla-label-ssr 宿主 label：interval label → <text> 元素 + 标签内容串', () => {
-    const labelSpec: PlotSpec = {
+    const labelSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -384,7 +384,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('vanilla-label-ssr 自由 TextMark：text mark → <text> 元素 + 字段值串', () => {
-    const textSpec: PlotSpec = {
+    const textSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'labels' },
@@ -425,7 +425,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { region: 'S', revenue: 2 },
       ],
     };
-    const aggSpec: PlotSpec = {
+    const aggSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'o' },
@@ -455,7 +455,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { dose: 2, response: 9 },
       ],
     };
-    const jitterSpec: PlotSpec = {
+    const jitterSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'pts' },

@@ -3,7 +3,12 @@ import type { ExternalRow } from '@retikz/data';
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
-import type { AxisGuide, CoordinateOperation, MarkOperation, ScaleOperation } from '../../schemas';
+import type {
+  IRPlotAxisGuide,
+  IRPlotCoordinateOperation,
+  IRPlotMarkOperation,
+  IRPlotScaleOperation,
+} from '../../schemas';
 import type { LegendReserve, Margins } from '../../shared';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../provenance';
@@ -75,33 +80,41 @@ export type CoordinateResolveContext = {
   /** Override axis ticks for marks whose role position is derived from interval bounds. */
   collectAxisTicks: (role: DimensionRole) => TickSet | undefined;
   /** 解析某个定位角色的 scale operation；未指定 scaleName 时按数据推导默认 scale（含自定义 type）。 */
-  resolveScaleForRole: (role: DimensionRole, scaleName: string | undefined, values: Array<unknown>) => ScaleOperation;
+  resolveScaleForRole: (
+    role: DimensionRole,
+    scaleName: string | undefined,
+    values: Array<unknown>,
+  ) => IRPlotScaleOperation;
   /** 把 scale operation 与数据域、屏幕 range 组合成可投影的位置 scale。 */
-  buildPositionScale: (def: ScaleOperation, values: Array<unknown>, range: readonly [number, number]) => PositionScale;
+  buildPositionScale: (
+    def: IRPlotScaleOperation,
+    values: Array<unknown>,
+    range: readonly [number, number],
+  ) => PositionScale;
   /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型（type 串，含自定义）。 */
-  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<MarkOperation>) => void;
+  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMarkOperation>) => void;
   /** 当前 plot 内所有 axis guide；definition 决定如何将其下沉到 grid / axis 层。 */
-  axisGuides: ReadonlyArray<AxisGuide>;
+  axisGuides: ReadonlyArray<IRPlotAxisGuide>;
   /** 下沉直线 / 内置 guide 的通用入口。 */
-  lowerGuide: (guide: AxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;
+  lowerGuide: (guide: IRPlotAxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;
   /** 下沉曲线坐标轴的入口，依赖 frame.roleScales 与 frame.projectRoles。 */
   lowerCustomAxis: (
     frame: CoordinateFrame,
-    guide: AxisGuide,
+    guide: IRPlotAxisGuide,
     fontSize: number,
     provenance?: ProvenanceContext,
   ) => LoweredGuide;
   /** 已解析的外部数据行；高级坐标系可按需读取完整数据。 */
   rows: Array<ExternalRow>;
   /** 当前 plot 的 mark 列表；主要用于 scale 兼容性与坐标系特定校验。 */
-  marks: ReadonlyArray<MarkOperation>;
+  marks: ReadonlyArray<IRPlotMarkOperation>;
 };
 
 /**
  * 坐标系运行时定义。
  * @description definition 是含函数的运行时对象，不进入 JSON IR；IR 只保存 `{ type, ...config }` 形态的 coordinate operation。
  */
-export type CoordinateDefinition<TCoordinateOperation extends CoordinateOperation = CoordinateOperation> = {
+export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOperation = IRPlotCoordinateOperation> = {
   /** 完整 coordinate operation schema；必须含非空 z.literal('type') 供 registry 提取注册键。 */
   schema: z.ZodType<TCoordinateOperation>;
   /** 该坐标系消费的定位角色序，用于 required-channel 与 guide-dimension 校验。 */
@@ -117,7 +130,7 @@ export type CoordinateDefinition<TCoordinateOperation extends CoordinateOperatio
  *   自定义坐标系都应通过这个对象进入 registry，避免内置白名单与扩展补丁接口分叉。
  * @remarks 当前 helper 只做 `CoordinateDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
  */
-export const defineCoordinate = <TCoordinateOperation extends CoordinateOperation>(
+export const defineCoordinate = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   def: CoordinateDefinition<TCoordinateOperation>,
 ): CoordinateDefinition<TCoordinateOperation> => def;
 
@@ -157,7 +170,7 @@ export const createCoordinateFrame = (
  * registry 内部使用的宽类型。
  * @description registry 需要存放不同 operation 泛型的 definition；取出后由具体 schema parse 收窄，因此 resolve 入参在表内用 never 防止误调。
  */
-export type AnyCoordinateDefinition = Omit<CoordinateDefinition<CoordinateOperation>, 'schema' | 'resolve'> & {
+export type AnyCoordinateDefinition = Omit<CoordinateDefinition<IRPlotCoordinateOperation>, 'schema' | 'resolve'> & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 type 并执行 parse。 */
   schema: z.ZodType;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation。 */

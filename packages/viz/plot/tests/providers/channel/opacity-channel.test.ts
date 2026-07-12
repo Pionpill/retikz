@@ -4,7 +4,7 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { OPACITY_MIN } from '../../../src/providers';
@@ -12,12 +12,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
@@ -35,7 +35,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 
 const opacityOf = (node: IRNode): number | undefined => (node as { opacity?: number }).opacity;
 
-const pointSpec = (opacity: Record<string, unknown> | undefined): PlotSpec =>
+const pointSpec = (opacity: Record<string, unknown> | undefined): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -48,7 +48,7 @@ const pointSpec = (opacity: Record<string, unknown> | undefined): PlotSpec =>
     marks: [{ type: 'point', ...(opacity ? { opacity } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
-describe('opacity channel (alpha.7 ADR-04)', () => {
+describe('opacity channel (contract)', () => {
   // Happy path：linear 映射到 [OPACITY_MIN, 1]。domain [0,10]：v=0→min、v=10→1、v=5→中点
   it('opacity_field_maps_to_min_one', () => {
     const data = [

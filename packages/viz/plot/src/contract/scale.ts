@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import type { Scale, ScaleOperation } from '../schemas';
+import type { IRPlotScale, IRPlotScaleOperation } from '../schemas';
 
 import { BUILTIN_SCALE_TYPES } from '../schemas';
 
@@ -77,7 +77,7 @@ export type ChannelScaleResolution = {
 };
 
 /** position 族：value → 坐标，喂 coordinate 投影 + guide 刻度（经 PositionScale 接口） */
-export type PositionScaleDefinition<TScaleOperation extends ScaleOperation = ScaleOperation> = {
+export type PositionScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> = {
   /** 族判别：position scale 产坐标数值 */
   family: 'position';
   /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
@@ -91,7 +91,7 @@ export type PositionScaleDefinition<TScaleOperation extends ScaleOperation = Sca
 };
 
 /** channel 族：value → 视觉量（颜色），喂 color 通道 + legend；resolve 单次产 evaluator + legend 同源数据 */
-export type ChannelScaleDefinition<TScaleOperation extends ScaleOperation = ScaleOperation> = {
+export type ChannelScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> = {
   /** 族判别：channel scale 产视觉量（颜色） */
   family: 'channel';
   /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
@@ -107,7 +107,7 @@ export type ChannelScaleDefinition<TScaleOperation extends ScaleOperation = Scal
  * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ type, name, ...config }` 形态的 scale operation。
  *   family 判别 position（坐标）vs channel（颜色），两族产出契约不同。
  */
-export type ScaleDefinition<TScaleOperation extends ScaleOperation = ScaleOperation> =
+export type ScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> =
   | PositionScaleDefinition<TScaleOperation>
   | ChannelScaleDefinition<TScaleOperation>;
 
@@ -116,7 +116,7 @@ export type ScaleDefinition<TScaleOperation extends ScaleOperation = ScaleOperat
  * @description 内置 15 个与自定义 scale 都经同一 registry 入口分派；family 决定 position / channel 解析通路。
  * @remarks 当前 helper 只做 `ScaleDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook。
  */
-export const defineScale = <TScaleOperation extends ScaleOperation>(
+export const defineScale = <TScaleOperation extends IRPlotScaleOperation>(
   def: ScaleDefinition<TScaleOperation>,
 ): ScaleDefinition<TScaleOperation> => def;
 
@@ -155,5 +155,5 @@ export const extractScaleType = (schema: z.ZodType): string => {
 };
 
 /** scale operation 是否内置（type 在内置集）；用于把 registry 取出的 operation 收窄回精确 Scale。 */
-export const isBuiltinScaleOperation = (operation: ScaleOperation): operation is Scale =>
+export const isBuiltinScaleOperation = (operation: IRPlotScaleOperation): operation is IRPlotScale =>
   BUILTIN_SCALE_TYPES.has(operation.type);

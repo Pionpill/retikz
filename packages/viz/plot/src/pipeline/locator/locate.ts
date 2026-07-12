@@ -14,7 +14,7 @@ import type {
   ResolvedAnchor,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
-import type { Mark, MarkOperation, PlotSpec, Transform } from '../../schemas';
+import type { IRPlotMark, IRPlotMarkOperation, IRPlotSpec, IRPlotTransform } from '../../schemas';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
@@ -28,11 +28,11 @@ import { createDatumIdRegistrar } from '../provenance';
 type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 
 /** 取某 mark 的 series 字段名（无则 undefined）；只有 path / interval 含 series */
-const seriesFieldOf = (mark: Mark): string | undefined =>
+const seriesFieldOf = (mark: IRPlotMark): string | undefined =>
   mark.type === PlotMark.Path || mark.type === PlotMark.Interval ? mark.series : undefined;
 
 /** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval（含 heatmap cell / sector，皆 interval）；自定义 mark 非 datum-bearing。 */
-const isDatumBearing = (mark: MarkOperation): mark is Mark =>
+const isDatumBearing = (mark: IRPlotMarkOperation): mark is IRPlotMark =>
   isBuiltinMark(mark) && (mark.type === PlotMark.Point || mark.type === PlotMark.Interval);
 
 type RenderDatumEntry = ResolvedAnchor & {
@@ -117,12 +117,12 @@ const contextMatches = (meta: IRJsonObject, opts: PlotLocatorOptions | undefined
 };
 
 const resolveMarkRows = (
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   rows: Array<ExternalRow>,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
 ): Array<ExternalRow> => {
-  const transform = (mark as { transform?: Array<Transform> }).transform;
+  const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
   if (transform === undefined) return rows;
   return applyTransforms(rows, transform, transformRegistry, transformContext);
 };
@@ -134,7 +134,7 @@ const resolveMarkRows = (
  *   datumIdField 设时在构建期跑 plot 级 registrar（与 lowering 同序、同查重）→ 同 spec+options 下 locator-build 抛 iff lowering 抛（#3）。
  */
 export const createPlotLocator = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: ExternalDatasets,
   options: LowerPlotsOptions = {},
 ): PlotLocator => {
@@ -195,7 +195,7 @@ export const createPlotLocator = (
 
   // 每 mark 的 IntervalContext 一次性建（interval mark 锚点需要；其余 mark undefined）——与 lowering 同源（#1）。
   const intervalContexts = new Map<number, IntervalContext>();
-  const intervalContextOf = (markIndex: number, mark: MarkOperation): IntervalContext | undefined => {
+  const intervalContextOf = (markIndex: number, mark: IRPlotMarkOperation): IntervalContext | undefined => {
     if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) return undefined;
     const cached = intervalContexts.get(markIndex);
     if (cached) return cached;
@@ -204,9 +204,9 @@ export const createPlotLocator = (
     return ctx;
   };
 
-  const markOf = (markIndex: number): MarkOperation | undefined => spec.marks[markIndex];
+  const markOf = (markIndex: number): IRPlotMarkOperation | undefined => spec.marks[markIndex];
   const defaultMarkIndex = 0;
-  const anchorFor = (mark: Mark, row: ExternalRow, ctx: IntervalContext | undefined): [number, number] | null => {
+  const anchorFor = (mark: IRPlotMark, row: ExternalRow, ctx: IntervalContext | undefined): [number, number] | null => {
     if (mark.type !== PlotMark.Interval) return datumAnchor(mark, row, frame, ctx);
     const geometry = intervalCellGeometry(mark, row, frame, ctx);
     if (geometry === null || !isRenderableCellGeometry(geometry)) return null;
@@ -289,7 +289,7 @@ export const createPlotLocator = (
   const anchorAt = (
     markIndex: number,
     transformedIndex: number,
-  ): { position: [number, number]; row: ExternalRow; mark: Mark } | null => {
+  ): { position: [number, number]; row: ExternalRow; mark: IRPlotMark } | null => {
     const mark = markOf(markIndex);
     if (!mark || !isBuiltinMark(mark)) return null; // 自定义 mark 非 datum-bearing，locator 跳过
     const markRows = rowsOfMark(markIndex);

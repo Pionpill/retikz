@@ -5,6 +5,7 @@ import { type ChannelResolution } from '../../../contract';
 import { type MarkValueType } from '../../../schemas';
 export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
+/** MarkValueType 解析出的逐行 resolver 与字段元数据。 */
 export type MarkValueResolution<T> = ChannelResolution<T> & {
   /** 绑定的数据字段名；常量值没有字段名。 */
   field?: string;
@@ -12,6 +13,7 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
   fieldType?: DataFieldTypeValue;
 };
 
+/** 创建 MarkValueType resolver 时的字段类型与常量处理策略。 */
 export type MarkValueResolverOptions<T> = {
   /** 用于错误信息的属性 / 通道名。 */
   channelName: string;

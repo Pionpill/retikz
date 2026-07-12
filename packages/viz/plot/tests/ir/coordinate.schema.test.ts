@@ -7,7 +7,7 @@ import {
   PlotCoordinate,
 } from '../../src/schemas/coordinate';
 
-describe('CoordinateSchema (ADR-04)', () => {
+describe('CoordinateSchema (contract)', () => {
   // Happy path
   it('coordinate_cartesian2d_valid', () => {
     const c = { type: 'cartesian2D', x: 'xs', y: 'ys' };
@@ -19,7 +19,7 @@ describe('CoordinateSchema (ADR-04)', () => {
     expect(() => CoordinateSchema.parse({ type: 'cartesian2D', x: '', y: 'ys' })).toThrow();
   });
 
-  // ADR-03：x/y 绑定改为可选（缺省按字段类型派生），故「省略」由 reject 变为 accept
+  // contract：x/y 绑定改为可选（缺省按字段类型派生），故「省略」由 reject 变为 accept
   it('coordinate_missing_x_accepted_derives', () => {
     expect(() => CoordinateSchema.parse({ type: 'cartesian2D', y: 'ys' })).not.toThrow();
   });
@@ -44,7 +44,7 @@ describe('CoordinateSchema (ADR-04)', () => {
   });
 });
 
-describe('CoordinateSchema polar2D (ADR-01)', () => {
+describe('CoordinateSchema polar2D (contract)', () => {
   // Happy path
   it('polar2d_minimal_valid_with_defaults', () => {
     const parsed = CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r' });
@@ -85,7 +85,7 @@ describe('CoordinateSchema polar2D (ADR-01)', () => {
 
   // 错误路径
   it('polar2d_missing_angle_accepted_derives', () => {
-    // ADR-03：angle/radius 绑定可省（派生）
+    // contract：angle/radius 绑定可省（派生）
     expect(() => CoordinateSchema.parse({ type: 'polar2D', radius: 'r' })).not.toThrow();
   });
 
@@ -121,7 +121,7 @@ describe('CoordinateSchema polar2D (ADR-01)', () => {
   });
 });
 
-describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (alpha.9 ADR-02)', () => {
+describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (contract)', () => {
   // Happy path：cartesian1D
   it('cartesian1d_minimal_valid', () => {
     const c = { type: 'cartesian1D', x: 'xs' };
@@ -201,7 +201,7 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (alpha.9 ADR
   });
 });
 
-describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
+describe('CoordinateSchema ternary2D (contract)', () => {
   // Happy path
   it('ternary2d_minimal_valid', () => {
     expect(CoordinateSchema.parse({ type: 'ternary2D' })).toEqual({ type: 'ternary2D' });
@@ -225,7 +225,7 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
   });
 });
 
-describe('CoordinateOperationSchema coordinate registry 占位（alpha.12 ADR-05）', () => {
+describe('CoordinateOperationSchema coordinate registry 占位（contract）', () => {
   it('CoordinateSchema 保持内置 5-union，不接收旧 custom 判别', () => {
     expect(Object.values(PlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D', 'ternary2D']);
     expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(

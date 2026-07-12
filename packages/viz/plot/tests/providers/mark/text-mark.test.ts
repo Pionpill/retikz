@@ -3,13 +3,13 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-04（alpha.11）：text mark / datum label 下沉契约测试。
+ * Text mark / datum label 下沉契约测试。
  * priority-1 宿主 label（位置 mark 加 label → 填 datum Node.label，零新建 Node）、priority-2 兜底自由 TextMark
  * （新建带 text 的 core Node、与 point 同源投影）、text 内容 field/value/displayFormat、运行时 resolveLabel 逃生舱、
  * 内容缺失跳过、坐标系无关投影、color → textColor 分子 Scope、dx/dy 微调、pin 引线。
@@ -21,7 +21,7 @@ const WIDTH = 400;
 const HEIGHT = 300;
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Datasets,
   options: LowerPlotsOptions = { width: WIDTH, height: HEIGHT },
 ): IRScope => {
@@ -44,7 +44,7 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 最小 cartesian2D interval spec：x = month (band)、y = revenue (linear)，可选 label */
-const intervalSpec = (label?: Record<string, unknown>, id?: string): PlotSpec =>
+const intervalSpec = (label?: Record<string, unknown>, id?: string): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -66,7 +66,7 @@ const intervalSpec = (label?: Record<string, unknown>, id?: string): PlotSpec =>
   });
 
 /** 最小 cartesian2D text mark spec（priority-2 兜底自由文本） */
-const textSpec = (encoding: Record<string, unknown>, extra: Record<string, unknown> = {}): PlotSpec =>
+const textSpec = (encoding: Record<string, unknown>, extra: Record<string, unknown> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -93,7 +93,7 @@ const POINT_ROWS: Datasets = {
   ],
 };
 
-describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
+describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-host-node：interval label → 每个 datum Node.label 被填上 NodeLabelSchema，不新建额外 Node', () => {
     const spec = intervalSpec({ content: { field: 'revenue' }, position: 'top', distance: 6 });
     const layer = expandOf(spec, BAR_ROWS);
@@ -160,7 +160,7 @@ describe('ADR-04 priority-1 宿主 label（填 datum Node.label）', () => {
   });
 });
 
-describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）', () => {
+describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）', () => {
   it('text-field-content：text={field} → 每行 Node.text = 字段值转串', () => {
     const nodes = nodesOf(expandOf(textSpec({ text: { field: 'label' } }), POINT_ROWS));
     expect(nodes).toHaveLength(2);
@@ -294,7 +294,7 @@ describe('ADR-04 priority-2 兜底自由 TextMark（新建带 text 的 Node）',
   });
 });
 
-describe('ADR-04 schema accept/reject', () => {
+describe('contract schema accept/reject', () => {
   it('text-channel-both-reject：text 通道同时设 field 与 value → refine 拒', () => {
     expect(() => textSpec({ text: { field: 'label', value: 'x' } })).toThrow();
   });

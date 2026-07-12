@@ -2,7 +2,7 @@ import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../src/schemas';
@@ -88,9 +88,9 @@ const sharedYOverlaySpec = {
   ],
 };
 
-const parsePlotSpec = (spec: unknown): PlotSpec => PlotSpecSchema.parse(spec);
+const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
 
-const expandOf = (spec: PlotSpec): IRScope => {
+const expandOf = (spec: IRPlotSpec): IRScope => {
   const [definition] = lowerPlots({ weather: rows }, { width: 480, height: 300, provenance: true });
   return definition.expand(spec) as IRScope;
 };

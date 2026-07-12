@@ -16,13 +16,13 @@ import type {
   PositionScale,
 } from '../../../contract';
 import type { PolarCoordinateFrame } from '../../../contract';
-import type { Mark, MarkGeometryLabel, MarkNodeLabel, ReferenceMark } from '../../../schemas';
+import type { IRPlotMark, IRPlotMarkGeometryLabel, IRPlotMarkNodeLabel, IRPlotReferenceMark } from '../../../schemas';
 import type { CartesianCoordinateFrame } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { ChannelDefinitionKind } from '../../../contract';
-import { PlotMark } from '../../../schemas';
+import { PlotMark, ReferenceMarkKind, ReferenceMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import { isCartesianCoordinateFrame, isPolarCoordinateFrame, isTernary2DCoordinateFrame } from '../../coordinate';
 import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
@@ -47,19 +47,21 @@ import { pointsToSteps } from './path';
 /** reference 描边宽度（参考线；与 path mark 同宽，视觉一致）。 */
 const REFERENCE_STROKE_WIDTH = LINE_STROKE_WIDTH;
 
-const referencePathOptions = (mark: ReferenceMark): Partial<Pick<IRPath, 'marks'>> =>
+const referencePathOptions = (mark: IRPlotReferenceMark): Partial<Pick<IRPath, 'marks'>> =>
   mark.marks === undefined ? {} : { marks: mark.marks };
 
 type ReferenceOrientation = 'x' | 'y';
 
-type ReferenceShape = { kind: 'axis'; orientation: ReferenceOrientation; band: boolean } | { kind: 'region' };
+type ReferenceShape =
+  | { kind: 'axis'; orientation: ReferenceOrientation; band: boolean }
+  | { kind: typeof ReferenceMarkKind.Region };
 
-const isReferenceRegion = (mark: ReferenceMark): boolean => mark.kind === 'region';
+const isReferenceRegion = (mark: IRPlotReferenceMark): boolean => mark.kind === ReferenceMarkKind.Region;
 
 /**
  * reference 取向：恰好绑 encoding.x（竖直）或 encoding.y（水平）之一；皆设 / 皆缺 → fail-loud。
  */
-const referenceOrientation = (mark: ReferenceMark): ReferenceOrientation => {
+const referenceOrientation = (mark: IRPlotReferenceMark): ReferenceOrientation => {
   const hasX = mark.encoding.x !== undefined;
   const hasY = mark.encoding.y !== undefined;
   if (hasX === hasY) {
@@ -74,7 +76,7 @@ const referenceOrientation = (mark: ReferenceMark): ReferenceOrientation => {
  * reference 的对侧维（垂直于常量轴）输出区间：默认满铺该轴 range，extent 字段给定时截成 [extentLo, extentTo] 输出坐标。
  */
 const referenceSpanInterval = (
-  mark: ReferenceMark,
+  mark: IRPlotReferenceMark,
   row: ExternalRow,
   oppositeCoordinate: (value: unknown) => number,
   oppositeRange: [number, number],
@@ -94,19 +96,26 @@ const referenceSpanInterval = (
 };
 
 /** reference line 某行的常量轴值（绑 x → encoding.x、绑 y → encoding.y；value 常量 / field per-datum 均经 channelValue）。 */
-const referenceConstantValue = (mark: ReferenceMark, row: ExternalRow, orientation: ReferenceOrientation): unknown =>
-  channelValue(orientation === 'x' ? mark.encoding.x : mark.encoding.y, row);
+const referenceConstantValue = (
+  mark: IRPlotReferenceMark,
+  row: ExternalRow,
+  orientation: ReferenceOrientation,
+): unknown => channelValue(orientation === 'x' ? mark.encoding.x : mark.encoding.y, row);
 
 const isFullPolarSweep = (startAngle: number, endAngle: number): boolean => Math.abs(endAngle - startAngle) >= 360;
 
 /** reference band 某行的上界值（绑 x → xTo、绑 y → yTo；number 常量 / string field per-datum）。 */
-const referenceUpperValue = (mark: ReferenceMark, row: ExternalRow, orientation: ReferenceOrientation): unknown => {
+const referenceUpperValue = (
+  mark: IRPlotReferenceMark,
+  row: ExternalRow,
+  orientation: ReferenceOrientation,
+): unknown => {
   const bound = orientation === 'x' ? mark.xTo : mark.yTo;
   return typeof bound === 'string' ? resolveFieldPath(row, bound) : bound;
 };
 
 /** reference 是否 band 形态（绑定维度上给了匹配的上界 xTo / yTo）；并校验上界与所绑维度匹配（不匹配 / 单飞 → fail-loud）。 */
-const isReferenceBand = (mark: ReferenceMark, orientation: ReferenceOrientation): boolean => {
+const isReferenceBand = (mark: IRPlotReferenceMark, orientation: ReferenceOrientation): boolean => {
   if (orientation === 'x' && mark.yTo !== undefined) {
     throw new Error(
       'lowerPlots: reference mark binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
@@ -120,7 +129,7 @@ const isReferenceBand = (mark: ReferenceMark, orientation: ReferenceOrientation)
   return (orientation === 'x' ? mark.xTo : mark.yTo) !== undefined;
 };
 
-const referenceShape = (mark: ReferenceMark): ReferenceShape => {
+const referenceShape = (mark: IRPlotReferenceMark): ReferenceShape => {
   if (!isReferenceRegion(mark)) {
     const orientation = referenceOrientation(mark);
     return { kind: 'axis', orientation, band: isReferenceBand(mark, orientation) };
@@ -130,17 +139,17 @@ const referenceShape = (mark: ReferenceMark): ReferenceShape => {
       'lowerPlots: reference region does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
     );
   }
-  return { kind: 'region' };
+  return { kind: ReferenceMarkKind.Region };
 };
 
-const referenceRegionUpperRaw = (mark: ReferenceMark, role: string): number | string | undefined => {
+const referenceRegionUpperRaw = (mark: IRPlotReferenceMark, role: string): number | string | undefined => {
   if (role === 'x') return mark.xTo;
   if (role === 'y') return mark.yTo;
   if (role === 'z') return mark.zTo;
   return undefined;
 };
 
-const referenceRegionRequireRole = (mark: ReferenceMark, role: string, frame: CoordinateFrame): void => {
+const referenceRegionRequireRole = (mark: IRPlotReferenceMark, role: string, frame: CoordinateFrame): void => {
   if (!Object.prototype.hasOwnProperty.call(mark.encoding, role) || referenceRegionUpperRaw(mark, role) === undefined) {
     throw new Error(
       `lowerPlots: reference region under the ${frame.type} coordinate system requires encoding.${role} and ${role}To bounds`,
@@ -175,8 +184,8 @@ const referenceRegionScale = (role: string, frame: CoordinateFrame): PositionSca
 /**
  * reference 是否完全常量（单条 full-span line / band / region，不逐行）：边界均为 value/number、无 extent field。
  */
-const isReferenceConstant = (mark: ReferenceMark, shape: ReferenceShape, frame: CoordinateFrame): boolean => {
-  if (shape.kind === 'region') {
+const isReferenceConstant = (mark: IRPlotReferenceMark, shape: ReferenceShape, frame: CoordinateFrame): boolean => {
+  if (shape.kind === ReferenceMarkKind.Region) {
     for (const role of frame.roles) {
       referenceRegionRequireRole(mark, role, frame);
       if (mark.encoding[role].field !== undefined) return false;
@@ -194,7 +203,7 @@ const isReferenceConstant = (mark: ReferenceMark, shape: ReferenceShape, frame: 
 
 /** reference 的有效迭代行：全常量 → 单行代表（任取首行，无行则空对象）；per-datum → 原数据行。 */
 const referenceRows = (
-  mark: ReferenceMark,
+  mark: IRPlotReferenceMark,
   rows: Array<ExternalRow>,
   shape: ReferenceShape,
   frame: CoordinateFrame,
@@ -202,7 +211,7 @@ const referenceRows = (
 
 /** reference line 某行 → core Path steps（cartesian 直连两端点；polar 竖直径向线直连、水平常半径环段采样）；退化 → null。 */
 const referenceLineSteps = (
-  mark: ReferenceMark,
+  mark: IRPlotReferenceMark,
   row: ExternalRow,
   frame: CartesianCoordinateFrame | PolarCoordinateFrame,
   orientation: ReferenceOrientation,
@@ -240,7 +249,7 @@ const referenceLineSteps = (
 
 /** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null。 */
 const referenceAxisBandCell = (
-  mark: ReferenceMark,
+  mark: IRPlotReferenceMark,
   row: ExternalRow,
   frame: CartesianCoordinateFrame | PolarCoordinateFrame,
   orientation: ReferenceOrientation,
@@ -276,7 +285,7 @@ const referenceAxisBandCell = (
   return { intervals: { x: [a0, a1], y: radiusSpan } };
 };
 
-const referenceRegionCell = (mark: ReferenceMark, row: ExternalRow, frame: CoordinateFrame): Cell | null => {
+const referenceRegionCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame: CoordinateFrame): Cell | null => {
   const intervals: Cell['intervals'] = {};
   for (const role of frame.roles) {
     referenceRegionRequireRole(mark, role, frame);
@@ -294,9 +303,9 @@ const referenceRegionCell = (mark: ReferenceMark, row: ExternalRow, frame: Coord
 };
 
 /** reference cell 形态（axis band / region）某行 → 正交 Cell；line 形态返回 null。 */
-export const referenceCell = (mark: ReferenceMark, row: ExternalRow, frame: CoordinateFrame): Cell | null => {
+export const referenceCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame: CoordinateFrame): Cell | null => {
   const shape = referenceShape(mark);
-  if (shape.kind === 'region') return referenceRegionCell(mark, row, frame);
+  if (shape.kind === ReferenceMarkKind.Region) return referenceRegionCell(mark, row, frame);
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return null;
   return shape.band ? referenceAxisBandCell(mark, row, frame, shape.orientation) : null;
 };
@@ -305,7 +314,7 @@ export const referenceCell = (mark: ReferenceMark, row: ExternalRow, frame: Coor
  * 参考标注（reference mark）下沉：line → core Path（每行一条）、band / region → projectCell Node（每行一个）。
  */
 const lowerReference = (
-  mark: ReferenceMark,
+  mark: IRPlotReferenceMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
@@ -319,7 +328,7 @@ const lowerReference = (
       `lowerPlots: a constant reference cannot use a per-datum color field "${mark.encoding.color.field}"; use a constant color value, or bind a per-datum position field`,
     );
   }
-  const cellForm = shape.kind === 'region' || shape.band;
+  const cellForm = shape.kind === ReferenceMarkKind.Region || shape.band;
   const effectiveRows = referenceRows(mark, rows, shape, frame);
   const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? DEFAULT_FILL;
   const defaultStroke = channelDefaultOf<MarkPaint>(channels, 'stroke') ?? defaultColor ?? DEFAULT_FILL;
@@ -336,7 +345,7 @@ const lowerReference = (
     for (let transformedIndex = 0; transformedIndex < effectiveRows.length; transformedIndex++) {
       const row = effectiveRows[transformedIndex];
       const cell =
-        shape.kind === 'region'
+        shape.kind === ReferenceMarkKind.Region
           ? referenceRegionCell(mark, row, frame)
           : isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame)
             ? referenceAxisBandCell(mark, row, frame, shape.orientation)
@@ -352,7 +361,7 @@ const lowerReference = (
       const stroke = strokeOf?.(row);
       if (stroke !== undefined) cellNode.stroke = stroke;
       const label = resolveNodeMarkLabels(
-        mark.label as MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
+        mark.label as IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
         row,
         labelOf,
       );
@@ -394,7 +403,7 @@ const lowerReference = (
       pathDefault: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH },
       children: placed.map(p => {
         const label = resolveGeometryMarkLabels(
-          mark.label as MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined,
+          mark.label as IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
           p.row,
           labelOf,
         );
@@ -412,7 +421,7 @@ const lowerReference = (
     const stroke = color ?? DEFAULT_FILL;
     const directStroke = strokeOf?.(row);
     const label = resolveGeometryMarkLabels(
-      mark.label as MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined,
+      mark.label as IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
       row,
       labelOf,
     );
@@ -442,7 +451,7 @@ const lowerReference = (
 
 /** reference 图层下沉：line 走 core Path、band 走 projectCell；本轮仅 cartesian2D / polar2D，其余坐标系 fail-loud + attachMarkLayer。 */
 export const lowerReferenceLayer = (
-  mark: Mark,
+  mark: IRPlotMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
@@ -450,7 +459,7 @@ export const lowerReferenceLayer = (
 ): IRChild | null => {
   if (mark.type !== PlotMark.Reference) return null;
   const shape = referenceShape(mark);
-  if (shape.kind === 'region') {
+  if (shape.kind === ReferenceMarkKind.Region) {
     if (!hasProjectCell(frame)) {
       throw new Error(failLoudMessage(mark.type, frame.type));
     }
@@ -470,7 +479,7 @@ export const lowerReferenceLayer = (
 };
 
 /** 收集 reference mark 的位置 / color / 扩展 encoding 字段。 */
-const collectReferenceEncodingFields = (mark: ReferenceMark, fields: FieldCollector): void => {
+const collectReferenceEncodingFields = (mark: IRPlotReferenceMark, fields: FieldCollector): void => {
   fields.addChannel(mark.encoding.x);
   fields.addChannel(mark.encoding.y);
   fields.addChannel(mark.encoding.z);
@@ -481,7 +490,7 @@ const collectReferenceEncodingFields = (mark: ReferenceMark, fields: FieldCollec
 };
 
 /** 收集 reference mark 独有字段：band 上界与部分 span 范围。 */
-const collectReferenceChannelFields = (mark: ReferenceMark, fields: FieldCollector): void => {
+const collectReferenceChannelFields = (mark: IRPlotReferenceMark, fields: FieldCollector): void => {
   fields.addFields(
     typeof mark.xTo === 'string' ? mark.xTo : undefined,
     typeof mark.yTo === 'string' ? mark.yTo : undefined,
@@ -491,8 +500,9 @@ const collectReferenceChannelFields = (mark: ReferenceMark, fields: FieldCollect
   );
 };
 
-export const referenceMarkDefinition: MarkDefinition<ReferenceMark> = {
-  type: PlotMark.Reference,
+/** 内置 reference mark definition。 */
+export const referenceMarkDefinition: MarkDefinition<IRPlotReferenceMark> = {
+  schema: ReferenceMarkSchema,
   channelKinds: () =>
     new Set([
       ChannelDefinitionKind.Mark,

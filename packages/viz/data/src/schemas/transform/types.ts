@@ -78,7 +78,7 @@ export type IRDataSummarizeTransform = z.infer<typeof SummarizeTransformSchema>;
 /** 选择变换（选择代表原始行，可能改行数）。 */
 export type IRDataSelectTransform = z.infer<typeof SelectTransformSchema>;
 
-/** annotate selector 配置（代表行选择结果回填规则）。 */
+/** annotate 单行 selector 配置（至多一个代表行的回填规则）。 */
 export type IRDataAnnotateSelector = z.infer<typeof AnnotateSelectorSchema>;
 
 /** 标注变换（统计回填，保行数）。 */

@@ -8,7 +8,16 @@ import {
 } from '@retikz/data';
 import { z } from 'zod';
 
-import { BUILTIN_PLOT_TRANSFORM_KINDS, PlotTransform, StackOffset } from './constants';
+import {
+  BUILTIN_PLOT_TRANSFORM_KINDS,
+  DensityBandwidthKind,
+  JitterAxis,
+  NormalizeBasis,
+  PairMeasureOperationKind,
+  PlotTransform,
+  SmoothMethodKind,
+  StackOffset,
+} from './constants';
 
 export const StackTransformSchema = z
   .object({
@@ -40,7 +49,7 @@ export const StackTransformSchema = z
   .describe('Stack transform: within each x group, accumulate y across series and derive [start, end] bounds per row');
 
 export const BinTransformSchema = z
-  .object({
+  .strictObject({
     kind: z
       .literal(PlotTransform.Bin)
       .describe('Discriminator: bin a continuous field into discrete intervals (changes row count)'),
@@ -82,13 +91,12 @@ export const BinTransformSchema = z
       'Per-bin reducer metrics using shared reducer operations; default count as "binCount"',
     ),
   })
-  .strict()
   .describe(
     'Bin transform: partition a continuous field into intervals, emitting one row per bin with [start, end] edges and reducer metrics',
   );
 
 export const EndpointProjectionSchema = z
-  .object({
+  .strictObject({
     selector: SelectorOperationSchema.describe('Selector choosing the endpoint source row'),
     fields: z
       .record(z.string().min(1), z.string().min(1))
@@ -97,15 +105,14 @@ export const EndpointProjectionSchema = z
         'Output field suffix to source row field map; source outputs sourceX/sourceId, target outputs targetX/targetId',
       ),
   })
-  .strict()
   .describe('Relation endpoint projection: selects one row per group and maps source fields to endpoint output fields');
 
 export const PairMeasureOperationSchema = z
   .union([
     z
-      .object({
+      .strictObject({
         op: z
-          .literal('difference')
+          .literal(PairMeasureOperationKind.Difference)
           .describe('Pair measure discriminator: compute target minus source for one numeric field'),
         field: z.string().min(1).describe('Numeric field read from the selected source and target rows'),
         as: z.string().min(1).describe('Output field for the numeric difference'),
@@ -116,13 +123,12 @@ export const PairMeasureOperationSchema = z
           .describe('Optional output field for stringified label text derived from the difference'),
         labelPrefix: z.string().optional().describe('Optional prefix for non-negative label text, commonly "+"'),
       })
-      .strict()
       .describe('Difference pair measure operation'),
   ])
   .describe('Pair measure operation computed from selected source and target rows');
 
 export const RelateTransformSchema = z
-  .object({
+  .strictObject({
     kind: z
       .literal(PlotTransform.Relate)
       .describe('Discriminator: derive source-target relation rows from selected data rows'),
@@ -135,7 +141,6 @@ export const RelateTransformSchema = z
       .optional()
       .describe('Optional pair measures derived from selected source and target rows'),
   })
-  .strict()
   .describe(
     'Relate transform: select source and target rows per group and emit relation rows consumable by RelationMark',
   );
@@ -152,7 +157,7 @@ export const NormalizeTransformSchema = z
         'Grouping key fields: rows sharing all these values form one normalization group (composite key); omit to normalize all rows against the global sum',
       ),
     basis: z
-      .enum(['fraction', 'percent'])
+      .enum(NormalizeBasis)
       .optional()
       .describe("Output scale: 'fraction' -> share in [0,1], 'percent' -> share in [0,100]; default 'fraction'"),
     as: z
@@ -208,7 +213,7 @@ export const JitterTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.Jitter).describe('Discriminator: deterministic positional jitter'),
     axis: z
-      .enum(['x', 'y', 'both'])
+      .enum(JitterAxis)
       .optional()
       .describe(
         "Which positional field(s) to perturb; default 'x'. The jittered field MUST be a continuous numeric field (v1 jitter is a pre-scale offset in data units)",
@@ -245,27 +250,25 @@ export const JitterTransformSchema = z
 export const DensityBandwidthSpecSchema = z
   .discriminatedUnion('kind', [
     z
-      .object({
+      .strictObject({
         kind: z
-          .literal('silverman')
+          .literal(DensityBandwidthKind.Silverman)
           .describe('Bandwidth strategy discriminator: compute Gaussian KDE bandwidth with Silverman rule of thumb'),
       })
-      .strict()
       .describe('Silverman bandwidth strategy'),
     z
-      .object({
+      .strictObject({
         kind: z
-          .literal('value')
+          .literal(DensityBandwidthKind.Value)
           .describe('Bandwidth strategy discriminator: use an explicit positive numeric bandwidth'),
         value: z.number().positive().describe('Explicit positive finite KDE bandwidth in source data units'),
       })
-      .strict()
       .describe('Explicit bandwidth strategy'),
   ])
   .describe('Density transform bandwidth strategy');
 
 export const DensityTransformSchema = z
-  .object({
+  .strictObject({
     kind: z.literal(PlotTransform.Density).describe('Discriminator: sample one-dimensional KDE density rows'),
     field: z.string().min(1).describe('Continuous source field used as the one-dimensional KDE sample value'),
     groupBy: GroupBySchema,
@@ -287,7 +290,6 @@ export const DensityTransformSchema = z
     xAs: z.string().min(1).describe('Output field receiving each density sample position'),
     densityAs: z.string().min(1).describe('Output field receiving each KDE density value'),
   })
-  .strict()
   .superRefine((operation, ctx) => {
     if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
       ctx.addIssue({
@@ -318,16 +320,17 @@ export const DensityTransformSchema = z
 export const SmoothMethodSpecSchema = z
   .discriminatedUnion('kind', [
     z
-      .object({
-        kind: z.literal('linear').describe('Smooth method discriminator: ordinary least-squares linear regression'),
+      .strictObject({
+        kind: z
+          .literal(SmoothMethodKind.Linear)
+          .describe('Smooth method discriminator: ordinary least-squares linear regression'),
       })
-      .strict()
       .describe('Linear regression smooth method'),
   ])
   .describe('Smooth transform method strategy');
 
 export const SmoothTransformSchema = z
-  .object({
+  .strictObject({
     kind: z.literal(PlotTransform.Smooth).describe('Discriminator: sample trend rows from a fitted smooth model'),
     x: z.string().min(1).describe('Continuous source field used as the independent x value'),
     y: z.string().min(1).describe('Continuous source field used as the dependent y value'),
@@ -348,7 +351,6 @@ export const SmoothTransformSchema = z
     xAs: z.string().min(1).describe('Output field receiving each trend sample x position'),
     yAs: z.string().min(1).describe('Output field receiving each predicted y value'),
   })
-  .strict()
   .superRefine((operation, ctx) => {
     if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
       ctx.addIssue({

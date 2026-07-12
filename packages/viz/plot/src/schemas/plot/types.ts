@@ -5,6 +5,8 @@ import type {
   CompositionAxisResolve,
   CompositionGridResolve,
   CompositionScaleResolve,
+  CoordinateArrangementKind,
+  CoordinateViewPlacementKind,
   FacetEmptyPolicy,
   FacetScaleSharing,
   PlotComposite,
@@ -30,8 +32,14 @@ export type CompositionAxisResolveValue = ValueOf<typeof CompositionAxisResolve>
 /** 坐标组合中的网格投放模式取值。 */
 export type CompositionGridResolveValue = ValueOf<typeof CompositionGridResolve>;
 
+/** 坐标视图放置方式取值。 */
+export type CoordinateViewPlacementKindValue = ValueOf<typeof CoordinateViewPlacementKind>;
+
+/** 坐标组合结构类型取值。 */
+export type CoordinateArrangementKindValue = ValueOf<typeof CoordinateArrangementKind>;
+
 /** 轨道组合结构的 frame 共享模式取值。 */
 export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
 
 /** Plot IR 根节点（plot composite 节点） */
-export type PlotSpec = z.infer<typeof PlotSpecSchema>;
+export type IRPlotSpec = z.infer<typeof PlotSpecSchema>;

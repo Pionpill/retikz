@@ -22,12 +22,12 @@ import type {
   NodeChannelDefinition,
 } from '../../../contract';
 import type {
-  LinearScale,
-  MarkOperation,
-  OrdinalScale,
-  PlotSpec,
+  IRPlotLinearScale,
+  IRPlotMarkOperation,
+  IRPlotOrdinalScale,
+  IRPlotSpec,
+  IRPlotSqrtScale,
   ScaledMarkValueType,
-  SqrtScale,
 } from '../../../schemas';
 
 import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
@@ -40,15 +40,18 @@ export const OPACITY_MIN = 0.2;
 
 /** strokeWidth 通道连续映射的最小 / 最大描边宽度（user units）；避免最小值落成不可见边框 */
 export const STROKE_WIDTH_MIN = 0.5;
+/** 数值描边宽度通道的默认最大输出值。 */
 export const STROKE_WIDTH_MAX = 4;
 
 /** size 通道最小 / 最大半径（px，user units；对齐散点默认直径 10 量级）；core 换算细节，不外泄 IR */
 export const SIZE_MIN_RADIUS = 2;
+/** size 通道自动半径映射的默认最大值。 */
 export const SIZE_MAX_RADIUS = 20;
 
 /** shape 通道默认 glyph 调色板（直用 core 内置 shape 名，无 plot-only 别名）；循环复用 */
 export const PLOT_SHAPE_PALETTE = ['circle', 'rectangle', 'diamond'] as const;
 
+/** 数值 Node 通道 resolver 的 range、clamp 与整数化选项。 */
 export type NumericNodeResolverOptions = {
   range?: readonly [number, number];
   clamp?: boolean;
@@ -61,7 +64,7 @@ const isScaledMarkValue = <T>(value: unknown): value is ScaledMarkValueType<T> =
   ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant') &&
   'value' in value;
 
-const pickStyleChannel = <T>(mark: MarkOperation, channel: string): ScaledMarkValueType<T> | undefined => {
+const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): ScaledMarkValueType<T> | undefined => {
   const value = (mark as Record<string, unknown>)[channel];
   return isScaledMarkValue<T>(value) ? value : undefined;
 };
@@ -126,15 +129,15 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
  *   非 continuous 字段（temporal / categorical）fail-loud；constant 变体由 nodeDefault / node 本身处理，不在这里产 resolver。
  */
 export const makeNumericNodeResolver = (
-  node: PlotSpec,
+  node: IRPlotSpec,
   rows: Array<ExternalRow>,
   fieldTypes: DataFieldTypeMap,
-  pick: (mark: MarkOperation) => ScaledMarkValueType<number> | undefined,
+  pick: (mark: IRPlotMarkOperation) => ScaledMarkValueType<number> | undefined,
   channelName: string,
   options: NumericNodeResolverOptions = {},
-): ((mark: MarkOperation) => ChannelResolution<number> | undefined) => {
+): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  return (mark: MarkOperation): ChannelResolution<number> | undefined => {
+  return (mark: IRPlotMarkOperation): ChannelResolution<number> | undefined => {
     const channel = pick(mark);
     if (!channel) return undefined;
     const source = makeMarkValueResolver<number>(channel, fieldTypes, {
@@ -150,7 +153,7 @@ export const makeNumericNodeResolver = (
     const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
     let scale: ((value: number) => number) | undefined;
     if (channel.scale !== undefined || options.range !== undefined) {
-      let def: LinearScale = {
+      let def: IRPlotLinearScale = {
         type: PlotScale.Linear,
         name: channel.scale ?? `__${channelName}_${field}`,
         ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
@@ -198,10 +201,10 @@ export const makeNumericNodeResolver = (
  */
 export const resolveSizeChannel = (
   ctx: NodeChannelContext,
-): ((mark: MarkOperation) => ChannelResolution<number> | undefined) => {
+): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
   const { node, rows, fieldTypes } = ctx;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  return (mark: MarkOperation): ChannelResolution<number> | undefined => {
+  return (mark: IRPlotMarkOperation): ChannelResolution<number> | undefined => {
     const channel = pickStyleChannel<number>(mark, 'size');
     if (!channel) return undefined;
     if (channel.kind === 'constant') {
@@ -231,7 +234,7 @@ export const resolveSizeChannel = (
       };
     }
     const maxPositive = Math.max(...positives);
-    let def: SqrtScale = {
+    let def: IRPlotSqrtScale = {
       type: PlotScale.Sqrt,
       name: channel.scale ?? `__size_${field}`,
       domain: [0, maxPositive],
@@ -278,9 +281,9 @@ export const resolveSizeChannel = (
  */
 export const resolveShapeChannel = (
   ctx: NodeChannelContext,
-): ((mark: MarkOperation) => ChannelResolution<JsonValue> | undefined) => {
+): ((mark: IRPlotMarkOperation) => ChannelResolution<JsonValue> | undefined) => {
   const { rows, fieldTypes } = ctx;
-  return (mark: MarkOperation): ChannelResolution<JsonValue> | undefined => {
+  return (mark: IRPlotMarkOperation): ChannelResolution<JsonValue> | undefined => {
     const channel = pickStyleChannel<string | IRShapeRef>(mark, 'shape');
     if (!channel) return undefined;
     if (channel.kind === 'constant') {
@@ -296,7 +299,11 @@ export const resolveShapeChannel = (
     const values = rows.map(row => resolveFieldPath(row, field));
     const domain = inferCategoryDomain(values);
     // 复用 ordinal scale：调色板 = glyph 名（非颜色），category → glyph[index % len]（与旧手写映射等价）
-    const def: OrdinalScale = { type: PlotScale.Ordinal, name: `__shape_${field}`, range: [...PLOT_SHAPE_PALETTE] };
+    const def: IRPlotOrdinalScale = {
+      type: PlotScale.Ordinal,
+      name: `__shape_${field}`,
+      range: [...PLOT_SHAPE_PALETTE],
+    };
     const ordinal = resolveOrdinalScale(def, values);
     const shapes = domain.map(category => ordinal(category));
     return {
@@ -590,6 +597,7 @@ const shapeNodeChannel: NodeChannelDefinition<JsonValue> = defineNodeChannel<Jso
   },
 });
 
+/** 内置 Node 通道 definition 的按名称索引类型。 */
 export type BuiltinNodeChannels = {
   opacity: NodeChannelDefinition<number>;
   fillOpacity: NodeChannelDefinition<number>;
@@ -616,6 +624,7 @@ export const BUILTIN_NODE_CHANNELS: BuiltinNodeChannels = {
 
 const eraseNodeChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
+/** 内置 Node 通道 definition 集合。 */
 export const NODE_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_NODE_CHANNELS).map(def =>
   eraseNodeChannelDefinition(def),
 );

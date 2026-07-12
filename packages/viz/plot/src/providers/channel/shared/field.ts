@@ -7,10 +7,10 @@ import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
 import type { FieldCollector, ResolveLabel } from '../../../contract';
-import type { Channel, MarkLabelContent, TextChannel } from '../../../schemas';
+import type { IRPlotChannel, IRPlotMarkLabelContent, IRPlotTextChannel } from '../../../schemas';
 
 /** 取通道值：value 常量优先，否则 field 路径解析。 */
-export const channelValue = (channel: Channel | undefined, row: ExternalRow): unknown => {
+export const channelValue = (channel: IRPlotChannel | undefined, row: ExternalRow): unknown => {
   if (!channel) return undefined;
   if (channel.value !== undefined) return channel.value;
   if (channel.field !== undefined) return resolveFieldPath(row, channel.field);
@@ -43,11 +43,11 @@ const applyDisplayFormat = (
  * @description resolveLabel 最高优先；其次 field 解析值；再次 value 常量。
  */
 export const labelOf = (
-  content: TextChannel | MarkLabelContent,
+  content: IRPlotTextChannel | IRPlotMarkLabelContent,
   row: ExternalRow,
   fieldType?: DataFieldTypeValue,
   resolveLabel?: ResolveLabel,
-): MarkLabelContent['value'] | string | undefined => {
+): IRPlotMarkLabelContent['value'] | string | undefined => {
   if (resolveLabel !== undefined) return String(resolveLabel(row));
   if (content.field !== undefined) {
     const value = resolveFieldPath(row, content.field);

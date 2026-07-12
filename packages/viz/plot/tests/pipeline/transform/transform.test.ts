@@ -5,7 +5,7 @@ import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { Transform } from '../../../src/schemas';
+import type { IRPlotTransform } from '../../../src/schemas';
 
 import { resolvePlotTransformRegistry } from '../../../src/providers';
 
@@ -13,7 +13,7 @@ const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
 
 const applyTransforms = (
   rows: Array<ExternalRow>,
-  operations?: Array<Transform>,
+  operations?: Array<IRPlotTransform>,
   registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
   context?: TransformContext,
 ): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
@@ -25,7 +25,7 @@ const SALES: Array<ExternalRow> = [
   { month: 'Feb', product: 'B', revenue: 4 },
 ];
 
-describe('applyTransforms (ADR-03)', () => {
+describe('applyTransforms (contract)', () => {
   it('transform_empty_pipeline', () => {
     expect(applyTransforms(SALES)).toBe(SALES);
     expect(applyTransforms(SALES, [])).toBe(SALES);
@@ -142,7 +142,7 @@ describe('applyTransforms (ADR-03)', () => {
     ]);
   });
 
-  // ADR-02：泛化 stack —— 缺省 x / groupBy 的单链累积（按数据序），喂饼图
+  // contract：泛化 stack —— 缺省 x / groupBy 的单链累积（按数据序），喂饼图
   it('stack_single_chain_accumulates_in_data_order', () => {
     const SHARE = [
       { label: 'A', value: 3 },
@@ -180,8 +180,8 @@ describe('applyTransforms (ADR-03)', () => {
   });
 });
 
-// alpha.12 ADR-01：bin（连续分箱，改行数）
-describe('applyBin (alpha.12 ADR-01)', () => {
+// contract：bin（连续分箱，改行数）
+describe('applyBin (contract)', () => {
   // [0,10] 域、count 10 → 10 个等宽箱（含空箱），值落箱：0,1,2,8,9,10
   const GAPPED: Array<ExternalRow> = [{ m: 0 }, { m: 1 }, { m: 2 }, { m: 8 }, { m: 9 }, { m: 10 }];
 
@@ -318,8 +318,8 @@ describe('applyBin (alpha.12 ADR-01)', () => {
   });
 });
 
-// alpha.12 ADR-16：summarize（分组统计，改行数）
-describe('applySummarize (alpha.12 ADR-16)', () => {
+// contract：summarize（分组统计，改行数）
+describe('applySummarize (contract)', () => {
   const ORDERS: Array<ExternalRow> = [
     { region: 'N', product: 'A', revenue: 3 },
     { region: 'N', product: 'B', revenue: 5 },
@@ -419,8 +419,8 @@ describe('applySummarize (alpha.12 ADR-16)', () => {
   });
 });
 
-// alpha.12 ADR-02：normalize（组内百分比归一化，保行数）
-describe('applyNormalize (alpha.12 ADR-02)', () => {
+// contract：normalize（组内百分比归一化，保行数）
+describe('applyNormalize (contract)', () => {
   const REVENUE: Array<ExternalRow> = [
     { quarter: 'Q1', product: 'A', amount: 3 },
     { quarter: 'Q1', product: 'B', amount: 1 },
@@ -490,8 +490,8 @@ describe('applyNormalize (alpha.12 ADR-02)', () => {
   });
 });
 
-// alpha.12 ADR-02：derive-interval（单行派生区间，保行数）
-describe('applyDeriveInterval (alpha.12 ADR-02)', () => {
+// contract：derive-interval（单行派生区间，保行数）
+describe('applyDeriveInterval (contract)', () => {
   it('derive_interval_two_field', () => {
     const tasks = [
       { task: 'A', start: 1, end: 5 },
@@ -540,8 +540,8 @@ describe('applyDeriveInterval (alpha.12 ADR-02)', () => {
   });
 });
 
-// alpha.12 ADR-02：jitter（确定性位置抖动，保行数）
-describe('applyJitter (alpha.12 ADR-02)', () => {
+// contract：jitter（确定性位置抖动，保行数）
+describe('applyJitter (contract)', () => {
   const SAMPLES: Array<ExternalRow> = [
     { dose: 1, r: 10 },
     { dose: 1, r: 12 },

@@ -5,7 +5,7 @@ import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { Transform } from '../../../src/schemas';
+import type { IRPlotTransform } from '../../../src/schemas';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
@@ -17,14 +17,14 @@ const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
 
 const applyTransforms = (
   rows: Array<ExternalRow>,
-  operations?: Array<Transform>,
+  operations?: Array<IRPlotTransform>,
   registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
   context?: TransformContext,
 ): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
 
 const densityOperation = (operation: unknown) => TransformSchema.parse(operation);
 
-describe('density transform schema (alpha.13 ADR-03)', () => {
+describe('density transform schema (contract)', () => {
   it('accepts density transform and preserves JSON round trip', () => {
     const operation = {
       kind: 'density',
@@ -59,7 +59,7 @@ describe('density transform schema (alpha.13 ADR-03)', () => {
   });
 });
 
-describe('density transform behavior (alpha.13 ADR-03)', () => {
+describe('density transform behavior (contract)', () => {
   const rows: Array<ExternalRow> = [
     { species: 'setosa', value: 0 },
     { species: 'setosa', value: 4 },

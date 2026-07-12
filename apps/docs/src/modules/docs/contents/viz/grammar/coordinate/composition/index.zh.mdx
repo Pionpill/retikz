@@ -148,7 +148,7 @@ facet 会按数据字段把一张图拆成多个面板。常规写法是把 axis
 | ---------------------- | ---------------------------------------------- | ------------------------ | ------------------------------------------------------------------- |
 | `Scaffold.id`          | `string`                                       | 必填                     | Scaffold 容器身份，供显式 `scaffoldId` 以及生成 track view          |
 | `Scaffold.sharedRoles` | `Array<string>`                                | 必填                     | 由 Scaffold 容器统一管理的坐标 role，例如共享 `x`                   |
-| `Scaffold.coordinate`  | `CoordinateOperation`                          | 继承 `<Plot coordinate>` | Scaffold 容器使用的坐标系                                           |
+| `Scaffold.coordinate`  | `IRPlotCoordinateOperation`                    | 继承 `<Plot coordinate>` | Scaffold 容器使用的坐标系                                           |
 | `Scaffold.frame`       | `'shared' \| 'independent'`                    | `'shared'`               | track 是否共享 Scaffold 的 frame                                    |
 | `Track.id`             | `string`                                       | 必填                     | track 身份，供 `trackId` 引用                                       |
 | `Track.band`           | `{ role: string; start: number; end: number }` | 必填                     | track 在非共享 role 上占用的比例区间，`start` / `end` 取 `0` 到 `1` |

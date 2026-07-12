@@ -19,7 +19,22 @@ export const FieldDefinitionSchema = z
   .describe('Field declaration for type, format, and category order');
 
 /** 数据模型 schema；IR 中可选携带，用于 strict 字段引用校验和 type-driven scale 派生。 */
-export const DataModelSchema = z.array(FieldDefinitionSchema).describe('External data field declarations');
+export const DataModelSchema = z
+  .array(FieldDefinitionSchema)
+  .superRefine((fields, ctx) => {
+    const names = new Set<string>();
+    fields.forEach((field, index) => {
+      if (names.has(field.name)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [index, 'name'],
+          message: `duplicate data model field "${field.name}"`,
+        });
+      }
+      names.add(field.name);
+    });
+  })
+  .describe('External data field declarations with unique names');
 
 /** 数据引用 schema；IR 只记录外部数据集名称，不存储实际行数据。 */
 export const DataReferenceSchema = z

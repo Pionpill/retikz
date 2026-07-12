@@ -3,7 +3,7 @@ import type { IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -11,7 +11,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
@@ -19,7 +19,7 @@ const expandOf = (
   return def.expand(spec) as IRScope;
 };
 
-describe('smooth path composition (alpha.13 ADR-04)', () => {
+describe('smooth path composition (contract)', () => {
   const samples = [
     { group: 'A', time: 0, value: 1 },
     { group: 'A', time: 1, value: 3 },

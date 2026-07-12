@@ -1,9 +1,10 @@
 ﻿import { JsonObjectSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import { DataSortOrder, DataTransform, RESERVED_TRANSFORM_KINDS } from './constants';
+import { DataSortOrder, DataTransform, RESERVED_TRANSFORM_KINDS, RowSelectorTie } from './constants';
+import { reducerOutputFieldsOf } from './output-fields';
 import { ReducerMetricsSchema } from './reducer';
-import { SelectorOperationSchema } from './selector';
+import { BuiltinSelectorOperationSchemas, SelectorOperationSchema } from './selector';
 
 /** sort transform schema；稳定地按单个字段重排行，并保持相等键的原始顺序。 */
 export const SortTransformSchema = z
@@ -27,6 +28,19 @@ export const SummarizeTransformSchema = z
     groupBy: GroupBySchema,
     metrics: ReducerMetricsSchema.describe('Reducer metrics'),
   })
+  .superRefine((operation, ctx) => {
+    const groupFields = new Set(operation.groupBy ?? []);
+    operation.metrics.forEach((metric, metricIndex) => {
+      for (const { field, path } of reducerOutputFieldsOf(metric)) {
+        if (!groupFields.has(field)) continue;
+        ctx.addIssue({
+          code: 'custom',
+          path: ['metrics', metricIndex, ...path],
+          message: `reducer output field "${field}" must not collide with a groupBy field`,
+        });
+      }
+    });
+  })
   .describe('Group rows into metric rows');
 
 /** select transform schema；按 groupBy 分组后输出 selector 选中的原始行。 */
@@ -39,13 +53,38 @@ export const SelectTransformSchema = z
   })
   .describe('Select representative rows per group');
 
+/** annotate selector 的单行平局策略 schema。 */
+const AnnotateSelectorTieSchema = z
+  .union([z.literal(RowSelectorTie.First), z.literal(RowSelectorTie.Last)])
+  .optional()
+  .describe('Single-row tie-breaking strategy; default first');
+
+/** annotate 可用的单行 selector operation schema。 */
+const AnnotateSelectorOperationSchema = z
+  .discriminatedUnion('kind', [
+    BuiltinSelectorOperationSchemas.Min.extend({ tie: AnnotateSelectorTieSchema }),
+    BuiltinSelectorOperationSchemas.Max.extend({ tie: AnnotateSelectorTieSchema }),
+    BuiltinSelectorOperationSchemas.First,
+    BuiltinSelectorOperationSchemas.Last,
+    BuiltinSelectorOperationSchemas.Top.extend({
+      n: z.literal(1).describe('Selected row count; fixed to one for annotation'),
+      tie: AnnotateSelectorTieSchema,
+    }),
+    BuiltinSelectorOperationSchemas.Bottom.extend({
+      n: z.literal(1).describe('Selected row count; fixed to one for annotation'),
+      tie: AnnotateSelectorTieSchema,
+    }),
+    BuiltinSelectorOperationSchemas.Nth,
+  ])
+  .describe('Built-in selector operation guaranteed to select at most one row');
+
 /** annotate transform selector 回填配置 schema。 */
 export const AnnotateSelectorSchema = z
   .strictObject({
-    selector: SelectorOperationSchema.describe('Row selector'),
+    selector: AnnotateSelectorOperationSchema.describe('Single-row selector'),
     as: z.string().min(1).describe('Annotation output field'),
   })
-  .describe('Selector annotation');
+  .describe('Single-row selector annotation');
 
 /** annotate transform schema；保留输入行并追加 reducer / selector 派生字段。 */
 export const AnnotateTransformSchema = z
@@ -53,7 +92,7 @@ export const AnnotateTransformSchema = z
     kind: z.literal(DataTransform.Annotate).describe('Discriminator: annotate transform'),
     groupBy: GroupBySchema,
     metrics: ReducerMetricsSchema.optional().describe('Reducer metrics'),
-    selectors: z.array(AnnotateSelectorSchema).min(1).optional().describe('Selector annotations'),
+    selectors: z.array(AnnotateSelectorSchema).min(1).optional().describe('Single-row selector annotations'),
   })
   .superRefine((operation, ctx) => {
     if (operation.metrics === undefined && operation.selectors === undefined) {
@@ -62,6 +101,19 @@ export const AnnotateTransformSchema = z
         message: 'annotate transform requires metrics or selectors',
       });
     }
+    const outputFields = new Set(
+      (operation.metrics ?? []).flatMap(metric => reducerOutputFieldsOf(metric).map(output => output.field)),
+    );
+    operation.selectors?.forEach((selector, selectorIndex) => {
+      if (outputFields.has(selector.as)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['selectors', selectorIndex, 'as'],
+          message: `duplicate annotate output field "${selector.as}"`,
+        });
+      }
+      outputFields.add(selector.as);
+    });
   })
   .describe('Append group metrics or selector annotations');
 
@@ -102,6 +154,3 @@ const ExternalTransformSchema = z
 export const TransformSchema = z
   .union([BuiltinTransformSchema, ExternalTransformSchema])
   .describe('Built-in or custom data transform operation');
-
-/** transform operation schema 的兼容别名；runtime definition 用它表达单个 operation 契约。 */
-export const TransformOperationSchema = TransformSchema;

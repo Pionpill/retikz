@@ -5,7 +5,7 @@ import { schemeCategory10 as d3SchemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../src/schemas';
@@ -25,7 +25,7 @@ const paintGradient: IRPaintSpec = {
   ],
 };
 
-const lineSpec: PlotSpec = PlotSpecSchema.parse({
+const lineSpec: IRPlotSpec = PlotSpecSchema.parse({
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'sales' },
@@ -37,7 +37,7 @@ const lineSpec: PlotSpec = PlotSpecSchema.parse({
   marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
 });
 
-const pointSpec = (): PlotSpec =>
+const pointSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -51,7 +51,7 @@ const pointSpec = (): PlotSpec =>
   });
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
@@ -61,7 +61,7 @@ const expandOf = (
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -94,7 +94,7 @@ const nodeHeight = (node: IRNode): number => {
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-describe('lowerPlots (ADR-06)', () => {
+describe('lowerPlots (contract)', () => {
   // Happy path
   it('marks_become_layer_scopes', () => {
     const outer = expandOf(lineSpec, { sales: SALES }, opts);
@@ -363,8 +363,8 @@ describe('lowerPlots (ADR-06)', () => {
     expect(path.children[0]).toEqual({ type: 'step', kind: 'move', to: [0, 240] });
   });
 
-  // ADR-03：绘图区布局（margin convention）
-  const guidedLineSpec: PlotSpec = PlotSpecSchema.parse({
+  // contract：绘图区布局（margin convention）
+  const guidedLineSpec: IRPlotSpec = PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },
@@ -422,8 +422,8 @@ describe('lowerPlots (ADR-06)', () => {
   });
 });
 
-// ADR-02：interval(bar) mark
-const barSpec = (): PlotSpec =>
+// contract：interval(bar) mark
+const barSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -436,7 +436,7 @@ const barSpec = (): PlotSpec =>
     marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
   });
 
-describe('lowerPlots interval/bar (ADR-02)', () => {
+describe('lowerPlots interval/bar (contract)', () => {
   it('bar_layer_rectangle_nodes', () => {
     const layer = firstLayer(barSpec(), { sales: SALES }, opts);
     expect(layer.children).toHaveLength(3);
@@ -557,14 +557,14 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
   });
 });
 
-// ADR-04：ordinal·color scale + color 通道
-describe('lowerPlots color (ADR-04)', () => {
+// contract：ordinal·color scale + color 通道
+describe('lowerPlots color (contract)', () => {
   const COUNTRIES = [
     { gdp: 1, life: 70, continent: 'Asia' },
     { gdp: 2, life: 80, continent: 'Europe' },
     { gdp: 3, life: 75, continent: 'Asia' },
   ];
-  const coloredPoint = (scales: Array<unknown>): PlotSpec =>
+  const coloredPoint = (scales: Array<unknown>): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -884,8 +884,8 @@ describe('lowerPlots mark paint', () => {
   });
 });
 
-// ADR-05：relation（series / dodge / stack / 多系列折线）
-describe('lowerPlots relation (ADR-05)', () => {
+// contract：relation（series / dodge / stack / 多系列折线）
+describe('lowerPlots relation (contract)', () => {
   const SALES2 = [
     { month: 'Jan', product: 'A', revenue: 3 },
     { month: 'Jan', product: 'B', revenue: 5 },

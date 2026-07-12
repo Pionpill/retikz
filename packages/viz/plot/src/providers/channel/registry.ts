@@ -11,7 +11,7 @@
 import type { BuiltinTextChannelOptions } from './features';
 
 import { ChannelDefinitionKind } from '../../contract';
-import { type MarkOperation } from '../../schemas';
+import { type IRPlotMarkOperation } from '../../schemas';
 import { createBuiltinPaintChannels, createBuiltinTextChannels, DELIVERY_CHANNELS } from './features';
 
 /**
@@ -57,6 +57,7 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
   'thickness',
 ]);
 
+/** 解析通道 registry 时可传入的自定义 definition 与文本选项。 */
 export type ChannelRegistryOptions = {
   custom?: ReadonlyArray<AnyChannelDefinition>;
   resolveLabel?: BuiltinTextChannelOptions['resolveLabel'];
@@ -68,6 +69,7 @@ const createBuiltinChannels = (options: BuiltinTextChannelOptions = {}): Readonl
   ...DELIVERY_CHANNELS,
 ];
 
+/** 包含 definition 顺序视图的通道 registry。 */
 export type ChannelRegistry = Map<string, AnyChannelDefinition> & {
   readonly definitions: ReadonlyArray<AnyChannelDefinition>;
 };
@@ -80,6 +82,9 @@ export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): Ch
   const registry = new Map<string, AnyChannelDefinition>() as ChannelRegistry;
   const definitions: Array<AnyChannelDefinition> = [];
   const addDefinition = (def: AnyChannelDefinition): void => {
+    if (def.channel.trim() === '') {
+      throw new Error('lowerPlots: channel definition must use a non-empty channel name');
+    }
     definitions.push(def);
     if (!registry.has(def.channel)) registry.set(def.channel, def);
   };
@@ -109,12 +114,12 @@ export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): Ch
   return registry;
 };
 
-const extensionChannelsOf = (mark: MarkOperation): Record<string, unknown> =>
+const extensionChannelsOf = (mark: IRPlotMarkOperation): Record<string, unknown> =>
   (mark as { encoding?: { channels?: Record<string, unknown> } }).encoding?.channels ?? {};
 
 /** 解析某 mark 可消费的所有通道。 */
 export const resolveMarkChannels = (
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   ctx: ChannelContext,
   registry: ReadonlyMap<string, AnyChannelDefinition> & { readonly definitions?: ReadonlyArray<AnyChannelDefinition> },
   defaultColor: string,

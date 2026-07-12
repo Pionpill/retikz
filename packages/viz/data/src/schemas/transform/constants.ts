@@ -1,4 +1,4 @@
-import { createReadonlySet } from '../../shared';
+import { createReadonlySet } from '../../shared/collections';
 
 /**
  * transform operation kind 关键字。

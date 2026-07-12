@@ -1,36 +1,36 @@
 ﻿import type { IRAxisScale, IRBoxSize, IRPaintSpec } from '@retikz/core';
 import type { ExternalRow, IRDataModel } from '@retikz/data';
 import type {
-  AxisGuide,
-  Channel,
-  CoordinateOperation,
-  Encoding,
-  Guide,
-  IntervalBounds,
-  Mark,
-  MarkGeometryLabelList,
-  MarkNodeLabel,
-  MarkNodeLabelList,
+  IRPlotAxisGuide,
+  IRPlotChannel,
+  IRPlotCoordinateOperation,
+  IRPlotEncoding,
+  IRPlotGuide,
+  IRPlotIntervalBounds,
+  IRPlotLabel,
+  IRPlotMark,
+  IRPlotMarkGeometryLabelList,
+  IRPlotMarkNodeLabel,
+  IRPlotMarkNodeLabelList,
+  IRPlotNodeAxisScaleStyle,
+  IRPlotNodeBoxSizeStyle,
+  IRPlotNodeBoxSpacingStyle,
+  IRPlotPointColorStyle,
+  IRPlotPointFillStyle,
+  IRPlotPointNonnegativeNumberStyle,
+  IRPlotPointNumberStyle,
+  IRPlotPointOpacityStyle,
+  IRPlotPointShapeStyle,
+  IRPlotPointSizeStyle,
+  IRPlotPointStrokeStyle,
+  IRPlotPointStrokeWidthStyle,
+  IRPlotPointZIndexStyle,
+  IRPlotRelationPathGeometry,
+  IRPlotScale,
+  IRPlotSpec,
+  IRPlotTextChannel,
+  IRPlotTransform,
   MarkValueType,
-  NodeAxisScaleStyle,
-  NodeBoxSizeStyle,
-  NodeBoxSpacingStyle,
-  PlotLabel,
-  PlotSpec,
-  PointColorStyle,
-  PointFillStyle,
-  PointNonnegativeNumberStyle,
-  PointNumberStyle,
-  PointOpacityStyle,
-  PointShapeStyle,
-  PointSizeStyle,
-  PointStrokeStyle,
-  PointStrokeWidthStyle,
-  PointZIndexStyle,
-  RelationPathGeometry,
-  Scale as PlotScaleSpec,
-  TextChannel,
-  TransformOperation,
 } from '@retikz/plot';
 import type { TextProps } from '@retikz/react';
 import type { ReactElement, ReactNode } from 'react';
@@ -132,24 +132,24 @@ type Polar2DCoordinateInput = Extract<CoordinateInput, { type: 'polar2D' }>;
 
 /** buildPlotSpec 选项：坐标系选择 + 数据模型 */
 export type BuildPlotSpecOptions = {
-  /** PlotSpec id：作为整张图的外部 anchor 句柄 */
+  /** IRPlotSpec id：作为整张图的外部 anchor 句柄 */
   id?: string;
-  /** PlotSpec intrinsic width：组合场景下每张 plot 自描述面板宽度 */
+  /** IRPlotSpec intrinsic width：组合场景下每张 plot 自描述面板宽度 */
   width?: number;
-  /** PlotSpec intrinsic height：组合场景下每张 plot 自描述面板高度 */
+  /** IRPlotSpec intrinsic height：组合场景下每张 plot 自描述面板高度 */
   height?: number;
   /** 坐标系选择（缺省 cartesian2D）；"polar2D" 或 polar2D 对象配置 */
   coordinate?: CoordinateInput;
-  composition?: PlotSpec['composition'];
+  composition?: IRPlotSpec['composition'];
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
   model?: IRDataModel;
   /**
    * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
-   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark shortcut stack（B4 去重）。
+   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样按签名抑制重复的 mark shortcut stack。
    */
-  transforms?: Array<TransformOperation>;
+  transforms?: Array<IRPlotTransform>;
   /**
-   * Mark-level transform shortcuts.
+   * IRPlotMark-level transform shortcuts.
    * @description Shortcuts convert a mark shape into ordinary plot-level transform operations. They do not consume
    * mark.transform; mark-local transforms still run later as that layer's private row view.
    */
@@ -157,11 +157,11 @@ export type BuildPlotSpecOptions = {
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
-  theme?: PlotSpec['theme'];
+  theme?: IRPlotSpec['theme'];
   /** Plot-level label layout strategy. */
-  layout?: PlotSpec['layout'];
+  layout?: IRPlotSpec['layout'];
   /** Static plot labels such as title, caption, note, or source text. */
-  labels?: PlotSpec['labels'];
+  labels?: IRPlotSpec['labels'];
   /** 当前数据集可见字段名集合；用于把样式字符串糖优先解析成字段通道 */
   dataFieldNames?: ReadonlySet<string>;
   /**
@@ -172,30 +172,30 @@ export type BuildPlotSpecOptions = {
 };
 
 export type MarkTransformShortcutContext = {
-  mark: Mark;
+  mark: IRPlotMark;
   markIndex: number;
-  marks: ReadonlyArray<Mark>;
+  marks: ReadonlyArray<IRPlotMark>;
 };
 
 export type MarkTransformShortcutDefinition = {
   markType: string;
-  build: (context: MarkTransformShortcutContext) => Array<TransformOperation> | undefined;
+  build: (context: MarkTransformShortcutContext) => Array<IRPlotTransform> | undefined;
 };
 
-type AxisBoundMark = Mark & {
+type AxisBoundMark = IRPlotMark & {
   xAxisId?: string;
   yAxisId?: string;
   facetId?: string;
   trackId?: string;
 };
 
-type AxisBoundGuide = Guide & {
+type AxisBoundGuide = IRPlotGuide & {
   facetId?: string;
   scaffoldId?: string;
   trackId?: string;
 };
 
-type CompositionSpec = NonNullable<PlotSpec['composition']>;
+type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
 type ArrangementSpec = NonNullable<CompositionSpec['arrangements']>[number];
 type FacetGridSpec = Extract<ArrangementSpec, { kind: 'facet' }>;
 type SharedScaffoldSpec = Extract<ArrangementSpec, { kind: 'tracks' }>;
@@ -211,7 +211,7 @@ type CollectedScaffold = Omit<SharedScaffoldSpec, 'coordinate'> & {
 };
 
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 <Plot> 本身不补）：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
-const DEFAULT_GUIDES: ReadonlyArray<Guide> = [
+const DEFAULT_GUIDES: ReadonlyArray<IRPlotGuide> = [
   { type: PlotGuide.Axis, dimension: 'x' },
   { type: PlotGuide.Axis, dimension: 'y', grid: true },
 ];
@@ -219,11 +219,11 @@ const DEFAULT_GUIDES: ReadonlyArray<Guide> = [
 /** 运行时 datum label 解析器：按 mark id 映射「行 → 自定义标签串」，经 lowerPlots options 注入而不进入 IR。 */
 export type ResolveLabelMap = Record<string, (row: ExternalRow) => string>;
 
-/** buildPlotSpec 收集的 resolveLabel 旁路：以返回的 PlotSpec 为键，供 resolvePlotRuntime 取出注入 options（不进 IR） */
-const resolveLabelBySpec = new WeakMap<PlotSpec, ResolveLabelMap>();
+/** buildPlotSpec 收集的 resolveLabel 旁路：以返回的 IRPlotSpec 为键，供 resolvePlotRuntime 取出注入 options（不进 IR） */
+const resolveLabelBySpec = new WeakMap<IRPlotSpec, ResolveLabelMap>();
 
-/** 取某 PlotSpec 经 buildPlotSpec 收集的 resolveLabel 运行时表（无则 undefined） */
-export const resolveLabelOf = (spec: PlotSpec): ResolveLabelMap | undefined => resolveLabelBySpec.get(spec);
+/** 取某 IRPlotSpec 经 buildPlotSpec 收集的 resolveLabel 运行时表（无则 undefined） */
+export const resolveLabelOf = (spec: IRPlotSpec): ResolveLabelMap | undefined => resolveLabelBySpec.get(spec);
 
 /** 收集过程的可变累加器 */
 type Collected = {
@@ -232,11 +232,11 @@ type Collected = {
   facets: Array<CollectedFacet>;
   scaffolds: Array<CollectedScaffold>;
   /** Plot 级静态文本标签。 */
-  labels: Array<PlotLabel>;
+  labels: Array<IRPlotLabel>;
   /** 显式 transform（<Transform> 声明组件收集，按声明序） */
-  transforms: Array<TransformOperation>;
-  /** mark shortcut 自动装配的 transform；显式 stack 存在时同签名抑制（B4 去重） */
-  shortcutTransforms: Array<TransformOperation>;
+  transforms: Array<IRPlotTransform>;
+  /** mark shortcut 自动装配的 transform；显式 stack 存在时按同签名抑制。 */
+  shortcutTransforms: Array<IRPlotTransform>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
   /** 按 mark id 收集且不进入 IR 的运行时 resolveLabel。 */
@@ -335,13 +335,13 @@ const isMarkValue = (value: unknown): value is MarkValueType<unknown> =>
   'kind' in value &&
   ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant');
 
-const isChannelBinding = (value: unknown): value is Channel =>
+const isChannelBinding = (value: unknown): value is IRPlotChannel =>
   value !== null &&
   !Array.isArray(value) &&
   typeof value === 'object' &&
   ('field' in value || 'value' in value || 'scale' in value);
 
-const channelBindingOf = (value: ExtensionChannelProp): Channel => {
+const channelBindingOf = (value: ExtensionChannelProp): IRPlotChannel => {
   if (isMarkValue(value)) {
     return value.kind === 'field' ? { field: String(value.value) } : { value: value.value };
   }
@@ -349,16 +349,16 @@ const channelBindingOf = (value: ExtensionChannelProp): Channel => {
   return typeof value === 'string' ? { field: value } : { value };
 };
 
-const extensionChannelEncoding = (channels: DatumLabelProps['channels']): Pick<Encoding, 'channels'> => {
+const extensionChannelEncoding = (channels: DatumLabelProps['channels']): Pick<IRPlotEncoding, 'channels'> => {
   if (channels === undefined) return {};
-  const out: Record<string, Channel> = {};
+  const out: Record<string, IRPlotChannel> = {};
   for (const [name, value] of Object.entries(channels)) out[name] = channelBindingOf(value);
   return Object.keys(out).length > 0 ? { channels: out } : {};
 };
 
 type PaintStyleInput = string | IRPaintSpec | MarkValueType<string | IRPaintSpec> | undefined;
 
-const paintStyleOf = <T extends PointFillStyle | PointStrokeStyle>(
+const paintStyleOf = <T extends IRPlotPointFillStyle | IRPlotPointStrokeStyle>(
   value: PaintStyleInput,
   prop: 'fill' | 'stroke',
   context: StyleSugarContext,
@@ -372,7 +372,10 @@ const paintStyleOf = <T extends PointFillStyle | PointStrokeStyle>(
   return undefined;
 };
 
-const pointColorStyleOf = (value: PointMarkProps['color'], context: StyleSugarContext): PointColorStyle | undefined => {
+const pointColorStyleOf = (
+  value: PointMarkProps['color'],
+  context: StyleSugarContext,
+): IRPlotPointColorStyle | undefined => {
   if (value === undefined) return undefined;
   if (typeof value !== 'string') return value.kind === 'field' ? { ...value, scale: value.scale ?? AUTO_COLOR } : value;
   if (context.fieldNames.has(value)) return { kind: 'field', value, scale: AUTO_COLOR };
@@ -381,14 +384,17 @@ const pointColorStyleOf = (value: PointMarkProps['color'], context: StyleSugarCo
   return undefined;
 };
 
-const strokeStyleOf = (stroke: PointMarkProps['stroke'], context: StyleSugarContext): PointStrokeStyle | undefined => {
-  return paintStyleOf<PointStrokeStyle>(stroke, 'stroke', context);
+const strokeStyleOf = (
+  stroke: PointMarkProps['stroke'],
+  context: StyleSugarContext,
+): IRPlotPointStrokeStyle | undefined => {
+  return paintStyleOf<IRPlotPointStrokeStyle>(stroke, 'stroke', context);
 };
 
 const strokeWidthStyleOf = (
   strokeWidth: PointMarkProps['strokeWidth'],
   context: StyleSugarContext,
-): PointStrokeWidthStyle | undefined => {
+): IRPlotPointStrokeWidthStyle | undefined => {
   if (strokeWidth === undefined) return undefined;
   if (isMarkValue(strokeWidth)) return strokeWidth;
   if (typeof strokeWidth === 'number') return { kind: 'constant', value: strokeWidth };
@@ -410,7 +416,7 @@ const numberStyleOf = <T extends MarkValueType<number>>(
   return undefined;
 };
 
-const intervalPullStyleOf = (value: IntervalMarkProps['pull']): PointNonnegativeNumberStyle | undefined => {
+const intervalPullStyleOf = (value: IntervalMarkProps['pull']): IRPlotPointNonnegativeNumberStyle | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
   return typeof value === 'number' ? { kind: 'constant', value } : { kind: 'field', value };
@@ -462,7 +468,7 @@ const boxSpacingStyleOf = (
   value: CoreNodeChannelProps['padding'],
   prop: string,
   context: StyleSugarContext,
-): NodeBoxSpacingStyle | undefined => {
+): IRPlotNodeBoxSpacingStyle | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
   if (typeof value === 'string') {
@@ -477,13 +483,13 @@ const nodeScaleStyleOf = (
   value: CoreNodeChannelProps['scale'],
   prop: string,
   context: StyleSugarContext,
-): NodeAxisScaleStyle | undefined => jsonStyleOf<number | IRAxisScale>(value, prop, context);
+): IRPlotNodeAxisScaleStyle | undefined => jsonStyleOf<number | IRAxisScale>(value, prop, context);
 
 const nodeBoxSizeStyleOf = (
   value: PointMarkProps['minimumSize'],
   prop: string,
   context: StyleSugarContext,
-): NodeBoxSizeStyle | undefined => jsonStyleOf<number | IRBoxSize>(value, prop, context);
+): IRPlotNodeBoxSizeStyle | undefined => jsonStyleOf<number | IRBoxSize>(value, prop, context);
 
 const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContext): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
@@ -542,8 +548,8 @@ const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSugarContex
   const put = (name: string, value: unknown): void => {
     if (value !== undefined) out[name] = value;
   };
-  put('fill', paintStyleOf<PointFillStyle>(props.fill, 'fill', context));
-  put('stroke', paintStyleOf<PointStrokeStyle>(props.stroke, 'stroke', context));
+  put('fill', paintStyleOf<IRPlotPointFillStyle>(props.fill, 'fill', context));
+  put('stroke', paintStyleOf<IRPlotPointStrokeStyle>(props.stroke, 'stroke', context));
   put('strokeOpacity', numberStyleOf(props.strokeOpacity, 'strokeOpacity', context));
   put('zIndex', numberStyleOf(props.zIndex, 'zIndex', context));
   put('rotate', numberStyleOf(props.rotate, 'rotate', context));
@@ -596,7 +602,10 @@ const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSugarContex
 };
 
 /** 记录某 mark 的 color 编码：置 colored 并收集 color 字段名（供 model 派生 sequential / ordinal） */
-const shapeStyleOf = (value: PointMarkProps['shape'], context: StyleSugarContext): PointShapeStyle | undefined => {
+const shapeStyleOf = (
+  value: PointMarkProps['shape'],
+  context: StyleSugarContext,
+): IRPlotPointShapeStyle | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
   if (typeof value !== 'string') return { kind: 'constant', value };
@@ -610,7 +619,7 @@ const recordColor = (into: Collected, colorEnc: { color: { field: string; scale:
   into.colorFields.push(colorEnc.color.field);
 };
 
-const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): void => {
+const recordMarkColor = (into: Collected, color: IRPlotPointColorStyle | undefined): void => {
   if (color?.kind !== 'field') return;
   into.colored = true;
   into.colorFields.push(color.value);
@@ -621,7 +630,7 @@ const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): v
  * @description label 顶层 string 默认按字段（content.field）；labelDisplayFormat 进 IR；labelPosition / labelDistance / labelPin
  *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）。
  */
-const buildMarkLabel = (props: DatumLabelProps): MarkNodeLabel | undefined => {
+const buildMarkLabel = (props: DatumLabelProps): IRPlotMarkNodeLabel | undefined => {
   const {
     label,
     labelDisplayFormat,
@@ -635,7 +644,7 @@ const buildMarkLabel = (props: DatumLabelProps): MarkNodeLabel | undefined => {
     labelKeepUpright,
   } = props;
   if (label === undefined) return undefined;
-  const content: TextChannel = {
+  const content: IRPlotTextChannel = {
     field: label,
     ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}),
   };
@@ -666,19 +675,20 @@ const recordResolveLabel = (
 };
 
 /** 把 x/y 字段装成位置 encoding（x/y 是唯一位置通道；polar 下坐标系把 x→angle、y→radius 重解释） */
-const canonicalGeometryLabel = (label: PathMarkProps['label'] | RelationMarkProps['label']): MarkGeometryLabelList =>
-  MarkGeometryLabelListSchema.parse(label);
+const canonicalGeometryLabel = (
+  label: PathMarkProps['label'] | RelationMarkProps['label'],
+): IRPlotMarkGeometryLabelList => MarkGeometryLabelListSchema.parse(label);
 
-const canonicalReferenceLabel = (props: ReferenceMarkProps): MarkNodeLabelList | MarkGeometryLabelList => {
+const canonicalReferenceLabel = (props: ReferenceMarkProps): IRPlotMarkNodeLabelList | IRPlotMarkGeometryLabelList => {
   const usesNodeHost =
     props.kind === 'region' || props.xTo !== undefined || props.yTo !== undefined || props.zTo !== undefined;
   return usesNodeHost ? MarkNodeLabelListSchema.parse(props.label) : MarkGeometryLabelListSchema.parse(props.label);
 };
 
-const canonicalRelationPath = (path: RelationMarkProps['path']): RelationPathGeometry =>
+const canonicalRelationPath = (path: RelationMarkProps['path']): IRPlotRelationPathGeometry =>
   RelationPathGeometrySchema.parse(path);
 
-const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
+const positionEncoding = (x: string, y: string): Pick<IRPlotEncoding, 'x' | 'y'> => ({
   x: { field: x },
   y: { field: y },
 });
@@ -771,7 +781,7 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
   if (color !== undefined) {
     colorEnc = constantRule ? { color: { value: color } } : { color: { field: color, scale: AUTO_COLOR } };
   }
-  const positional: Encoding = {};
+  const positional: IRPlotEncoding = {};
   if (hasX) {
     positional.x = ruleChannel(x);
   }
@@ -787,8 +797,8 @@ const collectReference = (props: ReferenceMarkProps, into: Collected, styleConte
     ...(zTo !== undefined ? { zTo } : {}),
   };
   const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-  const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-  const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+  const fillOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+  const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
   const referenceNodeStyleProps = {
     align: props.align,
     lineHeight: props.lineHeight,
@@ -887,7 +897,7 @@ const collectScaffoldChildren = (
   });
 };
 
-type TextPlotLabel = Extract<PlotLabel, { type: 'text' }>;
+type TextPlotLabel = Extract<IRPlotLabel, { type: 'text' }>;
 type PlotLabelTextBlock = TextPlotLabel['text'];
 type PlotLabelLine = Extract<PlotLabelTextBlock, Array<unknown>>[number];
 type StyledPlotLabelLine = Extract<PlotLabelLine, { text: string }>;
@@ -1146,10 +1156,10 @@ const collectInto = (
       } = props;
       const colorEnc = colorChannel(color, series);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+      const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
       const lineCapStyle = enumStyleOf(lineCap, 'lineCap', new Set(['butt', 'round', 'square']), styleContext);
       const lineJoinStyle = enumStyleOf(lineJoin, 'lineJoin', new Set(['miter', 'round', 'bevel']), styleContext);
-      const roundedCornersStyle = numberStyleOf<PointNonnegativeNumberStyle>(
+      const roundedCornersStyle = numberStyleOf<IRPlotPointNonnegativeNumberStyle>(
         roundedCorners,
         'roundedCorners',
         styleContext,
@@ -1223,20 +1233,20 @@ const collectInto = (
       const markLabel = buildMarkLabel(props);
       const colorStyle = pointColorStyleOf(color, styleContext);
       const textColorStyle = pointColorStyleOf(textColor, styleContext);
-      const sizeStyle = numberStyleOf<PointSizeStyle>(size, 'size', styleContext);
+      const sizeStyle = numberStyleOf<IRPlotPointSizeStyle>(size, 'size', styleContext);
       const shapeStyle = shapeStyleOf(shape, styleContext);
-      const fillStyle = paintStyleOf<PointFillStyle>(fill, 'fill', styleContext);
+      const fillStyle = paintStyleOf<IRPlotPointFillStyle>(fill, 'fill', styleContext);
       const strokeStyle = strokeStyleOf(stroke, styleContext);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-      const strokeOpacityStyle = numberStyleOf<PointOpacityStyle>(strokeOpacity, 'strokeOpacity', styleContext);
-      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
-      const rotateStyle = numberStyleOf<PointNumberStyle>(rotate, 'rotate', styleContext);
+      const fillOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+      const strokeOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(strokeOpacity, 'strokeOpacity', styleContext);
+      const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
+      const rotateStyle = numberStyleOf<IRPlotPointNumberStyle>(rotate, 'rotate', styleContext);
       const paddingStyle = boxSpacingStyleOf(padding, 'padding', styleContext);
       const minimumSizeStyle = nodeBoxSizeStyleOf(minimumSize, 'minimumSize', styleContext);
-      const zIndexStyle = numberStyleOf<PointZIndexStyle>(zIndex, 'zIndex', styleContext);
+      const zIndexStyle = numberStyleOf<IRPlotPointZIndexStyle>(zIndex, 'zIndex', styleContext);
       // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。位置通道按坐标系角色（x / x/y / x/y/z）
-      const textEnc: { text: TextChannel } | undefined =
+      const textEnc: { text: IRPlotTextChannel } | undefined =
         text !== undefined
           ? { text: { field: text, ...(displayFormat !== undefined ? { displayFormat } : {}) } }
           : undefined;
@@ -1333,11 +1343,11 @@ const collectInto = (
         explicitArrangement ??
         (percent === true ? 'normalize-stack' : stack ? 'stack' : arrangementGroup !== undefined ? 'dodge' : undefined);
       const markLabel = buildMarkLabel(props);
-      const fillStyle = paintStyleOf<PointFillStyle>(fill, 'fill', styleContext);
+      const fillStyle = paintStyleOf<IRPlotPointFillStyle>(fill, 'fill', styleContext);
       const strokeStyle = strokeStyleOf(stroke, styleContext);
       const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-      const fillOpacityStyle = numberStyleOf<PointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-      const opacityStyle = numberStyleOf<PointOpacityStyle>(opacity, 'opacity', styleContext);
+      const fillOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
+      const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
       const pullStyle = intervalPullStyleOf(pull);
       const effectiveFacetId = facetId ?? context.facetId;
       const effectiveTrackId = trackId ?? context.trackId;
@@ -1512,7 +1522,7 @@ const collectInto = (
         });
       }
       // arrangement → bounds：dodge 切 band 子带；stack / normalize-stack 读 y0/y1 extent。
-      let bounds: IntervalBounds | undefined;
+      let bounds: IRPlotIntervalBounds | undefined;
       if (proportional) {
         bounds = { [bandRole]: { kind: IntervalBoundKind.Proportional, field: width } };
       } else if (!histogram && (direction === 'horizontal' || arrangement === 'dodge')) {
@@ -1668,7 +1678,7 @@ const buildColorScale = (
   colorFields: Array<string>,
   model: IRDataModel | undefined,
   colors: Array<string> | undefined,
-): PlotScaleSpec => {
+): IRPlotScale => {
   if (model !== undefined) {
     const typeByField = new Map(model.map(field => [field.name, field.type] as const));
     const anyContinuous = colorFields.some(field => {
@@ -1697,7 +1707,7 @@ const continuousPositionScaleOptions = (options: PositionScaleOptions | undefine
   ...(options?.singleValueSpan !== undefined ? { singleValueSpan: options.singleValueSpan } : {}),
 });
 
-const buildPositionScale = (name: string, type: PositionScaleType, options?: ScaleProps): PlotScaleSpec => {
+const buildPositionScale = (name: string, type: PositionScaleType, options?: ScaleProps): IRPlotScale => {
   const scaleOptions = continuousPositionScaleOptions(isContinuousScaleProps(options) ? options : undefined);
   switch (type) {
     case 'linear':
@@ -1723,7 +1733,7 @@ const buildPositionScale = (name: string, type: PositionScaleType, options?: Sca
 };
 
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
-const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | undefined): PlotScaleSpec => {
+const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | undefined): IRPlotScale => {
   if (forceBand && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> for automatic band inference',
@@ -1734,7 +1744,7 @@ const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | undefin
 };
 
 /** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
-const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined): PlotScaleSpec => {
+const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined): IRPlotScale => {
   if (hasRect && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> for automatic band inference',
@@ -1748,7 +1758,7 @@ const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined
  * polar 角向 scale 类型推断：IntervalMark angle → linear（连续累积角界）；IntervalMark x/y → band（径向柱分类）；
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
-const buildAngleScale = (collected: Collected, explicit: ScaleProps | undefined): PlotScaleSpec => {
+const buildAngleScale = (collected: Collected, explicit: ScaleProps | undefined): IRPlotScale => {
   if (collected.hasBar && explicit !== undefined) {
     throw new Error(
       'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference',
@@ -1815,9 +1825,9 @@ const collectExplicitScales = (
 };
 
 const buildShortcutTransforms = (
-  marks: ReadonlyArray<Mark>,
+  marks: ReadonlyArray<IRPlotMark>,
   definitions: ReadonlyArray<MarkTransformShortcutDefinition> | undefined,
-): Array<TransformOperation> => {
+): Array<IRPlotTransform> => {
   if (definitions === undefined || definitions.length === 0) return [];
   return marks.flatMap((mark, markIndex) =>
     definitions
@@ -1866,9 +1876,9 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
 };
 
 const fillCoordinateScaleBindings = (
-  input: CoordinateOperation,
-  defaults: CoordinateOperation,
-): CoordinateOperation => {
+  input: IRPlotCoordinateOperation,
+  defaults: IRPlotCoordinateOperation,
+): IRPlotCoordinateOperation => {
   if (input.type !== defaults.type) return input;
   if (input.type === PlotCoordinate.Cartesian2D && defaults.type === PlotCoordinate.Cartesian2D) {
     return {
@@ -1900,9 +1910,9 @@ const fillCoordinateScaleBindings = (
 };
 
 const fillCompositionScaleBindings = (
-  composition: PlotSpec['composition'],
-  defaults: CoordinateOperation,
-): PlotSpec['composition'] => {
+  composition: IRPlotSpec['composition'],
+  defaults: IRPlotCoordinateOperation,
+): IRPlotSpec['composition'] => {
   if (composition === undefined) return undefined;
   return {
     ...composition,
@@ -1936,19 +1946,19 @@ const fillCompositionScaleBindings = (
 };
 
 /**
- * 把 mark / guide 子组件装配成规范化 PlotSpec
+ * 把 mark / guide 子组件装配成规范化 IRPlotSpec
  * @description 纯函数：从 children 收集 mark + guide + transform；按 coordinate（cartesian / polar）推断 scale 类型、
  *   装配 stack transform、自动建坐标系绑定（用户不写）。cartesian：x band/linear/time/point、y linear；
  *   polar：角向 sector→linear / bar→band / 闭合 line→point / 否则 linear，径向 linear。
  *   guide 规则：薄 Plot 只保留显式 <Axis>/<Legend>（不补默认轴）。默认轴交 <Chart>/decorateDefaultGuides。
- *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
+ *   产出须等价于手写 IRPlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 type AxisBindingNormalization = {
-  marks: Array<Mark>;
-  guides: Array<Guide>;
-  scales: Array<PlotScaleSpec>;
-  coordinate?: CoordinateOperation;
-  composition?: PlotSpec['composition'];
+  marks: Array<IRPlotMark>;
+  guides: Array<IRPlotGuide>;
+  scales: Array<IRPlotScale>;
+  coordinate?: IRPlotCoordinateOperation;
+  composition?: IRPlotSpec['composition'];
 };
 
 type CoordinateViewSpec = NonNullable<CompositionSpec['views']>[number];
@@ -1956,12 +1966,12 @@ type CoordinateViewSpec = NonNullable<CompositionSpec['views']>[number];
 const yAxisScaleNameOf = (axisId: string): string => `__y.${axisId}`;
 const xAxisScaleNameOf = (axisId: string): string => `__x.${axisId}`;
 
-const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
+const isAxisGuide = (guide: IRPlotGuide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis;
 
 const isPositionMark = (mark: AxisBoundMark): boolean =>
   mark.type === PlotMark.Path || mark.type === PlotMark.Point || mark.type === PlotMark.Interval;
 
-const stripMarkBindings = (mark: AxisBoundMark): Mark => {
+const stripMarkBindings = (mark: AxisBoundMark): IRPlotMark => {
   const rest = { ...mark };
   delete rest.xAxisId;
   delete rest.yAxisId;
@@ -1970,7 +1980,7 @@ const stripMarkBindings = (mark: AxisBoundMark): Mark => {
   return rest;
 };
 
-const stripGuideBindings = (guide: AxisBoundGuide): Guide => {
+const stripGuideBindings = (guide: AxisBoundGuide): IRPlotGuide => {
   const rest = { ...guide };
   delete rest.facetId;
   delete rest.scaffoldId;
@@ -1978,12 +1988,12 @@ const stripGuideBindings = (guide: AxisBoundGuide): Guide => {
   return rest;
 };
 
-const withMarkScope = (mark: AxisBoundMark, coordinateView: string | undefined): Mark => {
+const withMarkScope = (mark: AxisBoundMark, coordinateView: string | undefined): IRPlotMark => {
   const stripped = stripMarkBindings(mark);
   return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
 };
 
-const withGuideScope = (guide: AxisBoundGuide, coordinateView: string | undefined): Guide => {
+const withGuideScope = (guide: AxisBoundGuide, coordinateView: string | undefined): IRPlotGuide => {
   const stripped = stripGuideBindings(guide);
   if (!isAxisGuide(stripped)) return stripped;
   return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
@@ -2024,23 +2034,23 @@ const assertGuideBindingCompatibility = (guide: AxisBoundGuide): void => {
 };
 
 const insertAxisBindingScales = (
-  scales: ReadonlyArray<PlotScaleSpec>,
+  scales: ReadonlyArray<IRPlotScale>,
   xAxisIds: ReadonlyArray<string>,
   yAxisIds: ReadonlyArray<string>,
-): Array<PlotScaleSpec> => {
+): Array<IRPlotScale> => {
   const hasXBinding = xAxisIds.length > 0;
   const hasYBinding = yAxisIds.length > 0;
   const baseXScale = scales.find(scale => scale.name === AUTO_X) ?? { type: PlotScale.Linear, name: AUTO_X };
   const baseYScale = scales.find(scale => scale.name === AUTO_Y) ?? { type: PlotScale.Linear, name: AUTO_Y };
-  const xScales: Array<PlotScaleSpec> = xAxisIds.map(axisId => ({
+  const xScales: Array<IRPlotScale> = xAxisIds.map(axisId => ({
     ...baseXScale,
     name: xAxisScaleNameOf(axisId),
   }));
-  const yScales: Array<PlotScaleSpec> = yAxisIds.map(axisId => ({
+  const yScales: Array<IRPlotScale> = yAxisIds.map(axisId => ({
     ...baseYScale,
     name: yAxisScaleNameOf(axisId),
   }));
-  const out: Array<PlotScaleSpec> = [];
+  const out: Array<IRPlotScale> = [];
   let insertedX = false;
   let insertedY = false;
   for (const scale of scales) {
@@ -2070,7 +2080,7 @@ const insertAxisBindingScales = (
 const buildTopologyComposition = (
   facets: ReadonlyArray<CollectedFacet>,
   scaffolds: ReadonlyArray<CollectedScaffold>,
-  coordinate: CoordinateOperation,
+  coordinate: IRPlotCoordinateOperation,
 ): {
   composition: CompositionSpec;
   facetViewById: Map<string, string>;
@@ -2134,8 +2144,8 @@ const buildTopologyComposition = (
 const normalizeTopologyBindings = (
   marks: ReadonlyArray<AxisBoundMark>,
   guides: ReadonlyArray<AxisBoundGuide>,
-  scales: ReadonlyArray<PlotScaleSpec>,
-  coordinate: CoordinateOperation,
+  scales: ReadonlyArray<IRPlotScale>,
+  coordinate: IRPlotCoordinateOperation,
   facets: ReadonlyArray<CollectedFacet>,
   scaffolds: ReadonlyArray<CollectedScaffold>,
 ): AxisBindingNormalization => {
@@ -2189,9 +2199,9 @@ const normalizeTopologyBindings = (
 const normalizeAxisBindings = (
   marks: ReadonlyArray<AxisBoundMark>,
   guides: ReadonlyArray<AxisBoundGuide>,
-  scales: ReadonlyArray<PlotScaleSpec>,
-  coordinate: CoordinateOperation,
-  composition: PlotSpec['composition'],
+  scales: ReadonlyArray<IRPlotScale>,
+  coordinate: IRPlotCoordinateOperation,
+  composition: IRPlotSpec['composition'],
   coordKind: ReturnType<typeof coordinateTypeOf>,
   facets: ReadonlyArray<CollectedFacet>,
   scaffolds: ReadonlyArray<CollectedScaffold>,
@@ -2234,9 +2244,9 @@ const normalizeAxisBindings = (
   }
 
   const axes = guides.filter(isAxisGuide);
-  const xAxesById = new Map<string, AxisGuide>();
-  const yAxesById = new Map<string, AxisGuide>();
-  const axesById = new Map<string, AxisGuide>();
+  const xAxesById = new Map<string, IRPlotAxisGuide>();
+  const yAxesById = new Map<string, IRPlotAxisGuide>();
+  const axesById = new Map<string, IRPlotAxisGuide>();
   const seenAxisKeys = new Set<string>();
   const seenBindingScopeIds = new Map<string, string>();
   for (const axis of axes) {
@@ -2393,7 +2403,7 @@ const normalizeAxisBindings = (
   };
 };
 
-export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
+export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): IRPlotSpec => {
   const collected: Collected = {
     marks: [],
     guides: [],
@@ -2414,15 +2424,15 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   };
   collectInto(children, collected, styleSugarContext(options));
 
-  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → mark shortcut transforms（B4 去重）
-  // B4 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 shortcut stack（那条会二次堆叠），
+  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → mark shortcut transforms
+  // 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 shortcut stack（那条会二次堆叠），
   // 不同签名的 shortcut stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错。
-  const explicitTransforms: Array<TransformOperation> = [...(options.transforms ?? []), ...collected.transforms];
+  const explicitTransforms: Array<IRPlotTransform> = [...(options.transforms ?? []), ...collected.transforms];
   const shortcutTransforms = [
     ...collected.shortcutTransforms,
     ...buildShortcutTransforms(collected.marks, options.markTransformShortcuts),
   ];
-  const stackSignature = (transform: TransformOperation): string =>
+  const stackSignature = (transform: IRPlotTransform): string =>
     transform.kind === PlotTransform.Stack
       ? JSON.stringify([
           transform.x ?? null,
@@ -2439,8 +2449,8 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   const dedupedShortcutTransforms = shortcutTransforms.filter(
     transform => transform.kind !== PlotTransform.Stack || !explicitStackSignatures.has(stackSignature(transform)),
   );
-  const transforms: Array<TransformOperation> = [...explicitTransforms, ...dedupedShortcutTransforms];
-  const labels: Array<PlotLabel> = [...(options.labels ?? []), ...collected.labels];
+  const transforms: Array<IRPlotTransform> = [...explicitTransforms, ...dedupedShortcutTransforms];
+  const labels: Array<IRPlotLabel> = [...(options.labels ?? []), ...collected.labels];
 
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {
@@ -2459,8 +2469,8 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生。
   // 直接调用 buildPlotSpec 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）。
   const shouldDeferPositionScales = options.model !== undefined || options.deferPositionScaleInference === true;
-  let coordinate: CoordinateOperation;
-  let scales: Array<PlotScaleSpec>;
+  let coordinate: IRPlotCoordinateOperation;
+  let scales: Array<IRPlotScale>;
   if (coordKind === 'polar2D') {
     const polar = toPolarConfig(options.coordinate) as PolarConfig;
     const angleScale = buildAngleScale(collected, explicitScales.angle);
@@ -2565,7 +2575,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     collected.scaffolds,
   );
 
-  const spec: PlotSpec = {
+  const spec: IRPlotSpec = {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
     ...(options.id !== undefined ? { id: options.id } : {}),
@@ -2592,10 +2602,10 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
 
 /**
  * 给薄 <Plot> 产物补默认坐标轴：cartesian2D 且无任何显式 axis 时，前置 x 轴 + y 轴（带网格）。
- * @description 框架无关的 PlotSpec 纯函数，供需要默认轴的上层组件复用；薄 <Plot> 本身不调用。
+ * @description 框架无关的 IRPlotSpec 纯函数，供需要默认轴的上层组件复用；薄 <Plot> 本身不调用。
  *   非 cartesian2D（polar / 1D / ternary）的专门轴仍需显式声明，原样返回；已有显式 <Axis> 时不补。
  */
-export const decorateDefaultGuides = (spec: PlotSpec): PlotSpec => {
+export const decorateDefaultGuides = (spec: IRPlotSpec): IRPlotSpec => {
   if (spec.coordinate === undefined) return spec;
   if (spec.coordinate.type !== PlotCoordinate.Cartesian2D) return spec;
   const guides = spec.guides ?? [];

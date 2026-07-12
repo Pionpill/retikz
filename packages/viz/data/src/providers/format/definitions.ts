@@ -4,7 +4,7 @@ import type { FieldFormatDefinition } from '../../contract';
 
 import { defineFieldFormat } from '../../contract';
 import { DataFieldType } from '../../schemas';
-import { createReadonlyMap } from '../../shared';
+import { createReadonlyMap } from '../../shared/collections';
 import { coerceValue } from '../data';
 import { freezeDefinitions } from '../shared';
 import { DataFieldFormat } from './constants';

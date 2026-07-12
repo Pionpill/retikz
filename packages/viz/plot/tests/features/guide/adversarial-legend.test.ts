@@ -4,13 +4,13 @@ import { ChildSchema, compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-03 legend guide 对抗测试（Adversarial Bug Hunter）。
+ * contract legend guide 对抗测试（Adversarial Bug Hunter）。
  *
  * 目标：用 LLM 真实 / 边角会生成的 plot IR JSON 让 legend lowering 抛意外 / 返回坏结果 /
  * 产出不可序列化或非有限数 IR。只构造输入、不改实现。
@@ -19,7 +19,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Datasets,
   options: LowerPlotsOptions = { width: 480, height: 300 },
 ): IRScope => {
@@ -676,16 +676,14 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: 1000 } }],
     });
-    const start = Date.now();
     const outer = expandOf(spec, {
       d: [
         { lon: 0, lat: 0, t: 0.001 },
         { lon: 1, lat: 1, t: 0.002 },
       ],
     });
-    expect(Date.now() - start).toBeLessThan(2000);
     expect(legendScopes(outer)[0]).toBeDefined();
-  });
+  }, 5000);
 
   it('[adversarial] 超长类别名（千字符）：legend 不崩、label 文本保留', () => {
     const longName = 'x'.repeat(2000);

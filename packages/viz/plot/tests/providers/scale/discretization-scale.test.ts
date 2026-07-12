@@ -3,7 +3,7 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -11,13 +11,13 @@ import { PlotSpecSchema } from '../../../src/schemas';
 /** 笛卡尔默认画布：x [0,..]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 /**
@@ -57,7 +57,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 建单 point mark 的 cartesian spec，x/y linear + 给定离散化色 scale，color 引用之 */
-const pointSpec = (colorScale: Record<string, unknown>): PlotSpec =>
+const pointSpec = (colorScale: Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -77,7 +77,7 @@ const pointSpec = (colorScale: Record<string, unknown>): PlotSpec =>
     ],
   });
 
-describe('离散色 · quantize 等宽切档求值（alpha.8 ADR-02）', () => {
+describe('离散色 · quantize 等宽切档求值（contract）', () => {
   // Happy path：domain [0,100] count 5 → 值按 20 宽切档，落同档同色、不同档异色
   it('quantize 5 档：值落对应档色', () => {
     const data = [
@@ -140,7 +140,7 @@ describe('离散色 · quantize 等宽切档求值（alpha.8 ADR-02）', () => {
     expect(lower[1]).toEqual('#eeeeee');
   });
 
-  // 交互：scheme 采样与 ADR-01 一致（quantize 'blues' 采 N 档 vs sequential 'blues' 等距采样——都产稳定 hex 且档间不同色）
+  // 交互：scheme 采样与 contract 一致（quantize 'blues' 采 N 档 vs sequential 'blues' 等距采样——都产稳定 hex 且档间不同色）
   it('quantize scheme blues 产稳定 hex 且档间互异', () => {
     const data = [
       { x: 0, y: 0, v: 0 },
@@ -155,7 +155,7 @@ describe('离散色 · quantize 等宽切档求值（alpha.8 ADR-02）', () => {
   });
 });
 
-describe('离散色 · threshold 阈值断点求值（alpha.8 ADR-02）', () => {
+describe('离散色 · threshold 阈值断点求值（contract）', () => {
   // Happy path：breakpoints [60,80] + 3 色 → 50→色0、70→色1、90→色2
   it('threshold 断点 [60,80] + 3 色落档', () => {
     const data = [
@@ -226,7 +226,7 @@ describe('离散色 · threshold 阈值断点求值（alpha.8 ADR-02）', () => 
   });
 });
 
-describe('离散色 · quantile 分位切档求值（alpha.8 ADR-02）', () => {
+describe('离散色 · quantile 分位切档求值（contract）', () => {
   // Happy path：偏斜数据 count 4 → 每档样本数约等
   it('quantile 4 档每档样本数约等', () => {
     // 12 样本 / 4 档 → 每档约 3 个
@@ -243,7 +243,7 @@ describe('离散色 · quantile 分位切档求值（alpha.8 ADR-02）', () => {
     for (const c of counts.values()) expect(Math.abs(c - 3)).toBeLessThanOrEqual(1);
   });
 
-  // 错误路径：显式 domain → fail-loud（分位由数据定，ADR 决策⑤）
+  // 错误路径：显式 domain → fail-loud（分位由数据决定）
   //   注：QuantileColorScaleSchema 非 strict，schema parse 会静默 strip domain（见 scale.schema.test.ts），
   //   故此处显式 domain 已被剥离、lowering 收不到——本测试改测「带 domain 的 spec 经 schema parse 后仍正常 lower 不受 domain 影响」。
   //   真正的「给 domain → fail-loud」契约在 schema 层即以 strip 形式落地（用户给的 domain 无效化），lowering 不读 domain。
@@ -271,8 +271,8 @@ describe('离散色 · quantile 分位切档求值（alpha.8 ADR-02）', () => {
   });
 });
 
-describe('离散色 · fail-loud 守卫（alpha.8 ADR-02）', () => {
-  const pathColorSpec = (markType: 'line' | 'area', colorScale: Record<string, unknown>): PlotSpec =>
+describe('离散色 · fail-loud 守卫（contract）', () => {
+  const pathColorSpec = (markType: 'line' | 'area', colorScale: Record<string, unknown>): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -356,7 +356,7 @@ describe('离散色 · count 与 range 长度冲突 fail-loud（与 threshold �
   });
 });
 
-describe('离散色 · 回归：每点产 node（alpha.8 ADR-02）', () => {
+describe('离散色 · 回归：每点产 node（contract）', () => {
   // 离散化 color 仍走 per-datum point node（与连续色一致，不产 path）
   it('quantize point mark 每数据点产 node', () => {
     const data = [

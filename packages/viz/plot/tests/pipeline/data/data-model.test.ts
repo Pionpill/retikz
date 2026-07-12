@@ -2,13 +2,13 @@
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { PlotSpecSchema } from '../../../src/schemas';
 
-/** 构造最小可解析 PlotSpec（cartesian + 给定 marks / transform / model） */
-const buildSpec = (overrides: Record<string, unknown>): PlotSpec =>
+/** 构造最小可解析 IRPlotSpec（cartesian + 给定 marks / transform / model） */
+const buildSpec = (overrides: Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -24,7 +24,7 @@ const buildSpec = (overrides: Record<string, unknown>): PlotSpec =>
 
 const rowsOf = (...values: Array<unknown>): Array<Record<string, unknown>> => values.map(v => ({ f: v }));
 
-describe('inferFieldType — 缺省推断（ADR-01）', () => {
+describe('inferFieldType — 缺省推断（contract）', () => {
   // Happy path
   it('infer_temporal_from_iso', () => {
     expect(inferFieldType(rowsOf('2024-01-01', '2024-02-01'), 'f')).toBe(DataFieldType.Temporal);
@@ -75,7 +75,7 @@ describe('inferFieldType — 缺省推断（ADR-01）', () => {
   });
 });
 
-describe('isIsoDateString — 严格 ISO guard（ADR-01）', () => {
+describe('isIsoDateString — 严格 ISO guard（contract）', () => {
   it('iso_accept_reject', () => {
     expect(isIsoDateString('2024-01-01')).toBe(true);
     expect(isIsoDateString('2024-01-01T08:30:00Z')).toBe(true);
@@ -87,7 +87,7 @@ describe('isIsoDateString — 严格 ISO guard（ADR-01）', () => {
   });
 });
 
-describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
+describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('collect_encoding_order_series', () => {
     const spec = buildSpec({
       marks: [
@@ -144,7 +144,7 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
   });
 
   it('collect_label_and_text_content_fields_alpha11', () => {
-    // 位置 mark 的 priority-1 datum label 内容字段 + TextMark 的 text 内容字段都进用户源集（alpha.11 P1 回归）
+    // 位置 mark 的 datum label 内容字段与 TextMark 的 text 内容字段都进入用户源字段集。
     const spec = buildSpec({
       marks: [
         {
@@ -187,7 +187,7 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
     ).toThrow(/unknown field/i);
   });
 
-  // alpha.12 ADR-16：bin / summarize 输入字段进、派生输出字段不进
+  // contract：bin / summarize 输入字段进、派生输出字段不进
   it('bin_inputs_in_outputs_out', () => {
     const spec = buildSpec({
       transform: [
@@ -253,7 +253,7 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
     expect(fields.has('count')).toBe(false);
   });
 
-  // alpha.12 ADR-02：normalize / derive-interval / jitter 输入字段进、派生输出不进
+  // contract：normalize / derive-interval / jitter 输入字段进、派生输出不进
   it('normalize_inputs_in_as_out', () => {
     const spec = buildSpec({
       transform: [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' }],
@@ -302,7 +302,7 @@ describe('collectSourceFields — 用户源字段集（ADR-01）', () => {
   });
 });
 
-describe('resolveFieldTypes — 类型解析 + strict 校验（ADR-01）', () => {
+describe('resolveFieldTypes — 类型解析 + strict 校验（contract）', () => {
   const rows = [{ month: '2024-01-01', revenue: 10, cat: 'A' }];
 
   it('model_type_overrides_inference', () => {
@@ -356,7 +356,7 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（ADR-01）', () =>
   });
 });
 
-describe('resolveFieldTypes — 部分声明 model（type 可选，ADR-05）', () => {
+describe('resolveFieldTypes — 部分声明 model（type 可选，contract）', () => {
   const rows = [{ month: '2024-01-01', revenue: 10, cat: 'A' }];
 
   it('partial_model_infers_untyped', () => {
