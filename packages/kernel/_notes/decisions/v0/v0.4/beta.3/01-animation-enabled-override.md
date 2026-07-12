@@ -31,12 +31,15 @@ export const resolveAnimationEnabled = (explicit: boolean | undefined, reducedMo
 
 `snapshotAt` 的优先级保持更高：只要提供静态截帧时刻，就渲染该时刻的静态帧，不启动动画，即使同时显式开启。无 `matchMedia` 的 SSR / 非浏览器环境按“系统未要求减少动态效果”处理，因此未传开关时默认开启；显式值仍保持确定性。
 
+React 额外提供 `AnimationModeProvider`，用于编辑器、文档站或测试工具统一控制一棵组件树。Provider 的 `mode` 采用 `'system' | 'enabled' | 'disabled'`：`system` 忽略后代 `Layout` 的显式值并跟随系统，`enabled` / `disabled` 则统一强制开关。优先级为“最近的 Provider > `Layout.animate` > 系统偏好”，因此宿主能可靠覆盖无法修改或不应修改的 demo 源码。
+
 理由：
 
 1. 布尔值恢复对称语义，显式作者配置高于隐式环境默认值。
 2. React 与 Vanilla 共享解析规则，同时保留符合各自 API 结构的现有命名，避免无收益的破坏性重命名。
 3. 环境读取停留在 adapter / runtime，core IR、Scene 和编译管线继续保持 renderer-agnostic。
 4. CanvasHost 只接受 Layout 已解析的结果，避免同一条渲染路径重复读取系统偏好并覆盖显式 `true`。
+5. React Context 属于宿主树级控制，不进入 core IR，也不要求 Vanilla 复制框架特有的 Provider 形状。
 
 ## 待决策点 🔻
 
@@ -49,6 +52,13 @@ export const resolveAnimationEnabled = (explicit: boolean | undefined, reducedMo
 <Layout>{/* ... */}</Layout>
 <Layout animate={true}>{/* ... */}</Layout>
 <Layout animate={false}>{/* ... */}</Layout>
+```
+
+```tsx
+// React 宿主：统一覆盖整棵预览树，后代 Layout 的 animate 不再参与解析。
+<AnimationModeProvider mode="system">{/* ... */}</AnimationModeProvider>
+<AnimationModeProvider mode="enabled">{/* ... */}</AnimationModeProvider>
+<AnimationModeProvider mode="disabled">{/* ... */}</AnimationModeProvider>
 ```
 
 ```ts
@@ -64,7 +74,9 @@ mountSvg(container, spec, { animation: { enabled: false } });
 
 - `@retikz/render` 直接覆盖纯解析函数的三态真值表。
 - `@retikz/react` 覆盖 SVG / Canvas、首次读取、媒体查询变化、显式值覆盖和 `snapshotAt`。
+- `@retikz/react` 覆盖 Provider 对后代显式值的强制覆盖、最近 Provider 优先和 `system` 模式。
 - `@retikz/vanilla` 覆盖 mountSvg / mountCanvas / renderToSvgString 的同义行为与无浏览器 API 降级。
+- 文档站覆盖持久化模式从 store 注入共享 PreviewPanel，确保卡片与弹窗使用同一宿主策略。
 - 保留低层 render builder 的纯配置测试，防止其重新读取宿主环境。
 
 具体 case 拆分见下面“实现契约 § 测试象限”。
@@ -73,16 +85,17 @@ mountSvg(container, spec, { animation: { enabled: false } });
 
 - `@retikz/render/animation` 新增公开纯函数 `resolveAnimationEnabled`，供 React 与 Vanilla runtime 复用。
 - `@retikz/react` 的 `LayoutProps.animate?: boolean` 类型和名称不变，但显式 `true` 在 reduced-motion 环境下由静态改为播放；CanvasHost 不再二次读取系统偏好。
+- `@retikz/react` 新增 `AnimationModeProvider`，供宿主统一覆盖后代 Layout 的动画策略；不使用 Provider 时完全保留既有行为。
 - `@retikz/vanilla` 的 `VanillaAnimationOptions.enabled?: boolean` 类型和名称不变，但显式 `true` 同样覆盖 reduced-motion。
 - `@retikz/core` 的 IR、Scene、schema、compile 与 animation track 契约均不改。
-- 文档站同步 React / Vanilla 的三态映射、无障碍提示、`snapshotAt` 优先级和快速开始的显式演示用法。
+- 文档站同步 React / Vanilla 的三态映射、无障碍提示、`snapshotAt` 优先级，并提供持久化的预览动画三态开关。
 - ⚠️ **行为变更**：此前在 reduced-motion 环境下，显式 `true` 仍为静态；迁移后它会强制播放。希望继续尊重系统偏好的调用方应省略该值，不要传 `true`。
 
 ## 不在本 ADR 范围
 
 - 不新增 core IR 字段、Scene 字段或全局动画策略对象。
 - 不统一 React 与 Vanilla 的属性形状，不把 React 改成 `animation={{ enabled }}`，也不把 Vanilla 改成顶层 `animate`。
-- 不新增浏览器站点级偏好存储、文档站全局动画设置或持久化用户设置。
+- 不把文档站偏好写入业务 IR、Scene 或包级全局变量；站点设置只通过 React Provider 作用于预览子树。
 - 不让 Vanilla 已挂载 view 订阅系统偏好变化；Vanilla 继续在 mount / render 调用时解析一次，动态订阅需另行设计生命周期。
 - 不改变不支持 CSS / WAAPI / rAF 时既有的静态降级策略。
 
@@ -107,7 +120,12 @@ mountSvg(container, spec, { animation: { enabled: false } });
 - `packages/kernel/render/src/animation/runtime.ts`（修改：新增纯解析函数）
 - `packages/kernel/render/tests/animation/animation-runtime.test.ts`（修改：三态真值表与无环境边界）
 - `packages/kernel/react/src/kernel/runtime/Layout.tsx`（修改：解析三态并完善 JSDoc）
+- `packages/kernel/react/src/kernel/runtime/animation-context.ts`（新增：树级动画模式 Context）
+- `packages/kernel/react/src/kernel/runtime/AnimationModeProvider.tsx`（新增：树级动画模式 Provider）
+- `packages/kernel/react/src/kernel/runtime/index.ts`（修改：导出 Provider 与公共类型）
 - `packages/kernel/react/src/render/canvas/CanvasHost.tsx`（修改：只消费已解析布尔值）
+- `packages/kernel/react/tests/kernel/runtime/layout-animation-context.test.tsx`（新增：Provider 优先级与交互）
+- `packages/kernel/react/tests/public-api.test.ts`（修改：固定公共导出）
 - `packages/kernel/react/tests/kernel/runtime/reduced-motion.test.tsx`（修改：媒体偏好与显式覆盖）
 - `packages/kernel/react/tests/kernel/runtime/animation.test.tsx`（修改：SVG / Canvas 与截帧交互）
 - `packages/kernel/vanilla/src/runtime/types.ts`（修改：完善三态 JSDoc）
@@ -126,6 +144,12 @@ mountSvg(container, spec, { animation: { enabled: false } });
 - `apps/docs/src/modules/docs/contents/kernel/get-start/index.en.mdx`（修改）
 - `apps/docs/src/modules/docs/contents/kernel/get-start/get-start-step-4.zh.demo.tsx`（修改）
 - `apps/docs/src/modules/docs/contents/kernel/get-start/get-start-step-4.en.demo.tsx`（修改）
+- `apps/docs/src/app/header/HeaderActions.tsx`（修改：预览动画三态菜单）
+- `apps/docs/src/i18n/locales/zh.json`（修改：中文菜单文案）
+- `apps/docs/src/i18n/locales/en.json`（修改：英文菜单文案）
+- `apps/docs/src/modules/docs/store/useComponentPreviewStore.ts`（修改：持久化动画模式）
+- `apps/docs/src/modules/docs/components/component-preview/preview-panel/PreviewPanel.tsx`（修改：共享预览宿主注入 Provider）
+- `apps/docs/tests/component-preview/component-preview-animation-mode.test.tsx`（新增：store 到共享宿主的覆盖测试）
 
 若实现证明既有 owner barrel 未导出 `runtime.ts` 中的新函数，允许只在 `packages/kernel/render/src/animation/index.ts` 增加 `export *`；不得因此扩大包根公共面。偏离其余白名单需先回到本 ADR 补充理由。
 
@@ -143,6 +167,7 @@ mountSvg(container, spec, { animation: { enabled: false } });
 - `undefined + reduce`：保持当前默认，React / Vanilla 均静态降级。
 - 无 `matchMedia`：`prefersReducedMotion()` 为 `false`，未传配置时默认开启且不抛错。
 - `snapshotAt + true`：静态截帧优先，不 emit CSS / WAAPI、不启动 rAF。
+- Provider `system` + 后代显式值：忽略后代值并重新跟随系统。
 
 **错误路径（≥ 2）**：
 
@@ -153,6 +178,8 @@ mountSvg(container, spec, { animation: { enabled: false } });
 
 - React 未传 `animate` 时，系统偏好从 no-preference 切为 reduce：订阅触发重渲染并即时转为静态。
 - React 显式 `true` / `false` 时切换系统偏好：最终结果保持显式值，不随媒体查询变化。
+- React Provider 强制模式覆盖后代相反的 `animate` 值；嵌套时最近 Provider 生效。
+- 文档站切换持久化模式后，共享 PreviewPanel 中的 demo 立即按新模式重新解析。
 - CanvasHost 收到 Layout 解析后的 `true` 且系统为 reduce：不得再次读取系统偏好把它改回 `false`。
 - manual 动画在显式 `true + reduce` 下：hydration animation handle 可 restart；显式 `false` 时仍为空操作。
 
@@ -161,6 +188,7 @@ mountSvg(container, spec, { animation: { enabled: false } });
 - `prefersReducedMotion`（`packages/kernel/render/src/animation/runtime.ts`）——继续负责读取宿主环境，结果交给新的纯解析函数。
 - `usePrefersReducedMotion`（`packages/kernel/react/src/render/animation/reduced-motion.ts`）——继续负责 React 中的媒体查询订阅，不改变 owner。
 - `LayoutProps.animate`（`packages/kernel/react/src/kernel/runtime/Layout.tsx`）——修改语义和 JSDoc，不改名称与类型。
+- `RendererModeProvider`（`packages/kernel/react/src/kernel/runtime/RendererModeProvider.tsx`）——复用其 Provider / Context 的公开 API 组织方式，不混合渲染器与动画职责。
 - `VanillaAnimationOptions.enabled`（`packages/kernel/vanilla/src/runtime/types.ts`）——修改语义和 JSDoc，不改名称与类型。
 - `BuildDocumentOptions.animate`（`packages/kernel/render/src/svg/builders/document.ts`）——继续作为已经解析的低层布尔值，不读取系统偏好。
 - `snapshotAt`（React / Vanilla runtime）——保持对动画播放开关的更高优先级。

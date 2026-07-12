@@ -114,6 +114,26 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 </RendererModeProvider>;
 ```
 
+### Control animation for a whole subtree
+
+Normally, each `<Layout>` should express its own animation intent through `animate`. An editor, docs preview, or test harness that needs one policy for an entire component tree can wrap it in `AnimationModeProvider`:
+
+```tsx
+import { AnimationModeProvider } from '@retikz/react';
+
+<AnimationModeProvider mode="enabled">
+  <SomeInteractiveChart />
+</AnimationModeProvider>;
+```
+
+| `mode`       | Behavior                                              |
+| ------------ | ----------------------------------------------------- |
+| `'system'`   | The whole subtree follows the reduced-motion setting  |
+| `'enabled'`  | The whole subtree is forced to play animations        |
+| `'disabled'` | The whole subtree is forced to show the static result |
+
+The animation Provider is a host-level override: the nearest `AnimationModeProvider` wins over descendant `<Layout animate>` props, including an explicit opposite value. Without a Provider, `animate` keeps its existing tri-state behavior. `snapshotAt` always wins and produces a static frame.
+
 ## How it works
 
 > Optional for everyday use; revisit when you hit edge cases or want to understand how `<Layout>` handles styles / viewBox / backends.
@@ -129,6 +149,10 @@ When set, `viewBox` overrides the auto-computed range, ignores padding, and is i
 ### Render backend fallback
 
 When the `renderer` prop is omitted, resolution follows **explicit `renderer` prop > context > `'svg'`**, where context comes from the nearest `RendererModeProvider`. A `<Layout>` with an explicit `renderer` is unaffected by the Provider.
+
+### Animation mode priority
+
+Animation resolves in this order: **`snapshotAt` > nearest `AnimationModeProvider` > `animate` > system preference**. Unlike the render-backend Provider, the animation Provider exists to let a host override an entire preview tree, so a descendant's explicit `animate` prop cannot override it.
 
 ### Clipped / empty-space troubleshooting
 

@@ -67,7 +67,7 @@ retikz 的 React 适配器是 `@retikz/react`，它的对等依赖是 `react` / 
 
 <ComponentPreview files="get-start-step-4" size="xs" replayable />
 
-这里的动画设置为 `trigger: 'manual'`，所以它不会自动播放，而是等点击节点时由回调触发；回调里也可以同步更新你的 React 状态。示例显式传了 `animate={true}`，确保教学互动在开启「减少动态效果」的系统上仍可见；实际应用若要跟随用户偏好，省略这个 prop 即可。
+这里的动画设置为 `trigger: 'manual'`，所以它不会自动播放，而是等点击节点时由回调触发；回调里也可以同步更新你的 React 状态。预览默认跟随系统的「减少动态效果」偏好；如果动画没有播放，可在页面右上角 **… → 组件演示 → 动画播放** 中选择「开启」。
 
 到这里先记住 4 个规则：
 

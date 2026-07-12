@@ -39,6 +39,7 @@ import { CanvasHost } from '../../render/canvas';
 import { svgToReact } from '../../render/svg';
 import { browserMeasurer } from '../../render/text';
 import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from '../adapter';
+import { useAnimationMode } from './animation-context';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
 
@@ -149,7 +150,8 @@ export type LayoutProps = ScopeStyleProps & {
   /**
    * 是否播放动画；未传时跟随系统减少动态效果偏好，显式 `true` / `false` 强制开关
    * @description SVG 模式：`load` track 经内联 `<style>` CSS 自播、交互 track 经 WAAPI 桥按 trigger 驱动；
-   *   `animate={false}` 走 settled 静态。显式 `true` 会覆盖 `prefers-reduced-motion`。
+   *   `animate={false}` 走 settled 静态。显式 `true` 会覆盖 `prefers-reduced-motion`；祖先
+   *   `AnimationModeProvider` 存在时由最近的 Provider 统一覆盖本属性。
    */
   animate?: boolean;
   /**
@@ -346,7 +348,10 @@ export const Layout: FC<LayoutProps> = props => {
     handlers,
   } = props;
   const reducedMotion = usePrefersReducedMotion();
-  const animate = resolveAnimationEnabled(animateProp, reducedMotion);
+  const animationMode = useAnimationMode();
+  const resolvedAnimateProp =
+    animationMode === undefined ? animateProp : animationMode === 'system' ? undefined : animationMode === 'enabled';
+  const animate = resolveAnimationEnabled(resolvedAnimateProp, reducedMotion);
   const {
     color,
     stroke,

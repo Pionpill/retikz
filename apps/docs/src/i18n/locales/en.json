@@ -188,6 +188,10 @@
   "preview": {
     "groupLabel": "Component Preview",
     "renderMode": "Render mode",
+    "animationMode": "Animation playback",
+    "animationSystem": "Follow system",
+    "animationEnabled": "On",
+    "animationDisabled": "Off",
     "hideAllCode": "Hide all code",
     "expandAllCode": "Expand all code",
     "dragComponent": "Drag component"

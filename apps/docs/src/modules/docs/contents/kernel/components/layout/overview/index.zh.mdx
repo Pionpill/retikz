@@ -114,6 +114,26 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 </RendererModeProvider>;
 ```
 
+### 统一控制一棵子树的动画
+
+通常应让每个 `<Layout>` 通过 `animate` 表达自己的动画意图。如果编辑器、文档预览或测试工具需要统一控制一整棵组件树，可在外层使用 `AnimationModeProvider`：
+
+```tsx
+import { AnimationModeProvider } from '@retikz/react';
+
+<AnimationModeProvider mode="enabled">
+  <SomeInteractiveChart />
+</AnimationModeProvider>;
+```
+
+| `mode`       | 行为                                   |
+| ------------ | -------------------------------------- |
+| `'system'`   | 整棵子树跟随系统的「减少动态效果」偏好 |
+| `'enabled'`  | 整棵子树强制播放动画                   |
+| `'disabled'` | 整棵子树强制显示静态结果               |
+
+动画 Provider 是宿主级覆盖：最近的 `AnimationModeProvider` 优先于后代 `<Layout animate>`，包括相反的显式值。未使用 Provider 时，`animate` 仍保持原有三态语义；`snapshotAt` 始终优先，提供后只渲染静态截帧。
+
 ## 技术原理
 
 > 上手阶段可跳过本节；遇到边界 case 或想理解 `<Layout>` 在样式 / viewBox / 后端上的取舍时再回来读。
@@ -129,6 +149,10 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 ### 渲染后端回退优先级
 
 缺省 `renderer` prop 时按 **显式 `renderer` prop > context > `'svg'`** 回退，context 取自最近的 `RendererModeProvider`。写了 `renderer` 的 `<Layout>` 不受 Provider 影响。
+
+### 动画模式优先级
+
+动画按 **`snapshotAt` > 最近的 `AnimationModeProvider` > `animate` > 系统偏好** 解析。与渲染后端 Provider 不同，动画 Provider 的用途就是让宿主统一覆盖整棵预览树，因此后代显式 `animate` 不会反向覆盖它。
 
 ### 视框被裁 / 留白排查
 

@@ -14,7 +14,7 @@ const GetStartStep4: FC = () => {
   const [count, setCount] = useState(0);
 
   return (
-    <Layout width={420} height={120} animate={true}>
+    <Layout width={420} height={120}>
       <Node
         id="a"
         position={[0, 0]}
