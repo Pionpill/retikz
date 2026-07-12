@@ -52,7 +52,7 @@ Render options are grouped by the stage that consumes them:
 renderToSvgString(spec, {
   output: { width: 640, height: 360, idPrefix: 'flow' },
   compile: { composites, measureText },
-  animation: { enabled: false, snapshotAt: 1000 },
+  animation: { enabled: true },
 });
 
 mount(canvasRoot, spec, {
@@ -63,6 +63,8 @@ mount(canvasRoot, spec, {
 ```
 
 `figure()` describes the figure. `output` controls display size and resource ids, `compile` injects core compile capabilities, `animation` controls playback or snapshots, and `canvas` is only for the Canvas backend.
+
+Omit `animation.enabled` to follow the system's reduced-motion preference. Explicit `true` forces playback on, and explicit `false` forces it off. `snapshotAt` still overrides playback and produces a static frame.
 
 ## Layers And Embeds
 

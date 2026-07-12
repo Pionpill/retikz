@@ -125,6 +125,13 @@ export const createClock = (options: ClockOptions): AnimationControls => {
 export const prefersReducedMotion = (): boolean =>
   env.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
 
+/**
+ * 把作者动画开关与系统减少动态效果偏好解析为最终播放状态。
+ * @description 未显式配置时跟随系统偏好；显式 `true` / `false` 始终覆盖系统偏好。
+ */
+export const resolveAnimationEnabled = (explicit: boolean | undefined, reducedMotion: boolean): boolean =>
+  explicit ?? !reducedMotion;
+
 /** 递归判断 prim 树是否有任意 animations */
 const primsHaveAnimations = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
   prims.some(p => (p.animations?.length ?? 0) > 0 || (p.type === 'group' && primsHaveAnimations(p.children)));

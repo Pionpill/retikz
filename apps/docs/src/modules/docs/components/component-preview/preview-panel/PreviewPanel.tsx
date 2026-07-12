@@ -1,8 +1,10 @@
 import type { CSSProperties, FC, ReactNode } from 'react';
 
+import { AnimationModeProvider } from '@retikz/react';
 import { Fragment } from 'react';
 
 import { cn } from '@/lib';
+import { useComponentPreviewStore } from '@/modules/docs/store';
 
 import type { PreviewControlSlot, RendererMode } from '../types';
 import type { PreviewPanelState } from './usePreviewPanelState';
@@ -33,6 +35,7 @@ export type PreviewPanelProps = {
 
 /** 渲染由宿主 controller 驱动的通用预览面板。 */
 export const PreviewPanel: FC<PreviewPanelProps> = props => {
+  const animationMode = useComponentPreviewStore(state => state.animationMode);
   const {
     state,
     Component,
@@ -79,13 +82,15 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
         style={{ transform: transformStyle }}
       >
         <Fragment key={remountKey}>
-          <PreviewControlStateContext.Provider value={controlState}>
-            {activeRender ? (
-              activeRender(rendererMode)
-            ) : (
-              <DemoRenderer Component={Component} rendererMode={rendererMode} />
-            )}
-          </PreviewControlStateContext.Provider>
+          <AnimationModeProvider mode={animationMode}>
+            <PreviewControlStateContext.Provider value={controlState}>
+              {activeRender ? (
+                activeRender(rendererMode)
+              ) : (
+                <DemoRenderer Component={Component} rendererMode={rendererMode} />
+              )}
+            </PreviewControlStateContext.Provider>
+          </AnimationModeProvider>
         </Fragment>
       </div>
       <PreviewControlSlotLayer slots={controlSlots} runtime={runtime} pinned={toolbarPinned} />

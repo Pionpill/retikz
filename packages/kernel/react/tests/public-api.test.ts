@@ -18,6 +18,7 @@ const PUBLIC_RUNTIME_EXPORTS = [
   'convertReactNodeToIR',
   'convertIRToReactNode',
   'RendererModeProvider',
+  'AnimationModeProvider',
 ];
 
 const INTERNAL_RENDER_EXPORTS = [

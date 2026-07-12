@@ -1,0 +1,31 @@
+---
+title: 概念
+description: 从整体设计、基础坐标到图元关系，建立阅读和使用 Kernel 所需的心智模型。
+---
+
+概念分组解释 retikz 为什么这样组织图形，以及各层能力如何协作。建议先读基础概念理解坐标和定位，再读核心概念认识图元模型与图元关系；需要判断能力边界时，再进入设计理念。
+
+## 职责一览
+
+| 分组     | 职责                                 | 从这里开始                       |
+| -------- | ------------------------------------ | -------------------------------- |
+| 设计理念 | 解释 DSL、IR、Scene 与复合能力的分层 | 判断能力应该落在哪一层           |
+| 基础概念 | 建立坐标系与定位方式                 | 第一次接触 retikz 的空间规则     |
+| 核心概念 | 解释图元模型与图元关系               | 理解节点为什么能被路径引用和连接 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/concepts/design">
+    <span className="font-semibold">设计理念</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 DSL、IR、Scene 与上层能力的边界</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/basic">
+    <span className="font-semibold">基础概念</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">坐标系、位置与相对定位规则</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/core">
+    <span className="font-semibold">核心概念</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">图元模型、引用与路径关系</span>
+  </LinkedCard>
+</div>

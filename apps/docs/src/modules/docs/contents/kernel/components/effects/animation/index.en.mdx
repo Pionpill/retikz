@@ -18,7 +18,7 @@ import { Layout, Node } from '@retikz/react';
 
 <ComponentAlert
   title="Last frame = resting state, so it degrades"
-  description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, users who prefer reduced motion, or animate={false} make React SVG / Canvas and Vanilla render that resting state — you see the complete final figure, not the possibly-transparent starting point."
+  description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, an omitted switch with a reduced-motion preference, or an explicit off switch make React SVG / Canvas and Vanilla render that resting state — you see the complete final figure, not the possibly-transparent starting point."
 />
 
 ## All animations
@@ -160,7 +160,21 @@ const ref = useRef<AnimationControls | null>(null);
 
 `animationRef` / vanilla `view.animation` is the scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/kernel/packages/render/hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
 
-**When it doesn't play**: you pass `animate={false}`, the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. React SVG / Canvas and Vanilla all converge to the resting state; degradation never throws or drops the figure.
+The playback switch has three states. React and Vanilla use different shapes but the same priority:
+
+| Intent        | React             | Vanilla                         |
+| ------------- | ----------------- | ------------------------------- |
+| Follow system | omit `animate`    | omit `animation.enabled`        |
+| Force on      | `animate={true}`  | `animation: { enabled: true }`  |
+| Force off     | `animate={false}` | `animation: { enabled: false }` |
+
+<ComponentAlert
+  type="warn"
+  title="Explicit on overrides the system preference"
+  description="animate={true} and animation.enabled: true still play under prefers-reduced-motion. Most apps should omit the switch to follow the system, and force animation only after an explicit user choice or when motion is essential to the experience."
+/>
+
+**When it doesn't play**: you explicitly turn it off, omit the switch while the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. React SVG / Canvas and Vanilla all converge to the resting state; degradation never throws or drops the figure.
 
 ### Static snapshot (`snapshot` / `snapshotAt`)
 
@@ -177,7 +191,7 @@ Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { animation: { snapsh
 </Layout>
 ```
 
-`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides `animate`. Interaction-triggered tracks (`manual` / `visible` / `{ onEvent }`) are **not frozen** in a static frame — they stay at base (settled), since a poster represents "after load, before any interaction has happened"; both backends agree.
+`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides the explicit animation switch. Interaction-triggered tracks (`manual` / `visible` / `{ onEvent }`) are **not frozen** in a static frame — they stay at base (settled), since a poster represents "after load, before any interaction has happened"; both backends agree.
 
 ## Related
 

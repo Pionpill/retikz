@@ -31,16 +31,18 @@ A few more equally important advantages:
 
 ## Registering a composite
 
-`defineComposite({ schema, expand })`: `schema` extends `CompositeBaseSchema` (which declares the required `namespace` / `type`) plus domain fields; `expand` receives the schema-validated, strongly-typed node and produces Tier 1. Register via `CompileOptions.composites` (in React, `<Layout composites={[...]}>`); the node enters via raw IR (`<Layout ir>`). The `barChart` below expands a `data` array into N bars plus a baseline: **the node count is driven by `data.length`, the bar heights scaled by `value/max`** — not 1:1 reversible and algorithmic, exactly the case for a composite rather than Sugar (see the table below):
+`defineComposite({ namespace, type, schema, expand })`: the definition explicitly declares its provider key, while `schema` extends `CompositeBaseSchema` and uses the same `namespace` / `type` literals to describe the node contract. `expand` receives the schema-validated, strongly typed node and produces Tier 1. Register via `CompileOptions.composites` (in React, `<Layout composites={[...]}>`); the node enters via raw IR (`<Layout ir>`). The `barChart` below expands a `data` array into N bars plus a baseline: **the node count is driven by `data.length`, the bar heights scaled by `value/max`** — not 1:1 reversible and algorithmic, exactly the case for a composite rather than Sugar (see the table below):
 
 <ComponentPreview files="composite-basic" size="sm" />
 
-| Field    | Type                             | Description                                                                                                                                                                              |
-| -------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `schema` | `ZodType`                        | Full node schema: `CompositeBaseSchema.extend({ namespace: z.literal(...), type: z.literal(...), ...fields })`; core extracts `namespace.type` from the two literals as the registry key |
-| `expand` | `(node) => IRChild \| IRChild[]` | Lowers the node to Tier 1 (pure, props-driven; may produce many, may nest composites)                                                                                                    |
+| Field       | Type                             | Description                                                         |
+| ----------- | -------------------------------- | ------------------------------------------------------------------- |
+| `namespace` | `string`                         | Provider namespace; must match the schema literal                   |
+| `type`      | `string`                         | Provider type within the namespace; must match the schema literal   |
+| `schema`    | `ZodType`                        | Full node schema extending `CompositeBaseSchema` with domain fields |
+| `expand`    | `(node) => IRChild \| IRChild[]` | Lowers the node to Tier 1; may emit many nodes or nested composites |
 
-> `namespace` / `type` are **not repeated at the definition top level** — core extracts them from the `z.literal`s in `schema`. The schema must be a ZodObject extending `CompositeBaseSchema` with both as `z.literal`, otherwise registration throws.
+> The definition and schema both declare `namespace` / `type`: the former supplies the provider registry key, while the latter validates IR nodes. `defineComposite` checks that both sides match exactly so registry keys cannot drift from the node schema.
 
 ## Lowering
 
@@ -69,13 +71,22 @@ PGFPlots is to TikZ as Tier 2 is to retikz's Tier 1: charts (PGFPlots' `axis` en
 
 ## Embeddable Tier 2: writing Tier 2 components inside `<Layout>`
 
-Above we covered how a Tier 2 _node_ lowers to Tier 1. This section covers an adjacent problem: when you want to write several Tier 2 _React components_ (such as a future `<Plot>`) inside one `<Layout>`, collected into a single figure, how does each one's high-level node and expand logic get into that figure's compile.
+Above we covered how a Tier 2 _node_ lowers to Tier 1. This section covers an adjacent problem: when several Tier 2 _React components_ (including today's `<Plot>`) live inside one `<Layout>`, how does each component contribute its high-level node and expand logic to the shared compile?
 
 ```tsx
 <Layout width={800} height={600}>
-  <Panel id="a" x={40} y={40} data={salesA} />
-  <Panel id="b" x={420} y={60} data={salesB} />
-  <Path from={{ id: 'a', anchor: 'right' }} to={{ id: 'b', anchor: 'left' }} />
+  <Plot id="a" x={40} y={40} width={320} height={240} data={salesA}>
+    <IntervalMark x="month" y="value" />
+  </Plot>
+  <Plot id="b" x={420} y={60} width={320} height={240} data={salesB}>
+    <PathMark x="month" y="value" />
+  </Plot>
+  <Draw
+    way={[
+      { id: 'a', anchor: 'right' },
+      { id: 'b', anchor: 'left' },
+    ]}
+  />
 </Layout>
 ```
 
@@ -140,8 +151,8 @@ The static marker is the primary path. `<Layout embeddables={[adapter]}>` is an 
 
 <ComponentAlert
   type="tip"
-  title="First-class plot embedding is coming"
-  description="This section describes core's generic mechanism and adapter contract. Attaching displayName + adapter to <Plot>, and embed props like x / y / width / height, are implemented on the plot side and not yet in place — so <Layout><Plot/></Layout> cannot run today. The <Panel> above is illustrative only, showing the contract a domain author implements."
+  title="@retikz/plot is connected"
+  description="<Plot> now uses this static adapter contract: width / height enter PlotSpec, while x / y become an outer Scope translation. With the standard configuration, multiple Plot components can share one Layout."
 />
 
 ## Further reading

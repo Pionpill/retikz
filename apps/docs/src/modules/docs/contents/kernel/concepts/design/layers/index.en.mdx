@@ -19,7 +19,7 @@ retikz turns the DSL (React components or Vanilla JS) into IR first, then compil
 | ----- | ---------------------------------------------------------------------------------------------------- | ------------------------------------ |
 | DSL   | React component or Vanilla JS syntax, split into Kernel and Sugar                                    | Everyday authors                     |
 | IR    | JSON-serializable declaration model that preserves Node / Path / Step / Coordinate / Scope semantics | Users, LLMs, persistence, converters |
-| Scene | Render-target-neutral primitive list with measured text, paths, groups, and layout bounds            | Renderers                            |
+| Scene | Render-target-neutral primitives, layout bounds, resources, and root animations                      | Renderers                            |
 
 IR is the public contract; Scene is renderer input. You normally do not write Scene by hand.
 
@@ -27,10 +27,10 @@ Why this matters in practice: use the DSL when authoring diagrams, use IR when s
 
 ## Kernel and Sugar
 
-| Layer  | Examples                                                                                                                                    | Enters IR directly | Notes                                          |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------- |
-| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                                                    | Yes                | One-to-one with IR nodes                       |
-| Sugar  | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings, <br />shape helpers like `<Circle>` / `<Rectangle>` / `<Grid>` / `<Star>` | No                 | Synchronously expands to Kernel in the adapter |
+| Layer  | Examples                                                                                                                         | Enters IR directly | Notes                                          |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------- |
+| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                                         | Yes                | One-to-one with IR nodes                       |
+| Sugar  | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings, <br />shape helpers like `<Circle>` / `<Rectangle>` / `<Star>` | No                 | Synchronously expands to Kernel in the adapter |
 
 Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets bottom compile to the same result:
 
@@ -85,18 +85,20 @@ Sugar expansion is called synchronously by the builder, so it must not depend on
 
 ## Packages
 
-These three layers are split across four npm packages under `packages/kernel`, all built on top of `@retikz/core`. Solid arrows point to the primary build dependency; dashed arrows show that react / vanilla also depend on core directly.
+The Kernel group consists of six lockstep npm packages under `packages/kernel`. Arrows point from capability providers to consumers: solid lines form the primary build chain, while gray dashed lines show direct cross-layer dependencies. `@retikz/math` is the zero-dependency computational foundation, `@retikz/core` defines IR and compilation semantics on top of it, and the remaining packages connect to core by responsibility.
 
 <ComponentPreview files="layers-packages" size="sm" hideCode />
 
-| Package           | Responsibility                                          | Depends on    |
-| ----------------- | ------------------------------------------------------- | ------------- |
-| `@retikz/core`    | IR / Scene / schema / geometry / parser                 | zod           |
-| `@retikz/render`  | Scene rendering: SVG / Canvas, hydration, animation     | core          |
-| `@retikz/react`   | Kernel / Sugar JSX components, SVG / Canvas built in    | core + render |
-| `@retikz/vanilla` | Framework-free runtime: mount / hydrate / animate / SSR | core + render |
+| Package           | Responsibility                                          | Kernel dependencies |
+| ----------------- | ------------------------------------------------------- | ------------------- |
+| `@retikz/math`    | Zero-dependency geometry, matrix, and numeric utilities | —                   |
+| `@retikz/core`    | IR / Scene / schema / geometry / parser                 | math                |
+| `@retikz/render`  | Scene rendering: SVG / Canvas, hydration, animation     | math + core         |
+| `@retikz/react`   | Kernel / Sugar JSX components, SVG / Canvas built in    | core + render       |
+| `@retikz/vanilla` | Framework-free runtime: mount / hydrate / animate / SSR | core + render       |
+| `@retikz/tex`     | Optional LaTeX parsing and lowering to primitives       | core                |
 
-react / vanilla are adapters only: they collect the DSL into IR and hand rendering to render. All lower-level semantics come from core — they never build a parallel capability of their own.
+react / vanilla are adapters: they collect the DSL into IR and hand rendering to render. tex lowers LaTeX formulas into primitives that core can compile. Upper packages do not create a parallel IR, rendering model, or geometry foundation.
 
 Most users install `@retikz/react` (or `@retikz/vanilla`), which pulls in core and render automatically. You only depend on `@retikz/core` directly when writing a custom renderer or reading/writing IR by hand.
 

@@ -1,46 +1,40 @@
 ---
 title: 简介
-description: AI 原生的通用绘图库——React 组件描述图元、JSON IR 持久化，LLM 直接生成与编辑。
+description: AI 原生的通用绘图库——用 React 组件或 Vanilla plain spec 描述图形，以 JSON IR 连接生成、持久化与渲染。
 ---
 
-`@retikz/core` 是 retikz 的 **绘图底座**：不是又一个图表库，而是面向 AI 原生工作流设计的底层图形契约，负责把“用图描述思想”这件事沉淀成稳定、可校验、可渲染的结构。
+`@retikz/core` 是 retikz 的 **绘图底座**：它定义稳定、可校验、可渲染的图形契约，并提供共享的 IR、Scene 编译、几何与扩展能力。`@retikz/plot` 等后续模块都建立在这些能力之上，共享同一套底层语义。
 
-它把成熟的节点 / 路径 / anchor 词汇搬进浏览器，用 React 组件作为表达形式；底层的 JSON IR 则作为统一的数据契约，连接人类写的 JSX、LLM 生成的 JSON、当前已支持的 SVG / Canvas renderer，以及后续 PDF / 原生平台方向。
+它把成熟的节点 / 路径 / anchor 词汇带进浏览器，并提供 React 组件与 Vanilla plain spec 两种写法。底层 JSON IR 作为统一的数据契约，连接人类编写的 DSL、LLM 生成结果与 SVG / Canvas renderer。
 
-## 一个最小例子
+## 核心概念
 
 这张图只做一件最小的事：放两个命名节点，再用一条带箭头的 `Draw` 把它们连起来。它说明 retikz 的基本顺序是先摆可引用的点，再用路径关系把图元串起来。
 
 <ComponentPreview files="minimal-example" size="xs" />
 
-## 两个核心概念
-
 `@retikz/core` 最重要的心智模型只有两层：先描述**图元是什么**，再描述**图元之间的连接与几何关系**。
 
-| 核心能力     | 由谁承担        | 解决什么问题                                                                     |
-| ------------ | --------------- | -------------------------------------------------------------------------------- |
-| **图元模型** | `Node`          | 描述一个可见对象本身：形状、文本、填充、边框、尺寸、位置和可被引用的 anchor。    |
-| **图元关系** | `Path` / `Step` | 描述对象之间的连接与几何关系：起点、终点、中间动作、箭头和边标注如何沿路径组织。 |
-
-因此你不需要先选择“流程图”“UML”或“图表”模板。先把重要对象放成命名 `Node`，再用 `Path` 把对象之间的连接、依赖、流向或注释关系画出来；更高层的 domain 包只是把这两个底层能力批量组织起来。
-
-## 当前版本
-
-当前 v0.3 的能力集中在 **绘图底座 + 多 renderer runtime**：`@retikz/core` 提供命名节点、坐标点、路径动作、箭头、边标注、Scope 分组 / 局部变换 / 样式继承，以及渐变 / 图案 / 图片填充、可注册形状和时间轴动画；`@retikz/render` 承接 SVG / Canvas 后端；`@retikz/react` 与 `@retikz/vanilla` 则分别提供 React DSL 与无框架 runtime / SSR。
-
-这个阶段已经进入 beta 收口：重点是文档 demo、SVG / Canvas 对照测试、服务端导出、包体与公开 API 清理。图表语义、自动布局、codec 与更多框架 adapter 仍属于独立 domain 包或后续集成方向，不是 `@retikz/core` 要直接承担的能力。
+| 核心能力     | 由谁承担                 | 解决什么问题                                                                     |
+| ------------ | ------------------------ | -------------------------------------------------------------------------------- |
+| **图元模型** | `Node`                   | 描述一个可见对象本身：形状、文本、填充、边框、尺寸、位置和可被引用的 anchor。    |
+| **图元关系** | `Path` / `Step` / `Draw` | 描述对象之间的连接与几何关系：起点、终点、中间动作、箭头和边标注如何沿路径组织。 |
 
 ## AI 友好优先
 
 **AI 友好不是 retikz 的功能之一，是 retikz 存在的理由。**
 
-retikz 选择 IR JSON 而非 JSX 作为 AI 接入的主接口，借力 OpenAI Structured Outputs / Anthropic Tool Use 的 schema 强约束输出能力——LLM 输出 100% 合法 IR、runtime 强校验。
+retikz 选择 IR JSON 而非 JSX 作为 AI 接入的主接口，借力 OpenAI Structured Outputs / Anthropic Tool Use 的 schema 约束输出能力，让 LLM 输出符合既定结构，并在 runtime 继续校验。
 
-| 能力                   | 落地                                             |
-| ---------------------- | ------------------------------------------------ |
-| **类型 / schema 同源** | zod 单源 → TS 类型 + JSON Schema                 |
-| **增量编辑**           | JSON Patch（RFC 6902），patch 比重写整份 IR 便宜 |
-| **text DSL（远期）**   | 复用成熟绘图语法，让 LLM 更容易零样本生成        |
+AI 友好会贯穿每一层设计：schema 的层级与判别字段保持清晰，字段值采用语义明确、边界可校验的类型，上层封装则稳定映射到同一份 core IR。目标是减少模型猜测，让生成结果更容易校验、修正和复用。
+
+| 设计层面               | 落地                                      |
+| ---------------------- | ----------------------------------------- |
+| **schema 结构**        | 判别字段和嵌套关系明确，减少生成歧义      |
+| **值类型**             | 优先采用有限、可序列化、可校验的数据结构  |
+| **上层封装**           | 高层意图稳定映射到同一份 core IR          |
+| **类型 / schema 同源** | zod 单源 → TS 类型 + JSON Schema          |
+| **text DSL（远期）**   | 复用成熟绘图语法，让 LLM 更容易零样本生成 |
 
 ## IR 居中
 
@@ -56,60 +50,63 @@ retikz 选择 IR JSON 而非 JSX 作为 AI 接入的主接口，借力 OpenAI St
 
 ## 分层抽象
 
-retikz DSL 表面有三类构造，混淆它们是事后迁移噩梦：
+retikz DSL 表面有三类构造。理解它们的边界，可以判断一个能力应进入 IR、只作为书写简化，还是由上层模块下沉：
 
 | 层         | 例子                                  | 是否进 IR                   | 落在哪          |
 | ---------- | ------------------------------------- | --------------------------- | --------------- |
 | **Kernel** | `<Layout>` `<Node>` `<Path>` `<Step>` | ✅ 直接对应 IR 节点         | `@retikz/core`  |
 | **Sugar**  | `<Draw way={[...]} />`                | ❌ 编译期展开为 Kernel      | `@retikz/react` |
-| **Tier 2** | `<Axis>` `<BarPlot>` `<Tree>`         | ✅ 高层节点 + lowering 下沉 | 独立 domain 包  |
+| **Tier 2** | `<Plot>`                              | ✅ 高层节点 + lowering 下沉 | 独立 domain 包  |
+
+以 `<Draw way={['a', 'b']} />` 为例，`Draw` 只提供更简洁的路径写法。构建 IR 时，`way` 会被解析为一组 `Step`，再组成一个 `Path`；最终 IR 里只有 `Path` 和 `Step`，不会保留 `Draw`。
 
 关键约束：**Sugar 不引入新能力**——任何 Sugar 能表达的，Kernel 都能表达。这样 Sugar 可以放心地服务书写体验，而不把核心语义藏进 adapter 里。
 
 ## 通用图元，任意组合
 
-`@retikz/core` 的 Kernel 保持克制——`<Layout>`、`<Scope>`、`<Node>`、`<Coordinate>`、`<Path>`、`<Step>`——但它们足够通用，能拼出大多数二维关系图。`<Draw>` / `<Text>` 这类 Sugar 只改善书写体验，最终仍然落回同一批 Kernel IR。
+retikz 用一组职责明确的组件描述图形。每个组件只负责一个层面的结构或几何语义，再通过嵌套与引用组合成完整图形。
 
-| 类别                      | 由 Kernel 拼出                      | 在哪                |
-| ------------------------- | ----------------------------------- | ------------------- |
-| **流程图 / DAG**          | Node + Step + Anchor + 外部布局算法 | 独立 domain 包      |
-| **图表 / chart**          | Step + Path + Node + data binding   | `@retikz/plot` 方向 |
-| **UML / 网络 / 思维导图** | 同 Kernel，换 layout 与样式约定     | 独立 domain 包      |
-| **任意自定义**            | 直接写 Kernel JSX                   | 你的应用            |
+| 分组         | 组件           | 职责                                               |
+| ------------ | -------------- | -------------------------------------------------- |
+| **布局**     | `<Layout>`     | 承载整张图，收集内部描述并配置尺寸与渲染方式       |
+|              | `<Scope>`      | 对子图元分组，应用局部变换与继承样式               |
+| **图元模型** | `<Node>`       | 描述可见对象的形状、文本、位置和 anchor            |
+|              | `<Coordinate>` | 声明供定位和引用的不可见命名坐标                   |
+| **图元关系** | `<Path>`       | 描述完整路径，承载描边、填充、marker 与内部 `Step` |
+|              | `<Step>`       | 描述移动、直线、曲线或圆弧等单次路径动作           |
 
-**你在图元层组合**——形状、连接方式、anchor、标签，都按几何 / 路径词汇直接表达：柱子上加一条曲线连到旁边的注释、节点之间画一条带 label 的曲线，都跟多画两个原图元一样自然。
+上层模块可以继续组合这三组职责，而不需要改变 core 的底层语义。
 
-domain 包是 Kernel 之上 + 数据绑定 / 布局算法 / 默认样式的薄薄一层；底层结构、持久化、AI 接口在所有 domain 间完全一致。当前先把通用图元打稳，避免在 core 里过早塞入图表 / 布局算法。
+Sugar 只简化常见写法，不进入 IR，也不增加 Kernel 无法表达的新能力：
+
+| Sugar                                   | 展开结果                 | 职责                         |
+| --------------------------------------- | ------------------------ | ---------------------------- |
+| `<Draw>`                                | `<Path>` + 一组 `<Step>` | 用 `way` 简写路径关系        |
+| `<EdgeLabel>`                           | `Step.label`             | 用子组件写法声明路径段标注   |
+| `<Arc>` / `<Circle>` / `<Rectangle>` 等 | `<Path>` + 几何 `<Step>` | 把高层几何参数换算成路径结构 |
 
 ## 包关系
 
-retikz 拆成四个发布包，从框架无关的底层到面向用户的入口逐层叠加：
+Kernel 组目前包含六个同版本发布的包，从零依赖计算底座到渲染、框架入口与可选公式能力逐层协作：
 
 <ComponentPreview files="package-viz" size="md" hideCode />
 
-实线是主构建链——右侧的包构建在左侧的包之上；虚线表示 `@retikz/react` / `@retikz/vanilla` 也直接消费 `@retikz/core` 的 IR。四个包同版本发布。
+实线表示主要构建依赖，虚线表示次要直接依赖。`math` 提供纯计算几何，`core` 定义图形契约，`render` 提供渲染后端，`react` / `vanilla` 提供作者入口，`tex` 通过 core 的注入能力接入公式渲染。
 
-| 包                | 职责                                                                            | 依赖          |
-| ----------------- | ------------------------------------------------------------------------------- | ------------- |
-| `@retikz/core`    | IR、`compileToScene` 编译器、Scene 契约；零 React / 零 DOM                      | `zod`         |
-| `@retikz/render`  | 渲染后端：`./svg`（Scene → SVG 描述 / 字符串）、`./canvas`（Scene → Canvas 2D） | core          |
-| `@retikz/react`   | React adapter：JSX 构建 IR，`<Layout renderer>` 选 svg / canvas 后端            | core · render |
-| `@retikz/vanilla` | 无框架 runtime / SSR：用 plain spec 挂载到 DOM 或产 SVG 字符串                  | core · render |
-
-`@retikz/render` 把原本在 `@retikz/react` 里的 SVG 渲染核心抽出来，和新增的 Canvas 后端合并成独立包；`@retikz/react` 与 `@retikz/vanilla` 都不再各自维护渲染逻辑，只组合 render 的后端。
+| 包                | 职责                     | 主要依赖      |
+| ----------------- | ------------------------ | ------------- |
+| `@retikz/math`    | 纯计算几何               | 无            |
+| `@retikz/core`    | IR、schema 与 Scene 编译 | math · zod    |
+| `@retikz/render`  | SVG / Canvas runtime     | core · math   |
+| `@retikz/react`   | React JSX adapter        | core · render |
+| `@retikz/vanilla` | Plain spec 与 SSR        | core · render |
+| `@retikz/tex`     | LaTeX 公式 lowering      | core          |
 
 ## 跨框架，共享 IR
 
-retikz 的架构是 **core + runtime / adapter**：React DSL、无框架 runtime 和后续其它框架共享同一份 IR、同一份 `compileToScene` 编译器、同一份 Scene 渲染契约；上层入口只负责 authoring 体验、生命周期和渲染后端选择。
+React 组件与 Vanilla plain spec 最终都生成同一份 IR，SVG 与 Canvas renderer 也消费同一份 Scene。框架层只负责书写体验、生命周期和渲染后端选择，不引入新的底层几何语义。
 
-| 角色                                  | 作用                              | 当前状态      |
-| ------------------------------------- | --------------------------------- | ------------- |
-| `@retikz/core` / `@retikz/render`     | 框架无关的 IR + 编译器 + 渲染后端 | ✅ 当前主线   |
-| `@retikz/react`                       | React adapter（peerDep: react）   | ✅ 当前主线   |
-| `@retikz/vanilla`                     | 无框架 runtime / SSR              | ✅ 当前主线   |
-| `@retikz/vue` / `svelte` / `native` … | 其它框架 / 渲染目标 adapter       | ⏳ 社区或后续 |
-
-**架构层面 retikz 不绑任何框架——IR 是 universal 的，DSL 因框架而异是合理的。** 你今天用 `@retikz/react` 画的图，其 IR 可以被未来任意 adapter 直接渲染，不需要重写。
+因此，同一份图形数据可以在不同作者入口与 renderer 之间复用，不需要重新描述图元和关系。
 
 <Comparison target="tikz" title="与 TikZ 的关系">
 
@@ -125,27 +122,12 @@ retikz 的命名 / 路径动作 / anchor 体系直接致敬 LaTeX 的 TikZ 包�
 
 IR ↔ TikZ 源码转换属于后续 codec 方向：目标是在浏览器里编辑后能进入 LaTeX 工作流，或把已有 `.tex` 中的 TikZ 图迁移到 retikz 的 IR / React 表达里。
 
-不需要先懂 TikZ 才能使用 retikz。retikz 借用的是命名词汇（node / path / anchor / step），API 仍然是纯 React 组件。
+不需要先懂 TikZ 才能使用 retikz。retikz 借用的是命名词汇（node / path / anchor / step），可以使用 React 组件或 Vanilla plain spec 描述图形。
 
 </Comparison>
 
-## 适合谁
-
-**用图描述思想的人**——技术写作者、研究者、文档作者、教师。
-
-具体场景：
-
-1. 论文 / 博客里嵌入可交互示意图
-2. 流程图、概念图、网络结构图、UML、思维导图
-3. 由 LLM 自动生成或编辑的图形配图
-4. 在浏览器里需要精细几何控制力的任何场景
-
-## 技术对比
-
-| 方案             | 适合什么                | 优点                           | 局限                         |
-| ---------------- | ----------------------- | ------------------------------ | ---------------------------- |
-| `@retikz/core`   | 关系图、概念图、AI 配图 | Node / Path / anchor + JSON IR | 不内置图表模板               |
-| 传统图表库       | 统计图、仪表盘、报表    | 图表类型和数据映射成熟         | 自由几何组合较弱             |
-| 裸 SVG / `<svg>` | 单张精修图、静态资产    | 平台原生、最直接               | 关系、anchor、后续编辑要手写 |
-
-长期规划里，`@retikz/core` 会作为底座，向上封装更多领域组件与上层包；core 只保留通用图元、IR 契约和编译能力。
+<ComponentAlert
+  type="tip"
+  title="文档中的图也是 retikz"
+  description="本站所有示意图都由 retikz 自身绘制。你看到的节点、连线、布局与动画，都是这些底层组件组合后的实际效果。"
+/>

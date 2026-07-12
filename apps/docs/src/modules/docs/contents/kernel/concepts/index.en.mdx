@@ -1,0 +1,35 @@
+---
+title: Concepts
+description: Build the mental model needed to use Kernel, from overall design and coordinates to primitive relationships.
+---
+
+The concepts section explains why retikz organizes figures this way and how its layers work together. Start with basic concepts for coordinates and positioning, continue with core concepts for primitives and relationships, then use design philosophy when deciding where a capability belongs.
+
+## Responsibilities
+
+| Group             | Responsibility                              | Start here when                              |
+| ----------------- | ------------------------------------------- | -------------------------------------------- |
+| Design Philosophy | Explain the DSL, IR, Scene, and composition | Deciding which layer should own a capability |
+| Basic Concepts    | Establish coordinates and positioning       | Learning retikz spatial rules                |
+| Core Concepts     | Explain primitives and their relationships  | Understanding references and connections     |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/concepts/design">
+    <span className="font-semibold">Design Philosophy</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">DSL, IR, Scene, and higher-level boundaries</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/basic">
+    <span className="font-semibold">Basic Concepts</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Coordinates, positions, and relative placement
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/core">
+    <span className="font-semibold">Core Concepts</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Primitive models, references, and path relationships
+    </span>
+  </LinkedCard>
+</div>

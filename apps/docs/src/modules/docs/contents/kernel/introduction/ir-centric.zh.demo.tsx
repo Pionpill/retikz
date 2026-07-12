@@ -38,7 +38,7 @@ const Demo: FC = () => (
     <Node id="canvas" position={[200, 18]} stroke="none">
       Canvas
     </Node>
-    <Node id="raster" position={[350, 18]} stroke="none" textColor="gray">
+    <Node id="raster" position={[350, 18]} stroke="none">
       PNG/JPEG/WebP
     </Node>
     <Node id="native" position={[200, 54]} stroke="none" textColor="gray">
@@ -62,7 +62,7 @@ const Demo: FC = () => (
     <Draw way={['scene', 'react']} arrow="->" />
     <Draw way={['scene', 'svg']} arrow="->" />
     <Draw way={['scene', 'canvas']} arrow="->" />
-    <Draw way={['canvas', 'raster']} arrow="->" stroke="gray" />
+    <Draw way={['canvas', 'raster']} arrow="->" />
     <Draw way={['scene', 'native']} arrow="->" stroke="gray" />
 
     <Draw way={['ir', 'persist']} arrow="<->" />

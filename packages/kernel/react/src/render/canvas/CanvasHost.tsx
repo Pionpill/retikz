@@ -8,7 +8,6 @@ import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
 import {
   createClock,
   createIdClockRegistry,
-  prefersReducedMotion,
   sceneAnimationDurationMs,
   sceneHasAnimations,
   sceneHasAutoplayTrigger,
@@ -75,8 +74,8 @@ export type CanvasHostProps = {
   className?: string;
   /** 透传样式 */
   style?: CSSProperties;
-  /** 是否播放动画（缺省 true）；false 或 prefers-reduced-motion → 只画 base 静态、不起 rAF */
-  animate?: boolean;
+  /** Layout 已解析的最终动画开关；false 时只画 base 静态、不起 rAF。 */
+  animate: boolean;
   /** 静态截帧时刻（毫秒）；给定时按该时刻画一帧、不起 rAF（定格），覆盖 animate */
   snapshotAt?: number;
   /** 命令式动画句柄出口：写入 rAF 时钟 AnimationControls（无动画 / 截帧 / 降级时为 null） */
@@ -145,13 +144,12 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     height,
     className,
     style,
-    animate: animateProp,
+    animate,
     snapshotAt,
     animationRef,
     easings,
     animationProperties,
   } = props;
-  const animate = animateProp !== false;
   const ref = useRef<HTMLCanvasElement>(null);
   // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation 读 live，update 后自动跟随
   const clockRef = useRef<AnimationControls | null>(null);
@@ -217,7 +215,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     };
     // base 静态先画一帧；含动画且未降级 → 起 rAF 共享时钟逐帧重绘（auto track 自动播；manual/onEvent/visible 默认渲染 base）
     renderToCanvas(canvas, scene, baseOptions);
-    if (!animate || prefersReducedMotion() || !sceneHasAnimations(scene)) {
+    if (!animate || !sceneHasAnimations(scene)) {
       clockRef.current = null;
       assignRef(animationRef, null);
       return undefined;
@@ -241,7 +239,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
 
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas || !animate || prefersReducedMotion() || !sceneHasAnimations(scene)) return undefined;
+    if (!canvas || !animate || !sceneHasAnimations(scene)) return undefined;
     const ids = collectCanvasVisibleAnimationIds(scene);
     if (ids.size === 0 || typeof window === 'undefined') return undefined;
     const activated = new Set<string>();

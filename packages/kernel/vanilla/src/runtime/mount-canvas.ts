@@ -7,6 +7,7 @@ import {
   createClock,
   createIdClockRegistry,
   prefersReducedMotion,
+  resolveAnimationEnabled,
   sceneAnimationDurationMs,
   sceneHasAnimations,
   sceneHasAutoplayTrigger,
@@ -50,8 +51,8 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
   const animation = options.animation ?? {};
   const canvasOptions = options.canvas ?? {};
   const ratio = resolveDevicePixelRatio(canvasOptions.devicePixelRatio);
-  // 动画总关：{animation:{enabled:false}} 或 prefers-reduced-motion → 不起 rAF、只画 base 静态
-  const animate = animation.enabled !== false && !prefersReducedMotion();
+  // 未显式配置时跟随系统偏好；显式 enabled 值覆盖系统偏好。
+  const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   let clock: AnimationControls | undefined;
   // per-id 虚拟时钟登记表：ctx.animation 的 per-id 控制经它给各 id 叠加独立 offset / pause / active / stop
   const registry: IdClockRegistry = createIdClockRegistry();

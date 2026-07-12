@@ -31,16 +31,18 @@ composite 是「带语义的高层 IR 节点」。相比直接手写一堆 Tier 
 
 ## 注册一个 composite
 
-`defineComposite({ schema, expand })`：`schema` 继承 `CompositeBaseSchema`（定义必填的 `namespace` / `type`）再加领域字段；`expand` 收 schema 校验后的强类型节点、产 Tier 1。注册经 `CompileOptions.composites`（React 里 `<Layout composites={[...]}>`），节点经 IR 直传（`<Layout ir>`）。下例 `barChart` 据 `data` 数组展开成 N 根柱 + 基线：**节点数量由 `data.length` 决定、柱高经 `value/max` 缩放**——无法 1:1 反推、含算法，这正是该用 composite 而非 Sugar 的场景（见下方对照表）：
+`defineComposite({ namespace, type, schema, expand })`：definition 显式声明 provider key，`schema` 继承 `CompositeBaseSchema` 并用同一组 `namespace` / `type` literal 描述节点契约；`expand` 接收 schema 校验后的强类型节点并产出 Tier 1。注册经 `CompileOptions.composites`（React 里 `<Layout composites={[...]}>`），节点经 IR 直传（`<Layout ir>`）。下例 `barChart` 据 `data` 数组展开成 N 根柱 + 基线：**节点数量由 `data.length` 决定、柱高经 `value/max` 缩放**——无法 1:1 反推、含算法，这正是该用 composite 而非 Sugar 的场景（见下方对照表）：
 
 <ComponentPreview files="composite-basic" size="sm" />
 
-| 字段     | 类型                             | 描述                                                                                                                                                              |
-| -------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `schema` | `ZodType`                        | 完整节点 schema：`CompositeBaseSchema.extend({ namespace: z.literal(...), type: z.literal(...), ...字段 })`；core 从两个 literal 提取 `namespace.type` 作注册 key |
-| `expand` | `(node) => IRChild \| IRChild[]` | 据节点字段展开成 Tier 1（纯函数、props 驱动；可产多个、可嵌套 composite）                                                                                         |
+| 字段        | 类型                             | 描述                                                          |
+| ----------- | -------------------------------- | ------------------------------------------------------------- |
+| `namespace` | `string`                         | provider namespace；必须与 schema literal 一致                |
+| `type`      | `string`                         | namespace 内的 provider type；必须与 schema literal 一致      |
+| `schema`    | `ZodType`                        | 完整节点 schema：从 `CompositeBaseSchema` 扩展领域字段        |
+| `expand`    | `(node) => IRChild \| IRChild[]` | 据节点字段展开成 Tier 1；可产多个节点，也可继续产出 composite |
 
-> `namespace` / `type` **不在 definition 顶层重复写**——core 从 `schema` 的 `z.literal` 提取。schema 必须是 extend `CompositeBaseSchema` 的 ZodObject、且两者为 `z.literal`，否则注册期报错。
+> definition 与 schema 会重复声明 `namespace` / `type`：前者是 provider 注册键，后者是 IR 校验契约。`defineComposite` 会在注册时校验两边逐字一致，避免 registry key 与节点 schema 漂移。
 
 ## 展开（lowering）
 
@@ -69,13 +71,22 @@ PGFPlots 之于 TikZ ≈ Tier 2 之于 retikz Tier 1：图表（PGFPlots 的 `ax
 
 ## 可嵌入 Tier2：把 Tier2 组件写进 `<Layout>`
 
-上面讲的是「一个 Tier2 _节点_ 怎么下沉成 Tier 1」。这一节讲一个相邻问题：当你想把多个 Tier2 _React 组件_（如未来的 `<Plot>`）写进同一个 `<Layout>`、收进同一张图时，它们各自的高层节点和展开逻辑怎么进到这张图的 compile。
+上面讲的是「一个 Tier2 _节点_ 怎么下沉成 Tier 1」。这一节讲一个相邻问题：当你把多个 Tier2 _React 组件_（当前已有 `<Plot>`）写进同一个 `<Layout>`、收进同一张图时，它们各自的高层节点和展开逻辑怎么进入这张图的 compile。
 
 ```tsx
 <Layout width={800} height={600}>
-  <Panel id="a" x={40} y={40} data={salesA} />
-  <Panel id="b" x={420} y={60} data={salesB} />
-  <Path from={{ id: 'a', anchor: 'right' }} to={{ id: 'b', anchor: 'left' }} />
+  <Plot id="a" x={40} y={40} width={320} height={240} data={salesA}>
+    <IntervalMark x="month" y="value" />
+  </Plot>
+  <Plot id="b" x={420} y={60} width={320} height={240} data={salesB}>
+    <PathMark x="month" y="value" />
+  </Plot>
+  <Draw
+    way={[
+      { id: 'a', anchor: 'right' },
+      { id: 'b', anchor: 'left' },
+    ]}
+  />
 </Layout>
 ```
 
@@ -140,8 +151,8 @@ Panel.embeddableAdapter = {
 
 <ComponentAlert
   type="tip"
-  title="plot 的一等嵌入即将到来"
-  description="本节描述的是 core 的通用机制与 adapter 契约。把 displayName + adapter 挂到 <Plot> 上、以及 x / y / width / height 等嵌入 props，由 plot 侧实现、尚未就位——所以 <Layout><Plot/></Layout> 暂时还不能直接运行。上面的 <Panel> 仅作示意，展示 domain 作者要实现的契约。"
+  title="@retikz/plot 已接入"
+  description="<Plot> 已通过静态 adapter 接入这套机制：width / height 写入 PlotSpec，x / y 转成外层 Scope 位移；标准配置下可以把多个 Plot 放进同一个 Layout。"
 />
 
 ## 延伸阅读

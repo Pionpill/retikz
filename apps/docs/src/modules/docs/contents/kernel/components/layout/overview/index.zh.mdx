@@ -114,6 +114,26 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 </RendererModeProvider>;
 ```
 
+### 统一控制一棵子树的动画
+
+通常应让每个 `<Layout>` 通过 `animate` 表达自己的动画意图。如果编辑器、文档预览或测试工具需要统一控制一整棵组件树，可在外层使用 `AnimationModeProvider`：
+
+```tsx
+import { AnimationModeProvider } from '@retikz/react';
+
+<AnimationModeProvider mode="enabled">
+  <SomeInteractiveChart />
+</AnimationModeProvider>;
+```
+
+| `mode`       | 行为                                   |
+| ------------ | -------------------------------------- |
+| `'system'`   | 整棵子树跟随系统的「减少动态效果」偏好 |
+| `'enabled'`  | 整棵子树强制播放动画                   |
+| `'disabled'` | 整棵子树强制显示静态结果               |
+
+动画 Provider 是宿主级覆盖：最近的 `AnimationModeProvider` 优先于后代 `<Layout animate>`，包括相反的显式值。未使用 Provider 时，`animate` 仍保持原有三态语义；`snapshotAt` 始终优先，提供后只渲染静态截帧。
+
 ## 技术原理
 
 > 上手阶段可跳过本节；遇到边界 case 或想理解 `<Layout>` 在样式 / viewBox / 后端上的取舍时再回来读。
@@ -129,6 +149,10 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 ### 渲染后端回退优先级
 
 缺省 `renderer` prop 时按 **显式 `renderer` prop > context > `'svg'`** 回退，context 取自最近的 `RendererModeProvider`。写了 `renderer` 的 `<Layout>` 不受 Provider 影响。
+
+### 动画模式优先级
+
+动画按 **`snapshotAt` > 最近的 `AnimationModeProvider` > `animate` > 系统偏好** 解析。与渲染后端 Provider 不同，动画 Provider 的用途就是让宿主统一覆盖整棵预览树，因此后代显式 `animate` 不会反向覆盖它。
 
 ### 视框被裁 / 留白排查
 
@@ -163,7 +187,7 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 | `embeddables`                                                                             | `Array<EmbeddableTier2Adapter>`                 | —       | 可选逃生舱：显式注入可嵌入 Tier 2 adapter；主路径是组件静态标记，按 displayName 匹配并覆盖标记。见 [复合](/kernel/concepts/design/composite#可嵌入-tier2把-tier2-组件写进-layout)    |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` | 同 [`<Scope>`](/kernel/components/layout/scope) | —       | 全图级联 graphic state；设值则把 children 包进隐式根 `<Scope>`                                                                                                                       |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                           | 同 [`<Scope>`](/kernel/components/layout/scope) | —       | 全图 every-X 默认样式（四通道）；同上挂隐式根 scope                                                                                                                                  |
-| `animate`                                                                                 | `boolean`                                       | `true`  | 是否播放动画；`false` 渲染 base 静态图（不 emit CSS/WAAPI、canvas 不起 rAF）。见 [动画](/kernel/components/effects/animation)                                                        |
+| `animate`                                                                                 | `boolean`                                       | 系统    | 未传跟随系统；`true` 强制开启，`false` 强制关闭。见 [动画](/kernel/components/effects/animation)                                                                                     |
 | `snapshotAt`                                                                              | `number`                                        | —       | 静态截帧时刻（毫秒）：定格在该时刻的一帧、不播放，覆盖 `animate`；SSR 海报帧 / 缩略图                                                                                                |
 | `animations`                                                                              | `Array<AnimationTrack>`                         | —       | scene 根（镜头）动画 tracks（`viewBox` 通道），配 [`cameraTo()`](/kernel/components/effects/animation)                                                                               |
 | `animationRef`                                                                            | `Ref<AnimationControls \| null>`                | —       | 命令式动画句柄出口：挂载后写入 `play` / `pause` / `seek`（svg=WAAPI、canvas=rAF 时钟），无动画为 `null`                                                                              |

@@ -118,6 +118,16 @@ const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContri
   return scope as EmbeddableContribution['node'];
 };
 
+/** 默认 Plot lowering maker；同一 Layout 内的标准 Plot 复用函数身份。 */
+const makeDefaultPlotComposites = (mergedDatasets: Record<string, unknown>) =>
+  lowerPlots(mergedDatasets as ExternalDatasets);
+
+/** 判断嵌入态是否携带不能由 PlotSpec 自身表达的 runtime-only lowering 选项。 */
+const hasRuntimeLowerOptions = (options: LowerPlotsOptions): boolean =>
+  (Object.entries(options) as Array<[keyof LowerPlotsOptions, LowerPlotsOptions[keyof LowerPlotsOptions]]>).some(
+    ([key, value]) => key !== 'width' && key !== 'height' && value !== undefined,
+  );
+
 const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
   displayName: 'Plot',
   namespace: 'plot',
@@ -126,7 +136,9 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
     return {
       node: wrapPanelScope(spec, props),
       datasets,
-      makeComposites: mergedDatasets => lowerPlots(mergedDatasets as ExternalDatasets, lowerOptions),
+      makeComposites: hasRuntimeLowerOptions(lowerOptions)
+        ? mergedDatasets => lowerPlots(mergedDatasets as ExternalDatasets, lowerOptions)
+        : makeDefaultPlotComposites,
     };
   },
 };
