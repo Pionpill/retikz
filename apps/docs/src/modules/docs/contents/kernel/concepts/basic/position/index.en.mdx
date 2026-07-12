@@ -53,7 +53,7 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 
 <ComponentPreview files="positioning-id-ref" size="xs" />
 
-The actual line endpoints are computed by retikz automatically — see [Primitive Relations](/kernel/concepts/kernel/primitive-relations).
+The actual line endpoints are computed by retikz automatically — see [Primitive Relations](/kernel/concepts/core/primitive-relations).
 
 `<Node>` / `<Coordinate>` do not accept a bare node id as `position`, because "place this entity at another entity's center" is rarely the useful default. Use `{ direction, of, distance? }` for relational placement, or `{ of, offset }` for arbitrary 2D offsets. Both keep layout intent in the document instead of baking every coordinate up front.
 
@@ -109,9 +109,14 @@ Paths also support relative targets that are only valid in `<Step>.to` / `<Draw>
 
 These forms are path targets only; they are not valid for `<Node>.position` / `<Coordinate>.position`. For entity placement, use Cartesian, polar, relative placement, offset placement, or proportional placement.
 
-## Forward-reference requirement
+## Reference order
 
-String references, `origin: 'node-id'`, `of: 'node-id'`, and ids inside `between` endpoints all require the **referenced entity to appear before the referrer** (in IR children source order). An unresolved entity position cannot be resolved; an unresolved path target prevents that path from being emitted normally and produces a diagnostic.
+Entity positions and path targets resolve at different times:
+
+- `origin`, `of`, and `between` inside `<Node>.position` / `<Coordinate>.position` resolve in IR children order, so the referenced entity must be defined first.
+- Node or Coordinate references inside `<Step>.to` / `<Draw>.way` are deferred until entities in the current namespace have been registered, so they may reference an entity defined later in the same resolvable scope.
+
+Compilation fails when an entity position reference cannot resolve. If a path target still cannot find its entity during deferred resolution, that path cannot be emitted normally and produces a diagnostic.
 
 ```tsx
 // ✅ b references a, a defined first
@@ -123,6 +128,14 @@ String references, `origin: 'node-id'`, `of: 'node-id'`, and ids inside `between
 <Node id="b" position={[0, 0]}>B</Node>
 ```
 
+A path reference may appear first:
+
+```tsx
+<Draw way={['a', 'b']} />
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={[120, 0]}>B</Node>
+```
+
 ## Further reading
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -132,7 +145,7 @@ String references, `origin: 'node-id'`, `of: 'node-id'`, and ids inside `between
       the coordinate model behind every position form: user units, x-right / y-down, viewBox mapping
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/concepts/kernel/primitive-relations">
+  <LinkedCard href="/kernel/concepts/core/primitive-relations">
     <span className="font-semibold">Primitive Relations</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       how a path references a primitive — endpoints resolved between dynamic attach and locked

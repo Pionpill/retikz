@@ -15,11 +15,11 @@ retikz 把用户写下的 DSL（React 组件或 Vanilla JS 写法）先转成 IR
 
 ## 三层模型
 
-| 层    | 作用                                                                        | 面向谁                    |
-| ----- | --------------------------------------------------------------------------- | ------------------------- |
-| DSL   | React 组件或 Vanilla JS 写法，分为 Kernel 与 Sugar                          | 日常作者                  |
-| IR    | JSON 可序列化的声明结构，保留 Node / Path / Step / Coordinate / Scope 语义  | 用户、LLM、持久化、转换器 |
-| Scene | 渲染目标无关的 primitive 列表，包含测量后的文本、路径、group、layout bounds | renderer                  |
+| 层    | 作用                                                                       | 面向谁                    |
+| ----- | -------------------------------------------------------------------------- | ------------------------- |
+| DSL   | React 组件或 Vanilla JS 写法，分为 Kernel 与 Sugar                         | 日常作者                  |
+| IR    | JSON 可序列化的声明结构，保留 Node / Path / Step / Coordinate / Scope 语义 | 用户、LLM、持久化、转换器 |
+| Scene | 渲染目标无关的 primitive、layout bounds、资源表与根动画                    | renderer                  |
 
 IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 Scene。
 
@@ -27,10 +27,10 @@ IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 
 
 ## Kernel 与 Sugar
 
-| 层     | 例子                                                                                                                   | 是否直接进 IR | 说明                      |
-| ------ | ---------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------- |
-| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                               | 是            | 与 IR 节点一一对应        |
-| Sugar  | `<Draw way={...}>`、`DrawWay.Cycle`、相对坐标字符串、<br />`<Circle>` / `<Rectangle>` / `<Grid>` / `<Star>` 等形状组件 | 否            | adapter 同步展开为 Kernel |
+| 层     | 例子                                                                                                        | 是否直接进 IR | 说明                      |
+| ------ | ----------------------------------------------------------------------------------------------------------- | ------------- | ------------------------- |
+| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                    | 是            | 与 IR 节点一一对应        |
+| Sugar  | `<Draw way={...}>`、`DrawWay.Cycle`、相对坐标字符串、<br />`<Circle>` / `<Rectangle>` / `<Star>` 等形状组件 | 否            | adapter 同步展开为 Kernel |
 
 Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` + `<Step>` 手写出来。下面两段编译结果完全一致：
 
@@ -85,18 +85,20 @@ Sugar 的展开逻辑由 builder 同步调用，不能依赖 React hooks 或异�
 
 ## 包结构
 
-这三层能力被拆进 `packages/kernel` 下的四个 npm 包，全部以 `@retikz/core` 为底座。实线指向主要构建依赖，虚线表示 react / vanilla 也直接依赖 core。
+Kernel 组由 `packages/kernel` 下六个同步发版的 npm 包组成。依赖箭头从使用方指向能力提供方：`@retikz/math` 是零依赖计算底座，`@retikz/core` 在其上定义 IR 与编译语义，其余包按职责接入 core。
 
 <ComponentPreview files="layers-packages" size="sm" hideCode />
 
-| 包                | 职责                                           | 依赖          |
+| 包                | 职责                                           | Kernel 组依赖 |
 | ----------------- | ---------------------------------------------- | ------------- |
-| `@retikz/core`    | IR / Scene / schema / geometry / parser        | zod           |
-| `@retikz/render`  | Scene 渲染：SVG / Canvas、hydration、animation | core          |
+| `@retikz/math`    | 零依赖的几何、矩阵与数值计算                   | —             |
+| `@retikz/core`    | IR / Scene / schema / geometry / parser        | math          |
+| `@retikz/render`  | Scene 渲染：SVG / Canvas、hydration、animation | math + core   |
 | `@retikz/react`   | Kernel / Sugar JSX 组件，内置 SVG / Canvas     | core + render |
 | `@retikz/vanilla` | 框架无关运行时：mount / hydrate / 动画 / SSR   | core + render |
+| `@retikz/tex`     | 可选的 LaTeX 公式解析与图元下沉                | core          |
 
-react / vanilla 只做 adapter：把 DSL 收集成 IR、把渲染交给 render，所有底层语义都来自 core，不另造平行能力。
+react / vanilla 只做 adapter：把 DSL 收集成 IR、把渲染交给 render；tex 把 LaTeX 公式下沉为 core 可编译的图元。上层包不另造平行 IR、渲染语义或几何底座。
 
 普通用户装 `@retikz/react`（或 `@retikz/vanilla`）即可，它会自动带上 core 与 render；只有写自定义渲染器或直接读写 IR 时，才单独依赖 `@retikz/core`。
 

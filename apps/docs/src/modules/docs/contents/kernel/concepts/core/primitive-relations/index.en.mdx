@@ -3,7 +3,7 @@ title: Primitive Relations
 description: 'Following the primitive model: how two primitives connect — where endpoints land (dynamic attach / locked), margin clearance, line styles and routing, and group connections.'
 ---
 
-The [primitive model](/kernel/concepts/kernel/primitive-model) covers the geometry of a _single_ primitive: how big it is and which anchors it exposes. Primitive relations cover what happens _between two_ primitives — when a path references another primitive, where its endpoint finally lands on the other's geometry.
+The [primitive model](/kernel/concepts/core/primitive-model) covers the geometry of a _single_ primitive: how big it is and which anchors it exposes. Primitive relations cover what happens _between two_ primitives — when a path references another primitive, where its endpoint finally lands on the other's geometry.
 
 retikz resolves such a connection in two modes:
 
@@ -31,7 +31,7 @@ Each group bottom has 8 `[outerNode, center]` draws: the left center has a recta
 
 <ComponentPreview files="anchors-auto-attach" size="sm" hideCode />
 
-Which surface the endpoint lands on is decided by the target's **boundary** (following shape by default) — for how boundary, shape, and bounding box divide their roles, see the [primitive model](/kernel/concepts/kernel/primitive-model). To keep lines off the border, use `margin` (bottom) rather than replacing the target with hand-computed coordinates.
+Which surface the endpoint lands on is decided by the target's **boundary** (following shape by default) — for how boundary, shape, and bounding box divide their roles, see the [primitive model](/kernel/concepts/core/primitive-model). To keep lines off the border, use `margin` (bottom) rather than replacing the target with hand-computed coordinates.
 
 ### Locked position
 
@@ -40,12 +40,14 @@ To lock onto a specific position, a path target uses the **object form** `{ id, 
 | anchor form       | Meaning                                                                                                                                   |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | anchor omitted    | `{ id: 'A' }`: dynamic attach (same as plain id)                                                                                          |
-| named anchor      | `{ id: 'A', anchor: 'top' }`: a Web anchor name; compass names such as `north` remain aliases                                             |
+| named anchor      | `{ id: 'A', anchor: 'top' }`: core IR uses canonical Web directional names                                                                |
 | angle anchor      | `{ id: 'A', anchor: 30 }`: visual border point at the given degree                                                                        |
 | edge proportional | `{ id: 'A', anchor: { side: 'top', fraction: 0.25 } }`                                                                                    |
 | anchor + offset   | `{ id: 'A', anchor: 'left', offset: [-4, 0] }`: resolve the point, then add a world-space `[dx, dy]` (not rotated by the node's `rotate`) |
 
-The anchor naming rules and geometric meanings all live in the [primitive model · anchors](/kernel/concepts/kernel/primitive-model); here only one thing matters: named / angle / edge-proportional anchors are **fixed in place**, unaffected by neighbor step direction (only auto mode adjusts dynamically). The three groups bottom: rectangle / ellipse use generic Web anchors, while star uses its own `tip-N`:
+The anchor naming rules and geometric meanings all live in the [primitive model · anchors](/kernel/concepts/core/primitive-model); here only one thing matters: named / angle / edge-proportional anchors are **fixed in place**, unaffected by neighbor step direction (only auto mode adjusts dynamically). The three groups bottom: rectangle / ellipse use generic Web anchors, while star uses its own `tip-N`:
+
+React string Sugar may use `'A.north'`; the parser normalizes it to `'top'` before producing IR. Use canonical names when writing object IR directly.
 
 <ComponentPreview files="anchors-explicit" size="sm" hideCode />
 
@@ -59,7 +61,7 @@ A path target can also be a Cartesian, polar, relative / offset / proportional p
 
 ## Line clearance
 
-`<Node margin={n}>` leaves the visible border untouched but pushes the node's whole connection boundary outward by `n` user units — **auto endpoints and explicit border anchors (`'A.right'` / `'A.30'`) move out alike**, so lines don't touch the border directly (matching TikZ `outer sep`). In multi-node flowcharts `margin={4}` is usually enough. For where margin sits in the node box model (and how it divides from padding), see the [primitive model](/kernel/concepts/kernel/primitive-model).
+`<Node margin={n}>` leaves the visible border untouched but pushes the node's whole connection boundary outward by `n` user units — **auto endpoints and explicit border anchors (`'A.right'` / `'A.30'`) move out alike**, so lines don't touch the border directly (matching TikZ `outer sep`). In multi-node flowcharts `margin={4}` is usually enough. For where margin sits in the node box model (and how it divides from padding), see the [primitive model](/kernel/concepts/core/primitive-model).
 
 <ComponentPreview files="anchors-margin" size="xs" hideCode />
 
@@ -106,7 +108,7 @@ Above, the light-gray dashed outline is the cluster's bounding box; the external
 ## Further Reading
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/concepts/kernel/primitive-model">
+  <LinkedCard href="/kernel/concepts/core/primitive-model">
     <span className="font-semibold">Primitive Model</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       How a single primitive's content, shape, boundary, and anchors layer up
