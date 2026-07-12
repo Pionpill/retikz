@@ -1,0 +1,33 @@
+---
+title: Effects
+description: Add shadows, blend modes, and animation to existing primitives without changing their structure or relationships.
+---
+
+Effects attach to existing primitives such as Node and Path. Shadows add visual depth, blend modes control layer composition, and animation describes how properties change over time. They reuse the same IR and Scene instead of introducing another primitive model.
+
+## Responsibilities
+
+| Capability | Responsibility                          | Use it when                              |
+| ---------- | --------------------------------------- | ---------------------------------------- |
+| Shadow     | Add offset, blur, and color             | Showing depth or spatial hierarchy       |
+| Blend      | Control color composition with layers   | Creating overlays and highlights         |
+| Animation  | Describe tracks, triggers, and playback | Adding entrances or interaction feedback |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/components/effects/shadow">
+    <span className="font-semibold">Shadow</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Offsets, blur, color, and render bounds</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/effects/blend">
+    <span className="font-semibold">Blend</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">How primitives compose with their background</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/effects/animation">
+    <span className="font-semibold">Animation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Tracks, triggers, controls, and static fallback
+    </span>
+  </LinkedCard>
+</div>
