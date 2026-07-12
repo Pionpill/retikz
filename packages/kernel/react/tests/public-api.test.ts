@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { ConvertIRToReactNodeOptions } from '../src';
+
 import * as react from '../src';
 
 const PUBLIC_RUNTIME_EXPORTS = [
@@ -34,9 +36,11 @@ const INTERNAL_RENDER_EXPORTS = [
 
 describe('@retikz/react public API', () => {
   it('保留 Kernel、Sugar 与公开 runtime 能力', () => {
+    const convertOptions: ConvertIRToReactNodeOptions = {};
     for (const name of PUBLIC_RUNTIME_EXPORTS) {
       expect(react).toHaveProperty(name);
     }
+    expect(convertOptions).toEqual({});
   });
 
   it('不从包根暴露 renderer internals', () => {

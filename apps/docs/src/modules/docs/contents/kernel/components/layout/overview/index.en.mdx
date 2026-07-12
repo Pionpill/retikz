@@ -71,10 +71,10 @@ The exact wrapping condition, and what happens when combined with the `ir` prop,
 
 <ComponentPreview name="layout-from-ir" size="xs" />
 
-When you need to convert between the DSL and IR, pair with `convertReactNodeToIR` / `convertIRToReactNode` for a two-way bridge:
+When you need to convert between the DSL and IR, pair `convertReactNodeToIR` with `convertIRToReactNode`. Tier 1 IR stays structurally equivalent across the roundtrip. Tier 2 composites are first expanded with the supplied `composites` definitions, so the result is semantically equivalent to the lowered Kernel IR rather than the original custom component:
 
 ```tsx
-import { Layout, Node, convertReactNodeToIR } from '@retikz/react';
+import { Layout, Node, convertIRToReactNode, convertReactNodeToIR } from '@retikz/react';
 
 const ir = convertReactNodeToIR(
   <Node id="a" position={[0, 0]}>
@@ -83,7 +83,13 @@ const ir = convertReactNodeToIR(
 );
 // Serialize, send to LLM, store in DB...
 <Layout ir={ir} width={200} height={80} />;
+
+const kernelChildren = convertIRToReactNode(tier2IR, {
+  composites: [panelDefinition],
+});
 ```
+
+If a Tier 2 definition is missing, its payload is invalid, or recursive expansion exceeds the depth limit, `convertIRToReactNode` throws with the composite key and IR path instead of silently dropping the node.
 
 `ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.
 

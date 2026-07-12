@@ -1,16 +1,12 @@
-import type { IRChild, IRNode, IRScene, IRScope, IRStep } from '@retikz/core';
+import type { IRNode, IRScene, IRStep, LoweredIRChild, LoweredIRScope, LowerIRToKernelOptions } from '@retikz/core';
 import type { ReactNode } from 'react';
 
+import { lowerIRToKernel } from '@retikz/core';
 import { createElement } from 'react';
 
-import type { NodeProps } from '../components';
-import type { ScopeProps } from '../components';
+import type { NodeProps, ScopeProps } from '../components';
 
-import { Coordinate } from '../components';
-import { Node } from '../components';
-import { Path } from '../components';
-import { Scope } from '../components';
-import { Step } from '../components';
+import { Coordinate, Node, Path, Scope, Step } from '../components';
 import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS } from './fields';
 
 /**
@@ -149,13 +145,7 @@ const assertNever = (x: never): never => {
 };
 
 /** 单个 IR child → 对应 Kernel element；走 discriminated union 穷举 */
-const childToElement = (child: IRChild, key: number): ReactNode => {
-  if ('namespace' in child) {
-    // tier2 composite 还原成 JSX 暂不支持；IR→React 仅覆盖 Tier 1（Node / Path / Coordinate / Scope / Step）
-    throw new Error(
-      `convertIRToReactNode: Tier 2 composite '${child.namespace}.${child.type}' cannot be converted back to JSX; only Tier 1 IR children are supported.`,
-    );
-  }
+const childToElement = (child: LoweredIRChild, key: number): ReactNode => {
   switch (child.type) {
     case 'node':
       return createElement(Node, { key, ...nodePropsFromIR(child) });
@@ -181,14 +171,26 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
 };
 
 /** IR 'scope' child → ScopeProps；样式 / 容器字段走 SCOPE_FIELDS 透传，递归把 scope.children 还原为 Kernel element 数组 */
-const scopePropsFromIR = (s: IRScope, key: number): ScopeProps & { key: number } => ({
+const scopePropsFromIR = (s: LoweredIRScope, key: number): ScopeProps & { key: number } => ({
   key,
   ...pickDefined(s, SCOPE_FIELDS),
   children: s.children.map((c, i) => childToElement(c, i)),
 });
 
+/** IR 转 Kernel React 节点时使用的 Tier 2 composite 定义与递归深度配置。 */
+export type ConvertIRToReactNodeOptions = LowerIRToKernelOptions;
+
 /**
- * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）
- * @description 调用方可 `<Layout>{convertIRToReactNode(ir)}</Layout>` 或用 `<Layout ir={ir}/>`；Sugar 简写会还原为等价的 Kernel 组件。
+ * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）。
+ * @description Tier 1 IR 保持结构等价；Tier 2 composite 先按 definitions lowering，再生成语义等价的 Kernel JSX。
  */
-export const convertIRToReactNode = (ir: IRScene): ReactNode => ir.children.map((child, i) => childToElement(child, i));
+export const convertIRToReactNode = (ir: IRScene, options: ConvertIRToReactNodeOptions = {}): ReactNode => {
+  try {
+    const lowered = lowerIRToKernel(ir, options);
+    return lowered.children.map((child, i) => childToElement(child, i));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.startsWith('convertIRToReactNode:')) throw error;
+    throw new Error(`convertIRToReactNode: ${message}`, { cause: error });
+  }
+};

@@ -21,6 +21,7 @@ describe('compile source structure', () => {
       'computeLayout',
       'fallbackMeasurer',
       'formatCompileWarning',
+      'lowerIRToKernel',
     ]);
   });
 

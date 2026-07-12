@@ -92,10 +92,10 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-11',
+          date: '2026-07-12',
           summary: {
-            zh: '收紧 Scene 输入边界：`SceneSchema` / `ViewBoxSchema` 现在拒绝未知字段，并从 `@retikz/core` 顶层入口移除误暴露的内部递归 schema 注册器。',
-            en: 'Tightens Scene input boundaries: `SceneSchema` / `ViewBoxSchema` now reject unknown fields, and the accidentally exposed recursive-schema registrar is removed from the `@retikz/core` root entry.',
+            zh: '收紧 Scene 输入边界，并新增 `lowerIRToKernel`，让 adapter 可复用 core 的 composite lowering，把 Tier 2 IR 转成纯 Kernel IR。',
+            en: 'Tightens Scene input boundaries and adds `lowerIRToKernel`, allowing adapters to reuse core composite lowering and turn Tier 2 IR into pure Kernel IR.',
           },
           items: [
             {
@@ -103,6 +103,13 @@ export const kernelV04: Release = {
               content: {
                 zh: '依赖 Zod 静默剥离 Scene 或 viewBox 未知字段的调用应改为传入合法字段；外部代码不应调用内部 `__registerChildSchema`，请直接删除相关调用。',
                 en: 'Callers that relied on Zod silently stripping unknown Scene or viewBox fields must pass only valid fields. External calls to the internal `__registerChildSchema` should be removed.',
+              },
+            },
+            {
+              label: { zh: '公开 Tier 2 lowering', en: 'Public Tier 2 lowering' },
+              content: {
+                zh: '`lowerIRToKernel(ir, { composites, maxCompositeDepth })` 递归展开 composite 并返回可 JSON 序列化的 Tier 1 IR；缺少 definition 时携带 composite key 与 IR 路径直接抛错。`compileToScene` 原有的告警并跳过行为不变。',
+                en: '`lowerIRToKernel(ir, { composites, maxCompositeDepth })` recursively expands composites into JSON-serializable Tier 1 IR. Missing definitions throw with the composite key and IR path, while `compileToScene` keeps its existing warn-and-skip behavior.',
               },
             },
           ],
@@ -229,10 +236,10 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-11',
+          date: '2026-07-12',
           summary: {
-            zh: '`@retikz/react` 包根只聚合 Kernel / Sugar 公共 owner，不再转发仅供 `<Layout>` 内部接线和测试使用的 renderer internals；SVG / Canvas 运行行为不变。',
-            en: 'The `@retikz/react` root now aggregates only the public Kernel and Sugar owners instead of forwarding renderer internals used by `<Layout>` wiring and tests; SVG and Canvas behavior is unchanged.',
+            zh: '`@retikz/react` 收紧包根公共面，并让 `convertIRToReactNode` 通过 definitions 把 Tier 2 IR 还原为语义等价的 Kernel JSX。',
+            en: '`@retikz/react` narrows its root public surface and lets `convertIRToReactNode` lower Tier 2 IR through definitions into semantically equivalent Kernel JSX.',
           },
           items: [
             {
@@ -247,6 +254,13 @@ export const kernelV04: Release = {
               content: {
                 zh: 'React SVG（默认 renderer）现在与 React Canvas、Vanilla SVG / Canvas 一样响应系统 `prefers-reduced-motion`，并在偏好变化时即时切换到完整静止态。',
                 en: 'React SVG, the default renderer, now respects `prefers-reduced-motion` like React Canvas and Vanilla SVG / Canvas, switching immediately to the complete resting state when the preference changes.',
+              },
+            },
+            {
+              label: { zh: 'Tier 2 IR 反向转换', en: 'Tier 2 IR reverse conversion' },
+              content: {
+                zh: '`convertIRToReactNode(ir, { composites, maxCompositeDepth })` 现在先复用 core lowering，再生成 Kernel JSX。Tier 1 保持结构等价；Tier 2 往返结果与 lowering 后的 Kernel IR 等价。缺少 definition 或 payload 非法时会保留 key 与 IR 路径并抛错。',
+                en: '`convertIRToReactNode(ir, { composites, maxCompositeDepth })` now reuses core lowering before producing Kernel JSX. Tier 1 stays structurally equivalent, while Tier 2 roundtrips match the lowered Kernel IR. Missing definitions and invalid payloads throw with the key and IR path.',
               },
             },
           ],
