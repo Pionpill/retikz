@@ -1,5 +1,5 @@
 ﻿import type { IRAxisScale, IRBoxSize, IRPaintSpec } from '@retikz/core';
-import type { DataModel, ExternalRow } from '@retikz/data';
+import type { ExternalRow, IRDataModel } from '@retikz/data';
 import type {
   AxisGuide,
   Channel,
@@ -142,7 +142,7 @@ export type BuildPlotSpecOptions = {
   coordinate?: CoordinateInput;
   composition?: PlotSpec['composition'];
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
-  model?: DataModel;
+  model?: IRDataModel;
   /**
    * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
    * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark shortcut stack（B4 去重）。
@@ -216,7 +216,7 @@ const DEFAULT_GUIDES: ReadonlyArray<Guide> = [
   { type: PlotGuide.Axis, dimension: 'y', grid: true },
 ];
 
-/** 运行时 datum label 解析器（ADR-04）：按 mark id 映射「行 → 自定义标签串」（不进 IR，经 lowerPlots options 注入） */
+/** 运行时 datum label 解析器：按 mark id 映射「行 → 自定义标签串」，经 lowerPlots options 注入而不进入 IR。 */
 export type ResolveLabelMap = Record<string, (row: ExternalRow) => string>;
 
 /** buildPlotSpec 收集的 resolveLabel 旁路：以返回的 PlotSpec 为键，供 resolvePlotRuntime 取出注入 options（不进 IR） */
@@ -239,7 +239,7 @@ type Collected = {
   shortcutTransforms: Array<TransformOperation>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
-  /** 按 mark id 收集的运行时 resolveLabel（不进 IR；ADR-04） */
+  /** 按 mark id 收集且不进入 IR 的运行时 resolveLabel。 */
   resolveLabels: ResolveLabelMap;
   /** 是否有 mark 用了颜色（→ 需自动色 scale） */
   colored: boolean;
@@ -617,7 +617,7 @@ const recordMarkColor = (into: Collected, color: PointColorStyle | undefined): v
 };
 
 /**
- * 把位置 mark 的扁平 label* props 装成 IR MarkLabel（priority-1 宿主 datum label，ADR-04）
+ * 把位置 mark 的扁平 label props 装成宿主 datum label。
  * @description label 顶层 string 默认按字段（content.field）；labelDisplayFormat 进 IR；labelPosition / labelDistance / labelPin
  *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）。
  */
@@ -652,7 +652,7 @@ const buildMarkLabel = (props: DatumLabelProps): MarkNodeLabel | undefined => {
   });
 };
 
-/** 收集某 mark 的运行时 resolveLabel（不进 IR）：仅在配了 mark id 时按 id 注册，否则无从命中（与 ADR-04 注入点一致） */
+/** 收集某 mark 的运行时 resolveLabel；仅在配置 mark id 时按 id 注册，且不会进入 IR。 */
 const recordResolveLabel = (
   into: Collected,
   id: string | undefined,
@@ -1666,7 +1666,7 @@ const collectInto = (
  */
 const buildColorScale = (
   colorFields: Array<string>,
-  model: DataModel | undefined,
+  model: IRDataModel | undefined,
   colors: Array<string> | undefined,
 ): PlotScaleSpec => {
   if (model !== undefined) {
@@ -1681,12 +1681,17 @@ const buildColorScale = (
 };
 
 type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'point'> }>;
-type PositionScaleOptions = Pick<ContinuousScaleProps, 'domain' | 'domainPadding' | 'singleValueSpan'>;
+type PositionScaleOptions = Pick<
+  ContinuousScaleProps,
+  'base' | 'constant' | 'domain' | 'domainPadding' | 'singleValueSpan'
+>;
 
 const isContinuousScaleProps = (options: ScaleProps | undefined): options is ContinuousScaleProps =>
   options !== undefined && options.type !== 'point';
 
 const continuousPositionScaleOptions = (options: PositionScaleOptions | undefined): PositionScaleOptions => ({
+  ...(options?.base !== undefined ? { base: options.base } : {}),
+  ...(options?.constant !== undefined ? { constant: options.constant } : {}),
   ...(options?.domain !== undefined ? { domain: options.domain } : {}),
   ...(options?.domainPadding !== undefined ? { domainPadding: options.domainPadding } : {}),
   ...(options?.singleValueSpan !== undefined ? { singleValueSpan: options.singleValueSpan } : {}),
@@ -2544,8 +2549,8 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   }
   if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model, options.colors));
 
-  // 薄 Plot：不补默认轴——用户显式 <Axis>/<Legend> 才有 guides。
-  //   开箱即用的默认轴 / 网格交给上层 <Chart>（v0.2，复用 decorateDefaultGuides）。
+  // 薄 Plot 不补默认轴：只有用户显式声明 <Axis>/<Legend> 才生成 guides。
+  // 需要默认轴与网格的上层组件可复用 decorateDefaultGuides。
   const explicitAxes = collected.guides.filter(guide => guide.type === PlotGuide.Axis);
   const legends = collected.guides.filter(guide => guide.type === PlotGuide.Legend);
   const guides: Array<AxisBoundGuide> = [...explicitAxes, ...legends];
@@ -2587,7 +2592,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
 
 /**
  * 给薄 <Plot> 产物补默认坐标轴：cartesian2D 且无任何显式 axis 时，前置 x 轴 + y 轴（带网格）。
- * @description 框架无关纯函数（PlotSpec 进出），供上层 <Chart>（v0.2）复用——薄 <Plot> 本身不调用。
+ * @description 框架无关的 PlotSpec 纯函数，供需要默认轴的上层组件复用；薄 <Plot> 本身不调用。
  *   非 cartesian2D（polar / 1D / ternary）的专门轴仍需显式声明，原样返回；已有显式 <Axis> 时不补。
  */
 export const decorateDefaultGuides = (spec: PlotSpec): PlotSpec => {

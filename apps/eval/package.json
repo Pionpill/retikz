@@ -8,7 +8,8 @@
     "eval": "tsx --env-file-if-exists=.env src/index.ts",
     "lint": "eslint .",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "catalog:",

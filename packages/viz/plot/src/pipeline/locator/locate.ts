@@ -14,7 +14,7 @@ import type {
   ResolvedAnchor,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
-import type { Mark, MarkOperation, PlotSpec, TransformOperation } from '../../schemas';
+import type { Mark, MarkOperation, PlotSpec, Transform } from '../../schemas';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
@@ -122,7 +122,7 @@ const resolveMarkRows = (
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
 ): Array<ExternalRow> => {
-  const transform = (mark as { transform?: Array<TransformOperation> }).transform;
+  const transform = (mark as { transform?: Array<Transform> }).transform;
   if (transform === undefined) return rows;
   return applyTransforms(rows, transform, transformRegistry, transformContext);
 };

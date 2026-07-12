@@ -1,6 +1,4 @@
-﻿import type { ValueOf } from '@retikz/core';
-
-import { GeometryLabelPosition } from '@retikz/core';
+﻿import { GeometryLabelPosition } from '@retikz/core';
 
 /**
  * guide 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'axis'` 同样可用）
@@ -12,9 +10,6 @@ export const PlotGuide = {
   /** 图例：把非位置 scale（颜色 / 尺寸 / 透明度 / 形状）可视化为 swatch / 色带 ramp / 分箱 / 梯度符号 */
   Legend: 'legend',
 } as const;
-
-/** guide 类型 */
-export type PlotGuideValue = ValueOf<typeof PlotGuide>;
 
 /**
  * 坐标轴摆放方式关键字。
@@ -31,9 +26,6 @@ export const AxisPlacementKind = {
   Origin: 'origin',
 } as const;
 
-/** 坐标轴摆放方式。 */
-export type AxisPlacementKindValue = ValueOf<typeof AxisPlacementKind>;
-
 /**
  * 笛卡尔式四方向轴位置。
  * @description 只表达 top/right/bottom/left；非四边形坐标系应使用 auto 或 edge。
@@ -48,9 +40,6 @@ export const AxisCardinalSide = {
   /** plotArea 左边。 */
   Left: 'left',
 } as const;
-
-/** 笛卡尔式四方向轴位置。 */
-export type AxisCardinalSideValue = ValueOf<typeof AxisCardinalSide>;
 
 /**
  * 坐标轴网格投放模式。
@@ -67,9 +56,6 @@ export const AxisGridApplyTo = {
   Selected: 'selected',
 } as const;
 
-/** 坐标轴网格投放模式取值。 */
-export type AxisGridApplyToValue = ValueOf<typeof AxisGridApplyTo>;
-
 /** 固定间隔 tick source kind。 */
 export const GuideTickIntervalKind = {
   /** 数值轴按固定数值步长生成 tick。 */
@@ -79,9 +65,6 @@ export const GuideTickIntervalKind = {
   /** 分类型轴按类别序号间隔抽取 tick。 */
   Category: 'category',
 } as const;
-
-/** 固定间隔 tick source kind 取值。 */
-export type GuideTickIntervalKindValue = ValueOf<typeof GuideTickIntervalKind>;
 
 /** 时间间隔单位。 */
 export const GuideTickTimeUnit = {
@@ -96,9 +79,6 @@ export const GuideTickTimeUnit = {
   Year: 'year',
 } as const;
 
-/** 时间间隔单位取值。 */
-export type GuideTickTimeUnitValue = ValueOf<typeof GuideTickTimeUnit>;
-
 /** tick 可见密度策略 kind。 */
 export const AxisTickDensityKind = {
   /** 保留全部候选 tick。 */
@@ -106,9 +86,6 @@ export const AxisTickDensityKind = {
   /** 对候选 tick 做确定性抽样。 */
   Sample: 'sample',
 } as const;
-
-/** tick 可见密度策略 kind 取值。 */
-export type AxisTickDensityKindValue = ValueOf<typeof AxisTickDensityKind>;
 
 /** tick mark 形态 kind。 */
 export const AxisTickMarkKind = {
@@ -126,9 +103,6 @@ export const AxisTickMarkKind = {
   Custom: 'custom',
 } as const;
 
-/** tick mark 形态 kind 取值。 */
-export type AxisTickMarkKindValue = ValueOf<typeof AxisTickMarkKind>;
-
 /** tick 端点避让影响范围。 */
 export const AxisTickEndpointAffect = {
   /** 只隐藏 tick mark，保留 tick label 与 grid。 */
@@ -136,9 +110,6 @@ export const AxisTickEndpointAffect = {
   /** 同时隐藏 tick mark 与 tick label，grid 仍使用原 tick source。 */
   MarkAndLabel: 'mark-and-label',
 } as const;
-
-/** tick 端点避让影响范围取值。 */
-export type AxisTickEndpointAffectValue = ValueOf<typeof AxisTickEndpointAffect>;
 
 /** shape tick mark 方向策略。 */
 export const AxisTickShapeOrientation = {
@@ -152,9 +123,6 @@ export const AxisTickShapeOrientation = {
   Fixed: 'fixed',
 } as const;
 
-/** shape tick mark 方向策略取值。 */
-export type AxisTickShapeOrientationValue = ValueOf<typeof AxisTickShapeOrientation>;
-
 /** tick label 重叠隐藏策略。 */
 export const AxisTickLabelHideStrategy = {
   /** 顺序扫描，保留不与上一个可见 label 重叠的 label。 */
@@ -162,9 +130,6 @@ export const AxisTickLabelHideStrategy = {
   /** 先隔一个隐藏一个，不够时继续扩大步长。 */
   Parity: 'parity',
 } as const;
-
-/** tick label 重叠隐藏策略取值。 */
-export type AxisTickLabelHideStrategyValue = ValueOf<typeof AxisTickLabelHideStrategy>;
 
 /** tick label 超出轴范围时的处理策略。 */
 export const AxisTickLabelOverflow = {
@@ -176,14 +141,8 @@ export const AxisTickLabelOverflow = {
   Flush: 'flush',
 } as const;
 
-/** tick label 超出轴范围时的处理策略取值。 */
-export type AxisTickLabelOverflowValue = ValueOf<typeof AxisTickLabelOverflow>;
-
 /** axis title 沿轴线的定位关键字，复用 core path label position 词表。 */
 export const AxisTitlePlacementKeyword = GeometryLabelPosition;
-
-/** axis title 沿轴线的定位关键字取值。 */
-export type AxisTitlePlacementKeywordValue = ValueOf<typeof AxisTitlePlacementKeyword>;
 
 /** axis title 对齐锚点。 */
 export const AxisTitleAnchor = {
@@ -197,9 +156,6 @@ export const AxisTitleAnchor = {
   End: 'end',
 } as const;
 
-/** axis title 对齐锚点取值。 */
-export type AxisTitleAnchorValue = ValueOf<typeof AxisTitleAnchor>;
-
 /** axis title 旋转策略。 */
 export const AxisTitleOrientation = {
   /** 使用坐标系和轴位置推导的默认旋转。 */
@@ -210,9 +166,6 @@ export const AxisTitleOrientation = {
   Axis: 'axis',
 } as const;
 
-/** axis title 旋转策略取值。 */
-export type AxisTitleOrientationValue = ValueOf<typeof AxisTitleOrientation>;
-
 /** axis 交叉值处 tick mark 策略。 */
 export const AxisCrossingTickPolicy = {
   /** 显示交叉值 tick mark。 */
@@ -220,9 +173,6 @@ export const AxisCrossingTickPolicy = {
   /** 隐藏交叉值 tick mark。 */
   Hide: 'hide',
 } as const;
-
-/** axis 交叉值处 tick mark 策略取值。 */
-export type AxisCrossingTickPolicyValue = ValueOf<typeof AxisCrossingTickPolicy>;
 
 /** axis 交叉值处 tick label 策略。 */
 export const AxisCrossingLabelPolicy = {
@@ -233,9 +183,6 @@ export const AxisCrossingLabelPolicy = {
   /** 将交叉值 tick label 放到交叉点角落。 */
   Corner: 'corner',
 } as const;
-
-/** axis 交叉值处 tick label 策略取值。 */
-export type AxisCrossingLabelPolicyValue = ValueOf<typeof AxisCrossingLabelPolicy>;
 
 /** axis 交叉值 label 的角落位置。 */
 export const AxisCrossingCorner = {
@@ -248,15 +195,6 @@ export const AxisCrossingCorner = {
   /** 右下角。 */
   BottomRight: 'bottom-right',
 } as const;
-
-/** axis 交叉值 label 的角落位置取值。 */
-export type AxisCrossingCornerValue = ValueOf<typeof AxisCrossingCorner>;
-
-/**
- * 图例绑定的非位置通道名。
- * @description schema 只要求非空字符串；该通道是否存在、是否产出 legend descriptor，由 channel registry 在 lowering 时解析。
- */
-export type LegendChannelValue = string;
 
 /**
  * 图例摆放位置关键字（暴露给用户；裸字面量 `'right'` 同样可用）
@@ -273,9 +211,6 @@ export const LegendPosition = {
   Bottom: 'bottom',
 } as const;
 
-/** 图例位置 */
-export type LegendPositionValue = ValueOf<typeof LegendPosition>;
-
 /**
  * 图例条目排布方向关键字（暴露给用户；裸字面量 `'vertical'` 同样可用）
  * @description 省略默认按 position（左右→vertical、上下→horizontal），默认值在 lowering 给
@@ -287,9 +222,6 @@ export const LegendOrient = {
   Horizontal: 'horizontal',
 } as const;
 
-/** 图例排布方向 */
-export type LegendOrientValue = ValueOf<typeof LegendOrient>;
-
 /**
  * 图例符号尺寸适配策略。
  * @description fit 会把 size legend 的符号压入 symbolSize 盒子；preserve 保留通道 descriptor 的原始半径。
@@ -300,12 +232,3 @@ export const LegendSymbolFit = {
   /** 保留 descriptor 半径。 */
   Preserve: 'preserve',
 } as const;
-
-/** 图例符号尺寸适配策略。 */
-export type LegendSymbolFitValue = ValueOf<typeof LegendSymbolFit>;
-
-/**
- * guide 绑定的坐标系定位维度名。
- * @description schema 只要求非空字符串；该维度是否被坐标系支持，由 CoordinateDefinition.roles 在 lowering 时校验。
- */
-export type GuideDimensionValue = string;

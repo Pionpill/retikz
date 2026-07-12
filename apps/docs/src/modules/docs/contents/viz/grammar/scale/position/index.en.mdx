@@ -10,10 +10,10 @@ Positional scales map a data value to a **coordinate / length / radius** on the 
 | Type     | For                                      | Notes                                                                                           |
 | -------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `linear` | Continuous numbers                       | Evenly-spaced linear mapping (default)                                                          |
-| `log`    | Positive values across magnitudes        | Logarithmic; point / line only                                                                  |
+| `log`    | Positive values across magnitudes        | Logarithmic; `base` defaults to 10; point / line only                                           |
 | `sqrt`   | Area-perceptual                          | Square-root; point / line only (the `size` channel's default)                                   |
 | `pow`    | Custom power                             | Power mapping (needs `exponent`; via a full spec)                                               |
-| `symlog` | Wide-range data crossing zero / negative | Symmetric log: linear near zero, logarithmic in the tails; point / line only                    |
+| `symlog` | Wide-range data crossing zero / negative | Symmetric log; `constant` defaults to 1; point / line only                                      |
 | `radial` | Polar / rose chart radius                | Radial: output radius makes area proportional to value; usable as an interval / area value axis |
 | `time`   | Temporal field                           | Continuous time mapping; ticks land on human-readable time boundaries                           |
 | `band`   | Categorical (bars)                       | Each category gets an equal-width slot; marks sit in the center and can fill it                 |
@@ -27,7 +27,7 @@ Use `domainPadding={0}` to restore edge-to-edge behavior, or `domainPadding={{ l
 
 ## Linear vs log
 
-When data spans several orders of magnitude, a linear axis crushes the small values against the bottom. A log axis (`<Scale dimension="y" type="log" />`) gives every magnitude equal height, so small values stay legible. Both charts use the same yearly user counts.
+When data spans several orders of magnitude, a linear axis crushes the small values against the bottom. A log axis (`<Scale dimension="y" type="log" />`) gives every magnitude equal height, so small values stay legible. The default base is 10; set `base={Math.E}` for the natural logarithm. `base` must be greater than 1. Both charts use the same yearly user counts.
 
 <ComponentPreview name="scale-linear-log" sourceFiles={['scale-continuous.data.ts']} />
 
@@ -54,7 +54,7 @@ When data spans several orders of magnitude, a linear axis crushes the small val
 
 ## Symlog
 
-`log` cannot handle zero or negatives, yet profit/loss, temperature deltas, and growth rates often cross zero _and_ span magnitudes. `<Scale dimension="y" type="symlog" />` uses a **symmetric log** — a linear region near zero with logarithmic tails on either side — so zero and negative values are defined. The width of the linear region is set by `constant` (default `1`; raise it to keep more of the center linear). Like `log` / `sqrt` / `pow`, `symlog` is a non-linear scale and applies to point / line only.
+`log` cannot handle zero or negatives, yet profit/loss, temperature deltas, and growth rates often cross zero _and_ span magnitudes. `<Scale dimension="y" type="symlog" />` uses a **symmetric log** — a linear region near zero with logarithmic tails on either side — so zero and negative values are defined. The width of the linear region is set by `constant` (default `1`; raise it to keep more of the center linear). On the positive side, `constant={50}` is equivalent to `ln(1 + x / 50)`. Like `log` / `sqrt` / `pow`, `symlog` is a non-linear scale and applies to point / line only.
 
 <ComponentPreview name="scale-symlog" sourceFiles={['scale-symlog.data.ts']} />
 

@@ -1,5 +1,8 @@
 ﻿import type { DataFieldTypeValue } from '../schemas';
 
+/** 逻辑字段名到字段测量类型的运行时映射；由 data.model、自动推断和 resolver 合成，不进入 IR。 */
+export type DataFieldTypeMap = Map<string, DataFieldTypeValue>;
+
 /** 运行时字段规范值；不含 boolean / null，是 `coerceValue` 与自定义 `parse` 的输出域。 */
 export type ParsedFieldValue = string | number | undefined;
 

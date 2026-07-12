@@ -1,4 +1,4 @@
-import type { DataModel, ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
 import type {
   LowerPlotsOptions,
   PlotHostLineageMetadata,
@@ -78,7 +78,7 @@ export type PlotDslProps = PlotCommonProps &
     /** mark / guide 子组件（<PathMark> / <PointMark> / <IntervalMark> / <Axis>） */
     children: ReactNode;
     /** 数据模型（字段名 + 类型）：声明则 strict 校验 + type-driven scale/guide；注入构造 spec 的 data.model */
-    model?: DataModel;
+    model?: IRDataModel;
     /** 逻辑字段 → 物理数据路径（扁平，单数据集）；需 model；内部映射到固定数据集名 */
     fieldMap?: Record<string, string>;
     /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */

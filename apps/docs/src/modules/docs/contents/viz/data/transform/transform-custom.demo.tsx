@@ -1,4 +1,4 @@
-import type { DataModel } from '@retikz/data';
+import type { IRDataModel } from '@retikz/data';
 import type { FC } from 'react';
 
 import { defineTransform } from '@retikz/data';
@@ -22,7 +22,7 @@ const doubleX = defineTransform({
     })),
 });
 
-const model: DataModel = [
+const model: IRDataModel = [
   { name: 'x', type: 'continuous' },
   { name: 'y', type: 'continuous' },
 ];

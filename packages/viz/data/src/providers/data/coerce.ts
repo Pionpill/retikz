@@ -8,6 +8,18 @@ import { isIsoDateString } from './field';
 /** 严格数字串：trimmed 十进制 / 科学计数；拒空串、Infinity、NaN、hex、带单位串。 */
 const NUMERIC_RE = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 
+/** 校验 ISO 字符串日期部分是否为真实日历日期，避免 Date.parse 自动滚动非法日期。 */
+const isValidIsoCalendarDate = (value: string): boolean => {
+  const [yearText, monthText, dayText] = value.slice(0, 10).split('-');
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  date.setUTCHours(0, 0, 0, 0);
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+};
+
 /** 数值 coercion：number 原样，safe-integer bigint 转 number，严格数字串转 number，其余转 NaN。 */
 export const coerceNumber = (value: unknown): number => {
   if (typeof value === 'number') return isFiniteNumber(value) ? value : NaN;
@@ -38,7 +50,7 @@ export const coerceTimestamp = (value: unknown): number | null => {
   }
   if (typeof value === 'number') return isFiniteNumber(value) ? value : null;
   if (typeof value === 'string') {
-    if (!isIsoDateString(value)) return null;
+    if (!isIsoDateString(value) || !isValidIsoCalendarDate(value)) return null;
     const parsed = Date.parse(value.replace(' ', 'T'));
     return Number.isNaN(parsed) ? null : parsed;
   }

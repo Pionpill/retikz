@@ -7,21 +7,22 @@ import type {
   FieldCollector,
   TransformContext,
 } from '../contract';
-import type { ExternalRow, Transform } from '../schemas';
+import type { IRDataTransform } from '../schemas';
+import type { ExternalRow } from '../shared';
 
 import { resolveTransformRegistry } from '../providers';
 import { createDataLineageRecorder } from './lineage';
 import { readSourceIndex, readSourceIndices, tagSourceIndex, withGroupProvenance } from './provenance';
 
 /** 默认 transform 上下文：使用 data provenance symbol 标记，不把来源信息写进 JSON IR。 */
-export const DEFAULT_TRANSFORM_CONTEXT: TransformContext = {
+export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.freeze({
   readSourceIndex,
   readSourceIndices,
   groupProvenance: withGroupProvenance,
-};
+});
 
 /** 解析并校验单个 transform operation；返回可安全传给对应 definition 的宽类型。 */
-const parseTransformOperation = (definition: AnyTransformDefinition, operation: Transform): never => {
+const parseTransformOperation = (definition: AnyTransformDefinition, operation: IRDataTransform): never => {
   JsonObjectSchema.parse(operation);
   const parsed = definition.schema.parse(operation) as never;
   JsonObjectSchema.parse(parsed);
@@ -30,7 +31,7 @@ const parseTransformOperation = (definition: AnyTransformDefinition, operation: 
 
 /** 查找 transform definition；未知 kind 必须 fail-loud，避免静默跳过结构性数据变换。 */
 const transformDefinitionOf = (
-  operation: Transform,
+  operation: IRDataTransform,
   registry: ReadonlyMap<string, AnyTransformDefinition>,
 ): AnyTransformDefinition => {
   const definition = registry.get(operation.kind);
@@ -44,7 +45,7 @@ const transformDefinitionOf = (
 
 /** 收集 transform 读取的源字段，并登记 transform 派生输出字段以供 strict model 排除。 */
 export const collectTransformFields = (
-  transform: Transform,
+  transform: IRDataTransform,
   fields: FieldCollector,
   derivedOutputs: Set<string>,
   registry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry(),
@@ -62,7 +63,7 @@ export const collectTransformFields = (
  */
 export const applyTransforms = (
   rows: Array<ExternalRow>,
-  operations?: Array<Transform>,
+  operations?: Array<IRDataTransform>,
   registry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry(),
   context: TransformContext = DEFAULT_TRANSFORM_CONTEXT,
 ): Array<ExternalRow> => {
@@ -93,11 +94,11 @@ export type ApplyTransformsWithLineageResult = {
 
 /**
  * 按声明顺序执行 transform，并返回运行时 lineage。
- * @description 该入口不改变 Transform schema；lineage 只通过返回值暴露，不写入 JSON IR。
+ * @description 该入口不改变 IRDataTransform schema；lineage 只通过返回值暴露，不写入 JSON IR。
  */
 export const applyTransformsWithLineage = (
   rows: Array<ExternalRow>,
-  operations?: Array<Transform>,
+  operations?: Array<IRDataTransform>,
   options: ApplyTransformsWithLineageOptions = {},
 ): ApplyTransformsWithLineageResult => {
   const lineage = createDataLineageRecorder(options.lineage ?? {});

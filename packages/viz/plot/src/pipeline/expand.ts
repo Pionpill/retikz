@@ -48,7 +48,7 @@ import type {
   MarkOperation,
   PlotSpec,
   ScaleOperation,
-  TransformOperation,
+  Transform,
 } from '../schemas';
 import type { LegendReserve, Margins, Rect } from '../shared';
 import type { LegendEntry, LegendInput } from './guide';
@@ -199,6 +199,7 @@ type SharedScaffold = Extract<CoordinateArrangement, { kind: 'tracks' }>;
 type ScaffoldTrack = SharedScaffold['tracks'][number];
 type CompositionLayout = NonNullable<CompositionSpec['spacing']>;
 type CompositionResolve = NonNullable<CompositionSpec['resolve']>;
+type FacetHeaderLabelStyle = Exclude<NonNullable<NonNullable<FacetGrid['header']>['row']>, boolean>;
 type CompositionAxisPolicyValue = 'perScope' | 'outerShared' | 'none';
 
 const relationTargetRoleValues = (
@@ -434,6 +435,25 @@ type FacetTuple = Array<FacetScalar>;
 type FacetPanelValue = FacetScalar | FacetTuple | undefined;
 type FacetLabelDimension = 'row' | 'column';
 
+const isFacetHeaderVisible = (facet: FacetGrid, dimension: FacetLabelDimension): boolean => {
+  const header = facet.header?.[dimension];
+  return header !== undefined && header !== false;
+};
+
+const facetHeaderLabelStyleOf = (
+  facet: FacetGrid,
+  dimension: FacetLabelDimension,
+): FacetHeaderLabelStyle | undefined => {
+  const header = facet.header?.[dimension];
+  return header && typeof header === 'object' ? header : undefined;
+};
+
+const facetHeaderLabelRotateOf = (facet: FacetGrid, dimension: FacetLabelDimension): number | undefined => {
+  const style = facetHeaderLabelStyleOf(facet, dimension);
+  if (style?.rotate !== undefined) return style.rotate;
+  return dimension === 'row' ? -90 : undefined;
+};
+
 type FacetPanel = {
   id: string;
   facet: FacetGrid;
@@ -608,7 +628,25 @@ const buildFacetLabelGroups = (
   }));
 };
 
-const facetLabelTextOf = (value: FacetScalar): string => String(value);
+const facetDimensionItemOf = (
+  facet: FacetGrid,
+  dimension: FacetLabelDimension,
+  level: number,
+): FacetDimensionItem | undefined => {
+  const dimensions = facetDimensionsOf(dimension === 'column' ? facet.column : facet.row);
+  return dimensions[level];
+};
+
+const facetLabelTextOf = (
+  facet: FacetGrid,
+  dimension: FacetLabelDimension,
+  level: number,
+  value: FacetScalar,
+): IRNode['text'] => {
+  const item = facetDimensionItemOf(facet, dimension, level);
+  const label = item?.labels?.find(candidate => JSON.stringify(candidate.value) === JSON.stringify(value));
+  return label?.label ?? String(value);
+};
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验。 */
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
@@ -1485,7 +1523,7 @@ const resolveMarkRows = (
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
 ): Array<ExternalRow> => {
-  const transform = (mark as { transform?: Array<TransformOperation> }).transform;
+  const transform = (mark as { transform?: Array<Transform> }).transform;
   if (transform === undefined) return rows;
   return applyTransforms(rows, transform, transformRegistry, transformContext);
 };
@@ -2046,14 +2084,19 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
     const facetLayout = arrangementLayoutOf(facets[0]);
     const panelGap = facetLayout?.panelGap ?? 0;
-    const facetLabelsEnabled = facets.some(facet => facet.header?.row === true || facet.header?.column === true);
+    const facetLabelsEnabled = facets.some(
+      facet => isFacetHeaderVisible(facet, 'row') || isFacetHeaderVisible(facet, 'column'),
+    );
     const rowFacetLevelCount = facetLabelsEnabled
-      ? Math.max(0, ...facets.map(facet => (facet.header?.row === true ? facetDimensionsOf(facet.row).length : 0)))
+      ? Math.max(
+          0,
+          ...facets.map(facet => (isFacetHeaderVisible(facet, 'row') ? facetDimensionsOf(facet.row).length : 0)),
+        )
       : 0;
     const columnFacetLevelCount = facetLabelsEnabled
       ? Math.max(
           0,
-          ...facets.map(facet => (facet.header?.column === true ? facetDimensionsOf(facet.column).length : 0)),
+          ...facets.map(facet => (isFacetHeaderVisible(facet, 'column') ? facetDimensionsOf(facet.column).length : 0)),
         )
       : 0;
     const facetLabelBandSize =
@@ -2084,8 +2127,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       span: number,
       value: FacetScalar,
       rect: Rect,
-      rotate: number | undefined,
     ): IRScope => {
+      const style = facetHeaderLabelStyleOf(facet, dimension);
+      const rotate = facetHeaderLabelRotateOf(facet, dimension);
+      const maxTextWidth = style?.maxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
@@ -2105,9 +2150,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
           {
             type: 'node',
             position,
-            text: facetLabelTextOf(value),
-            rotate,
-            maxTextWidth: Math.max(1, (rotate === undefined ? rect.width : rect.height) - 8),
+            text: facetLabelTextOf(facet, dimension, level, value),
+            ...style,
+            ...(rotate !== undefined ? { rotate } : {}),
+            maxTextWidth,
           },
         ],
       };
@@ -2127,9 +2173,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
                 width: group.span * panelWidth + Math.max(0, group.span - 1) * panelGap,
                 height: facetLabelBandSize,
               };
-              labels.push(
-                makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect, undefined),
-              );
+              labels.push(makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect));
             }
           }
           for (let level = rowLevels - 1; level >= 0; level -= 1) {
@@ -2141,9 +2185,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
                 width: facetLabelBandSize,
                 height: group.span * panelHeight + Math.max(0, group.span - 1) * panelGap,
               };
-              labels.push(
-                makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect, -90),
-              );
+              labels.push(makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect));
             }
           }
           return labels;
@@ -2169,6 +2211,15 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (guide.dimension === 'y') return panel.columnIndex === 0;
       return panel.rowIndex === 0 && panel.columnIndex === 0;
     };
+    const axisConsumesFacetPanelLayout = (guide: Guide, panel: FacetPanel): boolean => {
+      if (!isAxisGuide(guide)) return true;
+      const resolve = arrangementResolveOf(panel.facet);
+      const policy = axisPolicyFor(resolve, { hasFacets: true, hasScaffolds: false }, guide.dimension);
+      if (policy !== 'outerShared') return true;
+      const sharing = resolve?.scale?.[guide.dimension] ?? 'shared';
+      if (sharing === 'independent') return true;
+      return guide.dimension !== 'x';
+    };
     const selectorMatchesFacetPanel = (selector: GridTargetSelector, panel: FacetPanel): boolean => {
       if (selector.view !== undefined) {
         const views = Array.isArray(selector.view) ? selector.view : [selector.view];
@@ -2193,6 +2244,12 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     };
     const facetAxisGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
       withoutAxisGrid(facetGuides.filter(guide => keepOuterSharedAxisForPanel(guide, panel)));
+    const facetFrameGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
+      withoutAxisGrid(
+        facetGuides.filter(
+          guide => keepOuterSharedAxisForPanel(guide, panel) && axisConsumesFacetPanelLayout(guide, panel),
+        ),
+      );
     const facetGridGuidesForPanel = (panel: FacetPanel): Array<Guide> =>
       facetGuides.flatMap(guide =>
         isAxisGuide(guide) && axisGridTargetsFacetPanel(guide, panel) ? [withEnabledAxisGrid(guide, undefined)] : [],
@@ -2217,6 +2274,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
     const panelScopes: Array<IRScope> = panels.map(panel => {
       const panelAxisGuides = facetAxisGuidesForPanel(panel);
+      const panelFrameGuides = facetFrameGuidesForPanel(panel);
       const panelMarkDataViews: Array<MarkDataView> = node.marks.map(mark => ({
         mark,
         rows: resolveMarkRows(mark, panel.rows, transformRegistry, transformContext),
@@ -2230,7 +2288,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
         composition: undefined,
         marks: node.marks,
-        guides: panelAxisGuides,
+        guides: panelFrameGuides,
       };
       const panelLayout = arrangementLayoutOf(panel.facet);
       const frameResolution = resolveFrame({
@@ -2248,6 +2306,25 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         markDataViews,
         roleMarkDataViews,
       });
+      const axisResolution =
+        panelAxisGuides.length === panelFrameGuides.length
+          ? frameResolution
+          : resolveFrame({
+              node: { ...panelNode, guides: panelAxisGuides },
+              rows: panel.rows,
+              fieldTypes,
+              width: panelWidth,
+              height: panelHeight,
+              fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+              margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+              labelGap: panelLayout?.labelGap,
+              plotAreaOverride: frameResolution.plotArea,
+              provenance,
+              coordinates: options.coordinates,
+              scaleRegistry,
+              markDataViews,
+              roleMarkDataViews,
+            });
       const panelGridGuides = facetGridGuidesForPanel(panel);
       const gridResolution =
         panelGridGuides.length > 0
@@ -2308,7 +2385,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         children: [
           ...(gridResolution?.gridLayers ?? []).map(layer => withScopeContext(layer, panelContext) as IRScope),
           ...markLayers,
-          ...frameResolution.axisLayers.map(layer => withScopeContext(layer, panelContext) as IRScope),
+          ...axisResolution.axisLayers.map(layer => withScopeContext(layer, panelContext) as IRScope),
         ],
       };
       const translateX = rowLabelWidth + panel.columnIndex * panelStrideX;

@@ -1,4 +1,4 @@
-import type { DataModel } from '@retikz/data';
+import type { IRDataModel } from '@retikz/data';
 import type { FC } from 'react';
 
 import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
@@ -6,7 +6,7 @@ import { Layout } from '@retikz/react';
 
 import { currentSales, forecastSales } from './processing-same.data';
 
-const model: DataModel = [
+const model: IRDataModel = [
   { name: 'month', type: 'temporal' },
   { name: 'revenue', type: 'continuous' },
 ];

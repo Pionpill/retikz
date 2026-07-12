@@ -5,7 +5,7 @@ import type { PlotLocatorOptions, ResolvedAnchor } from './locator';
 
 /** plot row value 样本选项。 */
 export type PlotRowValueOptions = {
-  /** 最大记录行数，必须为正有限数。 */
+  /** 最大记录行数，必须为正整数。 */
   maxRows: number;
   /** 允许记录值的字段白名单，必须非空；不允许省略后记录整行。 */
   fields: Array<string>;

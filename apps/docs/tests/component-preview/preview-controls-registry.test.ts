@@ -3,11 +3,17 @@ import { describe, expect, it } from 'vitest';
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import {
   buildControlsKey,
+  buildLangControlsKey,
   controlModules,
+  resolveControlsKey,
   resolvePreviewControls,
 } from '../../src/modules/docs/components/component-preview';
 
 describe('preview controls registry', () => {
+  it('exports a localized controls key resolver', () => {
+    expect((componentPreviewExports as Record<string, unknown>).resolveControlsKey).toBeTypeOf('function');
+  });
+
   it('exports the public registry helpers from the top-level barrel only', () => {
     expect(buildControlsKey).toBeTypeOf('function');
     expect(controlModules).toBeTypeOf('object');
@@ -33,6 +39,25 @@ describe('preview controls registry', () => {
     );
   });
 
+  it('优先解析语言化 controls，并在缺失时回退通用文件', () => {
+    const segments = ['viz', 'grammar', 'mark', 'path'];
+    const englishKey = buildLangControlsKey(segments, 'line-curve', 'en');
+
+    expect(Object.keys(controlModules).filter(key => key.includes('line-curve'))).toContain(englishKey);
+    expect(resolveControlsKey(segments, 'line-curve', 'en')).toBe(englishKey);
+    expect(resolveControlsKey(segments, 'line-curve', 'fr')).toBe(buildControlsKey(segments, 'line-curve'));
+
+    const controls = resolvePreviewControls(controlModules[englishKey]);
+    expect(controls?.[0]).toMatchObject({
+      kind: 'select',
+      label: 'Connection',
+      options: expect.arrayContaining([
+        { value: 'linear', label: 'Linear' },
+        { value: 'step', label: 'Step' },
+      ]),
+    });
+  });
+
   it('resolves named *Controls exports only', () => {
     const controls = [{ kind: 'input', id: 'size', label: 'Size', defaultValue: '6' }];
 
@@ -40,11 +65,13 @@ describe('preview controls registry', () => {
     expect(resolvePreviewControls({ lineCurveActions: controls })).toBeUndefined();
   });
 
-  it('loads current path mark controls from all migrated control files', () => {
+  it('仅收集 canonical controls，不要求复用方提供转发模块', () => {
     const segments = ['viz', 'grammar', 'mark', 'path'];
 
     expect(resolvePreviewControls(controlModules[buildControlsKey(segments, 'line-curve')])).toBeDefined();
-    expect(resolvePreviewControls(controlModules[buildControlsKey(segments, 'line-closure')])).toBeDefined();
-    expect(resolvePreviewControls(controlModules[buildControlsKey(segments, 'line-stack-area')])).toBeDefined();
+    expect(controlModules[buildControlsKey(segments, 'line-closure')]).toBeUndefined();
+    expect(controlModules[buildLangControlsKey(segments, 'line-closure', 'en')]).toBeUndefined();
+    expect(controlModules[buildControlsKey(segments, 'line-stack-area')]).toBeUndefined();
+    expect(controlModules[buildLangControlsKey(segments, 'line-stack-area', 'en')]).toBeUndefined();
   });
 });

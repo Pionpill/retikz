@@ -5,10 +5,10 @@ import { collectTransformFields } from '@retikz/data';
 import { type AnyMarkDefinition } from '../contract';
 import { collectMarkFields, resolveMarkRegistry, resolvePlotTransformRegistry } from '../providers';
 import { createFieldCollector } from '../providers/channel/shared';
-import { type MarkOperation, type PlotSpec, type TransformOperation } from '../schemas';
+import { type MarkOperation, type PlotSpec, type Transform } from '../schemas';
 
-const markTransformOf = (mark: MarkOperation): Array<TransformOperation> | undefined =>
-  (mark as { transform?: Array<TransformOperation> }).transform;
+const markTransformOf = (mark: MarkOperation): Array<Transform> | undefined =>
+  (mark as { transform?: Array<Transform> }).transform;
 
 /** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验。 */
 export const collectSourceFields = (
