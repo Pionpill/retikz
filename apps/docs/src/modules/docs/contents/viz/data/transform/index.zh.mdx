@@ -35,6 +35,8 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 
 `sort` 按一个字段稳定重排行。等值时保留原始相对顺序，适合在折线连接、时间序列展示或后续分组处理前固定行序。
 
+`null`、`undefined`、`NaN` 与无穷值按 missing 处理，无论升序还是降序都稳定排在有效值之后。
+
 注意把它和数据模型里的 [`order`](/viz/data/model#分类顺序) 分开：`sort` 排的是数据行，`order` 排的是分类域。
 
 <ComponentPreview name="transform-sort" sourceFiles={['transform-sort.data.ts']} />
@@ -47,6 +49,8 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 ## 汇总 summarize
 
 `summarize` 按 `groupBy` 分组，并用 `metrics` 把每组明细规约成一行。输出行保留组键，每个 reducer 都必须显式写 `as` 字段名。
+
+同一个 operation 内的输出名必须唯一：summarize 的 reducer 输出不能与 `groupBy` 重名，annotate 的 metric 输出与 selector `as` 也不能互相重名；冲突会在 schema 解析阶段直接报错。
 
 <ComponentPreview name="transform-summarize" sourceFiles={['transform-summarize.data.ts']} />
 
@@ -114,6 +118,8 @@ transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`Re
 | selector | 原始行   | `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band` |
 
 `quantile-band` 用 `lowerP` 和 `upperP` 定义任意分位区间，不固定成 q1 / q3。`outside-quantile-band` 是 selector，所以它输出原始行，适合保留 id、标签和 provenance。
+
+当字段没有任何有限数值时，`sum` 仍按空和返回 `0`，`count` 返回组内行数；`mean`、`median`、`min`、`max`、`extent`、`quantile` 与 `quantile-band` 没有可定义统计量，返回 invalid sentinel 交给下游 skip / error 策略处理，不会伪造成 0。
 
 <ComponentPreview name="transform-boxplot" sourceFiles={['transform-boxplot.data.ts']} />
 

@@ -1,10 +1,10 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
 import type { DataFieldTypeMap } from '../../contract';
-import type { DataFieldTypeValue, IRDataModel } from '../../schemas';
+import type { DataFieldTypeValue, DataSortOrderValue, IRDataModel } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 
-import { DataFieldType } from '../../schemas';
+import { DataFieldType, DataSortOrder } from '../../schemas';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）
@@ -21,12 +21,38 @@ export const resolveFieldPath = (row: ExternalRow, path: string): unknown => {
   return current;
 };
 
-/** 按字段路径比较两行；有限数值按数值升序比较，其余按字符串序比较。 */
-export const compareRowsByFieldPath = (a: ExternalRow, b: ExternalRow, path: string): number => {
+/** 判断排序值是否缺失或为非有限数值。 */
+const isMissingSortValue = (value: unknown): boolean =>
+  value === undefined || value === null || (typeof value === 'number' && !isFiniteNumber(value));
+
+/**
+ * 按字段路径和方向比较两行。
+ * @description missing / 非有限数值始终排在有效值之后；有限数值按数值比较，其余按稳定字符串序比较。
+ */
+export const compareRowsByFieldPath = (
+  a: ExternalRow,
+  b: ExternalRow,
+  path: string,
+  order: DataSortOrderValue = DataSortOrder.Ascending,
+): number => {
   const va = resolveFieldPath(a, path);
   const vb = resolveFieldPath(b, path);
-  if (isFiniteNumber(va) && isFiniteNumber(vb)) return va - vb;
-  return String(va).localeCompare(String(vb));
+  const aMissing = isMissingSortValue(va);
+  const bMissing = isMissingSortValue(vb);
+  if (aMissing || bMissing) {
+    if (aMissing && bMissing) return 0;
+    return aMissing ? 1 : -1;
+  }
+
+  const compared =
+    isFiniteNumber(va) && isFiniteNumber(vb)
+      ? va - vb
+      : String(va) === String(vb)
+        ? 0
+        : String(va) < String(vb)
+          ? -1
+          : 1;
+  return order === DataSortOrder.Descending ? -compared : compared;
 };
 
 /**

@@ -223,6 +223,8 @@ data 的 schema 派生类型统一带 `IRData` owner 前缀，便于和 core、p
 
 <ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
 
+自定义 parser 要直接返回最终字段类型可消费的 canonical 值：`continuous` / `temporal` 返回有限数值，`categorical` 返回字符串或有限数值。类型不匹配、`NaN` 或无穷值会按 invalid 值收口，不会作为合法 canonical 数据流入 transform。
+
 解析和归一化发生在 transform、scale、mark 之前。Plot 会把解析后的值按逻辑字段名写入 canonical 行（规范化行：解析、归一后写回逻辑字段名的标准行）；后续所有环节都读这份值。因此 `fieldMap={{ revenue: 'finance.amount' }}`、`format: 'percent'` 和自定义解析都只影响数据准备阶段，mark 里仍然写 `y="revenue"`。
 
 ## 校验脏数据

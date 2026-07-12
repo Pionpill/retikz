@@ -95,6 +95,32 @@ describe('transform schema', () => {
     expect(SelectorOperationSchema.safeParse({ kind: 'min' }).success).toBe(false);
   });
 
+  it('rejects transform output fields that collide within one operation', () => {
+    expect(
+      TransformSchema.safeParse({
+        kind: 'summarize',
+        groupBy: ['group'],
+        metrics: [{ kind: 'count', as: 'group' }],
+      }).success,
+    ).toBe(false);
+    expect(
+      TransformSchema.safeParse({
+        kind: 'annotate',
+        metrics: [{ kind: 'sum', field: 'value', as: 'stat' }],
+        selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'stat' }],
+      }).success,
+    ).toBe(false);
+    expect(
+      TransformSchema.safeParse({
+        kind: 'annotate',
+        selectors: [
+          { selector: { kind: 'min', by: 'value' }, as: 'stat' },
+          { selector: { kind: 'max', by: 'value' }, as: 'stat' },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
   it('rejects unknown keys on built-in transforms without blocking external config', () => {
     expect(() => TransformSchema.parse({ kind: 'sort', field: 'month', oder: 'descending' })).toThrow();
     expect(() =>

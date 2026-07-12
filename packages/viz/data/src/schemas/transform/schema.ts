@@ -2,6 +2,7 @@
 import { z } from 'zod';
 
 import { DataSortOrder, DataTransform, RESERVED_TRANSFORM_KINDS } from './constants';
+import { reducerOutputFieldsOf } from './output-fields';
 import { ReducerMetricsSchema } from './reducer';
 import { SelectorOperationSchema } from './selector';
 
@@ -26,6 +27,19 @@ export const SummarizeTransformSchema = z
     kind: z.literal(DataTransform.Summarize).describe('Discriminator: summarize transform'),
     groupBy: GroupBySchema,
     metrics: ReducerMetricsSchema.describe('Reducer metrics'),
+  })
+  .superRefine((operation, ctx) => {
+    const groupFields = new Set(operation.groupBy ?? []);
+    operation.metrics.forEach((metric, metricIndex) => {
+      for (const { field, path } of reducerOutputFieldsOf(metric)) {
+        if (!groupFields.has(field)) continue;
+        ctx.addIssue({
+          code: 'custom',
+          path: ['metrics', metricIndex, ...path],
+          message: `reducer output field "${field}" must not collide with a groupBy field`,
+        });
+      }
+    });
   })
   .describe('Group rows into metric rows');
 
@@ -62,6 +76,19 @@ export const AnnotateTransformSchema = z
         message: 'annotate transform requires metrics or selectors',
       });
     }
+    const outputFields = new Set(
+      (operation.metrics ?? []).flatMap(metric => reducerOutputFieldsOf(metric).map(output => output.field)),
+    );
+    operation.selectors?.forEach((selector, selectorIndex) => {
+      if (outputFields.has(selector.as)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['selectors', selectorIndex, 'as'],
+          message: `duplicate annotate output field "${selector.as}"`,
+        });
+      }
+      outputFields.add(selector.as);
+    });
   })
   .describe('Append group metrics or selector annotations');
 

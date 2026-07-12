@@ -57,6 +57,20 @@ export const vizV01: Release = {
                 en: 'Slash-date parsing now rejects overflowing calendar dates; top / bottom selectors use the same threshold logic for boundary ties under `tie="all"` and `tie="last"`.',
               },
             },
+            {
+              label: { zh: '脏数据与输出冲突不再静默改值', en: 'Dirty data and output collisions fail safely' },
+              content: {
+                zh: '自定义 parser 输出会按字段类型收口；无有效数值的非恒等统计返回 invalid sentinel；summarize / annotate 的静态输出名冲突在 schema 阶段 fail-loud。',
+                en: 'Custom parser outputs are narrowed by field type; undefined non-identity statistics return invalid sentinels; summarize / annotate output-name collisions now fail loudly at the schema boundary.',
+              },
+            },
+            {
+              label: { zh: '排序统一 missing-last', en: 'Unified missing-last ordering' },
+              content: {
+                zh: 'sort transform 与 selector 共用同一比较契约；`null`、`undefined`、`NaN` 和无穷值在升降序下都稳定排到有效值之后。',
+                en: 'Sort transforms and selectors now share one comparison contract; `null`, `undefined`, `NaN`, and infinities stay after valid values in both directions.',
+              },
+            },
           ],
         },
         {

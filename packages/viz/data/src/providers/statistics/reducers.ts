@@ -39,7 +39,9 @@ const meanReducerDefinition = defineStatisticsReducer({
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length };
+    return {
+      [operation.as]: values.length === 0 ? NaN : values.reduce((sum, value) => sum + value, 0) / values.length,
+    };
   },
 });
 
@@ -58,7 +60,7 @@ const minReducerDefinition = defineStatisticsReducer({
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : Math.min(...values) };
+    return { [operation.as]: values.length === 0 ? NaN : Math.min(...values) };
   },
 });
 
@@ -69,7 +71,7 @@ const maxReducerDefinition = defineStatisticsReducer({
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : Math.max(...values) };
+    return { [operation.as]: values.length === 0 ? NaN : Math.max(...values) };
   },
 });
 
@@ -80,7 +82,7 @@ const extentReducerDefinition = defineStatisticsReducer({
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? [0, 0] : [Math.min(...values), Math.max(...values)] };
+    return { [operation.as]: values.length === 0 ? [NaN, NaN] : [Math.min(...values), Math.max(...values)] };
   },
 });
 

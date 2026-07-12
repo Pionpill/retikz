@@ -4,23 +4,10 @@ import type { DataSortOrderValue, IRDataOrderBy } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 
 import { DataSortOrder } from '../../schemas';
-import { resolveFieldPath } from '../data';
+import { compareRowsByFieldPath, resolveFieldPath } from '../data';
 
 /** quantile-band spread whisker 的默认倍率。 */
 const DEFAULT_QUANTILE_BAND_SPREAD_FACTOR = 1.5;
-
-/** 按指定方向比较排序字段值；空值不参与方向翻转并稳定排到末尾。 */
-const compareValues = (left: unknown, right: unknown, order: DataSortOrderValue | undefined): number => {
-  const leftMissing = left === undefined || left === null;
-  const rightMissing = right === undefined || right === null;
-  if (leftMissing || rightMissing) {
-    if (leftMissing && rightMissing) return 0;
-    return leftMissing ? 1 : -1;
-  }
-  if (left === right) return 0;
-  const compared = left < right ? -1 : 1;
-  return order === DataSortOrder.Descending ? -compared : compared;
-};
 
 /** 提取一组 rows 中某字段的有限数值，并保留原始行引用。 */
 const finiteValueEntriesOf = (rows: Array<ExternalRow>, field: string): Array<{ row: ExternalRow; value: number }> => {
@@ -32,9 +19,9 @@ const finiteValueEntriesOf = (rows: Array<ExternalRow>, field: string): Array<{ 
   return entries;
 };
 
-/** 计算中位数；空集合按统计变换的零值约定返回 0。 */
+/** 计算中位数；空集合没有可定义统计量，返回 NaN invalid sentinel。 */
 export const medianOf = (values: Array<number>): number => {
-  if (values.length === 0) return 0;
+  if (values.length === 0) return NaN;
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 === 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
@@ -42,7 +29,7 @@ export const medianOf = (values: Array<number>): number => {
 
 /** 在已排序数值数组上按线性插值计算分位点。 */
 export const quantileOfSorted = (sorted: Array<number>, p: number): number => {
-  if (sorted.length === 0) return 0;
+  if (sorted.length === 0) return NaN;
   if (sorted.length === 1) return sorted[0];
   const index = (sorted.length - 1) * p;
   const lo = Math.floor(index);
@@ -59,10 +46,10 @@ export const quantileOf = (values: Array<number>, p: number): number =>
     p,
   );
 
-/** 计算有限数值范围；空集合按统计变换的零值约定返回 `[0, 0]`。 */
+/** 计算有限数值范围；空集合的端点返回 NaN invalid sentinel。 */
 export const finiteExtentOf = (values: Array<number>): { min: number; max: number; count: number } => ({
-  min: values.length === 0 ? 0 : Math.min(...values),
-  max: values.length === 0 ? 0 : Math.max(...values),
+  min: values.length === 0 ? NaN : Math.min(...values),
+  max: values.length === 0 ? NaN : Math.max(...values),
   count: values.length,
 });
 
@@ -111,11 +98,7 @@ export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<IRDataOrderB
     .map((row, index) => ({ row, index }))
     .sort((left, right) => {
       for (const order of orderBy) {
-        const compared = compareValues(
-          resolveFieldPath(left.row, order.field),
-          resolveFieldPath(right.row, order.field),
-          order.order,
-        );
+        const compared = compareRowsByFieldPath(left.row, right.row, order.field, order.order);
         if (compared !== 0) return compared;
       }
       return left.index - right.index;

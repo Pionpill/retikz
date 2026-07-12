@@ -225,6 +225,8 @@ Use `resolveField` when parsing needs per-source branches, multiple raw fields, 
 
 <ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
 
+Custom parsers must return a canonical value consumable by the final field type: a finite number for `continuous` / `temporal`, or a string / finite number for `categorical`. Type mismatches, `NaN`, and infinities are normalized as invalid values instead of flowing into transforms as valid canonical data.
+
 Parsing and normalization happen before transforms, scales, and marks. Plot writes parsed values back under logical field names into the canonical row (the standardized row after parsing and coercion); every later stage reads that value. So `fieldMap={{ revenue: 'finance.amount' }}`, `format: 'percent'`, and custom parsing only affect preparation; the mark still says `y="revenue"`.
 
 ## Validating dirty data
