@@ -316,11 +316,35 @@ export const kernelV04: Release = {
       pkg: '@retikz/vanilla',
       version: 'v0.4',
       description: {
-        zh: 'Vanilla DSL 跟进 core v0.4：`node` / `draw` config 经 `Omit<IR*>` 自动获得 `shadow` / `blendMode`、Path kind / ribbon 等核心字段。',
-        en: 'The vanilla DSL follows core v0.4: `node` / `draw` config get core fields such as `shadow` / `blendMode`, Path kind, and ribbon through `Omit<IR*>`.',
+        zh: 'Vanilla v0.4 以 plain spec 统一无框架作者模型和 runtime 入口，并为分层 metadata、Tier 2 adapter 与后续增量更新建立稳定边界。',
+        en: 'Vanilla v0.4 unifies framework-free authoring and runtime around plain specs, establishing stable boundaries for layer metadata, Tier 2 adapters, and future incremental updates.',
       },
       highlights: [],
       subVersions: [
+        {
+          version: 'beta.2',
+          date: '2026-07-12',
+          summary: {
+            zh: '以可结构化比较的 plain object spec 取代旧 `Figure` builder；新增统一 `mount`、layer metadata 和显式 Tier 2 adapter，并收紧 Vanilla 包根公共面。',
+            en: 'Replaces the old `Figure` builder with structurally comparable plain-object specs; adds unified `mount`, layer metadata, and explicit Tier 2 adapters while tightening the Vanilla root API.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：移除 Figure builder', en: 'BREAKING: Figure builder removed' },
+              content: {
+                zh: '原 `.node()` / `.draw()` / `.mount()` / `.toSvgString()` 链式写法改为 `figure({ children | layers })` 配合独立的 `mount()` / `renderToSvgString()`；`draw()` 改用与 core IR 对齐的 `path()`。旧 builder、内部品牌字段和 core 能力转发不再从 `@retikz/vanilla` 导出。',
+                en: 'Replace chained `.node()` / `.draw()` / `.mount()` / `.toSvgString()` calls with `figure({ children | layers })` plus standalone `mount()` / `renderToSvgString()`, and replace `draw()` with the core-IR-aligned `path()`. The old builder, internal brands, and forwarded core capabilities are no longer exported from `@retikz/vanilla`.',
+              },
+            },
+            {
+              label: { zh: 'Layer 与 Tier 2 边界', en: 'Layer and Tier 2 boundaries' },
+              content: {
+                zh: '`layer()` 保留 cache、顺序和 identity metadata 而不污染 core IR；`embed()` 通过显式 `VanillaTier2Adapter` 聚合 datasets 与 composite definitions。`view.update()` 当前仍整图重绘，但保持根元素 identity 与 live hydration context。',
+                en: '`layer()` preserves cache, ordering, and identity metadata without polluting core IR, while `embed()` aggregates datasets and composite definitions through an explicit `VanillaTier2Adapter`. `view.update()` still redraws the full figure, but preserves root identity and live hydration context.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.6',
           date: '2026-06-28',
