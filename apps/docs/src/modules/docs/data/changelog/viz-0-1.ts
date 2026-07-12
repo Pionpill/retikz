@@ -37,6 +37,13 @@ export const vizV01: Release = {
           },
           items: [
             {
+              label: { zh: 'BREAKING：只读集合 helper 内收', en: 'BREAKING: Readonly collection helpers are internal' },
+              content: {
+                zh: '`createReadonlyMap` 与 `createReadonlySet` 不再从 `@retikz/data` 包根导出；它们属于 registry 状态隔离的内部基础设施。外部代码应直接使用原生 `Map` / `Set`，或自行维护所需的只读视图。',
+                en: '`createReadonlyMap` and `createReadonlySet` are no longer exported from the `@retikz/data` package root; they are internal infrastructure for registry state isolation. External code should use native `Map` / `Set` instances or maintain its own readonly views.',
+              },
+            },
+            {
               label: { zh: 'BREAKING：transform schema 入口收口', en: 'BREAKING: Consolidated transform schema entry' },
               content: {
                 zh: '移除与 `TransformSchema` 完全相同的 `TransformOperationSchema` 公共别名；原有导入直接改为 `TransformSchema`，schema 行为不变。',

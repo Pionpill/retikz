@@ -13,7 +13,7 @@ import {
   SortTransformSchema,
   SummarizeTransformSchema,
 } from '../../schemas';
-import { createReadonlyMap } from '../../shared';
+import { createReadonlyMap } from '../../shared/collections';
 import { freezeDefinitions } from '../shared';
 import { reducerInputFields, reducerOutputFields, selectorInputFields } from '../statistics';
 import { applyAnnotate, applySelect, applySummarize } from './group';
