@@ -20,8 +20,11 @@
     "check:release-groups": "node scripts/check-release-groups.mjs",
     "build": "pnpm -r --if-present run build",
     "test": "pnpm run test:full",
-    "test:full": "pnpm -r --if-present run test:run",
+    "test:full": "pnpm -r --if-present run test:run && pnpm run test:release-groups && pnpm run test:publish-artifacts:unit",
     "test:release-groups": "node scripts/check-release-groups.test.mjs",
+    "test:publish-artifacts:unit": "node --test scripts/check-publish-artifacts.test.mjs",
+    "test:publish-artifacts": "node scripts/check-publish-artifacts.mjs",
+    "update:publish-artifact-limits": "node scripts/check-publish-artifacts.mjs --update-limits",
     "test:kernel": "pnpm --filter @retikz/math --filter @retikz/core --filter @retikz/render --filter @retikz/react --filter @retikz/vanilla --filter @retikz/tex -r --if-present run test:run",
     "test:viz": "pnpm --filter @retikz/data --filter @retikz/plot --filter @retikz/plot-react --filter @retikz/plot-vanilla -r --if-present run test:run",
     "test:apps": "pnpm --filter @retikz/docs --filter @retikz/eval -r --if-present run test:run",
@@ -47,6 +50,9 @@
     "globals": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:"
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
   }
 }

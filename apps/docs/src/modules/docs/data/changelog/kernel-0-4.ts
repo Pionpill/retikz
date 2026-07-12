@@ -1,5 +1,7 @@
 import type { Release } from '../types';
 
+import { esmOnlyChangeItem } from './esm-only';
+
 export const kernelV04: Release = {
   minor: 'v0.4',
   stableDate: null,
@@ -28,7 +30,7 @@ export const kernelV04: Release = {
             zh: '修正 `intersect.lineCircle` 的退化方向判断：短但有效的方向向量现在与其单位化写法得到相同交点，不再因向量缩放误返回空结果。',
             en: 'Fixes degenerate-direction detection in `intersect.lineCircle`: short but valid direction vectors now produce the same intersections as their normalized form instead of incorrectly returning no hits.',
           },
-          items: [],
+          items: [esmOnlyChangeItem],
         },
         {
           version: 'alpha.3',
@@ -98,6 +100,7 @@ export const kernelV04: Release = {
             en: 'Tightens Scene input boundaries and adds `lowerIRToKernel`, allowing adapters to reuse core composite lowering and turn Tier 2 IR into pure Kernel IR.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'BREAKING：Scene schema 闭合', en: 'BREAKING: closed Scene schemas' },
               content: {
@@ -215,6 +218,15 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'beta.2',
+          date: '2026-07-12',
+          summary: {
+            zh: '统一发布为 ESM-only，并要求 Node.js 24 或更高版本。',
+            en: 'Standardizes publishing on ESM-only and requires Node.js 24 or newer.',
+          },
+          items: [esmOnlyChangeItem],
+        },
+        {
           version: 'alpha.4',
           date: '2026-06-16',
           summary: {
@@ -242,6 +254,7 @@ export const kernelV04: Release = {
             en: '`@retikz/react` narrows its root public surface and lets `convertIRToReactNode` lower Tier 2 IR through definitions into semantically equivalent Kernel JSX.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'BREAKING：移除 renderer internals', en: 'BREAKING: renderer internals removed' },
               content: {
@@ -329,6 +342,7 @@ export const kernelV04: Release = {
             en: 'Replaces the old `Figure` builder with structurally comparable plain-object specs; adds unified `mount`, layer metadata, and explicit Tier 2 adapters while tightening the Vanilla root API.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'BREAKING：移除 Figure builder', en: 'BREAKING: Figure builder removed' },
               content: {
@@ -390,7 +404,7 @@ export const kernelV04: Release = {
             zh: '`useLowerTex` 现在保留 MathJax 初始化原始错误、同次失败只报告一次，并在后续挂载时重试。',
             en: '`useLowerTex` now preserves the original MathJax startup error, reports each shared failure once, and retries on a later mount.',
           },
-          items: [],
+          items: [esmOnlyChangeItem],
         },
         {
           version: 'alpha.5',

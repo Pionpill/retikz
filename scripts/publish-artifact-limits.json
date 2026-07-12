@@ -1,0 +1,42 @@
+{
+  "@retikz/core": {
+    "maxFiles": 900,
+    "maxPackedBytes": 337920
+  },
+  "@retikz/data": {
+    "maxFiles": 150,
+    "maxPackedBytes": 71680
+  },
+  "@retikz/math": {
+    "maxFiles": 60,
+    "maxPackedBytes": 30720
+  },
+  "@retikz/plot": {
+    "maxFiles": 360,
+    "maxPackedBytes": 440320
+  },
+  "@retikz/plot-react": {
+    "maxFiles": 40,
+    "maxPackedBytes": 51200
+  },
+  "@retikz/plot-vanilla": {
+    "maxFiles": 20,
+    "maxPackedBytes": 20480
+  },
+  "@retikz/react": {
+    "maxFiles": 150,
+    "maxPackedBytes": 81920
+  },
+  "@retikz/render": {
+    "maxFiles": 180,
+    "maxPackedBytes": 112640
+  },
+  "@retikz/tex": {
+    "maxFiles": 40,
+    "maxPackedBytes": 20480
+  },
+  "@retikz/vanilla": {
+    "maxFiles": 60,
+    "maxPackedBytes": 30720
+  }
+}

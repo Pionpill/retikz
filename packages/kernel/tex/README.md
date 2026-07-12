@@ -8,6 +8,9 @@ Optional TeX formula support for [retikz](https://pionpill.github.io/retikz/). I
 pnpm add @retikz/tex mathjax-full
 ```
 
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
 `mathjax-full` is an optional peer dependency. Install it when you call `createMathJaxEngine()` or `useLowerTex()`. If you already have a compatible TeX-to-SVG runtime, inject your own `MathJaxSvgEngine` instead.
 
 React users also need `react >= 18` for the `@retikz/tex/react` subpath.

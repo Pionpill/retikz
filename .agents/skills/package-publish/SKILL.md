@@ -94,6 +94,7 @@ pnpm run check:full
 pnpm run check:release-groups
 pnpm run test:full
 pnpm run build
+pnpm run test:publish-artifacts
 ```
 
 然后按发布顺序 dry-run 发布组内每个包：
@@ -105,6 +106,8 @@ pnpm --filter @retikz/core publish --dry-run --no-git-checks --access public --t
 逐包检查 dry-run 输出：
 
 - tarball 只包含 `dist/`、`LICENSE`、`README.md`、`package.json`；
+- runtime 只位于 `dist/**/*.js`，declarations 只位于 `dist/types/**/*.d.ts` / `*.d.ts.map`；
+- 不含 `dist/es`、`dist/lib` 或 `.cjs`，全部 package exports 与公开 subpath 已通过 packed ESM import；
 - `workspace:*` 依赖已解析为确切版本，`workspace:^` 依赖已解析为兼容范围；
 - package name 和 version 正确；
 - publishable 包没有 `"private": true`；
@@ -116,6 +119,8 @@ pnpm --filter @retikz/core publish --dry-run --no-git-checks --access public --t
 rg '"private": true' packages/*/*/package.json
 rg --files packages | rg 'packages/.*/src/.*\.(d\.ts|d\.ts\.map|js)$'
 ```
+
+若公开模块正常增长导致 artifact limits 需要调整，先完成构建，再显式运行 `pnpm run update:publish-artifact-limits`；逐包核对生成的文件数与 tarball bytes diff 后，重新运行普通 `pnpm run test:publish-artifacts`。普通验证命令不得改写 limits。
 
 ## 授权暂停点
 
