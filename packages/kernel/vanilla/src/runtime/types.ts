@@ -72,7 +72,7 @@ export type VanillaView = {
   /**
    * 绑定 handler 到本 view 的 `<svg>`（locateSvg 定位）；handler 收 `(event, context)` 富上下文
    * @description context 由本 view 的 Scene 构造（meta / geometry / per-id 动画控制），读 live `currentScene`——
-   *   `update` 后 context 自动反映新图（无需重 hydrate）。`HydrateOptions.scene` / `renderer` 在 view.hydrate 下忽略。
+   *   `update` 后 context 自动反映新图（无需重 hydrate）。`HydrateOptions.scene` 在 view.hydrate 下忽略。
    */
   hydrate: (options: HydrateOptions) => HydrationHandle;
   /** 动画播放控制句柄（scene 含动画且未降级时存在）：play / pause / seek；manual trigger 经此驱动 */
@@ -88,9 +88,9 @@ export type HydrationHandle = {
 };
 
 /**
- * 水合入参：按 id 提供的 handler 注册表（事件名 → handler）+ 可选 Scene（富 context 来源）
- * @description `view.hydrate`（mountSvg / mountCanvas）忽略 `scene` / `renderer`、用自身 Scene 构造富 context；
- *   standalone `hydrate(root, options)`（SSR 后独立入口）传 `scene` → 富 context（meta / geometry / 动画），
+ * 水合入参：按 id 提供的 handler 注册表（事件名 → handler）+ 可选 Scene（standalone SVG 富 context 来源）
+ * @description `view.hydrate`（mountSvg / mountCanvas）忽略 `scene`、用自身 Scene 构造富 context；standalone
+ *   `hydrate(svg, options)` 只水合 SSR / 已有 SVG，传 `scene` → 富 context（meta / geometry / 动画），
  *   不传 → 最小 context（id + element + root + point，`meta` / `geometry` / `scene` undefined、`animation` no-op）。
  */
 export type HydrateOptions = {
@@ -98,8 +98,6 @@ export type HydrateOptions = {
   handlers: HydrationHandlers;
   /** 富 context 来源 Scene（仅 standalone `hydrate` 用；不传则最小 context）；可经 `compileToScene(ir)` 得到 */
   scene?: Scene;
-  /** standalone `hydrate` 的渲染后端（缺省 `'svg'`）；决定 context.renderer 与 element 定位口径 */
-  renderer?: 'svg' | 'canvas';
 };
 
 /** Scene user units 坐标点（hitTest 入参 / 坐标映射出参） */

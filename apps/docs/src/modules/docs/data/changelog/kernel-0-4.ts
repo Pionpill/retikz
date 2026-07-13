@@ -337,6 +337,13 @@ export const kernelV04: Release = {
               },
             },
             {
+              label: { zh: 'BREAKING：standalone hydrate 仅支持 SVG', en: 'BREAKING: standalone hydrate is SVG-only' },
+              content: {
+                zh: '`hydrate(svg, options)` 的首参收窄为 `SVGSVGElement`，并移除 `HydrateOptions.renderer`。SSR SVG 调用方传入注入后取得的 `<svg>` 根；Canvas 调用方改用 `mountCanvas(...).hydrate({ handlers })`，由 view 提供命中查询与坐标映射。',
+                en: 'The first argument of `hydrate(svg, options)` is narrowed to `SVGSVGElement`, and `HydrateOptions.renderer` is removed. SSR SVG callers should pass the injected `<svg>` root; Canvas callers should use `mountCanvas(...).hydrate({ handlers })`, whose view provides hit testing and coordinate mapping.',
+              },
+            },
+            {
               label: { zh: 'Layer 与 Tier 2 边界', en: 'Layer and Tier 2 boundaries' },
               content: {
                 zh: '`layer()` 保留 cache、顺序和 identity metadata 而不污染 core IR；`embed()` 通过显式 `VanillaTier2Adapter` 聚合 datasets 与 composite definitions。`view.update()` 当前仍整图重绘，但保持根元素 identity 与 live hydration context。',
