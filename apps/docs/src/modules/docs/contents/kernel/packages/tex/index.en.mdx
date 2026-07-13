@@ -1,5 +1,5 @@
 ---
-title: TeX Formulas
+title: Math Typesetting
 description: Write LaTeX, lowered to renderer-agnostic glyph paths via MathJax SVG; mix $...$ / $$...$$ inline in any text, injected into core via lowerTex.
 ---
 
@@ -30,10 +30,12 @@ const Diagram = () => {
 };
 ```
 
-<ComponentAlert
-  title="lowerTex injection required"
-  description="$...$ is only parsed when lowerTex is injected (React via Layout, vanilla via compile.lowerTex); without it a $ stays literal (existing text with $ is unchanged), and content carrying math degrades to no formula with a diagnosable warning instead of crashing."
-/>
+Without `lowerTex`, string sugar and explicit math runs behave differently:
+
+- **String sugar:** `$...$` / `$$...$$` is not parsed; the dollar signs and enclosed content remain ordinary text.
+- **Explicit math run:** the formula segment in `{ runs: [{ tex: '...' }] }` is skipped with a `TEX_LOWERER_MISSING` warning; other text still renders.
+
+Inject it through `<Layout lowerTex>` in React or `compile.lowerTex` in Vanilla.
 
 <ComponentAlert
   type="error"
@@ -107,7 +109,9 @@ const svg = renderToSvgString(spec, { compile: { lowerTex } });
 | `$...$`           | Inline formula (inline metrics, on the text baseline)                          |
 | `$$...$$`         | Display formula (block metrics; alone in a node = standalone / framed formula) |
 | `\$`              | A literal dollar sign (not a delimiter)                                        |
-| `{ runs: [...] }` | Explicit run sequence (canonical); each run can carry its own `fill` / `font`  |
+| `{ runs: [...] }` | Explicit run sequence (canonical)                                              |
+
+A text run can set its own `fill`, `opacity`, and `font`; a math run can set its own `fill` and `opacity`.
 
 ## API reference
 

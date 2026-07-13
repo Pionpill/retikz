@@ -30,7 +30,13 @@ const svg = renderToSvgString(spec);
 const view = mount(document.querySelector('#diagram')!, spec);
 ```
 
-`figure({ children })` is the shorthand for a single-layer figure. Use `layers` when you need caching, local invalidation, or future incremental updates.
+`figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or `cache` metadata. Updates in v0.4 still rerender the full figure and do not provide local invalidation.
+
+## From Spec To Output
+
+A plain spec first goes through `normalizeFigureSpec` to produce core IR (the JSON drawing contract), then through `compileToScene` to create the `Scene` consumed by renderers. `renderToSvgString`, `mountSvg`, and `mountCanvas` run this pipeline automatically when their input is a plain spec.
+
+<ComponentPreview files="vanilla-pipeline" size="sm" hideCode />
 
 ## Runtime Entries
 
@@ -42,7 +48,7 @@ const view = mount(document.querySelector('#diagram')!, spec);
 | `mountCanvas`       | Mount a Canvas explicitly                 | `CanvasView`                 |
 | `hydrate`           | Bind handlers to SSR / existing SVG roots | `HydrationHandle`            |
 
-`view.update(nextSpec)` still rerenders the whole figure today, but the root element identity stays stable. The plain spec keeps layer and identity metadata so future `patch` / `invalidate` can work at a smaller boundary.
+`view.update(nextSpec)` still rerenders the whole figure, while keeping the root element identity stable. Layer order, layer ids, the `cache` hint, and child identities are retained in `view.runtimeMeta`; this metadata does not mean local patching or invalidation is available.
 
 ## Options Shape
 
@@ -68,33 +74,47 @@ Omit `animation.enabled` to follow the system's reduced-motion preference. Expli
 
 ## Layers And Embeds
 
-`layer(id, options, children)` is an authoring boundary. `cache` is a runtime hint and does not enter core IR. `zIndex` only orders the layer stack; equal values keep declaration order.
+`layer(id, options, children)` is an authoring boundary. `cache` is a hint retained in runtime metadata and does not enter core IR. `zIndex` only orders the layer stack; equal values keep declaration order.
 
 Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a core IR child, datasets, and composite definitions.
 
 ```ts
-import { embed, figure, layer } from '@retikz/vanilla';
+import type { VanillaTier2Adapter } from '@retikz/vanilla';
+import { embed, figure, layer, node, renderToSvgString } from '@retikz/vanilla';
+
+type BadgeProps = { label: string };
+
+const badgeAdapter: VanillaTier2Adapter<BadgeProps> = {
+  kind: 'badge',
+  namespace: 'badge',
+  lower: (props, context) => ({
+    node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
+    datasets: {},
+    makeComposites: () => [],
+  }),
+};
 
 const spec = figure({
-  layers: [
-    layer('chart', [
-      embed('my-chart', 'sales', {
-        dataRef: 'sales',
-        x: 'month',
-        y: 'value',
-      }),
-    ]),
-  ],
+  layers: [layer('content', [embed('badge', 'sales', { label: 'Sales' })])],
 });
+
+const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 ```
+
+`normalizeFigureSpec` is exported from the `@retikz/vanilla` package root. `adapters` is a top-level render / mount option, not a field inside `compile`. To inspect normalization before rendering, call `normalizeFigureSpec(spec, { adapters })` directly and read its `ir`, `composites`, and `runtimeMeta` result.
 
 ## API Summary
 
-| API                   | Kind   | Description                              |
-| --------------------- | ------ | ---------------------------------------- |
-| `figure`              | helper | Builds the plain spec root               |
-| `layer`               | helper | Builds a layer boundary                  |
-| `node` / `coordinate` | helper | Builds named or anonymous nodes / points |
-| `path`                | helper | Builds a path; `way` reuses Draw way DSL |
-| `embed`               | helper | Builds a Tier 2 embed node               |
-| `VanillaTier2Adapter` | type   | Defines lowering for `embed()`           |
+| API                   | Kind          | Description                                        |
+| --------------------- | ------------- | -------------------------------------------------- |
+| `figure`              | authoring     | Builds the plain spec root                         |
+| `layer`               | authoring     | Builds a layer with ordering and metadata          |
+| `node`                | authoring     | Builds a named or anonymous node                   |
+| `coordinate`          | authoring     | Builds a named coordinate with a required id       |
+| `path`                | authoring     | Builds a path; `way` reuses Draw way DSL           |
+| `scope`               | authoring     | Builds a style and namespace scope                 |
+| `embed`               | authoring     | Builds a Tier 2 embed node                         |
+| `VanillaLayerCache`   | authoring     | Provides the layer `cache` metadata values         |
+| `isVanillaFigureSpec` | normalization | Checks for a version 1 plain spec                  |
+| `normalizeFigureSpec` | normalization | Produces core IR, composites, and runtime metadata |
+| `VanillaTier2Adapter` | type          | Defines lowering for `embed()`                     |

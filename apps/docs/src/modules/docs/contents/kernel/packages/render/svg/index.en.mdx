@@ -7,6 +7,10 @@ description: retikz's default renderer — paints the Scene as a vector DOM wher
 
 SVG is retikz's default renderer. It paints the compiled figure as a real `<svg>` DOM: every node and path is an element on the page, hit-testable by CSS, grabbable by selectors, readable by accessibility tools. Vector output stays crisp at any zoom and suits the vast majority of charts and diagrams — use it unless you have hundreds of primitives or need frequent repaints.
 
+The preview below uses the same shared IR as the [Canvas page](/kernel/packages/render/canvas), fixed to SVG output. The Scene semantics are shared; the host representation is not.
+
+<ComponentPreview files="shared-scene" size="sm" hideCode />
+
 ## How to use it
 
 **React** — `<Layout>` defaults to SVG, so `renderer` is optional:
@@ -38,7 +42,13 @@ import { renderToSvgString } from '@retikz/vanilla';
 const svg = renderToSvgString(ir); // '<svg ...>...</svg>', drop it into HTML
 ```
 
-All three entries accept a compiled `Scene`, an `IR` to compile, or a vanilla plain spec.
+The three entries have different input contracts:
+
+| Entry               | Accepted input                                  | Output     |
+| ------------------- | ----------------------------------------------- | ---------- |
+| React `<Layout>`    | JSX `children`<br />or `IRScene`                | SVG DOM    |
+| Vanilla `mountSvg`  | `Scene` / `IRScene`<br />or `VanillaFigureSpec` | SVG DOM    |
+| `renderToSvgString` | `Scene` / `IRScene`<br />or `VanillaFigureSpec` | SVG string |
 
 ## Adding interaction to an SVG figure
 
@@ -59,4 +69,4 @@ SVG primitives carry the element `id` when rendered (as a `data-retikz-id` attri
 | Many primitives | Slows as nodes pile up       | Immediate mode stays steady  |
 | Default         | Yes                          | Explicit `renderer="canvas"` |
 
-Use SVG (the default) for a modest number of primitives, crisp vectors, or CSS interaction; switch to [Canvas](/kernel/packages/render/canvas) for hundreds of primitives or frequent repaints. Both render the same Scene, look identical, and share the exact same hydration code — switch any time.
+Use SVG (the default) for a modest number of primitives, crisp vectors, or CSS interaction; consider [Canvas](/kernel/packages/render/canvas) for hundreds of primitives or frequent repaints. Both share Scene and handler-registry semantics, but their output representation and supported capabilities are not identical. Check the Canvas page's host and resource limits before switching.

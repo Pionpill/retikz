@@ -105,9 +105,11 @@ export const HeaderActions: FC = () => {
           <DropdownMenu modal={false}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <DropdownMenuTrigger className={triggerClass}>
-                  <MoreHorizontal className="size-4" />
-                </DropdownMenuTrigger>
+                <span className="inline-flex">
+                  <DropdownMenuTrigger className={triggerClass}>
+                    <MoreHorizontal className="size-4" />
+                  </DropdownMenuTrigger>
+                </span>
               </TooltipTrigger>
               <TooltipContent>{t('common.more')}</TooltipContent>
             </Tooltip>
