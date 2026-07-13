@@ -34,7 +34,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 | `{ bend }`  | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes             |
 | `{ arc }`   | Circular arc around the previous point by angles and radius      | Angle marks, circle fragments, geometry diagrams |
 
-> There is also a **smooth curve through points** — a smooth curve passing through a list of points (centripetal Catmull-Rom). It is a `<Step kind="smooth">`-only capability, not a `way` operator (`way` is a "previous → next" pairwise infix and cannot carry a multi-point curve), so use it inside `<Path>` / `<Step>`. See [Step §Smooth](/kernel/components/draw/step).
+> There is also a **smooth curve through points** — a smooth curve passing through a list of points (centripetal Catmull-Rom). It is a `<Step kind="smooth">`-only capability, not a `way` operator (`way` is a "previous → next" pairwise infix and cannot carry a multi-point curve), so use it inside `<Path>` / `<Step>`. See [Step curves §Smooth curve through points](/kernel/components/draw/step#smooth-curve-through-points-smooth).
 
 #### Quadratic Bezier
 
@@ -86,7 +86,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 #### Position Rules
 
-`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind — line / fold use normalized path position, curves (curve / cubic / bend) use Bezier t, and arc / circle / ellipse use angular parametrization; see [Step §Geometric meaning of t](/kernel/components/draw/step#geometric-meaning-of-t-per-step-kind) for the full per-kind table and demos.
+`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind — line / fold use normalized path position, curves (curve / cubic / bend) use Bezier t, and arc / circle / ellipse use angular parametrization; see [Step labels §Geometric meaning of t](/kernel/components/draw/step#geometric-meaning-of-t-per-step-kind) for the full per-kind table and demos.
 
 Line segments are the most direct: `start` / `midway` / `end` land near the start, middle, and end of the segment.
 

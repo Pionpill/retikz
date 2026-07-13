@@ -1,6 +1,6 @@
 ---
 name: docs-doc-component
-description: retikz 组件类文档（apps/docs/src/contents/<module>/components/**/*.mdx）的页面结构规范——6 段顺序（Usage / Composition / Examples / How it works / API Reference / Related，Composition / How it works / Related 可选）、Examples 子节多 demo 时的主题分组、Examples vs How it works 边界（简单 demo vs 底层原理）、Usage 的双代码块写法、Composition 适用的组件类型、How it works 何时该写。本 skill 只覆盖组件页特有规则；通用规则（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间、ZodSchema 等）见 docs-doc-principle。retikz 专用。
+description: retikz 组件类文档（apps/docs/src/contents/{module}/components/**/*.mdx）的页面结构规范——6 段顺序（Usage / Composition / Examples / How it works / API Reference / Related，Composition / How it works / Related 可选）、Examples 子节多 demo 时的主题分组、Examples vs How it works 边界（简单 demo vs 底层原理）、Usage 的双代码块写法、Composition 适用的组件类型、How it works 何时该写。本 skill 只覆盖组件页特有规则；通用规则（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间、ZodSchema 等）见 docs-doc-principle。retikz 专用。
 ---
 
 # 组件类文档写法
@@ -101,7 +101,7 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 - 主题组用 `###`，组内具体示例用 `####`；如果该页示例较少，可直接用 `###`
 - 主题顺序按用户心智排序：基础 → 常用变体 → 高级 / 边界 → 样式；样式主题一般放在 Examples 最后面，除非该组件本身就是样式组件
 - 分组后每个具体示例仍保持"一句说明 + 一个 `<ComponentPreview>`"的节奏
-- 如果一个主题组本身超过阅读时间或示例过多，优先拆成子页，而不是继续加深标题层级
+- 如果一个主题组阅读体量较大或示例过多，先用 TOC、主题分组和稳定锚点保证可跳读；只有该组拥有可独立成立的职责、读者任务或 API 契约时才拆成子页
 - **Examples 保持"展示用法"——底层 compile / 投影 / 命名空间机制的原理说明走 `## 技术原理`**（见下节），不要塞进 Examples 子节让用户在"看 demo"和"读原理"之间来回切
 - 同一主题下的并列示例，优先按**横向并排**排版，便于用户对比；除非形态极端狭长或需要强顺序阅读，否则不要竖着堆成一列
 - 每个示例下方建议加一行**浅灰说明文字**，只说这张图在演什么，不解释内部原理；这样用户扫图时不会猜错示例意图
@@ -145,7 +145,7 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 - 句式参考（按组件自身机制替换"compile 行为"那段）：
   - zh：「> 上手阶段可跳过本节；遇到边界 case 或想理解 \<本组件的核心机制\> 时再回来读。」
   - en：「> Optional for everyday use; revisit when you hit edge cases or want to understand \<the component's core mechanism\>.」
-- 单子节超过 5 分钟阅读体量时拆子页或并入 `concepts/` 章节，不要让本节自己变成长文
+- 单子节阅读体量较大时先压缩重复解释、增加清晰小节和跳读提示；只有内容能独立形成概念任务时才拆到子页或 `concepts/`，时间估算本身不构成拆页条件
 - 顺序按"用户最容易碰到 → 最少碰到"排：常见陷阱（重复 id / shadowing）在前，底层机制（bbox 计算 / 变换展平）在后
 
 ### 写作风格

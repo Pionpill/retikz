@@ -71,7 +71,7 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview files="node-star-corner-radius" size="md" />
 
-除节点的中心与 8 个方位 anchor（`center` / `top` …）外，星形还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：`tip-N`（第 N 个尖角）/ `notch-N`（第 N 个凹角）。这些命名锚点固定在原始尖角 / 凹角的逻辑位置，不随 `cornerRadius` 内移。完整的 `<Node>` 属性见 [Node](/kernel/components/node/overview)。
+除节点的中心与 8 个方位 anchor（`center` / `top` …）外，星形还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：`tip-N`（第 N 个尖角）/ `notch-N`（第 N 个凹角）。这些命名锚点固定在原始尖角 / 凹角的逻辑位置，不随 `cornerRadius` 内移。Node 的形状、尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/overview)。
 
 ### API 参考
 
@@ -91,6 +91,6 @@ import { Node } from '@retikz/react';
 
 ## 相关
 
-- [Node](/kernel/components/node/overview)：把形状用作节点边界时的完整属性
+- [Node 几何](/kernel/components/node/overview)：把形状用作节点边界时的尺寸、边界与 anchor
 - [Polygon](../polygon)：等边正多边形
 - [Shapes](/kernel/components/shapes)：形状分组入口与完整定义

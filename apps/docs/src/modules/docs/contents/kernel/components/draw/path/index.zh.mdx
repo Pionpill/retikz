@@ -1,11 +1,7 @@
 ---
 title: Path
-description: Kernel 路径容器——`<Step>` 子节点序列定义折线 / 曲线 / 弧形，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
+description: Path 是 Kernel 层的路径容器，既可描述描边与填充路径，也可通过 ribbon 生成可变宽流带。
 ---
-
-`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / fold（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ smooth / generator（路径生成器）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
-
-它最适合三类场景：一条 path 里有多个子路径（多次 `move`）、不同段要混用不同 `kind` / label / 控制点、或者你希望 JSX 结构和 IR `path.children` 几乎一一对应，方便调试和生成。
 
 ## 用法
 
@@ -73,7 +69,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 端点连接面
 
-端点引用节点时（`{ id }` 对象形态，或 way 里的 id），可加 `boundary` 字段，**只对这一个端点**覆盖目标节点的 [`boundary`](/kernel/components/node/overview)（连接面）。取值与节点 `boundary` 同形：`'shape'`（视觉形状自身）/ `'circle'`（真圆）/ 任意注册 shape 名 / `{ type, params }`。
+端点引用节点时（`{ id }` 对象形态，或 way 里的 id），可加 `boundary` 字段，**只对这一个端点**覆盖目标节点的 [`boundary`](/kernel/components/node/overview#连接面-boundary)（连接面）。取值与节点 `boundary` 同形：`'shape'`（视觉形状自身）/ `'circle'`（真圆）/ 任意注册 shape 名 / `{ type, params }`。
 
 ```tsx
 <Path arrow="->">
@@ -82,7 +78,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的标准方位 / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node boundary>`](/kernel/components/node/overview)，端点 `boundary` 是单边覆盖。
+`boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的标准方位 / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node boundary>`](/kernel/components/node/overview#连接面-boundary)，端点 `boundary` 是单边覆盖。
 
 下例同一五角星（未设节点 `boundary`），两条边各自在端点选连接面：实线默认贴真实尖端，虚线 `boundary="circle"` 改贴外接圆——连接面由边自己决定。
 
@@ -90,7 +86,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 样式
 
-`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` 与 `<Draw>` 完全一致：
+`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` 与 `<Draw>` 完全一致。
 
 <ComponentPreview files="path-dashed" size="xs" />
 
@@ -164,6 +160,19 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview files="path-rounded-vs-linejoin" size="sm" />
 
+<Comparison target="tikz" title="Path 写法映射">
+
+| retikz                       | TikZ 对照                    |
+| ---------------------------- | ---------------------------- |
+| `lineCap` / `lineJoin`       | `line cap` / `line join`     |
+| `ultraThin` … `ultraThick`   | `ultra thin` … `ultra thick` |
+| `outAngle` / `inAngle`       | `out=` / `in=`               |
+| `marks` 与端点箭头随线宽缩放 | 标记与端点箭头随线宽缩放     |
+| `roundedCorners={r}`         | `rounded corners=<r>`        |
+| `color`                      | `color=`                     |
+
+</Comparison>
+
 ### 流带路径
 
 `<Path kind="ribbon">` 用同一个 Path 宿主绘制可填充的带状关系。中心线仍然由 `<Step>` 描述，带宽、端帽、采样和边界模式放进 `ribbon={{ ... }}`；`fill`、`stroke`、`opacity`、`label`、`zIndex` 等宿主字段仍然写在 Path 顶层。
@@ -219,19 +228,6 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 
 <ComponentPreview files="ribbon-style" size="md" />
 
-<Comparison target="tikz" title="Path 写法映射">
-
-| retikz                       | TikZ 对照                    |
-| ---------------------------- | ---------------------------- |
-| `lineCap` / `lineJoin`       | `line cap` / `line join`     |
-| `ultraThin` … `ultraThick`   | `ultra thin` … `ultra thick` |
-| `outAngle` / `inAngle`       | `out=` / `in=`               |
-| `marks` 与端点箭头随线宽缩放 | 标记与端点箭头随线宽缩放     |
-| `roundedCorners={r}`         | `rounded corners=<r>`        |
-| `color`                      | `color=`                     |
-
-</Comparison>
-
 ## API 参考
 
 | 属性             | 类型                                                                                                          | 默认值         | 描述                                                                                                                                                                                                              |
@@ -240,7 +236,6 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 | `meta`           | `Record<string, JSON 值>`                                                                                     | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
 | `kind`           | `string`                                                                                                      | `'stroke'`     | Path kind provider；内置 `'stroke'` 与 `'ribbon'`，外部 kind 通过 Path kind contract 注册                                                                                                                         |
 | `kindOptions`    | `Record<string, JSON 值>`                                                                                     | —              | 传给自定义 Path kind provider 的 JSON 参数；内置 `stroke` / `ribbon` 不使用                                                                                                                                       |
-| `ribbon`         | `PathRibbonOptions`                                                                                           | —              | `kind="ribbon"` 时必填；放宽度、端帽、采样和 boundary 模式等专属参数                                                                                                                                              |
 | `color`          | `string`                                                                                                      | —              | 主色；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`）                                                                                                                                            |
 | `stroke`         | `string \| PaintSpec`                                                                                         | `currentColor` | 描边 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                            |
 | `strokeWidth`    | `number`                                                                                                      | `1`            | 描边宽度                                                                                                                                                                                                          |
@@ -263,9 +258,18 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 | `rotate`         | `number`                                                                                                      | —              | 整条 path 旋转角（度，绕包围盒中心）                                                                                                                                                                              |
 | `scale`          | `number \| { x, y }`                                                                                          | —              | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心）                                                                                                                                                      |
 | `marks`          | `Array<{ pos, mark }>`                                                                                        | —              | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线                                                                                                                                       |
-| `label`          | `GeometryLabel \| Array<GeometryLabel>`                                                                       | —              | path kind 宿主标签；内置 ribbon 的中心线模式可用                                                                                                                                                                  |
 | `animations`     | `Array<AnimationTrack>`                                                                                       | —              | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/kernel/components/effects/animation)                                                                                            |
 | `children`       | `Array<<Step>>`                                                                                               | —              | `stroke` 与中心线 `ribbon` 必填；boundary `ribbon` 省略。首个非 `move` 时编译器会强制改成 `move`                                                                                                                  |
+
+### 流带
+
+Ribbon 复用上表的 Path 宿主字段；这里只列选择 ribbon kind 与流带专属的入口。
+
+| 属性     | 类型                                    | 默认值 | 描述                                                                                |
+| -------- | --------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `kind`   | `'ribbon'`                              | —      | 选择内置 ribbon Path kind                                                           |
+| `ribbon` | `PathRibbonOptions`                     | —      | 必填；配置宽度、端帽、采样和 boundary 模式                                          |
+| `label`  | `GeometryLabel \| Array<GeometryLabel>` | —      | centerline 模式可用的宿主标签；共享颜色、透明度、效果、栈序与动画字段见上方 Path 表 |
 
 ## 相关
 
