@@ -41,6 +41,8 @@ import { Star } from '@retikz/react';
 | `points`      | `number`           | —       | Number of star points                                                  |
 | `rotate`      | `number`           | `-90`   | Starting angle                                                         |
 
+This shape sugar also forwards the shared Path props, including `stroke`, `fill`, `opacity`, `animations`, and `onClick`. See [Path](/kernel/components/draw/path) for the full list and [Hydration](/kernel/packages/render/hydration) for how events are attached after rendering.
+
 ## As a node shape
 
 When you need a star **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type:'star', params }}` on `<Node>`. It is sized by the radius parameters, **independent of any text content**.

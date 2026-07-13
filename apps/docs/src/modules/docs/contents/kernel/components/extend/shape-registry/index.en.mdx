@@ -27,6 +27,8 @@ Read the core types in the table like this:
 - `Position` is a point coordinate, shaped as `[x, y]`.
 - `ScenePrimitive` is a low-level drawing primitive passed to the renderer, such as `path`, `rect`, or `ellipse`.
 
+Import `Rect`, `ResolvedShapeStyle`, and `ScenePrimitive` from `@retikz/core`; the geometry foundation `@retikz/math` exports `Position`.
+
 Every computation function receives a final, **already-validated** `params` argument (parameterless shapes receive `{}` and may ignore it). `paramsSchema` declares the shape of those params: use `z.strictObject({})` for parameterless shapes (rejects extra fields), or a concrete schema for parametric ones. Each method is described bottom (the ones marked “optional” are optional hooks; the other four are required).
 
 A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of computation functions, with no inheritance or registration ceremony. Wrap it at the definition site with `defineShape<TParams>()` to get type safety — the parameter type `TParams` inferred from `paramsSchema` flows into the final `params` of every function; the registry actually stores the form with `TParams` erased to `IRJsonObject` (so `TParams` in the signatures bottom means “the parameter type inferred from `paramsSchema`”).
@@ -159,7 +161,8 @@ edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
 ### emit
 
 ```ts
-emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
+emit: (rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) =>
+  Iterable<ScenePrimitive>;
 ```
 
 Called when compiling the visible node body; returns one or more primitives to draw. Note that `rect` here is **axis-aligned** (`rotate` is applied later by the compiler through an outer group), so just draw the shape around the center as if on ordinary graph paper. Use `round` for consistent coordinate precision, and forward the fill, stroke, opacity, and related fields from `style`. Simple shapes return one path or rect; complex shapes can return several primitives.
@@ -312,4 +315,4 @@ When writing a third-party shape, check these points first:
 
 ## Public helpers
 
-`@retikz/core` exports for third-party shape authors: `defineShape` / `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeValue` / `Rect` / `Position` / `worldToLocal` / `localToWorld`.
+`@retikz/core` exports for third-party shape authors: `defineShape` / `ShapeDefinition` / `ResolvedShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeValue` / `Rect` / `worldToLocal` / `localToWorld`. Import the point-coordinate type `Position` from `@retikz/math`.

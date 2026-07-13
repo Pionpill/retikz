@@ -1,4 +1,4 @@
-﻿---
+---
 title: Arrow
 description: Arrows on Path / Draw in depth. `arrow` picks direction; `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth), with optional `start` / `end` sub-objects that merge field-by-field.
 ---
@@ -14,15 +14,21 @@ An arrow attaches to a path endpoint: it does not change the original path geome
 
 ## Usage
 
-<ComponentPreview files="arrow-default" size="xs" />
+```tsx
+import { Draw } from '@retikz/react';
+```
 
 ```tsx
 <Draw way={['a', 'b']} arrow="->" />
 ```
 
+## Examples
+
+### Basic
+
 With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the path stroke color and using 6 user units for both length and width.
 
-## Examples
+<ComponentPreview files="arrow-default" size="xs" />
 
 ### Shapes
 

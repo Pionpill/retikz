@@ -8,12 +8,14 @@ description: 图元级混合模式（blendMode）——让主几何与其下方�
 ## 用法
 
 ```tsx
-import { Node, Path, Step } from '@retikz/react';
+import { Node } from '@retikz/react';
 ```
 
 ```tsx
 <Node shape="circle" fill="magenta" blendMode="multiply" />
 ```
+
+## 例子
 
 `blendMode` 让主几何与它**下方已经画好的内容**按 W3C 分离公式混合：`multiply` 压暗、`screen` 提亮、`overlay` 增强对比……取值是 16 个 W3C 分离模式之一：
 
@@ -21,7 +23,7 @@ import { Node, Path, Step } from '@retikz/react';
 
 省略或 `'normal'` = 普通叠放（source-over），逐字不变。
 
-## 叠色 multiply
+### 叠色 multiply
 
 两个或多个重叠图元，给上层设 `blendMode` 就在重叠处看到混合效果。`multiply` 在浅底上把重叠处压暗：
 
@@ -29,7 +31,7 @@ import { Node, Path, Step } from '@retikz/react';
 
 <span style={{ color: '#888' }}>三个重叠圆，上层 multiply——重叠处颜色相乘变暗。</span>
 
-## 叠色 screen
+### 叠色 screen
 
 `screen` 反过来在深底上把重叠处提亮：
 

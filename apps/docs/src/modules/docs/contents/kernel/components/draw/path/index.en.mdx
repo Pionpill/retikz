@@ -1,4 +1,4 @@
-﻿---
+---
 title: Path
 description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline / curve / arc; `<Draw>` compiles down to this.
 ---
@@ -112,23 +112,11 @@ If a gradient-stroked path also has arrows, give `arrowDetail.color` or the endp
 
 `lineCap` controls the stroke endpoint shape: `'butt'` default (square end at endpoint) / `'round'` half-circle cap / `'square'` square cap extended past the endpoint by half a stroke. `lineJoin` controls the corner shape: `'miter'` default (sharp) / `'round'` rounded / `'bevel'` flat-cut.
 
-<Comparison target="tikz" title="Stroke Endpoints / Corners">
-
-`lineCap` / `lineJoin` map to TikZ `line cap` / `line join`.
-
-</Comparison>
-
 <ComponentPreview files="path-line-style" />
 
 #### Semantic thickness preset
 
 `thickness` is component / builder sugar for a semantic stroke preset — `'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'` — resolved into numeric `strokeWidth` before IR is produced (`thin = 1` matches the default `strokeWidth`). **Explicit `strokeWidth` always wins** — `thickness` only applies when `strokeWidth` is omitted:
-
-<Comparison target="tikz" title="Semantic Stroke Presets">
-
-These presets reuse TikZ names from `ultra thin` through `ultra thick`; retikz exposes them as camelCase prop values such as `ultraThin` / `veryThick`.
-
-</Comparison>
 
 <ComponentPreview files="path-thickness" size="md" />
 
@@ -150,7 +138,7 @@ By default stacking = declaration order. `zIndex` overrides it explicitly: highe
 
 #### Out / in angles and self-loops
 
-Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accepts `outAngle` / `inAngle` for the start out-angle and end in-angle to draw asymmetric curves (TikZ `out=` / `in=`); `looseness` tunes the control-point distance (default ≈1). **out/in take precedence over `bendDirection`.** When `from == to` (same node / same coordinate) it degenerates into a **self-loop** — the prime use case for out/in (a state-machine self transition), which a symmetric bend cannot draw.
+Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accepts `outAngle` / `inAngle` for the start out-angle and end in-angle to draw asymmetric curves; `looseness` tunes the control-point distance (default ≈1). **out/in take precedence over `bendDirection`.** When `from == to` (same node / same coordinate) it degenerates into a **self-loop** — the prime use case for out/in (a state-machine self transition), which a symmetric bend cannot draw.
 
 <ComponentPreview files="path-outin-loop" size="sm" />
 
@@ -162,7 +150,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 #### Mid-path marks
 
-`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/extend/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`** (TikZ semantics, same as endpoint arrows): the thicker the line, the larger the mark.
+`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/extend/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`**, just like endpoint arrows: the thicker the line, the larger the mark.
 
 <ComponentPreview files="path-marks" size="xs" />
 
@@ -175,12 +163,6 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 `roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.) The contrast bottom uses a very thick stroke: the top path uses `lineJoin="round"` (only the stroke is rounded, the centerline stays sharp), the bottom uses `roundedCorners` (the centerline itself is an arc):
 
 <ComponentPreview files="path-rounded-vs-linejoin" size="sm" />
-
-<Comparison target="tikz" title="roundedCorners">
-
-`roundedCorners` maps to the TikZ path option `rounded corners=<r>`, one radius governing every eligible corner of the path.
-
-</Comparison>
 
 ### Ribbon path
 
@@ -237,16 +219,29 @@ Ribbon is a closed area, so styling focuses on `fill`, outline `stroke`, opacity
 
 <ComponentPreview files="ribbon-style" size="md" />
 
+<Comparison target="tikz" title="Path Syntax Mapping">
+
+| retikz                            | TikZ mapping                                      |
+| --------------------------------- | ------------------------------------------------- |
+| `lineCap` / `lineJoin`            | `line cap` / `line join`                          |
+| `ultraThin` … `ultraThick`        | `ultra thin` … `ultra thick`                      |
+| `outAngle` / `inAngle`            | `out=` / `in=`                                    |
+| `marks` and endpoint arrows scale | Mark and endpoint-arrow sizing follows line width |
+| `roundedCorners={r}`              | `rounded corners=<r>`                             |
+| `color`                           | `color=`                                          |
+
+</Comparison>
+
 ## API Reference
 
 | Prop             | Type                                                                                                          | Default        | Description                                                                                                                                                                                                                                                                                                                                                         |
 | ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`             | `string`                                                                                                      | —              | Optional stable id: lets other elements anchor to the path and serves as the attach point for [hydration](/kernel/reference/hydration) event binding (a path needs an `id` before you can bind `onClick` and friends)                                                                                                                                               |
+| `id`             | `string`                                                                                                      | —              | Optional stable id: lets other elements anchor to the path and serves as the attach point for [hydration](/kernel/packages/render/hydration) event binding (a path needs an `id` before you can bind `onClick` and friends)                                                                                                                                         |
 | `meta`           | `Record<string, JSON value>`                                                                                  | —              | Provenance metadata, passed through verbatim onto the Scene primitives this path emits; ignored by renderers and never part of layout / style. Typically injected by a higher-level lowering (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
 | `kind`           | `string`                                                                                                      | `'stroke'`     | Path kind provider. Built-ins are `'stroke'` and `'ribbon'`; custom kinds are registered through the Path kind contract                                                                                                                                                                                                                                             |
 | `kindOptions`    | `Record<string, JSON value>`                                                                                  | —              | JSON options passed to a custom Path kind provider. Built-in `stroke` / `ribbon` do not use it                                                                                                                                                                                                                                                                      |
 | `ribbon`         | `PathRibbonOptions`                                                                                           | —              | Required when `kind="ribbon"`; holds width, caps, sampling, and boundary mode options                                                                                                                                                                                                                                                                               |
-| `color`          | `string`                                                                                                      | —              | Master color (TikZ `color=`); `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`)                                                                                                                                                                                                                          |
+| `color`          | `string`                                                                                                      | —              | Master color; `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`)                                                                                                                                                                                                                                          |
 | `stroke`         | `string \| PaintSpec`                                                                                         | `currentColor` | Stroke paint: CSS color or PaintSpec (gradient / pattern / image); arrows that inherit stroke need an explicit solid arrow color                                                                                                                                                                                                                                    |
 | `strokeWidth`    | `number`                                                                                                      | `1`            | Stroke width                                                                                                                                                                                                                                                                                                                                                        |
 | `dashPattern`    | `Array<number>`                                                                                               | —              | Dash/gap lengths in user units (e.g. `[4, 2]`)                                                                                                                                                                                                                                                                                                                      |

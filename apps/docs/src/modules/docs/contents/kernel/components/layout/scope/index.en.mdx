@@ -1,4 +1,4 @@
-﻿---
+---
 title: Scope
 description: Local transform container — wraps a group of children and translates / rotates / scales them as a unit.
 ---
@@ -229,7 +229,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 ### Clipping
 
-`<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away (TikZ `\begin{scope}\clip ...`). Built-in clips support `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`, and [Custom Clips](/kernel/components/extend/clip-registry) can register additional `kind` values. Coordinates are scope-local:
+`<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away. Built-in clips support `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`, and [Custom Clips](/kernel/components/extend/clip-registry) can register additional `kind` values. Coordinates are scope-local:
 
 ```tsx
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
@@ -239,11 +239,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 ## How it works
 
-<ComponentAlert
-  type="tip"
-  title="Optional on first read"
-  description="Revisit when you hit edge cases or want to see how scope flattens transforms, registers namespaces, and isolates / cascades ids at compile time."
-/>
+> Optional for everyday use; revisit when you hit edge cases or want to understand how scope flattens transforms, registers namespaces, and handles ids.
 
 ### Namespace stack and lookup
 
@@ -310,7 +306,7 @@ When `<Scope id="X">` is set, compile collects the **global point set** of all c
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Compute timing**                  | End of Pass 1 recursion of the scope subtree (after every inner node / coordinate / nested scope.id is registered)                                                                                                                                                                                                                                                                                                                      |
 | **bbox input**                      | The 4 corners (with accumulated rotate / scale in global coordinates) of every `NodeLayout` in the subtree, fed into an AABB                                                                                                                                                                                                                                                                                                            |
-| **Not counted in bbox**             | Path endpoints (move / line `to`) — matches TikZ `local bounding box`'s default                                                                                                                                                                                                                                                                                                                                                         |
+| **Not counted in bbox**             | Path endpoints (move / line `to`)                                                                                                                                                                                                                                                                                                                                                                                                       |
 | **Register location**               | **Parent frame** (not affected by its own `localNamespace`) — scope.id is the external handle                                                                                                                                                                                                                                                                                                                                           |
 | **Shape**                           | Default synthetic rectangle `NodeLayout` with `rect.rotate=0` (axis-aligned); with `boundingShape='circle'` it's an ellipse(`circumscribe:'equal'`) form whose rect is the MEC's square bounding box                                                                                                                                                                                                                                    |
 | **boundingShape**                   | Optional envelope shape — a **controlled enum** (`'rectangle'` \| `'circle'`), not an open shape reference like Node `shape` / `boundary`: omitted / `'rectangle'` = AABB; `'circle'` = minimal enclosing circle of the subtree point set (consumes `@retikz/math`'s `circle.minimalEnclosing`). Other values are rejected by the schema at parse time. `polygon` / `ellipse` deferred (each needs its own minimal-enclosing algorithm) |
@@ -358,7 +354,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | **Master-color expansion**          | Within each style source, a sub-color (stroke / fill / textColor, arrow color) not set explicitly takes that source's `color` — same-source fields override the master |
 | **Color cascade**                   | A container's resolved color flows down as the child's color default: node.color → text / edge label; path.color → stroke / arrow / step label                         |
 | **Missing vs explicit**             | Decided by presence (not truthiness): missing defers outward; explicit `none` / `0` / `false` cuts at this layer                                                       |
-| **opacity replaces, not compounds** | Nested scope opacity replaces (0.5 ⊃ 0.5 → 0.5 each, not 0.25), matching TikZ default; only label × element opacity multiplies within an element                       |
+| **opacity replaces, not compounds** | Nested scope opacity replaces (0.5 ⊃ 0.5 → 0.5 each, not 0.25); only label × element opacity multiplies within an element                                              |
 | **resetStyle keeps the host axis**  | Only the scope inheritance axis is cut; labels / arrows still follow the host path / node resolved color, never orphaned                                               |
 
 ### Clip resource materialization

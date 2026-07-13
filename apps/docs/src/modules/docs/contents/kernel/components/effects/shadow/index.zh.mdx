@@ -8,16 +8,18 @@ description: 图元级投影（shadow）——作用于 Node 形状 / Path 主�
 ## 用法
 
 ```tsx
-import { Node, Path, Step } from '@retikz/react';
+import { Node } from '@retikz/react';
 ```
 
 ```tsx
 <Node shape="rectangle" fill="white" shadow="md" />
 ```
 
-`shadow` 给主几何加一层 drop shadow。两种写法是同一个字段的两种填法。
+## 例子
 
-## 预设档位
+`shadow` 给主几何加一层 drop shadow。预设字符串与对象是同一个字段的两种填法。
+
+### 预设档位
 
 最简写法是 Tailwind 风格的预设字符串：`'sm'` / `'md'` / `'lg'` / `'xl'` / `'2xl'` / `'none'`。档位越大，投影越远、越柔。`'none'` 表示显式无阴影（等价于不写）。
 
@@ -25,7 +27,7 @@ import { Node, Path, Step } from '@retikz/react';
 
 <span style={{ color: '#888' }}>同一张白卡分设五个预设档位。</span>
 
-## 对象写法
+### 对象写法
 
 需要精确控制时，用对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`：
 
@@ -38,7 +40,7 @@ import { Node, Path, Step } from '@retikz/react';
 
 <span style={{ color: '#888' }}>左：preset 调色（md 基底 + 蓝色）；右：Path 主路径的完整显式投影。</span>
 
-## 图元级，不是组级
+### 图元级，不是组级
 
 `shadow` 跟随图元本身。Node 的文字 / 标签 / 引脚是**独立图元**，不带投影——需要「整张卡片连文字一起浮起」时，本字段做不到（它是图元级、不是组级效果）。但 Path 的端点箭头属于主路径这一图元，会**随主路径一起投影**（与 SVG 元素级 filter / Canvas 同一绘制过程的原生语义一致）。
 
@@ -61,7 +63,7 @@ import { Node, Path, Step } from '@retikz/react';
 
 ### shadow 对象字段
 
-| 字段      | 类型                                              | 默认值             | 描述                                                                                |
+| 属性      | 类型                                              | 默认值             | 描述                                                                                |
 | --------- | ------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------- |
 | `preset`  | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'` | —                  | Tailwind 风格档位，作为 offsetX / offsetY / blur / color 的默认基底；显式字段覆盖之 |
 | `offsetX` | `number`                                          | `0`（preset 提供） | 水平位移（用户单位）                                                                |

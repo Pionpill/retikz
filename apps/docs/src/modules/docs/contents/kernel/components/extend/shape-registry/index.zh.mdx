@@ -27,6 +27,8 @@ retikz 自带的 `rectangle` / `ellipse` / `sector` / `arc` / `polygon` / `star`
 - `Position` 是一个点坐标，形如 `[x, y]`。
 - `ScenePrimitive` 是最终交给渲染器的基础图元，例如 `path`、`rect`、`ellipse`。
 
+`Rect`、`ResolvedShapeStyle` 和 `ScenePrimitive` 从 `@retikz/core` 导入；`Position` 由几何底座 `@retikz/math` 导出。
+
 每个计算函数都会在末位收到一份**已校验的 `params`**（无参形状收到 `{}`，可以忽略）。`paramsSchema` 则声明这份参数的形态：无参形状用 `z.strictObject({})`（拒绝多余字段），带参形状用具体 schema。下面逐个方法说明（标“可选”的是可选 hook，其余四个必填）。
 
 `ShapeDefinition` 本身只是一份普通对象：一个 `paramsSchema` 加一组计算函数，没有任何继承或注册仪式。在定义点用 `defineShape<TParams>()` 包一层就能拿到类型安全——`paramsSchema` 推出的参数类型 `TParams` 会贯穿到每个函数末位的 `params`；registry 里实际存的是把 `TParams` 擦成 `IRJsonObject` 的形态（下文签名里的 `TParams` 即“`paramsSchema` 推出的参数类型”）。
@@ -159,7 +161,8 @@ edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
 ### emit
 
 ```ts
-emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>;
+emit: (rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) =>
+  Iterable<ScenePrimitive>;
 ```
 
 编译节点视觉内容时调用，返回一个或多个要画出来的基础图元。注意这里的 `rect` 是**轴对齐的**（`rotate` 由编译器在外层 group 统一施加），你只需像在普通坐标纸上一样把形状画在中心点周围。用 `round` 统一坐标精度，并尽量透传 `style` 里的填充、描边、透明度等字段。简单形状返回一个 path 或 rect，复杂形状可以返回多个 primitive。
@@ -312,4 +315,4 @@ const scene = compileToScene(ir, { shapes: [createPolygonShape('hexagon', 6)] })
 
 ## 公开导出
 
-`@retikz/core` 为第三方形状作者导出：`defineShape` / `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeValue` / `Rect` / `Position` / `worldToLocal` / `localToWorld`。
+`@retikz/core` 为第三方形状作者导出：`defineShape` / `ShapeDefinition` / `ResolvedShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeValue` / `Rect` / `worldToLocal` / `localToWorld`。点坐标类型 `Position` 从 `@retikz/math` 导入。

@@ -42,6 +42,8 @@ import { Rectangle } from '@retikz/react';
 |               | `corner1` + `width` + `height` | Rectangle from one corner and size                   |
 |               | + `cornerRadius?`              | Rounded rectangle (clamped to half the smaller side) |
 
+This shape sugar also forwards the shared Path props, including `stroke`, `fill`, `opacity`, `animations`, and `onClick`. See [Path](/kernel/components/draw/path) for the full list and [Hydration](/kernel/packages/render/hydration) for how events are attached after rendering.
+
 ## As a node shape
 
 A `<Node>` without a `shape` is a rectangle: the boundary wraps "text + padding" and is sized by the text content. Almost every flowchart node is this form.

@@ -1,4 +1,4 @@
-﻿---
+---
 title: Scope
 description: 局部 transform 容器——把一组 children 包起来批量平移 / 旋转 / 缩放。
 ---
@@ -229,7 +229,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 ### clip 裁切
 
-`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉（对应 TikZ `\begin{scope}\clip ...`）。内置裁剪区支持 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`，也可以通过 [自定义裁剪区](/kernel/components/extend/clip-registry) 注册自己的 `kind`；坐标用 scope 局部坐标系：
+`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉。内置裁剪区支持 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`，也可以通过 [自定义裁剪区](/kernel/components/extend/clip-registry) 注册自己的 `kind`；坐标用 scope 局部坐标系：
 
 ```tsx
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
@@ -239,11 +239,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 ## 技术原理
 
-<ComponentAlert
-  type="tip"
-  title="上手阶段可跳过本节"
-  description="遇到边界 case 或想理解 scope 在 compile 期如何展平 transform、注册命名空间、屏蔽 / 透传 id 时再回来读。"
-/>
+> 上手阶段可跳过本节；遇到边界情况，或想理解 scope 如何展平 transform、注册命名空间与处理 id 时再回来读。
 
 ### 命名空间栈与 lookup
 
@@ -310,7 +306,7 @@ scope 内 `<Node>` / `<Coordinate>` / `<Path>` `Step.to` 使用 `PolarPosition` 
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **计算时机**                          | Pass 1 递归 scope 子树结束时（所有内层 node / coordinate / 嵌套 scope.id 都已 register）                                                                                                                                                                                                                                   |
 | **bbox 输入**                         | 子树全部 `NodeLayout` 的 4 角点（含累积 rotate / scale 后的全局坐标）求轴对齐 AABB                                                                                                                                                                                                                                         |
-| **不计入 bbox**                       | path 走线端点（move / line `to`）—— 与 TikZ `local bounding box` 默认一致                                                                                                                                                                                                                                                  |
+| **不计入 bbox**                       | path 走线端点（move / line `to`）                                                                                                                                                                                                                                                                                          |
 | **注册位置**                          | **父 frame**（不受自身 `localNamespace` 影响）——scope.id 是外部句柄                                                                                                                                                                                                                                                        |
 | **形态**                              | 默认 synthetic rectangle `NodeLayout`，`rect.rotate=0`（轴对齐）；`boundingShape='circle'` 时为 ellipse(`circumscribe:'equal'`) 形态、rect 为 MEC 的正方外接框                                                                                                                                                             |
 | **boundingShape**                     | 可选包络形状——**受控枚举**（`'rectangle'` \| `'circle'`），非 Node `shape` / `boundary` 那种开放 shape 引用：缺省 / `'rectangle'` = AABB；`'circle'` = 子树点集最小外接圆（消费 `@retikz/math` 的 `circle.minimalEnclosing`）；枚举外的值由 schema 在 parse 边界拒绝。`polygon` / `ellipse` 缓做（各需独立的最小外接算法） |
@@ -353,13 +349,13 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 
 内层整体压外层；同层分类默认压级联。
 
-| 机制                       | 行为                                                                                                             |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **主色展开**               | 每个样式来源内，分项色（stroke / fill / textColor、arrow color）未单设则取该源 `color`——同源内分项覆盖主色       |
-| **颜色级联**               | 容器已解析 color 下传子元素色默认：node.color → 文字 / 边 label；path.color → stroke / 箭头 / step label         |
-| **缺省 vs 显式**           | 按存在性判定（非真假值）：缺省让位向外查；显式 `none` / `0` / `false` 本层截断                                   |
-| **opacity 替换不复合**     | 嵌套 scope opacity 各自替换（0.5 ⊃ 0.5 → 各 0.5，非 0.25），与 TikZ 默认一致；仅元素内 label × 元素 opacity 相乘 |
-| **resetStyle host 轴不切** | 只切 scope 继承轴；label / arrow 仍跟宿主 path / node 已解析色，不成孤岛                                         |
+| 机制                       | 行为                                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **主色展开**               | 每个样式来源内，分项色（stroke / fill / textColor、arrow color）未单设则取该源 `color`——同源内分项覆盖主色 |
+| **颜色级联**               | 容器已解析 color 下传子元素色默认：node.color → 文字 / 边 label；path.color → stroke / 箭头 / step label   |
+| **缺省 vs 显式**           | 按存在性判定（非真假值）：缺省让位向外查；显式 `none` / `0` / `false` 本层截断                             |
+| **opacity 替换不复合**     | 嵌套 scope opacity 各自替换（0.5 ⊃ 0.5 → 各 0.5，非 0.25）；仅元素内 label × 元素 opacity 相乘             |
+| **resetStyle host 轴不切** | 只切 scope 继承轴；label / arrow 仍跟宿主 path / node 已解析色，不成孤岛                                   |
 
 ### clip 资源物化
 
