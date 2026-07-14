@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { changelog, PACKAGE_IDS } from '@/modules/docs/data';
+import { changelog, changelogForModule, changelogVersionSlug, kernelSection, PACKAGE_IDS } from '@/modules/docs/data';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const Localized = z.object({ zh: z.string().min(1), en: z.string().min(1) });
@@ -34,6 +34,16 @@ describe('changelog data', () => {
 
   it('里程碑非空', () => {
     expect(changelog.length).toBeGreaterThan(0);
+  });
+
+  it('当前 kernel 里程碑注册详情路由', () => {
+    const releases = kernelSection.find(section => section.id === 'releases');
+    const changelogPage = releases?.pages.find(page => page.id === 'changelog');
+    const currentKernelRelease = changelogForModule('kernel')[0];
+    expect(currentKernelRelease).toBeDefined();
+    const currentReleaseId = changelogVersionSlug(currentKernelRelease.minor);
+
+    expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
   });
 
   it('每个里程碑的 subVersions 日期倒序', () => {

@@ -9,7 +9,7 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 defineArr
 
 ## 注册一个箭头
 
-下面注册一个 `bracket`——TikZ Bracket 样式的空心方括号 `[`（一条 stroke 路径），与内置三角形箭头明显不同：
+下面注册一个 `bracket`——空心方括号 `[`（一条 stroke 路径），与内置三角形箭头明显不同：
 
 <ComponentPreview files="custom-arrow-basic" size="xs" />
 
@@ -63,6 +63,6 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 defineArr
 
 <Comparison target="tikz" title="自定义箭头">
 
-TikZ 用 `\pgfdeclarearrow` 在 TeX 宏层声明箭头。retikz 把它落成一个 renderer-agnostic 的 `ArrowDefinition`：几何用结构化 `MarkerPrimitive` 描述（而非 SVG / PGF 字符串），任何 adapter 都能物化，第三方可发 `@retikz/arrows-*` 包。
+这个 `bracket` 造型对应 TikZ 的 Bracket arrow tip。TikZ 用 `\pgfdeclarearrow` 在 TeX 宏层声明箭头；retikz 把它落成一个 renderer-agnostic 的 `ArrowDefinition`：几何用结构化 `MarkerPrimitive` 描述（而非 SVG / PGF 字符串），任何 adapter 都能物化，第三方可发 `@retikz/arrows-*` 包。
 
 </Comparison>

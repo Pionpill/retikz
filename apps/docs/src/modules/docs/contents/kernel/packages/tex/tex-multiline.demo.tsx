@@ -5,7 +5,7 @@ import { useLowerTex } from '@retikz/tex/react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
 
-// 一个 `$$...$$` display 块里放一个多行 LaTeX 环境——仍是一个 node、一个 bbox、一个连接目标
+// A multiline LaTeX environment remains one node, one bbox, and one connection target.
 const multilineFormula = String.raw`$$\begin{array}{rl}
 f(x) &= ax^2 + bx + c\\
 f'(x) &= 2ax + b\\

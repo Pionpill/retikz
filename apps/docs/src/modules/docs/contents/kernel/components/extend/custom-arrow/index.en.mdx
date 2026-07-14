@@ -9,7 +9,7 @@ Registration goes through `CompileOptions.arrows` (in React that's `<Layout arro
 
 ## Registering an arrow
 
-Below registers a `bracket` — a TikZ Bracket-style hollow square bracket `[` (a single stroked path), clearly distinct from the built-in triangular tips:
+Below registers a `bracket` — a hollow square bracket `[` (a single stroked path), clearly distinct from the built-in triangular tips:
 
 <ComponentPreview files="custom-arrow-basic" size="xs" />
 
@@ -63,6 +63,6 @@ Both Draws use the same `bracket` definition and set no arrow-specific color, so
 
 <Comparison target="tikz" title="Custom arrows">
 
-TikZ declares arrow tips at the TeX macro layer with `\pgfdeclarearrow`. retikz lands the same idea as a renderer-agnostic `ArrowDefinition`: geometry is described with structured `MarkerPrimitive`s (instead of SVG / PGF strings), any adapter can materialize it, and third parties can publish `@retikz/arrows-*` packages.
+This `bracket` shape corresponds to TikZ's Bracket arrow tip. TikZ declares arrow tips at the TeX macro layer with `\pgfdeclarearrow`; retikz lands the same idea as a renderer-agnostic `ArrowDefinition`: geometry is described with structured `MarkerPrimitive`s (instead of SVG / PGF strings), any adapter can materialize it, and third parties can publish `@retikz/arrows-*` packages.
 
 </Comparison>

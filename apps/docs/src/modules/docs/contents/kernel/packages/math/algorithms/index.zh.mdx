@@ -1,9 +1,9 @@
 ﻿---
 title: 几何算法
-description: 求交、圆 / 三角形算法、点在多边形、凸包、样条曲线的完整签名——core 未转出，直接从 @retikz/math 导入。
+description: 查询 @retikz/math 的求交、圆与三角形、多边形、凸包和过点曲线算法。
 ---
 
-这些是 `@retikz/core` **未** re-export 的高阶计算，直接从 `@retikz/math` 导入：
+这些是 `@retikz/core` **未**转出的高阶计算，直接从 `@retikz/math` 导入。公开类型还包括 `Circle`、`LineLineInput`、`LineCircleInput`、`CircleCircleInput` 和 `CubicSegment`。
 
 ```ts
 import { intersect, circle, triangle, polygon, convexHull, curve } from '@retikz/math';
@@ -101,6 +101,10 @@ convexHull(points: Array<Position>): Array<Position>;
 
 Andrew monotone chain，返回 **CCW 顺序**顶点、**剔除共线中间点**；点数 < 3 或全共线时返回排序去重后的端点。
 
+下图将全部输入点保留为圆点，并用橙色边界连接 `convexHull(points)` 返回的顶点。凹陷处的内部点不会进入结果。
+
+<ComponentPreview files="convex-hull" size="sm" hideCode />
+
 ## curve 过点平滑曲线
 
 给一串 knot，返回一条**穿过每个 knot** 的三次贝塞尔段链——`<Step kind="smooth">` 的底层算法。用 centripetal Catmull-Rom（α=0.5）：点距不均时不产生 cusp / 自交回环。
@@ -114,4 +118,6 @@ type CubicSegment = { control1: Position; control2: Position; to: Position };
 curve.catmullRomToCubic(knots: Array<Position>, tension: number): Array<CubicSegment>;
 ```
 
-`tension` 为切线长度乘子（TikZ `tension`）：`1` 标准、`<1` 更紧、`>1` 更鼓。开放曲线两端用单侧切线（端点 knot 复制相邻端点）；重合 knot 的间距回退到 `DEFAULT_EPSILON` 防除零，输出始终有限。`knots.length < 2` 返回 `[]`。
+`tension` 是切线长度乘子：`1` 为标准值，`<1` 更紧，`>1` 更鼓。开放曲线两端使用单侧切线；重合 knot 的间距回退到 `DEFAULT_EPSILON`，避免除零并保证输出有限。`knots.length < 2` 返回 `[]`。
+
+<Comparison target="tikz">TikZ 也使用 `tension` 表达曲线松紧；迁移时可从相同数值开始，再按实际点距调整。</Comparison>

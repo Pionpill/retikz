@@ -1,121 +1,138 @@
 ---
 title: Primitives
-description: The Position / CenteredShape types and full signatures for point vector math, lerp, affine transforms, and arc endpoint / bbox primitives.
+description: Look up @retikz/math point and vector operations, affine transforms, bounds, ellipses, and arc computations.
 ---
 
-The base compute primitives of `@retikz/math`. Of these, `Position` / `point` / `lerp` / `localToWorld` / `worldToLocal` are also re-exported by `@retikz/core`; the two imports are equivalent:
+`@retikz/math` exposes the complete geometry-computation surface. `@retikz/core` only provides convenience re-exports for values commonly used while drawing and aliases `lerp` to `lerpPoint`. Import the `Position` / `Vector2` types, bounds, ellipse, and arc APIs from `@retikz/math`.
 
 ```ts
-import { point, lerp, localToWorld } from '@retikz/math';
-// or (core already re-exports these)
-import { point, lerp, localToWorld } from '@retikz/core';
+import { point, vector2, lerpPoint, localToWorld } from '@retikz/core';
+import { type Position, lerp, boundsOf, ellipse } from '@retikz/math';
 ```
 
-## Types
+- `@retikz/core`: `DEFAULT_EPSILON`, `point`, `vector2`, `lerpPoint`, `localToWorld`, and `worldToLocal`.
+- `@retikz/math`: every type and value on this page, plus the higher-level computations in [Algorithms](/kernel/packages/math/algorithms).
+
+## Points and vectors
 
 ```ts
-/** Cartesian point [x, y] */
-type Position = [number, number];
+type Vector2 = [number, number];
+type Position = Vector2;
 
-/** Default geometry tolerance (naive, fine at drawing scale) */
-const DEFAULT_EPSILON = 1e-9;
-
-/** "Center + optional rotation" shape contract, used by affine transforms */
-type CenteredShape = {
-  x: number; // center x
-  y: number; // center y
-  rotate?: number; // rotation in radians about the center; omitted / 0 = no rotation
-};
-
-type ArcBoundingPointsInput = {
-  center: Position;
-  radius: number;
-  startAngleDeg: number;
-  endAngleDeg: number;
-};
-
-type ArcAngleInRangeInput = {
-  startAngleDeg: number;
-  endAngleDeg: number;
-  angleDeg: number;
-  toleranceDeg?: number;
-};
-
-type RayArcInput = ArcBoundingPointsInput & {
-  origin: Position;
-  dir: Position;
-  tolerance?: number;
-};
-
-type EllipseArcPointInput = {
-  center: Position;
-  radiusX: number;
-  radiusY: number;
-  angleDeg: number;
-};
-
-type EllipseArcBoundingPointsInput = Omit<EllipseArcPointInput, 'angleDeg'> & {
-  startAngleDeg: number;
-  endAngleDeg: number;
-};
+isFiniteNumber(value: unknown): value is number;
+isFinitePoint(value: unknown): value is Position;
+isInfiniteNumber(value: unknown): value is number;
 ```
 
-## point vector math
+`point` handles the basic operations shared by points and 2D vectors. Every method returns a new tuple without mutating its inputs.
 
 ```ts
-point.add        (a: Position, b: Position): Position   // a + b
-point.sub        (a: Position, b: Position): Position   // a − b
-point.scale      (a: Position, k: number): Position     // a × k
-point.dot        (a: Position, b: Position): number     // dot product a·b
-point.cross      (a: Position, b: Position): number     // 2D cross product a×b (scalar)
-point.length     (a: Position): number                  // magnitude |a|
-point.equal      (a: Position, b: Position): boolean    // exact equality (no tolerance)
-point.normalize  (a: Position, fallback?: Position, epsilon?: number): Position
-point.shiftToward(p: Position, target: Position, dist: number): Position
+point.add(a, b); // a + b
+point.sub(a, b); // a - b
+point.scale(a, k); // a * k
+point.dot(a, b); // dot product
+point.cross(a, b); // 2D cross-product scalar
+point.length(a); // vector length
+point.distance(a, b); // distance between two points
+point.along(origin, direction, length); // move along direction
+point.against(origin, direction, length); // move against direction
+point.normalize(a, fallback?, epsilon?);
+point.shiftToward(p, target, distance);
+point.equal(a, b); // exact comparison
 ```
 
-| Function      | Params / behavior                                                                                                             |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `normalize`   | `fallback` is returned for a zero-length vector, default `[1, 0]`; `epsilon` is the zero threshold, default `DEFAULT_EPSILON` |
-| `shiftToward` | moves `p` along the `p→target` unit direction by `dist`; returns `p` unchanged when `dist=0` or `p===target`                  |
-
-## lerp
+`vector2` adds vector-specific construction and normal-vector operations:
 
 ```ts
-lerp(a: Position, b: Position, t: number): Position;  // a + (b − a)·t
+vector2.fromPosition(p: Position): Vector2;
+vector2.fromAngleDegrees(angle: number): Vector2;
+vector2.normalize(v: Vector2, fallback?: Vector2, epsilon?: number): Vector2;
+vector2.normalizeOrNull(v: Vector2, epsilon?: number): Vector2 | null;
+vector2.normal(v: Vector2): Vector2;
+
+lerp(a: Position, b: Position, t: number): Position;
 ```
 
-`t=0` returns `a`, `t=1` returns `b`; `t` is not clamped and may extrapolate outside `[0, 1]`.
+`normalize` defaults to `[1, 0]` for a zero-length vector. `normalizeOrNull` returns `null` for zero-length or non-finite vectors. `lerp` does not clamp `t`, so it can extrapolate outside `[0, 1]`.
+
+The figure uses one origin to show `v` and its left-hand normal `normal(v)`. The arrows remain perpendicular; normalization only changes their lengths.
+
+<ComponentPreview files="vector-normal" size="sm" hideCode />
 
 ## Affine transforms
 
 ```ts
-localToWorld(shape: CenteredShape, local: Position): Position;  // local (centered at origin) → world
-worldToLocal(shape: CenteredShape, world: Position): Position;  // world → local (inverse of localToWorld)
+type CenteredShape = {
+  x: number;
+  y: number;
+  rotate?: number; // radians about the center
+};
+
+localToWorld(shape: CenteredShape, local: Position): Position;
+worldToLocal(shape: CenteredShape, world: Position): Position;
 ```
 
-When `shape.rotate` is omitted / 0 it degenerates to pure translation; otherwise it rotates about the center (right-handed).
+With `rotate` omitted or set to `0`, the transform is translation only. Otherwise it rotates about the center while converting between local and world coordinates. The two functions are inverses.
 
-## Arc primitives
+## Bounds
 
-Angle convention: SVG **y-down**, `0°=+x`, `90°=+y` (visually down), increasing angle = clockwise on screen.
+Bounds use `minX` / `minY` / `maxX` / `maxY`. The rectangle form uses a top-left position plus width and height.
 
 ```ts
-arcEndPoint(center: Position, radius: number, angleDeg: number): Position;       // point on the circle at the angle
-ellipseArcPoint(input: EllipseArcPointInput): Position;  // parametric point on the ellipse
+type AxisAlignedBounds = { minX: number; minY: number; maxX: number; maxY: number };
+type BoundsRect = { x: number; y: number; width: number; height: number };
+type BoundsHalfAxes = { halfWidth: number; halfHeight: number };
+type BoundsInsets = { left: number; right: number; top: number; bottom: number };
 
-// whether an angle lies in the arc [startDeg, endDeg] (inclusive, with tolerance)
+boundsOf(points: ReadonlyArray<Position>): AxisAlignedBounds | undefined;
+mergeBounds(a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisAlignedBounds | undefined;
+boundsToRect(bounds: AxisAlignedBounds): BoundsRect;
+rectToBounds(rect: BoundsRect): AxisAlignedBounds;
+isFiniteBoundsRect(rect: BoundsRect): boolean;
+isPositiveBoundsRect(rect: BoundsRect): boolean;
+boundsCenter(bounds: AxisAlignedBounds): Position;
+boundsHalfAxes(bounds: AxisAlignedBounds): BoundsHalfAxes;
+expandBounds(bounds: AxisAlignedBounds, insets: BoundsInsets): AxisAlignedBounds;
+boundsCorners(bounds: AxisAlignedBounds): Array<Position>;
+```
+
+`boundsOf([])` and `mergeBounds(undefined, undefined)` return `undefined`, leaving skip, fallback, or error handling to the caller.
+
+## Ellipses
+
+```ts
+type Ellipse = CenteredShape & { rx: number; ry: number };
+type CenteredBox = CenteredShape & { width: number; height: number };
+type EllipseCircumscribeMode = 'proportional' | 'equal';
+
+ellipse.center(value: Ellipse): Position;
+ellipse.inscribedInBox(box: CenteredBox): Ellipse;
+ellipse.circumscribedHalfAxes(
+  inner: BoundsHalfAxes,
+  mode?: EllipseCircumscribeMode,
+): BoundsHalfAxes;
+ellipse.contains(value: Ellipse, point: Position): boolean;
+ellipse.boundaryPoint(value: Ellipse, toward: Position): Position;
+```
+
+`contains` includes the boundary and returns `false` for a zero-radius axis. `boundaryPoint` follows a ray from the ellipse center toward the target; it returns the center for a degenerate ellipse or a target at the center.
+
+## Arcs
+
+Angles follow SVG coordinates: y points down, `0°` points along +x, `90°` points along +y, and positive angles increase clockwise on screen.
+
+```ts
+arcEndPoint(center: Position, radius: number, angleDeg: number): Position;
+ellipseArcPoint(input: EllipseArcPointInput): Position;
 arcAngleInRange(input: ArcAngleInRangeInput): boolean;
-
-// ray ∩ arc; returns forward parameters for origin + s·dir (ascending). Zero direction returns []
 rayArc(input: RayArcInput): Array<number>;
-
-// candidate extreme points for the (elliptical-)arc bbox (endpoints + 90°·k directions inside the range)
 arcBoundingPoints(input: ArcBoundingPointsInput): Array<Position>;
 ellipseArcBoundingPoints(input: EllipseArcBoundingPointsInput): Array<Position>;
 ```
 
+`@retikz/math` also exports the corresponding `ArcBoundingPointsInput`, `ArcAngleInRangeInput`, `RayArcInput`, `EllipseArcPointInput`, and `EllipseArcBoundingPointsInput` types. The bbox helpers return endpoint and in-range axis-extrema candidates without de-duplication.
+
 <ComponentAlert
   title="rayArc returns parameters, not points"
-  description="rayArc returns scalar s values from the general parameter equation (hit point = origin + s·dir), handy for picking the nearest hit — unlike intersect.* in Algorithms, which return coordinate points."
+  description="Each result is a positive scalar s from origin + s·dir, sorted in ascending order. Substitute it back into the equation to obtain the hit point; intersect.* on the Algorithms page returns coordinates directly."
 />

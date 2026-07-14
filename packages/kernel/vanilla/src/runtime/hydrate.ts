@@ -14,7 +14,7 @@ import {
 import type { HydrateOptions, HydrationHandle } from './types';
 
 /**
- * 把用户 handler 水合到容器内已挂的 `<svg>`（SSR 后的独立 SVG 水合入口）
+ * 把用户 handler 水合到已挂的根 `<svg>`（SSR 后的独立 SVG 水合入口）
  * @description SSR / `mountSvg` 先渲染出含 `data-retikz-id` 的图，本入口再把 handler 绑回图元——不重建 DOM、
  *   不接管状态，只做「图元 id ↔ 用户函数」绑定。用 `createHydrationController(root, handlers, locateSvg, buildContext)`
  *   在 `root` 上挂根级委托：事件经 `closest('[data-retikz-id]')` 反查图元 id，命中即以 `(event, context)` 触发对应
@@ -26,11 +26,10 @@ import type { HydrateOptions, HydrationHandle } from './types';
  *   （浏览器有效、jsdom 为 null），`meta` / `geometry` / `scene` undefined、`animation` no-op。SSR 后要富 context 须把
  *   `scene` 一并传入。
  */
-export const hydrate = (root: Element, options: HydrateOptions): HydrationHandle => {
-  const renderer = options.renderer ?? 'svg';
+export const hydrate = (root: SVGSVGElement, options: HydrateOptions): HydrationHandle => {
   const scene = options.scene;
   const buildContext: BuildContext = createContextBuilder({
-    renderer,
+    renderer: 'svg',
     root,
     scene,
     resolveElement: resolveSvgElement,

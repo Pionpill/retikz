@@ -38,6 +38,8 @@ import { RegularPolygon } from '@retikz/react';
 |                    | `center` + `sideLength` + `sides` | Polygon from side length and side count                   |
 |                    | + `rotate?`                       | Overall start angle; default `-90` (one vertex points up) |
 
+This shape sugar also forwards the shared Path props, including `stroke`, `fill`, `opacity`, `animations`, and `onClick`. See [Path](/kernel/components/draw/path) for the full list and [Hydration](/kernel/packages/render/hydration) for how events are attached after rendering.
+
 ## As a node shape
 
 When you need a polygon **node** (to hold text, to be referenced by a connection) rather than a line, set `shape={{ type:'polygon', params }}` on `<Node>`. The boundary takes the regular polygon that circumscribes "text + padding", sized by the text.
@@ -63,7 +65,7 @@ Give `params.cornerRadius` a positive number to round every vertex; omitting it 
 
 <ComponentPreview files="node-polygon-corner-radius" size="sm" />
 
-Connection endpoints snap to the polygon edge, and the node's center plus 8 directional anchors (`center` / `top` …) still apply. For the full `<Node>` props see [Node](/kernel/components/node/overview).
+Connection endpoints snap to the polygon edge, and the node's center plus 8 directional anchors (`center` / `top` …) still apply. See [Node geometry](/kernel/components/node/overview) for Node shapes, sizes, boundaries, and anchors.
 
 ### API Reference
 
@@ -88,7 +90,7 @@ Connection endpoints snap to the polygon edge, and the node's center plus 8 dire
 
 ## Related
 
-- [Node](/kernel/components/node/overview): full props for a polygon node
+- [Node geometry](/kernel/components/node/overview): sizes, boundaries, and anchors for polygon nodes
 - [Rectangle](../rectangle): rectangles and rounded rectangles
 - [Star](../star): alternating inner / outer radius stars
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

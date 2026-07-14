@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { ChatGptIcon, ClaudeIcon, DeepSeekIcon, GitHubIcon } from '@/components/icons';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 import {
   DropdownMenu,
@@ -139,11 +139,16 @@ export const DocPageActions: FC<DocPageActionsProps> = props => {
           <ButtonGroupSeparator />
           {/* modal={false}：同 HeaderActions，避免 body[data-scroll-locked] 破坏窗口级 sticky 顶栏（页面下滑时点开会把 header 顶出视口） */}
           <DropdownMenu modal={false}>
-            <Button asChild variant="secondary" size="icon" className="h-8 w-7 cursor-pointer">
-              <DropdownMenuTrigger aria-label={t('page.openInGroup')}>
-                <ChevronDown className="size-3.5" />
-              </DropdownMenuTrigger>
-            </Button>
+            <DropdownMenuTrigger
+              className={buttonVariants({
+                variant: 'secondary',
+                size: 'icon',
+                className: 'h-8 w-7 cursor-pointer',
+              })}
+              aria-label={t('page.openInGroup')}
+            >
+              <ChevronDown className="size-3.5" />
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-72">
               <DropdownMenuItem asChild className="cursor-pointer items-center gap-3 py-1.5">
                 <a href={rawUrl} target="_blank" rel="noopener noreferrer">
@@ -210,15 +215,15 @@ export const DocPageActions: FC<DocPageActionsProps> = props => {
         </ButtonGroup>
         {prev && (
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="size-8 cursor-pointer hidden sm:inline-flex"
-                onClick={() => navigate(prev.path)}
-              >
-                <ArrowLeft className="size-4" />
-              </Button>
+            <TooltipTrigger
+              className={buttonVariants({
+                variant: 'secondary',
+                size: 'icon',
+                className: 'size-8 cursor-pointer hidden sm:inline-flex',
+              })}
+              onClick={() => navigate(prev.path)}
+            >
+              <ArrowLeft className="size-4" />
             </TooltipTrigger>
             <TooltipContent>
               {t('page.prevPage')} · {t(prev.label)}
@@ -227,15 +232,15 @@ export const DocPageActions: FC<DocPageActionsProps> = props => {
         )}
         {next && (
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="size-8 cursor-pointer hidden sm:inline-flex"
-                onClick={() => navigate(next.path)}
-              >
-                <ArrowRight className="size-4" />
-              </Button>
+            <TooltipTrigger
+              className={buttonVariants({
+                variant: 'secondary',
+                size: 'icon',
+                className: 'size-8 cursor-pointer hidden sm:inline-flex',
+              })}
+              onClick={() => navigate(next.path)}
+            >
+              <ArrowRight className="size-4" />
             </TooltipTrigger>
             <TooltipContent>
               {t('page.nextPage')} · {t(next.label)}

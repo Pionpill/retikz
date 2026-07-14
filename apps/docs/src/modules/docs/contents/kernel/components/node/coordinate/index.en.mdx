@@ -27,6 +27,8 @@ The plainest way to anchor "a named point" is to fake an empty `<Node>` with `st
 
 `<Coordinate id="hub" position={[0, 0]} />` maps to TikZ `\coordinate (hub) at (0,0);`: it names a point without rendering a shape.
 
+`{ between: [A, B], fraction }` maps to TikZ `($(A)!t!(B)$)`; both take a proportional point between two endpoints.
+
 </Comparison>
 
 ## Examples
@@ -53,7 +55,7 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 
 ### Proportional partway positioning
 
-`{ between: [A, B], fraction }` takes a point along the A→B segment at proportion `fraction` (0..1) — `lerp(A, B, fraction)`, matching TikZ `($(A)!t!(B)$)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
+`{ between: [A, B], fraction }` takes a point along the A→B segment at proportion `fraction` (0..1) — `lerp(A, B, fraction)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
 
 <ComponentPreview files="coordinate-between" size="xs" />
 

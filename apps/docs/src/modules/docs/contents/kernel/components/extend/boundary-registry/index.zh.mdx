@@ -109,7 +109,7 @@ React 里把同一份定义传给 `<Layout>`：
 
 ## 公开导出
 
-`@retikz/core` 导出 `defineBoundary` / `BoundaryDefinition` / `BoundaryDefinitionInput` / `BUILTIN_BOUNDARIES`。React 和 Vanilla 单包入口也 re-export 了这些定义，方便 adapter 用户从当前包导入。
+`defineBoundary` / `BoundaryDefinition` / `BoundaryDefinitionInput` / `BUILTIN_BOUNDARIES` 均从 `@retikz/core` 导入；`@retikz/react` 与 `@retikz/vanilla` 包根不重导出这些定义。
 
 ## 相关
 

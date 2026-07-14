@@ -20,9 +20,7 @@ Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the elem
 
 <ComponentPreview files="hydration-click" size="md" />
 
-<p className="text-center text-sm text-muted-foreground">
-  Click the orange node to toggle the highlight; the counter next to it ticks up.
-</p>
+Click the orange node to toggle the highlight; the counter next to it ticks up.
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -95,7 +93,7 @@ const handle = view.hydrate({
 
 `handlers` is a `{ [id]: { eventName: handler } }` table; event names are `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel` (a one-to-one match with React's `on<Event>`, with the `on` prefix dropped and the first letter lowercased).
 
-After SSR, bind via the standalone `hydrate(root, options)` entry (the container already holds the SSR-injected `<svg>` string). `options` also accepts `renderer: 'svg' | 'canvas'` (defaults to `'svg'`), which decides how elements are located. To give context its meta / geometry / animation controls, pass `scene` (compiled from the IR via `@retikz/core`'s `compileToScene(ir)`) in too; otherwise you get only the minimal context (bottom):
+After SSR, bind via the standalone `hydrate(svg, options)` entry. This entry only hydrates the `<svg>` root obtained from the injected SSR output; it does not support Canvas. Canvas callers must use `mountCanvas(...).hydrate()`, whose view supplies the Scene, hit query, and coordinate mapping. To give standalone SVG context its meta / geometry / animation controls, pass `scene` (compiled from the IR via `@retikz/core`'s `compileToScene(ir)`) in too; otherwise you get only the minimal context (bottom):
 
 ```ts
 import { compileToScene } from '@retikz/core';
@@ -104,9 +102,10 @@ import { hydrate, mountSvg } from '@retikz/vanilla';
 // the view from mountSvg / mountCanvas carries view.hydrate; context uses this view's Scene automatically
 mountSvg(container, ir).hydrate({ handlers: { box: { click: (event, context) => context.animation.restart() } } });
 
-// standalone hydration after SSR: pass scene for a rich context (meta / geometry / animation)
+// standalone SVG hydration after SSR: pass scene for a rich context (meta / geometry / animation)
 const scene = compileToScene(ir);
-hydrate(root, { handlers, scene });
+const svg = container.querySelector('svg')!;
+hydrate(svg, { handlers, scene });
 ```
 
 ## The handler context

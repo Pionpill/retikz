@@ -1,4 +1,4 @@
-﻿---
+---
 title: Draw
 description: Sugar 组件——用 way 数组串起节点、坐标、折角、曲线、闭合、边标注和样式，编译期展开为等价的 Path + Step。
 ---
@@ -34,7 +34,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `{ bend }`  | 只指定向左 / 向右弯和角度，由编译器算控制点 | 两节点之间的快捷弧形连线       |
 | `{ arc }`   | 以上一点为圆心，按角度和半径画圆弧          | 角度标注、圆周片段、几何示意   |
 
-> 还有一类**过点平滑曲线**——穿过一串点的光滑曲线（centripetal Catmull-Rom）。它是 `<Step kind="smooth">` 的专属能力，不是 `way` 算子（`way` 是"上一项→下一项"的点对 infix，承载不了多点曲线），故只在 `<Path>` / `<Step>` 里用。见 [Step §平滑曲线](/kernel/components/draw/step)。
+> 还有一类**过点平滑曲线**——穿过一串点的光滑曲线（centripetal Catmull-Rom）。它是 `<Step kind="smooth">` 的专属能力，不是 `way` 算子（`way` 是"上一项→下一项"的点对 infix，承载不了多点曲线），故只在 `<Path>` / `<Step>` 里用。见 [Step 曲线 §过点平滑曲线](/kernel/components/draw/step#过点平滑曲线smooth)。
 
 #### 二次贝塞尔
 
@@ -86,7 +86,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 #### 位置规则
 
-`label.position` 接 7 个 keyword 或 `0..1` 数值 t。t 的几何含义随 step kind 变化——直线 / 折角按归一化路径位置，曲线（curve / cubic / bend）按 Bezier 参数，弧 / 圆 / 椭圆按角度参数化；每种 kind 的完整对照表与逐一 demo 见 [Step §t 几何含义](/kernel/components/draw/step#t-在每种-step-kind-上的几何含义)。
+`label.position` 接 7 个 keyword 或 `0..1` 数值 t。t 的几何含义随 step kind 变化——直线 / 折角按归一化路径位置，曲线（curve / cubic / bend）按 Bezier 参数，弧 / 圆 / 椭圆按角度参数化；每种 kind 的完整对照表与逐一 demo 见 [Step 标签 §t 几何含义](/kernel/components/draw/step#t-在每种-step-kind-上的几何含义)。
 
 直线段最直观：`start` / `midway` / `end` 分别落在起点、中点和终点附近。
 
@@ -118,7 +118,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 #### 圆角
 
-`roundedCorners` 把折线相邻 `line` 段之间的拐角倒成相切圆弧（TikZ `rounded corners=`）。它改的是**路径几何**——顶点回退并插入弧段，因此影响包围盒、弧长和连接点；这与只磨描边视觉的 `lineJoin` 不同。半径过大时按相邻段长自动夹紧。下例上方尖角、下方同形状折线设 `roundedCorners={24}`：
+`roundedCorners` 把折线相邻 `line` 段之间的拐角倒成相切圆弧。它改的是**路径几何**——顶点回退并插入弧段，因此影响包围盒、弧长和连接点；这与只磨描边视觉的 `lineJoin` 不同。半径过大时按相邻段长自动夹紧。下例上方尖角、下方同形状折线设 `roundedCorners={24}`：
 
 <ComponentPreview files="draw-rounded-corners" size="sm" />
 
@@ -149,29 +149,29 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 ### Props
 
-| 属性             | 类型                                                                                           | 默认值         | 描述                                                                                                                                           |
-| ---------------- | ---------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `way`            | `Array<WayItem>`                                                                               | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `fold` / `cycle` 等动作                                                            |
-| `stroke`         | `string`                                                                                       | `currentColor` | 描边色                                                                                                                                         |
-| `strokeWidth`    | `number`                                                                                       | `1`            | 描边宽度                                                                                                                                       |
-| `dashPattern`    | `Array<number>`                                                                                | —              | dash / gap 长度序列，如 `[4, 2]`                                                                                                               |
-| `dashOffset`     | `number`                                                                                       | —              | 虚线起点偏移，单位同路径 user units                                                                                                            |
-| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | 描边端点形状                                                                                                                                   |
-| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                               |
-| `roundedCorners` | `number`                                                                                       | —              | 折线 line-line 接缝**几何**圆角半径（TikZ `rounded corners=`）；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/kernel/components/draw/path) |
-| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | 语义化 stroke 档位；显式 `strokeWidth` 优先                                                                                                    |
-| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                              | —              | 路径级箭头方向                                                                                                                                 |
-| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`       | —              | 箭头详细配置；详见 [Arrow](/kernel/components/draw/arrow)                                                                                      |
-| `fill`           | `string \| PaintSpec`                                                                          | `'none'`       | 闭合区域填充色：纯色或 PaintSpec（渐变 / 图案 / 图片）                                                                                         |
-| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | 填充规则                                                                                                                                       |
-| `opacity`        | `number`                                                                                       | —              | 整 path 透明度 0..1                                                                                                                            |
-| `fillOpacity`    | `number`                                                                                       | —              | 仅 fill 透明度 0..1                                                                                                                            |
-| `strokeOpacity`  | `number`                                                                                       | —              | 仅 stroke 透明度 0..1                                                                                                                          |
-| `zIndex`         | `number`（整数）                                                                               | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`）                                                              |
+| 属性             | 类型                                                                                           | 默认值         | 描述                                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `way`            | `Array<WayItem>`                                                                               | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `fold` / `cycle` 等动作                                 |
+| `stroke`         | `string`                                                                                       | `currentColor` | 描边色                                                                                                              |
+| `strokeWidth`    | `number`                                                                                       | `1`            | 描边宽度                                                                                                            |
+| `dashPattern`    | `Array<number>`                                                                                | —              | dash / gap 长度序列，如 `[4, 2]`                                                                                    |
+| `dashOffset`     | `number`                                                                                       | —              | 虚线起点偏移，单位同路径 user units                                                                                 |
+| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | 描边端点形状                                                                                                        |
+| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                    |
+| `roundedCorners` | `number`                                                                                       | —              | 折线 line-line 接缝**几何**圆角半径；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/kernel/components/draw/path) |
+| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | 语义化 stroke 档位；显式 `strokeWidth` 优先                                                                         |
+| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                              | —              | 路径级箭头方向                                                                                                      |
+| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`       | —              | 箭头详细配置；详见 [Arrow](/kernel/components/draw/arrow)                                                           |
+| `fill`           | `string \| PaintSpec`                                                                          | `'none'`       | 闭合区域填充色：纯色或 PaintSpec（渐变 / 图案 / 图片）                                                              |
+| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | 填充规则                                                                                                            |
+| `opacity`        | `number`                                                                                       | —              | 整 path 透明度 0..1                                                                                                 |
+| `fillOpacity`    | `number`                                                                                       | —              | 仅 fill 透明度 0..1                                                                                                 |
+| `strokeOpacity`  | `number`                                                                                       | —              | 仅 stroke 透明度 0..1                                                                                               |
+| `zIndex`         | `number`（整数）                                                                               | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`）                                   |
 
 <Comparison target="tikz" title="样式命名">
 
-`lineCap` / `lineJoin` 对应 TikZ 的 `line cap` / `line join`；`strokeOpacity` 表示描边透明度；`thickness` 的档位沿用 `ultra thin` 到 `ultra thick` 的语义化描边厚度。
+`lineCap` / `lineJoin` 对应 TikZ 的 `line cap` / `line join`，`roundedCorners` 对应 `rounded corners=`；`strokeOpacity` 表示描边透明度；`thickness` 的档位沿用 `ultra thin` 到 `ultra thick` 的语义化描边厚度。
 
 </Comparison>
 

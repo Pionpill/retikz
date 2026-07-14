@@ -1,4 +1,4 @@
-﻿---
+---
 title: Arrow
 description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth），并支持 `start` / `end` 起末分别配置 + 逐字段合并。
 ---
@@ -14,15 +14,21 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 ## 用法
 
-<ComponentPreview files="arrow-default" size="xs" />
+```tsx
+import { Draw } from '@retikz/react';
+```
 
 ```tsx
 <Draw way={['a', 'b']} arrow="->" />
 ```
 
+## 例子
+
+### 基础
+
 省略 `arrowDetail` 时，箭头使用默认的 `stealth` 倒钩形状，颜色继承路径描边色，长度和宽度默认都是 6 个用户单位。
 
-## 例子
+<ComponentPreview files="arrow-default" size="xs" />
 
 ### 形状
 
