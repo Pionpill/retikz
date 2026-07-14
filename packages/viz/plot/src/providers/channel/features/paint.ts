@@ -15,14 +15,14 @@ import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contrac
 import { PlotScale } from '../../../schemas';
 import { orderedCategoryDomain, resolveChannelScale } from '../../scale';
 
-/** 颜色通道 definition 的名称、取值与图例配置。 */
+/** 颜色通道 definition 的名称、取值与图例配置 */
 export type ColorChannelDefinitionOptions = {
   channel: string;
   pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
   constantPaint?: boolean;
 };
 
-/** plot 通道可下沉到 core 的颜色或 paint 值。 */
+/** plot 通道可下沉到 core 的颜色或 paint 值 */
 export type PlotPaint = string | IRPaintSpec;
 
 const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec: boolean): PlotPaint => {

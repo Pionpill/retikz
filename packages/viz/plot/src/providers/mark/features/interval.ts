@@ -52,7 +52,7 @@ type IntervalRoleContext = NonNullable<IntervalContext['byRole'][string]>;
 /**
  * 解析某 interval mark 在某位置 role 的有效区间来源（缺省推断）。
  * @description 显式 bounds 优先；省略时按惯例推断——primary（x）band、secondary（y）span(baseline 0)。
- *   lowering 与 scale 推断共用此单一真源，杜绝两处各推各的漂移。
+ *   lowering 与 scale 推断共用此单一真源，杜绝两处各推各的漂移
  */
 export const resolveIntervalBound = (mark: IRPlotIntervalMark, role: DimensionRole): IRPlotIntervalBound => {
   const explicit = (mark.bounds as Record<string, IRPlotIntervalBound | undefined> | undefined)?.[role];
@@ -63,7 +63,7 @@ export const resolveIntervalBound = (mark: IRPlotIntervalMark, role: DimensionRo
 /**
  * 建某 band role 的摆放上下文（每 mark 每 role 一次；lowering 与 locator 同源）。
  * @description group 取自 bounds.<role> band 的 group 字段；据其切等分子带（dodge）。
- *   seriesRank / subWidth 走 inferCategoryDomain（按数据序去重），与旧 dodge 同算法。
+ *   seriesRank / subWidth 走 inferCategoryDomain（按数据序去重），与旧 dodge 同算法
  */
 const buildBandContext = (
   bandwidth: number,

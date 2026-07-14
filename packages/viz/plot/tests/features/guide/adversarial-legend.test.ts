@@ -13,7 +13,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
  * contract legend guide 对抗测试（Adversarial Bug Hunter）。
  *
  * 目标：用 LLM 真实 / 边角会生成的 plot IR JSON 让 legend lowering 抛意外 / 返回坏结果 /
- * 产出不可序列化或非有限数 IR。只构造输入、不改实现。
+ * 产出不可序列化或非有限数 IR。只构造输入、不改实现
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -372,7 +372,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
   });
 
   it('[adversarial] legend.scale 指向存在但通道不匹配的 scale（color legend 指向 x linear scale）', () => {
-    // guide.scale='x' 存在（是个 linear 位置 scale），但不是 color scale。
+    // guide.scale='x' 存在（是个 linear 位置 scale），但不是 color scale
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',

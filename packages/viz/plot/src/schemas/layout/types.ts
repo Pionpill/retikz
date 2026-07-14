@@ -23,11 +23,11 @@ export type PlotLabelRoleValue = ValueOf<typeof PlotLabelRole>;
 
 export type LayoutAnchorValue = ValueOf<typeof LayoutAnchor>;
 
-/** Plot 全局布局策略。 */
+/** Plot 全局布局策略 */
 export type IRPlotLayout = z.infer<typeof PlotLayoutSchema>;
 
-/** Plot label 位置声明。 */
+/** Plot label 位置声明 */
 export type IRPlotLayoutPlacement = z.infer<typeof LayoutPlacementSchema>;
 
-/** Plot label 条目。 */
+/** Plot label 条目 */
 export type IRPlotLabel = z.infer<typeof PlotLabelSchema>;

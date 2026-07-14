@@ -3,7 +3,7 @@ import type { AnyCoordinateDefinition } from '../../contract';
 import { extractCoordinateType } from '../../contract';
 import { BUILTIN_COORDINATES } from './private';
 
-/** 校验坐标系定位角色可作为稳定、无歧义的 encoding key。 */
+/** 校验坐标系定位角色可作为稳定、无歧义的 encoding key */
 const assertCoordinateRoles = (type: string, roles: ReadonlyArray<string>): void => {
   const seen = new Set<string>();
   for (const role of roles) {
@@ -21,7 +21,7 @@ const assertCoordinateRoles = (type: string, roles: ReadonlyArray<string>): void
  * 解析坐标系 registry。
  * @description 内置坐标系总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复。
  *   返回值是一次 lowering 使用的完整 registry，后续通过 coordinate.type 找到 definition，再由该 definition.schema parse
- *   operation，并调用 definition.resolve 得到运行时 frame。
+ *   operation，并调用 definition.resolve 得到运行时 frame
  */
 export const resolveCoordinateRegistry = (
   custom?: ReadonlyArray<AnyCoordinateDefinition>,

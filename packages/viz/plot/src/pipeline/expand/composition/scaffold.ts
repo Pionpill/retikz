@@ -16,18 +16,18 @@ import type {
 import { defaultOriginAxisTickSideOf } from '../../../providers';
 import { AxisGridApplyTo, PlotGuide } from '../../../schemas';
 
-/** 判断 guide 是否为 axis。 */
+/** 判断 guide 是否为 axis */
 export const isAxisGuide = (guide: IRPlotGuide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis;
 
-/** 判断 guide 是否为 legend。 */
+/** 判断 guide 是否为 legend */
 export const isLegendGuide = (guide: IRPlotGuide): guide is Extract<IRPlotGuide, { type: typeof PlotGuide.Legend }> =>
   guide.type === PlotGuide.Legend;
 
-/** 返回 axis guide 绑定的 coordinate scope。 */
+/** 返回 axis guide 绑定的 coordinate scope */
 export const axisGuideScopeIdOf = (guide: IRPlotAxisGuide, defaultScope: string): string =>
   guide.coordinateView ?? defaultScope;
 
-/** 解析 composition axis 的默认与显式输出策略。 */
+/** 解析 composition axis 的默认与显式输出策略 */
 export const compositionAxisPolicyOf = (
   resolve: CompositionResolve | undefined,
   context: { hasFacets: boolean; hasScaffolds: boolean },
@@ -40,7 +40,7 @@ export const compositionAxisPolicyOf = (
   return context.hasFacets || context.hasScaffolds ? 'outerShared' : 'perScope';
 };
 
-/** 解析 composition grid 的默认与显式投放策略。 */
+/** 解析 composition grid 的默认与显式投放策略 */
 export const compositionGridPlacementOf = (
   resolve: CompositionResolve | undefined,
   context: { hasFacets: boolean; hasScaffolds: boolean },
@@ -49,7 +49,7 @@ export const compositionGridPlacementOf = (
   resolve?.grid?.[dimension] ??
   (context.hasFacets || context.hasScaffolds ? AxisGridApplyTo.All : AxisGridApplyTo.Local);
 
-/** 合并根 composition 与 arrangement 的 layout 覆盖。 */
+/** 合并根 composition 与 arrangement 的 layout 覆盖 */
 export const mergeCompositionLayout = (
   base: CompositionLayout | undefined,
   override: CompositionLayout | undefined,
@@ -68,7 +68,7 @@ const mergeCompositionResolveRecord = <T extends string>(
   return { ...base, ...override };
 };
 
-/** 合并根 composition 与 arrangement 的 scale/axis/grid resolve。 */
+/** 合并根 composition 与 arrangement 的 scale/axis/grid resolve */
 export const mergeCompositionResolve = (
   base: CompositionResolve | undefined,
   override: CompositionResolve | undefined,
@@ -87,19 +87,19 @@ export const mergeCompositionResolve = (
   };
 };
 
-/** 合并根 composition 与指定 arrangement 的 layout。 */
+/** 合并根 composition 与指定 arrangement 的 layout */
 export const resolveArrangementLayout = (
   base: CompositionLayout | undefined,
   arrangement: CoordinateArrangement | undefined,
 ): CompositionLayout | undefined => mergeCompositionLayout(base, arrangement?.spacing);
 
-/** 合并根 composition 与指定 arrangement 的 resolve。 */
+/** 合并根 composition 与指定 arrangement 的 resolve */
 export const resolveArrangementPolicy = (
   base: CompositionResolve | undefined,
   arrangement: CoordinateArrangement | undefined,
 ): CompositionResolve | undefined => mergeCompositionResolve(base, arrangement?.resolve);
 
-/** 解析 axis grid 的最终 applyTo 策略。 */
+/** 解析 axis grid 的最终 applyTo 策略 */
 export const axisGridApplyToOf = (
   guide: IRPlotAxisGuide,
   resolve: CompositionResolve | undefined,
@@ -110,13 +110,13 @@ export const axisGridApplyToOf = (
   return guide.grid.applyTo ?? compositionGridPlacementOf(resolve, context, guide.dimension);
 };
 
-/** 读取 axis grid 的显式目标选择器。 */
+/** 读取 axis grid 的显式目标选择器 */
 export const axisGridSelectorOf = (guide: IRPlotAxisGuide): GridTargetSelector | undefined =>
   typeof guide.grid === 'object' ? guide.grid.select : undefined;
 
 const facetScalarKey = (value: FacetScalar): string => JSON.stringify(value);
 
-/** 判断 facet panel value 是否命中 selector value。 */
+/** 判断 facet panel value 是否命中 selector value */
 export const scalarSelectorIncludes = (values: FacetPanelValue, value: FacetPanelValue): boolean => {
   if (values === undefined) return true;
   if (value === undefined) return false;

@@ -1,4 +1,4 @@
-// 组合 DSL：mark / guide 声明组件 + 纯装配 builder。
+// 组合 DSL：mark / guide 声明组件 + 纯装配 builder
 export type {
   BuildPlotSpecOptions,
   CoordinateInput,

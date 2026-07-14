@@ -36,28 +36,28 @@ import {
 } from '../../../schemas';
 import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS, labelOf } from '../../channel';
 
-/** 折线默认描边宽度（user units）。 */
+/** 折线默认描边宽度（user units） */
 export const LINE_STROKE_WIDTH = 2;
 
-/** 无 color 编码时的回退填充。 */
+/** 无 color 编码时的回退填充 */
 export const DEFAULT_FILL = 'currentColor';
 
-/** mark lowering 可使用的字符串颜色或 core paint。 */
+/** mark lowering 可使用的字符串颜色或 core paint */
 export type MarkPaint = string | IRPaintSpec;
 
-/** 按通道名读取逐行值 resolver。 */
+/** 按通道名读取逐行值 resolver */
 export const channelValueOf = <T extends ChannelValue>(
   channels: MarkChannels,
   channel: string,
 ): ChannelValueResolver<T> | undefined => channels.values?.[channel] as ChannelValueResolver<T> | undefined;
 
-/** 按通道名读取已解析的默认值。 */
+/** 按通道名读取已解析的默认值 */
 export const channelDefaultOf = <T extends ChannelValue>(channels: MarkChannels, channel: string): T | undefined =>
   channels.defaults?.[channel] as T | undefined;
 
 /**
  * 把若干「已就位 node + 其颜色」按颜色分组，每色一子 Scope（fill 上提到子 Scope 的 nodeDefault）。
- * @description 颜色不逐 node 写：N 行同色 → 一个子 Scope 设 fill，IR 体积 O(色数) 而非 O(行数)。
+ * @description 颜色不逐 node 写：N 行同色 → 一个子 Scope 设 fill，IR 体积 O(色数) 而非 O(行数)
  */
 export const colorGroupedScope = (
   placed: Array<{ color: string | undefined; node: IRNode }>,
@@ -78,7 +78,7 @@ export const colorGroupedScope = (
   return { type: 'scope', children };
 };
 
-/** 收集 mark 上可直接提升为 Node 默认样式的常量值。 */
+/** 收集 mark 上可直接提升为 Node 默认样式的常量值 */
 export const constantNodeStyleOverrides = (mark: IRPlotMark): Partial<IRNodeDefault> => {
   const stroke = 'stroke' in mark && mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
   const strokeWidth =
@@ -96,7 +96,7 @@ export const constantNodeStyleOverrides = (mark: IRPlotMark): Partial<IRNodeDefa
 
 /**
  * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）。
- * @description 关 provenance / 无 markProvenance → 原样返回，不写 id/meta。
+ * @description 关 provenance / 无 markProvenance → 原样返回，不写 id/meta
  */
 export const decorateDatum = (
   node: IRNode,
@@ -201,7 +201,7 @@ const normalizeGeometryLabel = (label: IRGeometryLabel): IRGeometryLabel => {
   return side === label.side ? label : { ...label, side };
 };
 
-/** 把 plot Node label 配置解析为 core Node label。 */
+/** 把 plot Node label 配置解析为 core Node label */
 export const resolveNodeMarkLabels = (
   labels: IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
   row: ExternalRow,
@@ -215,7 +215,7 @@ export const resolveNodeMarkLabels = (
   return normalizeResolvedLabels(resolved);
 };
 
-/** 把 plot geometry label 配置解析为 core Path label。 */
+/** 把 plot geometry label 配置解析为 core Path label */
 export const resolveGeometryMarkLabels = (
   labels: IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
   row: ExternalRow,
@@ -231,7 +231,7 @@ export const resolveGeometryMarkLabels = (
 
 /**
  * priority-1 宿主 label：若位置 mark 带 `label` 且该行解析出内容，给 datum Node 填 core NodeLabelSchema。
- * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）。
+ * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）
  */
 export const attachDatumLabel = (
   node: IRNode,
@@ -248,7 +248,7 @@ export const attachDatumLabel = (
   return label === undefined ? node : { ...node, label };
 };
 
-/** 把已解析的 Node 通道值交付到单个 core Node。 */
+/** 把已解析的 Node 通道值交付到单个 core Node */
 export const applyNodeChannelDeliveries = (
   node: IRNode,
   mark: IRPlotMark,
@@ -262,7 +262,7 @@ export const applyNodeChannelDeliveries = (
   }
 };
 
-/** 把已解析的 Path 通道值交付到单个 core Path。 */
+/** 把已解析的 Path 通道值交付到单个 core Path */
 export const applyPathChannelDeliveries = (
   path: IRPath,
   mark: IRPlotMark,
@@ -277,7 +277,7 @@ export const applyPathChannelDeliveries = (
 };
 
 /**
- * 给图层外层 Scope 挂 layer id + meta（provenance 开时）；关 → 原样返回。
+ * 给图层外层 Scope 挂 layer id + meta（provenance 开时）；关 → 原样返回
  */
 export const attachMarkLayer = (
   layer: IRScope,
@@ -295,7 +295,7 @@ export const attachMarkLayer = (
 };
 
 /**
- * 坐标系不支持某 mark 的统一 fail-loud 文案（含 mark.type / frame.type，便于定位）。
+ * 坐标系不支持某 mark 的统一 fail-loud 文案（含 mark.type / frame.type，便于定位）
  */
 export const failLoudMessage = (markType: string, frameType: string): string =>
   `lowerPlots: ${markType} mark is not supported under the ${frameType} coordinate system (this coordinate system does not provide the geometry for ${markType} marks this round)`;

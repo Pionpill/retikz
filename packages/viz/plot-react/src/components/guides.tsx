@@ -7,18 +7,18 @@ import type { PositionScaleType } from './scales';
 export type AxisProps = {
   /**
    * 装饰哪个定位维度：cartesian 的 x（水平）/ y（垂直）；polar 的 x（角向）/ y（径向）；
-   * ternary 的 x / y / z（三角三边）。维度须匹配坐标系合法集，否则 lowering fail-loud。
+   * ternary 的 x / y / z（三角三边）。维度须匹配坐标系合法集，否则 lowering fail-loud
    */
   dimension: 'x' | 'y' | 'z';
   /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <Scale dimension={dimension} type={scale} /> */
   scale?: PositionScaleType;
-  /** 轴线样式；false 隐藏轴线但保留 ticks / labels / grid。 */
+  /** 轴线样式；false 隐藏轴线但保留 ticks / labels / grid */
   line?: IRPlotAxisGuide['line'];
-  /** 刻度来源和刻度线样式；grid 复用同一批 ticks。 */
+  /** 刻度来源和刻度线样式；grid 复用同一批 ticks */
   ticks?: IRPlotAxisGuide['ticks'];
-  /** 轴线交叉值处的 tick / label 冲突策略。 */
+  /** 轴线交叉值处的 tick / label 冲突策略 */
   crossing?: IRPlotAxisGuide['crossing'];
-  /** 刻度标签开关、格式化和文本样式；false 隐藏刻度标签，缺省显示。 */
+  /** 刻度标签开关、格式化和文本样式；false 隐藏刻度标签，缺省显示 */
   tickLabels?: IRPlotAxisGuide['tickLabels'];
   /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */
   grid?: IRPlotAxisGuide['grid'];
@@ -28,9 +28,9 @@ export type AxisProps = {
   trackId?: string;
   placement?: IRPlotAxisGuide['placement'];
   title?: IRPlotAxisGuide['title'];
-  /** 语义图层覆盖；控制坐标轴外层 scope 在 plot 内的 zIndex。 */
+  /** 语义图层覆盖；控制坐标轴外层 scope 在 plot 内的 zIndex */
   layer?: IRPlotAxisGuide['layer'];
-  /** 可选 guide 句柄，用于稳定标识生成的坐标轴。 */
+  /** 可选 guide 句柄，用于稳定标识生成的坐标轴 */
   id?: string;
 };
 
@@ -58,13 +58,13 @@ export type LegendProps = {
   tickLabels?: IRPlotLegendGuide['tickLabels'];
   /** 图例本地视觉 token；覆盖 Plot theme.legend */
   style?: IRPlotLegendGuide['style'];
-  /** 语义图层覆盖；控制图例外层 scope 在 plot 内的 zIndex。 */
+  /** 语义图层覆盖；控制图例外层 scope 在 plot 内的 zIndex */
   layer?: IRPlotLegendGuide['layer'];
 };
 
 /**
  * 图例声明组件
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec.guides；
- *   <Legend> 不抑制默认坐标轴（与 <Axis> 区分），图例与默认轴共存。
+ *   <Legend> 不抑制默认坐标轴（与 <Axis> 区分），图例与默认轴共存
  */
 export const Legend: FC<LegendProps> = () => null;

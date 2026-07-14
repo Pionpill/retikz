@@ -1,6 +1,6 @@
 /**
  * 坐标系类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'cartesian2D'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotCoordinate.x)（不用 z.enum）；命名按空间几何 + 维度。
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotCoordinate.x)（不用 z.enum）；命名按空间几何 + 维度
  */
 export const PlotCoordinate = {
   /** 2D 笛卡尔空间（x 水平 / y 垂直） */
@@ -26,5 +26,5 @@ export const Cartesian1DOrientation = {
   Vertical: 'vertical',
 } as const;
 
-/** 内置坐标系 type 集：供自定义 coordinate operation 排除内置判别串。 */
+/** 内置坐标系 type 集：供自定义 coordinate operation 排除内置判别串 */
 export const BUILTIN_COORDINATE_TYPES = new Set<string>(Object.values(PlotCoordinate));

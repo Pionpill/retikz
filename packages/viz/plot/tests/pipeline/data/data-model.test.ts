@@ -144,7 +144,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   });
 
   it('collect_label_and_text_content_fields_alpha11', () => {
-    // 位置 mark 的 datum label 内容字段与 TextMark 的 text 内容字段都进入用户源字段集。
+    // 位置 mark 的 datum label 内容字段与 TextMark 的 text 内容字段都进入用户源字段集
     const spec = buildSpec({
       marks: [
         {

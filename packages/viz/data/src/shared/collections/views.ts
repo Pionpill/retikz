@@ -1,6 +1,6 @@
 /**
  * 创建不暴露写方法的 Map 只读视图。
- * @description 底层 Map 仅存在于闭包内；迭代与查询保持原生语义，forEach 的 owner 参数返回只读视图自身。
+ * @description 底层 Map 仅存在于闭包内；迭代与查询保持原生语义，forEach 的 owner 参数返回只读视图自身
  */
 export const createReadonlyMap = <TKey, TValue>(
   entries: Iterable<readonly [TKey, TValue]>,
@@ -28,7 +28,7 @@ export const createReadonlyMap = <TKey, TValue>(
 
 /**
  * 创建不暴露写方法的 Set 只读视图。
- * @description 底层 Set 仅存在于闭包内；迭代与查询保持原生语义，forEach 的 owner 参数返回只读视图自身。
+ * @description 底层 Set 仅存在于闭包内；迭代与查询保持原生语义，forEach 的 owner 参数返回只读视图自身
  */
 export const createReadonlySet = <TValue>(values: Iterable<TValue>): ReadonlySet<TValue> => {
   const source = new Set<TValue>(values);

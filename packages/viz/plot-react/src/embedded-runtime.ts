@@ -50,7 +50,7 @@ const mergeResolveLabels = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpt
   return Object.keys(merged).length > 0 ? merged : undefined;
 };
 
-/** 合并同一 Layout 内所有 Plot 共用的 lowering 选项。 */
+/** 合并同一 Layout 内所有 Plot 共用的 lowering 选项 */
 const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOptions => {
   const shared: Record<string, unknown> = {};
   for (const options of optionSets) {
@@ -74,7 +74,7 @@ const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpti
 
 /**
  * 给嵌入式 Plot 数据附带 runtime-only lowering 选项。
- * @description 内部条目只在 Layout 聚合阶段传递，调用 lowerPlots 前会剥离，不进入 Plot IR 或 Scene。
+ * @description 内部条目只在 Layout 聚合阶段传递，调用 lowerPlots 前会剥离，不进入 Plot IR 或 Scene
  */
 export const withEmbeddedPlotRuntime = (
   datasets: ExternalDatasets,

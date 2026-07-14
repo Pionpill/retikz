@@ -17,30 +17,30 @@ const DEFAULT_SOURCE_IDENTITY_LIMIT = 20;
 
 /**
  * data lineage recorder 的归一化消费选项。
- * @description 已补齐公开开关默认值，并把需要记录 row 值的选项收敛为显式白名单形态。
+ * @description 已补齐公开开关默认值，并把需要记录 row 值的选项收敛为显式白名单形态
  */
 type ResolvedDataLineageOptions = {
-  /** sourceIndex / sourceIndices 摘要策略；false 表示不记录来源索引。 */
+  /** sourceIndex / sourceIndices 摘要策略；false 表示不记录来源索引 */
   sourceIdentity: false | Required<DataSourceIdentityOptions>;
-  /** 是否记录 transform step 摘要事件。 */
+  /** 是否记录 transform step 摘要事件 */
   transformSteps: boolean;
-  /** 是否记录字段输入 / 输出流向事件。 */
+  /** 是否记录字段输入 / 输出流向事件 */
   fieldFlow: boolean;
-  /** 是否记录 reducer 操作摘要事件。 */
+  /** 是否记录 reducer 操作摘要事件 */
   reducerOperations: boolean;
-  /** 是否记录 selector 操作摘要事件。 */
+  /** 是否记录 selector 操作摘要事件 */
   selectorOperations: boolean;
-  /** transform 前后 row 样本白名单；false 表示不记录行值。 */
+  /** transform 前后 row 样本白名单；false 表示不记录行值 */
   rowSamples: false | DataValueSampleOptions;
-  /** reducer / selector 诊断详情白名单；false 表示不记录候选行值。 */
+  /** reducer / selector 诊断详情白名单；false 表示不记录候选行值 */
   calculationDetails: false | DataValueSampleOptions;
-  /** 可选的流式事件消费回调。 */
+  /** 可选的流式事件消费回调 */
   sink?: (event: DataLineageEvent) => void;
-  /** 是否在返回的 lineage run 中保留事件数组。 */
+  /** 是否在返回的 lineage run 中保留事件数组 */
   retainEvents: boolean;
 };
 
-/** 校验 sample 类开关，避免省略字段后记录整行。 */
+/** 校验 sample 类开关，避免省略字段后记录整行 */
 const normalizeSampleOptions = (
   value: false | DataValueSampleOptions | undefined,
   label: string,

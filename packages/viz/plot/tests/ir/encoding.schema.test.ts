@@ -40,7 +40,7 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
     expect(() => ChannelSchema.parse({})).toThrow();
   });
 
-  // 交互：value 复用 JSON literal 约束，允许对象常量用于 font / boundary 等内置通道。
+  // 交互：value 复用 JSON literal 约束，允许对象常量用于 font / boundary 等内置通道
   it('channel_value_uses_json_literal', () => {
     const value = { a: 1, nested: [true, null] };
     expect(ChannelSchema.parse({ value })).toEqual({ value });
@@ -68,7 +68,7 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
   });
 
   // x / y 在 schema 层可选，必填性下放到 coordinate 级校验（cartesian2D 需 x+y、
-  // cartesian1D 仅需单维、ternary2D 需 x/y/z）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）。
+  // cartesian1D 仅需单维、ternary2D 需 x/y/z）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）
   it('encoding_missing_x_accepted', () => {
     expect(EncodingSchema.parse({ y: { field: 'value' } })).toEqual({ y: { field: 'value' } });
   });
@@ -151,7 +151,7 @@ describe('SizeChannelSchema / PointEncodingSchema (contract)', () => {
     expect(() => SizeChannelSchema.parse({ value: 'big' })).toThrow();
   });
 
-  // 未知 encoding key 在 schema 层保留，是否是合法位置角色由 active CoordinateDefinition.roles 在 lowering 校验。
+  // 未知 encoding key 在 schema 层保留，是否是合法位置角色由 active CoordinateDefinition.roles 在 lowering 校验
   it('shared_encoding_preserves_unknown_role_key', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, size: { field: 'p' } });
     expect((e as { size?: unknown }).size).toEqual({ field: 'p' });

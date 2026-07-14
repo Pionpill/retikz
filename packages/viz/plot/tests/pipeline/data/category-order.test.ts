@@ -31,7 +31,7 @@ const firstLayer = (
 
 /**
  * 构造一个 x=band 的散点 spec：x 绑 categorical 字段 cat（带 order）、y 绑 continuous 字段 val。
- * 省略 coordinate.x → 触发 type-driven 派生 band（order 注入派生 scale 的 domain）。
+ * 省略 coordinate.x → 触发 type-driven 派生 band（order 注入派生 scale 的 domain）
  */
 const bandSpec = (model: Array<Record<string, unknown>>, scales: Array<unknown> = []): IRPlotSpec =>
   PlotSpecSchema.parse({
@@ -46,7 +46,7 @@ const bandSpec = (model: Array<Record<string, unknown>>, scales: Array<unknown> 
 /**
  * 读出 band 域的实际类别顺序（左→右）。
  * @description point 下沉逐行保序：layer.children[i] ↔ rows[i]。把每行的 cat 与对应 node 的 x 配对，
- *   按 x 升序去重 → 得到 band 域里类别从左到右的真实顺序（而非仅断言「band 等距」这种对任意域都真的废断言）。
+ *   按 x 升序去重 → 得到 band 域里类别从左到右的真实顺序（而非仅断言「band 等距」这种对任意域都真的废断言）
  */
 const bandCategorySequence = (layer: IRScope, rows: Array<Record<string, unknown>>): Array<string | number> => {
   const paired = layer.children.map((child, index) => ({
@@ -294,8 +294,8 @@ describe('IRDataFieldDefinition.order — 交互', () => {
       { cat: 'M', val: 3 },
     ];
     const layer = firstLayer(spec, { d: rows });
-    // color 合成 ordinal，域按 order S,M,L → 颜色 S→scheme[0]、M→[1]、L→[2]（与位置同序，与数据出现序 L,S,M 无关）。
-    // 每个 color 子 scope 内是同色一组 node；用每个 node 的 band x 反查类别（最左=S、中=M、右=L），核对该组 fill。
+    // color 合成 ordinal，域按 order S,M,L → 颜色 S→scheme[0]、M→[1]、L→[2]（与位置同序，与数据出现序 L,S,M 无关）
+    // 每个 color 子 scope 内是同色一组 node；用每个 node 的 band x 反查类别（最左=S、中=M、右=L），核对该组 fill
     const subScopes = layer.children.map(child => child as IRScope);
     // band 中心 x：S 最小、L 最大；按 x 升序映射域序 S,M,L
     const allX = subScopes.flatMap(scope =>

@@ -141,7 +141,7 @@ const smoothTransformDefinition = defineTransform<IRPlotSmoothTransform>({
   apply: (rows, operation, context) => applySmooth(rows, operation, context),
 });
 
-/** plot-only 内置 transform definition 列表；通过 data transform registry 与 data 内置项同路消费。 */
+/** plot-only 内置 transform definition 列表；通过 data transform registry 与 data 内置项同路消费 */
 export const BUILTIN_PLOT_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = [
   stackTransformDefinition,
   binTransformDefinition,
@@ -153,14 +153,14 @@ export const BUILTIN_PLOT_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = [
   smoothTransformDefinition,
 ] as ReadonlyArray<AnyTransformDefinition>;
 
-/** 按 kind 索引的 plot-only 内置 transform definition。 */
+/** 按 kind 索引的 plot-only 内置 transform definition */
 export const BUILTIN_PLOT_TRANSFORM_DEFINITIONS_BY_KIND: ReadonlyMap<string, AnyTransformDefinition> = new Map(
   BUILTIN_PLOT_TRANSFORMS.map(def => [extractTransformKind(def.schema), def] as const),
 );
 
 /**
  * 解析 plot transform registry。
- * @description 先注册 data 内置项，再注册 plot-only 内置项，最后合并用户自定义 definition。
+ * @description 先注册 data 内置项，再注册 plot-only 内置项，最后合并用户自定义 definition
  */
 export const resolvePlotTransformRegistry = (
   custom?: ReadonlyArray<AnyTransformDefinition>,

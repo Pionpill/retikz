@@ -18,17 +18,17 @@ import { BUILTIN_ROW_SELECTORS } from './selectors';
 export { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 export { BUILTIN_ROW_SELECTORS } from './selectors';
 
-/** 默认 statistics reducer registry 的私有稳定索引。 */
+/** 默认 statistics reducer registry 的私有稳定索引 */
 const BUILTIN_STATISTICS_REDUCER_REGISTRY = createReadonlyMap(
   BUILTIN_STATISTICS_REDUCERS.map(def => [extractStatisticOperation(def.schema), def] as const),
 );
 
-/** 默认 row selector registry 的私有稳定索引。 */
+/** 默认 row selector registry 的私有稳定索引 */
 const BUILTIN_ROW_SELECTOR_REGISTRY = createReadonlyMap(
   BUILTIN_ROW_SELECTORS.map(def => [extractStatisticOperation(def.schema), def] as const),
 );
 
-/** 合并内置与自定义统计 reducer 定义，并集中检查 kind 冲突。 */
+/** 合并内置与自定义统计 reducer 定义，并集中检查 kind 冲突 */
 export const resolveStatisticsReducerRegistry = (
   custom?: ReadonlyArray<AnyStatisticsReducerDefinition>,
 ): Map<string, AnyStatisticsReducerDefinition> => {
@@ -41,7 +41,7 @@ export const resolveStatisticsReducerRegistry = (
   return registry;
 };
 
-/** 合并内置与自定义 row selector 定义，并集中检查 kind 冲突。 */
+/** 合并内置与自定义 row selector 定义，并集中检查 kind 冲突 */
 export const resolveRowSelectorRegistry = (
   custom?: ReadonlyArray<AnyRowSelectorDefinition>,
 ): Map<string, AnyRowSelectorDefinition> => {
@@ -54,7 +54,7 @@ export const resolveRowSelectorRegistry = (
   return registry;
 };
 
-/** 依次用公开契约与 definition schema 收窄 reducer operation，并保证解析结果仍可 JSON 序列化。 */
+/** 依次用公开契约与 definition schema 收窄 reducer operation，并保证解析结果仍可 JSON 序列化 */
 const parseReducerOperation = (
   definition: AnyStatisticsReducerDefinition,
   operation: IRDataReducerOperation,
@@ -65,7 +65,7 @@ const parseReducerOperation = (
   return parsed;
 };
 
-/** 依次用公开契约与 definition schema 收窄 selector operation，并保证解析结果仍可 JSON 序列化。 */
+/** 依次用公开契约与 definition schema 收窄 selector operation，并保证解析结果仍可 JSON 序列化 */
 const parseSelectorOperation = (definition: AnyRowSelectorDefinition, operation: IRDataSelectorOperation): never => {
   const publicOperation = SelectorOperationSchema.parse(operation);
   const parsed = definition.schema.parse(publicOperation) as never;
@@ -73,7 +73,7 @@ const parseSelectorOperation = (definition: AnyRowSelectorDefinition, operation:
   return parsed;
 };
 
-/** 从注册表解析 reducer 定义；缺失时给出注入入口提示。 */
+/** 从注册表解析 reducer 定义；缺失时给出注入入口提示 */
 const reducerDefinitionOf = (
   operation: IRDataReducerOperation,
   registry: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
@@ -87,7 +87,7 @@ const reducerDefinitionOf = (
   return definition;
 };
 
-/** 从注册表解析 selector 定义；缺失时给出注入入口提示。 */
+/** 从注册表解析 selector 定义；缺失时给出注入入口提示 */
 const selectorDefinitionOf = (
   operation: IRDataSelectorOperation,
   registry: ReadonlyMap<string, AnyRowSelectorDefinition> = resolveRowSelectorRegistry(),
@@ -101,7 +101,7 @@ const selectorDefinitionOf = (
   return definition;
 };
 
-/** 收集 reducer 会读取的源字段。 */
+/** 收集 reducer 会读取的源字段 */
 export const reducerInputFields = (
   operation: IRDataReducerOperation,
   registry: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
@@ -110,7 +110,7 @@ export const reducerInputFields = (
   return definition.inputFields?.(parseReducerOperation(definition, operation)) ?? [];
 };
 
-/** 收集 reducer 会产生的派生字段。 */
+/** 收集 reducer 会产生的派生字段 */
 export const reducerOutputFields = (
   operation: IRDataReducerOperation,
   registry: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
@@ -119,7 +119,7 @@ export const reducerOutputFields = (
   return definition.outputFields?.(parseReducerOperation(definition, operation)) ?? [];
 };
 
-/** 对一组 rows 执行 reducer operation，并允许 context 注入自定义 reducer registry。 */
+/** 对一组 rows 执行 reducer operation，并允许 context 注入自定义 reducer registry */
 export const applyReducerOperation = (
   rows: Array<ExternalRow>,
   operation: IRDataReducerOperation,
@@ -138,7 +138,7 @@ export const applyReducerOperation = (
   return out;
 };
 
-/** 收集 selector 会读取的源字段。 */
+/** 收集 selector 会读取的源字段 */
 export const selectorInputFields = (
   operation: IRDataSelectorOperation,
   registry: ReadonlyMap<string, AnyRowSelectorDefinition> = resolveRowSelectorRegistry(),
@@ -147,7 +147,7 @@ export const selectorInputFields = (
   return definition.inputFields?.(parseSelectorOperation(definition, operation)) ?? [];
 };
 
-/** 对一组 rows 执行 selector operation，并允许 context 注入自定义 selector registry。 */
+/** 对一组 rows 执行 selector operation，并允许 context 注入自定义 selector registry */
 export const applySelectorOperation = (
   rows: Array<ExternalRow>,
   operation: IRDataSelectorOperation,

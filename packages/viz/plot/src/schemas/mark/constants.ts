@@ -2,7 +2,7 @@
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 z.enum）。
  *   5 个抽象 mark = 3 个维度 mark（point / path / interval，描述数据在坐标空间的 k 维几何）
- *   + 1 个特殊 mark（reference，复用维度 mark 投影但语义不等同）。
+ *   + 1 个特殊 mark（reference，复用维度 mark 投影但语义不等同）
  */
 export const PlotMark = {
   /** 维度 mark / 0D：坐标元组上的实体 / glyph / 文本 anchor（散点 + 文本标签） */
@@ -20,7 +20,7 @@ export const PlotMark = {
 
 /**
  * PathMark 相邻点连接方式。
- * @description 面向图表层的曲线类型；底层会下沉为 core Path 的 line / cubic / smooth steps。
+ * @description 面向图表层的曲线类型；底层会下沉为 core Path 的 line / cubic / smooth steps
  */
 export const PathCurve = {
   /** 折线连接：每相邻两点用直线段连接 */
@@ -47,7 +47,7 @@ export const PathCurve = {
 
 /**
  * PathMark 闭合策略关键字。
- * @description cycle 首尾闭合；baseline 回到常量基线；stack 回到逐行基线字段，适合堆叠面积。
+ * @description cycle 首尾闭合；baseline 回到常量基线；stack 回到逐行基线字段，适合堆叠面积
  */
 export const PathClosureKind = {
   /** 首尾直接闭合，形成多边形 / 雷达轮廓 */
@@ -63,49 +63,49 @@ export const RelationGeometryKind = {
   Ribbon: 'ribbon',
 } as const;
 
-/** relation 显式路由支持的 core step 类型。 */
+/** relation 显式路由支持的 core step 类型 */
 export const RelationRouteStepKind = {
-  /** 移动到目标但不绘制。 */
+  /** 移动到目标但不绘制 */
   Move: 'move',
-  /** 绘制直线段。 */
+  /** 绘制直线段 */
   Line: 'line',
-  /** 绘制正交折线段。 */
+  /** 绘制正交折线段 */
   Fold: 'fold',
-  /** 绘制二次 Bezier 曲线。 */
+  /** 绘制二次 Bezier 曲线 */
   Curve: 'curve',
-  /** 绘制三次 Bezier 曲线。 */
+  /** 绘制三次 Bezier 曲线 */
   Cubic: 'cubic',
-  /** 绘制 bend 曲线。 */
+  /** 绘制 bend 曲线 */
   Bend: 'bend',
 } as const;
 
-/** relation 自动路由策略类型。 */
+/** relation 自动路由策略类型 */
 export const RelationRoutingKind = {
-  /** 以直线连接相邻目标。 */
+  /** 以直线连接相邻目标 */
   Line: 'line',
-  /** 以 bend 曲线连接相邻目标。 */
+  /** 以 bend 曲线连接相邻目标 */
   Bend: 'bend',
-  /** 以正交折线连接相邻目标。 */
+  /** 以正交折线连接相邻目标 */
   Orthogonal: 'orthogonal',
 } as const;
 
-/** relation 正交路由标签落点策略。 */
+/** relation 正交路由标签落点策略 */
 export const RelationOrthogonalLabelStep = {
-  /** 放到最长的主线段。 */
+  /** 放到最长的主线段 */
   Main: 'main',
-  /** 放到最后一个可绘制线段。 */
+  /** 放到最后一个可绘制线段 */
   Last: 'last',
 } as const;
 
-/** reference mark 显式形态。 */
+/** reference mark 显式形态 */
 export const ReferenceMarkKind = {
-  /** 使用所有坐标 role 的上下界生成区域。 */
+  /** 使用所有坐标 role 的上下界生成区域 */
   Region: 'region',
 } as const;
 
 /**
  * interval 单维区间来源关键字（暴露给用户；裸 `'band'` 等同样可用）
- * @description interval 各位置 role 的区间 [lo,hi] 怎么来：band（band 宽）/ span（baseline→值）/ extent（两字段区间）/ full（满域）。
+ * @description interval 各位置 role 的区间 [lo,hi] 怎么来：band（band 宽）/ span（baseline→值）/ extent（两字段区间）/ full（满域）
  */
 export const IntervalBoundKind = {
   /** 中心取位置通道、宽取 band scale bandwidth；可选 group 字段把 band 切等分子带（分组柱 / dodge） */
@@ -127,5 +127,5 @@ export const MarkValueKind = {
   Constant: 'constant',
 } as const;
 
-/** 内置 mark type 集合；自定义 mark 的 type 不能与之冲突。 */
+/** 内置 mark type 集合；自定义 mark 的 type 不能与之冲突 */
 export const BUILTIN_MARK_TYPES = new Set<string>(Object.values(PlotMark));

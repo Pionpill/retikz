@@ -7,7 +7,7 @@ import pkg from './package.json' with { type: 'json' };
 
 /**
  * 把 dependencies / peerDependencies 都视为 external，避免把 React / @retikz/plot
- * 等运行时打进库产物（同时支持 'foo' 和 'foo/sub' 子路径）。
+ * 等运行时打进库产物（同时支持 'foo' 和 'foo/sub' 子路径）
  */
 const runtimeDeps = [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)];
 const external = (id: string) => runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));

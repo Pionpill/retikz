@@ -47,7 +47,7 @@ describe('TransformSchema sort / stack', () => {
     expect(() => TransformSchema.parse({ kind: 'stack', x: 'm', groupBy: 'p' })).toThrow();
   });
 
-  // stack 允许省略 x / groupBy，用于单链累积场景。
+  // stack 允许省略 x / groupBy，用于单链累积场景
   it('stack_omits_x_and_group_valid', () => {
     // 单链累积：只给 y，按数据序累加（饼图用法）
     const t = { kind: 'stack', y: 'value' };

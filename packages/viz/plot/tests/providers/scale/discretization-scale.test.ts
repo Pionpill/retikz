@@ -22,7 +22,7 @@ const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<stri
 
 /**
  * 收集图层内每个 point node 的有效 fill（离散色把同档 node 分组到子 Scope.nodeDefault.fill）。
- * 返回长度与 node 数一致、按 node 出现序的 fill 串数组（无 fill → undefined）。
+ * 返回长度与 node 数一致、按 node 出现序的 fill 串数组（无 fill → undefined）
  */
 const nodeFills = (layer: IRScope): Array<string | undefined> => {
   const out: Array<string | undefined> = [];
@@ -245,8 +245,8 @@ describe('离散色 · quantile 分位切档求值（contract）', () => {
 
   // 错误路径：显式 domain → fail-loud（分位由数据决定）
   //   注：QuantileColorScaleSchema 非 strict，schema parse 会静默 strip domain（见 scale.schema.test.ts），
-  //   故此处显式 domain 已被剥离、lowering 收不到——本测试改测「带 domain 的 spec 经 schema parse 后仍正常 lower 不受 domain 影响」。
-  //   真正的「给 domain → fail-loud」契约在 schema 层即以 strip 形式落地（用户给的 domain 无效化），lowering 不读 domain。
+  //   故此处显式 domain 已被剥离、lowering 收不到——本测试改测「带 domain 的 spec 经 schema parse 后仍正常 lower 不受 domain 影响」
+  //   真正的「给 domain → fail-loud」契约在 schema 层即以 strip 形式落地（用户给的 domain 无效化），lowering 不读 domain
   it('quantile 显式 domain 被 schema strip、lowering 不受其影响', () => {
     const data = [
       { x: 0, y: 0, v: 1 },

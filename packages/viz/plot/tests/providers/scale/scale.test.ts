@@ -5,7 +5,7 @@ import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../../src
 import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../../src/providers';
 import { type IRPlotScaleOperation } from '../../../src/schemas';
 
-// 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。
+// 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();
 const resolvePositionScale = (
   operation: IRPlotScaleOperation,
@@ -45,7 +45,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
 
   // 边界
   it('scale_single_datum_midpoint', () => {
-    // d0=d1：d3 归一化返回 0.5 → range 中点。
+    // d0=d1：d3 归一化返回 0.5 → range 中点
     const scale = resolveLinearScale({ domain: [5, 5] }, [], [0, 480]);
     expect(scale(5)).toBe(240);
   });
@@ -58,7 +58,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
   });
 
   it('scale_nice_toggle', () => {
-    // nice 会把 [0,9.7] 扩展到整齐的 [0,10]。
+    // nice 会把 [0,9.7] 扩展到整齐的 [0,10]
     const scale = resolveLinearScale({ domain: [0, 9.7], nice: true }, [], [0, 100]);
     expect(scale.domain()).toEqual([0, 10]);
     const plain = resolveLinearScale({ domain: [0, 9.7] }, [], [0, 100]);
@@ -193,7 +193,7 @@ describe('resolvePositionScale linear back-compat (contract)', () => {
   });
 
   it('linear_skips_non_numeric', () => {
-    // 非数值（含数字字符串）→ NaN，不投影。
+    // 非数值（含数字字符串）→ NaN，不投影
     const pos = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 10] }, [], [0, 100]);
     expect(Number.isNaN(pos.coordinate('5'))).toBe(true);
     expect(Number.isNaN(pos.coordinate(undefined))).toBe(true);

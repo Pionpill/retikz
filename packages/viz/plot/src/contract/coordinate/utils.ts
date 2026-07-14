@@ -5,7 +5,7 @@ import type { CellProjectableCoordinate, CoordinateFrame } from './types';
 /**
  * 判断坐标帧是否支持 cell 类几何投影。
  * @description interval、reference band 等 mark 先构造逻辑 Cell，再要求 frame.projectCell 把 Cell 投成 rect / sector / contour。
- *   这个 guard 只表示“能投 cell”，不表示 mark 侧一定能构造 cell；自定义 interval 仍需要 roleScales。
+ *   这个 guard 只表示“能投 cell”，不表示 mark 侧一定能构造 cell；自定义 interval 仍需要 roleScales
  */
 export const hasProjectCell = (coordinate: CoordinateFrame): coordinate is CellProjectableCoordinate => {
   const candidate = coordinate as { projectCell?: unknown };
@@ -15,7 +15,7 @@ export const hasProjectCell = (coordinate: CoordinateFrame): coordinate is CellP
 /**
  * 从 coordinate definition schema 中提取 registry key。
  * @description definition schema 必须是包含 `type: z.literal('<coordinate-type>')` 的 ZodObject；
- *   该 literal 值就是 IR 中 `coordinate.type` 的真实判别串，也是 registry 的唯一键。
+ *   该 literal 值就是 IR 中 `coordinate.type` 的真实判别串，也是 registry 的唯一键
  */
 export const extractCoordinateType = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {

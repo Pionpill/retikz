@@ -33,17 +33,17 @@ export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'rendere
   LowerPlotsOptions &
   PlotLineageProps;
 
-/** React adapter 暴露的运行时图元链路 props。 */
+/** React adapter 暴露的运行时图元链路 props */
 export type PlotLineageProps = {
   /**
    * 图元链路记录开关。
    * @description `false` 表示关闭；传对象时沿用 `@retikz/plot` 的独立开关。省略时只有 `onLineage`
-   *   或 `resolvePlotLineage` 触发运行时链路计算，并使用最小默认摘要。
+   *   或 `resolvePlotLineage` 触发运行时链路计算，并使用最小默认摘要
    */
   lineage?: false | PlotLineageOptions;
-  /** 宿主侧查询 / AI / 权限 metadata；只有 `lineage.hostMetadata` 打开对应开关时才会透传。 */
+  /** 宿主侧查询 / AI / 权限 metadata；只有 `lineage.hostMetadata` 打开对应开关时才会透传 */
   hostLineageMetadata?: PlotHostLineageMetadata;
-  /** 渲染后接收 runtime-only 图元链路产物；不会把链路写入 IRPlotSpec 或 Scene meta。 */
+  /** 渲染后接收 runtime-only 图元链路产物；不会把链路写入 IRPlotSpec 或 Scene meta */
   onLineage?: (lineage: PlotLineageRun) => void;
 };
 
@@ -52,7 +52,7 @@ export type PlotColorProps = {
   colors?: Array<string>;
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
   theme?: IRPlotSpec['theme'];
-  /** 整图 label 空间布局策略。 */
+  /** 整图 label 空间布局策略 */
   layout?: IRPlotSpec['layout'];
 };
 
@@ -88,7 +88,7 @@ export type PlotDslProps = PlotCommonProps &
     /**
      * 数据变换 IR 直传（快捷入口）：拼到 `<Transform>` 子组件收集结果之前、自动装配 stack 之前。
      * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
-     *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack。
+     *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack
      */
     dataTransforms?: Array<IRPlotTransform>;
     /**

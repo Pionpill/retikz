@@ -7,7 +7,7 @@ import { IntervalMark, PointMark } from '../../src/components/marks';
 /**
  * ADR-04（alpha.11）：plot-react 装配契约。
  * priority-1：位置 mark 的扁平 label* props → IR mark.label（MarkLabelSchema），resolveLabel 收进旁路、不落 IR；
- * priority-2：<PointMark text> 扁平 props → IR point mark（type:'point'、encoding.text、x/y/color、dx/dy 落顶层）。
+ * priority-2：<PointMark text> 扁平 props → IR point mark（type:'point'、encoding.text、x/y/color、dx/dy 落顶层）
  */
 
 describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {

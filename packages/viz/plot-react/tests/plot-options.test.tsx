@@ -12,7 +12,7 @@ import { IntervalMark, Plot } from '../src';
  *
  * 结构性断言：开 provenance + root id 时，下沉会合成 '<plotId>.mark.0' 的 scope id，
  *   compile / SVG 渲染会把它 emit 成 data-retikz-id="sales.mark.0"。该属性只在 option
- *   真正到达 lowerPlots 时才出现 → 作转发是否生效的可观测代理。
+ *   真正到达 lowerPlots 时才出现 → 作转发是否生效的可观测代理
  */
 
 const spec: IRPlotSpec = {

@@ -3,7 +3,7 @@ import type { PositionChannelDefinition } from '../../../contract';
 import { ChannelDefinitionKind } from '../../../contract';
 import { type IRPlotChannel } from '../../../schemas';
 
-/** 内置 position channel definition 的扩展形态。 */
+/** 内置 position channel definition 的扩展形态 */
 export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {
   pickWithOptions: () => PositionChannelDefinition['pick'];
 };
@@ -19,7 +19,7 @@ const positionChannelDefinitionOf = (role: string): BuiltinPositionChannelDefini
   pickWithOptions: () => mark => markEncoding(mark)?.[role],
 });
 
-/** 把坐标系 roles 包成 position channel definitions，供校验、域收集和 scale 推导共用同一读取入口。 */
+/** 把坐标系 roles 包成 position channel definitions，供校验、域收集和 scale 推导共用同一读取入口 */
 export const createPositionChannelDefinitions = (
   roles: ReadonlyArray<string>,
 ): ReadonlyMap<string, BuiltinPositionChannelDefinition> => {

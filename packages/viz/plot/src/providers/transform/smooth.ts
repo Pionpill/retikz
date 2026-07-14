@@ -59,17 +59,17 @@ const sampleExtentOf = (operation: IRPlotSmoothTransform, pairs: Array<SmoothPai
   return [min, max];
 };
 
-/** 返回 smooth transform 读取的源字段。 */
+/** 返回 smooth transform 读取的源字段 */
 export const smoothInputFields = (operation: IRPlotSmoothTransform): Array<string> => [
   operation.x,
   operation.y,
   ...(operation.groupBy ?? []),
 ];
 
-/** 返回 smooth transform 写出的派生字段。 */
+/** 返回 smooth transform 写出的派生字段 */
 export const smoothOutputFields = (operation: IRPlotSmoothTransform): Array<string> => [operation.xAs, operation.yAs];
 
-/** smooth：首轮只做普通最小二乘线性回归，每组输出 sampleCount 个预测点。 */
+/** smooth：首轮只做普通最小二乘线性回归，每组输出 sampleCount 个预测点 */
 export const applySmooth = (
   rows: Array<ExternalRow>,
   operation: IRPlotSmoothTransform,

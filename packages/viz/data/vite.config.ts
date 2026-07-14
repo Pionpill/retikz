@@ -5,7 +5,7 @@ import dts from 'vite-plugin-dts';
 import pkg from './package.json' with { type: 'json' };
 
 /**
- * 把 runtime dependencies 视为 external，避免把第三方运行时打包进库产物。
+ * 把 runtime dependencies 视为 external，避免把第三方运行时打包进库产物
  */
 const runtimeDeps = [...Object.keys(pkg.dependencies)];
 const external = (id: string) => runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));

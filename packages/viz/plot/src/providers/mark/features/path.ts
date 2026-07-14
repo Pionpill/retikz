@@ -49,14 +49,14 @@ import {
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）。
- * @description x/y 是唯一位置通道（坐标系决定其含义）。
+ * @description x/y 是唯一位置通道（坐标系决定其含义）
  */
 export const resolveRolePosition = (mark: IRPlotPathMark, row: ExternalRow): [unknown, unknown] => [
   channelValue(mark.encoding.x, row),
   channelValue(mark.encoding.y, row),
 ];
 
-/** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null。 */
+/** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null */
 export const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<IRStep> | null => {
   if (points.length < 2) return null;
   const steps: Array<IRStep> = [
@@ -67,7 +67,7 @@ export const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: b
   return steps;
 };
 
-// PathMark 的 curve 是图表层连接方式；这里统一下沉为 core Path 已支持的 step 序列。
+// PathMark 的 curve 是图表层连接方式；这里统一下沉为 core Path 已支持的 step 序列
 const cubicStep = (
   control1: [number, number],
   control2: [number, number],
@@ -290,7 +290,7 @@ const pointsToCurveSteps = (
   return steps;
 };
 
-/** 按 order / 数据序排好一组行（path 共用连接顺序）。 */
+/** 按 order / 数据序排好一组行（path 共用连接顺序） */
 const effectivePathCurve = (curve: PathCurveValue | undefined, frame: CoordinateFrame): PathCurveValue => {
   if (isPolarCoordinateFrame(frame) && (curve === PathCurve.MonotoneX || curve === PathCurve.MonotoneY)) {
     return PathCurve.Linear;
@@ -298,13 +298,13 @@ const effectivePathCurve = (curve: PathCurveValue | undefined, frame: Coordinate
   return curve ?? PathCurve.Linear;
 };
 
-/** 按图元 order 字段稳定排序数据行。 */
+/** 按图元 order 字段稳定排序数据行 */
 export const orderRows = (rows: Array<ExternalRow>, order: string | undefined): Array<ExternalRow> =>
   order ? [...rows].sort((a, b) => compareRowsByFieldPath(a, b, order)) : rows;
 
 /**
  * 把一组有序行投影成上沿屏幕点（坐标系无关）。
- * @description cartesian / polar 分类角轴 / closed 走弦（顶点直连）；polar 连续角轴段内采样弯弧。
+ * @description cartesian / polar 分类角轴 / closed 走弦（顶点直连）；polar 连续角轴段内采样弯弧
  */
 export const buildOutlinePoints = (
   mark: IRPlotPathMark,
@@ -524,16 +524,16 @@ const buildClosureStepSegments = (
     },
   );
 
-/** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值）。 */
+/** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值） */
 export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathStepSegment>;
 
-/** path child 的可变形态（series 下沉时按需补 id / meta），直接复用 core IRPath 属性面。 */
+/** path child 的可变形态（series 下沉时按需补 id / meta），直接复用 core IRPath 属性面 */
 type IRPathChild = IRPath;
 
 const pathMarkOptions = (mark: IRPlotPathMark): Partial<Pick<IRPath, 'marks'>> =>
   mark.marks === undefined ? {} : { marks: mark.marks };
 
-/** 按 series 分组并构造 path 图元序列。 */
+/** 按 series 分组并构造 path 图元序列 */
 export const buildSeriesPaths = (
   mark: IRPlotPathMark,
   rows: Array<ExternalRow>,

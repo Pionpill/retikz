@@ -26,7 +26,7 @@ import { isBuiltinMark, PlotSpecSchema } from '../../../src/schemas';
 /**
  * 区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。
  * 验证 cartesian/polar 闭式快路逐字段等价、CellGeometry 三态装配、densifyCellContour 密采样闭合、
- * contour Node 可连接、datumAnchor 三态 parity，以及无 projectCell 坐标系 fail-loud。
+ * contour Node 可连接、datumAnchor 三态 parity，以及无 projectCell 坐标系 fail-loud
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;

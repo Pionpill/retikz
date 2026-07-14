@@ -15,7 +15,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 /**
  * 自定义坐标系（custom coordinate）lowering 测试。
  * IR 只存 `{type:<customType>, ...config}`（JSON 安全）；roles / 投影函数由运行时 CoordinateDefinition 提供。
- * 证明 projectRoles 足以表达任意坐标系几何（曲线一维 / 拱形 x 轴），无需「轴」抽象、不破坏 IR 序列化。
+ * 证明 projectRoles 足以表达任意坐标系几何（曲线一维 / 拱形 x 轴），无需「轴」抽象、不破坏 IR 序列化
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -402,8 +402,8 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 });
 
 // ── contract：frameAlong 单 role 轴标架契约 ───────────────────────────────────────────────
-// 坐标系可选报某角色轴曲线在某点的局部标架（origin + 切向，屏幕空间）；曲线轴优先吃它、缺则数值差分回落。
-// 法向 = 切向逆时针转 90°，由 guide 导出。维度无关：轴曲线永远 1D、永远有切向法向（2D custom 的单 role 轴亦然）。
+// 坐标系可选报某角色轴曲线在某点的局部标架（origin + 切向，屏幕空间）；曲线轴优先吃它、缺则数值差分回落
+// 法向 = 切向逆时针转 90°，由 guide 导出。维度无关：轴曲线永远 1D、永远有切向法向（2D custom 的单 role 轴亦然）
 
 /** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
 const DIAGONAL_K = 10;

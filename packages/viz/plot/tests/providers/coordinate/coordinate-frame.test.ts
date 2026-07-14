@@ -13,7 +13,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
  * 经公开 lowerPlots 断言（不戳内部 frame 方法）：
  *   - cartesian / polar 投影逐字不变（frame 加 roles/projectRoles 零回归）；
  *   - 缺必填位置角色 fail-loud（必填性下放 coordinate 级，承 encoding x/y 转可选）；
- *   - guide 维度按坐标系合法集校验，非法 dimension fail-loud。
+ *   - guide 维度按坐标系合法集校验，非法 dimension fail-loud
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;

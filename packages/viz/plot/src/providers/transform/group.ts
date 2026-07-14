@@ -13,25 +13,25 @@ import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 
 import type { IRPlotBinTransform, IRPlotRelateTransform } from '../../schemas';
 
-/** bin 默认输出字段名，对齐 IntervalMark 的区间消费方。 */
+/** bin 默认输出字段名，对齐 IntervalMark 的区间消费方 */
 const DEFAULT_BIN_START_FIELD = 'binStart';
 const DEFAULT_BIN_END_FIELD = 'binEnd';
 const DEFAULT_BIN_COUNT_FIELD = 'binCount';
 
-/** bin 默认目标箱数。 */
+/** bin 默认目标箱数 */
 const DEFAULT_BIN_COUNT = 10;
 
-/** bin 的边界输出字段名，validate 剔除派生字段时复用。 */
+/** bin 的边界输出字段名，validate 剔除派生字段时复用 */
 export const binOutputFields = (operation: IRPlotBinTransform): { startField: string; endField: string } => ({
   startField: operation.startField ?? DEFAULT_BIN_START_FIELD,
   endField: operation.endField ?? DEFAULT_BIN_END_FIELD,
 });
 
-/** bin 指标列表；缺省时用 count 指标产生默认频数列。 */
+/** bin 指标列表；缺省时用 count 指标产生默认频数列 */
 export const binMetricOperations = (operation: IRPlotBinTransform): NonNullable<IRPlotBinTransform['metrics']> =>
   operation.metrics ?? [{ kind: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
 
-/** 由策略计算分箱边界；count / step / thresholds 三策略互斥。 */
+/** 由策略计算分箱边界；count / step / thresholds 三策略互斥 */
 const binEdges = (operation: IRPlotBinTransform, values: Array<number>): Array<number> => {
   const strategies = [
     operation.count !== undefined,
@@ -85,7 +85,7 @@ const applyReducerMetrics = (
 
 /**
  * bin：连续 field 分箱，输出每箱一行，包含空箱。
- * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；metrics 缺省输出 binCount。
+ * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；metrics 缺省输出 binCount
  */
 export const applyBin = (
   rows: Array<ExternalRow>,

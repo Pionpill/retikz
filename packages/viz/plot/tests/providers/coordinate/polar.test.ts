@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
  * contract polar 投影 lowering 测试。
  * 断言 lowerPlots 产出的 core IR（node position / 结构），不碰内部 CoordinateFrame 方法。
  * 投影约定：θ=angleScale(angleValue) 度、r=radiusScale(radiusValue)，
- *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]；0°=+x、90°=+y（屏幕 y 向下）。
+ *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]；0°=+x、90°=+y（屏幕 y 向下）
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -219,7 +219,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     expect(distinctX.size).toBeGreaterThan(1);
   });
 
-  // 边界：非有限值跳过。
+  // 边界：非有限值跳过
   it('non_finite_radius_skipped', () => {
     const rows = [
       { theta: 0, value: 5 },
@@ -315,7 +315,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 位置通道完整性由 coordinate 级 lowering 校验——
-  // x/y 在 parse 期合法（可选），缺角色在 lowering fail-loud（polar2D / cartesian2D 都需 x+y）。
+  // x/y 在 parse 期合法（可选），缺角色在 lowering fail-loud（polar2D / cartesian2D 都需 x+y）
   it('polar_encoding_missing_y_fails_loud_at_lowering', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

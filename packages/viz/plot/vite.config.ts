@@ -6,7 +6,7 @@ import pkg from './package.json' with { type: 'json' };
 
 /**
  * 把 dependencies / peerDependencies 都视为 external，避免把第三方运行时
- * 打包进库产物（同时支持 'foo' 和 'foo/sub' 子路径）。
+ * 打包进库产物（同时支持 'foo' 和 'foo/sub' 子路径）
  */
 const runtimeDeps = [...Object.keys(pkg.dependencies)];
 const external = (id: string) => runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));

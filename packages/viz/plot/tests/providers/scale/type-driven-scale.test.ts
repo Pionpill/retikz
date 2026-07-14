@@ -14,7 +14,7 @@ import {
 } from '../../../src/providers';
 import { PlotSpecSchema } from '../../../src/schemas';
 
-// 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参。
+// 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();
 const assertScaleFieldCompatible = (
   role: string,
