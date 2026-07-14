@@ -16,6 +16,7 @@ import { useEffect, useRef } from 'react';
 
 import type { CoordinateInput, MarkTransformShortcutDefinition } from './components';
 
+import { makeEmbeddedPlotComposites, withEmbeddedPlotRuntime } from './embedded-runtime';
 import { resolvePlotRuntime } from './plot-runtime';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
@@ -125,8 +126,8 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
     const { spec, datasets, lowerOptions } = resolvePlotRuntime(props, { embedded: true });
     return {
       node: wrapPanelScope(spec, props),
-      datasets,
-      makeComposites: mergedDatasets => lowerPlots(mergedDatasets as ExternalDatasets, lowerOptions),
+      datasets: withEmbeddedPlotRuntime(datasets, lowerOptions),
+      makeComposites: makeEmbeddedPlotComposites,
     };
   },
 };

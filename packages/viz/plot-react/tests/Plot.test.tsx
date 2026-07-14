@@ -1,4 +1,4 @@
-import type { ExternalDatasets } from '@retikz/data';
+import type { ExternalDatasets, IRDataModel } from '@retikz/data';
 import type { IRPlotSpec, PlotLineageRun } from '@retikz/plot';
 
 import { lowerPlots } from '@retikz/plot';
@@ -216,5 +216,40 @@ describe('<Plot spec data> 薄包装', () => {
     expect(svg.match(/<svg/g)).toHaveLength(1);
     expect(svg).toContain('leftPanel.plotArea');
     expect(svg).toContain('rightPanel.plotArea');
+  });
+
+  it('同一 Layout 的多个 Plot 按数据集 reference 合并 fieldMap', () => {
+    const model: IRDataModel = [
+      { name: 'month', type: 'categorical' },
+      { name: 'revenue', type: 'continuous' },
+    ];
+    const mappedRows = [
+      { period: 'Jan', amount: 10 },
+      { period: 'Feb', amount: 20 },
+    ];
+    const directRows = [
+      { month: 'Jan', revenue: 12 },
+      { month: 'Feb', revenue: 18 },
+    ];
+
+    const svg = renderToStaticMarkup(
+      <Layout width={580} height={260}>
+        <Plot
+          id="mappedPanel"
+          data={mappedRows}
+          model={model}
+          fieldMap={{ month: 'period', revenue: 'amount' }}
+          width={280}
+          height={220}
+        >
+          <PointMark x="month" y="revenue" />
+        </Plot>
+        <Plot id="directPanel" data={directRows} model={model} width={280} height={220} x={300}>
+          <PointMark x="month" y="revenue" />
+        </Plot>
+      </Layout>,
+    );
+
+    expect(svg.match(/<ellipse/g)).toHaveLength(4);
   });
 });
