@@ -36,7 +36,7 @@ import { legendReserveOf } from '../legend';
 /**
  * interval mark 在某位置 role 对 scale 域的贡献值（按 bounds 来源）
  * @description band / span → 取 encoding 位置通道值（band 为类别、span 为值，baseline 由 includeBaseline 纳入）；
- *   extent → 取两字段（histogram 箱边 / 堆叠 y0,y1 / 累积饼角 start,end）；full → 不贡献（满铺坐标域）。
+ *   extent → 取两字段（histogram 箱边 / 堆叠 y0,y1 / 累积饼角 start,end）；full → 不贡献（满铺坐标域）
  */
 const intervalRoleValues = (
   mark: IRPlotIntervalMark,
@@ -111,17 +111,17 @@ const relationTargetRoleValues = (
   return fields.flatMap(field => rows.map(row => resolveFieldPath(row, field)));
 };
 
-/** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined。 */
+/** 读 mark 的 encoding（内置与自定义共享 EncodingSchema 形态）；自定义 mark 缺 encoding 时 undefined */
 const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotChannel | undefined> | undefined =>
   (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding;
 
-/** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验。 */
+/** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验 */
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
 
 /**
  * 校验内置 mark 的 encoding key 是否属于当前坐标系角色。
  * @description schema 允许未知 key 承载自定义坐标系位置角色；lowering 必须按 active CoordinateDefinition.roles
- *   fail-loud，避免把 `size` / `opacity` 这类拼错或误放进 encoding 的字段静默当成无效位置角色。
+ *   fail-loud，避免把 `size` / `opacity` 这类拼错或误放进 encoding 的字段静默当成无效位置角色
  */
 const assertKnownPositionEncodingRoles = (
   coordinateType: string,

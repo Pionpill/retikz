@@ -49,7 +49,7 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
 
 /**
  * 收集图层内每个 point node 的有效 fill（连续色把同色 node 分组到子 Scope.nodeDefault.fill）。
- * 返回长度与 node 数一致、按 node 出现序的 fill 串数组（无 fill → undefined）。
+ * 返回长度与 node 数一致、按 node 出现序的 fill 串数组（无 fill → undefined）
  */
 const nodeFills = (layer: IRScope): Array<string | undefined> => {
   const out: Array<string | undefined> = [];
@@ -354,7 +354,7 @@ describe('连续色 · temporal sequential（contract）', () => {
 });
 
 describe('连续色 · 非有限 domain 端点 fail-loud（contract 越界一致性）', () => {
-  // 非有限 domain 端点会被 scale schema 的 number 校验静态拦截；此处刻意绕过静态校验，验证 lowering 期的纵深防御（resolve* finite 守卫）。
+  // 非有限 domain 端点会被 scale schema 的 number 校验静态拦截；此处刻意绕过静态校验，验证 lowering 期的纵深防御（resolve* finite 守卫）
   const infinitySpec = (colorScale: Record<string, unknown>): IRPlotSpec =>
     ({
       namespace: 'plot',

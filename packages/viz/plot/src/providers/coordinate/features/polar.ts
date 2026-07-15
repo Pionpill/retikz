@@ -21,17 +21,17 @@ import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Polar2D }>;
 
-/** 空刻度集：某维度无 axis 时给 GuideContext 的占位。 */
+/** 空刻度集：某维度无 axis 时给 GuideContext 的占位 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
-/** guide 维度 → 极坐标定位角色。 */
+/** guide 维度 → 极坐标定位角色 */
 const axisRole = (dimension: string): string => {
   if (dimension === 'x') return 'angular';
   if (dimension === 'y') return 'radial';
   return dimension;
 };
 
-/** 连续角轴需要段内采样弯弧；分类角轴类别间无中间值，走弦。 */
+/** 连续角轴需要段内采样弯弧；分类角轴类别间无中间值，走弦 */
 const isContinuousAngleScale = (scaleType: string): boolean =>
   scaleType === PlotScale.Linear ||
   scaleType === PlotScale.Time ||
@@ -44,12 +44,12 @@ const isContinuousAngleScale = (scaleType: string): boolean =>
 /**
  * 极坐标输出空间点 → 屏幕点。
  * @description 角度约定由 `@retikz/math` 的 arcEndPoint 统一维护；plot 侧只保留坐标帧的 nullable 契约，
- *   让 mark lowering 可以跳过非有限输入点。
+ *   让 mark lowering 可以跳过非有限输入点
  */
 const polarPoint = (center: Position, angleDeg: number, radius: number): Position | null =>
   isFiniteNumber(angleDeg) && isFiniteNumber(radius) ? arcEndPoint(center, radius, angleDeg) : null;
 
-/** 创建二维极坐标运行时坐标帧所需的已解析参数。 */
+/** 创建二维极坐标运行时坐标帧所需的已解析参数 */
 export type PolarCoordinateSpec = {
   /** 圆心（屏幕坐标） */
   center: Position;
@@ -73,7 +73,7 @@ export type PolarCoordinateSpec = {
  * 建二维极坐标运行时坐标帧。
  * @description θ=primary.coordinate(angleValue)（度）、r=secondary.coordinate(radiusValue)；
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]，屏幕 y 向下、0°=+x、90°=+y（与 core polar 约定一致）。
- *   frame 同时提供 projectCell，将 x/y 输出区间闭式投影为 sector，供 interval / reference band 使用。
+ *   frame 同时提供 projectCell，将 x/y 输出区间闭式投影为 sector，供 interval / reference band 使用
  */
 export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null =>
@@ -111,7 +111,7 @@ export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordina
 
 /**
  * 一维极坐标运行时坐标帧。
- * @description 用单一角向 scale 把 x 角色投影到固定半径的圆周上；它不提供 cell 几何投影能力。
+ * @description 用单一角向 scale 把 x 角色投影到固定半径的圆周上；它不提供 cell 几何投影能力
  */
 export type Polar1DCoordinateFrame = {
   /** 判别字段：1D 极坐标圆周 */
@@ -130,7 +130,7 @@ export type Polar1DCoordinateFrame = {
   continuousAngle: boolean;
   /** angle 位置 scale（range = [startAngle, endAngle] 度） */
   primary: PositionScale;
-  /** 按通用 coordinate contract 暴露 x role 的位置 scale。 */
+  /** 按通用 coordinate contract 暴露 x role 的位置 scale */
   roleScales: Partial<Record<DimensionRole, PositionScale>>;
   /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（非有限 → null） */
   projectPolar: (thetaDeg: number, radius: number) => Position | null;
@@ -140,7 +140,7 @@ export type Polar1DCoordinateFrame = {
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
 };
 
-/** 创建一维极坐标运行时坐标帧所需的已解析参数。 */
+/** 创建一维极坐标运行时坐标帧所需的已解析参数 */
 export type Polar1DCoordinateSpec = {
   /** 圆心（屏幕坐标） */
   center: Position;
@@ -159,7 +159,7 @@ export type Polar1DCoordinateSpec = {
 /**
  * 建一维极坐标运行时坐标帧。
  * @description 单一 x 角色被解释为角向值，并投影到固定 radius 的圆周上。该 frame 只表达点/路径位置，
- *   不提供 projectCell；需要面积 cell 时必须使用 polar2D 或自定义带 projectCell 的 frame。
+ *   不提供 projectCell；需要面积 cell 时必须使用 polar2D 或自定义带 projectCell 的 frame
  */
 export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null =>
@@ -184,13 +184,13 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCo
   };
 };
 
-/** 一行数据在极坐标 scale 输出空间中的顶点：θ（度）+ r（user units）。 */
+/** 一行数据在极坐标 scale 输出空间中的顶点：θ（度）+ r（user units） */
 export type PolarVertex = { theta: number; radius: number };
 
 /**
  * 把一行的角向 / 径向原始值映射成 PolarVertex。
  * @description PolarVertex 保留的是 scale 输出空间的 θ（度）和 r（user units），还不是屏幕点；
- *   path 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null。
+ *   path 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null
  */
 export const toPolarVertex = (
   frame: PolarCoordinateFrame,
@@ -207,7 +207,7 @@ export const toPolarVertex = (
  * 连续角轴段内采样：在 [θ, r] scale 输出空间线性插值，逐点反投影成屏幕弧点
  * @description 相邻顶点间插 RETIKZ_POLAR_SEGMENT_SAMPLES 个中间点（在度 + 半径空间线性，非原始数据空间），
  *   使数据空间「常半径变角」的直边在屏幕弯成弧。顶点数 < 2 时直接返回各顶点投影点（不采样）。
- *   调用方只应在 frame.continuousAngle 为 true 时使用；分类角轴的相邻类别应保持弦连接。
+ *   调用方只应在 frame.continuousAngle 为 true 时使用；分类角轴的相邻类别应保持弦连接
  */
 export const densifyPolarSegments = (
   frame: PolarCoordinateFrame,
@@ -392,7 +392,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
   },
 };
 
-/** 极坐标内置坐标系 definitions。 */
+/** 极坐标内置坐标系 definitions */
 export const POLAR_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
   polar2DCoordinateDefinition,
   polar1DCoordinateDefinition,

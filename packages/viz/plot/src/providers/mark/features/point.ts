@@ -29,10 +29,10 @@ import {
   roleValues,
 } from '../shared';
 
-/** 散点 glyph 默认直径（user units，已补偿 circle 外接）。 */
+/** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;
 
-/** 散点 node 样式（circle + padding0 + minimumSize；÷√2 补 circle 外接，使 POINT_SIZE 即真实直径）。 */
+/** 散点 node 样式（circle + padding0 + minimumSize；÷√2 补 circle 外接，使 POINT_SIZE 即真实直径） */
 const pointStyle = (fill: MarkPaint, mark: IRPlotPointMark): IRNodeDefault => {
   const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
   const minimumSize = mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined;
@@ -57,7 +57,7 @@ const pointStyle = (fill: MarkPaint, mark: IRPlotPointMark): IRNodeDefault => {
   };
 };
 
-/** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill）。 */
+/** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill） */
 const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
   const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
   const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
@@ -77,7 +77,7 @@ const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
 /**
  * point mark：每行一个 circle glyph 或无边框文本 Node（坐标系无关，经 frame.projectRoles 投影；吸收旧 text mark）。
  * @description encoding.text 设 → 无边框带 text 的 Node（内容走 labelOf、缺失跳过、dx/dy 微调），样式走 textStyle（textColor）；
- *   否则 → circle glyph（size / opacity / shape 通道 per-datum、datum label 经 attachDatumLabel），样式走 pointStyle（fill）。
+ *   否则 → circle glyph（size / opacity / shape 通道 per-datum、datum label 经 attachDatumLabel），样式走 pointStyle（fill）
  */
 export const lowerPoint = (
   mark: IRPlotMark,
@@ -168,7 +168,7 @@ export const lowerPoint = (
   return attachMarkLayer(layer, mark, markProvenance);
 };
 
-/** 收集 point mark 独有的 mark-level 通道字段。 */
+/** 收集 point mark 独有的 mark-level 通道字段 */
 const collectPointChannelFields = (mark: IRPlotPointMark, fields: FieldCollector): void => {
   fields.addChannel(mark.color);
   fields.addChannel(mark.fill);
@@ -176,7 +176,7 @@ const collectPointChannelFields = (mark: IRPlotPointMark, fields: FieldCollector
   fields.addChannel(mark.encoding.text);
 };
 
-/** 内置 point mark definition。 */
+/** 内置 point mark definition */
 export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
   schema: PointMarkSchema,
   channelKinds: nodeChannelKinds,

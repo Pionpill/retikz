@@ -12,13 +12,13 @@ import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '.
 
 const MAX_INTERVAL_TICKS = 10_000;
 
-/** axis guide 的刻度来源配置。 */
+/** axis guide 的刻度来源配置 */
 export type GuideTickSourceInput = {
-  /** 目标刻度数；由 scale 自己决定最终刻度值。 */
+  /** 目标刻度数；由 scale 自己决定最终刻度值 */
   count?: number;
-  /** 显式刻度值；分类 scale 可用字符串，数值 / 时间 scale 会先校验并归一化。 */
+  /** 显式刻度值；分类 scale 可用字符串，数值 / 时间 scale 会先校验并归一化 */
   values?: Array<string | number>;
-  /** 固定间隔候选 tick source；优先级低于 values，高于 count。 */
+  /** 固定间隔候选 tick source；优先级低于 values，高于 count */
   interval?:
     | { kind: typeof GuideTickIntervalKind.Number; step: number; anchor?: number }
     | {
@@ -28,15 +28,15 @@ export type GuideTickSourceInput = {
         anchor?: string | number;
       }
     | { kind: typeof GuideTickIntervalKind.Category; step: number; offset?: number };
-  /** 候选 tick 到可见 tick 的抽样策略。 */
+  /** 候选 tick 到可见 tick 的抽样策略 */
   density?:
     | { kind: typeof AxisTickDensityKind.All }
     | { kind: typeof AxisTickDensityKind.Sample; maxCount?: number; minGap?: number; preserveEnds?: boolean };
 };
 
-/** axis guide 的刻度标签格式化配置。 */
+/** axis guide 的刻度标签格式化配置 */
 export type GuideTickLabelFormatInput = {
-  /** d3-format 或 d3-time-format 风格格式字符串；未知 tickKind 的自定义 scale 保留原标签。 */
+  /** d3-format 或 d3-time-format 风格格式字符串；未知 tickKind 的自定义 scale 保留原标签 */
   format?: string;
 };
 

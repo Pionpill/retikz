@@ -13,7 +13,7 @@ import { PlotSpecSchema } from '../../src/schemas';
 /**
  * scope-aware id 绑定 + meta 透传。
  * @description 断言 lowerPlots 产物中 core IR Scope / Node / Path 的 id 与 meta。
- *   这些字段由 provenance、datumProvenance、datumIdField 控制；provenance 关闭时不写合成 id/meta。
+ *   这些字段由 provenance、datumProvenance、datumIdField 控制；provenance 关闭时不写合成 id/meta
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -25,7 +25,7 @@ const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOpti
 
 /**
  * plot lowered 的内容 scope：承载 mark/guide 层与 provenance meta 的 localNamespace scope。
- * @description 带 id 的 plot 会生成外层 panel scope；无 id 时 outer 自身就是内容 scope。
+ * @description 带 id 的 plot 会生成外层 panel scope；无 id 时 outer 自身就是内容 scope
  */
 const contentScope = (outer: IRScope): IRScope =>
   outer.id !== undefined && outer.localNamespace !== true ? (outer.children[0] as IRScope) : outer;
@@ -113,7 +113,7 @@ const pointSpec = (over: { id?: string } = {}): IRPlotSpec =>
 // =====================================================================
 describe('scope id/meta — happy path', () => {
   it('root_id_to_scope_id', () => {
-    // <Plot id="sales"> + provenance:true → 外层 panel scope.id='sales'，内层 localNamespace 承载内容 meta。
+    // <Plot id="sales"> + provenance:true → 外层 panel scope.id='sales'，内层 localNamespace 承载内容 meta
     const outer = expandOf(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
     expect(outer.type).toBe('scope');
     expect(outer.id).toBe('sales');
@@ -134,7 +134,7 @@ describe('scope id/meta — happy path', () => {
   });
 
   it('mark_layer_uses_user_mark_id', () => {
-    // 用户给 mark.id='bars' → 用户句柄优先，layer scope.id='sales.bars'。
+    // 用户给 mark.id='bars' → 用户句柄优先，layer scope.id='sales.bars'
     const layer = firstLayer(barSpec({ id: 'sales', markId: 'bars' }), { sales: SALES }, { ...opts, provenance: true });
     expect(layer.id).toBe('sales.bars');
     expect((layer.meta as { markIndex?: number }).markIndex).toBe(0);
@@ -211,8 +211,8 @@ describe('scope id/meta — happy path', () => {
 // =====================================================================
 describe('scope id/meta — boundary', () => {
   it('provenance_off_byte_identical', () => {
-    // 默认（provenance 关）→ lowering 产物不写任何 meta / 合成 id key。
-    // 用「无 root id / 无 mark id」spec（point + bar）作代表，逐字结构比对 off vs 显式 off。
+    // 默认（provenance 关）→ lowering 产物不写任何 meta / 合成 id key
+    // 用「无 root id / 无 mark id」spec（point + bar）作代表，逐字结构比对 off vs 显式 off
     for (const spec of [pointSpec(), barSpec()]) {
       const withoutOptions = expandOf(spec, { sales: SALES }, opts);
       const explicitOff = expandOf(spec, { sales: SALES }, { ...opts, provenance: false, datumProvenance: false });
@@ -267,7 +267,7 @@ describe('scope id/meta — boundary', () => {
   });
 
   it('series_value_slug', () => {
-    // series 值含 '.' → id 路径确定性 slug。断言稳定性 + 可寻址，不锁死精确串。
+    // series 值含 '.' → id 路径确定性 slug。断言稳定性 + 可寻址，不锁死精确串
     const TREND = [
       { t: 0, v: 1, region: 'north.west' },
       { t: 1, v: 3, region: 'north.west' },
@@ -325,7 +325,7 @@ describe('scope id/meta — boundary', () => {
   });
 
   it('transformed_vs_source_index', () => {
-    // spec 带 sort transform → datum meta transformedIndex=渲染序、sourceIndex=原 dataset 行序，二者不同且都正确。
+    // spec 带 sort transform → datum meta transformedIndex=渲染序、sourceIndex=原 dataset 行序，二者不同且都正确
     const rows = [
       { month: 2, revenue: 9 }, // source 0
       { month: 0, revenue: 10 }, // source 1
@@ -458,7 +458,7 @@ describe('scope id/meta — interaction', () => {
   });
 
   it('compile_meta_reaches_scene', () => {
-    // 含 meta 的 lowering 产物 → compileToScene → Scene 图元保留同款 meta。
+    // 含 meta 的 lowering 产物 → compileToScene → Scene 图元保留同款 meta
     const spec = barSpec({ id: 'sales' });
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
@@ -477,7 +477,7 @@ describe('scope id/meta — interaction', () => {
   });
 
   it('compile_meta_render_neutral', () => {
-    // meta 渲染中立：开 provenance 与关 provenance 的 Scene 图元几何不变（除 id/meta key 外结构等价）。
+    // meta 渲染中立：开 provenance 与关 provenance 的 Scene 图元几何不变（除 id/meta key 外结构等价）
     const spec = () => barSpec({ id: 'sales' });
     const sceneOff = compileToScene(
       { version: 1, type: 'scene', children: [spec()] },
@@ -565,7 +565,7 @@ describe('scope id/meta — interaction', () => {
 describe('scope id/meta — bug hunter regressions', () => {
   it('middle_skipped_row_index_integrity', () => {
     // 中间行被跳过（非有限投影）时，存活 datum 的 transformedIndex / sourceIndex 必须反映「原始行位置」，
-    // 而非压缩后的 placed 数组位置（经典 off-by-one 陷阱）。row1 的 y=NaN → 跳过，存活 row0/row2 应得 index 0/2。
+    // 而非压缩后的 placed 数组位置（经典 off-by-one 陷阱）。row1 的 y=NaN → 跳过，存活 row0/row2 应得 index 0/2
     const rows = [
       { month: 0, revenue: 10 },
       { month: 1, revenue: Number.NaN }, // 跳过
@@ -585,7 +585,7 @@ describe('scope id/meta — bug hunter regressions', () => {
 
   it('datum_provenance_implies_provenance', () => {
     // datumProvenance / datumIdField 任一开即蕴含 provenance：不显式传 provenance:true 也应写 per-datum meta / 绑 datum id，
-    // 不能静默无效（修复：原实现仅 options.provenance truthy 才启用，致 datumProvenance 单开被吞）。
+    // 不能静默无效（修复：原实现仅 options.provenance truthy 才启用，致 datumProvenance 单开被吞）
     const rows = [
       { month: 0, revenue: 10, q: 'Q1' },
       { month: 1, revenue: 14, q: 'Q2' },
@@ -601,7 +601,7 @@ describe('scope id/meta — bug hunter regressions', () => {
   });
 
   it('provenance_does_not_mutate_input', () => {
-    // SOURCE_INDEX 标记必须打在克隆行上，绝不污染调用方原始数据对象。
+    // SOURCE_INDEX 标记必须打在克隆行上，绝不污染调用方原始数据对象
     const rows = [
       { month: 0, revenue: 10 },
       { month: 1, revenue: 14 },

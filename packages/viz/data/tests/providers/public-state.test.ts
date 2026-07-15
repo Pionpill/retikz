@@ -18,7 +18,7 @@ import {
   resolveTransformRegistry,
 } from '../../src';
 
-/** 断言公开 definition 列表及其元素在运行时只读，并验证被拒绝的写入不改变默认 registry。 */
+/** 断言公开 definition 列表及其元素在运行时只读，并验证被拒绝的写入不改变默认 registry */
 const expectFrozenDefinitionList = (definitions: ReadonlyArray<object>, resolveFirst: () => unknown): void => {
   const original = definitions[0];
   const replacement = definitions[1] ?? original;
@@ -34,7 +34,7 @@ const expectFrozenDefinitionList = (definitions: ReadonlyArray<object>, resolveF
   }
 };
 
-/** 断言公开 Map 视图不暴露写方法，且 forEach 不泄漏底层可写 Map。 */
+/** 断言公开 Map 视图不暴露写方法，且 forEach 不泄漏底层可写 Map */
 const expectReadonlyMapView = <TValue>(registry: ReadonlyMap<string, TValue>): void => {
   let callbackOwner: ReadonlyMap<string, TValue> | undefined;
   registry.forEach((_definition, _key, owner) => {
@@ -50,7 +50,7 @@ const expectReadonlyMapView = <TValue>(registry: ReadonlyMap<string, TValue>): v
   expect(Array.from(registry)).toHaveLength(registry.size);
 };
 
-/** 断言公开 Set 视图不暴露写方法，且 forEach 不泄漏底层可写 Set。 */
+/** 断言公开 Set 视图不暴露写方法，且 forEach 不泄漏底层可写 Set */
 const expectReadonlySetView = (values: ReadonlySet<string>): void => {
   let callbackOwner: ReadonlySet<string> | undefined;
   values.forEach((_value, _key, owner) => {

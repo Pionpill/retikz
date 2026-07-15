@@ -89,7 +89,7 @@ const CORE_TEXT_DISPLAY_NAME = '@retikz/Text';
 /**
  * <Plot coordinate> 入口形态：字符串简写或对象配置；缺省 cartesian2D
  * @description 简写 / 判别串与 IR 一致（含维度命名）：polar2D / cartesian1D / polar1D / ternary2D；cartesian2D 为缺省态不必写。
- *   对象形态承载各坐标系几何：polar2D 角向区间 + 环图内半径、cartesian1D 轴向、polar1D 半径占比 + 角向区间、ternary2D 无额外配置。
+ *   对象形态承载各坐标系几何：polar2D 角向区间 + 环图内半径、cartesian1D 轴向、polar1D 半径占比 + 角向区间、ternary2D 无额外配置
  */
 export type CoordinateInput =
   | 'polar2D'
@@ -145,7 +145,7 @@ export type BuildPlotSpecOptions = {
   model?: IRDataModel;
   /**
    * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
-   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样按签名抑制重复的 mark shortcut stack。
+   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样按签名抑制重复的 mark shortcut stack
    */
   transforms?: Array<IRPlotTransform>;
   /**
@@ -166,7 +166,7 @@ export type BuildPlotSpecOptions = {
   dataFieldNames?: ReadonlySet<string>;
   /**
    * 延迟位置 scale 推断：省略未显式声明的位置 scale 绑定，让 lowering 按实际数据字段类型派生。
-   * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为。
+   * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为
    */
   deferPositionScaleInference?: boolean;
 };
@@ -216,7 +216,7 @@ const DEFAULT_GUIDES: ReadonlyArray<IRPlotGuide> = [
   { type: PlotGuide.Axis, dimension: 'y', grid: true },
 ];
 
-/** 运行时 datum label 解析器：按 mark id 映射「行 → 自定义标签串」，经 lowerPlots options 注入而不进入 IR。 */
+/** 运行时 datum label 解析器：按 mark id 映射「行 → 自定义标签串」，经 lowerPlots options 注入而不进入 IR */
 export type ResolveLabelMap = Record<string, (row: ExternalRow) => string>;
 
 /** buildPlotSpec 收集的 resolveLabel 旁路：以返回的 IRPlotSpec 为键，供 resolvePlotRuntime 取出注入 options（不进 IR） */
@@ -231,15 +231,15 @@ type Collected = {
   guides: Array<AxisBoundGuide>;
   facets: Array<CollectedFacet>;
   scaffolds: Array<CollectedScaffold>;
-  /** Plot 级静态文本标签。 */
+  /** Plot 级静态文本标签 */
   labels: Array<IRPlotLabel>;
   /** 显式 transform（<Transform> 声明组件收集，按声明序） */
   transforms: Array<IRPlotTransform>;
-  /** mark shortcut 自动装配的 transform；显式 stack 存在时按同签名抑制。 */
+  /** mark shortcut 自动装配的 transform；显式 stack 存在时按同签名抑制 */
   shortcutTransforms: Array<IRPlotTransform>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
-  /** 按 mark id 收集且不进入 IR 的运行时 resolveLabel。 */
+  /** 按 mark id 收集且不进入 IR 的运行时 resolveLabel */
   resolveLabels: ResolveLabelMap;
   /** 是否有 mark 用了颜色（→ 需自动色 scale） */
   colored: boolean;

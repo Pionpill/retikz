@@ -40,7 +40,7 @@ import {
 } from '../../schemas';
 import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
 
-/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
+/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint */
 const DEG_TO_RAD = Math.PI / 180;
 
 /** 一段直线（首尾两点） */
@@ -799,12 +799,12 @@ const axisPlacementOffsetOf = (guide: IRPlotAxisGuide): number =>
     ? (guide.placement.offset ?? 0)
     : 0;
 
-/** y 轴标题默认旋转：让文字局部顶部朝向轴线。 */
+/** y 轴标题默认旋转：让文字局部顶部朝向轴线 */
 const cartesianYAxisTitleRotateOf = (side: CartesianAxisSide): number => (side === AxisCardinalSide.Right ? -90 : 90);
 
 /**
  * 极坐标点投影的窄返回值 helper。
- * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露。
+ * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露
  */
 const finitePolarPoint = (center: Position, angleDeg: number, radius: number): Position =>
   Number.isFinite(angleDeg) && Number.isFinite(radius) ? arcEndPoint(center, radius, angleDeg) : [NaN, NaN];
@@ -812,7 +812,7 @@ const finitePolarPoint = (center: Position, angleDeg: number, radius: number): P
 /**
  * 轴 / 网格 scope 的 id + meta props（provenance 开时合成 `<plotId>.` 前缀 id + layer 来源 meta）
  * @description provenance 关（context undefined）→ 仅在用户给 guide.id 时绑裸 id、无 meta。
- *   开 → id 走 `<plotId>.<guideId|axis|grid.dim>`（plotId 缺则匿名）、meta 写 {source,layer,dimension}。
+ *   开 → id 走 `<plotId>.<guideId|axis|grid.dim>`（plotId 缺则匿名）、meta 写 {source,layer,dimension}
  */
 const guideScopeProps = (
   guide: IRPlotAxisGuide,
@@ -1105,7 +1105,7 @@ const arcPath = (frame: PolarCoordinateFrame, radius: number): IRPath => {
 /**
  * polar angular axis：外圆弧轴线 + 每角向刻度短径向刻度线 + 圆周外标签
  * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 DEFAULT_AXIS_TICK_LENGTH 短线；
- *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条。
+ *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条
  */
 const lowerAngularAxis = (
   guide: IRPlotAxisGuide,
@@ -1237,7 +1237,7 @@ const lowerAngularAxis = (
 /**
  * polar radial axis：沿 startAngle 辐条轴线 + 辐条上刻度 + 标签
  * @description 轴线 = center→外圆 直段（基准角 = startAngle）；刻度 = 辐条上每径向刻度短切向横线；
- *   标签 = 刻度点旁 Node text。grid:true → 每径向刻度一个同心圆环（arc step）。
+ *   标签 = 刻度点旁 Node text。grid:true → 每径向刻度一个同心圆环（arc step）
  */
 const lowerRadialAxis = (
   guide: IRPlotAxisGuide,
@@ -1254,8 +1254,8 @@ const lowerRadialAxis = (
   const tickLabelGap = axisTickLabelGapOf(guide);
   const tickLabelStyle = axisTickLabelStyleOf(guide);
   const showLabels = tickLabelStyle !== false;
-  // 辐条切向单位向量（垂直于辐条）；刻度短线与标签沿此方向朝一侧（-tangent）偏移，与 cartesian / angular 轴一致。
-  // 不沿辐条方向画刻度——否则首尾刻度会沿辐条越出内 / 外圆端点（各多出半个刻度长）。
+  // 辐条切向单位向量（垂直于辐条）；刻度短线与标签沿此方向朝一侧（-tangent）偏移，与 cartesian / angular 轴一致
+  // 不沿辐条方向画刻度——否则首尾刻度会沿辐条越出内 / 外圆端点（各多出半个刻度长）
   const tangent: [number, number] = [-Math.sin(baseAngle * DEG_TO_RAD), Math.cos(baseAngle * DEG_TO_RAD)];
 
   // ---- 轴层 ----
@@ -1395,7 +1395,7 @@ const lerp2 = (from: readonly [number, number], to: readonly [number, number], t
 /**
  * 某 ternary 分量轴的三角角色：顶点 + 该分量 0 边的两端
  * @description x：顶点 Vx、0 边 = Vy–Vz；y：顶点 Vy、0 边 = Vx–Vz；z：顶点 Vz、0 边 = Vx–Vy。
- *   刻度沿 baseP→apex 边（= 三角一条边）；等值线（iso）= lerp(baseP,apex,t)–lerp(baseQ,apex,t)，平行 0 边。
+ *   刻度沿 baseP→apex 边（= 三角一条边）；等值线（iso）= lerp(baseP,apex,t)–lerp(baseQ,apex,t)，平行 0 边
  */
 const ternaryAxisRoles = (
   dimension: string,
@@ -1410,7 +1410,7 @@ const ternaryAxisRoles = (
 /**
  * ternary 三角轴：沿一条边的刻度轴（0→100%）+ 平行对边的等值网格线
  * @description 轴线 = baseP→apex 三角边（三条 x/y/z 轴合起来 = 完整三角外框）；刻度沿该边、标签外法向偏移；
- *   grid:true → 内部刻度处画平行 0 边的等值线（lerp(baseP,apex,t)–lerp(baseQ,apex,t)）。
+ *   grid:true → 内部刻度处画平行 0 边的等值线（lerp(baseP,apex,t)–lerp(baseQ,apex,t)）
  */
 const lowerTernaryGuide = (
   guide: IRPlotAxisGuide,
@@ -1567,7 +1567,7 @@ const CUSTOM_AXIS_SAMPLES = 40;
  * 自定义坐标系的曲线轴（通用 path-aware 轴）：沿 projectRoles 投影密采样画轴线 + 在 scale 刻度处放刻度 / 标签
  * @description 取该维度的位置 scale 刻度、其余角色锚在各自 scale 首刻度（≈ domain 起点），按 frame.roles 序喂 projectRoles
  *   得轴线（任意曲线）与刻度点；刻度短线 / 标签沿局部切向的法线摆。frame 无 roleScales[dimension] → 不画（返回空）。
- *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。自定义坐标系暂不生成网格。
+ *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。自定义坐标系暂不生成网格
  */
 export const lowerCustomAxis = (
   frame: CoordinateFrame,
@@ -1703,7 +1703,7 @@ export const lowerCustomAxis = (
  * 把一个 axis guide 下沉成网格层 + 轴层（各自一层 core scope；样式上提到 scope）
  * @description 按坐标帧分支：ternary（ctx.ternaryVertices 存在）走三角轴；polar（ctx.frame 存在）按维度角色走 angular
  *   （外圆弧 + 圆周刻度 / 标签 + 角向辐条 grid）或 radial（辐条轴 + 同心环 grid）；否则走 cartesian 直线轴 / 网格。
- *   下沉目标统一是 core Node（标签）+ Path（直段 / arc step）。id → 轴层 scope.id（anchor 预留）。
+ *   下沉目标统一是 core Node（标签）+ Path（直段 / arc step）。id → 轴层 scope.id（anchor 预留）
  */
 export const lowerGuide = (guide: IRPlotAxisGuide, ctx: GuideContext, context?: ProvenanceContext): LoweredGuide => {
   if (ctx.ternaryVertices || ctx.frame) {
@@ -1741,7 +1741,7 @@ export const LEGEND_RAMP_THICKNESS = 12;
 /**
  * 一个离散 legend 条目：swatch 视觉量 + 标签
  * @description color = 色块填充；shape = glyph 名（形状 swatch）；radius = size 梯度符号半径；opacity = 透明度块。
- *   一个条目按 channel 取其中一种视觉量；label 是已格式化的文本（formatter 在 expand 侧据 fieldType 选定）。
+ *   一个条目按 channel 取其中一种视觉量；label 是已格式化的文本（formatter 在 expand 侧据 fieldType 选定）
  */
 export type LegendEntry = {
   /** 条目标签（类别串 / 代表值 / 区间） */
@@ -1769,7 +1769,7 @@ export type LegendRamp = {
 /**
  * lowerLegend 入参：已解析的 legend 内容（形态 + 条目 / ramp + 摆放）
  * @description 形态选择（swatch / ramp）与颜色 / 代表值由 expand 据 descriptor + scale 求好后传入；
- *   本函数只管几何摆放与 core 节点产出（关注点分离：求值在 expand、绘制在 guide）。
+ *   本函数只管几何摆放与 core 节点产出（关注点分离：求值在 expand、绘制在 guide）
  */
 export type LegendInput = {
   /** 形态：swatch（离散 / 分箱 / size / opacity）或 ramp（连续色带） */
@@ -1792,7 +1792,7 @@ export type LegendInput = {
   band: Rect;
   /** legend scope id（稳定，'legend' 前缀；anchor / 识别用） */
   id?: string;
-  /** legend 语义图层的 core zIndex。 */
+  /** legend 语义图层的 core zIndex */
   zIndex?: number;
   /** 已按 built-in theme < PlotSpec.theme < LegendGuide.style 合并的视觉 token */
   style: ResolvedLegendGuideTokens;
@@ -1802,7 +1802,7 @@ export type LegendInput = {
  * 矩形 swatch / ramp 条 → core Node（shape rectangle）
  * @description core PathSchema 要求 children ≥ 2 step，单 rectangle step 的 Path 非法；矩形改用 Node
  *   （与 bar mark 同款：shape rectangle + minimumSize + fill），符合「一切可见物是 Node」。
- *   入参沿用左上角 + 宽高语义，内部换算成 Node 中心点（Node.position 是中心）。
+ *   入参沿用左上角 + 宽高语义，内部换算成 Node 中心点（Node.position 是中心）
  */
 const rectNode = (x: number, y: number, width: number, height: number): IRNode => ({
   type: 'node',
@@ -1812,7 +1812,7 @@ const rectNode = (x: number, y: number, width: number, height: number): IRNode =
   padding: 0,
 });
 
-/** legend 文本节点默认只绘制文字，不继承外部节点描边或填充。 */
+/** legend 文本节点默认只绘制文字，不继承外部节点描边或填充 */
 const legendTextNode = (node: IRNode): IRNode => ({
   ...node,
   stroke: 'none',
@@ -1825,7 +1825,7 @@ const legendTextNode = (node: IRNode): IRNode => ({
  * @description swatch 形态：每条目一个矩形 swatch Node（shape rectangle，填 color / opacity；size 条目额外一个圆点 Node）+ 一个标签 Node，纵 / 横堆叠；
  *   ramp 形态：一个矩形 Node 填 core linearGradient paint server（连续真渐变）+ 沿带刻度标签 Node。
  *   条目几何在传入 band 内从左上角起摆，受无文字度量约束（plot-design §13.1）：超 band 溢出可接受、不做测量自适应。
- *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON。
+ *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON
  */
 export const lowerLegend = (input: LegendInput): IRScope => {
   const { fontSize, band, orient } = input;
@@ -1902,7 +1902,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
           strokeWidth: 0,
         });
       } else if (entry.radius !== undefined) {
-        // size 图例：只画代表半径的圆点，不额外画矩形 swatch。
+        // size 图例：只画代表半径的圆点，不额外画矩形 swatch
         children.push({
           type: 'node',
           position: symbolCenter,
@@ -1940,8 +1940,8 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     ...(input.id !== undefined ? { id: input.id } : {}),
     zIndex: input.zIndex ?? PlotLayerZIndex.Legend,
     meta: { source: 'plot', layer: 'legend', channel: input.channel },
-    // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）。
-    // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis。
+    // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）
+    // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis
     nodeDefault: { font: { size: fontSize }, padding: 0, strokeWidth: 0 },
     children,
   };

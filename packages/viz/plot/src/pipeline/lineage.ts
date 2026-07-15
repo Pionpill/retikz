@@ -29,11 +29,11 @@ import { CoordinateArrangementKind } from '../schemas';
 import { lowerPlots, prepareRows } from './expand';
 import { createPlotLocator } from './locator';
 
-/** lowerPlotWithLineage 选项。 */
+/** lowerPlotWithLineage 选项 */
 export type PlotLineageLowerOptions = LowerPlotsOptions & {
-  /** plot lineage 开关；false 时关闭可选摘要，只返回最小结构。 */
+  /** plot lineage 开关；false 时关闭可选摘要，只返回最小结构 */
   lineage?: false | PlotLineageOptions;
-  /** 宿主提供的 JSON-safe lineage metadata。 */
+  /** 宿主提供的 JSON-safe lineage metadata */
   hostLineageMetadata?: PlotHostLineageMetadata;
 };
 
@@ -49,7 +49,7 @@ type ResolvedPlotLineageOptions = {
   hostMetadata: false | NonNullable<PlotLineageOptions['hostMetadata']>;
 };
 
-/** 校验 rowValues，避免默认记录整行。 */
+/** 校验 rowValues，避免默认记录整行 */
 const normalizeRowValueOptions = (value: false | PlotRowValueOptions | undefined): false | PlotRowValueOptions => {
   if (value === undefined || value === false) return false;
   if (!Number.isInteger(value.maxRows) || value.maxRows < 1) {
@@ -61,7 +61,7 @@ const normalizeRowValueOptions = (value: false | PlotRowValueOptions | undefined
   return { maxRows: value.maxRows, fields: [...value.fields] };
 };
 
-/** 解析 plot lineage 开关默认值。 */
+/** 解析 plot lineage 开关默认值 */
 const normalizePlotLineageOptions = (options: false | PlotLineageOptions | undefined): ResolvedPlotLineageOptions => {
   if (options === false) {
     return {
@@ -90,7 +90,7 @@ const normalizePlotLineageOptions = (options: false | PlotLineageOptions | undef
   };
 };
 
-/** 把任意值裁剪成 JSON-safe metadata。 */
+/** 把任意值裁剪成 JSON-safe metadata */
 const toJsonValue = (value: unknown): JsonValue | undefined => {
   if (value === undefined) return undefined;
   if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
@@ -110,7 +110,7 @@ const toJsonValue = (value: unknown): JsonValue | undefined => {
   return String(value);
 };
 
-/** 读取 channel 中的字段引用。 */
+/** 读取 channel 中的字段引用 */
 const encodingFieldOf = (channel: unknown): { field: string; scale?: string } | undefined => {
   if (channel === null || typeof channel !== 'object') return undefined;
   const record = channel as { field?: unknown; kind?: unknown; value?: unknown; scale?: unknown };
@@ -124,7 +124,7 @@ const encodingFieldOf = (channel: unknown): { field: string; scale?: string } | 
   return typeof record.scale === 'string' ? { field, scale: record.scale } : { field };
 };
 
-/** 收集 mark encoding 字段引用。 */
+/** 收集 mark encoding 字段引用 */
 const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encoding'] => {
   const encoding = (mark as { encoding?: Record<string, unknown> }).encoding;
   if (encoding === undefined) return [];
@@ -144,11 +144,11 @@ const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encodin
   return out;
 };
 
-/** 取 operation kind 列表。 */
+/** 取 operation kind 列表 */
 const operationKindsOf = (operations: Array<IRPlotTransform> | undefined): Array<string> =>
   operations?.map(operation => operation.kind) ?? [];
 
-/** 按字段白名单裁剪 mark rows。 */
+/** 按字段白名单裁剪 mark rows */
 const sampleRows = (rows: Array<ExternalRow>, options: PlotRowValueOptions): Array<ExternalRow> =>
   rows.slice(0, options.maxRows).map(row => {
     const out: ExternalRow = {};
@@ -156,7 +156,7 @@ const sampleRows = (rows: Array<ExternalRow>, options: PlotRowValueOptions): Arr
     return out;
   });
 
-/** 按开关透传宿主 metadata。 */
+/** 按开关透传宿主 metadata */
 const hostMetadataOf = (
   options: false | NonNullable<PlotLineageOptions['hostMetadata']>,
   metadata: PlotHostLineageMetadata | undefined,
@@ -175,7 +175,7 @@ const hostMetadataOf = (
   return Object.keys(out).length === 0 ? undefined : out;
 };
 
-/** 生成 layout lineage 摘要。 */
+/** 生成 layout lineage 摘要 */
 const layoutLineageOf = (spec: IRPlotSpec): NonNullable<PlotLineageLowerResult['lineage']['layout']> => {
   const composition = spec.composition as
     | {
@@ -207,14 +207,14 @@ const layoutLineageOf = (spec: IRPlotSpec): NonNullable<PlotLineageLowerResult['
   };
 };
 
-/** 从坐标配置推断位置 channel 绑定的 scale。 */
+/** 从坐标配置推断位置 channel 绑定的 scale */
 const coordinateScaleNameOf = (spec: IRPlotSpec, channel: string): string | undefined => {
   const coordinate = spec.coordinate as Record<string, unknown> | undefined;
   const value = coordinate?.[channel];
   return typeof value === 'string' ? value : undefined;
 };
 
-/** 收集使用指定 scale 的 mark channel。 */
+/** 收集使用指定 scale 的 mark channel */
 const scaleChannelsOf = (spec: IRPlotSpec, scaleName: string): NonNullable<PlotScaleLineage['channels']> =>
   spec.marks.flatMap((mark, markIndex) =>
     (markEncodingFields(mark) ?? [])
@@ -226,7 +226,7 @@ const scaleChannelsOf = (spec: IRPlotSpec, scaleName: string): NonNullable<PlotS
       })),
   );
 
-/** 生成 scale lineage 摘要。 */
+/** 生成 scale lineage 摘要 */
 const scaleLineageOf = (spec: IRPlotSpec, scales: Array<IRPlotScaleOperation> | undefined): Array<PlotScaleLineage> =>
   (scales ?? []).map(scale => {
     const record = scale as { name?: unknown; type?: unknown; domain?: unknown; range?: unknown };
@@ -243,7 +243,7 @@ const scaleLineageOf = (spec: IRPlotSpec, scales: Array<IRPlotScaleOperation> | 
     };
   });
 
-/** 从 locator meta 生成 datum source identity。 */
+/** 从 locator meta 生成 datum source identity */
 const sourceIdentityOfMeta = (meta: Record<string, unknown>): DataSourceIdentity | undefined => {
   const sourceIndices = meta.sourceIndices;
   if (Array.isArray(sourceIndices) && sourceIndices.every((value): value is number => typeof value === 'number')) {
@@ -261,10 +261,10 @@ const sourceIdentityOfMeta = (meta: Record<string, unknown>): DataSourceIdentity
     : undefined;
 };
 
-/** 把 expand 结果统一成 children 数组。 */
+/** 把 expand 结果统一成 children 数组 */
 const childrenOf = (child: IRChild | Array<IRChild>): Array<IRChild> => (Array.isArray(child) ? child : [child]);
 
-/** 用 plot spec 与数据集生成 runtime-only lineage artifact。 */
+/** 用 plot spec 与数据集生成 runtime-only lineage artifact */
 const buildPlotLineage = (
   spec: IRPlotSpec,
   datasets: ExternalDatasets,
@@ -325,7 +325,7 @@ const buildPlotLineage = (
   };
 };
 
-/** 下沉单个 plot spec 并返回 runtime-only lineage artifact。 */
+/** 下沉单个 plot spec 并返回 runtime-only lineage artifact */
 export const lowerPlotWithLineage = (
   spec: IRPlotSpec,
   datasets: ExternalDatasets,
@@ -336,7 +336,7 @@ export const lowerPlotWithLineage = (
   return { children, lineage: buildPlotLineage(spec, datasets, options) };
 };
 
-/** 创建带 lineage 的 plot locator。 */
+/** 创建带 lineage 的 plot locator */
 export const createPlotLineageLocator = (
   spec: IRPlotSpec,
   datasets: ExternalDatasets,

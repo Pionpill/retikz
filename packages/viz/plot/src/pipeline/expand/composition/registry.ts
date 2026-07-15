@@ -6,14 +6,14 @@ import { CoordinateArrangementKind, CoordinateViewPlacementKind } from '../../..
 
 const DEFAULT_COORDINATE_SCOPE_ID = 'default';
 
-/** 解析 track 对应的 coordinate view id。 */
+/** 解析 track 对应的 coordinate view id */
 const trackViewIdOf = (arrangement: SharedScaffold, track: ScaffoldTrack): string => {
   if (track.view !== undefined) return track.view;
   const template = arrangement.viewIdTemplate ?? '{arrangement}.track.{track}';
   return template.replaceAll('{arrangement}', arrangement.id).replaceAll('{track}', track.id);
 };
 
-/** 解析 plot 的坐标简写或 composition 为统一坐标视图 registry。 */
+/** 解析 plot 的坐标简写或 composition 为统一坐标视图 registry */
 export const resolveCoordinateScopeRegistry = (node: IRPlotSpec): CoordinateScopeRegistry => {
   if (node.composition !== undefined) {
     const scaffolds = (node.composition.arrangements ?? []).filter(
@@ -58,6 +58,6 @@ export const resolveCoordinateScopeRegistry = (node: IRPlotSpec): CoordinateScop
   };
 };
 
-/** 返回图元或 guide 应路由到的坐标视图 id。 */
+/** 返回图元或 guide 应路由到的坐标视图 id */
 export const coordinateScopeIdOf = (operation: { coordinateView?: string }, defaultScope: string): string =>
   operation.coordinateView ?? defaultScope;

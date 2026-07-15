@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 /**
  * contract 待实现字段的本地类型扩展：`LowerPlotsOptions.invalid` 现在还不存在（实现 Agent 的活），
  * 给 options 一个 `invalid?: 'skip' | 'error'` 表达「实现后该字段应存在」，让测试文件能编译。
- * 实现落地后应删除此扩展、直接用 `LowerPlotsOptions`。
+ * 实现落地后应删除此扩展、直接用 `LowerPlotsOptions`
  */
 type RobustOptions = LowerPlotsOptions & { invalid?: 'skip' | 'error' };
 

@@ -17,7 +17,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 /**
  * Rect mark（heatmap 双 band 正交 cell）下沉契约测试。
  * 验证 cartesian 双 band cell 几何（复用 contract projectCell rect 快路）、值→color 分子 Scope、
- * 缺 color 回退默认填充、y 非 band fail-loud、polar / 1D / ternary 下 fail-loud、rect + interval 共存。
+ * 缺 color 回退默认填充、y 非 band fail-loud、polar / 1D / ternary 下 fail-loud、rect + interval 共存
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -294,7 +294,7 @@ describe('rect 缺 color', () => {
 
 // ── 错误路径：1D / ternary fail-loud（坐标系级守卫仍在）；band×band 在 polar / 非 band scale 下的新行为 ─
 describe('rect fail-loud', () => {
-  // 重构后 band bound 直接取 scale.bandwidth（linear scale = 0），不再单独要求 band scale → 退化 cell（高 0），不再 throw。
+  // 重构后 band bound 直接取 scale.bandwidth（linear scale = 0），不再单独要求 band scale → 退化 cell（高 0），不再 throw
   it('rect-secondary-not-band-degenerate-cell', () => {
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 5 }], frame) as IRScope);
@@ -330,7 +330,7 @@ describe('rect fail-loud', () => {
     expect(() => expandOf(spec, { d: [{ rk: 'r0', ck: 3 }] }, cartOpts)).not.toThrow();
   });
 
-  // 重构后 interval（band×band）在 polar2D 下受支持（→ sector），不再 fail-loud。
+  // 重构后 interval（band×band）在 polar2D 下受支持（→ sector），不再 fail-loud
   it('rect-polar-supported-as-sector', () => {
     const frame = createPolarCoordinate({
       center: [200, 200],

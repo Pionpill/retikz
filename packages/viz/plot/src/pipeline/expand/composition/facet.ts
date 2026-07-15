@@ -18,13 +18,13 @@ import type {
 import { slug } from '../../../contract';
 import { FacetEmptyPolicy } from '../../../schemas';
 
-/** 判断 facet header 是否启用。 */
+/** 判断 facet header 是否启用 */
 export const isFacetHeaderVisible = (facet: FacetGrid, dimension: FacetLabelDimension): boolean => {
   const header = facet.header?.[dimension];
   return header !== undefined && header !== false;
 };
 
-/** 读取 facet header 的显式 label 样式。 */
+/** 读取 facet header 的显式 label 样式 */
 export const facetHeaderLabelStyleOf = (
   facet: FacetGrid,
   dimension: FacetLabelDimension,
@@ -33,7 +33,7 @@ export const facetHeaderLabelStyleOf = (
   return header && typeof header === 'object' ? header : undefined;
 };
 
-/** 解析 facet header label 的旋转角。 */
+/** 解析 facet header label 的旋转角 */
 export const facetHeaderLabelRotateOf = (facet: FacetGrid, dimension: FacetLabelDimension): number | undefined => {
   const style = facetHeaderLabelStyleOf(facet, dimension);
   if (style?.rotate !== undefined) return style.rotate;
@@ -54,7 +54,7 @@ const facetValueOf = (row: ExternalRow, field: string): FacetScalar => {
   return value;
 };
 
-/** 把单层或多层 facet 声明归一化为数组。 */
+/** 把单层或多层 facet 声明归一化为数组 */
 export const facetDimensionsOf = (dimension: FacetDimension | undefined): Array<FacetDimensionItem> => {
   if (dimension === undefined) return [];
   return Array.isArray(dimension) ? dimension : [dimension];

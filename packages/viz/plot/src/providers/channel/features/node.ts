@@ -40,18 +40,18 @@ export const OPACITY_MIN = 0.2;
 
 /** strokeWidth 通道连续映射的最小 / 最大描边宽度（user units）；避免最小值落成不可见边框 */
 export const STROKE_WIDTH_MIN = 0.5;
-/** 数值描边宽度通道的默认最大输出值。 */
+/** 数值描边宽度通道的默认最大输出值 */
 export const STROKE_WIDTH_MAX = 4;
 
 /** size 通道最小 / 最大半径（px，user units；对齐散点默认直径 10 量级）；core 换算细节，不外泄 IR */
 export const SIZE_MIN_RADIUS = 2;
-/** size 通道自动半径映射的默认最大值。 */
+/** size 通道自动半径映射的默认最大值 */
 export const SIZE_MAX_RADIUS = 20;
 
 /** shape 通道默认 glyph 调色板（直用 core 内置 shape 名，无 plot-only 别名）；循环复用 */
 export const PLOT_SHAPE_PALETTE = ['circle', 'rectangle', 'diamond'] as const;
 
-/** 数值 Node 通道 resolver 的 range、clamp 与整数化选项。 */
+/** 数值 Node 通道 resolver 的 range、clamp 与整数化选项 */
 export type NumericNodeResolverOptions = {
   range?: readonly [number, number];
   clamp?: boolean;
@@ -126,7 +126,7 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
 /**
  * 解析数值 Node 通道字段 → 行→数值（opacity / strokeWidth / fillOpacity / rotate / padding / zIndex… 共享基型）
  * @description field 变体若给 scale 或默认 range，则过 linear scale；否则直接使用字段原始有限数。
- *   非 continuous 字段（temporal / categorical）fail-loud；constant 变体由 nodeDefault / node 本身处理，不在这里产 resolver。
+ *   非 continuous 字段（temporal / categorical）fail-loud；constant 变体由 nodeDefault / node 本身处理，不在这里产 resolver
  */
 export const makeNumericNodeResolver = (
   node: IRPlotSpec,

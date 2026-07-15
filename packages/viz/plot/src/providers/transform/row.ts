@@ -13,24 +13,24 @@ import type {
 
 import { JitterAxis, NormalizeBasis, StackOffset } from '../../schemas';
 
-/** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值。 */
+/** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值 */
 export const DEFAULT_START_FIELD = 'y0';
-/** stack transform 默认上界输出字段名。 */
+/** stack transform 默认上界输出字段名 */
 export const DEFAULT_END_FIELD = 'y1';
 
-/** derive-interval 默认输出字段名，对齐 interval y0Field / y1Field 与 sector startField / endField 消费方。 */
+/** derive-interval 默认输出字段名，对齐 interval y0Field / y1Field 与 sector startField / endField 消费方 */
 export const DEFAULT_DERIVE_START_FIELD = 'y0';
-/** derive-interval transform 默认终点输出字段名。 */
+/** derive-interval transform 默认终点输出字段名 */
 export const DEFAULT_DERIVE_END_FIELD = 'y1';
 
-/** jitter 默认被扰动字段名：连续数值位置字段。 */
+/** jitter 默认被扰动字段名：连续数值位置字段 */
 export const DEFAULT_JITTER_X_FIELD = 'x';
-/** jitter transform 默认 y 轴输出字段名。 */
+/** jitter transform 默认 y 轴输出字段名 */
 export const DEFAULT_JITTER_Y_FIELD = 'y';
 
 /**
  * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]。
- * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入，避免后续累计错位。
+ * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入，避免后续累计错位
  */
 export const applyStack = (rows: Array<ExternalRow>, operation: IRPlotStackTransform): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_START_FIELD;
@@ -113,7 +113,7 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRPlotStackTrans
 
 /**
  * normalize：同组内各行 field / 组总和 -> 组内占比，保持行数。
- * @description groupBy 缺省时全行单组；basis percent 输出 0..100，组和为 0 时输出 0。
+ * @description groupBy 缺省时全行单组；basis percent 输出 0..100，组和为 0 时输出 0
  */
 export const applyNormalize = (rows: Array<ExternalRow>, operation: IRPlotNormalizeTransform): Array<ExternalRow> => {
   const outField = operation.as ?? operation.field;
@@ -140,7 +140,7 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: IRPlotNormal
 
 /**
  * derive-interval：每行独立算 [start, end]，保持行数。
- * @description 两字段模式 startFrom + endFrom 优先；否则 from 模式派生 [baseline, fromValue]。
+ * @description 两字段模式 startFrom + endFrom 优先；否则 from 模式派生 [baseline, fromValue]
  */
 export const applyDeriveInterval = (
   rows: Array<ExternalRow>,
@@ -168,7 +168,7 @@ export const applyDeriveInterval = (
 };
 
 /**
- * 确定性 PRNG：mulberry32。seed 相同则输出序列相同，保证 SSR / locator parity。
+ * 确定性 PRNG：mulberry32。seed 相同则输出序列相同，保证 SSR / locator parity
  */
 const mulberry32 = (seed: number): (() => number) => {
   let state = seed | 0;
@@ -182,7 +182,7 @@ const mulberry32 = (seed: number): (() => number) => {
 
 /**
  * jitter：给连续数值位置字段加确定性伪随机偏移，保持行数。
- * @description 偏移发生在数据空间 pre-scale；非有限值保留原值，但仍消耗一次随机数保持行序确定性。
+ * @description 偏移发生在数据空间 pre-scale；非有限值保留原值，但仍消耗一次随机数保持行序确定性
  */
 export const applyJitter = (rows: Array<ExternalRow>, operation: IRPlotJitterTransform): Array<ExternalRow> => {
   const axis = operation.axis ?? JitterAxis.X;

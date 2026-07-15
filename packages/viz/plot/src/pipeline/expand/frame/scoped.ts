@@ -44,7 +44,7 @@ import {
 } from '../composition';
 import { resolveFrame } from './resolve';
 
-/** scoped/scaffold frame 解析所需的显式上下文。 */
+/** scoped/scaffold frame 解析所需的显式上下文 */
 export type ResolveScopedFramesInput = {
   node: IRPlotSpec;
   rows: Array<ExternalRow>;
@@ -65,7 +65,7 @@ export type ResolveScopedFramesInput = {
   scopedLabelReserve?: Partial<Margins>;
 };
 
-/** scoped/scaffold frame 解析结果及后续 facet/mark lowering 需要的 scope 查询。 */
+/** scoped/scaffold frame 解析结果及后续 facet/mark lowering 需要的 scope 查询 */
 export type ScopedFramesResolution = {
   coordinateScopes: CoordinateScopeRegistry;
   scopeById: Map<string, CoordinateScopeRegistryEntry>;
@@ -81,7 +81,7 @@ export type ScopedFramesResolution = {
   plotArea: Rect;
 };
 
-/** 解析 composition 中 root、overlay、track 与 scaffold 的共享 frame。 */
+/** 解析 composition 中 root、overlay、track 与 scaffold 的共享 frame */
 export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFramesResolution => {
   const {
     node,

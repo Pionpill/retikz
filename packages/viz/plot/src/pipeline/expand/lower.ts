@@ -92,7 +92,7 @@ const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
 /**
  * 把一个 Plot IR 根节点 + 外部数据下沉成一个 core Scope
  * @description 编排：校验 ref/scale → 收集轴值 → 建归一化 scale → 建投影器（resolveFrame）→ 各 mark 下沉 → 包 localNamespace Scope。
- *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id。
+ *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id
  */
 const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认

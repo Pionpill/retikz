@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
  * Text mark / datum label 下沉契约测试。
  * priority-1 宿主 label（位置 mark 加 label → 填 datum Node.label，零新建 Node）、priority-2 兜底自由 TextMark
  * （新建带 text 的 core Node、与 point 同源投影）、text 内容 field/value/displayFormat、运行时 resolveLabel 逃生舱、
- * 内容缺失跳过、坐标系无关投影、color → textColor 分子 Scope、dx/dy 微调、pin 引线。
+ * 内容缺失跳过、坐标系无关投影、color → textColor 分子 Scope、dx/dy 微调、pin 引线
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;

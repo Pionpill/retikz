@@ -84,7 +84,7 @@ describe('shape channel 类别映射', () => {
     expect(nodes.every(n => shapeOf(n) === undefined)).toBe(true);
   });
 
-  // continuous / temporal 字段必须 fail-loud。
+  // continuous / temporal 字段必须 fail-loud
   it('shape_continuous_field_fails_loud', () => {
     const data = [
       { x: 0, y: 0, v: 1.5 },
@@ -105,7 +105,7 @@ describe('shape channel 类别映射', () => {
     );
   });
 
-  // shape、color 与 size 可以同时生效。
+  // shape、color 与 size 可以同时生效
   it('shape_with_color_and_size_coexist', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

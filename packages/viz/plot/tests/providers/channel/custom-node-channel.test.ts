@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
  * 自定义 `intensity`（→ node.opacity）经 options.channelDefinitions 注册，
- * 与内置通道共享 channel registry / delivery。
+ * 与内置通道共享 channel registry / delivery
  */
 
 const extensionChannelsOf = (mark: {
@@ -291,7 +291,7 @@ describe('custom node channel registry', () => {
     expect(pathsOf(layer)[0]?.strokeWidth).toBe(3);
   });
 
-  // 交互：自定义 node 通道也可被 legend guide 引用；schema 不再把 channel 限死在内置 color/size/opacity/shape。
+  // 交互：自定义 node 通道也可被 legend guide 引用；schema 不再把 channel 限死在内置 color/size/opacity/shape
   it('custom_channel_legend_lowers_from_registry_descriptor', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

@@ -8,7 +8,7 @@ import { slug } from '../contract';
 
 /**
  * 创建 plot 级 datum id 登记器。
- * @description 登记器跨 mark 共享；缺字段、重复 id 或 slug 后碰撞都会 fail-loud。
+ * @description 登记器跨 mark 共享；缺字段、重复 id 或 slug 后碰撞都会 fail-loud
  */
 export const createDatumIdRegistrar = (datumIdField: string, plotId: string): DatumIdRegistrar => {
   const seenIds = new Map<string, unknown>();

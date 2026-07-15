@@ -6,10 +6,10 @@ import type { ExternalRow } from '../../shared';
 import { DataSortOrder } from '../../schemas';
 import { compareRowsByFieldPath, resolveFieldPath } from '../data';
 
-/** quantile-band spread whisker 的默认倍率。 */
+/** quantile-band spread whisker 的默认倍率 */
 const DEFAULT_QUANTILE_BAND_SPREAD_FACTOR = 1.5;
 
-/** 提取一组 rows 中某字段的有限数值，并保留原始行引用。 */
+/** 提取一组 rows 中某字段的有限数值，并保留原始行引用 */
 const finiteValueEntriesOf = (rows: Array<ExternalRow>, field: string): Array<{ row: ExternalRow; value: number }> => {
   const entries: Array<{ row: ExternalRow; value: number }> = [];
   for (const row of rows) {
@@ -19,7 +19,7 @@ const finiteValueEntriesOf = (rows: Array<ExternalRow>, field: string): Array<{ 
   return entries;
 };
 
-/** 计算中位数；空集合没有可定义统计量，返回 NaN invalid sentinel。 */
+/** 计算中位数；空集合没有可定义统计量，返回 NaN invalid sentinel */
 export const medianOf = (values: Array<number>): number => {
   if (values.length === 0) return NaN;
   const sorted = [...values].sort((a, b) => a - b);
@@ -30,7 +30,7 @@ export const medianOf = (values: Array<number>): number => {
   return Math.sign(lower) === Math.sign(upper) ? lower + (upper - lower) / 2 : lower / 2 + upper / 2;
 };
 
-/** 计算有限数值平均数；直接求和溢出时按最大绝对值缩放。 */
+/** 计算有限数值平均数；直接求和溢出时按最大绝对值缩放 */
 export const meanOf = (values: Array<number>): number => {
   if (values.length === 0) return NaN;
   let sum = 0;
@@ -43,7 +43,7 @@ export const meanOf = (values: Array<number>): number => {
   return (normalizedSum / values.length) * scale;
 };
 
-/** 在已排序数值数组上按线性插值计算分位点。 */
+/** 在已排序数值数组上按线性插值计算分位点 */
 export const quantileOfSorted = (sorted: Array<number>, p: number): number => {
   if (sorted.length === 0) return NaN;
   if (sorted.length === 1) return sorted[0];
@@ -55,14 +55,14 @@ export const quantileOfSorted = (sorted: Array<number>, p: number): number => {
   return sorted[lo] * (1 - weight) + sorted[hi] * weight;
 };
 
-/** 对未排序数值数组计算分位点。 */
+/** 对未排序数值数组计算分位点 */
 export const quantileOf = (values: Array<number>, p: number): number =>
   quantileOfSorted(
     [...values].sort((a, b) => a - b),
     p,
   );
 
-/** 计算有限数值范围；空集合的端点返回 NaN invalid sentinel。 */
+/** 计算有限数值范围；空集合的端点返回 NaN invalid sentinel */
 export const finiteExtentOf = (values: Array<number>): { min: number; max: number; count: number } => {
   if (values.length === 0) return { min: NaN, max: NaN, count: 0 };
   let min = values[0];
@@ -75,10 +75,10 @@ export const finiteExtentOf = (values: Array<number>): { min: number; max: numbe
   return { min, max, count: values.length };
 };
 
-/** 解析 spread whisker 倍率；未传时使用 data 层默认倍率。 */
+/** 解析 spread whisker 倍率；未传时使用 data 层默认倍率 */
 export const spreadFactorOf = (factor: number | undefined): number => factor ?? DEFAULT_QUANTILE_BAND_SPREAD_FACTOR;
 
-/** 计算参数化分位区间及其复用统计量。 */
+/** 计算参数化分位区间及其复用统计量 */
 export const quantileBandStatsOf = (
   rows: Array<ExternalRow>,
   field: string,
@@ -109,11 +109,11 @@ export const quantileBandStatsOf = (
   };
 };
 
-/** 过滤闭区间内的数值，用于 spread fence 内 whisker 端点计算。 */
+/** 过滤闭区间内的数值，用于 spread fence 内 whisker 端点计算 */
 export const valuesWithin = (values: Array<number>, lower: number, upper: number): Array<number> =>
   values.filter(value => value >= lower && value <= upper);
 
-/** 按 orderBy 稳定排序 rows；未传排序规则时返回浅拷贝。 */
+/** 按 orderBy 稳定排序 rows；未传排序规则时返回浅拷贝 */
 export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<IRDataOrderBy>): Array<ExternalRow> => {
   if (orderBy === undefined || orderBy.length === 0) return [...rows];
   return rows
@@ -128,7 +128,7 @@ export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<IRDataOrderB
     .map(entry => entry.row);
 };
 
-/** 按数值字段稳定排名，并自动剔除非有限数值行。 */
+/** 按数值字段稳定排名，并自动剔除非有限数值行 */
 export const rankedByNumericField = (
   rows: Array<ExternalRow>,
   field: string,

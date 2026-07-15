@@ -44,7 +44,7 @@ import {
 } from '../shared';
 import { pointsToSteps } from './path';
 
-/** reference 描边宽度（参考线；与 path mark 同宽，视觉一致）。 */
+/** reference 描边宽度（参考线；与 path mark 同宽，视觉一致） */
 const REFERENCE_STROKE_WIDTH = LINE_STROKE_WIDTH;
 
 const referencePathOptions = (mark: IRPlotReferenceMark): Partial<Pick<IRPath, 'marks'>> =>
@@ -59,7 +59,7 @@ type ReferenceShape =
 const isReferenceRegion = (mark: IRPlotReferenceMark): boolean => mark.kind === ReferenceMarkKind.Region;
 
 /**
- * reference 取向：恰好绑 encoding.x（竖直）或 encoding.y（水平）之一；皆设 / 皆缺 → fail-loud。
+ * reference 取向：恰好绑 encoding.x（竖直）或 encoding.y（水平）之一；皆设 / 皆缺 → fail-loud
  */
 const referenceOrientation = (mark: IRPlotReferenceMark): ReferenceOrientation => {
   const hasX = mark.encoding.x !== undefined;
@@ -73,7 +73,7 @@ const referenceOrientation = (mark: IRPlotReferenceMark): ReferenceOrientation =
 };
 
 /**
- * reference 的对侧维（垂直于常量轴）输出区间：默认满铺该轴 range，extent 字段给定时截成 [extentLo, extentTo] 输出坐标。
+ * reference 的对侧维（垂直于常量轴）输出区间：默认满铺该轴 range，extent 字段给定时截成 [extentLo, extentTo] 输出坐标
  */
 const referenceSpanInterval = (
   mark: IRPlotReferenceMark,
@@ -95,7 +95,7 @@ const referenceSpanInterval = (
   return [lo, hi];
 };
 
-/** reference line 某行的常量轴值（绑 x → encoding.x、绑 y → encoding.y；value 常量 / field per-datum 均经 channelValue）。 */
+/** reference line 某行的常量轴值（绑 x → encoding.x、绑 y → encoding.y；value 常量 / field per-datum 均经 channelValue） */
 const referenceConstantValue = (
   mark: IRPlotReferenceMark,
   row: ExternalRow,
@@ -104,7 +104,7 @@ const referenceConstantValue = (
 
 const isFullPolarSweep = (startAngle: number, endAngle: number): boolean => Math.abs(endAngle - startAngle) >= 360;
 
-/** reference band 某行的上界值（绑 x → xTo、绑 y → yTo；number 常量 / string field per-datum）。 */
+/** reference band 某行的上界值（绑 x → xTo、绑 y → yTo；number 常量 / string field per-datum） */
 const referenceUpperValue = (
   mark: IRPlotReferenceMark,
   row: ExternalRow,
@@ -114,7 +114,7 @@ const referenceUpperValue = (
   return typeof bound === 'string' ? resolveFieldPath(row, bound) : bound;
 };
 
-/** reference 是否 band 形态（绑定维度上给了匹配的上界 xTo / yTo）；并校验上界与所绑维度匹配（不匹配 / 单飞 → fail-loud）。 */
+/** reference 是否 band 形态（绑定维度上给了匹配的上界 xTo / yTo）；并校验上界与所绑维度匹配（不匹配 / 单飞 → fail-loud） */
 const isReferenceBand = (mark: IRPlotReferenceMark, orientation: ReferenceOrientation): boolean => {
   if (orientation === 'x' && mark.yTo !== undefined) {
     throw new Error(

@@ -17,7 +17,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
  * 摆在 position 对应边的预留带内；本测试断言 **结构性** 产物（swatch 数、scope 存在、plotArea 宽度变化、
  * 默认 axis 是否仍在、descriptor 一致性），不硬编码像素。
  *
- * lowerLegend / resolver descriptor 双产出 / by-type axes / 占位均未实现 → 大量 case 此刻 fail，符合预期。
+ * lowerLegend / resolver descriptor 双产出 / by-type axes / 占位均未实现 → 大量 case 此刻 fail，符合预期
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -51,7 +51,7 @@ const allScopes = (root: IRScope): Array<IRScope> => {
 /**
  * 辨认 legend 内的 swatch / glyph Node（色块 / ramp 条 / size 圆点 / shape glyph）与标签 Node。
  * @description legend 矩形改用 core Node（shape rectangle，修 PathSchema.min(2) 违规），不再是 Path。
- *   swatch Node 自带 shape 且无 text；label Node 有 text。
+ *   swatch Node 自带 shape 且无 text；label Node 有 text
  */
 const swatchNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text === undefined);
@@ -751,8 +751,8 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
 
 describe('lowerPlots legend — core schema 合法性回归（修 PathSchema.min(2) 违规）', () => {
   // legend 下沉产物（整个 legend scope）必须通过 core ChildSchema 校验——
-  //   早期 swatch 用单 step rectangle Path 违反 PathSchema.children.min(2)，schema 校验会拒绝。
-  //   改用 core Node（shape rectangle）后，整个 legend scope 应 100% 合法可序列化。
+  //   早期 swatch 用单 step rectangle Path 违反 PathSchema.children.min(2)，schema 校验会拒绝
+  //   改用 core Node（shape rectangle）后，整个 legend scope 应 100% 合法可序列化
   const assertLegendSchemaValid = (outer: IRScope): void => {
     const legend = findLegendLayer(outer);
     expect(legend).toBeDefined();

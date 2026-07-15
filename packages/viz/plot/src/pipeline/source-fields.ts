@@ -14,7 +14,7 @@ import { type IRPlotMarkOperation, type IRPlotSpec, type IRPlotTransform } from 
 const markTransformOf = (mark: IRPlotMarkOperation): Array<IRPlotTransform> | undefined =>
   (mark as { transform?: Array<IRPlotTransform> }).transform;
 
-/** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验。 */
+/** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验 */
 export const collectSourceFields = (
   spec: IRPlotSpec,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolvePlotTransformRegistry(),

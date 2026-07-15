@@ -111,7 +111,7 @@ describe('IRDataFieldDefinition.format — 错误路径', () => {
 });
 
 describe('IRDataFieldDefinition.format 自定义格式', () => {
-  /** 千分位分隔的金额串：'1.234,56' → 1234.56（欧式小数逗号），演示自定义 continuous 解析。 */
+  /** 千分位分隔的金额串：'1.234,56' → 1234.56（欧式小数逗号），演示自定义 continuous 解析 */
   const currencyFormat: FieldFormatDefinition = defineFieldFormat({
     name: 'currency',
     impliedType: 'continuous',

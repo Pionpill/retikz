@@ -365,7 +365,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
   });
 
   // 负值饼图：旧 sector mark 曾对负累积界 fail-loud；合并进 interval 后 extent bound 不再带此守卫，
-  // stack transform 亦不校验负值 → 现不再 throw（行为变更，已上报）。此处仅锁定「不再抛 /non-negative/」的现状。
+  // stack transform 亦不校验负值 → 现不再 throw（行为变更，已上报）。此处仅锁定「不再抛 /non-negative/」的现状
   it('pie_negative_value_no_longer_throws', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

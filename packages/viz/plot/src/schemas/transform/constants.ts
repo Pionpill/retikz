@@ -1,6 +1,6 @@
 ﻿/**
  * plot-only transform 类型关键字。
- * @description 这些 transform 直接服务 plot mark / geometry / stat layer，由 plot 自行注册到 data transform pipeline。
+ * @description 这些 transform 直接服务 plot mark / geometry / stat layer，由 plot 自行注册到 data transform pipeline
  */
 export const PlotTransform = {
   /** 堆叠：每个 x 分组内按系列累加，派生 [y0, y1] */
@@ -21,57 +21,57 @@ export const PlotTransform = {
   Smooth: 'smooth',
 } as const;
 
-/** stack baseline offset 策略。 */
+/** stack baseline offset 策略 */
 export const StackOffset = {
-  /** 从 0 开始按系列顺序累加各段，生成普通堆叠区间。 */
+  /** 从 0 开始按系列顺序累加各段，生成普通堆叠区间 */
   Zero: 'zero',
-  /** 按组总和缩放各段后从 0 累加，使整组堆叠范围归一到 0..1。 */
+  /** 按组总和缩放各段后从 0 累加，使整组堆叠范围归一到 0..1 */
   Normalize: 'normalize',
-  /** 从 0 开始分别累加正值与负值，使两类区间向基线两侧延伸。 */
+  /** 从 0 开始分别累加正值与负值，使两类区间向基线两侧延伸 */
   Diverging: 'diverging',
-  /** 按系列顺序累加各段，并将整组堆叠范围以 0 为中心放置。 */
+  /** 按系列顺序累加各段，并将整组堆叠范围以 0 为中心放置 */
   Center: 'center',
-  /** 不累加各段，使每段都生成从 0 到自身值的重叠区间。 */
+  /** 不累加各段，使每段都生成从 0 到自身值的重叠区间 */
   Overlap: 'overlap',
 } as const;
 
-/** 配对度量操作类型。 */
+/** 配对度量操作类型 */
 export const PairMeasureOperationKind = {
-  /** 计算 target 与 source 的数值差。 */
+  /** 计算 target 与 source 的数值差 */
   Difference: 'difference',
 } as const;
 
-/** 归一化结果的数值基准。 */
+/** 归一化结果的数值基准 */
 export const NormalizeBasis = {
-  /** 输出 0..1 范围的比例。 */
+  /** 输出 0..1 范围的比例 */
   Fraction: 'fraction',
-  /** 输出 0..100 范围的百分比。 */
+  /** 输出 0..100 范围的百分比 */
   Percent: 'percent',
 } as const;
 
-/** jitter 作用轴。 */
+/** jitter 作用轴 */
 export const JitterAxis = {
-  /** 只扰动 x 字段。 */
+  /** 只扰动 x 字段 */
   X: 'x',
-  /** 只扰动 y 字段。 */
+  /** 只扰动 y 字段 */
   Y: 'y',
-  /** 同时扰动 x 与 y 字段。 */
+  /** 同时扰动 x 与 y 字段 */
   Both: 'both',
 } as const;
 
-/** density 带宽策略类型。 */
+/** density 带宽策略类型 */
 export const DensityBandwidthKind = {
-  /** 使用 Silverman 经验规则计算带宽。 */
+  /** 使用 Silverman 经验规则计算带宽 */
   Silverman: 'silverman',
-  /** 使用显式数值带宽。 */
+  /** 使用显式数值带宽 */
   Value: 'value',
 } as const;
 
-/** smooth 方法类型。 */
+/** smooth 方法类型 */
 export const SmoothMethodKind = {
-  /** 普通最小二乘线性回归。 */
+  /** 普通最小二乘线性回归 */
   Linear: 'linear',
 } as const;
 
-/** plot 内置 transform kind 集：用于外部 transform 开放配置排除 plot 内置判别串。 */
+/** plot 内置 transform kind 集：用于外部 transform 开放配置排除 plot 内置判别串 */
 export const BUILTIN_PLOT_TRANSFORM_KINDS = new Set<string>(Object.values(PlotTransform));

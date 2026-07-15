@@ -51,7 +51,7 @@ const DEFAULT_DISCRETE_BIN_COUNT = 5;
 /**
  * 建序数 scale（d3 scaleOrdinal）：分类域 → 离散输出（颜色）
  * @description range 省略用默认配色方案（schemeCategory10，10 色，域超出循环复用）；domain 省略按数据序去重推断。
- *   返回 (category) => 输出串；非位置通道（color）消费。
+ *   返回 (category) => 输出串；非位置通道（color）消费
  */
 export const resolveOrdinalScale = (
   def: IRPlotOrdinalScale | undefined,
@@ -77,7 +77,7 @@ const discreteBinColors = (
  * sequential 颜色 scale 求值：单调量 domain [min, max] → 单方向色带
  * @description domain 缺省从数据 [min, max] 推断；显式 domain 须 min < max（违反 fail-loud）。
  *   range 给定（两端颜色）→ 经 scaleLinear 颜色插值覆盖 scheme；否则用命名 scheme interpolator（缺省 viridis）。
- *   单值数据（min == max 推断）退化为常量取色（端点），不崩。
+ *   单值数据（min == max 推断）退化为常量取色（端点），不崩
  */
 export const resolveSequentialColorScale = (
   def: IRPlotSequentialColorScale,
@@ -112,7 +112,7 @@ export const resolveSequentialColorScale = (
  * diverging 颜色 scale 求值：有中点的量 domain [low, mid, high] → 两侧异色色带（中点淡）
  * @description domain 缺省从数据 [min, (min+max)/2, max] 推断；显式 domain 须 low < mid < high（违反 fail-loud）。
  *   range 给定（三端点）→ 经三段 scaleLinear 颜色插值覆盖 scheme；否则用命名 diverging scheme（缺省 rdbu），
- *   把 [low, mid, high] 映射到 interpolator 的 [0, 0.5, 1]。
+ *   把 [low, mid, high] 映射到 interpolator 的 [0, 0.5, 1]
  */
 export const resolveDivergingColorScale = (
   def: IRPlotDivergingColorScale,
@@ -162,7 +162,7 @@ export const resolveDivergingColorScale = (
 /**
  * quantize 颜色 scale 求值：连续 domain [min, max] 等宽切 count 段 → 离散色档（d3 scaleQuantize）
  * @description domain 缺省从数据 [min, max] 推断；count 缺省 5（range 给定时档数 = range.length，覆盖 count）。
- *   range 显式给颜色数组、否则从 scheme 采 count 档。超出 domain 的值落首 / 末档（d3 clamp 语义）。
+ *   range 显式给颜色数组、否则从 scheme 采 count 档。超出 domain 的值落首 / 末档（d3 clamp 语义）
  */
 export const resolveQuantizeColorScale = (
   def: IRPlotQuantizeColorScale,
@@ -185,7 +185,7 @@ export const resolveQuantizeColorScale = (
  * threshold 颜色 scale 求值：用户自定义升序断点切档 → 离散色档（d3 scaleThreshold）
  * @description breakpoints 须严格升序（违反 fail-loud）；档数 = breakpoints.length + 1。
  *   range 显式给时长度须 = breakpoints.length + 1（违反 fail-loud）、否则从 scheme 采 breakpoints.length + 1 档。
- *   < 首断点落第 0 档、≥ 末断点落末档（d3 默认语义）。
+ *   < 首断点落第 0 档、≥ 末断点落末档（d3 默认语义）
  */
 export const resolveThresholdColorScale = (
   def: IRPlotThresholdColorScale,
@@ -214,7 +214,7 @@ export const resolveThresholdColorScale = (
 /**
  * quantile 颜色 scale 求值：按绑定数据分位切 count 档（每档样本数约等）→ 离散色档（d3 scaleQuantile）
  * @description count 缺省 5（range 给定时档数 = range.length，覆盖 count）；分位边界纯由数据定（schema 已 strip 显式 domain，此处不读）。
- *   range 显式给颜色数组、否则从 scheme 采 count 档。
+ *   range 显式给颜色数组、否则从 scheme 采 count 档
  */
 export const resolveQuantileColorScale = (
   def: IRPlotQuantileColorScale,
@@ -249,7 +249,7 @@ const quantileAt = (sortedAscending: ReadonlyArray<number>, p: number): number =
 /**
  * 离散化色阶 → 档色 + 内部边界（legend 分箱 + channel 解析共用单一来源）
  * @description quantize：domain 等宽切；threshold：用户断点；quantile：数据分位。
- *   edges 是档间内部边界（长度 = binCount - 1）；colors 是各档色（range 显式则用、否则从 scheme 采）。
+ *   edges 是档间内部边界（长度 = binCount - 1）；colors 是各档色（range 显式则用、否则从 scheme 采）
  */
 export const discretizedBins = (
   def: IRPlotQuantizeColorScale | IRPlotThresholdColorScale | IRPlotQuantileColorScale,
@@ -284,7 +284,7 @@ export const discretizedBins = (
 
 // ── channel 族 scale definition ───────────────────────────────────────────────────
 
-/** 建 channel 取值用的数值序列：temporal 字段过 coerceTimestamp，其余取有限数。 */
+/** 建 channel 取值用的数值序列：temporal 字段过 coerceTimestamp，其余取有限数 */
 const numericValuesOf = (values: Array<unknown>, ctx: ChannelResolveContext): Array<number> => {
   const toNumber = ctx.fieldType === DataFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
   return values.map(toNumber).filter((value): value is number => value !== null);
@@ -438,7 +438,7 @@ const quantileScaleDefinition = defineScale<IRPlotQuantileColorScale>({
   },
 });
 
-/** channel 族 scale definition（分类 1 + 连续色 2 + 离散化 3 = 6）：产视觉量（颜色），喂 color 通道 + legend。 */
+/** channel 族 scale definition（分类 1 + 连续色 2 + 离散化 3 = 6）：产视觉量（颜色），喂 color 通道 + legend */
 export const COLOR_SCALE_DEFINITIONS: ReadonlyArray<AnyScaleDefinition> = [
   ordinalScaleDefinition,
   sequentialScaleDefinition,

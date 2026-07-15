@@ -12,7 +12,7 @@ import { COLOR_SCALE_DEFINITIONS, POSITION_SCALE_DEFINITIONS } from './features'
 
 /**
  * 内置 scale definition 列表（position 9 + channel 6 = 15）。
- * @description 按 family 分族登记（position 产坐标 / channel 产颜色，对齐 contract 的 family 判别）；与自定义 scale 共享同一 registry 分派流程。
+ * @description 按 family 分族登记（position 产坐标 / channel 产颜色，对齐 contract 的 family 判别）；与自定义 scale 共享同一 registry 分派流程
  */
 export const BUILTIN_SCALES: ReadonlyArray<AnyScaleDefinition> = [
   ...POSITION_SCALE_DEFINITIONS,
@@ -21,7 +21,7 @@ export const BUILTIN_SCALES: ReadonlyArray<AnyScaleDefinition> = [
 
 /**
  * 解析 scale registry。
- * @description 内置 scale 总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复。
+ * @description 内置 scale 总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复
  */
 export const resolveScaleRegistry = (custom?: ReadonlyArray<AnyScaleDefinition>): Map<string, AnyScaleDefinition> => {
   const registry = new Map<string, AnyScaleDefinition>();
@@ -54,7 +54,7 @@ const scaleDefinitionOf = (
 /**
  * 解析并校验单个 scale operation；返回可安全喂给 definition 的宽类型。
  * @description 内置 op 已是精确 Scale 形态（PlotSpecSchema 静态校验 + resolve* 运行时深校验，如 finite domain / 升序断点），
- *   直接透传以保留信息化错误；自定义 op 才用 definition.schema 深解析 + JSON 可序列化双校验。
+ *   直接透传以保留信息化错误；自定义 op 才用 definition.schema 深解析 + JSON 可序列化双校验
  */
 const parseScaleOperation = (def: AnyScaleDefinition, operation: IRPlotScaleOperation): never => {
   if (isBuiltinScaleOperation(operation)) return operation as never;
@@ -66,7 +66,7 @@ const parseScaleOperation = (def: AnyScaleDefinition, operation: IRPlotScaleOper
 
 /**
  * 据 scale operation 建对应 PositionScale（registry 分派，family='position'）。
- * @description channel scale 作位置通道 → fail-loud（color scale 只绑 color 通道）。
+ * @description channel scale 作位置通道 → fail-loud（color scale 只绑 color 通道）
  */
 export const resolvePositionScale = (
   operation: IRPlotScaleOperation,

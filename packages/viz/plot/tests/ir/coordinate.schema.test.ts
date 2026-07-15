@@ -207,8 +207,8 @@ describe('CoordinateSchema ternary2D (contract)', () => {
     expect(CoordinateSchema.parse({ type: 'ternary2D' })).toEqual({ type: 'ternary2D' });
   });
 
-  // ternary2D 本轮无几何配置字段：分量绑定走 mark 的 x/y/z 通道，coordinate 内自动归一化。
-  // 多余的 x/y/z key（per-component scale 未来才做）被 zod 剥离（同 polar2D 剥离 cartesian x/y）。
+  // ternary2D 本轮无几何配置字段：分量绑定走 mark 的 x/y/z 通道，coordinate 内自动归一化
+  // 多余的 x/y/z key（per-component scale 未来才做）被 zod 剥离（同 polar2D 剥离 cartesian x/y）
   it('ternary2d_strips_unsupported_scale_keys', () => {
     expect(CoordinateSchema.parse({ type: 'ternary2D', x: 'xs', y: 'ys', z: 'zs' })).toEqual({ type: 'ternary2D' });
   });

@@ -25,7 +25,7 @@ import { lowerLegend } from '../guide';
 /**
  * 收集所有 mark 在某非位置通道上的字段 descriptor（size / opacity / shape）
  * @description resolver 双产出的 descriptor 注册到 channel → descriptor 表；同通道多 mark 取首个有 descriptor 的
- *   legend 据 scale name 消歧；未具名的默认 scale 用 channel/field/type 签名区分。
+ *   legend 据 scale name 消歧；未具名的默认 scale 用 channel/field/type 签名区分
  */
 export const collectChannelDescriptors = (
   node: IRPlotSpec,

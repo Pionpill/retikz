@@ -143,7 +143,7 @@ const addReserve = (reserve: Partial<Margins>, side: keyof Margins, value: numbe
   [side]: (reserve[side] ?? 0) + value,
 });
 
-/** 计算 plot label 需要在各边预留的布局空间。 */
+/** 计算 plot label 需要在各边预留的布局空间 */
 export const resolveLabelReserve = (input: LabelLayoutInput): Partial<Margins> => {
   let reserve: Partial<Margins> = input.layout?.padding === undefined ? EMPTY_RESERVE : { ...input.layout.padding };
   if (!reserveEnabled(input.layout)) return reserve;
@@ -228,7 +228,7 @@ const labelMetaOf = (label: TextLabel): IRJsonObject => ({
   ...(label.id !== undefined ? { id: label.id } : {}),
 });
 
-/** 把 plot 级文本标签下沉成 core IR 图层。 */
+/** 把 plot 级文本标签下沉成 core IR 图层 */
 export const lowerPlotLabels = (input: LowerLabelsInput): Array<IRScope> => {
   const items = resolveLabels(input);
   if (items.length === 0) return [];

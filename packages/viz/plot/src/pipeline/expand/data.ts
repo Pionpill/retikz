@@ -25,7 +25,7 @@ import type { LowerPlotsOptions } from './types';
 import { resolveMarkRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '../../providers';
 import { collectSourceFields } from '../source-fields';
 
-/** 对单个 mark 应用局部 transform，返回该 mark 实际消费的数据行。 */
+/** 对单个 mark 应用局部 transform，返回该 mark 实际消费的数据行 */
 export const resolveMarkRows = (
   mark: IRPlotMarkOperation,
   rows: Array<ExternalRow>,
@@ -39,7 +39,7 @@ export const resolveMarkRows = (
 
 /**
  * 校验 fieldMaps 中的数据集与逻辑字段引用。
- * @description 供 lowering 与 locator 共用，保证两条入口采用相同的 fail-loud 契约。
+ * @description 供 lowering 与 locator 共用，保证两条入口采用相同的 fail-loud 契约
  */
 export const validateFieldMaps = (
   spec: IRPlotSpec,
@@ -69,7 +69,7 @@ export const validateFieldMaps = (
 
 /**
  * 准备绑定数据、字段类型及 lowering 所需 registry。
- * @description 先校验 fieldMaps，再解析 model / format / resolver 并恒归一化；transform 由调用方在本函数之后执行。
+ * @description 先校验 fieldMaps，再解析 model / format / resolver 并恒归一化；transform 由调用方在本函数之后执行
  */
 export const prepareRows = (
   spec: IRPlotSpec,

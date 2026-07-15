@@ -9,7 +9,7 @@ import type { IRPlotSpec } from '../../../src/schemas';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
-/** 笛卡尔使用默认画布；极坐标使用正方形画布，因此 outerRadius = 200、center = [200, 200]。 */
+/** 笛卡尔使用默认画布；极坐标使用正方形画布，因此 outerRadius = 200、center = [200, 200] */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 const polarOpts: LowerPlotsOptions = { width: 400, height: 400 };
 
@@ -22,14 +22,14 @@ const expandOf = (
   return def.expand(spec) as IRScope;
 };
 
-/** 取得第一个 mark 图层 Scope，也就是外层 plot Scope 的第一个子 Scope。 */
+/** 取得第一个 mark 图层 Scope，也就是外层 plot Scope 的第一个子 Scope */
 const firstLayer = (
   spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
-/** 深度收集图层内所有 Path；颜色分组时 Path 可能位于子 Scope。 */
+/** 深度收集图层内所有 Path；颜色分组时 Path 可能位于子 Scope */
 const collectPaths = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
   const walk = (children: ReadonlyArray<unknown>): void => {
@@ -43,10 +43,10 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
   return out;
 };
 
-/** 读取 step 的目标坐标。 */
+/** 读取 step 的目标坐标 */
 const stepPoint = (step: IRStep): [number, number] => (step as { to: [number, number] }).to;
 
-/** 判断路径是否包含 cycle step，或末点是否回到首点。 */
+/** 判断路径是否包含 cycle step，或末点是否回到首点 */
 const isClosedSteps = (steps: ReadonlyArray<IRStep>): boolean => {
   if (steps.some(s => s.kind === 'cycle')) return true;
   const withTo = steps.filter(s => s.kind === 'move' || s.kind === 'line');
@@ -112,17 +112,17 @@ describe('lowerPlots 笛卡尔面积路径', () => {
   });
 
   it('area_top_outline_matches_value_projection', () => {
-    // domain x [0,2] -> [0,480]；y [9,14] -> [300,0]；上沿首点是 (month0, revenue10) 的投影。
+    // domain x [0,2] -> [0,480]；y [9,14] -> [300,0]；上沿首点是 (month0, revenue10) 的投影
     const path = collectPaths(firstLayer(areaSpec({ order: 'month' }), { sales: SALES }, cartOpts))[0];
     const first = stepPoint(path.children[0]);
     expect(first[0]).toBeCloseTo(0, 6);
-    // revenue 10 位于 [9,14] 内，因此 y 介于 0 与 300 之间，而不是 baseline。
+    // revenue 10 位于 [9,14] 内，因此 y 介于 0 与 300 之间，而不是 baseline
     expect(first[1]).toBeGreaterThan(0);
     expect(first[1]).toBeLessThan(300);
   });
 
   it('area_baseline_zero_return_edge_at_baseline', () => {
-    // baseline 0 投影到屏幕底部 y = 300，回边至少有一点贴近该位置。
+    // baseline 0 投影到屏幕底部 y = 300，回边至少有一点贴近该位置
     const path = collectPaths(
       firstLayer(areaSpec({ order: 'month', closure: { kind: 'baseline', baseline: 0 } }), { sales: SALES }, cartOpts),
     )[0];
@@ -167,7 +167,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
-  // 少于两个有效点时返回 null，不生成面积。
+  // 少于两个有效点时返回 null，不生成面积
   it('area_single_point_yields_no_layer', () => {
     const outer = expandOf(areaSpec(), { sales: [{ month: 1, revenue: 5 }] }, cartOpts);
     expect(outer.children).toHaveLength(0);
@@ -178,19 +178,19 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     expect(outer.children).toHaveLength(0);
   });
 
-  // 非有限值对应的投影为 null，该点会被跳过。
+  // 非有限值对应的投影为 null，该点会被跳过
   it('area_non_finite_point_skipped', () => {
     const rows = [
       { month: 0, revenue: 10 },
       { month: 'oops', revenue: 14 },
       { month: 2, revenue: 9 },
     ];
-    // 仍有两个有效顶点，可以生成面积且不抛错。
+    // 仍有两个有效顶点，可以生成面积且不抛错
     const path = collectPaths(firstLayer(areaSpec({ order: 'month' }), { sales: rows }, cartOpts))[0];
     expect(path.type).toBe('path');
   });
 
-  // 多系列面积会拆成多个子 Path。
+  // 多系列面积会拆成多个子 Path
   it('area_series_splits_into_multiple_paths', () => {
     const TREND = [
       { t: 0, v: 1, city: 'X' },
@@ -243,7 +243,7 @@ describe('lowerPlots 笛卡尔折线回归', () => {
     });
 
   it('line_unchanged_no_sampling', () => {
-    // 笛卡尔折线不采样：三个顶点生成一个 move 和两个 line step。
+    // 笛卡尔折线不采样：三个顶点生成一个 move 和两个 line step
     const path = collectPaths(firstLayer(lineSpec(), { sales: SALES }, cartOpts))[0];
     expect(path.children).toEqual([
       { type: 'step', kind: 'move', to: [0, 240] },
@@ -253,12 +253,12 @@ describe('lowerPlots 笛卡尔折线回归', () => {
   });
 
   it('open_line_not_closed', () => {
-    // 省略 closed 时不闭合：没有 cycle，末点也不等于首点。
+    // 省略 closed 时不闭合：没有 cycle，末点也不等于首点
     const path = collectPaths(firstLayer(lineSpec(), { sales: SALES }, cartOpts))[0];
     expect(path.children.some(s => s.kind === 'cycle')).toBe(false);
   });
 
-  // 笛卡尔 closed line 允许形成闭合多边形。
+  // 笛卡尔 closed line 允许形成闭合多边形
   it('closed_line_returns_to_first_point', () => {
     const path = collectPaths(firstLayer(lineSpec({ closed: true }), { sales: SALES }, cartOpts))[0];
     expect(isClosedSteps(path.children)).toBe(true);
@@ -407,7 +407,7 @@ describe('lowerPlots path closure cartesian', () => {
 
 // ── 极坐标折线：连续角轴段内采样，分类角轴走弦 ──
 describe('lowerPlots 极坐标折线采样', () => {
-  // 两个顶点角差较大：linear 角轴映射到 [0,360]，半径保持线性。
+  // 两个顶点角差较大：linear 角轴映射到 [0,360]，半径保持线性
   const POLAR = [
     { a: 0, r: 5 },
     { a: 9, r: 10 },
@@ -437,14 +437,14 @@ describe('lowerPlots 极坐标折线采样', () => {
   });
 
   it('polar_continuous_axis_densifies_segment', () => {
-    // 连续角轴且未闭合时，相邻顶点角差较大会在段内插入采样点。
+    // 连续角轴且未闭合时，相邻顶点角差较大会在段内插入采样点
     const path = collectPaths(firstLayer(polarLineSpec({ closed: false }), { d: POLAR }, polarOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
     expect(points.length).toBeGreaterThan(2);
   });
 
   it('polar_sampled_points_lie_on_projected_arc', () => {
-    // 采样点在 [θ,r] 空间线性插值后反投影，圆心距离位于两端半径之间且单调。
+    // 采样点在 [θ,r] 空间线性插值后反投影，圆心距离位于两端半径之间且单调
     const path = collectPaths(firstLayer(polarLineSpec({ closed: false }), { d: POLAR }, polarOpts))[0];
     const center = [200, 200];
     const radii = path.children
@@ -453,17 +453,17 @@ describe('lowerPlots 极坐标折线采样', () => {
         const [x, y] = stepPoint(s);
         return Math.hypot(x - center[0], y - center[1]);
       });
-    // 端点半径：r=5 映射到 innerRadius 0，r=10 映射到 outerRadius 200。
+    // 端点半径：r=5 映射到 innerRadius 0，r=10 映射到 outerRadius 200
     expect(radii[0]).toBeCloseTo(0, 6);
     expect(radii[radii.length - 1]).toBeCloseTo(200, 6);
-    // 中间采样点半径按半径空间线性插值并单调递增。
+    // 中间采样点半径按半径空间线性插值并单调递增
     for (let i = 1; i < radii.length; i += 1) {
       expect(radii[i]).toBeGreaterThanOrEqual(radii[i - 1] - 1e-6);
     }
   });
 
   it('polar_band_axis_walks_chords_no_sampling', () => {
-    // 分类角轴（band）在类别之间没有中间值，因此不采样并直接走弦。
+    // 分类角轴（band）在类别之间没有中间值，因此不采样并直接走弦
     const CAT = [
       { dim: 'A', v: 5 },
       { dim: 'B', v: 8 },
@@ -486,10 +486,10 @@ describe('lowerPlots 极坐标折线采样', () => {
   });
 
   it('polar_closed_line_walks_chords_no_sampling', () => {
-    // closed 雷达图恒走弦：即使使用连续角轴，闭合多边形也不做段内采样。
+    // closed 雷达图恒走弦：即使使用连续角轴，闭合多边形也不做段内采样
     const path = collectPaths(firstLayer(polarLineSpec({ closed: true }), { d: POLAR }, polarOpts))[0];
     expect(isClosedSteps(path.children)).toBe(true);
-    // 两个顶点直接走弦，不因连续角轴增加采样点。
+    // 两个顶点直接走弦，不因连续角轴增加采样点
     const lines = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
     expect(lines.length).toBeLessThanOrEqual(3);
   });
@@ -522,7 +522,7 @@ describe('lowerPlots 雷达图', () => {
   });
 
   it('radar_vertices_lie_on_distinct_angular_axes', () => {
-    // point scale 将四组类别等分到不同角度，四个顶点落在不同方位。
+    // point scale 将四组类别等分到不同角度，四个顶点落在不同方位
     const path = collectPaths(firstLayer(radarSpec(), { m: METRICS }, polarOpts))[0];
     const center = [200, 200];
     const angles = path.children
@@ -609,7 +609,7 @@ describe('lowerPlots 极坐标面积路径', () => {
   });
 
   it('polar_area_return_edge_at_inner_baseline', () => {
-    // baseline 0 映射到径向内界；innerRadius 为 0 时，回边点贴近圆心。
+    // baseline 0 映射到径向内界；innerRadius 为 0 时，回边点贴近圆心
     const path = collectPaths(
       firstLayer(polarAreaSpec({ closure: { kind: 'baseline', baseline: 0 } }), { m: METRICS }, polarOpts),
     )[0];
@@ -620,7 +620,7 @@ describe('lowerPlots 极坐标面积路径', () => {
         const [x, y] = stepPoint(s);
         return Math.hypot(x - center[0], y - center[1]);
       });
-    // baseline 回边至少有一点贴近圆心。
+    // baseline 回边至少有一点贴近圆心
     expect(Math.min(...radii)).toBeCloseTo(0, 6);
   });
 

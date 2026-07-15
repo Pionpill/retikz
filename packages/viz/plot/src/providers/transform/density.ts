@@ -17,7 +17,7 @@ const standardDeviationOf = (values: ReadonlyArray<number>): number => {
   return Math.sqrt(variance);
 };
 
-/** 在已排序数值数组上按线性插值计算分位点。 */
+/** 在已排序数值数组上按线性插值计算分位点 */
 const quantileOfSorted = (sorted: Array<number>, p: number): number => {
   if (sorted.length === 0) return 0;
   if (sorted.length === 1) return sorted[0];
@@ -70,19 +70,19 @@ const densityAt = (x: number, values: ReadonlyArray<number>, bandwidth: number):
   return sum / values.length;
 };
 
-/** 返回 density transform 读取的源字段。 */
+/** 返回 density transform 读取的源字段 */
 export const densityInputFields = (operation: IRPlotDensityTransform): Array<string> => [
   operation.field,
   ...(operation.groupBy ?? []),
 ];
 
-/** 返回 density transform 写出的派生字段。 */
+/** 返回 density transform 写出的派生字段 */
 export const densityOutputFields = (operation: IRPlotDensityTransform): Array<string> => [
   operation.xAs,
   operation.densityAs,
 ];
 
-/** density：一维 Gaussian KDE 采样，每组输出 sampleCount 行。 */
+/** density：一维 Gaussian KDE 采样，每组输出 sampleCount 行 */
 export const applyDensity = (
   rows: Array<ExternalRow>,
   operation: IRPlotDensityTransform,

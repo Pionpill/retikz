@@ -351,7 +351,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   it('mark_interval_preserves_unknown_role_key_size', () => {
-    // 未知 encoding key 在 schema 层保留；是否是合法位置角色交给 active CoordinateDefinition.roles 在 lowering 校验。
+    // 未知 encoding key 在 schema 层保留；是否是合法位置角色交给 active CoordinateDefinition.roles 在 lowering 校验
     const parsed = MarkSchema.parse({
       type: 'interval',
       encoding: { x: { field: 'c' }, y: { field: 'v' }, size: { field: 'p' } },
@@ -507,7 +507,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   it('mark_rect_preserves_unknown_role_key_size', () => {
-    // 未知 encoding key 在 schema 层保留；lowering 按坐标系 roles fail-loud。
+    // 未知 encoding key 在 schema 层保留；lowering 按坐标系 roles fail-loud
     const parsed = MarkSchema.parse({
       type: 'interval',
       bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
@@ -620,7 +620,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   it('mark_reference_preserves_unknown_role_key_size', () => {
-    // 未知 encoding key 在 schema 层保留；lowering 按坐标系 roles fail-loud。
+    // 未知 encoding key 在 schema 层保留；lowering 按坐标系 roles fail-loud
     const parsed = MarkSchema.parse({ type: 'reference', encoding: { y: { value: 80 }, size: { field: 'p' } } });
     expect((parsed.encoding as { size?: unknown }).size).toEqual({ field: 'p' });
   });

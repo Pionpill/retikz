@@ -31,7 +31,7 @@ type RulePath = {
 /**
  * Rule mark 下沉契约测试：line 下沉 core Path，band 复用 projectCell。
  * 验证 line 几何（满铺 / extent 截断 / per-datum / color）、band → projectCell 区域（rect / sector / 可连接）、
- * 取向 fail-loud、extent 单设 fail-loud、band 上界不匹配 fail-loud、坐标系矩阵 fail-loud、polar 径向线 / 常半径环、rule + bar z-order。
+ * 取向 fail-loud、extent 单设 fail-loud、band 上界不匹配 fail-loud、坐标系矩阵 fail-loud、polar 径向线 / 常半径环、rule + bar z-order
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -251,7 +251,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
   });
 
   it('rule-region-cartesian-rect', () => {
-    // region x∈[2,5] 且 y∈[70,90] → rect Node。x 像素 80..200，y 像素 120..40。
+    // region x∈[2,5] 且 y∈[70,90] → rect Node。x 像素 80..200，y 像素 120..40
     const mark: IRPlotReferenceMark = {
       type: 'reference',
       kind: 'region',
@@ -267,7 +267,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
   });
 
   it('rule-region-per-datum-field', () => {
-    // per-datum region 四边界均可来自字段；每行一个区域 Node。
+    // per-datum region 四边界均可来自字段；每行一个区域 Node
     const mark: IRPlotReferenceMark = {
       type: 'reference',
       kind: 'region',
@@ -451,7 +451,7 @@ describe('rule polar', () => {
   });
 
   it('rule-polar-constant-radius-ring', () => {
-    // 水平 rule y=50（常量半径）→ 常半径环，用 core circlePath 表达，避免采样成多边形。
+    // 水平 rule y=50（常量半径）→ 常半径环，用 core circlePath 表达，避免采样成多边形
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 50 } } };
     const layer = lowerMark(mark, [{}], polarFrame(true)) as IRScope;
     const steps = pathsOf(layer)[0].children;
@@ -555,7 +555,7 @@ describe('rule polar', () => {
   });
 
   it('rule-region-polar-sector', () => {
-    // region x∈[30,120] 且 y∈[40,60] → projectCell 环扇区。
+    // region x∈[30,120] 且 y∈[40,60] → projectCell 环扇区
     const mark: IRPlotReferenceMark = {
       type: 'reference',
       kind: 'region',

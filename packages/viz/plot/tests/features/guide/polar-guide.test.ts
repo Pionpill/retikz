@@ -15,7 +15,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]；0°=+x、90°=+y（屏幕 y 向下）。
  * polar guide：angular axis = 外圆弧 + 角向刻度 + 圆周外标签；radial axis = 沿 startAngle 辐条 + 刻度 + 标签；
  *   radius grid = 同心环（arc）；angle grid = 圆心→外圆辐条（直段）。
- * z-order：gridLayer 垫底 → markLayers → axisLayer 压顶。
+ * z-order：gridLayer 垫底 → markLayers → axisLayer 压顶
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -58,7 +58,7 @@ const segmentsOfAxis = (axisLayer: IRScope): Array<[[number, number], [number, n
 
 /**
  * 外层 plot scope 子层粗分类：mark 层 = point/sector 的 nodeDefault.shape 层，或 line/area 的 pathDefault.strokeWidth 层
- * （guide 层的 pathDefault 只有 stroke / strokeOpacity，无 strokeWidth）。z-order = [...gridLayers, ...markLayers, ...axisLayers]。
+ * （guide 层的 pathDefault 只有 stroke / strokeOpacity，无 strokeWidth）。z-order = [...gridLayers, ...markLayers, ...axisLayers]
  */
 const layersOf = (outer: IRScope): { children: Array<IRChild>; markIndex: number } => {
   const children = outer.children;

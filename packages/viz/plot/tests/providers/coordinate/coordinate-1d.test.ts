@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
  * 一维坐标系族 lowering 契约测试：cartesian1D（直线）+ polar1D（圆周）。
  * 经公开 lowerPlots 断言 core IR node position：
  *   cartesian1D 单维投影落基线轴 + orientation；polar1D 角向投影落固定半径圆周 + radius / 半环；
- *   mark 矩阵 point 为主（interval/sector/area fail-loud）；缺单维通道 / 非法维度 fail-loud；1D×color 仍工作。
+ *   mark 矩阵 point 为主（interval/sector/area fail-loud）；缺单维通道 / 非法维度 fail-loud；1D×color 仍工作
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;

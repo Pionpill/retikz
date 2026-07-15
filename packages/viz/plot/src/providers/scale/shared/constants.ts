@@ -1,6 +1,6 @@
 /**
  * 内置命名配色方案名。
- * @description 这些名字只声明内置 color scheme resolver 的注册键；schema 只校验非空字符串，具体 scheme 是否存在由 lowering 的 color scheme resolver 解析。
+ * @description 这些名字只声明内置 color scheme resolver 的注册键；schema 只校验非空字符串，具体 scheme 是否存在由 lowering 的 color scheme resolver 解析
  */
 export const PlotColorScheme = {
   /** sequential 单色相蓝 */
@@ -47,5 +47,5 @@ export const PlotColorScheme = {
   Spectral: 'spectral',
 } as const;
 
-/** 内置配色方案名集合；用于内置 resolver 与自定义 resolver 分流。 */
+/** 内置配色方案名集合；用于内置 resolver 与自定义 resolver 分流 */
 export const BUILTIN_COLOR_SCHEMES: ReadonlySet<string> = new Set<string>(Object.values(PlotColorScheme));

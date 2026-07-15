@@ -16,6 +16,7 @@ import { useEffect, useRef } from 'react';
 
 import type { CoordinateInput, MarkTransformShortcutDefinition } from './components';
 
+import { makeEmbeddedPlotComposites, withEmbeddedPlotRuntime } from './embedded-runtime';
 import { resolvePlotRuntime } from './plot-runtime';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
@@ -32,17 +33,17 @@ export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'rendere
   LowerPlotsOptions &
   PlotLineageProps;
 
-/** React adapter 暴露的运行时图元链路 props。 */
+/** React adapter 暴露的运行时图元链路 props */
 export type PlotLineageProps = {
   /**
    * 图元链路记录开关。
    * @description `false` 表示关闭；传对象时沿用 `@retikz/plot` 的独立开关。省略时只有 `onLineage`
-   *   或 `resolvePlotLineage` 触发运行时链路计算，并使用最小默认摘要。
+   *   或 `resolvePlotLineage` 触发运行时链路计算，并使用最小默认摘要
    */
   lineage?: false | PlotLineageOptions;
-  /** 宿主侧查询 / AI / 权限 metadata；只有 `lineage.hostMetadata` 打开对应开关时才会透传。 */
+  /** 宿主侧查询 / AI / 权限 metadata；只有 `lineage.hostMetadata` 打开对应开关时才会透传 */
   hostLineageMetadata?: PlotHostLineageMetadata;
-  /** 渲染后接收 runtime-only 图元链路产物；不会把链路写入 IRPlotSpec 或 Scene meta。 */
+  /** 渲染后接收 runtime-only 图元链路产物；不会把链路写入 IRPlotSpec 或 Scene meta */
   onLineage?: (lineage: PlotLineageRun) => void;
 };
 
@@ -51,7 +52,7 @@ export type PlotColorProps = {
   colors?: Array<string>;
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
   theme?: IRPlotSpec['theme'];
-  /** 整图 label 空间布局策略。 */
+  /** 整图 label 空间布局策略 */
   layout?: IRPlotSpec['layout'];
 };
 
@@ -87,7 +88,7 @@ export type PlotDslProps = PlotCommonProps &
     /**
      * 数据变换 IR 直传（快捷入口）：拼到 `<Transform>` 子组件收集结果之前、自动装配 stack 之前。
      * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
-     *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack。
+     *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack
      */
     dataTransforms?: Array<IRPlotTransform>;
     /**
@@ -118,16 +119,6 @@ const wrapPanelScope = (node: IRPlotSpec, props: PlotPanelProps): EmbeddableCont
   return scope as EmbeddableContribution['node'];
 };
 
-/** 默认 Plot lowering maker；同一 Layout 内的标准 Plot 复用函数身份。 */
-const makeDefaultPlotComposites = (mergedDatasets: Record<string, unknown>) =>
-  lowerPlots(mergedDatasets as ExternalDatasets);
-
-/** 判断嵌入态是否携带不能由 PlotSpec 自身表达的 runtime-only lowering 选项。 */
-const hasRuntimeLowerOptions = (options: LowerPlotsOptions): boolean =>
-  (Object.entries(options) as Array<[keyof LowerPlotsOptions, LowerPlotsOptions[keyof LowerPlotsOptions]]>).some(
-    ([key, value]) => key !== 'width' && key !== 'height' && value !== undefined,
-  );
-
 const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
   displayName: 'Plot',
   namespace: 'plot',
@@ -135,10 +126,8 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
     const { spec, datasets, lowerOptions } = resolvePlotRuntime(props, { embedded: true });
     return {
       node: wrapPanelScope(spec, props),
-      datasets,
-      makeComposites: hasRuntimeLowerOptions(lowerOptions)
-        ? mergedDatasets => lowerPlots(mergedDatasets as ExternalDatasets, lowerOptions)
-        : makeDefaultPlotComposites,
+      datasets: withEmbeddedPlotRuntime(datasets, lowerOptions),
+      makeComposites: makeEmbeddedPlotComposites,
     };
   },
 };

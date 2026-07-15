@@ -31,7 +31,7 @@ type FacetDimensionInput = string | NonNullable<FacetGridSpec['row']>;
  * 基本字段与 plain `IRPlotSpec` 保持一致，但 `marks` / `guides` 可以额外携带
  * builder-only 的轴、facet 与 scaffold 绑定字段。调用 `build()` 时这些字段会先被展开成
  * 普通 `IRPlotSpec` 的 `composition`、`coordinateView`、`scales` 与 guides，再交给
- * `PlotSpecSchema` 校验；它们不会进入 Plot IR，也不会被 `renderPlot` 直接消费。
+ * `PlotSpecSchema` 校验；它们不会进入 Plot IR，也不会被 `renderPlot` 直接消费
  */
 export type PlotBuilderConfig = Omit<IRPlotSpec, 'namespace' | 'type' | 'marks' | 'guides'> & {
   /**
@@ -39,7 +39,7 @@ export type PlotBuilderConfig = Omit<IRPlotSpec, 'namespace' | 'type' | 'marks' 
    *
    * @description
    * mark 可以使用 `xAxisId`、`yAxisId`、`facetId` 或 `trackId` 这类 builder-only
-   * 绑定字段；`build()` 会把它们转换为普通 IRPlotSpec 里的 coordinate view 关系。
+   * 绑定字段；`build()` 会把它们转换为普通 IRPlotSpec 里的 coordinate view 关系
    */
   marks?: Array<AxisBoundMarkOperation>;
   /**
@@ -47,7 +47,7 @@ export type PlotBuilderConfig = Omit<IRPlotSpec, 'namespace' | 'type' | 'marks' 
    *
    * @description
    * guide 可以使用 `facetId`、`scaffoldId` 或 `trackId` 绑定到 builder 生成的布局；
-   * 这些字段只参与 build 阶段，不会保留到输出 IR。
+   * 这些字段只参与 build 阶段，不会保留到输出 IR
    */
   guides?: Array<AxisBoundGuide>;
 };
@@ -79,18 +79,18 @@ type AxisBoundLegendGuide = Extract<IRPlotGuide, { type: typeof PlotGuide.Legend
  * @description
  * 该类型是 `plotBuilder().facet(...)` 的轻量写法：`row` / `column` 可直接写字段名，
  * `view` 可省略并由 builder 生成。`build()` 会把它展开为 plain `IRPlotSpec.composition`
- * 的 facet arrangement，输入中的便捷字段不会进入 Plot IR。
+ * 的 facet arrangement，输入中的便捷字段不会进入 Plot IR
  */
 export type BuilderFacetInput = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'column'> & {
-  /** 行方向分面字段；字符串会被展开为 `{ field }`。 */
+  /** 行方向分面字段；字符串会被展开为 `{ field }` */
   row?: FacetDimensionInput;
-  /** 列方向分面字段；字符串会被展开为 `{ field }`。 */
+  /** 列方向分面字段；字符串会被展开为 `{ field }` */
   column?: FacetDimensionInput;
-  /** 分面单元对应的 coordinate view；省略时由 builder 基于 facet id 生成。 */
+  /** 分面单元对应的 coordinate view；省略时由 builder 基于 facet id 生成 */
   view?: string;
-  /** 作用于该 facet arrangement 的间距配置。 */
+  /** 作用于该 facet arrangement 的间距配置 */
   spacing?: CompositionSpec['spacing'];
-  /** 作用于该 facet arrangement 的 scale / guide resolve 配置。 */
+  /** 作用于该 facet arrangement 的 scale / guide resolve 配置 */
   resolve?: CompositionSpec['resolve'];
 };
 
@@ -100,14 +100,14 @@ export type BuilderFacetInput = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'c
  * @description
  * 该类型是 `plotBuilder().scaffold(...)` 的共享轨道写法。`coordinate` 可省略并在
  * `build()` 时继承默认 cartesian 配置；最终会被展开为 plain `IRPlotSpec.composition`
- * 的 tracks arrangement，builder-only 字段不会进入 Plot IR。
+ * 的 tracks arrangement，builder-only 字段不会进入 Plot IR
  */
 export type BuilderScaffoldInput = Omit<SharedScaffoldSpec, 'kind' | 'coordinate'> & {
-  /** scaffold 内各 track 使用的坐标系；省略时 builder 使用默认 cartesian2D。 */
+  /** scaffold 内各 track 使用的坐标系；省略时 builder 使用默认 cartesian2D */
   coordinate?: SharedScaffoldSpec['coordinate'];
-  /** 作用于该 scaffold arrangement 的间距配置。 */
+  /** 作用于该 scaffold arrangement 的间距配置 */
   spacing?: CompositionSpec['spacing'];
-  /** 作用于该 scaffold arrangement 的 scale / guide resolve 配置。 */
+  /** 作用于该 scaffold arrangement 的 scale / guide resolve 配置 */
   resolve?: CompositionSpec['resolve'];
 };
 
@@ -128,30 +128,30 @@ type CollectedScaffold = SharedScaffoldSpec & {
  * `PlotBuilder` 提供链式 authoring surface，方便在无 React / SSR 场景中组织 mark、
  * guide、axis、legend、facet 与 scaffold。所有便捷绑定字段都会在 `build()` 前展开为
  * plain `IRPlotSpec`；输出结果只包含标准 Plot IR 字段，可继续交给 `renderPlot(spec, datasets)`
- * 或 `lowerPlots` 使用。
+ * 或 `lowerPlots` 使用
  */
 export type PlotBuilder = {
-  /** 追加一个通用 mark，可携带 builder-only 的轴或拓扑绑定字段。 */
+  /** 追加一个通用 mark，可携带 builder-only 的轴或拓扑绑定字段 */
   mark: (mark: AxisBoundMarkOperation) => PlotBuilder;
-  /** 追加一个通用 guide，可携带 builder-only 的 facet / scaffold / track 绑定字段。 */
+  /** 追加一个通用 guide，可携带 builder-only 的 facet / scaffold / track 绑定字段 */
   guide: (guide: AxisBoundGuide) => PlotBuilder;
-  /** 追加 path mark。 */
+  /** 追加 path mark */
   path: (mark: AxisBoundPathMark) => PlotBuilder;
-  /** 追加 point mark。 */
+  /** 追加 point mark */
   point: (mark: AxisBoundPointMark) => PlotBuilder;
-  /** 追加 interval mark。 */
+  /** 追加 interval mark */
   interval: (mark: AxisBoundIntervalMark) => PlotBuilder;
-  /** 追加 reference mark。 */
+  /** 追加 reference mark */
   reference: (mark: Extract<IRPlotMarkOperation, { type: typeof PlotMark.Reference }>) => PlotBuilder;
-  /** 追加 relation mark。 */
+  /** 追加 relation mark */
   relation: (mark: Extract<IRPlotMarkOperation, { type: typeof PlotMark.Relation }>) => PlotBuilder;
-  /** 追加 axis guide，并支持 builder-only 的拓扑绑定字段。 */
+  /** 追加 axis guide，并支持 builder-only 的拓扑绑定字段 */
   axis: (guide: AxisBoundAxisGuide) => PlotBuilder;
-  /** 追加 legend guide。 */
+  /** 追加 legend guide */
   legend: (guide: AxisBoundLegendGuide) => PlotBuilder;
-  /** 声明 facet 布局，并允许 mark / guide 通过 `facetId` 绑定到对应 view。 */
+  /** 声明 facet 布局，并允许 mark / guide 通过 `facetId` 绑定到对应 view */
   facet: (facet: BuilderFacetInput) => PlotBuilder;
-  /** 声明 shared scaffold 布局，并允许 mark / guide 通过 `trackId` / `scaffoldId` 绑定。 */
+  /** 声明 shared scaffold 布局，并允许 mark / guide 通过 `trackId` / `scaffoldId` 绑定 */
   scaffold: (scaffold: BuilderScaffoldInput) => PlotBuilder;
   /**
    * 生成 schema-valid 的 plain `IRPlotSpec`。
@@ -159,7 +159,7 @@ export type PlotBuilder = {
    * @description
    * 该方法会移除 `xAxisId`、`yAxisId`、`facetId`、`trackId`、`scaffoldId`
    * 等 builder-only 字段，并把它们展开为标准 Plot IR 的 scale、composition 与
-   * coordinate view 关系。
+   * coordinate view 关系
    */
   build: () => IRPlotSpec;
 };

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { ReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
 import { reducerOutputFieldsOf } from './output-fields';
 
-/** count reducer operation schema；只输出组内行数，不读取字段。 */
+/** count reducer operation schema；只输出组内行数，不读取字段 */
 const CountReducerOperationSchema = z
   .strictObject({
     kind: z.literal(ReducerOperationKind.Count).describe('Discriminator: count reducer'),
@@ -12,7 +12,7 @@ const CountReducerOperationSchema = z
   })
   .describe('Count reducer operation');
 
-/** 创建一个按字段读取数值的 reducer operation schema。 */
+/** 创建一个按字段读取数值的 reducer operation schema */
 const createFieldReducerOperationSchema = <TKind extends string>(kind: TKind) =>
   z
     .strictObject({
@@ -22,7 +22,7 @@ const createFieldReducerOperationSchema = <TKind extends string>(kind: TKind) =>
     })
     .describe('Field reducer operation');
 
-/** quantile reducer operation schema；输出指定概率位置的单个分位点。 */
+/** quantile reducer operation schema；输出指定概率位置的单个分位点 */
 const QuantileReducerOperationSchema = z
   .strictObject({
     kind: z.literal(ReducerOperationKind.Quantile).describe('Discriminator: quantile reducer'),
@@ -32,7 +32,7 @@ const QuantileReducerOperationSchema = z
   })
   .describe('Quantile reducer operation');
 
-/** quantile-band reducer 额外分位点输出 schema。 */
+/** quantile-band reducer 额外分位点输出 schema */
 export const QuantileBandPointOutputSchema = z
   .strictObject({
     p: z.number().min(0).max(1).describe('Quantile probability'),
@@ -40,7 +40,7 @@ export const QuantileBandPointOutputSchema = z
   })
   .describe('Quantile-band point output');
 
-/** quantile-band reducer whisker 策略 schema。 */
+/** quantile-band reducer whisker 策略 schema */
 export const QuantileBandWhiskerSpecSchema = z
   .discriminatedUnion('kind', [
     z
@@ -57,7 +57,7 @@ export const QuantileBandWhiskerSpecSchema = z
   ])
   .describe('Quantile-band whisker strategy');
 
-/** quantile-band reducer 输出字段映射 schema；所有输出字段名必须唯一。 */
+/** quantile-band reducer 输出字段映射 schema；所有输出字段名必须唯一 */
 export const QuantileBandOutputsSchema = z
   .strictObject({
     lower: z.string().min(1).describe('Lower boundary output field'),
@@ -104,7 +104,7 @@ export const QuantileBandOutputsSchema = z
   })
   .describe('Quantile-band output field mapping');
 
-/** quantile-band reducer operation schema；用于一次计算区间、分位点、spread 与 whisker 派生字段。 */
+/** quantile-band reducer operation schema；用于一次计算区间、分位点、spread 与 whisker 派生字段 */
 export const QuantileBandReducerOperationSchema = z
   .strictObject({
     kind: z.literal(ReducerOperationKind.QuantileBand).describe('Discriminator: quantile-band reducer'),
@@ -120,7 +120,7 @@ export const QuantileBandReducerOperationSchema = z
   })
   .describe('Quantile-band reducer operation');
 
-/** 内置 reducer operation 的 schema 单一真源；aggregate schema 与 provider definition 共用这些实例。 */
+/** 内置 reducer operation 的 schema 单一真源；aggregate schema 与 provider definition 共用这些实例 */
 export const BuiltinReducerOperationSchemas = Object.freeze({
   Count: CountReducerOperationSchema,
   Sum: createFieldReducerOperationSchema(ReducerOperationKind.Sum),
@@ -133,7 +133,7 @@ export const BuiltinReducerOperationSchemas = Object.freeze({
   QuantileBand: QuantileBandReducerOperationSchema,
 });
 
-/** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供。 */
+/** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
 const ExternalReducerOperationSchema = z
   .looseObject({
     kind: z
@@ -156,7 +156,7 @@ const ExternalReducerOperationSchema = z
   })
   .describe('Custom reducer operation with JSON config');
 
-/** 内置统计 reducer operation schema。 */
+/** 内置统计 reducer operation schema */
 export const BuiltinReducerOperationSchema = z
   .union([
     BuiltinReducerOperationSchemas.Count,
@@ -171,12 +171,12 @@ export const BuiltinReducerOperationSchema = z
   ])
   .describe('Built-in statistic reducer operation');
 
-/** 统计 reducer operation schema；包含内置 kind 与外部注册 kind 开放配置对象。 */
+/** 统计 reducer operation schema；包含内置 kind 与外部注册 kind 开放配置对象 */
 export const ReducerOperationSchema = z
   .union([BuiltinReducerOperationSchema, ExternalReducerOperationSchema])
   .describe('Built-in or custom reducer operation');
 
-/** reducer metrics schema；同一 metrics 数组内的输出字段名必须唯一。 */
+/** reducer metrics schema；同一 metrics 数组内的输出字段名必须唯一 */
 export const ReducerMetricsSchema = z
   .array(ReducerOperationSchema)
   .min(1)

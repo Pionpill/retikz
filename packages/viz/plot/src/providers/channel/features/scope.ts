@@ -33,7 +33,7 @@ const numericScopeChannel = (
     deliver,
   });
 
-/** 允许直接交付到 core Scope 的内置通道名集合。 */
+/** 允许直接交付到 core Scope 的内置通道名集合 */
 export const BUILTIN_SCOPE_CHANNELS = {
   strokeWidth: numericScopeChannel(
     'strokeWidth',
@@ -68,7 +68,7 @@ export const BUILTIN_SCOPE_CHANNELS = {
 
 const eraseScopeChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
-/** 内置 Scope 通道 definition 集合。 */
+/** 内置 Scope 通道 definition 集合 */
 export const SCOPE_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_SCOPE_CHANNELS).map(def =>
   eraseScopeChannelDefinition(def),
 );

@@ -55,7 +55,7 @@ import { DEFAULT_TICK_COUNT, resolvePaddedDomain, safeExtent, scaleTicks } from 
  * 建轴的线性 scale（d3 scaleLinear）
  * @description domain 缺省时从绑定数据值推断（d3 extent）；range 缺省时用 fallback（坐标系尺寸给）。
  *   返回 d3 ScaleLinear：可作 `(value) => number` 投影，也可 `.ticks()` / `.tickFormat()` / `.range([...])` 后续设值。
- *   单值 domain（d0=d1）d3 归一化返回 0.5 → 映射到 range 中点，与早期自写 linear 行为一致。
+ *   单值 domain（d0=d1）d3 归一化返回 0.5 → 映射到 range 中点，与早期自写 linear 行为一致
  */
 type LinearScaleOptions = Omit<IRPlotLinearScale, 'type' | 'name'> & {
   type?: IRPlotLinearScale['type'];
@@ -64,7 +64,7 @@ type LinearScaleOptions = Omit<IRPlotLinearScale, 'type' | 'name'> & {
   applyDomainPadding?: boolean;
 };
 
-/** 解析线性位置比例尺的 domain、range 与映射函数。 */
+/** 解析线性位置比例尺的 domain、range 与映射函数 */
 export const resolveLinearScale = (
   def: LinearScaleOptions,
   values: Array<number>,
@@ -93,14 +93,14 @@ export const resolveLinearScale = (
 /**
  * 建对数 scale（d3 scaleLog，全正 domain）
  * @description 显式 domain 含 0 / 负值 → fail-loud；缺省从正值 extent 推断（空集回退 [1, 10]）。
- *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理。
+ *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理
  */
 type PositionDomainOptions = {
   defaultDomainPadding?: number;
   applyDomainPadding?: boolean;
 };
 
-/** 解析对数位置比例尺的 domain、range 与映射函数。 */
+/** 解析对数位置比例尺的 domain、range 与映射函数 */
 export const resolveLogScale = (
   def: IRPlotLogScale & PositionDomainOptions,
   values: Array<number>,
@@ -139,7 +139,7 @@ export const resolveLogScale = (
 /**
  * 建幂 scale（d3 scalePow）
  * @description 非整数 exponent + 显式 domain 含负值 → fail-loud（避免 d3 sign-preserving 反直觉）；
- *   整数 exponent 允许负 domain。exponent 缺省 2。
+ *   整数 exponent 允许负 domain。exponent 缺省 2
  */
 export const resolvePowScale = (
   def: IRPlotPowScale & PositionDomainOptions,
@@ -177,7 +177,7 @@ export const resolvePowScale = (
 
 /**
  * 建平方根 scale（d3 scalePow exponent 0.5；面积感知）
- * @description 显式 domain 含负值 → fail-loud；缺省从非负值 extent 推断。负数据值由 isValidInput 跳过。
+ * @description 显式 domain 含负值 → fail-loud；缺省从非负值 extent 推断。负数据值由 isValidInput 跳过
  */
 export const resolveSqrtScale = (
   def: IRPlotSqrtScale & PositionDomainOptions,
@@ -214,7 +214,7 @@ export const resolveSqrtScale = (
 /**
  * 建对称对数 scale（d3 scaleSymlog）
  * @description 近零线性、尾部对数，能处理跨零 / 含负的宽幅数据（log 不能）。constant 控制近零线性区宽度（缺省 1）。
- *   domain 缺省从值 extent 推断；负 / 零 domain 合法（symlog 全域有定义），不 fail-loud。
+ *   domain 缺省从值 extent 推断；负 / 零 domain 合法（symlog 全域有定义），不 fail-loud
  */
 export const resolveSymlogScale = (
   def: IRPlotSymlogScale & PositionDomainOptions,
@@ -246,7 +246,7 @@ export const resolveSymlogScale = (
 /**
  * 建径向 scale（d3 scaleRadial；面积感知半径）
  * @description 输出半径使「编码面积」正比于值（开方映射）；极坐标 / 玫瑰图（南丁格尔）的天然值 scale。
- *   domain 缺省从值 extent 推断。
+ *   domain 缺省从值 extent 推断
  */
 export const resolveRadialScale = (
   def: IRPlotRadialScale & PositionDomainOptions,
@@ -298,7 +298,7 @@ export const linearPositionScale = (scale: D3ScaleLinear<number, number>): Posit
 /**
  * 连续数值 scale → PositionScale（linear / log / pow / sqrt / symlog / radial 共用）
  * @description bandwidth=0；isValidInput 拦不可绘的值（log ≤ 0、sqrt / 非整数幂 < 0）→ NaN 跳过；
- *   投影结果非有限（log(0)=-∞）也归 NaN，与连续 scale 跳过非有限值一致。
+ *   投影结果非有限（log(0)=-∞）也归 NaN，与连续 scale 跳过非有限值一致
  */
 export const continuousPositionScale = (
   scale: D3ScaleContinuousNumeric<number, number>,
@@ -398,7 +398,7 @@ export type CategoryOrder = NonNullable<IRDataFieldDefinition['order']>;
 /**
  * 按 order 计算有序的分类域：在 inferCategoryDomain 去重保序基础上再排
  * @description order='appearance'/undefined → 现状出现序去重；'ascending'/'descending' → 全数值按数值比、否则统一 String localeCompare（descending 反序）；
- *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）。
+ *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）
  */
 export const orderedCategoryDomain = (
   values: Array<unknown>,
@@ -625,7 +625,7 @@ const pointScaleDefinition = defineScale<IRPlotPointScale>({
   resolve: (def, values, range) => pointPositionScale(resolvePointScale(def, values, range)),
 });
 
-/** position 族 scale definition（连续 6 + 时间 1 + 分类 2 = 9）：产坐标，喂 coordinate projector + guide。 */
+/** position 族 scale definition（连续 6 + 时间 1 + 分类 2 = 9）：产坐标，喂 coordinate projector + guide */
 export const POSITION_SCALE_DEFINITIONS: ReadonlyArray<AnyScaleDefinition> = [
   linearScaleDefinition,
   logScaleDefinition,
