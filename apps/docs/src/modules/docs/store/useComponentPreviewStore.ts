@@ -1,3 +1,5 @@
+import type { AnimationMode } from '@retikz/react';
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -7,10 +9,12 @@ export type ComponentPreviewState = {
   isExpand: boolean;
   dragEnabled: boolean;
   rendererMode: 'svg' | 'canvas';
+  animationMode: AnimationMode;
   setHideCode: (value: boolean) => void;
   setIsExpand: (value: boolean) => void;
   setDragEnabled: (value: boolean) => void;
   setRendererMode: (value: 'svg' | 'canvas') => void;
+  setAnimationMode: (value: AnimationMode) => void;
   toggleHideCode: () => void;
   toggleIsExpand: () => void;
   toggleDragEnabled: () => void;
@@ -24,10 +28,12 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       isExpand: false,
       dragEnabled: false,
       rendererMode: 'svg',
+      animationMode: 'system',
       setHideCode: value => set({ hideCode: value }),
       setIsExpand: value => set({ isExpand: value }),
       setDragEnabled: value => set({ dragEnabled: value }),
       setRendererMode: value => set({ rendererMode: value }),
+      setAnimationMode: value => set({ animationMode: value }),
       toggleHideCode: () => set({ hideCode: !get().hideCode }),
       toggleIsExpand: () => set({ isExpand: !get().isExpand }),
       toggleDragEnabled: () => set({ dragEnabled: !get().dragEnabled }),

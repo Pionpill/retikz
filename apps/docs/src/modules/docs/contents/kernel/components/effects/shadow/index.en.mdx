@@ -8,16 +8,18 @@ description: Element-level drop shadow — applied to a Node shape / Path main p
 ## Usage
 
 ```tsx
-import { Node, Path, Step } from '@retikz/react';
+import { Node } from '@retikz/react';
 ```
 
 ```tsx
 <Node shape="rectangle" fill="white" shadow="md" />
 ```
 
-`shadow` adds a drop shadow to the primary geometry. The two writings are two ways of filling the same field.
+## Examples
 
-## Presets
+`shadow` adds a drop shadow to the primary geometry. Preset strings and objects are two forms of the same field.
+
+### Presets
 
 The simplest form is a Tailwind-style preset string: `'sm'` / `'md'` / `'lg'` / `'xl'` / `'2xl'` / `'none'`. Larger steps push the shadow farther and softer. `'none'` means an explicit no-shadow (equivalent to omitting it).
 
@@ -25,7 +27,7 @@ The simplest form is a Tailwind-style preset string: `'sm'` / `'md'` / `'lg'` / 
 
 <span style={{ color: '#888' }}>The same white card at five preset steps.</span>
 
-## Object form
+### Object form
 
 For precise control, use an object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`:
 
@@ -40,7 +42,7 @@ Priority is always: **explicit field > preset > default**. The default color is 
   Left: preset + recolor (md base, blue); right: a fully explicit shadow on a Path main path.
 </span>
 
-## Element-level, not group-level
+### Element-level, not group-level
 
 `shadow` follows the primitive itself. A Node's text / label / pin are **separate primitives** and get no shadow — there is no "lift the whole card including its text" (this is an element-level effect, not a group-level one). But a Path's endpoint arrows belong to the main-path primitive and **cast a shadow together with it** (matching the native semantics of SVG's element-level filter / Canvas's single draw pass).
 
@@ -65,7 +67,7 @@ Priority is always: **explicit field > preset > default**. The default color is 
 
 ### shadow object fields
 
-| Field     | Type                                              | Default           | Description                                                                                           |
+| Prop      | Type                                              | Default           | Description                                                                                           |
 | --------- | ------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
 | `preset`  | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'` | —                 | Tailwind-style step seeding offsetX / offsetY / blur / color as defaults; explicit fields override it |
 | `offsetX` | `number`                                          | `0` (from preset) | Horizontal offset (user units)                                                                        |
@@ -77,5 +79,5 @@ Priority is always: **explicit field > preset > default**. The default color is 
 ## Related
 
 - [Blend](/kernel/components/effects/blend): the element-level `blendMode`
-- [Node](/kernel/components/node/overview): full props for a node
-- [Path](/kernel/components/draw/path): full props for a path
+- [Node](/kernel/components/node/overview): minimal usage and topic entry points
+- [Path](/kernel/components/draw/path): path basics, common props, and topic entry points

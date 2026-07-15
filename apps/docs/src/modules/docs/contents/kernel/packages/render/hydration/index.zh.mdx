@@ -20,7 +20,7 @@ retikz 的图是先画出来、再加交互的：服务端或静态先渲染出�
 
 <ComponentPreview files="hydration-click" size="md" />
 
-<p className="text-center text-sm text-muted-foreground">点击橙色节点切换高亮，旁边的计数同步累加。</p>
+点击橙色节点切换高亮，旁边的计数同步累加。
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -93,7 +93,7 @@ const handle = view.hydrate({
 
 `handlers` 是一张 `{ [id]: { 事件名: handler } }` 表，事件名用 `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel`（与 React 的 `on<事件>` 一一对应，去掉 `on` 前缀、首字母小写）。
 
-SSR 后用独立的 `hydrate(root, options)` 入口绑定（容器里已是 SSR 注入的 `<svg>` 字符串）。`options` 里还可给 `renderer: 'svg' | 'canvas'`（缺省 `'svg'`）决定 element 定位口径。要让 context 拿到 meta / 几何 / 动画控制，把 `scene`（用 `@retikz/core` 的 `compileToScene(ir)` 从 IR 编译得到）一并传入；不传则只给最小 context（见下）：
+SSR 后用独立的 `hydrate(svg, options)` 入口绑定。这个入口只水合 SSR 注入后得到的 `<svg>` 根，不支持 Canvas；Canvas 必须使用 `mountCanvas(...).hydrate()`，由 view 提供 Scene、命中查询和坐标映射。要让 standalone SVG 的 context 拿到 meta / 几何 / 动画控制，把 `scene`（用 `@retikz/core` 的 `compileToScene(ir)` 从 IR 编译得到）一并传入；不传则只给最小 context（见下）：
 
 ```ts
 import { compileToScene } from '@retikz/core';
@@ -102,9 +102,10 @@ import { hydrate, mountSvg } from '@retikz/vanilla';
 // mountSvg / mountCanvas 的 view 自带 view.hydrate，context 自动用本 view 的 Scene
 mountSvg(container, ir).hydrate({ handlers: { box: { click: (event, context) => context.animation.restart() } } });
 
-// SSR 后独立水合：传 scene 才得富 context（meta / 几何 / 动画）
+// SSR 后独立水合 SVG：传 scene 才得富 context（meta / 几何 / 动画）
 const scene = compileToScene(ir);
-hydrate(root, { handlers, scene });
+const svg = container.querySelector('svg')!;
+hydrate(svg, { handlers, scene });
 ```
 
 ## handler 的 context

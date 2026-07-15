@@ -95,7 +95,7 @@ The scope bottom uses a custom `rounded-rect` provider. The IR only carries the 
 
 ## Public Helpers
 
-`@retikz/core` exports `defineClip` / `ClipDefinition` / `ClipDefinitionInput` / `ClipResolveContext` / `BUILTIN_CLIPS`. The React and Vanilla package entries re-export the definition helpers as well, so adapter users can import from their current package.
+Import `defineClip` / `ClipDefinition` / `ClipDefinitionInput` / `ClipResolveContext` / `BUILTIN_CLIPS` from `@retikz/core`; the `@retikz/react` and `@retikz/vanilla` package roots do not re-export these definitions.
 
 ## Related
 

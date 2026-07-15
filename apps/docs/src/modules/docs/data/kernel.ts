@@ -10,6 +10,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'concepts',
     label: 'kernel.concepts',
+    document: true,
     pages: [
       {
         id: 'design',
@@ -40,6 +41,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'components',
     label: 'kernel.components',
+    document: true,
     pages: [
       {
         id: 'layout',
@@ -114,6 +116,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'packages',
     label: 'kernel.packages',
+    document: true,
     pages: [
       { id: 'vanilla', label: 'kernel.pkgVanilla' },
       { id: 'tex', label: 'kernel.pkgTex' },
@@ -139,6 +142,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'reference',
     label: 'kernel.reference',
+    document: true,
     pages: [
       {
         id: 'composites',
@@ -169,6 +173,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'examples',
     label: 'kernel.examples',
+    document: true,
     pages: [
       { id: 'karl-circle', label: 'kernel.examplesKarlCircle' },
       { id: 'learning-path', label: 'kernel.examplesLearningPath' },
@@ -178,11 +183,13 @@ export const kernelSection: Array<Section> = [
   {
     id: 'releases',
     label: 'kernel.releases',
+    document: true,
     pages: [
       {
         id: 'changelog',
         label: 'kernel.changelog',
         children: [
+          { id: 'v0-4', label: 'kernel.changelogV04' },
           { id: 'v0-3', label: 'kernel.changelogV03' },
           { id: 'v0-2', label: 'kernel.changelogV02' },
           { id: 'v0-1', label: 'kernel.changelogV01' },

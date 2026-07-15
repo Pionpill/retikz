@@ -10,6 +10,9 @@ Framework-agnostic core of [retikz](https://pionpill.github.io/retikz/) — a Ti
 pnpm add @retikz/core
 ```
 
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
 ## Usage
 
 `@retikz/core` is renderer-agnostic: it turns an IR into a serializable `Scene`. A backend (`@retikz/render`) or runtime (`@retikz/react` / `@retikz/vanilla`) then renders that Scene.

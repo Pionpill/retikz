@@ -10,6 +10,9 @@ Zero-dependency pure computational geometry for [retikz](https://pionpill.github
 pnpm add @retikz/math
 ```
 
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
 ## Usage
 
 Most consumers get the common primitives through `@retikz/core`'s re-exports (`Position`, `point`, `lerp`, `localToWorld` / `worldToLocal`). Depend on `@retikz/math` directly when you need computation that core does not re-export — `intersect`, `triangle`, `circle`, `polygon`, `convexHull`, `ellipse`, or `curve`.

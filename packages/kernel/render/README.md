@@ -12,6 +12,9 @@ retikz 的渲染后端：消费 `@retikz/core` 编译出的 `Scene`，按使用�
 pnpm add @retikz/render @retikz/core
 ```
 
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
 Node Canvas output additionally needs the optional peer:
 
 ```bash

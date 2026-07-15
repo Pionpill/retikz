@@ -1,7 +1,12 @@
 import type { Scene } from '@retikz/core';
 import type { AnimationControls } from '@retikz/render/animation';
 
-import { bindWaapiDescriptors, prefersReducedMotion, sceneHasAnimations } from '@retikz/render/animation';
+import {
+  bindWaapiDescriptors,
+  prefersReducedMotion,
+  resolveAnimationEnabled,
+  sceneHasAnimations,
+} from '@retikz/render/animation';
 import {
   createContextBuilder,
   createHydrationController,
@@ -35,8 +40,8 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
   const animation = options.animation ?? {};
   const idPrefix = output.idPrefix ?? DEFAULT_ID_PREFIX;
   const root = document.createElementNS(SVG_NS, 'svg');
-  // 动画总关：{animation:{enabled:false}} 或 prefers-reduced-motion → 渲染 base 静态（不 emit CSS/WAAPI）
-  const animate = animation.enabled !== false && !prefersReducedMotion();
+  // 未显式配置时跟随系统偏好；显式 enabled 值覆盖系统偏好。
+  const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   let animationControls: AnimationControls | undefined;
   let currentScene: Scene;
   let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();

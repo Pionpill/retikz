@@ -129,6 +129,32 @@ describe('useComponentPreviewStore', () => {
 });
 
 describe('PreviewControlSlotLayer', () => {
+  it('同一位置的插槽分别遵循各自可见性', () => {
+    const slots: Array<PreviewControlSlot> = [
+      {
+        id: 'always-control',
+        placement: 'top-start',
+        visibility: 'always',
+        render: () => <span>Always control</span>,
+      },
+      {
+        id: 'hover-control',
+        placement: 'top-start',
+        visibility: 'hover',
+        render: () => <span>Hover control</span>,
+      },
+    ];
+    const markup = renderToStaticMarkup(<PreviewControlSlotLayer slots={slots} runtime={previewControlRuntime} />);
+
+    expect(markup).toMatch(/pointer-events-auto opacity-100[^>]*><span>Always control/);
+    expect(markup).toMatch(/pointer-events-none opacity-0[^>]*><span>Hover control/);
+
+    const pinnedMarkup = renderToStaticMarkup(
+      <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
+    );
+    expect(pinnedMarkup.match(/pointer-events-auto opacity-100/g)).toHaveLength(2);
+  });
+
   it('canvas 模式下下载按钮切换为 PNG', () => {
     const slots = buildPreviewToolSlots({
       transform: { x: 0, y: 0, scale: 1 },
@@ -149,6 +175,7 @@ describe('PreviewControlSlotLayer', () => {
       <PreviewControlSlotLayer slots={slots} pinned runtime={{ ...previewControlRuntime, rendererMode: 'canvas' }} />,
     );
 
+    expect(slots[0]?.visibility).toBe('hover');
     expect(markup).toContain('aria-label="Download PNG"');
     expect(markup).not.toContain('aria-label="Download SVG"');
   });
@@ -171,6 +198,7 @@ describe('PreviewControlSlotLayer', () => {
       <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
     );
 
+    expect(slots[0]?.visibility).toBe('always');
     expect(markup).toContain('aria-label="标记样式"');
     expect(markup).toContain('圆点');
   });
@@ -190,6 +218,7 @@ describe('PreviewControlSlotLayer', () => {
       <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
     );
 
+    expect(slots[0]?.visibility).toBe('always');
     expect(markup).toContain('aria-label="标记大小"');
     expect(markup).toContain('value="6"');
     expect(markup).toContain('placeholder="输入大小"');
@@ -205,6 +234,7 @@ describe('animation control slots', () => {
     });
     const playingMarkup = renderSlots(slots, previewControlRuntime);
 
+    expect(slots[0]?.visibility).toBe('hover');
     expect(pausedMarkup).toContain('aria-label="Replay"');
     expect(pausedMarkup).toContain('aria-label="Play"');
     expect(pausedMarkup).not.toContain('aria-label="Pause"');

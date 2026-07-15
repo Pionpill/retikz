@@ -11,12 +11,13 @@ import type {
   PreviewActionSlot,
   PreviewControlConfig,
   PreviewControlSlot,
+  PreviewControlsOptions,
   SizeKey,
 } from './types';
 
 import { ComponentPreviewCard } from './ComponentPreviewCard';
 import { useDemoLocationContext } from './context';
-import { buildAnimationControlSlots } from './controls';
+import { mergePreviewControlSlots, resolveBuiltinControlSlots } from './controls';
 import { buildConfiguredControlSlots } from './preview-panel';
 import {
   buildIrJsonKey,
@@ -32,13 +33,15 @@ import {
   vanillaOverrides,
 } from './registry';
 import { buildPreviewSource } from './source-panel';
-import { irHasAnimations, normalizeComponentPreviewFiles } from './utils';
+import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
   /** 主 demo 与附加源码文件；主 demo id 不含 `.demo.tsx` 后缀。 */
   files: ComponentPreviewFiles;
-  /** 复用同目录下另一 demo 的 controls；默认与主 demo 相同。 */
-  controlsName?: string;
+  /** 预览控制能力与局部插槽。 */
+  controls?: PreviewControlsOptions;
+  /** 全屏弹窗 header 动作。 */
+  dialogActions?: Array<PreviewActionSlot>;
   /** 渲染区垂直对齐，默认 center */
   align?: AlignKey;
   /** 渲染区高度档位，默认 `md`。 */
@@ -47,30 +50,12 @@ export type ComponentPreviewProps = {
   previewClassName?: string;
   /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;
-  /** 强制显示 / 隐藏内置动画工具；省略时自动判定。 */
-  replayable?: boolean;
-  /** 自定义预览控制定义，优先于 demo 模块声明控件，并分别针对每个面板 runtime 求值。 */
-  controlSlots?: Array<PreviewControlSlot>;
-  /** 自定义预览控件层是否常驻显示；默认 true。 */
-  controlsAlwaysVisible?: boolean;
-  /** 全屏弹窗 header 动作定义，使用弹窗自己的 runtime 求值。 */
-  dialogActionSlots?: Array<PreviewActionSlot>;
 };
 
 /** MDX 内的演示卡入口。 */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const {
-    files,
-    controlsName,
-    align = 'center',
-    size = 'md',
-    previewClassName,
-    hideCode = false,
-    replayable,
-    controlSlots,
-    controlsAlwaysVisible = true,
-    dialogActionSlots,
-  } = props;
+  const { files, controls, dialogActions, align = 'center', size = 'md', previewClassName, hideCode = false } = props;
+  const controlOptions = controls ?? {};
   const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
   const loc = useDocLocation();
   const { i18n } = useTranslation();
@@ -82,9 +67,16 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;
   const Component = mod?.default;
-  const controlKey = segments ? resolveControlsKey(segments, controlsName ?? name, lang) : null;
+  const controlsDisabled = controlOptions.name === false;
+  const explicitControlsName = typeof controlOptions.name === 'string' ? controlOptions.name : null;
+  const controlKey =
+    segments && !controlsDisabled ? resolveControlsKey(segments, explicitControlsName ?? name, lang) : null;
   const controlModule = controlKey ? controlModules[controlKey] : undefined;
-  const moduleControls = mod?.previewControls ?? resolvePreviewControls(controlModule);
+  const moduleControls = controlsDisabled
+    ? undefined
+    : explicitControlsName === null
+      ? (mod?.previewControls ?? resolvePreviewControls(controlModule))
+      : resolvePreviewControls(controlModule);
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
@@ -146,14 +138,20 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     );
   }
 
-  const previewIr = sourceResult.previewIr;
-  const animated = replayable ?? (previewIr !== null && irHasAnimations(previewIr.ir));
   const controlConfigs = moduleControls?.filter((control): control is PreviewControlConfig => 'kind' in control) ?? [];
   const moduleControlSlots =
     moduleControls?.filter((control): control is PreviewControlSlot => 'render' in control) ?? [];
   const configuredControlSlots = buildConfiguredControlSlots(controlConfigs);
-  const contentControlSlots = controlSlots ?? [...configuredControlSlots, ...moduleControlSlots];
-  const resolvedControlSlots = [...(animated ? buildAnimationControlSlots() : []), ...contentControlSlots];
+  const builtinControlSlots = resolveBuiltinControlSlots({
+    previewIr: sourceResult.previewIr,
+    options: controlOptions,
+  });
+  const resolvedControlSlots = mergePreviewControlSlots(
+    builtinControlSlots,
+    configuredControlSlots,
+    moduleControlSlots,
+    controlOptions.slots,
+  );
 
   return (
     <ComponentPreviewCard
@@ -164,8 +162,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       size={size}
       previewClassName={previewClassName}
       controlSlots={resolvedControlSlots}
-      controlsAlwaysVisible={controlsAlwaysVisible && contentControlSlots.length > 0}
-      dialogActionSlots={dialogActionSlots}
+      dialogActions={dialogActions}
     />
   );
 };

@@ -82,6 +82,7 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
     {
       id: 'preview-tools',
       placement: 'bottom-end',
+      visibility: 'hover',
       render: runtime => (
         <PreviewToolbar className="flex-col">
           <div className={isSmallPreview ? 'hidden' : 'hidden grid-cols-3 gap-0.5 md:grid'}>

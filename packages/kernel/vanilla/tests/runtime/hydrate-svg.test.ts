@@ -3,7 +3,9 @@ import type { IRScene } from '@retikz/core';
 import type { HydrationContext } from '@retikz/render/hydration';
 
 import { compileToScene } from '@retikz/core';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+
+import type { HydrateOptions } from '../../src';
 
 import { hydrate, mountSvg, renderToSvgString } from '../../src';
 
@@ -41,6 +43,11 @@ const findById = (container: Element, id: string): Element | null =>
   container.querySelector(`[data-retikz-id="${id}"]`);
 
 describe('@retikz/vanilla hydrate（SVG 水合）', () => {
+  it('standalone-contract：root 只接受 SVG，options 不暴露 renderer', () => {
+    expectTypeOf<Parameters<typeof hydrate>[0]>().toEqualTypeOf<SVGSVGElement>();
+    expectTypeOf<HydrateOptions>().not.toHaveProperty('renderer');
+  });
+
   it('hydrate-click：mountSvg 后点击带 data-retikz-id 的图元 → 对应 handler 触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -125,6 +132,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
       scene: compileToScene(metaIr),
     });
     findById(richRoot, 'a')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(richCtx?.renderer).toBe('svg');
     expect(richCtx?.meta).toEqual({ series: 'sales', i: 3 });
     expect(richCtx?.geometry).toBeDefined();
 
@@ -144,6 +152,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     });
     findById(minRoot, 'a')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(minCtx?.id).toBe('a');
+    expect(minCtx?.renderer).toBe('svg');
     expect(minCtx?.meta).toBeUndefined();
     expect(minCtx?.geometry).toBeUndefined();
     expect(minCtx?.scene).toBeUndefined();

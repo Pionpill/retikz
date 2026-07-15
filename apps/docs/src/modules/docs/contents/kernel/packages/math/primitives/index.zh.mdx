@@ -1,121 +1,138 @@
 ---
 title: 几何原语
-description: Position / CenteredShape 类型，point 向量运算、lerp、仿射变换与 arc 端点 / bbox 原语的完整签名。
+description: 查询 @retikz/math 的点与向量、仿射变换、外接范围、椭圆和圆弧计算能力。
 ---
 
-`@retikz/math` 的基础计算原语。其中 `Position` / `point` / `lerp` / `localToWorld` / `worldToLocal` 也由 `@retikz/core` re-export，两处导入等价：
+`@retikz/math` 提供完整的几何计算公开面；`@retikz/core` 只为绘图常用值提供便捷转出，并把 `lerp` 别名为 `lerpPoint`。类型 `Position` / `Vector2`、外接范围、椭圆和圆弧 API 仍从 `@retikz/math` 导入。
 
 ```ts
-import { point, lerp, localToWorld } from '@retikz/math';
-// 或（这几个 core 已转出）
-import { point, lerp, localToWorld } from '@retikz/core';
+import { point, vector2, lerpPoint, localToWorld } from '@retikz/core';
+import { type Position, lerp, boundsOf, ellipse } from '@retikz/math';
 ```
 
-## 类型
+- `@retikz/core`：`DEFAULT_EPSILON`、`point`、`vector2`、`lerpPoint`、`localToWorld`、`worldToLocal`。
+- `@retikz/math`：本页全部类型和值，以及[几何算法](/kernel/packages/math/algorithms)中的高阶计算。
+
+## 点与向量
 
 ```ts
-/** 笛卡尔坐标点 [x, y] */
-type Position = [number, number];
+type Vector2 = [number, number];
+type Position = Vector2;
 
-/** 几何计算默认容差（朴素实现，绘图量级够用） */
-const DEFAULT_EPSILON = 1e-9;
-
-/** 「中心 + 可选旋转」形状契约，供仿射变换使用 */
-type CenteredShape = {
-  x: number; // 中心 x
-  y: number; // 中心 y
-  rotate?: number; // 绕中心旋转弧度；省略 / 0 = 不旋转
-};
-
-type ArcBoundingPointsInput = {
-  center: Position;
-  radius: number;
-  startAngleDeg: number;
-  endAngleDeg: number;
-};
-
-type ArcAngleInRangeInput = {
-  startAngleDeg: number;
-  endAngleDeg: number;
-  angleDeg: number;
-  toleranceDeg?: number;
-};
-
-type RayArcInput = ArcBoundingPointsInput & {
-  origin: Position;
-  dir: Position;
-  tolerance?: number;
-};
-
-type EllipseArcPointInput = {
-  center: Position;
-  radiusX: number;
-  radiusY: number;
-  angleDeg: number;
-};
-
-type EllipseArcBoundingPointsInput = Omit<EllipseArcPointInput, 'angleDeg'> & {
-  startAngleDeg: number;
-  endAngleDeg: number;
-};
+isFiniteNumber(value: unknown): value is number;
+isFinitePoint(value: unknown): value is Position;
+isInfiniteNumber(value: unknown): value is number;
 ```
 
-## point 向量运算
+`point` 同时承担点和二维向量的基础运算；所有方法都返回新 tuple，不修改输入。
 
 ```ts
-point.add        (a: Position, b: Position): Position   // a + b
-point.sub        (a: Position, b: Position): Position   // a − b
-point.scale      (a: Position, k: number): Position     // a × k
-point.dot        (a: Position, b: Position): number     // 点积 a·b
-point.cross      (a: Position, b: Position): number     // 二维叉积 a×b（标量）
-point.length     (a: Position): number                  // 模长 |a|
-point.equal      (a: Position, b: Position): boolean    // 精确相等（不带容差）
-point.normalize  (a: Position, fallback?: Position, epsilon?: number): Position
-point.shiftToward(p: Position, target: Position, dist: number): Position
+point.add(a, b); // a + b
+point.sub(a, b); // a - b
+point.scale(a, k); // a * k
+point.dot(a, b); // 点积
+point.cross(a, b); // 二维叉积标量
+point.length(a); // 向量长度
+point.distance(a, b); // 两点距离
+point.along(origin, direction, length); // 顺 direction 前进
+point.against(origin, direction, length); // 逆 direction 后退
+point.normalize(a, fallback?, epsilon?);
+point.shiftToward(p, target, distance);
+point.equal(a, b); // 精确比较
 ```
 
-| 函数          | 参数 / 行为                                                                            |
-| ------------- | -------------------------------------------------------------------------------------- |
-| `normalize`   | `fallback` 零长向量的回退值，默认 `[1, 0]`；`epsilon` 判零阈值，默认 `DEFAULT_EPSILON` |
-| `shiftToward` | 把 `p` 沿 `p→target` 的单位方向移动 `dist`；`dist=0` 或 `p===target` 时原样返回 `p`    |
-
-## lerp 线性插值
+`vector2` 补充语义明确的向量构造和法向量操作：
 
 ```ts
-lerp(a: Position, b: Position, t: number): Position;  // a + (b − a)·t
+vector2.fromPosition(p: Position): Vector2;
+vector2.fromAngleDegrees(angle: number): Vector2;
+vector2.normalize(v: Vector2, fallback?: Vector2, epsilon?: number): Vector2;
+vector2.normalizeOrNull(v: Vector2, epsilon?: number): Vector2 | null;
+vector2.normal(v: Vector2): Vector2;
+
+lerp(a: Position, b: Position, t: number): Position;
 ```
 
-`t=0` 取 `a`，`t=1` 取 `b`；`t` 不做 clamp，可超出 `[0, 1]` 外推。
+`normalize` 的零长回退值默认是 `[1, 0]`；`normalizeOrNull` 遇到零长或非有限向量返回 `null`。`lerp` 不限制 `t`，因此可在 `[0, 1]` 外外推。
+
+下图用同一起点展示向量 `v` 与左手法向量 `normal(v)`；两条箭头保持正交，单位化只改变长度。
+
+<ComponentPreview files="vector-normal" size="sm" hideCode />
 
 ## 仿射变换
 
 ```ts
-localToWorld(shape: CenteredShape, local: Position): Position;  // 本地（中心为原点）→ 世界
-worldToLocal(shape: CenteredShape, world: Position): Position;  // 世界 → 本地（localToWorld 的逆）
+type CenteredShape = {
+  x: number;
+  y: number;
+  rotate?: number; // 绕中心旋转，单位为弧度
+};
+
+localToWorld(shape: CenteredShape, local: Position): Position;
+worldToLocal(shape: CenteredShape, world: Position): Position;
 ```
 
-`shape.rotate` 省略 / 为 0 时退化为纯平移；非零时绕中心按右手系旋转。
+`rotate` 省略或为 `0` 时只有平移；非零时先绕中心旋转，再在本地坐标与世界坐标之间转换。两个函数互为逆变换。
 
-## arc 原语
+## 外接范围
 
-角度约定：SVG **y 向下**，`0°=+x`、`90°=+y`（视觉向下）、角度递增 = 屏幕顺时针。
+外接范围用 `minX` / `minY` / `maxX` / `maxY` 表示；矩形形式则使用左上角与宽高。
 
 ```ts
-arcEndPoint(center: Position, radius: number, angleDeg: number): Position;       // 圆周上该角度的点
-ellipseArcPoint(input: EllipseArcPointInput): Position;  // 椭圆周参数点
+type AxisAlignedBounds = { minX: number; minY: number; maxX: number; maxY: number };
+type BoundsRect = { x: number; y: number; width: number; height: number };
+type BoundsHalfAxes = { halfWidth: number; halfHeight: number };
+type BoundsInsets = { left: number; right: number; top: number; bottom: number };
 
-// 角度是否落在弧 [startDeg, endDeg] 内（含端点，带容差）
+boundsOf(points: ReadonlyArray<Position>): AxisAlignedBounds | undefined;
+mergeBounds(a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisAlignedBounds | undefined;
+boundsToRect(bounds: AxisAlignedBounds): BoundsRect;
+rectToBounds(rect: BoundsRect): AxisAlignedBounds;
+isFiniteBoundsRect(rect: BoundsRect): boolean;
+isPositiveBoundsRect(rect: BoundsRect): boolean;
+boundsCenter(bounds: AxisAlignedBounds): Position;
+boundsHalfAxes(bounds: AxisAlignedBounds): BoundsHalfAxes;
+expandBounds(bounds: AxisAlignedBounds, insets: BoundsInsets): AxisAlignedBounds;
+boundsCorners(bounds: AxisAlignedBounds): Array<Position>;
+```
+
+`boundsOf([])` 与两个空值的 `mergeBounds` 返回 `undefined`，由调用方决定跳过、兜底还是报错。
+
+## 椭圆
+
+```ts
+type Ellipse = CenteredShape & { rx: number; ry: number };
+type CenteredBox = CenteredShape & { width: number; height: number };
+type EllipseCircumscribeMode = 'proportional' | 'equal';
+
+ellipse.center(value: Ellipse): Position;
+ellipse.inscribedInBox(box: CenteredBox): Ellipse;
+ellipse.circumscribedHalfAxes(
+  inner: BoundsHalfAxes,
+  mode?: EllipseCircumscribeMode,
+): BoundsHalfAxes;
+ellipse.contains(value: Ellipse, point: Position): boolean;
+ellipse.boundaryPoint(value: Ellipse, toward: Position): Position;
+```
+
+`contains` 包含边界；零半轴椭圆返回 `false`。`boundaryPoint` 从椭圆中心沿目标方向取边界点，退化椭圆或目标正好位于中心时返回中心。
+
+## 圆弧
+
+角度遵循 SVG 坐标：y 轴向下，`0°` 指向 +x，`90°` 指向 +y；正角度在屏幕上顺时针增加。
+
+```ts
+arcEndPoint(center: Position, radius: number, angleDeg: number): Position;
+ellipseArcPoint(input: EllipseArcPointInput): Position;
 arcAngleInRange(input: ArcAngleInRangeInput): boolean;
-
-// 射线 ∩ 圆弧；返回一般参数方程 origin + s·dir 的正向参数（升序）。零方向返回 []
 rayArc(input: RayArcInput): Array<number>;
-
-// 弧 / 椭圆弧 bbox 的极值候选点（端点 + 区间内 90°·k 方向点）
 arcBoundingPoints(input: ArcBoundingPointsInput): Array<Position>;
 ellipseArcBoundingPoints(input: EllipseArcBoundingPointsInput): Array<Position>;
 ```
 
+对应输入类型 `ArcBoundingPointsInput`、`ArcAngleInRangeInput`、`RayArcInput`、`EllipseArcPointInput` 和 `EllipseArcBoundingPointsInput` 也由 `@retikz/math` 公开。bbox 函数返回端点与区间内轴向极值的候选点，不去重。
+
 <ComponentAlert
-  title="rayArc 返回参数不是点"
-  description="rayArc 返回一般参数方程里的标量 s（命中点 = origin + s·dir），便于取最近命中；与 algorithms 里返回坐标点的 intersect.* 不同。"
+  title="rayArc 返回参数而不是点"
+  description="返回值是方程 origin + s·dir 中按升序排列的正向标量 s，命中点需由调用方代回方程；algorithms 页的 intersect.* 才直接返回坐标点。"
 />

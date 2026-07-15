@@ -32,10 +32,10 @@ const GetStartStep4: FC = () => {
       <Node id="c" position={[200, 0]}>
         C
       </Node>
-      <Draw way={['a', 'b']} />
-      <Draw way={['b', 'c']} />
+      <Draw way={['a', 'b']} arrow="->" />
+      <Draw way={['b', 'c']} arrow="->" />
       <Node id="hint" position={[100, 45]} stroke="none" textColor="gray">
-        clicks: {count}
+        Clicks: {count}
       </Node>
     </Layout>
   );

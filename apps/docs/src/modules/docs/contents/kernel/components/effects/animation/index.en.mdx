@@ -5,23 +5,24 @@ description: Keyframe nodes, paths, and the camera over time with named presets 
 
 Animation transitions a static figure **from one look to another over time**: fade in, draw a line, scale up, spin, shift color, pan the camera. You don't hand-write keyframes — call a **preset factory** (`fadeIn()` / `spin()` …) to get an animation descriptor and attach it to an element's `animations` array.
 
+## Usage
+
 ```tsx
 import { fadeIn, scaleIn } from '@retikz/core';
-import { Layout, Node } from '@retikz/react';
+import { Node } from '@retikz/react';
+```
 
+```tsx
 <Node position={[0, 0]} animations={[fadeIn(), scaleIn()]}>
   hi
-</Node>;
+</Node>
 ```
+
+## Examples
 
 `animations` attaches to `<Node>` / `<Path>` / `<Scope>` (element animation) and `<Layout>` (camera). An element can carry several; they don't interfere. Apart from the `loop` wrapper and the `stagger` choreographer, every preset accepts the common options `{ duration, delay, easing, trigger }`; some add their own (`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …).
 
-<ComponentAlert
-  title="Last frame = resting state, so it degrades"
-  description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, users who prefer reduced motion, or animate={false} make React SVG / Canvas and Vanilla render that resting state — you see the complete final figure, not the possibly-transparent starting point."
-/>
-
-## All animations
+### All animations
 
 | Animation    | Family       | Channel       | What it does                                      |
 | ------------ | ------------ | ------------- | ------------------------------------------------- |
@@ -42,44 +43,7 @@ import { Layout, Node } from '@retikz/react';
 | `stagger`    | choreography | —             | add increasing delay across a group               |
 | `snapshot`   | control      | —             | `snapshotAt` bakes a static frame at a given time |
 
-## preset ↔ AnimationTrack
-
-A preset is just a shorthand for an underlying `AnimationTrack` (property + keyframes + timing), and the two are **fully equivalent**: `fadeIn()` expands to one `opacity` track from 0 to 1, `spin()` to an infinite `rotate` 0→360 track. A preset introduces nothing a track can't express — it only names a common keyframe combination and hands you a factory.
-
-Every preset is a factory for an `AnimationTrack` — call it and you get a JSON track to attach to `animations`. A track describes "keyframes of one property channel over normalized time `[0, 1]`, plus WAAPI-style timing":
-
-```ts
-type AnimationTrack = {
-  property: string; // channel: opacity / scale / scaleX|Y / rotate / translateX|Y / fill / stroke / pathDraw …
-  keyframes: Array<{
-    at: number; // normalized time 0..1, decoupled from duration; sorted ascending by at
-    value: JsonValue; // the ABSOLUTE display value at that time (not a delta): number / color string / [x,y,w,h], narrowed by property
-    easing?: string | [number, number, number, number]; // per-segment easing, overrides the track level
-  }>;
-  duration: number; // one-iteration duration in ms (> 0)
-  delay?: number; // delay before first iteration (ms)
-  easing?: string | [number, number, number, number]; // track-level easing, defaults to linear
-  iterations?: number | 'infinite'; // play count, defaults to 1
-  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // defaults to normal
-  fill?: 'none' | 'forwards' | 'backwards' | 'both'; // value outside the active interval, defaults to forwards
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // defaults to load
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number]; // pivot for scale / scaleX|Y / rotate, defaults to the geometric center
-};
-```
-
-Key convention: **the last frame (`at: 1`) equals the element's base (resting) state** — so ignoring the animation renders the complete final figure, which is exactly what degradation relies on. A preset's output is **field-for-field equal to a hand-written track**, and the common options `{ duration, delay, easing, trigger }` override each preset's defaults. Switch any demo's code panel to the IR / Vanilla tab to see the preset expanded into its raw track — the same shape animation takes inside the IR when persisted or AI-generated.
-
-## Intro
+### Intro
 
 Intro animations **play once on load**, bringing an element from a transparent / offset / shrunk state to its final look. They are element animations attached to a `<Node>` / `<Path>` / `<Scope>`'s `animations`.
 
@@ -98,7 +62,7 @@ Intro animations **play once on load**, bringing an element from a transparent /
 | `slideIn` | `translateX`/`translateY` `offset`→0, sliding back to place from an offset                              | `axis` (`'x'`→`translateX` / `'y'`→`translateY`, defaults to `'x'`), `offset` (starting shift, defaults to `-20`; last frame always `0`) |
 | `drawOn`  | `pathDraw` 0→1, the stroke drawing progressively along the path; only for **stroked** `<Path>` / shapes | — (common options only)                                                                                                                  |
 
-## Emphasis & Loop
+### Emphasis & Loop
 
 Emphasis animations **draw attention** — shift color, flash, rock; loop animations **play continuously** — pulse, spin, or wrap any track into an infinite loop. They are element animations. Emphasis often uses three frames `0 → 0.5 → 1` (with the last frame back at base, so one pass leaves the element unchanged); `flash` repeats twice by default, `wiggle` three times, while `blink` / `pulse` / `spin` use `iterations: 'infinite'` to run forever.
 
@@ -118,7 +82,7 @@ Emphasis animations **draw attention** — shift color, flash, rock; loop animat
 | `spin`       | `rotate` 0→360, infinite and linear, around the geometric center — a typical loader                                                                                 | `origin` (rotation pivot, defaults to the geometric center)                                                                                              |
 | `loop`       | `loop(track, { direction })`: wraps any one-shot track into an infinite loop; produces no new track, layering `iterations` / `direction` onto the track you pass in | `iterations` (defaults to `'infinite'`), `direction` (e.g. `'alternate'`, play back and forth)                                                           |
 
-## Camera & Stagger
+### Camera & Stagger
 
 Camera and stagger are the two animations that act **on the whole, not on a single element's look**: `cameraTo` animates the scene's viewbox, while `stagger` adjusts the start times of a group of animations.
 
@@ -134,7 +98,7 @@ Camera and stagger are the two animations that act **on the whole, not on a sing
 
 <span style={{ color: '#888' }}>Three nodes with the same fadeIn, entering at 0 / 150 / 300ms.</span>
 
-## Triggers & Control
+### Triggers & Control
 
 Once an animation is attached, **when it plays, how it plays, and what happens when it doesn't** are decided by these mechanisms.
 
@@ -160,9 +124,23 @@ const ref = useRef<AnimationControls | null>(null);
 
 `animationRef` / vanilla `view.animation` is the scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/kernel/packages/render/hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
 
-**When it doesn't play**: you pass `animate={false}`, the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. React SVG / Canvas and Vanilla all converge to the resting state; degradation never throws or drops the figure.
+The playback switch has three states. React and Vanilla use different shapes but the same priority:
 
-### Static snapshot (`snapshot` / `snapshotAt`)
+| Intent        | React             | Vanilla                         |
+| ------------- | ----------------- | ------------------------------- |
+| Follow system | omit `animate`    | omit `animation.enabled`        |
+| Force on      | `animate={true}`  | `animation: { enabled: true }`  |
+| Force off     | `animate={false}` | `animation: { enabled: false }` |
+
+<ComponentAlert
+  type="warn"
+  title="Explicit on overrides the system preference"
+  description="animate={true} and animation.enabled: true still play under prefers-reduced-motion. Most apps should omit the switch to follow the system, and force animation only after an explicit user choice or when motion is essential to the experience."
+/>
+
+**When it doesn't play**: you explicitly turn it off, omit the switch while the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. React SVG / Canvas and Vanilla all converge to the resting state; degradation never throws or drops the figure.
+
+#### Static snapshot (`snapshot` / `snapshotAt`)
 
 Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`) to render **a single frame frozen at that time**: no playback, no emitted animation — the value of each **autoplay track** (`trigger: 'load'` / omitted) at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
 
@@ -177,7 +155,79 @@ Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { animation: { snapsh
 </Layout>
 ```
 
-`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides `animate`. Interaction-triggered tracks (`manual` / `visible` / `{ onEvent }`) are **not frozen** in a static frame — they stay at base (settled), since a poster represents "after load, before any interaction has happened"; both backends agree.
+`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides the explicit animation switch. Interaction-triggered tracks (`manual` / `visible` / `{ onEvent }`) are **not frozen** in a static frame — they stay at base (settled), since a poster represents "after load, before any interaction has happened"; both backends agree.
+
+## How it works
+
+> Optional for everyday use; revisit when you want to understand presets, resting states, or graceful degradation.
+
+### preset ↔ AnimationTrack
+
+A preset is just a shorthand for an underlying `AnimationTrack` (property + keyframes + timing), and the two are **fully equivalent**: `fadeIn()` expands to one `opacity` track from 0 to 1, `spin()` to an infinite `rotate` 0→360 track. A preset introduces nothing a track can't express — it only names a common keyframe combination and hands you a factory.
+
+Every preset is a factory for an `AnimationTrack` — call it and you get a JSON track to attach to `animations`. A track describes "keyframes of one property channel over normalized time `[0, 1]`, plus WAAPI-style timing":
+
+```ts
+type AnimationTrack = {
+  property: string; // channel: opacity / scale / rotate / fill / stroke / pathDraw …
+  keyframes: Array<{
+    at: number; // normalized time 0..1, decoupled from duration; sorted by at
+    value: JsonValue; // the absolute display value at that time, not a delta
+    easing?: string | [number, number, number, number]; // segment easing; overrides track level
+  }>;
+  duration: number; // one-iteration duration in ms (> 0)
+  delay?: number; // delay before first iteration (ms)
+  easing?: string | [number, number, number, number]; // track easing; defaults to linear
+  iterations?: number | 'infinite'; // play count; defaults to 1
+  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // defaults to normal
+  fill?: 'none' | 'forwards' | 'backwards' | 'both'; // defaults to forwards
+  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // defaults to load
+  origin?:
+    | 'center'
+    | 'top'
+    | 'right'
+    | 'bottom'
+    | 'left'
+    | 'top-right'
+    | 'top-left'
+    | 'bottom-right'
+    | 'bottom-left'
+    | [number, number]; // scale / rotate pivot; defaults to geometric center
+};
+```
+
+Key convention: **the last frame (`at: 1`) equals the element's base (resting) state** — so ignoring the animation renders the complete final figure, which is exactly what degradation relies on. A preset's output is **field-for-field equal to a hand-written track**, and the common options `{ duration, delay, easing, trigger }` override each preset's defaults. Switch any demo's code panel to the IR / Vanilla tab to see the preset expanded into its raw track — the same shape animation takes inside the IR when persisted or AI-generated.
+
+<ComponentAlert
+  title="Last frame = resting state, so it degrades"
+  description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, an omitted switch with a reduced-motion preference, or an explicit off switch make React SVG / Canvas and Vanilla render that resting state — you see the complete final figure, not the possibly-transparent starting point."
+/>
+
+## API Reference
+
+### Component props
+
+| Prop           | Type                             | Default     | Description                                               |
+| -------------- | -------------------------------- | ----------- | --------------------------------------------------------- |
+| `animations`   | `Array<IRAnimationTrack>`        | —           | Tracks attached to a Node, Path, Scope, or Layout         |
+| `animate`      | `boolean`                        | `undefined` | Layout playback switch; omitted follows system preference |
+| `snapshotAt`   | `number`                         | —           | Layout static-snapshot time in milliseconds               |
+| `animationRef` | `Ref<AnimationControls \| null>` | —           | Layout's scene-level playback control handle              |
+
+### AnimationTrack
+
+| Prop         | Type                                                                 | Default        | Description                                            |
+| ------------ | -------------------------------------------------------------------- | -------------- | ------------------------------------------------------ |
+| `property`   | `string`                                                             | —              | Property channel; `viewBox` is Layout-only             |
+| `keyframes`  | `Array<{ at, value, easing? }>`                                      | —              | Absolute-value keyframes sorted by `at`                |
+| `duration`   | `number`                                                             | —              | Duration of one iteration in milliseconds              |
+| `delay`      | `number`                                                             | `0`            | Delay before the first iteration in milliseconds       |
+| `easing`     | `string \| [number, number, number, number]`                         | `'linear'`     | Track easing; a keyframe can override the next segment |
+| `iterations` | `number \| 'infinite'`                                               | `1`            | Playback count                                         |
+| `direction`  | `'normal' \| 'reverse' \| 'alternate'`<br />`\| 'alternate-reverse'` | `'normal'`     | Direction of each iteration                            |
+| `fill`       | `'none' \| 'forwards' \| 'backwards' \| 'both'`                      | `'forwards'`   | Value used outside the active interval                 |
+| `trigger`    | `'load' \| 'visible' \| 'manual'`<br />`\| { onEvent: string }`      | `'load'`       | Playback trigger                                       |
+| `origin`     | `Anchor \| [number, number]`                                         | element center | Pivot for scale, scaleX/Y, and rotate                  |
 
 ## Related
 

@@ -36,6 +36,7 @@
     },
     {
       "type": "path",
+      "marks": [{ "pos": 1, "mark": { "kind": "arrow" } }],
       "children": [
         { "type": "step", "kind": "move", "to": { "id": "a" } },
         { "type": "step", "kind": "line", "to": { "id": "b" } }
@@ -43,6 +44,7 @@
     },
     {
       "type": "path",
+      "marks": [{ "pos": 1, "mark": { "kind": "arrow" } }],
       "children": [
         { "type": "step", "kind": "move", "to": { "id": "b" } },
         { "type": "step", "kind": "line", "to": { "id": "c" } }
@@ -54,7 +56,7 @@
       "position": [100, 45],
       "stroke": "none",
       "textColor": "gray",
-      "text": "clicks: 0"
+      "text": "0"
     }
   ]
 }

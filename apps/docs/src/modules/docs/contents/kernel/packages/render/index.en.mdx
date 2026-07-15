@@ -5,7 +5,7 @@ description: Lands the renderer-agnostic Scene on a concrete backend — SVG vec
 
 > This is package documentation, not component docs; to draw, start from [Components](/kernel/components/layout).
 
-This group covers how retikz actually paints a figure to the screen. Your figure is first compiled into a **renderer-agnostic Scene**, then handed to a backend: **SVG** emits a vector DOM where every primitive is a real, CSS-targetable element; **Canvas** paints the same Scene as a raster bitmap, suited to many primitives or frequent repaints. Both backends render the same Scene and look identical — pick one by element count and interaction needs, and switch any time. **Hydration** is the mechanism both backends share: render statically first, then bind event handlers back to primitives by id on the client.
+This group covers how retikz actually paints a figure to the screen. Your figure is first compiled into a **renderer-agnostic Scene**, then handed to a backend: **SVG** emits a vector DOM where every primitive is a real, CSS-targetable element; **Canvas** paints the same Scene as a raster bitmap, suited to many primitives or frequent repaints. The backends share Scene semantics and align their output where each backend supports the required feature; check host capabilities and interaction needs before switching. **Hydration** is the mechanism both backends share: render statically first, then bind event handlers back to primitives by id on the client.
 
 ## Responsibilities
 

@@ -30,6 +30,7 @@
     "getStart": "快速开始",
     "releases": "发布",
     "changelog": "更新日志",
+    "changelogV04": "v0.4",
     "changelogV03": "v0.3",
     "changelogV02": "v0.2",
     "changelogV01": "v0.1",
@@ -188,6 +189,10 @@
   "preview": {
     "groupLabel": "组件演示",
     "renderMode": "渲染模式",
+    "animationMode": "动画播放",
+    "animationSystem": "跟随系统",
+    "animationEnabled": "开启",
+    "animationDisabled": "关闭",
     "hideAllCode": "隐藏所有代码",
     "expandAllCode": "展开所有代码",
     "dragComponent": "拖动组件"

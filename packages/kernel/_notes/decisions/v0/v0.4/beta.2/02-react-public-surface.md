@@ -2,6 +2,8 @@
 
 - 状态：Accepted
 - 决策日期：2026-07-11
+- 验收日期：2026-07-14
+- 实现提交：`27695cbe`
 - 关联：[beta.2 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [renderer repackage](../../v0.3/alpha.1/05-renderer-repackage.md) · [`@retikz/react` AGENTS](../../../../../react/AGENTS.md)
 
 ## 背景
@@ -58,17 +60,25 @@ Kernel、Sugar、extension contract、Props 与 `<Layout>` 的 SVG / Canvas 行�
 - `buildPathD`、`buildTransform`、`formatViewBox` 的测试迁到 `@retikz/render`，删除 React 内只为测试保留的转发文件。
 - React `Layout` 的公开 API、SVG / Canvas 与 renderer context 测试继续作为行为等价守卫。
 
-## 验收
+## 最终实现
 
-```bash
-pnpm --filter @retikz/render exec eslint .
-pnpm --filter @retikz/render exec tsc --noEmit
-pnpm --filter @retikz/render exec vitest run
-pnpm --filter @retikz/react exec eslint .
-pnpm --filter @retikz/react exec tsc --noEmit
-pnpm --filter @retikz/react exec vitest run
-pnpm --filter @retikz/react build
-pnpm --filter @retikz/docs exec tsc --noEmit
-```
+- React 包根只聚合 `kernel` 与 `sugar`；`render` 保持包内实现 owner，不再向 npm 根入口传递内部能力。
+- `<Layout>` 从 `render/canvas`、`render/svg`、`render/text` 二级 owner barrel 消费宿主能力。
+- `buildPathD`、`buildTransform`、`formatViewBox` 的公共归属统一到 `@retikz/render/svg`，对应测试迁回 render。
+- React public API 守卫固定保留的 Kernel / Sugar 入口，并明确断言 renderer internals 不存在。
 
-生成的 React 根 `index.d.ts` 不包含本 ADR 的移除清单；代码中不再存在 `export * from './render'` 或 renderer-neutral React 转发。
+## 验证
+
+2026-07-14 在 `next` release 基线上复核：
+
+- `pnpm run check:kernel` 通过，覆盖六个 kernel 包的 ESLint 与 `tsc --noEmit`。
+- `@retikz/render` 全量测试通过：45 files / 374 tests。
+- React public API、unbuilder、Layout runtime 与动画宿主定向回归通过：5 files / 89 tests。
+- 源码与产物入口不再存在 `export * from './render'`、`require` 条件或 renderer-neutral React 转发。
+
+主 agent 对 ADR、changelog、README、双语 docs、实现与测试做 Contract Auditor，未发现 BLOCKING 偏差。
+
+## 遗留边界
+
+- React 的 Canvas host、SVG binding、defs wrapper 与 browser measurer 仍可在包内按 owner 复用，但不承诺 npm 子路径。
+- 若未来开放 React 专属 renderer 扩展面，需要单独设计稳定子路径，不能重新从包根透出内部实现。

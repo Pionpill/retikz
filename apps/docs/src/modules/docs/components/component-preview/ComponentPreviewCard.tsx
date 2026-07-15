@@ -10,6 +10,7 @@ import type { AlignKey, ComponentRenderSource, PreviewActionSlot, PreviewControl
 
 import { ComponentPreviewDialog } from './ComponentPreviewDialog';
 import { alignClass, sizeClass } from './constants';
+import { mergePreviewControlSlots } from './controls';
 import { buildPreviewToolSlots, PreviewPanel, usePreviewPanelState } from './preview-panel';
 import { InlineSourcePanel, useSourcePanelState } from './source-panel';
 import { buildAskAiPrompt, findPrecedingHeading, resolvePreviewCodeVisible } from './utils';
@@ -32,10 +33,8 @@ export type ComponentPreviewCardProps = {
   showAskAi?: boolean;
   /** 分别针对卡片与弹窗面板 runtime 求值的预览控制定义。 */
   controlSlots?: Array<PreviewControlSlot>;
-  /** 自定义预览控件层是否常驻显示，默认 `true`。 */
-  controlsAlwaysVisible?: boolean;
   /** 分别针对弹窗 runtime 求值的全屏 header 动作定义。 */
-  dialogActionSlots?: Array<PreviewActionSlot>;
+  dialogActions?: Array<PreviewActionSlot>;
 };
 
 /** 演示卡核心。 */
@@ -49,8 +48,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     previewClassName,
     showAskAi = true,
     controlSlots,
-    controlsAlwaysVisible = true,
-    dialogActionSlots,
+    dialogActions,
   } = props;
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
@@ -108,6 +106,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     rendererModeFixed: previewState.rendererModeFixed,
     toggleRendererMode: previewState.toggleRendererMode,
   });
+  const resolvedCardControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots);
 
   return (
     <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
@@ -115,8 +114,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
         state={previewState}
         Component={Component}
         activeRender={sourceState.activeRender}
-        controlSlots={[...(controlSlots ?? []), ...previewToolSlots]}
-        controlsAlwaysVisible={controlsAlwaysVisible && (controlSlots?.length ?? 0) > 0}
+        controlSlots={resolvedCardControlSlots}
         className={cn(
           'flex w-full justify-center overflow-hidden p-6 select-none sm:p-10',
           sizeClass[previewState.size],
@@ -144,8 +142,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           align={align}
           initialSize={size}
           controlSlots={controlSlots}
-          controlsAlwaysVisible={controlsAlwaysVisible}
-          dialogActionSlots={dialogActionSlots}
+          dialogActions={dialogActions}
           showAskAi={showAskAi}
           onClose={() => setIsMaximized(false)}
         />

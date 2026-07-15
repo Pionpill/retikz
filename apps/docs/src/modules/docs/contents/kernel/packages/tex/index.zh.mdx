@@ -1,5 +1,5 @@
 ---
-title: TeX 公式
+title: 数学公式
 description: 用 LaTeX 写公式，经 MathJax SVG 降解成 renderer-agnostic 字形路径；文本里用 $...$ / $$...$$ 行内混排，底层经 lowerTex 注入 core。
 ---
 
@@ -30,10 +30,12 @@ const Diagram = () => {
 };
 ```
 
-<ComponentAlert
-  title="需要注入 lowerTex"
-  description="$...$ 仅在注入了 lowerTex（React 经 Layout，vanilla 经 compile.lowerTex）时解析；未注入时 $ 一律字面（现有含 $ 的文本零行为变化），含公式的内容降级不渲染并发出诊断 warn，不会崩。"
-/>
+未注入 `lowerTex` 时，字符串 sugar 与显式 math run 的行为不同：
+
+- **字符串 sugar**：`$...$` / `$$...$$` 不会被解析，美元符号和中间内容都按普通文字保留。
+- **显式 math run**：`{ runs: [{ tex: '...' }] }` 中的公式 segment 会被跳过，并发出 `TEX_LOWERER_MISSING` warning；其他文字段仍渲染。
+
+React 通过 `<Layout lowerTex>` 注入；Vanilla 通过 `compile.lowerTex` 注入。
 
 <ComponentAlert
   type="error"
@@ -107,7 +109,9 @@ const svg = renderToSvgString(spec, { compile: { lowerTex } });
 | `$...$`           | 行内公式（inline 度量，贴文字基线）                            |
 | `$$...$$`         | display 公式（block 度量；独占一个 node 时 = 独立 / 带框公式） |
 | `\$`              | 字面美元符号（不作分隔符）                                     |
-| `{ runs: [...] }` | 显式 run 序列（canonical）；每 run 可单独 `fill` / `font`      |
+| `{ runs: [...] }` | 显式 run 序列（canonical）                                     |
+
+其中 text run 可单独设置 `fill`、`opacity` 与 `font`；math run 可单独设置 `fill` 与 `opacity`。
 
 ## API 参考
 

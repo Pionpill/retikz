@@ -53,7 +53,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 
 <ComponentPreview files="positioning-id-ref" size="xs" />
 
-线段的实际起止点由 retikz 自动算——见 [图元关系](/kernel/concepts/kernel/primitive-relations)。
+线段的实际起止点由 retikz 自动算——见 [图元关系](/kernel/concepts/core/primitive-relations)。
 
 `<Node>` / `<Coordinate>` 不能直接把 `position` 写成节点 id，因为"把一个实体放在另一个实体中心"通常不是最有用的默认。要表达节点之间的关系，用 `{ direction, of, distance? }`；要表达任意二维偏移，用 `{ of, offset }`。这两种写法把布局意图留在文档里，比提前算好每个绝对坐标更容易维护。
 
@@ -109,9 +109,14 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 
 它们只属于 path target，不用于 `<Node>.position` / `<Coordinate>.position`。如果要摆放实体，请用笛卡尔、极坐标、相对定位、偏移定位或比例定位。
 
-## 前向引用要求
+## 引用顺序
 
-字符串引用、`origin: 'node-id'`、`of: 'node-id'`、`between` 端点里的 id 都要求**被引用实体先于引用方定义**（按 IR children 源码顺序）。实体 position 引用未定义 id 时，该实体无法解析；path target 引用未定义 id 时，该 path 无法正常输出，并会产生诊断。
+实体位置与路径目标的解析时机不同：
+
+- `<Node>.position` / `<Coordinate>.position` 中的 `origin`、`of` 和 `between` 会按 IR children 顺序解析，因此被引用实体必须先定义。
+- `<Step>.to` / `<Draw>.way` 中的节点或 Coordinate 引用会延迟到当前命名空间的实体完成注册后解析，因此可以引用同一可解析作用域内稍后定义的实体。
+
+实体位置引用无法解析时，编译会报错；路径目标最终仍找不到对应实体时，该路径无法正常输出，并会产生诊断。
 
 ```tsx
 // ✅ b 引用 a，a 在前
@@ -123,6 +128,14 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 <Node id="b" position={[0, 0]}>B</Node>
 ```
 
+路径引用则可以前置：
+
+```tsx
+<Draw way={['a', 'b']} />
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={[120, 0]}>B</Node>
+```
+
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -132,7 +145,7 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
       位置表达背后的坐标模型：user units、x 右 y 下、viewBox 映射
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/concepts/kernel/primitive-relations">
+  <LinkedCard href="/kernel/concepts/core/primitive-relations">
     <span className="font-semibold">图元关系</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       path 如何引用图元、端点在动态贴边与锁定间解析

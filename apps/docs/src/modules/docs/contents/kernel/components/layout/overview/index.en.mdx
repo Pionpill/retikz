@@ -1,4 +1,4 @@
-﻿---
+---
 title: Layout
 description: Top-level container — accepts a component tree or IR, compiles to Scene, and produces rendered output.
 ---
@@ -114,6 +114,26 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 </RendererModeProvider>;
 ```
 
+### Control animation for a whole subtree
+
+Normally, each `<Layout>` should express its own animation intent through `animate`. An editor, docs preview, or test harness that needs one policy for an entire component tree can wrap it in `AnimationModeProvider`:
+
+```tsx
+import { AnimationModeProvider } from '@retikz/react';
+
+<AnimationModeProvider mode="enabled">
+  <SomeInteractiveChart />
+</AnimationModeProvider>;
+```
+
+| `mode`       | Behavior                                              |
+| ------------ | ----------------------------------------------------- |
+| `'system'`   | The whole subtree follows the reduced-motion setting  |
+| `'enabled'`  | The whole subtree is forced to play animations        |
+| `'disabled'` | The whole subtree is forced to show the static result |
+
+The animation Provider is a host-level override: the nearest `AnimationModeProvider` wins over descendant `<Layout animate>` props, including an explicit opposite value. Without a Provider, `animate` keeps its existing tri-state behavior. `snapshotAt` always wins and produces a static frame.
+
 ## How it works
 
 > Optional for everyday use; revisit when you hit edge cases or want to understand how `<Layout>` handles styles / viewBox / backends.
@@ -129,6 +149,10 @@ When set, `viewBox` overrides the auto-computed range, ignores padding, and is i
 ### Render backend fallback
 
 When the `renderer` prop is omitted, resolution follows **explicit `renderer` prop > context > `'svg'`**, where context comes from the nearest `RendererModeProvider`. A `<Layout>` with an explicit `renderer` is unaffected by the Provider.
+
+### Animation mode priority
+
+Animation resolves in this order: **`snapshotAt` > nearest `AnimationModeProvider` > `animate` > system preference**. Unlike the render-backend Provider, the animation Provider exists to let a host override an entire preview tree, so a descendant's explicit `animate` prop cannot override it.
 
 ### Clipped / empty-space troubleshooting
 
@@ -163,7 +187,7 @@ If a diagram looks clipped or has too much empty space, inspect **View Code → 
 | `embeddables`                                                                             | `Array<EmbeddableTier2Adapter>`                      | —       | Optional escape hatch: explicitly inject embeddable Tier 2 adapters; the primary path is the component static marker, matched by displayName and overriding the marker. See [Composites](/kernel/concepts/design/composite#embeddable-tier-2-writing-tier-2-components-inside-layout) |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` | same as [`<Scope>`](/kernel/components/layout/scope) | —       | Whole-figure cascade graphic state; when set, wraps children in an implicit root `<Scope>`                                                                                                                                                                                            |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                           | same as [`<Scope>`](/kernel/components/layout/scope) | —       | Whole-figure every-X defaults (four channels); wraps the same implicit root scope                                                                                                                                                                                                     |
-| `animate`                                                                                 | `boolean`                                            | `true`  | Whether to play animations; `false` renders the base static figure (no CSS/WAAPI, canvas skips rAF). See [Animation](/kernel/components/effects/animation)                                                                                                                            |
+| `animate`                                                                                 | `boolean`                                            | system  | Omit to follow the system; `true` forces on and `false` forces off. See [Animation](/kernel/components/effects/animation)                                                                                                                                                             |
 | `snapshotAt`                                                                              | `number`                                             | —       | Static-snapshot time (ms): freeze one frame at that instant (no playback), overrides `animate`; SSR poster frames / thumbnails                                                                                                                                                        |
 | `animations`                                                                              | `Array<AnimationTrack>`                              | —       | Scene-root (camera) animation tracks (`viewBox` channel), paired with [`cameraTo()`](/kernel/components/effects/animation)                                                                                                                                                            |
 | `animationRef`                                                                            | `Ref<AnimationControls \| null>`                     | —       | Imperative animation handle out-port: receives `play` / `pause` / `seek` after mount (svg=WAAPI, canvas=rAF clock); `null` when there's no animation                                                                                                                                  |

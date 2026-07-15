@@ -199,4 +199,17 @@ describe('react canvas 动画', () => {
     );
     expect(rafSpy).not.toHaveBeenCalled();
   });
+
+  it('renderer="canvas" + animate={true} 覆盖 reduced-motion', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    );
+    await mount(
+      <Layout renderer="canvas" width={100} height={100} animate={true}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+      </Layout>,
+    );
+    expect(rafSpy).toHaveBeenCalled();
+  });
 });

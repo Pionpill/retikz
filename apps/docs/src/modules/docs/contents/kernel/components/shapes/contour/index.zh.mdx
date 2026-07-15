@@ -35,13 +35,15 @@ import { Node } from '@retikz/react';
 />
 ```
 
+### 例子
+
 `points` 是一圈**局部系顶点**（至少 3 个，隐式闭合，边为直线）。你**不需要预居中**——core 按这圈点的 AABB 中心自动归一化，把 Node 的 `position` 对齐到轮廓的几何中心。下例两个节点用同一形状，但右侧的点整体偏了一段：自动居中后两者渲染完全一致。
 
 <ComponentPreview files="node-contour" size="sm" />
 
 `cornerRadius` 给**每个顶点**统一倒一个圆角（用户单位），省略 / `0` = 尖角，逐角夹紧到不自交的最大半径——复用与 `polygon` / `roundedCorners` 同一套 fillet 引擎。
 
-### 可连接
+#### 可连接
 
 `contour` 的关键价值是它**仍然是 Node**：另一条 `<Path>` / `<Draw>` 能按 id 连到它，连线端点经 `boundaryPoint` 落在轮廓边上的精确交点（射线 ∩ 轮廓），而不是外接矩形。
 
@@ -77,7 +79,7 @@ import { Node } from '@retikz/react';
 
 ## 相关
 
-- [Node](/kernel/components/node/overview)：节点的完整属性
+- [Node](/kernel/components/node/overview)：节点最小用法与定位、内容、几何、样式主题入口
 - [Polygon](../polygon)：正多边形（同一套轮廓引擎，顶点由边数推导）
 - [Path](/kernel/components/draw/path)：画一条任意轮廓线（非节点）
 - [Shapes](/kernel/components/shapes)：形状分组入口与完整定义

@@ -25,6 +25,7 @@ import type { AlignKey, ComponentRenderSource, PreviewActionSlot, PreviewControl
 
 import { ToolbarIconButton } from './components';
 import { alignClass } from './constants';
+import { mergePreviewControlSlots } from './controls';
 import {
   downloadPreviewImage,
   PAN_STEP,
@@ -51,10 +52,8 @@ export type ComponentPreviewDialogProps = {
   initialSize: SizeKey;
   /** 针对弹窗独立 runtime 求值的预览控制定义。 */
   controlSlots?: Array<PreviewControlSlot>;
-  /** 自定义预览控件层是否常驻显示。 */
-  controlsAlwaysVisible?: boolean;
   /** 针对弹窗独立 runtime 求值的 header 动作定义。 */
-  dialogActionSlots?: Array<PreviewActionSlot>;
+  dialogActions?: Array<PreviewActionSlot>;
   /** 是否展示源码 header 的 Ask AI 动作。 */
   showAskAi?: boolean;
   /** 关闭并卸载弹窗。 */
@@ -72,6 +71,7 @@ const buildDialogPreviewToolSlots = (state: ReturnType<typeof usePreviewPanelSta
   {
     id: 'dialog-preview-tools',
     placement: 'bottom-end',
+    visibility: 'hover',
     render: () => (
       <PreviewToolbar>
         <PreviewToolbarButton label="Pan up" onClick={() => state.panBy(0, -PAN_STEP)}>
@@ -106,18 +106,7 @@ const buildDialogPreviewToolSlots = (state: ReturnType<typeof usePreviewPanelSta
 
 /** 拥有独立预览与源码 controller 的全屏演示弹窗。 */
 export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => {
-  const {
-    name,
-    Component,
-    source,
-    align,
-    initialSize,
-    controlSlots,
-    controlsAlwaysVisible = true,
-    dialogActionSlots,
-    showAskAi = true,
-    onClose,
-  } = props;
+  const { name, Component, source, align, initialSize, controlSlots, dialogActions, showAskAi = true, onClose } = props;
   const [globalDefaults] = useState(() => {
     const { rendererMode, dragEnabled } = useComponentPreviewStore.getState();
     return { rendererMode, dragEnabled };
@@ -137,6 +126,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
   const aiCurrentPage = useAiChatStore(state => state.currentPage);
   const hasCode = sourceState.views.length > 0;
   const previewToolSlots = buildDialogPreviewToolSlots(previewState);
+  const resolvedDialogControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots);
   const downloadLabel = previewState.rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
 
   const handleAskAi = () => {
@@ -150,8 +140,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       state={previewState}
       Component={Component}
       activeRender={sourceState.activeRender}
-      controlSlots={[...(controlSlots ?? []), ...previewToolSlots]}
-      controlsAlwaysVisible={controlsAlwaysVisible}
+      controlSlots={resolvedDialogControlSlots}
       className={cn('flex h-full w-full justify-center overflow-hidden p-10 select-none', alignClass[align])}
       style={DOT_PATTERN_STYLE}
       pinControlsOnClick={false}
@@ -167,8 +156,8 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
         <header className="flex shrink-0 items-center justify-between border-b px-4 py-2">
           <DialogTitle className="font-mono text-sm font-normal text-muted-foreground">{name}</DialogTitle>
           <div className="flex items-center gap-1">
-            {dialogActionSlots?.map(slot => (
-              <span key={slot.id}>{slot.render(previewState.runtime)}</span>
+            {dialogActions?.map(action => (
+              <span key={action.id}>{action.render(previewState.runtime)}</span>
             ))}
             <RendererModeButton
               rendererMode={previewState.rendererMode}

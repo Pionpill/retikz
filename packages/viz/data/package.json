@@ -9,6 +9,9 @@
   },
   "description": "retikz data layer: JSON-serializable data models, field resolution, and transform pipeline for visualization packages.",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
@@ -37,15 +40,14 @@
     }
   },
   "publishConfig": {
-    "main": "dist/lib/index.cjs",
-    "module": "dist/es/index.js",
-    "types": "dist/lib/index.d.ts",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/types/index.d.ts",
     "exports": {
       ".": {
-        "types": "./dist/lib/index.d.ts",
-        "import": "./dist/es/index.js",
-        "require": "./dist/lib/index.cjs",
-        "default": "./dist/es/index.js"
+        "types": "./dist/types/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
       }
     }
   },

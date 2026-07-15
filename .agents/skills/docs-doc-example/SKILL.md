@@ -1,6 +1,6 @@
 ---
 name: docs-doc-example
-description: retikz 示例页规范：`apps/docs/src/contents/<module>/examples/**` 的 6 段结构、累加式 step demo、Prompt/能力/限制/扩展阅读写法、多文件 demo 与 diff 约定。通用文档规则见 docs-doc-principle。retikz 专用。
+description: retikz 示例页规范：`apps/docs/src/contents/{module}/examples/**` 的 6 段结构、累加式 step demo、Prompt/能力/限制/扩展阅读写法、多文件 demo 与 diff 约定。通用文档规则见 docs-doc-principle。retikz 专用。
 ---
 
 # 示例类文档写法
@@ -154,7 +154,7 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 
 ## 阅读时间
 
-教程类，目标 ≤ 10 分钟。超过就拆子页（如 example 太大，可拆成「基础版 / 完整版」两页，或按主题拆「Karl 单位圆 - 几何篇 / 装饰篇」）。
+教程类推荐目标约 10 分钟，但时间只作为可读性诊断，不构成 BLOCKING，也不能单独触发拆页。超出推荐时先检查步骤是否重复、阶段目标是否清晰、是否能跳读；只有读者任务或教程主线能独立成立时才拆子页（如「基础版 / 完整版」或按主题拆篇）。
 
 7-9 step + 引言 + Prompt + 能力 + 限制 + 扩展阅读 一般在 8-10 分钟以内。
 

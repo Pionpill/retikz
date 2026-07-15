@@ -5,7 +5,11 @@ description: Paints the same Scene as a raster bitmap — immediate-mode drawing
 
 > This is @retikz/render package documentation, not component docs; to draw, start from [Components](/kernel/components/layout).
 
-The Canvas backend paints the figure as a raster bitmap rather than a DOM. It renders the same Scene as SVG and looks identical; the difference is that the whole figure is one canvas instead of an element tree. With no per-primitive DOM nodes, it stays steadier than SVG when you have hundreds of primitives or need frequent repaints / animation. The trade-off is losing CSS hit-testing and accessibility — both of which retikz makes up for with coordinate hit-testing and the same hydration semantics.
+The Canvas backend paints the figure as a raster bitmap rather than a DOM. It consumes the same Scene as SVG and aligns drawing semantics where the backend supports them; the whole figure is one canvas instead of an element tree. With no per-primitive DOM nodes, it usually stays steadier than SVG when you have hundreds of primitives or need frequent repaints / animation. The trade-off is losing per-element CSS selection and native accessibility semantics. Coordinate hit-testing restores interaction targeting, not DOM capabilities.
+
+The preview below shares the same IR as the [SVG page](/kernel/packages/render/svg), fixed to Canvas output. Geometry and styling come from one Scene, while the final artifact is a single bitmap canvas.
+
+<ComponentPreview files="shared-scene" size="sm" hideCode />
 
 ## How to use it
 
@@ -28,11 +32,18 @@ const view = mountCanvas(container, ir);
 // view.root is the <canvas>; view.update(next) repaints; view.dispose() unmounts
 ```
 
-The input matches SVG: a `Scene`, `IR`, or vanilla plain spec. `devicePixelRatio` defaults to `globalThis.devicePixelRatio` (falling back to 1), so high-DPI screens stay crisp automatically.
+The two entries have different input contracts:
+
+| Entry                 | Accepted input                                  | Output     |
+| --------------------- | ----------------------------------------------- | ---------- |
+| React `<Layout>`      | JSX `children`<br />or `IRScene`                | `<canvas>` |
+| Vanilla `mountCanvas` | `Scene` / `IRScene`<br />or `VanillaFigureSpec` | `<canvas>` |
+
+`devicePixelRatio` defaults to `globalThis.devicePixelRatio` (falling back to 1), preserving enough bitmap resolution for high-DPI screens.
 
 ## Adding interaction to a Canvas figure
 
-A canvas has no DOM primitives, so locating one relies on **coordinate hit-testing**: the pointer's client pixels are mapped back into Scene coordinates, then geometry hit-testing yields a primitive `id`. That locating is wrapped inside `view.hydrate`, and the code is identical to SVG:
+A canvas has no DOM primitives, so locating one relies on **coordinate hit-testing**: the pointer's client pixels are mapped back into Scene coordinates, then geometry hit-testing yields a primitive `id`. That locating is wrapped inside `view.hydrate`, while the handler registry has the same shape as SVG:
 
 ```ts
 const view = mountCanvas(container, ir);
@@ -42,12 +53,21 @@ const handle = view.hydrate({
 // handle.dispose() unbinds
 ```
 
-The same `handlers` table behaves identically under SVG and Canvas — see [Hydration](/kernel/packages/render/hydration).
+The same `handlers` table works under SVG and Canvas; the locating implementation and host fields such as `context.element` still differ — see [Hydration](/kernel/packages/render/hydration).
 
 <ComponentAlert
   title="Low-level drawing / hit-testing (for custom integrations)"
   description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; ordinary usage only needs mountCanvas top."
 />
+
+## Known limits
+
+Canvas support depends on the 2D APIs and resource loaders supplied by the host. Low-level `drawScene` accepts `warnUnsupported` for diagnostics; without it, diagnostics go to `console.warn`.
+
+- If the host lacks `createConicGradient`, conic-gradient paint is skipped with a warning.
+- Image paint needs `getImage` to return a decoded image. React `<Layout renderer="canvas">` supplies a loader and repaints after loading. In v0.4, Vanilla `mountCanvas` does not expose `getImage`, so image paint is skipped with a warning; custom hosts can call `renderToCanvas` / `drawScene` with a loader and repaint when it becomes ready.
+- When calling `drawScene` directly, patterns and exact non-uniform gradient strokes depend on `createOffscreen`. Browser `renderToCanvas` supplies a default offscreen context; other hosts must inject one.
+- A missing or currently unsupported paint / clip resource is skipped with a warning.
 
 ## Node image export
 
@@ -71,7 +91,7 @@ const png = await renderSceneToImage(scene, {
 });
 ```
 
-`renderSceneToImage` consumes a compiled `Scene` and reuses `drawScene`, so gradients, patterns, clips, markers, and animation snapshots stay aligned with browser Canvas. `width` / `height` are CSS-sized dimensions; the encoded bitmap is multiplied by `devicePixelRatio`.
+`renderSceneToImage` consumes a compiled `Scene` and reuses `drawScene`. `width` / `height` are CSS-sized dimensions, and the encoded bitmap is multiplied by `devicePixelRatio`; exact effects still depend on the selected native canvas host.
 
 ## Canvas or SVG
 
@@ -83,4 +103,4 @@ const png = await renderSceneToImage(scene, {
 | CSS / selectors | One opaque canvas            | Every primitive hit-testable |
 | Default         | Explicit `renderer="canvas"` | Yes                          |
 
-Use Canvas for hundreds of primitives or frequent repaints / animation; use the default [SVG](/kernel/packages/render/svg) for a modest number of primitives, crisp vectors, or CSS interaction. Both render the same Scene and share the same hydration code — switch any time.
+Use Canvas for hundreds of primitives or frequent repaints / animation; use the default [SVG](/kernel/packages/render/svg) for a modest number of primitives, crisp vectors, per-element CSS, or native accessibility semantics. Both share Scene and handler-registry semantics, but check the Canvas capability limits above before switching.

@@ -21,6 +21,9 @@ export type PreviewControlPlacement =
   | 'bottom-center'
   | 'bottom-end';
 
+/** 预览控制插槽的可见策略。 */
+export type PreviewControlVisibility = 'hover' | 'always';
+
 /** 预览控制运行时，由宿主卡片或弹窗提供给控制插槽。 */
 export type PreviewControlRuntime = {
   /** 重新挂载演示子树。 */
@@ -51,8 +54,20 @@ export type PreviewControlSlot = {
   id: string;
   /** 插槽在预览区九宫格中的位置。 */
   placement?: PreviewControlPlacement;
+  /** 插槽可见策略。 */
+  visibility: PreviewControlVisibility;
   /** 根据当前预览上下文渲染插槽内容。 */
   render: (runtime: PreviewControlRuntime) => ReactNode;
+};
+
+/** ComponentPreview 的预览控制配置。 */
+export type PreviewControlsOptions = {
+  /** controls 定义名；缺省使用主 demo 名，false 禁用内容 controls。 */
+  name?: string | false;
+  /** 动画 controls 覆盖；缺省时根据可用 IR 自动判定。 */
+  animation?: boolean;
+  /** 在共享与 demo controls 后追加的局部插槽。 */
+  slots?: Array<PreviewControlSlot>;
 };
 
 /** 预览动作插槽。 */
@@ -79,6 +94,8 @@ export type PreviewSelectControlConfig = {
   defaultValue: string;
   options: Array<PreviewControlOption>;
   placement?: PreviewControlPlacement;
+  /** 生成 slot 的可见策略；缺省为 always。 */
+  visibility?: PreviewControlVisibility;
 };
 
 /** 文本输入类预览控件。 */
@@ -89,6 +106,8 @@ export type PreviewInputControlConfig = {
   defaultValue: string;
   placeholder?: string;
   placement?: PreviewControlPlacement;
+  /** 生成 slot 的可见策略；缺省为 always。 */
+  visibility?: PreviewControlVisibility;
 };
 
 /** 常见预览控件的声明式配置。 */

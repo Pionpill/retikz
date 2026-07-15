@@ -1,0 +1,36 @@
+---
+title: Packages
+description: Choose the Vanilla, formula, geometry, or rendering entry and understand how it connects to core.
+---
+
+The packages section helps when choosing an installation entry or using lower-level capabilities. Everyday React authoring starts with `@retikz/react`; the pages here focus on the framework-free runtime, formula integration, pure computational geometry, and rendering backends that share the same core contract.
+
+## Responsibilities
+
+| Package           | Responsibility                      | Reach for it when                                |
+| ----------------- | ----------------------------------- | ------------------------------------------------ |
+| `@retikz/vanilla` | Plain specs, browser mounts, SSR    | Working without React or rendering strings       |
+| `@retikz/tex`     | Lower formulas into glyph paths     | Rendering mathematics inside node text           |
+| `@retikz/math`    | Pure computational geometry         | Reusing vectors, affine, arcs, and intersections |
+| `@retikz/render`  | Scene to SVG / Canvas and hydration | Integrating or choosing a render backend         |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/vanilla">
+    <span className="font-semibold">Vanilla Runtime</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Plain specs, SVG / Canvas mounts, and SSR</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/tex">
+    <span className="font-semibold">Math Typesetting</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">MathJax SVG lowering and React integration</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/math">
+    <span className="font-semibold">Computational Geometry</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Geometry primitives and reusable algorithms</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/render">
+    <span className="font-semibold">Renderer</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">SVG, Canvas, and hydration runtime</span>
+  </LinkedCard>
+</div>

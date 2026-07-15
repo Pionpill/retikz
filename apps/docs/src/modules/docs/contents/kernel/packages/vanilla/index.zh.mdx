@@ -30,7 +30,13 @@ const svg = renderToSvgString(spec);
 const view = mount(document.querySelector('#diagram')!, spec);
 ```
 
-`figure({ children })` 是单层图的简写；需要缓存、局部失效或未来增量更新时，用 `layers` 明确分层。
+`figure({ children })` 会生成默认 layer。需要明确绘制顺序、稳定的 layer id 或 `cache` 元数据时，再用 `layers` 分层；v0.4 的更新仍是整图重渲染，不提供局部失效。
+
+## 从 spec 到输出
+
+plain spec 会先由 `normalizeFigureSpec` 归一成 core IR（核心 JSON 描述），再经 `compileToScene` 生成 renderer 消费的 `Scene`。`renderToSvgString`、`mountSvg` 与 `mountCanvas` 会在收到 plain spec 时自动执行这条管线。
+
+<ComponentPreview files="vanilla-pipeline" size="sm" hideCode />
 
 ## Runtime 入口
 
@@ -42,7 +48,7 @@ const view = mount(document.querySelector('#diagram')!, spec);
 | `mountCanvas`       | 显式挂载 Canvas                      | `CanvasView`                 |
 | `hydrate`           | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationHandle`            |
 
-`view.update(nextSpec)` 当前仍是整图重渲染，但 root 元素 identity 保持稳定。plain spec 会保留 layer 和 identity metadata，为后续 `patch` / `invalidate` 做准备。
+`view.update(nextSpec)` 当前仍是整图重渲染，但 root 元素 identity 保持稳定。plain spec 的 layer 顺序、layer id、`cache` hint 和子节点 identity 会保存在 `view.runtimeMeta`；这些 metadata 不代表已经支持局部 patch 或 invalidate。
 
 ## 选项结构
 
@@ -52,7 +58,7 @@ const view = mount(document.querySelector('#diagram')!, spec);
 renderToSvgString(spec, {
   output: { width: 640, height: 360, idPrefix: 'flow' },
   compile: { composites, measureText },
-  animation: { enabled: false, snapshotAt: 1000 },
+  animation: { enabled: true },
 });
 
 mount(canvasRoot, spec, {
@@ -64,35 +70,51 @@ mount(canvasRoot, spec, {
 
 `figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas 后端使用。
 
+`animation.enabled` 省略时跟随系统的「减少动态效果」偏好；显式 `true` 强制开启，显式 `false` 强制关闭。`snapshotAt` 仍会覆盖播放开关并输出静态截帧。
+
 ## 分层与嵌入
 
-`layer(id, options, children)` 是 authoring 边界。`cache` 是 runtime hint，不进入 core IR；`zIndex` 只决定 layer stack 排序，相同值保持声明顺序。
+`layer(id, options, children)` 是 authoring 边界。`cache` 是保存在 runtime metadata 中的 hint，不进入 core IR；`zIndex` 只决定 layer stack 排序，相同值保持声明顺序。
 
 Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它只按 `kind` 找到注入的 adapter，把 props 静态 lower 成 core IR child、datasets 和 composite definitions。
 
 ```ts
-import { embed, figure, layer } from '@retikz/vanilla';
+import type { VanillaTier2Adapter } from '@retikz/vanilla';
+import { embed, figure, layer, node, renderToSvgString } from '@retikz/vanilla';
+
+type BadgeProps = { label: string };
+
+const badgeAdapter: VanillaTier2Adapter<BadgeProps> = {
+  kind: 'badge',
+  namespace: 'badge',
+  lower: (props, context) => ({
+    node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
+    datasets: {},
+    makeComposites: () => [],
+  }),
+};
 
 const spec = figure({
-  layers: [
-    layer('chart', [
-      embed('my-chart', 'sales', {
-        dataRef: 'sales',
-        x: 'month',
-        y: 'value',
-      }),
-    ]),
-  ],
+  layers: [layer('content', [embed('badge', 'sales', { label: 'Sales' })])],
 });
+
+const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 ```
+
+`normalizeFigureSpec` 从 `@retikz/vanilla` 包根导出；`adapters` 是 render / mount 选项的顶层字段，不放在 `compile` 里。若需要在渲染前检查归一结果，可直接调用 `normalizeFigureSpec(spec, { adapters })`，读取返回的 `ir`、`composites` 与 `runtimeMeta`。
 
 ## API 摘要
 
-| API                   | 类型   | 说明                               |
-| --------------------- | ------ | ---------------------------------- |
-| `figure`              | helper | 构造 plain spec 根对象             |
-| `layer`               | helper | 构造分层边界                       |
-| `node` / `coordinate` | helper | 构造具名或匿名节点、坐标点         |
-| `path`                | helper | 构造 path，`way` 复用 Draw way DSL |
-| `embed`               | helper | 构造 Tier 2 嵌入节点               |
-| `VanillaTier2Adapter` | type   | 定义 `embed()` 的 lowering 适配器  |
+| API                   | 类型          | 说明                                         |
+| --------------------- | ------------- | -------------------------------------------- |
+| `figure`              | authoring     | 构造 plain spec 根对象                       |
+| `layer`               | authoring     | 构造带顺序与 metadata 的 layer 边界          |
+| `node`                | authoring     | 构造具名或匿名 node                          |
+| `coordinate`          | authoring     | 构造必须带 id 的具名 coordinate              |
+| `path`                | authoring     | 构造 path，`way` 复用 Draw way DSL           |
+| `scope`               | authoring     | 构造样式与 namespace 作用域                  |
+| `embed`               | authoring     | 构造 Tier 2 嵌入节点                         |
+| `VanillaLayerCache`   | authoring     | 提供 layer `cache` metadata 的可选值         |
+| `isVanillaFigureSpec` | normalization | 判断输入是否为 version 1 plain spec          |
+| `normalizeFigureSpec` | normalization | 生成 core IR、composites 与 runtime metadata |
+| `VanillaTier2Adapter` | type          | 定义 `embed()` 的 lowering 适配器            |

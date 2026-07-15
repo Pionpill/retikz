@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
 
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { modules, resolveModule } from '@/modules/docs/data';
@@ -35,15 +35,15 @@ export const MobileNav: FC = () => {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="size-7 cursor-pointer rounded-sm lg:hidden"
-          aria-label="Open navigation"
-        >
-          <Menu className="size-4" />
-        </Button>
+      <SheetTrigger
+        className={buttonVariants({
+          variant: 'ghost',
+          size: 'icon',
+          className: 'size-7 cursor-pointer rounded-sm lg:hidden',
+        })}
+        aria-label="Open navigation"
+      >
+        <Menu className="size-4" />
       </SheetTrigger>
       <SheetContent side="left" className="w-80 p-0 flex flex-col gap-0">
         <SheetHeader className="border-b px-4 py-3 shrink-0 gap-2">

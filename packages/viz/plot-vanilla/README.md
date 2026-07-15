@@ -18,4 +18,17 @@ hosts can keep the SVG output and the runtime plot mark lineage artifact togethe
 or passing `lineage: false`, preserves the original SVG string return value.
 Both entrypoints avoid DOM globals and are suitable for SSR / build-time generation.
 
+## Install
+
+```bash
+pnpm add @retikz/plot-vanilla
+```
+
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
+```ts
+import { plotBuilder } from '@retikz/plot-vanilla';
+```
+
 See the [retikz docs site](https://pionpill.github.io/retikz/) for usage.

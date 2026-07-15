@@ -1,4 +1,4 @@
-﻿---
+---
 title: Draw
 description: Sugar component — a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
 ---
@@ -34,7 +34,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 | `{ bend }`  | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes             |
 | `{ arc }`   | Circular arc around the previous point by angles and radius      | Angle marks, circle fragments, geometry diagrams |
 
-> There is also a **smooth curve through points** — a smooth curve passing through a list of points (centripetal Catmull-Rom). It is a `<Step kind="smooth">`-only capability, not a `way` operator (`way` is a "previous → next" pairwise infix and cannot carry a multi-point curve), so use it inside `<Path>` / `<Step>`. See [Step §Smooth](/kernel/components/draw/step).
+> There is also a **smooth curve through points** — a smooth curve passing through a list of points (centripetal Catmull-Rom). It is a `<Step kind="smooth">`-only capability, not a `way` operator (`way` is a "previous → next" pairwise infix and cannot carry a multi-point curve), so use it inside `<Path>` / `<Step>`. See [Step curves §Smooth curve through points](/kernel/components/draw/step#smooth-curve-through-points-smooth).
 
 #### Quadratic Bezier
 
@@ -86,7 +86,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 #### Position Rules
 
-`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind — line / fold use normalized path position, curves (curve / cubic / bend) use Bezier t, and arc / circle / ellipse use angular parametrization; see [Step §Geometric meaning of t](/kernel/components/draw/step#geometric-meaning-of-t-per-step-kind) for the full per-kind table and demos.
+`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind — line / fold use normalized path position, curves (curve / cubic / bend) use Bezier t, and arc / circle / ellipse use angular parametrization; see [Step labels §Geometric meaning of t](/kernel/components/draw/step#geometric-meaning-of-t-per-step-kind) for the full per-kind table and demos.
 
 Line segments are the most direct: `start` / `midway` / `end` land near the start, middle, and end of the segment.
 
@@ -118,7 +118,7 @@ Folded segments divide t evenly across the folded legs. `midway` lands on the co
 
 #### Rounded corners
 
-`roundedCorners` rounds the joints between adjacent `line` segments into tangent arcs (TikZ `rounded corners=`). It changes the **path geometry** — the joint vertices are pulled back and an arc is inserted, so it affects the bounding box, arc length, and connection points; this is unlike `lineJoin`, which only styles the stroke render. Radii that are too large are clamped to the adjacent segment lengths. Below: sharp on top, the same polyline with `roundedCorners={24}` underneath:
+`roundedCorners` rounds the joints between adjacent `line` segments into tangent arcs. It changes the **path geometry** — the joint vertices are pulled back and an arc is inserted, so it affects the bounding box, arc length, and connection points; this is unlike `lineJoin`, which only styles the stroke render. Radii that are too large are clamped to the adjacent segment lengths. Below: sharp on top, the same polyline with `roundedCorners={24}` underneath:
 
 <ComponentPreview files="draw-rounded-corners" size="sm" />
 
@@ -147,29 +147,29 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/ker
 
 ### Props
 
-| Prop             | Type                                                                                           | Default        | Description                                                                                                                                                                            |
-| ---------------- | ---------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `way`            | `Array<WayItem>`                                                                               | —              | At least 2 items; first is always `move`, rest become `line` / `fold` / `cycle` and related actions based on item form                                                                 |
-| `stroke`         | `string`                                                                                       | `currentColor` | Stroke color                                                                                                                                                                           |
-| `strokeWidth`    | `number`                                                                                       | `1`            | Stroke width                                                                                                                                                                           |
-| `dashPattern`    | `Array<number>`                                                                                | —              | Dash / gap length sequence, for example `[4, 2]`                                                                                                                                       |
-| `dashOffset`     | `number`                                                                                       | —              | Dash start offset in path user units                                                                                                                                                   |
-| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | Stroke endpoint shape                                                                                                                                                                  |
-| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | Stroke corner shape (visual only, geometry unchanged)                                                                                                                                  |
-| `roundedCorners` | `number`                                                                                       | —              | **Geometric** corner radius for line-to-line joints (TikZ `rounded corners=`); changes the path geometry, unlike `lineJoin`. See [Path §Rounded corners](/kernel/components/draw/path) |
-| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | Semantic stroke preset; explicit `strokeWidth` wins                                                                                                                                    |
-| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                              | —              | Path-level arrow direction                                                                                                                                                             |
-| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`       | —              | Detailed arrow configuration; see [Arrow](/kernel/components/draw/arrow)                                                                                                               |
-| `fill`           | `string \| PaintSpec`                                                                          | `'none'`       | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image)                                                                                                         |
-| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | Fill rule                                                                                                                                                                              |
-| `opacity`        | `number`                                                                                       | —              | Whole-path opacity, 0..1                                                                                                                                                               |
-| `fillOpacity`    | `number`                                                                                       | —              | Fill-only opacity, 0..1                                                                                                                                                                |
-| `strokeOpacity`  | `number`                                                                                       | —              | Stroke-only opacity, 0..1                                                                                                                                                              |
-| `zIndex`         | `number` (integer)                                                                             | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`)                      |
+| Prop             | Type                                                                                           | Default        | Description                                                                                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `way`            | `Array<WayItem>`                                                                               | —              | At least 2 items; first is always `move`, rest become `line` / `fold` / `cycle` and related actions based on item form                                            |
+| `stroke`         | `string`                                                                                       | `currentColor` | Stroke color                                                                                                                                                      |
+| `strokeWidth`    | `number`                                                                                       | `1`            | Stroke width                                                                                                                                                      |
+| `dashPattern`    | `Array<number>`                                                                                | —              | Dash / gap length sequence, for example `[4, 2]`                                                                                                                  |
+| `dashOffset`     | `number`                                                                                       | —              | Dash start offset in path user units                                                                                                                              |
+| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | Stroke endpoint shape                                                                                                                                             |
+| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | Stroke corner shape (visual only, geometry unchanged)                                                                                                             |
+| `roundedCorners` | `number`                                                                                       | —              | **Geometric** corner radius for line-to-line joints; changes the path geometry, unlike `lineJoin`. See [Path §Rounded corners](/kernel/components/draw/path)      |
+| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | Semantic stroke preset; explicit `strokeWidth` wins                                                                                                               |
+| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                              | —              | Path-level arrow direction                                                                                                                                        |
+| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`       | —              | Detailed arrow configuration; see [Arrow](/kernel/components/draw/arrow)                                                                                          |
+| `fill`           | `string \| PaintSpec`                                                                          | `'none'`       | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image)                                                                                    |
+| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | Fill rule                                                                                                                                                         |
+| `opacity`        | `number`                                                                                       | —              | Whole-path opacity, 0..1                                                                                                                                          |
+| `fillOpacity`    | `number`                                                                                       | —              | Fill-only opacity, 0..1                                                                                                                                           |
+| `strokeOpacity`  | `number`                                                                                       | —              | Stroke-only opacity, 0..1                                                                                                                                         |
+| `zIndex`         | `number` (integer)                                                                             | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`) |
 
 <Comparison target="tikz" title="Style Naming">
 
-`lineCap` / `lineJoin` map to TikZ `line cap` / `line join`; `strokeOpacity` is stroke-only opacity; `thickness` presets reuse semantic stroke-width names from `ultra thin` through `ultra thick`.
+`lineCap` / `lineJoin` map to TikZ `line cap` / `line join`, and `roundedCorners` maps to `rounded corners=`; `strokeOpacity` is stroke-only opacity; `thickness` presets reuse semantic stroke-width names from `ultra thin` through `ultra thick`.
 
 </Comparison>
 

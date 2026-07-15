@@ -13,6 +13,8 @@ export type {
   PreviewControlPlacement,
   PreviewControlRuntime,
   PreviewControlSlot,
+  PreviewControlsOptions,
+  PreviewControlVisibility,
   PreviewSourceConfig,
   RendererMode,
   SizeKey,

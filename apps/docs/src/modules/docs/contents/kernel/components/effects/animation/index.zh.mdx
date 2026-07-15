@@ -5,23 +5,24 @@ description: 给节点 / 路径 / 镜头按时间打关键帧——入场、强�
 
 动画让固定图元**按时间从一个样子过渡到另一个样子**：淡入、画线、放大、旋转、变色、镜头推拉。你不用手写关键帧——调一个 **preset 工厂**（`fadeIn()` / `spin()` …）得到一条动画描述，挂到元素的 `animations` 数组即可。
 
+## 用法
+
 ```tsx
 import { fadeIn, scaleIn } from '@retikz/core';
-import { Layout, Node } from '@retikz/react';
+import { Node } from '@retikz/react';
+```
 
+```tsx
 <Node position={[0, 0]} animations={[fadeIn(), scaleIn()]}>
   hi
-</Node>;
+</Node>
 ```
+
+## 例子
 
 `animations` 可挂在 `<Node>` / `<Path>` / `<Scope>`（元素动画）与 `<Layout>`（镜头）。一个元素能挂多条，互不干扰。除包装器 `loop` 与编排 `stagger` 外，每个 preset 都接受公共项 `{ duration, delay, easing, trigger }`，部分另有专有项（`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …）。
 
-<ComponentAlert
-  title="末帧 = 静止态，所以能降级"
-  description="入场类动画的最后一帧就是元素本来的样子（fadeIn 的末帧 = 不透明）。于是不支持动画的环境、用户开了「减少动态效果」、或你传 animate={false} 时，React SVG / Canvas 与 Vanilla 都直接渲染这个静止态——看到的是完整最终图，不是动画起点那个可能全透明的样子。"
-/>
-
-## 全部动画一览
+### 全部动画一览
 
 | 动画         | 家族 | 底层通道      | 说明                              |
 | ------------ | ---- | ------------- | --------------------------------- |
@@ -42,44 +43,7 @@ import { Layout, Node } from '@retikz/react';
 | `stagger`    | 编排 | —             | 给一组动画依次叠加延迟            |
 | `snapshot`   | 控制 | —             | `snapshotAt` 把某时刻烘焙成静态帧 |
 
-## preset 与 AnimationTrack
-
-preset 只是底层 `AnimationTrack`（property + keyframes + timing）的便捷写法，二者**完全等价**：`fadeIn()` 展开出来就是一条 `opacity` 从 0 到 1 的 track，`spin()` 就是一条 `rotate` 0→360 的无限 track。preset 不引入任何 track 表达不了的能力，只是把常用关键帧组合命名好、给个工厂函数。
-
-每个 preset 都是 `AnimationTrack` 的工厂——调用即得一条 JSON track，挂到 `animations` 上。track 描述「某个属性通道在归一化时间 `[0, 1]` 上的关键帧 + WAAPI 风格的时序」：
-
-```ts
-type AnimationTrack = {
-  property: string; // 动画通道：opacity / scale / scaleX|Y / rotate / translateX|Y / fill / stroke / pathDraw …
-  keyframes: Array<{
-    at: number; // 归一化时间 0..1，与 duration 解耦；按 at 升序
-    value: JsonValue; // 该时刻的「绝对展示值」（不是增量）：数字 / 颜色串 / [x,y,w,h]，按 property narrow
-    easing?: string | [number, number, number, number]; // 段级缓动，覆盖 track 级
-  }>;
-  duration: number; // 单次迭代时长（毫秒，> 0）
-  delay?: number; // 起播延迟（毫秒）
-  easing?: string | [number, number, number, number]; // track 级缓动，缺省 linear
-  iterations?: number | 'infinite'; // 播放次数，缺省 1
-  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // 缺省 normal
-  fill?: 'none' | 'forwards' | 'backwards' | 'both'; // 活动区间外取值，缺省 forwards
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // 缺省 load
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number]; // scale / scaleX|Y / rotate 的支点，缺省几何中心
-};
-```
-
-关键约定：**末帧（`at: 1`）= 元素 base（静止）态**——所以忽略动画时渲染的就是完整成品图，这正是降级的依据。preset 产出**逐字段等于手写 track**；公共项 `{ duration, delay, easing, trigger }` 都可覆盖各 preset 的默认。在下面任意 demo 的代码面板切到 IR / Vanilla Tab，就能看到 preset 展开后的原始 track——这也是动画在持久化 / AI 生成时落到 IR 里的真实形态。
-
-## 入场
+### 入场
 
 入场动画在**页面加载时播一次**，把元素从透明 / 偏移 / 缩小状态带到最终样子。它们都是元素动画，挂在 `<Node>` / `<Path>` / `<Scope>` 的 `animations` 上。
 
@@ -98,7 +62,7 @@ type AnimationTrack = {
 | `slideIn` | `translateX`/`translateY` `offset`→0，从偏移滑回原位                     | `axis`（`'x'`→`translateX` / `'y'`→`translateY`，缺省 `'x'`）、`offset`（起始位移，缺省 `-20`，末帧恒为 `0`） |
 | `drawOn`  | `pathDraw` 0→1，描边沿路径逐渐画出；仅对**有描边**的 `<Path>` / 形状有效 | —（仅公共项）                                                                                                 |
 
-## 强调与循环
+### 强调与循环
 
 强调动画**吸引注意**——变色、闪烁、抖动；循环动画**持续播放**——脉冲、旋转、把任意 track 变成无限循环。它们都是元素动画。强调多用 `0 → 0.5 → 1` 三帧往返（末帧仍回 base，一次播完元素停在原样）；`flash` 默认重复 2 次、`wiggle` 3 次，`blink` / `pulse` / `spin` 用 `iterations: 'infinite'` 持续播。
 
@@ -118,7 +82,7 @@ type AnimationTrack = {
 | `spin`       | `rotate` 0→360 无限匀速，绕几何中心——典型 loader                                                                          | `origin`（旋转支点，缺省几何中心）                                                                           |
 | `loop`       | `loop(track, { direction })`：把任意一次性 track 包成无限循环；不产新 track，给传入 track 叠加 `iterations` / `direction` | `iterations`（缺省 `'infinite'`）、`direction`（如 `'alternate'`，往返播）                                   |
 
-## 镜头与编排
+### 镜头与编排
 
 镜头与编排是**作用于整体、而非单个元素外观**的两类动画：`cameraTo` 动的是 scene 的取景框，`stagger` 调的是一组动画的起始时间。
 
@@ -134,7 +98,7 @@ type AnimationTrack = {
 
 <span style={{ color: '#888' }}>三个节点同样 fadeIn，依次延迟 0 / 150 / 300ms 入场。</span>
 
-## 触发与控制
+### 触发与控制
 
 挂好动画后，**何时播、怎么播、不播时怎么办**由这些机制决定。
 
@@ -160,9 +124,23 @@ const ref = useRef<AnimationControls | null>(null);
 
 `animationRef` / vanilla `view.animation` 是 scene 级时钟句柄：SVG 控制整图交互动画的 WAAPI 句柄，Canvas 控制共享 rAF 时钟。handler 内要控制命中的具体图元时，用水合的 [`context.animation`](/kernel/packages/render/hydration#handler-的-context)，两后端都是 per-id 控制。
 
-**何时不播**：传 `animate={false}`、用户系统开了「减少动态效果」（`prefers-reduced-motion`）、或后端不支持动画。React SVG / Canvas 与 Vanilla 都会降级到静止态；降级时**不报错、不丢图**，渲染完整静止图。
+播放总开关是三态的。React 与 Vanilla 的写法不同，但优先级一致：
 
-### 静态截帧（`snapshot` / `snapshotAt`）
+| 意图     | React             | Vanilla                         |
+| -------- | ----------------- | ------------------------------- |
+| 跟随系统 | 省略 `animate`    | 省略 `animation.enabled`        |
+| 强制开启 | `animate={true}`  | `animation: { enabled: true }`  |
+| 强制关闭 | `animate={false}` | `animation: { enabled: false }` |
+
+<ComponentAlert
+  type="warn"
+  title="显式开启会覆盖系统偏好"
+  description="animate={true} 与 animation.enabled: true 即使在 prefers-reduced-motion 下也会播放。一般应用应省略开关来跟随系统，只在用户主动选择或必须展示动态效果时强制开启。"
+/>
+
+**何时不播**：显式关闭、未传开关且用户系统开了「减少动态效果」（`prefers-reduced-motion`），或后端不支持动画。React SVG / Canvas 与 Vanilla 都会降级到静止态；降级时**不报错、不丢图**，渲染完整静止图。
+
+#### 静态截帧（`snapshot` / `snapshotAt`）
 
 给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把**自动播 track**（`trigger: 'load'` / 缺省）在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
 
@@ -177,7 +155,79 @@ const ref = useRef<AnimationControls | null>(null);
 </Layout>
 ```
 
-`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖 `animate`。交互触发的 track（`manual` / `visible` / `{ onEvent }`）在静态帧里**不参与定格**、停在 base（settled）——海报代表「加载后、尚未发生任何交互」的样子，两后端一致。
+`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖显式动画开关。交互触发的 track（`manual` / `visible` / `{ onEvent }`）在静态帧里**不参与定格**、停在 base（settled）——海报代表「加载后、尚未发生任何交互」的样子，两后端一致。
+
+## 技术原理
+
+> 上手阶段可跳过本节；需要理解 preset、静止态与降级行为时再回来读。
+
+### preset 与 AnimationTrack
+
+preset 只是底层 `AnimationTrack`（property + keyframes + timing）的便捷写法，二者**完全等价**：`fadeIn()` 展开出来就是一条 `opacity` 从 0 到 1 的 track，`spin()` 就是一条 `rotate` 0→360 的无限 track。preset 不引入任何 track 表达不了的能力，只是把常用关键帧组合命名好、给个工厂函数。
+
+每个 preset 都是 `AnimationTrack` 的工厂——调用即得一条 JSON track，挂到 `animations` 上。track 描述「某个属性通道在归一化时间 `[0, 1]` 上的关键帧 + WAAPI 风格的时序」：
+
+```ts
+type AnimationTrack = {
+  property: string; // 动画通道：opacity / scale / rotate / fill / stroke / pathDraw …
+  keyframes: Array<{
+    at: number; // 归一化时间 0..1，与 duration 解耦；按 at 升序
+    value: JsonValue; // 该时刻的绝对展示值，不是增量
+    easing?: string | [number, number, number, number]; // 段级缓动，覆盖 track 级
+  }>;
+  duration: number; // 单次迭代时长（毫秒，> 0）
+  delay?: number; // 起播延迟（毫秒）
+  easing?: string | [number, number, number, number]; // track 级缓动，缺省 linear
+  iterations?: number | 'infinite'; // 播放次数，缺省 1
+  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // 缺省 normal
+  fill?: 'none' | 'forwards' | 'backwards' | 'both'; // 缺省 forwards
+  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // 缺省 load
+  origin?:
+    | 'center'
+    | 'top'
+    | 'right'
+    | 'bottom'
+    | 'left'
+    | 'top-right'
+    | 'top-left'
+    | 'bottom-right'
+    | 'bottom-left'
+    | [number, number]; // 缩放与旋转支点，缺省几何中心
+};
+```
+
+关键约定：**末帧（`at: 1`）= 元素 base（静止）态**——所以忽略动画时渲染的就是完整成品图，这正是降级的依据。preset 产出**逐字段等于手写 track**；公共项 `{ duration, delay, easing, trigger }` 都可覆盖各 preset 的默认。在任意 demo 的代码面板切到 IR / Vanilla Tab，就能看到 preset 展开后的原始 track——这也是动画在持久化 / AI 生成时落到 IR 里的真实形态。
+
+<ComponentAlert
+  title="末帧 = 静止态，所以能降级"
+  description="入场类动画的最后一帧就是元素本来的样子（fadeIn 的末帧 = 不透明）。于是不支持动画的环境、未显式开关且用户开了「减少动态效果」、或你显式关闭动画时，React SVG / Canvas 与 Vanilla 都直接渲染这个静止态——看到的是完整最终图，不是动画起点那个可能全透明的样子。"
+/>
+
+## API 参考
+
+### 组件属性
+
+| 属性           | 类型                             | 默认值      | 描述                                        |
+| -------------- | -------------------------------- | ----------- | ------------------------------------------- |
+| `animations`   | `Array<IRAnimationTrack>`        | —           | 挂到 Node、Path、Scope 或 Layout 的动画轨道 |
+| `animate`      | `boolean`                        | `undefined` | Layout 播放总开关；省略时跟随系统偏好       |
+| `snapshotAt`   | `number`                         | —           | Layout 静态截帧时间，单位毫秒               |
+| `animationRef` | `Ref<AnimationControls \| null>` | —           | Layout 的 scene 级播放控制句柄              |
+
+### AnimationTrack
+
+| 属性         | 类型                                                                 | 默认值       | 描述                                  |
+| ------------ | -------------------------------------------------------------------- | ------------ | ------------------------------------- |
+| `property`   | `string`                                                             | —            | 动画属性通道；`viewBox` 只用于 Layout |
+| `keyframes`  | `Array<{ at, value, easing? }>`                                      | —            | 按 `at` 升序的绝对值关键帧            |
+| `duration`   | `number`                                                             | —            | 单次迭代时长，单位毫秒                |
+| `delay`      | `number`                                                             | `0`          | 首次迭代前延迟，单位毫秒              |
+| `easing`     | `string \| [number, number, number, number]`                         | `'linear'`   | track 级缓动；关键帧可覆盖下一段      |
+| `iterations` | `number \| 'infinite'`                                               | `1`          | 播放次数                              |
+| `direction`  | `'normal' \| 'reverse' \| 'alternate'`<br />`\| 'alternate-reverse'` | `'normal'`   | 每轮播放方向                          |
+| `fill`       | `'none' \| 'forwards' \| 'backwards' \| 'both'`                      | `'forwards'` | 活动区间外采用的值                    |
+| `trigger`    | `'load' \| 'visible' \| 'manual'`<br />`\| { onEvent: string }`      | `'load'`     | 播放触发方式                          |
+| `origin`     | `Anchor \| [number, number]`                                         | 几何中心     | scale、scaleX/Y 与 rotate 的支点      |
 
 ## 相关
 

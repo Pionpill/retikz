@@ -1,5 +1,7 @@
 import type { Release } from '../types';
 
+import { esmOnlyChangeItem } from './esm-only';
+
 export const kernelV04: Release = {
   minor: 'v0.4',
   stableDate: null,
@@ -23,12 +25,12 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-11',
+          date: '2026-07-14',
           summary: {
             zh: '修正 `intersect.lineCircle` 的退化方向判断：短但有效的方向向量现在与其单位化写法得到相同交点，不再因向量缩放误返回空结果。',
             en: 'Fixes degenerate-direction detection in `intersect.lineCircle`: short but valid direction vectors now produce the same intersections as their normalized form instead of incorrectly returning no hits.',
           },
-          items: [],
+          items: [esmOnlyChangeItem],
         },
         {
           version: 'alpha.3',
@@ -92,12 +94,13 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-12',
+          date: '2026-07-14',
           summary: {
             zh: '收紧 Scene 输入边界，并新增 `lowerIRToKernel`，让 adapter 可复用 core 的 composite lowering，把 Tier 2 IR 转成纯 Kernel IR。',
             en: 'Tightens Scene input boundaries and adds `lowerIRToKernel`, allowing adapters to reuse core composite lowering and turn Tier 2 IR into pure Kernel IR.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'BREAKING：Scene schema 闭合', en: 'BREAKING: closed Scene schemas' },
               content: {
@@ -215,6 +218,24 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'beta.2',
+          date: '2026-07-14',
+          summary: {
+            zh: '统一发布为 ESM-only、要求 Node.js 24 或更高版本，并提供跨 React / Vanilla 共用的动画开关三态解析。',
+            en: 'Standardizes publishing on ESM-only with Node.js 24 or newer and provides shared tri-state animation resolution for React and Vanilla.',
+          },
+          items: [
+            esmOnlyChangeItem,
+            {
+              label: { zh: '动画三态解析', en: 'Tri-state animation resolution' },
+              content: {
+                zh: '`@retikz/render/animation` 新增 `resolveAnimationEnabled(explicit, reducedMotion)`：未传时跟随系统偏好，显式 `true` / `false` 强制开启或关闭；低层 SVG / Canvas renderer 只消费解析后的布尔值。',
+                en: '`@retikz/render/animation` adds `resolveAnimationEnabled(explicit, reducedMotion)`: omission follows the system preference, while explicit `true` / `false` forces animation on or off. Low-level SVG and Canvas renderers consume only the resolved boolean.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.4',
           date: '2026-06-16',
           summary: {
@@ -236,12 +257,13 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-12',
+          date: '2026-07-14',
           summary: {
-            zh: '`@retikz/react` 收紧包根公共面，并让 `convertIRToReactNode` 通过 definitions 把 Tier 2 IR 还原为语义等价的 Kernel JSX。',
-            en: '`@retikz/react` narrows its root public surface and lets `convertIRToReactNode` lower Tier 2 IR through definitions into semantically equivalent Kernel JSX.',
+            zh: '`@retikz/react` 收紧包根公共面，让 Tier 2 IR 可转换为语义等价的 Kernel JSX，并统一动画三态与宿主级覆盖。',
+            en: '`@retikz/react` narrows its root public surface, converts Tier 2 IR into semantically equivalent Kernel JSX, and unifies tri-state animation with host-level overrides.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'BREAKING：移除 renderer internals', en: 'BREAKING: renderer internals removed' },
               content: {
@@ -250,10 +272,10 @@ export const kernelV04: Release = {
               },
             },
             {
-              label: { zh: '减少动态效果后端对齐', en: 'Reduced-motion backend parity' },
+              label: { zh: '动画三态与宿主覆盖', en: 'Tri-state animation and host override' },
               content: {
-                zh: 'React SVG（默认 renderer）现在与 React Canvas、Vanilla SVG / Canvas 一样响应系统 `prefers-reduced-motion`，并在偏好变化时即时切换到完整静止态。',
-                en: 'React SVG, the default renderer, now respects `prefers-reduced-motion` like React Canvas and Vanilla SVG / Canvas, switching immediately to the complete resting state when the preference changes.',
+                zh: '省略 `<Layout animate>` 时跟随 `prefers-reduced-motion`，显式 `true` / `false` 强制开关；`AnimationModeProvider` 可用 `system` / `enabled` / `disabled` 覆盖整棵子树，最近 Provider 生效，`snapshotAt` 始终优先。此前依赖“显式 true 仍尊重系统偏好”的调用应改为省略该值。',
+                en: 'Omitting `<Layout animate>` follows `prefers-reduced-motion`, while explicit `true` / `false` forces animation on or off. `AnimationModeProvider` can override a subtree with `system`, `enabled`, or `disabled`; the nearest provider wins and `snapshotAt` remains highest priority. Callers that relied on explicit `true` still respecting the system preference should omit the value.',
               },
             },
             {
@@ -323,12 +345,13 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-12',
+          date: '2026-07-14',
           summary: {
-            zh: '以可结构化比较的 plain object spec 取代旧 `Figure` builder；新增统一 `mount`、layer metadata 和显式 Tier 2 adapter，并收紧 Vanilla 包根公共面。',
-            en: 'Replaces the old `Figure` builder with structurally comparable plain-object specs; adds unified `mount`, layer metadata, and explicit Tier 2 adapters while tightening the Vanilla root API.',
+            zh: '以可结构化比较的 plain object spec 取代旧 `Figure` builder；新增统一 `mount`、layer metadata、显式 Tier 2 adapter 与动画三态语义，并收紧 Vanilla 包根公共面。',
+            en: 'Replaces the old `Figure` builder with structurally comparable plain-object specs; adds unified `mount`, layer metadata, explicit Tier 2 adapters, and tri-state animation semantics while tightening the Vanilla root API.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'BREAKING：移除 Figure builder', en: 'BREAKING: Figure builder removed' },
               content: {
@@ -337,10 +360,24 @@ export const kernelV04: Release = {
               },
             },
             {
+              label: { zh: 'BREAKING：standalone hydrate 仅支持 SVG', en: 'BREAKING: standalone hydrate is SVG-only' },
+              content: {
+                zh: '`hydrate(svg, options)` 的首参收窄为 `SVGSVGElement`，并移除 `HydrateOptions.renderer`。SSR SVG 调用方传入注入后取得的 `<svg>` 根；Canvas 调用方改用 `mountCanvas(...).hydrate({ handlers })`，由 view 提供命中查询与坐标映射。',
+                en: 'The first argument of `hydrate(svg, options)` is narrowed to `SVGSVGElement`, and `HydrateOptions.renderer` is removed. SSR SVG callers should pass the injected `<svg>` root; Canvas callers should use `mountCanvas(...).hydrate({ handlers })`, whose view provides hit testing and coordinate mapping.',
+              },
+            },
+            {
               label: { zh: 'Layer 与 Tier 2 边界', en: 'Layer and Tier 2 boundaries' },
               content: {
                 zh: '`layer()` 保留 cache、顺序和 identity metadata 而不污染 core IR；`embed()` 通过显式 `VanillaTier2Adapter` 聚合 datasets 与 composite definitions。`view.update()` 当前仍整图重绘，但保持根元素 identity 与 live hydration context。',
                 en: '`layer()` preserves cache, ordering, and identity metadata without polluting core IR, while `embed()` aggregates datasets and composite definitions through an explicit `VanillaTier2Adapter`. `view.update()` still redraws the full figure, but preserves root identity and live hydration context.',
+              },
+            },
+            {
+              label: { zh: '动画三态语义', en: 'Tri-state animation semantics' },
+              content: {
+                zh: '省略 `animation.enabled` 时跟随系统偏好，显式 `true` / `false` 强制开启或关闭；`snapshotAt` 仍优先输出静态截帧。SSR 或无 `matchMedia` 环境按系统未要求减少动态效果处理，因此省略时默认开启。',
+                en: 'Omitting `animation.enabled` follows the system preference, while explicit `true` / `false` forces animation on or off; `snapshotAt` still takes priority and produces a static frame. SSR or environments without `matchMedia` are treated as not requesting reduced motion, so omission defaults to enabled.',
               },
             },
           ],
@@ -385,12 +422,12 @@ export const kernelV04: Release = {
       subVersions: [
         {
           version: 'beta.2',
-          date: '2026-07-11',
+          date: '2026-07-14',
           summary: {
             zh: '`useLowerTex` 现在保留 MathJax 初始化原始错误、同次失败只报告一次，并在后续挂载时重试。',
             en: '`useLowerTex` now preserves the original MathJax startup error, reports each shared failure once, and retries on a later mount.',
           },
-          items: [],
+          items: [esmOnlyChangeItem],
         },
         {
           version: 'alpha.5',

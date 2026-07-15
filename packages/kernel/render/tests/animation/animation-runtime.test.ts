@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createClock,
   prefersReducedMotion,
+  resolveAnimationEnabled,
   sceneAnimationDurationMs,
   sceneHasAnimations,
   sceneHasAutoplayTrigger,
@@ -149,6 +150,21 @@ describe('prefersReducedMotion', () => {
   it('无 matchMedia（SSR）→ 降级 false', () => {
     vi.stubGlobal('matchMedia', undefined);
     expect(prefersReducedMotion()).toBe(false);
+  });
+});
+
+describe('resolveAnimationEnabled', () => {
+  it('未显式配置时跟随系统偏好', () => {
+    expect(resolveAnimationEnabled(undefined, false)).toBe(true);
+    expect(resolveAnimationEnabled(undefined, true)).toBe(false);
+  });
+
+  it('显式 true 覆盖减少动态效果偏好', () => {
+    expect(resolveAnimationEnabled(true, true)).toBe(true);
+  });
+
+  it('显式 false 覆盖系统默认开启', () => {
+    expect(resolveAnimationEnabled(false, false)).toBe(false);
   });
 });
 

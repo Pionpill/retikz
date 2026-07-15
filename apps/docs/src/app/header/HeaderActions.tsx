@@ -12,6 +12,8 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuSub,
@@ -45,10 +47,12 @@ export const HeaderActions: FC = () => {
   const previewIsExpand = useComponentPreviewStore(s => s.isExpand);
   const previewDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
   const previewRendererMode = useComponentPreviewStore(s => s.rendererMode);
+  const previewAnimationMode = useComponentPreviewStore(s => s.animationMode);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
   const togglePreviewDragEnabled = useComponentPreviewStore(s => s.toggleDragEnabled);
   const togglePreviewRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
+  const setPreviewAnimationMode = useComponentPreviewStore(s => s.setAnimationMode);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
   const setComparisonTargetVisible = useComparisonStore(s => s.setTargetVisible);
 
@@ -101,9 +105,11 @@ export const HeaderActions: FC = () => {
           <DropdownMenu modal={false}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <DropdownMenuTrigger className={triggerClass}>
-                  <MoreHorizontal className="size-4" />
-                </DropdownMenuTrigger>
+                <span className="inline-flex">
+                  <DropdownMenuTrigger className={triggerClass}>
+                    <MoreHorizontal className="size-4" />
+                  </DropdownMenuTrigger>
+                </span>
               </TooltipTrigger>
               <TooltipContent>{t('common.more')}</TooltipContent>
             </Tooltip>
@@ -161,6 +167,23 @@ export const HeaderActions: FC = () => {
                   {t('preview.renderMode')}
                   <DropdownMenuShortcut>{previewRendererMode.toUpperCase()}</DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger inset>{t('preview.animationMode')}</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-40">
+                    <DropdownMenuRadioGroup
+                      value={previewAnimationMode}
+                      onValueChange={value => {
+                        if (value === 'system' || value === 'enabled' || value === 'disabled') {
+                          setPreviewAnimationMode(value);
+                        }
+                      }}
+                    >
+                      <DropdownMenuRadioItem value="system">{t('preview.animationSystem')}</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="enabled">{t('preview.animationEnabled')}</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="disabled">{t('preview.animationDisabled')}</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuCheckboxItem checked={previewHideCode} onCheckedChange={togglePreviewHideCode}>
                   {t('preview.hideAllCode')}
                   <DropdownMenuShortcut className="max-lg:hidden">

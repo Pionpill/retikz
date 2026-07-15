@@ -1,6 +1,6 @@
 ---
 name: docs-doc-concept
-description: retikz 概念页规范：`apps/docs/src/contents/<module>/concepts/**` 叶子页——先讲为什么需要、再给模块内心智模型、图文结合、内部模型按模块语境解释（core 的 IR/Scene 只是一例）、保持当前版本、延伸阅读。适用 core / plot / renderer 等各模块。通用规则见 docs-doc-principle，画法见 docs-figure-contract。retikz 专用。
+description: retikz 概念页规范：`apps/docs/src/contents/{module}/concepts/**` 叶子页——先讲为什么需要、再给模块内心智模型、图文结合、内部模型按模块语境解释（core 的 IR/Scene 只是一例）、保持当前版本、延伸阅读。适用 core / plot / renderer 等各模块。通用规则见 docs-doc-principle，画法见 docs-figure-contract。retikz 专用。
 ---
 
 # 概念类文档写法
@@ -172,7 +172,7 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 
 - 默认读者**初级前端**：会 React / TS，不熟 TikZ / IR / 几何术语和项目历史
 - 深架构 / 底层链路页配「首次阅读可以先跳过」`<ComponentAlert type="tip">`
-- 阅读时间沿用 principle（教程类 ≤10 分钟、字典类 ≤15 分钟）；超了拆子概念或分页
+- 阅读时间沿用 principle 的推荐信号（教程类约 10 分钟、字典类约 15 分钟），不构成强制拆页条件；超出推荐时先改善 TOC、主题分组、稳定锚点和跳读提示，只有概念或读者任务能独立成立时才拆子概念或分页
 
 ## 与其它 doc-skill 的分工
 

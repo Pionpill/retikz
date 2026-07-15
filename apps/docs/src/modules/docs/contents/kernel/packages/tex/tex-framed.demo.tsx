@@ -13,7 +13,7 @@ const Demo: FC = () => {
   const lowerTex = useLowerTex();
   return (
     <Layout width={460} height={160} lowerTex={lowerTex}>
-      {/* 带框公式 = 给含公式的 node 配 shape；容器由公式 bbox + padding 自动定尺寸 */}
+      {/* A shape frames the formula; its bbox and padding size the node. */}
       <Node id="box" position={[-100, 0]} shape="rectangle" fill="#eef2ff" stroke="#4f46e5" padding={12}>
         {'$E = mc^2$'}
       </Node>

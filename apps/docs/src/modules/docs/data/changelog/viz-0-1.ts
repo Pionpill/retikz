@@ -1,5 +1,7 @@
 import type { Release } from '../types';
 
+import { esmOnlyChangeItem } from './esm-only';
+
 export const vizV01: Release = {
   minor: 'v0.1',
   stableDate: null,
@@ -36,6 +38,7 @@ export const vizV01: Release = {
             en: 'Tightens data IR and statistic selector boundaries, unifies schema-derived public type names, and fixes date parsing plus top / bottom tie handling.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'BREAKING：lineage mode 类型规范化', en: 'BREAKING: Normalized lineage mode type' },
               content: {
@@ -179,6 +182,7 @@ export const vizV01: Release = {
             en: 'Narrows plot root exports and unimplemented layout contracts, while moving provenance / layout helpers under stable owners to reduce misuse.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: '顶层入口只保留公开渲染契约', en: 'Root entry keeps only public rendering contracts' },
               content: {
@@ -437,6 +441,7 @@ export const vizV01: Release = {
             en: 'The React `<Plot>` spec entry now forwards layout, and empty-mark composition DSL output also goes through full PlotSpec validation.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'spec 入口支持 layout 覆盖', en: 'Spec entry supports layout overrides' },
               content: {
@@ -654,6 +659,7 @@ export const vizV01: Release = {
             en: 'The Vanilla builder documents the facet / scaffold / axis binding authoring contract and fills in public type descriptions.',
           },
           items: [
+            esmOnlyChangeItem,
             {
               label: { zh: 'builder-only 字段边界更清楚', en: 'Clearer builder-only field boundary' },
               content: {

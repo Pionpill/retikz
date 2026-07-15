@@ -30,6 +30,7 @@
     "getStart": "Get Started",
     "releases": "Releases",
     "changelog": "Changelog",
+    "changelogV04": "v0.4",
     "changelogV03": "v0.3",
     "changelogV02": "v0.2",
     "changelogV01": "v0.1",
@@ -188,6 +189,10 @@
   "preview": {
     "groupLabel": "Component Preview",
     "renderMode": "Render mode",
+    "animationMode": "Animation playback",
+    "animationSystem": "Follow system",
+    "animationEnabled": "On",
+    "animationDisabled": "Off",
     "hideAllCode": "Hide all code",
     "expandAllCode": "Expand all code",
     "dragComponent": "Drag component"

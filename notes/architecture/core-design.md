@@ -419,7 +419,7 @@ Scene 必须是**矢量图形的最大公约子集**，不向任何特定 render
 **强制约束**：
 
 - `@retikz/core` 内 `import` 任何 React 相关代码 = bug
-- CI 加一条：`node -e 'require("@retikz/core")'` 在零 React 环境必须能加载
+- CI 加一条：从 packed tarball 安装后，`import('@retikz/core')` 在零 React 的 ESM 环境必须能加载
 - React adapter 写完发现超过 100 行 → 说明 Scene 抽象不够下沉，回 core 补
 
 ### 5.2 v1.x（生态扩展）

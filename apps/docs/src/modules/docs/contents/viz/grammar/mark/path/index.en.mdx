@@ -93,13 +93,13 @@ Both `stroke` and `fill` can be `IRPaintSpec` values. The left chart applies a l
 
 `closure` only closes PathMark into a fillable path; it does not enable filling by itself. `stroke` is on by default, and `stroke="none"` removes the border line; `fill` is off by default, and a concrete color or paint enables filling. The left area effect is composed from two PathMark layers: one `baseline + fill + stroke="none"` layer for the area, and one normal path layer for the upper outline. The right side uses `cycle + fill` to fill a radar polygon. Use the top-left control to switch `curve`; the default is a straight line. Baseline and stack return edges use the same connection curve.
 
-<ComponentPreview files={['line-closure', 'line-closure.data.ts']} controlsName="line-curve" size="md" />
+<ComponentPreview files={['line-closure', 'line-closure.data.ts']} controls={{ name: 'line-curve' }} size="md" />
 
 When `baseline` is omitted, it follows the value axis: use 0 when 0 is inside the value-axis domain; if an explicit domain excludes 0, such as `[30, 80]`, use the nearest domain edge, 30. Pass `closure={{ kind: 'baseline', baseline: ... }}` when the lower edge should be pinned to another value.
 
 For stacked areas, bind the upper boundary to `y` and pass the lower boundary field as `closure.baselineField`. The data can come from a stack transform or from precomputed `y0` / `y1` fields. The example uses the same fill-layer plus outline-layer composition for the area-chart effect. When `curve` is set, both boundaries use the same connection mode.
 
-<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} controlsName="line-curve" size="md" />
+<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} controls={{ name: 'line-curve' }} size="md" />
 
 ### Interrupted Paths
 

@@ -1,9 +1,9 @@
 ﻿---
 title: Algorithms
-description: Full signatures for intersections, circle / triangle algorithms, point-in-polygon, convex hull, and splines — not re-exported by core; import from @retikz/math.
+description: Look up @retikz/math intersections, circle and triangle helpers, polygon tests, convex hulls, and point-fitting curves.
 ---
 
-These are higher-level computations `@retikz/core` does **not** re-export; import them directly from `@retikz/math`:
+These are higher-level computations `@retikz/core` does **not** re-export, so import them directly from `@retikz/math`. The public types also include `Circle`, `LineLineInput`, `LineCircleInput`, `CircleCircleInput`, and `CubicSegment`.
 
 ```ts
 import { intersect, circle, triangle, polygon, convexHull, curve } from '@retikz/math';
@@ -101,6 +101,10 @@ convexHull(points: Array<Position>): Array<Position>;
 
 Andrew's monotone chain; returns **CCW vertices** with **collinear middle points dropped**; for fewer than 3 points or all-collinear input, returns the sorted, de-duplicated endpoints.
 
+The figure keeps every input as a dot and connects the vertices returned by `convexHull(points)` with an orange boundary. Points inside concavities are excluded from the result.
+
+<ComponentPreview files="convex-hull" size="sm" hideCode />
+
 ## curve (smooth curve through points)
 
 Given a list of knots, returns a chain of cubic Bézier segments that **passes through every knot** — the algorithm behind `<Step kind="smooth">`. It uses centripetal Catmull-Rom (α=0.5), which produces no cusps / self-intersecting loops when the points are unevenly spaced.
@@ -114,4 +118,9 @@ type CubicSegment = { control1: Position; control2: Position; to: Position };
 curve.catmullRomToCubic(knots: Array<Position>, tension: number): Array<CubicSegment>;
 ```
 
-`tension` is a tangent-length multiplier (TikZ `tension`): `1` is standard, `<1` tauter, `>1` loopier. Open curves use a one-sided tangent at each end (endpoint knots duplicate the adjacent point); coincident knots fall back to `DEFAULT_EPSILON` spacing to avoid division by zero, so output is always finite. `knots.length < 2` returns `[]`.
+`tension` is a tangent-length multiplier: `1` is standard, `<1` is tauter, and `>1` is loopier. Open curves use a one-sided tangent at each end. Coincident knots fall back to `DEFAULT_EPSILON` spacing to avoid division by zero and keep output finite. `knots.length < 2` returns `[]`.
+
+<Comparison target="tikz">
+  TikZ also uses `tension` for curve looseness. Start with the same value when migrating, then adjust it for the actual
+  knot spacing.
+</Comparison>

@@ -3,7 +3,7 @@ title: 图元关系
 description: 接着图元模型，讲两个图元如何连接：端点落在哪（动态贴边 / 锁定位置）、margin 留白、连线形态与路由、分组连接。
 ---
 
-[图元模型](/kernel/concepts/kernel/primitive-model) 讲清了*单个*图元的几何：它有多大、暴露哪些锚点。图元关系接着讲*两个*图元之间的事——一条 path 引用另一个图元时，端点最终落到对方几何的哪个位置。
+[图元模型](/kernel/concepts/core/primitive-model) 讲清了*单个*图元的几何：它有多大、暴露哪些锚点。图元关系接着讲*两个*图元之间的事——一条 path 引用另一个图元时，端点最终落到对方几何的哪个位置。
 
 retikz 把这种连接的解析分成两种模式：
 
@@ -31,7 +31,7 @@ retikz 把这种连接的解析分成两种模式：
 
 <ComponentPreview files="anchors-auto-attach" size="sm" hideCode />
 
-端点落在哪一层表面，由目标的 **boundary** 决定（默认跟随 shape）——boundary 怎么和 shape、外接框分工，见 [图元模型](/kernel/concepts/kernel/primitive-model)。要让线离边框远一点，用 `margin`（见下），不要为了留空隙把目标改成手算坐标。
+端点落在哪一层表面，由目标的 **boundary** 决定（默认跟随 shape）——boundary 怎么和 shape、外接框分工，见 [图元模型](/kernel/concepts/core/primitive-model)。要让线离边框远一点，用 `margin`（见下），不要为了留空隙把目标改成手算坐标。
 
 ### 锁定位置
 
@@ -40,12 +40,14 @@ retikz 把这种连接的解析分成两种模式：
 | anchor 形态   | 含义                                                                                                    |
 | ------------- | ------------------------------------------------------------------------------------------------------- |
 | 省略 anchor   | `{ id: 'A' }`：动态贴边（同纯 id）                                                                      |
-| 命名 anchor   | `{ id: 'A', anchor: 'top' }`：Web 方位名；`north` 等 compass 写法可作别名                               |
+| 命名 anchor   | `{ id: 'A', anchor: 'top' }`：core IR 使用 Web 方位的 canonical 名称                                    |
 | 角度 anchor   | `{ id: 'A', anchor: 30 }`：deg 方向的视觉边界点                                                         |
 | 边上比例点    | `{ id: 'A', anchor: { side: 'top', fraction: 0.25 } }`                                                  |
 | anchor + 偏移 | `{ id: 'A', anchor: 'left', offset: [-4, 0] }`：解析到点后再加世界系 `[dx, dy]`（不随节点 rotate 旋转） |
 
-anchor 的命名规则和几何含义都在 [图元模型 · 锚点](/kernel/concepts/kernel/primitive-model)；这里只关心一点：命名 / 角度 / 边上比例点都**位置定死**，不受邻居 step 方向影响（只有 auto 模式才动态调整）。下面三组：矩形 / 椭圆用通用 Web 方位 anchor，星形用它专属的 `tip-N`：
+anchor 的命名规则和几何含义都在 [图元模型 · 锚点](/kernel/concepts/core/primitive-model)；这里只关心一点：命名 / 角度 / 边上比例点都**位置定死**，不受邻居 step 方向影响（只有 auto 模式才动态调整）。下面三组：矩形 / 椭圆用通用 Web 方位 anchor，星形用它专属的 `tip-N`：
+
+React 字符串 Sugar 可以写 `'A.north'`，解析器会在生成 IR 前将其归一为 `'top'`；直接编写对象 IR 时应使用 canonical 名称。
 
 <ComponentPreview files="anchors-explicit" size="sm" hideCode />
 
@@ -59,7 +61,7 @@ path target 还能写笛卡尔、极坐标、相对 / 偏移 / 比例定位等�
 
 ## 连线留白
 
-`<Node margin={n}>` 不改视觉 border，但把节点的连接边界整体外推 `n` user units——**auto 端点和显式 border 锚点（`'A.right'` / `'A.30'`）都一致外移**，连线不顶死边框（对齐 TikZ `outer sep`）。多节点流程图里 `margin={4}` 通常就够。margin 在节点盒模型里的位置（与 padding 的分工）见 [图元模型](/kernel/concepts/kernel/primitive-model)。
+`<Node margin={n}>` 不改视觉 border，但把节点的连接边界整体外推 `n` user units——**auto 端点和显式 border 锚点（`'A.right'` / `'A.30'`）都一致外移**，连线不顶死边框（对齐 TikZ `outer sep`）。多节点流程图里 `margin={4}` 通常就够。margin 在节点盒模型里的位置（与 padding 的分工）见 [图元模型](/kernel/concepts/core/primitive-model)。
 
 <ComponentPreview files="anchors-margin" size="xs" hideCode />
 
@@ -106,7 +108,7 @@ margin 还分形状：对**文本容器形状**（矩形 / 椭圆 / 多边形，
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/concepts/kernel/primitive-model">
+  <LinkedCard href="/kernel/concepts/core/primitive-model">
     <span className="font-semibold">图元模型</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">单个图元的内容、形状、边界与锚点如何分层</span>
   </LinkedCard>
