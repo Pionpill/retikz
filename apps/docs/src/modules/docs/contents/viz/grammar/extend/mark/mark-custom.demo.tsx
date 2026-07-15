@@ -1,9 +1,10 @@
 import type { IRChild, IRNode } from '@retikz/core';
-import type { CustomMark, PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 import type { FC } from 'react';
 
-import { defineMark } from '@retikz/plot';
+import { defineMark, EncodingSchema } from '@retikz/plot';
 import { Plot } from '@retikz/plot-react';
+import { z } from 'zod';
 
 import { glyphRows } from './mark-custom.data';
 
@@ -12,8 +13,15 @@ import { glyphRows } from './mark-custom.data';
  * @description type='diamond' 是非内置判别串；collectFields 登记读取的源字段；lower 拿到坐标系 frame，
  *   把每行的 x/y 经 frame.projectRoles 投成屏幕点，再装配 core Node（diamond shape）。
  */
-const diamondMark = defineMark<CustomMark>({
-  type: 'diamond',
+const DiamondMarkSchema = z.strictObject({
+  type: z.literal('diamond'),
+  encoding: EncodingSchema,
+});
+
+type DiamondMark = z.infer<typeof DiamondMarkSchema>;
+
+const diamondMark = defineMark<DiamondMark>({
+  schema: DiamondMarkSchema,
   collectFields: (mark, fields) => {
     fields.addChannel(mark.encoding?.x);
     fields.addChannel(mark.encoding?.y);
@@ -40,7 +48,7 @@ const diamondMark = defineMark<CustomMark>({
 });
 
 // 自定义图元没有专属 React 组件，经 spec 入口创作：marks 里写 { type: 'diamond', ... }，运行时由 markDefinitions 解释。
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'glyphs' },

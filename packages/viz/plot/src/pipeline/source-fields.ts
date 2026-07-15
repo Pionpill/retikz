@@ -3,16 +3,20 @@
 import { collectTransformFields } from '@retikz/data';
 
 import { type AnyMarkDefinition } from '../contract';
-import { collectMarkFields, resolveMarkRegistry, resolvePlotTransformRegistry } from '../providers';
-import { createFieldCollector } from '../providers/channel/shared';
-import { type MarkOperation, type PlotSpec, type Transform } from '../schemas';
+import {
+  collectMarkFields,
+  createFieldCollector,
+  resolveMarkRegistry,
+  resolvePlotTransformRegistry,
+} from '../providers';
+import { type IRPlotMarkOperation, type IRPlotSpec, type IRPlotTransform } from '../schemas';
 
-const markTransformOf = (mark: MarkOperation): Array<Transform> | undefined =>
-  (mark as { transform?: Array<Transform> }).transform;
+const markTransformOf = (mark: IRPlotMarkOperation): Array<IRPlotTransform> | undefined =>
+  (mark as { transform?: Array<IRPlotTransform> }).transform;
 
-/** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验。 */
+/** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验 */
 export const collectSourceFields = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolvePlotTransformRegistry(),
   markRegistry: ReadonlyMap<string, AnyMarkDefinition> = resolveMarkRegistry(),
   transformContext?: TransformContext,

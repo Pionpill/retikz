@@ -10,7 +10,12 @@ import type {
   PositionScale,
   TickSet,
 } from '../../../contract';
-import type { Cartesian1DCoordinate, Cartesian1DOrientationType, Coordinate, ScaleOperation } from '../../../schemas';
+import type {
+  Cartesian1DOrientationType,
+  IRPlotCartesian1DCoordinate,
+  IRPlotCoordinate,
+  IRPlotScaleOperation,
+} from '../../../schemas';
 import type { Rect } from '../../../shared';
 
 import { cellInterval } from '../../../contract';
@@ -25,13 +30,13 @@ import { computePlotArea } from '../../../shared';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
-type Cartesian2DCoordinate = Extract<Coordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
+type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
 
-/** 空刻度集：某维度无 axis 时给 GuideContext 的占位。 */
+/** 空刻度集：某维度无 axis 时给 GuideContext 的占位 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
-/** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理）。 */
-const hasExplicitContinuousRange = (def: ScaleOperation): boolean =>
+/** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理） */
+const hasExplicitContinuousRange = (def: IRPlotScaleOperation): boolean =>
   (def.type === PlotScale.Linear ||
     def.type === PlotScale.Log ||
     def.type === PlotScale.Pow ||
@@ -44,7 +49,7 @@ const hasExplicitContinuousRange = (def: ScaleOperation): boolean =>
 /**
  * 二维笛卡尔运行时坐标帧。
  * @description 由 IR 坐标配置和 x/y scale 解析得到，lowering 阶段通过它把数据通道值投影成屏幕坐标。
- *   该类型描述可执行的投影能力，不等同于 `ir/coordinate` 中的 JSON schema 类型。
+ *   该类型描述可执行的投影能力，不等同于 schemas 层的 JSON IR 类型
  */
 export type CartesianCoordinateFrame = {
   /** 判别字段：2D 笛卡尔 */
@@ -55,7 +60,7 @@ export type CartesianCoordinateFrame = {
   primary: PositionScale;
   /** y（垂直）位置 scale */
   secondary: PositionScale;
-  /** 按通用 coordinate contract 暴露各 role 的位置 scale。 */
+  /** 按通用 coordinate contract 暴露各 role 的位置 scale */
   roleScales: Partial<Record<DimensionRole, PositionScale>>;
   /** 投影：[primary.coordinate(x), secondary.coordinate(y)]；任一非有限 → null */
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
@@ -68,7 +73,7 @@ export type CartesianCoordinateFrame = {
 /**
  * 建二维笛卡尔运行时坐标帧。
  * @description primary 是 x 角色位置 scale，secondary 是 y 角色位置 scale；返回的 frame 同时提供点投影与 rect cell 快路。
- *   这是 lowering 内部的运行时对象，不进入 JSON IR，也不从根入口暴露给用户作为构造公共坐标系的主路径。
+ *   这是 lowering 内部的运行时对象，不进入 JSON IR，也不从根入口暴露给用户作为构造公共坐标系的主路径
  */
 export const createCartesianCoordinate = (
   primary: PositionScale,
@@ -104,7 +109,7 @@ export const createCartesianCoordinate = (
 /**
  * 一维笛卡尔运行时坐标帧。
  * @description 用单一位置 scale 沿 horizontal/vertical 方向投影，另一屏幕维度固定在 baseline。
- *   适用于单轴图形或 1D 坐标语法解析后的 lowering；它仍然产出二维屏幕坐标。
+ *   适用于单轴图形或 1D 坐标语法解析后的 lowering；它仍然产出二维屏幕坐标
  */
 export type Cartesian1DCoordinateFrame = {
   /** 判别字段：1D 笛卡尔直线 */
@@ -117,7 +122,7 @@ export type Cartesian1DCoordinateFrame = {
   baseline: number;
   /** 单一位置 scale */
   primary: PositionScale;
-  /** 按通用 coordinate contract 暴露 x role 的位置 scale。 */
+  /** 按通用 coordinate contract 暴露 x role 的位置 scale */
   roleScales: Partial<Record<DimensionRole, PositionScale>>;
   /** 投影别名（2 入参形态，secondary 忽略）：等价 projectRoles([primaryValue]) */
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
@@ -128,7 +133,7 @@ export type Cartesian1DCoordinateFrame = {
 /**
  * 建一维笛卡尔运行时坐标帧。
  * @description 单 scale 沿 orientation 指定的轴投影，另一屏幕维度固定在 baseline。
- *   1D 坐标没有面积 cell 语义，因此不提供 projectCell，interval / reference band 等 cell 类 mark 会 fail-loud。
+ *   1D 坐标没有面积 cell 语义，因此不提供 projectCell，interval / reference band 等 cell 类 mark 会 fail-loud
  */
 export const createCartesian1DCoordinate = (
   scale: PositionScale,
@@ -237,7 +242,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
   },
 };
 
-const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinate> = {
+const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoordinate> = {
   schema: Cartesian1DSchema,
   roles: ['x'],
   resolve: (coordinate, ctx) => {
@@ -300,7 +305,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<Cartesian1DCoordinat
   },
 };
 
-/** 笛卡尔内置坐标系 definitions。 */
+/** 笛卡尔内置坐标系 definitions */
 export const CARTESIAN_COORDINATES: ReadonlyArray<AnyCoordinateDefinition> = [
   cartesian2DCoordinateDefinition,
   cartesian1DCoordinateDefinition,

@@ -76,8 +76,7 @@ describe('ComponentPreviewDialog', () => {
       align: AlignKey;
       initialSize: SizeKey;
       controlSlots?: Array<PreviewControlSlot>;
-      controlsAlwaysVisible?: boolean;
-      dialogActionSlots?: Array<PreviewActionSlot>;
+      dialogActions?: Array<PreviewActionSlot>;
       showAskAi?: boolean;
       onClose: () => void;
     }>();
@@ -92,7 +91,7 @@ describe('ComponentPreviewDialog', () => {
         Component={Demo}
         align="center"
         initialSize="md"
-        dialogActionSlots={[
+        dialogActions={[
           {
             id: 'runtime-probe',
             render: runtime => <span data-runtime={runtime.rendererMode}>Runtime {runtime.rendererMode}</span>,
@@ -125,7 +124,7 @@ describe('ComponentPreviewDialog', () => {
         Component={Demo}
         align="center"
         initialSize="sm"
-        dialogActionSlots={[actionSlot]}
+        dialogActions={[actionSlot]}
         onClose={() => undefined}
       />,
     );
@@ -135,7 +134,7 @@ describe('ComponentPreviewDialog', () => {
         Component={Demo}
         align="center"
         initialSize="xl"
-        dialogActionSlots={[actionSlot]}
+        dialogActions={[actionSlot]}
         onClose={() => undefined}
       />,
     );
@@ -151,6 +150,81 @@ describe('ComponentPreviewDialog', () => {
 
     expect(markup).not.toContain('conditionally-mounted');
     expect(markup).not.toContain('aria-label="Close"');
+  });
+
+  it('Card 将 dialogActions 透传给 Dialog，并用弹窗 runtime 求值', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <ComponentPreviewCard
+          name="forward-dialog-actions"
+          Component={Demo}
+          dialogActions={[
+            {
+              id: 'forwarded-runtime-probe',
+              render: runtime => (
+                <span data-dialog-action-renderer={runtime.rendererMode}>Dialog {runtime.rendererMode}</span>
+              ),
+            },
+          ]}
+        />,
+      );
+    });
+
+    expect(container.querySelector('[data-dialog-action-renderer]')).toBeNull();
+    const cardRendererButton = container.querySelector<HTMLButtonElement>('button[aria-label="Canvas renderer"]');
+    expect(cardRendererButton).not.toBeNull();
+    act(() => cardRendererButton!.click());
+    expect(container.querySelector('button[aria-label="SVG renderer"]')).not.toBeNull();
+
+    const maximizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');
+    expect(maximizeButton).not.toBeNull();
+    act(() => maximizeButton!.click());
+
+    const dialog = container.querySelector<HTMLElement>('[data-dialog-content]');
+    expect(dialog).not.toBeNull();
+    expect(dialog!.querySelector('[data-dialog-action-renderer="canvas"]')).not.toBeNull();
+    expect(dialog!.querySelector('button[aria-label="Canvas renderer"]')).not.toBeNull();
+
+    act(() => root.unmount());
+  });
+
+  it('Card 拒绝与 host preview tools 重复的 control slot id', () => {
+    const duplicateSlot: PreviewControlSlot = {
+      id: 'preview-tools',
+      visibility: 'always',
+      render: () => null,
+    };
+
+    expect(() =>
+      renderToStaticMarkup(
+        <ComponentPreviewCard name="duplicate-card-tools" Component={Demo} controlSlots={[duplicateSlot]} />,
+      ),
+    ).toThrow('Duplicate preview control slot id: "preview-tools".');
+  });
+
+  it('Dialog 拒绝与 host preview tools 重复的 control slot id', () => {
+    const duplicateSlot: PreviewControlSlot = {
+      id: 'dialog-preview-tools',
+      visibility: 'hover',
+      render: () => null,
+    };
+
+    expect(() =>
+      renderToStaticMarkup(
+        <ComponentPreviewDialog
+          name="duplicate-dialog-tools"
+          Component={Demo}
+          align="center"
+          initialSize="md"
+          controlSlots={[duplicateSlot]}
+          onClose={() => undefined}
+        />,
+      ),
+    ).toThrow('Duplicate preview control slot id: "dialog-preview-tools".');
   });
 
   it('Card 禁用 Ask AI 时全屏源码 header 也不显示该动作', () => {
@@ -189,18 +263,13 @@ describe('ComponentPreviewDialog', () => {
     };
     const runtimeProbe: PreviewControlSlot = {
       id: 'renderer-runtime-probe',
+      visibility: 'always',
       render: runtime => <span data-runtime-renderer={runtime.rendererMode}>{runtime.rendererMode}</span>,
     };
 
     act(() => {
       root.render(
-        <ComponentPreviewCard
-          name="fixed-renderer"
-          Component={Demo}
-          source={source}
-          controlSlots={[runtimeProbe]}
-          controlsAlwaysVisible
-        />,
+        <ComponentPreviewCard name="fixed-renderer" Component={Demo} source={source} controlSlots={[runtimeProbe]} />,
       );
     });
 
@@ -252,6 +321,7 @@ describe('ComponentPreviewDialog', () => {
     const root = createRoot(container);
     const controlSlot: PreviewControlSlot = {
       id: 'integration-owner-probe',
+      visibility: 'always',
       render: runtime => {
         const value = runtime.value('integration-owner-probe') ?? 'fresh';
         return (
@@ -268,13 +338,7 @@ describe('ComponentPreviewDialog', () => {
 
     act(() => {
       root.render(
-        <ComponentPreviewCard
-          name="integration-dialog"
-          Component={Demo}
-          size="sm"
-          controlSlots={[controlSlot]}
-          controlsAlwaysVisible
-        />,
+        <ComponentPreviewCard name="integration-dialog" Component={Demo} size="sm" controlSlots={[controlSlot]} />,
       );
     });
 

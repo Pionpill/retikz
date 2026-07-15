@@ -1,5 +1,5 @@
 ﻿import type { ExternalDatasets } from '@retikz/data';
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -7,15 +7,15 @@ import { describe, expect, it } from 'vitest';
 import { IntervalMark, Plot } from '../src';
 
 /**
- * ADR-01 P1 评审回归：<Plot> 必须把新增的 provenance / datumProvenance / datumIdField
+ * <Plot> option 转发契约：必须把 provenance / datumProvenance / datumIdField
  *   转发到 lowerPlots（当前 Plot.tsx 只转发 width/height/fontSize/margin，会静默丢弃）。
  *
  * 结构性断言：开 provenance + root id 时，下沉会合成 '<plotId>.mark.0' 的 scope id，
  *   compile / SVG 渲染会把它 emit 成 data-retikz-id="sales.mark.0"。该属性只在 option
- *   真正到达 lowerPlots 时才出现 → 作转发是否生效的可观测代理。
+ *   真正到达 lowerPlots 时才出现 → 作转发是否生效的可观测代理
  */
 
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   namespace: 'plot',
   type: 'plot',
   id: 'sales',
@@ -36,7 +36,7 @@ const data: ExternalDatasets = {
   ],
 };
 
-describe('<Plot> lowerPlots option 转发 (ADR-01)', () => {
+describe('<Plot> lowerPlots option 转发', () => {
   it('react_options_forwarded — provenance reaches lowerPlots', () => {
     // provenance:true + root id → 合成 scope id 'sales.mark.0' → SVG data-retikz-id
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} provenance />);
@@ -58,7 +58,7 @@ describe('<Plot> lowerPlots option 转发 (ADR-01)', () => {
   });
 });
 
-describe('<Plot dataTransforms> 快捷数据变换直传 (alpha.12)', () => {
+describe('<Plot dataTransforms> 快捷数据变换直传', () => {
   const orders = [
     { region: 'N', revenue: 3 },
     { region: 'N', revenue: 5 },

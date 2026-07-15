@@ -1,5 +1,5 @@
-import type { ExternalDatasets } from '@retikz/data';
-import type { PlotLineageRun, PlotSpec } from '@retikz/plot';
+import type { ExternalDatasets, IRDataModel } from '@retikz/data';
+import type { IRPlotSpec, PlotLineageRun } from '@retikz/plot';
 
 import { lowerPlots } from '@retikz/plot';
 import { Layout } from '@retikz/react';
@@ -9,7 +9,7 @@ import { ZodError } from 'zod';
 
 import { Axis, IntervalMark, PathMark, Plot, PointMark, resolvePlotLineage } from '../src';
 
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'sales' },
@@ -71,7 +71,7 @@ describe('<Plot spec data> 薄包装', () => {
 
   it('非法 spec（缺判别字段）→ 抛清晰 ZodError，不落到 core 内部崩', () => {
     // 模拟运行时拿到的残缺 spec（如 LLM 生成漏字段）
-    const malformed = {} as unknown as PlotSpec;
+    const malformed = {} as unknown as IRPlotSpec;
     expect(() => renderToStaticMarkup(<Plot spec={malformed} data={{}} width={480} height={300} />)).toThrow(ZodError);
   });
 
@@ -83,7 +83,7 @@ describe('<Plot spec data> 薄包装', () => {
           data={data}
           width={480}
           height={300}
-          layout={{ autoPadding: 'yes' } as unknown as PlotSpec['layout']}
+          layout={{ autoPadding: 'yes' } as unknown as IRPlotSpec['layout']}
         />,
       ),
     ).toThrow(ZodError);
@@ -216,5 +216,40 @@ describe('<Plot spec data> 薄包装', () => {
     expect(svg.match(/<svg/g)).toHaveLength(1);
     expect(svg).toContain('leftPanel.plotArea');
     expect(svg).toContain('rightPanel.plotArea');
+  });
+
+  it('同一 Layout 的多个 Plot 按数据集 reference 合并 fieldMap', () => {
+    const model: IRDataModel = [
+      { name: 'month', type: 'categorical' },
+      { name: 'revenue', type: 'continuous' },
+    ];
+    const mappedRows = [
+      { period: 'Jan', amount: 10 },
+      { period: 'Feb', amount: 20 },
+    ];
+    const directRows = [
+      { month: 'Jan', revenue: 12 },
+      { month: 'Feb', revenue: 18 },
+    ];
+
+    const svg = renderToStaticMarkup(
+      <Layout width={580} height={260}>
+        <Plot
+          id="mappedPanel"
+          data={mappedRows}
+          model={model}
+          fieldMap={{ month: 'period', revenue: 'amount' }}
+          width={280}
+          height={220}
+        >
+          <PointMark x="month" y="revenue" />
+        </Plot>
+        <Plot id="directPanel" data={directRows} model={model} width={280} height={220} x={300}>
+          <PointMark x="month" y="revenue" />
+        </Plot>
+      </Layout>,
+    );
+
+    expect(svg.match(/<ellipse/g)).toHaveLength(4);
   });
 });

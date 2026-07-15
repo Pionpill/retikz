@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../../src/providers';
@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -21,12 +21,12 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
-/** 深度收集图层内所有 Node；颜色分组时 Node 可能位于子 Scope。 */
+/** 深度收集图层内所有 Node；颜色分组时 Node 可能位于子 Scope */
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
   const walk = (children: ReadonlyArray<unknown>): void => {
@@ -40,7 +40,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-/** 读取 Node.minimumSize；它等于逐节点半径乘以 √2。 */
+/** 读取 Node.minimumSize；它等于逐节点半径乘以 √2 */
 const sizeOf = (node: IRNode): number | undefined => (node as { minimumSize?: number }).minimumSize;
 const radiusOf = (node: IRNode): number | undefined => {
   const ms = sizeOf(node);
@@ -50,7 +50,7 @@ const radiusOf = (node: IRNode): number | undefined => {
 const pointSpec = (
   size: { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number } | undefined,
   extraScales: Array<Record<string, unknown>> = [],
-): PlotSpec =>
+): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -61,7 +61,7 @@ const pointSpec = (
   });
 
 describe('size channel 映射节点半径', () => {
-  // sqrt 半径映射：domain [0,16]、range [MIN,MAX] 时，v=4 映射到半程半径。
+  // sqrt 半径映射：domain [0,16]、range [MIN,MAX] 时，v=4 映射到半程半径
   it('size_field_maps_radius_by_sqrt', () => {
     const data = [
       { x: 0, y: 0, p: 0 },
@@ -70,13 +70,13 @@ describe('size channel 映射节点半径', () => {
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts));
     const radii = nodes.map(radiusOf);
-    expect(radii[0]).toBeCloseTo(SIZE_MIN_RADIUS, 6); // p=0 位于 domain 下界，映射到 MIN。
-    expect(radii[2]).toBeCloseTo(SIZE_MAX_RADIUS, 6); // p=16 是最大正值，映射到 MAX。
+    expect(radii[0]).toBeCloseTo(SIZE_MIN_RADIUS, 6); // p=0 位于 domain 下界，映射到 MIN
+    expect(radii[2]).toBeCloseTo(SIZE_MAX_RADIUS, 6); // p=16 是最大正值，映射到 MAX
     const mid = SIZE_MIN_RADIUS + 0.5 * (SIZE_MAX_RADIUS - SIZE_MIN_RADIUS);
-    expect(radii[1]).toBeCloseTo(mid, 6); // p=4 是 sqrt 映射的中点。
+    expect(radii[1]).toBeCloseTo(mid, 6); // p=4 是 sqrt 映射的中点
   });
 
-  // 常量 value 直接表示最终半径，不经过 scale。
+  // 常量 value 直接表示最终半径，不经过 scale
   it('size_value_is_final_radius_bypassing_scale', () => {
     const data = [
       { x: 0, y: 0 },
@@ -86,7 +86,7 @@ describe('size channel 映射节点半径', () => {
     expect(nodes.every(n => radiusOf(n) !== undefined && Math.abs(radiusOf(n)! - 8) < 1e-6)).toBe(true);
   });
 
-  // size 与 color 独立生效：半径逐节点解析，颜色按值分组。
+  // size 与 color 独立生效：半径逐节点解析，颜色按值分组
   it('size_with_color_both_apply', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

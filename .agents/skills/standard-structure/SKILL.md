@@ -37,6 +37,7 @@ shared/schemas <- parsers
 
 ## JSDoc
 
+- 中文注释和 JSDoc 的末句不写句号；多句内容只保留句间句号。
 - 整体 JSDoc 写功能视角：让读者先知道函数、类、类型负责什么，不从实现过程、内部步骤或历史背景开头。
 - 细节 JSDoc 可说明实现细节，但仍从功能目的出发简短描述；不要复述代码逐行做了什么。
 - React / Vanilla 等面向开发者使用的公开 JSDoc，主要描述功能、使用契约、默认值和可观察行为；验收标准是用户能看懂怎么用，不写 builder / emit / Scene primitive / renderer 物化等实现细节，也不按 LLM 理解优化。

@@ -7,7 +7,7 @@ import { createFieldCollector } from '../../../src/providers/channel/shared';
 import { TransformSchema } from '../../../src/schemas';
 import { PlotSpecSchema } from '../../../src/schemas/plot';
 
-describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
+describe('quantile-band statistics schema (contract)', () => {
   it('accepts quantile-band reducer and preserves JSON round trip', () => {
     const operation = {
       kind: 'summarize',
@@ -151,7 +151,7 @@ describe('quantile-band statistics schema (alpha.13 ADR-02)', () => {
   });
 });
 
-describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
+describe('quantile-band statistics behavior (contract)', () => {
   const rows = [
     { group: 'A', value: 0 },
     { group: 'A', value: 2 },
@@ -267,7 +267,7 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
     expect(out[0]).toMatchObject({ group: 'A', low: 2, high: 6, whiskerMin: 0, whiskerMax: 8 });
   });
 
-  it('handles single-value and empty finite groups', () => {
+  it('handles single-value groups and marks empty finite groups invalid', () => {
     const out = applyTransforms(
       [
         { group: 'A', value: 5 },
@@ -298,10 +298,9 @@ describe('quantile-band statistics behavior (alpha.13 ADR-02)', () => {
       ],
     );
 
-    expect(out).toEqual([
-      expect.objectContaining({ group: 'A', low: 5, high: 5, mid: 5, min: 5, max: 5, count: 1 }),
-      expect.objectContaining({ group: 'B', low: 0, high: 0, mid: 0, min: 0, max: 0, count: 0 }),
-    ]);
+    expect(out[0]).toMatchObject({ group: 'A', low: 5, high: 5, mid: 5, min: 5, max: 5, count: 1 });
+    expect(out[1]).toMatchObject({ group: 'B', count: 0 });
+    for (const field of ['low', 'high', 'mid', 'min', 'max']) expect(Number.isNaN(out[1][field])).toBe(true);
   });
 
   it('selects rows outside quantile band boundaries in source order', () => {

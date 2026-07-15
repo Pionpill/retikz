@@ -7,6 +7,7 @@ import { freezeDefinitions } from '../shared';
 import { finiteFieldValuesOf } from '../transform';
 import {
   finiteExtentOf,
+  meanOf,
   medianOf,
   quantileBandStatsOf,
   quantileOf,
@@ -15,14 +16,14 @@ import {
   valuesWithin,
 } from './helpers';
 
-/** count reducer definition：统计组内行数，不读取源字段。 */
+/** count reducer definition：统计组内行数，不读取源字段 */
 const countReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Count,
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => ({ [operation.as]: rows.length }),
 });
 
-/** sum reducer definition：读取一个数值字段并输出有限值之和。 */
+/** sum reducer definition：读取一个数值字段并输出有限值之和 */
 const sumReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Sum,
   inputFields: operation => [operation.field],
@@ -32,18 +33,18 @@ const sumReducerDefinition = defineStatisticsReducer({
   }),
 });
 
-/** mean reducer definition：读取一个数值字段并输出有限值平均数。 */
+/** mean reducer definition：读取一个数值字段并输出有限值平均数 */
 const meanReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Mean,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length };
+    return { [operation.as]: meanOf(values) };
   },
 });
 
-/** median reducer definition：读取一个数值字段并输出有限值中位数。 */
+/** median reducer definition：读取一个数值字段并输出有限值中位数 */
 const medianReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Median,
   inputFields: operation => [operation.field],
@@ -51,40 +52,41 @@ const medianReducerDefinition = defineStatisticsReducer({
   reduce: (rows, operation) => ({ [operation.as]: medianOf(finiteFieldValuesOf(rows, operation.field)) }),
 });
 
-/** min reducer definition：读取一个数值字段并输出有限值最小值。 */
+/** min reducer definition：读取一个数值字段并输出有限值最小值 */
 const minReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Min,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : Math.min(...values) };
+    return { [operation.as]: finiteExtentOf(values).min };
   },
 });
 
-/** max reducer definition：读取一个数值字段并输出有限值最大值。 */
+/** max reducer definition：读取一个数值字段并输出有限值最大值 */
 const maxReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Max,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? 0 : Math.max(...values) };
+    return { [operation.as]: finiteExtentOf(values).max };
   },
 });
 
-/** extent reducer definition：读取一个数值字段并输出有限值 `[min, max]` 范围。 */
+/** extent reducer definition：读取一个数值字段并输出有限值 `[min, max]` 范围 */
 const extentReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Extent,
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
-    return { [operation.as]: values.length === 0 ? [0, 0] : [Math.min(...values), Math.max(...values)] };
+    const { min, max } = finiteExtentOf(values);
+    return { [operation.as]: [min, max] };
   },
 });
 
-/** quantile reducer definition：读取一个数值字段并输出单个分位点。 */
+/** quantile reducer definition：读取一个数值字段并输出单个分位点 */
 const quantileReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Quantile,
   inputFields: operation => [operation.field],
@@ -94,7 +96,7 @@ const quantileReducerDefinition = defineStatisticsReducer({
   }),
 });
 
-/** quantile-band reducer definition：读取一个数值字段并输出参数化分位区间及可选 whisker 字段。 */
+/** quantile-band reducer definition：读取一个数值字段并输出参数化分位区间及可选 whisker 字段 */
 const quantileBandReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.QuantileBand,
   inputFields: operation => [operation.field],
@@ -152,7 +154,7 @@ const quantileBandReducerDefinition = defineStatisticsReducer({
   },
 });
 
-/** 内置统计 reducer 定义集合；内置与自定义 reducer 共享同一 registry 分派流程。 */
+/** 内置统计 reducer 定义集合；内置与自定义 reducer 共享同一 registry 分派流程 */
 export const BUILTIN_STATISTICS_REDUCERS: ReadonlyArray<AnyStatisticsReducerDefinition> = freezeDefinitions([
   countReducerDefinition,
   sumReducerDefinition,

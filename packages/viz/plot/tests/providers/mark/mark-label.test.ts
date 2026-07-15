@@ -3,7 +3,7 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -11,7 +11,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 const opts: LowerPlotsOptions = { width: 200, height: 100 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
@@ -47,7 +47,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const baseSpec = (marks: unknown): PlotSpec =>
+const baseSpec = (marks: unknown): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -61,7 +61,7 @@ const baseSpec = (marks: unknown): PlotSpec =>
     guides: [],
   });
 
-describe('ADR-07 mark host label lowering', () => {
+describe('contract mark host label lowering', () => {
   it('path-mark-host-geometry-label：PathMark label lowering 到 core Path.label', () => {
     const root = expandOf(
       baseSpec([

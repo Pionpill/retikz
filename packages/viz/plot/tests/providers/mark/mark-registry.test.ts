@@ -1,27 +1,36 @@
 import type { IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { CustomMark, PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import * as plot from '../../../src';
-import { defineMark } from '../../../src/contract';
+import { defineMark, extractMarkType } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
-import { BUILTIN_MARK_TYPES, MarkOperationSchema, PlotSpecSchema } from '../../../src/schemas';
+import { BUILTIN_MARK_TYPES, EncodingSchema, MarkOperationSchema, PlotSpecSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
+const DotMarkSchema = z.strictObject({
+  type: z.literal('dot'),
+  strength: z.number().positive(),
+  encoding: EncodingSchema.optional(),
+});
+
+type DotMark = z.infer<typeof DotMarkSchema>;
+
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 /** 自定义 mark：记录被分派调用 + 读取的行数，返回一个可识别的空 layer scope */
 const makeDotMark = (record: { calls: number; rows: number }) =>
-  defineMark<CustomMark>({
-    type: 'dot',
+  defineMark<DotMark>({
+    schema: DotMarkSchema,
     collectFields: (mark, fields) => {
       fields.addChannel(mark.encoding?.x);
       fields.addChannel(mark.encoding?.y);
@@ -33,7 +42,7 @@ const makeDotMark = (record: { calls: number; rows: number }) =>
     },
   });
 
-const dotSpec = (overrides?: Partial<PlotSpec>): PlotSpec =>
+const dotSpec = (overrides?: Partial<IRPlotSpec>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -43,20 +52,20 @@ const dotSpec = (overrides?: Partial<PlotSpec>): PlotSpec =>
       { type: 'band', name: 'cat' },
       { type: 'linear', name: 'val' },
     ],
-    marks: [{ type: 'dot', encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
+    marks: [{ type: 'dot', strength: 1, encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
     ...overrides,
   });
 
 const opts: LowerPlotsOptions = { width: 400, height: 300 };
 
-describe('mark registry（alpha.12 ADR-08：自定义 mark）', () => {
+describe('mark registry（contract：自定义 mark）', () => {
   it('mark_operation_schema_accepts_builtin_and_custom', () => {
     expect(MarkOperationSchema.safeParse({ type: 'point', encoding: { x: { field: 'a' } } }).success).toBe(true);
     expect(MarkOperationSchema.safeParse({ type: 'dot', encoding: { x: { field: 'a' } } }).success).toBe(true);
   });
 
   it('custom_mark_type_collision_rejected', () => {
-    // 自定义 type 撞内置 → CustomMark refine 拒；内置 'point' 走内置分支但缺位置编码也不该当自定义通过
+    // 自定义 type 撞内置 → IRPlotCustomMark refine 拒；内置 'point' 走内置分支但缺位置编码也不该当自定义通过
     const collide = MarkOperationSchema.safeParse({ type: 'point', foo: 1 });
     // 'point' 命中内置 schema（point 字段可选）→ accept；但带非法额外字段的纯自定义占用名应被内置严格 schema 兜住
     expect(MarkOperationSchema.safeParse({ type: 'path', notAField: true }).success).toBe(collide.success);
@@ -69,7 +78,7 @@ describe('mark registry（alpha.12 ADR-08：自定义 mark）', () => {
   });
 
   it('builtin_marks_cover_public_builtin_types', () => {
-    expect(BUILTIN_MARKS.map(def => def.type).sort()).toEqual([...BUILTIN_MARK_TYPES].sort());
+    expect(BUILTIN_MARKS.map(def => extractMarkType(def.schema)).sort()).toEqual([...BUILTIN_MARK_TYPES].sort());
   });
 
   it('resolve_mark_registry_merges_builtin_and_custom', () => {
@@ -80,18 +89,19 @@ describe('mark registry（alpha.12 ADR-08：自定义 mark）', () => {
   });
 
   it('duplicate_mark_registration_throws（自定义撞内置）', () => {
-    const collide = defineMark({ type: 'point', lower: () => null });
+    const collide = defineMark({ schema: z.strictObject({ type: z.literal('point') }), lower: () => null });
     expect(() => resolveMarkRegistry([collide])).toThrow(/duplicate mark registration: "point"/);
   });
 
   it('duplicate_mark_registration_throws（两自定义同 type）', () => {
-    const a = defineMark({ type: 'dot', lower: () => null });
-    const b = defineMark({ type: 'dot', lower: () => null });
+    const a = defineMark({ schema: DotMarkSchema, lower: () => null });
+    const b = defineMark({ schema: DotMarkSchema, lower: () => null });
     expect(() => resolveMarkRegistry([a, b])).toThrow(/duplicate mark registration: "dot"/);
   });
 
   it('public_barrel_exports_mark_extension_helpers', () => {
     expect(plot.defineMark).toBe(defineMark);
+    expect(plot.extractMarkType).toBe(extractMarkType);
     expect(plot.resolveMarkRegistry).toBe(resolveMarkRegistry);
   });
 
@@ -105,6 +115,17 @@ describe('mark registry（alpha.12 ADR-08：自定义 mark）', () => {
     expandOf(dotSpec(), { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)] });
     expect(record.calls).toBe(1);
     expect(record.rows).toBe(rows.length);
+  });
+
+  it('custom_mark_schema_rejects_invalid_operation_before_behavior_callbacks', () => {
+    const record = { calls: 0, rows: 0 };
+    const spec = dotSpec({
+      marks: [{ type: 'dot', strength: -1, encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
+    });
+    expect(() =>
+      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeDotMark(record)] }),
+    ).toThrow();
+    expect(record.calls).toBe(0);
   });
 
   it('unregistered_custom_mark_fails_loud', () => {
@@ -143,7 +164,7 @@ describe('mark registry（alpha.12 ADR-08：自定义 mark）', () => {
     // 自定义 dot + 内置 point 同 plot，共用同一坐标 / scale；lowering 不抛、两 mark 各产一层
     const spec = dotSpec({
       marks: [
-        { type: 'dot', encoding: { x: { field: 'cat' }, y: { field: 'val' } } },
+        { type: 'dot', strength: 1, encoding: { x: { field: 'cat' }, y: { field: 'val' } } },
         { type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'val' } } },
       ],
     });

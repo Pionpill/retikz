@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PlotSpecSchema } from '../../src/schemas';
 import { AxisGuideSchema, GuideSchema, LegendGuideSchema } from '../../src/schemas/guide';
 
-describe('GuideSchema (ADR-01 alpha.2)', () => {
+describe('GuideSchema contract', () => {
   // Happy path
   it('axis_x_valid', () => {
     const guide = { type: 'axis', dimension: 'x' };
@@ -93,7 +93,7 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
-  // alpha.9 ADR-03：ternary 三角轴维度 x / y / z
+  // contract：ternary 三角轴维度 x / y / z
   it('axis_ternary_xyz_dimensions_valid', () => {
     for (const dimension of ['x', 'y', 'z']) {
       expect(AxisGuideSchema.parse({ type: 'axis', dimension })).toEqual({ type: 'axis', dimension });
@@ -523,7 +523,7 @@ describe('GuideSchema plot dimensions', () => {
   });
 });
 
-describe('LegendGuideSchema (ADR-03 alpha.8)', () => {
+describe('LegendGuideSchema contract', () => {
   // Happy path
   it('legend_minimal_valid', () => {
     // 最小合法 legend：仅 type + channel
@@ -611,7 +611,7 @@ describe('LegendGuideSchema (ADR-03 alpha.8)', () => {
   });
 });
 
-describe('GuideSchema discriminated union (ADR-03 alpha.8)', () => {
+describe('GuideSchema discriminated union contract', () => {
   // union 判别：axis 仍合法（回归）
   it('union_accepts_axis', () => {
     const guide = { type: 'axis', dimension: 'x', grid: true };

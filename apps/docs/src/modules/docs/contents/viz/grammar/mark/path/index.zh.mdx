@@ -93,13 +93,13 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 `closure` 只让 PathMark 闭合成可填充路径，不会自动开启填充。`stroke` 默认开启，写 `stroke="none"` 可以关闭边框线；`fill` 默认关闭，写具体颜色或 paint 后才填充内容。左侧的面积效果由两层 PathMark 组合：一层 `baseline + fill + stroke="none"` 负责填充，另一层普通 path 负责上边界描边；右侧使用 `cycle + fill` 填充雷达多边形。左上角可以切换 `curve`，默认是直线连接；baseline / stack 的回程下边界也会使用同一个连接方式。
 
-<ComponentPreview files={['line-closure', 'line-closure.data.ts']} controlsName="line-curve" size="md" />
+<ComponentPreview files={['line-closure', 'line-closure.data.ts']} controls={{ name: 'line-curve' }} size="md" />
 
 `baseline` 省略时会跟随值轴：0 落在值轴 domain 内就使用 0；如果显式 domain 不包含 0，例如 `[30, 80]`，则使用离 0 最近的 domain 边界 30。需要固定到其它值时再显式传 `closure={{ kind: 'baseline', baseline: ... }}`。
 
 堆叠面积可以把上边界绑定到 `y`，再把下边界字段交给 `closure.baselineField`。这个字段可以来自 stack transform，也可以像示例一样来自预先算好的 `y0` / `y1`；示例同样用填充层和描边层组合出面积图效果。设置 `curve` 时，上下两条边界都会按同一种方式连接。
 
-<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} controlsName="line-curve" size="md" />
+<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} controls={{ name: 'line-curve' }} size="md" />
 
 ### 路径中断
 
@@ -187,7 +187,7 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 | 标签   | `label`                                      | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?`                                                                  | —                                         | 给路径段挂几何标签；内容写在 `content.field` / `content.value`，`position`、`side`、`distance` 复用 core geometry label |
 |        | `resolveLabel`                               | `(row) => string?`                                                                                                    | —                                         | 运行时覆盖标签内容；需要同时设置 `id`，不进入 PlotSpec                                                                  |
 | 通用   | `id`                                         | `string?`                                                                                                             | —                                         | 可选 mark 句柄，用于图层 id / 运行时标签解析                                                                            |
-|        | `transform`                                  | `Array<Transform>?`                                                                                                   | —                                         | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows                                          |
+|        | `transform`                                  | `Array<IRPlotTransform>?`                                                                                             | —                                         | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows                                          |
 | 自定义 | `channels`                                   | `Record<string, Channel>`                                                                                             | —                                         | 自定义通道入口；交给注册的 channel definition 解析                                                                      |
 
 ## 相关

@@ -16,17 +16,17 @@ import type {
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
 import type { ResolvedLegendGuideTokens } from '../../providers';
-import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
+import type { IRPlotAxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
 import type { Rect } from '../../shared';
 
 import { guideLayerId, guideLayerMeta } from '../../contract';
-import { defaultOriginAxisTickSideOf } from '../../providers';
-import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../providers/scale/shared';
+import { defaultOriginAxisTickSideOf, resolveGuideTicks, resolveVisibleGuideTicks } from '../../providers';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,
   AxisCrossingLabelPolicy,
   AxisCrossingTickPolicy,
+  AxisLineExtentTarget,
   AxisPlacementKind,
   AxisTickEndpointAffect,
   AxisTickLabelHideStrategy,
@@ -38,9 +38,9 @@ import {
   AxisTitlePlacementKeyword,
   PlotLayerZIndex,
 } from '../../schemas';
-import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
+import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
 
-/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint。 */
+/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint */
 const DEG_TO_RAD = Math.PI / 180;
 
 /** 一段直线（首尾两点） */
@@ -79,21 +79,21 @@ const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({
   ...(style?.rotate !== undefined ? { rotate: style.rotate } : {}),
 });
 
-const axisLineStyleOf = (guide: AxisGuide): GuidePathStyle | false =>
+const axisLineStyleOf = (guide: IRPlotAxisGuide): GuidePathStyle | false =>
   guide.line === false ? false : lineStyleProps(guide.line);
 
-type AxisLineToken = Exclude<NonNullable<AxisGuide['line']>, false>;
+type AxisLineToken = Exclude<NonNullable<IRPlotAxisGuide['line']>, false>;
 
-const axisLineTokenOf = (guide: AxisGuide): AxisLineToken | undefined =>
+const axisLineTokenOf = (guide: IRPlotAxisGuide): AxisLineToken | undefined =>
   guide.line !== undefined && guide.line !== false ? guide.line : undefined;
 
-const hasCartesianOnlyAxisLineGeometry = (guide: AxisGuide): boolean => {
+const hasCartesianOnlyAxisLineGeometry = (guide: IRPlotAxisGuide): boolean => {
   const line = axisLineTokenOf(guide);
   if (line === undefined) return false;
-  return line.arrow !== undefined || (line.extent !== undefined && line.extent !== 'plotArea');
+  return line.arrow !== undefined || (line.extent !== undefined && line.extent !== AxisLineExtentTarget.PlotArea);
 };
 
-const assertNoCartesianOnlyAxisLineGeometry = (guide: AxisGuide): void => {
+const assertNoCartesianOnlyAxisLineGeometry = (guide: IRPlotAxisGuide): void => {
   if (hasCartesianOnlyAxisLineGeometry(guide)) {
     throw new Error('lowerPlots: axis line arrow and data extent are only supported for cartesian axes');
   }
@@ -106,7 +106,7 @@ const axisArrowMarkOf = (
   return { pos: 0, mark: arrow === true ? { kind: 'arrow' } : { kind: 'arrow', ...arrow } };
 };
 
-const axisLineMarksOf = (guide: AxisGuide): IRPath['marks'] | undefined => {
+const axisLineMarksOf = (guide: IRPlotAxisGuide): IRPath['marks'] | undefined => {
   const arrow = axisLineTokenOf(guide)?.arrow;
   if (arrow === undefined) return undefined;
   const negative = axisArrowMarkOf(arrow.negative);
@@ -117,33 +117,38 @@ const axisLineMarksOf = (guide: AxisGuide): IRPath['marks'] | undefined => {
   return marks.length > 0 ? marks : undefined;
 };
 
-type AxisTicksToken = NonNullable<AxisGuide['ticks']>;
+type AxisTicksToken = NonNullable<IRPlotAxisGuide['ticks']>;
 type AxisTickMarkToken = Exclude<NonNullable<AxisTicksToken['mark']>, false>;
 type AxisShapeTickMarkToken = Exclude<AxisTickMarkToken, { kind: 'line' }>;
-type AxisCrossingToken = Exclude<NonNullable<AxisGuide['crossing']>, false>;
+type AxisCrossingToken = Exclude<NonNullable<IRPlotAxisGuide['crossing']>, false>;
 type AxisTickEndpointPolicyToken = Exclude<NonNullable<AxisTicksToken['endpoint']>, false>;
 type AxisGuideValue = IRDataScalarValue;
-type AxisTitleToken = Exclude<NonNullable<AxisGuide['title']>, string>;
+type AxisTitleToken = Exclude<NonNullable<IRPlotAxisGuide['title']>, string>;
 type AxisTitlePlacementValue = NonNullable<AxisTitleToken['placement']>;
 type AxisTitleOrientationValue = NonNullable<AxisTitleToken['orientation']>;
 type AxisTitleAnchorValue = NonNullable<AxisTitleToken['anchor']>;
 type AxisTitleShiftValue = NonNullable<AxisTitleToken['shift']>;
 type AxisTitleLayoutValue = NonNullable<AxisTitleToken['layout']>;
 
-const axisTickLineMarkOf = (guide: AxisGuide): { length: number; line: GuidePathStyle | false } | false | null => {
+const axisTickLineMarkOf = (
+  guide: IRPlotAxisGuide,
+): { length: number; line: GuidePathStyle | false } | false | null => {
   const mark = guide.ticks?.mark;
   if (mark === false) return false;
   if (mark === undefined) {
     return {
-      length: guide.ticks?.length ?? AXIS_TICK_LENGTH,
+      length: guide.ticks?.length ?? DEFAULT_AXIS_TICK_LENGTH,
       line: guide.ticks?.line === false ? false : lineStyleProps(guide.ticks?.line),
     };
   }
   if (mark.kind !== AxisTickMarkKind.Line) return null;
-  return { length: mark.length ?? AXIS_TICK_LENGTH, line: mark.line === false ? false : lineStyleProps(mark.line) };
+  return {
+    length: mark.length ?? DEFAULT_AXIS_TICK_LENGTH,
+    line: mark.line === false ? false : lineStyleProps(mark.line),
+  };
 };
 
-const axisShapeTickMarkOf = (guide: AxisGuide): AxisShapeTickMarkToken | null => {
+const axisShapeTickMarkOf = (guide: IRPlotAxisGuide): AxisShapeTickMarkToken | null => {
   const mark = guide.ticks?.mark;
   return mark !== undefined && mark !== false && mark.kind !== AxisTickMarkKind.Line ? mark : null;
 };
@@ -155,25 +160,25 @@ const shapeMarkSizeOf = (mark: AxisShapeTickMarkToken): { width: number; height:
   return { width, height, offset: mark.offset ?? Math.max(width, height) / 2 };
 };
 
-const axisTickLengthOf = (guide: AxisGuide): number => {
+const axisTickLengthOf = (guide: IRPlotAxisGuide): number => {
   const line = axisTickLineMarkOf(guide);
   if (line !== null) return line === false ? 0 : line.length;
   const shape = axisShapeTickMarkOf(guide);
-  if (shape === null) return AXIS_TICK_LENGTH;
+  if (shape === null) return DEFAULT_AXIS_TICK_LENGTH;
   const size = shapeMarkSizeOf(shape);
   return size.offset + Math.max(size.width, size.height) / 2;
 };
 
-const axisTickLineStyleOf = (guide: AxisGuide): GuidePathStyle | false => {
+const axisTickLineStyleOf = (guide: IRPlotAxisGuide): GuidePathStyle | false => {
   const line = axisTickLineMarkOf(guide);
   if (line === null || line === false || line.line === false) return false;
   return line.line;
 };
 
-const axisCrossingTokenOf = (guide: AxisGuide): AxisCrossingToken | undefined =>
+const axisCrossingTokenOf = (guide: IRPlotAxisGuide): AxisCrossingToken | undefined =>
   guide.crossing !== undefined && guide.crossing !== false ? guide.crossing : undefined;
 
-const axisCrossingValueOf = (guide: AxisGuide): AxisGuideValue | undefined => {
+const axisCrossingValueOf = (guide: IRPlotAxisGuide): AxisGuideValue | undefined => {
   const crossing = axisCrossingTokenOf(guide);
   return crossing === undefined ? undefined : (crossing.value ?? 0);
 };
@@ -181,18 +186,18 @@ const axisCrossingValueOf = (guide: AxisGuide): AxisGuideValue | undefined => {
 const axisGuideValuesEqual = (a: AxisGuideValue, b: AxisGuideValue): boolean =>
   typeof a === 'number' && typeof b === 'number' ? Math.abs(a - b) <= 1e-6 : String(a) === String(b);
 
-const isCrossingTickValue = (guide: AxisGuide, value: AxisGuideValue): boolean => {
+const isCrossingTickValue = (guide: IRPlotAxisGuide, value: AxisGuideValue): boolean => {
   const crossingValue = axisCrossingValueOf(guide);
   return crossingValue !== undefined && axisGuideValuesEqual(crossingValue, value);
 };
 
-const shouldHideCrossingTickMark = (guide: AxisGuide, value: AxisGuideValue): boolean =>
+const shouldHideCrossingTickMark = (guide: IRPlotAxisGuide, value: AxisGuideValue): boolean =>
   axisCrossingTokenOf(guide)?.tick === AxisCrossingTickPolicy.Hide && isCrossingTickValue(guide, value);
 
-const shouldHideCrossingTickLabel = (guide: AxisGuide, value: AxisGuideValue): boolean =>
+const shouldHideCrossingTickLabel = (guide: IRPlotAxisGuide, value: AxisGuideValue): boolean =>
   axisCrossingTokenOf(guide)?.label === AxisCrossingLabelPolicy.Hide && isCrossingTickValue(guide, value);
 
-const shouldUseCrossingCornerLabel = (guide: AxisGuide, value: AxisGuideValue): boolean =>
+const shouldUseCrossingCornerLabel = (guide: IRPlotAxisGuide, value: AxisGuideValue): boolean =>
   axisCrossingTokenOf(guide)?.label === AxisCrossingLabelPolicy.Corner && isCrossingTickValue(guide, value);
 
 const crossingCornerVectorOf = (corner: AxisCrossingToken['corner']): readonly [number, number] => {
@@ -202,7 +207,7 @@ const crossingCornerVectorOf = (corner: AxisCrossingToken['corner']): readonly [
   return [-1, 1];
 };
 
-const axisTickEndpointPolicyOf = (guide: AxisGuide): AxisTickEndpointPolicyToken | undefined => {
+const axisTickEndpointPolicyOf = (guide: IRPlotAxisGuide): AxisTickEndpointPolicyToken | undefined => {
   const endpoint = guide.ticks?.endpoint;
   return endpoint !== undefined && endpoint !== false ? endpoint : undefined;
 };
@@ -212,7 +217,7 @@ const hasAxisArrowEnd = (
 ): boolean => arrow !== undefined && arrow !== false;
 
 const shouldHideEndpointTickMark = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   projected: number,
   range: readonly [number, number],
   tickLength: number,
@@ -231,7 +236,7 @@ const shouldHideEndpointTickMark = (
 };
 
 const shouldHideEndpointTickLabel = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   projected: number,
   range: readonly [number, number],
   tickLength: number,
@@ -336,7 +341,7 @@ const axisTickShapeRotationOf = (mark: AxisShapeTickMarkToken, placement: TickSh
   return rotate === 0 ? undefined : rotate;
 };
 
-const axisTickShapeNodesOf = (guide: AxisGuide, placements: ReadonlyArray<TickShapePlacement>): Array<IRNode> => {
+const axisTickShapeNodesOf = (guide: IRPlotAxisGuide, placements: ReadonlyArray<TickShapePlacement>): Array<IRNode> => {
   const mark = axisShapeTickMarkOf(guide);
   if (mark === null) return [];
   const { width, height, offset } = shapeMarkSizeOf(mark);
@@ -358,13 +363,13 @@ const axisTickShapeNodesOf = (guide: AxisGuide, placements: ReadonlyArray<TickSh
   });
 };
 
-const axisTickLabelStyleOf = (guide: AxisGuide): GuideTextStyle | false =>
+const axisTickLabelStyleOf = (guide: IRPlotAxisGuide): GuideTextStyle | false =>
   guide.tickLabels === false ? false : textStyleProps(guide.tickLabels);
 
-const axisTickLabelGapOf = (guide: AxisGuide): number =>
-  guide.tickLabels !== false ? (guide.tickLabels?.gap ?? AXIS_LABEL_GAP) : AXIS_LABEL_GAP;
+const axisTickLabelGapOf = (guide: IRPlotAxisGuide): number =>
+  guide.tickLabels !== false ? (guide.tickLabels?.gap ?? DEFAULT_AXIS_LABEL_GAP) : DEFAULT_AXIS_LABEL_GAP;
 
-type AxisTickLabelsToken = Exclude<NonNullable<AxisGuide['tickLabels']>, false>;
+type AxisTickLabelsToken = Exclude<NonNullable<IRPlotAxisGuide['tickLabels']>, false>;
 type AxisTickLabelLayoutToken = NonNullable<AxisTickLabelsToken['layout']>;
 type AxisTickLabelLayoutObject = Exclude<AxisTickLabelLayoutToken, false>;
 type TickLabelLayoutAxis = 'x' | 'y' | 'both';
@@ -387,7 +392,7 @@ type TickLabelLayoutOptions = {
   sideNormal?: readonly [number, number];
 };
 
-const axisTickLabelsTokenOf = (guide: AxisGuide): AxisTickLabelsToken | undefined =>
+const axisTickLabelsTokenOf = (guide: IRPlotAxisGuide): AxisTickLabelsToken | undefined =>
   guide.tickLabels !== undefined && guide.tickLabels !== false ? guide.tickLabels : undefined;
 
 const labelTextOf = (node: IRNode): string => textBlockMeasureText(node.text);
@@ -462,7 +467,7 @@ const defaultTickLabelAutoAnglesOf = (mode: TickLabelLayoutMode): Array<number> 
   mode === 'cartesian-x' ? [0, -30, -45, -60, -90] : [0];
 
 const tickLabelAutoRotateOf = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   nodes: ReadonlyArray<IRNode>,
   layout: AxisTickLabelLayoutObject | undefined,
   options: TickLabelLayoutOptions,
@@ -591,7 +596,7 @@ const alignRotatedTickLabelEndpoint = (
 };
 
 const layoutTickLabelNodes = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   nodes: ReadonlyArray<IRNode>,
   options: TickLabelLayoutOptions,
 ): Array<IRNode> => {
@@ -621,7 +626,7 @@ const layoutTickLabelNodes = (
 };
 
 const axisTitleOf = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
 ):
   | ({
       text: IRNode['text'];
@@ -659,11 +664,11 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
     .join('\n');
 };
 
-type AxisGridToken = Exclude<NonNullable<AxisGuide['grid']>, boolean>;
+type AxisGridToken = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
 type AxisMinorGridToken = Exclude<NonNullable<AxisGridToken['minor']>, false>;
 type AxisGridTickOptions = Pick<AxisGridToken, 'ticks' | 'density' | 'bandPosition'>;
 
-const axisGridTokenOf = (guide: AxisGuide): AxisGridToken | undefined =>
+const axisGridTokenOf = (guide: IRPlotAxisGuide): AxisGridToken | undefined =>
   typeof guide.grid === 'object' ? guide.grid : undefined;
 
 const axisMinorGridTokenOf = (grid: AxisGridToken | undefined): AxisMinorGridToken | undefined =>
@@ -764,7 +769,7 @@ const assertCartesianAxisSideCompatible = (side: CartesianAxisSide, isX: boolean
   }
 };
 
-const cartesianAxisSideOf = (guide: AxisGuide, isX: boolean): CartesianAxisSide => {
+const cartesianAxisSideOf = (guide: IRPlotAxisGuide, isX: boolean): CartesianAxisSide => {
   const placement = guide.placement;
   if (placement === undefined || placement.kind === AxisPlacementKind.Auto) {
     return isX ? AxisCardinalSide.Bottom : AxisCardinalSide.Left;
@@ -787,19 +792,19 @@ const cartesianAxisSideOf = (guide: AxisGuide, isX: boolean): CartesianAxisSide 
   return side;
 };
 
-const axisPlacementOffsetOf = (guide: AxisGuide): number =>
+const axisPlacementOffsetOf = (guide: IRPlotAxisGuide): number =>
   guide.placement?.kind === AxisPlacementKind.Side ||
   guide.placement?.kind === AxisPlacementKind.Edge ||
   guide.placement?.kind === AxisPlacementKind.Origin
     ? (guide.placement.offset ?? 0)
     : 0;
 
-/** y 轴标题默认旋转：让文字局部顶部朝向轴线。 */
+/** y 轴标题默认旋转：让文字局部顶部朝向轴线 */
 const cartesianYAxisTitleRotateOf = (side: CartesianAxisSide): number => (side === AxisCardinalSide.Right ? -90 : 90);
 
 /**
  * 极坐标点投影的窄返回值 helper。
- * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露。
+ * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露
  */
 const finitePolarPoint = (center: Position, angleDeg: number, radius: number): Position =>
   Number.isFinite(angleDeg) && Number.isFinite(radius) ? arcEndPoint(center, radius, angleDeg) : [NaN, NaN];
@@ -807,10 +812,10 @@ const finitePolarPoint = (center: Position, angleDeg: number, radius: number): P
 /**
  * 轴 / 网格 scope 的 id + meta props（provenance 开时合成 `<plotId>.` 前缀 id + layer 来源 meta）
  * @description provenance 关（context undefined）→ 仅在用户给 guide.id 时绑裸 id、无 meta。
- *   开 → id 走 `<plotId>.<guideId|axis|grid.dim>`（plotId 缺则匿名）、meta 写 {source,layer,dimension}。
+ *   开 → id 走 `<plotId>.<guideId|axis|grid.dim>`（plotId 缺则匿名）、meta 写 {source,layer,dimension}
  */
 const guideScopeProps = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   layer: 'axis' | 'grid',
   context: ProvenanceContext | undefined,
 ): { id?: string; meta?: ReturnType<typeof guideLayerMeta>; zIndex: number } => {
@@ -824,12 +829,12 @@ const guideScopeProps = (
 
 /** cartesian guide：直线轴 + 竖 / 横刻度 + grid 跨绘图区直线 */
 const lowerCartesianGuide = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   ctx: GuideContext,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { plotArea, fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
+  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const left = plotArea.x;
   const right = plotArea.x + plotArea.width;
   const top = plotArea.y;
@@ -865,7 +870,7 @@ const lowerCartesianGuide = (
   // ---- 轴层 ----
   const axisLine: Segment = (() => {
     const extent = axisLineToken?.extent;
-    if (extent !== undefined && extent !== 'plotArea') {
+    if (extent !== undefined && extent !== AxisLineExtentTarget.PlotArea) {
       const from = project.coordinate(extent.from);
       const to = project.coordinate(extent.to);
       return isX
@@ -1099,17 +1104,17 @@ const arcPath = (frame: PolarCoordinateFrame, radius: number): IRPath => {
 
 /**
  * polar angular axis：外圆弧轴线 + 每角向刻度短径向刻度线 + 圆周外标签
- * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 AXIS_TICK_LENGTH 短线；
- *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条。
+ * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 DEFAULT_AXIS_TICK_LENGTH 短线；
+ *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条
  */
 const lowerAngularAxis = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   ctx: GuideContext,
   frame: PolarCoordinateFrame,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
+  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const ticks = ctx.angularTicks ?? { values: [], labels: [] };
   const scale = frame.primary;
   const outer = frame.outerRadius;
@@ -1232,16 +1237,16 @@ const lowerAngularAxis = (
 /**
  * polar radial axis：沿 startAngle 辐条轴线 + 辐条上刻度 + 标签
  * @description 轴线 = center→外圆 直段（基准角 = startAngle）；刻度 = 辐条上每径向刻度短切向横线；
- *   标签 = 刻度点旁 Node text。grid:true → 每径向刻度一个同心圆环（arc step）。
+ *   标签 = 刻度点旁 Node text。grid:true → 每径向刻度一个同心圆环（arc step）
  */
 const lowerRadialAxis = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   ctx: GuideContext,
   frame: PolarCoordinateFrame,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
+  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const ticks = ctx.radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
   const baseAngle = frame.startAngle;
@@ -1249,8 +1254,8 @@ const lowerRadialAxis = (
   const tickLabelGap = axisTickLabelGapOf(guide);
   const tickLabelStyle = axisTickLabelStyleOf(guide);
   const showLabels = tickLabelStyle !== false;
-  // 辐条切向单位向量（垂直于辐条）；刻度短线与标签沿此方向朝一侧（-tangent）偏移，与 cartesian / angular 轴一致。
-  // 不沿辐条方向画刻度——否则首尾刻度会沿辐条越出内 / 外圆端点（各多出半个刻度长）。
+  // 辐条切向单位向量（垂直于辐条）；刻度短线与标签沿此方向朝一侧（-tangent）偏移，与 cartesian / angular 轴一致
+  // 不沿辐条方向画刻度——否则首尾刻度会沿辐条越出内 / 外圆端点（各多出半个刻度长）
   const tangent: [number, number] = [-Math.sin(baseAngle * DEG_TO_RAD), Math.cos(baseAngle * DEG_TO_RAD)];
 
   // ---- 轴层 ----
@@ -1390,7 +1395,7 @@ const lerp2 = (from: readonly [number, number], to: readonly [number, number], t
 /**
  * 某 ternary 分量轴的三角角色：顶点 + 该分量 0 边的两端
  * @description x：顶点 Vx、0 边 = Vy–Vz；y：顶点 Vy、0 边 = Vx–Vz；z：顶点 Vz、0 边 = Vx–Vy。
- *   刻度沿 baseP→apex 边（= 三角一条边）；等值线（iso）= lerp(baseP,apex,t)–lerp(baseQ,apex,t)，平行 0 边。
+ *   刻度沿 baseP→apex 边（= 三角一条边）；等值线（iso）= lerp(baseP,apex,t)–lerp(baseQ,apex,t)，平行 0 边
  */
 const ternaryAxisRoles = (
   dimension: string,
@@ -1405,16 +1410,16 @@ const ternaryAxisRoles = (
 /**
  * ternary 三角轴：沿一条边的刻度轴（0→100%）+ 平行对边的等值网格线
  * @description 轴线 = baseP→apex 三角边（三条 x/y/z 轴合起来 = 完整三角外框）；刻度沿该边、标签外法向偏移；
- *   grid:true → 内部刻度处画平行 0 边的等值线（lerp(baseP,apex,t)–lerp(baseQ,apex,t)）。
+ *   grid:true → 内部刻度处画平行 0 边的等值线（lerp(baseP,apex,t)–lerp(baseQ,apex,t)）
  */
 const lowerTernaryGuide = (
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   ctx: GuideContext,
   vertices: TernaryVertices,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
   const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? AXIS_LABEL_GAP;
+  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const ticks = ctx.ternaryTicks ?? { values: [], labels: [] };
   const tickLength = axisTickLengthOf(guide);
   const tickLabelGap = axisTickLabelGapOf(guide);
@@ -1562,11 +1567,11 @@ const CUSTOM_AXIS_SAMPLES = 40;
  * 自定义坐标系的曲线轴（通用 path-aware 轴）：沿 projectRoles 投影密采样画轴线 + 在 scale 刻度处放刻度 / 标签
  * @description 取该维度的位置 scale 刻度、其余角色锚在各自 scale 首刻度（≈ domain 起点），按 frame.roles 序喂 projectRoles
  *   得轴线（任意曲线）与刻度点；刻度短线 / 标签沿局部切向的法线摆。frame 无 roleScales[dimension] → 不画（返回空）。
- *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。自定义坐标系暂不生成网格。
+ *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。自定义坐标系暂不生成网格
  */
 export const lowerCustomAxis = (
   frame: CoordinateFrame,
-  guide: AxisGuide,
+  guide: IRPlotAxisGuide,
   fontSize: number,
   context: ProvenanceContext | undefined,
 ): LoweredGuide => {
@@ -1586,7 +1591,7 @@ export const lowerCustomAxis = (
   const tickLabelGap = axisTickLabelGapOf(guide);
   const tickLabelStyle = axisTickLabelStyleOf(guide);
   const showLabels = tickLabelStyle !== false;
-  const labelGap = AXIS_LABEL_GAP;
+  const labelGap = DEFAULT_AXIS_LABEL_GAP;
 
   // 其它角色锚在各自 scale 首刻度（≈ domain 起点）；按 frame.roles 序拼 values 喂 projectRoles
   const anchorFor = (role: DimensionRole): unknown => {
@@ -1698,9 +1703,9 @@ export const lowerCustomAxis = (
  * 把一个 axis guide 下沉成网格层 + 轴层（各自一层 core scope；样式上提到 scope）
  * @description 按坐标帧分支：ternary（ctx.ternaryVertices 存在）走三角轴；polar（ctx.frame 存在）按维度角色走 angular
  *   （外圆弧 + 圆周刻度 / 标签 + 角向辐条 grid）或 radial（辐条轴 + 同心环 grid）；否则走 cartesian 直线轴 / 网格。
- *   下沉目标统一是 core Node（标签）+ Path（直段 / arc step）。id → 轴层 scope.id（anchor 预留）。
+ *   下沉目标统一是 core Node（标签）+ Path（直段 / arc step）。id → 轴层 scope.id（anchor 预留）
  */
-export const lowerGuide = (guide: AxisGuide, ctx: GuideContext, context?: ProvenanceContext): LoweredGuide => {
+export const lowerGuide = (guide: IRPlotAxisGuide, ctx: GuideContext, context?: ProvenanceContext): LoweredGuide => {
   if (ctx.ternaryVertices || ctx.frame) {
     assertNoCartesianOnlyAxisLineGeometry(guide);
   }
@@ -1736,7 +1741,7 @@ export const LEGEND_RAMP_THICKNESS = 12;
 /**
  * 一个离散 legend 条目：swatch 视觉量 + 标签
  * @description color = 色块填充；shape = glyph 名（形状 swatch）；radius = size 梯度符号半径；opacity = 透明度块。
- *   一个条目按 channel 取其中一种视觉量；label 是已格式化的文本（formatter 在 expand 侧据 fieldType 选定）。
+ *   一个条目按 channel 取其中一种视觉量；label 是已格式化的文本（formatter 在 expand 侧据 fieldType 选定）
  */
 export type LegendEntry = {
   /** 条目标签（类别串 / 代表值 / 区间） */
@@ -1764,7 +1769,7 @@ export type LegendRamp = {
 /**
  * lowerLegend 入参：已解析的 legend 内容（形态 + 条目 / ramp + 摆放）
  * @description 形态选择（swatch / ramp）与颜色 / 代表值由 expand 据 descriptor + scale 求好后传入；
- *   本函数只管几何摆放与 core 节点产出（关注点分离：求值在 expand、绘制在 guide）。
+ *   本函数只管几何摆放与 core 节点产出（关注点分离：求值在 expand、绘制在 guide）
  */
 export type LegendInput = {
   /** 形态：swatch（离散 / 分箱 / size / opacity）或 ramp（连续色带） */
@@ -1787,7 +1792,7 @@ export type LegendInput = {
   band: Rect;
   /** legend scope id（稳定，'legend' 前缀；anchor / 识别用） */
   id?: string;
-  /** legend 语义图层的 core zIndex。 */
+  /** legend 语义图层的 core zIndex */
   zIndex?: number;
   /** 已按 built-in theme < PlotSpec.theme < LegendGuide.style 合并的视觉 token */
   style: ResolvedLegendGuideTokens;
@@ -1797,7 +1802,7 @@ export type LegendInput = {
  * 矩形 swatch / ramp 条 → core Node（shape rectangle）
  * @description core PathSchema 要求 children ≥ 2 step，单 rectangle step 的 Path 非法；矩形改用 Node
  *   （与 bar mark 同款：shape rectangle + minimumSize + fill），符合「一切可见物是 Node」。
- *   入参沿用左上角 + 宽高语义，内部换算成 Node 中心点（Node.position 是中心）。
+ *   入参沿用左上角 + 宽高语义，内部换算成 Node 中心点（Node.position 是中心）
  */
 const rectNode = (x: number, y: number, width: number, height: number): IRNode => ({
   type: 'node',
@@ -1807,7 +1812,7 @@ const rectNode = (x: number, y: number, width: number, height: number): IRNode =
   padding: 0,
 });
 
-/** legend 文本节点默认只绘制文字，不继承外部节点描边或填充。 */
+/** legend 文本节点默认只绘制文字，不继承外部节点描边或填充 */
 const legendTextNode = (node: IRNode): IRNode => ({
   ...node,
   stroke: 'none',
@@ -1820,7 +1825,7 @@ const legendTextNode = (node: IRNode): IRNode => ({
  * @description swatch 形态：每条目一个矩形 swatch Node（shape rectangle，填 color / opacity；size 条目额外一个圆点 Node）+ 一个标签 Node，纵 / 横堆叠；
  *   ramp 形态：一个矩形 Node 填 core linearGradient paint server（连续真渐变）+ 沿带刻度标签 Node。
  *   条目几何在传入 band 内从左上角起摆，受无文字度量约束（plot-design §13.1）：超 band 溢出可接受、不做测量自适应。
- *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON。
+ *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON
  */
 export const lowerLegend = (input: LegendInput): IRScope => {
   const { fontSize, band, orient } = input;
@@ -1897,7 +1902,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
           strokeWidth: 0,
         });
       } else if (entry.radius !== undefined) {
-        // size 图例：只画代表半径的圆点，不额外画矩形 swatch。
+        // size 图例：只画代表半径的圆点，不额外画矩形 swatch
         children.push({
           type: 'node',
           position: symbolCenter,
@@ -1935,8 +1940,8 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     ...(input.id !== undefined ? { id: input.id } : {}),
     zIndex: input.zIndex ?? PlotLayerZIndex.Legend,
     meta: { source: 'plot', layer: 'legend', channel: input.channel },
-    // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）。
-    // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis。
+    // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）
+    // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis
     nodeDefault: { font: { size: fontSize }, padding: 0, strokeWidth: 0 },
     children,
   };

@@ -1,6 +1,6 @@
 import type { IRNode, IRPath } from '@retikz/core';
 
-import type { AxisGuide, LegendGuide, PlotTheme } from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotTheme } from '../../schemas';
 
 import { LegendSymbolFit } from '../../schemas';
 import { DEFAULT_PLOT_COLORS, PlotColorScheme } from '../scale/shared';
@@ -13,26 +13,26 @@ type GuidePathStyle = Partial<
 type GuideTextStyle = Partial<
   Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>
 >;
-type AxisTicksToken = NonNullable<AxisGuide['ticks']>;
-type AxisTitleToken = Exclude<NonNullable<AxisGuide['title']>, string>;
-type AxisGridToken = Exclude<NonNullable<AxisGuide['grid']>, boolean>;
-type LegendStyle = NonNullable<LegendGuide['style']>;
+type AxisTicksToken = NonNullable<IRPlotAxisGuide['ticks']>;
+type AxisTitleToken = Exclude<NonNullable<IRPlotAxisGuide['title']>, string>;
+type AxisGridToken = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
+type LegendStyle = NonNullable<IRPlotLegendGuide['style']>;
 
-/** Plot palette 解析结果：所有默认配色入口收敛到一个对象。 */
+/** Plot palette 解析结果：所有默认配色入口收敛到一个对象 */
 export type ResolvedPlotPalette = {
-  /** 分类 scale 默认颜色。 */
+  /** 分类 scale 默认颜色 */
   categorical: Array<string>;
-  /** 无 color 编码的 mark / series 默认颜色。 */
+  /** 无 color 编码的 mark / series 默认颜色 */
   series: Array<string>;
-  /** sector / pie 默认颜色。 */
+  /** sector / pie 默认颜色 */
   sector: Array<string>;
-  /** 连续单向色阶默认 scheme。 */
+  /** 连续单向色阶默认 scheme */
   sequential: string;
-  /** 发散色阶默认 scheme。 */
+  /** 发散色阶默认 scheme */
   diverging: string;
 };
 
-/** Plot legend 解析后的视觉 token。 */
+/** Plot legend 解析后的视觉 token */
 export type ResolvedLegendGuideTokens = Required<
   Pick<
     LegendStyle,
@@ -47,25 +47,25 @@ export type ResolvedLegendGuideTokens = Required<
     | 'symbolFit'
   >
 > & {
-  /** Legend title 文本样式。 */
+  /** Legend title 文本样式 */
   title: GuideTextStyle;
-  /** Legend label 文本样式。 */
+  /** Legend label 文本样式 */
   label: GuideTextStyle;
 };
 
-/** Plot theme 解析结果：lowering 只消费 resolved token，不直接读原始 theme。 */
+/** Plot theme 解析结果：lowering 只消费 resolved token，不直接读原始 theme */
 export type ResolvedPlotTheme = {
-  /** 可选背景填充；省略表示透明。 */
+  /** 可选背景填充；省略表示透明 */
   background?: string;
-  /** 全局 guide 文本默认样式。 */
+  /** 全局 guide 文本默认样式 */
   typography: GuideTextStyle;
-  /** 解析后的 palette。 */
+  /** 解析后的 palette */
   palette: ResolvedPlotPalette;
-  /** Axis 视觉默认值。 */
-  axis: NonNullable<PlotTheme['axis']>;
-  /** Legend 视觉默认值。 */
+  /** Axis 视觉默认值 */
+  axis: NonNullable<IRPlotTheme['axis']>;
+  /** Legend 视觉默认值 */
   legend: ResolvedLegendGuideTokens;
-  /** Plot label 文本默认样式。 */
+  /** Plot label 文本默认样式 */
   labelText: GuideTextStyle;
 };
 
@@ -104,7 +104,7 @@ const mergePathStyle = <T extends GuidePathStyle>(base: GuidePathStyle | undefin
 };
 
 const resolvePalette = (
-  palette: PlotTheme['palette'] | undefined,
+  palette: IRPlotTheme['palette'] | undefined,
   colors: ReadonlyArray<string> | undefined,
 ): ResolvedPlotPalette => {
   const categorical = [...(palette?.categorical ?? colors ?? DEFAULT_PLOT_COLORS)];
@@ -119,10 +119,10 @@ const resolvePalette = (
 
 /**
  * 解析 PlotSpec.theme。
- * @description 只处理视觉 token、typography、palette 和 background；domain、tick source、format 等语义字段不进入 theme。
+ * @description 只处理视觉 token、typography、palette 和 background；domain、tick source、format 等语义字段不进入 theme
  */
 export const resolvePlotTheme = (
-  theme: PlotTheme | undefined,
+  theme: IRPlotTheme | undefined,
   colors: ReadonlyArray<string> | undefined,
 ): ResolvedPlotTheme => {
   const typography = mergeTextStyle(DEFAULT_TYPOGRAPHY, theme?.typography);
@@ -150,9 +150,9 @@ export const resolvePlotTheme = (
 };
 
 const mergeAxisTicks = (
-  theme: NonNullable<PlotTheme['axis']>['ticks'] | undefined,
-  local: AxisGuide['ticks'],
-): AxisGuide['ticks'] => {
+  theme: NonNullable<IRPlotTheme['axis']>['ticks'] | undefined,
+  local: IRPlotAxisGuide['ticks'],
+): IRPlotAxisGuide['ticks'] => {
   if (theme === undefined) return local;
   const themeMark = theme.mark;
   const lineMarkFromShorthand = (): AxisTicksToken['mark'] => {
@@ -200,9 +200,9 @@ const mergeAxisTicks = (
 };
 
 const mergeAxisTickLabels = (
-  theme: NonNullable<PlotTheme['axis']>['tickLabels'] | undefined,
-  local: AxisGuide['tickLabels'],
-): AxisGuide['tickLabels'] => {
+  theme: NonNullable<IRPlotTheme['axis']>['tickLabels'] | undefined,
+  local: IRPlotAxisGuide['tickLabels'],
+): IRPlotAxisGuide['tickLabels'] => {
   if (local === false) return false;
   if (theme === false && local === undefined) return false;
   if (theme === undefined) return local;
@@ -211,9 +211,9 @@ const mergeAxisTickLabels = (
 };
 
 const mergeAxisTitle = (
-  theme: NonNullable<PlotTheme['axis']>['title'] | undefined,
-  local: AxisGuide['title'],
-): AxisGuide['title'] => {
+  theme: NonNullable<IRPlotTheme['axis']>['title'] | undefined,
+  local: IRPlotAxisGuide['title'],
+): IRPlotAxisGuide['title'] => {
   if (local === undefined) return undefined;
   if (typeof local === 'string') return theme === undefined ? local : { text: local, ...theme };
   const themeTitle = theme === undefined ? undefined : { ...theme };
@@ -228,9 +228,9 @@ const mergeAxisTitle = (
 };
 
 const mergeAxisGrid = (
-  theme: NonNullable<PlotTheme['axis']>['grid'] | undefined,
-  local: AxisGuide['grid'],
-): AxisGuide['grid'] => {
+  theme: NonNullable<IRPlotTheme['axis']>['grid'] | undefined,
+  local: IRPlotAxisGuide['grid'],
+): IRPlotAxisGuide['grid'] => {
   if (local === undefined || local === false || theme === undefined) return local;
   if (local === true) return mergePathStyle(theme, undefined) satisfies AxisGridToken;
   return { ...mergePathStyle(theme, local), ...local };
@@ -238,9 +238,9 @@ const mergeAxisGrid = (
 
 /**
  * 合并 axis guide 的主题 token。
- * @description 只合并 line/tick line/tick label/title/grid 的视觉字段；ticks.values、ticks.count、tickLabels.format、title.text 和 grid projection 保持 local 语义。
+ * @description 只合并 line/tick line/tick label/title/grid 的视觉字段；ticks.values、ticks.count、tickLabels.format、title.text 和 grid projection 保持 local 语义
  */
-export const resolveAxisGuideTokens = (theme: ResolvedPlotTheme, guide: AxisGuide): AxisGuide => ({
+export const resolveAxisGuideTokens = (theme: ResolvedPlotTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
   ...guide,
   ...(theme.axis.line !== undefined
     ? {
@@ -268,7 +268,7 @@ export const resolveAxisGuideTokens = (theme: ResolvedPlotTheme, guide: AxisGuid
 
 /**
  * 合并 legend guide 的主题 token。
- * @description position、orient、channel、scale、ticks、tickLabels.format 等语义字段不参与合并。
+ * @description position、orient、channel、scale、ticks、tickLabels.format 等语义字段不参与合并
  */
 export const resolveLegendGuideTokens = (
   theme: ResolvedPlotTheme,

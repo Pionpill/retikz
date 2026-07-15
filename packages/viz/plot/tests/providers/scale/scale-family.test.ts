@@ -3,7 +3,7 @@ import type { IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -21,7 +21,7 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -42,7 +42,7 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
 const stepPoint = (step: IRStep): [number, number] => (step as { to: [number, number] }).to;
 
 /** 建单 line mark 的 cartesian spec，x linear、y 为给定连续 scale 定义 */
-const lineSpec = (yScale: Record<string, unknown>): PlotSpec =>
+const lineSpec = (yScale: Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -55,7 +55,7 @@ const lineSpec = (yScale: Record<string, unknown>): PlotSpec =>
     marks: [{ type: 'path', order: 'i', encoding: { x: { field: 'i' }, y: { field: 'v' } } }],
   });
 
-describe('scale family · log (alpha.7 ADR-01)', () => {
+describe('scale family · log (contract)', () => {
   // Happy path：log 映射几何中点。domain [1,100] range [300,0]：v=10 → log 中点 → y≈150
   it('log_maps_value_to_geometric_midpoint', () => {
     const data = [
@@ -97,7 +97,7 @@ describe('scale family · log (alpha.7 ADR-01)', () => {
   });
 });
 
-describe('scale family · sqrt (alpha.7 ADR-01)', () => {
+describe('scale family · sqrt (contract)', () => {
   // Happy path：sqrt 映射。domain [0,4] range [300,0]：v=1 → sqrt(1)/sqrt(4)=0.5 → y≈150
   it('sqrt_maps_by_square_root', () => {
     const data = [
@@ -118,7 +118,7 @@ describe('scale family · sqrt (alpha.7 ADR-01)', () => {
   });
 });
 
-describe('scale family · pow (alpha.7 ADR-01)', () => {
+describe('scale family · pow (contract)', () => {
   // Happy path：pow exponent 2，domain [0,2] range [300,0]：v=1 → 1^2/2^2=0.25 → y≈225
   it('pow_exponent_two_maps_by_square', () => {
     const data = [
@@ -246,8 +246,8 @@ describe('scale family · radial', () => {
   });
 });
 
-describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
-  const barSpec = (yScale: Record<string, unknown>): PlotSpec =>
+describe('scale family · L1 baseline guard (contract)', () => {
+  const barSpec = (yScale: Record<string, unknown>): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -260,7 +260,7 @@ describe('scale family · L1 baseline guard (alpha.7 ADR-01)', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
     });
 
-  const areaSpec = (yScale: Record<string, unknown>): PlotSpec =>
+  const areaSpec = (yScale: Record<string, unknown>): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',

@@ -8,7 +8,7 @@ import { resolveFieldPath } from '../data';
 import { freezeDefinitions } from '../shared';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
 
-/** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略。 */
+/** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略 */
 const selectTopBottomRows = (
   ranked: Array<ExternalRow>,
   operation: { by: string; n: number; tie?: RowSelectorTieValue },
@@ -32,7 +32,7 @@ const selectTopBottomRows = (
   return selected;
 };
 
-/** min selector definition：选择数值最小的原始行。 */
+/** min selector definition：选择数值最小的原始行 */
 const minSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Min,
   inputFields: operation => [operation.by],
@@ -57,7 +57,7 @@ const minSelectorDefinition = defineRowSelector({
   },
 });
 
-/** max selector definition：选择数值最大的原始行。 */
+/** max selector definition：选择数值最大的原始行 */
 const maxSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Max,
   inputFields: operation => [operation.by],
@@ -82,7 +82,7 @@ const maxSelectorDefinition = defineRowSelector({
   },
 });
 
-/** first selector definition：选择输入顺序或稳定排序后的首行。 */
+/** first selector definition：选择输入顺序或稳定排序后的首行 */
 const firstSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.First,
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
@@ -92,7 +92,7 @@ const firstSelectorDefinition = defineRowSelector({
   },
 });
 
-/** last selector definition：选择输入顺序或稳定排序后的末行。 */
+/** last selector definition：选择输入顺序或稳定排序后的末行 */
 const lastSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Last,
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
@@ -102,7 +102,7 @@ const lastSelectorDefinition = defineRowSelector({
   },
 });
 
-/** top selector definition：按数值字段选择前 N 行。 */
+/** top selector definition：按数值字段选择前 N 行 */
 const topSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Top,
   inputFields: operation => [operation.by],
@@ -113,7 +113,7 @@ const topSelectorDefinition = defineRowSelector({
   },
 });
 
-/** bottom selector definition：按数值字段选择后 N 行。 */
+/** bottom selector definition：按数值字段选择后 N 行 */
 const bottomSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Bottom,
   inputFields: operation => [operation.by],
@@ -124,7 +124,7 @@ const bottomSelectorDefinition = defineRowSelector({
   },
 });
 
-/** nth selector definition：按稳定排序选择指定零基下标行。 */
+/** nth selector definition：按稳定排序选择指定零基下标行 */
 const nthSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Nth,
   inputFields: operation => operation.orderBy.map(order => order.field),
@@ -134,7 +134,7 @@ const nthSelectorDefinition = defineRowSelector({
   },
 });
 
-/** outside-quantile-band selector definition：选择参数化分位区间或 spread fence 外的原始行。 */
+/** outside-quantile-band selector definition：选择参数化分位区间或 spread fence 外的原始行 */
 const outsideQuantileBandSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.OutsideQuantileBand,
   inputFields: operation => [operation.field],
@@ -150,7 +150,7 @@ const outsideQuantileBandSelectorDefinition = defineRowSelector({
   },
 });
 
-/** 内置 row selector 定义集合；内置与自定义 selector 共享同一 registry 分派流程。 */
+/** 内置 row selector 定义集合；内置与自定义 selector 共享同一 registry 分派流程 */
 export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = freezeDefinitions([
   minSelectorDefinition,
   maxSelectorDefinition,

@@ -78,10 +78,68 @@ describe('statistics provider runtime', () => {
     ).toEqual({ result: 2.5 });
   });
 
-  it('uses the documented zero-value convention for empty reducer inputs', () => {
-    const operations: Array<IRDataReducerOperation> = [
+  it('keeps finite mean and median results stable near the numeric limit', () => {
+    const reduce = (
+      values: Array<number>,
+      kind: typeof ReducerOperationKind.Mean | typeof ReducerOperationKind.Median,
+    ) =>
+      applyReducerOperation(
+        values.map(value => ({ value })),
+        { kind, field: 'value', as: 'result' },
+        DEFAULT_TRANSFORM_CONTEXT,
+      ).result;
+
+    expect(reduce([1e308, 1e308], ReducerOperationKind.Mean)).toBe(1e308);
+    expect(reduce([1e308, -1e308], ReducerOperationKind.Mean)).toBe(0);
+    expect(reduce([1e308, 1e308], ReducerOperationKind.Median)).toBe(1e308);
+    expect(reduce([-1e308, 1e308], ReducerOperationKind.Median)).toBe(0);
+  });
+
+  it('computes large-group extrema without expanding values into call arguments', () => {
+    const rows = Array.from({ length: 1_000_000 }, (_, index) => ({ value: index + 1 }));
+
+    expect(
+      applyReducerOperation(
+        rows,
+        { kind: ReducerOperationKind.Min, field: 'value', as: 'result' },
+        DEFAULT_TRANSFORM_CONTEXT,
+      ),
+    ).toEqual({ result: 1 });
+    expect(
+      applyReducerOperation(
+        rows,
+        { kind: ReducerOperationKind.Max, field: 'value', as: 'result' },
+        DEFAULT_TRANSFORM_CONTEXT,
+      ),
+    ).toEqual({ result: 1_000_000 });
+    expect(
+      applyReducerOperation(
+        rows,
+        { kind: ReducerOperationKind.Extent, field: 'value', as: 'result' },
+        DEFAULT_TRANSFORM_CONTEXT,
+      ),
+    ).toEqual({ result: [1, 1_000_000] });
+    expect(
+      applyReducerOperation(
+        rows,
+        {
+          kind: ReducerOperationKind.QuantileBand,
+          field: 'value',
+          lowerP: 0.25,
+          upperP: 0.75,
+          outputs: { lower: 'lower', upper: 'upper', min: 'min', max: 'max' },
+        },
+        DEFAULT_TRANSFORM_CONTEXT,
+      ),
+    ).toMatchObject({ min: 1, max: 1_000_000 });
+  });
+
+  it('keeps count and sum identities but marks undefined empty statistics invalid', () => {
+    const identityOperations: Array<IRDataReducerOperation> = [
       { kind: ReducerOperationKind.Count, as: 'result' },
       { kind: ReducerOperationKind.Sum, field: 'value', as: 'result' },
+    ];
+    const undefinedScalarOperations: Array<IRDataReducerOperation> = [
       { kind: ReducerOperationKind.Mean, field: 'value', as: 'result' },
       { kind: ReducerOperationKind.Median, field: 'value', as: 'result' },
       { kind: ReducerOperationKind.Min, field: 'value', as: 'result' },
@@ -89,16 +147,51 @@ describe('statistics provider runtime', () => {
       { kind: ReducerOperationKind.Quantile, field: 'value', p: 0.5, as: 'result' },
     ];
 
-    for (const operation of operations) {
+    for (const operation of identityOperations) {
       expect(applyReducerOperation([], operation, DEFAULT_TRANSFORM_CONTEXT)).toEqual({ result: 0 });
     }
-    expect(
-      applyReducerOperation(
-        [],
-        { kind: ReducerOperationKind.Extent, field: 'value', as: 'result' },
-        DEFAULT_TRANSFORM_CONTEXT,
-      ),
-    ).toEqual({ result: [0, 0] });
+    for (const operation of undefinedScalarOperations) {
+      const out = applyReducerOperation([], operation, DEFAULT_TRANSFORM_CONTEXT);
+      expect(Number.isNaN(out.result)).toBe(true);
+    }
+
+    const extent = applyReducerOperation(
+      [],
+      { kind: ReducerOperationKind.Extent, field: 'value', as: 'result' },
+      DEFAULT_TRANSFORM_CONTEXT,
+    ).result;
+    expect(Array.isArray(extent)).toBe(true);
+    expect((extent as Array<unknown>).every(value => typeof value === 'number' && Number.isNaN(value))).toBe(true);
+
+    const band = applyReducerOperation(
+      [],
+      {
+        kind: ReducerOperationKind.QuantileBand,
+        field: 'value',
+        lowerP: 0.25,
+        upperP: 0.75,
+        outputs: {
+          lower: 'lower',
+          upper: 'upper',
+          points: [{ p: 0.5, as: 'median' }],
+          spread: 'spread',
+          lowerFence: 'lowerFence',
+          upperFence: 'upperFence',
+          whiskerMin: 'whiskerMin',
+          whiskerMax: 'whiskerMax',
+          min: 'min',
+          max: 'max',
+          count: 'count',
+        },
+        whisker: { kind: 'spread' },
+      },
+      DEFAULT_TRANSFORM_CONTEXT,
+    );
+    expect(band.count).toBe(0);
+    for (const [field, value] of Object.entries(band)) {
+      if (field === 'count') continue;
+      expect(Number.isNaN(value)).toBe(true);
+    }
   });
 
   it('computes quantile-band points, spread fences, whiskers and extent metadata', () => {

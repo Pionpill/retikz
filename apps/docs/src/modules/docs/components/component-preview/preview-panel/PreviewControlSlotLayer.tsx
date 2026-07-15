@@ -27,13 +27,11 @@ export type PreviewControlSlotLayerProps = {
   runtime: PreviewControlRuntime;
   /** 是否固定显示控制层。 */
   pinned?: boolean;
-  /** 是否忽略 hover 状态始终显示控制层。 */
-  alwaysVisible?: boolean;
 };
 
 /** 将预览控制插槽渲染到预览区九宫格位置。 */
 export const PreviewControlSlotLayer: FC<PreviewControlSlotLayerProps> = props => {
-  const { slots, runtime, pinned, alwaysVisible } = props;
+  const { slots, runtime, pinned } = props;
   const groups = useMemo(() => {
     const next = new Map<PreviewControlPlacement, Array<PreviewControlSlot>>();
     for (const slot of slots) {
@@ -48,20 +46,24 @@ export const PreviewControlSlotLayer: FC<PreviewControlSlotLayerProps> = props =
       {groups.map(([placement, group]) => (
         <div
           key={placement}
-          className={cn(
-            'absolute z-10 flex items-center gap-1',
-            PLACEMENT_CLASS[placement],
-            pinned || alwaysVisible
-              ? 'pointer-events-auto opacity-100'
-              : 'pointer-events-none opacity-0 transition-opacity group-hover/preview:pointer-events-auto group-hover/preview:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100',
-          )}
+          className={cn('pointer-events-none absolute z-10 flex items-center gap-1', PLACEMENT_CLASS[placement])}
           onClick={event => event.stopPropagation()}
           onPointerDown={event => event.stopPropagation()}
           onMouseDown={event => event.stopPropagation()}
           onTouchStart={event => event.stopPropagation()}
         >
           {group.map(slot => (
-            <div key={slot.id}>{slot.render(runtime)}</div>
+            <div
+              key={slot.id}
+              className={cn(
+                'transition-opacity',
+                pinned || slot.visibility === 'always'
+                  ? 'pointer-events-auto opacity-100'
+                  : 'pointer-events-none opacity-0 group-hover/preview:pointer-events-auto group-hover/preview:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100',
+              )}
+            >
+              {slot.render(runtime)}
+            </div>
           ))}
         </div>
       ))}

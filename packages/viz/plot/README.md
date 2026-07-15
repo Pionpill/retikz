@@ -13,6 +13,19 @@ JSON-serializable, grammar-of-graphics **Plot IR** and lowers that IR to
 - `@retikz/plot-vanilla` provides `plotBuilder()` and `renderPlot()` for
   framework-free and server-side rendering workflows.
 
+## Install
+
+```bash
+pnpm add @retikz/plot
+```
+
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
+```ts
+import { lowerPlots } from '@retikz/plot';
+```
+
 See the [plot architecture](https://github.com/Pionpill/retikz/blob/next-viz/packages/viz/_notes/architecture/plot-design.md)
 and [plot design decisions](https://github.com/Pionpill/retikz/tree/next-viz/packages/viz/_notes/decisions/plot)
 for the underlying model and design rationale.

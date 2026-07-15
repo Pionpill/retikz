@@ -3,14 +3,17 @@ import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../../src/providers';
 import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../../src/providers';
-import { type ScaleOperation } from '../../../src/schemas';
+import { type IRPlotScaleOperation } from '../../../src/schemas';
 
-// 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参。
+// 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();
-const resolvePositionScale = (operation: ScaleOperation, values: Array<unknown>, range: readonly [number, number]) =>
-  resolvePositionScaleOp(operation, values, range, scaleRegistry);
+const resolvePositionScale = (
+  operation: IRPlotScaleOperation,
+  values: Array<unknown>,
+  range: readonly [number, number],
+) => resolvePositionScaleOp(operation, values, range, scaleRegistry);
 
-describe('resolveLinearScale (ADR-02 d3-scale)', () => {
+describe('resolveLinearScale (contract d3-scale)', () => {
   // Happy path
   it('scale_maps_like_alpha1', () => {
     const scale = resolveLinearScale({ domain: [0, 2] }, [], [0, 480]);
@@ -42,7 +45,7 @@ describe('resolveLinearScale (ADR-02 d3-scale)', () => {
 
   // 边界
   it('scale_single_datum_midpoint', () => {
-    // d0=d1：d3 归一化返回 0.5 → range 中点（守住 alpha.1 自写 linear 的行为）
+    // d0=d1：d3 归一化返回 0.5 → range 中点
     const scale = resolveLinearScale({ domain: [5, 5] }, [], [0, 480]);
     expect(scale(5)).toBe(240);
   });
@@ -55,7 +58,7 @@ describe('resolveLinearScale (ADR-02 d3-scale)', () => {
   });
 
   it('scale_nice_toggle', () => {
-    // nice 现在真生效（alpha.1 自写 linear 曾忽略）：[0,9.7] → 取整到 [0,10]
+    // nice 会把 [0,9.7] 扩展到整齐的 [0,10]
     const scale = resolveLinearScale({ domain: [0, 9.7], nice: true }, [], [0, 100]);
     expect(scale.domain()).toEqual([0, 10]);
     const plain = resolveLinearScale({ domain: [0, 9.7] }, [], [0, 100]);
@@ -77,7 +80,7 @@ describe('resolveLinearScale (ADR-02 d3-scale)', () => {
   });
 });
 
-describe('scaleTicks (ADR-02)', () => {
+describe('scaleTicks (contract)', () => {
   it('scaleticks_count_and_labels', () => {
     const scale = resolveLinearScale({ domain: [0, 10] }, [], [0, 100]);
     const { values, labels } = scaleTicks(scale, 5);
@@ -104,7 +107,7 @@ describe('scaleTicks (ADR-02)', () => {
   });
 });
 
-describe('inferCategoryDomain (ADR-01)', () => {
+describe('inferCategoryDomain (contract)', () => {
   it('category_domain_dedup_order', () => {
     expect(inferCategoryDomain(['b', 'a', 'b', 'c', 'a'])).toEqual(['b', 'a', 'c']);
   });
@@ -118,7 +121,7 @@ describe('inferCategoryDomain (ADR-01)', () => {
   });
 });
 
-describe('resolvePositionScale band / point (ADR-01)', () => {
+describe('resolvePositionScale band / point (contract)', () => {
   it('band_coordinate_center_ordered', () => {
     const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b', 'c'] }, [], [0, 300]);
     const ca = scale.coordinate('a');
@@ -151,6 +154,15 @@ describe('resolvePositionScale band / point (ADR-01)', () => {
     expect(scale.ticks().values).toEqual(['x', 'y']);
   });
 
+  it('band_skips_non_finite_category_values', () => {
+    const scale = resolvePositionScale(
+      { type: 'band', name: 'x' },
+      [Number.NaN, Infinity, -Infinity, 1, 'a'],
+      [0, 200],
+    );
+    expect(scale.ticks().values).toEqual([1, 'a']);
+  });
+
   it('band_unknown_category_nan', () => {
     const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b'] }, [], [0, 300]);
     expect(Number.isNaN(scale.coordinate('zzz'))).toBe(true);
@@ -170,7 +182,7 @@ describe('resolvePositionScale band / point (ADR-01)', () => {
   });
 });
 
-describe('resolvePositionScale linear back-compat (ADR-01)', () => {
+describe('resolvePositionScale linear back-compat (contract)', () => {
   it('linear_through_positionscale_unchanged', () => {
     const pos = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 2] }, [], [0, 480]);
     expect(pos.coordinate(1)).toBe(240);
@@ -181,7 +193,7 @@ describe('resolvePositionScale linear back-compat (ADR-01)', () => {
   });
 
   it('linear_skips_non_numeric', () => {
-    // 守 alpha.1 跳过语义：非数值（含数字字符串）→ NaN，不投影
+    // 非数值（含数字字符串）→ NaN，不投影
     const pos = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 10] }, [], [0, 100]);
     expect(Number.isNaN(pos.coordinate('5'))).toBe(true);
     expect(Number.isNaN(pos.coordinate(undefined))).toBe(true);
@@ -196,7 +208,7 @@ describe('resolvePositionScale linear back-compat (ADR-01)', () => {
   });
 });
 
-describe('resolveTimeScale / coerceTimestamp (ADR-06, UTC)', () => {
+describe('resolveTimeScale / coerceTimestamp (contract, UTC)', () => {
   it('to_timestamp_number_iso_invalid', () => {
     expect(coerceTimestamp(1000)).toBe(1000);
     expect(coerceTimestamp('2024-03-01')).toBe(Date.parse('2024-03-01'));

@@ -1,6 +1,6 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { Transform } from '@retikz/plot';
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotTransform } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 
 type CartesianScaleNames = {
   x: string;
@@ -26,7 +26,7 @@ export const createPolarPieSpec = (
   reference = 'share',
   scales: PolarScaleNames = { angle: 'angle', radius: 'radius', color: 'color' },
   innerRadius = 0,
-): PlotSpec => ({
+): IRPlotSpec => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference },
@@ -54,7 +54,7 @@ export const createPolarPieSpec = (
   guides: [],
 });
 
-export const createPolarPulledSpec = (): PlotSpec => ({
+export const createPolarPulledSpec = (): IRPlotSpec => ({
   ...createPolarPieSpec(),
   marks: [
     {
@@ -66,7 +66,7 @@ export const createPolarPulledSpec = (): PlotSpec => ({
   ],
 });
 
-export const createPolarRadialBarSpec = (): PlotSpec => ({
+export const createPolarRadialBarSpec = (): IRPlotSpec => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'share' },
@@ -93,7 +93,7 @@ export const createHistogramSpec = (
   reference = 's',
   scales: CartesianScaleNames = { x: 'x', y: 'y' },
   step = 2,
-): PlotSpec => ({
+): IRPlotSpec => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference },
@@ -129,7 +129,7 @@ export type DensitySpecOptions = {
   scales?: CartesianScaleNames;
 };
 
-export const createDensityAreaSpec = (reference = 'samples', options: DensitySpecOptions = {}): PlotSpec => {
+export const createDensityAreaSpec = (reference = 'samples', options: DensitySpecOptions = {}): IRPlotSpec => {
   const scales = options.scales ?? { x: 'x', y: 'y', color: 'color' };
   return {
     namespace: 'plot',
@@ -190,7 +190,7 @@ export type SmoothSpecOptions = {
   scales?: Required<CartesianScaleNames>;
 };
 
-export const createSmoothTrendSpec = (reference = 'samples', options: SmoothSpecOptions = {}): PlotSpec => {
+export const createSmoothTrendSpec = (reference = 'samples', options: SmoothSpecOptions = {}): IRPlotSpec => {
   const scales = options.scales ?? { x: 'x', y: 'y', color: 'color' };
   return {
     namespace: 'plot',
@@ -245,7 +245,7 @@ export const boxplotData: ExternalDatasets = {
   ],
 };
 
-export const boxplotSummary: Transform = {
+export const boxplotSummary: IRPlotTransform = {
   kind: 'summarize',
   groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
   metrics: [
@@ -266,7 +266,7 @@ export const boxplotSummary: Transform = {
   ],
 };
 
-export const boxplotOutside: Transform = {
+export const boxplotOutside: IRPlotTransform = {
   kind: 'select',
   groupBy: ['group'],
   selector: {
@@ -281,7 +281,7 @@ export const boxplotOutside: Transform = {
 export const createBoxplotCompositionSpec = (
   reference = 'samples',
   scales: CartesianScaleNames = { x: 'x', y: 'y' },
-): PlotSpec => ({
+): IRPlotSpec => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference },

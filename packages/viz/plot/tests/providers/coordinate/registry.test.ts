@@ -32,7 +32,7 @@ const archDefinition = defineCoordinate({
   },
 });
 
-describe('coordinate registry（alpha.12 ADR-05 spec）', () => {
+describe('coordinate registry（contract spec）', () => {
   it('defineCoordinate 保留 schema 推导出的注册 type 与 roles', () => {
     expect(extractCoordinateType(archDefinition.schema)).toBe('arch');
     expect(archDefinition.roles).toEqual(['x']);
@@ -97,6 +97,16 @@ describe('coordinate registry（alpha.12 ADR-05 spec）', () => {
       resolve: archDefinition.resolve,
     };
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/non-empty z\.literal string/);
+  });
+
+  it('empty_coordinate_role_throws', () => {
+    const malformed: AnyCoordinateDefinition = { ...archDefinition, roles: [''] };
+    expect(() => resolveCoordinateRegistry([malformed])).toThrow(/non-empty coordinate role/);
+  });
+
+  it('duplicate_coordinate_role_throws', () => {
+    const malformed: AnyCoordinateDefinition = { ...archDefinition, roles: ['x', 'x'] };
+    expect(() => resolveCoordinateRegistry([malformed])).toThrow(/duplicate coordinate role: "x"/);
   });
 
   it('custom_schema_rejects_invalid_config', () => {

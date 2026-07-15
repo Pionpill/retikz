@@ -1,18 +1,20 @@
+import type { IRChild, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
-import { type IRChild, type IRScope } from '@retikz/core';
+import { JsonObjectSchema } from '@retikz/core';
 
-import type { Mark, MarkOperation, PlotMarkValue } from '../../schemas';
-
-import {
-  type AnyMarkDefinition,
-  type CoordinateFrame,
-  type FieldCollector,
-  type IntervalContext,
-  type MarkChannels,
-  type MarkDefinition,
-  type MarkLoweringContext,
+import type {
+  AnyMarkDefinition,
+  CoordinateFrame,
+  FieldCollector,
+  IntervalContext,
+  MarkChannels,
+  MarkDefinition,
+  MarkLoweringContext,
 } from '../../contract';
+import type { IRPlotMark, IRPlotMarkOperation, PlotMarkValue } from '../../schemas';
+
+import { extractMarkType } from '../../contract';
 import { PlotMark } from '../../schemas';
 import {
   intervalMarkDefinition,
@@ -23,13 +25,12 @@ import {
 } from './features';
 import { cellAnchor, roleAnchor } from './shared';
 
-const asAnyMarkDefinition = <T extends MarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition =>
-  def as unknown as AnyMarkDefinition;
+const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<T>): AnyMarkDefinition => def;
 
 /**
- * mark lowering 行为注册表：内置 6 个 mark = 6 个内置注册项（lowerMark 按 type 查表分发）。
+ * mark lowering 行为注册表：每个内置 mark 对应一个注册项（lowerMark 按 type 查表分发）。
  * @description 对齐仓库已有 composite / coordinate 工厂注册范式；新增内置 mark = 加一条注册项，不改 lowerMark。
- *   IR schema 仍是 ir/mark.ts 静态单一真源（不由此表组装）。
+ *   Plot mark schema 仍是静态单一真源，不由此表组装
  */
 export const MARK_REGISTRY: Record<PlotMarkValue, AnyMarkDefinition> = {
   [PlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
@@ -39,31 +40,35 @@ export const MARK_REGISTRY: Record<PlotMarkValue, AnyMarkDefinition> = {
   [PlotMark.Relation]: asAnyMarkDefinition(relationMarkDefinition),
 };
 
-/** 内置 mark definition registry（按 type 索引）；内置与自定义 mark 共享同一分派流程。 */
+/** 内置 mark definition registry（按 type 索引）；内置与自定义 mark 共享同一分派流程 */
 const BUILTIN_MARK_REGISTRY: ReadonlyMap<string, AnyMarkDefinition> = new Map(
-  Object.values(MARK_REGISTRY).map(def => [def.type, def] as const),
+  Object.values(MARK_REGISTRY).map(def => [extractMarkType(def.schema), def] as const),
 );
 
-/** 内置 mark definition 列表；主要供诊断与测试确认内置覆盖。自定义 definition 不写入此表，而是在每次 lowering 时合并。 */
+/** 内置 mark definition 列表；主要供诊断与测试确认内置覆盖。自定义 definition 不写入此表，而是在每次 lowering 时合并 */
 export const BUILTIN_MARKS: ReadonlyArray<AnyMarkDefinition> = Object.values(MARK_REGISTRY);
 
 /**
  * 解析 mark registry。
- * @description 内置 mark 总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复。
+ * @description 内置 mark 总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复
  */
 export const resolveMarkRegistry = (custom?: ReadonlyArray<AnyMarkDefinition>): Map<string, AnyMarkDefinition> => {
   const registry = new Map<string, AnyMarkDefinition>(BUILTIN_MARK_REGISTRY);
   for (const def of custom ?? []) {
-    if (registry.has(def.type)) {
-      throw new Error(`lowerPlots: duplicate mark registration: "${def.type}"`);
+    const type = extractMarkType(def.schema);
+    if (registry.has(type)) {
+      throw new Error(`lowerPlots: duplicate mark registration: "${type}"`);
     }
-    registry.set(def.type, def);
+    registry.set(type, def);
   }
   return registry;
 };
 
-/** 查找 mark definition；未知 type 必须 fail-loud，避免静默跳过图元下沉。 */
-const markDefinitionOf = (mark: MarkOperation, registry: ReadonlyMap<string, AnyMarkDefinition>): AnyMarkDefinition => {
+/** 查找 mark definition；未知 type 必须 fail-loud，避免静默跳过图元下沉 */
+const markDefinitionOf = (
+  mark: IRPlotMarkOperation,
+  registry: ReadonlyMap<string, AnyMarkDefinition>,
+): AnyMarkDefinition => {
   const def = registry.get(mark.type);
   if (def === undefined) {
     throw new Error(
@@ -73,36 +78,53 @@ const markDefinitionOf = (mark: MarkOperation, registry: ReadonlyMap<string, Any
   return def;
 };
 
+/** 通过匹配的 definition schema 解析 mark，并再次确认解析结果仍为 JSON object */
+const parseMarkOperation = (
+  mark: IRPlotMarkOperation,
+  registry: ReadonlyMap<string, AnyMarkDefinition>,
+): { definition: AnyMarkDefinition; operation: never } => {
+  JsonObjectSchema.parse(mark);
+  const definition = markDefinitionOf(mark, registry);
+  const operation = definition.schema.parse(mark);
+  JsonObjectSchema.parse(operation);
+  return { definition, operation: operation as never };
+};
+
+/** 通过匹配的 mark definition 收集图元引用的源字段 */
 export const collectMarkFields = (
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   fields: FieldCollector,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
 ): void => {
-  markDefinitionOf(mark, registry).collectFields?.(mark as never, fields);
+  const { definition, operation } = parseMarkOperation(mark, registry);
+  definition.collectFields?.(operation, fields);
 };
 
+/** 返回匹配 mark definition 声明的可消费通道类型 */
 export const channelKindsForMark = (
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
-): ReturnType<NonNullable<AnyMarkDefinition['channelKinds']>> | undefined =>
-  markDefinitionOf(mark, registry).channelKinds?.(mark as never);
+): ReturnType<NonNullable<AnyMarkDefinition['channelKinds']>> | undefined => {
+  const { definition, operation } = parseMarkOperation(mark, registry);
+  return definition.channelKinds?.(operation);
+};
 
 /**
  * 解析 datum 锚点：cell 类 mark 通过 definition.buildCell 取逻辑 cell，其余内置 mark 走 role 投影。
- * @description registry 层负责查 definition，shared 层只提供纯投影 helper，避免 shared 反向依赖 interval feature。
+ * @description registry 层负责查 definition，shared 层只提供纯投影 helper，避免 shared 反向依赖 interval feature
  */
 export const datumAnchor = (
-  mark: Mark,
+  mark: IRPlotMark,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx?: IntervalContext,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
 ): [number, number] | null => {
-  const definition = markDefinitionOf(mark, registry);
+  const { definition, operation } = parseMarkOperation(mark, registry);
   if (definition.buildCell !== undefined) {
-    return cellAnchor(definition.buildCell(mark as never, row, frame, ctx), frame);
+    return cellAnchor(definition.buildCell(operation, row, frame, ctx), frame);
   }
-  return roleAnchor(mark, row, frame);
+  return roleAnchor(operation, row, frame);
 };
 
 const isScopeLayer = (layer: IRChild | null): layer is IRScope =>
@@ -110,7 +132,7 @@ const isScopeLayer = (layer: IRChild | null): layer is IRScope =>
 
 const applyScopeChannelDeliveries = (
   layer: IRChild | null,
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   rows: Array<ExternalRow>,
   channels: MarkChannels,
 ): IRChild | null => {
@@ -125,19 +147,21 @@ const applyScopeChannelDeliveries = (
  * 把一个 mark + 数据行下沉成一个图层 Scope（按 mark type 查 registry 分发）。
  * @description **原则：尽可能用 Scope 承载共享信息，把每个 Node / Path 压到最小，以减小生成的 core IR 体积。**
  *   color 编码时按颜色分子 Scope；series 把记录拆成多系列（多线 / 分组 / 堆叠柱）。无可绘制图元返回 null。
- *   markProvenance 给定（provenance 开）→ 给图层 / series Path / datum Node 绑 id + 来源 meta。
+ *   markProvenance 给定（provenance 开）→ 给图层 / series Path / datum Node 绑 id + 来源 meta
  */
 export const lowerMark = (
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels = {},
   markContext?: MarkLoweringContext,
   registry: ReadonlyMap<string, AnyMarkDefinition> = BUILTIN_MARK_REGISTRY,
-): IRChild | null =>
-  applyScopeChannelDeliveries(
-    markDefinitionOf(mark, registry).lower(mark as never, rows, frame, channels, markContext),
-    mark,
+): IRChild | null => {
+  const { definition, operation } = parseMarkOperation(mark, registry);
+  return applyScopeChannelDeliveries(
+    definition.lower(operation, rows, frame, channels, markContext),
+    operation,
     rows,
     channels,
   );
+};

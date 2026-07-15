@@ -24,15 +24,15 @@ import {
 
 import type { AnyScaleDefinition, PositionScale, TickSet } from '../../../contract';
 import type {
-  BandScale,
-  LinearScale,
-  LogScale,
-  PointScale,
-  PowScale,
-  RadialScale,
-  SqrtScale,
-  SymlogScale,
-  TimeScale,
+  IRPlotBandScale,
+  IRPlotLinearScale,
+  IRPlotLogScale,
+  IRPlotPointScale,
+  IRPlotPowScale,
+  IRPlotRadialScale,
+  IRPlotSqrtScale,
+  IRPlotSymlogScale,
+  IRPlotTimeScale,
 } from '../../../schemas';
 
 import { defineScale } from '../../../contract';
@@ -55,15 +55,16 @@ import { DEFAULT_TICK_COUNT, resolvePaddedDomain, safeExtent, scaleTicks } from 
  * 建轴的线性 scale（d3 scaleLinear）
  * @description domain 缺省时从绑定数据值推断（d3 extent）；range 缺省时用 fallback（坐标系尺寸给）。
  *   返回 d3 ScaleLinear：可作 `(value) => number` 投影，也可 `.ticks()` / `.tickFormat()` / `.range([...])` 后续设值。
- *   单值 domain（d0=d1）d3 归一化返回 0.5 → 映射到 range 中点，与早期自写 linear 行为一致。
+ *   单值 domain（d0=d1）d3 归一化返回 0.5 → 映射到 range 中点，与早期自写 linear 行为一致
  */
-type LinearScaleOptions = Omit<LinearScale, 'type' | 'name'> & {
-  type?: LinearScale['type'];
+type LinearScaleOptions = Omit<IRPlotLinearScale, 'type' | 'name'> & {
+  type?: IRPlotLinearScale['type'];
   name?: string;
   defaultDomainPadding?: number;
   applyDomainPadding?: boolean;
 };
 
+/** 解析线性位置比例尺的 domain、range 与映射函数 */
 export const resolveLinearScale = (
   def: LinearScaleOptions,
   values: Array<number>,
@@ -92,15 +93,16 @@ export const resolveLinearScale = (
 /**
  * 建对数 scale（d3 scaleLog，全正 domain）
  * @description 显式 domain 含 0 / 负值 → fail-loud；缺省从正值 extent 推断（空集回退 [1, 10]）。
- *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理。
+ *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理
  */
 type PositionDomainOptions = {
   defaultDomainPadding?: number;
   applyDomainPadding?: boolean;
 };
 
+/** 解析对数位置比例尺的 domain、range 与映射函数 */
 export const resolveLogScale = (
-  def: LogScale & PositionDomainOptions,
+  def: IRPlotLogScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -137,10 +139,10 @@ export const resolveLogScale = (
 /**
  * 建幂 scale（d3 scalePow）
  * @description 非整数 exponent + 显式 domain 含负值 → fail-loud（避免 d3 sign-preserving 反直觉）；
- *   整数 exponent 允许负 domain。exponent 缺省 2。
+ *   整数 exponent 允许负 domain。exponent 缺省 2
  */
 export const resolvePowScale = (
-  def: PowScale & PositionDomainOptions,
+  def: IRPlotPowScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -175,10 +177,10 @@ export const resolvePowScale = (
 
 /**
  * 建平方根 scale（d3 scalePow exponent 0.5；面积感知）
- * @description 显式 domain 含负值 → fail-loud；缺省从非负值 extent 推断。负数据值由 isValidInput 跳过。
+ * @description 显式 domain 含负值 → fail-loud；缺省从非负值 extent 推断。负数据值由 isValidInput 跳过
  */
 export const resolveSqrtScale = (
-  def: SqrtScale & PositionDomainOptions,
+  def: IRPlotSqrtScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -212,10 +214,10 @@ export const resolveSqrtScale = (
 /**
  * 建对称对数 scale（d3 scaleSymlog）
  * @description 近零线性、尾部对数，能处理跨零 / 含负的宽幅数据（log 不能）。constant 控制近零线性区宽度（缺省 1）。
- *   domain 缺省从值 extent 推断；负 / 零 domain 合法（symlog 全域有定义），不 fail-loud。
+ *   domain 缺省从值 extent 推断；负 / 零 domain 合法（symlog 全域有定义），不 fail-loud
  */
 export const resolveSymlogScale = (
-  def: SymlogScale & PositionDomainOptions,
+  def: IRPlotSymlogScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -244,10 +246,10 @@ export const resolveSymlogScale = (
 /**
  * 建径向 scale（d3 scaleRadial；面积感知半径）
  * @description 输出半径使「编码面积」正比于值（开方映射）；极坐标 / 玫瑰图（南丁格尔）的天然值 scale。
- *   domain 缺省从值 extent 推断。
+ *   domain 缺省从值 extent 推断
  */
 export const resolveRadialScale = (
-  def: RadialScale & PositionDomainOptions,
+  def: IRPlotRadialScale & PositionDomainOptions,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -296,7 +298,7 @@ export const linearPositionScale = (scale: D3ScaleLinear<number, number>): Posit
 /**
  * 连续数值 scale → PositionScale（linear / log / pow / sqrt / symlog / radial 共用）
  * @description bandwidth=0；isValidInput 拦不可绘的值（log ≤ 0、sqrt / 非整数幂 < 0）→ NaN 跳过；
- *   投影结果非有限（log(0)=-∞）也归 NaN，与连续 scale 跳过非有限值一致。
+ *   投影结果非有限（log(0)=-∞）也归 NaN，与连续 scale 跳过非有限值一致
  */
 export const continuousPositionScale = (
   scale: D3ScaleContinuousNumeric<number, number>,
@@ -336,7 +338,7 @@ export const timeTicks = (scale: D3ScaleTime<number, number>, count: number = DE
 
 /** 建时间 scale（d3 scaleUtc，UTC 语义、环境无关）；domain 缺省从字段时间戳 extent 推断 */
 export const resolveTimeScale = (
-  def: TimeScale,
+  def: IRPlotTimeScale,
   values: Array<unknown>,
   fallbackRange: readonly [number, number],
 ): D3ScaleTime<number, number> => {
@@ -396,7 +398,7 @@ export type CategoryOrder = NonNullable<IRDataFieldDefinition['order']>;
 /**
  * 按 order 计算有序的分类域：在 inferCategoryDomain 去重保序基础上再排
  * @description order='appearance'/undefined → 现状出现序去重；'ascending'/'descending' → 全数值按数值比、否则统一 String localeCompare（descending 反序）；
- *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）。
+ *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）
  */
 export const orderedCategoryDomain = (
   values: Array<unknown>,
@@ -419,7 +421,7 @@ export const orderedCategoryDomain = (
 
 /** 建分类 band scale（d3 scaleBand）；domain 缺省按数据序去重推断 */
 export const resolveBandScale = (
-  def: BandScale,
+  def: IRPlotBandScale,
   values: Array<unknown>,
   fallbackRange: readonly [number, number],
 ): D3ScaleBand<string | number> => {
@@ -434,7 +436,7 @@ export const resolveBandScale = (
 
 /** 建分类 point scale（d3 scalePoint）；domain 缺省按数据序去重推断 */
 export const resolvePointScale = (
-  def: PointScale,
+  def: IRPlotPointScale,
   values: Array<unknown>,
   fallbackRange: readonly [number, number],
 ): D3ScalePoint<string | number> => {
@@ -498,7 +500,7 @@ export const pointPositionScale = (scale: D3ScalePoint<string | number>): Positi
 
 // ── position 族 scale definition ──────────────────────────────────────────────────
 
-const linearScaleDefinition = defineScale<LinearScale>({
+const linearScaleDefinition = defineScale<IRPlotLinearScale>({
   family: 'position',
   schema: LinearScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
@@ -513,7 +515,7 @@ const linearScaleDefinition = defineScale<LinearScale>({
     ),
 });
 
-const logScaleDefinition = defineScale<LogScale>({
+const logScaleDefinition = defineScale<IRPlotLogScale>({
   family: 'position',
   schema: LogScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
@@ -529,7 +531,7 @@ const logScaleDefinition = defineScale<LogScale>({
     ),
 });
 
-const powScaleDefinition = defineScale<PowScale>({
+const powScaleDefinition = defineScale<IRPlotPowScale>({
   family: 'position',
   schema: PowScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
@@ -550,7 +552,7 @@ const powScaleDefinition = defineScale<PowScale>({
   },
 });
 
-const sqrtScaleDefinition = defineScale<SqrtScale>({
+const sqrtScaleDefinition = defineScale<IRPlotSqrtScale>({
   family: 'position',
   schema: SqrtScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
@@ -566,7 +568,7 @@ const sqrtScaleDefinition = defineScale<SqrtScale>({
     ),
 });
 
-const symlogScaleDefinition = defineScale<SymlogScale>({
+const symlogScaleDefinition = defineScale<IRPlotSymlogScale>({
   family: 'position',
   schema: SymlogScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
@@ -583,7 +585,7 @@ const symlogScaleDefinition = defineScale<SymlogScale>({
     ),
 });
 
-const radialScaleDefinition = defineScale<RadialScale>({
+const radialScaleDefinition = defineScale<IRPlotRadialScale>({
   family: 'position',
   schema: RadialScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
@@ -599,7 +601,7 @@ const radialScaleDefinition = defineScale<RadialScale>({
     ),
 });
 
-const timeScaleDefinition = defineScale<TimeScale>({
+const timeScaleDefinition = defineScale<IRPlotTimeScale>({
   family: 'position',
   schema: TimeScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
@@ -607,7 +609,7 @@ const timeScaleDefinition = defineScale<TimeScale>({
   resolve: (def, values, range) => timePositionScale(resolveTimeScale(def, values, range)),
 });
 
-const bandScaleDefinition = defineScale<BandScale>({
+const bandScaleDefinition = defineScale<IRPlotBandScale>({
   family: 'position',
   schema: BandScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Temporal,
@@ -615,7 +617,7 @@ const bandScaleDefinition = defineScale<BandScale>({
   resolve: (def, values, range) => bandPositionScale(resolveBandScale(def, values, range)),
 });
 
-const pointScaleDefinition = defineScale<PointScale>({
+const pointScaleDefinition = defineScale<IRPlotPointScale>({
   family: 'position',
   schema: PointScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Temporal,
@@ -623,7 +625,7 @@ const pointScaleDefinition = defineScale<PointScale>({
   resolve: (def, values, range) => pointPositionScale(resolvePointScale(def, values, range)),
 });
 
-/** position 族 scale definition（连续 6 + 时间 1 + 分类 2 = 9）：产坐标，喂 coordinate projector + guide。 */
+/** position 族 scale definition（连续 6 + 时间 1 + 分类 2 = 9）：产坐标，喂 coordinate projector + guide */
 export const POSITION_SCALE_DEFINITIONS: ReadonlyArray<AnyScaleDefinition> = [
   linearScaleDefinition,
   logScaleDefinition,

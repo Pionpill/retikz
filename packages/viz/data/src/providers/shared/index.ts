@@ -1,1 +1,1 @@
-export * from './readonly-collections';
+export * from './definitions';

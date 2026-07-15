@@ -4,7 +4,7 @@ import { computePlotArea } from '../../src/shared';
 
 const noAxis = { hasXAxis: false, hasYAxis: false, xLabels: [], yLabels: [] };
 
-describe('computePlotArea (ADR-03)', () => {
+describe('computePlotArea (contract)', () => {
   // Happy path
   it('area_no_axis_is_full', () => {
     const { margins, plotArea } = computePlotArea(480, 300, noAxis);

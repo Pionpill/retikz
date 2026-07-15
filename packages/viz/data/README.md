@@ -10,6 +10,9 @@ Real dataset rows stay outside the IR and enter at runtime. This package prepare
 pnpm add @retikz/data
 ```
 
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
 ## Quick start
 
 Declare a logical field model, normalize external rows, then apply JSON-serializable transforms:

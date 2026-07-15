@@ -25,37 +25,39 @@ import type {
 
 import { ChannelDefinitionKind, datumMeta, markLayerId, markLayerMeta } from '../../../contract';
 import {
-  type AnchorIdSpec,
-  type IntervalMark,
-  type Mark,
-  type MarkGeometryLabel,
-  type MarkNodeLabel,
-  type MarkOperation,
-  type PathMark,
-  type PointMark,
+  type IRPlotAnchorIdSpec,
+  type IRPlotIntervalMark,
+  type IRPlotMark,
+  type IRPlotMarkGeometryLabel,
+  type IRPlotMarkNodeLabel,
+  type IRPlotMarkOperation,
+  type IRPlotPathMark,
+  type IRPlotPointMark,
 } from '../../../schemas';
-import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS } from '../../channel';
-import { labelOf as resolveLabelContent } from '../../channel/shared';
+import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS, labelOf } from '../../channel';
 
-/** 折线默认描边宽度（user units）。 */
+/** 折线默认描边宽度（user units） */
 export const LINE_STROKE_WIDTH = 2;
 
-/** 无 color 编码时的回退填充。 */
+/** 无 color 编码时的回退填充 */
 export const DEFAULT_FILL = 'currentColor';
 
+/** mark lowering 可使用的字符串颜色或 core paint */
 export type MarkPaint = string | IRPaintSpec;
 
+/** 按通道名读取逐行值 resolver */
 export const channelValueOf = <T extends ChannelValue>(
   channels: MarkChannels,
   channel: string,
 ): ChannelValueResolver<T> | undefined => channels.values?.[channel] as ChannelValueResolver<T> | undefined;
 
+/** 按通道名读取已解析的默认值 */
 export const channelDefaultOf = <T extends ChannelValue>(channels: MarkChannels, channel: string): T | undefined =>
   channels.defaults?.[channel] as T | undefined;
 
 /**
  * 把若干「已就位 node + 其颜色」按颜色分组，每色一子 Scope（fill 上提到子 Scope 的 nodeDefault）。
- * @description 颜色不逐 node 写：N 行同色 → 一个子 Scope 设 fill，IR 体积 O(色数) 而非 O(行数)。
+ * @description 颜色不逐 node 写：N 行同色 → 一个子 Scope 设 fill，IR 体积 O(色数) 而非 O(行数)
  */
 export const colorGroupedScope = (
   placed: Array<{ color: string | undefined; node: IRNode }>,
@@ -76,7 +78,8 @@ export const colorGroupedScope = (
   return { type: 'scope', children };
 };
 
-export const constantNodeStyleOverrides = (mark: Mark): Partial<IRNodeDefault> => {
+/** 收集 mark 上可直接提升为 Node 默认样式的常量值 */
+export const constantNodeStyleOverrides = (mark: IRPlotMark): Partial<IRNodeDefault> => {
   const stroke = 'stroke' in mark && mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
   const strokeWidth =
     'strokeWidth' in mark && mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
@@ -93,7 +96,7 @@ export const constantNodeStyleOverrides = (mark: Mark): Partial<IRNodeDefault> =
 
 /**
  * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）。
- * @description 关 provenance / 无 markProvenance → 原样返回，不写 id/meta。
+ * @description 关 provenance / 无 markProvenance → 原样返回，不写 id/meta
  */
 export const decorateDatum = (
   node: IRNode,
@@ -124,26 +127,28 @@ export const decorateDatum = (
 
 type LabelText = IRNodeLabel['text'];
 type MarkLabelFieldSource =
-  | MarkNodeLabel
-  | MarkGeometryLabel
-  | ReadonlyArray<MarkNodeLabel>
-  | ReadonlyArray<MarkGeometryLabel>
-  | ReadonlyArray<MarkNodeLabel | MarkGeometryLabel>
+  | IRPlotMarkNodeLabel
+  | IRPlotMarkGeometryLabel
+  | ReadonlyArray<IRPlotMarkNodeLabel>
+  | ReadonlyArray<IRPlotMarkGeometryLabel>
+  | ReadonlyArray<IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel>
   | undefined;
-type MarkLabelFieldEntry = MarkNodeLabel | MarkGeometryLabel;
+type MarkLabelFieldEntry = IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel;
 
 const normalizeNodeLabels = (
-  labels: MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
-): Array<MarkNodeLabel> => {
+  labels: IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
+): Array<IRPlotMarkNodeLabel> => {
   if (labels === undefined) return [];
-  return Array.isArray(labels) ? [...(labels as ReadonlyArray<MarkNodeLabel>)] : [labels as MarkNodeLabel];
+  return Array.isArray(labels) ? [...(labels as ReadonlyArray<IRPlotMarkNodeLabel>)] : [labels as IRPlotMarkNodeLabel];
 };
 
 const normalizeGeometryLabels = (
-  labels: MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined,
-): Array<MarkGeometryLabel> => {
+  labels: IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
+): Array<IRPlotMarkGeometryLabel> => {
   if (labels === undefined) return [];
-  return Array.isArray(labels) ? [...(labels as ReadonlyArray<MarkGeometryLabel>)] : [labels as MarkGeometryLabel];
+  return Array.isArray(labels)
+    ? [...(labels as ReadonlyArray<IRPlotMarkGeometryLabel>)]
+    : [labels as IRPlotMarkGeometryLabel];
 };
 
 const normalizeLabelFieldEntries = (labels: MarkLabelFieldSource): Array<MarkLabelFieldEntry> => {
@@ -155,13 +160,13 @@ const omitContent = <T extends { content: unknown }>(label: T): Omit<T, 'content
   Object.fromEntries(Object.entries(label).filter(([key]) => key !== 'content')) as Omit<T, 'content'>;
 
 const textForLabel = (
-  label: MarkNodeLabel | MarkGeometryLabel,
+  label: IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel,
   row: ExternalRow,
-  labelOf: ChannelValueResolver<LabelText> | undefined,
+  labelResolver: ChannelValueResolver<LabelText> | undefined,
   index: number,
 ): LabelText | undefined => {
-  if (index === 0 && labelOf !== undefined) return labelOf(row);
-  return resolveLabelContent(label.content, row);
+  if (index === 0 && labelResolver !== undefined) return labelResolver(row);
+  return labelOf(label.content, row);
 };
 
 const normalizeResolvedLabels = <T>(labels: Array<T>): T | Array<T> | undefined => {
@@ -196,26 +201,28 @@ const normalizeGeometryLabel = (label: IRGeometryLabel): IRGeometryLabel => {
   return side === label.side ? label : { ...label, side };
 };
 
+/** 把 plot Node label 配置解析为 core Node label */
 export const resolveNodeMarkLabels = (
-  labels: MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
+  labels: IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
   row: ExternalRow,
-  labelOf: ChannelValueResolver<LabelText> | undefined,
+  labelResolver: ChannelValueResolver<LabelText> | undefined,
 ): IRNode['label'] | undefined => {
   const resolved = normalizeNodeLabels(labels).flatMap((label, index): Array<IRNodeLabel> => {
-    const text = textForLabel(label, row, labelOf, index);
+    const text = textForLabel(label, row, labelResolver, index);
     if (text === undefined) return [];
     return [normalizeNodeLabel({ ...omitContent(label), text })];
   });
   return normalizeResolvedLabels(resolved);
 };
 
+/** 把 plot geometry label 配置解析为 core Path label */
 export const resolveGeometryMarkLabels = (
-  labels: MarkGeometryLabel | ReadonlyArray<MarkGeometryLabel> | undefined,
+  labels: IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
   row: ExternalRow,
-  labelOf: ChannelValueResolver<LabelText> | undefined,
+  labelResolver: ChannelValueResolver<LabelText> | undefined,
 ): IRPath['label'] | undefined => {
   const resolved = normalizeGeometryLabels(labels).flatMap((label, index): Array<IRGeometryLabel> => {
-    const text = textForLabel(label, row, labelOf, index);
+    const text = textForLabel(label, row, labelResolver, index);
     if (text === undefined) return [];
     return [normalizeGeometryLabel({ ...omitContent(label), text })];
   });
@@ -224,26 +231,27 @@ export const resolveGeometryMarkLabels = (
 
 /**
  * priority-1 宿主 label：若位置 mark 带 `label` 且该行解析出内容，给 datum Node 填 core NodeLabelSchema。
- * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）。
+ * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）
  */
 export const attachDatumLabel = (
   node: IRNode,
   mark: PositionEncodedMark,
   row: ExternalRow,
-  labelOf: ChannelValueResolver<LabelText> | undefined,
+  labelResolver: ChannelValueResolver<LabelText> | undefined,
 ): IRNode => {
   if (!('label' in mark) || mark.label === undefined) return node;
   const label = resolveNodeMarkLabels(
-    mark.label as MarkNodeLabel | ReadonlyArray<MarkNodeLabel> | undefined,
+    mark.label as IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
     row,
-    labelOf,
+    labelResolver,
   );
   return label === undefined ? node : { ...node, label };
 };
 
+/** 把已解析的 Node 通道值交付到单个 core Node */
 export const applyNodeChannelDeliveries = (
   node: IRNode,
-  mark: Mark,
+  mark: IRPlotMark,
   row: ExternalRow,
   channels: MarkChannels,
   nodeKind: 'pointGlyph' | 'pointText' | 'cell',
@@ -254,9 +262,10 @@ export const applyNodeChannelDeliveries = (
   }
 };
 
+/** 把已解析的 Path 通道值交付到单个 core Path */
 export const applyPathChannelDeliveries = (
   path: IRPath,
-  mark: Mark,
+  mark: IRPlotMark,
   row: ExternalRow,
   channels: MarkChannels,
 ): IRPath => {
@@ -268,9 +277,13 @@ export const applyPathChannelDeliveries = (
 };
 
 /**
- * 给图层外层 Scope 挂 layer id + meta（provenance 开时）；关 → 原样返回。
+ * 给图层外层 Scope 挂 layer id + meta（provenance 开时）；关 → 原样返回
  */
-export const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvenance | undefined): IRScope => {
+export const attachMarkLayer = (
+  layer: IRScope,
+  mark: IRPlotMark,
+  markProvenance: MarkProvenance | undefined,
+): IRScope => {
   if (!markProvenance) return layer;
   const { context, markIndex } = markProvenance;
   const id = markLayerId(context.plotId, mark.id, markIndex);
@@ -282,12 +295,12 @@ export const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: Mark
 };
 
 /**
- * 坐标系不支持某 mark 的统一 fail-loud 文案（含 mark.type / frame.type，便于定位）。
+ * 坐标系不支持某 mark 的统一 fail-loud 文案（含 mark.type / frame.type，便于定位）
  */
 export const failLoudMessage = (markType: string, frameType: string): string =>
   `lowerPlots: ${markType} mark is not supported under the ${frameType} coordinate system (this coordinate system does not provide the geometry for ${markType} marks this round)`;
 
-type PositionEncodedMark = PointMark | PathMark | IntervalMark;
+type PositionEncodedMark = IRPlotPointMark | IRPlotPathMark | IRPlotIntervalMark;
 
 const anchorOwnerOf = (
   mark: PositionEncodedMark,
@@ -302,6 +315,7 @@ const anchorOwnerOf = (
   ...(role !== undefined ? { role } : {}),
 });
 
+/** 按图元锚点配置为 datum 图元注册稳定 id。 */
 export const attachDatumAnchor = (
   node: IRNode,
   mark: PositionEncodedMark,
@@ -353,11 +367,13 @@ export const collectDatumLabelFields = (mark: PositionEncodedMark, fields: Field
   for (const label of normalizeLabelFieldEntries(mark.label)) fields.addChannel(label.content);
 };
 
+/** 收集 plot label 内容绑定引用的源字段。 */
 export const collectMarkLabelFields = (label: MarkLabelFieldSource, fields: FieldCollector): void => {
   for (const entry of normalizeLabelFieldEntries(label)) fields.addChannel(entry.content);
 };
 
-export const collectAnchorIdFields = (anchorId: AnchorIdSpec | undefined, fields: FieldCollector): void => {
+/** 收集锚点 id 配置引用的源字段。 */
+export const collectAnchorIdFields = (anchorId: IRPlotAnchorIdSpec | undefined, fields: FieldCollector): void => {
   if (anchorId === undefined) return;
   fields.addField(anchorId.field);
   if (anchorId.template === undefined) return;
@@ -382,7 +398,7 @@ type ChannelDefinitionMap = Readonly<Record<string, { channel: string }>>;
  * @description node/path 内置通道名由 channel 层单一维护；mark 侧只声明自己消费哪类 channel，避免再维护一份平行字段列表。
  */
 const collectChannelDefinitionFields = (
-  mark: MarkOperation,
+  mark: IRPlotMarkOperation,
   fields: FieldCollector,
   definitions: ChannelDefinitionMap,
 ): void => {
@@ -391,15 +407,17 @@ const collectChannelDefinitionFields = (
 };
 
 /** 收集当前 mark 消费的内置 Node channel 字段。 */
-export const collectNodeChannelFields = (mark: MarkOperation, fields: FieldCollector): void =>
+export const collectNodeChannelFields = (mark: IRPlotMarkOperation, fields: FieldCollector): void =>
   collectChannelDefinitionFields(mark, fields, BUILTIN_NODE_CHANNELS);
 
 /** 收集当前 mark 消费的内置 Path channel 字段。 */
-export const collectPathChannelFields = (mark: MarkOperation, fields: FieldCollector): void =>
+export const collectPathChannelFields = (mark: IRPlotMarkOperation, fields: FieldCollector): void =>
   collectChannelDefinitionFields(mark, fields, BUILTIN_PATH_CHANNELS);
 
+/** Node 类 mark 默认可消费的通道类型集合。 */
 export const nodeChannelKinds = (): ReturnType<NonNullable<MarkDefinition['channelKinds']>> =>
   new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Node]);
 
+/** Path 类 mark 默认可消费的通道类型集合。 */
 export const pathChannelKinds = (): ReturnType<NonNullable<MarkDefinition['channelKinds']>> =>
   new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Path]);

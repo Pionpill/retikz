@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../src/schemas';
@@ -15,7 +15,7 @@ const salesRows = [
   { region: 'north', channel: 'store', month: 0, revenue: 4 },
 ];
 
-const parsePlotSpec = (spec: unknown): PlotSpec => PlotSpecSchema.parse(spec);
+const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
 
 const facetArrangement = (arrangement: Record<string, unknown>): Record<string, unknown> => ({
   kind: 'facet',
@@ -46,7 +46,7 @@ const baseFacetSpec = {
 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   options: { width?: number; height?: number } = {},
   datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
 ): IRScope => {

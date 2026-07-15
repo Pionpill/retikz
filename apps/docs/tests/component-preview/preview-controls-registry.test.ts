@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
   AlignKey,
   ComponentPreviewCardProps,
+  ComponentPreviewFiles,
   ComponentPreviewProps,
   ComponentRenderSource,
   DiffLineKind,
@@ -11,6 +12,8 @@ import type {
   PreviewControlPlacement,
   PreviewControlRuntime,
   PreviewControlSlot,
+  PreviewControlsOptions,
+  PreviewControlVisibility,
   PreviewSourceConfig,
   RendererMode,
   SizeKey,
@@ -50,6 +53,18 @@ const privateExportKeys = [
 ];
 
 describe('preview controls registry', () => {
+  it('锁定 ComponentPreview 完整公开 props', () => {
+    expectTypeOf<ComponentPreviewProps>().toEqualTypeOf<{
+      files: ComponentPreviewFiles;
+      controls?: PreviewControlsOptions;
+      dialogActions?: Array<PreviewActionSlot>;
+      align?: AlignKey;
+      size?: SizeKey;
+      previewClassName?: string;
+      hideCode?: boolean;
+    }>();
+  });
+
   it('从 registry owner 暴露本地化 controls key resolver', () => {
     expect(resolveControlsKey).toBeTypeOf('function');
   });
@@ -88,6 +103,8 @@ describe('preview controls registry', () => {
       controlPlacement: PreviewControlPlacement;
       controlRuntime: PreviewControlRuntime;
       controlSlot: PreviewControlSlot;
+      controls: PreviewControlsOptions;
+      controlVisibility: PreviewControlVisibility;
       actionSlot: PreviewActionSlot;
       rendererMode: RendererMode;
       align: AlignKey;

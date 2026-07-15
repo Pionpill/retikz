@@ -11,7 +11,7 @@ import {
   resolveFormatRegistry,
 } from '../../src';
 
-/** 读取已注册内置 format；缺失时让测试直接失败。 */
+/** 读取已注册内置 format；缺失时让测试直接失败 */
 const formatOf = (name: string) => {
   const definition = resolveFormatRegistry().get(name);
   if (definition === undefined) throw new Error(`missing test format: ${name}`);

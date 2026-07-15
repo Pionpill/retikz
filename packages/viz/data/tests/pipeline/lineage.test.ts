@@ -11,7 +11,9 @@ import {
   readSourceIndices,
   resolveStatisticsReducerRegistry,
   resolveTransformRegistry,
+  SOURCE_INDICES,
   tagSourceIndex,
+  withGroupProvenance,
 } from '../../src';
 
 const SALES: Array<ExternalRow> = [
@@ -29,6 +31,16 @@ const eventsOf = <TKind extends DataLineageEvent['kind']>(
   events.filter((event): event is Extract<DataLineageEvent, { kind: TKind }> => event.kind === kind);
 
 describe('data lineage runtime', () => {
+  it('flattens large nested provenance groups without expanding call arguments', () => {
+    const sourceIndices = Array.from({ length: 1_000_000 }, (_, index) => index);
+    const grouped = withGroupProvenance({}, [{ [SOURCE_INDICES]: sourceIndices }]);
+    const flattened = readSourceIndices(grouped);
+
+    expect(flattened).toHaveLength(1_000_000);
+    expect(flattened?.[0]).toBe(0);
+    expect(flattened?.at(-1)).toBe(999_999);
+  });
+
   it('keeps applyTransforms lineage-free and records capped source plus steps only by default', () => {
     const plain = applyTransforms(tagSourceIndex(SALES), [
       {
@@ -197,6 +209,31 @@ describe('data lineage runtime', () => {
         lineage: { sourceIdentity: { maxIndices } },
       }),
     ).toThrow(/sourceIdentity\.maxIndices must be a positive integer/);
+  });
+
+  it('rejects invalid source identity modes at recorder creation', () => {
+    expect(() =>
+      Reflect.apply(applyTransformsWithLineage, undefined, [
+        SALES,
+        [],
+        { lineage: { sourceIdentity: { mode: 'bogus' } } },
+      ]),
+    ).toThrow('data lineage: sourceIdentity.mode must be "summary" or "full"');
+  });
+
+  it.each([
+    { fields: [42], path: 'rowSamples.fields[0]' },
+    { fields: [''], path: 'calculationDetails.fields[0]' },
+  ])('rejects invalid sample field whitelist members at $path', ({ fields, path }) => {
+    const option = path.startsWith('rowSamples') ? 'rowSamples' : 'calculationDetails';
+
+    expect(() =>
+      Reflect.apply(applyTransformsWithLineage, undefined, [
+        SALES,
+        [],
+        { lineage: { [option]: { maxRows: 1, fields } } },
+      ]),
+    ).toThrow(`data lineage: ${path} must be a non-empty string`);
   });
 
   it('records custom transform steps through the shared registry', () => {

@@ -6,7 +6,7 @@ import { resolveFormatRegistry } from './definitions';
 /**
  * 收集 model 里的 format 声明，按 registry 解析格式，校验 format 与 type 的兼容性，并产出 per-field parser。
  * @description format 经 registry 解析出 definition：impliedType 在字段省略 type 时覆盖基础推断；
- *   format 未注册 / 与显式 type 冲突均 fail-loud，避免静默把自定义值误判为缺失。
+ *   format 未注册 / 与显式 type 冲突均 fail-loud，避免静默把自定义值误判为缺失
  */
 export const collectFormatFields = (
   model: IRDataModel | undefined,

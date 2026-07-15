@@ -9,6 +9,9 @@
   },
   "description": "retikz renderers: Scene to SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
@@ -54,34 +57,29 @@
   "publishConfig": {
     "exports": {
       "./svg": {
-        "types": "./dist/lib/svg/index.d.ts",
-        "import": "./dist/es/svg/index.js",
-        "require": "./dist/lib/svg/index.cjs",
-        "default": "./dist/es/svg/index.js"
+        "types": "./dist/types/svg/index.d.ts",
+        "import": "./dist/svg/index.js",
+        "default": "./dist/svg/index.js"
       },
       "./canvas": {
-        "types": "./dist/lib/canvas/index.d.ts",
-        "import": "./dist/es/canvas/index.js",
-        "require": "./dist/lib/canvas/index.cjs",
-        "default": "./dist/es/canvas/index.js"
+        "types": "./dist/types/canvas/index.d.ts",
+        "import": "./dist/canvas/index.js",
+        "default": "./dist/canvas/index.js"
       },
       "./canvas-node": {
-        "types": "./dist/lib/canvas-node/index.d.ts",
-        "import": "./dist/es/canvas-node/index.js",
-        "require": "./dist/lib/canvas-node/index.cjs",
-        "default": "./dist/es/canvas-node/index.js"
+        "types": "./dist/types/canvas-node/index.d.ts",
+        "import": "./dist/canvas-node/index.js",
+        "default": "./dist/canvas-node/index.js"
       },
       "./hydration": {
-        "types": "./dist/lib/hydration/index.d.ts",
-        "import": "./dist/es/hydration/index.js",
-        "require": "./dist/lib/hydration/index.cjs",
-        "default": "./dist/es/hydration/index.js"
+        "types": "./dist/types/hydration/index.d.ts",
+        "import": "./dist/hydration/index.js",
+        "default": "./dist/hydration/index.js"
       },
       "./animation": {
-        "types": "./dist/lib/animation/index.d.ts",
-        "import": "./dist/es/animation/index.js",
-        "require": "./dist/lib/animation/index.cjs",
-        "default": "./dist/es/animation/index.js"
+        "types": "./dist/types/animation/index.d.ts",
+        "import": "./dist/animation/index.js",
+        "default": "./dist/animation/index.js"
       }
     }
   },

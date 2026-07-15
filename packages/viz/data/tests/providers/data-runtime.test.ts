@@ -55,6 +55,7 @@ describe('data provider runtime boundaries', () => {
     expect(inferFieldType([{ x: 1 }, { x: 'one' }], 'x')).toBe(DataFieldType.Categorical);
     expect(inferFieldType([{ x: null }, { x: Number.NaN }], 'x')).toBe(DataFieldType.Categorical);
     expect(inferCategoryDomain(['beta', 2, 'alpha', 'beta', null])).toEqual(['beta', 2, 'alpha']);
+    expect(inferCategoryDomain([Number.NaN, Infinity, -Infinity, 1, 'alpha'])).toEqual([1, 'alpha']);
   });
 
   it('rejects duplicate or unknown model fields before runtime normalization', () => {

@@ -3,19 +3,19 @@
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, opts);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 const collectNodes = (scope: IRScope): Array<IRNode> => {
@@ -58,7 +58,7 @@ const collectScopes = (scope: IRScope): Array<IRScope> => {
   return out;
 };
 
-describe('channel core coverage (alpha.12 ADR-12)', () => {
+describe('channel core coverage (contract)', () => {
   it('constant_style_channels_deliver_to_core_scope', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

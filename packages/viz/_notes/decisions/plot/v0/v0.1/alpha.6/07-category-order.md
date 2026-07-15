@@ -47,7 +47,7 @@ DSL：
 
 ### order 如何落到 scale（cross-review #2，钉死）
 
-现 `resolvePositionScale(def, values, fallbackRange)` 只收**合并后的 values**、不知字段名（[registry.ts:68](../../../../../../plot/src/providers/scale/registry.ts)），而 `collectValues` 跨该 role 所有 mark 合并取值——order 挂 FieldDef，必须在**知道字段名的那一层**（`resolveScaleForRole`，[expand.ts:1022](../../../../../../plot/src/pipeline/expand.ts)）解析成域，再作为 `def.domain` 下传，而非改 `resolvePositionScale` 签名。规则照搬现成的 `roleFieldTypes` / 混类型 fail-loud 套路：
+现 `resolvePositionScale(def, values, fallbackRange)` 只收**合并后的 values**、不知字段名（[registry.ts:68](../../../../../../plot/src/providers/scale/registry.ts)），而 `collectValues` 跨该 role 所有 mark 合并取值——order 挂 FieldDef，必须在**知道字段名的那一层**（`resolveScaleForRole`，[expand/frame/resolve.ts](../../../../../../plot/src/pipeline/expand/frame/resolve.ts)）解析成域，再作为 `def.domain` 下传，而非改 `resolvePositionScale` 签名。规则照搬现成的 `roleFieldTypes` / 混类型 fail-loud 套路：
 
 - **单字段绑该 role**：取该字段 `order`，按 order 算出有序类别域，注入 `scale.domain`（band/point/ordinal 同此域）。
 - **多字段共该 role（不同字段不同 order）**：若解析出**冲突的 order**（≥2 个不同非默认 order）→ **fail-loud**（与「混类型 fail-loud」同档），提示显式给 scale domain。多字段同 order 或仅一个有 order → 用那个。

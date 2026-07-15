@@ -14,4 +14,17 @@ Runtime plot mark lineage can be collected through `<Plot lineage={...} onLineag
 `resolvePlotLineage(props)` helper. Lineage is returned to the host only; it is not written into
 PlotSpec or Scene metadata.
 
+## Install
+
+```bash
+pnpm add @retikz/plot-react
+```
+
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
+```tsx
+import { Plot } from '@retikz/plot-react';
+```
+
 See the [retikz docs site](https://pionpill.github.io/retikz/) for usage.

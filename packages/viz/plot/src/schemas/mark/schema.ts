@@ -1,4 +1,13 @@
-import { BoxSpacingSchema, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
+import {
+  BendDirection,
+  BoxSpacingSchema,
+  FoldStepVia,
+  JsonObjectSchema,
+  PaintSpecSchema,
+  RibbonAlignment,
+  RibbonSamplingSchema,
+  RibbonTaperInterpolation,
+} from '@retikz/core';
 import { AnchorRefSchema, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { AxisScaleSchema, BoxSizeSchema } from '@retikz/core';
 import {
@@ -27,7 +36,11 @@ import {
   PathClosureKind,
   PathCurve,
   PlotMark,
+  ReferenceMarkKind,
   RelationGeometryKind,
+  RelationOrthogonalLabelStep,
+  RelationRouteStepKind,
+  RelationRoutingKind,
 } from './constants';
 
 export const MarkTransformSchema = z
@@ -55,7 +68,7 @@ const markBase = {
 };
 
 export const AnchorIdSpecSchema = z
-  .object({
+  .strictObject({
     prefix: z
       .string()
       .min(1)
@@ -79,7 +92,6 @@ export const AnchorIdSpecSchema = z
         'Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the PlotSpec',
       ),
   })
-  .strict()
   .superRefine((spec, ctx) => {
     const count = [spec.field, spec.template, spec.generator].filter(value => value !== undefined).length;
     if (count !== 1) {
@@ -101,30 +113,27 @@ const anchorTargetFields = {
 };
 
 const DirectPlotTargetRefSchema = z
-  .object({
+  .strictObject({
     id: z.string().min(1).describe('Existing core Node / Coordinate id'),
     ...anchorTargetFields,
   })
-  .strict()
   .describe('Direct core target reference by id');
 
 const GeneratedAnchorPlotTargetRefSchema = z
-  .object({
+  .strictObject({
     anchorId: AnchorIdSpecSchema.describe('Anchor id rule evaluated against the current relation row'),
     ...anchorTargetFields,
   })
-  .strict()
   .describe('Generated anchor target reference evaluated from the current relation row');
 
 const ProjectedPlotTargetRefSchema = z
-  .object({
+  .strictObject({
     project: z
       .record(z.string().min(1), z.string().min(1))
       .describe('Coordinate-role to data-field map projected in the relation mark coordinate frame'),
     anchorId: AnchorIdSpecSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
     ...anchorTargetFields,
   })
-  .strict()
   .describe('Projected coordinate target from the current relation row');
 
 export const PlotTargetRefSchema = z
@@ -133,14 +142,12 @@ export const PlotTargetRefSchema = z
 
 const relationLabelTextSchema = z.union([
   StepLabelSchema.shape.text,
-  z
-    .object({
-      field: z
-        .string()
-        .min(1)
-        .describe('Data field path resolved from the current relation row and stringified into StepLabel.text'),
-    })
-    .strict(),
+  z.strictObject({
+    field: z
+      .string()
+      .min(1)
+      .describe('Data field path resolved from the current relation row and stringified into StepLabel.text'),
+  }),
 ]);
 
 export const RelationStepLabelSchema = StepLabelSchema.extend({
@@ -161,61 +168,57 @@ export const RelationPathSpecificOptionsSchema = PathBaseSchema.pick({
   .describe('Core Path options used only when RelationMark kind is path');
 
 export const RelationRouteStepSchema = z
-  .object({
-    kind: z
-      .enum(['move', 'line', 'fold', 'curve', 'cubic', 'bend'])
-      .describe('Core path step kind for this relation route segment'),
+  .strictObject({
+    kind: z.enum(RelationRouteStepKind).describe('Core path step kind for this relation route segment'),
     to: PlotTargetRefSchema.optional().describe(
       'Target for this step; omitted on the last drawable step defaults to RelationMark.target',
     ),
-    via: z.enum(['-|', '|-']).optional().describe('Fold direction for kind=fold'),
+    via: z.enum(FoldStepVia).optional().describe('Fold direction for kind=fold'),
     control: PositionSchema.optional().describe('Quadratic Bezier control point for kind=curve'),
     control1: PositionSchema.optional().describe('First cubic Bezier control point for kind=cubic'),
     control2: PositionSchema.optional().describe('Second cubic Bezier control point for kind=cubic'),
-    bendDirection: z.enum(['left', 'right']).optional().describe('Bend direction for kind=bend'),
+    bendDirection: z.enum(BendDirection).optional().describe('Bend direction for kind=bend'),
     bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle for kind=bend'),
     outAngle: z.number().optional().describe('Outgoing angle for kind=bend'),
     inAngle: z.number().optional().describe('Incoming angle for kind=bend'),
     looseness: z.number().positive().optional().describe('Curve looseness for kind=bend'),
     label: RelationStepLabelSchema.optional().describe('Optional label attached to this drawable step'),
   })
-  .strict()
   .describe('Relation route step lowered to a core path step');
 
 const RelationLineRoutingSchema = z
-  .object({
-    kind: z.literal('line').describe('Discriminator: connect source, via points, and target with straight line steps'),
+  .strictObject({
+    kind: z
+      .literal(RelationRoutingKind.Line)
+      .describe('Discriminator: connect source, via points, and target with straight line steps'),
   })
-  .strict()
   .describe('Line relation routing strategy');
 
 const RelationBendRoutingSchema = z
-  .object({
-    kind: z.literal('bend').describe('Discriminator: connect each segment with a core bend step'),
-    bendDirection: z.enum(['left', 'right']).optional().describe('Bend side relative to each relation segment'),
+  .strictObject({
+    kind: z.literal(RelationRoutingKind.Bend).describe('Discriminator: connect each segment with a core bend step'),
+    bendDirection: z.enum(BendDirection).optional().describe('Bend side relative to each relation segment'),
     bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle in degrees for each relation segment'),
     outAngle: z.number().optional().describe('Outgoing angle in degrees for bend routing'),
     inAngle: z.number().optional().describe('Incoming angle in degrees for bend routing'),
     looseness: z.number().positive().optional().describe('Curve looseness factor for bend routing'),
   })
-  .strict()
   .describe('Bend relation routing strategy');
 
 const RelationOrthogonalRoutingSchema = z
-  .object({
+  .strictObject({
     kind: z
-      .literal('orthogonal')
+      .literal(RelationRoutingKind.Orthogonal)
       .describe('Discriminator: connect each segment with right-angle orthogonal line steps'),
     via: z
-      .enum(['-|', '|-'])
+      .enum(FoldStepVia)
       .optional()
       .describe('Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal'),
     labelStep: z
-      .enum(['main', 'last'])
+      .enum(RelationOrthogonalLabelStep)
       .optional()
       .describe('Which generated drawable step receives the shorthand relation label; default main'),
   })
-  .strict()
   .superRefine((routing, ctx) => {
     if (routing.via === undefined) {
       ctx.addIssue({
@@ -446,7 +449,7 @@ export const PathScaleStyleSchema = markValueSchema(
 );
 
 export const RelationPrimitiveStyleSchema = z
-  .object({
+  .strictObject({
     color: PointColorStyleSchema.optional().describe(
       'Shared relation master color: field-bound datum channel or constant color',
     ),
@@ -478,7 +481,6 @@ export const RelationPrimitiveStyleSchema = z
       'Shared relation zIndex: field-bound datum channel or constant integer',
     ),
   })
-  .strict()
   .describe('Style fields shared by RelationMark path kinds');
 
 const PathCycleClosureSchema = z
@@ -599,7 +601,7 @@ const corePathStyle = {
 };
 
 export const PointMarkSchema = z
-  .object({
+  .strictObject({
     type: z.literal(PlotMark.Point).describe('Discriminator: one glyph or text label per record'),
     color: PointColorStyleSchema.optional().describe(
       'Glyph color: field-bound datum channel or constant color; overrides constant fill',
@@ -662,7 +664,6 @@ export const PointMarkSchema = z
     ...nodeHostLabel,
     encoding: PointEncodingSchema,
   })
-  .strict()
   .describe(
     'Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels',
   );
@@ -859,14 +860,14 @@ export const IntervalMarkSchema = z
   );
 
 export const ReferenceMarkSchema = z
-  .object({
+  .strictObject({
     type: z
       .literal(PlotMark.Reference)
       .describe(
         'Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval, or region for a bounded coordinate cell)',
       ),
     kind: z
-      .literal('region')
+      .literal(ReferenceMarkKind.Region)
       .optional()
       .describe(
         'Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band',
@@ -923,11 +924,13 @@ export const ReferenceMarkSchema = z
     ...markBase,
     ...positionalEncoding,
   })
-  .strict()
   .superRefine((mark, ctx) => {
     if (mark.label === undefined) return;
     const usesNodeHost =
-      mark.kind === 'region' || mark.xTo !== undefined || mark.yTo !== undefined || mark.zTo !== undefined;
+      mark.kind === ReferenceMarkKind.Region ||
+      mark.xTo !== undefined ||
+      mark.yTo !== undefined ||
+      mark.zTo !== undefined;
     const result = usesNodeHost
       ? MarkNodeLabelListSchema.safeParse(mark.label)
       : MarkGeometryLabelListSchema.safeParse(mark.label);
@@ -946,7 +949,7 @@ export const ReferenceMarkSchema = z
   );
 
 export const RelationPathGeometrySchema = z
-  .object({
+  .strictObject({
     via: z
       .array(PlotTargetRefSchema)
       .optional()
@@ -964,7 +967,6 @@ export const RelationPathGeometrySchema = z
     ),
     options: RelationPathSpecificOptionsSchema.optional().describe('Core Path options used only by path relations'),
   })
-  .strict()
   .superRefine((path, ctx) => {
     if (path.route !== undefined && path.routing !== undefined) {
       ctx.addIssue({
@@ -984,41 +986,19 @@ export const RelationPathGeometrySchema = z
   })
   .describe('Path geometry configuration for RelationMark');
 
-const RelationRibbonSamplingSchema = z
-  .union([
-    z
-      .object({
-        kind: z.literal('fixed').describe('Use a fixed number of cross-section samples'),
-        samples: z.number().int().min(2).max(512).describe('Number of cross-section samples'),
-      })
-      .strict(),
-    z
-      .object({
-        kind: z.literal('adaptive').describe('Choose samples from path length and tolerance'),
-        tolerance: z.number().positive().describe('Approximate target segment length in user units'),
-        maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples'),
-      })
-      .strict(),
-  ])
-  .describe('Ribbon boundary sampling strategy');
-
 export const RelationRibbonSpecificOptionsSchema = z
-  .object({
+  .strictObject({
     interpolation: z
-      .enum(['linear', 'smooth'])
+      .enum(RibbonTaperInterpolation)
       .optional()
       .describe('Interpolation curve between start.width and end.width'),
-    align: z
-      .enum(['center', 'left', 'right'])
-      .optional()
-      .describe('Which side of the generated band stays on the centerline'),
+    align: z.enum(RibbonAlignment).optional().describe('Which side of the generated band stays on the centerline'),
     samples: z
       .union([z.boolean(), z.number().int().min(2).max(512)])
       .optional()
       .describe('Sampling shorthand for centerline lowering'),
-    sampling: RelationRibbonSamplingSchema.optional().describe('Explicit sampling strategy'),
+    sampling: RibbonSamplingSchema.optional().describe('Explicit sampling strategy'),
   })
-  .strict()
   .superRefine((options, ctx) => {
     if (options.samples !== undefined && options.sampling !== undefined) {
       ctx.addIssue({
@@ -1031,7 +1011,7 @@ export const RelationRibbonSpecificOptionsSchema = z
   .describe('Core Path kind=ribbon options used only by ribbon relations');
 
 export const RelationRibbonOptionsSchema = z
-  .object({
+  .strictObject({
     width: PointNonnegativeNumberStyleSchema.describe(
       'Ribbon width at the source side, or the whole width when endWidth is omitted',
     ),
@@ -1042,7 +1022,6 @@ export const RelationRibbonOptionsSchema = z
       'Core Path kind=ribbon options used only by ribbon relations',
     ),
   })
-  .strict()
   .superRefine((ribbon, ctx) => {
     if (ribbon.options?.interpolation !== undefined && ribbon.endWidth === undefined) {
       ctx.addIssue({
@@ -1055,7 +1034,7 @@ export const RelationRibbonOptionsSchema = z
   .describe('Ribbon geometry configuration for RelationMark');
 
 export const RelationMarkSchema = z
-  .object({
+  .strictObject({
     type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
     kind: z.enum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
     source: PlotTargetRefSchema.describe('Relation source target'),
@@ -1081,7 +1060,6 @@ export const RelationMarkSchema = z
       .optional()
       .describe('Optional non-position relation channels; source/target carry relation geometry'),
   })
-  .strict()
   .superRefine((mark, ctx) => {
     const kind = mark.kind ?? RelationGeometryKind.Path;
     if (kind === RelationGeometryKind.Path && mark.ribbon !== undefined) {

@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import type { AnyCoordinateDefinition, AxisFrame, CoordinateFrame, DimensionRole } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { createCoordinateFrame, defineCoordinate } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -15,17 +15,17 @@ import { PlotSpecSchema } from '../../../src/schemas';
 /**
  * 自定义坐标系（custom coordinate）lowering 测试。
  * IR 只存 `{type:<customType>, ...config}`（JSON 安全）；roles / 投影函数由运行时 CoordinateDefinition 提供。
- * 证明 projectRoles 足以表达任意坐标系几何（曲线一维 / 拱形 x 轴），无需「轴」抽象、不破坏 IR 序列化。
+ * 证明 projectRoles 足以表达任意坐标系几何（曲线一维 / 拱形 x 轴），无需「轴」抽象、不破坏 IR 序列化
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
@@ -126,7 +126,7 @@ const bridgeCoordinate = defineCoordinate({
   },
 });
 
-const sineSpec = (): PlotSpec =>
+const sineSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -136,7 +136,7 @@ const sineSpec = (): PlotSpec =>
     marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
   });
 
-const bridgeSpec = (): PlotSpec =>
+const bridgeSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -208,6 +208,28 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
   it('custom 坐标系 IR JSON round-trip（投影函数不在 IR）', () => {
     const ir = sineSpec().coordinate;
     expect(JSON.parse(JSON.stringify(ir))).toEqual({ type: 'sine' });
+  });
+
+  it('definition 返回的 frame type 必须与注册 type 一致', () => {
+    const malformed = defineCoordinate({
+      ...sineCoordinate,
+      resolve: (operation, context) => {
+        const resolution = sineCoordinate.resolve(operation, context);
+        return { ...resolution, frame: { ...resolution.frame, type: 'other' } };
+      },
+    });
+    expect(() => firstLayer(sineSpec(), { d: [{ v: 1 }] }, opts([malformed]))).toThrow(/sine.*frame type/);
+  });
+
+  it('definition 返回的 frame roles 必须与注册 roles 一致', () => {
+    const malformed = defineCoordinate({
+      ...sineCoordinate,
+      resolve: (operation, context) => {
+        const resolution = sineCoordinate.resolve(operation, context);
+        return { ...resolution, frame: { ...resolution.frame, roles: ['y'] } };
+      },
+    });
+    expect(() => firstLayer(sineSpec(), { d: [{ v: 1 }] }, opts([malformed]))).toThrow(/frame roles.*x/);
   });
 });
 
@@ -379,9 +401,9 @@ describe('custom coordinate — 契约 / fail-loud', () => {
   });
 });
 
-// ── ADR-05：frameAlong 单 role 轴标架契约 ───────────────────────────────────────────────
-// 坐标系可选报某角色轴曲线在某点的局部标架（origin + 切向，屏幕空间）；曲线轴优先吃它、缺则数值差分回落。
-// 法向 = 切向逆时针转 90°，由 guide 导出。维度无关：轴曲线永远 1D、永远有切向法向（2D custom 的单 role 轴亦然）。
+// ── contract：frameAlong 单 role 轴标架契约 ───────────────────────────────────────────────
+// 坐标系可选报某角色轴曲线在某点的局部标架（origin + 切向，屏幕空间）；曲线轴优先吃它、缺则数值差分回落
+// 法向 = 切向逆时针转 90°，由 guide 导出。维度无关：轴曲线永远 1D、永远有切向法向（2D custom 的单 role 轴亦然）
 
 /** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
 const DIAGONAL_K = 10;
@@ -458,7 +480,7 @@ const degenerateFramed = defineSineCoordinate(
   true,
 );
 
-const sineAxisSpec = (type = 'sineFramed'): PlotSpec =>
+const sineAxisSpec = (type = 'sineFramed'): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -500,7 +522,7 @@ const tickSegmentsOf = (layer: IRScope): Array<[number, number]> => {
 const labelNodesOf = (layer: IRScope): Array<IRNode> =>
   (layer.children as Array<IRNode>).filter(child => (child as { type?: string }).type === 'node');
 
-describe('custom coordinate — frameAlong 局部标架契约（ADR-05）', () => {
+describe('custom coordinate — frameAlong 局部标架契约（contract）', () => {
   it('framealong_origin_matches_project_roles', () => {
     // frameAlong(role,p).origin 与 projectRoles(p) 逐分量近似相等；projectRoles 为 null 时同返 null（非引用相等）
     const frame = diagonalFrame();

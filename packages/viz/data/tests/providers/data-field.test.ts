@@ -10,6 +10,7 @@ import {
   resolveFieldPath,
   resolveFieldTypes,
   resolveFormatRegistry,
+  validateBoundData,
 } from '../../src';
 
 describe('data field runtime', () => {
@@ -42,6 +43,34 @@ describe('data field runtime', () => {
 
   it('returns undefined for missing categorical values', () => {
     expect(coerceValue(undefined, DataFieldType.Categorical)).toBeUndefined();
+  });
+
+  it('normalizes custom parser outputs to the declared canonical field type', () => {
+    const continuous = normalizeRows(
+      [{ value: 'raw' }],
+      new Map([['value', DataFieldType.Continuous]]),
+      undefined,
+      new Map([['value', () => '12']]),
+    );
+    const temporal = normalizeRows(
+      [{ value: 'raw' }],
+      new Map([['value', DataFieldType.Temporal]]),
+      undefined,
+      new Map([['value', () => '2026-07-12']]),
+    );
+    const categorical = normalizeRows(
+      [{ value: 'raw' }],
+      new Map([['value', DataFieldType.Categorical]]),
+      undefined,
+      new Map([['value', () => Number.NaN]]),
+    );
+
+    expect(continuous[0].value).toBeUndefined();
+    expect(temporal[0].value).toBeUndefined();
+    expect(categorical[0].value).toBeUndefined();
+    expect(() => validateBoundData(continuous, new Map([['value', DataFieldType.Continuous]]), 10)).toThrow(
+      /no valid values/,
+    );
   });
 
   it('parses slashDate only when the value is a real YYYY/MM/DD calendar date', () => {

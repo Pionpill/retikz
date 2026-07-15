@@ -8,7 +8,7 @@ import type { PositionScale } from '../../../src/contract';
 import type { Cell } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { CartesianCoordinateFrame } from '../../../src/providers';
-import type { IntervalMark, PlotSpec } from '../../../src/schemas';
+import type { IRPlotIntervalMark, IRPlotSpec } from '../../../src/schemas';
 
 import {
   cellGeometryAnchor,
@@ -24,19 +24,19 @@ import { createCartesianCoordinate, createPolarCoordinate, createTernary2DCoordi
 import { isBuiltinMark, PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-01（alpha.11）：区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。
+ * 区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。
  * 验证 cartesian/polar 闭式快路逐字段等价、CellGeometry 三态装配、densifyCellContour 密采样闭合、
- * contour Node 可连接、datumAnchor 三态 parity，以及无 projectCell 坐标系 fail-loud。
+ * contour Node 可连接、datumAnchor 三态 parity，以及无 projectCell 坐标系 fail-loud
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
@@ -121,7 +121,7 @@ const WIDTH = 400;
 const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
-const cartesianBarSpec = (arrangement?: 'stack', series?: string): PlotSpec =>
+const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -194,7 +194,7 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
   });
 });
 
-const polarBarSpec = (): PlotSpec =>
+const polarBarSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -207,7 +207,7 @@ const polarBarSpec = (): PlotSpec =>
     marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
   });
 
-const pieSpec = (): PlotSpec =>
+const pieSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -273,7 +273,7 @@ const curvedFrame = (): CartesianCoordinateFrame => {
   };
 };
 
-const intervalMarkSpec = (): PlotSpec =>
+const intervalMarkSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -286,8 +286,8 @@ const intervalMarkSpec = (): PlotSpec =>
     marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
   });
 
-/** 取首个 interval mark（窄化为 IntervalMark，供需 IntervalMark 的 buildIntervalContext 用） */
-const firstIntervalMark = (spec: PlotSpec): IntervalMark => {
+/** 取首个 interval mark（窄化为 IRPlotIntervalMark，供需 IRPlotIntervalMark 的 buildIntervalContext 用） */
+const firstIntervalMark = (spec: IRPlotSpec): IRPlotIntervalMark => {
   const mark = spec.marks[0];
   if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
   return mark;
@@ -466,7 +466,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
   });
 
   it('datum_anchor_ternary_empty_contour_is_null', () => {
-    const mark: IntervalMark = {
+    const mark: IRPlotIntervalMark = {
       type: 'interval',
       bounds: {
         x: { kind: 'extent', from: 'x0', to: 'x1' },
@@ -495,9 +495,9 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
   });
 });
 
-// ── alpha.12 ADR-01：histogram 连续 x 区间柱（interval x0Field / x1Field）──────────────────
+// ── contract：histogram 连续 x 区间柱（interval x0Field / x1Field）──────────────────
 describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () => {
-  const histogramMark = (): IntervalMark => ({
+  const histogramMark = (): IRPlotIntervalMark => ({
     type: 'interval',
     bounds: { x: { kind: 'extent', from: 'binStart', to: 'binEnd' } },
     encoding: { y: { field: 'binCount' } },

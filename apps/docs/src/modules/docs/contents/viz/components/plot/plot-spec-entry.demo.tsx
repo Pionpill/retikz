@@ -1,11 +1,11 @@
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 import type { FC } from 'react';
 
 import { Plot } from '@retikz/plot-react';
 
 import { revenue } from './plot-cartesian.data';
 
-const spec: PlotSpec = {
+const spec: IRPlotSpec = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'revenue' },

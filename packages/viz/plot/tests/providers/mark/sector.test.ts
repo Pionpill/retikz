@@ -3,7 +3,7 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
@@ -22,7 +22,7 @@ const expandOf = (
 
 /** 取第一个 mark 图层 scope */
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -57,13 +57,13 @@ const sectorParams = (
 };
 
 // ── interval polar → sector（径向柱 / 玫瑰）─────────────────────────────
-describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
+describe('lowerPlots interval→sector under polar2D (contract)', () => {
   const SALES = [
     { month: 'Jan', amount: 3 },
     { month: 'Feb', amount: 6 },
     { month: 'Mar', amount: 9 },
   ];
-  const roseSpec = (): PlotSpec =>
+  const roseSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -226,14 +226,14 @@ describe('lowerPlots interval→sector under polar2D (ADR-02)', () => {
 });
 
 // ── sector mark（饼图 / 环图）──────────────────────────────────────────
-describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
+describe('lowerPlots sector mark pie / donut (contract)', () => {
   const SHARE = [
     { label: 'A', value: 3 },
     { label: 'B', value: 5 },
     { label: 'C', value: 2 },
   ];
   // 饼图：stack transform 产 y0/y1（单链）→ sector mark 读界、角度编码值
-  const pieSpec = (innerRadius = 0): PlotSpec =>
+  const pieSpec = (innerRadius = 0): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -365,7 +365,7 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
   });
 
   // 负值饼图：旧 sector mark 曾对负累积界 fail-loud；合并进 interval 后 extent bound 不再带此守卫，
-  // stack transform 亦不校验负值 → 现不再 throw（行为变更，已上报）。此处仅锁定「不再抛 /non-negative/」的现状。
+  // stack transform 亦不校验负值 → 现不再 throw（行为变更，已上报）。此处仅锁定「不再抛 /non-negative/」的现状
   it('pie_negative_value_no_longer_throws', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

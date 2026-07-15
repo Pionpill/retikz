@@ -1,11 +1,11 @@
 import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
 import type {
+  IRPlotSpec,
+  IRPlotTransform,
   LowerPlotsOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
   PlotLineageRun,
-  PlotSpec,
-  TransformOperation,
 } from '@retikz/plot';
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
@@ -16,6 +16,7 @@ import { useEffect, useRef } from 'react';
 
 import type { CoordinateInput, MarkTransformShortcutDefinition } from './components';
 
+import { makeEmbeddedPlotComposites, withEmbeddedPlotRuntime } from './embedded-runtime';
 import { resolvePlotRuntime } from './plot-runtime';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
@@ -32,17 +33,17 @@ export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'rendere
   LowerPlotsOptions &
   PlotLineageProps;
 
-/** React adapter 暴露的运行时图元链路 props。 */
+/** React adapter 暴露的运行时图元链路 props */
 export type PlotLineageProps = {
   /**
    * 图元链路记录开关。
    * @description `false` 表示关闭；传对象时沿用 `@retikz/plot` 的独立开关。省略时只有 `onLineage`
-   *   或 `resolvePlotLineage` 触发运行时链路计算，并使用最小默认摘要。
+   *   或 `resolvePlotLineage` 触发运行时链路计算，并使用最小默认摘要
    */
   lineage?: false | PlotLineageOptions;
-  /** 宿主侧查询 / AI / 权限 metadata；只有 `lineage.hostMetadata` 打开对应开关时才会透传。 */
+  /** 宿主侧查询 / AI / 权限 metadata；只有 `lineage.hostMetadata` 打开对应开关时才会透传 */
   hostLineageMetadata?: PlotHostLineageMetadata;
-  /** 渲染后接收 runtime-only 图元链路产物；不会把链路写入 PlotSpec 或 Scene meta。 */
+  /** 渲染后接收 runtime-only 图元链路产物；不会把链路写入 IRPlotSpec 或 Scene meta */
   onLineage?: (lineage: PlotLineageRun) => void;
 };
 
@@ -50,16 +51,16 @@ export type PlotColorProps = {
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
-  theme?: PlotSpec['theme'];
-  /** 整图 label 空间布局策略。 */
-  layout?: PlotSpec['layout'];
+  theme?: IRPlotSpec['theme'];
+  /** 整图 label 空间布局策略 */
+  layout?: IRPlotSpec['layout'];
 };
 
-/** spec 入口（薄包装）：给已构造好的完整 PlotSpec + 数据集表 */
+/** spec 入口（薄包装）：给已构造好的完整 IRPlotSpec + 数据集表 */
 export type PlotSpecProps = PlotCommonProps &
   PlotColorProps & {
     /** 已构造好的 Plot IR 根节点（手写 / 生成） */
-    spec: PlotSpec;
+    spec: IRPlotSpec;
     /** 外部数据集表（data.reference 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
     data: ExternalDatasets;
     children?: never;
@@ -69,7 +70,7 @@ export type PlotSpecProps = PlotCommonProps &
 export type PlotDslProps = PlotCommonProps &
   PlotColorProps & {
     spec?: never;
-    /** 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 dataRef 时也作为默认数据集引用 */
+    /** 面板 id：写入 IRPlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 dataRef 时也作为默认数据集引用 */
     id?: string;
     /** 嵌入态/DSL 入口的数据集引用名；多 plot 共享同一数据源时可显式设成同名 */
     dataRef?: string;
@@ -83,13 +84,13 @@ export type PlotDslProps = PlotCommonProps &
     fieldMap?: Record<string, string>;
     /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */
     coordinate?: CoordinateInput;
-    composition?: PlotSpec['composition'];
+    composition?: IRPlotSpec['composition'];
     /**
      * 数据变换 IR 直传（快捷入口）：拼到 `<Transform>` 子组件收集结果之前、自动装配 stack 之前。
      * @description 与 `<Transform kind="...">` 声明组件共用同一管线、可混用；程序化构造变换链时的便捷入口。
-     *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack。
+     *   命名 `dataTransforms` 以区别于 core scope 的几何 `transforms`（translate / rotate）。含 stack 时按签名抑制同款 mark shortcut stack
      */
-    dataTransforms?: Array<TransformOperation>;
+    dataTransforms?: Array<IRPlotTransform>;
     /**
      * Mark-level transform shortcuts for DSL children.
      * @description A shortcut observes assembled mark IR and emits ordinary plot-level transform operations.
@@ -101,7 +102,7 @@ export type PlotDslProps = PlotCommonProps &
 /** <Plot> props：spec 入口与组合 DSL 入口二选一（按 spec/children 分流） */
 export type PlotProps = PlotSpecProps | PlotDslProps;
 
-const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
+const wrapPanelScope = (node: IRPlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
   const { x, y, transforms, zIndex, clip } = props;
   const panelTransforms =
     x !== undefined || y !== undefined
@@ -118,16 +119,6 @@ const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContri
   return scope as EmbeddableContribution['node'];
 };
 
-/** 默认 Plot lowering maker；同一 Layout 内的标准 Plot 复用函数身份。 */
-const makeDefaultPlotComposites = (mergedDatasets: Record<string, unknown>) =>
-  lowerPlots(mergedDatasets as ExternalDatasets);
-
-/** 判断嵌入态是否携带不能由 PlotSpec 自身表达的 runtime-only lowering 选项。 */
-const hasRuntimeLowerOptions = (options: LowerPlotsOptions): boolean =>
-  (Object.entries(options) as Array<[keyof LowerPlotsOptions, LowerPlotsOptions[keyof LowerPlotsOptions]]>).some(
-    ([key, value]) => key !== 'width' && key !== 'height' && value !== undefined,
-  );
-
 const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
   displayName: 'Plot',
   namespace: 'plot',
@@ -135,10 +126,8 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
     const { spec, datasets, lowerOptions } = resolvePlotRuntime(props, { embedded: true });
     return {
       node: wrapPanelScope(spec, props),
-      datasets,
-      makeComposites: hasRuntimeLowerOptions(lowerOptions)
-        ? mergedDatasets => lowerPlots(mergedDatasets as ExternalDatasets, lowerOptions)
-        : makeDefaultPlotComposites,
+      datasets: withEmbeddedPlotRuntime(datasets, lowerOptions),
+      makeComposites: makeEmbeddedPlotComposites,
     };
   },
 };
@@ -150,7 +139,7 @@ type EmbeddablePlotComponent = FC<PlotProps> & {
 
 /**
  * Plot 组件（两条入口同名分流）
- * @description 给 spec → 薄包装直接渲染；给 children → builder 装配成 PlotSpec 再渲染。
+ * @description 给 spec → 薄包装直接渲染；给 children → builder 装配成 IRPlotSpec 再渲染。
  *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
  */
 export const Plot: EmbeddablePlotComponent = props => {

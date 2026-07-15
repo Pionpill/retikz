@@ -47,7 +47,7 @@ root scope 是 `localNamespace`（alpha.1 就位）。core 语义（[scope schem
 
 ### datum 来源标识（index 语义，P1 评审修正）
 
-lowering 先 `applyTransforms`（sort 重排行、stack 派生新行对象）再下沉（[expand.ts](../../../../../../plot/src/pipeline/expand.ts) / [transform orchestrate](../../../../../../plot/src/providers/transform/orchestrate.ts)），故「第几行」有歧义。per-datum meta **同时带三者**：
+lowering 先 `applyTransforms`（sort 重排行、stack 派生新行对象）再下沉（[expand/lower.ts](../../../../../../plot/src/pipeline/expand/lower.ts) / [transform orchestrate](../../../../../../plot/src/providers/transform/orchestrate.ts)），故「第几行」有歧义。per-datum meta **同时带三者**：
 
 ```ts
 meta = {
@@ -121,5 +121,5 @@ meta = {
 - **`sourceIndex` 全链路强追踪**：跨所有 transform（含派生行）精确回指源行——backlog；v0.1 best-effort。
 - **legend / 跨域组合 UI**：v0.5。
 
-> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/pipeline/expand.ts`、`packages/viz/plot/src/providers/{mark,guide}/`、plot React/vanilla options 透传与 provenance 测试，测试见 `packages/viz/plot/tests/pipeline/scope-id-meta.test.ts`。完整施工契约见压缩前蓝图。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/viz/plot/src/pipeline/expand/`、`packages/viz/plot/src/providers/{mark,guide}/`、plot React/vanilla options 透传与 provenance 测试，测试见 `packages/viz/plot/tests/pipeline/scope-id-meta.test.ts`。完整施工契约见压缩前蓝图。
 > 🔖 本文件压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/viz/_notes/decisions/v0/v0.1/alpha.5/01-scope-id-meta.md`（封板全文）。

@@ -4,31 +4,31 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { DomainPaddingSchema } from '../../../schemas';
 
-/** position scale 的 domain padding 输入。 */
+/** position scale 的 domain padding 输入 */
 export type DomainPaddingInput = z.infer<typeof DomainPaddingSchema>;
 
-/** 可按连续值域规则扩展的 position scale 族。 */
+/** 可按连续值域规则扩展的 position scale 族 */
 export type PositionDomainFamily = 'linear' | 'time' | 'log' | 'pow' | 'sqrt' | 'symlog' | 'radial';
 
-/** 解析带弹性值域时需要的 scale 上下文。 */
+/** 解析带弹性值域时需要的 scale 上下文 */
 export type ResolvePaddedDomainOptions = {
-  /** scale 名称，用于报错定位。 */
+  /** scale 名称，用于报错定位 */
   scaleName: string;
-  /** 连续 position scale 族。 */
+  /** 连续 position scale 族 */
   family: PositionDomainFamily;
-  /** 原始 domain，可能来自用户显式配置或数据推断。 */
+  /** 原始 domain，可能来自用户显式配置或数据推断 */
   domain: readonly [number, number];
-  /** domain 是否来自用户显式配置。 */
+  /** domain 是否来自用户显式配置 */
   explicitDomain: boolean;
-  /** 用户声明的 domain padding；数字代表两端同值，对象可分别指定上下界。 */
+  /** 用户声明的 domain padding；数字代表两端同值，对象可分别指定上下界 */
   domainPadding?: DomainPaddingInput;
-  /** 单值 domain 展开跨度。 */
+  /** 单值 domain 展开跨度 */
   singleValueSpan?: number;
-  /** log scale 的对数底。 */
+  /** log scale 的对数底 */
   base?: number;
-  /** pow scale 的指数。 */
+  /** pow scale 的指数 */
   exponent?: number;
-  /** 推断 domain 时使用的默认 padding；显式 domain 默认不自动留白。 */
+  /** 推断 domain 时使用的默认 padding；显式 domain 默认不自动留白 */
   defaultDomainPadding?: number;
 };
 

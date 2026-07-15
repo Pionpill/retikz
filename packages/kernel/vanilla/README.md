@@ -10,6 +10,9 @@ retikz 的无框架 runtime / SSR 入口：不依赖任何 UI 框架。`renderTo
 pnpm add @retikz/vanilla @retikz/core @retikz/render
 ```
 
+This package is ESM-only and requires Node.js 24 or newer.
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
 ## Render IR / Scene
 
 ```ts

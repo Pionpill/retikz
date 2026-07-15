@@ -11,6 +11,8 @@ Note: retikz itself is framework-agnostic. You can also use `@retikz/vanilla` to
 
 <PackageManagerInstall packages="@retikz/react react react-dom" />
 
+All published retikz packages are ESM-only and require Node.js 24 or newer.
+
 The underlying `@retikz/core` (IR + compiler, zero React / zero DOM) is pulled in transitively — no need to install it directly.
 
 ## How to Learn
@@ -65,7 +67,7 @@ Three nodes joined by two arrowed lines — the static structure now matches the
 
 A figure can also respond to user input. Add `animations` to describe animation tracks, then add an `onClick` callback. The callback's second argument, `context`, carries the current element information and animation controls; calling `context.animation.restart()` replays the animation from the event.
 
-<ComponentPreview files="get-start-step-4" size="xs" replayable />
+<ComponentPreview files="get-start-step-4" size="xs" controls={{ animation: true }} />
 
 This animation uses `trigger: 'manual'`, so it does not autoplay. It waits for the click callback, and the callback can update your React state at the same time. Previews follow the system reduced-motion preference by default. If the animation does not play, choose **… → Component Preview → Animation playback → On** in the upper-right menu.
 

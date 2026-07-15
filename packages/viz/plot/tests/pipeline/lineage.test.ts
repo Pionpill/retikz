@@ -3,7 +3,7 @@ import type { ExternalDatasets } from '@retikz/data';
 
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../src';
+import type { IRPlotSpec } from '../../src';
 
 import {
   createPlotLineageLocator,
@@ -52,7 +52,7 @@ const intensityChannel = defineNodeChannel<number>({
   },
 });
 
-const pointSpec = (): PlotSpec =>
+const pointSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -72,7 +72,7 @@ const pointSpec = (): PlotSpec =>
     ],
   });
 
-const summarySpec = (): PlotSpec =>
+const summarySpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -100,7 +100,7 @@ const summarySpec = (): PlotSpec =>
     ],
   });
 
-const seriesSpec = (): PlotSpec =>
+const seriesSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -121,7 +121,7 @@ const seriesSpec = (): PlotSpec =>
     ],
   });
 
-const extensionChannelSpec = (): PlotSpec =>
+const extensionChannelSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',

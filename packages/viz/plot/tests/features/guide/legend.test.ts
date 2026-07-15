@@ -5,26 +5,26 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
- * ADR-03 legend guide lowering 测试（alpha.8）。
+ * Legend guide lowering 契约测试。
  *
  * legend 经 lowerPlots 下沉成一个 core scope（swatch / 色带 ramp / 分箱 / 梯度符号 + 标签），
  * 摆在 position 对应边的预留带内；本测试断言 **结构性** 产物（swatch 数、scope 存在、plotArea 宽度变化、
  * 默认 axis 是否仍在、descriptor 一致性），不硬编码像素。
  *
- * lowerLegend / resolver descriptor 双产出 / by-type axes / 占位均未实现 → 大量 case 此刻 fail，符合预期。
+ * lowerLegend / resolver descriptor 双产出 / by-type axes / 占位均未实现 → 大量 case 此刻 fail，符合预期
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions = opts): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions = opts): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
@@ -51,7 +51,7 @@ const allScopes = (root: IRScope): Array<IRScope> => {
 /**
  * 辨认 legend 内的 swatch / glyph Node（色块 / ramp 条 / size 圆点 / shape glyph）与标签 Node。
  * @description legend 矩形改用 core Node（shape rectangle，修 PathSchema.min(2) 违规），不再是 Path。
- *   swatch Node 自带 shape 且无 text；label Node 有 text。
+ *   swatch Node 自带 shape 且无 text；label Node 有 text
  */
 const swatchNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text === undefined);
@@ -124,7 +124,7 @@ const QUANTILE_ROWS = [
 // ── spec 工厂 ─────────────────────────────────────────────────────────
 
 /** ordinal color 散点 + 显式 color legend（不声明 Axis） */
-const ordinalColorLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
+const ordinalColorLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -146,7 +146,7 @@ const ordinalColorLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec 
   });
 
 /** 连续 color 散点 + sequential color legend */
-const sequentialColorLegendSpec = (): PlotSpec =>
+const sequentialColorLegendSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -175,7 +175,7 @@ const sequentialColorLegendSpec = (): PlotSpec =>
   });
 
 /** size 散点 + size legend */
-const sizeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
+const sizeLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -196,7 +196,7 @@ const sizeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
   });
 
 /** shape 散点 + shape legend（categorical → glyph 调色板） */
-const shapeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
+const shapeLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -222,7 +222,7 @@ const SECTOR_SHARE = [
   { label: 'B', value: 5 },
   { label: 'C', value: 2 },
 ];
-const sectorColorLegendSpec = (): PlotSpec =>
+const sectorColorLegendSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -293,7 +293,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
   });
 });
 
-describe('lowerPlots legend — happy path（ADR-03）', () => {
+describe('lowerPlots legend — happy path（contract）', () => {
   // 离散 swatch：每类一块 + 标签
   it('ordinal_color_legend_one_swatch_per_category', () => {
     const outer = expandOf(ordinalColorLegendSpec(), { d: ORDINAL_ROWS });
@@ -401,7 +401,7 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
   });
 });
 
-describe('lowerPlots legend — 边界（ADR-03）', () => {
+describe('lowerPlots legend — 边界（contract）', () => {
   // 单类别 legend → 一个 swatch
   it('single_category_legend_one_swatch', () => {
     const outer = expandOf(ordinalColorLegendSpec(), { d: SINGLE_CATEGORY_ROWS });
@@ -454,7 +454,7 @@ describe('lowerPlots legend — 边界（ADR-03）', () => {
   });
 });
 
-describe('lowerPlots legend — 错误路径（ADR-03）', () => {
+describe('lowerPlots legend — 错误路径（contract）', () => {
   // 多 color scale 未给 scale 消歧 → fail-loud
   it('ambiguous_multiple_color_scales_fail_loud', () => {
     const spec = PlotSpecSchema.parse({
@@ -511,7 +511,7 @@ describe('lowerPlots legend — 错误路径（ADR-03）', () => {
   });
 });
 
-describe('lowerPlots legend — 交互（ADR-03 修 P1 ⑦ / P2 ⑩ / P1 ⑥）', () => {
+describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥）', () => {
   // 修 P1 ⑦：Legend 不抑制默认 axes —— point mark + 只声明 Legend、无显式 Axis → 默认 x/y 轴仍在 + legend
   it('legend_does_not_suppress_default_axes', () => {
     // 显式补两条默认 axis + legend，模拟 buildPlotSpec by-type 合并后的 spec：legend 与 axis 共存、互不抑制
@@ -622,7 +622,7 @@ describe('lowerPlots legend — 交互（ADR-03 修 P1 ⑦ / P2 ⑩ / P1 ⑥）'
 });
 
 /** quantile 分箱 color legend spec（ChildSchema 回归复用） */
-const quantileColorLegendSpec = (): PlotSpec =>
+const quantileColorLegendSpec = (): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -650,9 +650,9 @@ const quantileColorLegendSpec = (): PlotSpec =>
     guides: [{ type: 'legend', channel: 'color', scale: 'densColor' }],
   });
 
-describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-audit W2）', () => {
+describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
   // 数据 temperature 仅 [5,30]，显式 domain [0,100]；ramp 刻度应落 domain（取色基准同源），非数据 extent
-  const explicitDomainRampSpec = (): PlotSpec =>
+  const explicitDomainRampSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -751,8 +751,8 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-au
 
 describe('lowerPlots legend — core schema 合法性回归（修 PathSchema.min(2) 违规）', () => {
   // legend 下沉产物（整个 legend scope）必须通过 core ChildSchema 校验——
-  //   早期 swatch 用单 step rectangle Path 违反 PathSchema.children.min(2)，schema 校验会拒绝。
-  //   改用 core Node（shape rectangle）后，整个 legend scope 应 100% 合法可序列化。
+  //   早期 swatch 用单 step rectangle Path 违反 PathSchema.children.min(2)，schema 校验会拒绝
+  //   改用 core Node（shape rectangle）后，整个 legend scope 应 100% 合法可序列化
   const assertLegendSchemaValid = (outer: IRScope): void => {
     const legend = findLegendLayer(outer);
     expect(legend).toBeDefined();

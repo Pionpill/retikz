@@ -47,7 +47,7 @@ export const safeExtent = (values: Array<number>): [number, number] => {
 /**
  * 取一个线性 scale 的刻度值 + 格式化标签
  * @description 刻度值 / 标签只依赖 domain + count（与 range 无关）——故可在 range 定下来前先算，供布局估算 margin。
- *   axis 与同维 grid 复用同一 TickSet（同源）。
+ *   axis 与同维 grid 复用同一 TickSet（同源）
  */
 export const scaleTicks = (
   scale: D3ScaleContinuousNumeric<number, number>,
@@ -58,7 +58,7 @@ export const scaleTicks = (
   return { values, labels: values.map(format) };
 };
 
-/** scheme 名 → interpolator（t∈[0,1] → 颜色串）；先查内置、再查自定义；未注册 throw。 */
+/** scheme 名 → interpolator（t∈[0,1] → 颜色串）；先查内置、再查自定义；未注册 throw */
 export type ColorSchemeResolver = (name: string) => (t: number) => string;
 
 /** 配色方案名 → d3-scale-chromatic interpolator（t∈[0,1] → 颜色串）；命名 scheme 进 IR、求值期映射到函数（函数不进 IR） */
@@ -86,7 +86,7 @@ export const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => s
   [PlotColorScheme.Spectral]: d3InterpolateSpectral,
 };
 
-/** 内置 scheme 名 → interpolator；未知名 throw（提示经 options.colorSchemes 注册）。自定义解析由调用方在外层叠加。 */
+/** 内置 scheme 名 → interpolator；未知名 throw（提示经 options.colorSchemes 注册）。自定义解析由调用方在外层叠加 */
 export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
   if (!BUILTIN_COLOR_SCHEMES.has(name)) {
     throw new Error(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
@@ -96,7 +96,7 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
 
 /**
  * 建 scheme 解析器：先查内置 SCHEME_INTERPOLATORS、再查自定义 options.colorSchemes，未命中 throw。
- * @description interpolator 函数不进 IR；IR 只存 scheme 名串，求值期经此解析为函数（含自定义命名配色）。
+ * @description interpolator 函数不进 IR；IR 只存 scheme 名串，求值期经此解析为函数（含自定义命名配色）
  */
 export const makeColorSchemeResolver =
   (custom?: Record<string, (t: number) => string>): ColorSchemeResolver =>
@@ -110,7 +110,7 @@ export const makeColorSchemeResolver =
 /**
  * d3 颜色串（`rgb(r, g, b)` / `#rgb` / `#rrggbb`）归一化为 6 位十六进制
  * @description interpolator 与 scaleLinear 颜色插值产物形态不一（hex 或 rgb()）；统一成 hex 使产物稳定、可序列化进 core fill / stroke。
- *   解析不出 r/g/b 三元（命名色 / 已是其它格式）→ 原样返回。
+ *   解析不出 r/g/b 三元（命名色 / 已是其它格式）→ 原样返回
  */
 export const toHexColor = (color: string): string => {
   const match = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(color);

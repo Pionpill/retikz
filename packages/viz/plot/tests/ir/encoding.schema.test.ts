@@ -8,7 +8,7 @@ import {
   SizeChannelSchema,
 } from '../../src/schemas/encoding';
 
-describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
+describe('ChannelSchema / EncodingSchema (contract)', () => {
   // Happy path
   it('channel_field_valid', () => {
     expect(ChannelSchema.parse({ field: 'revenue' })).toEqual({ field: 'revenue' });
@@ -40,14 +40,14 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     expect(() => ChannelSchema.parse({})).toThrow();
   });
 
-  // 交互：value 复用 JSON literal 约束，允许对象常量用于 font / boundary 等内置通道。
+  // 交互：value 复用 JSON literal 约束，允许对象常量用于 font / boundary 等内置通道
   it('channel_value_uses_json_literal', () => {
     const value = { a: 1, nested: [true, null] };
     expect(ChannelSchema.parse({ value })).toEqual({ value });
     expect(() => ChannelSchema.parse({ value: () => 1 })).toThrow();
   });
 
-  // ADR-04：color 通道 + scale 引用
+  // contract：color 通道 + scale 引用
   it('channel_with_scale_ref_valid', () => {
     const c = { field: 'continent', scale: 'col' };
     expect(ChannelSchema.parse(c)).toEqual(c);
@@ -67,8 +67,8 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     expect(() => ChannelSchema.parse({ field: 'c', value: '#000', scale: 'col' })).toThrow();
   });
 
-  // ADR-01（alpha.9）：x / y 从必填转可选——必填性下放到 coordinate 级校验（cartesian2D 需 x+y、
-  // cartesian1D 仅需单维、ternary2D 需 x/y/z）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）。
+  // x / y 在 schema 层可选，必填性下放到 coordinate 级校验（cartesian2D 需 x+y、
+  // cartesian1D 仅需单维、ternary2D 需 x/y/z）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）
   it('encoding_missing_x_accepted', () => {
     expect(EncodingSchema.parse({ y: { field: 'value' } })).toEqual({ y: { field: 'value' } });
   });
@@ -91,7 +91,7 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
 
-  // alpha.9 ADR-03：ternary 的 x/y/z 位置角色通道（可选；ternary 必填由 lowering 校验）
+  // contract：ternary 的 x/y/z 位置角色通道（可选；ternary 必填由 lowering 校验）
   it('encoding_xyz_channels_valid', () => {
     const e = { x: { field: 'sand' }, y: { field: 'silt' }, z: { field: 'clay' } };
     expect(EncodingSchema.parse(e)).toEqual(e);
@@ -118,7 +118,7 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   });
 });
 
-describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
+describe('SizeChannelSchema / PointEncodingSchema (contract)', () => {
   // Happy path
   it('size_field_valid', () => {
     expect(SizeChannelSchema.parse({ field: 'population' })).toEqual({ field: 'population' });
@@ -151,14 +151,14 @@ describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
     expect(() => SizeChannelSchema.parse({ value: 'big' })).toThrow();
   });
 
-  // 未知 encoding key 在 schema 层保留，是否是合法位置角色由 active CoordinateDefinition.roles 在 lowering 校验。
+  // 未知 encoding key 在 schema 层保留，是否是合法位置角色由 active CoordinateDefinition.roles 在 lowering 校验
   it('shared_encoding_preserves_unknown_role_key', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, size: { field: 'p' } });
     expect((e as { size?: unknown }).size).toEqual({ field: 'p' });
   });
 });
 
-describe('ShapeChannelSchema (alpha.7 ADR-05)', () => {
+describe('ShapeChannelSchema (contract)', () => {
   // Happy path
   it('shape_field_valid', () => {
     expect(ShapeChannelSchema.parse({ field: 'category' })).toEqual({ field: 'category' });

@@ -18,12 +18,12 @@ import type {
   PositionScale,
 } from '../../../contract';
 import type { PolarCoordinateFrame } from '../../../contract';
-import type { IntervalBound, IntervalMark, Mark } from '../../../schemas';
+import type { IRPlotIntervalBound, IRPlotIntervalMark, IRPlotMark } from '../../../schemas';
 import type { CartesianCoordinateFrame } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
-import { IntervalBoundKind, PlotCoordinate, PlotMark } from '../../../schemas';
+import { IntervalBoundKind, IntervalMarkSchema, PlotCoordinate, PlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import {
   isCartesianCoordinateFrame,
@@ -52,10 +52,10 @@ type IntervalRoleContext = NonNullable<IntervalContext['byRole'][string]>;
 /**
  * 解析某 interval mark 在某位置 role 的有效区间来源（缺省推断）。
  * @description 显式 bounds 优先；省略时按惯例推断——primary（x）band、secondary（y）span(baseline 0)。
- *   lowering 与 scale 推断共用此单一真源，杜绝两处各推各的漂移。
+ *   lowering 与 scale 推断共用此单一真源，杜绝两处各推各的漂移
  */
-export const resolveIntervalBound = (mark: IntervalMark, role: DimensionRole): IntervalBound => {
-  const explicit = (mark.bounds as Record<string, IntervalBound | undefined> | undefined)?.[role];
+export const resolveIntervalBound = (mark: IRPlotIntervalMark, role: DimensionRole): IRPlotIntervalBound => {
+  const explicit = (mark.bounds as Record<string, IRPlotIntervalBound | undefined> | undefined)?.[role];
   if (explicit !== undefined) return explicit;
   return role === 'x' ? { kind: IntervalBoundKind.Band } : { kind: IntervalBoundKind.Span };
 };
@@ -63,7 +63,7 @@ export const resolveIntervalBound = (mark: IntervalMark, role: DimensionRole): I
 /**
  * 建某 band role 的摆放上下文（每 mark 每 role 一次；lowering 与 locator 同源）。
  * @description group 取自 bounds.<role> band 的 group 字段；据其切等分子带（dodge）。
- *   seriesRank / subWidth 走 inferCategoryDomain（按数据序去重），与旧 dodge 同算法。
+ *   seriesRank / subWidth 走 inferCategoryDomain（按数据序去重），与旧 dodge 同算法
  */
 const buildBandContext = (
   bandwidth: number,
@@ -85,6 +85,7 @@ const assertProportionalWidth = (field: string, value: unknown): number | null =
   return value;
 };
 
+/** 按数据权重构造每行对应的比例累计区间。 */
 export const buildProportionalIntervals = (
   field: string,
   rows: Array<ExternalRow>,
@@ -109,6 +110,7 @@ export const buildProportionalIntervals = (
   return intervals;
 };
 
+/** 收集比例区间需要贡献给位置比例尺的域值。 */
 export const proportionalIntervalDomainValues = (field: string, rows: Array<ExternalRow>): Array<number> => {
   const values: Array<number> = [0];
   let cursor = 0;
@@ -128,7 +130,7 @@ export const proportionalIntervalDomainValues = (field: string, rows: Array<Exte
 };
 
 const buildProportionalContext = (
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   roles: ReadonlyArray<DimensionRole>,
   rows: Array<ExternalRow>,
 ): IntervalContext['proportionalByRole'] => {
@@ -146,7 +148,7 @@ const buildProportionalContext = (
  *   generic frame 只在 `bounds.<role>=band{group}` 时需要上下文，其余 interval 直接由 roleScales 构造 cell。
  */
 export const buildIntervalContext = (
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   frame: CoordinateFrame,
   rows: Array<ExternalRow>,
 ): IntervalContext | undefined => {
@@ -204,10 +206,10 @@ const subBandIndexOf = (ctx: IntervalRoleContext, row: ExternalRow): number => {
  *   extent：两字段（非有限 → fail-loud，保旧堆叠 / 扇形缺字段行为）；full：满铺该 role 坐标域。非有限 → null（跳过该行）。
  */
 const boundOutputInterval = (
-  bound: IntervalBound,
+  bound: IRPlotIntervalBound,
   axis: 'primary' | 'secondary',
   scale: PositionScale,
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   row: ExternalRow,
   frame: CartesianCoordinateFrame | PolarCoordinateFrame,
   ctx: IntervalContext,
@@ -268,7 +270,7 @@ const boundOutputInterval = (
  *   polar 下 primary（角度）或 secondary（半径）跨度退化（< DEFAULT_EPSILON）→ null（与旧 sector / radial bar 守卫一致）。
  */
 export const intervalCell = (
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   row: ExternalRow,
   frame: CartesianCoordinateFrame | PolarCoordinateFrame,
   ctx: IntervalContext,
@@ -297,7 +299,10 @@ export const intervalCell = (
  * @description 三元坐标要求三项齐全、非负且和大于 0；缺通道或非法数值 fail-loud / 跳过，
  *   这样后续 bound 计算只面对 0..1 的稳定 barycentric 分量。
  */
-const normalizedTernaryComponents = (mark: IntervalMark, row: ExternalRow): Record<'x' | 'y' | 'z', number> | null => {
+const normalizedTernaryComponents = (
+  mark: IRPlotIntervalMark,
+  row: ExternalRow,
+): Record<'x' | 'y' | 'z', number> | null => {
   if (mark.encoding.x === undefined || mark.encoding.y === undefined || mark.encoding.z === undefined) {
     throw new Error('lowerPlots: ternary2D interval requires x, y, and z position channels');
   }
@@ -326,9 +331,9 @@ const normalizedTernaryComponents = (mark: IntervalMark, row: ExternalRow): Reco
  *   extent 直接读取用户字段，full 覆盖 0..1。非数值 extent fail-loud，避免生成不可解释的三元区域。
  */
 const ternaryBoundOutputInterval = (
-  bound: IntervalBound,
+  bound: IRPlotIntervalBound,
   role: 'x' | 'y' | 'z',
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   row: ExternalRow,
   components: Record<'x' | 'y' | 'z', number>,
 ): [number, number] | null => {
@@ -364,9 +369,9 @@ const ternaryBoundOutputInterval = (
  *   mark 侧只负责把 encoding/bounds 解析成正交 cell，最终几何仍交给 frame.projectCell。
  */
 const genericBoundOutputInterval = (
-  bound: IntervalBound,
+  bound: IRPlotIntervalBound,
   role: DimensionRole,
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx?: IntervalContext,
@@ -436,7 +441,7 @@ const genericBoundOutputInterval = (
 
 /** 带 projectCell 的通用坐标帧：按 frame.roles 和各 role scale 构造正交 cell。 */
 const genericIntervalCell = (
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx?: IntervalContext,
@@ -455,7 +460,7 @@ const genericIntervalCell = (
  * @description 先把 x/y/z 原始分量归一化成和为 1 的 barycentric 分量，再按每个 role 的 bound 生成 cell intervals；
  *   返回的 cell 仍是坐标无关的逻辑区间，最终几何由 ternary frame.projectCell 决定。
  */
-export const ternaryIntervalCell = (mark: IntervalMark, row: ExternalRow): Cell | null => {
+export const ternaryIntervalCell = (mark: IRPlotIntervalMark, row: ExternalRow): Cell | null => {
   const components = normalizedTernaryComponents(mark, row);
   if (components === null) return null;
   return {
@@ -472,7 +477,12 @@ export const ternaryIntervalCell = (mark: IntervalMark, row: ExternalRow): Cell 
  * @description interval → intervalCell（cartesian / polar）或 ternaryIntervalCell；其余 mark → null（非 cell 类）。
  *   interval 在无对应正交 cell 的坐标系（1D / 无 projectCell 的 custom）返回 null，由 mark.ts fail-loud。
  */
-export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): Cell | null => {
+export const markCell = (
+  mark: IRPlotMark,
+  row: ExternalRow,
+  frame: CoordinateFrame,
+  ctx?: IntervalContext,
+): Cell | null => {
   if (mark.type !== PlotMark.Interval) return null;
   if (isTernary2DCoordinateFrame(frame)) return ternaryIntervalCell(mark, row);
   if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame))
@@ -482,10 +492,10 @@ export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, c
 };
 
 /** interval cell 类 mark 某行的 series 值（写进 datum meta；series 字段拆分）。 */
-const cellSeriesValue = (mark: Mark, row: ExternalRow): unknown =>
+const cellSeriesValue = (mark: IRPlotMark, row: ExternalRow): unknown =>
   mark.type === PlotMark.Interval && mark.series !== undefined ? resolveFieldPath(row, mark.series) : undefined;
 
-const resolveSectorPull = (mark: IntervalMark, row: ExternalRow): number => {
+const resolveSectorPull = (mark: IRPlotIntervalMark, row: ExternalRow): number => {
   const pull = mark.pull;
   if (pull === undefined) return 0;
   const value = pull.kind === 'field' ? resolveFieldPath(row, pull.value) : pull.value;
@@ -495,9 +505,10 @@ const resolveSectorPull = (mark: IntervalMark, row: ExternalRow): number => {
   return value;
 };
 
+/** 把 interval 的视觉参数应用到已投影 cell 图元。 */
 export const applyIntervalCellVisualParams = (
   geometry: CellGeometry,
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   row: ExternalRow,
 ): CellGeometry => {
   if (geometry.kind !== 'sector') {
@@ -530,8 +541,9 @@ export const applyIntervalCellVisualParams = (
   };
 };
 
+/** 解析单行 interval 在当前坐标帧中的 cell 几何。 */
 export const intervalCellGeometry = (
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   row: ExternalRow,
   frame: CoordinateFrame,
   ctx: IntervalContext | undefined,
@@ -562,7 +574,7 @@ const moveSectorCornerRadiusToShapeParams = (node: IRNode): void => {
  *   kind 选（rect → 矩形 barStyle、sector / contour → shapeStyle）。无可绘制图元返回 null。
  */
 const lowerCells = (
-  mark: IntervalMark,
+  mark: IRPlotIntervalMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   intervalContext: IntervalContext | undefined,
@@ -615,7 +627,7 @@ const lowerCells = (
 
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径）。 */
 export const lowerIntervalLayer = (
-  mark: Mark,
+  mark: IRPlotMark,
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   channels: MarkChannels,
@@ -642,7 +654,7 @@ export const lowerIntervalLayer = (
 };
 
 /** 收集 interval mark 独有字段：series 分组与显式 extent bounds。 */
-const collectIntervalChannelFields = (mark: IntervalMark, fields: FieldCollector): void => {
+const collectIntervalChannelFields = (mark: IRPlotIntervalMark, fields: FieldCollector): void => {
   fields.addField(mark.series);
   if (mark.pull?.kind === 'field') fields.addField(mark.pull.value);
   if (mark.bounds !== undefined) {
@@ -653,8 +665,9 @@ const collectIntervalChannelFields = (mark: IntervalMark, fields: FieldCollector
   }
 };
 
-export const intervalMarkDefinition: MarkDefinition<IntervalMark> = {
-  type: PlotMark.Interval,
+/** 内置 interval mark definition。 */
+export const intervalMarkDefinition: MarkDefinition<IRPlotIntervalMark> = {
+  schema: IntervalMarkSchema,
   channelKinds: nodeChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);

@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PLOT_SHAPE_PALETTE } from '../../../src/providers';
@@ -11,12 +11,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec) as IRScope;
 };
 
-const firstLayer = (spec: PlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
@@ -36,7 +36,7 @@ const shapeOf = (node: IRNode): string | undefined => (node as { shape?: string 
 
 const pointSpec = (
   shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined,
-): PlotSpec =>
+): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -84,7 +84,7 @@ describe('shape channel 类别映射', () => {
     expect(nodes.every(n => shapeOf(n) === undefined)).toBe(true);
   });
 
-  // continuous / temporal 字段必须 fail-loud。
+  // continuous / temporal 字段必须 fail-loud
   it('shape_continuous_field_fails_loud', () => {
     const data = [
       { x: 0, y: 0, v: 1.5 },
@@ -105,7 +105,7 @@ describe('shape channel 类别映射', () => {
     );
   });
 
-  // shape、color 与 size 可以同时生效。
+  // shape、color 与 size 可以同时生效
   it('shape_with_color_and_size_coexist', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

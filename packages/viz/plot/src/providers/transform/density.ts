@@ -3,7 +3,9 @@ import type { ExternalRow, TransformContext } from '@retikz/data';
 import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import type { DensityTransform } from '../../schemas';
+import type { IRPlotDensityTransform } from '../../schemas';
+
+import { DensityBandwidthKind } from '../../schemas';
 
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;
 const DENSITY_EXTENT_BANDWIDTH_FACTOR = 3;
@@ -15,7 +17,7 @@ const standardDeviationOf = (values: ReadonlyArray<number>): number => {
   return Math.sqrt(variance);
 };
 
-/** 在已排序数值数组上按线性插值计算分位点。 */
+/** 在已排序数值数组上按线性插值计算分位点 */
 const quantileOfSorted = (sorted: Array<number>, p: number): number => {
   if (sorted.length === 0) return 0;
   if (sorted.length === 1) return sorted[0];
@@ -45,13 +47,13 @@ const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
   return bandwidth;
 };
 
-const bandwidthOf = (operation: DensityTransform, sortedValues: Array<number>): number => {
-  if (operation.bandwidth?.kind === 'value') return operation.bandwidth.value;
+const bandwidthOf = (operation: IRPlotDensityTransform, sortedValues: Array<number>): number => {
+  if (operation.bandwidth?.kind === DensityBandwidthKind.Value) return operation.bandwidth.value;
   return silvermanBandwidthOf(sortedValues);
 };
 
 const sampleExtentOf = (
-  operation: DensityTransform,
+  operation: IRPlotDensityTransform,
   sortedValues: Array<number>,
   bandwidth: number,
 ): [number, number] => {
@@ -68,17 +70,22 @@ const densityAt = (x: number, values: ReadonlyArray<number>, bandwidth: number):
   return sum / values.length;
 };
 
-export const densityInputFields = (operation: DensityTransform): Array<string> => [
+/** 返回 density transform 读取的源字段 */
+export const densityInputFields = (operation: IRPlotDensityTransform): Array<string> => [
   operation.field,
   ...(operation.groupBy ?? []),
 ];
 
-export const densityOutputFields = (operation: DensityTransform): Array<string> => [operation.xAs, operation.densityAs];
+/** 返回 density transform 写出的派生字段 */
+export const densityOutputFields = (operation: IRPlotDensityTransform): Array<string> => [
+  operation.xAs,
+  operation.densityAs,
+];
 
-/** density：一维 Gaussian KDE 采样，每组输出 sampleCount 行。 */
+/** density：一维 Gaussian KDE 采样，每组输出 sampleCount 行 */
 export const applyDensity = (
   rows: Array<ExternalRow>,
-  operation: DensityTransform,
+  operation: IRPlotDensityTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
   groupRowsByFields(rows, operation.groupBy).flatMap(group => {

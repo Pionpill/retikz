@@ -2,7 +2,7 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline';
 import { PlotSpecSchema } from '../../src/schemas';
@@ -13,12 +13,12 @@ const ROWS = [
   { x: 2, y: 3, city: 'C', value: 3 },
 ];
 
-const expandOf = (spec: PlotSpec): IRScope => {
+const expandOf = (spec: IRPlotSpec): IRScope => {
   const [def] = lowerPlots({ d: ROWS }, { width: 480, height: 300 });
   return def.expand(spec) as IRScope;
 };
 
-const baseSpec = (override: Partial<PlotSpec> = {}): PlotSpec =>
+const baseSpec = (override: Partial<IRPlotSpec> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -104,7 +104,7 @@ describe('plot theme schema and lowering', () => {
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
-          theme: { palette: { categorical: ['#2563eb'], unknown: true } } as PlotSpec['theme'],
+          theme: { palette: { categorical: ['#2563eb'], unknown: true } } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();
@@ -264,7 +264,7 @@ describe('plot theme schema and lowering', () => {
             axis: {
               crossing: { tick: 'hide' },
             },
-          } as PlotSpec['theme'],
+          } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();
@@ -275,7 +275,7 @@ describe('plot theme schema and lowering', () => {
             axis: {
               ticks: { endpoint: { hideWhenArrow: true } },
             },
-          } as PlotSpec['theme'],
+          } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();
@@ -286,7 +286,7 @@ describe('plot theme schema and lowering', () => {
             axis: {
               title: { placement: 'at-end' },
             },
-          } as PlotSpec['theme'],
+          } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();
@@ -297,7 +297,7 @@ describe('plot theme schema and lowering', () => {
             axis: {
               title: { orientation: 'horizontal' },
             },
-          } as PlotSpec['theme'],
+          } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();
@@ -308,7 +308,7 @@ describe('plot theme schema and lowering', () => {
             axis: {
               title: { gap: 4 },
             },
-          } as PlotSpec['theme'],
+          } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();
@@ -319,7 +319,7 @@ describe('plot theme schema and lowering', () => {
             axis: {
               title: { anchor: { align: 'end' } },
             },
-          } as PlotSpec['theme'],
+          } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();
@@ -330,7 +330,7 @@ describe('plot theme schema and lowering', () => {
             axis: {
               title: { shift: { normal: 2 } },
             },
-          } as PlotSpec['theme'],
+          } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();
@@ -341,7 +341,7 @@ describe('plot theme schema and lowering', () => {
             axis: {
               title: { layout: false },
             },
-          } as PlotSpec['theme'],
+          } as IRPlotSpec['theme'],
         }),
       ),
     ).toThrow();

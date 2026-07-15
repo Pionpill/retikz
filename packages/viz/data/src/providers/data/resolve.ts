@@ -3,7 +3,7 @@ import type { IRDataModel } from '../../schemas';
 
 /**
  * 在已解析的基础类型上叠加 resolveField：类型覆盖、per-field parser 收集和命中标记。
- * @description 优先级为 resolveField.type > model/推断；parse 没有显式 type 且 model 也未声明时 fail-loud。
+ * @description 优先级为 resolveField.type > model/推断；parse 没有显式 type 且 model 也未声明时 fail-loud
  */
 export const applyFieldResolver = (
   baseTypes: DataFieldTypeMap,

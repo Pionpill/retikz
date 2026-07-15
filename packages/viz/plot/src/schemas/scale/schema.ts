@@ -18,11 +18,10 @@ export const DomainPaddingSchema = z
   .union([
     z.number().nonnegative(),
     z
-      .object({
+      .strictObject({
         lower: z.number().nonnegative().optional().describe('Padding fraction applied below the lower domain bound'),
         upper: z.number().nonnegative().optional().describe('Padding fraction applied above the upper domain bound'),
       })
-      .strict()
       .superRefine((padding, ctx) => {
         if (padding.lower === undefined && padding.upper === undefined) {
           ctx.addIssue({

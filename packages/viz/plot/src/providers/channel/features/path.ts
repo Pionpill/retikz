@@ -8,7 +8,7 @@ import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
-import type { LinearScale, MarkOperation, PlotSpec, ScaledMarkValueType } from '../../../schemas';
+import type { IRPlotLinearScale, IRPlotMarkOperation, IRPlotSpec, ScaledMarkValueType } from '../../../schemas';
 
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
 import { PlotScale } from '../../../schemas';
@@ -27,7 +27,7 @@ const isScaledMarkValue = <T>(value: unknown): value is ScaledMarkValueType<T> =
   ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant') &&
   'value' in value;
 
-const pickStyleChannel = <T>(mark: MarkOperation, channel: string): ScaledMarkValueType<T> | undefined => {
+const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): ScaledMarkValueType<T> | undefined => {
   const value = (mark as Record<string, unknown>)[channel];
   return isScaledMarkValue<T>(value) ? value : undefined;
 };
@@ -61,13 +61,13 @@ const defineSimplePathChannel = <T extends JsonValue>(
   });
 
 const makeNumericPathResolver = (
-  node: PlotSpec,
+  node: IRPlotSpec,
   rows: Array<ExternalRow>,
   fieldTypes: DataFieldTypeMap,
-  pick: (mark: MarkOperation) => ScaledMarkValueType<number> | undefined,
+  pick: (mark: IRPlotMarkOperation) => ScaledMarkValueType<number> | undefined,
   channelName: string,
   options: NumericPathResolverOptions = {},
-): ((mark: MarkOperation) => ChannelResolution<number> | undefined) => {
+): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return mark => {
     const channel = pick(mark);
@@ -83,7 +83,7 @@ const makeNumericPathResolver = (
     const numeric = rows.map(row => resolveFieldPath(row, source.field as string)).filter(isFiniteNumber);
     let scale: ((value: number) => number) | undefined;
     if (channel.scale !== undefined || options.range !== undefined) {
-      let def: LinearScale = {
+      let def: IRPlotLinearScale = {
         type: PlotScale.Linear,
         name: channel.scale ?? `__path_${channelName}_${source.field}`,
         ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
@@ -110,13 +110,13 @@ const makeNumericPathResolver = (
   };
 };
 
-const pickPathStrokeWidth = (mark: MarkOperation): ScaledMarkValueType<number> | undefined =>
+const pickPathStrokeWidth = (mark: IRPlotMarkOperation): ScaledMarkValueType<number> | undefined =>
   pickStyleChannel<number>(mark, 'strokeWidth');
 
-const pickPathOpacity = (mark: MarkOperation): ScaledMarkValueType<number> | undefined =>
+const pickPathOpacity = (mark: IRPlotMarkOperation): ScaledMarkValueType<number> | undefined =>
   pickStyleChannel<number>(mark, 'opacity');
 
-const pickPathFillOpacity = (mark: MarkOperation): ScaledMarkValueType<number> | undefined =>
+const pickPathFillOpacity = (mark: IRPlotMarkOperation): ScaledMarkValueType<number> | undefined =>
   pickStyleChannel<number>(mark, 'fillOpacity');
 
 const pathNumericChannels: {
@@ -288,6 +288,7 @@ const directPathChannels = {
   ),
 };
 
+/** 允许直接交付到 core Path 的内置通道名集合。 */
 export const BUILTIN_PATH_CHANNELS = {
   ...pathNumericChannels,
   ...directPathChannels,
@@ -331,6 +332,7 @@ export const BUILTIN_PATH_CHANNELS = {
 
 const erasePathChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
+/** 内置 Path 通道 definition 集合。 */
 export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_PATH_CHANNELS).map(def =>
   erasePathChannelDefinition(def),
 );

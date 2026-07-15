@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { AnyChannelDefinition } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -12,7 +12,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
  * 自定义 `intensity`（→ node.opacity）经 options.channelDefinitions 注册，
- * 与内置通道共享 channel registry / delivery。
+ * 与内置通道共享 channel registry / delivery
  */
 
 const extensionChannelsOf = (mark: {
@@ -91,7 +91,7 @@ const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({
   channelDefinitions: defs,
 });
 
-const scatterSpec = (channels?: Record<string, unknown>): PlotSpec =>
+const scatterSpec = (channels?: Record<string, unknown>): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -143,7 +143,7 @@ const scopesOf = (scope: IRScope): Array<IRScope> => {
 };
 
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -152,7 +152,7 @@ const firstLayer = (
 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -221,6 +221,16 @@ describe('custom node channel registry', () => {
     );
   });
 
+  it('empty_custom_channel_name_fails_loud', () => {
+    const bad = defineNodeChannel<number>({
+      channel: '',
+      output: { outputKind: 'number', range: [0, 1] },
+      resolve: () => () => undefined,
+      deliver: () => {},
+    });
+    expect(() => lowerPlots({ d: rows }, opts([bad]))[0].expand(scatterSpec())).toThrow(/non-empty channel name/);
+  });
+
   // 交互：自定义通道 + 内置 size 同图各自生效（size→radius、intensity→opacity）
   it('custom_channel_coexists_with_builtin_size', () => {
     const spec = PlotSpecSchema.parse({
@@ -281,7 +291,7 @@ describe('custom node channel registry', () => {
     expect(pathsOf(layer)[0]?.strokeWidth).toBe(3);
   });
 
-  // 交互：自定义 node 通道也可被 legend guide 引用；schema 不再把 channel 限死在内置 color/size/opacity/shape。
+  // 交互：自定义 node 通道也可被 legend guide 引用；schema 不再把 channel 限死在内置 color/size/opacity/shape
   it('custom_channel_legend_lowers_from_registry_descriptor', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

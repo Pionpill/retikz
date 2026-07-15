@@ -1,7 +1,7 @@
 import { DataModelSchema, DataReferenceSchema, ScalarValueSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-describe('DataReferenceSchema / DataModelSchema / ScalarValueSchema (ADR-02)', () => {
+describe('DataReferenceSchema / DataModelSchema / ScalarValueSchema (contract)', () => {
   // Happy path
   it('dataref_ref_only_valid', () => {
     expect(DataReferenceSchema.parse({ reference: 'sales' })).toEqual({ reference: 'sales' });
@@ -50,7 +50,7 @@ describe('DataReferenceSchema / DataModelSchema / ScalarValueSchema (ADR-02)', (
   });
 
   it('fielddef_name_only_valid', () => {
-    // ADR-05：type 可选，仅给 name 合法（lowering 时推断类型）
+    // contract：type 可选，仅给 name 合法（lowering 时推断类型）
     const spec = { reference: 'd', model: [{ name: 'month', type: 'temporal' }, { name: 'revenue' }] };
     expect(DataReferenceSchema.parse(spec)).toEqual(spec);
   });

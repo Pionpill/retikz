@@ -5,25 +5,27 @@ import { type ChannelResolution } from '../../../contract';
 import { type MarkValueType } from '../../../schemas';
 export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
+/** MarkValueType 解析出的逐行 resolver 与字段元数据 */
 export type MarkValueResolution<T> = ChannelResolution<T> & {
-  /** 绑定的数据字段名；常量值没有字段名。 */
+  /** 绑定的数据字段名；常量值没有字段名 */
   field?: string;
-  /** 绑定字段的解析类型；常量值或未知字段类型时省略。 */
+  /** 绑定字段的解析类型；常量值或未知字段类型时省略 */
   fieldType?: DataFieldTypeValue;
 };
 
+/** 创建 MarkValueType resolver 时的字段类型与常量处理策略 */
 export type MarkValueResolverOptions<T> = {
-  /** 用于错误信息的属性 / 通道名。 */
+  /** 用于错误信息的属性 / 通道名 */
   channelName: string;
-  /** 字段变体允许的字段类型；省略表示不做类型限制。 */
+  /** 字段变体允许的字段类型；省略表示不做类型限制 */
   expectedFieldType?: DataFieldTypeValue;
-  /** 把数据行中的原始字段值转换为属性值；返回 undefined 表示该行跳过该属性。 */
+  /** 把数据行中的原始字段值转换为属性值；返回 undefined 表示该行跳过该属性 */
   parse: (value: unknown) => T | undefined;
-  /** 常量变体是否也产出 resolver；默认产出，需要把常量收敛进默认 core 属性时可显式跳过。 */
+  /** 常量变体是否也产出 resolver；默认产出，需要把常量收敛进默认 core 属性时可显式跳过 */
   constants?: 'resolve' | 'skip';
 };
 
-/** 把 MarkValueType 解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用。 */
+/** 把 MarkValueType 解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用 */
 export const makeMarkValueResolver = <T>(
   value: MarkValueType<T> | undefined,
   fieldTypes: DataFieldTypeMap,

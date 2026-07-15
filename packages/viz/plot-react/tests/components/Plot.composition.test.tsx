@@ -1,4 +1,4 @@
-import type { PlotSpec } from '@retikz/plot';
+import type { IRPlotSpec } from '@retikz/plot';
 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -23,7 +23,7 @@ const geometry = (svg: string) => {
   return { glyphs, paths };
 };
 
-describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
+describe('<Plot data>{marks} 组合 DSL', () => {
   it('端到端渲出 path（折线）+ ellipse（散点）', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
@@ -43,7 +43,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
       </Plot>,
     );
     // 薄 Plot DSL 不补默认 guides，等价 spec 也无 guides
-    const equivalentSpec: PlotSpec = {
+    const equivalentSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },
@@ -64,7 +64,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
   });
 
-  // alpha.10：薄 Plot 默认不出轴；显式 <Axis> 才渲轴文字
+  // 薄 Plot 默认不出轴；显式 <Axis> 才渲轴文字
   it('dsl_no_axis_no_text：薄 <Plot> 无 <Axis> → 渲 path 但不出刻度文字', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
@@ -105,7 +105,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toContain('Q1');
   });
 
-  // ADR-07：<IntervalMark> / <Scale>
+  // <IntervalMark> / <Scale> 渲染契约
   it('barmark_renders_rect：<IntervalMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
@@ -171,7 +171,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toContain('<text'); // 时间轴刻度标签
   });
 
-  // ADR-05：polar 端到端渲染（不崩 + 产物含扇形 / 路径）
+  // polar 端到端渲染（不崩 + 产物含扇形 / 路径）
   const share = [
     { label: 'A', value: 30 },
     { label: 'B', value: 50 },
@@ -258,7 +258,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
         <IntervalMark angle="value" color="label" />
       </Plot>,
     );
-    const equivalentSpec: PlotSpec = {
+    const equivalentSpec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },

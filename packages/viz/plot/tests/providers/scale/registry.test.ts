@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import type { AnyScaleDefinition, ChannelResolveContext } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import * as plot from '../../../src';
 import { defineScale, extractScaleType } from '../../../src/contract';
@@ -83,7 +83,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -91,7 +91,7 @@ const expandOf = (
   return def.expand(spec) as IRScope;
 };
 
-describe('scale registry（alpha.12 ADR-07 spec）', () => {
+describe('scale registry（contract spec）', () => {
   it('defineScale 保留 schema 推导出的注册 type 与 family', () => {
     expect(extractScaleType(unitScale.schema)).toBe('unit');
     expect(unitScale.family).toBe('position');
@@ -215,7 +215,7 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
   });
 
   it('custom_position_scale_lowers_in_plot', () => {
-    const spec: PlotSpec = {
+    const spec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -245,7 +245,7 @@ describe('scale registry（alpha.12 ADR-07 spec）', () => {
   });
 
   it('custom_channel_scale_lowers_color_in_plot', () => {
-    const spec: PlotSpec = {
+    const spec: IRPlotSpec = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

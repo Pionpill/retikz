@@ -4,7 +4,7 @@ import { arcEndPoint } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -18,7 +18,7 @@ const share = [
 ];
 
 const expandOf = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
@@ -27,7 +27,7 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: PlotSpec,
+  spec: IRPlotSpec,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -62,7 +62,7 @@ const vectorPosition = (node: IRNode): [number, number] => {
   return [position[0], position[1]];
 };
 
-const pieSpec = (pull?: unknown, extraMark: Record<string, unknown> = {}, innerRadius = 0): PlotSpec =>
+const pieSpec = (pull?: unknown, extraMark: Record<string, unknown> = {}, innerRadius = 0): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',

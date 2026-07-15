@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { PlotSpec } from '../../../src/schemas';
+import type { IRPlotSpec } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -15,7 +15,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 /**
  * datum locator：逻辑地址 → 位置/元素的确定性解析函数。
  * @description createPlotLocator 与 lowerPlots 同参，locator.datum(i).position 应与 lowering 实际摆放一致。
- *   sector/polar 锚点取扇片 centroid，断言落在渲染扇区内。
+ *   sector/polar 锚点取扇片 centroid，断言落在渲染扇区内
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
@@ -73,13 +73,13 @@ const SALES = [
 // ── lowering 侧 helper（找 lowered datum Node 作 parity 对照）────────────
 
 /** 用 lowerPlots 把 spec 展成外层 plot scope */
-const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（无 guides 时即外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 datum Node（无 color 时直接子；有 color 时藏在子 Scope 里）——渲染序 */
@@ -108,7 +108,7 @@ const sectorParams = (
 // ── spec 工厂（沿用 scope-id-meta SALES 风格）──────────────────────────
 
 /** band-x interval(bar) spec；可带 root id */
-const barSpec = (over: { id?: string } = {}): PlotSpec =>
+const barSpec = (over: { id?: string } = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -123,7 +123,7 @@ const barSpec = (over: { id?: string } = {}): PlotSpec =>
   });
 
 /** linear point spec；可带 root id */
-const pointSpec = (over: { id?: string } = {}): PlotSpec =>
+const pointSpec = (over: { id?: string } = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -138,7 +138,7 @@ const pointSpec = (over: { id?: string } = {}): PlotSpec =>
   });
 
 /** 饼图 sector spec（stack transform 产累积界 → sector mark） */
-const pieSpec = (over: { id?: string } = {}): PlotSpec =>
+const pieSpec = (over: { id?: string } = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -332,7 +332,7 @@ describe('datum locator — boundary', () => {
   });
 
   it('no_plot_id_structural', () => {
-    // root 无 id → 结构寻址 datum(i) 仍解析（不依赖 plotId）；点路径支持无前缀形式 'datum.<i>'。
+    // root 无 id → 结构寻址 datum(i) 仍解析（不依赖 plotId）；点路径支持无前缀形式 'datum.<i>'
     const spec = pointSpec(); // 无 id
     const locator = createPlotLocator(spec, { sales: SALES }, opts);
     const nodes = datumNodes(firstLayer(spec, { sales: SALES }, opts));
@@ -397,8 +397,8 @@ describe('datum locator — errors', () => {
 // =====================================================================
 describe('datum locator — interaction', () => {
   it('polar_datum_parity', () => {
-    // sector(饼图)：centroid 落在渲染扇区内（inner ≤ |anchor-center| ≤ outer，角度在 [start,end]）。
-    //   不与 Node.position（圆心）相等——sector 锚点取扇片 centroid。
+    // sector(饼图)：centroid 落在渲染扇区内（inner ≤ |anchor-center| ≤ outer，角度在 [start,end]）
+    //   不与 Node.position（圆心）相等——sector 锚点取扇片 centroid
     const spec = pieSpec({ id: 'pie' });
     const locator = createPlotLocator(spec, { d: PIE_ROWS }, squareOpts);
     const nodes = datumNodes(firstLayer(spec, { d: PIE_ROWS }, squareOpts));
@@ -453,7 +453,7 @@ describe('datum locator — interaction', () => {
 
   it('shared_anchor_no_drift', () => {
     // 共享几何单一真源：point / interval 下 locator.position 与 lowering Node.position 完全一致（同 #datum_position_matches_*，
-    //   此处显式命名「无漂移」——验证 datumAnchor 被 mark.ts 与 locate.ts 同源调用，无两套投影偏差）。
+    //   此处显式命名「无漂移」——验证 datumAnchor 被 mark.ts 与 locate.ts 同源调用，无两套投影偏差）
     for (const make of [pointSpec, barSpec]) {
       const spec = make({ id: 'sales' });
       const datasets: Datasets = { sales: SALES };
@@ -473,7 +473,7 @@ describe('datum locator — interaction', () => {
 describe('datum locator — bug hunter regressions', () => {
   it('locator_matches_lowering_under_transform', () => {
     // 关键对抗：locator 必须与 lowering 用「同一份 transform 后行」。带 descending sort 时，
-    //   locator.datum(i) 须对齐 lowering 渲染序第 i 个 Node（而非原始数据序），且 meta.sourceIndex 正确回指。
+    //   locator.datum(i) 须对齐 lowering 渲染序第 i 个 Node（而非原始数据序），且 meta.sourceIndex 正确回指
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -509,7 +509,7 @@ describe('datum locator — bug hunter regressions', () => {
   });
 
   it('locator_does_not_mutate_input_datasets', () => {
-    // locator 为合成 meta 需 tagSourceIndex，但必须打在克隆行、不污染调用方原始数据。
+    // locator 为合成 meta 需 tagSourceIndex，但必须打在克隆行、不污染调用方原始数据
     const rows = [
       { month: 0, revenue: 10 },
       { month: 1, revenue: 14 },
@@ -621,7 +621,7 @@ describe('datum locator transform registry parity', () => {
 // =====================================================================
 describe('datum locator — anchor parity and fail-loud', () => {
   // dodge：2 系列分组柱（band-x，series 切等分子带）
-  const dodgeSpec = (): PlotSpec =>
+  const dodgeSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -649,7 +649,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
   ];
 
   // stack：带 stack transform 的堆叠柱（派生 y0/y1）
-  const stackSpec = (): PlotSpec =>
+  const stackSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -678,7 +678,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
   ];
 
   // polar dodge：极坐标 2 系列 interval（径向柱 / 玫瑰，子角带）
-  const polarDodgeSpec = (): PlotSpec =>
+  const polarDodgeSpec = (): IRPlotSpec =>
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -706,8 +706,8 @@ describe('datum locator — anchor parity and fail-loud', () => {
   ];
 
   it('anchor_parity_cartesian_dodge', () => {
-    // dodge 柱：每个已渲染行 locator.datum(i).position 与 lowered Node.position 逐点相等。
-    //   修 #1 前 barCenterAnchor 只匹配 plain → 子带柱漂移；修后共享 intervalRect。
+    // dodge 柱：每个已渲染行 locator.datum(i).position 与 lowered Node.position 逐点相等
+    //   修 #1 前 barCenterAnchor 只匹配 plain → 子带柱漂移；修后共享 intervalRect
     const spec = dodgeSpec();
     const datasets: Datasets = { d: DODGE_ROWS };
     const locator = createPlotLocator(spec, datasets, opts);
@@ -721,7 +721,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
   });
 
   it('anchor_parity_cartesian_stack', () => {
-    // stack 柱：每行 locator.datum(i).position === lowered Node.position（y0/y1 中点）。
+    // stack 柱：每行 locator.datum(i).position === lowered Node.position（y0/y1 中点）
     const spec = stackSpec();
     const datasets: Datasets = { d: STACK_ROWS };
     const locator = createPlotLocator(spec, datasets, opts);
@@ -735,7 +735,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
   });
 
   it('anchor_parity_polar_dodge', () => {
-    // polar 2 系列 interval：locator datum centroid 落在 lowered 扇区内 + 等于该扇区 params 的 wedgeCentroid。
+    // polar 2 系列 interval：locator datum centroid 落在 lowered 扇区内 + 等于该扇区 params 的 wedgeCentroid
     const spec = polarDodgeSpec();
     const datasets: Datasets = { d: POLAR_DODGE_ROWS };
     const locator = createPlotLocator(spec, datasets, squareOpts);
@@ -761,7 +761,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
 
   it('datum_id_cross_mark_throws', () => {
     // point + bar 两 datum-bearing mark 同 datumIdField 同数据 → 跨 mark 撞同 id（每个 mark 各渲染一遍同值）
-    //   → lowering 抛 + createPlotLocator 抛（plot 级共享 registrar，#2/#3 parity）。
+    //   → lowering 抛 + createPlotLocator 抛（plot 级共享 registrar，#2/#3 parity）
     const rows = [
       { month: 0, revenue: 10, q: 'Q1' },
       { month: 1, revenue: 14, q: 'Q2' },
@@ -787,7 +787,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
   });
 
   it('locator_datum_id_fail_loud', () => {
-    // datumIdField 指向某行缺字段 → createPlotLocator 抛（与 lowering fail-loud parity，#3）。
+    // datumIdField 指向某行缺字段 → createPlotLocator 抛（与 lowering fail-loud parity，#3）
     const rows = [
       { month: 0, revenue: 10, q: 'Q1' },
       { month: 1, revenue: 14 }, // 缺 q
@@ -799,7 +799,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
   });
 
   it('resolve_series_numeric', () => {
-    // 数值 series 值经 resolve('plotId.series.<n>')（字符串 token）可达——宽松字符串比对（#4）。
+    // 数值 series 值经 resolve('plotId.series.<n>')（字符串 token）可达——宽松字符串比对（#4）
     const TREND = [
       { t: 0, v: 4, g: 5 },
       { t: 1, v: 8, g: 5 },

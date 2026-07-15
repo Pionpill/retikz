@@ -4,19 +4,19 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { PlotSpec } from '../../src/schemas';
+import type { IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../src/schemas';
 
-// ADR-02：plot 可被组合 —— 自描述尺寸（L1-a）+ 外部可见面板 anchor（L1-b）
+// contract：plot 可被组合 —— 自描述尺寸（L1-a）+ 外部可见面板 anchor（L1-b）
 
 const SALES = [
   { month: 0, revenue: 10 },
   { month: 2, revenue: 9 },
 ];
 
-const pointSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
+const pointSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -30,7 +30,7 @@ const pointSpec = (extra: Record<string, unknown> = {}): PlotSpec =>
     ...extra,
   });
 
-const expandOf = (spec: PlotSpec, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlotSpec, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots({ sales: SALES }, options);
   return def.expand(spec) as IRScope;
 };
@@ -49,7 +49,7 @@ const nodeHeight = (node: IRNode): number => {
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-describe('ADR-02 L1-a · PlotSpec 自描述尺寸', () => {
+describe('contract L1-a · IRPlotSpec 自描述尺寸', () => {
   it('node_width_overrides_global', () => {
     // node.width=200 应覆盖全局 opts.width=480：max-x 数据点落在 200，而非 480
     const layer = expandOf(pointSpec({ width: 200, height: 120 }), opts).children[0] as IRScope;
@@ -72,7 +72,7 @@ describe('ADR-02 L1-a · PlotSpec 自描述尺寸', () => {
   });
 });
 
-describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
+describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
   it('id_plot_outer_panel_scope', () => {
     // 有 id → 外层 panel scope（id、非 localNamespace，承面板 bbox）⊃ 内层 localNamespace 内容
     const outer = expandOf(pointSpec({ id: 'p' }), opts);
@@ -132,7 +132,7 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
   });
 
   // 兄弟 Path line 端点（compile 后从 path primitive 取第一个 line 命令的 to）
-  const lineEndpoint = (plotNode: PlotSpec, to: IRTarget): [number, number] | undefined => {
+  const lineEndpoint = (plotNode: IRPlotSpec, to: IRTarget): [number, number] | undefined => {
     const scene: IRScene = {
       version: 1,
       type: 'scene',
@@ -155,7 +155,7 @@ describe('ADR-02 L1-b · 外部可见面板 anchor（gated on id）', () => {
   };
 
   it('panel_bbox_resolvable_from_sibling', () => {
-    // 面板 bbox：core ADR-03 既有能力（scope.id 注册父帧）；无 guides → 内容满图，p.right ≈ [480,150]
+    // 面板 bbox：core contract 既有能力（scope.id 注册父帧）；无 guides → 内容满图，p.right ≈ [480,150]
     const end = lineEndpoint(pointSpec({ id: 'p' }), { id: 'p', anchor: 'right' });
     expect(end).toBeDefined();
     // 内容右边 ≈ 480（+ 散点字形半径），y 居中 ≈ 150

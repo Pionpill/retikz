@@ -207,7 +207,7 @@ describe('ScaleSchema sequential 连续顺序色阶', () => {
     expect(ScaleSchema.parse({ type: 'sequential', name: 'col' })).not.toHaveProperty('scheme');
   });
 
-  // 边界：schema 只校结构，domain 乱序（min > max）的正性 / 顺序由 lowering fail-loud。
+  // 边界：schema 只校结构，domain 乱序（min > max）的正性 / 顺序由 lowering fail-loud
   it('schema 接受乱序 domain（顺序校验留 lowering）', () => {
     const s = { type: 'sequential', name: 'col', domain: [100, 0] };
     expect(ScaleSchema.parse(s)).toEqual(s);
