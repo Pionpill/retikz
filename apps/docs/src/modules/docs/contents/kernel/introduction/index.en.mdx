@@ -3,9 +3,7 @@ title: Introduction
 description: An AI-native general-purpose drawing library — describe figures with React components or Vanilla plain specs, with JSON IR connecting generation, persistence, and rendering.
 ---
 
-`@retikz/core` is retikz's **graphics foundation**: it defines a stable, validated, renderable graphics contract and provides the shared IR, Scene compilation, geometry, and extension capabilities. Downstream modules such as `@retikz/plot` build on these capabilities and share the same underlying semantics.
-
-It brings a mature vocabulary of nodes, paths, and anchors into the browser through React components and Vanilla plain specs. The underlying JSON IR is the shared contract connecting human-authored DSLs, LLM output, and SVG / Canvas renderers.
+retikz is a general-purpose drawing library for browsers and Node.js. You describe the objects in a figure, then compose them through names, positions, and path relationships. Higher-level modules such as `@retikz/plot` reuse the same drawing semantics.
 
 ## Core Concepts
 
@@ -13,100 +11,34 @@ This diagram does one small thing: it places two named nodes, then uses one arro
 
 <ComponentPreview files="minimal-example" size="xs" />
 
-`@retikz/core` has a simple mental model: first describe **what each primitive is**, then describe **the connections and geometry between primitives**.
+retikz's beginner mental model has two layers: first describe **what each primitive is**, then describe **the connections and geometry between primitives**. A `Node` is a visible object, while `Draw` connects objects through named references.
 
-| Core capability             | Carried by               | What it solves                                                                                                                                                |
-| --------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Primitive model**         | `Node`                   | Describes a visible object itself: shape, text, fill, stroke, size, position, and anchors that other elements can reference.                                  |
-| **Primitive relationships** | `Path` / `Step` / `Draw` | Describes connections and geometry between objects: start point, end point, intermediate actions, and how arrows or edge labels are organized along the path. |
-
-## AI-First
-
-**AI-friendliness is not one of retikz's features — it's the reason retikz exists.**
-
-retikz picks IR JSON over JSX as the primary AI interface, using OpenAI Structured Outputs or Anthropic Tool Use to constrain output to the expected schema, followed by runtime validation.
-
-AI-friendliness shapes every layer of the design: schemas keep their hierarchy and discriminators clear, field values use semantically explicit and verifiable types, and higher-level abstractions map predictably to the same core IR. The goal is to reduce guesswork and make generated results easier to validate, correct, and reuse.
-
-| Design layer                     | How                                                             |
-| -------------------------------- | --------------------------------------------------------------- |
-| **Schema structure**             | Clear discriminators and nesting reduce generation ambiguity    |
-| **Value types**                  | Prefer bounded, serializable, and verifiable data structures    |
-| **Higher-level abstractions**    | Map high-level intent predictably to the same core IR           |
-| **Single-source types & schema** | zod single source → TS types + JSON Schema                      |
-| **Text DSL (long-term)**         | Mature drawing syntax that gives LLMs stronger zero-shot priors |
-
-## IR at the Center
+## An AI-Friendly Shared Format
 
 <ComponentPreview files="ir-centric" hideCode />
 
-Every input form (JSX / DSL / AI) compiles to the same IR; every output form (renderer) reads from it.
-**Persistence, cross-platform support, and AI integration aren't separate features — they're the same dividend paid by an IR-centric model.**
-The practical benefit is straightforward:
+React, Vanilla, and AI-generated input all normalize to the same IR. Because IR is ordinary JSON, it can be validated with a schema, persisted, transported, and edited before SVG, Canvas, or another renderer uses it.
+
+The benefits of one shared format are straightforward:
 
 - You maintain saving, editing, and rendering around one IR contract.
-- You do not need separate formats for JSX, AI output, or each renderer.
-- System boundaries stay clearer, and future extensions get cheaper.
+- You do not maintain separate figure formats for JSX, AI output, and each renderer.
+- The same figure data can be reused across authoring surfaces and runtimes.
 
-## Layered Abstraction
-
-retikz's DSL surface has three kinds of constructs. Their boundaries show whether a capability belongs in IR, only simplifies authoring, or lowers from a higher-level module:
-
-| Layer      | Examples                              | In IR?                                 | Where           |
-| ---------- | ------------------------------------- | -------------------------------------- | --------------- |
-| **Kernel** | `<Layout>` `<Node>` `<Path>` `<Step>` | ✅ Maps 1:1 to IR nodes                | `@retikz/core`  |
-| **Sugar**  | `<Draw way={[...]} />`                | ❌ Expands into Kernel at compile time | `@retikz/react` |
-| **Tier 2** | `<Plot>`                              | ✅ High-level node + lowering hook     | Domain packages |
-
-For example, `<Draw way={['a', 'b']} />` only provides a more concise way to author a path. When the IR is built, `way` is parsed into a sequence of `Step`s and assembled into a `Path`; the final IR contains only `Path` and `Step`, not `Draw`.
-
-Hard rule: **Sugar introduces no new capabilities** — anything Sugar can express, Kernel can. That lets Sugar optimize authoring ergonomics without hiding core semantics inside an adapter.
+Continue with [Technical Principles](/kernel/principles) when you need to understand how IR becomes Scene, where a capability belongs, or how the packages work together.
 
 ## General Primitives, Arbitrary Composition
 
-retikz describes figures with a small set of components whose responsibilities stay explicit. Each component owns one layer of structure or geometry, then combines through nesting and references into a complete figure.
+retikz uses a small set of components with explicit responsibilities. They can be used directly or combined through nesting, named references, and authoring conveniences.
 
-| Group                       | Component      | Responsibility                                                                |
-| --------------------------- | -------------- | ----------------------------------------------------------------------------- |
-| **Layout**                  | `<Layout>`     | Hosts the figure, collects its description, and configures size and rendering |
-|                             | `<Scope>`      | Groups child primitives and applies local transforms and inherited styles     |
-| **Primitive model**         | `<Node>`       | Describes a visible object's shape, text, position, and anchors               |
-|                             | `<Coordinate>` | Declares an invisible named coordinate for positioning and references         |
-| **Primitive relationships** | `<Path>`       | Describes a complete path, including stroke, fill, markers, and child `Step`s |
-|                             | `<Step>`       | Describes one move, line, curve, arc, or other path action                    |
+| Concern                    | Common components                              | Responsibility                                                                    |
+| -------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Canvas and groups**      | `<Layout>` `<Scope>`                           | Host the figure, group local primitives, and apply styles or transforms           |
+| **Objects and points**     | `<Node>` `<Coordinate>`                        | Describe visible objects or named coordinates used for positioning and references |
+| **Path relationships**     | `<Path>` `<Step>`                              | Precisely describe a path and its line, curve, or arc actions                     |
+| **Authoring conveniences** | `<Draw>` `<Arc>` `<Circle>` `<Rectangle>` etc. | Combine base primitives through concise parameters without adding new semantics   |
 
-Higher-level modules can keep composing these three groups of responsibilities without changing core semantics.
-
-Sugar only simplifies common authoring. It does not enter the IR or add capabilities that Kernel cannot express:
-
-| Sugar                                     | Expands to                         | Responsibility                                     |
-| ----------------------------------------- | ---------------------------------- | -------------------------------------------------- |
-| `<Draw>`                                  | `<Path>` + a sequence of `<Step>`s | Provides concise path relationships through `way`  |
-| `<EdgeLabel>`                             | `Step.label`                       | Declares a path-segment label through child syntax |
-| `<Arc>` / `<Circle>` / `<Rectangle>` etc. | `<Path>` + geometric `<Step>`s     | Converts high-level geometry into a path structure |
-
-## Package Relationships
-
-The Kernel group currently contains six lockstep-versioned packages, spanning the zero-dependency computation base, rendering, framework entries, and optional formula support:
-
-<ComponentPreview files="package-viz" size="md" hideCode />
-
-Solid lines show primary build dependencies; dashed lines show secondary direct dependencies. `math` provides pure computational geometry, `core` defines the graphics contract, `render` provides rendering backends, `react` / `vanilla` provide authoring entries, and `tex` plugs formula rendering into core.
-
-| Package           | Role                        | Depends on    |
-| ----------------- | --------------------------- | ------------- |
-| `@retikz/math`    | Computational geometry      | None          |
-| `@retikz/core`    | IR, schemas, Scene compiler | math · zod    |
-| `@retikz/render`  | SVG / Canvas runtime        | core · math   |
-| `@retikz/react`   | React JSX adapter           | core · render |
-| `@retikz/vanilla` | Plain specs and SSR         | core · render |
-| `@retikz/tex`     | LaTeX formula lowering      | core          |
-
-## Framework-Agnostic, Shared IR
-
-React components and Vanilla plain specs both produce the same IR, while the SVG and Canvas renderers consume the same Scene. Framework layers only own authoring ergonomics, lifecycle, and backend selection; they do not introduce new geometry semantics.
-
-The same figure data can therefore be reused across authoring entries and renderers without describing its primitives and relationships again.
+## Relation to TikZ
 
 <Comparison target="tikz" title="Relation to TikZ">
 
