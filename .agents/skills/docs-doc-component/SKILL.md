@@ -55,7 +55,7 @@ frontmatter `title` + `description` 始终在；H1 由 DocPage 渲染，正文**
 - **两套用法 / 例子 / API 是有意为之**——形状页同时服务两类读者，不要为了凑 6 段把它们揉成「作为图形 / 作为节点形状」交错子节
 - **定义单一来源**：形状的权威定义（双重身份 + 可扩展性）写在**形状组落地页**（`shapes/index`），各形状页导言只一句话 + 链接，不复制
 - 无参的 Node 形状（circle / ellipse / rectangle）Node 块较短（无 params 表）；带参的（sector / arc / star / polygon）多一块 **params 表 + 几何 anchor 列表**
-- `## 技术原理` 仍是可选 deepdive，按 6 段规则用 blockquote 写导读；不要每个块各写一个技术原理，统一收在共享段
+- `## 技术原理` 仍是可选 deepdive，按 6 段规则用 `<ComponentAlert type="tip">` 写导读；不要每个块各写一个技术原理，统一收在共享段
 - 其它（双语、写作风格、Comparison、自绘图示、宽度、ComponentPreview 用法）一律继承 [docs-doc-principle](../docs-doc-principle/SKILL.md)
 
 ## Usage 写法
@@ -141,10 +141,23 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 ### 子节组织
 
 - 子节用 `###` 平铺；每个子节单独一个主题（如 scope 的「命名空间与隔离」/「重复 id 处理」/「scope.id synthetic bbox」/「transforms 展平到 Scene」/「scope 下相对定位投影」）
-- **节首用 blockquote 写一句导读，明示"上手不依赖本节、按需回来即可"**——光靠 H2 在 Examples 之后的位置信号不够；初学者默认按顺序读完才算掌握，硬啃机制描述容易劝退。导读把"先会用、再懂原理"的学习路径写明，给读者跳过的许可
-- 句式参考（按组件自身机制替换"compile 行为"那段）：
-  - zh：「> 上手阶段可跳过本节；遇到边界 case 或想理解 \<本组件的核心机制\> 时再回来读。」
-  - en：「> Optional for everyday use; revisit when you hit edge cases or want to understand \<the component's core mechanism\>.」
+- **节首用 `<ComponentAlert type="tip">` 写一句导读，明示"上手不依赖本节、按需回来即可"**——光靠 H2 在 Examples 之后的位置信号不够；初学者默认按顺序读完才算掌握，硬啃机制描述容易劝退。导读把"先会用、再懂原理"的学习路径写明，给读者跳过的许可
+- 句式参考（按组件自身机制替换 `description`）：
+
+  ```mdx
+  <ComponentAlert
+    type="tip"
+    title="上手阶段可跳过本节"
+    description="遇到边界 case 或想理解本组件的核心机制时再回来读。"
+  />
+
+  <ComponentAlert
+    type="tip"
+    title="Optional for everyday use"
+    description="Revisit when you hit edge cases or want to understand the component's core mechanism."
+  />
+  ```
+
 - 单子节阅读体量较大时先压缩重复解释、增加清晰小节和跳读提示；只有内容能独立形成概念任务时才拆到子页或 `concepts/`，时间估算本身不构成拆页条件
 - 顺序按"用户最容易碰到 → 最少碰到"排：常见陷阱（重复 id / shadowing）在前，底层机制（bbox 计算 / 变换展平）在后
 

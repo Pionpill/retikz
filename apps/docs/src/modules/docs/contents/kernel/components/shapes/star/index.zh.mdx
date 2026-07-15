@@ -83,7 +83,11 @@ import { Node } from '@retikz/react';
 
 ## 技术原理
 
-> 日常使用可以跳过本节；只有在星形朝向或内外半径比例不符合预期时再回来读。
+<ComponentAlert
+  type="tip"
+  title="日常使用可以跳过本节"
+  description="只有在星形朝向或内外半径比例不符合预期时再回来读。"
+/>
 
 `<Star>` 会先计算 `points * 2` 个顶点：外点落在 `outerRadius` 上，内点落在 `innerRadius` 上。默认 `innerRatio` 是 `0.5`，也就是内半径为外半径的一半。`rotate` 改变第一个外点的起始角度；默认起始角让一个外点朝上，在屏幕坐标里正角度顺时针旋转。
 

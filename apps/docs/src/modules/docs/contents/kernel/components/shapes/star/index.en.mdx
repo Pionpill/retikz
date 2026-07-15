@@ -83,7 +83,11 @@ Besides the node's center plus 8 directional anchors (`center` / `top` …), the
 
 ## How it works
 
-> Optional for everyday use; revisit when the orientation or inner-radius ratio looks surprising.
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when the orientation or inner-radius ratio looks surprising."
+/>
 
 `<Star>` computes `points * 2` vertices: outer vertices land on `outerRadius`, and inner vertices land on `innerRadius`. The default `innerRatio` is `0.5`, so the inner radius is half of the outer radius. `rotate` changes the starting angle of the first outer vertex; by default one outer point faces upward, and in screen coordinates positive angles rotate clockwise.
 
