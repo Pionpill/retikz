@@ -165,7 +165,7 @@ export const lowerPoint = (
         children: placed.map(p => p.node),
       }
     : colorGroupedScope(placed, fill => (isText ? textStyle(textColorConstant ?? fill, mark) : pointStyle(fill, mark)));
-  return attachMarkLayer(layer, mark, markProvenance);
+  return attachMarkLayer(layer, mark, ctx);
 };
 
 /** 收集 point mark 独有的 mark-level 通道字段 */

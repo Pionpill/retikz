@@ -152,21 +152,19 @@ export const compileChildrenToPrimitives = (
       for (const pendingPath of pendingPaths) {
         const result = emitPathKindPrimitive(pendingPath.path, pendingPath.irPath, pendingPath.scopeChain);
         const primitives = result?.primitives ?? [];
-        if (pendingPath.placeholderSlot !== undefined) {
-          const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
-          if (idx === -1) {
-            throw new Error('internal: path placeholder missing from its sink');
-          }
-          pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
-          runtime.state.placeholderBalance--;
-        } else {
-          runtime.state.primitives.push(...primitives);
+        const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
+        if (idx === -1) {
+          throw new Error('internal: path placeholder missing from its sink');
         }
+        pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
+        runtime.state.placeholderBalance--;
         for (const prim of primitives) recordPrimitiveZIndex(runtime.state.zIndexOf, prim, pendingPath.zIndex);
         if (result !== null) {
           runtime.state.layoutBounds = collectLayoutBounds(
             runtime.state.layoutBounds,
-            result.boundsPoints,
+            pendingPath.scopeChain.length === 0
+              ? result.boundsPoints
+              : result.boundsPoints.map(point => applyTransformChain(point, pendingPath.scopeChain)),
             resolveShadow(pendingPath.path.shadow),
           );
         }
@@ -258,6 +256,8 @@ export const compileChildrenToPrimitives = (
     const { scopeChain, primitiveSink, locatorPrefix, pathSink, styleStack } = frame;
     const pathIrPath = `${locatorPrefix}children[${index}].path`;
     const effectivePath = resolveEffectivePath(child, styleStack);
+    const placeholder = makePathPlaceholder();
+    primitiveSink.push(placeholder);
     const pending: PendingPathEmission = {
       path: {
         ...effectivePath,
@@ -269,14 +269,10 @@ export const compileChildrenToPrimitives = (
       },
       irPath: pathIrPath,
       scopeChain,
+      placeholderSlot: { primitiveSink, placeholder },
       zIndex: child.zIndex,
     };
-    if (scopeChain.length === 0) {
-      const placeholder = makePathPlaceholder();
-      primitiveSink.push(placeholder);
-      pending.placeholderSlot = { primitiveSink, placeholder };
-      runtime.state.placeholderBalance++;
-    }
+    runtime.state.placeholderBalance++;
     pathSink.push(pending);
   };
 

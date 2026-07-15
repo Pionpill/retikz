@@ -113,7 +113,7 @@ describe('compile zIndex 稳定排序', () => {
     expect(innerOf(withZ)).toEqual(innerOf(withoutZ));
   });
 
-  it('transformed scope 内 path 按自身 zIndex 在顶层排（hoist 限制延续）', () => {
+  it('transformed scope 内 path 按自身 zIndex 在所属 group 内排序', () => {
     const ir = scene([
       node([100, 0]),
       {
@@ -123,9 +123,7 @@ describe('compile zIndex 稳定排序', () => {
       },
     ]);
     const result = compileToScene(ir, silent);
-    // hoist 的 path（z=9）排到顶层末尾；scope 的 group（z=0）与顶层 node（z=0）保 IR 序在前
-    expect(result.primitives.map(p => p.type)).toEqual(['rect', 'group', 'path']);
-    // group 内只含 node 的 rect，不含 hoist 出去的 path
-    expect(topGroup(result).children.map(p => p.type)).toEqual(['rect']);
+    expect(result.primitives.map(p => p.type)).toEqual(['rect', 'group']);
+    expect(topGroup(result).children.map(p => p.type)).toEqual(['rect', 'path']);
   });
 });

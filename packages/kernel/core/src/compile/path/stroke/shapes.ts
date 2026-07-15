@@ -19,7 +19,7 @@ import {
 } from '../../../shared/geometry';
 import { CompileWarningCode } from '../../constants';
 import { nodeIdFromResolvableTarget } from '../../position';
-import { clipForTarget, isAutoBoundaryTarget, refPointOfTarget, samePoint } from '../host/target';
+import { clipForTarget, isAutoBoundaryTarget, localPointOfTarget, samePoint } from '../host/target';
 import { lowerGeneratorStepToCommands } from './lower';
 
 /** 自包含或高阶几何 path step。 */
@@ -90,7 +90,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   if (step.kind === 'generator') {
     const previous = cursor.previous();
     const from: IRPosition = commandEmitter.getLastEnd() ?? (previous ? previous.anchor : [0, 0]);
-    const resolvedTo = step.to !== undefined ? refPointOfTarget(step.to, namespaceStack, scopeChain) : null;
+    const resolvedTo = step.to !== undefined ? localPointOfTarget(step.to, namespaceStack, scopeChain) : null;
     const to = resolvedTo ?? undefined;
     const generated = lowerGeneratorStepToCommands({
       step,
@@ -98,7 +98,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
       from,
       ...(to !== undefined ? { to } : {}),
       round,
-      resolveTargetParam: value => refPointOfTarget(value as IRTarget, namespaceStack, scopeChain) ?? undefined,
+      resolveTargetParam: value => localPointOfTarget(value as IRTarget, namespaceStack, scopeChain) ?? undefined,
       irPath: `${irPath}.children[${index}]`,
     });
 
@@ -151,7 +151,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
     const moveTo = cursor.lastMoveTarget();
     const previous = cursor.previous();
     if (!moveTo || (!previous && !usedOverride)) return true;
-    const moveAnchor = refPointOfTarget(moveTo, namespaceStack, scopeChain);
+    const moveAnchor = localPointOfTarget(moveTo, namespaceStack, scopeChain);
     if (!moveAnchor) return false;
 
     const fromClip =
@@ -170,8 +170,8 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   }
 
   if (step.kind === 'rectangle') {
-    const from = refPointOfTarget(step.from, namespaceStack, scopeChain);
-    const to = refPointOfTarget(step.to, namespaceStack, scopeChain);
+    const from = localPointOfTarget(step.from, namespaceStack, scopeChain);
+    const to = localPointOfTarget(step.to, namespaceStack, scopeChain);
     if (!from || !to) {
       const fromId = nodeIdFromResolvableTarget(step.from);
       const toId = nodeIdFromResolvableTarget(step.to);
@@ -233,7 +233,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   if (step.kind === 'arc') {
     let center: IRPosition;
     if (step.center !== undefined) {
-      const resolved = refPointOfTarget(step.center, namespaceStack, scopeChain);
+      const resolved = localPointOfTarget(step.center, namespaceStack, scopeChain);
       if (!resolved) {
         const centerId = nodeIdFromResolvableTarget(step.center);
         if (centerId !== undefined) {
@@ -409,7 +409,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   const resolvedPoints: Array<IRPosition> = [];
   for (let pointIndex = 0; pointIndex < step.points.length; pointIndex++) {
     const point = step.points[pointIndex];
-    const resolved = refPointOfTarget(point, namespaceStack, scopeChain);
+    const resolved = localPointOfTarget(point, namespaceStack, scopeChain);
     if (!resolved) {
       const pointId = nodeIdFromResolvableTarget(point);
       if (pointId !== undefined) {

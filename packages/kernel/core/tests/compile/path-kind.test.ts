@@ -121,6 +121,36 @@ describe('Path kind registry', () => {
     expect(prim.stroke).toBe('gold');
   });
 
+  it('keeps custom path kind primitives in the transformed owner group', () => {
+    const badge = definePathKind({
+      schema: z.object({ kind: z.literal('badge') }),
+      compile: () => ({
+        primitives: [{ type: 'rect', x: 0, y: 0, width: 10, height: 6, fill: 'gold' }],
+        boundsPoints: [
+          [0, 0],
+          [10, 6],
+        ],
+      }),
+    });
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          transforms: [{ kind: 'translate', x: 100, y: 20 }],
+          children: [{ type: 'path', kind: 'badge', children: [] }],
+        },
+      ] as IRScene['children']),
+      { pathKinds: [badge] },
+    );
+
+    expect(compiled.primitives).toHaveLength(1);
+    const [group] = compiled.primitives;
+    expect(group.type).toBe('group');
+    if (group.type !== 'group') throw new Error('expected transformed owner group');
+    expect(group.transforms).toEqual([{ kind: 'translate', x: 100, y: 20 }]);
+    expect(group.children).toEqual([{ type: 'rect', x: 0, y: 0, width: 10, height: 6, fill: 'gold' }]);
+  });
+
   it('custom_path_kind_options_error_contains_provider_and_ir_path', () => {
     const highlight = definePathKind({
       schema: z.object({ kind: z.literal('highlight') }),

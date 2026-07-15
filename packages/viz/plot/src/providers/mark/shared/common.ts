@@ -276,15 +276,20 @@ export const applyPathChannelDeliveries = (
   return path;
 };
 
-/**
- * 给图层外层 Scope 挂 layer id + meta（provenance 开时）；关 → 原样返回
- */
+/** 给图层外层 Scope 挂显式 mark id，并在 provenance 开启时补齐合成 id 与来源 meta */
 export const attachMarkLayer = (
   layer: IRScope,
   mark: IRPlotMark,
-  markProvenance: MarkProvenance | undefined,
+  layerContext: MarkProvenance | MarkLoweringContext | undefined,
 ): IRScope => {
-  if (!markProvenance) return layer;
+  const markContext = layerContext !== undefined && 'context' in layerContext ? undefined : layerContext;
+  const markProvenance =
+    layerContext !== undefined && 'context' in layerContext ? layerContext : layerContext?.provenance;
+  const explicitId =
+    mark.id !== undefined && layerContext !== undefined
+      ? markLayerId(markContext?.plotId ?? markProvenance?.context.plotId, mark.id, layerContext.markIndex)
+      : undefined;
+  if (!markProvenance) return explicitId === undefined ? layer : { ...layer, id: explicitId };
   const { context, markIndex } = markProvenance;
   const id = markLayerId(context.plotId, mark.id, markIndex);
   return {

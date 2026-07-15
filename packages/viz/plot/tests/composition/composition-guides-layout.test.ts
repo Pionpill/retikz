@@ -395,6 +395,31 @@ describe('composition guides layout lowering', () => {
     expect(panels.map(panel => gridLayersOf(panel).length)).toEqual([2, 2]);
   });
 
+  it('facet_local_guides_use_panel_local_ids', () => {
+    const spec = {
+      ...facetSpec,
+      composition: {
+        ...facetSpec.composition,
+        resolve: { axis: { x: 'local', y: 'local' }, grid: { x: 'local', y: 'local' } },
+      },
+    };
+    const outer = expandOf(parsePlotSpec(spec), { sales: salesRows });
+    const panels = panelScopesOf(outer);
+    const ids = panels.flatMap(panel => [...gridLayersOf(panel), ...axisLayersOf(panel)].map(layer => layer.id));
+
+    expect(ids).toEqual([
+      'sales.view.region_panel___north.grid.x',
+      'sales.view.region_panel___north.grid.y',
+      'sales.view.region_panel___north.axis.x',
+      'sales.view.region_panel___north.axis.y',
+      'sales.view.region_panel___south.grid.x',
+      'sales.view.region_panel___south.grid.y',
+      'sales.view.region_panel___south.axis.x',
+      'sales.view.region_panel___south.axis.y',
+    ]);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it('facet_local_resolve_overrides_composition_grid_default', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',

@@ -181,7 +181,7 @@ describe('带 clip 的 scope 不被 prune', () => {
   });
 });
 
-describe('交互：paint + clip 资源共存 / transformed scope path hoist', () => {
+describe('交互：paint + clip 资源共存 / transformed scope path ownership', () => {
   it('同 scene 既有 paint 又有 clip 资源 → 两类共存、id 命名空间不撞（paint-N / clip-N）', () => {
     const ir = scene([
       { type: 'node', id: 'G', position: [0, 0], text: 'G', fill: grad },
@@ -202,7 +202,7 @@ describe('交互：paint + clip 资源共存 / transformed scope path hoist', ()
     expect(new Set(allIds).size).toBe(allIds.length);
   });
 
-  it('带 transforms 的 scope 内 path 被 hoist 到顶层、不进该 scope GroupPrim（既有限制）', () => {
+  it('带 transforms 的 scope 内 path 留在该 scope GroupPrim 并受 clip 约束', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -222,14 +222,12 @@ describe('交互：paint + clip 资源共存 / transformed scope path hoist', ()
       },
     ]);
     const compiled = compileToScene(ir);
-    // path hoist 到顶层
     const topPath = compiled.primitives.find(p => p.type === 'path');
-    expect(topPath).toBeDefined();
-    // scope GroupPrim 内不含 path primitive（被 hoist）
+    expect(topPath).toBeUndefined();
     const group = firstGroup(compiled.primitives);
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
     const innerPath = group?.children.find(c => c.type === 'path');
-    expect(innerPath).toBeUndefined();
+    expect(innerPath).toBeDefined();
   });
 
   it('无 transforms 的 scope 内 path 留在 GroupPrim 内（正常被裁）', () => {

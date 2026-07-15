@@ -5,8 +5,7 @@ import type { IRPosition, IRStep, IRTarget } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
-import { inverseTransformChain } from '../../transform';
-import { refPointOfTarget } from './target';
+import { localPointOfTarget } from './target';
 
 export const normalizePathSteps = (
   steps: ReadonlyArray<IRStep>,
@@ -48,18 +47,16 @@ export const normalizePathSteps = (
         let resolvedPt: IRTarget = original;
         let updatePrevEnd = true;
         if (isRelativeTargetLike(original)) {
-          const refGlobal = prevEnd ?? [0, 0];
-          const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+          const refLocal = prevEnd ?? [0, 0];
           resolvedPt = [refLocal[0] + original.relative[0], refLocal[1] + original.relative[1]];
           updatePrevEnd = false;
         } else if (isRelativeAccumulateTargetLike(original)) {
-          const refGlobal = prevEnd ?? [0, 0];
-          const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+          const refLocal = prevEnd ?? [0, 0];
           resolvedPt = [refLocal[0] + original.relativeAccumulate[0], refLocal[1] + original.relativeAccumulate[1]];
         }
         normalizedPoints.push(resolvedPt);
         if (updatePrevEnd) {
-          const pos = refPointOfTarget(resolvedPt, namespaceStack, scopeChain);
+          const pos = localPointOfTarget(resolvedPt, namespaceStack, scopeChain);
           if (pos) prevEnd = pos;
         }
       }
@@ -71,7 +68,7 @@ export const normalizePathSteps = (
       // generator 产段终点要等编译期 generate 才知；预处理阶段以 step.to 近似推进 prevEnd（多数曲线收于 to），
       // 供后续相对定位。无 to 的纯参数曲线保守不推进（产段末端不可预知）。
       if (step.to !== undefined) {
-        const pos = refPointOfTarget(step.to, namespaceStack, scopeChain);
+        const pos = localPointOfTarget(step.to, namespaceStack, scopeChain);
         if (pos) prevEnd = pos;
       }
       continue;
@@ -83,23 +80,18 @@ export const normalizePathSteps = (
     let updatePrevEnd = true;
 
     if (isRelativeTargetLike(original)) {
-      // prevEnd 全局 → 反向投影到当前 scope 局部 + 加 relative 部分（局部度量）= 局部 tuple；
-      // 下游 refPointOfTarget / clipForTarget 把 tuple 当 scope 局部字面量再 applyTransformChain 投全局
-      const refGlobal = prevEnd ?? [0, 0];
-      const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+      const refLocal = prevEnd ?? [0, 0];
       resolvedTo = [refLocal[0] + original.relative[0], refLocal[1] + original.relative[1]];
       updatePrevEnd = false;
     } else if (isRelativeAccumulateTargetLike(original)) {
-      const refGlobal = prevEnd ?? [0, 0];
-      const refLocal = scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+      const refLocal = prevEnd ?? [0, 0];
       resolvedTo = [refLocal[0] + original.relativeAccumulate[0], refLocal[1] + original.relativeAccumulate[1]];
-      // updatePrevEnd 保持 true：refPointOfTarget 把 tuple 当局部，apply chain 投全局后存为 prevEnd
     }
 
     out.push({ ...step, to: resolvedTo });
 
     if (updatePrevEnd) {
-      const pos = refPointOfTarget(resolvedTo, namespaceStack, scopeChain);
+      const pos = localPointOfTarget(resolvedTo, namespaceStack, scopeChain);
       if (pos) prevEnd = pos;
     }
   }

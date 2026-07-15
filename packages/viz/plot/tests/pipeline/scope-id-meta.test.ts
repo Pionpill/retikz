@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { SOURCE_INDEX } from '@retikz/data';
@@ -55,6 +55,14 @@ const collectIds = (child: IRChild, out: Array<string> = []): Array<string> => {
 
 /** 递归收集 Scene primitive 树里所有带 meta 的图元 */
 type ScenePrimLike = { type: string; id?: string; meta?: unknown; children?: Array<ScenePrimLike> };
+
+/** 递归收集 Scene primitive 树里的稳定 id */
+const collectSceneIds = (prim: ScenePrimLike, out: Array<string> = []): Array<string> => {
+  if (prim.id !== undefined) out.push(prim.id);
+  if (Array.isArray(prim.children)) for (const child of prim.children) collectSceneIds(child, out);
+  return out;
+};
+
 const collectSceneMeta = (
   prim: ScenePrimLike,
   out: Array<{ type: string; meta: unknown }> = [],
@@ -140,8 +148,14 @@ describe('scope id/meta — happy path', () => {
     expect((layer.meta as { markIndex?: number }).markIndex).toBe(0);
   });
 
-  it('line_series_path_id_meta', () => {
-    // line 多系列 → 每条 series Path 带 id='trend.series.<value>' + Path.meta 带 series（series 落在 Path、非子 scope）
+  it('mark_layer_uses_user_mark_id_without_provenance', () => {
+    const layer = firstLayer(barSpec({ id: 'sales', markId: 'bars' }), { sales: SALES }, opts);
+    expect(layer.id).toBe('sales.bars');
+    expect(layer.meta).toBeUndefined();
+  });
+
+  it('line_series_scope_id_meta', () => {
+    // line 多系列 → 每条 series 形成独立 Scope，稳定 id/meta 落在 series owner 上
     const TREND = [
       { t: 0, v: 1, city: 'X' },
       { t: 1, v: 3, city: 'X' },
@@ -169,12 +183,14 @@ describe('scope id/meta — happy path', () => {
       ],
     });
     const layer = firstLayer(spec, { t: TREND }, { ...opts, provenance: true });
-    const [pathX, pathY] = layer.children as Array<IRPath>;
-    expect(pathX.type).toBe('path');
-    expect(pathX.id).toBe('trend.series.X');
-    expect((pathX.meta as { series?: unknown }).series).toBe('X');
-    expect(pathY.id).toBe('trend.series.Y');
-    expect((pathY.meta as { series?: unknown }).series).toBe('Y');
+    const [seriesX, seriesY] = layer.children as Array<IRScope>;
+    expect(seriesX.type).toBe('scope');
+    expect(seriesX.id).toBe('trend.series.X');
+    expect((seriesX.meta as { series?: unknown }).series).toBe('X');
+    expect(seriesX.children.every(child => child.type === 'path')).toBe(true);
+    expect(seriesY.id).toBe('trend.series.Y');
+    expect((seriesY.meta as { series?: unknown }).series).toBe('Y');
+    expect(seriesY.children.every(child => child.type === 'path')).toBe(true);
   });
 
   it('datum_provenance_on', () => {
@@ -287,8 +303,8 @@ describe('scope id/meta — boundary', () => {
       marks: [{ type: 'path', series: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
     });
     const layer = firstLayer(spec, { t: TREND }, { ...opts, provenance: true });
-    const paths = layer.children as Array<IRPath>;
-    const ids = paths.map(p => p.id);
+    const seriesScopes = layer.children as Array<IRScope>;
+    const ids = seriesScopes.map(scope => scope.id);
     // 每条 series 一个 id，全部以 trend.series. 前缀、不含裸 '.' 在 value 段（'.' 已被 slug 掉）
     expect(ids.every(id => typeof id === 'string' && id.startsWith('trend.series.'))).toBe(true);
     for (const id of ids) {
@@ -297,8 +313,8 @@ describe('scope id/meta — boundary', () => {
     }
     // id 稳定唯一（无冲突）
     expect(new Set(ids).size).toBe(ids.length);
-    // 但 Path.meta.series 保留原始值（未 slug）
-    expect((paths[0].meta as { series?: unknown }).series).toBe('north.west');
+    // 但 series Scope.meta.series 保留原始值（未 slug）
+    expect((seriesScopes[0].meta as { series?: unknown }).series).toBe('north.west');
   });
 
   it('series_slug_collision_throws', () => {
@@ -556,6 +572,41 @@ describe('scope id/meta — interaction', () => {
     expect((axisMeta!.meta as { dimension?: string }).dimension).toBe('x');
     // guide.id='xaxis' → 加前缀 'sales.xaxis'
     expect(axisMeta!.id).toBe('sales.xaxis');
+  });
+
+  it('legend_layer_id_is_plot_local_across_scene', () => {
+    const legendSpec = (id: string, dataReference: string): IRPlotSpec =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        id,
+        data: { reference: dataReference },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+          { type: 'ordinal', name: 'color' },
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: [
+          {
+            type: 'point',
+            encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'series', scale: 'color' } },
+          },
+        ],
+        guides: [{ type: 'legend', channel: 'color' }],
+      });
+    const left = legendSpec('left', 'left-data');
+    const right = legendSpec('right', 'right-data');
+    const datasets = {
+      'left-data': [{ x: 0, y: 1, series: 'A' }],
+      'right-data': [{ x: 1, y: 0, series: 'B' }],
+    };
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [left, right] },
+      { composites: lowerPlots(datasets, { ...opts, provenance: true }) },
+    );
+    const ids = scene.primitives.flatMap(primitive => collectSceneIds(primitive as ScenePrimLike));
+    expect(ids.filter(id => id.endsWith('legend.color'))).toEqual(['left.legend.color', 'right.legend.color']);
   });
 });
 

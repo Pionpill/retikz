@@ -44,7 +44,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 系列属性
 
-给 `series` 一个字段，数据会先按该字段拆成多组，每组下沉为一条 core Path。这个例子显式按 `city` 拆分，左侧看多系列折线，右侧看同一组系列在极坐标下形成的线框。
+给 `series` 一个字段，数据会先按该字段拆成多组，每组保留独立渲染分组并承载一个或多个连续 Path 段。SVG 使用 `<g>`，Canvas 复用相同层级。这个例子显式按 `city` 拆分，左侧看多系列折线，右侧看同一组系列在极坐标下形成的线框。
 
 <ComponentPreview files={['line-series', 'line-series.data.ts']} />
 
@@ -138,8 +138,8 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
       ? buildClosureStepSegments(mark, segmentRows, frame, closure, closed)
       : buildLineStepSegments(mark, segmentRows, frame, closed);
   if (seriesField) {
-    const paths = buildSeriesPaths(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
-    return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
+    const seriesScopes = buildSeriesPathScopes(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
+    return seriesScopes.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: seriesScopes };
   }
   const segments = buildSegments(rows);
   if (segments.length === 0) return null;
@@ -155,12 +155,12 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 
 这段逻辑可以拆成四步：
 
-| 步骤       | 说明                                                                                                                                 |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 坐标系校验 | PathMark 需要二维轨迹几何；当前只在 cartesian2D / polar2D 下下沉                                                                     |
-| 排序与投影 | `orderRows` 决定连接顺序，`frame.project(...)` 把位置通道投影成屏幕点                                                                |
-| 系列拆分   | `series` 显式优先；没有 `series` 但有分类 `color` 时，按 `color` 隐式拆系列                                                          |
-| core 下沉  | 每个系列里的每个连续段生成一个 core `Path`；`closed` 追加线框闭合段（polar2D 缺省闭合），`closure` 构建闭合路径，`fill` 决定是否填充 |
+| 步骤       | 说明                                                                                                                                    |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 坐标系校验 | PathMark 需要二维轨迹几何；当前只在 cartesian2D / polar2D 下下沉                                                                        |
+| 排序与投影 | `orderRows` 决定连接顺序，`frame.project(...)` 把位置通道投影成屏幕点                                                                   |
+| 系列拆分   | `series` 显式优先；没有 `series` 但有分类 `color` 时，按 `color` 隐式拆系列                                                             |
+| core 下沉  | 每个系列生成独立 `Scope`，连续段生成子 `Path`；`closed` 追加线框闭合段（polar2D 缺省闭合），`closure` 构建闭合路径，`fill` 决定是否填充 |
 
 ## API
 

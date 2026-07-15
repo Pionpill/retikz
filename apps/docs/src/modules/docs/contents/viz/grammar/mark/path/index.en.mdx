@@ -44,7 +44,7 @@ The presentation form mainly changes through three groups of props: position cha
 
 ### Series Props
 
-Set `series` to a field and rows split into groups first; each group lowers into one core Path. This example explicitly splits by `city`: the left side is a multi-series line, and the right side shows the same series under polar coordinates.
+Set `series` to a field and rows split into groups first. Each series keeps an independent render group containing one or more continuous Path segments. SVG uses `<g>`, while Canvas reuses the same hierarchy. This example explicitly splits by `city`: the left side is a multi-series line, and the right side shows the same series under polar coordinates.
 
 <ComponentPreview files={['line-series', 'line-series.data.ts']} />
 
@@ -138,8 +138,8 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
       ? buildClosureStepSegments(mark, segmentRows, frame, closure, closed)
       : buildLineStepSegments(mark, segmentRows, frame, closed);
   if (seriesField) {
-    const paths = buildSeriesPaths(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
-    return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
+    const seriesScopes = buildSeriesPathScopes(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
+    return seriesScopes.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: seriesScopes };
   }
   const segments = buildSegments(rows);
   if (segments.length === 0) return null;
@@ -155,12 +155,12 @@ const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 
 The logic has four parts:
 
-| Step             | Behavior                                                                                                                                                                                                                    |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Coordinate check | PathMark needs 2D trajectory geometry; this release lowers it only under cartesian2D / polar2D                                                                                                                              |
-| Sort and project | `orderRows` decides connection order, and `frame.project(...)` maps position channels into screen points                                                                                                                    |
-| Series split     | Explicit `series` wins; without `series`, categorical `color` can implicitly split the rows                                                                                                                                 |
-| Core lowering    | Each continuous segment inside each series becomes one core `Path`; `closed` appends a cycle for a line outline (`polar2D` closes by default), while `closure` builds a closed path and `fill` decides whether it is filled |
+| Step             | Behavior                                                                                                                                                                                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Coordinate check | PathMark needs 2D trajectory geometry; this release lowers it only under cartesian2D / polar2D                                                                                                                                                          |
+| Sort and project | `orderRows` decides connection order, and `frame.project(...)` maps position channels into screen points                                                                                                                                                |
+| Series split     | Explicit `series` wins; without `series`, categorical `color` can implicitly split the rows                                                                                                                                                             |
+| Core lowering    | Each series becomes an independent `Scope`, and each continuous segment becomes a child `Path`; `closed` appends a cycle for a line outline (`polar2D` closes by default), while `closure` builds a closed path and `fill` decides whether it is filled |
 
 ## API
 

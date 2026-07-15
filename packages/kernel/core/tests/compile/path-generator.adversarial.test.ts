@@ -510,7 +510,7 @@ describe('[ADV] cursor / 衔接', () => {
 // 与既有交叉 / round-trip 综合
 // ───────────────────────────────────────────────────────────────────────────
 describe('[ADV] 与既有交叉 / round-trip', () => {
-  it('generator_in_scale_scope：scope 缩放作用于游标，generate 增量在世界系（语义记录）', () => {
+  it('generator_in_scale_scope：scope 缩放由 owner group 统一应用，generate 使用局部坐标', () => {
     const gen = definePathGenerator({
       name: 'gen',
       paramsSchema: z.object({}),
@@ -538,8 +538,8 @@ describe('[ADV] 与既有交叉 / round-trip', () => {
     const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).primitives);
     const move = drawn?.commands.find(c => c.kind === 'move');
     const line = drawn?.commands.find(c => c.kind === 'line');
-    if (move) expect(move.to).toEqual([10, 10]);
-    if (line) expect(line.to).toEqual([20, 10]);
+    if (move) expect(move.to).toEqual([5, 5]);
+    if (line) expect(line.to).toEqual([15, 5]);
   });
 
   it('unicode_and_bignum_params_roundtrip：Unicode key / 大数 round-trip 一致', () => {

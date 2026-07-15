@@ -155,6 +155,28 @@ describe('scope provenance surface lowering', () => {
     expect(rainGridLayer?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
     expect(rainGridLayer?.meta?.scaffold).toBeUndefined();
   });
+
+  it('grid_layer_uses_explicit_guide_owner_id', () => {
+    const spec = parsePlotSpec({
+      ...overlaySpec,
+      guides: overlaySpec.guides.map((guide, index) => ({
+        ...guide,
+        id: index === 0 ? 'temperature-axis' : 'rainfall-axis',
+        grid: true,
+      })),
+    });
+    const ids = gridLayersOf(expandOf(spec)).map(layer => layer.id);
+    expect(ids).toEqual(['weather.temperature-axis.grid', 'weather.rainfall-axis.grid']);
+  });
+
+  it('anonymous_grid_layer_uses_coordinate_view_owner_id', () => {
+    const spec = parsePlotSpec({
+      ...overlaySpec,
+      guides: overlaySpec.guides.map(guide => ({ ...guide, grid: true })),
+    });
+    const ids = gridLayersOf(expandOf(spec)).map(layer => layer.id);
+    expect(ids).toEqual(['weather.view.temp.grid.y', 'weather.view.rain.grid.y']);
+  });
 });
 
 describe('scope provenance surface locator', () => {
