@@ -11,7 +11,7 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 /**
  * clip 物化对抗测试（破坏视角）
  * @description clipRef 指向不存在资源、ClipDefs 收纯 paint / 空表 / 混合资源、polygon points 序列化边界。
- *   主张：物化不抛、不串话、按 kind 严格分流。
+ *   主张：物化不抛、不串话、按 kind 严格分流
  */
 
 const clipPathsOf = (resources: Array<SceneResource>): Array<AnyEl> => {

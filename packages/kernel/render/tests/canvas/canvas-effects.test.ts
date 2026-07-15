@@ -45,7 +45,7 @@ const arrowPathScene = (extra: Partial<PathPrim>): Scene =>
  * Canvas 后端效果：
  *   shadow → set ctx.shadowOffsetX/Y / shadowBlur / shadowColor；
  *   blendMode → set ctx.globalCompositeOperation；
- *   跨端 parity：真实 napi 光栅化校验 multiply 压暗。
+ *   跨端 parity：真实 napi 光栅化校验 multiply 压暗
  */
 
 const sceneOf = (primitives: Scene['primitives']): Scene => ({

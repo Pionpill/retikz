@@ -21,7 +21,7 @@ const DEFAULT_INNER_RATIO = 0.5;
 /**
  * Star sugar——星形，展开为 `<Path>` 的 `move + (2·points-1) line + cycle`（交替外/内半径顶点）
  * @description 纯几何 sugar，无 IR 改动。center 须 literal 笛卡尔。`points >= 2`。
- *   缺省 innerRadius = outerRadius × 0.5。
+ *   缺省 innerRadius = outerRadius × 0.5
  */
 export const Star: FC<StarProps> = props => {
   const center = requireXY(props.center, 'Star', 'center');

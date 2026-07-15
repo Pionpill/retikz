@@ -21,7 +21,7 @@ const DEFAULT_ROTATE = -90;
 /**
  * RegularPolygon sugar——正多边形，展开为 `<Path>` 的 `move + (sides-1) line + cycle`
  * @description 纯几何 sugar，无 IR 改动。center 须 literal 笛卡尔（组件内算顶点）。`sides >= 3`。
- *   边长形态由 `R = sideLength / (2·sin(π/sides))` 反算外接半径。
+ *   边长形态由 `R = sideLength / (2·sin(π/sides))` 反算外接半径
  */
 export const RegularPolygon: FC<RegularPolygonProps> = props => {
   const center = requireXY(props.center, 'RegularPolygon', 'center');

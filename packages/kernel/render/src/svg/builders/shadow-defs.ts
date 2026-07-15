@@ -11,7 +11,7 @@ const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
 /**
  * 递归收集 scene 里所有几何图元（rect / ellipse / path）携带的已解析 IRDropShadow —— 按需注入 filter defs
- * @description 仅主几何图元带 shadow（compile 已保证 text / marker 不带）；group 递归。
+ * @description 仅主几何图元带 shadow（compile 已保证 text / marker 不带）；group 递归
  */
 export const collectShadows = (prims: ReadonlyArray<ScenePrimitive>): Array<IRDropShadow> => {
   const out: Array<IRDropShadow> = [];
@@ -29,7 +29,7 @@ export const collectShadows = (prims: ReadonlyArray<ScenePrimitive>): Array<IRDr
 
 /**
  * IRDropShadow → 稳定字符串 key
- * @description 按固定字段顺序遍历（不依赖对象字面量字段顺序），相同 shadow → 同 key（dedup）。
+ * @description 按固定字段顺序遍历（不依赖对象字面量字段顺序），相同 shadow → 同 key（dedup）
  */
 export const stableShadowKey = (s: IRDropShadow): string => {
   const parts: Array<string> = [];
@@ -72,7 +72,7 @@ const svgShadowStdDeviation = (s: IRDropShadow): number => (s.blur ?? 0) / 2;
  *   filter region 显式取 `userSpaceOnUse` + 扩展后的 scene viewBox：缺省的 objectBoundingBox `-10%/120%` 会按
  *   被引用元素的包围盒裁剪——直线 / 细 path 的包围盒退化为零宽或零高（120%×0≈0）会把投影整段裁没，
  *   小图元上 offset+blur 超过 10% 也会被切边（Tailwind 预设几乎都会）。一个 filter 跨不同尺寸元素共享去重，
- *   故区域不能依赖单个 bbox；统一覆盖并外扩 viewBox 即与 Canvas 口径更接近，且对直线 / 大模糊一致生效。
+ *   故区域不能依赖单个 bbox；统一覆盖并外扩 viewBox 即与 Canvas 口径更接近，且对直线 / 大模糊一致生效
  */
 export const buildShadowDef = (s: IRDropShadow, id: string, region: BoundsRect): SvgNode => {
   const expanded = shadowRegion(s, region);

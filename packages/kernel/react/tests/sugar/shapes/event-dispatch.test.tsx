@@ -12,7 +12,7 @@ import { Circle, Layout, Rectangle, Star } from '../../../src';
  * @description 现有 collectHydrationHandlers 测试只覆盖「收集」阶段。本文件验证 Sugar 形状（Circle / Rectangle /
  *   Star）上的 `on<Event>` props 经 <Layout> 真实渲染后，对底层挂点 DOM 派发真实事件 → handler 被调用且拿到正确
  *   context（id / meta / renderer / element / geometry / animation）。Sugar 的 id 透传给底层 <Path>，故挂点
- *   DOM 带 `data-retikz-id` = Sugar 的 id。
+ *   DOM 带 `data-retikz-id` = Sugar 的 id
  */
 
 const SIZE = 200;

@@ -10,7 +10,7 @@ import { Layout } from '../../../src/kernel';
 /**
  * <Layout composites={...}> Tier 2 透传
  * @description React 把 composites prop 透传给 compileToScene 的 CompileOptions.composites；
- *   展开始终在 core。本轮 Tier 2 节点经 <Layout ir={...}> 直喂。
+ *   展开始终在 core。本轮 Tier 2 节点经 <Layout ir={...}> 直喂
  */
 const labeledBox = defineComposite({
   namespace: 'example',

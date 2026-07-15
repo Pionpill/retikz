@@ -28,7 +28,7 @@ const arrowEndSpec: ResolvedArrowEndSpec = {
 /**
  * SVG 后端效果：
  *   shadow → `<filter><feDropShadow>` def + 几何 `filter="url(#...)"`；
- *   blendMode → 几何 `style="mix-blend-mode:..."`。
+ *   blendMode → 几何 `style="mix-blend-mode:..."`
  */
 
 const sceneOf = (primitives: Scene['primitives']): Scene => ({

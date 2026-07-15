@@ -14,7 +14,7 @@ import { Layout } from '../../../src/kernel';
 import { buildIRWithContributions } from '../../../src/kernel/adapter';
 
 /**
- * 端到端回归护栏：可嵌入 Tier2 子组件的函数体在静态遍历期间「绝不被调用 / 渲染」。
+ * 端到端回归护栏：可嵌入 Tier2 子组件的函数体在静态遍历期间「绝不被调用 / 渲染」
  * @description 该特性存在的根因 bug：可嵌入组件曾在静态遍历（buildIR / collectHydrationHandlers）期间被同步
  *   CALL，触发其 React hooks（useId/useMemo）在 React render 之外执行，污染宿主 hook 顺序——
  *   重渲染 / i18n 语言切换时崩溃。本文件用「函数体一旦执行即抛」的 fixture 钉死两条遍历链与重渲染路径。
@@ -23,7 +23,7 @@ import { buildIRWithContributions } from '../../../src/kernel/adapter';
  *   react-test-renderer，React 为 18.2（无 `act`）。为不引入新依赖 / 不改测试环境配置，
  *   用 react-dom/server `renderToStaticMarkup` 驱动真实 React 渲染（hooks 在 SSR 期间确实执行），
  *   并以「同子树多次渲染 + 变更无关 prop」模拟重渲染 / 语言切换；回归向量（静态遍历期误调函数体触发 hook）
- *   在此路径下被完整覆盖。
+ *   在此路径下被完整覆盖
  */
 
 type FixtureProps = { id: string; data: unknown };
@@ -53,9 +53,9 @@ const makePanelComposite = (namespace: string): CompositeDefinition => {
 };
 
 /**
- * 造一个「函数体一旦执行即抛」的可嵌入 fixture。
+ * 造一个「函数体一旦执行即抛」的可嵌入 fixture
  * @description body throw 是护栏核心：组件被标记 isTier2Embeddable 且带可用 adapter，
- *   所以两条静态遍历链都应只读 adapter 静态贡献、绝不调用函数体；一旦被误调即抛、测试失败。
+ *   所以两条静态遍历链都应只读 adapter 静态贡献、绝不调用函数体；一旦被误调即抛、测试失败
  */
 const makeThrowingFixture = (options: { namespace?: string; displayName?: string } = {}): EmbeddableFixture => {
   const { namespace = 'demo', displayName = 'ThrowingPanel' } = options;
@@ -78,10 +78,10 @@ const makeThrowingFixture = (options: { namespace?: string; displayName?: string
 };
 
 /**
- * 有状态宿主兄弟组件：持 useState + useEffect（hook），渲染普通 DOM 标记。
+ * 有状态宿主兄弟组件：持 useState + useEffect（hook），渲染普通 DOM 标记
  * @description 与抛错可嵌入 fixture 并列挂在同一棵树里；其 hooks 在 SSR 渲染期间执行——
  *   若可嵌入函数体被静态遍历误调并触发自身 hook，将污染本宿主的 hook 顺序。label prop 模拟
- *   i18n 文案，bump prop 模拟一次 state 变更后的重渲染。
+ *   i18n 文案，bump prop 模拟一次 state 变更后的重渲染
  */
 const StatefulHost: FC<{ label: string; bump?: number }> = props => {
   const { label, bump = 0 } = props;

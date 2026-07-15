@@ -11,7 +11,7 @@ export { lerp as lerpPoint } from '@retikz/math';
 /**
  * rect 四直边 t=0 / t=1 端点对应的角 anchor
  * @description 方向约定单一真源：top/bottom = 西→东（t=0 在 left 端），right/left = 北→南（t=0 在 top 端）。
- *   仅 rect 直边用两角端点；circle/ellipse 用 `edgeAngleDeg` 角度表、diamond 用过顶点折线。
+ *   仅 rect 直边用两角端点；circle/ellipse 用 `edgeAngleDeg` 角度表、diamond 用过顶点折线
  */
 export const EDGE_ENDS = {
   [Side.Top]: [Anchor.TopLeft, Anchor.TopRight],
@@ -23,7 +23,7 @@ export const EDGE_ENDS = {
 /**
  * circle / ellipse 周长弧段：side 的局部参数角 θ(t)，单位度
  * @description 约定同 geometry 既有 `(cosθ, sinθ)` + y 轴向下 ⇒ right=0° / bottom=90° / left=180° / top=270°，
- *   顺时针为正。每条 side 是一段 90° 弧（等角插值）；三点（t=0/0.5/1）与 9-anchor 重合。
+ *   顺时针为正。每条 side 是一段 90° 弧（等角插值）；三点（t=0/0.5/1）与 9-anchor 重合
  */
 export const edgeAngleDeg = (side: SideValue, t: number): number => {
   switch (side) {

@@ -8,7 +8,7 @@ import { defineBuiltinProviderArray } from '../registry';
 
 export type BuiltinPathGeneratorName = 'parabola';
 
-/** 二次贝塞尔曲线 generator：`control` 走 Target 解析，`to` 作为曲线终点。 */
+/** 二次贝塞尔曲线 generator：`control` 走 Target 解析，`to` 作为曲线终点 */
 const parabola = definePathGenerator({
   name: 'parabola',
   paramsSchema: z.strictObject({ control: TargetSchema }),
@@ -21,7 +21,7 @@ const parabola = definePathGenerator({
   },
 });
 
-/** 内置 path generator 注册项。 */
+/** 内置 path generator 注册项 */
 export const BUILTIN_PATH_GENERATORS = defineBuiltinProviderArray<PathGeneratorDefinition, BuiltinPathGeneratorName>([
   parabola,
 ]);

@@ -26,11 +26,11 @@ type ArcParams = z.infer<typeof arcParamsSchema>;
 
 /** arc 的派生几何类型：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
 type ArcGeometry = {
-  /** 规范化后的起止角与弧中点角度。 */
+  /** 规范化后的起止角与弧中点角度 */
   range: { start: number; end: number; mid: number };
-  /** 覆盖整段弧线的精确 AABB 半轴。 */
+  /** 覆盖整段弧线的精确 AABB 半轴 */
   aabbHalfAxes: { halfWidth: number; halfHeight: number };
-  /** 圆心相对 AABB 中心的偏移；投影到 rect 前先加到圆心局部点上。 */
+  /** 圆心相对 AABB 中心的偏移；投影到 rect 前先加到圆心局部点上 */
   centerOffset: Position;
 };
 
@@ -56,9 +56,9 @@ const arcLocalToWorld = (rect: Rect, centerOffset: Position, localFromCenter: Po
   localToWorld(rect, [localFromCenter[0] + centerOffset[0], localFromCenter[1] + centerOffset[1]]);
 
 /**
- * arc 注册项：单半径弧线。
+ * arc 注册项：单半径弧线
  * @description close=true 时闭合成可填充弓形；anchor 提供 center / start / end / arc-mid。
- *   scaleParams 只缩 radius。
+ *   scaleParams 只缩 radius
  */
 export const arc = defineShape<ArcParams>({
   name: 'arc',

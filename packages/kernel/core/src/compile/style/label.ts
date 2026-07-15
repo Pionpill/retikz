@@ -3,7 +3,7 @@ import type { StyleFrame } from './frame';
 
 import { cuts, pickDefinedKeys } from './frame';
 
-/** fold labelDefault 通道。 */
+/** fold labelDefault 通道 */
 export const resolveLabelDefault = (stack: ReadonlyArray<StyleFrame>): IRLabelDefault => {
   let acc: IRLabelDefault = {};
   for (const frame of stack) {
@@ -13,7 +13,7 @@ export const resolveLabelDefault = (stack: ReadonlyArray<StyleFrame>): IRLabelDe
   return acc;
 };
 
-/** 逐字段合并字体。 */
+/** 逐字段合并字体 */
 const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undefined => {
   if (a === undefined) return b;
   if (b === undefined) return a;
@@ -29,7 +29,7 @@ const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undef
   return out;
 };
 
-/** 解析 path label 的最终样式。 */
+/** 解析 path label 的最终样式 */
 export const resolveGeometryLabel = (
   label: IRGeometryLabel,
   labelDefault: IRLabelDefault,

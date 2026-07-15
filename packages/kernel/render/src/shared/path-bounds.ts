@@ -7,15 +7,15 @@ type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
 
 const ROOT_EPSILON = 1e-12;
 
-/** PathCommand 绘制几何的轴对齐包围盒。 */
+/** PathCommand 绘制几何的轴对齐包围盒 */
 export type PathBounds = {
-  /** 左上角 x 坐标。 */
+  /** 左上角 x 坐标 */
   x: number;
-  /** 左上角 y 坐标。 */
+  /** 左上角 y 坐标 */
   y: number;
-  /** 几何宽度。 */
+  /** 几何宽度 */
   w: number;
-  /** 几何高度。 */
+  /** 几何高度 */
   h: number;
 };
 
@@ -59,7 +59,7 @@ const cubicPoint = (from: Point, control1: Point, control2: Point, to: Point, t:
   ];
 };
 
-/** 求落在开区间 (0, 1) 内的二次方程实根。 */
+/** 求落在开区间 (0, 1) 内的二次方程实根 */
 const unitQuadraticRoots = (a: number, b: number, c: number): Array<number> => {
   if (Math.abs(a) <= ROOT_EPSILON) {
     if (Math.abs(b) <= ROOT_EPSILON) return [];
@@ -137,7 +137,7 @@ const boundsOf = (points: ReadonlyArray<Point>): PathBounds => {
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 };
 
-/** 按 renderer 统一的 cursor 与有向 sweep 语义计算 path 真实几何 bbox。 */
+/** 按 renderer 统一的 cursor 与有向 sweep 语义计算 path 真实几何 bbox */
 export const pathBounds = (commands: ReadonlyArray<PathCommand>): PathBounds => {
   const points: Array<Point> = [];
   let cursor: Point | null = null;

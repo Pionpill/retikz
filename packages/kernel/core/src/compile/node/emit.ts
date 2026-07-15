@@ -8,12 +8,12 @@ import { toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter, resolveLabelRotateDeg } from './label/geometry';
 
-/** 空 shape params。 */
+/** 空 shape params */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
 
 type Round = (n: number) => number;
 
-/** 从 NodeLayout 收敛 shape emit 所需的视觉样式。 */
+/** 从 NodeLayout 收敛 shape emit 所需的视觉样式 */
 const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
   fill: resolvePaint(layout.fill),
   fillOpacity: layout.fillOpacity,
@@ -28,7 +28,7 @@ const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): Resolved
   blendMode: layout.blendMode,
 });
 
-/** 发出节点 shape 主体图元。 */
+/** 发出节点 shape 主体图元 */
 const emitNodeShapePrimitives = (
   layout: NodeLayout,
   round: Round,
@@ -45,7 +45,7 @@ const emitNodeShapePrimitives = (
   ].map(primitive => ({ ...primitive }));
 };
 
-/** 发出节点正文图元。 */
+/** 发出节点正文图元 */
 const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<ScenePrimitive> => {
   if (layout.inlineBlock) {
     const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
@@ -97,7 +97,7 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
   ];
 };
 
-/** 发出 label pin 引线图元。 */
+/** 发出 label pin 引线图元 */
 const emitNodeLabelPinPrimitive = (
   layout: NodeLayout,
   label: NodeLabelLayout,
@@ -129,7 +129,7 @@ const emitNodeLabelPinPrimitive = (
   };
 };
 
-/** 发出 label 正文图元。 */
+/** 发出 label 正文图元 */
 const emitNodeLabelContentPrimitive = (
   layout: NodeLayout,
   label: NodeLabelLayout,
@@ -172,7 +172,7 @@ const emitNodeLabelContentPrimitive = (
   };
 };
 
-/** 发出节点附属 label 图元。 */
+/** 发出节点附属 label 图元 */
 const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, round: Round): Array<ScenePrimitive> => {
   const labelCenterPosition = labelCenter(layout, label);
   const [lx, ly] = labelCenterPosition;
@@ -198,7 +198,7 @@ const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, rou
   return primitives;
 };
 
-/** 把节点标识和元数据写到纯几何节点的 shape 图元。 */
+/** 把节点标识和元数据写到纯几何节点的 shape 图元 */
 const stampNodeShapePrimitives = (layout: NodeLayout, primitives: Array<ScenePrimitive>): void => {
   if (layout.id !== undefined) {
     for (const prim of primitives) prim.id = layout.id;
@@ -211,7 +211,7 @@ const stampNodeShapePrimitives = (layout: NodeLayout, primitives: Array<ScenePri
   }
 };
 
-/** 包装带文本或旋转的节点 group。 */
+/** 包装带文本或旋转的节点 group */
 const wrapNodeGroupPrimitive = (layout: NodeLayout, children: Array<ScenePrimitive>, round: Round): GroupPrim => {
   const group: GroupPrim = { type: 'group', children };
   if (layout.id !== undefined) group.id = layout.id;
@@ -232,7 +232,7 @@ const wrapNodeGroupPrimitive = (layout: NodeLayout, children: Array<ScenePrimiti
 
 /**
  * NodeLayout → Scene primitives
- * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive。
+ * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive
  */
 export const emitNodePrimitives = (
   layout: NodeLayout,

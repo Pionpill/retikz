@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { parseMathJaxSvg, parsePathD } from '../../src/svg';
 
 /**
- * SVG path-d 解析 + MathJax SVG → renderer-agnostic 字形 LoweredTex。
+ * SVG path-d 解析 + MathJax SVG → renderer-agnostic 字形 LoweredTex
  */
 
 describe('[path-d] parsePathD', () => {

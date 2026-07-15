@@ -20,7 +20,7 @@ export type BuiltinBoundaryProviderName = Extract<
   typeof BuiltinShape.Circle | typeof BuiltinShape.Rectangle | typeof BuiltinShape.Ellipse
 >;
 
-/** 圆形连接面：通过最大边正方形复用 ellipse shape 几何。 */
+/** 圆形连接面：通过最大边正方形复用 ellipse shape 几何 */
 const circleBoundary = defineBoundary({
   name: BuiltinShape.Circle,
   paramsSchema: NO_PARAMS,
@@ -28,7 +28,7 @@ const circleBoundary = defineBoundary({
   anchor: (rect, name, params) => ellipseShape.anchor(squareToMax(rect), name, params),
 });
 
-/** 矩形连接面：直接复用 rectangle shape 的连接面实现。 */
+/** 矩形连接面：直接复用 rectangle shape 的连接面实现 */
 const rectangleBoundary = defineBoundary({
   name: BuiltinShape.Rectangle,
   paramsSchema: NO_PARAMS,
@@ -36,7 +36,7 @@ const rectangleBoundary = defineBoundary({
   anchor: rectangle.anchor,
 });
 
-/** 椭圆连接面：直接复用 ellipse shape 的连接面实现。 */
+/** 椭圆连接面：直接复用 ellipse shape 的连接面实现 */
 const ellipseBoundary = defineBoundary({
   name: BuiltinShape.Ellipse,
   paramsSchema: NO_PARAMS,
@@ -44,7 +44,7 @@ const ellipseBoundary = defineBoundary({
   anchor: ellipseShape.anchor,
 });
 
-/** 内置 boundary provider 注册项。 */
+/** 内置 boundary provider 注册项 */
 export const BUILTIN_BOUNDARIES = defineBuiltinProviderArray<BoundaryDefinition, BuiltinBoundaryProviderName>([
   circleBoundary,
   rectangleBoundary,

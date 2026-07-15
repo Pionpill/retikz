@@ -41,7 +41,7 @@ const warnUnsupported = (options: DrawOptions, feature: UnsupportedCanvasFeature
 
 /**
  * 解析颜色串：`currentColor` → `DrawOptions.currentColor`（缺省保持原串）
- * @description canvas 不继承 CSS `color`，故主题色 `currentColor` 需显式解析；其余颜色原样返回。
+ * @description canvas 不继承 CSS `color`，故主题色 `currentColor` 需显式解析；其余颜色原样返回
  */
 const resolveColor = (color: string | undefined, options: DrawOptions): string | undefined => {
   if (color === 'currentColor' && options.currentColor !== undefined) return options.currentColor;
@@ -93,7 +93,7 @@ type DrawState = {
 
 /**
  * 把 hex / rgb(a) 颜色乘上 alpha 转成 rgba 串；无法正则解析则返回 undefined
- * @description 纯字符串解析（不依赖 ctx），命名色 / hsl 等返回 undefined 交由上层归一后重试。
+ * @description 纯字符串解析（不依赖 ctx），命名色 / hsl 等返回 undefined 交由上层归一后重试
  */
 const bakeAlpha = (color: string, opacity: number): string | undefined => {
   const bytes = parseHexColor(color);
@@ -115,9 +115,9 @@ const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 type CanvasShadowStyle = { offsetX: number; offsetY: number; blur: number };
 
 /**
- * 把 shadow 的 user-unit 口径映射到 Canvas shadow* 属性。
+ * 把 shadow 的 user-unit 口径映射到 Canvas shadow* 属性
  * @description Canvas shadowOffset / shadowBlur 不会稳定跟随当前变换；这里显式读取 CTM，让预览缩放 / camera
- *   下的投影尺寸继续贴近 SVG 的 user-space filter 口径。无 getTransform 的宿主保持旧行为。
+ *   下的投影尺寸继续贴近 SVG 的 user-space filter 口径。无 getTransform 的宿主保持旧行为
  */
 const resolveCanvasShadowStyle = (ctx: CanvasRenderingContext2D, shadow: IRDropShadow): CanvasShadowStyle => {
   const offsetX = shadow.offsetX ?? 0;
@@ -148,7 +148,7 @@ const resolveCanvasShadowStyle = (ctx: CanvasRenderingContext2D, shadow: IRDropS
 /**
  * 用已解析 IRDropShadow 包裹一段绘制：set `ctx.shadow*`、draw、restore
  * @description `blur` / offset 按当前 Canvas transform 校准到 shadow*；`opacity`（若给）经 bakeAlpha 相乘到 color 有效 alpha。
- *   无 shadow → 直接 draw（逐字不变）。
+ *   无 shadow → 直接 draw（逐字不变）
  */
 const withShadow = (ctx: CanvasRenderingContext2D, shadow: IRDropShadow | undefined, draw: () => void): void => {
   if (shadow === undefined) {
@@ -168,7 +168,7 @@ const withShadow = (ctx: CanvasRenderingContext2D, shadow: IRDropShadow | undefi
 
 /**
  * 用 blendMode 包裹一段绘制：set `globalCompositeOperation`、draw、restore（回 `source-over`）
- * @description `normal` / 省略 → 直接 draw（逐字不变）；其余 W3C 分离模式名直接是 canvas GCO 值。
+ * @description `normal` / 省略 → 直接 draw（逐字不变）；其余 W3C 分离模式名直接是 canvas GCO 值
  */
 const withBlend = (ctx: CanvasRenderingContext2D, blendMode: BlendModeValue | undefined, draw: () => void): void => {
   if (blendMode === undefined || blendMode === 'normal') {
@@ -184,7 +184,7 @@ const withBlend = (ctx: CanvasRenderingContext2D, blendMode: BlendModeValue | un
 /**
  * 把 stop 的 opacity 烘焙进颜色（canvas addColorStop 无 stop-opacity）
  * @description 先直接正则烘焙 hex / rgb；命名色 / hsl 等用宿主 `resolveCssColor` 归一成 hex / rgb 后再烘焙。
- *   归一器缺省（无宿主）时按 best-effort 忽略 opacity（渐变退化纯色，与历史一致）。
+ *   归一器缺省（无宿主）时按 best-effort 忽略 opacity（渐变退化纯色，与历史一致）
  */
 const applyStopAlpha = (
   color: string,
@@ -239,7 +239,7 @@ const imageNaturalSize = (img: CanvasImageSource): { w: number; h: number } => {
 /**
  * image paint server 填充：clip 到当前形状路径，按 fit 把图片放进 bbox 后 drawImage
  * @description fill 拉伸铺满、contain 等比装入、cover（默认）等比覆盖；均居中。未提供 getImage → 降级告警；
- *   已提供但未就绪（返回 null）→ 本帧静默跳过（加载完由调用方重绘）。
+ *   已提供但未就绪（返回 null）→ 本帧静默跳过（加载完由调用方重绘）
  */
 const fillImage = (
   ctx: CanvasRenderingContext2D,
@@ -466,7 +466,7 @@ const drawableSegments = (commands: ReadonlyArray<PathCommand>): Array<DrawableS
 
 /**
  * 末端箭头定位：终点 + 入射切线角（指向终点的方向）
- * @description 使用最后一条可绘制命令的几何终点与解析切线；无法判向则角度取 0。
+ * @description 使用最后一条可绘制命令的几何终点与解析切线；无法判向则角度取 0
  */
 const endArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
   const segment = drawableSegments(commands).at(-1);
@@ -480,7 +480,7 @@ const endArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Poin
 
 /**
  * 起点箭头定位：起点 + 离开切线角的反向（对应 SVG `orient="auto-start-reverse"`）
- * @description 使用第一条可绘制命令的几何起点与解析切线；无法判向则角度取 0。
+ * @description 使用第一条可绘制命令的几何起点与解析切线；无法判向则角度取 0
  */
 const startArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
   const segment = drawableSegments(commands).at(0);
@@ -617,7 +617,7 @@ const drawMarkerPrim = (
  * pattern paint server 填充：离屏渲染 motif tile → ctx.createPattern('repeat')
  * @description tile 已由 compile 解析（size / background / rotation / motif 几何）。motif 复用 drawMarkerPrim
  *   画进 size×size 离屏 context；contextStroke / currentColor 走 options.currentColor（缺省黑）。rotation 经
- *   pattern.setTransform 旋转。缺 createOffscreen 工厂返回 undefined（caller 据此降级告警）。
+ *   pattern.setTransform 旋转。缺 createOffscreen 工厂返回 undefined（caller 据此降级告警）
  */
 const buildPattern = (
   ctx: CanvasRenderingContext2D,
@@ -644,7 +644,7 @@ const buildPattern = (
 /**
  * 绘制端点箭头 marker：参考点 (refX, baseSize/2) 贴端点 V、沿切线旋转、按 markerUnits=strokeWidth 缩放
  * @description 复刻 SVG `<marker>` 物化：viewBox `0 0 baseSize baseSize` 经 preserveAspectRatio=none 拉伸到
- *   markerWidth×markerHeight，再乘 strokeWidth（markerUnits）。spec.opacity 叠加到 path opacity 上。
+ *   markerWidth×markerHeight，再乘 strokeWidth（markerUnits）。spec.opacity 叠加到 path opacity 上
  */
 const drawArrowMarker = (
   ctx: CanvasRenderingContext2D,

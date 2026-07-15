@@ -36,9 +36,9 @@ const rectVertices = (bounds: Rect): Array<Position> => {
 };
 
 /**
- * rectangle 注册项：文本容器矩形。
+ * rectangle 注册项：文本容器矩形
  * @description anchor / edgePoint 走 rect 几何；cornerRadius 影响 boundaryPoint 和 emit。
- *   scaleParams 只缩 cornerRadius。
+ *   scaleParams 只缩 cornerRadius
  */
 export const rectangle = defineShape<RectangleParams>({
   name: BuiltinShape.Rectangle,

@@ -19,12 +19,12 @@ export type BuildDocumentOptions = {
   /**
    * id 前缀——所有 `<defs>` 资源 id（marker / paint / clip）与对应 `url(#...)` 引用共用此前缀确保唯一
    * @description 同 scene + 同 idPrefix → 逐字一致的 id（水合前置）；不同 idPrefix → id 无交集（多实例隔离）。
-   *   caller 注入（React 用剥冒号的 `useId()`；SSR / Vanilla 显式给）。
+   *   caller 注入（React 用剥冒号的 `useId()`；SSR / Vanilla 显式给）
    */
   idPrefix: string;
   /**
    * 是否产出动画（缺省 true）；`false` → 不 emit `<style>` / WAAPI 描述，渲染 base 静态图（settled 不变量）
-   * @description runtime 据 `{animate:false}` / `prefers-reduced-motion` 走静态路径时传 false。
+   * @description runtime 据 `{animate:false}` / `prefers-reduced-motion` 走静态路径时传 false
    */
   animate?: boolean;
   /** 自定义 easing 注册表（名 → cubic-bezier 四元组进 CSS / 函数仅 JS） */
@@ -33,7 +33,7 @@ export type BuildDocumentOptions = {
   onAnimationWarn?: (message: string) => void;
   /**
    * 静态截帧时刻（毫秒）；给定时不 emit 动画，而是把各 track 在该时刻的值**烘焙成静态属性 / transform**（定格一帧）
-   * @description SSR 海报帧 / 缩略图 / 截图用。覆盖 `animate`（截帧本就是静态产物，复用 `evaluateTrack` 求值）。
+   * @description SSR 海报帧 / 缩略图 / 截图用。覆盖 `animate`（截帧本就是静态产物，复用 `evaluateTrack` 求值）
    */
   snapshotAt?: number;
 };
@@ -111,7 +111,7 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
 
 /**
  * Scene → SVG 内容子树（`<defs>` + primitives，无 `<svg>` 外壳）
- * @description 给 Vanilla `mountSvg` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用。
+ * @description 给 Vanilla `mountSvg` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用
  */
 export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): Array<SvgNode> => {
   const safeIdPrefix = toSafeSvgToken(options.idPrefix);
@@ -147,7 +147,7 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
 /**
  * Scene → 整棵 `<svg>` 描述树（含 viewBox + `<defs>` + primitives）
  * @description `@retikz/render/svg` 的核心总装入口。width / height / className / 框架级 style 等 svg 元素附加由
- *   framework adapter 自理（非本包职责）。
+ *   framework adapter 自理（非本包职责）
  */
 export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): SvgNode => ({
   tag: 'svg',

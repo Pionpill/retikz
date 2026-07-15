@@ -13,5 +13,5 @@ export type FontWeightKeywordValue = ValueOf<typeof FontWeightKeyword>;
 /** CSS font-style 关键字取值 */
 export type FontStyleValue = ValueOf<typeof FontStyle>;
 
-/** 字号 preset 取值。 */
+/** 字号 preset 取值 */
 export type FontSizePresetValue = ValueOf<typeof WebFontSizePreset>;

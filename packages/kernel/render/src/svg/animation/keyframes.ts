@@ -1,7 +1,7 @@
 /**
  * track → CSS `@keyframes` + `animation` shorthand 生成；per-document 动画收集器（元素装饰 + 镜头 + `<style>`）
  * @description `trigger:'load'` 的 track 编进 CSS（SSR 零 JS 自播）；交互 track 出 WAAPI 描述挂 data 属性。
- *   transform 通道各包一层 `<g>`（避免同元素多个 transform 动画在 CSS 上冲突，且天然支持支点 transform-origin）。
+ *   transform 通道各包一层 `<g>`（避免同元素多个 transform 动画在 CSS 上冲突，且天然支持支点 transform-origin）
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 
@@ -83,7 +83,7 @@ export type SvgAnimationOptions = {
   onWarn?: (message: string) => void;
   /**
    * 静态截帧时刻（毫秒）；给定时收集器不 emit `@keyframes` / WAAPI，而是把各 track 在该时刻的求值结果
-   * **烘焙成静态属性 / transform**（定格一帧）。SSR 海报帧 / 缩略图 / 截图用。复用 `evaluateTrack` 引擎。
+   * **烘焙成静态属性 / transform**（定格一帧）。SSR 海报帧 / 缩略图 / 截图用。复用 `evaluateTrack` 引擎
    */
   snapshotAt?: number;
 };
@@ -109,7 +109,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
   /**
    * 处理 transform 通道：每条 track 包一层 `<g>`（load→CSS class、交互→WAAPI data）
    * @description wrapper `<g>` 没有 `data-retikz-id`，给它打 `data-retikz-animation-owner=<被包元素 id>`（id 存在时），
-   *   让 `context.animation` per-id 控制经此双查到承载真动画的 wrapper（否则带 transform 的节点 restart 失效）。
+   *   让 `context.animation` per-id 控制经此双查到承载真动画的 wrapper（否则带 transform 的节点 restart 失效）
    */
   const wrapTransform = (
     current: SvgNode,

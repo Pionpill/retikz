@@ -9,7 +9,7 @@ import { createGeometryContext } from '../../helpers/geometry-context';
 /**
  * 水合：renderer 双模事件等价
  * @description 同一 <Node id onClick> 在 renderer="svg" 与 renderer="canvas" 下点击同一逻辑位置 →
- *   同一 spy 触发（同一注册表 + 同一分发，定位层不同）。
+ *   同一 spy 触发（同一注册表 + 同一分发，定位层不同）
  */
 
 const SIZE = 200;

@@ -41,10 +41,10 @@ const ringShape = (): ShapeDefinition =>
   });
 
 /**
- * 宽松 paramsSchema（passthrough 放过 `undefined` 值）——验证第二道 JsonObjectSchema 护栏。
+ * 宽松 paramsSchema（passthrough 放过 `undefined` 值）——验证第二道 JsonObjectSchema 护栏
  * @description `z.object({}).passthrough()` 不校验值形态，会让 `{ v: undefined }` 原样通过第一道，
  *   交给编译期第二道 `JsonObjectSchema.parse` 拦下。类型层标 `ZodType<IRJsonObject>` 是定义点契约
- *   （第二道 parse 才是真正护栏，与 path generator 同构）。
+ *   （第二道 parse 才是真正护栏，与 path generator 同构）
  */
 const looseShape = (): ShapeDefinition =>
   defineShape({

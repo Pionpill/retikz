@@ -16,7 +16,7 @@ export type TextProps = {
 
 /**
  * Text 是 Node 内的"行级"标记组件——本身不渲染
- * @description 声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行。
+ * @description 声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行
  */
 export const Text: FC<TextProps> = () => null;
 Text.displayName = TIKZ_TEXT;

@@ -7,7 +7,7 @@ type NodeSpacingValue = number | IRBoxSpacing | undefined;
 type NodeAxisScaleValue = number | IRAxisScale | undefined;
 type NodeBoxSizeValue = number | IRBoxSize | undefined;
 
-/** 构造四边同值的盒模型边距。 */
+/** 构造四边同值的盒模型边距 */
 export const boxInsets = (value: number): BoundsInsets => ({
   top: value,
   right: value,
@@ -15,7 +15,7 @@ export const boxInsets = (value: number): BoundsInsets => ({
   left: value,
 });
 
-/** 解析节点盒间距，支持统一值、轴向值和边向值。 */
+/** 解析节点盒间距，支持统一值、轴向值和边向值 */
 export const resolveBoxSpacing = (value: NodeSpacingValue, fallback: number): BoundsInsets => {
   if (typeof value === 'number') {
     return boxInsets(value);
@@ -29,7 +29,7 @@ export const resolveBoxSpacing = (value: NodeSpacingValue, fallback: number): Bo
   };
 };
 
-/** 解析节点轴向缩放。 */
+/** 解析节点轴向缩放 */
 export const resolveAxisScale = (value: NodeAxisScaleValue, fallback: number): AxisScale => {
   if (typeof value === 'number') return { x: value, y: value };
   const base = value?.default ?? fallback;
@@ -39,7 +39,7 @@ export const resolveAxisScale = (value: NodeAxisScaleValue, fallback: number): A
   };
 };
 
-/** 解析节点盒尺寸。 */
+/** 解析节点盒尺寸 */
 export const resolveBoxSize = (value: NodeBoxSizeValue, fallback: number): BoxSize => {
   if (typeof value === 'number') return { width: value, height: value };
   const base = value?.default ?? fallback;

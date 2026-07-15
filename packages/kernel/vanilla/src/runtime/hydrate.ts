@@ -24,7 +24,7 @@ import type { HydrateOptions, HydrationHandle } from './types';
  *   聚合查询、`point` 逆 meet-fit、`animation` 经 `data-retikz-id` / `data-retikz-animation-owner` 双查
  *   `getAnimations()` per-id 控制；不传 → 最小 context——`id` + `element` + `root` + `renderer`，`point` 退 `getScreenCTM`
  *   （浏览器有效、jsdom 为 null），`meta` / `geometry` / `scene` undefined、`animation` no-op。SSR 后要富 context 须把
- *   `scene` 一并传入。
+ *   `scene` 一并传入
  */
 export const hydrate = (root: SVGSVGElement, options: HydrateOptions): HydrationHandle => {
   const scene = options.scene;

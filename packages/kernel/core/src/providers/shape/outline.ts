@@ -6,15 +6,15 @@ import type { ContourCommand, LineSegment } from '../../shared';
 import { pathPrimitiveStyle } from './style';
 
 /**
- * 由顶点环构造闭合折线段序列。
- * @description 接缝顺序跟随顶点顺序，供圆角轮廓 helper 复用。
+ * 由顶点环构造闭合折线段序列
+ * @description 接缝顺序跟随顶点顺序，供圆角轮廓 helper 复用
  */
 export const verticesToSegments = (verts: Array<Position>): Array<LineSegment> =>
   verts.map((from, i) => ({ kind: 'line', from, to: verts[(i + 1) % verts.length] }));
 
 /**
- * contour 命令转 path 命令。
- * @description 过滤 close 前回到起点的冗余 line，保持无圆角输出简洁。
+ * contour 命令转 path 命令
+ * @description 过滤 close 前回到起点的冗余 line，保持无圆角输出简洁
  */
 export const contourToPathCommands = (
   commands: Array<ContourCommand>,
@@ -58,7 +58,7 @@ export const contourToPathCommands = (
   return out;
 };
 
-/** contour shape 共用的 path primitive 样式落地。 */
+/** contour shape 共用的 path primitive 样式落地 */
 export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ResolvedShapeStyle): PathPrim => ({
   type: 'path',
   commands,

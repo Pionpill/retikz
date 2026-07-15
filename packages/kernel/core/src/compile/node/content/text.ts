@@ -1,6 +1,6 @@
 import type { FontSpec, TextMeasurer } from '../../text';
 
-/** 行高倍率。 */
+/** 行高倍率 */
 export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 
 /** CJK / 全角字符范围：无需空白分隔，折行时可按单字符切分 */
@@ -21,11 +21,11 @@ const isCjk = (ch: string): boolean => {
  * @description 用注入的 measureText 度量；连续空白归一为单空格分隔。空文本返回 [''].
  */
 export type WrapTextContext = {
-  /** 文本字体。 */
+  /** 文本字体 */
   font: FontSpec;
-  /** 最大行宽。 */
+  /** 最大行宽 */
   maxWidth: number;
-  /** 文本测量函数。 */
+  /** 文本测量函数 */
   measureText: TextMeasurer;
 };
 

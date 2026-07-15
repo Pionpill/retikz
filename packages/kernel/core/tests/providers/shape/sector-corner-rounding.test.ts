@@ -27,7 +27,7 @@ const mkRect = (x = 0, y = 0, w = 120, h = 120, rotate = 0): Rect => ({ x, y, wi
 
 /**
  * 现状 sectorBoundaryHit 的独立复刻：从质心向 toward 射线，求与外弧 / 内弧 / 两径向边轮廓的最近正交点。
- * 与改前 sector.ts 内 sectorBoundaryHit 逐字同算法（局部圆心系）。
+ * 与改前 sector.ts 内 sectorBoundaryHit 逐字同算法（局部圆心系）
  */
 const referenceBoundaryHit = (rect: Rect, params: SectorParams, toward: Position): Position | undefined => {
   const geo = sectorGeometry(params);
@@ -110,7 +110,7 @@ describe('sector cornerRadius — paramsSchema', () => {
 // ───────────────────────────── r=0 emit 等价 ─────────────────────────────
 
 describe('sector cornerRadius — r=0 emit equivalence', () => {
-  /** 现状 emit 命令序参考（环楔 / pie）—— 与改前 sector.ts emit 逐字同。 */
+  /** 现状 emit 命令序参考（环楔 / pie）—— 与改前 sector.ts emit 逐字同 */
   const sharpEmitReference = (rect: Rect, round: (n: number) => number, params: SectorParams) => {
     const geo = sectorGeometry(params);
     const { innerRadius, outerRadius } = params;

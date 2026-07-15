@@ -4,13 +4,13 @@ import type { PathCommand } from './path';
 
 /**
  * marker-local 填充取值
- * @description 只允许纯色或 `contextStroke`，不允许引用外部 paint resource。
+ * @description 只允许纯色或 `contextStroke`，不允许引用外部 paint resource
  */
 export type MarkerFill = string | { kind: 'contextStroke' };
 
 /**
  * marker-local path 原语：`PathPrim` 去掉 arrowStart / arrowEnd（禁递归箭头），fill 收窄到 `MarkerFill`
- * @description 局部 baseSize 坐标系；不含外部 resourceRef / clip / text。
+ * @description 局部 baseSize 坐标系；不含外部 resourceRef / clip / text
  */
 export type MarkerPathPrim = {
   /** 类型判别符 */
@@ -56,7 +56,7 @@ export type MarkerPathPrim = {
 
 /**
  * marker-local ellipse 原语：`EllipsePrim` fill 收窄到 `MarkerFill`
- * @description 圆形（rx=ry）复用同一 prim；不含外部 resourceRef。
+ * @description 圆形（rx=ry）复用同一 prim；不含外部 resourceRef
  */
 export type MarkerEllipsePrim = {
   /** 类型判别符 */
@@ -98,7 +98,7 @@ export type MarkerEllipsePrim = {
 
 /**
  * marker-local rect 原语：`RectPrim` fill 收窄到 `MarkerFill`
- * @description 不含外部 resourceRef；`x`/`y` 维持 RectPrim 的左上角约定。
+ * @description 不含外部 resourceRef；`x`/`y` 维持 RectPrim 的左上角约定
  */
 export type MarkerRectPrim = {
   /** 类型判别符 */
@@ -141,7 +141,7 @@ export type MarkerRectPrim = {
 /**
  * marker-local group 原语：允许 transform 包裹的复合箭头
  * @description children 只能再套 `MarkerPrimitive`（path / ellipse / rect / group），
- *   禁再套 marker / text；杜绝 marker 递归引用。
+ *   禁再套 marker / text；杜绝 marker 递归引用
  */
 export type MarkerGroupPrim = {
   /** 类型判别符 */
@@ -157,6 +157,6 @@ export type MarkerGroupPrim = {
 
 /**
  * marker 物化窄子集：ArrowDefinition.emit 的产物类型
- * @description 相对 `ScenePrimitive` 的收窄子集：禁 text、递归箭头、外部 resourceRef 和 clip。
+ * @description 相对 `ScenePrimitive` 的收窄子集：禁 text、递归箭头、外部 resourceRef 和 clip
  */
 export type MarkerPrimitive = MarkerPathPrim | MarkerEllipsePrim | MarkerRectPrim | MarkerGroupPrim;

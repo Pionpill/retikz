@@ -19,15 +19,15 @@ import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
 
-/** scope transform lowering 所需的编译上下文。 */
+/** scope transform lowering 所需的编译上下文 */
 export type LowerScopeTransformsContext = {
-  /** id 查询栈。 */
+  /** id 查询栈 */
   namespaceStack: NamespaceStack;
-  /** 相对定位默认距离。 */
+  /** 相对定位默认距离 */
   nodeDistance?: number;
-  /** between 端点的全局坐标解析器。 */
+  /** between 端点的全局坐标解析器 */
   resolveBetweenGlobal?: ResolveBetweenGlobal;
-  /** transform 引用解析失败时的回调。 */
+  /** transform 引用解析失败时的回调 */
   onUnresolved?: (failed: IRTransform) => void;
 };
 
@@ -35,7 +35,7 @@ export type LowerScopeTransformsContext = {
  * 将 scope transform 的 translate-like IR 变体 lowered 为 Scene transform。
  *
  * @description 该步骤依赖当前 namespace，因此保留在 traversal 编译过程中执行；输出只包含 renderer
- * 可直接消费的 `translate` / `rotate` / `scale` 形态。引用解析失败时返回 null。
+ * 可直接消费的 `translate` / `rotate` / `scale` 形态。引用解析失败时返回 null
  */
 export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
@@ -111,7 +111,7 @@ export const lowerScopeTransforms = (
   return out;
 };
 
-/** 收集一组 NodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用。 */
+/** 收集一组 NodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用 */
 export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Array<IRPosition> => {
   const points: Array<IRPosition> = [];
   for (const layout of layouts) {
@@ -126,7 +126,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
   return points;
 };
 
-/** 计算一组 layout 的全局 AABB；空数组返回 null。 */
+/** 计算一组 layout 的全局 AABB；空数组返回 null */
 export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): Rect | null => {
   const bounds = boundsOf(collectScopeCornerPoints(layouts));
   if (bounds === undefined) return null;

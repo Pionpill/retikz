@@ -13,7 +13,7 @@ import { TIKZ_STEP } from '../protocol';
 
 /**
  * React DSL 层的 target 类型：core 对象 `IRTarget` + 字符串 shorthand（`'A'` / `'A.north'` / `'A.30'` / `'+dx,dy'`）
- * @description 对象形态适合精确描述节点锚点、坐标和相对位移；字符串 shorthand 适合手写 JSX 时快速引用常见目标。
+ * @description 对象形态适合精确描述节点锚点、坐标和相对位移；字符串 shorthand 适合手写 JSX 时快速引用常见目标
  */
 export type DslTarget = IRTarget | string;
 
@@ -90,7 +90,7 @@ export type CubicStepProps = {
 /**
  * Bend action：弧形简记，自动算控制点生成 cubic（TikZ `to[bend left=N]` / `to[out=…, in=…]`）
  * @description 支持对称弯与非对称弯 / 自环两种模式；同给时 out/in 优先（编译层）。
- *   三者全省时默认 left 对称弯。`from == to`（同节点 / 同坐标）配合 out/in 画自环。
+ *   三者全省时默认 left 对称弯。`from == to`（同节点 / 同坐标）配合 out/in 画自环
  */
 export type BendStepProps = {
   /** 弧形简记 step 鉴别字面量 */
@@ -183,7 +183,7 @@ export type RectangleStepProps = {
 /**
  * Smooth action：过当前游标 + `points` 的平滑曲线（TikZ `plot[smooth]` / Hobby 风格）
  * @description 游标为隐式首 knot，曲线依次穿过 `points` 每个点；编译期经 centripetal Catmull-Rom 转成 cubic 链。
- *   需前置 step 设游标；游标终于 `points` 末项。`tension` 缺省 1（标准 centripetal CR），<1 更紧、>1 更鼓。
+ *   需前置 step 设游标；游标终于 `points` 末项。`tension` 缺省 1（标准 centripetal CR），<1 更紧、>1 更鼓
  */
 export type SmoothStepProps = {
   /** 平滑曲线 step 鉴别字面量 */
@@ -215,7 +215,7 @@ export type GeneratorStepProps = {
 };
 
 /**
- * @description 十三种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
+ * @description 十三种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生
  */
 export type StepProps =
   | MoveStepProps
@@ -234,7 +234,7 @@ export type StepProps =
 
 /**
  * Step 是 DSL 标记组件——本身不渲染
- * @description 声明路径中的一个动作，例如移动、连线、曲线、圆弧、闭合或生成器片段。
+ * @description 声明路径中的一个动作，例如移动、连线、曲线、圆弧、闭合或生成器片段
  */
 export const Step: FC<StepProps> = () => null;
 Step.displayName = TIKZ_STEP;

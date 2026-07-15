@@ -32,93 +32,93 @@ export type StyleChannel = ValueOf<typeof ScopeStyleChannel>;
 /**
  * Scope IR 类型——手写而非 z.infer 派生
  * @description ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
- *   Scope 兼作样式默认值挂点：级联 graphic state（color + 跨类共享分项）+ 四通道 every-X 默认 + resetStyle 继承屏障。
+ *   Scope 兼作样式默认值挂点：级联 graphic state（color + 跨类共享分项）+ 四通道 every-X 默认 + resetStyle 继承屏障
  */
 export type IRScope = {
   type: 'scope';
   id?: string;
   /**
-   * 是否为子树开启局部命名空间。
+   * 是否为子树开启局部命名空间
    * @default false
    */
   localNamespace?: boolean;
   /**
-   * scope 局部变换序列。
+   * scope 局部变换序列
    * @default []
    */
   transforms?: Array<IRTransform>;
   /**
-   * 级联主色。
+   * 级联主色
    * @default 继承外层 color
    */
   color?: string;
   /**
-   * 级联描边 paint。
+   * 级联描边 paint
    * @default 继承外层 stroke
    */
   stroke?: string | IRPaintSpec;
   /**
-   * 级联填充 paint。
+   * 级联填充 paint
    * @default 继承外层 fill
    */
   fill?: string | IRPaintSpec;
   /**
-   * 级联描边宽度。
+   * 级联描边宽度
    * @default 继承外层 strokeWidth
    */
   strokeWidth?: number;
   /**
-   * 级联整体不透明度。
+   * 级联整体不透明度
    * @default 继承外层 opacity
    */
   opacity?: number;
   /**
-   * 级联填充不透明度。
+   * 级联填充不透明度
    * @default 继承外层 fillOpacity
    */
   fillOpacity?: number;
   /**
-   * 级联绘制不透明度。
+   * 级联绘制不透明度
    * @default 继承外层 strokeOpacity
    */
   strokeOpacity?: number;
   /**
-   * every node 默认样式。
+   * every node 默认样式
    * @default 继承外层 nodeDefault
    */
   nodeDefault?: IRNodeDefault;
   /**
-   * every path 默认样式。
+   * every path 默认样式
    * @default 继承外层 pathDefault
    */
   pathDefault?: IRPathDefault;
   /**
-   * every label 默认样式。
+   * every label 默认样式
    * @default 继承外层 labelDefault
    */
   labelDefault?: IRLabelDefault;
   /**
-   * every arrow 默认样式。
+   * every arrow 默认样式
    * @default 继承外层 arrowDefault
    */
   arrowDefault?: IRArrowDefault;
   /**
-   * 样式继承屏障；缺省继承全部通道。
+   * 样式继承屏障；缺省继承全部通道
    * @default false
    */
   resetStyle?: boolean | Array<StyleChannel>;
   /**
-   * scope 整体参与同层排序的层级。
+   * scope 整体参与同层排序的层级
    * @default 0
    */
   zIndex?: number;
   /**
-   * scope 裁剪区。
+   * scope 裁剪区
    * @default 不裁剪
    */
   clip?: IRClipSpec;
   /**
-   * 有 id 的 scope 注册为可引用边界时使用的包络形状。
+   * 有 id 的 scope 注册为可引用边界时使用的包络形状
    * @default 'rectangle'
    */
   boundingShape?: ScopeBoundingShapeValue;

@@ -4,21 +4,21 @@ export const ASCENT_FACTOR = 0.8;
 /** descent 近似占 fontSize 比例（基线之下） */
 export const DESCENT_FACTOR = 0.2;
 
-/** 文本基线换算输入。 */
+/** 文本基线换算输入 */
 export type AlphabeticBaselineInput = {
-  /** 文本锚点 y。 */
+  /** 文本锚点 y */
   y: number;
-  /** 原始垂直锚点。 */
+  /** 原始垂直锚点 */
   baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
-  /** 行数。 */
+  /** 行数 */
   lineCount: number;
-  /** 行高。 */
+  /** 行高 */
   lineHeight: number;
-  /** 字号。 */
+  /** 字号 */
   fontSize: number;
 };
 
-/** 把文本块垂直锚点折算成首行 alphabetic 基线 y。 */
+/** 把文本块垂直锚点折算成首行 alphabetic 基线 y */
 export const toAlphabeticBaselineY = (input: AlphabeticBaselineInput): number => {
   const { y, baseline, lineCount, lineHeight, fontSize } = input;
   const asc = fontSize * ASCENT_FACTOR;

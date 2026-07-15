@@ -1,9 +1,9 @@
 import type { NodeLayout } from './node';
 
-/** namespace 栈当前写入/解析阶段。 */
+/** namespace 栈当前写入/解析阶段 */
 export type NamespacePhase = 'registering' | 'resolving';
 
-/** 同一 namespace frame 内重复 id 的诊断载荷。 */
+/** 同一 namespace frame 内重复 id 的诊断载荷 */
 export type DuplicateRegisterInfo = {
   /** 同 frame 内重复出现的 id（两次 register 都用此 id） */
   id: string;
@@ -17,13 +17,13 @@ export type DuplicateRegisterInfo = {
 
 /** NamespaceStack 构造选项 */
 export type NamespaceStackOptions = {
-  /** 同 frame 重复 register 时的回调。 */
+  /** 同 frame 重复 register 时的回调 */
   onDuplicate?: (info: DuplicateRegisterInfo) => void;
 };
 
 /**
- * 栈式 namespace frame。
- * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断。
+ * 栈式 namespace frame
+ * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断
  */
 export class NamespaceStack {
   /** 栈式 frame 容器；栈底（index 0）= 根 frame，栈顶（last）= 当前 frame */
@@ -31,7 +31,7 @@ export class NamespaceStack {
   /** 与每个 frame 对应的"已注册 id → 首次 register 时的 irPath"映射，用于 duplicate warn 复述位置 */
   private readonly firstIrPaths: Array<Map<string, string | undefined>>;
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
-  /** 当前阶段；registering 允许写入，resolving 只允许 lookup。 */
+  /** 当前阶段；registering 允许写入，resolving 只允许 lookup */
   private currentPhase: NamespacePhase = 'registering';
 
   constructor(options: NamespaceStackOptions = {}) {
@@ -45,7 +45,7 @@ export class NamespaceStack {
     return this.frames.length;
   }
 
-  /** 当前阶段。 */
+  /** 当前阶段 */
   get phase(): NamespacePhase {
     return this.currentPhase;
   }
@@ -56,7 +56,7 @@ export class NamespaceStack {
     this.firstIrPaths.push(new Map());
   }
 
-  /** 弹出栈顶 frame；根 frame 不可弹出。 */
+  /** 弹出栈顶 frame；根 frame 不可弹出 */
   popFrame(): void {
     if (this.frames.length <= 1) {
       throw new Error('NamespaceStack.popFrame: cannot pop the root frame (internal invariant violated)');
@@ -65,17 +65,17 @@ export class NamespaceStack {
     this.firstIrPaths.pop();
   }
 
-  /** 切换到 resolving 阶段；切换后 register / replaceLayout 一律抛 internal error。 */
+  /** 切换到 resolving 阶段；切换后 register / replaceLayout 一律抛 internal error */
   enterResolvingPhase(): void {
     this.currentPhase = 'resolving';
   }
 
-  /** 切回 registering 阶段；用于 pending path 解析完成后继续处理上层 scope 子树。 */
+  /** 切回 registering 阶段；用于 pending path 解析完成后继续处理上层 scope 子树 */
   exitResolvingPhase(): void {
     this.currentPhase = 'registering';
   }
 
-  /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值。 */
+  /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值 */
   register(id: string, layout: NodeLayout, irPath?: string): boolean {
     if (this.currentPhase !== 'registering') {
       throw new Error(
@@ -99,7 +99,7 @@ export class NamespaceStack {
     return wasOverwritten;
   }
 
-  /** 替换指定 frame 内已注册的 layout；用于 scope 占位升级，不触发重复 id 诊断。 */
+  /** 替换指定 frame 内已注册的 layout；用于 scope 占位升级，不触发重复 id 诊断 */
   replaceLayout(id: string, layout: NodeLayout, frameDepth: number, expectedCurrent?: NodeLayout): boolean {
     if (this.currentPhase !== 'registering') {
       throw new Error(
@@ -122,7 +122,7 @@ export class NamespaceStack {
     return true;
   }
 
-  /** 按 inside-out 规则查找 id 对应的 layout。 */
+  /** 按 inside-out 规则查找 id 对应的 layout */
   lookup(id: string): NodeLayout | undefined {
     for (let i = this.frames.length - 1; i >= 0; i--) {
       const layout = this.frames[i].get(id);

@@ -9,7 +9,7 @@ import { parseProviderPayload } from '../../provider-payload';
 
 const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
 
-/** 校验 path generator 产出的单条命令可写入 Scene。 */
+/** 校验 path generator 产出的单条命令可写入 Scene */
 const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
   const bad = (detail: string): never => {
     throw new Error(`path generator '${name}' produced a ${detail}.`);

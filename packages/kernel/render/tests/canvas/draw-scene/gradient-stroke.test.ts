@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { drawScene } from '../../../src/canvas';
 import { createSpyCanvasContext } from './helpers';
 
-/** 构造非正方形 rect 的 gradient stroke 场景。 */
+/** 构造非正方形 rect 的 gradient stroke 场景 */
 const gradientRectScene = (kind: 'linearGradient' | 'radialGradient' | 'conicGradient'): Scene => ({
   layout: { x: 0, y: 0, width: 120, height: 80 },
   resources: [

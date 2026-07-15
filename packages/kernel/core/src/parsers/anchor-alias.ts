@@ -23,16 +23,16 @@ const AnchorAliasToAnchor: Record<string, AnchorValue> = {
   'below-left': Corner.BottomLeft,
 };
 
-/** node target sugar 错误提示中展示的 canonical 与别名候选名。 */
+/** node target sugar 错误提示中展示的 canonical 与别名候选名 */
 export const SupportedAnchorSugarNames = [
   CenterAnchor.Center,
   ...Object.values(Anchor),
   ...Object.keys(AnchorAliasToAnchor),
 ];
 
-/** Parser sugar：把 compass / TikZ anchor 别名转换为 core canonical anchor。 */
+/** Parser sugar：把 compass / TikZ anchor 别名转换为 core canonical anchor */
 export const parseAnchorAlias = (name: string): AnchorInput | undefined =>
   isAnchor(name) ? name : AnchorAliasToAnchor[name];
 
-/** Parser sugar：把 compass / TikZ side 别名转换为 core canonical side。 */
+/** Parser sugar：把 compass / TikZ side 别名转换为 core canonical side */
 export const parseSideAlias = (name: string): SideValue | undefined => (isSide(name) ? name : SideAliasToSide[name]);

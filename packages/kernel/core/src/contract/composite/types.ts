@@ -3,13 +3,13 @@ import type { ZodType } from 'zod';
 import type { IRChild } from '../../schemas';
 
 /**
- * Tier 2 composite 注册项。
- * @description 描述一个 composite 节点的 schema 和展开逻辑；定义本身不进入 IR。
+ * Tier 2 composite 注册项
+ * @description 描述一个 composite 节点的 schema 和展开逻辑；定义本身不进入 IR
  */
 export type CompositeDefinition<T = unknown> = {
-  /** composite IR 节点引用的 provider namespace。 */
+  /** composite IR 节点引用的 provider namespace */
   namespace: string;
-  /** composite IR 节点引用的 provider type。 */
+  /** composite IR 节点引用的 provider type */
   type: string;
   /** 完整节点 schema（extend CompositeBaseSchema；namespace / type 为 literal） */
   schema: ZodType<T>;

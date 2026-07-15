@@ -4,51 +4,51 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 
 import { gradientLineFromAngle } from '../shared';
 
-/** Canvas objectBoundingBox gradient 使用的局部几何 bbox。 */
+/** Canvas objectBoundingBox gradient 使用的局部几何 bbox */
 export type GradientBBox = {
-  /** 左上角 x 坐标。 */
+  /** 左上角 x 坐标 */
   x: number;
-  /** 左上角 y 坐标。 */
+  /** 左上角 y 坐标 */
   y: number;
-  /** 几何宽度。 */
+  /** 几何宽度 */
   w: number;
-  /** 几何高度。 */
+  /** 几何高度 */
   h: number;
 };
 
-/** Canvas 支持的 gradient paint。 */
+/** Canvas 支持的 gradient paint */
 export type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
 
 type GradientCommonInput = {
-  /** 目标 Canvas context。 */
+  /** 目标 Canvas context */
   ctx: CanvasRenderingContext2D;
-  /** 渐变定义。 */
+  /** 渐变定义 */
   spec: GradientSpec;
-  /** 渐变映射的局部几何 bbox。 */
+  /** 渐变映射的局部几何 bbox */
   bbox: GradientBBox;
-  /** 解析 stop 的 currentColor 与 opacity。 */
+  /** 解析 stop 的 currentColor 与 opacity */
   resolveStopColor: (color: string, opacity: number | undefined) => string;
-  /** 上报 paint 降级。 */
+  /** 上报 paint 降级 */
   warn: (message: string) => void;
 };
 
-/** 已构建 current path 上执行 gradient fill 的输入。 */
+/** 已构建 current path 上执行 gradient fill 的输入 */
 export type GradientFillInput = GradientCommonInput & {
-  /** 本次填充透明度。 */
+  /** 本次填充透明度 */
   fillOpacity: number | undefined;
-  /** 执行一次 current path fill。 */
+  /** 执行一次 current path fill */
   drawFill: () => void;
 };
 
-/** gradient stroke style 构建输入。 */
+/** gradient stroke style 构建输入 */
 export type GradientStrokeInput = GradientCommonInput & {
-  /** 创建离屏 Canvas context 的宿主工厂。 */
+  /** 创建离屏 Canvas context 的宿主工厂 */
   createOffscreen: ((width: number, height: number) => CanvasRenderingContext2D | null) | undefined;
-  /** 描边相对几何 bbox 的最大外扩。 */
+  /** 描边相对几何 bbox 的最大外扩 */
   outset: number;
-  /** 单次 drawScene 内复用纹理 pattern 的缓存。 */
+  /** 单次 drawScene 内复用纹理 pattern 的缓存 */
   cache: Map<string, CanvasPattern>;
-  /** paint resource 的稳定缓存前缀。 */
+  /** paint resource 的稳定缓存前缀 */
   cacheKey: string;
 };
 
@@ -77,7 +77,7 @@ const addStops = (
   return gradient;
 };
 
-/** 在当前 context 的单位方框坐标中创建 gradient。 */
+/** 在当前 context 的单位方框坐标中创建 gradient */
 const buildUnitGradient = (
   ctx: CanvasRenderingContext2D,
   spec: GradientSpec,
@@ -105,7 +105,7 @@ const buildUnitGradient = (
   return addStops(gradient, spec, resolveStopColor);
 };
 
-/** 在 user-space bbox 中创建无需纹理的原生 gradient。 */
+/** 在 user-space bbox 中创建无需纹理的原生 gradient */
 const buildNativeGradient = (
   ctx: CanvasRenderingContext2D,
   spec: GradientSpec,
@@ -146,7 +146,7 @@ const buildNativeGradient = (
   return addStops(gradient, spec, resolveStopColor);
 };
 
-/** 在已构建的 current path 上按 objectBoundingBox 语义执行一次 gradient fill。 */
+/** 在已构建的 current path 上按 objectBoundingBox 语义执行一次 gradient fill */
 export const fillObjectGradient = (input: GradientFillInput): void => {
   const { ctx, spec, bbox, fillOpacity, drawFill, resolveStopColor, warn } = input;
   if (!validBBox(bbox)) {
@@ -189,7 +189,7 @@ const textureSize = (width: number, height: number): { width: number; height: nu
   return resolvedWidth >= 2 && resolvedHeight >= 2 ? { width: resolvedWidth, height: resolvedHeight } : undefined;
 };
 
-/** 构建保持 objectBoundingBox 映射且不缩放描边几何的 Canvas stroke style。 */
+/** 构建保持 objectBoundingBox 映射且不缩放描边几何的 Canvas stroke style */
 export const buildGradientStrokeStyle = (input: GradientStrokeInput): CanvasGradient | CanvasPattern | undefined => {
   const { ctx, spec, bbox, resolveStopColor, warn } = input;
   if (!validBBox(bbox)) {

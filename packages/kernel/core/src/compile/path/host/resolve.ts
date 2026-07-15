@@ -4,21 +4,21 @@ import type { PathBaseProps } from '../stroke';
 
 import { resolveShadow } from '../../style';
 
-/** 已解析默认值后的 PathPrim 公共样式属性。 */
+/** 已解析默认值后的 PathPrim 公共样式属性 */
 export type ResolvedPathBaseProps = PathBaseProps & {
-  /** 最终描边宽度；缺省 path.strokeWidth 时为 1。 */
+  /** 最终描边宽度；缺省 path.strokeWidth 时为 1 */
   strokeWidth: number;
 };
 
-/** path 基础样式解析上下文。 */
+/** path 基础样式解析上下文 */
 export type ResolvePathBasePropsContext = {
-  /** PaintSpec 解析器；直调 emit 时通常只透传字符串。 */
+  /** PaintSpec 解析器；直调 emit 时通常只透传字符串 */
   resolvePaint: PaintResolver;
 };
 
 /**
- * 解析 PathPrim 公共样式属性。
- * @description 只处理 path 自身样式与默认值，不处理几何命令、箭头、marks 或整体 transform。
+ * 解析 PathPrim 公共样式属性
+ * @description 只处理 path 自身样式与默认值，不处理几何命令、箭头、marks 或整体 transform
  */
 export const resolvePathBaseProps = (path: IRPathBase, context: ResolvePathBasePropsContext): ResolvedPathBaseProps => {
   const { resolvePaint } = context;

@@ -9,7 +9,7 @@ import { mountCanvas } from '../../src';
  * @retikz/vanilla mountCanvas（无框架 canvas 直挂，jsdom 环境）
  * @description jsdom 的 `<canvas>.getContext('2d')` 默认返回 null（无真实 2D backend），故 spy
  *   `HTMLCanvasElement.prototype.getContext` 返回一个「录制型」proxy context 充当原生 canvas 原语——
- *   只提供 canvas API、不替换被测的 mountCanvas 挂载 / dpr / 尺寸逻辑（仍真实受测，对齐 builder-canvas.test 写法）。
+ *   只提供 canvas API、不替换被测的 mountCanvas 挂载 / dpr / 尺寸逻辑（仍真实受测，对齐 builder-canvas.test 写法）
  */
 
 /** 录制型 fake 2d context：记录调用名，供断言 drawScene 链路被走（setTransform 等） */

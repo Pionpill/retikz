@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest';
 import { hitTest } from '../../src/canvas';
 
 /**
- * Canvas 水合 hitTest：逆 z-order + fill/stroke 区分 + group 祖先 id。
+ * Canvas 水合 hitTest：逆 z-order + fill/stroke 区分 + group 祖先 id
  * @description hitTest 无逐图元 DOM，靠把每个图元几何重建进一个 2D context 后调 isPointInPath /
  *   isPointInStroke 点测。本测试注入一个「几何忠实」的 2D context 充当原生 canvas：记录子路径并按
  *   even-odd / nonzero 射线法回答 isPointInPath、按点到线段距离回答 isPointInStroke——只提供 canvas 原语，
  *   hitTest 自身的「选哪个图元 / z-order / 祖先 id / 容差」逻辑仍真实受测。
- *   stub 阶段 hitTest 恒返回 null，断言此刻预期 fail。
+ *   stub 阶段 hitTest 恒返回 null，断言此刻预期 fail
  */
 
 type Pt = [number, number];
@@ -24,7 +24,7 @@ type SubPath = {
  * 几何忠实的 2D context test harness：足够支撑 hitTest 的路径构建 + 点测
  * @description 记录 moveTo/lineTo/rect/arc/ellipse/bezierCurveTo/quadraticCurveTo 为折线子路径；
  *   transform（translate/rotate/scale/setTransform）按仿射矩阵应用到落点；isPointInPath 用射线法、
- *   isPointInStroke 用点到线段距离（含 lineWidth/2）。曲线 / 弧采样成折线（命中判定够用）。
+ *   isPointInStroke 用点到线段距离（含 lineWidth/2）。曲线 / 弧采样成折线（命中判定够用）
  */
 const createGeometryContext = (): CanvasRenderingContext2D => {
   let subPaths: Array<SubPath> = [];

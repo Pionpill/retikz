@@ -16,6 +16,6 @@ export type BuiltinArrowShapeValue = ValueOf<typeof BuiltinArrowShape>;
 /**
  * 箭头形状名：开放字符串
  * @description 内置 `BuiltinArrowShapeValue`，或经 `CompileOptions.arrows` 注册的扩展箭头名；
- *   `& {}` 让 IDE 仍对内置 8 名自动补全，同时接受任意非空字符串（对齐 `NodeShape` / `PatternShapeName`）。
+ *   `& {}` 让 IDE 仍对内置 8 名自动补全，同时接受任意非空字符串（对齐 `NodeShape` / `PatternShapeName`）
  */
 export type ArrowShapeValue = BuiltinArrowShapeValue | (string & {});

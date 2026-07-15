@@ -4,64 +4,64 @@ import { DEFAULT_EPSILON } from '../constants';
 
 const DEG_TO_RAD = Math.PI / 180;
 
-/** 圆弧外接候选点参数。 */
+/** 圆弧外接候选点参数 */
 export type ArcBoundingPointsInput = {
-  /** 圆心。 */
+  /** 圆心 */
   center: Position;
-  /** 半径。 */
+  /** 半径 */
   radius: number;
-  /** 起始角度，单位为度。 */
+  /** 起始角度，单位为度 */
   startAngleDeg: number;
-  /** 结束角度，单位为度。 */
+  /** 结束角度，单位为度 */
   endAngleDeg: number;
 };
 
-/** 圆弧角度区间判定参数。 */
+/** 圆弧角度区间判定参数 */
 export type ArcAngleInRangeInput = {
-  /** 起始角度，单位为度。 */
+  /** 起始角度，单位为度 */
   startAngleDeg: number;
-  /** 结束角度，单位为度。 */
+  /** 结束角度，单位为度 */
   endAngleDeg: number;
-  /** 待判定角度，单位为度。 */
+  /** 待判定角度，单位为度 */
   angleDeg: number;
-  /** 角度容差，单位为度。 */
+  /** 角度容差，单位为度 */
   toleranceDeg?: number;
 };
 
-/** 射线与圆弧求交参数。 */
+/** 射线与圆弧求交参数 */
 export type RayArcInput = ArcBoundingPointsInput & {
-  /** 射线起点。 */
+  /** 射线起点 */
   origin: Position;
-  /** 射线方向，不要求单位化。 */
+  /** 射线方向，不要求单位化 */
   dir: Position;
-  /** 正向参数容差。 */
+  /** 正向参数容差 */
   tolerance?: number;
 };
 
-/** 椭圆弧参数点参数。 */
+/** 椭圆弧参数点参数 */
 export type EllipseArcPointInput = {
-  /** 椭圆中心。 */
+  /** 椭圆中心 */
   center: Position;
-  /** x 方向半轴。 */
+  /** x 方向半轴 */
   radiusX: number;
-  /** y 方向半轴。 */
+  /** y 方向半轴 */
   radiusY: number;
-  /** 参数角，单位为度。 */
+  /** 参数角，单位为度 */
   angleDeg: number;
 };
 
-/** 椭圆弧外接候选点参数。 */
+/** 椭圆弧外接候选点参数 */
 export type EllipseArcBoundingPointsInput = Omit<EllipseArcPointInput, 'angleDeg'> & {
-  /** 起始参数角，单位为度。 */
+  /** 起始参数角，单位为度 */
   startAngleDeg: number;
-  /** 结束参数角，单位为度。 */
+  /** 结束参数角，单位为度 */
   endAngleDeg: number;
 };
 
 /**
- * 枚举角度区间内的轴向极值候选角。
- * @description 返回 `[lo, hi]` 内所有 `90 * k` 角度；区间不可安全枚举时返回空数组。
- * @remarks 复杂度：时间 O(m)，空间 O(m)，m 为返回角度数；大区间保护用于避免浮点整数分辨率不足导致枚举不前进。
+ * 枚举角度区间内的轴向极值候选角
+ * @description 返回 `[lo, hi]` 内所有 `90 * k` 角度；区间不可安全枚举时返回空数组
+ * @remarks 复杂度：时间 O(m)，空间 O(m)，m 为返回角度数；大区间保护用于避免浮点整数分辨率不足导致枚举不前进
  */
 const axisAngles = (lo: number, hi: number): Array<number> => {
   const kStart = Math.ceil(lo / 90);
@@ -81,7 +81,7 @@ export const arcEndPoint = (center: Position, radius: number, angleDeg: number):
 
 /**
  * 弧的 bbox 极值候选：起点、终点，加 [startAngle,endAngle] 内所有 90°·k 方向的圆周点
- * @description 不去重；端角恰在 90°·k 上时由调用方处理。
+ * @description 不去重；端角恰在 90°·k 上时由调用方处理
  */
 export const arcBoundingPoints = ({
   center,
@@ -111,7 +111,7 @@ const normalizeDeg = (deg: number): number => {
 
 /**
  * 角度 a（度）是否落在弧的角度区间 [startAngle, endAngle] 内（含端点，带容差）
- * @description start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描。
+ * @description start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
  */
 export const arcAngleInRange = ({
   startAngleDeg,
@@ -130,7 +130,7 @@ export const arcAngleInRange = ({
 
 /**
  * 射线（origin + s·dir）∩ 圆弧（center, radius, [startAngle, endAngle]）
- * @description 返回沿射线的正向参数 s，按升序排列；零方向或无有效交点时返回空数组。
+ * @description 返回沿射线的正向参数 s，按升序排列；零方向或无有效交点时返回空数组
  */
 export const rayArc = ({
   origin,
@@ -167,7 +167,7 @@ export const rayArc = ({
 
 /**
  * 椭圆弧参数点：中心 + 半轴 rx/ry + 参数角（度）→ 椭圆周上点
- * @description 与 arcEndPoint 同角度约定；θ 是参数角，不一定等于真实极角。
+ * @description 与 arcEndPoint 同角度约定；θ 是参数角，不一定等于真实极角
  */
 export const ellipseArcPoint = ({ center, radiusX, radiusY, angleDeg }: EllipseArcPointInput): Position => {
   const rad = angleDeg * DEG_TO_RAD;
@@ -176,7 +176,7 @@ export const ellipseArcPoint = ({ center, radiusX, radiusY, angleDeg }: EllipseA
 
 /**
  * 椭圆弧 bbox 极值候选：起点、终点，加 [start,end] 区间内所有 90°·k 参数角处的椭圆周点
- * @description 只处理轴对齐椭圆弧，候选点不去重。
+ * @description 只处理轴对齐椭圆弧，候选点不去重
  */
 export const ellipseArcBoundingPoints = ({
   center,

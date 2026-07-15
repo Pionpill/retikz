@@ -25,7 +25,7 @@ export type Diamond = {
   /** 中心到 north/south 顶点距离 */
   halfB: number;
   /**
-   * 绕中心旋转弧度。
+   * 绕中心旋转弧度
    * @default 0
    */
   rotate?: number;
@@ -36,7 +36,7 @@ export type Diamond = {
  * @description 注意：这是一套独立的菱形几何工具，**与 Node 的 diamond shape 不是同一条路径**——
  *   后者已被 compile 规范化为 `polygon` preset（`{ sides: 4 }`），其标准方位 anchor 走外接 AABB 角。
  *   本工具的 NE/NW/SE/SW anchor 取斜边中点（落在真实菱形边上），语义与 polygon 路径不同；
- *   作为通用几何 API 保留，勿假设它与 Node diamond shape 行为一致。
+ *   作为通用几何 API 保留，勿假设它与 Node diamond shape 行为一致
  */
 export const diamond = {
   /** 中心 */

@@ -17,7 +17,7 @@ export type BoundaryOutlineCommandsInput = {
 
 /**
  * boundary 模式 ribbon 轮廓
- * @description upper / lower 已各自解析成中心线段；这里按同一归一化 offset 采样两条边界，再拼成闭合 path。
+ * @description upper / lower 已各自解析成中心线段；这里按同一归一化 offset 采样两条边界，再拼成闭合 path
  */
 export const boundaryOutlineCommands = ({
   upper,

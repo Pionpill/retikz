@@ -5,19 +5,19 @@ import type { NodeLabelLayout, NodeTextLayoutContext } from '../types';
 import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
 import { normalizeLabelPosition } from './geometry';
 
-/** 节点附属 label 布局输入。 */
+/** 节点附属 label 布局输入 */
 export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
-  /** 样式栈解析出的 label 默认值。 */
+  /** 样式栈解析出的 label 默认值 */
   labelDefault?: IRLabelDefault;
-  /** 节点 label 与节点边界的默认距离。 */
+  /** 节点 label 与节点边界的默认距离 */
   labelDistance: number;
-  /** 基准字体大小。 */
+  /** 基准字体大小 */
   baseFontSize: number;
-  /** preset 与 rem 字号解析的根字号。 */
+  /** preset 与 rem 字号解析的根字号 */
   rootFontSize: number;
 };
 
-/** 布局节点附属 label。 */
+/** 布局节点附属 label */
 export const layoutNodeLabels = (input: LayoutNodeLabelsInput): Array<NodeLabelLayout> | undefined => {
   const {
     node,

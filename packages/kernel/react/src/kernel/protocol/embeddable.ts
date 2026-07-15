@@ -7,7 +7,7 @@ export type EmbeddableDatasets = Record<string, unknown>;
 export type EmbeddableContribution = {
   node: IRChild;
   datasets: EmbeddableDatasets;
-  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用。 */
+  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<CompositeDefinition>;
 };
 
@@ -22,7 +22,7 @@ export type EmbeddableTier2Adapter<TProps = Record<string, unknown>> = {
 export type EmbeddableContributionRecord = {
   namespace: string;
   datasets: EmbeddableDatasets;
-  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用。 */
+  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<CompositeDefinition>;
 };
 
@@ -46,9 +46,9 @@ const asMaybeEmbeddable = (type: unknown): MaybeEmbeddableType | null => {
 export const isEmbeddableMarked = (type: unknown): boolean => asMaybeEmbeddable(type)?.isTier2Embeddable === true;
 
 /**
- * 解析一个元素的可嵌入适配器。
+ * 解析一个元素的可嵌入适配器
  * @description 优先用显式 `adapters` 列表按 displayName 匹配；否则读取组件上的可嵌入静态属性。
- *   组件声明自己可嵌入但缺少 adapter 时会抛出带组件名的错误；普通组件返回 null。
+ *   组件声明自己可嵌入但缺少 adapter 时会抛出带组件名的错误；普通组件返回 null
  */
 export const resolveEmbeddableAdapter = (
   type: unknown,

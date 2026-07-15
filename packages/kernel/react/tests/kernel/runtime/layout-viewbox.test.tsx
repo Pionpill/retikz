@@ -1,7 +1,7 @@
 /**
  * <Layout viewBox> 渲染测试
  * @description Layout 接受 viewBox prop 并注入构造出的 IR 根，使 `<svg viewBox="x y w h">` 用显式视框；
- *   直接传 ir prop 且 IR 自带 viewBox 时尊重 IR 内置值（prop 缺省不覆盖）；prop 与 IR 内置冲突时 prop 优先。
+ *   直接传 ir prop 且 IR 自带 viewBox 时尊重 IR 内置值（prop 缺省不覆盖）；prop 与 IR 内置冲突时 prop 优先
  */
 import type { IRScene } from '@retikz/core';
 

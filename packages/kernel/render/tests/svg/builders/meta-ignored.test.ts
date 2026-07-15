@@ -8,7 +8,7 @@ import { buildPrim } from '../../../src/svg/builders/prim';
 /**
  * meta provenance 对 SVG renderer 不可见：图元带 meta 与不带 meta 产出逐字节一致
  * @description renderer 只读已知字段（id → data-retikz-id、几何 / 样式），不迭代 meta；
- *   故 meta 既不进 attrs、也不改变任何输出。与「meta 不进 DOM」的设计契约对齐。
+ *   故 meta 既不进 attrs、也不改变任何输出。与「meta 不进 DOM」的设计契约对齐
  */
 describe('SVG renderer 忽略 meta', () => {
   it('rect-meta-ignored：带 meta 的 rect 与不带 meta 产出相同 SvgNode（无 meta 派生 attr）', () => {

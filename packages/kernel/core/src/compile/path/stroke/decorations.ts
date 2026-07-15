@@ -9,9 +9,9 @@ import { buildMarkMarkerGroup, markerContextStroke } from './marks';
 import { sampleRoundedCommands } from './rounded-corners';
 import { emitEndpointArrowMark, emitMarkArrowSpec } from './shrink';
 
-/** 端点箭头与中段 marks 分流结果。 */
+/** 端点箭头与中段 marks 分流结果 */
 export type ResolvedPathEndpointDecorations = {
-  /** 起点 / 终点箭头规格与 shrink 信息。 */
+  /** 起点 / 终点箭头规格与 shrink 信息 */
   arrows: {
     arrowStart?: ResolvedArrowEndSpec;
     arrowEnd?: ResolvedArrowEndSpec;
@@ -20,21 +20,21 @@ export type ResolvedPathEndpointDecorations = {
     boundaryOuterInsetStart: number;
     boundaryOuterInsetEnd: number;
   };
-  /** 非端点 marks，稍后按 path 采样点 emit 成 Scene primitive。 */
+  /** 非端点 marks，稍后按 path 采样点 emit 成 Scene primitive */
   inlineMarks: NonNullable<IRPathBase['marks']>;
 };
 
-/** path 端点 mark 解析输入。 */
+/** path 端点 mark 解析输入 */
 export type ResolvePathEndpointDecorationsContext = {
-  /** 已解析 arrow registry。 */
+  /** 已解析 arrow registry */
   resolvedArrows: ResolvedArrowRegistry;
-  /** 坐标取整函数。 */
+  /** 坐标取整函数 */
   round: (n: number) => number;
 };
 
 /**
- * 将 `path.marks` 分流为端点箭头与中段 marks。
- * @description pos=0 / pos=1 的首个 mark 会成为端点箭头；其余 mark 保持为 inline mark。
+ * 将 `path.marks` 分流为端点箭头与中段 marks
+ * @description pos=0 / pos=1 的首个 mark 会成为端点箭头；其余 mark 保持为 inline mark
  */
 export const resolvePathEndpointDecorations = (
   path: IRPathBase,
@@ -68,27 +68,27 @@ export const resolvePathEndpointDecorations = (
   return { arrows, inlineMarks };
 };
 
-/** 中段 mark emit 输入。 */
+/** 中段 mark emit 输入 */
 export type EmitInlineMarkPrimitivesInput = {
-  /** path commands；倒角后 mark 采样需要读取最终 commands。 */
+  /** path commands；倒角后 mark 采样需要读取最终 commands */
   commands: Array<PathCommand>;
-  /** 非端点 marks。 */
+  /** 非端点 marks */
   inlineMarks: NonNullable<IRPathBase['marks']>;
-  /** 每段几何采样器。 */
+  /** 每段几何采样器 */
   segmentSamplers: Array<(t: number) => SegmentSample>;
-  /** commands 是否已经被 roundedCorners 改写。 */
+  /** commands 是否已经被 roundedCorners 改写 */
   roundedCommands: boolean;
-  /** 已解析 arrow registry。 */
+  /** 已解析 arrow registry */
   resolvedArrows: ResolvedArrowRegistry;
-  /** PathPrim 公共样式属性。 */
+  /** PathPrim 公共样式属性 */
   baseProps: ResolvedPathBaseProps;
-  /** 坐标取整函数。 */
+  /** 坐标取整函数 */
   round: (n: number) => number;
 };
 
 /**
- * 将中段 marks 编译成按切线定向的 marker group。
- * @description 未倒角时保持原有按段数均分采样；倒角后按最终 commands 总弧长采样。
+ * 将中段 marks 编译成按切线定向的 marker group
+ * @description 未倒角时保持原有按段数均分采样；倒角后按最终 commands 总弧长采样
  */
 export const emitInlineMarkPrimitives = ({
   commands,
@@ -129,7 +129,7 @@ export const emitInlineMarkPrimitives = ({
   return { primitives, boundsPoints };
 };
 
-/** 端点箭头字段：无箭头时不写 undefined key，保持 Scene 输出纯净。 */
+/** 端点箭头字段：无箭头时不写 undefined key，保持 Scene 输出纯净 */
 export const pathEndpointArrowSpecs = (
   arrows: ResolvedPathEndpointDecorations['arrows'],
 ): { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec } => {

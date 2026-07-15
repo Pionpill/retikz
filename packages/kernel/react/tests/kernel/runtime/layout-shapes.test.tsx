@@ -13,7 +13,7 @@ import { Step } from '../../../src/kernel';
 /**
  * <Layout shapes={...}> 自定义 shape 注入透传
  * @description React 把 shapes prop 透传给 compileToScene 的 CompileOptions.shapes；
- *   IR 里 <Node shape="..."> 仍只写字符串名，定义在此注入。无参形状用 `z.strictObject({})`。
+ *   IR 里 <Node shape="..."> 仍只写字符串名，定义在此注入。无参形状用 `z.strictObject({})`
  */
 const radialShape = (): ShapeDefinition =>
   defineShape({

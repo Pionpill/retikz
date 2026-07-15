@@ -1,8 +1,8 @@
 import type { MarkerFill, MarkerPrimitive } from '../scene';
 
 /**
- * arrow emit 的运行时上下文。
- * @description 提供已解析的颜色、描边粗细和取整函数，供定义生成 marker 几何。
+ * arrow emit 的运行时上下文
+ * @description 提供已解析的颜色、描边粗细和取整函数，供定义生成 marker 几何
  */
 export type ArrowEmitContext = {
   /** 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） */
@@ -16,11 +16,11 @@ export type ArrowEmitContext = {
 };
 
 /**
- * 可注册的 arrow 定义。
- * @description 描述箭头 marker 的尺寸、接触点和几何生成能力；定义本身不进入 IR。
+ * 可注册的 arrow 定义
+ * @description 描述箭头 marker 的尺寸、接触点和几何生成能力；定义本身不进入 IR
  */
 export type ArrowDefinition = {
-  /** arrow 名称，由 IR `arrowDetail.shape` 引用。 */
+  /** arrow 名称，由 IR `arrowDetail.shape` 引用 */
   name: string;
   /**
    * marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10
@@ -28,11 +28,11 @@ export type ArrowDefinition = {
    */
   baseSize?: number;
   /**
-   * 空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点。
+   * 空心标志：true 时由描边表达外轮廓，并按 lineWidth 修正接触点
    * @default false
    */
   hollow?: boolean;
-  /** 线接触点静态 base，决定 path shrink 与 marker refX。 */
+  /** 线接触点静态 base，决定 path shrink 与 marker refX */
   lineContactX: number;
   /**
    * 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0

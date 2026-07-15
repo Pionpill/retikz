@@ -20,7 +20,7 @@ export type DrawProps = {
   strokeWidth?: IRPath['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */
   dashPattern?: IRPath['dashPattern'];
-  /** 描边 dash offset。 */
+  /** 描边 dash offset */
   dashOffset?: IRPath['dashOffset'];
   /** 端点形状（TikZ `line cap`） */
   lineCap?: IRPath['lineCap'];
@@ -61,7 +61,7 @@ export type DrawProps = {
 /**
  * Sugar 组件——展开为等价的 <Path><Step.../></Path> Kernel 子树
  * @description 用 way 数组按顺序声明移动、连线、折角、曲线、闭合、圆弧和边标注；能力与手写 `<Path>` /
- *   `<Step>` 等价，不额外引入新的路径语义。
+ *   `<Step>` 等价，不额外引入新的路径语义
  */
 export const Draw: FC<DrawProps> = props => {
   const {

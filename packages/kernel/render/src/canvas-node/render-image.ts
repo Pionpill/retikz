@@ -78,8 +78,8 @@ const encodeCanvas = async (
 };
 
 /**
- * 将编译后的 Scene 绘制并编码为 Node 图片缓冲区。
- * @description 需要安装可选 peer dependency `@napi-rs/canvas`；输出尺寸与 Scene 布局会在加载该依赖前完成校验。
+ * 将编译后的 Scene 绘制并编码为 Node 图片缓冲区
+ * @description 需要安装可选 peer dependency `@napi-rs/canvas`；输出尺寸与 Scene 布局会在加载该依赖前完成校验
  */
 export const renderSceneToImage = async (scene: Scene, options: RenderSceneToImageOptions): Promise<Buffer> => {
   assertPositiveFinite('width', options.width);

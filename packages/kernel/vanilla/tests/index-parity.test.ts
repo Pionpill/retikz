@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import * as vanilla from '../src';
 
 /**
- * 入口边界：vanilla 只导出自身 runtime / spec，不转手导出 core 能力。
+ * 入口边界：vanilla 只导出自身 runtime / spec，不转手导出 core 能力
  */
 describe('@retikz/vanilla 入口边界', () => {
   it('own-runtime-and-spec：自身公开值挂在命名空间上', () => {

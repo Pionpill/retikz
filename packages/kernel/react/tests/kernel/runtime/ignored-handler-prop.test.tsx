@@ -12,7 +12,7 @@ import { buildIR } from '../../../src/kernel/adapter';
  * 水合：JSX 模式下 `handlers` prop 被忽略（契约）
  * @description <Layout> 的 `handlers` prop 仅在 `ir` prop 模式生效（无 JSX children 可收集时按 id 提供注册表）。
  *   JSX/标记组件模式下事件经组件自身的 `on<Event>` props 收集，错误传入的 `handlers` prop 应被静默忽略、不报错、
- *   也不参与分发。对照组验证 `ir` prop 模式下 `handlers` prop 确实生效，钉死两条路径的分工。
+ *   也不参与分发。对照组验证 `ir` prop 模式下 `handlers` prop 确实生效，钉死两条路径的分工
  */
 
 const SIZE = 200;

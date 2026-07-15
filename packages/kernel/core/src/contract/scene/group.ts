@@ -44,7 +44,7 @@ export type ScaleTransform = {
 
 /**
  * Group transform：结构化变换（3 分支 discriminated union）
- * @description 按数组顺序应用（与 SVG transform 多操作列表语义一致）；角度=度，缩放 y 缺省等比 x，rotate cx/cy 缺省绕原点。每个 kind 有对应 named type export。
+ * @description 按数组顺序应用（与 SVG transform 多操作列表语义一致）；角度=度，缩放 y 缺省等比 x，rotate cx/cy 缺省绕原点。每个 kind 有对应 named type export
  */
 export type Transform = TranslateTransform | RotateTransform | ScaleTransform;
 
@@ -64,9 +64,9 @@ export type GroupPrim = {
    */
   transforms?: Array<Transform>;
   /**
-   * 裁剪资源 id：指向 `Scene.resources` 里某 ClipResource。
+   * 裁剪资源 id：指向 `Scene.resources` 里某 ClipResource
    * @description 有值时该 group 的所有子原语被裁到该资源描述的区域（adapter → `<g clip-path="url(#id)">`）；
-   *   裁剪区坐标在该 group 的局部坐标系（与 children 同帧）。缺省 = 不裁。
+   *   裁剪区坐标在该 group 的局部坐标系（与 children 同帧）。缺省 = 不裁
    * @default 不裁剪
    */
   clipRef?: string;

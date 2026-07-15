@@ -64,7 +64,7 @@ const hasContains = (target: EventTarget): target is Node => typeof (target as P
  *   命中 id 后恒以 `handler(event, buildContext(event, id))` 调用——`context` 永远传入（绝不 undefined）。
  *   `buildContext` 由各 runtime（vanilla / react）提供，携 Scene / renderer / 动画句柄构造富 context；省略时退回
  *   最小 context（id + root，meta / geometry / scene 缺省、animation no-op），现有 `(event) => …` handler 忽略 context 照常。
- *   `renderer` 指明实际后端（缺省 svg）：仅在退回最小 context 时用于如实填 `context.renderer`，Canvas 路径应传 `'canvas'`。
+ *   `renderer` 指明实际后端（缺省 svg）：仅在退回最小 context 时用于如实填 `context.renderer`，Canvas 路径应传 `'canvas'`
  */
 export const createHydrationController = (
   root: EventTarget,

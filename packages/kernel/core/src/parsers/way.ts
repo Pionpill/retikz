@@ -67,7 +67,7 @@ export type WayCubicOp = { cubic: [IRControlPoint, IRControlPoint] };
 export type WayBendOp = {
   bend: 'left' | 'right';
   /**
-   * bend 角度（度）。
+   * bend 角度（度）
    * @default 30
    */
   angle?: number;

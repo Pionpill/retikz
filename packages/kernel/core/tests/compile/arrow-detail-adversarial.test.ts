@@ -16,7 +16,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 /**
  * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何抽主导颜色
  * @description 新契约：视觉输入 color / fill 在 compile 被消费、物化进 marker 几何（实心 fill / 空心 stroke）；
- *   contextStroke / 无 paint → undefined（继承）。
+ *   contextStroke / 无 paint → undefined（继承）
  */
 const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;
@@ -38,7 +38,7 @@ const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined
 
 /**
  * Adversarial / bug hunter 测试
- * @description 攻击箭头视觉配置的边缘 case 与错误路径。
+ * @description 攻击箭头视觉配置的边缘 case 与错误路径
  */
 
 describe('adv 1: 字段名 = arrowDetail（旧字段 arrowShape 不偷偷生效）', () => {

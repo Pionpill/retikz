@@ -4,7 +4,7 @@ import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';
 
-/** 按 transform 失败来源选择 warning code。 */
+/** 按 transform 失败来源选择 warning code */
 export const transformWarnCode = (failed: IRTransform | undefined): CompileWarning['code'] => {
   switch (failed?.kind) {
     case 'offset-translate':
@@ -18,7 +18,7 @@ export const transformWarnCode = (failed: IRTransform | undefined): CompileWarni
   }
 };
 
-/** 格式化重复 id warning。 */
+/** 格式化重复 id warning */
 export const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => {
   const frameNote =
     info.frameDepth === 0

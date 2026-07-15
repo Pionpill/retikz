@@ -22,7 +22,7 @@ export type CoordinateProps = {
 
 /**
  * 占位节点——TikZ `\coordinate (id) at (x, y);` 同义
- * @description 命名一个可引用的点，供后续 path 与其它 node 的 `at.of` 使用；自身不渲染、不参与 viewBox 扩展。
+ * @description 命名一个可引用的点，供后续 path 与其它 node 的 `at.of` 使用；自身不渲染、不参与 viewBox 扩展
  */
 export const Coordinate: FC<CoordinateProps> = () => null;
 Coordinate.displayName = TIKZ_COORDINATE;

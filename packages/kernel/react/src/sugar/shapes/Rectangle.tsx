@@ -20,7 +20,7 @@ export type RectangleProps = PathVisualProps & {
 
 /**
  * Rectangle sugar——展开为 `<Path><Step move(from)><Step rectangle(from,to)></Path>`
- * @description `{ corner1, corner2 }` 透传（任意 Target，直接作 rectangle 的 from/to）；其余形态需算坐标 → 限 literal 笛卡尔。
+ * @description `{ corner1, corner2 }` 透传（任意 Target，直接作 rectangle 的 from/to）；其余形态需算坐标 → 限 literal 笛卡尔
  */
 export const Rectangle: FC<RectangleProps> = props => {
   let from: IRTarget;

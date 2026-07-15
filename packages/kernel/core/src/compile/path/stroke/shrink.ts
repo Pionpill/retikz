@@ -22,44 +22,44 @@ import { arcCommandPointAt, trimArcEnd, trimArcStart } from './arc-shrink';
 /** 已解析 arrow registry：内置 8 + 注入 */
 export type ResolvedArrowRegistry = ReadonlyMap<string, ArrowDefinition>;
 
-/** marker 局部基准边长。 */
+/** marker 局部基准边长 */
 const ARROW_GEOMETRY_BASE_SIZE = 10;
 
-/** compile 内部使用的箭头视觉输入。 */
+/** compile 内部使用的箭头视觉输入 */
 type ResolvedArrowVisual = {
   shape: string;
   /**
-   * 箭头缩放倍率。
+   * 箭头缩放倍率
    * @default 1
    */
   scale?: number;
   /**
-   * 箭头长度。
+   * 箭头长度
    * @default def.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE (fallback 6)
    */
   length?: number;
   /**
-   * 箭头宽度。
+   * 箭头宽度
    * @default def.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE (fallback 6)
    */
   width?: number;
   /**
-   * 箭头主色。
+   * 箭头主色
    * @default 继承 `contextStroke`
    */
   color?: string;
   /**
-   * 实心箭头填充色。
+   * 实心箭头填充色
    * @default color ?? contextStroke
    */
   fill?: string;
   /**
-   * marker 元素不透明度。
+   * marker 元素不透明度
    * @default 继承 `path.opacity`
    */
   opacity?: number;
   /**
-   * 空心箭头局部描边宽度。
+   * 空心箭头局部描边宽度
    * @default ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH (1.5)
    */
   lineWidth?: number;
@@ -69,7 +69,7 @@ type ResolvedArrowVisual = {
 const lookupArrowDef = (shape: string, registry: ResolvedArrowRegistry): ArrowDefinition =>
   providerDefinitionOf(registry, shape, { capability: 'arrow shape', optionName: 'arrows' });
 
-/** 解析端点箭头的视觉输入。 */
+/** 解析端点箭头的视觉输入 */
 const resolveArrowMarkVisual = (mark: IRArrowMark, registry: ResolvedArrowRegistry): ResolvedArrowVisual => {
   const baseShape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const out: ResolvedArrowVisual = { shape: baseShape };
@@ -84,7 +84,7 @@ const resolveArrowMarkVisual = (mark: IRArrowMark, registry: ResolvedArrowRegist
   return out;
 };
 
-/** 校验 arrow definition 的几何字段有效。 */
+/** 校验 arrow definition 的几何字段有效 */
 const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
   if (!Number.isFinite(def.lineContactX)) {
     throw new Error(
@@ -106,7 +106,7 @@ const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
   }
 };
 
-/** 调用 arrow emit，并校验 marker 产物。 */
+/** 调用 arrow emit，并校验 marker 产物 */
 const emitArrowMarkerPrimitives = (
   shape: string,
   def: ArrowDefinition,
@@ -140,7 +140,7 @@ type ResolvedArrowGeometry = {
   resolvedLength: number;
   /** 已解析尖宽 = (width ?? defaultWidth) × scale */
   resolvedWidth: number;
-  /** 节点边界端点需要额外内缩的距离，单位为描边前的 user units。 */
+  /** 节点边界端点需要额外内缩的距离，单位为描边前的 user units */
   boundaryOuterInset: number;
 };
 
@@ -172,11 +172,11 @@ const resolveGeometry = (visual: ResolvedArrowVisual, registry: ResolvedArrowReg
   return { def, baseSize, tipX, contactX, lineWidth, resolvedLength, resolvedWidth, boundaryOuterInset };
 };
 
-/** 计算端点箭头需要的 path 收缩量。 */
+/** 计算端点箭头需要的 path 收缩量 */
 const computeShrink = (geometry: ResolvedArrowGeometry): number =>
   ((geometry.tipX - geometry.contactX) * geometry.resolvedLength) / geometry.baseSize;
 
-/** 构造 ArrowDefinition.emit 的上下文。 */
+/** 构造 ArrowDefinition.emit 的上下文 */
 const buildEmitContext = (
   visual: ResolvedArrowVisual,
   geometry: ResolvedArrowGeometry,
@@ -188,7 +188,7 @@ const buildEmitContext = (
   return { stroke, fill, lineWidth: geometry.lineWidth, round };
 };
 
-/** 把箭头视觉输入物化为 Scene 端点箭头描述。 */
+/** 把箭头视觉输入物化为 Scene 端点箭头描述 */
 const emitArrowEndSpec = (
   visual: ResolvedArrowVisual,
   geometry: ResolvedArrowGeometry,
@@ -208,13 +208,13 @@ const emitArrowEndSpec = (
   return out;
 };
 
-/** 已解析的端点箭头及对应 path 收缩量。 */
+/** 已解析的端点箭头及对应 path 收缩量 */
 export type ResolvedEndpointArrowMark = {
-  /** 已物化的 Scene 端点箭头描述。 */
+  /** 已物化的 Scene 端点箭头描述 */
   spec: ResolvedArrowEndSpec;
-  /** path 本体需要向内收缩的距离（未乘 strokeWidth）。 */
+  /** path 本体需要向内收缩的距离（未乘 strokeWidth） */
   shrink: number;
-  /** auto boundary 端点为了避开空心箭头外缘需要额外内缩的距离。 */
+  /** auto boundary 端点为了避开空心箭头外缘需要额外内缩的距离 */
   boundaryOuterInset: number;
 };
 
@@ -232,7 +232,7 @@ export const emitEndpointArrowMark = (
   };
 };
 
-/** 解析中段 arrow mark 为 marker 描述。 */
+/** 解析中段 arrow mark 为 marker 描述 */
 export const emitMarkArrowSpec = (
   mark: IRArrowMark,
   registry: ResolvedArrowRegistry,
@@ -296,7 +296,7 @@ const precedingMoveIndex = (commands: ReadonlyArray<PathCommand>, commandIndex: 
   return -1;
 };
 
-/** 箭头收缩改写所需上下文。 */
+/** 箭头收缩改写所需上下文 */
 export type ApplyArrowShrinksContext = {
   shrinkStart: number;
   shrinkEnd: number;
@@ -304,7 +304,7 @@ export type ApplyArrowShrinksContext = {
   round: (n: number) => number;
 };
 
-/** 按箭头收缩量改写 path 首尾端点。 */
+/** 按箭头收缩量改写 path 首尾端点 */
 export const applyArrowShrinks = (commands: Array<PathCommand>, context: ApplyArrowShrinksContext): void => {
   const { shrinkStart, shrinkEnd, strokeWidth, round } = context;
   if (shrinkStart !== 0) {

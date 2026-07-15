@@ -39,7 +39,7 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
  * @description 输入会先归一成 Scene，再按「名义显示尺寸」
  *   `output.width` / `output.height`（均为有限数值时）× dpr 开、否则回退内容边界；`renderToCanvas` 再把 Scene 内容 meet-fit
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
- *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全。
+ *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全
  */
 export const mountCanvas = (container: Element, input: RenderInput, options: MountCanvasOptions = {}): CanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
@@ -192,7 +192,7 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
    *   `scale = min(cssWidth/layout.width, cssHeight/layout.height)`；`offset = (cssSize − layout.size·scale)/2`
    *   居中 letterbox；`cssX = offset.x + (sceneX − layout.x)·scale`。此处求逆——读 `canvas.getBoundingClientRect()`
    *   把 client 坐标降到 canvas 局部 CSS 像素，再去 letterbox offset、除 scale、加 layout origin。落在 letterbox
-   *   黑边外的点会得到 layout 区域外坐标，交由 `hitTest` 自然判为无命中（不在此截断）。
+   *   黑边外的点会得到 layout 区域外坐标，交由 `hitTest` 自然判为无命中（不在此截断）
    */
   const clientToScene = (clientX: number, clientY: number): ScenePoint => {
     const { layout } = currentScene;
@@ -212,7 +212,7 @@ export const mountCanvas = (container: Element, input: RenderInput, options: Mou
    * @description canvas 无逐图元 DOM，`locate(event)` = client 坐标经 `clientToScene` 逆 meet-fit 成 Scene 点
    *   （落 letterbox 黑边 → null、不命中），再 `hitTest(currentScene, point, { context2d })` 返回命中图元 id。
    *   `context2d` 用 canvas 自己的 2D context（生产真实；测试 spy 的 harness context 经 `getContext('2d')` 返回）
-   *   作几何重建 + 原生点测的载体。绑定经 `createHydrationController`（根级委托 + enter/leave 合成 + dispose）。
+   *   作几何重建 + 原生点测的载体。绑定经 `createHydrationController`（根级委托 + enter/leave 合成 + dispose）
    */
   const hydrate = (hydrateOptions: HydrateOptions): { dispose: () => void } => {
     const context2d = canvas.getContext('2d') ?? undefined;

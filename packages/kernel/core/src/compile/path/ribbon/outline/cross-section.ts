@@ -21,7 +21,7 @@ export type RibbonCrossSectionInput = {
 
 /**
  * 计算中心线某一点的 ribbon 横截面
- * @description 宽度按 offset 求值；align 决定宽度分配到左右两侧的比例；首尾附近会把切线向端点 direction 平滑过渡。
+ * @description 宽度按 offset 求值；align 决定宽度分配到左右两侧的比例；首尾附近会把切线向端点 direction 平滑过渡
  */
 export const ribbonCrossSection = ({
   sample,
