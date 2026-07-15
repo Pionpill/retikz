@@ -1,0 +1,193 @@
+---
+title: Technical Principles
+description: Understand retikz's design principles, package responsibilities, definition-registry extension pattern, and end-to-end execution flow as a library developer.
+---
+
+This page is an architecture map for library developers. It does not teach individual component APIs; it explains where a capability belongs, how extensions enter the system, and how author input becomes SVG or Canvas output.
+
+<ComponentAlert
+  type="tip"
+  title="Optional while getting started"
+  description="If you only want to draw a figure, continue with Get Started and the component docs. Return when you extend retikz, work with IR directly, or debug compile behavior."
+/>
+
+## The system at a glance
+
+React JSX, Vanilla plain specs, and externally generated IR converge on one JSON contract. `@retikz/core` accepts only IR plus explicitly injected compile capabilities and produces a renderer-agnostic Scene. SVG and Canvas diverge only after that boundary.
+
+<ComponentPreview files="principles-pipeline" size="sm" hideCode />
+
+The main pipeline deliberately establishes four boundaries:
+
+- The **authoring layer** owns authoring ergonomics. It normalizes framework syntax or a plain spec into IR without reimplementing geometry or rendering semantics.
+- **IR** records what should be drawn. It is validated, serializable JSON shared by persistence, AI, and different runtimes.
+- The **core compiler** owns lowering, layout, named references, path resolution, and resource collection.
+- **Scene** records what a renderer should draw. SVG, Canvas, SSR, and interactive runtimes all continue from this boundary.
+
+## Design principles
+
+These principles are capability-placement tests, not slogans. For a new requirement, first decide whether it changes authoring convenience, shared drawing semantics, a high-level domain model, a pluggable compile policy, or backend runtime behavior. Then start from the corresponding source owner.
+
+<ComponentPreview files="principles-placement" size="md" hideCode />
+
+Read the figure as “requirement signal → design owner → source owner.” Each arrow points to the first responsible owner; it does not mean a feature may touch only one file. One capability can need authoring, contract, and runtime wiring, but every layer of semantics must still have one source of truth.
+
+| Decision rule                     | Source owner and responsibility                                                                                                                                                                                                                           | Failure signal                            |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Normalize inputs to IR            | [`builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/adapter/builder.ts)<br />[`normalize.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/vanilla/src/spec/normalize.ts)<br />author input → IR | React / Vanilla<br />output drifts        |
+| Shared semantics live in core     | [`schemas`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/schemas)<br />[`compile`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/compile)<br />define IR · consume IR                                    | adapters / renderers<br />repeat geometry |
+| Lower high-level models first     | [`lower.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/core/src/compile/lower.ts)<br />[`composite`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/contract/composite)<br />expand high-level models           | high-level nodes reach layout             |
+| Built-ins and custom share a path | [`contract`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/contract)<br />[`providers`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/providers)<br />extension contract · built-ins                      | custom capabilities diagnose differently  |
+| Scene excludes backend objects    | [`scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/core/src/contract/scene/scene.ts)<br />[`render`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/render/src)<br />Scene · backend boundary                        | DOM / Canvas state enters core            |
+| Move pure helpers down            | [`shared`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/shared)<br />common types · pure geometry                                                                                                                                | imports schemas / compile upward          |
+| Parsers stop at IR                | [`parsers`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/parsers)<br />string / Sugar → IR                                                                                                                                       | parser reads registry / runtime           |
+| Root only exports public API      | [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/kernel/core/src/index.ts)<br />stable owner barrels                                                                                                                                    | root barrel contains behavior             |
+
+### Shared contracts
+
+React's `buildIRWithContributions` and Vanilla's `normalizeFigureSpec` both normalize author input into IR. `compileToScene` accepts only that IR plus call-local `CompileOptions`, then produces a Scene. The same input can therefore be persisted, tested outside a framework, or sent to different renderers.
+
+IR records what should be drawn, so it contains only validated, serializable data. Scene records laid-out primitives, so it contains only primitives, layout, resources, and animations that every backend can interpret. Callbacks, DOM nodes, and Canvas state remain in adapters or runtimes.
+
+The failure test is concrete: if React and Vanilla need separate layout implementations for the same capability, or Scene needs DOM or Canvas objects to express it, the capability belongs to the wrong owner.
+
+### Capability ownership
+
+Start by asking whether core can already express the capability. Use Sugar when only the authoring parameters become friendlier and can expand synchronously to existing Kernel. Use a composite when a high-level domain structure must survive until lowering. Introduce an `XxxDefinition` and provider registry when geometry or compile policy must be replaceable.
+
+`createCompileContext` lowers composites first, then resolves built-in and caller-supplied definitions into compile-local registries. Every authoring surface then shares the same layout, anchor, path, and resource assembly instead of copying them into adapters or renderers.
+
+A practical review signal is duplicated shape, anchor, or path behavior in React, Vanilla, and a renderer. Extend the core contract first, then remove the upper-layer forks.
+
+### Runtime boundaries
+
+React's `Layout.tsx` owns component lifecycle, compile options, and hydration wiring. Vanilla's `to-scene.ts` owns input normalization, compilation, and mount preparation. SVG and Canvas backends consume Scene. These layers may own host capabilities, but they do not redefine IR semantics.
+
+Removing React must not change geometry, and adding a renderer must not require changes to the author DSL or core layout algorithms. Either symptom means shared semantics likely leaked into an adapter or backend.
+
+## The definition-registry extension pattern
+
+“Define-registry” is not a global registration API. It is a recurring extension pattern: contracts describe a capability, `defineXxx` preserves type safety at the definition site, provider collections supply built-in and custom items, and compile looks up a key in a registry created for that invocation.
+
+<ComponentPreview files="principles-registry" size="sm" hideCode />
+
+The full process has five steps:
+
+1. **Declare the contract**: `XxxDefinitionInput` describes strongly typed author input, while the erased `XxxDefinition` is the uniform shape stored by a registry.
+2. **Call `defineXxx`**: validate generic, schema, and callback signatures at the definition site and centralize any required type erasure. It does not mutate process-global state.
+3. **Collect definitions**: built-ins live in `BUILTIN_XXX`; callers inject custom items through `CompileOptions`. Both use the same definition type.
+4. **Resolve the registry**: `resolveXxxRegistry` inserts built-ins first, then custom items, and returns a compile-local `ReadonlyMap`. Empty or duplicate keys fail immediately; a custom item cannot silently override a built-in.
+5. **Consume during compilation**: IR supplies a lookup key through `name`, `type`, or `kind`. The compiler retrieves the definition, validates its payload, then calls its geometry, lowering, or emit callback.
+
+The main extension families follow the same structure:
+
+| Capability           | Selection in IR         | Injection point                              |
+| -------------------- | ----------------------- | -------------------------------------------- |
+| Shape                | `Node.shape`            | `CompileOptions.shapes`                      |
+| Boundary             | `Node.boundary`         | `CompileOptions.boundaries`                  |
+| Clip                 | `Scope.clip`            | `CompileOptions.clips`                       |
+| Arrow                | path arrow mark         | `CompileOptions.arrows`                      |
+| Pattern              | pattern paint           | `CompileOptions.patterns`                    |
+| Path generator       | `Step.kind='generator'` | `CompileOptions.`<br />`pathGenerators`      |
+| Path kind            | `Path.kind`             | `CompileOptions.pathKinds`                   |
+| Ribbon width profile | ribbon options          | `CompileOptions.`<br />`ribbonWidthProfiles` |
+| Composite            | `namespace + type`      | `CompileOptions.composites`                  |
+
+A missing key for a regular provider fails loudly and reports the registered names. An unregistered composite is the exception: normal compilation emits a warning, skips that high-level node, and continues with the rest of the figure. Calling `lowerIRToKernel` directly promotes the same condition to an error.
+
+## End-to-end execution
+
+`compileToScene` does not traverse IR and immediately emit SVG. It first lowers high-level capabilities to Kernel, constructs provider and runtime context, resolves layout and references in phases, and only then assembles a Scene.
+
+<ComponentPreview files="principles-compile" size="sm" hideCode />
+
+### 1. Author input becomes IR
+
+React's `builder.ts` statically traverses children. Kernel components map directly to IR, Sugar function components expand synchronously and are traversed again, and an embeddable Tier 2 adapter contributes a composite node plus its definition. Vanilla's `normalize.ts` converts a plain spec and adapter output into the same IR.
+
+Final text measurement, anchor resolution, and renderer output do not happen here. IR can be persisted, sent to an AI system, patched with JSON Patch, or passed to another runtime at this boundary.
+
+### 2. Create compile context
+
+`createCompileContext` resolves `CompileOptions` into a compile-local context: text measurement, precision, default distances, warning dispatch, TeX lowering, and every provider registry.
+
+Without implicit global registration, separate compilations can inject different extensions without contaminating one another. This also makes SSR, tests, and parallel rendering easier to keep deterministic.
+
+### 3. Composite lowering
+
+A Tier 2 node with `namespace + type` first looks up its composite definition, validates through its schema, and calls `expand`. Expansion continues recursively until only Tier 1 Kernel IR—Node, Path, Coordinate, and Scope—remains. Lowering must finish before layout and anchor resolution.
+
+### 4. Nodes, scopes, and namespaces
+
+The compiler first resolves the position, text, shape, boundary, transforms, and inherited style of Node, Coordinate, and Scope entities. It computes layouts and registers every named result in a namespace stack. A named Scope layout is replaced after its child bounding box becomes available.
+
+Those layouts are the shared basis for relative positioning, anchor lookup, and automatic viewBox calculation.
+
+### 5. Resolve paths later
+
+During traversal, a Path reserves its output position and enters a pending queue. Once referenceable layouts are available, the compiler resolves `Path.kind`, step targets, arrows, generators, and ribbon definitions into primitives. This allows a path to reference a node declared later in the same scope while preserving drawing order.
+
+### 6. Assemble Scene and start runtime
+
+Core combines primitives, layout bounds, paint/clip resources, and root animations. An explicit `viewBox` wins; otherwise Scene layout is calculated from collected bounds and padding. Output is stably sorted by `zIndex`.
+
+The SVG backend converts Scene into a neutral SVG descriptor tree before serializing it or handing it to React. The Canvas backend draws Scene directly. Hydration reconnects runtime handlers through `data-retikz-id` or hit testing, while the animation runtime drives WAAPI or a Canvas clock from the same Scene animation descriptions.
+
+## Packages and source ownership
+
+Arrows point from capability providers to consumers. Solid lines show the main construction path; dashed lines show additional direct dependencies.
+
+<ComponentPreview files="principles-packages" size="sm" hideCode />
+
+| Package           | Primary responsibility                                                   |
+| ----------------- | ------------------------------------------------------------------------ |
+| `@retikz/math`    | Dependency-free geometry, curves, matrices, and numeric algorithms       |
+| `@retikz/core`    | IR/schema, Scene contracts, provider contracts, and compilation          |
+| `@retikz/render`  | SVG, Canvas, hydration, and animation runtimes                           |
+| `@retikz/react`   | Kernel/Sugar JSX adapter, `<Layout>` runtime, and React hydration wiring |
+| `@retikz/vanilla` | Plain specs, IR/Scene input, SVG/Canvas mounting, and SSR                |
+| `@retikz/tex`     | MathJax integration and LaTeX lowering to renderer-neutral glyphs        |
+
+When reading source, start from the owner directory instead of guessing downward from a large entry file:
+
+| Owner                                                                                                           | Responsibility                                             | Key entry                                        |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------ |
+| [`core/schemas`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/schemas)                 | Zod source of truth for IR and derived types               | `schemas/index.ts`                               |
+| [`core/contract`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/contract)               | Scene and `XxxDefinition` contracts                        | `contract/index.ts`                              |
+| [`core/providers`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/providers)             | Built-in definitions, registry merge, and lookup           | `providers/registry.ts`                          |
+| [`core/compile`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/core/src/compile)                 | Lowering, layout, reference resolution, and Scene assembly | `compile.ts` · `orchestration/`                  |
+| [`react/kernel/adapter`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react/src/kernel/adapter) | Kernel/Sugar JSX → IR                                      | `builder.ts`                                     |
+| [`react/kernel/runtime`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/react/src/kernel/runtime) | Compilation, renderer selection, and hydration wiring      | `Layout.tsx`                                     |
+| [`vanilla/spec`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/vanilla/src/spec)                 | Plain-spec types and normalization                         | `normalize.ts`                                   |
+| [`vanilla/runtime`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/vanilla/src/runtime)           | IR/Scene compilation, mount, hydrate, and SSR              | `to-scene.ts` · `mount.ts`                       |
+| [`render`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/render/src)                             | Independent backend and runtime owners                     | `svg/` · `canvas/` · `hydration/` · `animation/` |
+| [`tex`](https://github.com/Pionpill/retikz/tree/main/packages/kernel/tex/src)                                   | Formula parsing, SVG glyph extraction, and lowering        | `lower/lower-tex.ts`                             |
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/concepts/design/layers">
+    <span className="font-semibold">Layers</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Explore the boundaries between DSL, IR, Scene, and renderers
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/design/composite">
+    <span className="font-semibold">Composite</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Learn Tier 2 nodes, schemas, and recursive lowering
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema">
+    <span className="font-semibold">Schema</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Look up the current IR schema and field contracts
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/about/developer/source-code-guide">
+    <span className="font-semibold">Source Code Guide</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Continue with repository structure, development commands, and contribution entry points
+    </span>
+  </LinkedCard>
+</div>

@@ -5,6 +5,7 @@ export const kernelSection: Array<Section> = [
     pages: [
       { id: 'introduction', label: 'kernel.introduction' },
       { id: 'get-start', label: 'kernel.getStart' },
+      { id: 'principles', label: 'kernel.principles' },
     ],
   },
   {
