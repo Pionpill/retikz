@@ -23,12 +23,12 @@ type DiamondMark = z.infer<typeof DiamondMarkSchema>;
 const diamondMark = defineMark<DiamondMark>({
   schema: DiamondMarkSchema,
   collectFields: (mark, fields) => {
-    fields.addChannel(mark.encoding?.x);
-    fields.addChannel(mark.encoding?.y);
+    fields.addChannel(mark.encoding.x);
+    fields.addChannel(mark.encoding.y);
   },
   lower: (mark, rows, frame) => {
-    const xField = mark.encoding?.x?.field;
-    const yField = mark.encoding?.y?.field;
+    const xField = mark.encoding.x?.field;
+    const yField = mark.encoding.y?.field;
     if (xField === undefined || yField === undefined) return null;
     const nodes: Array<IRNode> = [];
     for (const row of rows) {
