@@ -77,7 +77,7 @@ const Demo: FC = () => (
     <Draw
       way={[
         'layout',
-        { label: { text: 'anchors', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
+        { label: { text: 'anchors', side: 'bottom', sloped: true, textColor: 'gray', font: { size: 12 } } },
         'paths',
       ]}
       arrow="->"

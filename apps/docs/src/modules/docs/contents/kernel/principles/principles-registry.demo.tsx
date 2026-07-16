@@ -4,10 +4,10 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** 技术原理页的 define-registry 闭环图 */
 const Demo: FC = () => (
-  <Layout width={720} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={780} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="input"
-      position={[-290, 0]}
+      position={[-310, 0]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.1}
@@ -18,7 +18,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="define"
-      position={[-150, 0]}
+      position={[-185, 0]}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
@@ -29,7 +29,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="definitions"
-      position={[-5, 0]}
+      position={[-60, 0]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -40,7 +40,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="registry"
-      position={[150, 0]}
+      position={[125, 0]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -51,7 +51,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="consumer"
-      position={[295, 0]}
+      position={[315, 0]}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
@@ -62,7 +62,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="ir-key"
-      position={[295, -72]}
+      position={[315, -72]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.1}
