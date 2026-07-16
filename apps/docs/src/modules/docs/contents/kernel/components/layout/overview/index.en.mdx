@@ -142,25 +142,94 @@ The animation Provider is a host-level override: the nearest `AnimationModeProvi
   description="Revisit when you hit edge cases or want to understand how `<Layout>` handles styles / viewBox / backends."
 />
 
-### Implicit root Scope wrapping
+This section zooms in on the input, viewport, and host-policy decisions owned by `<Layout>`. See [Technical Principles](/kernel/principles) for the complete JSX → IR → Scene pipeline.
 
-The implicit root `<Scope>` is added only when at least one style prop carries an actual style directive; with no style prop (or only empty-object defaults like `nodeDefault={{}}`) the IR shape stays unchanged and no empty scope is introduced. When combined with the `ir` prop, the style props are ignored (a dev-mode console warning fires) — `ir` is already a complete IR, so put root styles in the IR's own root `<Scope>` node.
+### How the two inputs converge
 
-### viewBox override & padding
+Both `children` and `ir` end as the same JSON IR before core compiles them. Only the work before IR differs: the JSX branch walks the component tree, while the `ir` branch adopts an existing contract directly.
 
-When set, `viewBox` overrides the auto-computed range, ignores padding, and is injected into the constructed IR root (`ir.viewBox`). When passing an `ir` prop whose IR already carries a viewBox, the prop wins and the IR value is used only if the prop is omitted. viewBox is orthogonal to `width` / `height` (render size).
+<ComponentPreview files="layout-input-flow" size="md" hideCode />
 
-### Render backend fallback
+The JSX branch adds a root `<Scope>` only when a style prop carries a real directive; empty defaults leave the IR unchanged. With direct `ir` input, figure-level style props are ignored and produce a development warning because the IR already owns its complete root semantics.
 
-When the `renderer` prop is omitted, resolution follows **explicit `renderer` prop > context > `'svg'`**, where context comes from the nearest `RendererModeProvider`. A `<Layout>` with an explicit `renderer` is unaffected by the Provider.
+<SourceLinks
+  sources={[
+    {
+      label: 'input normalization',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 399,
+      endLine: 455,
+    },
+    {
+      label: 'on-demand root Scope wrapping',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 653,
+      endLine: 695,
+    },
+  ]}
+/>
 
-### Animation mode priority
+### How the viewport is chosen
 
-Animation resolves in this order: **`snapshotAt` > nearest `AnimationModeProvider` > `animate` > system preference**. Unlike the render-backend Provider, the animation Provider exists to let a host override an entire preview tree, so a descendant's explicit `animate` prop cannot override it.
+The upper track resolves the internal coordinate range: an explicit `viewBox` prop wins, then an IR-owned `viewBox`, then content bounds plus padding. The lower `width` / `height` track controls only the CSS display size and never participates in the internal coordinate calculation.
 
-### Clipped / empty-space troubleshooting
+<ComponentPreview files="layout-viewbox-resolution" size="sm" hideCode />
 
-If a diagram looks clipped or has too much empty space, inspect **View Code → IR** first: the usual causes are internal coordinates far away from visible primitives, invisible coordinates that do not extend bounds, or explicit coordinates without a visible boundary around them.
+If a figure is clipped or has too much empty space, inspect **View Code → IR** first. An explicit viewBox may be smaller than visible primitives, while automatic layout may be expanded by visible bounds far from the subject. A coordinate without a visible boundary does not extend the automatic range by itself.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'viewBox injection into IR',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 420,
+      endLine: 429,
+    },
+    {
+      label: 'explicit versus automatic layout',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 22,
+      endLine: 37,
+    },
+    {
+      label: 'content bounds and padding',
+      path: 'packages/kernel/core/src/compile/scene/layout.ts',
+      startLine: 25,
+      endLine: 33,
+    },
+  ]}
+/>
+
+### How host policies fall back
+
+The numbers show lookup order. Resolution moves downward only when the current item is absent and stops at the first effective value. The left column is **`renderer` prop > nearest `RendererModeProvider` > `'svg'`**; the right column is **`snapshotAt` > nearest `AnimationModeProvider` > `animate` > system preference**.
+
+<ComponentPreview files="layout-runtime-priority" size="lg" hideCode />
+
+The renderer Provider fills only an omitted renderer, so an explicit descendant prop still wins. The animation Provider intentionally controls the entire subtree and overrides descendant `animate` props. Once `snapshotAt` is present, both SVG and Canvas emit only the static frame at that time.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'renderer and animation mode resolution',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 350,
+      endLine: 370,
+    },
+    {
+      label: 'backend branching and snapshots',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 479,
+      endLine: 520,
+    },
+    {
+      label: 'system motion fallback',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 132,
+      endLine: 133,
+    },
+  ]}
+/>
 
 ## API Reference
 

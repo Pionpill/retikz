@@ -10,6 +10,8 @@
     "contentPlaceholder": "{{title}} — this page does not have body content yet.",
     "github": "GitHub",
     "githubRepo": "Pionpill/retikz",
+    "sourceCode": "Source",
+    "sourceCodeLabel": "Source:",
     "switchLanguage": "Switch language",
     "themeLight": "Light theme",
     "themeDark": "Dark theme",

@@ -142,25 +142,94 @@ import { AnimationModeProvider } from '@retikz/react';
   description="遇到边界 case 或想理解 `<Layout>` 在样式 / viewBox / 后端上的取舍时再回来读。"
 />
 
-### 隐式根 Scope 的包裹规则
+本节只放大 `<Layout>` 自己负责的输入归一、视框与宿主策略；完整的 JSX → IR → Scene 编译管线见[技术原理](/kernel/principles)。
 
-仅当至少一个样式 prop 真正携带样式指令时，才把 children 包进隐式根 `<Scope>`；无样式 prop（或只传空对象 default 如 `nodeDefault={{}}`）时 IR 形态保持不变、不引入空 scope。与 `ir` prop 并用时样式 props 被忽略（dev 模式发 console 警告）——`ir` 已是完整 IR，根样式请写进 IR 里的根 `<Scope>` 节点。
+### 两种输入如何汇合
 
-### viewBox 覆盖与 padding
+`children` 与 `ir` 最终都会变成同一份 JSON IR，再交给 core 编译。区别只发生在进入 IR 之前：JSX 分支需要遍历组件树，`ir` 分支直接采用已有契约。
 
-有 `viewBox` 则覆盖自动算的范围、忽略 padding，并注入构造出的 IR 根（`ir.viewBox`）。直接传 `ir` prop 且 IR 自带 viewBox 时，prop 优先、prop 缺省才用 IR 内置值。viewBox 与 `width` / `height`（渲染尺寸）正交。
+<ComponentPreview files="layout-input-flow" size="md" hideCode />
 
-### 渲染后端回退优先级
+JSX 分支仅在样式 prop 真正携带指令时包一层根 `<Scope>`；空 default 不改变 IR。直接传 `ir` 时，全图样式 props 被忽略并在开发模式提示，因为这份 IR 已经包含完整根语义。
 
-缺省 `renderer` prop 时按 **显式 `renderer` prop > context > `'svg'`** 回退，context 取自最近的 `RendererModeProvider`。写了 `renderer` 的 `<Layout>` 不受 Provider 影响。
+<SourceLinks
+  sources={[
+    {
+      label: '输入归一',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 399,
+      endLine: 455,
+    },
+    {
+      label: '根 Scope 按需包裹',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 653,
+      endLine: 695,
+    },
+  ]}
+/>
 
-### 动画模式优先级
+### 视框如何确定
 
-动画按 **`snapshotAt` > 最近的 `AnimationModeProvider` > `animate` > 系统偏好** 解析。与渲染后端 Provider 不同，动画 Provider 的用途就是让宿主统一覆盖整棵预览树，因此后代显式 `animate` 不会反向覆盖它。
+上半部分决定内部坐标范围：显式 `viewBox` prop 优先，其次是 IR 自带的 `viewBox`，两者都没有时才使用内容边界加 padding。下半部分的 `width` / `height` 只控制页面显示尺寸，不参与内部坐标计算。
 
-### 视框被裁 / 留白排查
+<ComponentPreview files="layout-viewbox-resolution" size="sm" hideCode />
 
-图形看起来被裁掉或留白过多时，先看 **View Code → IR** 里的节点坐标和 path bounds：通常是内部坐标离可见图元太远、只定义了不可见 coordinate，或用了显式坐标但没有对应的可见边界。
+图形被裁或留白过多时，先看 **View Code → IR**：显式 viewBox 可能小于可见图元，自动模式则可能被远离主体的可见边界拉大。只有 coordinate 而没有可见边界时，它不会单独扩展自动范围。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'viewBox 注入 IR',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 420,
+      endLine: 429,
+    },
+    {
+      label: '显式与自动 layout 决策',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 22,
+      endLine: 37,
+    },
+    {
+      label: '内容边界与 padding',
+      path: 'packages/kernel/core/src/compile/scene/layout.ts',
+      startLine: 25,
+      endLine: 33,
+    },
+  ]}
+/>
+
+### 宿主策略如何回退
+
+图中数字就是查找顺序；只有当前项未提供时才继续向下，命中第一个有效值即停止。左列是 **`renderer` prop > 最近的 `RendererModeProvider` > `'svg'`**；右列是 **`snapshotAt` > 最近的 `AnimationModeProvider` > `animate` > 系统偏好**。
+
+<ComponentPreview files="layout-runtime-priority" size="lg" hideCode />
+
+渲染 Provider 只补充缺省的 renderer，后代显式 prop 仍可覆盖；动画 Provider 则用于宿主统一控制整棵树，会覆盖后代 `animate`。一旦传入 `snapshotAt`，SVG 与 Canvas 都只输出指定时刻的静态帧。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'renderer 与动画模式解析',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 350,
+      endLine: 370,
+    },
+    {
+      label: '后端分流与静态截帧',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 479,
+      endLine: 520,
+    },
+    {
+      label: '系统动画偏好回退',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 132,
+      endLine: 133,
+    },
+  ]}
+/>
 
 ## API 参考
 

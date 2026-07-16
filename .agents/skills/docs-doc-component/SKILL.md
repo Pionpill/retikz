@@ -138,6 +138,8 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 
 简单 sugar（`<Draw>` / `<EdgeLabel>`）或纯样式 prop 组件**不需要**本节——它们没有底层 compile 行为，硬写会变成「为了凑节而写」。
 
+写本节前先读实现入口与相关测试，确认真实的行为、优先级和职责边界，再提炼成用户可观察的机制。正文不能只堆文字，也不能把内部函数名、类型名或调用顺序当作解释；它们只用于核对结论和提供源码入口。
+
 ### 子节组织
 
 - 子节用 `###` 平铺；每个子节单独一个主题（如 scope 的「命名空间与隔离」/「重复 id 处理」/「scope.id synthetic bbox」/「transforms 展平到 Scene」/「scope 下相对定位投影」）
@@ -166,11 +168,17 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 仍服从 principle 的「文字精简、表格 / 列表 / 代码块优先」规则。本节常用的几种表达：
 
 - **概念性插图**：`<ComponentPreview hideCode>` 当叙述图，**用 retikz 自绘逻辑图**，别引第三方截图 / Mermaid / draw.io
-  - **风格：学术 + 简单 + Node 无 border**（即 `stroke="none"`，参 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)）—— 让节点退到背景、把视觉焦点留给关系线 / 标签 / 区域分组；与"演示用法"类 demo 的视觉口径区分（用法 demo 的 Node 保留默认外框，机制图的 Node 是文字锚点）
+  - 图只解释当前子节的一个局部机制，在组件职责边界停止；完整 JSX → IR → Scene 管线链接 `/kernel/principles`，不要在组件页重复绘制
+  - 节点是否有框按 [`docs-figure-contract`](../docs-figure-contract/SKILL.md) 的语义规则选择，整图保持同一种边界模式；需要解释实现逻辑时继续读 [`docs-figure-logic`](../docs-figure-logic/SKILL.md)
   - 多用箭头 / 虚线 / 浅色区域分块表达"流程 / 包含 / 隔离 / 投影"等抽象语义；不要追求像素级精确，节点位置以"读懂关系"为准
+- **图文衔接**：图前用一两句说明观察重点，图后说明该机制带来的用户可见结果、边界或排查方法；不能只放一张无上下文的图
 - **边界 case demo**：`<ComponentPreview>`（带源码）演示「这样写会被拒 / 这样写才能工作」
 - **机制表**：3 列以内说清 `输入 → compile 行为 → 用户可见效果`
 - **`<Comparison target="tikz">`**：对照 TikZ pgf 同机制的实现可以提一下，但只在差异有教学价值时；不为对照而对照
+- **源码入口**：每个需要源码佐证的子节，在行为解释、图示和用户可见结论之后，用 `<SourceLinks sources={[{ label, path, startLine?, endLine? }]} />` 收尾
+  - `sources` 只列直接实现入口与关键决策分支；`label` 用当前语言概括机制，不写文件名
+  - `path` 写仓库相对路径，行号范围只覆盖支撑当前结论的实现；完成前确认文件存在、行号范围不得超出文件、代码仍能支撑正文结论
+  - 组件统一生成 GitHub URL 与双语标题；源码入口只用于延伸核对，不能替代行为解释，也不要手写 `<small>`、完整 GitHub URL 或本地文件路径
 
 ### 与 API Reference 的边界
 
@@ -197,5 +205,7 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 - **简单组件硬写 How it works** —— 没有底层 compile 行为的组件（纯 sugar / 纯样式 prop 组件）不需要本节；为了"完整性"凑节会让节内只剩重复 API 表的内容
 - **How it works 段塞 API 表** —— 字段表归 API Reference；本节讲机制不讲字段；要交叉引用时 API 表「描述」列写"详见 § 技术原理"指过去
 - **How it works 段写成"我们的实现细节"** —— 站在**用户能观察到的行为**写（"同 id 多次声明时后定义覆盖前定义"），不是站在内部数据结构写（"NameStack 用栈式 frame 管理"）；内部数据结构留给 AGENTS / ADR
+- **How it works 只写文字或只堆源码名** —— 从实现与测试提炼用户可观察机制；关系、优先级或流程适合画图时用叙述性插图，图前后补观察重点和结果
+- **源码链接替代机制解释** —— 正文先讲清行为，段末再用 `<SourceLinks>` 给次要层级的源码入口；不要手写 `<small>`、完整 GitHub URL 或本地文件路径
 - **中英标题不一致** —— 中文必须用「技术原理」，英文必须用「How it works」；不要写「原理」/「原理说明」/「Implementation」/「Internals」等变体
 - **概念性插图忘开 `hideCode`** —— How it works 里的叙述性插图（架构图 / 概念示意）必须 `<ComponentPreview hideCode>`；演示边界 case 的 demo 才保留源码

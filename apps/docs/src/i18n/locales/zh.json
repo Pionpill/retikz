@@ -10,6 +10,8 @@
     "contentPlaceholder": "{{title}} —— 该文档暂未提供正文。",
     "github": "GitHub",
     "githubRepo": "Pionpill/retikz",
+    "sourceCode": "源码入口",
+    "sourceCodeLabel": "源码入口：",
     "switchLanguage": "切换语言",
     "themeLight": "浅色主题",
     "themeDark": "深色主题",
