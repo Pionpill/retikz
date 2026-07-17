@@ -165,65 +165,6 @@ A scope `labelDefault` gives a whole group of labels a shared default (see [Scop
 
 A numeric form like `position={0.3}` precisely places the label along the segment. **Values outside `[0, 1]` are rejected at schema validation, not clamped at compile time** (`position={-0.1}` / `position={1.2}` fail IR validation).
 
-#### Geometric meaning of t per step kind
-
-t is normalized along the whole segment; each kind has its own parametrization:
-
-| Step kind             | Parametrization                                                                             | t=0.25                     | t=0.5                                              | t=0.75                      |
-| --------------------- | ------------------------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------- | --------------------------- |
-| `'line'`              | Normalized arc length                                                                       | 1/4 in                     | Midpoint                                           | 3/4 in                      |
-| `'fold'` (N=2)        | Each leg gets `1/N` of t — the corner is always at `t = j/N`, **independent of leg length** | Leg-1 midpoint             | **Corner**                                         | Leg-2 midpoint              |
-| `'curve'` / `'cubic'` | Bezier parameter t (**not arc length**)                                                     | Bezier t=0.25              | Bezier t=0.5 (usually **not** the visual midpoint) | Bezier t=0.75               |
-| `'bend'`              | Lowered to cubic, then Bezier t                                                             | Same as cubic              | Same as cubic                                      | Same as cubic               |
-| `'arc'`               | t maps linearly across `startAngle..endAngle` (degrees)                                     | Quarter of the angle sweep | Mid angle                                          | Three-quarters of the sweep |
-| `'circlePath'`        | Full circle t∈[0, 1]: t=0 at angle 0 (+x), CCW growth                                       | 90° (visually down)        | 180° (−x)                                          | 270° (visually up)          |
-| `'ellipsePath'`       | Same as circlePath: t=0 at angle 0, CCW growth                                              | Ellipse at 90°             | Ellipse at 180° (**not** arc-length midpoint)      | Ellipse at 270°             |
-
-One set of t markers per kind below (`t=0.25` vs `midway`), confirming the geometry in the table above:
-
-**Line**
-
-<ComponentPreview files="edge-label-on-line" size="md" />
-
-**Fold**
-
-For fold, t is split by intermediate points rather than weighted by leg length; `A -| B` below shows keyword positions, and `A |- B` shows numeric positions.
-
-<ComponentPreview files="edge-label-on-fold" size="md" />
-
-**Quadratic Bezier (curve)**
-
-<ComponentPreview files="edge-label-on-curve" size="sm" />
-
-**Cubic Bezier (cubic)**
-
-<ComponentPreview files="edge-label-on-cubic" size="sm" />
-
-**Bend**
-
-<ComponentPreview files="edge-label-on-bend" size="sm" />
-
-**Arc**
-
-<ComponentPreview files="edge-label-on-arc" />
-
-**Circle (circlePath)**
-
-<ComponentPreview files="edge-label-on-circle" size="lg" />
-
-**Ellipse (ellipsePath)**
-
-<ComponentPreview files="edge-label-on-ellipse" size="sm" />
-
-<Comparison target="tikz" title="Step Label Syntax">
-
-| retikz                             | TikZ mapping                            |
-| ---------------------------------- | --------------------------------------- |
-| `label={{ text, position, side }}` | `(a) -- node[midway, above] {text} (b)` |
-| numeric `position: t`              | `pos=<float>`                           |
-
-</Comparison>
-
 ### Styling
 
 `<Step>` itself has no stroke-related visual props — styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `dashPattern` / `dashOffset`:
@@ -241,6 +182,134 @@ For fold, t is split by intermediate points rather than weighted by leg length; 
 | `kind="rectangle"`                        | `(a) rectangle (b)`                |
 
 </Comparison>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when the first step does not draw, a relative target starts somewhere unexpected, or a label misses the visual midpoint."
+/>
+
+### From markers to an ordered Step sequence
+
+`<Step>` is a marker component that returns `null`; it creates no DOM or graphic by itself. Its parent `<Path>` collects these markers in JSX order and normalizes string targets, a missing `kind`, and `<EdgeLabel>` children into serializable `IRStep` values. An explicit `label` prop wins over the child form.
+
+Except for a single self-contained `rectangle`, a Path needs at least two Steps. If the first Step is not `move`, the React adapter converts it to `move`: it keeps `to` when available and falls back to `[0, 0]` otherwise. A leading `line` therefore positions the cursor instead of drawing that line.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Step marker component',
+      path: 'packages/kernel/react/src/kernel/components/Step.tsx',
+      startLine: 235,
+      endLine: 240,
+    },
+    {
+      label: 'Path Step collection and label precedence',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 294,
+      endLine: 367,
+    },
+    {
+      label: 'First-step and minimum-sequence normalization',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 525,
+      endLine: 539,
+    },
+  ]}
+/>
+
+### Cursor-driven geometry compilation
+
+Once core compilation begins for the default `kind="stroke"`, Steps do not render independently. The compiler first normalizes relative targets into the current scope coordinates, then advances the cursor in declaration order, resolves node references and boundary connections, and finally lowers each `kind` into shared path commands and edge-label geometry:
+
+<ComponentPreview files="step-compile-flow" size="xs" hideCode />
+
+| Step family                                                      | Compile behavior                                                                   | Observable result                                                                                  |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `move` / `cycle`                                                 | Maintain the cursor and latest subpath start                                       | `move` draws nothing; `cycle` closes to the latest `move`                                          |
+| `line` / `curve` / `cubic`<br />`fold` / `bend`                  | Resolve both targets, clip node boundaries,<br />then emit line or Bezier commands | Node ids attach to their borders; `fold` / `bend` still become ordinary path segments              |
+| `smooth` / `generator`<br />`arc` / `circlePath` / `ellipsePath` | Generate path commands and record the actual pen position afterward                | The next segment continues from the generated result; full circles / ellipses return to the center |
+| `rectangle`                                                      | Resolve `from` / `to` independently of a preceding cursor                          | It may be the only Step in a Path                                                                  |
+
+This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry compiler. A renderer consumes the lowered commands and does not need to understand all thirteen Step forms.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Relative-target normalization',
+      path: 'packages/kernel/core/src/compile/path/host/relative.ts',
+      startLine: 11,
+      endLine: 108,
+    },
+    {
+      label: 'Target normalization and the per-Step compile loop',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 54,
+      endLine: 147,
+    },
+    {
+      label: 'Geometry lowering for ordinary segment Steps',
+      path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
+      startLine: 41,
+      endLine: 125,
+    },
+    {
+      label: 'Geometry lowering for generator, cycle, and rectangle Steps',
+      path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
+      startLine: 85,
+      endLine: 220,
+    },
+    {
+      label: 'Geometry lowering for arcs, circles, ellipses, and smooth',
+      path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
+      startLine: 223,
+      endLine: 445,
+    },
+  ]}
+/>
+
+### Geometric meaning of t per step kind
+
+`label.position` first maps to a `0..1` parameter t. The compiler then asks the current kind's geometry sampler for a point and tangent: `side` offsets from that point, while `sloped` rotates by the tangent. Consequently, t means “progress through this kind's parametrization,” which is not always visual arc-length progress.
+
+| Step kind             | Parametrization of t                                                           | Meaning of `t=0.5`                                                    |
+| --------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `'line'`              | Normalized arc length                                                          | Straight-line midpoint                                                |
+| `'fold'`              | Each of the two legs gets half of `t`, regardless of leg length                | The corner at `t=0.5`                                                 |
+| `'curve'` / `'cubic'` | Bezier parameter, **not arc length**                                           | Usually not the visual midpoint                                       |
+| `'bend'`              | Bezier parameter after lowering to cubic                                       | Same as cubic                                                         |
+| `'smooth'`            | Generated cubic segments split t evenly;<br />each interval then uses Bezier t | Depends on segment count, not full-curve arc length                   |
+| `'generator'`         | Linear interpolation from the cursor on entry to the final pen position        | Midpoint of those endpoints; it does not follow intermediate commands |
+| `'arc'`               | Linear interpolation across `startAngle..endAngle`                             | Mid angle                                                             |
+| `'circlePath'`        | Full-circle angle 0→360, with 0 at +x                                          | 180° (−x)                                                             |
+| `'ellipsePath'`       | Same as circlePath; parameter angle rather than uniform arc-length sampling    | 180° (−x); arbitrary `t` is not uniformly distributed by arc length   |
+
+Circle and ellipse angles increase in screen coordinates, so 90° is visually downward.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Mapping label.position to t',
+      path: 'packages/kernel/core/src/compile/path/host/label.ts',
+      startLine: 50,
+      endLine: 69,
+    },
+    {
+      label: 'Sampling edge labels from Step geometry',
+      path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts',
+      startLine: 41,
+      endLine: 79,
+    },
+    {
+      label: 'Edge-label offsets and tangent rotation',
+      path: 'packages/kernel/core/src/compile/path/host/label.ts',
+      startLine: 75,
+      endLine: 166,
+    },
+  ]}
+/>
 
 ## API Reference
 
@@ -271,8 +340,6 @@ For fold, t is split by intermediate points rather than weighted by leg length; 
 | `'circlePath'`  | Cursor as center; full circle, pen returns to center             | path "A"×2                    |
 | `'ellipsePath'` | Cursor as center; full ellipse, pen returns to center            | path "A"×2                    |
 | `'rectangle'`   | Draw a rectangle using `from` and `to` as opposite corners       | independent rectangle subpath |
-
-The first step of a `<Path>` must be `move` — if you write `'line'` / `'fold'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 
 ### Two via values
 
@@ -338,7 +405,7 @@ Only meaningful when `kind="fold"`. Given cursor `(px, py)` and target `(tx, ty)
 | `opacity`   | `number`                                 | —          | Label-only opacity 0..1; multiplied with the owning path opacity (does not compound across scopes)                                                                                                                                          |
 | `font`      | `object`                                 | —          | Label font overrides (family / size / weight / style); per-field fallback to `labelDefault` → renderer default                                                                                                                              |
 
-The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line uses normalized arc length; fold splits the t interval evenly by polyline leg count (the corner is always at t=0.5); curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint); arc uses angle parametrization; circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
+The geometric meaning of t per step kind, including the `smooth` / `generator` boundaries, is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above.
 
 ## Related
 
