@@ -50,6 +50,86 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview files="draw-rel" size="sm" />
 
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要排查算子顺序、label 挂载或相对坐标累积时再回来读。"
+/>
+
+本节只放大 `way` 到 `<Path>` / `<Step>` 的局部展开；完整的 JSX → IR（中间表示） → Scene 编译管线见[技术原理](/kernel/principles)。
+
+### WayItem 如何变成 Step
+
+`<Draw>` 从左到右扫描 `way`。首项必须是 target，并固定产出 `move`；后续 item 先按角色分类，再按各自的消费规则产出等价 Step。这里的“消费”是指当前规则会从数组中取走哪些 item。
+
+<ComponentPreview files="way-parser-flow" size="sm" hideCode />
+
+| 类别                           | 扫描如何前进           | 产出                          |
+| ------------------------------ | ---------------------- | ----------------------------- |
+| target                         | 消费当前项             | 首项 `move`，其余 `line`      |
+| `-\|` / `\|-`、curve / bend 等 | 消费算子 + 下一 target | 一个对应的折角或曲线 Step     |
+| arc / circle / ellipse         | 只消费当前算子         | 一个形状 Step；下一项仍会扫描 |
+| `{ label }`                    | 暂存到下一段           | 自身不产出 Step               |
+| `DrawWay.Cycle`                | 消费当前项             | `cycle`，且不能挂 label       |
+
+因此，折角和曲线算子后面必须紧跟 target；形状算子不会吞掉下一项。`{ label }` 则先进入一个待挂状态，由下一个真正产出路径段的 item 消费，所以它要写在 target 或段算子之前。连续 label、末尾 label，以及给 cycle 挂 label 都会被拒绝。
+
+最后，`<Draw>` 把 Step 序列逐项展开为 `<Path>` 的 `<Step>` children，并把描边、填充和箭头等视觉属性交给 `<Path>`。它只是更紧凑的语法糖（Sugar），不引入另一套路径语义。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'WayItem 分类与相邻 target 校验',
+      path: 'packages/kernel/core/src/parsers/way.ts',
+      startLine: 181,
+      endLine: 230,
+    },
+    {
+      label: 'way 按序归约与 label 状态',
+      path: 'packages/kernel/core/src/parsers/way.ts',
+      startLine: 344,
+      endLine: 409,
+    },
+    {
+      label: 'Draw 展开为 Path + Step',
+      path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
+      startLine: 88,
+      endLine: 157,
+    },
+  ]}
+/>
+
+### 相对坐标在 Path 编译时求值
+
+`parseWay` 只把 `'+10,0'` / `'++10,0'` 和对应对象写法归一为 `relative` / `relativeAccumulate` target，不会提前算成绝对坐标。Path 编译逐段处理时，两者都以上一个有效终点 `prevEnd` 为基准；首项没有基准时回退到 `[0, 0]`。
+
+`Relative` 只借用 `prevEnd` 算出本次终点，不替换这个基准；`Accumulate` 会把结果写回 `prevEnd`，所以下一个相对项从新位置继续。若当前处在变换后的 [Scope](/kernel/components/layout/scope) 中，偏移会先在该 Scope 的局部坐标中相加，再投影回全局。
+
+<SourceLinks
+  sources={[
+    {
+      label: '对象相对坐标归一',
+      path: 'packages/kernel/core/src/parsers/way.ts',
+      startLine: 168,
+      endLine: 179,
+    },
+    {
+      label: '字符串相对坐标归一',
+      path: 'packages/kernel/core/src/parsers/target-sugar.ts',
+      startLine: 10,
+      endLine: 31,
+    },
+    {
+      label: '相对坐标求值与 prevEnd 更新',
+      path: 'packages/kernel/core/src/compile/path/host/relative.ts',
+      startLine: 80,
+      endLine: 107,
+    },
+  ]}
+/>
+
 ## API 参考
 
 ### WayItem

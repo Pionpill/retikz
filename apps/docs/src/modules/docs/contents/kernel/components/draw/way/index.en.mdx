@@ -50,6 +50,86 @@ These raw literals follow TikZ path syntax: `(A) -| (B)` / `(A) |- (B)`. `'-|'` 
 
 <ComponentPreview files="draw-rel" size="sm" />
 
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit this section when debugging operator order, label attachment, or relative-coordinate accumulation."
+/>
+
+This section zooms in on the local expansion from `way` to `<Path>` / `<Step>`. See [Technical Principles](/kernel/principles) for the complete JSX → IR (intermediate representation) → Scene pipeline.
+
+### How a WayItem becomes a Step
+
+`<Draw>` scans `way` from left to right. The first item must be a target and always emits `move`; every later item is classified by role, then emits an equivalent Step according to its consumption rule. “Consume” means which array items the current rule takes.
+
+<ComponentPreview files="way-parser-flow" size="sm" hideCode />
+
+| Category                         | Scan advance              | Output                          |
+| -------------------------------- | ------------------------- | ------------------------------- |
+| target                           | Current item              | First `move`, then `line`       |
+| `-\|` / `\|-`, curve / bend etc. | Operator + next target    | One matching fold or curve Step |
+| arc / circle / ellipse           | Current operator only     | One shape Step; next item stays |
+| `{ label }`                      | Hold for the next segment | No Step of its own              |
+| `DrawWay.Cycle`                  | Current item              | `cycle`, with no label          |
+
+That is why a fold or curve operator must be followed immediately by a target, while a shape operator leaves the next item available to the scan. `{ label }` enters a pending state that the next segment-producing item consumes, so place it before the target or segment operator. Consecutive labels, trailing labels, and labels attached to cycle are rejected.
+
+Finally, `<Draw>` expands the Step sequence into `<Step>` children of `<Path>` and passes stroke, fill, arrow, and related visual props to `<Path>`. It is compact sugar rather than a second path model.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'WayItem classification and following-target validation',
+      path: 'packages/kernel/core/src/parsers/way.ts',
+      startLine: 181,
+      endLine: 230,
+    },
+    {
+      label: 'Sequential way reduction and pending-label state',
+      path: 'packages/kernel/core/src/parsers/way.ts',
+      startLine: 344,
+      endLine: 409,
+    },
+    {
+      label: 'Draw expansion into Path + Step',
+      path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
+      startLine: 88,
+      endLine: 157,
+    },
+  ]}
+/>
+
+### Relative coordinates resolve during Path compilation
+
+`parseWay` only normalizes `'+10,0'` / `'++10,0'` and their object forms into `relative` / `relativeAccumulate` targets. It does not precompute an absolute point. As Path compilation visits each Step, both forms use the previous effective endpoint, `prevEnd`, as their base; the first item falls back to `[0, 0]` when no base exists.
+
+`Relative` borrows `prevEnd` for this endpoint without replacing the base. `Accumulate` writes its result back to `prevEnd`, so the next relative item continues from the new position. Inside a transformed [Scope](/kernel/components/layout/scope), the offset is added in that Scope's local coordinates before being projected back to global coordinates.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Object-form relative-coordinate normalization',
+      path: 'packages/kernel/core/src/parsers/way.ts',
+      startLine: 168,
+      endLine: 179,
+    },
+    {
+      label: 'String-form relative-coordinate normalization',
+      path: 'packages/kernel/core/src/parsers/target-sugar.ts',
+      startLine: 10,
+      endLine: 31,
+    },
+    {
+      label: 'Relative-coordinate resolution and prevEnd updates',
+      path: 'packages/kernel/core/src/compile/path/host/relative.ts',
+      startLine: 80,
+      endLine: 107,
+    },
+  ]}
+/>
+
 ## API Reference
 
 ### WayItem
