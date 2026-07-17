@@ -1,6 +1,6 @@
 ---
 title: 动画
-description: 给节点 / 路径 / 镜头按时间打关键帧——入场、强调、循环、镜头与错峰，声明式书写、能优雅降级；末帧即静止态，preset 与底层 AnimationTrack 等价。
+description: 给节点 / 路径 / 镜头按时间打关键帧——入场、强调、循环、镜头与错峰，声明式书写、能优雅降级；preset 与底层 AnimationTrack 等价，静止末帧约定支持完整降级。
 ---
 
 动画让固定图元**按时间从一个样子过渡到另一个样子**：淡入、画线、放大、旋转、变色、镜头推拉。你不用手写关键帧——调一个 **preset 工厂**（`fadeIn()` / `spin()` …）得到一条动画描述，挂到元素的 `animations` 数组即可。
@@ -98,11 +98,85 @@ import { Node } from '@retikz/react';
 
 <span style={{ color: '#888' }}>三个节点同样 fadeIn，依次延迟 0 / 150 / 300ms 入场。</span>
 
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要理解轨道如何编译、后端如何播放，或静态帧与降级为什么一致时再回来读。"
+/>
+
+### 轨道如何进入渲染
+
+preset 与手写轨道最终都是同一种 `AnimationTrack`。preset 只负责填好常用的属性通道、关键帧和时序默认值；它产出的仍是可序列化 JSON，不携带回调、DOM 对象或播放状态。
+
+轨道挂到元素或 `<Layout>` 后，compile（从 IR 生成 Scene 的阶段）只校验职责边界并保留合法数据：`viewBox` 只能作为 Scene 根镜头动画，其它通道只能落在元素上。越界轨道会给出 warning 并被丢弃，renderer 不需要重新判断这条归属规则。
+
+下图在动画职责边界内展示主链：preset 与手写数据汇合成同一轨道，进入与 renderer 无关的 Scene，再按实时播放或静态截帧分流。
+
+<ComponentPreview files="animation-pipeline" size="lg" hideCode />
+
+因此 React DSL、直接写 IR 与 Vanilla spec 共用一份动画语义；后端只决定如何播放，不会把 preset 解释成另一种模型。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'preset 生成 JSON 轨道',
+      path: 'packages/kernel/core/src/parsers/animation.ts',
+      startLine: 17,
+      endLine: 36,
+    },
+    {
+      label: '元素与镜头轨道边界校验',
+      path: 'packages/kernel/core/src/compile/orchestration/animation.ts',
+      startLine: 20,
+      endLine: 42,
+    },
+    {
+      label: 'Scene 根镜头轨道写入',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 22,
+      endLine: 42,
+    },
+  ]}
+/>
+
+### 时间如何变成一帧
+
+关键帧的 `at` 是 `[0, 1]` 内的归一化位置，`duration` 才把它映射到毫秒。对任意时刻，求值器依次扣除 `delay`、确定迭代次数与方向、按 `fill` 处理活动区间外的值，再定位相邻关键帧并应用该段 easing，最后按值类型插值。
+
+实时播放时，两种 renderer 选择不同载体，但消费的是同一条轨道：
+
+- SVG 把 `load` 轨道展开成内联 CSS `@keyframes`，静态 HTML 就能零 JS 自播；`visible` / `manual` / 事件轨道则序列化为描述，再由运行时接到 WAAPI
+- Canvas 用一个 Scene 级 rAF 时钟推进绝对时间，每帧调用共享求值器，把结果应用到图元属性或画布变换后重绘
+- `snapshotAt` 不启动时钟，而是直接用同一求值器采样指定时刻，生成静态属性与 transform
+
+<SourceLinks
+  sources={[
+    {
+      label: '绝对时间到关键帧值的共享求值',
+      path: 'packages/kernel/render/src/animation/evaluate.ts',
+      startLine: 92,
+      endLine: 155,
+    },
+    {
+      label: 'SVG 的 CSS 与 WAAPI 分流',
+      path: 'packages/kernel/render/src/svg/animation/keyframes.ts',
+      startLine: 121,
+      endLine: 178,
+    },
+    {
+      label: 'Canvas 逐帧应用求值结果',
+      path: 'packages/kernel/render/src/canvas/animate.ts',
+      startLine: 68,
+      endLine: 106,
+    },
+  ]}
+/>
+
 ### 触发与控制
 
-挂好动画后，**何时播、怎么播、不播时怎么办**由这些机制决定。
-
-**何时播**由 `trigger` 决定，默认 `load`（渲染即播）：
+`trigger` 只决定轨道**何时被激活**，不会改变关键帧和时序本身。默认值是 `load`：
 
 | trigger                | 行为                       | 后端支持                                                            |
 | ---------------------- | -------------------------- | ------------------------------------------------------------------- |
@@ -122,7 +196,7 @@ const ref = useRef<AnimationControls | null>(null);
 <button onClick={() => ref.current?.play()}>播放</button>
 ```
 
-`animationRef` / vanilla `view.animation` 是 scene 级时钟句柄：SVG 控制整图交互动画的 WAAPI 句柄，Canvas 控制共享 rAF 时钟。handler 内要控制命中的具体图元时，用水合的 [`context.animation`](/kernel/packages/render/hydration#handler-的-context)，两后端都是 per-id 控制。
+`animationRef` / vanilla `view.animation` 是 Scene 级时钟句柄：SVG 控制整图交互动画的 WAAPI 句柄，Canvas 控制共享 rAF 时钟。handler 内要控制命中的具体图元时，用水合的 [`context.animation`](/kernel/packages/render/hydration#handler-的-context)，两后端都是 per-id 控制。
 
 播放总开关是三态的。React 与 Vanilla 的写法不同，但优先级一致：
 
@@ -138,11 +212,32 @@ const ref = useRef<AnimationControls | null>(null);
   description="animate={true} 与 animation.enabled: true 即使在 prefers-reduced-motion 下也会播放。一般应用应省略开关来跟随系统，只在用户主动选择或必须展示动态效果时强制开启。"
 />
 
-**何时不播**：显式关闭、未传开关且用户系统开了「减少动态效果」（`prefers-reduced-motion`），或后端不支持动画。React SVG / Canvas 与 Vanilla 都会降级到静止态；降级时**不报错、不丢图**，渲染完整静止图。
+<SourceLinks
+  sources={[
+    {
+      label: '播放开关与自动播放判定',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 124,
+      endLine: 154,
+    },
+    {
+      label: 'SVG 交互触发与控制句柄',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 191,
+      endLine: 282,
+    },
+    {
+      label: 'Canvas 共享时钟与命令式出口',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 198,
+      endLine: 230,
+    },
+  ]}
+/>
 
-#### 静态截帧（`snapshot` / `snapshotAt`）
+### 静态帧与降级
 
-给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把**自动播 track**（`trigger: 'load'` / 缺省）在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
+给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`）会渲染**定格在该时刻的一帧**：不播放、不输出动画规则，只把自动播轨道在该时刻的值烘焙成静态属性或 transform。它适合 SSR 海报帧、缩略图和社交卡片预览。
 
 <ComponentPreview files="snapshot" size="xs" />
 
@@ -155,52 +250,36 @@ const ref = useRef<AnimationControls | null>(null);
 </Layout>
 ```
 
-`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖显式动画开关。交互触发的 track（`manual` / `visible` / `{ onEvent }`）在静态帧里**不参与定格**、停在 base（settled）——海报代表「加载后、尚未发生任何交互」的样子，两后端一致。
+`snapshotAt` 的优先级高于播放总开关，但只采样 `load` / 缺省触发的轨道；`manual` / `visible` / 事件轨道保持 base，因为静态海报代表「加载后、尚未发生交互」。未指定截帧且动画关闭、系统要求减少动态效果或后端不支持播放时，也会直接渲染 base，不报错、不丢图。
 
-## 技术原理
-
-<ComponentAlert type="tip" title="上手阶段可跳过本节" description="需要理解 preset、静止态与降级行为时再回来读。" />
-
-### preset 与 AnimationTrack
-
-preset 只是底层 `AnimationTrack`（property + keyframes + timing）的便捷写法，二者**完全等价**：`fadeIn()` 展开出来就是一条 `opacity` 从 0 到 1 的 track，`spin()` 就是一条 `rotate` 0→360 的无限 track。preset 不引入任何 track 表达不了的能力，只是把常用关键帧组合命名好、给个工厂函数。
-
-每个 preset 都是 `AnimationTrack` 的工厂——调用即得一条 JSON track，挂到 `animations` 上。track 描述「某个属性通道在归一化时间 `[0, 1]` 上的关键帧 + WAAPI 风格的时序」：
-
-```ts
-type AnimationTrack = {
-  property: string; // 动画通道：opacity / scale / rotate / fill / stroke / pathDraw …
-  keyframes: Array<{
-    at: number; // 归一化时间 0..1，与 duration 解耦；按 at 升序
-    value: JsonValue; // 该时刻的绝对展示值，不是增量
-    easing?: string | [number, number, number, number]; // 段级缓动，覆盖 track 级
-  }>;
-  duration: number; // 单次迭代时长（毫秒，> 0）
-  delay?: number; // 起播延迟（毫秒）
-  easing?: string | [number, number, number, number]; // track 级缓动，缺省 linear
-  iterations?: number | 'infinite'; // 播放次数，缺省 1
-  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // 缺省 normal
-  fill?: 'none' | 'forwards' | 'backwards' | 'both'; // 缺省 forwards
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // 缺省 load
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number]; // 缩放与旋转支点，缺省几何中心
-};
-```
-
-关键约定：**末帧（`at: 1`）= 元素 base（静止）态**——所以忽略动画时渲染的就是完整成品图，这正是降级的依据。preset 产出**逐字段等于手写 track**；公共项 `{ duration, delay, easing, trigger }` 都可覆盖各 preset 的默认。在任意 demo 的代码面板切到 IR / Vanilla Tab，就能看到 preset 展开后的原始 track——这也是动画在持久化 / AI 生成时落到 IR 里的真实形态。
+默认 `fill="forwards"` 会在播放结束后保留末帧。内置入场与往返类 preset 把末帧设计成常见 base 值，`spin` 的 360° 也与 0° 等价；`colorShift` / `cameraTo` 无法读取元素或镜头的 base，因此要求你显式给出终点。`AnimationTrackSchema` 只把「末帧应是静止态」写成约定、不会替你比较 base；手写轨道和显式终点若希望优雅降级，也应落到预期静止态。
 
 <ComponentAlert
-  title="末帧 = 静止态，所以能降级"
-  description="入场类动画的最后一帧就是元素本来的样子（fadeIn 的末帧 = 不透明）。于是不支持动画的环境、未显式开关且用户开了「减少动态效果」、或你显式关闭动画时，React SVG / Canvas 与 Vanilla 都直接渲染这个静止态——看到的是完整最终图，不是动画起点那个可能全透明的样子。"
+  title="末帧回到静止态是一条作者约定"
+  description="内置入场与往返类 preset 已按常见 base 设计；手写 track 或显式 to 值仍需自行保证。否则实时播放结束会停在末帧，而关闭动画时显示 base，两种结果可能不同。"
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'SVG 静态帧烘焙与交互轨道过滤',
+      path: 'packages/kernel/render/src/svg/animation/keyframes.ts',
+      startLine: 219,
+      endLine: 295,
+    },
+    {
+      label: 'Canvas 截帧优先级与静态绘制',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 198,
+      endLine: 230,
+    },
+    {
+      label: '静止末帧的数据契约',
+      path: 'packages/kernel/core/src/schemas/animation/schema.ts',
+      startLine: 51,
+      endLine: 86,
+    },
+  ]}
 />
 
 ## API 参考
@@ -233,4 +312,4 @@ type AnimationTrack = {
 
 - [阴影](/kernel/components/effects/shadow)：图元级投影 `shadow`
 - [混合](/kernel/components/effects/blend)：图元级混合模式 `blendMode`
-- [自定义动画](/kernel/components/extend/custom-animation)：注册自定义 preset 与底层 track
+- [自定义动画](/kernel/components/effects/custom-animation)：注册自定义 preset 与底层 track
