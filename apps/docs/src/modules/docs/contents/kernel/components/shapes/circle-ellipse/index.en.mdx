@@ -106,39 +106,58 @@ Connection endpoints snap to the circle / ellipse edge, and the node's center pl
 <ComponentAlert
   type="tip"
   title="Optional for everyday use"
-  description="Revisit when a point form throws an error, or when you want to understand the difference between sugar and Node."
+  description="Revisit when a point type behaves unexpectedly, or when you want to understand where sugar and Node boundaries come from."
 />
 
-### Some forms pass points through, others compute first (sugar)
+### How sugar becomes a Path
 
-`<Circle>`'s `center` passes the point directly to the underlying Path, so it accepts node ids, polar points, or plain `[x, y]` coordinates:
+The upper route preserves a `Circle center` target, so a node id, polar point, or `[x, y]` coordinate can resolve later during Path compilation. The lower route must compute a center and radii in the React adapter first, so it accepts literal `[x, y]` geometry only:
 
-```tsx
-<Circle center="A" radius={24} />
-```
+<ComponentPreview files="circle-ellipse-sugar-flow" size="md" hideCode />
 
-Other forms must compute a midpoint, size, or bounding box in React first, so they only accept literal `[x, y]` coordinates — all of `<Ellipse>`'s point inputs (including `center` / `corner1` / `corner2`), plus `<Circle>`'s `from` / `to` / `corner1` / `corner2`:
+`Circle` from / corner / box forms and every `Ellipse` form take the lower route. Both routes expand to an equivalent `<Path>` plus a `circlePath` / `ellipsePath` Step. With angles present, `closed` then chooses a chord (`chord`, the default), a return to the center (`sector`), or an open arc (`open`).
 
-```tsx
-<Circle from={[-40, 0]} to={[40, 0]} />
-<Ellipse corner1={[-40, -20]} corner2={[40, 20]} />
-```
+<SourceLinks
+  sources={[
+    {
+      label: 'Circle input normalization and Step expansion',
+      path: 'packages/kernel/react/src/sugar/shapes/Circle.tsx',
+      startLine: 20,
+      endLine: 94,
+    },
+    {
+      label: 'Ellipse input normalization and Step expansion',
+      path: 'packages/kernel/react/src/sugar/shapes/Ellipse.tsx',
+      startLine: 19,
+      endLine: 89,
+    },
+  ]}
+/>
 
-Passing a node id to a computed `<Circle>` form throws an error; `<Ellipse>`'s corner branch is currently unchecked, so a non-`[x, y]` input computes to NaN — always pass literal coordinates.
+### How Node gets its connection boundary
 
-### Partial shapes have three closing modes (sugar)
+`<Node>` combines measured text and `padding` into a content box, then asks the shape definition to compute a visible boundary around that inner box. Both panels below start with the same content box and change only the circumscription policy:
 
-When angles are present, `closed` decides how the arc ends are connected:
+<ComponentPreview files="circle-ellipse-circumscription" size="md" hideCode />
 
-| Value    | Effect                                                          |
-| -------- | --------------------------------------------------------------- |
-| `chord`  | Default, draw a straight chord between the arc ends             |
-| `sector` | Draw from the arc end to the center, then back to the arc start |
-| `open`   | Draw only the arc                                               |
+The default `ellipse` multiplies each half-axis by √2. During compilation, `circle` resolves to `ellipse + circumscribe:'equal'`, using the content-box half-diagonal as one shared radius. The same resolved geometry emits the visible ellipse primitive and provides anchors plus the connection boundary, so `<Draw>` / `<Path>` endpoints snap to the outer contour.
 
-### Sugar and Node are two routes
-
-`<Circle>` / `<Ellipse>` expand to an equivalent `<Path>` / `<Step>` sequence — pure graphics that can use `stroke`, `fill`, `arrow`, and `zIndex` like any path. `<Node shape>` is not a Path but a node with a boundary circumscribed from the text content that connections can snap to. For a circle that both holds text and connects, use `<Node>` rather than `<Circle>`.
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve the circle preset to an equal ellipse',
+      path: 'packages/kernel/core/src/compile/node/shape.ts',
+      startLine: 41,
+      endLine: 48,
+    },
+    {
+      label: 'Ellipse circumscription, anchors, and primitive emission',
+      path: 'packages/kernel/core/src/providers/shape/ellipse.ts',
+      startLine: 11,
+      endLine: 47,
+    },
+  ]}
+/>
 
 ## Related
 
