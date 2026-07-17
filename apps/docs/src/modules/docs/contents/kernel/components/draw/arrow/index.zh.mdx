@@ -10,7 +10,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 `arrow` + `arrowDetail` 同时挂在 `<Draw>` 和 `<Path>` 上，写法和效果完全一致——下文示例用 `<Draw>` 演示，`<Path>` 写法等价。
 
-箭头附着在路径端点上：不会改变原始路径的几何长度，也不会在中间节点重复出现。短线段、双向箭头或很大的 `length` / `width` 可能产生视觉重叠；这时优先减小箭头尺寸，或用节点 `margin` / 显式坐标给线段留出空间。
+箭头尖端附着在路径解析后的起点 / 终点上，也不会在中间节点重复出现。编译时会按箭头接触点缩短实际描边，避免线条穿过箭头；短线段、双向箭头或很大的 `length` / `width` 仍可能产生视觉重叠，这时优先减小箭头尺寸，或用节点 `margin` / 显式坐标给线段留出空间。
 
 ## 用法
 
@@ -76,6 +76,99 @@ import { Draw } from '@retikz/react';
 `opacity` 0..1，作用于箭头整体（独立于路径的 `opacity` / `strokeOpacity`）：
 
 <ComponentPreview files="arrow-opacity" size="xs" />
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="遇到端点合并、箭头与路径接缝或描边继承的边界问题时再回来读。"
+/>
+
+本节只解释 `<Draw>` / `<Path>` 箭头在 compile（编译）阶段如何变成端点几何；完整的 JSX → IR → Scene 管线见[技术原理](/kernel/principles)。
+
+### 方向与端点样式如何解析
+
+`<Draw>` 先展开为等价的 `<Path>`。`arrow` 决定只创建起点、终点还是两端标记；每一端再把 `arrowDetail` 顶层字段与对应的 `start` / `end` 字段逐项合并。
+
+图中实线表示端点箭头的主解析链，虚线表示样式默认值与箭头注册表这两类辅助输入：
+
+<ComponentPreview files="arrow-compile-flow" size="sm" hideCode />
+
+元素显式字段优先于路径主色和 Scope 箭头默认值；字段仍缺省时，才读取所选箭头定义的内置尺寸。`shape` 会查询内置或自定义 `ArrowDefinition`，并在 compile 阶段物化为与渲染器无关（renderer-agnostic）的 marker 几何；未注册名称会直接报错，不会静默回退成默认形状。
+
+<SourceLinks
+  sources={[
+    {
+      label: '方向拆分与逐端字段合并',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 242,
+      endLine: 274,
+    },
+    {
+      label: 'Scope 默认值与路径主色解析',
+      path: 'packages/kernel/core/src/compile/style/arrow.ts',
+      startLine: 35,
+      endLine: 87,
+    },
+    {
+      label: '箭头定义查询与 marker 物化',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 68,
+      endLine: 127,
+    },
+  ]}
+/>
+
+### 路径本体为什么会缩短
+
+箭头尖端仍落在原始端点；compiler 根据定义里的尖端与线条接触点，反向缩短路径本体，让描边停在箭头尾部。这样空心箭头不会被线条贯穿，实心或半透明箭头下也不会透出多余线段。
+
+收缩距离会随 `length × scale × strokeWidth` 改变；空心形状还会把 `lineWidth` 计入接触位置。端点引用 Node 且由边界自动裁切时，compiler 还会补偿箭头外轮廓，避免空心轮廓压进节点边界。
+
+<SourceLinks
+  sources={[
+    {
+      label: '箭头接触点与收缩量计算',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 147,
+      endLine: 177,
+    },
+    {
+      label: '路径端点收缩编排',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 181,
+      endLine: 188,
+    },
+  ]}
+/>
+
+### 整体端点与描边继承边界
+
+多节点路径可能在 compile 后变成多个子路径，但起点箭头只属于第一段，终点箭头只属于最后一段，中间段不会获得端点箭头。这里的“起末”始终指整条 `<Path>`，不是每个视觉折点。
+
+<ComponentAlert
+  type="warn"
+  title="渐变描边需要显式箭头颜色"
+  description="当 stroke 是 PaintSpec 时，箭头不能把渐变当作单一描边色继承；请设置 arrowDetail.color，或分别设置 start.color / end.color 为 CSS 颜色。"
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: '多子路径的整体首末端分配',
+      path: 'packages/kernel/core/src/compile/path/stroke/split.ts',
+      startLine: 6,
+      endLine: 56,
+    },
+    {
+      label: 'PaintSpec 描边继承守卫',
+      path: 'packages/kernel/core/src/compile/path/stroke/marks.ts',
+      startLine: 24,
+      endLine: 41,
+    },
+  ]}
+/>
 
 ## API 参考
 

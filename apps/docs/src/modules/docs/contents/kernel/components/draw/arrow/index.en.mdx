@@ -10,7 +10,7 @@ Arrows are driven by two independent props:
 
 Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples bottom use `<Draw>`; the `<Path>` equivalent is the same.
 
-An arrow attaches to a path endpoint: it does not change the original path geometry, and it is not repeated at intermediate nodes. Very short segments, two-ended arrows, or large `length` / `width` values can overlap visually; reduce the arrow size or create room with node `margin` / explicit coordinates.
+The arrow tip stays at the resolved path start / end, and arrows are not repeated at intermediate nodes. Compile shortens the rendered stroke at the arrow contact point so the line does not pass through the tip. Very short segments, two-ended arrows, or large `length` / `width` values can still overlap visually; reduce the arrow size or create room with node `margin` / explicit coordinates.
 
 ## Usage
 
@@ -76,6 +76,99 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 `opacity` 0..1 applies to the whole arrow (independent of the path's own `opacity` / `strokeOpacity`):
 
 <ComponentPreview files="arrow-opacity" size="xs" />
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when you hit edge cases involving per-end merging, arrow-to-path joins, or stroke inheritance."
+/>
+
+This section focuses only on how `<Draw>` / `<Path>` arrows become endpoint geometry during compile. See [Principles](/kernel/principles) for the complete JSX → IR → Scene pipeline.
+
+### How direction and per-end styles resolve
+
+`<Draw>` first expands to an equivalent `<Path>`. `arrow` chooses whether to create a start marker, an end marker, or both; each endpoint then merges the top-level `arrowDetail` fields with its matching `start` / `end` fields.
+
+Solid lines show the main endpoint-arrow resolution path. Dashed lines show the two auxiliary inputs: style defaults and the arrow registry.
+
+<ComponentPreview files="arrow-compile-flow" size="sm" hideCode />
+
+Explicit element fields win over the path master color and Scope arrow defaults. Any remaining size fields fall back to defaults from the selected arrow definition. `shape` looks up a built-in or custom `ArrowDefinition`, which compile materializes into renderer-agnostic marker geometry. An unregistered name fails explicitly instead of silently falling back to the default shape.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'direction splitting and per-end field merging',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 242,
+      endLine: 274,
+    },
+    {
+      label: 'Scope defaults and path master-color resolution',
+      path: 'packages/kernel/core/src/compile/style/arrow.ts',
+      startLine: 35,
+      endLine: 87,
+    },
+    {
+      label: 'arrow definition lookup and marker materialization',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 68,
+      endLine: 127,
+    },
+  ]}
+/>
+
+### Why the path body becomes shorter
+
+The arrow tip remains at the original endpoint. The compiler uses the definition's tip and line-contact points to shorten the path body in the opposite direction, making the stroke stop at the arrow's tail. This prevents a line from crossing a hollow outline or showing through a solid or translucent arrow.
+
+The shrink distance changes with `length × scale × strokeWidth`; hollow shapes also include `lineWidth` in the contact position. When an endpoint references a Node and is clipped to its boundary automatically, compile adds an outer-outline compensation so a hollow arrow does not press into the node boundary.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'arrow contact point and shrink calculation',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 147,
+      endLine: 177,
+    },
+    {
+      label: 'path endpoint shrink orchestration',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 181,
+      endLine: 188,
+    },
+  ]}
+/>
+
+### Whole-path endpoints and the stroke-inheritance boundary
+
+A multi-node path can become several subpaths during compile, but the start arrow belongs only to the first subpath and the end arrow only to the last. “Start” and “end” always refer to the whole `<Path>`, not every visual corner.
+
+<ComponentAlert
+  type="warn"
+  title="Gradient strokes need an explicit arrow color"
+  description="When stroke is a PaintSpec, an arrow cannot inherit the gradient as one stroke color. Set arrowDetail.color, or set start.color / end.color to CSS colors."
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'whole-path endpoint assignment across subpaths',
+      path: 'packages/kernel/core/src/compile/path/stroke/split.ts',
+      startLine: 6,
+      endLine: 56,
+    },
+    {
+      label: 'PaintSpec stroke-inheritance guard',
+      path: 'packages/kernel/core/src/compile/path/stroke/marks.ts',
+      startLine: 24,
+      endLine: 41,
+    },
+  ]}
+/>
 
 ## API Reference
 
