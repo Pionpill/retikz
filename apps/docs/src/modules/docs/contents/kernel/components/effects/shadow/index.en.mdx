@@ -57,6 +57,113 @@ Priority is always: **explicit field > preset > default**. The default color is 
   description="blur is a blur radius in user units. SVG and Canvas apply backend-specific calibration through their native shadow APIs, keeping it close under preview sizing / transforms; it is not pixel-exact. blur=0 is a hard edge."
 />
 
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Preset and object forms are enough for daily use. Revisit this section when diagnosing clipping, scaling, or cross-backend differences."
+/>
+
+### From input to primary geometry
+
+The two `shadow` forms exist only at the input boundary. During compile, a preset expands into offsets, blur, and color, then explicit object fields override those values one by one. The result converges on one resolved shadow description attached to a Node shape or Path main path, so renderers never need to understand preset names.
+
+The figure isolates shadow's local responsibility. See [Principles](/kernel/principles) for the complete JSX / IR → Scene pipeline.
+
+<ComponentPreview files="shadow-pipeline" size="xl" hideCode />
+
+This is also why `shadow="md"` and `shadow={{ preset: 'md' }}` produce the same output, while Node text and labels do not inherit the shadow: they are emitted later as separate primitives rather than as part of the primary shape carrying `shadow`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Expand presets and merge explicit fields',
+      path: 'packages/kernel/core/src/compile/style/shadow.ts',
+      startLine: 8,
+      endLine: 29,
+    },
+    {
+      label: 'Attach shadow to the Node primary shape',
+      path: 'packages/kernel/core/src/compile/node/emit.ts',
+      startLine: 16,
+      endLine: 45,
+    },
+    {
+      label: 'Resolve Path primary-geometry style',
+      path: 'packages/kernel/core/src/compile/path/host/resolve.ts',
+      startLine: 19,
+      endLine: 40,
+    },
+  ]}
+/>
+
+### Automatic layout and fixed cropping
+
+A shadow extends beyond its original geometry. Automatic layout expands each side by `blur` plus the part of the offset pointing toward that side, then merges that result into the Scene's visible range. An explicit `viewBox`, by contrast, always remains the fixed window chosen by the user.
+
+| Layout mode        | Compile behavior                       | Visible result                                 |
+| ------------------ | -------------------------------------- | ---------------------------------------------- |
+| No `viewBox`       | Merge geometry and shadow overflow     | The canvas automatically reserves shadow room  |
+| Explicit `viewBox` | Fixed window replaces automatic layout | Shadow outside the window may still be clipped |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Merge shadow overflow into automatic bounds',
+      path: 'packages/kernel/core/src/compile/orchestration/bounds.ts',
+      startLine: 7,
+      endLine: 33,
+    },
+    {
+      label: 'Let an explicit viewBox replace automatic layout',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 22,
+      endLine: 42,
+    },
+  ]}
+/>
+
+### SVG and Canvas mapping
+
+The Scene keeps renderer-agnostic values in user units. SVG and Canvas consume the same resolved shadow description but translate it to different native capabilities:
+
+| Backend | Native mapping | Calibration and resources                         |
+| ------- | -------------- | ------------------------------------------------- |
+| SVG     | `feDropShadow` | Expanded `userSpaceOnUse` region<br />shared defs |
+| Canvas  | `ctx.shadow*`  | Transform-aware offsets and blur<br />saved state |
+
+SVG maps `blur` to Gaussian standard deviation and bases the filter region on the expanded Scene window, preventing thin Paths or large shadows from being clipped by the element's own bounding box. Identical shadows share one filter def. Canvas reads the current transform matrix (CTM) to calibrate offsets and blur to the actual drawing scale; after CSS color normalization, `opacity` is baked into `shadowColor`. The two backends do not promise pixel-identical output.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Build the SVG shadow filter and expanded region',
+      path: 'packages/kernel/render/src/svg/builders/shadow-defs.ts',
+      startLine: 46,
+      endLine: 102,
+    },
+    {
+      label: 'Deduplicate and register SVG shadow resources',
+      path: 'packages/kernel/render/src/svg/builders/document.ts',
+      startLine: 81,
+      endLine: 108,
+    },
+    {
+      label: 'Calibrate and draw Canvas shadows under transforms',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 117,
+      endLine: 172,
+    },
+    {
+      label: 'Normalize CSS colors and bake shadow opacity',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 189,
+      endLine: 208,
+    },
+  ]}
+/>
+
 ## API Reference
 
 `shadow` is a shared style prop on `<Node>` and `<Path>`, written the same way on both.

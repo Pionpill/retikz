@@ -147,10 +147,15 @@ const resolveCanvasShadowStyle = (ctx: CanvasRenderingContext2D, shadow: IRDropS
 
 /**
  * 用已解析 IRDropShadow 包裹一段绘制：set `ctx.shadow*`、draw、restore
- * @description `blur` / offset 按当前 Canvas transform 校准到 shadow*；`opacity`（若给）经 bakeAlpha 相乘到 color 有效 alpha。
+ * @description `blur` / offset 按当前 Canvas transform 校准到 shadow*；`opacity`（若给）经 CSS 颜色归一后相乘到 color 有效 alpha。
  *   无 shadow → 直接 draw（逐字不变）
  */
-const withShadow = (ctx: CanvasRenderingContext2D, shadow: IRDropShadow | undefined, draw: () => void): void => {
+const withShadow = (
+  ctx: CanvasRenderingContext2D,
+  shadow: IRDropShadow | undefined,
+  resolveCssColor: ((color: string) => string) | undefined,
+  draw: () => void,
+): void => {
   if (shadow === undefined) {
     draw();
     return;
@@ -161,7 +166,7 @@ const withShadow = (ctx: CanvasRenderingContext2D, shadow: IRDropShadow | undefi
   ctx.shadowOffsetY = canvasShadow.offsetY;
   ctx.shadowBlur = canvasShadow.blur;
   const color = shadow.color ?? DEFAULT_SHADOW_COLOR;
-  ctx.shadowColor = shadow.opacity !== undefined ? (bakeAlpha(color, shadow.opacity) ?? color) : color;
+  ctx.shadowColor = applyColorAlpha(color, shadow.opacity, resolveCssColor);
   draw();
   ctx.restore();
 };
@@ -182,11 +187,11 @@ const withBlend = (ctx: CanvasRenderingContext2D, blendMode: BlendModeValue | un
 };
 
 /**
- * 把 stop 的 opacity 烘焙进颜色（canvas addColorStop 无 stop-opacity）
+ * 把独立 opacity 烘焙进 CSS 颜色
  * @description 先直接正则烘焙 hex / rgb；命名色 / hsl 等用宿主 `resolveCssColor` 归一成 hex / rgb 后再烘焙。
- *   归一器缺省（无宿主）时按 best-effort 忽略 opacity（渐变退化纯色，与历史一致）
+ *   归一器缺省（无宿主）时按 best-effort 忽略命名色 / hsl 的独立 opacity
  */
-const applyStopAlpha = (
+const applyColorAlpha = (
   color: string,
   opacity: number | undefined,
   resolveCssColor: ((color: string) => string) | undefined,
@@ -304,7 +309,7 @@ const fillCurrentPath = (
           fillOpacity,
           drawFill: () => ctx.fill(fillRule),
           resolveStopColor: (color, opacity) =>
-            applyStopAlpha(resolveColor(color, options) ?? color, opacity, options.resolveCssColor),
+            applyColorAlpha(resolveColor(color, options) ?? color, opacity, options.resolveCssColor),
           warn: message => warnUnsupported(options, 'paint', message),
         });
         return;
@@ -357,7 +362,7 @@ const strokeCurrentPath = (
         cache: state.gradientPatterns,
         cacheKey: stroke.id,
         resolveStopColor: (color, opacity) =>
-          applyStopAlpha(resolveColor(color, options) ?? color, opacity, options.resolveCssColor),
+          applyColorAlpha(resolveColor(color, options) ?? color, opacity, options.resolveCssColor),
         warn: message => warnUnsupported(options, 'paint', message),
       });
     }
@@ -693,7 +698,7 @@ const drawPrim = (
   switch (p.type) {
     case 'rect':
       withBlend(ctx, p.blendMode, () =>
-        withShadow(ctx, p.shadow, () =>
+        withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
             roundedRectPath(ctx, p.x, p.y, p.width, p.height, p.cornerRadius);
             fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options, resources, {
@@ -725,7 +730,7 @@ const drawPrim = (
       break;
     case 'ellipse':
       withBlend(ctx, p.blendMode, () =>
-        withShadow(ctx, p.shadow, () =>
+        withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
             const shouldRestore = p.rotate !== undefined;
             if (shouldRestore) ctx.save();
@@ -766,7 +771,7 @@ const drawPrim = (
       break;
     case 'path':
       withBlend(ctx, p.blendMode, () =>
-        withShadow(ctx, p.shadow, () =>
+        withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
             buildPath(ctx, p.commands);
             if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;

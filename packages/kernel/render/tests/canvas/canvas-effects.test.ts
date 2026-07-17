@@ -129,6 +129,15 @@ describe('[canvas-effects] drop shadow', () => {
     expect(snaps.find(s => s.key === 'shadowColor')?.value).toBe('rgba(0, 0, 0, 0.5)');
   });
 
+  it('shadow opacity + 命名色 → 先归一 CSS 颜色再烘焙 alpha', () => {
+    const snaps: Array<{ key: string; value: unknown }> = [];
+    const ctx = makeRecordingCtx(snaps);
+    drawScene(ctx, rectScene({ shadow: { offsetX: 0, offsetY: 1, blur: 2, color: 'darkorange', opacity: 0.25 } }), {
+      resolveCssColor: color => (color === 'darkorange' ? '#ff8c00' : color),
+    });
+    expect(snaps.find(s => s.key === 'shadowColor')?.value).toBe('rgba(255, 140, 0, 0.25)');
+  });
+
   it('带端点箭头的 path + shadow → 箭头也在 shadow 状态下绘制（比无箭头多一次带阴影的 draw）', () => {
     const blursOf = (scene: Scene): Array<unknown> => {
       const snaps: Array<{ key: string; value: unknown }> = [];

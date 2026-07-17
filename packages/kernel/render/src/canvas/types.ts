@@ -46,11 +46,11 @@ export type DrawOptions = {
    */
   createOffscreen?: (width: number, height: number) => CanvasRenderingContext2D | null;
   /**
-   * 把任意 CSS 颜色串归一成 hex / rgb(a)（用于渐变 stop 烘焙 alpha）
-   * @description canvas `addColorStop` 无 stop-opacity，stop 的 opacity 须烘焙进颜色串；而命名色（darkorange）
-   *   / hsl 等无法直接正则解析。drawScene 跑在 spy ctx 上无法解析 CSS 色，故归一由宿主注入：`renderToCanvas`
-   *   缺省用真实 canvas 的 `fillStyle` 往返（浏览器规范化为 `#rrggbb` / `rgba(...)`）。未提供时命名色 stop 的
-   *   opacity 按 best-effort 忽略（渐变退化为纯色，与历史一致）
+   * 把任意 CSS 颜色串归一成 hex / rgb(a)，供 Canvas 烘焙独立 opacity
+   * @description canvas 的渐变 stop 与 shadowColor 都没有独立 opacity 通道，须把 alpha 烘焙进颜色串；而命名色
+   *   （darkorange）/ hsl 等无法直接正则解析。drawScene 跑在 spy ctx 上无法解析 CSS 色，故归一由宿主注入：
+   *   `renderToCanvas` 缺省用真实 canvas 的 `fillStyle` 往返（浏览器规范化为 `#rrggbb` / `rgba(...)`）。未提供时
+   *   命名色的独立 opacity 按 best-effort 忽略
    */
   resolveCssColor?: (color: string) => string;
   /**
