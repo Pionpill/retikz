@@ -153,15 +153,100 @@ sector 的 `cornerRadius`（用户单位）给环楔四角倒角，省略 / `0` 
 
 ## 技术原理
 
-<ComponentAlert type="tip" title="日常使用可以跳过本节" description="只有在角度方向或闭合方式不符合预期时再回来读。" />
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要理解角度方向、Sugar 展开或 Node 连接边界时再回来读。"
+/>
 
-### 角度跟屏幕坐标一致（两者）
+本节只放大 Arc / Sector 自己负责的角度、路径拓扑与节点几何；完整的 JSX → IR（中间表示） → Scene 编译管线见[技术原理](/kernel/principles)。
 
-retikz 的文档示例使用屏幕坐标：x 向右，y 向下。因此 `0` 度指向右侧，`90` 度指向下方，`-90` 度指向上方。Sugar 和 Node 形状的角度都按这套来。
+### 角度范围如何确定
 
-### 弧线和扇形的闭合不同
+先看图中的坐标轴和橙色箭头：角度从 `startAngle` 出发，沿屏幕坐标中的递增方向扫到 `endAngle`，两者之差就是 `sweepAngle`。
 
-`<Arc>` 默认是开放路径，不会自动填充一个区域；`<Sector>` 会闭合成区域，所以可以直接设置 `fill`。需要"弦闭合"或"扇形闭合"的部分圆时，可以给 `<Arc close="chord" | "sector">`，或直接用 [Circle / Ellipse](../circle-ellipse) 里的角度 + `closed` 写法（三者底层一致）。而 `<Node shape="sector">` 是另一条路：它不是 Path，而是一个有扇形边界、可被连线贴边的节点。
+<ComponentPreview files="arc-sector-angle-model" size="sm" hideCode />
+
+屏幕坐标的 x 向右、y 向下，所以 `0°` 指向右侧，`90°` 指向下方，角度递增看起来是顺时针。Sugar 接受 `startAngle` / `endAngle` / `sweepAngle` 中恰好两个，再补出第三个；Node 形状的 params 则直接保存 `startAngle` 与 `endAngle`，但两者使用同一视觉约定。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Sugar 角度输入解析',
+      path: 'packages/kernel/react/src/sugar/shapes/shape-helpers.ts',
+      startLine: 192,
+      endLine: 224,
+    },
+    {
+      label: 'Node 角度范围规范化',
+      path: 'packages/kernel/core/src/shared/geometry/angle.ts',
+      startLine: 29,
+      endLine: 37,
+    },
+  ]}
+/>
+
+### Sugar 如何形成 Path
+
+图右侧不是三种渲染特效，而是三种等价的 `<Path>` / `<Step>` 拓扑。`<Arc>` 与 `<Sector>` 先解析角度和半径，再根据开放、闭合或空心选择其中一条分支。
+
+<ComponentPreview files="arc-sector-sugar-flow" size="sm" hideCode />
+
+- 开放 `<Arc>` 从圆心开始，用一个 `arc` Step 画弧，游标停在弧终点。
+- 闭合 `<Arc>` 与实心 `<Sector>` 使用 `circlePath` / `ellipsePath`；`closed` 决定两端连弦，还是连回圆心。
+- 空心 `<Sector>` 依次画外弧、径向边、反向内弧和回起点的径向边。它必须先算出内外弧端点，因此 `center` 只能是字面量 `[x, y]`。
+
+描边、填充、箭头和整体变换统一落在外层 `<Path>`；`label` 挂在承担可见弧线的 Step 上。Sugar 到这里就结束，不引入另一套路径或渲染语义。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Arc 的开放与闭合展开',
+      path: 'packages/kernel/react/src/sugar/shapes/Arc.tsx',
+      startLine: 30,
+      endLine: 92,
+    },
+    {
+      label: 'Sector 的实心与空心展开',
+      path: 'packages/kernel/react/src/sugar/shapes/Sector.tsx',
+      startLine: 37,
+      endLine: 107,
+    },
+  ]}
+/>
+
+### Node 如何共享一份几何
+
+`<Node shape={{ type, params }}>` 不经过上面的 Sugar 组件树，而是把形状交给 core 的 shape 定义。图中间的“形状几何 / 轮廓”是关键：轴对齐包围盒（AABB）、anchor、连接点和最终 path 都从同一组 params 派生。
+
+<ComponentPreview files="arc-sector-node-geometry" size="sm" hideCode />
+
+Arc 是没有内部面积的曲线。普通连线会把目标方向投影成弧上的角度；若方向落在缺口中，连接点夹到更近的起点或终点。Sector 是闭合轮廓，连线从填充区域内部朝目标发射射线，命中内弧、外弧、径向边或圆角后的真实轮廓。
+
+因此 `cornerRadius` 会同时改变 Sector 的可见轮廓与自动连接点，但不会移动精确 AABB 和 `apex` / `outer-arc-mid` 等命名 anchor。要固定语义位置就显式选 anchor；要让连线自动贴合当前轮廓就使用普通节点引用。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Arc 的范围、anchor 与曲线连接点',
+      path: 'packages/kernel/core/src/providers/shape/arc.ts',
+      startLine: 38,
+      endLine: 122,
+    },
+    {
+      label: 'Sector 的范围、质心与连接射线起点',
+      path: 'packages/kernel/core/src/providers/shape/sector-geometry.ts',
+      startLine: 37,
+      endLine: 89,
+    },
+    {
+      label: 'Sector 的轮廓、anchor 与 Scene 输出',
+      path: 'packages/kernel/core/src/providers/shape/sector.ts',
+      startLine: 79,
+      endLine: 145,
+    },
+  ]}
+/>
 
 ## 相关
 

@@ -155,17 +155,98 @@ The sector's `cornerRadius` (user units) rounds the four wedge corners; omitted 
 
 <ComponentAlert
   type="tip"
-  title="Optional for everyday use"
-  description="Revisit when angle direction or closing behavior looks surprising."
+  title="Optional while getting started"
+  description="Revisit when you need to understand angle direction, sugar expansion, or Node connection boundaries."
 />
 
-### Angles follow screen coordinates (both)
+This section focuses on the angle, path topology, and node geometry owned by Arc / Sector. See [How it works](/kernel/principles) for the complete JSX → IR (intermediate representation) → Scene pipeline.
 
-The docs examples use screen coordinates: x points right and y points down. So `0` degrees points right, `90` points down, and `-90` points up. Both the sugar and the Node shape use this convention.
+### How an angle span is determined
 
-### Arc and Sector close differently
+Start with the axes and orange arrow: the span begins at `startAngle`, follows increasing screen-space angles to `endAngle`, and the difference is `sweepAngle`.
 
-`<Arc>` is open by default, so it does not create a fillable region on its own; `<Sector>` closes a region and can be filled directly. For a chord-closed or sector-closed partial circle, pass `<Arc close="chord" | "sector">`, or use the angle + `closed` forms on [Circle / Ellipse](../circle-ellipse) (all three share the same underlying path). `<Node shape="sector">` is a different route: it is not a Path but a node with a sector boundary that connections can snap to.
+<ComponentPreview files="arc-sector-angle-model" size="sm" hideCode />
+
+Screen coordinates point x to the right and y downward, so `0°` points right, `90°` points down, and increasing angles look clockwise. Sugar accepts exactly two of `startAngle` / `endAngle` / `sweepAngle` and derives the third. Node shape params store `startAngle` and `endAngle` directly, but both APIs share the same visual convention.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve sugar angle inputs',
+      path: 'packages/kernel/react/src/sugar/shapes/shape-helpers.ts',
+      startLine: 192,
+      endLine: 224,
+    },
+    {
+      label: 'Normalize Node angle ranges',
+      path: 'packages/kernel/core/src/shared/geometry/angle.ts',
+      startLine: 29,
+      endLine: 37,
+    },
+  ]}
+/>
+
+### How sugar forms a Path
+
+The three outputs on the right are not rendering effects; they are three equivalent `<Path>` / `<Step>` topologies. `<Arc>` and `<Sector>` resolve angles and radii first, then choose a branch based on open, closed, or hollow geometry.
+
+<ComponentPreview files="arc-sector-sugar-flow" size="sm" hideCode />
+
+- An open `<Arc>` starts at the center, draws one `arc` Step, and leaves the cursor at the arc endpoint.
+- A closed `<Arc>` and solid `<Sector>` use `circlePath` / `ellipsePath`; `closed` decides whether the endpoints form a chord or return to the center.
+- A hollow `<Sector>` draws the outer arc, a radial edge, the inner arc in reverse, then the radial edge back to the start. It must calculate both arc endpoints up front, so `center` must be a literal `[x, y]`.
+
+Stroke, fill, arrows, and whole-shape transforms all live on the outer `<Path>`; `label` belongs to the Step that draws the visible arc. Sugar stops at this boundary and introduces no parallel path or rendering semantics.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Expand open and closed Arc forms',
+      path: 'packages/kernel/react/src/sugar/shapes/Arc.tsx',
+      startLine: 30,
+      endLine: 92,
+    },
+    {
+      label: 'Expand solid and hollow Sector forms',
+      path: 'packages/kernel/react/src/sugar/shapes/Sector.tsx',
+      startLine: 37,
+      endLine: 107,
+    },
+  ]}
+/>
+
+### How a Node shares one geometry source
+
+`<Node shape={{ type, params }}>` does not pass through the sugar component tree above. It hands the shape to its core shape definition. The middle “Shape geometry / contour” role is the key: the axis-aligned bounding box (AABB), anchors, connection points, and the final path are all derived from the same params.
+
+<ComponentPreview files="arc-sector-node-geometry" size="sm" hideCode />
+
+Arc has no interior area. An automatic connection projects the target direction onto the curve; if that direction falls in the gap, the point clamps to the nearer endpoint. Sector is a closed contour. Its connection ray starts inside the filled region and hits the real inner arc, outer arc, radial edge, or rounded contour.
+
+As a result, `cornerRadius` changes both the visible Sector contour and automatic connection points, but it does not move the exact AABB or named anchors such as `apex` and `outer-arc-mid`. Choose an explicit anchor for a stable semantic location; use an ordinary node reference when the connection should follow the current contour.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Arc bounds, anchors, and curve connection points',
+      path: 'packages/kernel/core/src/providers/shape/arc.ts',
+      startLine: 38,
+      endLine: 122,
+    },
+    {
+      label: 'Sector bounds, centroid, and connection-ray origin',
+      path: 'packages/kernel/core/src/providers/shape/sector-geometry.ts',
+      startLine: 37,
+      endLine: 89,
+    },
+    {
+      label: 'Sector contour, anchors, and Scene output',
+      path: 'packages/kernel/core/src/providers/shape/sector.ts',
+      startLine: 79,
+      endLine: 145,
+    },
+  ]}
+/>
 
 ## Related
 
