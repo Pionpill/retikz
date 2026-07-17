@@ -86,12 +86,68 @@ Besides the node's center plus 8 directional anchors (`center` / `top` …), the
 <ComponentAlert
   type="tip"
   title="Optional for everyday use"
-  description="Revisit when the orientation or inner-radius ratio looks surprising."
+  description="Revisit when you want to understand vertex construction, rotation baselines, or Node connection boundaries."
 />
 
-`<Star>` computes `points * 2` vertices: outer vertices land on `outerRadius`, and inner vertices land on `innerRadius`. The default `innerRatio` is `0.5`, so the inner radius is half of the outer radius. `rotate` changes the starting angle of the first outer vertex; by default one outer point faces upward, and in screen coordinates positive angles rotate clockwise.
+This section focuses on how star parameters become a local contour and how Sugar and Node consume that contour. See [Technical Principles](/kernel/principles) for the complete JSX → IR (intermediate representation) → Scene pipeline.
 
-`<Node shape="star">` shares the same star geometry as `<Star>` (the former is a node with a boundary that connections can snap to), but the `rotate` baseline differs by 90°: Node `star` `rotate:0` already points a tip up, whereas the Sugar `<Star>` needs `rotate:-90` for a tip up (`<Star>` defaults to `-90`). The two only align visually at their respective defaults; offset by 90° when you set `rotate` explicitly. The Sugar `<Star>` also allows `points ≥ 2`, while Node `star` requires `points ≥ 3`.
+### Alternating between the two radii (both)
+
+Let `p = points`. The orange tips lie on the outer circle `R`, while the blue notches lie on the inner circle `r`; the two kinds alternate by vertex index.
+
+<ComponentPreview files="star-vertex-construction" size="sm" hideCode />
+
+The contour has `2p` vertices, with an angular step of `180° / p` between neighbors. Sugar uses an explicit `innerRadius` when present, otherwise it derives one as `outerRadius × innerRatio`; Node star requires both radii. `rotate` changes only the first tip's starting direction, and every later vertex continues at the same step.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Sugar radius defaults and vertex inputs',
+      path: 'packages/kernel/react/src/sugar/shapes/Star.tsx',
+      startLine: 18,
+      endLine: 35,
+    },
+    {
+      label: 'Sugar alternating-vertex calculation',
+      path: 'packages/kernel/react/src/sugar/shapes/shape-helpers.ts',
+      startLine: 175,
+      endLine: 189,
+    },
+    {
+      label: 'Node star local geometry calculation',
+      path: 'packages/kernel/core/src/providers/shape/star.ts',
+      startLine: 55,
+      endLine: 80,
+    },
+  ]}
+/>
+
+### One contour, two consumers (both)
+
+Both entry points first produce the same alternating-vertex contour. Their responsibilities diverge from there: Sugar turns it into a drawable Path, while the Node shape turns it into named geometry that can be laid out and connected.
+
+<ComponentPreview files="star-output-flow" size="sm" hideCode />
+
+Sugar bakes `rotate` directly into the vertex coordinates, then emits `move + line × (2p - 1) + cycle`. The underlying Path carries no `rotate`, avoiding a second rotation around its bounding-box center. Node star derives its circumscribed box from the vertices and reuses the contour for auto-clipping, `tip-N` / `notch-N` anchors, and the Scene path. `cornerRadius` changes the rounded contour and auto-clipped endpoints, but named anchors stay at the original logical vertices.
+
+The left side of the figure also shows the two rotation baselines: Sugar `rotate:-90` and Node star `rotate:0` both point the first tip upward. To keep explicit values visually aligned, set the Node value `90°` higher than the Sugar value. Sugar also allows `points ≥ 2`, while Node star requires `points ≥ 3`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Sugar expansion into a closed Path',
+      path: 'packages/kernel/react/src/sugar/shapes/Star.tsx',
+      startLine: 26,
+      endLine: 46,
+    },
+    {
+      label: 'Node star boundary, anchors, and Scene output',
+      path: 'packages/kernel/core/src/providers/shape/star.ts',
+      startLine: 97,
+      endLine: 134,
+    },
+  ]}
+/>
 
 ## Related
 

@@ -86,12 +86,68 @@ import { Node } from '@retikz/react';
 <ComponentAlert
   type="tip"
   title="日常使用可以跳过本节"
-  description="只有在星形朝向或内外半径比例不符合预期时再回来读。"
+  description="想理解顶点构造、旋转基准或 Node 连接边界时再回来读。"
 />
 
-`<Star>` 会先计算 `points * 2` 个顶点：外点落在 `outerRadius` 上，内点落在 `innerRadius` 上。默认 `innerRatio` 是 `0.5`，也就是内半径为外半径的一半。`rotate` 改变第一个外点的起始角度；默认起始角让一个外点朝上，在屏幕坐标里正角度顺时针旋转。
+本节只放大星形参数到局部轮廓，以及这份轮廓如何被 Sugar 与 Node 消费。完整的 JSX → IR（中间表示） → Scene 编译管线见[技术原理](/kernel/principles)。
 
-`<Node shape="star">` 与 `<Star>` 几何形状一致（前者是有边界、可连线的节点），但 `rotate` 基准差 90°：Node star `rotate:0` 就让一个尖角朝上，而 Sugar `<Star>` 须 `rotate:-90` 才尖角朝上（`<Star>` 缺省即 `-90`）。两者只在各自缺省值下视觉对齐；显式给 `rotate` 时记得换算这 90°。Sugar `<Star>` 还允许 `points ≥ 2`，Node star 要求 `points ≥ 3`。
+### 内外半径交替取点（两者）
+
+设 `p = points`。图中的橙色尖角落在外圆 `R` 上，蓝色凹角落在内圆 `r` 上；两类点按索引交替排列。
+
+<ComponentPreview files="star-vertex-construction" size="sm" hideCode />
+
+轮廓总共有 `2p` 个顶点，相邻顶点的角度步进是 `180° / p`。Sugar 显式传入 `innerRadius` 时直接使用，否则按 `outerRadius × innerRatio` 计算；Node star 则要求同时提供内外半径。`rotate` 只改变第一个尖角的起始方向，后续顶点继续按固定步进展开。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Sugar 的半径默认值与顶点输入',
+      path: 'packages/kernel/react/src/sugar/shapes/Star.tsx',
+      startLine: 18,
+      endLine: 35,
+    },
+    {
+      label: 'Sugar 的交替顶点计算',
+      path: 'packages/kernel/react/src/sugar/shapes/shape-helpers.ts',
+      startLine: 175,
+      endLine: 189,
+    },
+    {
+      label: 'Node star 的局部几何计算',
+      path: 'packages/kernel/core/src/providers/shape/star.ts',
+      startLine: 55,
+      endLine: 80,
+    },
+  ]}
+/>
+
+### 同一轮廓，两种消费方式（两者）
+
+两种入口都先得到交替顶点轮廓，区别从这里开始：Sugar 把轮廓变成一条可绘制的 Path，Node shape 则把它变成可布局、可连接的命名几何。
+
+<ComponentPreview files="star-output-flow" size="sm" hideCode />
+
+Sugar 把 `rotate` 直接烘焙进顶点坐标，再输出 `move + line × (2p - 1) + cycle`；底层 Path 不再携带 `rotate`，避免绕包围盒中心二次旋转。Node star 会从顶点求外接盒，并复用轮廓处理自动贴边、`tip-N` / `notch-N` anchor 与 Scene 路径；`cornerRadius` 改变圆角轮廓和自动贴边点，但命名 anchor 仍固定在原始逻辑顶点。
+
+图左同时标出了两种旋转基准：Sugar 的 `rotate:-90` 与 Node star 的 `rotate:0` 都让第一个尖角朝上。若要让显式角度下的两种写法保持同一朝向，Node 的值应比 Sugar 大 `90°`。此外，Sugar 允许 `points ≥ 2`，Node star 要求 `points ≥ 3`。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Sugar 展开为闭合 Path',
+      path: 'packages/kernel/react/src/sugar/shapes/Star.tsx',
+      startLine: 26,
+      endLine: 46,
+    },
+    {
+      label: 'Node star 的边界、anchor 与 Scene 输出',
+      path: 'packages/kernel/core/src/providers/shape/star.ts',
+      startLine: 97,
+      endLine: 134,
+    },
+  ]}
+/>
 
 ## 相关
 
