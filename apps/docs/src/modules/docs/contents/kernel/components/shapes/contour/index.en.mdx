@@ -37,7 +37,7 @@ import { Node } from '@retikz/react';
 
 ### Examples
 
-`points` is a ring of **local-frame vertices** (at least 3, implicitly closed, with straight edges). You **do not need to pre-center** them — core normalizes by the points' AABB center and aligns the node's `position` to the geometric center of the contour. The two nodes bottom use the same shape, but the right one's points are all shifted by a fixed offset: after auto-centering they render identically.
+`points` is a ring of **local-frame vertices** (at least 3, implicitly closed, with straight edges). You **do not need to pre-center** them — core normalizes by the center of the points' axis-aligned bounding box (AABB) and aligns the node's `position` to that center. The two nodes below use the same shape, but the right one's points are all shifted by a fixed offset: after auto-centering they render identically.
 
 <ComponentPreview files="node-contour" size="sm" />
 
@@ -50,8 +50,8 @@ The key value of `contour` is that it is **still a Node**: another `<Path>` / `<
 <ComponentPreview files="contour-connect" size="sm" />
 
 <ComponentAlert
-  title="Anchors fall back to the AABB"
-  description="Named / standard direction anchors (top / center …) have no meaningful direction on a curved block, so contour falls them back to the circumscribing AABB rectangle; directional connection (boundaryPoint) always hits the contour exactly. For an exact edge hit, point a line at it rather than reading a named anchor."
+  title="Standard direction names fall back to the AABB"
+  description="Standard direction names such as top / right fall back to the circumscribing AABB; automatic id connections and numeric angle anchors still intersect the real contour. To attach exactly along the incoming direction, target the node id directly."
 />
 
 ### API Reference
@@ -73,13 +73,61 @@ The key value of `contour` is that it is **still a Node**: another `<Path>` / `<
   description="Revisit when you want to understand auto-centering or anchor fallback."
 />
 
-### Auto-centering
+This section focuses only on the vertex normalization and attachment resolution owned by `contour`. See [How it works](/kernel/principles) for the full JSX → IR (intermediate representation) → Scene pipeline.
 
-`points` may be given at any local origin. Internally core subtracts the points' **AABB center** from every vertex before projecting to world space, so the geometric center of the contour lands on the node's `position`. Whether you draw the points near the origin or far off to one side, the result is the same — the "uncentered" footgun the schema cannot guard against simply does not exist.
+### How any local origin is normalized to the node position
 
-### Anchor fallback, exact boundaryPoint
+Read the figure from left to right: the same `points` ring sheds the caller's choice of local origin, then becomes a world-space contour centered on `Node.position`.
 
-`contour` is a geometry-driven curved block; standard direction names (`top` / `right` …) have no stable meaning, so `anchor` provides no named anchors and compile falls back to the circumscribing AABB rectangle. Directional connection goes through `boundaryPoint` — it computes the exact ray ∩ contour intersection for **any** vertex ring (convex / concave / filleted), and is the reliable way to connect to a contour node.
+<ComponentPreview files="contour-normalization" size="xs" hideCode />
+
+Core first computes the AABB center `c` of `points`, then rewrites each vertex as `pᵢ - c`. This removes only a translation of the full ring; it does not change edge lengths, angles, or concavity. The centered ring is then projected into world space around `Node.position`.
+
+Translating every input point by the same amount therefore cannot change the final shape. Rendering and attachment intersection both consume the same normalized contour segments, so the visible boundary and automatic connections do not derive separate geometry.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Vertex AABB centering and contour generation',
+      path: 'packages/kernel/core/src/providers/shape/contour.ts',
+      startLine: 31,
+      endLine: 73,
+    },
+  ]}
+/>
+
+### Why automatic attachment and standard direction names differ
+
+The top row follows the real contour; the bottom row shows the fallback for standard direction names. Both start from the same node geometry, but they answer different questions.
+
+<ComponentPreview files="contour-attachment" size="sm" hideCode />
+
+When a path targets the node id automatically, the compiler already knows the direction from which the line approaches. `boundaryPoint` can cast a ray from the node center and intersect the sharp or filleted contour. Numeric angle anchors also provide an explicit direction and use the real contour.
+
+Standard direction names such as `top` / `right` ask for a fixed canonical point; they do not carry the incoming direction of a particular line. An arbitrary concave or convex ring may have several local extremes in the same direction, so `contour` avoids inventing named points. Only after the shape lookup has no result does the compiler use the circumscribing AABB's rectangle direction point. `center` always remains the node center and is unaffected by this fallback.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Contour intersection and named-anchor declaration',
+      path: 'packages/kernel/core/src/providers/shape/contour.ts',
+      startLine: 61,
+      endLine: 68,
+    },
+    {
+      label: 'Automatic attachment endpoint resolution',
+      path: 'packages/kernel/core/src/compile/path/host/target.ts',
+      startLine: 107,
+      endLine: 127,
+    },
+    {
+      label: 'Standard direction and numeric angle anchor resolution',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 57,
+      endLine: 102,
+    },
+  ]}
+/>
 
 ## Related
 
