@@ -78,16 +78,70 @@ Connection endpoints snap to the rectangle edge, and the node's center plus 8 di
 <ComponentAlert
   type="tip"
   title="Optional for everyday use"
-  description="Revisit when a point form throws an error, or when you want to understand the difference between sugar and Node."
+  description="Revisit when point references or rounded connections behave unexpectedly, or when you want to understand the difference between sugar and Node."
 />
 
-### Rectangle can pass through points (sugar)
+This section covers only how Rectangle produces a Path and how a rectangular Node gets a connectable boundary. See [Principles](/kernel/principles) for the complete JSX → IR → Scene pipeline.
 
-The `<Rectangle>` `corner1 + corner2` form can pass points to the underlying Path, so it can reference node ids. Forms that require React-side size calculation, such as `center + width + height`, only accept literal `[x, y]` coordinates.
+### How sugar converges on a closed Path
 
-### Sugar and Node are two routes
+`<Rectangle>` first converges its four prop forms on two opposite corners, `from` and `to`. The upper route in the figure passes through Targets (resolvable points, including coordinates and node ids); the lower route computes the corners from dimensions in the React layer:
 
-`<Rectangle>` expands to a closed `<Path>` and is pure graphics; `<Node>` (the default rectangle) is a node with a boundary circumscribed from the text box that connections can snap to. For a rectangle that both holds text and connects, use `<Node>` rather than `<Rectangle>`.
+<ComponentPreview files="rectangle-sugar-flow" size="lg" hideCode />
+
+Only `corner1 + corner2` passes both Targets through unchanged, so it can reference node ids. Forms such as `center + width + height` need arithmetic first and accept only literal `[x, y]` coordinates. The `rectangle` step then resolves both corners and emits an independent closed subpath; `cornerRadius` replaces each corner with an arc and is clamped to half the shorter side.
+
+If either node reference cannot be resolved, the whole Path is skipped with a warning instead of leaving a partial rectangle.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Rectangle prop normalization and Path expansion',
+      path: 'packages/kernel/react/src/sugar/shapes/Rectangle.tsx',
+      startLine: 21,
+      endLine: 56,
+    },
+    {
+      label: 'Rectangle-step point resolution and closed outline emission',
+      path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
+      startLine: 172,
+      endLine: 220,
+    },
+  ]}
+/>
+
+### How Node gets a connectable boundary
+
+When `<Node>` omits `shape`, it selects `rectangle`. Text measurement and `padding` first form the inner content box, which the rectangle shape uses to produce both the visible outline and connection geometry:
+
+<ComponentPreview files="rectangle-node-boundary" size="lg" hideCode />
+
+A rectangle does not enlarge the half-axes when circumscribing the content, so its boundary wraps exactly around “text + padding.” The same `cornerRadius` participates in both drawing the rectangle and finding a boundary point toward a target. That is why a connection to a rounded node lands on the fillet arc rather than on the sharp corner that was rounded away.
+
+The result of `<Rectangle>` is pure Path geometry. A rectangular `<Node>` retains its id, directional anchors, and boundary-intersection behavior; use `<Node>` when the rectangle needs to hold text and connect.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Default Node shape and corner-radius resolution',
+      path: 'packages/kernel/core/src/compile/node/shape.ts',
+      startLine: 41,
+      endLine: 98,
+    },
+    {
+      label: 'Text and padding to shape-boundary layout',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 82,
+      endLine: 128,
+    },
+    {
+      label: 'Rectangle outline, anchors, and boundary intersection',
+      path: 'packages/kernel/core/src/providers/shape/rectangle.ts',
+      startLine: 43,
+      endLine: 71,
+    },
+  ]}
+/>
 
 ## Related
 
