@@ -143,6 +143,72 @@ Folded segments divide t evenly across the folded legs. `midway` lands on the co
 
 One-line forms for circles, rectangles, and sectors live under the [Shapes](/kernel/components/shapes) group, while background line fields like Grid live under [Helpers](/kernel/components/helpers). They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/kernel/components/shapes/circle-ellipse) for geometric shapes and [Grid](/kernel/components/helpers/grid) for regular reference lines.
 
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit this section when you need to inspect way expansion or diagnose structural errors."
+/>
+
+`<Draw>` only turns the author-friendly `way` syntax into a Kernel subtree. This section stops at the `<Path>` + `<Step>` boundary; see [Principles](/kernel/principles) for the complete JSX → IR → Scene pipeline.
+
+### From way syntax to a Step sequence
+
+The `way` array is scanned from left to right. Its first item must be a target and always becomes `move`; later items either produce path actions or decorate the action that follows them.
+
+| Input role                        | Normalized result                       | Scan behavior                     |
+| --------------------------------- | --------------------------------------- | --------------------------------- |
+| First target                      | `move` step                             | Consumes the current item         |
+| Ordinary / relative target        | `line` step                             | Consumes the current item         |
+| Fold / `curve` / `cubic` / `bend` | Matching `fold` / curve step            | Consumes the following target too |
+| `arc` / `circle` / `ellipse`      | `arc` / `circlePath` / `ellipsePath`    | Does not consume a later target   |
+| `label`                           | Sets the next `step.label`; no own step | Waits for and decorates next step |
+| `cycle`                           | `cycle` step                            | Closes the current subpath        |
+
+The same scan validates structure. A `way` with fewer than two items, a non-target first item, an infix operator without a following target, consecutive labels, or a trailing label fails while Draw expands instead of producing an ambiguous Kernel subtree.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Way normalization and structural validation',
+      path: 'packages/kernel/core/src/parsers/way.ts',
+      startLine: 344,
+      endLine: 409,
+    },
+  ]}
+/>
+
+### Equivalent expansion
+
+For example, this Sugar:
+
+```tsx
+<Draw way={['a', { label: 'ok' }, '-|', 'b']} arrow="->" />
+```
+
+expands to the equivalent Kernel component tree:
+
+```tsx
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step kind="fold" via="-|" to="b" label={{ text: 'ok' }} />
+</Path>
+```
+
+Draw forwards whole-path properties such as stroke, fill, arrows, and stacking to `<Path>`, then maps every normalized action to a `<Step>`. Both forms therefore enter the same Kernel semantics and downstream geometry pipeline. Switching from Draw to an explicit Path + Step tree changes authoring granularity, not path behavior.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Draw expansion into Path and Step',
+      path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
+      startLine: 88,
+      endLine: 157,
+    },
+  ]}
+/>
+
 ## API Reference
 
 ### Props
