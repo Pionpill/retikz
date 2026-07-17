@@ -1,11 +1,11 @@
 ---
-title: 扩展
-description: 扩展 retikz——为内置能力之外的需求注册新形状等扩展点；面向在 retikz 之上构建的人（第三方包 / 宿主集成），不是日常画图。
+title: 扩展机制
+description: 总览 Definition、registry 与 host lowerer 三类扩展模型，并索引各领域的自定义能力。
 ---
 
-这一分组讲怎么**扩展** retikz：内置组件覆盖不到的能力，通过运行时注入的扩展点补上。读者是发第三方包、做宿主集成、或给 retikz 加新基元的人——日常画图从 [组件](/kernel/components/layout) 开始即可。
+本页从运行时视角解释怎样**扩展** retikz：内置组件覆盖不到的能力，通过宿主注入的扩展点补上。读者是发第三方包、做宿主集成、或给 retikz 加新基元的人；日常画图仍从[组件](/kernel/components/layout)开始，各领域的具体扩展页也放在对应组件分组末尾。
 
-> 扩展点都是**宿主 / 编译期能力，不写进 IR**——IR 始终是可序列化的纯数据（LLM / 持久化友好），扩展定义经 `CompileOptions` / 组件 props 在运行时注入。
+> 扩展函数和 registry **不写进 IR**。IR 始终只保存可序列化的名字、kind 与参数；宿主再通过 `CompileOptions`、`<Layout>` props 或可选 lowerer 注入实际行为。
 
 ## 职责一览
 
@@ -30,42 +30,42 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
 - **Registry 扩展**（缓动 / 动画属性）：注入面是 `<Layout>` 的轻量 registry，运行时在渲染器内生效，不进 compile。缓动没有 `EasingDefinition`——值就是 cubic-bezier 元组或函数；动画属性要同时定义插值与后端落地，才用 `AnimationPropertyDefinition`。
 - **Host lowerer**（TeX 公式）：`CompileOptions.lowerTex` 是可选宿主能力，把公式在编译期降成基础 path，不属于通用图元扩展；缺失时可诊断降级。
 
-## 章节内容
+## 扩展点索引
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/extend/shape-registry">
+  <LinkedCard href="/kernel/components/shapes/custom-shape">
     <span className="font-semibold">自定义形状</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义节点形状的 ShapeDefinition</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/boundary-registry">
+  <LinkedCard href="/kernel/components/node/custom-boundary">
     <span className="font-semibold">自定义连接面</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       注册 / 注入只影响连线端点的 BoundaryDefinition
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/clip-registry">
+  <LinkedCard href="/kernel/components/layout/custom-clip">
     <span className="font-semibold">自定义裁剪区</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       注册 / 注入控制 scope 裁剪区的 ClipDefinition
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/custom-arrow">
+  <LinkedCard href="/kernel/components/draw/custom-arrow">
     <span className="font-semibold">自定义箭头</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义箭头样式的 ArrowDefinition</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/custom-pattern">
+  <LinkedCard href="/kernel/components/effects/custom-pattern">
     <span className="font-semibold">自定义图案</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       注册 / 注入自定义填充图案的 PatternDefinition
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/custom-path">
+  <LinkedCard href="/kernel/components/draw/custom-path">
     <span className="font-semibold">自定义路径</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       注册 / 注入接管整条 Path 的 PathKindDefinition
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/path-generator">
+  <LinkedCard href="/kernel/components/draw/path-generator">
     <span className="font-semibold">路径生成器</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       注册 / 注入自定义曲线生成器的 PathGeneratorDefinition
@@ -77,7 +77,7 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
       注册 Tier 2 高层节点的 CompositeDefinition，经 lowering 下沉到 Tier 1
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/custom-animation">
+  <LinkedCard href="/kernel/components/effects/custom-animation">
     <span className="font-semibold">自定义动画</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">注册自定义缓动曲线与动画属性通道</span>
   </LinkedCard>

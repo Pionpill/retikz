@@ -50,6 +50,7 @@ export const kernelSection: Array<Section> = [
         children: [
           { id: 'overview', label: 'kernel.layoutOverview' },
           { id: 'scope', label: 'kernel.layoutScope' },
+          { id: 'custom-clip', label: 'kernel.layoutCustomClip' },
         ],
       },
       {
@@ -59,6 +60,7 @@ export const kernelSection: Array<Section> = [
           { id: 'overview', label: 'kernel.nodeOverview' },
           { id: 'text', label: 'kernel.text' },
           { id: 'coordinate', label: 'kernel.coordinate' },
+          { id: 'custom-boundary', label: 'kernel.nodeCustomBoundary' },
         ],
       },
       {
@@ -68,8 +70,11 @@ export const kernelSection: Array<Section> = [
           { id: 'overview', label: 'kernel.drawOverview' },
           { id: 'way', label: 'kernel.drawWay' },
           { id: 'path', label: 'kernel.path' },
-          { id: 'arrow', label: 'kernel.arrow' },
           { id: 'step', label: 'kernel.step' },
+          { id: 'arrow', label: 'kernel.arrow' },
+          { id: 'path-generator', label: 'kernel.drawPathGenerator' },
+          { id: 'custom-path', label: 'kernel.drawCustomPath' },
+          { id: 'custom-arrow', label: 'kernel.drawCustomArrow' },
         ],
       },
       {
@@ -82,6 +87,7 @@ export const kernelSection: Array<Section> = [
           { id: 'polygon', label: 'kernel.shapesPolygon' },
           { id: 'star', label: 'kernel.shapesStar' },
           { id: 'contour', label: 'kernel.shapesContour' },
+          { id: 'custom-shape', label: 'kernel.shapesCustomShape' },
         ],
       },
       {
@@ -96,20 +102,8 @@ export const kernelSection: Array<Section> = [
           { id: 'shadow', label: 'kernel.effectsShadow' },
           { id: 'blend', label: 'kernel.effectsBlend' },
           { id: 'animation', label: 'kernel.effectsAnimation' },
-        ],
-      },
-      {
-        id: 'extend',
-        label: 'kernel.refExtending',
-        children: [
-          { id: 'shape-registry', label: 'kernel.refShapeRegistry' },
-          { id: 'boundary-registry', label: 'kernel.refBoundaryRegistry' },
-          { id: 'clip-registry', label: 'kernel.refClipRegistry' },
-          { id: 'custom-arrow', label: 'kernel.refCustomArrow' },
-          { id: 'custom-pattern', label: 'kernel.refCustomPattern' },
-          { id: 'custom-path', label: 'kernel.refCustomPath' },
-          { id: 'path-generator', label: 'kernel.refPathGenerator' },
-          { id: 'custom-animation', label: 'kernel.refCustomAnimation' },
+          { id: 'custom-pattern', label: 'kernel.effectsCustomPattern' },
+          { id: 'custom-animation', label: 'kernel.effectsCustomAnimation' },
         ],
       },
     ],
@@ -167,6 +161,7 @@ export const kernelSection: Array<Section> = [
           { id: 'compile', label: 'kernel.refCompile' },
           { id: 'scene-primitive', label: 'kernel.refScenePrimitive' },
           { id: 'parser', label: 'kernel.refParser' },
+          { id: 'extensions', label: 'kernel.refExtensions' },
         ],
       },
     ],

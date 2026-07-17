@@ -5,7 +5,7 @@ description: Register node connection surfaces through the Boundary Registry; th
 
 `boundary` decides where a path stops when it connects to a node. The default is `shape`: the connection surface is the node's own visual shape. Use a separate `BoundaryDefinition` when a rectangular node should expose only left/right ports, an icon should connect as a circle, or several visual shapes should share one connection rule.
 
-The Boundary Registry is a compile-time extension like [Custom Shapes](/kernel/components/extend/shape-registry): the IR stores only a `boundary` name or `{ type, params }`; the real functions are injected through `CompileOptions.boundaries` / `<Layout boundaries>`.
+The Boundary Registry is a compile-time extension like [Custom Shapes](/kernel/components/shapes/custom-shape): the IR stores only a `boundary` name or `{ type, params }`; the real functions are injected through `CompileOptions.boundaries` / `<Layout boundaries>`.
 
 > This page is not needed for everyday connections. Reach for it when "what the node looks like" and "where lines should attach" are different concerns.
 
@@ -113,6 +113,6 @@ Import `defineBoundary` / `BoundaryDefinition` / `BoundaryDefinitionInput` / `BU
 
 ## Related
 
-- [Custom Shapes](/kernel/components/extend/shape-registry): Define how nodes size, connect, and draw
+- [Custom Shapes](/kernel/components/shapes/custom-shape): Define how nodes size, connect, and draw
 - [Layout](/kernel/components/layout/overview): See the `<Layout boundaries>` prop
 - [Compile](/kernel/reference/runtime/compile): See `CompileOptions.boundaries`

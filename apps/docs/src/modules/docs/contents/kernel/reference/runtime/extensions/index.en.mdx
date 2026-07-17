@@ -1,11 +1,11 @@
 ---
-title: Extending
-description: Extending retikz — register new shapes and other extension points for needs the built-ins don't cover; for people building on top of retikz (third-party packages / host integrations), not everyday figure authoring.
+title: Extension Mechanisms
+description: An overview of definition, registry, and host-lowerer extension models, with links to each domain-specific capability.
 ---
 
-This group is about **extending** retikz: capabilities the built-in components don't cover, filled in through runtime-injected extension points. The audience is people shipping third-party packages, doing host integration, or adding new primitives to retikz — for everyday figures, start from [Components](/kernel/components/layout).
+This page explains how to **extend** retikz from the runtime perspective: host-injected extension points fill capabilities the built-in components do not cover. It is for people shipping third-party packages, integrating a host, or adding new primitives. Everyday authoring still starts from [Components](/kernel/components/layout), with each domain-specific extension page placed at the end of its related component group.
 
-> Extension points are **host / compile-time capabilities and never enter the IR** — the IR stays serializable plain data (LLM / persistence friendly); extension definitions are injected at runtime via `CompileOptions` / component props.
+> Extension functions and registries **never enter the IR**. The IR stores only serializable names, kinds, and parameters; the host injects behavior through `CompileOptions`, `<Layout>` props, or an optional lowerer.
 
 ## What each part covers
 
@@ -30,46 +30,46 @@ Extension points fall into three models by mechanism; knowing which one a capabi
 - **Registry extensions** (easing / animation property): the injection points are lightweight registries on `<Layout>`, applied at runtime inside the renderer, never entering compile. Easing has no `EasingDefinition` — the value is just a cubic-bezier tuple or a function; an animation property needs both an interpolator and backend application, which is why it uses `AnimationPropertyDefinition`.
 - **Host lowerer** (TeX formula): `CompileOptions.lowerTex` is an optional host capability that lowers formulas into plain paths at compile time; it is not a general primitive extension and degrades diagnosably when absent.
 
-## In this section
+## Extension point index
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/extend/shape-registry">
+  <LinkedCard href="/kernel/components/shapes/custom-shape">
     <span className="font-semibold">Custom Shapes</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register / inject a ShapeDefinition for custom node shapes
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/boundary-registry">
+  <LinkedCard href="/kernel/components/node/custom-boundary">
     <span className="font-semibold">Custom Boundaries</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register / inject a BoundaryDefinition for connection-only surfaces
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/clip-registry">
+  <LinkedCard href="/kernel/components/layout/custom-clip">
     <span className="font-semibold">Custom Clips</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register / inject a ClipDefinition for scope clipping regions
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/custom-arrow">
+  <LinkedCard href="/kernel/components/draw/custom-arrow">
     <span className="font-semibold">Custom Arrows</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register / inject an ArrowDefinition for custom arrow tips
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/custom-pattern">
+  <LinkedCard href="/kernel/components/effects/custom-pattern">
     <span className="font-semibold">Custom Patterns</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register / inject a PatternDefinition for custom fills
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/custom-path">
+  <LinkedCard href="/kernel/components/draw/custom-path">
     <span className="font-semibold">Custom Paths</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register / inject a PathKindDefinition for whole-path providers
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/path-generator">
+  <LinkedCard href="/kernel/components/draw/path-generator">
     <span className="font-semibold">Path Generators</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register / inject a PathGeneratorDefinition for custom curves
@@ -81,7 +81,7 @@ Extension points fall into three models by mechanism; knowing which one a capabi
       Register a CompositeDefinition for Tier 2 nodes, lowered down to Tier 1
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/custom-animation">
+  <LinkedCard href="/kernel/components/effects/custom-animation">
     <span className="font-semibold">Custom Animation</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Register custom easing curves and animation property channels

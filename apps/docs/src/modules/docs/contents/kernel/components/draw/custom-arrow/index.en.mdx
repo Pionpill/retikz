@@ -3,7 +3,7 @@ title: Custom Arrows
 description: Arrow shape names are open strings; beyond the 8 built-ins, register any arrow with defineArrow / ArrowDefinition — emit produces MarkerPrimitive geometry in local coordinates, and color follows the path stroke via contextStroke.
 ---
 
-Arrow shape names are **open strings**: beyond the 8 built-ins (`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`), you can register your own arrow tips. React `arrowDetail.shape` and core IR `marks[].mark.shape` both look up the same registry name. The registry mirrors the [shape registry](/kernel/components/extend/shape-registry) — the 8 built-ins are themselves registry entries, with no special privileges.
+Arrow shape names are **open strings**: beyond the 8 built-ins (`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`), you can register your own arrow tips. React `arrowDetail.shape` and core IR `marks[].mark.shape` both look up the same registry name. The registry mirrors the [shape registry](/kernel/components/shapes/custom-shape) — the 8 built-ins are themselves registry entries, with no special privileges.
 
 Registration goes through `CompileOptions.arrows` (in React that's `<Layout arrows={...}>`): core IR only stores the string name in `marks[].mark.shape`; the geometry is injected here. An unregistered name throws at compile time (with the list of available names); each definition carries `name`; built-in name collisions fail at registration time.
 

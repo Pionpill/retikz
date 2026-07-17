@@ -34,10 +34,10 @@ description: Path 的 kind 是开放字符串；除了内置 stroke / ribbon，�
 
 自定义路径接管**整条 Path**：它决定这条路径最终产出什么 primitive，适合改变关系形态或复用内置 lowerer 后再改写结果。
 
-路径生成器只接管 **一个 `generator` step**：它把某一段曲线转换成低层 `PathCommand[]`，之后仍交给当前 Path kind 继续编译。需要新增曲线段时用 [路径生成器](/kernel/components/extend/path-generator)，需要新增整条路径的 provider 时用自定义路径。
+路径生成器只接管 **一个 `generator` step**：它把某一段曲线转换成低层 `PathCommand[]`，之后仍交给当前 Path kind 继续编译。需要新增曲线段时用 [路径生成器](/kernel/components/draw/path-generator)，需要新增整条路径的 provider 时用自定义路径。
 
 ## 相关
 
 - [Path](/kernel/components/draw/path)
-- [路径生成器](/kernel/components/extend/path-generator)
-- [自定义箭头](/kernel/components/extend/custom-arrow)
+- [路径生成器](/kernel/components/draw/path-generator)
+- [自定义箭头](/kernel/components/draw/custom-arrow)

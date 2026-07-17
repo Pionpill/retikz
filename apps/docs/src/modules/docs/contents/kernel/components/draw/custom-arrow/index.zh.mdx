@@ -3,7 +3,7 @@ title: 自定义箭头
 description: arrow shape 是开放字符串；内置 8 种之外，用 defineArrow / ArrowDefinition 注册任意箭头——emit 在局部坐标产 MarkerPrimitive 几何，颜色经 contextStroke 跟随 path 描边。
 ---
 
-箭头形状名是**开放字符串**：内置 8 种（`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`）之外，可以注册自己的箭头。React `arrowDetail.shape` 和 core IR `marks[].mark.shape` 都按同一注册名查找。注册面对齐 [shape 注册面](/kernel/components/extend/shape-registry)——内置 8 种本身也是注册项，没有特权。
+箭头形状名是**开放字符串**：内置 8 种（`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`）之外，可以注册自己的箭头。React `arrowDetail.shape` 和 core IR `marks[].mark.shape` 都按同一注册名查找。注册面对齐 [shape 注册面](/kernel/components/shapes/custom-shape)——内置 8 种本身也是注册项，没有特权。
 
 注册通过 `CompileOptions.arrows`（React 里是 `<Layout arrows={...}>`）：core IR 的 `marks[].mark.shape` 只保存字符串名，几何定义在这里注入。未注册名会在编译时报错（带可用名称列表）；每个 definition 都携带 `name`；与内置名冲突会在注册阶段失败。
 

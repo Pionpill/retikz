@@ -1,21 +1,20 @@
 ---
 title: Components
-description: Navigate Kernel components by layout, primitives, relationships, shapes, effects, and extension capabilities.
+description: Navigate Kernel components by layout, primitives, relationships, shapes, helpers, and effects.
 ---
 
-Components are the main entry point for authoring figures. Establish the canvas and local coordinate contexts first, then place nodes and coordinates and draw path relationships. Shapes, helpers, effects, and extension pages add more specialized capabilities.
+Components are the main entry point for authoring figures. Establish the canvas and local coordinate contexts first, then place nodes and coordinates and draw path relationships. Shapes, helpers, and effects add more specialized capabilities. Domain-specific extension pages sit at the end of their related groups, while [Extension Mechanisms](/kernel/reference/runtime/extensions) collects the cross-domain model.
 
 ## Responsibilities
 
-| Group     | Main members                      | Responsibility                                |
-| --------- | --------------------------------- | --------------------------------------------- |
-| Layout    | Layout, Scope                     | Host the figure and local coordinate contexts |
-| Node      | Node, Text, Coordinate            | Describe visible objects and reference points |
-| Drawing   | Draw, Way, Path, Arrow, Step      | Describe connections and path actions         |
-| Shapes    | Circle, Arc, Rectangle, Polygon   | Build common geometry from higher-level input |
-| Helpers   | Grid                              | Provide reusable drawing helpers              |
-| Effects   | Shadow, Blend, Animation          | Control visual composition and motion         |
-| Extending | Registries and custom definitions | Register new shapes, paths, arrows, and more  |
+| Group   | Main members                      | Responsibility                                |
+| ------- | --------------------------------- | --------------------------------------------- |
+| Layout  | Layout, Scope, Clip               | Host the figure and local coordinate contexts |
+| Node    | Node, Text, Coordinate, Boundary  | Describe visible objects and reference points |
+| Drawing | Draw, Way, Path, Arrow, Step      | Describe connections and path actions         |
+| Shapes  | Circle, Arc, Rectangle, Polygon   | Build common geometry from higher-level input |
+| Helpers | Grid                              | Provide reusable drawing helpers              |
+| Effects | Shadow, Blend, Pattern, Animation | Control visual composition and motion         |
 
 ## Chapters
 
@@ -47,11 +46,5 @@ Components are the main entry point for authoring figures. Establish the canvas 
   <LinkedCard href="/kernel/components/effects">
     <span className="font-semibold">Effects</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Shadows, blend modes, and animation</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/extend">
-    <span className="font-semibold">Extending</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Extend capabilities through definitions and registries
-    </span>
   </LinkedCard>
 </div>

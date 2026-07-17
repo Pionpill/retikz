@@ -1,9 +1,9 @@
 ---
 title: Runtime
-description: Runtime reference — the IR-to-picture pipeline, covering the compile entry, the Primitive output, and Parser helpers.
+description: Runtime reference — the IR pipeline, Primitive model, Parser helpers, and host-injected extension mechanisms.
 ---
 
-This group is the runtime pipeline from IR to picture. `compile` is the entry point: it takes IR and emits a renderer-agnostic Scene Primitive; the Primitive is that renderer-agnostic drawing model; the Parser is the set of pure functions that turn sugar input into IR fragments. Look here when you drive compilation yourself, write a custom renderer, or reuse the sugar parsing logic.
+This group is the runtime pipeline from IR to picture. `compile` is the entry point, Primitive is the renderer-agnostic drawing model, Parser turns sugar input into IR fragments, and Extension Mechanisms explains how hosts inject custom definitions, registries, and lowerers. Look here when you drive compilation, build extension packages, or write a custom renderer.
 
 <ComponentPreview files="runtime-flow" size="sm" hideCode />
 
@@ -11,11 +11,12 @@ This group is the runtime pipeline from IR to picture. `compile` is the entry po
 
 ## What each part covers
 
-| Topic     | Responsibility                                                               | Reach for it when                                                    |
-| --------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Compile   | The IR → Scene entry point, layout options, text measuring, warning contract | Driving compilation yourself, configuring layout, receiving warnings |
-| Primitive | The renderer-agnostic drawing model produced by compile                      | Writing a custom renderer / exporter                                 |
-| Parser    | Pure conversion from sugar input to IR fragments                             | Reusing sugar parsing such as relative coordinates                   |
+| Topic      | Responsibility                                                               | Reach for it when                                                    |
+| ---------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Compile    | The IR → Scene entry point, layout options, text measuring, warning contract | Driving compilation yourself, configuring layout, receiving warnings |
+| Primitive  | The renderer-agnostic drawing model produced by compile                      | Writing a custom renderer / exporter                                 |
+| Parser     | Pure conversion from sugar input to IR fragments                             | Reusing sugar parsing such as relative coordinates                   |
+| Extensions | Injection models for definitions, registries, and host lowerers              | Building third-party packages or host integrations                   |
 
 ## In this section
 
@@ -34,6 +35,12 @@ This group is the runtime pipeline from IR to picture. `compile` is the entry po
     <span className="font-semibold">Parser</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Pure functions from sugar input to IR fragments
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/runtime/extensions">
+    <span className="font-semibold">Extension Mechanisms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Cross-domain extension points and host injection models
     </span>
   </LinkedCard>
 </div>

@@ -5,7 +5,7 @@ description: 通过 Boundary Registry 注册节点的连接面；节点的视觉
 
 `boundary` 控制路径连接到节点时停在哪里。默认值是 `shape`：连接面就是节点自己的视觉形状。需要让一个矩形节点只暴露左右两个端口、让一个图标按圆形连线、或让多个视觉 shape 复用同一套连接规则时，就把连接面拆成独立的 `BoundaryDefinition`。
 
-Boundary Registry 和 [自定义形状](/kernel/components/extend/shape-registry) 是同一类 compile-time 扩展：IR 里只保存 `boundary` 的名字或 `{ type, params }`，真正的函数定义通过 `CompileOptions.boundaries` / `<Layout boundaries>` 注入。
+Boundary Registry 和 [自定义形状](/kernel/components/shapes/custom-shape) 是同一类 compile-time 扩展：IR 里只保存 `boundary` 的名字或 `{ type, params }`，真正的函数定义通过 `CompileOptions.boundaries` / `<Layout boundaries>` 注入。
 
 > 日常连线通常不需要本页。只有当“看起来是什么形状”和“线应该接到哪里”不是同一件事时，才需要自定义连接面。
 
@@ -113,6 +113,6 @@ React 里把同一份定义传给 `<Layout>`：
 
 ## 相关
 
-- [自定义形状](/kernel/components/extend/shape-registry)：定义节点如何占位、连线和绘制
+- [自定义形状](/kernel/components/shapes/custom-shape)：定义节点如何占位、连线和绘制
 - [Layout](/kernel/components/layout/overview)：查看 `<Layout boundaries>` prop
 - [编译](/kernel/reference/runtime/compile)：查看 `CompileOptions.boundaries`

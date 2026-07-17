@@ -227,7 +227,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 ### Clipping
 
-`<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away. Built-in clips support `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`, and [Custom Clips](/kernel/components/extend/clip-registry) can register additional `kind` values. Coordinates are scope-local:
+`<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away. Built-in clips support `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`, and [Custom Clips](/kernel/components/layout/custom-clip) can register additional `kind` values. Coordinates are scope-local:
 
 ```tsx
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>

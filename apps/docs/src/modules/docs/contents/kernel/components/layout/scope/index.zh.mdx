@@ -227,7 +227,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 ### clip 裁切
 
-`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉。内置裁剪区支持 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`，也可以通过 [自定义裁剪区](/kernel/components/extend/clip-registry) 注册自己的 `kind`；坐标用 scope 局部坐标系：
+`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉。内置裁剪区支持 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`，也可以通过 [自定义裁剪区](/kernel/components/layout/custom-clip) 注册自己的 `kind`；坐标用 scope 局部坐标系：
 
 ```tsx
 <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>

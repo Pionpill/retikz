@@ -3,7 +3,7 @@ title: Custom Patterns
 description: pattern.shape is an open string; beyond the built-in lines / dots / grid, register any motif with definePattern / PatternDefinition — emit produces MarkerPrimitive geometry in tile-local coordinates (emit-in-compile) into a Scene resource, and the adapter materializes the <pattern>.
 ---
 
-In a `fill` `PaintSpec`, `pattern.shape` is an **open string**: beyond the three built-in motifs (`lines` hatching / `dots` / `grid`), you can register your own pattern. The registry mirrors the [shape registry](/kernel/components/extend/shape-registry) / [custom arrows](/kernel/components/extend/custom-arrow) — the 3 built-ins are themselves registry entries, with no special privilege.
+In a `fill` `PaintSpec`, `pattern.shape` is an **open string**: beyond the three built-in motifs (`lines` hatching / `dots` / `grid`), you can register your own pattern. The registry mirrors the [shape registry](/kernel/components/shapes/custom-shape) / [custom arrows](/kernel/components/draw/custom-arrow) — the 3 built-ins are themselves registry entries, with no special privilege.
 
 Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns={...}>`): the IR's `fill={{ kind:'pattern', shape:'...' }}` still only stores a string name; the motif geometry is injected here. Unregistered names throw at compile time (with the list of available names); each definition carries `name`; built-in name collisions fail at registration time.
 
@@ -37,7 +37,7 @@ The `PatternEmitContext` passed to `emit`:
 
 `emit` runs at **compile time** (same place as a shape's or arrow's emit): the resulting motif `MarkerPrimitive[]`, together with the tile params (`size` / `background` / `rotation`), is resolved into a `ResolvedPatternTile` and written into the Scene resource (`SceneResource.tile`); the adapter only **materializes** the `<pattern>`, knowing nothing about the pattern registry and recomputing no geometry.
 
-The motif geometry reuses the [custom arrows](/kernel/components/extend/custom-arrow) `MarkerPrimitive` **narrow subset** — `path` / `ellipse` / `rect` / `group`, with `fill` / `stroke` limited to a color string or `{ kind:'contextStroke' }`; `text`, external `resourceRef`, and functions are forbidden; coordinates must be finite (non-finite throws at compile, keeping the Scene JSON-serializable).
+The motif geometry reuses the [custom arrows](/kernel/components/draw/custom-arrow) `MarkerPrimitive` **narrow subset** — `path` / `ellipse` / `rect` / `group`, with `fill` / `stroke` limited to a color string or `{ kind:'contextStroke' }`; `text`, external `resourceRef`, and functions are forbidden; coordinates must be finite (non-finite throws at compile, keeping the Scene JSON-serializable).
 
 ## Size and color
 

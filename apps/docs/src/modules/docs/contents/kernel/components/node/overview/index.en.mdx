@@ -94,13 +94,13 @@ For each shape's parameters, anchors, and examples, see its shape page:
 | polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/shapes/polygon)                 |
 | star              | `{ type:'star', params }`                  | [Star](/kernel/components/shapes/star)                       |
 
-`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/kernel/components/extend/shape-registry).
+`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/kernel/components/shapes/custom-shape).
 
 #### Connection surface (boundary)
 
 By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `boundary` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
 
-`boundary` takes the same forms as `shape`. The four parameter-free values below are the common ones; other names first check [Custom Boundaries](/kernel/components/extend/boundary-registry), then fall back to any registered shape:
+`boundary` takes the same forms as `shape`. The four parameter-free values below are the common ones; other names first check [Custom Boundaries](/kernel/components/node/custom-boundary), then fall back to any registered shape:
 
 | Value                                                    | Connection surface                                               | Effect                                                                                                    |
 | -------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |

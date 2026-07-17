@@ -1,9 +1,9 @@
 ---
 title: 运行时
-description: 运行时参考——把 IR 编译成渲染目标无关绘制模型的管线：compile 入口、Primitive 输出、Parser 工具。
+description: 运行时参考——从 IR 编译管线、Primitive 与 Parser，到宿主注入的扩展机制。
 ---
 
-这一分组是从 IR 到画面的运行时管线。`compile` 是入口，吃 IR、吐出渲染目标无关的 Scene Primitive；Primitive 是那份与具体渲染器无关的绘制模型；Parser 是把 Sugar 输入转成 IR 片段的纯函数。自己驱动编译、写自定义渲染器、或复用 Sugar 解析逻辑时看这里。
+这一分组是从 IR 到画面的运行时管线。`compile` 是入口，吃 IR、吐出渲染目标无关的 Scene Primitive；Primitive 是那份与具体渲染器无关的绘制模型；Parser 把 Sugar 输入转成 IR 片段；扩展机制则说明宿主怎样注入自定义 Definition、registry 与 lowerer。自己驱动编译、写扩展包或自定义渲染器时看这里。
 
 <ComponentPreview files="runtime-flow" size="sm" hideCode />
 
@@ -16,6 +16,7 @@ description: 运行时参考——把 IR 编译成渲染目标无关绘制模型
 | Compile   | IR → Scene 的编译入口、布局选项、文字度量、warning 合同 | 自己驱动编译、配置布局、接收 warning |
 | Primitive | compile 输出的渲染目标无关绘制模型                      | 写自定义渲染器 / 导出器              |
 | Parser    | Sugar 输入到 IR 片段的纯函数转换                        | 复用相对坐标等 Sugar 解析逻辑        |
+| 扩展机制  | Definition、registry 与 host lowerer 的注入模型         | 写第三方包或宿主集成                 |
 
 ## 章节内容
 
@@ -31,5 +32,9 @@ description: 运行时参考——把 IR 编译成渲染目标无关绘制模型
   <LinkedCard href="/kernel/reference/runtime/parser">
     <span className="font-semibold">解析器</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Sugar 输入到 IR 片段的纯函数</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/runtime/extensions">
+    <span className="font-semibold">扩展机制</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">跨领域扩展点与宿主注入模型</span>
   </LinkedCard>
 </div>
