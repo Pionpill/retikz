@@ -1,9 +1,9 @@
 ---
 title: Coordinate
-description: 占位节点——命名一个点不画任何图形，给后续 path 和 node 相对定位（`{ of }`）引用。
+description: 占位节点——命名一个点不画任何图形，给 path 和 node 相对定位（`{ of }`）引用。
 ---
 
-`<Coordinate>` 用来在 IR 中登记一个可命名的引用点。它和 `<Node>` 一样可以被路径与相对定位引用，但不会在画面上渲染形状或文字；编译时只登记它的 `id` 与位置，供后续 `<Path>` 端点和 `<Node position>` 的相对 / 偏移定位（`{ of }`）引用。
+`<Coordinate>` 用来在 IR 中登记一个可命名的引用点。它和 `<Node>` 一样可以被路径与相对定位引用，但不会在画面上渲染形状或文字；编译时会解析它的位置并登记 `id`，供 `<Path>` 端点和 `<Node position>` 的相对 / 偏移定位（`{ of }`）引用。
 
 ## 用法
 
@@ -66,21 +66,82 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 <ComponentAlert
   type="tip"
   title="上手阶段可跳过本节"
-  description="想理解 coordinate 为何不撑大画布、anchor 为何都落在中心时再回来读。"
+  description="想理解 Coordinate 的引用时序、零尺寸记录和 anchor 行为时再回来读。"
 />
 
-Coordinate 在内部以一个 **0×0 的点**登记，由此带来三条可观察行为：
+本节只放大 `<Coordinate>` 如何在 compile 中成为可引用的几何句柄；完整的 JSX → IR → Scene 管线见[技术原理](/kernel/principles)。
+
+### 先登记，再引用
+
+图的主链表示编译器遍历到 Coordinate 时发生的动作；下方两条分支展示定位引用与 path 端点读取同一登记结果的不同时机。
+
+<ComponentPreview files="coordinate-resolution-flow" size="sm" hideCode />
+
+Coordinate 的 `position` 会立即解析。若它依赖另一个 id，该 id 必须已经在当前可见命名空间中登记；引用同一层里后定义的 Node / Coordinate 会直接报错。位置解析成功后，编译器把结果投影到全局坐标，保存成一条只有中心坐标的零尺寸几何记录，再按 `id` 登记。
+
+Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到已登记的 id。Path 则先排队，等当前 Scope 的 children 完成登记后再解析端点，所以同一作用域里的 path 可以引用写在它后面的 Coordinate。`localNamespace` 带来的可见范围仍遵循 [Scope 的命名空间规则](/kernel/components/layout/scope#命名空间与-id-冲突如何处理)。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Coordinate 位置解析与登记',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 232,
+      endLine: 253,
+    },
+    {
+      label: 'children 遍历与 path 延迟回填',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 420,
+      endLine: 452,
+    },
+    {
+      label: '定位引用解析',
+      path: 'packages/kernel/core/src/compile/position.ts',
+      startLine: 55,
+      endLine: 98,
+    },
+  ]}
+/>
+
+### 零尺寸记录如何影响输出
+
+这里的“零尺寸”表示记录的宽为 0、高为 0，因此也常简写为 **0×0**。它只保存 Coordinate 的中心坐标，没有面积或可见内容，边界也退化到中心；这是一条供编译器定位和连线引用的内部几何记录，不是 Scene 图元。这样既能复用 Node 的 id 查询与 anchor 解析机制，又不会让纯引用点进入渲染输出或自动画布范围。
 
 - **不画任何图元**——没有形状、没有文字，渲染产物里完全不出现。
 - **不撑大画布**——远处的 coordinate 不会让最终 viewBox 自动变大；必须有实际 `<Node>` / `<Path>` 落在那片区域，画布才覆盖过去（调试定位时常踩这点）。
-- **所有 anchor 退化为中心**——尺寸是 0，`hub.top` / `hub.bottom` 等方位 anchor 都等于中心点；需要方向 anchor 就改用 `<Node>`。
+- **命名 / 角度 anchor 退化为中心**——因为宽和高都是 0，各方向的边界都和中心重合，所以 `hub.top` / `hub.bottom` / `hub.30` 都等于中心点；需要方向 anchor 就改用 `<Node>`。
+- **边上比例点会报错**——`{ anchor: { side, fraction } }` 需要一条真实边，而零尺寸记录只有中心点，没有可取样的边。
+
+<SourceLinks
+  sources={[
+    {
+      label: '零尺寸几何记录构造',
+      path: 'packages/kernel/core/src/compile/node/synthetic.ts',
+      startLine: 52,
+      endLine: 77,
+    },
+    {
+      label: '命名 anchor 解析',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 57,
+      endLine: 84,
+    },
+    {
+      label: '零尺寸边上比例点拒绝',
+      path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
+      startLine: 58,
+      endLine: 77,
+    },
+  ]}
+/>
 
 ## API 参考
 
-| 属性       | 类型                                                                                                 | 默认值 | 描述                                                                                                                       |
-| ---------- | ---------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `id`       | `string`                                                                                             | —      | **必填**——占位的全部意义就在于被 id 引用                                                                                   |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —      | 占位点位置；与 `<Node position>` 完全一致——含偏移定位 `{ of, offset }` 与比例 partway `{ between: [A, B], fraction }` 形态 |
+| 属性       | 类型                                                                                                 | 默认值 | 描述                                                                                                   |
+| ---------- | ---------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------ |
+| `id`       | `string`                                                                                             | —      | **必填**——占位的全部意义就在于被 id 引用                                                               |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —      | 占位点位置；与 `<Node position>` 完全一致；其中 id 依赖必须先登记，解析时序见[技术原理](#先登记再引用) |
 
 ## 相关
 
@@ -101,7 +162,7 @@ Coordinate 在内部以一个 **0×0 的点**登记，由此带来三条可观�
 
 - **要给点配文字标签** → 用 `<Node>` 加 `label?`，coordinate 不带文字字段
 - **要画一个圆点 / 标记位置** → 用 `<Node shape="circle">` + 小尺寸；coordinate 永远不画
-- **anchor 指向**（`hub.top`）→ coordinate 所有 anchor 都退化为中心，要方向 anchor 用 `<Node>`
+- **anchor 指向**（`hub.top`）→ coordinate 的命名 / 角度 anchor 都退化为中心，要方向 anchor 用 `<Node>`
 
 - [Node](/kernel/components/node/overview)：有形状和文字的节点
 - [Draw](/kernel/components/draw/overview)：引用 coordinate id 的日常连线写法
