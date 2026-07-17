@@ -328,6 +328,119 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 </Comparison>
 
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when positioning order, connection points, or node footprint behave differently than expected."
+/>
+
+This section focuses on the layout, naming, and connection mechanisms owned by `<Node>`. For the complete JSX → IR → Scene pipeline, see [Principles](/kernel/principles).
+
+### From props to a referenceable node
+
+The compiler first resolves the style-inherited `position`, content, and geometry props into one Node layout. That layout serves two outputs: shape, text, and labels become Scene primitives, while `id`, anchors, and the connection boundary become named geometry that `<Path>` / `<Draw>` can query.
+
+<ComponentPreview files="node-layout-flow" size="md" hideCode />
+
+Node sizing converges in a fixed order: text is measured and wrapped first; `padding` forms the content box; the shape definition computes a visual circumscribed box from that box and its params; then `minimumSize` applies a floor. `scale` affects fonts, spacing, and shape params from the start, while `rotate` is attached to the resolved geometry.
+
+`label` does not participate in visual shape sizing. Labels are laid out as separate attached primitives, so they do not enlarge the node border, but their extents join `margin` and shadow when the automatic viewBox is collected.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve content and geometry into a Node layout',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 69,
+      endLine: 169,
+    },
+    {
+      label: 'Emit shape, content, and labels as Scene primitives',
+      path: 'packages/kernel/core/src/compile/node/emit.ts',
+      startLine: 235,
+      endLine: 256,
+    },
+    {
+      label: 'Register names and collect automatic viewBox bounds',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 211,
+      endLine: 229,
+    },
+  ]}
+/>
+
+### Visual shape vs connection geometry
+
+`shape` owns the rendered contour and shape-specific anchors. `boundary` participates only when resolving automatic path endpoints, standard directional anchors, and numeric-angle anchors. The two geometry paths coincide only when `boundary` is omitted or set to `'shape'`.
+
+| Reference form                        | Geometry used                    |
+| ------------------------------------- | -------------------------------- |
+| Automatic endpoint, `.top`, or `.30`  | `boundary`, expanded by `margin` |
+| Shape-specific anchor such as `tip-0` | Visual `shape`                   |
+| `{ side, fraction }` edge point       | Visual `shape`                   |
+
+As a result, `margin` pushes connection endpoints and standard border anchors outward and expands the node's layout footprint, but never redraws the visual shape. Shape-specific anchors and edge points stay on the original contour. If a shape does not implement a standard directional anchor, core falls back to its bounding rectangle.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve connection-surface providers',
+      path: 'packages/kernel/core/src/compile/node/boundary.ts',
+      startLine: 47,
+      endLine: 90,
+    },
+    {
+      label: 'Route visual contours, boundaries, and anchors',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 35,
+      endLine: 82,
+    },
+    {
+      label: 'Apply margin by anchor category',
+      path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
+      startLine: 16,
+      endLine: 75,
+    },
+  ]}
+/>
+
+### Why named positioning is order-sensitive
+
+Node positioning resolves immediately when traversal reaches that node: the compiler queries the current namespace first, then registers the node's `id` only after its layout is known. A `position` that refers to a later Node / Coordinate in the same scope therefore fails, and cyclic positioning cannot resolve.
+
+Path / Draw endpoints use a different phase. A path first reserves its drawing-order slot, then resolves only after every Node and Coordinate in the current scope has registered. Path endpoints can therefore refer to later sibling nodes.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve Node positions',
+      path: 'packages/kernel/core/src/compile/position.ts',
+      startLine: 59,
+      endLine: 98,
+    },
+    {
+      label: 'Register ids after Node layout',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 179,
+      endLine: 215,
+    },
+    {
+      label: 'Queue paths for deferred emission',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 256,
+      endLine: 281,
+    },
+    {
+      label: 'Resolve paths after name registration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 147,
+      endLine: 175,
+    },
+  ]}
+/>
+
 ## API Reference
 
 | Prop   | Type                         | Default | Description                                                                                                                                                                                                                                                                                                                                                          |
