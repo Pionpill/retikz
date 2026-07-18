@@ -129,7 +129,6 @@ docs / notes 可解释
 
 本文不替代现有 core 架构规则：
 
-- `notes/architecture/core-design.md` 仍是全局 core 架构背景。
 - `packages/kernel/core/AGENTS.md` 仍是包内硬约束。
 - `standard-structure` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile` 仍决定代码落层。
 - kernel ADR 仍记录具体版本的设计决策。

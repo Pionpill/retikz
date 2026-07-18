@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [core-design.md §4.5](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md)
 
 > **范围**：把 edge label 的 `position` 从 3 keyword 扩成 TikZ 完整集（7 keyword + 任意数值 t∈[0,1]），并把"t 在每种 step kind 上的几何含义"写定。
 

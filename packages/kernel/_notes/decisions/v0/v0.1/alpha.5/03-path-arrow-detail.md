@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [core-design.md §4.5](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md)
 
 > **范围**：把箭头从"形状一个扁平字段 + 视觉全锁死等于 path"升级为可独立控制颜色 / 尺寸 / 透明度、且起末两端可异形异色的 `arrowDetail` 对象。
 

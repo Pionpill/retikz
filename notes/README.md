@@ -31,7 +31,6 @@
 
 ### 全仓架构
 
-- [`core-design.md`](./architecture/core-design.md)：retikz 总架构设计，包含分层模型、IR、Scene、AI 友好原则、跨平台策略。
 - [`schema-design.md`](./architecture/schema-design.md)：schema / LLM 契约相关设计。
 
 ### kernel 发布组

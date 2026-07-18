@@ -1,7 +1,7 @@
 # plot 渲染性能分析 + GPU（WebGL/WebGPU）后端可行性
 
 > 目的：回答「`@retikz/plot` 会不会撞性能墙、在哪里撞、要不要上 WebGL」。结论先行：plot 的图元随数据量 `O(N)` 增长，canvas 在 5k–10k 动画图元 / ~5 万静态图元处掉帧，**确会撞墙**；但 GPU 后端不是第一杠杆——canvas batching 与 plot 侧聚合更便宜、且能独立见效，真撞墙时再上 **hybrid GPU（数据层 GPU + 文字/轴留 2D）**。
-> 日期：2026-06-07 · 关联：[`v0.3 roadmap`](../../../../packages/kernel/_notes/decisions/v0/v0.3/roadmap.md)（包拆分图已预留 `./webgl`）· [`plot-compare-analysis`](./plot-compare-analysis.md)（性能维度横向定位）· [`core-design.md`](../../../../notes/architecture/core-design.md)
+> 日期：2026-06-07 · 关联：[`v0.3 roadmap`](../../../../packages/kernel/_notes/decisions/v0/v0.3/roadmap.md)（包拆分图已预留 `./webgl`）· [`plot-compare-analysis`](./plot-compare-analysis.md)（性能维度横向定位）
 > 说明：文中性能阈值为**工程经验量级，非实测**；正式立项前应补 benchmark 把拐点测准（见 §6）。
 
 ## 1. plot 的图元随数据量线性爆炸（O(N)，已确认）

@@ -10,7 +10,6 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - Kernel 组：`packages/kernel/{math,core,render,react,vanilla,tex}`，其中 `math` 是零依赖计算底座，`tex` 是可选 LaTeX 公式接入包
 - Viz 组：`packages/viz/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
 - Apps：`apps/docs` 文档站，`apps/eval` 评测工具
-- 架构背景：`notes/architecture/core-design.md`
 
 ## 设计原则
 

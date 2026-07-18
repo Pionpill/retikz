@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-06-11
 - 实现日期：2026-06-12（实现 + 测试 + 文档已完成并全绿；改动留工作树待人工提交——`compile/node.ts`、`ir/node.ts` 上有用户并行 WIP，无法干净分离故未代提交）
-- 关联：[v0.3-beta.1 roadmap](./roadmap.md) · **部分 supersede**：[v0.3-alpha.4 ADR-06 连接面](../alpha.4/06-connection-surface.md)（其「不在范围 §连接面影响 outer sep / 间距 → 另案」即本 ADR） · 参照：[core-design.md §7 AI 友好](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0.3-beta.1 roadmap](./roadmap.md) · **部分 supersede**：[v0.3-alpha.4 ADR-06 连接面](../alpha.4/06-connection-surface.md)（其「不在范围 §连接面影响 outer sep / 间距 → 另案」即本 ADR） · 参照：
 
 ## 背景
 

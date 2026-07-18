@@ -1,7 +1,7 @@
 # retikz eval：LLM 生成准确性评测 · 设计
 
 > 目的：验证 LLM 生成 retikz IR（core + plot）的准确性，产出**可回归追踪**的报告，反哺 schema / DSL 设计。
-> 状态：**设计中（草案）** · 2026-06-12 起 · 关联：[`core-design.md §1.2 / §7 AI 友好`](../../../notes/architecture/core-design.md) · [`core 底座对比分析 · AI 维度`](../../../packages/kernel/_notes/analysis/core-compare-analysis.md) · [`v0.4 roadmap · D`](../../../packages/kernel/_notes/decisions/v0/v0.4/roadmap.md)
+> 状态：**设计中（草案）** · 2026-06-12 起 · 关联：[`core 底座对比分析 · AI 维度`](../../../packages/kernel/_notes/analysis/core-compare-analysis.md) · [`v0.4 roadmap · D`](../../../packages/kernel/_notes/decisions/v0/v0.4/roadmap.md)
 > 落地：`apps/eval`（workspace 包，依赖 core + plot 的 schema）。
 
 ## 为什么做

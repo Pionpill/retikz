@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.4 plan](./roadmap.md) · [v0.2 总计划 §alpha.1 收尾遗留 / §alpha.4 设计预想](../roadmap.md) · [alpha.1 ADR-01 Scope IR/compile](../alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../alpha.1/02-node-index-anchor-resolution.md) · [v0.1-alpha.5 ADR-01 Scene PathPrim/GroupPrim 结构化](../../v0.1/alpha.5/01-scene-primitive-structured.md) · [core-design.md §1.2 AI 一等公民](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0.2-alpha.4 plan](./roadmap.md) · [v0.2 总计划 §alpha.1 收尾遗留 / §alpha.4 设计预想](../roadmap.md) · [alpha.1 ADR-01 Scope IR/compile](../alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../alpha.1/02-node-index-anchor-resolution.md) · [v0.1-alpha.5 ADR-01 Scene PathPrim/GroupPrim 结构化](../../v0.1/alpha.5/01-scene-primitive-structured.md)
 
 > **范围**：修 alpha.1 重写 compile 管线（`NameStack` + 两遍扫描）时退化的「z-order 严格 = IR 声明顺序」。本段是同段 emit 增强（zIndex / 文本 Node 包 g / label rotate）与 alpha.5 Grid 底纹 sugar 的硬前置，故先落。
 

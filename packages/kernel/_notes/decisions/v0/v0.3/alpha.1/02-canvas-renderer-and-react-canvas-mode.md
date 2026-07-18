@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现；**超出首版 MVP**：首版列为「降级 + 警告」的 gradient / pattern / image / clip / marker 已全部转为真实 Canvas 实现，另含 currentColor 解析 + 主题响应 + 文本基线统一 + 弧扫描方向 + 尺寸对齐 SVG）
 - 决策日期：2026-05-29
-- 关联：[v0.3 roadmap §Canvas 包首版范围 / §React API 方向](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)（并列 renderer + react 接 svg）· [core-design.md §5 / §6](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0.3 roadmap §Canvas 包首版范围 / §React API 方向](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)（并列 renderer + react 接 svg）
 
 > **打包变更（[ADR-05](./05-renderer-repackage.md)）**：`@retikz/canvas` 已并入 `@retikz/render`、以子路径 **`@retikz/render/canvas`** 发布；下文 `@retikz/canvas` ≡ `@retikz/render/canvas`、`packages/canvas/` ≡ `render/src/canvas/`，**渲染设计与决策不变**。
 >

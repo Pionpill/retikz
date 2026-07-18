@@ -4,7 +4,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.3 transform / §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../../../../notes/architecture/core-design.md)
+- 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.3 transform / §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md)
 
 > **实现期修订（review pass，2026-06-06）**：随 ADR-01 把位置通道收成 x/y 必填（删 angle/radius），**`SectorMark` 用样式-only 编码 `StyleEncodingSchema`**（只 color，无 x/y——角度来自累积界 startField/endField、半径常量满铺）；其余位置 mark 用 x/y 必填的 `EncodingSchema`。负值累积界 → reject（fail loud，已在「待决策点」与代码落地）。下文 schema 草案 / 示例以此为准。
 

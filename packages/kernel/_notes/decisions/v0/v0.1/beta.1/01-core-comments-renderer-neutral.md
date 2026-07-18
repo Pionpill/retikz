@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-3](./roadmap.md) · [packages/kernel/AGENTS.md](../../../../../AGENTS.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0.1-beta.1 plan TODO-3](./roadmap.md) · [packages/kernel/AGENTS.md](../../../../../AGENTS.md)
 
 > **范围**：把 core 里 JSDoc 注释与 zod `.describe()` 字符串里"把 SVG 当作 the renderer"的措辞（`<ellipse>` / `<tspan>` / `stroke-dasharray` / SVG path `M/L/Q/C/A/Z` / SVG `textAnchor` 等）改成渲染器中性表述。纯字符串改动，DSL / 行为不变。
 

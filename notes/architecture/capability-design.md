@@ -80,7 +80,7 @@
 
 本文是总纲，不替代子模块设计。
 
-- `core-design.md` 负责 core 的具体架构原则。
+- 根与就近的 `AGENTS.md` 以及 `standard-*` skills 负责 core 的具体架构约束。
 - `packages/viz/_notes/architecture/plot-design.md` 负责 plot 的具体图形语法与管线。
 - 各模块 roadmap / ADR 负责把完备检测拆成具体阶段和任务。
 
