@@ -45,8 +45,10 @@ describe('usePreviewControlRuntime', () => {
   it('提供 remount key、runtime 与 control state', () => {
     let latest: PreviewControlRuntimeState | null = null;
     const controlState: PreviewControlState = {
+      canonicalValues: { curve: 'step' },
       values: { curve: 'step' },
       setValue: () => undefined,
+      applyValues: () => undefined,
       reset: () => undefined,
     };
 

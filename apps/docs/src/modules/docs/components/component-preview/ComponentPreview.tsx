@@ -9,6 +9,7 @@ import type {
   AlignKey,
   ComponentPreviewFiles,
   PreviewActionSlot,
+  PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlsOptions,
   SizeKey,
@@ -27,7 +28,7 @@ import {
   irJsonOverrides,
   resolveControlsKey,
   resolveDemoKey,
-  resolvePreviewControls,
+  resolvePreviewControlContract,
   vanillaModules,
   vanillaOverrides,
 } from './registry';
@@ -71,11 +72,12 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const controlKey =
     segments && !controlsDisabled ? resolveControlsKey(segments, explicitControlsName ?? name, lang) : null;
   const controlModule = controlKey ? controlModules[controlKey] : undefined;
-  const controlDefinition: PreviewControlsDefinition | undefined = controlsDisabled
+  const controlContract: PreviewControlContract | undefined = controlsDisabled
     ? undefined
     : explicitControlsName === null
-      ? (resolvePreviewControls(mod) ?? resolvePreviewControls(controlModule))
-      : resolvePreviewControls(controlModule);
+      ? (resolvePreviewControlContract(mod) ?? resolvePreviewControlContract(controlModule))
+      : resolvePreviewControlContract(controlModule);
+  const controlDefinition: PreviewControlsDefinition | undefined = controlContract?.controls;
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
@@ -158,6 +160,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       align={align}
       size={size}
       previewClassName={previewClassName}
+      controlContract={controlContract}
       controlDefinition={controlDefinition}
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}

@@ -25,8 +25,10 @@ const FADE: Array<IRAnimationTrack> = [
 ];
 
 const controlState: PreviewControlState = {
+  canonicalValues: {},
   values: {},
   setValue: () => undefined,
+  applyValues: () => undefined,
   reset: () => undefined,
 };
 

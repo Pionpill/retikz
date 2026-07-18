@@ -282,6 +282,7 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 - `PreviewControlSlot.visibility` 必须显式写 `hover` 或 `always`；不要再从宿主统一控制可见性。
 - animation 与预览宿主工具使用 `hover`；作为 demo 参数的 select / input 通常使用 `always`。
 - 局部 `controls.slots` 与共享 controls 追加组合；id 必须全局唯一。替换 animation 时先写 `animation: false`。
+- 有主题切换时，预览内容顶部预留 `40px` 间距，避免悬浮控件遮挡 demo。
 
 声明式 controls 作者约定：
 

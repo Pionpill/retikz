@@ -4,9 +4,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const originalDefaultOpen = useComponentPreviewStore.getState().controlPanelDefaultOpen;
+const originalThemeMode = useComponentPreviewStore.getState().themeMode;
 
 afterEach(() => {
   useComponentPreviewStore.getState().setControlPanelDefaultOpen(originalDefaultOpen);
+  useComponentPreviewStore.getState().setThemeMode(originalThemeMode);
 });
 
 describe('ComponentPreview store controls panel preference', () => {
@@ -16,6 +18,13 @@ describe('ComponentPreview store controls panel preference', () => {
 
     useComponentPreviewStore.getState().toggleControlPanelDefaultOpen();
     expect(useComponentPreviewStore.getState().controlPanelDefaultOpen).toBe(false);
+  });
+
+  it('保存新预览实例的主题默认值', () => {
+    expect(useComponentPreviewStore.getState().themeMode).toBe('inherit');
+
+    useComponentPreviewStore.getState().setThemeMode('dark');
+    expect(useComponentPreviewStore.getState().themeMode).toBe('dark');
   });
 
   it('不保存 panel 宽度或实例级映射', () => {

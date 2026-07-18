@@ -36,6 +36,7 @@ export type {
   PreviewSourceConfig,
   PreviewSwitchControlField,
   PreviewTextControlField,
+  PreviewThemeMode,
   RendererMode,
   SizeKey,
 } from './types';
