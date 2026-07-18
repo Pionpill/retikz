@@ -60,7 +60,7 @@ description: 从库维护者角度判断能力归属、包边界、扩展完备�
 
 ## 包职责
 
-Kernel 六个包按能力提供方向组成单向依赖链。每个包不仅要说明“做什么”，还要明确“不做什么”，防止后续迭代把便利功能无限叠加到当前包。
+Kernel 六个包围绕 `IR → Scene → 图像` 形成一条主数据流。`@retikz/react` 与 `@retikz/vanilla` 构建 IR；`@retikz/core` 在 `@retikz/math` 支撑下完成 lowering、布局、引用解析与 Scene 组装，TeX 能力由 `@retikz/tex` 可选接入；`@retikz/render` 最后把 Scene 执行为 SVG 或 Canvas。虚线表示能力依赖或可选接入，不是主数据流。
 
 <ComponentPreview files="principles-packages" size="sm" hideCode />
 

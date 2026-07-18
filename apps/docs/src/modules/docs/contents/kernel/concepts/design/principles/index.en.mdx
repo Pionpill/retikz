@@ -60,7 +60,7 @@ This order defines ownership: parsers do not read runtime registries, renderers 
 
 ## Package responsibilities
 
-The six Kernel packages form a one-way capability chain. Each package must state both what it solves and what it does not own so later iterations cannot accumulate unrelated convenience features indefinitely.
+The six Kernel packages form one primary data flow around `IR → Scene → image`. `@retikz/react` and `@retikz/vanilla` build IR. With `@retikz/math` as its foundation, `@retikz/core` performs lowering, layout, reference resolution, and Scene assembly, while `@retikz/tex` can optionally supply TeX capability. `@retikz/render` then executes the Scene as SVG or Canvas. Dashed arrows show capability dependencies or optional integration rather than the main data flow.
 
 <ComponentPreview files="principles-packages" size="sm" hideCode />
 
