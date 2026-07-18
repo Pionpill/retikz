@@ -93,9 +93,7 @@ describe('path rotate 与绕同一中心的 scope rotate 等价', () => {
     expect(rPath?.degrees).toBe(rScope?.degrees);
     expect(rPath?.cx).toBeCloseTo(rScope?.cx ?? NaN, 6);
     expect(rPath?.cy).toBeCloseTo(rScope?.cy ?? NaN, 6);
-    // 两种写法 Scene 结构不同——<Path rotate> 把未变换几何包进 rotate group；scope 内坐标字面量 path
-    // 走 hoist + 端点预变换（既有契约）。二者渲染等价，等价性体现在同一 rotate transform（degrees + 支点
-    // cx/cy）上，故此处只比 transform，不比两种编码各自的内层 commands。
+    // 两种写法都保留局部几何，并分别由 Path / Scope 的 group transform 完成旋转
   });
 });
 

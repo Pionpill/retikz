@@ -21,7 +21,7 @@ import type {
 } from './composition';
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
-import { rootMeta } from '../../contract';
+import { rootMeta, slug } from '../../contract';
 import { resolveAxisGuideTokens, resolvePlotTheme } from '../../providers';
 import {
   channelKindsForMark,
@@ -88,6 +88,20 @@ const plotBackgroundNode = (width: number, height: number, fill: string | undefi
 
 const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
   child.type === 'coordinate' ? child : { ...child, zIndex };
+
+/** 把复制进 facet panel 的 guide 图层收进 panel-local identity，避免各 panel 复用同一顶层 scope id */
+const withFacetGuideContext = (
+  layer: IRScope,
+  context: IRJsonObject,
+  plotId: string | undefined,
+  panelId: string,
+): IRScope => {
+  const scoped = withScopeContext(layer, context) as IRScope;
+  if (plotId === undefined || scoped.id === undefined) return scoped;
+  const plotPrefix = `${plotId}.`;
+  const localId = scoped.id.startsWith(plotPrefix) ? scoped.id.slice(plotPrefix.length) : scoped.id;
+  return { ...scoped, id: `${plotId}.view.${slug(panelId)}.${localId}` };
+};
 
 /**
  * 把一个 Plot IR 根节点 + 外部数据下沉成一个 core Scope
@@ -529,9 +543,11 @@ const expandPlot = (node: IRPlotSpec, datasets: ExternalDatasets, options: Lower
         localNamespace: true,
         meta,
         children: [
-          ...(gridResolution?.gridLayers ?? []).map(layer => withScopeContext(layer, panelContext) as IRScope),
+          ...(gridResolution?.gridLayers ?? []).map(layer =>
+            withFacetGuideContext(layer, panelContext, node.id, panel.id),
+          ),
           ...markLayers,
-          ...axisResolution.axisLayers.map(layer => withScopeContext(layer, panelContext) as IRScope),
+          ...axisResolution.axisLayers.map(layer => withFacetGuideContext(layer, panelContext, node.id, panel.id)),
         ],
       };
       const translateX = rowLabelWidth + panel.columnIndex * panelStrideX;

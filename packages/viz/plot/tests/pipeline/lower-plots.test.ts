@@ -1013,11 +1013,12 @@ describe('lowerPlots relation (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { t: TREND }, opts);
-    // 2 系列 → 2 条 Path，各自一色
+    // 2 系列 → 2 个 series Scope，各含一条独立颜色的 Path
     expect(layer.children).toHaveLength(2);
-    expect((layer.children[0] as IRPath).type).toBe('path');
-    expect((layer.children[0] as IRPath).stroke).toBe('#aa');
-    expect((layer.children[1] as IRPath).stroke).toBe('#bb');
+    const [seriesX, seriesY] = layer.children as Array<IRScope>;
+    expect(seriesX.type).toBe('scope');
+    expect((seriesX.children[0] as IRPath).stroke).toBe('#aa');
+    expect((seriesY.children[0] as IRPath).stroke).toBe('#bb');
   });
 
   it('series_omitted_single_bar_layer', () => {

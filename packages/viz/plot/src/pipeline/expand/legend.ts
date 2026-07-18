@@ -310,11 +310,17 @@ export const reserveLegendBands = (
   });
 };
 
+/** 生成 legend 的稳定 scope id；有 plot id 时收进对应 plot owner */
+const legendLayerId = (plotId: string | undefined, channel: string, index: number, count: number): string => {
+  const owner = plotId === undefined ? 'legend' : `${plotId}.legend`;
+  return count > 1 ? `${owner}.${channel}.${index}` : `${owner}.${channel}`;
+};
+
 /**
  * 解析所有 legend guide → core legend scope（据通道 + 绑定 scale 类型选 swatch / ramp / 分箱 / 梯度符号）
  * @description color descriptor 从 PlotSpec.scales 具名 color scale 取（多于一个且未消歧 → fail-loud）；
  *   size / opacity / shape 从 resolver descriptor 注册表取。形态由 scale 类型决定，标签复用 axis formatter 链（决策 ⑨）。
- *   每个 legend 下沉成稳定 'legend' 前缀 id 的独立 scope，落在传入的预留带内。
+ *   每个 legend 下沉成归属当前 plot owner 的稳定 id 独立 scope，落在传入的预留带内。
  */
 export const buildLegendLayers = (
   node: IRPlotSpec,
@@ -330,7 +336,7 @@ export const buildLegendLayers = (
     const band = bands[legendIndex] ?? { x: 0, y: 0, width: 0, height: 0 };
     const orient =
       guide.orient ?? (guide.position === 'top' || guide.position === 'bottom' ? 'horizontal' : 'vertical');
-    const id = legendGuides.length > 1 ? `legend.${guide.channel}.${legendIndex}` : `legend.${guide.channel}`;
+    const id = legendLayerId(node.id, guide.channel, legendIndex, legendGuides.length);
     const style = resolveLegendGuideTokens(resolvedTheme, guide.style);
     const baseInput: LegendBaseInput = {
       channel: guide.channel,

@@ -23,7 +23,7 @@ import { lerpPoint, point } from '../../../shared/geometry';
 import { boundaryPointOf } from '../../node';
 import { resolvePosition } from '../../position';
 import { resolveAnchor, resolveEdgePoint } from '../../reference';
-import { applyTransformChain } from '../../transform';
+import { applyTransformChain, inverseTransformChain } from '../../transform';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);
@@ -92,6 +92,39 @@ export const refPointOfTarget = (
   return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };
 
+/**
+ * 把 target 解析到当前 scope 的局部坐标系
+ * @description 节点 layout 保持全局坐标，解析后按累计 transform 反投影；字面量与相对位置沿用 scope 局部度量
+ */
+export const localPointOfTarget = (
+  target: IRTarget,
+  namespaceStack: NamespaceStack,
+  scopeChain: ReadonlyArray<Transform> = [],
+): IRPosition | null => {
+  if (isNodeTarget(target)) {
+    const node = namespaceStack.lookup(target.id);
+    if (!node) return null;
+    const base =
+      target.anchor === undefined
+        ? ([node.rect.x, node.rect.y] as IRPosition)
+        : resolveAnchorRef(node, target.anchor, target.boundary ?? node.boundary);
+    const global = addOffset(base, target.offset);
+    return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
+  }
+  if (isBetween(target)) {
+    const a = localPointOfTarget(target.between[0], namespaceStack, scopeChain);
+    const b = localPointOfTarget(target.between[1], namespaceStack, scopeChain);
+    if (!a || !b) return null;
+    const mid = lerpPoint(a, b, target.fraction);
+    if (!Number.isFinite(mid[0]) || !Number.isFinite(mid[1])) return null;
+    return mid;
+  }
+  if (isRelative(target)) {
+    return null;
+  }
+  return resolvePosition(target, { namespaceStack, scopeChain });
+};
+
 /** 根据 fold step 的方向计算正交折角中间点 */
 export const cornerOf = (prev: IRPosition, curr: IRPosition, via: FoldStepViaValue): IRPosition =>
   via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
@@ -120,15 +153,17 @@ export const clipForTarget = (
     const node = namespaceStack.lookup(target.id);
     if (!node) return null;
     const boundary = target.boundary ?? node.boundary;
+    const towardGlobal = scopeChain.length === 0 ? toward : applyTransformChain(toward, scopeChain);
     const base =
       target.anchor === undefined
-        ? boundaryPointOf(node, toward, boundary)
+        ? boundaryPointOf(node, towardGlobal, boundary)
         : resolveAnchorRef(node, target.anchor, boundary);
-    return addOffset(base, target.offset);
+    const global = addOffset(base, target.offset);
+    return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
   }
   // between 是固定点，不参与连接面裁剪。
   if (isBetween(target)) {
-    return refPointOfTarget(target, namespaceStack, scopeChain);
+    return localPointOfTarget(target, namespaceStack, scopeChain);
   }
   // relative 目标应已在进入 path emit 前预解析。
   if (isRelative(target)) {
@@ -136,7 +171,7 @@ export const clipForTarget = (
   }
   const local = resolvePosition(target, { namespaceStack, scopeChain });
   if (!local) return null;
-  return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
+  return local;
 };
 
 /** 判断两个已解析坐标是否逐分量精确相等 */

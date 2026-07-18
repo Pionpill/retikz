@@ -439,10 +439,7 @@ describe('ATTACK 9: out/in bend + rotate + marks 三合一 + arrow', () => {
 // 攻击面 10：path transform + 既有 scope transform 嵌套（双重变换顺序）
 // =====================================================================
 describe('ATTACK 10: path transform 嵌套 scope transform（双重变换）', () => {
-  it('scope rotate + path rotate 嵌套 → path hoist 到顶层后丢 scope transform？（已知 hoist 限制）', () => {
-    // scope 有 transform → 内部 path 走 hoist 到顶层 primitives（compile.ts resolvePendingPaths）。
-    // path 自身又有 rotate → 包一层自己的 GroupPrim。问题：path hoist 到顶层后，scope 的 rotate
-    // 是否还作用于它？（hoist 路径上 path 端点已是全局坐标，但 path 自己的 group 不含 scope transform）
+  it('scope rotate + path rotate 嵌套 → 两层 GroupPrim 都保留且数值有限', () => {
     const scene = compileToScene({
       version: 1,
       type: 'scene',
@@ -464,7 +461,15 @@ describe('ATTACK 10: path transform 嵌套 scope transform（双重变换）', (
       ],
     });
     expect(expectAllFinite(scene).ok).toBe(true);
-    // 仅诊断：path 是否被 hoist + 是否仍受 scope rotate（视觉正确性，可能是已知限制）
+    const outer = scene.primitives[0];
+    expect(outer.type).toBe('group');
+    if (outer.type !== 'group') throw new Error('expected scope group');
+    expect(outer.transforms).toEqual([{ kind: 'rotate', degrees: 30, cx: 0, cy: 0 }]);
+    const inner = outer.children.find(child => child.type === 'group');
+    expect(inner?.type).toBe('group');
+    if (inner?.type !== 'group') throw new Error('expected path transform group');
+    expect(inner.transforms?.some(transform => transform.kind === 'rotate' && transform.degrees === 15)).toBe(true);
+    expect(inner.children.some(child => child.type === 'path')).toBe(true);
   });
 });
 

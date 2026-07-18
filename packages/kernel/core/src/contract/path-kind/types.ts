@@ -5,13 +5,13 @@ import type { ScenePrimitive } from '../scene';
 
 /**
  * path kind 编译结果
- * @description path kind definition 把高层 path 形态编译成 Scene primitive，并返回参与 bbox / transform
- *   计算的关键点集合
+ * @description path kind definition 把高层 path 形态编译成当前 Path 局部坐标系中的 Scene primitive，
+ *   并返回同一坐标系内参与 bbox / transform 计算的关键点集合
  */
 export type PathKindCompileResult = {
-  /** 实际渲染输出 */
+  /** 当前 Path 局部坐标系中的实际渲染输出 */
   primitives: Array<ScenePrimitive>;
-  /** layout 与路径级 rotate / scale 的几何依据 */
+  /** 当前 Path 局部坐标系中的 layout 与路径级 rotate / scale 几何依据 */
   boundsPoints: Array<IRPosition>;
 };
 

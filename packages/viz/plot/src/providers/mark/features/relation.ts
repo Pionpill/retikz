@@ -569,7 +569,7 @@ export const lowerRelation = (
     children.push(...coordinates, path);
   }
   if (children.length === 0) return null;
-  return attachMarkLayer({ type: 'scope', children }, mark, ctx?.provenance);
+  return attachMarkLayer({ type: 'scope', children }, mark, ctx);
 };
 
 const collectTargetFields = (ref: IRPlotTargetRef, fields: FieldCollector): void => {

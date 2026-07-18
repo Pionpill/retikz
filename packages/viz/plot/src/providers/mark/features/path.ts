@@ -524,17 +524,17 @@ const buildClosureStepSegments = (
     },
   );
 
-/** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值） */
+/** 多系列 series 拆分通用：每条 series 一个 Scope，内部承载一个或多个 Path segment */
 export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathStepSegment>;
 
-/** path child 的可变形态（series 下沉时按需补 id / meta），直接复用 core IRPath 属性面 */
+/** path child 的可变形态（series 多段时按需补 segment id），直接复用 core IRPath 属性面 */
 type IRPathChild = IRPath;
 
 const pathMarkOptions = (mark: IRPlotPathMark): Partial<Pick<IRPath, 'marks'>> =>
   mark.marks === undefined ? {} : { marks: mark.marks };
 
-/** 按 series 分组并构造 path 图元序列 */
-export const buildSeriesPaths = (
+/** 按 series 分组并构造独立 scope owner */
+export const buildSeriesPathScopes = (
   mark: IRPlotPathMark,
   rows: Array<ExternalRow>,
   seriesField: string,
@@ -542,14 +542,25 @@ export const buildSeriesPaths = (
   paintOf: (seriesRows: Array<ExternalRow>) => Partial<Pick<IRPath, 'fill' | 'stroke'>>,
   channels: MarkChannels,
   markProvenance: MarkProvenance | undefined,
-): Array<IRChild> => {
+): Array<IRScope> => {
   const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField)));
   const plotId = markProvenance?.context.plotId;
   const seenIds = markProvenance && plotId !== undefined ? new Map<string, unknown>() : undefined;
-  const paths: Array<IRChild> = [];
+  const scopes: Array<IRScope> = [];
   for (const series of seriesValues) {
     const seriesRows = rows.filter(row => resolveFieldPath(row, seriesField) === series);
     const segments = buildSteps(seriesRows);
+    const baseId = plotId === undefined ? undefined : `${plotId}.series.${slug(series)}`;
+    if (baseId !== undefined && seenIds) {
+      const prior = seenIds.get(baseId);
+      if (prior !== undefined && prior !== series) {
+        throw new Error(
+          `lowerPlots: series values "${String(prior)}" and "${String(series)}" collide to the same series id "${baseId}"; series anchors must be unique`,
+        );
+      }
+      seenIds.set(baseId, series);
+    }
+    const paths: Array<IRPath> = [];
     for (let index = 0; index < segments.length; index += 1) {
       const segment = segments[index];
       const row = segment.rows[0] ?? {};
@@ -566,25 +577,20 @@ export const buildSeriesPaths = (
         row,
         channels,
       );
-      if (markProvenance) {
-        if (plotId !== undefined && seenIds) {
-          const baseId = `${plotId}.series.${slug(series)}`;
-          const id = segments.length === 1 ? baseId : `${baseId}.segment.${index + 1}`;
-          const prior = seenIds.get(id);
-          if (prior !== undefined && prior !== series) {
-            throw new Error(
-              `lowerPlots: series values "${String(prior)}" and "${String(series)}" collide to the same series id "${id}"; series anchors must be unique`,
-            );
-          }
-          seenIds.set(id, series);
-          path.id = id;
-        }
-        path.meta = seriesPathMeta(mark.type, markProvenance.markIndex, series);
+      if (baseId !== undefined && segments.length > 1) {
+        path.id = `${baseId}.segment.${index + 1}`;
       }
       paths.push(path);
     }
+    if (paths.length === 0) continue;
+    scopes.push({
+      type: 'scope',
+      ...(baseId !== undefined ? { id: baseId } : {}),
+      ...(markProvenance ? { meta: seriesPathMeta(mark.type, markProvenance.markIndex, series) } : {}),
+      children: paths,
+    });
   }
-  return paths;
+  return scopes;
 };
 
 /** 解析 path 图元在当前通道与默认值下使用的 paint。 */
@@ -653,7 +659,7 @@ const lowerPath = (
   const defaultStroke = markPaintOf(mark, channels, 'stroke', rows, defaultColor ?? DEFAULT_FILL) ?? DEFAULT_FILL;
   const defaultFill = markPaintOf(mark, channels, 'fill', rows, undefined);
   if (seriesField) {
-    const paths = buildSeriesPaths(
+    const seriesScopes = buildSeriesPathScopes(
       mark,
       rows,
       seriesField,
@@ -672,9 +678,9 @@ const lowerPath = (
       channels,
       markProvenance,
     );
-    return paths.length === 0
+    return seriesScopes.length === 0
       ? null
-      : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
+      : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: seriesScopes };
   }
   const segments = closure
     ? buildClosureStepSegments(mark, rows, frame, closure, closed)
@@ -751,7 +757,7 @@ export const lowerPathLayer = (
   if (layer === null || mark.type !== PlotMark.Path) return layer;
   const coordinates = pathAnchorCoordinates(mark, rows, frame, ctx);
   const anchoredLayer = coordinates.length === 0 ? layer : { ...layer, children: [...coordinates, ...layer.children] };
-  return attachMarkLayer(anchoredLayer, mark, ctx?.provenance);
+  return attachMarkLayer(anchoredLayer, mark, ctx);
 };
 
 /** 收集 path mark 独有字段：连接顺序与 series 拆分。 */

@@ -30,6 +30,8 @@ The `PathKindCompileContext` passed to `compile`:
 | `emitStroke` | `(path?) => PathKindCompileResult \| null` | Reuse the built-in stroke lowerer, optionally with a patched Path |
 | `emitRibbon` | `(path?) => PathKindCompileResult \| null` | Reuse the built-in ribbon lowerer, optionally with a patched Path |
 
+`PathKindCompileResult.primitives` and `boundsPoints` use the current Path's local coordinate system. When the Path is inside a transformed scope, its owning Scene group applies that transform; `emitStroke` and `emitRibbon` return results in the same coordinate system.
+
 ## Difference from path generators
 
 A custom path owns the **whole Path**: it decides what primitives that Path emits, so it is the right place to change relation form or reuse a built-in lowerer and rewrite the result.

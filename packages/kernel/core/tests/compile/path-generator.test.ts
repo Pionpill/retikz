@@ -104,7 +104,7 @@ describe('Path generator 注册面 — happy path', () => {
     expect(drawn?.commands.some(c => c.kind === 'move')).toBe(true);
   });
 
-  it('target_param_resolved：targetParams 的 bend(NodeTarget) 先 resolve 成世界坐标喂 generate', () => {
+  it('target_param_resolved：targetParams 的 bend(NodeTarget) 先解析到当前 Path 局部坐标喂 generate', () => {
     let seenBend: [number, number] | undefined;
     const probe = definePathGenerator({
       name: 'probe',
@@ -395,7 +395,7 @@ describe('Path generator 注册面 — 交互', () => {
     expect(text).toBeDefined();
   });
 
-  it('generator_in_scope_transform：generator step 在 translate scope 内 → 坐标投回正确', () => {
+  it('generator_in_scope_transform：generator step 在 translate scope 内保持局部命令', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -417,9 +417,8 @@ describe('Path generator 注册面 — 交互', () => {
     };
     const scene = compileToScene(ir, { pathGenerators: [fixedSegment] });
     const drawn = firstDrawnPath(scene.primitives);
-    // 段在 translate(100,0) scope 内：起点应被投到 [100,0]
     const move = drawn?.commands.find(c => c.kind === 'move');
-    if (move) expect(move.to[0]).toBe(100);
+    if (move) expect(move.to).toEqual([0, 0]);
   });
 
   it('generator_then_line：generator 段后接 line → cursor 衔接（无重复 move）', () => {

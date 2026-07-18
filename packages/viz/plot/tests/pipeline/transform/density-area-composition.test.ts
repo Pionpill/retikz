@@ -70,7 +70,9 @@ describe('density area composition (contract)', () => {
 
     const layer = firstLayer(spec, { samples }, opts);
     expect(layer.children).toHaveLength(2);
-    for (const path of layer.children as Array<IRPath>) {
+    for (const seriesScope of layer.children as Array<IRScope>) {
+      expect(seriesScope.type).toBe('scope');
+      const path = seriesScope.children[0] as IRPath;
       expect(path.type).toBe('path');
       expect(path.children.at(-1)).toEqual({ type: 'step', kind: 'cycle' });
     }
