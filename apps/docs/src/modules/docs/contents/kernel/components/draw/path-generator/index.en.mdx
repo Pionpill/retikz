@@ -26,16 +26,16 @@ A `PathGeneratorDefinition` is a plain object (not part of the IR, can be return
 | `name`         | `string`                      | Registry name; a generator step looks up its definition by `name`                                                 |
 | `paramsSchema` | `ZodType<IRJsonObject>`       | zod schema for params; type-constrains the output to be JSON-safe (a second runtime guard exists too, see bottom) |
 | `generate`     | `(ctx) => Array<PathCommand>` | Produces low-level path commands (line / quad / cubic / move…) from ctx; does not re-enter step compilation       |
-| `targetParams` | `Array<string>`               | Which **top-level** params keys are Targets, resolved to world coordinates by compile first                       |
+| `targetParams` | `Array<string>`               | Which **top-level** params keys are Targets, resolved into the current Path's local coordinates first             |
 
 The `PathGeneratorGenerateContext` passed to `generate`:
 
 | Field             | Type                       | Description                                                            |
 | ----------------- | -------------------------- | ---------------------------------------------------------------------- |
-| `from`            | `Position`                 | Current cursor in world coords (previous segment end / sub-path start) |
-| `to`              | `Position?`                | step.to resolved to world coords; undefined when the step has no `to`  |
+| `from`            | `Position`                 | Current cursor in local coords (previous segment end / sub-path start) |
+| `to`              | `Position?`                | step.to resolved to local coords; undefined when the step has no `to`  |
 | `params`          | `Record<string, unknown>`  | Params after paramsSchema validation                                   |
-| `resolvedTargets` | `Record<string, Position>` | targetParams top-level keys → resolved world coordinates               |
+| `resolvedTargets` | `Record<string, Position>` | targetParams top-level keys → current Path local coordinates           |
 | `round`           | `(n) => number`            | Precision rounding (same function as compile / render)                 |
 
 The generator step in the IR:
@@ -59,7 +59,7 @@ The `PathCommand` coordinates produced by `generate` are audited too: non-finite
 
 ## targetParams: top-level Target resolution
 
-`params` may carry node references / coordinate Targets (e.g. the `C` in `parabola bend (C)`). List those **top-level keys** in `targetParams`, and compile resolves them to world coordinates into `ctx.resolvedTargets`:
+`params` may carry node references / coordinate Targets (e.g. the `C` in `parabola bend (C)`). List those **top-level keys** in `targetParams`, and compile resolves them into the current Path's local coordinates in `ctx.resolvedTargets`:
 
 - **Top-level keys only**: nested (`{ control: { at: { id } } }`) or in-array Targets are not resolved — put them at the params top level.
 - A string value is resolved as a **node id** (same semantics as a step `to`); don't list plain string params in targetParams.
@@ -69,7 +69,7 @@ The `PathCommand` coordinates produced by `generate` are audited too: non-finite
 
 `generate` returns low-level `PathCommand[]` (may include `move` to form a sub-path, e.g. multi-segment waves), spliced into the path command stream; the cursor lands on the last command's endpoint, and the next step continues from there.
 
-> generate's coordinates are treated as **already in world space**: when the generator step is inside a transformed scope, `ctx.from` / `ctx.to` / `resolvedTargets` are already world coordinates, and the scope's transform does not apply again to the increments computed inside generate.
+> `generate` receives and returns coordinates in the current Path's local space. When the generator step is inside a transformed scope, the owning group applies the transform once, so lengths and directions produced by the generator scale, rotate, and translate with that scope.
 
 <Comparison target="tikz" title="Path generators">
 

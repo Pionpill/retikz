@@ -475,7 +475,7 @@ export const lowerReferenceLayer = (
     channelDefaultOf<string>(channels, 'color'),
     ctx?.provenance,
   );
-  return layer === null ? null : attachMarkLayer(layer, mark, ctx?.provenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, ctx);
 };
 
 /** 收集 reference mark 的位置 / color / 扩展 encoding 字段。 */

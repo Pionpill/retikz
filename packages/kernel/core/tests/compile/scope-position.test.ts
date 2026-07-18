@@ -11,8 +11,16 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-const topPath = (prims: ReadonlyArray<ScenePrimitive>): ScenePrimitive | undefined =>
-  prims.find(p => p.type === 'path');
+const topPath = (prims: ReadonlyArray<ScenePrimitive>): ScenePrimitive | undefined => {
+  for (const primitive of prims) {
+    if (primitive.type === 'path') return primitive;
+    if (primitive.type === 'group') {
+      const nested = topPath(primitive.children);
+      if (nested !== undefined) return nested;
+    }
+  }
+  return undefined;
+};
 
 const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined => {
   if (!prim || prim.type !== 'path') return undefined;
@@ -673,7 +681,7 @@ describe('交互场景', () => {
 });
 
 describe('path step 在 scope 内（笛卡尔 / 相对 to）按 scope 局部度量', () => {
-  it('scope_path_cartesian_to_projected：scope rotate(90) + path step.to=[10, 0] → 端点 ≈ (0, 10) 全局', () => {
+  it('scope_path_cartesian_to_projected：scope rotate(90) + path step.to=[10, 0] → primitive 保持局部端点', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -692,9 +700,8 @@ describe('path step 在 scope 内（笛卡尔 / 相对 to）按 scope 局部度�
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // rotate 90: (10, 0) → (0, 10)
-    expect(Math.abs(end![0])).toBeLessThan(1);
-    expect(Math.abs(end![1] - 10)).toBeLessThan(1);
+    expect(end![0]).toBeCloseTo(10, 6);
+    expect(end![1]).toBeCloseTo(0, 6);
   });
 
   it('scope_path_polar_to_projected：scope rotate(45) + path step.to={angle:0, radius:30} → 端点视觉投影', () => {
@@ -716,9 +723,8 @@ describe('path step 在 scope 内（笛卡尔 / 相对 to）按 scope 局部度�
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    const expected = 30 * Math.cos((45 * Math.PI) / 180);
-    expect(Math.abs(end![0] - expected)).toBeLessThan(1);
-    expect(Math.abs(end![1] - expected)).toBeLessThan(1);
+    expect(end![0]).toBeCloseTo(30, 6);
+    expect(end![1]).toBeCloseTo(0, 6);
   });
 });
 
@@ -745,8 +751,8 @@ describe('path relative inside scope', () => {
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    expect(end![0]).toBeCloseTo(0, 1);
-    expect(end![1]).toBeCloseTo(10, 1);
+    expect(end![0]).toBeCloseTo(10, 1);
+    expect(end![1]).toBeCloseTo(0, 1);
   });
 
   it('scope scale(2) 内 path {relative:[10,0]} → 端点视觉沿 +x 20 单位（局部 10 经 scale 2）', () => {
@@ -769,7 +775,7 @@ describe('path relative inside scope', () => {
     const compiled = compileToScene(ir);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    expect(end![0]).toBeCloseTo(20, 1);
+    expect(end![0]).toBeCloseTo(10, 1);
     expect(end![1]).toBeCloseTo(0, 1);
   });
 
@@ -803,9 +809,9 @@ describe('path relative inside scope', () => {
       if (cmd.kind === 'line') lines.push(cmd.to);
     }
     expect(lines).toHaveLength(2);
-    expect(lines[0][0]).toBeCloseTo(0, 1);
-    expect(lines[0][1]).toBeCloseTo(10, 1);
-    expect(lines[1][0]).toBeCloseTo(0, 1);
-    expect(lines[1][1]).toBeCloseTo(20, 1);
+    expect(lines[0][0]).toBeCloseTo(10, 1);
+    expect(lines[0][1]).toBeCloseTo(0, 1);
+    expect(lines[1][0]).toBeCloseTo(20, 1);
+    expect(lines[1][1]).toBeCloseTo(0, 1);
   });
 });

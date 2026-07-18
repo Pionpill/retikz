@@ -4,7 +4,7 @@ import type { NamespaceStack } from '../../namespace';
 
 import { CompileWarningCode } from '../../constants';
 import { nodeIdFromResolvableTarget } from '../../position';
-import { refPointOfTarget } from '../host/target';
+import { localPointOfTarget } from '../host/target';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
 export type StrokeTargetStep = Exclude<
@@ -80,7 +80,7 @@ export const createStrokeCursor = ({
 }: CreateStrokeCursorInput): StrokeCursor => {
   const anchors: Array<IRPosition | null> = steps.map((step, index) => {
     if (!hasTarget(step)) return null;
-    const anchor = refPointOfTarget(step.to, namespaceStack, scopeChain);
+    const anchor = localPointOfTarget(step.to, namespaceStack, scopeChain);
     const targetId = nodeIdFromResolvableTarget(step.to);
     if (!anchor && targetId !== undefined) {
       warn(

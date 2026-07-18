@@ -650,7 +650,7 @@ export const lowerIntervalLayer = (
     ctx,
     channelValueOf<IRNodeLabel['text']>(channels, 'label'),
   );
-  return layer === null ? null : attachMarkLayer(layer, mark, ctx?.provenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, ctx);
 };
 
 /** 收集 interval mark 独有字段：series 分组与显式 extent bounds。 */

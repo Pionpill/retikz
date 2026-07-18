@@ -175,11 +175,11 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
 });
 
 // ===========================================================================
-// 交互：transformed scope 内 path 仍 hoist（已知限制锁定）
+// 交互：transformed scope 内 path 保留 owner group
 // ===========================================================================
 
-describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () => {
-  it('translate scope 内 path 被 hoist 出 group 落在 group 之前且端点含 translate 不双重应用', () => {
+describe('compile transformed scope 保留 path 所有权', () => {
+  it('translate scope 内 path 留在 group，端点保持局部坐标并由 group 应用一次 translate', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -189,29 +189,23 @@ describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () =
     ]);
     const result = compileToScene(ir, silent);
 
-    // primitives 顺序：hoist 的 path 在前、scope 的 group 在后
-    expect(result.primitives.map(p => p.type)).toEqual(['path', 'group']);
-
-    // group 内只含 node 的 rect，不含 path
+    expect(result.primitives.map(p => p.type)).toEqual(['group']);
     const group = firstGroup(result);
-    expect(group.children.map(p => p.type)).toEqual(['rect']);
+    expect(group.transforms).toEqual([{ kind: 'translate', x: 5, y: 3 }]);
+    expect(group.children.map(p => p.type)).toEqual(['rect', 'path']);
 
-    // hoist 的 path 是首个 primitive（落在该 scope 的 group 之前）
-    const hoisted = result.primitives[0];
-    expect(hoisted.type).toBe('path');
-
-    // 端点坐标体现 translate（一次），不双重 apply：move [0,0]→[5,3]、line [10,0]→[15,3]
-    if (hoisted.type !== 'path') throw new Error('expected first primitive to be a path');
-    const moveCmd = hoisted.commands[0];
-    const lineCmd = hoisted.commands[hoisted.commands.length - 1];
+    const path = group.children[1];
+    if (path.type !== 'path') throw new Error('expected group child to be a path');
+    const moveCmd = path.commands[0];
+    const lineCmd = path.commands[path.commands.length - 1];
     if (moveCmd.kind !== 'move' || lineCmd.kind !== 'line') {
       throw new Error('expected move + line commands');
     }
-    expect(moveCmd.to).toEqual([5, 3]);
-    expect(lineCmd.to).toEqual([15, 3]);
+    expect(moveCmd.to).toEqual([0, 0]);
+    expect(lineCmd.to).toEqual([10, 0]);
   });
 
-  it('transformed scope 内 path 的 Scene 输出形态被锁定', () => {
+  it('transformed scope 内 path 的局部 Scene 输出形态被锁定', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -220,26 +214,25 @@ describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () =
       },
     ]);
     const result = compileToScene(ir, silent);
-    // 锁定 primitives 的 type 序：hoist 的 path 在前、scope 的 group 在后
-    expect(result.primitives.map(p => p.type)).toEqual(['path', 'group']);
-    // 自包含锁定 hoist path 的完整形态（端点含 translate、落在 group 之前、不在 group 内）
-    const hoisted = result.primitives[0];
-    expect(hoisted).toMatchInlineSnapshot(`
+    expect(result.primitives.map(p => p.type)).toEqual(['group']);
+    const group = firstGroup(result);
+    const path = group.children.find(primitive => primitive.type === 'path');
+    expect(path).toMatchInlineSnapshot(`
       {
         "blendMode": undefined,
         "commands": [
           {
             "kind": "move",
             "to": [
-              5,
-              3,
+              0,
+              0,
             ],
           },
           {
             "kind": "line",
             "to": [
-              15,
-              3,
+              10,
+              0,
             ],
           },
         ],
@@ -260,7 +253,7 @@ describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () =
     `);
   });
 
-  it('两 node 之间夹只含 path 的 transformed scope 时 path hoist 到该 scope 的 group 之前', () => {
+  it('两 node 之间夹只含 path 的 transformed scope 时整组保持父层声明顺序', () => {
     const ir = scene([
       node([0, 0]),
       {
@@ -271,8 +264,8 @@ describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () =
       node([20, 0]),
     ]);
     const types = compileToScene(ir, silent).primitives.map(p => p.type);
-    // node A 的 rect、hoist 的 path、scope 的（空）group、node B 的 rect
-    // path 落在它所属 scope 的 group 之前；A / B 的 rect 仍按声明序（已知限制：path 相对其 group 提前）
-    expect(types).toEqual(['rect', 'path', 'group', 'rect']);
+    expect(types).toEqual(['rect', 'group', 'rect']);
+    const group = firstGroup(compileToScene(ir, silent));
+    expect(group.children.map(p => p.type)).toEqual(['path']);
   });
 });

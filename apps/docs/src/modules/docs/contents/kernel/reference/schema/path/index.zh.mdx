@@ -305,7 +305,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
     name: '生成器名；内置名可直接用，自定义名由 CompileOptions.pathGenerators 注册，未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
     to: '可选终点（作为段末传给生成器）；纯参数化曲线（闭环 / 定长波形等）不需要终点时可省略',
     params:
-      '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析为世界坐标再运行',
+      '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析到当前 Path 的局部坐标再运行',
     label: '边标注：附在生成段上的文字标签',
   }}
 />

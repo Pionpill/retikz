@@ -810,9 +810,9 @@ const finitePolarPoint = (center: Position, angleDeg: number, radius: number): P
   Number.isFinite(angleDeg) && Number.isFinite(radius) ? arcEndPoint(center, radius, angleDeg) : [NaN, NaN];
 
 /**
- * 轴 / 网格 scope 的 id + meta props（provenance 开时合成 `<plotId>.` 前缀 id + layer 来源 meta）
+ * 轴 / 网格 scope 的 id + meta props（provenance 开时按 guide owner 合成 plot-local id + layer 来源 meta）
  * @description provenance 关（context undefined）→ 仅在用户给 guide.id 时绑裸 id、无 meta。
- *   开 → id 走 `<plotId>.<guideId|axis|grid.dim>`（plotId 缺则匿名）、meta 写 {source,layer,dimension}
+ *   开 → 显式 guide.id 生成 axis owner 与 grid phase id；匿名 composition guide 由 coordinateView 消歧
  */
 const guideScopeProps = (
   guide: IRPlotAxisGuide,
@@ -821,9 +821,7 @@ const guideScopeProps = (
 ): { id?: string; meta?: ReturnType<typeof guideLayerMeta>; zIndex: number } => {
   const zIndex = layer === 'grid' ? PlotLayerZIndex.Grid : (guide.layer?.zIndex ?? PlotLayerZIndex.Axis);
   if (!context) return { ...(layer === 'axis' && guide.id ? { id: guide.id } : {}), zIndex };
-  // 用户句柄 guide.id 只挂轴层（一个 guide 一个外部句柄）；网格层走结构 id，避免轴 / 网格 id 撞名
-  const guideId = layer === 'axis' ? guide.id : undefined;
-  const id = guideLayerId(context.plotId, guideId, layer, guide.dimension);
+  const id = guideLayerId(context.plotId, guide.id, layer, guide.dimension, guide.coordinateView);
   return { ...(id !== undefined ? { id } : {}), meta: guideLayerMeta(layer, guide.dimension), zIndex };
 };
 

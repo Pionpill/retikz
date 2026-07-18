@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IRScene, Scene, ScenePrimitive } from '../../src';
+import type { CompileWarning, IRScene, Scene, ScenePrimitive, Transform } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
+import { applyTransformChain } from '../../src/compile/transform';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -16,10 +17,6 @@ const compileWithWarnings = (ir: IRScene): { compiled: Scene; warnings: Array<Co
   return { compiled, warnings };
 };
 
-/** 顶层第一条 path primitive */
-const topPath = (prims: ReadonlyArray<ScenePrimitive>): ScenePrimitive | undefined =>
-  prims.find(p => p.type === 'path');
-
 /** 取第一条 line 命令的 to 端点 */
 const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined => {
   if (!prim || prim.type !== 'path') return undefined;
@@ -27,6 +24,23 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
     if (cmd.kind === 'line') return cmd.to;
   }
   return undefined;
+};
+
+/** 递归收集 path 的视觉 line 端点，应用沿途 GroupPrim transform */
+const collectVisualLineEnds = (
+  primitives: ReadonlyArray<ScenePrimitive>,
+  scopeChain: ReadonlyArray<Transform> = [],
+  out: Array<[number, number]> = [],
+): Array<[number, number]> => {
+  for (const primitive of primitives) {
+    if (primitive.type === 'group') {
+      collectVisualLineEnds(primitive.children, [...scopeChain, ...(primitive.transforms ?? [])], out);
+      continue;
+    }
+    const end = lineTo(primitive);
+    if (end !== undefined) out.push(applyTransformChain(end, scopeChain));
+  }
+  return out;
 };
 
 describe('localNamespace 隔离子 frame', () => {
@@ -59,13 +73,11 @@ describe('localNamespace 隔离子 frame', () => {
     const { compiled, warnings } = compileWithWarnings(ir);
     // 两个 A 跨 frame 不算 duplicate
     expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(0);
-    const paths = compiled.primitives.filter(p => p.type === 'path');
-    expect(paths).toHaveLength(2);
+    const ends = collectVisualLineEnds(compiled.primitives);
+    expect(ends).toHaveLength(2);
     // 第一条 path（来自 scope 内）：内层 A 全局中心 ≈ (200, 0)
     // 第二条 path（顶层）：外层 A 全局中心 ≈ (0, 0)
-    const ends = paths.map(lineTo).filter((p): p is [number, number] => !!p);
-    expect(ends).toHaveLength(2);
-    // 一条端点 x 接近 200（内层 A），另一条接近 0（外层 A）
+    // 一条视觉端点 x 接近 200（内层 A），另一条接近 0（外层 A）
     const sorted = ends.map(p => p[0]).sort((a, b) => a - b);
     expect(Math.abs(sorted[0] - 0)).toBeLessThan(30);
     expect(Math.abs(sorted[1] - 200)).toBeLessThan(30);
@@ -92,12 +104,9 @@ describe('localNamespace 隔离子 frame', () => {
     ]);
     const { compiled, warnings } = compileWithWarnings(ir);
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
-    const p = topPath(compiled.primitives);
-    expect(p).toBeDefined();
-    // line 到 hub 全局 (0, 0)；boundary clip ±20
-    const end = lineTo(p);
+    const [end] = collectVisualLineEnds(compiled.primitives);
     expect(end).toBeDefined();
-    expect(Math.abs(end![0] - 0)).toBeLessThan(20);
+    expect(Math.abs(end[0] - 0)).toBeLessThan(20);
   });
 
   it('local_namespace_external_cannot_reference_internal：外层 path 引用内层 id 触发 UNRESOLVED_NODE_REFERENCE warn', () => {
@@ -157,13 +166,10 @@ describe('localNamespace 隔离子 frame', () => {
     const { compiled, warnings } = compileWithWarnings(ir);
     // 三个 A 跨 frame，全部 shadowing，没有 duplicate warn
     expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(0);
-    const paths = compiled.primitives.filter(p => p.type === 'path');
-    expect(paths).toHaveLength(2);
-    const ends = paths
-      .map(lineTo)
-      .filter((p): p is [number, number] => !!p)
+    const ends = collectVisualLineEnds(compiled.primitives)
       .map(p => p[0])
       .sort((a, b) => a - b);
+    expect(ends).toHaveLength(2);
     // 中层 A 全局 ≈ 100；最内层 A 全局 ≈ 200
     expect(Math.abs(ends[0] - 100)).toBeLessThan(30);
     expect(Math.abs(ends[1] - 200)).toBeLessThan(30);

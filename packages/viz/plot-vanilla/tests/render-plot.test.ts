@@ -46,6 +46,25 @@ const data: ExternalDatasets = {
   ],
 };
 
+type ScenePrimLike = { type: string; id?: string; children?: Array<ScenePrimLike> };
+
+/** 收集 Canvas / SVG 共用 Scene 中的语义分组 id */
+const collectSceneGroupIds = (primitives: Array<ScenePrimLike>): Array<string> =>
+  primitives.flatMap(primitive => [
+    ...(primitive.type === 'group' && primitive.id !== undefined ? [primitive.id] : []),
+    ...collectSceneGroupIds(primitive.children ?? []),
+  ]);
+
+/** 按稳定 id 查找 Canvas / SVG 共用 Scene 中的语义分组 */
+const findSceneGroup = (primitives: Array<ScenePrimLike>, id: string): ScenePrimLike | undefined => {
+  for (const primitive of primitives) {
+    if (primitive.type === 'group' && primitive.id === id) return primitive;
+    const nested = findSceneGroup(primitive.children ?? [], id);
+    if (nested !== undefined) return nested;
+  }
+  return undefined;
+};
+
 describe('renderPlot 薄包装（SSR SVG 串）', () => {
   it('返回含 <svg / <path / <ellipse（散点 glyph）的字符串', () => {
     const svg = renderPlot(spec, data, { width: 480, height: 300 });
@@ -82,6 +101,108 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const svg = renderPlot(spec, data, { width: 360, height: 200 });
     expect(svg).toMatch(/<svg[^>]*\swidth="360"/);
     expect(svg).toMatch(/<svg[^>]*\sheight="200"/);
+  });
+
+  it('语义组件先形成共享 Scene group，再映射为带稳定 id 的 SVG g', () => {
+    const layeredSpec: IRPlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      id: 'audit',
+      data: { reference: 'layered' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'color' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          id: 'points',
+          encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'series', scale: 'color' } },
+        },
+      ],
+      guides: [
+        { type: 'axis', id: 'x-axis', dimension: 'x', grid: true },
+        { type: 'legend', channel: 'color' },
+      ],
+    };
+    const datasets = { layered: [{ x: 0, y: 1, series: 'A' }] };
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [layeredSpec] },
+      { composites: lowerPlots(datasets, { width: 480, height: 300, provenance: true }) },
+    );
+    const semanticIds = ['audit.points', 'audit.x-axis.grid', 'audit.x-axis', 'audit.legend.color'];
+    expect(collectSceneGroupIds(scene.primitives as Array<ScenePrimLike>)).toEqual(expect.arrayContaining(semanticIds));
+
+    const svg = renderToSvgString(scene, { output: { width: 480, height: 300 } });
+    for (const id of semanticIds) {
+      expect(svg).toMatch(new RegExp(`<g[^>]*data-retikz-id="${id}"`));
+    }
+  });
+
+  it('嵌套 translate 的多系列 PathMark 保留 mark / series group，不把 path hoist 到 Scene 根层', () => {
+    const seriesSpec: IRPlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      id: 'series-demo',
+      data: { reference: 'climate' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'color' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'path',
+          id: 'lines',
+          series: 'city',
+          order: 'month',
+          encoding: {
+            x: { field: 'month' },
+            y: { field: 'score' },
+            color: { field: 'city', scale: 'color' },
+          },
+        },
+      ],
+    };
+    const datasets = {
+      climate: [
+        { month: 0, score: 10, city: 'A' },
+        { month: 1, score: 14, city: 'A' },
+        { month: 0, score: 12, city: 'B' },
+        { month: 1, score: 9, city: 'B' },
+      ],
+    };
+    const scene = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'scope',
+            transforms: [{ kind: 'translate', x: 0, y: 30 }],
+            children: [seriesSpec],
+          },
+        ],
+      },
+      { composites: lowerPlots(datasets, { width: 300, height: 220, provenance: true }) },
+    );
+
+    expect(scene.primitives.map(primitive => primitive.type)).toEqual(['group']);
+    const primitives = scene.primitives as Array<ScenePrimLike>;
+    const markGroup = findSceneGroup(primitives, 'series-demo.lines');
+    const seriesA = findSceneGroup(primitives, 'series-demo.series.A');
+    const seriesB = findSceneGroup(primitives, 'series-demo.series.B');
+    expect(markGroup).toBeDefined();
+    expect(seriesA?.children?.some(child => child.type === 'path')).toBe(true);
+    expect(seriesB?.children?.some(child => child.type === 'path')).toBe(true);
+
+    const svg = renderToSvgString(scene, { output: { width: 300, height: 250 } });
+    for (const id of ['series-demo.lines', 'series-demo.series.A', 'series-demo.series.B']) {
+      expect(svg).toMatch(new RegExp(`<g[^>]*data-retikz-id="${id}"`));
+    }
   });
 
   it('传入 lineage 配置时返回 SVG 与运行时图元链路', () => {

@@ -303,8 +303,7 @@ describe('scope GroupPrim emit 形态', () => {
     expect(rects.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('scope 内 path 落到顶层 primitives，不进 scope 的 GroupPrim', () => {
-    // path 端点用 nodeIndex 全局坐标解析后几何已是全局；若落到 GroupPrim 会被 scope.transform 再 apply 一次造成视觉偏移翻倍
+  it('scope 内 path 保持局部坐标并留在 scope 的 GroupPrim', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -324,22 +323,20 @@ describe('scope GroupPrim emit 形态', () => {
     ]);
     const compiled = compileToScene(ir);
     const topPath = compiled.primitives.find(p => p.type === 'path');
-    expect(topPath).toBeDefined();
+    expect(topPath).toBeUndefined();
     const group = compiled.primitives.find(p => p.type === 'group');
+    expect(group?.type).toBe('group');
     if (group?.type === 'group') {
       const innerPath = group.children.find(c => c.type === 'path');
-      expect(innerPath).toBeUndefined();
-    }
-    if (topPath?.type === 'path') {
-      const moveCmd = topPath.commands.find(c => c.kind === 'move');
-      const lineCmd = topPath.commands.find(c => c.kind === 'line');
+      expect(innerPath).toBeDefined();
+      if (innerPath?.type !== 'path') throw new Error('expected path in scope group');
+      const moveCmd = innerPath.commands.find(c => c.kind === 'move');
+      const lineCmd = innerPath.commands.find(c => c.kind === 'line');
       if (moveCmd?.kind === 'move') {
-        // A 全局中心 (10, 0)，boundary clip 偏移最多 ~半宽
-        expect(Math.abs(moveCmd.to[0] - 10)).toBeLessThan(20);
+        expect(Math.abs(moveCmd.to[0])).toBeLessThan(20);
       }
       if (lineCmd?.kind === 'line') {
-        // B 全局中心 (40, 0)，boundary clip 偏移最多 ~半宽
-        expect(Math.abs(lineCmd.to[0] - 40)).toBeLessThan(20);
+        expect(Math.abs(lineCmd.to[0] - 30)).toBeLessThan(20);
       }
     }
   });
@@ -401,25 +398,18 @@ describe('scope GroupPrim emit 形态', () => {
       },
     ]);
     const compiled = compileToScene(ir);
-    const path = compiled.primitives.find(p => p.type === 'path');
+    const group = findTopScopeGroup(compiled.primitives);
+    const path = group === undefined ? undefined : flattenPrims(group.children).find(p => p.type === 'path');
     expect(path).toBeDefined();
     if (path?.type === 'path') {
       const moveCmd = path.commands.find(c => c.kind === 'move');
       const lineCmd = path.commands.find(c => c.kind === 'line');
-      // s1 视觉中心 = (0, 0)；s2 视觉中心 = (150, 0)；视觉 halfWidth ≈ 同 fallback measure 下 1.5x 原本宽度
-      // 旧实现（未把 scale 投到 rect.width）会让 clip 落在 1x halfWidth 处，距视觉边界明显内移
-      // 这里取近似断言：move 端点距 s1 中心 > 0（贴边而非中心）；line 端点距 s2 中心 > 0；
-      // 且 move.x 与 line.x 之差 < |s2.center - s1.center| = 150（两端各自向内 clip）
+      // PathPrim 使用 scope 局部坐标；GroupPrim scale 负责映射到视觉坐标
       if (moveCmd?.kind === 'move' && lineCmd?.kind === 'line') {
         expect(moveCmd.to[0]).toBeGreaterThan(0);
-        expect(lineCmd.to[0]).toBeLessThan(150);
-        // 关键回归：旧实现下 move.x ≈ 1x halfWidth；新实现下 ≈ 1.5x halfWidth → 必然 > 1.2x halfWidth
-        // 这里用 "扣除两端 clip 后剩下的中段长度" 与 "1x 视觉间距" 比较——新实现 < 旧实现
+        expect(lineCmd.to[0]).toBeLessThan(100);
         const midSegment = lineCmd.to[0] - moveCmd.to[0];
-        // 旧实现下 midSegment ≈ 150 - 2 * halfWidth_1x；新实现下 ≈ 150 - 2 * halfWidth_1.5x → 新更短
-        // 取严格上界："如果 scale 未投到 width，midSegment 至少是 150 - 2*1.2*halfWidth_default ~ 130"
-        // 新实现 midSegment 应明显 < 130（halfWidth_default 约 15，1.5x = 22.5，midSegment ≈ 150 - 45 = 105）
-        expect(midSegment).toBeLessThan(130);
+        expect(midSegment).toBeLessThan(100);
       }
     }
   });

@@ -290,8 +290,8 @@ describe('builtin path generator and ribbon width profile', () => {
     );
     const prim = firstPathPrim(compiled.primitives);
 
-    expect(commandPoint(prim.commands[0])).toEqual([100, 0]);
-    expect(prim.commands[1]).toEqual({ kind: 'quad', control: [120, -20], to: [140, 0] });
+    expect(commandPoint(prim.commands[0])).toEqual([0, 0]);
+    expect(prim.commands[1]).toEqual({ kind: 'quad', control: [20, -20], to: [40, 0] });
     expect(flattenPrims(compiled.primitives).some(item => item.type === 'text')).toBe(true);
   });
 });

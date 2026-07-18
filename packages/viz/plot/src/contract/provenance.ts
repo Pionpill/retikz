@@ -111,13 +111,18 @@ export const markLayerId = (
   return markId !== undefined ? `${plotId}.${markId}` : `${plotId}.mark.${markIndex}`;
 };
 
-/** guide scope.id，存在 plotId 时生成 plot-local 稳定 id。 */
+/** guide scope.id，存在 plotId 时按 guide owner 与 paint phase 生成 plot-local 稳定 id */
 export const guideLayerId = (
   plotId: string | undefined,
   guideId: string | undefined,
   layer: 'axis' | 'grid',
   dimension: string,
+  coordinateView?: string,
 ): string | undefined => {
   if (plotId === undefined) return undefined;
-  return guideId !== undefined ? `${plotId}.${guideId}` : `${plotId}.${layer}.${dimension}`;
+  if (guideId !== undefined) return layer === 'axis' ? `${plotId}.${guideId}` : `${plotId}.${guideId}.grid`;
+  if (coordinateView !== undefined) {
+    return `${plotId}.view.${slug(coordinateView)}.${layer}.${dimension}`;
+  }
+  return `${plotId}.${layer}.${dimension}`;
 };

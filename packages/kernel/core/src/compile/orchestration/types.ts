@@ -16,8 +16,8 @@ export type PendingPathEmission = {
   irPath: string;
   /** path 所在 scope 的累计 transform */
   scopeChain: ReadonlyArray<Transform>;
-  /** 顶层原位回填用的占位槽；scope 内 path 走 hoist，不占位 */
-  placeholderSlot?: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
+  /** path 在所属 primitive sink 中的原位回填槽 */
+  placeholderSlot: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
   /** 编译期排序用 zIndex，不写入 Scene primitive */
   zIndex?: number;
 };

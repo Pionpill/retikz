@@ -30,6 +30,8 @@ description: Path 的 kind 是开放字符串；除了内置 stroke / ribbon，�
 | `emitStroke` | `(path?) => PathKindCompileResult \| null` | 复用内置 stroke lowerer，可传入改写后的 Path  |
 | `emitRibbon` | `(path?) => PathKindCompileResult \| null` | 复用内置 ribbon lowerer，可传入改写后的 Path  |
 
+`PathKindCompileResult.primitives` 与 `boundsPoints` 使用当前 Path 的局部坐标。Path 位于带 transform 的 scope 中时，所属 Scene 分组统一应用 transform；`emitStroke` 和 `emitRibbon` 返回相同坐标系的结果。
+
 ## 与路径生成器的区别
 
 自定义路径接管**整条 Path**：它决定这条路径最终产出什么 primitive，适合改变关系形态或复用内置 lowerer 后再改写结果。
