@@ -14,7 +14,7 @@
 | 目录                                                      | 内容                                                                                 |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | [`../packages/kernel/_notes/`](../packages/kernel/_notes) | kernel 发布组（`@retikz/math/core/render/react/vanilla/tex`）的 roadmap、ADR、分析。 |
-| [`../packages/viz/_notes/`](../packages/viz/_notes)       | `@retikz/plot` 发布组的架构、roadmap、ADR、分析。                                    |
+| [`../packages/viz/_notes/`](../packages/viz/_notes)       | viz 组各能力域与发布组的架构、roadmap、ADR、分析。                                   |
 | [`../apps/eval/_notes/`](../apps/eval/_notes)             | eval 应用的评测设计、语料与 runner 方案。                                            |
 
 ## 写到哪里
@@ -31,7 +31,7 @@
 
 ### 全仓架构
 
-- [`core-design.md`](./architecture/core-design.md)：retikz 总架构设计，包含分层模型、IR、Scene、AI 友好原则、跨平台策略。
+- [`capability-design.md`](./architecture/capability-design.md)：能力域、包角色、完备标准与能力性迭代门禁。
 - [`schema-design.md`](./architecture/schema-design.md)：schema / LLM 契约相关设计。
 
 ### kernel 发布组
@@ -41,10 +41,12 @@
 - [`kernel ADR template`](../packages/kernel/_notes/decisions/_template.md)：kernel ADR 模板。
 - [`core compare analysis`](../packages/kernel/_notes/analysis/core-compare-analysis.md)：core 底座横向对比。
 
-### plot 发布组
+### viz 发布组
 
 - [`plot notes`](../packages/viz/_notes/README.md)：plot 发布组内部文档入口。
 - [`plot-design.md`](../packages/viz/_notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
+- [`data-capability-complete.md`](../packages/viz/_notes/architecture/data-capability-complete.md)：data 能力完备与宿主边界。
+- [`plot-visualization-complete.md`](../packages/viz/_notes/architecture/plot-visualization-complete.md)：plot 可视化完备与跨能力域闭环。
 - [`plot v0 roadmap`](../packages/viz/_notes/decisions/plot/v0/roadmap.md)：plot v0 总路线。
 - [`plot v0.1 roadmap`](../packages/viz/_notes/decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`plot compare analysis`](../packages/viz/_notes/analysis/plot-compare-analysis.md)：plot 横向对比。

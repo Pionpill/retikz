@@ -7,7 +7,7 @@ import type { NodeLayout } from '../node';
 import { isAnchor } from '../../shared';
 import { anchorOf, angleBoundaryOf, boundaryKey, outerRectOf } from '../node';
 
-/** 单个 NodeLayout 生命周期内的 anchor 坐标缓存。 */
+/** 单个 NodeLayout 生命周期内的 anchor 坐标缓存 */
 const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();
 
 /** 角度字符串识别：可选负号 + 数字 + 可选小数；与 parseTarget.ts 的 ANGLE_RE 同语义 */
@@ -19,7 +19,7 @@ const withOuterRect = (layout: NodeLayout): NodeLayout => ({
   rect: outerRectOf(layout),
 });
 
-/** 把 anchor 名称解析为节点上的全局坐标。 */
+/** 把 anchor 名称解析为节点上的全局坐标 */
 const computeAnchor = (layout: NodeLayout, anchorName: string, boundary: IRBoundary | undefined): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
     const angle = Number(anchorName);
@@ -36,7 +36,7 @@ const computeAnchor = (layout: NodeLayout, anchorName: string, boundary: IRBound
 /** geometry Position（含 readonly 形态）转 IRPosition 元组（IRPosition === [number, number]） */
 const positionToIR = (p: Position): IRPosition => [p[0], p[1]];
 
-/** 取节点 anchor 的全局坐标。 */
+/** 取节点 anchor 的全局坐标 */
 export const resolveAnchor = (
   layout: NodeLayout,
   anchorName: string,
@@ -55,7 +55,7 @@ export const resolveAnchor = (
   return result;
 };
 
-/** 取节点边上比例点的全局坐标。 */
+/** 取节点边上比例点的全局坐标 */
 export const resolveEdgePoint = (layout: NodeLayout, side: SideValue, t: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {

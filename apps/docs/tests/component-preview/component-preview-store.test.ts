@@ -1,0 +1,29 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it } from 'vitest';
+
+import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
+
+const originalDefaultOpen = useComponentPreviewStore.getState().controlPanelDefaultOpen;
+
+afterEach(() => {
+  useComponentPreviewStore.getState().setControlPanelDefaultOpen(originalDefaultOpen);
+});
+
+describe('ComponentPreview store controls panel preference', () => {
+  it('设置并切换默认打开状态', () => {
+    useComponentPreviewStore.getState().setControlPanelDefaultOpen(true);
+    expect(useComponentPreviewStore.getState().controlPanelDefaultOpen).toBe(true);
+
+    useComponentPreviewStore.getState().toggleControlPanelDefaultOpen();
+    expect(useComponentPreviewStore.getState().controlPanelDefaultOpen).toBe(false);
+  });
+
+  it('不保存 panel 宽度或实例级映射', () => {
+    const state = useComponentPreviewStore.getState();
+
+    expect(state).not.toHaveProperty('controlPanelSize');
+    expect(state).not.toHaveProperty('controlPanelWidth');
+    expect(state).not.toHaveProperty('controlPanelSizes');
+    expect(state).not.toHaveProperty('controlPanelWidths');
+  });
+});

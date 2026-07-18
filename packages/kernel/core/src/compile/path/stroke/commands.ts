@@ -53,7 +53,7 @@ export type CreatePathCommandEmitterInput = {
   currentStepKind: () => string;
 };
 
-/** 创建普通 path emit 的命令写入器。 */
+/** 创建普通 path emit 的命令写入器 */
 export const createPathCommandEmitter = ({
   round,
   currentStepKind,

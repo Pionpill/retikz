@@ -5,7 +5,7 @@ export type PathBaseProps = Omit<PathPrim, 'type' | 'commands' | 'arrowStart' | 
 
 /**
  * 多 sub-path + 有端点箭头：按 sub-path split 成多个 PathPrim
- * @description 端点箭头只属于整条 path 的首端和末端；单 sub-path 或无箭头时直接产一个 PathPrim。
+ * @description 端点箭头只属于整条 path 的首端和末端；单 sub-path 或无箭头时直接产一个 PathPrim
  */
 export const splitSubPathsForEndpointArrows = (
   commands: Array<PathCommand>,

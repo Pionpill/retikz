@@ -8,7 +8,7 @@ import { parsePathD, transformCommands } from './path-d';
 
 /**
  * 从标签属性串里取某属性值（双 / 单引号；MathJax 属性值不含引号字符）
- * @description 名字前要求行首或空白边界——否则 `d` 会误命中 `id=`、`href` 会误命中 `xlink:href=`。
+ * @description 名字前要求行首或空白边界——否则 `d` 会误命中 `id=`、`href` 会误命中 `xlink:href=`
  */
 const attr = (attrs: string, name: string): string | undefined => {
   const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*['"]([^'"]*)['"]`).exec(attrs);
@@ -49,7 +49,7 @@ const collectDefsPaths = (svg: string): Map<string, string> => {
  *   `translate`）到每个 `<path>` / `<rect>` / `<use>`；坐标经矩阵变换后归一到「左上角原点、y-down、user 单位」：
  *   `(p - viewBoxOrigin) × fontSize/1000`。`fontCache:'none'`：字形 `<path>` 内联（直接 emit）；`'local'`/`'global'`：
  *   字形在 `<defs><path id>`、由 `<use xlink:href="#id">` 引用——`<defs>` 内 path 不直接 emit，经 `<use>` 解引用 emit。
- *   width/height = viewBox × scale；depth = `(viewBox.y + viewBox.height) × scale`。无 viewBox / 解析失败 → null。
+ *   width/height = viewBox × scale；depth = `(viewBox.y + viewBox.height) × scale`。无 viewBox / 解析失败 → null
  */
 export const parseMathJaxSvg = (svg: string, fontSize: number): LoweredTex | null => {
   const vbMatch = /viewBox\s*=\s*"([^"]+)"/.exec(svg);

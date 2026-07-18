@@ -16,8 +16,8 @@ export const CornerValues = [
 export const AnchorValues = [...SideValues, ...CornerValues] as const satisfies Readonly<Array<AnchorValue>>;
 
 /**
- * 标准方向 anchor 在屏幕坐标系里的单位向量。
- * @description 对角分量归一化，保证斜向 distance 与水平 / 垂直 distance 等长。
+ * 标准方向 anchor 在屏幕坐标系里的单位向量
+ * @description 对角分量归一化，保证斜向 distance 与水平 / 垂直 distance 等长
  */
 export const AnchorUnitVectorByAnchor = {
   [Side.Top]: [0, -1],

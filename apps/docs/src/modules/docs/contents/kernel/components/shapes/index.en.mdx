@@ -10,10 +10,7 @@ Shapes (circle, ellipse, arc, sector, rectangle, polygon, star, arbitrary contou
 
 Each shape page documents both faces as two self-contained halves: "As a Path shape" first, then "As a Node shape". In short: reach for sugar to draw a shape line, and for `<Node shape>` to get a connectable, labelable shape node.
 
-**Both sides are open to extension:**
-
-- For Node shapes beyond the built-ins (hexagon / cloud…) — register them with the [shape-registry](/kernel/components/extend/shape-registry); the built-in registry entries are rectangle / ellipse / sector / arc / polygon / star / contour (circle / diamond are compile-time preset aliases, not in the registry).
-- For path curve steps beyond the built-in `parabola` (sin-cos…) — use the [path-generator](/kernel/components/extend/path-generator).
+The Node shape registry is also open to extensions. For shapes beyond the built-ins (cylinder / cloud…), use [Custom Shapes](/kernel/components/shapes/custom-shape) at the end of this group. For curve steps beyond `parabola`, switch to [Path Generators](/kernel/components/draw/path-generator) under Drawing.
 
 <ComponentPreview files="shapes-family" size="md" hideCode />
 
@@ -27,6 +24,7 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
 | Polygon          | `<RegularPolygon>`       | `shape={{ type:'polygon', params }}` (params) · `"diamond"`  |
 | Star             | `<Star>`                 | `shape={{ type:'star', params }}` (params)                   |
 | Contour          | — (draw with `<Path>`)   | `shape={{ type:'contour', params }}` (arbitrary vertex ring) |
+| Custom Shapes    | —                        | `ShapeDefinition` + `<Layout shapes>`                        |
 
 > Background grids and reference lines — **a field of regular lines** rather than a single closed shape — are not in this group; see `<Grid>` under [Helpers](/kernel/components/helpers).
 
@@ -62,5 +60,9 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Connectable node from an arbitrary closed vertex ring
     </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/shapes/custom-shape">
+    <span className="font-semibold">Custom Shapes</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register Node shapes beyond the built-ins</span>
   </LinkedCard>
 </div>

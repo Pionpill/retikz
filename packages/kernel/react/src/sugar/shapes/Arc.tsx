@@ -9,9 +9,9 @@ import { Step } from '../../kernel/components';
 import { pickPathVisual, resolveAngles } from './shape-helpers';
 
 /**
- * `<Arc>` 形态：圆弧（radius number）/ 椭圆弧（radius {x,y}）；必给角度（startAngle / endAngle / sweepAngle 三选二）。
+ * `<Arc>` 形态：圆弧（radius number）/ 椭圆弧（radius {x,y}）；必给角度（startAngle / endAngle / sweepAngle 三选二）
  * @description 默认开放弧；给 `close="chord"`（弦闭合）或 `close="sector"`（连回圆心成扇形）可闭合成可填充区域。
- *   `label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 midway，按 startAngle..endAngle 线性映射）。
+ *   `label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 midway，按 startAngle..endAngle 线性映射）
  */
 export type ArcProps = PathVisualProps &
   AngleInput & {
@@ -25,7 +25,7 @@ export type ArcProps = PathVisualProps &
  * Arc sugar——弧线（默认开放，可弦闭合 / 扇形闭合）
  * @description center 透传（任意 Target，可为节点 id / 极坐标）。
  *   开放弧展开为 `<Path><Step move(center)><Step arc(center)></Path>`（pen 停在弧端点，输出与旧版一致）；
- *   `close="chord"|"sector"` 改走 circlePath / ellipsePath 的对应 closed 模式（圆心 = 游标）。
+ *   `close="chord"|"sector"` 改走 circlePath / ellipsePath 的对应 closed 模式（圆心 = 游标）
  */
 export const Arc: FC<ArcProps> = props => {
   const angles = resolveAngles(props, 'Arc', true);

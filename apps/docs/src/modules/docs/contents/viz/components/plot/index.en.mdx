@@ -143,7 +143,11 @@ When chart configuration comes from persisted JSON or an external generator, pas
 
 ## How it works
 
-> Optional for everyday use; revisit when you want to understand how `<Plot>` is compiled, or when you write / generate the low-level IR directly.
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when you want to understand how `<Plot>` is compiled, or when you write / generate the low-level IR directly."
+/>
 
 `<Plot>` draws nothing on its own. The composition entry first assembles children (marks / guides / scales / coordinate) into a **PlotSpec**: a high-level Tier 2 IR (fully JSON-serializable; data is not part of it). At compile time, **lowering** turns that PlotSpec into `@retikz/core`'s Tier 1 IR (`<Scope>` / `<Node>` / `<Path>`), which core then compiles into a Scene for the renderer. The spec entry skips assembly and feeds a PlotSpec directly.
 

@@ -9,7 +9,7 @@ export type CommandProvenance = string;
 /**
  * ContourCommand → PathCommand（圆角后只可能是 move / line / arc / close 子集）
  * @description 坐标 / 半径走 Scene precision round（与 emitLine / emitArc 同口径），让超大半径 clamp
- *   与显式可行半径在 round 后稳定一致。
+ *   与显式可行半径在 round 后稳定一致
  */
 const contourToPathCommand = (c: ContourCommand, round: (n: number) => number): PathCommand => {
   if (c.kind === 'move') return { kind: 'move', to: [round(c.to[0]), round(c.to[1])] };
@@ -39,7 +39,7 @@ const samePoint = (a: [number, number], b: [number, number]): boolean =>
 /**
  * 一段连续 line-step run 的描述
  * @description start = run 前一命令终点（move / 上一 line 的终点）；lineEnds = run 内每条 line 命令终点；
- *   cmdStart / cmdEnd = run 在 commands 中的下标区间 [cmdStart, cmdEnd)（仅含 line 命令本身，不含前置 move）。
+ *   cmdStart / cmdEnd = run 在 commands 中的下标区间 [cmdStart, cmdEnd)（仅含 line 命令本身，不含前置 move）
  */
 type LineRun = {
   start: [number, number];
@@ -48,7 +48,7 @@ type LineRun = {
   cmdEnd: number;
 };
 
-/** line-step 圆角改写输入。 */
+/** line-step 圆角改写输入 */
 export type ApplyRoundedCornersInput = {
   commands: Array<PathCommand>;
   provenance: Array<CommandProvenance>;
@@ -70,7 +70,7 @@ const runSegments = (run: LineRun): Array<ContourSegment> => {
 /**
  * 对一条 path 的 commands 施加 line-line 接缝几何圆角
  * @description provenance 与 commands 一一对应、给出每条命令的来源 step kind。返回新 commands（≥2 段 line run 才倒，
- *   无合格 run 时原样返回）。radius ≤ 0 由调用方提前短路。
+ *   无合格 run 时原样返回）。radius ≤ 0 由调用方提前短路
  */
 export const applyRoundedCorners = ({
   commands,
@@ -182,7 +182,7 @@ const dist = (a: [number, number], b: [number, number]): number => Math.hypot(b[
 /**
  * 把（倒角后）commands 拆成可按弧长行走的片段序列
  * @description 只识别 move / line / arc / close（倒角输出子集）；其余命令片段被跳过（圆角路径不含）。
- *   close 视作回到当前 subpath 起点的直线段。
+ *   close 视作回到当前 subpath 起点的直线段
  */
 const piecesFromCommands = (commands: ReadonlyArray<PathCommand>): Array<Piece> => {
   const pieces: Array<Piece> = [];
@@ -247,7 +247,7 @@ const samplePiece = (piece: Piece, u: number): CommandSample => {
 /**
  * 沿（倒角后）commands 按总弧长在 pos∈[0,1] 处采样点 + 切线（mark / label 弧长重定位用）
  * @description 倒角缩短了路径总弧长并改变接缝几何 → 同一 pos 落点 / 切线与尖角不同。
- *   无可行片段（退化）时回退 { [0,0], [1,0] }。
+ *   无可行片段（退化）时回退 { [0,0], [1,0] }
  */
 export const sampleRoundedCommands = (commands: ReadonlyArray<PathCommand>, pos: number): CommandSample => {
   const pieces = piecesFromCommands(commands);

@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3 / §8 / §8.1 / §11 / §13.1](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../../../../notes/architecture/core-design.md) · 子结构：[ADR-02 data](./02-plot-data.md) · [ADR-03 scale](./03-plot-scale.md) · [ADR-04 coordinate](./04-plot-coordinate.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3 / §8 / §8.1 / §11 / §13.1](../../../../../architecture/plot-design.md) · 子结构：[ADR-02 data](./02-plot-data.md) · [ADR-03 scale](./03-plot-scale.md) · [ADR-04 coordinate](./04-plot-coordinate.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
 
 ## 背景 / 约束
 

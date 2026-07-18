@@ -2,9 +2,15 @@
 
 本文件只写 `@retikz/react` 包内特有规则。全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，kernel 组规则见 [`../AGENTS.md`](../AGENTS.md)。
 
-## 包定位
+## 包职责契约
 
-`@retikz/react` 是 `@retikz/core` 之上的 React adapter：把 Kernel / Sugar JSX 编译成 IR，调用 `compileToScene`，再经 `@retikz/render` 输出 SVG 或 Canvas。
+- **解决的问题**：让 React 用户用 JSX 构造 Core 能力，并把编译后的 Scene 接入 React 的 SVG / Canvas 宿主生命周期
+- **拥有的契约**：Kernel / Sugar React 组件、props / children 到 Core IR 的 adapter、React 侧 runtime / hydration 接线与公开 props 类型
+- **不拥有的能力**：Core IR / Scene 语义、几何与 compile 规则、SVG / Canvas 后端算法、Plot 等 Tier 2 语法或通用业务组件
+- **输入与输出**：接收 JSX、公开 props、compile / render options，构造 Core IR 并调用 core / render，输出 ReactElement 与宿主 runtime 句柄
+- **缺口流向**：新图形语义先补 `@retikz/core`；通用几何下沉 `@retikz/math`；后端执行补 `@retikz/render`；Tier 2 能力留在各自 React adapter；只有 authoring convenience 才进入 Sugar
+
+具体适配链路：
 
 - Kernel 组件一对一映射 IR：`Layout`、`Node`、`Path`、`Step`、`Text`、`Coordinate`、`Scope` 等。
 - Sugar 组件同步展开为 Kernel，产出的 IR 必须与手写 Kernel 等价。

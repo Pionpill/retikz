@@ -12,19 +12,19 @@ import { TIKZ_SCOPE } from '../protocol';
 export type ScopeProps = ScopeStyleProps &
   HydrationEventProps & {
     /**
-     * 可选 scope 引用 id；设值后可把整个 scope 的包络当作引用目标。
+     * 可选 scope 引用 id；设值后可把整个 scope 的包络当作引用目标
      * @description 外部 path / position 可用 `scope.id` / `scope.id.<anchor>` / `scope.id.<deg>` 引用该包络；
-     *   这个外部句柄不受 `localNamespace` 影响。
+     *   这个外部句柄不受 `localNamespace` 影响
      */
     id?: string;
     /**
      * 是否创建本地命名空间；true 时子节点 id 不向父 frame 传播（外部不可见）
-     * @description 子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用。
+     * @description 子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用
      */
     localNamespace?: boolean;
     /**
-     * 局部 transform 列表；数组顺序应用，与 SVG transform list 一致。
-     * @description 支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale。
+     * 局部 transform 列表；数组顺序应用，与 SVG transform list 一致
+     * @description 支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale
      */
     transforms?: Array<IRTransformInput>;
     /** 继承屏障：切外层对应通道继承（true 全切 / 数组按 'node'|'path'|'label'|'arrow' 切） */
@@ -45,7 +45,7 @@ export type ScopeProps = ScopeStyleProps &
 
 /**
  * Scope 容器组件——TikZ `\begin{scope}[...]...\end{scope}` 同义
- * @description 给一组节点 / 路径提供局部样式、命名空间、变换、裁剪和引用包络。
+ * @description 给一组节点 / 路径提供局部样式、命名空间、变换、裁剪和引用包络
  */
 export const Scope: FC<ScopeProps> = () => null;
 Scope.displayName = TIKZ_SCOPE;

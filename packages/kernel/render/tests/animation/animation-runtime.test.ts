@@ -14,7 +14,7 @@ import {
 /**
  * animation/runtime 纯逻辑锁定测试：scene 动画存在性 / 自动播放判定 / 总时长聚合（递归 group + 根镜头），
  * prefers-reduced-motion 读取与缺失降级，createClock 在无 requestAnimationFrame（SSR）下的同步定格行为。
- * 不触真 rAF / IntersectionObserver；只钉可纯函数化的部分。
+ * 不触真 rAF / IntersectionObserver；只钉可纯函数化的部分
  */
 
 const layout = { x: 0, y: 0, width: 100, height: 100 };

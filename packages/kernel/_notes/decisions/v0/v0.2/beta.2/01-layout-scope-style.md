@@ -3,7 +3,7 @@
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-31
 - 落地日期：2026-06-01（yellow；react kernel + 测试 + 文档；core 零改动）
-- 关联：[v0 roadmap](../../roadmap.md) · [core-design.md §4](../../../../../../../notes/architecture/core-design.md) · [`flow-beta` SKILL](../../../../../../../.agents/skills/flow-beta/SKILL.md)（**本 ADR 是对其"beta 不开新功能 ADR"的有意破例**）· `<Scope>`（复用其级联语义）
+- 关联：[v0 roadmap](../../roadmap.md) · [`flow-beta` SKILL](../../../../../../../.agents/skills/flow-beta/SKILL.md)（**本 ADR 是对其"beta 不开新功能 ADR"的有意破例**）· `<Scope>`（复用其级联语义）
 
 > ⚠️ **流程破例说明**：给 `LayoutProps` 加公开级联样式 props 属于"新增公开 API / 新功能"，按 `flow-beta` 规则应推到下一个 alpha 窗口。2026-05-31 由维护者决定在 v0.2-beta.2 内有意破例接入——理由：改动小、纯增量（非破坏）、且把高频样板（每张图都套一层根 `<Scope>`）一次性消掉，收益明确。记录在案以保审计 trail 完整。
 

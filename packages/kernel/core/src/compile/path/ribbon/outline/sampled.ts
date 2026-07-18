@@ -24,7 +24,7 @@ export type OutlineCommandsInput = {
 
 /**
  * 采样型 centerline ribbon 轮廓
- * @description 沿中心线取 sampleCount 个横截面，左侧顺序连线、右侧逆序连线，再按端帽配置闭合。
+ * @description 沿中心线取 sampleCount 个横截面，左侧顺序连线、右侧逆序连线，再按端帽配置闭合
  */
 export const outlineCommands = ({
   segments,

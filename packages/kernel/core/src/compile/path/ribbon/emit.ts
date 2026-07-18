@@ -31,22 +31,22 @@ import {
   resolveSampleCount,
 } from './width';
 
-/** ribbon path emit 所需的编译上下文。 */
+/** ribbon path emit 所需的编译上下文 */
 export type EmitRibbonPrimitiveContext = {
-  /** id 查询栈。 */
+  /** id 查询栈 */
   namespaceStack: NamespaceStack;
-  /** 坐标取整函数。 */
+  /** 坐标取整函数 */
   round: (n: number) => number;
-  /** 文本测量函数。 */
+  /** 文本测量函数 */
   measureText: TextMeasurer;
-  /** ribbon emit 选项。 */
+  /** ribbon emit 选项 */
   options?: RibbonEmitOptions;
 };
 
 /**
  * IR ribbon path → Scene primitive
  * @description boundary 模式把 upper/lower 两条 path 采样成闭合轮廓；centerline 模式先复用普通 path emit 解析中心线，
- *   再按宽度函数生成左右边界。静态宽度 + 解析型线段优先走 analyticOutlineCommands；无法解析或用户要求采样时走采样轮廓。
+ *   再按宽度函数生成左右边界。静态宽度 + 解析型线段优先走 analyticOutlineCommands；无法解析或用户要求采样时走采样轮廓
  */
 export const emitRibbonPrimitive = (
   path: IRPathBase,

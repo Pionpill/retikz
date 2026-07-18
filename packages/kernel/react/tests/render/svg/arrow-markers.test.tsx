@@ -13,7 +13,7 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
  *   wrapper 参数（viewBox `0 0 baseSize baseSize` / refX / refY=baseSize/2 / markerWidth / markerHeight）来自
  *   spec，内部元素来自 `spec.marker`（`MarkerPrimitive[]`，core 已产）。内置 8 的 d-string 回归改成：给定
  *   resolved marker 几何 → 物化的 path d 等价旧值。
- *   ArrowMarker 是 FC——直接调函数拿 ReactElement 检查。
+ *   ArrowMarker 是 FC——直接调函数拿 ReactElement 检查
  */
 
 /** 构造一个已解析 ResolvedArrowEndSpec（wrapper 参数 + marker 几何） */
@@ -130,7 +130,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
 /**
  * 内置 8 marker 的 d-string 回归（golden master）
  * @description 给定 resolved marker 几何（compile 产物的 commands / ellipse 参数）→ 物化的 path d / ellipse
- *   参数等价旧 switch。几何已在 compile，react 只翻成 SVG。
+ *   参数等价旧 switch。几何已在 compile，react 只翻成 SVG
  */
 describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）', () => {
   const pathMarker = (commands: Array<PathCommand>): ResolvedArrowEndSpec =>

@@ -1,6 +1,6 @@
 ---
 title: 混合
-description: 图元级混合模式（blendMode）——让主几何与其下方已绘内容按 W3C 16 个分离公式混合，三端一致、可叠加。
+description: 图元级混合模式（blendMode）——让主几何与其下方已绘内容按 W3C 16 种标准模式混合，SVG 与 Canvas 共用同一契约。
 ---
 
 `blendMode` 是图元级的视觉效果属性，`<Node>` 和 `<Path>` 都能直接写。它作用于**该图元本身**——Node 的 shape、Path 的主路径（含其端点箭头）。Node 的文字 / 标签 / 引脚是独立图元，不参与混合。它是 renderer 无关的：SVG 与 Canvas 两端各自翻译成原生能力，结果一致。
@@ -17,7 +17,7 @@ import { Node } from '@retikz/react';
 
 ## 例子
 
-`blendMode` 让主几何与它**下方已经画好的内容**按 W3C 分离公式混合：`multiply` 压暗、`screen` 提亮、`overlay` 增强对比……取值是 16 个 W3C 分离模式之一：
+`blendMode` 让主几何与它**下方已经画好的内容**按 W3C 标准模式混合：`multiply` 压暗、`screen` 提亮、`overlay` 增强对比……取值是以下 16 种模式之一：
 
 `normal` / `multiply` / `screen` / `overlay` / `darken` / `lighten` / `color-dodge` / `color-burn` / `hard-light` / `soft-light` / `difference` / `exclusion` / `hue` / `saturation` / `color` / `luminosity`。
 
@@ -39,9 +39,79 @@ import { Node } from '@retikz/react';
 
 <span style={{ color: '#888' }}>深底上两个圆 screen——重叠处提亮叠加。</span>
 
+## 技术原理
+
 <ComponentAlert
-  title="首切为元素级混合"
-  description="blendMode 作用于单个图元，让它与同一 Scene 内在它之前绘制的内容混合，不引入额外的 isolation 分组。扁平场景下 SVG 与 Canvas 两端结果一致；嵌套分组的隔离差异属于组级混合，暂未支持。"
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要判断绘制顺序、透明度或分组边界为什么改变混合结果时再回来读。"
+/>
+
+### 源图层与背景图层
+
+混合发生在当前图元与已绘内容重叠的像素上。当前图元是 source（源图层），Scene 最终绘制顺序中位于它之前的累计结果是 backdrop（背景图层）：
+
+| 角色     | 含义                       | 作用               |
+| -------- | -------------------------- | ------------------ |
+| backdrop | 此前累计的 Scene 内容      | 提供源图层下方像素 |
+| source   | 当前图元的主几何           | 提供颜色与透明度   |
+| 最终结果 | `B(Cb, Cs)` 后 source-over | 只在重叠区混色     |
+
+`blendMode` 只决定混色函数，不替代 `opacity`：混色后仍会结合双方透明度做普通 `source-over` 叠放，透明背景会减弱混合影响。调整声明顺序或 `zIndex` 会改变谁是 source、谁是 backdrop；对 `overlay`、`hard-light` 等区分两者角色的模式，结果也会随之改变。
+
+前 12 种（`normal` 到 `exclusion`）是分离模式，会逐颜色通道计算；`hue` / `saturation` / `color` / `luminosity` 是非分离模式，会联合处理色相、饱和度与明度。`normal` 不做额外混色，所以与省略 `blendMode` 等价。
+
+<SourceLinks
+  sources={[
+    {
+      label: '确定 Scene 图元的最终顺序',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 443,
+      endLine: 466,
+    },
+    {
+      label: 'SVG 按 Scene 顺序组装图元',
+      path: 'packages/kernel/render/src/svg/builders/document.ts',
+      startLine: 127,
+      endLine: 140,
+    },
+    {
+      label: 'Canvas 按 Scene 顺序逐图元绘制',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+    },
+  ]}
+/>
+
+### 图元边界与后端映射
+
+编译阶段不会为混合额外创建组，而是把模式保留在 Node 主形状或 Path 主路径图元上。渲染阶段再把同一个值映射到各后端的原生混合能力：
+
+| 契约          | SVG                | Canvas                     |
+| ------------- | ------------------ | -------------------------- |
+| 非 normal 值  | `mix-blend-mode`   | `globalCompositeOperation` |
+| 省略 / normal | 不输出额外混合样式 | 保持 `source-over`         |
+| 状态边界      | 当前几何元素       | 保存 → 绘制 → 恢复         |
+
+这解释了元素边界：SVG 的 marker / filter 输出跟随当前几何元素，Canvas 只在当前图元绘制期间切换状态。Node 的文字、标签和引脚是后续独立图元，不继承主形状的混合；Path 端点箭头则在主路径的同一效果边界内绘制。`opacity` 与 `shadow` 可以同时存在，它们共同形成当前图元的 source，再与 backdrop 混合。
+
+<ComponentAlert
+  title="当前只提供图元级混合"
+  description="retikz 不为 blendMode 额外创建 isolation 分组。扁平 Scene 中 SVG 与 Canvas 使用同一模式与绘制顺序；嵌套组的隔离合成属于组级混合，暂未支持。"
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'SVG 混合模式映射',
+      path: 'packages/kernel/render/src/svg/builders/prim.ts',
+      startLine: 84,
+      endLine: 91,
+    },
+    {
+      label: 'Canvas 混合状态隔离',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+    },
+  ]}
 />
 
 ## API 参考
@@ -50,7 +120,7 @@ import { Node } from '@retikz/react';
 
 | 属性        | 类型                                                                                                                                                                                                                           | 默认值     | 描述                                                                                                                                                                  |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | 主几何与其下方已绘内容的混合模式（W3C 16 个分离模式）；省略 / `'normal'` = 普通叠放。图元级：Node 文字 / 标签 / 引脚（独立图元）不参与；Path 端点箭头随主路径一起混合 |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | 主几何与其下方已绘内容的混合模式（W3C 16 种标准模式）；省略 / `'normal'` = 普通叠放。图元级：Node 文字 / 标签 / 引脚（独立图元）不参与；Path 端点箭头随主路径一起混合 |
 
 ## 相关
 

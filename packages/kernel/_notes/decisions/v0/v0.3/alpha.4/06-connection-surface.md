@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · **前置**：[ADR-01 shape 参数化泛化](./01-shape-params-generalization.md)（`circumscribe` 精确 AABB 契约 + 擦除注册表）· **借用的内置形状**：[ADR-02 circle/ellipse](./02-circle-ellipse.md)（`rectangle` / `ellipse` def 被连接面复用）· 参照：[core-design.md §7 AI 友好](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · **前置**：[ADR-01 shape 参数化泛化](./01-shape-params-generalization.md)（`circumscribe` 精确 AABB 契约 + 擦除注册表）· **借用的内置形状**：[ADR-02 circle/ellipse](./02-circle-ellipse.md)（`rectangle` / `ellipse` def 被连接面复用）· 参照：
 
 ## 背景
 

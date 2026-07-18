@@ -6,7 +6,7 @@
  * 字符串 / Vanilla / 多框架逐字消费 attrs（SVG 真名）；React 唯一需把呈现属性 kebab→camelCase。
  *
  * 公开 API 白名单（受 semver 约束）由子目录 barrel 自身 curate：`builders/index.ts` 只聚合公开 builder、
- * 不含内部 helper（arrowCollect / attrs），故此处可直接 `export *`。
+ * 不含内部 helper（arrowCollect / attrs），故此处可直接 `export *`
  */
 
 // ============ 描述树类型 ============

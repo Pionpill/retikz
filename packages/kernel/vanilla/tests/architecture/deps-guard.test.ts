@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 /**
  * @retikz/vanilla 架构守卫（node 环境）
  * @description 钉死三条不可越界：仅依赖 core/render（无 react）、不复制 Scene→SVG 内核、
- *   作 SSR 门面必须「导入不触 DOM」（无 document 的 Node 下 import + renderToSvgString 不炸）。
+ *   作 SSR 门面必须「导入不触 DOM」（无 document 的 Node 下 import + renderToSvgString 不炸）
  */
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(path.resolve(here, '../../package.json'), 'utf8'));

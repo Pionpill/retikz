@@ -5,6 +5,8 @@ import { useState } from 'react';
 import type { PreviewControlRuntime, PreviewControlState, RendererMode } from '../types';
 
 export type UsePreviewControlRuntimeOptions = {
+  /** 由 Card 宿主持有并注入的业务控件状态 */
+  controlState: PreviewControlState;
   /** 当前面板渲染模式。 */
   rendererMode: RendererMode;
   /** 当前面板渲染区域 ref。 */
@@ -23,16 +25,15 @@ export type PreviewControlRuntimeState = {
   remountKey: number;
   /** 当前面板独享的控制 runtime。 */
   runtime: PreviewControlRuntime;
-  /** 当前面板独享的控件共享值状态。 */
+  /** 宿主注入的业务控件状态 */
   controlState: PreviewControlState;
 };
 
 /** 为单个预览面板创建独立的控制运行时状态。 */
 export const usePreviewControlRuntime = (options: UsePreviewControlRuntimeOptions): PreviewControlRuntimeState => {
-  const { rendererMode, renderPaneRef, hovered, pinned, expanded } = options;
+  const { controlState, rendererMode, renderPaneRef, hovered, pinned, expanded } = options;
   const [remountKey, setRemountKey] = useState(0);
   const [activeState, setActiveState] = useState<Record<string, boolean>>({});
-  const [values, setValues] = useState<Record<string, string>>({});
 
   const remount = () => setRemountKey(key => key + 1);
   const runtime: PreviewControlRuntime = {
@@ -46,13 +47,8 @@ export const usePreviewControlRuntime = (options: UsePreviewControlRuntimeOption
     expanded,
     active: id => activeState[id] ?? false,
     setActive: (id, on) => setActiveState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
-    value: id => values[id],
-    setValue: (id, value) => setValues(prev => ({ ...prev, [id]: value })),
-  };
-
-  const controlState: PreviewControlState = {
-    values,
-    setValue: runtime.setValue,
+    value: id => controlState.values[id],
+    setValue: controlState.setValue,
   };
 
   return { remountKey, runtime, controlState };

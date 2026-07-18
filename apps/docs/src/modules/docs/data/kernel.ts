@@ -1,4 +1,12 @@
-import type { Section } from './types';
+import type { DocPageMetadataOverride, Section } from './types';
+
+/** 标记以 Definition / registry 为主线的扩展指南。 */
+const extensionGuide = (capability: string): DocPageMetadataOverride => ({
+  pageType: 'extension',
+  audience: 'extension-author',
+  capability,
+  sourceOfTruth: 'runtime',
+});
 
 export const kernelSection: Array<Section> = [
   {
@@ -18,6 +26,16 @@ export const kernelSection: Array<Section> = [
         children: [
           { id: 'layers', label: 'kernel.layers' },
           { id: 'composite', label: 'kernel.refComposite' },
+          {
+            id: 'principles',
+            label: 'kernel.principles',
+            meta: {
+              pageType: 'architecture',
+              audience: 'maintainer',
+              capability: 'kernel.architecture',
+              sourceOfTruth: 'architecture',
+            },
+          },
         ],
       },
       {
@@ -49,6 +67,7 @@ export const kernelSection: Array<Section> = [
         children: [
           { id: 'overview', label: 'kernel.layoutOverview' },
           { id: 'scope', label: 'kernel.layoutScope' },
+          { id: 'custom-clip', label: 'kernel.layoutCustomClip', meta: extensionGuide('kernel.clip') },
         ],
       },
       {
@@ -58,6 +77,7 @@ export const kernelSection: Array<Section> = [
           { id: 'overview', label: 'kernel.nodeOverview' },
           { id: 'text', label: 'kernel.text' },
           { id: 'coordinate', label: 'kernel.coordinate' },
+          { id: 'custom-boundary', label: 'kernel.nodeCustomBoundary', meta: extensionGuide('kernel.boundary') },
         ],
       },
       {
@@ -67,8 +87,11 @@ export const kernelSection: Array<Section> = [
           { id: 'overview', label: 'kernel.drawOverview' },
           { id: 'way', label: 'kernel.drawWay' },
           { id: 'path', label: 'kernel.path' },
-          { id: 'arrow', label: 'kernel.arrow' },
           { id: 'step', label: 'kernel.step' },
+          { id: 'arrow', label: 'kernel.arrow' },
+          { id: 'path-generator', label: 'kernel.drawPathGenerator', meta: extensionGuide('kernel.path-generator') },
+          { id: 'custom-path', label: 'kernel.drawCustomPath', meta: extensionGuide('kernel.path-kind') },
+          { id: 'custom-arrow', label: 'kernel.drawCustomArrow', meta: extensionGuide('kernel.arrow') },
         ],
       },
       {
@@ -81,6 +104,7 @@ export const kernelSection: Array<Section> = [
           { id: 'polygon', label: 'kernel.shapesPolygon' },
           { id: 'star', label: 'kernel.shapesStar' },
           { id: 'contour', label: 'kernel.shapesContour' },
+          { id: 'custom-shape', label: 'kernel.shapesCustomShape', meta: extensionGuide('kernel.shape') },
         ],
       },
       {
@@ -95,20 +119,8 @@ export const kernelSection: Array<Section> = [
           { id: 'shadow', label: 'kernel.effectsShadow' },
           { id: 'blend', label: 'kernel.effectsBlend' },
           { id: 'animation', label: 'kernel.effectsAnimation' },
-        ],
-      },
-      {
-        id: 'extend',
-        label: 'kernel.refExtending',
-        children: [
-          { id: 'shape-registry', label: 'kernel.refShapeRegistry' },
-          { id: 'boundary-registry', label: 'kernel.refBoundaryRegistry' },
-          { id: 'clip-registry', label: 'kernel.refClipRegistry' },
-          { id: 'custom-arrow', label: 'kernel.refCustomArrow' },
-          { id: 'custom-pattern', label: 'kernel.refCustomPattern' },
-          { id: 'custom-path', label: 'kernel.refCustomPath' },
-          { id: 'path-generator', label: 'kernel.refPathGenerator' },
-          { id: 'custom-animation', label: 'kernel.refCustomAnimation' },
+          { id: 'custom-pattern', label: 'kernel.effectsCustomPattern', meta: extensionGuide('kernel.pattern') },
+          { id: 'custom-animation', label: 'kernel.effectsCustomAnimation', meta: extensionGuide('kernel.animation') },
         ],
       },
     ],
@@ -166,6 +178,16 @@ export const kernelSection: Array<Section> = [
           { id: 'compile', label: 'kernel.refCompile' },
           { id: 'scene-primitive', label: 'kernel.refScenePrimitive' },
           { id: 'parser', label: 'kernel.refParser' },
+          {
+            id: 'extensions',
+            label: 'kernel.refExtensions',
+            meta: {
+              pageType: 'reference',
+              audience: 'extension-author',
+              capability: 'kernel.extensions',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
     ],

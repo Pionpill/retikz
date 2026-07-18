@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [core-design.md §4.5](../../../../../../../notes/architecture/core-design.md) · [alpha.4 ADR-01](../alpha.4/01-node-at-positioning.md) · [alpha.4 ADR-02](../alpha.4/02-coordinate-placeholder.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [alpha.4 ADR-01](../alpha.4/01-node-at-positioning.md) · [alpha.4 ADR-02](../alpha.4/02-coordinate-placeholder.md)
 
 > **范围**：补"相对某基准点偏移 `(dx, dy)`"这一最直白的相对定位（对应 TikZ `calc` 的 `($(A)+(30,10)$)`），现有三种 position 形态都表达不了。
 

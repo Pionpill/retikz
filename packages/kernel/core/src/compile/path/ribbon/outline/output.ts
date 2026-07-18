@@ -7,7 +7,7 @@ import { resolveShadow } from '../../../style';
 
 /**
  * 将闭合轮廓命令写成最终 PathPrim
- * @description 仅当用户显式请求 stroke / strokeWidth 时写描边字段。
+ * @description 仅当用户显式请求 stroke / strokeWidth 时写描边字段
  */
 export const styledPrimitiveFromOutline = (
   ribbon: RibbonLike,

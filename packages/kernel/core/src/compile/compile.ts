@@ -16,8 +16,8 @@ export type {
 export type { CompileWarning } from './warning';
 
 /**
- * IR → Scene 纯函数转换，所有 adapter 共享。
- * @description 解析节点、scope、path、资源和动画，并输出 renderer-agnostic 的 Scene。
+ * IR → Scene 纯函数转换，所有 adapter 共享
+ * @description 解析节点、scope、path、资源和动画，并输出 renderer-agnostic 的 Scene
  */
 export const compileToScene = (ir: IRScene, options?: CompileOptions): Scene => {
   const context = createCompileContext(ir, options ?? {});

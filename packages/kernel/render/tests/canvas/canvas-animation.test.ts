@@ -9,7 +9,7 @@ import { drawScene } from '../../src/canvas';
 
 /**
  * Canvas 动画播放：drawScene({time}) 逐帧应用 opacity/transform/pathDraw/自定义；无 time = 静态帧；
- *   自定义未注册 / pathDraw 无描边 warn；camera viewBox 叠 ctx 变换。
+ *   自定义未注册 / pathDraw 无描边 warn；camera viewBox 叠 ctx 变换
  */
 type Call = { name: string; args: Array<unknown>; globalAlpha: number };
 type SpyCtx = CanvasRenderingContext2D & { calls: Array<Call> };

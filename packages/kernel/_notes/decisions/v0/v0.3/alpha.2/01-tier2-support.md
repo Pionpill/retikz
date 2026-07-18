@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-06-01
-- 关联：[ADR-02 Tier 2 延后项](./02-composite-authoring-context-cache.md) · [v0.3 roadmap §alpha.2](../roadmap.md) · [core-design.md §4.3 Tier 2 / Composite](../../../../../../../notes/architecture/core-design.md) · [plot-design.md](../../../../../../viz/_notes/architecture/plot-design.md) · [v0.2-alpha.3 ADR-01 shape-registry](../../v0.2/alpha.3/01-shape-registry.md)（registry 模式参照）
+- 关联：[ADR-02 Tier 2 延后项](./02-composite-authoring-context-cache.md) · [v0.3 roadmap §alpha.2](../roadmap.md) · [plot-design.md](../../../../../../viz/_notes/architecture/plot-design.md) · [v0.2-alpha.3 ADR-01 shape-registry](../../v0.2/alpha.3/01-shape-registry.md)（registry 模式参照）
 
 > **范围**：把 core-design §4.3 的 Tier 2 / Composite 接入面落地成可注册的展开管线——domain 包注册「Tier 2 节点 schema + 展开（lowering）函数」，`compileToScene` 据注册表把 Tier 2 节点展开成 Tier 1 Kernel。本轮只交付 core 基础设施 + 示例 fixture 端到端验证 + react/vanilla 透传；`@retikz/plot` 是首个消费者，但本 ADR 不实现 plot 本体。
 

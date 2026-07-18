@@ -3,7 +3,7 @@
 > 目的：把 `@retikz/plot` 放进主流绘图库的坐标系里，看清现状差距与未来定位，为 roadmap 取舍提供参照。
 > 范围：聚焦「图表层 / 绘图库」能力，不评 R 生态、不评业务图表美观度。
 > 评分：公平客观、不迎合 retikz，标杆库在其强项给满分；retikz 现状按 **v0.1.0-beta.2** 与 `next-viz@b7809fa` 已落地能力打分（独立 `@retikz/data` 数据层；transform / statistics / scale / coordinate / mark / channel 的 definition + registry 扩展闭环；5 个抽象 mark / 12 类内置 transform / 15 类 scale + 21 套配色 / 5 类坐标系；facet / 共享轨道 / 同面板多轴 / theme / guide 布局 / provenance / lineage 均已落地；动画、selection grammar 与 hover / tooltip / zoom 等交互 UI 仍未实现），**目标 = 现有架构（core IR / Scene / Tier 2 分层）的能力上限**（受架构取舍约束，大数据性能等非目标维度即便做满也不高）。
-> 版本：v0.6 · 日期：2026-07-15 · 关联：[`plot v0.1 roadmap`](../decisions/plot/v0/v0.1/roadmap.md) · [`plot-design.md`](../architecture/plot-design.md) · [`core-design.md`](../../../../notes/architecture/core-design.md)
+> 版本：v0.6 · 日期：2026-07-15 · 关联：[`plot v0.1 roadmap`](../decisions/plot/v0/v0.1/roadmap.md) · [`plot-design.md`](../architecture/plot-design.md)
 
 ## 评分口径
 

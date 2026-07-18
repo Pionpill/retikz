@@ -14,30 +14,30 @@ import {
   toAlphabeticBaselineY,
 } from '../../text';
 
-/** 边标注默认行高与偏移量。 */
+/** 边标注默认行高与偏移量 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
 type LabelSide = GeometryLabelSideValue | 'center';
 
-/** 边标注公式上下文。 */
+/** 边标注公式上下文 */
 export type LabelTexContext = {
-  /** 注入的 TeX 降解能力。 */
+  /** 注入的 TeX 降解能力 */
   lowerTex?: LowerTex;
-  /** `$...$` 解析门控。 */
+  /** `$...$` 解析门控 */
   gatingOn: boolean;
   warn: (code: CompileWarningCodeValue, message: string) => void;
 };
 
-/** step label 放置时额外需要的宿主几何信息。 */
+/** step label 放置时额外需要的宿主几何信息 */
 export type LabelPlacementContext = {
   /**
-   * 面状宿主在采样点处从中心线到边界的半宽。
+   * 面状宿主在采样点处从中心线到边界的半宽
    * @default 0
    */
   boundaryOffset?: number;
 };
 
-/** step label emit 所需上下文。 */
+/** step label emit 所需上下文 */
 export type EmitLabelPrimitiveContext = {
   measureText: TextMeasurer;
   round: (n: number) => number;
@@ -47,7 +47,7 @@ export type EmitLabelPrimitiveContext = {
   placement?: LabelPlacementContext;
 };
 
-/** keyword → t 数值映射。 */
+/** keyword → t 数值映射 */
 const KEYWORD_TO_T: Record<string, number> = {
   'at-start': 0,
   'very-near-start': 0.125,
@@ -60,7 +60,7 @@ const KEYWORD_TO_T: Record<string, number> = {
 
 /**
  * label.position → 段参数 t∈[0,1]
- * @description 数值原样返回；keyword 走 KEYWORD_TO_T 映射。
+ * @description 数值原样返回；keyword 走 KEYWORD_TO_T 映射
  */
 export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
   if (typeof pos === 'number') return pos;
@@ -69,8 +69,8 @@ export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
 };
 
 /**
- * step.label + 段采样 → 单行 primitive。
- * @description 返回 label primitive 及其 bbox 外接点。
+ * step.label + 段采样 → 单行 primitive
+ * @description 返回 label primitive 及其 bbox 外接点
  */
 export const emitLabelPrimitive = (
   label: IRStepLabel,

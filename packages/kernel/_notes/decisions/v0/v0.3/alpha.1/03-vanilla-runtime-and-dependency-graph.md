@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现；SVG 路径 `renderToSvgString` + `mountSvg` + `svgNodeToDom` 完整落地；Canvas 侧入口后置 alpha.4）
 - 决策日期：2026-05-31
-- 关联：[v0.3 roadmap §Vanilla runtime 范围 / §包拆分目标](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)（vanilla 复用其 `renderToSvgString` / `buildSvgDocument`）· [ADR-02 `@retikz/canvas` + react canvas mode](./02-canvas-renderer-and-react-canvas-mode.md)（依赖方向由本 ADR 收口）· [core-design.md §5 / §6](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0.3 roadmap §Vanilla runtime 范围 / §包拆分目标](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)（vanilla 复用其 `renderToSvgString` / `buildSvgDocument`）· [ADR-02 `@retikz/canvas` + react canvas mode](./02-canvas-renderer-and-react-canvas-mode.md)（依赖方向由本 ADR 收口）
 
 > **打包变更（[ADR-05](./05-renderer-repackage.md)）**：renderer 由 `@retikz/svg` + `@retikz/canvas` 两包合并为 **`@retikz/render`**（子路径 `./svg` / `./canvas`）。vanilla / react **依赖 `@retikz/render` 一条**（非 svg+canvas 两条）；下文 `@retikz/svg` ≡ `@retikz/render/svg`、`@retikz/canvas` ≡ `@retikz/render/canvas`。
 >

@@ -22,7 +22,7 @@ import { emitPathPrimitive } from '../stroke';
 
 const LENGTH_SUBDIVISIONS = 16;
 
-/** 去掉 step.label，让中心线复用 path emit 时不会额外产出 label primitive。 */
+/** 去掉 step.label，让中心线复用 path emit 时不会额外产出 label primitive */
 export const stripStepLabel = (step: IRStep): IRStep => {
   const next = { ...step } as IRStep;
   if ('label' in next) delete next.label;
@@ -36,7 +36,7 @@ const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRP
   throw new Error(`Ribbon centerline command "${command.kind}" has no current point; start with a move step.`);
 };
 
-/** 校验并归一化 ribbon 方向向量；零向量或非有限值直接报错。 */
+/** 校验并归一化 ribbon 方向向量；零向量或非有限值直接报错 */
 export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   const normalized = vector2.normalizeOrNull(vector);
   if (normalized === null) {
@@ -45,7 +45,7 @@ export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   return normalized;
 };
 
-/** 把端点切线翻到与参考切线同侧，避免首尾横截面左右侧反转。 */
+/** 把端点切线翻到与参考切线同侧，避免首尾横截面左右侧反转 */
 export const alignTangentNormal = (tangent: Vector2, reference: Vector2): Vector2 => {
   const normal = vector2.normal(tangent);
   const referenceNormal = vector2.normal(reference);
@@ -56,7 +56,7 @@ const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
 /**
  * 在端点指定方向和中心线采样切线之间平滑过渡
- * @description 只用于首尾一小段，避免用户指定 start/end direction 时横截面突然旋转。
+ * @description 只用于首尾一小段，避免用户指定 start/end direction 时横截面突然旋转
  */
 export type BlendTangentInput = {
   endpointTangent: Vector2;
@@ -78,7 +78,7 @@ export const blendTangent = ({ endpointTangent, sampleTangent, t, source }: Blen
 
 /**
  * 把 ribbon 端点 direction 解析为单位切线
- * @description 支持角度、显式向量和无字符串 origin 的 PolarPosition；未配置时沿用整条连接线方向。
+ * @description 支持角度、显式向量和无字符串 origin 的 PolarPosition；未配置时沿用整条连接线方向
  */
 export const directionToTangent = (
   direction: IRRibbonDirection | undefined,
@@ -101,7 +101,7 @@ export const directionToTangent = (
   }
 };
 
-/** 用固定细分估算曲线弧长，供 offset→segment 映射和采样数量选择使用。 */
+/** 用固定细分估算曲线弧长，供 offset→segment 映射和采样数量选择使用 */
 export const estimateLength = (sampleAt: (t: number) => SegmentSample): number => {
   let total = 0;
   let prev = sampleAt(0).point;
@@ -113,7 +113,7 @@ export const estimateLength = (sampleAt: (t: number) => SegmentSample): number =
   return total;
 };
 
-/** 控制柄长度兜底：退化控制点用兜底长度，避免端点方向覆盖时生成零柄。 */
+/** 控制柄长度兜底：退化控制点用兜底长度，避免端点方向覆盖时生成零柄 */
 export const controlHandleLength = (anchor: IRPosition, control: IRPosition, fallback: number): number => {
   const handle = point.distance(anchor, control);
   return handle > 0 ? handle : fallback;
@@ -121,7 +121,7 @@ export const controlHandleLength = (anchor: IRPosition, control: IRPosition, fal
 
 /**
  * PathCommand → RibbonSegmentInput
- * @description ribbon 只支持单条开放子路径；零长度段会被丢弃，close / 多 move 会立即报错。
+ * @description ribbon 只支持单条开放子路径；零长度段会被丢弃，close / 多 move 会立即报错
  */
 export const commandsToSegmentInputs = (
   commands: ReadonlyArray<PathCommand>,
@@ -283,7 +283,7 @@ const segmentToSampler = ({
 
 /**
  * RibbonSegmentInput → 可采样中心线段
- * @description start/end direction 覆盖会重算首尾 Bezier 控制柄，使轮廓端面切线与用户指定方向一致。
+ * @description start/end direction 覆盖会重算首尾 Bezier 控制柄，使轮廓端面切线与用户指定方向一致
  */
 export const segmentInputsToSegments = (
   inputs: ReadonlyArray<RibbonSegmentInput>,
@@ -298,7 +298,7 @@ export const segmentInputsToSegments = (
   return segments;
 };
 
-/** 按累计弧长在整条中心线上取样；target 会落到对应 segment 的局部 t。 */
+/** 按累计弧长在整条中心线上取样；target 会落到对应 segment 的局部 t */
 export const sampleAtDistance = (
   segments: ReadonlyArray<RibbonSegment>,
   totalLength: number,
@@ -327,7 +327,7 @@ export type EmittedPathFromStepsInput = {
 
 /**
  * 复用普通 path emit，把 ribbon.children 降成单个 PathPrim
- * @description 这一步负责解析节点引用、relative、generator 等 path 语义；ribbon 后续只消费已物化的 commands。
+ * @description 这一步负责解析节点引用、relative、generator 等 path 语义；ribbon 后续只消费已物化的 commands
  */
 export const emittedPathFromSteps = ({
   steps,
@@ -357,7 +357,7 @@ export type SegmentsFromStepsInput = EmittedPathFromStepsInput & {
 
 /**
  * 从一组 IRStep 生成 ribbon 中心线段与总长度
- * @description boundary 模式的 upper/lower 和 centerline 模式的 children 都走这里，保证 path 解析口径一致。
+ * @description boundary 模式的 upper/lower 和 centerline 模式的 children 都走这里，保证 path 解析口径一致
  */
 export const segmentsFromSteps = ({
   steps,

@@ -281,7 +281,7 @@ export const wiggle = (opts: WiggleOptions = {}): IRAnimationTrack => {
 
 /**
  * 错峰：给一组 track 依次叠加 delay（`startMs + i*stepMs`），实现「N 元素依次入场」
- * @description 覆盖各 track 原有 delay（错峰编排以本 helper 为准）。
+ * @description 覆盖各 track 原有 delay（错峰编排以本 helper 为准）
  */
 export const stagger = (
   tracks: ReadonlyArray<IRAnimationTrack>,

@@ -6,21 +6,21 @@ import type { CompileWarning } from '../warning';
 import { CompileWarningCode } from '../constants';
 import { parseProviderPayload } from '../provider-payload';
 
-/** composite 嵌套展开最大深度。 */
+/** composite 嵌套展开最大深度 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
 
 type LowerOptions = {
   onWarn: (warning: CompileWarning) => void;
-  /** 未注册 composite 的 fail-loud 钩子；缺省继续走 compile warning + skip。 */
+  /** 未注册 composite 的 fail-loud 钩子；缺省继续走 compile warning + skip */
   onUnregistered?: (key: string, path: string) => never;
   /**
-   * composite 嵌套展开最大深度。
+   * composite 嵌套展开最大深度
    * @default DEFAULT_MAX_COMPOSITE_DEPTH (32)
    */
   maxDepth?: number;
 };
 
-/** 把 composite 节点展开为 Tier 1 IR；未注册节点 warning 后跳过。 */
+/** 把 composite 节点展开为 Tier 1 IR；未注册节点 warning 后跳过 */
 export const lowerComposites = (
   ir: IRScene,
   registry: ReadonlyMap<string, CompositeDefinition>,

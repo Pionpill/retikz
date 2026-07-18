@@ -20,8 +20,8 @@ const ellipseParamsSchema = z.strictObject({
 type EllipseParams = z.infer<typeof ellipseParamsSchema>;
 
 /**
- * ellipse 注册项。
- * @description circumscribe 支持默认比例外接和等轴外接；circle 由 compile 解析为等轴 ellipse preset。
+ * ellipse 注册项
+ * @description circumscribe 支持默认比例外接和等轴外接；circle 由 compile 解析为等轴 ellipse preset
  */
 export const ellipseShape = defineShape<EllipseParams>({
   name: BuiltinShape.Ellipse,

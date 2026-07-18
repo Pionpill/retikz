@@ -3,7 +3,7 @@ title: Draw
 description: Sugar 组件——用 way 数组串起节点、坐标、折角、曲线、闭合、边标注和样式，编译期展开为等价的 Path + Step。
 ---
 
-`<Draw>` 是大多数连线的首选入口。它接受一个 `way` 数组，按顺序把目标点、折角、闭合、曲线、形状和边标注展开成 Kernel `<Path>` + `<Step>`。描边、填充、箭头等样式字段与 `<Path>` 保持一致。
+`<Draw>` 是大多数连线的首选入口。它接受一个 `way` 数组，按顺序把目标点、折角、闭合、曲线、形状和边标注展开成 Kernel（底层）`<Path>` + `<Step>`。描边、填充、箭头等样式字段与 `<Path>` 保持一致。
 
 选择建议：普通关系线、流程图边、带箭头连接默认用 `<Draw>`；需要多次 `move`、逐段精确控制 `kind`、或调试最贴近 IR 的结构时，用 `<Path>` + `<Step>`；画单个几何形（圆 / 矩形 / 扇形等）用下方**形状 sugar**；画背景参考线用 [Grid](/kernel/components/helpers/grid)。只是在 AI / 数据库存储层交换图形时，直接处理 IR。
 
@@ -144,6 +144,68 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `<Star>`           | 星形                     |
 
 圆、矩形、扇形这些几何形的一行式写法收在 [形状](/kernel/components/shapes) 分组，网格底纹这类成片参考线收在 [辅助](/kernel/components/helpers) 分组。它们仍会展开为 `<Path>` / `<Step>`，并与 `<Draw>` / `<Path>` 共用同一套视觉 prop。几何图形见 [圆与椭圆](/kernel/components/shapes/circle-ellipse)，规则参考线见 [Grid](/kernel/components/helpers/grid)。
+
+## 技术原理
+
+<ComponentAlert type="tip" title="日常使用可以跳过本节" description="需要排查 way 的展开结果或结构错误时再回来读。" />
+
+`<Draw>` 只负责把便于书写的 `way` 转成底层组件树。本节停在 `<Path>` + `<Step>` 这一职责边界；完整的 JSX → IR（中间表示）→ Scene（渲染场景）管线见[架构](/kernel/concepts/design/principles)。
+
+### 从路径写法到步骤序列
+
+`way` 会从左到右扫描。第一项必须是目标点，并固定生成 `move`；后续项根据自身角色生成路径动作，或修饰紧随其后的动作。
+
+| 输入角色                          | 归一化结果                               | 扫描行为                   |
+| --------------------------------- | ---------------------------------------- | -------------------------- |
+| 第一个目标点                      | `move` step                              | 消费当前项                 |
+| 普通目标点 / 相对目标             | `line` step                              | 消费当前项                 |
+| 折角 / `curve` / `cubic` / `bend` | 对应的 `fold` / 曲线 step                | 与后一个目标点一起消费     |
+| `arc` / `circle` / `ellipse`      | `arc` / `circlePath` / `ellipsePath`     | 只消费自身，不吞掉后续目标 |
+| `label`                           | 写入下一段的 `step.label`，不单独成 step | 消费自身，等待下一段       |
+| `cycle`                           | `cycle` step                             | 消费当前项并闭合当前子路径 |
+
+扫描同时完成结构校验：`way` 少于两项、首项不是目标、中缀算子后缺目标、连续 `label` 或末尾悬空 `label` 都会在 Draw 展开时直接报错，而不会生成一棵含糊的 Kernel 子树。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'way 归一化与结构校验',
+      path: 'packages/kernel/core/src/parsers/way.ts',
+      startLine: 344,
+      endLine: 409,
+    },
+  ]}
+/>
+
+### 等价展开
+
+例如下面的 Sugar：
+
+```tsx
+<Draw way={['a', { label: 'ok' }, '-|', 'b']} arrow="->" />
+```
+
+会展开为等价的 Kernel 组件树：
+
+```tsx
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step kind="fold" via="-|" to="b" label={{ text: 'ok' }} />
+</Path>
+```
+
+Draw 把描边、填充、箭头和层级等整条路径的属性透传给 `<Path>`，再把归一化后的每个动作映射为 `<Step>`。因此两种写法进入同一套 Kernel 语义和后续几何流程；从 Draw 切到手写 Path + Step 只改变控制粒度，不会引入另一套路径行为。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Draw 展开为 Path 与 Step',
+      path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
+      startLine: 88,
+      endLine: 157,
+    },
+  ]}
+/>
 
 ## API 参考
 

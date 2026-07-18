@@ -12,6 +12,7 @@ import { Comparison } from './comparison';
 import { ComponentAlert } from './component-alert';
 import { ExamplePrompt } from './example-prompt';
 import { PackageManagerInstall } from './package-manager-install';
+import { SourceLinks } from './source-links';
 import { ZodSchema } from './zod-schema';
 
 const linkClass = 'font-medium underline underline-offset-4';
@@ -169,5 +170,6 @@ export const mdxComponents: MDXComponents = {
   ExamplePrompt,
   LinkedCard,
   PackageManagerInstall,
+  SourceLinks,
   ZodSchema,
 };

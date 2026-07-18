@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-17 完工；最终随 ADR-03 收敛）
 - 决策日期：2026-06-16
-- 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [ADR-03 行内混排](./03-inline-math-runs.md) · [core-design.md §7 AI 一等公民](../../../../../../../notes/architecture/core-design.md) · `packages/kernel/tex` · `packages/kernel/core/src/compile/lower-tex.ts`
+- 关联：[v0.4-alpha.5 roadmap](./roadmap.md) · [ADR-03 行内混排](./03-inline-math-runs.md) · `packages/kernel/tex` · `packages/kernel/core/src/compile/lower-tex.ts`
 
 ## 背景
 

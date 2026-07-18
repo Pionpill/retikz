@@ -4,7 +4,7 @@ import type { ScopeStyleProps } from '../protocol';
 
 /**
  * IRNode 纯透传字段表（除 type / position / text / label 特化字段外）
- * @description as const satisfies 拒不存在的 key；下方 _NodeFieldsCheck 静态校验完备性——未来 IRNode 加新字段时漏写此表 TS 编译期报错。builder / unbuilder 共用同一份字段表，两端字段对称变化自动同步。
+ * @description as const satisfies 拒不存在的 key；下方 _NodeFieldsCheck 静态校验完备性——未来 IRNode 加新字段时漏写此表 TS 编译期报错。builder / unbuilder 共用同一份字段表，两端字段对称变化自动同步
  */
 export const NODE_FIELDS = [
   'id',

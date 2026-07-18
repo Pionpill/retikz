@@ -1,6 +1,6 @@
 /**
  * renderer 无关的动画通道工具：property 分类、transform 支点解析、描边判定
- * @description SVG（svg/animation）与 Canvas（canvas/drawScene）共用，避免两端通道语义漂移。
+ * @description SVG（svg/animation）与 Canvas（canvas/drawScene）共用，避免两端通道语义漂移
  */
 import type { IRAnimationOrigin, IRAnimationTrack, ScenePrimitive } from '@retikz/core';
 
@@ -80,7 +80,7 @@ const anchorOnBBox = (
 /**
  * 解析 transform 支点为 user 坐标点（scale / scaleX / scaleY / rotate 用）
  * @description `[x,y]` 直用；命名 anchor 折算 rect/ellipse 的 bbox 点；origin 省略 → 几何中心（rect/ellipse）。
- *   prim 无可解析几何（text/path/group）或 anchor 不识别 → undefined（caller 退回各后端默认支点）。
+ *   prim 无可解析几何（text/path/group）或 anchor 不识别 → undefined（caller 退回各后端默认支点）
  */
 export const resolveTransformOrigin = (
   prim: ScenePrimitive,
@@ -101,7 +101,7 @@ export const primHasStroke = (prim: ScenePrimitive): boolean =>
  * track 是否「自动播放」触发器（`load` / 缺省）
  * @description Canvas 后端按 trigger 过滤：rAF 共享时钟只施加 auto track；`visible` / `manual` / `{onEvent}`
  *   不被自动播（否则同元素的 manual track 会随 load track 一起跑，违 trigger 语义）。SVG 后端按元素 DOM
- *   逐 track 接 WAAPI / IO，不走本判定。Canvas 的 visible/manual/onEvent 通过 per-id 虚拟时钟激活。
+ *   逐 track 接 WAAPI / IO，不走本判定。Canvas 的 visible/manual/onEvent 通过 per-id 虚拟时钟激活
  */
 export const isAutoplayTrigger = (track: IRAnimationTrack): boolean =>
   track.trigger === undefined || track.trigger === 'load';

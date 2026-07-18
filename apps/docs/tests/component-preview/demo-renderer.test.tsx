@@ -203,10 +203,10 @@ describe('PreviewControlSlotLayer', () => {
     expect(markup).toContain('圆点');
   });
 
-  it('渲染配置式 input 控件', () => {
+  it('渲染配置式 text 控件', () => {
     const slots = buildConfiguredControlSlots([
       {
-        kind: 'input',
+        kind: 'text',
         id: 'mark-size',
         label: '标记大小',
         defaultValue: '6',

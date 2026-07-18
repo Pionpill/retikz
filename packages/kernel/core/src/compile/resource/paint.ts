@@ -26,7 +26,7 @@ const FALLBACK_PATTERN_SIZE = 8;
 /** motif 缺省主色：CSS `currentColor`（继承 svg color，主题反应天然） */
 const DEFAULT_MOTIF_COLOR = 'currentColor';
 
-/** 解析 pattern paint spec 为 Scene resource tile。 */
+/** 解析 pattern paint spec 为 Scene resource tile */
 const resolvePatternTile = (
   spec: Extract<IRPaintSpec, { kind: 'pattern' }>,
   effectivePatterns: ReadonlyMap<string, PatternDefinition>,
@@ -81,7 +81,7 @@ const resolvePatternTile = (
   return tile;
 };
 
-/** 创建 paint 资源登记表，按 spec 稳定去重。 */
+/** 创建 paint 资源登记表，按 spec 稳定去重 */
 export const createPaintRegistry = (
   effectivePatterns: ReadonlyMap<string, PatternDefinition>,
   round: (n: number) => number,

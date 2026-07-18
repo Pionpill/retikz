@@ -10,7 +10,7 @@ import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import { resolveFontSize } from './font-size';
 import { isMathRun, parseInlineRuns } from './inline';
 
-/** 行高近似系数。 */
+/** 行高近似系数 */
 const LINE_HEIGHT_FACTOR = 1.2;
 
 type Round = (n: number) => number;
@@ -18,19 +18,19 @@ type Round = (n: number) => number;
 /** 混排行布局上下文：注入的度量 / 降解 + 块级字体 / 色 + warn 发射器 */
 export type LineLayoutContext = {
   measureText: TextMeasurer;
-  /** TeX 降解能力。 */
+  /** TeX 降解能力 */
   lowerTex?: LowerTex;
-  /** 块级字体。 */
+  /** 块级字体 */
   font: FontSpec;
-  /** preset 与 rem 字号解析的根字号。 */
+  /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
   /**
-   * 块级文字色。
+   * 块级文字色
    * @default 'currentColor'
    */
   color?: string;
   /**
-   * 宿主整体不透明度。
+   * 宿主整体不透明度
    * @default 1
    */
   opacity?: number;
@@ -51,7 +51,7 @@ export type LaidLine = {
   descent: number;
   /** 无 math run（纯文本，可与既有 TextPrim 路径等价） */
   isPlain: boolean;
-  /** 把本行子图元放到行起点。 */
+  /** 把本行子图元放到行起点 */
   emit: (originX: number, baselineY: number, round: Round) => Array<ScenePrimitive>;
 };
 
@@ -86,7 +86,7 @@ export const resolveLineRuns = (
   return { runs, hasMath: parsed.hasMath, warn: parsed.warn };
 };
 
-/** resolveLineRuns 的诊断包装：保留各个宿主自定义的 warning 文案。 */
+/** resolveLineRuns 的诊断包装：保留各个宿主自定义的 warning 文案 */
 export const resolveLineRunsWithWarning = (
   spec: IRLineSpec,
   context: {
@@ -108,12 +108,12 @@ type TextPiece = {
   text: string;
   font: FontSpec;
   /**
-   * 文本 run 填充色。
+   * 文本 run 填充色
    * @default LineLayoutContext.color
    */
   fill?: string;
   /**
-   * 文本 run 不透明度。
+   * 文本 run 不透明度
    * @default LineLayoutContext.opacity
    */
   opacity?: number;
@@ -129,19 +129,19 @@ type MathPiece = {
   height: number;
   depth: number;
   /**
-   * 公式 run 填充色。
+   * 公式 run 填充色
    * @default LineLayoutContext.color
    */
   fill?: string;
   /**
-   * 公式 run 不透明度。
+   * 公式 run 不透明度
    * @default LineLayoutContext.opacity
    */
   opacity?: number;
 };
 type Piece = TextPiece | MathPiece;
 
-/** 度量一行 inline run，并返回可 emit 的行布局。 */
+/** 度量一行 inline run，并返回可 emit 的行布局 */
 export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContext): LaidLine => {
   const rootFontSize = ctx.rootFontSize ?? DEFAULT_FONT_SIZE;
   let x = 0;

@@ -7,25 +7,22 @@ description: Install retikz and build a minimal example in 4 steps to learn the 
 
 The React adapter is `@retikz/react`, with peer dependencies on `react` / `react-dom` (>= 18).
 
-Note: retikz itself is framework-agnostic. You can also use `@retikz/vanilla` to build and render diagrams with plain JavaScript. The prose uses the React API so examples can focus on primitives, paths, and IR; open **View Code** on a demo to switch to the equivalent Vanilla API.
+If you do not use React, `@retikz/vanilla` can build and render figures with plain JavaScript. The prose uses the React API; open **View Code** on a demo to switch to the equivalent Vanilla API.
 
 <PackageManagerInstall packages="@retikz/react react react-dom" />
 
 All published retikz packages are ESM-only and require Node.js 24 or newer.
 
-The underlying `@retikz/core` (IR + compiler, zero React / zero DOM) is pulled in transitively — no need to install it directly.
-
 ## How to Learn
 
-Start by getting this page working, then read in the order “mental model → component details → complete examples → reference contracts”:
+Complete the four-step example first, then choose the next page for your current task:
 
-| Section                    | What to read                                                                                                           |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Introduction / Get Started | Build the overall picture and see why retikz centers on Node, Path, and IR.                                            |
-| Concepts                   | Learn positioning, anchors, layers, and animation — the shared rules behind every figure.                              |
-| Components                 | Look up `<Layout>`, `<Node>`, `<Draw>`, shapes, and helper components.                                                 |
-| Examples                   | See how a full figure is broken down from a prompt or idea into primitives.                                            |
-| Reference                  | Use extending, IR schema, renderer, and runtime pages when writing adapters, persistence, or low-level debugging code. |
+| Page                                                                          | When to read                                                                                               |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Introduction**                                                              | Understand what retikz solves and the mental model of nodes, paths, and shared IR                          |
+| **Concepts**                                                                  | Learn reusable rules such as positioning, anchors, layers, and animation                                   |
+| **Components / Examples**                                                     | Look up a specific API or see a complete figure decomposed from an idea into primitives                    |
+| **[Architecture Principles](/kernel/concepts/design/principles) / Reference** | Optional; read it when extending retikz, working with IR directly, debugging compilation, or using schemas |
 
 You can also open the AI panel from the top AI button and ask about the current page, selected code, or an API name. The docs site is fully static and does not provide an LLM service; enter your own API key in the panel, and the site only forwards requests from your browser to the model provider you choose.
 
@@ -105,10 +102,10 @@ Keep four rules in mind before moving on:
       Understand tracks, presets, playback controls, and static fallback
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/render/hydration">
-    <span className="font-semibold">Hydration</span>
+  <LinkedCard href="/kernel/concepts/design/principles">
+    <span className="font-semibold">Technical Principles</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Learn event callbacks, context, and vanilla binding
+      Explore the internal flow when extending retikz, working with IR, or debugging compilation
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/examples/karl-circle">

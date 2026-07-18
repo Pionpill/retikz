@@ -6,19 +6,19 @@ import type { LowerTex } from '../text';
 import type { CompileWarning } from '../warning';
 import type { ResolvedArrowRegistry } from './stroke/shrink';
 
-/** path emit 阶段产出的 Scene primitive 与 bbox 采样点。 */
+/** path emit 阶段产出的 Scene primitive 与 bbox 采样点 */
 export type PathPrimitiveEmitResult = {
-  /** 实际 Scene 输出。 */
+  /** 实际 Scene 输出 */
   primitives: Array<ScenePrimitive>;
-  /** layout 与 path 级 rotate / scale 的几何依据。 */
+  /** layout 与 path 级 rotate / scale 的几何依据 */
   boundsPoints: Array<IRPosition>;
 };
 
-/** path emit 阶段的可选服务与诊断上下文。 */
+/** path emit 阶段的可选服务与诊断上下文 */
 export type PathEmitOptions = {
   /**
    * 警告收集器（由 compileToScene 传入）
-   * 缺省时不发出警告。
+   * 缺省时不发出警告
    */
   onWarn?: (warning: CompileWarning) => void;
   /**
@@ -26,19 +26,19 @@ export type PathEmitOptions = {
    * @default 'path'
    */
   irPath?: string;
-  /** 该 path 所属 scope 的累积 transform 链。 */
+  /** 该 path 所属 scope 的累积 transform 链 */
   scopeChain?: ReadonlyArray<Transform>;
   /**
    * paint 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 / currentColor
    * @default 透传字符串；无法解析的 spec 变为 undefined
    */
   resolvePaint?: PaintResolver;
-  /** 已解析 arrow 注册表。 */
+  /** 已解析 arrow 注册表 */
   resolvedArrows?: ResolvedArrowRegistry;
-  /** 有效 path generator 表。 */
+  /** 有效 path generator 表 */
   effectivePathGenerators?: ReadonlyMap<string, PathGeneratorDefinition>;
-  /** 注入的 TeX 降级能力。 */
+  /** 注入的 TeX 降级能力 */
   lowerTex?: LowerTex;
-  /** preset 与 rem 字号解析的根字号。 */
+  /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
 };

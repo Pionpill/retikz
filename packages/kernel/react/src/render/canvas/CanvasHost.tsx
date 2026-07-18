@@ -31,7 +31,7 @@ const imageCache = new Map<string, ImageEntry>();
 /**
  * 取已解码图片；未就绪则发起加载、注册重绘回调并返回 null
  * @description canvas 同步绘制无法 await，故首帧返回 null，加载完调用 `onReady` 触发宿主重绘后命中缓存绘出。
- *   失败（onerror）标记 failed、恒返回 null，不无限重试。
+ *   失败（onerror）标记 failed、恒返回 null，不无限重试
  */
 const loadImage = (href: string, onReady: () => void): HTMLImageElement | null => {
   const cached = imageCache.get(href);
@@ -63,7 +63,7 @@ export type CanvasHostProps = {
   /**
    * 水合 handler 注册表（按图元 id）
    * @description 经 `createHydrationController(canvas, handlers, locate)` 绑到 `<canvas>`，
-   *   locate 由 `hitTest` + client→Scene 坐标映射（逆 meet-fit）构成，与 svg 模式共用同一注册表语义。
+   *   locate 由 `hitTest` + client→Scene 坐标映射（逆 meet-fit）构成，与 svg 模式共用同一注册表语义
    */
   handlers?: HydrationHandlers;
   /** 透传显示宽度 */
@@ -74,7 +74,7 @@ export type CanvasHostProps = {
   className?: string;
   /** 透传样式 */
   style?: CSSProperties;
-  /** Layout 已解析的最终动画开关；false 时只画 base 静态、不起 rAF。 */
+  /** Layout 已解析的最终动画开关；false 时只画 base 静态、不起 rAF */
   animate: boolean;
   /** 静态截帧时刻（毫秒）；给定时按该时刻画一帧、不起 rAF（定格），覆盖 animate */
   snapshotAt?: number;
@@ -117,7 +117,7 @@ const canvasFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
  * @description 与 `renderToCanvas` 的 `computeCanvasTransform` / vanilla `mountCanvas.clientToScene` 同口径：
  *   读 `canvas.getBoundingClientRect()` 把 client 坐标降到 canvas 局部 CSS 像素（dpr 在 client→CSS 这步已无关），
  *   再去 letterbox offset、除 scale、加 layout origin。落在 letterbox 黑边外的点会得到 layout 区域外坐标，
- *   交由 `hitTest` 自然判为无命中。
+ *   交由 `hitTest` 自然判为无命中
  */
 const clientToScene = (
   canvas: HTMLCanvasElement,

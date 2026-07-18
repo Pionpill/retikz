@@ -61,7 +61,7 @@ export type ContourCommand =
       startAngle: number;
       endAngle: number;
       /**
-       * 是否逆时针扫描；缺省 / false = CW。
+       * 是否逆时针扫描；缺省 / false = CW
        * @default false
        */
       counterClockwise?: boolean;
@@ -82,7 +82,7 @@ const segmentEnd = (seg: ContourSegment): Position =>
 /**
  * 段在某端的「行进切线」单位向量
  * @description atStart=true 取起点处沿行进方向的切线，否则取终点处。line 两端切线相同；
- *   arc 切线垂直于半径，方向随 counterClockwise 翻转（CW: (-sinθ, cosθ)，CCW: (sinθ, -cosθ)）。
+ *   arc 切线垂直于半径，方向随 counterClockwise 翻转（CW: (-sinθ, cosθ)，CCW: (sinθ, -cosθ)）
  */
 const tangentAt = (seg: ContourSegment, atStart: boolean): Position => {
   if (seg.kind === 'line') return point.normalize([seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]]);
@@ -98,7 +98,7 @@ const arcSpan = (seg: ArcSegment): number => seg.endAngle - seg.startAngle;
 /**
  * 一个接缝处 fillet 的解算结果
  * @description tangentInPoint = 前段被裁短到此点（前段新终点）；tangentOutPoint = 后段从此点起（后段新起点）；
- *   filletArc 描述连接两切点的圆弧。clampedToZero=true 表示该角夹紧后 r→0，不倒角（保持尖角）。
+ *   filletArc 描述连接两切点的圆弧。clampedToZero=true 表示该角夹紧后 r→0，不倒角（保持尖角）
  */
 export type FilletSolution = {
   /** 前段切点（前段新终点） */
@@ -121,7 +121,7 @@ export type FilletSolution = {
 
 /**
  * 把一个点投影到段上、返回沿段的「已走比例」(line: t∈[0,1]；arc: 已扫角 / 总跨度)
- * @description 用于逐角夹紧：校验切点是否落在该段长度（弧用角度）内。返回 fraction 可能 <0 或 >1 表示越界。
+ * @description 用于逐角夹紧：校验切点是否落在该段长度（弧用角度）内。返回 fraction 可能 <0 或 >1 表示越界
  */
 const fractionAlong = (seg: ContourSegment, p: Position, fromStart: boolean): number => {
   if (seg.kind === 'line') {
@@ -150,17 +150,17 @@ const fractionAlong = (seg: ContourSegment, p: Position, fromStart: boolean): nu
 /**
  * 段的「偏移线 / 弧」：把段朝 fillet 圆心侧平移 / 缩放 r
  * @description fillet 圆心是两段各自偏移 r 后的交点。line 偏移成平行线；arc 偏移成同心弧（半径 ±r）。
- *   返回用于求交的表示（直线 = 过 point 的方向 dir 线；圆 = center + radius）。
+ *   返回用于求交的表示（直线 = 过 point 的方向 dir 线；圆 = center + radius）
  */
 type Offset =
   | { kind: 'line'; point: Position; dir: Position } // 过 point、方向 dir 的直线
   | { kind: 'circle'; center: Position; radius: number };
 
 /**
- * 段朝 fillet 圆心侧偏移 r：line→平行线、arc→同心圆。
+ * 段朝 fillet 圆心侧偏移 r：line→平行线、arc→同心圆
  * @description fillet 圆心所在侧由接缝转向 turnSign 决定（叉积 tIn×tOut）：凸角圆心在轮廓内侧、
  *   凹角（反向转）圆心在外侧（弧仍嵌入凹槽）。故偏移侧 = 行进方向左手 (-dy, dx) 乘 turnSign 符号。
- *   arc 同心偏移返回 radius−r 主候选；±r 两候选由 offsetSegmentAlt 补齐、求交后按真实距离校验择优。
+ *   arc 同心偏移返回 radius−r 主候选；±r 两候选由 offsetSegmentAlt 补齐、求交后按真实距离校验择优
  */
 const offsetSegment = (seg: ContourSegment, r: number, turnSign: number, atEnd: boolean): Offset => {
   if (seg.kind === 'line') {
@@ -197,7 +197,7 @@ const footOnLine = (p: Position, base: Position, dir: Position): Position => {
  *   1. 取接缝点 corner、前段到达切线 tIn、后段离开切线 tOut，叉积 turnSign 定转向（含内侧）。
  *   2. 由两段「内侧偏移 r」求 fillet 圆心：候选交点中挑离两段距离均≈r、且落在 corner 内侧的那个。
  *   3. 圆心到两段的垂足 / 投影点 = 两切点。
- *   4. 逐角夹紧：切点须落在两段剩余长度内（fraction∈[0,1]），越界则缩 r 重解；r→0 标记不倒。
+ *   4. 逐角夹紧：切点须落在两段剩余长度内（fraction∈[0,1]），越界则缩 r 重解；r→0 标记不倒
  */
 const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): FilletSolution => {
   if (segA.kind === 'arc' && segB.kind === 'arc') {
@@ -336,7 +336,7 @@ const distanceToAny = (seg: ContourSegment, p: Position): number => {
 /**
  * fillet 圆心 → 段上切点
  * @description line：圆心在直线上的垂足。arc：圆心与 arc 圆心连线 ∩ arc 圆周（朝 fillet 圆心一侧）。
- *   切点须落在段几何上（line 在线上、arc 在弧角度区间内）才有效，否则返回 undefined。
+ *   切点须落在段几何上（line 在线上、arc 在弧角度区间内）才有效，否则返回 undefined
  */
 const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: number): Position | undefined => {
   if (seg.kind === 'line') {
@@ -386,7 +386,7 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
  * @description cornerRadius 省略 / ≤0 → 返回空数组（调用方据此 passthrough 原段序列）。arc-arc 接缝抛错。
  *   closed（缺省 true）= 闭合轮廓，含首尾环绕接缝（下标 n-1 = 段 n-1 终点接段 0 起点）；
  *   closed=false = 开放折线，只倒内部接缝（下标 0..n-2），末位补一个 clampedToZero 占位使返回长度恒 = n，
- *   下游 contourCommands / boundaryFromContour 据 clampedToZero 跳过该「不存在的」环绕缝。
+ *   下游 contourCommands / boundaryFromContour 据 clampedToZero 跳过该「不存在的」环绕缝
  */
 export const filletContour = (
   segments: Array<ContourSegment>,
@@ -423,7 +423,7 @@ export const filletContour = (
  * 把闭合轮廓 + cornerRadius emit 成路径命令（move + 缩短 line + 裁剪原 arc + fillet arc + close）
  * @description cornerRadius 省略 / ≤0 → 直接 emit 原始尖角轮廓（passthrough）。否则每段从「上一接缝的
  *   fillet 出点」走到「本接缝的 fillet 入点」（line 缩短 / arc 裁剪角度），接缝处插 fillet 弧。
- *   夹紧到 0 的角不插弧、按原尖角连接。
+ *   夹紧到 0 的角不插弧、按原尖角连接
  */
 export const contourCommands = (
   segments: Array<ContourSegment>,
@@ -512,7 +512,7 @@ const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cm
  * 从 rayOrigin 朝 toward 射线 ∩ fillet 后轮廓全部段，返回最近正向交点
  * @description rayOrigin 显式传（不假设中心）；toward 是射线指向的目标点（方向 = toward − rayOrigin）。
  *   遍历 fillet 后的有效段（缩短 line / 裁剪 arc / fillet arc），对每段求 ray∩段、取最小正参数命中点。
- *   cornerRadius 省略 / ≤0 → 走原尖角轮廓。无命中返回 undefined（调用方兜底）。
+ *   cornerRadius 省略 / ≤0 → 走原尖角轮廓。无命中返回 undefined（调用方兜底）
  */
 export const boundaryFromContour = (
   segments: Array<ContourSegment>,

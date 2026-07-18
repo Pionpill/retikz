@@ -9,7 +9,7 @@ import { createMathJaxEngine } from '../mathjax';
 
 let enginePromise: Promise<MathJaxSvgEngine | undefined> | undefined;
 
-/** 获取共享 MathJax 引擎；初始化失败时报告原始错误并清空缓存，允许后续挂载重试。 */
+/** 获取共享 MathJax 引擎；初始化失败时报告原始错误并清空缓存，允许后续挂载重试 */
 const getEngine = (): Promise<MathJaxSvgEngine | undefined> => {
   if (!enginePromise) {
     const handled = createMathJaxEngine().catch(error => {
@@ -22,7 +22,7 @@ const getEngine = (): Promise<MathJaxSvgEngine | undefined> => {
   return enginePromise;
 };
 
-/** 异步创建并缓存默认 MathJax lowerer；初始化失败时保持 `undefined`，后续重新挂载会重试。 */
+/** 异步创建并缓存默认 MathJax lowerer；初始化失败时保持 `undefined`，后续重新挂载会重试 */
 export const useLowerTex = (): LowerTex | undefined => {
   const [lower, setLower] = useState<LowerTex>();
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-07
-- 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md) / [ADR-02 可移植契约](./02-data-portability.md) · [plot-design.md §3.1 数据模型 / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md §4.4 IR 可序列化](../../../../../../../../notes/architecture/core-design.md) · 前序：字段类型简化为 `continuous` / `categorical` / `temporal`（commit `30f2cce1`）
+- 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md) / [ADR-02 可移植契约](./02-data-portability.md) · [plot-design.md §3.1 数据模型 / §8.3 投影分层](../../../../../architecture/plot-design.md) · 前序：字段类型简化为 `continuous` / `categorical` / `temporal`（commit `30f2cce1`）
 
 ## 背景
 

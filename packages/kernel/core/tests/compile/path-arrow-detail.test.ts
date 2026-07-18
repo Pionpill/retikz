@@ -15,7 +15,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 /**
  * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何抽主导颜色
  * @description 新契约：视觉输入 color / fill 在 compile 被消费，物化进 marker 几何（实心 fill / 空心 stroke）；
- *   contextStroke / 无 paint → undefined（继承，不冻结）。
+ *   contextStroke / 无 paint → undefined（继承，不冻结）
  */
 const markerPaint = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;

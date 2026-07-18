@@ -3,39 +3,39 @@ import type { Position } from './point';
 import { DEFAULT_EPSILON } from '../constants';
 import { point } from './point';
 
-/** 两条无限直线求交参数。 */
+/** 两条无限直线求交参数 */
 export type LineLineInput = {
-  /** 第一条直线上的第一个点。 */
+  /** 第一条直线上的第一个点 */
   a1: Position;
-  /** 第一条直线上的第二个点。 */
+  /** 第一条直线上的第二个点 */
   a2: Position;
-  /** 第二条直线上的第一个点。 */
+  /** 第二条直线上的第一个点 */
   b1: Position;
-  /** 第二条直线上的第二个点。 */
+  /** 第二条直线上的第二个点 */
   b2: Position;
 };
 
-/** 直线与圆求交参数。 */
+/** 直线与圆求交参数 */
 export type LineCircleInput = {
-  /** 直线起点。 */
+  /** 直线起点 */
   origin: Position;
-  /** 直线方向，不要求单位化。 */
+  /** 直线方向，不要求单位化 */
   dir: Position;
-  /** 圆心。 */
+  /** 圆心 */
   center: Position;
-  /** 圆半径。 */
+  /** 圆半径 */
   radius: number;
 };
 
-/** 两圆求交参数。 */
+/** 两圆求交参数 */
 export type CircleCircleInput = {
-  /** 第一个圆心。 */
+  /** 第一个圆心 */
   centerA: Position;
-  /** 第一个圆半径。 */
+  /** 第一个圆半径 */
   radiusA: number;
-  /** 第二个圆心。 */
+  /** 第二个圆心 */
   centerB: Position;
-  /** 第二个圆半径。 */
+  /** 第二个圆半径 */
   radiusB: number;
 };
 
@@ -94,7 +94,7 @@ const circleCircle = ({ centerA, radiusA, centerB, radiusB }: CircleCircleInput)
   ];
 };
 
-/** 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null。 */
+/** 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null */
 const segmentSegment = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const da: Position = [a2[0] - a1[0], a2[1] - a1[1]];
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];
@@ -109,7 +109,7 @@ const segmentSegment = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
 };
 
 /**
- * 求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）。
- * @description ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `./arc` 单独导出。
+ * 求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）
+ * @description ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `./arc` 单独导出
  */
 export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };

@@ -4,7 +4,7 @@ import { boundsOf, boundsToRect, expandBounds, isFiniteBoundsRect } from '@retik
 
 import type { IRPosition } from '../../schemas';
 
-/** 对 layout 四字段应用输出精度。 */
+/** 对 layout 四字段应用输出精度 */
 export const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: number) => number): BoundsRect => ({
   x: round(x),
   y: round(y),
@@ -12,7 +12,7 @@ export const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: numb
   height: round(height),
 });
 
-/** 校验自动 layout 不含非 finite 值。 */
+/** 校验自动 layout 不含非 finite 值 */
 export const assertFiniteLayout = (layout: BoundsRect): BoundsRect => {
   if (!isFiniteBoundsRect(layout)) {
     throw new Error(
@@ -22,7 +22,7 @@ export const assertFiniteLayout = (layout: BoundsRect): BoundsRect => {
   return layout;
 };
 
-/** 由 bbox 算出布局边界；无 bbox 时返回 100x100 兜底。 */
+/** 由 bbox 算出布局边界；无 bbox 时返回 100x100 兜底 */
 export const computeLayoutFromBounds = (
   bounds: AxisAlignedBounds | undefined,
   padding: number,
@@ -33,7 +33,7 @@ export const computeLayoutFromBounds = (
   return roundLayout(boundsToRect(padded), round);
 };
 
-/** 由 bbox 候选点算出布局边界；保留给既有调用方使用。 */
+/** 由 bbox 候选点算出布局边界；保留给既有调用方使用 */
 export const computeLayout = (
   boundsPoints: ReadonlyArray<IRPosition>,
   padding: number,

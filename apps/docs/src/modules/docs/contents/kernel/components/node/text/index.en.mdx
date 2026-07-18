@@ -3,7 +3,7 @@ title: Text
 description: Per-line marker component inside <Node> — overrides fill / opacity / font for a single line; participates equally with string children in Node's multi-line layout.
 ---
 
-`<Text>` is Sugar — it renders nothing on its own. At compile time it expands into one line (a LineSpec) inside `<Node>`'s `text` array.
+`<Text>` overrides text styling for one whole line inside `<Node>` and mixes with plain string children in JSX order. It is Sugar: the syntax stays in the React layer and is normalized into one LineSpec inside `Node.text` before core receives it.
 
 It's an **equivalent** alternative to writing LineSpec objects directly into the `text` prop:
 
@@ -17,7 +17,7 @@ It's an **equivalent** alternative to writing LineSpec objects directly into the
 <ComponentAlert
   type="warn"
   title="A Text is one whole line, not an inline span"
-  description="Think of it as adding one styled line to a Node; it can't mix several colors within a single line — split the content into separate lines or use multiple independent Nodes for that."
+  description="Text itself cannot express several styled runs on one line. For multi-color inline content, use a { runs } LineSpec through the Node text prop; split into Text elements only when each segment should occupy its own line."
 />
 
 ## Usage
@@ -60,6 +60,64 @@ String children can still be split on `'\n'` internally; each `<Text>` element c
 These two nodes compile to identical output:
 
 <ComponentPreview files="text-vs-prop" size="xs" />
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when you want to understand why Text always represents a whole line and what wins when text prop is also present."
+/>
+
+### Line normalization and precedence
+
+`<Text>` is a marker component that returns `null`; it creates no DOM or graphic by itself. It is recognized only while `<Node>` collects its children, where the React inputs converge on the same `Node.text` contract:
+
+<ComponentPreview files="text-normalization" size="sm" hideCode />
+
+An explicit `text` prop wins. When it is present, children do not participate in text collection. Without `text`, the adapter recursively reads strings, numbers, arrays, Fragments, and `<Text>` markers in JSX order:
+
+| Input             | Normalization rule                                     | `Node.text` result   |
+| ----------------- | ------------------------------------------------------ | -------------------- |
+| String / number   | Adjacent content joins; Node text rules handle `\n`    | Plain string line    |
+| Unstyled `<Text>` | Flush the current plain line, then add a separate line | Plain string line    |
+| Styled `<Text>`   | Flush the current plain line and retain line overrides | LineSpec object line |
+
+This also explains both boundaries: `<Text>` only works inside `<Node>`, and it represents a whole line rather than an inline span.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Text marker component',
+      path: 'packages/kernel/react/src/kernel/components/Text.tsx',
+      startLine: 18,
+      endLine: 22,
+    },
+    {
+      label: 'Node child-line normalization',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 77,
+      endLine: 196,
+    },
+  ]}
+/>
+
+### Styling and layout responsibilities
+
+After normalization, the `<Text>` marker no longer exists; `<Node>` text layout handles every line uniformly. Missing `font` fields inherit the Node block font, while `fill` / `opacity` apply only to the current line. Measurement, wrapping, alignment, and line height remain block-level Node responsibilities.
+
+That is why `<Text>` exposes only per-line visual fields. A per-line font participates in that line's width measurement, but `<Text>` cannot split the line into differently styled spans or override `align` or `lineHeight` by itself. Use a `{ runs }` LineSpec through `text` when one line needs multiple styles.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node body text layout',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
+      startLine: 35,
+      endLine: 130,
+    },
+  ]}
+/>
 
 ## API Reference
 

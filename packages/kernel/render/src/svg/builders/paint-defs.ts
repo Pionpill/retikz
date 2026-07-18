@@ -112,7 +112,7 @@ const buildConicGradient = (spec: Extract<IRPaintSpec, { kind: 'conicGradient' }
 /**
  * 物化已解析 pattern tile（emit-in-compile 产物）成 `<pattern>` SvgNode
  * @description 宽高 = `tile.size`、`patternUnits=userSpaceOnUse`（tile 固定 user units）、可选整体旋转；
- *   `tile.motif`（`MarkerPrimitive[]`）复用 `buildMarkerPrim` 物化（contextStroke → context-stroke）。
+ *   `tile.motif`（`MarkerPrimitive[]`）复用 `buildMarkerPrim` 物化（contextStroke → context-stroke）
  */
 const buildPatternTile = (tile: ResolvedPatternTile, id: string): SvgNode => ({
   tag: 'pattern',
@@ -129,7 +129,7 @@ const buildPatternTile = (tile: ResolvedPatternTile, id: string): SvgNode => ({
 /**
  * 一个 paint 资源 → SVG paint server SvgNode（gradient / pattern / image）
  * @description gradient / image 用 objectBoundingBox（随形状缩放）；pattern 用 userSpaceOnUse（tile 固定 user units）。
- *   `id` 已由 caller 加实例前缀。pattern 资源缺 `tile` 是不该出现的 compile bug → 产空 `<pattern id>` 兜底、不抛。
+ *   `id` 已由 caller 加实例前缀。pattern 资源缺 `tile` 是不该出现的 compile bug → 产空 `<pattern id>` 兜底、不抛
  */
 export const buildPaintDef = (resource: PaintResource, id: string): SvgNode => {
   const spec: IRPaintSpec = resource.spec;

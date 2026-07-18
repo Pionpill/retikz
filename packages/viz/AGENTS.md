@@ -2,24 +2,33 @@
 
 本文件覆盖 `packages/viz/`。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)。
 
-## 当前包
+## 包职责与边界
 
-| 包                     | 职责                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `@retikz/data`         | viz 通用数据层：数据模型、字段解析、数据通道基础、transform schema / definition / registry / apply pipeline   |
-| `@retikz/plot`         | Tier 2 GoG 可视化层：Plot IR、scale / coordinate / mark / guide、plot lowering；数据层能力来自 `@retikz/data` |
-| `@retikz/plot-react`   | plot 的 React adapter，把 props / children 组装成 plot spec 并交给底层 lowering                               |
-| `@retikz/plot-vanilla` | plot 的 framework-free / SSR adapter                                                                          |
+| 包                     | 解决的问题                             | 拥有                                                                   | 不拥有                                               |
+| ---------------------- | -------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@retikz/data`         | 为多个可视化宿主提供统一数据处理底座   | 数据模型、字段解析、通用 transform / statistics、registry、lineage     | channel、scale、mark、可视化布局、renderer           |
+| `@retikz/plot`         | 把数据语义映射成可组合的 Core 图形语义 | Plot IR、channel / scale / coordinate / mark / guide、layout、lowering | 通用数据算法、Core IR 语义、renderer、框架 authoring |
+| `@retikz/plot-react`   | 用 React JSX authoring 和运行 Plot     | React 组件、composition builder、数据注入和 React runtime 接线         | Data / Plot 算法、Core 编译、renderer                |
+| `@retikz/plot-vanilla` | 无框架 authoring、SSR 和运行 Plot      | plot builder、数据注入、vanilla / SSR 编排                             | Data / Plot 算法、Core 编译、renderer                |
 
 未来的 chart / table / geo 等边界只在 ADR 或 roadmap 明确后落包；AGENTS 不为未存在包保留详细规则。
 
 ## 分层约束
 
 - viz 组是 Tier 2 能力层，不向 core 组反向注入实现；通用绘图 / 几何缺口优先补 `@retikz/core` 或 `@retikz/math`。
-- `@retikz/data` 是数据模型、字段解析、transform 和通用数据通道真源；plot / chart / table 不复制数据处理算法。
+- `@retikz/data` 是数据模型、字段与值语义、transform 和通用数据处理契约真源；plot / chart / table 不复制数据处理算法。
 - `@retikz/plot` 是 plot 语义、layout transform 和 lowering 真源；adapter 不复制 data、scale、coordinate、mark、guide 或 lowering 算法。
+- plot-specific transform 可以在 plot 实现，但必须复用 data 的 definition、registry 与 apply contract；宿主无关的 rows / fields / statistics 算法归 data。
 - viz 内共用几何类型和工具优先来自 `@retikz/math` / `@retikz/core`。例如二维坐标用 `Position`，有限 / 无穷数值判断用既有 helper，不在 plot 内重复定义。
 - 已存在的本包工具应复用；如果工具应上移到 math/core，先迁移再使用。
+
+每个包的输入输出与缺口流向以就近 `AGENTS.md` 为准。宿主无关的数据处理进入 data；可视化映射语义进入 plot；框架 authoring 和生命周期进入对应 adapter；通用图形或几何缺口下沉 core / math。当前实现位置和 adapter 是否能展示都不能改变这条所有权链。
+
+## 能力完备性
+
+- `@retikz/data` 的主责边界见 [`data-capability-complete.md`](./_notes/architecture/data-capability-complete.md)。
+- `@retikz/plot` 的主责边界见 [`plot-visualization-complete.md`](./_notes/architecture/plot-visualization-complete.md)。
+- 新能力先判断属于 Data Complete、Visualization Complete 还是应下沉 Drawing Complete；adapter / preset 能展示不等于能力闭环。
 
 ## 代码风格
 

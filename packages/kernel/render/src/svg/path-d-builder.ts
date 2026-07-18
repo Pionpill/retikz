@@ -12,7 +12,7 @@ const defaultRound = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * SVG `<path>` A 命令的 large-arc-flag 与 sweep-flag
- * @description largeArc：对齐后的弧跨度 |Δ| > 180° 为 1；sweep：屏幕坐标顺时针为 1、逆时针为 0。
+ * @description largeArc：对齐后的弧跨度 |Δ| > 180° 为 1；sweep：屏幕坐标顺时针为 1、逆时针为 0
  */
 const arcSvgFlags = (
   startAngleDeg: number,

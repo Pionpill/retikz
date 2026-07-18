@@ -3,7 +3,7 @@
  * @description 可复用底座：rAF 时钟（Canvas 逐帧驱动）、`prefers-reduced-motion` 判定、scene 是否
  *   含动画 / 总时长、SVG 交互 track 的 WAAPI 桥（读 `data-retikz-anim` → `element.animate` + 按 trigger 接驱动）。
  *   纯 runtime（触 DOM），与 evaluate/oklch 等纯数学分开；缺 rAF / IntersectionObserver / element.animate 的环境
- *   （SSR / 老浏览器）优雅退化。
+ *   （SSR / 老浏览器）优雅退化
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 
@@ -51,7 +51,7 @@ export type ClockOptions = {
 /**
  * 创建 rAF 共享时钟：维护 scene 级 time，每帧调 onFrame；到有限时长尽头停在末帧
  * @description 缺 requestAnimationFrame（SSR）→ 退化为只画一帧（末帧 / t=0）。所有 track 共用此时钟，
- *   per-track delay 在 evaluateTrack 内偏移，天然支持错峰。
+ *   per-track delay 在 evaluateTrack 内偏移，天然支持错峰
  */
 export const createClock = (options: ClockOptions): AnimationControls => {
   const raf = env.requestAnimationFrame;
@@ -126,8 +126,8 @@ export const prefersReducedMotion = (): boolean =>
   env.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
 
 /**
- * 把作者动画开关与系统减少动态效果偏好解析为最终播放状态。
- * @description 未显式配置时跟随系统偏好；显式 `true` / `false` 始终覆盖系统偏好。
+ * 把作者动画开关与系统减少动态效果偏好解析为最终播放状态
+ * @description 未显式配置时跟随系统偏好；显式 `true` / `false` 始终覆盖系统偏好
  */
 export const resolveAnimationEnabled = (explicit: boolean | undefined, reducedMotion: boolean): boolean =>
   explicit ?? !reducedMotion;
@@ -148,7 +148,7 @@ const primsHaveAutoplay = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
 
 /**
  * scene 是否含「自动播放」(load/缺省) track（元素级或根镜头）
- * @description Canvas runtime 据此决定是否自动 `clock.play()`；全为 visible/manual/onEvent → 不自动起钟。
+ * @description Canvas runtime 据此决定是否自动 `clock.play()`；全为 visible/manual/onEvent → 不自动起钟
  */
 export const sceneHasAutoplayTrigger = (scene: Scene): boolean =>
   (scene.animations ?? []).some(isAutoplayTrigger) || primsHaveAutoplay(scene.primitives);
@@ -174,7 +174,7 @@ const collectTracks = (scene: Scene): Array<IRAnimationTrack> => {
 
 /**
  * scene 动画总时长（毫秒）；任一 track infinite → null（持续播放）
- * @description Canvas runtime 据此决定有限播完即停 / 持续。
+ * @description Canvas runtime 据此决定有限播完即停 / 持续
  */
 export const sceneAnimationDurationMs = (scene: Scene): number | null => {
   const tracks = collectTracks(scene);
@@ -192,7 +192,7 @@ export const sceneAnimationDurationMs = (scene: Scene): number | null => {
  * 绑定 SVG 交互 track（读 root 下 `data-retikz-anim`）：按 trigger 经 WAAPI 播放
  * @description visible→IntersectionObserver 进视口播；manual→创建即暂停、句柄控制；{onEvent}→事件委托命中即播。
  *   load track 不在此（已由 CSS 自播）。缺 element.animate / IntersectionObserver 的环境优雅跳过。返回控制句柄。
- *   timing.easing 已由编译期烘焙成 CSS 串（含自定义 easing 的 bezier 形式），本桥直传、无需 easing 注册表。
+ *   timing.easing 已由编译期烘焙成 CSS 串（含自定义 easing 的 bezier 形式），本桥直传、无需 easing 注册表
  */
 export const bindWaapiDescriptors = (root: Element): AnimationControls => {
   const animations: Array<Animation> = [];

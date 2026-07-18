@@ -8,9 +8,9 @@ import { buildSvgFragment } from '../../../src/svg/builders/document';
 import { buildPrim } from '../../../src/svg/builders/prim';
 
 /**
- * SVG renderer 从 ScenePrimitive.id emit data-retikz-id attribute。
+ * SVG renderer 从 ScenePrimitive.id emit data-retikz-id attribute
  * @description 带 id 的图元 → attrs['data-retikz-id'] === id；无 id → attrs 不含该键。
- *   stub 阶段 buildPrim 尚未 emit，断言此刻预期 fail。
+ *   stub 阶段 buildPrim 尚未 emit，断言此刻预期 fail
  */
 const layout = { x: 0, y: 0, width: 100, height: 100 };
 

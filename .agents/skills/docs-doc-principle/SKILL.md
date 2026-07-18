@@ -17,7 +17,8 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 
 | 页型             | 路径                                                               | 分流到                                                                                                |
 | ---------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| 组件页           | `contents/<module>/components/**`                                  | [`docs-doc-component`](../docs-doc-component/SKILL.md)                                                |
+| 扩展指南         | data 节点标记 `meta.pageType: 'extension'`                         | [`docs-doc-extension`](../docs-doc-extension/SKILL.md)                                                |
+| 组件页           | `contents/<module>/components/**`，且未标记为扩展指南              | [`docs-doc-component`](../docs-doc-component/SKILL.md)                                                |
 | 示例页           | `contents/<module>/examples/**`                                    | [`docs-doc-example`](../docs-doc-example/SKILL.md)                                                    |
 | 分组落地页       | 带 children 的分组节点（`components/node`、`reference/schema` 等） | [`docs-doc-group`](../docs-doc-group/SKILL.md)                                                        |
 | 概念页           | `contents/<module>/concepts/**` 叶子页                             | [`docs-doc-concept`](../docs-doc-concept/SKILL.md)                                                    |
@@ -139,6 +140,8 @@ mdx 正文里不主动加任何指向第三方网站的链接（zod 官网、RFC
 ```
 
 GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用户来说是可达的"项目延伸阅读"，与第三方外链性质不同。
+
+How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks sources={[{ label, path, startLine?, endLine? }]} />`；每项只指向支撑当前结论的直接实现入口，`label` 按当前语言概括机制，`path` 写仓库相对路径，行号范围保持最小。完成前确认文件存在、`startLine` / `endLine` 不得超出文件、行号对应的代码仍支撑正文结论。设计文档、ADR 等普通延伸阅读仍使用正文链接。
 
 **不要在 mdx 中暴露项目结构路径**（文件名 / 目录路径）——文档站用户看不到也点不到。例如不要写"详见 `notes/architecture/core-design.md` §7"或"参 `.agents/skills/...`"——用户读到这种描述只能去仓库 / 本地手动找。仅与"项目目录约定"相关的纯文字描述（如"ADR 起新文件用 `cp _template.md ...`"）可以保留路径作为 inline code，因为这是给已经在用 retikz 的人看的操作说明。
 
@@ -280,6 +283,15 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 - animation 与预览宿主工具使用 `hover`；作为 demo 参数的 select / input 通常使用 `always`。
 - 局部 `controls.slots` 与共享 controls 追加组合；id 必须全局唯一。替换 animation 时先写 `animation: false`。
 
+声明式 controls 作者约定：
+
+- 多属性 playground 用 `definePreviewControls({ presentation: 'panel', sections: [...] })`，一个或少量轻量控件用 `presentation: 'overlay'`
+- 标准表单字段优先使用 `text`、`number`、`select`、`switch`、`color`、`range` 六种 kind，不用 `PreviewControlSlot.render` 重写基础控件
+- controls 与 demo 从 `@/modules/docs/components/component-preview/author` 导入 `definePreviewControls`、`usePreviewControls` 和作者类型；该入口不反向加载 eager demo registry
+- demo 用 `usePreviewControls(definition)` 读取由 definition 推导的值；使用 hook 后同步导出 `previewSource = { deriveIR: false }`
+- zh/en definition 的字段 id、kind、defaultValue、select option value 必须一致，只翻译 title、section、field 与 option label
+- `PreviewControlSlot` 只用于 animation、预览工具或内置 kind 无法表达的特殊渲染逃生口
+
 ### 代码视图：React / IR / Vanilla
 
 `ComponentPreview` 默认展示三套视图：
@@ -315,6 +327,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
   - `<Comparison ... />` —— 外部生态对照内容用，当前只支持 `target="tikz"`
   - `<ExamplePrompt ... />` —— 示例页 AI Prompt 节用，见 [`docs-doc-example`](../docs-doc-example/SKILL.md)
   - `<ComponentAlert type="tip|warn|error" title="..." description="..." />` —— 文档提示块，只传 `title` 和 `description`；`type` 省略时默认为 `tip`
+  - `<SourceLinks sources={[...]} />` —— How it works 等机制说明的仓库源码入口；传本地化 `label`、仓库相对 `path` 与可选行号
 
 ### `<ComponentAlert>` 使用边界
 
@@ -340,6 +353,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 | 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径）      | —                                                      |
 | 写 TikZ 对照        | 用 `<Comparison target="tikz">` 包起来，不写进普通正文                                   | —                                                      |
 | 加组件页            | —                                                                                        | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
+| 加扩展指南          | data 节点 `meta.pageType: 'extension'` + 双语正文与闭环 demo                             | [`docs-doc-extension`](../docs-doc-extension/SKILL.md) |
 | 加示例页            | —                                                                                        | [`docs-doc-example`](../docs-doc-example/SKILL.md)     |
 
 ## Common Mistakes
@@ -383,6 +397,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 | **页内锚链接**（`#xxx`）    | 每一条都跳得到对应 H1-H3；CJK / 含 `+ - ° :` 的标题别手写 slug，用 github-slugger 跑一下：`cd apps/docs && node -e "import('github-slugger').then(({default:S})=>console.log(new S().slug('<标题>')))"` |
 | **站内路径**（`/core/...`） | 路径段必须命中 `data/<module>.ts` 里实际注册的 `{ id }` —— 改名 / 重组目录后所有外部文档 link 一起改；最简单做法是搜全仓 `rg "/core/old-path"`                                                          |
 | **GitHub URL**              | 仓库根 / branch / 路径都对（默认 `main`）；本地复制 GitHub URL 时容易把 `blob/<commit>/...` 黏进去——必须改回 `blob/main/...`                                                                            |
+| **`<SourceLinks>`**         | 每个 `path` 命中仓库内现有文件；`startLine >= 1`，`endLine >= startLine` 且不超过文件总行数；行号对应的代码仍支撑正文结论，生成的 `blob/main` URL 可达                                                  |
 | **能力节 step 锚**          | 示例页能力节第三列每个 `[N](#<H3-slug>)` 都要跳到对应 step H3，slug 与 github-slugger 输出一致                                                                                                          |
 | **components/ 跳转**        | 每条 `[X](/core/components/...)` 都落到现有页 —— 组件改名 / 移位时一起改                                                                                                                                |
 

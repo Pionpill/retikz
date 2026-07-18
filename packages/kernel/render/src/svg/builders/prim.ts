@@ -12,7 +12,7 @@ type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'al
 
 /**
  * builder 上下文——容器侧把「全 SVG 共享」的资源 id 回调向下传给 buildPrim
- * @description 资源缺省时回退裸 `url(#id)`（无实例前缀）；arrow marker 缺省不引用。
+ * @description 资源缺省时回退裸 `url(#id)`（无实例前缀）；arrow marker 缺省不引用
  */
 export type BuildContext = {
   /** 按 arrow 端点 spec 查 `<marker id>` id 的回调（按 detail hash 区分起末异形 / 异色） */
@@ -44,7 +44,7 @@ const baselineToDominant = (b: 'top' | 'middle' | 'bottom' | 'alphabetic'): Domi
 /**
  * PaintValue → SVG paint attribute / inline style 值
  * @description string 纯色：含 `var(` 走 style（attribute 不解析 CSS var）否则 attribute；`resourceRef` →
- *   `url(#...)`；`contextStroke` → `context-stroke`（继承 path 描边）。
+ *   `url(#...)`；`contextStroke` → `context-stroke`（继承 path 描边）
  */
 const paintToSvg = (
   paint: PaintValue | undefined,
@@ -61,7 +61,7 @@ const paintToSvg = (
 /**
  * SVG attribute 与 inline style 的双路 paint：含 `var(...)` 的颜色值改走 style（SVG attribute 不解析 CSS var）
  * @description SVG2 / CSS Color Module 规定 var() 只在 CSS 属性上下文解析，作为 SVG attribute 值时不展开；
- *   想用 `var(--background)` 这类主题感知颜色必须落 inline style。
+ *   想用 `var(--background)` 这类主题感知颜色必须落 inline style
  */
 const paintAttr = (value: string | undefined): string | undefined =>
   value === undefined || value.includes('var(') ? undefined : value;
@@ -83,7 +83,7 @@ const withStyle = (node: SvgNode, style: SvgStyle | undefined): SvgNode => (styl
 
 /**
  * 把可选 blendMode 合进（可能已含 fill/stroke 的）几何图元 style
- * @description `normal` / 省略不出 `mix-blend-mode`（逐字不变）；其余 emit CSS `mix-blend-mode`，与 var() 颜色共存。
+ * @description `normal` / 省略不出 `mix-blend-mode`（逐字不变）；其余 emit CSS `mix-blend-mode`，与 var() 颜色共存
  */
 const mergeBlendStyle = (style: SvgStyle | undefined, blendMode: BlendModeValue | undefined): SvgStyle | undefined => {
   if (blendMode === undefined || blendMode === 'normal') return style;
@@ -95,7 +95,7 @@ const mergeBlendStyle = (style: SvgStyle | undefined, blendMode: BlendModeValue 
  * @description 缺省 `shadowIdFor`（粒度化调用 `buildPrim` 而非走整文档装配）时回退到「内容寻址」裸 id
  *   `retikz-shadow-<hash>`（同 paint / clip 回退口径：不带实例前缀的稳定 id）。这样独立调用方只要自行用同口径
  *   emit 对应 `<filter>` def，引用即生效；不同 shadow 得不同 hash（不会塌成一个 id）。整文档路径恒由
- *   `context.shadowIdFor` 注入带前缀 id 并配套 defs。
+ *   `context.shadowIdFor` 注入带前缀 id 并配套 defs
  */
 const shadowFilterRef = (
   shadow: IRDropShadow | undefined,
@@ -106,7 +106,7 @@ const shadowFilterRef = (
 /**
  * Scene primitive → `SvgNode`
  * @description 不读 IR，只读 Scene。属性名一律 SVG 真名（呈现属性 kebab、结构属性规范拼写）；含 `var()` 的
- *   颜色值落 `style`、其余落 `attrs`。group 递归并跳过 undefined 子槽位（防御非法 Scene）。
+ *   颜色值落 `style`、其余落 `attrs`。group 递归并跳过 undefined 子槽位（防御非法 Scene）
  */
 const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
   const paintRefUrl = context.paintRefUrl ?? ((id: string) => `url(#${id})`);
@@ -262,7 +262,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
 /**
  * Scene primitive → `SvgNode`（含动画装饰）
  * @description 先建静态 base 节点（buildPrimRaw），再经 context.decorate 挂动画（CSS class / WAAPI data /
- *   transform wrapper `<g>`）；无 decorate（动画关闭或无 animations）时原样返回 base。
+ *   transform wrapper `<g>`）；无 decorate（动画关闭或无 animations）时原样返回 base
  */
 export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNode => {
   const node = buildPrimRaw(p, context);

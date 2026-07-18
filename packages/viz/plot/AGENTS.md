@@ -1,14 +1,24 @@
 # @retikz/plot 工作指南
 
-`@retikz/plot` 是 viz 组核心包：定义 Plot IR，处理 data / transform / scale / coordinate / mark / guide，并通过 composite lowering 接入 `@retikz/core`。
+全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，viz 组规则见 [`../AGENTS.md`](../AGENTS.md)。
+
+## 包职责契约
+
+- **解决的问题**：用可扩展的 grammar-of-graphics 把数据与可视化语义确定性地映射为 Core IR，而不依赖 chart type、framework 或 renderer
+- **拥有的契约**：Plot IR / schema、channel / scale / coordinate / mark / guide / layout definitions 与 registries、plot-specific transform、lowering、visualization provenance / locator
+- **不拥有的能力**：宿主无关的数据模型与 transform 算法、Core IR / Scene 语义、SVG / Canvas 执行、React / Vanilla authoring、chart preset 或业务 dashboard 状态
+- **输入与输出**：接收 Plot IR、Data view / datasets、plot definitions 与 lowering options，输出 Core IR contribution、plot lineage / locator 和 diagnostics；不直接输出 DOM、SVG 或 Canvas
+- **缺口流向**：通用数据能力下沉 `@retikz/data`；通用图形 / 几何能力下沉 core / math；chart-level 组合上移 preset；authoring / runtime 进入对应 adapter；只有依赖可视化语法轴的能力才进入 plot
+
+新增或迁移可视化能力前，先按 [`plot-visualization-complete.md`](../_notes/architecture/plot-visualization-complete.md) 确认 Visualization Complete 与 Data / Drawing Complete 的交界。
 
 ## 分层
 
 ```text
 shared/       无依赖共享词汇、纯函数、映射和工具类型
 schemas/      Zod schema 与 Plot IR 类型真源
-contract/     coordinate / scale / transform / mark / channel / format / guide / locator 的扩展契约与公开类型
-providers/    内置 definition、BUILTIN_*、registry resolver、dispatch / apply / resolve，以及 theme token 解析
+contract/     coordinate / scale / mark / channel / guide / locator 等可视化扩展契约与公开类型
+providers/    内置 definition、plot-specific transform、BUILTIN_*、registry resolver、dispatch / apply / resolve，以及 theme token 解析
 pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract；guide / locator 等运行时编排也归这里
 ```
 
@@ -27,6 +37,7 @@ pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract；g
 - 几何坐标类型使用 `@retikz/math` 的 `Position`。
 - core IR / Scene 类型从 `@retikz/core` 获取，不在 plot 内复制。
 - 有限 / 无穷数值判断、字段解析、label 格式化、scale 解析等优先使用所属模块已有 helper。
+- 通用数据模型、字段、transform / statistics / format 与 lineage 从 `@retikz/data` 获取；plot-specific transform 复用 data contract，不复制 apply pipeline。
 - 函数保持纯计算和 plain data；不要把 d3 scale 函数、class 实例、ReactNode 等放入 IR。
 
 ## Registry 规则

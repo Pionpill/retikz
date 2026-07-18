@@ -3,21 +3,21 @@ title: Text
 description: 写在 <Node> 内部的"行级"标记组件——给一行单独覆盖 fill / opacity / font 样式；与字符串 children 平等参与 Node 多行布局。
 ---
 
-`<Text>` 是 Sugar——本身不渲染任何 DOM，编译期展开成 `<Node>` `text` 数组里的一行（LineSpec）。
+`<Text>` 给 `<Node>` 中的某一整行覆盖文字样式，并与普通字符串 children 按 JSX 顺序混排。它是 Sugar（语法糖）：写法留在 React 层，进入 core 前会归一成 `Node.text` 中的一条 LineSpec（单行文本规格）。
 
 它和直接把 LineSpec 对象写进 `text` prop 是**等价**的两条路径：
 
-| 路径           | 写法                                                | 优点                               |
-| -------------- | --------------------------------------------------- | ---------------------------------- |
-| `<Text>` Sugar | `<Node><Text fill="red">x</Text>...</Node>`         | JSX 顺手，混排字符串 children 自然 |
-| `text` 数组    | `<Node text={[{ text: 'x', fill: 'red' }, ...]} />` | JSON 友好；AI 直接生成 IR JSON     |
+| 路径           | 写法                                                | 优点                                  |
+| -------------- | --------------------------------------------------- | ------------------------------------- |
+| `<Text>` Sugar | `<Node><Text fill="red">x</Text>...</Node>`         | JSX 顺手，混排字符串 children 自然    |
+| `text` 数组    | `<Node text={[{ text: 'x', fill: 'red' }, ...]} />` | JSON 友好；AI 直接生成 IR（中间表示） |
 
 > 块级属性（`align` / `lineHeight`）写在 `<Node>` 上；行级覆盖（`fill` / `opacity` / `font`）写在 `<Text>` 上。
 
 <ComponentAlert
   type="warn"
   title="一个 Text 是一整行，不是 inline span"
-  description="把它理解成给 Node 增加一整行带样式文本；同一行不能混多段颜色，需要多色时把内容拆成多行，或改用多个独立 Node。"
+  description="Text 本身不能表达同一行里的多段样式；需要一行多色时，改用 Node text prop 的 { runs } LineSpec。只有各段本就应独占一行时才拆成多个 Text。"
 />
 
 ## 用法
@@ -60,6 +60,64 @@ import { Node, Text } from '@retikz/react';
 下面两个节点编译出来一模一样：
 
 <ComponentPreview files="text-vs-prop" size="xs" />
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="想理解 Text 为何只能写一整行、与 text prop 冲突时谁优先，再回来读。"
+/>
+
+### 行归一化与优先级
+
+`<Text>` 是一个返回 `null` 的标记组件，本身不创建 DOM 或图形。只有 `<Node>` 收集 children 时会识别这个标记，并把不同 JSX 输入归一到同一份 `Node.text` 契约：
+
+<ComponentPreview files="text-normalization" size="sm" hideCode />
+
+显式 `text` prop 优先；只要它存在，children 就不再参与文本收集。没有 `text` prop 时，适配层按 JSX 顺序递归读取字符串、数字、数组、Fragment 与 `<Text>`：
+
+| 输入            | 归一规则                                     | `Node.text` 结果 |
+| --------------- | -------------------------------------------- | ---------------- |
+| 字符串 / 数字   | 相邻内容拼接，按 Node 文本规则处理 `\n`      | 普通字符串行     |
+| 无样式 `<Text>` | 先结束当前普通行，再把自身作为独立一行       | 普通字符串行     |
+| 有样式 `<Text>` | 先结束当前普通行，再保留当前行的样式覆盖字段 | LineSpec 对象行  |
+
+这也解释了两个边界：`<Text>` 只能在 `<Node>` 内生效，而且它表达的是一整行，不是行内 span。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Text 标记组件',
+      path: 'packages/kernel/react/src/kernel/components/Text.tsx',
+      startLine: 18,
+      endLine: 22,
+    },
+    {
+      label: 'Node children 行归一化',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 77,
+      endLine: 196,
+    },
+  ]}
+/>
+
+### 样式与布局分工
+
+归一完成后，`<Text>` 标记就不再存在；后续由 `<Node>` 的文本布局统一处理所有行。缺省的 `font` 子字段继承 Node 块级字体，`fill` / `opacity` 只作用于当前行；测量、换行、对齐与行高仍由 Node 的块级配置负责。
+
+因此 `<Text>` 只提供行级视觉字段。行级字体会参与该行宽度测量，但 `<Text>` 本身不能把一行拆成多个不同样式的片段，也不能单独覆盖 `align` 或 `lineHeight`；同一行需要多段样式时，使用 `text` prop 的 `{ runs }` LineSpec。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node 正文文本布局',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
+      startLine: 35,
+      endLine: 130,
+    },
+  ]}
+/>
 
 ## API 参考
 

@@ -9,7 +9,7 @@ import { renderToSvgString } from '../../src/svg';
 
 /**
  * Tier 2 composite —— renderer 对照（render 零源码改动）
- * @description composite 在 compile 期已展开成 Tier 1 → Scene；svg / canvas 消费同一 Scene，无需认识 composite。
+ * @description composite 在 compile 期已展开成 Tier 1 → Scene；svg / canvas 消费同一 Scene，无需认识 composite
  */
 const labeledBox = defineComposite({
   namespace: 'example',

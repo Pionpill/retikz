@@ -1,9 +1,5 @@
 import type { FC, ReactNode } from 'react';
 
-import { useEffect, useState } from 'react';
-
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib';
@@ -81,117 +77,6 @@ export const PreviewToolbarSeparator: FC<PreviewToolbarSeparatorProps> = props =
 
   return (
     <Separator orientation={orientation} className={cn(orientation === 'vertical' ? 'h-5' : 'w-full', className)} />
-  );
-};
-
-const releaseSelectDocumentLock = (): void => {
-  if (document.querySelector('[role="dialog"]')) return;
-  document.body.style.pointerEvents = '';
-  document.body.style.setProperty('overflow', 'visible', 'important');
-  document.documentElement.style.setProperty('overflow', 'visible', 'important');
-};
-
-const restoreSelectDocumentLockOverride = (): void => {
-  document.body.style.removeProperty('overflow');
-  document.documentElement.style.removeProperty('overflow');
-};
-
-const useReleaseSelectDocumentLock = (open: boolean): void => {
-  useEffect(() => {
-    if (!open) return undefined;
-    let frame = 0;
-    const tick = () => {
-      releaseSelectDocumentLock();
-      frame = window.requestAnimationFrame(tick);
-    };
-    tick();
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.requestAnimationFrame(restoreSelectDocumentLockOverride);
-    };
-  }, [open]);
-};
-
-export type PreviewToolbarSelectOption = {
-  /** 写入 runtime 的选项值。 */
-  value: string;
-  /** 展示给用户的选项文本。 */
-  label: string;
-};
-
-export type PreviewToolbarSelectProps = {
-  /** 选择器无障碍标签。 */
-  label: string;
-  /** 当前选项值。 */
-  value: string;
-  /** 可选值集合。 */
-  options: Array<PreviewToolbarSelectOption>;
-  /** 选择器附加样式。 */
-  className?: string;
-  /** 选项变化回调。 */
-  onValueChange: (value: string) => void;
-};
-
-/** 预览区控制插槽推荐选择器。 */
-export const PreviewToolbarSelect: FC<PreviewToolbarSelectProps> = props => {
-  const { label, value, options, className, onValueChange } = props;
-  const [open, setOpen] = useState(false);
-  useReleaseSelectDocumentLock(open);
-  const selected = options.find(option => option.value === value);
-
-  return (
-    <Select
-      value={value}
-      onOpenChange={nextOpen => {
-        setOpen(nextOpen);
-        if (nextOpen) releaseSelectDocumentLock();
-      }}
-      onValueChange={onValueChange}
-    >
-      <SelectTrigger
-        aria-label={label}
-        title={label}
-        className={cn('h-7 min-w-28 bg-background px-2 text-xs', className)}
-      >
-        <SelectValue>{selected?.label ?? value}</SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {options.map(option => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-};
-
-export type PreviewToolbarInputProps = {
-  /** 输入框无障碍标签。 */
-  label: string;
-  /** 当前输入值。 */
-  value: string;
-  /** 空值提示。 */
-  placeholder?: string;
-  /** 输入框附加样式。 */
-  className?: string;
-  /** 输入值变化回调。 */
-  onValueChange: (value: string) => void;
-};
-
-/** 预览工具栏里的文本输入控件。 */
-export const PreviewToolbarInput: FC<PreviewToolbarInputProps> = props => {
-  const { label, value, placeholder, className, onValueChange } = props;
-
-  return (
-    <Input
-      aria-label={label}
-      title={label}
-      value={value}
-      placeholder={placeholder}
-      className={cn('h-7 min-w-28 bg-background px-2 text-xs', className)}
-      onChange={event => onValueChange(event.target.value)}
-    />
   );
 };
 

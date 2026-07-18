@@ -15,14 +15,14 @@ export type HitTestOptions = {
   /**
    * 描边命中容差（user units）
    * @description fill='none' / 透明填充的图元只有描边线可命中；判定时按 strokeTolerance 加宽描边宽度。
-   *   缺省按图元自身 strokeWidth/2。
+   *   缺省按图元自身 strokeWidth/2
    */
   strokeTolerance?: number;
   /**
    * hitTest 复用的 2D context（路径构建 + isPointInPath / isPointInStroke）
    * @description 即时模式无逐图元 DOM，命中靠把每个图元的几何重建进一个 2D context 后调原生点测。
    *   生产环境由挂载方（vanilla mountCanvas / react CanvasHost）传入已有 `<canvas>` 的 context；
-   *   缺省时实现自建离屏 context（无 canvas 环境则无法点测）。
+   *   缺省时实现自建离屏 context（无 canvas 环境则无法点测）
    */
   context2d?: CanvasRenderingContext2D;
 };
@@ -32,7 +32,7 @@ let fallbackContext: CanvasRenderingContext2D | null | undefined;
 
 /**
  * 解析 hitTest 用的 2D context：优先用调用方传入的 context2d，否则复用模块内懒建的离屏 canvas
- * @description 无传入且无 canvas 环境（如 SSR）时返回 null，hitTest 直接判定为无命中。
+ * @description 无传入且无 canvas 环境（如 SSR）时返回 null，hitTest 直接判定为无命中
  */
 const resolveContext = (options: HitTestOptions | undefined): CanvasRenderingContext2D | null => {
   if (options?.context2d !== undefined) return options.context2d;
@@ -70,7 +70,7 @@ const hasFill = (prim: ScenePrimitive): boolean => {
 
 /**
  * 单图元点测：在当前 transform 栈下构建几何，先填充区（hasFill）再描边线判定
- * @description 描边半宽 = strokeTolerance ?? strokeWidth/2；context isPointInStroke 用 lineWidth/2 作半宽，故 lineWidth = 2×半宽。
+ * @description 描边半宽 = strokeTolerance ?? strokeWidth/2；context isPointInStroke 用 lineWidth/2 作半宽，故 lineWidth = 2×半宽
  */
 const hitPrim = (
   ctx: CanvasRenderingContext2D,
@@ -101,7 +101,7 @@ const insideClip = (ctx: CanvasRenderingContext2D, shape: ClipShape | undefined,
  * Canvas 命中测试：把 Scene 坐标点定位到最上层 id-bearing 图元
  * @description 逆 z-order（后画的在上）重走 Scene，复用 drawScene 几何 + 原生 isPointInPath（填充区）/
  *   isPointInStroke（描边线，按 strokeTolerance 加宽）判定；命中即返回该图元或其最近 id-bearing 祖先（group）
- *   的 id，空白处返回 null。函数不进 IR、纯 runtime 定位层。
+ *   的 id，空白处返回 null。函数不进 IR、纯 runtime 定位层
  */
 export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions): string | null => {
   const ctx = resolveContext(options);

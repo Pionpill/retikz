@@ -5,7 +5,7 @@ import type { NodeLayout } from './node';
 
 import { DEG_TO_RAD, RAD_TO_DEG } from '../shared/geometry';
 
-/** 将局部点按 transform chain 投影到全局坐标。 */
+/** 将局部点按 transform chain 投影到全局坐标 */
 export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
   let x = local[0];
   let y = local[1];
@@ -33,7 +33,7 @@ export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Tran
   return [x, y];
 };
 
-/** 将全局点反投影回当前 transform chain 的局部坐标。 */
+/** 将全局点反投影回当前 transform chain 的局部坐标 */
 export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
   let x = global[0];
   let y = global[1];
@@ -65,7 +65,7 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
   return [x, y];
 };
 
-/** 将 NodeLayout 投影到全局坐标系。 */
+/** 将 NodeLayout 投影到全局坐标系 */
 export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<Transform>): NodeLayout => {
   const [gx, gy] = applyTransformChain([layout.rect.x, layout.rect.y], chain);
   let rotateAccumRad = 0;

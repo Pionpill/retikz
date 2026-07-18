@@ -5,7 +5,7 @@ import type { IRJsonObject } from '../../schemas';
 import type { PathCommand } from '../scene';
 
 /**
- * path generator 的运行时上下文。
+ * path generator 的运行时上下文
  * @description 坐标均位于当前 Path 的局部坐标系，返回的命令由所属 GroupPrim 统一应用 scope transform
  */
 export type PathGeneratorGenerateContext = {
@@ -25,15 +25,15 @@ export type PathGeneratorGenerateContext = {
 };
 
 /**
- * 可注册的 path generator 定义。
- * @description 描述 JSON 参数、可解析 target 参数和命令生成能力；定义本身不进入 IR。
+ * 可注册的 path generator 定义
+ * @description 描述 JSON 参数、可解析 target 参数和命令生成能力；定义本身不进入 IR
  */
 export type PathGeneratorDefinition = {
-  /** generator 名称，由 generator step 的 `name` 引用。 */
+  /** generator 名称，由 generator step 的 `name` 引用 */
   name: string;
   /**
-   * 实例参数 schema。
-   * @description 解析结果必须是 JSON object。
+   * 实例参数 schema
+   * @description 解析结果必须是 JSON object
    */
   paramsSchema: ZodType<IRJsonObject>;
   /**

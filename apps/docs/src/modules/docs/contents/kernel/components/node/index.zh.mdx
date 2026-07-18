@@ -1,19 +1,20 @@
 ---
 title: 节点
-description: 节点家族——可被引用的命名图元，连同它的行级文字样式与纯占位点。
+description: 节点家族——可被引用的命名图元、行级文字样式、纯占位点与可扩展连接面。
 ---
 
-节点是图里「被引用」的主体：它有 id、有位置、有形状边界，连线会按 id 自动贴上它的边界。这一分组把节点本身、写在节点内部的行级文字样式、以及只命名不画形状的占位点收在一起。
+节点是图里「被引用」的主体：它有 id、有位置、有形状边界，连线会按 id 自动贴上它的边界。这一分组把节点本身、写在节点内部的行级文字样式、只命名不画形状的占位点，以及视觉形状之外的自定义连接面收在一起。
 
 <ComponentPreview files="node-family" size="md" hideCode />
 
 ## 职责一览
 
-| 组件       | 类型   | 职责                                                 | 适合场景                                         |
-| ---------- | ------ | ---------------------------------------------------- | ------------------------------------------------ |
-| Node       | Kernel | 命名图元，带位置 / 形状 / 文本，路径靠 id 贴它的边界 | 流程图节点、带文字的形状、任何要被连线引用的图元 |
-| Text       | Sugar  | 写在 Node 内部，给单独一行覆盖 fill / opacity / font | 一行里混排多种样式的文字                         |
-| Coordinate | Kernel | 只命名一个点，不画任何形状                           | 纯引用锚点、辅助定位、不需要可见图形时           |
+| 组件         | 类型   | 职责                                                 | 适合场景                                         |
+| ------------ | ------ | ---------------------------------------------------- | ------------------------------------------------ |
+| Node         | Kernel | 命名图元，带位置 / 形状 / 文本，路径靠 id 贴它的边界 | 流程图节点、带文字的形状、任何要被连线引用的图元 |
+| Text         | Sugar  | 写在 Node 内部，给单独一行覆盖 fill / opacity / font | 一行里混排多种样式的文字                         |
+| Coordinate   | Kernel | 只命名一个点，不画任何形状                           | 纯引用锚点、辅助定位、不需要可见图形时           |
+| 自定义连接面 | 扩展   | 注册独立于视觉 shape 的节点连接几何                  | 视觉轮廓与连线贴边规则需要分离时                 |
 
 ## 章节内容
 
@@ -29,5 +30,9 @@ description: 节点家族——可被引用的命名图元，连同它的行级�
   <LinkedCard href="/kernel/components/node/coordinate">
     <span className="font-semibold">Coordinate</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">只命名引用点、不渲染形状</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/node/custom-boundary">
+    <span className="font-semibold">自定义连接面</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">让视觉形状与连线贴边规则独立扩展</span>
   </LinkedCard>
 </div>

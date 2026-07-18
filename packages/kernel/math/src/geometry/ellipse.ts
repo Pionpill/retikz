@@ -4,29 +4,29 @@ import type { CenteredShape } from './transform';
 
 import { localToWorld, worldToLocal } from './transform';
 
-/** 椭圆：中心 + 半轴 + 可选旋转。 */
+/** 椭圆：中心 + 半轴 + 可选旋转 */
 export type Ellipse = CenteredShape & {
-  /** 沿本地 +x 的半轴长度。 */
+  /** 沿本地 +x 的半轴长度 */
   rx: number;
-  /** 沿本地 +y 的半轴长度。 */
+  /** 沿本地 +y 的半轴长度 */
   ry: number;
 };
 
-/** 以中心描述的矩形盒。 */
+/** 以中心描述的矩形盒 */
 export type CenteredBox = CenteredShape & {
-  /** 矩形盒宽度。 */
+  /** 矩形盒宽度 */
   width: number;
-  /** 矩形盒高度。 */
+  /** 矩形盒高度 */
   height: number;
 };
 
-/** 椭圆外接内部盒的半轴策略。 */
+/** 椭圆外接内部盒的半轴策略 */
 export type EllipseCircumscribeMode = 'proportional' | 'equal';
 
-/** 基于中心、本地半轴和可选旋转的椭圆运算。 */
+/** 基于中心、本地半轴和可选旋转的椭圆运算 */
 export const ellipse = {
   center: (e: Ellipse): Position => [e.x, e.y],
-  /** 矩形盒的内接椭圆。 */
+  /** 矩形盒的内接椭圆 */
   inscribedInBox: (box: CenteredBox): Ellipse => ({
     x: box.x,
     y: box.y,
@@ -35,8 +35,8 @@ export const ellipse = {
     rotate: box.rotate,
   }),
   /**
-   * 包住内部盒的椭圆外接半轴。
-   * @description `proportional` 保持内部盒宽高比例，`equal` 使用等轴圆包住内部盒。
+   * 包住内部盒的椭圆外接半轴
+   * @description `proportional` 保持内部盒宽高比例，`equal` 使用等轴圆包住内部盒
    */
   circumscribedHalfAxes: (
     innerHalfAxes: BoundsHalfAxes,
@@ -51,15 +51,15 @@ export const ellipse = {
           halfWidth: innerHalfAxes.halfWidth * Math.SQRT2,
           halfHeight: innerHalfAxes.halfHeight * Math.SQRT2,
         },
-  /** 判断点是否在椭圆内，含边界。 */
+  /** 判断点是否在椭圆内，含边界 */
   contains: (e: Ellipse, p: Position): boolean => {
     if (e.rx === 0 || e.ry === 0) return false;
     const [lx, ly] = worldToLocal(e, p);
     return (lx * lx) / (e.rx * e.rx) + (ly * ly) / (e.ry * e.ry) <= 1;
   },
   /**
-   * 从中心向目标方向的射线与椭圆的交点。
-   * @description 退化椭圆返回中心，避免零半轴除法。
+   * 从中心向目标方向的射线与椭圆的交点
+   * @description 退化椭圆返回中心，避免零半轴除法
    */
   boundaryPoint: (e: Ellipse, toward: Position): Position => {
     if (e.rx === 0 || e.ry === 0) return [e.x, e.y];

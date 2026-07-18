@@ -12,43 +12,43 @@ import { resolveShapeRegistry } from '../../providers/shape';
 import { applyTransformChain } from '../transform';
 import { boxInsets } from './box';
 
-/** synthetic layout 构造使用的 shape / boundary 注册表。 */
+/** synthetic layout 构造使用的 shape / boundary 注册表 */
 export type SyntheticLayoutRegistryContext = {
-  /** shape 注册表。 */
+  /** shape 注册表 */
   shapes?: ProviderCollection<ShapeDefinition>;
-  /** boundary 注册表。 */
+  /** boundary 注册表 */
   boundaries?: ProviderCollection<BoundaryDefinition>;
 };
 
-/** synthetic rectangle layout 输入。 */
+/** synthetic rectangle layout 输入 */
 export type SyntheticRectangleLayoutInput = {
-  /** layout id。 */
+  /** layout id */
   id: string;
-  /** layout 矩形。 */
+  /** layout 矩形 */
   rect: Rect;
 };
 
-/** synthetic scope rectangle layout 输入。 */
+/** synthetic scope rectangle layout 输入 */
 export type ScopeRectangleLayoutInput = {
-  /** layout id。 */
+  /** layout id */
   id: string;
-  /** 已计算的 bbox rect；空 scope 时传 null。 */
+  /** 已计算的 bbox rect；空 scope 时传 null */
   bbox: Rect | null;
-  /** 空 bbox 时使用的回退原点。 */
+  /** 空 bbox 时使用的回退原点 */
   fallbackOrigin: IRPosition;
 };
 
-/** synthetic scope circle layout 输入。 */
+/** synthetic scope circle layout 输入 */
 export type ScopeCircleLayoutInput = {
-  /** layout id。 */
+  /** layout id */
   id: string;
-  /** 子树外包络角点。 */
+  /** 子树外包络角点 */
   cornerPoints: ReadonlyArray<IRPosition>;
-  /** 空点集时使用的回退原点。 */
+  /** 空点集时使用的回退原点 */
   fallbackOrigin: IRPosition;
 };
 
-/** 构造编译期 synthetic rectangle layout。 */
+/** 构造编译期 synthetic rectangle layout */
 export const createSyntheticRectangleLayout = (
   input: SyntheticRectangleLayoutInput,
   context: SyntheticLayoutRegistryContext = {},
@@ -77,7 +77,7 @@ export const createSyntheticRectangleLayout = (
   };
 };
 
-/** 用 scope id 和当前 transform chain 构造临时 0×0 synthetic layout。 */
+/** 用 scope id 和当前 transform chain 构造临时 0×0 synthetic layout */
 export const createScopePlaceholderLayout = (
   id: string,
   scopeChain: ReadonlyArray<Transform>,
@@ -93,7 +93,7 @@ export const createScopePlaceholderLayout = (
   );
 };
 
-/** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout。 */
+/** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout */
 export const createScopeRectangleLayout = (
   input: ScopeRectangleLayoutInput,
   context: SyntheticLayoutRegistryContext = {},
@@ -108,7 +108,7 @@ export const createScopeRectangleLayout = (
   return createSyntheticRectangleLayout({ id: input.id, rect }, context);
 };
 
-/** 用 scope id 和子树点集构造可引用的 synthetic circle layout。 */
+/** 用 scope id 和子树点集构造可引用的 synthetic circle layout */
 export const createScopeCircleLayout = (
   input: ScopeCircleLayoutInput,
   context: SyntheticLayoutRegistryContext = {},

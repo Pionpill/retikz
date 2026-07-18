@@ -1,142 +1,121 @@
 # Plot 可视化完备设计
 
-> 本文定义 `@retikz/plot` 的可视化完备目标和检测方法。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)。本文只讨论 plot 模块，不覆盖 chart、table、geo、React / Vanilla adapter 或具体 renderer 的体验封装。
+> 本文定义 Visualization Complete 能力域的长期边界与检测方法，主责包是 `@retikz/plot`。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)。通用数据与 transform 能力由 [`@retikz/data`](./data-capability-complete.md) 负责；本文不覆盖 chart preset、table、geo、adapter UI 或具体 renderer。
 
 ---
 
-## 1. 定义
+## 1. 定位与问题边界
 
-`@retikz/plot` 的定位是 **Grammar-of-Graphics Layer of Retikz**：它不是 chart type 目录，也不是 renderer，而是把数据语义映射成 core 图形语义的核心可视化表达层。所有 plot 功能迭代都必须服务这个定位。
+`@retikz/plot` 是 **Grammar-of-Graphics Layer of Retikz**，解决数据语义如何稳定映射成 core 图形语义的问题。它不是 chart type 目录、通用数据处理库或 renderer。
 
-`@retikz/plot` 的完备方向是 **Visualization Complete**：
+它的完备方向是 **Visualization Complete**：
 
-> 任意数据可视化语义，都应能通过 plot 的 Data -> Transform -> Encoding -> Scale -> Coordinate -> Mark -> Guide -> Layer / Scope -> Lowering 管线表达，并最终下沉到 core IR。
+> 在 grammar-of-graphics 边界内，新增同类可视化语义时，应能通过统一的 Plot IR、扩展契约和 lowering 管线映射到 Core IR，无需由 chart preset、adapter、demo 或 renderer 私造平行可视化模型。
 
-这里的“任意数据可视化”不是指 plot 内置所有图表类型，也不是把所有交互运行时塞进 plot。它指 plot 有足够稳定的图形语法与交互契约底座，让新增可视化能力可以通过同一套机制进入：
+Visualization Complete 不表示内置所有图表类型。它保证 Encoding、Scale、Coordinate、Mark、Guide、Layer / Scope 等语法轴可以组合和扩展，并能消费 Data Complete、下沉 Drawing Complete。
+
+## 2. 包角色与端到端管线
+
+| 角色                | 包                        | 责任                                                                                                                | 不拥有                                         |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 上游数据能力        | `@retikz/data`            | 数据模型、字段与输入格式解析、通用 transform / statistics、lineage                                                  | scale、展示 formatter、mark、guide、可视化布局 |
+| 主责包              | `@retikz/plot`            | Plot IR、可视化 contracts / providers、scale、coordinate、mark、guide、lowering、visualization provenance / locator | 通用数据算法、Core IR 语义、renderer           |
+| 下游图形能力        | `@retikz/core`            | 接收 lowering 产物并编译 Scene / manifest                                                                           | Plot 数据映射语义                              |
+| authoring / runtime | plot-react / plot-vanilla | 构造 spec、传入 definitions / datasets、接入 runtime                                                                | adapter 私有 Plot IR 或可视化算法              |
 
 ```text
-Plot IR / schema
-  -> contract / definition
-  -> provider / registry
-  -> pipeline
-  -> core IR
-  -> core compile / render
-  -> interaction metadata / locator
+Data IR / external data
+  -> @retikz/data transform / lineage
+  -> Plot IR: Encoding -> Scale -> Coordinate -> Mark -> Guide -> Layer / Scope
+  -> plot providers / pipeline / lowering
+  -> Core IR
+  -> core Scene / manifest
+  -> plot provenance / locator -> adapter runtime
 ```
 
-如果某种可视化只能靠 chart type、adapter props、demo 代码或 renderer 特判实现，而不能落回 Plot IR 与 core IR，它不属于 plot 完备能力。
+plot 可以提供依赖 mark、geometry 或 layout 语义的 plot-specific transform definition，但必须复用 `@retikz/data` 的 transform contract 和 registry。通用 rows-in / rows-out 运算、字段解析和 lineage 真源不得复制回 plot。
 
-如果某种交互只能靠 React / DOM / SVG 私有事件树或 renderer 私有状态实现，而不能落回 plot provenance、locator、selection 语义与 core Scene metadata，它也不属于 plot 完备能力。
+## 3. 能力面
 
----
+| 能力面                | 目标                                                                        | 所有权                                                   | 不属于 Visualization Complete                   |
+| --------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------- |
+| Data Consumption      | 组合 Data IR、external datasets 和 data view                                | data 拥有数据与字段解析语义，plot 拥有消费方式           | 数据库、业务数据源 SDK                          |
+| Transform Consumption | 消费通用 transform，提供必要的 plot-specific definitions                    | data 拥有 contract / pipeline，plot 只拥有可视化特有实现 | core geometry transform、UI state update        |
+| Encoding / Channel    | 把字段、常量或派生值绑定到视觉通道                                          | plot                                                     | renderer 私有样式补丁                           |
+| Scale                 | 把数据域映射到视觉范围或视觉值                                              | plot                                                     | 坐标系本身、core transform                      |
+| Coordinate            | 把位置通道解析到绘图空间                                                    | plot                                                     | core target / anchor、geo 底图系统              |
+| Mark                  | 定义数据在坐标空间中的几何显现                                              | plot                                                     | chart preset、单 demo 拼装                      |
+| Guide                 | 生成 axis、grid、legend、label 等解释结构                                   | plot                                                     | 上层 UI 控件、文档说明文字                      |
+| Layer / Lowering      | 组织层、scope 与 provenance，并下沉 Core IR                                 | plot                                                     | 独立 renderer、平行 scene graph                 |
+| Interaction Readiness | 保留 datum / series / scope identity、locator、selection mapping 和诊断边界 | plot 定义语义，core 承载 metadata，adapter 消费          | DOM 事件树、tooltip UI、高频 dashboard dataflow |
 
-## 2. Plot 需要检测的能力面
+这些是检测维度，不要求一一对应目录；代码仍按 `schemas / contract / providers / pipeline / shared` 分层。
 
-Plot 可视化完备至少覆盖九类能力面。每类能力都可以独立演进，但必须共享同一条 Plot IR -> core IR -> interaction metadata 管线。
+## 4. 准入原则
 
-| 能力面             | 目标                                                                                                                                | 不属于 plot 的情况                                                                             |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Data               | 描述数据引用、数据模型、字段路径和外部数据注入边界。                                                                                | 数据库接入、权限治理、业务数据源 SDK。                                                         |
-| Transform          | 把原始数据变成可绘制数据视图。                                                                                                      | core 几何变换；UI 运行时状态变更。                                                             |
-| Encoding / Channel | 把字段、常量或派生值绑定到视觉通道。                                                                                                | renderer 私有样式补丁；chart type 内部隐式映射。                                               |
-| Scale              | 把数据域映射到视觉范围或视觉值。                                                                                                    | 坐标系本身；core 图形 transform。                                                              |
-| Coordinate         | 消费位置通道，把 scale 后的值解析到绘图空间。                                                                                       | 通用 core target / anchor 语义；地理底图系统。                                                 |
-| Mark               | 定义数据在坐标空间中的几何显现。                                                                                                    | chart type preset；只服务单个 demo 的几何拼装。                                                |
-| Guide              | 生成 axis、grid、legend、label 等解释性结构。                                                                                       | 文档说明文字；上层 UI 控件。                                                                   |
-| Layer / Lowering   | 组织图层、scope、provenance，并下沉到 core IR。                                                                                     | 独立 renderer、平行 scene graph、adapter 私有树。                                              |
-| Interaction        | 定义 tooltip、hover、selection、brush、linked highlighting 等交互语义所需的 datum identity、locator、命中索引、状态映射和诊断边界。 | React / DOM / SVG 私有事件绑定；renderer 私有 hit-test；大数据 dashboard 的高频过滤 dataflow。 |
+### 4.1 是否属于 Visualization Complete
 
-这些能力面是检测维度，不是必须一一对应目录。具体实现仍按 `schemas / contract / providers / features / pipeline` 分层。
+通常应满足：
 
-Interaction 是横切能力：plot 负责让下沉产物可追踪、可定位、可从 datum / series / scope 映射到图形元素和交互状态；React / Vanilla adapter 负责把浏览器事件、水合实例或框架状态接到这套契约上。adapter 可以暴露 `onHover` / `onClick` / tooltip 等体验入口，但不能私造与 Plot IR、locator 或 provenance 脱节的交互模型。
+- 增强 grammar-of-graphics，而不是只服务一个 chart type、demo 或 adapter。
+- 能用 Plot IR 或 runtime definition 描述。
+- 能通过 lowering 下沉 Core IR，不要求 plot 拥有 renderer。
+- 不复制 `@retikz/data` 的通用数据算法，也不复制 core 的图形、几何、target 或 style。
+- 缺失时会迫使多个 preset / adapter 私造相同可视化语义。
 
----
+通用数据能力先补 data；通用图形能力先补 core / math；体验组合留在 chart / preset；运行时事件接线留在 adapter。
 
-## 3. 准入原则
+### 4.2 是否需要新语法能力
 
-新增 plot 能力前，先做三步判断。
+现有 Encoding / Scale / Coordinate / Mark / Guide / Layer 能组合时优先组合。只有出现以下情况才增加 Plot 语法：
 
-### 3.1 是否真的属于 plot
-
-属于 plot 的能力通常满足：
-
-- 能增强 grammar-of-graphics 表达层，而不是只服务单个 chart type、上层封装或 demo。
-- 能用 Plot IR 描述。
-- 能通过 lowering 下沉为 core IR。
-- 不依赖 React、DOM、Canvas 实例、SVG DOM 或具体 renderer。
-- 不要求 plot 自造 core 已有的 geometry、target、shape、style 或 renderer 语义。
-
-Interaction 能力有一个例外：事件监听、水合实例和 DOM 命中本身属于 adapter / renderer runtime，但交互语义的静态契约属于 plot。判断时看它是否能用 plot 的数据身份、locator、provenance、selection 状态映射表达，而不是看某个 adapter 能否临时绑事件。
-
-不满足这些条件时，优先放到 chart、table、geo、domain 包、adapter 层，或下沉补 core / math。
-
-### 3.2 是否需要新语法能力
-
-如果现有 plot 能力可以组合表达，应优先组合，不新增底层语法。
-
-只有出现以下情况，才考虑新增 plot 语法能力：
-
-- 现有 Data / Transform / Encoding / Scale / Coordinate / Mark / Guide 无法自然表达。
-- 多个 preset、adapter 或文档示例重复手写同一类可视化语义。
+- 现有语法轴无法自然表达同类可视化语义。
+- 多个 preset、adapter 或文档示例重复手写同一映射规则。
 - 自定义能力无法通过现有 definition / registry 接入。
-- 缺少该能力会迫使 chart、adapter 或 demo 私造平行 Plot IR。
-- 该能力能明确下沉到 core IR，而不要求 plot 拥有 renderer。
+- 缺口会迫使上层私造 Plot IR 或无法稳定 lowering。
 
-### 3.3 是否形成闭环
-
-进入 plot 的能力必须能形成闭环：
+### 4.3 是否形成闭环
 
 ```text
-schema 可表达
+Data 能力可提供输入
+Plot schema 可表达
 contract 可扩展
 provider / feature 可实现
-pipeline 可消费
-core IR 可承载
-interaction 可追踪 / 可定位
-adapter 可等价暴露
+pipeline / lowering 可消费
+Core IR 可承载
+provenance / locator 可追踪
+React / Vanilla 可等价暴露
 tests 可锁定
 docs / notes 可解释
 ```
 
-只完成其中一段，不能称为 plot 完备能力。
+只加 schema、只加内置 mark、只能手写 IR、只有 React 能使用，或通过 plot 私造 data transform，都不能称为 Visualization Complete。
 
----
-
-## 4. 设计检查模板
-
-涉及 plot 新能力的 ADR 或架构 notes，应加入以下小节：
+## 5. 设计检查模板
 
 ```md
-## 可视化完备检查
+## 可视化完备性检查
 
-- 能力面：
-- 是否属于 plot：
-- 是否需要下沉到 core / math：
-- 是否需要新 Plot IR / schema：
-- 是否需要新 contract / definition：
-- 是否需要新 provider / registry：
-- 是否需要改 pipeline / lowering：
-- 是否需要 interaction provenance / locator / state mapping：
-- React / Vanilla adapter 如何等价暴露：
-- 不支持边界与诊断：
-- 本轮不做的能力及原因：
+- 能力面与解决的问题：
+- 是否属于 Visualization Complete：
+- 主责包与协作包：
+- 是否可由现有能力组合：
+- 是否应先下沉到 data / core / math：
+- Plot IR / contract / registry / lowering 变化：
+- Data Complete 与 Drawing Complete 如何衔接：
+- provenance / locator / Interaction Readiness：
+- plot-react / plot-vanilla 如何等价暴露：
+- 不支持边界与本轮结论：
 ```
 
-评审时优先看两类问题：
+评审优先拒绝三类方案：能力放错层、闭环缺失，以及交互或数据语义只在某个 adapter 中成立。
 
-1. **能力放错层**：chart / adapter / demo 能力被塞进 plot，或 plot 通用能力被上层私造。
-2. **闭环缺失**：只加 schema、只加内置实现、只能手写 IR、或 React / Vanilla 表面不等价。
-3. **交互脱轨**：tooltip / hover / selection 只在某个 renderer 或 adapter 私有实现里成立，无法通过 plot locator、provenance 或 selection state 反查 datum / series / scope。
+## 6. 与现有设计的关系
 
----
+- `architecture/plot-design.md` 定义 grammar-of-graphics、Plot IR 与 lowering 的具体语法设计。
+- `packages/viz/plot/AGENTS.md` 是主责包硬约束；`packages/viz/AGENTS.md` 定义 data / plot / adapter 依赖方向。
+- `standard-structure` 与适用的 `standard-*` skills 决定代码落层。
+- plot roadmap / ADR 记录具体版本决策；Data 缺口进入 data roadmap / ADR。
+- `develop-completeness` 用本文能力面做阶段性横向审计。
 
-## 5. 与现有设计的关系
-
-本文不替代现有 plot 架构规则：
-
-- `architecture/plot-design.md` 仍是 plot grammar-of-graphics、Plot IR 与 lowering 管线的主设计。
-- `packages/viz/plot/AGENTS.md` 仍是包内硬约束。
-- `standard-structure` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile` 仍决定代码落层。
-- plot ADR 仍记录具体版本的设计决策。
-
-本文只补一个判断框架：当 plot 要接收新可视化能力时，用可视化完备检测确认它放对层、能闭环、不会破坏 Plot IR -> core IR 的统一表达管线。
+本文负责稳定 Visualization Complete 的问题范围与跨能力域交界，不维护具体图表清单。改变 Data / Plot / Core 的所有权边界必须先形成架构决策，不能用现存局部代码作为长期归属依据。

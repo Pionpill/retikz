@@ -16,7 +16,7 @@ export type ParsedInlineRuns = {
 /** run 是否为 math run（结构判别：有 tex 字段） */
 export const isMathRun = (run: IRInlineRun): run is IRMathRun => 'tex' in run;
 
-/** 从指定位置查找下一个未转义公式闭合符。 */
+/** 从指定位置查找下一个未转义公式闭合符 */
 const findClose = (raw: string, from: number, display: boolean): number => {
   const n = raw.length;
   let i = from;
@@ -37,7 +37,7 @@ const findClose = (raw: string, from: number, display: boolean): number => {
   return -1;
 };
 
-/** 把行内文本解析为 text/math run；未开启 TeX 时原样返回文本。 */
+/** 把行内文本解析为 text/math run；未开启 TeX 时原样返回文本 */
 export const parseInlineRuns = (raw: string, gatingOn: boolean): ParsedInlineRuns => {
   if (!gatingOn) {
     return { runs: [{ text: raw }], hasMath: false, warn: false };

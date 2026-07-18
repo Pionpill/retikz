@@ -21,7 +21,7 @@ export const collectArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Array<R
  * `ResolvedArrowEndSpec`（已解析 marker 描述）除必填 `shape` 外的全部字段表——`stableSpecKey` 遍历此表拼 key
  * @description `as const satisfies` 拒不存在的 key；下方静态校验完备性——未来 `ResolvedArrowEndSpec` 加新字段时此表
  *   漏写 TS 编译期报错，防「字段表漂移」。spec 字段集为 wrapper 参数（baseSize / refX / markerWidth /
- *   markerHeight / opacity）+ 已解析几何（marker）。
+ *   markerHeight / opacity）+ 已解析几何（marker）
  */
 const ARROW_END_SPEC_KEY_FIELDS = [
   'baseSize',
@@ -44,7 +44,7 @@ void _assertKeyFieldsCheck;
  * spec → 稳定字符串 key
  * @description 必填 `shape` 头部输出，其余字段按 `ARROW_END_SPEC_KEY_FIELDS` 顺序遍历——不依赖对象字面量
  *   字段顺序、不漏字段；标量直接拼，`marker`（结构化几何数组）走 JSON.stringify。不同 spec → 不同 key、
- *   相同 spec → 同 key（dedup）。
+ *   相同 spec → 同 key（dedup）
  */
 export const stableSpecKey = (spec: ResolvedArrowEndSpec): string => {
   const parts: Array<string> = [`shape=${spec.shape}`];
@@ -59,7 +59,7 @@ export const stableSpecKey = (spec: ResolvedArrowEndSpec): string => {
 /**
  * key → 短 hash（SVG id 中可安全嵌入的 ascii；non-cryptographic）
  * @description djb2 变体；只用十六进制末 8 位避免 id 过长。同 spec → 同 hash、不同 spec → 不同 hash
- *   （碰撞概率极低，且 id 前缀已带实例隔离，不会跨 svg 串话）。
+ *   （碰撞概率极低，且 id 前缀已带实例隔离，不会跨 svg 串话）
  */
 export const hashKey = (key: string): string => {
   let h = 5381;

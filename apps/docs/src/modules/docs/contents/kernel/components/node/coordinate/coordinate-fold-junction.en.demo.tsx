@@ -4,7 +4,7 @@ import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
 /**
  * Coordinate as a named junction for path convergence
- * @description Multiple step nodes converge to a shared decision junction with no rectangle or text; each path routes through via `<Draw way={['A', 'junction', 'B']}>` and endpoints clip to the 0×0 anchor center.
+ * @description Multiple step nodes converge to a shared decision junction with no rectangle or text; each path routes through via `<Draw way={['A', 'junction', 'B']}>`, and the Coordinate keeps only a center position for the endpoints to meet.
  */
 const Demo: FC = () => (
   <Layout width={320} height={200}>

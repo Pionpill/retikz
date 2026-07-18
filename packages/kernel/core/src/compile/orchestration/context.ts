@@ -33,49 +33,49 @@ import { lowerComposites } from './composite';
  * @description compileToScene 入口把选项、内置 provider、自定义 provider、资源表和 rounding 规则集中解析到这里；
  */
 export type CompileContext = {
-  /** composite lowering 后的 Tier 1 IR。 */
+  /** composite lowering 后的 Tier 1 IR */
   loweredIr: IRScene;
-  /** 文字度量函数。 */
+  /** 文字度量函数 */
   measureText: NonNullable<CompileOptions['measureText']>;
-  /** 运行时注入的 TeX lowering 钩子。 */
+  /** 运行时注入的 TeX lowering 钩子 */
   lowerTex: CompileOptions['lowerTex'];
-  /** 编译 warning dispatcher。 */
+  /** 编译 warning dispatcher */
   onWarn: (warning: CompileWarning) => void;
-  /** 节点 layout 观测回调。 */
+  /** 节点 layout 观测回调 */
   onNodeLayout: CompileOptions['onNodeLayout'];
-  /** Scene 输出 rounder。 */
+  /** Scene 输出 rounder */
   round: (n: number) => number;
-  /** 自动 layout padding。 */
+  /** 自动 layout padding */
   layoutPadding: number;
-  /** 相对定位距离。 */
+  /** 相对定位距离 */
   nodeDistance: number;
-  /** 节点 label 默认距离。 */
+  /** 节点 label 默认距离 */
   labelDistance: number;
-  /** preset 与 rem 字号解析的根字号。 */
+  /** preset 与 rem 字号解析的根字号 */
   rootFontSize: number;
-  /** shape provider 注册表。 */
+  /** shape provider 注册表 */
   shapes: ReadonlyMap<string, ShapeDefinition>;
-  /** boundary provider 注册表。 */
+  /** boundary provider 注册表 */
   boundaries: ReadonlyMap<string, BoundaryDefinition>;
-  /** clip provider 注册表。 */
+  /** clip provider 注册表 */
   clips: ReadonlyMap<string, ClipDefinition>;
-  /** arrow provider 注册表。 */
+  /** arrow provider 注册表 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
-  /** pattern provider 注册表。 */
+  /** pattern provider 注册表 */
   patterns: ReadonlyMap<string, PatternDefinition>;
-  /** path generator provider 注册表。 */
+  /** path generator provider 注册表 */
   pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
-  /** path kind provider 注册表。 */
+  /** path kind provider 注册表 */
   pathKinds: ReadonlyMap<string, PathKindDefinition>;
-  /** ribbon width profile provider 注册表。 */
+  /** ribbon width profile provider 注册表 */
   ribbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition>;
-  /** paint 资源注册表。 */
+  /** paint 资源注册表 */
   paint: ReturnType<typeof createPaintRegistry>;
-  /** clip 资源注册表。 */
+  /** clip 资源注册表 */
   clip: ReturnType<typeof createClipRegistry>;
 };
 
-/** 创建 compile 编排所需的不可变依赖上下文。 */
+/** 创建 compile 编排所需的不可变依赖上下文 */
 export const createCompileContext = (ir: IRScene, options: CompileOptions): CompileContext => {
   const round = createRound(options.precision ?? DEFAULT_PRECISION);
 

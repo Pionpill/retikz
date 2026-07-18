@@ -3,7 +3,7 @@ import type { CascadeState, StyleFrame } from './frame';
 
 import { cuts, pickDefinedKeys } from './frame';
 
-/** 级联 graphic state 投影到 node 样式字段。 */
+/** 级联 graphic state 投影到 node 样式字段 */
 const cascadeToNode = (c: CascadeState): Partial<IRNode> => {
   const out: Partial<IRNode> = {};
   const master = c.color;
@@ -19,7 +19,7 @@ const cascadeToNode = (c: CascadeState): Partial<IRNode> => {
   return out;
 };
 
-/** node 源同源主色展开。 */
+/** node 源同源主色展开 */
 const expandNodeColor = (src: Partial<IRNode>): Partial<IRNode> => {
   const out: Partial<IRNode> = { ...src };
   const master = src.color;
@@ -31,7 +31,7 @@ const expandNodeColor = (src: Partial<IRNode>): Partial<IRNode> => {
   return out;
 };
 
-/** 解析 node 的最终样式。 */
+/** 解析 node 的最终样式 */
 export const resolveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleFrame>): IRNode => {
   let acc: Partial<IRNode> = {};
   for (const frame of stack) {

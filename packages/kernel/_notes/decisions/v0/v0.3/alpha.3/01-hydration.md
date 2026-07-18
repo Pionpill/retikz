@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现，2026-06-05；core IRPath.id + 图元 id stamp / render data-retikz-id + hitTest + hydration 控制器 / vanilla hydrate + mountCanvas / react 事件 props + collectHydrationHandlers + 双模等价 / 文档全落地。Adversarial 两关：第一关修 1 BLOCKING——canvas enter/leave 改 pointermove 状态机；第二关 contract 对账无 BLOCKING）
 - 决策日期：2026-06-04
-- 关联：[v0.3 roadmap §水合 / §动画 / §Alpha 切分 alpha.3](../roadmap.md) · [core-design.md §4.4 IR 100% 可序列化](../../../../../../../notes/architecture/core-design.md) · [alpha.1 ADR-03 vanilla runtime / 依赖图](../alpha.1/03-vanilla-runtime-and-dependency-graph.md)
+- 关联：[v0.3 roadmap §水合 / §动画 / §Alpha 切分 alpha.3](../roadmap.md) · [alpha.1 ADR-03 vanilla runtime / 依赖图](../alpha.1/03-vanilla-runtime-and-dependency-graph.md)
 
 > **范围**：SSR / 静态先渲染出图，客户端再把用户 handler 绑回图元。SVG 与 Canvas 共用同一套绑定语义，差异只在"如何把 pointer 事件定位到图元 id"这一定位层。函数（handler / 回调）**不进 IR**，只在 runtime。本 ADR 不做动画（roadmap §动画，候选 v0.4，复用本段 runtime 基建）。
 

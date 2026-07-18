@@ -4,12 +4,12 @@ import type { Position } from './point';
 import { DEFAULT_EPSILON } from '../constants';
 import { point } from './point';
 
-/** 三角形外接圆与内切圆构造。 */
+/** 三角形外接圆与内切圆构造 */
 export const triangle = {
   /**
    * 外接圆（过三顶点的圆）
    * @description 三点共线（面积≈0）返回 null
-   * @remarks 复杂度：时间 O(1)，空间 O(1)。
+   * @remarks 复杂度：时间 O(1)，空间 O(1)
    */
   circumCircle: (a: Position, b: Position, c: Position): Circle | null => {
     const d = 2 * (a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1]));
@@ -24,8 +24,8 @@ export const triangle = {
   },
   /**
    * 内切圆（与三边相切的圆）
-   * @description 三点共线或退化时返回 null。
-   * @remarks 复杂度：时间 O(1)，空间 O(1)。
+   * @description 三点共线或退化时返回 null
+   * @remarks 复杂度：时间 O(1)，空间 O(1)
    */
   inCircle: (a: Position, b: Position, c: Position): Circle | null => {
     const la = point.length([b[0] - c[0], b[1] - c[1]]);

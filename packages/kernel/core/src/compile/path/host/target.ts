@@ -32,10 +32,10 @@ const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);
 export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
   isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
 
-/** 判断 target 是否为两端目标之间的比例点。 */
+/** 判断 target 是否为两端目标之间的比例点 */
 const isBetween = (t: IRTarget): t is IRBetweenPosition => isBetweenPositionLike(t);
 
-/** 判断 target 是否为进入 emit 前应被 path 游标归一化的相对端点。 */
+/** 判断 target 是否为进入 emit 前应被 path 游标归一化的相对端点 */
 const isRelative = (t: IRTarget): t is IRRelativeTarget | IRRelativeAccumulateTarget =>
   isRelativeTargetLike(t) || isRelativeAccumulateTargetLike(t);
 
@@ -50,13 +50,13 @@ const resolveAnchorRef = (
   return resolveEdgePoint(node, anchor.side, anchor.fraction);
 };
 
-/** 在世界坐标系叠加节点目标的 offset。 */
+/** 在世界坐标系叠加节点目标的 offset */
 const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition =>
   offset ? [base[0] + offset[0], base[1] + offset[1]] : base;
 
 /**
- * 解析 target 的参考点。
- * @description 参考点用于确定前后段方向、折角位置和非裁剪目标坐标。未指定 anchor 的 NodeTarget 取节点中心，不按连接面裁剪。
+ * 解析 target 的参考点
+ * @description 参考点用于确定前后段方向、折角位置和非裁剪目标坐标。未指定 anchor 的 NodeTarget 取节点中心，不按连接面裁剪
  */
 export const refPointOfTarget = (
   target: IRTarget,
@@ -125,22 +125,22 @@ export const localPointOfTarget = (
   return resolvePosition(target, { namespaceStack, scopeChain });
 };
 
-/** 根据 fold step 的方向计算正交折角中间点。 */
+/** 根据 fold step 的方向计算正交折角中间点 */
 export const cornerOf = (prev: IRPosition, curr: IRPosition, via: FoldStepViaValue): IRPosition =>
   via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
 
-/** target 裁剪解析所需上下文。 */
+/** target 裁剪解析所需上下文 */
 export type ClipForTargetContext = {
-  /** 节点 id 查询栈。 */
+  /** 节点 id 查询栈 */
   namespaceStack: NamespaceStack;
-  /** 当前 scope 的累计 transform。 */
+  /** 当前 scope 的累计 transform */
   scopeChain?: ReadonlyArray<Transform>;
 };
 
 /**
- * 解析 target 在 toward 方向上的实际绘制端点。
+ * 解析 target 在 toward 方向上的实际绘制端点
  * @description 未指定 anchor 的 NodeTarget 会按连接面裁剪到节点边界；显式 anchor、between 和普通坐标目标
- * 解析为固定点。
+ * 解析为固定点
  */
 export const clipForTarget = (
   target: IRTarget,
@@ -174,5 +174,5 @@ export const clipForTarget = (
   return local;
 };
 
-/** 判断两个已解析坐标是否逐分量精确相等。 */
+/** 判断两个已解析坐标是否逐分量精确相等 */
 export const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean => !!a && !!b && point.equal(a, b);

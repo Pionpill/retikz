@@ -12,8 +12,8 @@ import { contourToPathCommands, contourToPathPrimitive } from './outline';
 import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
 /**
- * sector 参数 schema。
- * @description innerRadius=0 表示实心扇片；cornerRadius 对边界接缝倒角。
+ * sector 参数 schema
+ * @description innerRadius=0 表示实心扇片；cornerRadius 对边界接缝倒角
  */
 const sectorParamsSchema = z
   .strictObject({
@@ -45,8 +45,8 @@ const toWorld = (rect: Rect, geo: SectorGeometry, localFromApex: Position): Posi
 };
 
 /**
- * 构造 sector 闭合轮廓。
- * @description 环楔包含内外弧，实心扇片退化为圆心到外弧的闭合区域；emit / boundaryPoint 共用此段序。
+ * 构造 sector 闭合轮廓
+ * @description 环楔包含内外弧，实心扇片退化为圆心到外弧的闭合区域；emit / boundaryPoint 共用此段序
  */
 const sectorSegments = (rect: Rect, geo: SectorGeometry, params: SectorParams): Array<ContourSegment> => {
   const { innerRadius, outerRadius } = params;
@@ -94,9 +94,9 @@ const createSectorContour = (
 };
 
 /**
- * sector 注册项：可填充的环楔 / 扇片。
+ * sector 注册项：可填充的环楔 / 扇片
  * @description 几何由内外半径和起止角驱动；提供圆心、质心、弧中点和边中点 anchor。
- *   scaleParams 只缩半径和倒角，不缩角度。
+ *   scaleParams 只缩半径和倒角，不缩角度
  */
 export const sector = defineShape<SectorParams>({
   name: 'sector',

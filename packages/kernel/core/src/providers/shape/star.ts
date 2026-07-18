@@ -42,8 +42,8 @@ const starParamsSchema = z
 type StarParams = z.infer<typeof starParamsSchema>;
 
 /**
- * star 派生几何。
- * @description 顶点在内外半径间交替分布，AABB 半轴由顶点范围得到；星形中心恒为局部原点。
+ * star 派生几何
+ * @description 顶点在内外半径间交替分布，AABB 半轴由顶点范围得到；星形中心恒为局部原点
  */
 type StarGeometry = {
   /** `2×points` 个顶点局部坐标（中心为原点，偶 index = 尖角、奇 index = 凹角） */
@@ -53,8 +53,8 @@ type StarGeometry = {
 };
 
 /**
- * 计算 star 顶点和 AABB 半轴。
- * @description 默认第一尖角朝上；rotate 只改变自旋角。
+ * 计算 star 顶点和 AABB 半轴
+ * @description 默认第一尖角朝上；rotate 只改变自旋角
  */
 const starGeometry = (params: StarParams): StarGeometry => {
   const { points, innerRadius, outerRadius } = params;
@@ -84,15 +84,15 @@ const starGeometry = (params: StarParams): StarGeometry => {
 const toWorld = (rect: Rect, local: Position): Position => localToWorld(rect, local);
 
 /**
- * 世界系顶点环。
- * @description 保持 starGeometry 的尖角 / 凹角交替顺序。
+ * 世界系顶点环
+ * @description 保持 starGeometry 的尖角 / 凹角交替顺序
  */
 const worldVertices = (rect: Rect, geo: StarGeometry): Array<Position> => geo.vertices.map(v => toWorld(rect, v));
 
 /**
- * star 注册项：尖角和凹角交替的闭合多边形。
+ * star 注册项：尖角和凹角交替的闭合多边形
  * @description 尺寸由 inner/outerRadius 驱动；cornerRadius 对顶点倒角。
- *   anchor 提供 tip-N / notch-N；scaleParams 只缩长度参数。
+ *   anchor 提供 tip-N / notch-N；scaleParams 只缩长度参数
  */
 export const star = defineShape<StarParams>({
   name: 'star',

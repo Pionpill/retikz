@@ -56,7 +56,7 @@ export type GridProps = PathVisualProps & {
   majorStrokeWidth?: GridPathVisualProps['strokeWidth'];
   /** 主网格虚线 */
   majorDashPattern?: GridPathVisualProps['dashPattern'];
-  /** 主网格虚线偏移。 */
+  /** 主网格虚线偏移 */
   majorDashOffset?: GridPathVisualProps['dashOffset'];
   /** 主网格端点 */
   majorLineCap?: GridPathVisualProps['lineCap'];
@@ -84,7 +84,7 @@ export type GridProps = PathVisualProps & {
   borderStrokeWidth?: GridPathVisualProps['strokeWidth'];
   /** 外边框虚线 */
   borderDashPattern?: GridPathVisualProps['dashPattern'];
-  /** 外边框虚线偏移。 */
+  /** 外边框虚线偏移 */
   borderDashOffset?: GridPathVisualProps['dashOffset'];
   /** 外边框端点 */
   borderLineCap?: GridPathVisualProps['lineCap'];
@@ -112,7 +112,7 @@ export type GridProps = PathVisualProps & {
 /**
  * Grid sugar——展开为多条 `<Path>`（每条 move + line）和可选外边框 Path
  * @description 默认按范围左上角起算，显式给 origin/offset 时按基准点对齐；includeBoundary 会补范围边界线。
- *   普通视觉 prop 透传到内部线，major* 覆盖主网格线，border* 覆盖外边框。点位限 literal 笛卡尔。
+ *   普通视觉 prop 透传到内部线，major* 覆盖主网格线，border* 覆盖外边框。点位限 literal 笛卡尔
  */
 export const Grid: FC<GridProps> = props => {
   let x0: number;

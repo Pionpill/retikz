@@ -14,43 +14,43 @@ import type {
 
 import { DEFAULT_LAYER_ID, VanillaLayerCache } from './constants';
 
-/** 单个嵌入节点贡献的待聚合记录。 */
+/** 单个嵌入节点贡献的待聚合记录 */
 type ContributionRecord = {
-  /** 适配器命名空间，用来把同类贡献合并到同一 composite 生成器。 */
+  /** 适配器命名空间，用来把同类贡献合并到同一 composite 生成器 */
   namespace: string;
-  /** 该嵌入节点带来的外部数据集表。 */
+  /** 该嵌入节点带来的外部数据集表 */
   datasets: Record<string, unknown>;
-  /** 命名空间级 composite 生成器；同一命名空间必须保持同一个函数引用。 */
+  /** 命名空间级 composite 生成器；同一命名空间必须保持同一个函数引用 */
   makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
 };
 
-/** 规范化递归过程共享的上下文。 */
+/** 规范化递归过程共享的上下文 */
 type NormalizeContext = {
-  /** 当前所在分层 id。 */
+  /** 当前所在分层 id */
   layerId: string;
-  /** 当前节点的父身份标识；匿名节点继承最近的具名祖先。 */
+  /** 当前节点的父身份标识；匿名节点继承最近的具名祖先 */
   parentId: string;
-  /** 从分层根到当前遍历位置的身份路径。 */
+  /** 从分层根到当前遍历位置的身份路径 */
   path: Array<string>;
-  /** 调用方注入的 Tier2 适配器列表。 */
+  /** 调用方注入的 Tier2 适配器列表 */
   adapters: VanillaNormalizeOptions['adapters'];
-  /** 递归过程中收集到的 Tier2 数据与 composite 贡献。 */
+  /** 递归过程中收集到的 Tier2 数据与 composite 贡献 */
   contributions: Array<ContributionRecord>;
-  /** 全图公开身份标识索引，用于去重和后续 patch 定位。 */
+  /** 全图公开身份标识索引，用于去重和后续 patch 定位 */
   identityIndex: Map<string, Array<string>>;
-  /** 全图父子身份关系索引，用于后续失效边界推导。 */
+  /** 全图父子身份关系索引，用于后续失效边界推导 */
   parentIndex: Map<string, string>;
 };
 
-/** 校验 adapter 输出身份标识时额外需要的上下文。 */
+/** 校验 adapter 输出身份标识时额外需要的上下文 */
 type AdapterOutputContext = NormalizeContext & {
-  /** 当前 embed id；adapter 输出 id 必须以它作为前缀。 */
+  /** 当前 embed id；adapter 输出 id 必须以它作为前缀 */
   embedId: string;
   parentId: string;
   path: Array<string>;
 };
 
-/** 判断输入是否为 Vanilla 图形规格。 */
+/** 判断输入是否为 Vanilla 图形规格 */
 export const isVanillaFigureSpec = (input: unknown): input is VanillaFigureSpec =>
   typeof input === 'object' &&
   input !== null &&
@@ -60,7 +60,7 @@ export const isVanillaFigureSpec = (input: unknown): input is VanillaFigureSpec 
 const hasChildren = (input: VanillaFigureSpec): input is VanillaFigureSpec & { children: Array<VanillaChildSpec> } =>
   'children' in input;
 
-/** 把 children 简写提升为默认分层，并按 zIndex 稳定排序。 */
+/** 把 children 简写提升为默认分层，并按 zIndex 稳定排序 */
 const asLayerStack = (figure: VanillaFigureSpec): Array<VanillaLayerSpec> => {
   const layers = hasChildren(figure)
     ? [{ type: 'layer' as const, id: DEFAULT_LAYER_ID, cache: VanillaLayerCache.Auto, children: figure.children }]
@@ -71,7 +71,7 @@ const asLayerStack = (figure: VanillaFigureSpec): Array<VanillaLayerSpec> => {
     .map(({ entry }) => entry);
 };
 
-/** 注册公开身份标识；重复 id 会破坏 patch 定位，因此在规范化阶段直接拒绝。 */
+/** 注册公开身份标识；重复 id 会破坏 patch 定位，因此在规范化阶段直接拒绝 */
 const registerIdentity = (
   id: string | undefined,
   parentId: string,
@@ -94,7 +94,7 @@ const isScope = (child: IRChild): child is IRScope =>
 const readIdentity = (child: IRChild): string | undefined =>
   'id' in child && typeof child.id === 'string' ? child.id : undefined;
 
-/** 按命名空间合并 Tier2 数据集，再生成 core composite definitions。 */
+/** 按命名空间合并 Tier2 数据集，再生成 core composite definitions */
 const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): Array<CompositeDefinition> => {
   const groups = new Map<
     string,
@@ -123,7 +123,7 @@ const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): 
   return out;
 };
 
-/** 注册 adapter 输出的公开身份标识，并要求它被当前 embed id 命名空间约束。 */
+/** 注册 adapter 输出的公开身份标识，并要求它被当前 embed id 命名空间约束 */
 const registerAdapterOutputIdentity = (id: string | undefined, ctx: AdapterOutputContext): void => {
   if (id === undefined) return;
   const requiredPrefix = `${ctx.embedId}/`;
@@ -133,7 +133,7 @@ const registerAdapterOutputIdentity = (id: string | undefined, ctx: AdapterOutpu
   registerIdentity(id, ctx.parentId, [...ctx.path, id], ctx);
 };
 
-/** 递归检查 adapter 输出树，避免 Tier2 输出抢占外部节点 id。 */
+/** 递归检查 adapter 输出树，避免 Tier2 输出抢占外部节点 id */
 const validateAdapterOutputIdentities = (child: IRChild, ctx: AdapterOutputContext): void => {
   const identity = readIdentity(child);
   registerAdapterOutputIdentity(identity, ctx);
@@ -145,7 +145,7 @@ const validateAdapterOutputIdentities = (child: IRChild, ctx: AdapterOutputConte
   for (const scopeChild of child.children) validateAdapterOutputIdentities(scopeChild, childCtx);
 };
 
-/** 把 embed 节点交给匹配的 Tier2 adapter 静态下沉为 core IR 子节点。 */
+/** 把 embed 节点交给匹配的 Tier2 adapter 静态下沉为 core IR 子节点 */
 const lowerEmbed = (embed: VanillaEmbedSpec, ctx: NormalizeContext): IRChild => {
   const adapter = ctx.adapters?.find(entry => entry.kind === embed.kind);
   if (!adapter) {
@@ -172,7 +172,7 @@ const lowerEmbed = (embed: VanillaEmbedSpec, ctx: NormalizeContext): IRChild => 
   return contribution.node;
 };
 
-/** 规范化单个子节点，并同步维护身份索引与父子关系索引。 */
+/** 规范化单个子节点，并同步维护身份索引与父子关系索引 */
 const normalizeChild = (child: VanillaChildSpec, ctx: NormalizeContext): IRChild => {
   if (isEmbed(child)) {
     registerIdentity(child.id, ctx.parentId, [...ctx.path, child.id], ctx);
@@ -191,7 +191,7 @@ const normalizeChild = (child: VanillaChildSpec, ctx: NormalizeContext): IRChild
   return { ...child, children };
 };
 
-/** 把 Vanilla 普通规格规范化为核心 IR 与运行时元数据。 */
+/** 把 Vanilla 普通规格规范化为核心 IR 与运行时元数据 */
 export const normalizeFigureSpec = (
   figure: VanillaFigureSpec,
   options: VanillaNormalizeOptions = {},

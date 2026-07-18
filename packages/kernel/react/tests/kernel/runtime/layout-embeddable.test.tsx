@@ -15,7 +15,7 @@ import { Layout } from '../../../src/kernel';
 /**
  * <Layout> 可嵌入 Tier2 聚合：按 namespace 合并 datasets、产 composite、喂 compile
  * @description 可嵌入子组件经 adapter 静态贡献 IR composite 节点 + datasets + makeComposites；
- *   Layout 按 namespace 合并 datasets（同 ref 异引用 fail-loud）、每组调一次 makeComposites、与显式 composites 拼接喂 compileToScene。
+ *   Layout 按 namespace 合并 datasets（同 ref 异引用 fail-loud）、每组调一次 makeComposites、与显式 composites 拼接喂 compileToScene
  */
 
 type FixtureProps = { id: string; data: unknown };

@@ -103,7 +103,7 @@ Transform 把原始数据变成可绘制数据。它发生在 scale / coordinate
 - dodge / jitter。
 - derive interval（如 gantt 的 start/end）。
 
-Transform 属于 plot domain，不进 core。Transform 的结果仍应是 JSON 可序列化的数据表或派生字段。
+Transform 属于 viz 数据 / 可视化能力域，不进 core。宿主无关的 rows / fields / statistics 变换归 `@retikz/data`；依赖 mark、geometry 或 layout 语义的 plot-specific transform 留在 `@retikz/plot`，但复用 data 的 definition、registry 与 apply contract。Transform 的结果仍应是 JSON 可序列化的数据表或派生字段。
 
 ### 3.4 Scale
 
@@ -280,7 +280,7 @@ Annotation 不应被 plot 黑盒吞掉。它应该能直接混用 retikz core �
 
 viz domain 分为三类 API：
 
-- **共享数据层**：`@retikz/data`。职责是数据模型、字段解析、通用 transform、数据通道等跨可视化表达层共用的契约。
+- **共享数据层**：`@retikz/data`。职责是数据模型、字段与值语义、通用 transform / statistics、字段输入解析、lineage 等宿主无关契约。
 - **Tier 2 表达层**：`@retikz/plot` / `@retikz/table` / geo 候选能力。职责是抽象能力、扩展契约、底层实现和 lowering；面向高级用户、AI、preset 作者和扩展作者。原 struct 范围收敛进 plot 的 layout transform，不作为独立包。
 - **Tier 3 封装层**：`@retikz/chart`。职责是通过 `type` / config / preset 提供新手友好的 API；可以拥有 JSON-safe 的 `ChartSpec`，但唯一执行出口是 lower 成 PlotSpec；不拥有直接到 core 的底层 IR、lowering 或 renderer。
 - **框架绑定层**：各模块各自发布 React / Vanilla 绑定包，例如 `@retikz/plot-react` / `@retikz/plot-vanilla`、`@retikz/chart-react` / `@retikz/chart-vanilla`、`@retikz/table-react` / `@retikz/table-vanilla`，以及候选的 `@retikz/geo-react` / `@retikz/geo-vanilla`。不规划统一 `@retikz/viz-react` / `@retikz/viz-vanilla` 聚合 adapter，避免安装不需要的模块。
@@ -313,13 +313,13 @@ Chart API（包：`@retikz/chart`，框架表面由 `@retikz/chart-react` / `@re
 
 ### 5.2 Data API
 
-Data API（包：`@retikz/data`）是 viz 的共享数据层。它负责数据模型、数据引用、字段解析、通用 transform、数据通道、scale / formatter / theme token 等跨 plot / table / geo（若独立）共用的契约。
+Data API（包：`@retikz/data`）是 viz 的共享数据层。它负责数据模型、数据引用、字段与输入格式解析、通用 transform / statistics 与 lineage 等宿主无关契约；视觉 channel、scale、展示 formatter 和 theme 由 plot / table / geo 等宿主按自身表达语义负责。
 
 数据层的原则：
 
 - 内置数据处理逻辑与外部注入逻辑都是一等公民，统一走 definition / registry。
 - 通用 transform 可以放在 data：filter、derive、sort、limit、sample、groupBy、aggregate 等只关心数据表和字段的变换。
-- 领域 transform 留在使用方：plot 保留 bin / stack / dodge / density / smooth 等统计变换，以及 stratify / force / packing / treemap / wordCloud 等 layout transform；table 保留 pivot / subtotal / column sizing 等表格语义；geo 若独立则保留 projection / topojson feature extraction / tile / graticule 等地图语义。
+- 领域 transform 留在使用方：plot 保留依赖 series / mark / geometry 的 stack / dodge 和 stratify / force / packing / treemap / wordCloud 等 layout transform；bin / density / smooth 等操作如果只依赖 rows / fields / statistics，应下沉 data，当前代码位置不决定长期所有权。table 保留 pivot / subtotal / column sizing 等表格语义；geo 若独立则保留 projection / topojson feature extraction / tile / graticule 等地图语义。
 - data 不拥有 coordinate / mark / guide / layout / lowering。
 
 ### 5.3 Plot API
@@ -370,7 +370,7 @@ data
 
 ### 5.5 Table API
 
-Table API（包：`@retikz/table`）是表格可视化的稳定核心。它承载列、行、单元格、分组、汇总、透视表、矩阵等表格型展示语义，并允许复用 data 的字段解析、通道、formatter、theme token。
+Table API（包：`@retikz/table`）是表格可视化的稳定核心。它承载列、行、单元格、分组、汇总、透视表、矩阵等表格型展示语义，并允许复用 data 的字段与输入格式解析、通用 transform / statistics 和 lineage；列映射、展示 formatter 与 theme token 由 table 自己负责。
 
 Table 与 Plot 一样是 Tier 2 能力层：它负责表格语义、布局与 lowering，不承担 chart 级新手封装。
 
@@ -408,7 +408,7 @@ import { Geo } from '@retikz/geo-react';
 
 ### 6.1 Tier 2 能力层 + Per-Module Adapter
 
-- **共享 `@retikz/data`**：viz 数据语义层，提供 data model / field / transform / channel / scale / formatter 等共享契约。
+- **共享 `@retikz/data`**：viz 数据语义层，提供 data model / field / transform / statistics / field parsing / lineage 等宿主无关契约。
 - **底层 `@retikz/plot`**：可组合的坐标语法 primitive（data / transform / layout / scale / coordinate / encoding / mark / guide / layer），像 Recharts / Observable Plot 那样自由组合（即 §5.3 Plot API）。原 struct 范围作为 plot layout transform，不独立成包。
 - **底层 `@retikz/table`**：可组合的表格可视化 primitive（columns / cells / grouping / summary / pivot / matrix 等），承载表格布局和表格语义。
 - **底层 `@retikz/geo`（候选）**：可组合的地图可视化 primitive（projection / feature / layer / geo channel 等），是否独立成包待决策；若不独立，地图投影 / 地理布局能力进入 plot pipeline。

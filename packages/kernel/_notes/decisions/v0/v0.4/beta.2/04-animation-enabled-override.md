@@ -4,7 +4,7 @@
 - 决策日期：2026-07-12
 - 验收日期：2026-07-14
 - 实现提交：`ce5af412`、`b2f51f62`
-- 关联：[beta.2 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [v0.3 alpha.5 runtime control](../../v0.3/alpha.5/04-runtime-control.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md)
+- 关联：[beta.2 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [v0.3 alpha.5 runtime control](../../v0.3/alpha.5/04-runtime-control.md)
 
 ## 背景
 

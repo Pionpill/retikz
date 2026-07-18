@@ -30,7 +30,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * 把 IR / Scene / plain spec 挂成真实 SVG DOM（无框架浏览器 runtime）
  * @description 输入会先归一成 Scene，再经 `@retikz/render/svg` 生成 SVG 描述并物化进**稳定复用**的 root
  *   `<svg>`；`output.width` / `output.height` 若给则写回根（`@retikz/render/svg` 只产 viewBox，显示尺寸是 adapter 本分）。`update`
- *   原地重渲染、root 元素 identity 跨 update 不变、不失效。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全。
+ *   原地重渲染、root 元素 identity 跨 update 不变、不失效。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全
  */
 export const mountSvg = (container: Element, input: RenderInput, options: MountOptions = {}): VanillaView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
@@ -79,7 +79,7 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
    * 把 handler 绑到本 view 的 `<svg>`，handler 收 `(event, context)` 富上下文
    * @description `buildContext` 读 live `currentScene`（`update` 后自动反映新图）：meta / geometry 经 Scene 按 id
    *   聚合查询，element 经 `closest('[data-retikz-id]')`，point 逆 meet-fit，动画控制经 `data-retikz-id` /
-   *   `data-retikz-animation-owner` 双查 `getAnimations()` per-id 控制。
+   *   `data-retikz-animation-owner` 双查 `getAnimations()` per-id 控制
    */
   const hydrate = (hydrateOptions: HydrateOptions): HydrationHandle => {
     const buildContext = createContextBuilder({

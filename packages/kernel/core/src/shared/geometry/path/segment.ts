@@ -128,7 +128,7 @@ export const ellipseSegmentSample = (center: Position, rx: number, ry: number, t
  * 矩形周长段：两对角 → 闭合周长上 t∈[0,1] 的点 / 切线
  * @description 4 条边按 rectOutline 的顺时针绕向（y-down：左上→右上→右下→左下→闭合回左上）均分参数，
  *   每条边占 1/4 t；切线 = 该边方向。忽略 cornerRadius（采尖角折线周长），mark 落在直边上精确、
- *   贴近圆角处略偏轮廓——对中段 marking 足够。退化（零宽 / 零高）由 lineSegmentSample 的零切线回退兜底。
+ *   贴近圆角处略偏轮廓——对中段 marking 足够。退化（零宽 / 零高）由 lineSegmentSample 的零切线回退兜底
  */
 export const rectPerimeterSample = (from: Position, to: Position, t: number): SegmentSample => {
   const x0 = Math.min(from[0], to[0]);

@@ -5,7 +5,7 @@ import { resolvePathMarks } from './arrow';
 import { cuts, pickDefinedKeys, pickDrawableStyle } from './frame';
 import { resolveGeometryLabel, resolveLabelDefault } from './label';
 
-/** 级联 graphic state 投影到 path 样式字段。 */
+/** 级联 graphic state 投影到 path 样式字段 */
 const cascadeToPath = (c: CascadeState): Partial<IRPathBase> => {
   const out: Partial<IRPathBase> = {};
   const stroke = c.stroke ?? c.color;
@@ -18,7 +18,7 @@ const cascadeToPath = (c: CascadeState): Partial<IRPathBase> => {
   return out;
 };
 
-/** 级联 graphic state 投影到 ribbon 样式字段。 */
+/** 级联 graphic state 投影到 ribbon 样式字段 */
 const cascadeToRibbon = (c: CascadeState): Partial<IRPathBase> => {
   const out: Partial<IRPathBase> = {};
   const fill = c.fill ?? c.color;
@@ -31,21 +31,21 @@ const cascadeToRibbon = (c: CascadeState): Partial<IRPathBase> => {
   return out;
 };
 
-/** path 源同源主色展开。 */
+/** path 源同源主色展开 */
 const expandPathColor = (src: Partial<IRPathBase>): Partial<IRPathBase> => {
   const out: Partial<IRPathBase> = { ...src };
   if (src.color !== undefined && out.stroke === undefined) out.stroke = src.color;
   return out;
 };
 
-/** ribbon 源同源主色展开。 */
+/** ribbon 源同源主色展开 */
 const expandRibbonColor = (src: Partial<IRPathBase>): Partial<IRPathBase> => {
   const out: Partial<IRPathBase> = { ...src };
   if (src.color !== undefined && out.fill === undefined) out.fill = src.color;
   return out;
 };
 
-/** 替换 path children 中各 step 的 label 为已解析 effective label。 */
+/** 替换 path children 中各 step 的 label 为已解析 effective label */
 const resolveStepLabels = (
   children: ReadonlyArray<IRStep>,
   labelDefault: IRLabelDefault,
@@ -70,7 +70,7 @@ const resolveGeometryLabelField = (
   return resolveGeometryLabel(label, labelDefault, masterColor);
 };
 
-/** 解析 path 的最终样式。 */
+/** 解析 path 的最终样式 */
 export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<StyleFrame>): IRPathBase => {
   let acc: Partial<IRPathBase> = {};
   let masterColor: string | undefined;

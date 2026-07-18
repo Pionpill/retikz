@@ -3,19 +3,19 @@ import type { CompileWarning } from '../warning';
 
 import { CompileWarningCode } from '../constants';
 
-/** animation 过滤上下文。 */
+/** animation 过滤上下文 */
 export type FilterAnimationsContext = {
-  /** 校验目标层级。 */
+  /** 校验目标层级 */
   target: 'element' | 'root';
-  /** warning 收集器。 */
+  /** warning 收集器 */
   onWarn: (warning: CompileWarning) => void;
-  /** 当前 IR locator。 */
+  /** 当前 IR locator */
   irPath: string;
 };
 
 /**
- * 校验 animation tracks 的 scene 根约束。
- * @description 非法 track 会触发 warning 并被丢弃；全空返回 undefined。
+ * 校验 animation tracks 的 scene 根约束
+ * @description 非法 track 会触发 warning 并被丢弃；全空返回 undefined
  */
 export const filterAnimations = (
   tracks: ReadonlyArray<IRAnimationTrack> | undefined,

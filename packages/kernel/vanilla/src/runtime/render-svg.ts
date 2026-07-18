@@ -10,7 +10,7 @@ import { toScene } from './to-scene';
  * 把 IR / Scene / plain spec 渲染成 SVG 字符串（SSR / 构建期）
  * @description 收 IR / Scene / plain spec 时薄包 `@retikz/render/svg`：`toScene`
  *   （ir 缺省走 core fallback measurer、确定性）→ 序列化。`output.width` / `output.height` 直接透传给 render，由其结构化写进根
- *   `<svg>` attrs（不在本层对字符串做正则后处理）。零 DOM。
+ *   `<svg>` attrs（不在本层对字符串做正则后处理）。零 DOM
  */
 export const renderToSvgString = (input: RenderInput, options: RenderToStringOptions = {}): string => {
   const output = options.output ?? {};

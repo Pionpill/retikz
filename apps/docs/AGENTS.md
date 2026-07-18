@@ -43,6 +43,7 @@ docs 内容规则不复制在 AGENTS 中，按需动态加载：
 - React 组件 / layout / shadcn UI 规范：`.agents/skills/develop-docs/SKILL.md`
 - 通用规则：`.agents/skills/docs-doc-principle/SKILL.md`
 - 组件页：`docs-doc-component`
+- 扩展指南：`docs-doc-extension`
 - 示例页：`docs-doc-example`
 - 分组落地页：`docs-doc-group`
 - 概念页：`docs-doc-concept`

@@ -11,7 +11,7 @@ const PanelSchema = CompositeBaseSchema.extend({
   id: z.string(),
 });
 
-/** demo.panel → 同 id 的 Tier 1 node。 */
+/** demo.panel → 同 id 的 Tier 1 node */
 const panelComposite = defineComposite({
   namespace: 'demo',
   type: 'panel',
@@ -19,7 +19,7 @@ const panelComposite = defineComposite({
   expand: panel => ({ type: 'node', id: panel.id, position: [0, 0], text: panel.id }),
 });
 
-/** demo.wrapper → 继续展开为 demo.panel，验证 fixpoint。 */
+/** demo.wrapper → 继续展开为 demo.panel，验证 fixpoint */
 const wrapperComposite = defineComposite({
   namespace: 'demo',
   type: 'wrapper',
@@ -31,7 +31,7 @@ const wrapperComposite = defineComposite({
   expand: wrapper => ({ namespace: 'demo', type: 'panel', id: wrapper.id }),
 });
 
-/** demo.loop → 自身，用于深度守卫。 */
+/** demo.loop → 自身，用于深度守卫 */
 const loopComposite = defineComposite({
   namespace: 'demo',
   type: 'loop',
@@ -39,7 +39,7 @@ const loopComposite = defineComposite({
   expand: () => ({ namespace: 'demo', type: 'loop' }),
 });
 
-/** demo.batch → 零个或多个节点，验证 flatMap 语义。 */
+/** demo.batch → 零个或多个节点，验证 flatMap 语义 */
 const batchComposite = defineComposite({
   namespace: 'demo',
   type: 'batch',
@@ -51,7 +51,7 @@ const batchComposite = defineComposite({
   expand: batch => batch.ids.map(id => ({ type: 'node' as const, id, position: [0, 0] as [number, number] })),
 });
 
-/** Unicode provider key 也应按原值参与注册与诊断。 */
+/** Unicode provider key 也应按原值参与注册与诊断 */
 const unicodeComposite = defineComposite({
   namespace: '示例',
   type: '面板',

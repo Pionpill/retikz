@@ -58,17 +58,17 @@ export type TextPrim = {
   lines: Array<TextLine>;
   fontSize: number;
   /**
-   * 块级字体族。
+   * 块级字体族
    * @default 'sans-serif'
    */
   fontFamily?: IRFont['family'];
   /**
-   * 块级字重。
+   * 块级字重
    * @default 'normal'
    */
   fontWeight?: SceneFontWeight;
   /**
-   * 块级字形。
+   * 块级字形
    * @default 'normal'
    */
   fontStyle?: IRFont['style'];
@@ -81,7 +81,7 @@ export type TextPrim = {
   /** 编译期算好的整块文字高度 ≈ lines × lineHeight */
   measuredHeight: number;
   /**
-   * 块级文字颜色。
+   * 块级文字颜色
    * @default 'currentColor'
    */
   fill?: IRTextRun['fill'];

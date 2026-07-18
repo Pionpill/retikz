@@ -17,6 +17,7 @@ alpha 功能开发入口。目标是产出一份状态为 `Proposed` 的 ADR，�
 ## 必读
 
 - 根 `AGENTS.md` 的设计原则、IR / Schema / 分层规则。
+- 能力性迭代读取 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档；纯 bugfix、文案或行为等价重构只需声明不改变能力边界。
 - 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应 `standard-*` skill。
 - 对应分组的 `_notes/decisions/_template.md` 与当前 milestone `roadmap.md`。
 
@@ -26,14 +27,16 @@ alpha 功能开发入口。目标是产出一份状态为 `Proposed` 的 ADR，�
 
 ```text
 packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
-packages/viz/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
+packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
 ```
 
 其它分组以后新增时沿用同形态。模板来自该分组的 `_notes/decisions/_template.md`。编号在 milestone 目录内从 `01` 起，起新 ADR 前查对应 `_notes/README.md` 或 roadmap。
 
 ## ADR 必填内容
 
-叙述部分按模板写，至少覆盖：背景、决策、DSL / API 表面、测试设计、影响、不在范围。
+叙述部分按模板写，至少覆盖：背景、决策、DSL / API 表面、测试设计、影响、能力完备性检查、不在范围。
+
+能力完备性检查必须写清所属能力域与能力面、解决的问题、主责 / 协作包、内部表达与外部扩展链路、依赖域和下游闭环，以及本轮结论。不能用“先局部实现”代替组合、扩展当前域、下沉、上移、不支持或延期中的明确选择。
 
 实现契约段必须完整：
 
@@ -47,19 +50,17 @@ packages/viz/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.
 
 新增或修改 authoring API 时，ADR 必须同时考虑 React 与 Vanilla 两套入口；若某套不适用，在“不在范围”写明理由。
 
-## 多视角设计评估
+## Alpha Architecture Gate
 
-ADR 草案写完、进入实现前，先问用户是否派子 agent / 外部模型评审。用户确认后再调度；用户拒绝或工具不可用时，由主 AI 自审并说明退化路径。
+ADR 草案完成后，先执行 `develop-completeness` 的 `adr-gate`，再交人工 review 或请求进入实现：
 
-涉及先写文档再执行的流程，都按同一规则处理：文档草案完成后先确认是否评审，采纳结论后再进入执行。
+1. 自动派遣一个新的只读 subagent；这是 `flow-alpha` 的常驻授权，不询问用户，也不因用户离线、赶进度或已有实现而跳过。
+2. subagent 读取 ADR、适用 completeness / AGENTS、当前代码与必要 standard skills，检查能力完备性、包边界、define-registry 和端到端闭环。
+3. 主 AI按 findings 修订 ADR；只要 ADR 因 BLOCKING 或 WARNING 发生修订，就必须派新的 subagent 复检，不能由主 AI判断自己的修订已经通过。
+4. Gate 只接受最新 subagent 明确返回 `PASS`；该轮必须无 BLOCKING，且每个 WARNING 已修复或 ADR 已记录可验证的接受理由。
+5. 最多执行 3 轮。第 3 轮未 PASS、其后仍需修订，或 subagent 不可用时，立即停止并交人工决策，不退化为主 AI自审放行。
 
-评审重点看：
-
-- schema / API 是否 LLM 友好、JSON 可序列化、命名不含含糊缩写。
-- 是否已有更小的复用路径，避免重复造能力。
-- 测试象限是否漏掉用户或 LLM 容易误用的边界。
-
-记录结论进 ADR：采纳项写入“决策”，拒绝或延期项写入“待决策点”或“不在范围”并注明理由。
+Gate 只校验并修订 ADR，不授权实现、commit、push 或扩大文件 scope。其它目的的子 agent / 外部模型评审仍按根 AGENTS 单独征求授权。
 
 ## 草案落盘规则
 
@@ -71,6 +72,8 @@ ADR 草案写完、进入实现前，先问用户是否派子 agent / 外部模�
 ## 完成标志
 
 - ADR 文件已创建，状态为 `Proposed`。
+- 能力性迭代已完成适用 completeness 检查；不适用时已写明理由。
+- Alpha Architecture Gate 已 PASS；或 3 轮后已停止并等待人工决策。
 - 实现契约段五项齐全。
 - 人工明确确认“可以进入实现”。
 - ADR 草案未提交，或用户明确要求时已按根 AGENTS 的 Git 规则单独提交。

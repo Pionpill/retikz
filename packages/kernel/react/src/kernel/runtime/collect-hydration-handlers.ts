@@ -25,7 +25,7 @@ const readElementHandlers = (props: Record<string, unknown>): ElementHandlers =>
 /**
  * 把一个元素的 id + handlers 合并进注册表（处理无 id / 重复 id 规则）
  * @description 有 handler 但无 `id` → dev warn + 跳过；有 `id`：重复 id 时合并不同事件、同事件后者覆盖（并 dev warn）。
- *   无 handler 的元素（即使有 id）不进注册表——注册表只收真正绑了 handler 的挂点。
+ *   无 handler 的元素（即使有 id）不进注册表——注册表只收真正绑了 handler 的挂点
  */
 const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handlers: ElementHandlers): void => {
   const eventNames = Object.keys(handlers);
@@ -52,7 +52,7 @@ const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handl
 /**
  * 从 React DSL children 收集元素事件 handler
  * @description 带 `id` 且声明了 `on<Event>` 的元素会注册为水合事件挂点；`<Scope>` 和普通函数式 Sugar 会继续读取子元素。
- *   带 handler 但无 `id` 的元素会在开发环境告警并跳过；重复 `id` 会合并不同事件，同一事件以后出现者覆盖。
+ *   带 handler 但无 `id` 的元素会在开发环境告警并跳过；重复 `id` 会合并不同事件，同一事件以后出现者覆盖
  */
 const visit = (
   registry: Map<string, ElementHandlers>,
@@ -95,7 +95,7 @@ const visit = (
 /**
  * 按元素 `id` 收集水合 handler props
  * @description 返回 `{ [id]: { click, pointerEnter, ... } }` 注册表，供 `<Layout>` 在渲染后绑定事件。
- *   带 handler 但无 `id` 会跳过并在开发环境告警；重复 `id` 会合并不同事件，同一事件以后出现者覆盖。
+ *   带 handler 但无 `id` 会跳过并在开发环境告警；重复 `id` 会合并不同事件，同一事件以后出现者覆盖
  */
 export const collectHydrationHandlers = (
   children: ReactNode,

@@ -26,7 +26,7 @@ export type PathProps = HydrationEventProps & {
   strokeWidth?: IRPath['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */
   dashPattern?: IRPath['dashPattern'];
-  /** 描边 dash offset。 */
+  /** 描边 dash offset */
   dashOffset?: IRPath['dashOffset'];
   /** 端点形状（TikZ `line cap`）：`'butt'`（默认 / 直角）/ `'round'`（半圆）/ `'square'`（方头外扩半 stroke） */
   lineCap?: IRPath['lineCap'];
@@ -85,8 +85,8 @@ export type PathProps = HydrationEventProps & {
 };
 
 /**
- * Path 用一组 `<Step>` 声明路径。
- * @description 本组件自身不渲染 DOM；最终路径由 `<Layout>` 根据 step 序列、样式、箭头和标记输出。
+ * Path 用一组 `<Step>` 声明路径
+ * @description 本组件自身不渲染 DOM；最终路径由 `<Layout>` 根据 step 序列、样式、箭头和标记输出
  */
 export const Path: FC<PathProps> = () => null;
 Path.displayName = TIKZ_PATH;

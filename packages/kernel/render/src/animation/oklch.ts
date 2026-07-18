@@ -2,7 +2,7 @@
  * oklch 颜色插值（renderer 无关、纯数学）
  * @description fill / stroke 动画在 oklch 空间插值（感知均匀，避免 sRGB 直插的灰带）。SVG 端编译期预采样成
  *   keyframe 颜色串（CSS 不赌 color-mix(in oklch) 兼容性），Canvas 端逐帧真 lerp——两端共用本模块。
- *   解析支持 hex（#rgb / #rrggbb）/ rgb(a) / oklch(...)；无法解析的颜色串（命名色 / hsl）回退为两端点直插。
+ *   解析支持 hex（#rgb / #rrggbb）/ rgb(a) / oklch(...)；无法解析的颜色串（命名色 / hsl）回退为两端点直插
  */
 
 import { parseHexColor } from '../shared/color';
@@ -137,7 +137,7 @@ const lerpOklch = (a: Oklch, b: Oklch, t: number): Oklch => ({
 
 /**
  * 在 oklch 空间插值两个颜色，返回 sRGB hex（带透明度则输出 `#rrggbbaa`）
- * @description 任一端点无法解析 oklch（命名色 / hsl 等）→ 回退：t<0.5 返回 from、否则 to（无平滑过渡，best-effort）。
+ * @description 任一端点无法解析 oklch（命名色 / hsl 等）→ 回退：t<0.5 返回 from、否则 to（无平滑过渡，best-effort）
  */
 export const lerpColorOklch = (from: string, to: string, t: number): string => {
   const a = colorToOklch(from);
@@ -149,7 +149,7 @@ export const lerpColorOklch = (from: string, to: string, t: number): string => {
 /**
  * 在 from→to 之间按 oklch 预采样 N 个等分颜色（含两端点，共 N+1 个），返回 sRGB hex 数组
  * @description SVG CSS 预采样用：把感知均匀的 oklch 路径退化成 sRGB 分段折线，写进 @keyframes，兼容性满分。
- *   端点无法解析 oklch 时回退为 [from, to]（不采样）。
+ *   端点无法解析 oklch 时回退为 [from, to]（不采样）
  */
 export const sampleColorOklch = (from: string, to: string, segments: number): Array<string> => {
   const a = colorToOklch(from);

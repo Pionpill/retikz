@@ -4,12 +4,12 @@ import { DEFAULT_EPSILON } from '../constants';
 import { point } from './point';
 import { triangle } from './triangle';
 
-/** 圆：圆心 + 半径。 */
+/** 圆：圆心 + 半径 */
 export type Circle = { center: Position; radius: number };
 
 /**
- * 以两点连线为直径构造圆。
- * @description 返回刚好经过 a / b 的最小圆；两点重合时半径为 0。
+ * 以两点连线为直径构造圆
+ * @description 返回刚好经过 a / b 的最小圆；两点重合时半径为 0
  */
 const circleFrom2 = (a: Position, b: Position): Circle => ({
   center: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
@@ -17,8 +17,8 @@ const circleFrom2 = (a: Position, b: Position): Circle => ({
 });
 
 /**
- * 以三点构造候选最小圆。
- * @description 非共线时返回三角形外接圆；共线或近似共线时退化为三组两点直径圆中半径最大的圆。
+ * 以三点构造候选最小圆
+ * @description 非共线时返回三角形外接圆；共线或近似共线时退化为三组两点直径圆中半径最大的圆
  */
 const circleFrom3 = (a: Position, b: Position, c: Position): Circle => {
   const cc = triangle.circumCircle(a, b, c);
@@ -32,18 +32,18 @@ const circleFrom3 = (a: Position, b: Position, c: Position): Circle => {
 };
 
 /**
- * 判断点是否落在圆内或圆边界上。
- * @description 使用 epsilon 扩张半径，抵消浮点误差对边界点的影响。
+ * 判断点是否落在圆内或圆边界上
+ * @description 使用 epsilon 扩张半径，抵消浮点误差对边界点的影响
  */
 const inCircle = (c: Circle, p: Position, epsilon: number): boolean =>
   point.length([p[0] - c.center[0], p[1] - c.center[1]]) <= c.radius + epsilon;
 
-/** 圆相关几何算法。 */
+/** 圆相关几何算法 */
 export const circle = {
   /**
-   * 点集的最小外接圆（Welzl 迭代式）。
-   * @description 覆盖输入点集的最小圆；空集返回 null。
-   * @remarks 复杂度：时间最坏 O(n^3)，空间 O(1)，n 为输入点数。
+   * 点集的最小外接圆（Welzl 迭代式）
+   * @description 覆盖输入点集的最小圆；空集返回 null
+   * @remarks 复杂度：时间最坏 O(n^3)，空间 O(1)，n 为输入点数
    */
   minimalEnclosing: (points: Array<Position>, epsilon = DEFAULT_EPSILON): Circle | null => {
     const n = points.length;

@@ -2,7 +2,7 @@
  * 共享插值引擎：给绝对时间求一条 track 当下值（renderer 无关、纯数学、无 DOM）
  * @description Canvas 逐帧、SVG 静态截帧 `{at:t}`、WAAPI JS fallback 都「给 t 求值」——一份引擎三处复用，
  *   避免漂移。处理 delay / iteration / direction / fill / easing（具名 / cubic-bezier / 注册函数）/ 段插值
- *   （数值线性、颜色 oklch 真 lerp、viewBox 4 元组分量线性、自定义经注入插值器）。
+ *   （数值线性、颜色 oklch 真 lerp、viewBox 4 元组分量线性、自定义经注入插值器）
  */
 import type { IRAnimationTrack } from '@retikz/core';
 
@@ -107,7 +107,7 @@ const valueAtProgress = (track: IRAnimationTrack, p: number, options: EvaluateTr
 
 /**
  * 给绝对时间 timeMs 求 track 当下值；返回 `null` 表示该时刻 track 不活动（caller 用 base、不施加）
- * @description 减 delay → 算迭代次序 + 迭代内进度 → 按 fill 处理活动区间外 → 按 direction 翻转 → 段插值。
+ * @description 减 delay → 算迭代次序 + 迭代内进度 → 按 fill 处理活动区间外 → 按 direction 翻转 → 段插值
  */
 export const evaluateTrack = (
   track: IRAnimationTrack,

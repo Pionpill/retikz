@@ -2,6 +2,38 @@ import type { ReactNode } from 'react';
 
 import type { I18nResources } from '@/i18n/locales';
 
+/** 文档页的稳定内容类型。 */
+export type DocPageType =
+  | 'entry'
+  | 'group'
+  | 'concept'
+  | 'architecture'
+  | 'component'
+  | 'extension'
+  | 'package'
+  | 'reference'
+  | 'example'
+  | 'release'
+  | 'blog'
+  | 'guide';
+
+/** 文档页的主要读者。 */
+export type DocAudience = 'user' | 'extension-author' | 'integrator' | 'maintainer';
+
+/** 文档结论应回溯到的真源类别。 */
+export type DocSourceOfTruth = 'docs' | 'schema' | 'runtime' | 'architecture' | 'changelog';
+
+/** 机器 manifest 使用的完整页面元数据。 */
+export type DocPageMetadata = {
+  pageType: DocPageType;
+  audience: DocAudience;
+  capability: string;
+  sourceOfTruth: DocSourceOfTruth;
+};
+
+/** 导航节点只声明无法从路由稳定推导的元数据覆盖。 */
+export type DocPageMetadataOverride = Partial<DocPageMetadata>;
+
 /** 全部合法的 i18n 完整 key。 */
 export type I18nKey = {
   [N in keyof I18nResources]: `${N & string}.${keyof I18nResources[N] & string}`;
@@ -11,6 +43,8 @@ type SubPageBase = {
   id: string;
   /** i18n 完整 key，调用方直接 t(label) */
   label: I18nKey;
+  /** 生成机器文档时应用的显式元数据覆盖。 */
+  meta?: DocPageMetadataOverride;
   /** 标题右侧的自定义元素（外链、徽章、操作按钮等），可选 */
   extra?: ReactNode;
 };

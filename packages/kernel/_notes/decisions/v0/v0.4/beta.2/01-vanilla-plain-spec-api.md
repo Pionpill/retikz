@@ -4,7 +4,7 @@
 - 决策日期：2026-07-08
 - 验收日期：2026-07-12
 - 实现提交：`85b87479`、`c8edba13`、`3849bc3d`
-- 关联：[beta.2 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [alpha.2 Tier 2 支撑](../alpha.2/01-embeddable-tier2-in-layout.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md)
+- 关联：[beta.2 roadmap](./roadmap.md) · [v0.4 roadmap](../roadmap.md) · [alpha.2 Tier 2 支撑](../alpha.2/01-embeddable-tier2-in-layout.md)
 
 ## 背景
 

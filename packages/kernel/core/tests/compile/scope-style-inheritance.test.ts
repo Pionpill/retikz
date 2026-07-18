@@ -41,7 +41,7 @@ const textWith = (ir: IRScene, content: string): TextPrim | undefined =>
  * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `ResolvedArrowEndSpec`——解析后的颜色物化进
  *   `marker[]` 内部几何的 fill / stroke（实心走 fill、空心走 stroke；contextStroke 表示继承 path stroke）。
  *   测断言箭头颜色优先级链时改读此处。递归穿 group 子原语，返回首个非 contextStroke 的纯色字符串；
- *   全部 contextStroke / 无 paint 时返回 undefined（= 走继承，未冻结颜色）。
+ *   全部 contextStroke / 无 paint 时返回 undefined（= 走继承，未冻结颜色）
  */
 const markerPaintColor = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
   if (!spec) return undefined;

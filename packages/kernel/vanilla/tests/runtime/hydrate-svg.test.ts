@@ -12,7 +12,7 @@ import { hydrate, mountSvg, renderToSvgString } from '../../src';
 /**
  * @retikz/vanilla hydrate（SVG 水合，jsdom 环境）
  * @description mountSvg / SSR 先渲染出含 data-retikz-id 的图，hydrate 再把 handler 经根级 closest 委托绑回图元。
- *   触发类断言验证命中图元后 handler 被调用；dispose 后再触发不再调用。
+ *   触发类断言验证命中图元后 handler 被调用；dispose 后再触发不再调用
  */
 
 /** 带可点击图元 id 的最小 IR（矩形 Node，便于 SVG 输出有 data-retikz-id 挂点） */

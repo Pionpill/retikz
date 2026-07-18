@@ -2,13 +2,13 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [core-design.md §4.5](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md)
 
 > **范围**：把 Scene primitive 里残留的 SVG mini-language 字符串（`PathPrim.d` / `GroupPrim.transform`）改为结构化命令数组，让 core 不再依赖 SVG 知识、各 backend 翻译为各自原生 API。
 
 ## 背景 / 约束
 
-- `PathPrim.d: string` 与 `GroupPrim.transform?: string` 本质都是 SVG mini-language，与 [core-design.md §4.5](../../../../../../../notes/architecture/core-design.md)「Scene primitive 是矢量图形最大公约子集、core 不假定渲染端」冲突。
+- `PathPrim.d: string` 与 `GroupPrim.transform?: string` 本质都是 SVG mini-language，与“Scene primitive 是矢量图形最大公约子集、core 不假定渲染端”的约束冲突。
 - 后果：Canvas / Skia / PDF adapter 要么自写 SVG path 解析器、要么依赖浏览器 `Path2D`（Node canvas 没有）；SVG-only 细节（A 命令 `large-arc/sweep` flag）被迫住在 `core/geometry`；GroupPrim transform 同病（canvas 的 `translate/rotate/scale` 是顺序调用、无字符串概念）。
 - TikZ 自身从不暴露"d 字符串"——path 操作是 high-level 命令、各 backend 走不同 lowering；retikz 应复刻"core 持结构化数据、backend 翻译原生 API"。
 

@@ -130,7 +130,7 @@ export type AnalyticOutlineCommandsInput = {
 /**
  * 解析型 centerline ribbon 轮廓
  * @description 当中心线仅由 line / quad / cubic 组成且宽度可解析时，尽量保留线段阶数生成左右 offset 命令；
- *   遇到 arc / ellipseArc 或输入不匹配返回 null，由调用方退回采样型轮廓。
+ *   遇到 arc / ellipseArc 或输入不匹配返回 null，由调用方退回采样型轮廓
  */
 export const analyticOutlineCommands = ({
   inputs,

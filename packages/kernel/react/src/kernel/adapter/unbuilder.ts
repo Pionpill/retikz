@@ -177,12 +177,12 @@ const scopePropsFromIR = (s: LoweredIRScope, key: number): ScopeProps & { key: n
   children: s.children.map((c, i) => childToElement(c, i)),
 });
 
-/** IR 转 Kernel React 节点时使用的 Tier 2 composite 定义与递归深度配置。 */
+/** IR 转 Kernel React 节点时使用的 Tier 2 composite 定义与递归深度配置 */
 export type ConvertIRToReactNodeOptions = LowerIRToKernelOptions;
 
 /**
- * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）。
- * @description Tier 1 IR 保持结构等价；Tier 2 composite 先按 definitions lowering，再生成语义等价的 Kernel JSX。
+ * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）
+ * @description Tier 1 IR 保持结构等价；Tier 2 composite 先按 definitions lowering，再生成语义等价的 Kernel JSX
  */
 export const convertIRToReactNode = (ir: IRScene, options: ConvertIRToReactNodeOptions = {}): ReactNode => {
   try {

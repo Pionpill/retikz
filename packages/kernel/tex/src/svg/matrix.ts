@@ -1,6 +1,6 @@
 /**
  * 2D 仿射矩阵（SVG `[a,b,c,d,e,f]` 约定：`x' = a·x + c·y + e`，`y' = b·x + d·y + f`）
- * @description 用于把 MathJax SVG 嵌套 `<g transform>` 累积成「根 → 字形」的世界变换，再作用到 path 坐标。
+ * @description 用于把 MathJax SVG 嵌套 `<g transform>` 累积成「根 → 字形」的世界变换，再作用到 path 坐标
  */
 export type Matrix = [number, number, number, number, number, number];
 
@@ -25,7 +25,7 @@ export const apply = (m: Matrix, x: number, y: number): [number, number] => [
 /**
  * 解析 SVG `transform` 属性值为单一矩阵（支持 translate / scale / matrix，按出现顺序左乘累积）
  * @description MathJax SVG 仅用 `scale(1,-1)`（全局 y 翻转）+ `translate(x,y)`（字形偏移）；matrix 一并支持兜底。
- *   无 / 空 → 单位阵。未知函数或 malformed 参数会抛错，由上层降级为 null，避免静默错位。
+ *   无 / 空 → 单位阵。未知函数或 malformed 参数会抛错，由上层降级为 null，避免静默错位
  */
 export const parseTransform = (value: string | undefined): Matrix => {
   const source = value?.trim();

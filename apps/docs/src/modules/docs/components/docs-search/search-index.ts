@@ -1,6 +1,7 @@
 import type { Lang } from '@/i18n';
 
 import { LANGS } from '@/i18n';
+import { parseDocSource } from '@/modules/docs/lib';
 
 type MdxLoader = () => Promise<string>;
 
@@ -25,14 +26,7 @@ export type IndexedPage = {
 };
 
 const extractIndexedPage = (raw: string): IndexedPage => {
-  const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---\n/);
-  const body = frontmatterMatch ? raw.slice(frontmatterMatch[0].length) : raw;
-
-  let description = '';
-  if (frontmatterMatch) {
-    const descriptionMatch = frontmatterMatch[1].match(/^description:\s*(.+)$/m);
-    if (descriptionMatch) description = descriptionMatch[1].trim();
-  }
+  const { frontmatter, body } = parseDocSource(raw);
 
   const headings: Array<string> = [];
   for (const headingMatch of body.matchAll(/^#{2,3}\s+(.+)$/gm)) {
@@ -44,7 +38,7 @@ const extractIndexedPage = (raw: string): IndexedPage => {
     inlineCodes.push(inlineMatch[1].trim());
   }
 
-  return { description, headings, inlineCodes };
+  return { description: frontmatter.description, headings, inlineCodes };
 };
 
 export type SearchIndex = Partial<Record<string, Partial<Record<Lang, IndexedPage>>>>;

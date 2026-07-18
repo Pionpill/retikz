@@ -12,7 +12,7 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
  * @description 坏 ResolvedArrowEndSpec（NaN refX / Infinity baseSize / text 注入）已由 compile 运行时栅栏在源头拦下
  *   （见 core 侧 builtin-registry.adversarial），react 作纯物化层不重复兜底。这里保留 marker 几何里 arc /
  *   ellipseArc 命令的物化回归——marker path 与 Scene `PathCommand` 同词汇，react 复用 buildPathD
- *   产 SVG A 段（曾经被静默丢弃，现已补齐）。
+ *   产 SVG A 段（曾经被静默丢弃，现已补齐）
  */
 
 const spec = (overrides: Partial<ResolvedArrowEndSpec> = {}): ResolvedArrowEndSpec => ({
