@@ -6,8 +6,10 @@ import { buildPreviewControlDefaults } from '../controls';
 
 /** 自定义预览控件的共享状态上下文。 */
 export const PreviewControlStateContext = createContext<PreviewControlState>({
+  canonicalValues: {},
   values: {},
   setValue: () => undefined,
+  applyValues: () => undefined,
   reset: () => undefined,
 });
 

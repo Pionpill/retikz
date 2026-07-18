@@ -9,6 +9,7 @@ import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 import type {
   PreviewControlsDefinition,
   PreviewControlState,
+  PreviewControlValues,
 } from '../../src/modules/docs/components/component-preview';
 
 import { definePreviewControls, usePreviewControls } from '../../src/modules/docs/components/component-preview';
@@ -47,12 +48,13 @@ const Consumer: FC<ConsumerProps> = props => {
 
 type HarnessProps = {
   definition: PreviewControlsDefinition;
+  canonicalValues?: Readonly<PreviewControlValues>;
   onSnapshot: ConsumerProps['onSnapshot'];
 };
 
 const Harness: FC<HarnessProps> = props => {
-  const { definition, onSnapshot } = props;
-  const state = usePreviewControlState(definition);
+  const { definition, canonicalValues, onSnapshot } = props;
+  const state = usePreviewControlState(definition, canonicalValues);
 
   return (
     <PreviewControlStateContext.Provider value={state}>
@@ -64,6 +66,9 @@ const Harness: FC<HarnessProps> = props => {
       </button>
       <button type="button" onClick={state.reset}>
         reset
+      </button>
+      <button type="button" onClick={() => state.applyValues({ strokeWidth: 6 })}>
+        preset
       </button>
       <Consumer definition={definition} state={state} onSnapshot={onSnapshot} />
     </PreviewControlStateContext.Provider>
@@ -129,6 +134,39 @@ describe('preview control state', () => {
 
     await act(() => buttons[2].click());
     expect(values).toEqual({ strokeWidth: 2, dashed: false });
+  });
+
+  it('以 canonical values 初始化并原子应用 preset', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    renderedRoots.push(root);
+    let state: PreviewControlState | undefined;
+    let values: Record<string, unknown> = {};
+
+    await act(() =>
+      root.render(
+        <Harness
+          definition={appearanceDefinition}
+          canonicalValues={{ strokeWidth: 3, dashed: true }}
+          onSnapshot={(nextState, nextValues) => {
+            state = nextState;
+            values = nextValues;
+          }}
+        />,
+      ),
+    );
+
+    expect(state?.canonicalValues).toEqual({ strokeWidth: 3, dashed: true });
+    expect(values).toEqual({ strokeWidth: 3, dashed: true });
+
+    const buttons = container.querySelectorAll('button');
+    await act(() => buttons[0].click());
+    await act(() => buttons[3].click());
+    expect(values).toEqual({ strokeWidth: 6, dashed: true });
+
+    await act(() => buttons[2].click());
+    expect(values).toEqual({ strokeWidth: 3, dashed: true });
   });
 
   it('definition 切换时移除旧 id 并初始化新默认值', async () => {

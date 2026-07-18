@@ -15,6 +15,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
+  PreviewThemeMode,
   SizeKey,
 } from '../../src/modules/docs/components/component-preview/types';
 
@@ -55,6 +56,7 @@ vi.mock('../../src/modules/docs/store', () => {
     isExpand: false,
     rendererMode: 'canvas',
     dragEnabled: false,
+    themeMode: 'inherit',
     controlPanelDefaultOpen: true,
   };
   return {
@@ -66,8 +68,10 @@ vi.mock('../../src/modules/docs/store', () => {
 
 const Demo: FC = () => null;
 const controlState: PreviewControlState = {
+  canonicalValues: {},
   values: {},
   setValue: () => undefined,
+  applyValues: () => undefined,
   reset: () => undefined,
 };
 
@@ -85,6 +89,9 @@ describe('ComponentPreviewDialog', () => {
       initialSize: SizeKey;
       controlState: PreviewControlState;
       controlDefinition?: PreviewControlsDefinition;
+      showContextBar: boolean;
+      themeMode: PreviewThemeMode;
+      onThemeModeChange: (themeMode: PreviewThemeMode) => void;
       controlPanelOpen: boolean;
       onControlPanelOpenChange: (open: boolean) => void;
       controlSlots?: Array<PreviewControlSlot>;
@@ -104,6 +111,9 @@ describe('ComponentPreviewDialog', () => {
         align="center"
         initialSize="md"
         controlState={controlState}
+        showContextBar={false}
+        themeMode="inherit"
+        onThemeModeChange={() => undefined}
         controlPanelOpen
         onControlPanelOpenChange={() => undefined}
         dialogActions={[
@@ -140,6 +150,9 @@ describe('ComponentPreviewDialog', () => {
         align="center"
         initialSize="sm"
         controlState={controlState}
+        showContextBar={false}
+        themeMode="inherit"
+        onThemeModeChange={() => undefined}
         controlPanelOpen
         onControlPanelOpenChange={() => undefined}
         dialogActions={[actionSlot]}
@@ -153,6 +166,9 @@ describe('ComponentPreviewDialog', () => {
         align="center"
         initialSize="xl"
         controlState={controlState}
+        showContextBar={false}
+        themeMode="inherit"
+        onThemeModeChange={() => undefined}
         controlPanelOpen
         onControlPanelOpenChange={() => undefined}
         dialogActions={[actionSlot]}
@@ -242,6 +258,9 @@ describe('ComponentPreviewDialog', () => {
           align="center"
           initialSize="md"
           controlState={controlState}
+          showContextBar={false}
+          themeMode="inherit"
+          onThemeModeChange={() => undefined}
           controlPanelOpen
           onControlPanelOpenChange={() => undefined}
           controlSlots={[duplicateSlot]}

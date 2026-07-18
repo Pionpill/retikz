@@ -30,6 +30,7 @@ vi.mock('../../src/modules/docs/store', () => {
     isExpand: false,
     rendererMode: 'svg',
     dragEnabled: false,
+    themeMode: 'inherit',
     controlPanelDefaultOpen: true,
   };
   return {
@@ -111,6 +112,7 @@ describe('ComponentPreviewCard dialog boundary', () => {
     expect(container.querySelector('.card-preview-class')).not.toBeNull();
     expect(container.querySelector('[data-slot="preview-workspace"]')?.classList.contains('h-56')).toBe(true);
     expect(container.querySelector('.card-preview-class')?.classList.contains('h-full')).toBe(true);
+    expect(container.querySelector('[data-slot="preview-context-bar"]')).toBeNull();
 
     act(() => root.unmount());
   });
@@ -135,6 +137,33 @@ describe('ComponentPreviewCard dialog boundary', () => {
 
     expect(dialogCapture.props).toHaveLength(1);
     expect(dialogCapture.props[0].initialSize).toBe('sm');
+
+    act(() => root.unmount());
+  });
+
+  it('Card 与 Dialog 共享局部预览主题', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <ComponentPreviewCard
+          name="shared-theme"
+          Component={Demo}
+          source={{ react: { files: [{ filename: 'demo.tsx', code: 'export default null', lang: 'tsx' }] } }}
+        />,
+      );
+    });
+
+    const darkTheme = container.querySelector<HTMLButtonElement>('button[aria-label="Preview theme dark"]');
+    expect(darkTheme).not.toBeNull();
+    act(() => darkTheme?.click());
+
+    const maximizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');
+    act(() => maximizeButton?.click());
+
+    expect(dialogCapture.props.at(-1)?.themeMode).toBe('dark');
 
     act(() => root.unmount());
   });

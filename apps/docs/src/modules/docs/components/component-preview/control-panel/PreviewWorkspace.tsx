@@ -7,9 +7,16 @@ import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
 
 import type { PreviewPanelState } from '../preview-panel';
-import type { PreviewControlsDefinition, PreviewControlSlot, PreviewControlState, RendererMode } from '../types';
+import type {
+  PreviewControlsDefinition,
+  PreviewControlSlot,
+  PreviewControlState,
+  PreviewThemeMode,
+  RendererMode,
+} from '../types';
 
 import { ToolbarIconButton } from '../components';
+import { PreviewContextBar, PreviewThemeBoundary } from '../context-bar';
 import { mergePreviewControlSlots } from '../controls';
 import { PreviewPanel } from '../preview-panel';
 import { PreviewControlPanel } from './PreviewControlPanel';
@@ -23,6 +30,12 @@ export type PreviewWorkspaceProps = {
   workspaceClassName?: string;
   /** Card/Dialog 共享的字段值状态 */
   controlState: PreviewControlState;
+  /** 是否显示预览上下文栏 */
+  showContextBar: boolean;
+  /** 当前预览使用的局部主题 */
+  themeMode: PreviewThemeMode;
+  /** 更新局部主题 */
+  onThemeModeChange: (themeMode: PreviewThemeMode) => void;
   /** 属性面板当前是否打开 */
   controlPanelOpen: boolean;
   /** 属性面板字段控件密度
@@ -95,6 +108,9 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     definition,
     workspaceClassName,
     controlState,
+    showContextBar,
+    themeMode,
+    onThemeModeChange,
     controlPanelOpen,
     controlDensity = 'default',
     onControlPanelOpenChange,
@@ -111,19 +127,31 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
   const panelSizesRef = useRef<Record<PreviewWorkspaceDirection, number>>(createDefaultPanelSizes());
   const [panelSizes, setPanelSizes] = useState<Record<PreviewWorkspaceDirection, number>>(createDefaultPanelSizes);
 
+  const renderPreviewPane = (resolvedControlSlots: Array<PreviewControlSlot> | undefined) => (
+    <div
+      data-slot="preview-context-pane"
+      className="group/preview-context relative flex h-full min-h-0 flex-col overflow-hidden"
+    >
+      {showContextBar ? <PreviewContextBar themeMode={themeMode} onThemeModeChange={onThemeModeChange} /> : null}
+      <PreviewPanel
+        state={previewState}
+        Component={Component}
+        activeRender={activeRender}
+        controlSlots={resolvedControlSlots}
+        className={cn(previewClassName, showContextBar && 'pt-10')}
+        renderPaneClassName={previewRenderPaneClassName}
+        style={previewStyle}
+        pinControlsOnClick={pinControlsOnClick}
+      />
+    </div>
+  );
+
   if (definition?.presentation !== 'panel') {
     return (
       <div ref={workspaceRef} data-slot="preview-workspace" className={cn('h-full min-h-0', workspaceClassName)}>
-        <PreviewPanel
-          state={previewState}
-          Component={Component}
-          activeRender={activeRender}
-          controlSlots={controlSlots}
-          className={previewClassName}
-          renderPaneClassName={previewRenderPaneClassName}
-          style={previewStyle}
-          pinControlsOnClick={pinControlsOnClick}
-        />
+        <PreviewThemeBoundary themeMode={themeMode} className="h-full overflow-hidden">
+          {renderPreviewPane(controlSlots)}
+        </PreviewThemeBoundary>
       </div>
     );
   }
@@ -154,48 +182,41 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
 
   return (
     <div ref={workspaceRef} data-slot="preview-workspace" className={cn('h-full min-h-0', workspaceClassName)}>
-      <ResizablePanelGroup direction={direction} dir="ltr" className="min-h-0">
-        {controlPanelOpen ? (
-          <>
-            <ResizablePanel
-              order={1}
-              defaultSize={panelSize}
-              minSize={isHorizontal ? 18 : 25}
-              maxSize={isHorizontal ? 45 : 60}
-              collapsible
-              collapsedSize={0}
-              onCollapse={() => handleControlPanelOpenChange(false)}
-              onResize={size => {
-                if (size > 0) panelSizesRef.current[direction] = size;
-              }}
-            >
-              <PreviewControlPanel
-                definition={definition}
-                controlState={controlState}
-                density={controlDensity}
-                onClose={() => handleControlPanelOpenChange(false)}
-              />
-            </ResizablePanel>
-            <PreviewResizeHandle />
-          </>
-        ) : null}
-        <ResizablePanel
-          order={2}
-          defaultSize={controlPanelOpen ? 100 - panelSize : 100}
-          minSize={isHorizontal ? 45 : 30}
-        >
-          <PreviewPanel
-            state={previewState}
-            Component={Component}
-            activeRender={activeRender}
-            controlSlots={resolvedControlSlots}
-            className={previewClassName}
-            renderPaneClassName={previewRenderPaneClassName}
-            style={previewStyle}
-            pinControlsOnClick={pinControlsOnClick}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+      <PreviewThemeBoundary themeMode={themeMode} className="h-full overflow-hidden">
+        <ResizablePanelGroup direction={direction} dir="ltr" className="min-h-0">
+          {controlPanelOpen ? (
+            <>
+              <ResizablePanel
+                order={1}
+                defaultSize={panelSize}
+                minSize={isHorizontal ? 18 : 25}
+                maxSize={isHorizontal ? 45 : 60}
+                collapsible
+                collapsedSize={0}
+                onCollapse={() => handleControlPanelOpenChange(false)}
+                onResize={size => {
+                  if (size > 0) panelSizesRef.current[direction] = size;
+                }}
+              >
+                <PreviewControlPanel
+                  definition={definition}
+                  controlState={controlState}
+                  density={controlDensity}
+                  onClose={() => handleControlPanelOpenChange(false)}
+                />
+              </ResizablePanel>
+              <PreviewResizeHandle />
+            </>
+          ) : null}
+          <ResizablePanel
+            order={2}
+            defaultSize={controlPanelOpen ? 100 - panelSize : 100}
+            minSize={isHorizontal ? 45 : 30}
+          >
+            {renderPreviewPane(resolvedControlSlots)}
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </PreviewThemeBoundary>
     </div>
   );
 };

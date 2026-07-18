@@ -28,6 +28,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
+  PreviewThemeMode,
   SizeKey,
 } from './types';
 
@@ -62,6 +63,12 @@ export type ComponentPreviewDialogProps = {
   controlState: PreviewControlState;
   /** 与所属 Card 共享的声明式 controls definition */
   controlDefinition?: PreviewControlsDefinition;
+  /** 是否显示预览上下文栏 */
+  showContextBar: boolean;
+  /** 与所属 Card 共享的局部主题 */
+  themeMode: PreviewThemeMode;
+  /** 更新 Card/Dialog 共享的局部主题 */
+  onThemeModeChange: (themeMode: PreviewThemeMode) => void;
   /** 与所属 Card 共享的属性面板打开状态 */
   controlPanelOpen: boolean;
   /** 更新 Card/Dialog 共享的属性面板打开状态 */
@@ -130,6 +137,9 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     initialSize,
     controlState,
     controlDefinition,
+    showContextBar,
+    themeMode,
+    onThemeModeChange,
     controlPanelOpen,
     onControlPanelOpenChange,
     controlSlots,
@@ -170,6 +180,9 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     <PreviewWorkspace
       definition={controlDefinition}
       controlState={controlState}
+      showContextBar={showContextBar}
+      themeMode={themeMode}
+      onThemeModeChange={onThemeModeChange}
       controlPanelOpen={controlPanelOpen}
       controlDensity="default"
       onControlPanelOpenChange={onControlPanelOpenChange}
