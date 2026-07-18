@@ -1,6 +1,6 @@
 ---
 name: docs-doc-component
-description: retikz 组件类文档（apps/docs/src/contents/{module}/components/**/*.mdx）的页面结构规范——6 段顺序（Usage / Composition / Examples / How it works / API Reference / Related，Composition / How it works / Related 可选）、Examples 子节多 demo 时的主题分组、Examples vs How it works 边界（简单 demo vs 底层原理）、Usage 的双代码块写法、Composition 适用的组件类型、How it works 何时该写。本 skill 只覆盖组件页特有规则；通用规则（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间、ZodSchema 等）见 docs-doc-principle。retikz 专用。
+description: Use when 编写或修改 apps/docs/src/contents/{module}/components/**/*.mdx 组件页，尤其需要组织核心设计、用法、demo、controls、技术原理或 API 参考时。retikz 专用。
 ---
 
 # 组件类文档写法
@@ -10,20 +10,19 @@ description: retikz 组件类文档（apps/docs/src/contents/{module}/components
 - 在 `apps/docs/src/contents/<module>/components/**` 下加 / 改组件页
 - 即将动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
 
-本 skill 只覆盖**组件页特有**的 6 段结构与子节写法；其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间、ZodSchema、Common Mistakes 等）以 principle 为准。
+本 skill 只覆盖**组件页特有**的页面结构与子节写法；其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间、ZodSchema、Common Mistakes 等）以 principle 为准。
 
 组件页尤其要遵守 principle 的“新手友好，不用全知视角”规则：Usage 先回答这个组件帮用户解决什么问题，再给最小骨架；Examples 先展示可复制写法，再解释术语；How it works 只在用户可观察行为需要解释时写，不能把内部类型名和实现决策当正文主线。
 
-## 文档结构（6 段顺序）
+组件页首先说明组件的核心抽象、在能力闭环中的职责和边界；props 只是实现这些职责的接口，不是页面主线。边框色、背景色、线宽、透明度等跨图元通用样式默认简写并保留在 controls / API 表中，不为每个取值或字段建立独立叙事。
 
-参考：<https://ui.shadcn.com/docs/components/spinner>（简单）/ <https://ui.shadcn.com/docs/components/radix/alert-dialog#usage>（复杂）
+## 文档结构（5 类 section）
 
-字典类组件页固定为 6 类 section，**按下面顺序**出现；`Composition` / `How it works` / `Related` 可选，其余不要新增散乱顶级章节。需要额外内容时优先并入 `Examples` 子节、`How it works` 子节、`API Reference` 说明或拆子页。
+字典类组件页使用下面 5 类 section，**按顺序**出现；`How it works` / `Related` 可选，其余不要新增散乱顶级章节。需要额外内容时优先并入 `Usage`、`Examples`、`How it works`、`API Reference` 或拆子页。
 
 | section                       | 必需 | 内容                                                                                                                                               |
 | ----------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `## 用法 / Usage`             | ✅   | 两个**纯代码块**（不放 `<ComponentPreview>`）：`import` + 一个最小 JSX 骨架                                                                        |
-| `## 组合 / Composition`       | 可选 | 仅 compound 组件需要——展示组件之间的父子关系                                                                                                       |
 | `## 例子 / Examples`          | ✅   | 页面主体；多子节，每子节围绕一个能力点，**简单 demo + 一句说明**，回答"长什么样、怎么写"                                                           |
 | `## 技术原理 / How it works`  | 可选 | 底层 compile / 投影 / 命名空间 / bbox 计算等机制说明，回答"为什么这么工作 / 内部怎么走的"；用户读完用法 + 例子已会用，本节是 deepdive              |
 | `## API 参考 / API Reference` | ✅   | 4 列表（`属性 / 类型 / 默认值 / 描述` / `Prop / Type / Default / Description`），无默认填 `—`，属性名 + 类型用反引号包；多组件合一页时按组件分子节 |
@@ -40,7 +39,7 @@ frontmatter `title` + `description` 始终在；H1 由 DocPage 渲染，正文**
 
 ## 形状页（双 API 页型）
 
-`components/shapes/**` 下的形状页是上面 6 段结构的**例外**：同一个几何形状同时有两种用法——**Sugar 组件**（画一条 `<Path>`，如 `<Circle>`）和 **Node 形状**（节点边界，如 `shape="circle"`）。这类页改用**两大块自包含**结构，每块各写自己的用法 / 例子 / API，让"画图形"和"建节点"两类读者各自一口气读完、不来回跳：
+`components/shapes/**` 下的形状页是上面常规结构的**例外**：同一个几何形状同时有两种用法——**Sugar 组件**（画一条 `<Path>`，如 `<Circle>`）和 **Node 形状**（节点边界，如 `shape="circle"`）。这类页改用**两大块自包含**结构，每块各写自己的用法 / 例子 / API，让"画图形"和"建节点"两类读者各自一口气读完、不来回跳：
 
 | 段                           | 必需 | 内容                                                                                                                                                            |
 | ---------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -52,10 +51,10 @@ frontmatter `title` + `description` 始终在；H1 由 DocPage 渲染，正文**
 
 要点：
 
-- **两套用法 / 例子 / API 是有意为之**——形状页同时服务两类读者，不要为了凑 6 段把它们揉成「作为图形 / 作为节点形状」交错子节
+- **两套用法 / 例子 / API 是有意为之**——形状页同时服务两类读者，不要为了凑常规结构把它们揉成「作为图形 / 作为节点形状」交错子节
 - **定义单一来源**：形状的权威定义（双重身份 + 可扩展性）写在**形状组落地页**（`shapes/index`），各形状页导言只一句话 + 链接，不复制
 - 无参的 Node 形状（circle / ellipse / rectangle）Node 块较短（无 params 表）；带参的（sector / arc / star / polygon）多一块 **params 表 + 几何 anchor 列表**
-- `## 技术原理` 仍是可选 deepdive，按 6 段规则用 `<ComponentAlert type="tip">` 写导读；不要每个块各写一个技术原理，统一收在共享段
+- `## 技术原理` 仍是可选 deepdive，按本页技术原理规则用 `<ComponentAlert type="tip">` 写导读；不要每个块各写一个技术原理，统一收在共享段
 - 其它（双语、写作风格、Comparison、自绘图示、宽度、ComponentPreview 用法）一律继承 [docs-doc-principle](../docs-doc-principle/SKILL.md)
 
 ## Usage 写法
@@ -81,26 +80,38 @@ import { Path, Step } from '@retikz/react';
 
 `Usage` 下应包含**使用时机相关说明**，帮助读者判断这个组件适合解决什么问题。说明很短时，直接接在最小骨架后的段落尾；说明较长，或 `Usage` 下已有子分小节时，单独开一个 `### 何时使用 / When to use` 子小节说明。
 
-## Composition 适用
+## 组合关系的承载位置
 
-| 组件              | 是否写 Composition                      |
-| ----------------- | --------------------------------------- |
-| `<Layout>`        | ✅ 容器，children 是 Kernel/Sugar       |
-| `<Path>`          | ✅ 必须配 `<Step>` 子节点               |
-| `<Node>` `<Draw>` | ❌ 单组件                               |
-| `<Step>`          | ❌ 只作 `<Path>` 子节点；写在父组件页里 |
+retikz 底层组件多数可直接使用，不把 shadcn compound component 的固定装配结构当作组件页前提，也不设置独立的 `## 组合 / Composition` 顶级章节。
+
+- 组件要求 children 时，在 Usage 的最小 JSX 骨架与紧随其后的一句话中讲清，例如 `<Path>` 与 `<Step>`
+- 存在多种协作或嵌套写法时，在 Examples 下按用户任务组织子节
+- 组合引发用户可感知的 compile、作用域或边界行为时，在 How it works 解释机制
+- 只有普通父子 JSX 关系时，代码本身足够，不再追加说明
 
 ## Examples 分组
 
 Examples 里的示例较多时，必须先抽象主题，再在主题下细分具体能力，避免一长串并列 `###` 把页面变成 demo 清单。
 
+### 静态 demo 与 controls 的分工
+
+先判断变化是否改变组件结构或语义：
+
+| 变化                                                           | 承载方式                       |
+| -------------------------------------------------------------- | ------------------------------ |
+| JSX 结构、对象变体、组合关系、职责边界、错误行为、编译机制不同 | 保留静态 demo                  |
+| JSX 不变，只调整通用样式、尺寸或其它 prop 值                   | 合并进一个 controls playground |
+| 样式本身就是组件的核心能力，或取值会改变语义                   | 按核心语义保留必要静态 demo    |
+
+controls 用于探索参数空间，不用于隐藏核心设计。每页通常只设一个主 playground；正文仍需用最小静态 demo 讲清 canonical 用法，并保留无法靠 prop 切换表达的语义分支。
+
 规则：
 
 - 同类示例 ≥ 3 个时，先合并成主题组。例如 `<Draw>` 的弧线、二次贝塞尔、三次贝塞尔可统一放进"曲线"主题，再在主题下细分
-- 样式类示例统一归入"样式 / Style"主题，不要把 stroke、fill、dash、opacity、font 等每个样式字段都单独提成同级小节
+- 样式类示例默认合并进一个 controls playground 或 API 表；确需静态展示时统一归入一个简短的"样式 / Style"主题，不把 stroke、fill、dash、opacity、font 等字段分别提成小节
 - 主题组用 `###`，组内具体示例用 `####`；如果该页示例较少，可直接用 `###`
 - 主题顺序按用户心智排序：基础 → 常用变体 → 高级 / 边界 → 样式；样式主题一般放在 Examples 最后面，除非该组件本身就是样式组件
-- 分组后每个具体示例仍保持"一句说明 + 一个 `<ComponentPreview>`"的节奏
+- 每个核心语义示例保持"一句说明 + 一个 `<ComponentPreview>`"的节奏；仅有视觉参数差异的条目不单独生成示例
 - 如果一个主题组阅读体量较大或示例过多，先用 TOC、主题分组和稳定锚点保证可跳读；只有该组拥有可独立成立的职责、读者任务或 API 契约时才拆成子页
 - **Examples 保持"展示用法"——底层 compile / 投影 / 命名空间机制的原理说明走 `## 技术原理`**（见下节），不要塞进 Examples 子节让用户在"看 demo"和"读原理"之间来回切
 - 同一主题下的并列示例，优先按**横向并排**排版，便于用户对比；除非形态极端狭长或需要强顺序阅读，否则不要竖着堆成一列
@@ -197,9 +208,12 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 
 ## 常见错误（组件页特有）
 
-- **6 段顺序错乱** —— Examples 放到 API 后面、Related 放最前、How it works 写在 Examples 之前都不行；按表格规定的顺序走
+- **5 类 section 顺序错乱** —— Examples 放到 API 后面、Related 放最前、How it works 写在 Examples 之前都不行；按表格规定的顺序走
+- **照搬独立 Composition 章节** —— 组合要求写进 Usage 骨架、Examples 用法或 How it works 机制，不为普通父子 JSX 单独开顶级章节
 - **API 表少列 / 多列** —— 严格 4 列，列名与顺序与表格规定一致
 - **Examples 平铺 10+ 个 `###`** —— 满足 ≥3 同类时必须主题分组到 `####`
+- **把通用样式写成页面主体** —— stroke、fill、opacity、尺寸等仅改变外观时合并进 controls / API 表；正文优先讲根问题、核心抽象、职责边界和语义分支
+- **用 controls 吞掉语义分支** —— controls 只压缩同一结构下的参数变化；不同 JSX、组合、对象变体、错误与边界行为仍保留静态 demo
 - **把"示例页"内容写进组件页** —— 完整图表的 step-by-step 教程走 `examples/`，不要塞进单组件页的 `## 例子`
 - **把机制 / 原理塞进 Examples 子节** —— Examples 一句说明 + demo 就够；compile / 命名空间 / 投影 / bbox 这些机制走 `## 技术原理`，让用户能选择性跳过
 - **简单组件硬写 How it works** —— 没有底层 compile 行为的组件（纯 sugar / 纯样式 prop 组件）不需要本节；为了"完整性"凑节会让节内只剩重复 API 表的内容

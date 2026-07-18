@@ -31,7 +31,8 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 
 ### 1. 页型结构
 
-- 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 6 段顺序：Usage / Composition / Examples / How it works / API Reference / Related
+- 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 5 类 section 顺序：Usage / Examples / How it works / API Reference / Related
+- 是否照搬了独立的 Composition 顶级章节；必要组合关系是否就近放在 Usage 骨架、Examples 用法或 How it works 机制中
 - 扩展指南是否符合 [`docs-doc-extension`](../docs-doc-extension/SKILL.md)：适用边界 / 定义 / 注入 / 执行机制 / 错误与限制 / API / 相关，并证明内置与自定义同路
 - 示例页是否符合 [`docs-doc-example`](../docs-doc-example/SKILL.md) 的 6 段结构：引言 hero / Prompt / 过程 / 能力 / Limitations / Related
 - 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedCard 子页索引
@@ -50,14 +51,23 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 - 进阶内容是否用 `ComponentAlert` / tip / `How it works` 标出，并提示初次阅读可跳过
 - API 表描述是否能独立读懂，还是只有作者才懂的关键词
 
-### 3. 对照内容
+### 3. 核心设计与内容权重
+
+- 页面是否先讲根问题、核心抽象、职责边界和用户可感知的能力闭环，而不是按 prop 数量组织正文
+- 分组页是否说明成员如何协作，以及本家族明确不负责什么；开放能力是否能看出统一扩展入口
+- 组件页是否把语义、结构、组合、边界 case 与错误行为作为主要示例
+- 边框色、背景色、线宽、透明度、尺寸等通用视觉属性是否简写并收进 controls / API 表
+- controls 是否只压缩同一 JSX 结构下的参数变化；不同 JSX、对象变体、组合关系或编译机制是否仍由静态 demo 讲清
+- 是否错误地用 demo 数量、视觉变体数量或 prop 覆盖率证明能力完备
+
+### 4. 对照内容
 
 - TikZ / D3 / Recharts / shadcn / 其它生态的对照，是否走 `<Comparison target="tikz">` 或页面支持的 reference / 对照组件，而不是散落在正文
 - 隐藏对照块后，正文是否仍然完整自洽
 - 对照内容是否客观，不写“我们更好 / 竞品做不到”
 - 外部生态只在帮助读者迁移或消除困惑时出现，不为了显示知识面而出现
 
-### 4. Demo 覆盖
+### 5. Demo 覆盖
 
 - 用户需要看到效果才能理解的功能，是否有 `<ComponentPreview files="..." />`
 - 新 prop / 新字段 / 新组件是否至少有一个最小 demo；复杂能力是否拆成 2-3 个单主题 demo
@@ -65,14 +75,14 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 - 含展示文本的 demo 是否 zh / en 双语文件并行；无展示文本时单文件即可
 - demo 是否可复制：不过度抽 helper、不依赖读者看不到的上下文
 
-### 5. 图示与复杂逻辑
+### 6. 图示与复杂逻辑
 
 - 架构、数据流、多阶段流程、坐标变换、命名空间、编译管线等内容，是否有 retikz 自绘图示（通常 `<ComponentPreview hideCode />`）
 - 图示是否服务理解，而不是装饰；图中标签是否少而清楚
 - 图示和正文是否互相解释：正文先给读图线索，图后收束结论
 - 没有图示时，是否至少用表格 / 步骤列表把流程拆开
 
-### 6. 三处协同与可维护性
+### 7. 三处协同与可维护性
 
 - `contents/`、`data/`、`i18n/` 是否同步
 - 页面路由、目录段、data id 是否一致
@@ -80,7 +90,7 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 - Related 链接是否存在，是否链到最有帮助的下一页
 - 新文档是否避免引用本地路径给普通用户看；需要引用项目设计文档时用 GitHub URL
 
-### 7. 链接有效性
+### 8. 链接有效性
 
 - 逐条检查所有链接，不以正文看起来正确、`tsc` 或 build 通过代替可达性验证；zh / en 分别检查
 - 站内路径必须命中已注册路由，页内锚点必须落到实际标题；HTTP(S) 链接确认目标与响应状态正常
@@ -118,14 +128,16 @@ INFO（做得好的地方 / 可保留）：
 
 严重度判定：
 
-- **BLOCKING**：结构不符合页型、zh/en 明显不一致、API / demo 与实际行为冲突、必要 demo 缺失、初级前端读者无法理解主线、链接 404 / 锚点失效 / 源码路径或行号错误
-- **WARNING**：术语偏多但还能读、进阶内容位置不佳、Related 不够好、demo 可更聚焦
+- **BLOCKING**：结构不符合页型、zh/en 明显不一致、API / demo 与实际行为冲突、必要 demo 缺失、核心职责或边界缺失导致读者无法理解主线、链接 404 / 锚点失效 / 源码路径或行号错误
+- **WARNING**：术语偏多但还能读、进阶内容位置不佳、Related 不够好、通用样式挤占正文、controls 与静态 demo 分工不清
 - **INFO**：可保留的写法、已经满足规范的地方、适合进入 changelog / review summary 的亮点
 
 ## 常见问题
 
 - **把实现说明当用户文档主线**：先讲用户怎么用，再把内部机制放进 How it works 或 tip
 - **demo 太大**：一个 demo 只演示一个能力；多能力拆多个 demo
+- **样式 demo 太多**：通用视觉属性合并进 controls / API 表，把篇幅还给核心抽象、职责边界和语义分支
+- **controls 代替设计说明**：controls 只能探索同一结构的参数空间，不能隐藏不同结构、组合或边界行为
 - **正文散落 TikZ 对照**：统一放到 Comparison / reference，对照隐藏后正文仍要能读
 - **API 表像源码注释**：改成用户能判断的描述，“什么时候设、设了会怎样、默认是什么”
 - **进阶内容没提示可跳过**：初次阅读路径要干净，deepdive 要显式标出

@@ -2,91 +2,68 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/** Layout 两种输入路径的归一流程图 */
+/** Layout 从 React 输入到渲染结果的职责闭环 */
 const Demo: FC = () => (
-  <Layout width={560} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node
-      id="children"
-      position={[-220, -20]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
-      cornerRadius={4}
-      font={{ size: 14 }}
-    >
+  <Layout width={620} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Node id="jsx" position={[-270, -55]} stroke="dimgray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
       JSX children
     </Node>
+    <Node id="ir-input" position={[-270, 55]} stroke="dimgray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+      ir prop
+    </Node>
     <Node
-      id="root-scope"
-      position={[-50, -20]}
+      id="layout"
+      position={[-120, 0]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.1}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      font={{ weight: 'bold' }}
     >
-      根 Scope（按需）
+      Layout（React）
     </Node>
     <Node
-      id="style"
-      position={[-100, -125]}
+      id="definitions"
+      position={[-120, -105]}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
     >
-      全图样式 props
+      definitions / options
+    </Node>
+    <Node id="core-ir" position={[15, 0]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
+      Core IR
     </Node>
     <Node
-      id="ir-prop"
-      position={[-220, 60]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
+      id="compile"
+      position={[155, 0]}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.1}
       cornerRadius={4}
-      font={{ size: 14 }}
+      font={{ weight: 'bold' }}
     >
-      ir prop
+      compile（core）
     </Node>
-    <Node
-      id="ir"
-      position={[195, 0]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
-    >
-      JSON IR
+    <Node id="scene" position={[285, 0]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
+      Scene
     </Node>
-    <Draw way={['children', 'root-scope']} arrow="->" />
-    <Draw
-      way={[
-        'style',
-        { label: { text: '有指令时', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'root-scope',
-      ]}
-      arrow="->"
-      stroke="gray"
-      dashPattern={[4, 3]}
-    />
-    <Draw
-      way={[
-        'root-scope',
-        { label: { text: '转换', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'ir',
-      ]}
-      arrow="->"
-    />
-    <Draw
-      way={[
-        'ir-prop',
-        { label: { text: '直接采用', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'ir',
-      ]}
-      arrow="->"
-    />
+    <Node id="render" position={[155, 100]} stroke="dimgray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+      render 执行
+    </Node>
+    <Node id="output" position={[285, 100]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
+      SVG / Canvas
+    </Node>
+
+    <Draw way={['jsx', 'layout']} arrow="->" />
+    <Draw way={['ir-input', 'layout']} arrow="->" />
+    <Draw way={['definitions', 'layout']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['layout', 'core-ir']} arrow="->" />
+    <Draw way={['core-ir', 'compile']} arrow="->" />
+    <Draw way={['compile', 'scene']} arrow="->" />
+    <Draw way={['scene', 'render']} arrow="->" />
+    <Draw way={['render', 'output']} arrow="->" />
   </Layout>
 );
 

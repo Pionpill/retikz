@@ -119,6 +119,21 @@ apps/docs/src/
 
 如果一页包含多个彼此隔离、没有递进逻辑的条目（例如多个 transform、多个策略、多个变体），按条目组织内容。每个条目里就近放用途说明、demo、关键配置 / API 表和注意事项；只有跨条目的公共机制才单独成节。
 
+## 核心设计优先
+
+文档内容按能力完备性排序，不按 prop 数量或可展示效果数量排序。写作前先从当前代码、测试与所属能力域的 completeness 文档确认：
+
+1. 解决的根问题与核心抽象
+2. 该页对象在能力闭环中的职责，以及明确不负责的边界
+3. 输入、处理、产物、下游消费是否形成用户可理解的闭环
+4. 开放能力的内置与自定义是否共用 Definition / registry / resolver / 消费路径
+
+正文优先解释这些设计如何影响用户选择和使用，不把内部审计清单原样搬给用户。只有会改变语义、结构、组合、所有权、扩展方式、错误行为或边界的差异，才值得展开说明或独立 demo。
+
+边框色、背景色、线宽、透明度、字号等跨图元通用视觉属性默认只保留简要说明与 API 可查询性；需要试验参数空间时，合并进一个 controls playground。仅当样式本身就是该页解决的核心问题，或不同取值会改变语义而不只是外观时，才升级为独立内容。
+
+`ComponentPreview` controls 用于压缩“同一结构下改变 prop 值”的参数空间，不能替代展示不同 JSX 结构、对象变体、组合关系、边界 case、错误行为或编译机制的静态 demo。不要用 demo 数量或视觉变体数量证明能力完备。
+
 ## DSL 优先，IR 克制
 
 retikz 文档面向**用户**——用户写的是 DSL（`<Layout>` / `<Node>` / `<Path>` / `<Draw>` 等 JSX）。正文以 DSL 用法为主；IR 是底层的持久化 / AI 生成中间表示，对用户**默认隐藏**，只在以下场景下出现：
@@ -160,12 +175,12 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 
 ## 图文结合，多配图
 
-**优先图文结合、提高配图密度**——能用图说清的就配图，别堆纯文字。文档站既是教材也是 retikz 的活体演示,图多 = 演示多,默认姿势是「一段讲解配一张图」而非「整页文字偶尔插图」:
+**优先图文结合，但只为核心语义配图**——关系、行为或边界能用图说清时就配图，不按 prop 数量堆图。文档站既是教材也是 retikz 的活体演示，配图应帮助读者理解设计，而不是枚举视觉参数：
 
-- 组件页：每个能力点 / 关键 prop 尽量配一个 `<ComponentPreview>` demo，而不是只用文字 + API 表描述
+- 组件页：每个核心语义、结构分支或边界 case 尽量配一个 `<ComponentPreview>`；通用样式 prop 合并到 controls 或 API 表
 - 概念 / 设计页：每个模型 / 流程 / 关系尽量配一张叙述图（详见 [`docs-doc-concept`](../docs-doc-concept/SKILL.md)）
 - 示例页：本就是累加式 demo，天然图文结合
-- 判断信号：一屏滚下去只有文字没有图，多半是漏画了
+- 判断信号：核心关系只能靠长段文字解释时多半漏了图；通用样式只有文字或 API 表不算漏图
 
 ## 图示一律 retikz 自绘
 
@@ -282,10 +297,13 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 - `PreviewControlSlot.visibility` 必须显式写 `hover` 或 `always`；不要再从宿主统一控制可见性。
 - animation 与预览宿主工具使用 `hover`；作为 demo 参数的 select / input 通常使用 `always`。
 - 局部 `controls.slots` 与共享 controls 追加组合；id 必须全局唯一。替换 animation 时先写 `animation: false`。
-- 有主题切换时，预览内容顶部预留 `40px` 间距，避免悬浮控件遮挡 demo。
+- 完成 demo 后在真实页面复核内容大小，按渲染结果选择合适的 `<ComponentPreview size>`；常规 demo 的内容与预览区四边各保留约 `12px`。
+- 内容显得过大、贴边或过小时，继续调整 `size` 并重新检查，不以源码中的逻辑宽高直接判断。
+- 存在主题 / 样式切换等顶部悬浮控件时，在常规 `12px` 基础上额外增加 `40px` 顶部间距，即顶部约 `52px`；其余三边仍约 `12px`。
 
 声明式 controls 作者约定：
 
+- 写 controls 前先核对 `ComponentPreview` 已有 actions；actions 已覆盖的交互不再写入 controls，只保留 demo 专属参数
 - 多属性 playground 用 `definePreviewControls({ presentation: 'panel', sections: [...] })`，一个或少量轻量控件用 `presentation: 'overlay'`
 - 标准表单字段优先使用 `text`、`number`、`select`、`switch`、`color`、`range` 六种 kind，不用 `PreviewControlSlot.render` 重写基础控件
 - controls 与 demo 从 `@/modules/docs/components/component-preview/author` 导入 `definePreviewControls`、`usePreviewControls` 和作者类型；该入口不反向加载 eager demo registry
@@ -372,6 +390,7 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 - **写成连续的大段文字** —— 优先表格 / 示例 / 代码块；段落超过 3 行就拆
 - **写防御性 / 攻击性内容** —— "竞品做不到 / 我们更好"等段落直接删，正向表述自身能力即可
 - **普通用法页大段讲 IR 结构 / 字段** —— IR 是后端 / AI 用的隐藏层，正文说 DSL 即可；要看 IR 的用户点 `<ComponentPreview>` 的 IR tab
+- **用样式 demo 数量证明“能力丰富”** —— 完备性看根问题、职责边界、闭环与扩展路径；通用视觉属性收进 controls / API 表
 - **把 TikZ / 外部生态对照散落在正文** —— 用 `<Comparison>` 可选显示；隐藏对照后正文仍要完整
 - **塞 jpg / png / Mermaid / 截图当演示** —— 演示用 `<ComponentPreview>` + retikz 自绘；ASCII 框图作辅助叙述可以
 
