@@ -50,6 +50,7 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 - 句子是否被内部词堆满，如“renderer-agnostic resource table / emit-in-compile / synthetic bbox”这类内容是否放进可选 deepdive
 - 进阶内容是否用 `ComponentAlert` / tip / `How it works` 标出，并提示初次阅读可跳过
 - API 表描述是否能独立读懂，还是只有作者才懂的关键词
+- `frontmatter.description` 是否能脱离页面独立说明根问题与核心职责或使用入口，供 manifest / `llms.txt` 直接作为机器摘要使用
 
 ### 3. 核心设计与内容权重
 
@@ -74,6 +75,8 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 - demo 是否真展示了该能力，而不是只把 prop 写上但视觉上看不出差异
 - 含展示文本的 demo 是否 zh / en 双语文件并行；无展示文本时单文件即可
 - demo 是否可复制：不过度抽 helper、不依赖读者看不到的上下文
+- 是否在真实页面复核 `<ComponentPreview size>`：常规内容四边约 `12px`，有顶部悬浮样式控件时顶部约 `52px`，且没有过大、贴边或过小
+- renderer、主题、全屏、重置、代码视图等宿主 actions 是否被重复写成静态 demo 或 controls；只有页面讲宿主机制或该选择改变当前能力语义时才保留
 
 ### 6. 图示与复杂逻辑
 
@@ -138,6 +141,7 @@ INFO（做得好的地方 / 可保留）：
 - **demo 太大**：一个 demo 只演示一个能力；多能力拆多个 demo
 - **样式 demo 太多**：通用视觉属性合并进 controls / API 表，把篇幅还给核心抽象、职责边界和语义分支
 - **controls 代替设计说明**：controls 只能探索同一结构的参数空间，不能隐藏不同结构、组合或边界行为
+- **只看逻辑宽高判断 demo 尺寸**：必须打开真实页面，根据内容包围盒、宿主控件和四周留白选择 `<ComponentPreview size>`
 - **正文散落 TikZ 对照**：统一放到 Comparison / reference，对照隐藏后正文仍要能读
 - **API 表像源码注释**：改成用户能判断的描述，“什么时候设、设了会怎样、默认是什么”
 - **进阶内容没提示可跳过**：初次阅读路径要干净，deepdive 要显式标出

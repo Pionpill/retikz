@@ -108,6 +108,7 @@ apps/docs/src/
 - **少形容词**：“非常 / 极其 / 强大”这类无信息词直接删。
 - **标题简写**：H2 / H3 优先用短标题，表达主题即可；限定条件、适用场景和解释放到正文首句或表格里，不要堆进标题。
 - **生僻词首次标注**：非常见词汇（如 `canonical 行` / `lowering` / `bbox` / `IR` 等）在一页中**首次**出现时，就近括注中文含义或一句话解释，让读者无需跳页就能跟上；同一页后续出现不再重复。跨页是独立文档，每页各自在首次出现处标注。
+- **机器摘要自洽**：`frontmatter.description` 同时进入 manifest / `llms.txt`，用一句可脱离页面独立理解的话说明根问题与核心职责或使用入口；不写“本页介绍”“如上”“如下”等依赖上下文的描述。
 
 | 内容              | 优先形式             |
 | ----------------- | -------------------- |
@@ -300,10 +301,10 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 - 完成 demo 后在真实页面复核内容大小，按渲染结果选择合适的 `<ComponentPreview size>`；常规 demo 的内容与预览区四边各保留约 `12px`。
 - 内容显得过大、贴边或过小时，继续调整 `size` 并重新检查，不以源码中的逻辑宽高直接判断。
 - 存在主题 / 样式切换等顶部悬浮控件时，在常规 `12px` 基础上额外增加 `40px` 顶部间距，即顶部约 `52px`；其余三边仍约 `12px`。
+- `ComponentPreview` 宿主已有的 renderer、主题、全屏、重置、代码视图等通用 actions，不在正文重复建立静态 demo，也不写入 controls；只有页面本身讲宿主机制，或该选择改变当前能力的语义 / 行为时才单独展示。
 
 声明式 controls 作者约定：
 
-- 写 controls 前先核对 `ComponentPreview` 已有 actions；actions 已覆盖的交互不再写入 controls，只保留 demo 专属参数
 - 多属性 playground 用 `definePreviewControls({ presentation: 'panel', sections: [...] })`，一个或少量轻量控件用 `presentation: 'overlay'`
 - 标准表单字段优先使用 `text`、`number`、`select`、`switch`、`color`、`range` 六种 kind，不用 `PreviewControlSlot.render` 重写基础控件
 - controls 与 demo 从 `@/modules/docs/components/component-preview/author` 导入 `definePreviewControls`、`usePreviewControls` 和作者类型；该入口不反向加载 eager demo registry
