@@ -13,6 +13,7 @@ import type {
 
 import i18n from '../../src/i18n';
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
+import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import { ComponentPreview } from '../../src/modules/docs/components/component-preview/ComponentPreview';
 import { DemoLocationContext } from '../../src/modules/docs/components/component-preview/context';
 import { buildKey, demoModules, demoSources } from '../../src/modules/docs/components/component-preview/registry';
@@ -159,7 +160,7 @@ describe('ComponentPreview localized controls', () => {
     expect(props.controlSlots?.map(slot => slot.id)).toEqual(['animation-controls', 'local-control']);
   });
 
-  it('按 provider、configured config、demo raw slot、local slot 顺序组合真实预览 controls', () => {
+  it('按 provider、overlay field、definition slot、local slot 顺序组合真实预览 controls', () => {
     const moduleSlot: PreviewControlSlot = {
       id: 'module-raw-slot',
       visibility: 'always',
@@ -170,16 +171,20 @@ describe('ComponentPreview localized controls', () => {
       visibility: 'always',
       render: () => <button aria-label="Local slot" />,
     };
-    const restore = installDemoRegistryFixture('control-order-fixture', [
-      {
-        kind: 'input',
-        id: 'configured-config',
-        label: 'Configured config',
-        defaultValue: 'fixture',
-        visibility: 'hover',
-      },
-      moduleSlot,
-    ]);
+    const definition = definePreviewControls({
+      presentation: 'overlay',
+      controls: [
+        {
+          kind: 'text',
+          id: 'configured-config',
+          label: 'Configured config',
+          defaultValue: 'fixture',
+          visibility: 'hover',
+        },
+      ],
+      slots: [moduleSlot],
+    });
+    const restore = installDemoRegistryFixture('control-order-fixture', definition);
 
     try {
       const props = renderPreview(
@@ -194,6 +199,7 @@ describe('ComponentPreview localized controls', () => {
         'local-slot',
       ]);
       expect(props.controlSlots?.find(slot => slot.id === 'configured-config')?.visibility).toBe('hover');
+      expect(props.controlDefinition).toBe(definition);
     } finally {
       restore();
     }
@@ -205,16 +211,22 @@ describe('ComponentPreview localized controls', () => {
       visibility: 'always',
       render: () => <button aria-label="Duplicate middle slot" />,
     };
-    const restore = installDemoRegistryFixture('control-duplicate-fixture', [
-      {
-        kind: 'input',
-        id: duplicateSlot.id,
-        label: 'Duplicate config',
-        defaultValue: 'fixture',
-        visibility: 'hover',
-      },
-      duplicateSlot,
-    ]);
+    const restore = installDemoRegistryFixture(
+      'control-duplicate-fixture',
+      definePreviewControls({
+        presentation: 'overlay',
+        controls: [
+          {
+            kind: 'text',
+            id: duplicateSlot.id,
+            label: 'Duplicate config',
+            defaultValue: 'fixture',
+            visibility: 'hover',
+          },
+        ],
+        slots: [duplicateSlot],
+      }),
+    );
 
     try {
       expect(() => renderPreview(fixtureSegments, <ComponentPreview files="control-duplicate-fixture" />)).toThrow(
@@ -223,6 +235,33 @@ describe('ComponentPreview localized controls', () => {
     } finally {
       restore();
     }
+  });
+
+  it('panel definition 到达 Card 且不生成字段 slot', () => {
+    const definition = definePreviewControls({
+      presentation: 'panel',
+      sections: [{ controls: [{ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }] }],
+    });
+    const restore = installDemoRegistryFixture('control-panel-fixture', definition);
+
+    try {
+      const props = renderPreview(fixtureSegments, <ComponentPreview files="control-panel-fixture" />);
+
+      expect(props.controlDefinition).toBe(definition);
+      expect(props.controlSlots?.map(slot => slot.id)).toEqual(['animation-controls']);
+    } finally {
+      restore();
+    }
+  });
+
+  it('为 node-styled 解析真实 panel definition', () => {
+    const props = renderPreview(['kernel', 'components', 'node', 'overview'], <ComponentPreview files="node-styled" />);
+
+    expect(props.controlDefinition).toMatchObject({
+      presentation: 'panel',
+      title: 'Node 属性',
+    });
+    expect(props.controlSlots?.map(slot => slot.id)).not.toContain('text');
   });
 
   it('英文页面使用英文声明式 controls', async () => {

@@ -193,6 +193,7 @@
     "animationSystem": "跟随系统",
     "animationEnabled": "开启",
     "animationDisabled": "关闭",
+    "controlPanelDefaultOpen": "默认打开属性面板",
     "hideAllCode": "隐藏所有代码",
     "expandAllCode": "展开所有代码",
     "dragComponent": "拖动组件"

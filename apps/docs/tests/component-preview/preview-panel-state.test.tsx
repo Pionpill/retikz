@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
+import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
 
 import { buildAnimationControlSlots } from '../../src/modules/docs/components/component-preview/controls';
 import {
@@ -12,12 +13,14 @@ import {
 } from '../../src/modules/docs/components/component-preview/preview-panel';
 
 type ProbeProps = {
+  controlState: PreviewControlState;
   onState: (state: PreviewPanelState) => void;
 };
 
 const Probe: FC<ProbeProps> = props => {
-  const { onState } = props;
+  const { controlState, onState } = props;
   const state = usePreviewPanelState({
+    controlState,
     rendererMode: 'svg',
     size: 'md',
     dragEnabled: false,
@@ -27,28 +30,44 @@ const Probe: FC<ProbeProps> = props => {
   return null;
 };
 
+const createControlState = (): PreviewControlState => {
+  const state: PreviewControlState = {
+    values: {},
+    setValue: (id, value) => {
+      state.values = { ...state.values, [id]: value };
+    },
+    reset: () => {
+      state.values = {};
+    },
+  };
+  return state;
+};
+
 describe('usePreviewPanelState', () => {
-  it('为每个预览面板创建独立 runtime、control state 与渲染 ref', () => {
+  it('让两个预览面板共享 control state 并隔离 runtime 与渲染 ref', () => {
     let card: PreviewPanelState | null = null;
     let dialog: PreviewPanelState | null = null;
+    const controlState = createControlState();
 
-    renderToStaticMarkup(<Probe onState={state => (card = state)} />);
-    renderToStaticMarkup(<Probe onState={state => (dialog = state)} />);
+    renderToStaticMarkup(<Probe controlState={controlState} onState={state => (card = state)} />);
+    renderToStaticMarkup(<Probe controlState={controlState} onState={state => (dialog = state)} />);
 
     expect(card).not.toBeNull();
     expect(dialog).not.toBeNull();
     expect(card!.runtime).not.toBe(dialog!.runtime);
-    expect(card!.controlState).not.toBe(dialog!.controlState);
+    expect(card!.controlState).toBe(dialog!.controlState);
+    expect(card!.controlState).toBe(controlState);
     expect(card!.renderPaneRef).not.toBe(dialog!.renderPaneRef);
     expect(card!.runtime.value('curve')).toBeUndefined();
-    expect(dialog!.runtime.value('curve')).toBeUndefined();
+    card!.runtime.setValue('curve', 'step');
+    expect(dialog!.runtime.value('curve')).toBe('step');
   });
 
   it('让 configured 与 animation 定义分别通过接收方 runtime 求值', () => {
     let card: PreviewPanelState | null = null;
     let dialog: PreviewPanelState | null = null;
-    renderToStaticMarkup(<Probe onState={state => (card = state)} />);
-    renderToStaticMarkup(<Probe onState={state => (dialog = state)} />);
+    renderToStaticMarkup(<Probe controlState={createControlState()} onState={state => (card = state)} />);
+    renderToStaticMarkup(<Probe controlState={createControlState()} onState={state => (dialog = state)} />);
     const cardState: PreviewPanelState = card!;
     const dialogState: PreviewPanelState = dialog!;
     cardState.runtime.value = () => 'card-value';
@@ -56,7 +75,7 @@ describe('usePreviewPanelState', () => {
     cardState.runtime.active = () => false;
     dialogState.runtime.active = () => true;
     const configuredSlot = buildConfiguredControlSlots([
-      { kind: 'input', id: 'curve', label: 'Curve', defaultValue: 'default' },
+      { kind: 'text', id: 'curve', label: 'Curve', defaultValue: 'default' },
     ])[0];
     const animationSlot = buildAnimationControlSlots()[0];
 

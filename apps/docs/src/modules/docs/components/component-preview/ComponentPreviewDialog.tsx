@@ -16,20 +16,28 @@ import {
 import { useState } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
-import type { AlignKey, ComponentRenderSource, PreviewActionSlot, PreviewControlSlot, SizeKey } from './types';
+import type {
+  AlignKey,
+  ComponentRenderSource,
+  PreviewActionSlot,
+  PreviewControlsDefinition,
+  PreviewControlSlot,
+  PreviewControlState,
+  SizeKey,
+} from './types';
 
 import { ToolbarIconButton } from './components';
 import { alignClass } from './constants';
+import { PreviewResizeHandle, PreviewWorkspace } from './control-panel';
 import { mergePreviewControlSlots } from './controls';
 import {
   downloadPreviewImage,
   PAN_STEP,
-  PreviewPanel,
   PreviewToolbar,
   PreviewToolbarButton,
   RendererModeButton,
@@ -50,6 +58,14 @@ export type ComponentPreviewDialogProps = {
   align: AlignKey;
   /** 从 ComponentPreview 原始配置初始化，不读取 card controller 当前 size。 */
   initialSize: SizeKey;
+  /** 与所属 Card 双向共享的业务控件状态 */
+  controlState: PreviewControlState;
+  /** 与所属 Card 共享的声明式 controls definition */
+  controlDefinition?: PreviewControlsDefinition;
+  /** 与所属 Card 共享的属性面板打开状态 */
+  controlPanelOpen: boolean;
+  /** 更新 Card/Dialog 共享的属性面板打开状态 */
+  onControlPanelOpenChange: (open: boolean) => void;
   /** 针对弹窗独立 runtime 求值的预览控制定义。 */
   controlSlots?: Array<PreviewControlSlot>;
   /** 针对弹窗独立 runtime 求值的 header 动作定义。 */
@@ -106,13 +122,28 @@ const buildDialogPreviewToolSlots = (state: ReturnType<typeof usePreviewPanelSta
 
 /** 拥有独立预览与源码 controller 的全屏演示弹窗。 */
 export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => {
-  const { name, Component, source, align, initialSize, controlSlots, dialogActions, showAskAi = true, onClose } = props;
+  const {
+    name,
+    Component,
+    source,
+    align,
+    initialSize,
+    controlState,
+    controlDefinition,
+    controlPanelOpen,
+    onControlPanelOpenChange,
+    controlSlots,
+    dialogActions,
+    showAskAi = true,
+    onClose,
+  } = props;
   const [globalDefaults] = useState(() => {
     const { rendererMode, dragEnabled } = useComponentPreviewStore.getState();
     return { rendererMode, dragEnabled };
   });
   const sourceState = useSourcePanelState(source);
   const previewState = usePreviewPanelState({
+    controlState,
     rendererMode: globalDefaults.rendererMode,
     rendererModeOverride: sourceState.activeRendererMode,
     size: initialSize,
@@ -136,13 +167,18 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     fillAiDraft(buildAskAiPrompt(lang, pageTitle, '', name));
   };
   const previewPanel = (
-    <PreviewPanel
-      state={previewState}
+    <PreviewWorkspace
+      definition={controlDefinition}
+      controlState={controlState}
+      controlPanelOpen={controlPanelOpen}
+      controlDensity="default"
+      onControlPanelOpenChange={onControlPanelOpenChange}
+      previewState={previewState}
       Component={Component}
       activeRender={sourceState.activeRender}
       controlSlots={resolvedDialogControlSlots}
-      className={cn('flex h-full w-full justify-center overflow-hidden p-10 select-none', alignClass[align])}
-      style={DOT_PATTERN_STYLE}
+      previewClassName={cn('flex h-full w-full justify-center overflow-hidden p-10 select-none', alignClass[align])}
+      previewStyle={DOT_PATTERN_STYLE}
       pinControlsOnClick={false}
     />
   );
@@ -191,7 +227,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
               {previewPanel}
             </ResizablePanel>
-            <ResizableHandle withHandle />
+            <PreviewResizeHandle />
             <ResizablePanel defaultSize={40} minSize={15}>
               <SourcePanel
                 state={sourceState}

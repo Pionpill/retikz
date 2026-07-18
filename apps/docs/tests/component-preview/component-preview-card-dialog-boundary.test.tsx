@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentPreviewDialogProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
 
+import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 
 const dialogCapture = vi.hoisted(() => ({ props: [] as Array<ComponentPreviewDialogProps> }));
@@ -29,6 +30,7 @@ vi.mock('../../src/modules/docs/store', () => {
     isExpand: false,
     rendererMode: 'svg',
     dragEnabled: false,
+    controlPanelDefaultOpen: true,
   };
   return {
     useComponentPreviewStore: Object.assign((selector: (snapshot: typeof state) => unknown) => selector(state), {
@@ -40,6 +42,14 @@ vi.mock('../../src/modules/docs/store', () => {
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const Demo: FC = () => null;
+const panelDefinition = definePreviewControls({
+  presentation: 'panel',
+  sections: [
+    {
+      controls: [{ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }],
+    },
+  ],
+});
 
 afterEach(() => {
   dialogCapture.props.length = 0;
@@ -47,6 +57,46 @@ afterEach(() => {
 });
 
 describe('ComponentPreviewCard dialog boundary', () => {
+  it('正文 Card 使用 compact 属性字段', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <ComponentPreviewCard name="compact-controls" Component={Demo} controlDefinition={panelDefinition} />,
+      );
+    });
+
+    expect(container.querySelector('aside')?.getAttribute('data-density')).toBe('compact');
+
+    act(() => root.unmount());
+  });
+
+  it('带属性面板的 Card 最小使用 md 尺寸', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <ComponentPreviewCard
+          name="minimum-panel-size"
+          Component={Demo}
+          size="xs"
+          controlDefinition={panelDefinition}
+        />,
+      );
+    });
+
+    const workspace = container.querySelector('[data-slot="preview-workspace"]');
+    expect(workspace?.classList.contains('h-56')).toBe(true);
+    expect(workspace?.classList.contains('h-32')).toBe(false);
+    expect(container.querySelector('button[aria-label="Preview size md"]')?.getAttribute('data-state')).toBe('on');
+
+    act(() => root.unmount());
+  });
+
   it('将 previewClassName 合并到 inline 预览容器', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -59,6 +109,8 @@ describe('ComponentPreviewCard dialog boundary', () => {
     });
 
     expect(container.querySelector('.card-preview-class')).not.toBeNull();
+    expect(container.querySelector('[data-slot="preview-workspace"]')?.classList.contains('h-56')).toBe(true);
+    expect(container.querySelector('.card-preview-class')?.classList.contains('h-full')).toBe(true);
 
     act(() => root.unmount());
   });

@@ -12,7 +12,9 @@ import type {
   AlignKey,
   ComponentRenderSource,
   PreviewActionSlot,
+  PreviewControlsDefinition,
   PreviewControlSlot,
+  PreviewControlState,
   SizeKey,
 } from '../../src/modules/docs/components/component-preview/types';
 
@@ -53,6 +55,7 @@ vi.mock('../../src/modules/docs/store', () => {
     isExpand: false,
     rendererMode: 'canvas',
     dragEnabled: false,
+    controlPanelDefaultOpen: true,
   };
   return {
     useComponentPreviewStore: Object.assign((selector: (snapshot: typeof state) => unknown) => selector(state), {
@@ -62,6 +65,11 @@ vi.mock('../../src/modules/docs/store', () => {
 });
 
 const Demo: FC = () => null;
+const controlState: PreviewControlState = {
+  values: {},
+  setValue: () => undefined,
+  reset: () => undefined,
+};
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -75,6 +83,10 @@ describe('ComponentPreviewDialog', () => {
       source?: ComponentRenderSource;
       align: AlignKey;
       initialSize: SizeKey;
+      controlState: PreviewControlState;
+      controlDefinition?: PreviewControlsDefinition;
+      controlPanelOpen: boolean;
+      onControlPanelOpenChange: (open: boolean) => void;
       controlSlots?: Array<PreviewControlSlot>;
       dialogActions?: Array<PreviewActionSlot>;
       showAskAi?: boolean;
@@ -91,6 +103,9 @@ describe('ComponentPreviewDialog', () => {
         Component={Demo}
         align="center"
         initialSize="md"
+        controlState={controlState}
+        controlPanelOpen
+        onControlPanelOpenChange={() => undefined}
         dialogActions={[
           {
             id: 'runtime-probe',
@@ -124,6 +139,9 @@ describe('ComponentPreviewDialog', () => {
         Component={Demo}
         align="center"
         initialSize="sm"
+        controlState={controlState}
+        controlPanelOpen
+        onControlPanelOpenChange={() => undefined}
         dialogActions={[actionSlot]}
         onClose={() => undefined}
       />,
@@ -134,6 +152,9 @@ describe('ComponentPreviewDialog', () => {
         Component={Demo}
         align="center"
         initialSize="xl"
+        controlState={controlState}
+        controlPanelOpen
+        onControlPanelOpenChange={() => undefined}
         dialogActions={[actionSlot]}
         onClose={() => undefined}
       />,
@@ -220,6 +241,9 @@ describe('ComponentPreviewDialog', () => {
           Component={Demo}
           align="center"
           initialSize="md"
+          controlState={controlState}
+          controlPanelOpen
+          onControlPanelOpenChange={() => undefined}
           controlSlots={[duplicateSlot]}
           onClose={() => undefined}
         />,
@@ -315,7 +339,7 @@ describe('ComponentPreviewDialog', () => {
     act(() => root.unmount());
   });
 
-  it('通过真实 Card/Dialog 装配隔离状态，并在关闭重开后重置弹窗 controller', () => {
+  it('通过真实 Card/Dialog 共享控件值，并在关闭重开后重置弹窗视图 controller', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -328,7 +352,7 @@ describe('ComponentPreviewDialog', () => {
           <button
             type="button"
             aria-label={`control ${value}`}
-            onClick={() => runtime.setValue('integration-owner-probe', 'dirty')}
+            onClick={() => runtime.setValue('integration-owner-probe', value === 'dirty' ? 'dialog' : 'dirty')}
           >
             {value}
           </button>
@@ -351,14 +375,15 @@ describe('ComponentPreviewDialog', () => {
     expect(queryButton('control dirty')).toBeTruthy();
 
     act(() => queryButton('Maximize').click());
-    expect(container.querySelectorAll('button[aria-label="control fresh"]')).toHaveLength(1);
-    expect(container.querySelectorAll('button[aria-label="control dirty"]')).toHaveLength(1);
+    expect(container.querySelectorAll('button[aria-label="control fresh"]')).toHaveLength(0);
+    expect(container.querySelectorAll('button[aria-label="control dirty"]')).toHaveLength(2);
     expect(container.querySelector('[data-resizable-panel-group]')).toBeNull();
     expect(container.querySelector('[data-resizable-handle]')).toBeNull();
     expect(container.querySelector('button[aria-label="Copy"]')).toBeNull();
 
-    act(() => queryButton('control fresh').click());
-    expect(container.querySelectorAll('button[aria-label="control dirty"]')).toHaveLength(2);
+    const dirtyButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="control dirty"]');
+    act(() => dirtyButtons[1].click());
+    expect(container.querySelectorAll('button[aria-label="control dialog"]')).toHaveLength(2);
     expect(container.querySelectorAll('button[aria-label="Canvas renderer"]')).toHaveLength(2);
     const rendererButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Canvas renderer"]');
     act(() => rendererButtons[1].click());
@@ -367,11 +392,11 @@ describe('ComponentPreviewDialog', () => {
 
     act(() => queryButton('Close').click());
     expect(container.querySelector('[data-dialog-content]')).toBeNull();
-    expect(container.querySelectorAll('button[aria-label="control dirty"]')).toHaveLength(1);
+    expect(container.querySelectorAll('button[aria-label="control dialog"]')).toHaveLength(1);
 
     act(() => queryButton('Maximize').click());
-    expect(container.querySelectorAll('button[aria-label="control fresh"]')).toHaveLength(1);
-    expect(container.querySelectorAll('button[aria-label="control dirty"]')).toHaveLength(1);
+    expect(container.querySelectorAll('button[aria-label="control fresh"]')).toHaveLength(0);
+    expect(container.querySelectorAll('button[aria-label="control dialog"]')).toHaveLength(2);
     expect(container.querySelectorAll('button[aria-label="Canvas renderer"]')).toHaveLength(2);
 
     act(() => root.unmount());

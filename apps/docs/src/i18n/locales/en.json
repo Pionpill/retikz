@@ -193,6 +193,7 @@
     "animationSystem": "Follow system",
     "animationEnabled": "On",
     "animationDisabled": "Off",
+    "controlPanelDefaultOpen": "Open controls panel by default",
     "hideAllCode": "Hide all code",
     "expandAllCode": "Expand all code",
     "dragComponent": "Drag component"

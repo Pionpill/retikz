@@ -1,23 +1,22 @@
 ﻿import type { PathCurveValue } from '@retikz/plot';
 import type { FC } from 'react';
 
-import { PathCurve } from '@retikz/plot';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
 
-import { usePreviewControlValue } from '@/modules/docs/components/component-preview/context';
+import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { closureRadar, closureTrend } from './line-closure.data';
-import { PATH_CURVE_CONTROL_ID } from './line-curve.controls';
+import { lineCurveControls, PATH_CURVE_CONTROL_ID } from './line-curve.controls';
 
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
 
 const Demo: FC = () => {
-  const curve = usePreviewControlValue(PATH_CURVE_CONTROL_ID, PathCurve.Linear) as PathCurveValue;
+  const curve: PathCurveValue = usePreviewControls(lineCurveControls)[PATH_CURVE_CONTROL_ID];
   return (
     <Layout width={620} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
       <Plot data={closureTrend} width={300} height={230} x={0} y={35}>

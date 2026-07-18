@@ -48,11 +48,13 @@ export const HeaderActions: FC = () => {
   const previewDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
   const previewRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const previewAnimationMode = useComponentPreviewStore(s => s.animationMode);
+  const previewControlPanelDefaultOpen = useComponentPreviewStore(s => s.controlPanelDefaultOpen);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
   const togglePreviewDragEnabled = useComponentPreviewStore(s => s.toggleDragEnabled);
   const togglePreviewRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
   const setPreviewAnimationMode = useComponentPreviewStore(s => s.setAnimationMode);
+  const setPreviewControlPanelDefaultOpen = useComponentPreviewStore(s => s.setControlPanelDefaultOpen);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
   const setComparisonTargetVisible = useComparisonStore(s => s.setTargetVisible);
 
@@ -184,6 +186,12 @@ export const HeaderActions: FC = () => {
                     </DropdownMenuRadioGroup>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
+                <DropdownMenuCheckboxItem
+                  checked={previewControlPanelDefaultOpen}
+                  onCheckedChange={setPreviewControlPanelDefaultOpen}
+                >
+                  {t('preview.controlPanelDefaultOpen')}
+                </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewHideCode} onCheckedChange={togglePreviewHideCode}>
                   {t('preview.hideAllCode')}
                   <DropdownMenuShortcut className="max-lg:hidden">

@@ -43,9 +43,9 @@ export type PreviewControlRuntime = {
   /** 写入或翻转 per-card toggle 状态。 */
   setActive: (id: string, on?: boolean) => void;
   /** 读取 slot 共享值。 */
-  value: (id: string) => string | undefined;
+  value: (id: string) => PreviewControlValue | undefined;
   /** 写入 slot 共享值。 */
-  setValue: (id: string, value: string) => void;
+  setValue: (id: string, value: PreviewControlValue) => void;
 };
 
 /** 预览区控制插槽。 */
@@ -78,45 +78,156 @@ export type PreviewActionSlot = {
   render: (runtime: PreviewControlRuntime) => ReactNode;
 };
 
-/** 预览控件选项。 */
+/** 声明式预览控件支持的值 */
+export type PreviewControlValue = string | number | boolean;
+
+/** 预览控件选项 */
 export type PreviewControlOption = {
-  /** 写入预览状态的值。 */
+  /** 写入预览状态的值 */
   value: string;
-  /** 展示给用户的文本。 */
+  /** 展示给用户的文本 */
   label: string;
 };
 
-/** 下拉选择类预览控件。 */
-export type PreviewSelectControlConfig = {
-  kind: 'select';
-  id: string;
-  label: string;
-  defaultValue: string;
-  options: Array<PreviewControlOption>;
-  placement?: PreviewControlPlacement;
-  /** 生成 slot 的可见策略；缺省为 always。 */
-  visibility?: PreviewControlVisibility;
-};
-
-/** 文本输入类预览控件。 */
-export type PreviewInputControlConfig = {
-  kind: 'input';
+/** 文本预览控件字段 */
+export type PreviewTextControlField = {
+  kind: 'text';
   id: string;
   label: string;
   defaultValue: string;
   placeholder?: string;
+};
+
+/** 数值预览控件字段 */
+export type PreviewNumberControlField = {
+  kind: 'number';
+  id: string;
+  label: string;
+  defaultValue: number;
+  min?: number;
+  max?: number;
+  step?: number;
+};
+
+/** 下拉选择预览控件字段 */
+export type PreviewSelectControlField = {
+  kind: 'select';
+  id: string;
+  label: string;
+  defaultValue: string;
+  options: ReadonlyArray<PreviewControlOption>;
+};
+
+/** 布尔开关预览控件字段 */
+export type PreviewSwitchControlField = {
+  kind: 'switch';
+  id: string;
+  label: string;
+  defaultValue: boolean;
+};
+
+/** 颜色预览控件字段 */
+export type PreviewColorControlField = {
+  kind: 'color';
+  id: string;
+  label: string;
+  defaultValue: string;
+};
+
+/** 范围预览控件字段 */
+export type PreviewRangeControlField = {
+  kind: 'range';
+  id: string;
+  label: string;
+  defaultValue: number;
+  min: number;
+  max: number;
+  step?: number;
+};
+
+/** 声明式预览控件字段 */
+export type PreviewControlField =
+  | PreviewTextControlField
+  | PreviewNumberControlField
+  | PreviewSelectControlField
+  | PreviewSwitchControlField
+  | PreviewColorControlField
+  | PreviewRangeControlField;
+
+/** 可放置在预览浮层中的声明式字段 */
+export type PreviewOverlayControlField = PreviewControlField & {
+  /** 字段在预览区九宫格中的位置 */
   placement?: PreviewControlPlacement;
-  /** 生成 slot 的可见策略；缺省为 always。 */
+  /** 字段生成的 slot 可见策略
+   * @default always
+   */
   visibility?: PreviewControlVisibility;
 };
 
-/** 常见预览控件的声明式配置。 */
-export type PreviewControlConfig = PreviewSelectControlConfig | PreviewInputControlConfig;
+/** 属性面板中的预览控件分组 */
+export type PreviewControlSection = {
+  /** 分组标题 */
+  label?: string;
+  /** 分组内字段 */
+  controls: ReadonlyArray<PreviewControlField>;
+};
 
-/** 自定义预览控件的共享值状态。 */
+/** 浮层形式的预览控件定义 */
+export type PreviewOverlayControlsDefinition = {
+  presentation: 'overlay';
+  /** 浮层字段 */
+  controls: ReadonlyArray<PreviewOverlayControlField>;
+  /** 在字段后追加的自定义 slot */
+  slots?: ReadonlyArray<PreviewControlSlot>;
+};
+
+/** 左侧属性面板形式的预览控件定义 */
+export type PreviewPanelControlsDefinition = {
+  presentation: 'panel';
+  /** 面板标题 */
+  title?: string;
+  /** 面板字段分组 */
+  sections: ReadonlyArray<PreviewControlSection>;
+  /** 在预览区追加的自定义 slot */
+  slots?: ReadonlyArray<PreviewControlSlot>;
+};
+
+/** ComponentPreview 支持的声明式控件定义 */
+export type PreviewControlsDefinition = PreviewOverlayControlsDefinition | PreviewPanelControlsDefinition;
+
+type PreviewControlFieldOf<TDefinition extends PreviewControlsDefinition> =
+  TDefinition extends PreviewOverlayControlsDefinition
+    ? TDefinition['controls'][number]
+    : TDefinition extends PreviewPanelControlsDefinition
+      ? TDefinition['sections'][number]['controls'][number]
+      : never;
+
+type PreviewControlValueForField<TField extends PreviewControlField> = TField extends PreviewSelectControlField
+  ? TField['options'][number]['value']
+  : TField extends PreviewTextControlField | PreviewColorControlField
+    ? string
+    : TField extends PreviewNumberControlField | PreviewRangeControlField
+      ? number
+      : TField extends PreviewSwitchControlField
+        ? boolean
+        : never;
+
+/** 从声明式定义推导出的控件值对象 */
+export type PreviewControlValuesFor<TDefinition extends PreviewControlsDefinition> = {
+  [TField in PreviewControlFieldOf<TDefinition> as TField['id']]: PreviewControlValueForField<TField>;
+};
+
+/** 预览控件运行时值集合 */
+export type PreviewControlValues = Record<string, PreviewControlValue>;
+
+/** 自定义预览控件的共享值状态 */
 export type PreviewControlState = {
-  values: Record<string, string>;
-  setValue: (id: string, value: string) => void;
+  /** 当前字段值 */
+  values: PreviewControlValues;
+  /** 更新单个字段值 */
+  setValue: (id: string, value: PreviewControlValue) => void;
+  /** 恢复 definition 中声明的默认值 */
+  reset: () => void;
 };
 
 /** 演示区垂直对齐档位。 */
