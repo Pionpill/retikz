@@ -9,6 +9,9 @@ export type SourceView = 'react' | 'ir' | 'vanilla';
 /** demo 渲染目标：SVG DOM 或 Canvas 2D。 */
 export type RendererMode = 'svg' | 'canvas';
 
+/** 单张预览的局部主题环境。 */
+export type PreviewThemeMode = 'inherit' | 'light' | 'dark';
+
 /** 预览区控制插槽位置。 */
 export type PreviewControlPlacement =
   | 'top-start'
@@ -244,11 +247,15 @@ export type PreviewControlContract = {
 
 /** 自定义预览控件的共享值状态 */
 export type PreviewControlState = {
+  /** definition 默认值与 contract canonical values 合并后的稳定基线 */
+  canonicalValues: PreviewControlValues;
   /** 当前字段值 */
   values: PreviewControlValues;
   /** 更新单个字段值 */
   setValue: (id: string, value: PreviewControlValue) => void;
-  /** 恢复 definition 中声明的默认值 */
+  /** 以 canonical values 为基线原子应用一组值 */
+  applyValues: (values: Readonly<PreviewControlValues>) => void;
+  /** 恢复 canonical values */
   reset: () => void;
 };
 

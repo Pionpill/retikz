@@ -7,6 +7,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentPreviewCardProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 import type {
+  PreviewControlContract,
   PreviewControlRuntime,
   PreviewControlSlot,
 } from '../../src/modules/docs/components/component-preview/types';
@@ -45,6 +46,23 @@ const installDemoRegistryFixture = (
   const restoreModule = replaceRegistryValue(demoModules, key, {
     default: RegistryAnimatedDemo,
     previewControls,
+  });
+  const restoreSource = replaceRegistryValue(demoSources, key, 'export default RegistryAnimatedDemo;');
+
+  return () => {
+    restoreSource();
+    restoreModule();
+  };
+};
+
+const installDemoRegistryContractFixture = (
+  name: string,
+  previewControlContract: PreviewControlContract,
+): (() => void) => {
+  const key = buildKey(fixtureSegments, name);
+  const restoreModule = replaceRegistryValue(demoModules, key, {
+    default: RegistryAnimatedDemo,
+    previewControlContract,
   });
   const restoreSource = replaceRegistryValue(demoSources, key, 'export default RegistryAnimatedDemo;');
 
@@ -249,6 +267,30 @@ describe('ComponentPreview localized controls', () => {
 
       expect(props.controlDefinition).toBe(definition);
       expect(props.controlSlots?.map(slot => slot.id)).toEqual(['animation-controls']);
+    } finally {
+      restore();
+    }
+  });
+
+  it('将 canonical values 与 presets 随完整 contract 传给 Card', () => {
+    const contract = {
+      controls: definePreviewControls({
+        presentation: 'panel',
+        sections: [
+          { controls: [{ kind: 'number' as const, id: 'strokeWidth', label: 'Stroke width', defaultValue: 2 }] },
+        ],
+      }),
+      canonicalValues: { strokeWidth: 3 },
+      presets: [{ id: 'bold', label: 'Bold', values: { strokeWidth: 6 } }],
+      relatedApis: ['Node.strokeWidth'],
+    };
+    const restore = installDemoRegistryContractFixture('control-contract-fixture', contract);
+
+    try {
+      const props = renderPreview(fixtureSegments, <ComponentPreview files="control-contract-fixture" />);
+
+      expect(props.controlContract).toBe(contract);
+      expect(props.controlDefinition).toBe(contract.controls);
     } finally {
       restore();
     }
