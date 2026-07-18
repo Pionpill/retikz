@@ -17,13 +17,13 @@ import type {
   NodeSchema,
 } from './schema';
 
-/** CSS-like 四边 spacing 对象，供 Node padding / margin 复用。 */
+/** CSS-like 四边 spacing 对象，供 Node padding / margin 复用 */
 export type IRBoxSpacing = z.infer<typeof BoxSpacingSchema>;
 
-/** 轴向缩放对象，供 Node scale 复用。 */
+/** 轴向缩放对象，供 Node scale 复用 */
 export type IRAxisScale = z.infer<typeof AxisScaleSchema>;
 
-/** 宽高尺寸对象，供 Node minimumSize 复用。 */
+/** 宽高尺寸对象，供 Node minimumSize 复用 */
 export type IRBoxSize = z.infer<typeof BoxSizeSchema>;
 
 export type IRNodeLabelBoundaryPosition = z.infer<typeof NodeLabelBoundaryPositionSchema>;

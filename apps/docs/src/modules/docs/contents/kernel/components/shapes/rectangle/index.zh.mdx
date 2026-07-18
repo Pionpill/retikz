@@ -75,15 +75,73 @@ import { Node } from '@retikz/react';
 
 ## 技术原理
 
-> 日常使用可以跳过本节；只有在点位报错，或想理解 Sugar 与 Node 的区别时再回来读。
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="遇到点位引用、圆角连线等边界问题，或想理解 Sugar 与 Node 的区别时再回来读。"
+/>
 
-### 矩形可以透传点位（Sugar）
+本节只解释 Rectangle 自身如何生成 Path、矩形 Node 如何得到可连接边界；完整的 JSX → IR（中间表示）→ Scene 管线见[架构](/kernel/concepts/design/principles)。
 
-`<Rectangle>` 的 `corner1 + corner2` 写法可以把点位交给底层 Path，因此能引用节点 id。需要组件先计算尺寸的写法，例如 `center + width + height`，只接受 `[x, y]` 字面量坐标。
+### Sugar 如何收敛为闭合 Path
 
-### Sugar 和 Node 是两条路
+`<Rectangle>` 先把四种 props 写法收敛成 `from` / `to` 两个对角。图中上路直接透传 Target（可解析点位，包括坐标与节点 id），下路先在 React 层根据尺寸计算对角：
 
-`<Rectangle>` 展开成一条闭合 `<Path>`，是纯图形；`<Node>`（默认矩形）则是一个有边界的节点，边界由文字内框外接得到、可被连线贴边。要一个能装文字又能连线的矩形，用 `<Node>` 而不是 `<Rectangle>`。
+<ComponentPreview files="rectangle-sugar-flow" size="lg" hideCode />
+
+只有 `corner1 + corner2` 会原样透传两个 Target，因此可以引用节点 id；`center + width + height` 等写法需要先做算术，只接受 `[x, y]` 字面量坐标。随后 `rectangle` step 解析两个对角并生成独立的闭合子路径；`cornerRadius` 会把四角替换为圆弧，并限制在短边一半以内。
+
+任一节点引用无法解析时，整条 Path 会被跳过并产生 warning，而不是留下半个矩形。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Rectangle props 归一与 Path 展开',
+      path: 'packages/kernel/react/src/sugar/shapes/Rectangle.tsx',
+      startLine: 21,
+      endLine: 56,
+    },
+    {
+      label: '矩形 step 的点位解析与闭合轮廓生成',
+      path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
+      startLine: 172,
+      endLine: 220,
+    },
+  ]}
+/>
+
+### Node 如何得到可连接边界
+
+`<Node>` 省略 `shape` 时会选择 `rectangle`。文字测量结果与 `padding` 先组成内容内框，再交给矩形 shape 同时生成可见轮廓和连接几何：
+
+<ComponentPreview files="rectangle-node-boundary" size="lg" hideCode />
+
+矩形不会为了外接内容额外放大半轴，所以边界正好包住「文字 + padding」。同一份 `cornerRadius` 参数既参与矩形绘制，也参与朝目标方向求边界交点；这就是圆角节点的连线会落在圆弧上，而不是落在已被磨掉的尖角上的原因。
+
+因此 `<Rectangle>` 的结果是纯 Path 图形；矩形 `<Node>` 则保留 id、方位 anchor 与边界求交能力。需要装文字并连接时，应选择 `<Node>`。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node 默认形状与圆角参数解析',
+      path: 'packages/kernel/core/src/compile/node/shape.ts',
+      startLine: 41,
+      endLine: 98,
+    },
+    {
+      label: '文字与 padding 到形状边界的布局',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 82,
+      endLine: 128,
+    },
+    {
+      label: '矩形轮廓、anchor 与边界交点',
+      path: 'packages/kernel/core/src/providers/shape/rectangle.ts',
+      startLine: 43,
+      endLine: 71,
+    },
+  ]}
+/>
 
 ## 相关
 

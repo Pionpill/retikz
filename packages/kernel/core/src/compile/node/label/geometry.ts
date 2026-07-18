@@ -56,7 +56,7 @@ const labelBoundaryDirection = (position: IRNodeLabelBoundaryPosition): Position
 
 const labelPlacementSign = (label: NodeLabelLayout): number => (label.placement === 'inside' ? -1 : 1);
 
-/** label 在 node 边界上的附着点。 */
+/** label 在 node 边界上的附着点 */
 export const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   if (label.position === 'center') return [layout.rect.x, layout.rect.y];
   const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
@@ -84,7 +84,7 @@ export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Positio
   return [bx + vec[0] * label.distance * sign, by + vec[1] * label.distance * sign];
 };
 
-/** 从 label 中心朝 border 方向，求 label 框边界交点。 */
+/** 从 label 中心朝 border 方向，求 label 框边界交点 */
 export type LabelBoxEdgeTowardInput = {
   center: Position;
   border: Position;
@@ -105,7 +105,7 @@ export const labelBoxEdgeToward = ({ center, border, halfWidth, halfHeight }: La
   return [center[0] + ux * s, center[1] + uy * s];
 };
 
-/** label 自旋角计算输入。 */
+/** label 自旋角计算输入 */
 export type ResolveLabelRotateDegInput = {
   label: NodeLabelLayout;
   labelPosition: Position;
@@ -113,8 +113,8 @@ export type ResolveLabelRotateDegInput = {
 };
 
 /**
- * 算 label 文本自旋角度。
- * @description keepUpright 会翻转倒置文本。
+ * 算 label 文本自旋角度
+ * @description keepUpright 会翻转倒置文本
  */
 export const resolveLabelRotateDeg = ({ label, labelPosition, nodeCenter }: ResolveLabelRotateDegInput): number => {
   const mode = label.rotate;
@@ -134,8 +134,8 @@ export const resolveLabelRotateDeg = ({ label, labelPosition, nodeCenter }: Reso
 };
 
 /**
- * 节点 label 的外接点。
- * @description 用于顶层 bbox / viewBox 计算。
+ * 节点 label 的外接点
+ * @description 用于顶层 bbox / viewBox 计算
  */
 export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];

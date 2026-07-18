@@ -4,7 +4,7 @@ import { boundsOf, expandBounds, mergeBounds } from '@retikz/math';
 
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 
-/** 返回 shadow 影响后的外溢 bbox。 */
+/** 返回 shadow 影响后的外溢 bbox */
 const expandBoundsForShadow = (
   bounds: AxisAlignedBounds | undefined,
   shadow: ResolvedDropShadow | undefined,
@@ -22,7 +22,7 @@ const expandBoundsForShadow = (
   });
 };
 
-/** 将几何点及其 shadow 外溢范围合并到自动 layout bbox。 */
+/** 将几何点及其 shadow 外溢范围合并到自动 layout bbox */
 export const collectLayoutBounds = (
   current: AxisAlignedBounds | undefined,
   boundsPoints: ReadonlyArray<IRPosition>,

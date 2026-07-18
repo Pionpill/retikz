@@ -1,11 +1,11 @@
 import type { Position } from './point';
 
-/** 简单多边形运算。 */
+/** 简单多边形运算 */
 export const polygon = {
   /**
    * 点是否在简单多边形内（ray-casting 奇偶规则；顶点按序，不要求凹凸 / 绕向）
-   * @description 边界点结果未定义，调用方需按自身语义处理。
-   * @remarks 复杂度：时间 O(n)，空间 O(1)，n 为顶点数。
+   * @description 边界点结果未定义，调用方需按自身语义处理
+   * @remarks 复杂度：时间 O(n)，空间 O(1)，n 为顶点数
    */
   containsPoint: (vertices: Array<Position>, p: Position): boolean => {
     const n = vertices.length;

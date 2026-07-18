@@ -4,7 +4,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 coordinate / §3.6 encoding / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../../../../notes/architecture/core-design.md)
+- 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 coordinate / §3.6 encoding / §8.3 投影分层](../../../../../architecture/plot-design.md)
 
 > **实现期修订（review pass，2026-06-06，以本节为准）**：原「hybrid 位置通道（默认 x/y + 可选 angle/radius）」**已废**——改为 **位置通道仅 `x` / `y`、且必填**，无 angle/radius 通道；坐标系把 x/y 重解释为 angle/radius（纯 ggplot 模型）。理由：双形态对 LLM 有歧义，且 zod `refine` 不进 JSON Schema、约束不了 constrained-decoding 生成；x/y 必填则**形状层**即可结构性约束生成。连带变更：encoding 拆 `PositionEncodingSchema`(x/y 必填) + `StyleEncodingSchema`(color)，**sector 用样式-only 编码**（无 x/y）；删除 `assertEncodingChannels` 跨字段校验（schema 已结构性强制，无需运行时校验）；运行时类型 `CoordinateFrame`（非 `ResolvedCoordinateFrame`），`PolarFrame` 另含 `continuousAngle` / `projectPolar`（ADR-03 段内采样用）。**下文 §1、待决策点、schema 表中凡涉及 angle/radius 通道 / x+angle 优先级 / hybrid 的部分，一律以本修订为准。** DSL 简写见 ADR-05（`coordinate="polar2D"`）。
 

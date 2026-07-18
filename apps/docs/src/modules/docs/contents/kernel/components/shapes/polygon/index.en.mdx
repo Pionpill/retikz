@@ -78,15 +78,75 @@ Connection endpoints snap to the polygon edge, and the node's center plus 8 dire
 
 ## How it works
 
-> Optional for everyday use; revisit when a point form throws an error or the rotation direction looks surprising.
+<ComponentAlert
+  type="tip"
+  title="Optional while getting started"
+  description="Revisit when you want to understand vertex expansion, content circumscription, or the diamond preset."
+/>
 
-### RegularPolygon computes vertices first (sugar)
+This section zooms in only on the two local mechanisms owned by Polygon. See [Architecture Principles](/kernel/concepts/design/principles) for the full JSX → IR → Scene pipeline.
 
-`<RegularPolygon>` computes all vertices from the center, radius or side length, then expands to a closed Path. `rotate` changes the starting vertex angle; it is not an SVG transform.
+### Props become a closed Path (sugar)
 
-### diamond is a preset of polygon
+The three input groups converge on one vertex ring before the single main path expands it into a Path:
 
-`<Node shape="diamond">` normalizes at compile time to `polygon{ sides:4, rotate:0 }` — its 4 vertices land on the top / bottom / left / right axes (with `rotate:0` the start angle is 0° and the vertices spread evenly by `360/4` to 0° / 90° / 180° / 270°), giving a diamond. An axis-aligned square would need `rotate:45`. For a non-square text box it stays a regular diamond (rather than stretched); the bare string `"diamond"` and the explicit `{ type:'polygon', params:{ sides:4, rotate:0 } }` are equivalent.
+<ComponentPreview files="polygon-sugar-flow" size="md" hideCode />
+
+`radius` is already the circumradius. `sideLength` first converges on the same value through `R = sideLength / (2·sin(π/sides))`. Vertex `k` then uses the direction `rotate + k·360/sides`; `rotate` is baked into the vertex coordinates instead of being forwarded as a transform on the underlying Path.
+
+The output topology is therefore always one `move`, `sides - 1` `line` steps, and one `cycle`. A non-literal `[x, y]` center, or a `sides` value that is not an integer of at least 3, fails before the vertex ring is produced.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'RegularPolygon input normalization and Path expansion',
+      path: 'packages/kernel/react/src/sugar/shapes/RegularPolygon.tsx',
+      startLine: 26,
+      endLine: 44,
+    },
+    {
+      label: 'Regular polygon vertex calculation',
+      path: 'packages/kernel/react/src/sugar/shapes/shape-helpers.ts',
+      startLine: 160,
+      endLine: 173,
+    },
+  ]}
+/>
+
+### The inner box becomes a connectable contour (Node)
+
+Along the main path, the Node content determines what the polygon must contain, then the shape parameters determine which regular polygon contains it. The two outputs show the same contour rules serving both rendering and automatic connections:
+
+<ComponentPreview files="polygon-node-flow" size="lg" hideCode />
+
+Text and `padding` first form the inner box. The polygon provider then derives the smallest circumradius that fully contains that box for the given `sides` and `rotate`. Every vertex still lies on one circle, so long text enlarges the regular polygon as a whole instead of stretching it into an irregular polygon.
+
+`cornerRadius` does not change the circumscribed size; it is applied after the vertex ring is available. The same vertex and fillet rules emit the Scene path and intersect a ray from the node center toward an automatic connection target, so an endpoint lands on the rounded arc. Standard directional anchors (`top`, `bottom`, and so on) still come from the external bounding box; they are not arbitrary-direction contour intersections.
+
+`shape="diamond"` changes only the entry form: the compiler first normalizes it to `polygon{ sides:4, rotate:0 }`, then sends it through the same provider path. Its four vertices start at 0° and advance by 90°, landing right, down, left, and up. Use an explicit `rotate:45` for an axis-aligned square.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'diamond preset normalization',
+      path: 'packages/kernel/core/src/compile/node/shape.ts',
+      startLine: 41,
+      endLine: 49,
+    },
+    {
+      label: 'Circumradius calculation for the inner box',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 63,
+      endLine: 79,
+    },
+    {
+      label: 'Contour output, connection hit, and directional anchors',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 114,
+      endLine: 133,
+    },
+  ]}
+/>
 
 ## Related
 

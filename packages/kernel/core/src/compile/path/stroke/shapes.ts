@@ -22,35 +22,35 @@ import { nodeIdFromResolvableTarget } from '../../position';
 import { clipForTarget, isAutoBoundaryTarget, refPointOfTarget, samePoint } from '../host/target';
 import { lowerGeneratorStepToCommands } from './lower';
 
-/** 自包含或高阶几何 path step。 */
+/** 自包含或高阶几何 path step */
 export type StrokeShapeStep = Extract<
   IRStep,
   { kind: 'generator' | 'cycle' | 'rectangle' | 'arc' | 'circlePath' | 'ellipsePath' | 'smooth' }
 >;
 
-/** shape step 降级所需的共享上下文。 */
+/** shape step 降级所需的共享上下文 */
 export type LowerShapeStepContext = {
-  /** id 查询栈。 */
+  /** id 查询栈 */
   namespaceStack: NamespaceStack;
-  /** 当前 scope 的累积变换链。 */
+  /** 当前 scope 的累积变换链 */
   scopeChain: ReadonlyArray<Transform>;
-  /** 坐标取整函数。 */
+  /** 坐标取整函数 */
   round: (value: number) => number;
-  /** 当前 path 的 IR locator。 */
+  /** 当前 path 的 IR locator */
   irPath: string;
-  /** 有效 path generator 表。 */
+  /** 有效 path generator 表 */
   generators: ReadonlyMap<string, PathGeneratorDefinition> | undefined;
-  /** path warning 收集器。 */
+  /** path warning 收集器 */
   warn: (code: string, message: string, subPath?: string) => void;
-  /** path command 写入器。 */
+  /** path command 写入器 */
   commandEmitter: PathCommandEmitter;
-  /** step 循环共享游标。 */
+  /** step 循环共享游标 */
   cursor: StrokeCursor;
-  /** label 与 mark 采样收集器。 */
+  /** label 与 mark 采样收集器 */
   sampling: StrokeSamplingCollector;
 };
 
-/** 判断 step 是否属于 shape family。 */
+/** 判断 step 是否属于 shape family */
 export const isStrokeShapeStep = (step: IRStep): step is StrokeShapeStep =>
   step.kind === 'generator' ||
   step.kind === 'cycle' ||
@@ -60,7 +60,7 @@ export const isStrokeShapeStep = (step: IRStep): step is StrokeShapeStep =>
   step.kind === 'ellipsePath' ||
   step.kind === 'smooth';
 
-/** 解析部分圆或椭圆的闭合模式。 */
+/** 解析部分圆或椭圆的闭合模式 */
 const resolvePartialClosed = (
   closed: 'closed' | 'chord' | 'open' | 'sector' | undefined,
   index: number,
@@ -79,8 +79,8 @@ const resolvePartialClosed = (
 };
 
 /**
- * 将 shape family step 降级到 path commands。
- * @returns `false` 表示目标解析失败，调用方应跳过整个 path；provider 异常保持向外抛出。
+ * 将 shape family step 降级到 path commands
+ * @returns `false` 表示目标解析失败，调用方应跳过整个 path；provider 异常保持向外抛出
  */
 export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: LowerShapeStepContext): boolean => {
   const { namespaceStack, scopeChain, round, irPath, generators, warn, commandEmitter, cursor, sampling } = context;

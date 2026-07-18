@@ -9,7 +9,7 @@ import { DEFAULT_RIBBON_SAMPLES } from './types';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
-/** 校验宽度函数输出：ribbon 宽度必须是有限且非负的数。 */
+/** 校验宽度函数输出：ribbon 宽度必须是有限且非负的数 */
 export const assertFiniteWidth = (width: number, source: string): number => {
   if (!Number.isFinite(width) || width < 0) {
     throw new Error(`Ribbon width ${source} produced ${String(width)}; width must be a finite nonnegative number.`);
@@ -17,7 +17,7 @@ export const assertFiniteWidth = (width: number, source: string): number => {
   return width;
 };
 
-/** 按指定插值模式在两个宽度值之间取样。 */
+/** 按指定插值模式在两个宽度值之间取样 */
 export type InterpolateInput = {
   from: number;
   to: number;
@@ -33,7 +33,7 @@ export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => 
 
 /**
  * 把 IRRibbonWidth 解析为 offset∈[0,1] → width 的函数
- * @description number 走常量宽度；stops 先按 offset 排序再插值；profile 查运行时注册表并校验 params JSON-safe。
+ * @description number 走常量宽度；stops 先按 offset 排序再插值；profile 查运行时注册表并校验 params JSON-safe
  */
 export const widthFunction = (
   width: IRRibbonWidth,
@@ -106,7 +106,7 @@ export const widthFunction = (
 
 /**
  * 解析 centerline ribbon 的宽度函数
- * @description 顶层 width 优先；未给 width 时用 start.width/end.width 做端点 taper。
+ * @description 顶层 width 优先；未给 width 时用 start.width/end.width 做端点 taper
  */
 export const centerlineWidthFunction = (
   ribbon: RibbonLike,
@@ -135,13 +135,13 @@ export const centerlineWidthFunction = (
     );
 };
 
-/** 动态 width（stops/profile）会让解析型 offset 不再可靠，需要走采样轮廓。 */
+/** 动态 width（stops/profile）会让解析型 offset 不再可靠，需要走采样轮廓 */
 export const centerlineWidthRequiresSampling = (ribbon: RibbonLike): boolean =>
   ribbon.width !== undefined && typeof ribbon.width !== 'number';
 
 /**
  * 解析 ribbon 采样数
- * @description samples 是旧快捷入口；sampling 是新对象入口，二者互斥。adaptive 按总长 / tolerance 估算并受 maxSamples 限制。
+ * @description samples 是旧快捷入口；sampling 是新对象入口，二者互斥。adaptive 按总长 / tolerance 估算并受 maxSamples 限制
  */
 export const resolveSampleCount = (
   samples: IRPathRibbonOptions['samples'],
@@ -161,7 +161,7 @@ export const resolveSampleCount = (
   return samples;
 };
 
-/** 校验采样点数量，避免过少无法形成轮廓或过多造成异常开销。 */
+/** 校验采样点数量，避免过少无法形成轮廓或过多造成异常开销 */
 export const assertSampleCount = (samples: number): number => {
   if (!Number.isInteger(samples) || samples < 2 || samples > 512) {
     throw new Error(`Ribbon samples must be an integer in [2, 512]; got ${String(samples)}.`);

@@ -23,7 +23,7 @@ const PanelSchema = CompositeBaseSchema.extend({
   id: z.string(),
 });
 
-/** demo.panel → 同 id 的 Tier 1 node。 */
+/** demo.panel → 同 id 的 Tier 1 node */
 const panelComposite = defineComposite({
   namespace: 'demo',
   type: 'panel',
@@ -31,7 +31,7 @@ const panelComposite = defineComposite({
   expand: panel => ({ type: 'node', id: panel.id, position: [0, 0], text: panel.id }),
 });
 
-/** demo.path → 带 steps 的 Tier 1 path。 */
+/** demo.path → 带 steps 的 Tier 1 path */
 const pathComposite = defineComposite({
   namespace: 'demo',
   type: 'path',
@@ -46,7 +46,7 @@ const pathComposite = defineComposite({
   }),
 });
 
-/** demo.loop → 自身，用于深度错误透传。 */
+/** demo.loop → 自身，用于深度错误透传 */
 const loopComposite = defineComposite({
   namespace: 'demo',
   type: 'loop',

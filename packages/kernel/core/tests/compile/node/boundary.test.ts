@@ -160,13 +160,13 @@ describe('star.anchor no longer handles canonical directly', () => {
 /**
  * 找"连接线"那条 PathPrim（IRPath step 编译产物）：区分于节点 emit 的形状路径。
  * star 的 emit 产含 close 命令的多边形；连接线只有 move + line，无 close。
- * 以"无 close 命令"作为区分依据。
+ * 以"无 close 命令"作为区分依据
  */
 const findConnectionPath = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.filter((x): x is PathPrim => x.type === 'path').find(p => !p.commands.some(c => c.kind === 'close'));
 
 /**
- * 构造 IR（star 节点 + path），编译后取连接线在 star 那端的实际端点。
+ * 构造 IR（star 节点 + path），编译后取连接线在 star 那端的实际端点
  * @param nodeBoundary star 节点的 boundary（undefined = 无）
  * @param targetOverride 追加到 { id: 'star' } 的额外字段（如 boundary）
  * @param start path 的 move 起点（决定 toward 方向）

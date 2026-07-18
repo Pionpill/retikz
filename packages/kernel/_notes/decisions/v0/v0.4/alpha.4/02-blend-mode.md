@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-16 完工）
 - 决策日期：2026-06-16
-- 关联：[v0.4-alpha.4 roadmap](./roadmap.md) · [v0.4 roadmap 候选 F](../roadmap.md) · [core-design.md §7 AI 一等公民](../../../../../../../notes/architecture/core-design.md) · [ADR-01 drop shadow（同享接线骨架）](./01-scene-drop-shadow.md)
+- 关联：[v0.4-alpha.4 roadmap](./roadmap.md) · [v0.4 roadmap 候选 F](../roadmap.md) · [ADR-01 drop shadow（同享接线骨架）](./01-scene-drop-shadow.md)
 
 > **范围**：F2「blend mode」——给 Scene 图元加混合模式。F1「drop shadow」见 [ADR-01](./01-scene-drop-shadow.md)。
 

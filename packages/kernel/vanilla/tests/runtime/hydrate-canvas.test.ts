@@ -12,7 +12,7 @@ import { mountCanvas } from '../../src';
  *   jsdom 无真实 canvas backend，故沿用 render 层 canvas-hittest 的做法——spy getContext 返回「几何忠实」的 2D
  *   context 充当原生 canvas 原语（记录子路径、射线法点测），mountCanvas / clientToScene / hitTest 的选择逻辑仍真实受测。
  *   canvas getBoundingClientRect 也 spy 出受限容器（letterbox）的显示盒，喂确定坐标。
- *   命中 / 触发类断言验证 client 坐标逆 fit 后 hitTest 命中正确 id、handler 被调用；dispose 后不再触发。
+ *   命中 / 触发类断言验证 client 坐标逆 fit 后 hitTest 命中正确 id、handler 被调用；dispose 后不再触发
  */
 
 type Pt = [number, number];
@@ -182,7 +182,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
  * 受限容器 letterbox 几何（与 mountCanvas meet-fit 一致）：
  * Scene layout 100×100、CSS 显示盒 200×100（宽于内容比 → 水平 letterbox）。
  * scale = min(200/100, 100/100) = 1；offsetX = (200-100)/2 = 50，offsetY = 0。
- * ⇒ Scene 点 s → CSS px：cssX = 50 + s.x，cssY = s.y（canvas 局部）；client = canvas rect 左上 + cssX/cssY。
+ * ⇒ Scene 点 s → CSS px：cssX = 50 + s.x，cssY = s.y（canvas 局部）；client = canvas rect 左上 + cssX/cssY
  */
 const SCENE_SIZE = 100;
 const CSS_WIDTH = 200;

@@ -4,7 +4,7 @@ import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
 /**
  * Coordinate 作为命名拐点汇聚
- * @description 多个 step 节点向同一决策汇合点收敛，汇合点本身不画矩形 / 不打字；各 path 用 `<Draw way={['A', 'junction', 'B']}>` 经过它，coordinate 是 0×0 锚点端点贴中心。
+ * @description 多个 step 节点向同一决策汇合点收敛，汇合点本身不画矩形 / 不打字；各 path 用 `<Draw way={['A', 'junction', 'B']}>` 经过它，coordinate 只有中心坐标，端点会贴到该中心。
  */
 const Demo: FC = () => (
   <Layout width={320} height={200}>

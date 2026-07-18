@@ -1,5 +1,5 @@
 ---
-title: Shapes
+title: 形状
 description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，也是 Node 默认支持的边界形状。
 ---
 
@@ -10,10 +10,7 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 
 每个形状页把这两副面孔分两大块写全：先「作为 Path 图形」，再「作为 Node 形状」。简单说：要画一条形状线，用 Sugar；要一个可连接、可标注的形状节点，用 `<Node shape>`。
 
-**两侧都对扩展开放**：
-
-- 想要内置之外的 **Node 形状**（hexagon / cloud…）——注册到 [shape-registry](/kernel/components/extend/shape-registry)；注册表里的内置项是 rectangle / ellipse / sector / arc / polygon / star / contour（circle / diamond 是编译期 preset 别名，不在注册表）。
-- 想画内置 `parabola` 之外的**路径曲线 step**（sin-cos…）——走 [path-generator](/kernel/components/extend/path-generator)。
+Node 形状注册表也对扩展开放。想要内置之外的形状（cylinder / cloud…），在本分组最后的[自定义形状](/kernel/components/shapes/custom-shape)页注册；想补充 `parabola` 之外的曲线 step，则转到绘制分组的[路径生成器](/kernel/components/draw/path-generator)。
 
 <ComponentPreview files="shapes-family" size="md" hideCode />
 
@@ -27,6 +24,7 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 | Polygon          | `<RegularPolygon>`       | `shape={{ type:'polygon', params }}`（带 params）· `"diamond"` |
 | Star             | `<Star>`                 | `shape={{ type:'star', params }}`（带 params）                 |
 | Contour          | —（用 `<Path>` 画线）    | `shape={{ type:'contour', params }}`（任意顶点环）             |
+| 自定义形状       | —                        | `ShapeDefinition` + `<Layout shapes>`                          |
 
 > 背景网格、参考线这类**一片规则线条**（而非单个闭合形状）不在这一组——见 [辅助](/kernel/components/helpers) 里的 `<Grid>`。
 
@@ -56,5 +54,9 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
   <LinkedCard href="/kernel/components/shapes/contour">
     <span className="font-semibold">Contour</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">任意闭合顶点环的可连接节点</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/shapes/custom-shape">
+    <span className="font-semibold">自定义形状</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册内置之外的 Node 形状</span>
   </LinkedCard>
 </div>

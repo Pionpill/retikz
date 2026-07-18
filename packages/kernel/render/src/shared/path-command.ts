@@ -1,5 +1,5 @@
 /**
- * PathCommand 几何（renderer 无关纯函数）。
+ * PathCommand 几何（renderer 无关纯函数）
  */
 import type { ArcPathCommand, EllipseArcPathCommand, PathCommand } from '@retikz/core';
 
@@ -22,24 +22,24 @@ const rotateVector = (x: number, y: number, rotationDeg: number): Point => {
   return [x * Math.cos(rotation) - y * Math.sin(rotation), x * Math.sin(rotation) + y * Math.cos(rotation)];
 };
 
-/** renderer 统一使用的有向弧扫描区间。 */
+/** renderer 统一使用的有向弧扫描区间 */
 export type CommandArcSweep = {
-  /** 对齐后的起始角。 */
+  /** 对齐后的起始角 */
   start: number;
-  /** 沿指定方向对齐后的结束角。 */
+  /** 沿指定方向对齐后的结束角 */
   end: number;
-  /** 屏幕坐标中的扫描方向：1 为顺时针，-1 为逆时针。 */
+  /** 屏幕坐标中的扫描方向：1 为顺时针，-1 为逆时针 */
   direction: 1 | -1;
 };
 
-/** 按 PathCommand 的显式方向或角度顺序解析实际有向 sweep。 */
+/** 按 PathCommand 的显式方向或角度顺序解析实际有向 sweep */
 export const commandArcSweep = (command: ArcCommand): CommandArcSweep => {
   const counterClockwise = command.counterClockwise ?? command.endAngle < command.startAngle;
   const aligned = alignAngleSweep(command.startAngle, command.endAngle, counterClockwise);
   return { ...aligned, direction: counterClockwise ? -1 : 1 };
 };
 
-/** 计算旋转椭圆弧在给定参数角上的点。 */
+/** 计算旋转椭圆弧在给定参数角上的点 */
 export const ellipseArcPointAt = (command: EllipseArcPathCommand, angleDeg: number): [number, number] => {
   const angle = angleDeg * DEG_TO_RAD;
   const [x, y] = rotateVector(
@@ -50,7 +50,7 @@ export const ellipseArcPointAt = (command: EllipseArcPathCommand, angleDeg: numb
   return [command.center[0] + x, command.center[1] + y];
 };
 
-/** 计算圆弧或旋转椭圆弧的起点。 */
+/** 计算圆弧或旋转椭圆弧的起点 */
 export const commandArcStart = (command: ArcCommand): [number, number] => {
   if (command.kind === 'ellipseArc') return ellipseArcPointAt(command, command.startAngle);
   const angle = command.startAngle * DEG_TO_RAD;
@@ -60,7 +60,7 @@ export const commandArcStart = (command: ArcCommand): [number, number] => {
 /**
  * 取一个 PathCommand 的末端 endpoint（与 core 同口径）
  * @description move/line/quad/cubic → `to`；arc/ellipseArc → 极坐标末点（绕 center 按 endAngle）；close 无端点 → null。
- *   drawScene 末端箭头定位、animate pathDraw 弧长揭示等共用，避免多处口径漂移。
+ *   drawScene 末端箭头定位、animate pathDraw 弧长揭示等共用，避免多处口径漂移
  */
 export const commandEndpoint = (cmd: PathCommand): [number, number] | null => {
   switch (cmd.kind) {
@@ -96,7 +96,7 @@ const arcTangent = (command: ArcCommand, angleDeg: number): Point | null => {
   return normalizeVector(x, y);
 };
 
-/** 计算命令起点处沿绘制方向的单位切线；无可绘制切线时返回 null。 */
+/** 计算命令起点处沿绘制方向的单位切线；无可绘制切线时返回 null */
 export const commandStartTangent = (command: PathCommand, from: Point | null): Point | null => {
   switch (command.kind) {
     case 'move':
@@ -118,7 +118,7 @@ export const commandStartTangent = (command: PathCommand, from: Point | null): P
   }
 };
 
-/** 计算命令终点处沿绘制方向的单位切线；无可绘制切线时返回 null。 */
+/** 计算命令终点处沿绘制方向的单位切线；无可绘制切线时返回 null */
 export const commandEndTangent = (command: PathCommand, from: Point | null): Point | null => {
   switch (command.kind) {
     case 'move':
@@ -145,7 +145,7 @@ export const commandEndTangent = (command: PathCommand, from: Point | null): Poi
  * @description 曲线取控制点、弧取半径外接角点：move/line → `to`；quad → `control` + `to`；cubic → `control1` +
  *   `control2` + `to`；arc → `center ± radius` 两角点；ellipseArc → `center ± (radiusX, radiusY)` 两角点；close 无点。
  *   控制点凸包必含曲线，故其并集 bbox 是真包围盒的松上界，供 hydration 聚合几何使用；gradient 映射改用
- *   `pathBounds()` 的精确几何口径。
+ *   `pathBounds()` 的精确几何口径
  */
 export const pathControlPoints = (commands: ReadonlyArray<PathCommand>): Array<[number, number]> => {
   const points: Array<[number, number]> = [];

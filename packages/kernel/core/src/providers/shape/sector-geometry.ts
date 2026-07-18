@@ -7,19 +7,19 @@ import type { AngleRange } from '../../shared';
 import { DEG_TO_RAD, normalizeAngleRange } from '../../shared';
 
 /**
- * sector 的派生几何。
- * @description 在圆心局部系计算 AABB、圆心偏移、质心偏移和 boundaryPoint 射线起点。
+ * sector 的派生几何
+ * @description 在圆心局部系计算 AABB、圆心偏移、质心偏移和 boundaryPoint 射线起点
  */
 export type SectorGeometry = {
-  /** 规范化起止角与中分角。 */
+  /** 规范化起止角与中分角 */
   range: AngleRange;
-  /** 含圆心 + 内外弧的精确 AABB 半轴。 */
+  /** 含圆心 + 内外弧的精确 AABB 半轴 */
   aabbHalfAxes: { halfWidth: number; halfHeight: number };
-  /** 圆心(apex)相对 AABB 中心的偏移。 */
+  /** 圆心(apex)相对 AABB 中心的偏移 */
   apexOffset: Position;
-  /** 质心(centroid)相对 AABB 中心的偏移。 */
+  /** 质心(centroid)相对 AABB 中心的偏移 */
   centroidOffset: Position;
-  /** boundaryPoint 射线起点偏移；环形扇区使用填充环楔内的点，而不是质心。 */
+  /** boundaryPoint 射线起点偏移；环形扇区使用填充环楔内的点，而不是质心 */
   boundaryOriginOffset: Position;
 };
 
@@ -31,8 +31,8 @@ type SectorGeometryInput = {
 };
 
 /**
- * 计算 sector 单一真源几何。
- * @description AABB 来自圆心、外弧和内弧候选点；质心使用环楔解析公式。
+ * 计算 sector 单一真源几何
+ * @description AABB 来自圆心、外弧和内弧候选点；质心使用环楔解析公式
  */
 export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   const { innerRadius, outerRadius } = params;
@@ -89,5 +89,5 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   };
 };
 
-/** sector 局部系点（圆心为原点）：极角（度）+ 半径转直角坐标。 */
+/** sector 局部系点（圆心为原点）：极角（度）+ 半径转直角坐标 */
 export const sectorPolarPoint = (radius: number, angleDeg: number): Position => arcEndPoint([0, 0], radius, angleDeg);

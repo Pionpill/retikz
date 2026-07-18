@@ -8,7 +8,7 @@ import { renderToSvgString } from '../../src';
 
 /**
  * @retikz/vanilla composites 透传（SSR / 构建期）
- * @description CommonOptions.compile 承载 core CompileOptions；composites 随 compile 自动透传给 compileToScene；展开在 core。
+ * @description CommonOptions.compile 承载 core CompileOptions；composites 随 compile 自动透传给 compileToScene；展开在 core
  */
 const labeledBox = defineComposite({
   namespace: 'example',

@@ -1,6 +1,6 @@
 ---
 title: Animation
-description: Keyframe nodes, paths, and the camera over time with named presets — intro, emphasis, loop, camera, and stagger — written declaratively and degrading gracefully; the last frame is the resting state, and a preset equals an underlying AnimationTrack.
+description: Keyframe nodes, paths, and the camera over time with named presets — intro, emphasis, loop, camera, and stagger — written declaratively and degrading gracefully; presets equal their underlying AnimationTrack, and a settled-last-frame convention preserves fallback.
 ---
 
 Animation transitions a static figure **from one look to another over time**: fade in, draw a line, scale up, spin, shift color, pan the camera. You don't hand-write keyframes — call a **preset factory** (`fadeIn()` / `spin()` …) to get an animation descriptor and attach it to an element's `animations` array.
@@ -98,11 +98,85 @@ Camera and stagger are the two animations that act **on the whole, not on a sing
 
 <span style={{ color: '#888' }}>Three nodes with the same fadeIn, entering at 0 / 150 / 300ms.</span>
 
-### Triggers & Control
+## How it works
 
-Once an animation is attached, **when it plays, how it plays, and what happens when it doesn't** are decided by these mechanisms.
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when you want to understand track compilation, backend playback, or why snapshots and fallback agree."
+/>
 
-**When it plays** is set by `trigger`, defaulting to `load` (plays on render):
+### How a track reaches rendering
+
+A preset and a hand-written track both end as the same `AnimationTrack`. A preset only supplies a common property channel, keyframes, and timing defaults; its result is still serializable JSON with no callbacks, DOM objects, or playback state.
+
+After a track is attached to an element or `<Layout>`, compile only validates its responsibility boundary and preserves valid data: `viewBox` belongs to the Scene root as a camera track, while every other channel belongs to an element. An out-of-place track emits a warning and is dropped, so a renderer does not need to decide that ownership again.
+
+The figure stays within the animation boundary: presets and hand-written data converge on one track, enter the renderer-agnostic Scene, then branch into live playback or a static snapshot.
+
+<ComponentPreview files="animation-pipeline" size="lg" hideCode />
+
+React DSL, direct IR, and Vanilla specs therefore share one animation model. A backend chooses how to play it; it does not reinterpret a preset as a second model.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Presets produce JSON tracks',
+      path: 'packages/kernel/core/src/parsers/animation.ts',
+      startLine: 17,
+      endLine: 36,
+    },
+    {
+      label: 'Element and camera track boundaries',
+      path: 'packages/kernel/core/src/compile/orchestration/animation.ts',
+      startLine: 20,
+      endLine: 42,
+    },
+    {
+      label: 'Scene-root camera track emission',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 22,
+      endLine: 42,
+    },
+  ]}
+/>
+
+### How time becomes a frame
+
+A keyframe's `at` is a normalized position in `[0, 1]`; `duration` maps that position to milliseconds. At any instant, evaluation subtracts `delay`, selects the iteration and direction, applies `fill` outside the active interval, locates the neighboring keyframes, applies segment easing, and finally interpolates by value type.
+
+The two renderers use different live carriers while consuming the same track:
+
+- SVG expands `load` tracks into inline CSS `@keyframes`, so static HTML can autoplay with zero JavaScript; `visible`, `manual`, and event tracks become descriptors that the runtime connects to WAAPI
+- Canvas advances one Scene-level rAF clock and calls the shared evaluator every frame, then applies the result to primitive properties or canvas transforms before redrawing
+- `snapshotAt` starts no clock; it samples that same evaluator at one time and emits static attributes and transforms
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Shared absolute-time track evaluation',
+      path: 'packages/kernel/render/src/animation/evaluate.ts',
+      startLine: 92,
+      endLine: 155,
+    },
+    {
+      label: 'SVG CSS and WAAPI routing',
+      path: 'packages/kernel/render/src/svg/animation/keyframes.ts',
+      startLine: 121,
+      endLine: 178,
+    },
+    {
+      label: 'Canvas frame evaluation and application',
+      path: 'packages/kernel/render/src/canvas/animate.ts',
+      startLine: 68,
+      endLine: 106,
+    },
+  ]}
+/>
+
+### Triggers and control
+
+`trigger` decides **when a track becomes active**; it does not change the keyframes or timing. The default is `load`:
 
 | trigger                | Behavior                                | Backend support                                                        |
 | ---------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
@@ -122,7 +196,7 @@ const ref = useRef<AnimationControls | null>(null);
 <button onClick={() => ref.current?.play()}>Play</button>
 ```
 
-`animationRef` / vanilla `view.animation` is the scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/kernel/packages/render/hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
+`animationRef` / vanilla `view.animation` is the Scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/kernel/packages/render/hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
 
 The playback switch has three states. React and Vanilla use different shapes but the same priority:
 
@@ -138,11 +212,32 @@ The playback switch has three states. React and Vanilla use different shapes but
   description="animate={true} and animation.enabled: true still play under prefers-reduced-motion. Most apps should omit the switch to follow the system, and force animation only after an explicit user choice or when motion is essential to the experience."
 />
 
-**When it doesn't play**: you explicitly turn it off, omit the switch while the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. React SVG / Canvas and Vanilla all converge to the resting state; degradation never throws or drops the figure.
+<SourceLinks
+  sources={[
+    {
+      label: 'Playback switch and autoplay detection',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 124,
+      endLine: 154,
+    },
+    {
+      label: 'SVG interactive triggers and controls',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 191,
+      endLine: 282,
+    },
+    {
+      label: 'Canvas shared clock and imperative handle',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 198,
+      endLine: 230,
+    },
+  ]}
+/>
 
-#### Static snapshot (`snapshot` / `snapshotAt`)
+### Static frames and fallback
 
-Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`) to render **a single frame frozen at that time**: no playback, no emitted animation — the value of each **autoplay track** (`trigger: 'load'` / omitted) at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
+Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { animation: { snapshotAt } })` / `mountSvg(…, { animation: { snapshotAt } })`) to render **one frame frozen at that time**. It starts no playback and emits no animation rules; it only bakes autoplay-track values into static attributes or transforms. This is useful for SSR poster frames, thumbnails, and social-card previews.
 
 <ComponentPreview files="snapshot" size="xs" />
 
@@ -155,52 +250,36 @@ Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { animation: { snapsh
 </Layout>
 ```
 
-`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides the explicit animation switch. Interaction-triggered tracks (`manual` / `visible` / `{ onEvent }`) are **not frozen** in a static frame — they stay at base (settled), since a poster represents "after load, before any interaction has happened"; both backends agree.
+`snapshotAt` has priority over the playback switch, but samples only `load` or omitted triggers. `manual`, `visible`, and event tracks stay at base because a poster represents "loaded, before any interaction." Without a snapshot, explicitly disabling animation, following a reduced-motion preference, or lacking backend animation support also renders the base figure without throwing or dropping it.
 
-## How it works
-
-> Optional for everyday use; revisit when you want to understand presets, resting states, or graceful degradation.
-
-### preset ↔ AnimationTrack
-
-A preset is just a shorthand for an underlying `AnimationTrack` (property + keyframes + timing), and the two are **fully equivalent**: `fadeIn()` expands to one `opacity` track from 0 to 1, `spin()` to an infinite `rotate` 0→360 track. A preset introduces nothing a track can't express — it only names a common keyframe combination and hands you a factory.
-
-Every preset is a factory for an `AnimationTrack` — call it and you get a JSON track to attach to `animations`. A track describes "keyframes of one property channel over normalized time `[0, 1]`, plus WAAPI-style timing":
-
-```ts
-type AnimationTrack = {
-  property: string; // channel: opacity / scale / rotate / fill / stroke / pathDraw …
-  keyframes: Array<{
-    at: number; // normalized time 0..1, decoupled from duration; sorted by at
-    value: JsonValue; // the absolute display value at that time, not a delta
-    easing?: string | [number, number, number, number]; // segment easing; overrides track level
-  }>;
-  duration: number; // one-iteration duration in ms (> 0)
-  delay?: number; // delay before first iteration (ms)
-  easing?: string | [number, number, number, number]; // track easing; defaults to linear
-  iterations?: number | 'infinite'; // play count; defaults to 1
-  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // defaults to normal
-  fill?: 'none' | 'forwards' | 'backwards' | 'both'; // defaults to forwards
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string }; // defaults to load
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number]; // scale / rotate pivot; defaults to geometric center
-};
-```
-
-Key convention: **the last frame (`at: 1`) equals the element's base (resting) state** — so ignoring the animation renders the complete final figure, which is exactly what degradation relies on. A preset's output is **field-for-field equal to a hand-written track**, and the common options `{ duration, delay, easing, trigger }` override each preset's defaults. Switch any demo's code panel to the IR / Vanilla tab to see the preset expanded into its raw track — the same shape animation takes inside the IR when persisted or AI-generated.
+The default `fill="forwards"` keeps the last frame after playback. Built-in intro and return-to-base presets end at common base values, and `spin` at 360° is equivalent to 0°. `colorShift` and `cameraTo` cannot read an element or camera base, so you provide their destinations explicitly. `AnimationTrackSchema` documents "the last frame should be settled" as an authoring convention rather than comparing it against the base; hand-written tracks and explicit destinations must land on the intended resting state when they need graceful fallback.
 
 <ComponentAlert
-  title="Last frame = resting state, so it degrades"
-  description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, an omitted switch with a reduced-motion preference, or an explicit off switch make React SVG / Canvas and Vanilla render that resting state — you see the complete final figure, not the possibly-transparent starting point."
+  title="Ending at rest is an authoring convention"
+  description="Built-in intro and return-to-base presets use common base values; hand-written tracks and explicit to values still need your guarantee. Otherwise live playback ends at the last frame while disabled animation shows the base, and the two results can differ."
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'SVG snapshot baking and interactive-track filtering',
+      path: 'packages/kernel/render/src/svg/animation/keyframes.ts',
+      startLine: 219,
+      endLine: 295,
+    },
+    {
+      label: 'Canvas snapshot priority and static rendering',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 198,
+      endLine: 230,
+    },
+    {
+      label: 'Settled-last-frame data contract',
+      path: 'packages/kernel/core/src/schemas/animation/schema.ts',
+      startLine: 51,
+      endLine: 86,
+    },
+  ]}
 />
 
 ## API Reference
@@ -233,4 +312,4 @@ Key convention: **the last frame (`at: 1`) equals the element's base (resting) s
 
 - [Shadow](/kernel/components/effects/shadow): the element-level `shadow`
 - [Blend](/kernel/components/effects/blend): the element-level `blendMode`
-- [Custom Animation](/kernel/components/extend/custom-animation): register custom presets and the underlying tracks
+- [Custom Animation](/kernel/components/effects/custom-animation): register custom presets and the underlying tracks

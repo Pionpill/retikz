@@ -81,7 +81,7 @@ export type NodeProps = HydrationEventProps & {
   dotted?: boolean;
   /** 显式 dash pattern（如 [4, 2]）；优先级最高 */
   dashPattern?: IRNode['dashPattern'];
-  /** 描边 dash offset。 */
+  /** 描边 dash offset */
   dashOffset?: IRNode['dashOffset'];
   /** 圆角半径（user units）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */
   cornerRadius?: number;
@@ -110,9 +110,9 @@ export type NodeProps = HydrationEventProps & {
 };
 
 /**
- * Node 声明一个可引用的节点。
+ * Node 声明一个可引用的节点
  * @description 声明一个带位置、文本、形状和样式的可引用节点；组件自身不渲染 DOM，最终由 `<Layout>` 输出到
- *   SVG 或 Canvas。
+ *   SVG 或 Canvas
  */
 export const Node: FC<NodeProps> = () => null;
 Node.displayName = TIKZ_NODE;

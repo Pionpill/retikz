@@ -28,14 +28,14 @@ const contourParamsSchema = z.strictObject({
 
 export type ContourParams = z.infer<typeof contourParamsSchema>;
 
-/** 点集 AABB 中心，用于把任意原点的顶点环居中到 Node position。 */
+/** 点集 AABB 中心，用于把任意原点的顶点环居中到 Node position */
 const aabbCenterOf = (points: Array<Position>): Position => {
   const bounds = boundsOf(points);
   if (bounds === undefined) throw new Error('contour: points must contain at least one vertex.');
   return boundsCenter(bounds);
 };
 
-/** 顶点环居中后投到世界系，生成闭合折线段。 */
+/** 顶点环居中后投到世界系，生成闭合折线段 */
 const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment> => {
   const center = aabbCenterOf(params.points);
   const verts = params.points.map(p => localToWorld(rect, point.sub(p, center)));
@@ -43,9 +43,9 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
 };
 
 /**
- * contour 注册项：任意闭合顶点环。
+ * contour 注册项：任意闭合顶点环
  * @description 顶点按 AABB 中心自动归一化，Node position 对齐轮廓中心；命名 anchor 交给外接 AABB 回退。
- *   points 按轴缩放，cornerRadius 按几何均值缩放。
+ *   points 按轴缩放，cornerRadius 按几何均值缩放
  */
 export const contour = defineShape<ContourParams>({
   name: 'contour',

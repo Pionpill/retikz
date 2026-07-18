@@ -1,7 +1,7 @@
 # 空间贴附与复用长期计划
 
 > **状态：长期计划，当前不实现。** 本文记录复杂复合可视化所需的底层能力，用于后续 core / plot 架构演进时对齐方向。
-> 关联：[`core-design.md`](./core-design.md) · `packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/decisions/plot/v0/v0.1/alpha.14/09-composition-api-structure.md`。
+> 关联：`packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/decisions/plot/v0/v0.1/alpha.14/09-composition-api-structure.md`。
 
 ---
 
@@ -171,7 +171,7 @@ core 不应该理解 plot 语义，但应该允许 domain 包把语义信息挂�
 - locator / selection / inspector 能按 metadata 找回源对象。
 - 同一图元可以同时携带空间 provenance 和数据 provenance。
 
-这与 `core-design.md` 中“core 不理解 meta 内容，只保证存进 / 读出不丢失”的方向一致，但需要进一步面向布局空间和选区查询收敛成稳定契约。
+core 不解释 meta 内容，只保证它在编译与渲染链路中不丢失；后续还需要面向布局空间和选区查询把这一方向收敛成稳定契约。
 
 长期上，meta 不应只是任意对象散落在 primitive 上。core 可以提供一个保守的 envelope：
 

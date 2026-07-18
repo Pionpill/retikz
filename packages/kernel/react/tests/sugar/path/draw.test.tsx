@@ -11,7 +11,7 @@ import { Draw } from '../../../src/sugar';
  * 在 node env 不渲染，直接调 FC 拿 element 树检查；走 buildIR 拿最终 IR 验证语义。
  *
  * Hard rule：Sugar 不引入新能力——任何 Draw 表达都必须能用 Kernel 等价表达。这里通过对比
- * Draw 输出的 IR 与手写 Kernel 的 IR 是否一致来验。
+ * Draw 输出的 IR 与手写 Kernel 的 IR 是否一致来验
  */
 const ir = (jsx: React.ReactNode) => buildIR(jsx);
 

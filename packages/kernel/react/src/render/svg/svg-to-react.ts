@@ -7,7 +7,7 @@ import { createElement } from 'react';
  * 呈现属性 kebab → React camelCase 映射表（手工小表，零依赖）
  * @description retikz 实际产出的呈现属性有限可枚举（~20 个）。结构属性（`viewBox` / `refX` / `markerWidth`...）
  *   已与 React 拼写一致、无连字符，不进表（passthrough 原样）；`data-*` 同样原样。React 是唯一需要把呈现
- *   属性 kebab→camelCase 的消费者（字符串 / Vanilla / Vue / Svelte 逐字用 SVG 真名）。
+ *   属性 kebab→camelCase 的消费者（字符串 / Vanilla / Vue / Svelte 逐字用 SVG 真名）
  */
 const ATTR_KEBAB_TO_CAMEL: Record<string, string> = {
   class: 'className',
@@ -53,7 +53,7 @@ const toReactStyle = (style: SvgStyle): CSSProperties => {
 /**
  * `SvgNode` → React 元素（`@retikz/render/svg` 描述树的 React 薄消费层）
  * @description 仅做名字映射 + `createElement`，不持有任何渲染逻辑（逻辑全在 `@retikz/render/svg` builder）。
- *   产出 100% 正常的 React element 树：reconciliation / `key` / `React.memo` / 并发特性照常可用。
+ *   产出 100% 正常的 React element 树：reconciliation / `key` / `React.memo` / 并发特性照常可用
  */
 export const svgToReact = (node: SvgNode | string, key?: Key): ReactElement | string => {
   if (typeof node === 'string') return node;

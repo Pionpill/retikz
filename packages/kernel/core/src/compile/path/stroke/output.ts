@@ -4,23 +4,23 @@ import type { PathPrimitiveEmitResult } from '../types';
 
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
 
-/** path emit 最终输出包装输入。 */
+/** path emit 最终输出包装输入 */
 export type WrapPathPrimitiveOutputInput = {
-  /** 原始 IR path，用于读取 transform 与水合元数据。 */
+  /** 原始 IR path，用于读取 transform 与水合元数据 */
   path: IRPathBase;
-  /** 主体 primitive；无整体 transform 时 id/meta/animations 会落在这里。 */
+  /** 主体 primitive；无整体 transform 时 id/meta/animations 会落在这里 */
   primitive: ScenePrimitive;
-  /** 主体、label、mark primitives。 */
+  /** 主体、label、mark primitives */
   bodyPrims: Array<ScenePrimitive>;
-  /** 当前 path 的 bbox 采样点。 */
+  /** 当前 path 的 bbox 采样点 */
   boundsPoints: Array<IRPosition>;
-  /** 坐标取整函数。 */
+  /** 坐标取整函数 */
   round: (n: number) => number;
 };
 
 /**
- * 包装 path 最终输出。
- * @description rotate / scale 需要最后包 GroupPrim；水合 id/meta/animations 只落在最外层主体 primitive。
+ * 包装 path 最终输出
+ * @description rotate / scale 需要最后包 GroupPrim；水合 id/meta/animations 只落在最外层主体 primitive
  */
 export const wrapPathPrimitiveOutput = ({
   path,

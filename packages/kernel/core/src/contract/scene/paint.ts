@@ -4,13 +4,13 @@ import type { MarkerPrimitive } from './marker';
 
 /**
  * paint 属性取值词汇表（可用于 fill / stroke，不绑定单一属性）
- * @description 渲染无关：`string` 表示纯色，`resourceRef` 指向 `Scene.resources`，`contextStroke` 继承所在元素描边。
+ * @description 渲染无关：`string` 表示纯色，`resourceRef` 指向 `Scene.resources`，`contextStroke` 继承所在元素描边
  */
 export type PaintValue = string | { kind: 'resourceRef'; id: string } | { kind: 'contextStroke' };
 
 /**
- * 已解析 pattern tile。
- * @description 描述 tile 周期、可选底色 / 旋转和局部 motif 几何；纯 JSON 数据。
+ * 已解析 pattern tile
+ * @description 描述 tile 周期、可选底色 / 旋转和局部 motif 几何；纯 JSON 数据
  */
 export type ResolvedPatternTile = {
   /** tile 周期（user units）；= 解析后 pattern.size（缺省 8） */
@@ -31,7 +31,7 @@ export type ResolvedPatternTile = {
 
 /**
  * paint 资源（gradient / pattern / image）
- * @description primitive 经 `{ kind:'resourceRef', id }` 引用；pattern 资源额外带已解析 `tile`。
+ * @description primitive 经 `{ kind:'resourceRef', id }` 引用；pattern 资源额外带已解析 `tile`
  */
 export type PaintResource = {
   kind: 'paint';
@@ -42,7 +42,7 @@ export type PaintResource = {
 };
 
 /**
- * Scene 级渲染无关资源。
- * @description 通过 `kind` 区分 paint 与 clip，id 在各资源类型间保持稳定且不冲突。
+ * Scene 级渲染无关资源
+ * @description 通过 `kind` 区分 paint 与 clip，id 在各资源类型间保持稳定且不冲突
  */
 export type SceneResource = PaintResource | ClipResource;

@@ -4,7 +4,7 @@
  *   全部图元并集 bbox）/ DOM element / scene 指针坐标 / 动画控制 / scene。compile 会把同一 user id stamp 到多个
  *   平铺 shape 图元，故 context 表达的是「用户交互的那个语义元素」（由 id 标识），不是单个 primitive。各 runtime
  *   （vanilla / react）经 `createContextBuilder` 注入 renderer 专有片段（element 定位 / 指针逆映射 / 动画句柄），
- *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op。
+ *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op
  */
 import type { IRJsonObject, Scene, ScenePrimitive } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
@@ -16,7 +16,7 @@ import { pathControlPoints } from '../shared/path-command';
 /**
  * handler 内的动画控制（缺省作用于命中元素，传 id 控别的元素）
  * @description SVG per-id 强（查 `data-retikz-id` / `data-retikz-animation-owner` 全部命中元素的 `getAnimations()`）；
- *   Canvas coarse（scene 级单时钟，id 参数当前忽略）；无 runtime / scene 时各方法 no-op。
+ *   Canvas coarse（scene 级单时钟，id 参数当前忽略）；无 runtime / scene 时各方法 no-op
  */
 export type HydrationAnimationControls = {
   /** 播放 / 继续（manual track 或已暂停的） */
@@ -42,7 +42,7 @@ export type HydrationGeometry = {
 /**
  * 水合 handler 第二参：renderer 无关的 runtime 上下文
  * @description context 永远传入（绝不 undefined）；信息不全表现为字段缺省（`meta` / `geometry` / `scene` 可选、
- *   `animation` 各方法可 no-op）而非「无 context」。抄 LangChain config——以后加字段不动 handler 签名。
+ *   `animation` 各方法可 no-op）而非「无 context」。抄 LangChain config——以后加字段不动 handler 签名
  */
 export type HydrationContext = {
   /** 命中的语义元素 id（user id）；同 id 的多个平铺图元聚合视为「一个元素」 */
@@ -232,7 +232,7 @@ const accumulateSubtree = (prim: ScenePrimitive, m: Matrix, bbox: BBox | undefin
  * 同 id 全部图元的并集几何（scene user units）
  * @description 走 scene 树（累积 group transform），命中 id 的图元（叶子或 group）取其整棵子树叶子角点并集——
  *   覆盖「纯几何 Node 多平铺 shape 共享 id」与「文本 / rotate Node 单 GroupPrim 持 id」两种 stamp 形态。
- *   无匹配 / 无可解析几何 → undefined。
+ *   无匹配 / 无可解析几何 → undefined
  */
 export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefined => {
   let bbox: BBox | undefined;
@@ -265,7 +265,7 @@ const escapeAttr = (value: string): string => value.replace(/["\\]/g, '\\$&');
  * SVG per-id 动画控制：查 `[data-retikz-id]` + `[data-retikz-animation-owner]` 全部命中元素的 `getAnimations()`
  * @description 覆盖元素自身的 CSS load 动画 / WAAPI 交互动画、以及承载 transform / camera 的 wrapper `<g>`（无
  *   `data-retikz-id`、但有 `data-retikz-animation-owner`）。`getAnimations` 同时返回 CSSAnimation + WAAPI，配
- *   owner 属性定位最完整。`defaultId` = 命中元素 id（`id` 省略时用它）。缺 `getAnimations` 的环境优雅退化为空。
+ *   owner 属性定位最完整。`defaultId` = 命中元素 id（`id` 省略时用它）。缺 `getAnimations` 的环境优雅退化为空
  */
 export const createSvgAnimationControls = (root: Element, defaultId: string): HydrationAnimationControls => {
   const animationsFor = (id: string): Array<Animation> => {
@@ -314,7 +314,7 @@ const SETTLED_SEEK_MS = Number.MAX_SAFE_INTEGER;
  * @description per-id 控制不可用（无登记表）时的降级；restart 走 `seek(0)+play`。无时钟 → no-op。
  *   `stop` 落 **settled 末态**（与 SVG `finish` / per-id `stop` 一致，非定格当前帧）：scene 级时钟无 per-id
  *   skip 机制，故 seek 到远超任何有限动画时长处让各 track fill-forward 到末态，再 pause 定格。无限循环动画无
- *   settled 末态（与 SVG `finish` 同样语义未定），会落在循环某相位。
+ *   settled 末态（与 SVG `finish` 同样语义未定），会落在循环某相位
  */
 export const createClockAnimationControls = (clock: ClockHandle): HydrationAnimationControls => {
   if (!clock) return noopAnimationControls;
@@ -350,7 +350,7 @@ export type CanvasIdControlsDeps = {
 /**
  * Canvas per-id 动画控制：在 scene 级单 rAF 时钟之上经 IdClockRegistry 给每个 id 叠加独立虚拟时钟
  * @description `ctx.animation.restart(id)` 等只影响该 id（缺省命中元素）：登记表记 offset / pause / active / stop，
- *   `drawScene` 经 `resolvePrimAnimation` 折算各 id 有效时刻。play / restart / seek 后确保时钟在跑；每次操作后重绘一帧。
+ *   `drawScene` 经 `resolvePrimAnimation` 折算各 id 有效时刻。play / restart / seek 后确保时钟在跑；每次操作后重绘一帧
  */
 export const createCanvasIdAnimationControls = (deps: CanvasIdControlsDeps): HydrationAnimationControls => {
   const { registry, clockTime, ensurePlaying, renderFrame, defaultId } = deps;
@@ -385,7 +385,7 @@ export const createCanvasIdAnimationControls = (deps: CanvasIdControlsDeps): Hyd
 /**
  * 经 scene layout 逆 meet-fit 把指针 client 像素映射成 scene user units（svg / canvas 共用口径）
  * @description 读 `root.getBoundingClientRect()` 降到局部 CSS 像素，去 letterbox offset、除 scale、加 layout origin
- *   （镜像 canvas `clientToScene` / `preserveAspectRatio=meet`）。非指针事件（无 clientX）/ 退化尺寸 → null。
+ *   （镜像 canvas `clientToScene` / `preserveAspectRatio=meet`）。非指针事件（无 clientX）/ 退化尺寸 → null
  */
 export const resolvePointViaLayout =
   (root: Element, layout: BoundsRect) =>
@@ -406,7 +406,7 @@ export const resolvePointViaLayout =
 /**
  * 经 svg `getScreenCTM` 把指针映射到 viewBox(user) 坐标（无需 scene；standalone 最小 context 用）
  * @description scene 缺省时无 layout 可逆 meet-fit，改用浏览器原生 CTM（同时含 camera `<g>` 之外的根映射）。
- *   缺 `getScreenCTM` / `createSVGPoint`（jsdom / 非 svg）或非指针事件 → null。
+ *   缺 `getScreenCTM` / `createSVGPoint`（jsdom / 非 svg）或非指针事件 → null
  */
 export const resolveSvgPointViaCtm =
   (root: Element) =>
@@ -439,7 +439,7 @@ export type ContextSources = {
   root: Element;
   /**
    * 当前 Scene；缺省 → meta / geometry / scene 字段缺省、animation no-op（standalone 最小 context）。
-   * 传 getter（`() => Scene`）支持 live scene——mount 后 `update()` 换图时每次命中读最新 Scene。
+   * 传 getter（`() => Scene`）支持 live scene——mount 后 `update()` 换图时每次命中读最新 Scene
    */
   scene?: Scene | (() => Scene | undefined);
   /** 命中 DOM 元素定位（svg = closest；canvas = () => null） */
@@ -453,7 +453,7 @@ export type ContextSources = {
 /**
  * 组装 `buildContext`：命中 id → 完整 `HydrationContext`
  * @description renderer 无关骨架——meta / geometry 经 scene 按 id 聚合查询；element / point / animation 由 `sources`
- *   注入的 renderer 专有片段提供。无 scene → meta / geometry / scene 缺省。context 永远完整对象（绝不 undefined）。
+ *   注入的 renderer 专有片段提供。无 scene → meta / geometry / scene 缺省。context 永远完整对象（绝不 undefined）
  */
 export const createContextBuilder = (sources: ContextSources): BuildContext => {
   const { renderer, root, scene, resolveElement, resolvePoint, makeAnimation } = sources;

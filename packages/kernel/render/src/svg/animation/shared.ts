@@ -1,6 +1,6 @@
 /**
  * SVG 动画播放共享映射（纯函数）：property 分类、value→SVG、origin 支点解析、easing→CSS、prim 几何
- * @description CSS @keyframes（keyframes.ts）与 WAAPI 描述（waapi.ts）共用本模块，避免两端映射漂移。
+ * @description CSS @keyframes（keyframes.ts）与 WAAPI 描述（waapi.ts）共用本模块，避免两端映射漂移
  */
 import type { IRAnimationTrack, ScenePrimitive } from '@retikz/core';
 
@@ -40,7 +40,7 @@ const CSS_NAMED_EASINGS = new Set(['linear', 'ease', 'ease-in', 'ease-out', 'eas
 /**
  * easing → CSS timing-function 串
  * @description 内置具名 / cubic-bezier 四元组直转；自定义注册名查 registry（bezier 形式可进 CSS，函数形式
- *   进不了 CSS → warn + linear）；未注册名 → warn + linear。
+ *   进不了 CSS → warn + linear）；未注册名 → warn + linear
  */
 export const easingToCss = (
   easing: string | CubicBezier | undefined,
@@ -94,7 +94,7 @@ const asColor = (value: unknown): string => (typeof value === 'string' ? value :
  * 把一条 track 展开成 SVG 可消费的归一化帧（CSS @keyframes / WAAPI 共用）
  * @description 内置通道按类型映射：css 直属（opacity/fill/stroke/stroke-width）/ transform（合成串 + 支点）/
  *   pathDraw（stroke-dashoffset 1→0 + pathLength/dasharray setup）；fill/stroke 在 oklch 空间预采样成多帧。
- *   返回 `{ skip }` 表示该 track 无法在 SVG 表达（自定义无映射 / pathDraw 无描边），caller warn + 跳过。
+ *   返回 `{ skip }` 表示该 track 无法在 SVG 表达（自定义无映射 / pathDraw 无描边），caller warn + 跳过
  */
 export const expandTrack = (
   track: IRAnimationTrack,

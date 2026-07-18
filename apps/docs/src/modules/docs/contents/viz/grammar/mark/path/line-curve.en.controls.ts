@@ -1,5 +1,7 @@
 import { PathCurve } from '@retikz/plot';
 
+import type { PreviewControlContract } from '@/modules/docs/components';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { PATH_CURVE_CONTROL_ID } from './line-curve.controls';
@@ -27,3 +29,13 @@ export const lineCurveControls = definePreviewControls({
     },
   ],
 });
+
+export const previewControlContract = {
+  controls: lineCurveControls,
+  canonicalValues: { [PATH_CURVE_CONTROL_ID]: PathCurve.Linear },
+  presets: [
+    { id: 'linear', label: 'Linear', values: { [PATH_CURVE_CONTROL_ID]: PathCurve.Linear } },
+    { id: 'smooth', label: 'Catmull-Rom', values: { [PATH_CURVE_CONTROL_ID]: PathCurve.CatmullRom } },
+  ],
+  relatedApis: ['PathMark.curve'],
+} satisfies PreviewControlContract;

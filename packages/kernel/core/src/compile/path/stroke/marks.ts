@@ -41,7 +41,7 @@ export const markerContextStroke = (stroke: PaintValue | undefined): string => {
   throw new Error('Path mark cannot inherit a PaintSpec stroke; set the mark or arrow color to an explicit CSS color.');
 };
 
-/** marker 放置所需上下文。 */
+/** marker 放置所需上下文 */
 export type BuildMarkMarkerGroupContext = {
   strokeWidth: number;
   round: (n: number) => number;
@@ -63,7 +63,7 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
 
 /**
  * 把已物化的 arrow marker（局部 baseSize 坐标系，尖端 +x）按路径切线定向放到采样点
- * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x。
+ * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x
  */
 export const buildMarkMarkerGroup = (
   spec: ResolvedArrowEndSpec,

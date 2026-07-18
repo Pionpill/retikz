@@ -1,6 +1,6 @@
 # v0.4.0-alpha.3 路线：路径补强（B）+ 任意轮廓 contour shape
 
-> 写于 2026-06-15。承接 [v0.4 roadmap 候选 B「路径补强」](../roadmap.md#b--路径补强2026-06-12-拍板)（2026-06-12 拍板「首切 = B1 圆角 + B2 平滑曲线一块做」）；2026-06-15 并入一项 plot → core 跨包能力请求（contour shape，ADR-03）。
+> 写于 2026-06-15。承接 [v0.4 历史候选 B「路径补强」](../history.md#b--路径补强2026-06-12-拍板)（2026-06-12 拍板「首切 = B1 圆角 + B2 平滑曲线一块做」）；2026-06-15 并入一项 plot → core 跨包能力请求（contour shape，ADR-03）。
 >
 > 关联：[`v0.4 roadmap`](../roadmap.md) · [`alpha.1 math 底座`](../alpha.1/roadmap.md)（B 消费 A）· [`ADR-01 任意折线圆角`](./01-polyline-rounded-corners.md) · [`ADR-02 过点平滑曲线`](./02-smooth-curve-through-points.md) · [`ADR-03 任意轮廓 contour shape`](./03-core-contour-shape.md)
 

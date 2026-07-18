@@ -54,7 +54,7 @@ import {
   stableSortByZIndex,
 } from './primitive';
 
-/** 编译 child 树，完成 namespace 注册、延迟 path 回填、zIndex 排序和自动 layout bbox 收集。 */
+/** 编译 child 树，完成 namespace 注册、延迟 path 回填、zIndex 排序和自动 layout bbox 收集 */
 export const compileChildrenToPrimitives = (
   rootChildren: ReadonlyArray<IRChild>,
   context: CompileContext,
@@ -90,7 +90,7 @@ export const compileChildrenToPrimitives = (
     },
   };
 
-  /** 按 path.kind 查找 path kind provider，并提供内置 stroke / ribbon emit 回调。 */
+  /** 按 path.kind 查找 path kind provider，并提供内置 stroke / ribbon emit 回调 */
   const emitPathKindPrimitive = (
     path: IRPathBase,
     irPath: string,
@@ -144,7 +144,7 @@ export const compileChildrenToPrimitives = (
     });
   };
 
-  /** 在命名引用可查阶段 emit 延迟 path，并把结果回填到对应输出容器。 */
+  /** 在命名引用可查阶段 emit 延迟 path，并把结果回填到对应输出容器 */
   const flushPendingPathEmissions = (pendingPaths: ReadonlyArray<PendingPathEmission>): void => {
     if (pendingPaths.length === 0) return;
     runtime.state.namespaceStack.enterResolvingPhase();
@@ -176,7 +176,7 @@ export const compileChildrenToPrimitives = (
     }
   };
 
-  /** 布局并 emit node，同时注册 id、收集边界点和父 scope layout 输入。 */
+  /** 布局并 emit node，同时注册 id、收集边界点和父 scope layout 输入 */
   const emitNodeChild = (child: NodeChild, index: number, frame: TraversalFrame): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, styleStack } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
@@ -229,7 +229,7 @@ export const compileChildrenToPrimitives = (
     layoutSink.push(globalLayout);
   };
 
-  /** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用。 */
+  /** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用 */
   const registerCoordinateChild = (child: CoordinateChild, index: number, frame: TraversalFrame): void => {
     const { scopeChain, locatorPrefix, layoutSink } = frame;
     const coordinateIrPath = `${locatorPrefix}children[${index}].coordinate`;
@@ -253,7 +253,7 @@ export const compileChildrenToPrimitives = (
     layoutSink.push(coordinateLayout);
   };
 
-  /** 合并 path 样式并加入延迟 emit 队列，保留顶层绘制顺序占位。 */
+  /** 合并 path 样式并加入延迟 emit 队列，保留顶层绘制顺序占位 */
   const queuePathChild = (child: PathChild, index: number, frame: TraversalFrame): void => {
     const { scopeChain, primitiveSink, locatorPrefix, pathSink, styleStack } = frame;
     const pathIrPath = `${locatorPrefix}children[${index}].path`;
@@ -280,7 +280,7 @@ export const compileChildrenToPrimitives = (
     pathSink.push(pending);
   };
 
-  /** 解析 scope 自身 transforms，并生成子树继续使用的累积 scopeChain。 */
+  /** 解析 scope 自身 transforms，并生成子树继续使用的累积 scopeChain */
   const resolveScopeTransforms = (
     child: ScopeChild,
     index: number,
@@ -309,7 +309,7 @@ export const compileChildrenToPrimitives = (
     return { scopeTransforms, childScopeChain: [...scopeChain, ...scopeTransforms] };
   };
 
-  /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换。 */
+  /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
   const registerScopeLayoutPlaceholder = (
     child: ScopeChild,
     input: ScopeLayoutPlaceholderContext,
@@ -330,7 +330,7 @@ export const compileChildrenToPrimitives = (
     return { parentFrameDepth, placeholderLayout };
   };
 
-  /** 根据子 layout 计算 scope 的最终命名 layout，并回填 scope.id 注册结果。 */
+  /** 根据子 layout 计算 scope 的最终命名 layout，并回填 scope.id 注册结果 */
   const registerResolvedScopeLayout = (child: ScopeChild, input: RegisterResolvedScopeLayoutContext): void => {
     const { childScopeChain, scopeLayouts, layoutPlaceholder, frame } = input;
     const { layoutSink } = frame;
@@ -360,7 +360,7 @@ export const compileChildrenToPrimitives = (
     layoutSink.push(bboxLayout);
   };
 
-  /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画。 */
+  /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
   const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): void => {
     const { index, scopeTransforms, scopePrimitiveSink, frame } = input;
     const { primitiveSink, locatorPrefix } = frame;
@@ -388,7 +388,7 @@ export const compileChildrenToPrimitives = (
     recordPrimitiveZIndex(runtime.state.zIndexOf, group, child.zIndex);
   };
 
-  /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出。 */
+  /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出 */
   const compileScopeChild = (child: ScopeChild, index: number, frame: TraversalFrame): void => {
     const { locatorPrefix, styleStack } = frame;
     const { scopeTransforms, childScopeChain } = resolveScopeTransforms(child, index, frame);

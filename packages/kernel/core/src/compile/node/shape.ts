@@ -6,39 +6,39 @@ import { providerDefinitionOf } from '../../providers/registry';
 import { BuiltinShape, JsonObjectSchema } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 
-/** 节点 shape 解析输入。 */
+/** 节点 shape 解析输入 */
 export type ResolveNodeShapeInput = {
-  /** 待解析节点。 */
+  /** 待解析节点 */
   node: IRNode;
-  /** shape 注册表。 */
+  /** shape 注册表 */
   shapes: ProviderCollection<ShapeDefinition>;
-  /** x 轴缩放。 */
+  /** x 轴缩放 */
   scaleX: number;
-  /** y 轴缩放。 */
+  /** y 轴缩放 */
   scaleY: number;
-  /** 当前 node 的 IR 路径，用于 provider payload 诊断。 */
+  /** 当前 node 的 IR 路径，用于 provider payload 诊断 */
   irPath?: string;
 };
 
-/** 节点 shape 解析结果。 */
+/** 节点 shape 解析结果 */
 export type ResolvedNodeShape = {
-  /** shape 名称。 */
+  /** shape 名称 */
   shapeName: string;
-  /** shape definition。 */
+  /** shape definition */
   shapeDef: ShapeDefinition;
-  /** 已归一化并缩放后的 shape params。 */
+  /** 已归一化并缩放后的 shape params */
   shapeParams: IRJsonObject;
 };
 
-/** Node shape preset 解析后的 provider 查询形态。 */
+/** Node shape preset 解析后的 provider 查询形态 */
 type ResolvedNodeShapePreset = {
-  /** 实际查询的 shape provider 名称。 */
+  /** 实际查询的 shape provider 名称 */
   type: string;
-  /** 传给 provider 的 JSON-safe 参数对象。 */
+  /** 传给 provider 的 JSON-safe 参数对象 */
   params: IRJsonObject;
 };
 
-/** 把 Node shape preset 解析到实际 provider 名称和参数。 */
+/** 把 Node shape preset 解析到实际 provider 名称和参数 */
 const resolveNodeShapePreset = (shape: IRNode['shape']): ResolvedNodeShapePreset => {
   if (shape === undefined) return { type: BuiltinShape.Rectangle, params: {} };
   if (shape === BuiltinShape.Circle) return { type: BuiltinShape.Ellipse, params: { circumscribe: 'equal' } };
@@ -48,7 +48,7 @@ const resolveNodeShapePreset = (shape: IRNode['shape']): ResolvedNodeShapePreset
   return { type: ref.type, params: ref.params ?? {} };
 };
 
-/** 递归把 JSON 值里的数值叶子乘以 factor。 */
+/** 递归把 JSON 值里的数值叶子乘以 factor */
 const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
   if (typeof value === 'number') return (value * factor) as T;
   if (Array.isArray(value)) return value.map(v => scaleJsonNumbers(v, factor)) as T;
@@ -60,7 +60,7 @@ const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
   return value;
 };
 
-/** 解析节点 shape definition 和随节点缩放后的 params。 */
+/** 解析节点 shape definition 和随节点缩放后的 params */
 export const resolveNodeShape = (input: ResolveNodeShapeInput): ResolvedNodeShape => {
   const { node, shapes, scaleX, scaleY, irPath = 'node' } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);

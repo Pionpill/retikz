@@ -37,7 +37,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports thirteen kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `generator` for built-in or custom path generators, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/kernel/components/draw/step) and [path generators](/kernel/components/extend/path-generator) for details.
+`<Step>` supports thirteen kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `generator` for built-in or custom path generators, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/kernel/components/draw/step) and [path generators](/kernel/components/draw/path-generator) for details.
 
 ## Examples
 
@@ -146,7 +146,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 #### Mid-path marks
 
-`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/extend/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`**, just like endpoint arrows: the thicker the line, the larger the mark.
+`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/draw/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`**, just like endpoint arrows: the thicker the line, the larger the mark.
 
 <ComponentPreview files="path-marks" size="xs" />
 
@@ -228,6 +228,107 @@ Ribbon is a closed area, so styling focuses on `fill`, outline `stroke`, opacity
 
 <ComponentPreview files="ribbon-style" size="md" />
 
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when endpoint references, Path kinds, rounded geometry, arrows, or ribbon outlines produce an edge case."
+/>
+
+This section focuses on the local path from a `<Path>` step sequence to Scene primitives. See [Architecture Principles](/kernel/concepts/design/principles) for the full JSX → IR → Scene pipeline.
+
+### Why endpoints can refer forward
+
+The compiler does not emit primitives as soon as it reaches a `<Path>`. It queues the path and leaves an ordering placeholder when output stays at the current level. It continues registering `<Node>` and `<Coordinate>` ids, then resolves `Step.to`, control points, and connection boundaries after the current scope has been scanned. Ordinary scopes backfill the placeholder; see the [`<Scope>` deep dive](/kernel/components/layout/scope#how-it-works) for transformed-scope projection.
+
+As a result, path endpoints can refer to an id declared later in the same scope without changing paint order. This is a contract of deferred path emission only: `Node.position` and scope transforms are still resolved when the compiler reaches them, so not every id reference supports forward declarations.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Path placeholders and pending queue',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 256,
+      endLine: 281,
+    },
+    {
+      label: 'Endpoint resolution and primitive backfill',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 147,
+      endLine: 176,
+    },
+  ]}
+/>
+
+### How kind selects whole-path output
+
+`kind` is not a renderer switch. It names the provider that compiles the whole Path and defaults to `stroke`. The compiler resolves a definition from the shared registry. If that provider declares an `optionsSchema`, the compiler validates `kindOptions`; otherwise it keeps the original JSON object. The provider can then reuse standard stroke emission, reuse standard ribbon emission, or return custom Scene primitives directly.
+
+The figure stops at the Path responsibility boundary: the input remains one `<Path>`, while every provider branch returns renderer-agnostic Scene primitives.
+
+<ComponentPreview files="path-kind-pipeline" size="sm" hideCode />
+
+Built-in `stroke` / `ribbon` kinds and external kinds use the same registry and collision rules; renderers do not need to understand custom kinds. See [Custom Paths](/kernel/components/draw/custom-path) to own the whole path, or [Path Generators](/kernel/components/draw/path-generator) to extend one step.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Path kind lookup and dispatch',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 93,
+      endLine: 145,
+    },
+    {
+      label: 'Path kind provider contract',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 18,
+      endLine: 53,
+    },
+  ]}
+/>
+
+### How stroke and ribbon materialize geometry
+
+| Mode                | Core work                | Scene output     |
+| ------------------- | ------------------------ | ---------------- |
+| `stroke`            | steps → commands → decor | stroke + helpers |
+| `ribbon` centerline | commands → offset sides  | closed outline   |
+| `ribbon` boundary   | sample sides → join caps | closed outline   |
+
+The default stroke path first resolves relative targets, node references, and generators into path commands (`PathCommand`: materialized move / line / arc geometry). `roundedCorners` then rewrites those commands before marks and endpoint-arrow shrinking are calculated. Finally, `rotate` / `scale` wrap the main path, labels, and marks in one group. Marks therefore follow the rounded arc length and tangent, while whole-path transforms keep decorations attached.
+
+A centerline ribbon reuses the same step-resolution rules, then offsets both sides with a width function. Fixed-width analytic segments use a direct outline when possible; other cases sample cross-sections. Boundary mode samples the supplied upper and lower paths directly. Both modes end as ordinary closed Path primitives, so SVG and Canvas do not need separate ribbon semantics.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Step resolution and path commands',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 57,
+      endLine: 147,
+    },
+    {
+      label: 'Rounded geometry, marks, and arrow order',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 149,
+      endLine: 190,
+    },
+    {
+      label: 'Ribbon reuse of Path geometry',
+      path: 'packages/kernel/core/src/compile/path/ribbon/centerline.ts',
+      startLine: 328,
+      endLine: 378,
+    },
+    {
+      label: 'Ribbon outline construction',
+      path: 'packages/kernel/core/src/compile/path/ribbon/emit.ts',
+      startLine: 62,
+      endLine: 190,
+    },
+  ]}
+/>
+
 ## API Reference
 
 | Prop             | Type                                                                                                          | Default        | Description                                                                                                                                                                                                                                                                                                                                                         |
@@ -276,3 +377,4 @@ Ribbon reuses the Path host fields in the table above; this subsection lists onl
 - [Draw](/kernel/components/draw/overview): Sugar preferred for everyday connections
 - [Step](/kernel/components/draw/step): Complete field and kind reference for `<Path>` children
 - [Arrow](/kernel/components/draw/arrow): Detailed path arrow configuration
+- [Custom Paths](/kernel/components/draw/custom-path): Register a kind provider that owns the whole Path

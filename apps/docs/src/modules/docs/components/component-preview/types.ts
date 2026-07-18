@@ -220,6 +220,28 @@ export type PreviewControlValuesFor<TDefinition extends PreviewControlsDefinitio
 /** 预览控件运行时值集合 */
 export type PreviewControlValues = Record<string, PreviewControlValue>;
 
+/** 一组可复用的预览控件状态 */
+export type PreviewControlPreset = {
+  /** preset 的稳定 id */
+  id: string;
+  /** 展示给用户的文本 */
+  label: string;
+  /** 按 control id 写入的值 */
+  values: Readonly<PreviewControlValues>;
+};
+
+/** 可交互 demo 的稳定文档契约 */
+export type PreviewControlContract = {
+  /** 声明式控件定义 */
+  controls: PreviewControlsDefinition;
+  /** 无交互环境、截图与测试使用的 canonical 状态 */
+  canonicalValues: Readonly<PreviewControlValues>;
+  /** 可选的语义化状态组合 */
+  presets?: ReadonlyArray<PreviewControlPreset>;
+  /** 这些控件直接解释的公开 API */
+  relatedApis: ReadonlyArray<string>;
+};
+
 /** 自定义预览控件的共享值状态 */
 export type PreviewControlState = {
   /** 当前字段值 */

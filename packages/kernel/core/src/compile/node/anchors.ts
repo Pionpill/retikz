@@ -10,12 +10,12 @@ import { CenterAnchor, isAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { fallbackBoundaryAnchor, resolveBoundary } from './boundary';
 
-/** 空 shape params。 */
+/** 空 shape params */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
 
 const isZeroInsets = (m: BoundsInsets): boolean => m.top === 0 && m.right === 0 && m.bottom === 0 && m.left === 0;
 
-/** 按 rect 局部坐标系四边外扩，非对称外扩会移动外边界中心。 */
+/** 按 rect 局部坐标系四边外扩，非对称外扩会移动外边界中心 */
 const inflateRect = (r: Rect, m: BoundsInsets): Rect => {
   if (isZeroInsets(m)) return r;
   const dx = (m.right - m.left) / 2;
@@ -32,7 +32,7 @@ const inflateRect = (r: Rect, m: BoundsInsets): Rect => {
   };
 };
 
-/** 取节点视觉 rect 外扩 margin 后的外边界。 */
+/** 取节点视觉 rect 外扩 margin 后的外边界 */
 export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.rect, layout.margin);
 
 const boundaryContextOf = (layout: NodeLayout): ResolveBoundaryContext => ({
@@ -44,7 +44,7 @@ const boundaryContextOf = (layout: NodeLayout): ResolveBoundaryContext => ({
   irPath: layout.irPath,
 });
 
-/** 取节点 shape 在 toward 方向的附着点。 */
+/** 取节点 shape 在 toward 方向的附着点 */
 export const boundaryPointOf = (
   layout: NodeLayout,
   toward: Position,
@@ -54,7 +54,7 @@ export const boundaryPointOf = (
   return def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
 };
 
-/** 取节点 shape 的命名 anchor。 */
+/** 取节点 shape 的命名 anchor */
 export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
@@ -84,7 +84,7 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
   return p;
 };
 
-/** 取节点 shape 在指定角度方向的边界点。 */
+/** 取节点 shape 在指定角度方向的边界点 */
 export const angleBoundaryOf = (
   layout: NodeLayout,
   angleDeg: number,

@@ -52,7 +52,7 @@ const dirOf = (angleDeg: number): Position => {
  * out/in 角 + looseness 拟合 from→to 的非对称 cubic（含 self-loop 退化）
  * @description 标准 TikZ：control1 = from + d·dir(outAngle)，control2 = to + d·dir(inAngle)；
  *   d = looseness × distance，distance = chord × 系数（chord>0）或默认环大小（self-loop，from==to chord=0）。
- *   self-loop 时两控制点沿 out/in 两个不同方向各自从端点撑开，画出环（bend 对称弯在 chord=0 时退化为点，故 out/in 是自环唯一手段）。
+ *   self-loop 时两控制点沿 out/in 两个不同方向各自从端点撑开，画出环（bend 对称弯在 chord=0 时退化为点，故 out/in 是自环唯一手段）
  */
 export const outInControlPoints = (
   from: Position,

@@ -14,7 +14,7 @@ export type Circle = {
   /** 半径 */
   radius: number;
   /**
-   * 绕中心旋转弧度（圆视觉不变，与 Rect 同形保留）。
+   * 绕中心旋转弧度（圆视觉不变，与 Rect 同形保留）
    * @default 0
    */
   rotate?: number;

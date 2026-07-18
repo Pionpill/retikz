@@ -2,7 +2,7 @@
 
 状态：Accepted
 决策日期：2026-06-22
-关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [ADR-10 channel registry](./10-channel-registry.md) · [ADR-11 custom visual channel](./11-custom-visual-channel.md) · [core design](../../../../../../../../notes/architecture/core-design.md)
+关联：[plot v0.1-alpha.12 roadmap](./roadmap.md) · [ADR-10 channel registry](./10-channel-registry.md) · [ADR-11 custom visual channel](./11-custom-visual-channel.md)
 
 ## 背景
 

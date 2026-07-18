@@ -1,8 +1,8 @@
 import type { IRScope } from '@retikz/core';
 
 /**
- * Scope 与 Layout 可共用的级联样式 props。
- * @description 用于设置局部或全图默认样式；不包含 id、命名空间、变换、裁剪等容器语义字段。
+ * Scope 与 Layout 可共用的级联样式 props
+ * @description 用于设置局部或全图默认样式；不包含 id、命名空间、变换、裁剪等容器语义字段
  */
 export type ScopeStyleProps = {
   /** 级联主色（TikZ scope `color=`）；内部元素 stroke / fill / 文字未单设则随它，并级联到边 label / 箭头 */

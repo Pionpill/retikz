@@ -70,7 +70,7 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 文本容器形状更像按钮或 DOM 盒子：文字变长，节点会变大。参数驱动形状更像一个几何 glyph：半径、角度、尖角数量已经定义了大小，文本只是附着在它上面。
 
-用 `defineShape` 扩展 shape 时，要补齐 shape 的几何回答——外接框怎么包住自己、射线打到哪、具名 anchor 在哪、如何 emit 成基础图元——让 Node 在可测量、可连接、可引用、可渲染上和内置 shape 一样。实现细节见 [自定义形状](/kernel/components/extend/shape-registry)。
+用 `defineShape` 扩展 shape 时，要补齐 shape 的几何回答——外接框怎么包住自己、射线打到哪、具名 anchor 在哪、如何 emit 成基础图元——让 Node 在可测量、可连接、可引用、可渲染上和内置 shape 一样。实现细节见 [自定义形状](/kernel/components/shapes/custom-shape)。
 
 ## 外层边界 Boundary
 
@@ -139,7 +139,7 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
 
 </Comparison>
 
-自定义 shape 可以通过 `ShapeDefinition` 覆盖 anchor 行为，但不必逐个实现 8 个 Web 方位点：未覆盖的标准方位点会回退到节点外接框（AABB）的对应位置。普通 `center` 由编译器按节点中心处理；arc / sector 这类语义中心不同于 AABB 中心的形状可以自行声明 `center`。star 的 `tip-N` 这类 shape 专属名称仍需由 shape 提供，引用未知专属 anchor 时编译会报错。见 [自定义形状](/kernel/components/extend/shape-registry)。
+自定义 shape 可以通过 `ShapeDefinition` 覆盖 anchor 行为，但不必逐个实现 8 个 Web 方位点：未覆盖的标准方位点会回退到节点外接框（AABB）的对应位置。普通 `center` 由编译器按节点中心处理；arc / sector 这类语义中心不同于 AABB 中心的形状可以自行声明 `center`。star 的 `tip-N` 这类 shape 专属名称仍需由 shape 提供，引用未知专属 anchor 时编译会报错。见 [自定义形状](/kernel/components/shapes/custom-shape)。
 
 边上比例点 `{ side, fraction }` 取 shape **真实边界**某条边上从约定起点起 `fraction ∈ [0, 1]` 比例处——方向 top/bottom 左→右、right/left 上→下：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'left', fraction: 1/3 }` = 左边三等分点，`{ side: 'top', fraction: 0.5 }` = 上边中点（等于命名 `'top'`）。
 
@@ -158,7 +158,7 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
     <span className="font-semibold">Node</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Node 组件的完整 props、形状、样式与定位用法</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/extend/shape-registry">
+  <LinkedCard href="/kernel/components/shapes/custom-shape">
     <span className="font-semibold">自定义形状</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       补齐外接框 / 射线 / anchor / emit 这套几何回答，注册新 shape

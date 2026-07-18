@@ -11,7 +11,7 @@ export type PointMapper = (x: number, y: number) => [number, number];
  * 解析 SVG path `d` 字符串为绝对坐标 `PathCommand[]`
  * @description 支持 M/m L/l H/h V/v C/c S/s Q/q T/t Z/z（字体字形常用集）；S/T 按 SVG 规范做控制点反射。
  *   不支持椭圆弧 A/a（字体字形不产生）——遇到则抛错（caller 据此降级）。坐标先在本地系产出，再由 caller 经
- *   `transformCommands` 应用矩阵 + viewBox 归一。
+ *   `transformCommands` 应用矩阵 + viewBox 归一
  */
 export const parsePathD = (d: string): Array<PathCommand> => {
   const tokens = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:[eE][-+]?\d+)?/g);

@@ -15,7 +15,7 @@ export const assertNoFunction = (owner: string, value: unknown): void => {
   }
 };
 
-/** 深度校验 marker 产物中的数值都为 finite。 */
+/** 深度校验 marker 产物中的数值都为 finite */
 export const assertFiniteNumbers = (owner: string, value: unknown): void => {
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) {
@@ -32,7 +32,7 @@ export const assertFiniteNumbers = (owner: string, value: unknown): void => {
   }
 };
 
-/** 校验单个 marker primitive 符合 marker 允许的窄子集。 */
+/** 校验单个 marker primitive 符合 marker 允许的窄子集 */
 export const assertValidMarkerPrim = (owner: string, prim: unknown): void => {
   if (prim === null || typeof prim !== 'object') {
     throw new Error(`${owner} emit produced a non-object marker primitive.`);
@@ -62,7 +62,7 @@ export const assertValidMarkerPrim = (owner: string, prim: unknown): void => {
   }
 };
 
-/** 校验 marker primitive 列表可安全写入 Scene。 */
+/** 校验 marker primitive 列表可安全写入 Scene */
 export const validateMarkerPrimitives = (owner: string, marker: ReadonlyArray<MarkerPrimitive>): void => {
   for (const prim of marker) assertValidMarkerPrim(owner, prim);
   assertNoFunction(owner, marker);

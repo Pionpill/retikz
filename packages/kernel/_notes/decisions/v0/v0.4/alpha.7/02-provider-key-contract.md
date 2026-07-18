@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-29 人工签字，2026-07-03 已实现）
 - 决策日期：2026-06-28
-- 关联：[alpha.7 roadmap](./roadmap.md) · [ADR-01](./01-provider-registry-contract.md) · [core-design.md](../../../../../../../notes/architecture/core-design.md) · [plot-design.md](../../../../../../viz/_notes/architecture/plot-design.md)
+- 关联：[alpha.7 roadmap](./roadmap.md) · [ADR-01](./01-provider-registry-contract.md) · [plot-design.md](../../../../../../viz/_notes/architecture/plot-design.md)
 - 压缩前全文：`git show b7744b60565aa579a6f1deb892b56021633c6754:packages/kernel/_notes/decisions/v0/v0.4/alpha.7/02-provider-key-contract.md`
 
 ## 背景

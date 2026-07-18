@@ -7,7 +7,7 @@ import { mountCanvas, mountSvg, renderToSvgString } from '../../src';
 
 /**
  * runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；
- *   {animation:{enabled:false}} + prefers-reduced-motion 降级；view.animation 句柄。
+ *   {animation:{enabled:false}} + prefers-reduced-motion 降级；view.animation 句柄
  */
 
 /** 录制型 2d context（jsdom 无 2d backend） */

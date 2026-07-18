@@ -15,7 +15,7 @@ export type CanvasWarning = {
 /**
  * 单个 prim 的动画解析结果（per-id 虚拟时钟产出）
  * @description `skip` 渲染 base 静止态（跳过全部 track）；`at` 按 `time` 求值，`includeNonAutoplay` 控制是否
- *   施加 manual / visible / onEvent 等非自动播 track（被 per-id play / restart 激活时为 true）。
+ *   施加 manual / visible / onEvent 等非自动播 track（被 per-id play / restart 激活时为 true）
  */
 export type PrimAnimationResolution = { mode: 'skip' } | { mode: 'at'; time: number; includeNonAutoplay: boolean };
 
@@ -28,42 +28,42 @@ export type DrawOptions = {
   /**
    * `currentColor` 解析目标
    * @description canvas 是即时模式、无法从 DOM 继承 CSS `color`；`renderToCanvas` 读 `getComputedStyle(canvas).color`
-   *   写入此项，drawScene 把颜色串 `currentColor` 解析为它（缺省不解析、保持原串）。修复主题反应 / 暗色模式。
+   *   写入此项，drawScene 把颜色串 `currentColor` 解析为它（缺省不解析、保持原串）。修复主题反应 / 暗色模式
    */
   currentColor?: string;
   /**
    * image paint server 的图片获取器
    * @description canvas 同步绘制、无法 await 图片加载；调用方（如 React canvasHost）维护按 href 的图片缓存，
    *   返回已解码可绘制的 `CanvasImageSource`，未就绪返回 `null`（drawScene 本帧跳过、加载完由调用方触发重绘）。
-   *   缺省（未提供）时 image 填充降级告警 paint。
+   *   缺省（未提供）时 image 填充降级告警 paint
    */
   getImage?: (href: string) => CanvasImageSource | null;
   /**
    * pattern 与非均匀 gradient stroke 的离屏 2D context 工厂
    * @description paint server 需把 tile 或 objectBoundingBox gradient 纹理离屏渲染后 `createPattern`；
    *   canvas/OffscreenCanvas 创建依赖宿主环境，故由调用方（如 `renderToCanvas`）提供。返回指定宽高的 2D context，
-   *   其 `.canvas` 作为 pattern 图源；缺省时 pattern 跳过，gradient stroke 发告警并使用原生近似。
+   *   其 `.canvas` 作为 pattern 图源；缺省时 pattern 跳过，gradient stroke 发告警并使用原生近似
    */
   createOffscreen?: (width: number, height: number) => CanvasRenderingContext2D | null;
   /**
-   * 把任意 CSS 颜色串归一成 hex / rgb(a)（用于渐变 stop 烘焙 alpha）
-   * @description canvas `addColorStop` 无 stop-opacity，stop 的 opacity 须烘焙进颜色串；而命名色（darkorange）
-   *   / hsl 等无法直接正则解析。drawScene 跑在 spy ctx 上无法解析 CSS 色，故归一由宿主注入：`renderToCanvas`
-   *   缺省用真实 canvas 的 `fillStyle` 往返（浏览器规范化为 `#rrggbb` / `rgba(...)`）。未提供时命名色 stop 的
-   *   opacity 按 best-effort 忽略（渐变退化为纯色，与历史一致）。
+   * 把任意 CSS 颜色串归一成 hex / rgb(a)，供 Canvas 烘焙独立 opacity
+   * @description canvas 的渐变 stop 与 shadowColor 都没有独立 opacity 通道，须把 alpha 烘焙进颜色串；而命名色
+   *   （darkorange）/ hsl 等无法直接正则解析。drawScene 跑在 spy ctx 上无法解析 CSS 色，故归一由宿主注入：
+   *   `renderToCanvas` 缺省用真实 canvas 的 `fillStyle` 往返（浏览器规范化为 `#rrggbb` / `rgba(...)`）。未提供时
+   *   命名色的独立 opacity 按 best-effort 忽略
    */
   resolveCssColor?: (color: string) => string;
   /**
    * 动画时刻（毫秒，绝对时间轴）
    * @description 给定时 drawScene 绘制该时刻的一帧（对每个 prim 的 animations 逐 track `evaluateTrack` 求值后应用）；
-   *   缺省（undefined）→ 渲染 base 静态图。连续播放由 runtime 的 rAF 循环推进 time。
+   *   缺省（undefined）→ 渲染 base 静态图。连续播放由 runtime 的 rAF 循环推进 time
    */
   time?: number;
   /**
    * 按 id 解析单个 prim 的动画时刻 / 模式（per-id 虚拟时钟用；缺省 → 全部用 `time` + 仅自动播 track）
    * @description Canvas per-id 控制（`ctx.animation.restart(id)` 等）经此把全局帧时刻折算成各 id 的有效时刻：
    *   `skip` → 渲染 base（跳过全部 track）；`at` → 按 `time` 播，`includeNonAutoplay` 决定是否含 manual / visible /
-   *   onEvent track。无此项时退回 `options.time` + 仅自动播（与单时钟整图播放一致）。
+   *   onEvent track。无此项时退回 `options.time` + 仅自动播（与单时钟整图播放一致）
    */
   resolvePrimAnimation?: (id: string | undefined) => PrimAnimationResolution;
   /** 自定义 property 插值器注册表（内置通道内建处理；未注册的自定义 property → warn + skip） */

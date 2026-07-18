@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import type { CompositeDefinition } from './types';
 
-/** 从 composite schema 中读取并校验 namespace / type literal。 */
+/** 从 composite schema 中读取并校验 namespace / type literal */
 const literalValueOf = (schema: CompositeDefinition['schema'], field: 'namespace' | 'type'): string => {
   if (!(schema instanceof z.ZodObject)) {
     throw new Error('defineComposite: schema must be a ZodObject extending CompositeBaseSchema.');
@@ -15,8 +15,8 @@ const literalValueOf = (schema: CompositeDefinition['schema'], field: 'namespace
 };
 
 /**
- * 定义 Tier 2 composite 注册项。
- * @remarks 保留 `expand` 的节点泛型，并校验 definition key 与 schema literal 一致。
+ * 定义 Tier 2 composite 注册项
+ * @remarks 保留 `expand` 的节点泛型，并校验 definition key 与 schema literal 一致
  */
 export const defineComposite = <T>(definition: CompositeDefinition<T>): CompositeDefinition => {
   const namespace = literalValueOf(definition.schema, 'namespace');

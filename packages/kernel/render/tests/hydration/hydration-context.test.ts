@@ -17,9 +17,9 @@ import {
 } from '../../src/hydration';
 
 /**
- * 水合 runtime 上下文：按 id 聚合的语义元素 context + per-id owner 动画控制。
+ * 水合 runtime 上下文：按 id 聚合的语义元素 context + per-id owner 动画控制
  * @description 覆盖 meta/几何按 id 聚合（多平铺 shape 并集、group transform）、buildContext 经控制器注入
- *   `(event, context)`、SVG 动画 owner 双查（data-retikz-id + data-retikz-animation-owner）、最小 context 降级。
+ *   `(event, context)`、SVG 动画 owner 双查（data-retikz-id + data-retikz-animation-owner）、最小 context 降级
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';

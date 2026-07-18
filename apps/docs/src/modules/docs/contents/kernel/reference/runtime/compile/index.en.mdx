@@ -40,16 +40,16 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 
 ### Provider Registries
 
-| Option                | Type                                          | Default | Notes                                                                                                                     |
-| --------------------- | --------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `shapes`              | `ReadonlyArray<ShapeDefinition>`              | `—`     | Inject custom node shapes. See [Custom Shapes](/kernel/components/extend/shape-registry)                                  |
-| `boundaries`          | `ReadonlyArray<BoundaryDefinition>`           | `—`     | Inject custom connection surfaces. See [Custom Boundaries](/kernel/components/extend/boundary-registry)                   |
-| `clips`               | `ReadonlyArray<ClipDefinition>`               | `—`     | Inject custom clipping regions. See [Custom Clips](/kernel/components/extend/clip-registry)                               |
-| `arrows`              | `ReadonlyArray<ArrowDefinition>`              | `—`     | Inject custom arrows. See [Custom Arrows](/kernel/components/extend/custom-arrow)                                         |
-| `patterns`            | `ReadonlyArray<PatternDefinition>`            | `—`     | Inject custom fill pattern motifs. See [Custom Patterns](/kernel/components/extend/custom-pattern)                        |
-| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | `—`     | Inject custom curve generators; core includes `parabola`. See [Path Generators](/kernel/components/extend/path-generator) |
-| `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | `—`     | Inject custom path kind providers                                                                                         |
-| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | `—`     | Inject ribbon width profiles; core includes `bulge`, and profile functions never enter IR                                 |
+| Option                | Type                                          | Default | Notes                                                                                                                   |
+| --------------------- | --------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `shapes`              | `ReadonlyArray<ShapeDefinition>`              | `—`     | Inject custom node shapes. See [Custom Shapes](/kernel/components/shapes/custom-shape)                                  |
+| `boundaries`          | `ReadonlyArray<BoundaryDefinition>`           | `—`     | Inject custom connection surfaces. See [Custom Boundaries](/kernel/components/node/custom-boundary)                     |
+| `clips`               | `ReadonlyArray<ClipDefinition>`               | `—`     | Inject custom clipping regions. See [Custom Clips](/kernel/components/layout/custom-clip)                               |
+| `arrows`              | `ReadonlyArray<ArrowDefinition>`              | `—`     | Inject custom arrows. See [Custom Arrows](/kernel/components/draw/custom-arrow)                                         |
+| `patterns`            | `ReadonlyArray<PatternDefinition>`            | `—`     | Inject custom fill pattern motifs. See [Custom Patterns](/kernel/components/effects/custom-pattern)                     |
+| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | `—`     | Inject custom curve generators; core includes `parabola`. See [Path Generators](/kernel/components/draw/path-generator) |
+| `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | `—`     | Inject custom path kind providers                                                                                       |
+| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | `—`     | Inject ribbon width profiles; core includes `bulge`, and profile functions never enter IR                               |
 
 ### Composite Expansion
 

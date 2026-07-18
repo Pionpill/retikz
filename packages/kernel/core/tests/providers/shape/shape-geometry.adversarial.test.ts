@@ -20,7 +20,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene> =>
   compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]));
 
-/** 收集 path primitive 的数值坐标，检测 NaN / Infinity 是否进入 Scene。 */
+/** 收集 path primitive 的数值坐标，检测 NaN / Infinity 是否进入 Scene */
 const numericLeaves = (v: unknown, out: Array<number> = []): Array<number> => {
   if (typeof v === 'number') out.push(v);
   else if (Array.isArray(v)) v.forEach(x => numericLeaves(x, out));

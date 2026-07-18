@@ -13,7 +13,7 @@ const withBackground = (context: PatternEmitContext, motif: ReadonlyArray<Marker
     ? [...motif]
     : [{ type: 'rect', x: 0, y: 0, width: context.size, height: context.size, fill: context.background }, ...motif];
 
-/** 横线 pattern motif：在 tile 中线位置绘制一条水平线。 */
+/** 横线 pattern motif：在 tile 中线位置绘制一条水平线 */
 const linesPattern = definePattern({
   name: PatternShape.Lines,
   defaultSize: DEFAULT_PATTERN_SIZE,
@@ -33,7 +33,7 @@ const linesPattern = definePattern({
   },
 });
 
-/** 网格 pattern motif：在 tile 中线位置绘制水平线和垂直线。 */
+/** 网格 pattern motif：在 tile 中线位置绘制水平线和垂直线 */
 const gridPattern = definePattern({
   name: PatternShape.Grid,
   defaultSize: DEFAULT_PATTERN_SIZE,
@@ -55,7 +55,7 @@ const gridPattern = definePattern({
   },
 });
 
-/** 圆点 pattern motif：在 tile 中心绘制一个圆点。 */
+/** 圆点 pattern motif：在 tile 中心绘制一个圆点 */
 const dotsPattern = definePattern({
   name: PatternShape.Dots,
   defaultSize: DEFAULT_PATTERN_SIZE,
@@ -68,7 +68,7 @@ const dotsPattern = definePattern({
   },
 });
 
-/** 内置 pattern provider 注册项。 */
+/** 内置 pattern provider 注册项 */
 export const BUILTIN_PATTERNS = defineBuiltinProviderArray<PatternDefinition, BuiltinPatternName>([
   linesPattern,
   gridPattern,

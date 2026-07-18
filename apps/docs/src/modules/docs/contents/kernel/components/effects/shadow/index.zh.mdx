@@ -53,6 +53,113 @@ import { Node } from '@retikz/react';
   description="blur 是用户单位的模糊半径，SVG 与 Canvas 会按各自原生阴影 API 做内部校准，并随预览尺寸 / 变换保持接近；不追求逐像素一致。blur=0 为硬边。"
 />
 
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="日常使用只需选择预设或对象写法；遇到裁切、缩放或跨后端差异时再回来读。"
+/>
+
+### 从输入到主几何
+
+`shadow` 的两种写法只存在于输入阶段。编译时，预设先展开为位移、模糊和颜色，随后由对象中的显式字段逐项覆盖；最终结果收敛为一份统一的阴影描述，再附着到 Node shape 或 Path 主路径。renderer（渲染后端）因此不需要理解预设名称。
+
+下图只截取 shadow 自身的局部职责；完整的 JSX / IR → Scene 管线见[架构](/kernel/concepts/design/principles)。
+
+<ComponentPreview files="shadow-pipeline" size="xl" hideCode />
+
+这也解释了为什么 `shadow="md"` 与 `shadow={{ preset: 'md' }}` 的输出相同，以及为什么 Node 的文字和标签不会继承阴影：它们是后续独立发出的图元，不属于携带 shadow 的主形状。
+
+<SourceLinks
+  sources={[
+    {
+      label: '展开预设并合并显式字段',
+      path: 'packages/kernel/core/src/compile/style/shadow.ts',
+      startLine: 8,
+      endLine: 29,
+    },
+    {
+      label: '将 shadow 附着到 Node 主形状',
+      path: 'packages/kernel/core/src/compile/node/emit.ts',
+      startLine: 16,
+      endLine: 45,
+    },
+    {
+      label: '解析 Path 主几何样式',
+      path: 'packages/kernel/core/src/compile/path/host/resolve.ts',
+      startLine: 19,
+      endLine: 40,
+    },
+  ]}
+/>
+
+### 自动布局与固定裁切
+
+阴影会伸出原始几何边界。自动布局会按“每侧 `blur` + 朝该侧偏移的部分”扩展包围盒（bbox，能包住图元的最小轴对齐矩形），再把结果并入 Scene 的可视范围；显式 `viewBox` 则始终代表用户指定的固定窗口。
+
+| 布局方式           | 编译行为                   | 用户可见结果                 |
+| ------------------ | -------------------------- | ---------------------------- |
+| 未设置 `viewBox`   | 合并几何与阴影外溢范围     | 画布自动给阴影留出空间       |
+| 显式设置 `viewBox` | 固定窗口覆盖自动布局的结果 | 窗口外的阴影仍可能被画布裁掉 |
+
+<SourceLinks
+  sources={[
+    {
+      label: '把阴影外溢并入自动布局边界',
+      path: 'packages/kernel/core/src/compile/orchestration/bounds.ts',
+      startLine: 7,
+      endLine: 33,
+    },
+    {
+      label: '显式 viewBox 覆盖自动布局',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 22,
+      endLine: 42,
+    },
+  ]}
+/>
+
+### SVG 与 Canvas 如何映射
+
+Scene 保留的是 renderer-agnostic（不绑定渲染后端）的用户单位。SVG 与 Canvas 消费同一份阴影描述，但会翻译到不同的原生能力：
+
+| 后端   | 原生映射       | 校准与资源策略                                      |
+| ------ | -------------- | --------------------------------------------------- |
+| SVG    | `feDropShadow` | `userSpaceOnUse` 外扩滤镜区域<br />相同阴影复用 def |
+| Canvas | `ctx.shadow*`  | 按当前变换换算位移与模糊<br />绘制后恢复 context    |
+
+SVG 把 `blur` 映射为高斯标准差，并以扩展后的 Scene 窗口作为滤镜区域，避免细 Path 或大阴影被元素自身的包围盒裁掉；配置完全相同的阴影只生成一个 filter def。Canvas 则读取当前变换矩阵（CTM），把位移和模糊校准到实际绘制尺度；`opacity` 会在 CSS 颜色归一后烘焙进 `shadowColor`。两端不承诺逐像素相同。
+
+<SourceLinks
+  sources={[
+    {
+      label: '生成 SVG 阴影滤镜与外扩区域',
+      path: 'packages/kernel/render/src/svg/builders/shadow-defs.ts',
+      startLine: 46,
+      endLine: 102,
+    },
+    {
+      label: '去重并注册 SVG 阴影资源',
+      path: 'packages/kernel/render/src/svg/builders/document.ts',
+      startLine: 81,
+      endLine: 108,
+    },
+    {
+      label: '按 Canvas 变换校准并绘制阴影',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 117,
+      endLine: 172,
+    },
+    {
+      label: '归一 CSS 颜色并烘焙透明度',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 189,
+      endLine: 208,
+    },
+  ]}
+/>
+
 ## API 参考
 
 `shadow` 是 `<Node>` 与 `<Path>` 共有的样式属性，写法一致。

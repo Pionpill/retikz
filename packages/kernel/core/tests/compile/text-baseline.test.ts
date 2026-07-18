@@ -7,7 +7,7 @@ import { ASCENT_FACTOR, DESCENT_FACTOR, toAlphabeticBaselineY } from '../../src/
  * @description core 统一把 top/middle/bottom 折算成 alphabetic（唯一在 canvas textBaseline 与
  *   SVG dominant-baseline 两套模型里定义一致的基线），把垂直定位从两个 adapter 上移到编译期，
  *   消除「同名异义」导致的跨后端基线漂移。断言折算后文本块的视觉边界落在关键字所指位置，
- *   对 ascent/descent 近似常量的取值鲁棒。
+ *   对 ascent/descent 近似常量的取值鲁棒
  */
 describe('toAlphabeticBaselineY', () => {
   const fontSize = 16;

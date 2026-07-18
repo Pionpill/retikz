@@ -5,6 +5,7 @@ export * from './InlineMdx';
 export * from './MdxContent';
 export * from './MdxToc';
 export * from './package-manager-install';
+export * from './source-links';
 export * from './types';
 export * from './utils';
 export * from './zod-schema';

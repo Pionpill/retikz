@@ -2,7 +2,7 @@
 
 - 状态：Accepted（延后方案已采纳；三项均未排期、未实现，从 [ADR-01](./01-tier2-support.md) 收窄时拆出，待后续版本触发）
 - 决策日期：2026-06-02
-- 关联：[ADR-01 Tier 2 支撑](./01-tier2-support.md) · [v0.3 roadmap §alpha.2](../roadmap.md) · [core-design.md §4.3 Tier 2](../../../../../../../notes/architecture/core-design.md)
+- 关联：[ADR-01 Tier 2 支撑](./01-tier2-support.md) · [v0.3 roadmap §alpha.2](../roadmap.md)
 
 > [ADR-01](./01-tier2-support.md) 把 Tier 2 支撑收窄为「core 基础设施 + fixture 验证 + react/vanilla 透传」。本 ADR 收纳被刻意延后的三项，记录其设计方向与触发条件，避免散落丢失。三项互相独立、可分别排期。展开始终在 core，三项都不改变这一点。
 

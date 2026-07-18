@@ -74,7 +74,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const controlDefinition: PreviewControlsDefinition | undefined = controlsDisabled
     ? undefined
     : explicitControlsName === null
-      ? (mod?.previewControls ?? resolvePreviewControls(controlModule))
+      ? (resolvePreviewControls(mod) ?? resolvePreviewControls(controlModule))
       : resolvePreviewControls(controlModule);
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;

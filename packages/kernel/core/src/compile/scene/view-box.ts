@@ -6,7 +6,7 @@ import type { IRViewBox } from '../../schemas';
 
 import { roundLayout } from './layout';
 
-/** 校验显式 viewBox 的原始输入。 */
+/** 校验显式 viewBox 的原始输入 */
 const assertViewBoxInput = (viewBox: IRViewBox): void => {
   if (!Number.isFinite(viewBox.x) || !Number.isFinite(viewBox.y)) {
     throw new Error(
@@ -25,7 +25,7 @@ const assertViewBoxInput = (viewBox: IRViewBox): void => {
   }
 };
 
-/** 校验 round 后真正进入 Scene 的 viewBox layout。 */
+/** 校验 round 后真正进入 Scene 的 viewBox layout */
 const assertRoundedViewBoxLayout = (layout: BoundsRect): BoundsRect => {
   if (!isPositiveBoundsRect(layout)) {
     throw new Error(
@@ -35,7 +35,7 @@ const assertRoundedViewBoxLayout = (layout: BoundsRect): BoundsRect => {
   return layout;
 };
 
-/** 把显式 viewBox 转为 Scene.layout，并做输入和输出守卫。 */
+/** 把显式 viewBox 转为 Scene.layout，并做输入和输出守卫 */
 export const viewBoxToLayout = (viewBox: IRViewBox, round: (n: number) => number): BoundsRect => {
   assertViewBoxInput(viewBox);
   return assertRoundedViewBoxLayout(roundLayout(viewBox, round));

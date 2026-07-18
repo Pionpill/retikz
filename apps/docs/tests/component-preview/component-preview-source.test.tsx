@@ -123,7 +123,7 @@ describe('ComponentPreview Vanilla source', () => {
 
   it('没有 alternate render 的 Vanilla view 不声明固定 renderer', () => {
     const props = renderPreview(
-      ['kernel', 'components', 'extend', 'custom-animation'],
+      ['kernel', 'components', 'effects', 'custom-animation'],
       <ComponentPreview files="custom-property" />,
     );
 

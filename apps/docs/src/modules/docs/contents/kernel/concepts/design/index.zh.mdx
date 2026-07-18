@@ -11,6 +11,7 @@ description: 理解 retikz 为什么把书写、声明、编译和渲染拆成�
 | ---- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
 | 分层 | DSL、IR、Scene 与渲染器之间的关系                          | 想知道 JSX 怎么变成 SVG / Canvas，或想理解 Kernel / Sugar 的边界 |
 | 复合 | domain 包如何在 core 之上注册高层节点，并在 compile 期下沉 | 想理解 composite、plot 这类高层能力为什么不直接塞进 core         |
+| 架构 | 能力归属、包边界、完备性门槛与完整执行流程                 | 维护库、设计扩展点或判断新能力应该落在哪个 owner                 |
 
 ## 章节内容
 
@@ -24,5 +25,9 @@ description: 理解 retikz 为什么把书写、声明、编译和渲染拆成�
     <span className="mt-1 text-center text-sm text-muted-foreground">
       理解 composite 的注册、判别与 lowering 展开管线
     </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/design/principles">
+    <span className="font-semibold">架构</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">判断能力归属、包边界与端到端完备性</span>
   </LinkedCard>
 </div>

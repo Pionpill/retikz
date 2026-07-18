@@ -37,7 +37,7 @@ import { Node } from '@retikz/react';
 
 ### 例子
 
-`points` 是一圈**局部系顶点**（至少 3 个，隐式闭合，边为直线）。你**不需要预居中**——core 按这圈点的 AABB 中心自动归一化，把 Node 的 `position` 对齐到轮廓的几何中心。下例两个节点用同一形状，但右侧的点整体偏了一段：自动居中后两者渲染完全一致。
+`points` 是一圈**局部系顶点**（至少 3 个，隐式闭合，边为直线）。你**不需要预居中**——core 按这圈点的轴对齐外接框（AABB）中心自动归一化，把 Node 的 `position` 对齐到该中心。下例两个节点用同一形状，但右侧的点整体偏了一段：自动居中后两者渲染完全一致。
 
 <ComponentPreview files="node-contour" size="sm" />
 
@@ -50,8 +50,8 @@ import { Node } from '@retikz/react';
 <ComponentPreview files="contour-connect" size="sm" />
 
 <ComponentAlert
-  title="anchor 回退 AABB"
-  description="命名 / 标准方位 anchor（top / center …）在曲边块上没有有意义的方位，contour 让它们回退到外接 AABB 矩形；指向式连接（boundaryPoint）始终精确命中轮廓。需要精确贴边时用「连一条线指向它」而非取具名 anchor。"
+  title="标准方位名称回退 AABB"
+  description="top / right 等标准方位名称回退到外接 AABB；按 id 自动连接与数字角度 anchor 仍按真实轮廓求交。需要沿来向精确贴边时，直接让连线指向节点 id。"
 />
 
 ### API 参考
@@ -67,15 +67,63 @@ import { Node } from '@retikz/react';
 
 ## 技术原理
 
-> 日常使用可跳过本节；想理解自动居中或 anchor 回退时再回来读。
+<ComponentAlert type="tip" title="日常使用可跳过本节" description="想理解自动居中或 anchor 回退时再回来读。" />
 
-### 自动居中
+本节只放大 `contour` 自己负责的顶点归一与连接面解析；完整的 JSX → IR（中间表示） → Scene 编译管线见[架构](/kernel/concepts/design/principles)。
 
-`points` 可以在任意局部原点给出。core 在内部对每个顶点减去这圈点的 **AABB 中心**，再投到世界系，使轮廓的几何中心落在 Node 的 `position` 上。所以无论你把点画在原点附近还是偏出去一大截，结果都一样——schema 防不住的「未居中」隐患从此不存在。
+### 任意原点如何归一到节点位置
 
-### anchor 回退、boundaryPoint 精确
+图从左到右展示同一圈 `points` 如何摆脱调用方选取的局部原点，最终围绕 `Node.position` 形成世界坐标轮廓。
 
-`contour` 是几何驱动的曲边块，命名 / 标准方位（`top` / `right` …）没有稳定语义，故 `anchor` 不提供具名锚点，compile 回退到外接 AABB 矩形。指向式连接走 `boundaryPoint`——它对**任意**顶点环（凸 / 凹 / 圆角后）都求射线 ∩ 轮廓的精确交点，是连接到 contour 节点的可靠方式。
+<ComponentPreview files="contour-normalization" size="xs" hideCode />
+
+core 先求 `points` 的 AABB 中心 `c`，再把每个顶点改写为 `pᵢ - c`。这一步只消除整圈点的平移，不改变边长、夹角或凹凸结构；随后才把居中顶点环投影到以 `Node.position` 为中心的世界坐标。
+
+因此，整体平移全部输入点不会改变最终图形。归一后的同一组轮廓段同时供渲染与连接面求交使用，视觉边界和自动连线不会各算一套几何。
+
+<SourceLinks
+  sources={[
+    {
+      label: '顶点 AABB 居中与轮廓生成',
+      path: 'packages/kernel/core/src/providers/shape/contour.ts',
+      startLine: 31,
+      endLine: 73,
+    },
+  ]}
+/>
+
+### 自动连接与标准方位名称为何不同
+
+上排是沿真实轮廓求交的路径，下排是标准方位名称的回退路径。两者都从同一份节点几何出发，但回答的问题不同。
+
+<ComponentPreview files="contour-attachment" size="sm" hideCode />
+
+按 id 自动连接时，编译器已经知道连线从哪个方向靠近节点，因此 `boundaryPoint` 可以从节点中心朝来向发出射线，与尖角或圆角后的轮廓求交。数字角度 anchor 同样有明确方向，也走真实轮廓。
+
+`top` / `right` 等标准方位名称请求的是固定方位点，并不携带某条连线的实际来向。任意凹凸轮廓在同一方位可能出现多个局部极值，`contour` 不为它虚构一组命名点；形状查询未命中后，编译器才使用外接 AABB 的矩形方位点。`center` 始终是节点中心，不受该回退影响。
+
+<SourceLinks
+  sources={[
+    {
+      label: '轮廓求交与命名 anchor 声明',
+      path: 'packages/kernel/core/src/providers/shape/contour.ts',
+      startLine: 61,
+      endLine: 68,
+    },
+    {
+      label: '自动连接端点解析',
+      path: 'packages/kernel/core/src/compile/path/host/target.ts',
+      startLine: 107,
+      endLine: 127,
+    },
+    {
+      label: '标准方位与数字角度 anchor 解析',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 57,
+      endLine: 102,
+    },
+  ]}
+/>
 
 ## 相关
 

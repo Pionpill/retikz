@@ -9,7 +9,7 @@ import { compact } from './attrs';
 /**
  * marker fill 取值 → SVG fill 属性值
  * @description 纯色字符串直传；`{ kind:'contextStroke' }` → `context-stroke`（继承所在元素描边，主题反应）；
- *   省略（hollow 几何无 fill）→ `none`（SVG `<path>` 缺省填黑，空心几何必须显式置 `none`）。
+ *   省略（hollow 几何无 fill）→ `none`（SVG `<path>` 缺省填黑，空心几何必须显式置 `none`）
  */
 const markerFillToSvg = (fill: MarkerFill | undefined): string => {
   if (fill === undefined) return 'none';
@@ -20,7 +20,7 @@ const markerFillToSvg = (fill: MarkerFill | undefined): string => {
 /**
  * marker stroke 取值 → SVG stroke 属性值
  * @description 纯色字符串直传；`{ kind:'contextStroke' }` → `context-stroke`（继承所在元素描边）；
- *   省略 → undefined（compact 丢弃，SVG stroke 缺省 none）。
+ *   省略 → undefined（compact 丢弃，SVG stroke 缺省 none）
  */
 const markerStrokeToSvg = (stroke: MarkerFill | undefined): string | undefined => {
   if (stroke === undefined) return undefined;
@@ -34,7 +34,7 @@ const markerCommandsToD = (commands: ReadonlyArray<PathCommand>): string => buil
 /**
  * 单个 `MarkerPrimitive` → `SvgNode`（arrow marker / pattern motif 共用物化）
  * @description core 已在 compile 把 emit 几何解析成纯数据；本 builder 只翻成 SVG 描述。group 递归；
- *   fill 走 `markerFillToSvg`（contextStroke → context-stroke）。属性名一律 SVG 真名（kebab）。
+ *   fill 走 `markerFillToSvg`（contextStroke → context-stroke）。属性名一律 SVG 真名（kebab）
  */
 export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
   switch (prim.type) {

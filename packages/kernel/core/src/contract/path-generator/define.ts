@@ -1,9 +1,9 @@
 import type { PathGeneratorDefinition } from './types';
 
 /**
- * 定义 path generator 注册项，并做轻量形态校验。
- * @remarks generator 输出的 JSON-safe 校验仍由 compile 阶段负责。
- * @throws 当 name、paramsSchema、generate 或 targetParams 形态非法时。
+ * 定义 path generator 注册项，并做轻量形态校验
+ * @remarks generator 输出的 JSON-safe 校验仍由 compile 阶段负责
+ * @throws 当 name、paramsSchema、generate 或 targetParams 形态非法时
  */
 export const definePathGenerator = (def: PathGeneratorDefinition): PathGeneratorDefinition => {
   if (typeof def.name !== 'string' || def.name.trim().length === 0) {

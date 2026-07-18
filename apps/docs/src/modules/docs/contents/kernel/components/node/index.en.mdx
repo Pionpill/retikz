@@ -1,19 +1,20 @@
 ---
 title: Node
-description: The node family — referenceable named primitives, plus per-line text styling and pure placeholder points.
+description: The node family — referenceable named primitives, per-line text styling, placeholder points, and extensible connection boundaries.
 ---
 
-A node is what the rest of a figure _references_: it has an id, a position, and a shape boundary, and connectors auto-attach to that boundary by id. This group gathers the node itself, the per-line text styling that lives inside it, and the placeholder point that names a spot without drawing anything.
+A node is what the rest of a figure _references_: it has an id, a position, and a shape boundary, and connectors auto-attach to that boundary by id. This group gathers the node itself, its per-line text styling, placeholder points that draw nothing, and custom connection boundaries that are independent of visual shape.
 
 <ComponentPreview files="node-family" size="md" hideCode />
 
 ## What each part does
 
-| Component  | Type   | Responsibility                                                                   | Use it when                                                            |
-| ---------- | ------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Node       | Kernel | Named primitive with position / shape / text; paths attach to its boundary by id | Flowchart nodes, shapes with text, anything a connector must reference |
-| Text       | Sugar  | Lives inside a Node and overrides fill / opacity / font for a single line        | Mixing several styles within one line of text                          |
-| Coordinate | Kernel | Names a point without drawing any shape                                          | Pure reference anchors, helper positioning, no visible geometry needed |
+| Component         | Type      | Responsibility                                                                   | Use it when                                                            |
+| ----------------- | --------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Node              | Kernel    | Named primitive with position / shape / text; paths attach to its boundary by id | Flowchart nodes, shapes with text, anything a connector must reference |
+| Text              | Sugar     | Lives inside a Node and overrides fill / opacity / font for a single line        | Mixing several styles within one line of text                          |
+| Coordinate        | Kernel    | Names a point without drawing any shape                                          | Pure reference anchors, helper positioning, no visible geometry needed |
+| Custom Boundaries | Extension | Register node connection geometry independently of visual shape                  | Visual outline and connector attachment rules need to differ           |
 
 ## In this section
 
@@ -33,5 +34,11 @@ A node is what the rest of a figure _references_: it has an id, a position, and 
   <LinkedCard href="/kernel/components/node/coordinate">
     <span className="font-semibold">Coordinate</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Names a reference point, renders no shape</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/node/custom-boundary">
+    <span className="font-semibold">Custom Boundaries</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Extend connector attachment independently of visual shape
+    </span>
   </LinkedCard>
 </div>

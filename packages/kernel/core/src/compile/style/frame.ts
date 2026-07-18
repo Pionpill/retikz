@@ -1,28 +1,28 @@
 ﻿import type { IRDrawableStyle, IRLabelDefault, IRScope, StyleChannel } from '../../schemas';
 
-/** scope 级联 graphic state。 */
+/** scope 级联 graphic state */
 export type CascadeState = Pick<
   IRScope,
   'color' | 'stroke' | 'fill' | 'strokeWidth' | 'opacity' | 'fillOpacity' | 'strokeOpacity'
 >;
 
-/** 单层 scope 样式 frame。 */
+/** 单层 scope 样式 frame */
 export type StyleFrame = {
-  /** 级联 graphic state。 */
+  /** 级联 graphic state */
   cascade: CascadeState;
-  /** node 样式通道。 */
+  /** node 样式通道 */
   nodeDefault?: IRScope['nodeDefault'];
-  /** path 样式通道。 */
+  /** path 样式通道 */
   pathDefault?: IRScope['pathDefault'];
-  /** label 样式通道。 */
+  /** label 样式通道 */
   labelDefault?: IRLabelDefault;
-  /** arrow 样式通道。 */
+  /** arrow 样式通道 */
   arrowDefault?: IRScope['arrowDefault'];
-  /** 继承屏障。 */
+  /** 继承屏障 */
   resetStyle?: IRScope['resetStyle'];
 };
 
-/** 拷贝源对象中 !== undefined 的字段。 */
+/** 拷贝源对象中 !== undefined 的字段 */
 export const pickDefinedKeys = <T extends object>(src: T): Partial<T> => {
   const out: Partial<T> = {};
   for (const key of Object.keys(src) as Array<keyof T>) {
@@ -44,7 +44,7 @@ const DRAWABLE_STYLE_KEYS = [
   'blendMode',
 ] as const satisfies ReadonlyArray<keyof IRDrawableStyle>;
 
-/** 提取 drawable style 字段。 */
+/** 提取 drawable style 字段 */
 export const pickDrawableStyle = (src: Partial<IRDrawableStyle>): Partial<IRDrawableStyle> => {
   const entries = DRAWABLE_STYLE_KEYS.flatMap(key => {
     const value = src[key];
@@ -53,7 +53,7 @@ export const pickDrawableStyle = (src: Partial<IRDrawableStyle>): Partial<IRDraw
   return Object.fromEntries(entries);
 };
 
-/** 从 IRScope 抽取样式 frame。 */
+/** 从 IRScope 抽取样式 frame */
 export const createStyleFrame = (scope: IRScope): StyleFrame => {
   const cascade: CascadeState = {};
   if (scope.color !== undefined) cascade.color = scope.color;
@@ -72,7 +72,7 @@ export const createStyleFrame = (scope: IRScope): StyleFrame => {
   return frame;
 };
 
-/** resetStyle 是否切断某通道。 */
+/** resetStyle 是否切断某通道 */
 export const cuts = (reset: StyleFrame['resetStyle'], channel: StyleChannel): boolean => {
   if (reset === undefined || reset === false) return false;
   if (reset === true) return true;

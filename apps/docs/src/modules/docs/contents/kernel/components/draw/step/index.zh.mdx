@@ -165,65 +165,6 @@ scope `labelDefault` 给整组标注统一默认（见 [Scope 样式](/kernel/co
 
 `position={0.3}` 这种任意数值可以精确指定段上位置。**数值超出 `[0, 1]` 区间在 schema 阶段直接拒绝，不在编译阶段 clamp**（`position={-0.1}` / `position={1.2}` 均会让 IR 校验失败）。
 
-#### t 在每种 step kind 上的几何含义
-
-t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
-
-| Step kind             | 参数化方式                                              | t=0.25               | t=0.5                                   | t=0.75                |
-| --------------------- | ------------------------------------------------------- | -------------------- | --------------------------------------- | --------------------- |
-| `'line'`              | 归一化弧长                                              | 1/4 处               | 中点                                    | 3/4 处                |
-| `'fold'`（N=2）       | 每段占 `1/N` t 区间——拐角恒在 `t = j/N`，**与段长无关** | 段 1 中点            | **拐角**                                | 段 2 中点             |
-| `'curve'` / `'cubic'` | Bezier 参数 t（**非弧长**）                             | Bezier t=0.25 位置   | Bezier t=0.5 位置（通常**非视觉中点**） | Bezier t=0.75 位置    |
-| `'bend'`              | 内部 lower 成 cubic 后 Bezier t                         | 同 cubic             | 同 cubic                                | 同 cubic              |
-| `'arc'`               | t 线性映射 `startAngle..endAngle`（度）                 | 起末角度 1/4 处      | 起末中点角度                            | 起末角度 3/4 处       |
-| `'circlePath'`        | 沿整圆 t∈[0, 1]：t=0 为 angle 0（+x），CCW 增长         | 圆周 90°（视觉下方） | 圆周 180°（-x）                         | 圆周 270°（视觉上方） |
-| `'ellipsePath'`       | 同 circlePath：t=0 在 angle 0，CCW 增长                 | 椭圆 90° 处          | 椭圆 180° 处（**非弧长中点**）          | 椭圆 270° 处          |
-
-下面每种 kind 各一组 demo（`t=0.25` / `midway` 两档对比），印证表中的几何含义：
-
-**Line**
-
-<ComponentPreview files="edge-label-on-line" size="md" />
-
-**Fold**
-
-Fold 的 t 按经过点把整条折线分段；下例的 `A -| B` 展示 keyword position，`A |- B` 展示数值 position。
-
-<ComponentPreview files="edge-label-on-fold" size="md" />
-
-**Quadratic Bezier (curve)**
-
-<ComponentPreview files="edge-label-on-curve" size="sm" />
-
-**Cubic Bezier (cubic)**
-
-<ComponentPreview files="edge-label-on-cubic" size="sm" />
-
-**Bend**
-
-<ComponentPreview files="edge-label-on-bend" size="sm" />
-
-**Arc**
-
-<ComponentPreview files="edge-label-on-arc" />
-
-**Circle (circlePath)**
-
-<ComponentPreview files="edge-label-on-circle" size="lg" />
-
-**Ellipse (ellipsePath)**
-
-<ComponentPreview files="edge-label-on-ellipse" size="sm" />
-
-<Comparison target="tikz" title="Step 标签语法">
-
-| retikz                             | TikZ 对照                               |
-| ---------------------------------- | --------------------------------------- |
-| `label={{ text, position, side }}` | `(a) -- node[midway, above] {text} (b)` |
-| 数值 `position: t`                 | `pos=<float>`                           |
-
-</Comparison>
-
 ### 样式
 
 `<Step>` 自身没有 stroke 类视觉属性——样式都挂在父 `<Path>` 上，整条 Path 的所有 Step 共享同一套 `stroke` / `strokeWidth` / `dashPattern` / `dashOffset`：
@@ -241,6 +182,134 @@ Fold 的 t 按经过点把整条折线分段；下例的 `A -| B` 展示 keyword
 | `kind="rectangle"`                        | `(a) rectangle (b)`                   |
 
 </Comparison>
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="想排查首段为何不画线、相对坐标从哪里起算，或标签为何没有落在视觉中点时，再回来读。"
+/>
+
+### 从标记到有序 Step
+
+`<Step>` 是返回 `null` 的标记组件，本身不创建 DOM 或图形。父 `<Path>` 按 JSX 顺序收集这些标记，把字符串 target、缺省 `kind` 和 `<EdgeLabel>` child 归一成可序列化的 `IRStep`；显式 `label` prop 比 child 优先。
+
+除单个自包含的 `rectangle` 外，一条 Path 至少需要两个 Step。首段不是 `move` 时，React 适配层会把它改成 `move`：有 `to` 就保留该目标，没有 `to` 就回退到 `[0, 0]`。因此首段写成 `line` 只会定位游标，不会画出这条线。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Step 标记组件',
+      path: 'packages/kernel/react/src/kernel/components/Step.tsx',
+      startLine: 235,
+      endLine: 240,
+    },
+    {
+      label: 'Path 收集 Step 与标签优先级',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 294,
+      endLine: 367,
+    },
+    {
+      label: '首段与最短序列规范化',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 525,
+      endLine: 539,
+    },
+  ]}
+/>
+
+### 游标驱动的几何编译
+
+进入默认 `kind="stroke"` 的 core 编译后，Step 不会各自独立渲染。编译器先把相对 target 归一为当前 scope 的坐标，再按声明顺序推进游标、解析节点引用与边界连接，最后把每个 `kind` 降级为统一的路径命令和边标注几何：
+
+<ComponentPreview files="step-compile-flow" size="xs" hideCode />
+
+| Step 家族                                                        | 编译行为                                                   | 用户可见结果                                             |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------- |
+| `move` / `cycle`                                                 | 维护游标与最近一次子路径起点                               | `move` 不画线；`cycle` 闭合回最近一次 `move`             |
+| `line` / `curve` / `cubic`<br />`fold` / `bend`                  | 解析前后目标并按节点边界裁切<br />再发射直线或 Bezier 命令 | 节点 id 自动接到边界；`fold` / `bend` 最终仍是普通路径段 |
+| `smooth` / `generator`<br />`arc` / `circlePath` / `ellipsePath` | 生成一组路径命令，并记录画完后的真实笔位                   | 下一段从生成结果的终点续接；整圆 / 整椭圆画完回到圆心    |
+| `rectangle`                                                      | 独立解析 `from` / `to`，不要求前置游标                     | 可以作为 Path 中唯一的 Step                              |
+
+这套顺序让 JSX、直接写 IR 和 `<Draw>` sugar 最终复用同一条几何编译路径；renderer 只消费降级后的命令，不需要理解十三种 Step 写法。
+
+<SourceLinks
+  sources={[
+    {
+      label: '相对目标归一化',
+      path: 'packages/kernel/core/src/compile/path/host/relative.ts',
+      startLine: 11,
+      endLine: 108,
+    },
+    {
+      label: '目标归一化与逐段编译主循环',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 54,
+      endLine: 147,
+    },
+    {
+      label: '普通连线 Step 的几何降级',
+      path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
+      startLine: 41,
+      endLine: 125,
+    },
+    {
+      label: '生成器、闭合与矩形 Step 的几何降级',
+      path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
+      startLine: 85,
+      endLine: 220,
+    },
+    {
+      label: '圆弧、圆、椭圆与 smooth 的几何降级',
+      path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
+      startLine: 223,
+      endLine: 445,
+    },
+  ]}
+/>
+
+### t 在每种 step kind 上的几何含义
+
+`label.position` 会先换算成 `0..1` 的参数 t。编译器再向当前 kind 的几何采样器索取该处的坐标与切线：`side` 根据坐标偏移，`sloped` 根据切线旋转。因此 t 表示的是“该 kind 的参数进度”，不一定是视觉弧长进度。
+
+| Step kind             | t 的参数化方式                                             | `t=0.5` 的含义                        |
+| --------------------- | ---------------------------------------------------------- | ------------------------------------- |
+| `'line'`              | 归一化弧长                                                 | 直线中点                              |
+| `'fold'`              | 两段折线各占一半 `t`，与各段长度无关                       | `t=0.5` 正好落在拐角                  |
+| `'curve'` / `'cubic'` | Bezier 参数，**不是弧长**                                  | 通常不是视觉中点                      |
+| `'bend'`              | 降级成 cubic 后使用 Bezier 参数                            | 与 cubic 相同                         |
+| `'smooth'`            | 每个生成的 cubic 等分 t 区间<br />区间内再使用 Bezier 参数 | 取决于生成段数，不按整条曲线弧长      |
+| `'generator'`         | 当前按进入 step 时的游标到最终笔位做直线插值               | 两端点的中点，不跟随中间命令          |
+| `'arc'`               | 在 `startAngle..endAngle` 间线性插值                       | 起末角的中间角度                      |
+| `'circlePath'`        | 整圆按角度 0→360；0 在 +x                                  | 180°（-x）                            |
+| `'ellipsePath'`       | 同 circlePath，按参数角而非等弧长采样                      | 180°（-x）；任意 `t` 不按弧长均匀分布 |
+
+整圆和椭圆的角度递增遵循屏幕坐标，因此 90° 位于视觉下方。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'label.position 到 t 的映射',
+      path: 'packages/kernel/core/src/compile/path/host/label.ts',
+      startLine: 50,
+      endLine: 69,
+    },
+    {
+      label: '按 Step 几何采样边标注',
+      path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts',
+      startLine: 41,
+      endLine: 79,
+    },
+    {
+      label: '边标注偏移与切线旋转',
+      path: 'packages/kernel/core/src/compile/path/host/label.ts',
+      startLine: 75,
+      endLine: 166,
+    },
+  ]}
+/>
 
 ## API 参考
 
@@ -271,8 +340,6 @@ Fold 的 t 按经过点把整条折线分段；下例的 `A -| B` 展示 keyword
 | `'circlePath'`  | 以游标为圆心画整圆，画完回到圆心                  | path "A"×2      |
 | `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆心                | path "A"×2      |
 | `'rectangle'`   | 用 `from` 和 `to` 作为两对角画矩形                | 独立矩形子路径  |
-
-`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'fold'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
 
 ### via 的两种取值
 
@@ -338,7 +405,7 @@ Fold 的 t 按经过点把整条折线分段；下例的 `A -| B` 展示 keyword
 | `opacity`   | `number`                                 | —          | 标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）                                                                                                                          |
 | `font`      | `object`                                 | —          | 标签字体覆盖（family / size / weight / style）；逐字段回退 `labelDefault` → 渲染端默认                                                                                                    |
 
-不同 step kind 上 t 的几何解释见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。要点：line 按弧长归一化；fold 按折线段数均分 t 区间（拐角恒在 t=0.5）；curve / cubic / bend 用 Bezier 参数 t（**非弧长**——t=0.5 通常不是视觉中点）；arc 用角度参数化；circlePath / ellipsePath 沿整圆从 angle 0（+x）CCW 增长。
+不同 step kind 上 t 的几何解释与 `smooth` / `generator` 边界见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。
 
 ## 相关
 

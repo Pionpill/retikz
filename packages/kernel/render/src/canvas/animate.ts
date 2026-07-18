@@ -2,7 +2,7 @@
  * Canvas 逐帧动画应用：给时刻 t，把一个 prim 的 tracks 求值并落到 ctx / 返回带覆盖值的 prim
  * @description 内置通道：opacity/fill/stroke/strokeWidth → 覆盖 prim 字段（绝对展示值）；transform → 绕
  *   origin 支点 ctx.translate/rotate/scale；pathDraw → stroke-dashoffset 揭示（dashPattern 覆盖 + lineDashOffset）；
- *   自定义通道 → 注册表 interpolate + applyCanvas，未注册 warn+skip。viewBox 是 scene 根镜头、不在元素级。
+ *   自定义通道 → 注册表 interpolate + applyCanvas，未注册 warn+skip。viewBox 是 scene 根镜头、不在元素级
  */
 import type { ScenePrimitive } from '@retikz/core';
 
@@ -63,7 +63,7 @@ const isUnsupportedGroupStyleProperty = (prim: ScenePrimitive, property: string)
 
 /**
  * 给时刻 time 把 prim 的 tracks 应用到 ctx，返回带覆盖值的 prim（无覆盖则原样返回）
- * @description ctx 变更（transform / lineDashOffset）须在 caller 的 ctx.save/restore 作用域内调用。
+ * @description ctx 变更（transform / lineDashOffset）须在 caller 的 ctx.save/restore 作用域内调用
  */
 export const applyPrimAnimations = (
   ctx: CanvasRenderingContext2D,

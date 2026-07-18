@@ -1,0 +1,103 @@
+---
+title: Architecture Principles
+description: Decide capability ownership, package boundaries, extension completeness, and the end-to-end execution flow as a library maintainer.
+---
+
+This page is an architecture checklist for maintainers and extension authors. It answers who owns a capability, where its boundary ends, and how to prove the capability forms a complete loop. See [Layers](/kernel/concepts/design/layers) for the user-facing mental model of DSL, IR, and Scene.
+
+<ComponentAlert
+  type="tip"
+  title="Skip this page while getting started"
+  description="Continue with Get Started and component docs if you only want to draw. Return when extending retikz, working with IR directly, or assigning ownership for a new capability."
+/>
+
+## Capability ownership
+
+Start by deciding whether a request changes authoring ergonomics, shared drawing semantics, a high-level domain model, a replaceable compile strategy, or backend runtime behavior. Design from that first owner.
+
+<ComponentPreview files="principles-placement" size="md" hideCode />
+
+Each arrow points to the first owner, not the only package that can change. One capability may need authoring, contract, compile, and runtime wiring, but each semantic layer has one source of truth.
+
+| Request signal                 | First owner             | Boundary failure                       |
+| ------------------------------ | ----------------------- | -------------------------------------- |
+| Friendlier JSX / plain specs   | React / Vanilla adapter | Adapters produce different geometry    |
+| Shared drawing semantics       | `@retikz/core`          | Adapter / renderer repeats layout      |
+| High-level domain model        | Domain composite        | Chart / domain fields enter core IR    |
+| Pure geometry and numeric work | `@retikz/math`          | Math depends on schema or runtime      |
+| SVG / Canvas execution         | `@retikz/render`        | DOM / Canvas objects enter Scene       |
+| Optional lowering such as TeX  | Dedicated lowerer       | Heavy dependency becomes core-required |
+
+The central constraint is that upper packages obtain foundations from `@retikz/core` or `@retikz/math`. Adapters may change authoring and domain packages may preserve high-level IR, but neither may create parallel IR, rendering semantics, or geometry foundations.
+
+## Completeness gate
+
+Rendering one built-in example does not make a capability complete. Every long-lived capability must answer four groups of questions:
+
+| Axis            | Required answer                                                                 | Action when missing                 |
+| --------------- | ------------------------------------------------------------------------------- | ----------------------------------- |
+| Problem / owner | What root problem is solved, who owns it, and what remains outside the scope?   | Reassign ownership or narrow scope  |
+| Internal model  | Can IR, pure computation, and compile express it without host special cases?    | Move down a shared contract         |
+| Extension       | Do built-ins and custom items share Definition, registry, resolver, and errors? | Complete one extension path         |
+| End-to-end loop | Are input, compile, Scene, renderer, adapters, tests, and docs connected?       | Record the missing links explicitly |
+
+Open capabilities normally follow `XxxDefinition → defineXxx → builtin + custom registry → unified dispatch`. Use [Extension Mechanisms](/kernel/reference/runtime/extensions) to look up extension families, injection points, and error semantics. Implementation steps belong in the extension guide at the end of each capability group.
+
+## End-to-end execution
+
+`compileToScene` does not walk IR and immediately emit SVG. It lowers high-level capabilities to Kernel, builds a compile-local capability context, resolves layout and references in stages, and only then assembles Scene.
+
+<ComponentPreview files="principles-compile" size="sm" hideCode />
+
+1. **Authoring produces IR**: React JSX, Vanilla plain specs, and external IR converge on one JSON contract.
+2. **Create compile context**: resolve measurement, warnings, lowerers, and call-local provider registries without global state.
+3. **Composite lowering**: validate Tier 2 nodes and expand them into Tier 1 Kernel IR.
+4. **Layout and namespaces**: resolve Node, Coordinate, and Scope positions, shapes, boundaries, and styles, then register layouts.
+5. **Deferred Path resolution**: after nodes exist, resolve anchors, generators, arrows, ribbons, and path kinds while preserving order.
+6. **Scene and runtime**: combine primitives, resources, animations, and bounds; SVG / Canvas, hydration, and animation execute after Scene.
+
+This order defines ownership: parsers do not read runtime registries, renderers do not reinterpret IR, and adapters do not repeat layout. If a capability only works by crossing these boundaries, fix the contract before adding a special case.
+
+## Package responsibilities
+
+The six Kernel packages form a one-way capability chain. Each package must state both what it solves and what it does not own so later iterations cannot accumulate unrelated convenience features indefinitely.
+
+<ComponentPreview files="principles-packages" size="sm" hideCode />
+
+| Package           | Solves                                            | Does not own                          |
+| ----------------- | ------------------------------------------------- | ------------------------------------- |
+| `@retikz/math`    | Dependency-free geometry, curves, matrices, maths | IR, schemas, drawing-domain semantics |
+| `@retikz/core`    | IR / Scene, provider contracts, compile semantics | React lifecycle, DOM, Canvas          |
+| `@retikz/render`  | SVG, Canvas, hydration, animation runtime         | Author DSL, IR meaning, layout        |
+| `@retikz/react`   | JSX adapter, `<Layout>` host, React wiring        | Parallel IR or renderer semantics     |
+| `@retikz/vanilla` | Plain specs, mount, hydrate, SSR                  | Geometry different from React         |
+| `@retikz/tex`     | Lower LaTeX into renderer-neutral glyph paths     | General text model or backend hacks   |
+
+When a subpackage lacks a capability, first decide whether the need is composition, an extension gap in the current domain, or a missing shared foundation. Keep only composition in the caller; add a domain contract for the second case or move the foundation to its true owner for the third.
+
+## Related
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/concepts/design/layers">
+    <span className="font-semibold">Layers</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand DSL, IR, Scene, and renderers as a user
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/design/composite">
+    <span className="font-semibold">Tier 2 Composites</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Preserve domain intent and lower high-level nodes
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/runtime/extensions">
+    <span className="font-semibold">Extension Mechanisms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Look up definitions, registries, host lowerers, and guides
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema">
+    <span className="font-semibold">Schema</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Look up the current IR fields and contracts</span>
+  </LinkedCard>
+</div>

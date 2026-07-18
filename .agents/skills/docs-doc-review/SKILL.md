@@ -1,6 +1,6 @@
 ---
 name: docs-doc-review
-description: retikz 文档站文档评审技能。用于在 docs-doc-principle / docs-doc-component / docs-doc-example / develop-document 产出后做独立审稿，也可单独评审 apps/docs 下已有页面。重点检查结构是否符合页型规范、是否按初级前端工程师视角写作、专业术语是否过载、TikZ / 外部生态对照是否走 Comparison / reference 展示、必要 demo / 图示是否齐全、双语与三处协同是否完整。只输出问题和修改建议，不直接改稿，除非用户明确要求修。
+description: retikz 文档站文档评审技能。用于在 docs-doc-principle / docs-doc-component / docs-doc-example / develop-document 产出后做独立审稿，也可单独评审 apps/docs 下已有页面。重点检查结构是否符合页型规范、是否按初级前端工程师视角写作、专业术语是否过载、TikZ / 外部生态对照是否走 Comparison / reference 展示、必要 demo / 图示是否齐全、双语与三处协同是否完整、链接与源码行号是否有效。只输出问题和修改建议，不直接改稿，除非用户明确要求修。
 ---
 
 # 文档评审
@@ -10,7 +10,7 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 ## 何时用
 
 - `develop-document` 阶段完成后，进入 wrapup 前
-- `docs-doc-principle` / `docs-doc-component` / `docs-doc-example` / `docs-doc-group` 产出初稿后
+- `docs-doc-principle` / `docs-doc-component` / `docs-doc-extension` / `docs-doc-example` / `docs-doc-group` 产出初稿后
 - 用户单独说“审一下这篇文档 / 这个 docs 改动 / 这些 demo”
 - 大规模文档重构后，想确认没有把页面写成作者自嗨的内部说明
 
@@ -32,6 +32,7 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 ### 1. 页型结构
 
 - 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 6 段顺序：Usage / Composition / Examples / How it works / API Reference / Related
+- 扩展指南是否符合 [`docs-doc-extension`](../docs-doc-extension/SKILL.md)：适用边界 / 定义 / 注入 / 执行机制 / 错误与限制 / API / 相关，并证明内置与自定义同路
 - 示例页是否符合 [`docs-doc-example`](../docs-doc-example/SKILL.md) 的 6 段结构：引言 hero / Prompt / 过程 / 能力 / Limitations / Related
 - 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedCard 子页索引
 - Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程
@@ -79,6 +80,13 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 - Related 链接是否存在，是否链到最有帮助的下一页
 - 新文档是否避免引用本地路径给普通用户看；需要引用项目设计文档时用 GitHub URL
 
+### 7. 链接有效性
+
+- 逐条检查所有链接，不以正文看起来正确、`tsc` 或 build 通过代替可达性验证；zh / en 分别检查
+- 站内路径必须命中已注册路由，页内锚点必须落到实际标题；HTTP(S) 链接确认目标与响应状态正常
+- `<SourceLinks>` 的 `path` 必须命中仓库内现有文件；行号范围满足 `startLine >= 1`、`endLine >= startLine` 且不超过文件总行数
+- `<SourceLinks>` 生成的 `blob/main` URL 必须可达，行号对应实现仍能支撑当前技术原理；路径可达但代码已漂移同样算无效
+
 ## 输出格式
 
 按严重度输出，先问题后总结：
@@ -110,7 +118,7 @@ INFO（做得好的地方 / 可保留）：
 
 严重度判定：
 
-- **BLOCKING**：结构不符合页型、zh/en 明显不一致、API / demo 与实际行为冲突、必要 demo 缺失、初级前端读者无法理解主线
+- **BLOCKING**：结构不符合页型、zh/en 明显不一致、API / demo 与实际行为冲突、必要 demo 缺失、初级前端读者无法理解主线、链接 404 / 锚点失效 / 源码路径或行号错误
 - **WARNING**：术语偏多但还能读、进阶内容位置不佳、Related 不够好、demo 可更聚焦
 - **INFO**：可保留的写法、已经满足规范的地方、适合进入 changelog / review summary 的亮点
 
@@ -121,3 +129,4 @@ INFO（做得好的地方 / 可保留）：
 - **正文散落 TikZ 对照**：统一放到 Comparison / reference，对照隐藏后正文仍要能读
 - **API 表像源码注释**：改成用户能判断的描述，“什么时候设、设了会怎样、默认是什么”
 - **进阶内容没提示可跳过**：初次阅读路径要干净，deepdive 要显式标出
+- **只看链接文字不验证目标**：逐条确认路由、锚点、响应与 `<SourceLinks>` 行号仍有效

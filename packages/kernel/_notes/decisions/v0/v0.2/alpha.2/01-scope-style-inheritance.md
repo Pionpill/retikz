@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-21
-- 关联：[v0 roadmap §v0.2](../../roadmap.md) · [v0.2 总计划 §alpha.2 设计预想](../roadmap.md#alpha2-设计预想scope-样式子集) · [core-design.md §1.2 AI 一等公民](../../../../../../../notes/architecture/core-design.md) · [alpha.1 ADR-01 Scope 容器](../alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 inside-out lookup](../alpha.1/02-node-index-anchor-resolution.md)
+- 关联：[v0 roadmap §v0.2](../../roadmap.md) · [v0.2 总计划 §alpha.2 设计预想](../roadmap.md#alpha2-设计预想scope-样式子集) · [alpha.1 ADR-01 Scope 容器](../alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 inside-out lookup](../alpha.1/02-node-index-anchor-resolution.md)
 
 ## 背景
 

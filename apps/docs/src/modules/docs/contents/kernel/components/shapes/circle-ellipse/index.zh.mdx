@@ -103,38 +103,61 @@ import { Node } from '@retikz/react';
 
 ## 技术原理
 
-> 日常使用可以跳过本节；只有在点位报错，或者想理解 Sugar 与 Node 的区别时再回来读。
+<ComponentAlert
+  type="tip"
+  title="日常使用可以跳过本节"
+  description="只有在点位类型不符合预期，或者想理解 Sugar 与 Node 的边界来源时再回来读。"
+/>
 
-### 有些写法直接透传点，有些写法要先计算（Sugar）
+### Sugar 如何变成 Path
 
-`<Circle>` 的 `center` 直接把点交给底层 `Path`，可以用节点 id、极坐标点或普通 `[x, y]` 坐标：
+图中上路保留 `Circle center` 的 target 引用，节点 id、极坐标或 `[x, y]` 会留到 Path 编译时解析；下路必须先在 React adapter 计算中心和半径，因此只接受字面量 `[x, y]` 几何：
 
-```tsx
-<Circle center="A" radius={24} />
-```
+<ComponentPreview files="circle-ellipse-sugar-flow" size="md" hideCode />
 
-另外一些写法要先在 React 里算出圆心、尺寸或边界，所以只接受字面量 `[x, y]` 坐标——`<Ellipse>` 的所有点输入（含 `center` / `corner1` / `corner2`）都属此类，`<Circle>` 的 `from` / `to` / `corner1` / `corner2` 也是：
+`Circle` 的 `from` / corners / box 与 `Ellipse` 的全部写法走下路。两路最终都展开成等价的 `<Path>` + `circlePath` / `ellipsePath` Step；给角度后，`closed` 再决定弧端是连弦（`chord`，默认）、连回中心（`sector`）还是保持开放（`open`）。
 
-```tsx
-<Circle from={[-40, 0]} to={[40, 0]} />
-<Ellipse corner1={[-40, -20]} corner2={[40, 20]} />
-```
+<SourceLinks
+  sources={[
+    {
+      label: 'Circle 输入归一化与 Step 展开',
+      path: 'packages/kernel/react/src/sugar/shapes/Circle.tsx',
+      startLine: 20,
+      endLine: 94,
+    },
+    {
+      label: 'Ellipse 输入归一化与 Step 展开',
+      path: 'packages/kernel/react/src/sugar/shapes/Ellipse.tsx',
+      startLine: 19,
+      endLine: 89,
+    },
+  ]}
+/>
 
-把节点 id 传给这类需要先计算的写法时，`<Circle>` 会直接报错；`<Ellipse>` 的 corner 分支目前不做校验，传非 `[x, y]` 会算出 NaN，务必传字面量坐标。
+### Node 如何得到连接边界
 
-### 部分圆有三种闭合方式（Sugar）
+`<Node>` 先把文字测量结果与 `padding` 合成内容框，再让 shape 定义从这个内框计算可见边界。下图给两边相同的内容框，只切换外接策略：
 
-带角度时，`closed` 决定弧线两端怎么收口：
+<ComponentPreview files="circle-ellipse-circumscription" size="md" hideCode />
 
-| 值       | 效果                           |
-| -------- | ------------------------------ |
-| `chord`  | 默认值，直接连接两个弧端点     |
-| `sector` | 从弧终点连到中心，再回到弧起点 |
-| `open`   | 只画弧线，不闭合               |
+默认 `ellipse` 把两个半轴分别乘以 √2；`circle` 则在编译时解析成 `ellipse + circumscribe:'equal'`，把内容框半对角线作为统一半径。解析后的同一份几何既产出可见的 ellipse 图元，也提供 anchor 与连接边界，所以 `<Draw>` / `<Path>` 的端点会贴到外轮廓。
 
-### Sugar 和 Node 是两条路
-
-`<Circle>` / `<Ellipse>` 展开成等价的 `<Path>` / `<Step>` 序列，是纯图形，可直接用 `stroke`、`fill`、`arrow`、`zIndex` 等 Path 属性。`<Node shape>` 则不是 Path，而是一个有边界的节点，边界由文字内容外接得到、可被连线贴边。要一个能装文字又能连线的圆，用 `<Node>` 而不是 `<Circle>`。
+<SourceLinks
+  sources={[
+    {
+      label: 'circle preset 解析为 equal ellipse',
+      path: 'packages/kernel/core/src/compile/node/shape.ts',
+      startLine: 41,
+      endLine: 48,
+    },
+    {
+      label: 'ellipse 外接、anchor 与图元生成',
+      path: 'packages/kernel/core/src/providers/shape/ellipse.ts',
+      startLine: 11,
+      endLine: 47,
+    },
+  ]}
+/>
 
 ## 相关
 

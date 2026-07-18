@@ -22,21 +22,21 @@ import { isStrokeShapeStep, lowerShapeStep } from './shapes';
 import { applyArrowShrinks } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
 
-/** 普通 path emit 所需的编译上下文。 */
+/** 普通 path emit 所需的编译上下文 */
 export type EmitPathPrimitiveContext = {
-  /** id 查询栈。 */
+  /** id 查询栈 */
   namespaceStack: NamespaceStack;
-  /** 坐标取整函数。 */
+  /** 坐标取整函数 */
   round: (n: number) => number;
-  /** 文本测量函数。 */
+  /** 文本测量函数 */
   measureText?: TextMeasurer;
-  /** path emit 选项与 warning 钩子。 */
+  /** path emit 选项与 warning 钩子 */
   options?: PathEmitOptions;
 };
 
 /**
  * IR Path → PathPrim
- * @description 解析失败返回 null，并通过 `PathEmitOptions.onWarn` 报告 warning。
+ * @description 解析失败返回 null，并通过 `PathEmitOptions.onWarn` 报告 warning
  */
 export const emitPathPrimitive = (
   path: IRPathBase,

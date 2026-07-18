@@ -37,7 +37,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` 支持 13 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`smooth` 画穿过点列的平滑曲线，`generator` 调用内置或自定义路径生成器，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/kernel/components/draw/step) 与 [路径生成器](/kernel/components/extend/path-generator)。
+`<Step>` 支持 13 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`smooth` 画穿过点列的平滑曲线，`generator` 调用内置或自定义路径生成器，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/kernel/components/draw/step) 与 [路径生成器](/kernel/components/draw/path-generator)。
 
 ## 例子
 
@@ -146,7 +146,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 中段标记（marks）
 
-`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/extend/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**：线越粗、标记越大。
+`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/draw/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**：线越粗、标记越大。
 
 <ComponentPreview files="path-marks" size="xs" />
 
@@ -228,6 +228,107 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 
 <ComponentPreview files="ribbon-style" size="md" />
 
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="遇到端点引用、Path kind、几何圆角、箭头或 ribbon 轮廓的边界问题时再回来读。"
+/>
+
+本节只说明 `<Path>` 从 step 序列到 Scene 图元的局部机制；完整的 JSX → IR → Scene 管线见[架构](/kernel/concepts/design/principles)。
+
+### 端点引用为什么支持后定义
+
+编译器遍历到 `<Path>` 时不会立刻生成图元，而是加入待处理队列；需要保持当前输出层级时，还会留下绘制顺序占位。它继续注册当前 scope 内的 `<Node>` 与 `<Coordinate>`，待该 scope 扫描完成后再统一解析 `Step.to`、控制点和连接面。普通 scope 会把图元回填到占位处；带变换 scope 的全局投影规则见 [`<Scope>` 技术原理](/kernel/components/layout/scope#技术原理)。
+
+因此 path 端点可以引用同一 scope 内稍后声明的 id，同时仍保持原来的绘制顺序。这个能力只属于延迟生成的 path；`Node.position` 与 scope transform 仍在遍历到自身时解析，不能据此假设所有 id 引用都支持后定义。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Path 占位与待处理队列',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 256,
+      endLine: 281,
+    },
+    {
+      label: '端点解析与图元回填',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 147,
+      endLine: 176,
+    },
+  ]}
+/>
+
+### kind 如何选择整条路径的输出
+
+`kind` 不是 renderer 的绘制开关，而是整条 Path 的编译 provider（处理器）名称，缺省为 `stroke`。编译器从统一注册表找到 definition；如果该 provider 声明了 `optionsSchema`，就先校验 `kindOptions`，否则保留原始 JSON 对象。随后由 provider 决定复用标准描边、复用标准 ribbon，还是直接生成自定义 Scene 图元。
+
+下图在 Path 的职责边界停止：输入仍是一条 `<Path>`，provider 分派后只输出与 renderer 无关的 Scene 图元。
+
+<ComponentPreview files="path-kind-pipeline" size="sm" hideCode />
+
+内置 `stroke` / `ribbon` 与外部 kind 走同一套注册和冲突规则；renderer 不需要认识自定义 kind。要接管整条路径时见[自定义路径](/kernel/components/draw/custom-path)，只扩展某一个 step 时则使用[路径生成器](/kernel/components/draw/path-generator)。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Path kind 查找与分派',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 93,
+      endLine: 145,
+    },
+    {
+      label: 'Path kind provider 契约',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 18,
+      endLine: 53,
+    },
+  ]}
+/>
+
+### 描边与流带如何物化几何
+
+| 模式                | 核心处理               | Scene 输出     |
+| ------------------- | ---------------------- | -------------- |
+| `stroke`            | step → 命令 → 装饰     | 描边与附属图元 |
+| `ribbon` centerline | 命令 → 按宽度偏移两侧  | 闭合填充轮廓   |
+| `ribbon` boundary   | 采样上下边界并连接端帽 | 闭合填充轮廓   |
+
+默认描边会先把 relative、节点引用和 generator 解析成路径命令（`PathCommand`，即物化后的 move / line / arc 等几何）。`roundedCorners` 随后改写命令，再计算路径标记与端点箭头收缩；`rotate` / `scale` 最后把主路径、标签和标记包装成同一个 group。于是标记会跟随倒圆后的弧长与切线，整体变换也不会让装饰脱离路径。
+
+中心线 ribbon 复用同一套 step 解析口径，再按宽度函数求两侧轮廓；固定宽度且线段可解析时优先直接构造轮廓，其余情况按横截面采样。Boundary 模式则直接采样已给出的上下边界。两种模式最终都变成普通的闭合 Path 图元，SVG / Canvas 无需各自实现一套 ribbon 语义。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Step 解析与路径命令生成',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 57,
+      endLine: 147,
+    },
+    {
+      label: '圆角、标记与箭头处理顺序',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 149,
+      endLine: 190,
+    },
+    {
+      label: 'Ribbon 复用 Path 几何',
+      path: 'packages/kernel/core/src/compile/path/ribbon/centerline.ts',
+      startLine: 328,
+      endLine: 378,
+    },
+    {
+      label: 'Ribbon 轮廓生成',
+      path: 'packages/kernel/core/src/compile/path/ribbon/emit.ts',
+      startLine: 62,
+      endLine: 190,
+    },
+  ]}
+/>
+
 ## API 参考
 
 | 属性             | 类型                                                                                                          | 默认值         | 描述                                                                                                                                                                                                              |
@@ -276,3 +377,4 @@ Ribbon 复用上表的 Path 宿主字段；这里只列选择 ribbon kind 与流
 - [Draw](/kernel/components/draw/overview)：日常连线优先使用的 Sugar
 - [Step](/kernel/components/draw/step)：`<Path>` 子节点的完整字段和 kind 说明
 - [Arrow](/kernel/components/draw/arrow)：路径箭头的详细配置
+- [自定义路径](/kernel/components/draw/custom-path)：注册接管整条 Path 的 kind provider

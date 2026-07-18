@@ -2,7 +2,7 @@
  * 几何忠实的 2D context test harness（canvas 水合 / parity 测试用）
  * @description jsdom 无真实 canvas 2D context；hitTest 靠把图元几何重建进 context 再调 isPointInPath /
  *   isPointInStroke 点测。本 harness 记录子路径、按仿射矩阵应用 transform，用射线法 / 点到线段距离回答点测，
- *   只提供 canvas 原语——hitTest / 控制器 / 坐标映射的真实逻辑仍受测。与 render 层 canvas-hittest 同款思路。
+ *   只提供 canvas 原语——hitTest / 控制器 / 坐标映射的真实逻辑仍受测。与 render 层 canvas-hittest 同款思路
  */
 
 type Pt = [number, number];

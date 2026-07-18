@@ -1,6 +1,6 @@
 # v0.4.0-alpha.4 路线：Scene 视觉效果（F）—— drop shadow + blend mode
 
-> 写于 2026-06-16。承接 [v0.4 roadmap 候选 F「Scene 视觉效果」](../roadmap.md#f--scene-视觉效果2026-06-13-方向)（2026-06-13 拍板「首切 = z-index / 层模型 + shadow + blend mode」）。
+> 写于 2026-06-16。承接 [v0.4 历史候选 F「Scene 视觉效果」](../history.md#f--scene-视觉2026-06-13-方向)（2026-06-13 拍板「首切 = z-index / 层模型 + shadow + blend mode」）。
 >
 > 关联：[`v0.4 roadmap`](../roadmap.md) · [`ADR-01 drop shadow`](./01-scene-drop-shadow.md)（Accepted）· [`ADR-02 blend mode`](./02-blend-mode.md)（Accepted）· `primitive/scene.ts`（Scene 契约红线）· `shapes/types.ts`（`ShapeStyle`）
 

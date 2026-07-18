@@ -1,21 +1,20 @@
 ---
 title: 组件
-description: 按布局、图元、关系、形状、效果与扩展能力组织 Kernel 的组件和常用写法。
+description: 按布局、图元、关系、形状、辅助与效果组织 Kernel 的组件和常用写法。
 ---
 
-组件分组是日常写图的主要入口。先用布局建立画布和局部坐标语境，再放置节点与坐标、绘制路径关系；形状、辅助、效果和扩展页面用于补充更具体的表达能力。
+组件分组是日常写图的主要入口。先用布局建立画布和局部坐标语境，再放置节点与坐标、绘制路径关系；形状、辅助和效果页面用于补充更具体的表达能力。各领域的自定义能力放在对应分组末尾，跨领域机制则集中在[扩展机制](/kernel/reference/runtime/extensions)。
 
 ## 职责一览
 
-| 分组 | 主要内容                           | 职责                         |
-| ---- | ---------------------------------- | ---------------------------- |
-| 布局 | Layout、Scope                      | 承载整图与局部坐标语境       |
-| 节点 | Node、Text、Coordinate             | 描述可见对象与可引用位置     |
-| 绘制 | Draw、Way、Path、Arrow、Step       | 描述连接方式与路径动作       |
-| 形状 | Circle、Arc、Rectangle、Polygon 等 | 用高层参数生成常见几何路径   |
-| 辅助 | Grid                               | 提供可复用的辅助绘制能力     |
-| 效果 | Shadow、Blend、Animation           | 控制视觉合成与动态表现       |
-| 扩展 | Registry 与自定义 Definition       | 注册形状、路径、箭头等新能力 |
+| 分组 | 主要内容                           | 职责                       |
+| ---- | ---------------------------------- | -------------------------- |
+| 布局 | Layout、Scope、Clip                | 承载整图与局部坐标语境     |
+| 节点 | Node、Text、Coordinate、Boundary   | 描述可见对象与可引用位置   |
+| 绘制 | Draw、Way、Path、Arrow、Step       | 描述连接方式与路径动作     |
+| 形状 | Circle、Arc、Rectangle、Polygon 等 | 用高层参数生成常见几何路径 |
+| 辅助 | Grid                               | 提供可复用的辅助绘制能力   |
+| 效果 | Shadow、Blend、Pattern、Animation  | 控制视觉合成与动态表现     |
 
 ## 章节内容
 
@@ -43,9 +42,5 @@ description: 按布局、图元、关系、形状、效果与扩展能力组织 
   <LinkedCard href="/kernel/components/effects">
     <span className="font-semibold">效果</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">阴影、混合模式与动画</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/extend">
-    <span className="font-semibold">扩展</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">通过 Definition 与 registry 扩展能力</span>
   </LinkedCard>
 </div>

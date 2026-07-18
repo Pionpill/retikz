@@ -21,31 +21,31 @@ import { resolveNodeShape } from './shape';
 
 const DEFAULT_PADDING = 8;
 
-/** 节点 layout 阶段使用的编译依赖。 */
+/** 节点 layout 阶段使用的编译依赖 */
 export type LayoutNodeContext = {
-  /** 文本测量函数。 */
+  /** 文本测量函数 */
   measureText: TextMeasurer;
-  /** id 查询栈。 */
+  /** id 查询栈 */
   namespaceStack: NamespaceStack;
-  /** 相对定位默认距离。 */
+  /** 相对定位默认距离 */
   nodeDistance?: number;
-  /** 节点 label 默认距离。 */
+  /** 节点 label 默认距离 */
   labelDistance?: number;
-  /** preset 与 rem 字号解析的根字号。 */
+  /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
-  /** 当前 scope 累积 transform。 */
+  /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
-  /** 当前样式栈解析出的 label 默认值。 */
+  /** 当前样式栈解析出的 label 默认值 */
   labelDefault?: IRLabelDefault;
-  /** shape 注册表。 */
+  /** shape 注册表 */
   shapes?: ProviderCollection<ShapeDefinition>;
-  /** boundary 注册表。 */
+  /** boundary 注册表 */
   boundaries?: ProviderCollection<BoundaryDefinition>;
-  /** between target 的全局点解析函数。 */
+  /** between target 的全局点解析函数 */
   resolveBetweenGlobal?: ResolveBetweenGlobal;
-  /** TeX 降级上下文。 */
+  /** TeX 降级上下文 */
   texLowering?: TexLoweringContext;
-  /** 当前 node 的 IR 路径，用于 provider payload 诊断。 */
+  /** 当前 node 的 IR 路径，用于 provider payload 诊断 */
   irPath?: string;
 };
 

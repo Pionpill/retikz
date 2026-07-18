@@ -29,13 +29,13 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 | 单条          | 一次 1 条 ADR，在当前 worktree 跑完 5 阶段后停止            |
 | 批量 worktree | 一次多条 ADR，每条独立 worktree + 分支；适合用户离线 review |
 
-含“批量 / 一次跑完 / 离线 / 睡觉 / 健身”或 ≥2 个 ADR 编号时，先呈现候选 ADR、推荐布局和 base 分支，等人工确认。长任务启动时同时询问：ADR / plan 写完是否派子 agent review，代码写完是否派子 agent review。
+含“批量 / 一次跑完 / 离线 / 睡觉 / 健身”或 ≥2 个 ADR 编号时，先呈现候选 ADR、推荐布局和 base 分支，等人工确认。ADR Architecture Gate 自动执行，不询问是否 review；长任务启动时只按根规则确认代码完工后的其它 review 需求。
 
 ## 5 阶段
 
 | #   | 阶段 | 子 skill            | 通过条件                                                                            |
 | --- | ---- | ------------------- | ----------------------------------------------------------------------------------- |
-| 1   | 设计 | `develop-design`    | ADR 草案含实现契约段，人工 ack，不默认提交                                          |
+| 1   | 设计 | `develop-design`    | ADR 草案含实现契约段，Architecture Gate PASS，人工 ack，不默认提交                  |
 | 2   | 实现 | `develop-implement` | spec test / lint / tsc / 必要测试全过                                               |
 | 3   | 自测 | `develop-test`      | Adversarial Bug Hunter 的 BLOCKING 清空                                             |
 | 4   | 文档 | `develop-document`  | 用户可见能力有 zh/en 文档、demo、API 表                                             |
@@ -55,9 +55,21 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接实现并按受影响模块验证。跨级 ADR 取最高 level。
 
-## 独立视角
+## 自动 Architecture Gate
 
-派子 agent、外部模型或新线程评审前必须先得到用户确认；用户拒绝或工具不可用时，由主 AI 自审并说明退化路径。可选独立视角包括：
+每条 Alpha ADR 草案完成后、人工 review 与实现授权前，强制执行：
+
+1. 以 `adr-gate` 模式调用 `develop-completeness`，自动派遣一个新的只读 subagent，轮次从 `1/3` 开始。
+2. subagent 只返回 `BLOCKING / WARNING / INFO`；主 AI按 findings 修订 ADR，不让 subagent 修改文件。
+3. ADR 因 BLOCKING 或 WARNING 发生修订后，必须派新的 subagent 复检；不能由同一 subagent 或主 AI自审代替下一轮。
+4. 只有最新 subagent 明确返回 `PASS`，且该轮无 BLOCKING、WARNING 均已处置时，Gate 才 PASS。
+5. 最多 3 轮。第 3 轮未 PASS、其后仍需修订、审计意见无法调和或 subagent 不可用时 halt，交人工决策。
+
+该 Gate 具有根 AGENTS 规定的常驻自动授权，不因用户离线、赶进度、已有实现或 green level 跳过；它不授权实现、commit、push、外部写操作或扩大 ADR scope。
+
+## 其它独立视角
+
+Architecture Gate 之外的 subagent、外部模型或新线程仍须先得到用户确认；用户拒绝或工具不可用时，由主 AI自审并说明退化路径。可选独立视角包括：
 
 - Spec Writer：设计 spec test。
 - Bug Hunter：构造失败输入。
@@ -103,6 +115,7 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 ## 失败阈值
 
 - 任一阶段连续 3 轮不收敛：halt，汇报当前状态和阻塞点。
+- Architecture Gate 最多 3 轮；第 3 轮仍未 PASS 时必须交人工，不能开始第 4 轮或降低 finding 等级。
 - Contract Auditor 发现 ADR / docs / 行为不一致且 1 轮修不动：halt，交给人工裁定。
 - 批量模式任一 worktree 失败：该 worktree 写 `REVIEW.md` 标明失败并 halt，不伪装完工。
 
@@ -111,6 +124,7 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 单条完成前检查：
 
 - 执行阶段曾有完整实现契约，最终 ADR 保留稳定契约摘要。
+- 每条 ADR 在实现前均有 Architecture Gate PASS；3 轮未通过的 ADR 保持 Proposed 并停止实施。
 - ADR 已删除临时文件索引、LLM 执行 checklist、review prompt 等只服务执行的材料；保留背景、关键决策、被否决选项、兼容性、最终摘要和验证结果。
 - Spec-First 需要时能从历史看出测试先于实现。
 - 实现未擅改 spec test 或 schema 字段名。

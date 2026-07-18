@@ -6,33 +6,33 @@ import type { NodeTextLayoutContext } from '../types';
 import { layoutInlineLine, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
 import { wrapText } from './text';
 
-/** 节点正文布局输入。 */
+/** 节点正文布局输入 */
 export type LayoutNodeContentInput = NodeTextLayoutContext & {
-  /** 基准字体大小。 */
+  /** 基准字体大小 */
   fontSize: number;
-  /** 未缩放前的节点基准字号。 */
+  /** 未缩放前的节点基准字号 */
   baseFontSize: number;
-  /** preset 与 rem 字号解析的根字号。 */
+  /** preset 与 rem 字号解析的根字号 */
   rootFontSize: number;
-  /** 行高。 */
+  /** 行高 */
   lineHeight: number;
-  /** 已按节点缩放处理的最大文本宽度。 */
+  /** 已按节点缩放处理的最大文本宽度 */
   maxTextWidth?: number;
 };
 
-/** 节点正文布局结果。 */
+/** 节点正文布局结果 */
 export type NodeContentLayout = {
-  /** 普通文本行。 */
+  /** 普通文本行 */
   lines?: Array<TextLine>;
-  /** 行内公式混排块。 */
+  /** 行内公式混排块 */
   inlineBlock?: { lines: Array<{ laid: LaidLine; baselineOffset: number }> };
-  /** 内容文本宽度。 */
+  /** 内容文本宽度 */
   textWidth: number;
-  /** 内容文本高度。 */
+  /** 内容文本高度 */
   textHeight: number;
 };
 
-/** 布局节点正文文本。 */
+/** 布局节点正文文本 */
 export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLayout => {
   const {
     node,

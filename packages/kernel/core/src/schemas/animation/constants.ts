@@ -3,7 +3,7 @@
  * @description `viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；
  *   `pathDraw` 是 0..1 路径画出进度；`scaleX` / `scaleY` 是非均匀缩放（柱状图从基线长出等），`scale` 是均匀缩放；
  *   transform 通道（scale / scaleX / scaleY / rotate）的支点见 track 级 `origin`，缺省几何中心。
- *   各后端按通道翻译：SVG WAAPI/CSS、Canvas rAF 几何 lerp。
+ *   各后端按通道翻译：SVG WAAPI/CSS、Canvas rAF 几何 lerp
  */
 export const AnimationProperty = {
   Opacity: 'opacity',

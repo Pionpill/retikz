@@ -5,7 +5,7 @@ import { defineConfig, type Plugin } from 'vitest/config';
 
 import { writeLlmsTxt } from './scripts/gen-llms-txt';
 
-/** 在 dev 启动 / build 开始时把 llms.txt 写到 public/，让 dev 直接服务、build 自动 copy 到 dist/ */
+/** 在 dev 启动 / build 开始时写出 llms.txt、manifest 与原始 MDX，让 dev 直接服务、build 自动 copy 到 dist/ */
 const llmsTxtPlugin = (): Plugin => ({
   name: 'gen-llms-txt',
   buildStart() {
@@ -19,7 +19,7 @@ const llmsTxtPlugin = (): Plugin => ({
  * - optimizeDeps.exclude: 让 workspace 包走 HMR——改 packages/react / core 源码立即热更
  * - resolve.alias: shadcn 标配 @/* 别名
  * - base: 仅 build 模式注入 `/retikz/` 前缀，匹配 GH Pages 项目页 URL；dev 仍走 `/`
- * - llmsTxtPlugin: 由 src/data + frontmatter 派生 public/llms.txt（"通过 MCP 连接" 那条菜单的目标）
+ * - llmsTxtPlugin: 由导航树 + frontmatter 派生 public/llms.txt、manifest 与原始 MDX
  */
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/retikz/' : '/',

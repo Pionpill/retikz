@@ -46,7 +46,7 @@ const contentBounds = (
   return boundsToRect(bounds);
 };
 
-/** 将内部 NodeLayout 收敛为公开 compile 观测 DTO。 */
+/** 将内部 NodeLayout 收敛为公开 compile 观测 DTO */
 export const computeCompiledNodeLayout = (
   layout: NodeLayout,
   scopeChain: ReadonlyArray<Transform>,

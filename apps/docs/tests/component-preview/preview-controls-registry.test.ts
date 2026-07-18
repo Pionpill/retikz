@@ -8,8 +8,10 @@ import type {
   ComponentRenderSource,
   DiffLineKind,
   PreviewActionSlot,
+  PreviewControlContract,
   PreviewControlField,
   PreviewControlPlacement,
+  PreviewControlPreset,
   PreviewControlRuntime,
   PreviewControlsDefinition,
   PreviewControlSlot,
@@ -32,6 +34,7 @@ import {
   demoModules,
   resolveControlsKey,
   resolveDemoKey,
+  resolvePreviewControlContract,
   resolvePreviewControls,
 } from '../../src/modules/docs/components/component-preview/registry';
 import {
@@ -74,6 +77,7 @@ describe('preview controls registry', () => {
   it('registry helper 不通过组件预览根 barrel 转发', () => {
     expect(buildControlsKey).toBeTypeOf('function');
     expect(controlModules).toBeTypeOf('object');
+    expect(resolvePreviewControlContract).toBeTypeOf('function');
     expect(resolvePreviewControls).toBeTypeOf('function');
     expect(componentPreviewExports).not.toHaveProperty('resolveControlsKey');
     expect(componentPreviewExports).not.toHaveProperty('buildControlsKey');
@@ -104,6 +108,8 @@ describe('preview controls registry', () => {
       field: PreviewControlField;
       definition: PreviewControlsDefinition;
       values: PreviewControlValuesFor<PreviewControlsDefinition>;
+      contract: PreviewControlContract;
+      preset: PreviewControlPreset;
       controlPlacement: PreviewControlPlacement;
       controlRuntime: PreviewControlRuntime;
       controlSlot: PreviewControlSlot;
@@ -195,6 +201,37 @@ describe('preview controls registry', () => {
 
     expect(resolvePreviewControls({ lineCurveControls: controls })).toBe(controls);
     expect(resolvePreviewControls({ lineCurveActions: controls })).toBeUndefined();
+  });
+
+  it('归一显式 controls contract，并保留 canonical state、presets 与 API 归属', () => {
+    const controls = componentPreviewExports.definePreviewControls({
+      presentation: 'overlay',
+      controls: [{ kind: 'text', id: 'size', label: 'Size', defaultValue: '6' }],
+    });
+    const contract = {
+      controls,
+      canonicalValues: { size: '6' },
+      presets: [{ id: 'large', label: 'Large', values: { size: '12' } }],
+      relatedApis: ['Node.fontSize'],
+    } satisfies PreviewControlContract;
+
+    expect(resolvePreviewControlContract({ previewControlContract: contract })).toBe(contract);
+    expect(resolvePreviewControls({ previewControlContract: contract })).toBe(controls);
+  });
+
+  it('拒绝 contract 中不存在的 canonical control id', () => {
+    expect(() =>
+      resolvePreviewControlContract({
+        previewControlContract: {
+          controls: componentPreviewExports.definePreviewControls({
+            presentation: 'overlay',
+            controls: [{ kind: 'text', id: 'size', label: 'Size', defaultValue: '6' }],
+          }),
+          canonicalValues: { missing: '6' },
+          relatedApis: ['Node.fontSize'],
+        },
+      }),
+    ).toThrow('Unknown preview control id in canonicalValues: "missing".');
   });
 
   it('仅收集 canonical controls，不要求复用方提供转发模块', () => {

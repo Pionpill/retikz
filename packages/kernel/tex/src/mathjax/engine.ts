@@ -1,7 +1,7 @@
 /**
  * 同步 tex→SVG 引擎接口（`@retikz/tex` 只吃这个抽象，不硬依赖 MathJax）
  * @description 由调用方在 await MathJax startup 后构造（见 `createMathJaxEngine`），或自备等价实现。
- *   `convert` 返回 MathJax SVG 标记串（`fontCache:'none'` 内联字形）。
+ *   `convert` 返回 MathJax SVG 标记串（`fontCache:'none'` 内联字形）
  */
 export type MathJaxSvgEngine = {
   convert: (tex: string, options: { display: boolean }) => string;
@@ -9,7 +9,7 @@ export type MathJaxSvgEngine = {
 
 /**
  * `createMathJaxEngine` 的配置项
- * @description `packages` 会透传给 MathJax TeX input，默认只启用 `base` 包。
+ * @description `packages` 会透传给 MathJax TeX input，默认只启用 `base` 包
  */
 export type MathJaxEngineOptions = {
   /** MathJax TeX input packages。@default ['base'] */
@@ -32,7 +32,7 @@ type HandlerModule = { RegisterHTMLHandler: (adaptor: LiteAdaptor) => void };
  *   浏览器 / Node 通用），`fontCache:'none'` 内联字形路径便于解析。字面量形式让打包器（Vite / webpack）能静态
  *   解析并按需分包——dev / build 两端的浏览器侧动态 import 都可解析（变量 specifier 在浏览器无法解析裸模块名）；
  *   `mathjax-full` 仍是 optional peer：tex 库构建已将其 external，未安装时 import 失败 → 下方 catch 抛带安装提示
- *   的错误（同 `@napi-rs/canvas` optional peer 口径）。startup 异步故本工厂 async；引擎 `convert` 同步。
+ *   的错误（同 `@napi-rs/canvas` optional peer 口径）。startup 异步故本工厂 async；引擎 `convert` 同步
  */
 export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promise<MathJaxSvgEngine> => {
   let mods: {

@@ -11,13 +11,13 @@ const ARC_LENGTH_TOLERANCE = 1e-7;
 const MAX_INTEGRATION_DEPTH = 12;
 const ANGLE_BISECTION_STEPS = 48;
 
-/** 解析弧命令的实际有向扫描区间。 */
+/** 解析弧命令的实际有向扫描区间 */
 export const resolveArcSweep = (command: ArcCommand): { start: number; end: number } => {
   const counterClockwise = command.counterClockwise ?? command.endAngle < command.startAngle;
   return alignAngleSweep(command.startAngle, command.endAngle, counterClockwise);
 };
 
-/** 计算弧命令在给定参数角上的点，包含 ellipseArc rotation。 */
+/** 计算弧命令在给定参数角上的点，包含 ellipseArc rotation */
 export const arcCommandPointAt = (command: ArcCommand, angleDeg: number): IRPosition => {
   const angle = angleDeg * DEG_TO_RAD;
   const radiusX = command.kind === 'arc' ? command.radius : command.radiusX;
@@ -31,13 +31,13 @@ export const arcCommandPointAt = (command: ArcCommand, angleDeg: number): IRPosi
   ];
 };
 
-/** 椭圆参数角每变化一度对应的弧长速度，单位为 user units / degree。 */
+/** 椭圆参数角每变化一度对应的弧长速度，单位为 user units / degree */
 const ellipseSpeed = (radiusX: number, radiusY: number, angleDeg: number): number => {
   const angle = angleDeg * DEG_TO_RAD;
   return Math.hypot(radiusX * Math.sin(angle), radiusY * Math.cos(angle)) * DEG_TO_RAD;
 };
 
-/** 使用确定性的自适应 Simpson 积分计算椭圆参数角区间弧长。 */
+/** 使用确定性的自适应 Simpson 积分计算椭圆参数角区间弧长 */
 const integrateEllipseLength = (radiusX: number, radiusY: number, startAngle: number, endAngle: number): number => {
   const from = Math.min(startAngle, endAngle);
   const to = Math.max(startAngle, endAngle);
@@ -76,7 +76,7 @@ const integrateEllipseLength = (radiusX: number, radiusY: number, startAngle: nu
   return integrate(from, to, whole, ARC_LENGTH_TOLERANCE, 0);
 };
 
-/** 计算弧命令当前扫描区间的总长度。 */
+/** 计算弧命令当前扫描区间的总长度 */
 const arcLength = (command: ArcCommand, startAngle: number, endAngle: number): number => {
   if (command.kind === 'arc') {
     return Math.abs(endAngle - startAngle) * DEG_TO_RAD * Math.abs(command.radius);
@@ -84,7 +84,7 @@ const arcLength = (command: ArcCommand, startAngle: number, endAngle: number): n
   return integrateEllipseLength(Math.abs(command.radiusX), Math.abs(command.radiusY), startAngle, endAngle);
 };
 
-/** 从有向扫描起点沿弧长前进，反解对应参数角。 */
+/** 从有向扫描起点沿弧长前进，反解对应参数角 */
 const angleAtDistance = (command: ArcCommand, startAngle: number, endAngle: number, distance: number): number => {
   const totalLength = arcLength(command, startAngle, endAngle);
   if (totalLength <= DEFAULT_EPSILON) return startAngle;
@@ -109,14 +109,14 @@ const angleAtDistance = (command: ArcCommand, startAngle: number, endAngle: numb
   return startAngle + (endAngle - startAngle) * ((low + high) / 2);
 };
 
-/** 从起点按实际弧长裁剪命令。 */
+/** 从起点按实际弧长裁剪命令 */
 export const trimArcStart = (command: ArcCommand, distance: number): ArcCommand => {
   const sweep = resolveArcSweep(command);
   const startAngle = angleAtDistance(command, sweep.start, sweep.end, Math.max(0, distance));
   return { ...command, startAngle, endAngle: sweep.end };
 };
 
-/** 从终点按实际弧长反向裁剪命令。 */
+/** 从终点按实际弧长反向裁剪命令 */
 export const trimArcEnd = (command: ArcCommand, distance: number): ArcCommand => {
   const sweep = resolveArcSweep(command);
   const totalLength = arcLength(command, sweep.start, sweep.end);

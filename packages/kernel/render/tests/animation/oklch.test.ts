@@ -4,7 +4,7 @@ import { lerpColorOklch, sampleColorOklch } from '../../src/animation/oklch';
 
 /**
  * oklch 颜色插值（fill / stroke 动画核心数学）锁定测试：
- *   解析等价（hex3↔hex6 / rgb↔hex）、无法解析回退、色相 360° 环绕最短路径、预采样退化。
+ *   解析等价（hex3↔hex6 / rgb↔hex）、无法解析回退、色相 360° 环绕最短路径、预采样退化
  */
 
 /** `#rrggbb` → [r, g, b] 字节 */

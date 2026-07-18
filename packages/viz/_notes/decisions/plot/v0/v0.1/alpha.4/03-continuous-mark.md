@@ -4,7 +4,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../../../../notes/architecture/core-design.md)
+- 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md)
 
 ## 背景
 

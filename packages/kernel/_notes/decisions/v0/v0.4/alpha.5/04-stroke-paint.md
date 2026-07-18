@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-23 完工）
 - 决策日期：2026-06-23
-- 关联：[core v0.2-alpha.7 ADR-01 Paint 基础](../../v0.2/alpha.7/01-paint-basics.md) · [core-design.md §4.5 Scene 编译器](../../../../../../../notes/architecture/core-design.md#45-scene-编译器) · `packages/kernel/core/src/compile/paint.ts`
+- 关联：[core v0.2-alpha.7 ADR-01 Paint 基础](../../v0.2/alpha.7/01-paint-basics.md) · `packages/kernel/core/src/compile/paint.ts`
 
 ## 背景
 

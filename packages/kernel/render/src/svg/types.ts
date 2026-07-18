@@ -3,7 +3,7 @@ import type { PropertiesHyphen, SvgPropertiesHyphen } from 'csstype';
 /**
  * SVG 结构 / 几何属性表（手工维护，用 SVG 真实拼写）
  * @description 键名一律用 SVG 真名：几何 / defs 属性裸 SVG 本就是 camelCase（`viewBox` / `refX` /
- *   `markerWidth`...），故照写。`data-*` 是水合挂点（如 `data-retikz-id`）。
+ *   `markerWidth`...），故照写。`data-*` 是水合挂点（如 `data-retikz-id`）
  */
 export type SvgStructuralAttrs = {
   /** 元素 id（marker / clipPath / paint server 等被 `url(#id)` 引用） */
@@ -64,7 +64,7 @@ export type SvgStructuralAttrs = {
  * @description 手工小表（retikz 实际只用 ~20 个）。**不直接用 `csstype` 的 `SvgPropertiesHyphen` 作值类型**：
  *   csstype 把 SVG 呈现属性按 CSS 语义收得过死——`font-size` 等不收纯 number（SVG attribute 接受数字）、
  *   `dominant-baseline` 不含 SVG 专有值 `text-before-edge` / `text-after-edge`。故手工放宽，强类型靠 builder
- *   读 Scene 那端守。`csstype` 仍用于 `SvgStyle`（inline style）。
+ *   读 Scene 那端守。`csstype` 仍用于 `SvgStyle`（inline style）
  */
 export type SvgPresentationAttrs = {
   fill?: string;
@@ -104,7 +104,7 @@ export type SvgAttrs = SvgStructuralAttrs & SvgPresentationAttrs;
 /**
  * `SvgNode.style` 类型：仅承载含 `var()` 的颜色值（SVG attribute 不解析 CSS var，必须落 inline style）
  * @description 键用 CSS kebab 拼写（`fill` / `stroke`）；标准 CSS 属性走 `PropertiesHyphen`，SVG 呈现属性
- *   （`fill` / `stroke`）走 `SvgPropertiesHyphen`。
+ *   （`fill` / `stroke`）走 `SvgPropertiesHyphen`
  */
 export type SvgStyle = PropertiesHyphen & Partial<SvgPropertiesHyphen>;
 
@@ -135,7 +135,7 @@ export type SvgTag =
  * framework-neutral SVG 描述节点（`@retikz/render/svg` 的核心产物）
  * @description 公开但非持久化：第三方框架 adapter（Vue / Svelte / Solid）消费它，受 semver 约束；但它不是
  *   IR，不写盘、不进 core。`attrs` 的 key 一律用 SVG 真名（呈现属性 kebab、结构属性规范拼写），于是字符串 /
- *   Vanilla / 多框架逐字输出零转换，唯有 React 需把呈现属性 kebab→camelCase。
+ *   Vanilla / 多框架逐字输出零转换，唯有 React 需把呈现属性 kebab→camelCase
  */
 export type SvgNode = {
   /** 标签名 */

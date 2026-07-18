@@ -12,7 +12,7 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
  * ClipDefs 物化测试 + GroupPrim.clipRef 渲染
  * @description ClipResource 物化成 `<clipPath>` 内对应形状子元素（rect / circle / ellipse / polygon）；
  *   GroupPrim.clipRef 经 renderPrim group 分支物化成 `<g clip-path="url(#...)">`。
- *   仿 PaintDefs：直接调函数组件拿 ReactElement 检查 children。
+ *   仿 PaintDefs：直接调函数组件拿 ReactElement 检查 children
  */
 
 /** 调 ClipDefs 拿物化后的 clipPath 元素数组（过滤 falsy） */
@@ -30,7 +30,7 @@ const shapeChildrenOf = (clipPath: AnyEl): Array<AnyEl> => {
 /**
  * 构造一个 clip 资源（ClipResource）
  * @description shape 用 4 形状判别 union 的对象字面量；经 `as unknown as SceneResource`
- *   构造（资源表升 paint+clip 联合后此 cast 收紧为正常 ClipResource）。
+ *   构造（资源表升 paint+clip 联合后此 cast 收紧为正常 ClipResource）
  */
 const clipResource = (id: string, shape: unknown): SceneResource =>
   ({ kind: 'clip', id, shape }) as unknown as SceneResource;

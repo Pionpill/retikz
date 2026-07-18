@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-21
-- 关联：[v0 roadmap §Shape Registry 提案](../../roadmap.md#shape-registry-提案) · [core-design.md §1.2 AI 一等公民](../../../../../../../notes/architecture/core-design.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../alpha.1/02-node-index-anchor-resolution.md) · [v0.1-beta.1 ADR-03 geometry 共享 transform / 死 anchor 清理](../../v0.1/beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md) · [v0.1-beta.1 ADR-08 onWarn 收集器](../../v0.1/beta.1/08-compile-on-warn-collector.md)
+- 关联：[v0 roadmap §Shape Registry 提案](../../roadmap.md#shape-registry-提案) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../alpha.1/02-node-index-anchor-resolution.md) · [v0.1-beta.1 ADR-03 geometry 共享 transform / 死 anchor 清理](../../v0.1/beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md) · [v0.1-beta.1 ADR-08 onWarn 收集器](../../v0.1/beta.1/08-compile-on-warn-collector.md)
 
 > **前置依赖说明**：alpha.6（结构化 Target / Anchor）依赖本 ADR 先固化 anchor 接口。本 ADR 把 anchor 解释面收敛到 `ShapeDefinition.anchor(rect, name)`，alpha.6 的对象化 path target 直接消费同一入口，避免「内置 shape anchor 走旧路径、注册 shape anchor 走新路径」的双轨。是接口先后，非排期紧邻。
 

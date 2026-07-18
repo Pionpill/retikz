@@ -6,7 +6,7 @@ import type { HydrationHandler, RetikzEventValue } from '@retikz/render/hydratio
  *   按元素 `id` 收集后喂给 `createHydrationController`。每个 `on<Event>` 对应一个 {@link RetikzEventValue}：
  *   prop 名 = `on` + RetikzEventValue 首字母大写；签名是 {@link HydrationHandler} `(event, context)`——第二参
  *   携命中语义元素的 id / meta / 几何 / DOM element / 动画控制等（additive，旧式只用 `event` 仍可）。
- *   `<Node>` / `<Path>` / `<Scope>` 复用此类型；`<Coordinate>` 无可点面积、不带这些 props。
+ *   `<Node>` / `<Path>` / `<Scope>` 复用此类型；`<Coordinate>` 无可点面积、不带这些 props
  */
 export type HydrationEventProps = {
   /** 单击该图元（DOM `click`） */
@@ -33,7 +33,7 @@ export type HydrationEventProps = {
  * `HydrationEventProps` 的 prop 名 → {@link RetikzEventValue} 映射
  * @description 收集逻辑用它把组件上的 `on<Event>` props 翻译为注册表里的 RetikzEventValue 键
  *   （`onClick` → `click`、`onRightClick` → `rightClick`、`onPointerEnter` → `pointerEnter`）。
- *   单一来源，避免在收集器里散写字符串规则。
+ *   单一来源，避免在收集器里散写字符串规则
  */
 export const EVENT_PROP_TO_NAME = {
   onClick: 'click',

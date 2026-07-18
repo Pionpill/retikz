@@ -2,18 +2,18 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-14](./roadmap.md) · [core-design.md "core 错误信息原则"](../../../../../../../notes/architecture/core-design.md)
+- 关联：[v0.1-beta.1 plan TODO-14](./roadmap.md)
 
 > **范围**：把 path / position 编译里 20+ 处 silent `return null`（引用未定义节点 id / step < 2 / anchor 解析失败 / OffsetPosition / AtPosition / polar origin 解析失败等）补一道可观察通道——可选 `CompileOptions.onWarn` callback，不传时 dev 默认 `console.warn`、生产静默。保留"path 解析失败 path 消失"的现状行为，仅在沉默处补告警。
 
 ## 背景 / 约束
 
 - 路径解析失败处 silent `return null`，调用方只 `if (result) push(...)`——任一失败 path 静默从 Scene 消失、控制台零信息。用户写 `<Path><Step to="bogusId"/></Path>` 整条 path 消失，是调试体验最差点之一。
-- core-design.md 错误信息原则 "AI / LLM 一等公民、错误信息必须可调试"——silent fail 直接违背。
+- AI / LLM 一等公民要求错误信息可调试，silent fail 直接违背这一要求。
 
 ## 决策：引入可选 `onWarn` callback + 默认 dev `console.warn`
 
-所有 silent `return null` 点前先调 `options.onWarn?.(warning)`；`onWarn` 不传时按 `process.env.NODE_ENV` 自动选 dev `console.warn` / production 静默。被否决的备选：(B) 默认 throw / 不可关 console.warn——可能破坏依赖"silent fail = path 该消失"的用户代码；(C) 不动——调试体验持续最差、违背 core-design.md。
+所有 silent `return null` 点前先调 `options.onWarn?.(warning)`；`onWarn` 不传时按 `process.env.NODE_ENV` 自动选 dev `console.warn` / production 静默。被否决的备选：(B) 默认 throw / 不可关 console.warn——可能破坏依赖"silent fail = path 该消失"的用户代码；(C) 不动——调试体验持续最差、违背可诊断性要求。
 
 理由：可选 callback = 完全非破坏（不传时行为等价 + dev 暴露问题）；`CompileWarning.code` 机器可读让用户可分支处理；`path` 字段 IR locator 让用户定位到具体 JSX child；不引入 throw 路径。
 

@@ -135,7 +135,11 @@ Theme 只合并视觉 token。Scale domain、`domainPadding`、显式 tick 值�
 
 ## 技术原理
 
-> 上手阶段可跳过本节；想理解 `<Plot>` 怎么被编译，或要直接写 / 生成底层 IR 时再回来读。
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="想理解 `<Plot>` 怎么被编译，或要直接写 / 生成底层 IR 时再回来读。"
+/>
 
 `<Plot>` 自己不画任何图元。组合入口会先把 children（mark / guide / scale / coordinate）装配成一棵 **PlotSpec**，也就是 Tier 2 的高层 IR（全 JSON 可序列化，数据不在其中）。编译期再经 **lowering** 把 PlotSpec 下沉成 `@retikz/core` 的 Tier 1 IR（`<Scope>` / `<Node>` / `<Path>`），最后由 core 编译成 Scene 交给 renderer。spec 入口跳过装配，直接喂 PlotSpec。
 

@@ -78,15 +78,75 @@ import { Node } from '@retikz/react';
 
 ## 技术原理
 
-> 日常使用可以跳过本节；只有在点位报错或旋转方向不符合预期时再回来读。
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="想理解顶点展开、内容外接或 diamond 预设时再回来读。"
+/>
 
-### 正多边形先计算顶点（Sugar）
+本节只放大 Polygon 自己负责的两条局部机制；完整的 JSX → IR（中间表示） → Scene 管线见[架构](/kernel/concepts/design/principles)。
 
-`<RegularPolygon>` 会先根据中心、半径或边长计算所有顶点，然后展开成一条闭合 Path。`rotate` 改的是第一个顶点的起始角度，而不是 SVG transform。
+### 属性如何变成闭合 Path（Sugar）
 
-### diamond 是 polygon 的预设
+图中三组输入先收敛为同一个顶点环，再由唯一的主链展开成 Path：
 
-`<Node shape="diamond">` 在编译期规范化为 `polygon{ sides:4, rotate:0 }`——4 个顶点落在上下左右四个方向（`rotate:0` 下顶点起始角即 0°，按 `360/4` 均布到 0° / 90° / 180° / 270°），得到一个菱形。若要正置的方形需写 `rotate:45`。它对非正方形文字框仍是正菱形（而非拉伸）；裸字符串 `"diamond"` 和带参 `{ type:'polygon', params:{ sides:4, rotate:0 } }` 等价。
+<ComponentPreview files="polygon-sugar-flow" size="md" hideCode />
+
+`radius` 可以直接作为外接半径；`sideLength` 则先通过 `R = sideLength / (2·sin(π/sides))` 换算到同一半径。随后第 `k` 个顶点取 `rotate + k·360/sides` 的方向，`rotate` 直接烘焙进顶点坐标，不会再作为底层 Path 的 transform 透传。
+
+因此输出拓扑始终是一次 `move`、`sides - 1` 次 `line` 和一次 `cycle`。`center` 不是字面 `[x, y]`，或 `sides` 不是至少为 3 的整数时，会在生成顶点环之前报错。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'RegularPolygon 输入归一与 Path 展开',
+      path: 'packages/kernel/react/src/sugar/shapes/RegularPolygon.tsx',
+      startLine: 26,
+      endLine: 44,
+    },
+    {
+      label: '正多边形顶点计算',
+      path: 'packages/kernel/react/src/sugar/shapes/shape-helpers.ts',
+      startLine: 160,
+      endLine: 173,
+    },
+  ]}
+/>
+
+### 内框如何变成可连接轮廓（Node）
+
+沿主链看，Node 的内容尺寸先决定多边形要包住什么，再由 shape 参数决定用什么正多边形去包；上下两条输出表示同一套轮廓规则同时服务渲染与自动连接：
+
+<ComponentPreview files="polygon-node-flow" size="lg" hideCode />
+
+文字与 `padding` 先形成内容内框；`polygon` 形状实现再根据 `sides` 与 `rotate` 求出能完整外接这个内框的最小外接圆半径。所有顶点仍落在同一个圆上，所以长文本只会把正多边形整体放大，不会把它拉伸成不规则多边形。
+
+`cornerRadius` 不改变外接尺寸，而是在顶点环生成后应用倒角。同一套顶点与倒角规则既输出 Scene path，也用于从节点中心朝目标方向求边界交点，因此自动连接会落在圆角弧上。标准方位 anchor（`top`、`bottom` 等）仍取外接矩形；它们不等同于任意方向上的真实轮廓交点。
+
+`shape="diamond"` 只改变入口写法：编译器会先把它归一为 `polygon{ sides:4, rotate:0 }`，再进入完全相同的 provider 主链。4 个顶点从 0° 开始按 90° 均布，因此落在右、下、左、上四个方向；要让四边形正置，可显式写 `rotate:45`。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'diamond 预设归一',
+      path: 'packages/kernel/core/src/compile/node/shape.ts',
+      startLine: 41,
+      endLine: 49,
+    },
+    {
+      label: '内容内框的外接半径计算',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 63,
+      endLine: 79,
+    },
+    {
+      label: '轮廓输出、连接交点与方位 anchor',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 114,
+      endLine: 133,
+    },
+  ]}
+/>
 
 ## 相关
 

@@ -9,11 +9,11 @@ import { Step } from '../../kernel/components';
 import { pickPathVisual, polarXY, requireXY, resolveAngles } from './shape-helpers';
 
 /**
- * `<Sector>` 形态：扇形（wedge 经圆心闭合）；圆 / 椭圆；必给角度（三选二）。
+ * `<Sector>` 形态：扇形（wedge 经圆心闭合）；圆 / 椭圆；必给角度（三选二）
  * @description 实心扇形走 circlePath / ellipsePath 的 `closed="sector"`，圆心 = 游标，故 `center` 可为
  *   节点 id / 极坐标等任意 Target。给 innerRadius（圆）或 innerRadiusX + innerRadiusY（椭圆）画**空心扇形**
  *   （环形扇区 / donut 切片）；空心需算内 / 外弧端点，`center` 须 literal 笛卡尔。
- *   `label` 透传到弧 step，沿弧定位（`position` 缺省 midway）。
+ *   `label` 透传到弧 step，沿弧定位（`position` 缺省 midway）
  */
 export type SectorProps = PathVisualProps &
   AngleInput & {
@@ -32,7 +32,7 @@ export type SectorProps = PathVisualProps &
  * Sector sugar——扇形
  * @description 实心（无内半径）：`move(center) → circlePath/ellipsePath(closed="sector")`——圆心 = 游标，
  *   center 接任意 Target。空心（给内半径）：`move(外弧起点) → 外弧 → line(内弧终点) → 内弧(反向) → line(回外弧起点)`——
- *   末段用 line 回起点而非 cycle（内弧不在 hasTo 内，cycle 会从前一段闭合而错位），需 literal center 算端点。
+ *   末段用 line 回起点而非 cycle（内弧不在 hasTo 内，cycle 会从前一段闭合而错位），需 literal center 算端点
  */
 export const Sector: FC<SectorProps> = props => {
   const angles = resolveAngles(props, 'Sector', true);

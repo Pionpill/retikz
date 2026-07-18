@@ -7,7 +7,7 @@ import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
 
 /**
- * Path commands e2e snapshot 守门——锁住 IR → PathPrim.commands 输出。
+ * Path commands e2e snapshot 守门——锁住 IR → PathPrim.commands 输出
  * @description 12 个典型场景覆盖：line / fold / cycle / curve / cubic / bend / arc / circlePath / ellipsePath / arrow shrink / label / 多 sub-path
  * 拆 compile/path.ts 子文件 + findPrev O(n²)→O(n) 改造时本守门必须全过——任何 commands 数组变化即说明回归
  */

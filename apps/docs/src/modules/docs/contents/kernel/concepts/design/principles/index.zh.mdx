@@ -1,0 +1,99 @@
+---
+title: 架构
+description: 从库维护者角度判断能力归属、包边界、扩展完备性与完整执行流程。
+---
+
+本页是一张面向库维护者和扩展作者的架构检查表。它回答“一项能力应该由谁解决、边界在哪里、怎样证明已经形成完整闭环”；DSL、IR 与 Scene 的用户心智模型归[分层](/kernel/concepts/design/layers)讲解。
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本页"
+  description="只想先画图，可以继续阅读快速开始和组件文档；准备扩展 retikz、直接读写 IR 或判断新能力归属时再回来。"
+/>
+
+## 能力归属原则
+
+遇到新需求时，先判断它改变的是书写体验、共享绘图语义、高层领域模型、可替换编译策略，还是后端运行行为，再从第一责任 owner 开始设计。
+
+<ComponentPreview files="principles-placement" size="md" hideCode />
+
+图中箭头指向第一责任 owner，不代表一项能力只能改一个包。同一能力可以包含 authoring、contract、compile 与 runtime 接线，但每层语义只能有一个真源。
+
+| 需求信号                  | 第一责任 owner          | 边界失守信号                    |
+| ------------------------- | ----------------------- | ------------------------------- |
+| 更友好的 JSX / plain spec | React / Vanilla adapter | 两个 adapter 产生不同几何       |
+| 通用绘图语义              | `@retikz/core`          | adapter / renderer 重复布局算法 |
+| 高层领域模型              | domain composite        | chart / domain 字段进入 core IR |
+| 纯几何与数值算法          | `@retikz/math`          | math 反向依赖 schema 或 runtime |
+| SVG / Canvas 执行行为     | `@retikz/render`        | DOM / Canvas 对象进入 Scene     |
+| LaTeX 等可选下沉能力      | 独立 lowerer 包         | 重依赖成为 core 必选依赖        |
+
+核心约束是：上层包的底层能力来自 `@retikz/core` 或 `@retikz/math`。adapter 可以改变书写方式，domain 包可以保留高层 IR，但不能建立平行 IR、平行渲染语义或第二套几何底座。
+
+## 完备性门槛
+
+“能画出一个内置例子”不等于能力完备。每项能力在进入长期迭代前，都要同时回答四组问题：
+
+| 检查轴     | 必答问题                                                           | 不通过时的动作               |
+| ---------- | ------------------------------------------------------------------ | ---------------------------- |
+| 问题与归属 | 根问题是什么；哪个包拥有；明确不解决什么                           | 重新划分 owner 或缩小范围    |
+| 内部表达   | IR、纯计算、compile 是否能通用表达，不依赖 adapter / renderer 特判 | 下沉共享契约或拒绝局部补丁   |
+| 外部扩展   | 内置与自定义是否共享 Definition、registry、resolver 与诊断         | 补齐统一扩展链或说明闭合原因 |
+| 端到端闭环 | 输入、编译、Scene、renderer、adapter、测试与文档是否全部接通       | 列出缺口，不能用单端展示代替 |
+
+开放能力默认采用 `XxxDefinition → defineXxx → builtin + custom registry → unified dispatch`。完整扩展族、注入入口和异常语义查[扩展机制](/kernel/reference/runtime/extensions)；具体实现步骤归各能力分组末尾的扩展指南，不在本页重复。
+
+## 完整执行流程
+
+`compileToScene` 不会遍历 IR 后直接输出 SVG。它先把高层能力降到 Kernel，再建立本次编译专用的能力上下文，分阶段解决布局和引用，最后才组装 Scene。
+
+<ComponentPreview files="principles-compile" size="sm" hideCode />
+
+1. **作者输入生成 IR**：React JSX、Vanilla plain spec 与外部 IR 归一为同一份 JSON 契约。
+2. **创建编译上下文**：解析文字度量、warning、lowerer 与本次调用注入的 provider registries，不写全局状态。
+3. **Composite lowering**：Tier 2 节点经 schema 校验和 definition 展开成 Tier 1 Kernel IR。
+4. **布局与命名空间**：解析 Node、Coordinate、Scope 的位置、形状、边界和样式，登记可引用 layout。
+5. **延迟解析 Path**：节点就位后再解析 anchor、generator、arrow、ribbon 与 path kind，保持声明顺序。
+6. **组装 Scene 与 runtime**：合并 primitive、资源、动画和 bounds；SVG / Canvas、hydration 与 animation 在 Scene 之后执行。
+
+这个顺序界定了职责：parser 不读取 runtime registry，renderer 不重新解释 IR，adapter 不复制布局。新能力如果必须跨过这些边界才能工作，应先修正契约，而不是增加特判。
+
+## 包职责
+
+Kernel 六个包按能力提供方向组成单向依赖链。每个包不仅要说明“做什么”，还要明确“不做什么”，防止后续迭代把便利功能无限叠加到当前包。
+
+<ComponentPreview files="principles-packages" size="sm" hideCode />
+
+| 包                | 解决什么                                      | 不拥有                        |
+| ----------------- | --------------------------------------------- | ----------------------------- |
+| `@retikz/math`    | 零依赖几何、曲线、矩阵与数值算法              | IR、schema、绘图业务语义      |
+| `@retikz/core`    | IR / Scene 契约、provider contract 与编译语义 | React 生命周期、DOM、Canvas   |
+| `@retikz/render`  | SVG、Canvas、hydration 与 animation runtime   | 作者 DSL、IR 语义和布局算法   |
+| `@retikz/react`   | JSX adapter、`<Layout>` 宿主与 React 接线     | 平行 IR、平行 renderer 语义   |
+| `@retikz/vanilla` | plain spec、mount、hydrate 与 SSR             | 与 React 不同的几何或编译结果 |
+| `@retikz/tex`     | 把 LaTeX 降成 renderer-neutral glyph paths    | 通用文字模型和 renderer 特判  |
+
+遇到子包现有能力不足时，先判断它是组合问题、当前域的扩展点缺口，还是下层通用能力缺口。只有第一种留在调用方；后两种分别补当前域 contract 或下沉到真正 owner。
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/concepts/design/layers">
+    <span className="font-semibold">分层</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">从用户视角理解 DSL、IR、Scene 与 renderer</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/design/composite">
+    <span className="font-semibold">复合</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 domain 高层节点如何保留意图并下沉</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/runtime/extensions">
+    <span className="font-semibold">扩展机制</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      查询 Definition、registry、host lowerer 与具体指南
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema">
+    <span className="font-semibold">结构</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查询当前 IR schema 与字段契约</span>
+  </LinkedCard>
+</div>

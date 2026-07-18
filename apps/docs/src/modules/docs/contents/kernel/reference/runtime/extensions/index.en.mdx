@@ -1,0 +1,99 @@
+---
+title: Extension Mechanisms
+description: Look up capability families, injection points, selection keys, and guides for definitions, registries, and host lowerers.
+---
+
+This page is an extension-point dictionary. Use it to decide which mechanism owns a custom capability, where it is injected, and what remains in IR. Step-by-step implementations live in the extension guide at the end of each capability group. See [Architecture Principles](/kernel/concepts/design/principles) for ownership and completeness checks.
+
+> Extension functions and registries never enter IR. IR stores serializable keys and parameters; the host injects behavior during compile or runtime.
+
+## Extension models
+
+| Model               | Capability families                                    | Stage                      |
+| ------------------- | ------------------------------------------------------ | -------------------------- |
+| Definition registry | shape, boundary, clip, arrow, pattern, path, composite | compile                    |
+| Runtime registry    | easing, animation property                             | render / animation runtime |
+| Host lowerer        | optional heavy lowering such as TeX                    | early compile              |
+
+Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custom definitions merge into a compile-local registry. Runtime registries hold host functions outside the compile contract. A host lowerer supplies an optional integration without expanding the general primitive model.
+
+## Capability index
+
+| Capability         | IR selection key   | Injection point                      |
+| ------------------ | ------------------ | ------------------------------------ |
+| Shape              | `Node.shape`       | `CompileOptions.shapes`              |
+| Boundary           | `Node.boundary`    | `CompileOptions.boundaries`          |
+| Clip               | `Scope.clip.kind`  | `CompileOptions.clips`               |
+| Arrow              | arrow shape name   | `CompileOptions.arrows`              |
+| Pattern            | pattern shape name | `CompileOptions.patterns`            |
+| Path generator     | generator name     | `CompileOptions.pathGenerators`      |
+| Path kind          | `Path.kind`        | `CompileOptions.pathKinds`           |
+| Ribbon profile     | profile name       | `CompileOptions.ribbonWidthProfiles` |
+| Composite          | `namespace + type` | `CompileOptions.composites`          |
+| Easing             | easing name        | `<Layout easings>`                   |
+| Animation property | property name      | `<Layout animationProperties>`       |
+| TeX lowerer        | math text payload  | `CompileOptions.lowerTex`            |
+
+## Diagnostics
+
+- Empty or duplicate keys in one registry throw immediately; custom items cannot silently replace built-ins.
+- Missing ordinary Definition keys fail loudly and list registered items.
+- Missing composites warn and skip the node during full compile; standalone lowering promotes the condition to an error.
+- Schema and payload validation run before consuming a definition, and diagnostics identify the capability family and lookup key.
+
+## Guides
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/components/shapes/custom-shape">
+    <span className="font-semibold">Custom Shapes</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      ShapeDefinition: node contours, boundaries, and anchors
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/node/custom-boundary">
+    <span className="font-semibold">Custom Boundaries</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      BoundaryDefinition: connection surfaces independent of visual shape
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/layout/custom-clip">
+    <span className="font-semibold">Custom Clips</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      ClipDefinition: named clipping geometry for Scope
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/custom-arrow">
+    <span className="font-semibold">Custom Arrows</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      ArrowDefinition: marker geometry at path endpoints
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/effects/custom-pattern">
+    <span className="font-semibold">Custom Patterns</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">PatternDefinition: reusable fill motifs</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/custom-path">
+    <span className="font-semibold">Custom Paths</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      PathKindDefinition: whole-path processing strategies
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/path-generator">
+    <span className="font-semibold">Path Generators</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      PathGeneratorDefinition: parameterized curve commands
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/concepts/design/composite">
+    <span className="font-semibold">Tier 2 Composites</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      CompositeDefinition: lower high-level nodes into Tier 1
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/effects/custom-animation">
+    <span className="font-semibold">Custom Animation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Runtime registries for easings and animated properties
+    </span>
+  </LinkedCard>
+</div>

@@ -16,30 +16,30 @@ import {
 import { DEFAULT_NODE_DISTANCE } from './constants';
 import { inverseTransformChain } from './transform';
 
-/** between 端点的世界坐标解析器，由 path 编译侧注入。 */
+/** between 端点的世界坐标解析器，由 path 编译侧注入 */
 export type ResolveBetweenGlobal = (
   between: IRBetweenPosition,
   namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform>,
 ) => IRPosition | null;
 
-/** position 解析所需的编译上下文。 */
+/** position 解析所需的编译上下文 */
 export type ResolvePositionContext = {
-  /** id 查询栈。 */
+  /** id 查询栈 */
   namespaceStack: NamespaceStack;
-  /** 相对定位默认距离。 */
+  /** 相对定位默认距离 */
   nodeDistance?: number;
-  /** 当前 scope 累积 transform。 */
+  /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
-  /** between 端点的全局坐标解析器。 */
+  /** between 端点的全局坐标解析器 */
   resolveBetweenGlobal?: ResolveBetweenGlobal;
 };
 
-/** 从 position referent 中提取诊断用节点 id；只读输入，不解析 namespace。 */
+/** 从 position referent 中提取诊断用节点 id；只读输入，不解析 namespace */
 export const nodeIdFromPositionReferent = (ref: unknown): string | undefined =>
   typeof ref === 'string' ? ref : nodeIdFromResolvableTarget(ref);
 
-/** 从可解析 target / position 形态中提取一个代表性节点 id，供 unresolved warning 使用。 */
+/** 从可解析 target / position 形态中提取一个代表性节点 id，供 unresolved warning 使用 */
 export const nodeIdFromResolvableTarget = (target: unknown): string | undefined => {
   if (isNodeTargetLike(target)) return target.id;
   if (isBetweenPositionLike(target)) {
@@ -53,8 +53,8 @@ export const nodeIdFromResolvableTarget = (target: unknown): string | undefined 
 };
 
 /**
- * 把 IR 位置解析为笛卡尔坐标。
- * @description `scopeChain` 非空时返回当前 scope 局部坐标；解析失败返回 null。
+ * 把 IR 位置解析为笛卡尔坐标
+ * @description `scopeChain` 非空时返回当前 scope 局部坐标；解析失败返回 null
  */
 export const resolvePosition = (pos: IRResolvablePosition, context: ResolvePositionContext): IRPosition | null => {
   const { namespaceStack, nodeDistance = DEFAULT_NODE_DISTANCE, scopeChain = [], resolveBetweenGlobal } = context;

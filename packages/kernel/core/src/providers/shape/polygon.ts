@@ -50,7 +50,7 @@ const vertexAngles = (params: PolygonParams): Array<number> => {
   return out;
 };
 
-/** 顶点角的 |cos| 最大值，用于由 AABB 半宽反推外接半径。 */
+/** 顶点角的 |cos| 最大值，用于由 AABB 半宽反推外接半径 */
 const maxAbsCos = (params: PolygonParams): number => {
   let max = 0;
   for (const angle of vertexAngles(params)) {
@@ -61,8 +61,8 @@ const maxAbsCos = (params: PolygonParams): number => {
 };
 
 /**
- * 计算能容纳内框的正多边形外接圆半径。
- * @description polygon 是文本容器 shape，尺寸由内框推导而不是由 params 直接指定。
+ * 计算能容纳内框的正多边形外接圆半径
+ * @description polygon 是文本容器 shape，尺寸由内框推导而不是由 params 直接指定
  */
 const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number => {
   const { sides } = params;
@@ -82,8 +82,8 @@ const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number 
 const circumradiusFromRect = (bounds: Rect, params: PolygonParams): number => bounds.width / 2 / maxAbsCos(params);
 
 /**
- * 正多边形顶点的世界坐标。
- * @description 顶点均布在外接圆上，按 params.rotate 自旋。
+ * 正多边形顶点的世界坐标
+ * @description 顶点均布在外接圆上，按 params.rotate 自旋
  */
 const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): Array<Position> =>
   vertexAngles(params).map(deg => {
@@ -92,9 +92,9 @@ const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): A
   });
 
 /**
- * polygon 注册项：正多边形文本容器。
+ * polygon 注册项：正多边形文本容器
  * @description sides/rotate 决定顶点环，cornerRadius 做顶点倒角；命名 anchor 走外接 AABB。
- *   scaleParams 只缩 cornerRadius，不缩 sides / rotate。diamond 由 compile 解析为 polygon preset。
+ *   scaleParams 只缩 cornerRadius，不缩 sides / rotate。diamond 由 compile 解析为 polygon preset
  */
 export const polygon = defineShape<PolygonParams>({
   name: 'polygon',

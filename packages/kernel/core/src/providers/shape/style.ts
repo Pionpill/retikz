@@ -51,7 +51,7 @@ const withoutCornerRadius = (style: ShapeStylePassthrough): Omit<ShapeStylePasst
   return passthroughStyle;
 };
 
-/** 将 shape style 落到 path primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth。 */
+/** 将 shape style 落到 path primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth */
 export const pathPrimitiveStyle = (
   style: ResolvedShapeStyle,
   options?: { fill?: PathPrim['fill'] },
@@ -65,7 +65,7 @@ export const pathPrimitiveStyle = (
   };
 };
 
-/** 将 shape style 落到 ellipse primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth。 */
+/** 将 shape style 落到 ellipse primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth */
 export const ellipsePrimitiveStyle = (style: ResolvedShapeStyle): EllipsePrimitiveStyle => {
   const { fill, stroke, strokeWidth, ...passthroughStyle } = style;
   return {
@@ -76,7 +76,7 @@ export const ellipsePrimitiveStyle = (style: ResolvedShapeStyle): EllipsePrimiti
   };
 };
 
-/** 将 shape style 落到 rect primitive；用调用方圆角覆盖 style.cornerRadius。 */
+/** 将 shape style 落到 rect primitive；用调用方圆角覆盖 style.cornerRadius */
 export const rectPrimitiveStyle = (
   style: ResolvedShapeStyle,
   cornerRadius: RectPrim['cornerRadius'],

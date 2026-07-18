@@ -9,7 +9,7 @@ import { buildMarkerPrim } from './marker-prim';
  * 端点级已解析 marker spec → `<marker>` SvgNode
  * @description emit-in-compile 物化：marker 内部几何来自 `spec.marker`（core 已产 `MarkerPrimitive[]`），
  *   wrapper 参数来自 `spec.baseSize`（viewBox `0 0 baseSize baseSize` + refY = baseSize/2）/ `spec.refX` /
- *   `spec.markerWidth` / `spec.markerHeight`。`overflow=visible` 允许空心描边落在标准几何边界外。
+ *   `spec.markerWidth` / `spec.markerHeight`。`overflow=visible` 允许空心描边落在标准几何边界外
  */
 export const buildArrowMarker = (id: string, spec: ResolvedArrowEndSpec): SvgNode => ({
   tag: 'marker',

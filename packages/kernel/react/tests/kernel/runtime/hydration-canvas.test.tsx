@@ -11,7 +11,7 @@ import { createGeometryContext } from '../../helpers/geometry-context';
  * @description <Layout renderer="canvas"> 在 <canvas> 上 dispatch 命中节点的 pointer / click 事件 →
  *   对应 onClick 触发。canvas 无逐图元 DOM，定位走 hitTest + client→Scene 逆 meet-fit 坐标映射。
  *   注入几何忠实 context（充当原生 canvas 原语）+ getBoundingClientRect harness，hitTest / 控制器 /
- *   坐标映射真实逻辑仍受测。
+ *   坐标映射真实逻辑仍受测
  */
 
 const SIZE = 200;

@@ -7,7 +7,7 @@ import { defineBuiltinProviderArray } from '../registry';
 
 export type BuiltinRibbonWidthProfileName = 'bulge';
 
-/** 中点鼓起 / 收窄的内置宽度 profile。 */
+/** 中点鼓起 / 收窄的内置宽度 profile */
 const bulge = defineRibbonWidthProfile({
   name: 'bulge',
   paramsSchema: z.strictObject({
@@ -20,7 +20,7 @@ const bulge = defineRibbonWidthProfile({
   },
 });
 
-/** 内置 ribbon width profile 注册项。 */
+/** 内置 ribbon width profile 注册项 */
 export const BUILTIN_RIBBON_WIDTH_PROFILES = defineBuiltinProviderArray<
   RibbonWidthProfileDefinition,
   BuiltinRibbonWidthProfileName
