@@ -1,84 +1,87 @@
 ---
 title: 扩展机制
-description: 总览 Definition、registry 与 host lowerer 三类扩展模型，并索引各领域的自定义能力。
+description: 查询 Definition、registry 与 host lowerer 的能力族、注入入口、选择键和具体扩展指南。
 ---
 
-本页从运行时视角解释怎样**扩展** retikz：内置组件覆盖不到的能力，通过宿主注入的扩展点补上。读者是发第三方包、做宿主集成、或给 retikz 加新基元的人；日常画图仍从[组件](/kernel/components/layout)开始，各领域的具体扩展页也放在对应组件分组末尾。
+本页是扩展点词典：用于快速判断一个自定义能力属于哪种机制、从哪里注入、IR 保存什么。完整实现步骤放在对应能力分组末尾的扩展指南；能力归属和完备性判断见[架构](/kernel/concepts/design/principles)。
 
-> 扩展函数和 registry **不写进 IR**。IR 始终只保存可序列化的名字、kind 与参数；宿主再通过 `CompileOptions`、`<Layout>` props 或可选 lowerer 注入实际行为。
+> 扩展函数和 registry 不写进 IR。IR 只保存可序列化的 key 与参数，宿主在编译或运行时注入实际行为。
 
-## 职责一览
+## 扩展模型
 
-| 主题           | 扩展什么                                                                                   | 何时用                                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| 自定义形状     | 注册新的节点形状（`ShapeDefinition` + `CompileOptions.shapes`）                            | 内置 6 注册形状 + 2 preset 之外要 cylinder / cloud 等（hexagon 已可用内置 `polygon{ sides:6 }` 表达） |
-| 自定义连接面   | 注册新的节点连接面（`BoundaryDefinition` + `CompileOptions.boundaries`）                   | 节点视觉形状不变，但连线只应接到语义端口、圆形外轮廓或其它独立连接面时                                |
-| 自定义裁剪区   | 注册新的 scope 裁剪区（`ClipDefinition` + `CompileOptions.clips`）                         | Scope 裁剪需要可复用的命名 mask、path clip 或业务视窗时                                               |
-| 自定义箭头     | 注册新的箭头样式（`defineArrow` / `ArrowDefinition` + `CompileOptions.arrows`）            | 需要 bracket / 业务箭头等新端点样式                                                                   |
-| 自定义图案     | 注册新的填充图案（`definePattern` / `PatternDefinition` + `CompileOptions.patterns`）      | 需要 cross / 条纹 / 特殊 motif                                                                        |
-| 自定义路径     | 注册新的 Path kind（`definePathKind` / `PathKindDefinition` + `CompileOptions.pathKinds`） | 需要把整条 Path 当作高亮、双线、业务关系或其它关系形态处理                                            |
-| 路径生成器     | 注册新的曲线生成器（`PathGeneratorDefinition` + `CompileOptions.pathGenerators`）          | 需要 parabola / 波形 / 自定义曲线                                                                     |
-| 复合（Tier 2） | 注册 Tier 2 高层节点（`CompositeDefinition` + `CompileOptions.composites`）                | domain 包把高层节点 lowering 成 Tier 1 基础图元，详见 [复合](/kernel/reference/composites)            |
-| 自定义缓动     | 注册新的缓动曲线（`EasingRegistry` + `<Layout easings>`）                                  | 需要 spring 等内置之外的缓动曲线                                                                      |
-| 自定义动画属性 | 注册新的动画属性通道（`AnimationPropertyDefinition` + `<Layout animationProperties>`）     | 需要 blur 等内置之外的动画属性                                                                        |
+| 模型                | 适用能力                                               | 生效阶段                   |
+| ------------------- | ------------------------------------------------------ | -------------------------- |
+| Definition registry | shape、boundary、clip、arrow、pattern、path、composite | compile                    |
+| Runtime registry    | easing、animation property                             | render / animation runtime |
+| Host lowerer        | TeX 等可选重型下沉                                     | compile 前段               |
 
-## 三类扩展模型
+Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置和自定义 definitions 合并成一次编译专用的 registry。Runtime registry 保存宿主函数，不进入 compile contract。Host lowerer 是可选宿主能力，不应为了单个集成扩张通用图元契约。
 
-扩展点按机制分三类；判断一个能力属于哪类，就知道它怎么定义、何时生效：
+## 能力索引
 
-- **Definition 扩展**（形状 / 连接面 / 裁剪区 / 箭头 / 图案 / 自定义路径 / 路径生成器 / 复合）：用 `xxxDefinition` 定义，经 `CompileOptions` / `<Layout>` 注入，编译期生效，IR 里只留名字、kind 或 operation。provider 统一以 definition 数组注入；形状 / 连接面 / 箭头 / 图案 / 路径生成器用 `name` 做 key，clip 和 path kind 用 schema 的 `kind` literal，复合用显式 `namespace` + `type`。任意同名 collision 都直接报错，内置名不可覆盖。
-- **Registry 扩展**（缓动 / 动画属性）：注入面是 `<Layout>` 的轻量 registry，运行时在渲染器内生效，不进 compile。缓动没有 `EasingDefinition`——值就是 cubic-bezier 元组或函数；动画属性要同时定义插值与后端落地，才用 `AnimationPropertyDefinition`。
-- **Host lowerer**（TeX 公式）：`CompileOptions.lowerTex` 是可选宿主能力，把公式在编译期降成基础 path，不属于通用图元扩展；缺失时可诊断降级。
+| 能力               | IR 选择键          | 注入入口                             |
+| ------------------ | ------------------ | ------------------------------------ |
+| Shape              | `Node.shape`       | `CompileOptions.shapes`              |
+| Boundary           | `Node.boundary`    | `CompileOptions.boundaries`          |
+| Clip               | `Scope.clip.kind`  | `CompileOptions.clips`               |
+| Arrow              | arrow shape name   | `CompileOptions.arrows`              |
+| Pattern            | pattern shape name | `CompileOptions.patterns`            |
+| Path generator     | generator name     | `CompileOptions.pathGenerators`      |
+| Path kind          | `Path.kind`        | `CompileOptions.pathKinds`           |
+| Ribbon profile     | profile name       | `CompileOptions.ribbonWidthProfiles` |
+| Composite          | `namespace + type` | `CompileOptions.composites`          |
+| Easing             | easing name        | `<Layout easings>`                   |
+| Animation property | property name      | `<Layout animationProperties>`       |
+| TeX lowerer        | math text payload  | `CompileOptions.lowerTex`            |
 
-## 扩展点索引
+## 诊断约定
+
+- 同一 registry 的空 key 或重复 key 立即报错，自定义项不能静默覆盖内置项。
+- 普通 Definition 找不到 key 时 fail-loud，并列出已注册项。
+- 未注册 composite 在完整 compile 中产生 warning 并跳过该节点；独立 lowering 会提升为错误。
+- schema 或 payload 校验发生在 definition 消费前，错误应包含能力族与 lookup key。
+
+## 指南入口
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/components/shapes/custom-shape">
     <span className="font-semibold">自定义形状</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义节点形状的 ShapeDefinition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">ShapeDefinition：节点轮廓、边界与锚点</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/node/custom-boundary">
     <span className="font-semibold">自定义连接面</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      注册 / 注入只影响连线端点的 BoundaryDefinition
+      BoundaryDefinition：独立于视觉 shape 的连线表面
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/layout/custom-clip">
     <span className="font-semibold">自定义裁剪区</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      注册 / 注入控制 scope 裁剪区的 ClipDefinition
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">ClipDefinition：Scope 的命名裁剪形状</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/custom-arrow">
     <span className="font-semibold">自定义箭头</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义箭头样式的 ArrowDefinition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">ArrowDefinition：路径端点 marker 几何</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/effects/custom-pattern">
     <span className="font-semibold">自定义图案</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      注册 / 注入自定义填充图案的 PatternDefinition
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">PatternDefinition：可复用填充 motif</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/custom-path">
     <span className="font-semibold">自定义路径</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      注册 / 注入接管整条 Path 的 PathKindDefinition
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">PathKindDefinition：整条 Path 的处理策略</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/path-generator">
     <span className="font-semibold">路径生成器</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      注册 / 注入自定义曲线生成器的 PathGeneratorDefinition
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">PathGeneratorDefinition：参数化曲线命令</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/reference/composites">
-    <span className="font-semibold">复合（Tier 2）</span>
+  <LinkedCard href="/kernel/concepts/design/composite">
+    <span className="font-semibold">复合</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      注册 Tier 2 高层节点的 CompositeDefinition，经 lowering 下沉到 Tier 1
+      CompositeDefinition：Tier 2 高层节点 lowering
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/effects/custom-animation">
     <span className="font-semibold">自定义动画</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册自定义缓动曲线与动画属性通道</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">缓动曲线与动画属性 runtime registry</span>
   </LinkedCard>
 </div>

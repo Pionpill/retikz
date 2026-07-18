@@ -1,6 +1,6 @@
 # v0.4.0-alpha.5 路线：LaTeX 数学公式 `@retikz/tex`（E）
 
-> 写于 2026-06-16。承接 [v0.4 roadmap 候选 E「数学公式」](../roadmap.md#e--数学公式latex2026-06-12-方向落地靠后)（方向已定：MathJax SVG → lowering 成路径，独立包 + optional peer）。
+> 写于 2026-06-16。承接 [v0.4 历史候选 E「数学公式」](../history.md#e--数学公式2026-06-12-方向)（方向已定：MathJax SVG → lowering 成路径，独立包 + optional peer）。
 >
 > 关联：[`v0.4 roadmap`](../roadmap.md) · `compile/compile.ts`（`options.lowerMath` 注入）· `compile/node.ts`（内容路径）· `ir/text.ts`（行内容模型）· `primitive/{group,path}.ts`
 

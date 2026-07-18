@@ -10,7 +10,7 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 ## 何时用
 
 - `develop-document` 阶段完成后，进入 wrapup 前
-- `docs-doc-principle` / `docs-doc-component` / `docs-doc-example` / `docs-doc-group` 产出初稿后
+- `docs-doc-principle` / `docs-doc-component` / `docs-doc-extension` / `docs-doc-example` / `docs-doc-group` 产出初稿后
 - 用户单独说“审一下这篇文档 / 这个 docs 改动 / 这些 demo”
 - 大规模文档重构后，想确认没有把页面写成作者自嗨的内部说明
 
@@ -32,6 +32,7 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 ### 1. 页型结构
 
 - 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 6 段顺序：Usage / Composition / Examples / How it works / API Reference / Related
+- 扩展指南是否符合 [`docs-doc-extension`](../docs-doc-extension/SKILL.md)：适用边界 / 定义 / 注入 / 执行机制 / 错误与限制 / API / 相关，并证明内置与自定义同路
 - 示例页是否符合 [`docs-doc-example`](../docs-doc-example/SKILL.md) 的 6 段结构：引言 hero / Prompt / 过程 / 能力 / Limitations / Related
 - 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedCard 子页索引
 - Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程

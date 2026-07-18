@@ -17,12 +17,12 @@ All published retikz packages are ESM-only and require Node.js 24 or newer.
 
 Complete the four-step example first, then choose the next page for your current task:
 
-| Page                                                       | When to read                                                                                               |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Introduction**                                           | Understand what retikz solves and the mental model of nodes, paths, and shared IR                          |
-| **Concepts**                                               | Learn reusable rules such as positioning, anchors, layers, and animation                                   |
-| **Components / Examples**                                  | Look up a specific API or see a complete figure decomposed from an idea into primitives                    |
-| **[Technical Principles](/kernel/principles) / Reference** | Optional; read it when extending retikz, working with IR directly, debugging compilation, or using schemas |
+| Page                                                                          | When to read                                                                                               |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Introduction**                                                              | Understand what retikz solves and the mental model of nodes, paths, and shared IR                          |
+| **Concepts**                                                                  | Learn reusable rules such as positioning, anchors, layers, and animation                                   |
+| **Components / Examples**                                                     | Look up a specific API or see a complete figure decomposed from an idea into primitives                    |
+| **[Architecture Principles](/kernel/concepts/design/principles) / Reference** | Optional; read it when extending retikz, working with IR directly, debugging compilation, or using schemas |
 
 You can also open the AI panel from the top AI button and ask about the current page, selected code, or an API name. The docs site is fully static and does not provide an LLM service; enter your own API key in the panel, and the site only forwards requests from your browser to the model provider you choose.
 
@@ -102,7 +102,7 @@ Keep four rules in mind before moving on:
       Understand tracks, presets, playback controls, and static fallback
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/principles">
+  <LinkedCard href="/kernel/concepts/design/principles">
     <span className="font-semibold">Technical Principles</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Explore the internal flow when extending retikz, working with IR, or debugging compilation

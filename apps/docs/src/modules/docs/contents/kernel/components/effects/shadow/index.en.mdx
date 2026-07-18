@@ -69,7 +69,7 @@ Priority is always: **explicit field > preset > default**. The default color is 
 
 The two `shadow` forms exist only at the input boundary. During compile, a preset expands into offsets, blur, and color, then explicit object fields override those values one by one. The result converges on one resolved shadow description attached to a Node shape or Path main path, so renderers never need to understand preset names.
 
-The figure isolates shadow's local responsibility. See [Principles](/kernel/principles) for the complete JSX / IR → Scene pipeline.
+The figure isolates shadow's local responsibility. See [Architecture Principles](/kernel/concepts/design/principles) for the complete JSX / IR → Scene pipeline.
 
 <ComponentPreview files="shadow-pipeline" size="xl" hideCode />
 

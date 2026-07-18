@@ -28,6 +28,7 @@ import {
   irJsonOverrides,
   resolveControlsKey,
   resolveDemoKey,
+  resolvePreviewControlContract,
   resolvePreviewControls,
   vanillaModules,
   vanillaOverrides,
@@ -72,10 +73,13 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const controlKey =
     segments && !controlsDisabled ? resolveControlsKey(segments, explicitControlsName ?? name, lang) : null;
   const controlModule = controlKey ? controlModules[controlKey] : undefined;
+  const demoControlContract = mod?.previewControlContract
+    ? resolvePreviewControlContract({ previewControlContract: mod.previewControlContract })
+    : undefined;
   const moduleControls = controlsDisabled
     ? undefined
     : explicitControlsName === null
-      ? (mod?.previewControls ?? resolvePreviewControls(controlModule))
+      ? (demoControlContract?.controls ?? mod?.previewControls ?? resolvePreviewControls(controlModule))
       : resolvePreviewControls(controlModule);
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;

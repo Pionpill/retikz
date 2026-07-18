@@ -65,7 +65,7 @@ import { Node } from '@retikz/react';
 
 `shadow` 的两种写法只存在于输入阶段。编译时，预设先展开为位移、模糊和颜色，随后由对象中的显式字段逐项覆盖；最终结果收敛为一份统一的阴影描述，再附着到 Node shape 或 Path 主路径。renderer（渲染后端）因此不需要理解预设名称。
 
-下图只截取 shadow 自身的局部职责；完整的 JSX / IR → Scene 管线见[技术原理](/kernel/principles)。
+下图只截取 shadow 自身的局部职责；完整的 JSX / IR → Scene 管线见[架构](/kernel/concepts/design/principles)。
 
 <ComponentPreview files="shadow-pipeline" size="xl" hideCode />
 

@@ -113,6 +113,28 @@ export type PreviewInputControlConfig = {
 /** 常见预览控件的声明式配置。 */
 export type PreviewControlConfig = PreviewSelectControlConfig | PreviewInputControlConfig;
 
+/** 一组可复用的预览控件状态。 */
+export type PreviewControlPreset = {
+  /** preset 的稳定 id。 */
+  id: string;
+  /** 展示给用户的文本。 */
+  label: string;
+  /** 按 control id 写入的值。 */
+  values: Readonly<Record<string, string>>;
+};
+
+/** 可交互 demo 的稳定文档契约。 */
+export type PreviewControlContract = {
+  /** 声明式控件与自定义插槽。 */
+  controls: Array<PreviewControlConfig | PreviewControlSlot>;
+  /** 无交互环境、截图与测试使用的 canonical 状态。 */
+  canonicalValues: Readonly<Record<string, string>>;
+  /** 可选的语义化状态组合。 */
+  presets?: Array<PreviewControlPreset>;
+  /** 这些控件直接解释的公开 API。 */
+  relatedApis: Array<string>;
+};
+
 /** 自定义预览控件的共享值状态。 */
 export type PreviewControlState = {
   values: Record<string, string>;

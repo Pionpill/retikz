@@ -168,7 +168,7 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 仍服从 principle 的「文字精简、表格 / 列表 / 代码块优先」规则。本节常用的几种表达：
 
 - **概念性插图**：`<ComponentPreview hideCode>` 当叙述图，**用 retikz 自绘逻辑图**，别引第三方截图 / Mermaid / draw.io
-  - 图只解释当前子节的一个局部机制，在组件职责边界停止；完整 JSX → IR → Scene 管线链接 `/kernel/principles`，不要在组件页重复绘制
+  - 图只解释当前子节的一个局部机制，在组件职责边界停止；完整 JSX → IR → Scene 管线链接 `/kernel/concepts/design/principles`，不要在组件页重复绘制
   - 节点是否有框按 [`docs-figure-contract`](../docs-figure-contract/SKILL.md) 的语义规则选择，整图保持同一种边界模式；需要解释实现逻辑时继续读 [`docs-figure-logic`](../docs-figure-logic/SKILL.md)
   - 多用箭头 / 虚线 / 浅色区域分块表达"流程 / 包含 / 隔离 / 投影"等抽象语义；不要追求像素级精确，节点位置以"读懂关系"为准
 - **图文衔接**：图前用一两句说明观察重点，图后说明该机制带来的用户可见结果、边界或排查方法；不能只放一张无上下文的图

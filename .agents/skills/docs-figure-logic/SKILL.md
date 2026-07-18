@@ -17,7 +17,7 @@ description: Use when explaining how a retikz feature, module, pipeline, runtime
 - 中间经过哪些稳定角色？
 - 输出、反馈或副作用在哪里？
 
-不要把所有实现细节画进去。图只保留解释当前小节所需的主链路、关键分支和一两个约束点，并在当前组件或模块的职责边界停止。涉及全局 JSX → IR → Scene 管线时，只画与当前职责相接的入口 / 出口，再链接 `/kernel/principles`，不要重复绘制整条管线。
+不要把所有实现细节画进去。图只保留解释当前小节所需的主链路、关键分支和一两个约束点，并在当前组件或模块的职责边界停止。涉及全局 JSX → IR → Scene 管线时，只画与当前职责相接的入口 / 出口，再链接 `/kernel/concepts/design/principles`，不要重复绘制整条管线。
 
 ## 工作流
 

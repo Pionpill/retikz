@@ -17,7 +17,8 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 
 | 页型             | 路径                                                               | 分流到                                                                                                |
 | ---------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| 组件页           | `contents/<module>/components/**`                                  | [`docs-doc-component`](../docs-doc-component/SKILL.md)                                                |
+| 扩展指南         | data 节点标记 `meta.pageType: 'extension'`                         | [`docs-doc-extension`](../docs-doc-extension/SKILL.md)                                                |
+| 组件页           | `contents/<module>/components/**`，且未标记为扩展指南              | [`docs-doc-component`](../docs-doc-component/SKILL.md)                                                |
 | 示例页           | `contents/<module>/examples/**`                                    | [`docs-doc-example`](../docs-doc-example/SKILL.md)                                                    |
 | 分组落地页       | 带 children 的分组节点（`components/node`、`reference/schema` 等） | [`docs-doc-group`](../docs-doc-group/SKILL.md)                                                        |
 | 概念页           | `contents/<module>/concepts/**` 叶子页                             | [`docs-doc-concept`](../docs-doc-concept/SKILL.md)                                                    |
@@ -343,6 +344,7 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 | 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径）      | —                                                      |
 | 写 TikZ 对照        | 用 `<Comparison target="tikz">` 包起来，不写进普通正文                                   | —                                                      |
 | 加组件页            | —                                                                                        | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
+| 加扩展指南          | data 节点 `meta.pageType: 'extension'` + 双语正文与闭环 demo                             | [`docs-doc-extension`](../docs-doc-extension/SKILL.md) |
 | 加示例页            | —                                                                                        | [`docs-doc-example`](../docs-doc-example/SKILL.md)     |
 
 ## Common Mistakes

@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-07-03 已实现）
 - 决策日期：2026-06-13（拆分重写 2026-06-14）
-- 关联：[v0.4 roadmap 候选 A](../roadmap.md#a--retikzmath2026-06-12-拍板) · [alpha.1 roadmap](./roadmap.md) · [ADR-02 core 纯几何下沉](./02-core-pure-geometry-sink.md) · [ADR-03 point 公开面修正](./03-point-polar-surface-fix.md) · core `geometry/`（`packages/kernel/core/src/geometry/`）
+- 关联：[v0.4 历史候选 A](../history.md#a--retikzmath2026-06-12-拍板) · [alpha.1 roadmap](./roadmap.md) · [ADR-02 core 纯几何下沉](./02-core-pure-geometry-sink.md) · [ADR-03 point 公开面修正](./03-point-polar-surface-fix.md) · core `geometry/`（`packages/kernel/core/src/geometry/`）
 
 > **范围**：承接 v0.4 roadmap 候选 A（2026-06-12 拍板「新增独立零依赖纯计算几何包」）。本 ADR 只定 **math 侧**——包的存在 / 边界 / API 风格 / 首切几何能力与返回形态。core 如何接入、公开面 re-export 见 [ADR-02](./02-core-pure-geometry-sink.md)；`point.toPolar`/`equalPolar` 的移除见 [ADR-03](./03-point-polar-surface-fix.md)。
 

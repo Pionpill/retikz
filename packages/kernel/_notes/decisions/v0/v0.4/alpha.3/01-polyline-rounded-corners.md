@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-06-16；step `label` 倒角后重定位延后，见「不在本 ADR 范围」）
 - 决策日期：2026-06-15
-- 关联：[v0.4-alpha.3 roadmap](./roadmap.md) · [v0.4 roadmap 候选 B](../roadmap.md#b--路径补强2026-06-12-拍板)
+- 关联：[v0.4-alpha.3 roadmap](./roadmap.md) · [v0.4 历史候选 B](../history.md#b--路径补强2026-06-12-拍板)
 
 > **范围**：B1「任意折线圆角」——把矩形 / 多边形已有的 `cornerRadius` 圆角能力推广到 `<Path>` 任意折线拐角。B2「过点平滑曲线」见 [ADR-02](./02-smooth-curve-through-points.md)。
 
