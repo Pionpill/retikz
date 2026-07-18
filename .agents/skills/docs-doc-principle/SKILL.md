@@ -280,6 +280,15 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 - animation 与预览宿主工具使用 `hover`；作为 demo 参数的 select / input 通常使用 `always`。
 - 局部 `controls.slots` 与共享 controls 追加组合；id 必须全局唯一。替换 animation 时先写 `animation: false`。
 
+声明式 controls 作者约定：
+
+- 多属性 playground 用 `definePreviewControls({ presentation: 'panel', sections: [...] })`，一个或少量轻量控件用 `presentation: 'overlay'`
+- 标准表单字段优先使用 `text`、`number`、`select`、`switch`、`color`、`range` 六种 kind，不用 `PreviewControlSlot.render` 重写基础控件
+- controls 与 demo 从 `@/modules/docs/components/component-preview/author` 导入 `definePreviewControls`、`usePreviewControls` 和作者类型；该入口不反向加载 eager demo registry
+- demo 用 `usePreviewControls(definition)` 读取由 definition 推导的值；使用 hook 后同步导出 `previewSource = { deriveIR: false }`
+- zh/en definition 的字段 id、kind、defaultValue、select option value 必须一致，只翻译 title、section、field 与 option label
+- `PreviewControlSlot` 只用于 animation、预览工具或内置 kind 无法表达的特殊渲染逃生口
+
 ### 代码视图：React / IR / Vanilla
 
 `ComponentPreview` 默认展示三套视图：
