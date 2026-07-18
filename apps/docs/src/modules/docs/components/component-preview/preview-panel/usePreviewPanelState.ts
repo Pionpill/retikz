@@ -9,6 +9,8 @@ import { usePreviewControlRuntime } from './usePreviewControlRuntime';
 
 /** 创建预览面板状态时使用的宿主默认值。 */
 export type UsePreviewPanelStateOptions = {
+  /** 由 Card 宿主持有并在 Card/Dialog 间共享的业务控件状态 */
+  controlState: PreviewControlState;
   /** 宿主尚未局部切换时使用的渲染模式。 */
   rendererMode: RendererMode;
   /** 当前内容固定使用的渲染模式；缺省时允许局部切换。 */
@@ -57,7 +59,7 @@ export type PreviewPanelState = {
   remountKey: number;
   /** 当前面板独享的预览控件运行时。 */
   runtime: PreviewControlRuntime;
-  /** 当前面板独享的控件共享值状态。 */
+  /** 宿主注入并可与其它视图 controller 共享的业务控件状态 */
   controlState: PreviewControlState;
   /** 当前渲染区域 DOM ref。 */
   renderPaneRef: RefObject<HTMLDivElement>;
@@ -95,6 +97,7 @@ export const usePreviewPanelState = (options: UsePreviewPanelStateOptions): Prev
   const renderPaneRef = useRef<HTMLDivElement>(null);
   const panZoom = usePanZoom();
   const runtimeState = usePreviewControlRuntime({
+    controlState: options.controlState,
     rendererMode,
     renderPaneRef,
     hovered: options.hovered ?? previewHovered,

@@ -1,13 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import type {
-  PreviewControlConfig,
-  PreviewControlContract,
-  PreviewControlSlot,
-  PreviewSourceConfig,
-  SourceLang,
-} from '../types';
+import type { PreviewControlContract, PreviewControlsDefinition, PreviewSourceConfig, SourceLang } from '../types';
 
 /**
  * 收集 contents 下全部 demo 模块与源码字符串。
@@ -19,7 +13,7 @@ export const demoModules: Record<
       default: FC;
       previewIR?: IRScene;
       previewControlContract?: PreviewControlContract;
-      previewControls?: Array<PreviewControlConfig | PreviewControlSlot>;
+      previewControls?: PreviewControlsDefinition;
       previewSource?: PreviewSourceConfig;
     }
   | undefined
@@ -27,7 +21,7 @@ export const demoModules: Record<
   default: FC;
   previewIR?: IRScene;
   previewControlContract?: PreviewControlContract;
-  previewControls?: Array<PreviewControlConfig | PreviewControlSlot>;
+  previewControls?: PreviewControlsDefinition;
   previewSource?: PreviewSourceConfig;
 }>('../../contents/**/*.demo.tsx', { base: '../', eager: true });
 

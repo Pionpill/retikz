@@ -8,6 +8,8 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
+
 import { PreviewPanel, usePreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
@@ -21,6 +23,12 @@ const FADE: Array<IRAnimationTrack> = [
     duration: 400,
   },
 ];
+
+const controlState: PreviewControlState = {
+  values: {},
+  setValue: () => undefined,
+  reset: () => undefined,
+};
 
 const ExplicitlyEnabledDemo: FC = () => (
   <Layout animate={true} width={100} height={100}>
@@ -36,6 +44,7 @@ const ExplicitlyDisabledDemo: FC = () => (
 
 const PreviewHarness: FC<{ Component: FC }> = props => {
   const state = usePreviewPanelState({
+    controlState,
     rendererMode: 'svg',
     size: 'md',
     dragEnabled: false,

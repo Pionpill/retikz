@@ -8,13 +8,15 @@ import type {
   ComponentRenderSource,
   DiffLineKind,
   PreviewActionSlot,
-  PreviewControlConfig,
   PreviewControlContract,
+  PreviewControlField,
   PreviewControlPlacement,
   PreviewControlPreset,
   PreviewControlRuntime,
+  PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlsOptions,
+  PreviewControlValuesFor,
   PreviewControlVisibility,
   PreviewSourceConfig,
   RendererMode,
@@ -103,7 +105,9 @@ describe('preview controls registry', () => {
       card: ComponentPreviewCardProps;
       source: ComponentRenderSource;
       diff: DiffLineKind;
-      config: PreviewControlConfig;
+      field: PreviewControlField;
+      definition: PreviewControlsDefinition;
+      values: PreviewControlValuesFor<PreviewControlsDefinition>;
       contract: PreviewControlContract;
       preset: PreviewControlPreset;
       controlPlacement: PreviewControlPlacement;
@@ -122,7 +126,9 @@ describe('preview controls registry', () => {
     expect(Object.keys(componentPreviewExports).sort()).toEqual([
       'ComponentPreview',
       'ComponentPreviewCard',
+      'definePreviewControls',
       'formatIR',
+      'usePreviewControls',
     ]);
 
     for (const key of privateExportKeys) {
@@ -171,27 +177,37 @@ describe('preview controls registry', () => {
     expect(resolveControlsKey(segments, 'line-curve', 'fr')).toBe(buildControlsKey(segments, 'line-curve'));
 
     const controls = resolvePreviewControls(controlModules[englishKey]);
-    expect(controls?.[0]).toMatchObject({
-      kind: 'select',
-      label: 'Connection',
-      options: expect.arrayContaining([
-        { value: 'linear', label: 'Linear' },
-        { value: 'step', label: 'Step' },
-      ]),
+    expect(controls).toMatchObject({
+      presentation: 'overlay',
+      controls: [
+        {
+          kind: 'select',
+          id: 'path-curve',
+          label: 'Connection',
+          options: expect.arrayContaining([
+            { value: 'linear', label: 'Linear' },
+            { value: 'step', label: 'Step' },
+          ]),
+        },
+      ],
     });
   });
 
   it('resolves named *Controls exports only', () => {
-    const controls = [{ kind: 'input', id: 'size', label: 'Size', defaultValue: '6' }];
+    const controls = componentPreviewExports.definePreviewControls({
+      presentation: 'overlay',
+      controls: [{ kind: 'text', id: 'size', label: 'Size', defaultValue: '6' }],
+    });
 
     expect(resolvePreviewControls({ lineCurveControls: controls })).toBe(controls);
     expect(resolvePreviewControls({ lineCurveActions: controls })).toBeUndefined();
   });
 
   it('归一显式 controls contract，并保留 canonical state、presets 与 API 归属', () => {
-    const controls = [
-      { kind: 'input', id: 'size', label: 'Size', defaultValue: '6' },
-    ] satisfies Array<PreviewControlConfig>;
+    const controls = componentPreviewExports.definePreviewControls({
+      presentation: 'overlay',
+      controls: [{ kind: 'text', id: 'size', label: 'Size', defaultValue: '6' }],
+    });
     const contract = {
       controls,
       canonicalValues: { size: '6' },
@@ -207,7 +223,10 @@ describe('preview controls registry', () => {
     expect(() =>
       resolvePreviewControlContract({
         previewControlContract: {
-          controls: [{ kind: 'input', id: 'size', label: 'Size', defaultValue: '6' }],
+          controls: componentPreviewExports.definePreviewControls({
+            presentation: 'overlay',
+            controls: [{ kind: 'text', id: 'size', label: 'Size', defaultValue: '6' }],
+          }),
           canonicalValues: { missing: '6' },
           relatedApis: ['Node.fontSize'],
         },
@@ -223,5 +242,36 @@ describe('preview controls registry', () => {
     expect(controlModules[buildLangControlsKey(segments, 'line-closure', 'en')]).toBeUndefined();
     expect(controlModules[buildControlsKey(segments, 'line-stack-area')]).toBeUndefined();
     expect(controlModules[buildLangControlsKey(segments, 'line-stack-area', 'en')]).toBeUndefined();
+  });
+
+  it('Node playground 的中英文 panel definition 保持运行时契约一致', () => {
+    const segments = ['kernel', 'components', 'node', 'overview'];
+    const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-styled')]);
+    const enDefinition = resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-styled', 'en')]);
+    expect(zhDefinition?.presentation).toBe('panel');
+    expect(enDefinition?.presentation).toBe('panel');
+
+    const contractOf = (definition: typeof zhDefinition) =>
+      definition?.presentation === 'panel'
+        ? definition.sections.flatMap(section =>
+            section.controls.map(field => ({
+              id: field.id,
+              kind: field.kind,
+              defaultValue: field.defaultValue,
+              optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
+            })),
+          )
+        : [];
+
+    expect(contractOf(zhDefinition)).toEqual(contractOf(enDefinition));
+    expect(contractOf(zhDefinition).map(field => field.id)).toEqual([
+      'text',
+      'shape',
+      'fill',
+      'stroke',
+      'strokeWidth',
+      'dashed',
+      'opacity',
+    ]);
   });
 });

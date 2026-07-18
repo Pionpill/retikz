@@ -1,5 +1,8 @@
-import type { PreviewControlConfig, PreviewControlContract, PreviewControlSlot } from '../types';
+import type { PreviewControlContract, PreviewControlsDefinition, PreviewControlValues } from '../types';
 
+import { buildPreviewControlDefaults, definePreviewControls, getPreviewControlFields } from '../controls';
+
+/** 收集 contents 下 canonical 与本地化 controls definition 模块 */
 export const controlModules: Record<string, Record<string, unknown> | undefined> = import.meta.glob<
   Record<string, unknown>
 >(['../../contents/**/*.controls.ts', '../../contents/**/*.zh.controls.ts', '../../contents/**/*.en.controls.ts'], {
@@ -20,42 +23,47 @@ export const resolveControlsKey = (segments: Array<string>, name: string, lang: 
   return controlModules[langKey] !== undefined ? langKey : buildControlsKey(segments, name);
 };
 
+/** 判断模块导出是否是声明式预览控件定义 */
+const isPreviewControlsDefinition = (value: unknown): value is PreviewControlsDefinition => {
+  if (typeof value !== 'object' || value === null) return false;
+
+  const presentation = Reflect.get(value, 'presentation');
+  if (presentation === 'overlay') return Array.isArray(Reflect.get(value, 'controls'));
+  if (presentation === 'panel') return Array.isArray(Reflect.get(value, 'sections'));
+  return false;
+};
+
 const isControlContract = (value: unknown): value is PreviewControlContract =>
-  typeof value === 'object' && value !== null && Array.isArray((value as PreviewControlContract).controls);
+  typeof value === 'object' &&
+  value !== null &&
+  isPreviewControlsDefinition(Reflect.get(value, 'controls')) &&
+  typeof Reflect.get(value, 'canonicalValues') === 'object' &&
+  Reflect.get(value, 'canonicalValues') !== null &&
+  Array.isArray(Reflect.get(value, 'relatedApis'));
 
 const assertKnownValues = (
   label: 'canonicalValues' | `preset "${string}"`,
-  values: Readonly<Record<string, string>>,
-  controls: Array<PreviewControlConfig | PreviewControlSlot>,
+  values: Readonly<PreviewControlValues>,
+  knownIds: ReadonlySet<string>,
 ): void => {
-  const ids = new Set(controls.map(control => control.id));
   for (const id of Object.keys(values)) {
-    if (!ids.has(id)) throw new Error(`Unknown preview control id in ${label}: "${id}".`);
+    if (!knownIds.has(id)) throw new Error(`Unknown preview control id in ${label}: "${id}".`);
   }
 };
 
 const validateControlContract = (contract: PreviewControlContract): PreviewControlContract => {
-  const ids = new Set<string>();
-  for (const control of contract.controls) {
-    if (ids.has(control.id)) throw new Error(`Duplicate preview control id: "${control.id}".`);
-    ids.add(control.id);
-  }
-  assertKnownValues('canonicalValues', contract.canonicalValues, contract.controls);
+  definePreviewControls(contract.controls);
+  const ids = new Set(getPreviewControlFields(contract.controls).map(field => field.id));
+  assertKnownValues('canonicalValues', contract.canonicalValues, ids);
   for (const preset of contract.presets ?? []) {
-    assertKnownValues(`preset "${preset.id}"`, preset.values, contract.controls);
+    assertKnownValues(`preset "${preset.id}"`, preset.values, ids);
   }
   return contract;
 };
 
-const contractFromLegacyControls = (
-  controls: Array<PreviewControlConfig | PreviewControlSlot>,
-): PreviewControlContract => ({
-  controls,
-  canonicalValues: Object.fromEntries(
-    controls
-      .filter((control): control is PreviewControlConfig => 'kind' in control)
-      .map(control => [control.id, control.defaultValue]),
-  ),
+const contractFromDefinition = (controls: PreviewControlsDefinition): PreviewControlContract => ({
+  controls: definePreviewControls(controls),
+  canonicalValues: buildPreviewControlDefaults(controls),
   relatedApis: [],
 });
 
@@ -67,16 +75,18 @@ export const resolvePreviewControlContract = (
   if (isControlContract(mod.previewControlContract)) {
     return validateControlContract(mod.previewControlContract);
   }
-  if (Array.isArray(mod.previewControls)) {
-    return contractFromLegacyControls(mod.previewControls as Array<PreviewControlConfig | PreviewControlSlot>);
+  if (isPreviewControlsDefinition(mod.previewControls)) {
+    return contractFromDefinition(mod.previewControls);
   }
-  const namedControls = Object.entries(mod).find(([key, value]) => key.endsWith('Controls') && Array.isArray(value));
+  const namedControls = Object.entries(mod).find(
+    ([key, value]) => key.endsWith('Controls') && isPreviewControlsDefinition(value),
+  );
   return namedControls === undefined
     ? undefined
-    : contractFromLegacyControls(namedControls[1] as Array<PreviewControlConfig | PreviewControlSlot>);
+    : contractFromDefinition(namedControls[1] as PreviewControlsDefinition);
 };
 
-/** 兼容只消费 controls 数组的现有预览宿主。 */
+/** 解析 demo controls 的声明式定义 */
 export const resolvePreviewControls = (
   mod: Record<string, unknown> | undefined,
-): Array<PreviewControlConfig | PreviewControlSlot> | undefined => resolvePreviewControlContract(mod)?.controls;
+): PreviewControlsDefinition | undefined => resolvePreviewControlContract(mod)?.controls;

@@ -9,8 +9,7 @@ import type {
   AlignKey,
   ComponentPreviewFiles,
   PreviewActionSlot,
-  PreviewControlConfig,
-  PreviewControlSlot,
+  PreviewControlsDefinition,
   PreviewControlsOptions,
   SizeKey,
 } from './types';
@@ -28,7 +27,6 @@ import {
   irJsonOverrides,
   resolveControlsKey,
   resolveDemoKey,
-  resolvePreviewControlContract,
   resolvePreviewControls,
   vanillaModules,
   vanillaOverrides,
@@ -73,13 +71,10 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const controlKey =
     segments && !controlsDisabled ? resolveControlsKey(segments, explicitControlsName ?? name, lang) : null;
   const controlModule = controlKey ? controlModules[controlKey] : undefined;
-  const demoControlContract = mod?.previewControlContract
-    ? resolvePreviewControlContract({ previewControlContract: mod.previewControlContract })
-    : undefined;
-  const moduleControls = controlsDisabled
+  const controlDefinition: PreviewControlsDefinition | undefined = controlsDisabled
     ? undefined
     : explicitControlsName === null
-      ? (demoControlContract?.controls ?? mod?.previewControls ?? resolvePreviewControls(controlModule))
+      ? (resolvePreviewControls(mod) ?? resolvePreviewControls(controlModule))
       : resolvePreviewControls(controlModule);
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
@@ -142,10 +137,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     );
   }
 
-  const controlConfigs = moduleControls?.filter((control): control is PreviewControlConfig => 'kind' in control) ?? [];
-  const moduleControlSlots =
-    moduleControls?.filter((control): control is PreviewControlSlot => 'render' in control) ?? [];
-  const configuredControlSlots = buildConfiguredControlSlots(controlConfigs);
+  const configuredControlSlots =
+    controlDefinition?.presentation === 'overlay' ? buildConfiguredControlSlots(controlDefinition.controls) : [];
   const builtinControlSlots = resolveBuiltinControlSlots({
     previewIr: sourceResult.previewIr,
     options: controlOptions,
@@ -153,7 +146,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const resolvedControlSlots = mergePreviewControlSlots(
     builtinControlSlots,
     configuredControlSlots,
-    moduleControlSlots,
+    controlDefinition?.slots,
     controlOptions.slots,
   );
 
@@ -165,6 +158,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       align={align}
       size={size}
       previewClassName={previewClassName}
+      controlDefinition={controlDefinition}
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
     />

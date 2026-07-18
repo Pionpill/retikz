@@ -21,7 +21,7 @@ description: '发布或准备发布 retikz npm 包时使用。覆盖版本号 bu
 
 | 组     | 包                                                                                                  | 发布顺序                                          | tag               |
 | ------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------- |
-| kernel | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/vanilla`, `@retikz/react`, `@retikz/tex` | math -> core -> render -> vanilla -> react -> tex | `v<version>`      |
+| kernel | `@retikz/math`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> core -> render -> react -> vanilla -> tex | `v<version>`      |
 | data   | `@retikz/data`                                                                                      | data                                              | `data-v<version>` |
 | plot   | `@retikz/plot`, `@retikz/plot-vanilla`, `@retikz/plot-react`                                        | plot -> plot-vanilla -> plot-react                | `plot-v<version>` |
 

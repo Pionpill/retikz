@@ -2,9 +2,12 @@ import { PathCurve } from '@retikz/plot';
 
 import type { PreviewControlContract } from '@/modules/docs/components';
 
+import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
+
 export const PATH_CURVE_CONTROL_ID = 'path-curve';
 
-export const previewControlContract = {
+export const lineCurveControls = definePreviewControls({
+  presentation: 'overlay',
   controls: [
     {
       kind: 'select',
@@ -25,6 +28,10 @@ export const previewControlContract = {
       ],
     },
   ],
+});
+
+export const previewControlContract = {
+  controls: lineCurveControls,
   canonicalValues: { [PATH_CURVE_CONTROL_ID]: PathCurve.Linear },
   presets: [
     { id: 'linear', label: '直线', values: { [PATH_CURVE_CONTROL_ID]: PathCurve.Linear } },
