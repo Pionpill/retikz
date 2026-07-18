@@ -10,25 +10,25 @@
 > - PATCH 不开目录（patch 仅修 bug，不写 ADR）
 >   NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.1 是 01-08，alpha.2 从 01 重新起计；跨 milestone 引用带前缀：`alpha.1 ADR-01`
 >   slug 用 kebab-case
->   **plot 版本线独立**：`@retikz/plot` 有自身演进节奏，**不与 core 版本号对齐**——它只消费 core 能力、不反向依赖，里程碑由「所需 core 能力是否就绪」gating（见 [plot-design §13](../architecture/plot-design.md)）。
->   模板对应 [`develop-design`](../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
->   路径假设实例位于 `packages/viz/_notes/decisions/<MAJOR>/<MAJOR>.<MINOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
->   **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
+>   **viz 家族版本独立**：data / plot 等家族各自维护路线与版本；消费上游能力但不反向注入实现，里程碑由所需依赖能力是否就绪 gating。
+>   模板对应 [`develop-design`](../../../../../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
+>   路径假设实例位于 `packages/viz/_notes/decisions/<FAMILY>/<MAJOR>/<MAJOR>.<MINOR>/<channel.N>/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
+>   **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../../../../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
-- 关联：[plot v0 roadmap §<段>](../../roadmap.md) · [plot-design.md §<段>](../../../../architecture/plot-design.md)
+- 关联：[所属家族 v0 roadmap §<段>](../../roadmap.md) · [能力域 completeness 文档](../../../../../architecture/<data-capability-complete-or-plot-visualization-complete>.md) · [具体架构设计 §<段>](../../../../../architecture/<...>.md)
 
 ## 背景
 
-<现状是什么、为什么不够、grammar of graphics / 同类库（Observable Plot / Vega-Lite / G2）怎么做、用户为什么会想要。3-5 段，避免空话>
+<现状是什么、为什么不够、所属能力域或同类库怎么做、用户为什么会想要。3-5 段，避免空话>
 
 ## 决策：<最终方案一句话>
 
 <直接写定稿方案：解决了什么、关键设计、代价。只写最终采纳的做法，不罗列被否决的中间方案>
 
 ```ts
-// Plot IR / schema 草案 / spec 表面 / lowering 到 core IR 的处理示意
+// Data / Plot IR、schema、spec 表面或 pipeline / lowering 处理示意
 ```
 
 理由：
@@ -48,12 +48,12 @@
 ## DSL 表面
 
 ```tsx
-<最能表达本 ADR 价值的 1-2 段示例：plot spec（primitive API）或 chart preset；用户读这段就知道"这玩意能用来干什么"——develop-document 阶段的 mdx demo 的种子>
+<最能表达本 ADR 价值的 1-2 段 Data / Plot IR 或 authoring 示例；用户读这段就知道能力解决什么问题——develop-document 阶段的 mdx demo 种子>
 ```
 
 ## 测试设计
 
-`packages/viz/plot/tests/<对应路径>.test.ts`（chart preset 相关则 `packages/viz/chart/tests/...`）覆盖：
+`packages/viz/<data-or-plot>/tests/<对应路径>.test.ts` 覆盖：
 
 - <case 类别 1>
 - <case 类别 2>
@@ -63,11 +63,25 @@
 
 ## 影响
 
-- <对现有代码的影响：哪些模块受牵动、哪些 Plot IR 字段意义变了、lowering 产物是否改变>
-- <对 core 的影响：是否依赖 core 新能力 / 是否触及 core IR 契约（plot 不得反向依赖 core 内部）>
+- <对现有代码的影响：哪些能力域和包受牵动、哪些 IR 字段或 pipeline 产物改变>
+- <对 data / core 的影响：是否依赖上游新能力、是否触及其公开契约>
 - <对文档站的影响：哪些章节要补 / 改>
 - <对外 API 的影响：哪些 plot spec / chart prop 加 / 改 / 删>
 - <breaking 改动则显式标 ⚠️ BREAKING + 迁移路径>
+
+## 能力完备性检查
+
+- 所属能力域与能力面：Data Complete / Visualization Complete
+- 解决的问题：
+- 主责包与协作包：
+- 是否可由现有能力组合：
+- 是否需要下沉到 data / core / math：
+- 内部表达链路：
+- 外部扩展链路：
+- pipeline / lowering 与下游消费：
+- React / Vanilla adapter 等价性：
+- provenance / lineage / locator 是否适用：
+- 不支持边界与本轮结论：组合 / 扩展当前域 / 下沉 / 上移 / 不支持或延期
 
 ## 不在本 ADR 范围
 
@@ -84,20 +98,20 @@
 
 `red` | `yellow` | `green`
 
-判级规则（参 [`flow-alpha`](../../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
+判级规则（参 [`flow-alpha`](../../../../../../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
 
-- **red**：动 `packages/viz/plot/src/ir/**` · `packages/viz/plot/src/lowering/**`（下沉到 core IR 的契约边界）· `packages/viz/*/src/index.ts`
-- **yellow**：动 `packages/viz/plot/src/{transform,encoding,scale,coordinate,mark,relation,guide,scope}/**` · `packages/viz/chart/src/**`（preset 层）
+- **red**：动 `packages/viz/{data,plot}/src/schemas/**` · `packages/viz/plot/src/pipeline/**`（下沉到 core IR 的契约边界）· `packages/viz/*/src/index.ts`
+- **yellow**：动 `packages/viz/{data,plot}/src/{contract,providers,shared}/**` 或 adapter 接线
 - **green**：仅 `apps/docs/**` / 测试 / 注释 / 配置
 
 跨级取最高 level。本 ADR 自评 level：`<red / yellow / green>`，与"文件 scope" 段相符。
 
 ### Schema 改动
 
-| 文件                                | 操作         | 字段名         | 类型         | 默认值           | describe 中文摘要 |
-| ----------------------------------- | ------------ | -------------- | ------------ | ---------------- | ----------------- |
-| `packages/viz/plot/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话>          |
-| ...                                 | ...          | ...            | ...          | ...              | ...               |
+| 文件                                               | 操作         | 字段名         | 类型         | 默认值           | describe 中文摘要 |
+| -------------------------------------------------- | ------------ | -------------- | ------------ | ---------------- | ----------------- |
+| `packages/viz/<data-or-plot>/src/schemas/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话>          |
+| ...                                                | ...          | ...            | ...          | ...              | ...               |
 
 每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**——发现需要改 → 回本 ADR 加条 / 开新 ADR。
 
@@ -107,13 +121,11 @@
 
 本 ADR 实现允许触碰的文件白名单：
 
-- `packages/viz/plot/src/ir/<新建>.ts`
-- `packages/viz/plot/src/<模块>/<...>.ts`（修改）
-- `packages/viz/plot/src/lowering/<...>.ts`（修改）
-- `packages/viz/plot/tests/<.../...>.test.ts`（新建）
-- `packages/viz/chart/src/<...>.ts`（preset，按需）
-- `apps/docs/src/contents/<...>/<...>.mdx`（修改）
-- `apps/docs/src/contents/<...>/<...>.demo.tsx`（新建）
+- `packages/viz/<data-or-plot>/src/schemas/<新建>.ts`
+- `packages/viz/<data-or-plot>/src/{contract,providers,pipeline}/<...>.ts`（修改）
+- `packages/viz/<data-or-plot>/tests/<.../...>.test.ts`（新建）
+- `apps/docs/src/modules/docs/contents/<...>/<...>.mdx`（修改）
+- `apps/docs/src/modules/docs/contents/<...>/<...>.demo.tsx`（新建）
 - ...
 
 偏离白名单的改动需要：
@@ -146,14 +158,14 @@
 - `<case 名>`：<与已有功能交叉，如 stack × dodge × scale / polar × guide> → <期望>
 - `<case 名>`：...
 
-> 这是 [`develop-implement`](../../../../.agents/skills/develop-implement/SKILL.md) Stage 2 Spec Writer 的输入。象限填得越具体，Spec Writer 写出的测试越贴 ADR 意图，越不需要 [`develop-test`](../../../../.agents/skills/develop-test/SKILL.md) Stage 3 Bug Hunter 兜底。
+> 这是 [`develop-implement`](../../../../../../../../.agents/skills/develop-implement/SKILL.md) Stage 2 Spec Writer 的输入。象限填得越具体，Spec Writer 写出的测试越贴 ADR 意图，越不需要 [`develop-test`](../../../../../../../../.agents/skills/develop-test/SKILL.md) Stage 3 Bug Hunter 兜底。
 
 ### 依赖的现有元素
 
-本 ADR 引用 / 扩展 / 修改的现有 Plot IR 元素 / plot API / core 能力：
+本 ADR 引用 / 扩展 / 修改的现有 Data / Plot IR、公开 API 和上游能力：
 
 - `<元素名>`（位于 `<file path>`）—— <如何用：仅引用 / 扩展 / 修改>
-- `<core 能力>`（位于 `packages/kernel/core/src/<...>`）—— <plot 如何消费：lowering 目标 / Scope 引用，仅消费不改 core 内部>
+- `<data / core 能力>`（位于所属主责包）—— <本能力如何消费，不反向依赖其内部实现>
 - ...
 
 无依赖（全新孤立功能）→ 写"无"。

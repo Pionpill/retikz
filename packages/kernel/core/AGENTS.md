@@ -2,6 +2,16 @@
 
 本文件只写 `@retikz/core` 包内特有规则。全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，kernel 组规则见 [`../AGENTS.md`](../AGENTS.md)。
 
+## 包职责契约
+
+- **解决的问题**：为所有上层 DSL、Tier 2 能力和 renderer 提供后端中立、可序列化、可扩展的二维绘图表达与确定性编译
+- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、纯 parser、IR / composite lowering、`compileToScene`、Scene / manifest 语义与绘图诊断
+- **不拥有的能力**：通用计算几何算法、SVG / Canvas 执行、React / Vanilla authoring、数据处理与可视化语法、TeX 引擎或应用交互状态
+- **输入与输出**：接收 JSON-safe Core IR、compile options 与运行时 definitions，输出 renderer-agnostic Scene、manifest 和 diagnostics；不直接输出 DOM、SVG 字符串或 Canvas 像素
+- **缺口流向**：通用纯几何下沉 `@retikz/math`；后端实现进入 `@retikz/render`；authoring / runtime 接线上移 adapter；数据可视化进入 viz 能力域；可选公式集成进入 `@retikz/tex`
+
+新增或改变图形能力前，先按 [`core-drawing-complete.md`](../_notes/architecture/core-drawing-complete.md) 确认 Drawing Complete 的能力面、主责 / 协作包和端到端闭环。
+
 ## 硬约束
 
 - 不准 import `react` / `react-dom`；React 内容属于 `@retikz/react`。

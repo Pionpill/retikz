@@ -17,6 +17,7 @@ alpha 功能开发入口。目标是产出一份状态为 `Proposed` 的 ADR，�
 ## 必读
 
 - 根 `AGENTS.md` 的设计原则、IR / Schema / 分层规则。
+- 能力性迭代读取 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档；纯 bugfix、文案或行为等价重构只需声明不改变能力边界。
 - 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应 `standard-*` skill。
 - 对应分组的 `_notes/decisions/_template.md` 与当前 milestone `roadmap.md`。
 
@@ -26,14 +27,16 @@ alpha 功能开发入口。目标是产出一份状态为 `Proposed` 的 ADR，�
 
 ```text
 packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
-packages/viz/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
+packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
 ```
 
 其它分组以后新增时沿用同形态。模板来自该分组的 `_notes/decisions/_template.md`。编号在 milestone 目录内从 `01` 起，起新 ADR 前查对应 `_notes/README.md` 或 roadmap。
 
 ## ADR 必填内容
 
-叙述部分按模板写，至少覆盖：背景、决策、DSL / API 表面、测试设计、影响、不在范围。
+叙述部分按模板写，至少覆盖：背景、决策、DSL / API 表面、测试设计、影响、能力完备性检查、不在范围。
+
+能力完备性检查必须写清所属能力域与能力面、解决的问题、主责 / 协作包、内部表达与外部扩展链路、依赖域和下游闭环，以及本轮结论。不能用“先局部实现”代替组合、扩展当前域、下沉、上移、不支持或延期中的明确选择。
 
 实现契约段必须完整：
 
@@ -71,6 +74,7 @@ ADR 草案写完、进入实现前，先问用户是否派子 agent / 外部模�
 ## 完成标志
 
 - ADR 文件已创建，状态为 `Proposed`。
+- 能力性迭代已完成适用 completeness 检查；不适用时已写明理由。
 - 实现契约段五项齐全。
 - 人工明确确认“可以进入实现”。
 - ADR 草案未提交，或用户明确要求时已按根 AGENTS 的 Git 规则单独提交。

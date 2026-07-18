@@ -15,6 +15,8 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - 上层包的底层能力必须源自 `@retikz/core` 或 `@retikz/math`。React / Vanilla / Plot / Docs demo 可以通过 adapter、sugar、composite、lowering、renderer 扩展表达力，但不要绕开 core 另造平行 IR、平行渲染语义或平行几何底座。
 - 新能力优先抽象 Definition / registry / capability contract，再实现内置能力。内置与自定义应复用同一套注册、解析和消费逻辑，不要拆成“内置白名单 + 扩展补丁接口”。
+- 新增或改变公开能力、IR / schema、扩展契约、pipeline / lowering、Scene / manifest、跨包职责或 adapter 独有能力前，先读 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档，并在 ADR 中完成能力归属、包边界与闭环检查。纯 bugfix、文案和行为等价重构只需确认不改变能力边界。
+- 包不是功能收纳桶。每个发布包必须在就近 `AGENTS.md` 明确解决的问题、拥有的契约、不拥有的能力、输入与输出及缺口流向；新增能力只有在直接服务包使命、符合输入输出边界并能形成完整闭环时才能进入。实现方便、当前代码位置或单个消费方需求不能决定长期所有权。
 - 遇到具体需求时，先识别通用模型、边界和扩展点；确实只能局部处理时，在代码、ADR 或 notes 中说明不抽象的原因。
 - 发现既有设计方向不佳时，以当前能判断的最优方案修正架构，再评估兼容性和版本节奏。`0.x` 阶段公开 API / schema / 命名仍可为正确设计做破坏性调整，不为旧写法保留别名或桥接，除非当次版本设计文档明确要求。
 - 临时方案必须记录原因、影响范围和后续替换方向，并同步到对应 roadmap，避免沉没成长期事实。

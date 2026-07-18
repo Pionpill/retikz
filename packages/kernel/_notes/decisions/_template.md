@@ -10,13 +10,13 @@
 > - PATCH 不开目录（patch 仅修 bug，不写 ADR）
 >   NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.4 是 01-03，alpha.5 从 01 重新起计；跨 milestone 引用带前缀：`alpha.4 ADR-01`
 >   slug 用 kebab-case
->   模板对应 [`develop-design`](../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
+>   模板对应 [`develop-design`](../../../../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
 >   路径假设实例位于 `packages/kernel/_notes/decisions/<MAJOR>/<MAJOR>.<MINOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
->   **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
+>   **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../../../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
-- 关联：[v0 roadmap §<段>](../../roadmap.md) · [analysis §<段>](../../../../analysis/<...>.md)
+- 关联：[v0 roadmap §<段>](../../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [analysis §<段>](../../../../analysis/<...>.md)
 
 ## 背景
 
@@ -67,6 +67,20 @@
 - <对外 API 的影响：哪些 prop 加 / 改 / 删>
 - <breaking 改动则显式标 ⚠️ BREAKING + 迁移路径>
 
+## 绘图完备性检查
+
+- 能力面与解决的问题：
+- 是否属于 Drawing Complete：
+- 主责包与协作包：
+- 是否可由现有能力组合：
+- math / core / render / adapter 的责任切分：
+- 是否需要新 IR / contract / registry：
+- Scene / manifest 如何承载：
+- renderer 实现或诊断降级：
+- React / Vanilla 如何等价暴露：
+- Interaction Readiness 是否适用：
+- 不支持边界与本轮结论：组合 / 扩展当前域 / 下沉 / 上移 / 不支持或延期
+
 ## 不在本 ADR 范围
 
 - <列推迟到下版的相关项；写清楚省得 review 时被问 "为什么不顺手做掉 X">
@@ -82,9 +96,9 @@
 
 `red` | `yellow` | `green`
 
-判级规则（参 [`flow-alpha`](../../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
+判级规则（参 [`flow-alpha`](../../../../../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
 
-- **red**：动 `packages/kernel/core/src/ir/**` · `packages/kernel/core/src/compile/**` · `packages/*/*/src/index.ts`
+- **red**：动 `packages/kernel/core/src/schemas/**` · `packages/kernel/core/src/compile/**` · `packages/*/*/src/index.ts`
 - **yellow**：动 `packages/kernel/react/src/{kernel,sugar,render}/**` · `packages/kernel/core/src/parsers/**`
 - **green**：仅 `apps/docs/**` / 测试 / 注释 / 配置
 
@@ -92,10 +106,10 @@
 
 ### Schema 改动
 
-| 文件                                   | 操作         | 字段名         | 类型         | 默认值           | describe 中文摘要 |
-| -------------------------------------- | ------------ | -------------- | ------------ | ---------------- | ----------------- |
-| `packages/kernel/core/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话>          |
-| ...                                    | ...          | ...            | ...          | ...              | ...               |
+| 文件                                        | 操作         | 字段名         | 类型         | 默认值           | describe 中文摘要 |
+| ------------------------------------------- | ------------ | -------------- | ------------ | ---------------- | ----------------- |
+| `packages/kernel/core/src/schemas/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话>          |
+| ...                                         | ...          | ...            | ...          | ...              | ...               |
 
 每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**——发现需要改 → 回本 ADR 加条 / 开新 ADR。
 
@@ -105,12 +119,12 @@
 
 本 ADR 实现允许触碰的文件白名单：
 
-- `packages/kernel/core/src/ir/<新建>.ts`
+- `packages/kernel/core/src/schemas/<新建>.ts`
 - `packages/kernel/core/src/compile/<...>.ts`（修改）
 - `packages/kernel/core/tests/<.../...>.test.ts`（新建）
 - `packages/kernel/react/src/kernel/<...>.tsx`（新建 / 修改）
-- `apps/docs/src/contents/<...>/<...>.mdx`（修改）
-- `apps/docs/src/contents/<...>/<...>.demo.tsx`（新建）
+- `apps/docs/src/modules/docs/contents/<...>/<...>.mdx`（修改）
+- `apps/docs/src/modules/docs/contents/<...>/<...>.demo.tsx`（新建）
 - ...
 
 偏离白名单的改动需要：
@@ -143,7 +157,7 @@
 - `<case 名>`：<与已有功能交叉，如 rotate × scale × 本字段> → <期望>
 - `<case 名>`：...
 
-> 这是 [`develop-implement`](../../../../.agents/skills/develop-implement/SKILL.md) Stage 2 Spec Writer 的输入。象限填得越具体，Spec Writer 写出的测试越贴 ADR 意图，越不需要 [`develop-test`](../../../../.agents/skills/develop-test/SKILL.md) Stage 3 Bug Hunter 兜底。
+> 这是 [`develop-implement`](../../../../../../../.agents/skills/develop-implement/SKILL.md) Stage 2 Spec Writer 的输入。象限填得越具体，Spec Writer 写出的测试越贴 ADR 意图，越不需要 [`develop-test`](../../../../../../../.agents/skills/develop-test/SKILL.md) Stage 3 Bug Hunter 兜底。
 
 ### 依赖的现有元素
 
