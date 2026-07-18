@@ -32,12 +32,16 @@ const Probe: FC<ProbeProps> = props => {
 
 const createControlState = (): PreviewControlState => {
   const state: PreviewControlState = {
+    canonicalValues: {},
     values: {},
     setValue: (id, value) => {
       state.values = { ...state.values, [id]: value };
     },
+    applyValues: values => {
+      state.values = { ...state.canonicalValues, ...values };
+    },
     reset: () => {
-      state.values = {};
+      state.values = state.canonicalValues;
     },
   };
   return state;

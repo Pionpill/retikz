@@ -2,7 +2,7 @@
 import type { FC, ReactNode } from 'react';
 import type { Root } from 'react-dom/client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
@@ -11,10 +11,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type * as ResizableModule from '../../src/components/ui/resizable';
 import type { PreviewControlLayoutMetrics } from '../../src/modules/docs/components/component-preview/control-panel';
 import type {
+  PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlSection,
   PreviewControlState,
   PreviewPanelControlsDefinition,
+  PreviewThemeMode,
 } from '../../src/modules/docs/components/component-preview/types';
 
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
@@ -227,12 +229,26 @@ afterEach(async () => {
 type WorkspaceHarnessProps = {
   definition?: PreviewControlsDefinition;
   initialOpen?: boolean;
+  showContextBar?: boolean;
+};
+
+const emptyControlState: PreviewControlState = {
+  canonicalValues: {},
+  values: {},
+  setValue: () => undefined,
+  applyValues: () => undefined,
+  reset: () => undefined,
 };
 
 const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
-  const { definition: controlsDefinition, initialOpen = true } = props;
+  const { definition: controlsDefinition, initialOpen = true, showContextBar = true } = props;
   const [open, setOpen] = useState(initialOpen);
-  const controlState = usePreviewControlState(controlsDefinition);
+  const [themeMode, setThemeMode] = useState<PreviewThemeMode>('inherit');
+  const controlContract = useMemo<PreviewControlContract | undefined>(
+    () => (controlsDefinition ? { controls: controlsDefinition, canonicalValues: {}, relatedApis: [] } : undefined),
+    [controlsDefinition],
+  );
+  const controlState = usePreviewControlState(controlsDefinition, controlContract?.canonicalValues);
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: 'svg',
@@ -246,6 +262,9 @@ const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
       <PreviewWorkspace
         definition={controlsDefinition}
         controlState={controlState}
+        showContextBar={showContextBar}
+        themeMode={themeMode}
+        onThemeModeChange={setThemeMode}
         controlPanelOpen={open}
         onControlPanelOpenChange={setOpen}
         previewState={previewState}
@@ -265,22 +284,14 @@ const DefinitionChangeHarness: FC = () => {
         aria-label="Change controls definition"
         onClick={() => setCurrentDefinition(alternateDefinition)}
       />
-      <PreviewControlPanel
-        definition={currentDefinition}
-        controlState={{ values: {}, setValue: () => undefined, reset: () => undefined }}
-        onClose={() => undefined}
-      />
+      <PreviewControlPanel definition={currentDefinition} controlState={emptyControlState} onClose={() => undefined} />
     </>
   );
 };
 
 describe('PreviewControlPanel', () => {
   it('渲染标题、section 与六种 shadcn 字段', () => {
-    const controlState: PreviewControlState = {
-      values: {},
-      setValue: () => undefined,
-      reset: () => undefined,
-    };
+    const controlState: PreviewControlState = emptyControlState;
     const markup = renderToStaticMarkup(
       <PreviewControlPanel definition={definition} controlState={controlState} onClose={() => undefined} />,
     );
@@ -358,11 +369,7 @@ describe('PreviewControlPanel', () => {
 
   it('内容网格使用 gap-2 与 p-2', async () => {
     const container = await mount(
-      <PreviewControlPanel
-        definition={definition}
-        controlState={{ values: {}, setValue: () => undefined, reset: () => undefined }}
-        onClose={() => undefined}
-      />,
+      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
     );
     const columns = container.querySelector('[data-slot="preview-control-columns"]');
 
@@ -372,11 +379,7 @@ describe('PreviewControlPanel', () => {
 
   it('section 之间使用 mb-3 间距', async () => {
     const container = await mount(
-      <PreviewControlPanel
-        definition={definition}
-        controlState={{ values: {}, setValue: () => undefined, reset: () => undefined }}
-        onClose={() => undefined}
-      />,
+      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
     );
     const section = container.querySelector('[data-slot="preview-control-column"] > section');
 
@@ -386,11 +389,7 @@ describe('PreviewControlPanel', () => {
 
   it('299px 始终一列，达到 300px 且高度不足时最多渲染两列与一个 Separator', async () => {
     const container = await mount(
-      <PreviewControlPanel
-        definition={definition}
-        controlState={{ values: {}, setValue: () => undefined, reset: () => undefined }}
-        onClose={() => undefined}
-      />,
+      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
     );
     const columns = () => container.querySelector('[data-slot="preview-control-columns"]');
 
@@ -411,11 +410,7 @@ describe('PreviewControlPanel', () => {
 
   it('面板高度变化时在一列与两列之间自动回流', async () => {
     const container = await mount(
-      <PreviewControlPanel
-        definition={definition}
-        controlState={{ values: {}, setValue: () => undefined, reset: () => undefined }}
-        onClose={() => undefined}
-      />,
+      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
     );
     const columnCount = () =>
       container.querySelector('[data-slot="preview-control-columns"]')?.getAttribute('data-column-count');
@@ -435,11 +430,7 @@ describe('PreviewControlPanel', () => {
 
   it('section 默认展开并通过 Plus/Minus 在跨列副本间同步折叠', async () => {
     const container = await mount(
-      <PreviewControlPanel
-        definition={definition}
-        controlState={{ values: {}, setValue: () => undefined, reset: () => undefined }}
-        onClose={() => undefined}
-      />,
+      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
     );
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 100)));
@@ -468,7 +459,7 @@ describe('PreviewControlPanel', () => {
     const container = await mount(
       <PreviewControlPanel
         definition={definition}
-        controlState={{ values: {}, setValue: () => undefined, reset }}
+        controlState={{ ...emptyControlState, reset }}
         onClose={() => undefined}
       />,
     );
@@ -502,7 +493,7 @@ describe('PreviewControlPanel', () => {
     const container = await mount(
       <PreviewControlPanel
         definition={unlabeledDefinition}
-        controlState={{ values: {}, setValue: () => undefined, reset: () => undefined }}
+        controlState={emptyControlState}
         onClose={() => undefined}
       />,
     );
@@ -515,7 +506,7 @@ describe('PreviewControlPanel', () => {
     const markup = renderToStaticMarkup(
       <PreviewControlPanel
         definition={definition}
-        controlState={{ values: {}, setValue: () => undefined, reset: () => undefined }}
+        controlState={emptyControlState}
         density="compact"
         onClose={() => undefined}
       />,
@@ -531,7 +522,11 @@ describe('PreviewControlPanel', () => {
     const reset = vi.fn();
     const onClose = vi.fn();
     const container = await mount(
-      <PreviewControlPanel definition={definition} controlState={{ values: {}, setValue, reset }} onClose={onClose} />,
+      <PreviewControlPanel
+        definition={definition}
+        controlState={{ ...emptyControlState, setValue, reset }}
+        onClose={onClose}
+      />,
     );
 
     const dashed = container.querySelector<HTMLButtonElement>('button[aria-label="Dashed"]');
@@ -547,6 +542,47 @@ describe('PreviewControlPanel', () => {
 });
 
 describe('PreviewWorkspace', () => {
+  it('用同一个局部主题边界包裹 ContextBar、ControlPanel 与预览内容', async () => {
+    const container = await mount(<WorkspaceHarness definition={definition} />);
+    const previewPane = container.querySelector('[data-slot="preview-context-pane"]');
+    const contextBar = previewPane?.querySelector('[data-slot="preview-context-bar"]');
+    const previewPanel = contextBar?.nextElementSibling;
+    const themeBoundary = container.querySelector('[data-slot="preview-theme-boundary"]');
+    const controlPanel = container.querySelector('aside');
+
+    expect(previewPane).not.toBeNull();
+    expect(contextBar).not.toBeNull();
+    expect(controlPanel).not.toBeNull();
+    expect(themeBoundary?.contains(previewPane)).toBe(true);
+    expect(themeBoundary?.contains(contextBar ?? null)).toBe(true);
+    expect(themeBoundary?.contains(controlPanel)).toBe(true);
+    expect(previewPane?.classList.contains('relative')).toBe(true);
+    expect(previewPane?.classList.contains('group/preview-context')).toBe(true);
+    expect(previewPane?.classList.contains('pt-10')).toBe(false);
+    expect(previewPanel?.classList.contains('pt-10')).toBe(true);
+    expect(contextBar?.classList.contains('absolute')).toBe(true);
+    expect(contextBar?.classList.contains('top-2')).toBe(true);
+    expect(contextBar?.classList.contains('opacity-0')).toBe(true);
+    expect(contextBar?.classList.contains('group-hover/preview-context:opacity-100')).toBe(true);
+    expect(themeBoundary?.getAttribute('data-theme-mode')).toBe('inherit');
+
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Preview theme dark"]')?.click());
+    expect(themeBoundary?.getAttribute('data-theme-mode')).toBe('dark');
+    expect(themeBoundary?.classList.contains('dark')).toBe(true);
+  });
+
+  it('允许纯说明图隐藏 ContextBar 但保留主题边界', async () => {
+    const container = await mount(<WorkspaceHarness definition={definition} showContextBar={false} />);
+
+    expect(container.querySelector('[data-slot="preview-context-bar"]')).toBeNull();
+    const themeBoundary = container.querySelector('[data-slot="preview-theme-boundary"]');
+    const previewPane = container.querySelector('[data-slot="preview-context-pane"]');
+    const previewPanel = previewPane?.firstElementChild;
+    expect(themeBoundary).not.toBeNull();
+    expect(previewPane?.classList.contains('pt-10')).toBe(false);
+    expect(previewPanel?.classList.contains('pt-10')).toBe(false);
+  });
+
   it('开放 panel 时使用两个 ResizablePanel 与 handle', async () => {
     const container = await mount(<WorkspaceHarness definition={definition} />);
     const handle = container.querySelector('[data-slot="resizable-handle"]');
@@ -574,6 +610,11 @@ describe('PreviewWorkspace', () => {
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(639)));
     expect(group()?.getAttribute('data-direction')).toBe('vertical');
+    const panel = container.querySelector('aside');
+    const contextBar = container.querySelector('[data-slot="preview-context-bar"]');
+    expect(panel).not.toBeNull();
+    expect(contextBar).not.toBeNull();
+    expect(panel!.compareDocumentPosition(contextBar!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(640)));
     expect(group()?.getAttribute('data-direction')).toBe('horizontal');

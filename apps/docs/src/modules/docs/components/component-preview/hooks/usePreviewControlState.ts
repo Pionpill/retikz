@@ -5,15 +5,23 @@ import type { PreviewControlsDefinition, PreviewControlState, PreviewControlValu
 import { buildPreviewControlDefaults } from '../controls';
 
 /** 为单张预览卡创建可注入多个视图 controller 的业务控件状态 */
-export const usePreviewControlState = (definition: PreviewControlsDefinition | undefined): PreviewControlState => {
-  const defaults = useMemo(() => buildPreviewControlDefaults(definition), [definition]);
-  const [values, setValues] = useState<PreviewControlValues>(defaults);
+export const usePreviewControlState = (
+  definition: PreviewControlsDefinition | undefined,
+  canonicalValues?: Readonly<PreviewControlValues>,
+): PreviewControlState => {
+  const baseline = useMemo(
+    () => ({ ...buildPreviewControlDefaults(definition), ...canonicalValues }),
+    [canonicalValues, definition],
+  );
+  const [values, setValues] = useState<PreviewControlValues>(baseline);
 
-  useEffect(() => setValues(defaults), [defaults]);
+  useEffect(() => setValues(baseline), [baseline]);
 
   return {
+    canonicalValues: baseline,
     values,
     setValue: (id, value) => setValues(current => ({ ...current, [id]: value })),
-    reset: () => setValues(defaults),
+    applyValues: nextValues => setValues({ ...baseline, ...nextValues }),
+    reset: () => setValues(baseline),
   };
 };

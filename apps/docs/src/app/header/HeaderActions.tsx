@@ -48,12 +48,14 @@ export const HeaderActions: FC = () => {
   const previewDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
   const previewRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const previewAnimationMode = useComponentPreviewStore(s => s.animationMode);
+  const previewThemeMode = useComponentPreviewStore(s => s.themeMode);
   const previewControlPanelDefaultOpen = useComponentPreviewStore(s => s.controlPanelDefaultOpen);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
   const togglePreviewDragEnabled = useComponentPreviewStore(s => s.toggleDragEnabled);
   const togglePreviewRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
   const setPreviewAnimationMode = useComponentPreviewStore(s => s.setAnimationMode);
+  const setPreviewThemeMode = useComponentPreviewStore(s => s.setThemeMode);
   const setPreviewControlPanelDefaultOpen = useComponentPreviewStore(s => s.setControlPanelDefaultOpen);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
   const setComparisonTargetVisible = useComparisonStore(s => s.setTargetVisible);
@@ -183,6 +185,21 @@ export const HeaderActions: FC = () => {
                       <DropdownMenuRadioItem value="system">{t('preview.animationSystem')}</DropdownMenuRadioItem>
                       <DropdownMenuRadioItem value="enabled">{t('preview.animationEnabled')}</DropdownMenuRadioItem>
                       <DropdownMenuRadioItem value="disabled">{t('preview.animationDisabled')}</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger inset>{t('preview.themeMode')}</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-40">
+                    <DropdownMenuRadioGroup
+                      value={previewThemeMode}
+                      onValueChange={value => {
+                        if (value === 'inherit' || value === 'light' || value === 'dark') setPreviewThemeMode(value);
+                      }}
+                    >
+                      <DropdownMenuRadioItem value="inherit">{t('preview.themeInherit')}</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="light">{t('preview.themeLight')}</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="dark">{t('preview.themeDark')}</DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
