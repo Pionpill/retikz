@@ -8,6 +8,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { blendPlaygroundControls } from './blend-playground.controls';
 
+export const previewControls = blendPlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;

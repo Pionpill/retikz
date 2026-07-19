@@ -10,6 +10,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { animationPlaygroundControls } from './animation-playground.controls';
 
+export const previewControls = animationPlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -27,7 +29,7 @@ const Demo: FC = () => {
   const replayKey = `${values.from}-${values.duration}-${values.delay}-${values.easing}-${values.origin}`;
 
   return (
-    <Layout key={replayKey} width={220} height={150}>
+    <Layout key={replayKey} width={220} height={150} viewBox={{ x: -110, y: -75, width: 220, height: 150 }}>
       <Node
         position={[0, 0]}
         shape="rectangle"

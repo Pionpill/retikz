@@ -8,6 +8,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { shadowPlaygroundControls } from './shadow-playground.controls';
 
+export const previewControls = shadowPlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;

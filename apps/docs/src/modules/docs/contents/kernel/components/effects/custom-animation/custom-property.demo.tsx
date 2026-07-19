@@ -10,6 +10,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { customPropertyControls, previewControlContract } from './custom-property.controls';
 
+export const previewControls = customPropertyControls;
+
 // 自定义属性通道 'blur'：interpolate 线性插值、applyCanvas 写 ctx.filter。仅 Canvas 生效，故 renderer="canvas"。
 const blur: AnimationPropertyDefinition = {
   interpolate: (from, to, t) => (from as number) + ((to as number) - (from as number)) * t,
@@ -52,7 +54,14 @@ const Demo: FC = () => {
   const replayKey = `${values.blur}-${values.duration}`;
 
   return (
-    <Layout key={replayKey} renderer="canvas" width={160} height={100} animationProperties={{ blur }}>
+    <Layout
+      key={replayKey}
+      renderer="canvas"
+      width={160}
+      height={100}
+      viewBox={{ x: -80, y: -50, width: 160, height: 100 }}
+      animationProperties={{ blur }}
+    >
       <Node id="a" position={[0, 0]} fill="#3b82f6" animations={[blurIn]}>
         blur
       </Node>

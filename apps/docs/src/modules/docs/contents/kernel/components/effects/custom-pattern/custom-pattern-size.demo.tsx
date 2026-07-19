@@ -9,6 +9,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { customPatternSizeControls } from './custom-pattern-size.controls';
 
+export const previewControls = customPatternSizeControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;

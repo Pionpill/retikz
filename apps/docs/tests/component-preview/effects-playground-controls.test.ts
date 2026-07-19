@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -96,5 +98,17 @@ describe('effects playground controls', () => {
     expect(presetContractOf(enContract!)).toEqual(presetContractOf(zhContract!));
     expect(zhContract?.relatedApis.length).toBeGreaterThan(0);
     expect(enContract?.relatedApis).toEqual(zhContract?.relatedApis);
+  });
+
+  it('keeps animation scale and Canvas blur playgrounds in fixed viewports', () => {
+    const root = resolve('src/modules/docs/contents/kernel/components/effects');
+    const demos = [
+      ['animation/animation-playground.demo.tsx', 'viewBox={{ x: -110, y: -75, width: 220, height: 150 }}'],
+      ['custom-animation/custom-property.demo.tsx', 'viewBox={{ x: -80, y: -50, width: 160, height: 100 }}'],
+    ] as const;
+
+    for (const [path, viewBox] of demos) {
+      expect(readFileSync(resolve(root, path), 'utf8'), path).toContain(viewBox);
+    }
   });
 });

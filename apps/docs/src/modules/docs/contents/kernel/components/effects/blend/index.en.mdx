@@ -27,29 +27,31 @@ Omitted or `'normal'` = ordinary source-over, unchanged.
 
 With two or more overlapping elements, set `blendMode` on the upper one to see the blend in the overlap. `multiply` darkens the overlap over a light backdrop:
 
-<ComponentPreview files="blend-multiply" size="sm" />
-
-<span style={{ color: '#888' }}>
-  Three overlapping circles, upper ones multiply — colors multiply darker where they overlap.
-</span>
+<ComponentPreview
+  files="blend-multiply"
+  size="sm"
+  caption="Three overlapping circles, upper ones multiply — colors multiply darker where they overlap."
+/>
 
 ### Overlapping colors with screen
 
 `screen` does the opposite, lightening the overlap over a dark backdrop:
 
-<ComponentPreview files="blend-screen" size="sm" />
-
-<span style={{ color: '#888' }}>Two circles screened over a dark backdrop — overlaps lighten and add.</span>
+<ComponentPreview
+  files="blend-screen"
+  size="sm"
+  caption="Two circles screened over a dark backdrop — overlaps lighten and add."
+/>
 
 ### Mode playground
 
 The static examples above keep the characteristic `multiply` and `screen` results visible. The playground fixes the left circle as an ordinary opaque backdrop and applies all 16 modes plus opacity only to the right source. The background and both circle colors remain adjustable.
 
-<ComponentPreview files="blend-playground" size="sm" />
-
-<span style={{ color: '#888' }}>
-  The right circle remains the source; source opacity weakens only the blend contributed by that circle.
-</span>
+<ComponentPreview
+  files="blend-playground"
+  size="sm"
+  caption="The right circle remains the source; source opacity weakens only the blend contributed by that circle."
+/>
 
 ## How it works
 

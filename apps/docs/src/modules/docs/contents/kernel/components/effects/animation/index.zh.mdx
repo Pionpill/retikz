@@ -55,11 +55,11 @@ import { Node } from '@retikz/react';
 
 入场动画在**页面加载时播一次**，把元素从透明 / 偏移 / 缩小状态带到最终样子。它们都是元素动画，挂在 `<Node>` / `<Path>` / `<Scope>` 的 `animations` 上。
 
-<ComponentPreview files="entrance" size="md" />
-
-<span style={{ color: '#888' }}>
-  一图集齐：fadeIn / scaleIn / grow / slideIn 四个节点、growUp 两根柱子、drawOn 一条路径。
-</span>
+<ComponentPreview
+  files="entrance"
+  size="md"
+  caption="一图集齐：fadeIn / scaleIn / grow / slideIn 四个节点、growUp 两根柱子、drawOn 一条路径。"
+/>
 
 `origin` 省略时，rect / ellipse 能从几何推导中心；Path、Text、Group 等无法推导时使用后端默认支点。若同一动画要跨图元保持一致，请显式设置 `origin`。
 
@@ -76,11 +76,11 @@ import { Node } from '@retikz/react';
 
 强调动画**吸引注意**——变色、闪烁、抖动；循环动画**持续播放**——脉冲、旋转、把任意 track 变成无限循环。它们都是元素动画。强调多用 `0 → 0.5 → 1` 三帧往返（末帧仍回 base，一次播完元素停在原样）；`flash` 默认重复 2 次、`wiggle` 3 次，`blink` / `pulse` / `spin` 用 `iterations: 'infinite'` 持续播。
 
-<ComponentPreview files="emphasis" size="md" />
-
-<span style={{ color: '#888' }}>
-  flash / blink / wiggle / pulse 四个节点，spin 旋转条、loop 往返、colorShift 变色三块形状。
-</span>
+<ComponentPreview
+  files="emphasis"
+  size="md"
+  caption="flash / blink / wiggle / pulse 四个节点，spin 旋转条、loop 往返、colorShift 变色三块形状。"
+/>
 
 | 动画         | 行为                          | 专有项                                        |
 | ------------ | ----------------------------- | --------------------------------------------- |
@@ -98,23 +98,21 @@ import { Node } from '@retikz/react';
 
 `cameraTo({ from, to })`：动 scene 的取景框 `[x, y, w, h]`，实现推拉 / 平移。挂在 `<Layout animations>`（镜头属 scene 根，不是某个元素）；起止取景都要显式给。默认 `duration` 800ms、`easing` `ease-in-out`，与其他公共项一样可覆盖。展开后是一条 `viewBox` 通道的 track。
 
-<ComponentPreview files="camera" size="md" />
-
-<span style={{ color: '#888' }}>镜头从全景推到右下角局部。</span>
+<ComponentPreview files="camera" size="md" caption="镜头从全景推到右下角局部。" />
 
 `stagger(tracks, stepMs, startMs = 0)`：把一组 track 的 `delay` **统一改写为 `startMs + i×stepMs`**（覆盖各 track 原有 `delay`），实现「依次入场」。第三参 `startMs` 缺省 0，是整组的起始偏移。它编排的是元素动画的起始时间，本身不改变单个动画的形态。
 
-<ComponentPreview files="stagger" size="sm" />
-
-<span style={{ color: '#888' }}>三个节点同样 fadeIn，依次延迟 0 / 150 / 300ms 入场。</span>
+<ComponentPreview files="stagger" size="sm" caption="三个节点同样 fadeIn，依次延迟 0 / 150 / 300ms 入场。" />
 
 ### 参数试验场
 
 前面的静态示例已经覆盖入场、强调、循环、镜头与编排。最后固定使用 `scaleIn`，只调整起始缩放、时长、延迟、缓动与变换原点，便于比较公共时序参数的影响。
 
-<ComponentPreview files="animation-playground" size="sm" />
-
-<span style={{ color: '#888' }}>修改配置会重新播放动画；也可以使用预览工具栏再次播放当前组合。</span>
+<ComponentPreview
+  files="animation-playground"
+  size="sm"
+  caption="修改配置会重新播放动画；也可以使用预览工具栏再次播放当前组合。"
+/>
 
 ## 技术原理
 
@@ -154,7 +152,7 @@ preset 与手写轨道最终都是同一种 `AnimationTrack`。preset 只负责�
       label: 'Scene 根镜头轨道写入',
       path: 'packages/kernel/core/src/compile/compile.ts',
       startLine: 22,
-      endLine: 42,
+      endLine: 41,
     },
   ]}
 />

@@ -63,12 +63,16 @@ When calling `compileToScene()` directly, use `CompileOptions.patterns`. Definit
 
 `pattern.size` overrides the definition's `defaultSize`. These two nodes reuse the same complete definition: the left stays at `size: 6` as a reference, while the right starts at `size: 16` and lets you tune period, rotation, color, and backdrop.
 
-<ComponentPreview files="custom-pattern-size" size="sm" />
-
-<span style={{ color: '#888' }}>
-  The controls change only serializable pattern configuration; the copyable `PatternDefinition`, host injection, and
-  usage code remain complete in the example.
-</span>
+<ComponentPreview
+  files="custom-pattern-size"
+  size="sm"
+  caption={
+    <>
+      The controls change only serializable pattern configuration; the copyable <code>PatternDefinition</code>, host
+      injection, and usage code remain complete in the example.
+    </>
+  }
+/>
 
 ## Execution
 

@@ -27,25 +27,23 @@ import { Node } from '@retikz/react';
 
 两个或多个重叠图元，给上层设 `blendMode` 就在重叠处看到混合效果。`multiply` 在浅底上把重叠处压暗：
 
-<ComponentPreview files="blend-multiply" size="sm" />
-
-<span style={{ color: '#888' }}>三个重叠圆，上层 multiply——重叠处颜色相乘变暗。</span>
+<ComponentPreview files="blend-multiply" size="sm" caption="三个重叠圆，上层 multiply——重叠处颜色相乘变暗。" />
 
 ### 叠色 screen
 
 `screen` 反过来在深底上把重叠处提亮：
 
-<ComponentPreview files="blend-screen" size="sm" />
-
-<span style={{ color: '#888' }}>深底上两个圆 screen——重叠处提亮叠加。</span>
+<ComponentPreview files="blend-screen" size="sm" caption="深底上两个圆 screen——重叠处提亮叠加。" />
 
 ### 模式试验场
 
 上面的静态示例让 `multiply` 与 `screen` 的典型语义始终可见。最后固定左圆为普通、不透明的 backdrop，只让右圆 source 接收全部 16 种模式与可调透明度；背景和两层颜色仍可分别调整。
 
-<ComponentPreview files="blend-playground" size="sm" />
-
-<span style={{ color: '#888' }}>切换模式时，右圆始终是 source；调整 source opacity 只会减弱右圆参与的混合。</span>
+<ComponentPreview
+  files="blend-playground"
+  size="sm"
+  caption="切换模式时，右圆始终是 source；调整 source opacity 只会减弱右圆参与的混合。"
+/>
 
 ## 技术原理
 

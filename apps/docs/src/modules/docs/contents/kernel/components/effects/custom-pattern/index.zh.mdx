@@ -63,11 +63,15 @@ const cross = definePattern({
 
 `pattern.size` 会覆盖定义的 `defaultSize`。下面两个节点复用同一个完整定义：左侧固定为 `size: 6` 作为参照，右侧从 `size: 16` 开始，并允许调整周期、旋转、颜色与背景。
 
-<ComponentPreview files="custom-pattern-size" size="sm" />
-
-<span style={{ color: '#888' }}>
-  控件只改变可序列化的图案配置；可复制的 `PatternDefinition`、宿主注入和使用代码仍完整保留在示例中。
-</span>
+<ComponentPreview
+  files="custom-pattern-size"
+  size="sm"
+  caption={
+    <>
+      控件只改变可序列化的图案配置；可复制的 <code>PatternDefinition</code>、宿主注入和使用代码仍完整保留在示例中。
+    </>
+  }
+/>
 
 ## 执行机制
 
