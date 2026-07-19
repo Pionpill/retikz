@@ -11,6 +11,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { ngonControls } from './ngon.controls';
 
+export const previewControls = ngonControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -114,7 +116,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(ngonControls);
 
   return (
-    <Layout width={460} height={250} viewBox={{ x: -230, y: -125, width: 460, height: 250 }} shapes={[ngon]}>
+    <Layout width={400} height={250} viewBox={{ x: -230, y: -125, width: 460, height: 250 }} shapes={[ngon]}>
       <Node id="source" position={[-155, 0]} shape="circle" minimumSize={18} fill="gray" stroke="none" />
       <Node
         id="shape"

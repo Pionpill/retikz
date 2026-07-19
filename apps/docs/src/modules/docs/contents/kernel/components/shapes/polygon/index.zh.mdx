@@ -28,8 +28,6 @@ import { RegularPolygon } from '@retikz/react';
 | `{ center, radius, sides }`     | 已知外接半径 |
 | `{ center, sideLength, sides }` | 已知边长     |
 
-<ComponentPreview files="regular-polygon-basic" size="xs" />
-
 下面的 playground 同时显示外接圆和第一个顶点方向。调整 `sides`、半径与 `rotate`，观察顶点始终均匀落在参考圆上。
 
 <ComponentPreview files="polygon-playground" size="md" />
@@ -63,7 +61,7 @@ import { Node } from '@retikz/react';
 
 playground 把六边形与 `diamond` 预设放在同一场景比较；`diamond` 等价于 `{ type:'polygon', params:{ sides:4, rotate:0 } }`，不接收额外参数。选择六边形时可调整 `cornerRadius`，再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随尖角或圆角轮廓，并与命名 / 数字 anchor 对照。
 
-<ComponentPreview files="node-connection-playground" size="md" />
+<ComponentPreview files="node-connection-playground" size="sm" />
 
 Node 的通用尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/overview)。
 

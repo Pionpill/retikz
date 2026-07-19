@@ -86,7 +86,7 @@ A filled sector's center is the cursor, so `center` can take a node id (or polar
 
 Arc and Sector share the same elliptical radii and angle model. Once the basic forms above are clear, adjust both in the playground: the left side shows Arc closure, while the right side shows how Sector's inner arc changes ring width.
 
-<ComponentPreview files="arc-sector-playground" size="md" />
+<ComponentPreview files="arc-sector-playground" size="sm" />
 
 ### API Reference
 
@@ -130,7 +130,7 @@ import { Node } from '@retikz/react';
 
 Switch between Arc and Sector in the playground: Arc is a single-radius curve, while Sector is a ring wedge. When Sector is selected, adjust `cornerRadius` to compare sharp and rounded connection boundaries; then move the source with the orbit angle and distance to see automatic clipping follow the current curve or contour. `Arc midpoint` targets the Sector's outer arc, while `Inner arc midpoint` targets `inner-arc-mid` for Sector and safely falls back to `arc-mid` for Arc.
 
-<ComponentPreview files="node-connection-playground" size="md" />
+<ComponentPreview files="node-connection-playground" size="sm" />
 
 Besides the node's center plus 8 directional anchors (`center` / `top` …), these shapes provide geometry-named anchors for precise connections via `{ id, anchor }`:
 

@@ -9,6 +9,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { contourBoundaryPlaygroundControls } from './contour-boundary-playground.controls';
 
+export const previewControls = contourBoundaryPlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -47,8 +49,16 @@ const Demo: FC = () => {
   ];
 
   return (
-    <Layout width={430} height={430} viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
-      <Rectangle center={[0, 0]} width={84} height={94} stroke="gray" strokeOpacity={0.55} dashPattern={[5, 4]} />
+    <Layout width={400} height={430} viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
+      <Rectangle
+        center={[0, 0]}
+        width={84}
+        height={94}
+        stroke="lightgray"
+        strokeOpacity={0.55}
+        dashPattern={[1, 4]}
+        lineCap="round"
+      />
       <Node
         id="shape"
         position={[0, 0]}

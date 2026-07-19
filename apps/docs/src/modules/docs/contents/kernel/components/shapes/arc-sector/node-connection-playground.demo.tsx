@@ -9,6 +9,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { nodeConnectionPlaygroundControls } from './node-connection-playground.controls';
 
+export const previewControls = nodeConnectionPlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -62,8 +64,8 @@ const Demo: FC = () => {
         };
 
   return (
-    <Layout width={430} height={430} viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
-      <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[4, 4]} zIndex={-2} />
+    <Layout width={400} height={430} viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
+      <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-2} />
       <Node id="target" position={[0, 0]} shape={targetShape} fill="#bfdbfe" stroke="#2563eb" />
       <Node id="source" position={sourcePosition} shape="circle" minimumSize={18} fill="gray" stroke="none" />
       <Draw way={[sourceTarget, targetOf(values.shape, values.anchor)]} arrow="->" stroke="gray" zIndex={-1} />

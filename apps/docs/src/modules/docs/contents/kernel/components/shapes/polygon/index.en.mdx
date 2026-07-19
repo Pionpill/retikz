@@ -28,8 +28,6 @@ import { RegularPolygon } from '@retikz/react';
 | `{ center, radius, sides }`     | Known circumradius |
 | `{ center, sideLength, sides }` | Known side length  |
 
-<ComponentPreview files="regular-polygon-basic" size="xs" />
-
 The playground shows both the circumcircle and the first-vertex direction. Adjust `sides`, radius, and `rotate` to see every vertex remain evenly distributed on the reference circle.
 
 <ComponentPreview files="polygon-playground" size="md" />
@@ -63,7 +61,7 @@ import { Node } from '@retikz/react';
 
 The playground compares a hexagon with the `diamond` preset in one scene; `diamond` is equivalent to `{ type:'polygon', params:{ sides:4, rotate:0 } }` and accepts no extra params. Select the hexagon to adjust `cornerRadius`, then move the source with the orbit angle and distance to see automatic clipping follow sharp or rounded contours and compare it with named or numeric anchors.
 
-<ComponentPreview files="node-connection-playground" size="md" />
+<ComponentPreview files="node-connection-playground" size="sm" />
 
 See [Node geometry](/kernel/components/node/overview) for shared sizing, boundary, and anchor behavior.
 

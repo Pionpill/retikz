@@ -16,12 +16,12 @@ import { nodeConnectionPlaygroundControls as rectangleControls } from '../../src
 import { nodeConnectionPlaygroundControls as starControls } from '../../src/modules/docs/contents/kernel/components/shapes/star/node-connection-playground.controls';
 
 const shapePages = new Map([
-  ['circle-ellipse', 'node-connection-playground'],
-  ['arc-sector', 'node-connection-playground'],
-  ['rectangle', 'node-connection-playground'],
-  ['polygon', 'node-connection-playground'],
-  ['star', 'node-connection-playground'],
-  ['contour', 'contour-boundary-playground'],
+  ['circle-ellipse', { preview: 'node-connection-playground', size: 'sm' }],
+  ['arc-sector', { preview: 'node-connection-playground', size: 'sm' }],
+  ['rectangle', { preview: 'node-connection-playground', size: 'sm' }],
+  ['polygon', { preview: 'node-connection-playground', size: 'sm' }],
+  ['star', { preview: 'node-connection-playground', size: 'md' }],
+  ['contour', { preview: 'contour-boundary-playground', size: 'md' }],
 ]);
 
 const replacedStaticDemos = [
@@ -65,12 +65,12 @@ const examplesSource = (pageSource: string, locale: 'zh' | 'en') => {
 
 describe('Shapes Node examples consolidation', () => {
   it('keeps one controls preview in every built-in Node Examples section', () => {
-    for (const [folder, preview] of shapePages) {
+    for (const [folder, { preview, size }] of shapePages) {
       for (const locale of ['zh', 'en'] as const) {
         const pageSource = readFileSync(resolve(contentRoot, folder, `index.${locale}.mdx`), 'utf8');
         const examples = examplesSource(pageSource, locale);
         expect(examples.match(/<ComponentPreview\b/g)).toHaveLength(1);
-        expect(examples).toContain(`<ComponentPreview files="${preview}" size="md" />`);
+        expect(examples).toContain(`<ComponentPreview files="${preview}" size="${size}" />`);
       }
     }
   });
@@ -186,6 +186,31 @@ describe('Shapes Node examples consolidation', () => {
       expect(connection, preview).toBeDefined();
       expect(connection, preview).toContain('stroke="gray"');
       expect(connection, preview).not.toContain('strokeWidth=');
+    }
+  });
+
+  it('keeps every Shapes controls output at or below the compact preview width', () => {
+    const controlsDemos = [
+      'arc-sector/arc-sector-playground.demo.tsx',
+      'arc-sector/node-connection-playground.demo.tsx',
+      'circle-ellipse/ellipse-playground.demo.tsx',
+      'circle-ellipse/node-connection-playground.demo.tsx',
+      'contour/contour-boundary-playground.demo.tsx',
+      'custom-shape/ngon.demo.tsx',
+      'polygon/node-connection-playground.demo.tsx',
+      'polygon/polygon-playground.demo.tsx',
+      'rectangle/node-connection-playground.demo.tsx',
+      'rectangle/rectangle-playground.demo.tsx',
+      'star/node-connection-playground.demo.tsx',
+      'star/star-playground.demo.tsx',
+    ];
+
+    for (const demo of controlsDemos) {
+      const source = readFileSync(resolve(contentRoot, demo), 'utf8');
+      const width = source.match(/<Layout\s+width=\{(\d+)\}/)?.[1];
+
+      expect(width, demo).toBeDefined();
+      expect(Number(width), demo).toBeLessThanOrEqual(400);
     }
   });
 });

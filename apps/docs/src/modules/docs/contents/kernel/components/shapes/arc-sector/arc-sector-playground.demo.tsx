@@ -8,6 +8,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { arcSectorPlaygroundControls } from './arc-sector-playground.controls';
 
+export const previewControls = arcSectorPlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -34,7 +36,7 @@ const Demo: FC = () => {
     : undefined;
 
   return (
-    <Layout width={460} height={270} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
+    <Layout width={400} height={270} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       {[arcCenter, sectorCenter].map((center, index) => (
         <Draw
           key={index}
@@ -44,7 +46,8 @@ const Demo: FC = () => {
             ellipsePoint(center, values.radiusX, values.radiusY, values.endAngle),
           ]}
           stroke="lightgray"
-          dashPattern={[4, 4]}
+          dashPattern={[1, 4]}
+          lineCap="round"
         />
       ))}
       <Circle center={arcCenter} radius={3} fill="gray" stroke="none" />

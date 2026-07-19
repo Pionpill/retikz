@@ -8,6 +8,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { polygonPlaygroundControls } from './polygon-playground.controls';
 
+export const previewControls = polygonPlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -19,9 +21,9 @@ const Demo: FC = () => {
   const firstVertex: [number, number] = [values.radius * Math.cos(angle), values.radius * Math.sin(angle)];
 
   return (
-    <Layout width={420} height={250} viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
-      <Circle center={[0, 0]} radius={values.radius} stroke="lightgray" dashPattern={[4, 4]} />
-      <Draw way={[[0, 0], firstVertex]} stroke="gray" dashPattern={[3, 3]} />
+    <Layout width={400} height={250} viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
+      <Circle center={[0, 0]} radius={values.radius} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />
+      <Draw way={[[0, 0], firstVertex]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />
       <RegularPolygon
         center={[0, 0]}
         radius={values.radius}

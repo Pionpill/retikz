@@ -8,6 +8,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { rectanglePlaygroundControls } from './rectangle-playground.controls';
 
+export const previewControls = rectanglePlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -19,14 +21,15 @@ const Demo: FC = () => {
   const halfHeight = values.height / 2;
 
   return (
-    <Layout width={420} height={250} viewBox={{ x: -135, y: -95, width: 270, height: 190 }}>
+    <Layout width={400} height={250} viewBox={{ x: -135, y: -95, width: 270, height: 190 }}>
       <Draw
         way={[
           [0, -86],
           [0, 86],
         ]}
         stroke="lightgray"
-        dashPattern={[3, 3]}
+        dashPattern={[1, 4]}
+        lineCap="round"
       />
       <Draw
         way={[
@@ -34,21 +37,26 @@ const Demo: FC = () => {
           [126, 0],
         ]}
         stroke="lightgray"
-        dashPattern={[3, 3]}
+        dashPattern={[1, 4]}
+        lineCap="round"
       />
       <Draw
         way={[
           [-halfWidth, halfHeight + 16],
           [halfWidth, halfHeight + 16],
         ]}
-        stroke="gray"
+        stroke="lightgray"
+        dashPattern={[1, 4]}
+        lineCap="round"
       />
       <Draw
         way={[
           [halfWidth + 16, -halfHeight],
           [halfWidth + 16, halfHeight],
         ]}
-        stroke="gray"
+        stroke="lightgray"
+        dashPattern={[1, 4]}
+        lineCap="round"
       />
       <Rectangle
         center={[0, 0]}

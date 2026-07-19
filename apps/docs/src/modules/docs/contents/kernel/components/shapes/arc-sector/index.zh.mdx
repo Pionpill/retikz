@@ -86,7 +86,7 @@ import { Arc, Sector } from '@retikz/react';
 
 Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法后，可以用 playground 同时调整两者：左侧观察 Arc 的开放 / 闭合方式，右侧观察 Sector 的内弧如何改变环宽。
 
-<ComponentPreview files="arc-sector-playground" size="md" />
+<ComponentPreview files="arc-sector-playground" size="sm" />
 
 ### API 参考
 
@@ -130,7 +130,7 @@ import { Node } from '@retikz/react';
 
 在 playground 中切换 Arc / Sector：Arc 是单半径弧，Sector 是环楔。选择 Sector 时可调整 `cornerRadius`，比较硬角与圆角后的连接边界；再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随当前曲线或轮廓。`弧中点` 对应 Sector 的外弧中点，`内弧中点` 在 Sector 下对应 `inner-arc-mid`，切到 Arc 时安全回退到 `arc-mid`。
 
-<ComponentPreview files="node-connection-playground" size="md" />
+<ComponentPreview files="node-connection-playground" size="sm" />
 
 除节点的中心与 8 个方位 anchor（`center` / `top` …）外，这两个形状还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：
 

@@ -9,6 +9,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { ellipsePlaygroundControls } from './ellipse-playground.controls';
 
+export const previewControls = ellipsePlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -70,14 +72,15 @@ const Demo: FC = () => {
   const inputBox = inputBoxOf(values);
 
   return (
-    <Layout width={440} height={260} viewBox={{ x: -130, y: -100, width: 260, height: 200 }}>
+    <Layout width={400} height={260} viewBox={{ x: -130, y: -100, width: 260, height: 200 }}>
       <Draw
         way={[
           [0, -92],
           [0, 92],
         ]}
         stroke="lightgray"
-        dashPattern={[3, 3]}
+        dashPattern={[1, 4]}
+        lineCap="round"
       />
       <Draw
         way={[
@@ -85,15 +88,17 @@ const Demo: FC = () => {
           [122, 0],
         ]}
         stroke="lightgray"
-        dashPattern={[3, 3]}
+        dashPattern={[1, 4]}
+        lineCap="round"
       />
       <Rectangle
         center={[0, 0]}
         width={inputBox.width}
         height={inputBox.height}
-        stroke="gray"
+        stroke="lightgray"
         strokeOpacity={0.5}
-        dashPattern={[5, 4]}
+        dashPattern={[1, 4]}
+        lineCap="round"
       />
       <Ellipse
         {...ellipsePropsOf(values)}

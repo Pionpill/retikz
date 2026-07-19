@@ -8,6 +8,8 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { starPlaygroundControls } from './star-playground.controls';
 
+export const previewControls = starPlaygroundControls;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -18,9 +20,16 @@ const Demo: FC = () => {
   const innerRadius = values.outerRadius * values.innerRatio;
 
   return (
-    <Layout width={420} height={250} viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
-      <Circle center={[0, 0]} radius={values.outerRadius} stroke="lightgray" dashPattern={[4, 4]} />
-      <Circle center={[0, 0]} radius={innerRadius} stroke="gray" strokeOpacity={0.45} dashPattern={[3, 3]} />
+    <Layout width={400} height={250} viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
+      <Circle center={[0, 0]} radius={values.outerRadius} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />
+      <Circle
+        center={[0, 0]}
+        radius={innerRadius}
+        stroke="lightgray"
+        strokeOpacity={0.45}
+        dashPattern={[1, 4]}
+        lineCap="round"
+      />
       <Star
         center={[0, 0]}
         outerRadius={values.outerRadius}
