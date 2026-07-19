@@ -1,0 +1,119 @@
+---
+title: 图案
+description: 用内置线条、圆点或网格图案填充 Node 与闭合 Path，并通过实例参数控制周期、线宽、颜色和旋转。
+---
+
+图案把一小块重复单元铺满图元，比纯色更适合区分区域、标记材质或表达状态。`lines`、`dots` 与 `grid` 是可直接使用的内置图案，不需要向宿主注册定义。
+
+## 用法
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node fill={{ kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 }} />
+```
+
+把图案对象传给 Node 或 Path 的 `fill`；闭合 Path 会填充内部区域。需要图案描边时也可以把同一对象传给 `stroke`。
+
+## 例子
+
+### 内置图案
+
+三种内置 `shape` 共用一套实例参数，只改变重复单元的几何：
+
+<ComponentPreview files="pattern-builtins" size="sm" />
+
+| shape   | 重复单元    | 适合场景         |
+| ------- | ----------- | ---------------- |
+| `lines` | 一条横线    | 剖面、阴影线     |
+| `dots`  | 一个圆点    | 采样点、轻量纹理 |
+| `grid`  | 横线 + 竖线 | 网格、坐标区域   |
+
+`rotation` 会旋转整块重复图案，所以 `lines` 可以变成斜线或竖线；不需要为每个方向注册新名称。
+
+### Node 与 Path
+
+图案是共享的 paint（绘制颜料）规格，不属于某一种图元。同一个对象可以同时填充 Node 与闭合 Path：
+
+<ComponentPreview files="pattern-surfaces" size="sm" />
+
+### 参数试验场
+
+固定图元和取景框，只调整内置类型、周期、线宽、旋转与颜色。几何位置不会随图案参数变化：
+
+<ComponentPreview files="pattern-playground" size="sm" />
+
+<span style={{ color: '#888' }}>切换三种 shape 后继续调整 size 与 lineWidth，可以直接比较疏密和重复单元粗细。</span>
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要理解图案为什么能在 SVG 与 Canvas 中保持同一重复单元时再回来读。"
+/>
+
+编译时，`shape` 会从统一图案注册表找到对应定义，再把实例参数变成一个已解析的重复单元资源。Scene 只保存结构化图元；SVG 与 Canvas 分别把同一资源物化为各自的 pattern。
+
+这也解释了参数边界：`size` 是重复周期，`lineWidth` 影响线条粗细或圆点半径，`rotation` 旋转整块图案。它们不会改变 Node 或 Path 自身的几何边界。
+
+<SourceLinks
+  sources={[
+    {
+      label: '三种内置重复单元定义',
+      path: 'packages/kernel/core/src/providers/pattern/definitions.ts',
+      startLine: 17,
+      endLine: 76,
+    },
+    {
+      label: '解析实例参数并生成 Scene 图案资源',
+      path: 'packages/kernel/core/src/compile/resource/paint.ts',
+      startLine: 29,
+      endLine: 81,
+    },
+    {
+      label: '物化 SVG 图案',
+      path: 'packages/kernel/render/src/svg/builders/paint-defs.ts',
+      startLine: 117,
+      endLine: 126,
+    },
+    {
+      label: '物化 Canvas 图案',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 627,
+      endLine: 646,
+    },
+  ]}
+/>
+
+## API 参考
+
+### 图元属性
+
+| 属性     | 类型                    | 默认值 | 描述                   |
+| -------- | ----------------------- | ------ | ---------------------- |
+| `fill`   | `string \| IRPaintSpec` | —      | 填充 Node 或闭合 Path  |
+| `stroke` | `string \| IRPaintSpec` | —      | 描边；支持相同图案规格 |
+
+### Pattern 分支
+
+`IRPaintSpec` 中 `kind: 'pattern'` 的对象字段如下：
+
+| 属性         | 类型        | 默认值                   | 描述                       |
+| ------------ | ----------- | ------------------------ | -------------------------- |
+| `kind`       | `'pattern'` | —                        | 图案 paint 的判别字段      |
+| `shape`      | `string`    | —                        | 内置名或已注册的自定义名称 |
+| `color`      | `string`    | `currentColor`           | 重复单元主色               |
+| `background` | `string`    | 透明                     | 每块 tile 的背景色         |
+| `size`       | `number`    | `8`                      | 重复周期，必须为有限正数   |
+| `lineWidth`  | `number`    | 线/网格 `1`；点 `size/5` | 线宽；dots 中作为圆点半径  |
+| `rotation`   | `number`    | `0`                      | 整块图案旋转角度           |
+
+## 相关
+
+- [自定义图案](/kernel/components/effects/custom-pattern)：重复单元几何不够用时注册新名称
+- [Node](/kernel/components/node/overview)：节点填充与其它样式
+- [Path](/kernel/components/draw/path)：闭合路径与填充规则
+- [效果](/kernel/components/effects)：返回效果家族与阅读顺序

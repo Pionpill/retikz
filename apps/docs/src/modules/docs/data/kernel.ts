@@ -119,6 +119,7 @@ export const kernelSection: Array<Section> = [
           { id: 'shadow', label: 'kernel.effectsShadow' },
           { id: 'blend', label: 'kernel.effectsBlend' },
           { id: 'animation', label: 'kernel.effectsAnimation' },
+          { id: 'pattern', label: 'kernel.effectsPattern' },
           { id: 'custom-pattern', label: 'kernel.effectsCustomPattern', meta: extensionGuide('kernel.pattern') },
           { id: 'custom-animation', label: 'kernel.effectsCustomAnimation', meta: extensionGuide('kernel.animation') },
         ],

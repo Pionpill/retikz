@@ -1,6 +1,6 @@
 ---
 title: Shadow
-description: Element-level drop shadow — applied to a Node shape / Path main path, calibrated across backends and stackable; a preset string or an object.
+description: Add a drop shadow to the primary geometry of a Node or Path with a quick preset or a precise object form.
 ---
 
 `shadow` is an element-level visual-effect prop you can set directly on `<Node>` and `<Path>`. It applies to **the primitive itself** — the Node shape, the Path main path (including its endpoint arrows). A Node's text / label / pin are separate primitives and get no shadow. It is renderer-agnostic: SVG and Canvas each translate it to native capabilities and calibrate the visual contract to stay close.
@@ -56,6 +56,16 @@ Priority is always: **explicit field > preset > default**. The default color is 
   title="Blur is a diagnosable approximation"
   description="blur is a blur radius in user units. SVG and Canvas apply backend-specific calibration through their native shadow APIs, keeping it close under preview sizing / transforms; it is not pixel-exact. blur=0 is a hard edge."
 />
+
+### Parameter playground
+
+The static examples above preserve presets, object overrides, and the effect boundary. Finish by tuning offset, blur, color, and opacity on one card to see how those fields shape the shadow together.
+
+<ComponentPreview files="shadow-playground" size="sm" />
+
+<span style={{ color: '#888' }}>
+  Start from a preset or adjust `offsetX`, `offsetY`, `blur`, `color`, and `opacity` one by one.
+</span>
 
 ## How it works
 
@@ -168,9 +178,9 @@ SVG maps `blur` to Gaussian standard deviation and bases the filter region on th
 
 `shadow` is a shared style prop on `<Node>` and `<Path>`, written the same way on both.
 
-| Prop     | Type                                                                                                                 | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| -------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —       | Drop shadow on the primary geometry: a preset string, or an object (preset seeds defaults, explicit fields override; without a preset you must give offsetX + offsetY). Priority: explicit > preset > default; color defaults to `rgba(0,0,0,0.5)`, `opacity` multiplies onto the color alpha. Element-level: a Node's text / label / pin (separate primitives) get none; a Path's endpoint arrows cast a shadow with the main path |
+| Prop     | Type                                                                                                                 | Default | Description                                                     |
+| -------- | -------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------- |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —       | Shadow on primary geometry; see precedence and boundaries above |
 
 ### shadow object fields
 

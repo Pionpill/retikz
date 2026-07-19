@@ -1,9 +1,9 @@
 ---
 title: Animation
-description: Keyframe nodes, paths, and the camera over time with named presets — intro, emphasis, loop, camera, and stagger — written declaratively and degrading gracefully; presets equal their underlying AnimationTrack, and a settled-last-frame convention preserves fallback.
+description: Animate primitives and the camera with presets or keyframe tracks, including triggers, controls, snapshots, and reduced-motion fallback.
 ---
 
-Animation transitions a static figure **from one look to another over time**: fade in, draw a line, scale up, spin, shift color, pan the camera. You don't hand-write keyframes — call a **preset factory** (`fadeIn()` / `spin()` …) to get an animation descriptor and attach it to an element's `animations` array.
+Animation transitions a static figure **from one look to another over time**: fade in, draw a line, scale up, spin, shift color, pan the camera. Call a **preset factory** (`fadeIn()` / `spin()` …) for common effects, or write an `IRAnimationTrack` when you need exact control.
 
 ## Usage
 
@@ -20,28 +20,36 @@ import { Node } from '@retikz/react';
 
 ## Examples
 
-`animations` attaches to `<Node>` / `<Path>` / `<Scope>` (element animation) and `<Layout>` (camera). An element can carry several; they don't interfere. Apart from the `loop` wrapper and the `stagger` choreographer, every preset accepts the common options `{ duration, delay, easing, trigger }`; some add their own (`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …).
+`animations` attaches to `<Node>` / `<Path>` / `<Scope>` (element animation) and `<Layout>` (camera). An element can carry several: different channels can combine, but tracks on the same property are not automatically composited. Merge conflicting values into one track and preserve the intended array order for transform channels. Apart from the `loop` wrapper and the `stagger` choreographer, every preset accepts the common options `{ duration, delay, easing, trigger }`; some add their own (`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …).
 
-### All animations
+### Animations and controls
 
-| Animation    | Family       | Channel       | What it does                                      |
-| ------------ | ------------ | ------------- | ------------------------------------------------- |
-| `fadeIn`     | intro        | opacity       | fade in (0→1)                                     |
-| `drawOn`     | intro        | pathDraw      | stroke draws along the path                       |
-| `scaleIn`    | intro        | scale         | pop in from slightly small (0.8→1)                |
-| `grow`       | intro        | scale         | grow from nothing (0→1)                           |
-| `growUp`     | intro        | scaleY        | grow from baseline (bars)                         |
-| `slideIn`    | intro        | translateX/Y  | slide in from an offset                           |
-| `colorShift` | emphasis     | fill / stroke | color transition (oklch lerp)                     |
-| `flash`      | emphasis     | opacity       | flash once (2× by default)                        |
-| `blink`      | emphasis     | opacity       | continuous blink (infinite)                       |
-| `wiggle`     | emphasis     | rotate        | rock left/right (3× by default)                   |
-| `pulse`      | loop         | scale         | pulsing scale (infinite)                          |
-| `spin`       | loop         | rotate        | steady rotation (infinite, loader)                |
-| `loop`       | loop         | any           | turn any track into an infinite loop              |
-| `cameraTo`   | camera       | viewBox       | pan / zoom the camera (on `<Layout>`)             |
-| `stagger`    | choreography | —             | add increasing delay across a group               |
-| `snapshot`   | control      | —             | `snapshotAt` bakes a static frame at a given time |
+| Animation    | Family        | Channel       | What it does                          |
+| ------------ | ------------- | ------------- | ------------------------------------- |
+| `fadeIn`     | intro         | opacity       | fade in (0→1)                         |
+| `drawOn`     | intro         | pathDraw      | stroke draws along the path           |
+| `scaleIn`    | intro         | scale         | pop in from slightly small (0.8→1)    |
+| `grow`       | intro         | scale         | grow from nothing (0→1)               |
+| `growUp`     | intro         | scaleY        | grow from baseline (bars)             |
+| `slideIn`    | intro         | translateX/Y  | slide in from an offset               |
+| `colorShift` | emphasis      | fill / stroke | color transition (oklch lerp)         |
+| `flash`      | emphasis      | opacity       | flash once (2× by default)            |
+| `blink`      | emphasis      | opacity       | continuous blink (infinite)           |
+| `wiggle`     | emphasis      | rotate        | rock left/right (3× by default)       |
+| `pulse`      | loop          | scale         | pulsing scale (infinite)              |
+| `spin`       | loop          | rotate        | steady rotation (infinite, loader)    |
+| `loop`       | loop          | any           | turn any track into an infinite loop  |
+| `cameraTo`   | camera        | viewBox       | pan / zoom the camera (on `<Layout>`) |
+| `stagger`    | choreography  | —             | add increasing delay across a group   |
+| `snapshotAt` | static output | —             | bake a static frame at a given time   |
+
+### Hand-written keyframes
+
+When a preset does not cover the timing you need, write a serializable `IRAnimationTrack` directly. This three-keyframe track moves the node up and back to its settled position:
+
+<ComponentPreview files="handwritten-track" size="sm" />
+
+`at` is a normalized position from 0 to 1, and `value` is an absolute value for the selected channel. The last frame returns to `0`, so completed playback and disabled animation share the same settled state. An easing on a keyframe controls the following segment.
 
 ### Intro
 
@@ -53,14 +61,16 @@ Intro animations **play once on load**, bringing an element from a transparent /
   All in one: fadeIn / scaleIn / grow / slideIn nodes, two growUp bars, and one drawOn path.
 </span>
 
-| Animation | What it does                                                                                            | Specific options                                                                                                                         |
-| --------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `fadeIn`  | Opacity 0→1, the most common entrance                                                                   | — (common options only)                                                                                                                  |
-| `scaleIn` | Uniform scale `from`→1, popping in around a pivot                                                       | `from` (starting scale, defaults to `0.8`; last frame always `1`), `origin` (scale pivot, defaults to the geometric center)              |
-| `grow`    | The `from: 0` alias of `scaleIn`, growing from nothing                                                  | `origin` (same as `scaleIn`)                                                                                                             |
-| `growUp`  | `scaleY` 0→1 with the pivot at the bottom edge — bars growing from the baseline                         | `origin` (defaults to `'bottom'`, the bottom-edge midpoint; also accepts another canonical anchor or `[x, y]`)                           |
-| `slideIn` | `translateX`/`translateY` `offset`→0, sliding back to place from an offset                              | `axis` (`'x'`→`translateX` / `'y'`→`translateY`, defaults to `'x'`), `offset` (starting shift, defaults to `-20`; last frame always `0`) |
-| `drawOn`  | `pathDraw` 0→1, the stroke drawing progressively along the path; only for **stroked** `<Path>` / shapes | — (common options only)                                                                                                                  |
+When `origin` is omitted, rects and ellipses can derive their geometric center. Path, Text, and Group primitives fall back to the backend's default pivot because their center cannot be derived. Set `origin` explicitly when an animation must behave consistently across primitive kinds.
+
+| Animation | Behavior                        | Specific options               |
+| --------- | ------------------------------- | ------------------------------ |
+| `fadeIn`  | opacity 0→1                     | —                              |
+| `scaleIn` | scale `from`→1                  | `from: 0.8`<br />`origin`      |
+| `grow`    | scale 0→1                       | `origin`                       |
+| `growUp`  | scaleY 0→1 from the baseline    | `origin: 'bottom'`             |
+| `slideIn` | translate `offset`→0            | `axis: 'x'`<br />`offset: -20` |
+| `drawOn`  | pathDraw 0→1 reveals the stroke | stroked `<Path>` / shapes only |
 
 ### Emphasis & Loop
 
@@ -72,15 +82,15 @@ Emphasis animations **draw attention** — shift color, flash, rock; loop animat
   flash / blink / wiggle / pulse nodes, plus a spin bar, a loop slide, and a colorShift shape.
 </span>
 
-| Animation    | What it does                                                                                                                                                        | Specific options                                                                                                                                         |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `colorShift` | Transitions `fill` / `stroke` in **oklch** space (perceptually even, no muddy band); targets the shape's own fill / stroke                                          | `from` / `to` (start / end color, **both required** — a pure factory can't read the base color), `channel` (`'fill'` / `'stroke'`, defaults to `'fill'`) |
-| `flash`      | `opacity` 1→dim→1 flashed once, twice by default; the last frame returns to base                                                                                    | `dim` (trough opacity, defaults to `0`), `iterations` (flash count, defaults to `2`)                                                                     |
-| `blink`      | The infinite version of `flash` (`opacity` blinking continuously)                                                                                                   | `dim` (trough opacity, defaults to `0`), `iterations` (defaults to `'infinite'`)                                                                         |
-| `wiggle`     | `rotate` 0→+a→−a→+a→0 rocking emphasis, around the geometric center                                                                                                 | `angle` (rock amplitude in degrees, defaults to `5`), `iterations` (defaults to `3`), `origin` (rotation pivot, defaults to the geometric center)        |
-| `pulse`      | `scale` 1→peak→1 infinite pulse (emphasis / heartbeat)                                                                                                              | `peak` (peak scale, defaults to `1.1`), `origin` (scale pivot, defaults to the geometric center)                                                         |
-| `spin`       | `rotate` 0→360, infinite and linear, around the geometric center — a typical loader                                                                                 | `origin` (rotation pivot, defaults to the geometric center)                                                                                              |
-| `loop`       | `loop(track, { direction })`: wraps any one-shot track into an infinite loop; produces no new track, layering `iterations` / `direction` onto the track you pass in | `iterations` (defaults to `'infinite'`), `direction` (e.g. `'alternate'`, play back and forth)                                                           |
+| Animation    | Behavior                          | Specific options                              |
+| ------------ | --------------------------------- | --------------------------------------------- |
+| `colorShift` | fill / stroke transition in oklch | `from` + `to` required<br />`channel: 'fill'` |
+| `flash`      | opacity 1→dim→1                   | `dim: 0`<br />`iterations: 2`                 |
+| `blink`      | continuous flash                  | `dim: 0`<br />`iterations: 'infinite'`        |
+| `wiggle`     | rotate back and forth             | `angle: 5`<br />`iterations: 3`<br />`origin` |
+| `pulse`      | scale 1→peak→1                    | `peak: 1.1`<br />`origin`                     |
+| `spin`       | rotate 0→360                      | `origin`                                      |
+| `loop`       | any track, looping forever        | `direction`<br />`iterations: 'infinite'`     |
 
 ### Camera & Stagger
 
@@ -97,6 +107,16 @@ Camera and stagger are the two animations that act **on the whole, not on a sing
 <ComponentPreview files="stagger" size="sm" />
 
 <span style={{ color: '#888' }}>Three nodes with the same fadeIn, entering at 0 / 150 / 300ms.</span>
+
+### Timing playground
+
+The static examples above already cover entrances, emphasis, loops, camera motion, and choreography. Finish with a fixed `scaleIn` structure and vary only the starting scale, duration, delay, easing, and transform origin to compare the shared timing options.
+
+<ComponentPreview files="animation-playground" size="sm" />
+
+<span style={{ color: '#888' }}>
+  Changing a value replays the animation; the preview toolbar can replay the current combination again.
+</span>
 
 ## How it works
 
@@ -185,16 +205,9 @@ The two renderers use different live carriers while consuming the same track:
 | `manual`               | no autoplay, driven by a runtime handle | SVG / Canvas                                                           |
 | `{ onEvent: 'click' }` | plays when the event fires              | SVG / Canvas (hydration hit activates the id)                          |
 
-Pass a ref to `<Layout animationRef={ref}>` and after mount you get `AnimationControls` (`play` / `pause` / `seek`) to drive playback from your own buttons outside the component (most useful with `trigger: 'manual'`):
+Pass a ref to `<Layout animationRef={ref}>` and after mount you get `AnimationControls` (`play` / `pause` / `seek`) to drive playback from your own buttons. The `manual` track below does not autoplay; `seek(600)` moves directly to the midpoint of its 1200ms duration:
 
-```tsx
-const ref = useRef<AnimationControls | null>(null);
-
-<Layout animationRef={ref}>
-  <Node position={[0, 0]} animations={[{ ...spin(), trigger: 'manual' }]} />
-</Layout>
-<button onClick={() => ref.current?.play()}>Play</button>
-```
+<ComponentPreview files="manual-controls" size="sm" controls={{ animation: true }} />
 
 `animationRef` / vanilla `view.animation` is the Scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/kernel/packages/render/hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
 
@@ -295,21 +308,21 @@ The default `fill="forwards"` keeps the last frame after playback. Built-in intr
 
 ### AnimationTrack
 
-| Prop         | Type                                                                 | Default        | Description                                            |
-| ------------ | -------------------------------------------------------------------- | -------------- | ------------------------------------------------------ |
-| `property`   | `string`                                                             | —              | Property channel; `viewBox` is Layout-only             |
-| `keyframes`  | `Array<{ at, value, easing? }>`                                      | —              | Absolute-value keyframes sorted by `at`                |
-| `duration`   | `number`                                                             | —              | Duration of one iteration in milliseconds              |
-| `delay`      | `number`                                                             | `0`            | Delay before the first iteration in milliseconds       |
-| `easing`     | `string \| [number, number, number, number]`                         | `'linear'`     | Track easing; a keyframe can override the next segment |
-| `iterations` | `number \| 'infinite'`                                               | `1`            | Playback count                                         |
-| `direction`  | `'normal' \| 'reverse' \| 'alternate'`<br />`\| 'alternate-reverse'` | `'normal'`     | Direction of each iteration                            |
-| `fill`       | `'none' \| 'forwards' \| 'backwards' \| 'both'`                      | `'forwards'`   | Value used outside the active interval                 |
-| `trigger`    | `'load' \| 'visible' \| 'manual'`<br />`\| { onEvent: string }`      | `'load'`       | Playback trigger                                       |
-| `origin`     | `Anchor \| [number, number]`                                         | element center | Pivot for scale, scaleX/Y, and rotate                  |
+| Prop         | Type                                                                 | Default                          | Description                                                                             |
+| ------------ | -------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
+| `property`   | `string`                                                             | —                                | Property channel; `viewBox` is Layout-only                                              |
+| `keyframes`  | `Array<{ at, value, easing? }>`                                      | —                                | Absolute-value keyframes sorted by `at`                                                 |
+| `duration`   | `number`                                                             | —                                | Duration of one iteration in milliseconds                                               |
+| `delay`      | `number`                                                             | `0`                              | Delay before the first iteration in milliseconds                                        |
+| `easing`     | `string \| [number, number, number, number]`                         | `'linear'`                       | Track easing; a keyframe can override the next segment                                  |
+| `iterations` | `number \| 'infinite'`                                               | `1`                              | Playback count                                                                          |
+| `direction`  | `'normal' \| 'reverse' \| 'alternate'`<br />`\| 'alternate-reverse'` | `'normal'`                       | Direction of each iteration                                                             |
+| `fill`       | `'none' \| 'forwards' \| 'backwards' \| 'both'`                      | `'forwards'`                     | Value used outside the active interval                                                  |
+| `trigger`    | `'load' \| 'visible' \| 'manual'`<br />`\| { onEvent: string }`      | `'load'`                         | Playback trigger                                                                        |
+| `origin`     | `Anchor \| [number, number]`                                         | derived center / backend default | Pivot for scale, scaleX/Y, and rotate; set explicitly for consistency across primitives |
 
 ## Related
 
 - [Shadow](/kernel/components/effects/shadow): the element-level `shadow`
 - [Blend](/kernel/components/effects/blend): the element-level `blendMode`
-- [Custom Animation](/kernel/components/effects/custom-animation): register custom presets and the underlying tracks
+- [Custom Animation](/kernel/components/effects/custom-animation): register easing curves and Canvas property channels

@@ -1,56 +1,150 @@
 ---
 title: Custom Animation
-description: Both the easing curve and the property channel of animations are open — register custom easings (spring, …) and custom property channels (blur, …) beyond the built-ins.
+description: Register easing curves through Layout.easings or add Canvas animation property channels through Layout.animationProperties.
 ---
 
-An [animation](/kernel/components/effects/animation)'s `easing` and `property` are both **open strings**: beyond the built-ins you can register your own easing curves and property channels. The two injection points are two `<Layout>` props — same as the [shape](/kernel/components/shapes/custom-shape) / [arrow](/kernel/components/draw/custom-arrow) extensions: the IR / preset only carries a name, the definition is injected at `<Layout>`. The difference is that these two are lightweight [registry extensions](/kernel/reference/runtime/extensions#three-extension-models) applied at runtime inside the renderer, not compile-time `xxxDefinition`s.
+Built-in animation covers common opacity, color, transform, stroke, and camera changes. Register an easing when you need a new motion curve, or register a property channel when animation must drive a new Canvas value.
 
-## Custom easing (`easings`)
-
-`<Layout easings={{ name: curve }}>` registers an easing; a preset's or track's `easing` referencing that name takes effect:
+This example gives `scaleIn()` a spring-like `spring` easing. The animation track still stores only the string name.
 
 <ComponentPreview files="custom-easing" size="xs" />
 
+## Boundaries
+
+First decide whether you are extending the timing curve or the property being changed:
+
+| Need                    | Extension point       | Backend                     |
+| ----------------------- | --------------------- | --------------------------- |
+| Change motion timing    | `easings`             | SVG + Canvas (tuple)        |
+| Use a JavaScript easing | `easings`             | Canvas live; both snapshots |
+| Drive a new property    | `animationProperties` | Canvas                      |
+
+If a built-in channel already represents the property, change its easing or write keyframes instead of adding another channel. Custom property channels depend on the Canvas 2D context and are not suitable when equivalent SVG output is required.
+
+## Define the capability
+
+### Easing curves
+
+An easing registry value is either a cubic-bezier tuple or a `(t) => number` function, so it needs no wrapper definition:
+
 ```tsx
-<Layout easings={{ spring: [0.34, 1.56, 0.64, 1] }}>
-  <Node animations={[scaleIn({ from: 0.4, easing: 'spring' })]}>spring</Node>
+import type { EasingRegistry } from '@retikz/render/animation';
+
+const easings = {
+  spring: [0.34, 1.56, 0.64, 1],
+} satisfies EasingRegistry;
+```
+
+A tuple works in SVG CSS and the shared evaluator. A function needs JavaScript: Canvas can play it live, and `snapshotAt` can evaluate it for both SVG and Canvas; live SVG cannot put the function into CSS. Tuple y values may leave `[0, 1]` for overshoot or spring-like motion.
+
+### Property channels
+
+A new channel uses `AnimationPropertyDefinition`. `interpolate` computes a value between neighboring keyframes, and `applyCanvas` applies that value while the primitive is being drawn.
+
+```tsx
+import type { AnimationPropertyDefinition } from '@retikz/render/animation';
+
+const blur = {
+  interpolate: (from, to, t) => Number(from) + (Number(to) - Number(from)) * t,
+  applyCanvas: (ctx, _primitive, value) => {
+    ctx.filter = `blur(${Number(value)}px)`;
+  },
+} satisfies AnimationPropertyDefinition;
+```
+
+This example registers `blur` and uses an ordinary `AnimationTrack` to move from blurred to sharp. You can tune the starting blur and duration while the complete property definition stays visible in the code:
+
+<ComponentPreview files="custom-property" size="sm" />
+
+<span style={{ color: '#888' }}>
+  Changing a control replays the current track; the two presets make subtle and pronounced filter changes easy to
+  compare.
+</span>
+
+## Inject the host
+
+Both registries enter through `<Layout>`. Tracks reference registry entries by name, while functions and Canvas contexts stay outside the IR.
+
+```tsx
+<Layout renderer="canvas" easings={easings} animationProperties={{ blur }}>
+  <Node animations={[scaleIn({ easing: 'spring' }), blurIn]} />
 </Layout>
 ```
 
-Two registered-value forms:
+You do not need to force Canvas when registering only an easing. Cubic-bezier tuples play live in both SVG and Canvas. Function easings are limited only for live SVG; snapshots still use the shared JavaScript evaluator. `animationProperties` always depends on Canvas.
 
-| Form               | Type                    | Backend support                                                          |
-| ------------------ | ----------------------- | ------------------------------------------------------------------------ |
-| cubic-bezier tuple | `[x1, y1, x2, y2]`      | SVG (becomes CSS `cubic-bezier()`) + Canvas                              |
-| easing function    | `(t: number) => number` | **Canvas only**; can't enter CSS → falls back to `linear` with a warning |
+## Execution
 
-There is **no** `EasingDefinition` — a cubic-bezier tuple or a function value is already simple enough to register directly as a registry value. `y` may exceed `[0, 1]` (e.g. `1.56`) for overshoot / spring effects. An unregistered easing name → falls back to `linear` (SVG warns, Canvas degrades silently); either way the track still plays — only the easing degrades to linear, it does not fall back to the resting state.
+Track `easing` and `property` values are both open strings, but they are resolved at different points:
 
-## Custom property channel (`animationProperties`)
+| Extension | Lookup time                    | Consumption                      |
+| --------- | ------------------------------ | -------------------------------- |
+| easing    | Before each segment evaluates  | Maps time to eased progress      |
+| property  | While Canvas draws a primitive | Interpolates and updates context |
 
-`property` is open too: register a channel name plus its interpolator and how to apply it, and you can animate properties beyond the built-ins (e.g. a `blur` filter). Unlike easing, a custom property channel uses `AnimationPropertyDefinition` — it must define both interpolation and backend application, which a single value can't express. Below registers `blur` and runs a focus-in entrance (click ↺ at the top-left to replay):
+Live SVG converts cubic-bezier values into CSS timing functions. A function cannot be serialized into CSS, so it warns and falls back to `linear`. `snapshotAt` emits no CSS and samples the shared evaluator, so static SVG frames can use function easings. A custom property has no generic SVG mapping, so SVG skips that track and keeps the primitive at rest.
 
-<ComponentPreview files="custom-property" size="xs" />
+Built-in easing names resolve before custom record entries, and built-in property channels are classified first, so custom entries cannot override built-in semantics. These extensions do not share one `defineXxx`: an easing value is already simple, while a property channel is a renderer-specific runtime definition.
 
-`AnimationPropertyDefinition`:
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve custom easing values',
+      path: 'packages/kernel/render/src/animation/evaluate.ts',
+      startLine: 56,
+      endLine: 65,
+    },
+    {
+      label: 'Convert easing to SVG CSS',
+      path: 'packages/kernel/render/src/svg/animation/shared.ts',
+      startLine: 41,
+      endLine: 63,
+    },
+    {
+      label: 'Apply a custom property in Canvas',
+      path: 'packages/kernel/render/src/canvas/animate.ts',
+      startLine: 78,
+      endLine: 92,
+    },
+  ]}
+/>
 
-| Field         | Type                         | Description                                                                                             |
-| ------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `interpolate` | `(from, to, t) => value`     | interpolates adjacent keyframe values at segment progress `t∈[0,1]` (fed to the evaluation engine)      |
-| `applyCanvas` | `(ctx, prim, value) => void` | applies the current value to the Canvas 2D context (called within the primitive's `save/restore` scope) |
+## Errors and limits
+
+| Case                           | SVG                  | Canvas                 |
+| ------------------------------ | -------------------- | ---------------------- |
+| Unregistered easing (live)     | Warns, uses `linear` | Silently uses `linear` |
+| Function easing (live)         | Warns, uses `linear` | Evaluates normally     |
+| Function easing (`snapshotAt`) | Evaluates normally   | Evaluates normally     |
+| Unregistered property          | Warns, skips track   | Warns, skips track     |
+| Registered custom property     | Warns, skips track   | Evaluates and applies  |
+
+Skipping a track never drops the primitive; it renders at rest. Registry keys should be non-empty, stable strings that do not overlap built-in names. These lightweight record registries do not diagnose replacement by the same key.
 
 <ComponentAlert
   type="warn"
-  title="Custom property channels are Canvas-only for now"
-  description="Generic interpolation of a custom property runs in JS (applyCanvas), which lives in the Canvas backend. SVG has no built-in mapping, so an unrecognized property warns and skips that track (rendering the resting state). Use the canvas renderer for custom property channels."
+  title="Custom property channels are Canvas-only"
+  description="Use built-in property channels when SVG and Canvas must match; animationProperties has no generic SVG mapping."
 />
 
-## Backend support
+## API Reference
 
-| Extension                    | SVG                             | Canvas |
-| ---------------------------- | ------------------------------- | ------ |
-| custom easing (cubic-bezier) | ✅                              | ✅     |
-| custom easing (function)     | ⚠️ falls back to linear + warns | ✅     |
-| custom property channel      | ⚠️ warns + skips                | ✅     |
+### Layout registry props
 
-Any unregistered custom easing / property degrades diagnosably and the figure is never dropped, but the two degrade differently: an unregistered easing only falls back to `linear` (SVG warns, Canvas silent) while the track still plays; only an unregistered property skips the track and falls back to the resting state (both SVG and Canvas warn).
+| Prop                  | Type                        | Default | Description                       |
+| --------------------- | --------------------------- | ------- | --------------------------------- |
+| `easings`             | `EasingRegistry`            | —       | Maps names to tuples or functions |
+| `animationProperties` | `AnimationPropertyRegistry` | —       | Maps names to Canvas definitions  |
+
+### AnimationPropertyDefinition
+
+| Prop          | Type                         | Default | Description                         |
+| ------------- | ---------------------------- | ------- | ----------------------------------- |
+| `interpolate` | `(from, to, t) => unknown`   | —       | Computes the current keyframe value |
+| `applyCanvas` | `(ctx, prim, value) => void` | —       | Applies the value while drawing     |
+
+## Related
+
+- [Animation](/kernel/components/effects/animation): built-in presets, tracks, triggers, and snapshots
+- [Effects](/kernel/components/effects): return to the family and reading order
+- [Extension Runtime](/kernel/reference/runtime/extensions): compare compile-time and render-time registries

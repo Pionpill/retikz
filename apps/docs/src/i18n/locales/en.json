@@ -71,6 +71,7 @@
     "effects": "Effects",
     "effectsShadow": "Shadow",
     "effectsBlend": "Blend",
+    "effectsPattern": "Patterns",
     "effectsCustomPattern": "Custom Patterns",
     "effectsAnimation": "Animation",
     "effectsCustomAnimation": "Custom Animation",

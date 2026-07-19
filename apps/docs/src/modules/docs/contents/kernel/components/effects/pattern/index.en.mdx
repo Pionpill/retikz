@@ -1,0 +1,121 @@
+---
+title: Patterns
+description: Fill Node and closed Path geometry with built-in lines, dots, or grids, then tune spacing, width, color, and rotation per instance.
+---
+
+A pattern repeats one small tile across a primitive. It works well for distinguishing regions, marking materials, or showing state without relying on a solid color. The built-in `lines`, `dots`, and `grid` shapes need no host registration.
+
+## Usage
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node fill={{ kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 }} />
+```
+
+Pass the pattern object to `fill` on a Node or Path; a closed Path fills its interior. The same object can also be used as `stroke` when you need patterned outlines.
+
+## Examples
+
+### Built-in patterns
+
+All three built-in `shape` values share the same instance options and differ only in tile geometry:
+
+<ComponentPreview files="pattern-builtins" size="sm" />
+
+| shape   | Tile      | Use it for                |
+| ------- | --------- | ------------------------- |
+| `lines` | One line  | Hatching or section marks |
+| `dots`  | One dot   | Samples or light texture  |
+| `grid`  | Two lines | Grids or coordinate areas |
+
+`rotation` rotates the whole tile, so `lines` can become diagonal or vertical without registering another name.
+
+### Node and Path
+
+Patterns are shared paint specs rather than a feature owned by one primitive. The same object can fill both Node and a closed Path:
+
+<ComponentPreview files="pattern-surfaces" size="sm" />
+
+### Playground
+
+The primitive and viewBox stay fixed while you change the built-in shape, spacing, width, rotation, and colors:
+
+<ComponentPreview files="pattern-playground" size="sm" />
+
+<span style={{ color: '#888' }}>
+  Switch among all three shapes, then compare how size and lineWidth affect spacing and motif weight.
+</span>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when you want to understand why SVG and Canvas share the same resolved tile."
+/>
+
+During compile, `shape` resolves through the unified pattern registry and combines with the instance options to produce one resolved tile resource. The Scene contains only structured primitives; SVG and Canvas materialize that same resource as their native pattern.
+
+This also defines the option boundaries: `size` is the tile period, `lineWidth` changes line weight or dot radius, and `rotation` turns the complete pattern. None of them changes the Node or Path geometry itself.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Define the three built-in tiles',
+      path: 'packages/kernel/core/src/providers/pattern/definitions.ts',
+      startLine: 17,
+      endLine: 76,
+    },
+    {
+      label: 'Resolve instance options into a Scene resource',
+      path: 'packages/kernel/core/src/compile/resource/paint.ts',
+      startLine: 29,
+      endLine: 81,
+    },
+    {
+      label: 'Materialize the SVG pattern',
+      path: 'packages/kernel/render/src/svg/builders/paint-defs.ts',
+      startLine: 117,
+      endLine: 126,
+    },
+    {
+      label: 'Materialize the Canvas pattern',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 627,
+      endLine: 646,
+    },
+  ]}
+/>
+
+## API Reference
+
+### Primitive props
+
+| Prop     | Type                    | Default | Description                     |
+| -------- | ----------------------- | ------- | ------------------------------- |
+| `fill`   | `string \| IRPaintSpec` | —       | Fill a Node or closed Path      |
+| `stroke` | `string \| IRPaintSpec` | —       | Stroke with the same paint spec |
+
+### Pattern branch
+
+The `kind: 'pattern'` branch of `IRPaintSpec` has these fields:
+
+| Prop         | Type        | Default                       | Description                       |
+| ------------ | ----------- | ----------------------------- | --------------------------------- |
+| `kind`       | `'pattern'` | —                             | Pattern paint discriminator       |
+| `shape`      | `string`    | —                             | Built-in or registered name       |
+| `color`      | `string`    | `currentColor`                | Motif color                       |
+| `background` | `string`    | transparent                   | Background for each tile          |
+| `size`       | `number`    | `8`                           | Positive finite tile period       |
+| `lineWidth`  | `number`    | lines/grid `1`; dots `size/5` | Line width or dot radius          |
+| `rotation`   | `number`    | `0`                           | Rotation for the complete pattern |
+
+## Related
+
+- [Custom Patterns](/kernel/components/effects/custom-pattern): register a new tile geometry
+- [Node](/kernel/components/node/overview): node fill and other styles
+- [Path](/kernel/components/draw/path): closed paths and fill behavior
+- [Effects](/kernel/components/effects): return to the family overview

@@ -1,9 +1,9 @@
 ---
 title: 动画
-description: 给节点 / 路径 / 镜头按时间打关键帧——入场、强调、循环、镜头与错峰，声明式书写、能优雅降级；preset 与底层 AnimationTrack 等价，静止末帧约定支持完整降级。
+description: 用动画预设或关键帧轨道控制图元与镜头，并支持触发、播放控制、静态截帧和减少动态效果。
 ---
 
-动画让固定图元**按时间从一个样子过渡到另一个样子**：淡入、画线、放大、旋转、变色、镜头推拉。你不用手写关键帧——调一个 **preset 工厂**（`fadeIn()` / `spin()` …）得到一条动画描述，挂到元素的 `animations` 数组即可。
+动画让固定图元**按时间从一个样子过渡到另一个样子**：淡入、画线、放大、旋转、变色、镜头推拉。常见效果可以直接调用 **preset 工厂**（`fadeIn()` / `spin()` …）；需要精确控制时再手写一条 `IRAnimationTrack`。
 
 ## 用法
 
@@ -20,28 +20,36 @@ import { Node } from '@retikz/react';
 
 ## 例子
 
-`animations` 可挂在 `<Node>` / `<Path>` / `<Scope>`（元素动画）与 `<Layout>`（镜头）。一个元素能挂多条，互不干扰。除包装器 `loop` 与编排 `stagger` 外，每个 preset 都接受公共项 `{ duration, delay, easing, trigger }`，部分另有专有项（`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …）。
+`animations` 可挂在 `<Node>` / `<Path>` / `<Scope>`（元素动画）与 `<Layout>`（镜头）。一个元素能挂多条：不同通道可以组合；同一属性不会自动合成，冲突时应合并成一条轨道，并留意 transform 通道的数组顺序。除包装器 `loop` 与编排 `stagger` 外，每个 preset 都接受公共项 `{ duration, delay, easing, trigger }`，部分另有专有项（`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …）。
 
-### 全部动画一览
+### 动画与控制一览
 
-| 动画         | 家族 | 底层通道      | 说明                              |
-| ------------ | ---- | ------------- | --------------------------------- |
-| `fadeIn`     | 入场 | opacity       | 渐入（0→1）                       |
-| `drawOn`     | 入场 | pathDraw      | 描边沿路径画出                    |
-| `scaleIn`    | 入场 | scale         | 从略小弹入（0.8→1）               |
-| `grow`       | 入场 | scale         | 从无到有放大（0→1）               |
-| `growUp`     | 入场 | scaleY        | 从基线长出（柱状图）              |
-| `slideIn`    | 入场 | translateX/Y  | 从偏移滑入                        |
-| `colorShift` | 强调 | fill / stroke | 颜色过渡（oklch 插值）            |
-| `flash`      | 强调 | opacity       | 闪一下（默认 2 次）               |
-| `blink`      | 强调 | opacity       | 持续闪烁（无限）                  |
-| `wiggle`     | 强调 | rotate        | 左右抖动（默认 3 次）             |
-| `pulse`      | 循环 | scale         | 脉冲缩放（无限）                  |
-| `spin`       | 循环 | rotate        | 匀速旋转（无限，loader）          |
-| `loop`       | 循环 | 任意          | 把任意 track 变成无限循环         |
-| `cameraTo`   | 镜头 | viewBox       | 镜头推拉 / 平移（挂 `<Layout>`）  |
-| `stagger`    | 编排 | —             | 给一组动画依次叠加延迟            |
-| `snapshot`   | 控制 | —             | `snapshotAt` 把某时刻烘焙成静态帧 |
+| 动画         | 家族     | 底层通道      | 说明                             |
+| ------------ | -------- | ------------- | -------------------------------- |
+| `fadeIn`     | 入场     | opacity       | 渐入（0→1）                      |
+| `drawOn`     | 入场     | pathDraw      | 描边沿路径画出                   |
+| `scaleIn`    | 入场     | scale         | 从略小弹入（0.8→1）              |
+| `grow`       | 入场     | scale         | 从无到有放大（0→1）              |
+| `growUp`     | 入场     | scaleY        | 从基线长出（柱状图）             |
+| `slideIn`    | 入场     | translateX/Y  | 从偏移滑入                       |
+| `colorShift` | 强调     | fill / stroke | 颜色过渡（oklch 插值）           |
+| `flash`      | 强调     | opacity       | 闪一下（默认 2 次）              |
+| `blink`      | 强调     | opacity       | 持续闪烁（无限）                 |
+| `wiggle`     | 强调     | rotate        | 左右抖动（默认 3 次）            |
+| `pulse`      | 循环     | scale         | 脉冲缩放（无限）                 |
+| `spin`       | 循环     | rotate        | 匀速旋转（无限，loader）         |
+| `loop`       | 循环     | 任意          | 把任意 track 变成无限循环        |
+| `cameraTo`   | 镜头     | viewBox       | 镜头推拉 / 平移（挂 `<Layout>`） |
+| `stagger`    | 编排     | —             | 给一组动画依次叠加延迟           |
+| `snapshotAt` | 静态输出 | —             | 把某时刻烘焙成静态帧             |
+
+### 手写关键帧
+
+需要 preset 没有覆盖的节奏时，可以直接写一条可序列化的 `IRAnimationTrack`。下面用三个绝对值关键帧让节点上跳再回到静止位置：
+
+<ComponentPreview files="handwritten-track" size="sm" />
+
+`at` 是从 0 到 1 的归一化位置，`value` 是当前通道的绝对值。末帧回到 `0`，因此播放结束与动画关闭时都落在同一静止状态；关键帧上的 `easing` 控制从该帧出发的下一段。
 
 ### 入场
 
@@ -53,14 +61,16 @@ import { Node } from '@retikz/react';
   一图集齐：fadeIn / scaleIn / grow / slideIn 四个节点、growUp 两根柱子、drawOn 一条路径。
 </span>
 
-| 动画      | 说明                                                                     | 专有项                                                                                                        |
-| --------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `fadeIn`  | 透明度 0→1，最常用的入场                                                 | —（仅公共项）                                                                                                 |
-| `scaleIn` | 均匀缩放 `from`→1，绕支点弹入                                            | `from`（起始缩放，缺省 `0.8`，末帧恒为 `1`）、`origin`（缩放支点，缺省几何中心）                              |
-| `grow`    | `scaleIn` 的 `from: 0` 别名，从无到有放大                                | `origin`（同 `scaleIn`）                                                                                      |
-| `growUp`  | `scaleY` 0→1，支点底边——柱状图从基线长出                                 | `origin`（缺省 `'bottom'` 底边中点；也可写其它 canonical anchor 或 `[x, y]`）                                 |
-| `slideIn` | `translateX`/`translateY` `offset`→0，从偏移滑回原位                     | `axis`（`'x'`→`translateX` / `'y'`→`translateY`，缺省 `'x'`）、`offset`（起始位移，缺省 `-20`，末帧恒为 `0`） |
-| `drawOn`  | `pathDraw` 0→1，描边沿路径逐渐画出；仅对**有描边**的 `<Path>` / 形状有效 | —（仅公共项）                                                                                                 |
+`origin` 省略时，rect / ellipse 能从几何推导中心；Path、Text、Group 等无法推导时使用后端默认支点。若同一动画要跨图元保持一致，请显式设置 `origin`。
+
+| 动画      | 行为                     | 专有项                         |
+| --------- | ------------------------ | ------------------------------ |
+| `fadeIn`  | opacity 0→1              | —                              |
+| `scaleIn` | scale `from`→1           | `from: 0.8`<br />`origin`      |
+| `grow`    | scale 0→1                | `origin`                       |
+| `growUp`  | scaleY 0→1，从基线长出   | `origin: 'bottom'`             |
+| `slideIn` | translate `offset`→0     | `axis: 'x'`<br />`offset: -20` |
+| `drawOn`  | pathDraw 0→1，逐渐画描边 | 仅有描边的 `<Path>` / 形状     |
 
 ### 强调与循环
 
@@ -72,15 +82,15 @@ import { Node } from '@retikz/react';
   flash / blink / wiggle / pulse 四个节点，spin 旋转条、loop 往返、colorShift 变色三块形状。
 </span>
 
-| 动画         | 说明                                                                                                                      | 专有项                                                                                                       |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `colorShift` | `fill` / `stroke` 在 **oklch** 空间过渡（感知均匀、无灰带）；作用于形状自身的填充 / 描边                                  | `from` / `to`（起止色，**均必填**——纯工厂取不到 base 色）、`channel`（`'fill'` / `'stroke'`，缺省 `'fill'`） |
-| `flash`      | `opacity` 1→dim→1 闪一下，默认闪 2 次；末帧回 base                                                                        | `dim`（谷值不透明度，缺省 `0`）、`iterations`（闪烁次数，缺省 `2`）                                          |
-| `blink`      | 无限版 `flash`（`opacity` 持续闪烁）                                                                                      | `dim`（谷值不透明度，缺省 `0`）、`iterations`（缺省 `'infinite'`）                                           |
-| `wiggle`     | `rotate` 0→+a→−a→+a→0 左右抖动强调，绕几何中心                                                                            | `angle`（抖动幅度，度，缺省 `5`）、`iterations`（缺省 `3`）、`origin`（旋转支点，缺省几何中心）              |
-| `pulse`      | `scale` 1→peak→1 无限脉冲（强调 / 心跳）                                                                                  | `peak`（峰值缩放，缺省 `1.1`）、`origin`（缩放支点，缺省几何中心）                                           |
-| `spin`       | `rotate` 0→360 无限匀速，绕几何中心——典型 loader                                                                          | `origin`（旋转支点，缺省几何中心）                                                                           |
-| `loop`       | `loop(track, { direction })`：把任意一次性 track 包成无限循环；不产新 track，给传入 track 叠加 `iterations` / `direction` | `iterations`（缺省 `'infinite'`）、`direction`（如 `'alternate'`，往返播）                                   |
+| 动画         | 行为                          | 专有项                                        |
+| ------------ | ----------------------------- | --------------------------------------------- |
+| `colorShift` | fill / stroke 在 oklch 中过渡 | `from` + `to` 必填<br />`channel: 'fill'`     |
+| `flash`      | opacity 1→dim→1               | `dim: 0`<br />`iterations: 2`                 |
+| `blink`      | 持续 flash                    | `dim: 0`<br />`iterations: 'infinite'`        |
+| `wiggle`     | rotate 往返                   | `angle: 5`<br />`iterations: 3`<br />`origin` |
+| `pulse`      | scale 1→peak→1                | `peak: 1.1`<br />`origin`                     |
+| `spin`       | rotate 0→360                  | `origin`                                      |
+| `loop`       | 任意轨道无限循环              | `direction`<br />`iterations: 'infinite'`     |
 
 ### 镜头与编排
 
@@ -97,6 +107,14 @@ import { Node } from '@retikz/react';
 <ComponentPreview files="stagger" size="sm" />
 
 <span style={{ color: '#888' }}>三个节点同样 fadeIn，依次延迟 0 / 150 / 300ms 入场。</span>
+
+### 参数试验场
+
+前面的静态示例已经覆盖入场、强调、循环、镜头与编排。最后固定使用 `scaleIn`，只调整起始缩放、时长、延迟、缓动与变换原点，便于比较公共时序参数的影响。
+
+<ComponentPreview files="animation-playground" size="sm" />
+
+<span style={{ color: '#888' }}>修改配置会重新播放动画；也可以使用预览工具栏再次播放当前组合。</span>
 
 ## 技术原理
 
@@ -185,16 +203,9 @@ preset 与手写轨道最终都是同一种 `AnimationTrack`。preset 只负责�
 | `manual`               | 不自动播，由运行时句柄控制 | SVG / Canvas                                                        |
 | `{ onEvent: 'click' }` | 命中事件才播               | SVG / Canvas（水合命中后激活）                                      |
 
-给 `<Layout animationRef={ref}>` 传一个 ref，挂载后拿到 `AnimationControls`（`play` / `pause` / `seek`），即可在组件外用自己的按钮控制（配 `trigger: 'manual'` 最常见）：
+给 `<Layout animationRef={ref}>` 传一个 ref，挂载后拿到 `AnimationControls`（`play` / `pause` / `seek`），即可在组件外用自己的按钮控制。下面的 `manual` 轨道不会自动播放；`seek(600)` 会直接定位到 1200ms 轨道的中点：
 
-```tsx
-const ref = useRef<AnimationControls | null>(null);
-
-<Layout animationRef={ref}>
-  <Node position={[0, 0]} animations={[{ ...spin(), trigger: 'manual' }]} />
-</Layout>
-<button onClick={() => ref.current?.play()}>播放</button>
-```
+<ComponentPreview files="manual-controls" size="sm" controls={{ animation: true }} />
 
 `animationRef` / vanilla `view.animation` 是 Scene 级时钟句柄：SVG 控制整图交互动画的 WAAPI 句柄，Canvas 控制共享 rAF 时钟。handler 内要控制命中的具体图元时，用水合的 [`context.animation`](/kernel/packages/render/hydration#handler-的-context)，两后端都是 per-id 控制。
 
@@ -295,21 +306,21 @@ const ref = useRef<AnimationControls | null>(null);
 
 ### AnimationTrack
 
-| 属性         | 类型                                                                 | 默认值       | 描述                                  |
-| ------------ | -------------------------------------------------------------------- | ------------ | ------------------------------------- |
-| `property`   | `string`                                                             | —            | 动画属性通道；`viewBox` 只用于 Layout |
-| `keyframes`  | `Array<{ at, value, easing? }>`                                      | —            | 按 `at` 升序的绝对值关键帧            |
-| `duration`   | `number`                                                             | —            | 单次迭代时长，单位毫秒                |
-| `delay`      | `number`                                                             | `0`          | 首次迭代前延迟，单位毫秒              |
-| `easing`     | `string \| [number, number, number, number]`                         | `'linear'`   | track 级缓动；关键帧可覆盖下一段      |
-| `iterations` | `number \| 'infinite'`                                               | `1`          | 播放次数                              |
-| `direction`  | `'normal' \| 'reverse' \| 'alternate'`<br />`\| 'alternate-reverse'` | `'normal'`   | 每轮播放方向                          |
-| `fill`       | `'none' \| 'forwards' \| 'backwards' \| 'both'`                      | `'forwards'` | 活动区间外采用的值                    |
-| `trigger`    | `'load' \| 'visible' \| 'manual'`<br />`\| { onEvent: string }`      | `'load'`     | 播放触发方式                          |
-| `origin`     | `Anchor \| [number, number]`                                         | 几何中心     | scale、scaleX/Y 与 rotate 的支点      |
+| 属性         | 类型                                                                 | 默认值                | 描述                                                   |
+| ------------ | -------------------------------------------------------------------- | --------------------- | ------------------------------------------------------ |
+| `property`   | `string`                                                             | —                     | 动画属性通道；`viewBox` 只用于 Layout                  |
+| `keyframes`  | `Array<{ at, value, easing? }>`                                      | —                     | 按 `at` 升序的绝对值关键帧                             |
+| `duration`   | `number`                                                             | —                     | 单次迭代时长，单位毫秒                                 |
+| `delay`      | `number`                                                             | `0`                   | 首次迭代前延迟，单位毫秒                               |
+| `easing`     | `string \| [number, number, number, number]`                         | `'linear'`            | track 级缓动；关键帧可覆盖下一段                       |
+| `iterations` | `number \| 'infinite'`                                               | `1`                   | 播放次数                                               |
+| `direction`  | `'normal' \| 'reverse' \| 'alternate'`<br />`\| 'alternate-reverse'` | `'normal'`            | 每轮播放方向                                           |
+| `fill`       | `'none' \| 'forwards' \| 'backwards' \| 'both'`                      | `'forwards'`          | 活动区间外采用的值                                     |
+| `trigger`    | `'load' \| 'visible' \| 'manual'`<br />`\| { onEvent: string }`      | `'load'`              | 播放触发方式                                           |
+| `origin`     | `Anchor \| [number, number]`                                         | 可推导中心 / 后端默认 | scale、scaleX/Y 与 rotate 的支点；跨图元一致时显式设置 |
 
 ## 相关
 
 - [阴影](/kernel/components/effects/shadow)：图元级投影 `shadow`
 - [混合](/kernel/components/effects/blend)：图元级混合模式 `blendMode`
-- [自定义动画](/kernel/components/effects/custom-animation)：注册自定义 preset 与底层 track
+- [自定义动画](/kernel/components/effects/custom-animation)：注册缓动曲线与 Canvas 属性通道

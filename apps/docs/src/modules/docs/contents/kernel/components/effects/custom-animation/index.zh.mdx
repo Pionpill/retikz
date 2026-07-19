@@ -1,56 +1,147 @@
 ---
 title: 自定义动画
-description: 动画的缓动曲线与属性通道都开放——注册自定义 easing（spring 等）与自定义属性通道（blur 等），内置之外按需扩展。
+description: 通过 Layout.easings 注册缓动曲线，或通过 Layout.animationProperties 为 Canvas 注册新的动画属性通道。
 ---
 
-[动画](/kernel/components/effects/animation) 的 `easing` 与 `property` 都是**开放字符串**：内置之外，可注册自己的缓动曲线和属性通道。两个注入面对应 `<Layout>` 的两个 prop，和 [形状](/kernel/components/shapes/custom-shape) / [箭头](/kernel/components/draw/custom-arrow) 等扩展一样——IR / preset 里只写名字，定义在 `<Layout>` 注入。区别在于这两个面走的是轻量 [registry 扩展](/kernel/reference/runtime/extensions#三类扩展模型)，运行时在渲染器内生效，不是编译期的 `xxxDefinition`。
+内置动画已经覆盖常见的透明度、颜色、变换、描边与镜头变化。需要新的运动节奏时注册缓动；需要动画驱动新的 Canvas 属性时注册属性通道。
 
-## 自定义缓动（`easings`）
-
-`<Layout easings={{ 名字: 曲线 }}>` 注册缓动；preset 或 track 的 `easing` 写该名字即生效：
+下面给 `scaleIn()` 注册一个带回弹感的 `spring` 缓动。动画轨道仍只保存字符串名称。
 
 <ComponentPreview files="custom-easing" size="xs" />
 
+## 适用边界
+
+先判断要扩展的是“时间曲线”还是“被改变的属性”：
+
+| 需求             | 扩展入口              | 后端                   |
+| ---------------- | --------------------- | ---------------------- |
+| 改变快慢节奏     | `easings`             | SVG + Canvas（四元组） |
+| 使用 JS 缓动函数 | `easings`             | Canvas 实时；两端截帧  |
+| 驱动新的属性     | `animationProperties` | Canvas                 |
+
+如果内置通道已经能表达属性，只需换 easing 或手写关键帧，不必新增属性通道。自定义属性通道当前依赖 Canvas 2D context，因此不适合需要 SVG 等价输出的内容。
+
+## 定义能力
+
+### 缓动曲线
+
+缓动注册值直接使用 cubic-bezier 四元组或 `(t) => number` 函数，不需要额外的 Definition 对象：
+
 ```tsx
-<Layout easings={{ spring: [0.34, 1.56, 0.64, 1] }}>
-  <Node animations={[scaleIn({ from: 0.4, easing: 'spring' })]}>spring</Node>
+import type { EasingRegistry } from '@retikz/render/animation';
+
+const easings = {
+  spring: [0.34, 1.56, 0.64, 1],
+} satisfies EasingRegistry;
+```
+
+四元组可进入 SVG CSS 与共享求值器。函数需要 JavaScript：Canvas 可实时播放，SVG 与 Canvas 的 `snapshotAt` 都能静态求值；SVG 实时播放无法把函数写进 CSS。四元组的 y 值可以超出 `[0, 1]`，用于回弹或越界效果。
+
+### 属性通道
+
+新的属性通道需要 `AnimationPropertyDefinition`：`interpolate` 计算相邻关键帧之间的值，`applyCanvas` 把当前值应用到正在绘制的图元。
+
+```tsx
+import type { AnimationPropertyDefinition } from '@retikz/render/animation';
+
+const blur = {
+  interpolate: (from, to, t) => Number(from) + (Number(to) - Number(from)) * t,
+  applyCanvas: (ctx, _primitive, value) => {
+    ctx.filter = `blur(${Number(value)}px)`;
+  },
+} satisfies AnimationPropertyDefinition;
+```
+
+下面的示例注册 `blur`，并用一条普通 `AnimationTrack` 从模糊过渡到清晰。可以调整起始模糊与时长，属性定义本身仍完整保留在代码中：
+
+<ComponentPreview files="custom-property" size="sm" />
+
+<span style={{ color: '#888' }}>修改控件会重新播放当前轨道；两个预设分别适合快速确认轻微与明显的滤镜变化。</span>
+
+## 注入宿主
+
+两个注册表都由 `<Layout>` 注入。轨道通过名称引用注册项；函数和 Canvas context 不会进入 IR。
+
+```tsx
+<Layout renderer="canvas" easings={easings} animationProperties={{ blur }}>
+  <Node animations={[scaleIn({ easing: 'spring' }), blurIn]} />
 </Layout>
 ```
 
-注册值两种形态：
+只注册 easing 时无需强制 Canvas：cubic-bezier 四元组在 SVG 与 Canvas 都能实时播放。函数 easing 仅限制 SVG 实时播放，静态截帧仍由共享 JavaScript 求值器处理；`animationProperties` 才始终依赖 Canvas。
 
-| 形态                | 类型                    | 后端支持                                           |
-| ------------------- | ----------------------- | -------------------------------------------------- |
-| cubic-bezier 四元组 | `[x1, y1, x2, y2]`      | SVG（进 CSS `cubic-bezier()`）+ Canvas             |
-| 缓动函数            | `(t: number) => number` | **仅 Canvas**；SVG 进不了 CSS → 退 `linear` 并告警 |
+## 执行机制
 
-缓动**没有** `EasingDefinition`——cubic-bezier 元组和函数值本身已经够简单，直接当 registry value 注册即可。`y` 可超出 `[0, 1]`（如 `1.56`）做回弹 / 越界效果。未注册的 easing 名 → 退 `linear`（SVG 会告警，Canvas 静默退化）；无论哪种情况 track 照常播放，只是缓动退化为线性，不会退回静止态。
+轨道中的 `easing` 与 `property` 都是开放字符串，但查找阶段不同：
 
-## 自定义属性通道（`animationProperties`）
+| 扩展     | 查找时机              | 消费方式                  |
+| -------- | --------------------- | ------------------------- |
+| easing   | 每段关键帧求值前      | 把时间进度映射为缓动进度  |
+| property | Canvas 绘制当前图元时 | 插值后写入 Canvas context |
 
-`property` 也开放：注册一个通道名 + 它的插值器与应用方式，就能动内置之外的属性（如 `blur` 滤镜）。与缓动不同，自定义属性通道用 `AnimationPropertyDefinition`——它要同时定义插值与后端落地，单个值表达不了。下面注册 `blur` 并做一个入场去焦（点左上角 ↺ 重播）：
+SVG 实时播放可把 cubic-bezier 转为 CSS timing function；函数无法序列化到 CSS，因此会告警并退回 `linear`。`snapshotAt` 不生成 CSS，而是通过共享求值器采样，所以 SVG 静态帧也能使用函数 easing。自定义属性没有通用 SVG 映射，SVG 会跳过该轨道并保留图元的静止状态。
 
-<ComponentPreview files="custom-property" size="xs" />
+内置 easing 名称会先于自定义记录解析，内置属性通道也会先分类；自定义注册项不能覆盖内置语义。这两类扩展没有统一的 `defineXxx`：easing 的值本身足够简单，而属性通道是 renderer 专属的运行时定义。
 
-`AnimationPropertyDefinition`：
+<SourceLinks
+  sources={[
+    {
+      label: '解析自定义缓动',
+      path: 'packages/kernel/render/src/animation/evaluate.ts',
+      startLine: 56,
+      endLine: 65,
+    },
+    {
+      label: '把缓动转换为 SVG CSS',
+      path: 'packages/kernel/render/src/svg/animation/shared.ts',
+      startLine: 41,
+      endLine: 63,
+    },
+    {
+      label: '在 Canvas 应用自定义属性',
+      path: 'packages/kernel/render/src/canvas/animate.ts',
+      startLine: 78,
+      endLine: 92,
+    },
+  ]}
+/>
 
-| 字段          | 类型                         | 描述                                                                     |
-| ------------- | ---------------------------- | ------------------------------------------------------------------------ |
-| `interpolate` | `(from, to, t) => value`     | 相邻关键帧值在段进度 `t∈[0,1]` 的插值（喂给求值引擎）                    |
-| `applyCanvas` | `(ctx, prim, value) => void` | 把当下值落到 Canvas 2D context（在该图元的 `save/restore` 作用域内调用） |
+## 错误与限制
+
+| 情况                        | SVG                 | Canvas            |
+| --------------------------- | ------------------- | ----------------- |
+| 未注册 easing（实时）       | 告警并退回 `linear` | 静默退回 `linear` |
+| 函数 easing（实时）         | 告警并退回 `linear` | 正常求值          |
+| 函数 easing（`snapshotAt`） | 正常求值            | 正常求值          |
+| 未注册 property             | 告警并跳过轨道      | 告警并跳过轨道    |
+| 已注册自定义 property       | 告警并跳过轨道      | 正常求值与应用    |
+
+跳过轨道不会丢失图元，只会渲染它的静止状态。注册表键应使用非空、稳定且不会与内置名称混淆的字符串；当前轻量注册表不会替你诊断同名覆盖。
 
 <ComponentAlert
   type="warn"
   title="自定义属性通道当前仅 Canvas"
-  description="自定义 property 的通用插值靠 JS（applyCanvas），落在 Canvas 后端。SVG 没有内置映射，遇到未识别的 property 会告警并跳过该 track（渲染 base 静止态）。要用自定义属性通道请走 canvas 渲染器。"
+  description="需要 SVG 与 Canvas 一致输出时，请使用内置属性通道；animationProperties 没有通用 SVG 映射。"
 />
 
-## 后端支持一览
+## API 参考
 
-| 扩展                          | SVG                 | Canvas |
-| ----------------------------- | ------------------- | ------ |
-| 自定义 easing（cubic-bezier） | ✅                  | ✅     |
-| 自定义 easing（函数）         | ⚠️ 退 linear + 告警 | ✅     |
-| 自定义属性通道                | ⚠️ 告警 + 跳过      | ✅     |
+### Layout 注册属性
 
-未注册的自定义 easing / property 一律**可诊断降级**，绝不丢图，但两者降级方式不同：未注册 easing 只让缓动退回 `linear`（SVG 告警、Canvas 静默），track 照常播放；未注册 property 才会跳过该 track、退回 base 静止态（SVG / Canvas 均告警）。
+| 属性                  | 类型                        | 默认值 | 描述                         |
+| --------------------- | --------------------------- | ------ | ---------------------------- |
+| `easings`             | `EasingRegistry`            | —      | 缓动名称到四元组或函数的映射 |
+| `animationProperties` | `AnimationPropertyRegistry` | —      | 属性名称到 Canvas 定义的映射 |
+
+### AnimationPropertyDefinition
+
+| 属性          | 类型                         | 默认值 | 描述                     |
+| ------------- | ---------------------------- | ------ | ------------------------ |
+| `interpolate` | `(from, to, t) => unknown`   | —      | 计算当前关键帧值         |
+| `applyCanvas` | `(ctx, prim, value) => void` | —      | 在图元绘制期间应用当前值 |
+
+## 相关
+
+- [动画](/kernel/components/effects/animation)：内置预设、轨道、触发与静态帧
+- [效果](/kernel/components/effects)：返回效果家族与阅读顺序
+- [扩展运行时](/kernel/reference/runtime/extensions)：比较编译期与渲染期注册机制
