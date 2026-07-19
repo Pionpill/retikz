@@ -61,6 +61,22 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
 
   switch (field.kind) {
     case 'text':
+      if (field.multiline === true) {
+        return (
+          <textarea
+            data-slot="textarea"
+            aria-label={field.label}
+            value={typeof value === 'string' ? value : field.defaultValue}
+            placeholder={field.placeholder}
+            rows={compact ? 2 : 3}
+            className={cn(
+              'flex min-h-16 w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50',
+              compact && 'min-h-12 px-2 py-1 text-xs',
+            )}
+            onChange={event => onValueChange(event.currentTarget.value)}
+          />
+        );
+      }
       return (
         <Input
           type="text"

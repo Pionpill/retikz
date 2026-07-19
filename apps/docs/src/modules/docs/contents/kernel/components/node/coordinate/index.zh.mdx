@@ -1,9 +1,9 @@
 ---
 title: Coordinate
-description: 占位节点——命名一个点不画任何图形，给 path 和 node 相对定位（`{ of }`）引用。
+description: Coordinate 命名一个不渲染的几何点，供路径端点和其它节点按 id 定位。
 ---
 
-`<Coordinate>` 用来在 IR 中登记一个可命名的引用点。它和 `<Node>` 一样可以被路径与相对定位引用，但不会在画面上渲染形状或文字；编译时会解析它的位置并登记 `id`，供 `<Path>` 端点和 `<Node position>` 的相对 / 偏移定位（`{ of }`）引用。
+`<Coordinate>` 给位置一个稳定的 `id`，但不画形状或文字。路径可以把它当端点，其它节点也能通过相对、偏移或比例定位引用它。
 
 ## 用法
 
@@ -17,11 +17,18 @@ import { Coordinate } from '@retikz/react';
 
 `position` 接受 `<Node>` 完全相同的五种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例定位 `{ between, fraction }`。
 
-### 为什么需要它
+### 何时使用
 
-要在某处放一个引用点，最朴素的做法是 fake 一个 `stroke="transparent" fill="transparent"` 的空 `<Node>`——但空 Node 仍会按 padding 占一块不可见的方块、把外框撑大，AI / 序列化往返时也分不清它是真节点还是占位。
+需要汇合点、辅助定位或不可见锚点时使用 Coordinate；需要形状、文字或方向性边界时使用 Node。不要用透明 Node 模拟坐标点：它仍有尺寸和 padding，会扩大布局范围。
 
-`<Coordinate>` 把"命名点"做成一等概念：字段最少（只有 `id` + `position`）、不画任何东西、也不会撑大画布。背后的占位语义见 [技术原理](#技术原理)。
+| 目标                   | 选择           |
+| ---------------------- | -------------- |
+| 只命名位置             | `<Coordinate>` |
+| 显示圆点或其它标记     | `<Node>`       |
+| 显示文字或 label       | `<Node>`       |
+| 使用不同方向的真实锚点 | `<Node>`       |
+
+Coordinate 的方向与角度 anchor 都退化到中心；它也不提供文字字段。零尺寸语义见[技术原理](#技术原理)。
 
 <Comparison target="tikz" title="Coordinate 对照">
 
@@ -35,29 +42,29 @@ import { Coordinate } from '@retikz/react';
 
 ### 命名虚拟锚点
 
-最常用的姿势：用 coordinate 命名一个虚拟中心，让多个节点围绕它定位、多条 path 终止于它。
+用 coordinate 命名一个虚拟中心，让多个节点围绕它定位、多条 path 终止于它。浅色坐标轴固定在世界原点；通过面板调整 hub 的 `position` 与节点的 `distance`，观察 hub 相对原点移动、所有引用一起更新。
 
 <ComponentPreview files="coordinate-as-anchor" size="md" />
 
-上面 4 个节点用 `position={{ of: 'hub', ... }}` 引用同一个 hub；移动 hub 整组节点都跟着移。如果不用 coordinate，4 个节点的 `of` 必须改成绝对坐标，4 条 path 也得用 `[0, 0]` 字面量——重复且不可重命名。
+上面 4 个节点用 `position={{ of: 'hub', ... }}` 引用同一个 hub；移动 hub 整组节点都跟着移。
 
 ### 命名拐点汇聚
 
-流程图里多条 path 在一个虚拟点汇合的场景——汇合点本身不是真节点（不该有矩形 / 文字），但需要一个 id 让多条 way 经过它。
+流程图里多条 path 可以在一个虚拟点汇合。调整 junction 的 `position`，观察三条 path 始终经过这个没有形状和文字的 Coordinate。
 
-<ComponentPreview files="coordinate-fold-junction" size="sm" />
+<ComponentPreview files="coordinate-fold-junction" size="md" />
 
 ### 偏移定位链
 
-Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coordinate 驱动整组节点的相对位置，移动根点其它点全跟着走。比手写每个绝对坐标耦合更低：
+Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coordinate 驱动整组节点的相对位置，移动根点其它点全跟着走。浅色坐标轴固定在世界原点；用控件移动根点或调整水平步长，观察整组位移与偏移沿引用链传播：
 
-<ComponentPreview files="coordinate-offset-chain" size="sm" />
+<ComponentPreview files="coordinate-offset-chain" size="md" />
 
-### 比例 partway 定位
+### 比例定位
 
-`{ between: [A, B], fraction }` 在 A、B 两端点的连线上按 `fraction`（0..1）取点——`lerp(A, B, fraction)`。放"连线中点 / 1/3 处"的点比手算坐标更省、且随 A、B 移动自动保持比例。端点是**自包含 AbsoluteTarget**（笛卡尔 / 极坐标 / 节点引用 `{ id, anchor? }` / `{ of, offset }` / 嵌套 between，**不含** path-relative）。同一形态可用于 `<Coordinate position>` / `<Node position>` / `<Step to>`：
+`{ between: [A, B], fraction }` 在 x 轴上的 A、B 之间按 `fraction`（0..1）取点——`lerp(A, B, fraction)`。面板实际移动的是不可见的 Coordinate Q，橙色 q 只是引用 Q 的可视标记；端点变化时 Q 仍自动保持比例。端点是**自包含 AbsoluteTarget**（笛卡尔 / 极坐标 / 节点引用 `{ id, anchor? }` / `{ of, offset }` / 嵌套 between，**不含** path-relative）。同一形态可用于 `<Coordinate position>` / `<Node position>` / `<Step to>`：
 
-<ComponentPreview files="coordinate-between" size="xs" />
+<ComponentPreview files="coordinate-between" size="sm" />
 
 > `t` 严格 [0,1]（外插暂不支持）；端点引用未定义节点时，Coordinate / Node 位置解析失败抛错、path `Step.to` 发 warn 跳过——与其它定位形态同口径。
 
@@ -79,7 +86,7 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 
 Coordinate 的 `position` 会立即解析。若它依赖另一个 id，该 id 必须已经在当前可见命名空间中登记；引用同一层里后定义的 Node / Coordinate 会直接报错。位置解析成功后，编译器把结果投影到全局坐标，保存成一条只有中心坐标的零尺寸几何记录，再按 `id` 登记。
 
-Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到已登记的 id。Path 则先排队，等当前 Scope 的 children 完成登记后再解析端点，所以同一作用域里的 path 可以引用写在它后面的 Coordinate。`localNamespace` 带来的可见范围仍遵循 [Scope 的命名空间规则](/kernel/components/layout/scope#命名空间与-id-冲突如何处理)。
+Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到已登记的 id。Path 则先排队，等当前 Scope 的 children 完成登记后再解析端点，所以同一作用域里的 path 可以引用写在它后面的 Coordinate。`localNamespace` 带来的可见范围仍遵循 [Scope 的命名空间规则](/kernel/components/layout/scope#命名空间与-id-冲突)。
 
 <SourceLinks
   sources={[
@@ -145,24 +152,6 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
 
 ## 相关
 
-### 与 `<Node>` / `<Path>` 的关系
-
-|                                 | `<Coordinate>` | `<Node>`       |
-| ------------------------------- | -------------- | -------------- |
-| 渲染图形                        | ❌             | ✅（按 shape） |
-| 参与 layout bounds              | ❌             | ✅             |
-| 进 nodeIndex                    | ✅             | ✅             |
-| path target 引用                | ✅             | ✅             |
-| 相对 / 偏移定位（`{ of }`）引用 | ✅             | ✅             |
-| 必须有 `id`                     | ✅             | 可选           |
-
-简单原则：需要画形状 + 文字 → `<Node>`；只要一个引用点 → `<Coordinate>`。
-
-### 不适用场景
-
-- **要给点配文字标签** → 用 `<Node>` 加 `label?`，coordinate 不带文字字段
-- **要画一个圆点 / 标记位置** → 用 `<Node shape="circle">` + 小尺寸；coordinate 永远不画
-- **anchor 指向**（`hub.top`）→ coordinate 的命名 / 角度 anchor 都退化为中心，要方向 anchor 用 `<Node>`
-
 - [Node](/kernel/components/node/overview)：有形状和文字的节点
+- [Path](/kernel/components/draw/path)：把 Coordinate 用作路径端点
 - [Draw](/kernel/components/draw/overview)：引用 coordinate id 的日常连线写法

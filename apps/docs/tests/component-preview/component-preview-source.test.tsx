@@ -301,7 +301,7 @@ describe('ComponentPreview localized controls', () => {
 
     expect(props.controlDefinition).toMatchObject({
       presentation: 'panel',
-      title: 'Node 属性',
+      title: '属性',
     });
     expect(props.controlSlots?.map(slot => slot.id)).not.toContain('text');
   });

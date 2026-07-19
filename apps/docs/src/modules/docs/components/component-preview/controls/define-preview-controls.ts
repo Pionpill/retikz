@@ -1,4 +1,5 @@
 import type {
+  PreviewControlCondition,
   PreviewControlField,
   PreviewControlsDefinition,
   PreviewControlValues,
@@ -72,11 +73,22 @@ const validateSelectControl = (field: PreviewSelectControlField): void => {
   }
 };
 
+/** 校验显示条件的引用与值集合 */
+const validateControlCondition = (condition: PreviewControlCondition, knownIds: ReadonlySet<string>): void => {
+  if (!knownIds.has(condition.controlId)) {
+    throw new Error(`Preview control condition references unknown control id: "${condition.controlId}".`);
+  }
+  if (condition.oneOf.length === 0) {
+    throw new Error(`Preview control condition for "${condition.controlId}" must define at least one value.`);
+  }
+};
+
 /** 校验字段 id 与各 kind 的运行时约束 */
 const validatePreviewControls = (definition: PreviewControlsDefinition): void => {
   const ids = new Set<string>();
+  const fields = getPreviewControlFields(definition);
 
-  for (const field of getPreviewControlFields(definition)) {
+  for (const field of fields) {
     if (ids.has(field.id)) {
       throw new Error(`Duplicate preview control id: "${field.id}".`);
     }
@@ -86,6 +98,15 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
     if (field.kind === 'number' || field.kind === 'range') validateNumericControl(field);
     if (field.kind === 'color' && !COLOR_HEX_PATTERN.test(field.defaultValue)) {
       throw new Error(`Preview color control "${field.id}" defaultValue must be a #RRGGBB hex color.`);
+    }
+  }
+
+  for (const field of fields) {
+    if (field.visibleWhen) validateControlCondition(field.visibleWhen, ids);
+  }
+  if (definition.presentation === 'panel') {
+    for (const section of definition.sections) {
+      if (section.visibleWhen) validateControlCondition(section.visibleWhen, ids);
     }
   }
 };

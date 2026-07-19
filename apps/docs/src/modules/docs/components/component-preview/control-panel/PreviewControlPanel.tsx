@@ -1,15 +1,20 @@
 import type { FC } from 'react';
 
 import { Minus, PanelLeftClose, Plus, RotateCcw } from 'lucide-react';
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useId, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
-import type { PreviewControlState, PreviewPanelControlsDefinition } from '../types';
+import type { PreviewControlState, PreviewControlValues, PreviewPanelControlsDefinition } from '../types';
 
-import { PreviewControlFieldInput } from '../controls';
+import {
+  buildPreviewControlVisibilityKey,
+  PreviewControlFieldInput,
+  resolveVisiblePreviewControlSections,
+} from '../controls';
 import { usePreviewControlLayout } from './hooks';
 
 type PreviewCollapsedSectionsState = {
@@ -34,45 +39,64 @@ export type PreviewControlPanelProps = {
 /** 渲染可滚动的声明式预览属性面板 */
 export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
   const { definition, controlState, density = 'default', onClose } = props;
+  const { t } = useTranslation();
+  const controlPanelId = useId();
+  const panelTitleId = `${controlPanelId}-preview-control-panel-title`;
   const compact = density === 'compact';
   const panelRef = useRef<HTMLElement>(null);
+  const visibilityKey = buildPreviewControlVisibilityKey(definition.sections, controlState.values);
+  const visibilityValues = useMemo<PreviewControlValues>(() => JSON.parse(visibilityKey), [visibilityKey]);
+  const visibleDefinition = useMemo<PreviewPanelControlsDefinition>(
+    () => ({
+      ...definition,
+      sections: resolveVisiblePreviewControlSections(definition.sections, visibilityValues),
+    }),
+    [definition, visibilityValues],
+  );
   const [collapsedSections, setCollapsedSections] = useState<PreviewCollapsedSectionsState>(() => ({
-    definition,
+    definition: visibleDefinition,
     indexes: new Set(),
   }));
 
-  if (collapsedSections.definition !== definition) {
-    setCollapsedSections({ definition, indexes: new Set() });
+  if (collapsedSections.definition !== visibleDefinition) {
+    setCollapsedSections({ definition: visibleDefinition, indexes: new Set() });
   }
 
   const collapsedSectionIndexes =
-    collapsedSections.definition === definition ? collapsedSections.indexes : new Set<number>();
+    collapsedSections.definition === visibleDefinition ? collapsedSections.indexes : new Set<number>();
   const { columns, columnsRef } = usePreviewControlLayout({
-    definition,
+    definition: visibleDefinition,
     collapsedSectionIndexes,
     density,
     panelRef,
   });
   const toggleSection = (sourceIndex: number) => {
     setCollapsedSections(currentState => {
-      const nextIndexes = new Set(currentState.definition === definition ? currentState.indexes : []);
+      const nextIndexes = new Set(currentState.definition === visibleDefinition ? currentState.indexes : []);
       if (nextIndexes.has(sourceIndex)) nextIndexes.delete(sourceIndex);
       else nextIndexes.add(sourceIndex);
-      return { definition, indexes: nextIndexes };
+      return { definition: visibleDefinition, indexes: nextIndexes };
     });
   };
 
   return (
-    <aside ref={panelRef} data-density={density} className="flex h-full min-h-0 flex-col bg-muted/30">
+    <aside
+      ref={panelRef}
+      data-density={density}
+      aria-labelledby={panelTitleId}
+      className="flex h-full min-h-0 flex-col bg-muted/30"
+    >
       <header className="flex shrink-0 items-center justify-between gap-2 px-3 py-2">
-        <span className="min-w-0 truncate text-sm font-medium">{definition.title}</span>
+        <span id={panelTitleId} className="min-w-0 truncate text-sm font-medium">
+          {definition.title}
+        </span>
         <div className="flex shrink-0 items-center gap-1">
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label="Reset controls"
-            title="Reset controls"
+            aria-label={t('preview.resetControls')}
+            title={t('preview.resetControls')}
             onClick={controlState.reset}
           >
             <RotateCcw className="size-3.5" />
@@ -81,8 +105,8 @@ export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label="Close controls panel"
-            title="Close controls panel"
+            aria-label={t('preview.closeControlsPanel')}
+            title={t('preview.closeControlsPanel')}
             onClick={onClose}
           >
             <PanelLeftClose className="size-3.5" />
@@ -107,28 +131,28 @@ export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
             <div data-slot="preview-control-column" className="min-w-0">
               {columnSections.map(section => {
                 const collapsed = section.label ? collapsedSectionIndexes.has(section.sourceIndex) : false;
-                const controlsId = `preview-control-section-${section.sourceIndex}-${columnIndex}`;
+                const controlsId = `${controlPanelId}-preview-control-section-${section.sourceIndex}-${columnIndex}`;
 
                 return (
                   <section key={section.sourceIndex} className="mb-3 space-y-2 last:mb-0">
                     {section.label && section.showTitle ? (
-                      <h3 data-slot="preview-control-section-title">
+                      <div data-slot="preview-control-section-title">
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           data-slot="preview-control-section-toggle"
                           data-section-index={section.sourceIndex}
-                          aria-controls={controlsId}
+                          aria-controls={collapsed ? undefined : controlsId}
                           aria-expanded={!collapsed}
-                          aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${section.label}`}
+                          aria-label={section.label}
                           className="h-6 w-full justify-between px-0! text-xs font-medium tracking-wide text-muted-foreground uppercase hover:bg-transparent hover:text-muted-foreground"
                           onClick={() => toggleSection(section.sourceIndex)}
                         >
                           <span className="truncate">{section.label}</span>
                           {collapsed ? <Plus className="size-3.5" /> : <Minus className="size-3.5" />}
                         </Button>
-                      </h3>
+                      </div>
                     ) : null}
                     {!collapsed ? (
                       <div id={controlsId} className="space-y-2">

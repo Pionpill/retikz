@@ -84,6 +84,17 @@ export type PreviewActionSlot = {
 /** 声明式预览控件支持的值 */
 export type PreviewControlValue = string | number | boolean;
 
+/** 可用于显示条件比较的标量预览值 */
+export type PreviewControlScalarValue = PreviewControlValue;
+
+/** 根据另一控件当前值判断可见性的声明式条件 */
+export type PreviewControlCondition = {
+  /** 作为条件来源的控件 id */
+  controlId: string;
+  /** 任一匹配即显示的值集合 */
+  oneOf: ReadonlyArray<PreviewControlScalarValue>;
+};
+
 /** 预览控件选项 */
 export type PreviewControlOption = {
   /** 写入预览状态的值 */
@@ -99,6 +110,10 @@ export type PreviewTextControlField = {
   label: string;
   defaultValue: string;
   placeholder?: string;
+  /** 使用支持换行的文本域
+   * @default false
+   */
+  multiline?: boolean;
 };
 
 /** 数值预览控件字段 */
@@ -149,13 +164,17 @@ export type PreviewRangeControlField = {
 };
 
 /** 声明式预览控件字段 */
-export type PreviewControlField =
+export type PreviewControlField = (
   | PreviewTextControlField
   | PreviewNumberControlField
   | PreviewSelectControlField
   | PreviewSwitchControlField
   | PreviewColorControlField
-  | PreviewRangeControlField;
+  | PreviewRangeControlField
+) & {
+  /** 字段的可选显示条件 */
+  visibleWhen?: PreviewControlCondition;
+};
 
 /** 可放置在预览浮层中的声明式字段 */
 export type PreviewOverlayControlField = PreviewControlField & {
@@ -171,6 +190,8 @@ export type PreviewOverlayControlField = PreviewControlField & {
 export type PreviewControlSection = {
   /** 分组标题 */
   label?: string;
+  /** 整个分组的可选显示条件 */
+  visibleWhen?: PreviewControlCondition;
   /** 分组内字段 */
   controls: ReadonlyArray<PreviewControlField>;
 };

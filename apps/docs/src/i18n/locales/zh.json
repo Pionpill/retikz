@@ -202,6 +202,8 @@
     "themeSystem": "系统",
     "themeLight": "亮色",
     "themeDark": "暗色",
+    "resetControls": "重置控件",
+    "closeControlsPanel": "关闭属性面板",
     "controlPanelDefaultOpen": "默认打开属性面板",
     "hideAllCode": "隐藏所有代码",
     "expandAllCode": "展开所有代码",

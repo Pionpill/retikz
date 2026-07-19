@@ -1,20 +1,20 @@
 ---
 title: Node
-description: The node family — referenceable named primitives, per-line text styling, placeholder points, and extensible connection boundaries.
+description: Build named, positioned, and connectable primitives with Node, Text, Coordinate, and boundary extensions.
 ---
 
-A node is what the rest of a figure _references_: it has an id, a position, and a shape boundary, and connectors auto-attach to that boundary by id. This group gathers the node itself, its per-line text styling, placeholder points that draw nothing, and custom connection boundaries that are independent of visual shape.
+The node family answers how objects in a figure are named, positioned, and connected. `Node` provides the visible subject, `Text` refines individual text lines, and `Coordinate` keeps only a referenceable position. Add a custom boundary only when the visual outline and connector geometry must differ. Start with [Node](/kernel/components/node/overview) on your first visit.
 
-<ComponentPreview files="node-family" size="md" hideCode />
+<ComponentPreview files="node-family" size="xs" hideCode />
 
 ## What each part does
 
-| Component         | Type      | Responsibility                                                                   | Use it when                                                            |
-| ----------------- | --------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Node              | Kernel    | Named primitive with position / shape / text; paths attach to its boundary by id | Flowchart nodes, shapes with text, anything a connector must reference |
-| Text              | Sugar     | Lives inside a Node and overrides fill / opacity / font for a single line        | Mixing several styles within one line of text                          |
-| Coordinate        | Kernel    | Names a point without drawing any shape                                          | Pure reference anchors, helper positioning, no visible geometry needed |
-| Custom Boundaries | Extension | Register node connection geometry independently of visual shape                  | Visual outline and connector attachment rules need to differ           |
+| Component         | Type      | Responsibility                               | Use it when                                 |
+| ----------------- | --------- | -------------------------------------------- | ------------------------------------------- |
+| Node              | Kernel    | Declares a visible primitive with a boundary | You need a visible subject or endpoint      |
+| Text              | Sugar     | Overrides one whole text line inside Node    | JSX needs per-line text styling             |
+| Coordinate        | Kernel    | Names a position without visible output      | You need a junction or invisible anchor     |
+| Custom Boundaries | Extension | Defines attachment and directional anchors   | Visual shape and connection rules must vary |
 
 ## In this section
 
@@ -22,23 +22,21 @@ A node is what the rest of a figure _references_: it has an id, a position, and 
   <LinkedCard href="/kernel/components/node/overview">
     <span className="font-semibold">Node</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Full usage: shapes, text, styling, positioning, and labels
+      Build a visible, positioned, connectable primitive
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/node/text">
     <span className="font-semibold">Text</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Sugar for overriding style line by line inside a Node
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Override one whole text line inside a Node</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/node/coordinate">
     <span className="font-semibold">Coordinate</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Names a reference point, renders no shape</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Name a point without visible output</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/node/custom-boundary">
     <span className="font-semibold">Custom Boundaries</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Extend connector attachment independently of visual shape
+      Separate connector geometry from the visual outline
     </span>
   </LinkedCard>
 </div>

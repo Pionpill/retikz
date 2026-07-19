@@ -2,27 +2,47 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+
+import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+
+import { coordinateFoldJunctionControls, coordinateFoldJunctionFrame } from './coordinate-fold-junction.controls';
+
+export const previewControls = coordinateFoldJunctionControls;
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
 /**
  * Coordinate 作为命名拐点汇聚
  * @description 多个 step 节点向同一决策汇合点收敛，汇合点本身不画矩形 / 不打字；各 path 用 `<Draw way={['A', 'junction', 'B']}>` 经过它，coordinate 只有中心坐标，端点会贴到该中心。
  */
-const Demo: FC = () => (
-  <Layout width={320} height={200}>
-    <Node id="A" position={[-110, -55]}>
-      A
-    </Node>
-    <Node id="B" position={[-110, 55]}>
-      B
-    </Node>
-    <Coordinate id="junction" position={[0, 0]} />
-    <Node id="out" position={[110, 0]} shape="diamond">
-      汇合后
-    </Node>
-    {/* 两条线先各自走到 junction，再合并到 out */}
-    <Draw way={['A', 'junction']} stroke="gray" />
-    <Draw way={['B', 'junction']} stroke="gray" />
-    <Draw way={['junction', 'out']} arrow="->" stroke="gray" />
-  </Layout>
-);
+const Demo: FC = () => {
+  const values = usePreviewControls(coordinateFoldJunctionControls);
+
+  return (
+    <Layout
+      width={coordinateFoldJunctionFrame.width}
+      height={coordinateFoldJunctionFrame.height}
+      viewBox={coordinateFoldJunctionFrame.viewBox}
+    >
+      <Node id="A" position={[-120, -55]}>
+        A
+      </Node>
+      <Node id="B" position={[-120, 55]}>
+        B
+      </Node>
+      <Coordinate id="junction" position={[values.junctionX, values.junctionY]} />
+      <Node id="out" position={[120, 0]} shape="diamond">
+        汇合后
+      </Node>
+      {/* 两条线先各自走到 junction，再合并到 out */}
+      <Draw way={['A', 'junction']} stroke="gray" />
+      <Draw way={['B', 'junction']} stroke="gray" />
+      <Draw way={['junction', 'out']} arrow="->" stroke="gray" />
+    </Layout>
+  );
+};
 
 export default Demo;

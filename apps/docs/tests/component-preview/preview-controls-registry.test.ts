@@ -265,8 +265,10 @@ describe('preview controls registry', () => {
 
     expect(contractOf(zhDefinition)).toEqual(contractOf(enDefinition));
     expect(contractOf(zhDefinition).map(field => field.id)).toEqual([
-      'text',
-      'shape',
+      'fontFamily',
+      'fontSize',
+      'fontWeight',
+      'fontStyle',
       'fill',
       'stroke',
       'strokeWidth',

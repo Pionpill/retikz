@@ -5,27 +5,49 @@ import { NodeStyledControlId } from './node-styled.controls';
 /** Node styling demo controls panel in English */
 export const nodeStyledControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Node Properties',
+  title: 'Properties',
   sections: [
     {
-      label: 'Content',
+      label: 'Font',
       controls: [
         {
-          kind: 'text',
-          id: NodeStyledControlId.Text,
-          label: 'Text',
-          defaultValue: 'Node',
+          kind: 'select',
+          id: NodeStyledControlId.FontFamily,
+          label: 'Family',
+          defaultValue: 'sans-serif',
+          options: [
+            { value: 'sans-serif', label: 'Sans serif' },
+            { value: 'serif', label: 'Serif' },
+            { value: 'monospace', label: 'Monospace' },
+          ],
+        },
+        {
+          kind: 'range',
+          id: NodeStyledControlId.FontSize,
+          label: 'Size',
+          defaultValue: 16,
+          min: 10,
+          max: 28,
+          step: 1,
         },
         {
           kind: 'select',
-          id: NodeStyledControlId.Shape,
-          label: 'Shape',
-          defaultValue: 'rectangle',
+          id: NodeStyledControlId.FontWeight,
+          label: 'Weight',
+          defaultValue: 'normal',
           options: [
-            { value: 'rectangle', label: 'Rectangle' },
-            { value: 'circle', label: 'Circle' },
-            { value: 'ellipse', label: 'Ellipse' },
-            { value: 'diamond', label: 'Diamond' },
+            { value: 'normal', label: 'Normal' },
+            { value: 'bold', label: 'Bold' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: NodeStyledControlId.FontStyle,
+          label: 'Style',
+          defaultValue: 'normal',
+          options: [
+            { value: 'normal', label: 'Normal' },
+            { value: 'italic', label: 'Italic' },
           ],
         },
       ],
