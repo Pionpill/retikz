@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Layout 输出边界面板使用的稳定字段 id */
@@ -24,7 +26,7 @@ export const layoutViewboxControls = definePreviewControls({
           label: '显示宽度',
           defaultValue: 300,
           min: 180,
-          max: 420,
+          max: 400,
           step: 10,
         },
         {
@@ -81,3 +83,17 @@ export const layoutViewboxControls = definePreviewControls({
     },
   ],
 });
+
+/** Layout 输出边界面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: layoutViewboxControls,
+  canonicalValues: {
+    width: 300,
+    height: 200,
+    viewBoxX: -120,
+    viewBoxY: -120,
+    viewBoxWidth: 240,
+    viewBoxHeight: 240,
+  },
+  relatedApis: ['Layout.width', 'Layout.height', 'Layout.viewBox'],
+} satisfies PreviewControlContract;

@@ -69,7 +69,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(scopeTranslateBasicControls);
 
   return (
-    <Layout width={480} height={260} viewBox={{ x: -240, y: -130, width: 480, height: 260 }}>
+    <Layout width={400} height={217} viewBox={{ x: -240, y: -130, width: 480, height: 260 }}>
       <Node id="O" position={[-100, 0]} shape="circle" padding={4} stroke="none" fill="none">
         o
       </Node>

@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -50,11 +50,22 @@ export type ComponentPreviewProps = {
   previewClassName?: string;
   /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;
+  /** 紧跟在预览卡正下方的读图或操作说明。 */
+  caption?: ReactNode;
 };
 
 /** MDX 内的演示卡入口。 */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { files, controls, dialogActions, align = 'center', size = 'md', previewClassName, hideCode = false } = props;
+  const {
+    files,
+    controls,
+    dialogActions,
+    align = 'center',
+    size = 'md',
+    previewClassName,
+    hideCode = false,
+    caption,
+  } = props;
   const controlOptions = controls ?? {};
   const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
   const loc = useDocLocation();
@@ -132,9 +143,16 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
 
   if (!mod || rawSource == null || !key || !Component) {
     return (
-      <div className="my-6 rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
-        Demo <code className="rounded bg-muted px-1">{name}</code> not found at{' '}
-        <code className="rounded bg-muted px-1">{key ?? '(unknown)'}</code>
+      <div className="my-6">
+        <div className="rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
+          Demo <code className="rounded bg-muted px-1">{name}</code> not found at{' '}
+          <code className="rounded bg-muted px-1">{key ?? '(unknown)'}</code>
+        </div>
+        {caption ? (
+          <p data-slot="component-preview-caption" className="mt-2 text-sm text-muted-foreground">
+            {caption}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -164,6 +182,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       controlDefinition={controlDefinition}
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
+      caption={caption}
     />
   );
 };

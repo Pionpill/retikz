@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Scope 裁剪 playground 使用的稳定字段 id */
@@ -31,3 +33,10 @@ export const scopeClipControls = definePreviewControls({
     },
   ],
 });
+
+/** Scope 裁剪面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: scopeClipControls,
+  canonicalValues: { clipKind: 'circle' },
+  relatedApis: ['Scope.clip'],
+} satisfies PreviewControlContract;

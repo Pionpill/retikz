@@ -41,6 +41,12 @@ const setInputValue = (input: HTMLInputElement, value: string): void => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
+const setTextareaValue = (textarea: HTMLTextAreaElement, value: string): void => {
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+  setter?.call(textarea, value);
+  textarea.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
 const renderField = async (
   field: PreviewControlField,
   value: PreviewControlValue,
@@ -68,6 +74,26 @@ afterEach(async () => {
 });
 
 describe('PreviewControlFieldInput', () => {
+  it('multiline text 使用 textarea 并发出换行内容', async () => {
+    const onValueChange = vi.fn();
+    const field = {
+      kind: 'text',
+      id: 'content',
+      label: 'Content',
+      defaultValue: 'Line 1\nLine 2',
+      multiline: true,
+    } satisfies PreviewControlField;
+    const text = await renderField(field, field.defaultValue, onValueChange);
+    const textarea = text.container.querySelector<HTMLTextAreaElement>('textarea');
+
+    expect(textarea).not.toBeNull();
+    expect(text.container.querySelector('input[type="text"]')).toBeNull();
+    await act(() => {
+      if (textarea) setTextareaValue(textarea, 'Title\nBody');
+    });
+    expect(onValueChange).toHaveBeenLastCalledWith('Title\nBody');
+  });
+
   it('用 shadcn 组件渲染七种字段', async () => {
     const text = await renderField({ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }, 'Node');
     const number = await renderField(

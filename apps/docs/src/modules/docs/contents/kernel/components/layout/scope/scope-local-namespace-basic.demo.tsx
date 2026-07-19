@@ -21,10 +21,10 @@ export const previewSource = {
  */
 const Demo: FC = () => {
   const values = usePreviewControls(scopeLocalNamespaceBasicControls);
-  const innerNodeId = values.nodeId.trim() || 'A';
+  const innerNodeId = values.nodeId;
 
   return (
-    <Layout width={560} height={140}>
+    <Layout width={400} height={117} viewBox={{ x: -100, y: -70, width: 480, height: 140 }}>
       <Node id="A" position={[0, 0]}>
         outer A
       </Node>

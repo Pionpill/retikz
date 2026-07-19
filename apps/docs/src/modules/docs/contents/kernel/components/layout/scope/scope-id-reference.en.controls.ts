@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { ScopeIdReferenceControlId, ScopeIdReferenceVisibleWhen } from './scope-id-reference.controls';
@@ -57,3 +59,10 @@ export const scopeIdReferenceEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Scope identifier-reference controls */
+export const previewControlContract = {
+  controls: scopeIdReferenceEnControls,
+  canonicalValues: { boundingShape: 'rectangle', anchor: 'left', angleDegrees: 180 },
+  relatedApis: ['Scope.boundingShape', 'Draw.way'],
+} satisfies PreviewControlContract;

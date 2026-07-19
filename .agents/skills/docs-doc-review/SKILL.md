@@ -70,6 +70,8 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 
 ### 5. Demo 覆盖
 
+带 controls 的 demo 还要按 [`docs-doc-control`](../docs-doc-control/SKILL.md) 检查显式契约、注册回退、固定取景、caption 与视觉层级。
+
 - 用户需要看到效果才能理解的功能，是否有 `<ComponentPreview files="..." />`
 - 新 prop / 新字段 / 新组件是否至少有一个最小 demo；复杂能力是否拆成 2-3 个单主题 demo
 - demo 是否真展示了该能力，而不是只把 prop 写上但视觉上看不出差异

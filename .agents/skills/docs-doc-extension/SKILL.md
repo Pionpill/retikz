@@ -9,7 +9,7 @@ description: retikz 扩展指南页型。用于解释 Definition、defineXxx、r
 
 - 页面教读者注册自定义 shape、boundary、clip、arrow、pattern、path kind、path generator、animation property 或 composite
 - 页面位于 `components/**`，但主任务是扩展机制而不是内置组件 API
-- 动手前先读 `docs-doc-principle`；分组落地页仍走 `docs-doc-group`
+- 动手前先读 `docs-doc-principle`；分组落地页仍走 `docs-doc-group`；页面含 controls 时再读 `docs-doc-control`
 
 扩展页必须在 `data/<module>.ts` 的节点上声明 `meta.pageType: 'extension'`，并写清 `capability`、`audience: 'extension-author'` 与对应 `sourceOfTruth`
 
@@ -28,12 +28,14 @@ description: retikz 扩展指南页型。用于解释 Definition、defineXxx、r
 3. `## 注入宿主`：`CompileOptions`、`<Layout>` 或 domain adapter 的注入入口
 4. `## 执行机制`：用短流程或叙述图说明 registry 合并、lookup、校验和消费阶段
 5. `## 错误与限制`：重复 key、未注册、非法 payload、后端或阶段限制
-6. `## API 参考`：只列当前页直接使用的类型和字段
+6. `## API 参考`：只列当前页直接使用的公开面，并按 `docs-doc-principle` 的“导出概览 → 核心契约 → 重要闭合集合”组织
 7. `## 相关`：链接所在能力页、runtime 扩展索引和相邻扩展指南
 
 开头先给一个最小可运行结果；Definition、注入和使用分属不同文件时，用一个多文件 `ComponentPreview` 展示完整闭环
 
 ## 交互式 demo
+
+面板、稳定契约、取景、caption 与视觉层级统一走 [`docs-doc-control`](../docs-doc-control/SKILL.md)，本节只补扩展页差异。
 
 参数变化属于同一语义时，优先使用 `PreviewControlContract`：
 

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { LayoutViewBoxControlId } from './layout-viewbox.controls';
@@ -16,7 +18,7 @@ export const layoutViewboxControls = definePreviewControls({
           label: 'Display width',
           defaultValue: 300,
           min: 180,
-          max: 420,
+          max: 400,
           step: 10,
         },
         {
@@ -73,3 +75,17 @@ export const layoutViewboxControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Layout output-boundary controls */
+export const previewControlContract = {
+  controls: layoutViewboxControls,
+  canonicalValues: {
+    width: 300,
+    height: 200,
+    viewBoxX: -120,
+    viewBoxY: -120,
+    viewBoxWidth: 240,
+    viewBoxHeight: 240,
+  },
+  relatedApis: ['Layout.width', 'Layout.height', 'Layout.viewBox'],
+} satisfies PreviewControlContract;

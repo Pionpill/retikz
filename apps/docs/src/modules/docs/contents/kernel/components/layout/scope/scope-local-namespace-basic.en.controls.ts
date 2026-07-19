@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { ScopeLocalNamespaceBasicControlId } from './scope-local-namespace-basic.controls';
@@ -11,10 +13,15 @@ export const scopeLocalNamespaceBasicEnControls = definePreviewControls({
       label: 'Inner node',
       controls: [
         {
-          kind: 'text',
+          kind: 'select',
           id: ScopeLocalNamespaceBasicControlId.NodeId,
           label: 'Node id',
           defaultValue: 'A',
+          options: [
+            { value: 'A', label: 'A (same as outer)' },
+            { value: 'B', label: 'B (different id)' },
+            { value: 'local-node', label: 'local-node (local only)' },
+          ],
         },
         {
           kind: 'switch',
@@ -26,3 +33,10 @@ export const scopeLocalNamespaceBasicEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Scope local-namespace controls */
+export const previewControlContract = {
+  controls: scopeLocalNamespaceBasicEnControls,
+  canonicalValues: { nodeId: 'A', localNamespace: true },
+  relatedApis: ['Scope.localNamespace', 'Node.id'],
+} satisfies PreviewControlContract;

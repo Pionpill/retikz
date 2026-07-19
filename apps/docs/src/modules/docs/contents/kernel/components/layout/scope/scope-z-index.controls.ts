@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Scope zIndex playground 使用的稳定字段 id */
@@ -81,3 +83,10 @@ export const scopeZIndexControls = definePreviewControls({
     },
   ],
 });
+
+/** Scope 层级面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: scopeZIndexControls,
+  canonicalValues: { scopeA: 1, nodeA1: 0, nodeA2: 0, scopeB: 0, nodeB1: 0, nodeB2: 0 },
+  relatedApis: ['Scope.zIndex', 'Node.zIndex'],
+} satisfies PreviewControlContract;

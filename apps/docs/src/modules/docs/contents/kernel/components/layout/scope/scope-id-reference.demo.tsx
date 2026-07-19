@@ -35,7 +35,7 @@ const Demo: FC = () => {
   const anchor = values.anchor === 'angle' ? values.angleDegrees : values.anchor;
 
   return (
-    <Layout width={480} height={240} viewBox={{ x: -240, y: -120, width: 480, height: 240 }}>
+    <Layout width={400} height={200} viewBox={{ x: -240, y: -120, width: 480, height: 240 }}>
       <Node id="source" position={[-150, 0]}>
         source
       </Node>

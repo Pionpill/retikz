@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Scope 整体引用 playground 使用的稳定字段 id */
@@ -67,3 +69,10 @@ export const scopeIdReferenceControls = definePreviewControls({
     },
   ],
 });
+
+/** Scope 标识引用面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: scopeIdReferenceControls,
+  canonicalValues: { boundingShape: 'rectangle', anchor: 'left', angleDegrees: 180 },
+  relatedApis: ['Scope.boundingShape', 'Draw.way'],
+} satisfies PreviewControlContract;

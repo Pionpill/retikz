@@ -26,6 +26,7 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 | Reference 词典页 | `contents/<module>/reference/**`                                   | 本 skill 的「Reference 词典页」节                                                                     |
 | 博客文章         | `contents/blog/**`                                                 | [`docs-doc-blog`](../docs-doc-blog/SKILL.md)（差异较大，blog skill 独立成体；通用规则仍继承本 skill） |
 | 文档评审         | 任意文档初稿 / 改稿 / demo 补充后                                  | [`docs-doc-review`](../docs-doc-review/SKILL.md)                                                      |
+| Controls demo    | 任意带 controls 的 `<ComponentPreview>`                            | [`docs-doc-control`](../docs-doc-control/SKILL.md)                                                    |
 
 本 skill 也直接覆盖：i18n 改 key、改菜单、改正文、加 demo 这类"对页结构无大改"的杂活。
 
@@ -133,7 +134,7 @@ apps/docs/src/
 
 边框色、背景色、线宽、透明度、字号等跨图元通用视觉属性默认只保留简要说明与 API 可查询性；需要试验参数空间时，合并进一个 controls playground。仅当样式本身就是该页解决的核心问题，或不同取值会改变语义而不只是外观时，才升级为独立内容。
 
-`ComponentPreview` controls 用于压缩“同一结构下改变 prop 值”的参数空间，不能替代展示不同 JSX 结构、对象变体、组合关系、边界 case、错误行为或编译机制的静态 demo。不要用 demo 数量或视觉变体数量证明能力完备。
+`ComponentPreview` controls 用于压缩稳定任务与结构下的参数空间，不能替代展示不同 JSX 结构、组合关系、职责边界、错误行为或编译机制的静态 demo。闭合 union / 内置 kind 即使字段结构不同，只要属于同一公开能力、能在固定场景中直接比较、集合规模适合交互，且源码完整映射每个对象，就可以合并为 playground；正文仍需说明 canonical 用法与关键语义差异。不要用 demo 数量或视觉变体数量证明能力完备。面板、稳定契约、取景、caption 与视觉层级统一走 [`docs-doc-control`](../docs-doc-control/SKILL.md)。
 
 ## DSL 优先，IR 克制
 
@@ -224,11 +225,21 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 
 ## 文档宽度限制
 
-文档正文最大宽度 **640px**（`max-w-160`）；表格 `<td>` 默认 `whitespace-nowrap`——**单元格不会自动换行**，过长会触发横向滚动。
+文档正文最大宽度 **800px**（`max-w-200`）；表格 `<td>` 默认 `whitespace-nowrap`——**单元格不会自动换行**，过长会触发横向滚动。
 
 表格优先 3 列以内，单元格 ≤ 12 个中文字 / 25 个英文字符；过长用 `<br />` 软断或拆成段落。单元格内 `|` 写 `\|`。代码块、URL、长英文术语也要人工检查窄屏。
 
 表格单元格里多个行内代码值属于同一字段时，保持在**同一个表格行**，用 `<br />` 软断，不要为了视觉换行拆成多行表格。例如类型列可写 `` `FieldName`<br />`PointColorStyle?` ``。表格渲染层会只对 `<td>` 内的 `br + code` 增加行间距；MDX 里不要额外包 `span` / `div` / class，也不要把这条规则扩散到正文段落。
+
+## API 参考信息层级
+
+页面同时涉及函数、类型、常量、枚举或 registry 时，按“导出概览 → 核心契约 → 重要闭合集合”组织 API 参考：
+
+1. 先用列表逐项写出当前页直接涉及的公开导出及一句话用途；标明特殊来源、宿主入口和通常无需直接调用的底层 API
+2. 再用表格展开核心 props、Definition、options 或其它对象契约；区分作者输入、运行时存储等语义不同但字段相近的类型
+3. 对影响用户选择的重要 enum、const object、内置 Definition 集合或 registry 单独建表，列出成员、公开 key / 序列化值、关键输入与含义；先核对实际运行时形态，不把可索引数组或对象集合误写成字符串枚举
+
+只记录当前页完成任务所需的公开面，不把包内所有 export 搬进正文。删除与其它列完全重复的列，并按“文档宽度限制”复核窄屏；简单组件只有一张 props 表时可直接写表格，不强制补导出概览或闭合集合。
 
 ## 阅读时间与页面类型
 
@@ -311,6 +322,8 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 - controls 与 demo 从 `@/modules/docs/components/component-preview/author` 导入 `definePreviewControls`、`usePreviewControls` 和作者类型；该入口不反向加载 eager demo registry
 - demo 用 `usePreviewControls(definition)` 读取由 definition 推导的值；使用 hook 后同步导出 `previewSource = { deriveIR: false }`
 - zh/en definition 的字段 id、kind、defaultValue、select option value 必须一致，只翻译 title、section、field 与 option label
+- 新建同名 controls 文件时，demo 同步导出 `previewControls = definition` 作为新增文件尚未进入 HMR registry 时的兜底；正常解析仍优先使用当前语言的 controls module
+- 多字段、条件显示或闭合集合 controls 增加聚焦测试，直接导入双语 definition，锁定字段 id、kind、默认值、选项 value 与显示条件
 - `PreviewControlSlot` 只用于 animation、预览工具或内置 kind 无法表达的特殊渲染逃生口
 
 ### 代码视图：React / IR / Vanilla

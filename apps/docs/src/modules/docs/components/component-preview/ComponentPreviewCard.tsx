@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { useRef, useState } from 'react';
 
@@ -18,7 +18,7 @@ import type {
 } from './types';
 
 import { ComponentPreviewDialog } from './ComponentPreviewDialog';
-import { alignClass, clampPreviewSize, sizeClass } from './constants';
+import { alignClass, sizeClass } from './constants';
 import { PreviewWorkspace } from './control-panel';
 import { mergePreviewControlSlots } from './controls';
 import { usePreviewControlState } from './hooks';
@@ -52,6 +52,8 @@ export type ComponentPreviewCardProps = {
   controlSlots?: Array<PreviewControlSlot>;
   /** 分别针对弹窗 runtime 求值的全屏 header 动作定义。 */
   dialogActions?: Array<PreviewActionSlot>;
+  /** 紧跟在卡片正下方的读图或操作说明。 */
+  caption?: ReactNode;
 };
 
 /** 演示卡核心。 */
@@ -69,6 +71,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     showContextBar = source !== undefined,
     controlSlots,
     dialogActions,
+    caption,
   } = props;
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
@@ -88,14 +91,12 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const globalRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const globalControlPanelDefaultOpen = useComponentPreviewStore(s => s.controlPanelDefaultOpen);
   const resolvedControlDefinition = controlContract?.controls ?? controlDefinition;
-  const resolvePreviewSize = (nextSize: SizeKey): SizeKey =>
-    resolvedControlDefinition?.presentation === 'panel' ? clampPreviewSize(nextSize, 'md') : nextSize;
   const controlState = usePreviewControlState(resolvedControlDefinition, controlContract?.canonicalValues);
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: globalRendererMode,
     rendererModeOverride: sourceState.activeRendererMode,
-    size: resolvePreviewSize(size),
+    size,
     dragEnabled: globalDragEnabled,
     expanded: isMaximized,
   });
@@ -129,7 +130,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     toggleDrag: previewState.toggleDrag,
     onMaximize: () => setIsMaximized(true),
     size: previewState.size,
-    onSizeChange: nextSize => previewState.setSize(resolvePreviewSize(nextSize)),
+    onSizeChange: previewState.setSize,
     name,
     rendererMode: previewState.rendererMode,
     rendererModeFixed: previewState.rendererModeFixed,
@@ -138,58 +139,65 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const resolvedCardControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots);
 
   return (
-    <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
-      <PreviewWorkspace
-        definition={resolvedControlDefinition}
-        controlState={controlState}
-        showContextBar={showContextBar}
-        themeMode={themeMode}
-        onThemeModeChange={setThemeMode}
-        controlPanelOpen={controlPanelOpen}
-        controlDensity="compact"
-        onControlPanelOpenChange={setLocalControlPanelOpen}
-        workspaceClassName={sizeClass[previewState.size]}
-        previewState={previewState}
-        Component={Component}
-        activeRender={sourceState.activeRender}
-        controlSlots={resolvedCardControlSlots}
-        previewClassName={cn(
-          'flex h-full w-full justify-center overflow-hidden p-6 select-none sm:p-10',
-          alignClass[align],
-          previewClassName,
-        )}
-      />
-      {hasCode ? (
-        <InlineSourcePanel
-          state={sourceState}
-          isCodeVisible={isCodeVisible}
-          showAskAi={showAskAi}
-          onAskAi={handleAskAi}
-          isExpanded={isExpanded}
-          onExpandedChange={setLocalIsExpanded}
-          onHideSource={handleHideAll}
-          onShowCode={() => setLocalIsCodeVisible(true)}
-        />
-      ) : null}
-      {isMaximized ? (
-        <ComponentPreviewDialog
-          name={name}
-          Component={Component}
-          source={source}
-          align={align}
-          initialSize={size}
+    <div ref={containerRef} className="my-6">
+      <div className="overflow-hidden rounded-xl border">
+        <PreviewWorkspace
+          definition={resolvedControlDefinition}
           controlState={controlState}
-          controlDefinition={resolvedControlDefinition}
           showContextBar={showContextBar}
           themeMode={themeMode}
           onThemeModeChange={setThemeMode}
           controlPanelOpen={controlPanelOpen}
+          controlDensity="compact"
           onControlPanelOpenChange={setLocalControlPanelOpen}
-          controlSlots={controlSlots}
-          dialogActions={dialogActions}
-          showAskAi={showAskAi}
-          onClose={() => setIsMaximized(false)}
+          workspaceClassName={sizeClass[previewState.size]}
+          previewState={previewState}
+          Component={Component}
+          activeRender={sourceState.activeRender}
+          controlSlots={resolvedCardControlSlots}
+          previewClassName={cn(
+            'flex h-full w-full justify-center overflow-hidden p-6 select-none sm:p-10',
+            alignClass[align],
+            previewClassName,
+          )}
         />
+        {hasCode ? (
+          <InlineSourcePanel
+            state={sourceState}
+            isCodeVisible={isCodeVisible}
+            showAskAi={showAskAi}
+            onAskAi={handleAskAi}
+            isExpanded={isExpanded}
+            onExpandedChange={setLocalIsExpanded}
+            onHideSource={handleHideAll}
+            onShowCode={() => setLocalIsCodeVisible(true)}
+          />
+        ) : null}
+        {isMaximized ? (
+          <ComponentPreviewDialog
+            name={name}
+            Component={Component}
+            source={source}
+            align={align}
+            initialSize={size}
+            controlState={controlState}
+            controlDefinition={resolvedControlDefinition}
+            showContextBar={showContextBar}
+            themeMode={themeMode}
+            onThemeModeChange={setThemeMode}
+            controlPanelOpen={controlPanelOpen}
+            onControlPanelOpenChange={setLocalControlPanelOpen}
+            controlSlots={controlSlots}
+            dialogActions={dialogActions}
+            showAskAi={showAskAi}
+            onClose={() => setIsMaximized(false)}
+          />
+        ) : null}
+      </div>
+      {caption ? (
+        <p data-slot="component-preview-caption" className="mt-2 text-sm text-muted-foreground">
+          {caption}
+        </p>
       ) : null}
     </div>
   );

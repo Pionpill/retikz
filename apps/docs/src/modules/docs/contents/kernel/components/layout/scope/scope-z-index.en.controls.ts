@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { ScopeZIndexControlId } from './scope-z-index.controls';
@@ -73,3 +75,10 @@ export const scopeZIndexEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Scope z-index controls */
+export const previewControlContract = {
+  controls: scopeZIndexEnControls,
+  canonicalValues: { scopeA: 1, nodeA1: 0, nodeA2: 0, scopeB: 0, nodeB1: 0, nodeB2: 0 },
+  relatedApis: ['Scope.zIndex', 'Node.zIndex'],
+} satisfies PreviewControlContract;

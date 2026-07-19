@@ -8,6 +8,10 @@ import { usePreviewControls } from '@/modules/docs/components/component-preview/
 
 import { layoutViewboxControls } from './layout-viewbox.controls';
 
+export const previewControls = layoutViewboxControls;
+
+const VIEWBOX_GUIDE_INSET = 2;
+
 export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
@@ -19,11 +23,14 @@ export const previewSource = {
  */
 const Demo: FC = () => {
   const values = usePreviewControls(layoutViewboxControls);
+  const viewBoxGuideWidth = Math.max(0, values.viewBoxWidth - VIEWBOX_GUIDE_INSET * 2);
+  const viewBoxGuideHeight = Math.max(0, values.viewBoxHeight - VIEWBOX_GUIDE_INSET * 2);
 
   return (
     <Layout
       width={values.width}
       height={values.height}
+      style={{ outline: '1px dashed gray', outlineOffset: '-1px' }}
       viewBox={{
         x: values.viewBoxX,
         y: values.viewBoxY,
@@ -36,9 +43,9 @@ const Demo: FC = () => {
       </Node>
       <Node id="c" position={[70, 70]} shape="circle" minimumSize={24} fill="darkorange" />
       <Rectangle
-        center={[0, 0]}
-        width={236}
-        height={236}
+        center={[values.viewBoxX + values.viewBoxWidth / 2, values.viewBoxY + values.viewBoxHeight / 2]}
+        width={viewBoxGuideWidth}
+        height={viewBoxGuideHeight}
         fill="none"
         stroke="lightgray"
         dashPattern={[1, 4]}

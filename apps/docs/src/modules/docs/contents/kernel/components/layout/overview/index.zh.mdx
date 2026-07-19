@@ -51,7 +51,11 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 `viewBox` 决定内部坐标范围，`width` / `height` 决定页面显示尺寸。用面板分别调整这两类输出参数，观察它们不会改变 JSX 图形结构。
 
-<ComponentPreview files="layout-viewbox" size="md" />
+<ComponentPreview
+  files="layout-viewbox"
+  size="md"
+  caption="外层灰色 dashed 边框表示 SVG 显示尺寸，内层浅灰 dotted 边框表示内部 viewBox；默认等比适配会保留必要留白。"
+/>
 
 ### 能力注入
 

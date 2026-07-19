@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type * as ResizableModule from '../../src/components/ui/resizable';
 import type { PreviewControlLayoutMetrics } from '../../src/modules/docs/components/component-preview/control-panel';
@@ -19,6 +19,7 @@ import type {
   PreviewThemeMode,
 } from '../../src/modules/docs/components/component-preview/types';
 
+import i18n from '../../src/i18n';
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import {
   layoutPreviewControlSections,
@@ -167,6 +168,45 @@ const alternateDefinition = definePreviewControls({
   ],
 });
 
+const conditionalDefinition = definePreviewControls({
+  presentation: 'panel',
+  title: 'Conditional Properties',
+  sections: [
+    {
+      label: 'Kind',
+      controls: [
+        {
+          kind: 'select',
+          id: 'kind',
+          label: 'Kind',
+          defaultValue: 'a',
+          options: [
+            { value: 'a', label: 'A' },
+            { value: 'b', label: 'B' },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'A parameters',
+      visibleWhen: { controlId: 'kind', oneOf: ['a'] },
+      controls: [{ kind: 'number', id: 'aValue', label: 'A value', defaultValue: 1 }],
+    },
+    {
+      label: 'Shared parameters',
+      controls: [
+        {
+          kind: 'number',
+          id: 'bValue',
+          label: 'B value',
+          defaultValue: 2,
+          visibleWhen: { controlId: 'kind', oneOf: ['b'] },
+        },
+      ],
+    },
+  ],
+});
+
 const adaptiveSections = [
   {
     label: 'Content',
@@ -291,7 +331,39 @@ const DefinitionChangeHarness: FC = () => {
   );
 };
 
+const ConditionalPanelHarness: FC = () => {
+  const controlState = usePreviewControlState(conditionalDefinition);
+
+  return (
+    <>
+      <button type="button" aria-label="Show B controls" onClick={() => controlState.setValue('kind', 'b')} />
+      <button type="button" aria-label="Set hidden B value" onClick={() => controlState.setValue('bValue', 9)} />
+      <PreviewControlPanel definition={conditionalDefinition} controlState={controlState} onClose={() => undefined} />
+    </>
+  );
+};
+
 describe('PreviewControlPanel', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('en');
+  });
+
+  it('根据当前值显示匹配字段与分组，并保留隐藏字段的状态', async () => {
+    const container = await mount(<ConditionalPanelHarness />);
+
+    expect(
+      Array.from(container.querySelectorAll<HTMLElement>('[data-control-id]'), element => element.dataset.controlId),
+    ).toEqual(['kind', 'aValue']);
+
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Set hidden B value"]')?.click());
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Show B controls"]')?.click());
+
+    expect(
+      Array.from(container.querySelectorAll<HTMLElement>('[data-control-id]'), element => element.dataset.controlId),
+    ).toEqual(['kind', 'bValue']);
+    expect(container.querySelector<HTMLInputElement>('[data-control-id="bValue"] input')?.value).toBe('9');
+  });
+
   it('渲染标题、section 与六种 shadcn 字段', () => {
     const controlState: PreviewControlState = emptyControlState;
     const markup = renderToStaticMarkup(
@@ -316,6 +388,38 @@ describe('PreviewControlPanel', () => {
     expect(markup).not.toMatch(/data-slot="preview-control-field"[^>]*class="[^"]*justify-between/);
     expect(markup).toContain('>Text</label>');
     expect(markup).not.toContain('Text：');
+  });
+
+  it('多个面板为 section 生成唯一关联 id，且控制组标题不进入文档标题大纲', async () => {
+    const container = await mount(
+      <>
+        <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />
+        <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />
+      </>,
+    );
+    const toggles = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[data-slot="preview-control-section-toggle"]'),
+    );
+    const controlledIds = toggles.map(toggle => toggle.getAttribute('aria-controls'));
+    const panels = Array.from(container.querySelectorAll<HTMLElement>('aside'));
+    const panelLabelIds = panels.map(panel => panel.getAttribute('aria-labelledby'));
+
+    expect(toggles.map(toggle => toggle.getAttribute('aria-label'))).toEqual(['Appearance', 'Appearance']);
+    expect(new Set(controlledIds).size).toBe(controlledIds.length);
+    expect(controlledIds.every(id => id !== null && container.ownerDocument.getElementById(id) !== null)).toBe(true);
+    expect(container.querySelectorAll('h3 [data-slot="preview-control-section-toggle"]')).toHaveLength(0);
+    expect(new Set(panelLabelIds).size).toBe(panelLabelIds.length);
+    expect(panelLabelIds.every(id => id !== null && container.ownerDocument.getElementById(id) !== null)).toBe(true);
+  });
+
+  it('面板操作按钮使用当前文档语言', async () => {
+    await i18n.changeLanguage('zh');
+    const container = await mount(
+      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
+    );
+
+    expect(container.querySelector('button[aria-label="重置控件"]')).not.toBeNull();
+    expect(container.querySelector('button[aria-label="关闭属性面板"]')).not.toBeNull();
   });
 
   it('按控件数量均衡拆成两列并重复跨列 section 标题', () => {
@@ -437,22 +541,23 @@ describe('PreviewControlPanel', () => {
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 100)));
     await flushAnimationFrames();
-    const collapseButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Collapse Appearance"]');
+    const collapseButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Appearance"]');
     expect(collapseButtons).toHaveLength(1);
     expect(collapseButtons[0].getAttribute('aria-expanded')).toBe('true');
     expect(container.querySelectorAll('.lucide-minus')).toHaveLength(1);
 
     await act(() => collapseButtons[0].click());
     await flushAnimationFrames();
-    const expandButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Expand Appearance"]');
+    const expandButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Appearance"]');
     expect(expandButtons).toHaveLength(1);
     expect(expandButtons[0].getAttribute('aria-expanded')).toBe('false');
+    expect(expandButtons[0].hasAttribute('aria-controls')).toBe(false);
     expect(container.querySelectorAll('.lucide-plus')).toHaveLength(1);
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(0);
 
     await act(() => expandButtons[0].click());
     await flushAnimationFrames();
-    expect(container.querySelectorAll('button[aria-label="Collapse Appearance"]')).toHaveLength(1);
+    expect(container.querySelectorAll('button[aria-label="Appearance"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(6);
   });
 
@@ -466,24 +571,24 @@ describe('PreviewControlPanel', () => {
       />,
     );
 
-    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Collapse Appearance"]')?.click());
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Appearance"]')?.click());
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Reset controls"]')?.click());
 
     expect(reset).toHaveBeenCalledOnce();
-    expect(container.querySelector('button[aria-label="Expand Appearance"]')).not.toBeNull();
+    expect(container.querySelector('button[aria-label="Appearance"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(0);
   });
 
   it('definition 变化时恢复所有 section 展开', async () => {
     const container = await mount(<DefinitionChangeHarness />);
 
-    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Collapse Appearance"]')?.click());
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Appearance"]')?.click());
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(0);
     await act(() =>
       container.querySelector<HTMLButtonElement>('button[aria-label="Change controls definition"]')?.click(),
     );
 
-    expect(container.querySelector('button[aria-label="Collapse Layout"]')).not.toBeNull();
+    expect(container.querySelector('button[aria-label="Layout"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(1);
   });
 

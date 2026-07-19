@@ -56,7 +56,7 @@ Five translation forms mirror Node's relative-position model; `rotate` and `scal
 
 `O` / `T` are fixed referents outside the Scope. Switch among all seven transform inputs and adjust their parameters in the panel: only the local axes and point `q` move as a group, while the two dotted guide projections preserve `q`'s position in the local coordinate system.
 
-<ComponentPreview files="scope-translate-basic" size="md" />
+<ComponentPreview files="scope-translate-basic" size="sm" />
 
 Relative directions are interpreted in the current local coordinate system, so rotating Scope also rotates the visual direction of `right` with the axes.
 
@@ -64,7 +64,7 @@ Relative directions are interpreted in the current local coordinate system, so r
 
 With an `id`, Scope derives a referenceable group target from the children bounds. Use the panel to switch `boundingShape` and the connection anchor: the boundary shape and attachment point change independently, while the children stay fixed.
 
-<ComponentPreview files="scope-id-reference" size="md" />
+<ComponentPreview files="scope-id-reference" size="sm" />
 
 Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The panel starts with both Nodes named `A`; disable isolation to redirect the outer arrow to the inner Node, or rename the inner id to `B` to remove the conflict.
 
@@ -74,11 +74,11 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 `clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. Switch among all six built-in regions in the panel, then register a [Custom Clip](/kernel/components/layout/custom-clip) when those are insufficient.
 
-<ComponentPreview files="scope-clip" size="xs" minimumSize="xs" previewClassName="!p-3 !pt-[52px]" />
+<ComponentPreview files="scope-clip" size="xs" previewClassName="!p-3 !pt-[52px]" />
 
 `zIndex` moves the whole Scope among siblings without reordering children inside it. Adjust all four Nodes and both Scopes in the panel to compare within-group and whole-group stacking.
 
-<ComponentPreview files="scope-z-index" size="md" />
+<ComponentPreview files="scope-z-index" size="sm" />
 
 ### Style defaults
 

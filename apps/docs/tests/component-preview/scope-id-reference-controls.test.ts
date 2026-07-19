@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview';
 
 import { scopeIdReferenceControls } from '../../src/modules/docs/contents/kernel/components/layout/scope/scope-id-reference.controls';
+import { previewControlContract as scopeIdReferenceContract } from '../../src/modules/docs/contents/kernel/components/layout/scope/scope-id-reference.controls';
 import { scopeIdReferenceEnControls } from '../../src/modules/docs/contents/kernel/components/layout/scope/scope-id-reference.en.controls';
+import { previewControlContract as scopeIdReferenceEnContract } from '../../src/modules/docs/contents/kernel/components/layout/scope/scope-id-reference.en.controls';
 
 const localizedControls: Array<readonly [string, PreviewControlsDefinition]> = [
   ['zh', scopeIdReferenceControls],
@@ -11,6 +13,12 @@ const localizedControls: Array<readonly [string, PreviewControlsDefinition]> = [
 ];
 
 describe('Scope id reference controls', () => {
+  it('只索引 controls 直接消费的 Scope 边界与 Draw 端点语义', () => {
+    for (const contract of [scopeIdReferenceContract, scopeIdReferenceEnContract]) {
+      expect(contract.relatedApis).toEqual(['Scope.boundingShape', 'Draw.way']);
+    }
+  });
+
   it.each(localizedControls)('%s 使用条件角度滑块而不是离散角度选项', (locale, controls) => {
     expect(controls.presentation).toBe('panel');
     if (controls.presentation !== 'panel') throw new Error(`Missing Scope panel controls: ${locale}`);

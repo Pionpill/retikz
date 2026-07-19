@@ -51,7 +51,11 @@ For everyday authoring, pass children directly. `<Layout>` converts the componen
 
 `viewBox` controls the internal coordinate range, while `width` / `height` control display size. Use the panel to vary these two output boundaries without changing the JSX structure.
 
-<ComponentPreview files="layout-viewbox" size="md" />
+<ComponentPreview
+  files="layout-viewbox"
+  size="md"
+  caption="The outer gray dashed border marks the SVG display size; the inner light-gray dotted border marks the viewBox. The default aspect-ratio fit preserves any necessary letterboxing."
+/>
 
 ### Capability Injection
 

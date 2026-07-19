@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { ScopeClipControlId } from './scope-clip.controls';
@@ -28,3 +30,10 @@ export const scopeClipEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Scope clipping controls */
+export const previewControlContract = {
+  controls: scopeClipEnControls,
+  canonicalValues: { clipKind: 'circle' },
+  relatedApis: ['Scope.clip'],
+} satisfies PreviewControlContract;

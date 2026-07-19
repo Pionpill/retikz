@@ -56,7 +56,7 @@ import { Scope } from '@retikz/react';
 
 `O` / `T` 是 Scope 外的固定参照点。用面板切换七种 transform 输入并调整对应参数时，只有中间的局部坐标轴与点 `q` 整体变化；两条点状辅助投影始终保留 `q` 在局部坐标系中的位置关系。
 
-<ComponentPreview files="scope-translate-basic" size="md" />
+<ComponentPreview files="scope-translate-basic" size="sm" />
 
 相对方向始终在当前局部坐标系中解释，因此 Scope 旋转后，`right` 的视觉方向也会随坐标轴旋转。
 
@@ -64,7 +64,7 @@ import { Scope } from '@retikz/react';
 
 设置 `id` 后，Scope 会根据 children 的包围盒生成一个可引用的整体目标。用面板切换 `boundingShape` 与连接 anchor，观察边界形状和连接落点如何独立变化；children 本身不会改变。
 
-<ComponentPreview files="scope-id-reference" size="md" />
+<ComponentPreview files="scope-id-reference" size="sm" />
 
 `localNamespace` 只在确实要复用带固定 id 的子图时使用。面板默认让内外 Node 同为 `A`；关闭隔离时外部箭头会改连内部 Node，把内部 id 改成 `B` 可消除冲突。
 
@@ -74,11 +74,11 @@ import { Scope } from '@retikz/react';
 
 `clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。用面板切换六种内置裁剪区；内置类型不够时再注册[自定义裁剪区](/kernel/components/layout/custom-clip)。
 
-<ComponentPreview files="scope-clip" size="xs" minimumSize="xs" previewClassName="!p-3 !pt-[52px]" />
+<ComponentPreview files="scope-clip" size="xs" previewClassName="!p-3 !pt-[52px]" />
 
 `zIndex` 调整整个 Scope 在父层的栈序，不会重排 Scope 内部 children。用面板分别修改四个 Node 与两个 Scope，比较组内排序和整组排序。
 
-<ComponentPreview files="scope-z-index" size="md" />
+<ComponentPreview files="scope-z-index" size="sm" />
 
 ### 样式默认值
 

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { ScopeTransformControlId, ScopeTransformVisibleWhen } from './scope-translate-basic.controls';
@@ -192,3 +194,26 @@ export const scopeTranslateBasicEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Scope transform controls */
+export const previewControlContract = {
+  controls: scopeTranslateBasicEnControls,
+  canonicalValues: {
+    transformKind: 'translate',
+    referent: 'O',
+    translateX: 0,
+    translateY: 0,
+    offsetX: 100,
+    offsetY: 0,
+    polarAngle: 0,
+    distance: 100,
+    direction: 'right',
+    fraction: 0.5,
+    rotateDegrees: 0,
+    rotateCenterX: 0,
+    rotateCenterY: 0,
+    scaleX: 1,
+    scaleY: 1,
+  },
+  relatedApis: ['Scope.transforms'],
+} satisfies PreviewControlContract;
