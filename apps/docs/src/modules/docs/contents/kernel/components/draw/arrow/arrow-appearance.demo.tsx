@@ -17,7 +17,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(arrowAppearanceControls);
 
   return (
-    <Layout width={440} height={200} viewBox={{ x: -40, y: -100, width: 440, height: 200 }}>
+    <Layout width={400} height={182} viewBox={{ x: -40, y: -100, width: 440, height: 200 }}>
       <Node id="A" position={[0, 0]} stroke="gray" dashed>
         a
       </Node>

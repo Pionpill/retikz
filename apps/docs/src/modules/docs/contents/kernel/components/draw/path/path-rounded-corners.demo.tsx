@@ -20,27 +20,27 @@ const Demo: FC = () => {
   const values = usePreviewControls(pathRoundedCornersControls);
 
   return (
-    <Layout width={440} height={260} viewBox={{ x: -220, y: -130, width: 440, height: 260 }}>
+    <Layout width={400} height={191} viewBox={{ x: -220, y: -105, width: 440, height: 210 }}>
       <Path stroke="lightgray" strokeWidth={values.strokeWidth} lineJoin={values.lineJoin}>
-        <Step kind="move" to={[-170, -50]} />
-        <Step to={[0, -105]} />
-        <Step to={[170, -50]} />
+        <Step kind="move" to={[-170, -30]} />
+        <Step to={[0, -75]} />
+        <Step to={[170, -30]} />
       </Path>
       <Path stroke="black" strokeWidth={1}>
-        <Step kind="move" to={[-170, -50]} />
-        <Step to={[0, -105]} />
-        <Step to={[170, -50]} />
+        <Step kind="move" to={[-170, -30]} />
+        <Step to={[0, -75]} />
+        <Step to={[170, -30]} />
       </Path>
 
       <Path stroke="lightblue" strokeWidth={values.strokeWidth} roundedCorners={values.radius}>
-        <Step kind="move" to={[-170, 75]} />
-        <Step to={[0, 20]} />
-        <Step to={[170, 75]} />
+        <Step kind="move" to={[-170, 55]} />
+        <Step to={[0, 10]} />
+        <Step to={[170, 55]} />
       </Path>
       <Path stroke="steelblue" strokeWidth={1} roundedCorners={values.radius}>
-        <Step kind="move" to={[-170, 75]} />
-        <Step to={[0, 20]} />
-        <Step to={[170, 75]} />
+        <Step kind="move" to={[-170, 55]} />
+        <Step to={[0, 10]} />
+        <Step to={[170, 55]} />
       </Path>
     </Layout>
   );

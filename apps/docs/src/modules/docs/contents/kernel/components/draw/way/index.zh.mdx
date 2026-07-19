@@ -48,7 +48,7 @@ import { Draw } from '@retikz/react';
 
 `+` 的第二段仍以起点为偏移基准，`++` 则从第一段终点继续偏移。调整二维偏移，dotted 直角辅助线会标出第二段实际使用的基准。
 
-<ComponentPreview files={['way-relative', 'way-relative.data.ts']} size="md" />
+<ComponentPreview files={['way-relative', 'way-relative.data.ts']} size="sm" />
 
 ## 技术原理
 
@@ -119,13 +119,13 @@ import { Draw } from '@retikz/react';
       label: '字符串相对坐标归一',
       path: 'packages/kernel/core/src/parsers/target-sugar.ts',
       startLine: 10,
-      endLine: 31,
+      endLine: 29,
     },
     {
       label: '相对坐标求值与 prevEnd 更新',
       path: 'packages/kernel/core/src/compile/path/host/relative.ts',
       startLine: 77,
-      endLine: 100,
+      endLine: 95,
     },
   ]}
 />

@@ -24,7 +24,7 @@ import { Path, Step } from '@retikz/react';
 
 在同一个面板中切换 `line`、多次 `move`、`fold`、`cycle` 与 `rectangle`。多次 `move` 可以在同一个 `<Path>` 中开始彼此独立的子路径；`fold` 可改变折角方向，`rectangle` 可调圆角，`cycle` 会闭合回最近一次 `move` 的起点。
 
-<ComponentPreview files="step-actions" size="md" />
+<ComponentPreview files="step-actions" size="sm" />
 
 ### 目标定位
 
@@ -36,13 +36,13 @@ import { Path, Step } from '@retikz/react';
 
 相对坐标也可写成 sugar 字符串 `'+dx,dy'` / `'++dx,dy'`。
 
-<ComponentPreview files="step-targeting" size="md" />
+<ComponentPreview files="step-targeting" size="sm" />
 
 ### 几何与曲线
 
 `curve`、`cubic`、`bend`、`smooth`、`arc`、`circlePath` 与 `ellipsePath` 都在下面的面板中切换。贝塞尔控制点以 `[x, y]` 成组编辑，并在画布中显示对应的虚线手柄；其他 kind 只显示相关的弯曲角、tension、角度或半径，便于比较它们如何推进游标并生成几何。
 
-<ComponentPreview files="step-curves" size="md" />
+<ComponentPreview files="step-curves" size="sm" />
 
 <ComponentAlert
   title="vanilla 写法"
@@ -67,7 +67,7 @@ import { Path, Step } from '@retikz/react';
 
 给 `<Step>` 挂 `label`，即可把文字放在该段的任意归一化位置。prop 形态 `<Step label={{...}} />` 与 sugar 形态 `<Step><EdgeLabel>...</EdgeLabel></Step>` 的基础位置字段等价；两者并存时 prop 优先。
 
-<ComponentPreview files="step-label" />
+<ComponentPreview files="step-label" size="md" />
 
 面板统一调整 `position`、`side`、`sloped` 与文字颜色。`position` 接受七个关键字或 `[0, 1]` 数值 t；关键字映射与完整字段放在下方 [API 的边标注表](#边标注)，避免在示例区重复列举。
 
@@ -145,7 +145,7 @@ import { Path, Step } from '@retikz/react';
       label: '相对目标归一化',
       path: 'packages/kernel/core/src/compile/path/host/relative.ts',
       startLine: 10,
-      endLine: 100,
+      endLine: 95,
     },
     {
       label: '目标归一化与逐段编译主循环',

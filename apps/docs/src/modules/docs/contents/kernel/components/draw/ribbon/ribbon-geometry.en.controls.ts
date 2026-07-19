@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English controls for the Ribbon geometry playground */
@@ -78,3 +80,31 @@ export const ribbonGeometryControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: ribbonGeometryControls,
+  canonicalValues: {
+    widthMode: 'endpoints',
+    startWidth: 16,
+    endWidth: 44,
+    middleWidth: 10,
+    peakWidth: 58,
+    endpointInterpolation: 'smooth',
+    stopInterpolation: 'smooth',
+    fill: '#38bdf8',
+    fillOpacity: 0.75,
+    stroke: '#075985',
+    strokeWidth: 1,
+    shadow: false,
+  },
+  relatedApis: [
+    'Path.kind',
+    'Path.ribbon',
+    'Path.fill',
+    'Path.fillOpacity',
+    'Path.stroke',
+    'Path.strokeWidth',
+    'Path.shadow',
+  ],
+} satisfies PreviewControlContract;

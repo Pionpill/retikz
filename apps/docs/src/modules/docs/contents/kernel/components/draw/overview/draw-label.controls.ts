@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Draw label playground 的中文属性面板 */
@@ -51,3 +53,10 @@ export const drawLabelControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: drawLabelControls,
+  canonicalValues: { segmentKind: 'line', position: 0.5, side: 'top', sloped: false, textColor: '#6b7280' },
+  relatedApis: ['Draw.label'],
+} satisfies PreviewControlContract;

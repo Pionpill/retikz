@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Step basic-action controls in English */
@@ -46,3 +48,10 @@ export const stepActionsEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: stepActionsEnControls,
+  canonicalValues: { actionKind: 'line', via: '-|', cornerRadius: 12 },
+  relatedApis: ['Step.kind', 'Step.to'],
+} satisfies PreviewControlContract;

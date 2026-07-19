@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Way 相对坐标对照的中文属性面板 */
@@ -21,3 +23,10 @@ export const wayRelativeControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: wayRelativeControls,
+  canonicalValues: { offset: [90, 30] },
+  relatedApis: ['Draw.way'],
+} satisfies PreviewControlContract;

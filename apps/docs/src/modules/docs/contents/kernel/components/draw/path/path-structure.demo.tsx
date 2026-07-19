@@ -17,7 +17,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(pathStructureControls);
 
   return (
-    <Layout width={440} height={240} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
+    <Layout width={400} height={218} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       <Path
         stroke={values.structure === 'fill' ? values.fill : 'currentColor'}
         strokeWidth={2}

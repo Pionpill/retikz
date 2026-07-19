@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English controls for the Ribbon endpoints playground */
@@ -63,3 +65,10 @@ export const ribbonEndpointsControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: ribbonEndpointsControls,
+  canonicalValues: { direction: 'auto', angle: 0, align: 'center', cap: 'round', width: 30 },
+  relatedApis: ['Path.kind', 'Path.ribbon'],
+} satisfies PreviewControlContract;

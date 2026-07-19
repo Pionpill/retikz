@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Step label 的中文属性面板 */
@@ -27,3 +29,10 @@ export const stepLabelControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: stepLabelControls,
+  canonicalValues: { position: 0.5, side: 'top', sloped: false, textColor: '#6b7280' },
+  relatedApis: ['Step.label'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Ribbon 宽度与样式 playground 的中文属性面板 */
@@ -78,3 +80,31 @@ export const ribbonGeometryControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: ribbonGeometryControls,
+  canonicalValues: {
+    widthMode: 'endpoints',
+    startWidth: 16,
+    endWidth: 44,
+    middleWidth: 10,
+    peakWidth: 58,
+    endpointInterpolation: 'smooth',
+    stopInterpolation: 'smooth',
+    fill: '#38bdf8',
+    fillOpacity: 0.75,
+    stroke: '#075985',
+    strokeWidth: 1,
+    shadow: false,
+  },
+  relatedApis: [
+    'Path.kind',
+    'Path.ribbon',
+    'Path.fill',
+    'Path.fillOpacity',
+    'Path.stroke',
+    'Path.strokeWidth',
+    'Path.shadow',
+  ],
+} satisfies PreviewControlContract;

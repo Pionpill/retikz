@@ -43,7 +43,7 @@ const Demo: FC = () => {
     values.cap === 'arc' ? { type: 'arc', center: [-190, 20], radius: values.width / 2 } : values.cap;
 
   return (
-    <Layout width={520} height={260} viewBox={{ x: -260, y: -130, width: 520, height: 260 }}>
+    <Layout width={400} height={200} viewBox={{ x: -260, y: -130, width: 520, height: 260 }}>
       <Path
         kind="ribbon"
         ribbon={{

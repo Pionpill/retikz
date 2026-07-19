@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Step label controls in English */
@@ -27,3 +29,10 @@ export const stepLabelEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: stepLabelEnControls,
+  canonicalValues: { position: 0.5, side: 'top', sloped: false, textColor: '#6b7280' },
+  relatedApis: ['Step.label'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Path 整体变换的中文属性面板 */
@@ -22,3 +24,10 @@ export const pathTransformControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: pathTransformControls,
+  canonicalValues: { rotate: 40, scale: [1, 1] },
+  relatedApis: ['Path.rotate', 'Path.scale'],
+} satisfies PreviewControlContract;

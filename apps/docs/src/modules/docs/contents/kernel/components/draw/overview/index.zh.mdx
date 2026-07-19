@@ -36,21 +36,21 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 用面板切换二次 / 三次贝塞尔、bend、arc、circle 与 ellipse。贝塞尔控制点以 `[x, y]` 成组编辑，画布上的虚线手柄会同步移动；其他类型只显示当前操作真正使用的角度或半径。连接类操作消费前后两个目标；arc / circle / ellipse 以上一项为中心，不消费下一项。
 
+<ComponentPreview files="draw-curve" size="sm" />
+
+过点平滑曲线是 `<Step kind="smooth">` 的专属能力，不是 `way` 操作；它需要同时消费一组点，见 [Step 曲线](/kernel/components/draw/step#几何与曲线)。
+
 <Comparison target="tikz" title="二次贝塞尔">
 
 `{ curve: [cx, cy] }` 对应 TikZ 的 `.. controls (B) ..` 路径控制点写法。
 
 </Comparison>
 
-<ComponentPreview files="draw-curve" size="md" />
-
-过点平滑曲线是 `<Step kind="smooth">` 的专属能力，不是 `way` 操作；它需要同时消费一组点，见 [Step 曲线](/kernel/components/draw/step#几何与曲线)。
-
 ### 边标注
 
 `{ label }` 修饰下一段产生的 `step.label`，不自己产生路径段。用面板切换直线与两种折角，拖动 `position`，再调整 side、sloped 与文字颜色；折角会把 t 平均分配给两段，因此 `0.5` 固定落在拐角。
 
-<ComponentPreview files="draw-label" size="md" />
+<ComponentPreview files="draw-label" size="sm" />
 
 7 个 position keyword、曲线与圆弧的 t 语义见 [Step 边标注](/kernel/components/draw/step#边标注label)。
 
@@ -58,7 +58,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 同一条开放折线可以直接试验 stroke、dash、圆角与箭头。`roundedCorners` 改变路径几何，`lineJoin` 只改变描边视觉；更细的箭头 shape、尺寸与单端配置见 [Arrow](/kernel/components/draw/arrow)。
 
-<ComponentPreview files="draw-style" size="md" />
+<ComponentPreview files="draw-style" size="sm" />
 
 #### 填充与栈序
 

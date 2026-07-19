@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Draw open-path appearance controls in English */
@@ -51,3 +53,17 @@ export const drawStyleEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: drawStyleEnControls,
+  canonicalValues: { stroke: '#1e90ff', strokeWidth: 2, dashed: false, dashOffset: 0, arrow: '->', roundedCorners: 0 },
+  relatedApis: [
+    'Draw.stroke',
+    'Draw.strokeWidth',
+    'Draw.dashPattern',
+    'Draw.dashOffset',
+    'Draw.arrow',
+    'Draw.roundedCorners',
+  ],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Draw 曲线 playground 的稳定字段 id */
@@ -170,3 +172,22 @@ export const drawCurveControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: drawCurveControls,
+  canonicalValues: {
+    curveKind: 'curve',
+    control: [100, -70],
+    control1: [60, -70],
+    control2: [140, 70],
+    bendDirection: 'left',
+    bendAngle: 30,
+    startAngle: 0,
+    endAngle: 120,
+    radius: 60,
+    radiusX: 80,
+    radiusY: 45,
+  },
+  relatedApis: ['Draw.way'],
+} satisfies PreviewControlContract;

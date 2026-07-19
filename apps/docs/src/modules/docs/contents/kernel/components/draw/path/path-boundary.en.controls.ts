@@ -48,6 +48,7 @@ export const pathBoundaryControls = definePreviewControls({
   ],
 });
 
+/** Stable documentation contract for the current controls */
 export const previewControlContract = {
   controls: pathBoundaryControls,
   canonicalValues: { boundary: 'circle', fit: 'tight', gap: 0 },

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Path 中段标记的中文属性面板 */
@@ -14,3 +16,10 @@ export const pathMarksControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: pathMarksControls,
+  canonicalValues: { firstPosition: 0.25, secondPosition: 0.75 },
+  relatedApis: ['Path.marks'],
+} satisfies PreviewControlContract;

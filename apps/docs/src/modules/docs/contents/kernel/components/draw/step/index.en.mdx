@@ -24,7 +24,7 @@ Use `<Step>` when you need exact control over Kernel path actions: multiple `mov
 
 Switch between `line`, repeated `move`s, `fold`, `cycle`, and `rectangle` in one panel. Repeated `move`s begin independent subpaths inside one `<Path>`; `fold` exposes its corner direction, `rectangle` exposes its corner radius, and `cycle` closes back to the most recent `move` target.
 
-<ComponentPreview files="step-actions" size="md" />
+<ComponentPreview files="step-actions" size="sm" />
 
 ### Target positioning
 
@@ -36,13 +36,13 @@ Besides absolute coordinates, `to` accepts `{ of, offset }`, `{ relative }`, and
 
 Relative targets also have the sugar strings `'+dx,dy'` / `'++dx,dy'`.
 
-<ComponentPreview files="step-targeting" size="md" />
+<ComponentPreview files="step-targeting" size="sm" />
 
 ### Geometry and curves
 
 Switch among `curve`, `cubic`, `bend`, `smooth`, `arc`, `circlePath`, and `ellipsePath` in the panel below. Bezier control points are edited as `[x, y]` pairs and appear as dashed handles on the canvas; other kinds reveal only their bend angle, tension, angles, or radii so you can compare how they advance the cursor and produce geometry.
 
-<ComponentPreview files="step-curves" size="md" />
+<ComponentPreview files="step-curves" size="sm" />
 
 <ComponentAlert
   title="Vanilla form"
@@ -67,7 +67,7 @@ Switch among `curve`, `cubic`, `bend`, `smooth`, `arc`, `circlePath`, and `ellip
 
 Attach `label` to a `<Step>` to place text at any normalized position along that segment. The prop form `<Step label={{...}} />` and sugar form `<Step><EdgeLabel>...</EdgeLabel></Step>` provide equivalent basic placement fields; the prop wins when both are present.
 
-<ComponentPreview files="step-label" />
+<ComponentPreview files="step-label" size="md" />
 
 The panel adjusts `position`, `side`, `sloped`, and text color together. `position` accepts seven keywords or a numeric t in `[0, 1]`; the keyword mapping and complete fields live in the [edge-label API table](#edge-labels) below instead of being repeated in the examples.
 
@@ -145,7 +145,7 @@ This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry co
       label: 'Relative-target normalization',
       path: 'packages/kernel/core/src/compile/path/host/relative.ts',
       startLine: 10,
-      endLine: 100,
+      endLine: 95,
     },
     {
       label: 'Target normalization and the per-Step compile loop',

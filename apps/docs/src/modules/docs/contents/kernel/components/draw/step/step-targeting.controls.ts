@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Step 目标定位的中文属性面板 */
@@ -25,3 +27,10 @@ export const stepTargetingControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: stepTargetingControls,
+  canonicalValues: { targetKind: 'offset', offsetX: 80, offsetY: -35 },
+  relatedApis: ['Step.to'],
+} satisfies PreviewControlContract;

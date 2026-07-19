@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English property panel for the Path gradient stroke */
@@ -16,3 +18,10 @@ export const pathStrokePaintControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: pathStrokePaintControls,
+  canonicalValues: { angle: 90, startColor: '#2563eb', middleColor: '#f59e0b', endColor: '#e11d48' },
+  relatedApis: ['Path.stroke'],
+} satisfies PreviewControlContract;

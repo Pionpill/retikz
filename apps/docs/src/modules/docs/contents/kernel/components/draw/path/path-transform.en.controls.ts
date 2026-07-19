@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English property panel for whole-Path transforms */
@@ -22,3 +24,10 @@ export const pathTransformControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: pathTransformControls,
+  canonicalValues: { rotate: 40, scale: [1, 1] },
+  relatedApis: ['Path.rotate', 'Path.scale'],
+} satisfies PreviewControlContract;

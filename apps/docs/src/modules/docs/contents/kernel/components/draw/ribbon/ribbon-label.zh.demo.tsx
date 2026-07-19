@@ -19,7 +19,7 @@ const Demo: FC = () => {
     values.placement === 'inside' ? ({ placement: 'inside' } as const) : ({ side: values.side } as const);
 
   return (
-    <Layout width={560} height={260} viewBox={{ x: -280, y: -130, width: 560, height: 260 }} color="#172033">
+    <Layout width={400} height={186} viewBox={{ x: -280, y: -130, width: 560, height: 260 }} color="#172033">
       <Path
         kind="ribbon"
         ribbon={{

@@ -36,21 +36,21 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 Use the panel to switch among quadratic / cubic Bezier, bend, arc, circle, and ellipse. Bezier control points are edited as `[x, y]` pairs and move the dashed handles on the canvas; other kinds expose only the angles or radii they actually use. Connection operations consume the targets on both sides; arc / circle / ellipse use the previous item as their center and do not consume a next target.
 
+<ComponentPreview files="draw-curve" size="sm" />
+
+A smooth curve through points is a `<Step kind="smooth">`-only capability rather than a `way` operation because it consumes a point list at once. See [Step curves](/kernel/components/draw/step#geometry-and-curves).
+
 <Comparison target="tikz" title="Quadratic Bezier">
 
 `{ curve: [cx, cy] }` maps to TikZ's `.. controls (B) ..` path control-point syntax.
 
 </Comparison>
 
-<ComponentPreview files="draw-curve" size="md" />
-
-A smooth curve through points is a `<Step kind="smooth">`-only capability rather than a `way` operation because it consumes a point list at once. See [Step curves](/kernel/components/draw/step#geometry-and-curves).
-
 ### Edge Labels
 
 `{ label }` decorates the next produced segment through `step.label`; it does not produce a segment itself. Switch between a line and the two fold operators, drag `position`, then adjust side, sloped, and text color. A fold divides t evenly across its two legs, so `0.5` always lands on the corner.
 
-<ComponentPreview files="draw-label" size="md" />
+<ComponentPreview files="draw-label" size="sm" />
 
 For the seven position keywords and t semantics on curves and arcs, see [Step edge labels](/kernel/components/draw/step#edge-label).
 
@@ -58,7 +58,7 @@ For the seven position keywords and t semantics on curves and arcs, see [Step ed
 
 Use one open polyline to explore stroke, dash, rounded geometry, and endpoint arrows. `roundedCorners` changes path geometry while `lineJoin` only changes stroke rendering; for arrow shape, size, and per-end overrides, see [Arrow](/kernel/components/draw/arrow).
 
-<ComponentPreview files="draw-style" size="md" />
+<ComponentPreview files="draw-style" size="sm" />
 
 #### Fill and stacking
 

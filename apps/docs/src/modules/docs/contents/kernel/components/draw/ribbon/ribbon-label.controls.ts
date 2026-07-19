@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Ribbon 标注的中文属性面板 */
@@ -35,3 +37,10 @@ export const ribbonLabelControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: ribbonLabelControls,
+  canonicalValues: { position: 0.5, placement: 'inside', side: 'top', sloped: true },
+  relatedApis: ['Path.label'],
+} satisfies PreviewControlContract;

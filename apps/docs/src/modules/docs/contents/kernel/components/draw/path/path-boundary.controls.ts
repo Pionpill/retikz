@@ -58,6 +58,7 @@ export const pathBoundaryControls = definePreviewControls({
   ],
 });
 
+/** 当前 controls 面板的稳定文档契约 */
 export const previewControlContract = {
   controls: pathBoundaryControls,
   canonicalValues: { boundary: 'circle', fit: 'tight', gap: 0 },

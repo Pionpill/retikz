@@ -49,7 +49,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(stepTargetingControls);
 
   return (
-    <Layout width={420} height={240} viewBox={{ x: -190, y: -120, width: 380, height: 240 }}>
+    <Layout width={400} height={229} viewBox={{ x: -190, y: -120, width: 380, height: 240 }}>
       <Node id="A" position={[-100, 40]} stroke="gray" dashed>
         a
       </Node>

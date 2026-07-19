@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Draw 开放路径样式的中文属性面板 */
@@ -51,3 +53,17 @@ export const drawStyleControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: drawStyleControls,
+  canonicalValues: { stroke: '#1e90ff', strokeWidth: 2, dashed: false, dashOffset: 0, arrow: '->', roundedCorners: 0 },
+  relatedApis: [
+    'Draw.stroke',
+    'Draw.strokeWidth',
+    'Draw.dashPattern',
+    'Draw.dashOffset',
+    'Draw.arrow',
+    'Draw.roundedCorners',
+  ],
+} satisfies PreviewControlContract;

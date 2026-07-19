@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English controls for the Path appearance playground */
@@ -77,3 +79,32 @@ export const pathStyleControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: pathStyleControls,
+  canonicalValues: {
+    stroke: '#172033',
+    thickness: 'custom',
+    strokeWidth: 5,
+    dashed: true,
+    dashOffset: 0,
+    lineCap: 'round',
+    lineJoin: 'round',
+    opacity: 1,
+    strokeOpacity: 1,
+    fillOpacity: 0.35,
+  },
+  relatedApis: [
+    'Path.stroke',
+    'Path.thickness',
+    'Path.strokeWidth',
+    'Path.opacity',
+    'Path.dashPattern',
+    'Path.dashOffset',
+    'Path.lineCap',
+    'Path.lineJoin',
+    'Path.strokeOpacity',
+    'Path.fillOpacity',
+  ],
+} satisfies PreviewControlContract;

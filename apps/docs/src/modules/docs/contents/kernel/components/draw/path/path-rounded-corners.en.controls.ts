@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English controls for the rounded Path playground */
@@ -25,3 +27,10 @@ export const pathRoundedCornersControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: pathRoundedCornersControls,
+  canonicalValues: { radius: 28, strokeWidth: 18, lineJoin: 'round' },
+  relatedApis: ['Path.roundedCorners', 'Path.strokeWidth', 'Path.lineJoin'],
+} satisfies PreviewControlContract;

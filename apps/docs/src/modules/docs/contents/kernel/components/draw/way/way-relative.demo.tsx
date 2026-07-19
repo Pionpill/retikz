@@ -29,7 +29,7 @@ const Demo: FC = () => {
   ];
 
   return (
-    <Layout width={440} height={240} viewBox={WayRelativeViewBox}>
+    <Layout width={400} height={218} viewBox={WayRelativeViewBox}>
       <Node id="A" position={WayRelativeStart} stroke="gray" dashed>
         +
       </Node>

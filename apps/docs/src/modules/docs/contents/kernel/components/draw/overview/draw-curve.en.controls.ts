@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { DrawCurveControlId, DrawCurveVisibleWhen } from './draw-curve.controls';
@@ -147,3 +149,22 @@ export const drawCurveEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: drawCurveEnControls,
+  canonicalValues: {
+    curveKind: 'curve',
+    control: [100, -70],
+    control1: [60, -70],
+    control2: [140, 70],
+    bendDirection: 'left',
+    bendAngle: 30,
+    startAngle: 0,
+    endAngle: 120,
+    radius: 60,
+    radiusX: 80,
+    radiusY: 45,
+  },
+  relatedApis: ['Draw.way'],
+} satisfies PreviewControlContract;

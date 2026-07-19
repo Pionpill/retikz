@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English property panel for Path outgoing and incoming angles */
@@ -44,3 +46,10 @@ export const pathOutInLoopControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: pathOutInLoopControls,
+  canonicalValues: { mode: 'loop', outAngle: 120, inAngle: 60, loopLooseness: 72, looseness: 1 },
+  relatedApis: ['Step.outAngle', 'Step.inAngle', 'Step.looseness'],
+} satisfies PreviewControlContract;

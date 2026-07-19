@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Path 几何圆角 playground 的中文属性面板 */
@@ -25,3 +27,10 @@ export const pathRoundedCornersControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: pathRoundedCornersControls,
+  canonicalValues: { radius: 28, strokeWidth: 18, lineJoin: 'round' },
+  relatedApis: ['Path.roundedCorners', 'Path.strokeWidth', 'Path.lineJoin'],
+} satisfies PreviewControlContract;

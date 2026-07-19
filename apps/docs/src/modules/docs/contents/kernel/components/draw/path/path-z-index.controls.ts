@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Path 栈序的中文属性面板 */
@@ -11,3 +13,10 @@ export const pathZIndexControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: pathZIndexControls,
+  canonicalValues: { zIndex: 1 },
+  relatedApis: ['Path.zIndex'],
+} satisfies PreviewControlContract;

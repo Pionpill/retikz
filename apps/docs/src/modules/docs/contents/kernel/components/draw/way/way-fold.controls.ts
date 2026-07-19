@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Way 折角方向的中文属性面板 */
@@ -22,3 +24,10 @@ export const wayFoldControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: wayFoldControls,
+  canonicalValues: { direction: '-|' },
+  relatedApis: ['Draw.way'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Path 出入射角的中文属性面板 */
@@ -44,3 +46,10 @@ export const pathOutInLoopControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: pathOutInLoopControls,
+  canonicalValues: { mode: 'loop', outAngle: 120, inAngle: 60, loopLooseness: 72, looseness: 1 },
+  relatedApis: ['Step.outAngle', 'Step.inAngle', 'Step.looseness'],
+} satisfies PreviewControlContract;

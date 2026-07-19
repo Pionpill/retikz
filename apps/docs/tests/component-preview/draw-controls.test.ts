@@ -63,6 +63,12 @@ const arrowAppearanceDemoSources = import.meta.glob<string>(
   { eager: true, query: '?raw', import: 'default' },
 );
 
+// 收集所有使用 controls 的 Draw demo，约束右侧预览面板内的 SVG 输出尺寸
+const controlDemoSources = import.meta.glob<string>(
+  '../../src/modules/docs/contents/kernel/components/draw/**/*.demo.tsx',
+  { eager: true, query: '?raw', import: 'default' },
+);
+
 /** 从 controls 模块中取出声明式定义 */
 const definitionOf = (module: Record<string, unknown>): PreviewControlsDefinition => {
   const definition = Object.values(module).find(value => {
@@ -87,6 +93,18 @@ const fieldContractOf = (field: PreviewControlField) => ({
 });
 
 describe('Draw family controls', () => {
+  it('controls demo 固定取景且右侧输出宽度不超过 400px', () => {
+    const entries = Object.entries(controlDemoSources).filter(([, source]) => source.includes('usePreviewControls('));
+    expect(entries).toHaveLength(25);
+
+    for (const [path, source] of entries) {
+      expect(source, `${path}: fixed viewBox`).toContain('viewBox=');
+      const widths = Array.from(source.matchAll(/<Layout[\s\S]*?width=\{(\d+)\}/g), match => Number(match[1]));
+      expect(widths.length, `${path}: explicit Layout width`).toBeGreaterThan(0);
+      for (const width of widths) expect(width, `${path}: Layout width`).toBeLessThanOrEqual(400);
+    }
+  });
+
   it('所有中文真源都有行为一致的英文定义', () => {
     const canonicalEntries = Object.entries(controlModules).filter(
       ([path]) => !path.endsWith('.en.controls.ts') && !path.endsWith('.zh.controls.ts'),

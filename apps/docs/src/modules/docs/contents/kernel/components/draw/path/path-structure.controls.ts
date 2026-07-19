@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Path 基础结构 playground 的中文属性面板 */
@@ -30,3 +32,10 @@ export const pathStructureControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: pathStructureControls,
+  canonicalValues: { structure: 'polyline', fill: '#1e90ff' },
+  relatedApis: ['Path.children', 'Path.fill'],
+} satisfies PreviewControlContract;

@@ -55,7 +55,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(ribbonGeometryControls) as RibbonGeometryValues;
 
   return (
-    <Layout width={520} height={260} viewBox={{ x: -260, y: -130, width: 520, height: 260 }}>
+    <Layout width={400} height={200} viewBox={{ x: -260, y: -130, width: 520, height: 260 }}>
       <Path
         kind="ribbon"
         ribbon={ribbonOf(values)}

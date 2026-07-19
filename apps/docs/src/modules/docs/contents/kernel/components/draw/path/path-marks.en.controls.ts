@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English property panel for marks along a Path */
@@ -14,3 +16,10 @@ export const pathMarksControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: pathMarksControls,
+  canonicalValues: { firstPosition: 0.25, secondPosition: 0.75 },
+  relatedApis: ['Path.marks'],
+} satisfies PreviewControlContract;

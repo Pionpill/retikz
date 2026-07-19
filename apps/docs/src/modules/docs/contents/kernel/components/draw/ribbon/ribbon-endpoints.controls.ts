@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Ribbon 端点 playground 的中文属性面板 */
@@ -63,3 +65,10 @@ export const ribbonEndpointsControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: ribbonEndpointsControls,
+  canonicalValues: { direction: 'auto', angle: 0, align: 'center', cap: 'round', width: 30 },
+  relatedApis: ['Path.kind', 'Path.ribbon'],
+} satisfies PreviewControlContract;

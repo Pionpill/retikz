@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { StepCurveControlId, StepCurveVisibleWhen } from './step-curves.controls';
@@ -150,3 +152,23 @@ export const stepCurvesEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: stepCurvesEnControls,
+  canonicalValues: {
+    stepKind: 'curve',
+    control: [0, -70],
+    control1: [-40, -70],
+    control2: [40, 70],
+    bendDirection: 'left',
+    bendAngle: 30,
+    tension: 1,
+    startAngle: 0,
+    endAngle: 120,
+    radius: 60,
+    radiusX: 80,
+    radiusY: 45,
+  },
+  relatedApis: ['Step.kind', 'Step.to'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English property panel for the Way closure state */
@@ -22,3 +24,10 @@ export const wayCycleControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: wayCycleControls,
+  canonicalValues: { state: 'open' },
+  relatedApis: ['Draw.way'],
+} satisfies PreviewControlContract;

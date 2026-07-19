@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Draw 填充与栈序的中文属性面板 */
@@ -37,3 +39,10 @@ export const drawFillStackControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: drawFillStackControls,
+  canonicalValues: { fillA: '#1e90ff', fillB: '#ef4444', fillOpacity: 0.7, zIndexA: 0 },
+  relatedApis: ['Draw.fill', 'Draw.fillOpacity', 'Draw.zIndex'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Step target controls in English */
@@ -25,3 +27,10 @@ export const stepTargetingEnControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: stepTargetingEnControls,
+  canonicalValues: { targetKind: 'offset', offsetX: 80, offsetY: -35 },
+  relatedApis: ['Step.to'],
+} satisfies PreviewControlContract;

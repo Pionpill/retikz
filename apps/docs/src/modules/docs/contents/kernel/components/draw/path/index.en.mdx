@@ -45,7 +45,7 @@ import { Path, Step } from '@retikz/react';
 
 Compare a polyline, multiple subpaths, and a closed fill in one panel. Repeated `move`s lift the pen and begin independent subpaths; the fill case uses `cycle`, which maps to SVG `Z`, to close its outline. See [Way](/kernel/components/draw/way) for focused fold and closure controls; this panel stays at the Path-container composition level.
 
-<ComponentPreview files="path-structure" size="md" />
+<ComponentPreview files="path-structure" size="sm" />
 
 ### Endpoints and connections
 
@@ -70,19 +70,19 @@ When an endpoint references a node (the `{ id }` object form, or an id inside a 
 
 The five-pointed star below has no node `boundary`. The panel starts on the circle boundary, so you can compare `tight` with `bounds` and adjust `gap` immediately; switch back to the star outline to compare the real shape surface. The light dotted outline is the current circle boundary and updates with the real endpoint.
 
-<ComponentPreview files="path-boundary" size="md" />
+<ComponentPreview files="path-boundary" size="sm" />
 
 ### Styling
 
 Set `strokeWidth` directly or use the semantic `thickness` presets from `ultraThin` through `ultraThick`; an explicit `strokeWidth` wins. `dashOffset` shifts only the dash rhythm's origin. `lineCap` / `lineJoin` shape endpoints and corners, while `opacity` / `fillOpacity` / `strokeOpacity` are three composable channels.
 
-<ComponentPreview files="path-style" size="md" />
+<ComponentPreview files="path-style" size="sm" />
 
 #### Gradient stroke
 
 Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `strokeOpacity`, and other stroke styles still apply to the line itself. Adjust the linear-gradient angle and three color stops in the panel to inspect their distribution along one path.
 
-<ComponentPreview files="path-stroke-paint" size="md" />
+<ComponentPreview files="path-stroke-paint" size="sm" />
 
 If a gradient-stroked path also has arrows, give `arrowDetail.color` or the endpoint `color` an explicit solid color; marker geometry cannot inherit a resource-backed stroke.
 
@@ -90,7 +90,7 @@ If a gradient-stroked path also has arrows, give `arrowDetail.color` or the endp
 
 By default stacking = declaration order. `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). The two filled rectangles below are declared dodgerblue-then-red; move the blue path's `zIndex` through negative, zero, and positive values to compare the overlap order.
 
-<ComponentPreview files="path-z-index" size="md" />
+<ComponentPreview files="path-z-index" size="sm" />
 
 ### Curves and transforms
 
@@ -104,19 +104,19 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 `rotate` (degrees) / `scale` (a number for uniform, or `{ x, y }` for non-uniform) transform the whole path around its **bounding-box center**, sparing a wrapping `<Scope transforms>` for a single path. The order is a hard contract: path endpoints resolve first, arrow shrink is computed on the **untransformed** geometry, then everything is wrapped in a group — so arrow direction follows the transform correctly without misalignment. The dotted path preserves the original geometry while the panel's rotation and two-axis scale affect only the solid path for direct comparison.
 
-<ComponentPreview files="path-transform" size="md" />
+<ComponentPreview files="path-transform" size="sm" />
 
 #### Mid-path marks
 
 `marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/draw/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`**, just like endpoint arrows: the thicker the line, the larger the mark. Move both position controls to watch the marks follow the local tangent as they travel along the path.
 
-<ComponentPreview files="path-marks" size="md" />
+<ComponentPreview files="path-marks" size="xs" />
 
 #### Rounded corners (roundedCorners)
 
 `roundedCorners` rounds every **line↔line joint** of the path with a tangent arc of the same radius — handy for flowcharts, routing, and polyline connections where you want soft corners instead of sharp ones. Omitted = sharp corners everywhere (behavior unchanged). The first / last endpoint stays sharp; a joint whose neighbor is a curve / arc / Bézier / fold stays sharp too. When the radius is too large it is **clamped per joint** to what the adjacent segment lengths allow. After a `cycle` close, the closing joint is rounded as well.
 
-<ComponentPreview files="path-rounded-corners" size="md" />
+<ComponentPreview files="path-rounded-corners" size="sm" />
 
 `roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The panel shows `lineJoin` above and geometric rounding below so you can drag the radius and compare them directly. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.)
 
@@ -188,7 +188,7 @@ Built-in `stroke` / [`ribbon`](/kernel/components/draw/ribbon) kinds and externa
       label: 'Path kind provider contract',
       path: 'packages/kernel/core/src/contract/path-kind/types.ts',
       startLine: 18,
-      endLine: 53,
+      endLine: 50,
     },
   ]}
 />

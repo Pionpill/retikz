@@ -34,7 +34,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(drawLabelControls);
 
   return (
-    <Layout width={440} height={240} viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
+    <Layout width={400} height={218} viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
       <Node id="A" position={[0, -60]} stroke="gray" dashed>
         a
       </Node>

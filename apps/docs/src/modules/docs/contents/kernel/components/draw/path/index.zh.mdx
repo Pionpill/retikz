@@ -45,7 +45,7 @@ import { Path, Step } from '@retikz/react';
 
 在一个面板中比较折线、多子路径与闭合填充三种 Path 组合。多次 `move` 会抬笔并从新位置开始独立子路径；填充示例用 `cycle` 对应的 `Z` 闭合轮廓。折角与单独的闭合操作见 [Way](/kernel/components/draw/way)，本面板只承担 Path 容器层的结构差异。
 
-<ComponentPreview files="path-structure" size="md" />
+<ComponentPreview files="path-structure" size="sm" />
 
 ### 端点与连接
 
@@ -70,19 +70,19 @@ import { Path, Step } from '@retikz/react';
 
 下例的五角星未设置节点 `boundary`。面板默认展示圆形连接面，可直接比较 `tight` / `bounds` 并调整 `gap`；切回星形轮廓可对照真实形状连接面。浅灰虚点线是当前圆形连接面，会与真实端点一起更新。
 
-<ComponentPreview files="path-boundary" size="md" />
+<ComponentPreview files="path-boundary" size="sm" />
 
 ### 样式
 
 `strokeWidth` 可直接给数值；`thickness` 则提供 `ultraThin` 到 `ultraThick` 的语义档位，且显式 `strokeWidth` 优先。`dashOffset` 只移动虚线节奏的起点。`lineCap` / `lineJoin` 分别控制端点与拐点，`opacity` / `fillOpacity` / `strokeOpacity` 是可叠加的三个透明度通道。
 
-<ComponentPreview files="path-style" size="md" />
+<ComponentPreview files="path-style" size="sm" />
 
 #### 渐变描边
 
 `stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。用面板调整线性渐变角度与三个色标，可直接观察同一条路径上的颜色分布。
 
-<ComponentPreview files="path-stroke-paint" size="md" />
+<ComponentPreview files="path-stroke-paint" size="sm" />
 
 带箭头的路径如果用渐变描边，需要给 `arrowDetail.color` 或端点 `color` 一个显式纯色；箭头 marker 不能继承资源型描边。
 
@@ -90,7 +90,7 @@ import { Path, Step } from '@retikz/react';
 
 默认层叠 = 声明顺序。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。下面两个填充矩形声明顺序蓝先红后，拖动面板中的蓝色 `zIndex`，可比较负值、0 与正值对重叠顺序的影响。
 
-<ComponentPreview files="path-z-index" size="md" />
+<ComponentPreview files="path-z-index" size="sm" />
 
 ### 曲线与变换
 
@@ -104,19 +104,19 @@ import { Path, Step } from '@retikz/react';
 
 `rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。变换顺序有硬契约：path 端点先 resolve、箭头 shrink 在**未变换的几何**上算，最后整体包进 group——故箭头方向随变换正确、不错位。虚点线路径保留原始几何，面板中的旋转与二维缩放只作用于实线路径，便于对照。
 
-<ComponentPreview files="path-transform" size="md" />
+<ComponentPreview files="path-transform" size="sm" />
 
 #### 中段标记（marks）
 
 `marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/draw/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**：线越粗、标记越大。拖动面板中的两个位置值，可观察标记沿路径移动时如何持续跟随局部切线。
 
-<ComponentPreview files="path-marks" size="md" />
+<ComponentPreview files="path-marks" size="xs" />
 
 #### 折线圆角（roundedCorners）
 
 `roundedCorners` 给整条 path 的每个 **line↔line 内拐角**倒一个半径相同的圆角弧——画流程图、布线、折线连接时把硬尖角磨圆。缺省 / 省略 = 全尖角（行为不变）。首点 / 末点保持尖；接缝一侧是曲线 / 弧 / 贝塞尔 / 折角（`fold`）时该接缝也保持尖。半径过大时按相邻段长**逐拐角夹紧**到可行最大值。`cycle` 闭合后，闭合接缝也参与倒圆。
 
-<ComponentPreview files="path-rounded-corners" size="md" />
+<ComponentPreview files="path-rounded-corners" size="sm" />
 
 `roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。面板上方展示 `lineJoin`，下方展示几何圆角，可直接拖动半径比较。（注：step 边标注 `label` 当前仍定位在该 step 自身线段上，不随接缝倒角缩短重算。）
 
@@ -188,7 +188,7 @@ import { Path, Step } from '@retikz/react';
       label: 'Path kind provider 契约',
       path: 'packages/kernel/core/src/contract/path-kind/types.ts',
       startLine: 18,
-      endLine: 53,
+      endLine: 50,
     },
   ]}
 />

@@ -17,7 +17,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(pathStrokePaintControls);
 
   return (
-    <Layout width={420} height={180} viewBox={{ x: -210, y: -90, width: 420, height: 180 }}>
+    <Layout width={400} height={171} viewBox={{ x: -210, y: -90, width: 420, height: 180 }}>
       <Path
         stroke={{
           kind: 'linearGradient',

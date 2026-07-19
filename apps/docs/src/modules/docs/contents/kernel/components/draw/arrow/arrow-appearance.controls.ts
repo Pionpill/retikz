@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 const shapeOptions = [
@@ -82,3 +84,23 @@ export const arrowAppearanceControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: arrowAppearanceControls,
+  canonicalValues: {
+    direction: '<->',
+    shape: 'stealth',
+    separateEnds: false,
+    startShape: 'diamond',
+    endShape: 'open',
+    color: '#1e90ff',
+    startColor: '#e63946',
+    endColor: '#1e90ff',
+    opacity: 1,
+    scale: 1,
+    length: 10,
+    width: 8,
+  },
+  relatedApis: ['Draw.arrow', 'Draw.arrowDetail', 'Path.arrow', 'Path.arrowDetail'],
+} satisfies PreviewControlContract;

@@ -18,7 +18,7 @@ const Demo: FC = () => {
   const thickness = values.thickness === 'custom' ? undefined : values.thickness;
 
   return (
-    <Layout width={440} height={240} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
+    <Layout width={400} height={218} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       <Path
         stroke={values.stroke}
         strokeWidth={values.thickness === 'custom' ? values.strokeWidth : undefined}

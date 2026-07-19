@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** English controls for the Path structure playground */
@@ -30,3 +32,10 @@ export const pathStructureControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the current controls */
+export const previewControlContract = {
+  controls: pathStructureControls,
+  canonicalValues: { structure: 'polyline', fill: '#1e90ff' },
+  relatedApis: ['Path.children', 'Path.fill'],
+} satisfies PreviewControlContract;

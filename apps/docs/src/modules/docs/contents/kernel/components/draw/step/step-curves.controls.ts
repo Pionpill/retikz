@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Step 曲线 playground 的稳定字段 id */
@@ -175,3 +177,23 @@ export const stepCurvesControls = definePreviewControls({
     },
   ],
 });
+
+/** 当前 controls 面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: stepCurvesControls,
+  canonicalValues: {
+    stepKind: 'curve',
+    control: [0, -70],
+    control1: [-40, -70],
+    control2: [40, 70],
+    bendDirection: 'left',
+    bendAngle: 30,
+    tension: 1,
+    startAngle: 0,
+    endAngle: 120,
+    radius: 60,
+    radiusX: 80,
+    radiusY: 45,
+  },
+  relatedApis: ['Step.kind', 'Step.to'],
+} satisfies PreviewControlContract;
