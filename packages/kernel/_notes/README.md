@@ -14,6 +14,7 @@
 
 - [`decisions/v0/roadmap.md`](./decisions/v0/roadmap.md)：kernel v0 总路线。
 - [`decisions/v0/v0.4/roadmap.md`](./decisions/v0/v0.4/roadmap.md)：当前 kernel v0.4 路线。
+- [`decisions/v0/v0.5/roadmap.md`](./decisions/v0/v0.5/roadmap.md)：下一版本候选路线；尚未进入正式 milestone。
 - [`decisions/v0/v0.4/backlog.md`](./decisions/v0/v0.4/backlog.md)：未排期候选、边界与启动条件。
 - [`decisions/v0/v0.4/history.md`](./decisions/v0/v0.4/history.md)：v0.4 早期路线讨论与已完成方向快照。
 - [`decisions/_template.md`](./decisions/_template.md)：kernel ADR 模板。
