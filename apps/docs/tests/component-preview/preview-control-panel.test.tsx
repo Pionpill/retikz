@@ -230,6 +230,7 @@ type WorkspaceHarnessProps = {
   definition?: PreviewControlsDefinition;
   initialOpen?: boolean;
   showContextBar?: boolean;
+  workspaceClassName?: string;
 };
 
 const emptyControlState: PreviewControlState = {
@@ -241,7 +242,7 @@ const emptyControlState: PreviewControlState = {
 };
 
 const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
-  const { definition: controlsDefinition, initialOpen = true, showContextBar = true } = props;
+  const { definition: controlsDefinition, initialOpen = true, showContextBar = true, workspaceClassName } = props;
   const [open, setOpen] = useState(initialOpen);
   const [themeMode, setThemeMode] = useState<PreviewThemeMode>('inherit');
   const controlContract = useMemo<PreviewControlContract | undefined>(
@@ -267,6 +268,7 @@ const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
         onThemeModeChange={setThemeMode}
         controlPanelOpen={open}
         onControlPanelOpenChange={setOpen}
+        workspaceClassName={workspaceClassName}
         previewState={previewState}
         Component={Demo}
       />
@@ -604,19 +606,50 @@ describe('PreviewWorkspace', () => {
     ).toEqual(['1', '2']);
   });
 
-  it('按 Workspace 宽度在移动端改为上下排列', async () => {
-    const container = await mount(<WorkspaceHarness definition={definition} />);
+  it('窄 Workspace 在完整预览上方提供 100–300px 的纵向拖拽面板', async () => {
+    const container = await mount(<WorkspaceHarness definition={definition} workspaceClassName="h-56" />);
     const group = () => container.querySelector('[data-slot="resizable-panel-group"]');
 
-    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(639)));
-    expect(group()?.getAttribute('data-direction')).toBe('vertical');
+    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(479)));
+    expect(group()).toBeNull();
+    const mobileStack = container.querySelector('[data-slot="preview-mobile-stack"]');
+    const mobileControlPanel = container.querySelector<HTMLElement>('[data-slot="preview-mobile-control-panel"]');
+    const mobileResizeHandle = container.querySelector<HTMLElement>('[data-slot="preview-mobile-resize-handle"]');
+    const mobilePreview = container.querySelector('[data-slot="preview-mobile-pane"]');
     const panel = container.querySelector('aside');
     const contextBar = container.querySelector('[data-slot="preview-context-bar"]');
+    expect(mobileStack).not.toBeNull();
+    expect(mobileControlPanel?.style.height).toBe('200px');
+    expect(mobileResizeHandle?.getAttribute('role')).toBe('separator');
+    expect(mobileResizeHandle?.getAttribute('aria-orientation')).toBe('horizontal');
+    expect(mobileResizeHandle?.getAttribute('aria-valuemin')).toBe('100');
+    expect(mobileResizeHandle?.getAttribute('aria-valuemax')).toBe('300');
+    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('200');
+    expect(mobileResizeHandle?.classList.contains('cursor-row-resize')).toBe(true);
+    expect(mobilePreview?.classList.contains('h-56')).toBe(true);
+    expect(container.querySelector('[data-slot="preview-workspace"]')?.classList.contains('h-56')).toBe(false);
     expect(panel).not.toBeNull();
     expect(contextBar).not.toBeNull();
     expect(panel!.compareDocumentPosition(contextBar!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(640)));
+    await act(() => mobileResizeHandle?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Home' })));
+    expect(mobileControlPanel?.style.height).toBe('100px');
+    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('100');
+
+    await act(() => mobileResizeHandle?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'End' })));
+    expect(mobileControlPanel?.style.height).toBe('300px');
+    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('300');
+
+    await act(() => {
+      mobileResizeHandle?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientY: 300 }));
+      window.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientY: 50 }));
+      window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    });
+    expect(mobileControlPanel?.style.height).toBe('100px');
+    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('100');
+
+    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(480)));
+    expect(group()).not.toBeNull();
     expect(group()?.getAttribute('data-direction')).toBe('horizontal');
   });
 
