@@ -19,6 +19,9 @@
 - [`architecture/table-design.md`](./architecture/table-design.md)：table grammar、Table Algebra、约束布局与 lowering 总设计。
 - [`decisions/plot/v0/roadmap.md`](./decisions/plot/v0/roadmap.md)：plot v0 总路线。
 - [`decisions/plot/v0/v0.1/roadmap.md`](./decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
+- [`decisions/table/v0/roadmap.md`](./decisions/table/v0/roadmap.md)：table v0 总路线。
+- [`decisions/table/v0/v0.1/roadmap.md`](./decisions/table/v0/v0.1/roadmap.md)：table v0.1 路线与 milestone 索引。
+- [`decisions/table/v0/v0.1/alpha.1/roadmap.md`](./decisions/table/v0/v0.1/alpha.1/roadmap.md)：table alpha.1 ADR 索引与执行顺序。
 - [`decisions/data/v0/roadmap.md`](./decisions/data/v0/roadmap.md)：data v0 总路线。
 - [`decisions/chart/v0/v0.1/roadmap.md`](./decisions/chart/v0/v0.1/roadmap.md)：chart v0.1 路线与 Tier 3 `ChartSpec` 边界。
 - [`decisions/_template.md`](./decisions/_template.md)：plot ADR 模板。

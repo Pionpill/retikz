@@ -30,7 +30,7 @@
 
 主要借鉴：List / Pivot 共用 Table 根能力，以及清晰的 cell location 与 presentation 模型。
 
-不借鉴其编辑、滚动、菜单和 Canvas runtime 状态，这些不属于 renderer-agnostic Table 内核。
+不借鉴其编辑和菜单模型，也不复制 Canvas runtime 状态。其大表 windowing 与滚动同步只作为后续虚拟滚动设计参考，并拆成 Table 计算与 adapter runtime 两层。
 
 ### 1.5 AntV S2
 
@@ -50,14 +50,15 @@
 
 不同问题应参考不同项目，不选择一个项目整体复刻：
 
-| 设计问题                 | 主要参考                        | retikz 取舍                                     |
-| ------------------------ | ------------------------------- | ----------------------------------------------- |
-| 表格语法与语义区域       | gt / Great Tables               | 建立正交、可组合的 Table grammar                |
-| List / Pivot 统一模型    | VTable、AntV S2                 | 共享根 Table 能力，以结构定义区分来源           |
-| 轨道、span 与测量        | Typst                           | 实现 renderer-agnostic 二维约束布局             |
-| 表线与分片               | booktabs、tabularray、longtable | 表线和分页属于 Table 语义，不交给 renderer 猜测 |
-| Headless core 与 adapter | TanStack Table                  | `table` 拥有领域算法，React / Vanilla 只做接入  |
-| Cell 内容扩展            | retikz Core composite           | Cell 内容统一为 `IRChild`，不建立封闭内容枚举   |
+| 设计问题                 | 主要参考                        | retikz 取舍                                      |
+| ------------------------ | ------------------------------- | ------------------------------------------------ |
+| 表格语法与语义区域       | gt / Great Tables               | 建立正交、可组合的 Table grammar                 |
+| List / Pivot 统一模型    | VTable、AntV S2                 | 共享根 Table 能力，以结构定义区分来源            |
+| 轨道、span 与测量        | Typst                           | 实现 renderer-agnostic 二维约束布局              |
+| 表线与分片               | booktabs、tabularray、longtable | 表线和分页属于 Table 语义，不交给 renderer 猜测  |
+| 大表展示与虚拟滚动       | VTable                          | Table 提供 window 计算，adapter 接入滚动 runtime |
+| Headless core 与 adapter | TanStack Table                  | `table` 拥有领域算法，React / Vanilla 只做接入   |
+| Cell 内容扩展            | retikz Core composite           | Cell 内容统一为 `IRChild`，不建立封闭内容枚举    |
 
 ## 3. retikz 的目标方向
 
@@ -74,16 +75,13 @@
 
 ## 4. 明确不追赶的领域
 
-以下能力不是 `@retikz/table` 的竞争目标：
+以下能力不是 Table 家族的竞争目标：
 
-- 虚拟滚动和滚动同步
 - 输入编辑、公式和撤销重做
-- 行选择、列拖拽、resize 手柄和菜单
 - 服务端分页、异步加载和缓存状态
-- DOM table / ARIA grid 的宿主实现
 - PivotChart 根类型
 
-未来若建设交互式 data grid，应作为独立宿主产品消费 Table spec、Data 和 layout manifest，而不是扩大 Table 内核的根职责。
+虚拟滚动和滚动同步属于后续大表展示能力，不进入 v0.1：Table 负责 viewport / window 与布局映射，adapter 负责 DOM / Canvas 滚动宿主。选择、列拖拽、resize 和可访问性导航按展示需求另开 ADR；编辑器与电子表格能力始终留在 Table 家族之外。
 
 ## 5. 结论
 
