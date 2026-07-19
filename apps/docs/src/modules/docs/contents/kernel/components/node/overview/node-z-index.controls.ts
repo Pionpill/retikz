@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** zIndex demo 使用的稳定字段 id */
@@ -46,3 +48,10 @@ export const nodeZIndexControls = definePreviewControls({
     },
   ],
 });
+
+/** Node 层级面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: nodeZIndexControls,
+  canonicalValues: { zIndexA: 2, zIndexB: 0, zIndexC: 0 },
+  relatedApis: ['Node.zIndex'],
+} satisfies PreviewControlContract;

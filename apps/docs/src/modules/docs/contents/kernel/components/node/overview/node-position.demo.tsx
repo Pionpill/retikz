@@ -41,7 +41,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(nodePositionControls);
 
   return (
-    <Layout width={520} height={280} viewBox={{ x: -280, y: -160, width: 560, height: 320 }}>
+    <Layout width={400} height={229} viewBox={{ x: -280, y: -160, width: 560, height: 320 }}>
       <Draw
         way={[
           [-240, 0],

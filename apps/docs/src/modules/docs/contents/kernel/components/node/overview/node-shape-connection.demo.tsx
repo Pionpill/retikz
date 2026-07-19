@@ -70,8 +70,8 @@ const Demo: FC = () => {
 
   return (
     <Layout
-      width={520}
-      height={240}
+      width={400}
+      height={185}
       viewBox={{ x: -260, y: -120, width: 520, height: 240 }}
       shapes={[boundaryGuideShape]}
     >

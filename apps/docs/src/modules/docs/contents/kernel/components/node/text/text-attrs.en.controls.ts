@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { TextAttrsControlId } from './text-attrs.controls';
@@ -74,3 +76,17 @@ export const textAttrsControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Text attribute controls */
+export const previewControlContract = {
+  controls: textAttrsControls,
+  canonicalValues: {
+    fill: '#f97316',
+    opacity: 1,
+    fontFamily: 'sans-serif',
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontStyle: 'normal',
+  },
+  relatedApis: ['Text.fill', 'Text.opacity', 'Text.font'],
+} satisfies PreviewControlContract;

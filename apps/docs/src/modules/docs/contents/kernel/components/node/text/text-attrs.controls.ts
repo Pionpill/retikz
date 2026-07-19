@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Text 行级属性 playground 使用的稳定字段 id */
@@ -82,3 +84,17 @@ export const textAttrsControls = definePreviewControls({
     },
   ],
 });
+
+/** Text 属性面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: textAttrsControls,
+  canonicalValues: {
+    fill: '#f97316',
+    opacity: 1,
+    fontFamily: 'sans-serif',
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontStyle: 'normal',
+  },
+  relatedApis: ['Text.fill', 'Text.opacity', 'Text.font'],
+} satisfies PreviewControlContract;

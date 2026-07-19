@@ -39,9 +39,8 @@ const Demo: FC = () => {
         merged
       </Node>
       {/* Two lines first reach junction, then merge into out */}
-      <Draw way={['A', 'junction']} stroke="gray" />
+      <Draw way={['A', 'junction', 'out']} arrow="->" stroke="gray" />
       <Draw way={['B', 'junction']} stroke="gray" />
-      <Draw way={['junction', 'out']} arrow="->" stroke="gray" />
     </Layout>
   );
 };

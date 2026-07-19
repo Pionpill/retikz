@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Coordinate 虚拟锚点 demo 使用的稳定字段 id */
@@ -29,12 +31,12 @@ export const coordinateAsAnchorControls = definePreviewControls({
   title: '虚拟锚点',
   sections: [
     {
-      label: 'position',
+      label: '中心位置',
       controls: [
         {
           kind: 'range',
           id: CoordinateAsAnchorControlId.PositionX,
-          label: 'position x',
+          label: 'x 坐标',
           defaultValue: 0,
           min: -30,
           max: 30,
@@ -43,7 +45,7 @@ export const coordinateAsAnchorControls = definePreviewControls({
         {
           kind: 'range',
           id: CoordinateAsAnchorControlId.PositionY,
-          label: 'position y',
+          label: 'y 坐标',
           defaultValue: 0,
           min: -20,
           max: 20,
@@ -52,12 +54,12 @@ export const coordinateAsAnchorControls = definePreviewControls({
       ],
     },
     {
-      label: 'distance',
+      label: '节点间距',
       controls: [
         {
           kind: 'range',
           id: CoordinateAsAnchorControlId.HorizontalDistance,
-          label: 'distance x',
+          label: '水平距离',
           defaultValue: 110,
           min: 80,
           max: 130,
@@ -66,7 +68,7 @@ export const coordinateAsAnchorControls = definePreviewControls({
         {
           kind: 'range',
           id: CoordinateAsAnchorControlId.VerticalDistance,
-          label: 'distance y',
+          label: '垂直距离',
           defaultValue: 65,
           min: 50,
           max: 80,
@@ -76,3 +78,10 @@ export const coordinateAsAnchorControls = definePreviewControls({
     },
   ],
 });
+
+/** Coordinate 虚拟锚点面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: coordinateAsAnchorControls,
+  canonicalValues: { positionX: 0, positionY: 0, horizontalDistance: 110, verticalDistance: 65 },
+  relatedApis: ['Coordinate.position', 'Node.position'],
+} satisfies PreviewControlContract;

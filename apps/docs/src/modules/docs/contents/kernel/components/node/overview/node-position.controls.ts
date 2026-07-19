@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Node 定位 playground 使用的稳定字段 id */
@@ -168,3 +170,22 @@ export const nodePositionControls = definePreviewControls({
     },
   ],
 });
+
+/** Node 定位面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: nodePositionControls,
+  canonicalValues: {
+    positionKind: 'relative',
+    referent: 'A',
+    x: 0,
+    y: -40,
+    angle: -90,
+    radius: 90,
+    direction: 'top',
+    distance: 90,
+    offsetX: 80,
+    offsetY: -70,
+    fraction: 0.5,
+  },
+  relatedApis: ['Node.position'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Coordinate between demo 使用的稳定字段 id */
@@ -18,12 +20,12 @@ export const coordinateBetweenControls = definePreviewControls({
   title: '比例定位',
   sections: [
     {
-      label: 'between',
+      label: '两点之间',
       controls: [
         {
           kind: 'range',
           id: CoordinateBetweenControlId.Fraction,
-          label: 'fraction',
+          label: '比例',
           defaultValue: 0.5,
           min: 0,
           max: 1,
@@ -33,3 +35,10 @@ export const coordinateBetweenControls = definePreviewControls({
     },
   ],
 });
+
+/** Coordinate 比例定位面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: coordinateBetweenControls,
+  canonicalValues: { fraction: 0.5 },
+  relatedApis: ['Coordinate.position'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Node label playground 使用的稳定字段 id */
@@ -42,7 +44,17 @@ export const nodeLabelControls = definePreviewControls({
     {
       label: '内容与附着点',
       controls: [
-        { kind: 'text', id: NodeLabelControlId.Text, label: '文字', defaultValue: 'label' },
+        {
+          kind: 'select',
+          id: NodeLabelControlId.Text,
+          label: '文字',
+          defaultValue: 'label',
+          options: [
+            { value: 'label', label: '默认标签' },
+            { value: 'outside label', label: '外侧标签' },
+            { value: 'angled label', label: '角度标签' },
+          ],
+        },
         {
           kind: 'select',
           id: NodeLabelControlId.PositionMode,
@@ -230,3 +242,29 @@ export const nodeLabelControls = definePreviewControls({
     },
   ],
 });
+
+/** Node 标签面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: nodeLabelControls,
+  canonicalValues: {
+    labelText: 'label',
+    positionMode: 'direction',
+    direction: 'top',
+    positionAngle: 30,
+    boundary: 'top',
+    fraction: 0.5,
+    placement: 'outside',
+    distance: 18,
+    rotateMode: 'none',
+    rotateAngle: 0,
+    keepUpright: true,
+    labelTextColor: '#2563eb',
+    labelFontSize: 16,
+    labelOpacity: 1,
+    pinStyle: 'none',
+    pinColor: '#808080',
+    pinWidth: 1,
+    pinDashOffset: 0,
+  },
+  relatedApis: ['Node.label'],
+} satisfies PreviewControlContract;

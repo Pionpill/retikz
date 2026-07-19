@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { NodeZIndexControlId } from './node-z-index.controls';
@@ -41,3 +43,10 @@ export const nodeZIndexControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Node z-index controls */
+export const previewControlContract = {
+  controls: nodeZIndexControls,
+  canonicalValues: { zIndexA: 2, zIndexB: 0, zIndexC: 0 },
+  relatedApis: ['Node.zIndex'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { NodeStyledControlId } from './node-styled.controls';
@@ -95,3 +97,20 @@ export const nodeStyledControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Node style controls */
+export const previewControlContract = {
+  controls: nodeStyledControls,
+  canonicalValues: {
+    fontFamily: 'sans-serif',
+    fontSize: 16,
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+    fill: '#e2e8f0',
+    stroke: '#f97316',
+    strokeWidth: 2,
+    dashed: false,
+    opacity: 1,
+  },
+  relatedApis: ['Node.font', 'Node.fill', 'Node.stroke', 'Node.strokeWidth', 'Node.dashed', 'Node.opacity'],
+} satisfies PreviewControlContract;

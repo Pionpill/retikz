@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { CoordinateOffsetChainControlId } from './coordinate-offset-chain.controls';
@@ -46,3 +48,10 @@ export const coordinateOffsetChainControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Coordinate offset-chain controls */
+export const previewControlContract = {
+  controls: coordinateOffsetChainControls,
+  canonicalValues: { rootX: -140, rootY: 0, stepX: 120 },
+  relatedApis: ['Coordinate.position'],
+} satisfies PreviewControlContract;

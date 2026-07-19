@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { CoordinateBetweenControlId } from './coordinate-between.controls';
@@ -23,3 +25,10 @@ export const coordinateBetweenControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Coordinate between controls */
+export const previewControlContract = {
+  controls: coordinateBetweenControls,
+  canonicalValues: { fraction: 0.5 },
+  relatedApis: ['Coordinate.position'],
+} satisfies PreviewControlContract;

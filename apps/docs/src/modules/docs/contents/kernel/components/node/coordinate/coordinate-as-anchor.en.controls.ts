@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { CoordinateAsAnchorControlId } from './coordinate-as-anchor.controls';
@@ -55,3 +57,10 @@ export const coordinateAsAnchorControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Coordinate virtual-anchor controls */
+export const previewControlContract = {
+  controls: coordinateAsAnchorControls,
+  canonicalValues: { positionX: 0, positionY: 0, horizontalDistance: 110, verticalDistance: 65 },
+  relatedApis: ['Coordinate.position', 'Node.position'],
+} satisfies PreviewControlContract;

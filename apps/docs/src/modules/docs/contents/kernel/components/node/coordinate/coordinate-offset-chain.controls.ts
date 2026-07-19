@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Coordinate 偏移链 demo 使用的稳定字段 id */
@@ -9,8 +11,8 @@ export const CoordinateOffsetChainControlId = {
 
 /** Coordinate 偏移链 playground 的固定取景 */
 export const coordinateOffsetChainFrame = {
-  width: 440,
-  height: 210,
+  width: 400,
+  height: 191,
   viewBox: { x: -220, y: -105, width: 440, height: 210 },
   xAxis: [
     [-200, 0],
@@ -28,12 +30,12 @@ export const coordinateOffsetChainControls = definePreviewControls({
   title: '偏移链',
   sections: [
     {
-      label: 'position',
+      label: '根节点位置',
       controls: [
         {
           kind: 'range',
           id: CoordinateOffsetChainControlId.RootX,
-          label: 'position x',
+          label: 'x 坐标',
           defaultValue: -140,
           min: -170,
           max: -90,
@@ -42,7 +44,7 @@ export const coordinateOffsetChainControls = definePreviewControls({
         {
           kind: 'range',
           id: CoordinateOffsetChainControlId.RootY,
-          label: 'position y',
+          label: 'y 坐标',
           defaultValue: 0,
           min: -40,
           max: 40,
@@ -51,12 +53,12 @@ export const coordinateOffsetChainControls = definePreviewControls({
       ],
     },
     {
-      label: 'offset',
+      label: '链式偏移',
       controls: [
         {
           kind: 'range',
           id: CoordinateOffsetChainControlId.StepX,
-          label: 'offset x',
+          label: '水平偏移',
           defaultValue: 120,
           min: 80,
           max: 140,
@@ -66,3 +68,10 @@ export const coordinateOffsetChainControls = definePreviewControls({
     },
   ],
 });
+
+/** Coordinate 偏移链面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: coordinateOffsetChainControls,
+  canonicalValues: { rootX: -140, rootY: 0, stepX: 120 },
+  relatedApis: ['Coordinate.position'],
+} satisfies PreviewControlContract;

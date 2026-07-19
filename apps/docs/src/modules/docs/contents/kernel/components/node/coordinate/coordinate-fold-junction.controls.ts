@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Coordinate 汇聚点 demo 使用的稳定字段 id */
@@ -19,12 +21,12 @@ export const coordinateFoldJunctionControls = definePreviewControls({
   title: '路径汇聚',
   sections: [
     {
-      label: 'position',
+      label: '汇聚点位置',
       controls: [
         {
           kind: 'range',
           id: CoordinateFoldJunctionControlId.JunctionX,
-          label: 'position x',
+          label: 'x 坐标',
           defaultValue: 0,
           min: -40,
           max: 40,
@@ -33,7 +35,7 @@ export const coordinateFoldJunctionControls = definePreviewControls({
         {
           kind: 'range',
           id: CoordinateFoldJunctionControlId.JunctionY,
-          label: 'position y',
+          label: 'y 坐标',
           defaultValue: 0,
           min: -40,
           max: 40,
@@ -43,3 +45,10 @@ export const coordinateFoldJunctionControls = definePreviewControls({
     },
   ],
 });
+
+/** Coordinate 折线连接点面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: coordinateFoldJunctionControls,
+  canonicalValues: { junctionX: 0, junctionY: 0 },
+  relatedApis: ['Coordinate.position'],
+} satisfies PreviewControlContract;

@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { NodeLabelControlId, NodeLabelVisibleWhen } from './node-label.controls';
@@ -10,7 +12,17 @@ export const nodeLabelControls = definePreviewControls({
     {
       label: 'Content and attachment',
       controls: [
-        { kind: 'text', id: NodeLabelControlId.Text, label: 'Text', defaultValue: 'label' },
+        {
+          kind: 'select',
+          id: NodeLabelControlId.Text,
+          label: 'Text',
+          defaultValue: 'label',
+          options: [
+            { value: 'label', label: 'Default label' },
+            { value: 'outside label', label: 'Outside label' },
+            { value: 'angled label', label: 'Angled label' },
+          ],
+        },
         {
           kind: 'select',
           id: NodeLabelControlId.PositionMode,
@@ -198,3 +210,29 @@ export const nodeLabelControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Node label controls */
+export const previewControlContract = {
+  controls: nodeLabelControls,
+  canonicalValues: {
+    labelText: 'label',
+    positionMode: 'direction',
+    direction: 'top',
+    positionAngle: 30,
+    boundary: 'top',
+    fraction: 0.5,
+    placement: 'outside',
+    distance: 18,
+    rotateMode: 'none',
+    rotateAngle: 0,
+    keepUpright: true,
+    labelTextColor: '#2563eb',
+    labelFontSize: 16,
+    labelOpacity: 1,
+    pinStyle: 'none',
+    pinColor: '#808080',
+    pinWidth: 1,
+    pinDashOffset: 0,
+  },
+  relatedApis: ['Node.label'],
+} satisfies PreviewControlContract;

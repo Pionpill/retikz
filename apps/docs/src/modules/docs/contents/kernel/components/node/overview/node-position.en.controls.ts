@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { NodePositionControlId, NodePositionVisibleWhen } from './node-position.controls';
@@ -145,3 +147,22 @@ export const nodePositionControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Node position controls */
+export const previewControlContract = {
+  controls: nodePositionControls,
+  canonicalValues: {
+    positionKind: 'relative',
+    referent: 'A',
+    x: 0,
+    y: -40,
+    angle: -90,
+    radius: 90,
+    direction: 'top',
+    distance: 90,
+    offsetX: 80,
+    offsetY: -70,
+    fraction: 0.5,
+  },
+  relatedApis: ['Node.position'],
+} satisfies PreviewControlContract;

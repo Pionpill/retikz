@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Node 文本 playground 使用的稳定字段 id */
@@ -27,11 +29,15 @@ export const nodeTextControls = definePreviewControls({
       label: '内容与排版',
       controls: [
         {
-          kind: 'text',
+          kind: 'select',
           id: NodeTextControlId.Content,
           label: '内容',
           defaultValue: 'A\nB\nC',
-          multiline: true,
+          options: [
+            { value: 'A\nB\nC', label: 'A / B / C' },
+            { value: 'First\nSecond\nThird', label: '第一 / 第二 / 第三' },
+            { value: 'Short\nline\nset', label: '短行集合' },
+          ],
         },
         {
           kind: 'select',
@@ -159,3 +165,25 @@ export const nodeTextControls = definePreviewControls({
     },
   ],
 });
+
+/** Node 文本面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: nodeTextControls,
+  canonicalValues: {
+    content: 'A\nB\nC',
+    shape: 'rectangle',
+    align: 'middle',
+    maxTextWidth: 150,
+    lineHeight: 24,
+    firstFill: '#2563eb',
+    firstEmphasis: 'bold',
+    firstOpacity: 1,
+    secondFill: '#172033',
+    secondEmphasis: 'normal',
+    secondOpacity: 1,
+    restFill: '#f97316',
+    restEmphasis: 'italic',
+    restOpacity: 0.75,
+  },
+  relatedApis: ['Node.text', 'Node.shape', 'Node.align', 'Node.maxTextWidth', 'Node.lineHeight', 'IRLineSpec'],
+} satisfies PreviewControlContract;

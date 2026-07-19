@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Node 几何 playground 使用的稳定字段 id */
@@ -107,3 +109,19 @@ export const nodeGeometryControls = definePreviewControls({
     },
   ],
 });
+
+/** Node 几何面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: nodeGeometryControls,
+  canonicalValues: {
+    paddingX: 18,
+    paddingY: 10,
+    margin: 8,
+    minimumWidth: 40,
+    minimumHeight: 24,
+    cornerRadius: 8,
+    scale: 1,
+    rotate: 0,
+  },
+  relatedApis: ['Node.padding', 'Node.margin', 'Node.minimumSize', 'Node.cornerRadius', 'Node.scale', 'Node.rotate'],
+} satisfies PreviewControlContract;

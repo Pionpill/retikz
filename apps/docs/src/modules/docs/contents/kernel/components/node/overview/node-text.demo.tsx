@@ -33,7 +33,7 @@ const Demo: FC = () => {
   });
 
   return (
-    <Layout width={600} height={400} viewBox={{ x: -300, y: -200, width: 600, height: 400 }}>
+    <Layout width={400} height={300} viewBox={{ x: -200, y: -150, width: 400, height: 300 }}>
       <Node
         id="Q"
         position={[0, 0]}

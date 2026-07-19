@@ -35,7 +35,7 @@ const Demo: FC = () => {
       : undefined;
 
   return (
-    <Layout width={520} height={320} viewBox={{ x: -260, y: -160, width: 520, height: 320 }}>
+    <Layout width={400} height={320} viewBox={{ x: -260, y: -160, width: 520, height: 320 }}>
       <Node
         id="Q"
         position={[0, 0]}

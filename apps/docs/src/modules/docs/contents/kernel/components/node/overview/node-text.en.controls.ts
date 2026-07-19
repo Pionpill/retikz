@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { NodeTextControlId } from './node-text.controls';
@@ -11,11 +13,15 @@ export const nodeTextControls = definePreviewControls({
       label: 'Content and layout',
       controls: [
         {
-          kind: 'text',
+          kind: 'select',
           id: NodeTextControlId.Content,
-          label: 'Content (newline per line)',
+          label: 'Content',
           defaultValue: 'A\nB\nC',
-          multiline: true,
+          options: [
+            { value: 'A\nB\nC', label: 'A / B / C' },
+            { value: 'First\nSecond\nThird', label: 'First / Second / Third' },
+            { value: 'Short\nline\nset', label: 'Short line set' },
+          ],
         },
         {
           kind: 'select',
@@ -143,3 +149,25 @@ export const nodeTextControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Node text controls */
+export const previewControlContract = {
+  controls: nodeTextControls,
+  canonicalValues: {
+    content: 'A\nB\nC',
+    shape: 'rectangle',
+    align: 'middle',
+    maxTextWidth: 150,
+    lineHeight: 24,
+    firstFill: '#2563eb',
+    firstEmphasis: 'bold',
+    firstOpacity: 1,
+    secondFill: '#172033',
+    secondEmphasis: 'normal',
+    secondOpacity: 1,
+    restFill: '#f97316',
+    restEmphasis: 'italic',
+    restOpacity: 0.75,
+  },
+  relatedApis: ['Node.text', 'Node.shape', 'Node.align', 'Node.maxTextWidth', 'Node.lineHeight', 'IRLineSpec'],
+} satisfies PreviewControlContract;

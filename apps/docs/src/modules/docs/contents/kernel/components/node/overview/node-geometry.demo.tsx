@@ -22,7 +22,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(nodeGeometryControls);
 
   return (
-    <Layout width={500} height={240} viewBox={nodeGeometryFrame.viewBox}>
+    <Layout width={400} height={240} viewBox={nodeGeometryFrame.viewBox}>
       <Node id="A" position={[-150, 0]} shape="circle" padding={6} stroke="gray" dashed>
         a
       </Node>

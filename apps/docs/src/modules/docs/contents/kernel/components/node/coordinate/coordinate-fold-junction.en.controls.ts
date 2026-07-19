@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { CoordinateFoldJunctionControlId } from './coordinate-fold-junction.controls';
@@ -32,3 +34,10 @@ export const coordinateFoldJunctionControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Coordinate fold-junction controls */
+export const previewControlContract = {
+  controls: coordinateFoldJunctionControls,
+  canonicalValues: { junctionX: 0, junctionY: 0 },
+  relatedApis: ['Coordinate.position'],
+} satisfies PreviewControlContract;
