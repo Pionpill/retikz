@@ -24,6 +24,15 @@ export const kernelV04: Release = {
       ],
       subVersions: [
         {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：纯几何公开 API 自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: the public geometry API freezes here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
+        {
           version: 'beta.2',
           date: '2026-07-14',
           summary: {
@@ -92,6 +101,15 @@ export const kernelV04: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：IR schema、导出名、函数签名与公开类型自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: IR schemas, exports, function signatures, and public types freeze here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
         {
           version: 'beta.2',
           date: '2026-07-14',
@@ -218,6 +236,15 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：修复 Canvas 命名色或 HSL 阴影与独立透明度组合时的 alpha 烘焙，未改变公开 API。',
+            en: 'Release candidate: fixes alpha baking for Canvas shadows that combine named or HSL colors with independent opacity, without changing the public API.',
+          },
+          items: [],
+        },
+        {
           version: 'beta.2',
           date: '2026-07-14',
           summary: {
@@ -255,6 +282,15 @@ export const kernelV04: Release = {
       },
       highlights: [],
       subVersions: [
+        {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：组件名、props、导出与公开类型自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: component names, props, exports, and public types freeze here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
         {
           version: 'beta.2',
           date: '2026-07-14',
@@ -344,6 +380,15 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：plain spec、挂载 API、adapter 与公开类型自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: plain specs, mounting APIs, adapters, and public types freeze here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
+        {
           version: 'beta.2',
           date: '2026-07-14',
           summary: {
@@ -420,6 +465,15 @@ export const kernelV04: Release = {
       },
       highlights: [],
       subVersions: [
+        {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：TeX 引擎、lowering、React hook 与公开类型自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: the TeX engine, lowering API, React hook, and public types freeze here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
         {
           version: 'beta.2',
           date: '2026-07-14',
