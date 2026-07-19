@@ -10,6 +10,12 @@ import { cn } from '@/lib';
 
 import type { PreviewControlField, PreviewControlValue } from '../types';
 
+import { PreviewPointControlInput } from './PreviewPointControlInput';
+
+/** 判断运行时值是否是有限二维坐标 */
+const isPreviewControlPoint = (value: unknown): value is [number, number] =>
+  Array.isArray(value) && value.length === 2 && value.every(coordinate => Number.isFinite(coordinate));
+
 const releaseSelectDocumentLock = (): void => {
   if (document.querySelector('[role="dialog"]')) return;
   document.body.style.pointerEvents = '';
@@ -171,6 +177,14 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
           />
           <span className="w-6 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{rangeValue}</span>
         </div>
+      );
+    }
+    case 'point': {
+      const pointValue = isPreviewControlPoint(value)
+        ? value
+        : ([field.defaultValue[0], field.defaultValue[1]] satisfies [number, number]);
+      return (
+        <PreviewPointControlInput field={field} value={pointValue} compact={compact} onValueChange={onValueChange} />
       );
     }
     default: {

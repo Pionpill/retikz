@@ -1,24 +1,27 @@
 ---
 title: Draw
-description: The drawing family — from everyday-connection Sugar to Kernel paths, with extensions for curves, whole paths, and arrow tips.
+description: Connect targets quickly with Draw or describe paths precisely with Path and Step, then extend segments, whole paths, or arrow tips through the same model.
 ---
 
-This group is about _drawing lines_: node to node, folds, curves, arcs, and closed fills. Reach for the Sugar `<Draw>` for everyday connections; drop to the Kernel `<Path>` + `<Step>` when you need step-by-step control or the closest match to the IR. Arrow specs get their own page and are shared by both Draw and Path. The final pages extend curve segments, whole Path providers, and arrow tips when the built-ins are not enough.
+This group solves one problem: turning targets into a renderable path. Start with the `<Draw>` Sugar for everyday links; switch to Kernel `<Path>` + `<Step>` for per-segment control or multiple moves; use `<Path kind="ribbon">` for variable-width relations. These entry points converge on the same Path semantics, while Draw and Path share the arrow model.
+
+The drawing family owns path structure, geometry, style, and endpoints. It does not own node shape or positioning, nor domain layouts such as flow or graph. When the built-ins are not enough, use the final pages to add a path generator, a whole-path kind, or an arrow definition.
 
 <ComponentPreview files="draw-anatomy" size="md" hideCode />
 
 ## What each part does
 
-| Component       | Type      | Responsibility                                                                                                    | Use it when                                                                |
-| --------------- | --------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Draw            | Sugar     | A way array threads targets / folds / curves / cycle / edge labels / styling, expanding to Path + Step            | Everyday connections, flowchart edges, arrowed links (the default)         |
-| Way             | Sugar     | Draw's way item forms, DrawWay constants, folds, cycle, relative coordinates                                      | Looking up what a way array can contain                                    |
-| Path            | Kernel    | Path container, a sequence of Step children defining a polyline / curve / arc; `kind="ribbon"` draws filled bands | Multiple moves, step-by-step control, closest to the IR, or relation bands |
-| Step            | Kernel    | One step = one action (move / line / curve / arc / cycle…)                                                        | Controlling each segment's path action semantics                           |
-| Arrow           | Shared    | Arrows shared by Path / Draw: `arrow` sets direction, `arrowDetail` covers visual specs                           | Fine-grained arrow shape / size / color / per-end config                   |
-| Path Generators | Extension | Register new curve generators for generator steps                                                                 | Adding waves, parametric curves, or other segment types                    |
-| Custom Paths    | Extension | Register a kind provider that owns the whole Path                                                                 | Double lines, highlights, or domain-specific relations                     |
-| Custom Arrows   | Extension | Register new endpoint arrow styles                                                                                | Brackets or domain-specific arrow tips                                     |
+| Component       | Type      | Responsibility                                                                                                | Use it when                                               |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Draw            | Sugar     | Declares targets, segment operators, labels, and whole-path style in a way array, then expands to Path + Step | Everyday connections, flowchart edges, and arrowed links  |
+| Way             | Sugar     | Defines target, fold, cycle, curve, and relative-coordinate forms in a Draw array                             | Looking up what a way array can contain                   |
+| Path            | Kernel    | Path container whose Step children define polylines, curves, and arcs                                         | Multiple moves, explicit per-step control, closest to IR  |
+| Ribbon          | Path kind | Builds a fillable variable-width relation from a Path centerline or precomputed boundaries                    | Flow magnitude, Sankey relations, or other width encoding |
+| Step            | Kernel    | One step = one action (move / line / curve / arc / cycle…)                                                    | Controlling each segment's path action semantics          |
+| Arrow           | Shared    | Direction and visual specifications shared by Path and Draw                                                   | Fine-grained shape, size, color, and per-end config       |
+| Path Generators | Extension | Register new curve generators for generator steps                                                             | Adding waves, parametric curves, or other segment types   |
+| Custom Paths    | Extension | Register a kind provider that owns the whole Path                                                             | Double lines, highlights, or domain-specific relations    |
+| Custom Arrows   | Extension | Register new endpoint arrow styles                                                                            | Brackets or domain-specific arrow tips                    |
 
 ## In this section
 
@@ -26,16 +29,26 @@ This group is about _drawing lines_: node to node, folds, curves, arcs, and clos
   <LinkedCard href="/kernel/components/draw/overview">
     <span className="font-semibold">Draw</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Way forms, curves, shapes, edge labels, styling, and the full API
+      Everyday links: way syntax, curves, labels, and path styling
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/way">
     <span className="font-semibold">Way</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Way item forms and DrawWay constants</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Way targets, operators, and DrawWay constants
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/path">
     <span className="font-semibold">Path</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Kernel path container and full stroke fields</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Kernel path container and whole-path features
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/ribbon">
+    <span className="font-semibold">Ribbon</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Variable-width relations and precomputed boundaries
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/step">
     <span className="font-semibold">Step</span>

@@ -1,6 +1,6 @@
 ---
 title: Draw
-description: Sugar component — a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
+description: Declare everyday links, folds, curves, cycles, and edge labels in one way array that expands to equivalent Path and Step actions.
 ---
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
@@ -34,11 +34,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 | `{ bend }`  | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes             |
 | `{ arc }`   | Circular arc around the previous point by angles and radius      | Angle marks, circle fragments, geometry diagrams |
 
-> There is also a **smooth curve through points** — a smooth curve passing through a list of points (centripetal Catmull-Rom). It is a `<Step kind="smooth">`-only capability, not a `way` operator (`way` is a "previous → next" pairwise infix and cannot carry a multi-point curve), so use it inside `<Path>` / `<Step>`. See [Step curves §Smooth curve through points](/kernel/components/draw/step#smooth-curve-through-points-smooth).
-
-#### Quadratic Bezier
-
-`{ curve: [cx, cy] }` is equivalent to `<Step kind="curve">`. It draws from the previous target to the next target, using one control point to set the bend direction and strength. The farther the control point is, the more strongly the curve is pulled.
+Use the panel to switch among quadratic / cubic Bezier, bend, arc, circle, and ellipse. Bezier control points are edited as `[x, y]` pairs and move the dashed handles on the canvas; other kinds expose only the angles or radii they actually use. Connection operations consume the targets on both sides; arc / circle / ellipse use the previous item as their center and do not consume a next target.
 
 <Comparison target="tikz" title="Quadratic Bezier">
 
@@ -46,102 +42,45 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 </Comparison>
 
-<ComponentPreview files="draw-curve" size="xs" />
+<ComponentPreview files="draw-curve" size="md" />
 
-#### Cubic Bezier
-
-`{ cubic: [[c1x, c1y], [c2x, c2y]] }` is equivalent to `<Step kind="cubic">`. It draws a more controllable Bezier curve with two control points: the first shapes how the curve leaves the start point; the second shapes how it approaches the end point. This makes it better than a quadratic curve for S-curves or connectors that need precise tuning.
-
-<ComponentPreview files="draw-cubic" size="xs" />
-
-#### Bend
-
-`{ bend: 'left' | 'right', angle?: number }` is equivalent to `<Step kind="bend">`. It is shorthand for a curved connection: you only choose whether the curve bends left or right as seen from start to end, plus an optional angle; the compiler computes the control points and expands it to a cubic Bezier.
-
-<ComponentPreview files="draw-bend" size="md" />
-
-#### Arc
-
-`{ arc: { startAngle, endAngle, radius } }` is equivalent to `<Step kind="arc">`. It draws a circular arc around the previous item. It does not connect to the next target and does not consume the next item. Think of it as "sweep from one angle to another at this radius"; it is useful for angle marks, circle fragments, and geometry helpers.
-
-<ComponentPreview files="draw-arc" size="sm" />
-
-### Full Circle / Ellipse
-
-`{ circle: { radius } }` draws a full circle around the previous item; the pen returns to the center.
-
-<ComponentPreview files="draw-circle" size="xs" />
-
-`{ ellipse: { radius: { x, y } } }` draws a full ellipse centered on the previous item.
-
-<ComponentPreview files="draw-ellipse" size="sm" />
+A smooth curve through points is a `<Step kind="smooth">`-only capability rather than a `way` operation because it consumes a point list at once. See [Step curves](/kernel/components/draw/step#geometry-and-curves).
 
 ### Edge Labels
 
-#### Basic Form
+`{ label }` decorates the next produced segment through `step.label`; it does not produce a segment itself. Switch between a line and the two fold operators, drag `position`, then adjust side, sloped, and text color. A fold divides t evenly across its two legs, so `0.5` always lands on the corner.
 
-`{ label }` is an infix label operator in Draw way. It decorates the next produced segment by setting `step.label`; it does not produce a segment itself. The shorthand `{ label: 'ok' }` is equivalent to `{ label: { text: 'ok' } }`.
+<ComponentPreview files="draw-label" size="md" />
 
-<ComponentPreview files="draw-label" size="sm" />
-
-#### Position Rules
-
-`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind — line / fold use normalized path position, curves (curve / cubic / bend) use Bezier t, and arc / circle / ellipse use angular parametrization; see [Step labels §Geometric meaning of t](/kernel/components/draw/step#geometric-meaning-of-t-per-step-kind) for the full per-kind table and demos.
-
-Line segments are the most direct: `start` / `midway` / `end` land near the start, middle, and end of the segment.
-
-<ComponentPreview files="draw-label-line" />
-
-Folded segments divide t evenly across the folded legs. `midway` lands on the corner, not at the visual midpoint by actual segment length.
-
-<ComponentPreview files="draw-label-fold" size="sm" />
+For the seven position keywords and t semantics on curves and arcs, see [Step edge labels](/kernel/components/draw/step#edge-label).
 
 ### Style
 
-#### Arrows
+Use one open polyline to explore stroke, dash, rounded geometry, and endpoint arrows. `roundedCorners` changes path geometry while `lineJoin` only changes stroke rendering; for arrow shape, size, and per-end overrides, see [Arrow](/kernel/components/draw/arrow).
 
-`arrow` controls endpoint arrows: `'->'` / `'<-'` / `'<->'` / `'none'`. For shape, size, color, and per-end overrides, see [Arrow](/kernel/components/draw/arrow).
+<ComponentPreview files="draw-style" size="md" />
 
-<ComponentPreview files="draw-arrow" size="sm" />
+#### Fill and stacking
 
-#### Fill
+After `DrawWay.Cycle` closes the region, `fill` and `fillOpacity` control its appearance, while `fillRule` handles nested sub-paths. `zIndex` overrides declaration order among siblings at the same level. The blue Draw in the panel is declared before the red one: red stays on top while blue has `zIndex` 0, and blue moves above it at 1.
 
-`fill` colors closed regions, and `fillRule` controls nested sub-path filling. It is commonly used with `DrawWay.Cycle`.
+<ComponentPreview files="draw-fill-stack" size="md" />
 
-<ComponentPreview files="draw-fill" size="sm" />
+### Geometry sugar that shares Draw's Path semantics
 
-#### Dash
+When you need a geometric shape rather than a relationship, use the one-line sugar in [Shapes](/kernel/components/shapes). It lowers to Path during compile and shares fill, stroke, effects, and stacking semantics with Draw and Path:
 
-`dashPattern` uses `Array<number>` for dash / gap lengths. `[4, 2]` means draw 4, skip 2, in user units. `dashOffset` shifts where the dash rhythm starts, useful when several dashed lines need to align.
+| Component          | Draws                             |
+| ------------------ | --------------------------------- |
+| `<Circle>`         | circle / half circle / segment    |
+| `<Ellipse>`        | ellipse / partial ellipse         |
+| `<Arc>`            | open circular / elliptical arc    |
+| `<Sector>`         | wedge (closed through the center) |
+| `<Rectangle>`      | rectangle / rounded rectangle     |
+| `<RegularPolygon>` | regular polygon                   |
+| `<Star>`           | star                              |
 
-<ComponentPreview files="draw-dashed" size="sm" />
-
-#### Rounded corners
-
-`roundedCorners` rounds the joints between adjacent `line` segments into tangent arcs. It changes the **path geometry** — the joint vertices are pulled back and an arc is inserted, so it affects the bounding box, arc length, and connection points; this is unlike `lineJoin`, which only styles the stroke render. Radii that are too large are clamped to the adjacent segment lengths. Below: sharp on top, the same polyline with `roundedCorners={24}` underneath:
-
-<ComponentPreview files="draw-rounded-corners" size="sm" />
-
-#### Stacking order (zIndex)
-
-`zIndex` overrides the default declaration-order stacking: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level. Same meaning as `<Path>`'s `zIndex` (Draw compiles to Path). The two filled squares below are declared dodgerblue-then-red (red on top by default); setting `zIndex={1}` on the earlier dodgerblue Draw lifts it above the red one:
-
-<ComponentPreview files="draw-z-index" size="sm" />
-
-### Shape sugar
-
-| Component          | Draws                                   |
-| ------------------ | --------------------------------------- |
-| `<Circle>`         | circle / half circle / segment          |
-| `<Ellipse>`        | ellipse / partial ellipse               |
-| `<Arc>`            | open circular / elliptical arc          |
-| `<Sector>`         | wedge (closed through the center)       |
-| `<Rectangle>`      | rectangle / rounded rectangle           |
-| `<Grid>`           | background grid (expands to many lines) |
-| `<RegularPolygon>` | regular polygon                         |
-| `<Star>`           | star                                    |
-
-One-line forms for circles, rectangles, and sectors live under the [Shapes](/kernel/components/shapes) group, while background line fields like Grid live under [Helpers](/kernel/components/helpers). They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/kernel/components/shapes/circle-ellipse) for geometric shapes and [Grid](/kernel/components/helpers/grid) for regular reference lines.
+Background grids are not geometric shapes; repeated reference lines live under [Helpers](/kernel/components/helpers). Start geometric shapes with [Circle and Ellipse](/kernel/components/shapes/circle-ellipse), or see [Grid](/kernel/components/helpers/grid) for regular reference lines.
 
 ## How it works
 
@@ -213,25 +152,27 @@ Draw forwards whole-path properties such as stroke, fill, arrows, and stacking t
 
 ### Props
 
-| Prop             | Type                                                                                           | Default        | Description                                                                                                                                                       |
-| ---------------- | ---------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `way`            | `Array<WayItem>`                                                                               | —              | At least 2 items; first is always `move`, rest become `line` / `fold` / `cycle` and related actions based on item form                                            |
-| `stroke`         | `string`                                                                                       | `currentColor` | Stroke color                                                                                                                                                      |
-| `strokeWidth`    | `number`                                                                                       | `1`            | Stroke width                                                                                                                                                      |
-| `dashPattern`    | `Array<number>`                                                                                | —              | Dash / gap length sequence, for example `[4, 2]`                                                                                                                  |
-| `dashOffset`     | `number`                                                                                       | —              | Dash start offset in path user units                                                                                                                              |
-| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | Stroke endpoint shape                                                                                                                                             |
-| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | Stroke corner shape (visual only, geometry unchanged)                                                                                                             |
-| `roundedCorners` | `number`                                                                                       | —              | **Geometric** corner radius for line-to-line joints; changes the path geometry, unlike `lineJoin`. See [Path §Rounded corners](/kernel/components/draw/path)      |
-| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | Semantic stroke preset; explicit `strokeWidth` wins                                                                                                               |
-| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                              | —              | Path-level arrow direction                                                                                                                                        |
-| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`       | —              | Detailed arrow configuration; see [Arrow](/kernel/components/draw/arrow)                                                                                          |
-| `fill`           | `string \| PaintSpec`                                                                          | `'none'`       | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image)                                                                                    |
-| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | Fill rule                                                                                                                                                         |
-| `opacity`        | `number`                                                                                       | —              | Whole-path opacity, 0..1                                                                                                                                          |
-| `fillOpacity`    | `number`                                                                                       | —              | Fill-only opacity, 0..1                                                                                                                                           |
-| `strokeOpacity`  | `number`                                                                                       | —              | Stroke-only opacity, 0..1                                                                                                                                         |
-| `zIndex`         | `number` (integer)                                                                             | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`) |
+| Prop             | Type                                                                                                          | Default        | Description                                                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `way`            | `Array<WayItem>`                                                                                              | —              | At least 2 items; first is always `move`, rest become `line` / `fold` / `cycle` and related actions based on item form                                                                      |
+| `stroke`         | `string \| PaintSpec`                                                                                         | `currentColor` | Stroke paint: CSS color or PaintSpec (gradient / pattern / image); when using PaintSpec, set an explicit CSS color for arrows                                                               |
+| `strokeWidth`    | `number`                                                                                                      | `1`            | Stroke width                                                                                                                                                                                |
+| `dashPattern`    | `Array<number>`                                                                                               | —              | Dash / gap length sequence, for example `[4, 2]`                                                                                                                                            |
+| `dashOffset`     | `number`                                                                                                      | —              | Dash start offset in path user units                                                                                                                                                        |
+| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                               | `'butt'`       | Stroke endpoint shape                                                                                                                                                                       |
+| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                               | `'miter'`      | Stroke corner shape (visual only, geometry unchanged)                                                                                                                                       |
+| `roundedCorners` | `number`                                                                                                      | —              | **Geometric** corner radius for line-to-line joints; changes the path geometry, unlike `lineJoin`. See [Path §Rounded corners](/kernel/components/draw/path#rounded-corners-roundedcorners) |
+| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'`                | —              | Semantic stroke preset; explicit `strokeWidth` wins                                                                                                                                         |
+| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                                             | —              | Path-level arrow direction                                                                                                                                                                  |
+| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`                      | —              | Detailed arrow configuration; see [Arrow](/kernel/components/draw/arrow)                                                                                                                    |
+| `fill`           | `string \| PaintSpec`                                                                                         | `'none'`       | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image)                                                                                                              |
+| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                                      | `'nonzero'`    | Fill rule                                                                                                                                                                                   |
+| `opacity`        | `number`                                                                                                      | —              | Whole-path opacity, 0..1                                                                                                                                                                    |
+| `fillOpacity`    | `number`                                                                                                      | —              | Fill-only opacity, 0..1                                                                                                                                                                     |
+| `strokeOpacity`  | `number`                                                                                                      | —              | Stroke-only opacity, 0..1                                                                                                                                                                   |
+| `shadow`         | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —              | Drop shadow on the main path; endpoint arrows cast a shadow with it. See [Visual Effects](/kernel/components/effects)                                                                       |
+| `blendMode`      | `'normal' \| 'multiply' \| 'screen' \| ...` (16 W3C separable modes)                                          | `'normal'`     | How the main path blends with content beneath it; endpoint arrows blend with it. See [Visual Effects](/kernel/components/effects)                                                           |
+| `zIndex`         | `number` (integer)                                                                                            | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`)                           |
 
 <Comparison target="tikz" title="Style Naming">
 

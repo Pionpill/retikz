@@ -54,6 +54,7 @@
     "drawWay": "Way",
     "arrow": "Arrow",
     "path": "Path",
+    "ribbon": "Ribbon",
     "step": "Step",
     "drawPathGenerator": "Path Generators",
     "drawCustomPath": "Custom Paths",

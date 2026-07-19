@@ -1,6 +1,6 @@
 ---
 title: Path
-description: Path is the Kernel path container for stroked or filled paths and variable-width ribbons.
+description: Describe a Kernel path with ordered Steps and apply stroke, fill, arrows, marks, or whole-path transforms.
 ---
 
 ## Usage
@@ -25,7 +25,7 @@ import { Path, Step } from '@retikz/react';
 | `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | Not exposed             | Yes                                              |
 | Use when                                                              | 90% of connection cases | Explicit Step sequence, element-level capability |
 
-## Composition
+### Path and Step
 
 `<Path>` requires `<Step>` children (at least 2); if the first isn't `move`, the compiler coerces it to `move`:
 
@@ -41,33 +41,19 @@ import { Path, Step } from '@retikz/react';
 
 ## Examples
 
-### Polyline
+### Basic structure
 
-<ComponentPreview files="path-basic" size="xs" />
+Compare a polyline, multiple subpaths, and a closed fill in one panel. Repeated `move`s lift the pen and begin independent subpaths; the fill case uses `cycle`, which maps to SVG `Z`, to close its outline. See [Way](/kernel/components/draw/way) for focused fold and closure controls; this panel stays at the Path-container composition level.
 
-### Fold
+<ComponentPreview files="path-structure" size="md" />
 
-`<Step kind="fold" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
+### Endpoints and connections
 
-<ComponentPreview files="path-fold" size="md" />
-
-### Closing (cycle)
-
-`<Step kind="cycle" />` closes the current path back to the most recent `move` target — saves writing one explicit endpoint vs. a `line` back to the start. Compiles to SVG path `Z`:
-
-<ComponentPreview files="path-cycle" size="sm" />
-
-### Filling
-
-`fill` colors the closed region (default `'none'` — stroke only, backward compatible); `fillRule` controls how self-intersecting / nested sub-paths fill (`'nonzero'` default / `'evenodd'` for ring & hole shapes). Pairs with `cycle`:
-
-<ComponentPreview files="path-fill" size="sm" />
-
-### Arrows
+#### Arrows
 
 `arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — eight built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/kernel/components/draw/arrow)** page.
 
-### Endpoint connection surface
+#### Endpoint connection surface
 
 When an endpoint references a node (the `{ id }` object form, or an id inside a way), you can add a `boundary` field to override the target node's [`boundary`](/kernel/components/node/overview#connection-surface-boundary) (connection surface) **for that endpoint only**. It takes the same forms as the node's `boundary`: `'shape'` (the visual shape itself) / `'circle'` (a true circle) / any registered shape name / `{ type, params }`.
 
@@ -80,85 +66,57 @@ When an endpoint references a node (the `{ id }` object form, or an id inside a 
 
 `boundary` only applies where a connection surface is meaningful: endpoint auto-clip (no explicit `anchor`) and that endpoint's standard direction / angle anchor. In direction-less reference contexts — `between` endpoints, an `offset` `of`, a node center — it is a no-op. A node's default connection surface lives on [`<Node boundary>`](/kernel/components/node/overview#connection-surface-boundary); the endpoint `boundary` is the per-edge override.
 
-Below, two edges target the same five-pointed star (no node `boundary` set) and each picks its connection surface at the endpoint: the solid edge clips to the real tips by default, the dashed edge uses `boundary="circle"` to clip to the circumscribed circle — the surface is decided per edge.
+The five-pointed star below has no node `boundary`. Switch the endpoint surface in the panel to see the same edge move from the real tip to the circumscribed circle; the edge decides its own surface, and the dotted circle is a reference.
 
-<ComponentPreview files="path-boundary" size="sm" />
+<ComponentPreview files="path-boundary" size="md" />
 
 ### Styling
 
-`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` match `<Draw>`.
+Set `strokeWidth` directly or use the semantic `thickness` presets from `ultraThin` through `ultraThick`; an explicit `strokeWidth` wins. `dashOffset` shifts only the dash rhythm's origin. `lineCap` / `lineJoin` shape endpoints and corners, while `opacity` / `fillOpacity` / `strokeOpacity` are three composable channels.
 
-<ComponentPreview files="path-dashed" size="xs" />
-
-#### Dash offset
-
-`dashOffset` shifts only where the dash rhythm starts; it does not change the `dashPattern`. The three lines below all use `[18, 10]` and only vary the offset:
-
-<ComponentPreview files="path-dash-offset" size="xs" />
+<ComponentPreview files="path-style" size="md" />
 
 #### Gradient stroke
 
-Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `strokeOpacity`, and other stroke styles still apply to the line itself.
+Besides a plain color string, `stroke` accepts a `PaintSpec`. Linear / radial gradients, patterns, and images enter the same paint resource table; `dashPattern`, `dashOffset`, `lineCap`, `strokeOpacity`, and other stroke styles still apply to the line itself. Adjust the linear-gradient angle and three color stops in the panel to inspect their distribution along one path.
 
-<ComponentPreview files="path-stroke-paint" size="sm" />
+<ComponentPreview files="path-stroke-paint" size="md" />
 
 If a gradient-stroked path also has arrows, give `arrowDetail.color` or the endpoint `color` an explicit solid color; marker geometry cannot inherit a resource-backed stroke.
 
-#### Stroke endpoints / corners
-
-`lineCap` controls the stroke endpoint shape: `'butt'` default (square end at endpoint) / `'round'` half-circle cap / `'square'` square cap extended past the endpoint by half a stroke. `lineJoin` controls the corner shape: `'miter'` default (sharp) / `'round'` rounded / `'bevel'` flat-cut.
-
-<ComponentPreview files="path-line-style" />
-
-#### Semantic thickness preset
-
-`thickness` is component / builder sugar for a semantic stroke preset — `'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'` — resolved into numeric `strokeWidth` before IR is produced (`thin = 1` matches the default `strokeWidth`). **Explicit `strokeWidth` always wins** — `thickness` only applies when `strokeWidth` is omitted:
-
-<ComponentPreview files="path-thickness" size="md" />
-
-#### Opacity
-
-Three independent channels: `opacity` overall (multiplies onto stroke and fill), `fillOpacity` for fill only, `strokeOpacity` for stroke only. The three compose:
-
-`strokeOpacity` uses the same stroke-opacity naming as Scene primitives, and matches the stroke-only opacity field on `<Node>`.
-
-<ComponentPreview files="path-opacity" />
-
 #### Stacking order (zIndex)
 
-By default stacking = declaration order. `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). The two filled rectangles below are declared dodgerblue-then-red (red on top by default); setting `zIndex={1}` on the earlier dodgerblue path lifts it above the red one:
+By default stacking = declaration order. `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). The two filled rectangles below are declared dodgerblue-then-red; move the blue path's `zIndex` through negative, zero, and positive values to compare the overlap order.
 
-<ComponentPreview files="path-z-index" size="sm" />
+<ComponentPreview files="path-z-index" size="md" />
 
 ### Curves and transforms
 
 #### Out / in angles and self-loops
 
-Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accepts `outAngle` / `inAngle` for the start out-angle and end in-angle to draw asymmetric curves; `looseness` tunes the control-point distance (default ≈1). **out/in take precedence over `bendDirection`.** When `from == to` (same node / same coordinate) it degenerates into a **self-loop** — the prime use case for out/in (a state-machine self transition), which a symmetric bend cannot draw.
+Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accepts `outAngle` / `inAngle` for the start out-angle and end in-angle to draw asymmetric curves; `looseness` tunes the control-point distance (default ≈1). **out/in take precedence over `bendDirection`.** When `from == to` (same node / same coordinate) it degenerates into a **self-loop** — the prime use case for out/in (a state-machine self transition), which a symmetric bend cannot draw. Switch between a self-loop and a two-endpoint connection in the panel, then use the dotted direction guides to tune both angles and looseness.
 
-<ComponentPreview files="path-outin-loop" size="sm" />
+<ComponentPreview files="path-outin-loop" size="md" />
 
 #### Whole-path transform (rotate / scale)
 
-`rotate` (degrees) / `scale` (a number for uniform, or `{ x, y }` for non-uniform) transform the whole path around its **bounding-box center**, sparing a wrapping `<Scope transforms>` for a single path. The order is a hard contract: path endpoints resolve first, arrow shrink is computed on the **untransformed** geometry, then everything is wrapped in a group — so arrow direction follows the transform correctly without misalignment.
+`rotate` (degrees) / `scale` (a number for uniform, or `{ x, y }` for non-uniform) transform the whole path around its **bounding-box center**, sparing a wrapping `<Scope transforms>` for a single path. The order is a hard contract: path endpoints resolve first, arrow shrink is computed on the **untransformed** geometry, then everything is wrapped in a group — so arrow direction follows the transform correctly without misalignment. The dotted path preserves the original geometry while the panel's rotation and two-axis scale affect only the solid path for direct comparison.
 
-<ComponentPreview files="path-transform" size="sm" />
+<ComponentPreview files="path-transform" size="md" />
 
 #### Mid-path marks
 
-`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/draw/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`**, just like endpoint arrows: the thicker the line, the larger the mark.
+`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/kernel/components/draw/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`**, just like endpoint arrows: the thicker the line, the larger the mark. Move both position controls to watch the marks follow the local tangent as they travel along the path.
 
-<ComponentPreview files="path-marks" size="xs" />
+<ComponentPreview files="path-marks" size="md" />
 
 #### Rounded corners (roundedCorners)
 
 `roundedCorners` rounds every **line↔line joint** of the path with a tangent arc of the same radius — handy for flowcharts, routing, and polyline connections where you want soft corners instead of sharp ones. Omitted = sharp corners everywhere (behavior unchanged). The first / last endpoint stays sharp; a joint whose neighbor is a curve / arc / Bézier / fold stays sharp too. When the radius is too large it is **clamped per joint** to what the adjacent segment lengths allow. After a `cycle` close, the closing joint is rounded as well.
 
-<ComponentPreview files="path-rounded-corners" size="sm" />
+<ComponentPreview files="path-rounded-corners" size="md" />
 
-`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.) The contrast bottom uses a very thick stroke: the top path uses `lineJoin="round"` (only the stroke is rounded, the centerline stays sharp), the bottom uses `roundedCorners` (the centerline itself is an arc):
-
-<ComponentPreview files="path-rounded-vs-linejoin" size="sm" />
+`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The panel shows `lineJoin` above and geometric rounding below so you can drag the radius and compare them directly. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.)
 
 <Comparison target="tikz" title="Path Syntax Mapping">
 
@@ -173,67 +131,12 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 </Comparison>
 
-### Ribbon path
-
-`<Path kind="ribbon">` uses the same Path host to draw a fillable relation band. The centerline is still described with `<Step>`, while width, caps, sampling, and boundary mode live under `ribbon={{ ... }}`. Host fields such as `fill`, `stroke`, `opacity`, `label`, and `zIndex` stay on the Path itself.
-
-```tsx
-<Path kind="ribbon" ribbon={{ start: { width: 32 }, end: { width: 12 } }} fill="#60a5fa">
-  <Step kind="move" to={[-120, 0]} />
-  <Step kind="cubic" control1={[-40, -48]} control2={[40, 48]} to={[120, 0]} />
-</Path>
-```
-
-#### Basic band
-
-Centerline mode offsets both sides of the open path by `width` and emits a closed Path primitive. `stroke` outlines the band boundary; it does not draw the centerline.
-
-<ComponentPreview files="ribbon-basic" size="xs" />
-
-#### Width and interpolation
-
-`width` can be fixed, split across start/end endpoints, or expressed as `kind: 'stops'` along the path. `interpolation` controls how width changes between those values.
-
-<ComponentPreview files="ribbon-interpolation" size="md" />
-
-<ComponentPreview files="ribbon-width-stops" size="xs" />
-
-The built-in `bulge` profile uses `base` for both endpoint widths and `peak` for the midpoint width; when `peak` is smaller than `base`, the middle narrows instead.
-
-<ComponentPreview files="ribbon-width-profile" size="xs" />
-
-#### Label placement
-
-Ribbon labels use the same GeometryLabel contract. `position` accepts keywords or a numeric `0..1` offset; `side` keeps the same default outside distance as Path labels; `placement="inside"` places the label inside the band, and `sloped: true` rotates along the centerline tangent.
-
-<ComponentPreview files="ribbon-label" size="sm" />
-
-#### Endpoints and caps
-
-`start` / `end` configure endpoint width, direction, and cap. `align` controls where the centerline sits inside the band width, and `samples` can switch complex curves to sampled construction.
-
-<ComponentPreview files="ribbon-direction" size="md" />
-
-<ComponentPreview files="ribbon-align-cap" size="md" />
-
-#### Precomputed boundaries
-
-When a layout algorithm has already computed both sides, use `ribbon.mode = 'boundary'` and provide `upper` / `lower` as two open step sequences. This mode does not need `children`, and it does not accept `width`.
-
-<ComponentPreview files="ribbon-boundary" size="sm" />
-
-#### Styling
-
-Ribbon is a closed area, so styling focuses on `fill`, outline `stroke`, opacity, shadows, and blend modes. `pathDefault` forwards the Path-shared drawable style fields to ribbon kind; arrows, dashes, line caps, and other stroke-only semantics belong to the default `stroke` kind.
-
-<ComponentPreview files="ribbon-style" size="md" />
-
 ## How it works
 
 <ComponentAlert
   type="tip"
   title="Optional for everyday use"
-  description="Revisit when endpoint references, Path kinds, rounded geometry, arrows, or ribbon outlines produce an edge case."
+  description="Revisit when endpoint references, Path kinds, rounded geometry, or arrows produce an edge case."
 />
 
 This section focuses on the local path from a `<Path>` step sequence to Scene primitives. See [Architecture Principles](/kernel/concepts/design/principles) for the full JSX → IR → Scene pipeline.
@@ -269,7 +172,7 @@ The figure stops at the Path responsibility boundary: the input remains one `<Pa
 
 <ComponentPreview files="path-kind-pipeline" size="sm" hideCode />
 
-Built-in `stroke` / `ribbon` kinds and external kinds use the same registry and collision rules; renderers do not need to understand custom kinds. See [Custom Paths](/kernel/components/draw/custom-path) to own the whole path, or [Path Generators](/kernel/components/draw/path-generator) to extend one step.
+Built-in `stroke` / [`ribbon`](/kernel/components/draw/ribbon) kinds and external kinds use the same registry and collision rules; renderers do not need to understand custom kinds. See [Custom Paths](/kernel/components/draw/custom-path) to own the whole path, or [Path Generators](/kernel/components/draw/path-generator) to extend one step.
 
 <SourceLinks
   sources={[
@@ -288,17 +191,9 @@ Built-in `stroke` / `ribbon` kinds and external kinds use the same registry and 
   ]}
 />
 
-### How stroke and ribbon materialize geometry
-
-| Mode                | Core work                | Scene output     |
-| ------------------- | ------------------------ | ---------------- |
-| `stroke`            | steps → commands → decor | stroke + helpers |
-| `ribbon` centerline | commands → offset sides  | closed outline   |
-| `ribbon` boundary   | sample sides → join caps | closed outline   |
+### How stroke materializes geometry
 
 The default stroke path first resolves relative targets, node references, and generators into path commands (`PathCommand`: materialized move / line / arc geometry). `roundedCorners` then rewrites those commands before marks and endpoint-arrow shrinking are calculated. Finally, `rotate` / `scale` wrap the main path, labels, and marks in one group. Marks therefore follow the rounded arc length and tangent, while whole-path transforms keep decorations attached.
-
-A centerline ribbon reuses the same step-resolution rules, then offsets both sides with a width function. Fixed-width analytic segments use a direct outline when possible; other cases sample cross-sections. Boundary mode samples the supplied upper and lower paths directly. Both modes end as ordinary closed Path primitives, so SVG and Canvas do not need separate ribbon semantics.
 
 <SourceLinks
   sources={[
@@ -314,18 +209,6 @@ A centerline ribbon reuses the same step-resolution rules, then offsets both sid
       startLine: 149,
       endLine: 190,
     },
-    {
-      label: 'Ribbon reuse of Path geometry',
-      path: 'packages/kernel/core/src/compile/path/ribbon/centerline.ts',
-      startLine: 328,
-      endLine: 378,
-    },
-    {
-      label: 'Ribbon outline construction',
-      path: 'packages/kernel/core/src/compile/path/ribbon/emit.ts',
-      startLine: 62,
-      endLine: 190,
-    },
   ]}
 />
 
@@ -335,7 +218,7 @@ A centerline ribbon reuses the same step-resolution rules, then offsets both sid
 | ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`             | `string`                                                                                                      | —              | Optional stable id: lets other elements anchor to the path and serves as the attach point for [hydration](/kernel/packages/render/hydration) event binding (a path needs an `id` before you can bind `onClick` and friends)                                                                                                                                         |
 | `meta`           | `Record<string, JSON value>`                                                                                  | —              | Provenance metadata, passed through verbatim onto the Scene primitives this path emits; ignored by renderers and never part of layout / style. Typically injected by a higher-level lowering (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
-| `kind`           | `string`                                                                                                      | `'stroke'`     | Path kind provider. Built-ins are `'stroke'` and `'ribbon'`; custom kinds are registered through the Path kind contract                                                                                                                                                                                                                                             |
+| `kind`           | `string`                                                                                                      | `'stroke'`     | Path kind provider. Built-ins are `'stroke'` and [`'ribbon'`](/kernel/components/draw/ribbon); custom kinds are registered through the Path kind contract                                                                                                                                                                                                           |
 | `kindOptions`    | `Record<string, JSON value>`                                                                                  | —              | JSON options passed to a custom Path kind provider. Built-in `stroke` / `ribbon` do not use it                                                                                                                                                                                                                                                                      |
 | `color`          | `string`                                                                                                      | —              | Master color; `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`)                                                                                                                                                                                                                                          |
 | `stroke`         | `string \| PaintSpec`                                                                                         | `currentColor` | Stroke paint: CSS color or PaintSpec (gradient / pattern / image); arrows that inherit stroke need an explicit solid arrow color                                                                                                                                                                                                                                    |
@@ -360,21 +243,12 @@ A centerline ribbon reuses the same step-resolution rules, then offsets both sid
 | `scale`          | `number \| { x, y }`                                                                                          | —              | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center)                                                                                                                                                                                                                                                                      |
 | `marks`          | `Array<{ pos, mark }>`                                                                                        | —              | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point                                                                                                                                                                                                                                             |
 | `animations`     | `Array<AnimationTrack>`                                                                                       | —              | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/kernel/components/effects/animation)                                                                                                                                                                                    |
-| `children`       | `Array<<Step>>`                                                                                               | —              | Required for `stroke` and centerline `ribbon`; omitted for boundary `ribbon`. If the first isn't `move`, the compiler coerces it to `move`                                                                                                                                                                                                                          |
-
-### Ribbon
-
-Ribbon reuses the Path host fields in the table above; this subsection lists only the ribbon selector and ribbon-specific entry points.
-
-| Prop     | Type                                    | Default | Description                                                                                                    |
-| -------- | --------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
-| `kind`   | `'ribbon'`                              | —       | Selects the built-in ribbon Path kind                                                                          |
-| `ribbon` | `PathRibbonOptions`                     | —       | Required; configures widths, caps, sampling, and boundary mode                                                 |
-| `label`  | `GeometryLabel \| Array<GeometryLabel>` | —       | Host label for centerline mode; shared paint, opacity, effect, stacking, and animation fields are listed above |
+| `children`       | `Array<<Step>>`                                                                                               | —              | Required by the default `stroke` kind. If the first isn't `move`, the compiler coerces it to `move`. See [Ribbon](/kernel/components/draw/ribbon) for centerline and boundary rules                                                                                                                                                                                 |
 
 ## Related
 
 - [Draw](/kernel/components/draw/overview): Sugar preferred for everyday connections
 - [Step](/kernel/components/draw/step): Complete field and kind reference for `<Path>` children
+- [Ribbon](/kernel/components/draw/ribbon): Variable-width relations and precomputed boundaries
 - [Arrow](/kernel/components/draw/arrow): Detailed path arrow configuration
 - [Custom Paths](/kernel/components/draw/custom-path): Register a kind provider that owns the whole Path

@@ -87,6 +87,7 @@ export const kernelSection: Array<Section> = [
           { id: 'overview', label: 'kernel.drawOverview' },
           { id: 'way', label: 'kernel.drawWay' },
           { id: 'path', label: 'kernel.path' },
+          { id: 'ribbon', label: 'kernel.ribbon' },
           { id: 'step', label: 'kernel.step' },
           { id: 'arrow', label: 'kernel.arrow' },
           { id: 'path-generator', label: 'kernel.drawPathGenerator', meta: extensionGuide('kernel.path-generator') },

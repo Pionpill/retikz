@@ -1,6 +1,6 @@
 ---
 title: Path
-description: Path 是 Kernel 层的路径容器，既可描述描边与填充路径，也可通过 ribbon 生成可变宽流带。
+description: 用有序 Step 描述一条 Kernel 路径，并统一承载描边、填充、箭头、标记与整体变换。
 ---
 
 ## 用法
@@ -25,7 +25,7 @@ import { Path, Step } from '@retikz/react';
 | `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | 不暴露        | 支持                       |
 | 适用                                                                  | 90% 连线场景  | 显式 Step 序列、元素级能力 |
 
-## 组合
+### Path 与 Step
 
 `<Path>` 必须搭配 `<Step>` 子节点（至少 2 个）；首个非 `move` 时编译器会强制改成 `move`：
 
@@ -41,33 +41,19 @@ import { Path, Step } from '@retikz/react';
 
 ## 例子
 
-### 折线
+### 基础结构
 
-<ComponentPreview files="path-basic" size="xs" />
+在一个面板中比较折线、多子路径与闭合填充三种 Path 组合。多次 `move` 会抬笔并从新位置开始独立子路径；填充示例用 `cycle` 对应的 `Z` 闭合轮廓。折角与单独的闭合操作见 [Way](/kernel/components/draw/way)，本面板只承担 Path 容器层的结构差异。
 
-### 折角
+<ComponentPreview files="path-structure" size="md" />
 
-`<Step kind="fold" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
+### 端点与连接
 
-<ComponentPreview files="path-fold" size="md" />
-
-### 闭合
-
-`<Step kind="cycle" />` 把当前路径闭合回最近一次 `move` 的起点——比手动 `line` 回起点少写一个端点，对应 SVG 路径的 `Z`：
-
-<ComponentPreview files="path-cycle" size="sm" />
-
-### 填充
-
-`fill` 给闭合区域填色（缺省 `'none'` = 仅描边，向后兼容）；`fillRule` 控制自交 / 嵌套子路径的填充规则（`'nonzero'` 默认 / `'evenodd'` 环形孔洞场景）。配合 cycle 步使用：
-
-<ComponentPreview files="path-fill" size="sm" />
-
-### 箭头
+#### 箭头
 
 `arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、8 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/kernel/components/draw/arrow)** 专页。
 
-### 端点连接面
+#### 端点连接面
 
 端点引用节点时（`{ id }` 对象形态，或 way 里的 id），可加 `boundary` 字段，**只对这一个端点**覆盖目标节点的 [`boundary`](/kernel/components/node/overview#连接面-boundary)（连接面）。取值与节点 `boundary` 同形：`'shape'`（视觉形状自身）/ `'circle'`（真圆）/ 任意注册 shape 名 / `{ type, params }`。
 
@@ -80,85 +66,57 @@ import { Path, Step } from '@retikz/react';
 
 `boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的标准方位 / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node boundary>`](/kernel/components/node/overview#连接面-boundary)，端点 `boundary` 是单边覆盖。
 
-下例同一五角星（未设节点 `boundary`），两条边各自在端点选连接面：实线默认贴真实尖端，虚线 `boundary="circle"` 改贴外接圆——连接面由边自己决定。
+下例的五角星未设置节点 `boundary`。在面板中切换端点连接面，观察同一条边如何从真实尖端改贴外接圆；连接面由边自己决定，虚点线圆是外接圆参考。
 
-<ComponentPreview files="path-boundary" size="sm" />
+<ComponentPreview files="path-boundary" size="md" />
 
 ### 样式
 
-`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` 与 `<Draw>` 完全一致。
+`strokeWidth` 可直接给数值；`thickness` 则提供 `ultraThin` 到 `ultraThick` 的语义档位，且显式 `strokeWidth` 优先。`dashOffset` 只移动虚线节奏的起点。`lineCap` / `lineJoin` 分别控制端点与拐点，`opacity` / `fillOpacity` / `strokeOpacity` 是可叠加的三个透明度通道。
 
-<ComponentPreview files="path-dashed" size="xs" />
-
-#### 虚线起点
-
-`dashOffset` 只移动虚线节奏的起点，不改变 `dashPattern` 本身。下例三条线共用 `[18, 10]`，只改变 offset：
-
-<ComponentPreview files="path-dash-offset" size="xs" />
+<ComponentPreview files="path-style" size="md" />
 
 #### 渐变描边
 
-`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。
+`stroke` 除纯色字符串外还接 `PaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。用面板调整线性渐变角度与三个色标，可直接观察同一条路径上的颜色分布。
 
-<ComponentPreview files="path-stroke-paint" size="sm" />
+<ComponentPreview files="path-stroke-paint" size="md" />
 
 带箭头的路径如果用渐变描边，需要给 `arrowDetail.color` 或端点 `color` 一个显式纯色；箭头 marker 不能继承资源型描边。
 
-#### 描边端点 / 拐点
-
-`lineCap` 控制描边端点形状：`'butt'` 默认（直角端）/ `'round'` 半圆 / `'square'` 方头外扩半个 stroke。`lineJoin` 控制拐点形状：`'miter'` 默认（尖角）/ `'round'` 圆角 / `'bevel'` 切角。
-
-<ComponentPreview files="path-line-style" />
-
-#### 语义 stroke 档位
-
-`thickness` 是组件 / builder 层的语义化描边档位糖——`'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'`，生成 IR 前会解析成具体 `strokeWidth`（`thin = 1` 与默认 strokeWidth 对齐）。**显式 `strokeWidth` 始终优先**——`thickness` 仅在 `strokeWidth` 缺省时生效：
-
-<ComponentPreview files="path-thickness" size="md" />
-
-#### 透明度
-
-三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`strokeOpacity` 仅 stroke。三者可叠加：
-
-`strokeOpacity` 使用与 Scene primitive 一致的描边透明字段名，并与 `<Node>` 的描边透明字段保持一致。
-
-<ComponentPreview files="path-opacity" />
-
 #### 栈序（zIndex）
 
-默认层叠 = 声明顺序。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。下面两个填充矩形声明顺序蓝先红后（默认红压上），给先声明的蓝色 path 设 `zIndex={1}` 即可把它抬到红色之上：
+默认层叠 = 声明顺序。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。下面两个填充矩形声明顺序蓝先红后，拖动面板中的蓝色 `zIndex`，可比较负值、0 与正值对重叠顺序的影响。
 
-<ComponentPreview files="path-z-index" size="sm" />
+<ComponentPreview files="path-z-index" size="md" />
 
 ### 曲线与变换
 
 #### 出 / 入射角与自环
 
-`<Step kind="bend">` 除对称的 `bendDirection` + `bendAngle` 外，还可用 `outAngle` / `inAngle` 指定起点出射角与终点入射角，画非对称曲线；`looseness` 调控制点距离（松紧，缺省 ≈1）。**out/in 给定时优先于 `bendDirection`**。当 `from == to`（同节点 / 同坐标）时退化为**自环**——这是 out/in 最大价值场景（状态机自跳转），对称 bend 画不出。
+`<Step kind="bend">` 除对称的 `bendDirection` + `bendAngle` 外，还可用 `outAngle` / `inAngle` 指定起点出射角与终点入射角，画非对称曲线；`looseness` 调控制点距离（松紧，缺省 ≈1）。**out/in 给定时优先于 `bendDirection`**。当 `from == to`（同节点 / 同坐标）时退化为**自环**——这是 out/in 最大价值场景（状态机自跳转），对称 bend 画不出。面板可在自环与双端点连接间切换，并配合虚点线方向参考调整出入射角与松紧度。
 
-<ComponentPreview files="path-outin-loop" size="sm" />
+<ComponentPreview files="path-outin-loop" size="md" />
 
 #### 整体变换（rotate / scale）
 
-`rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。变换顺序有硬契约：path 端点先 resolve、箭头 shrink 在**未变换的几何**上算，最后整体包进 group——故箭头方向随变换正确、不错位。
+`rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。变换顺序有硬契约：path 端点先 resolve、箭头 shrink 在**未变换的几何**上算，最后整体包进 group——故箭头方向随变换正确、不错位。虚点线路径保留原始几何，面板中的旋转与二维缩放只作用于实线路径，便于对照。
 
-<ComponentPreview files="path-transform" size="sm" />
+<ComponentPreview files="path-transform" size="md" />
 
 #### 中段标记（marks）
 
-`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/draw/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**：线越粗、标记越大。
+`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/draw/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**：线越粗、标记越大。拖动面板中的两个位置值，可观察标记沿路径移动时如何持续跟随局部切线。
 
-<ComponentPreview files="path-marks" size="xs" />
+<ComponentPreview files="path-marks" size="md" />
 
 #### 折线圆角（roundedCorners）
 
 `roundedCorners` 给整条 path 的每个 **line↔line 内拐角**倒一个半径相同的圆角弧——画流程图、布线、折线连接时把硬尖角磨圆。缺省 / 省略 = 全尖角（行为不变）。首点 / 末点保持尖；接缝一侧是曲线 / 弧 / 贝塞尔 / 折角（`fold`）时该接缝也保持尖。半径过大时按相邻段长**逐拐角夹紧**到可行最大值。`cycle` 闭合后，闭合接缝也参与倒圆。
 
-<ComponentPreview files="path-rounded-corners" size="sm" />
+<ComponentPreview files="path-rounded-corners" size="md" />
 
-`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。（注：step 边标注 `label` 当前仍定位在该 step 自身线段上，不随接缝倒角缩短重算。）下例用很粗的描边对照——上方 `lineJoin="round"`（只磨描边、中心线仍尖），下方 `roundedCorners`（中心线本身就是圆弧）：
-
-<ComponentPreview files="path-rounded-vs-linejoin" size="sm" />
+`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。面板上方展示 `lineJoin`，下方展示几何圆角，可直接拖动半径比较。（注：step 边标注 `label` 当前仍定位在该 step 自身线段上，不随接缝倒角缩短重算。）
 
 <Comparison target="tikz" title="Path 写法映射">
 
@@ -173,67 +131,12 @@ import { Path, Step } from '@retikz/react';
 
 </Comparison>
 
-### 流带路径
-
-`<Path kind="ribbon">` 用同一个 Path 宿主绘制可填充的带状关系。中心线仍然由 `<Step>` 描述，带宽、端帽、采样和边界模式放进 `ribbon={{ ... }}`；`fill`、`stroke`、`opacity`、`label`、`zIndex` 等宿主字段仍然写在 Path 顶层。
-
-```tsx
-<Path kind="ribbon" ribbon={{ start: { width: 32 }, end: { width: 12 } }} fill="#60a5fa">
-  <Step kind="move" to={[-120, 0]} />
-  <Step kind="cubic" control1={[-40, -48]} control2={[40, 48]} to={[120, 0]} />
-</Path>
-```
-
-#### 基础流带
-
-中心线模式会把开放路径两侧按 `width` 偏移，生成闭合 Path primitive。`stroke` 描的是流带外轮廓，不会绘制中心线。
-
-<ComponentPreview files="ribbon-basic" size="xs" />
-
-#### 宽度与插值
-
-`width` 可以是固定值、起末端宽度，或 `kind: 'stops'` 的沿路径宽度表；`interpolation` 控制宽度变化方式。
-
-<ComponentPreview files="ribbon-interpolation" size="md" />
-
-<ComponentPreview files="ribbon-width-stops" size="xs" />
-
-内置 `bulge` profile 用 `base` 表示两端宽度、`peak` 表示中点宽度；`peak` 小于 `base` 时会变成中间收窄。
-
-<ComponentPreview files="ribbon-width-profile" size="xs" />
-
-#### 标签位置
-
-Ribbon label 使用同一套 GeometryLabel 契约。`position` 支持关键字或 `0..1` 数值；`side` 默认像普通 Path label 一样带固定外侧距离；`placement="inside"` 可把标签放入带状面内部，`sloped: true` 会沿中心线切线旋转。
-
-<ComponentPreview files="ribbon-label" size="sm" />
-
-#### 端点与端帽
-
-`start` / `end` 可以配置端点宽度、方向和 cap。`align` 决定中心线在带宽中的对齐位置，`samples` 可让复杂曲线走采样构造。
-
-<ComponentPreview files="ribbon-direction" size="md" />
-
-<ComponentPreview files="ribbon-align-cap" size="md" />
-
-#### 预计算边界
-
-当布局算法已经算好上下边界时，用 `ribbon.mode = 'boundary'`，并把 `upper` / `lower` 写成两条开放 step 序列。该模式不需要 `children`，也不会接受 `width`。
-
-<ComponentPreview files="ribbon-boundary" size="sm" />
-
-#### 样式
-
-Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、阴影和混合模式。`pathDefault` 会把 Path 共享的 drawable 样式传给 ribbon kind；箭头、虚线、lineCap 等 stroke-only 语义只属于默认 `stroke` kind。
-
-<ComponentPreview files="ribbon-style" size="md" />
-
 ## 技术原理
 
 <ComponentAlert
   type="tip"
   title="上手阶段可跳过本节"
-  description="遇到端点引用、Path kind、几何圆角、箭头或 ribbon 轮廓的边界问题时再回来读。"
+  description="遇到端点引用、Path kind、几何圆角或箭头的边界问题时再回来读。"
 />
 
 本节只说明 `<Path>` 从 step 序列到 Scene 图元的局部机制；完整的 JSX → IR → Scene 管线见[架构](/kernel/concepts/design/principles)。
@@ -263,13 +166,13 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 
 ### kind 如何选择整条路径的输出
 
-`kind` 不是 renderer 的绘制开关，而是整条 Path 的编译 provider（处理器）名称，缺省为 `stroke`。编译器从统一注册表找到 definition；如果该 provider 声明了 `optionsSchema`，就先校验 `kindOptions`，否则保留原始 JSON 对象。随后由 provider 决定复用标准描边、复用标准 ribbon，还是直接生成自定义 Scene 图元。
+`kind` 不是 renderer 的绘制开关，而是整条 Path 的编译 provider（处理器）名称，缺省为 `stroke`。编译器从统一注册表找到 definition；如果该 provider 声明了 `optionsSchema`，就先校验 `kindOptions`，否则保留原始 JSON 对象。随后由 provider 决定复用标准描边、复用标准 Ribbon，还是直接生成自定义 Scene 图元。
 
 下图在 Path 的职责边界停止：输入仍是一条 `<Path>`，provider 分派后只输出与 renderer 无关的 Scene 图元。
 
 <ComponentPreview files="path-kind-pipeline" size="sm" hideCode />
 
-内置 `stroke` / `ribbon` 与外部 kind 走同一套注册和冲突规则；renderer 不需要认识自定义 kind。要接管整条路径时见[自定义路径](/kernel/components/draw/custom-path)，只扩展某一个 step 时则使用[路径生成器](/kernel/components/draw/path-generator)。
+内置 `stroke` / [`ribbon`](/kernel/components/draw/ribbon) 与外部 kind 走同一套注册和冲突规则；renderer 不需要认识自定义 kind。要接管整条路径时见[自定义路径](/kernel/components/draw/custom-path)，只扩展某一个 step 时则使用[路径生成器](/kernel/components/draw/path-generator)。
 
 <SourceLinks
   sources={[
@@ -288,17 +191,9 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
   ]}
 />
 
-### 描边与流带如何物化几何
-
-| 模式                | 核心处理               | Scene 输出     |
-| ------------------- | ---------------------- | -------------- |
-| `stroke`            | step → 命令 → 装饰     | 描边与附属图元 |
-| `ribbon` centerline | 命令 → 按宽度偏移两侧  | 闭合填充轮廓   |
-| `ribbon` boundary   | 采样上下边界并连接端帽 | 闭合填充轮廓   |
+### 描边如何物化几何
 
 默认描边会先把 relative、节点引用和 generator 解析成路径命令（`PathCommand`，即物化后的 move / line / arc 等几何）。`roundedCorners` 随后改写命令，再计算路径标记与端点箭头收缩；`rotate` / `scale` 最后把主路径、标签和标记包装成同一个 group。于是标记会跟随倒圆后的弧长与切线，整体变换也不会让装饰脱离路径。
-
-中心线 ribbon 复用同一套 step 解析口径，再按宽度函数求两侧轮廓；固定宽度且线段可解析时优先直接构造轮廓，其余情况按横截面采样。Boundary 模式则直接采样已给出的上下边界。两种模式最终都变成普通的闭合 Path 图元，SVG / Canvas 无需各自实现一套 ribbon 语义。
 
 <SourceLinks
   sources={[
@@ -314,18 +209,6 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
       startLine: 149,
       endLine: 190,
     },
-    {
-      label: 'Ribbon 复用 Path 几何',
-      path: 'packages/kernel/core/src/compile/path/ribbon/centerline.ts',
-      startLine: 328,
-      endLine: 378,
-    },
-    {
-      label: 'Ribbon 轮廓生成',
-      path: 'packages/kernel/core/src/compile/path/ribbon/emit.ts',
-      startLine: 62,
-      endLine: 190,
-    },
   ]}
 />
 
@@ -335,7 +218,7 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 | ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`             | `string`                                                                                                      | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                                   |
 | `meta`           | `Record<string, JSON 值>`                                                                                     | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
-| `kind`           | `string`                                                                                                      | `'stroke'`     | Path kind provider；内置 `'stroke'` 与 `'ribbon'`，外部 kind 通过 Path kind contract 注册                                                                                                                         |
+| `kind`           | `string`                                                                                                      | `'stroke'`     | Path kind provider；内置 `'stroke'` 与 [`'ribbon'`](/kernel/components/draw/ribbon)，外部 kind 通过 Path kind contract 注册                                                                                       |
 | `kindOptions`    | `Record<string, JSON 值>`                                                                                     | —              | 传给自定义 Path kind provider 的 JSON 参数；内置 `stroke` / `ribbon` 不使用                                                                                                                                       |
 | `color`          | `string`                                                                                                      | —              | 主色；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`）                                                                                                                                            |
 | `stroke`         | `string \| PaintSpec`                                                                                         | `currentColor` | 描边 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                            |
@@ -360,21 +243,12 @@ Ribbon 是闭合面，样式重点是 `fill`、外轮廓 `stroke`、透明度、
 | `scale`          | `number \| { x, y }`                                                                                          | —              | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心）                                                                                                                                                      |
 | `marks`          | `Array<{ pos, mark }>`                                                                                        | —              | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线                                                                                                                                       |
 | `animations`     | `Array<AnimationTrack>`                                                                                       | —              | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/kernel/components/effects/animation)                                                                                            |
-| `children`       | `Array<<Step>>`                                                                                               | —              | `stroke` 与中心线 `ribbon` 必填；boundary `ribbon` 省略。首个非 `move` 时编译器会强制改成 `move`                                                                                                                  |
-
-### 流带
-
-Ribbon 复用上表的 Path 宿主字段；这里只列选择 ribbon kind 与流带专属的入口。
-
-| 属性     | 类型                                    | 默认值 | 描述                                                                                |
-| -------- | --------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
-| `kind`   | `'ribbon'`                              | —      | 选择内置 ribbon Path kind                                                           |
-| `ribbon` | `PathRibbonOptions`                     | —      | 必填；配置宽度、端帽、采样和 boundary 模式                                          |
-| `label`  | `GeometryLabel \| Array<GeometryLabel>` | —      | centerline 模式可用的宿主标签；共享颜色、透明度、效果、栈序与动画字段见上方 Path 表 |
+| `children`       | `Array<<Step>>`                                                                                               | —              | 默认 `stroke` kind 必填；首个非 `move` 时编译器会强制改成 `move`。Ribbon 的 centerline / boundary 规则见 [Ribbon](/kernel/components/draw/ribbon)                                                                 |
 
 ## 相关
 
 - [Draw](/kernel/components/draw/overview)：日常连线优先使用的 Sugar
 - [Step](/kernel/components/draw/step)：`<Path>` 子节点的完整字段和 kind 说明
+- [Ribbon](/kernel/components/draw/ribbon)：可变宽带状关系与预计算边界
 - [Arrow](/kernel/components/draw/arrow)：路径箭头的详细配置
 - [自定义路径](/kernel/components/draw/custom-path)：注册接管整条 Path 的 kind provider

@@ -81,11 +81,14 @@ export type PreviewActionSlot = {
   render: (runtime: PreviewControlRuntime) => ReactNode;
 };
 
-/** 声明式预览控件支持的值 */
-export type PreviewControlValue = string | number | boolean;
+/** 二维点预览控件的坐标值 */
+export type PreviewControlPoint = [number, number];
 
 /** 可用于显示条件比较的标量预览值 */
-export type PreviewControlScalarValue = PreviewControlValue;
+export type PreviewControlScalarValue = string | number | boolean;
+
+/** 声明式预览控件支持的值 */
+export type PreviewControlValue = PreviewControlScalarValue | PreviewControlPoint;
 
 /** 根据另一控件当前值判断可见性的声明式条件 */
 export type PreviewControlCondition = {
@@ -163,6 +166,17 @@ export type PreviewRangeControlField = {
   step?: number;
 };
 
+/** 二维点预览控件字段 */
+export type PreviewPointControlField = {
+  kind: 'point';
+  id: string;
+  label: string;
+  defaultValue: PreviewControlPoint;
+  min: readonly [number, number];
+  max: readonly [number, number];
+  step?: number;
+};
+
 /** 声明式预览控件字段 */
 export type PreviewControlField = (
   | PreviewTextControlField
@@ -171,6 +185,7 @@ export type PreviewControlField = (
   | PreviewSwitchControlField
   | PreviewColorControlField
   | PreviewRangeControlField
+  | PreviewPointControlField
 ) & {
   /** 字段的可选显示条件 */
   visibleWhen?: PreviewControlCondition;
@@ -232,9 +247,11 @@ type PreviewControlValueForField<TField extends PreviewControlField> = TField ex
     ? string
     : TField extends PreviewNumberControlField | PreviewRangeControlField
       ? number
-      : TField extends PreviewSwitchControlField
-        ? boolean
-        : never;
+      : TField extends PreviewPointControlField
+        ? PreviewControlPoint
+        : TField extends PreviewSwitchControlField
+          ? boolean
+          : never;
 
 /** 从声明式定义推导出的控件值对象 */
 export type PreviewControlValuesFor<TDefinition extends PreviewControlsDefinition> = {

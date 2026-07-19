@@ -1,45 +1,129 @@
 ---
 title: Custom Paths
-description: Path kind is an open string; beyond the built-in stroke / ribbon kinds, register whole-path providers with definePathKind / PathKindDefinition and inject them through CompileOptions.pathKinds or <Layout pathKinds>.
+description: Register a whole-Path kind provider, validate JSON options, and reuse stroke or ribbon compilation to produce renderer-neutral Scene primitives.
 ---
 
-`<Path>` `kind` is an **open string**: beyond the built-in `stroke` and `ribbon` kinds, you can register your own path kind. Custom paths are for cases where the whole Path needs a different Scene output, such as highlight underlays, double-line relations, domain-specific relation lines, wide arrows, or future path forms.
+A custom Path kind extends **how the whole path is emitted**. IR stores only an open `kind` and JSON-safe `kindOptions`. After the host injects a `PathKindDefinition`, core resolves it from the shared registry and lets it produce Scene primitives.
 
-Registration goes through `CompileOptions.pathKinds` (in React, `<Layout pathKinds={...}>`): the IR only stores `kind` plus JSON-only `kindOptions`; the provider function is injected by the host at runtime and never enters the IR.
-
-## Registering a path kind
-
-The `highlight` kind bottom reuses the built-in stroke compiler, then turns the whole path into a thicker highlight line:
+The `highlight` kind below reuses the built-in stroke emitter and changes only line width and output color. Its definition, `<Layout pathKinds>` injection, and usage live in one runnable example.
 
 <ComponentPreview files="custom-path-highlight" size="xs" />
 
-## API
+## Applicability
 
-| Field           | Type                                         | Description                                                                              |
-| --------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `schema`        | `ZodObject<{ kind: ZodLiteral<string> }>`    | Path IR schema; the non-empty `schema.shape.kind.value` is the registry key              |
-| `optionsSchema` | `ZodType<IRJsonObject>`                      | Optional; validates `kindOptions`, whose output still must be JSON-safe                  |
-| `compile`       | `(context) => PathKindCompileResult \| null` | Compiles the whole Path into Scene primitives and `boundsPoints`; `null` means no output |
+First decide whether the extension owns one segment or the whole path:
 
-The `PathKindCompileContext` passed to `compile`:
+| Need                                     | Choose                                                    |
+| ---------------------------------------- | --------------------------------------------------------- |
+| Add a parameterized curve segment        | [Path Generators](/kernel/components/draw/path-generator) |
+| Change whole-Path primitives or outlines | Custom Path kind                                          |
+| Add only a new endpoint shape            | [Custom Arrows](/kernel/components/draw/custom-arrow)     |
 
-| Field        | Type                                       | Description                                                       |
-| ------------ | ------------------------------------------ | ----------------------------------------------------------------- |
-| `path`       | `IRPathBase`                               | Full IR data for the current Path                                 |
-| `options`    | `TOptions`                                 | `kindOptions` after `optionsSchema` validation                    |
-| `emitStroke` | `(path?) => PathKindCompileResult \| null` | Reuse the built-in stroke lowerer, optionally with a patched Path |
-| `emitRibbon` | `(path?) => PathKindCompileResult \| null` | Reuse the built-in ribbon lowerer, optionally with a patched Path |
+If you only need another stroke color, width, dash, arrow, or ribbon option, use the existing Path props instead of inventing a kind for a style preset.
 
-`PathKindCompileResult.primitives` and `boundsPoints` use the current Path's local coordinate system. When the Path is inside a transformed scope, its owning Scene group applies that transform; `emitStroke` and `emitRibbon` return results in the same coordinate system.
+## Define the capability
 
-## Difference from path generators
+Use `definePathKind` to declare a Path schema with a non-empty `kind` literal, an optional options schema, and a compile function that owns the whole path.
 
-A custom path owns the **whole Path**: it decides what primitives that Path emits, so it is the right place to change relation form or reuse a built-in lowerer and rewrite the result.
+```tsx
+const highlight = definePathKind({
+  schema: z.strictObject({ kind: z.literal('highlight') }),
+  optionsSchema: z.strictObject({ strokeWidth: z.number().positive() }),
+  compile: context =>
+    context.emitStroke({
+      ...context.path,
+      strokeWidth: context.options.strokeWidth,
+    }),
+});
+```
 
-A path generator owns only **one `generator` step**: it converts a curve segment into low-level `PathCommand[]`, then the current Path kind still compiles the whole Path. Use [Path Generators](/kernel/components/draw/path-generator) for new curve segments; use custom paths for new whole-path providers.
+`schema.shape.kind.value` is the registry key. `kindOptions` passes through `optionsSchema` and remains JSON-safe. The definition and compile function are runtime capability and never enter IR.
+
+## Inject into the host
+
+React injects definitions through `<Layout pathKinds>`; direct core calls use `CompileOptions.pathKinds`. A Path references only the registered name and instance options.
+
+```tsx
+<Layout pathKinds={[highlight]}>
+  <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
+    <Step kind="move" to="A" />
+    <Step kind="line" to="B" />
+  </Path>
+</Layout>
+```
+
+## Execution
+
+Built-in `stroke`, `ribbon`, and custom kinds first merge into one registry. When compiling a Path, core resolves `kind`, validates `kindOptions`, and passes the provider both standard stroke and ribbon emitters.
+
+A provider may create new Scene primitives directly, or call `emitStroke` / `emitRibbon` to reuse endpoint resolution, path commands, arrows, and ribbon logic. Returned `primitives` and `boundsPoints` use current Path-local coordinates; the outer Scope transform is applied afterward.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Path kind definition contract',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 40,
+      endLine: 53,
+    },
+    {
+      label: 'Built-in and custom kind merge',
+      path: 'packages/kernel/core/src/providers/path-kind/registry.ts',
+      startLine: 8,
+      endLine: 17,
+    },
+    {
+      label: 'Kind lookup, option validation, and compile call',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 93,
+      endLine: 145,
+    },
+  ]}
+/>
+
+## Errors and limits
+
+| Case                                        | Result                                                    |
+| ------------------------------------------- | --------------------------------------------------------- |
+| Empty or non-string `kind` literal          | `definePathKind` rejects it immediately                   |
+| Duplicate `stroke`, `ribbon`, or custom key | Registry merge reports a duplicate registration           |
+| Path references an unknown kind             | Compile lists available names and `options.pathKinds`     |
+| `kindOptions` fails its schema              | Error includes kind name and the relevant IR path         |
+| Provider returns `null`                     | The Path produces no primitives                           |
+| `boundsPoints` misses actual output bounds  | Auto layout and Path-level rotate/scale become inaccurate |
+
+A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG elements, Canvas instances, ReactNode values, or functions, and it cannot require renderers to understand the custom `kind`.
+
+## API Reference
+
+### PathKindDefinition
+
+| Field           | Type                                         | Default                 | Description                                   |
+| --------------- | -------------------------------------------- | ----------------------- | --------------------------------------------- |
+| `schema`        | `ZodObject<{ kind: ZodLiteral<string> }>`    | —                       | Declares Path shape and provides registry key |
+| `optionsSchema` | `ZodType<IRJsonObject>`                      | Raw `kindOptions ?? {}` | Validates custom instance options             |
+| `compile`       | `(context) => PathKindCompileResult \| null` | —                       | Emits whole-Path Scene primitives and bounds  |
+
+### Compile context
+
+| Field        | Type                                       | Default      | Description                                   |
+| ------------ | ------------------------------------------ | ------------ | --------------------------------------------- |
+| `path`       | `IRPathBase`                               | —            | Complete IR for the current Path              |
+| `options`    | `TOptions`                                 | —            | `kindOptions ?? {}` parsed by `optionsSchema` |
+| `emitStroke` | `(path?) => PathKindCompileResult \| null` | Current Path | Reuses standard stroke compilation            |
+| `emitRibbon` | `(path?) => PathKindCompileResult \| null` | Current Path | Reuses standard ribbon compilation            |
+
+### PathKindCompileResult
+
+| Field          | Type                    | Default | Description                                     |
+| -------------- | ----------------------- | ------- | ----------------------------------------------- |
+| `primitives`   | `Array<ScenePrimitive>` | —       | Actual output in current Path-local coordinates |
+| `boundsPoints` | `Array<Position>`       | —       | Key points for auto layout and Path transforms  |
 
 ## Related
 
-- [Path](/kernel/components/draw/path)
-- [Path Generators](/kernel/components/draw/path-generator)
-- [Custom Arrows](/kernel/components/draw/custom-arrow)
+- [Path](/kernel/components/draw/path): built-in `stroke` and host fields
+- [Ribbon](/kernel/components/draw/ribbon): width and boundary options for the built-in `ribbon` kind
+- [Path Generators](/kernel/components/draw/path-generator): extends only one generator Step
+- [Custom Arrows](/kernel/components/draw/custom-arrow): extends only endpoint markers
+- [Runtime extensions](/kernel/reference/runtime/extensions): cross-capability definition and registry overview

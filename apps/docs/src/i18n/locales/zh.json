@@ -54,6 +54,7 @@
     "drawWay": "Way",
     "arrow": "Arrow",
     "path": "Path",
+    "ribbon": "Ribbon",
     "step": "Step",
     "drawPathGenerator": "路径生成器",
     "drawCustomPath": "自定义路径",

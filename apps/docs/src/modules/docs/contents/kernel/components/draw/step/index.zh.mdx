@@ -1,6 +1,6 @@
 ---
 title: Step
-description: Step 是 Path 内的单个 Kernel 动作，覆盖直线、折角、曲线、圆弧、闭合、矩形与边标注。
+description: 用 Step 把一条 Path 拆成移动、直线、折角、曲线、闭合、几何轮廓与生成器等有序动作。
 ---
 
 ## 用法
@@ -20,97 +20,34 @@ import { Path, Step } from '@retikz/react';
 
 ## 例子
 
-### 基础
+### 基本动作
 
-下面这个 path 用一次 `move` + `line` 画 A→B，再 `move` 抬笔后 `line` 画一条独立的线：
+在同一个面板中切换 `line`、多次 `move`、`fold`、`cycle` 与 `rectangle`。多次 `move` 可以在同一个 `<Path>` 中开始彼此独立的子路径；`fold` 可改变折角方向，`rectangle` 可调圆角，`cycle` 会闭合回最近一次 `move` 的起点。
 
-<ComponentPreview files="step-basic" size="xs" />
+<ComponentPreview files="step-actions" size="md" />
 
-### 折角（fold）
+### 目标定位
 
-`kind="fold"` 在游标与目标点之间插一个直角拐点。流程图常用：
+`to` 除了绝对坐标，还接受 `{ of, offset }`、`{ relative }` 与 `{ relativeAccumulate }`。在面板中切换定位方式并调整 x / y，可以直接观察三者的锚点差异：
 
-<ComponentPreview files="step-fold" size="sm" />
+- `offset`：以节点、坐标或 PolarPosition 为基准再偏移
+- `relative`：基于前一终点，但不推进 `prevEnd`
+- `relativeAccumulate`：基于前一终点，并推进 `prevEnd`
 
-### 闭合（cycle）
+相对坐标也可写成 sugar 字符串 `'+dx,dy'` / `'++dx,dy'`。
 
-`kind="cycle"` 把当前子路径闭合回最近一次 `move` 的起点，对应 SVG path 的 `Z`。`cycle` 没有 `to` 字段（目标隐式 = 起点）。比手动 `line` 回起点少写一个端点：
+<ComponentPreview files="step-targeting" size="md" />
 
-<ComponentPreview files="step-cycle" size="sm" />
+### 几何与曲线
 
-### 偏移定位（offset）
+`curve`、`cubic`、`bend`、`smooth`、`arc`、`circlePath` 与 `ellipsePath` 都在下面的面板中切换。贝塞尔控制点以 `[x, y]` 成组编辑，并在画布中显示对应的虚线手柄；其他 kind 只显示相关的弯曲角、tension、角度或半径，便于比较它们如何推进游标并生成几何。
 
-`to` 也接受 **`{ of, offset }`** 形态——基准 + `(dx, dy)` 任意偏移。`of` 三态：节点 id、笛卡尔字面值、PolarPosition（递归极坐标）；和 `<Node position>` 的偏移定位完全对称：
-
-<ComponentPreview files="step-offset-target" size="sm" />
-
-### 相对坐标（relative / relativeAccumulate）
-
-`to` 还可以是相对偏移对象：`{ relative: [dx, dy] }` 与 `{ relativeAccumulate: [dx, dy] }` 都基于**前一 step 的终点**（`prevEnd`，无前段时回退到 `[0, 0]`）解析；区别只是**是否推进 prevEnd**：
-
-- `{ relative }`：多段链式偏移都基于**同一**锚点，**不**更新 prevEnd
-- `{ relativeAccumulate }`：每段累积，prevEnd 跟着推进
-
-也可写作 sugar 字符串 `'+dx,dy'` / `'++dx,dy'`（`<Step to="+1,0" />`），React adapter 会就地转成对应 IR 对象。下例两条路径 step 序列字面相同，仅差 target 形态——实线（relative）走出 L 形，虚线（relativeAccumulate）走出阶梯：
-
-<ComponentPreview files="step-relative" size="sm" />
-
-### 矩形（rectangle）
-
-`kind="rectangle"` 用 `from` 和 `to` 作为两个对角点画一个轴对齐矩形；可选 `cornerRadius` 做圆角。它不像 `line` 那样依赖当前游标。日常画矩形更推荐用 [Rectangle](/kernel/components/shapes/rectangle) sugar，写底层 IR 或需要和其它 step 混排时再直接用这个 kind。
-
-<ComponentPreview files="step-rectangle" size="sm" />
-
-### 二次贝塞尔（curve）
-
-`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 SVG path 的 `Q`。贝塞尔曲线不要求经过控制点；控制点更像一只手柄，用来把起点到终点之间的线段拉弯。控制点离直线越远，弯曲越明显。当前控制点使用笛卡尔 `[x, y]`：
-
-<ComponentPreview files="step-curve" size="xs" />
-
-### 三次贝塞尔（cubic）
-
-`kind="cubic"` 用两个控制点画三次贝塞尔曲线，对应 SVG path 的 `C`。`control1` 影响曲线离开起点时的方向，`control2` 影响曲线靠近终点时的方向；两端方向可分别控制，因此常用于 S 形曲线、复杂连接：
-
-<ComponentPreview files="step-cubic" size="xs" />
-
-### 弧形简记（bend）
-
-`kind="bend"` 是弧形连线的简记——只说明从起点看向终点时向左还是向右弯，以及弯曲角度；编译期会自动计算控制点，并展开为三次贝塞尔。`bendDirection` 是相对 from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30：
-
-<ComponentPreview files="step-bend" size="md" />
-
-### 过点平滑曲线（smooth）
-
-`kind="smooth"` 画一条**穿过一串点**的光滑曲线——画数据折线、流线、自由曲线时不必手算每段贝塞尔控制点。它不用 `to`，改用 `points`：当前**游标是隐式的第一个 knot**，曲线从游标起、依次穿过 `points` 里每个点，游标终于末点（所以前面要先有一个 `move` 或别的 step 设游标，否则该 path 被跳过并发 `PATH_TOO_SHORT` 警告，与 `line` / `curve` 作首段一致）。编译期用 centripetal Catmull-Rom 转成三次贝塞尔链。下例同一组点，蓝色是 `smooth`、灰色是逐点 `line` 折线：
-
-<ComponentPreview files="step-smooth" size="sm" />
-
-`tension` 调曲线松紧：缺省 1 是标准 centripetal Catmull-Rom，`<1` 把曲线拉得更紧（更接近折线），`>1` 更鼓。无论怎么调，曲线始终穿过每个点，变的只是各段切线长度：
-
-<ComponentPreview files="step-smooth-tension" size="sm" />
+<ComponentPreview files="step-curves" size="md" />
 
 <ComponentAlert
   title="vanilla 写法"
   description="vanilla 暂未提供 way 文法的 smooth token；用 vanilla 时把 smooth 作为 IR 对象放进 path children：{ type: 'step', kind: 'smooth', points: [...], tension }。下方代码视图的 Vanilla 标签即此形态。"
 />
-
-### 弧段（arc）
-
-`kind="arc"` 按起末角度 + 半径画一段圆弧——默认以**游标为圆心**，也可用 `center` 显式指定圆心（脱离游标独立定位）。半径二选一：`radius` 画圆弧，`radius={{ x, y }}` 画椭圆弧。它描述的是“从哪个角度扫到哪个角度的弧”，不需要 `to`，常用于角度标注、圆周片段或几何辅助线。角度沿 retikz polar 约定：0° 朝 +x，90° 视觉朝下；画完画笔停在弧的终点：
-
-<ComponentPreview files="step-arc" size="sm" />
-
-### 整圆（circlePath）
-
-`kind="circlePath"` 以**游标为圆心**，按 `radius` 画圆。不给角度时画一个完整闭合的圆——画完画笔回到圆心，常用于画端点圆点、圆形节点边框等场景。也可给 `startAngle` + `endAngle` 画**部分圆**（半圆 / 弧段），用 `closed` 选闭合方式：`'chord'`（弦，默认）/ `'sector'`（连圆心成扇形）/ `'open'`（不闭合的纯弧）：
-
-<ComponentPreview files="step-circle" size="xs" />
-
-### 整椭圆（ellipsePath）
-
-`kind="ellipsePath"` 以**游标为圆心**，按 `radius={{ x, y }}` 画椭圆。不给角度时画一个完整闭合的椭圆——画完画笔回到圆心，`radius.x === radius.y` 时退化为圆。同 circlePath，也可给 `startAngle` + `endAngle` 画**部分椭圆**，`closed` 选闭合方式（`'chord'` 默认 / `'sector'` / `'open'`）：
-
-<ComponentPreview files="step-ellipse" size="sm" />
 
 <Comparison target="tikz" title="Step 曲线语法">
 
@@ -128,48 +65,15 @@ import { Path, Step } from '@retikz/react';
 
 ### 边标注（label）
 
-给 `<Step>` 挂一个 `label` 就能在该段画线的中部 / 起点 / 终点附近放一段文字。`label` 是个对象：
-
-- `text`：必填，标签文字（单行）
-- `position`：`'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'` 七个 keyword，或 0..1 的数值 t（任意精细位置），缺省 `'midway'`（t=0.5）
-- `side`：`'top'` / `'bottom'` / `'left'` / `'right'`，缺省 `'top'`。也接受 compass 别名 `north` / `south` / `east` / `west`；`sloped: true` 让标签沿段切线方向旋转
-- `textColor`：标签文字色；缺省按 **scope `labelDefault` → 宿主 path 主色 `color` → currentColor** 回退（跟主色不跟 stroke）
-- `opacity`：标签独立透明度 0..1；与所属 path 的 opacity 相乘（元素内轴；跨 scope 不复合）
-- `font`：标签字体覆盖（family / size / weight / style），逐字段回退 `labelDefault` → 渲染端默认
-
-两种等价写法——prop 形态 `<Step label={{...}} />`，或 sugar 形态 `<Step><EdgeLabel>...</EdgeLabel></Step>`（需 `import { EdgeLabel } from '@retikz/react'`）；**两者并存时 prop 优先**。`'move'` / `'cycle'` / `'rectangle'` 不挂 label——move 不画线、cycle 是闭合标记、rectangle 无 label 字段，挂上去会被静默忽略：
+给 `<Step>` 挂 `label`，即可把文字放在该段的任意归一化位置。prop 形态 `<Step label={{...}} />` 与 sugar 形态 `<Step><EdgeLabel>...</EdgeLabel></Step>` 的基础位置字段等价；两者并存时 prop 优先。
 
 <ComponentPreview files="step-label" />
 
-#### 标签颜色与字体
-
-边标注颜色跟随宿主 path 的**主色 `color`**——`<Path color>` 时标注自动同色；只设 `stroke`（不设 `color`）标注不跟，保持默认色。也可用 `textColor` 显式覆盖，`font` / `opacity` 做小一号 / 淡化的辅助标注：
-
-<ComponentPreview files="step-label-color" size="sm" />
-
-scope `labelDefault` 给整组标注统一默认（见 [Scope 样式](/kernel/components/layout/scope)）；继承顺序：label 显式 > `labelDefault` > 宿主 path 主色 > currentColor。
-
-#### label.position：7 个 keyword + 任意数值 t
-
-`position` 接受 7 个 keyword 或 0..1 的数值 t，keyword 是 t 的语义糖：
-
-| keyword             | 对应 t  | 说明           |
-| ------------------- | ------- | -------------- |
-| `'at-start'`        | `0`     | 段起点         |
-| `'very-near-start'` | `0.125` | 起点附近       |
-| `'near-start'`      | `0.25`  | 起点 1/4 处    |
-| `'midway'`          | `0.5`   | 段中点（缺省） |
-| `'near-end'`        | `0.75`  | 终点 1/4 处    |
-| `'very-near-end'`   | `0.875` | 终点附近       |
-| `'at-end'`          | `1`     | 段终点         |
-
-`position={0.3}` 这种任意数值可以精确指定段上位置。**数值超出 `[0, 1]` 区间在 schema 阶段直接拒绝，不在编译阶段 clamp**（`position={-0.1}` / `position={1.2}` 均会让 IR 校验失败）。
+面板统一调整 `position`、`side`、`sloped` 与文字颜色。`position` 接受七个关键字或 `[0, 1]` 数值 t；关键字映射与完整字段放在下方 [API 的边标注表](#边标注)，避免在示例区重复列举。
 
 ### 样式
 
-`<Step>` 自身没有 stroke 类视觉属性——样式都挂在父 `<Path>` 上，整条 Path 的所有 Step 共享同一套 `stroke` / `strokeWidth` / `dashPattern` / `dashOffset`：
-
-<ComponentPreview files="step-styling" size="sm" />
+`<Step>` 自身没有 stroke 类视觉属性。`stroke`、虚线、圆角、填充与栈序都属于父 `<Path>`；直接在 [Path 的样式面板](/kernel/components/draw/path#样式) 中调整即可，本页不再复制同一条静态路径。
 
 <Comparison target="tikz" title="Step 基础路径语法">
 
@@ -240,8 +144,8 @@ scope `labelDefault` 给整组标注统一默认（见 [Scope 样式](/kernel/co
     {
       label: '相对目标归一化',
       path: 'packages/kernel/core/src/compile/path/host/relative.ts',
-      startLine: 11,
-      endLine: 108,
+      startLine: 10,
+      endLine: 100,
     },
     {
       label: '目标归一化与逐段编译主循环',
@@ -387,9 +291,9 @@ scope `labelDefault` 给整组标注统一默认（见 [Scope 样式](/kernel/co
 
 ### 边标注
 
-| 属性    | 类型          | 默认值 | 描述                                                                                                                                                                                         |
-| ------- | ------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label` | `IRStepLabel` | —      | 边标注（`'move'` / `'cycle'` / `'rectangle'` 外的 kind 通用）：`{ text, position?, side?, textColor?, opacity?, font? }`；等价 sugar 写法 `<Step><EdgeLabel>…</EdgeLabel></Step>`，prop 优先 |
+| 属性    | 类型          | 默认值 | 描述                                                                                                                                                                                                |
+| ------- | ------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label` | `IRStepLabel` | —      | 边标注（`'move'` / `'cycle'` / `'rectangle'` 外的 kind 通用）：`{ text, position?, side?, textColor?, opacity?, font? }`；`<EdgeLabel>` sugar 覆盖文字 / position / side / sloped，冲突时 prop 优先 |
 
 ### label 的字段
 

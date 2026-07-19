@@ -1,78 +1,153 @@
 ---
 title: Path Generators
-description: 'The generator step can reference the built-in parabola or custom curves (sin-cos / quadratic…): JSON-only params, top-level targetParams resolution, generate returns low-level PathCommands.'
+description: Register a parameterized curve for one generator Step, turning JSON parameters and target references into path commands that continue through normal Path compilation.
 ---
 
-A step's built-in kinds are a fixed set of 13 (move / line / fold / cycle / curve / cubic / bend / smooth / arc / circlePath / ellipsePath / rectangle / generator). Among them, **`generator`** is the open injection point: core ships a low-ambiguity `parabola`, while more specific "curve steps" like sin-cos or quadratic-equation curves still come from external packages or app-level registrations.
+A path generator extends **one path action**. `<Step kind="generator">` stores only a provider name and JSON parameters. After the host injects a `PathGeneratorDefinition`, core converts that segment into ordinary path commands and returns them to the current Path kind.
 
-In React, write a generator step with `<Step kind="generator" name="..." params={...} />`. Built-in names compile directly; custom names are injected through `CompileOptions.pathGenerators` (in React, `<Layout pathGenerators={...}>`). Unregistered names throw at compile time (with the list of available names), and custom definitions cannot reuse a built-in name.
-
-## Built-in parabola
-
-`parabola` is the built-in path generator in core: `from → to` plus a top-level Target `control` as the control point, producing one quadratic Bézier. It requires `step.to`; omitting it throws at compile time.
-
-<ComponentPreview files="path-generator-parabola" size="xs" />
-
-## Registering a custom generator
-
-To add your own curve, create a definition with `definePathGenerator`, then inject it through `CompileOptions.pathGenerators` or `<Layout pathGenerators>`.
+The runnable example below keeps the `sin` definition, `<Layout pathGenerators>` injection, and generator Step together. Open the code view to copy the complete loop.
 
 <ComponentPreview files="path-generator-sin" size="xs" />
 
-A `PathGeneratorDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it in `definePathGenerator` for a best-effort registration-time meta-check:
+## Applicability
 
-| Field          | Type                          | Description                                                                                                       |
-| -------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `name`         | `string`                      | Registry name; a generator step looks up its definition by `name`                                                 |
-| `paramsSchema` | `ZodType<IRJsonObject>`       | zod schema for params; type-constrains the output to be JSON-safe (a second runtime guard exists too, see bottom) |
-| `generate`     | `(ctx) => Array<PathCommand>` | Produces low-level path commands (line / quad / cubic / move…) from ctx; does not re-enter step compilation       |
-| `targetParams` | `Array<string>`               | Which **top-level** params keys are Targets, resolved into the current Path's local coordinates first             |
+Define a generator when the existing `line`, `curve`, `cubic`, `bend`, `smooth`, and `arc` actions cannot express a reusable parameterized segment.
 
-The `PathGeneratorGenerateContext` passed to `generate`:
+| Need                                      | Choose                                              |
+| ----------------------------------------- | --------------------------------------------------- |
+| One quadratic or cubic Bezier             | Existing `curve` / `cubic`                          |
+| A smooth curve through several points     | Existing `smooth`                                   |
+| A reusable parameterized curve segment    | Path generator                                      |
+| Different Scene output for the whole Path | [Custom Paths](/kernel/components/draw/custom-path) |
 
-| Field             | Type                       | Description                                                            |
-| ----------------- | -------------------------- | ---------------------------------------------------------------------- |
-| `from`            | `Position`                 | Current cursor in local coords (previous segment end / sub-path start) |
-| `to`              | `Position?`                | step.to resolved to local coords; undefined when the step has no `to`  |
-| `params`          | `Record<string, unknown>`  | Params after paramsSchema validation                                   |
-| `resolvedTargets` | `Record<string, Position>` | targetParams top-level keys → current Path local coordinates           |
-| `round`           | `(n) => number`            | Precision rounding (same function as compile / render)                 |
+A generator does not own whole-path stroke, arrows, ribbons, or transforms. The host Path and its selected Path kind still own those concerns.
 
-The generator step in the IR:
+## Define the capability
 
-| Field    | Type          | Description                                                                           |
-| -------- | ------------- | ------------------------------------------------------------------------------------- |
-| `kind`   | `'generator'` | step discriminant                                                                     |
-| `name`   | `string`      | registered name; unregistered throws at compile time                                  |
-| `to`     | `Target?`     | optional destination, passed as `ctx.to`                                              |
-| `params` | `JsonObject`  | JSON-only (keeps the IR serializable); the external paramsSchema refines this subtree |
-| `label`  | `StepLabel?`  | edge label                                                                            |
+Use `definePathGenerator` to declare a stable name, a parameter schema, optional target parameters, and a function that generates `PathCommand[]` from the current cursor.
 
-## JSON-only params (double-parse guard)
+```tsx
+const wave = definePathGenerator({
+  name: 'wave',
+  paramsSchema: z.strictObject({ amplitude: z.number().positive() }),
+  generate: ({ from, to, params }) => {
+    // Return move / line / quad / cubic / arc commands in Path-local coordinates.
+  },
+});
+```
 
-The IR must be 100% JSON-serializable, so a generator's `params` **may only be JSON values** (`JsonObjectSchema`: string / finite number / boolean / null / array / object, recursive). When compile resolves a generator step it runs **two parses**:
+The definition is runtime capability and never enters IR. IR keeps only `name`, optional `to`, and JSON-safe `params`, so diagram data remains serializable, persistable, and portable across adapters.
 
-1. `paramsSchema.parse(params)` — the external schema validates;
-2. `JsonObjectSchema.parse(parsed)` — the **second guard**: even if the external schema is loose (`z.any()` etc.), any non-JSON output (function / undefined / `Infinity` / `NaN`) is caught here.
+## Inject into the host
 
-The `PathCommand` coordinates produced by `generate` are audited too: non-finite values (NaN / Infinity), unknown command kinds, or missing fields all throw at compile time (naming the generator), so broken geometry never silently reaches the Scene.
+React injects definitions through `<Layout pathGenerators>`; direct core calls use `CompileOptions.pathGenerators`. A generator Step then references the registered name.
 
-## targetParams: top-level Target resolution
+```tsx
+<Layout pathGenerators={[wave]}>
+  <Path>
+    <Step kind="move" to="A" />
+    <Step kind="generator" name="wave" to="B" params={{ amplitude: 12 }} />
+  </Path>
+</Layout>
+```
 
-`params` may carry node references / coordinate Targets (e.g. the `C` in `parabola bend (C)`). List those **top-level keys** in `targetParams`, and compile resolves them into the current Path's local coordinates in `ctx.resolvedTargets`:
+The built-in `parabola` needs no injection. It resolves `params.control` as a target and emits one quadratic Bezier command:
 
-- **Top-level keys only**: nested (`{ control: { at: { id } } }`) or in-array Targets are not resolved — put them at the params top level.
-- A string value is resolved as a **node id** (same semantics as a step `to`); don't list plain string params in targetParams.
-- A value that isn't a Target (number / boolean…) throws a clear compile-time error.
+<ComponentPreview files="path-generator-parabola" size="xs" />
 
-## generate → PathCommand[]
+## Execution
 
-`generate` returns low-level `PathCommand[]` (may include `move` to form a sub-path, e.g. multi-segment waves), spliced into the path command stream; the cursor lands on the last command's endpoint, and the next step continues from there.
+Built-in and custom definitions enter one registry before lookup by the Step `name`. Compilation validates parameters, resolves declared target fields, invokes `generate`, and checks every output command for a complete shape and finite coordinates.
 
-> `generate` receives and returns coordinates in the current Path's local space. When the generator step is inside a transformed scope, the owning group applies the transform once, so lengths and directions produced by the generator scale, rotate, and translate with that scope.
+| Stage           | Input                            | Result                                        |
+| --------------- | -------------------------------- | --------------------------------------------- |
+| Merge           | Built-ins + host definitions     | One name registry                             |
+| Validate        | `params` + `paramsSchema`        | JSON-safe parameter object                    |
+| Resolve targets | Top-level `targetParams` keys    | Current Path-local coordinates                |
+| Generate        | `from` / `to` / params / targets | `PathCommand[]`                               |
+| Rejoin          | Generated commands               | The current Path kind compiles the whole path |
 
-<Comparison target="tikz" title="Path generators">
+`targetParams` accepts top-level keys only. A listed string is resolved as a node id; Targets nested inside objects or arrays are not searched recursively. Inside a transformed Scope, inputs and outputs still use Path-local coordinates, while the outer Scene group applies the transform.
 
-TikZ computes curves at the TeX macro layer with `to path` / decorations / `\pgfdeclarepathgenerator`. retikz lands the same idea as an IR-level registry: built-in `parabola` covers the smallest common curve, while other curves come from an external package's `generate` producing structured `PathCommand`s, so core does not need schema changes for each new curve.
+<SourceLinks
+  sources={[
+    {
+      label: 'Generator definition contract',
+      path: 'packages/kernel/core/src/contract/path-generator/types.ts',
+      startLine: 28,
+      endLine: 48,
+    },
+    {
+      label: 'Built-in and custom registry merge',
+      path: 'packages/kernel/core/src/providers/path-generator/registry.ts',
+      startLine: 6,
+      endLine: 15,
+    },
+    {
+      label: 'Command shape and coordinate validation',
+      path: 'packages/kernel/core/src/compile/path/stroke/lower.ts',
+      startLine: 12,
+      endLine: 58,
+    },
+    {
+      label: 'Parameter, target, generate call, and array validation',
+      path: 'packages/kernel/core/src/compile/path/stroke/lower.ts',
+      startLine: 60,
+      endLine: 129,
+    },
+  ]}
+/>
 
-</Comparison>
+## Errors and limits
+
+| Case                                     | Result                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| Empty name                               | `definePathGenerator` rejects it immediately                              |
+| Duplicate built-in or custom name        | Registry merge reports a duplicate registration                           |
+| Step references an unknown name          | Compile lists available names and the injection option                    |
+| `paramsSchema` rejects input             | Error includes provider name and the relevant IR path                     |
+| Parsed params contain functions/`NaN`    | The JSON-safe guard rejects them                                          |
+| A `targetParams` value is not a Target   | Compile identifies the offending key                                      |
+| A `targetParams` node id cannot resolve  | Its key is omitted from `resolvedTargets`; `generate` handles the absence |
+| `generate` throws                        | Error wraps the generator name and preserves the cause                    |
+| Non-array, unknown, or non-finite output | Output validation prevents invalid geometry entering Scene                |
+
+A generator may return `move` commands to create subpaths, but it cannot return Scene primitives or bypass the current Path kind's style and decoration pipeline.
+
+## API Reference
+
+### PathGeneratorDefinition
+
+| Field          | Type                          | Default | Description                                            |
+| -------------- | ----------------------------- | ------- | ------------------------------------------------------ |
+| `name`         | `string`                      | —       | Registry key and generator Step reference              |
+| `paramsSchema` | `ZodType<IRJsonObject>`       | —       | Validates instance parameters; output must remain JSON |
+| `targetParams` | `Array<string>`               | `[]`    | Top-level parameter keys resolved to local coordinates |
+| `generate`     | `(ctx) => Array<PathCommand>` | —       | Generates commands from the local context              |
+
+### Generate context
+
+| Field             | Type                       | Default | Description                                                     |
+| ----------------- | -------------------------- | ------- | --------------------------------------------------------------- |
+| `from`            | `Position`                 | —       | Current cursor in Path-local coordinates                        |
+| `to`              | `Position`                 | —       | Optional resolved Step endpoint                                 |
+| `params`          | `Record<string, unknown>`  | —       | Schema-validated parameters                                     |
+| `resolvedTargets` | `Record<string, Position>` | `{}`    | Successfully resolved `targetParams` keys and local coordinates |
+| `round`           | `(number) => number`       | —       | Compile/render precision rounding function                      |
+
+### Generator Step
+
+| Prop     | Type          | Default | Description                                |
+| -------- | ------------- | ------- | ------------------------------------------ |
+| `kind`   | `'generator'` | —       | Selects the generator action               |
+| `name`   | `string`      | —       | Generator registry key                     |
+| `to`     | `Target`      | —       | Optional endpoint passed as `ctx.to`       |
+| `params` | `JsonObject`  | —       | Serializable instance parameters           |
+| `label`  | `StepLabel`   | —       | Optional edge label for the generated span |
+
+## Related
+
+- [Step](/kernel/components/draw/step): where generator sits among the thirteen Step actions
+- [Path](/kernel/components/draw/path): the whole-path semantics that consume generated commands
+- [Custom Paths](/kernel/components/draw/custom-path): use this when the whole Path output must change
+- [Runtime extensions](/kernel/reference/runtime/extensions): cross-capability definition and registry overview

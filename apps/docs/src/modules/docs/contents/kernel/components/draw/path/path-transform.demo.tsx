@@ -2,23 +2,41 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+
+import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+
+import { pathTransformControls } from './path-transform.controls';
+
+export const previewControls = pathTransformControls;
+
+export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
+
 /**
- * 路径整体变换：rotate / scale 把整条 path 绕包围盒中心变换（免包 Scope）。
- * 左为原始直角折线，右为同形状 rotate={40}（绕各自包围盒中心旋转）。
+ * 路径整体变换 playground
  */
-const Demo: FC = () => (
-  <Layout width={320} height={140}>
-    <Path stroke="currentColor" strokeWidth={2}>
-      <Step kind="move" to={[20, 20]} />
-      <Step kind="line" to={[20, 90]} />
-      <Step kind="line" to={[90, 90]} />
-    </Path>
-    <Path stroke="currentColor" strokeWidth={2} rotate={40}>
-      <Step kind="move" to={[190, 20]} />
-      <Step kind="line" to={[190, 90]} />
-      <Step kind="line" to={[260, 90]} />
-    </Path>
-  </Layout>
-);
+const Demo: FC = () => {
+  const values = usePreviewControls(pathTransformControls);
+
+  return (
+    <Layout width={320} height={220} viewBox={{ x: -160, y: -110, width: 320, height: 220 }}>
+      <Path stroke="#94a3b8" strokeWidth={1.5} dashPattern={[1, 4]} lineCap="round">
+        <Step kind="move" to={[-55, -45]} />
+        <Step kind="line" to={[-55, 45]} />
+        <Step kind="line" to={[55, 45]} />
+      </Path>
+      <Path
+        stroke="dodgerblue"
+        strokeWidth={3}
+        rotate={values.rotate}
+        scale={{ x: values.scale[0], y: values.scale[1] }}
+      >
+        <Step kind="move" to={[-55, -45]} />
+        <Step kind="line" to={[-55, 45]} />
+        <Step kind="line" to={[55, 45]} />
+      </Path>
+    </Layout>
+  );
+};
 
 export default Demo;

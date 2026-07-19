@@ -2,58 +2,57 @@ import type { FC } from 'react';
 
 import { EdgeLabel, Layout, Node, Path, Step } from '@retikz/react';
 
-const Demo: FC = () => (
-  <Layout width={520} height={220} nodeDefault={{ stroke: 'gray', dashed: true }}>
-    <Node id="a" position={[0, 0]} shape="diamond">
-      ?
-    </Node>
-    <Node id="b" position={[150, -45]}>
-      yes
-    </Node>
-    <Node id="c" position={[150, 45]}>
-      no
-    </Node>
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
 
-    {/* prop 形态：直接给 label 对象，position 默认 midway，side='top' */}
-    <Path arrow="->">
-      <Step kind="move" to="a" />
-      <Step to="b" label={{ text: 'yes' }} />
-    </Path>
+import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
 
-    {/* sugar 形态：<EdgeLabel> 当 child；side='bottom' 让标签落在线下方 */}
-    <Path arrow="->">
-      <Step kind="move" to="a" />
-      <Step to="c">
-        <EdgeLabel side="bottom">no</EdgeLabel>
-      </Step>
-    </Path>
+import { stepLabelControls } from './step-label.controls';
 
-    <Node id="d" position={[280, -50]}>
-      d
-    </Node>
-    <Node id="e" position={[470, -50]}>
-      e
-    </Node>
-    <Path arrow="->">
-      <Step kind="move" to="d" />
-      <Step to="e">
-        <EdgeLabel side="bottom">bottom</EdgeLabel>
-      </Step>
-    </Path>
+export const previewControls = stepLabelControls;
 
-    <Node id="f" position={[280, 55]}>
-      f
-    </Node>
-    <Node id="g" position={[470, 105]}>
-      g
-    </Node>
-    <Path arrow="->">
-      <Step kind="move" to="f" />
-      <Step to="g">
-        <EdgeLabel sloped>sloped</EdgeLabel>
-      </Step>
-    </Path>
-  </Layout>
-);
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
+/** Step label prop 与 EdgeLabel sugar 的等价 playground */
+const Demo: FC = () => {
+  const values = usePreviewControls(stepLabelControls);
+  const label = {
+    text: 'prop',
+    position: values.position,
+    side: values.side,
+    sloped: values.sloped,
+    textColor: values.textColor,
+  } as const;
+
+  return (
+    <Layout width={440} height={240} viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
+      <Node id="A" position={[0, -60]} stroke="gray" dashed>
+        a
+      </Node>
+      <Node id="B" position={[360, -15]} stroke="gray" dashed>
+        b
+      </Node>
+      <Node id="C" position={[0, 45]} stroke="gray" dashed>
+        c
+      </Node>
+      <Node id="D" position={[360, 90]} stroke="gray" dashed>
+        d
+      </Node>
+      <Path arrow="->">
+        <Step kind="move" to="A" />
+        <Step to="B" label={label} />
+      </Path>
+      <Path arrow="->" color={values.textColor}>
+        <Step kind="move" to="C" />
+        <Step to="D">
+          <EdgeLabel position={values.position} side={values.side} sloped={values.sloped}>
+            sugar
+          </EdgeLabel>
+        </Step>
+      </Path>
+    </Layout>
+  );
+};
 
 export default Demo;

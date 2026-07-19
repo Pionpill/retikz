@@ -211,6 +211,7 @@ How it works 等机制说明需要列出实现源码时，使用 `<SourceLinks s
 - 锚点 Node：`id` 用大写 `A/B/C`，children 用小写 `a/b/c`，文字保持默认色。
 - 不把“右 80 下 30”“cartesian+offset”这类位置说明写进 Node；放正文或边标注。
 - 边标注可用淡色 `textColor="#888"`，不要降低整条 path 的层级来弱化文字。
+- 控制柄、投影、测量等几何参考线使用 dotted（`dashPattern={[1, 4]}` + `lineCap="round"`），不要复用 Node / 分组边框的 dashed。
 - 一个 demo 只演示一件事；两个节点能讲清就不要放四个。
 
 边界：
