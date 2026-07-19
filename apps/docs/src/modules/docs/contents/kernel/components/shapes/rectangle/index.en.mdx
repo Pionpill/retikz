@@ -32,6 +32,10 @@ import { Rectangle } from '@retikz/react';
 
 <ComponentPreview files="rectangle-basic" size="sm" />
 
+Use the playground to vary width, height, and corner radius continuously. The gray dimension lines stay attached to the current boundary, making it clear when rounding starts to dominate the short side.
+
+<ComponentPreview files="rectangle-playground" size="md" />
+
 ### API Reference
 
 | Component     | Combination                    | Meaning                                              |
@@ -61,11 +65,11 @@ import { Node } from '@retikz/react';
 
 ### Examples
 
-Round the corners with the top-level `cornerRadius`, or with `shape={{ type:'rectangle', params:{ cornerRadius } }}` (params win when both are present). The rounding is connection-aware: connection endpoints land on the fillet arc rather than the sharp corner that has been rounded away.
+The playground fixes the target rectangle at the origin. Adjust `cornerRadius` to compare sharp and rounded boundaries, then move the source with the orbit angle and distance; automatic clipping lands on the real boundary, while named and numeric anchors provide stable explicit positions.
 
-<ComponentPreview files="node-rectangle" size="sm" />
+<ComponentPreview files="node-connection-playground" size="md" />
 
-Connection endpoints snap to the rectangle edge, and the node's center plus 8 directional anchors (`center` / `top` …) still apply. See [Node geometry](/kernel/components/node/overview) for Node shapes, sizes, boundaries, and anchors.
+Round corners with the top-level `cornerRadius`, or with `shape={{ type:'rectangle', params:{ cornerRadius } }}` (params win when both are present). See [Node geometry](/kernel/components/node/overview) for shared sizing, boundary, and anchor behavior.
 
 ### API Reference
 
@@ -146,5 +150,5 @@ The result of `<Rectangle>` is pure Path geometry. A rectangular `<Node>` retain
 ## Related
 
 - [Node geometry](/kernel/components/node/overview): sizes, boundaries, and anchors for rectangular nodes
-- [Polygon](../polygon): regular polygons and diamond
+- [Polygon](/kernel/components/shapes/polygon): regular polygons and diamond
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

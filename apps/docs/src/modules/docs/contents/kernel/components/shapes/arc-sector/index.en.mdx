@@ -20,26 +20,28 @@ import { Arc, Sector } from '@retikz/react';
 <Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} fill="darkorange" />
 ```
 
-### Arc
+### Examples
+
+#### Arc
 
 `<Arc>` draws an open arc by default. It is useful for curved arrows, ring markers, and decorative strokes.
 
-| Form                                       | Best for       |
-| ------------------------------------------ | -------------- |
-| `{ center, radius, startAngle, endAngle }` | Circular arc   |
-| `{ center, radius, startAngle, endAngle }` | Elliptical arc |
+| Form                                   | Best for       |
+| -------------------------------------- | -------------- |
+| `{ center, radius: number, angles }`   | Circular arc   |
+| `{ center, radius: { x, y }, angles }` | Elliptical arc |
 
 Angles start from +x; `90` points downward on screen. Angles take any two of `startAngle` / `endAngle` / `sweepAngle`, e.g. `{ startAngle: 30, sweepAngle: 90 }`. `center` accepts any target (node id / polar / Cartesian).
 
 <ComponentPreview files="arc-basic" size="sm" />
 
-#### Visual props
+**Visual props**
 
 `<Arc>` forwards the full `<Path>` visual prop set: `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `marks` / `opacity` / `rotate` / `scale`, and more. Common ones are arrowed arcs (`arrow="->"`), dashed arcs (`dashPattern` / `dashOffset`), and mid-path direction marks (`marks`, oriented along the tangent).
 
 <ComponentPreview files="arc-visual" size="sm" />
 
-#### Closing modes
+**Closing modes**
 
 Arcs are open by default; pass `close` to turn the arc into a fillable region:
 
@@ -51,24 +53,24 @@ Arcs are open by default; pass `close` to turn the arc into a fillable region:
 
 <ComponentPreview files="arc-close" size="sm" />
 
-#### Labels on the arc
+**Labels on the arc**
 
 `label` forwards to the underlying arc step; the text is positioned along the arc (`position` defaults to `midway`, mapped linearly across `startAngle..endAngle`), just like an edge label. Sector supports it too — see the pie example below.
 
-### Sector
+#### Sector
 
-`<Sector>` starts from the center, draws an arc, then closes back to the center. Add `innerRadius` for a hollow circular sector; for an elliptical hollow sector, use `innerRadiusX` + `innerRadiusY`.
+`<Sector>` starts from the center, draws an arc, then closes back to the center. Add `innerRadius` for a hollow sector; circles use a `number`, while ellipses use `{ x, y }`.
 
-| Form                                       | Best for                 |
-| ------------------------------------------ | ------------------------ |
-| `{ center, radius, startAngle, endAngle }` | Circular sector          |
-| `{ center, radius, startAngle, endAngle }` | Elliptical sector        |
-| add `innerRadius`                          | Hollow circular sector   |
-| add `innerRadiusX` + `innerRadiusY`        | Hollow elliptical sector |
+| Form                                   | Best for                 |
+| -------------------------------------- | ------------------------ |
+| `{ center, radius: number, angles }`   | Circular sector          |
+| `{ center, radius: { x, y }, angles }` | Elliptical sector        |
+| add `innerRadius: number`              | Hollow circular sector   |
+| add `innerRadius: { x, y }`            | Hollow elliptical sector |
 
 <ComponentPreview files="sector-basic" size="sm" />
 
-#### Center on a node, labeled slices
+**Center on a node, labeled slices**
 
 A filled sector's center is the cursor, so `center` can take a node id (or polar coordinate) to pin the sector onto a node; combined with `sweepAngle` and `label`, a few slices make a labeled pie chart.
 
@@ -76,22 +78,26 @@ A filled sector's center is the cursor, so `center` can take a node id (or polar
 
 <ComponentPreview files="sector-label" size="sm" />
 
-#### Whole-shape transform
+**Whole-shape transform**
 
 `rotate` / `scale` forward to `<Path>`, transforming the whole sector around its bounding-box center (no `<Scope>` wrapper needed). `rotate` tilts an axis-aligned elliptical sector — currently the way to draw a "tilted elliptical sector".
 
 <ComponentPreview files="sector-transform" size="sm" />
 
+Arc and Sector share the same elliptical radii and angle model. Once the basic forms above are clear, adjust both in the playground: the left side shows Arc closure, while the right side shows how Sector's inner arc changes ring width.
+
+<ComponentPreview files="arc-sector-playground" size="md" />
+
 ### API Reference
 
-| Component  | Combination                         | Meaning                                         |
-| ---------- | ----------------------------------- | ----------------------------------------------- |
-| `<Arc>`    | `center` + `radius` + angles        | Circular arc (open by default; angles required) |
-|            | `center` + `radius` + angles        | Elliptical arc                                  |
-| `<Sector>` | `center` + `radius` + angles        | Circular sector (angles required)               |
-|            | `center` + `radius` + angles        | Elliptical sector                               |
-|            | + `innerRadius?`                    | Hollow circular sector                          |
-|            | + `innerRadiusX?` + `innerRadiusY?` | Hollow elliptical sector                        |
+| Component  | Combination                            | Meaning                                         |
+| ---------- | -------------------------------------- | ----------------------------------------------- |
+| `<Arc>`    | `center` + `radius: number` + angles   | Circular arc (open by default; angles required) |
+|            | `center` + `radius: { x, y }` + angles | Elliptical arc                                  |
+| `<Sector>` | `center` + `radius: number` + angles   | Circular sector (angles required)               |
+|            | `center` + `radius: { x, y }` + angles | Elliptical sector                               |
+|            | + `innerRadius?: number`               | Hollow circular sector                          |
+|            | + `innerRadius?: { x, y }`             | Hollow elliptical sector                        |
 
 Shared props (forwarded to the underlying `<Path>`):
 
@@ -122,16 +128,9 @@ import { Node } from '@retikz/react';
 
 ### Examples
 
-| shape  | params                                               | Notes                                                 |
-| ------ | ---------------------------------------------------- | ----------------------------------------------------- |
-| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | Ring wedge; `innerRadius:0` is a solid pie slice      |
-| arc    | `{ radius, startAngle, endAngle, close? }`           | Single-radius arc; `close:true` closes into a segment |
+Switch between Arc and Sector in the playground: Arc is a single-radius curve, while Sector is a ring wedge. When Sector is selected, adjust `cornerRadius` to compare sharp and rounded connection boundaries; then move the source with the orbit angle and distance to see automatic clipping follow the current curve or contour. `Arc midpoint` targets the Sector's outer arc, while `Inner arc midpoint` targets `inner-arc-mid` for Sector and safely falls back to `arc-mid` for Arc.
 
-<ComponentPreview files="node-arc-sector" size="md" />
-
-Give the sector's `params.cornerRadius` a positive number to round the wedge's four corners (where the two radial edges meet the inner / outer arcs); omitting it or `0` keeps sharp corners. The rounding is connection-aware: an endpoint aimed at the outer arc lands on the rounded contour.
-
-<ComponentPreview files="node-sector-corner-radius" size="md" />
+<ComponentPreview files="node-connection-playground" size="md" />
 
 Besides the node's center plus 8 directional anchors (`center` / `top` …), these shapes provide geometry-named anchors for precise connections via `{ id, anchor }`:
 
@@ -165,7 +164,7 @@ This section focuses on the angle, path topology, and node geometry owned by Arc
 
 Start with the axes and orange arrow: the span begins at `startAngle`, follows increasing screen-space angles to `endAngle`, and the difference is `sweepAngle`.
 
-<ComponentPreview files="arc-sector-angle-model" size="sm" hideCode />
+<ComponentPreview files="arc-sector-angle-model" size="md" hideCode />
 
 Screen coordinates point x to the right and y downward, so `0°` points right, `90°` points down, and increasing angles look clockwise. Sugar accepts exactly two of `startAngle` / `endAngle` / `sweepAngle` and derives the third. Node shape params store `startAngle` and `endAngle` directly, but both APIs share the same visual convention.
 
@@ -251,5 +250,5 @@ As a result, `cornerRadius` changes both the visible Sector contour and automati
 ## Related
 
 - [Node geometry](/kernel/components/node/overview): sizes, boundaries, and anchors when a shape is used as a node boundary
-- [Circle / Ellipse](../circle-ellipse): half circles, segments, and partial ellipses
+- [Circle / Ellipse](/kernel/components/shapes/circle-ellipse): half circles, segments, and partial ellipses
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

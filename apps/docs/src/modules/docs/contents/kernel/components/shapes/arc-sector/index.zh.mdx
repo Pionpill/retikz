@@ -20,26 +20,28 @@ import { Arc, Sector } from '@retikz/react';
 <Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} fill="darkorange" />
 ```
 
-### Arc
+### 例子
+
+#### Arc
 
 `<Arc>` 默认画一段不闭合的弧。它适合做箭头弧线、环形标记或装饰线。
 
-| 写法                                       | 适合   |
-| ------------------------------------------ | ------ |
-| `{ center, radius, startAngle, endAngle }` | 圆弧   |
-| `{ center, radius, startAngle, endAngle }` | 椭圆弧 |
+| 写法                                   | 适合   |
+| -------------------------------------- | ------ |
+| `{ center, radius: number, angles }`   | 圆弧   |
+| `{ center, radius: { x, y }, angles }` | 椭圆弧 |
 
 角度从 +x 方向开始；`90` 指向屏幕下方。角度三选二：`startAngle` / `endAngle` / `sweepAngle`（扫掠角）任给两个即可，例如 `{ startAngle: 30, sweepAngle: 90 }`。`center` 接任意 target（节点 id / 极坐标 / 笛卡尔）。
 
 <ComponentPreview files="arc-basic" size="sm" />
 
-#### 视觉属性
+**视觉属性**
 
 `<Arc>` 透传整套 `<Path>` 视觉属性：`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `marks` / `opacity` / `rotate` / `scale` 等。常见的有箭头弧（`arrow="->"`）、虚线弧（`dashPattern` / `dashOffset`）和中段方向标记（`marks`，朝向随切线）。
 
 <ComponentPreview files="arc-visual" size="sm" />
 
-#### 闭合方式
+**闭合方式**
 
 默认是开放弧；给 `close` 可把弧闭合成可填充区域：
 
@@ -51,24 +53,24 @@ import { Arc, Sector } from '@retikz/react';
 
 <ComponentPreview files="arc-close" size="sm" />
 
-#### 弧上标注
+**弧上标注**
 
 `label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 `midway`，按 `startAngle..endAngle` 线性映射），用法与边标注一致。Sector 同样支持，见下方饼图示例。
 
-### Sector
+#### Sector
 
-`<Sector>` 会从圆心出发，画弧，再回到圆心。给 `innerRadius` 可以画空心扇形；椭圆空心写法用 `innerRadiusX` + `innerRadiusY`。
+`<Sector>` 会从圆心出发，画弧，再回到圆心。给 `innerRadius` 可以画空心扇形；圆使用 `number`，椭圆使用 `{ x, y }`。
 
-| 写法                                       | 适合         |
-| ------------------------------------------ | ------------ |
-| `{ center, radius, startAngle, endAngle }` | 圆扇形       |
-| `{ center, radius, startAngle, endAngle }` | 椭圆扇形     |
-| 加 `innerRadius`                           | 空心圆扇形   |
-| 加 `innerRadiusX` + `innerRadiusY`         | 空心椭圆扇形 |
+| 写法                                   | 适合         |
+| -------------------------------------- | ------------ |
+| `{ center, radius: number, angles }`   | 圆扇形       |
+| `{ center, radius: { x, y }, angles }` | 椭圆扇形     |
+| 加 `innerRadius: number`               | 空心圆扇形   |
+| 加 `innerRadius: { x, y }`             | 空心椭圆扇形 |
 
 <ComponentPreview files="sector-basic" size="sm" />
 
-#### 圆心接节点、扇区标注
+**圆心接节点、扇区标注**
 
 实心扇形的圆心就是游标，所以 `center` 可以直接接节点 id（或极坐标），把扇形钉在某个节点上；配合 `sweepAngle` 和 `label`，几段就能拼出带标签的饼图。
 
@@ -76,22 +78,26 @@ import { Arc, Sector } from '@retikz/react';
 
 <ComponentPreview files="sector-label" size="sm" />
 
-#### 整体变换
+**整体变换**
 
 `rotate` / `scale` 透传到 `<Path>`，把整条扇形绕包围盒中心变换（免包 `<Scope>`）。`rotate` 让轴对齐椭圆扇形倾斜——这是目前画"斜椭圆扇形"的方式。
 
 <ComponentPreview files="sector-transform" size="sm" />
 
+Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法后，可以用 playground 同时调整两者：左侧观察 Arc 的开放 / 闭合方式，右侧观察 Sector 的内弧如何改变环宽。
+
+<ComponentPreview files="arc-sector-playground" size="md" />
+
 ### API 参考
 
-| 组件       | 组合                                | 含义                       |
-| ---------- | ----------------------------------- | -------------------------- |
-| `<Arc>`    | `center` + `radius` + 角度          | 圆弧（默认开放；角度必填） |
-|            | `center` + `radius` + 角度          | 椭圆弧                     |
-| `<Sector>` | `center` + `radius` + 角度          | 圆扇形（角度必填）         |
-|            | `center` + `radius` + 角度          | 椭圆扇形                   |
-|            | + `innerRadius?`                    | 空心圆扇形                 |
-|            | + `innerRadiusX?` + `innerRadiusY?` | 空心椭圆扇形               |
+| 组件       | 组合                                 | 含义                       |
+| ---------- | ------------------------------------ | -------------------------- |
+| `<Arc>`    | `center` + `radius: number` + 角度   | 圆弧（默认开放；角度必填） |
+|            | `center` + `radius: { x, y }` + 角度 | 椭圆弧                     |
+| `<Sector>` | `center` + `radius: number` + 角度   | 圆扇形（角度必填）         |
+|            | `center` + `radius: { x, y }` + 角度 | 椭圆扇形                   |
+|            | + `innerRadius?: number`             | 空心圆扇形                 |
+|            | + `innerRadius?: { x, y }`           | 空心椭圆扇形               |
 
 共用属性（透传到底层 `<Path>`）：
 
@@ -122,16 +128,9 @@ import { Node } from '@retikz/react';
 
 ### 例子
 
-| shape  | params                                               | 说明                              |
-| ------ | ---------------------------------------------------- | --------------------------------- |
-| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | 环楔；`innerRadius:0` 为实心扇片  |
-| arc    | `{ radius, startAngle, endAngle, close? }`           | 单半径弧；`close:true` 闭合成弓形 |
+在 playground 中切换 Arc / Sector：Arc 是单半径弧，Sector 是环楔。选择 Sector 时可调整 `cornerRadius`，比较硬角与圆角后的连接边界；再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随当前曲线或轮廓。`弧中点` 对应 Sector 的外弧中点，`内弧中点` 在 Sector 下对应 `inner-arc-mid`，切到 Arc 时安全回退到 `arc-mid`。
 
-<ComponentPreview files="node-arc-sector" size="md" />
-
-给 sector 的 `params.cornerRadius` 一个正数，会把环楔四个拐角（两条直边与内外弧的接缝）磨成圆角，省略 / `0` 是硬角。倒角是连接感知的：朝外弧方向的连线端点会落在圆角后的轮廓上。
-
-<ComponentPreview files="node-sector-corner-radius" size="md" />
+<ComponentPreview files="node-connection-playground" size="md" />
 
 除节点的中心与 8 个方位 anchor（`center` / `top` …）外，这两个形状还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：
 
@@ -165,7 +164,7 @@ sector 的 `cornerRadius`（用户单位）给环楔四角倒角，省略 / `0` 
 
 先看图中的坐标轴和橙色箭头：角度从 `startAngle` 出发，沿屏幕坐标中的递增方向扫到 `endAngle`，两者之差就是 `sweepAngle`。
 
-<ComponentPreview files="arc-sector-angle-model" size="sm" hideCode />
+<ComponentPreview files="arc-sector-angle-model" size="md" hideCode />
 
 屏幕坐标的 x 向右、y 向下，所以 `0°` 指向右侧，`90°` 指向下方，角度递增看起来是顺时针。Sugar 接受 `startAngle` / `endAngle` / `sweepAngle` 中恰好两个，再补出第三个；Node 形状的 params 则直接保存 `startAngle` 与 `endAngle`，但两者使用同一视觉约定。
 
@@ -251,5 +250,5 @@ Arc 是没有内部面积的曲线。普通连线会把目标方向投影成弧�
 ## 相关
 
 - [Node 几何](/kernel/components/node/overview)：把形状用作节点边界时的尺寸、边界与 anchor
-- [Circle / Ellipse](../circle-ellipse)：半圆、弓形和部分椭圆
+- [Circle / Ellipse](/kernel/components/shapes/circle-ellipse)：半圆、弓形和部分椭圆
 - [Shapes](/kernel/components/shapes)：形状分组入口与完整定义

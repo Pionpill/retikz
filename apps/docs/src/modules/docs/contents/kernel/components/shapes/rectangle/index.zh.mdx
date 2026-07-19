@@ -32,6 +32,10 @@ import { Rectangle } from '@retikz/react';
 
 <ComponentPreview files="rectangle-basic" size="sm" />
 
+用 playground 连续调整宽高与圆角半径；灰色尺寸线保持贴着当前边界，便于判断圆角何时开始主导短边。
+
+<ComponentPreview files="rectangle-playground" size="md" />
+
 ### API 参考
 
 | 组件          | 组合                           | 含义                               |
@@ -61,11 +65,11 @@ import { Node } from '@retikz/react';
 
 ### 例子
 
-圆角既可以用顶层 `cornerRadius`，也可以写成 `shape={{ type:'rectangle', params:{ cornerRadius } }}`（两者并存时 params 优先）。倒角是连接感知的：连线端点会落在圆角弧上，而不是已被磨掉的尖角。
+playground 固定目标矩形在原点。调整 `cornerRadius` 比较直角与圆角边界，再通过轨道角度与距离移动来源节点；自动贴边会落在真实边界上，命名 / 数字 anchor 则给出稳定的显式位置。
 
-<ComponentPreview files="node-rectangle" size="sm" />
+<ComponentPreview files="node-connection-playground" size="md" />
 
-连线端点贴矩形边，节点的中心与 8 个方位 anchor（`center` / `top` …）照常可用。Node 的形状、尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/overview)。
+圆角既可以用顶层 `cornerRadius`，也可以写成 `shape={{ type:'rectangle', params:{ cornerRadius } }}`（两者并存时 params 优先）。Node 的通用尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/overview)。
 
 ### API 参考
 
@@ -146,5 +150,5 @@ import { Node } from '@retikz/react';
 ## 相关
 
 - [Node 几何](/kernel/components/node/overview)：矩形节点的尺寸、边界与 anchor
-- [Polygon](../polygon)：正多边形与菱形
+- [Polygon](/kernel/components/shapes/polygon)：正多边形与菱形
 - [Shapes](/kernel/components/shapes)：形状分组入口与完整定义

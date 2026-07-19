@@ -1,318 +1,180 @@
 ---
 title: 自定义形状
-description: 通过 Shape Registry 注册新的节点形状；IR 里仍只保存形状名称，真正的绘制、边界和锚点逻辑在编译时通过 CompileOptions.shapes 提供。
+description: 用 ShapeDefinition 扩展 Node 的占位、连接边界、anchor 与 Scene 输出，并通过 Layout.shapes 或 CompileOptions.shapes 注入统一形状注册表。
 ---
 
-retikz 自带的 `rectangle` / `ellipse` / `sector` / `arc` / `polygon` / `star` 都是通过 Shape Registry 注册出来的形状（`circle` / `diamond` 不在注册表，是编译期 preset 别名：circle → `ellipse{ circumscribe:'equal' }`、diamond → `polygon{ sides:4, rotate:0 }`）。也就是说，内置注册形状和你自己写的形状走同一套机制：给一个形状名，再提供它如何包住文字、如何计算边界、如何画出来。
+内置形状无法表达 cylinder、cloud 或业务图标时，可以注册一份 `ShapeDefinition`。IR（中间表示）仍只保存 `shape: 'hexagon'` 或 `{ type, params }` 这样的 JSON 引用；包含函数的定义留在运行时。
 
-第三方包（例如 `@retikz/shapes-flow` / `-uml` 之类）或宿主代码可以用同样的方式注册新形状，不需要修改 core。
-
-> 日常写图只用内置形状时看[节点](/kernel/components/node/overview)即可；需要 cylinder / cloud 这类内置覆盖不到的形状再来这里（hexagon 已可用内置 `polygon{ sides:6 }` 表达）。
-
-## 核心约束：IR 里的形状名永远是字符串
-
-`node.shape` 只保存一个名字，比如 `'hexagon'`。这个名字可以安全写进 JSON，适合持久化、JSON Patch，也适合 LLM 生成。
-
-真正的形状定义叫 `ShapeDefinition`，里面会包含函数，因此**不会进入 IR**。编译时再通过 `CompileOptions.shapes` 把这些函数交给 retikz。schema 只检查 `shape` 是非空字符串；如果名字没有注册，错误会在 **compile 阶段**抛出，并列出当前可用的形状名。
-
-`node.shape` 还支持嵌套写法 `{ type, params }`：`type` 是形状名，`params` 是一份纯 JSON 参数对象（如扇形的 `{ innerRadius, outerRadius, startAngle, endAngle }`），同样能安全写进 IR。裸字符串 `'rectangle'` 等价于 `{ type: 'rectangle', params: {} }`——无参形状两种写法完全一致。参数会在编译期先经形状自己的 `paramsSchema` 校验、再经 JSON 护栏，最后透传给下面每个计算函数。
-
-## 形状定义
-
-一个自定义形状的核心是四个必填方法（`circumscribe` / `boundaryPoint` / `anchor` / `emit`）加一份 `paramsSchema`，外加几个可选 hook（`circumscribeOffset` / `edgePoint` / `scaleParams`）。retikz 已经负责文字测量、样式合并、旋转分组和最终渲染；形状作者只需要描述这个形状自己的几何和绘制方式。
-
-表里的几个类型先按直觉理解即可：
-
-- `Rect` 是“这个节点最终占用的外接矩形”：包含中心点 `x/y`、宽高 `width/height`，以及可选旋转角度 `rotate`。
-- `Position` 是一个点坐标，形如 `[x, y]`。
-- `ScenePrimitive` 是最终交给渲染器的基础图元，例如 `path`、`rect`、`ellipse`。
-
-`Rect`、`ResolvedShapeStyle` 和 `ScenePrimitive` 从 `@retikz/core` 导入；`Position` 由几何底座 `@retikz/math` 导出。
-
-每个计算函数都会在末位收到一份**已校验的 `params`**（无参形状收到 `{}`，可以忽略）。`paramsSchema` 则声明这份参数的形态：无参形状用 `z.strictObject({})`（拒绝多余字段），带参形状用具体 schema。下面逐个方法说明（标“可选”的是可选 hook，其余四个必填）。
-
-`ShapeDefinition` 本身只是一份普通对象：一个 `paramsSchema` 加一组计算函数，没有任何继承或注册仪式。在定义点用 `defineShape<TParams>()` 包一层就能拿到类型安全——`paramsSchema` 推出的参数类型 `TParams` 会贯穿到每个函数末位的 `params`；registry 里实际存的是把 `TParams` 擦成 `IRJsonObject` 的形态（下文签名里的 `TParams` 即“`paramsSchema` 推出的参数类型”）。
-
-| 方法                 | 作用                                                  | 必填 · 可选 |
-| -------------------- | ----------------------------------------------------- | ----------- |
-| `paramsSchema`       | 形状参数的 zod schema，编译期校验 `shape.params`      | 必填        |
-| `circumscribe`       | 由内容半轴算出能包住整个形状的外接框半轴              | 必填        |
-| `circumscribeOffset` | 外接框中心相对 `position` 的偏移（参考点 ≠ 框中心时） | 可选        |
-| `boundaryPoint`      | 中心朝 `toward` 的射线与边界的交点                    | 必填        |
-| `anchor`             | 命名锚点的世界坐标，未知名返回 `undefined`            | 必填        |
-| `edgePoint`          | 某条边上 0..1 比例处的点                              | 可选        |
-| `emit`               | 轴对齐空间里要画出的基础图元                          | 必填        |
-| `scaleParams`        | node 缩放如何作用到 params                            | 可选        |
-
-下面逐个方法给出完整签名与例子。
-
-### paramsSchema
-
-```ts
-paramsSchema: z.ZodType<TParams>;
-```
-
-形状参数的 zod schema，编译期校验 `shape.params`。无参形状用 `z.strictObject({})`（拒绝多余字段）；校验通过的输出还会再过一道 JSON 护栏，保证它可序列化、能安全写进 IR。
-
-```ts
-paramsSchema: z.strictObject({
-  innerRadius: z.number().nonnegative(),
-  outerRadius: z.number().positive(),
-  startAngle: z.number(),
-  endAngle: z.number(),
-}),
-```
-
-### circumscribe
-
-```ts
-circumscribe: (innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {
-  halfWidth: number;
-  halfHeight: number;
-};
-```
-
-节点布局时调用，回答“为了包住文字和 padding，形状外接矩形需要多大”。`innerHalfWidth` / `innerHalfHeight` 是文字和 padding 已经占用的半宽、半高；返回值必须是**能包住完整形状的精确外接矩形（AABB）半轴**——编译器只靠这四个角累积 viewBox 和 bbox。矩形原样返回，圆形两轴都取对角线半长，菱形要放大。
-
-```ts
-// circle：两轴相等，取内框对角线半长
-circumscribe: (hw, hh) => {
-  const r = Math.hypot(hw, hh);
-  return { halfWidth: r, halfHeight: r };
-},
-```
-
-### circumscribeOffset（可选）
-
-```ts
-circumscribeOffset?: (params: TParams) => Position;
-```
-
-形状的语义参考点 ≠ 外接框中心时实现——例如扇形以圆心定位，但圆心常落在形状外。返回外接框中心相对 node `position` 的偏移，让编译器把 rect 放到 `position + offset`：bbox / viewBox 精确罩住形状，而 `position` 仍落在语义参考点上。缺省 `[0, 0]`（外接框中心即 position）。
-
-```ts
-// sector：position 落在圆心 apex，外接框中心偏在一侧
-circumscribeOffset: (params) => {
-  const { apexOffset } = sectorGeometry(params);
-  return [-apexOffset[0], -apexOffset[1]];
-},
-```
-
-### boundaryPoint
-
-```ts
-boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
-```
-
-路径连接节点边界、解析 `A.30` 这种数字角度时调用，决定线条停在形状边上的哪里——返回从中心朝 `toward` 的射线与形状边界的交点。这里的 `rect` **带 `rotate`**：先用 `worldToLocal` 进入局部坐标算几何，再用 `localToWorld` 转回世界坐标。节点设了 `margin` 时，传入的 `rect` 已由引擎外扩好——你只管在给定 `rect` 上算几何，不用自己处理 margin。
-
-```ts
-// polygon：射线在局部系与各边求交，再投回世界系
-boundaryPoint: (rect, toward, params) => {
-  const radius = circumradiusFromRect(rect, params);
-  const localToward = worldToLocal(rect, toward);
-  const hit = polygonBoundaryLocal(radius, params, localToward);
-  return localToWorld(rect, hit);
-},
-```
-
-### anchor
-
-```ts
-anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
-```
-
-用户写 `A.top` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。Web 方位名（top/right…）会传给 provider；`north` / `east` 等 compass 写法只是输入别名，解析后也会变成 Web 名。普通 `A.center` 由编译器按节点中心处理；只有 sector / arc 这类语义中心不同于 AABB 中心的形状才需要自行声明 `center`。形状专属锚点恒走视觉 `rect`，不含 margin。
-
-```ts
-// sector：暴露 apex / centroid / 弧中点等语义锚点
-anchor: (rect, name, params) => {
-  const geo = sectorGeometry(params);
-  switch (name) {
-    case 'apex':
-    case 'center':
-      return toWorld(rect, geo, [0, 0]);
-    case 'centroid':
-      return localToWorld(rect, geo.centroidOffset);
-    default:
-      return undefined;
-  }
-},
-```
-
-### edgePoint（可选）
-
-```ts
-edgePoint?: (
-  rect: Rect,
-  side: 'top' | 'right' | 'bottom' | 'left',
-  t: number,
-  params: TParams,
-) => Position;
-```
-
-用户写边上比例点（`{ side, fraction }`）时调用：`side` 是 `top` / `right` / `bottom` / `left`，`t` 是 provider 回调收到的 0..1 比例，来自输入对象的 `fraction`。`north` / `east` 等 compass side 可作为输入别名，但 provider 收到的是 Web 名。内置形状都实现；未实现的形状收到比例点请求时编译期报错。坐标语义与 `anchor` 相同，`rect` 带 `rotate`。
-
-```ts
-// rectangle：复用 rect 几何层时先转成几何层 side
-edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
-```
-
-### emit
-
-```ts
-emit: (rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) =>
-  Iterable<ScenePrimitive>;
-```
-
-编译节点视觉内容时调用，返回一个或多个要画出来的基础图元。注意这里的 `rect` 是**轴对齐的**（`rotate` 由编译器在外层 group 统一施加），你只需像在普通坐标纸上一样把形状画在中心点周围。用 `round` 统一坐标精度，并尽量透传 `style` 里的填充、描边、透明度等字段。简单形状返回一个 path 或 rect，复杂形状可以返回多个 primitive。
-
-```ts
-// 多边形：sides 个顶点连成闭合 path，透传样式字段
-*emit(rect, style, round, params) {
-  const verts = polygonVertices(rect, circumradiusFromRect(rect, params), params);
-  const commands = verts.map((v, i) => ({
-    kind: i === 0 ? 'move' : 'line',
-    to: [round(v[0]), round(v[1])],
-  }));
-  commands.push({ kind: 'close' });
-  yield {
-    type: 'path',
-    commands,
-    fill: style.fill ?? 'transparent',
-    stroke: style.stroke ?? 'currentColor',
-    strokeWidth: style.strokeWidth ?? 1,
-    opacity: style.opacity,
-  };
-},
-```
-
-### scaleParams（可选）
-
-```ts
-scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
-```
-
-node 设 `scale`（数字或 `{ x, y }`） 时，决定缩放如何作用到 params。缺省会深度缩放 params 里**所有**数值叶子——对纯长度参数（半径）正确，但会缩坏角度和 `sides` / `points` 这类计数。**带角度或计数参数的形状必须实现它**，只缩长度量、放过角度与计数。
-
-```ts
-// sector：只缩内外半径，起止角不动
-scaleParams: (params, sx, sy) => {
-  const factor = Math.sqrt(sx * sy);
-  return {
-    ...params,
-    innerRadius: params.innerRadius * factor,
-    outerRadius: params.outerRadius * factor,
-  };
-},
-// polygon：sides 是计数、rotate 是角度，原样返回
-scaleParams: (params) => params,
-```
-
-<ComponentAlert
-  type="warn"
-  title="先画正放的形状，旋转交给编译器"
-  description="emit 拿到的 rect 永远是不旋转的：你只需要像在普通坐标纸上一样，把形状画在中心点周围。节点真正的旋转会由编译器统一包在外层 group 上。boundaryPoint / anchor 不同，它们要回答世界坐标里的连接点和锚点，所以会收到带旋转信息的 rect；这时先用 worldToLocal 算局部几何，再用 localToWorld 转回世界坐标。"
-/>
-
-数字角度（`A.30`）不需要单独实现。只要形状实现了 `boundaryPoint`，编译层会把 `30` 度换成一个方向点，再调用你的 `boundaryPoint`。
-
-## 注入形状定义
-
-```ts
-import { compileToScene, defineShape, type ShapeDefinition } from '@retikz/core';
-import { worldToLocal, localToWorld } from '@retikz/core';
-import { z } from 'zod';
-
-// factory 只是一个普通函数：传入参数，返回一份 ShapeDefinition
-// defineShape 在定义点提供类型安全：paramsSchema 的输出类型会贯穿到每个计算函数的 params
-const createPolygonShape = (name: string, sides: number): ShapeDefinition =>
-  defineShape({
-    name,
-    paramsSchema: z.strictObject({}), // 无参形状
-    circumscribe: (hw, hh) => {
-      const r = Math.hypot(hw, hh);
-      return { halfWidth: r, halfHeight: r };
-    },
-    boundaryPoint: (rect, toward) => {
-      /* 先把 toward 转到局部坐标，再计算射线和多边形边界的交点 */
-    },
-    anchor: () => undefined,
-    *emit(rect, style, round) {
-      yield {
-        type: 'path',
-        commands: [
-          /* n 顶点 + close */
-        ],
-        fill: style.fill ?? 'transparent',
-        fillOpacity: style.fillOpacity,
-        stroke: style.stroke ?? 'currentColor',
-        strokeOpacity: style.strokeOpacity,
-        strokeWidth: style.strokeWidth ?? 1,
-        dashPattern: style.dashPattern,
-        dashOffset: style.dashOffset,
-        opacity: style.opacity,
-      };
-    },
-  });
-
-// IR 里只写 shape: 'hexagon'，具体定义由 options 提供
-const scene = compileToScene(ir, { shapes: [createPolygonShape('hexagon', 6)] });
-```
-
-在 React 里，把同一份 `shapes` 传给 `<Layout>`：
-
-```tsx
-<Layout shapes={[createPolygonShape('hexagon', 6)]}>
-  <Node shape="hexagon" position={[0, 0]} text="准备" />
-</Layout>
-```
-
-## 例子
-
-### 多边形 factory（单 path）
-
-`createPolygonShape(name, n)` 返回一个普通的 `ShapeDefinition` 对象。调用侧传入不同 `name`，就能把同一套几何逻辑注册成多个互不冲突的 shape。
+下面的完整示例定义并注入 `hexagon`。两个节点通过 id 连接，端点会停在真实六边形边界，而不是节点中心。
 
 <ComponentPreview files="custom-shape" size="sm" />
 
-### 带参形状：参数走 nested params
+## 适用边界
 
-上面的工厂把边数固化在闭包里，每种边数都要单独注册一个名字。把参数写进 `params` 而非 factory 闭包后，同一个注册形状 `ngon` 就能按 `{ type, params }` 生成不同变体——`{ sides: 3 }` 是三角、`{ sides: 5 }` 是五边、`{ sides: 6 }` 是六边，而参数随 IR 持久化（裸字符串只能表达无参形状）。每个计算函数末位都拿到已校验的 `params`，几何统一基于 `params.sides`。最右一个节点是 `scale={2}` 的六边形：`scaleParams` 原样返回 params，让 `sides` 这类计数不被 node `scale` 缩坏——它只放大节点尺寸，边数仍是 6：
+自定义 shape 同时拥有节点的占位、可见轮廓和默认连接几何。只有这三者属于同一个图形时，才应放进 `ShapeDefinition`。
 
-<ComponentPreview files="ngon" size="sm" />
+| 需求                                         | 选择                                                         |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| 内置形状已经能表达                           | 直接使用 [Node](/kernel/components/node/overview)            |
+| 只想画一条可复用路径，不需要节点 id / anchor | 使用 [路径生成器](/kernel/components/draw/path-generator)    |
+| 视觉形状不变，只想改变连线落点               | 使用 [自定义连接面](/kernel/components/node/custom-boundary) |
+| 要新增完整的可布局、可绘制、可连接节点形状   | 使用本页的 `ShapeDefinition`                                 |
 
-### 多 primitive：子程序框
+`node.shape` 可以是字符串，也可以是 `{ type, params }`。两种写法都必须 100% JSON 可序列化；`ShapeDefinition` 含函数，不能写进 IR，也不能从 JSON 恢复。
 
-`emit` 可以一次返回多个图元。下面的子程序框由一个外框和左右两条竖线组成，所以它返回 3 个 primitive。它的外轮廓仍然是矩形，因此 `circumscribe` / `boundaryPoint` / `anchor` 可以直接复用内置 rectangle：
+内置 `rectangle` / `ellipse` / `polygon` / `star` / `sector` / `arc` / `contour` 与自定义项经过同一套 registry、参数校验和消费流程。`circle` 与 `diamond` 是编译期 preset，分别归一到 `ellipse` 与 `polygon`。
+
+## 定义能力
+
+用 `defineShape()` 声明注册名、参数 schema 和几何职责。无参形状使用 `z.strictObject({})`；下面的最小定义复用矩形几何，只改变注册名和占位大小。
+
+```ts
+import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
+import { z } from 'zod';
+
+const badge = defineShape({
+  name: 'badge',
+  paramsSchema: z.strictObject({}),
+  circumscribe: (halfWidth, halfHeight) => ({
+    halfWidth: halfWidth + 8,
+    halfHeight: halfHeight + 4,
+  }),
+  boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
+  anchor: BUILTIN_SHAPES.rectangle.anchor,
+  emit: BUILTIN_SHAPES.rectangle.emit,
+});
+```
+
+定义至少回答四个问题：内容需要多大的外接框、连线朝某方向时停在哪里、认识哪些专属 anchor、最终输出哪些 `ScenePrimitive`。字段签名集中在下方 [API 参考](#api-参考)。
+
+### 带参数的形状
+
+要让一个注册名生成多个变体，把参数放进 `{ type, params }`，不要固化在 factory 闭包里。`paramsSchema` 会在编译期校验参数，并把解析结果传给每个几何函数。
+
+下面的 `ngon` 用同一个定义生成任意正多边形。调整 `sides` 会改变持久化在 `shape.params` 中的边数；调整 Node `scale` 只改变布局尺寸。因为 `sides` 是计数，`scaleParams` 原样返回 params。
+
+<ComponentPreview files="ngon" size="md" />
+
+### 多图元输出
+
+`emit` 返回 `Iterable<ScenePrimitive>`，一个 shape 可以输出多个基础图元。子程序框复用矩形的占位、边界与 anchor，只在 `emit` 中生成外框和两条竖线。
 
 <ComponentPreview files="subroutine" size="xs" />
 
-### 语义端点：二极管
+### 语义连接点
 
-有些形状不是“从中心朝外找轮廓交点”就能得到正确连接点。二极管这类电路符号只有左右两个端点能接线：从左侧来的线应该接到左端，从右侧来的线应该接到右端，而不是接到三角形斜边或竖线外轮廓上。
-
-这个例子的 `boundaryPoint` 会先判断 `toward` 在局部坐标里位于左侧还是右侧，再返回对应端点。`anchor` 也额外提供了 `input` / `output` 这两个语义锚点：
+有些图形不能用“中心射线与可见轮廓求交”表达连接规则。二极管把 `boundaryPoint` 收敛到左右端子，并通过 `anchor` 暴露 `input` / `output`；视觉仍可由多个 primitive 组成。
 
 <ComponentPreview files="diode" size="sm" />
 
-## 实现清单
+## 注入宿主
 
-写第三方 shape 时，优先逐项核对这几个点：
+定义创建后，通过 core 的 `CompileOptions.shapes` 或 React 的 `<Layout shapes>` 注入。两种入口接收同一份 `ReadonlyArray<ShapeDefinition>`。
 
-- `circumscribe` 回答“为了包住文字和 padding，外接矩形需要多大”，不要直接返回视觉 path 的原始尺寸。
-- `boundaryPoint` 要处理 `toward` 刚好等于中心点的情况；常见做法是选一个固定默认方向。
-- `boundaryPoint` 和 `anchor` 如果涉及旋转，先用 `worldToLocal` 进入形状自己的局部坐标，算完后再用 `localToWorld` 返回世界坐标。
-- `anchor` 只处理自己认识的名字；未知名返回 `undefined`，让编译层抛统一错误。
-- `emit` 里用传入的 `round` 处理坐标与尺寸，并尽量透传相关样式字段：`fillOpacity` / `strokeOpacity` / `dashPattern` / `dashOffset` / `opacity` / `cornerRadius`。
-- 形状参数含角度或计数（如扇形角度、多边形 `sides`、星形 `points`）时实现 `scaleParams`，只缩长度量；否则默认缩放会把角度和计数一起缩坏。
-- 几何参考点偏离外接框中心的形状（如以圆心定位的扇形）实现 `circumscribeOffset`，让 bbox 精确罩住形状、position 仍落在语义参考点上。
+```ts
+import { compileToScene } from '@retikz/core';
 
-## 覆盖内置与未知名
+const scene = compileToScene(ir, { shapes: [badge] });
+```
 
-- **覆盖内置**：如果自定义 definition 的 `name` 写成 `rectangle`，注册会抛出 `duplicate shape registration`。内置名是保留名，不再通过 warning 静默覆盖。
-- **未知 shape**：如果 `node.shape` 写了一个没有注册过的名字，compile 会抛出 `Unknown shape '<name>'; registered shapes: <sorted list>`。因为 retikz 不知道这个形状的边界和锚点，不能安全降级成别的形状。
+```tsx
+import { Layout, Node } from '@retikz/react';
 
-## 公开导出
+<Layout shapes={[badge]}>
+  <Node id="status" shape="badge" position={[0, 0]} text="Ready" />
+</Layout>;
+```
 
-`@retikz/core` 为第三方形状作者导出：`defineShape` / `ShapeDefinition` / `ResolvedShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeValue` / `Rect` / `worldToLocal` / `localToWorld`。点坐标类型 `Position` 从 `@retikz/math` 导入。
+IR 只写注册名或带参引用；宿主负责在每次编译时提供相同定义。若需要持久化文档，应同时持久化 IR 与“应加载哪个扩展包”的宿主配置，而不是序列化 definition 函数。
+
+## 执行机制
+
+图中橙色是 JSON 数据，蓝色是运行时能力。两者在 compile 阶段按 shape 名汇合：registry 先合并内置与自定义定义，再校验 params，最后由同一份 definition 生成 Scene 图元与连接几何。
+
+<ComponentPreview files="custom-shape-flow" size="sm" hideCode />
+
+执行顺序如下：
+
+1. 解析 `node.shape`；`circle` / `diamond` preset 先归一为真实 provider 名和 params
+2. 在统一 shape registry 中查找定义；内置项与自定义项不分两条消费路径
+3. 依次通过 JSON object 护栏与 definition 的 `paramsSchema`
+4. Node 布局调用 `circumscribe`，连接与 anchor 调用几何函数，绘制调用 `emit`
+
+<SourceLinks
+  sources={[
+    {
+      label: '合并内置与自定义形状注册表',
+      path: 'packages/kernel/core/src/providers/shape/registry.ts',
+      startLine: 7,
+      endLine: 13,
+    },
+    {
+      label: '解析 shape preset、provider 与 params',
+      path: 'packages/kernel/core/src/compile/node/shape.ts',
+      startLine: 41,
+      endLine: 99,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+| 情况                         | 结果与排查入口                                                       |
+| ---------------------------- | -------------------------------------------------------------------- |
+| `name` 为空                  | 注册阶段报 provider key 必须是非空字符串                             |
+| 与内置或另一个自定义项同名   | 注册阶段报 `duplicate shape registration`；内置形状不能覆盖          |
+| IR 引用了未注册名称          | 编译报 `Unknown shape`，列出可用名称并提示通过 `options.shapes` 注入 |
+| params 不是 JSON object      | 编译在 `node.shape.params` 路径报 JSON 校验错误                      |
+| params 不符合 `paramsSchema` | 编译同时报告 shape 名、IR 路径与 zod 细节                            |
+| `anchor` 不认识专属名称      | 返回 `undefined` 后由编译层报 `Unknown anchor`                       |
+| 未实现 `edgePoint`           | 使用 `{ side, fraction }` 时编译报该 shape 不支持 side anchors       |
+
+<ComponentAlert
+  type="warn"
+  title="局部坐标与旋转不要混用"
+  description="emit 收到轴对齐 rect，节点旋转由编译器统一包在外层 group；boundaryPoint / anchor 回答世界坐标里的连接点，收到的 rect 可带旋转。涉及旋转时先用 worldToLocal 进入局部系，计算后再用 localToWorld 返回世界系。"
+/>
+
+默认 `scaleParams` 会按 `Math.sqrt(sx * sy)` 深度缩放 params 中的所有数值叶子。长度参数适合这个默认值；角度、计数或枚举数值必须自行实现 `scaleParams`，只缩放真正的长度。
+
+## API 参考
+
+| 字段                 | 类型                                                                     | 必需 | 职责                                                               |
+| -------------------- | ------------------------------------------------------------------------ | ---- | ------------------------------------------------------------------ |
+| `name`               | `string`                                                                 | 是   | registry key；由 `node.shape` 的字符串或 `type` 引用               |
+| `paramsSchema`       | `z.ZodType<TParams>`                                                     | 是   | 校验并解析 JSON-safe 的 `shape.params`                             |
+| `circumscribe`       | `(innerHalfWidth, innerHalfHeight, params) => { halfWidth, halfHeight }` | 是   | 从“文字 + padding”内框求完整形状的外接 AABB 半轴                   |
+| `circumscribeOffset` | `(params) => Position`                                                   | 否   | 语义参考点不等于 AABB 中心时，返回外接框中心相对 `position` 的偏移 |
+| `boundaryPoint`      | `(rect, toward, params) => Position`                                     | 是   | 根据可旋转 `rect` 与目标点 `toward` 返回自动连接落点               |
+| `anchor`             | `(rect, name, params) => Position \| undefined`                          | 是   | 解析标准或 shape 专属命名 anchor；不处理时返回 `undefined`         |
+| `edgePoint`          | `(rect, side, t, params) => Position`                                    | 否   | 支持 `{ side, fraction }` 比例点，`t ∈ [0, 1]`                     |
+| `emit`               | `(rect, style, round, params) => Iterable<ScenePrimitive>`               | 是   | 在轴对齐空间生成一个或多个 renderer-agnostic Scene 图元            |
+| `scaleParams`        | `(params, sx, sy) => TParams`                                            | 否   | 定义 Node scale 对 shape params 的作用方式                         |
+
+`@retikz/core` 导出 `defineShape`、`ShapeDefinition`、`ShapeDefinitionInput`、`ResolvedShapeStyle`、`BUILTIN_SHAPES`、`Rect`、`worldToLocal` 与 `localToWorld`；点坐标类型 `Position` 从 `@retikz/math` 导入。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'ShapeDefinition 完整契约',
+      path: 'packages/kernel/core/src/contract/shape/types.ts',
+      startLine: 80,
+      endLine: 143,
+    },
+    {
+      label: 'React Layout 的 shapes 注入入口',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 203,
+      endLine: 208,
+    },
+  ]}
+/>
+
+## 相关
+
+- [Node](/kernel/components/node/overview)：使用内置或自定义 shape 的节点入口
+- [Layout](/kernel/components/layout/overview)：React 宿主与 `shapes` 注入
+- [编译](/kernel/reference/runtime/compile)：`CompileOptions.shapes` 与 core 编译入口
+- [扩展机制](/kernel/reference/runtime/extensions)：所有 Definition / registry 能力的运行时索引
+- [自定义连接面](/kernel/components/node/custom-boundary)：只替换连接几何，不改变视觉 shape
+- [路径生成器](/kernel/components/draw/path-generator)：扩展 Path step，而不是 Node 形状
