@@ -37,7 +37,7 @@ Place Kernel / Sugar components directly in children; there is no additional fix
 
 For everyday authoring, pass children directly. `<Layout>` converts the component tree to Core IR and connects it to the remaining compile and render stages.
 
-<ComponentPreview files="layout-basic" size="xs" />
+<ComponentPreview files="layout-basic" size="sm" />
 
 ### IR Input
 
@@ -176,26 +176,36 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
 | `height`   | `number \| string`        | —       | SVG / Canvas display height                       |
 | `viewBox`  | `{ x, y, width, height }` | —       | Internal range; overrides IR and automatic layout |
 
-### Compile and Capability Injection
+### Compile Basics
 
 These props enter `CompileOptions` together. See each extension guide for definition, registration, and error contracts.
 
-| Prop                  | Type                                           | Default | Description                                                                            |
-| --------------------- | ---------------------------------------------- | ------- | -------------------------------------------------------------------------------------- |
-| `nodeDistance`        | `number`                                       | `24`    | Default relative-position distance; a node's own value wins                            |
-| `fontSize`            | `number`                                       | `16`    | Default font size and root size for presets and `rem`                                  |
-| `shapes`              | `ReadonlyArray<ShapeDefinition>`               | —       | Inject shapes; see [Custom Shapes](/kernel/components/shapes/custom-shape)             |
-| `boundaries`          | `ReadonlyArray<BoundaryDefinition>`            | —       | Inject boundaries; see [Custom Boundaries](/kernel/components/node/custom-boundary)    |
-| `clips`               | `ReadonlyArray<ClipDefinition>`                | —       | Inject clips; see [Custom Clips](/kernel/components/layout/custom-clip)                |
-| `arrows`              | `ReadonlyArray<ArrowDefinition>`               | —       | Inject arrows; see [Custom Arrows](/kernel/components/draw/custom-arrow)               |
-| `patterns`            | `ReadonlyArray<PatternDefinition>`             | —       | Inject patterns; see [Custom Patterns](/kernel/components/effects/custom-pattern)      |
-| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`       | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)  |
-| `pathKinds`           | `ReadonlyArray<PathKindDefinition>`            | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)             |
-| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>`  | —       | Inject ribbon width profiles; see [Compile Options](/kernel/reference/runtime/compile) |
-| `composites`          | `ReadonlyArray<CompositeDefinition>`           | —       | Inject Tier 2 lowering; see [Composite](/kernel/concepts/design/composite)             |
-| `lowerTex`            | `LowerTex`                                     | —       | Inject formula lowering; see [TeX](/kernel/packages/tex)                               |
-| `onNodeLayouts`       | `(layouts: Array<CompiledNodeLayout>) => void` | —       | Reports compiled node content boxes and global bounds after commit                     |
-| `embeddables`         | `Array<EmbeddableTier2Adapter>`                | —       | Explicit Tier 2 adapter injection; static component markers are the primary path       |
+| Prop            | Type                                                  | Default | Description                                                   |
+| --------------- | ----------------------------------------------------- | ------- | ------------------------------------------------------------- |
+| `nodeDistance`  | `number`                                              | `24`    | Default relative-position distance; the node's own value wins |
+| `fontSize`      | `number`                                              | `16`    | Default font size and root size for presets and `rem`         |
+| `onNodeLayouts` | `(layouts:`<br />`Array<CompiledNodeLayout>) => void` | —       | Reports node content boxes and global bounds after commit     |
+
+### Primitive and Resource Injection
+
+| Prop         | Type                                        | Default | Description                                                                         |
+| ------------ | ------------------------------------------- | ------- | ----------------------------------------------------------------------------------- |
+| `shapes`     | `ReadonlyArray`<br />`<ShapeDefinition>`    | —       | Inject shapes; see [Custom Shapes](/kernel/components/shapes/custom-shape)          |
+| `boundaries` | `ReadonlyArray`<br />`<BoundaryDefinition>` | —       | Inject boundaries; see [Custom Boundaries](/kernel/components/node/custom-boundary) |
+| `clips`      | `ReadonlyArray`<br />`<ClipDefinition>`     | —       | Inject clips; see [Custom Clips](/kernel/components/layout/custom-clip)             |
+| `arrows`     | `ReadonlyArray`<br />`<ArrowDefinition>`    | —       | Inject arrows; see [Custom Arrows](/kernel/components/draw/custom-arrow)            |
+| `patterns`   | `ReadonlyArray`<br />`<PatternDefinition>`  | —       | Inject patterns; see [Custom Patterns](/kernel/components/effects/custom-pattern)   |
+
+### Higher-Level Capabilities and Host Integration
+
+| Prop                  | Type                                                  | Default | Description                                                                           |
+| --------------------- | ----------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator) |
+| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)            |
+| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —       | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)      |
+| `composites`          | `ReadonlyArray`<br />`<CompositeDefinition>`          | —       | Inject Tier 2 lowering; see [Composite](/kernel/concepts/design/composite)            |
+| `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/tex)                              |
+| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —       | Explicit Tier 2 adapter injection; static component markers are primary               |
 
 ### Whole-Figure Defaults
 
@@ -222,7 +232,7 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 | --------------------- | -------------------------------- | ------- | ---------------------------------------------------------------------------------- |
 | `animate`             | `boolean`                        | system  | Playback switch; see [Animation](/kernel/components/effects/animation)             |
 | `snapshotAt`          | `number`                         | —       | Static snapshot time; overrides `animate`                                          |
-| `animations`          | `Array<AnimationTrack>`          | —       | Scene-root tracks such as viewBox camera animation                                 |
+| `animations`          | `Array<IRAnimationTrack>`        | —       | Scene-root tracks such as viewBox camera animation                                 |
 | `animationRef`        | `Ref<AnimationControls \| null>` | —       | Imperative `play` / `pause` / `seek` handle                                        |
 | `easings`             | `EasingRegistry`                 | —       | Custom easing; see [Custom Animation](/kernel/components/effects/custom-animation) |
 | `animationProperties` | `AnimationPropertyRegistry`      | —       | Custom animation-property interpolation; Canvas only for now                       |

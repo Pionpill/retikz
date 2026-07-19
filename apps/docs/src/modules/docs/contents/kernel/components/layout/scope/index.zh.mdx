@@ -1,7 +1,11 @@
 ---
 title: Scope
-description: 用 Scope 为一组图元建立局部坐标系，统一应用变换、样式、引用边界与裁切。
+description: Scope 是 Kernel 的局部上下文容器：让一组图元共享坐标变换、样式默认、命名空间、整体引用和裁剪，但不负责绘制或自动布局。
 ---
+
+`<Scope>` 把一组 children 放进同一个局部上下文。它不画新的图元，也不替你计算 plot / table 布局；它只管理这组内容怎样变换、怎样被引用，以及怎样进入 Scene。
+
+把 Scope 当作「子图边界」：只有一组内容确实需要共享几何或运行时语义时才使用。单纯为了整理 JSX，请拆普通 React 组件。
 
 ## 用法
 
@@ -10,443 +14,208 @@ import { Scope } from '@retikz/react';
 ```
 
 ```tsx
-<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>{/* Node / Path / Coordinate / 嵌套 Scope */}</Scope>
+<Scope id="cluster" transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+  {/* Node / Path / Coordinate / nested Scope */}
+</Scope>
 ```
 
-scope 子树产出任何 primitive，或带有 `transforms` / `id` / `clip` 之一 → 发 `GroupPrim`；否则（子树无产物且无这三项）被剪枝，不发任何 Scene primitive，不留空容器开销。仅给样式默认 / `meta` 而子树无产物的 scope 同样会被剪掉。
+### 何时使用
 
-### 何时用 Scope
-
-设计上有"分组"概念时——一组节点 / path 在意图上属于同一个子图，需要作为整体应用 transform，或需要让外层通过 `scope.id` 把它们当作一个单元引用 / 定位。
-
-第一次读 Scope，先抓住三件事：
-
-| 目标                           | 用法                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------- |
-| 整体移动 / 旋转 / 缩放一组图元 | `transforms`                                                              |
-| 给一组图元统一默认样式         | `color` / `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` |
-| 让外部连到整组图元边界         | `id`                                                                      |
+| 任务              | 使用入口               | Scope 的边界             |
+| ----------------- | ---------------------- | ------------------------ |
+| 整体变换一个子图  | `transforms`           | 不计算子元素原始位置     |
+| 从外部引用整组    | `id` + `boundingShape` | 不把 path 走线计入包络   |
+| 隔离可复用子图 id | `localNamespace`       | `scope.id` 仍注册到外层  |
+| 统一默认值        | `color` / `*Default`   | 元素显式值仍然优先       |
+| 限制可见区域      | `clip`                 | 不定义 renderer 专属语义 |
+| 调整整组栈序      | `zIndex`               | 不重排组内 children      |
 
 <ComponentAlert
   type="warn"
   title="不要为代码层级组织而包 Scope"
-  description="仅做代码层级组织、不共享 transform 与引用句柄时包 Scope，只会凭添命名空间陷阱、零几何收益。"
+  description="没有共享变换、引用、命名空间、默认值或裁剪时，Scope 只会增加不必要的上下文边界。"
 />
 
-## 组合
+### 变换输入
 
-`<Scope>` 的 children 可以是 `<Node>`、`<Coordinate>`、`<Path>` 或嵌套 `<Scope>`。Scope 自己不画形状；当子树产出任何 primitive，或带有 `transforms` / `id` / `clip` 之一时，才在 Scene 里形成一个 group（仅有样式默认 / `meta` 而无子产物的 scope 会被剪掉）。
+五种平移写法与 Node 的相对定位模型一致；`rotate` 与 `scale` 负责局部坐标系的方向和尺度。数组顺序沿用 SVG transform list：最后一项先作用到局部点。
 
-把 Scope 当成“子图容器”而不是“普通 div”：它适合承载几何关系、局部坐标和整组引用；如果只是想让 JSX 更好看，优先用普通 React 组件拆分代码。
-
-### transforms 7 变体
-
-5 个 translate 变体一一镜像 `<Node position>` 的 5 种形态（笛卡尔 / 极坐标 / 方向相对 / 偏移 / 两端点比例）。
-
-| kind                | 字段                           | 语义                                                                                           |
-| ------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `translate`         | `{ x, y }`                     | 笛卡尔平移，user units                                                                         |
-| `polar-translate`   | `{ origin?, angle, radius }`   | 极坐标平移，`origin` 为 `id` / `[x,y]` / `PolarPosition`，缺省 = 原点                          |
-| `at-translate`      | `{ direction, of, distance? }` | 落到 referent 节点的某方向 distance 处，`distance` 缺省走 `<Layout nodeDistance>`              |
-| `offset-translate`  | `{ of, offset? }`              | scope 原点 = referent 全局坐标 + `[dx, dy]`，`offset` 缺省 = `[0, 0]`                          |
-| `between-translate` | `{ between, fraction }`        | scope 原点 = 两个端点按 `fraction` 插值的位置，端点支持坐标 / 节点引用 / offset / 嵌套 between |
-| `rotate`            | `{ degrees, cx?, cy? }`        | 旋转 degrees 度，`cx/cy` 缺省 = scope 局部原点                                                 |
-| `scale`             | `{ x, y? }`                    | 缩放，`y` 缺省 = `x`（等比）                                                                   |
-
-数组顺序应用——第 0 个是最外层（最后作用到局部点），最后一个是最内层（最先作用），与 SVG transform list 语义一致。`transforms: [translate, rotate]` 等价 SVG `transform="translate(...) rotate(...)"`：rotate 先作用、translate 后作用；compile 展平 / 下沉细节见[技术原理：变换与相对定位如何落到全局](#变换与相对定位如何落到全局)。
-
-<Comparison target="tikz" title="Scope 对照">
-
-`<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>...</Scope>` 对应 TikZ 的 `\begin{scope}[shift={(50,0)}] ... \end{scope}`：在子图开始处压一层局部 transform，结束时弹出。TikZ 多个 option 写一起按出现顺序叠加 CM；retikz `transforms` 数组按 index 顺序应用，复用 SVG / Scene 约定。
-
-</Comparison>
+| kind                | 核心字段                       | 作用                         |
+| ------------------- | ------------------------------ | ---------------------------- |
+| `translate`         | `x`, `y`                       | 固定笛卡尔平移               |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | 从原点或 referent 极坐标落点 |
+| `at-translate`      | `direction`, `of`, `distance?` | 落到 referent 的某个方向     |
+| `offset-translate`  | `of`, `offset?`                | 在 referent 上叠加局部偏移   |
+| `between-translate` | `between`, `fraction`          | 落到两个端点的比例位置       |
+| `rotate`            | `degrees`, `cx?`, `cy?`        | 旋转局部坐标系               |
+| `scale`             | `x`, `y?`                      | 等比或分轴缩放               |
 
 ## 例子
 
-### 平移
+### 局部坐标
 
-笛卡尔 translate 是最常用形态——整组节点 + path 共享一层 shift：
+`O` / `T` 是 Scope 外的固定参照点。用面板切换七种 transform 输入并调整对应参数时，只有中间的局部坐标轴与点 `q` 整体变化；两条点状辅助投影始终保留 `q` 在局部坐标系中的位置关系。
 
-<ComponentPreview files="scope-translate-basic" size="xs" />
+<ComponentPreview files="scope-translate-basic" size="md" />
 
-polar 用极坐标偏移：
+相对方向始终在当前局部坐标系中解释，因此 Scope 旋转后，`right` 的视觉方向也会随坐标轴旋转。
 
-<ComponentPreview files="scope-polar-translate" size="xs" />
+### 整体引用与命名空间
 
-at 用方向相对（`direction` + referent + 可选 `distance`）：
+设置 `id` 后，Scope 会根据 children 的包围盒生成一个可引用的整体目标。用面板切换 `boundingShape` 与连接 anchor，观察边界形状和连接落点如何独立变化；children 本身不会改变。
 
-<ComponentPreview files="scope-at-translate" size="xs" />
+<ComponentPreview files="scope-id-reference" size="md" />
 
-offset 用任意 `[dx, dy]` 落点：
+`localNamespace` 只在确实要复用带固定 id 的子图时使用。面板默认让内外 Node 同为 `A`；关闭隔离时外部箭头会改连内部 Node，把内部 id 改成 `B` 可消除冲突。
 
-<ComponentPreview files="scope-offset-translate" size="xs" />
+<ComponentPreview files="scope-local-namespace-basic" size="sm" />
 
-between 用两个端点的比例点落点：
+### 裁剪与层级
 
-<ComponentPreview files="scope-between-translate" size="xs" />
+`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。用面板切换六种内置裁剪区；内置类型不够时再注册[自定义裁剪区](/kernel/components/layout/custom-clip)。
 
-### 旋转与缩放
+<ComponentPreview files="scope-clip" size="xs" minimumSize="xs" previewClassName="!p-3 !pt-[52px]" />
 
-`rotate` 绕 scope 局部原点旋转 degrees 度；`scale` 等比 / 分轴缩放，组内节点尺寸 + 字号 + 间距 + path 端点 boundary clip 都按 scope 视觉尺寸对齐：
+`zIndex` 调整整个 Scope 在父层的栈序，不会重排 Scope 内部 children。用面板分别修改四个 Node 与两个 Scope，比较组内排序和整组排序。
 
-<ComponentPreview files="scope-rotate-scale" size="sm" />
+<ComponentPreview files="scope-z-index" size="md" />
 
-#### Recipe：轨道 + 自转朝向中心
+### 样式默认值
 
-单 `polar-translate` 只平移 scope 原点、**不旋转**坐标系——动画过程 scope 内容朝向恒定，"像沿圆轨自由飘浮的卫星"。要让 scope 自身随轨道角度旋转（"潮汐锁定"，前方始终对准圆心），chain 一个 `rotate(angle + 180)`：
+Scope 同时提供 `color`、共享 graphic state 与 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`。这些值逐字段向内继承，元素显式值优先；`resetStyle` 只切断指定通道的外层继承。
 
-<ComponentPreview files="scope-orbit-facing-hub" size="md" />
-
-chain 应用顺序：数组 `[t0, t1]` 里 `t1` 先生效（innermost），所以先 `rotate` 把局部 +x 转到指向 hub 的方向，再 `polar-translate` 推到轨道位置。`+ 180` 让 scope 的 +x 从"指外"翻转到"指 hub"；想让 +x 指外（前方背离圆心），去掉 `+ 180` 即可。
-
-### 嵌套组合
-
-scope 内可以再放 scope——外层定位 cluster，内层再定位 cluster 内的子组；嵌套深度无限制：
-
-<ComponentPreview files="scope-nested-compose" size="xs" />
-
-### 跨 scope 引用
-
-scope 内 node id 默认注册到全局 nodeIndex，外部 path 端点 / `at.of` 都能引用：
-
-<ComponentPreview files="scope-cross-reference" size="xs" />
-
-引用 id 后追加 `.<anchor>` / `.<deg>` 取节点视觉边界点（含累积 rotate / scale 后的全局边界）：
-
-<ComponentPreview files="scope-anchor-cross" size="sm" />
-
-注意 Web 方位锚（`top` / `bottom-left` 等 8 方位）默认取节点**外接矩形（AABB）**的边 / 角点，不是形状轮廓——所以圆形节点 `hub` 的 `bottom-left` 落在外接框左下角、在圆**外**；只有 `top` / `right` / `bottom` / `left` 4 个边中点正好压在圆周上。要贴形状轮廓本身，用角度锚 `.<deg>`（如 `hub.225` 取圆周上西南方向的点），或给节点设 `boundary="circle"` 让标准方位锚改走圆边界。`north` / `south-west` 这类 compass 名仍可作为输入别名。
-
-### scope.id：作为引用整体
-
-`<Scope id="cluster">` 设值后，外部可用 `'cluster'` / `'cluster.<anchor>'` / `'cluster.<deg>'` 引用整个 scope 的视觉边界——与普通 rectangle 节点一致：
-
-<ComponentPreview files="scope-id-reference" size="sm" />
-
-嵌套时每层 scope.id 各算各的 bbox：
-
-<ComponentPreview files="scope-id-nested" size="sm" />
-
-scope.id 也可作为 `polar.origin` / `at.of` / `offset.of` referent（取 bbox 中心）：
-
-<ComponentPreview files="scope-id-referent" size="md" />
-
-bbox 的包络输入、形状与 clip 资源流转见[技术原理：scope.id 边界与 clip 如何进入 Scene](#scopeid-边界与-clip-如何进入-scene)。
-
-### scope 内相对定位
-
-scope 内 node / coordinate / path step.to 用 polar / at / offset 时，referent 取全局、relative 跟着当前 scope rotate / scale 走：
-
-<ComponentPreview files="scope-position-polar-in-rotate" size="sm" />
-
-`direction: 'right'` 是**当前 scope 局部**的 right——scope rotate 90° 后视觉变 down：
-
-<ComponentPreview files="scope-position-at-cross-scope" size="sm" />
-
-`offset: [40, 0]` 在 scope 局部度量；scope `scale(2)` 后视觉偏移 (80, 0)：
-
-<ComponentPreview files="scope-position-offset-with-scale" size="sm" />
-
-相对定位的正反投影主链与变换后 path 的 emit 边界见[技术原理：变换与相对定位如何落到全局](#变换与相对定位如何落到全局)。
-
-### 局部命名空间
-
-`localNamespace: true` 让 scope 创建本地 frame——内部 id 与外部隔离，常用于子图复用 / 模板化：
-
-<ComponentAlert
-  type="warn"
-  title="优先用可区分的 id，而不是 localNamespace"
-  description="localNamespace 引入命名空间栈：inside-out lookup 让 id 解析依赖嵌套层级、shadowing 会悄悄遮蔽外层同名 id、外部也无法再引用被隔离的内部 id。除非确实在做子图复用 / 模板化，否则优先给 id 起可区分的名字（如加前缀），别靠 localNamespace 回避命名冲突。"
-/>
-
-<ComponentPreview files="scope-local-namespace-basic" size="xs" />
-
-嵌套 localNamespace 形成栈式命名空间，最内层 path 引用 id 时从内向外 lookup：
-
-<ComponentPreview files="scope-local-namespace-nested" size="xs" />
-
-同名 id 在不同 frame 内不算冲突；inside-out lookup 自动让内层 shadowing 外层：
-
-<ComponentPreview files="scope-local-namespace-shadowing" size="sm" />
-
-inside-out / shadowing / scope.id 落父 frame 的语义见[技术原理：命名空间与 id 冲突如何处理](#命名空间与-id-冲突如何处理)。
-
-### 重复 id 警告
-
-同 frame 重复 id 触发 `DUPLICATE_NODE_ID` warn + 后定义覆盖前定义（last-wins，**不抛错**）：
-
-<ComponentPreview files="scope-duplicate-id-warn" size="xs" />
-
-触发条件、跨 frame shadowing 与同 frame 覆盖行为见[技术原理：命名空间与 id 冲突如何处理](#命名空间与-id-冲突如何处理)。
-
-### 样式继承
-
-Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**主色 `color`** + 跨类共享分项级联到全部元素；**四类默认** `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 按元素类型分发、扁平独立；**`resetStyle`** 切外层继承。
-
-#### 主色级联
-
-`<Scope color>` 把当前色下传给内部全部元素——节点边 / 文字、path stroke / 箭头 / 边标注都默认随它；分项（`stroke` / `fill` / `textColor`）显式给则覆盖主色：
-
-<ComponentPreview files="scope-style-cascade" size="xs" />
-
-主色同样会染节点 `fill`；上例锚点节点显式 `fill="white"` 截断填充让文字可读。颜色跟随的是**主色 `color`** 而非 `stroke`——`<Path color>` 标注 / 箭头同色，`<Path stroke>` 只染线、标注不跟。
-
-#### 分类默认
-
-`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 各给一类元素挂默认样式，扁平独立、互不干涉。`nodeDefault` 含形状 / 间距等节点专属字段（直接写 `color` 染不到 `shape`，得走 `nodeDefault`）；`pathDefault` 会作用到 Path，也会把共享几何样式字段传给 Ribbon；箭头走独立 `arrowDefault`，`pathDefault` 不含箭头：
-
-<ComponentPreview files="scope-style-typed-defaults" size="xs" />
-
-#### resetStyle 继承屏障
-
-`resetStyle` 切外层 scope 的继承（主色级联 + 四类默认），回内置基线；本 scope 自己的值 + 内层照常生效。`true` 全切，或传通道数组（`['node' | 'path' | 'label' | 'arrow']`）按类切：
-
-<ComponentPreview files="scope-style-reset" size="xs" />
-
-`resetStyle` 只切 scope 的继承、**不碰元素与宿主的结构关系**——label / arrow 仍跟所属 path / node 的已解析颜色：`resetStyle={['label']}` 只忽略外层 `labelDefault`、label 仍跟它的线。逐字段优先级、按存在性回退与继承屏障见[技术原理：样式如何逐字段解析](#样式如何逐字段解析)。
-
-<Comparison target="tikz" title="样式继承对照">
-
-主色 `color` 对应 TikZ 的 `color=`（设当前色，draw / fill / text 跟随）；`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 对应 `every node` / `every path` 等的 `.style`。差异：retikz 嵌套是 **per-field 合并**（≈ TikZ `.append style`），不是字面 `.style=` 整体替换。
-
-</Comparison>
-
-### 栈序（zIndex）
-
-`zIndex` 作用于 **scope 整体**（它编译出的 `GroupPrim`）在父层的上下位置，**不影响 scope 内部子元素的相对栈序**。下面两组节点簇重叠、声明顺序 A 先 B 后（默认 B 整组压上），给先声明的 A 组设 `zIndex={1}` 即可把整组浮到 B 组之上：
-
-<ComponentPreview files="scope-z-index" size="sm" />
-
-### scope 边界多态
-
-`boundingShape` 让 scope.id 句柄按指定形状取包络，而非默认的轴对齐矩形（AABB）。缺省 / `'rectangle'` 逐字不变；`'circle'` 取子树点集的**最小外接圆**——`cluster.<anchor>` / `cluster.<deg>` 与连线端点都落在**圆周**上，适合圆形 / polar 面板的连接：
-
-<ComponentPreview files="scope-bounding-shape" size="sm" />
-
-`boundingShape` 是受控枚举：只接受 `'rectangle'`（默认）与 `'circle'`，枚举外的值由 schema 在 parse 边界直接拒绝。`'polygon'` / `'ellipse'` 缓做（各需独立的最小外接算法）；这是有意设计为闭集，而非 Node `shape` / `boundary` 那种开放 shape 引用。
-
-### clip 裁切
-
-`<Scope clip={...}>` 把 scope 内所有子元素裁剪到一个区域内——区域内可见、区域外裁掉。内置裁剪区支持 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`，也可以通过 [自定义裁剪区](/kernel/components/layout/custom-clip) 注册自己的 `kind`；坐标用 scope 局部坐标系：
-
-```tsx
-<Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
-```
-
-<ComponentPreview files="scope-clip" size="md" />
-
-## 技术原理
+样式是 Scope 的辅助职责，不改变局部坐标、引用或裁剪语义。需要查字段时直接看下方 API，不必为颜色、线宽或透明度建立额外 Scope。
 
 <ComponentAlert
   type="tip"
-  title="上手阶段可跳过本节"
-  description="遇到 id、变换、样式继承、包围盒或裁切的边界问题时再回来读。"
+  title="共享默认值也能缩小配置"
+  description="把真正共享的局部样式写在 Scope 上，可以避免为每个 child 重复同一组字段，通常能显著减小配置对象和持久化 JSON。Plot 等 Tier 2 包也常在 lowering 时把系列或图层样式集中为 Scope 默认值，以压缩生成 IR 的体积。"
 />
 
-本节只放大 `<Scope>` 自己负责的局部坐标、命名空间、样式和边界机制；完整的 JSX → IR → Scene 管线见[架构](/kernel/concepts/design/principles)。
+## 技术原理
 
-### 变换与相对定位如何落到全局
+<ComponentAlert type="tip" title="上手阶段可跳过本节" description="遇到变换投影、id 冲突、包络或裁剪边界时再回来读。" />
 
-图的上半部分把 7 种 IR transform 收敛为 renderer 可直接消费的 `translate` / `rotate` / `scale`，下半部分展示相对定位如何借同一条 scope chain 在全局与局部之间往返。
+本节只解释用户能观察到的 Scope 机制；完整 JSX → IR → Scene 管线见[架构](/kernel/concepts/design/principles)。
+
+### 变换与相对定位
+
+七种输入先收敛为 Scene 可消费的 `translate` / `rotate` / `scale`。相对定位则沿当前 Scope chain 做「全局 referent → 反投影到局部 → 叠加 relative → 投影回全局」。
 
 <ComponentPreview files="scope-coordinate-flow" size="sm" hideCode />
 
-`transforms` 的列表顺序与 SVG 一致；相对定位则遵循 `全局 referent → 反投影到当前局部 → 叠加 relative → 正向投影回全局`。因此 rotate / scale 会改变 relative 的视觉方向或长度，单纯 translate 不会。
-
-带 transform 的 scope 中，path 端点在 emit 前已经变成全局坐标，因此会 hoist 到顶层以避免 transform 二次应用。这也意味着它的跨 frame z-order 不能完全保留 IR 顺序，且不会被该 scope 的 clip 裁切。
+因此 rotate 会改变 `right` 的视觉方向，scale 会改变 offset 的视觉长度。Path 会等 id 可查后再解析端点，并回填到原来的 Group 占位位置；声明顺序、Scope 归属与 clip 约束都不会因为延迟解析而丢失。
 
 <SourceLinks
   sources={[
     {
-      label: 'transform lowering',
+      label: 'transform 输入收敛',
       path: 'packages/kernel/core/src/compile/scope.ts',
       startLine: 34,
       endLine: 112,
     },
     {
-      label: '相对定位反投影',
+      label: '相对定位与 scope chain 投影',
       path: 'packages/kernel/core/src/compile/position.ts',
       startLine: 55,
       endLine: 98,
     },
     {
-      label: 'scope chain 正反投影',
-      path: 'packages/kernel/core/src/compile/transform.ts',
-      startLine: 8,
-      endLine: 65,
-    },
-    {
-      label: 'path 回填与 hoist',
+      label: 'path 延迟解析与原位回填',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 147,
-      endLine: 176,
+      endLine: 161,
     },
   ]}
 />
 
-### 命名空间与 id 冲突如何处理
+### 命名空间与 id 冲突
 
-`localNamespace` 决定是否新增 frame；lookup 永远从当前 frame 向外查找，只有当前候选未命中时才继续。register 则只写当前 frame，并在同 frame 重名时进入警告分支。
+默认 Scope 复用当前 namespace frame。`localNamespace` 才会新增 frame；lookup 从内向外返回第一个命中，register 只写当前 frame。
 
 <ComponentPreview files="scope-namespace-resolution" size="md" hideCode />
 
-默认 scope 不创建边界，子 id 会落入现有 frame。启用 `localNamespace` 后，内层仍能看到外层 id；同名 id 会 shadow 外层且不警告，frame 退出后外层 id 恢复可见。
-
-同一 frame 内重复 id 会对每次覆盖发出 `DUPLICATE_NODE_ID`，compile 继续并采用后定义。`scope.id` 在子 frame 入栈前先注册到父 frame，所以它始终是外部可见的 scope 句柄。
+因此跨 frame 同名是合法 shadowing；同一 frame 重复 id 会发出 `DUPLICATE_NODE_ID` 警告，并采用后定义。`scope.id` 在子 frame 入栈前注册到父 frame，所以外部始终能引用 Scope 整体。
 
 <SourceLinks
   sources={[
     {
-      label: 'namespace register 与 lookup',
+      label: 'namespace 注册与查找',
       path: 'packages/kernel/core/src/compile/namespace.ts',
       startLine: 24,
       endLine: 132,
     },
     {
-      label: 'scope 父子 frame 编排',
+      label: 'Scope 父子 frame 编排',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 312,
       endLine: 415,
     },
-    {
-      label: '重复 id 警告',
-      path: 'packages/kernel/core/src/compile/orchestration/diagnostics.ts',
-      startLine: 21,
-      endLine: 33,
-    },
   ]}
 />
 
-### 样式如何逐字段解析
+### 整体句柄与 Scene 输出
 
-从左到右是单个样式字段的回退顺序：只有当前来源没有提供值时才继续向后。同一来源内，显式分项优先于该来源的 `color` 展开。
+`scope.id` 与 `clip` 是两条独立链路：前者把子树 layout 汇总成可引用句柄，后者把 JSON clip spec 解析成 Scene 资源。两者都在 Core 编译边界结束。
 
-<ComponentPreview files="scope-style-resolution" size="xs" hideCode />
+<ComponentPreview files="scope-boundary-clip" size="sm" hideCode />
 
-解析按字段存在性判断，因此显式 `none` / `0` / `false` 都会在当前层停止回退。`resetStyle` 只切断所选通道的外层 scope 继承；当前 scope、元素显式值和内置默认仍参与解析。
-
-label 与 arrow 仍沿宿主轴取色：例如 reset arrow 默认后，箭头仍可跟随已解析的 path 主色，不会变成孤立样式。
+Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 走线。默认结果是全局 AABB；圆形模式使用最小外接圆。子树有输出，或 Scope 带 `transforms` / `id` / `clip` 时才生成 `GroupPrim`；空且无这些语义的 Scope 会被剪枝。
 
 <SourceLinks
   sources={[
     {
-      label: '样式 frame 与继承屏障',
-      path: 'packages/kernel/core/src/compile/style/frame.ts',
-      startLine: 56,
-      endLine: 80,
-    },
-    {
-      label: 'Node 逐字段解析',
-      path: 'packages/kernel/core/src/compile/style/node.ts',
-      startLine: 22,
-      endLine: 45,
-    },
-    {
-      label: 'Path 与 label 主色解析',
-      path: 'packages/kernel/core/src/compile/style/path.ts',
-      startLine: 73,
-      endLine: 116,
-    },
-    {
-      label: '箭头宿主色解析',
-      path: 'packages/kernel/core/src/compile/style/arrow.ts',
-      startLine: 35,
-      endLine: 63,
-    },
-  ]}
-/>
-
-### scope.id 边界与 clip 如何进入 Scene
-
-上半行把 scope 子树变成可引用的 synthetic layout；下半行把 renderer-agnostic 的 clip IR 变成 Scene 资源与 group 引用。两条链都在 compile 边界结束，具体绘制交给 adapter。
-
-<ComponentPreview files="scope-boundary-clip" size="xs" hideCode />
-
-`scope.id` 只收集 node、coordinate 与嵌套 scope layout，不把 path 走线计入边界。默认用全局角点求轴对齐 AABB；`boundingShape="circle"` 改用最小外接圆；空 scope 退化为局部原点投影出的 0×0 句柄。
-
-clip provider 先解析出 JSON 可序列化的 `ClipShape`，registry 再按 shape 去重并生成稳定 `clipRef`。SVG 会物化 `<clipPath>`，Canvas 使用同一份 Scene 资源执行裁切；前述 hoist path 不在 group children 内，因此不受该 group 的 clip 影响。
-
-<SourceLinks
-  sources={[
-    {
-      label: 'scope.id 占位与边界回填',
+      label: 'Scope 包络与 Group 输出',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 312,
-      endLine: 360,
+      endLine: 394,
     },
     {
-      label: 'AABB 与 synthetic layout',
-      path: 'packages/kernel/core/src/compile/scope.ts',
-      startLine: 114,
-      endLine: 135,
-    },
-    {
-      label: '矩形与圆形包络',
+      label: '矩形与圆形 synthetic layout',
       path: 'packages/kernel/core/src/compile/node/synthetic.ts',
       startLine: 80,
       endLine: 137,
     },
     {
-      label: 'clip 解析、去重与资源注册',
+      label: 'clip 解析与资源注册',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
       startLine: 156,
       endLine: 189,
-    },
-    {
-      label: 'SVG clip 物化',
-      path: 'packages/kernel/render/src/svg/builders/document.ts',
-      startLine: 91,
-      endLine: 109,
     },
   ]}
 />
 
 ## API 参考
 
-| 属性         | 类型                      | 默认值 | 描述                                                                                                                                                                                       |
-| ------------ | ------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `transforms` | `Array<Transform>`        | —      | 局部 transform 列表，7 变体；数组顺序应用（第 0 个最外层、最后一个最内层，同 SVG transform list）；展平 / 下沉细节见[技术原理：变换与相对定位如何落到全局](#变换与相对定位如何落到全局)    |
-| `children`   | `ReactNode`               | —      | scope 内子元素：`<Node>` / `<Path>` / `<Coordinate>` / 嵌套 `<Scope>`                                                                                                                      |
-| `meta`       | `Record<string, JSON 值>` | —      | provenance 元数据：原样透传进本 scope emit 的 `GroupPrim`，renderer 忽略、不参与布局、**不下传子元素**；典型由 plot 等高层 lowering 注入（标记 series / layer 层）。须为 JSON 可序列化对象 |
-| `animations` | `Array<AnimationTrack>`   | —      | 作用于 scope 整体（其 GroupPrim）的时间轴动画 tracks；不下传子元素、不参与布局。见 [动画](/kernel/components/effects/animation)                                                            |
+### 上下文与输出
 
-### 引用与定位
+| 属性             | 类型                      | 默认值        | 描述                                                               |
+| ---------------- | ------------------------- | ------------- | ------------------------------------------------------------------ |
+| `children`       | `ReactNode`               | —             | Node / Path / Coordinate / 嵌套 Scope                              |
+| `transforms`     | `Array<IRTransformInput>` | —             | 七种局部变换；数组最后一项先作用                                   |
+| `id`             | `string`                  | —             | 把 Scope 包络注册成外部可引用句柄                                  |
+| `localNamespace` | `boolean`                 | `false`       | 隔离内部 id；`scope.id` 仍对外可见                                 |
+| `boundingShape`  | `'rectangle' \| 'circle'` | `'rectangle'` | `scope.id` 的矩形或圆形包络                                        |
+| `clip`           | `IRClipSpec`              | —             | Scope 局部坐标中的内置或自定义裁剪区                               |
+| `zIndex`         | `number`（整数）          | `0`           | Scope 整体在父层的稳定栈序                                         |
+| `meta`           | `Record<string, JSON 值>` | —             | 透传到 GroupPrim，不参与布局或继承                                 |
+| `animations`     | `Array<IRAnimationTrack>` | —             | Scope 整体动画，不下传 children                                    |
+| `on<Event>`      | `HydrationHandler`        | —             | 需要 `id`；完整事件列表见[水合](/kernel/packages/render/hydration) |
 
-| 属性             | 类型      | 默认值  | 描述                                                                                                                                                                                                                                                                       |
-| ---------------- | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`             | `string`  | —       | 可选 scope 引用 id；设值后 scope 子树全部 layout 的**轴对齐全局 bbox**注册为 synthetic rectangle layout 到**父 frame**；外部可用 `'X'` / `'X.<anchor>'` / `'X.<deg>'` 引用，包络计算见[技术原理：scope.id 边界与 clip 如何进入 Scene](#scopeid-边界与-clip-如何进入-scene) |
-| `localNamespace` | `boolean` | `false` | 是否创建本地命名空间：`true` 时 scope 推一个子 frame，内部 id 与外部隔离；详见[技术原理：命名空间与 id 冲突如何处理](#命名空间与-id-冲突如何处理)                                                                                                                          |
+### 样式默认值
 
-`scope.id` 的包络计算与 `boundingShape` 见 [Scope 裁切](/kernel/components/layout/scope)。
-
-### 样式与栈序
-
-| 属性            | 类型                    | 默认值  | 描述                                                                                                                            |
-| --------------- | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `color`         | `string`                | —       | 级联主色；内部 stroke / fill / 文字 / 箭头 / 标注未单设则随它                                                                   |
-| `stroke`        | `string \| PaintSpec`   | —       | 级联默认描边 paint（CSS 颜色或 PaintSpec：渐变 / pattern / image）                                                              |
-| `fill`          | `string \| PaintSpec`   | —       | 级联默认填充（CSS 颜色或 PaintSpec：渐变 / pattern / image）                                                                    |
-| `strokeWidth`   | `number`                | —       | 级联默认描边宽度                                                                                                                |
-| `opacity`       | `number`                | —       | 级联默认整体透明度 0~1（嵌套替换、不复合）                                                                                      |
-| `fillOpacity`   | `number`                | —       | 级联默认填充透明度 0~1                                                                                                          |
-| `strokeOpacity` | `number`                | —       | 级联默认描边透明度 0~1                                                                                                          |
-| `nodeDefault`   | `object`                | —       | node 默认样式（形状 / 间距 / 色等），作用于 scope 内每个 node                                                                   |
-| `pathDefault`   | `object`                | —       | path-like 默认样式；Path 使用完整字段，Ribbon 只使用共享几何样式字段；箭头走 `arrowDefault`                                     |
-| `labelDefault`  | `object`                | —       | label 默认样式（node label + step label 共享）                                                                                  |
-| `arrowDefault`  | `object`                | —       | arrow 默认样式（shape / scale / 色等）                                                                                          |
-| `resetStyle`    | `boolean \| Array`      | `false` | 继承屏障：切外层对应通道；详见[技术原理：样式如何逐字段解析](#样式如何逐字段解析)                                               |
-| `zIndex`        | `number`（整数）        | `0`     | 显式栈序：作用于 scope 整体（其 GroupPrim）在父层的位置，不影响 scope 内部子元素相对栈序；大者在上、同值保持声明顺序            |
-| `animations`    | `Array<AnimationTrack>` | —       | 作用于 scope 整体（其 GroupPrim）的时间轴动画 tracks；不下传子元素、不参与布局。见 [动画](/kernel/components/effects/animation) |
-
-### 边界与裁切
-
-| 属性            | 类型                      | 默认值        | 描述                                                                                                                                                                                                                        |
-| --------------- | ------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `boundingShape` | `'rectangle' \| 'circle'` | `'rectangle'` | scope.id 句柄的包络形状——受控枚举（非 Node `shape` 那种开放 shape 引用）：缺省矩形 AABB；`'circle'` 取子树最小外接圆（anchor / 连线落圆周，适合圆形 / polar 面板）；枚举外的值由 schema 拒绝。详见 `例子`「scope 边界多态」 |
-| `clip`          | `ClipSpec`                | —             | 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；裁 scope 内全部子元素                                                                                                               |
+| 属性                                                            | 类型                             | 默认值  | 描述                              |
+| --------------------------------------------------------------- | -------------------------------- | ------- | --------------------------------- |
+| `color`                                                         | `string`                         | —       | 跨元素级联的主色                  |
+| `stroke` / `fill`                                               | `string \| IRPaintSpec`          | —       | 跨元素逐字段级联的描边与填充      |
+| `strokeWidth` / opacity 字段                                    | `number`                         | —       | 线宽与逐字段级联的透明度          |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 对应默认值对象                   | —       | 四类元素各自独立的默认通道        |
+| `resetStyle`                                                    | `boolean \| Array<StyleChannel>` | `false` | 全部或按通道切断外层 Scope 的继承 |
 
 ## 相关
 
-- [Layout](/kernel/components/layout/overview)：scope 的最外层容器
-- [Node](/kernel/components/node/overview)：scope 内常见 children；node `position` 5 形态与 scope translate 5 变体一一镜像
-- [Coordinate](/kernel/components/node/coordinate)：scope 内可直接放命名占位点，跨 scope 同样可被外部引用
+- [Layout](/kernel/components/layout/overview)：整张图的输入、能力注入与宿主边界
+- [Node](/kernel/components/node/overview)：Scope 内最常见的可引用图元
+- [Coordinate](/kernel/components/node/coordinate)：无可见几何的命名坐标
+- [自定义裁剪区](/kernel/components/layout/custom-clip)：扩展 `clip.kind` 的统一 registry 路径
+- [水合](/kernel/packages/render/hydration)：`Scope` 可绑定的事件与 handler 上下文

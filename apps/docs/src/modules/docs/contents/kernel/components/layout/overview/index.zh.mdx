@@ -37,7 +37,7 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 日常写图直接传 children；`<Layout>` 负责把组件树转成 Core IR，并接入后续编译与渲染。
 
-<ComponentPreview files="layout-basic" size="xs" />
+<ComponentPreview files="layout-basic" size="sm" />
 
 ### IR 输入
 
@@ -172,26 +172,36 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 | `height`   | `number \| string`        | —      | SVG / Canvas 在页面上的显示高度              |
 | `viewBox`  | `{ x, y, width, height }` | —      | 内部坐标范围；覆盖 IR viewBox 与自动范围     |
 
-### 编译与能力注入
+### 编译基础
 
 这些 props 统一进入 `CompileOptions`；具体 definition 的定义、注册与错误契约见对应自定义指南。
 
-| 属性                  | 类型                                           | 默认值 | 描述                                                                        |
-| --------------------- | ---------------------------------------------- | ------ | --------------------------------------------------------------------------- |
-| `nodeDistance`        | `number`                                       | `24`   | 相对定位的默认节点距离；节点自带值优先                                      |
-| `fontSize`            | `number`                                       | `16`   | 默认字号，同时作为字号 preset 与 `rem` 根字号                               |
-| `shapes`              | `ReadonlyArray<ShapeDefinition>`               | —      | 注入自定义形状；见[自定义形状](/kernel/components/shapes/custom-shape)      |
-| `boundaries`          | `ReadonlyArray<BoundaryDefinition>`            | —      | 注入自定义连接面；见[自定义连接面](/kernel/components/node/custom-boundary) |
-| `clips`               | `ReadonlyArray<ClipDefinition>`                | —      | 注入自定义裁剪区；见[自定义裁剪区](/kernel/components/layout/custom-clip)   |
-| `arrows`              | `ReadonlyArray<ArrowDefinition>`               | —      | 注入自定义箭头；见[自定义箭头](/kernel/components/draw/custom-arrow)        |
-| `patterns`            | `ReadonlyArray<PatternDefinition>`             | —      | 注入自定义图案；见[自定义图案](/kernel/components/effects/custom-pattern)   |
-| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`       | —      | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator)      |
-| `pathKinds`           | `ReadonlyArray<PathKindDefinition>`            | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)         |
-| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>`  | —      | 注入 ribbon 宽度曲线；见[编译选项](/kernel/reference/runtime/compile)       |
-| `composites`          | `ReadonlyArray<CompositeDefinition>`           | —      | 注入 Tier 2 展开逻辑；见[复合](/kernel/concepts/design/composite)           |
-| `lowerTex`            | `LowerTex`                                     | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex)                       |
-| `onNodeLayouts`       | `(layouts: Array<CompiledNodeLayout>) => void` | —      | commit 后返回本次编译的节点内容盒和全局边界                                 |
-| `embeddables`         | `Array<EmbeddableTier2Adapter>`                | —      | 显式注入可嵌入 Tier 2 adapter；主路径使用组件静态标记                       |
+| 属性            | 类型                                                  | 默认值 | 描述                                    |
+| --------------- | ----------------------------------------------------- | ------ | --------------------------------------- |
+| `nodeDistance`  | `number`                                              | `24`   | 相对定位默认距离；节点自带值优先        |
+| `fontSize`      | `number`                                              | `16`   | 默认字号，也是 preset 与 `rem` 的根字号 |
+| `onNodeLayouts` | `(layouts:`<br />`Array<CompiledNodeLayout>) => void` | —      | commit 后返回节点内容盒与全局边界       |
+
+### 图元与资源注入
+
+| 属性         | 类型                                        | 默认值 | 描述                                                                  |
+| ------------ | ------------------------------------------- | ------ | --------------------------------------------------------------------- |
+| `shapes`     | `ReadonlyArray`<br />`<ShapeDefinition>`    | —      | 注入形状；见[自定义形状](/kernel/components/shapes/custom-shape)      |
+| `boundaries` | `ReadonlyArray`<br />`<BoundaryDefinition>` | —      | 注入连接面；见[自定义连接面](/kernel/components/node/custom-boundary) |
+| `clips`      | `ReadonlyArray`<br />`<ClipDefinition>`     | —      | 注入裁剪区；见[自定义裁剪区](/kernel/components/layout/custom-clip)   |
+| `arrows`     | `ReadonlyArray`<br />`<ArrowDefinition>`    | —      | 注入箭头；见[自定义箭头](/kernel/components/draw/custom-arrow)        |
+| `patterns`   | `ReadonlyArray`<br />`<PatternDefinition>`  | —      | 注入图案；见[自定义图案](/kernel/components/effects/custom-pattern)   |
+
+### 高级能力与宿主接入
+
+| 属性                  | 类型                                                  | 默认值 | 描述                                                                   |
+| --------------------- | ----------------------------------------------------- | ------ | ---------------------------------------------------------------------- |
+| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —      | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator) |
+| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)    |
+| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —      | 注入 ribbon 宽度曲线；见[编译选项](/kernel/reference/runtime/compile)  |
+| `composites`          | `ReadonlyArray`<br />`<CompositeDefinition>`          | —      | 注入 Tier 2 展开逻辑；见[复合](/kernel/concepts/design/composite)      |
+| `lowerTex`            | `LowerTex`                                            | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex)                  |
+| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —      | 显式注入 Tier 2 adapter；主路径使用组件静态标记                        |
 
 ### 全图默认值
 
@@ -218,7 +228,7 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 | --------------------- | -------------------------------- | ------ | ----------------------------------------------------------------------- |
 | `animate`             | `boolean`                        | 系统   | 播放开关；见[动画](/kernel/components/effects/animation)                |
 | `snapshotAt`          | `number`                         | —      | 静态截帧时刻，覆盖 `animate`                                            |
-| `animations`          | `Array<AnimationTrack>`          | —      | scene 根动画 tracks，例如 viewBox 镜头动画                              |
+| `animations`          | `Array<IRAnimationTrack>`        | —      | scene 根动画 tracks，例如 viewBox 镜头动画                              |
 | `animationRef`        | `Ref<AnimationControls \| null>` | —      | `play` / `pause` / `seek` 命令式句柄                                    |
 | `easings`             | `EasingRegistry`                 | —      | 自定义缓动；见[自定义动画](/kernel/components/effects/custom-animation) |
 | `animationProperties` | `AnimationPropertyRegistry`      | —      | 自定义动画属性插值器；当前仅 Canvas                                     |

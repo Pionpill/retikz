@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Layout, Node } from '@retikz/react';
+import { Layout, Node, Rectangle } from '@retikz/react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
 
@@ -35,14 +35,14 @@ const Demo: FC = () => {
         0,0
       </Node>
       <Node id="c" position={[70, 70]} shape="circle" minimumSize={24} fill="darkorange" />
-      <Node
-        id="frame"
-        position={[0, 0]}
-        shape="rectangle"
-        minimumSize={{ width: 236, height: 236 }}
+      <Rectangle
+        center={[0, 0]}
+        width={236}
+        height={236}
         fill="none"
         stroke="lightgray"
-        dashed
+        dashPattern={[1, 4]}
+        lineCap="round"
       />
     </Layout>
   );

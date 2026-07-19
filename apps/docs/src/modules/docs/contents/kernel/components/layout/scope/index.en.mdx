@@ -1,7 +1,11 @@
 ---
 title: Scope
-description: Use Scope to create a local coordinate system for a group and apply transforms, styles, reference bounds, and clipping as a unit.
+description: Scope is Kernel's local-context container: a group shares coordinate transforms, style defaults, namespaces, group references, and clipping without gaining drawing or automatic-layout behavior.
 ---
+
+`<Scope>` places a group of children in one local context. It does not draw a new primitive or calculate plot / table layout; it only controls how the group transforms, how it can be referenced, and how it enters Scene.
+
+Treat Scope as a _sub-figure boundary_. Use it only when the group genuinely shares geometry or runtime semantics. For JSX organization alone, extract an ordinary React component.
 
 ## Usage
 
@@ -10,443 +14,212 @@ import { Scope } from '@retikz/react';
 ```
 
 ```tsx
-<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>{/* Node / Path / Coordinate / nested Scope */}</Scope>
+<Scope id="cluster" transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+  {/* Node / Path / Coordinate / nested Scope */}
+</Scope>
 ```
-
-If the scope subtree produces any primitive, or the scope carries one of `transforms` / `id` / `clip` → a `GroupPrim` is emitted; otherwise (no subtree output and none of those three) it is pruned and emits no Scene primitive, with no empty-container overhead. A scope that only sets style defaults / `meta` but whose subtree produces nothing is pruned too.
 
 ### When to use Scope
 
-When your design has a "grouping" concept — a set of nodes / paths that conceptually belong to the same sub-diagram, need to be transformed as a unit, or need to be referenced / positioned as a whole from outside via `scope.id`.
-
-On a first read, remember three common jobs:
-
-| Goal                                               | Use                                                                       |
-| -------------------------------------------------- | ------------------------------------------------------------------------- |
-| Move / rotate / scale a group of primitives        | `transforms`                                                              |
-| Give a group shared default styling                | `color` / `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` |
-| Let external paths connect to the group's boundary | `id`                                                                      |
+| Task                  | Entry point            | Scope stops at                  |
+| --------------------- | ---------------------- | ------------------------------- |
+| Transform a subfigure | `transforms`           | It does not place raw children  |
+| Reference a group     | `id` + `boundingShape` | Path routes do not enter bounds |
+| Isolate reusable ids  | `localNamespace`       | `scope.id` stays in the parent  |
+| Share defaults        | `color` / `*Default`   | Explicit element values win     |
+| Limit visibility      | `clip`                 | No renderer-specific semantics  |
+| Move a whole stack    | `zIndex`               | Child order stays unchanged     |
 
 <ComponentAlert
   type="warn"
-  title="Don't wrap a Scope just for code-level organization"
-  description="Wrapping a Scope without a shared transform or external reference handle only adds namespace pitfalls and gives no geometric or referencing benefit."
+  title="Do not wrap Scope for code structure alone"
+  description="Without shared transforms, references, namespaces, defaults, or clipping, Scope only adds an unnecessary context boundary."
 />
 
-## Composition
+### Transform inputs
 
-`<Scope>` children can be `<Node>`, `<Coordinate>`, `<Path>`, or nested `<Scope>`. Scope does not draw a shape by itself; it becomes a Scene group when its subtree produces any primitive, or when it carries one of `transforms` / `id` / `clip` (a scope with only style defaults / `meta` and no subtree output is pruned).
+Five translation forms mirror Node's relative-position model; `rotate` and `scale` set the local axes and scale. Array order follows an SVG transform list, so the last item acts on a local point first.
 
-Think of Scope as a "subdiagram container", not a plain div. Use it for geometry, local coordinates, and whole-group references; if you only want cleaner JSX, split the code with ordinary React components first.
-
-### The 7 transform variants
-
-The 5 translate variants mirror the 5 `<Node position>` shapes (Cartesian / polar / direction-relative / offset / proportional between two endpoints) one-to-one.
-
-| kind                | Fields                         | Semantics                                                                                                                          |
-| ------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `translate`         | `{ x, y }`                     | Cartesian translation in user units                                                                                                |
-| `polar-translate`   | `{ origin?, angle, radius }`   | Polar translation; `origin` accepts `id` / `[x, y]` / `PolarPosition`; defaults to origin point                                    |
-| `at-translate`      | `{ direction, of, distance? }` | Place scope at `distance` from referent node along `direction`; `distance` defaults to `<Layout nodeDistance>`                     |
-| `offset-translate`  | `{ of, offset? }`              | Scope origin = referent global position + `[dx, dy]`; `offset` defaults to `[0, 0]`                                                |
-| `between-translate` | `{ between, fraction }`        | Scope origin = proportional point between two endpoints; endpoints support coordinates / node references / offset / nested between |
-| `rotate`            | `{ degrees, cx?, cy? }`        | Rotate by degrees; `cx/cy` default to scope local origin                                                                           |
-| `scale`             | `{ x, y? }`                    | Scale; `y` defaults to `x` (uniform)                                                                                               |
-
-Array order is application order — the 0-th entry is the outermost (applied last to the local point) and the last entry is the innermost (applied first), matching SVG transform-list semantics. `transforms: [translate, rotate]` is equivalent to SVG `transform="translate(...) rotate(...)"`: rotate applies first, translate last; see [How transforms and relative positions reach global space](#how-transforms-and-relative-positions-reach-global-space) for compile flattening and lowering.
-
-<Comparison target="tikz" title="Scope mapping">
-
-`<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>...</Scope>` maps to TikZ `\begin{scope}[shift={(50,0)}] ... \end{scope}`: a local transform is pushed at the start of the subdiagram and popped at the end. TikZ stacks CM in the order options appear; retikz applies `transforms` in array index order, reusing the SVG / Scene convention.
-
-</Comparison>
+| kind                | Key fields                     | Effect                             |
+| ------------------- | ------------------------------ | ---------------------------------- |
+| `translate`         | `x`, `y`                       | Fixed Cartesian translation        |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | Polar placement from an origin     |
+| `at-translate`      | `direction`, `of`, `distance?` | Place in a referent direction      |
+| `offset-translate`  | `of`, `offset?`                | Add a local offset to a referent   |
+| `between-translate` | `between`, `fraction`          | Interpolate between two endpoints  |
+| `rotate`            | `degrees`, `cx?`, `cy?`        | Rotate the local coordinate system |
+| `scale`             | `x`, `y?`                      | Uniform or per-axis scaling        |
 
 ## Examples
 
-### Translation
+### Local coordinates
 
-Cartesian translate is the most common form — the cluster of nodes + paths share one shift:
+`O` / `T` are fixed referents outside the Scope. Switch among all seven transform inputs and adjust their parameters in the panel: only the local axes and point `q` move as a group, while the two dotted guide projections preserve `q`'s position in the local coordinate system.
 
-<ComponentPreview files="scope-translate-basic" size="xs" />
+<ComponentPreview files="scope-translate-basic" size="md" />
 
-Polar applies a polar offset:
+Relative directions are interpreted in the current local coordinate system, so rotating Scope also rotates the visual direction of `right` with the axes.
 
-<ComponentPreview files="scope-polar-translate" size="xs" />
+### Group references and namespaces
 
-At uses direction-relative (`direction` + referent + optional `distance`):
+With an `id`, Scope derives a referenceable group target from the children bounds. Use the panel to switch `boundingShape` and the connection anchor: the boundary shape and attachment point change independently, while the children stay fixed.
 
-<ComponentPreview files="scope-at-translate" size="xs" />
+<ComponentPreview files="scope-id-reference" size="md" />
 
-Offset applies an arbitrary `[dx, dy]`:
+Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The panel starts with both Nodes named `A`; disable isolation to redirect the outer arrow to the inner Node, or rename the inner id to `B` to remove the conflict.
 
-<ComponentPreview files="scope-offset-translate" size="xs" />
+<ComponentPreview files="scope-local-namespace-basic" size="sm" />
 
-Between places the scope at a proportional point between two endpoints:
+### Clipping and stacking
 
-<ComponentPreview files="scope-between-translate" size="xs" />
+`clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. Switch among all six built-in regions in the panel, then register a [Custom Clip](/kernel/components/layout/custom-clip) when those are insufficient.
 
-### Rotate and scale
+<ComponentPreview files="scope-clip" size="xs" minimumSize="xs" previewClassName="!p-3 !pt-[52px]" />
 
-`rotate` rotates around the scope's local origin by `degrees`; `scale` is uniform or per-axis — node sizes, font sizes, spacing, and path endpoint boundary clip all align with the scope's visual dimensions:
+`zIndex` moves the whole Scope among siblings without reordering children inside it. Adjust all four Nodes and both Scopes in the panel to compare within-group and whole-group stacking.
 
-<ComponentPreview files="scope-rotate-scale" size="sm" />
+<ComponentPreview files="scope-z-index" size="md" />
 
-#### Recipe: orbit + self-rotation facing the center
+### Style defaults
 
-A bare `polar-translate` only moves the scope's origin — it does **not** rotate the local frame, so animating its angle keeps the scope content's orientation fixed ("like a satellite drifting along the orbit"). To make the scope also self-rotate so its front always faces the center ("tidal lock"), chain a `rotate(angle + 180)`:
+Scope also exposes `color`, shared graphic state, and `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`. Values cascade per field, explicit element values win, and `resetStyle` cuts only selected outer channels.
 
-<ComponentPreview files="scope-orbit-facing-hub" size="md" />
-
-Chain application order: in `[t0, t1]` the **last** element is applied first (innermost), so `rotate` runs first to align local +x toward hub, then `polar-translate` pushes the origin to the orbital position. The `+ 180` flips scope's +x from "pointing outward" to "pointing at hub"; drop it to face outward (front away from center).
-
-### Nested composition
-
-A scope can contain another scope — outer scope positions the cluster, inner scope positions children within; no depth limit:
-
-<ComponentPreview files="scope-nested-compose" size="xs" />
-
-### Cross-scope references
-
-Child node ids register into the global nodeIndex by default, and outer path endpoints / `at.of` can reference them:
-
-<ComponentPreview files="scope-cross-reference" size="xs" />
-
-Append `.<anchor>` / `.<deg>` to the id for the node's visual border point (computed on the global rect with accumulated rotate / scale):
-
-<ComponentPreview files="scope-anchor-cross" size="sm" />
-
-Note that Web anchors (`top` / `bottom-left`, the 8 directions) resolve on the node's **bounding box (AABB)** by default, not the shape outline — so on the circular `hub`, `bottom-left` lands at the bounding box's bottom-left corner, **outside** the circle; only the 4 edge midpoints (`top` / `right` / `bottom` / `left`) actually sit on the circle. To hug the shape outline itself, use an angle anchor `.<deg>` (e.g. `hub.225` for the southwest point on the circle), or set `boundary="circle"` so standard direction anchors follow the circle. Compass names such as `north` / `south-west` remain accepted input aliases.
-
-### scope.id: reference the scope as a whole
-
-When `<Scope id="cluster">` is set, external paths can use `'cluster'` / `'cluster.<anchor>'` / `'cluster.<deg>'` to reference the scope's visual boundary — same as a normal rectangle node:
-
-<ComponentPreview files="scope-id-reference" size="sm" />
-
-When nested, each scope.id keeps its own bbox:
-
-<ComponentPreview files="scope-id-nested" size="sm" />
-
-scope.id can also be a `polar.origin` / `at.of` / `offset.of` referent (resolves to bbox center):
-
-<ComponentPreview files="scope-id-referent" size="md" />
-
-See [How scope.id bounds and clip enter Scene](#how-scopeid-bounds-and-clip-enter-scene) for envelope inputs, boundary shapes, and clip resource flow.
-
-### Relative positioning inside a scope
-
-Inside a scope, `<Node>` / `<Coordinate>` / `<Path>` `Step.to` using polar / at / offset resolve the referent globally, while the relative part rotates / scales with the current scope:
-
-<ComponentPreview files="scope-position-polar-in-rotate" size="sm" />
-
-`direction: 'right'` is the **current scope's local** right — after the scope rotates 90°, "right" visually becomes "down":
-
-<ComponentPreview files="scope-position-at-cross-scope" size="sm" />
-
-`offset: [40, 0]` is measured in scope local; after `scale(2)`, the visual offset becomes (80, 0):
-
-<ComponentPreview files="scope-position-offset-with-scale" size="sm" />
-
-See [How transforms and relative positions reach global space](#how-transforms-and-relative-positions-reach-global-space) for the forward / inverse projection flow and the emit boundary of transformed paths.
-
-### Local namespace
-
-`localNamespace: true` makes the scope push its own frame — child ids are isolated from the outside, useful for subdiagram reuse / templating:
+Style is a supporting responsibility and does not alter local coordinates, references, or clipping. Consult the API below for color, stroke, and opacity fields rather than creating extra Scopes for visual variants.
 
 <ComponentAlert
-  type="warn"
-  title="Prefer distinct ids over localNamespace"
-  description="localNamespace introduces a namespace stack: inside-out lookup makes id resolution depend on nesting depth, shadowing silently masks same-named outer ids, and outside code can no longer reference the isolated inner ids. Unless you are genuinely doing subdiagram reuse / templating, prefer giving ids distinct names (e.g. a prefix) rather than leaning on localNamespace to dodge name clashes."
+  type="tip"
+  title="Shared defaults also reduce configuration size"
+  description="Putting genuinely shared local styles on Scope avoids repeating the same fields on every child, often reducing both configuration objects and persisted JSON substantially. Tier 2 packages such as Plot also centralize series or layer styles as Scope defaults during lowering to keep generated IR compact."
 />
-
-<ComponentPreview files="scope-local-namespace-basic" size="xs" />
-
-Nested localNamespace forms a stack of namespace frames; an inner path's id lookup walks from inner to outer:
-
-<ComponentPreview files="scope-local-namespace-nested" size="xs" />
-
-The same id across different frames is not a conflict; inside-out lookup automatically shadows outer ids:
-
-<ComponentPreview files="scope-local-namespace-shadowing" size="sm" />
-
-See [How namespaces and id conflicts are handled](#how-namespaces-and-id-conflicts-are-handled) for inside-out lookup, shadowing, and scope.id registration in the parent frame.
-
-### Duplicate id warning
-
-A duplicate id in the same frame triggers a `DUPLICATE_NODE_ID` warning and the later definition overrides the earlier one (last-wins, **does not throw**):
-
-<ComponentPreview files="scope-duplicate-id-warn" size="xs" />
-
-See [How namespaces and id conflicts are handled](#how-namespaces-and-id-conflicts-are-handled) for trigger conditions, cross-frame shadowing, and same-frame overwrite behavior.
-
-### Style inheritance
-
-A scope doubles as a style-default anchor, exposing three style surfaces to its children: a **master color `color`** plus shared sub-fields that cascade to every element; **four typed defaults** `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` dispatched by element type, flat and independent; and **`resetStyle`** to cut outer inheritance.
-
-#### Master color cascade
-
-`<Scope color>` cascades the current color to every inner element — node border / text, path stroke / arrow / edge label all default to it; individual fields (`stroke` / `fill` / `textColor`) override the master when set explicitly:
-
-<ComponentPreview files="scope-style-cascade" size="xs" />
-
-The master color also tints node `fill`; the anchor nodes top set `fill="white"` to cut that fill so their text stays readable. What follows the color is the **master `color`**, not `stroke` — `<Path color>` colors the label / arrow too, while `<Path stroke>` only paints the line and leaves the label unchanged.
-
-#### Typed defaults
-
-`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` each attach defaults to one element family, flat and independent. `nodeDefault` carries node-only fields like shape / spacing (a bare `color` can't reach `shape` — use `nodeDefault`); `pathDefault` applies to Path and passes its shared geometry style fields to Ribbon; arrows go through the separate `arrowDefault`, so `pathDefault` excludes them:
-
-<ComponentPreview files="scope-style-typed-defaults" size="xs" />
-
-#### resetStyle inheritance barrier
-
-`resetStyle` cuts the outer scope's inheritance (master-color cascade + typed defaults) back to the built-in baseline; the scope's own values and inner scopes still apply. `true` cuts all; pass a channel array (`['node' | 'path' | 'label' | 'arrow']`) to cut per type:
-
-<ComponentPreview files="scope-style-reset" size="xs" />
-
-`resetStyle` only cuts the scope inheritance, **not the structural relation between an element and its host** — labels / arrows still follow their owning path / node's resolved color: `resetStyle={['label']}` only ignores the outer `labelDefault`, the label still follows its line. See [How styles resolve field by field](#how-styles-resolve-field-by-field) for per-field priority, presence-based fallback, and inheritance barriers.
-
-<Comparison target="tikz" title="Style inheritance mapping">
-
-The master `color` maps to TikZ `color=` (sets the current color; draw / fill / text follow); `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` map to `every node` / `every path` etc. `.style`. Difference: retikz nesting is **per-field merge** (≈ TikZ `.append style`), not a literal `.style=` whole replacement.
-
-</Comparison>
-
-### Stacking order (zIndex)
-
-`zIndex` positions the **whole scope** (the `GroupPrim` it compiles to) among its siblings in the parent layer; it **does not affect the relative stacking of children inside the scope**. The two node clusters bottom overlap and are declared A-then-B (group B on top by default); setting `zIndex={1}` on the earlier A group lifts the entire group top B:
-
-<ComponentPreview files="scope-z-index" size="sm" />
-
-### Scope boundary polymorphism
-
-`boundingShape` makes the scope.id handle take an envelope of the given shape instead of the default axis-aligned rectangle (AABB). Omitted / `'rectangle'` is unchanged; `'circle'` takes the **minimal enclosing circle** of the subtree point set — `cluster.<anchor>` / `cluster.<deg>` and connecting endpoints all land on the **circle**, which suits round / polar panels:
-
-<ComponentPreview files="scope-bounding-shape" size="sm" />
-
-`boundingShape` is a controlled enum: only `'rectangle'` (default) and `'circle'` are accepted — the schema rejects any other value at parse time. `'polygon'` / `'ellipse'` are deferred because each needs its own minimal-enclosing algorithm; this is intentionally a closed set rather than the open shape reference Node `shape` / `boundary` use.
-
-### Clipping
-
-`<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away. Built-in clips support `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`, and [Custom Clips](/kernel/components/layout/custom-clip) can register additional `kind` values. Coordinates are scope-local:
-
-```tsx
-<Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 60 }}>{/* children */}</Scope>
-```
-
-<ComponentPreview files="scope-clip" size="md" />
 
 ## How it works
 
 <ComponentAlert
   type="tip"
   title="Optional for everyday use"
-  description="Revisit when you hit edge cases involving ids, transforms, style inheritance, bounding boxes, or clipping."
+  description="Return when you hit transform projection, id conflicts, envelope, or clipping edge cases."
 />
 
-This section zooms in only on `<Scope>`'s local-coordinate, namespace, style, and boundary responsibilities. See [Architecture Principles](/kernel/concepts/design/principles) for the complete JSX → IR → Scene pipeline.
+This section covers only Scope behavior visible to users. See [Architecture](/kernel/concepts/design/principles) for the complete JSX → IR → Scene pipeline.
 
-### How transforms and relative positions reach global space
+### Transforms and relative positions
 
-The upper row reduces 7 IR transform variants to renderer-ready `translate` / `rotate` / `scale`. The lower row shows relative positioning using that same scope chain to travel between global and local space.
+Seven inputs converge into Scene's `translate` / `rotate` / `scale`. Relative placement follows the current Scope chain: global referent → inverse-project into local space → add the relative value → project back to global space.
 
 <ComponentPreview files="scope-coordinate-flow" size="sm" hideCode />
 
-The `transforms` list follows SVG ordering. Relative positioning follows `global referent → inverse into the current local frame → add the relative part → project back to global`. Rotate / scale therefore changes the relative part's visual direction or length, while translation alone does not.
-
-Inside a transformed scope, path endpoints are already global before emit, so the path is hoisted to the top level to avoid applying the transform twice. Consequently, cross-frame z-order cannot fully preserve IR order, and the scope's clip does not affect that path.
+That is why rotate changes the visible direction of `right`, while scale changes the visible length of an offset. A Path waits until ids are available, resolves its endpoints, and backfills the original Group placeholder; deferred resolution preserves declaration order, Scope ownership, and clipping.
 
 <SourceLinks
   sources={[
     {
-      label: 'transform lowering',
+      label: 'Converge transform inputs',
       path: 'packages/kernel/core/src/compile/scope.ts',
       startLine: 34,
       endLine: 112,
     },
     {
-      label: 'relative-position inverse projection',
+      label: 'Relative placement and Scope-chain projection',
       path: 'packages/kernel/core/src/compile/position.ts',
       startLine: 55,
       endLine: 98,
     },
     {
-      label: 'scope-chain forward and inverse projection',
-      path: 'packages/kernel/core/src/compile/transform.ts',
-      startLine: 8,
-      endLine: 65,
-    },
-    {
-      label: 'path backfill and hoist',
+      label: 'Deferred Path resolution and in-place backfill',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 147,
-      endLine: 176,
+      endLine: 161,
     },
   ]}
 />
 
-### How namespaces and id conflicts are handled
+### Namespaces and id conflicts
 
-`localNamespace` decides whether a frame is added. Lookup always starts at the current frame and proceeds outward only after a miss. Register writes only to the current frame and takes the warning branch when that frame already contains the id.
+A default Scope reuses the current namespace frame. Only `localNamespace` creates a frame; lookup returns the first inside-out match, while registration writes only to the current frame.
 
 <ComponentPreview files="scope-namespace-resolution" size="md" hideCode />
 
-By default, a scope adds no boundary, so child ids enter the existing frame. With `localNamespace`, inner code can still see outer ids; a same-named inner id shadows without warning, and the outer id becomes visible again after the frame is popped.
-
-Duplicate ids in one frame emit `DUPLICATE_NODE_ID` for each overwrite; compile continues and keeps the later definition. `scope.id` is registered in the parent before the child frame is pushed, so it always remains the scope's externally visible handle.
+Equal ids in different frames are valid shadowing. A duplicate in one frame emits `DUPLICATE_NODE_ID` and keeps the later definition. `scope.id` registers in the parent before the child frame is entered, so the group handle remains externally visible.
 
 <SourceLinks
   sources={[
     {
-      label: 'namespace register and lookup',
+      label: 'Namespace registration and lookup',
       path: 'packages/kernel/core/src/compile/namespace.ts',
       startLine: 24,
       endLine: 132,
     },
     {
-      label: 'scope parent and child frame orchestration',
+      label: 'Parent and child frame orchestration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 312,
       endLine: 415,
     },
-    {
-      label: 'duplicate-id warning',
-      path: 'packages/kernel/core/src/compile/orchestration/diagnostics.ts',
-      startLine: 21,
-      endLine: 33,
-    },
   ]}
 />
 
-### How styles resolve field by field
+### Group handles and Scene output
 
-Left to right is the fallback order for one style field: resolution continues only when the current source does not provide a value. Within one source, an explicit field wins over that source's expanded `color`.
+`scope.id` and `clip` follow separate paths: one summarizes child layouts as a reference handle, while the other resolves a JSON clip spec into a Scene resource. Both stop at the Core compile boundary.
 
-<ComponentPreview files="scope-style-resolution" size="xs" hideCode />
+<ComponentPreview files="scope-boundary-clip" size="sm" hideCode />
 
-Resolution checks field presence, so explicit `none` / `0` / `false` all stop fallback at the current layer. `resetStyle` cuts only outer-scope inheritance for the selected channels; the current scope, explicit element values, and built-in defaults still participate.
-
-Labels and arrows retain the host color axis. For example, after resetting arrow defaults, an arrow can still follow its resolved path color instead of becoming an isolated style island.
+The Scope envelope collects node, coordinate, and nested-Scope layouts, not path routes. The default is a global AABB; circle mode computes a minimum enclosing circle. A `GroupPrim` is emitted when the subtree has output or Scope carries `transforms` / `id` / `clip`; an empty Scope without those semantics is pruned.
 
 <SourceLinks
   sources={[
     {
-      label: 'style frames and inheritance barriers',
-      path: 'packages/kernel/core/src/compile/style/frame.ts',
-      startLine: 56,
-      endLine: 80,
-    },
-    {
-      label: 'Node field resolution',
-      path: 'packages/kernel/core/src/compile/style/node.ts',
-      startLine: 22,
-      endLine: 45,
-    },
-    {
-      label: 'Path and label master-color resolution',
-      path: 'packages/kernel/core/src/compile/style/path.ts',
-      startLine: 73,
-      endLine: 116,
-    },
-    {
-      label: 'arrow host-color resolution',
-      path: 'packages/kernel/core/src/compile/style/arrow.ts',
-      startLine: 35,
-      endLine: 63,
-    },
-  ]}
-/>
-
-### How scope.id bounds and clip enter Scene
-
-The upper row turns the scope subtree into a referenceable synthetic layout. The lower row turns renderer-agnostic clip IR into a Scene resource plus a group reference. Both chains stop at compile's boundary; adapters perform the actual drawing.
-
-<ComponentPreview files="scope-boundary-clip" size="xs" hideCode />
-
-`scope.id` collects node, coordinate, and nested-scope layouts, but not path routing. By default, global corners produce an axis-aligned AABB; `boundingShape="circle"` uses a minimal enclosing circle; an empty scope becomes a 0×0 handle at the projected local origin.
-
-The clip provider first resolves a JSON-serializable `ClipShape`; the registry then deduplicates shapes and assigns a stable `clipRef`. SVG materializes `<clipPath>`, while Canvas clips from the same Scene resource. The hoisted path described earlier is outside the group's children and therefore outside that group's clip.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'scope.id placeholder and bounds backfill',
+      label: 'Scope envelope and Group output',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 312,
-      endLine: 360,
+      endLine: 394,
     },
     {
-      label: 'AABB and synthetic layout',
-      path: 'packages/kernel/core/src/compile/scope.ts',
-      startLine: 114,
-      endLine: 135,
-    },
-    {
-      label: 'rectangle and circle envelopes',
+      label: 'Rectangle and circle synthetic layouts',
       path: 'packages/kernel/core/src/compile/node/synthetic.ts',
       startLine: 80,
       endLine: 137,
     },
     {
-      label: 'clip resolution, dedupe, and resource registration',
+      label: 'Clip resolution and resource registration',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
       startLine: 156,
       endLine: 189,
-    },
-    {
-      label: 'SVG clip materialization',
-      path: 'packages/kernel/render/src/svg/builders/document.ts',
-      startLine: 91,
-      endLine: 109,
     },
   ]}
 />
 
 ## API Reference
 
-| Prop         | Type                         | Default | Description                                                                                                                                                                                                                                                                                 |
-| ------------ | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `transforms` | `Array<Transform>`           | —       | Local transform list, 7 variants; applied in array order (0-th outermost, last innermost, matching SVG transform-list); see [How transforms and relative positions reach global space](#how-transforms-and-relative-positions-reach-global-space) for flattening and lowering               |
-| `children`   | `ReactNode`                  | —       | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>`                                                                                                                                                                                                                     |
-| `meta`       | `Record<string, JSON value>` | —       | Provenance metadata, passed through verbatim onto the `GroupPrim` this scope emits; ignored by renderers, never part of layout, and **not propagated to children**. Typically injected by a higher-level lowering (e.g. plot) to tag the series / layer. Must be a JSON-serializable object |
-| `animations` | `Array<AnimationTrack>`      | —       | Timeline animation tracks applied to the scope as a whole (its GroupPrim); not propagated to children, not part of layout. See [Animation](/kernel/components/effects/animation)                                                                                                            |
+### Context and output
 
-### References and positioning
+| Prop             | Type                         | Default       | Description                                                                       |
+| ---------------- | ---------------------------- | ------------- | --------------------------------------------------------------------------------- |
+| `children`       | `ReactNode`                  | —             | Node / Path / Coordinate / nested Scope                                           |
+| `transforms`     | `Array<IRTransformInput>`    | —             | Seven local transforms; the last acts first                                       |
+| `id`             | `string`                     | —             | Register the Scope envelope as a group handle                                     |
+| `localNamespace` | `boolean`                    | `false`       | Isolate child ids; `scope.id` remains visible                                     |
+| `boundingShape`  | `'rectangle' \| 'circle'`    | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                       |
+| `clip`           | `IRClipSpec`                 | —             | Built-in or custom clip in local coordinates                                      |
+| `zIndex`         | `number` (integer)           | `0`           | Stable sibling order for the whole Scope                                          |
+| `meta`           | `Record<string, JSON value>` | —             | Forwarded to GroupPrim, not layout or cascade                                     |
+| `animations`     | `Array<IRAnimationTrack>`    | —             | Group animation, not inherited by children                                        |
+| `on<Event>`      | `HydrationHandler`           | —             | Requires `id`; see [Hydration](/kernel/packages/render/hydration) for every event |
 
-| Prop             | Type      | Default | Description                                                                                                                                                                                                                                                                                                                                                             |
-| ---------------- | --------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`             | `string`  | —       | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**; external code can reference it as `'X'` / `'X.<anchor>'` / `'X.<deg>'`; see [How scope.id bounds and clip enter Scene](#how-scopeid-bounds-and-clip-enter-scene) for envelope computation |
-| `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; see [How namespaces and id conflicts are handled](#how-namespaces-and-id-conflicts-are-handled)                                                                                                                                                               |
+### Style defaults
 
-See [Scope clipping](/kernel/components/layout/scope) for the `scope.id` envelope and `boundingShape`.
-
-### Styles and stacking
-
-| Prop            | Type                    | Default | Description                                                                                                                                                                                    |
-| --------------- | ----------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `color`         | `string`                | —       | Cascading master color; inner stroke / fill / text / arrow / label default to it                                                                                                               |
-| `stroke`        | `string \| PaintSpec`   | —       | Cascading default stroke paint (CSS color or PaintSpec: gradient / pattern / image)                                                                                                            |
-| `fill`          | `string \| PaintSpec`   | —       | Cascading default fill (CSS color or PaintSpec: gradient / pattern / image)                                                                                                                    |
-| `strokeWidth`   | `number`                | —       | Cascading default stroke width                                                                                                                                                                 |
-| `opacity`       | `number`                | —       | Cascading default whole-element opacity 0–1 (replaces, not compounds)                                                                                                                          |
-| `fillOpacity`   | `number`                | —       | Cascading default fill opacity 0–1                                                                                                                                                             |
-| `strokeOpacity` | `number`                | —       | Cascading default stroke opacity 0–1                                                                                                                                                           |
-| `nodeDefault`   | `object`                | —       | Node default style (shape / spacing / color), applied to every node in the scope                                                                                                               |
-| `pathDefault`   | `object`                | —       | Path-like default style. Path uses the full field set; Ribbon uses only shared geometry style fields. Arrows use `arrowDefault`                                                                |
-| `labelDefault`  | `object`                | —       | Label default style (node label + step label)                                                                                                                                                  |
-| `arrowDefault`  | `object`                | —       | Arrow default style (shape / scale / color)                                                                                                                                                    |
-| `resetStyle`    | `boolean \| Array`      | `false` | Inheritance barrier: cut outer channels; see [How styles resolve field by field](#how-styles-resolve-field-by-field)                                                                           |
-| `zIndex`        | `number` (integer)      | `0`     | Explicit stacking order: positions the scope as a whole (its GroupPrim) among its siblings without affecting the relative stacking inside it; higher draws on top, ties keep declaration order |
-| `animations`    | `Array<AnimationTrack>` | —       | Timeline animation tracks applied to the scope as a whole (its GroupPrim); not propagated to children, not part of layout. See [Animation](/kernel/components/effects/animation)               |
-
-### Bounds and clipping
-
-| Prop            | Type                      | Default       | Description                                                                                                                                                                                                                                                                                                                                                |
-| --------------- | ------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `boundingShape` | `'rectangle' \| 'circle'` | `'rectangle'` | Envelope shape of the scope.id handle — a controlled enum (not the open shape reference Node `shape` uses): default rectangle AABB; `'circle'` takes the subtree's minimal enclosing circle (anchors / connections land on the circle, suits round / polar panels). Other values are rejected by the schema. See `Examples`「Scope boundary polymorphism」 |
-| `clip`          | `ClipSpec`                | —             | Clip region (rect / circle / ellipse / polygon / path / compound / custom, scope-local coords); clips every child of the scope                                                                                                                                                                                                                             |
+| Prop                                                            | Type                             | Default | Description                               |
+| --------------------------------------------------------------- | -------------------------------- | ------- | ----------------------------------------- |
+| `color`                                                         | `string`                         | —       | Primary color cascaded across elements    |
+| `stroke` / `fill`                                               | `string \| IRPaintSpec`          | —       | Per-field stroke and fill cascade         |
+| `strokeWidth` / opacity fields                                  | `number`                         | —       | Stroke width and per-field opacity        |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | default objects                  | —       | Four independent element-default channels |
+| `resetStyle`                                                    | `boolean \| Array<StyleChannel>` | `false` | Cut all or selected outer Scope channels  |
 
 ## Related
 
-- [Layout](/kernel/components/layout/overview): the outermost container that owns a scope
-- [Node](/kernel/components/node/overview): scope's most common children; node `position` 5 shapes mirror scope translate 5 variants one-to-one
-- [Coordinate](/kernel/components/node/coordinate): named placeholder points inside a scope can be referenced from outside just like nodes
+- [Layout](/kernel/components/layout/overview): Figure input, capability injection, and host boundary
+- [Node](/kernel/components/node/overview): The most common referenceable child in a Scope
+- [Coordinate](/kernel/components/node/coordinate): Named coordinates without visible geometry
+- [Custom Clips](/kernel/components/layout/custom-clip): Extend `clip.kind` through the shared registry path
+- [Hydration](/kernel/packages/render/hydration): Scope events and handler context
