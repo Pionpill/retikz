@@ -1,3 +1,5 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { NodeShapeConnectionControlId } from './node-shape-connection.controls';
@@ -18,6 +20,11 @@ const boundaryOptions = [
   { value: 'circle', label: 'Circle surface' },
   { value: 'rectangle', label: 'Rectangle surface' },
   { value: 'ellipse', label: 'Ellipse surface' },
+] as const;
+
+const fitOptions = [
+  { value: 'tight', label: 'Fit shape' },
+  { value: 'bounds', label: 'Enclose bounds' },
 ] as const;
 
 const anchorOptions = [
@@ -57,6 +64,24 @@ export const nodeShapeConnectionControls = definePreviewControls({
         },
         {
           kind: 'select',
+          id: NodeShapeConnectionControlId.FitA,
+          label: 'fit',
+          defaultValue: 'tight',
+          options: fitOptions,
+          visibleWhen: { controlId: NodeShapeConnectionControlId.BoundaryA, oneOf: ['circle', 'rectangle', 'ellipse'] },
+        },
+        {
+          kind: 'range',
+          id: NodeShapeConnectionControlId.GapA,
+          label: 'gap',
+          defaultValue: 0,
+          min: -12,
+          max: 28,
+          step: 2,
+          visibleWhen: { controlId: NodeShapeConnectionControlId.BoundaryA, oneOf: ['circle', 'rectangle', 'ellipse'] },
+        },
+        {
+          kind: 'select',
           id: NodeShapeConnectionControlId.AnchorA,
           label: 'anchor',
           defaultValue: 'auto',
@@ -78,8 +103,26 @@ export const nodeShapeConnectionControls = definePreviewControls({
           kind: 'select',
           id: NodeShapeConnectionControlId.BoundaryB,
           label: 'boundary',
-          defaultValue: 'shape',
+          defaultValue: 'ellipse',
           options: boundaryOptions,
+        },
+        {
+          kind: 'select',
+          id: NodeShapeConnectionControlId.FitB,
+          label: 'fit',
+          defaultValue: 'tight',
+          options: fitOptions,
+          visibleWhen: { controlId: NodeShapeConnectionControlId.BoundaryB, oneOf: ['circle', 'rectangle', 'ellipse'] },
+        },
+        {
+          kind: 'range',
+          id: NodeShapeConnectionControlId.GapB,
+          label: 'gap',
+          defaultValue: 0,
+          min: -12,
+          max: 28,
+          step: 2,
+          visibleWhen: { controlId: NodeShapeConnectionControlId.BoundaryB, oneOf: ['circle', 'rectangle', 'ellipse'] },
         },
         {
           kind: 'select',
@@ -92,3 +135,21 @@ export const nodeShapeConnectionControls = definePreviewControls({
     },
   ],
 });
+
+/** Stable documentation contract for the Node shape and connection controls */
+export const previewControlContract = {
+  controls: nodeShapeConnectionControls,
+  canonicalValues: {
+    shapeA: 'star',
+    boundaryA: 'circle',
+    fitA: 'tight',
+    gapA: 0,
+    anchorA: 'auto',
+    shapeB: 'ellipse',
+    boundaryB: 'ellipse',
+    fitB: 'tight',
+    gapB: 0,
+    anchorB: 'auto',
+  },
+  relatedApis: ['Node.shape', 'Node.boundary', 'Draw.way'],
+} satisfies PreviewControlContract;

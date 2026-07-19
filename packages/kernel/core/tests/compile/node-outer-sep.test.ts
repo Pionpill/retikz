@@ -50,6 +50,15 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
     expect(a10[1]).toBeCloseTo(30 * tan30, 6);
   });
 
+  it('asymmetric-angle-margin：数字 anchor 从外扩后的连接面中心沿指定角度求交', () => {
+    const layout = mkLayout(0);
+    layout.margin = { top: 0, right: 10, bottom: 0, left: 0 };
+
+    expect(resolveAnchor(layout, '0')).toEqual([30, 0]);
+    expect(resolveAnchor(layout, '180')[0]).toBeCloseTo(-20);
+    expect(resolveAnchor(layout, '180')[1]).toBeCloseTo(0);
+  });
+
   it('autoclip-margin-regression：自动连线端点仍停在 shape 外 margin（行为不变）', () => {
     // 默认无 text、padding=8 → rect 16×16；A=(0,0) 朝 B=(100,0) → 端点 = 8 + 10 = 18
     const ir: IRScene = {

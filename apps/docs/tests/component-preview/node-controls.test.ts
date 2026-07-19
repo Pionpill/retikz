@@ -23,7 +23,7 @@ describe('Node controls documentation', () => {
   it('形状 playground 的源码面板包含 boundary helper', () => {
     for (const locale of ['zh', 'en']) {
       expect(readContent(`overview/index.${locale}.mdx`)).toContain(
-        "<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size=\"xl\" />",
+        "<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size=\"md\" />",
       );
     }
   });

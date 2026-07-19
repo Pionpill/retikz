@@ -60,13 +60,15 @@ import { Path, Step } from '@retikz/react';
 ```tsx
 <Path arrow="->">
   <Step kind="move" to="a" />
-  <Step kind="line" to={{ id: 'star', boundary: 'shape' }} />
+  <Step kind="line" to={{ id: 'star', boundary: { type: 'circle', params: { fit: 'tight', gap: 8 } } }} />
 </Path>
 ```
 
+`circle` / `rectangle` / `ellipse` 共用 `fit: 'tight' | 'bounds'` 与有符号 `gap`；默认是贴合形状的 `tight` 与 `gap: 0`。`rectangle` 的两种 fit 结果一致；负 gap 可向内收缩，但可能穿过视觉形状。
+
 `boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的标准方位 / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node boundary>`](/kernel/components/node/overview#连接面-boundary)，端点 `boundary` 是单边覆盖。
 
-下例的五角星未设置节点 `boundary`。在面板中切换端点连接面，观察同一条边如何从真实尖端改贴外接圆；连接面由边自己决定，虚点线圆是外接圆参考。
+下例的五角星未设置节点 `boundary`。面板默认展示圆形连接面，可直接比较 `tight` / `bounds` 并调整 `gap`；切回星形轮廓可对照真实形状连接面。浅灰虚点线是当前圆形连接面，会与真实端点一起更新。
 
 <ComponentPreview files="path-boundary" size="md" />
 

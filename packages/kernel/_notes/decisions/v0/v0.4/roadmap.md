@@ -26,13 +26,13 @@ v0.4 只做**纵向底座深化（机制 / 引擎 / 契约）**；具体 shape�
 | alpha.8   | Drawing Complete 收口、`dashOffset` 与剩余通用能力补齐 | [roadmap](./alpha.8/roadmap.md) | ✅ Accepted |
 | beta.1    | 编译期契约与 compile 文件结构收敛                      | [roadmap](./beta.1/roadmap.md)  | ✅ Accepted |
 | beta.2    | Adapter 作者 API、包根公共面与动画宿主策略收敛         | [roadmap](./beta.2/roadmap.md)  | ✅ Accepted |
-| rc.1      | 公开 API 冻结、文档与发布产物验收                      | —                               | 🚧 准备发布 |
+| rc.1      | 公开 API 冻结、Boundary 收口、文档与发布产物验收       | [roadmap](./rc.1/roadmap.md)    | 🚧 进行中   |
 
 ## 当前状态
 
 - Alpha 已完成通用底座扩展：math、可嵌入 Tier 2、路径补强、Scene 视觉、TeX、Ribbon / Path kind、provider contract 与 Drawing Complete 收口。
 - Beta 已完成 compile owner、Node 布局度量、Vanilla plain spec、React 包根、Tier 2 反向转换和动画宿主策略检查。
-- RC 不新增能力；rc.1 仅包含 beta.2 后的 Canvas 阴影透明度缺陷修复，并冻结公开 API，执行文档与发布产物验收。
+- RC 原则上不新增能力。经 2026-07-19 人工裁决，本轮允许把已在 rc.1 调整过的 boundary 拟合行为一次收口为 shape-aware `fit` / `gap` contract；除此之外继续冻结公开 API，并完成 Canvas 阴影透明度缺陷修复、文档与发布产物验收。
 - 未排期问题不再写入本执行索引；达到启动条件后，从 [`backlog.md`](./backlog.md) 提升到新版本 roadmap 或 ADR。
 
 ## 追溯规则

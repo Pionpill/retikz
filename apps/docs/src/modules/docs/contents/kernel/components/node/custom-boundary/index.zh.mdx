@@ -43,7 +43,9 @@ export const horizontalPorts = defineBoundary({
 });
 ```
 
-`rect` 是视觉 shape 已经算好的节点外接框；`toward` 是连线从节点中心指向的目标点。带参数的连接面把参数写进 `{ type, params }`，其中 `params` 必须是可 JSON 序列化的数据；函数只存在于 definition，不进入 IR（中间表示）。
+`boundaryPoint` 收到的是该 boundary 最终解析出的 `rect`；未提供 `resolveRect` 时，它就是视觉 shape 已经算好的节点外接框。`toward` 是连线从节点中心指向的目标点。带参数的连接面把参数写进 `{ type, params }`，其中 `params` 必须是可 JSON 序列化的数据；函数只存在于 definition，不进入 IR（中间表示）。
+
+需要在交点计算前调整连接面尺寸时，实现可选的 `resolveRect(context, params)`。`context.visualRect` 是视觉外接框，`context.connectionEnvelope(kind)` 则请求视觉 shape 对 circle / ellipse / rectangle 的安全规则包络；后者会复用同一节点内的缓存。返回矩形必须具有有限坐标和正宽高，否则编译会立即报错。
 
 ### 带参数的连接面
 
@@ -88,12 +90,12 @@ Definition 可以由应用代码持有，序列化的图只保留名字或参数
 
 ## 执行机制
 
-| 阶段 | 输入                      | 结果                                              |
-| ---- | ------------------------- | ------------------------------------------------- |
-| 合并 | 内置 + 自定义 definitions | 生成按 `name` 查询的 Boundary Registry            |
-| 查找 | `boundary` 名字           | 先查 boundary；未命中再查 Shape Registry          |
-| 校验 | `{ type, params }`        | 使用命中 definition 的 `paramsSchema` 解析参数    |
-| 消费 | 连线方向或标准方位 anchor | 调用 `boundaryPoint` / `anchor`，不改变视觉 shape |
+| 阶段 | 输入                      | 结果                                                                        |
+| ---- | ------------------------- | --------------------------------------------------------------------------- |
+| 合并 | 内置 + 自定义 definitions | 生成按 `name` 查询的 Boundary Registry                                      |
+| 查找 | `boundary` 名字           | 先查 boundary；未命中再查 Shape Registry                                    |
+| 校验 | `{ type, params }`        | 使用命中 definition 的 `paramsSchema` 解析参数                              |
+| 消费 | 连线方向或标准方位 anchor | 可先调用 `resolveRect`，再调用 `boundaryPoint` / `anchor`，不改变视觉 shape |
 
 `boundary="shape"` 是保留语义，始终复用节点自己的视觉形状。其它名字优先命中 Boundary Registry；同名 shape 只在 boundary 未注册时作为兼容回退。自定义 boundary 与 shape 同名时，boundary definition 优先，因此可以只替换连接规则。
 
@@ -108,8 +110,8 @@ Definition 可以由应用代码持有，序列化的图只保留名字或参数
     {
       label: '连接面查找、参数校验与 shape 回退',
       path: 'packages/kernel/core/src/compile/node/boundary.ts',
-      startLine: 47,
-      endLine: 90,
+      startLine: 123,
+      endLine: 187,
     },
   ]}
 />
@@ -120,6 +122,7 @@ Definition 可以由应用代码持有，序列化的图只保留名字或参数
 - **空 key**：`name` 必须是非空字符串。
 - **未知名字**：错误会同时列出已注册 boundaries 与 shapes，并提示检查 `boundaries` / `shapes` 注入。
 - **非法参数**：`paramsSchema` 在调用几何函数前校验，失败时会带上对应的 `.boundary.params` IR 路径。
+- **非法解析矩形**：`resolveRect` 返回非有限坐标、非正宽高或内部抛错时，错误会带 boundary 名和 Node IR 路径。
 - **未知 anchor**：`anchor` 可省略或返回 `undefined`；标准方位会回退到外接矩形，形状专属名字仍交给视觉 shape 解析。
 - **无绘制职责**：连接面不能改变节点尺寸、形状或内容；这些需求属于 Shape Definition 或 Node props。
 
@@ -139,12 +142,13 @@ compileToScene(ir, { boundaries: [biasedPorts, biasedPorts] });
 
 ### `BoundaryDefinitionInput<TParams>`
 
-| 属性            | 类型                                            | 默认值 | 描述                                  |
-| --------------- | ----------------------------------------------- | ------ | ------------------------------------- |
-| `name`          | `string`                                        | —      | Registry key，由 Node `boundary` 引用 |
-| `paramsSchema`  | `z.ZodType<TParams>`                            | —      | 校验 JSON-safe 的 `boundary.params`   |
-| `boundaryPoint` | `(rect, toward, params) => Position`            | —      | 返回射线与连接面的交点                |
-| `anchor`        | `(rect, name, params) => Position \| undefined` | —      | 可选标准方位锚点解析器                |
+| 属性            | 类型                                            | 默认值       | 描述                                            |
+| --------------- | ----------------------------------------------- | ------------ | ----------------------------------------------- |
+| `name`          | `string`                                        | —            | Registry key，由 Node `boundary` 引用           |
+| `paramsSchema`  | `z.ZodType<TParams>`                            | —            | 校验 JSON-safe 的 `boundary.params`             |
+| `resolveRect`   | `(context, params) => Rect`                     | `visualRect` | 可选；从视觉矩形或 shape 安全包络解析连接面矩形 |
+| `boundaryPoint` | `(rect, toward, params) => Position`            | —            | 返回射线与连接面的交点                          |
+| `anchor`        | `(rect, name, params) => Position \| undefined` | —            | 可选标准方位锚点解析器                          |
 
 `defineBoundary`、`BoundaryDefinition`、`BoundaryDefinitionInput` 与 `BUILTIN_BOUNDARIES` 从 `@retikz/core` 导入。`@retikz/react` 和 `@retikz/vanilla` 不重复导出作者侧定义。
 

@@ -60,13 +60,15 @@ When an endpoint references a node (the `{ id }` object form, or an id inside a 
 ```tsx
 <Path arrow="->">
   <Step kind="move" to="a" />
-  <Step kind="line" to={{ id: 'star', boundary: 'shape' }} />
+  <Step kind="line" to={{ id: 'star', boundary: { type: 'circle', params: { fit: 'tight', gap: 8 } } }} />
 </Path>
 ```
 
+`circle`, `rectangle`, and `ellipse` share `fit: 'tight' | 'bounds'` plus a signed `gap`. They default to shape-aware `tight` and `gap: 0`. Both fit values are equivalent for `rectangle`; a negative gap contracts inward but may cross the visual shape.
+
 `boundary` only applies where a connection surface is meaningful: endpoint auto-clip (no explicit `anchor`) and that endpoint's standard direction / angle anchor. In direction-less reference contexts — `between` endpoints, an `offset` `of`, a node center — it is a no-op. A node's default connection surface lives on [`<Node boundary>`](/kernel/components/node/overview#connection-surface-boundary); the endpoint `boundary` is the per-edge override.
 
-The five-pointed star below has no node `boundary`. Switch the endpoint surface in the panel to see the same edge move from the real tip to the circumscribed circle; the edge decides its own surface, and the dotted circle is a reference.
+The five-pointed star below has no node `boundary`. The panel starts on the circle boundary, so you can compare `tight` with `bounds` and adjust `gap` immediately; switch back to the star outline to compare the real shape surface. The light dotted outline is the current circle boundary and updates with the real endpoint.
 
 <ComponentPreview files="path-boundary" size="md" />
 

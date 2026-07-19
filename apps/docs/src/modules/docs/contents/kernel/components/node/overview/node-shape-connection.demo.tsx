@@ -1,4 +1,4 @@
-import type { IRNodeTarget } from '@retikz/core';
+import type { IRBoundary, IRNodeTarget } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
@@ -20,6 +20,7 @@ export const previewSource = {
 
 type NodeShapeConnectionValues = PreviewControlValuesFor<typeof nodeShapeConnectionControls>;
 type AnchorChoice = NodeShapeConnectionValues['anchorA'];
+type BoundaryFitChoice = NodeShapeConnectionValues['fitA'];
 
 /** 把 controls 值转换为 Draw 的节点端点引用 */
 const targetOf = (id: string, anchor: AnchorChoice): IRNodeTarget => ({
@@ -27,25 +28,31 @@ const targetOf = (id: string, anchor: AnchorChoice): IRNodeTarget => ({
   ...(anchor === 'auto' ? {} : { anchor }),
 });
 
+/** 把 control 值转换为 Node 的连接面引用 */
+const boundaryOf = (boundary: NodeBoundaryChoice, fit: BoundaryFitChoice, gap: number): IRBoundary =>
+  boundary === 'shape' ? boundary : { type: boundary, params: { fit, gap } };
+
 type BoundaryGuideProps = {
   position: [number, number];
   shape: NodeShapeChoice;
   boundary: NodeBoundaryChoice;
+  fit: BoundaryFitChoice;
+  gap: number;
   children: string;
 };
 
-/** 在可见 Node 上方绘制当前连接面的浅色虚线辅助轮廓 */
+/** 在可见 Node 上方绘制当前连接面的浅色点状辅助轮廓 */
 const BoundaryGuide: FC<BoundaryGuideProps> = props => {
-  const { position, shape, boundary, children } = props;
+  const { position, shape, boundary, fit, gap, children } = props;
   return (
     <Node
       position={position}
-      shape={{ type: boundaryGuideShape.name, params: { shape, boundary } }}
+      shape={{ type: boundaryGuideShape.name, params: { shape, boundary, fit, gap } }}
       fill="none"
       stroke="#94a3b8"
       strokeOpacity={0.6}
       strokeWidth={1}
-      dashPattern={[5, 4]}
+      dashPattern={[1, 4]}
       textColor="transparent"
       zIndex={1}
     >
@@ -72,7 +79,7 @@ const Demo: FC = () => {
         id="A"
         position={[-150, 0]}
         shape={nodeShapeOf(values.shapeA)}
-        boundary={values.boundaryA}
+        boundary={boundaryOf(values.boundaryA, values.fitA, values.gapA)}
         fill="#fbbf24"
         stroke="#b45309"
         textColor="#78350f"
@@ -83,17 +90,29 @@ const Demo: FC = () => {
         id="B"
         position={[150, 0]}
         shape={nodeShapeOf(values.shapeB)}
-        boundary={values.boundaryB}
+        boundary={boundaryOf(values.boundaryB, values.fitB, values.gapB)}
         fill="#93c5fd"
         stroke="#1d4ed8"
         textColor="#1e3a8a"
       >
         b
       </Node>
-      <BoundaryGuide position={[-150, 0]} shape={values.shapeA} boundary={values.boundaryA}>
+      <BoundaryGuide
+        position={[-150, 0]}
+        shape={values.shapeA}
+        boundary={values.boundaryA}
+        fit={values.fitA}
+        gap={values.gapA}
+      >
         a
       </BoundaryGuide>
-      <BoundaryGuide position={[150, 0]} shape={values.shapeB} boundary={values.boundaryB}>
+      <BoundaryGuide
+        position={[150, 0]}
+        shape={values.shapeB}
+        boundary={values.boundaryB}
+        fit={values.fitB}
+        gap={values.gapB}
+      >
         b
       </BoundaryGuide>
       <Draw way={[targetOf('A', values.anchorA), targetOf('B', values.anchorB)]} arrow="->" stroke="gray" zIndex={-1} />

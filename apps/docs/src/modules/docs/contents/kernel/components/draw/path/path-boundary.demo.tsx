@@ -1,8 +1,9 @@
+import type { IRBoundary } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
 
 import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
 
@@ -14,14 +15,23 @@ export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
 
 const StarOuterRadius = 50;
 const StarAabbHalfWidth = StarOuterRadius * Math.cos(Math.PI / 10);
-const CircleBoundaryRadius = Math.hypot(StarAabbHalfWidth, StarOuterRadius);
+
+type PathBoundaryValues = PreviewControlValuesFor<typeof pathBoundaryControls>;
+type BoundaryChoice = PathBoundaryValues['boundary'];
+type BoundaryFitChoice = PathBoundaryValues['fit'];
+
+/** 把面板值转换为 endpoint 的公开 boundary 引用 */
+const boundaryOf = (boundary: BoundaryChoice, fit: BoundaryFitChoice, gap: number): IRBoundary =>
+  boundary === 'shape' ? boundary : { type: boundary, params: { fit, gap } };
 
 /**
  * 端点 boundary：单边覆盖
- * @description 固定一条边，在面板切换目标端点使用星形轮廓或外接圆连接面
+ * @description 固定一条边，在面板切换目标端点的视觉轮廓 / 圆形连接面，并调整 fit 与 gap
  */
 const Demo: FC = () => {
   const values = usePreviewControls(pathBoundaryControls);
+  const baseRadius = values.fit === 'tight' ? StarOuterRadius : Math.hypot(StarAabbHalfWidth, StarOuterRadius);
+  const circleBoundaryRadius = baseRadius + values.gap;
 
   return (
     <Layout
@@ -30,14 +40,6 @@ const Demo: FC = () => {
       viewBox={{ x: -180, y: -110, width: 360, height: 220 }}
       nodeDefault={{ stroke: 'gray', dashed: true }}
     >
-      <Circle
-        center={[0, 0]}
-        radius={CircleBoundaryRadius}
-        stroke="#94a3b8"
-        fill="none"
-        dashPattern={[1, 4]}
-        lineCap="round"
-      />
       <Node
         id="star"
         position={[0, 0]}
@@ -45,10 +47,21 @@ const Demo: FC = () => {
         fill="gold"
         stroke="none"
       />
+      {values.boundary === 'circle' && (
+        <Circle
+          center={[0, 0]}
+          radius={circleBoundaryRadius}
+          stroke="#94a3b8"
+          fill="none"
+          dashPattern={[1, 4]}
+          lineCap="round"
+          zIndex={1}
+        />
+      )}
       <Node id="A" position={[-130, 80]}>
         a
       </Node>
-      <Draw way={['A', { id: 'star', boundary: values.boundary }]} arrow="->" />
+      <Draw way={['A', { id: 'star', boundary: boundaryOf(values.boundary, values.fit, values.gap) }]} arrow="->" />
     </Layout>
   );
 };

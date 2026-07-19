@@ -1,12 +1,18 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 /** Node 形状与连接 playground 使用的稳定字段 id */
 export const NodeShapeConnectionControlId = {
   ShapeA: 'shapeA',
   BoundaryA: 'boundaryA',
+  FitA: 'fitA',
+  GapA: 'gapA',
   AnchorA: 'anchorA',
   ShapeB: 'shapeB',
   BoundaryB: 'boundaryB',
+  FitB: 'fitB',
+  GapB: 'gapB',
   AnchorB: 'anchorB',
 } as const;
 
@@ -26,6 +32,11 @@ const boundaryOptions = [
   { value: 'circle', label: '圆形连接面' },
   { value: 'rectangle', label: '矩形连接面' },
   { value: 'ellipse', label: '椭圆连接面' },
+] as const;
+
+const fitOptions = [
+  { value: 'tight', label: '贴合形状' },
+  { value: 'bounds', label: '包住外接框' },
 ] as const;
 
 const anchorOptions = [
@@ -65,6 +76,24 @@ export const nodeShapeConnectionControls = definePreviewControls({
         },
         {
           kind: 'select',
+          id: NodeShapeConnectionControlId.FitA,
+          label: 'fit',
+          defaultValue: 'tight',
+          options: fitOptions,
+          visibleWhen: { controlId: NodeShapeConnectionControlId.BoundaryA, oneOf: ['circle', 'rectangle', 'ellipse'] },
+        },
+        {
+          kind: 'range',
+          id: NodeShapeConnectionControlId.GapA,
+          label: 'gap',
+          defaultValue: 0,
+          min: -12,
+          max: 28,
+          step: 2,
+          visibleWhen: { controlId: NodeShapeConnectionControlId.BoundaryA, oneOf: ['circle', 'rectangle', 'ellipse'] },
+        },
+        {
+          kind: 'select',
           id: NodeShapeConnectionControlId.AnchorA,
           label: 'anchor',
           defaultValue: 'auto',
@@ -86,8 +115,26 @@ export const nodeShapeConnectionControls = definePreviewControls({
           kind: 'select',
           id: NodeShapeConnectionControlId.BoundaryB,
           label: 'boundary',
-          defaultValue: 'shape',
+          defaultValue: 'ellipse',
           options: boundaryOptions,
+        },
+        {
+          kind: 'select',
+          id: NodeShapeConnectionControlId.FitB,
+          label: 'fit',
+          defaultValue: 'tight',
+          options: fitOptions,
+          visibleWhen: { controlId: NodeShapeConnectionControlId.BoundaryB, oneOf: ['circle', 'rectangle', 'ellipse'] },
+        },
+        {
+          kind: 'range',
+          id: NodeShapeConnectionControlId.GapB,
+          label: 'gap',
+          defaultValue: 0,
+          min: -12,
+          max: 28,
+          step: 2,
+          visibleWhen: { controlId: NodeShapeConnectionControlId.BoundaryB, oneOf: ['circle', 'rectangle', 'ellipse'] },
         },
         {
           kind: 'select',
@@ -100,3 +147,21 @@ export const nodeShapeConnectionControls = definePreviewControls({
     },
   ],
 });
+
+/** Node 形状与连接面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: nodeShapeConnectionControls,
+  canonicalValues: {
+    shapeA: 'star',
+    boundaryA: 'circle',
+    fitA: 'tight',
+    gapA: 0,
+    anchorA: 'auto',
+    shapeB: 'ellipse',
+    boundaryB: 'ellipse',
+    fitB: 'tight',
+    gapB: 0,
+    anchorB: 'auto',
+  },
+  relatedApis: ['Node.shape', 'Node.boundary', 'Draw.way'],
+} satisfies PreviewControlContract;

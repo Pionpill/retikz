@@ -27,4 +27,5 @@ export const CompileWarningCode = {
   TexInvalid: 'TEX_INVALID',
   TexTextConflict: 'TEX_TEXT_CONFLICT',
   TextTexParseError: 'TEXT_TEX_PARSE_ERROR',
+  BoundaryTightFallback: 'BOUNDARY_TIGHT_FALLBACK',
 } as const;

@@ -41,11 +41,12 @@ const badge = defineShape({
   }),
   boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
   anchor: BUILTIN_SHAPES.rectangle.anchor,
+  connectionEnvelope: BUILTIN_SHAPES.rectangle.connectionEnvelope,
   emit: BUILTIN_SHAPES.rectangle.emit,
 });
 ```
 
-A definition answers at least four questions: how large the content's outer box must be, where a connection stops in a target direction, which shape-specific anchors exist, and which `ScenePrimitive` values are emitted. See [API Reference](#api-reference) for the field signatures.
+A definition answers at least four questions: how large the content's outer box must be, where a connection stops in a target direction, which shape-specific anchors exist, and which `ScenePrimitive` values are emitted. To make built-in circle / ellipse boundaries with `fit: 'tight'` follow the shape closely, also provide `connectionEnvelope`; the example reuses rectangle's safe envelope. See [API Reference](#api-reference) for the field signatures.
 
 ### Parametric shapes
 
@@ -98,7 +99,7 @@ The execution order is:
 1. Resolve `node.shape`; normalize `circle` / `diamond` presets to real provider names and params
 2. Look up the definition in one shape registry; built-ins and custom definitions do not fork into separate consumption paths
 3. Validate through the JSON-object guard and the definition's `paramsSchema`
-4. Call `circumscribe` for Node layout, geometry hooks for connections and anchors, and `emit` for drawing
+4. Call `circumscribe` for Node layout, geometry hooks for connections and anchors, `connectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
 
 <SourceLinks
   sources={[
@@ -128,6 +129,8 @@ The execution order is:
 | params fail `paramsSchema`                | Compile reports the shape name, IR path, and zod details                              |
 | `anchor` does not recognize a custom name | Returning `undefined` lets compile throw `Unknown anchor`                             |
 | `edgePoint` is omitted                    | Using `{ side, fraction }` reports that the shape does not support side anchors       |
+| `connectionEnvelope` is omitted           | A built-in boundary with `fit: 'tight'` falls back to bounds and emits one warning    |
+| Invalid connection envelope               | Compile fails; axes must be finite and positive, and a circle's two axes must match   |
 
 <ComponentAlert
   type="warn"
@@ -147,19 +150,20 @@ By default, `scaleParams` deep-scales every numeric leaf by `Math.sqrt(sx * sy)`
 | `circumscribeOffset` | `(params) => Position`                                                   | No       | Offset the AABB center from `position` when the semantic origin differs             |
 | `boundaryPoint`      | `(rect, toward, params) => Position`                                     | Yes      | Derive the automatic connection point from rotatable `rect` and `toward`            |
 | `anchor`             | `(rect, name, params) => Position \| undefined`                          | Yes      | Resolve standard or shape-specific named anchors; return `undefined` when unhandled |
+| `connectionEnvelope` | `(rect, kind, params) => { halfWidth, halfHeight } \| undefined`         | No       | Return a safe regular envelope for circle / ellipse / rectangle `tight` fitting     |
 | `edgePoint`          | `(rect, side, t, params) => Position`                                    | No       | Support `{ side, fraction }` points with `t ∈ [0, 1]`                               |
 | `emit`               | `(rect, style, round, params) => Iterable<ScenePrimitive>`               | Yes      | Emit one or more renderer-agnostic Scene primitives in aligned space                |
 | `scaleParams`        | `(params, sx, sy) => TParams`                                            | No       | Define how Node scale applies to shape params                                       |
 
-`@retikz/core` exports `defineShape`, `ShapeDefinition`, `ShapeDefinitionInput`, `ResolvedShapeStyle`, `BUILTIN_SHAPES`, `Rect`, `worldToLocal`, and `localToWorld`. Import the point-coordinate type `Position` from `@retikz/math`.
+`@retikz/core` exports `defineShape`, `ShapeDefinition`, `ShapeDefinitionInput`, `ConnectionEnvelope`, `ConnectionEnvelopeKind`, `ResolvedShapeStyle`, `BUILTIN_SHAPES`, `Rect`, `worldToLocal`, and `localToWorld`. Import the point-coordinate type `Position` from `@retikz/math`.
 
 <SourceLinks
   sources={[
     {
       label: 'Complete ShapeDefinition contract',
       path: 'packages/kernel/core/src/contract/shape/types.ts',
-      startLine: 80,
-      endLine: 143,
+      startLine: 96,
+      endLine: 160,
     },
     {
       label: 'React Layout shapes injection point',

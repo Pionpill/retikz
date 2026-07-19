@@ -41,11 +41,12 @@ const badge = defineShape({
   }),
   boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
   anchor: BUILTIN_SHAPES.rectangle.anchor,
+  connectionEnvelope: BUILTIN_SHAPES.rectangle.connectionEnvelope,
   emit: BUILTIN_SHAPES.rectangle.emit,
 });
 ```
 
-定义至少回答四个问题：内容需要多大的外接框、连线朝某方向时停在哪里、认识哪些专属 anchor、最终输出哪些 `ScenePrimitive`。字段签名集中在下方 [API 参考](#api-参考)。
+定义至少回答四个问题：内容需要多大的外接框、连线朝某方向时停在哪里、认识哪些专属 anchor、最终输出哪些 `ScenePrimitive`。如果希望内置 circle / ellipse 的 `fit: 'tight'` 贴合该形状，还应提供 `connectionEnvelope`；上例直接复用矩形的安全包络。字段签名集中在下方 [API 参考](#api-参考)。
 
 ### 带参数的形状
 
@@ -98,7 +99,7 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
 1. 解析 `node.shape`；`circle` / `diamond` preset 先归一为真实 provider 名和 params
 2. 在统一 shape registry 中查找定义；内置项与自定义项不分两条消费路径
 3. 依次通过 JSON object 护栏与 definition 的 `paramsSchema`
-4. Node 布局调用 `circumscribe`，连接与 anchor 调用几何函数，绘制调用 `emit`
+4. Node 布局调用 `circumscribe`，连接与 anchor 调用几何函数，规则连接面可调用 `connectionEnvelope`，绘制调用 `emit`
 
 <SourceLinks
   sources={[
@@ -128,6 +129,8 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
 | params 不符合 `paramsSchema` | 编译同时报告 shape 名、IR 路径与 zod 细节                            |
 | `anchor` 不认识专属名称      | 返回 `undefined` 后由编译层报 `Unknown anchor`                       |
 | 未实现 `edgePoint`           | 使用 `{ side, fraction }` 时编译报该 shape 不支持 side anchors       |
+| 未实现 `connectionEnvelope`  | 内置 boundary 的 `fit: 'tight'` 回退到 bounds，并产生一次 warning    |
+| 返回非法连接包络             | 编译报错；半轴必须是有限正数，circle 的两个半轴还必须相等            |
 
 <ComponentAlert
   type="warn"
@@ -147,19 +150,20 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
 | `circumscribeOffset` | `(params) => Position`                                                   | 否   | 语义参考点不等于 AABB 中心时，返回外接框中心相对 `position` 的偏移 |
 | `boundaryPoint`      | `(rect, toward, params) => Position`                                     | 是   | 根据可旋转 `rect` 与目标点 `toward` 返回自动连接落点               |
 | `anchor`             | `(rect, name, params) => Position \| undefined`                          | 是   | 解析标准或 shape 专属命名 anchor；不处理时返回 `undefined`         |
+| `connectionEnvelope` | `(rect, kind, params) => { halfWidth, halfHeight } \| undefined`         | 否   | 为 circle / ellipse / rectangle 的 `tight` 拟合返回安全规则包络    |
 | `edgePoint`          | `(rect, side, t, params) => Position`                                    | 否   | 支持 `{ side, fraction }` 比例点，`t ∈ [0, 1]`                     |
 | `emit`               | `(rect, style, round, params) => Iterable<ScenePrimitive>`               | 是   | 在轴对齐空间生成一个或多个 renderer-agnostic Scene 图元            |
 | `scaleParams`        | `(params, sx, sy) => TParams`                                            | 否   | 定义 Node scale 对 shape params 的作用方式                         |
 
-`@retikz/core` 导出 `defineShape`、`ShapeDefinition`、`ShapeDefinitionInput`、`ResolvedShapeStyle`、`BUILTIN_SHAPES`、`Rect`、`worldToLocal` 与 `localToWorld`；点坐标类型 `Position` 从 `@retikz/math` 导入。
+`@retikz/core` 导出 `defineShape`、`ShapeDefinition`、`ShapeDefinitionInput`、`ConnectionEnvelope`、`ConnectionEnvelopeKind`、`ResolvedShapeStyle`、`BUILTIN_SHAPES`、`Rect`、`worldToLocal` 与 `localToWorld`；点坐标类型 `Position` 从 `@retikz/math` 导入。
 
 <SourceLinks
   sources={[
     {
       label: 'ShapeDefinition 完整契约',
       path: 'packages/kernel/core/src/contract/shape/types.ts',
-      startLine: 80,
-      endLine: 143,
+      startLine: 96,
+      endLine: 160,
     },
     {
       label: 'React Layout 的 shapes 注入入口',

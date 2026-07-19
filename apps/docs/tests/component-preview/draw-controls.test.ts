@@ -378,7 +378,11 @@ describe('Draw family controls', () => {
     const cases = [
       {
         name: 'path-boundary',
-        fields: [{ id: 'boundary', kind: 'select', options: ['shape', 'circle'] }],
+        fields: [
+          { id: 'boundary', kind: 'select', options: ['shape', 'circle'] },
+          { id: 'fit', kind: 'select', options: ['tight', 'bounds'] },
+          { id: 'gap', kind: 'range' },
+        ],
       },
       {
         name: 'path-stroke-paint',
@@ -453,12 +457,59 @@ describe('Draw family controls', () => {
       ).toEqual(testCase.fields.map(field => ({ ...field, options: 'options' in field ? field.options : undefined })));
     }
 
+    const pathBoundaryFields = getPreviewControlFields(
+      definitionOf(
+        controlModules['../../src/modules/docs/contents/kernel/components/draw/path/path-boundary.controls.ts'],
+      ),
+    );
+    expect(pathBoundaryFields.map(fieldContractOf)).toEqual([
+      {
+        id: 'boundary',
+        kind: 'select',
+        defaultValue: 'circle',
+        min: undefined,
+        max: undefined,
+        step: undefined,
+        options: ['shape', 'circle'],
+        visibleWhen: undefined,
+      },
+      {
+        id: 'fit',
+        kind: 'select',
+        defaultValue: 'tight',
+        min: undefined,
+        max: undefined,
+        step: undefined,
+        options: ['tight', 'bounds'],
+        visibleWhen: { controlId: 'boundary', oneOf: ['circle'] },
+      },
+      {
+        id: 'gap',
+        kind: 'range',
+        defaultValue: 0,
+        min: -12,
+        max: 28,
+        step: 2,
+        options: undefined,
+        visibleWhen: { controlId: 'boundary', oneOf: ['circle'] },
+      },
+    ]);
+    expect(
+      Reflect.get(
+        controlModules['../../src/modules/docs/contents/kernel/components/draw/path/path-boundary.controls.ts'],
+        'previewControlContract',
+      ),
+    ).toMatchObject({ canonicalValues: { boundary: 'circle', fit: 'tight', gap: 0 } });
+
     expect(Object.keys(pathPanelDemoSources)).toHaveLength(8);
     const sourceContracts = {
       'path-boundary.demo.tsx': [
-        'boundary: values.boundary',
+        'boundary: boundaryOf(values.boundary, values.fit, values.gap)',
+        'params: { fit, gap }',
+        "values.fit === 'tight'",
         'Math.hypot(StarAabbHalfWidth, StarOuterRadius)',
-        'radius={CircleBoundaryRadius}',
+        'baseRadius + values.gap',
+        'radius={circleBoundaryRadius}',
       ],
       'path-stroke-paint.demo.tsx': [
         'angle: values.angle',

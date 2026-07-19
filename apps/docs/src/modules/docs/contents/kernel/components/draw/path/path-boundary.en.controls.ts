@@ -1,4 +1,8 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
 import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
+
+import { PathBoundaryControlId, PathBoundaryVisibleWhen } from './path-boundary.controls';
 
 /** English property panel for the Path endpoint connection surface */
 export const pathBoundaryControls = definePreviewControls({
@@ -10,15 +14,42 @@ export const pathBoundaryControls = definePreviewControls({
       controls: [
         {
           kind: 'select',
-          id: 'boundary',
+          id: PathBoundaryControlId.Boundary,
           label: 'Surface',
-          defaultValue: 'shape',
+          defaultValue: 'circle',
           options: [
             { value: 'shape', label: 'Star outline' },
-            { value: 'circle', label: 'Circumscribed circle' },
+            { value: 'circle', label: 'Circle boundary' },
           ],
+        },
+        {
+          kind: 'select',
+          id: PathBoundaryControlId.Fit,
+          label: 'fit',
+          defaultValue: 'tight',
+          options: [
+            { value: 'tight', label: 'Fit shape' },
+            { value: 'bounds', label: 'Enclose bounds' },
+          ],
+          visibleWhen: PathBoundaryVisibleWhen.RegularBoundary,
+        },
+        {
+          kind: 'range',
+          id: PathBoundaryControlId.Gap,
+          label: 'gap',
+          defaultValue: 0,
+          min: -12,
+          max: 28,
+          step: 2,
+          visibleWhen: PathBoundaryVisibleWhen.RegularBoundary,
         },
       ],
     },
   ],
 });
+
+export const previewControlContract = {
+  controls: pathBoundaryControls,
+  canonicalValues: { boundary: 'circle', fit: 'tight', gap: 0 },
+  relatedApis: ['Draw.way', 'IRNodeTarget.boundary', 'IRBoundary.params.fit', 'IRBoundary.params.gap'],
+} satisfies PreviewControlContract;

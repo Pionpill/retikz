@@ -275,3 +275,25 @@ describe('star — round-trip / schema', () => {
     expect(ShapeRefSchema.parse(ref)).toEqual(ref);
   });
 });
+
+describe('star — connection envelope', () => {
+  it('tight circle 使用 outerRadius，tight ellipse 包含全部尖角与凹角', () => {
+    const params = { points: 5, innerRadius: 16, outerRadius: 40 };
+    const { halfWidth, halfHeight } = star.circumscribe(0, 0, params);
+    const rect = { x: 0, y: 0, width: 2 * halfWidth, height: 2 * halfHeight, rotate: 0 };
+    const circle = star.connectionEnvelope?.(rect, 'circle', params);
+    const ellipse = star.connectionEnvelope?.(rect, 'ellipse', params);
+
+    expect(circle?.halfWidth).toBeCloseTo(40);
+    expect(circle?.halfHeight).toBeCloseTo(40);
+    expect(ellipse).toBeDefined();
+    for (let index = 0; index < 5; index++) {
+      for (const prefix of ['tip', 'notch']) {
+        const point = star.anchor(rect, `${prefix}-${index}`, params);
+        expect(point).toBeDefined();
+        const normalized = (point![0] / ellipse!.halfWidth) ** 2 + (point![1] / ellipse!.halfHeight) ** 2;
+        expect(normalized).toBeLessThanOrEqual(1 + 1e-10);
+      }
+    }
+  });
+});

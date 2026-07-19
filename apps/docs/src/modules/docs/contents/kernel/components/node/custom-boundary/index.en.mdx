@@ -43,7 +43,9 @@ export const horizontalPorts = defineBoundary({
 });
 ```
 
-`rect` is the node box already derived by the visual shape; `toward` is the connector target measured from the node center. Parameterized boundaries use `{ type, params }`, where `params` must remain JSON-serializable. Functions stay in the definition and never enter IR (the intermediate representation).
+`boundaryPoint` receives the boundary's final resolved `rect`. Without `resolveRect`, this is the node box already derived by the visual shape. `toward` is the connector target measured from the node center. Parameterized boundaries use `{ type, params }`, where `params` must remain JSON-serializable. Functions stay in the definition and never enter IR (the intermediate representation).
+
+Implement optional `resolveRect(context, params)` when the surface needs to resize before intersection. `context.visualRect` is the visual AABB, while `context.connectionEnvelope(kind)` asks the visual shape for a safe circle / ellipse / rectangle envelope and shares a node-local cache. The returned rect must have finite coordinates and positive width and height, or compilation fails immediately.
 
 ### Parameterized boundaries
 
@@ -88,12 +90,12 @@ Application code owns the definitions; serialized figures keep only names or par
 
 ## Execution model
 
-| Stage    | Input                         | Result                                                 |
-| -------- | ----------------------------- | ------------------------------------------------------ |
-| Merge    | Built-in + custom definitions | Build a Boundary Registry keyed by `name`              |
-| Lookup   | `boundary` name               | Check boundary first, then the Shape Registry          |
-| Validate | `{ type, params }`            | Parse params with the matched definition's schema      |
-| Consume  | Direction or standard anchor  | Call `boundaryPoint` / `anchor` without changing shape |
+| Stage    | Input                         | Result                                                                                 |
+| -------- | ----------------------------- | -------------------------------------------------------------------------------------- |
+| Merge    | Built-in + custom definitions | Build a Boundary Registry keyed by `name`                                              |
+| Lookup   | `boundary` name               | Check boundary first, then the Shape Registry                                          |
+| Validate | `{ type, params }`            | Parse params with the matched definition's schema                                      |
+| Consume  | Direction or standard anchor  | Optionally call `resolveRect`, then `boundaryPoint` / `anchor`, without changing shape |
 
 `boundary="shape"` is reserved and always reuses the visual shape. Other names prefer the Boundary Registry and fall back to a same-named shape only when no boundary exists. A custom boundary can therefore share a name with a shape and override only the connection rule.
 
@@ -108,8 +110,8 @@ Application code owns the definitions; serialized figures keep only names or par
     {
       label: 'Resolve, validate, and fall back to shape geometry',
       path: 'packages/kernel/core/src/compile/node/boundary.ts',
-      startLine: 47,
-      endLine: 90,
+      startLine: 123,
+      endLine: 187,
     },
   ]}
 />
@@ -120,6 +122,7 @@ Application code owns the definitions; serialized figures keep only names or par
 - **Empty key**: `name` must be a non-empty string.
 - **Unknown name**: the error lists registered boundaries and shapes and points to the `boundaries` / `shapes` options.
 - **Invalid params**: `paramsSchema` runs before any geometry function and reports the corresponding `.boundary.params` IR path.
+- **Invalid resolved rect**: a non-finite or non-positive `resolveRect` result, or an exception inside the hook, reports the boundary name and Node IR path.
 - **Unknown anchor**: `anchor` may be omitted or return `undefined`; standard directions fall back to the node box, while shape-specific names still resolve through the visual shape.
 - **No drawing responsibility**: a boundary cannot change node size, shape, or content; use a Shape Definition or Node props for those concerns.
 
@@ -139,12 +142,13 @@ The first violates `paramsSchema`; the second registers the same key twice.
 
 ### `BoundaryDefinitionInput<TParams>`
 
-| Prop            | Type                                            | Default | Description                                   |
-| --------------- | ----------------------------------------------- | ------- | --------------------------------------------- |
-| `name`          | `string`                                        | —       | Registry key referenced by Node `boundary`    |
-| `paramsSchema`  | `z.ZodType<TParams>`                            | —       | Validates JSON-safe `boundary.params`         |
-| `boundaryPoint` | `(rect, toward, params) => Position`            | —       | Returns the ray intersection with the surface |
-| `anchor`        | `(rect, name, params) => Position \| undefined` | —       | Optional standard directional-anchor resolver |
+| Prop            | Type                                            | Default      | Description                                                   |
+| --------------- | ----------------------------------------------- | ------------ | ------------------------------------------------------------- |
+| `name`          | `string`                                        | —            | Registry key referenced by Node `boundary`                    |
+| `paramsSchema`  | `z.ZodType<TParams>`                            | —            | Validates JSON-safe `boundary.params`                         |
+| `resolveRect`   | `(context, params) => Rect`                     | `visualRect` | Optionally derive the surface rect from visual or safe bounds |
+| `boundaryPoint` | `(rect, toward, params) => Position`            | —            | Returns the ray intersection with the surface                 |
+| `anchor`        | `(rect, name, params) => Position \| undefined` | —            | Optional standard directional-anchor resolver                 |
 
 Import `defineBoundary`, `BoundaryDefinition`, `BoundaryDefinitionInput`, and `BUILTIN_BOUNDARIES` from `@retikz/core`. The author-side definitions are not re-exported by `@retikz/react` or `@retikz/vanilla`.
 

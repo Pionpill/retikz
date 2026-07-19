@@ -37,7 +37,7 @@ import { Node } from '@retikz/react';
 
 节点的视觉轮廓和连线端点分三层控制：`shape` 选择画出来的形状，`boundary` 选择自动贴边使用的连接面，path 端点的 `anchor` 则指定一个命名连接点。分别修改 A / B，观察同一条边如何落到两端。
 
-<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size="xl" />
+<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size="md" />
 
 `anchor` 省略时，连线朝另一个端点自动贴边；标准命名 anchor（如 `top` / `right`）按 `boundary` 解析。`center` 会直接连到节点中心。形状专属 anchor 仍属于视觉 `shape`，具体名称见对应形状页。
 
@@ -55,7 +55,9 @@ import { Node } from '@retikz/react';
 
 `shape` 也接受经 `<Layout shapes>` / `CompileOptions.shapes` 注册的名称，带参注册形状继续用 `{ type, params }`。详情见 [自定义形状](/kernel/components/shapes/custom-shape)。
 
-`boundary` 默认为 `'shape'`，也可选 `'circle'` / `'rectangle'` / `'ellipse'` 或注册的连接面。它只改变自动端点与标准 anchor 的解析，不改节点占位和视觉轮廓；三个内置替代面都会覆盖视觉外接框，playground 中的浅色虚线显示当前连接面。单条边也可在端点对象中覆盖节点默认值，注册方式见 [自定义连接面](/kernel/components/node/custom-boundary)，端点写法见 [Path](/kernel/components/draw/path)。
+`boundary` 默认为 `'shape'`，也可选 `'circle'` / `'rectangle'` / `'ellipse'` 或注册的连接面。它只改变自动端点与标准 anchor 的解析，不改节点占位和视觉轮廓。三个内置替代面都支持 `{ fit, gap }`：`fit: 'tight'`（默认）按视觉形状提供的安全包络尽量贴近，`fit: 'bounds'` 则包住视觉 AABB；`gap` 再向外（正数）或向内（负数）调整半径 / 半轴。矩形的两种 `fit` 结果相同。
+
+在 playground 中切换 A / B 的 `fit` 并拖动 `gap`，浅色点状轮廓就是实际连接面。负 `gap` 允许穿过视觉形状，但通常会让连线盖住节点，不推荐；若它把任一有效半轴压到 0 或以下，编译会直接报错。单条边也可在端点对象中覆盖节点默认值，注册方式见 [自定义连接面](/kernel/components/node/custom-boundary)，端点写法见 [Path](/kernel/components/draw/path)。
 
 ### 尺寸与变换
 
@@ -68,7 +70,7 @@ import { Node } from '@retikz/react';
 - `scale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
 - `rotate`——绕节点中心旋转，连线跟随旋转后的边界贴附
 
-<ComponentPreview files="node-geometry" size="md" />
+<ComponentPreview files="node-geometry" size="sm" />
 
 <Comparison target="tikz" title="Node 几何写法">
 
@@ -98,7 +100,7 @@ import { Node } from '@retikz/react';
 
 下面的 playground 聚焦一个标签，统一尝试命名方位、数字角度、边界比例、内外侧、朝向、文字样式与引线。
 
-<ComponentPreview files="node-label" size="lg" />
+<ComponentPreview files="node-label" size="md" />
 
 需要同时附加多个标签时，把同一份对象写法放进数组：
 
@@ -208,13 +210,21 @@ import { Node } from '@retikz/react';
 
 因此，`margin` 会外推连接端点与标准 border anchor，并扩大节点布局占位，却不会重画视觉形状。形状专属锚点与边上比例点保持在原轮廓上；某个 shape 没实现标准方位锚点时，core 会回退到它的外接矩形。
 
+规则连接面先按 `fit` 求矩形，再应用 `gap`；自动端点、数字角度和标准命名 anchor 会共享这一结果。内置 ellipse / polygon / star / contour 提供 shape-aware `tight` 包络；rectangle 的 `tight` 与 `bounds` 一致，arc / sector 本版也按 bounds 处理。自定义 shape 若未实现 `connectionEnvelope`，`tight` 会安全回退到 bounds，并产生一次结构化 warning。
+
 <SourceLinks
   sources={[
     {
-      label: '连接面 provider 解析',
+      label: 'tight 包络、fallback 与缓存',
       path: 'packages/kernel/core/src/compile/node/boundary.ts',
-      startLine: 47,
-      endLine: 90,
+      startLine: 49,
+      endLine: 94,
+    },
+    {
+      label: '内置 boundary 的 fit 与 gap',
+      path: 'packages/kernel/core/src/providers/boundary/definitions.ts',
+      startLine: 12,
+      endLine: 103,
     },
     {
       label: '视觉轮廓、连接面与 anchor 分流',
@@ -283,16 +293,16 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 
 ### 几何
 
-| 属性           | 类型                                                                                     | 默认值        | 描述                                                                                                                                                                                                                                                                                                                                                                         |
-| -------------- | ---------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shape`        | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string`<br />`\| { type, params }` | `'rectangle'` | 节点形状：裸字符串仅限无必填参数的形状（`rectangle` / `circle` / `ellipse` / `diamond` / 无参注册名）；`polygon` / `sector` / `arc` / `star` 等带必填参数的形状必须用 `{ type, params }`（裸字符串会编译期抛错）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册                                                                                            |
-| `boundary`     | `'shape' \| 'circle' \| string \| { type, params }`                                      | `'shape'`     | 连接面：边在此节点如何贴边、标准方位锚点如何解析，独立于视觉 `shape`；`'shape'` = 视觉形状自身；内置 `'rectangle'` = 视觉外接框，`'circle'` = 视觉外接框的外接圆（半径 = 半对角线），`'ellipse'` = 经过视觉外接框四角的外接椭圆。其它值先查自定义连接面，再 fallback 到已注册 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
-| `rotate`       | `number`                                                                                 | `0`           | 绕中心旋转角度（度，正值顺时针）                                                                                                                                                                                                                                                                                                                                             |
-| `padding`      | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                           | `8`           | 内容到边框的内边距；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析                                                                                                                                                                                                                                                                                      |
-| `margin`       | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                           | `0`           | 边框外推距离；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析；作用于**所有 border 锚点**（显式 `.top` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状                                                                                                                                                                      |
-| `cornerRadius` | `number`                                                                                 | —             | 顶层圆角半径；仅对 `rectangle` 形状生效（默认或显式 `'rectangle'`），且仅在 params 未给 `cornerRadius` 时合入。各形状的圆角写在 params 里：`shape={{ type, params:{ ..., cornerRadius } }}`（params 优先）                                                                                                                                                                   |
-| `minimumSize`  | `number \| { default?: number; width?: number; height?: number }`                        | —             | 撑开最小 bbox 宽高；数字表示宽高相同，对象可分别指定宽高，轴字段优先于 `default`                                                                                                                                                                                                                                                                                             |
-| `scale`        | `number \| { default?: number; x?: number; y?: number }`                                 | `1`           | 均匀或分轴缩放；轴字段优先于 `default`，并影响 bbox、字号、padding、margin 与路径附着点                                                                                                                                                                                                                                                                                      |
+| 属性           | 类型                                                                                     | 默认值        | 描述                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `shape`        | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string`<br />`\| { type, params }` | `'rectangle'` | 节点形状：裸字符串仅限无必填参数的形状（`rectangle` / `circle` / `ellipse` / `diamond` / 无参注册名）；`polygon` / `sector` / `arc` / `star` 等带必填参数的形状必须用 `{ type, params }`（裸字符串会编译期抛错）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册                                                                                                          |
+| `boundary`     | `'shape' \| 'circle' \| 'rectangle' \| 'ellipse' \| string`<br />`\| { type, params }`   | `'shape'`     | 连接面：边在此节点如何贴边、标准方位锚点如何解析，独立于视觉 `shape`。内置规则面参数为 `{ fit?: 'tight' \| 'bounds', gap?: number }`，默认 `{ fit:'tight', gap:0 }`；`gap` 有符号且必须有限，负值允许穿过视觉形状但不推荐，最终半轴必须大于 0。其它值先查自定义连接面，再 fallback 到已注册 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
+| `rotate`       | `number`                                                                                 | `0`           | 绕中心旋转角度（度，正值顺时针）                                                                                                                                                                                                                                                                                                                                                           |
+| `padding`      | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                           | `8`           | 内容到边框的内边距；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析                                                                                                                                                                                                                                                                                                    |
+| `margin`       | `number \| { default?, x?, y?, left?, right?, top?, bottom? }`                           | `0`           | 边框外推距离；对象字段按 `left/right/top/bottom` → `x/y` → `default` → 默认值解析；作用于**所有 border 锚点**（显式 `.top` / `.30` 与自动连线端点一致），并**计入节点布局占位 / viewBox**；不改视觉形状                                                                                                                                                                                    |
+| `cornerRadius` | `number`                                                                                 | —             | 顶层圆角半径；仅对 `rectangle` 形状生效（默认或显式 `'rectangle'`），且仅在 params 未给 `cornerRadius` 时合入。各形状的圆角写在 params 里：`shape={{ type, params:{ ..., cornerRadius } }}`（params 优先）                                                                                                                                                                                 |
+| `minimumSize`  | `number \| { default?: number; width?: number; height?: number }`                        | —             | 撑开最小 bbox 宽高；数字表示宽高相同，对象可分别指定宽高，轴字段优先于 `default`                                                                                                                                                                                                                                                                                                           |
+| `scale`        | `number \| { default?: number; x?: number; y?: number }`                                 | `1`           | 均匀或分轴缩放；轴字段优先于 `default`，并影响 bbox、字号、padding、margin 与路径附着点                                                                                                                                                                                                                                                                                                    |
 
 ### margin 与 padding 的区别
 

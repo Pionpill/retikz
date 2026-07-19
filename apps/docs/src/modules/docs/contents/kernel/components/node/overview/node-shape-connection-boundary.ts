@@ -1,11 +1,30 @@
-import type { IRJsonObject, IRNode, Rect, ShapeDefinition } from '@retikz/core';
+import type {
+  ConnectionEnvelopeKind,
+  IRJsonObject,
+  IRNode,
+  PathPrim,
+  Rect,
+  ScenePrimitive,
+  ShapeDefinition,
+} from '@retikz/core';
 
-import { arc, defineShape, ellipseShape, polygon, rectangle, sector, star } from '@retikz/core';
+import {
+  arc,
+  boundsConnectionEnvelope,
+  defineShape,
+  ellipseShape,
+  polygon,
+  rectangle,
+  sector,
+  star,
+} from '@retikz/core';
 import { z } from 'zod';
 
 const shapeChoiceSchema = z.enum(['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector', 'arc']);
 
 const boundaryChoiceSchema = z.enum(['shape', 'circle', 'rectangle', 'ellipse']);
+
+const boundaryFitSchema = z.enum(['tight', 'bounds']);
 
 /** Node 形状 playground 的可选视觉形状 */
 export type NodeShapeChoice = z.infer<typeof shapeChoiceSchema>;
@@ -65,26 +84,103 @@ export const nodeShapeOf = (shape: NodeShapeChoice): IRNode['shape'] => {
 const boundaryGuideParamsSchema = z.strictObject({
   shape: shapeChoiceSchema,
   boundary: boundaryChoiceSchema,
+  fit: boundaryFitSchema,
+  gap: z.number(),
 });
 
 type BoundaryGuideParams = z.infer<typeof boundaryGuideParamsSchema>;
 
-/** 把视觉外接框转换为 circle boundary 使用的外接圆正方形 */
-const circumscribedCircleRect = (rect: Rect): Rect => {
-  const side = Math.hypot(rect.width, rect.height);
-  return { ...rect, width: side, height: side };
+type GuideShapePrimitive = Extract<ScenePrimitive, { type: 'ellipse' | 'rect' }>;
+
+/** 取 ellipse / rect primitive 与 Path 共享的视觉字段 */
+const guidePathStyle = (primitive: GuideShapePrimitive): Omit<PathPrim, 'type' | 'commands'> => ({
+  id: primitive.id,
+  meta: primitive.meta,
+  animations: primitive.animations,
+  fill: primitive.fill,
+  fillOpacity: primitive.fillOpacity,
+  stroke: primitive.stroke,
+  strokeOpacity: primitive.strokeOpacity,
+  strokeWidth: primitive.strokeWidth,
+  dashPattern: primitive.dashPattern,
+  dashOffset: primitive.dashOffset,
+  opacity: primitive.opacity,
+  shadow: primitive.shadow,
+  blendMode: primitive.blendMode,
+});
+
+/** 把 shape primitive 统一转为具有圆形 dash 端点的教学辅助轮廓 */
+const dottedGuidePrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
+  if (primitive.type === 'path') return { ...primitive, strokeLinecap: 'round' };
+  if (primitive.type === 'group') {
+    return { ...primitive, children: primitive.children.map(dottedGuidePrimitive) };
+  }
+  if (primitive.type === 'ellipse') {
+    const { cx, cy, rx, ry, rotate } = primitive;
+    return {
+      ...guidePathStyle(primitive),
+      type: 'path',
+      commands: [
+        { kind: 'move', to: [cx + rx, cy] },
+        {
+          kind: 'ellipseArc',
+          center: [cx, cy],
+          radiusX: rx,
+          radiusY: ry,
+          ...(rotate === undefined ? {} : { rotation: rotate }),
+          startAngle: 0,
+          endAngle: 360,
+        },
+      ],
+      strokeLinecap: 'round',
+    } satisfies PathPrim;
+  }
+  if (primitive.type === 'rect') {
+    const { x, y, width, height } = primitive;
+    return {
+      ...guidePathStyle(primitive),
+      type: 'path',
+      commands: [
+        { kind: 'move', to: [x, y] },
+        { kind: 'line', to: [x + width, y] },
+        { kind: 'line', to: [x + width, y + height] },
+        { kind: 'line', to: [x, y + height] },
+        { kind: 'close' },
+      ],
+      strokeLinecap: 'round',
+    } satisfies PathPrim;
+  }
+  return primitive;
 };
 
-/** 把视觉外接框转换为四角落在边界上的外接椭圆矩形 */
-const circumscribedEllipseRect = (rect: Rect): Rect => ({
-  ...rect,
-  width: rect.width * Math.SQRT2,
-  height: rect.height * Math.SQRT2,
-});
+/** 逐个输出带 round line cap 的辅助轮廓 primitive */
+function* emitDottedGuide(primitives: Iterable<ScenePrimitive>): Iterable<ScenePrimitive> {
+  for (const primitive of primitives) yield dottedGuidePrimitive(primitive);
+}
+
+/** 复用正式 provider 的 fit / gap 语义计算辅助轮廓矩形 */
+const guideRect = (
+  rect: Rect,
+  visual: ResolvedVisualShape,
+  boundary: Exclude<NodeBoundaryChoice, 'shape'>,
+  fit: z.infer<typeof boundaryFitSchema>,
+  gap: number,
+): Rect => {
+  const kind: ConnectionEnvelopeKind = boundary;
+  const envelope =
+    boundary === 'rectangle' || fit === 'bounds'
+      ? boundsConnectionEnvelope(rect, kind)
+      : (visual.definition.connectionEnvelope?.(rect, kind, visual.params) ?? boundsConnectionEnvelope(rect, kind));
+  return {
+    ...rect,
+    width: (envelope.halfWidth + gap) * 2,
+    height: (envelope.halfHeight + gap) * 2,
+  };
+};
 
 /**
  * Node 形状 playground 的连接面辅助轮廓
- * @description 布局复用当前视觉 shape，绘制则复用所选 boundary 的内置几何，因此虚线与真实端点解析使用同一外接框
+ * @description 布局复用当前视觉 shape，绘制则复用所选 boundary 的 fit / gap 计算，因此辅助轮廓与真实端点解析一致
  */
 export const boundaryGuideShape = defineShape<BoundaryGuideParams>({
   name: 'node-boundary-guide',
@@ -103,16 +199,22 @@ export const boundaryGuideShape = defineShape<BoundaryGuideParams>({
     const visual = visualShapeOf(params.shape);
     switch (params.boundary) {
       case 'shape':
-        yield* visual.definition.emit(rect, style, round, visual.params);
+        yield* emitDottedGuide(visual.definition.emit(rect, style, round, visual.params));
         return;
       case 'circle':
-        yield* ellipseShape.emit(circumscribedCircleRect(rect), style, round, {});
+        yield* emitDottedGuide(
+          ellipseShape.emit(guideRect(rect, visual, params.boundary, params.fit, params.gap), style, round, {}),
+        );
         return;
       case 'rectangle':
-        yield* rectangle.emit(rect, style, round, {});
+        yield* emitDottedGuide(
+          rectangle.emit(guideRect(rect, visual, params.boundary, params.fit, params.gap), style, round, {}),
+        );
         return;
       case 'ellipse':
-        yield* ellipseShape.emit(circumscribedEllipseRect(rect), style, round, {});
+        yield* emitDottedGuide(
+          ellipseShape.emit(guideRect(rect, visual, params.boundary, params.fit, params.gap), style, round, {}),
+        );
     }
   },
 });
