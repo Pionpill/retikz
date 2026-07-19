@@ -15,6 +15,8 @@ export type AppSidebarMenuProps = {
   categories: Array<SidebarCategoryData>;
   /** 当前激活的一级 module id（路由首段） */
   moduleId: string;
+  /** 点击具体文档入口后的回调 */
+  onNavigate?: () => void;
 };
 
 const leafBase =
@@ -27,7 +29,7 @@ const leafActive = 'text-foreground font-semibold bg-accent';
  * @description 一级 module 无 children 即叶子链接，有 children 交给 AppSidebarMenuItem（Collapsible）；一级始终铺开不做 Plus/Minus 折叠；分组间 Separator 分隔
  */
 export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
-  const { categories, moduleId } = props;
+  const { categories, moduleId, onNavigate } = props;
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -54,6 +56,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                     onClick={e => {
                       e.preventDefault();
                       navigate(categoryPath);
+                      onNavigate?.();
                     }}
                   >
                     <span className="truncate">{category.label}</span>
@@ -78,6 +81,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                           onClick={e => {
                             e.preventDefault();
                             navigate(modulePath);
+                            onNavigate?.();
                           }}
                         >
                           <span className="truncate">{module.label}</span>
@@ -95,6 +99,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                         children: module.children,
                       }}
                       path={modulePath.toLowerCase()}
+                      onNavigate={onNavigate}
                     />
                   );
                 })}

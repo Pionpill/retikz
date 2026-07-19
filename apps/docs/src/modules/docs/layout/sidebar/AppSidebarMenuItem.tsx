@@ -15,6 +15,8 @@ export type AppSidebarMenuItemProps = {
   item: SidebarSubModuleData;
   /** 拼好的完整路径（lower-case） */
   path: string;
+  /** 点击具体文档入口后的回调 */
+  onNavigate?: () => void;
 };
 
 const baseLinkClass =
@@ -27,7 +29,7 @@ const activeLinkClass = 'text-foreground font-semibold bg-accent';
  * @description 叶子点击导航；分组点击主体导航到分组文档、点击右侧 chevron 仅展开/收起（命中自身或子项时高亮，命中子项时初始展开）；子项容器不带装饰竖线
  */
 export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
-  const { item, path } = props;
+  const { item, path, onNavigate } = props;
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -45,6 +47,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
           onClick={e => {
             e.preventDefault();
             navigate(path);
+            onNavigate?.();
           }}
         >
           <span className="truncate">{item.label}</span>
@@ -63,6 +66,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
             onClick={e => {
               e.preventDefault();
               navigate(path);
+              onNavigate?.();
             }}
           >
             <span className="truncate">{item.label}</span>
@@ -82,7 +86,12 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
         <CollapsibleContent>
           <ul className="ml-3 mt-0.5 flex flex-col gap-0.5 pl-3">
             {item.children!.map(child => (
-              <AppSidebarMenuItem key={child.value} item={child} path={`${path}/${child.value.toLowerCase()}`} />
+              <AppSidebarMenuItem
+                key={child.value}
+                item={child}
+                path={`${path}/${child.value.toLowerCase()}`}
+                onNavigate={onNavigate}
+              />
             ))}
           </ul>
         </CollapsibleContent>

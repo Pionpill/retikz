@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { Menu } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
 
@@ -27,11 +27,6 @@ export const MobileNav: FC = () => {
   }, [pathname]);
   const activeModule = resolveModule(pathname);
   const brandSuffix = activeModule?.version ? activeModule.id : 'doc';
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpen(false);
-  }, [pathname]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -75,7 +70,7 @@ export const MobileNav: FC = () => {
             ))}
           </ToggleGroup>
         </SheetHeader>
-        <AppSidebar className="flex-1 min-h-0 w-full shrink-0" moduleId={moduleId} />
+        <AppSidebar className="flex-1 min-h-0 w-full shrink-0" moduleId={moduleId} onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );
