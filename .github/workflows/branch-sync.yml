@@ -61,7 +61,8 @@ jobs:
       matrix:
         base:
           - next-kernel
-          - next-viz
+          - next-plot
+          - next-table
     steps:
       - name: Create sync PR
         env:
