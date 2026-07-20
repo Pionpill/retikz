@@ -47,7 +47,7 @@ description: 从库维护者角度判断能力归属、包边界、扩展完备�
 
 `compileToScene` 不会遍历 IR 后直接输出 SVG。它先把高层能力降到 Kernel，再建立本次编译专用的能力上下文，分阶段解决布局和引用，最后才组装 Scene。
 
-<ComponentPreview files="principles-compile" size="sm" hideCode />
+<ComponentPreview files="principles-compile" size="xs" hideCode />
 
 1. **作者输入生成 IR**：React JSX、Vanilla plain spec 与外部 IR 归一为同一份 JSON 契约。
 2. **创建编译上下文**：解析文字度量、warning、lowerer 与本次调用注入的 provider registries，不写全局状态。
@@ -74,6 +74,23 @@ Kernel 六个包围绕 `IR → Scene → 图像` 形成一条主数据流。`@re
 | `@retikz/tex`     | 把 LaTeX 降成 renderer-neutral glyph paths    | 通用文字模型和 renderer 特判  |
 
 遇到子包现有能力不足时，先判断它是组合问题、当前域的扩展点缺口，还是下层通用能力缺口。只有第一种留在调用方；后两种分别补当前域 contract 或下沉到真正 owner。
+
+<SourceLinks
+  sources={[
+    {
+      label: '集中解析内置与自定义 provider',
+      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+      startLine: 88,
+      endLine: 115,
+    },
+    {
+      label: '把共享 IR 编译为 renderer-agnostic Scene',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+  ]}
+/>
 
 ## 延伸阅读
 

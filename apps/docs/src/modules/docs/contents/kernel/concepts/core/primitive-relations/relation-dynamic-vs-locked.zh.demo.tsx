@@ -9,7 +9,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  *   右组锁定到 `T.top`——无论来源在哪，两条都钉在 T 上边中点。
  */
 const Demo: FC = () => (
-  <Layout width={520} height={200}>
+  <Layout width={520} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* 左：auto，端点随方向落到近侧 */}
     <Node id="A1" position={[-210, 0]} stroke="none">
       a

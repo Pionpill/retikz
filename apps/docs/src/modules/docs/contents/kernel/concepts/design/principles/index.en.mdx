@@ -47,7 +47,7 @@ Open capabilities normally follow `XxxDefinition → defineXxx → builtin + cus
 
 `compileToScene` does not walk IR and immediately emit SVG. It lowers high-level capabilities to Kernel, builds a compile-local capability context, resolves layout and references in stages, and only then assembles Scene.
 
-<ComponentPreview files="principles-compile" size="sm" hideCode />
+<ComponentPreview files="principles-compile" size="xs" hideCode />
 
 1. **Authoring produces IR**: React JSX, Vanilla plain specs, and external IR converge on one JSON contract.
 2. **Create compile context**: resolve measurement, warnings, lowerers, and call-local provider registries without global state.
@@ -74,6 +74,23 @@ The six Kernel packages form one primary data flow around `IR → Scene → imag
 | `@retikz/tex`     | Lower LaTeX into renderer-neutral glyph paths     | General text model or backend hacks   |
 
 When a subpackage lacks a capability, first decide whether the need is composition, an extension gap in the current domain, or a missing shared foundation. Keep only composition in the caller; add a domain contract for the second case or move the foundation to its true owner for the third.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve built-in and custom providers centrally',
+      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+      startLine: 88,
+      endLine: 115,
+    },
+    {
+      label: 'Compile shared IR into a renderer-agnostic Scene',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+  ]}
+/>
 
 ## Related
 

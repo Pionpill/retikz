@@ -1,51 +1,19 @@
 ---
 title: 定位
-description: retikz 的位置表达覆盖笛卡尔、极坐标、节点引用、相对定位、偏移定位、比例定位与相对 target，用于节点放置和路径目标解析。
+description: retikz 用节点引用、相对、偏移、比例与路径相对 target 表达实体之间的位置关系，并规定实体位置和路径目标的引用时序。
 ---
 
-retikz 使用一组统一的位置表达来描述实体放置与路径目标解析。`<Node>.position` / `<Coordinate>.position` 用于确定图元中心或引用点位置；`<Step>.to` / `<Draw>.way` 用于解析路径要连接或经过的目标。
+retikz 使用一组统一的位置表达来描述实体放置与路径目标解析。`<Node>.position` / `<Coordinate>.position` 确定图元中心或引用点；`<Step>.to` / `<Draw>.way` 确定路径连接或经过的目标。
 
-| 形态        | 类型                                                              | 含义                                                                         | 用在哪                                 |
-| ----------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------- |
-| 笛卡尔      | `[x, y]`                                                          | 直接给出画布坐标                                                             | 节点位置、路径目标                     |
-| 极坐标      | `{ origin?, angle, radius }`                                      | 从极点按角度和半径推导位置                                                   | 节点位置、路径目标                     |
-| 节点引用    | `'node-id'` / `{ id, anchor?, offset? }`                          | 引用已命名节点或 Coordinate，并由路径自动贴边界；字符串是 React DSL 便捷写法 | **仅**路径目标（`Step.to` / way item） |
-| 相对定位    | `{ direction, of, distance? }`                                    | 按方向和距离放在另一个节点 / Coordinate 周围                                 | 节点位置、Coordinate 位置              |
-| 偏移定位    | `{ of, offset }`                                                  | 基于节点、坐标或极坐标做二维偏移                                             | 节点位置、Coordinate 位置、路径目标    |
-| 比例定位    | `{ between: [A, B], fraction }`                                   | 取 A 到 B 连线上的比例点；节点端点写 `{ id: 'a' }`                           | 节点位置、Coordinate 位置、路径目标    |
-| 相对 target | `{ relative }` / `{ relativeAccumulate }` 或 `'+x,y'` / `'++x,y'` | 基于上一段终点做相对偏移                                                     | **仅**路径目标                         |
+笛卡尔、极坐标、user units 与 viewBox 的完整模型集中在[坐标系](/kernel/concepts/basic/coordinate-system)。本页从“一个位置如何依赖另一个实体”开始，只讲关系型定位与路径 target。
 
-> [坐标系](/kernel/concepts/basic/coordinate-system)：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<Layout>` 的 `width` / `height` 与编译得到的 layout bounds 决定。
-
-## 笛卡尔
-
-笛卡尔坐标是最直接的位置写法：`[x, y]` 表示画布上的一个点。x 向右增大，y 向下增大；因此 `[120, 40]` 表示从原点向右 120、向下 40。适合少量手工摆放、复刻已有 SVG 坐标，或作为其它定位表达的基准点。
-
-<ComponentPreview files="positioning-cartesian" size="xs" />
-
-## 极坐标
-
-极坐标用“从某个极点出发，沿某个角度走一段距离”来描述位置。它适合圆形布局、径向标注、围绕某个节点摆放一组元素，或表达“相对某点旋转偏移”的关系。
-
-`{ origin?, angle, radius }` 三个字段共同决定最终位置：
-
-| 字段     | 含义                                                                                          |
-| -------- | --------------------------------------------------------------------------------------------- |
-| `origin` | 极点。可选，省略时为 `[0, 0]`；可传节点 id 字符串、笛卡尔坐标，**或嵌套的极坐标**（链式偏移） |
-| `angle`  | 角度（度）：从 +x 轴量起，90° 朝屏幕下方（视觉顺时针为正），负角朝上                          |
-| `radius` | 半径（user units）                                                                            |
-
-<Comparison target="tikz" title="极坐标角度">
-
-`angle` 是度数制，从 +x 轴量起：0° 指向右，90° 朝屏幕下方，因此**视觉上顺时针为正**、负角朝上。这与 TikZ（逆时针为正）相反——根因是 retikz 的屏幕坐标 y 向下，角度在同一坐标系下旋转，示例里的视觉方向会跟浏览器坐标系一致。
-
-</Comparison>
-
-下面 6 个节点以 `O` 为极点、半径 80、角度从 0 到 300 每 60° 一个，画出常见的圆形布局：
-
-<ComponentPreview files="positioning-polar" size="md" />
-
-`origin` 还可以**嵌套**——例如 `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` 表示"从 a 向右 30 再向下 20"（90° 朝屏幕下方）。这种链式表达在画径向 / 局部偏移时很顺手。
+| 任务         | 典型写法                                  | 可用位置                     |
+| ------------ | ----------------------------------------- | ---------------------------- |
+| 绝对位置     | `[x, y]` / `{ angle, radius }`            | 实体位置、路径目标           |
+| 引用图元     | `{ id, anchor? }`                         | 路径目标                     |
+| 方向 / 偏移  | `{ direction, of }` / `{ of, offset }`    | 实体位置；偏移也可作路径目标 |
+| 两点之间     | `{ between: [A, B], fraction }`           | 实体位置、路径目标           |
+| 路径相对移动 | `{ relative }` / `{ relativeAccumulate }` | 仅路径目标                   |
 
 ## 节点 id 引用
 
@@ -135,6 +103,29 @@ retikz 使用一组统一的位置表达来描述实体放置与路径目标解�
 <Node id="a" position={[0, 0]}>A</Node>
 <Node id="b" position={[120, 0]}>B</Node>
 ```
+
+<SourceLinks
+  sources={[
+    {
+      label: '解析关系型与极坐标位置',
+      path: 'packages/kernel/core/src/compile/position.ts',
+      startLine: 59,
+      endLine: 98,
+    },
+    {
+      label: '登记 Node 与 Coordinate 命名引用',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 210,
+      endLine: 252,
+    },
+    {
+      label: '定义 path target 的完整 union',
+      path: 'packages/kernel/core/src/schemas/path/target/schema.ts',
+      startLine: 27,
+      endLine: 40,
+    },
+  ]}
+/>
 
 ## 延伸阅读
 

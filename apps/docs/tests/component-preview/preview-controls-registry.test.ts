@@ -2,7 +2,7 @@ import type { CompiledNodeLayout, IRScene, TextMeasurer } from '@retikz/core';
 import type { ReactNode } from 'react';
 
 import { compileToScene, fallbackMeasurer } from '@retikz/core';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
@@ -756,6 +756,26 @@ describe('preview controls registry', () => {
       expect(pageSource).toContain(
         "<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size=\"md\" />",
       );
+    }
+  });
+
+  it('Primitive Model playground 用同源虚线轮廓显示规则 boundary', () => {
+    const segments = ['kernel', 'concepts', 'core', 'primitive-model'];
+    const contentRoot = resolve('src/modules/docs/contents/kernel/concepts/core/primitive-model');
+    const helperPath = resolve(contentRoot, 'primitive-model-playground-boundary.ts');
+    const source = demoSources[buildKey(segments, 'primitive-model-playground')];
+    const helperSource = existsSync(helperPath) ? readFileSync(helperPath, 'utf8') : '';
+
+    expect(source).toContain('shapes={[primitiveModelBoundaryGuideShape]}');
+    expect(source).toContain('<BoundaryGuide shape=');
+    expect(source).toContain('dashPattern={[6, 4]}');
+    expect(helperSource).toContain("if (params.boundary === 'shape') return;");
+    expect(helperSource).toContain('visual.definition.connectionEnvelope?.');
+    expect(helperSource).toContain('boundsConnectionEnvelope');
+
+    for (const locale of ['zh', 'en']) {
+      const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
+      expect(pageSource).toContain("files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}");
     }
   });
 

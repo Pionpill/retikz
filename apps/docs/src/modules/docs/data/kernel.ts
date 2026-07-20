@@ -21,6 +21,22 @@ export const kernelSection: Array<Section> = [
     document: true,
     pages: [
       {
+        id: 'basic',
+        label: 'kernel.basicConcepts',
+        children: [
+          { id: 'coordinate-system', label: 'kernel.coordinateSystem' },
+          { id: 'position', label: 'kernel.positioning' },
+        ],
+      },
+      {
+        id: 'core',
+        label: 'kernel.coreConcepts',
+        children: [
+          { id: 'primitive-model', label: 'kernel.primitiveModel' },
+          { id: 'primitive-relations', label: 'kernel.primitiveRelations' },
+        ],
+      },
+      {
         id: 'design',
         label: 'kernel.design',
         children: [
@@ -36,22 +52,6 @@ export const kernelSection: Array<Section> = [
               sourceOfTruth: 'architecture',
             },
           },
-        ],
-      },
-      {
-        id: 'basic',
-        label: 'kernel.basicConcepts',
-        children: [
-          { id: 'coordinate-system', label: 'kernel.coordinateSystem' },
-          { id: 'position', label: 'kernel.positioning' },
-        ],
-      },
-      {
-        id: 'core',
-        label: 'kernel.coreConcepts',
-        children: [
-          { id: 'primitive-model', label: 'kernel.primitiveModel' },
-          { id: 'primitive-relations', label: 'kernel.primitiveRelations' },
         ],
       },
     ],

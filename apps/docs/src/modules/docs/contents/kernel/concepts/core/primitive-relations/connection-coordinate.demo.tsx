@@ -8,7 +8,7 @@ import { Circle, Coordinate, Draw, Layout, Node } from '@retikz/react';
  *   作为路由航点经过。灰点和 via 标注只是把这个不可见的坐标画出来示意。
  */
 const Demo: FC = () => (
-  <Layout width={340} height={160}>
+  <Layout width={340} height={160} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node id="A" position={[-110, 25]} stroke="none">
       a
     </Node>
