@@ -34,6 +34,15 @@ export const ellipseShape = defineShape<EllipseParams>({
     return isDirectionalAnchor(name) ? ellipse.anchor(mathEllipse.inscribedInBox(r), name) : undefined;
   },
   edgePoint: (r, side, t) => ellipse.edgePoint(mathEllipse.inscribedInBox(r), side, t),
+  connectionEnvelope: (r, kind) => {
+    const halfWidth = r.width / 2;
+    const halfHeight = r.height / 2;
+    if (kind === 'circle') {
+      const radius = Math.max(halfWidth, halfHeight);
+      return { halfWidth: radius, halfHeight: radius };
+    }
+    return { halfWidth, halfHeight };
+  },
   *emit(r, style, round): Iterable<ScenePrimitive> {
     yield {
       type: 'ellipse',

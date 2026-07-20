@@ -1,14 +1,14 @@
 import type { FC } from 'react';
 
 import { Menu } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { modules, resolveModule } from '@/modules/docs/data';
+import { modules } from '@/modules/docs/data';
 import { AppSidebar } from '@/modules/docs/layout';
 
 /**
@@ -24,13 +24,6 @@ export const MobileNav: FC = () => {
   const moduleId = useMemo(() => {
     const first = pathname.split('/').filter(Boolean)[0];
     return modules.some(m => m.id === first) ? first : modules[0]?.id;
-  }, [pathname]);
-  const activeModule = resolveModule(pathname);
-  const brandSuffix = activeModule?.version ? activeModule.id : 'doc';
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpen(false);
   }, [pathname]);
 
   return (
@@ -48,17 +41,8 @@ export const MobileNav: FC = () => {
       <SheetContent side="left" className="w-80 p-0 flex flex-col gap-0">
         <SheetHeader className="border-b px-4 py-3 shrink-0 gap-2">
           <SheetTitle asChild>
-            <Link
-              to="/"
-              className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity"
-              aria-label="retikz home"
-            >
-              <span className="text-base font-semibold tracking-tight">retikz.{brandSuffix}</span>
-              {activeModule?.version && (
-                <span className="rounded border border-border px-1.5 py-0.5 text-[10px] leading-none text-muted-foreground font-normal">
-                  {activeModule.version}
-                </span>
-              )}
+            <Link to="/" className="text-foreground hover:opacity-80 transition-opacity" aria-label="retikz home">
+              <span className="text-base font-semibold tracking-tight">retikz.doc</span>
             </Link>
           </SheetTitle>
           <ToggleGroup
@@ -75,7 +59,7 @@ export const MobileNav: FC = () => {
             ))}
           </ToggleGroup>
         </SheetHeader>
-        <AppSidebar className="flex-1 min-h-0 w-full shrink-0" moduleId={moduleId} />
+        <AppSidebar className="flex-1 min-h-0 w-full shrink-0" moduleId={moduleId} onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

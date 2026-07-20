@@ -4,16 +4,14 @@ import { definePathKind } from '@retikz/core';
 import { Layout, Node, Path, Step } from '@retikz/react';
 import { z } from 'zod';
 
-const HighlightOptionsSchema = z
-  .object({
-    stroke: z.string().min(1),
-    strokeWidth: z.number().positive().optional(),
-  })
-  .strict();
+const HighlightOptionsSchema = z.strictObject({
+  stroke: z.string().min(1),
+  strokeWidth: z.number().positive().optional(),
+});
 type HighlightOptions = z.infer<typeof HighlightOptionsSchema>;
 
 const highlight = definePathKind<HighlightOptions>({
-  schema: z.object({ kind: z.literal('highlight') }),
+  schema: z.strictObject({ kind: z.literal('highlight') }),
   optionsSchema: HighlightOptionsSchema,
   compile: context => {
     const base = context.emitStroke({

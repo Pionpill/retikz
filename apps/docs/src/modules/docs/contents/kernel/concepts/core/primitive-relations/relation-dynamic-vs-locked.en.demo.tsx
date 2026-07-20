@@ -10,7 +10,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  *   both pin to T's top-edge midpoint regardless of where the source is.
  */
 const Demo: FC = () => (
-  <Layout width={520} height={200}>
+  <Layout width={520} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* Left: auto, endpoint lands on the near side by direction */}
     <Node id="A1" position={[-210, 0]} stroke="none">
       a

@@ -28,7 +28,9 @@ import { RegularPolygon } from '@retikz/react';
 | `{ center, radius, sides }`     | Known circumradius |
 | `{ center, sideLength, sides }` | Known side length  |
 
-<ComponentPreview files="regular-polygon-basic" size="xs" />
+The playground shows both the circumcircle and the first-vertex direction. Adjust `sides`, radius, and `rotate` to see every vertex remain evenly distributed on the reference circle.
+
+<ComponentPreview files="polygon-playground" size="md" />
 
 ### API Reference
 
@@ -57,15 +59,11 @@ import { Node } from '@retikz/react';
 
 ### Examples
 
-`diamond` is the 4-side preset with vertices on the top / bottom / left / right axes, writable as the bare string `shape="diamond"`, equivalent to `{ type:'polygon', params:{ sides:4, rotate:0 } }`.
+The playground compares a hexagon with the `diamond` preset in one scene; `diamond` is equivalent to `{ type:'polygon', params:{ sides:4, rotate:0 } }` and accepts no extra params. Select the hexagon to adjust `cornerRadius`, then move the source with the orbit angle and distance to see automatic clipping follow sharp or rounded contours and compare it with named or numeric anchors.
 
-<ComponentPreview files="node-polygon" size="sm" />
+<ComponentPreview files="node-connection-playground" size="sm" />
 
-Give `params.cornerRadius` a positive number to round every vertex; omitting it or `0` keeps sharp corners. The rounding is connection-aware: connection endpoints land on the fillet arc rather than the sharp corner that has been rounded away.
-
-<ComponentPreview files="node-polygon-corner-radius" size="sm" />
-
-Connection endpoints snap to the polygon edge, and the node's center plus 8 directional anchors (`center` / `top` …) still apply. See [Node geometry](/kernel/components/node/overview) for Node shapes, sizes, boundaries, and anchors.
+See [Node geometry](/kernel/components/node/overview) for shared sizing, boundary, and anchor behavior.
 
 ### API Reference
 
@@ -151,6 +149,6 @@ Text and `padding` first form the inner box. The polygon provider then derives t
 ## Related
 
 - [Node geometry](/kernel/components/node/overview): sizes, boundaries, and anchors for polygon nodes
-- [Rectangle](../rectangle): rectangles and rounded rectangles
-- [Star](../star): alternating inner / outer radius stars
+- [Rectangle](/kernel/components/shapes/rectangle): rectangles and rounded rectangles
+- [Star](/kernel/components/shapes/star): alternating inner / outer radius stars
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

@@ -37,21 +37,13 @@ import { Node } from '@retikz/react';
 
 ### Examples
 
-`points` is a ring of **local-frame vertices** (at least 3, implicitly closed, with straight edges). You **do not need to pre-center** them — core normalizes by the center of the points' axis-aligned bounding box (AABB) and aligns the node's `position` to that center. The two nodes below use the same shape, but the right one's points are all shifted by a fixed offset: after auto-centering they render identically.
+The playground combines point-set normalization, rounding, and connection boundaries in one scene. Switch "Point coordinates" to shift every vertex by `+200`; the shape stays centered on the Node's `position` because core normalizes against the point set's axis-aligned bounding-box (AABB) center. Adjust rounding, orbit angle, and distance to see automatic and numeric-angle anchors land on the real contour, while standard directions land on the dashed gray AABB.
 
-<ComponentPreview files="node-contour" size="sm" />
-
-`cornerRadius` rounds **every vertex** uniformly (user units); omitted / `0` = sharp corners, clamped per corner to the largest non-self-intersecting radius — reusing the same fillet engine as `polygon` / `roundedCorners`.
-
-#### Connectable
-
-The key value of `contour` is that it is **still a Node**: another `<Path>` / `<Draw>` can target it by id, and the endpoint snaps via `boundaryPoint` to the exact intersection on the contour edge (ray ∩ contour), not the bounding box.
-
-<ComponentPreview files="contour-connect" size="sm" />
+<ComponentPreview files="contour-boundary-playground" size="md" />
 
 <ComponentAlert
   title="Standard direction names fall back to the AABB"
-  description="Standard direction names such as top / right fall back to the circumscribing AABB; automatic id connections and numeric angle anchors still intersect the real contour. To attach exactly along the incoming direction, target the node id directly."
+  description="Standard direction names such as top / right fall back to the circumscribing AABB; automatic and numeric angle anchors still intersect the real contour. To attach exactly along the incoming direction, select automatic and target the node id."
 />
 
 ### API Reference
@@ -123,8 +115,8 @@ Standard direction names such as `top` / `right` ask for a fixed canonical point
     {
       label: 'Standard direction and numeric angle anchor resolution',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 57,
-      endLine: 102,
+      startLine: 64,
+      endLine: 110,
     },
   ]}
 />
@@ -132,6 +124,6 @@ Standard direction names such as `top` / `right` ask for a fixed canonical point
 ## Related
 
 - [Node](/kernel/components/node/overview): minimal usage and positioning, content, geometry, and style topic entry points
-- [Polygon](../polygon): regular polygons (same contour engine, vertices derived from a side count)
+- [Polygon](/kernel/components/shapes/polygon): regular polygons (same contour engine, vertices derived from a side count)
 - [Path](/kernel/components/draw/path): draw an arbitrary contour line (not a node)
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

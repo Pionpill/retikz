@@ -1,6 +1,6 @@
 ---
 title: Arrow
-description: Arrows on Path / Draw in depth. `arrow` picks direction; `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth), with optional `start` / `end` sub-objects that merge field-by-field.
+description: Choose start and end arrows for Draw or Path, then control shape, size, color, opacity, and per-end overrides in one model.
 ---
 
 Arrows are driven by two independent props:
@@ -24,15 +24,13 @@ import { Draw } from '@retikz/react';
 
 ## Examples
 
-### Basic
+### Direction, shape, and appearance
 
-With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the path stroke color and using 6 user units for both length and width.
+One panel combines the `arrow` direction, all eight built-in shapes, color, opacity, and size. Enable “Configure ends separately” to let `start` / `end` override the shared shape and color field by field; disable it to share the top-level values. Omitting `arrowDetail` uses a `stealth` tip that inherits the path color, with length and width both set to 6.
 
-<ComponentPreview files="arrow-default" size="xs" />
+<ComponentPreview files="arrow-appearance" size="md" />
 
-### Shapes
-
-`arrowDetail.shape` picks the tip shape (default `'stealth'`):
+Built-in shapes come in solid and hollow pairs:
 
 | Solid                      | Hollow                            | Typical use                         |
 | -------------------------- | --------------------------------- | ----------------------------------- |
@@ -41,41 +39,13 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 | `'diamond'` filled diamond | `'openDiamond'` hollow diamond    | UML composition / aggregation       |
 | `'circle'` filled dot      | `'openCircle'` hollow dot         | Connection dot / open endpoint      |
 
-<ComponentPreview files="arrow-shapes" />
-
 > Multi-node paths (e.g. a → b → c) clip per-segment, but the arrow only attaches to the overall **start** / **end** — never to intermediate nodes.
-
-### Per-end overrides
-
-`arrowDetail.start` / `arrowDetail.end` sub-objects **merge field-by-field** into the top-level defaults — omitted fields inherit, present fields override. The classic UML "composition + inheritance" shows up as different `start.shape` + `end.shape`:
-
-<ComponentPreview files="arrow-uneven" size="xs" />
 
 > **Merge semantics**: sub-object fields win first; fields not in the sub-object fall back to the top-level defaults; fields not at the top level fall back to the built-in defaults. Example: `arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → both ends use stealth, start in red, end inherits the path stroke.
 
-### Style
-
-#### Color override
-
-`color` overrides the arrow stroke / solid fill instead of inheriting the path stroke color; `fill` is only effective on solid shapes. `start.color` / `end.color` give per-end overrides — handy for "light line, dark arrow" or two-color endpoints:
-
-<ComponentPreview files="arrow-color" size="xs" />
-
 > **Hollow shapes silently ignore `fill`**: when `shape ∈ { open / openStealth / openDiamond / openCircle }`, the `fill` field is silently dropped. Hollow shapes are driven entirely by `color` (stroke) + `lineWidth` (stroke width); writing `fill='red'` will not render a red fill.
 
-#### Sizing: scale / length / width
-
-- `scale` is the uniform arrow scale factor (default 1), multiplied **after** `length` / `width` — `length=10, scale=1.5` → effective arrow length 15
-- `length` controls the arrow dimension along the path direction (default 6)
-- `width` controls the arrow dimension perpendicular to the path (default 6)
-
-<ComponentPreview files="arrow-scale" size="sm" />
-
-#### Translucent
-
-`opacity` 0..1 applies to the whole arrow (independent of the path's own `opacity` / `strokeOpacity`):
-
-<ComponentPreview files="arrow-opacity" size="xs" />
+`scale` multiplies after `length` / `width`; for example, `length=10, scale=1.5` produces an effective length of 15.
 
 ## How it works
 
@@ -150,7 +120,7 @@ A multi-node path can become several subpaths during compile, but the start arro
 <ComponentAlert
   type="warn"
   title="Gradient strokes need an explicit arrow color"
-  description="When stroke is a PaintSpec, an arrow cannot inherit the gradient as one stroke color. Set arrowDetail.color, or set start.color / end.color to CSS colors."
+  description="When stroke is an IRPaintSpec, an arrow cannot inherit the gradient as one stroke color. Set arrowDetail.color, or set start.color / end.color to CSS colors."
 />
 
 <SourceLinks
@@ -162,7 +132,7 @@ A multi-node path can become several subpaths during compile, but the start arro
       endLine: 56,
     },
     {
-      label: 'PaintSpec stroke-inheritance guard',
+      label: 'IRPaintSpec stroke-inheritance guard',
       path: 'packages/kernel/core/src/compile/path/stroke/marks.ts',
       startLine: 24,
       endLine: 41,

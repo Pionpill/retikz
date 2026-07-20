@@ -1,0 +1,270 @@
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
+import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
+
+/** Node label playground 使用的稳定字段 id */
+export const NodeLabelControlId = {
+  Text: 'labelText',
+  PositionMode: 'positionMode',
+  Direction: 'direction',
+  PositionAngle: 'positionAngle',
+  Boundary: 'boundary',
+  Fraction: 'fraction',
+  Placement: 'placement',
+  Distance: 'distance',
+  RotateMode: 'rotateMode',
+  RotateAngle: 'rotateAngle',
+  KeepUpright: 'keepUpright',
+  TextColor: 'labelTextColor',
+  FontSize: 'labelFontSize',
+  Opacity: 'labelOpacity',
+  PinStyle: 'pinStyle',
+  PinColor: 'pinColor',
+  PinWidth: 'pinWidth',
+  PinDashOffset: 'pinDashOffset',
+} as const;
+
+/** Node label 条件字段的共享显示规则 */
+export const NodeLabelVisibleWhen = {
+  Direction: { controlId: NodeLabelControlId.PositionMode, oneOf: ['direction'] },
+  PositionAngle: { controlId: NodeLabelControlId.PositionMode, oneOf: ['angle'] },
+  Boundary: { controlId: NodeLabelControlId.PositionMode, oneOf: ['boundary'] },
+  RotateAngle: { controlId: NodeLabelControlId.RotateMode, oneOf: ['angle'] },
+  KeepUpright: { controlId: NodeLabelControlId.RotateMode, oneOf: ['radial', 'tangent', 'angle'] },
+  Outside: { controlId: NodeLabelControlId.Placement, oneOf: ['outside'] },
+  Pin: { controlId: NodeLabelControlId.PinStyle, oneOf: ['solid', 'dashed'] },
+  DashedPin: { controlId: NodeLabelControlId.PinStyle, oneOf: ['dashed'] },
+} as const;
+
+/** Node 标签位置、朝向、样式与引线的中文属性面板 */
+export const nodeLabelControls = definePreviewControls({
+  presentation: 'panel',
+  title: '节点标签',
+  sections: [
+    {
+      label: '内容与附着点',
+      controls: [
+        {
+          kind: 'select',
+          id: NodeLabelControlId.Text,
+          label: '文字',
+          defaultValue: 'label',
+          options: [
+            { value: 'label', label: '默认标签' },
+            { value: 'outside label', label: '外侧标签' },
+            { value: 'angled label', label: '角度标签' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: NodeLabelControlId.PositionMode,
+          label: 'position 写法',
+          defaultValue: 'direction',
+          options: [
+            { value: 'direction', label: '命名方位' },
+            { value: 'angle', label: '数字角度' },
+            { value: 'boundary', label: '边界比例' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: NodeLabelControlId.Direction,
+          label: '方位',
+          defaultValue: 'top',
+          visibleWhen: NodeLabelVisibleWhen.Direction,
+          options: [
+            { value: 'top', label: '上' },
+            { value: 'top-right', label: '右上' },
+            { value: 'right', label: '右' },
+            { value: 'bottom-right', label: '右下' },
+            { value: 'bottom', label: '下' },
+            { value: 'bottom-left', label: '左下' },
+            { value: 'left', label: '左' },
+            { value: 'top-left', label: '左上' },
+            { value: 'center', label: '中心' },
+          ],
+        },
+        {
+          kind: 'range',
+          id: NodeLabelControlId.PositionAngle,
+          label: 'position 角度',
+          defaultValue: 30,
+          min: -180,
+          max: 180,
+          step: 5,
+          visibleWhen: NodeLabelVisibleWhen.PositionAngle,
+        },
+        {
+          kind: 'select',
+          id: NodeLabelControlId.Boundary,
+          label: 'boundary',
+          defaultValue: 'top',
+          visibleWhen: NodeLabelVisibleWhen.Boundary,
+          options: [
+            { value: 'top', label: '上边' },
+            { value: 'right', label: '右边' },
+            { value: 'bottom', label: '下边' },
+            { value: 'left', label: '左边' },
+          ],
+        },
+        {
+          kind: 'range',
+          id: NodeLabelControlId.Fraction,
+          label: 'fraction',
+          defaultValue: 0.5,
+          min: 0,
+          max: 1,
+          step: 0.05,
+          visibleWhen: NodeLabelVisibleWhen.Boundary,
+        },
+        {
+          kind: 'select',
+          id: NodeLabelControlId.Placement,
+          label: 'placement',
+          defaultValue: 'outside',
+          options: [
+            { value: 'outside', label: '外侧' },
+            { value: 'inside', label: '内侧' },
+          ],
+        },
+        {
+          kind: 'range',
+          id: NodeLabelControlId.Distance,
+          label: 'distance',
+          defaultValue: 18,
+          min: 0,
+          max: 60,
+          step: 2,
+        },
+      ],
+    },
+    {
+      label: '朝向',
+      controls: [
+        {
+          kind: 'select',
+          id: NodeLabelControlId.RotateMode,
+          label: 'rotate',
+          defaultValue: 'none',
+          options: [
+            { value: 'none', label: '不旋转' },
+            { value: 'radial', label: '径向' },
+            { value: 'tangent', label: '切向' },
+            { value: 'angle', label: '显式角度' },
+          ],
+        },
+        {
+          kind: 'range',
+          id: NodeLabelControlId.RotateAngle,
+          label: 'rotate 角度',
+          defaultValue: 0,
+          min: -180,
+          max: 180,
+          step: 5,
+          visibleWhen: NodeLabelVisibleWhen.RotateAngle,
+        },
+        {
+          kind: 'switch',
+          id: NodeLabelControlId.KeepUpright,
+          label: '保持正向',
+          defaultValue: true,
+          visibleWhen: NodeLabelVisibleWhen.KeepUpright,
+        },
+      ],
+    },
+    {
+      label: '文字样式',
+      controls: [
+        { kind: 'color', id: NodeLabelControlId.TextColor, label: '文字颜色', defaultValue: '#2563eb' },
+        {
+          kind: 'range',
+          id: NodeLabelControlId.FontSize,
+          label: '字号',
+          defaultValue: 16,
+          min: 10,
+          max: 28,
+          step: 1,
+        },
+        {
+          kind: 'range',
+          id: NodeLabelControlId.Opacity,
+          label: '透明度',
+          defaultValue: 1,
+          min: 0.2,
+          max: 1,
+          step: 0.1,
+        },
+      ],
+    },
+    {
+      label: '外侧引线',
+      visibleWhen: NodeLabelVisibleWhen.Outside,
+      controls: [
+        {
+          kind: 'select',
+          id: NodeLabelControlId.PinStyle,
+          label: 'pin',
+          defaultValue: 'none',
+          options: [
+            { value: 'none', label: '无引线' },
+            { value: 'solid', label: '实线' },
+            { value: 'dashed', label: '虚线' },
+          ],
+        },
+        {
+          kind: 'color',
+          id: NodeLabelControlId.PinColor,
+          label: '引线颜色',
+          defaultValue: '#808080',
+          visibleWhen: NodeLabelVisibleWhen.Pin,
+        },
+        {
+          kind: 'range',
+          id: NodeLabelControlId.PinWidth,
+          label: '引线粗细',
+          defaultValue: 1,
+          min: 0.5,
+          max: 4,
+          step: 0.5,
+          visibleWhen: NodeLabelVisibleWhen.Pin,
+        },
+        {
+          kind: 'range',
+          id: NodeLabelControlId.PinDashOffset,
+          label: 'dashOffset',
+          defaultValue: 0,
+          min: -8,
+          max: 8,
+          step: 1,
+          visibleWhen: NodeLabelVisibleWhen.DashedPin,
+        },
+      ],
+    },
+  ],
+});
+
+/** Node 标签面板的稳定文档契约 */
+export const previewControlContract = {
+  controls: nodeLabelControls,
+  canonicalValues: {
+    labelText: 'label',
+    positionMode: 'direction',
+    direction: 'top',
+    positionAngle: 30,
+    boundary: 'top',
+    fraction: 0.5,
+    placement: 'outside',
+    distance: 18,
+    rotateMode: 'none',
+    rotateAngle: 0,
+    keepUpright: true,
+    labelTextColor: '#2563eb',
+    labelFontSize: 16,
+    labelOpacity: 1,
+    pinStyle: 'none',
+    pinColor: '#808080',
+    pinWidth: 1,
+    pinDashOffset: 0,
+  },
+  relatedApis: ['Node.label'],
+} satisfies PreviewControlContract;

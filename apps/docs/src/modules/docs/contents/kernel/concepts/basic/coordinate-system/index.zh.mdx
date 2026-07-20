@@ -83,6 +83,29 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 
 `viewBox` 和 `width` / `height` 是正交的：改 `width` / `height` 只改变显示缩放，不改变 `[x, y]` 的含义；改 `viewBox` 才会改变哪片内部坐标被看见。
 
+<SourceLinks
+  sources={[
+    {
+      label: '把极坐标转换为笛卡尔坐标',
+      path: 'packages/kernel/core/src/shared/geometry/polar.ts',
+      startLine: 17,
+      endLine: 40,
+    },
+    {
+      label: '在命名空间中解析位置表达',
+      path: 'packages/kernel/core/src/compile/position.ts',
+      startLine: 59,
+      endLine: 98,
+    },
+    {
+      label: '选择显式 viewBox 或自动布局范围',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 22,
+      endLine: 37,
+    },
+  ]}
+/>
+
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">

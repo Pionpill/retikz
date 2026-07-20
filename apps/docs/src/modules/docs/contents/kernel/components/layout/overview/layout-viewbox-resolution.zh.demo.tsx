@@ -4,10 +4,10 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Layout 视框与页面尺寸的决策图 */
 const Demo: FC = () => (
-  <Layout width={560} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={560} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="prop-viewbox"
-      position={[-190, -70]}
+      position={[-190, -55]}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
@@ -29,7 +29,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="auto-bounds"
-      position={[-190, 70]}
+      position={[-190, 55]}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}

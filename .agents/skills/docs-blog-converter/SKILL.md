@@ -1,13 +1,13 @@
 ---
 name: docs-blog-converter
-description: 把 retikz 文档站 blog mdx 转成可贴到掘金/公众号等外站的 markdown：输出 `.markdown/<slug>/content.md` 与 SVG，处理 ComponentPreview 抓图、站内链接绝对化、frontmatter/H1、Comparison 内联、平台元数据和手抄发布。retikz 专用。
+description: Use when converting a finished retikz blog MDX article into external-platform Markdown plus captured SVG assets.
 ---
 
 # retikz blog 文章外站发布规范
 
 ## 使用时机
 
-把一篇已写好的 blog 文章（`apps/docs/src/contents/blog/<section>/<slug>/index.{zh,en}.mdx`）转换为可直接贴到掘金 / 公众号 / 知乎等平台的 markdown + 配套 SVG 时使用。
+把一篇已写好的 blog 文章（`apps/docs/src/modules/docs/contents/blog/<section>/<slug>/index.{zh,en}.mdx`）转换为可直接贴到掘金 / 公众号 / 知乎等平台的 markdown + 配套 SVG 时使用。
 
 **前置依赖**：先读 [`docs-doc-blog`](../docs-doc-blog/SKILL.md)——本 skill 假设文章已按那套规范写好（ComponentPreview 前后有点题句、`## 引用` 节齐全、双语对齐等），转换步骤依赖这些不变量。
 
@@ -15,7 +15,7 @@ description: 把 retikz 文档站 blog mdx 转成可贴到掘金/公众号等外
 
 | 项       | 内容                                                                                                                                          |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| 输入     | `apps/docs/src/contents/blog/<section>/<slug>/index.<lang>.mdx`（`lang` ∈ `zh` / `en`，默认 `zh`）                                            |
+| 输入     | `apps/docs/src/modules/docs/contents/blog/<section>/<slug>/index.<lang>.mdx`（`lang` ∈ `zh` / `en`，默认 `zh`）                               |
 | 输出根   | `.markdown/<slug>/`（仓库根下的隐藏目录，**不进 git**，加 `.gitignore`）                                                                      |
 | 输出文件 | `content.md`（正文） + `<demo-name>.svg`（每个 ComponentPreview 一份）<br />双语并行时 `content.zh.md` / `content.en.md` 并存，SVG 共用同目录 |
 
@@ -69,15 +69,15 @@ retikz demo 里若用了 CSS var（如 `var(--foreground)`、`hsl(var(--primary)
 
 输入是 mdx，输出是平台通吃的 markdown。逐类改：
 
-| 源                                   | 输出                                                                             |
-| ------------------------------------ | -------------------------------------------------------------------------------- |
-| frontmatter `---...---`              | 删除；`title` 提为 `#`，`description` 提为引用段；`date/tags` 放文末平台元数据   |
-| `<ComponentPreview files="X" ... />` | `![10-30 字 alt](./X.svg)`；object 取 `file`，array 解析第一项；同名复用同一 SVG |
-| 站内 `/core/...`、`/blog/...` 链接   | 前缀 `https://pionpill.github.io/retikz/`；外部链接原样保留                      |
-| 站内 UI 表述                         | 加“retikz 官方文档站”限定，如 Ask AI、侧边栏、搜索、TOC、demo 卡片               |
-| `<Comparison>`                       | 把对比要点一句话内联到正文                                                       |
-| `<ZodSchema>` / `<ExamplePrompt>`    | blog 不该出现；回去让作者修 mdx，不在转换器硬转                                  |
-| `<br />`、代码块语言标识             | 保留                                                                             |
+| 源                                               | 输出                                                                             |
+| ------------------------------------------------ | -------------------------------------------------------------------------------- |
+| frontmatter `---...---`                          | 删除；`title` 提为 `#`，`description` 提为引用段；`date/tags` 放文末平台元数据   |
+| `<ComponentPreview files="X" ... />`             | `![10-30 字 alt](./X.svg)`；object 取 `file`，array 解析第一项；同名复用同一 SVG |
+| 站内 `/kernel/...`、`/viz/...`、`/blog/...` 链接 | 前缀 `https://pionpill.github.io/retikz/`；外部链接原样保留                      |
+| 站内 UI 表述                                     | 加“retikz 官方文档站”限定，如 Ask AI、侧边栏、搜索、TOC、demo 卡片               |
+| `<Comparison>`                                   | 把对比要点一句话内联到正文                                                       |
+| `<ZodSchema>` / `<ExamplePrompt>`                | blog 不该出现；回去让作者修 mdx，不在转换器硬转                                  |
+| `<br />`、代码块语言标识                         | 保留                                                                             |
 
 不要凭印象改 base URL；只用 `https://pionpill.github.io/retikz/`。
 
@@ -140,7 +140,7 @@ ls .markdown/<slug>/
 
 ```bash
 rg '<(ComponentPreview|Comparison|ZodSchema|ExamplePrompt)' .markdown/<slug>/content.md
-rg '\]\(/(blog|core|about)/' .markdown/<slug>/content.md
+rg '\]\(/(blog|kernel|viz|about)/' .markdown/<slug>/content.md
 ```
 
 两条都应该 0 行输出。

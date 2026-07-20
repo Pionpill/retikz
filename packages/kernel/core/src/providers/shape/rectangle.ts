@@ -7,7 +7,14 @@ import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
-import { boundaryFromContour, CenterAnchor, isDirectionalAnchor, localToWorld, rect } from '../../shared';
+import {
+  boundaryFromContour,
+  boundsConnectionEnvelope,
+  CenterAnchor,
+  isDirectionalAnchor,
+  localToWorld,
+  rect,
+} from '../../shared';
 import { verticesToSegments } from './outline';
 import { rectPrimitiveStyle } from './style';
 
@@ -56,6 +63,7 @@ export const rectangle = defineShape<RectangleParams>({
     return isDirectionalAnchor(name) ? rect.anchor(r, name) : undefined;
   },
   edgePoint: (r, side, t) => rect.edgePoint(r, side, t),
+  connectionEnvelope: boundsConnectionEnvelope,
   *emit(r, style, round, params): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

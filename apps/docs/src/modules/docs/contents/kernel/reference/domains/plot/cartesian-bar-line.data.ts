@@ -1,0 +1,23 @@
+/** 柱线组合示例数据：实际值与目标值共用季度和 Y 比例尺，数据只在 compile runtime 注入 */
+export const quarterlyPerformance: Array<Record<string, number | string>> = [
+  { quarter: 'Q1', order: 1, actual: 42, target: 48 },
+  { quarter: 'Q2', order: 2, actual: 48, target: 49 },
+  { quarter: 'Q3', order: 3, actual: 45, target: 52 },
+  { quarter: 'Q4', order: 4, actual: 57, target: 55 },
+  { quarter: 'Q5', order: 5, actual: 60, target: 58 },
+  { quarter: 'Q6', order: 6, actual: 63, target: 61 },
+  { quarter: 'Q7', order: 7, actual: 59, target: 64 },
+  { quarter: 'Q8', order: 8, actual: 68, target: 67 },
+  { quarter: 'Q9', order: 9, actual: 72, target: 70 },
+  { quarter: 'Q10', order: 10, actual: 69, target: 73 },
+  { quarter: 'Q11', order: 11, actual: 78, target: 76 },
+  { quarter: 'Q12', order: 12, actual: 82, target: 79 },
+  { quarter: 'Q13', order: 13, actual: 80, target: 82 },
+  { quarter: 'Q14', order: 14, actual: 88, target: 85 },
+  { quarter: 'Q15', order: 15, actual: 91, target: 88 },
+  { quarter: 'Q16', order: 16, actual: 87, target: 91 },
+  { quarter: 'Q17', order: 17, actual: 96, target: 94 },
+  { quarter: 'Q18', order: 18, actual: 102, target: 97 },
+  { quarter: 'Q19', order: 19, actual: 99, target: 100 },
+  { quarter: 'Q20', order: 20, actual: 110, target: 104 },
+];

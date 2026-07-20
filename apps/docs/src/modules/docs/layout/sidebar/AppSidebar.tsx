@@ -13,6 +13,8 @@ import { AppSidebarMenu } from './AppSidebarMenu';
 export type AppSidebarProps = {
   /** 容器额外类（移动端 Sheet 复用本组件时关掉 sticky 等） */
   className?: string;
+  /** 点击具体文档入口后的回调 */
+  onNavigate?: () => void;
   /**
    * 显式指定模块 id
    * @description MobileNav 渲染在 `<Routes>` 外（Header 里）useParams 拿不到 :moduleId，需调用方从 pathname 解出来传进；桌面 DocLayout 走 Routes，缺省即可
@@ -21,7 +23,7 @@ export type AppSidebarProps = {
 };
 
 export const AppSidebar: FC<AppSidebarProps> = props => {
-  const { className, moduleId: moduleIdProp } = props;
+  const { className, moduleId: moduleIdProp, onNavigate } = props;
   const { t } = useTranslation();
   const params = useParams<'moduleId'>();
   const moduleId = moduleIdProp ?? params.moduleId;
@@ -48,7 +50,7 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
       )}
     >
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <AppSidebarMenu categories={categories} moduleId={resolvedModuleId} />
+        <AppSidebarMenu categories={categories} moduleId={resolvedModuleId} onNavigate={onNavigate} />
       </div>
     </aside>
   );

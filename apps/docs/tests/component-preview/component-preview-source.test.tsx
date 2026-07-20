@@ -17,7 +17,13 @@ import * as componentPreviewExports from '../../src/modules/docs/components/comp
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import { ComponentPreview } from '../../src/modules/docs/components/component-preview/ComponentPreview';
 import { DemoLocationContext } from '../../src/modules/docs/components/component-preview/context';
-import { buildKey, demoModules, demoSources } from '../../src/modules/docs/components/component-preview/registry';
+import {
+  buildControlsKey,
+  buildKey,
+  controlModules,
+  demoModules,
+  demoSources,
+} from '../../src/modules/docs/components/component-preview/registry';
 
 const RegistryAnimatedDemo: FC = () => (
   <Layout width={40} height={20}>
@@ -272,6 +278,33 @@ describe('ComponentPreview localized controls', () => {
     }
   });
 
+  it('文件化 controls 优先于 demo 内联的兜底定义', () => {
+    const name = 'localized-control-panel-fixture';
+    const fallbackDefinition = definePreviewControls({
+      presentation: 'panel',
+      title: 'Fallback panel',
+      sections: [{ controls: [{ kind: 'text', id: 'text', label: 'Fallback', defaultValue: 'Node' }] }],
+    });
+    const localizedDefinition = definePreviewControls({
+      presentation: 'panel',
+      title: 'Localized panel',
+      sections: [{ controls: [{ kind: 'text', id: 'text', label: 'Localized', defaultValue: 'Node' }] }],
+    });
+    const restoreDemo = installDemoRegistryFixture(name, fallbackDefinition);
+    const restoreControls = replaceRegistryValue(controlModules, buildControlsKey(fixtureSegments, name), {
+      previewControls: localizedDefinition,
+    });
+
+    try {
+      const props = renderPreview(fixtureSegments, <ComponentPreview files={name} />);
+
+      expect(props.controlDefinition).toBe(localizedDefinition);
+    } finally {
+      restoreControls();
+      restoreDemo();
+    }
+  });
+
   it('将 canonical values 与 presets 随完整 contract 传给 Card', () => {
     const contract = {
       controls: definePreviewControls({
@@ -301,7 +334,7 @@ describe('ComponentPreview localized controls', () => {
 
     expect(props.controlDefinition).toMatchObject({
       presentation: 'panel',
-      title: 'Node 属性',
+      title: '属性',
     });
     expect(props.controlSlots?.map(slot => slot.id)).not.toContain('text');
   });

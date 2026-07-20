@@ -1,9 +1,9 @@
 ---
 title: Text
-description: 写在 <Node> 内部的"行级"标记组件——给一行单独覆盖 fill / opacity / font 样式；与字符串 children 平等参与 Node 多行布局。
+description: Text 在 Node 内声明一整行文字，并按行覆盖颜色、透明度与字体。
 ---
 
-`<Text>` 给 `<Node>` 中的某一整行覆盖文字样式，并与普通字符串 children 按 JSX 顺序混排。它是 Sugar（语法糖）：写法留在 React 层，进入 core 前会归一成 `Node.text` 中的一条 LineSpec（单行文本规格）。
+`<Text>` 给 `<Node>` 中的某一整行覆盖文字样式，并与普通字符串 children 按 JSX 顺序混排。它是 Sugar（语法糖）：写法只存在于 React DSL，随后会归一成 `Node.text` 中的一条 LineSpec（单行文本规格）。
 
 它和直接把 LineSpec 对象写进 `text` prop 是**等价**的两条路径：
 
@@ -45,9 +45,9 @@ import { Node, Text } from '@retikz/react';
 
 ### 行级覆盖字段
 
-`fill` / `opacity` / `font` 三大类——`font` 是嵌套对象，可以只覆盖其中一个子字段（family / size / weight / style）：
+`fill` / `opacity` / `font` 三大类——`font` 是嵌套对象，可以只覆盖其中一个子字段（family / size / weight / style）。第一行继承 Node，第二行由面板控制，未设置的字段继续继承：
 
-<ComponentPreview files="text-attrs" size="xs" />
+<ComponentPreview files="text-attrs" size="sm" />
 
 ### 与字符串 children 混排
 
@@ -136,5 +136,4 @@ import { Node, Text } from '@retikz/react';
 
 ## 相关
 
-- [Node 多行文本](/kernel/components/node/overview#多行文本)：块级 `text` / `align` / `lineHeight` 的用法
-- [Node 行级样式](/kernel/components/node/overview#行级样式)：`text` 数组里直接混 LineSpec 对象的等价写法
+- [Node 文本](/kernel/components/node/overview#文本)：块级 `text` / `align` / `lineHeight`，以及 `text` 数组里的 LineSpec 写法

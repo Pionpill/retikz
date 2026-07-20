@@ -35,14 +35,21 @@ const inflateRect = (r: Rect, m: BoundsInsets): Rect => {
 /** 取节点视觉 rect 外扩 margin 后的外边界 */
 export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.rect, layout.margin);
 
-const boundaryContextOf = (layout: NodeLayout): ResolveBoundaryContext => ({
-  visualDef: layout.shapeDef,
-  visualRect: layout.rect,
-  visualParams: layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-  shapeRegistry: layout.shapes,
-  boundaryRegistry: layout.boundaries ?? resolveBoundaryRegistry(),
-  irPath: layout.irPath,
-});
+const boundaryContextOf = (layout: NodeLayout): ResolveBoundaryContext => {
+  layout.connectionEnvelopeCache ??= new Map();
+  layout.connectionEnvelopeWarnings ??= new Set();
+  return {
+    visualDef: layout.shapeDef,
+    visualRect: layout.rect,
+    visualParams: layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+    shapeRegistry: layout.shapes,
+    boundaryRegistry: layout.boundaries ?? resolveBoundaryRegistry(),
+    irPath: layout.irPath,
+    connectionEnvelopeCache: layout.connectionEnvelopeCache,
+    connectionEnvelopeWarnings: layout.connectionEnvelopeWarnings,
+    warn: layout.warn,
+  };
+};
 
 /** 取节点 shape 在 toward 方向的附着点 */
 export const boundaryPointOf = (
@@ -54,8 +61,13 @@ export const boundaryPointOf = (
   return def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
 };
 
-/** 取节点 shape 的命名 anchor */
-export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary | undefined = 'shape'): Position => {
+/** 取节点 shape 的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
+export const anchorOf = (
+  layout: NodeLayout,
+  name: string,
+  boundary: IRBoundary | undefined = 'shape',
+  applyMargin = false,
+): Position => {
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
       const own = layout.shapeDef.anchor(layout.rect, CenterAnchor.Center, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
@@ -64,15 +76,18 @@ export const anchorOf = (layout: NodeLayout, name: string, boundary: IRBoundary 
 
     // 标准方位名优先走视觉 shape 自身 anchor；未实现时回退外接 AABB。
     if (boundary === 'shape') {
-      const own = layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
+      const shapeRect = applyMargin ? inflateRect(layout.rect, layout.margin) : layout.rect;
+      const own = layout.shapeDef.anchor(shapeRect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
       if (own !== undefined) return own;
       const fallback = resolveBoundary('rectangle', boundaryContextOf(layout));
-      const p = fallback.def.anchor?.(fallback.rect, name, fallback.params);
+      const fallbackRect = applyMargin ? inflateRect(fallback.rect, layout.margin) : fallback.rect;
+      const p = fallback.def.anchor?.(fallbackRect, name, fallback.params);
       if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
       return p;
     }
     const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
-    const p = def.anchor?.(rect, name, params) ?? fallbackBoundaryAnchor(rect, name);
+    const anchorRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
+    const p = def.anchor?.(anchorRect, name, params) ?? fallbackBoundaryAnchor(anchorRect, name);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }
@@ -89,15 +104,17 @@ export const angleBoundaryOf = (
   layout: NodeLayout,
   angleDeg: number,
   boundary: IRBoundary | undefined = 'shape',
+  applyMargin = false,
 ): Position => {
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);
-  const rot = layout.rect.rotate ?? 0;
+  const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
+  const boundaryRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
+  const rot = boundaryRect.rotate ?? 0;
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
   // 局部方向转为世界方向。
-  const toward: Position = [layout.rect.x + lx * cosR - ly * sinR, layout.rect.y + lx * sinR + ly * cosR];
-  const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
-  return def.boundaryPoint(rect, toward, params);
+  const toward: Position = [boundaryRect.x + lx * cosR - ly * sinR, boundaryRect.y + lx * sinR + ly * cosR];
+  return def.boundaryPoint(boundaryRect, toward, params);
 };

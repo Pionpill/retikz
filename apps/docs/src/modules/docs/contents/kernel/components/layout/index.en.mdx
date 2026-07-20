@@ -1,19 +1,21 @@
 ---
 title: Layout
-description: 'The layout family — Layout and Scope establish coordinate contexts, with extensible clipping for Scope.'
+description: 'The layout family establishes figure-level and local coordinate contexts: Layout connects the compile host, Scope owns sub-figure context, and custom clips extend Scope visibility.'
 ---
 
-This group is the figure's _container_ layer. `<Layout>` is the mandatory outermost wrapper of every figure: it takes a component tree or IR, compiles a Scene, and hands it to the current renderer. `<Scope>` gathers children into one unit, applies a shared translate / rotate / scale, and can be referenced or positioned as a whole through its `id`. Together they establish coordinate context; the last page extends Scope's `clip` kinds when the built-ins are not enough.
+This group only answers where graphic content lives and how a group enters downstream stages as one unit. `<Layout>` is the single required top-level entry; `<Scope>` establishes a local context so its children share transforms, defaults, reference bounds, and clipping.
 
-<ComponentPreview files="layout-family" size="md" hideCode />
+It does not define Node / Path geometry or provide domain layout algorithms such as plot or table. When Scope needs new clipping vocabulary, a Clip Definition joins the same registry and compile path.
+
+<ComponentPreview files="layout-family" size="sm" hideCode />
 
 ## What each part does
 
-| Component    | Type      | Responsibility                                                                                                               | Use it when                                                                       |
-| ------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Layout       | Kernel    | The one required top-level container: children / IR entry, compiles and emits the Scene; `width` / `height` set display size | The outermost wrapper of every figure                                             |
-| Scope        | Kernel    | Local transform container: translates / rotates / scales a group of children as a unit, referenceable as a whole by `id`     | Transforming a sub-figure as one, local coordinate frames, id namespace isolation |
-| Custom Clips | Extension | Register reusable clip kinds for Scope                                                                                       | Host or extension packages need domain-specific clipping primitives               |
+| Component    | Type      | Responsibility                                      | Use it when                         |
+| ------------ | --------- | --------------------------------------------------- | ----------------------------------- |
+| Layout       | Kernel    | Converge JSX / IR, capability injection, and output | Every figure needs its entry        |
+| Scope        | Kernel    | Establish local context and a group reference       | Transform, isolate, or clip a group |
+| Custom Clips | Extension | Register domain clip kinds resolved into Scene      | Built-in clips are not enough       |
 
 ## In this section
 
@@ -27,7 +29,7 @@ This group is the figure's _container_ layer. `<Layout>` is the mandatory outerm
   <LinkedCard href="/kernel/components/layout/scope">
     <span className="font-semibold">Scope</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      The seven transform variants, namespacing, and group-level references
+      Local coordinates, group references, namespaces, and clipping
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/layout/custom-clip">

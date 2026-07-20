@@ -24,6 +24,15 @@ export const kernelV04: Release = {
       ],
       subVersions: [
         {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：纯几何公开 API 自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: the public geometry API freezes here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
+        {
           version: 'beta.2',
           date: '2026-07-14',
           summary: {
@@ -92,6 +101,23 @@ export const kernelV04: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：在本轮 boundary 行为修正中补齐 shape-aware 规则连接面拟合与有符号间距；其余 IR schema、导出名、函数签名与公开类型自此冻结。',
+            en: 'Release candidate: completes the boundary behavior correction with shape-aware regular-surface fitting and signed spacing; other IR schemas, exports, signatures, and public types freeze here.',
+          },
+          items: [
+            {
+              label: { zh: '连接面拟合与间距', en: 'Connection-surface fit and spacing' },
+              content: {
+                zh: '内置 `circle` / `ellipse` / `rectangle` boundary 新增 `{ fit: "tight" | "bounds", gap }` 参数，默认 `tight`。shape-aware 包络让规则连接面更贴近 ellipse、polygon、star 与 contour；`bounds` 保留包住视觉 AABB 的策略，`gap` 可用有符号有限数继续外扩或内缩。自定义 shape 可用 `connectionEnvelope` 接入 tight，自定义 boundary 可用 `resolveRect` 复用同一包络。',
+                en: 'Built-in `circle`, `ellipse`, and `rectangle` boundaries add `{ fit: "tight" | "bounds", gap }`, defaulting to `tight`. Shape-aware envelopes fit regular surfaces more closely around ellipse, polygon, star, and contour shapes; `bounds` preserves visual-AABB enclosure, while signed finite `gap` expands or contracts the result. Custom shapes can implement `connectionEnvelope`, and custom boundaries can reuse it through `resolveRect`.',
+              },
+            },
+          ],
+        },
         {
           version: 'beta.2',
           date: '2026-07-14',
@@ -218,6 +244,15 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：修复 Canvas 命名色或 HSL 阴影与独立透明度组合时的 alpha 烘焙，未改变公开 API。',
+            en: 'Release candidate: fixes alpha baking for Canvas shadows that combine named or HSL colors with independent opacity, without changing the public API.',
+          },
+          items: [],
+        },
+        {
           version: 'beta.2',
           date: '2026-07-14',
           summary: {
@@ -255,6 +290,15 @@ export const kernelV04: Release = {
       },
       highlights: [],
       subVersions: [
+        {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：组件名、props、导出与公开类型自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: component names, props, exports, and public types freeze here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
         {
           version: 'beta.2',
           date: '2026-07-14',
@@ -344,6 +388,15 @@ export const kernelV04: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：plain spec、挂载 API、adapter 与公开类型自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: plain specs, mounting APIs, adapters, and public types freeze here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
+        {
           version: 'beta.2',
           date: '2026-07-14',
           summary: {
@@ -420,6 +473,15 @@ export const kernelV04: Release = {
       },
       highlights: [],
       subVersions: [
+        {
+          version: 'rc.1',
+          date: '2026-07-19',
+          summary: {
+            zh: '候选发布：TeX 引擎、lowering、React hook 与公开类型自此冻结；自 beta.2 起无功能改动。',
+            en: 'Release candidate: the TeX engine, lowering API, React hook, and public types freeze here, with no functional changes since beta.2.',
+          },
+          items: [],
+        },
         {
           version: 'beta.2',
           date: '2026-07-14',

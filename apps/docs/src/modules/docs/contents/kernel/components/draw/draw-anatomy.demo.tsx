@@ -2,60 +2,52 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/**
- * Draw 家族解剖图
- * @description 画一条 <Draw>（A→B→C，末端箭头）。下方灰色备注：Way（目标点数组）/ Step（一段）/
- *   Arrow（末端箭头，指向真正的箭头而非 Node C），整条标为 Draw (Sugar) / Path (Kernel)。
- *   纯技术 label，单文件共用。
- */
+/** Draw 家族从便捷写法到 Kernel 路径的职责关系图 */
 const Demo: FC = () => (
-  <Layout width={620} height={260} nodeDefault={{ stroke: 'gray', dashed: true }}>
-    {/* 主体：A→B→C 一条 Draw */}
-    <Node id="aNode" position={[-200, -30]}>
-      A
-    </Node>
-    <Node id="bNode" position={[0, -30]}>
-      B
-    </Node>
-    <Node id="cNode" position={[200, -30]}>
-      C
-    </Node>
-    <Draw way={['aNode', 'bNode', 'cNode']} arrow="->" />
-
-    {/* 下方点注：Step / Way / Arrow，备注在下方、箭头朝上 */}
-    <Node id="capStep" position={[-100, 35]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
-      Step
-    </Node>
-    <Draw
-      way={[
-        [-100, 18],
-        [-100, -22],
-      ]}
-      arrow="->"
-      stroke="gray"
-    />
-
-    <Node id="capWay" position={[0, 35]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+  <Layout width={620} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Node id="way" position={[-250, -40]} stroke="darkorange" fill="darkorange" fillOpacity={0.08} cornerRadius={4}>
       Way
     </Node>
-    <Draw way={[[0, 18], 'bNode']} arrow="->" stroke="gray" />
-
-    <Node id="capArrow" position={[170, 35]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node
+      id="draw"
+      position={[-95, -40]}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ weight: 'bold' }}
+    >
+      Draw (Sugar)
+    </Node>
+    <Node
+      id="path"
+      position={[95, -40]}
+      stroke="dodgerblue"
+      fill="dodgerblue"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ weight: 'bold' }}
+    >
+      Path (Kernel)
+    </Node>
+    <Node id="step" position={[250, -40]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
+      Step
+    </Node>
+    <Node id="arrow" position={[95, 60]} stroke="dimgray" fill="lightgray" fillOpacity={0.12} cornerRadius={4}>
       Arrow
     </Node>
+
+    <Draw way={['way', 'draw']} arrow="->" />
     <Draw
       way={[
-        [170, 18],
-        [183, -23],
+        'draw',
+        { label: { text: 'expand', sloped: true, side: 'top', textColor: 'gray', font: { size: 12 } } },
+        'path',
       ]}
       arrow="->"
-      stroke="gray"
     />
-
-    {/* 整条 = Draw (Sugar) / Path (Kernel) */}
-    <Node id="capWhole" position={[0, 80]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
-      Draw (Sugar) / Path (Kernel)
-    </Node>
+    <Draw way={['path', 'step']} arrow="<->" />
+    <Draw way={['arrow', 'path']} arrow="->" dashPattern={[4, 3]} stroke="gray" />
   </Layout>
 );
 

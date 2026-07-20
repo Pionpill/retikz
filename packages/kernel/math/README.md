@@ -15,7 +15,9 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ## Usage
 
-Most consumers get the common primitives through `@retikz/core`'s re-exports (`Position`, `point`, `lerp`, `localToWorld` / `worldToLocal`). Depend on `@retikz/math` directly when you need computation that core does not re-export — `intersect`, `triangle`, `circle`, `polygon`, `convexHull`, `ellipse`, or `curve`.
+Most consumers get common drawing helpers through `@retikz/core`'s re-exports: `DEFAULT_EPSILON`, `point`, `vector2`, `localToWorld`, and `worldToLocal`; core exposes math's `lerp` as `lerpPoint`. Import `Position` / `Vector2`, bounds, ellipses, arcs, intersections, enclosures, polygons, hulls, and curves directly from `@retikz/math`.
+
+多数绘图代码可使用 `@retikz/core` 转出的 `DEFAULT_EPSILON`、`point`、`vector2`、`localToWorld` 与 `worldToLocal`；math 的 `lerp` 在 core 中名为 `lerpPoint`。`Position` / `Vector2` 类型、外接范围、椭圆、圆弧、求交、包围、多边形、凸包和曲线应直接从 `@retikz/math` 导入。
 
 ```ts
 import { point, intersect, triangle, circle, convexHull } from '@retikz/math';

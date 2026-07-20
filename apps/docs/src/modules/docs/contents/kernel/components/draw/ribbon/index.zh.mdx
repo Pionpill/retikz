@@ -1,0 +1,160 @@
+---
+title: Ribbon
+description: 用 Path 的 ribbon kind 将 Step 中心线或预计算边界转换成可填充带状关系，并控制宽度、插值、端帽与标注。
+---
+
+`<Path kind="ribbon">` 用一条 Path 描述带状关系。中心线模式继续用 `<Step>` 定义走向，再按宽度向两侧生成轮廓；boundary 模式则直接接收已经算好的上下边界。
+
+Ribbon 负责带宽、采样、对齐与端帽，`fill`、外轮廓 `stroke`、透明度、阴影、标注和 `zIndex` 等共享字段仍写在 `<Path>` 顶层。普通描边路径见 [Path](/kernel/components/draw/path)。
+
+## 用法
+
+```tsx
+import { Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Path kind="ribbon" ribbon={{ start: { width: 32 }, end: { width: 12 } }} fill="#60a5fa">
+  <Step kind="move" to={[-120, 0]} />
+  <Step kind="cubic" control1={[-40, -48]} control2={[40, 48]} to={[120, 0]} />
+</Path>
+```
+
+布局只给出中心线时使用默认的 centerline 模式；布局已经拥有上下轮廓时使用 boundary 模式。
+
+## 例子
+
+### 基础
+
+中心线模式把开放路径两侧按宽度偏移，生成闭合 Path 图元。`stroke` 描的是带状面的外轮廓，不会重复绘制中心线。
+
+<ComponentPreview files="ribbon-basic" size="xs" />
+
+### 宽度与外观
+
+`width` 可以是固定值、起末端宽度、沿路径的 stops，或注册的宽度 profile。用面板比较宽度模型与插值方式，并调整填充、外轮廓和阴影。
+
+<ComponentPreview files="ribbon-geometry" size="md" />
+
+### 自定义宽度 profile
+
+内置 profile 不满足业务曲线时，用 `defineRibbonWidthProfile` 定义采样函数，通过 `<Layout ribbonWidthProfiles>` 注入，再由 `width.name` 引用。`params` 保持 JSON 可序列化，采样函数只存在于宿主注册表，不进入 IR。
+
+<ComponentPreview files="ribbon-custom-profile" size="sm" />
+
+### 标签位置
+
+Ribbon label 复用 GeometryLabel。`placement="inside"` 把标签放进带状面，外侧模式可选择边侧；`sloped` 让文字沿中心线切线旋转。
+
+<ComponentPreview files="ribbon-label" size="sm" />
+
+### 端点与端帽
+
+`start` / `end` 可以覆盖端点宽度、切线方向和 cap；`align` 决定中心线在带宽中的对齐位置。
+
+<ComponentPreview files="ribbon-endpoints" size="md" />
+
+### 预计算边界
+
+当布局已经算好两侧轮廓时，设置 `mode: 'boundary'`，并用 `upper` / `lower` 提供两条开放 step 序列。该模式不使用 `children`，且 schema 会拒绝 `width`、`align`、`start`、`end` 与 `interpolation`；`label` 也只支持 centerline 模式。
+
+<ComponentPreview files="ribbon-boundary" size="sm" />
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要判断中心线采样、预计算边界或 renderer 输出边界时再回来读。"
+/>
+
+### 两种模式如何生成轮廓
+
+| 模式         | 输入                       | 生成方式                   |
+| ------------ | -------------------------- | -------------------------- |
+| `centerline` | Path `children` + 宽度规则 | 解析中心线并向两侧生成截面 |
+| `boundary`   | `upper` / `lower` step     | 采样两侧并用端帽闭合       |
+
+中心线模式复用 Path 的 target、曲线与 generator 解析，再根据宽度函数生成两侧轮廓。固定宽度且线段可解析时优先直接构造，其余情况按横截面采样。
+
+Boundary 模式直接采样给定的上下边界。两种模式最终都输出普通闭合 Path 图元，因此 SVG / Canvas renderer 不需要理解 ribbon 专属语义。
+
+<SourceLinks
+  sources={[
+    {
+      label: '中心线复用 Path 几何',
+      path: 'packages/kernel/core/src/compile/path/ribbon/centerline.ts',
+      startLine: 328,
+      endLine: 372,
+    },
+    {
+      label: '两种模式的轮廓构造',
+      path: 'packages/kernel/core/src/compile/path/ribbon/emit.ts',
+      startLine: 62,
+      endLine: 190,
+    },
+  ]}
+/>
+
+### 注册表与失败边界
+
+内置与自定义 profile 合并进同一注册表，再按 `width.name` 查找。重复名称、未知名称、`paramsSchema` 校验失败，以及 `widthAt` 返回负数或非有限数都会在编译阶段抛错，不会静默退回固定宽度。
+
+<SourceLinks
+  sources={[
+    {
+      label: '内置与自定义 profile 合并',
+      path: 'packages/kernel/core/src/providers/ribbon/registry.ts',
+      startLine: 6,
+      endLine: 15,
+    },
+    {
+      label: '查找、参数校验与宽度结果约束',
+      path: 'packages/kernel/core/src/compile/path/ribbon/width.ts',
+      startLine: 64,
+      endLine: 101,
+    },
+  ]}
+/>
+
+## API 参考
+
+### Path 入口
+
+| 属性       | 类型                                    | 默认值         | 描述                                                                           |
+| ---------- | --------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
+| `kind`     | `'ribbon'`                              | —              | 选择内置 Ribbon Path kind                                                      |
+| `ribbon`   | `PathRibbonOptions`                     | —              | 必填；配置构造模式、宽度、采样、对齐、端点与预计算边界                         |
+| `label`    | `GeometryLabel \| Array<GeometryLabel>` | —              | centerline 模式可用的宿主标签                                                  |
+| `children` | `Array<<Step>>`                         | —              | centerline 模式必填；boundary 模式省略                                         |
+| `fill`     | `string \| IRPaintSpec`                 | `currentColor` | 带状面填充；其它 Path 共享字段见 [Path](/kernel/components/draw/path#api-参考) |
+
+### ribbon 选项
+
+| 字段              | 类型                                               | 默认值         | 描述                                              |
+| ----------------- | -------------------------------------------------- | -------------- | ------------------------------------------------- |
+| `mode`            | `'centerline' \| 'boundary'`                       | `'centerline'` | 选择从中心线生成，或直接闭合预计算边界            |
+| `width`           | `number \| RibbonWidthStops \| RibbonWidthProfile` | —              | 整条中心线的宽度规则；与起末端宽度二选一          |
+| `start` / `end`   | `{ width?, direction?, cap? }`                     | —              | 端点宽度、切线方向与端帽；默认 cap 为 `'butt'`    |
+| `interpolation`   | `'linear' \| 'smooth'`                             | `'linear'`     | 起末端宽度之间的插值                              |
+| `align`           | `'left' \| 'center' \| 'right'`                    | `'center'`     | 中心线位于带宽中的位置                            |
+| `samples`         | `boolean \| number`                                | —              | 两种模式通用的固定采样短写；`true` 使用 64 个截面 |
+| `sampling`        | `{ kind: 'fixed' \| 'adaptive', ... }`             | —              | 显式采样策略；不能与 `samples` 同时使用           |
+| `upper` / `lower` | `Array<IRStep>`                                    | —              | boundary 模式必填的两条开放边界                   |
+
+完整校验约束见 [PathRibbonOptions schema](/kernel/reference/schema/path#pathribbonoptions)。
+
+### 自定义 width profile 入口
+
+- `defineRibbonWidthProfile(definition)`：创建注册项；`name` 是 IR 引用 key
+- `RibbonWidthProfileDefinitionInput`：作者输入，包含可选 `paramsSchema` 与 `widthAt`
+- `RibbonWidthProfileContext`：向 `widthAt` 提供 `offset`、中心线 `length` 和校验后的 `params`
+- `<Layout ribbonWidthProfiles>`：把定义注入当前图的编译注册表
+
+## 相关
+
+- [Path](/kernel/components/draw/path)：Ribbon 的宿主与共享 Path 字段
+- [Step](/kernel/components/draw/step)：中心线和 boundary step 的动作语义
+- [自定义路径](/kernel/components/draw/custom-path)：注册其它整条 Path kind
+- [运行时扩展索引](/kernel/reference/runtime/extensions)：集中查询 define / registry 入口
+- [视觉效果](/kernel/components/effects)：阴影、混合模式与动画

@@ -3,65 +3,57 @@ import type { FC } from 'react';
 import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
- * 节点家族三件套
- * @description 并排展示 Node（命名图元）/ Text（节点内行级样式）/ Coordinate（不可见命名点）；
- *   Coordinate 不画形状，靠两条连线汇于它来体现；caption 用淡色 stroke/fill none 的 Node。
+ * 节点家族职责图
+ * @description 用统一无框节点展示 Node、Text 与 Coordinate 的职责；Coordinate 不画形状，
+ *   通过两条连线汇于同一点表现其位置
  */
 const Demo: FC = () => (
-  <Layout width={560} height={260}>
+  <Layout width={560} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* Node：有形状、有文字的命名图元 */}
-    <Node id="nodeDemo" position={[-190, 35]}>
+    <Node id="nodeDemo" position={[-190, -5]} stroke="none" fill="none" font={{ weight: 'bold' }}>
       Node
     </Node>
 
     {/* Text：在节点内给单独一行覆盖样式 */}
-    <Node id="textDemo" position={[0, 35]} align="start">
+    <Node id="textDemo" position={[0, -5]} align="middle" stroke="none" fill="none">
       <Text fill="darkorange" font={{ weight: 'bold' }}>
-        橙色加粗
+        Text
       </Text>
-      普通行
+      行级样式
     </Node>
 
     {/* Coordinate：不可见命名点，两条连线汇于它 */}
-    <Coordinate id="coordDemo" position={[190, 55]} />
-    <Node id="src1" position={[155, -10]} shape="circle" fill="gray" stroke="none" minimumSize={6} />
-    <Node id="src2" position={[225, -10]} shape="circle" fill="gray" stroke="none" minimumSize={6} />
-    <Draw way={['src1', 'coordDemo']} />
-    <Draw way={['src2', 'coordDemo']} />
+    <Coordinate id="coordDemo" position={[190, 5]} />
+    <Coordinate id="src1" position={[155, -40]} />
+    <Coordinate id="src2" position={[225, -40]} />
+    <Draw way={['src1', 'coordDemo']} stroke="gray" />
+    <Draw way={['src2', 'coordDemo']} stroke="gray" />
 
     {/* caption */}
     <Node
       id="capNode"
-      position={[-190, 100]}
+      position={[-190, 30]}
       stroke="none"
       fill="none"
       align="middle"
       textColor="gray"
       font={{ size: 12 }}
     >
-      {['Node', '命名图元']}
+      Node · 可见命名图元
     </Node>
-    <Node
-      id="capText"
-      position={[0, 100]}
-      stroke="none"
-      fill="none"
-      align="middle"
-      textColor="gray"
-      font={{ size: 12 }}
-    >
-      {['Text', '行级样式']}
+    <Node id="capText" position={[0, 35]} stroke="none" fill="none" align="middle" textColor="gray" font={{ size: 12 }}>
+      Text · 节点内整行覆盖
     </Node>
     <Node
       id="capCoord"
-      position={[190, 100]}
+      position={[190, 35]}
       stroke="none"
       fill="none"
       align="middle"
       textColor="gray"
       font={{ size: 12 }}
     >
-      {['Coordinate', '不可见的点']}
+      Coordinate · 不可见命名点
     </Node>
   </Layout>
 );

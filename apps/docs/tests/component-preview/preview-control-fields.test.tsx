@@ -41,6 +41,12 @@ const setInputValue = (input: HTMLInputElement, value: string): void => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
+const setTextareaValue = (textarea: HTMLTextAreaElement, value: string): void => {
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+  setter?.call(textarea, value);
+  textarea.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
 const renderField = async (
   field: PreviewControlField,
   value: PreviewControlValue,
@@ -68,7 +74,27 @@ afterEach(async () => {
 });
 
 describe('PreviewControlFieldInput', () => {
-  it('用 shadcn 组件渲染六种字段', async () => {
+  it('multiline text 使用 textarea 并发出换行内容', async () => {
+    const onValueChange = vi.fn();
+    const field = {
+      kind: 'text',
+      id: 'content',
+      label: 'Content',
+      defaultValue: 'Line 1\nLine 2',
+      multiline: true,
+    } satisfies PreviewControlField;
+    const text = await renderField(field, field.defaultValue, onValueChange);
+    const textarea = text.container.querySelector<HTMLTextAreaElement>('textarea');
+
+    expect(textarea).not.toBeNull();
+    expect(text.container.querySelector('input[type="text"]')).toBeNull();
+    await act(() => {
+      if (textarea) setTextareaValue(textarea, 'Title\nBody');
+    });
+    expect(onValueChange).toHaveBeenLastCalledWith('Title\nBody');
+  });
+
+  it('用 shadcn 组件渲染七种字段', async () => {
     const text = await renderField({ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }, 'Node');
     const number = await renderField(
       { kind: 'number', id: 'width', label: 'Width', defaultValue: 2, min: 0, max: 10, step: 0.5 },
@@ -90,6 +116,18 @@ describe('PreviewControlFieldInput', () => {
       { kind: 'range', id: 'opacity', label: 'Opacity', defaultValue: 1, min: 0, max: 1, step: 0.1 },
       1,
     );
+    const point = await renderField(
+      {
+        kind: 'point',
+        id: 'control',
+        label: 'Control',
+        defaultValue: [0, 0],
+        min: [-100, -100],
+        max: [100, 100],
+        step: 5,
+      },
+      [0, 0],
+    );
 
     expect(text.container.querySelector('[data-slot="input"][type="text"]')).not.toBeNull();
     expect(number.container.querySelector('[data-slot="input"][type="number"]')).not.toBeNull();
@@ -97,6 +135,11 @@ describe('PreviewControlFieldInput', () => {
     expect(toggle.container.querySelector('[data-slot="switch"]')).not.toBeNull();
     expect(color.container.querySelectorAll('[data-slot="input"]')).toHaveLength(2);
     expect(range.container.querySelector('[data-slot="slider"]')).not.toBeNull();
+    expect(point.container.querySelector('[data-slot="preview-point-control"]')).not.toBeNull();
+    expect(point.container.querySelectorAll('input[type="number"]')).toHaveLength(2);
+    expect(point.container.querySelector('[data-slot="slider"]')).toBeNull();
+    expect(point.container.querySelector<HTMLInputElement>('[aria-label="Control x"]')?.value).toBe('0');
+    expect(point.container.querySelector<HTMLInputElement>('[aria-label="Control y"]')?.value).toBe('0');
   });
 
   it('compact 字段使用 small 尺寸且保持可收缩宽度', async () => {
@@ -130,6 +173,19 @@ describe('PreviewControlFieldInput', () => {
       () => undefined,
       true,
     );
+    const point = await renderField(
+      {
+        kind: 'point',
+        id: 'control',
+        label: 'Control',
+        defaultValue: [10, 20],
+        min: [-100, -100],
+        max: [100, 100],
+      },
+      [10, 20],
+      () => undefined,
+      true,
+    );
 
     const textInput = text.container.querySelector('[data-slot="input"]');
     const numberInput = number.container.querySelector('[data-slot="input"]');
@@ -141,6 +197,9 @@ describe('PreviewControlFieldInput', () => {
     expect(colorTextInput?.classList.contains('w-full')).toBe(true);
     expect(select.container.querySelector('[data-slot="select-trigger"]')?.getAttribute('data-size')).toBe('sm');
     expect(select.container.querySelector('[data-slot="select-trigger"]')?.classList.contains('min-w-0')).toBe(true);
+    for (const input of point.container.querySelectorAll('input[type="number"]')) {
+      expect(input.classList.contains('h-7')).toBe(true);
+    }
   });
 
   it('range 在 default 与 compact 密度下都占满可用宽度', async () => {
@@ -275,5 +334,82 @@ describe('PreviewControlFieldInput', () => {
     expect(thumb).not.toBeNull();
     await act(() => thumb?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
     expect(onRangeChange).toHaveBeenLastCalledWith(0.6);
+  });
+
+  it('从 point 的两个轴发出完整坐标 tuple', async () => {
+    const onPointChange = vi.fn();
+    const point = await renderField(
+      {
+        kind: 'point',
+        id: 'control',
+        label: 'Control',
+        defaultValue: [10, 20],
+        min: [-100, -100],
+        max: [100, 100],
+        step: 5,
+      },
+      [10, 20],
+      onPointChange,
+    );
+    const xInput = point.container.querySelector<HTMLInputElement>('[aria-label="Control x"]');
+    const yInput = point.container.querySelector<HTMLInputElement>('[aria-label="Control y"]');
+    expect(xInput).not.toBeNull();
+    expect(yInput).not.toBeNull();
+    expect(xInput?.min).toBe('-100');
+    expect(yInput?.max).toBe('100');
+    expect(xInput?.step).toBe('5');
+
+    await act(() => {
+      if (xInput) {
+        setInputValue(xInput, '15');
+      }
+    });
+    expect(onPointChange).toHaveBeenLastCalledWith([15, 20]);
+
+    await act(() => {
+      if (yInput) {
+        setInputValue(yInput, '25');
+      }
+    });
+    expect(onPointChange).toHaveBeenLastCalledWith([10, 25]);
+
+    await act(() => {
+      if (xInput) {
+        setInputValue(xInput, '999');
+      }
+    });
+    expect(onPointChange).toHaveBeenLastCalledWith([100, 20]);
+
+    await act(() => {
+      if (yInput) {
+        setInputValue(yInput, '-999');
+      }
+    });
+    expect(onPointChange).toHaveBeenLastCalledWith([10, -100]);
+
+    onPointChange.mockClear();
+    await act(() => {
+      if (xInput) {
+        setInputValue(xInput, '');
+      }
+    });
+    expect(onPointChange).not.toHaveBeenCalled();
+  });
+
+  it('point 收到异常数组时回退到默认坐标', async () => {
+    const point = await renderField(
+      {
+        kind: 'point',
+        id: 'control',
+        label: 'Control',
+        defaultValue: [10, 20],
+        min: [-100, -100],
+        max: [100, 100],
+      },
+      [] as unknown as PreviewControlValue,
+    );
+
+    expect(point.container.querySelector<HTMLInputElement>('[aria-label="Control x"]')?.value).toBe('10');
+    expect(point.container.querySelector<HTMLInputElement>('[aria-label="Control y"]')?.value).toBe('20');
   });
 });

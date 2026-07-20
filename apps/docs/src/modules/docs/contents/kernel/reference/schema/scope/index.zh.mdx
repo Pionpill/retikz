@@ -1,0 +1,172 @@
+---
+title: 作用域
+description: Scope 的分组、局部命名空间、样式默认值、变换、裁剪与子树契约
+---
+
+`ScopeSchema` 是 Tier 1 的容器节点。它不绘制新的视觉图元，而是给一组 children 建立局部变换、样式默认值、裁剪、层级与引用边界；Scope 本身仍可通过 `id` 被引用。
+
+<span id="scope"></span>
+
+## Scope
+
+<ZodSchema
+  name="ScopeSchema"
+  description="作用域容器：组织子树，并提供局部变换、样式默认值与裁剪。"
+  descriptions={{
+    type: '判别字段，标记此子节点为 scope',
+    color: '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
+    fill: '作用域级默认填充；CSS color 字符串或 PaintSpec',
+    fillOpacity: '作用域级默认填充不透明度 0..1',
+    stroke: '作用域级默认描边；CSS color 字符串或 PaintSpec',
+    strokeWidth: '作用域级默认描边宽度（用户单位）',
+    strokeOpacity: '作用域级默认描边不透明度 0..1',
+    opacity: '作用域级默认整体不透明度 0..1',
+    id: '可选引用 id；始终注册到父级命名空间',
+    localNamespace: '为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级',
+    transforms: '依次作用于所有 children 的局部变换；相对位移在编译期解析',
+    nodeDefault: '只作用于 node 的默认样式；不包含 id、position、text 等结构字段',
+    pathDefault: '只作用于 path-like drawable 的默认样式；箭头使用独立 arrowDefault 通道',
+    labelDefault: 'node label 与 step / geometry label 共用的默认文字样式',
+    arrowDefault: '箭头默认外观，字段与 ArrowDetailSchema 相同',
+    resetStyle: '样式继承屏障：true 重置全部通道，或列出 node / path / label / arrow 中需要重置的通道',
+    zIndex: 'scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序',
+    clip: '以 scope 局部坐标描述的裁剪区域',
+    boundingShape: '给 scope id 生成的合成引用边界：rectangle 或 circle',
+    meta: 'JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释',
+    animations: '作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承',
+    children: '可递归包含 node、path、coordinate、scope 或 Tier 2 composite',
+  }}
+/>
+
+<span id="default-channels"></span>
+
+### 四个默认值通道
+
+Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿主未显式设置的字段；`resetStyle` 可以按通道阻断父 Scope 的继承。
+
+| 字段           | 复用的契约                                               | 不负责                           |
+| -------------- | -------------------------------------------------------- | -------------------------------- |
+| `nodeDefault`  | [Node](/kernel/reference/schema/entity#node) 的视觉字段  | id、位置、文字、标签与实例元数据 |
+| `pathDefault`  | [Path](/kernel/reference/schema/path#path) 的视觉字段    | kind、step、mark 与实例元数据    |
+| `labelDefault` | label 的 color、textColor、opacity、font                 | 文本、位置与宿主关系             |
+| `arrowDefault` | [ArrowDetail](/kernel/reference/schema/path#arrowdetail) | 箭头是否存在与沿路径的位置       |
+
+<span id="transform"></span>
+
+## 变换
+
+`TransformSchema` 是 `Scope.transforms` 的联合类型。数组顺序就是应用顺序：位移类在编译期解析为笛卡尔 translate，rotate 与 scale 保留为 renderer-agnostic 变换。
+
+<ZodSchema name="TransformSchema" description="Scope 局部变换：位移、旋转或缩放。" />
+
+| `kind`              | 核心字段                       | 作用                         |
+| ------------------- | ------------------------------ | ---------------------------- |
+| `translate`         | `x`、`y`                       | 笛卡尔位移                   |
+| `polar-translate`   | `origin?`、`angle`、`radius`   | 从原点按极坐标求位移         |
+| `at-translate`      | `direction`、`of`、`distance?` | 相对已命名实体求位移         |
+| `offset-translate`  | `of`、`offset?`                | 基准点加二维偏移             |
+| `between-translate` | `between`、`fraction`          | 两个绝对端点之间按比例求位移 |
+| `rotate`            | `degrees`、`cx?`、`cy?`        | 绕局部点旋转                 |
+| `scale`             | `x`、`y?`                      | 等比或非等比缩放             |
+
+<span id="clipspec"></span>
+
+## 裁剪
+
+`ClipSpecSchema` 是 `Scope.clip` 的联合类型。内置几何直接使用下面的 JSON 形状；自定义 `kind` 由 `CompileOptions.clips` 注册并在编译期解析。
+
+| 分支              | 判别方式               | 内容                                          |
+| ----------------- | ---------------------- | --------------------------------------------- |
+| 内置几何          | `rect` / `circle` 等   | 使用下方固定字段 schema                       |
+| `compound`        | `kind: 'compound'`     | 递归组合多个 ClipSpec                         |
+| 自定义 Definition | 其它非空 `kind` 字符串 | JSON 字段由 `CompileOptions.clips` 注册项校验 |
+
+<span id="rectclip"></span>
+
+### 矩形
+
+<ZodSchema
+  name="RectClipSchema"
+  description="矩形裁剪区域。"
+  descriptions={{
+    kind: '判别字段 rect',
+    x: '左上角 x，scope 局部坐标',
+    y: '左上角 y，scope 局部坐标',
+    width: '矩形宽度，必须为正数',
+    height: '矩形高度，必须为正数',
+  }}
+/>
+
+<span id="circleclip"></span>
+
+### 圆
+
+<ZodSchema
+  name="CircleClipSchema"
+  description="圆形裁剪区域。"
+  descriptions={{
+    kind: '判别字段 circle',
+    cx: '圆心 x',
+    cy: '圆心 y',
+    r: '半径，必须为正数',
+  }}
+/>
+
+<span id="ellipseclip"></span>
+
+### 椭圆
+
+<ZodSchema
+  name="EllipseClipSchema"
+  description="椭圆裁剪区域。"
+  descriptions={{
+    kind: '判别字段 ellipse',
+    cx: '圆心 x',
+    cy: '圆心 y',
+    rx: 'x 方向半径，必须为正数',
+    ry: 'y 方向半径，必须为正数',
+  }}
+/>
+
+<span id="polygonclip"></span>
+
+### 多边形
+
+<ZodSchema
+  name="PolygonClipSchema"
+  description="由至少三个顶点定义的多边形裁剪区域。"
+  descriptions={{
+    kind: '判别字段 polygon',
+    points: '至少三个 `[x, y]` 顶点，使用 scope 局部坐标',
+  }}
+/>
+
+<span id="pathclip"></span>
+
+### 路径
+
+<ZodSchema
+  name="PathClipSchema"
+  description="由结构化 PathCommand 定义的路径裁剪区域。"
+  descriptions={{
+    kind: '判别字段 path',
+    commands: '至少一条结构化 PathCommand；这里接收已展开的几何命令，不接收 Path Step',
+    fillRule: '裁剪路径填充规则：nonzero 或 evenodd',
+  }}
+/>
+
+<span id="compoundclip"></span>
+
+### 复合裁剪
+
+<ZodSchema
+  name="CompoundClipSchema"
+  description="递归组合多个子裁剪区域的复合裁剪。"
+  descriptions={{
+    kind: '判别字段 compound',
+    children: '至少一个 ClipSpec；递归累积为同一裁剪路径',
+    fillRule: '复合裁剪路径的填充规则：nonzero 或 evenodd',
+  }}
+/>
+
+自定义裁剪的 Definition、registry 与 renderer 边界见 [自定义裁剪](/kernel/components/layout/custom-clip)。

@@ -16,15 +16,17 @@ The Node shape registry is also open to extensions. For shapes beyond the built-
 
 ## What each part does
 
-| Shape            | As a Path (sugar)        | As a Node shape                                              |
-| ---------------- | ------------------------ | ------------------------------------------------------------ |
-| Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"`                               |
-| Arc / Sector     | `<Arc>` · `<Sector>`     | `shape="sector"` · `"arc"` (params)                          |
-| Rectangle        | `<Rectangle>`            | default / `shape="rectangle"`                                |
-| Polygon          | `<RegularPolygon>`       | `shape={{ type:'polygon', params }}` (params) · `"diamond"`  |
-| Star             | `<Star>`                 | `shape={{ type:'star', params }}` (params)                   |
-| Contour          | — (draw with `<Path>`)   | `shape={{ type:'contour', params }}` (arbitrary vertex ring) |
-| Custom Shapes    | —                        | `ShapeDefinition` + `<Layout shapes>`                        |
+In this table, Sugar means a shortcut component that expands to a Path at compile time; Kernel means a shape capability consumed directly through the core Node / Path contracts.
+
+| Page             | Type            | Responsibility                                                         | Use it when                                            |
+| ---------------- | --------------- | ---------------------------------------------------------------------- | ------------------------------------------------------ |
+| Circle / Ellipse | Sugar + Kernel  | Draw circle / ellipse Paths; provide circle / ellipse Nodes            | You need round marks, containers, or nodes             |
+| Arc / Sector     | Sugar + Kernel  | Draw arc / sector Paths; provide parametric arc / sector Nodes         | You need angle marks, ring wedges, or glyphs           |
+| Rectangle        | Sugar + Kernel  | Draw rectangle Paths; provide the default Node boundary                | You need boxes, flow nodes, or rounded nodes           |
+| Polygon          | Sugar + Kernel  | Draw regular-polygon Paths; provide polygon / diamond Nodes            | You need polygon marks or decision nodes               |
+| Star             | Sugar + Kernel  | Draw star Paths; provide star Nodes with geometric anchors             | You need ratings, emphasis, or star nodes              |
+| Contour          | Kernel          | Turn any closed vertex ring into a connectable, roundable Node         | You need a freeform node; use `<Path>` for a line only |
+| Custom Shapes    | Extension guide | Extend layout, boundaries, anchors, and drawing with `ShapeDefinition` | Built-ins cannot express the domain shape              |
 
 > Background grids and reference lines — **a field of regular lines** rather than a single closed shape — are not in this group; see `<Grid>` under [Helpers](/kernel/components/helpers).
 

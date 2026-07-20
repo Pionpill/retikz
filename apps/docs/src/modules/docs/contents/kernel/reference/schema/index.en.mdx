@@ -1,20 +1,23 @@
 ---
 title: Schema
-description: Schema reference — the JSON shape contract of retikz's IR, i.e. what a figure serializes to.
+description: The JSON shape contract of retikz IR, covering scenes, primitives, scopes, placement, style, and animation.
 ---
 
-This group is the data contract of the IR (intermediate representation): the JSON structure a retikz figure ultimately serializes to. AI generation, database storage, and custom converters all build on this schema. From the scene root downward come the named entities, the drawn paths, and the positioning fields that run through them.
+This group is the data contract of the IR (intermediate representation): the JSON structure a retikz figure ultimately serializes to. AI generation, database storage, and custom converters all build on it. These pages cover independently useful public contracts; nested helper schemas stay with their owning topic instead of mirroring the source tree page by page.
 
 > This is the reference layer, not component docs; to author figures, start from [Components](/kernel/components/layout).
 
 ## What each part covers
 
-| Topic     | Responsibility                                                                                   | Reach for it when                                                 |
-| --------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| Scene     | The IR root: a JSON-serializable description of one figure                                       | Understanding the top-level structure, serializing a whole figure |
-| Entity    | Named members in a scene: Node and Coordinate                                                    | Working with the IR shape of nodes / coordinates                  |
-| Path      | The stroke shell, step action sequence, and step targets                                         | Working with the IR shape of paths / connectors                   |
-| Placement | The five forms of a position field: Cartesian / polar / relative / offset / proportional partway | Parsing or generating any positioning field                       |
+| Topic     | Responsibility                                        | Reach for it when                        |
+| --------- | ----------------------------------------------------- | ---------------------------------------- |
+| Scene     | IR root, view box, and top-level child union          | Generating or validating a whole drawing |
+| Scope     | Subtree grouping, defaults, transforms, and clipping  | Building nested or local contexts        |
+| Entity    | Node, Coordinate, text, shape, and boundary contracts | Generating nodes, coordinates, or text   |
+| Path      | Path, steps, targets, ribbons, and arrows             | Generating paths and geometric relations |
+| Placement | Position and target placement forms                   | Resolving or generating references       |
+| Paint     | Shared visual fields, paints, patterns, and shadows   | Generating fill / stroke appearance      |
+| Animation | JSON-safe keyframes, timing, triggers, and origins    | Generating declarative animation tracks  |
 
 ## In this section
 
@@ -24,6 +27,10 @@ This group is the data contract of the IR (intermediate representation): the JSO
     <span className="mt-1 text-center text-sm text-muted-foreground">
       The IR root, a JSON description of one figure
     </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema/scope">
+    <span className="font-semibold">Scope</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Grouping, defaults, transforms, and clipping</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/schema/entity">
     <span className="font-semibold">Entity</span>
@@ -36,5 +43,13 @@ This group is the data contract of the IR (intermediate representation): the JSO
   <LinkedCard href="/kernel/reference/schema/placement">
     <span className="font-semibold">Placement</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">The five forms of a position field</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema/style">
+    <span className="font-semibold">Paint</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Shared visual fields and structured paints</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema/animation">
+    <span className="font-semibold">Animation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Keyframes, timing, and triggers</span>
   </LinkedCard>
 </div>

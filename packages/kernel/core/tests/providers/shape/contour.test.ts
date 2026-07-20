@@ -277,3 +277,32 @@ describe('contour — JSON round-trip', () => {
     expect(round.shape).toEqual(parsed.shape);
   });
 });
+
+describe('contour — connection envelope', () => {
+  it('共线 contour 的 tight ellipse 使用等轴包络，重合点 fail-loud', () => {
+    const lineParams = {
+      points: [
+        [-10, 0],
+        [0, 0],
+        [10, 0],
+      ] as Array<[number, number]>,
+    };
+    const lineRect = { x: 0, y: 0, width: 20, height: 0, rotate: 0 };
+
+    expect(contour.connectionEnvelope?.(lineRect, 'ellipse', lineParams)).toEqual({
+      halfWidth: 10,
+      halfHeight: 10,
+    });
+
+    const pointParams = {
+      points: [
+        [1, 1],
+        [1, 1],
+        [1, 1],
+      ] as Array<[number, number]>,
+    };
+    expect(() =>
+      contour.connectionEnvelope?.({ x: 0, y: 0, width: 0, height: 0, rotate: 0 }, 'ellipse', pointParams),
+    ).toThrow(/envelope|degenerate/i);
+  });
+});

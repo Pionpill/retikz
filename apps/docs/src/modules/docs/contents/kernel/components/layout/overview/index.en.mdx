@@ -1,170 +1,107 @@
 ---
 title: Layout
-description: Top-level container — accepts a component tree or IR, compiles to Scene, and produces rendered output.
+description: The React drawing entry that connects JSX or Core IR to one compile and SVG / Canvas rendering pipeline.
 ---
 
-`<Layout>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<Layout>`.
+`<Layout>` is the top-level runtime entry for a React drawing tree. Every Kernel / Sugar component enters the same graphics pipeline through it.
 
-It is the entry point between the DSL and the renderer: with children it converts the component tree into IR; with `ir` it uses that pre-built IR directly. It then compiles the IR into a Scene and hands it to the current renderer.
+It converges two input modes: children are converted to Core IR by the React adapter, while `ir` adopts an existing IR. It then asks `@retikz/core` to compile a Scene and hands that Scene to `@retikz/render` for SVG or Canvas output.
+
+`<Layout>` owns React-side construction, capability injection, and host wiring. It does not own IR / Scene semantics, geometry rules, or automatic layout algorithms. Core expresses generic positioning and constraints; plot and table layouts belong to their respective higher-level capabilities.
 
 `width` / `height` only control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the visible range is auto-computed from layout bounds at compile time.
 
 ## Usage
 
 ```tsx
-import { Layout } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 ```
 
 ```tsx
 <Layout width={300} height={80}>
-  {/* Kernel / Sugar children */}
+  <Node id="A" position={[0, 0]}>
+    A
+  </Node>
+  <Node id="B" position={[120, 0]}>
+    B
+  </Node>
+  <Draw way={['A', 'B']} arrow="->" />
 </Layout>
 ```
 
-## Composition
-
-`<Layout>` is a container; children are any Kernel / Sugar component tree:
-
-```tsx
-<Layout>
-  <Node id="..." position={...}>label</Node>
-  <Path>
-    <Step kind="move" to="..." />
-    <Step kind="line" to="..." />
-  </Path>
-  <Draw way={[...]} />
-</Layout>
-```
+Place Kernel / Sugar components directly in children; there is no additional fixed composition protocol.
 
 ## Examples
 
-### Basic
+### JSX Input
 
-<ComponentPreview files="layout-basic" size="xs" />
+For everyday authoring, pass children directly. `<Layout>` converts the component tree to Core IR and connects it to the remaining compile and render stages.
 
-### Whole-figure Default Style
+<ComponentPreview files="layout-basic" size="sm" />
 
-`<Layout>` directly accepts the same cascade style subset as [`<Scope>`](/kernel/components/layout/scope) (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`). When any style prop is set, Layout wraps its children in an **implicit root `<Scope>`**, removing the boilerplate of nesting one root `<Scope>` on every figure. Inner `<Scope>` and explicit primitive props still cascade over it as usual.
-
-<ComponentPreview files="layout-scope-style" size="sm" />
-
-```tsx
-// Set defaults for the whole figure — no nested <Scope> needed
-<Layout stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white', dashed: true }} pathDefault={{ lineCap: 'round' }}>
-  <Node id="A" position={[0, 0]}>A</Node>
-  <Draw way={['A', 'B']} arrow="->" />
-</Layout>
-
-// Equivalent to hand-writing one root <Scope>
-<Layout>
-  <Scope stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white', dashed: true }} pathDefault={{ lineCap: 'round' }}>
-    {/* ... */}
-  </Scope>
-</Layout>
-```
-
-The exact wrapping condition, and what happens when combined with the `ir` prop, are covered in How it works bottom.
-
-### Render from IR
+### IR Input
 
 `<Layout>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
 
-<ComponentPreview files="layout-from-ir" size="xs" />
+<ComponentPreview files="layout-from-ir" size="sm" />
 
-When you need to convert between the DSL and IR, pair `convertReactNodeToIR` with `convertIRToReactNode`. Tier 1 IR stays structurally equivalent across the roundtrip. Tier 2 composites are first expanded with the supplied `composites` definitions, so the result is semantically equivalent to the lowered Kernel IR rather than the original custom component:
+`ir` and `children` are two entry modes; if both are present, `ir` is used. For IR generation, persistence, and conversion, continue with [Architecture](/kernel/concepts/design/principles) and [Composite](/kernel/concepts/design/composite).
 
-```tsx
-import { Layout, Node, convertIRToReactNode, convertReactNodeToIR } from '@retikz/react';
+### Output Boundary
 
-const ir = convertReactNodeToIR(
-  <Node id="a" position={[0, 0]}>
-    A
-  </Node>,
-);
-// Serialize, send to LLM, store in DB...
-<Layout ir={ir} width={200} height={80} />;
+`viewBox` controls the internal coordinate range, while `width` / `height` control display size. Use the panel to vary these two output boundaries without changing the JSX structure.
 
-const kernelChildren = convertIRToReactNode(tier2IR, {
-  composites: [panelDefinition],
-});
-```
+<ComponentPreview
+  files="layout-viewbox"
+  size="md"
+  caption="The outer gray dashed border marks the SVG display size; the inner light-gray dotted border marks the viewBox. The default aspect-ratio fit preserves any necessary letterboxing."
+/>
 
-If a Tier 2 definition is missing, its payload is invalid, or recursive expansion exceeds the depth limit, `convertIRToReactNode` throws with the composite key and IR path instead of silently dropping the node.
+### Capability Injection
 
-`ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.
+A `ShapeDefinition` first supplies the folded file's footprint, connection boundary, and emitted primitives, then enters through `<Layout shapes>`. Both Nodes reference only the registered `drawio-file` name; the connector stops on the custom outline, showing that definition, registry, and compile share one path.
 
-### Custom viewBox
+<ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
 
-By default the `viewBox` is auto-computed from content (AABB + padding). Pass `viewBox={{ x, y, width, height }}` to pin it explicitly — for fixed size, deliberate clipping, multi-figure alignment, or excluding overflow. When set it overrides the auto computation and ignores padding; `width` / `height` must be > 0.
-
-<ComponentPreview files="layout-viewbox" size="md" />
-
-### Render Backend (SVG / Canvas)
-
-`renderer` selects the output backend: `'svg'` by default, or `'canvas'` to draw the same Scene onto a `<canvas>`.
-
-When the `renderer` prop is omitted, `<Layout>` falls back to the nearest `RendererModeProvider`. This fits the case where an outer layer wants to switch a whole subtree it can't reach into per-`<Layout>` — e.g. toggling an interactive (hooks / async) subtree between svg / canvas: you can't edit its inner `<Layout renderer>`, but wrapping it in the Provider does it:
-
-```tsx
-import { Layout, RendererModeProvider } from '@retikz/react';
-
-// Inner <Layout>s without an explicit renderer follow the Provider; those with one are unaffected
-<RendererModeProvider mode="canvas">
-  <SomeInteractiveChart />
-</RendererModeProvider>;
-```
-
-### Control animation for a whole subtree
-
-Normally, each `<Layout>` should express its own animation intent through `animate`. An editor, docs preview, or test harness that needs one policy for an entire component tree can wrap it in `AnimationModeProvider`:
-
-```tsx
-import { AnimationModeProvider } from '@retikz/react';
-
-<AnimationModeProvider mode="enabled">
-  <SomeInteractiveChart />
-</AnimationModeProvider>;
-```
-
-| `mode`       | Behavior                                              |
-| ------------ | ----------------------------------------------------- |
-| `'system'`   | The whole subtree follows the reduced-motion setting  |
-| `'enabled'`  | The whole subtree is forced to play animations        |
-| `'disabled'` | The whole subtree is forced to show the static result |
-
-The animation Provider is a host-level override: the nearest `AnimationModeProvider` wins over descendant `<Layout animate>` props, including an explicit opposite value. Without a Provider, `animate` keeps its existing tri-state behavior. `snapshotAt` always wins and produces a static frame.
+Boundary, clip, arrow, pattern, and path-kind definitions enter their own core registries through `<Layout>` in the same way. `<Layout>` only exposes the React injection point and does not maintain another adapter-side built-in allowlist; see each extension guide and the API below for the full contracts.
 
 ## How it works
 
 <ComponentAlert
   type="tip"
   title="Optional for everyday use"
-  description="Revisit when you hit edge cases or want to understand how `<Layout>` handles styles / viewBox / backends."
+  description="Revisit when you hit input, viewport, or host-policy edge cases."
 />
 
-This section zooms in on the input, viewport, and host-policy decisions owned by `<Layout>`. See [Architecture Principles](/kernel/concepts/design/principles) for the complete JSX → IR → Scene pipeline.
+This section zooms in on React wiring, viewport, and host-policy decisions owned by `<Layout>`. See [Architecture Principles](/kernel/concepts/design/principles) for package-level responsibilities.
 
-### How the two inputs converge
+### How Responsibilities Close the Loop
 
-Both `children` and `ir` end as the same JSON IR before core compiles them. Only the work before IR differs: the JSX branch walks the component tree, while the `ir` branch adopts an existing contract directly.
+`<Layout>` converts JSX children to Core IR or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. It then asks core for a renderer-agnostic Scene, hands the Scene to render, and wires events, animation, and the root element into the React host.
 
 <ComponentPreview files="layout-input-flow" size="md" hideCode />
 
-The JSX branch adds a root `<Scope>` only when a style prop carries a real directive; empty defaults leave the IR unchanged. With direct `ir` input, figure-level style props are ignored and produce a development warning because the IR already owns its complete root semantics.
+Semantic ownership does not drift with the entry point: React does not invent a parallel IR, core does not own DOM or Canvas instances, and render does not define new graphics semantics in reverse.
 
 <SourceLinks
   sources={[
     {
-      label: 'input normalization',
+      label: 'React input and compile wiring',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 399,
+      startLine: 410,
       endLine: 455,
     },
     {
-      label: 'on-demand root Scope wrapping',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 653,
-      endLine: 695,
+      label: 'React render-host wiring',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 479,
+      endLine: 527,
+    },
+    {
+      label: 'Core IR to Scene compilation',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
     },
   ]}
 />
@@ -200,11 +137,11 @@ If a figure is clipped or has too much empty space, inspect **View Code → IR**
   ]}
 />
 
-### How host policies fall back
+### Advanced Host Policies
 
-The numbers show lookup order. Resolution moves downward only when the current item is absent and stops at the first effective value. The left column is **`renderer` prop > nearest `RendererModeProvider` > `'svg'`**; the right column is **`snapshotAt` > nearest `AnimationModeProvider` > `animate` > system preference**.
+Ordinary pages can use `renderer`, `animate`, and `snapshotAt` directly. Editors and test harnesses only need Providers when they must control an entire subtree; the numbers show the full lookup priority.
 
-<ComponentPreview files="layout-runtime-priority" size="lg" hideCode />
+<ComponentPreview files="layout-runtime-priority" size="md" hideCode />
 
 The renderer Provider fills only an omitted renderer, so an explicit descendant prop still wins. The animation Provider intentionally controls the entire subtree and overrides descendant `animate` props. Once `snapshotAt` is present, both SVG and Canvas emit only the static frame at that time.
 
@@ -233,40 +170,82 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
 
 ## API Reference
 
-| Prop                                                                                      | Type                                                 | Default | Description                                                                                                                                                                                                                                                                           |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`                                                                                   | `number \| string`                                   | —       | Rendered output width                                                                                                                                                                                                                                                                 |
-| `height`                                                                                  | `number \| string`                                   | —       | Rendered output height                                                                                                                                                                                                                                                                |
-| `viewBox`                                                                                 | `{ x, y, width, height }`                            | —       | Explicit viewBox overriding the auto-computed range (ignores padding); injected into the IR root, prop wins over IR-embedded                                                                                                                                                          |
-| `children`                                                                                | `ReactNode`                                          | —       | Kernel / Sugar component tree (mutually exclusive with `ir`)                                                                                                                                                                                                                          |
-| `ir`                                                                                      | `IRScene`                                            | —       | Pre-built IR JSON (mutually exclusive with `children`)                                                                                                                                                                                                                                |
-| `className`                                                                               | `string`                                             | —       | Forwarded to the render root                                                                                                                                                                                                                                                          |
-| `style`                                                                                   | `CSSProperties`                                      | —       | Forwarded to the render root                                                                                                                                                                                                                                                          |
-| `idPrefix`                                                                                | `string`                                             | —       | Overrides the `<defs>` resource id prefix; pass the same value to SSR output and client `<Layout>` to keep reference ids aligned                                                                                                                                                      |
-| `renderer`                                                                                | `'svg' \| 'canvas'`                                  | `'svg'` | Render backend; when omitted, falls back to the nearest `RendererModeProvider` context value (prop > context > svg)                                                                                                                                                                   |
-| `nodeDistance`                                                                            | `number`                                             | `24`    | Default distance for relative positioning (`position = { direction, of }`); a node's own `distance` wins                                                                                                                                                                              |
-| `fontSize`                                                                                | `number`                                             | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                                                                                                                                                                                |
-| `shapes`                                                                                  | `ReadonlyArray<ShapeDefinition>`                     | ?       | Runtime-injected custom shapes (forwarded to `CompileOptions.shapes`); built-in name collisions fail registration, and an unregistered name throws at compile. See [Extending](/kernel/components/shapes/custom-shape)                                                                |
-| `boundaries`                                                                              | `ReadonlyArray<BoundaryDefinition>`                  | ?       | Runtime-injected custom connection surfaces (forwarded to `CompileOptions.boundaries`); boundary providers are checked before shape fallback. See [Custom Boundaries](/kernel/components/node/custom-boundary)                                                                        |
-| `clips`                                                                                   | `ReadonlyArray<ClipDefinition>`                      | ?       | Runtime-injected custom clipping regions (forwarded to `CompileOptions.clips`); built-in kind collisions fail registration. See [Custom Clips](/kernel/components/layout/custom-clip)                                                                                                 |
-| `arrows`                                                                                  | `ReadonlyArray<ArrowDefinition>`                     | ?       | Runtime-injected custom arrows (forwarded to `CompileOptions.arrows`); built-in name collisions fail registration. See [Extending](/kernel/components/draw/custom-arrow)                                                                                                              |
-| `patterns`                                                                                | `ReadonlyArray<PatternDefinition>`                   | ?       | Runtime-injected custom pattern motifs (forwarded to `CompileOptions.patterns`); built-in name collisions fail registration. See [Extending](/kernel/components/effects/custom-pattern)                                                                                               |
-| `pathGenerators`                                                                          | `ReadonlyArray<PathGeneratorDefinition>`             | ?       | Runtime-injected custom path generators (forwarded to `CompileOptions.pathGenerators`); use them beyond the built-in `parabola`, and unregistered names throw at compile. See [Extending](/kernel/components/draw/path-generator)                                                     |
-| `pathKinds`                                                                               | `ReadonlyArray<PathKindDefinition>`                  | —       | Runtime-injected custom Path kind providers (forwarded to `CompileOptions.pathKinds`). See [Custom Paths](/kernel/components/draw/custom-path)                                                                                                                                        |
-| `ribbonWidthProfiles`                                                                     | `ReadonlyArray<RibbonWidthProfileDefinition>`        | —       | Runtime-injected ribbon width profiles (forwarded to `CompileOptions.ribbonWidthProfiles`). See [Compile Options](/kernel/reference/runtime/compile)                                                                                                                                  |
-| `composites`                                                                              | `ReadonlyArray<CompositeDefinition>`                 | —       | Runtime-injected Tier 2 composite expansion logic (forwarded to `CompileOptions.composites`); expanded to Tier 1 in compile's first step, an unregistered namespace/type warns and is skipped                                                                                         |
-| `lowerTex`                                                                                | `LowerTex`                                           | —       | Formula-rendering capability injection, forwarded to `CompileOptions.lowerTex`, so LaTeX in `<Node>` text lowers to glyph paths. See [TeX Formulas](/kernel/packages/tex)                                                                                                             |
-| `onNodeLayouts`                                                                           | `(layouts: Array<CompiledNodeLayout>) => void`       | —       | Node layout measurement callback; after commit, receives batched content-box `content.size` and global AABB `content.bounds`, useful for reading TeX-aware content dimensions before renderer work                                                                                    |
-| `embeddables`                                                                             | `Array<EmbeddableTier2Adapter>`                      | —       | Optional escape hatch: explicitly inject embeddable Tier 2 adapters; the primary path is the component static marker, matched by displayName and overriding the marker. See [Composites](/kernel/concepts/design/composite#embeddable-tier-2-writing-tier-2-components-inside-layout) |
-| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` | same as [`<Scope>`](/kernel/components/layout/scope) | —       | Whole-figure cascade graphic state; when set, wraps children in an implicit root `<Scope>`                                                                                                                                                                                            |
-| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                           | same as [`<Scope>`](/kernel/components/layout/scope) | —       | Whole-figure every-X defaults (four channels); wraps the same implicit root scope                                                                                                                                                                                                     |
-| `animate`                                                                                 | `boolean`                                            | system  | Omit to follow the system; `true` forces on and `false` forces off. See [Animation](/kernel/components/effects/animation)                                                                                                                                                             |
-| `snapshotAt`                                                                              | `number`                                             | —       | Static-snapshot time (ms): freeze one frame at that instant (no playback), overrides `animate`; SSR poster frames / thumbnails                                                                                                                                                        |
-| `animations`                                                                              | `Array<AnimationTrack>`                              | —       | Scene-root (camera) animation tracks (`viewBox` channel), paired with [`cameraTo()`](/kernel/components/effects/animation)                                                                                                                                                            |
-| `animationRef`                                                                            | `Ref<AnimationControls \| null>`                     | —       | Imperative animation handle out-port: receives `play` / `pause` / `seek` after mount (svg=WAAPI, canvas=rAF clock); `null` when there's no animation                                                                                                                                  |
-| `easings`                                                                                 | `EasingRegistry`                                     | —       | Custom easing registry (name → cubic-bezier tuple / function). See [Custom Animation](/kernel/components/effects/custom-animation)                                                                                                                                                    |
-| `animationProperties`                                                                     | `AnimationPropertyRegistry`                          | —       | Custom animation property-channel interpolators (e.g. `blur`); Canvas-only for now. See [Custom Animation](/kernel/components/effects/custom-animation)                                                                                                                               |
-| `handlers`                                                                                | `HydrationHandlers`                                  | —       | Hydration handler registry keyed by id for `ir` mode (JSX mode uses component `on<Event>` props). See [Hydration](/kernel/packages/render/hydration)                                                                                                                                  |
+### Input and Viewport
+
+| Prop       | Type                      | Default | Description                                       |
+| ---------- | ------------------------- | ------- | ------------------------------------------------- |
+| `children` | `ReactNode`               | —       | Kernel / Sugar tree, used when `ir` is omitted    |
+| `ir`       | `IRScene`                 | —       | Pre-built Core IR; wins when children also exist  |
+| `width`    | `number \| string`        | —       | SVG / Canvas display width                        |
+| `height`   | `number \| string`        | —       | SVG / Canvas display height                       |
+| `viewBox`  | `{ x, y, width, height }` | —       | Internal range; overrides IR and automatic layout |
+
+### Compile Basics
+
+These props enter `CompileOptions` together. See each extension guide for definition, registration, and error contracts.
+
+| Prop            | Type                                                  | Default | Description                                                   |
+| --------------- | ----------------------------------------------------- | ------- | ------------------------------------------------------------- |
+| `nodeDistance`  | `number`                                              | `24`    | Default relative-position distance; the node's own value wins |
+| `fontSize`      | `number`                                              | `16`    | Default font size and root size for presets and `rem`         |
+| `onNodeLayouts` | `(layouts:`<br />`Array<CompiledNodeLayout>) => void` | —       | Reports node content boxes and global bounds after commit     |
+
+### Primitive and Resource Injection
+
+| Prop         | Type                                        | Default | Description                                                                         |
+| ------------ | ------------------------------------------- | ------- | ----------------------------------------------------------------------------------- |
+| `shapes`     | `ReadonlyArray`<br />`<ShapeDefinition>`    | —       | Inject shapes; see [Custom Shapes](/kernel/components/shapes/custom-shape)          |
+| `boundaries` | `ReadonlyArray`<br />`<BoundaryDefinition>` | —       | Inject boundaries; see [Custom Boundaries](/kernel/components/node/custom-boundary) |
+| `clips`      | `ReadonlyArray`<br />`<ClipDefinition>`     | —       | Inject clips; see [Custom Clips](/kernel/components/layout/custom-clip)             |
+| `arrows`     | `ReadonlyArray`<br />`<ArrowDefinition>`    | —       | Inject arrows; see [Custom Arrows](/kernel/components/draw/custom-arrow)            |
+| `patterns`   | `ReadonlyArray`<br />`<PatternDefinition>`  | —       | Inject patterns; see [Custom Patterns](/kernel/components/effects/custom-pattern)   |
+
+### Higher-Level Capabilities and Host Integration
+
+| Prop                  | Type                                                  | Default | Description                                                                           |
+| --------------------- | ----------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator) |
+| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)            |
+| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —       | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)      |
+| `composites`          | `ReadonlyArray`<br />`<CompositeDefinition>`          | —       | Inject Tier 2 lowering; see [Composite](/kernel/concepts/design/composite)            |
+| `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/tex)                              |
+| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —       | Explicit Tier 2 adapter injection; static component markers are primary               |
+
+### Whole-Figure Defaults
+
+These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contract rather than defining another style system. In children mode, values synthesize a root Scope; direct `ir` input ignores them with a development warning.
+
+| Prop                                                                                      | Type              | Default | Description                          |
+| ----------------------------------------------------------------------------------------- | ----------------- | ------- | ------------------------------------ |
+| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` | same as `<Scope>` | —       | Whole-figure graphic-state defaults  |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                           | same as `<Scope>` | —       | Node / path / label / arrow defaults |
+
+### Rendering and Host Runtime
+
+| Prop        | Type                | Default | Description                                                                      |
+| ----------- | ------------------- | ------- | -------------------------------------------------------------------------------- |
+| `renderer`  | `'svg' \| 'canvas'` | `'svg'` | Output backend; falls back to the nearest `RendererModeProvider`                 |
+| `className` | `string`            | —       | Forwarded to the SVG / Canvas root                                               |
+| `style`     | `CSSProperties`     | —       | Forwarded to the SVG / Canvas root                                               |
+| `idPrefix`  | `string`            | —       | Overrides resource ids for multi-instance or SSR hydration stability             |
+| `handlers`  | `HydrationHandlers` | —       | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
+
+### React host exports
+
+- `RendererModeProvider` / `RendererModeProviderProps`: supplies a default `mode: 'svg' | 'canvas'` to a subtree; `useRendererMode` reads the nearest value, while `RendererModeContext` is the low-level bridge
+- `AnimationModeProvider` / `AnimationModeProviderProps`: controls a subtree with `mode: 'system' | 'enabled' | 'disabled'`; `useAnimationMode` reads the nearest value, while `AnimationModeContext` is the low-level bridge
+- `collectHydrationHandlers(children, embeddables?)`: collects `on<Event>` handlers by element `id`; ordinary `<Layout>` children mode calls it automatically, so only custom hydration hosts need it directly
+
+### Animation
+
+| Prop                  | Type                             | Default | Description                                                                        |
+| --------------------- | -------------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `animate`             | `boolean`                        | system  | Playback switch; see [Animation](/kernel/components/effects/animation)             |
+| `snapshotAt`          | `number`                         | —       | Static snapshot time; overrides `animate`                                          |
+| `animations`          | `Array<IRAnimationTrack>`        | —       | Scene-root tracks such as viewBox camera animation                                 |
+| `animationRef`        | `Ref<AnimationControls \| null>` | —       | Imperative `play` / `pause` / `seek` handle                                        |
+| `easings`             | `EasingRegistry`                 | —       | Custom easing; see [Custom Animation](/kernel/components/effects/custom-animation) |
+| `animationProperties` | `AnimationPropertyRegistry`      | —       | Custom animation-property interpolation; Canvas only for now                       |
 
 ## Related
 

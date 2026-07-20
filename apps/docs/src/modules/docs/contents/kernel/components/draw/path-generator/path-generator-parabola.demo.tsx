@@ -14,7 +14,7 @@ const Demo: FC = () => (
       C
     </Node>
 
-    <Path stroke="#94a3b8" dashPattern={[5, 5]} strokeWidth={1}>
+    <Path stroke="#94a3b8" dashPattern={[1, 4]} lineCap="round" strokeWidth={1}>
       <Step kind="move" to="A" />
       <Step kind="line" to="C" />
       <Step kind="line" to="B" />
