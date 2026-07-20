@@ -8,11 +8,11 @@ import type {
 import { previewControlContract as curveContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-playground.controls';
 import { previewControlContract as curveEnContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-playground.en.controls';
 import { previewControlContract as intersectionContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.controls';
-import { previewControlContract as intersectionEnContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.en.controls';
 import {
   circleCircleCenters,
   intersectionViewBox,
-} from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.demo';
+} from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.data';
+import { previewControlContract as intersectionEnContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.en.controls';
 import { previewControlContract as vectorContract } from '../../src/modules/docs/contents/kernel/packages/math/primitives/vector-normal.controls';
 import { previewControlContract as vectorEnContract } from '../../src/modules/docs/contents/kernel/packages/math/primitives/vector-normal.en.controls';
 

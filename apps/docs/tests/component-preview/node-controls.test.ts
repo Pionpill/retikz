@@ -43,7 +43,7 @@ describe('Node controls documentation', () => {
       coordinateAsAnchorControls.sections.flatMap(section => section.controls.map(control => control.label)),
     ).toEqual(['x 坐标', 'y 坐标', '水平距离', '垂直距离']);
     expect(coordinateFoldJunctionControls.sections.map(section => section.label)).toEqual(['汇聚点位置']);
-    expect(coordinateFoldJunctionControls.sections[0]?.controls.map(control => control.label)).toEqual([
+    expect(coordinateFoldJunctionControls.sections[0].controls.map(control => control.label)).toEqual([
       'x 坐标',
       'y 坐标',
     ]);
@@ -52,7 +52,7 @@ describe('Node controls documentation', () => {
       coordinateOffsetChainControls.sections.flatMap(section => section.controls.map(control => control.label)),
     ).toEqual(['x 坐标', 'y 坐标', '水平偏移']);
     expect(coordinateBetweenControls.sections.map(section => section.label)).toEqual(['两点之间']);
-    expect(coordinateBetweenControls.sections[0]?.controls.map(control => control.label)).toEqual(['比例']);
+    expect(coordinateBetweenControls.sections[0].controls.map(control => control.label)).toEqual(['比例']);
   });
 
   it('相关 API 只列出各 playground 实际消费的 owner 与属性', () => {

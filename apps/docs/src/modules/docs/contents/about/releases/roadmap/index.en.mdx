@@ -1,31 +1,32 @@
 ---
 title: Roadmap
-description: "retikz's current and near-future roadmap: kernel v0.4.0-alpha.8 wrap-up, v0.5 mechanism candidates, v0.4 beta / rc, and v1+ domain packages."
+description: "retikz's current and near-future roadmap: kernel v0.4.0-rc.1 acceptance, v0.4 stable preparation, v0.5 mechanism candidates, and v1+ domain packages."
 ---
 
 The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/kernel/releases/changelog).
 
 ## Now
 
-**kernel v0.4.0-alpha.8** — the v0.4 alpha wrap-up release; it adds no runtime API and aligns versions, roadmap, changelog, and completeness-evaluation boundaries.
+**kernel v0.4.0-rc.1** — the first release candidate; after completing shape-aware boundary `fit` / `gap` convergence and the Canvas shadow-opacity fix, public APIs are frozen.
 
-| Item                     | Status                                                                          |
-| ------------------------ | ------------------------------------------------------------------------------- |
-| `@retikz/math` / `tex`   | ✅ In kernel lockstep                                                           |
-| path / ribbon / provider | ✅ Landed through alpha.7                                                       |
-| docs / changelog         | ✅ alpha.8 wrap-up notes synced                                                 |
-| interaction              | 🧭 Covered by completeness evaluation; implementation stays for v0.5 discussion |
+| Item                     | Status                                              |
+| ------------------------ | --------------------------------------------------- |
+| Six kernel packages      | ✅ `0.4.0-rc.1` lockstep                            |
+| boundary fit / gap       | ✅ Shape-aware fitting and signed spacing converged |
+| Canvas shadow opacity    | ✅ Named-color / HSL combinations fixed             |
+| installation / packaging | 🧪 Release-candidate acceptance in progress         |
 
-## Short Term: After Alpha.8
+## Short Term: RC Acceptance
 
-After alpha.8, the work should stay split into three tracks: v0.5 for vertical mechanism exploration, v0.4 beta / rc for stabilization, and longer-term items waiting for stronger design pull.
+RC freezes v0.4's public surface: complete real installation and packaging acceptance first, then use compatibility bugs to decide whether another RC patch is needed before stable. New mechanisms stay in v0.5.
 
-| Track          | Candidate                                | Content                                                                                                                 |
-| -------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| v0.5 alpha     | headless interaction                     | Core provides target / intent / manifest contracts; tooltip / select UI and state machines stay in adapters or userland |
-| v0.5 alpha     | Progressive / JSON Patch                 | Incremental rendering, AI step updates, local SVG / Canvas update strategies                                            |
-| v0.4 beta / rc | beta hardening                           | Add no capability; focus API review, install validation, and docs audit                                                 |
-| Longer term    | P3D / scope enrichment / blur-mask-layer | Pseudo-3D, `boundingShape` polygon / ellipse / padding, and visual-layer capabilities wait for stronger design pull     |
+| Track       | Candidate                                | Content                                                                                                                 |
+| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| v0.5 alpha  | headless interaction                     | Core provides target / intent / manifest contracts; tooltip / select UI and state machines stay in adapters or userland |
+| v0.5 alpha  | Progressive / JSON Patch                 | Incremental rendering, AI step updates, local SVG / Canvas update strategies                                            |
+| v0.4 RC     | compatible bugs / acceptance             | Add no capability; focus installation, artifact, documentation, and migration guidance acceptance                       |
+| v0.4 stable | final-release preparation                | Publish when RC acceptance has no blockers; after stable, accept only SemVer patch fixes                                |
+| Longer term | P3D / scope enrichment / blur-mask-layer | Pseudo-3D, `boundingShape` polygon / ellipse / padding, and visual-layer capabilities wait for stronger design pull     |
 
 ## Current v0.4 Shape
 
@@ -41,10 +42,10 @@ Kernel v0.4 has landed several base mechanisms that other layers can reuse.
 
 ## Long term
 
-| Topic          | Where                                                                       |
-| -------------- | --------------------------------------------------------------------------- |
-| v0.4 beta / rc | API review, install validation, docs and changelog audit                    |
-| v1+            | Domain packages such as `plot` / `viz` / `flow`, plus the broader ecosystem |
+| Topic            | Where                                                                       |
+| ---------------- | --------------------------------------------------------------------------- |
+| v0.4 RC / stable | API freeze, installation acceptance, docs and changelog audit               |
+| v1+              | Domain packages such as `plot` / `viz` / `flow`, plus the broader ecosystem |
 
 ## Not on the roadmap
 

@@ -17,17 +17,17 @@ retikz 的「关于」栏是除文档正文之外的元信息：版本怎么排�
 
 ## 当前仓库版本
 
-| 包                | 版本            | 说明                                                                    |
-| ----------------- | --------------- | ----------------------------------------------------------------------- |
-| `@retikz/math`    | `0.4.0-alpha.8` | 零依赖纯计算几何底座，被 core 与 domain 包复用                          |
-| `@retikz/core`    | `0.4.0-alpha.8` | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM           |
-| `@retikz/render`  | `0.4.0-alpha.8` | SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具     |
-| `@retikz/react`   | `0.4.0-alpha.8` | React adapter，支持 SVG / Canvas renderer                               |
-| `@retikz/vanilla` | `0.4.0-alpha.8` | 无框架 plain spec、SVG / Canvas mount、水合、动画控制与 SVG string 输出 |
-| `@retikz/tex`     | `0.4.0-alpha.8` | 可选 LaTeX 公式 lowering；通过 MathJax SVG 字形路径接入 core Scene      |
+| 包                | 版本         | 说明                                                                    |
+| ----------------- | ------------ | ----------------------------------------------------------------------- |
+| `@retikz/math`    | `0.4.0-rc.1` | 零依赖纯计算几何底座，被 core 与 domain 包复用                          |
+| `@retikz/core`    | `0.4.0-rc.1` | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM           |
+| `@retikz/render`  | `0.4.0-rc.1` | SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具     |
+| `@retikz/react`   | `0.4.0-rc.1` | React adapter，支持 SVG / Canvas renderer                               |
+| `@retikz/vanilla` | `0.4.0-rc.1` | 无框架 plain spec、SVG / Canvas mount、水合、动画控制与 SVG string 输出 |
+| `@retikz/tex`     | `0.4.0-rc.1` | 可选 LaTeX 公式 lowering；通过 MathJax SVG 字形路径接入 core Scene      |
 
-`0.4.0-alpha.8` 是 v0.4 alpha 收口版本：math、tex、path、ribbon、provider contract 等纵向底座能力已经对账，当前改动只同步版本、路线图、changelog 与完备评测边界，不新增运行时 API。详见 [版本策略](/about/releases/versioning)。
+`0.4.0-rc.1` 是首个 v0.4 发布候选：本轮完成 shape-aware boundary 的 `fit` / `gap` 收口与 Canvas 阴影透明度修复，随后冻结六包公开面。后续 RC 只接受兼容 bug 修复、文档、安装验收与发布说明。详见 [版本策略](/about/releases/versioning)。
 
 ## 反馈与提问
 
-retikz 当前处于 v0.4 alpha 收口阶段。反馈重点是 v0.4 新底座能力的文档准确性、安装与包组合问题、示例不可复现，以及 v0.5 候选（headless interaction / Progressive IR）是否值得优先展开。
+retikz 当前处于 v0.4 RC 验收阶段。反馈请聚焦 boundary 拟合与间距的兼容性、安装与包组合问题、示例不可复现、文档准确性和其它兼容 bug；新增能力请留给后续版本讨论。

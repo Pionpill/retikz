@@ -9,6 +9,7 @@ import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/doc
 import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
 
 import { intersectionPlaygroundControls } from './intersection-playground.controls';
+import { circleCircleCenters, intersectionViewBox } from './intersection-playground.data';
 
 export const previewControls = intersectionPlaygroundControls;
 
@@ -16,21 +17,12 @@ export const previewSource = {
   deriveIR: false,
 } satisfies PreviewSourceConfig;
 
-/** 求交 playground 的固定取景范围 */
-export const intersectionViewBox = { x: -195, y: -125, width: 390, height: 250 } as const;
-
 type IntersectionValues = PreviewControlValuesFor<typeof intersectionPlaygroundControls>;
 
 const lineEnds = (center: Position, angle: number): [Position, Position] => {
   const direction = point.scale(vector2.fromAngleDegrees(angle), 190);
   return [point.sub(center, direction), point.add(center, direction)];
 };
-
-/** 根据横向偏移返回圆与圆分支的两个圆心 */
-export const circleCircleCenters = (offset: number): [Position, Position] => [
-  [-45, 0],
-  [offset, 0],
-];
 
 const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array<Position> } => {
   if (values.kind === 'lineLine') {

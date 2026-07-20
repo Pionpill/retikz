@@ -17,17 +17,17 @@ The About section is the meta-layer around the docs: how versions are scheduled,
 
 ## Current repository versions
 
-| Package           | Version         | Notes                                                                                                  |
-| ----------------- | --------------- | ------------------------------------------------------------------------------------------------------ |
-| `@retikz/math`    | `0.4.0-alpha.8` | Zero-dependency computational geometry base reused by core and domain packages                         |
-| `@retikz/core`    | `0.4.0-alpha.8` | IR schemas, geometry, parsers, and Scene compiler; zero React / zero DOM                               |
-| `@retikz/render`  | `0.4.0-alpha.8` | SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities                 |
-| `@retikz/react`   | `0.4.0-alpha.8` | React adapter with SVG / Canvas renderers                                                              |
-| `@retikz/vanilla` | `0.4.0-alpha.8` | Framework-free plain spec, SVG / Canvas mounting, hydration, animation controls, and SVG string output |
-| `@retikz/tex`     | `0.4.0-alpha.8` | Optional LaTeX lowering via MathJax SVG glyph paths into the core Scene model                          |
+| Package           | Version      | Notes                                                                                                  |
+| ----------------- | ------------ | ------------------------------------------------------------------------------------------------------ |
+| `@retikz/math`    | `0.4.0-rc.1` | Zero-dependency computational geometry base reused by core and domain packages                         |
+| `@retikz/core`    | `0.4.0-rc.1` | IR schemas, geometry, parsers, and Scene compiler; zero React / zero DOM                               |
+| `@retikz/render`  | `0.4.0-rc.1` | SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities                 |
+| `@retikz/react`   | `0.4.0-rc.1` | React adapter with SVG / Canvas renderers                                                              |
+| `@retikz/vanilla` | `0.4.0-rc.1` | Framework-free plain spec, SVG / Canvas mounting, hydration, animation controls, and SVG string output |
+| `@retikz/tex`     | `0.4.0-rc.1` | Optional LaTeX lowering via MathJax SVG glyph paths into the core Scene model                          |
 
-`0.4.0-alpha.8` is the v0.4 alpha wrap-up: math, tex, path, ribbon, provider contracts, and related base mechanisms have been reconciled. The current changes only align versions, roadmap notes, changelog, and completeness-evaluation boundaries; they add no runtime API. See [Versioning](/about/releases/versioning).
+`0.4.0-rc.1` is the first v0.4 release candidate: it completes the shape-aware boundary `fit` / `gap` convergence and fixes Canvas shadow opacity, then freezes the six packages' public surfaces. Later RC work accepts only compatible bug fixes, documentation, installation acceptance, and release notes. See [Versioning](/about/releases/versioning).
 
 ## Feedback
 
-retikz is in the v0.4 alpha wrap-up phase. Feedback should focus on v0.4 base-mechanism docs accuracy, installation and package-composition issues, unreproducible examples, and whether v0.5 candidates such as headless interaction / Progressive IR should come first.
+retikz is in the v0.4 RC acceptance phase. Feedback should focus on boundary-fit and spacing compatibility, installation and package-composition issues, unreproducible examples, documentation accuracy, and other compatibility bugs; new capabilities belong in a later release discussion.

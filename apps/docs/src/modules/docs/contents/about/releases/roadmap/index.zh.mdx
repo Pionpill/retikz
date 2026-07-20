@@ -1,31 +1,32 @@
 ---
 title: 路线图
-description: retikz 的当前与近未来版本路线：kernel v0.4.0-alpha.8 收口、v0.5 机制候选、v0.4 beta / rc 与 v1+ 领域包。
+description: retikz 的当前与近未来版本路线：kernel v0.4.0-rc.1 验收、v0.4 stable 准备、v0.5 机制候选与 v1+ 领域包。
 ---
 
 路线图是**目标**而非承诺——会随社区反馈与维护者带宽调整。具体发布按版本号在[更新日志](/kernel/releases/changelog)里出现。
 
 ## 当前
 
-**kernel v0.4.0-alpha.8** — v0.4 alpha 收口版本；不新增运行时 API，集中对齐版本、roadmap、changelog 与完备评测边界。
+**kernel v0.4.0-rc.1** — 首个发布候选；完成 shape-aware boundary `fit` / `gap` 收口与 Canvas 阴影透明度修复后，公开 API 已冻结。
 
-| 项目                     | 状态                                |
-| ------------------------ | ----------------------------------- |
-| `@retikz/math` / `tex`   | ✅ 已进入 kernel lockstep           |
-| path / ribbon / provider | ✅ alpha.7 已落地                   |
-| docs / changelog         | ✅ alpha.8 收口说明已同步           |
-| interaction              | 🧭 进入完备评测；实现留到 v0.5 讨论 |
+| 项目                     | 状态                                  |
+| ------------------------ | ------------------------------------- |
+| 六个 kernel 包           | ✅ `0.4.0-rc.1` lockstep              |
+| boundary fit / gap       | ✅ shape-aware 拟合与有符号间距已收口 |
+| Canvas 阴影透明度        | ✅ 命名色 / HSL 组合已修正            |
+| installation / packaging | 🧪 进行候选发布验收                   |
 
-## 短期：alpha.8 之后
+## 短期：RC 验收
 
-alpha.8 之后先拆清三类工作：v0.5 继续做纵向机制探索，v0.4 beta / rc 做稳定化，长期项等待更强需求牵引。
+RC 阶段把 v0.4 的公开面固定下来：先完成真实安装与打包验收，再根据兼容 bug 决定继续 rc patch 或进入 stable。新机制留给 v0.5。
 
-| 层级           | 候选                               | 内容                                                                                               |
-| -------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
-| v0.5 alpha     | headless interaction               | core 提供 target / intent / manifest 等无头契约；tooltip / select UI 与状态机由 adapter 或外部实现 |
-| v0.5 alpha     | Progressive / JSON Patch           | 增量渲染、AI step 更新、局部 SVG / Canvas 更新策略                                                 |
-| v0.4 beta / rc | beta 加固                          | 不新增能力，集中做 API 复核、安装验收与文档对账                                                    |
-| 更长期         | P3D / scope 富化 / blur-mask-layer | 伪三维、`boundingShape` polygon / ellipse / padding、视觉层能力等继续等待设计牵引                  |
+| 层级        | 候选                               | 内容                                                                                               |
+| ----------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| v0.5 alpha  | headless interaction               | core 提供 target / intent / manifest 等无头契约；tooltip / select UI 与状态机由 adapter 或外部实现 |
+| v0.5 alpha  | Progressive / JSON Patch           | 增量渲染、AI step 更新、局部 SVG / Canvas 更新策略                                                 |
+| v0.4 RC     | 兼容 bug / 验收                    | 不新增能力，集中做安装、产物、文档与迁移说明验收                                                   |
+| v0.4 stable | 正式发布准备                       | RC 验收无 blocker 后发布；stable 后仅接受 SemVer patch 修复                                        |
+| 更长期      | P3D / scope 富化 / blur-mask-layer | 伪三维、`boundingShape` polygon / ellipse / padding、视觉层能力等继续等待设计牵引                  |
 
 ## 当前 v0.4 形态
 
@@ -41,10 +42,10 @@ kernel v0.4 已经把一批底座能力落成可复用机制。
 
 ## 远期
 
-| 主题           | 落点                                       |
-| -------------- | ------------------------------------------ |
-| v0.4 beta / rc | API 复核、安装验收、文档与 changelog 对账  |
-| v1+            | `plot` / `viz` / `flow` 等领域包与更广生态 |
+| 主题             | 落点                                       |
+| ---------------- | ------------------------------------------ |
+| v0.4 RC / stable | API 冻结、安装验收、文档与 changelog 对账  |
+| v1+              | `plot` / `viz` / `flow` 等领域包与更广生态 |
 
 ## 不在路线图
 
