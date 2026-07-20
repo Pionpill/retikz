@@ -81,6 +81,18 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 - `position: 'center'` 继续直接落在节点中心；`keepUpright` 的 180° 翻转不改变 box extent。任意非凸 shape 的全局 label 碰撞避让不纳入本项。
 - ADR 需覆盖长文本的 left / right、top / bottom、对角与数值角度、显式 / radial / tangent rotate、inside、混排 / TeX、旋转 Node、pin 端点、自动 viewBox，以及 `distance: 0` 的贴边语义。
 
+## TeX 数学语法兼容
+
+### 根问题
+
+当前 `@retikz/tex` 只覆盖有限的 MathJax TeX 输入与单一路径 lowering，部分 LaTeX 数学语法无法启用，公式内部颜色等视觉语义也会在进入 Scene 前丢失。v0.5 需要把目标明确为兼容 MathJax 支持的 TeX 数学语法，而不是完整 LaTeX 文档编译器。
+
+### 候选边界
+
+- `@retikz/tex` 负责 MathJax 扩展的选择性加载及公式字形与样式 lowering；Core 继续拥有后端中立的 `LowerTex` / `LoweredTex` 与 Scene 契约。
+- 保留现有默认行为、自定义 engine 与 lowerer 的兼容路径；具体 profile、扩展包集合和数据结构留到该 milestone 的 ADR 再确认。
+- ADR 需覆盖 SVG / Canvas 等后端的一致性、样式继承、无法表达的语法与样式诊断、浏览器包体与初始化成本，以及缓存键的完整性。
+
 ## 官方 Extension 包
 
 ### 根问题
