@@ -36,6 +36,12 @@ Centerline mode offsets both sides of an open path and emits a closed Path primi
 
 <ComponentPreview files="ribbon-geometry" size="md" />
 
+### Custom width profiles
+
+When the built-in profiles do not match a domain curve, define a sampler with `defineRibbonWidthProfile`, inject it through `<Layout ribbonWidthProfiles>`, and reference it by `width.name`. Keep `params` JSON-serializable; the sampling function stays in the host registry and never enters IR.
+
+<ComponentPreview files="ribbon-custom-profile" size="sm" />
+
 ### Label placement
 
 Ribbon labels reuse GeometryLabel. `placement="inside"` puts text inside the band; outside mode selects a side, and `sloped` follows the centerline tangent.
@@ -90,6 +96,27 @@ Boundary mode samples the supplied upper and lower paths directly. Both modes fi
   ]}
 />
 
+### Registry and failure boundaries
+
+Built-in and custom profiles merge into one registry before lookup by `width.name`. Duplicate names, unknown names, `paramsSchema` failures, and negative or non-finite `widthAt` results throw during compilation instead of silently falling back to a fixed width.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Built-in and custom profile merge',
+      path: 'packages/kernel/core/src/providers/ribbon/registry.ts',
+      startLine: 6,
+      endLine: 15,
+    },
+    {
+      label: 'Lookup, parameter validation, and width-result constraints',
+      path: 'packages/kernel/core/src/compile/path/ribbon/width.ts',
+      startLine: 64,
+      endLine: 101,
+    },
+  ]}
+/>
+
 ## API Reference
 
 ### Path entry points
@@ -100,7 +127,7 @@ Boundary mode samples the supplied upper and lower paths directly. Both modes fi
 | `ribbon`   | `PathRibbonOptions`                     | —              | Required construction mode, width, sampling, alignment, endpoints, and boundaries            |
 | `label`    | `GeometryLabel \| Array<GeometryLabel>` | —              | Host labels supported by centerline mode                                                     |
 | `children` | `Array<<Step>>`                         | —              | Required in centerline mode; omitted in boundary mode                                        |
-| `fill`     | `string \| PaintSpec`                   | `currentColor` | Band fill. See [Path](/kernel/components/draw/path#api-reference) for the shared Path fields |
+| `fill`     | `string \| IRPaintSpec`                 | `currentColor` | Band fill. See [Path](/kernel/components/draw/path#api-reference) for the shared Path fields |
 
 ### ribbon options
 
@@ -117,9 +144,17 @@ Boundary mode samples the supplied upper and lower paths directly. Both modes fi
 
 See the [PathRibbonOptions schema](/kernel/reference/schema/path#pathribbonoptions) for complete validation constraints.
 
+### Custom width-profile entry points
+
+- `defineRibbonWidthProfile(definition)`: creates a registry entry; `name` is the IR reference key
+- `RibbonWidthProfileDefinitionInput`: author input with optional `paramsSchema` and `widthAt`
+- `RibbonWidthProfileContext`: supplies `offset`, centerline `length`, and validated `params` to `widthAt`
+- `<Layout ribbonWidthProfiles>`: injects definitions into the current figure's compile registry
+
 ## Related
 
 - [Path](/kernel/components/draw/path): Ribbon's host and shared Path fields
 - [Step](/kernel/components/draw/step): Action semantics for centerlines and boundary steps
 - [Custom Paths](/kernel/components/draw/custom-path): Register another whole-Path kind
+- [Runtime Extension Index](/kernel/reference/runtime/extensions): Find define / registry entry points in one place
 - [Visual Effects](/kernel/components/effects): Shadows, blend modes, and animation

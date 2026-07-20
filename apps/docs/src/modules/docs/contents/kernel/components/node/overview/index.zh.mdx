@@ -141,11 +141,11 @@ import { Node } from '@retikz/react';
 
 ### 样式
 
-字体、颜色、透明度、描边与 `PaintSpec` 都是跨图元通用视觉属性，不改变 Node 的命名、定位或连接语义。使用下面的 playground 调整常用外观；完整字段留在 [API 参考](#视觉样式-api) 查询。
+字体、颜色、透明度、描边与 `IRPaintSpec` 都是跨图元通用视觉属性，不改变 Node 的命名、定位或连接语义。使用下面的 playground 调整常用外观；完整字段留在 [API 参考](#视觉样式-api) 查询。
 
 <ComponentPreview files="node-styled" size="xs" />
 
-`fill` / `stroke` 可传颜色字符串或渐变、图案、图片等 `PaintSpec`；`dashed` / `dotted` 是描边预设，显式 `dashPattern` 优先。阴影、混合模式与动画等跨图元能力见[视觉效果](/kernel/components/effects)。
+`fill` / `stroke` 可传颜色字符串或渐变、图案、图片等 `IRPaintSpec`；`dashed` / `dotted` 是描边预设，显式 `dashPattern` 优先。阴影、混合模式与动画等跨图元能力见[视觉效果](/kernel/components/effects)。
 
 <Comparison target="tikz" title="Node 样式写法">
 
@@ -236,7 +236,7 @@ import { Node } from '@retikz/react';
       label: 'margin 与锚点类型的解析边界',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
       startLine: 16,
-      endLine: 75,
+      endLine: 50,
     },
   ]}
 />
@@ -278,10 +278,11 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 
 ## API 参考
 
-| 属性   | 类型                      | 默认值 | 描述                                                                                                                                                                                                      |
-| ------ | ------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`   | `string`                  | —      | 唯一标识；被 `<Path>` / `<Draw>` 用来引用                                                                                                                                                                 |
-| `meta` | `Record<string, JSON 值>` | —      | provenance 元数据：随该节点原样透传到渲染产物，renderer 忽略、不参与布局 / 连接 / 样式；典型由 plot 等高层注入（标记来自哪个 datum / series / layer），供交互层命中图元后反查来源。须为 JSON 可序列化对象 |
+| 属性        | 类型                      | 默认值 | 描述                                                                                                                                                                                                      |
+| ----------- | ------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | `string`                  | —      | 唯一标识；被 `<Path>` / `<Draw>` 用来引用                                                                                                                                                                 |
+| `meta`      | `Record<string, JSON 值>` | —      | provenance 元数据：随该节点原样透传到渲染产物，renderer 忽略、不参与布局 / 连接 / 样式；典型由 plot 等高层注入（标记来自哪个 datum / series / layer），供交互层命中图元后反查来源。须为 JSON 可序列化对象 |
+| `on<Event>` | `HydrationHandler`        | —      | `onClick`、pointer 与 wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                                    |
 
 其余 props 按职责列在下方四个 API 主题；每个小节都能独立查阅对应默认值和示例。
 
@@ -330,8 +331,8 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 | 属性            | 类型                                                                                                          | 默认值         | 描述                                                                                                                                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `color`         | `string`                                                                                                      | —              | 主色；`stroke` / `fill` / `textColor` 未单设则随它，并级联到内部文字与边 label                                                                                                          |
-| `fill`          | `string \| PaintSpec`                                                                                         | —              | 背景填充：纯色 CSS 串，或 PaintSpec（渐变 linear / radial / conic、图案 pattern、图片 image）                                                                                           |
-| `stroke`        | `string \| PaintSpec`                                                                                         | `currentColor` | 边框 paint：CSS 颜色或 PaintSpec（渐变 / pattern / image）                                                                                                                              |
+| `fill`          | `string \| IRPaintSpec`                                                                                       | —              | 背景填充：纯色 CSS 串，或 IRPaintSpec（渐变 linear / radial / conic、图案 pattern、图片 image）                                                                                         |
+| `stroke`        | `string \| IRPaintSpec`                                                                                       | `currentColor` | 边框 paint：CSS 颜色或 IRPaintSpec（渐变 / pattern / image）                                                                                                                            |
 | `strokeWidth`   | `number`                                                                                                      | `1`            | 边框宽度（user units）                                                                                                                                                                  |
 | `opacity`       | `number`                                                                                                      | —              | 整节点 0~1，同时作用于 shape + text                                                                                                                                                     |
 | `fillOpacity`   | `number`                                                                                                      | —              | 仅填充透明 0~1                                                                                                                                                                          |

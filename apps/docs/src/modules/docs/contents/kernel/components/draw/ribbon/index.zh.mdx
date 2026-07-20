@@ -36,6 +36,12 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview files="ribbon-geometry" size="md" />
 
+### 自定义宽度 profile
+
+内置 profile 不满足业务曲线时，用 `defineRibbonWidthProfile` 定义采样函数，通过 `<Layout ribbonWidthProfiles>` 注入，再由 `width.name` 引用。`params` 保持 JSON 可序列化，采样函数只存在于宿主注册表，不进入 IR。
+
+<ComponentPreview files="ribbon-custom-profile" size="sm" />
+
 ### 标签位置
 
 Ribbon label 复用 GeometryLabel。`placement="inside"` 把标签放进带状面，外侧模式可选择边侧；`sloped` 让文字沿中心线切线旋转。
@@ -90,6 +96,27 @@ Boundary 模式直接采样给定的上下边界。两种模式最终都输出�
   ]}
 />
 
+### 注册表与失败边界
+
+内置与自定义 profile 合并进同一注册表，再按 `width.name` 查找。重复名称、未知名称、`paramsSchema` 校验失败，以及 `widthAt` 返回负数或非有限数都会在编译阶段抛错，不会静默退回固定宽度。
+
+<SourceLinks
+  sources={[
+    {
+      label: '内置与自定义 profile 合并',
+      path: 'packages/kernel/core/src/providers/ribbon/registry.ts',
+      startLine: 6,
+      endLine: 15,
+    },
+    {
+      label: '查找、参数校验与宽度结果约束',
+      path: 'packages/kernel/core/src/compile/path/ribbon/width.ts',
+      startLine: 64,
+      endLine: 101,
+    },
+  ]}
+/>
+
 ## API 参考
 
 ### Path 入口
@@ -100,7 +127,7 @@ Boundary 模式直接采样给定的上下边界。两种模式最终都输出�
 | `ribbon`   | `PathRibbonOptions`                     | —              | 必填；配置构造模式、宽度、采样、对齐、端点与预计算边界                         |
 | `label`    | `GeometryLabel \| Array<GeometryLabel>` | —              | centerline 模式可用的宿主标签                                                  |
 | `children` | `Array<<Step>>`                         | —              | centerline 模式必填；boundary 模式省略                                         |
-| `fill`     | `string \| PaintSpec`                   | `currentColor` | 带状面填充；其它 Path 共享字段见 [Path](/kernel/components/draw/path#api-参考) |
+| `fill`     | `string \| IRPaintSpec`                 | `currentColor` | 带状面填充；其它 Path 共享字段见 [Path](/kernel/components/draw/path#api-参考) |
 
 ### ribbon 选项
 
@@ -117,9 +144,17 @@ Boundary 模式直接采样给定的上下边界。两种模式最终都输出�
 
 完整校验约束见 [PathRibbonOptions schema](/kernel/reference/schema/path#pathribbonoptions)。
 
+### 自定义 width profile 入口
+
+- `defineRibbonWidthProfile(definition)`：创建注册项；`name` 是 IR 引用 key
+- `RibbonWidthProfileDefinitionInput`：作者输入，包含可选 `paramsSchema` 与 `widthAt`
+- `RibbonWidthProfileContext`：向 `widthAt` 提供 `offset`、中心线 `length` 和校验后的 `params`
+- `<Layout ribbonWidthProfiles>`：把定义注入当前图的编译注册表
+
 ## 相关
 
 - [Path](/kernel/components/draw/path)：Ribbon 的宿主与共享 Path 字段
 - [Step](/kernel/components/draw/step)：中心线和 boundary step 的动作语义
 - [自定义路径](/kernel/components/draw/custom-path)：注册其它整条 Path kind
+- [运行时扩展索引](/kernel/reference/runtime/extensions)：集中查询 define / registry 入口
 - [视觉效果](/kernel/components/effects)：阴影、混合模式与动画

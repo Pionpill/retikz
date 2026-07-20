@@ -120,7 +120,7 @@ import { Draw } from '@retikz/react';
 <ComponentAlert
   type="warn"
   title="渐变描边需要显式箭头颜色"
-  description="当 stroke 是 PaintSpec 时，箭头不能把渐变当作单一描边色继承；请设置 arrowDetail.color，或分别设置 start.color / end.color 为 CSS 颜色。"
+  description="当 stroke 是 IRPaintSpec 时，箭头不能把渐变当作单一描边色继承；请设置 arrowDetail.color，或分别设置 start.color / end.color 为 CSS 颜色。"
 />
 
 <SourceLinks
@@ -132,7 +132,7 @@ import { Draw } from '@retikz/react';
       endLine: 56,
     },
     {
-      label: 'PaintSpec 描边继承守卫',
+      label: 'IRPaintSpec 描边继承守卫',
       path: 'packages/kernel/core/src/compile/path/stroke/marks.ts',
       startLine: 24,
       endLine: 41,

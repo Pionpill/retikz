@@ -230,6 +230,12 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 | `idPrefix`  | `string`            | —       | Overrides resource ids for multi-instance or SSR hydration stability             |
 | `handlers`  | `HydrationHandlers` | —       | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
 
+### React host exports
+
+- `RendererModeProvider` / `RendererModeProviderProps`: supplies a default `mode: 'svg' | 'canvas'` to a subtree; `useRendererMode` reads the nearest value, while `RendererModeContext` is the low-level bridge
+- `AnimationModeProvider` / `AnimationModeProviderProps`: controls a subtree with `mode: 'system' | 'enabled' | 'disabled'`; `useAnimationMode` reads the nearest value, while `AnimationModeContext` is the low-level bridge
+- `collectHydrationHandlers(children, embeddables?)`: collects `on<Event>` handlers by element `id`; ordinary `<Layout>` children mode calls it automatically, so only custom hydration hosts need it directly
+
 ### Animation
 
 | Prop                  | Type                             | Default | Description                                                                        |

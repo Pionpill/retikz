@@ -226,6 +226,12 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 | `idPrefix`  | `string`            | —       | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                               |
 | `handlers`  | `HydrationHandlers` | —       | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/hydration) |
 
+### React 宿主导出
+
+- `RendererModeProvider` / `RendererModeProviderProps`：用 `mode: 'svg' | 'canvas'` 给子树提供缺省 renderer；`useRendererMode` 读取最近值，`RendererModeContext` 留给自定义桥接
+- `AnimationModeProvider` / `AnimationModeProviderProps`：用 `mode: 'system' | 'enabled' | 'disabled'` 统一控制子树动画；`useAnimationMode` 读取最近值，`AnimationModeContext` 留给自定义桥接
+- `collectHydrationHandlers(children, embeddables?)`：按元素 `id` 收集 `on<Event>`；普通 `<Layout>` children 模式会自动调用，仅自定义水合宿主需要直接使用
+
 ### 动画
 
 | 属性                  | 类型                             | 默认值 | 描述                                                                    |
