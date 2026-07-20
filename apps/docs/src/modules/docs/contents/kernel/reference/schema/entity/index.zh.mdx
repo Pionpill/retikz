@@ -22,7 +22,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
     position:
       '节点内容盒中心点；笛卡尔 [x,y]、极坐标、`at`-风格相对定位（`{ direction, of, distance? }`）、偏移定位（`{ of, offset }`）、或比例定位（`{ between: [A, B], fraction }`）；非笛卡尔形态编译期解析',
     rotate: '绕节点中心顺时针旋转角度（°）',
-    text: '节点内文本：纯字符串或多行 LineSpec 数组',
+    text: '节点内文本：单字符串，或由字符串、行级样式对象、`{ runs }` 混合文本 / 公式行组成的多行数组',
     align: '多行文本块内对齐，默认 `middle`',
     lineHeight: '行高（用户单位）；未填时取 `font.size × 1.2`',
     color: '主色（TikZ color=）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label',
@@ -115,15 +115,23 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 ## 文本块
 
-`TextBlockSchema` 是节点文本块的结构：单字符串表示单行；数组表示多行，数组项可用 `LineSpec` 做行级样式覆盖。
+`TextBlockSchema` 是节点文本块的结构：单字符串表示单行；非空数组表示多行。每个 `LineSpec` 可是普通字符串、行级样式对象，或 `{ runs }` 形式的混合文本 / 公式行。
 
-<ZodSchema name="TextBlockSchema" description="文本块：单字符串表示单行，非空 LineSpec 数组表示多行。" />
+<ZodSchema
+  name="TextBlockSchema"
+  description="文本块：单字符串表示单行，非空 LineSpec 数组表示多行；行可包含样式覆盖或混合文本 / 公式 runs。"
+/>
 
 <span id="linespec"></span>
 
 ### 行规格
 
-<ZodSchema name="LineSpecSchema" description="单行文本规格：字符串走默认样式，对象形式可覆盖本行颜色、透明度和字体。" />
+<ZodSchema
+  name="LineSpecSchema"
+  description="单行文本规格：字符串走默认样式，样式对象可覆盖颜色、透明度和字体，`{ runs }` 可按共享基线混排 text run 与 math run。"
+/>
+
+字符串里的 `$...$` / `$$...$$` 是公式 sugar，会归一化为 `MathRunSchema`；显式 `{ tex, displayMode?, fill?, opacity? }` 也可作为 run。公式需要宿主注入 `CompileOptions.lowerTex`，完整接入见 [TeX 包](/kernel/packages/tex)。
 
 <span id="font"></span>
 

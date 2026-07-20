@@ -18,9 +18,9 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 `DrawWay` is the keyword set for the way DSL. Do not hard-code the internal strings; reference the constants.
 
 | Constant             | Value / meaning        | Notes                                                     |
-| -------------------- | ---------------------- | --------------------------------------------------------- | ------------------------------ |
+| -------------------- | ---------------------- | --------------------------------------------------------- |
 | `DrawWay.Cycle`      | cycle                  | Close back to the path start                              |
-| `DrawWay.Hv`         | `'-                    | '`                                                        | Fold: horizontal then vertical |
+| `DrawWay.Hv`         | `'-\|'`                | Fold: horizontal then vertical                            |
 | `DrawWay.Vh`         | `'\|-'`                | Fold: vertical then horizontal                            |
 | `DrawWay.Relative`   | relative type marker   | Object-style relative offset; does not update prevEnd     |
 | `DrawWay.Accumulate` | accumulate type marker | Object-style accumulated relative offset; updates prevEnd |

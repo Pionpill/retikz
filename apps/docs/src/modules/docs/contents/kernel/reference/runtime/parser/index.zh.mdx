@@ -18,9 +18,9 @@ Parser reference 覆盖 `@retikz/core` 公开的 sugar 解析函数。它们不�
 `DrawWay` 是 way DSL 的关键字集合。不要硬编码内部字符串，使用常量引用。
 
 | Constant             | 值 / 语义           | 说明                             |
-| -------------------- | ------------------- | -------------------------------- | ------------------ |
+| -------------------- | ------------------- | -------------------------------- |
 | `DrawWay.Cycle`      | cycle               | 闭合回 path 起点                 |
-| `DrawWay.Hv`         | `'-                 | '`                               | 折角：先水平后垂直 |
+| `DrawWay.Hv`         | `'-\|'`             | 折角：先水平后垂直               |
 | `DrawWay.Vh`         | `'\|-'`             | 折角：先垂直后水平               |
 | `DrawWay.Relative`   | relative 类型标记   | 对象式相对偏移，不更新 prevEnd   |
 | `DrawWay.Accumulate` | accumulate 类型标记 | 对象式累积相对偏移，更新 prevEnd |

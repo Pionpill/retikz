@@ -18,6 +18,28 @@ Scene primitives are the output contract of `compileToScene`: after IR is laid o
 
 `ScenePrimitive` is a union of five primitives: `RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim`. A custom renderer must consume `resources` and `animations`, otherwise gradients / clipping / camera animations are lost.
 
+## Resources
+
+`SceneResource = PaintResource | ClipResource`. A primitive's `PaintValue.resourceRef` and `GroupPrim.clipRef` store only an id; the renderer adapter materializes platform resources and resolves those references.
+
+| Resource        | Fields                | Notes                                                                              |
+| --------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| `PaintResource` | `kind:'paint'` / `id` | `spec` stores `IRPaintSpec`; a pattern may also carry the compile-resolved `tile?` |
+| `ClipResource`  | `kind:'clip'` / `id`  | `shape` stores clipping geometry in user coordinates                               |
+
+`ClipResource.shape` selects one of these structures by `kind`:
+
+| Shape      | Key fields                                 |
+| ---------- | ------------------------------------------ |
+| `rect`     | `x` / `y` / `width` / `height`             |
+| `circle`   | `cx` / `cy` / `r`                          |
+| `ellipse`  | `cx` / `cy` / `rx` / `ry`                  |
+| `polygon`  | `points`                                   |
+| `path`     | `commands` / `fillRule?`                   |
+| `compound` | `children: Array<ClipShape>` / `fillRule?` |
+
+`fillRule` defaults to `nonzero`. Renderers do not consult IR schemas or provider registries again; they consume the resolved `spec`, `tile`, `shape`, and primitive references here.
+
 ## Shape Primitives
 
 | Primitive     | Key fields                     | Notes                                                                                                                                                                 |

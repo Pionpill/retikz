@@ -104,6 +104,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'RectangleStep',
     url: '/kernel/reference/schema/path#rectangle',
   },
+  SmoothStepSchema: {
+    schema: IR.SmoothStepSchema,
+    label: 'SmoothStep',
+    url: '/kernel/reference/schema/path#smooth',
+  },
   GeneratorStepSchema: {
     schema: IR.GeneratorStepSchema,
     label: 'GeneratorStep',

@@ -3,11 +3,13 @@ title: Path
 description: A drawn path container, its step actions, and step targets
 ---
 
-A `path` is the outer container for a drawn line. Its `children` field is an ordered array of `Step` actions; the renderer walks them sequentially to produce SVG path commands. Each step's destination is a `Target`.
+A `path` is the outer container for a drawn line. Its `children` field is an ordered array of `Step` actions. Compile lowers those steps into renderer-agnostic `PathPrim.commands`; SVG / Canvas adapters then materialize their platform commands. Each step's destination is a `Target`.
 
 ## Path
 
 <ZodSchema name="PathSchema" />
+
+React `<Path thickness>` is component / builder sugar that becomes `strokeWidth` before IR is produced, so it is not part of `PathSchema`. See [Path styling](/kernel/components/draw/path#styling) for the preset values.
 
 ## DrawableStyle
 
@@ -77,6 +79,12 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 <ZodSchema name="RectangleStepSchema" />
 
+<span id="smooth"></span>
+
+### Smooth
+
+<ZodSchema name="SmoothStepSchema" />
+
 ### Generator
 
 <ZodSchema name="GeneratorStepSchema" />
@@ -115,7 +123,6 @@ For the endpoint rules of proportional placement, see [Placement](/kernel/refere
 | IR field                                     | TikZ equivalent                                        |
 | -------------------------------------------- | ------------------------------------------------------ |
 | `lineCap` / `lineJoin`                       | `line cap` / `line join`                               |
-| `thickness`                                  | `ultra thin` … `ultra thick`                           |
 | `strokeOpacity`                              | stroke-only opacity                                    |
 | `kind: 'fold'`                               | `-\|` / `\|-`                                          |
 | `kind: 'cycle'`                              | `cycle`                                                |
