@@ -128,32 +128,6 @@ export const kernelSection: Array<Section> = [
     ],
   },
   {
-    id: 'packages',
-    label: 'kernel.packages',
-    document: true,
-    pages: [
-      { id: 'vanilla', label: 'kernel.pkgVanilla' },
-      { id: 'tex', label: 'kernel.pkgTex' },
-      {
-        id: 'math',
-        label: 'kernel.pkgMath',
-        children: [
-          { id: 'primitives', label: 'kernel.pkgMathPrimitives' },
-          { id: 'algorithms', label: 'kernel.pkgMathAlgorithms' },
-        ],
-      },
-      {
-        id: 'render',
-        label: 'kernel.pkgRender',
-        children: [
-          { id: 'svg', label: 'kernel.pkgRenderSvg' },
-          { id: 'canvas', label: 'kernel.pkgRenderCanvas' },
-          { id: 'hydration', label: 'kernel.pkgHydration' },
-        ],
-      },
-    ],
-  },
-  {
     id: 'reference',
     label: 'kernel.reference',
     document: true,
@@ -190,6 +164,33 @@ export const kernelSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'packages',
+    label: 'kernel.packages',
+    document: true,
+    pages: [
+      { id: 'react', label: 'kernel.pkgReact' },
+      { id: 'vanilla', label: 'kernel.pkgVanilla' },
+      { id: 'tex', label: 'kernel.pkgTex' },
+      {
+        id: 'math',
+        label: 'kernel.pkgMath',
+        children: [
+          { id: 'primitives', label: 'kernel.pkgMathPrimitives' },
+          { id: 'algorithms', label: 'kernel.pkgMathAlgorithms' },
+        ],
+      },
+      {
+        id: 'render',
+        label: 'kernel.pkgRender',
+        children: [
+          { id: 'svg', label: 'kernel.pkgRenderSvg' },
+          { id: 'canvas', label: 'kernel.pkgRenderCanvas' },
+          { id: 'hydration', label: 'kernel.pkgHydration' },
         ],
       },
     ],

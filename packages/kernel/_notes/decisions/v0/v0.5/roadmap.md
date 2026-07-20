@@ -18,6 +18,7 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | 单轴路径连接              | 只沿垂直或水平轴连接，不强制补齐正交折线的第二段       | 待 ADR   |
 | Node 文本自动对比色       | 根据实际填充明度选择黑色或白色文字，保持可读性         | 待 ADR   |
 | Node label 包围盒间距     | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠   | 待 ADR   |
+| TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义   | 待 ADR   |
 | 官方 Extension 包         | 承载可选 Core 扩展与跨官方组复用的 Tier 2 绘图封装     | 待 ADR   |
 | Headless interaction      | 补齐 renderer-agnostic 的 target / intent / manifest   | 待启动   |
 | Progressive IR / 增量编译 | 评估 AI step、局部重编译与 SVG / Canvas 更新的共同契约 | 待证据   |

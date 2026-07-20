@@ -1,26 +1,18 @@
-﻿---
-title: Computational Geometry
-description: '@retikz/math — a zero-dependency pure computational geometry package: vectors, affine, intersections, circles, hull, splines. The compute base under core.'
+---
+title: '@retikz/math'
+description: retikz's zero-dependency computation base for vectors, transforms, intersections, enclosures, and curves used by application code and the core compiler.
 ---
 
-`@retikz/math` is retikz's **zero-dependency pure computational geometry** package: vector math, affine transforms, arc primitives, intersections, triangle in-circle / circum-circle helpers, point-in-polygon, convex hull, and splines. Everything is a pure function over plain `Position = [number, number]` arrays — no classes, no IR, no zod, no runtime dependencies.
+`@retikz/math` handles how geometry is computed, not how it is drawn. Use it to move a point, intersect two lines, compute a convex hull, or turn knots into a smooth curve over plain TypeScript data, then pass the result to `@retikz/core` or an adapter.
 
-`@retikz/core` depends on it for low-level computation. Core provides convenience re-exports for `DEFAULT_EPSILON`, `point`, `vector2`, `localToWorld`, and `worldToLocal`, and exposes math's `lerp` as `lerpPoint`. Import types such as `Position`, bounds, ellipses, arcs, and higher-level algorithms directly from `@retikz/math`.
-
-> This is package documentation, not component docs; to draw, start from [Components](/kernel/components/layout).
-
-## Install
-
-```bash
-pnpm add @retikz/math
-```
+> To start drawing immediately, begin with [Components](/kernel/components/layout). Return here when you need to prepare geometry before drawing.
 
 ## Responsibilities
 
-| Topic                                          | Responsibility                                                                             | Reach for it when                                                                      |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| [Primitives](/kernel/packages/math/primitives) | Points, vectors, affine transforms, bounds, ellipses, and arcs                             | Computing geometry before it enters a drawing                                          |
-| [Algorithms](/kernel/packages/math/algorithms) | Intersections, triangle in-circle / circum-circle helpers, point-in-polygon, hull, splines | Higher-level compute core doesn't re-export (intersections, envelopes, smooth curves…) |
+| Topic                                          | Problem it solves                                    | Reach for it when                                     |
+| ---------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
+| [Primitives](/kernel/packages/math/primitives) | Points, vectors, transforms, bounds, ellipses, arcs  | Constructing, transforming, or checking geometry data |
+| [Algorithms](/kernel/packages/math/algorithms) | Intersections, enclosures, containment, hull, curves | Deriving new geometry from existing geometry          |
 
 ## In this section
 
@@ -28,13 +20,93 @@ pnpm add @retikz/math
   <LinkedCard href="/kernel/packages/math/primitives">
     <span className="font-semibold">Primitives</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Points / vectors / transforms / bounds / ellipses / arcs
+      Construct and transform points, vectors, bounds, ellipses, and arcs
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/packages/math/algorithms">
     <span className="font-semibold">Algorithms</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Intersections / triangle in-circle / circum-circle helpers / point-in-polygon / hull / splines
+      Derive intersections, enclosures, containment, and smooth curves
     </span>
   </LinkedCard>
 </div>
+
+## Install and use
+
+```bash
+pnpm add @retikz/math
+```
+
+```ts
+import { intersect, point, vector2 } from '@retikz/math';
+
+const direction = vector2.fromAngleDegrees(-30);
+const end = point.along([0, 0], direction, 120);
+const hit = intersect.lineLine({
+  a1: [0, 0],
+  a2: end,
+  b1: [20, -40],
+  b2: [20, 40],
+});
+```
+
+The package is ESM-only and requires Node.js 24 or newer.
+
+## Why @retikz/math exists
+
+Many drawing steps are deterministic numerical computations. Keeping them separate from IR, schemas, React, and renderers lets core, domain packages, server-side scripts, and tests share one geometry model. It also keeps the computations usable without a DOM or Canvas.
+
+Its boundaries are explicit:
+
+- Inputs and outputs are numbers, tuples, and plain objects; it produces no IR or Scene
+- APIs are primarily pure functions that neither mutate point sets nor retain renderer state
+- It has no runtime dependencies and does not own composition, compilation, measurement, or SVG / Canvas output
+
+## Relationship to @retikz/core
+
+`@retikz/math` relates to `@retikz/core` in two ways. Application code can use math to turn raw values into plain geometry before passing them to core. The core compiler also calls math directly for position resolution, path endpoints, bounds, and related computations. Math produces neither IR nor Scene; core still owns composition and Scene compilation.
+
+<ComponentPreview files="math-pipeline" size="xs" hideCode />
+
+Core convenience-re-exports `DEFAULT_EPSILON`, `point`, `vector2`, `localToWorld`, and `worldToLocal`, and exposes math's `lerp` as `lerpPoint`. Import the `Position` / `Vector2` types, bounds, ellipses, arcs, and higher-level algorithms directly from `@retikz/math`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'math public entry',
+      path: 'packages/kernel/math/src/index.ts',
+      startLine: 1,
+      endLine: 3,
+    },
+    {
+      label: 'core point and vector re-exports',
+      path: 'packages/kernel/core/src/shared/geometry/point.ts',
+      startLine: 1,
+      endLine: 1,
+    },
+    {
+      label: 'core lerpPoint alias',
+      path: 'packages/kernel/core/src/shared/geometry/edge.ts',
+      startLine: 1,
+      endLine: 9,
+    },
+    {
+      label: 'core transform re-exports',
+      path: 'packages/kernel/core/src/shared/geometry/transform.ts',
+      startLine: 1,
+      endLine: 1,
+    },
+    {
+      label: 'core compilation uses math bounds directly',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1,
+      endLine: 1,
+    },
+    {
+      label: 'core position resolution uses math arc calculations directly',
+      path: 'packages/kernel/core/src/compile/position.ts',
+      startLine: 1,
+      endLine: 1,
+    },
+  ]}
+/>

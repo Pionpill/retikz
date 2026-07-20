@@ -1,0 +1,252 @@
+---
+title: '@retikz/react'
+description: Author Kernel and Sugar components in JSX, then connect the generated core IR to React-managed SVG or Canvas hosts.
+---
+
+`@retikz/react` is the primary entry for React applications. You declare figures with JSX components such as `<Layout>`, `<Node>`, `<Path>`, `<Scope>`, and `<Draw>`; its adapter turns props and children into `@retikz/core` IR, then `<Layout>` compiles a Scene and connects it to an SVG or Canvas host.
+
+It owns React authoring and lifecycle wiring rather than new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; backend execution and cross-backend runtime belong to `@retikz/render`.
+
+## Install and usage
+
+`react` and `react-dom` are peer dependencies at version 18 or newer:
+
+```bash
+pnpm add @retikz/react react react-dom
+```
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+
+export const Diagram = () => (
+  <Layout>
+    <Node id="source" position={[0, 0]}>
+      Source
+    </Node>
+    <Node id="target" position={[160, 0]}>
+      Target
+    </Node>
+    <Draw way={['source', 'target']} arrow="->" />
+  </Layout>
+);
+```
+
+`<Layout>` emits SVG by default; pass `renderer="canvas"` when you need a raster bitmap. Start with [Getting Started](/kernel/get-start), then see [Layout](/kernel/components/layout/overview) for the complete host options.
+
+## Why @retikz/react exists
+
+### JSX reduces authoring overhead
+
+You can construct `@retikz/core` IR directly, but figures commonly contain nested, reusable, and compositional structures. JSX expresses those relationships as a component tree, keeping declarations such as `<Layout>`, `<Scope>`, `<Node>`, and `<Path>` close to the figure hierarchy while reducing the boilerplate of assembling Core IR by hand.
+
+retikz treats React as its officially supported first-class framework: the component API, documentation, examples, and adapter behavior in `@retikz/react` are maintained alongside the Kernel. React is the authoring layer here; the framework-neutral `@retikz/core` still owns the data contract and compilation semantics.
+
+### Why other adapters are not official packages
+
+This does not mean Core can only integrate with React. Any framework can reuse the retikz Kernel by converting its component or template structure into the same Core IR and connecting `compileToScene` to the renderer lifecycle.
+
+`@retikz/react` also serves as the implementation reference for other framework adapters, demonstrating the complete boundaries for component-tree-to-IR conversion, host capability injection, and renderer lifecycle wiring. The official project focuses its maintenance resources on React and does not develop, release, or maintain packages for Vue, Svelte, or other frameworks; the community can implement those adapters independently against the same boundaries.
+
+## Components do not render DOM directly
+
+### Why marker components
+
+Marker components are not used because React is incapable of drawing. They keep drawing semantics in one source of truth. If `<Node>` and `<Path>` each implemented their own DOM, browser layout, and geometry rules, the React DSL would gradually become a second system beside Core IR, and the same figure could produce different results in React, Vanilla, or another adapter.
+
+JSX therefore organizes declarations while the builder converges them into framework-neutral Core IR. The intermediate path creates no extra DOM and does not make CSS layout an implicit input to compilation. Persistence, transport, SSR, and other framework adapters can continue through the same IR → Scene pipeline.
+
+React still operates where it adds value. The final SVG descriptor tree becomes ordinary React elements with reconciliation, keys, refs, and event lifecycle; for Canvas, React manages the single host and redraw timing. Drawing semantics are thin in this layer, not host integration.
+
+Kernel components such as `<Node>`, `<Path>`, and `<Scope>` are **IR markers**, not DOM components. They return `null` and expose only a stable `displayName` that tells the React builder which primitive they represent. A `<Node>` therefore does not produce an intermediate `<div>` or acquire a second browser-layout model.
+
+```tsx
+export const Node: FC<NodeProps> = () => null;
+Node.displayName = TIKZ_NODE;
+```
+
+Sugar components do not add another IR either. `<Draw>`, for example, parses `way` with Core's `parseWay`, then returns standard `<Path>` / `<Step>` Kernel JSX. This excerpt shows only the line branch; the source covers fold, curve, arc, cycle, and the other branches through the same mapping:
+
+```tsx
+const steps = parseWay(way);
+
+return (
+  <Path arrow={arrow}>
+    {steps.map((step, index) => {
+      if (step.kind === 'line') {
+        return <Step key={index} kind="line" to={step.to} label={step.label} />;
+      }
+      return null;
+    })}
+  </Path>
+);
+```
+
+`readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `buildIRWithContributions` finally assembles an ordinary JSON `IRScene`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node IR marker implementation',
+      path: 'packages/kernel/react/src/kernel/components/Node.tsx',
+      startLine: 112,
+      endLine: 118,
+    },
+    {
+      label: 'Draw expanding to Path / Step',
+      path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
+      startLine: 61,
+      endLine: 155,
+    },
+  ]}
+/>
+
+### Performance boundaries and future direction
+
+Marker components avoid intermediate DOM and duplicated drawing semantics, but the conversion pipeline still has a cost. `Layout` currently uses separate `useMemo` stages for JSX → IR, IR → Scene, Scene → SVG descriptors, and handler collection. When IR, compile options, and the other dependency references stay stable, those stages can reuse their results.
+
+Children mode has an explicit limitation: JSX children commonly receive a new reference on every React render, so memoization can miss and rerun `buildIRWithContributions` plus full-scene `compileToScene`. For large figures that rerender frequently, the current guidance is to keep a stable IR outside the component or in `useMemo`, then pass it through the `ir` prop. When the other compile options are stable as well, this skips the JSX builder and lets the Scene compilation memo reuse its result.
+
+The project will not introduce a public incremental API merely because JSON Patch exists. Kernel will first measure full compilation in real large-figure or interaction scenarios and evaluate whether bailouts, caching, or domain lowering are sufficient. Only with supporting performance evidence will it design IR diffing, local compilation, Scene patches, concurrent scheduling, and whether SVG and Canvas can share the same update semantics.
+
+Progressive IR / incremental compilation is currently an evidence-gated v0.5 candidate, not scheduled work or a frozen API.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout memoization and full-compile boundary',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 410,
+      endLine: 493,
+    },
+    {
+      label: 'Thin React mapping for SVG descriptors',
+      path: 'packages/kernel/react/src/render/svg/svg-to-react.ts',
+      startLine: 53,
+      endLine: 69,
+    },
+    {
+      label: 'Incremental-compile entry criteria and open questions',
+      path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
+      startLine: 3,
+      endLine: 27,
+    },
+    {
+      label: 'v0.5 Progressive IR candidate status',
+      path: 'packages/kernel/_notes/decisions/v0/v0.5/roadmap.md',
+      startLine: 1,
+      endLine: 23,
+    },
+  ]}
+/>
+
+## From JSX to Scene
+
+`<Layout>` orchestrates two pure transformations: it first calls the React builder to adapt JSX into Core IR, then calls Core's `compileToScene`. In the figure, blue nodes belong to `@retikz/react` authoring / adaptation, while orange nodes are the data contracts and compiler owned by `@retikz/core`.
+
+<ComponentPreview files="react-to-scene" size="xs" hideCode />
+
+| Stage                      | Owner           | Responsibility                                                                                    |
+| -------------------------- | --------------- | ------------------------------------------------------------------------------------------------- |
+| Kernel / Sugar JSX         | `@retikz/react` | Collect props and children; expand Sugar into Kernel first                                        |
+| `buildIRWithContributions` | `@retikz/react` | Walk the component tree, produce `IRScene`, collect embeddable Tier 2 input                       |
+| `IRScene`                  | `@retikz/core`  | JSON-serializable drawing contract with no React element, hook, or DOM                            |
+| `compileToScene`           | `@retikz/core`  | Lower composites; resolve registries, references, geometry,<br />layout, resources, and animation |
+| `Scene`                    | `@retikz/core`  | Backend-neutral primitives, layout, resources, and optional root animation                        |
+
+`Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX builder and continues through the same `compileToScene` entry.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React builder traversing children',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 585,
+      endLine: 650,
+    },
+    {
+      label: 'React children to IRScene',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 685,
+      endLine: 702,
+    },
+    {
+      label: 'Layout wiring builder to compile',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 410,
+      endLine: 472,
+    },
+    {
+      label: 'Core IR to Scene compiler',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+  ]}
+/>
+
+## After Scene
+
+Scene no longer contains React component semantics. `@retikz/render` executes it against a target backend, while `@retikz/react` adds only React host lifecycle and element mapping:
+
+| Target | `@retikz/render`                                               | `@retikz/react`                                              |
+| ------ | -------------------------------------------------------------- | ------------------------------------------------------------ |
+| SVG    | `buildSvgDocument`: Scene → neutral `SvgNode` descriptor tree  | `svgToReact` maps it to React elements and connects root ref |
+| Canvas | `renderToCanvas`: draw Scene directly into a Canvas 2D context | `CanvasHost` owns `<canvas>`, redraw effects, and rAF clock  |
+
+Event handlers are functions and cannot enter JSON IR. In children mode, React separately runs `collectHydrationHandlers` to collect functions by primitive id, then binds them after rendering through SVG location or Canvas hit-testing. With the `ir` prop, the `handlers` prop supplies this runtime side channel instead.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout SVG / Canvas routing',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 479,
+      endLine: 527,
+    },
+    {
+      label: 'Thin SvgNode to React element mapping',
+      path: 'packages/kernel/react/src/render/svg/svg-to-react.ts',
+      startLine: 53,
+      endLine: 69,
+    },
+    {
+      label: 'CanvasHost calling renderToCanvas',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 175,
+      endLine: 230,
+    },
+    {
+      label: 'JSX handler runtime side channel',
+      path: 'packages/kernel/react/src/kernel/runtime/collect-hydration-handlers.ts',
+      startLine: 53,
+      endLine: 105,
+    },
+  ]}
+/>
+
+## Responsibility boundaries
+
+| Capability              | What `@retikz/react` owns                                      | Source of truth        |
+| ----------------------- | -------------------------------------------------------------- | ---------------------- |
+| JSX DSL                 | Kernel components construct IR; Sugar expands into Kernel      | `@retikz/core` IR      |
+| Compilation host        | Collect children / IR, inject options, connect React lifecycle | `@retikz/core` compile |
+| Rendering & interaction | Select SVG / Canvas, collect events, connect the host          | `@retikz/render`       |
+
+`@retikz/react` does not include framework-free plain specs. Use [`@retikz/vanilla`](/kernel/packages/vanilla) outside React, for SSR strings, or for direct DOM mounting.
+
+## Continue reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/get-start">
+    <span className="font-semibold">Getting Started</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Install the package and build your first React figure
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/layout">
+    <span className="font-semibold">Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand figure input, capability injection, and the host boundary
+    </span>
+  </LinkedCard>
+</div>

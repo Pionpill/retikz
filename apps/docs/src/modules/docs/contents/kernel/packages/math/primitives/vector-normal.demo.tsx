@@ -1,50 +1,69 @@
 import type { FC } from 'react';
 
-import { point, vector2 } from '@retikz/core';
+import { point, vector2 } from '@retikz/math';
 import { Draw, Layout, Node } from '@retikz/react';
 
-const ORIGIN: [number, number] = [-60, -30];
-const VECTOR_END: [number, number] = [90, -90];
-const VECTOR = point.sub(VECTOR_END, ORIGIN);
-const NORMAL_END = point.add(ORIGIN, vector2.normal(VECTOR));
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
 
-/** 向量与左手法向量的正交关系示意。 */
-const Demo: FC = () => (
-  <Layout
-    width={520}
-    height={300}
-    viewBox={{ x: -180, y: -125, width: 350, height: 270 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
-    <Draw
-      way={[
-        [-165, -30],
-        [155, -30],
-      ]}
-      stroke="lightgray"
-    />
-    <Draw
-      way={[
-        [-60, -115],
-        [-60, 135],
-      ]}
-      stroke="lightgray"
-    />
+import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
 
-    <Draw way={[ORIGIN, VECTOR_END]} arrow="->" stroke="darkorange" strokeWidth={2} />
-    <Draw way={[ORIGIN, NORMAL_END]} arrow="->" stroke="dodgerblue" strokeWidth={2} />
+import { vectorNormalControls } from './vector-normal.controls';
 
-    <Node position={ORIGIN} shape="circle" minimumSize={7} padding={0} fill="currentColor" stroke="none" />
-    <Node position={[105, -102]} stroke="none" textColor="darkorange">
-      v
-    </Node>
-    <Node position={[18, 124]} stroke="none" textColor="dodgerblue">
-      normal(v)
-    </Node>
-    <Node position={[64, 54]} stroke="none" textColor="gray" font={{ size: 12 }}>
-      dot(v, normal(v)) = 0
-    </Node>
-  </Layout>
-);
+export const previewControls = vectorNormalControls;
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
+const Origin: [number, number] = [0, 0];
+
+/** 通过方向角与长度观察向量及其左手法向量 */
+const Demo: FC = () => {
+  const values = usePreviewControls(vectorNormalControls);
+  const unit = vector2.fromAngleDegrees(values.angle);
+  const vector = point.scale(unit, values.length);
+  const normal = vector2.normal(vector);
+  const vectorEnd = point.add(Origin, vector);
+  const normalEnd = point.add(Origin, normal);
+  const vectorLabel = point.add(point.scale(vector, 0.62), point.scale(vector2.normalize(normal), -16));
+  const normalLabel = point.add(point.scale(normal, 0.62), point.scale(vector2.normalize(vector), 26));
+
+  return (
+    <Layout width={400} height={280} viewBox={{ x: -170, y: -145, width: 340, height: 290 }}>
+      <Draw
+        way={[
+          [-160, 0],
+          [160, 0],
+        ]}
+        stroke="lightgray"
+        dashPattern={[1, 4]}
+        lineCap="round"
+      />
+      <Draw
+        way={[
+          [0, -135],
+          [0, 135],
+        ]}
+        stroke="lightgray"
+        dashPattern={[1, 4]}
+        lineCap="round"
+      />
+
+      <Draw way={[Origin, vectorEnd]} arrow="->" stroke="darkorange" strokeWidth={2} />
+      <Draw way={[Origin, normalEnd]} arrow="->" stroke="dodgerblue" strokeWidth={2} />
+
+      <Node position={Origin} shape="circle" minimumSize={7} padding={0} fill="currentColor" stroke="none" />
+      <Node position={vectorLabel} stroke="none" textColor="darkorange">
+        v
+      </Node>
+      <Node position={normalLabel} stroke="none" textColor="dodgerblue">
+        normal(v)
+      </Node>
+      <Node position={[0, 125]} stroke="none" textColor="gray" font={{ size: 12 }}>
+        dot(v, normal(v)) = 0
+      </Node>
+    </Layout>
+  );
+};
 
 export default Demo;

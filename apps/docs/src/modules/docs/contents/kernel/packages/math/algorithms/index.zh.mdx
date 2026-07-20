@@ -1,123 +1,144 @@
-﻿---
+---
 title: 几何算法
-description: 查询 @retikz/math 的求交、圆与三角形、多边形、凸包和过点曲线算法。
+description: 用 @retikz/math 从已有几何求交、包围、包含关系、凸包和过点平滑曲线。
 ---
 
-这些是 `@retikz/core` **未**转出的高阶计算，直接从 `@retikz/math` 导入。公开类型还包括 `Circle`、`LineLineInput`、`LineCircleInput`、`CircleCircleInput` 和 `CubicSegment`。
+几何算法从已有点、线和圆推导新的几何结果。它们不创建 IR，也不会抛出专门的几何异常；退化输入通过 `null`、空数组或布尔值表达。
 
 ```ts
-import { intersect, circle, triangle, polygon, convexHull, curve } from '@retikz/math';
+import { circle, convexHull, curve, intersect, polygon, triangle } from '@retikz/math';
 ```
 
-退化输入不抛错：求交返回 `null` / `[]`，三角形圆退化返回 `null`。容差为朴素 `DEFAULT_EPSILON = 1e-9`（类型见[几何原语](/kernel/packages/math/primitives)）。
+默认容差是朴素的 `DEFAULT_EPSILON = 1e-9`，适合绘图尺度坐标，但不是任意数量级下的鲁棒几何谓词。
 
-## 类型
+## 如何选择
+
+| 问题                       | API                       | 结果                       |
+| -------------------------- | ------------------------- | -------------------------- |
+| 两条线、线段或圆在哪里相交 | `intersect.*`             | 单个交点、交点数组或无结果 |
+| 三角形的内切圆或外接圆     | `triangle.*`              | `Circle` 或 `null`         |
+| 覆盖一组点的最小圆         | `circle.minimalEnclosing` | `Circle` 或 `null`         |
+| 一个点是否位于多边形内部   | `polygon.containsPoint`   | `boolean`                  |
+| 一组点的最小凸边界         | `convexHull`              | 逆时针排列的边界顶点       |
+| 一组 knot 的过点平滑曲线   | `curve.catmullRomToCubic` | 三次贝塞尔段数组           |
+
+## 求交
+
+`intersect` 按输入几何返回坐标点。直线由两点或原点加方向定义；方向向量不必单位化。
 
 ```ts
-/** 圆：圆心 + 半径 */
-type Circle = { center: Position; radius: number };
+const hit = intersect.lineLine({
+  a1: [-40, -20],
+  a2: [60, 30],
+  b1: [0, -50],
+  b2: [0, 50],
+});
 
-type LineLineInput = {
-  a1: Position;
-  a2: Position;
-  b1: Position;
-  b2: Position;
-};
-
-type LineCircleInput = {
-  origin: Position;
-  dir: Position;
-  center: Position;
-  radius: number;
-};
-
-type CircleCircleInput = {
-  centerA: Position;
-  radiusA: number;
-  centerB: Position;
-  radiusB: number;
-};
+const circleHits = intersect.lineCircle({
+  origin: [-80, 0],
+  dir: [1, 0],
+  center: [0, 0],
+  radius: 40,
+});
 ```
 
-## intersect 求交
+用面板切换直线、直线与圆、两个圆，并选择相交、平行、相切和相离预设。紫色点就是 API 返回的坐标；面板中的 `|I|` 表示结果数组长度。
 
-返回**点**：单交点用 `Position | null`，可能多解用 `Array<Position>`。
+<ComponentPreview files="intersection-playground" size="sm" caption="求交结果与退化输入" />
 
-```ts
-// 两条无限直线（各由两点定）；平行 / 共线 → null
-intersect.lineLine(input: LineLineInput): Position | null;
+| 函数             | 返回与退化行为                                                    |
+| ---------------- | ----------------------------------------------------------------- |
+| `lineLine`       | 两条无限直线的交点；平行或共线返回 `null`                         |
+| `segmentSegment` | 两线段的单个交点；不相交、平行、共线或重叠返回 `null`             |
+| `lineCircle`     | 0 或 2 个点；相切返回两个坐标相同的点                             |
+| `circleCircle`   | 0 或 2 个点；相离、内含或重合返回空数组，相切返回两个坐标相同的点 |
 
-// 两线段；不相交 / 平行 / 共线（含重叠）→ null
-intersect.segmentSegment(input: LineLineInput): Position | null;
+射线与圆弧求交使用[几何原语](/kernel/packages/math/primitives)中的 `rayArc`；它返回射线参数而不是坐标点。
 
-// 直线（origin + 方向 dir，dir 不必单位化）∩ 圆；0 / 2 个交点
-intersect.lineCircle(input: LineCircleInput): Array<Position>;
+## 包围与包含
 
-// 圆 ∩ 圆；相离 / 内含 / 重合 → []
-intersect.circleCircle(input: CircleCircleInput): Array<Position>;
-```
+`triangle.circumCircle` 求过三个顶点的外接圆，`triangle.inCircle` 求与三边相切的内切圆；三点共线时两者返回 `null`。
 
-| 函数             | 返回 / 退化                                                                    |
-| ---------------- | ------------------------------------------------------------------------------ |
-| `lineLine`       | 交点 `Position`；平行或共线 → `null`                                           |
-| `segmentSegment` | 真交叉的交点；不相交 / 平行 / 共线（含重叠）→ `null`（首切不细分共线重叠区间） |
-| `lineCircle`     | 0 个（相离）或 2 个交点；相切时返回 2 个重合点                                 |
-| `circleCircle`   | 2 个交点；相离 / 内含 / 重合 → `[]`；相切时返回 2 个重合点                     |
+`circle.minimalEnclosing(points)` 返回覆盖全部输入点的最小圆。空点集返回 `null`，单点返回半径为 `0` 的圆；实现是确定性的迭代式 Welzl，最坏时间复杂度 `O(n³)`、额外空间 `O(1)`。
 
-射线 ∩ 圆弧用 [`rayArc`](/kernel/packages/math/primitives)（在原语页，返回参数而非点）。
+`polygon.containsPoint(vertices, point)` 使用奇偶规则，支持凹多边形和任意绕向；顶点少于三个时返回 `false`。边界点结果未定义，需要调用方在重要场景中单独处理落边判断。
 
-## triangle 三角形圆
-
-返回 `Circle`；三点共线（面积≈0）→ `null`。
-
-```ts
-triangle.circumCircle(a: Position, b: Position, c: Position): Circle | null;  // 外接圆（过三顶点）
-triangle.inCircle(a: Position, b: Position, c: Position): Circle | null;      // 内切圆（与三边相切）
-```
-
-## circle 圆算法
-
-```ts
-// Welzl 迭代式；空点集 → null，单点 → 半径 0 的圆
-circle.minimalEnclosing(points: Array<Position>, epsilon?: number): Circle | null;
-```
-
-`circle.minimalEnclosing` 返回覆盖全部输入点的最小圆。它的计算结果确定，复杂度为时间最坏 `O(n^3)`、空间 `O(1)`。
-
-## polygon 点在多边形
-
-```ts
-// ray-casting 奇偶规则；顶点按序，不要求凹凸 / 绕向
-polygon.containsPoint(vertices: Array<Position>, p: Position): boolean;
-```
-
-**边界点结果未定义**（落边界由调用方处理）；顶点数 < 3 返回 `false`。
-
-## convexHull 凸包
-
-```ts
-convexHull(points: Array<Position>): Array<Position>;
-```
-
-Andrew monotone chain，返回 **CCW 顺序**顶点、**剔除共线中间点**；点数 < 3 或全共线时返回排序去重后的端点。
-
-下图将全部输入点保留为圆点，并用橙色边界连接 `convexHull(points)` 返回的顶点。凹陷处的内部点不会进入结果。
+`convexHull(points)` 使用 Andrew monotone chain，返回逆时针顶点并剔除共线中间点。点数少于三个或全共线时，返回排序去重后的端点。
 
 <ComponentPreview files="convex-hull" size="sm" hideCode />
 
-## curve 过点平滑曲线
+## 过点平滑曲线
 
-给一串 knot，返回一条**穿过每个 knot** 的三次贝塞尔段链——`<Step kind="smooth">` 的底层算法。用 centripetal Catmull-Rom（α=0.5）：点距不均时不产生 cusp / 自交回环。
+`curve.catmullRomToCubic` 把 knot 序列转换为穿过每个 knot 的三次贝塞尔段链，也是 `<Step kind="smooth">` 使用的底层算法。
 
 ```ts
-// 一段三次贝塞尔：两控制点 + 终点（起点为上一段终点 / 首段为第一个 knot）
-type CubicSegment = { control1: Position; control2: Position; to: Position };
-
-// centripetal Catmull-Rom：穿过 knots 的 cubic 段链
-// 至少 2 个 knot；返回 knots.length - 1 段，段[i].to 严格命中 knots[i+1]（过点）
-curve.catmullRomToCubic(knots: Array<Position>, tension: number): Array<CubicSegment>;
+const segments = curve.catmullRomToCubic(
+  [
+    [-80, 20],
+    [-20, -40],
+    [30, 30],
+    [90, -10],
+  ],
+  1,
+);
 ```
 
-`tension` 是切线长度乘子：`1` 为标准值，`<1` 更紧，`>1` 更鼓。开放曲线两端使用单侧切线；重合 knot 的间距回退到 `DEFAULT_EPSILON`，避免除零并保证输出有限。`knots.length < 2` 返回 `[]`。
+它使用 centripetal Catmull-Rom（α=0.5），相较均匀参数化能降低点距不均时出现尖点或回环的风险，但不承诺任意 knot 和任意 `tension` 下都无自交。`tension = 1` 是标准值，较小值缩短手柄，较大值会放大弯曲。
 
-<Comparison target="tikz">TikZ 也使用 `tension` 表达曲线松紧；迁移时可从相同数值开始，再按实际点距调整。</Comparison>
+<ComponentPreview files="curve-playground" size="sm" caption="knot、张力与三次贝塞尔结果" />
+
+至少两个 knot 才会产生结果；返回 `knots.length - 1` 段，每段终点严格命中下一个 knot。开放曲线两端使用单侧切线，重合 knot 以 `DEFAULT_EPSILON` 作为间距回退以保持有限输出。
+
+<Comparison target="tikz">
+  TikZ 也用 `tension` 表达曲线松紧。迁移时可以从相同数值开始，再根据实际点距和是否出现过度弯曲调整。
+</Comparison>
+
+## API 摘要
+
+| 分组       | 公开类型 / API                                                                        | 无结果或退化行为                                 |
+| ---------- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 求交       | 三种输入类型、`intersect.lineLine` / `segmentSegment` / `lineCircle` / `circleCircle` | `null` 或空数组；相切保留两个重合点              |
+| 圆与三角形 | `Circle`、`triangle.inCircle`、`triangle.circumCircle`、`circle.minimalEnclosing`     | 共线三角形与空点集返回 `null`                    |
+| 多边形     | `polygon.containsPoint`、`convexHull`                                                 | 少于三个顶点的包含判断为 `false`；凸包保留端点   |
+| 曲线       | `CubicSegment`、`curve.catmullRomToCubic`                                             | 少于两个 knot 返回空数组；重合 knot 保持有限结果 |
+
+<SourceLinks
+  sources={[
+    {
+      label: '求交实现',
+      path: 'packages/kernel/math/src/geometry/intersect.ts',
+      startLine: 1,
+      endLine: 115,
+    },
+    {
+      label: '三角形圆实现',
+      path: 'packages/kernel/math/src/geometry/triangle.ts',
+      startLine: 1,
+      endLine: 41,
+    },
+    {
+      label: '最小包围圆实现',
+      path: 'packages/kernel/math/src/geometry/circle.ts',
+      startLine: 1,
+      endLine: 66,
+    },
+    {
+      label: '多边形与凸包实现',
+      path: 'packages/kernel/math/src/geometry/polygon.ts',
+      startLine: 1,
+      endLine: 22,
+    },
+    {
+      label: '凸包实现',
+      path: 'packages/kernel/math/src/geometry/hull.ts',
+      startLine: 1,
+      endLine: 37,
+    },
+    {
+      label: '过点曲线实现',
+      path: 'packages/kernel/math/src/curve/catmull-rom.ts',
+      startLine: 1,
+      endLine: 72,
+    },
+  ]}
+/>

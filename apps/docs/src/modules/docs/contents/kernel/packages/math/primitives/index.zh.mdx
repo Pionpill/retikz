@@ -1,138 +1,145 @@
 ---
 title: 几何原语
-description: 查询 @retikz/math 的点与向量、仿射变换、外接范围、椭圆和圆弧计算能力。
+description: 用 @retikz/math 构造和变换点、向量、外接范围、椭圆与圆弧。
 ---
 
-`@retikz/math` 提供完整的几何计算公开面；`@retikz/core` 只为绘图常用值提供便捷转出，并把 `lerp` 别名为 `lerpPoint`。类型 `Position` / `Vector2`、外接范围、椭圆和圆弧 API 仍从 `@retikz/math` 导入。
+几何原语用于回答“一个坐标是什么”和“它经过变换后在哪里”。本页 API 全部处理普通数据，不依赖 IR 或 renderer，也不会修改输入 tuple。
 
 ```ts
-import { point, vector2, lerpPoint, localToWorld } from '@retikz/core';
-import { type Position, lerp, boundsOf, ellipse } from '@retikz/math';
+import { boundsOf, ellipse, point, vector2, type Position } from '@retikz/math';
 ```
-
-- `@retikz/core`：`DEFAULT_EPSILON`、`point`、`vector2`、`lerpPoint`、`localToWorld`、`worldToLocal`。
-- `@retikz/math`：本页全部类型和值，以及[几何算法](/kernel/packages/math/algorithms)中的高阶计算。
 
 ## 点与向量
 
-```ts
-type Vector2 = [number, number];
-type Position = Vector2;
+`Position` 和 `Vector2` 都是 `[number, number]`。`point` 提供两者共享的加减、缩放、点积、叉积、距离与沿方向移动；`vector2` 补充角度构造、单位化和法向量。
 
-isFiniteNumber(value: unknown): value is number;
-isFinitePoint(value: unknown): value is Position;
-isInfiniteNumber(value: unknown): value is number;
-```
-
-`point` 同时承担点和二维向量的基础运算；所有方法都返回新 tuple，不修改输入。
+`DEFAULT_EPSILON = 1e-9` 是包内多个退化判断的默认容差。`isFiniteNumber` 排除 `NaN` 和正负无穷，`isInfiniteNumber` 只接受正负无穷；`isFinitePoint` 只接受恰好两个有限坐标组成的数组。
 
 ```ts
-point.add(a, b); // a + b
-point.sub(a, b); // a - b
-point.scale(a, k); // a * k
-point.dot(a, b); // 点积
-point.cross(a, b); // 二维叉积标量
-point.length(a); // 向量长度
-point.distance(a, b); // 两点距离
-point.along(origin, direction, length); // 顺 direction 前进
-point.against(origin, direction, length); // 逆 direction 后退
-point.normalize(a, fallback?, epsilon?);
-point.shiftToward(p, target, distance);
-point.equal(a, b); // 精确比较
+const origin: Position = [0, 0];
+const direction = vector2.fromAngleDegrees(-30);
+const end = point.along(origin, direction, 120);
+const normal = point.scale(vector2.normal(direction), 50);
+
+point.dot(direction, normal); // 接近 0
+point.distance(origin, end); // 120
 ```
 
-`vector2` 补充语义明确的向量构造和法向量操作：
+拖动角度和长度可以观察向量与左手法向量始终正交。`normalize` 的零长回退值默认是 `[1, 0]`；`normalizeOrNull` 遇到零长或非有限向量返回 `null`。
+
+<ComponentPreview files="vector-normal" size="sm" caption="向量与左手法向量" />
+
+`point.shiftToward(p, target, distance)` 将点朝目标移动指定距离，点与目标重合时保持原位；`point.equal` 使用严格坐标相等，不应用容差。`lerp(a, b, t)` 不限制 `t`：`0` 到 `1` 之间是插值，范围外是外推。
+
+## 坐标变换
+
+`localToWorld` 和 `worldToLocal` 在图形局部坐标与世界坐标间转换。图形由中心位置和可选旋转角描述；`rotate` 使用弧度。
 
 ```ts
-vector2.fromPosition(p: Position): Vector2;
-vector2.fromAngleDegrees(angle: number): Vector2;
-vector2.normalize(v: Vector2, fallback?: Vector2, epsilon?: number): Vector2;
-vector2.normalizeOrNull(v: Vector2, epsilon?: number): Vector2 | null;
-vector2.normal(v: Vector2): Vector2;
-
-lerp(a: Position, b: Position, t: number): Position;
+const shape = { x: 100, y: 60, rotate: Math.PI / 4 };
+const world = localToWorld(shape, [20, 0]);
+const local = worldToLocal(shape, world); // 约为 [20, 0]
 ```
 
-`normalize` 的零长回退值默认是 `[1, 0]`；`normalizeOrNull` 遇到零长或非有限向量返回 `null`。`lerp` 不限制 `t`，因此可在 `[0, 1]` 外外推。
+旋转为 `0` 时只有平移；非零时围绕图形中心旋转。两者互为逆变换，适合把连接点、边界点或命中坐标放到同一坐标系中计算。
 
-下图用同一起点展示向量 `v` 与左手法向量 `normal(v)`；两条箭头保持正交，单位化只改变长度。
+## 边界计算
 
-<ComponentPreview files="vector-normal" size="sm" hideCode />
-
-## 仿射变换
+`boundsOf` 从点集得到轴对齐范围，`mergeBounds` 合并两个可选范围，其余 helper 在范围、矩形、中心、半轴和四角之间转换。
 
 ```ts
-type CenteredShape = {
-  x: number;
-  y: number;
-  rotate?: number; // 绕中心旋转，单位为弧度
-};
+const bounds = boundsOf([
+  [10, 20],
+  [80, -5],
+  [45, 30],
+]);
 
-localToWorld(shape: CenteredShape, local: Position): Position;
-worldToLocal(shape: CenteredShape, world: Position): Position;
+if (bounds) {
+  const center = boundsCenter(bounds);
+  const expanded = expandBounds(bounds, { left: 8, right: 8, top: 4, bottom: 4 });
+}
 ```
 
-`rotate` 省略或为 `0` 时只有平移；非零时先绕中心旋转，再在本地坐标与世界坐标之间转换。两个函数互为逆变换。
+`boundsOf([])` 与 `mergeBounds(undefined, undefined)` 返回 `undefined`。这个返回值刻意把“跳过空数据、使用默认范围或报错”的选择留给调用方。
 
-## 外接范围
+`boundsToRect` / `rectToBounds` 在 min/max 范围与左上角 + 尺寸矩形之间转换。`isFiniteBoundsRect` 要求四个字段都是有限数，`isPositiveBoundsRect` 还要求宽高严格大于 `0`；`boundsCorners` 固定按左上、右上、左下、右下返回四角。
 
-外接范围用 `minX` / `minY` / `maxX` / `maxY` 表示；矩形形式则使用左上角与宽高。
+## 椭圆与圆弧
+
+**椭圆边界。** `ellipse` 统一处理椭圆中心、内接 / 外接关系、包含判断和朝向某点的边界交点。
 
 ```ts
-type AxisAlignedBounds = { minX: number; minY: number; maxX: number; maxY: number };
-type BoundsRect = { x: number; y: number; width: number; height: number };
-type BoundsHalfAxes = { halfWidth: number; halfHeight: number };
-type BoundsInsets = { left: number; right: number; top: number; bottom: number };
+const value = { x: 20, y: 10, rx: 80, ry: 40, rotate: Math.PI / 6 };
 
-boundsOf(points: ReadonlyArray<Position>): AxisAlignedBounds | undefined;
-mergeBounds(a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisAlignedBounds | undefined;
-boundsToRect(bounds: AxisAlignedBounds): BoundsRect;
-rectToBounds(rect: BoundsRect): AxisAlignedBounds;
-isFiniteBoundsRect(rect: BoundsRect): boolean;
-isPositiveBoundsRect(rect: BoundsRect): boolean;
-boundsCenter(bounds: AxisAlignedBounds): Position;
-boundsHalfAxes(bounds: AxisAlignedBounds): BoundsHalfAxes;
-expandBounds(bounds: AxisAlignedBounds, insets: BoundsInsets): AxisAlignedBounds;
-boundsCorners(bounds: AxisAlignedBounds): Array<Position>;
+ellipse.contains(value, [20, 10]); // true，边界也算在内
+ellipse.boundaryPoint(value, [160, 10]);
+ellipse.inscribedInBox({ x: 0, y: 0, width: 160, height: 80 });
+ellipse.circumscribedHalfAxes({ halfWidth: 80, halfHeight: 40 }, 'proportional');
 ```
 
-`boundsOf([])` 与两个空值的 `mergeBounds` 返回 `undefined`，由调用方决定跳过、兜底还是报错。
+`circumscribedHalfAxes` 的默认 `proportional` 模式保持内部盒宽高比例，`equal` 模式则返回能包住内部盒的等轴圆。零半轴椭圆的 `contains` 返回 `false`；退化椭圆或目标正好位于中心时，`boundaryPoint` 返回中心，避免产生非有限坐标。
 
-## 椭圆
+**圆弧与椭圆弧。** 角度遵循 SVG 坐标：y 轴向下，`0°` 指向 +x，`90°` 指向 +y；正角度在屏幕上顺时针增加。
 
 ```ts
-type Ellipse = CenteredShape & { rx: number; ry: number };
-type CenteredBox = CenteredShape & { width: number; height: number };
-type EllipseCircumscribeMode = 'proportional' | 'equal';
-
-ellipse.center(value: Ellipse): Position;
-ellipse.inscribedInBox(box: CenteredBox): Ellipse;
-ellipse.circumscribedHalfAxes(
-  inner: BoundsHalfAxes,
-  mode?: EllipseCircumscribeMode,
-): BoundsHalfAxes;
-ellipse.contains(value: Ellipse, point: Position): boolean;
-ellipse.boundaryPoint(value: Ellipse, toward: Position): Position;
+const end = arcEndPoint([0, 0], 40, 90); // [0, 40]
+const candidates = arcBoundingPoints({
+  center: [0, 0],
+  radius: 40,
+  startAngleDeg: 20,
+  endAngleDeg: 220,
+});
 ```
 
-`contains` 包含边界；零半轴椭圆返回 `false`。`boundaryPoint` 从椭圆中心沿目标方向取边界点，退化椭圆或目标正好位于中心时返回中心。
+`arcEndPoint` / `ellipseArcPoint` 取曲线上一点；椭圆的 `angleDeg` 是参数角，不一定等于从中心观察到的真实极角。`arcAngleInRange` 按 `startAngleDeg → endAngleDeg` 的符号判断有向区间：正跨度在屏幕上顺时针，负跨度逆时针。
 
-## 圆弧
-
-角度遵循 SVG 坐标：y 轴向下，`0°` 指向 +x，`90°` 指向 +y；正角度在屏幕上顺时针增加。
-
-```ts
-arcEndPoint(center: Position, radius: number, angleDeg: number): Position;
-ellipseArcPoint(input: EllipseArcPointInput): Position;
-arcAngleInRange(input: ArcAngleInRangeInput): boolean;
-rayArc(input: RayArcInput): Array<number>;
-arcBoundingPoints(input: ArcBoundingPointsInput): Array<Position>;
-ellipseArcBoundingPoints(input: EllipseArcBoundingPointsInput): Array<Position>;
-```
-
-对应输入类型 `ArcBoundingPointsInput`、`ArcAngleInRangeInput`、`RayArcInput`、`EllipseArcPointInput` 和 `EllipseArcBoundingPointsInput` 也由 `@retikz/math` 公开。bbox 函数返回端点与区间内轴向极值的候选点，不去重。
+`arcBoundingPoints` / `ellipseArcBoundingPoints` 返回端点和数值角度区间内的轴向极值候选点，不接受额外的 `sweep` 字段且不会去重。椭圆弧 helper 只处理轴对齐椭圆弧；旋转椭圆应先在局部坐标计算，再用坐标变换映射到世界坐标。
 
 <ComponentAlert
   title="rayArc 返回参数而不是点"
-  description="返回值是方程 origin + s·dir 中按升序排列的正向标量 s，命中点需由调用方代回方程；algorithms 页的 intersect.* 才直接返回坐标点。"
+  description="返回值是方程 origin + s·dir 中按升序排列的正向标量 s。把 s 代回方程可得到命中点；算法页的 intersect.* 则直接返回坐标点。"
+/>
+
+## API 摘要
+
+| 分组     | 公开类型 / 值                                                                               | 关键行为                                   |
+| -------- | ------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 数值与点 | `Position`、`Vector2`、`DEFAULT_EPSILON`、`point`、`vector2`、`lerp`、三个数值检查函数      | 纯函数；单位化有明确零长回退；插值允许外推 |
+| 坐标变换 | `CenteredShape`、`localToWorld`、`worldToLocal`                                             | 绕中心旋转后在局部与世界坐标间互转         |
+| 边界     | 四种 bounds 类型、`boundsOf`、`mergeBounds`、转换 / 检查 / 中心 / 半轴 / 扩张 / 四角 helper | 空点集与全空合并返回 `undefined`           |
+| 椭圆与弧 | `Ellipse`、`CenteredBox`、`ellipse`、五种弧输入类型与点 / 区间 / 射线 / bbox helper         | 椭圆弧只支持轴对齐；bbox candidates 不去重 |
+
+<SourceLinks
+  sources={[
+    {
+      label: '点与向量实现',
+      path: 'packages/kernel/math/src/geometry/point.ts',
+      startLine: 1,
+      endLine: 88,
+    },
+    {
+      label: '坐标变换实现',
+      path: 'packages/kernel/math/src/geometry/transform.ts',
+      startLine: 1,
+      endLine: 37,
+    },
+    {
+      label: '边界计算实现',
+      path: 'packages/kernel/math/src/geometry/bounds.ts',
+      startLine: 1,
+      endLine: 131,
+    },
+    {
+      label: '椭圆计算实现',
+      path: 'packages/kernel/math/src/geometry/ellipse.ts',
+      startLine: 1,
+      endLine: 73,
+    },
+    {
+      label: '圆弧计算实现',
+      path: 'packages/kernel/math/src/geometry/arc.ts',
+      startLine: 1,
+      endLine: 199,
+    },
+  ]}
 />
