@@ -1,13 +1,13 @@
 ---
 name: docs-doc-control
-description: retikz 文档站带 controls 面板的 ComponentPreview 规范。用于新增、合并、修改或评审 `*.controls.ts`、消费 `usePreviewControls` 的 demo、`PreviewControlContract`、playground 取景与交互视觉语义；也用于把同一稳定场景下的重复样式 demo 合并为可操作面板。retikz 专用。
+description: Use when a retikz ComponentPreview has controls, a *.controls.ts contract, usePreviewControls, presets, or a playground that replaces repeated parameter-only demos.
 ---
 
 # ComponentPreview Controls 规范
 
 ## 前置规则
 
-先读 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)，再按页面类型读取组件页、扩展页、示例页或分组页 skill。本 skill 只补充带 controls 的 `ComponentPreview` 规则。
+先读 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)、[`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md) 与 [`Demo 视觉语义`](../docs-doc-principle/references/demo-visual-language.md)，再按页面类型读取组件页、扩展页、示例页或分组页 skill。本 skill 只补充 controls 特有规则。
 
 ## 先定义试验场
 
@@ -48,35 +48,11 @@ export const previewControlContract = {
 - `relatedApis` 只列 controls 直接解释的公开 API，不列宿主 actions 或间接实现
 - `presets` 只收录有用户语义的完整状态，不把任意排列包装成 preset
 - zh / en 的 id、kind、默认值、范围、option value、条件和 canonical 状态保持一致；只本地化 title、section、label 与 preset label
-- demo 同时显式导出注册回退，并关闭动态 IR 派生：
+- demo 同时显式导出注册回退；`usePreviewControls` 属于 hook，按 ComponentPreview 按需契约关闭动态 IR 派生：
 
 ```ts
 export const previewControls = exampleControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 ```
-
-## 视觉层级
-
-用视觉语义区分主体、真实关系和教学辅助，不让颜色与线型互相抢职责：
-
-| 元素                   | 规则                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 主要对象               | 一般采用当前页面的主题色；同一 demo 只保留一个主强调色                                                        |
-| 次要但真实的关系       | 灰色、常规线宽、实线；例如不是教学重点的连接边                                                                |
-| 实际不存在的辅助线     | 浅灰 dotted：`dashPattern={[1, 4]}` + `lineCap="round"`；例如坐标轴、投影、控制柄、测量线和 boundary 辅助轮廓 |
-| 不关键但真实存在的对象 | 灰色 dashed 边框；例如仅提供参照的节点或分组边界                                                              |
-| 文字                   | 主体文字保持默认色；辅助标注用灰色，颜色不承担第二套分类语义                                                  |
-
-补充约束：
-
-- dotted 只表示“教学辅助、实际不存在”；dashed 表示“真实但降级”，两者不可混用
-- 连接线不是主题时使用 `stroke="gray"` 与常规粗细，不使用主题色或加粗
-- 优先复用 CSS 颜色关键字和当前 demo 已确定的主题色；不要为相同语义散落近似 hex
-- 需要比较多个真实类别时，可以增加颜色，但必须在正文或图内说明映射
-- Node 位置关系 demo 的引用 id 用大写 `A/B/C`，可见标签用小写 `a/b/c`
 
 ## 取景与尺寸
 

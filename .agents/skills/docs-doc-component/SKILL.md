@@ -1,15 +1,16 @@
 ---
 name: docs-doc-component
-description: Use when 编写或修改 apps/docs/src/contents/{module}/components/**/*.mdx 组件页，尤其需要组织核心设计、用法、demo、controls、技术原理或 API 参考时。retikz 专用。
+description: Use when writing or editing component pages under a module's apps/docs component contents, excluding pages marked as extension guides.
 ---
 
 # 组件类文档写法
 
 ## 何时用本 skill
 
-- 在 `apps/docs/src/contents/<module>/components/**` 下加 / 改组件页
+- 在 `apps/docs/src/modules/docs/contents/<module>/components/**` 下加 / 改组件页
 - 即将动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
 - 页面含 controls 时再读 [`docs-doc-control`](../docs-doc-control/SKILL.md)，统一面板、契约、取景与视觉层级
+- 页面使用多文件、数据文件或动态源码派生时，再读 [`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md)
 
 本 skill 只覆盖**组件页特有**的页面结构与子节写法；其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间、ZodSchema、Common Mistakes 等）以 principle 为准。
 
@@ -42,13 +43,13 @@ frontmatter `title` + `description` 始终在；H1 由 DocPage 渲染，正文**
 
 `components/shapes/**` 下的形状页是上面常规结构的**例外**：同一个几何形状同时有两种用法——**Sugar 组件**（画一条 `<Path>`，如 `<Circle>`）和 **Node 形状**（节点边界，如 `shape="circle"`）。这类页改用**两大块自包含**结构，每块各写自己的用法 / 例子 / API，让"画图形"和"建节点"两类读者各自一口气读完、不来回跳：
 
-| 段                           | 必需 | 内容                                                                                                                                                            |
-| ---------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 导言                         | ✅   | 一句话点出该形状的**双重身份** + 一句决策（要画线 → Sugar；要可连节点 → Node），并链到 [形状组落地页](/core/components/shapes) 看完整定义——**不在每页重写定义** |
-| `## 作为 Path 图形（Sugar）` | ✅   | 该 Sugar 组件的完整文档：`### 用法`（import + 骨架）/ `### 例子`（demo + 写法表）/ `### API 参考`（组合表）                                                     |
-| `## 作为 Node 形状`          | ✅   | 该 shape 的完整文档：`### 用法` / `### 例子`（含 params / 几何 anchor）/ `### API 参考`（shape 值 / params / 边界表）                                           |
-| `## 技术原理 / How it works` | 可选 | **共享底层机制**（Sugar→Path、Node→边界外接、角度坐标系等）；子节用一句标注适用 Path / Node / 两者                                                              |
-| `## 相关 / Related`          | ✅   | 链接 Node、相邻形状页、形状组、扩展 Reference                                                                                                                   |
+| 段                           | 必需 | 内容                                                                                                                                                              |
+| ---------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 导言                         | ✅   | 一句话点出该形状的**双重身份** + 一句决策（要画线 → Sugar；要可连节点 → Node），并链到 [形状组落地页](/kernel/components/shapes) 看完整定义——**不在每页重写定义** |
+| `## 作为 Path 图形（Sugar）` | ✅   | 该 Sugar 组件的完整文档：`### 用法`（import + 骨架）/ `### 例子`（demo + 写法表）/ `### API 参考`（组合表）                                                       |
+| `## 作为 Node 形状`          | ✅   | 该 shape 的完整文档：`### 用法` / `### 例子`（含 params / 几何 anchor）/ `### API 参考`（shape 值 / params / 边界表）                                             |
+| `## 技术原理 / How it works` | 可选 | **共享底层机制**（Sugar→Path、Node→边界外接、角度坐标系等）；子节用一句标注适用 Path / Node / 两者                                                                |
+| `## 相关 / Related`          | ✅   | 链接 Node、相邻形状页、形状组、扩展 Reference                                                                                                                     |
 
 要点：
 
@@ -96,7 +97,7 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 
 ### 静态 demo 与 controls 的分工
 
-本节只判断内容分工；具体写法统一走 [`docs-doc-control`](../docs-doc-control/SKILL.md)。
+本节只判断是否使用 controls；实现、契约、取景、caption、视觉层级与验证全部由 [`docs-doc-control`](../docs-doc-control/SKILL.md) 拥有。
 
 先判断变化是否改变组件结构或语义：
 
@@ -108,15 +109,7 @@ Examples 里的示例较多时，必须先抽象主题，再在主题下细分�
 | 变体无法共享比较场景，或切换后读者需要重新理解组合、所有权、错误或边界        | 保留静态 demo                              |
 | 样式本身就是组件的核心能力，或取值会改变语义                                  | 按核心语义保留必要静态 demo                |
 
-controls 用于探索参数空间，不用于隐藏核心设计。每页通常只设一个主 playground；正文仍需用最小静态 demo 讲清 canonical 用法，并保留无法靠 prop 切换表达的语义分支。
-
-设计 playground 时先确定“不变量、变量、能力所有者”：场景中只让目标能力变化，参照物与无关结构保持固定；多层能力按职责层级或视觉对象组织 section，不把字段平铺成属性清单。视觉编码必须让变化在默认页面尺寸下一眼可辨；需要比较边界、顺序、变换或引用时，主动安排必要的越界、重叠、固定参照或可区分外观。操作后看不出差异就重做场景，不靠正文解释不可见变化。
-
-闭合内置集合能共享比较场景且规模适合交互时，controls 应覆盖完整集合，聚焦测试锁定选项，浏览器验证默认分支与代表性的复杂分支。这种覆盖只证明分支可达，不代替完备性分析；某分支暴露实现缺陷时修复下层能力或记录 blocker，不为让 demo 通过而静默删除。
-
-页面既要覆盖能力全貌、又适合让用户试参数时，Examples 按「全量静态展示 → 收尾 controls playground」组织：先让全部核心能力与语义分支直接可见，最后用一个 playground 探索稳定任务与可比较场景下的配置。优先把末尾仅有参数变化的现有 demo 升级为 playground，不再新增与它重复的并行 demo；playground 不能成为页面唯一的可复制示例。
-
-如果 controls 只改变阴影、滤镜、描边等效果或样式，不改变主体几何与布局，playground 必须保持固定取景：不要让自动 viewBox 因效果包围盒变化而重算相机，导致主体看起来移动或缩放。显式 viewBox / 坐标域要覆盖 controls 的全部组合极值；主体相对画布的位置与尺寸保持不变，效果在极值下也不能裁切。回归测试同时锁定固定 viewBox、主体几何 bounds 与极值效果边界，不能只断言其中一项。
+controls 用于探索参数空间，不用于隐藏核心设计。每页通常只设一个主 playground；正文仍保留 canonical 用法，以及 controls 无法表达的语义分支。闭合集合放入 controls 时必须覆盖完整公开集合；某分支失败时追查实现或记录 blocker，不从 demo 静默删除。
 
 规则：
 
@@ -128,8 +121,7 @@ controls 用于探索参数空间，不用于隐藏核心设计。每页通常�
 - 如果一个主题组阅读体量较大或示例过多，先用 TOC、主题分组和稳定锚点保证可跳读；只有该组拥有可独立成立的职责、读者任务或 API 契约时才拆成子页
 - **Examples 保持"展示用法"——底层 compile / 投影 / 命名空间机制的原理说明走 `## 技术原理`**（见下节），不要塞进 Examples 子节让用户在"看 demo"和"读原理"之间来回切
 - 同一主题下的并列示例，优先按**横向并排**排版，便于用户对比；除非形态极端狭长或需要强顺序阅读，否则不要竖着堆成一列
-- 每个示例下方建议加一行**浅灰说明文字**，只说这张图在演什么，不解释内部原理；这样用户扫图时不会猜错示例意图
-- 说明文字要短，优先用一句话或词组，颜色用灰阶字面值而不是主题色
+- 示例需要读图提示时使用 `ComponentPreview.caption`，只说明“操作或观察什么”，不另写灰色 `span`
 
 > 注意：本节的 "Examples" 指**组件页内部的 `## 例子` 子节**——是该组件自身能力的多个独立小 demo。这与 `contents/<module>/examples/**` 顶层「示例页」是两件事，后者走 [`docs-doc-example`](../docs-doc-example/SKILL.md)。
 
@@ -212,6 +204,9 @@ controls 用于探索参数空间，不用于隐藏核心设计。每页通常�
 
 ## API Reference 写法
 
+- 先核对页面出现的函数、类型和常量能从所属包根入口公开导入；概念简称不能冒充类型名
+- 宿主或容器组件同时审计 owner barrel 中的 Provider、Context、hook 与 helper；只列完成当前任务需要的伴随导出
+- 继承的共享 props 用一行“共享契约 + 职责 + 权威链接”概括，不在每个组件页复制整张字段表
 - 列固定 4 列：`属性 / 类型 / 默认值 / 描述`（zh）或 `Prop / Type / Default / Description`（en）
 - 没有默认值填 `—`（em dash）；不要留空
 - 属性名 + 类型字面量用反引号包：`` `stroke` ``、`` `'->'` ``
@@ -227,7 +222,6 @@ controls 用于探索参数空间，不用于隐藏核心设计。每页通常�
 - **Examples 平铺 10+ 个 `###`** —— 满足 ≥3 同类时必须主题分组到 `####`
 - **把通用样式写成页面主体** —— stroke、fill、opacity、尺寸等仅改变外观时合并进 controls / API 表；正文优先讲根问题、核心抽象、职责边界和语义分支
 - **用 controls 吞掉语义分支** —— controls 只压缩稳定任务与可比较场景下的参数空间；不同 JSX、组合、职责边界、错误与编译机制仍保留静态 demo，闭合对象变体仅在满足本节条件时合并
-- **效果参数带着主体漂移** —— 阴影 offset / blur、滤镜或描边只应改变效果；为 playground 固定并预留足够 viewBox，测试主体 bounds 不变且组合极值不裁切
 - **把"示例页"内容写进组件页** —— 完整图表的 step-by-step 教程走 `examples/`，不要塞进单组件页的 `## 例子`
 - **把机制 / 原理塞进 Examples 子节** —— Examples 一句说明 + demo 就够；compile / 命名空间 / 投影 / bbox 这些机制走 `## 技术原理`，让用户能选择性跳过
 - **简单组件硬写 How it works** —— 没有底层 compile 行为的组件（纯 sugar / 纯样式 prop 组件）不需要本节；为了"完整性"凑节会让节内只剩重复 API 表的内容

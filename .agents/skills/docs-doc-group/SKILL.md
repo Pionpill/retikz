@@ -1,6 +1,6 @@
 ---
 name: docs-doc-group
-description: retikz 文档站「分组落地页」写法——带 children 的分组节点（如 components/node、components/draw、reference/schema、reference/runtime）自己的 index.{zh,en}.mdx。结构：介绍分组作用 + 可选配图 + 职责表（组件家族用 类型 Sugar/Kernel 列；参考家族换成 主题/何时查阅）+ LinkedCard 子页索引。分组页是家族视角 / 导航 hub，不复述子页（overview 等）的完整 API。通用规则见 docs-doc-principle，配图走 docs-figure-contract。retikz 专用。
+description: Use when writing a landing page for a docs data node with children, such as a component family or reference family navigation hub.
 ---
 
 # 分组落地页写法
@@ -74,7 +74,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 不是组件，Sugar/Kernel 不适用。列换成：`主题 | 职责 | 何时查阅`（en：`Topic | Responsibility | Reach for it when`），并在导言后加一句参考层提示：
 
 ```mdx
-> 这里是参考层，不是组件文档；写图请从 [组件](/core/components/layout) 开始。
+> 这里是参考层，不是组件文档；写图请从 [组件](/kernel/components/layout) 开始。
 ```
 
 ## LinkedCard 子页索引
@@ -85,7 +85,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/core/components/node/overview">
+  <LinkedCard href="/kernel/components/node/overview">
     <span className="font-semibold">Node</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">形状、文字、样式、定位与标签的完整用法</span>
   </LinkedCard>

@@ -1,6 +1,6 @@
 ---
 name: docs-doc-review
-description: retikz 文档站文档评审技能。用于在 docs-doc-principle / docs-doc-component / docs-doc-example / develop-document 产出后做独立审稿，也可单独评审 apps/docs 下已有页面。重点检查结构是否符合页型规范、是否按初级前端工程师视角写作、专业术语是否过载、TikZ / 外部生态对照是否走 Comparison / reference 展示、必要 demo / 图示是否齐全、双语与三处协同是否完整、链接与源码行号是否有效。只输出问题和修改建议，不直接改稿，除非用户明确要求修。
+description: Use when independently reviewing retikz docs pages or docs diffs for page-type structure, reader clarity, source-backed API claims, demo coverage, bilingual parity, and navigation integrity.
 ---
 
 # 文档评审
@@ -20,8 +20,8 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 
 至少给出一个：
 
-- 目标页面路径：`apps/docs/src/contents/**/index.{zh,en}.mdx`
-- 本次文档 diff：`git diff -- apps/docs/src/contents apps/docs/src/data apps/docs/src/i18n`
+- 目标页面路径：`apps/docs/src/modules/docs/contents/**/index.{zh,en}.mdx`
+- 本次文档 diff：`git diff -- apps/docs/src/modules/docs/contents apps/docs/src/modules/docs/data apps/docs/src/i18n`
 - 相关 demo：同目录 `*.demo.tsx`
 - 相关功能改动：packages 下 diff / ADR / plan TODO
 
@@ -54,11 +54,11 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 
 ### 3. 核心设计与内容权重
 
-- 页面是否先讲根问题、核心抽象、职责边界和用户可感知的能力闭环，而不是按 prop 数量组织正文
+- 核心功能必须作为页面主线，重点说明根问题、核心抽象、职责边界和用户可感知的能力闭环；不能与次要能力平均分配篇幅，也不能按 prop 数量组织正文
 - 分组页是否说明成员如何协作，以及本家族明确不负责什么；开放能力是否能看出统一扩展入口
 - 组件页是否把语义、结构、组合、边界 case 与错误行为作为主要示例
-- 边框色、背景色、线宽、透明度、尺寸等通用视觉属性是否简写并收进 controls / API 表
-- controls 是否只压缩稳定任务与可比较场景下的参数空间；不同 JSX、组合关系、职责边界、错误或编译机制是否仍由静态 demo 讲清；合并闭合对象变体时是否完整映射源码并保留 canonical 说明
+- 成熟绘图库普遍具备的通用功能，以及边框色、背景色、线宽、透明度、尺寸等基础样式，是否只做简要说明并保留 API 查询入口；不要挤占核心功能篇幅
+- 同一任务与 JSX 结构下仅参数取值不同的案例，是否合并为 controls playground，让用户通过操作感知变化；不同结构、组合关系、职责边界、错误或编译机制仍由静态 demo 讲清
 - 是否错误地用 demo 数量、视觉变体数量或 prop 覆盖率证明能力完备
 
 ### 4. 对照内容
@@ -70,20 +70,14 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 
 ### 5. Demo 覆盖
 
-带 controls 的 demo 还要按 [`docs-doc-control`](../docs-doc-control/SKILL.md) 检查显式契约、注册回退、固定取景、caption 与视觉层级。
-
 - 用户需要看到效果才能理解的功能，是否有 `<ComponentPreview files="..." />`
 - 新 prop / 新字段 / 新组件是否至少有一个最小 demo；复杂能力是否拆成 2-3 个单主题 demo
 - demo 是否真展示了该能力，而不是只把 prop 写上但视觉上看不出差异
 - 含展示文本的 demo 是否 zh / en 双语文件并行；无展示文本时单文件即可
 - demo 是否可复制：不过度抽 helper、不依赖读者看不到的上下文
-- 是否在真实页面复核 `<ComponentPreview size>`：常规内容四边约 `12px`，有顶部悬浮样式控件时顶部约 `52px`，且没有过大、贴边或过小
-- 是否实际操作代表性字段：每个职责层级至少改变一次，条件字段验证显示 / 隐藏，闭合集合验证默认与代表性复杂分支，最后 Reset 并确认数值与画面回到 canonical 状态
-- playground 是否明确不变量、变量与能力所有者；变化在默认尺寸下是否肉眼可辨，无关结构是否保持稳定，多层 controls 是否按职责层级或视觉对象分组
-- panel controls 是否完整可操作：源码栏不遮挡字段，滚动与折叠可达全部内容；受支持分支失败时是否追查下层实现或记录 blocker，而非从 demo 静默移除
-- controls 只改变阴影、滤镜、描边等效果或样式时，必须在真实页面操作字段最小值、最大值与组合极值：记录 SVG viewBox 与主体相对画布的 bounds，确认相机和主体位置 / 尺寸不变，完整效果边界不被裁切
-- 不得仅凭 JSX 中主体 `position` 固定或单张截图判定通过；自动 viewBox 仍可能随效果包围盒重算。相关回归测试必须同时断言固定 viewBox、主体 bounds 不变与组合极值不裁切
-- renderer、主题、全屏、重置、代码视图等宿主 actions 是否被重复写成静态 demo 或 controls；只有页面讲宿主机制或该选择改变当前能力语义时才保留
+- 大量仅参数变化的静态 demo 是否已收敛为 controls；评审者要实际操作代表性字段，确认变化肉眼可辨，无效或难以感知时重做场景而不是追加文字解释
+- 带 controls 时完整套用 [`docs-doc-control`](../docs-doc-control/SKILL.md) 的契约、取景、极值、Reset、caption、视觉层级和真实页面验证；本 skill 不复制其检查项
+- 使用多文件、数据文件或动态源码派生时，套用 [`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md)
 
 ### 6. 图示与复杂逻辑
 
@@ -97,15 +91,30 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 - `contents/`、`data/`、`i18n/` 是否同步
 - 页面路由、目录段、data id 是否一致
 - API 表是否与当前 props / schema 一致
+- API 表中的函数、类型和常量是否从所属包根入口真实可导入；是否把概念简称或内部类型误写成公共 API
+- 组件 Props、schema、owner barrel 与 package root 是否形成可追溯导出链
+- 宿主/容器页是否漏掉 owner barrel 中完成任务所需的 Provider、Context、hook 或 helper；共享继承 props 是否只做一行摘要并指向权威页
 - Related 链接是否存在，是否链到最有帮助的下一页
 - 新文档是否避免引用本地路径给普通用户看；需要引用项目设计文档时用 GitHub URL
 
 ### 8. 链接有效性
 
-- 逐条检查所有链接，不以正文看起来正确、`tsc` 或 build 通过代替可达性验证；zh / en 分别检查
-- 站内路径必须命中已注册路由，页内锚点必须落到实际标题；HTTP(S) 链接确认目标与响应状态正常
-- `<SourceLinks>` 的 `path` 必须命中仓库内现有文件；行号范围满足 `startLine >= 1`、`endLine >= startLine` 且不超过文件总行数
-- `<SourceLinks>` 生成的 `blob/main` URL 必须可达，行号对应实现仍能支撑当前技术原理；路径可达但代码已漂移同样算无效
+先运行 `docs-doc-principle/scripts/check-doc-integrity.mjs --scope <scope>`，不要人工重复可机械检查的双语配对、站内路由/锚点、demo 文件和 SourceLinks 行号。评审者继续负责脚本无法判断的部分：链接语义是否正确、SourceLinks 是否覆盖真正决策分支、HTTP(S) 目标是否仍匹配正文、zh/en 含义是否一致。
+
+### 9. 真实页面视觉复核
+
+结构、内容和链接检查完成后，必须打开真实 docs 页面再下结论。运行在 Codex desktop 时，优先在应用内浏览器侧边栏打开目标路由，以实际侧栏宽度检查窄屏阅读；条件允许时再补常规桌面宽度。
+
+检查：
+
+- 首屏是否突出标题、定位和核心功能，通用说明、API 与 deepdive 没有抢占主视觉
+- 标题层级、段落密度、留白和内容节奏是否便于扫描，表格、代码块、LinkedCard 是否溢出或拥挤
+- demo 的主体比例、取景、caption 与代码区是否协调；controls 面板打开后是否可操作，并能通过代表性字段直接感知变化
+- zh / en 的文本长度是否造成不同的换行、遮挡或布局跳动；本次涉及主题或响应式行为时一并切换验证
+
+根据真实效果判断是否继续优化：影响理解、遮挡内容、交互不可达或核心 demo 难以辨认记为 BLOCKING；层级、密度、留白或构图仍可改善但不妨碍使用记为 WARNING。不要只凭源码、截图尺寸或测试通过宣称视觉通过，也不要为没有读者收益的纯主观微调扩大范围。
+
+若浏览器或本地 dev 环境不可用，明确写“视觉复核未执行”及原因；此时可以给出结构评审结论，但不能宣称完整视觉通过。
 
 ## 输出格式
 
@@ -114,7 +123,7 @@ description: retikz 文档站文档评审技能。用于在 docs-doc-principle /
 ```md
 BLOCKING（必须修）：
 
-- [结构] apps/docs/src/contents/.../index.zh.mdx:42
+- [结构] apps/docs/src/modules/docs/contents/.../index.zh.mdx:42
   问题：...
   为什么影响读者：...
   建议：...
@@ -130,6 +139,11 @@ INFO（做得好的地方 / 可保留）：
 建议补充的 demo / 图示：
 
 - ...
+
+视觉复核：
+
+- 已执行：Codex 侧边栏 / 桌面宽度；通过 / 需优化
+- 可继续优化：... / 无
 
 结论：
 
@@ -148,8 +162,6 @@ INFO（做得好的地方 / 可保留）：
 - **demo 太大**：一个 demo 只演示一个能力；多能力拆多个 demo
 - **样式 demo 太多**：通用视觉属性合并进 controls / API 表，把篇幅还给核心抽象、职责边界和语义分支
 - **controls 代替设计说明**：controls 只能探索稳定任务与可比较场景下的参数空间，不能隐藏不同结构、组合、职责边界或错误行为
-- **只看逻辑宽高判断 demo 尺寸**：必须打开真实页面，根据内容包围盒、宿主控件和四周留白选择 `<ComponentPreview size>`
-- **只看 `position` 判断 controls 主体稳定**：实际操作效果参数的最小值、最大值与组合极值，比较固定 viewBox、主体相对 bounds 和完整效果边界；自动取景可能让未改 position 的主体看起来移动或缩放
 - **正文散落 TikZ 对照**：统一放到 Comparison / reference，对照隐藏后正文仍要能读
 - **API 表像源码注释**：改成用户能判断的描述，“什么时候设、设了会怎样、默认是什么”
 - **进阶内容没提示可跳过**：初次阅读路径要干净，deepdive 要显式标出

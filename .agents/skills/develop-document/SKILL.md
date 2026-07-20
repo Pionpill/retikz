@@ -11,7 +11,8 @@ description: Use when a retikz feature or user-visible behavior needs apps/docs 
 
 - `apps/docs/AGENTS.md`
 - `docs-doc-principle`
-- 按页型继续读 `docs-doc-component` / `docs-doc-example` / `docs-doc-group` / `docs-doc-concept` / `docs-doc-blog`
+- 按页型继续读 `docs-doc-component` / `docs-doc-extension` / `docs-doc-example` / `docs-doc-group` / `docs-doc-concept` / `docs-doc-blog`
+- 页面使用 controls、复杂 ComponentPreview 或 ZodSchema 时，只加载 principle 指向的对应 skill/reference
 - 需要独立审稿时读 `docs-doc-review`
 
 ## 输入
@@ -46,7 +47,8 @@ demo 有可见文本时必须双语：`<name>.zh.demo.tsx` + `<name>.en.demo.tsx
 
 按 `apps/docs/AGENTS.md` 的分级执行：
 
-- 纯正文：`git diff --check` + 页面 / 链接验证。
+- 先运行 `docs-doc-principle/scripts/check-doc-integrity.mjs --scope <scope>`，承担双语、路由/锚点、SourceLinks 行号与 demo 文件的机械检查。
+- 纯正文：Prettier + `git diff --check` + 页面语义 / 视觉验证。
 - demo / data / i18n / import：docs 包 `tsc --noEmit` + 浏览器确认 demo。
 - CI 等价路径：docs build。
 

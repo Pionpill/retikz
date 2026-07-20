@@ -1,13 +1,13 @@
 ---
 name: docs-doc-concept
-description: retikz 概念页规范：`apps/docs/src/contents/{module}/concepts/**` 叶子页——先讲为什么需要、再给模块内心智模型、图文结合、内部模型按模块语境解释（core 的 IR/Scene 只是一例）、保持当前版本、延伸阅读。适用 core / plot / renderer 等各模块。通用规则见 docs-doc-principle，画法见 docs-figure-contract。retikz 专用。
+description: Use when writing or editing a leaf apps/docs concept page to explain a module-specific mental model, boundary, or architecture.
 ---
 
 # 概念类文档写法
 
 ## 何时用本 skill
 
-- 在 `apps/docs/src/contents/<module>/concepts/**` 下加 / 改**叶子概念页**（如 core 的坐标系 / anchor / 分层；plot 的 scale / encoding / mark；renderer 的 backend / animation……）
+- 在 `apps/docs/src/modules/docs/contents/<module>/concepts/**` 下加 / 改**叶子概念页**（如 kernel 的坐标系 / anchor / 分层；viz 的 scale / encoding / mark；renderer 的 backend / animation……）
 - 动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
 
 本 skill 只覆盖**概念页特有**的页面结构与写法。其它一切（三处协同、双语、写作风格、Comparison、宽度、不引外链等）以 principle 为准；**配图画法**走 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)，本 skill 不重复画法细节。
@@ -156,7 +156,7 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/core/reference/schema">
+  <LinkedCard href="/kernel/reference/schema">
     <span className="font-semibold">结构</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">查 IR 各实体的字段</span>
   </LinkedCard>
@@ -176,15 +176,15 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 
 ## 与其它 doc-skill 的分工
 
-| 任务                                  | skill                                                      |
-| ------------------------------------- | ---------------------------------------------------------- |
-| 通用规则 / 三处协同 / 双语 / 页型分流 | [`docs-doc-principle`](../docs-doc-principle/SKILL.md)     |
-| 概念页结构与写法（本 skill）          | `docs-doc-concept`                                         |
-| 叙述性插图画法                        | [`docs-figure-contract`](../docs-figure-contract/SKILL.md) |
-| 组件 API 页                           | [`docs-doc-component`](../docs-doc-component/SKILL.md)     |
-| 示例 step 页                          | [`docs-doc-example`](../docs-doc-example/SKILL.md)         |
-| 分组落地页                            | [`docs-doc-group`](../docs-doc-group/SKILL.md)             |
-| schema 词典页                         | `docs-doc-principle` 的「Reference 词典页」节              |
+| 任务                                  | skill                                                                       |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| 通用规则 / 三处协同 / 双语 / 页型分流 | [`docs-doc-principle`](../docs-doc-principle/SKILL.md)                      |
+| 概念页结构与写法（本 skill）          | `docs-doc-concept`                                                          |
+| 叙述性插图画法                        | [`docs-figure-contract`](../docs-figure-contract/SKILL.md)                  |
+| 组件 API 页                           | [`docs-doc-component`](../docs-doc-component/SKILL.md)                      |
+| 示例 step 页                          | [`docs-doc-example`](../docs-doc-example/SKILL.md)                          |
+| 分组落地页                            | [`docs-doc-group`](../docs-doc-group/SKILL.md)                              |
+| schema 词典页                         | [`Reference 按需契约`](../docs-doc-principle/references/reference-pages.md) |
 
 ## 常见错误（概念页特有）
 
