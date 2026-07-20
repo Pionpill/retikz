@@ -138,6 +138,14 @@ afterEach(() => {
 });
 
 describe('MobileNav', () => {
+  it('固定显示文档站品牌且不展示模块版本', () => {
+    const container = renderMobileNav();
+
+    click(container.querySelector('button[aria-label="Open navigation"]'));
+
+    expect(container.querySelector('a[aria-label="retikz home"]')?.textContent).toBe('retikz.doc');
+  });
+
   it('切换顶部模块后保持抽屉打开', () => {
     const container = renderMobileNav();
 
