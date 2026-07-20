@@ -1,17 +1,46 @@
 ---
-title: 解析器
-description: Sugar 输入到 IR 片段的纯函数转换
+title: 解析工具
+description: 查询 adapter 可复用的路径、目标点、锚点、线宽与动画 Sugar 转换工具
 ---
 
-Parser reference 覆盖 `@retikz/core` 公开的 sugar 解析函数。它们不依赖 React、DOM 或 nodeIndex，适合 adapter、测试和自定义 DSL 复用。
+`@retikz/core` 的解析工具把面向作者的 Sugar 收窄为可序列化的 IR 片段。它们不依赖 React、DOM 或 node index，适合 adapter、测试和自定义 DSL 复用；已经是合法 IR 的输入不需要先经过这一层。
 
-## 函数
+## 公开导出概览
+
+| 能力             | 公开导出                                                                              | 用途                                                             |
+| ---------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 路径与目标点     | `parseWay` / `parseTargetSugar` / `parseNodeTarget`                                   | 把 Draw way 和字符串 shorthand 转成 IR                           |
+| 锚点与方向别名   | `parseAnchorAlias` / `parseSideAlias` / `SupportedAnchorSugarNames`                   | 归一化 compass / TikZ 风格命名                                   |
+| 语义线宽         | `parsePathThickness` / `PathThickness` / `PathThicknessSchema` / `THICKNESS_TO_WIDTH` | 把线宽 preset 转成数值 `strokeWidth`                             |
+| 动画 preset 工具 | `fadeIn` / `drawOn` / `scaleIn` 等                                                    | 生成动画 track；详见[动画](/kernel/components/effects/animation) |
+
+## 路径解析核心函数
 
 | API                | Signature                        | 用途                                                                                                                                                                                                                                                             |
 | ------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `parseWay`         | `(way: WayDSL) => Array<IRStep>` | 把 `<Draw way={...}>` 的 way 数组转成 path step 序列                                                                                                                                                                                                             |
 | `parseTargetSugar` | `(input: unknown) => IRTarget`   | 把 React DSL 字符串 shorthand 转成 IR target：`'+dx,dy'` / `'++dx,dy'` 变相对偏移，节点 ref 字符串委托 `parseNodeTarget`；**非字符串**输入（笛卡尔 / 极坐标 / 已是对象）原样返回。注意：非法字符串会抛错而非原样返回（如 `'+x,'`、未知 anchor、空 id、纯小数串） |
 | `parseNodeTarget`  | `(s: string) => IRNodeTarget`    | 节点 ref 字符串 → NodeTarget 对象：`'A'`→`{id:'A'}`、`'A.top'`→命名 anchor、`'A.30'`→角度 anchor；`north` 等 compass 写法作为别名归一到 Web 风格；按第一个 `.` 切分，含 `.` 的 id / shape 自定义 anchor 须写对象形态；空 id / 未知 anchor / 纯小数串抛错         |
+
+## 锚点与方向别名
+
+`parseAnchorAlias` 接受 canonical anchor，也会把 `north` / `south` / `east` / `west` 和 `above` / `below` 归一为 Web 风格方向；角点还支持 `north-east`、`above-left` 等组合。`parseSideAlias` 只处理四个边方向，无法识别时两者都返回 `undefined`。
+
+`SupportedAnchorSugarNames` 是错误消息可展示的完整候选集合。Shape 自定义 anchor 不在这份通用集合中，应直接使用对象目标 `{ id, anchor }`。
+
+## 语义线宽
+
+`parsePathThickness({ strokeWidth, thickness })` 优先保留显式 `strokeWidth`；只有数值线宽缺省时才把 `thickness` 映射为 IR 的 `strokeWidth`。两者都缺省时返回空对象，让下游使用默认值。
+
+| `PathThickness` | `strokeWidth` |
+| --------------- | ------------- |
+| `ultraThin`     | `0.25`        |
+| `veryThin`      | `0.5`         |
+| `thin`          | `1`           |
+| `semithick`     | `1.5`         |
+| `thick`         | `2`           |
+| `veryThick`     | `3`           |
+| `ultraThick`    | `4`           |
 
 ## 画线方式常量
 
@@ -89,3 +118,26 @@ Parser reference 覆盖 `@retikz/core` 公开的 sugar 解析函数。它们不�
 | 末尾 label               | `parseWay: label operator at end of way`                                     |
 
 这些错误属于 sugar 输入错误，应该在 adapter / 开发期尽早暴露，而不是降级成 warning。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Parser 公共导出面',
+      path: 'packages/kernel/core/src/parsers/index.ts',
+      startLine: 1,
+      endLine: 6,
+    },
+    {
+      label: '锚点与方向别名归一化',
+      path: 'packages/kernel/core/src/parsers/anchor-alias.ts',
+      startLine: 27,
+      endLine: 38,
+    },
+    {
+      label: '语义线宽映射与优先级',
+      path: 'packages/kernel/core/src/parsers/path-thickness.ts',
+      startLine: 29,
+      endLine: 61,
+    },
+  ]}
+/>

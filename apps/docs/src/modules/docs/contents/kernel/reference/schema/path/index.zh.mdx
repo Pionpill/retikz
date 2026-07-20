@@ -80,7 +80,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 <span id="pathribbonoptions"></span>
 
-## PathRibbonOptions
+## 带状路径选项
 
 `PathRibbonOptionsSchema` 配置内置 `kind: 'ribbon'` path provider。中心线模式读取 Path 的 `children`；boundary 模式读取这个对象里的 `upper` / `lower` 两条 step 数组，不再使用 `children`。
 
@@ -430,6 +430,21 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
     fill: '填充色 override（空心 shape 忽略）',
     opacity: '箭头透明度 0..1',
     lineWidth: '空心 shape 描边粗细',
+  }}
+/>
+
+<span id="pathmarkplacement"></span>
+
+### 标记位置
+
+`PathMarkPlacementSchema` 把一个 mark 放在路径归一化位置上；方向由该位置的路径切线决定。
+
+<ZodSchema
+  name="PathMarkPlacementSchema"
+  description="路径上的一个归一化标记位置及其 mark。"
+  descriptions={{
+    pos: '路径上的归一化位置 0..1；line-like step 按弧长，曲线 step 按参数位置',
+    mark: '放置的标记；当前为沿路径切线定向的 ArrowMark',
   }}
 />
 

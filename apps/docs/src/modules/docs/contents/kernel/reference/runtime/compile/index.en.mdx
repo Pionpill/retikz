@@ -3,7 +3,7 @@ title: Compile
 description: The IR-to-Scene compile entry point, layout options, text measuring, and warning contract
 ---
 
-The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Scene`. The React renderer, future SSR / Canvas adapters, and custom export pipelines should integrate at this boundary.
+The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Scene`. React and Vanilla adapters, server-side export flows, and custom renderers share the same compile semantics at this boundary.
 
 ## Functions
 
@@ -15,7 +15,7 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 | `fallbackMeasurer`     | `(text, font) => TextMetrics`                                       | Default text measurer; approximate but runnable, useful as a no-DOM fallback                    |
 | `formatCompileWarning` | `(warning: CompileWarning) => string`                               | Formats a structured warning into the standard readable message                                 |
 
-`compileToScene` runs in two passes: first it lays out nodes / coordinates and registers ids, then it emits primitives in the original child order. Paths can resolve registered nodes / coordinates, while final rendering order still follows the order written by the user.
+`compileToScene` traverses and registers nodes and coordinates in the current scope before filling deferred path slots. A path can therefore reference a target declared later in that scope. Output is then stably sorted by ascending `zIndex`; only primitives with the same `zIndex` retain declaration order.
 
 `lowerIRToKernel` performs no layout or Scene emission; it only consumes `composites` and `maxCompositeDepth`. An unregistered composite throws, while full `compileToScene` emits `COMPOSITE_NOT_REGISTERED` and skips that node. Both paths throw on a nesting limit or cycle.
 
@@ -34,13 +34,13 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 
 ### Layout And Output
 
-| Option          | Type     | Default | Notes                                                                                                  |
-| --------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `padding`       | `number` | `10`    | Extra layout padding in user units                                                                     |
-| `precision`     | `number` | `2`     | Decimal precision for output Scene primitives / path d / layout; internal geometry is double precision |
-| `nodeDistance`  | `number` | `24`    | Default distance for `AtPosition` when `distance` is omitted                                           |
-| `labelDistance` | `number` | `12`    | Default distance between a node label and the node boundary when `Node.label.distance` is omitted      |
-| `fontSize`      | `number` | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged |
+| Option          | Type     | Default | Notes                                                                                                                       |
+| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `padding`       | `number` | `10`    | Extra layout padding in user units                                                                                          |
+| `precision`     | `number` | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision |
+| `nodeDistance`  | `number` | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                |
+| `labelDistance` | `number` | `12`    | Default distance between a node label and the node boundary when `Node.label.distance` is omitted                           |
+| `fontSize`      | `number` | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                      |
 
 ### Provider Registries
 
@@ -124,3 +124,26 @@ Most warnings do not stop compilation. But when a coordinate's / node's own posi
 | `animations?` | `Array<IRAnimationTrack>` | Scene-root (camera) timeline tracks (viewBox property), passed through from the IR root `animations`; omitted when there are none                       |
 
 A custom renderer must consume `resources` and `animations`, otherwise gradients / clipping / camera animations are lost. If there are no bbox candidate points, `computeLayout` returns a `100×100` fallback layout.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Assemble Scene, resources, and root animations at the compile entry point',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+    {
+      label: 'Resolve deferred paths and fill their original output slots',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 147,
+      endLine: 161,
+    },
+    {
+      label: 'Stably sort Scene primitives by zIndex',
+      path: 'packages/kernel/core/src/compile/orchestration/primitive.ts',
+      startLine: 26,
+      endLine: 31,
+    },
+  ]}
+/>

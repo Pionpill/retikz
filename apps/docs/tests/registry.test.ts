@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components';
 
 describe('SCHEMA_REGISTRY', () => {
-  it('contains 40 entries (23 primary + 12 step variants + 2 target variants + 3 arrow detail variants)', () => {
-    expect(Object.keys(SCHEMA_REGISTRY)).toHaveLength(40);
+  it('contains the documented core schema surface', () => {
+    expect(Object.keys(SCHEMA_REGISTRY)).toHaveLength(82);
   });
 
   it('each entry has non-empty schema / label / url', () => {

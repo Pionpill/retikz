@@ -1,6 +1,6 @@
 ---
-title: 原语
-description: compile 输出的渲染目标无关绘制模型
+title: 场景原语
+description: 查询 compile 输出的 Scene、资源、结构化图元与 renderer 消费边界
 ---
 
 Scene primitive 是 `compileToScene` 的输出合同：IR 经过布局后不再包含 React / JSX / Zod schema，而是一组 renderer 可以直接消费的结构化图元。
@@ -108,6 +108,19 @@ renderer 不需要重新决定文字布局，只需要按 `TextPrim` 的锚点�
 
 compile 层已经把 core IR 的 `marks` 端点箭头解析成 `ResolvedArrowEndSpec`：查 effective arrow 表、调 `def.emit` 产几何，并完成路径端点收缩。renderer 不需要再理解箭头注册表或重新计算视觉尺寸。
 
+### Marker 原语子集
+
+`ResolvedArrowEndSpec.marker` 不接受完整的 `ScenePrimitive`，而是限制在 marker 局部坐标系中的窄子集：
+
+| 类型                | 可表达内容                       |
+| ------------------- | -------------------------------- |
+| `MarkerPathPrim`    | 结构化 path command 与基础描填充 |
+| `MarkerEllipsePrim` | 圆 / 椭圆                        |
+| `MarkerRectPrim`    | 矩形与圆角矩形                   |
+| `MarkerGroupPrim`   | 变换与上述 marker 子图元组合     |
+
+这一子集不含文字、递归箭头、外部 `resourceRef` 或 clip；`MarkerGroupPrim` 可以组合和变换子图元，但不能突破这些限制。
+
 ## 变换
 
 `GroupPrim.transforms` 是按顺序应用的结构化 transform：
@@ -119,3 +132,22 @@ compile 层已经把 core IR 的 `marks` 端点箭头解析成 `ResolvedArrowEnd
 | `scale`     | `x` / `y?`                | 缩放；`y` 省略时等比   |
 
 这层刻意不包含 SVG-only / Canvas-only 特性，例如 filter、marker、imageData。adapter 需要把这些结构翻译为各自平台支持的绘制能力。
+
+要查看平台物化行为，继续阅读 [SVG renderer](/kernel/packages/render/svg) 与 [Canvas renderer](/kernel/packages/render/canvas)。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Scene 与 ScenePrimitive 公共合同',
+      path: 'packages/kernel/core/src/contract/scene/scene.ts',
+      startLine: 14,
+      endLine: 32,
+    },
+    {
+      label: 'MarkerPrimitive 的封闭子集与限制',
+      path: 'packages/kernel/core/src/contract/scene/marker.ts',
+      startLine: 141,
+      endLine: 162,
+    },
+  ]}
+/>

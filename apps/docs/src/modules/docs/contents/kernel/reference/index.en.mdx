@@ -1,27 +1,27 @@
 ---
 title: Reference
-description: Look up stable contracts for composite extensions, IR schemas, and the runtime pipeline.
+description: Look up stable contracts for domain modules, IR schemas, and the runtime pipeline.
 ---
 
-Reference pages are contract dictionaries rather than tutorials. Use them when checking how high-level nodes lower, which values an IR field accepts, or which Scene primitives compilation produces.
+Reference pages are contract dictionaries rather than tutorials. Use them when checking how Tier 2 domain capabilities integrate, which values an IR field accepts, or which Scene primitives compilation produces.
 
 > This is the reference layer, not component documentation. Start with [Components](/kernel/components) when authoring figures.
 
 ## Responsibilities
 
-| Group     | Responsibility                           | Reach for it when                            |
-| --------- | ---------------------------------------- | -------------------------------------------- |
-| Composite | Register and lower high-level IR nodes   | Integrating Tier 2 capabilities such as plot |
-| Schema    | Define IR structures and field contracts | Generating, persisting, or validating IR     |
-| Runtime   | Compile IR to Scene and expose parsers   | Driving compilation or low-level tooling     |
+| Group          | Responsibility                                       | Reach for it when                           |
+| -------------- | ---------------------------------------------------- | ------------------------------------------- |
+| Domain Modules | Domain semantics, dependencies, and Core integration | Looking up standalone packages such as Plot |
+| Schema         | Define IR structures and field contracts             | Generating, persisting, or validating IR    |
+| Runtime        | Compile IR to Scene and expose parsers               | Driving compilation or low-level tooling    |
 
 ## Chapters
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/reference/composites">
-    <span className="font-semibold">Composite</span>
+  <LinkedCard href="/kernel/reference/domains">
+    <span className="font-semibold">Domain Modules</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Tier 2 registration, validation, and lowering
+      Responsibilities, dependencies, and Core integration for Tier 2 packages such as Plot
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/schema">

@@ -61,6 +61,29 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 </Comparison>
 
+<span id="shaperef"></span>
+
+## 形状引用
+
+`ShapeRefSchema` 用于需要参数的 shape。无参数 shape 可直接写字符串；对象形式把 provider 名与 JSON 参数一起交给 shape Definition 校验。
+
+<ZodSchema
+  name="ShapeRefSchema"
+  description="形状 provider 名与可选 JSON 参数。"
+  descriptions={{
+    type: '内置或通过 CompileOptions.shapes 注册的 shape 名；未注册名在编译期报错',
+    params: '参数化 shape 的 JSON 对象；字段由注册 shape 自己的 schema 校验',
+  }}
+/>
+
+<span id="boundary"></span>
+
+## 连接边界
+
+`BoundarySchema` 决定 path 端点和方向锚点贴在哪条连接面。字符串 `shape` 使用视觉 shape 自身；其它字符串或 `ShapeRef` 选择内置 / 注册的 boundary provider。
+
+<ZodSchema name="BoundarySchema" description="节点或单个 path 端点使用的连接面引用。" />
+
 <span id="coordinate"></span>
 
 ## 坐标
@@ -132,6 +155,63 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 />
 
 字符串里的 `$...$` / `$$...$$` 是公式 sugar，会归一化为 `MathRunSchema`；显式 `{ tex, displayMode?, fill?, opacity? }` 也可作为 run。公式需要宿主注入 `CompileOptions.lowerTex`，完整接入见 [TeX 包](/kernel/packages/tex)。
+
+<span id="styledline"></span>
+
+### 行级样式
+
+<ZodSchema
+  name="StyledLineSchema"
+  description="带文字内容和可选视觉覆盖的单行。"
+  descriptions={{
+    text: '本行文字内容',
+    fill: '本行文字颜色；覆盖文本块默认值',
+    opacity: '本行透明度 0..1',
+    font: '本行字体覆盖；缺省字段继承文本块 font',
+  }}
+/>
+
+<span id="mixedline"></span>
+
+### 混合文本行
+
+<ZodSchema
+  name="MixedLineSchema"
+  description="在同一基线上从左到右排列 text run 与 math run 的一行。"
+  descriptions={{
+    runs: '至少一个 TextRun 或 MathRun，按数组顺序排版',
+  }}
+/>
+
+<span id="textrun"></span>
+
+#### TextRun
+
+<ZodSchema
+  name="TextRunSchema"
+  description="混合文本行中的普通文字片段。"
+  descriptions={{
+    text: '文字片段内容',
+    fill: '片段颜色；覆盖行 / 文本块默认值',
+    opacity: '片段透明度 0..1',
+    font: '片段字体覆盖；缺省字段向上继承',
+  }}
+/>
+
+<span id="mathrun"></span>
+
+#### MathRun
+
+<ZodSchema
+  name="MathRunSchema"
+  description="由 lowerTex 转换为 glyph path 的公式片段。"
+  descriptions={{
+    tex: 'LaTeX 源码字符串',
+    displayMode: '是否使用 display 公式度量；默认 false（inline）',
+    fill: '公式 glyph 颜色；覆盖行 / 文本块默认值',
+    opacity: '公式片段透明度 0..1',
+  }}
+/>
 
 <span id="font"></span>
 

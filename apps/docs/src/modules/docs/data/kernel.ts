@@ -133,18 +133,21 @@ export const kernelSection: Array<Section> = [
     document: true,
     pages: [
       {
-        id: 'composites',
-        label: 'kernel.refComposites',
-        children: [{ id: 'plot', label: 'kernel.refPlot' }],
+        id: 'domains',
+        label: 'kernel.refDomains',
+        children: [{ id: 'plot', label: 'kernel.refVisualizationPlot' }],
       },
       {
         id: 'schema',
         label: 'kernel.refSchema',
         children: [
           { id: 'scene', label: 'kernel.refSceneSchema' },
+          { id: 'scope', label: 'kernel.refScopeSchema' },
           { id: 'entity', label: 'kernel.refEntity' },
           { id: 'path', label: 'kernel.refPathSchema' },
           { id: 'placement', label: 'kernel.refPlacement' },
+          { id: 'style', label: 'kernel.refStyleSchema' },
+          { id: 'animation', label: 'kernel.refAnimationSchema' },
         ],
       },
       {

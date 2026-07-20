@@ -1,0 +1,50 @@
+---
+title: Animation
+description: JSON-safe AnimationTrack, keyframe, easing, trigger, and transform-origin contracts
+---
+
+Core IR stores declarative animation data only: property names, keyframes, timing, and triggers. Playback state, event callbacks, and interpolation execution remain in the renderer runtime, keeping the full schema serializable.
+
+<span id="animationtrack"></span>
+
+## AnimationTrack
+
+<ZodSchema name="AnimationTrackSchema" />
+
+Built-in properties further refine `value`: opacity, strokeWidth, translation, rotation, scale, and pathDraw use numbers; fill / stroke use color strings; scene-root viewBox uses `[x, y, width, height]`. Custom properties are interpreted by renderer-registered interpolators.
+
+<span id="keyframe"></span>
+
+## Keyframe
+
+<ZodSchema name="KeyframeSchema" />
+
+<span id="easing"></span>
+
+## Easing
+
+`EasingSchema` accepts a built-in / custom easing name or a cubic-bezier tuple `[x1, y1, x2, y2]`.
+
+<ZodSchema name="EasingSchema" />
+
+<span id="trigger"></span>
+
+## Trigger
+
+`TriggerSchema` accepts `load`, `visible`, `manual`, or an object carrying an event name. The IR stores the name, never a callback function.
+
+<ZodSchema name="TriggerSchema" />
+
+<span id="eventtrigger"></span>
+
+<ZodSchema name="EventTriggerSchema" />
+
+<span id="origin"></span>
+
+## Origin
+
+`OriginSchema` accepts a canonical anchor name or element-local `[x, y]` coordinates. It affects scale, scaleX, scaleY, and rotate only.
+
+<ZodSchema name="OriginSchema" />
+
+For presets, triggers, and fallback behavior at the component layer, see [Animation](/kernel/components/effects/animation). For custom properties, interpolators, and the renderer registry, see [Custom Animation](/kernel/components/effects/custom-animation).

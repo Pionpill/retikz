@@ -1,6 +1,6 @@
 ---
-title: Primitive
-description: The renderer-agnostic drawing model produced by compile
+title: Scene Primitives
+description: Look up the Scene, resources, structured primitives, and renderer boundary produced by compile
 ---
 
 Scene primitives are the output contract of `compileToScene`: after IR is laid out, the result no longer contains React, JSX, or Zod schemas. It is a structured drawing model that renderers can consume directly.
@@ -108,6 +108,19 @@ Coordinates use user units. Angles follow the screen-coordinate convention: `0 =
 
 The compile layer has already resolved endpoint arrow entries from core IR `marks` into `ResolvedArrowEndSpec`: it looks up the effective arrow table, calls `def.emit` to produce geometry, and shrinks path endpoints. Renderers do not need to know the arrow registry or recompute visual sizes.
 
+### Marker primitive subset
+
+`ResolvedArrowEndSpec.marker` does not accept the full `ScenePrimitive` union. It uses a narrow subset in marker-local coordinates:
+
+| Type                | Expresses                                 |
+| ------------------- | ----------------------------------------- |
+| `MarkerPathPrim`    | Structured path commands and basic paints |
+| `MarkerEllipsePrim` | Circles and ellipses                      |
+| `MarkerRectPrim`    | Rectangles and rounded rectangles         |
+| `MarkerGroupPrim`   | Transforms and nested marker primitives   |
+
+This subset excludes text, recursive arrows, external `resourceRef` values, and clips. `MarkerGroupPrim` can compose and transform child primitives but cannot bypass those restrictions.
+
 ## Transforms
 
 `GroupPrim.transforms` is an ordered list of structured transforms:
@@ -119,3 +132,22 @@ The compile layer has already resolved endpoint arrow entries from core IR `mark
 | `scale`     | `x` / `y?`                | Scaling; `y` defaults to `x`                        |
 
 This layer intentionally excludes SVG-only or Canvas-only features such as filters, markers, or image data. Adapters translate the common structure into whatever their platform supports.
+
+For platform materialization behavior, continue to the [SVG renderer](/kernel/packages/render/svg) and [Canvas renderer](/kernel/packages/render/canvas).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Public Scene and ScenePrimitive contracts',
+      path: 'packages/kernel/core/src/contract/scene/scene.ts',
+      startLine: 14,
+      endLine: 32,
+    },
+    {
+      label: 'Closed MarkerPrimitive subset and restrictions',
+      path: 'packages/kernel/core/src/contract/scene/marker.ts',
+      startLine: 141,
+      endLine: 162,
+    },
+  ]}
+/>

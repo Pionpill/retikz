@@ -98,6 +98,23 @@ description: position 字段的五种形态 —— 笛卡尔 / 极坐标 / 相�
   description="自包含端点类型（排除 path-relative），用于 partway between 的端点。"
 />
 
+<span id="nodetarget"></span>
+
+## 命名实体目标
+
+`NodeTargetSchema` 是 path 端点引用 Node / Coordinate 的对象形式。省略 `anchor` 时自动裁剪到连接边界；显式 anchor、offset 与单端 boundary override 只影响这一个端点。
+
+<ZodSchema
+  name="NodeTargetSchema"
+  description="对命名 Node / Coordinate 的端点引用。"
+  descriptions={{
+    id: '被引用的 Node / Coordinate id；必须已经定义',
+    anchor: '命名 anchor、角度 anchor，或 `{ side, fraction }` 边界比例点；省略时自动裁剪',
+    offset: 'anchor / 边界点解析后叠加的世界坐标 `[dx, dy]`',
+    boundary: '此端点独有的连接面覆盖；省略时使用目标 Node 的 boundary',
+  }}
+/>
+
 <Comparison target="tikz" title="比例 partway">
 
 `BetweenPositionSchema` 对应 TikZ `calc` library 的 `($(A)!t!(B)$)`。同一形态可用于 `Node.position` / `Coordinate.position` / path `Step.to`。

@@ -2,72 +2,167 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/**
- * 运行时管线示意
- * @description 主流程 JSX → IR → Scene → SVG / Canvas / …。灰色备注在下方标出 Parser（sugar→IR）、
- *   Compile（IR→Scene）、Primitive（Scene 图元）、render（Scene→渲染目标，@retikz/react）分别在哪起作用。
- *   纯技术 label，单文件共用。
- */
+/** 从宿主适配到渲染后端的运行时主链，并标明 Parser 只是 IR 输入旁路 */
 const Demo: FC = () => (
-  <Layout width={680} height={190}>
-    {/* 主流程 */}
-    <Node id="jsx" position={[-300, 0]} stroke="none">
-      JSX
-    </Node>
-    <Node id="ir" position={[-175, 0]} stroke="none">
-      IR
-    </Node>
-    <Node id="scene" position={[-30, 0]} stroke="none">
-      Scene
-    </Node>
-    <Node id="target" position={[215, 0]} stroke="none">
-      SVG / Canvas / …
-    </Node>
-    <Draw way={['jsx', 'ir']} arrow="->" />
-    <Draw way={['ir', 'scene']} arrow="->" />
-    <Draw way={['scene', 'target']} arrow="->" />
-
-    {/* 灰色备注：备注在下方、箭头朝上 */}
-    <Node id="capParser" position={[-238, 60]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
-      Parser
-    </Node>
-    <Draw
-      way={[
-        [-238, 42],
-        [-238, 8],
+  <Layout width={760} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Node
+      id="host-group"
+      text=" "
+      position={[-290, -28]}
+      minimumSize={{ width: 160, height: 88 }}
+      stroke="lightgray"
+      fill="lightgray"
+      fillOpacity={0.04}
+      dashPattern={[4, 3]}
+      cornerRadius={4}
+    />
+    <Node
+      text="Host adapters"
+      position={[-325, -60]}
+      stroke="none"
+      fill="none"
+      padding={0}
+      textColor="gray"
+      font={{ size: 12 }}
+    />
+    <Node
+      id="adapters"
+      text={[
+        { text: 'React / Vanilla', font: { weight: 'bold' } },
+        { text: 'authoring adapters', fill: 'gray', font: { size: 11 } },
       ]}
-      arrow="->"
-      stroke="gray"
+      position={[-290, -23]}
+      minimumSize={{ width: 132, height: 46 }}
+      stroke="dodgerblue"
+      fill="dodgerblue"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
     />
 
-    <Node id="capCompile" position={[-103, 60]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
-      Compile
-    </Node>
-    <Draw
-      way={[
-        [-103, 42],
-        [-103, 8],
+    <Node
+      id="core-group"
+      text=" "
+      position={[0, -3]}
+      minimumSize={{ width: 390, height: 138 }}
+      stroke="lightgray"
+      fill="lightgray"
+      fillOpacity={0.04}
+      dashPattern={[4, 3]}
+      cornerRadius={4}
+    />
+    <Node
+      text="@retikz/core"
+      position={[-152, -60]}
+      stroke="none"
+      fill="none"
+      padding={0}
+      textColor="gray"
+      font={{ size: 12 }}
+    />
+    <Node
+      id="ir"
+      text={[
+        { text: 'Core IR', font: { weight: 'bold' } },
+        { text: 'serializable input', fill: 'gray', font: { size: 11 } },
       ]}
-      arrow="->"
+      position={[-125, -23]}
+      minimumSize={{ width: 104, height: 46 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
+    />
+    <Node
+      id="compile"
+      text={[
+        { text: 'compileToScene', font: { weight: 'bold' } },
+        { text: 'layout · resolve', fill: 'gray', font: { size: 11 } },
+      ]}
+      position={[0, -23]}
+      minimumSize={{ width: 120, height: 46 }}
+      stroke="dimgray"
+      fill="dimgray"
+      fillOpacity={0.06}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
+    />
+    <Node
+      id="scene"
+      text={[
+        { text: 'Scene', font: { weight: 'bold' } },
+        { text: 'resolved primitives', fill: 'gray', font: { size: 11 } },
+      ]}
+      position={[125, -23]}
+      minimumSize={{ width: 104, height: 46 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
+    />
+    <Node
+      id="parser"
+      text={[
+        { text: 'Parser helpers', font: { weight: 'bold' } },
+        { text: 'sugar → IR fragment', fill: 'gray', font: { size: 11 } },
+      ]}
+      position={[-125, 36]}
+      minimumSize={{ width: 132, height: 44 }}
       stroke="gray"
+      fill="gray"
+      fillOpacity={0.06}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
     />
 
-    <Node id="capPrimitive" position={[-30, 60]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
-      Primitive
-    </Node>
-    <Draw way={[[-30, 42], 'scene']} arrow="->" stroke="gray" />
-
-    <Node id="capRender" position={[65, 60]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
-      {['render', '@retikz/react']}
-    </Node>
-    <Draw
-      way={[
-        [65, 42],
-        [65, 8],
-      ]}
-      arrow="->"
-      stroke="gray"
+    <Node
+      id="render-group"
+      text=" "
+      position={[290, -28]}
+      minimumSize={{ width: 160, height: 88 }}
+      stroke="lightgray"
+      fill="lightgray"
+      fillOpacity={0.04}
+      dashPattern={[4, 3]}
+      cornerRadius={4}
     />
+    <Node
+      text="Render"
+      position={[245, -60]}
+      stroke="none"
+      fill="none"
+      padding={0}
+      textColor="gray"
+      font={{ size: 12 }}
+    />
+    <Node
+      id="render"
+      text={[
+        { text: '@retikz/render', font: { weight: 'bold' } },
+        { text: 'SVG · Canvas', fill: 'gray', font: { size: 11 } },
+      ]}
+      position={[290, -23]}
+      minimumSize={{ width: 132, height: 46 }}
+      stroke="dodgerblue"
+      fill="dodgerblue"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
+    />
+
+    <Draw way={['adapters', 'ir']} arrow="->" stroke="gray" />
+    <Draw way={['ir', 'compile']} arrow="->" stroke="gray" />
+    <Draw way={['compile', 'scene']} arrow="->" stroke="gray" />
+    <Draw way={['scene', 'render']} arrow="->" stroke="gray" />
+    <Draw way={['parser', 'ir']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
   </Layout>
 );
 

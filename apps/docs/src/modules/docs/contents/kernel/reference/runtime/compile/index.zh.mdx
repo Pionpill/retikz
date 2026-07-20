@@ -3,7 +3,7 @@ title: 编译
 description: IR 到 Scene 的编译入口、布局选项、文字度量与 warning 合同
 ---
 
-`@retikz/core` 的 compile 层把 JSON 化的 IR 转成已布局的 `Scene`。React 渲染器、未来的 SSR / Canvas adapter、以及任何自定义导出流程都应该从这里接入。
+`@retikz/core` 的 compile 层把 JSON 化的 IR 转成已布局的 `Scene`。React / Vanilla adapter、服务端导出流程和自定义 renderer 都在这条边界上共享同一份编译语义。
 
 ## 函数
 
@@ -15,7 +15,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `fallbackMeasurer`     | `(text, font) => TextMetrics`                                       | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底                       |
 | `formatCompileWarning` | `(warning: CompileWarning) => string`                               | 把结构化 warning 格式化为统一的可读消息                                 |
 
-`compileToScene` 分两步：先按 IR 顺序布局 node / coordinate 并注册 id，再按原始 children 顺序发出 primitive。这样路径可以引用任意已经注册的 node / coordinate，最终渲染顺序仍保持用户写入顺序。
+`compileToScene` 先遍历并注册当前作用域内的 node / coordinate，再回填延迟发出的 path，因此路径可以引用同一作用域中写在它后面的目标。输出随后按 `zIndex` 升序稳定排序；只有 `zIndex` 相同的图元才保持声明顺序。
 
 `lowerIRToKernel` 不做布局或 Scene 发出，只消费 `composites` 与 `maxCompositeDepth`。未注册 composite 会直接抛错；完整 `compileToScene` 则发出 `COMPOSITE_NOT_REGISTERED` 并跳过该节点。两条路径遇到嵌套超限或环都会抛错。
 
@@ -34,13 +34,13 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### 布局与输出
 
-| Option          | Type     | Default | 说明                                                                      |
-| --------------- | -------- | ------- | ------------------------------------------------------------------------- |
-| `padding`       | `number` | `10`    | layout 外围留白，单位为 user units                                        |
-| `precision`     | `number` | `2`     | 输出 Scene primitive / path d / layout 的小数位；内部几何保持 double 精度 |
-| `nodeDistance`  | `number` | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                             |
-| `labelDistance` | `number` | `12`    | `Node.label.distance` 未设置时，节点 label 与节点边界的默认距离           |
-| `fontSize`      | `number` | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号       |
+| Option          | Type     | Default | 说明                                                                                      |
+| --------------- | -------- | ------- | ----------------------------------------------------------------------------------------- |
+| `padding`       | `number` | `10`    | layout 外围留白，单位为 user units                                                        |
+| `precision`     | `number` | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
+| `nodeDistance`  | `number` | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
+| `labelDistance` | `number` | `12`    | `Node.label.distance` 未设置时，节点 label 与节点边界的默认距离                           |
+| `fontSize`      | `number` | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
 
 ### 扩展注册表
 
@@ -124,3 +124,26 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `animations?` | `Array<IRAnimationTrack>` | scene 根（镜头）时间轴动画 tracks（viewBox property），从 IR 根 animations 透传；无则省略             |
 
 自定义 renderer 必须消费 `resources` 与 `animations`，否则会丢渐变 / 裁剪 / 镜头动画。如果没有任何 bbox 候选点，`computeLayout` 返回 `100×100` 的兜底 layout。
+
+<SourceLinks
+  sources={[
+    {
+      label: '编译入口组装 Scene、资源与根动画',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+    {
+      label: '延迟解析 path 并回填原始输出位置',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 147,
+      endLine: 161,
+    },
+    {
+      label: '按 zIndex 稳定排序 Scene 图元',
+      path: 'packages/kernel/core/src/compile/orchestration/primitive.ts',
+      startLine: 26,
+      endLine: 31,
+    },
+  ]}
+/>

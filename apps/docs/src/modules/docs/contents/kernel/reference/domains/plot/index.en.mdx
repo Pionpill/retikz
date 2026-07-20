@@ -1,0 +1,79 @@
+---
+title: Visualization - Plot
+description: '@retikz/plot is the Tier 2 visualization grammar package in the Viz group. It deterministically lowers external data and serializable Plot IR into Core IR for React or Vanilla adapters to run.'
+---
+
+`@retikz/plot` is not a Kernel component. It is the data-visualization core of the **Viz group**. Kernel provides general primitives, Scene, composites, and renderer contracts; Plot adds the mapping from data semantics to graphical semantics.
+
+<ComponentPreview files={['cartesian-bar-line', 'cartesian-bar-line.data.ts']} />
+
+## Responsibilities Within Viz
+
+Viz is layered as data capabilities, visualization grammar, and host integration. Plot owns only the middle layer: visual mapping and lowering.
+
+| Package                | Responsibility                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `@retikz/data`         | Data models, field resolution, general transforms / statistics, and lineage     |
+| `@retikz/plot`         | Plot IR plus channels, scales, coordinates, marks, guides, layout, and lowering |
+| `@retikz/plot-react`   | React JSX authoring, data injection, and React runtime wiring                   |
+| `@retikz/plot-vanilla` | Framework-free `plotBuilder`, data injection, and Vanilla / SSR orchestration   |
+
+Plot does not own SVG / Canvas renderers, nor does it store React components or runtime functions. It receives JSON-serializable Plot IR and external data, produces graphical contributions for Core to compile, and optionally provides runtime lineage and diagnostics.
+
+## What Problem Plot Solves
+
+Raw data cannot become graphics directly. Fields must map to channels such as position and color, values must pass through transforms and scales, results must enter a coordinate system, and marks and guides must turn them into renderable structures.
+
+`@retikz/plot` describes this mapping with a grammar of graphics instead of maintaining a closed implementation for every chart type. Plot IR stores data references and visualization semantics while data stays at runtime, allowing the same IR to be validated, serialized, generated, and consumed through different adapters and renderers.
+
+## Dependencies
+
+| Dependency     | Capability reused by Plot                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------ |
+| `@retikz/data` | Data models, field and value semantics, general transforms / statistics, and lineage       |
+| `@retikz/math` | Coordinates such as `Position` and mathematical foundations                                |
+| `@retikz/core` | CompositeDefinition, Core IR, Scene compilation contracts, and general graphical semantics |
+
+The figure keeps only the main processing chain, with arrows showing the order of data and semantic processing. The API Layer sends data through Data first, Plot then resolves the visual grammar, and Pipeline finally lowers Plot IR to Core IR.
+
+<ComponentPreview files="plot-dependencies" size="xs" hideCode />
+
+`@retikz/plot-react` and `@retikz/plot-vanilla` form the API Layer that receives specs and datasets from React and Vanilla hosts. Data owns the data model and transforms; inside the `@retikz/plot` group, Plot owns the visual grammar and Pipeline owns lowering to Core IR.
+
+## Core Flow
+
+The main flow starts with host authoring, performs data preparation, visual-grammar resolution, and lowering inside Plot, then hands Core IR to Kernel compilation and a renderer. Built-in and custom definitions assist resolution without joining the primary data flow.
+
+<ComponentPreview files="plot-pipeline" size="sm" hideCode />
+
+1. **Build the specification**: the React composition DSL, Vanilla builder, or a direct spec produces `IRPlotSpec`; the host keeps datasets separately, outside the IR.
+2. **Prepare data**: schemas validate Plot IR, the data model resolves fields, and general and Plot-specific transforms produce the row views required by each layer.
+3. **Resolve visual grammar**: registries resolve channel, scale, coordinate, mark, and guide definitions; built-ins and extensions use the same resolution and consumption paths.
+4. **Lower to Core IR**: `lowerPlots(datasets, options)` creates the Plot composite definition. Plot lowering expands grids, marks, axes, labels, and legends into Core `Scope`, `Node`, and `Path` values.
+5. **Compile and render**: React or Vanilla adapters pass Plot IR and composite definitions to Core. Core compiles a Scene, which an SVG or Canvas renderer executes.
+
+Optional lineage remains runtime-only and is not written back into Plot IR or Scene. Schema and lowering contract failures stop before rendering and report an error.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Create the Plot composite definition and capture external data',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 724,
+      endLine: 735,
+    },
+    {
+      label: 'Connect Plot IR and lowerPlots to Layout in the React adapter',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 140,
+      endLine: 170,
+    },
+  ]}
+/>
+
+## Continue Reading
+
+- [Plot introduction](/viz/introduction): understand Viz's overall role and the Plot capability map
+- [Getting started](/viz/get-start): build a first chart from its data model
+- [Marks](/viz/grammar/mark): see how data becomes visual marks
+- [Cartesian coordinates](/viz/grammar/coordinate/2d): understand how coordinates, scales, and axes work together

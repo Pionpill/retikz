@@ -1,22 +1,22 @@
 ---
 title: 运行时
-description: 运行时参考——从 IR 编译管线、Primitive 与 Parser，到宿主注入的扩展机制。
+description: 查询从宿主规格到 Core IR、Scene 与渲染后端的运行时合同，以及可复用解析和扩展入口。
 ---
 
-这一分组是从 IR 到画面的运行时管线。`compile` 是入口，吃 IR、吐出渲染目标无关的 Scene Primitive；Primitive 是那份与具体渲染器无关的绘制模型；Parser 把 Sugar 输入转成 IR 片段；扩展机制则说明宿主怎样注入自定义 Definition、registry 与 lowerer。自己驱动编译、写扩展包或自定义渲染器时看这里。
+这一分组描述一份图如何穿过运行时边界：React / Vanilla adapter 先把宿主规格整理成 Core IR，`compileToScene` 完成下沉、布局与解析，再由 `@retikz/render` 把 Scene 物化为 SVG 或 Canvas。解析工具只是 adapter 可复用的 Sugar → IR 辅助入口，并不是每份 IR 都必须经过的独立阶段。
 
-<ComponentPreview files="runtime-flow" size="sm" hideCode />
+<ComponentPreview files="runtime-flow" size="xs" hideCode />
 
 > 这里是参考层，不是组件文档；写图请从 [组件](/kernel/components/layout) 开始。
 
 ## 职责一览
 
-| 主题      | 职责                                                    | 何时查阅                             |
-| --------- | ------------------------------------------------------- | ------------------------------------ |
-| Compile   | IR → Scene 的编译入口、布局选项、文字度量、warning 合同 | 自己驱动编译、配置布局、接收 warning |
-| Primitive | compile 输出的渲染目标无关绘制模型                      | 写自定义渲染器 / 导出器              |
-| Parser    | Sugar 输入到 IR 片段的纯函数转换                        | 复用相对坐标等 Sugar 解析逻辑        |
-| 扩展机制  | Definition、registry 与 host lowerer 的注入模型         | 写第三方包或宿主集成                 |
+| 主题     | 职责                                                    | 何时查阅                             |
+| -------- | ------------------------------------------------------- | ------------------------------------ |
+| 编译     | IR → Scene 的编译入口、布局选项、文字度量、warning 合同 | 自己驱动编译、配置布局、接收 warning |
+| 场景原语 | compile 输出的渲染目标无关绘制模型                      | 写自定义 renderer / 导出器           |
+| 解析工具 | Sugar 输入到 IR 片段的可复用纯函数                      | 编写 adapter 或自定义 DSL            |
+| 扩展机制 | Definition、registry 与 host lowerer 的注入模型         | 写第三方包或宿主集成                 |
 
 ## 章节内容
 
@@ -26,12 +26,12 @@ description: 运行时参考——从 IR 编译管线、Primitive 与 Parser，�
     <span className="mt-1 text-center text-sm text-muted-foreground">IR → Scene 入口、布局、文字度量与 warning</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/runtime/scene-primitive">
-    <span className="font-semibold">原语</span>
+    <span className="font-semibold">场景原语</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">渲染目标无关的绘制模型</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/runtime/parser">
-    <span className="font-semibold">解析器</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Sugar 输入到 IR 片段的纯函数</span>
+    <span className="font-semibold">解析工具</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Adapter 可复用的 Sugar → IR 辅助函数</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/runtime/extensions">
     <span className="font-semibold">扩展机制</span>

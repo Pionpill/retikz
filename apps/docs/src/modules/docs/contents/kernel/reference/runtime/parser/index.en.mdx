@@ -1,17 +1,46 @@
 ---
-title: Parser
-description: Pure conversion helpers from sugar input to IR fragments
+title: Parsing Helpers
+description: Look up reusable path, target, anchor, thickness, and animation Sugar conversion helpers for adapters
 ---
 
-Parser reference covers the sugar parsing helpers exported by `@retikz/core`. They do not depend on React, the DOM, or node indexes, so adapters, tests, and custom DSLs can reuse them.
+The parsing helpers exported by `@retikz/core` narrow author-facing Sugar into serializable IR fragments. They do not depend on React, the DOM, or node indexes, so adapters, tests, and custom DSLs can reuse them. Inputs that are already valid IR do not need to pass through this layer.
 
-## Functions
+## Public export overview
+
+| Capability              | Public exports                                                                        | Purpose                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Paths and targets       | `parseWay` / `parseTargetSugar` / `parseNodeTarget`                                   | Convert Draw ways and string shorthand into IR                                |
+| Anchor and side aliases | `parseAnchorAlias` / `parseSideAlias` / `SupportedAnchorSugarNames`                   | Normalize compass and TikZ-style names                                        |
+| Semantic thickness      | `parsePathThickness` / `PathThickness` / `PathThicknessSchema` / `THICKNESS_TO_WIDTH` | Convert a thickness preset into numeric `strokeWidth`                         |
+| Animation presets       | `fadeIn` / `drawOn` / `scaleIn` and related helpers                                   | Build animation tracks; see [Animation](/kernel/components/effects/animation) |
+
+## Core path helpers
 
 | API                | Signature                        | Purpose                                                                                                                                                                                                                                                                                                                                                          |
 | ------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `parseWay`         | `(way: WayDSL) => Array<IRStep>` | Converts the `<Draw way={...}>` way array into path steps                                                                                                                                                                                                                                                                                                        |
 | `parseTargetSugar` | `(input: unknown) => IRTarget`   | Converts React DSL string shorthand into IR targets: `'+dx,dy'` / `'++dx,dy'` become relative offsets, node ref strings delegate to `parseNodeTarget`; **non-string** input (Cartesian / polar / already-an-object) is returned unchanged. Note: invalid strings throw rather than passing through (e.g. `'+x,'`, unknown anchor, empty id, bare decimal string) |
 | `parseNodeTarget`  | `(s: string) => IRNodeTarget`    | Node ref string → NodeTarget object: `'A'`→`{id:'A'}`, `'A.top'`→named anchor, `'A.30'`→angle anchor; compass names such as `north` are accepted aliases and normalize to Web names; splits on the first `.`, so ids containing `.` or shape-specific anchors must use the object form; empty id / unknown anchor / bare decimal string throw                    |
+
+## Anchor and side aliases
+
+`parseAnchorAlias` accepts canonical anchors and normalizes `north` / `south` / `east` / `west` plus `above` / `below` to Web-style directions. Corner forms such as `north-east` and `above-left` are also supported. `parseSideAlias` is limited to the four sides; both helpers return `undefined` for unknown input.
+
+`SupportedAnchorSugarNames` is the complete candidate set intended for error messages. Shape-specific anchors are outside this shared set and should use the object target form `{ id, anchor }`.
+
+## Semantic thickness
+
+`parsePathThickness({ strokeWidth, thickness })` preserves an explicit `strokeWidth`. It maps `thickness` only when the numeric width is absent. If both are absent, it returns an empty object so downstream defaults remain in control.
+
+| `PathThickness` | `strokeWidth` |
+| --------------- | ------------- |
+| `ultraThin`     | `0.25`        |
+| `veryThin`      | `0.5`         |
+| `thin`          | `1`           |
+| `semithick`     | `1.5`         |
+| `thick`         | `2`           |
+| `veryThick`     | `3`           |
+| `ultraThick`    | `4`           |
 
 ## DrawWay
 
@@ -89,3 +118,26 @@ The regex accepts whitespace and negative numbers, such as `'+ -4, 8'` / `'++-4,
 | trailing label                    | `parseWay: label operator at end of way`                                     |
 
 These are sugar input errors. Adapters should surface them early during development instead of downgrading them to warnings.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Public parser exports',
+      path: 'packages/kernel/core/src/parsers/index.ts',
+      startLine: 1,
+      endLine: 6,
+    },
+    {
+      label: 'Normalize anchor and side aliases',
+      path: 'packages/kernel/core/src/parsers/anchor-alias.ts',
+      startLine: 27,
+      endLine: 38,
+    },
+    {
+      label: 'Map semantic thickness with explicit-width precedence',
+      path: 'packages/kernel/core/src/parsers/path-thickness.ts',
+      startLine: 29,
+      endLine: 61,
+    },
+  ]}
+/>
