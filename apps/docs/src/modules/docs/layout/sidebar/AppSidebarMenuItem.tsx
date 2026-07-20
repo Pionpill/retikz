@@ -24,6 +24,12 @@ const baseLinkClass =
 
 const activeLinkClass = 'text-foreground font-semibold bg-accent';
 
+/** 标准化文档路径，忽略末尾斜杠与大小写 */
+const normalizeDocPath = (value: string): string => {
+  const normalized = value.replace(/\/+$/, '');
+  return (normalized || '/').toLowerCase();
+};
+
 /**
  * 二级及以下菜单项
  * @description 叶子点击导航；分组点击主体导航到分组文档、点击右侧 chevron 仅展开/收起（命中自身或子项时高亮，命中子项时初始展开）；子项容器不带装饰竖线
@@ -34,9 +40,23 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const hasChildren = Boolean(item.children?.length);
-  const isActive = pathname.toLowerCase() === path.toLowerCase();
+  const normalizedPathname = normalizeDocPath(pathname);
+  const normalizedPath = normalizeDocPath(path);
+  const isActive = normalizedPathname === normalizedPath;
+  const isActiveBranch = hasChildren && normalizedPathname.startsWith(`${normalizedPath}/`);
 
-  const [open, setOpen] = useState(() => hasChildren && pathname.toLowerCase().startsWith(`${path.toLowerCase()}/`));
+  const [manualOpen, setManualOpen] = useState(false);
+  const [collapsedAtPath, setCollapsedAtPath] = useState<string | null>(null);
+  const open = isActiveBranch ? collapsedAtPath !== normalizedPathname : manualOpen;
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isActiveBranch) {
+      setCollapsedAtPath(nextOpen ? null : normalizedPathname);
+      return;
+    }
+
+    setManualOpen(nextOpen);
+  };
 
   if (!hasChildren) {
     return (
@@ -58,7 +78,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
 
   return (
     <li>
-      <Collapsible open={open} onOpenChange={setOpen}>
+      <Collapsible open={open} onOpenChange={handleOpenChange}>
         <div className={cn(baseLinkClass, isActive && activeLinkClass)}>
           <button
             type="button"
