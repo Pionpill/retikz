@@ -40,7 +40,7 @@ Tier 2 节点用 `namespace + type` 判别，拥有完整 schema，并在 compil
 | `schema`    | 校验完整高层节点并填充默认值               | 基于 `CompositeBaseSchema` |
 | `expand`    | 生成一个或多个 Tier 1，也可继续生成 Tier 2 | 最终必须收敛到 Tier 1      |
 
-编译器按 `${namespace}.${type}` 查注册表，校验节点后调用 `expand`；嵌套 composite 会继续展开，直到只剩 Tier 1。未注册节点产生 warning 并跳过，循环或超过深度限制则报错。完整字段、诊断与独立 lowering 入口见 [Composite 参考](/kernel/reference/composites)和[扩展运行时](/kernel/reference/runtime/extensions)。
+编译器按 `${namespace}.${type}` 查注册表，校验节点后调用 `expand`；嵌套 composite 会继续展开，直到只剩 Tier 1。未注册节点产生 warning 并跳过，循环或超过深度限制则报错。完整字段、诊断与独立 lowering 入口见[扩展运行时](/kernel/reference/runtime/extensions)。
 
 ## 与 Sugar 的区别
 
@@ -91,10 +91,6 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
   <LinkedCard href="/kernel/concepts/design/layers">
     <span className="font-semibold">分层</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">DSL、IR、Scene 三层模型与 lowering 所在位置</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/composites">
-    <span className="font-semibold">Composite 参考</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查询 composite 入口、诊断与具体 domain 实现</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/runtime/extensions">
     <span className="font-semibold">扩展运行时</span>

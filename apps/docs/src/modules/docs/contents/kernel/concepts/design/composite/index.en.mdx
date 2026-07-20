@@ -40,7 +40,7 @@ A capability usually belongs in a composite when all three are true:
 | `schema`    | Validate the full node and apply defaults | Extends `CompositeBaseSchema` |
 | `expand`    | Emit one or more Tier 1 or nested Tier 2  | Must eventually reach Tier 1  |
 
-The compiler looks up `${namespace}.${type}`, validates the node, and calls `expand`. Nested composites continue lowering until only Tier 1 remains. An unregistered node warns and is skipped; cycles or excess depth throw. See [Composite Reference](/kernel/reference/composites) and [Runtime Extensions](/kernel/reference/runtime/extensions) for complete fields, diagnostics, and standalone lowering entry points.
+The compiler looks up `${namespace}.${type}`, validates the node, and calls `expand`. Nested composites continue lowering until only Tier 1 remains. An unregistered node warns and is skipped; cycles or excess depth throw. See [Runtime Extensions](/kernel/reference/runtime/extensions) for complete fields, diagnostics, and standalone lowering entry points.
 
 ## Compared with Sugar
 
@@ -92,12 +92,6 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
     <span className="font-semibold">Layers</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       The DSL, IR, and Scene model and where lowering occurs
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/composites">
-    <span className="font-semibold">Composite Reference</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Composite entry points, diagnostics, and concrete domains
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/runtime/extensions">

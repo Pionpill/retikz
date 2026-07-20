@@ -1,23 +1,138 @@
 ---
 title: 架构
-description: 从库维护者角度判断能力归属、包边界、扩展完备性与完整执行流程。
+description: 从整体数据流、Core 源码结构与统一扩展模型理解 retikz 如何把作者输入编译为 Scene。
 ---
 
-本页是一张面向库维护者和扩展作者的架构检查表。它回答“一项能力应该由谁解决、边界在哪里、怎样证明已经形成完整闭环”；DSL、IR 与 Scene 的用户心智模型归[分层](/kernel/concepts/design/layers)讲解。
+retikz 把“描述图形”“解释能力”和“执行输出”分开：作者面向 IR 表达意图，Core 把 IR 编译成后端中立的 Scene，renderer 只负责执行 Scene。这样的边界让 React、Vanilla、LLM 与不同渲染后端可以共享同一套绘图语义。
 
 <ComponentAlert
   type="tip"
-  title="上手阶段可跳过本页"
-  description="只想先画图，可以继续阅读快速开始和组件文档；准备扩展 retikz、直接读写 IR 或判断新能力归属时再回来。"
+  title="上手阶段可以只看第一节"
+  description="只想先画图，看完架构总览后可以继续快速开始；准备读源码、扩展能力或直接处理 IR 时，再回来阅读后续章节。"
+/>
+
+## 一张图看懂架构
+
+先记住两个稳定产物：**IR 是描述边界，Scene 是执行边界**。React JSX、Vanilla plain spec 和已经过校验的外部 IR 都汇入同一条主数据流；Core 只输出 Scene，不直接输出 SVG 字符串、DOM 或 Canvas 像素。
+
+<ComponentPreview files="principles-packages" size="sm" hideCode />
+
+图中的实线是数据流：作者输入进入 IR，`compileToScene` 生成 Scene，renderer 再输出 SVG 或 Canvas。虚线是能力依赖：`@retikz/math` 提供纯几何底座，`@retikz/tex` 作为可选 lowerer 接入编译，而不是成为 IR 或 renderer 的特殊分支。
+
+| 包                | 第一职责                                     | 明确不拥有                    |
+| ----------------- | -------------------------------------------- | ----------------------------- |
+| `@retikz/math`    | 零依赖几何、曲线、矩阵与数值算法             | IR、schema、绘图业务语义      |
+| `@retikz/core`    | IR / Scene 契约、Definition、registry 与编译 | React 生命周期、DOM、Canvas   |
+| `@retikz/render`  | SVG、Canvas、hydration 与 animation runtime  | 作者 DSL、IR 语义和布局算法   |
+| `@retikz/react`   | JSX adapter、`<Layout>` 宿主与 React 接线    | 平行 IR、平行 renderer 语义   |
+| `@retikz/vanilla` | plain spec、mount、hydrate 与 SSR            | 与 React 不同的几何或编译结果 |
+| `@retikz/tex`     | 把 LaTeX 降成 renderer-neutral glyph paths   | 通用文字模型和 renderer 特判  |
+
+## Core 源码如何协作
+
+`@retikz/core/src` 的目录不是按功能随意分组，而是按契约与执行阶段分层。图中横向实线表示数据如何从便捷写法进入标准 IR，再编译为 Scene；两条垂直虚线分别表示 schema 约束和 Definition / registry 注入。底部的 `shared/` 是各层复用的纯词汇与工具底座，不参与执行流。
+
+<ComponentPreview files="principles-folders" size="md" hideCode />
+
+| 目录         | 拥有的职责                                                  | 不负责                       |
+| ------------ | ----------------------------------------------------------- | ---------------------------- |
+| `shared/`    | 无业务依赖的词汇、类型、纯工具与跨层 helper                 | IR schema、Definition、编排  |
+| `schemas/`   | Zod schema 与 IR 类型真源；字段 `.describe()`               | provider 函数与后端行为      |
+| `contract/`  | `XxxDefinition`、`defineXxx`、Scene 输出契约                | 内置实现与 registry 合并     |
+| `providers/` | 内置 Definition、`BUILTIN_*`、registry resolver 与查找诊断  | 新建平行 IR 或 renderer 语义 |
+| `parsers/`   | 把字符串、DSL shorthand 与 Sugar 纯函数归一为 IR 节点或片段 | 读取 registry、布局或运行时  |
+| `compile/`   | lowering、布局、命名空间、引用、资源与 IR → Scene 编排      | DOM、SVG / Canvas 后端执行   |
+
+`schemas/` 是 IR 的唯一数据准则：TypeScript 类型由 schema 推导，英文 `.describe()` 会进入 JSON Schema，供 LLM Tool Use、外部工具与文档消费。外部 JSON 应先在输入边界显式经过 `SceneSchema` 校验；`compileToScene` 消费规范化后的 `IRScene`，不替代这道输入校验。
+
+## 内置与扩展共用一条路
+
+可扩展能力不采用“内置 switch + 扩展补丁”。每个能力先定义 `XxxDefinition` 协议，再由内置项与 `defineXxx(...)` 创建的自定义项共同进入一个有效 registry，最后由 compile 使用相同 key 查找和消费。
+
+<ComponentPreview files="principles-registry" size="xs" hideCode />
+
+“内置与扩展都是一等公民”具体意味着三件事：
+
+1. **同一协议**：两者都必须满足相同 Definition，不给内置实现保留隐藏字段。
+2. **同一注册表**：`BUILTIN_*` 与 `options.xxx` 在每次编译开始时合并为同一个 `ReadonlyMap`。
+3. **同一消费路径**：resolver、错误诊断和 compile consumer 不区分 key 来自内置还是调用方。
+
+内置项会先注册，自定义项随后加入；建表阶段拒绝空 key 和重复 key。消费阶段遇到未知 key 时，再按具体能力的契约选择报错，或告警后跳过。因此“一等公民”表示同一协议与执行路径，不表示自定义项可以静默覆盖内置项。完整扩展族、注入入口与异常语义查[扩展机制](/kernel/reference/runtime/extensions)。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Core 六个源码目录的职责契约',
+      path: 'packages/kernel/core/AGENTS.md',
+      startLine: 23,
+      endLine: 34,
+    },
+    {
+      label: '可导出 JSON Schema 的 IR 真源',
+      path: 'packages/kernel/core/src/schemas/scene/schema.ts',
+      startLine: 13,
+      endLine: 50,
+    },
+    {
+      label: '由 schema 推导 IR TypeScript 类型',
+      path: 'packages/kernel/core/src/schemas/scene/types.ts',
+      startLine: 17,
+      endLine: 21,
+    },
+    {
+      label: '验证字段描述进入 JSON Schema',
+      path: 'packages/kernel/core/tests/schemas/scene-json-schema.test.ts',
+      startLine: 6,
+      endLine: 18,
+    },
+    {
+      label: '内置与自定义 Definition 合并为统一 registry',
+      path: 'packages/kernel/core/src/providers/registry.ts',
+      startLine: 74,
+      endLine: 112,
+    },
+  ]}
+/>
+
+## 完整执行流程
+
+`compileToScene` 不会遍历 IR 后直接输出 SVG。便捷语法先在 authoring / parser 边界归一为 IR；编译阶段再建立本次调用专用的能力上下文，按依赖顺序解决 lowering、布局和引用，最后才组装 Scene。
+
+<ComponentPreview files="principles-compile" size="xs" hideCode />
+
+1. **作者输入汇入 IR**：React JSX、Vanilla plain spec 与 parser sugar 生成同一 JSON 契约；外部 JSON 在进入前显式校验。
+2. **创建编译上下文**：合并本次调用的 measure、warning、lowerer，以及内置和自定义 provider definitions，不写全局状态。
+3. **Composite lowering**：Tier 2 节点按注册 Definition 校验并展开为 Tier 1 Kernel IR。
+4. **布局与命名空间**：解析 Node、Coordinate、Scope 的位置、形状、边界和样式，登记可引用 layout。
+5. **延迟解析 Path**：节点就位后再解析 anchor、generator、arrow、ribbon 与 path kind，保持声明顺序。
+6. **组装 Scene 与 runtime**：合并 primitive、资源、动画和 bounds；SVG / Canvas、hydration 与 animation 在 Scene 之后执行。
+
+这个顺序界定了边界：parser 不读取 provider registry，renderer 不重新解释 IR，adapter 不复制布局。新能力如果必须跨过这些边界才能工作，应先修正契约，而不是增加特判。
+
+<SourceLinks
+  sources={[
+    {
+      label: '创建 compile-local context 并集中解析 registries',
+      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+      startLine: 78,
+      endLine: 115,
+    },
+    {
+      label: '把共享 IR 编译为 renderer-agnostic Scene',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+  ]}
 />
 
 ## 能力归属原则
 
-遇到新需求时，先判断它改变的是书写体验、共享绘图语义、高层领域模型、可替换编译策略，还是后端运行行为，再从第一责任 owner 开始设计。
+建立整体框架后，再判断一项需求改变的是书写体验、共享绘图语义、高层领域模型、可替换编译策略，还是后端运行行为，并从第一责任 owner 开始设计。
 
 <ComponentPreview files="principles-placement" size="md" hideCode />
 
-图中箭头指向第一责任 owner，不代表一项能力只能改一个包。同一能力可以包含 authoring、contract、compile 与 runtime 接线，但每层语义只能有一个真源。
+图中箭头指向第一责任 owner，节点第二行给出常见实现锚点；这不代表一项能力只能改一个包。同一能力可以包含 authoring、contract、compile 与 runtime 接线，但每层语义只能有一个真源。
 
 | 需求信号                  | 第一责任 owner          | 边界失守信号                    |
 | ------------------------- | ----------------------- | ------------------------------- |
@@ -41,56 +156,7 @@ description: 从库维护者角度判断能力归属、包边界、扩展完备�
 | 外部扩展   | 内置与自定义是否共享 Definition、registry、resolver 与诊断         | 补齐统一扩展链或说明闭合原因 |
 | 端到端闭环 | 输入、编译、Scene、renderer、adapter、测试与文档是否全部接通       | 列出缺口，不能用单端展示代替 |
 
-开放能力默认采用 `XxxDefinition → defineXxx → builtin + custom registry → unified dispatch`。完整扩展族、注入入口和异常语义查[扩展机制](/kernel/reference/runtime/extensions)；具体实现步骤归各能力分组末尾的扩展指南，不在本页重复。
-
-## 完整执行流程
-
-`compileToScene` 不会遍历 IR 后直接输出 SVG。它先把高层能力降到 Kernel，再建立本次编译专用的能力上下文，分阶段解决布局和引用，最后才组装 Scene。
-
-<ComponentPreview files="principles-compile" size="xs" hideCode />
-
-1. **作者输入生成 IR**：React JSX、Vanilla plain spec 与外部 IR 归一为同一份 JSON 契约。
-2. **创建编译上下文**：解析文字度量、warning、lowerer 与本次调用注入的 provider registries，不写全局状态。
-3. **Composite lowering**：Tier 2 节点经 schema 校验和 definition 展开成 Tier 1 Kernel IR。
-4. **布局与命名空间**：解析 Node、Coordinate、Scope 的位置、形状、边界和样式，登记可引用 layout。
-5. **延迟解析 Path**：节点就位后再解析 anchor、generator、arrow、ribbon 与 path kind，保持声明顺序。
-6. **组装 Scene 与 runtime**：合并 primitive、资源、动画和 bounds；SVG / Canvas、hydration 与 animation 在 Scene 之后执行。
-
-这个顺序界定了职责：parser 不读取 runtime registry，renderer 不重新解释 IR，adapter 不复制布局。新能力如果必须跨过这些边界才能工作，应先修正契约，而不是增加特判。
-
-## 包职责
-
-Kernel 六个包围绕 `IR → Scene → 图像` 形成一条主数据流。`@retikz/react` 与 `@retikz/vanilla` 构建 IR；`@retikz/core` 在 `@retikz/math` 支撑下完成 lowering、布局、引用解析与 Scene 组装，TeX 能力由 `@retikz/tex` 可选接入；`@retikz/render` 最后把 Scene 执行为 SVG 或 Canvas。虚线表示能力依赖或可选接入，不是主数据流。
-
-<ComponentPreview files="principles-packages" size="sm" hideCode />
-
-| 包                | 解决什么                                      | 不拥有                        |
-| ----------------- | --------------------------------------------- | ----------------------------- |
-| `@retikz/math`    | 零依赖几何、曲线、矩阵与数值算法              | IR、schema、绘图业务语义      |
-| `@retikz/core`    | IR / Scene 契约、provider contract 与编译语义 | React 生命周期、DOM、Canvas   |
-| `@retikz/render`  | SVG、Canvas、hydration 与 animation runtime   | 作者 DSL、IR 语义和布局算法   |
-| `@retikz/react`   | JSX adapter、`<Layout>` 宿主与 React 接线     | 平行 IR、平行 renderer 语义   |
-| `@retikz/vanilla` | plain spec、mount、hydrate 与 SSR             | 与 React 不同的几何或编译结果 |
-| `@retikz/tex`     | 把 LaTeX 降成 renderer-neutral glyph paths    | 通用文字模型和 renderer 特判  |
-
 遇到子包现有能力不足时，先判断它是组合问题、当前域的扩展点缺口，还是下层通用能力缺口。只有第一种留在调用方；后两种分别补当前域 contract 或下沉到真正 owner。
-
-<SourceLinks
-  sources={[
-    {
-      label: '集中解析内置与自定义 provider',
-      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 88,
-      endLine: 115,
-    },
-    {
-      label: '把共享 IR 编译为 renderer-agnostic Scene',
-      path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
-    },
-  ]}
-/>
 
 ## 延伸阅读
 

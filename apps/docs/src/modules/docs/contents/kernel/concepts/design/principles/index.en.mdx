@@ -1,23 +1,138 @@
 ---
-title: Architecture Principles
-description: Decide capability ownership, package boundaries, extension completeness, and the end-to-end execution flow as a library maintainer.
+title: Architecture
+description: Understand how retikz compiles author input into Scene through its system flow, Core source structure, and unified extension model.
 ---
 
-This page is an architecture checklist for maintainers and extension authors. It answers who owns a capability, where its boundary ends, and how to prove the capability forms a complete loop. See [Layers](/kernel/concepts/design/layers) for the user-facing mental model of DSL, IR, and Scene.
+retikz separates describing a drawing, supplying capabilities, and executing output. Authors express intent as IR, Core compiles IR into a backend-neutral Scene, and renderers only execute that Scene. React, Vanilla, LLMs, and multiple rendering backends can therefore share one set of drawing semantics.
 
 <ComponentAlert
   type="tip"
-  title="Skip this page while getting started"
-  description="Continue with Get Started and component docs if you only want to draw. Return when extending retikz, working with IR directly, or assigning ownership for a new capability."
+  title="Read only the first section while getting started"
+  description="If you only want to draw, continue to Get Started after the overview. Return for the remaining sections when reading source, extending a capability, or handling IR directly."
+/>
+
+## Architecture at a glance
+
+Start with two stable artifacts: **IR is the description boundary, and Scene is the execution boundary**. React JSX, Vanilla plain specs, and validated external IR converge on one primary data flow. Core outputs Scene rather than SVG strings, DOM objects, or Canvas pixels.
+
+<ComponentPreview files="principles-packages" size="sm" hideCode />
+
+Solid arrows show data flow: author input becomes IR, `compileToScene` creates Scene, and a renderer emits SVG or Canvas. Dashed arrows show capability dependencies: `@retikz/math` supplies pure geometry, while `@retikz/tex` enters as an optional lowerer instead of creating a special IR or renderer branch.
+
+| Package           | First responsibility                              | Explicitly does not own               |
+| ----------------- | ------------------------------------------------- | ------------------------------------- |
+| `@retikz/math`    | Dependency-free geometry, curves, matrices, maths | IR, schemas, drawing-domain semantics |
+| `@retikz/core`    | IR / Scene, Definitions, registries, compilation  | React lifecycle, DOM, Canvas          |
+| `@retikz/render`  | SVG, Canvas, hydration, animation runtime         | Author DSL, IR meaning, layout        |
+| `@retikz/react`   | JSX adapter, `<Layout>` host, React wiring        | Parallel IR or renderer semantics     |
+| `@retikz/vanilla` | Plain specs, mount, hydrate, SSR                  | Geometry different from React         |
+| `@retikz/tex`     | Lower LaTeX into renderer-neutral glyph paths     | General text model or backend hacks   |
+
+## How Core source folders work together
+
+The folders under `@retikz/core/src` are separated by contracts and execution stages rather than being arbitrary feature buckets. In the figure, the horizontal solid path shows convenient input becoming canonical IR and then Scene. The two vertical dashed paths show schema constraints and Definition / registry injection. The `shared/` band is the pure vocabulary and utility foundation reused by every layer, not part of the execution flow.
+
+<ComponentPreview files="principles-folders" size="md" hideCode />
+
+| Folder       | Owns                                                                   | Does not own                               |
+| ------------ | ---------------------------------------------------------------------- | ------------------------------------------ |
+| `shared/`    | Dependency-free vocabulary, types, pure utilities, cross-layer helpers | IR schemas, Definitions, orchestration     |
+| `schemas/`   | Zod schemas and IR type source of truth; field `.describe()` text      | Provider functions or backend behavior     |
+| `contract/`  | `XxxDefinition`, `defineXxx`, and Scene output contracts               | Built-in implementations or registry merge |
+| `providers/` | Built-in Definitions, `BUILTIN_*`, registry resolvers, lookup errors   | Parallel IR or renderer semantics          |
+| `parsers/`   | Pure normalization from strings, DSL shorthand, and Sugar to IR pieces | Registries, layout, or runtime             |
+| `compile/`   | Lowering, layout, namespaces, references, resources, IR → Scene        | DOM, SVG / Canvas backend execution        |
+
+`schemas/` is the single data authority for IR. TypeScript types derive from schemas, and English `.describe()` text enters JSON Schema for LLM tool use, external tooling, and documentation. External JSON should be parsed explicitly with `SceneSchema` at the input boundary; `compileToScene` consumes canonical `IRScene` and does not replace that validation boundary.
+
+## Built-ins and extensions share one path
+
+Extensible capabilities do not use a built-in switch followed by an extension patch. Each capability begins with an `XxxDefinition` protocol. Built-in items and custom items created with `defineXxx(...)` enter one effective registry, after which compile looks up and consumes both through the same key path.
+
+<ComponentPreview files="principles-registry" size="xs" hideCode />
+
+“Built-ins and extensions are first-class” means three concrete things:
+
+1. **One protocol**: both satisfy the same Definition, with no hidden fields reserved for built-ins.
+2. **One registry**: `BUILTIN_*` and `options.xxx` become one `ReadonlyMap` at the start of each compile call.
+3. **One consumer path**: resolvers, diagnostics, and compile consumers do not branch on where a key came from.
+
+Built-ins register first and custom items follow. Registry construction rejects empty and duplicate keys. When a consumer later encounters an unknown key, that capability's contract determines whether to throw or warn and skip. First-class therefore means the same protocol and execution path, not that a custom item can silently override a built-in. See [Extension Mechanisms](/kernel/reference/runtime/extensions) for extension families, injection points, and failure semantics.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Responsibility contract for the six Core source folders',
+      path: 'packages/kernel/core/AGENTS.md',
+      startLine: 23,
+      endLine: 34,
+    },
+    {
+      label: 'IR source of truth that exports to JSON Schema',
+      path: 'packages/kernel/core/src/schemas/scene/schema.ts',
+      startLine: 13,
+      endLine: 50,
+    },
+    {
+      label: 'Derive IR TypeScript types from schemas',
+      path: 'packages/kernel/core/src/schemas/scene/types.ts',
+      startLine: 17,
+      endLine: 21,
+    },
+    {
+      label: 'Verify field descriptions enter JSON Schema',
+      path: 'packages/kernel/core/tests/schemas/scene-json-schema.test.ts',
+      startLine: 6,
+      endLine: 18,
+    },
+    {
+      label: 'Merge built-in and custom Definitions into one registry',
+      path: 'packages/kernel/core/src/providers/registry.ts',
+      startLine: 74,
+      endLine: 112,
+    },
+  ]}
+/>
+
+## End-to-end execution
+
+`compileToScene` does not walk IR and immediately emit SVG. Authoring helpers and parsers first normalize convenience syntax into IR. Compile then builds a call-local capability context, resolves lowering, layout, and references in dependency order, and only then assembles Scene.
+
+<ComponentPreview files="principles-compile" size="xs" hideCode />
+
+1. **Authoring converges on IR**: React JSX, Vanilla plain specs, and parser sugar produce one JSON contract; external JSON is validated before entering.
+2. **Create compile context**: combine call-local measurement, warnings, lowerers, and built-in plus custom provider Definitions without global state.
+3. **Composite lowering**: validate Tier 2 nodes against registered Definitions and expand them into Tier 1 Kernel IR.
+4. **Layout and namespaces**: resolve Node, Coordinate, and Scope positions, shapes, boundaries, and styles, then register layouts.
+5. **Deferred Path resolution**: after nodes exist, resolve anchors, generators, arrows, ribbons, and path kinds while preserving order.
+6. **Scene and runtime**: combine primitives, resources, animations, and bounds; SVG / Canvas, hydration, and animation execute after Scene.
+
+This order defines the boundaries: parsers do not read provider registries, renderers do not reinterpret IR, and adapters do not repeat layout. If a capability only works by crossing these boundaries, fix the contract before adding a special case.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Create the compile-local context and resolve registries centrally',
+      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+      startLine: 78,
+      endLine: 115,
+    },
+    {
+      label: 'Compile shared IR into a renderer-agnostic Scene',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+  ]}
 />
 
 ## Capability ownership
 
-Start by deciding whether a request changes authoring ergonomics, shared drawing semantics, a high-level domain model, a replaceable compile strategy, or backend runtime behavior. Design from that first owner.
+Once the overall framework is clear, decide whether a request changes authoring ergonomics, shared drawing semantics, a high-level domain model, a replaceable compile strategy, or backend runtime behavior. Design from that first owner.
 
 <ComponentPreview files="principles-placement" size="md" hideCode />
 
-Each arrow points to the first owner, not the only package that can change. One capability may need authoring, contract, compile, and runtime wiring, but each semantic layer has one source of truth.
+Each arrow points to the first owner, while the second line in the node shows common implementation anchors; this does not mean only one package can change. One capability may need authoring, contract, compile, and runtime wiring, but each semantic layer has one source of truth.
 
 | Request signal                 | First owner             | Boundary failure                       |
 | ------------------------------ | ----------------------- | -------------------------------------- |
@@ -41,56 +156,7 @@ Rendering one built-in example does not make a capability complete. Every long-l
 | Extension       | Do built-ins and custom items share Definition, registry, resolver, and errors? | Complete one extension path         |
 | End-to-end loop | Are input, compile, Scene, renderer, adapters, tests, and docs connected?       | Record the missing links explicitly |
 
-Open capabilities normally follow `XxxDefinition → defineXxx → builtin + custom registry → unified dispatch`. Use [Extension Mechanisms](/kernel/reference/runtime/extensions) to look up extension families, injection points, and error semantics. Implementation steps belong in the extension guide at the end of each capability group.
-
-## End-to-end execution
-
-`compileToScene` does not walk IR and immediately emit SVG. It lowers high-level capabilities to Kernel, builds a compile-local capability context, resolves layout and references in stages, and only then assembles Scene.
-
-<ComponentPreview files="principles-compile" size="xs" hideCode />
-
-1. **Authoring produces IR**: React JSX, Vanilla plain specs, and external IR converge on one JSON contract.
-2. **Create compile context**: resolve measurement, warnings, lowerers, and call-local provider registries without global state.
-3. **Composite lowering**: validate Tier 2 nodes and expand them into Tier 1 Kernel IR.
-4. **Layout and namespaces**: resolve Node, Coordinate, and Scope positions, shapes, boundaries, and styles, then register layouts.
-5. **Deferred Path resolution**: after nodes exist, resolve anchors, generators, arrows, ribbons, and path kinds while preserving order.
-6. **Scene and runtime**: combine primitives, resources, animations, and bounds; SVG / Canvas, hydration, and animation execute after Scene.
-
-This order defines ownership: parsers do not read runtime registries, renderers do not reinterpret IR, and adapters do not repeat layout. If a capability only works by crossing these boundaries, fix the contract before adding a special case.
-
-## Package responsibilities
-
-The six Kernel packages form one primary data flow around `IR → Scene → image`. `@retikz/react` and `@retikz/vanilla` build IR. With `@retikz/math` as its foundation, `@retikz/core` performs lowering, layout, reference resolution, and Scene assembly, while `@retikz/tex` can optionally supply TeX capability. `@retikz/render` then executes the Scene as SVG or Canvas. Dashed arrows show capability dependencies or optional integration rather than the main data flow.
-
-<ComponentPreview files="principles-packages" size="sm" hideCode />
-
-| Package           | Solves                                            | Does not own                          |
-| ----------------- | ------------------------------------------------- | ------------------------------------- |
-| `@retikz/math`    | Dependency-free geometry, curves, matrices, maths | IR, schemas, drawing-domain semantics |
-| `@retikz/core`    | IR / Scene, provider contracts, compile semantics | React lifecycle, DOM, Canvas          |
-| `@retikz/render`  | SVG, Canvas, hydration, animation runtime         | Author DSL, IR meaning, layout        |
-| `@retikz/react`   | JSX adapter, `<Layout>` host, React wiring        | Parallel IR or renderer semantics     |
-| `@retikz/vanilla` | Plain specs, mount, hydrate, SSR                  | Geometry different from React         |
-| `@retikz/tex`     | Lower LaTeX into renderer-neutral glyph paths     | General text model or backend hacks   |
-
 When a subpackage lacks a capability, first decide whether the need is composition, an extension gap in the current domain, or a missing shared foundation. Keep only composition in the caller; add a domain contract for the second case or move the foundation to its true owner for the third.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Resolve built-in and custom providers centrally',
-      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 88,
-      endLine: 115,
-    },
-    {
-      label: 'Compile shared IR into a renderer-agnostic Scene',
-      path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 18,
-      endLine: 42,
-    },
-  ]}
-/>
 
 ## Related
 
@@ -110,7 +176,7 @@ When a subpackage lacks a capability, first decide whether the need is compositi
   <LinkedCard href="/kernel/reference/runtime/extensions">
     <span className="font-semibold">Extension Mechanisms</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Look up definitions, registries, host lowerers, and guides
+      Look up Definitions, registries, host lowerers, and guides
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/schema">

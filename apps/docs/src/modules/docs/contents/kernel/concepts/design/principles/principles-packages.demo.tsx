@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/** 技术原理页的 Kernel 包职责图 */
+/** Kernel 包级架构与主数据流总览 */
 const Demo: FC = () => (
-  <Layout width={760} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="core-group"
-      position={[-50, 8]}
-      minimumSize={{ width: 250, height: 82 }}
+      position={[-55, 0]}
+      minimumSize={{ width: 350, height: 74 }}
       stroke="lightgray"
       fill="lightgray"
       fillOpacity={0.04}
@@ -17,13 +17,13 @@ const Demo: FC = () => (
     >
       {' '}
     </Node>
-    <Node position={[-130, -21]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
+    <Node position={[-175, -27]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
       @retikz/core
     </Node>
 
     <Node
       id="react"
-      position={[-310, -20]}
+      position={[-315, -42]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -34,7 +34,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="vanilla"
-      position={[-310, 58]}
+      position={[-315, 0]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -44,8 +44,20 @@ const Demo: FC = () => (
       @retikz/vanilla
     </Node>
     <Node
+      id="external-ir"
+      position={[-315, 42]}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+    >
+      external IR
+    </Node>
+
+    <Node
       id="ir"
-      position={[-205, 19]}
+      position={[-185, 0]}
       stroke="darkorange"
       fill="darkorange"
       fillOpacity={0.08}
@@ -54,44 +66,32 @@ const Demo: FC = () => (
     >
       IR
     </Node>
-
     <Node
-      id="lowering"
-      position={[-125, 19]}
+      id="compile"
+      position={[-55, 0]}
       stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
+      fill="dimgray"
+      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 12 }}
+      font={{ size: 13 }}
     >
-      lowering
+      compileToScene
     </Node>
     <Node
-      id="resolve"
-      position={[-50, 19]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
+      id="scene"
+      position={[70, 0]}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 12 }}
+      font={{ size: 14, weight: 'bold' }}
     >
-      {'layout\nresolve'}
-    </Node>
-    <Node
-      id="assemble"
-      position={[30, 19]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
-      cornerRadius={4}
-      font={{ size: 12 }}
-    >
-      assemble
+      Scene
     </Node>
 
     <Node
       id="math"
-      position={[-125, 84]}
+      position={[-110, 78]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -102,7 +102,7 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="tex"
-      position={[30, 84]}
+      position={[10, 78]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -113,19 +113,8 @@ const Demo: FC = () => (
     </Node>
 
     <Node
-      id="scene"
-      position={[110, 19]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
-      cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
-    >
-      Scene
-    </Node>
-    <Node
       id="render"
-      position={[220, 19]}
+      position={[210, 0]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -136,10 +125,10 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="svg"
-      position={[325, -20]}
+      position={[315, -24]}
       stroke="gray"
-      fill="lightgray"
-      fillOpacity={0.12}
+      fill="gray"
+      fillOpacity={0.06}
       cornerRadius={4}
       font={{ size: 12 }}
     >
@@ -147,10 +136,10 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="canvas"
-      position={[325, 58]}
+      position={[315, 24]}
       stroke="gray"
-      fill="lightgray"
-      fillOpacity={0.12}
+      fill="gray"
+      fillOpacity={0.06}
       cornerRadius={4}
       font={{ size: 12 }}
     >
@@ -159,15 +148,14 @@ const Demo: FC = () => (
 
     <Draw way={['react', 'ir']} arrow="->" />
     <Draw way={['vanilla', 'ir']} arrow="->" />
-    <Draw way={['ir', 'lowering']} arrow="->" />
-    <Draw way={['lowering', 'resolve']} arrow="->" />
-    <Draw way={['resolve', 'assemble']} arrow="->" />
-    <Draw way={['assemble', 'scene']} arrow="->" />
+    <Draw way={['external-ir', 'ir']} arrow="->" />
+    <Draw way={['ir', 'compile']} arrow="->" />
+    <Draw way={['compile', 'scene']} arrow="->" />
     <Draw way={['scene', 'render']} arrow="->" />
     <Draw way={['render', 'svg']} arrow="->" />
     <Draw way={['render', 'canvas']} arrow="->" />
-    <Draw way={['math', 'lowering']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['tex', 'assemble']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['math', 'compile']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['tex', 'compile']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
   </Layout>
 );
 
