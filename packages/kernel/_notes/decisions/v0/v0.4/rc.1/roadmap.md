@@ -8,9 +8,9 @@ rc.1 原本只允许兼容 bugfix、文档和发布验收。2026-07-19 用户明
 
 ## 决策列表
 
-| ADR                                        | 状态        | 主题                     | 说明                                                                          |
-| ------------------------------------------ | ----------- | ------------------------ | ----------------------------------------------------------------------------- |
-| [ADR-01](./01-shape-aware-boundary-fit.md) | Implemented | Shape-aware boundary fit | builtin boundary 统一 `fit` / `gap`，Shape runtime contract 提供安全 envelope |
+| ADR                                        | 状态     | 主题                     | 说明                                                                          |
+| ------------------------------------------ | -------- | ------------------------ | ----------------------------------------------------------------------------- |
+| [ADR-01](./01-shape-aware-boundary-fit.md) | Accepted | Shape-aware boundary fit | builtin boundary 统一 `fit` / `gap`，Shape runtime contract 提供安全 envelope |
 
 ## 验收范围
 
