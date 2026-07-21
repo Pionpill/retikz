@@ -83,6 +83,19 @@ describe('Table runtime contribution', () => {
     ).toThrow(/dataset.*conflict/i);
   });
 
+  it('encodes lone surrogate references without collapsing JSON string identities', () => {
+    const highSurrogate = String.fromCharCode(0xd800);
+    const replacementCharacter = '\ufffd';
+    const highContribution = createTableRuntimeContribution({ reference: highSurrogate });
+    const replacementContribution = createTableRuntimeContribution({ reference: replacementCharacter });
+    const highReference = Object.keys(highContribution.datasets)[0];
+    const replacementReference = Object.keys(replacementContribution.datasets)[0];
+
+    expect(highReference).toBe('@@retikz/table/runtime/%uD800');
+    expect(replacementReference).toBe('@@retikz/table/runtime/%EF%BF%BD');
+    expect(highReference).not.toBe(replacementReference);
+  });
+
   it('strips runtime envelopes, lowers clean datasets, and orders Table definitions before extras', () => {
     const extra = compositeOf('fixture', 'badge');
     const rows = [{ name: 'Ada' }];

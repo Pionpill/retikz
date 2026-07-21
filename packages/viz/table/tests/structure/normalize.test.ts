@@ -199,6 +199,20 @@ describe('normalizeTableStructure', () => {
     ).toThrow(/scalar/i);
   });
 
+  it.each(['toString', '__proto__'])('treats inherited dataset name %j as missing', reference => {
+    const detail = { kind: 'detail' as const, header: false, columns: [{ id: 'value', field: 'value' }] };
+
+    expect(() => normalizeTableStructure(detail, { data: { reference }, datasets: {} })).toThrow(
+      new RegExp(`dataset.*${reference}`, 'i'),
+    );
+    expect(
+      normalizeTableStructure(detail, {
+        data: { reference },
+        datasets: Object.fromEntries([[reference, [{ value: reference }]]]),
+      }).cells[0].payload,
+    ).toEqual({ kind: 'value', value: reference });
+  });
+
   it('dispatches custom structures and validates their output through the canonical guard', () => {
     const summary = defineTableStructure({
       schema: z.strictObject({ kind: z.literal('summary'), label: z.string() }),

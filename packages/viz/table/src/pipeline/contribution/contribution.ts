@@ -12,6 +12,16 @@ const TableRuntimeEnvelopeMarker = Symbol('retikz.table.runtimeEnvelope');
 const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';
 const PRESENTATION_DEFINITIONS_KEY = 'presentationDefinitions';
 
+/** 把任意 JSON 字符串编码为稳定且无碰撞的 runtime reference 片段 */
+const encodeRuntimeReference = (reference: string): string =>
+  Array.from(reference, character => {
+    const codeUnit = character.charCodeAt(0);
+    const isLoneSurrogate = character.length === 1 && codeUnit >= 0xd800 && codeUnit <= 0xdfff;
+    return isLoneSurrogate
+      ? `%u${codeUnit.toString(16).padStart(4, '0').toUpperCase()}`
+      : encodeURIComponent(character);
+  }).join('');
+
 /** Table runtime-only envelope；只在宿主聚合阶段存在 */
 type TableRuntimeEnvelope = Readonly<{
   [TableRuntimeEnvelopeMarker]: true;
@@ -111,7 +121,7 @@ export const createTableRuntimeContribution = (input: TableRuntimeContributionIn
   if (input.reference.trim().length === 0) {
     throw new Error('table: runtime contribution reference must be non-empty');
   }
-  const runtimeReference = `@@retikz/table/runtime/${encodeURIComponent(input.reference)}`;
+  const runtimeReference = `@@retikz/table/runtime/${encodeRuntimeReference(input.reference)}`;
   const data = input.data ?? {};
   if (Object.hasOwn(data, runtimeReference)) {
     throw new Error(`table: runtime contribution dataset conflict for reserved reference "${runtimeReference}"`);

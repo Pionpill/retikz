@@ -19,7 +19,7 @@ export const createTableStructureContext = (
   }
 
   const parsedData = DataReferenceSchema.parse(data);
-  if (!(parsedData.reference in datasets)) {
+  if (!Object.hasOwn(datasets, parsedData.reference)) {
     throw new Error(`dataset "${parsedData.reference}" not found in provided datasets`);
   }
   const rows = datasets[parsedData.reference];
