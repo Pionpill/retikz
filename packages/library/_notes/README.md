@@ -5,6 +5,7 @@
 ## 目录
 
 - [`architecture/`](./architecture)：Standard Drawing Library 的长期边界与准入标准
+- [`decisions/standard/v0/v0.1/`](./decisions/standard/v0/v0.1/)：Standard v0.1 的 milestone 与 ADR
 
 ## 当前入口
 
