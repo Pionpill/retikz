@@ -1,12 +1,10 @@
 # @retikz/table
 
-`@retikz/table` is retikz's renderer-agnostic Tier 2 table package. It will own the JSON-safe Table
-IR, table structure and presentation contracts, constraint-grid layout, and lowering to
-`@retikz/core`.
+`@retikz/table` is retikz's renderer-agnostic Tier 2 table package. It owns the JSON-safe Table IR,
+table structure and presentation contracts, constraint-grid layout, and lowering to `@retikz/core`.
 
-The npm package scaffold is initialized for `0.1.0-alpha.1`. Its public Table API will be added by
-the alpha.1 ADR sequence; this scaffold intentionally does not expose provisional schema or runtime
-APIs.
+`TableSpecSchema` and `IRTableSpec` define the public Table composite root. A Table spec keeps actual
+dataset rows outside the IR, referring to host-supplied data through `data.reference` instead.
 
 - `@retikz/data` owns shared data models and transforms.
 - `@retikz/table-react` will provide React authoring and runtime integration.
@@ -25,4 +23,4 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 See the [table architecture](https://github.com/Pionpill/retikz/blob/next-table/packages/viz/_notes/architecture/table-design.md)
 and [table capability boundary](https://github.com/Pionpill/retikz/blob/next-table/packages/viz/_notes/architecture/table-visualization-complete.md)
-for the planned model and ownership boundary.
+for the model and ownership boundary.

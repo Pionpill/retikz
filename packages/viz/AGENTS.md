@@ -33,7 +33,7 @@
 - `@retikz/data` 的主责边界见 [`data-capability-complete.md`](./_notes/architecture/data-capability-complete.md)。
 - `@retikz/plot` 的主责边界见 [`plot-visualization-complete.md`](./_notes/architecture/plot-visualization-complete.md)。
 - `@retikz/table` 的主责边界见 [`table-visualization-complete.md`](./_notes/architecture/table-visualization-complete.md)。
-- 新能力先判断属于 Data Complete、Visualization Complete 还是应下沉 Drawing Complete；adapter / preset 能展示不等于能力闭环。
+- 新能力先判断属于 Data Complete、Visualization Complete、Tabular Visualization Complete 还是应下沉 Drawing Complete；adapter / preset 能展示不等于能力闭环。
 
 ## 代码风格
 

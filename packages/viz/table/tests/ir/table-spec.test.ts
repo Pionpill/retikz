@@ -1,0 +1,89 @@
+import { defineComposite } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+
+import { TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../../src';
+
+const manualSpec = {
+  namespace: 'table',
+  type: 'table',
+  structure: { kind: 'manual', rows: 1, columns: 1, cells: [] },
+} as const;
+
+describe('Table root spec schema', () => {
+  it('round-trips a manual root without external data', () => {
+    expect(TableSpecSchema.parse(JSON.parse(JSON.stringify(manualSpec)))).toEqual(manualSpec);
+  });
+
+  it('accepts detail data references and preserves id, layout, and JSON metadata', () => {
+    const spec = {
+      namespace: 'table',
+      type: 'table',
+      id: 'people-table',
+      data: { reference: 'people' },
+      structure: {
+        kind: 'detail',
+        columns: [{ id: 'name', field: 'name' }],
+      },
+      layout: { columnWidth: 96, rowHeight: 28 },
+      meta: { source: 'example', nested: { visible: true }, tags: ['people', null] },
+    };
+
+    expect(TableSpecSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
+  });
+
+  it('accepts shortest non-empty identities and JSON-safe custom structures without forcing data', () => {
+    const spec = {
+      namespace: 'table',
+      type: 'table',
+      id: 't',
+      structure: { kind: 'summaryByRegion', field: 'region' },
+      data: { reference: 'd' },
+    };
+
+    expect(TableSpecSchema.parse(spec)).toEqual(spec);
+    expect(TableSpecSchema.parse({ ...spec, data: undefined })).toEqual({ ...spec, data: undefined });
+  });
+
+  it.each([
+    [{ type: 'table', structure: manualSpec.structure }],
+    [{ namespace: 'table', structure: manualSpec.structure }],
+    [{ namespace: 'table', type: 'table' }],
+    [{ ...manualSpec, namespace: 'plot' }],
+    [{ ...manualSpec, type: 'detail' }],
+  ])('rejects missing or incorrect root discriminators and structure: %j', invalid => {
+    expect(() => TableSpecSchema.parse(invalid)).toThrow();
+  });
+
+  it('requires data for detail and rejects unused data for manual structures', () => {
+    const detailWithoutData = {
+      namespace: 'table',
+      type: 'table',
+      structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
+    };
+    const manualWithData = { ...manualSpec, data: { reference: 'people' } };
+
+    expect(() => TableSpecSchema.parse(detailWithoutData)).toThrow(/data/i);
+    expect(() => TableSpecSchema.parse(manualWithData)).toThrow(/data/i);
+  });
+
+  it('keeps rows, functions, and non-JSON metadata outside the IR', () => {
+    expect(() => TableSpecSchema.parse({ ...manualSpec, data: { reference: 'people', rows: [] } })).toThrow();
+    expect(() =>
+      TableSpecSchema.parse({
+        ...manualSpec,
+        meta: { load: () => [] },
+      }),
+    ).toThrow();
+  });
+
+  it('extends the Core composite contract with matching literal keys', () => {
+    const definition = defineComposite({
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      schema: TableSpecSchema,
+      expand: () => ({ type: 'scope', children: [] }),
+    });
+
+    expect(definition.schema).toBe(TableSpecSchema);
+  });
+});
