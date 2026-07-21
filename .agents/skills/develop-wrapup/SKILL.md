@@ -23,14 +23,15 @@ internal-only 改动通常不写 changelog；breaking 必写迁移说明。
 
 ## Contract Auditor
 
-alpha 红黄改动建议做第二关对账。目标不是找代码 bug，而是检查四方一致：
+alpha 红黄改动建议做第二关对账。目标不是找代码 bug，而是检查五方一致：
 
 1. ADR 承诺。
-2. changelog 草稿。
-3. docs mdx + demo。
-4. 实际代码 + 测试。
+2. 测试契约矩阵及每行的具名证据。
+3. changelog 草稿。
+4. docs mdx + demo。
+5. 实际代码 + 测试。
 
-优先用独立线程、子代理或外部模型；不可用时主 AI 自己执行并说明退化。输入给 ADR、changelog 草稿、commit / diff、相关 docs、schema / public API / tests diff。
+优先用独立线程、子代理或外部模型；不可用时主 AI 自己执行并说明退化。输入给 ADR、测试契约矩阵、changelog 草稿、commit / diff、相关 docs、schema / public API / tests diff。
 
 结果处理：
 

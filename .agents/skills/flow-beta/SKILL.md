@@ -62,7 +62,7 @@ beta 允许调整既有契约的 breaking，不允许用 breaking 包装净新�
 
 ## Stage 1 实现规则
 
-- 不走 alpha red 的 Spec-First TDD，除非 TODO 本身是 bugfix 或风险足够高。
+- 不走 alpha red 的 Spec-First TDD，除非 TODO 本身是 bugfix 或风险足够高；visible / breaking、跨包契约或测试加固 TODO 必须先用 `test-contract` 补行为、不变量、反例与最低测试层。
 - 既有测试可跟随 rename / 类型迁移修改，但不得弱化断言语义。
 - bugfix 必加回归测试；性能优化应有基准或复杂度测试；纯内部搬迁可依赖既有测试。
 - 只跑受影响模块验证，除非跨包契约、CI 复现、发布门禁或用户要求全量。
@@ -72,6 +72,7 @@ beta 允许调整既有契约的 breaking，不允许用 breaking 包装净新�
 beta 的核心风险是重构回归和 breaking 漏迁移。Stage 0 / 4 的自动授权不覆盖本阶段；派 TODO review subagent / 外部模型前必须先得到用户确认。用户拒绝或工具不可用时由主 AI 自审并说明退化路径，但自审结论必须经人工明确接受后才能通过 Stage 2。至少准备以下评估材料：
 
 - TODO 原文。
+- 适用时的 `test-contract` 矩阵与每行证据。
 - 完整 diff。
 - public API surface diff，重点看 `packages/*/*/src/index.ts`。
 - 关键文件改前 / 改后 snapshot（足够判断等价性即可）。
