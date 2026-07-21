@@ -62,6 +62,7 @@ jobs:
         base:
           - next-kernel
           - next-plot
+          - next-standard
           - next-table
     steps:
       - name: Create sync PR
