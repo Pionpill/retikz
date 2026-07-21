@@ -1,9 +1,9 @@
-import type { core, ZodTypeAny } from 'zod';
+import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
 
 export type SchemaRegistryEntry = {
-  schema: ZodTypeAny;
+  schema: z.ZodType;
   /** 渲染类型签名时使用的名字（去掉 "Schema" 后缀） */
   label: string;
   /** Reference 页面 URL（含可选 #anchor） */

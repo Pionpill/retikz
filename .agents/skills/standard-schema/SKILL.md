@@ -15,6 +15,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - 字段级约束写在字段 schema 上；跨字段、跨 kind 规则放最终 schema 的 `.superRefine(...)`。
 - schema 改动影响公开 IR / DSL / docs demo 时，同步 docs、schema registry、测试和示例。
+- 修改或审阅 Zod schema 时，扫描受影响 workspace 与关联 docs demo 中当前安装版本标记为 `@deprecated` 的 API；替换前确认输入契约不变。Zod 4 的 `z.number()` 默认拒绝无穷值，不使用无行为差异的 `.finite()`。
 
 ## 文件分层
 

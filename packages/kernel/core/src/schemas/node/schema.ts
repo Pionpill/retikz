@@ -120,7 +120,7 @@ export const NodeLabelSchema = z
   .superRefine((label, ctx) => {
     if (label.placement === NodeLabelPlacement.Inside && label.pin) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['pin'],
         message: 'Node label pin is only supported for outside placement.',
       });
