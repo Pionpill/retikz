@@ -6,7 +6,6 @@ import { TableLayoutSchema } from '../layout';
 import { TableStructureKind, TableStructureSchema } from '../structure';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
 
-/** Table composite 根节点 schema */
 export const TableSpecSchema = CompositeBaseSchema.extend({
   namespace: z
     .literal(TABLE_NAMESPACE)

@@ -1,7 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { z } from 'zod';
 
-/** Cell presentation 引用 schema */
 export const TablePresentationRefSchema = z
   .strictObject({
     name: z

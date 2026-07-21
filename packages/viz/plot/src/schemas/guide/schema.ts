@@ -821,8 +821,4 @@ export const LegendGuideSchema = z
     'Legend guide: visualizes a non-positional scale (color / size / opacity / shape), with form derived from the bound scale type',
   );
 
-/**
- * Guide union（axis + legend；grid 是 axis 子属性、非独立成员）
- * @description type 判别位驱动的 discriminated union；后续 reference line 等新 guide 按 type 追加成员，属非破坏新增
- */
 export const GuideSchema = z.discriminatedUnion('type', [AxisGuideSchema, LegendGuideSchema]);

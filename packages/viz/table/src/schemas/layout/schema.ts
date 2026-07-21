@@ -3,7 +3,6 @@ import { z } from 'zod';
 const PositiveFiniteTrackSchema = z.number().finite().positive();
 const NonnegativeFiniteGapSchema = z.number().finite().nonnegative();
 
-/** 固定轨道 Table layout schema */
 export const TableLayoutSchema = z
   .strictObject({
     columnWidth: PositiveFiniteTrackSchema.optional().describe(

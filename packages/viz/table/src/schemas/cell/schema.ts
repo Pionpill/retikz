@@ -5,7 +5,6 @@ import { TableCellLocationSchema } from './location';
 import { TableCellPayloadSchema } from './payload';
 import { TableCellRoleSchema } from './role';
 
-/** manual structure Cell schema */
 export const TableCellSchema = z
   .strictObject({
     id: z.string().min(1).optional().describe('Optional stable Cell id. Omitted fields use an address-derived id.'),
@@ -22,5 +21,4 @@ export const TableCellSchema = z
   })
   .describe('Explicit Cell authored by a manual Table structure.');
 
-/** manual structure Cell */
 export type IRTableCell = z.infer<typeof TableCellSchema>;

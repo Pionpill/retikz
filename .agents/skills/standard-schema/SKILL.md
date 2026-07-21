@@ -86,7 +86,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - 对 discriminator 字段，说明它是 discriminator 以及该值对应的变体语义。
 - 对 provider 名称、custom key、fallback 策略，明确“可自定义”与“未注册在 compile/lowering 期处理”的边界。
 - 不写实现故事、历史背景、ADR、renderer 细节或长示例。
-- schema 常量一般不写 JSDoc；`types.ts`、`constants.ts` 的导出类型、非 schema 常量和重要 helper 默认写中文 JSDoc，纯推断 / 重命名别名（如 `ValueOf`、`z.infer`）可省略。
+- `schemas/**/schema.ts` 不写 JSDoc；schema 与字段的契约说明统一使用英文 `.describe(...)`。`types.ts`、`constants.ts` 的导出类型、非 schema 常量和重要 helper 默认写中文 JSDoc，纯推断 / 重命名别名（如 `ValueOf`、`z.infer`）可省略。
 - 整体 JSDoc 写功能视角：让读者先知道函数、类、类型负责什么，不从实现过程、内部步骤或历史背景开头。
 - 细节 JSDoc 可说明实现细节，但仍从功能目的出发简短描述；不要复述代码逐行做了什么。
 - `@description` 写主语义和契约边界；`@remarks` 只写设计理由或非主路径补充；字段默认值写 `@default`，tag 值不加 Markdown 反引号；默认缺省为 undefined 时不要写。
