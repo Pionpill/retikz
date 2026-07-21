@@ -7,7 +7,6 @@ import {
   Draw,
   EdgeLabel,
   Ellipse,
-  Grid,
   Layout,
   Node,
   Path,
@@ -19,6 +18,7 @@ import {
   Step,
   Text,
 } from '@retikz/react';
+import { Grid } from '@retikz/standard-react';
 import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';
 import { createElement } from 'react';

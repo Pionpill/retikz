@@ -109,11 +109,6 @@ export const kernelSection: Array<Section> = [
         ],
       },
       {
-        id: 'helpers',
-        label: 'kernel.helpers',
-        children: [{ id: 'grid', label: 'kernel.helpersGrid' }],
-      },
-      {
         id: 'effects',
         label: 'kernel.effects',
         children: [

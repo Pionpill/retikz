@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Circle, Coordinate, Draw, Grid, Layout, Node } from '@retikz/react';
+import { Circle, Coordinate, Draw, Layout, Node } from '@retikz/react';
+import { Grid } from '@retikz/standard-react';
 import { useLowerTex } from '@retikz/tex/react';
 import { Fragment } from 'react';
 
@@ -14,8 +15,12 @@ const Demo: FC = () => {
   const lowerTex = useLowerTex();
   return (
     <Layout width={600} height={360} lowerTex={lowerTex}>
-      {/* 背景网格（help lines）——直接用 Grid sugar，比手写 10 条线更短 */}
-      <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke="lightgray" strokeWidth={0.5} />
+      {/* 背景网格由 Standard Grid 声明，lowering 后复用 Core Path */}
+      <Grid
+        bounds={{ min: [-100, -100], max: [100, 100] }}
+        spacing={50}
+        lines={{ style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
+      />
 
       {/* 单位圆（半径 100px） */}
       <Circle center={[0, 0]} radius={100} lineCap="round" />

@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/react';
+import { Circle, Coordinate, Draw, Layout, Node, Sector } from '@retikz/react';
+import { Grid } from '@retikz/standard-react';
 import { useLowerTex } from '@retikz/tex/react';
 import { Fragment } from 'react';
 
@@ -33,7 +34,11 @@ const Demo: FC = () => {
   return (
     <Layout width={720} height={360} lowerTex={lowerTex}>
       {/* 背景网格 */}
-      <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke="lightgray" strokeWidth={0.5} />
+      <Grid
+        bounds={{ min: [-100, -100], max: [100, 100] }}
+        spacing={50}
+        lines={{ style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
+      />
 
       {/* 单位圆 */}
       <Circle center={[0, 0]} radius={100} lineCap="round" />

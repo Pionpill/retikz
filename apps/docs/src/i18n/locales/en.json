@@ -114,6 +114,11 @@
     "refDomains": "Domain Modules",
     "refVisualizationPlot": "Visualization - Plot"
   },
+  "standard": {
+    "label": "Standard",
+    "components": "Standard Components",
+    "grid": "Grid"
+  },
   "viz": {
     "label": "Visualization",
     "introduction": "Introduction",

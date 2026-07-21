@@ -114,6 +114,11 @@
     "refDomains": "领域模块",
     "refVisualizationPlot": "可视化-绘图"
   },
+  "standard": {
+    "label": "Standard",
+    "components": "标准组件",
+    "grid": "Grid"
+  },
   "viz": {
     "label": "可视化",
     "introduction": "简介",
