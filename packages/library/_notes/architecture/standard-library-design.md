@@ -6,6 +6,12 @@ Library 是 Retikz 的官方可选绘图能力库分组，不是 Core 扩展机�
 
 `standard` 的“标准”表示官方维护且适合重复使用，不表示默认内置、自动全局注册或必须随 Core 安装。用户选择 definition、factory、composite 或 preset 后，才把它们显式注入现有 Core / adapter 入口。
 
+## 可选加载与横向扩展
+
+`packages/library/` 下的包、能力和 preset 均是可选层，不属于 Core、renderer 或 adapter 的默认依赖。使用方按需安装，并通过显式 capability module、部分 preset 或 all preset 动态接入；不得依赖 import 副作用、module-level 全局 registry 或由 Core 反向自动加载。
+
+Library 的职责是在既有 Drawing Complete 机制上横向增加可复用能力：提供更多官方 definition、factory、composite 与 Sugar 组合，而不向 Core 迁入新的默认基础图元、平行 IR、Scene 语义或 renderer 分支。Core 继续保持最小且完整的基础表达与扩展合同；Library 只消费这些公开入口。
+
 ## 边界
 
 进入 Standard 的能力必须同时满足：
@@ -16,7 +22,7 @@ Library 是 Retikz 的官方可选绘图能力库分组，不是 Core 扩展机�
 4. 持久化输入保持 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不进入公开输入
 5. React 与 Vanilla 能表达同一宿主无关语义，或 ADR 明确说明某入口不适用
 
-典型候选包括可选箭头 / shape / connector 定义、`Grid` 这类纯绘图 Sugar 的跨入口等价表达，以及 Frame、Stack、Align / Distribute 等不理解领域模型的 composite。具体候选是否进入、是否只作为 Sugar、是否需独立 schema，都由后续 ADR 判断。
+典型候选包括可选箭头 / shape / connector 定义、`Grid` 这类具有 JSON-safe 持久化语义的通用 Tier 2 composite，以及 Frame、Stack、Align / Distribute 等不理解领域模型的 composite。具体候选是否进入、是否需要独立 schema，都由后续 ADR 判断。
 
 以下内容不得进入 Standard：数据字段与 scale、表格结构、Node / Port / Edge / Group 关系模型、算法布局与路由策略、selection / history / viewport、renderer 执行语义，以及 Core 已不可缺少的基础图元。
 
