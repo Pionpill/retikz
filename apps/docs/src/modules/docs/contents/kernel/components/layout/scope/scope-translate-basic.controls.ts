@@ -1,6 +1,6 @@
-import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Scope transform playground 使用的稳定字段 id */
 export const ScopeTransformControlId = {

@@ -2,22 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { drawStyleControls } from './draw-style.controls';
+import { drawStyleControls, previewControlContract } from './draw-style.controls';
 
 export const previewControls = drawStyleControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** Draw 开放路径外观 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(drawStyleControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={218} viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
       <Node id="A" position={[0, -50]} stroke="gray" dashed>
@@ -37,6 +28,11 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Draw 开放路径外观 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

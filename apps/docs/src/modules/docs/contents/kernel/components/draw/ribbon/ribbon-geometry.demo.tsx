@@ -3,15 +3,13 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { ribbonGeometryControls } from './ribbon-geometry.controls';
+import { previewControlContract, ribbonGeometryControls } from './ribbon-geometry.controls';
 
 export const previewControls = ribbonGeometryControls;
-
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
 
 type RibbonGeometryValues = PreviewControlValuesFor<typeof ribbonGeometryControls>;
 
@@ -50,26 +48,32 @@ const ribbonOf = (values: RibbonGeometryValues): IRPathRibbonOptions => {
   }
 };
 
-/** Ribbon 宽度与样式 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(ribbonGeometryControls) as RibbonGeometryValues;
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const resolvedValues = values as RibbonGeometryValues;
 
   return (
     <Layout width={400} height={200} viewBox={{ x: -260, y: -130, width: 520, height: 260 }}>
       <Path
         kind="ribbon"
-        ribbon={ribbonOf(values)}
-        fill={values.fill}
-        fillOpacity={values.fillOpacity}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
-        shadow={values.shadow ? { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' } : undefined}
+        ribbon={ribbonOf(resolvedValues)}
+        fill={resolvedValues.fill}
+        fillOpacity={resolvedValues.fillOpacity}
+        stroke={resolvedValues.stroke}
+        strokeWidth={resolvedValues.strokeWidth}
+        shadow={
+          resolvedValues.shadow ? { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' } : undefined
+        }
       >
         <Step kind="move" to={[-210, 30]} />
         <Step kind="curve" control={[0, -115]} to={[210, 30]} />
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Ribbon 宽度与样式 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

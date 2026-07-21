@@ -2,17 +2,13 @@ import type { FC, ReactNode } from 'react';
 
 import { Circle, Draw, Layout, Node, Path, Step } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { stepCurvesControls } from './step-curves.controls';
+import { previewControlContract,stepCurvesControls } from './step-curves.controls';
 
 export const previewControls = stepCurvesControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type StepCurveValues = PreviewControlValuesFor<typeof stepCurvesControls>;
 
@@ -56,9 +52,7 @@ const curveOf = (values: StepCurveValues): ReactNode => {
   }
 };
 
-/** Step curve / cubic / bend / smooth / arc / circle / ellipse playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(stepCurvesControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const usesEndpoints = values.stepKind === 'curve' || values.stepKind === 'cubic' || values.stepKind === 'bend';
   const isSmooth = values.stepKind === 'smooth';
   const start = isSmooth ? SmoothPoints[0] : usesEndpoints ? 'A' : 'C';
@@ -147,6 +141,11 @@ const Demo: FC = () => {
         ))}
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Step curve / cubic / bend / smooth / arc / circle / ellipse playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

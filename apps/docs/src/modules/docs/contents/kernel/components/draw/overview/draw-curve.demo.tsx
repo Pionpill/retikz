@@ -3,17 +3,13 @@ import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { drawCurveControls } from './draw-curve.controls';
+import { drawCurveControls, previewControlContract } from './draw-curve.controls';
 
 export const previewControls = drawCurveControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type DrawCurveValues = PreviewControlValuesFor<typeof drawCurveControls>;
 
@@ -54,9 +50,7 @@ const wayOf = (values: DrawCurveValues): WayDSL => {
   }
 };
 
-/** Draw 曲线操作 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(drawCurveControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const usesEndpoints = values.curveKind === 'curve' || values.curveKind === 'cubic' || values.curveKind === 'bend';
 
   return (
@@ -134,6 +128,11 @@ const Demo: FC = () => {
       <Draw way={wayOf(values)} stroke="dodgerblue" strokeWidth={2} />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Draw 曲线操作 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

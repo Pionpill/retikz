@@ -3,20 +3,14 @@ import type { FC } from 'react';
 import { DrawWay } from '@retikz/core';
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { wayRelativeControls } from './way-relative.controls';
+import { previewControlContract,wayRelativeControls } from './way-relative.controls';
 import { WayAccumulateStart, WayRelativeFirstOffset, WayRelativeStart, WayRelativeViewBox } from './way-relative.data';
 
 export const previewControls = wayRelativeControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/** 同屏对照 Relative 沿用基准与 Accumulate 推进基准 */
-const Demo: FC = () => {
-  const values = usePreviewControls(wayRelativeControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const relativeFirst: [number, number] = [WayRelativeStart[0] + WayRelativeFirstOffset[0], WayRelativeStart[1]];
   const relativeEnd: [number, number] = [
     WayRelativeStart[0] + values.offset[0],
@@ -77,6 +71,11 @@ const Demo: FC = () => {
       <Circle center={accumulateEnd} radius={4} fill="darkorange" stroke="none" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 同屏对照 Relative 沿用基准与 Accumulate 推进基准 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

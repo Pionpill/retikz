@@ -2,26 +2,14 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
-
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { coordinateOffsetChainFrame } from './coordinate-offset-chain.controls';
-import { coordinateOffsetChainControls } from './coordinate-offset-chain.en.controls';
+import { coordinateOffsetChainControls, previewControlContract } from './coordinate-offset-chain.en.controls';
 
 export const previewControls = coordinateOffsetChainControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/**
- * Coordinate offset chain
- * @description ca → cb → cc are derived via `{ of, offset }`; fixed axes reveal how moving `ca` shifts the group relative to the world origin.
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(coordinateOffsetChainControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
       width={coordinateOffsetChainFrame.width}
@@ -58,6 +46,14 @@ const Demo: FC = () => {
       <Draw way={['B', 'C']} arrow="->" stroke="gray" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * Coordinate offset chain
+ * @description ca → cb → cc are derived via `{ of, offset }`; fixed axes reveal how moving `ca` shifts the group relative to the world origin.
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -98,6 +98,13 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   } else if (exportedPreviewIR !== undefined) {
     resolvedPreviewIr = { ir: exportedPreviewIR, width: undefined, height: undefined };
     irJson = formatIR(exportedPreviewIR);
+  } else if (previewSource?.canonicalRender !== undefined) {
+    try {
+      resolvedPreviewIr = buildPreviewIR(previewSource.canonicalRender);
+      irJson = formatIR(resolvedPreviewIr.ir);
+    } catch (error) {
+      irJson = `// Failed to compute IR: ${errorMessage(error)}`;
+    }
   } else if (previewSource?.deriveIR !== false) {
     try {
       resolvedPreviewIr = buildPreviewIR(Component);

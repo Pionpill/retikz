@@ -155,6 +155,17 @@ describe('ComponentPreview Vanilla source', () => {
     expect(props.source?.vanilla?.render).toBeUndefined();
     expect(props.source?.vanilla?.rendererMode).toBeUndefined();
   });
+
+  it('controls demo 使用默认状态提供 React、IR 与 Vanilla 视图', () => {
+    const props = renderPreview(
+      ['kernel', 'components', 'node', 'coordinate'],
+      <ComponentPreview files="coordinate-between" />,
+    );
+
+    expect(props.source?.react).toBeDefined();
+    expect(props.source?.ir).toBeDefined();
+    expect(props.source?.vanilla).toBeDefined();
+  });
 });
 
 describe('ComponentPreview localized controls', () => {

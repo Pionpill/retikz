@@ -48,11 +48,22 @@ export const previewControlContract = {
 - `relatedApis` 只列 controls 直接解释的公开 API，不列宿主 actions 或间接实现
 - `presets` 只收录有用户语义的完整状态，不把任意排列包装成 preset
 - zh / en 的 id、kind、默认值、范围、option value、条件和 canonical 状态保持一致；只本地化 title、section、label 与 preset label
-- demo 同时显式导出注册回退；`usePreviewControls` 属于 hook，按 ComponentPreview 按需契约关闭动态 IR 派生：
+- demo 同时显式导出注册回退；使用 `defineControlledPreview` 复用一份 JSX，交互视图读取实时值，IR / Vanilla 源码视图读取 canonical 状态：
 
-```ts
+```tsx
+import { defineControlledPreview } from '@/modules/docs/preview';
+
 export const previewControls = exampleControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
+  <Layout>{/* 使用 values */}</Layout>
+));
+
+export const previewSource = controlledPreview.source;
+export default controlledPreview.Component;
 ```
+
+- 只有无法共享渲染函数的 hook / Effect demo 才手写 `deriveIR: false`，并按需导出 `previewIR` 或 Vanilla override
 
 ## 取景与尺寸
 

@@ -2,22 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { pathTransformControls } from './path-transform.controls';
+import { pathTransformControls, previewControlContract } from './path-transform.controls';
 
 export const previewControls = pathTransformControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/**
- * 路径整体变换 playground
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(pathTransformControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={320} height={220} viewBox={{ x: -160, y: -110, width: 320, height: 220 }}>
       <Path stroke="#94a3b8" strokeWidth={1.5} dashPattern={[1, 4]} lineCap="round">
@@ -37,6 +28,13 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * 路径整体变换 playground
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

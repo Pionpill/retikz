@@ -2,19 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { pathStyleControls } from './path-style.controls';
+import { pathStyleControls, previewControlContract } from './path-style.controls';
 
 export const previewControls = pathStyleControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/** Path 描边与透明度 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(pathStyleControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const thickness = values.thickness === 'custom' ? undefined : values.thickness;
 
   return (
@@ -44,6 +38,11 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Path 描边与透明度 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -4,21 +4,13 @@ import type { FC } from 'react';
 import { scaleIn } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { animationPlaygroundControls } from './animation-playground.controls';
+import { animationPlaygroundControls, previewControlContract } from './animation-playground.controls';
 
 export const previewControls = animationPlaygroundControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** 固定一个 scaleIn，让面板集中探索专有项、公共时序与支点 */
-const Demo: FC = () => {
-  const values = usePreviewControls(animationPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const animation = scaleIn({
     from: values.from,
     duration: values.duration,
@@ -42,6 +34,11 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 固定一个 scaleIn，让面板集中探索专有项、公共时序与支点 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

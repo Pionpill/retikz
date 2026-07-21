@@ -2,22 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { shadowPlaygroundControls } from './shadow-playground.controls';
+import { previewControlContract,shadowPlaygroundControls } from './shadow-playground.controls';
 
 export const previewControls = shadowPlaygroundControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** 固定一张卡片，让面板只探索 shadow 对象的连续参数 */
-const Demo: FC = () => {
-  const values = usePreviewControls(shadowPlaygroundControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={280} height={230} viewBox={{ x: -140, y: -115, width: 280, height: 230 }}>
       <Node
@@ -37,6 +28,11 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 固定一张卡片，让面板只探索 shadow 对象的连续参数 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

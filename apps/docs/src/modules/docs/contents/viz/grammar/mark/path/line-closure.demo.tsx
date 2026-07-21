@@ -4,19 +4,13 @@ import type { FC } from 'react';
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
-
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { closureRadar, closureTrend } from './line-closure.data';
-import { lineCurveControls, PATH_CURVE_CONTROL_ID } from './line-curve.controls';
+import { PATH_CURVE_CONTROL_ID, previewControlContract } from './line-curve.controls';
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-const Demo: FC = () => {
-  const curve: PathCurveValue = usePreviewControls(lineCurveControls)[PATH_CURVE_CONTROL_ID];
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const curve: PathCurveValue = values[PATH_CURVE_CONTROL_ID];
   return (
     <Layout width={620} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
       <Plot data={closureTrend} width={300} height={230} x={0} y={35}>
@@ -49,6 +43,10 @@ const Demo: FC = () => {
       </Plot>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

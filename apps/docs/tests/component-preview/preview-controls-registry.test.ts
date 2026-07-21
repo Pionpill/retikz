@@ -44,6 +44,7 @@ import {
   controlModules,
   demoModules,
   demoSources,
+  localSourceFiles,
   resolveControlsKey,
   resolveDemoKey,
   resolvePreviewControlContract,
@@ -270,7 +271,17 @@ describe('preview controls registry', () => {
   it('从真实 demo 模块收集源码派生配置', () => {
     const key = resolveDemoKey(['viz', 'grammar', 'mark', 'path'], 'line-curve', 'zh');
 
-    expect(demoModules[key]?.previewSource).toEqual({ deriveIR: false });
+    expect(demoModules[key]?.previewSource).toMatchObject({ deriveIR: false });
+    expect(demoModules[key]?.previewSource?.canonicalRender).toEqual(expect.any(Function));
+  });
+
+  it('contents 统一从短作者入口导入 ComponentPreview author API', () => {
+    const legacyPath = '@/modules/docs/components/component-preview/author';
+    const legacySources = [...Object.values(demoSources), ...Object.values(localSourceFiles)].filter(source =>
+      source?.includes(legacyPath),
+    );
+
+    expect(legacySources).toEqual([]);
   });
 
   it('Scope transform demo 使用坐标轴而非原点和轴端节点', () => {

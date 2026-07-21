@@ -5,7 +5,7 @@ import type { FC } from 'react';
 import { AnimationModeProvider, Layout, Node } from '@retikz/react';
 import { useRef } from 'react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { type PreviewSourceConfig } from '@/modules/docs/preview';
 
 export const previewSource = {
   deriveIR: false,

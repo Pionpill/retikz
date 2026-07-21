@@ -3,17 +3,16 @@ import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { primitiveRelationsPlaygroundControls } from './primitive-relations-playground.controls';
+import {
+  previewControlContract,
+  primitiveRelationsPlaygroundControls,
+} from './primitive-relations-playground.controls';
 
 export const previewControls = primitiveRelationsPlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 const SOURCE_DISTANCE = 125;
 const TARGET_HALF_WIDTH = 52;
@@ -39,12 +38,7 @@ const targetOf = (
   ...(boundaryOverride === 'inherit' ? {} : { boundary: boundaryOverride }),
 });
 
-/**
- * 图元关系端点 playground
- * @description 固定目标与取景，让来源沿轨道移动，对比自动贴边、显式 anchor 与单条边 boundary 覆盖
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(primitiveRelationsPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const sourcePosition = sourcePositionOf(values.sourceAngle);
 
   return (
@@ -91,6 +85,14 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * 图元关系端点 playground
+ * @description 固定目标与取景，让来源沿轨道移动，对比自动贴边、显式 anchor 与单条边 boundary 覆盖
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

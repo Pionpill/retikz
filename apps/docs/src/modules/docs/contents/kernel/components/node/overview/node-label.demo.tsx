@@ -3,21 +3,13 @@ import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { nodeLabelControls } from './node-label.controls';
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
+import { nodeLabelControls, previewControlContract } from './node-label.controls';
 
 export const previewControls = nodeLabelControls;
 
-/** Node 标签附着、朝向、样式与引线 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(nodeLabelControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const position: IRNodeLabelInput['position'] =
     values.positionMode === 'angle'
       ? values.positionAngle
@@ -60,6 +52,11 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Node 标签附着、朝向、样式与引线 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

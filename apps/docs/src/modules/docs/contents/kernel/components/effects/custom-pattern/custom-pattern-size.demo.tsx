@@ -3,17 +3,11 @@ import type { FC } from 'react';
 import { definePattern } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { customPatternSizeControls } from './custom-pattern-size.controls';
+import { customPatternSizeControls, previewControlContract } from './custom-pattern-size.controls';
 
 export const previewControls = customPatternSizeControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 /**
  * 同一个 motif、不同 tile 周期：`pattern.size` 覆盖 def 的 defaultSize，控制图案疏密。
@@ -25,8 +19,7 @@ const dotsGrid = definePattern({
   emit: ({ size, color }) => [{ type: 'ellipse', cx: size / 2, cy: size / 2, rx: 1.5, ry: 1.5, fill: color }],
 });
 
-const Demo: FC = () => {
-  const values = usePreviewControls(customPatternSizeControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const background = values.background === 'transparent' ? undefined : values.background;
 
   return (
@@ -54,6 +47,9 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -3,20 +3,14 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
-
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
 import type { BoundaryChoice, BoundaryFitChoice, ShapeChoice } from './primitive-model-playground-boundary';
 
-import { primitiveModelPlaygroundControls } from './primitive-model-playground.controls';
+import { previewControlContract,primitiveModelPlaygroundControls } from './primitive-model-playground.controls';
 import { nodeShapeOf, primitiveModelBoundaryGuideShape } from './primitive-model-playground-boundary';
 
 export const previewControls = primitiveModelPlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 const SOURCE_DISTANCE = 120;
 
@@ -62,12 +56,7 @@ const BoundaryGuide: FC<BoundaryGuideProps> = props => {
   );
 };
 
-/**
- * 图元模型 playground
- * @description 固定目标位置、来源轨道与取景，交互比较图元内容、内置 shape、连接面和基础样式
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(primitiveModelPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const sourcePosition = sourcePositionOf(values.sourceAngle);
 
   return (
@@ -99,6 +88,14 @@ const Demo: FC = () => {
       <Draw way={['A', 'T']} arrow="->" stroke="#64748b" zIndex={-1} />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * 图元模型 playground
+ * @description 固定目标位置、来源轨道与取景，交互比较图元内容、内置 shape、连接面和基础样式
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

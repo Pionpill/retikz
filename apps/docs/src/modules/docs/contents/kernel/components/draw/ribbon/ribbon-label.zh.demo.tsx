@@ -2,19 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { ribbonLabelControls } from './ribbon-label.controls';
+import { previewControlContract,ribbonLabelControls } from './ribbon-label.controls';
 
 export const previewControls = ribbonLabelControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/** Ribbon 标注属性 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(ribbonLabelControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const placement =
     values.placement === 'inside' ? ({ placement: 'inside' } as const) : ({ side: values.side } as const);
 
@@ -44,6 +38,11 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Ribbon 标注属性 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -4,9 +4,9 @@ import type { FC } from 'react';
 
 import { buildIR, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { usePreviewControls } from '@/modules/docs/preview';
 
 import { customPropertyControls, previewControlContract } from './custom-property.controls';
 

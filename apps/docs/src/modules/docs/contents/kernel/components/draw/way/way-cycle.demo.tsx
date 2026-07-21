@@ -2,20 +2,14 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { wayCycleControls } from './way-cycle.controls';
+import { previewControlContract,wayCycleControls } from './way-cycle.controls';
 import { WayCyclePresentationByState } from './way-cycle.data';
 
 export const previewControls = wayCycleControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/** 在固定三点路径上切换 DrawWay.Cycle */
-const Demo: FC = () => {
-  const values = usePreviewControls(wayCycleControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const presentation = WayCyclePresentationByState[values.state];
 
   return (
@@ -40,6 +34,11 @@ const Demo: FC = () => {
       <Draw way={presentation.way} stroke="dodgerblue" strokeWidth={2} fill={presentation.fill} fillOpacity={0.16} />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 在固定三点路径上切换 DrawWay.Cycle */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

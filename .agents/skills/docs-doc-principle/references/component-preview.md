@@ -14,7 +14,20 @@
 
 静态 demo 默认由源码管线执行并派生 IR，再从 IR 生成 Vanilla 代码。不要额外手写等价 IR / Vanilla 文件，除非自动结果不适合教学。
 
-使用 hook、Effect、组件状态或 Preview Context 的 demo 不能在 React 外静态执行，必须导出：
+controls demo 使用 `defineControlledPreview(previewControlContract, render)` 复用同一渲染函数：可见组件读取实时 controls，源码视图以 definition 默认值与 `canonicalValues` 合并后的稳定状态派生 IR / Vanilla：
+
+```tsx
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
+  <Layout>{/* 使用 values */}</Layout>
+));
+
+export const previewSource = controlledPreview.source;
+export default controlledPreview.Component;
+```
+
+其它使用 hook、Effect、组件状态或 Preview Context 且无法共享纯渲染函数的 demo 不能在 React 外静态执行，必须导出：
 
 ```ts
 export const previewSource = {
@@ -22,7 +35,7 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 ```
 
-这类 demo 默认只保留 React；确需 IR Tab 时导出 `previewIR` 或提供 `<name>.ir.json`。需要更地道的 Vanilla 写法时提供 `<name>.vanilla.ts`。
+这类 demo 默认只保留 React；确需 IR Tab 时导出 `previewIR` 或提供 `<name>.ir.json`。需要更地道的 Vanilla 写法时提供 `<name>.vanilla.ts`。Tier 2 composite IR 仍不自动生成 Vanilla。
 
 ## 数据与附属源码
 

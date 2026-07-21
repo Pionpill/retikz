@@ -1,6 +1,6 @@
-import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Path 基础结构 playground 的中文属性面板 */
 export const pathStructureControls = definePreviewControls({

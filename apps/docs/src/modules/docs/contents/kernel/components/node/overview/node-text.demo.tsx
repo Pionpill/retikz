@@ -3,15 +3,9 @@ import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { nodeTextControls } from './node-text.controls';
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
+import { nodeTextControls, previewControlContract } from './node-text.controls';
 
 export const previewControls = nodeTextControls;
 
@@ -21,9 +15,7 @@ const fontOf = (emphasis: 'normal' | 'bold' | 'italic' | 'bold-italic'): IRFont 
   style: emphasis === 'italic' || emphasis === 'bold-italic' ? 'italic' : 'normal',
 });
 
-/** Node 多行内容、自动换行与行级样式 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(nodeTextControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const lines = values.content.replaceAll('\r', '').split('\n');
   const text = lines.map((line, index): IRLineSpec => {
     const fill = index === 0 ? values.firstFill : index === 1 ? values.secondFill : values.restFill;
@@ -49,6 +41,11 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Node 多行内容、自动换行与行级样式 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -2,17 +2,11 @@ import type { FC } from 'react';
 
 import { Arc, Circle, Draw, Layout, Sector } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { arcSectorPlaygroundControls } from './arc-sector-playground.controls';
+import { arcSectorPlaygroundControls, previewControlContract } from './arc-sector-playground.controls';
 
 export const previewControls = arcSectorPlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 /** 返回椭圆在指定角度上的点 */
 const ellipsePoint = (
@@ -25,9 +19,7 @@ const ellipsePoint = (
   return [center[0] + radiusX * Math.cos(radians), center[1] + radiusY * Math.sin(radians)];
 };
 
-/** Arc 与 Sector 共享半径、角度和闭合语义的 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(arcSectorPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const arcCenter: [number, number] = [-110, 0];
   const sectorCenter: [number, number] = [110, 0];
   const radius = { x: values.radiusX, y: values.radiusY };
@@ -76,6 +68,11 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Arc 与 Sector 共享半径、角度和闭合语义的 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

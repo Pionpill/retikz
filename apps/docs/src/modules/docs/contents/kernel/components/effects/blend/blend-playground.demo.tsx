@@ -2,21 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { blendPlaygroundControls } from './blend-playground.controls';
+import { blendPlaygroundControls, previewControlContract } from './blend-playground.controls';
 
 export const previewControls = blendPlaygroundControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** 固定重叠结构，让面板探索全部 blendMode 与输入颜色 */
-const Demo: FC = () => {
-  const values = usePreviewControls(blendPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const blendMode = values.mode;
 
   return (
@@ -40,6 +32,11 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 固定重叠结构，让面板探索全部 blendMode 与输入颜色 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

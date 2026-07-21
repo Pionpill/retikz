@@ -1,6 +1,6 @@
-import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Layout 输出边界面板使用的稳定字段 id */
 export const LayoutViewBoxControlId = {

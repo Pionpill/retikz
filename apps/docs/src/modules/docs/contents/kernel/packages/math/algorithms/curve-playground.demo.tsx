@@ -4,17 +4,13 @@ import type { FC } from 'react';
 import { curve } from '@retikz/math';
 import { Circle, Draw, Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { curvePlaygroundControls } from './curve-playground.controls';
+import { curvePlaygroundControls, previewControlContract } from './curve-playground.controls';
 
 export const previewControls = curvePlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type CurveValues = PreviewControlValuesFor<typeof curvePlaygroundControls>;
 
@@ -42,9 +38,7 @@ const PointSets = {
   ],
 } satisfies Record<CurveValues['pointSet'], Array<Position>>;
 
-/** 直接渲染 math 返回的 CubicSegment，并保留 knot 折线作为参照 */
-const Demo: FC = () => {
-  const values = usePreviewControls(curvePlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const points = PointSets[values.pointSet];
   const segments = curve.catmullRomToCubic(points, values.tension);
 
@@ -62,6 +56,11 @@ const Demo: FC = () => {
       ))}
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 直接渲染 math 返回的 CubicSegment，并保留 knot 折线作为参照 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

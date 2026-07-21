@@ -4,18 +4,14 @@ import type { FC, ReactNode } from 'react';
 import { intersect, point, vector2 } from '@retikz/math';
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { intersectionPlaygroundControls } from './intersection-playground.controls';
+import { intersectionPlaygroundControls, previewControlContract } from './intersection-playground.controls';
 import { circleCircleCenters, intersectionViewBox } from './intersection-playground.data';
 
 export const previewControls = intersectionPlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type IntersectionValues = PreviewControlValuesFor<typeof intersectionPlaygroundControls>;
 
@@ -74,9 +70,7 @@ const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array
   };
 };
 
-/** 在固定取景中比较直线与圆的求交及退化结果 */
-const Demo: FC = () => {
-  const values = usePreviewControls(intersectionPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const scene = sceneOf(values);
 
   return (
@@ -90,6 +84,11 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 在固定取景中比较直线与圆的求交及退化结果 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

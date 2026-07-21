@@ -339,6 +339,8 @@ export type ComponentPreviewFiles =
 export type PreviewSourceConfig = {
   /** 是否允许直接执行 demo 以自动派生 IR。 @default true */
   deriveIR?: boolean;
+  /** 使用稳定默认状态渲染源码视图，不参与可见 demo 的交互状态 */
+  canonicalRender?: () => ReactNode;
 };
 
 /** unified diff 中单行的种类：未变 / 新增 / 删除。 */

@@ -3,17 +3,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Rectangle } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { contourBoundaryPlaygroundControls } from './contour-boundary-playground.controls';
+import { contourBoundaryPlaygroundControls, previewControlContract } from './contour-boundary-playground.controls';
 
 export const previewControls = contourBoundaryPlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type ContourBoundaryValues = PreviewControlValuesFor<typeof contourBoundaryPlaygroundControls>;
 type AnchorChoice = ContourBoundaryValues['anchor'];
@@ -35,9 +31,7 @@ const targetOf = (anchor: AnchorChoice, anchorAngle: number): IRNodeTarget => ({
 /** 让连线从来源节点的可连接边界开始 */
 const sourceTarget: IRNodeTarget = { id: 'source' };
 
-/** Contour 的精确连接边界与 AABB 对照 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(contourBoundaryPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const points =
     values.pointSet === 'shifted'
       ? CONTOUR_POINTS.map(([x, y]): [number, number] => [x + 200, y + 200])
@@ -71,6 +65,11 @@ const Demo: FC = () => {
       <Draw way={[sourceTarget, targetOf(values.anchor, values.anchorAngle)]} arrow="->" stroke="gray" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Contour 的精确连接边界与 AABB 对照 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

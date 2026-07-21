@@ -3,15 +3,13 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { ribbonEndpointsControls } from './ribbon-endpoints.controls';
+import { previewControlContract, ribbonEndpointsControls } from './ribbon-endpoints.controls';
 
 export const previewControls = ribbonEndpointsControls;
-
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
 
 type RibbonEndpointValues = PreviewControlValuesFor<typeof ribbonEndpointsControls>;
 
@@ -35,24 +33,28 @@ const directionOf = (values: RibbonEndpointValues): NonNullable<IRPathRibbonOpti
   }
 };
 
-/** Ribbon 端点方向、对齐与端帽 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(ribbonEndpointsControls) as RibbonEndpointValues;
-  const direction = directionOf(values);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const resolvedValues = values as RibbonEndpointValues;
+  const direction = directionOf(resolvedValues);
   const cap: NonNullable<IRPathRibbonOptions['start']>['cap'] =
-    values.cap === 'arc' ? { type: 'arc', center: [-190, 20], radius: values.width / 2 } : values.cap;
+    resolvedValues.cap === 'arc'
+      ? { type: 'arc', center: [-190, 20], radius: resolvedValues.width / 2 }
+      : resolvedValues.cap;
 
   return (
     <Layout width={400} height={200} viewBox={{ x: -260, y: -130, width: 520, height: 260 }}>
       <Path
         kind="ribbon"
         ribbon={{
-          width: values.width,
-          align: values.align,
+          width: resolvedValues.width,
+          align: resolvedValues.align,
           start: { direction, cap },
           end: {
             direction,
-            cap: values.cap === 'arc' ? { type: 'arc', center: [190, 20], radius: values.width / 2 } : values.cap,
+            cap:
+              resolvedValues.cap === 'arc'
+                ? { type: 'arc', center: [190, 20], radius: resolvedValues.width / 2 }
+                : resolvedValues.cap,
           },
           samples: 64,
         }}
@@ -66,6 +68,11 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Ribbon 端点方向、对齐与端帽 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

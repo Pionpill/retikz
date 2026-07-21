@@ -2,26 +2,14 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
-
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { coordinateAsAnchorFrame } from './coordinate-as-anchor.controls';
-import { coordinateAsAnchorControls } from './coordinate-as-anchor.en.controls';
+import { coordinateAsAnchorControls, previewControlContract } from './coordinate-as-anchor.en.controls';
 
 export const previewControls = coordinateAsAnchorControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/**
- * `<Coordinate>` as a named virtual anchor
- * @description hub is an invisible center; four nodes use `position={{ of: 'hub', ... }}` symmetrically and all paths terminate there; fixed axes reveal its displacement from the world origin.
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(coordinateAsAnchorControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
       width={coordinateAsAnchorFrame.width}
@@ -51,6 +39,14 @@ const Demo: FC = () => {
       <Draw way={['W', 'hub']} arrow="->" stroke="gray" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * `<Coordinate>` as a named virtual anchor
+ * @description hub is an invisible center; four nodes use `position={{ of: 'hub', ... }}` symmetrically and all paths terminate there; fixed axes reveal its displacement from the world origin.
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

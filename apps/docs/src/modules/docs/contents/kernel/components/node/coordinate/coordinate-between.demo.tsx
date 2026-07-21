@@ -2,25 +2,17 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { coordinateBetweenControls, coordinateBetweenFrame } from './coordinate-between.controls';
+import {
+  coordinateBetweenControls,
+  coordinateBetweenFrame,
+  previewControlContract,
+} from './coordinate-between.controls';
 
 export const previewControls = coordinateBetweenControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/**
- * 比例定位 `{ between: [A, B], fraction }`
- * @description A、B 固定在 x 轴上，面板连续调整同一个 q 的 fraction；同样的输入可用于 Node.position / Coordinate / Step.to
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(coordinateBetweenControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
       width={coordinateBetweenFrame.width}
@@ -47,6 +39,14 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * 比例定位 `{ between: [A, B], fraction }`
+ * @description A、B 固定在 x 轴上，面板连续调整同一个 q 的 fraction；同样的输入可用于 Node.position / Coordinate / Step.to
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

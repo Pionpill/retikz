@@ -2,26 +2,14 @@ import type { FC } from 'react';
 
 import { Layout, Node, Scope } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { scopeZIndexControls } from './scope-z-index.controls';
+import { previewControlContract,scopeZIndexControls } from './scope-z-index.controls';
 
 /** controls registry 未刷新时供 ComponentPreview 从 demo 模块直接解析的兜底定义 */
 export const previewControls = scopeZIndexControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/**
- * Scope 与 Node 两级 zIndex playground
- * @description Node zIndex 只在所属 Scope 内排序；Scope zIndex 决定整组 GroupPrim 在父层的上下位置
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(scopeZIndexControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={360} height={220} viewBox={{ x: -180, y: -110, width: 360, height: 220 }}>
       <Scope transforms={[{ kind: 'translate', x: -22, y: -14 }]} zIndex={values.scopeA}>
@@ -74,6 +62,14 @@ const Demo: FC = () => {
       </Scope>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * Scope 与 Node 两级 zIndex playground
+ * @description Node zIndex 只在所属 Scope 内排序；Scope zIndex 决定整组 GroupPrim 在父层的上下位置
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;
