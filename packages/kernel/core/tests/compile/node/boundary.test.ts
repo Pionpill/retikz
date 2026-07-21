@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../../src/contract';
-import type { IRNodeTarget, IRScene } from '../../../src/schemas';
+import type { IRBoundary, IRNodeTarget, IRScene } from '../../../src/schemas';
 import type { Rect } from '../../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { NamespaceStack } from '../../../src/compile/namespace';
 import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
+import { resolveAnchor } from '../../../src/compile/reference';
 import * as core from '../../../src/index';
 import { BUILTIN_SHAPES, star } from '../../../src/providers/shape';
 import { BoundaryKeyword, BoundarySchema } from '../../../src/schemas/boundary';
@@ -144,6 +145,31 @@ describe('boundary-aware boundary/canonical', () => {
     expect(angleBoundaryOf(layout, 0)).toEqual(angleBoundaryOf(layout, 0, 'shape'));
     expect(angleBoundaryOf(layout, 90)).toEqual(angleBoundaryOf(layout, 90, 'shape'));
   });
+
+  it('tight boundary 在 fit / gap 后应用 margin，自动端点与标准/数字 anchor 一致', () => {
+    const namespaceStack = new NamespaceStack();
+    const layout = layoutNode(
+      {
+        type: 'node',
+        id: 'star-margin',
+        shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
+        boundary: { type: 'circle', params: { fit: 'tight', gap: 2 } },
+        margin: 8,
+        position: [0, 0],
+      },
+      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
+    );
+    const boundary = { type: 'circle', params: { fit: 'tight', gap: 2 } } as const;
+    const automatic = boundaryPointOf(layout, [100, 0], boundary);
+    const standard = resolveAnchor(layout, 'right', boundary);
+    const numeric = resolveAnchor(layout, '0', boundary);
+
+    expect(automatic[0]).toBeCloseTo(40);
+    expect(standard[0]).toBeCloseTo(automatic[0]);
+    expect(standard[1]).toBeCloseTo(automatic[1]);
+    expect(numeric[0]).toBeCloseTo(automatic[0]);
+    expect(numeric[1]).toBeCloseTo(automatic[1]);
+  });
 });
 
 describe('star.anchor no longer handles canonical directly', () => {
@@ -172,7 +198,7 @@ const findConnectionPath = (prims: Array<ScenePrimitive>): PathPrim | undefined 
  * @param start path 的 move 起点（决定 toward 方向）
  */
 const lineEndpointWithNode = (
-  nodeBoundary: string | undefined,
+  nodeBoundary: IRBoundary | undefined,
   targetOverride: Partial<IRNodeTarget>,
   start: [number, number] = [200, 0],
 ): [number, number] => {
@@ -219,14 +245,14 @@ describe('端到端：path clip 透传 boundary ?? node.boundary', () => {
   // 方向选取：[200, 0] → star 中心 [0, 0]，即 toward = [0,0]（path 从 [200,0] 连到 star）
   // star 有 5 个尖角，0° 是第一个尖角（outerRadius=30）；
   // 改从 [0,0] 方向出发，让 toward 从 star 中心看去往 [200,0]（即 right 方向 0°）——
-  // star 在 0° 方向是尖角（outerRadius=30）；circle 也是半径30（max(30,30)=30）→ 数值相同！
+  // star 在 0° 方向是尖角（outerRadius=30）；circle 默认 tight，半径精确等于 outerRadius
   //
   // 默认 −90 基准下：tip-k 角 = −90 + k·72（即 270/342/54/126/198°），notch-k 角 = −54 + k·72
   //   （即 306/18/90/162/234°）。选 18° 方向（notch-1）取凹角边界。
   //
   // 让 boundaryPoint 取 18° 方向：path 从 star 中心朝 [100, 100·tan18°≈32.49] 出发，
   //   toward 方向 = arctan(32.49/100) ≈ 18°，正好命中 notch-1（凹角），
-  //   star 边界 ≈ innerRadius=10，circle 边界 = 30，差异显著（20 单位）。
+  //   star 边界 ≈ innerRadius=10，circle 外接圆边界更远，差异显著
 
   it('(a) node 无 boundary → 端点贴真实星形边界（凹角方向，约 innerRadius=10）', () => {
     // start=[100, 32.49]: toward≈18°，star 凹角（notch-1），边界约 r=10
@@ -236,18 +262,22 @@ describe('端到端：path clip 透传 boundary ?? node.boundary', () => {
     expect(distA).toBeCloseTo(10, 0);
   });
 
-  it('(b) node boundary="circle" → 端点贴真圆边界（半径=30=outerRadius）', () => {
-    // circle 连接面：r = max(halfWidth, halfHeight) = max(30, 30) = 30
+  it('(b) node boundary="circle" → 默认 tight，端点贴星形 outerRadius', () => {
     const pointB = lineEndpointWithNode('circle', {});
     const distB = Math.sqrt(pointB[0] ** 2 + pointB[1] ** 2);
-    expect(distB).toBeCloseTo(30, 0);
+    expect(distB).toBeCloseTo(30);
+  });
+
+  it("node circle fit:'bounds' → 端点贴视觉 AABB 外接圆", () => {
+    const point = lineEndpointWithNode({ type: 'circle', params: { fit: 'bounds' } }, {});
+    expect(Math.hypot(point[0], point[1])).toBeGreaterThan(30);
   });
 
   it('(a) != (b)：star 形边界与圆形边界不同（凹角方向显著差异）', () => {
     const notchStart: [number, number] = [100, 100 * Math.tan((18 * Math.PI) / 180)];
     const pointA = lineEndpointWithNode(undefined, {}, notchStart);
     const pointB = lineEndpointWithNode('circle', {}, notchStart);
-    // innerRadius=10 vs circle r=30，差距 20，必然不等
+    // 真实凹角与外接圆连接面必然不等
     expect(pointA).not.toEqual(pointB);
   });
 

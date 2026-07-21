@@ -5,10 +5,12 @@ import { useComponentPreviewStore } from '../../src/modules/docs/store/useCompon
 
 const originalDefaultOpen = useComponentPreviewStore.getState().controlPanelDefaultOpen;
 const originalThemeMode = useComponentPreviewStore.getState().themeMode;
+const originalRangePlaybackDuration = useComponentPreviewStore.getState().rangePlaybackDuration;
 
 afterEach(() => {
   useComponentPreviewStore.getState().setControlPanelDefaultOpen(originalDefaultOpen);
   useComponentPreviewStore.getState().setThemeMode(originalThemeMode);
+  useComponentPreviewStore.getState().setRangePlaybackDuration(originalRangePlaybackDuration);
 });
 
 describe('ComponentPreview store controls panel preference', () => {
@@ -25,6 +27,13 @@ describe('ComponentPreview store controls panel preference', () => {
 
     useComponentPreviewStore.getState().setThemeMode('dark');
     expect(useComponentPreviewStore.getState().themeMode).toBe('dark');
+  });
+
+  it('stores the default range playback duration', () => {
+    expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(2000);
+
+    useComponentPreviewStore.getState().setRangePlaybackDuration(500);
+    expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(500);
   });
 
   it('不保存 panel 宽度或实例级映射', () => {

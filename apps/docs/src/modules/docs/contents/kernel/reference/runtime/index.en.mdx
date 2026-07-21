@@ -1,22 +1,22 @@
 ---
 title: Runtime
-description: Runtime reference — the IR pipeline, Primitive model, Parser helpers, and host-injected extension mechanisms.
+description: Look up the runtime contracts from host specifications through Core IR and Scene to rendering, plus reusable parsing and extension entry points.
 ---
 
-This group is the runtime pipeline from IR to picture. `compile` is the entry point, Primitive is the renderer-agnostic drawing model, Parser turns sugar input into IR fragments, and Extension Mechanisms explains how hosts inject custom definitions, registries, and lowerers. Look here when you drive compilation, build extension packages, or write a custom renderer.
+This group follows a figure across runtime boundaries. React and Vanilla adapters normalize host specifications into Core IR, `compileToScene` performs lowering, layout, and resolution, and `@retikz/render` materializes the resulting Scene as SVG or Canvas. Parsing helpers are reusable Sugar-to-IR utilities for adapters, not a mandatory stage for every IR input.
 
-<ComponentPreview files="runtime-flow" size="sm" hideCode />
+<ComponentPreview files="runtime-flow" size="xs" hideCode />
 
 > This is the reference layer, not component docs; to author figures, start from [Components](/kernel/components/layout).
 
 ## What each part covers
 
-| Topic      | Responsibility                                                               | Reach for it when                                                    |
-| ---------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Compile    | The IR → Scene entry point, layout options, text measuring, warning contract | Driving compilation yourself, configuring layout, receiving warnings |
-| Primitive  | The renderer-agnostic drawing model produced by compile                      | Writing a custom renderer / exporter                                 |
-| Parser     | Pure conversion from sugar input to IR fragments                             | Reusing sugar parsing such as relative coordinates                   |
-| Extensions | Injection models for definitions, registries, and host lowerers              | Building third-party packages or host integrations                   |
+| Topic            | Responsibility                                                               | Reach for it when                                                       |
+| ---------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Compile          | The IR → Scene entry point, layout options, text measuring, warning contract | Driving compilation yourself, configuring layout, or receiving warnings |
+| Scene Primitives | The renderer-agnostic drawing model produced by compile                      | Writing a custom renderer or exporter                                   |
+| Parsing Helpers  | Reusable pure functions from Sugar input to IR fragments                     | Building an adapter or custom DSL                                       |
+| Extensions       | Injection models for definitions, registries, and host lowerers              | Building third-party packages or host integrations                      |
 
 ## In this section
 
@@ -28,14 +28,12 @@ This group is the runtime pipeline from IR to picture. `compile` is the entry po
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/runtime/scene-primitive">
-    <span className="font-semibold">Primitive</span>
+    <span className="font-semibold">Scene Primitives</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">The renderer-agnostic drawing model</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/runtime/parser">
-    <span className="font-semibold">Parser</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Pure functions from sugar input to IR fragments
-    </span>
+    <span className="font-semibold">Parsing Helpers</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Reusable Sugar-to-IR helpers for adapters</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/runtime/extensions">
     <span className="font-semibold">Extension Mechanisms</span>

@@ -1,0 +1,248 @@
+---
+title: '@retikz/react'
+description: 用 JSX 组织 Kernel 与 Sugar 组件，把生成的 core IR 编译后接入 React 的 SVG / Canvas 宿主生命周期。
+---
+
+`@retikz/react` 是 React 应用的首选入口。你用 `<Layout>`、`<Node>`、`<Path>`、`<Scope>`、`<Draw>` 等 JSX 组件声明图形；包内 adapter 把 props 与 children 转成 `@retikz/core` IR，再由 `<Layout>` 编译 Scene 并接入 SVG 或 Canvas 宿主。
+
+它负责 React 写法和生命周期接线，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`，后端执行与跨后端 runtime 属于 `@retikz/render`。
+
+## 安装与使用
+
+`react` 与 `react-dom` 是 peer dependencies，版本不低于 18：
+
+```bash
+pnpm add @retikz/react react react-dom
+```
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+
+export const Diagram = () => (
+  <Layout>
+    <Node id="source" position={[0, 0]}>
+      Source
+    </Node>
+    <Node id="target" position={[160, 0]}>
+      Target
+    </Node>
+    <Draw way={['source', 'target']} arrow="->" />
+  </Layout>
+);
+```
+
+`<Layout>` 默认输出 SVG；需要像素位图时传 `renderer="canvas"`。组件用法从[快速开始](/kernel/get-start)进入，完整宿主选项见 [Layout](/kernel/components/layout/overview)。
+
+## 为什么需要 @retikz/react
+
+### 用 JSX 降低描述成本
+
+`@retikz/core` 的 IR 可以直接构造，但图形通常包含嵌套、复用和组合关系。JSX 用组件树自然表达这些结构，让 `<Layout>`、`<Scope>`、`<Node>`、`<Path>` 等声明贴近图形层级，减少手工拼装 Core IR 的样板代码。
+
+retikz 把 React 作为官方支持的一等框架：`@retikz/react` 的组件 API、文档、示例和适配行为会随 Kernel 一起维护。React 在这里是 authoring layer；最终数据契约和编译语义仍由框架无关的 `@retikz/core` 拥有。
+
+### 为什么不提供其他官方框架包
+
+这不是 Core 只能接入 React。任何框架只要把自己的组件或模板结构转换成相同的 Core IR，并接入 `compileToScene` 与 renderer 生命周期，就能复用 retikz 的 Kernel 能力。
+
+`@retikz/react` 同时是其他框架适配器的实现参考，展示组件树到 IR、宿主能力注入和渲染生命周期接线的完整边界。官方把维护资源集中在 React，不负责开发、发布或维护 Vue、Svelte 等其他框架包；这些适配器可由社区沿用同一边界独立实现。
+
+## 组件不会直接渲染 DOM
+
+### 为什么采用标记组件
+
+选择标记组件不是因为 React 不能绘图，而是为了让图形语义只有一个真源。如果 `<Node>`、`<Path>` 各自实现 DOM、浏览器布局和几何计算，React DSL 就会逐渐形成一套与 Core IR 平行的规则；同一张图在 React、Vanilla 或其它适配器中也可能得到不同结果。
+
+因此 JSX 只负责组织声明，builder 把它收敛为框架无关的 Core IR。中间过程不创建额外 DOM，也不把 CSS layout 变成图形编译的隐式输入；持久化、传输、SSR 和其它框架适配都可以继续复用同一份 IR → Scene 管线。
+
+React 仍然在合适的边界发挥作用：最终 SVG 描述树会映射为普通 React elements，继续使用 reconciliation、key、ref 和事件生命周期；Canvas 则由 React 管理单个宿主与重绘时机。薄的是图形语义，不是宿主接线。
+
+`<Node>`、`<Path>`、`<Scope>` 等 Kernel 组件是 **IR 标记**，不是 DOM 组件。它们自身返回 `null`，只用稳定的 `displayName` 告诉 React builder“这是什么图元”；因此 `<Node>` 不会先生成一个 `<div>`，也不会拥有另一套浏览器布局语义。
+
+```tsx
+export const Node: FC<NodeProps> = () => null;
+Node.displayName = TIKZ_NODE;
+```
+
+Sugar 组件也不新增 IR。例如 `<Draw>` 先用 Core 的 `parseWay` 解析 `way`，再返回标准 `<Path>` / `<Step>` Kernel JSX。下面只截取 line 分支；源码还覆盖 fold、curve、arc、cycle 等同一映射过程：
+
+```tsx
+const steps = parseWay(way);
+
+return (
+  <Path arrow={arrow}>
+    {steps.map((step, index) => {
+      if (step.kind === 'line') {
+        return <Step key={index} kind="line" to={step.to} label={step.label} />;
+      }
+      return null;
+    })}
+  </Path>
+);
+```
+
+`readSceneChildren` 同步遍历 children：识别 Kernel 标记、展开 Fragment，并直接调用函数式 Sugar 后继续递归。这个过程不经过 React DOM renderer，所以 Kernel / Sugar 必须是无 hook、无副作用的函数组件；最终由 `buildIRWithContributions` 组装出普通 JSON `IRScene`。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node 的 IR 标记实现',
+      path: 'packages/kernel/react/src/kernel/components/Node.tsx',
+      startLine: 112,
+      endLine: 118,
+    },
+    {
+      label: 'Draw 展开为 Path / Step',
+      path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
+      startLine: 61,
+      endLine: 155,
+    },
+  ]}
+/>
+
+### 性能边界与后续方向
+
+标记组件避免了中间 DOM 和重复图形语义，但不代表转换链没有成本。`Layout` 目前分别用 `useMemo` 缓存 JSX → IR、IR → Scene、Scene → SVG 描述树和 handler 收集；当 IR、compile options 与其它依赖引用稳定时，这些阶段可以直接复用结果。
+
+children 模式有一个明确边界：JSX children 经常在每次 React render 时产生新引用，memo 因而可能失效，重新执行 `buildIRWithContributions` 和整图 `compileToScene`。大图需要频繁重渲染时，现阶段应优先在组件外或 `useMemo` 中持有稳定 IR，并通过 `ir` prop 传给 `<Layout>`；在其它编译选项也稳定时，这会跳过 JSX builder，并让 Scene 编译缓存有机会命中。
+
+后续不会仅凭“支持 JSON Patch”就引入公开的增量 API。Kernel 会先从真实大图或交互场景量化全量编译成本，优先评估 bailout、缓存或 domain lowering 是否足够；只有性能证据成立后，才进一步设计 IR diff、局部 compile、Scene patch、concurrent 调度，以及 SVG / Canvas 能否共享同一更新语义。
+
+Progressive IR / 增量编译目前只是 v0.5 的待证据候选，不代表已排期或已经冻结 API。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout 的 memo 与全量编译边界',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 410,
+      endLine: 493,
+    },
+    {
+      label: 'SVG 描述树的 React 薄映射',
+      path: 'packages/kernel/react/src/render/svg/svg-to-react.ts',
+      startLine: 53,
+      endLine: 69,
+    },
+    {
+      label: '增量编译的启动条件与待决问题',
+      path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
+      startLine: 3,
+      endLine: 27,
+    },
+    {
+      label: 'v0.5 Progressive IR 候选状态',
+      path: 'packages/kernel/_notes/decisions/v0/v0.5/roadmap.md',
+      startLine: 1,
+      endLine: 23,
+    },
+  ]}
+/>
+
+## 从 JSX 到 Scene
+
+`<Layout>` 是两段纯转换的编排边界：先调用 React builder 把 JSX 适配为 Core IR，再调用 Core 的 `compileToScene`。下图蓝色节点属于 `@retikz/react` 的 authoring / adapter，橙色节点是 `@retikz/core` 拥有的数据契约与编译器。
+
+<ComponentPreview files="react-to-scene" size="xs" hideCode />
+
+| 阶段                       | 所有者          | 做什么                                                                  |
+| -------------------------- | --------------- | ----------------------------------------------------------------------- |
+| Kernel / Sugar JSX         | `@retikz/react` | 收集 props 与 children；Sugar 先展开为 Kernel                           |
+| `buildIRWithContributions` | `@retikz/react` | 遍历组件树，生成 `IRScene`，同时收集可嵌入 Tier 2 的贡献                |
+| `IRScene`                  | `@retikz/core`  | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM              |
+| `compileToScene`           | `@retikz/core`  | lowering composite，解析 registry、引用、几何、布局、资源与动画         |
+| `Scene`                    | `@retikz/core`  | 后端中立的 primitives、layout、resources 与可选根动画，交给 render 消费 |
+
+`Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX builder，从同一个 `compileToScene` 入口继续。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React builder 遍历 children',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 585,
+      endLine: 650,
+    },
+    {
+      label: 'React children 生成 IRScene',
+      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
+      startLine: 685,
+      endLine: 702,
+    },
+    {
+      label: 'Layout 串联 builder 与 compile',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 410,
+      endLine: 472,
+    },
+    {
+      label: 'Core IR 编译为 Scene',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+  ]}
+/>
+
+## Scene 之后
+
+Scene 已经没有 React 组件语义。`@retikz/render` 负责把它执行到目标后端，`@retikz/react` 只补 React 宿主生命周期和元素映射：
+
+| 目标   | `@retikz/render`                                        | `@retikz/react`                                       |
+| ------ | ------------------------------------------------------- | ----------------------------------------------------- |
+| SVG    | `buildSvgDocument`：Scene → 中性 `SvgNode` 描述树       | `svgToReact` 薄映射成 React elements，并连接根 ref    |
+| Canvas | `renderToCanvas`：把 Scene 直接绘制到 Canvas 2D context | `CanvasHost` 管理 `<canvas>`、重绘 effect 与 rAF 时钟 |
+
+事件 handler 是函数，不能进入 JSON IR。children 模式下，React 侧会用另一条 `collectHydrationHandlers` 扫描按图元 id 收集函数；渲染完成后再绑定到 SVG 定位或 Canvas hit-test。直接传 `ir` prop 时，则通过 `handlers` prop 提供这条运行时旁路。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout 的 SVG / Canvas 分流',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 479,
+      endLine: 527,
+    },
+    {
+      label: 'SvgNode 到 React element 的薄映射',
+      path: 'packages/kernel/react/src/render/svg/svg-to-react.ts',
+      startLine: 53,
+      endLine: 69,
+    },
+    {
+      label: 'CanvasHost 调用 renderToCanvas',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 175,
+      endLine: 230,
+    },
+    {
+      label: 'JSX handler 运行时旁路',
+      path: 'packages/kernel/react/src/kernel/runtime/collect-hydration-handlers.ts',
+      startLine: 53,
+      endLine: 105,
+    },
+  ]}
+/>
+
+## 职责边界
+
+| 能力       | `@retikz/react` 负责什么                          | 能力真源            |
+| ---------- | ------------------------------------------------- | ------------------- |
+| JSX DSL    | Kernel 组件一对一构造 IR；Sugar 同步展开为 Kernel | `@retikz/core` IR   |
+| 编译宿主   | 收集 children / IR、注入选项并接入 React 生命周期 | `@retikz/core` 编译 |
+| 渲染与交互 | 选择 SVG / Canvas、收集事件并连接宿主             | `@retikz/render`    |
+
+`@retikz/react` 不包含无框架 plain spec；在非 React、SSR 字符串或直接 DOM 挂载场景使用 [`@retikz/vanilla`](/kernel/packages/vanilla)。
+
+## 继续阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/get-start">
+    <span className="font-semibold">快速开始</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">安装并完成第一张 React 图形</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/layout">
+    <span className="font-semibold">Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解整张图的输入、能力注入与宿主边界</span>
+  </LinkedCard>
+</div>

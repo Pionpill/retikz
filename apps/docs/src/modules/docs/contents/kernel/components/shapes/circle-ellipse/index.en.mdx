@@ -50,6 +50,10 @@ Ellipse works like Circle, but the radius is split into `radius: { x, y }`. It a
 
 <ComponentPreview files="ellipse-basic" size="sm" />
 
+The playground places all four input forms against one reference box. Switch construction, inset / outset the box, then enable a partial segment to compare the input bounds, final ellipse, and closure.
+
+<ComponentPreview files="ellipse-playground" size="sm" />
+
 ### API Reference
 
 | Component   | Combination                                                              | Meaning                                                       |
@@ -88,11 +92,11 @@ import { Node } from '@retikz/react';
 
 ### Examples
 
-The boundary circumscribes "text + padding": `circle` takes the circle that fits the text, `ellipse` takes the circumscribed ellipse (each axis × √2). The bare strings `"circle"` / `"ellipse"` need no extra parameters; `ellipse` also has one optional param `circumscribe` (`'proportional'` (default, each axis × √2) / `'equal'` (isotropic, radius = half the inner box diagonal)), and `circle` is exactly the `circumscribe:'equal'` preset of `ellipse`.
+Switch between `circle` and `ellipse` in the playground: the former is the isotropic `circumscribe:'equal'` preset, while the latter defaults to circumscribing "text + padding" by scaling each axis by √2. Adjust the orbit angle and distance to move the source; keep automatic clipping or choose a named or numeric anchor to compare endpoint placement on both boundaries.
 
-<ComponentPreview files="node-circle-ellipse" size="sm" />
+<ComponentPreview files="node-connection-playground" size="sm" />
 
-Connection endpoints snap to the circle / ellipse edge, and the node's center plus 8 directional anchors (`center` / `top` …) still apply. Node props such as `position` / `fill` / `padding` / `label` are organized by topic from the [Node](/kernel/components/node/overview) entry page.
+The center and 8 directional anchors (`center` / `top` …) still apply. See [Node](/kernel/components/node/overview) for shared props such as `position` / `fill` / `padding` / `label`.
 
 ### API Reference
 
@@ -162,5 +166,5 @@ The default `ellipse` multiplies each half-axis by √2. During compilation, `ci
 ## Related
 
 - [Node geometry](/kernel/components/node/overview): sizes, boundaries, and anchors when a shape is used as a node boundary
-- [Arc / Sector](../arc-sector): angle-based shapes
+- [Arc / Sector](/kernel/components/shapes/arc-sector): angle-based shapes
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

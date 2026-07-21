@@ -1,6 +1,6 @@
 ---
 title: Arrow
-description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth），并支持 `start` / `end` 起末分别配置 + 逐字段合并。
+description: 为 Draw 与 Path 选择起末箭头，并统一控制形状、尺寸、颜色、透明度与单端覆盖。
 ---
 
 箭头由两个独立的 prop 控制：
@@ -24,15 +24,13 @@ import { Draw } from '@retikz/react';
 
 ## 例子
 
-### 基础
+### 方向、形状与外观
 
-省略 `arrowDetail` 时，箭头使用默认的 `stealth` 倒钩形状，颜色继承路径描边色，长度和宽度默认都是 6 个用户单位。
+一个面板集中控制 `arrow` 方向、8 种内置形状、颜色、透明度和尺寸。开启“分别配置起末”后，`start` / `end` 会逐字段覆盖顶层形状与颜色；关闭时两端共用顶层配置。省略 `arrowDetail` 的默认值是继承路径颜色的 `stealth`，长度和宽度都是 6。
 
-<ComponentPreview files="arrow-default" size="xs" />
+<ComponentPreview files="arrow-appearance" size="md" />
 
-### 形状
-
-`arrowDetail.shape` 选形状，缺省 `'stealth'`：
+内置形状成对提供实心与空心版本：
 
 | 实心                 | 空心                     | 典型用途             |
 | -------------------- | ------------------------ | -------------------- |
@@ -41,41 +39,13 @@ import { Draw } from '@retikz/react';
 | `'diamond'` 实心菱形 | `'openDiamond'` 空心菱形 | UML 组合 / 聚合      |
 | `'circle'` 实心圆点  | `'openCircle'` 空心圆点  | 连接点 / 空心端点    |
 
-<ComponentPreview files="arrow-shapes" />
-
 > 多节点路径（如 a → b → c）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头。
-
-### 起末分别配置
-
-`arrowDetail.start` / `arrowDetail.end` 子对象与顶层默认**逐字段合并**——缺省字段继承顶层，已填字段覆盖顶层。UML "组合 + 继承"用 `start.shape` + `end.shape` 表达：
-
-<ComponentPreview files="arrow-uneven" size="xs" />
 
 > **合并语义**：`start` / `end` 子对象的字段优先；子对象未填的字段回退到顶层默认；顶层未填的字段回退到内置默认。例：`arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → 起末都用 `stealth`，起端用红色，末端继承路径描边色。
 
-### 样式
-
-#### 颜色覆盖
-
-`color` 把箭头描边 / 实心填充改为指定颜色，不再继承路径描边色；`fill` 仅实心形状生效。`start.color` / `end.color` 同样支持单端覆盖——常用于"线浅色、箭头深色"或起末异色：
-
-<ComponentPreview files="arrow-color" size="xs" />
-
 > **空心形状会静默忽略 `fill`**：`shape ∈ { open / openStealth / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
 
-#### 缩放：scale / length / width
-
-- `scale` 是箭头等比缩放因子（默认 1），乘到 `length` / `width` 之后——`length=10, scale=1.5` → 实际箭头长度为 15
-- `length` 控制箭头沿路径方向的长度（默认 6）
-- `width` 控制箭头垂直路径方向的宽度（默认 6）
-
-<ComponentPreview files="arrow-scale" size="sm" />
-
-#### 半透明
-
-`opacity` 0..1，作用于箭头整体（独立于路径的 `opacity` / `strokeOpacity`）：
-
-<ComponentPreview files="arrow-opacity" size="xs" />
+`scale` 乘到 `length` / `width` 之后，例如 `length=10, scale=1.5` 的实际长度是 15。
 
 ## 技术原理
 
@@ -150,7 +120,7 @@ import { Draw } from '@retikz/react';
 <ComponentAlert
   type="warn"
   title="渐变描边需要显式箭头颜色"
-  description="当 stroke 是 PaintSpec 时，箭头不能把渐变当作单一描边色继承；请设置 arrowDetail.color，或分别设置 start.color / end.color 为 CSS 颜色。"
+  description="当 stroke 是 IRPaintSpec 时，箭头不能把渐变当作单一描边色继承；请设置 arrowDetail.color，或分别设置 start.color / end.color 为 CSS 颜色。"
 />
 
 <SourceLinks
@@ -162,7 +132,7 @@ import { Draw } from '@retikz/react';
       endLine: 56,
     },
     {
-      label: 'PaintSpec 描边继承守卫',
+      label: 'IRPaintSpec 描边继承守卫',
       path: 'packages/kernel/core/src/compile/path/stroke/marks.ts',
       startLine: 24,
       endLine: 41,

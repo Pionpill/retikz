@@ -50,6 +50,10 @@ import { Circle, Ellipse } from '@retikz/react';
 
 <ComponentPreview files="ellipse-basic" size="sm" />
 
+下面的 playground 把四种输入放进同一张参考框中。切换构造方式、收缩 / 扩张范围，再打开局部弧段，观察输入框、最终椭圆与闭合区域的关系。
+
+<ComponentPreview files="ellipse-playground" size="sm" />
+
 ### API 参考
 
 | 组件        | 组合                                                                     | 含义                                              |
@@ -88,11 +92,11 @@ import { Node } from '@retikz/react';
 
 ### 例子
 
-边界自动外接「文字 + padding」：`circle` 取能容纳文字的外接圆，`ellipse` 取外接椭圆（各轴 × √2）。裸字符串 `"circle"` / `"ellipse"` 无需额外参数即可用；`ellipse` 另有一个可选参数 `circumscribe`（`'proportional'`（默认，各轴 × √2）/ `'equal'`（等轴，半径取内框对角线之半）），`circle` 即 `ellipse` 的 `circumscribe:'equal'` 预设。
+在 playground 中切换 `circle` / `ellipse`：前者是 `circumscribe:'equal'` 的等轴预设，后者默认按各轴 × √2 外接「文字 + padding」。调整轨道角度与距离移动来源节点；保持自动贴边，或切换命名 / 数字 anchor，直接比较端点在两种边界上的落点。
 
-<ComponentPreview files="node-circle-ellipse" size="sm" />
+<ComponentPreview files="node-connection-playground" size="sm" />
 
-连线端点会自动贴到圆 / 椭圆的边上，节点的中心与 8 个方位 anchor（`center` / `top` …）照常可用。`position` / `fill` / `padding` / `label` 等 Node 属性按主题整理在 [Node](/kernel/components/node/overview) 入口页。
+节点中心与 8 个方位 anchor（`center` / `top` …）照常可用。`position` / `fill` / `padding` / `label` 等通用属性见 [Node](/kernel/components/node/overview)。
 
 ### API 参考
 
@@ -162,5 +166,5 @@ import { Node } from '@retikz/react';
 ## 相关
 
 - [Node 几何](/kernel/components/node/overview)：把形状用作节点边界时的尺寸、边界与 anchor
-- [Arc / Sector](../arc-sector)：再看角度和空心扇形
+- [Arc / Sector](/kernel/components/shapes/arc-sector)：再看角度和空心扇形
 - [Shapes](/kernel/components/shapes)：形状分组入口与完整定义

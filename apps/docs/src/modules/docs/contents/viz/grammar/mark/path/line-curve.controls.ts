@@ -1,8 +1,8 @@
 import { PathCurve } from '@retikz/plot';
 
-import type { PreviewControlContract } from '@/modules/docs/components';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { definePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 export const PATH_CURVE_CONTROL_ID = 'path-curve';
 

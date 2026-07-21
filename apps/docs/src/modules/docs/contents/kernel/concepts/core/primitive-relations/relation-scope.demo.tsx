@@ -9,7 +9,7 @@ import { Draw, Layout, Node, Scope } from '@retikz/react';
  *   外部 ext 用纯 `'cluster'`（auto，贴到朝它一侧的边）与 `'cluster.top'`（锁定到上边中点）连接整组。
  */
 const Demo: FC = () => (
-  <Layout width={440} height={150}>
+  <Layout width={440} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node id="ext" position={[-170, 0]} stroke="none">
       ext
     </Node>

@@ -6,7 +6,7 @@ import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { boundaryFromContour, contourCommands, DEG_TO_RAD, localToWorld } from '../../shared';
+import { boundaryFromContour, contourCommands, DEG_TO_RAD, localToWorld, pointsConnectionEnvelope } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 const MAX_STAR_POINTS = 1024;
@@ -124,6 +124,7 @@ export const star = defineShape<StarParams>({
     }
     return undefined;
   },
+  connectionEnvelope: (_rect, kind, params) => pointsConnectionEnvelope(starGeometry(params).vertices, kind),
   *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const geo = starGeometry(params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path

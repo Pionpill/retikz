@@ -32,7 +32,7 @@ Why this matters in practice: use the DSL when authoring diagrams, use IR when s
 | Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                                         | Yes                | One-to-one with IR nodes                       |
 | Sugar  | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings, <br />shape helpers like `<Circle>` / `<Rectangle>` / `<Star>` | No                 | Synchronously expands to Kernel in the adapter |
 
-Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets bottom compile to the same result:
+Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets below compile to the same result:
 
 ```tsx
 // Sugar: a one-line way array
@@ -62,15 +62,15 @@ Sugar adds no new capability. Anything drawn with `<Draw>` can also be written m
 
 The adapter collects this JSX into IR. `@retikz/core` resolves positions, computes anchors, expands paths and bounds, then outputs Scene. In this example, `<Draw>` becomes a plain `path` node in IR.
 
-`@retikz/core` compiles in two passes, then finalizes the Scene. The text on each arrow marks the intermediate product handed to the next stage:
+`@retikz/core` coordinates layout and paths in stages during one recursive traversal, then finalizes the Scene. The diagram presents those stages in dependency order; it does not imply three independent walks over the whole IR:
 
 <ComponentPreview files="layers-compile" size="xs" hideCode />
 
-- **layout nodes**: resolve each node / coordinate position, measure text, compute the bounding box and anchors per shape, and register them by name.
-- **resolve paths**: nodes settle first so paths can look up their endpoints from the name table and expand into path commands (`d`) — exactly the dependency the `anchors` arrow stands for.
+- **layout nodes**: when traversal reaches a node / coordinate, resolve its position, measure text, compute its bounding box, and register it in the current namespace.
+- **resolve paths**: leave a placeholder for each path, then resolve and flush pending paths after the current scope subtree or root finishes. The paths can now look up registered endpoint layouts — exactly the dependency the `anchors` arrow stands for.
 - **fit bounds**: union every primitive's bounding box, add padding, round to precision, and produce the viewBox.
 
-If the IR contains Tier 2 composite nodes (such as plot's higher-level components), the compiler lowers them to Kernel first, then runs the chain top; see [Tier 2 composites](/kernel/concepts/design/composite) for details.
+If the IR contains Tier 2 composite nodes (such as plot's higher-level components), the compiler lowers them to Kernel first, then enters the staged traversal above; see [Tier 2 composites](/kernel/concepts/design/composite) for details.
 
 ## Choosing a Layer
 
@@ -101,6 +101,29 @@ The Kernel group consists of six lockstep npm packages under `packages/kernel`. 
 react / vanilla are adapters: they collect the DSL into IR and hand rendering to render. tex lowers LaTeX formulas into primitives that core can compile. Upper packages do not create a parallel IR, rendering model, or geometry foundation.
 
 Most users install `@retikz/react` (or `@retikz/vanilla`), which pulls in core and render automatically. You only depend on `@retikz/core` directly when writing a custom renderer or reading/writing IR by hand.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Shared IR-to-Scene orchestration entry',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+    {
+      label: 'Resolve lowering and provider registries centrally',
+      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+      startLine: 78,
+      endLine: 115,
+    },
+    {
+      label: 'Flush deferred paths after entity registration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 147,
+      endLine: 174,
+    },
+  ]}
+/>
 
 ## Further Reading
 

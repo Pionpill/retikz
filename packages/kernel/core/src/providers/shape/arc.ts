@@ -7,7 +7,7 @@ import type { PathCommand, ScenePrimitive, ShapeAnchorName } from '../../contrac
 import type { Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
+import { boundsConnectionEnvelope, localToWorld, normalizeAngleRange, RAD_TO_DEG, worldToLocal } from '../../shared';
 import { pathPrimitiveStyle } from './style';
 
 const arcParamsSchema = z.strictObject({
@@ -103,6 +103,7 @@ export const arc = defineShape<ArcParams>({
         return undefined;
     }
   },
+  connectionEnvelope: boundsConnectionEnvelope,
   *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const geo = computeArcGeometry(params);
     const { radius, close } = params;

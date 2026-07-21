@@ -60,7 +60,7 @@ MDX 中使用：
 | `red`          | 错误、失败、拒绝、危险路径                         | P5 语义专用 |
 | `green`        | 成功、通过、完成路径                               | P5 语义专用 |
 
-颜色只标记角色类别：同色节点必须属于同一稳定类别，无关角色使用中性色或不同语义色。当前重点由 `font={{ weight: 'bold' }}` 标出，不借复用强调色表达。
+颜色只标记角色类别：同色节点必须属于同一稳定类别，无关角色使用中性色或不同语义色。单行同级节点的当前重点可用 `font={{ weight: 'bold' }}` 标出，不借复用强调色表达；双行节点统一加粗标题只表达信息层级，不等同于当前重点。
 
 自检：灰度打印后结构仍一眼可读；去掉颜色后仍能靠文字、字重、线型和位置看出重点与关系。
 
@@ -88,13 +88,47 @@ MDX 中使用：
 - 次要说明、caption、edge label 使用 `textColor="gray"`。
 - 有框模式需要备注时，优先改成 edge label 或移入正文；无框模式的备注放在被标注元素下方，用少量引线指回元素。
 
+### 双行节点
+
+一个角色同时需要稳定名称和简短职责 / 实现锚点时，使用两级文字，不拆成连续流程节点：
+
+- 第一行是角色标题，默认 `14px`、加粗。
+- 第二行是职责、输入输出或实现锚点，默认 `12–13px`、常规灰色。
+- 文件路径、目录名和实现位置默认放第二行；它们不是下游阶段，不单独连接箭头。
+- 同一图的双行节点统一字号、行距和最小高度；空间不足时先缩短说明或调整布局，不单独缩小某一项。
+- 双行节点标题全部加粗属于结构层级；需要强调当前角色时，优先依靠主链位置和正文指认，不再增加临时颜色。
+
+### 分组边界与标题
+
+分组框只表达一组节点共同所属的 layer、runtime、adapter 或其它职责范围，不作为流程步骤。
+
+- 边界按内部标题与节点的实际包围盒紧密包裹，只增加一致的小内边距；不要用明显大于内容的 `minimumSize` 制造空白。
+- 框内预留一行紧凑标题区，内容节点从标题下方开始；标题同时贴近上边界与首行内容，不要用标题行制造额外纵向空白。
+- 标题放在框内左上角的固定内边距位置，使用 `gray`、常规字重和普通字号；不要使用类别色、粗体或外置 `label`。
+- 标题是分组标识，不是角色节点。它可以使用 `stroke="none"`、无填充的独立 `Node`，这是有框模式不混用无框节点规则的唯一默认例外；不要让箭头连接标题。
+- 边界默认使用 `lightgray` 虚线、无填充或极浅灰填充与 `cornerRadius={4}`；视觉权重低于内部节点。
+- 多个同级分组复用相同的标题位置、标题行高度、内边距与边界样式。
+
 ## 连线语义
 
 连线优先靠 id，不写绝对坐标：
 
 ```tsx
 <Draw
-  way={['source', { label: { text: 'resolve', sloped: true, textColor: 'gray', font: { size: 12 } } }, 'target']}
+  way={[
+    'source',
+    {
+      label: {
+        text: 'resolve',
+        position: 'midway',
+        side: 'top',
+        sloped: false,
+        textColor: 'gray',
+        font: { size: 12 },
+      },
+    },
+    'target',
+  ]}
   arrow="->"
 />
 ```
@@ -102,10 +136,13 @@ MDX 中使用：
 约定：
 
 - 实线表示数据流、控制流或主调用链。
-- 虚线表示工具依赖、辅助关系、派生参考，不表示主数据通道。
+- 虚线表示工具依赖、辅助关系、派生关系，不表示主数据通道。
+- 点线表示控制柄、投影、测量等几何参考线；使用 `dashPattern={[1, 4]}` + `lineCap="round"`，不要复用 Node / 分组边框的虚线样式。
 - `arrow="->"` 表示单向；`arrow="<->"` 表示双向同步 / 可逆关系；少用反向箭头，优先调换 `way` 顺序。
-- step / edge label 默认设置 `sloped: true`，沿当前 path step 的切线排版；不要让图中路径文字统一保持水平。
-- 使用 `sloped: true` 时必须显式设置 `side`；当前 core 在 `side` 缺省时会把 sloped label 居中放在线上。主链 label 默认使用 `side: 'top'`，辅助关系按语义选择其它侧边，但也必须显式设置。
+- 每个 step / edge label 都显式设置 `position`、`side` 和 `sloped`，不依赖默认值。
+- 水平主链 label 保持水平，默认使用 `position: 'midway'`、`side: 'top'`、`sloped: false`。
+- 竖向依赖 label 也优先水平显示，默认使用 `position: 'midway'`、`side: 'right'`、`sloped: false`，避免读者旋转视线。
+- 斜线或曲线只有在沿线排版能更明确地绑定关系时才使用 `sloped: true`；此时按旋转后的文字包围盒留空间，并显式选择 `side`。
 - edge label 比常规文字至少小 2 号，通常 `font={{ size: 12 }}` 且 `textColor="gray"`。
 - shape 专属 anchor 使用对象形态 `{ id, anchor: 'tip-0' }`，不要写 `'id.tip-0'` 这类字符串 shorthand。
 
@@ -119,8 +156,12 @@ MDX 中使用：
 
 - `width` / `height` 是 SVG 内部逻辑坐标，不是页面硬宽。
 - 必须加 `style={{ maxWidth: '100%', height: 'auto' }}`，避免窄屏横向滚动。
-- docs 正文区域和 preview padding 会压缩可视宽度；叙述图默认优先 `xs` / `sm`，够说明就不要撑大。
+- docs 正文区域、preview padding 和 render pane 的 `max-width` / `max-height` 会共同缩放 SVG；选择能保持文字可读的最小 `<ComponentPreview size>`，不要预先强套 `xs` / `sm`。
+- 完成节点排布后按实际内容包围盒反推 `Layout` 宽高，只保留稳定外边距；不要沿用明显大于内容的逻辑画布。
+- 在真实页面渲染后读取 preview、render pane 与 SVG 的实际 `getBoundingClientRect()`，再选择 `<ComponentPreview size>`；源码中的逻辑宽高和静态 SVG 不能替代页面结果。常规状态下图与预览区四边各保留约 `12px`。
+- 存在主题 / 样式切换等顶部悬浮控件时，在 `12px` 基础上额外增加 `40px` 顶部间距，即顶部约 `52px`；其余三边仍约 `12px`。
 - 节点间距按节点宽度、path label 和箭头共同占用的视觉空间分配，不机械等分节点中心。相邻两条边只有一侧带 label 时，中间节点可以向无 label 一侧小幅偏移，为 label 留出空间，同时确保另一侧不显拥挤。
+- 同级角色保持一致的正文文字字号；空间不足时先调整位置、缩短 label、换行或压缩逻辑跨度，不要单独缩小某个节点文字来塞入布局。
 - sloped label 按旋转后的真实文字包围盒预留空间；空间不足时优先拉开节点或延长边。`label.distance` 只用于微调文字离当前边的距离，盲目增大会把文字推向相邻节点。
 - 调整节点坐标或图的纵横跨度后，同步检查并匹配 `<ComponentPreview size>`；桌面和 `< 600px` 窄屏都不能裁切、贴边或留下失衡空白。
 - 窄屏放不下时依次删减节点、缩短 label、压缩逻辑跨度、改成纵向布局，最后才缩小字号。
@@ -139,13 +180,22 @@ MDX 中使用：
 - 只改正文说明：`pnpm exec prettier --write <changed-files>` + `git diff --check`。
 - 新增 / 修改 `.demo.tsx` 插图：`pnpm --filter @retikz/docs exec tsc --noEmit`。条件允许（本地页面可访问，且浏览器或截图能力可用）时，必须打开真实文档页面，必要时获取整图与窄屏截图做视觉检查；不要只依赖源码审阅或类型检查。
 
-视觉检查：
+Codex Node REPL 提供 Playwright 时，导入 [`scripts/check-figure-preview.mjs`](scripts/check-figure-preview.mjs) 并传入页面 URL 与中英文 H2；脚本会检查四种组合并把临时截图写到 `notes/reports/figure-preview/`。运行时没有 Playwright 时，手动执行同一检查矩阵，不安装新的仓库依赖。
 
+视觉检查必须覆盖 `zh / en × 桌面 / 窄屏`。桌面使用约 `1440px` viewport（正文约 `800px`），窄屏固定使用 `500px` viewport；条件允许时对目标 preview 截图并记录实际尺寸。
+
+- preview 容器满足 `scrollWidth === clientWidth`，没有横向滚动。
+- SVG、render pane 与 preview 的实际包围盒匹配；不能只检查 `<Layout width/height>`。
 - 图能渲染，节点不重叠，连线方向和虚实语义正确。
 - 节点、文字、连线、箭头和 path label 没有非预期重合、遮挡或裁切。
-- 节点位置对齐，层级与阅读顺序清楚；节点间距、四周留白和图内疏密均衡，label 不贴近节点或箭头。
+- 节点位置对齐，层级与阅读顺序清楚；常规四边留白约 `12px`，有顶部悬浮样式控件时顶部约 `52px`；图内疏密均衡，label 不贴近节点或箭头。
+- 根据真实渲染结果确认图没有过大或过小，`<ComponentPreview size>` 与内容包围盒匹配。
+- 分组框紧贴标题与内容，标题位于框内左上角的预留标题行，使用灰色常规字重。
+- 图的逻辑宽高贴合实际内容，分组两侧的入口 / 出口箭头只保留清晰可辨的安全长度，没有无意义长边。
+- 同级节点字号一致，没有为了布局而单独缩小某个标签。
 - 同图节点边界模式统一；有框常规节点均为 4px 小圆角。
-- 同色节点属于同一角色类别，重点用加粗表达；step / edge label 默认沿线 `sloped`，且显式设置 `side`。
+- 同色节点属于同一角色类别；双行节点的标题 / 说明层级稳定，单行节点的当前重点才使用额外加粗。
+- step / edge label 根据路径方向显式设置 `position`、`side` 和 `sloped`；竖向依赖标签默认保持水平。
 - 窄屏 `< 600px` 能缩放，不横向滚动。
 - 中英 demo 拆分时 label 对得上。
 - 没有遗留 ASCII、Mermaid、截图或外部图。

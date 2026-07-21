@@ -106,7 +106,7 @@ describe('ClipDefs — 裁剪区物化为 clipPath', () => {
     expect(shape.props.clipRule).toBe('evenodd');
   });
 
-  it('compound clip -> <clipPath> contains multiple child shapes', () => {
+  it('compound clip -> <clipPath> contains one accumulated <path>', () => {
     const [cp] = clipPathsOf([
       clipResource('clip-1', {
         kind: 'compound',
@@ -119,10 +119,9 @@ describe('ClipDefs — 裁剪区物化为 clipPath', () => {
         ],
       }),
     ]);
-    const [group] = shapeChildrenOf(cp);
-    expect(group.type).toBe('g');
-    const children = shapeChildrenOf(group);
-    expect(children.map(child => child.type)).toEqual(['rect', 'path']);
+    const [shape] = shapeChildrenOf(cp);
+    expect(shape.type).toBe('path');
+    expect(shape.props.d).toBe('M 0 0 L 40 0 L 40 30 L 0 30 Z M 5 5 L 20 5 Z');
   });
 
   it('多 clip 资源 → 多个 clipPath，各自 id', () => {

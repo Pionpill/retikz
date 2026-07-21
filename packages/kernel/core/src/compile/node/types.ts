@@ -1,6 +1,6 @@
 ﻿import type { BoundsInsets } from '@retikz/math';
 
-import type { BoundaryDefinition, ShapeDefinition, TextLine } from '../../contract';
+import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
   BlendModeValue,
@@ -173,6 +173,12 @@ export type NodeLayout = {
    * @default resolveBoundaryRegistry
    */
   boundaries?: ProviderCollection<BoundaryDefinition>;
+  /** shape-aware connection envelope 缓存 */
+  connectionEnvelopeCache?: Map<string, Rect>;
+  /** tight fallback warning 去重集合 */
+  connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
+  /** 当前 node 的 compile warning 分发函数 */
+  warn?: (code: CompileWarningCodeValue, message: string) => void;
 };
 
 /** 节点附属标签 layout */

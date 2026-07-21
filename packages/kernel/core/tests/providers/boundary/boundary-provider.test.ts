@@ -7,6 +7,7 @@ import type { IRBoundary, IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { defineBoundary, defineShape } from '../../../src/contract';
+import { BUILTIN_BOUNDARIES } from '../../../src/providers/boundary';
 import { BoundarySchema } from '../../../src/schemas/boundary';
 import { flattenPrims } from '../../helpers/flatten';
 
@@ -53,6 +54,14 @@ const fixedBoundary = (name: string, x: number): BoundaryDefinition =>
   });
 
 describe('Boundary provider contract', () => {
+  it('builtin boundary params 使用统一 fit / gap 默认值，并允许有限负 gap', () => {
+    for (const boundary of BUILTIN_BOUNDARIES) {
+      expect(boundary.paramsSchema.parse({})).toEqual({ fit: 'tight', gap: 0 });
+      expect(boundary.paramsSchema.parse({ fit: 'bounds', gap: -3 })).toEqual({ fit: 'bounds', gap: -3 });
+      expect(() => boundary.paramsSchema.parse({ gap: Number.POSITIVE_INFINITY })).toThrow();
+    }
+  });
+
   it('boundary_provider_custom_point：注册 custom boundary 后 path endpoint 使用 BoundaryDefinition.boundaryPoint', () => {
     expect(lineEndpoint({ boundaries: [fixedBoundary('pin', 7)] }, 'pin')).toEqual([7, 0]);
   });

@@ -1,0 +1,93 @@
+---
+title: Scope
+description: Scope grouping, local namespaces, style defaults, transforms, clipping, and subtree contracts
+---
+
+`ScopeSchema` is the Tier 1 container node. It does not draw a new visual primitive; it establishes local transforms, style defaults, clipping, stacking, and reference boundaries for a child subtree. A Scope can still be referenced through its own `id`.
+
+<span id="scope"></span>
+
+## Scope
+
+<ZodSchema name="ScopeSchema" />
+
+<span id="default-channels"></span>
+
+### Four default channels
+
+Scope separates defaults into four independent channels. Each fills only fields omitted by the matching host; `resetStyle` can block parent-Scope inheritance per channel.
+
+| Field          | Reused contract                                                 | Does not own                             |
+| -------------- | --------------------------------------------------------------- | ---------------------------------------- |
+| `nodeDefault`  | Visual fields from [Node](/kernel/reference/schema/entity#node) | id, position, text, labels, or metadata  |
+| `pathDefault`  | Visual fields from [Path](/kernel/reference/schema/path#path)   | kind, steps, marks, or instance metadata |
+| `labelDefault` | Label color, textColor, opacity, and font                       | Text, position, or host relation         |
+| `arrowDefault` | [ArrowDetail](/kernel/reference/schema/path#arrowdetail)        | Arrow existence or path placement        |
+
+<span id="transform"></span>
+
+## Transform
+
+`TransformSchema` is the union accepted by `Scope.transforms`. Array order is application order: translate variants resolve to Cartesian translation during compile, while rotate and scale remain renderer-agnostic transforms.
+
+<ZodSchema name="TransformSchema" />
+
+| `kind`              | Core fields                    | Effect                                 |
+| ------------------- | ------------------------------ | -------------------------------------- |
+| `translate`         | `x`, `y`                       | Cartesian translation                  |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | Translation derived from polar input   |
+| `at-translate`      | `direction`, `of`, `distance?` | Translation relative to a named entity |
+| `offset-translate`  | `of`, `offset?`                | Base point plus a 2D offset            |
+| `between-translate` | `between`, `fraction`          | Proportional point between endpoints   |
+| `rotate`            | `degrees`, `cx?`, `cy?`        | Rotation around a local point          |
+| `scale`             | `x`, `y?`                      | Uniform or anisotropic scale           |
+
+<span id="clipspec"></span>
+
+## Clip
+
+`ClipSpecSchema` is the union accepted by `Scope.clip`. Built-in geometry uses the JSON shapes below; a custom `kind` is registered through `CompileOptions.clips` and resolved during compile.
+
+| Branch            | Discriminator            | Content                                        |
+| ----------------- | ------------------------ | ---------------------------------------------- |
+| Built-in geometry | `rect` / `circle`, etc.  | Uses one of the fixed schemas below            |
+| `compound`        | `kind: 'compound'`       | Recursively combines multiple ClipSpec values  |
+| Custom Definition | Any other non-empty kind | Fields are validated by `CompileOptions.clips` |
+
+<span id="rectclip"></span>
+
+### RectClip
+
+<ZodSchema name="RectClipSchema" />
+
+<span id="circleclip"></span>
+
+### CircleClip
+
+<ZodSchema name="CircleClipSchema" />
+
+<span id="ellipseclip"></span>
+
+### EllipseClip
+
+<ZodSchema name="EllipseClipSchema" />
+
+<span id="polygonclip"></span>
+
+### PolygonClip
+
+<ZodSchema name="PolygonClipSchema" />
+
+<span id="pathclip"></span>
+
+### PathClip
+
+<ZodSchema name="PathClipSchema" />
+
+<span id="compoundclip"></span>
+
+### CompoundClip
+
+<ZodSchema name="CompoundClipSchema" />
+
+For the custom Definition, registry, and renderer boundary, see [Custom Clip](/kernel/components/layout/custom-clip).

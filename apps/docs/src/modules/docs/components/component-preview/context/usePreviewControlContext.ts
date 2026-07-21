@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 import type { PreviewControlsDefinition, PreviewControlState, PreviewControlValuesFor } from '../types';
 
-import { buildPreviewControlDefaults } from '../controls';
+import { buildPreviewControlDefaults } from '../controls/define-preview-controls';
 
 /** 自定义预览控件的共享状态上下文。 */
 export const PreviewControlStateContext = createContext<PreviewControlState>({

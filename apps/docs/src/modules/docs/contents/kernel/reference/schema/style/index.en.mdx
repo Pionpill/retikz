@@ -1,0 +1,78 @@
+---
+title: Paint
+description: Shared visual fields for Node, Path, and Scope, plus JSON contracts for gradients, patterns, images, and shadows
+---
+
+Core separates common appearance into two layers: `GraphicStyleSchema` defines fields used directly by a host, while `PaintSpecSchema` describes structured paints that a single CSS color cannot express. Node, Path, and Scope reuse these schemas instead of maintaining parallel color and opacity semantics.
+
+<span id="graphicstyle"></span>
+
+## GraphicStyle
+
+`GraphicStyleSchema` applies to an individual node / drawable. `CascadingGraphicStyleSchema` is the subset that Scope can inherit downward; it intentionally excludes shadow and blend mode.
+
+<ZodSchema name="GraphicStyleSchema" />
+
+<span id="cascadinggraphicstyle"></span>
+
+### CascadingGraphicStyle
+
+<ZodSchema name="CascadingGraphicStyleSchema" />
+
+<span id="paintvalue"></span>
+
+## Paint value
+
+`fill` and `stroke` accept `PaintValueSchema`: keep solid colors as CSS color strings, and use a `kind`-discriminated `PaintSpec` object only for gradients, patterns, or images.
+
+<ZodSchema name="PaintValueSchema" />
+
+<span id="paintspec"></span>
+
+<ZodSchema name="PaintSpecSchema" />
+
+<span id="gradientstop"></span>
+
+### GradientStop
+
+<ZodSchema name="GradientStopSchema" />
+
+<span id="lineargradient"></span>
+
+### LinearGradient
+
+<ZodSchema name="LinearGradientPaintSpecSchema" />
+
+<span id="radialgradient"></span>
+
+### RadialGradient
+
+<ZodSchema name="RadialGradientPaintSpecSchema" />
+
+<span id="conicgradient"></span>
+
+### ConicGradient
+
+<ZodSchema name="ConicGradientPaintSpecSchema" />
+
+<span id="pattern"></span>
+
+### Pattern
+
+<ZodSchema name="PatternPaintSpecSchema" />
+
+<span id="image"></span>
+
+### Image
+
+<ZodSchema name="ImagePaintSpecSchema" />
+
+<span id="dropshadow"></span>
+
+## DropShadow
+
+`DropShadowSchema` can start from a preset or use explicit offsets. Explicit fields override the matching preset values.
+
+<ZodSchema name="DropShadowSchema" />
+
+For component authoring and visual behavior, see [Shadow](/kernel/components/effects/shadow), [Blend](/kernel/components/effects/blend), and [Pattern](/kernel/components/effects/pattern).

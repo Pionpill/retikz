@@ -6,49 +6,50 @@ import { Fragment } from 'react';
 const placementRows = [
   {
     id: 'authoring',
-    y: -100,
+    y: -104,
     signal: 'Authoring convenience only',
     owner: 'Sugar / adapter',
-    source: 'react/adapter · vanilla/spec',
+    anchor: 'react/adapter · vanilla/spec',
   },
   {
     id: 'kernel',
-    y: -50,
+    y: -52,
     signal: 'Shared drawing semantics',
     owner: 'Core IR / Scene',
-    source: 'core/schemas · contract',
+    anchor: 'core/schemas · contract',
   },
   {
     id: 'tier2',
     y: 0,
     signal: 'High-level domain model',
     owner: 'Composite + lowering',
-    source: 'core/contract · compile',
+    anchor: 'core/contract · compile',
   },
   {
     id: 'provider',
-    y: 50,
+    y: 52,
     signal: 'Pluggable compile policy',
     owner: 'Definition + registry',
-    source: 'core/contract · providers',
+    anchor: 'core/contract · providers',
   },
   {
     id: 'runtime',
-    y: 100,
+    y: 104,
     signal: 'Backend runtime behavior',
     owner: 'Renderer / runtime',
-    source: 'render · runtime',
+    anchor: 'render · runtime',
   },
 ] as const;
 
 /** Capability placement decision figure for the technical principles page */
 const Demo: FC = () => (
-  <Layout width={660} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-    {placementRows.map(({ id, y, signal, owner, source }) => (
+  <Layout width={600} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    {placementRows.map(({ id, y, signal, owner, anchor }) => (
       <Fragment key={id}>
         <Node
           id={`${id}-signal`}
-          position={[-195, y]}
+          position={[-160, y]}
+          minimumSize={{ width: 220, height: 34 }}
           stroke="dimgray"
           fill="lightgray"
           fillOpacity={0.16}
@@ -59,28 +60,19 @@ const Demo: FC = () => (
         </Node>
         <Node
           id={`${id}-owner`}
-          position={[0, y]}
+          position={[155, y]}
+          minimumSize={{ width: 260, height: 38 }}
           stroke="dodgerblue"
           fill="dodgerblue"
           fillOpacity={0.08}
           cornerRadius={4}
-          font={{ size: 13, weight: 'bold' }}
-        >
-          {owner}
-        </Node>
-        <Node
-          id={`${id}-source`}
-          position={[195, y]}
-          stroke="darkviolet"
-          fill="darkviolet"
-          fillOpacity={0.08}
-          cornerRadius={4}
           font={{ size: 13 }}
-        >
-          {source}
-        </Node>
+          text={[
+            { text: owner, font: { size: 14, weight: 'bold' } },
+            { text: anchor, fill: 'gray', font: { size: 12 } },
+          ]}
+        />
         <Draw way={[`${id}-signal`, `${id}-owner`]} arrow="->" />
-        <Draw way={[`${id}-owner`, `${id}-source`]} arrow="->" />
       </Fragment>
     ))}
   </Layout>

@@ -22,7 +22,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
     position:
       '节点内容盒中心点；笛卡尔 [x,y]、极坐标、`at`-风格相对定位（`{ direction, of, distance? }`）、偏移定位（`{ of, offset }`）、或比例定位（`{ between: [A, B], fraction }`）；非笛卡尔形态编译期解析',
     rotate: '绕节点中心顺时针旋转角度（°）',
-    text: '节点内文本：纯字符串或多行 LineSpec 数组',
+    text: '节点内文本：单字符串，或由字符串、行级样式对象、`{ runs }` 混合文本 / 公式行组成的多行数组',
     align: '多行文本块内对齐，默认 `middle`',
     lineHeight: '行高（用户单位）；未填时取 `font.size × 1.2`',
     color: '主色（TikZ color=）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label',
@@ -60,6 +60,29 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 `strokeOpacity` 表示描边透明度；`dashed` / `dotted` 对应 TikZ 的虚线 / 点线预设；`label` 的 `{ text, position }` 形态对应 `[label=top:foo]` / `[label=30:foo]`。`placement: 'inside'` 是 retikz 对节点内部标签的结构化扩展。
 
 </Comparison>
+
+<span id="shaperef"></span>
+
+## 形状引用
+
+`ShapeRefSchema` 用于需要参数的 shape。无参数 shape 可直接写字符串；对象形式把 provider 名与 JSON 参数一起交给 shape Definition 校验。
+
+<ZodSchema
+  name="ShapeRefSchema"
+  description="形状 provider 名与可选 JSON 参数。"
+  descriptions={{
+    type: '内置或通过 CompileOptions.shapes 注册的 shape 名；未注册名在编译期报错',
+    params: '参数化 shape 的 JSON 对象；字段由注册 shape 自己的 schema 校验',
+  }}
+/>
+
+<span id="boundary"></span>
+
+## 连接边界
+
+`BoundarySchema` 决定 path 端点和方向锚点贴在哪条连接面。字符串 `shape` 使用视觉 shape 自身；其它字符串或 `ShapeRef` 选择内置 / 注册的 boundary provider。
+
+<ZodSchema name="BoundarySchema" description="节点或单个 path 端点使用的连接面引用。" />
 
 <span id="coordinate"></span>
 
@@ -115,15 +138,80 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 ## 文本块
 
-`TextBlockSchema` 是节点文本块的结构：单字符串表示单行；数组表示多行，数组项可用 `LineSpec` 做行级样式覆盖。
+`TextBlockSchema` 是节点文本块的结构：单字符串表示单行；非空数组表示多行。每个 `LineSpec` 可是普通字符串、行级样式对象，或 `{ runs }` 形式的混合文本 / 公式行。
 
-<ZodSchema name="TextBlockSchema" description="文本块：单字符串表示单行，非空 LineSpec 数组表示多行。" />
+<ZodSchema
+  name="TextBlockSchema"
+  description="文本块：单字符串表示单行，非空 LineSpec 数组表示多行；行可包含样式覆盖或混合文本 / 公式 runs。"
+/>
 
 <span id="linespec"></span>
 
 ### 行规格
 
-<ZodSchema name="LineSpecSchema" description="单行文本规格：字符串走默认样式，对象形式可覆盖本行颜色、透明度和字体。" />
+<ZodSchema
+  name="LineSpecSchema"
+  description="单行文本规格：字符串走默认样式，样式对象可覆盖颜色、透明度和字体，`{ runs }` 可按共享基线混排 text run 与 math run。"
+/>
+
+字符串里的 `$...$` / `$$...$$` 是公式 sugar，会归一化为 `MathRunSchema`；显式 `{ tex, displayMode?, fill?, opacity? }` 也可作为 run。公式需要宿主注入 `CompileOptions.lowerTex`，完整接入见 [TeX 包](/kernel/packages/tex)。
+
+<span id="styledline"></span>
+
+### 行级样式
+
+<ZodSchema
+  name="StyledLineSchema"
+  description="带文字内容和可选视觉覆盖的单行。"
+  descriptions={{
+    text: '本行文字内容',
+    fill: '本行文字颜色；覆盖文本块默认值',
+    opacity: '本行透明度 0..1',
+    font: '本行字体覆盖；缺省字段继承文本块 font',
+  }}
+/>
+
+<span id="mixedline"></span>
+
+### 混合文本行
+
+<ZodSchema
+  name="MixedLineSchema"
+  description="在同一基线上从左到右排列 text run 与 math run 的一行。"
+  descriptions={{
+    runs: '至少一个 TextRun 或 MathRun，按数组顺序排版',
+  }}
+/>
+
+<span id="textrun"></span>
+
+#### TextRun
+
+<ZodSchema
+  name="TextRunSchema"
+  description="混合文本行中的普通文字片段。"
+  descriptions={{
+    text: '文字片段内容',
+    fill: '片段颜色；覆盖行 / 文本块默认值',
+    opacity: '片段透明度 0..1',
+    font: '片段字体覆盖；缺省字段向上继承',
+  }}
+/>
+
+<span id="mathrun"></span>
+
+#### MathRun
+
+<ZodSchema
+  name="MathRunSchema"
+  description="由 lowerTex 转换为 glyph path 的公式片段。"
+  descriptions={{
+    tex: 'LaTeX 源码字符串',
+    displayMode: '是否使用 display 公式度量；默认 false（inline）',
+    fill: '公式 glyph 颜色；覆盖行 / 文本块默认值',
+    opacity: '公式片段透明度 0..1',
+  }}
+/>
 
 <span id="font"></span>
 

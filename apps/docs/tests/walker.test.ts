@@ -16,6 +16,10 @@ describe('walker — primitives & literal', () => {
     expect(walkType(z.boolean())).toEqual({ kind: 'primitive', name: 'boolean' });
   });
 
+  it('walks z.null() to a null literal', () => {
+    expect(walkType(z.null())).toEqual({ kind: 'literal', value: null });
+  });
+
   it('walks z.literal("coordinate") to literal', () => {
     expect(walkType(z.literal('coordinate'))).toEqual({ kind: 'literal', value: 'coordinate' });
   });

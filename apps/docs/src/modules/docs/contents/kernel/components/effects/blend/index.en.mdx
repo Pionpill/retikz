@@ -1,6 +1,6 @@
 ---
 title: Blend
-description: Element-level blend mode — blends the primary geometry with content already drawn beneath it through the 16 standard W3C modes, with one contract across SVG and Canvas.
+description: Blend a Node or Path's primary geometry with painted content beneath it through the same mode set in SVG and Canvas.
 ---
 
 `blendMode` is an element-level visual-effect prop you can set directly on `<Node>` and `<Path>`. It applies to **the primitive itself** — the Node shape, the Path main path (including its endpoint arrows). A Node's text / label / pin are separate primitives and are not blended. It is renderer-agnostic: SVG and Canvas each translate it to native capabilities with the same result.
@@ -27,19 +27,31 @@ Omitted or `'normal'` = ordinary source-over, unchanged.
 
 With two or more overlapping elements, set `blendMode` on the upper one to see the blend in the overlap. `multiply` darkens the overlap over a light backdrop:
 
-<ComponentPreview files="blend-multiply" size="sm" />
-
-<span style={{ color: '#888' }}>
-  Three overlapping circles, upper ones multiply — colors multiply darker where they overlap.
-</span>
+<ComponentPreview
+  files="blend-multiply"
+  size="sm"
+  caption="Three overlapping circles, upper ones multiply — colors multiply darker where they overlap."
+/>
 
 ### Overlapping colors with screen
 
 `screen` does the opposite, lightening the overlap over a dark backdrop:
 
-<ComponentPreview files="blend-screen" size="sm" />
+<ComponentPreview
+  files="blend-screen"
+  size="sm"
+  caption="Two circles screened over a dark backdrop — overlaps lighten and add."
+/>
 
-<span style={{ color: '#888' }}>Two circles screened over a dark backdrop — overlaps lighten and add.</span>
+### Mode playground
+
+The static examples above keep the characteristic `multiply` and `screen` results visible. The playground fixes the left circle as an ordinary opaque backdrop and applies all 16 modes plus opacity only to the right source. The background and both circle colors remain adjustable.
+
+<ComponentPreview
+  files="blend-playground"
+  size="sm"
+  caption="The right circle remains the source; source opacity weakens only the blend contributed by that circle."
+/>
 
 ## How it works
 
@@ -68,8 +80,8 @@ The first 12 modes (`normal` through `exclusion`) are separable and operate per 
     {
       label: 'Resolve the final Scene primitive order',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 443,
-      endLine: 466,
+      startLine: 460,
+      endLine: 462,
     },
     {
       label: 'Assemble SVG primitives in Scene order',
@@ -80,6 +92,8 @@ The first 12 modes (`normal` through `exclusion`) are separable and operate per 
     {
       label: 'Draw Canvas primitives in Scene order',
       path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 844,
+      endLine: 855,
     },
   ]}
 />
@@ -112,6 +126,8 @@ This explains the element boundary: SVG marker / filter output follows the curre
     {
       label: 'Isolate Canvas blend state',
       path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 174,
+      endLine: 187,
     },
   ]}
 />
@@ -120,9 +136,9 @@ This explains the element boundary: SVG marker / filter output follows the curre
 
 `blendMode` is a shared style prop on `<Node>` and `<Path>`, written the same way on both.
 
-| Prop        | Type                                                                                                                                                                                                                           | Default    | Description                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | How the primary geometry blends with the content drawn beneath it (the 16 standard W3C modes); omitted / `'normal'` = ordinary source-over. Element-level: a Node's text / label / pin (separate primitives) are not blended; a Path's endpoint arrows blend with the main path |
+| Prop        | Type                                                                                                                                                                                                                                                       | Default    | Description                                   |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | --------------------------------------------- |
+| `blendMode` | `'normal' \| 'multiply'`<br />`'screen' \| 'overlay'`<br />`'darken' \| 'lighten'`<br />`'color-dodge' \| 'color-burn'`<br />`'hard-light' \| 'soft-light'`<br />`'difference' \| 'exclusion'`<br />`'hue' \| 'saturation'`<br />`'color' \| 'luminosity'` | `'normal'` | Blends primary geometry; see boundaries above |
 
 ## Related
 

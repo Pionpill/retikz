@@ -41,26 +41,28 @@ export const SourceLinks: FC<SourceLinksProps> = props => {
   return (
     <nav
       aria-label={t('common.sourceCode')}
-      className="my-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground"
+      className="my-4 grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 text-xs text-muted-foreground"
     >
-      <span className="font-medium text-foreground/70">{t('common.sourceCodeLabel')}</span>
-      {sources.map((source, index) => (
-        <Fragment key={`${source.path}:${source.startLine ?? ''}:${source.label}`}>
-          {index > 0 && (
-            <span aria-hidden="true" className="text-border">
-              ·
-            </span>
-          )}
-          <a
-            href={sourceHref(source)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
-          >
-            {source.label}
-          </a>
-        </Fragment>
-      ))}
+      <span className="self-start font-medium text-foreground">{t('common.sourceCodeLabel')}</span>
+      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        {sources.map((source, index) => (
+          <Fragment key={`${source.path}:${source.startLine ?? ''}:${source.label}`}>
+            {index > 0 && (
+              <span aria-hidden="true" className="text-border">
+                ·
+              </span>
+            )}
+            <a
+              href={sourceHref(source)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+            >
+              {source.label}
+            </a>
+          </Fragment>
+        ))}
+      </span>
     </nav>
   );
 };

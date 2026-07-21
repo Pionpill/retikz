@@ -24,7 +24,7 @@ const bracket = defineArrow({
         { kind: 'line', to: [2, 9] },
         { kind: 'line', to: [8, 9] },
       ],
-      stroke: typeof stroke === 'string' ? stroke : 'context-stroke',
+      stroke: typeof stroke === 'string' ? stroke : { kind: 'contextStroke' },
       strokeWidth: lineWidth,
     },
   ],

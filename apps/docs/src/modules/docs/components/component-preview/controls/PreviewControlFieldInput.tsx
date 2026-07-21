@@ -1,14 +1,23 @@
 import type { FC } from 'react';
 
+import { Pause, Play } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib';
 
-import type { PreviewControlField, PreviewControlValue } from '../types';
+import type { PreviewControlField, PreviewControlValue, PreviewRangeControlField } from '../types';
+
+import { PreviewPointControlInput } from './PreviewPointControlInput';
+
+/** 判断运行时值是否是有限二维坐标 */
+const isPreviewControlPoint = (value: unknown): value is [number, number] =>
+  Array.isArray(value) && value.length === 2 && value.every(coordinate => Number.isFinite(coordinate));
 
 const releaseSelectDocumentLock = (): void => {
   if (document.querySelector('[role="dialog"]')) return;
@@ -51,16 +60,47 @@ export type PreviewControlFieldInputProps = {
   compact?: boolean;
   /** 字段值变化回调 */
   onValueChange: (value: PreviewControlValue) => void;
+  /** 当前正在播放的范围控件 id */
+  playingRangeId?: string;
+  /** 开始播放范围控件 */
+  onRangePlaybackStart?: (field: PreviewRangeControlField) => void;
+  /** 停止范围控件播放 */
+  onRangePlaybackStop?: () => void;
 };
 
 /** 用 shadcn 基础组件渲染单个声明式预览字段 */
 export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props => {
-  const { field, value, compact = false, onValueChange } = props;
+  const {
+    field,
+    value,
+    compact = false,
+    onValueChange,
+    playingRangeId,
+    onRangePlaybackStart,
+    onRangePlaybackStop,
+  } = props;
+  const { t } = useTranslation();
   const [selectOpen, setSelectOpen] = useState(false);
   useReleaseSelectDocumentLock(selectOpen);
 
   switch (field.kind) {
     case 'text':
+      if (field.multiline === true) {
+        return (
+          <textarea
+            data-slot="textarea"
+            aria-label={field.label}
+            value={typeof value === 'string' ? value : field.defaultValue}
+            placeholder={field.placeholder}
+            rows={compact ? 2 : 3}
+            className={cn(
+              'flex min-h-16 w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50',
+              compact && 'min-h-12 px-2 py-1 text-xs',
+            )}
+            onChange={event => onValueChange(event.currentTarget.value)}
+          />
+        );
+      }
       return (
         <Input
           type="text"
@@ -143,6 +183,8 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
     }
     case 'range': {
       const rangeValue = typeof value === 'number' ? value : field.defaultValue;
+      const playing = playingRangeId === field.id;
+      const playbackLabel = t(playing ? 'preview.pauseRange' : 'preview.playRange');
       return (
         <div className={cn('flex w-full min-w-0 items-center gap-3', compact && 'gap-2')}>
           <Slider
@@ -151,10 +193,35 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
             min={field.min}
             max={field.max}
             step={field.step}
-            onValueChange={nextValues => onValueChange(nextValues[0])}
+            onValueChange={nextValues => {
+              onRangePlaybackStop?.();
+              onValueChange(nextValues[0]);
+            }}
           />
           <span className="w-6 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{rangeValue}</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size={compact ? 'icon-xs' : 'icon-sm'}
+            aria-label={playbackLabel}
+            title={playbackLabel}
+            disabled={onRangePlaybackStart === undefined || field.min >= field.max}
+            onClick={() => {
+              if (playing) onRangePlaybackStop?.();
+              else onRangePlaybackStart?.(field);
+            }}
+          >
+            {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+          </Button>
         </div>
+      );
+    }
+    case 'point': {
+      const pointValue = isPreviewControlPoint(value)
+        ? value
+        : ([field.defaultValue[0], field.defaultValue[1]] satisfies [number, number]);
+      return (
+        <PreviewPointControlInput field={field} value={pointValue} compact={compact} onValueChange={onValueChange} />
       );
     }
     default: {

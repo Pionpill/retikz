@@ -1,6 +1,6 @@
 ---
 name: docs-doc-blog
-description: retikz 文档站「博客分区」（/blog/...）写作规则——面向程序员（多为前端开发）的设计理念 / 开发历程类文章。规定篇幅 / TL;DR / 段落风格 / ComponentPreview 优先 / 第三方外链允许 / 主观第一人称允许 / 中英流程 / 系列拆分 / 跨平台手抄约束 / 与 docs-doc-principle 的差异。写 blog mdx 前先读本文，再读 docs-doc-principle 拿继承通用规则（三处协同 / 路由 / Comparison 等不重复）。retikz 专用。
+description: Use when planning, writing, translating, or reviewing a programmer-facing retikz blog article under apps/docs/src/modules/docs/contents/blog.
 ---
 
 # retikz 博客分区规范
@@ -13,7 +13,7 @@ description: retikz 文档站「博客分区」（/blog/...）写作规则——
 
 ## 使用时机
 
-写 `apps/docs/src/contents/blog/<sectionId>/<slug>/index.{zh,en}.mdx` 前**先读本 skill**，再回读 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿**通用规则**（三处协同 / 路由 / `<Comparison>` 表的 GitHub 链接惯例 / 表格宽度 640px / `<br />` 软断等不重复列举）。
+写 `apps/docs/src/modules/docs/contents/blog/<sectionId>/<slug>/index.{zh,en}.mdx` 前先读 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)，再读本 skill 的 blog 差异（第三方链接、作者语气、可选英文、外站搬运）。
 
 本 skill **只列与 docs-doc-principle 有差异或额外补充的部分**。
 
@@ -101,13 +101,13 @@ retikz blog 默认走「作者讲 → AI 写」的双人协作，AI 不替作者
 
 ## 引用规则（与 docs 的关键差异）
 
-|                                        | docs（principle 现行）                        | blog（本 skill）                                                        |
-| -------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------------- |
-| 第三方外链                             | **禁止**                                      | **允许**——blog 是个人文字，引外部库 / 工具 / 文章合理；点到为止避免泛滥 |
-| 站内跨页跳转                           | react-router 路径（`/core/concepts/anchors`） | 同                                                                      |
-| 项目仓库内文件（ADR / DESIGN / SKILL） | GitHub 完整 URL                               | 同                                                                      |
-| mdx 暴露项目结构路径作为纯文字         | 禁止                                          | 同——用户读不到、点不到                                                  |
-| 文末引用清单                           | 不要求                                        | **有引用时必填**——见下「文末引用清单」                                  |
+|                                        | docs（principle 现行）                          | blog（本 skill）                                                        |
+| -------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------- |
+| 第三方外链                             | **禁止**                                        | **允许**——blog 是个人文字，引外部库 / 工具 / 文章合理；点到为止避免泛滥 |
+| 站内跨页跳转                           | react-router 路径（`/kernel/concepts/anchors`） | 同                                                                      |
+| 项目仓库内文件（ADR / DESIGN / SKILL） | GitHub 完整 URL                                 | 同                                                                      |
+| mdx 暴露项目结构路径作为纯文字         | 禁止                                            | 同——用户读不到、点不到                                                  |
+| 文末引用清单                           | 不要求                                          | **有引用时必填**——见下「文末引用清单」                                  |
 
 ### 文末引用清单（有引用时必填）
 
@@ -124,7 +124,7 @@ retikz blog 默认走「作者讲 → AI 写」的双人协作，AI 不替作者
 - [TikZ for Impatient — §3.2](https://tikz.dev/tutorial)：karl 圆原例出处
 - [retikz core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md)：IR 居中模型详述
 - [shadcn/ui](https://ui.shadcn.com/) / [Tailwind CSS v4](https://tailwindcss.com/)：无头库 + CSS-first 灵感来源
-- 站内：[核心架构介绍](/core/introduction) — IR / Sugar / Kernel 三层全景
+- 站内：[核心架构介绍](/kernel/introduction) — IR / Sugar / Kernel 三层全景
 ```
 
 约束：
@@ -142,7 +142,7 @@ retikz blog 默认走「作者讲 → AI 写」的双人协作，AI 不替作者
 - **所有图都 retikz 自绘**：`<ComponentPreview hideCode>` + 同级 `<name>.demo.tsx`；详细惯例去读 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)
 - **禁 `<img>` 截图 / Mermaid / Excalidraw / draw.io**——blog 站和 docs 站共用 retikz 活体演示的属性
 - **禁 GIF / 视频**：增加资源权重 + 程序员通常更愿读静态图 + 维护成本高
-- 表格沿用 640px 宽度限制——超出靠 `<br />` 软断或压缩措辞
+- 表格沿用 principle 的 800px 正文宽度限制——超出靠 `<br />` 软断或压缩措辞
 
 ## Frontmatter
 
@@ -181,13 +181,13 @@ tags: [设计, IR] # 必填，1-3 个标签，字符串数组
 
 blog 文章预期会被作者**手抄到掘金 / 公众号 / 其它平台**。写作时要预想"去掉 retikz 专属组件后仍可读"：
 
-| 元素                        | 跨平台行为                 | 应对                                                                                        |
-| --------------------------- | -------------------------- | ------------------------------------------------------------------------------------------- |
-| frontmatter `---...---`     | 各平台规则不一，多数不识别 | 手抄时直接删掉，正文从 `## ` 开始                                                           |
-| `<ComponentPreview>`        | 外部平台不认               | **前后一句话点出 demo 在演示什么**，去掉组件后读者仍能理解                                  |
-| `<Comparison target="...">` | 外部平台不认               | 同上：内容内嵌一句话，外部读者跳过对照块仍读得通                                            |
-| 站内路径 `/core/...`        | 外部平台访问会 404         | 手抄时改为 `https://pionpill.github.io/retikz/core/...` 完整 URL（BrowserRouter，不带 `#`） |
-| 相对图片 `./hero.png`       | 外部平台拿不到             | 改 GitHub raw 绝对 URL，或上传到平台素材库                                                  |
+| 元素                        | 跨平台行为                 | 应对                                                                                            |
+| --------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------- |
+| frontmatter `---...---`     | 各平台规则不一，多数不识别 | 手抄时直接删掉，正文从 `## ` 开始                                                               |
+| `<ComponentPreview>`        | 外部平台不认               | **前后一句话点出 demo 在演示什么**，去掉组件后读者仍能理解                                      |
+| `<Comparison target="...">` | 外部平台不认               | 同上：内容内嵌一句话，外部读者跳过对照块仍读得通                                                |
+| 站内路径 `/<module>/...`    | 外部平台访问会 404         | 手抄时改为 `https://pionpill.github.io/retikz/<module>/...` 完整 URL（BrowserRouter，不带 `#`） |
+| 相对图片 `./hero.png`       | 外部平台拿不到             | 改 GitHub raw 绝对 URL，或上传到平台素材库                                                      |
 
 **手抄不是工具的事**——是写作时就把"外部读者最差视图"作为可读性下限考虑进去。
 
@@ -243,5 +243,5 @@ blog 文章预期会被作者**手抄到掘金 / 公众号 / 其它平台**。�
 发布到外部平台前，**先在本地浏览器把文章读一遍**：
 
 1. 把 `<ComponentPreview>` 当作"代码块 + 一句话说明"的占位想象，确认上下文仍通顺
-2. 把所有相对路径 `./` / `/core/...` 在脑里替换为绝对 URL，确认链接仍可达
+2. 把所有相对路径 `./` / `/<module>/...` 在脑里替换为绝对 URL，确认链接仍可达
 3. frontmatter 段裁掉后，正文从 `## ` 开始是否成立——如果首段是孤立一句话要么并入下一节要么改为 `## ` 开头

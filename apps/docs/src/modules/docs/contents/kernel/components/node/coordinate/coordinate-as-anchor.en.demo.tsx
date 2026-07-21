@@ -2,32 +2,51 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { coordinateAsAnchorFrame } from './coordinate-as-anchor.controls';
+import { coordinateAsAnchorControls, previewControlContract } from './coordinate-as-anchor.en.controls';
+
+export const previewControls = coordinateAsAnchorControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  return (
+    <Layout
+      width={coordinateAsAnchorFrame.width}
+      height={coordinateAsAnchorFrame.height}
+      viewBox={coordinateAsAnchorFrame.viewBox}
+    >
+      <Draw way={coordinateAsAnchorFrame.xAxis} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-1} />
+      <Draw way={coordinateAsAnchorFrame.yAxis} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-1} />
+      {/* Named virtual center — invisible, but the four `of` references all rely on it */}
+      <Coordinate id="hub" position={[values.positionX, values.positionY]} />
+      <Node id="N" position={{ direction: 'top', of: 'hub', distance: values.verticalDistance }}>
+        North
+      </Node>
+      <Node id="S" position={{ direction: 'bottom', of: 'hub', distance: values.verticalDistance }}>
+        South
+      </Node>
+      <Node id="E" position={{ direction: 'right', of: 'hub', distance: values.horizontalDistance }} shape="circle">
+        East
+      </Node>
+      <Node id="W" position={{ direction: 'left', of: 'hub', distance: values.horizontalDistance }} shape="circle">
+        West
+      </Node>
+      {/* Four paths converge at hub — visually meeting at a center point with no drawn shape */}
+      <Draw way={['N', 'hub']} arrow="->" stroke="gray" />
+      <Draw way={['S', 'hub']} arrow="->" stroke="gray" />
+      <Draw way={['E', 'hub']} arrow="->" stroke="gray" />
+      <Draw way={['W', 'hub']} arrow="->" stroke="gray" />
+    </Layout>
+  );
+});
+
+export const previewSource = controlledPreview.source;
+
 /**
  * `<Coordinate>` as a named virtual anchor
- * @description hub is an invisible center; four nodes use `position={{ of: 'hub', ... }}` to lay out symmetrically and all paths terminate at hub — without a coordinate every node/path would duplicate `[0, 0]`.
+ * @description hub is an invisible center; four nodes use `position={{ of: 'hub', ... }}` symmetrically and all paths terminate there; fixed axes reveal its displacement from the world origin.
  */
-const Demo: FC = () => (
-  <Layout width={340} height={220}>
-    {/* Named virtual center — invisible, but the four `of` references all rely on it */}
-    <Coordinate id="hub" position={[0, 0]} />
-    <Node id="N" position={{ direction: 'top', of: 'hub', distance: 65 }}>
-      North
-    </Node>
-    <Node id="S" position={{ direction: 'bottom', of: 'hub', distance: 65 }}>
-      South
-    </Node>
-    <Node id="E" position={{ direction: 'right', of: 'hub', distance: 110 }} shape="circle">
-      East
-    </Node>
-    <Node id="W" position={{ direction: 'left', of: 'hub', distance: 110 }} shape="circle">
-      West
-    </Node>
-    {/* Four paths converge at hub — visually meeting at a center point with no drawn shape */}
-    <Draw way={['N', 'hub']} arrow="->" stroke="gray" />
-    <Draw way={['S', 'hub']} arrow="->" stroke="gray" />
-    <Draw way={['E', 'hub']} arrow="->" stroke="gray" />
-    <Draw way={['W', 'hub']} arrow="->" stroke="gray" />
-  </Layout>
-);
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -30,6 +30,10 @@ import { Star } from '@retikz/react';
 
 <ComponentPreview files="star-basic" size="sm" />
 
+playground 中两条虚线圆分别是内、外半径。调整星角数量、`innerRatio` 与起始角，可以直接看到凹角深度和整体朝向如何共同塑造轮廓。
+
+<ComponentPreview files="star-playground" size="md" />
+
 ### API 参考
 
 | 属性          | 类型               | 默认值 | 描述                                          |
@@ -65,13 +69,11 @@ import { Node } from '@retikz/react';
 
 > Node `star` 的约束：`points` 为 ≥3 的整数，`outerRadius` 必须 > `innerRadius`（违反编译期 refine 报错）。注意与 Sugar `<Star>` 的最小值不同——`<Star>` 允许 `points ≥ 2`。
 
-<ComponentPreview files="node-star" size="sm" />
+playground 固定目标星形在原点。调整 `cornerRadius` 会同时磨圆外凸尖角和内凹槽；自动贴边随轮廓内移，而 `tip-0` / `notch-0` 仍固定在原始逻辑顶点。也可切换方位或数字 anchor，并通过轨道角度与距离移动来源节点，比较自动落点。
 
-给 `params.cornerRadius` 一个正数会同时磨圆外凸尖角（tip）和内凹槽（notch），省略 / `0` 是硬角。倒角是连接感知的：朝某个尖角方向**自动贴边**（不写 anchor）的连线端点会落在圆角弧上、停在尖角之前，而不是原始尖尖；显式连命名锚点 `tip-N` 则**仍落在原始尖角**（恒在逻辑顶点、不随倒角内移）。
+<ComponentPreview files="node-connection-playground" size="md" />
 
-<ComponentPreview files="node-star-corner-radius" size="md" />
-
-除节点的中心与 8 个方位 anchor（`center` / `top` …）外，星形还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：`tip-N`（第 N 个尖角）/ `notch-N`（第 N 个凹角）。这些命名锚点固定在原始尖角 / 凹角的逻辑位置，不随 `cornerRadius` 内移。Node 的形状、尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/overview)。
+完整命名格式为 `tip-N`（第 N 个尖角）/ `notch-N`（第 N 个凹角）。Node 的通用尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/overview)。
 
 ### API 参考
 
@@ -152,5 +154,5 @@ Sugar 把 `rotate` 直接烘焙进顶点坐标，再输出 `move + line × (2p -
 ## 相关
 
 - [Node 几何](/kernel/components/node/overview)：把形状用作节点边界时的尺寸、边界与 anchor
-- [Polygon](../polygon)：等边正多边形
+- [Polygon](/kernel/components/shapes/polygon)：等边正多边形
 - [Shapes](/kernel/components/shapes)：形状分组入口与完整定义

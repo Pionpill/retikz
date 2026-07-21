@@ -62,15 +62,15 @@ Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` 
 
 这段 JSX 会被 adapter 收集成 IR，`@retikz/core` 再负责解析 position、计算 anchor、展开路径与边界，最后输出 Scene。上例中的 `<Draw>` 会在 IR 中成为普通 `path` 节点。
 
-`@retikz/core` 分两趟编译，再收尾输出 Scene。图中箭头上的文字标注了每一趟交给下一趟的中间产物：
+`@retikz/core` 在一次递归遍历中分阶段编排布局与路径，再收尾输出 Scene。下图按依赖顺序展开这三个阶段，不表示对整棵 IR 做三次独立遍历：
 
 <ComponentPreview files="layers-compile" size="xs" hideCode />
 
-- **layout nodes**：解析每个 node / coordinate 的坐标，度量文字，按形状算出包围盒与锚点，登记进命名表。
-- **resolve paths**：节点先就位，路径才能从命名表查到端点，展开成路径命令（`d`）；这正是箭头上 `anchors` 代表的依赖。
+- **layout nodes**：遍历遇到 node / coordinate 时立即解析坐标、度量文字、计算包围盒，并登记进当前命名空间。
+- **resolve paths**：path 先留下占位；当前 scope 子树或 root 遍历完成后，再从已登记的布局查端点并 flush 成路径图元。这正是箭头上 `anchors` 代表的依赖。
 - **fit bounds**：合并所有图元的包围盒，加 padding 并按精度 round，得到 viewBox。
 
-如果 IR 里有 Tier 2 的 composite 节点（如 plot 的高层组件），编译会先把它们下沉成 Kernel，再走上面这条链路；细节见[复合](/kernel/concepts/design/composite)。
+如果 IR 里有 Tier 2 的 composite 节点（如 plot 的高层组件），编译会先把它们下沉成 Kernel，再进入上面的分阶段遍历；细节见[复合](/kernel/concepts/design/composite)。
 
 ## 选择建议
 
@@ -101,6 +101,29 @@ Kernel 组由 `packages/kernel` 下六个同步发版的 npm 包组成。图中�
 react / vanilla 只做 adapter：把 DSL 收集成 IR、把渲染交给 render；tex 把 LaTeX 公式下沉为 core 可编译的图元。上层包不另造平行 IR、渲染语义或几何底座。
 
 普通用户装 `@retikz/react`（或 `@retikz/vanilla`）即可，它会自动带上 core 与 render；只有写自定义渲染器或直接读写 IR 时，才单独依赖 `@retikz/core`。
+
+<SourceLinks
+  sources={[
+    {
+      label: '编排 IR 到 Scene 的共享入口',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 18,
+      endLine: 42,
+    },
+    {
+      label: '集中解析 lowering 与 provider 注册表',
+      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+      startLine: 78,
+      endLine: 115,
+    },
+    {
+      label: '登记实体后刷新延迟 path',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 147,
+      endLine: 174,
+    },
+  ]}
+/>
 
 ## 延伸阅读
 

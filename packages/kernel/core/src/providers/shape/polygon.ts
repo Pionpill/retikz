@@ -13,6 +13,7 @@ import {
   DEG_TO_RAD,
   isDirectionalAnchor,
   localToWorld,
+  pointsConnectionEnvelope,
   rect,
 } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
@@ -85,11 +86,15 @@ const circumradiusFromRect = (bounds: Rect, params: PolygonParams): number => bo
  * 正多边形顶点的世界坐标
  * @description 顶点均布在外接圆上，按 params.rotate 自旋
  */
-const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): Array<Position> =>
+const polygonLocalVertices = (radius: number, params: PolygonParams): Array<Position> =>
   vertexAngles(params).map(deg => {
     const a = deg * DEG_TO_RAD;
-    return localToWorld(bounds, [radius * Math.cos(a), radius * Math.sin(a)]);
+    return [radius * Math.cos(a), radius * Math.sin(a)];
   });
+
+/** 正多边形顶点的世界坐标 */
+const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): Array<Position> =>
+  polygonLocalVertices(radius, params).map(point => localToWorld(bounds, point));
 
 /**
  * polygon 注册项：正多边形文本容器
@@ -123,6 +128,10 @@ export const polygon = defineShape<PolygonParams>({
   anchor: (bounds: Rect, name: ShapeAnchorName): Position | undefined => {
     if (name === CenterAnchor.Center) return undefined;
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
+  },
+  connectionEnvelope: (bounds, kind, params) => {
+    const radius = circumradiusFromRect(bounds, params);
+    return pointsConnectionEnvelope(polygonLocalVertices(radius, params), kind);
   },
   *emit(bounds: Rect, style, round, params): Iterable<ScenePrimitive> {
     const radius = circumradiusFromRect(bounds, params);

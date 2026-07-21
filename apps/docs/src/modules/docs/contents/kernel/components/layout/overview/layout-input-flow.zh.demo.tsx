@@ -2,91 +2,99 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/** Layout 两种输入路径的归一流程图 */
+/** Layout 在 React、Core 与渲染宿主之间的职责边界 */
 const Demo: FC = () => (
-  <Layout width={560} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={640} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
-      id="children"
-      position={[-220, -20]}
+      id="react-adapter-group"
+      text=" "
+      position={[-212.5, 0]}
+      minimumSize={{ width: 315, height: 145 }}
+      stroke="lightgray"
+      fill="lightgray"
+      fillOpacity={0.04}
+      dashPattern={[4, 3]}
+      cornerRadius={4}
+    />
+    <Node position={[-300, -53]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
+      @retikz/react
+    </Node>
+    <Node
+      id="react-input"
+      position={[-278, -15]}
+      minimumSize={{ width: 112, height: 38 }}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      font={{ size: 13 }}
     >
-      JSX children
+      JSX children / ir prop
     </Node>
     <Node
-      id="root-scope"
-      position={[-50, -20]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.1}
-      cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
-    >
-      根 Scope（按需）
-    </Node>
-    <Node
-      id="style"
-      position={[-100, -125]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
-      cornerRadius={4}
-      font={{ size: 14 }}
-    >
-      全图样式 props
-    </Node>
-    <Node
-      id="ir-prop"
-      position={[-220, 60]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
-      cornerRadius={4}
-      font={{ size: 14 }}
-    >
-      ir prop
-    </Node>
-    <Node
-      id="ir"
-      position={[195, 0]}
+      id="layout"
+      text={[
+        { text: 'Layout', font: { weight: 'bold' } },
+        { text: 'React 接入边界', fill: 'gray', font: { size: 11 } },
+      ]}
+      position={[-135, -15]}
+      minimumSize={{ width: 104, height: 48 }}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
+      font={{ size: 13 }}
+      lineHeight={15}
+    />
+    <Node
+      id="definitions"
+      position={[-135, 42]}
+      minimumSize={{ width: 132, height: 36 }}
+      stroke="dimgray"
+      fill="lightgray"
+      fillOpacity={0.16}
+      cornerRadius={4}
+      font={{ size: 12 }}
     >
-      JSON IR
+      definitions / options
     </Node>
-    <Draw way={['children', 'root-scope']} arrow="->" />
-    <Draw
-      way={[
-        'style',
-        { label: { text: '有指令时', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'root-scope',
+
+    <Node
+      id="core-compile"
+      text={[
+        { text: 'compileToScene', font: { weight: 'bold' } },
+        { text: '@retikz/core · IR → Scene', fill: 'gray', font: { size: 11 } },
       ]}
-      arrow="->"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      position={[35, -15]}
+      minimumSize={{ width: 150, height: 48 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
     />
-    <Draw
-      way={[
-        'root-scope',
-        { label: { text: '转换', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'ir',
+
+    <Node
+      id="render-host"
+      text={[
+        { text: '渲染宿主', font: { weight: 'bold' } },
+        { text: 'SVG / Canvas', fill: 'gray', font: { size: 11 } },
       ]}
-      arrow="->"
+      position={[225, -15]}
+      minimumSize={{ width: 118, height: 48 }}
+      stroke="dodgerblue"
+      fill="dodgerblue"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
     />
-    <Draw
-      way={[
-        'ir-prop',
-        { label: { text: '直接采用', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'ir',
-      ]}
-      arrow="->"
-    />
+
+    <Draw way={['react-input', 'layout']} arrow="->" stroke="gray" />
+    <Draw way={['definitions', 'layout']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['layout', 'core-compile']} arrow="->" stroke="gray" />
+    <Draw way={['core-compile', 'render-host']} arrow="->" stroke="gray" />
   </Layout>
 );
 

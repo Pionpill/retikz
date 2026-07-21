@@ -7,8 +7,34 @@ description: The top-level IR root — a JSON-serializable description of one re
 
 <ZodSchema name="SceneSchema" />
 
+<span id="viewbox"></span>
+
+## ViewBox
+
+`ViewBoxSchema` fixes the final framing explicitly. When omitted, compile derives the bounds from emitted-primitives AABB plus padding; when present, automatic padding is not added again.
+
+<ZodSchema name="ViewBoxSchema" />
+
 ## Child
 
 `ChildSchema` is the union for top-level scene children: the four Tier 1 variants discriminated by `type` — node, path, coordinate, and scope — plus Tier 2 composite nodes that carry a `namespace` (their precise fields are validated at compile time by the registered lowering schema). The per-field schemas for scope and composite are not listed separately in this group.
 
 <ZodSchema name="ChildSchema" />
+
+<span id="compositenode"></span>
+
+## Tier 2 Composite
+
+`CompositeNodeSchema` fixes only the cross-domain `namespace` and `type`. The selected Tier 2 Definition validates the remaining JSON fields and lowers the composite into Tier 1 children during compile.
+
+<ZodSchema name="CompositeNodeSchema" />
+
+<span id="jsonobject"></span>
+
+## JSON object
+
+`JsonObjectSchema` is a string-keyed object of recursive JSON values. It is used by `meta`, custom-provider parameters, and composite extension fields; runtime values such as functions, class instances, and ReactNode do not belong in IR.
+
+<span id="jsonvalue"></span>
+
+`JsonValueSchema` is the recursive union of string, number, boolean, null, arrays of JsonValue, and JsonObject.

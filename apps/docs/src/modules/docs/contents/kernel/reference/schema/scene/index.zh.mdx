@@ -19,6 +19,23 @@ description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
   }}
 />
 
+<span id="viewbox"></span>
+
+## 视框
+
+`ViewBoxSchema` 显式固定最终取景范围。省略时 compile 从 emitted primitives 的 AABB 与 padding 自动计算；设置后不再叠加自动 padding。
+
+<ZodSchema
+  name="ViewBoxSchema"
+  description="显式视框，覆盖自动计算的布局范围。"
+  descriptions={{
+    x: '视框左上角 x',
+    y: '视框左上角 y',
+    width: '视框宽度，必须为正数',
+    height: '视框高度，必须为正数',
+  }}
+/>
+
 <span id="child"></span>
 
 ## 子节点
@@ -29,3 +46,28 @@ description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
   name="ChildSchema"
   description="scene 顶层子节点：Tier 1 的 node / path / coordinate / scope，或 Tier 2 的 composite。"
 />
+
+<span id="compositenode"></span>
+
+## Tier 2 Composite
+
+`CompositeNodeSchema` 只固定跨领域共用的 `namespace` 与 `type`。其余 JSON 字段由对应 Tier 2 Definition 的 schema 校验，并在 compile 的 lowering 阶段转换为 Tier 1 children。
+
+<ZodSchema
+  name="CompositeNodeSchema"
+  description="Tier 2 composite 的公共外壳；领域字段由注册 Definition 校验。"
+  descriptions={{
+    namespace: '选择领域 Definition 的命名空间，如 viz',
+    type: '该命名空间内的 composite 类型名',
+  }}
+/>
+
+<span id="jsonobject"></span>
+
+## JSON 对象
+
+`JsonObjectSchema` 表示键为字符串、值为递归 JSON value 的对象。它用于 `meta`、自定义 provider 参数与 composite 扩展字段；函数、class 实例、ReactNode 等运行时值不属于 IR。
+
+<span id="jsonvalue"></span>
+
+`JsonValueSchema` 是递归联合：string、number、boolean、null、JsonValue 数组或 JsonObject。
