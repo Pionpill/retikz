@@ -35,4 +35,14 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 
 ## 当前状态
 
-当前目录只建立包职责边界，尚未初始化 npm package、源码、公开 API 或测试。正式实现必须先完成对应 ADR 与 roadmap 范围确认。
+当前目录已初始化 npm package、构建配置与空公开入口，版本线从 `0.1.0-alpha.1` 开始。Table IR、schema、pipeline 与测试尚未实现；正式能力必须按 alpha.1 ADR 的依赖顺序落地，不能从空入口推断临时 API。
+
+## 验证
+
+结构化改动后运行：
+
+```bash
+pnpm --filter @retikz/table exec eslint . --fix
+pnpm --filter @retikz/table exec tsc --noEmit
+pnpm --filter @retikz/table test:changed
+```

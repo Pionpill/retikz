@@ -77,7 +77,7 @@ TableSpec
 基础结构包括：
 
 - manual：显式二维结构
-- list：记录映射为明细行
+- detail：一条记录映射为一行明细
 - pivot：行维度、列维度和指标构成交叉表
 - matrix：消费已有二维矩阵
 
@@ -99,6 +99,10 @@ TableSpec
 Cell 是 Table 的语义与布局槽位，不是 Core Node。它拥有地址、span、location、role、来源和布局样式，内容统一使用 Core `IRChild`。
 
 这意味着文字、图片、Scope、Plot 或未来其它 Tier 2 composite 都通过同一 Core 内容边界进入 Cell，Table 不建立 `text | image | plot` 之类的封闭内容枚举，也不直接依赖其它 Tier 2 包。
+
+Table 的 Cell 拓扑保持正交矩形：地址是行列坐标，span 覆盖连续的矩形行列区间，轨道、Cell box 与 Table 自己的 border conflict 都以此为前提。Presentation 可以在矩形 Cell 内呈现圆角、胶囊、六边形等视觉内容或装饰框，但不能改变 Cell 的分配几何、span 语义或边界拓扑。
+
+真正的蜂窝、三角格或其它非矩形铺砌具有不同的坐标、邻接、边界和布局代数，不是 Table Cell 的可选形状。数据在此类格网上的编码属于 Plot 的 coordinate / mark；若未来需要复用多个非矩形铺砌的结构与布局，应抽象独立的离散格网能力，而不是将其并入 Table。
 
 `Table<PlotCell>` 是合法组合：Table 管理行列语义与 Cell box，Plot 管理 Cell 内部图形。Table 可以测量、放置和裁剪 Plot composite，但不能读取或自动协调多个 Plot Cell 的 scale、axis、grid 和 legend；这些语义由作者显式配置 Plot，或交给 Plot facet / 外部 Figure composition。
 
@@ -163,6 +167,7 @@ Lowering 最终只输出 Core IR，renderer 不感知 Table。Table 同时需要
 - 不复制 Data 的通用数据算法
 - 不建立平行 Core IR 或专用 renderer
 - 不依赖 Plot，也不在 Table 内实现 Plot mark
+- 不演进为支持任意 Cell 拓扑的通用铺砌或格网系统
 - 不用函数回调替代 JSON-safe IR 和 Definition
 - 不在 React / Vanilla adapter 中实现领域算法
 

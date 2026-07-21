@@ -1,6 +1,6 @@
 # ADR-05：Table lowering 与最小 layout manifest
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-19
 - 关联：[table v0 roadmap](../../roadmap.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md) · [Table 总设计](../../../../../architecture/table-design.md)
 
@@ -31,8 +31,23 @@ lowerTableWithArtifacts(spec, datasets, options): TableLoweringResult;
 2. 解析 external dataset
 3. 构造并验证 SemanticTableModel
 4. 解析 Cell presentation 得到 PresentedTableModel
-5. 执行固定轨道 layout
-6. emit Core IR 与最小 manifest
+5. 以 SemanticTableModel 执行固定轨道 layout
+6. 把 PresentedTableModel 与 TableLayout 按声明顺序和 `cellId` 精确配对，emit Core IR 与最小 manifest
+
+阶段签名固定为：
+
+```ts
+const presentTable = (
+  model: SemanticTableModel,
+  definitions?: ReadonlyArray<AnyCellPresentationDefinition>,
+): PresentedTableModel;
+
+const layoutTable = (model: SemanticTableModel, spec?: IRTableLayout): TableLayout;
+
+const emitTable = (presented: PresentedTableModel, layout: TableLayout): IRChild;
+```
+
+`presented.semantic` 是本次 layout 的同一 canonical model；`presented.cells` 与 `layout.cells` 必须和 semantic cells 长度相同、顺序相同且 `cellId` 逐项一致，否则以 `table: internal cell alignment` fail-loud。layout 不读取 presentation content，emit 不重新解析 structure 或计算轨道。
 
 `lowerTables()` 返回 `defineComposite({ namespace: 'table', type: 'table', schema: TableSpecSchema, expand })`；`expand` 只返回 `result.node`。`lowerTableWithArtifacts()` 返回同一次确定性计算的 sidecar，不通过隐藏状态穿过 Core compile。
 
@@ -61,7 +76,7 @@ lowerTableWithArtifacts(spec, datasets, options): TableLoweringResult;
 }
 ```
 
-sentinel 使用公开 Core Node 合同，不注册 id、不产生可见像素；即使没有 Cell 内容，固定轨道宽高与 gap 仍会贡献 AABB。Scene 最终 layout 还可包含宿主 `padding`，因此 parity 断言比较 `padding: 0` 时的 Scene layout，或比较 padding 前 AABB，而不把宿主留白误记为 Table bounds。
+sentinel 使用公开 Core Node 合同，不注册 id、不产生可见像素；即使没有 Cell 内容，固定轨道宽高与 gap 仍会贡献 AABB。零行或零列时仍输出同一个 sentinel，并把 ADR-04 的非负退化 width/height 原样写入 `minimumSize`；不私自补最小正尺寸。Scene 最终 layout 还可包含宿主 `padding`，因此 parity 断言比较 `padding: 0` 时的 Scene layout，或比较 padding 前 AABB，而不把宿主留白误记为 Table bounds。
 
 alpha.1 不输出背景、grid/border path、padding clip 或 overflow decoration。
 
@@ -75,19 +90,21 @@ type TableTrackManifestEntry = Readonly<{
   size: number;
 }>;
 
-type TableLayoutManifest = {
+type TableLayoutManifest = Readonly<{
   tableId?: string;
-  bounds: BoundsRect;
+  bounds: Readonly<BoundsRect>;
   rows: ReadonlyArray<TableTrackManifestEntry>;
   columns: ReadonlyArray<TableTrackManifestEntry>;
-  cells: ReadonlyArray<{
-    cellId: string;
-    box: BoundsRect;
-    location: TableCellLocationValue;
-    roles: ReadonlyArray<TableCellRoleValue>;
-    source?: TableCellSource;
-  }>;
-};
+  cells: ReadonlyArray<
+    Readonly<{
+      cellId: string;
+      box: Readonly<BoundsRect>;
+      location: TableCellLocationValue;
+      roles: ReadonlyArray<TableCellRoleValue>;
+      source?: TableCellSource;
+    }>
+  >;
+}>;
 
 type TableLoweringResult = Readonly<{
   node: IRChild;
@@ -96,6 +113,8 @@ type TableLoweringResult = Readonly<{
 ```
 
 `TableLoweringResult` 在 alpha.1 只包含 `node` 与 `manifest`。所有错误 fail-loud；非阻断 diagnostics、完整 lineage / locator / contribution mapping 在 alpha.6 一并增加，避免首版先冻结没有真实 code 的空诊断类型。
+
+`BoundsRect` 与 `TableCellSource` 本身是普通对象，因此公开只读类型之外还要求 runtime 所有权隔离：`resolveTable()` 从 canonical model/layout detached deep copy manifest 的 bounds、track、Cell box、roles 与 source，并递归冻结 manifest 全对象图。`node` 与 manifest 也不得共享可变对象；修改 provider output、layout 临时值或对 artifact 做失败的 mutation，都不能影响另一产物或后续重复调用。
 
 理由：
 
@@ -116,7 +135,7 @@ const { node, manifest } = lowerTableWithArtifacts(tableSpec, { sales: rows });
 
 ## 测试设计
 
-- manual/list 产生合法 Core Scope / Node
+- manual/detail 产生合法 Core Scope / Node
 - Table id 映射到外层 Scope id
 - Cell translation 与 TableLayout center 一致
 - empty/manual、1×1 与带 gap 表格的 bounds sentinel 使 Core AABB 覆盖完整 TableLayout bounds
@@ -124,6 +143,7 @@ const { node, manifest } = lowerTableWithArtifacts(tableSpec, { sales: rows });
 - nested composite 保留并由 Core 递归 lowering
 - 缺 dataset、未注册 structure/presentation、非法 provider output fail-loud
 - manifest row/column/cell boxes 与 layout 深相等
+- manifest 全对象图递归冻结，且与 layout/model/node 不共享可变对象
 - 重复调用无全局状态且结果确定
 
 ## 影响
@@ -176,13 +196,13 @@ const { node, manifest } = lowerTableWithArtifacts(tableSpec, { sales: rows });
 
 ### 测试象限
 
-**Happy path**：manual；list；root id；artifact API；nested composite。
+**Happy path**：manual；detail；root id；artifact API；nested composite。
 
-**边界**：无 id；空 Cell；空 list dataset；null text；单 Cell；零高度 list body 的 bounds sentinel。
+**边界**：无 id；空 Cell；空 detail dataset；null text；单 Cell；零行/零列退化 bounds sentinel 不补最小正尺寸。
 
 **错误路径**：缺 dataset；未注册 kind/name；provider schema/output 非法；Core 未注册 nested composite 时沿用 Core warning。
 
-**交互**：lowerTables/artifact parity；React/Vanilla parity；manifest/layout parity；custom structure × custom presentation；`compileToScene(..., { padding: 0 })` 的 Scene layout 覆盖 Table bounds。
+**交互**：lowerTables/artifact parity；React/Vanilla parity；PresentedTableModel/TableLayout 按顺序与 cellId 对齐；manifest/layout parity；custom structure × custom presentation；尝试修改 manifest bounds/track/Cell box/roles/source 不成功且不影响 node、layout/model 或重复调用；`compileToScene(..., { padding: 0 })` 的 Scene layout 覆盖 Table bounds。
 
 ### 依赖的现有元素
 

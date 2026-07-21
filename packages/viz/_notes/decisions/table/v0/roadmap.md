@@ -18,7 +18,8 @@ Table 家族是 viz 的 Tier 2 表格可视化能力：把外部数据或显式�
 
 v0.1 建立从 TableSpec 到 Core IR 的完整静态表格闭环，覆盖：
 
-- manual、list、group / hierarchy / summary、pivot、matrix
+- manual、detail、pivot、matrix 等基础 structure
+- group / hierarchy / summary / transpose 等可组合 operation
 - Cell formatter、presentation、条件视觉编码、rule 与 theme
 - track sizing、span、border、内容 fit / overflow 与 fragmentation
 - 文字、图片、Plot 等显式 `IRChild` Cell 的统一测量、放置和 lowering

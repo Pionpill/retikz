@@ -21,4 +21,14 @@
 
 ## 当前状态
 
-当前目录只建立包职责边界，尚未初始化 npm package、builder、公开 API 或测试。正式实现必须跟随 Table ADR，并保持 adapter 与核心语义等价。
+当前目录已初始化 npm package、无框架构建配置与空公开入口，版本线与 Table release group 保持 `0.1.0-alpha.1` lockstep。builder、render API 与测试尚未实现；正式能力必须跟随 Table ADR，并保持 adapter 与核心语义等价。
+
+## 验证
+
+结构化改动后运行：
+
+```bash
+pnpm --filter @retikz/table-vanilla exec eslint . --fix
+pnpm --filter @retikz/table-vanilla exec tsc --noEmit
+pnpm --filter @retikz/table-vanilla test:changed
+```

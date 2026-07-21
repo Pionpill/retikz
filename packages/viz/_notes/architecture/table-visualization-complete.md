@@ -50,7 +50,7 @@ Table 可以消费 Data 与 Core，但不依赖 Plot。Plot 等 Tier 2 内容通
 
 ### 3.1 Structure
 
-Table 需要统一表达 manual、list、pivot、matrix 等基础结构。分组、层级、汇总和转置应作为可组合的表格操作，而不是各自形成封闭根类型。
+Table 需要统一表达 manual、detail、pivot、matrix 等基础结构。detail 保持一条源记录对应一行明细；分组、层级、汇总和转置作为可组合的表格 operation，而不是各自形成封闭 structure kind。
 
 通用聚合计算由 Data 提供；Table 负责聚合结果在行列结构中的位置和语义。
 
@@ -59,6 +59,10 @@ Table 需要统一表达 manual、list、pivot、matrix 等基础结构。分组
 Cell 是 Table 的语义与布局槽位，具有地址、跨度、位置、角色和来源。Cell 不是 Core Node；它以 Core `IRChild` 作为统一内容边界，因此可以容纳文字、图片、Scope 或其它 Tier 2 composite。
 
 显式 Plot Cell 属于这条通用内容链路。若多个 Plot Cell 需要共享 domain、轴显隐或单一图例，作者应显式配置对应 Plot，或通过独立 `IRChild` / Figure 组合；Table 不建立 Plot-specific 的跨 Cell 协调器。
+
+Table 的结构 Cell 始终是正交矩形：行列地址、矩形 span、轨道尺寸和四边 border conflict 共同构成其合同。非矩形视觉内容或装饰框可以作为 Cell presentation，但不会改变 Cell 的分配几何与拓扑。
+
+蜂窝、三角格等非矩形铺砌需要独立的坐标、邻接和边界规则。其数据可视化属于 Plot 的 coordinate / mark；若将来形成可复用的铺砌结构与布局需求，应建立独立能力，而不是扩展 Table 为任意 Cell 形状。
 
 ### 3.3 Presentation
 
