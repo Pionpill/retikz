@@ -1,0 +1,79 @@
+---
+title: 动画
+description: JSON 安全的 AnimationTrack、关键帧、缓动、触发器与变换原点契约
+---
+
+Core IR 只保存声明式动画数据：属性名、关键帧、时间参数和触发器。播放状态、事件回调与插值执行留在 renderer runtime，因此整套 schema 仍可序列化。
+
+<span id="animationtrack"></span>
+
+## 动画轨道
+
+<ZodSchema
+  name="AnimationTrackSchema"
+  description="单属性动画 track：JSON 安全的关键帧、时间参数与触发方式。"
+  descriptions={{
+    property: '动画属性名；内置属性会校验 keyframe value，自定义属性接受任意 JSON value',
+    keyframes: '按 at 升序排列的关键帧；value 是绝对值，最后一帧应表达 settled 状态',
+    duration: '一次迭代的时长（ms），必须为正数',
+    delay: '播放前延迟（ms），必须为非负数',
+    easing: 'track 级默认缓动；可被单个 keyframe 的 easing 覆盖，默认 linear',
+    iterations: '正数迭代次数或 infinite；默认播放一次',
+    direction: '每次迭代的播放方向；默认 normal',
+    fill: '活动区间外的取值模式；默认 forwards，使静态渲染与 settled 状态一致',
+    trigger: '播放触发器；默认 load',
+    origin: 'scale / rotate 的变换原点；其它属性忽略此字段',
+  }}
+/>
+
+内置属性对 `value` 有额外约束：opacity、strokeWidth、位移、旋转、缩放与 pathDraw 使用 number；fill / stroke 使用 color string；scene 根的 viewBox 使用 `[x, y, width, height]`。自定义属性由 renderer 注册的插值器解释。
+
+<span id="keyframe"></span>
+
+## 关键帧
+
+<ZodSchema
+  name="KeyframeSchema"
+  description="归一化时间点、绝对属性值与可选分段缓动。"
+  descriptions={{
+    at: '归一化时间 0..1；同一 track 内必须升序排列',
+    value: '该时间点的绝对属性值；必须是 JSON value',
+    easing: '从本帧到下一帧的缓动；覆盖 track 级 easing',
+  }}
+/>
+
+<span id="easing"></span>
+
+## 缓动
+
+`EasingSchema` 接受内置 / 自定义缓动名称，或 cubic-bezier 四元组 `[x1, y1, x2, y2]`。
+
+<ZodSchema name="EasingSchema" description="缓动名称或 cubic-bezier 四元组。" />
+
+<span id="trigger"></span>
+
+## 触发器
+
+`TriggerSchema` 接受 `load`、`visible`、`manual`，或带事件名的对象。IR 只保存事件名，不保存回调函数。
+
+<ZodSchema name="TriggerSchema" description="内置播放触发器或事件触发描述。" />
+
+<span id="eventtrigger"></span>
+
+<ZodSchema
+  name="EventTriggerSchema"
+  description="由 runtime 事件名启动播放的触发描述。"
+  descriptions={{
+    onEvent: '启动播放的 runtime 事件名',
+  }}
+/>
+
+<span id="origin"></span>
+
+## 变换原点
+
+`OriginSchema` 接受 canonical anchor 名，或元素局部坐标 `[x, y]`。它只影响 scale、scaleX、scaleY 与 rotate。
+
+<ZodSchema name="OriginSchema" description="变换类动画的 anchor 名或局部坐标原点。" />
+
+组件层的 preset、触发与降级行为见 [动画](/kernel/components/effects/animation)；自定义属性、插值器与 renderer registry 见 [自定义动画](/kernel/components/effects/custom-animation)。

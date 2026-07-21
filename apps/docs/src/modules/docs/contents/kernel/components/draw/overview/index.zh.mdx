@@ -1,6 +1,6 @@
 ---
 title: Draw
-description: Sugar 组件——用 way 数组串起节点、坐标、折角、曲线、闭合、边标注和样式，编译期展开为等价的 Path + Step。
+description: 用一个 way 数组声明日常连线、折角、曲线、闭合与边标注，并展开为等价的 Path 与 Step。
 ---
 
 `<Draw>` 是大多数连线的首选入口。它接受一个 `way` 数组，按顺序把目标点、折角、闭合、曲线、形状和边标注展开成 Kernel（底层）`<Path>` + `<Step>`。描边、填充、箭头等样式字段与 `<Path>` 保持一致。
@@ -34,11 +34,11 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `{ bend }`  | 只指定向左 / 向右弯和角度，由编译器算控制点 | 两节点之间的快捷弧形连线       |
 | `{ arc }`   | 以上一点为圆心，按角度和半径画圆弧          | 角度标注、圆周片段、几何示意   |
 
-> 还有一类**过点平滑曲线**——穿过一串点的光滑曲线（centripetal Catmull-Rom）。它是 `<Step kind="smooth">` 的专属能力，不是 `way` 算子（`way` 是"上一项→下一项"的点对 infix，承载不了多点曲线），故只在 `<Path>` / `<Step>` 里用。见 [Step 曲线 §过点平滑曲线](/kernel/components/draw/step#过点平滑曲线smooth)。
+用面板切换二次 / 三次贝塞尔、bend、arc、circle 与 ellipse。贝塞尔控制点以 `[x, y]` 成组编辑，画布上的虚线手柄会同步移动；其他类型只显示当前操作真正使用的角度或半径。连接类操作消费前后两个目标；arc / circle / ellipse 以上一项为中心，不消费下一项。
 
-#### 二次贝塞尔
+<ComponentPreview files="draw-curve" size="sm" />
 
-`{ curve: [cx, cy] }` 等价 `<Step kind="curve">`。它从前一个目标点画到后一个目标点，中间用一个控制点决定弯曲方向和幅度。控制点越远，曲线被拉得越明显。
+过点平滑曲线是 `<Step kind="smooth">` 的专属能力，不是 `way` 操作；它需要同时消费一组点，见 [Step 曲线](/kernel/components/draw/step#几何与曲线)。
 
 <Comparison target="tikz" title="二次贝塞尔">
 
@@ -46,104 +46,41 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 </Comparison>
 
-<ComponentPreview files="draw-curve" size="xs" />
-
-#### 三次贝塞尔
-
-`{ cubic: [[c1x, c1y], [c2x, c2y]] }` 等价 `<Step kind="cubic">`。它用两个控制点画更可控的贝塞尔曲线：第一个控制点影响曲线离开起点时的方向，第二个控制点影响曲线靠近终点时的方向，因此比二次贝塞尔更适合 S 形或需要精细调整的连线。
-
-<ComponentPreview files="draw-cubic" size="xs" />
-
-#### 弯曲简写
-
-`{ bend: 'left' | 'right', angle?: number }` 等价 `<Step kind="bend">`。它是弧形连线的简写：你只需要说明从起点看向终点时向左还是向右弯，以及弯曲角度；编译期会自动计算控制点，并展开为三次贝塞尔。
-
-<ComponentPreview files="draw-bend" size="md" />
-
-#### 弧段
-
-`{ arc: { startAngle, endAngle, radius } }` 等价 `<Step kind="arc">`。它以上一项为圆心画弧段，不连接到下一个目标点，也不消耗下一项。它描述的是"从哪个角度扫到哪个角度的圆弧"，常用于画角度、圆周的一部分或辅助几何线。
-
-<ComponentPreview files="draw-arc" size="sm" />
-
-### 整圆 / 整椭圆
-
-`{ circle: { radius } }` 以上一项为圆心画整圆，画完画笔回到圆心。
-
-<ComponentPreview files="draw-circle" size="xs" />
-
-`{ ellipse: { radius: { x, y } } }` 以上一项为中心画整椭圆。
-
-<ComponentPreview files="draw-ellipse" size="sm" />
-
 ### 边标注
 
-#### 基础写法
-
-`{ label }` 是 Draw way 里的 infix 标注算子。它修饰下一段产生的 `step.label`，不自己产生路径段。短写 `{ label: 'ok' }` 等价 `{ label: { text: 'ok' } }`。
+`{ label }` 修饰下一段产生的 `step.label`，不自己产生路径段。用面板切换直线与两种折角，拖动 `position`，再调整 side、sloped 与文字颜色；折角会把 t 平均分配给两段，因此 `0.5` 固定落在拐角。
 
 <ComponentPreview files="draw-label" size="sm" />
 
-#### 位置规则
-
-`label.position` 接 7 个 keyword 或 `0..1` 数值 t。t 的几何含义随 step kind 变化——直线 / 折角按归一化路径位置，曲线（curve / cubic / bend）按 Bezier 参数，弧 / 圆 / 椭圆按角度参数化；每种 kind 的完整对照表与逐一 demo 见 [Step 标签 §t 几何含义](/kernel/components/draw/step#t-在每种-step-kind-上的几何含义)。
-
-直线段最直观：`start` / `midway` / `end` 分别落在起点、中点和终点附近。
-
-<ComponentPreview files="draw-label-line" />
-
-折角段会把 t 平均分配给每一段折线；`midway` 固定落在拐角处，而不是按两段实际长度取视觉中点。
-
-<ComponentPreview files="draw-label-fold" size="sm" />
+7 个 position keyword、曲线与圆弧的 t 语义见 [Step 边标注](/kernel/components/draw/step#边标注label)。
 
 ### 样式
 
-#### 箭头
+同一条开放折线可以直接试验 stroke、dash、圆角与箭头。`roundedCorners` 改变路径几何，`lineJoin` 只改变描边视觉；更细的箭头 shape、尺寸与单端配置见 [Arrow](/kernel/components/draw/arrow)。
 
-`arrow` 控制路径两端的箭头：`'->'` / `'<-'` / `'<->'` / `'none'`。更细的 shape、尺寸、颜色和起末分别配置见 [Arrow](/kernel/components/draw/arrow)。
+<ComponentPreview files="draw-style" size="sm" />
 
-<ComponentPreview files="draw-arrow" size="sm" />
+#### 填充与栈序
 
-#### 填充
+`DrawWay.Cycle` 闭合区域后，`fill` 与 `fillOpacity` 控制填充外观，嵌套子路径的填充规则由 `fillRule` 决定；`zIndex` 则覆盖默认声明顺序，只在同层子节点间比较。面板里的蓝色 Draw 先声明、红色 Draw 后声明：保持蓝色 `zIndex` 为 0 时红色在上，调到 1 后蓝色会移到上层。
 
-`fill` 给闭合区域填色，`fillRule` 控制嵌套子路径填充规则。常配合 `DrawWay.Cycle` 使用。
+<ComponentPreview files="draw-fill-stack" size="md" />
 
-<ComponentPreview files="draw-fill" size="sm" />
+### 与 Draw 共用 Path 语义的几何 sugar
 
-#### Dash
+需要画几何形而不是连接关系时，使用 [Shapes](/kernel/components/shapes) 分组的一行式 sugar。它们在编译期同样展开为 Path，并与 Draw / Path 共用填充、描边、效果和栈序语义：
 
-`dashPattern` 使用 `Array<number>` 表达 dash / gap 长度序列。`[4, 2]` 表示画 4、空 2，单位是 user units。`dashOffset` 可以移动虚线节奏的起点，常用于让多条虚线对齐。
+| 组件               | 画什么                |
+| ------------------ | --------------------- |
+| `<Circle>`         | 圆 / 半圆 / 弓形      |
+| `<Ellipse>`        | 椭圆 / 部分椭圆       |
+| `<Arc>`            | 不闭合的圆弧 / 椭圆弧 |
+| `<Sector>`         | 扇形（经圆心闭合）    |
+| `<Rectangle>`      | 矩形 / 圆角矩形       |
+| `<RegularPolygon>` | 正多边形              |
+| `<Star>`           | 星形                  |
 
-<ComponentPreview files="draw-dashed" size="sm" />
-
-#### 圆角
-
-`roundedCorners` 把折线相邻 `line` 段之间的拐角倒成相切圆弧。它改的是**路径几何**——顶点回退并插入弧段，因此影响包围盒、弧长和连接点；这与只磨描边视觉的 `lineJoin` 不同。半径过大时按相邻段长自动夹紧。下例上方尖角、下方同形状折线设 `roundedCorners={24}`：
-
-<ComponentPreview files="draw-rounded-corners" size="sm" />
-
-#### 栈序（zIndex）
-
-`zIndex` 显式覆盖默认的声明顺序层叠：大者在上、缺省 0、同值保持声明顺序；只在同层子节点间生效。与 `<Path>` 的 `zIndex` 同义（Draw 编译即 Path）。下面两个填充方块声明顺序蓝先红后（默认红压上），给先声明的蓝色 Draw 设 `zIndex={1}` 即可把它抬到红色之上：
-
-<ComponentPreview files="draw-z-index" size="sm" />
-
-### 形状 sugar
-
-除了 `way` 数组连线，Draw 家族还提供一组**形状 sugar**——一行画常见几何形，同样编译期展开为 `<Path>`、与 `<Draw>` / `<Path>` 共用同一套视觉 prop（`fill` / `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `zIndex` 等）：
-
-| 组件               | 画什么                   |
-| ------------------ | ------------------------ |
-| `<Circle>`         | 圆 / 半圆 / 弓形         |
-| `<Ellipse>`        | 椭圆 / 部分椭圆          |
-| `<Arc>`            | 不闭合的圆弧 / 椭圆弧    |
-| `<Sector>`         | 扇形（经圆心闭合）       |
-| `<Rectangle>`      | 矩形 / 圆角矩形          |
-| `<Grid>`           | 网格底纹（展开为多条线） |
-| `<RegularPolygon>` | 正多边形                 |
-| `<Star>`           | 星形                     |
-
-圆、矩形、扇形这些几何形的一行式写法收在 [形状](/kernel/components/shapes) 分组，网格底纹这类成片参考线收在 [辅助](/kernel/components/helpers) 分组。它们仍会展开为 `<Path>` / `<Step>`，并与 `<Draw>` / `<Path>` 共用同一套视觉 prop。几何图形见 [圆与椭圆](/kernel/components/shapes/circle-ellipse)，规则参考线见 [Grid](/kernel/components/helpers/grid)。
+网格底纹不属于几何 shape；这类成片参考线收在 [辅助](/kernel/components/helpers) 分组。几何图形可从 [圆与椭圆](/kernel/components/shapes/circle-ellipse) 开始，规则参考线见 [Grid](/kernel/components/helpers/grid)。
 
 ## 技术原理
 
@@ -211,25 +148,27 @@ Draw 把描边、填充、箭头和层级等整条路径的属性透传给 `<Pat
 
 ### Props
 
-| 属性             | 类型                                                                                           | 默认值         | 描述                                                                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `way`            | `Array<WayItem>`                                                                               | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `fold` / `cycle` 等动作                                 |
-| `stroke`         | `string`                                                                                       | `currentColor` | 描边色                                                                                                              |
-| `strokeWidth`    | `number`                                                                                       | `1`            | 描边宽度                                                                                                            |
-| `dashPattern`    | `Array<number>`                                                                                | —              | dash / gap 长度序列，如 `[4, 2]`                                                                                    |
-| `dashOffset`     | `number`                                                                                       | —              | 虚线起点偏移，单位同路径 user units                                                                                 |
-| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                | `'butt'`       | 描边端点形状                                                                                                        |
-| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                    |
-| `roundedCorners` | `number`                                                                                       | —              | 折线 line-line 接缝**几何**圆角半径；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/kernel/components/draw/path) |
-| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | 语义化 stroke 档位；显式 `strokeWidth` 优先                                                                         |
-| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                              | —              | 路径级箭头方向                                                                                                      |
-| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`       | —              | 箭头详细配置；详见 [Arrow](/kernel/components/draw/arrow)                                                           |
-| `fill`           | `string \| PaintSpec`                                                                          | `'none'`       | 闭合区域填充色：纯色或 PaintSpec（渐变 / 图案 / 图片）                                                              |
-| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                       | `'nonzero'`    | 填充规则                                                                                                            |
-| `opacity`        | `number`                                                                                       | —              | 整 path 透明度 0..1                                                                                                 |
-| `fillOpacity`    | `number`                                                                                       | —              | 仅 fill 透明度 0..1                                                                                                 |
-| `strokeOpacity`  | `number`                                                                                       | —              | 仅 stroke 透明度 0..1                                                                                               |
-| `zIndex`         | `number`（整数）                                                                               | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`）                                   |
+| 属性             | 类型                                                                                                          | 默认值         | 描述                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `way`            | `Array<WayItem>`                                                                                              | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `fold` / `cycle` 等动作                                                        |
+| `stroke`         | `string \| IRPaintSpec`                                                                                       | `currentColor` | 描边 paint：CSS 颜色或 IRPaintSpec（渐变 / 图案 / 图片）；使用 IRPaintSpec 时需给箭头显式 CSS 颜色                                         |
+| `strokeWidth`    | `number`                                                                                                      | `1`            | 描边宽度                                                                                                                                   |
+| `dashPattern`    | `Array<number>`                                                                                               | —              | dash / gap 长度序列，如 `[4, 2]`                                                                                                           |
+| `dashOffset`     | `number`                                                                                                      | —              | 虚线起点偏移，单位同路径 user units                                                                                                        |
+| `lineCap`        | `'butt' \| 'round' \| 'square'`                                                                               | `'butt'`       | 描边端点形状                                                                                                                               |
+| `lineJoin`       | `'miter' \| 'round' \| 'bevel'`                                                                               | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                           |
+| `roundedCorners` | `number`                                                                                                      | —              | 折线 line-line 接缝**几何**圆角半径；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/kernel/components/draw/path#折线圆角roundedcorners) |
+| `thickness`      | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'`                | —              | 语义化 stroke 档位；显式 `strokeWidth` 优先                                                                                                |
+| `arrow`          | `'none' \| '->' \| '<-' \| '<->'`                                                                             | —              | 路径级箭头方向                                                                                                                             |
+| `arrowDetail`    | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }`                      | —              | 箭头详细配置；详见 [Arrow](/kernel/components/draw/arrow)                                                                                  |
+| `fill`           | `string \| IRPaintSpec`                                                                                       | `'none'`       | 闭合区域填充色：纯色或 IRPaintSpec（渐变 / 图案 / 图片）                                                                                   |
+| `fillRule`       | `'nonzero' \| 'evenodd'`                                                                                      | `'nonzero'`    | 填充规则                                                                                                                                   |
+| `opacity`        | `number`                                                                                                      | —              | 整 path 透明度 0..1                                                                                                                        |
+| `fillOpacity`    | `number`                                                                                                      | —              | 仅 fill 透明度 0..1                                                                                                                        |
+| `strokeOpacity`  | `number`                                                                                                      | —              | 仅 stroke 透明度 0..1                                                                                                                      |
+| `shadow`         | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —              | 主路径投影；端点箭头随主路径一起投影。详见 [视觉效果](/kernel/components/effects)                                                          |
+| `blendMode`      | `'normal' \| 'multiply' \| 'screen' \| ...`（16 个 W3C 分离模式）                                             | `'normal'`     | 主路径与下方内容的混合模式；端点箭头随主路径一起混合。详见 [视觉效果](/kernel/components/effects)                                          |
+| `zIndex`         | `number`（整数）                                                                                              | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`）                                                          |
 
 <Comparison target="tikz" title="样式命名">
 

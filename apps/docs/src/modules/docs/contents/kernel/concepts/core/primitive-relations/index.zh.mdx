@@ -1,123 +1,123 @@
 ---
 title: 图元关系
-description: 接着图元模型，讲两个图元如何连接：端点落在哪（动态贴边 / 锁定位置）、margin 留白、连线形态与路由、分组连接。
+description: 接着图元模型，说明 path 引用图元时如何在动态贴边与显式位置间选择，并组织直线、折线、曲线、路由点与分组连接。
 ---
 
-[图元模型](/kernel/concepts/core/primitive-model) 讲清了*单个*图元的几何：它有多大、暴露哪些锚点。图元关系接着讲*两个*图元之间的事——一条 path 引用另一个图元时，端点最终落到对方几何的哪个位置。
+[图元模型](/kernel/concepts/core/primitive-model) 负责单个图元的内容、shape、boundary 与 anchor。本页只讨论图元之间的关系：path 引用目标时，端点如何选择，以及多个目标如何组成一条可维护的路线。
 
-retikz 把这种连接的解析分成两种模式：
+## 动态贴边与显式位置
 
-- **动态贴边（auto）**：只给目标 id，端点随两者相对方向自动选边。
-- **锁定位置（explicit）**：指定具体锚点，端点定死，不受相对方向影响。
-
-## 动态贴边 vs 锁定位置
-
-先看两种模式的差别。下面左右两组几何完全相同，只是引用写法不同：
+同一条关系可以让端点根据布局自动变化，也可以把端点锁在一个稳定位置：
 
 <ComponentPreview files="relation-dynamic-vs-locked" size="sm" hideCode />
 
-左组用纯 id（`'T'`），端点随来源方向分别贴到目标的左 / 右边；右组锁定到 `'T.top'`，无论来源在哪，端点都钉在上边中点。**默认优先 auto**——它让连线随布局自适应；只有要固定从某侧出线、做排版对齐或复刻已有图时才锁定。
+| 模式     | 写法                         | 行为                     |
+| -------- | ---------------------------- | ------------------------ |
+| 动态贴边 | `'T'` / `{ id: 'T' }`        | 朝相邻 step 自动命中边界 |
+| 显式位置 | `'T.top'` / `{ id, anchor }` | 固定到指定 anchor        |
 
-| 模式     | 写法                         | 端点行为         | 适合                         |
-| -------- | ---------------------------- | ---------------- | ---------------------------- |
-| 动态贴边 | `'T'` / `{ id: 'T' }`        | 随相对方向选边   | 流程图、DAG、一般关系线      |
-| 锁定位置 | `'T.top'` / `{ id, anchor }` | 定死，不随方向变 | 固定出线侧、排版对齐、复刻图 |
+默认优先动态贴边，让流程图、DAG 等关系线随布局变化；只有固定出线侧、对齐或复刻既有版式时才指定 anchor。
 
 ### 动态贴边
 
-纯 id 引用时（`<Step to="a">` / `<Draw way={['a', ...]}>`），retikz 在编译期调 `boundaryPoint`：从目标中心朝**邻居 step 方向**画射线，取与连接面（boundary）的交点作端点。所以端点取决于两个图元的相对位置——这正是"关系"的含义。
-
-下面两组各 8 条 `[外圈节点, 中心]`：左边中心是矩形 boundary、右边是椭圆 boundary。端点都贴到各自 boundary 上——矩形落到边 / 角，椭圆落到周长上对应方向的点：
+目标只给 id 时，编译器先看相邻 step 的方向，再从目标中心朝该方向命中 connection boundary。所以下图中同一个目标会按来源位置选择不同端点：
 
 <ComponentPreview files="anchors-auto-attach" size="sm" hideCode />
 
-端点落在哪一层表面，由目标的 **boundary** 决定（默认跟随 shape）——boundary 怎么和 shape、外接框分工，见 [图元模型](/kernel/concepts/core/primitive-model)。要让线离边框远一点，用 `margin`（见下），不要为了留空隙把目标改成手算坐标。
+boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响这层几何由[图元模型 · 外层边界](/kernel/concepts/core/primitive-model#外层边界-boundary)统一解释；本页不重复维护盒模型例外。
 
-### 锁定位置
+### 显式位置
 
-要锁死某个具体位置，path target 用**对象形态** `{ id, anchor?, offset? }`——这是 core IR 的主契约（序列化 / LLM 生成 / JSON patch 都用对象）：
-
-| anchor 形态   | 含义                                                                                                    |
-| ------------- | ------------------------------------------------------------------------------------------------------- |
-| 省略 anchor   | `{ id: 'A' }`：动态贴边（同纯 id）                                                                      |
-| 命名 anchor   | `{ id: 'A', anchor: 'top' }`：core IR 使用 Web 方位的 canonical 名称                                    |
-| 角度 anchor   | `{ id: 'A', anchor: 30 }`：deg 方向的视觉边界点                                                         |
-| 边上比例点    | `{ id: 'A', anchor: { side: 'top', fraction: 0.25 } }`                                                  |
-| anchor + 偏移 | `{ id: 'A', anchor: 'left', offset: [-4, 0] }`：解析到点后再加世界系 `[dx, dy]`（不随节点 rotate 旋转） |
-
-anchor 的命名规则和几何含义都在 [图元模型 · 锚点](/kernel/concepts/core/primitive-model)；这里只关心一点：命名 / 角度 / 边上比例点都**位置定死**，不受邻居 step 方向影响（只有 auto 模式才动态调整）。下面三组：矩形 / 椭圆用通用 Web 方位 anchor，星形用它专属的 `tip-N`：
-
-React 字符串 Sugar 可以写 `'A.north'`，解析器会在生成 IR 前将其归一为 `'top'`；直接编写对象 IR 时应使用 canonical 名称。
+指定 anchor 后，端点不再读取相邻 step 的方向。矩形、椭圆使用通用标准 anchor，复杂 shape 还可以提供自己的语义点：
 
 <ComponentPreview files="anchors-explicit" size="sm" hideCode />
 
-> **命名方位 anchor 走盒模型**：命名方位 anchor 默认在节点**外接框矩形**（bbox）上解析（圆 / 椭圆例外，落真实曲线）。所以多边形 hub 上 top-right / top-left / bottom-right / bottom-left 落在 **bbox 角（在形状外）**——这跟动态贴边不同（后者射线打真实形状）。想让命名 anchor 贴别的连接面，显式 `boundary`。
->
-> **角度 anchor 走真实形状**：数字角度 anchor（`{ id, anchor: 30 }` / `'A.30'`）沿该方向射线打到**真实形状边界**（再按 `margin` 外扩），与命名方位 anchor 的 bbox 解析不同。
->
-> **形状专属 anchor 例外**：star 的 `tip-N`、sector 的 `apex` / `outer-arc-mid` 等是该 shape 独有的命名点，恒落在**真实形状**上、不受 boundary 影响（上图右）。
-
-path target 还能写笛卡尔、极坐标、相对 / 偏移 / 比例定位等形态——完整目录见 [定位](/kernel/concepts/basic/position)。本页只覆盖"引用另一个图元"这一种。
-
-## 连线留白
-
-`<Node margin={n}>` 不改视觉 border，但把节点的连接边界整体外推 `n` user units——**auto 端点和显式 border 锚点（`'A.right'` / `'A.30'`）都一致外移**，连线不顶死边框（对齐 TikZ `outer sep`）。多节点流程图里 `margin={4}` 通常就够。margin 在节点盒模型里的位置（与 padding 的分工）见 [图元模型](/kernel/concepts/core/primitive-model)。
-
-<ComponentPreview files="anchors-margin" size="xs" hideCode />
-
-上图三列依次是：无 margin（贴边）、有 margin 的 auto（border 锚点 → 退开间隙）、有 margin 的 `{ side, fraction }`（边点 → 仍贴死视觉 border）。只有 border 锚点（auto / 命名方位 / 角度）随 margin 外移；`center`、形状专属锚点、边上比例点 `{ side, fraction }` 和标签附着点仍取**视觉 shape**、不吃 margin。要让连线在某处贴死视觉边，用这些点或显式坐标偏移。
-
-margin 还分形状：对**文本容器形状**（矩形 / 椭圆 / 多边形，尺寸由内框驱动）生效，对**参数驱动形状**（star / sector，尺寸由 params 定）不生效。
-
-<ComponentPreview files="margin-shapes" size="sm" hideCode />
-
-椭圆、正五边形是 rect 驱动——margin 把它们的连接边界整体外扩，端点退开间隙；五角星是 params 驱动（大小由 `outerRadius` 定），margin 只外扩外接框、不改星形边界，端点仍贴真实尖角、没有间隙。要给 star / sector 留间隙，用显式坐标偏移。
+概念上只需记住“省略 anchor 是动态，提供 anchor 是固定”。完整 target union、`offset`、角度与边比例写法见 [Path schema · 目标点](/kernel/reference/schema/path#目标点)；标准 anchor、boundary 与各 shape 专属名称见 [Node 几何](/kernel/components/node/overview)和 [Shapes](/kernel/components/shapes)。
 
 ## 连线与路由
 
-连接两个图元的线不止直线。下面是同样一对端点的三种常见连法——直线、曲线、折线：
+端点模式决定“连到哪里”，path step 决定“中间怎么走”。下面用同一对端点比较直线、曲线与折线：
 
 <ComponentPreview files="connection-styles" size="xs" hideCode />
 
-`<Draw>` 的 `way` 还支持更多形态，完整写法和参数见 [Draw](/kernel/components/draw/overview)：
+| 路线     | 常用写法                 | 适合                   |
+| -------- | ------------------------ | ---------------------- |
+| 直线     | `['a', 'b']`             | 默认关系线             |
+| 正交折线 | `'-\|'` / `'\|-'`        | 流程图、结构图         |
+| 曲线     | `{ bend }` / `{ curve }` | 避让、双向边、平滑关系 |
 
-| 方式           | 写法                      | 适合                 |
-| -------------- | ------------------------- | -------------------- |
-| 直线           | `['a', 'b']`              | 默认，最常用         |
-| 折线           | `'-\|'` / `'\|-'`         | 直角走线             |
-| 弧形           | `{ bend }`                | 平滑避让、双向边     |
-| 贝塞尔         | `{ curve }` / `{ cubic }` | 自定义控制点曲线     |
-| 弧 / 圆 / 椭圆 | `{ arc }` 等              | 以上一点为圆心画弧线 |
+完整 step 与 path kind 参数属于 [Draw](/kernel/components/draw/overview)和 [Path schema](/kernel/reference/schema/path)。关系页只给选择思路，不复制 API 字典。
 
-路径里的目标还能相对**上一段终点**给偏移，省去算绝对坐标：`'+dx,dy'`（TikZ `+`，临时偏移、不推进基准）、`'++dx,dy'`（TikZ `++`，把新终点作为下一段基准）；对象形态写 `{ relative }` / `{ relativeAccumulate }`。下图用连续 `++` 从 a 走出一段阶梯：
+路径内部可以相对上一段终点移动：`{ relative }` 临时偏移但不推进累计基准，`{ relativeAccumulate }` 偏移后把新终点作为下一段基准。React Sugar 也支持 `'+dx,dy'` / `'++dx,dy'`：
 
 <ComponentPreview files="connection-relative" size="xs" hideCode />
 
-连线的目标也不一定是节点。`<Coordinate>` 声明一个只有位置、不渲染的命名点，能像节点一样被 path 引用——适合做路由航点、对齐参考或几何中间点。下图先放一个 `via` 坐标，再让连线 `['a', 'via', 'b']` 经过它：
+需要稳定路由点时，用 `<Coordinate>` 声明一个可引用但不渲染的位置，再让 path 经过它：
 
 <ComponentPreview files="connection-coordinate" size="xs" hideCode />
 
+实体位置、偏移、between 与 path-relative 的适用范围集中在[定位](/kernel/concepts/basic/position)。
+
 ## 分组连接
 
-`<Scope id="cluster">` 把子树的视觉外接框注册成一个可引用边界，外部 path 用 `'cluster'` / `'cluster.top'` / `'cluster.30'` 引用——auto / 锁定两种模式同样适用，只是连接对象从单个节点换成一整组图元：
+`<Scope id="cluster">` 会把子树外接框注册为可引用的组边界。外部 path 可以用 `'cluster'` 动态贴边，也可以用 `'cluster.top'` 锁定位置：
 
 <ComponentPreview files="relation-scope" size="sm" hideCode />
 
-上图淡灰虚线是 cluster 的合成外接框；外部 `ext` 用纯 `'cluster'` 自动贴到朝它一侧的边，用 `'cluster.top'` 锁定到上边中点。适合给一组节点画外部连线；更细的命名空间和 bbox 行为见 [Scope](/kernel/components/layout/scope)。
+图中的淡灰虚线是 cluster 的合成外接框。分组连接仍复用与 Node 相同的 auto / explicit 选择；命名空间、bbox 模式与 transform 行为见 [Scope](/kernel/components/layout/scope)。
+
+## 动手试一试
+
+目标 Node 的视觉 shape 是椭圆，默认 boundary 是矩形。先保持 `anchor="auto"`，拖动来源角度：端点会持续朝来源方向命中目标 boundary。再锁定 `top` / `right` 或数字角度，来源继续移动而目标端点保持不变。`boundary` 选项只覆盖这条边的目标端点；切回“继承矩形”不会修改目标 Node 自己的默认设置。
+
+<ComponentPreview
+  files="primitive-relations-playground"
+  size="sm"
+  caption="淡灰 dotted 半径只是来源轨道辅助线；灰色 dashed 轮廓表示当前非 shape 连接面，选择“视觉形状”时连线直接落到蓝色椭圆。"
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: '把动态目标裁剪到 boundary 或解析显式 anchor',
+      path: 'packages/kernel/core/src/compile/path/host/target.ts',
+      startLine: 140,
+      endLine: 174,
+    },
+    {
+      label: '定义 path target 的完整 union',
+      path: 'packages/kernel/core/src/schemas/path/target/schema.ts',
+      startLine: 27,
+      endLine: 40,
+    },
+    {
+      label: '登记并回填可引用的 Scope 布局',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 309,
+      endLine: 352,
+    },
+  ]}
+/>
 
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/concepts/core/primitive-model">
     <span className="font-semibold">图元模型</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">单个图元的内容、形状、边界与锚点如何分层</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      内容、shape、boundary、anchor 与 margin 的几何所有权
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/concepts/basic/position">
     <span className="font-semibold">定位</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">path target 与实体放置的完整位置表达</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">实体放置、target 形态与引用顺序</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/overview">
+    <span className="font-semibold">Draw</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查询 step、path kind、arrow 与 route API</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/layout/scope">
     <span className="font-semibold">Scope</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">分组、命名空间与可引用的组边界</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">分组、命名空间与可引用组边界</span>
   </LinkedCard>
 </div>

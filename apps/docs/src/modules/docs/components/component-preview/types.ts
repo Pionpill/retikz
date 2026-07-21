@@ -49,6 +49,12 @@ export type PreviewControlRuntime = {
   value: (id: string) => PreviewControlValue | undefined;
   /** 写入 slot 共享值。 */
   setValue: (id: string, value: PreviewControlValue) => void;
+  /** 当前正在播放的范围控件 id。 */
+  rangePlaybackId?: string;
+  /** 从范围最小值开始播放。 */
+  startRangePlayback?: (field: PreviewRangeControlField) => void;
+  /** 停止当前范围播放。 */
+  stopRangePlayback?: () => void;
 };
 
 /** 预览区控制插槽。 */
@@ -81,8 +87,22 @@ export type PreviewActionSlot = {
   render: (runtime: PreviewControlRuntime) => ReactNode;
 };
 
+/** 二维点预览控件的坐标值 */
+export type PreviewControlPoint = [number, number];
+
+/** 可用于显示条件比较的标量预览值 */
+export type PreviewControlScalarValue = string | number | boolean;
+
 /** 声明式预览控件支持的值 */
-export type PreviewControlValue = string | number | boolean;
+export type PreviewControlValue = PreviewControlScalarValue | PreviewControlPoint;
+
+/** 根据另一控件当前值判断可见性的声明式条件 */
+export type PreviewControlCondition = {
+  /** 作为条件来源的控件 id */
+  controlId: string;
+  /** 任一匹配即显示的值集合 */
+  oneOf: ReadonlyArray<PreviewControlScalarValue>;
+};
 
 /** 预览控件选项 */
 export type PreviewControlOption = {
@@ -99,6 +119,10 @@ export type PreviewTextControlField = {
   label: string;
   defaultValue: string;
   placeholder?: string;
+  /** 使用支持换行的文本域
+   * @default false
+   */
+  multiline?: boolean;
 };
 
 /** 数值预览控件字段 */
@@ -146,16 +170,36 @@ export type PreviewRangeControlField = {
   min: number;
   max: number;
   step?: number;
+  /** 从最小值播放到最大值的时长（毫秒）
+   * @default 2000
+   */
+  playDuration?: number;
+};
+
+/** 二维点预览控件字段 */
+export type PreviewPointControlField = {
+  kind: 'point';
+  id: string;
+  label: string;
+  defaultValue: PreviewControlPoint;
+  min: readonly [number, number];
+  max: readonly [number, number];
+  step?: number;
 };
 
 /** 声明式预览控件字段 */
-export type PreviewControlField =
+export type PreviewControlField = (
   | PreviewTextControlField
   | PreviewNumberControlField
   | PreviewSelectControlField
   | PreviewSwitchControlField
   | PreviewColorControlField
-  | PreviewRangeControlField;
+  | PreviewRangeControlField
+  | PreviewPointControlField
+) & {
+  /** 字段的可选显示条件 */
+  visibleWhen?: PreviewControlCondition;
+};
 
 /** 可放置在预览浮层中的声明式字段 */
 export type PreviewOverlayControlField = PreviewControlField & {
@@ -171,6 +215,8 @@ export type PreviewOverlayControlField = PreviewControlField & {
 export type PreviewControlSection = {
   /** 分组标题 */
   label?: string;
+  /** 整个分组的可选显示条件 */
+  visibleWhen?: PreviewControlCondition;
   /** 分组内字段 */
   controls: ReadonlyArray<PreviewControlField>;
 };
@@ -211,9 +257,11 @@ type PreviewControlValueForField<TField extends PreviewControlField> = TField ex
     ? string
     : TField extends PreviewNumberControlField | PreviewRangeControlField
       ? number
-      : TField extends PreviewSwitchControlField
-        ? boolean
-        : never;
+      : TField extends PreviewPointControlField
+        ? PreviewControlPoint
+        : TField extends PreviewSwitchControlField
+          ? boolean
+          : never;
 
 /** 从声明式定义推导出的控件值对象 */
 export type PreviewControlValuesFor<TDefinition extends PreviewControlsDefinition> = {
@@ -257,6 +305,12 @@ export type PreviewControlState = {
   applyValues: (values: Readonly<PreviewControlValues>) => void;
   /** 恢复 canonical values */
   reset: () => void;
+  /** 当前正在播放的范围控件 id。 */
+  rangePlaybackId?: string;
+  /** 从范围最小值开始播放。 */
+  startRangePlayback?: (field: PreviewRangeControlField) => void;
+  /** 停止当前范围播放。 */
+  stopRangePlayback?: () => void;
 };
 
 /** 演示区垂直对齐档位。 */
@@ -285,6 +339,8 @@ export type ComponentPreviewFiles =
 export type PreviewSourceConfig = {
   /** 是否允许直接执行 demo 以自动派生 IR。 @default true */
   deriveIR?: boolean;
+  /** 使用稳定默认状态渲染源码视图，不参与可见 demo 的交互状态 */
+  canonicalRender?: () => ReactNode;
 };
 
 /** unified diff 中单行的种类：未变 / 新增 / 删除。 */

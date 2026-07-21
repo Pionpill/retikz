@@ -32,6 +32,7 @@ import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './u
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
+const rangePlaybackDurationOptions = [500, 1000, 2000, 3000, 5000] as const;
 
 /** 顶栏右侧动作组。 */
 export const HeaderActions: FC = () => {
@@ -50,6 +51,7 @@ export const HeaderActions: FC = () => {
   const previewAnimationMode = useComponentPreviewStore(s => s.animationMode);
   const previewThemeMode = useComponentPreviewStore(s => s.themeMode);
   const previewControlPanelDefaultOpen = useComponentPreviewStore(s => s.controlPanelDefaultOpen);
+  const previewRangePlaybackDuration = useComponentPreviewStore(s => s.rangePlaybackDuration);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
   const togglePreviewDragEnabled = useComponentPreviewStore(s => s.toggleDragEnabled);
@@ -57,6 +59,7 @@ export const HeaderActions: FC = () => {
   const setPreviewAnimationMode = useComponentPreviewStore(s => s.setAnimationMode);
   const setPreviewThemeMode = useComponentPreviewStore(s => s.setThemeMode);
   const setPreviewControlPanelDefaultOpen = useComponentPreviewStore(s => s.setControlPanelDefaultOpen);
+  const setPreviewRangePlaybackDuration = useComponentPreviewStore(s => s.setRangePlaybackDuration);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
   const setComparisonTargetVisible = useComparisonStore(s => s.setTargetVisible);
 
@@ -185,6 +188,34 @@ export const HeaderActions: FC = () => {
                       <DropdownMenuRadioItem value="system">{t('preview.animationSystem')}</DropdownMenuRadioItem>
                       <DropdownMenuRadioItem value="enabled">{t('preview.animationEnabled')}</DropdownMenuRadioItem>
                       <DropdownMenuRadioItem value="disabled">{t('preview.animationDisabled')}</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger inset>{t('preview.rangePlaybackDuration')}</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-40">
+                    <DropdownMenuRadioGroup
+                      value={String(previewRangePlaybackDuration)}
+                      onValueChange={value => {
+                        const duration = rangePlaybackDurationOptions.find(option => String(option) === value);
+                        if (duration !== undefined) {
+                          setPreviewRangePlaybackDuration(duration);
+                        }
+                      }}
+                    >
+                      <DropdownMenuRadioItem value="500">{t('preview.rangePlaybackDuration500')}</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="1000">
+                        {t('preview.rangePlaybackDuration1000')}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="2000">
+                        {t('preview.rangePlaybackDuration2000')}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="3000">
+                        {t('preview.rangePlaybackDuration3000')}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="5000">
+                        {t('preview.rangePlaybackDuration5000')}
+                      </DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>

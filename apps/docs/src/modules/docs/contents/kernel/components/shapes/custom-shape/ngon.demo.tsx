@@ -5,6 +5,12 @@ import { DEFAULT_EPSILON, defineShape, localToWorld, worldToLocal } from '@retik
 import { Draw, Layout, Node } from '@retikz/react';
 import { z } from 'zod';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { ngonControls, previewControlContract } from './ngon.controls';
+
+export const previewControls = ngonControls;
+
 type Position = IRPosition;
 
 /**
@@ -99,49 +105,30 @@ const ngon = defineShape({
   scaleParams: params => params,
 });
 
-const Demo: FC = () => (
-  <Layout width={460} height={200} shapes={[ngon]}>
-    <Node
-      id="t"
-      shape={{ type: 'ngon', params: { sides: 3 } }}
-      position={[-150, 0]}
-      text="3"
-      fill="lightgray"
-      stroke="dodgerblue"
-      strokeWidth={2}
-    />
-    <Node
-      id="p"
-      shape={{ type: 'ngon', params: { sides: 5 } }}
-      position={[-30, 0]}
-      text="5"
-      fill="lightgray"
-      stroke="seagreen"
-      strokeWidth={2}
-    />
-    <Node
-      id="h"
-      shape={{ type: 'ngon', params: { sides: 6 } }}
-      position={[90, 0]}
-      text="6"
-      fill="lightgray"
-      stroke="darkorange"
-      strokeWidth={2}
-    />
-    <Node
-      id="big"
-      shape={{ type: 'ngon', params: { sides: 6 } }}
-      position={[210, 0]}
-      text="6"
-      scale={2}
-      fill="lightgray"
-      stroke="crimson"
-      strokeWidth={2}
-    />
-    <Draw way={['t', 'p']} arrow="->" />
-    <Draw way={['p', 'h']} arrow="->" />
-    <Draw way={['h', 'big']} arrow="->" />
-  </Layout>
-);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  return (
+    <Layout width={400} height={250} viewBox={{ x: -230, y: -125, width: 460, height: 250 }} shapes={[ngon]}>
+      <Node id="source" position={[-155, 0]} shape="circle" minimumSize={18} fill="gray" stroke="none" />
+      <Node
+        id="shape"
+        shape={{ type: 'ngon', params: { sides: values.sides } }}
+        position={[0, 0]}
+        text={String(values.sides)}
+        scale={values.scale}
+        fill={values.fill}
+        stroke={values.stroke}
+        strokeWidth={values.strokeWidth}
+        padding={12}
+      />
+      <Node id="sink" position={[155, 0]} shape="circle" minimumSize={18} fill="gray" stroke="none" />
+      <Draw way={['source', 'shape', 'sink']} arrow="->" stroke="gray" />
+    </Layout>
+  );
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 参数化 ngon 的 sides 与 Node scale playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

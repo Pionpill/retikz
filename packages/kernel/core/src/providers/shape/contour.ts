@@ -7,7 +7,7 @@ import type { ScenePrimitive } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
-import { boundaryFromContour, contourCommands, localToWorld, point } from '../../shared';
+import { boundaryFromContour, contourCommands, localToWorld, point, pointsConnectionEnvelope } from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 const contourParamsSchema = z.strictObject({
@@ -42,6 +42,12 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
   return verticesToSegments(verts);
 };
 
+/** 顶点环按 AABB 中心归一到 Node 局部系 */
+const centeredPoints = (params: ContourParams): Array<Position> => {
+  const center = aabbCenterOf(params.points);
+  return params.points.map(p => point.sub(p, center));
+};
+
 /**
  * contour 注册项：任意闭合顶点环
  * @description 顶点按 AABB 中心自动归一化，Node position 对齐轮廓中心；命名 anchor 交给外接 AABB 回退。
@@ -66,6 +72,7 @@ export const contour = defineShape<ContourParams>({
   },
   // 标准方位名交 compile 回退到外接 AABB rect；曲边块没有有意义的真·命名方位。
   anchor: () => undefined,
+  connectionEnvelope: (_rect, kind, params) => pointsConnectionEnvelope(centeredPoints(params), kind),
   *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     const segments = worldSegments(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);

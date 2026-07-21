@@ -1,118 +1,161 @@
 ---
 title: 自定义连接面
-description: 通过 Boundary Registry 注册节点的连接面；节点的视觉 shape 保持不变，路径连线和具名锚点可以改用单独的 BoundaryDefinition。
+description: 用 BoundaryDefinition 独立定义节点的连线贴边与标准方位锚点，并通过统一 registry 注入编译宿主。
 ---
 
-`boundary` 控制路径连接到节点时停在哪里。默认值是 `shape`：连接面就是节点自己的视觉形状。需要让一个矩形节点只暴露左右两个端口、让一个图标按圆形连线、或让多个视觉 shape 复用同一套连接规则时，就把连接面拆成独立的 `BoundaryDefinition`。
+`boundary` 决定连线接触节点的位置。通常它直接沿用视觉 `shape`；只有当“节点看起来是什么”和“线应该接在哪里”需要分离时，才注册自定义连接面。
 
-Boundary Registry 和 [自定义形状](/kernel/components/shapes/custom-shape) 是同一类 compile-time 扩展：IR 里只保存 `boundary` 的名字或 `{ type, params }`，真正的函数定义通过 `CompileOptions.boundaries` / `<Layout boundaries>` 注入。
-
-> 日常连线通常不需要本页。只有当“看起来是什么形状”和“线应该接到哪里”不是同一件事时，才需要自定义连接面。
-
-## 核心约束：shape 是默认连接面
-
-不写 `boundary`，或写 `boundary="shape"`，都表示沿用节点自己的 `shape`。这也是最常见、最直观的行为。
-
-除了 `shape` 这个保留值，其他 `boundary` 名字会先查 Boundary Registry；如果找不到，再 fallback 到 Shape Registry。这个 fallback 保留了旧能力：你仍然可以写 `boundary="ellipse"` 让一个矩形节点按椭圆连线。但新的推荐写法是：只负责连接面的逻辑放进 `BoundaryDefinition`。
-
-| 写法                               | 查找顺序                           | 适用场景             |
-| ---------------------------------- | ---------------------------------- | -------------------- |
-| 不写 / `shape`                     | 节点视觉 shape                     | 默认行为             |
-| `circle` / `rectangle` / `ellipse` | 内置 boundary provider             | 复用常见连接面       |
-| 自定义名字                         | boundary provider → shape fallback | 业务端口、语义连接面 |
-| `{ type, params }`                 | 同上，并把 params 传给 provider    | 带参数的连接面       |
-
-`boundary` 仍然是 JSON-safe 的 IR 字段；`BoundaryDefinition` 含函数，不进入 IR。
-
-## BoundaryDefinition
-
-一个连接面只负责“线接在哪里”和“这个连接面有哪些锚点”。它不参与节点尺寸计算，也不绘制任何图元；这些仍然由节点自己的 `shape` 负责。
-
-| 字段            | 作用                                                 | 必填 · 可选 |
-| --------------- | ---------------------------------------------------- | ----------- |
-| `name`          | Registry key；IR 的 `boundary` 通过它引用 provider   | 必填        |
-| `paramsSchema`  | zod schema；编译期校验 `boundary.params`             | 必填        |
-| `boundaryPoint` | 从节点中心朝 `toward` 发射射线时，返回连线应停下的点 | 必填        |
-| `anchor`        | 返回具名锚点坐标；未知名字返回 `undefined`           | 可选        |
-
-`rect` 是节点视觉 shape 已经算好的外接框，包含中心点、宽高和可选旋转；`params` 是 `paramsSchema` 校验后的纯 JSON 对象。连接面不重新决定节点大小，所以不会有 `circumscribe` / `emit`。
-
-### paramsSchema
-
-```ts
-paramsSchema: z.ZodType<TParams>;
-```
-
-无参连接面用 `z.strictObject({})`。带参数时，参数写在 IR 的 `{ type, params }` 里，编译期先过 provider 自己的 schema，再传给计算函数。
-
-### boundaryPoint
-
-```ts
-boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
-```
-
-路径连接节点、或解析 `A.30` 这类数字角度时调用。普通几何可以按 `toward` 与 `rect` 求交点；语义端口可以直接忽略真实轮廓，按方向返回固定端口。
-
-### anchor
-
-```ts
-anchor?: (rect: Rect, name: string, params: TParams) => Position | undefined;
-```
-
-当用户写 `A.input`、`A.output` 这类名字时调用。未实现 `anchor`，或返回 `undefined` 时，编译层会回退到矩形 Web 锚点；这让简单 boundary 只写 `boundaryPoint` 也能继续使用 `top` / `right` 等常见方位。`north` / `east` 这类 compass 写法仍可作为输入别名，但进入 provider 前会归一为 Web 风格。
-
-## 注入连接面定义
-
-```ts
-import { compileToScene, defineBoundary, type BoundaryDefinition } from '@retikz/core';
-import { z } from 'zod';
-
-const horizontalPorts: BoundaryDefinition = defineBoundary({
-  name: 'horizontal-ports',
-  paramsSchema: z.strictObject({}),
-  boundaryPoint: (rect, toward) => {
-    return toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y];
-  },
-  anchor: (rect, name) => {
-    if (name === 'input') return [rect.x - rect.width / 2, rect.y];
-    if (name === 'output') return [rect.x + rect.width / 2, rect.y];
-    return undefined;
-  },
-});
-
-const scene = compileToScene(ir, { boundaries: [horizontalPorts] });
-```
-
-React 里把同一份定义传给 `<Layout>`：
-
-```tsx
-<Layout boundaries={[horizontalPorts]}>
-  <Node id="io" boundary="horizontal-ports" position={[0, 0]} text="IO" />
-</Layout>
-```
-
-## 例子
-
-### 只换连接面，不换视觉形状
-
-下面的 `IO` 仍然是普通矩形节点，但 `boundary="horizontal-ports"` 让连线只接左右两个端口。右侧的 `B` 放在右下方，线仍然落在 `IO` 的右侧中心，而不是矩形的右下边缘。
+下面的矩形仍按原形状绘制，但 `horizontal-ports` 让连线只接左右端口。展开源码可以看到定义、注入与消费的完整闭环。
 
 <ComponentPreview files="boundary-registry" size="sm" />
 
-## 查找与冲突
+## 适用边界
 
-- `boundary="shape"` 是保留语义，不是 provider key；它永远表示节点自己的视觉 shape。
-- 除 `shape` 外，查找顺序是 **boundaries 优先，shapes fallback 其次**。
-- 自定义 boundary 不能和内置 boundary 同名；同一数组内重复名字也会在注册期报错。
-- 自定义 boundary 与 shape 同名时，boundary provider 优先。这样可以单独替换连接面，而不影响视觉 shape。
-- 未知名字会在编译期报错，并同时列出已注册 boundaries 和 shapes，方便判断是少传了 `boundaries` 还是 `shapes`。
+先判断现有写法能否解决问题：
 
-## 公开导出
+| 需求                        | 选择                         |
+| --------------------------- | ---------------------------- |
+| 连线沿视觉轮廓贴边          | 省略 `boundary` 或写 `shape` |
+| 改用圆、矩形或椭圆连接面    | 使用同名内置 boundary        |
+| 借用已注册 shape 的连接几何 | 把 shape 名写进 `boundary`   |
+| 固定方向端口或方位 anchor   | 注册 `BoundaryDefinition`    |
 
-`defineBoundary` / `BoundaryDefinition` / `BoundaryDefinitionInput` / `BUILTIN_BOUNDARIES` 均从 `@retikz/core` 导入；`@retikz/react` 与 `@retikz/vanilla` 包根不重导出这些定义。
+连接面只拥有“连线停在哪里”和“标准方位锚点在哪里”。它不计算节点尺寸，也不输出图元；视觉形状、占位和绘制仍由 `shape` 负责。若连接规则始终等同于新形状，应改写 [自定义形状](/kernel/components/shapes/custom-shape)，不要维护两份几何。形状专属自定义锚点仍属于视觉 shape，不由 boundary 扩展。
+
+## 定义能力
+
+用 `defineBoundary` 声明稳定的 registry key、参数 schema 和射线交点。无参数时仍提供 `z.strictObject({})`，让所有 payload 都经过同一校验路径。
+
+```ts
+import { defineBoundary } from '@retikz/core';
+import { z } from 'zod';
+
+export const horizontalPorts = defineBoundary({
+  name: 'horizontal-ports',
+  paramsSchema: z.strictObject({}),
+  boundaryPoint: (rect, toward) =>
+    toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y],
+  anchor: (rect, name) => {
+    if (name === 'left') return [rect.x - rect.width / 2, rect.y];
+    if (name === 'right') return [rect.x + rect.width / 2, rect.y];
+    return undefined;
+  },
+});
+```
+
+`boundaryPoint` 收到的是该 boundary 最终解析出的 `rect`；未提供 `resolveRect` 时，它就是视觉 shape 已经算好的节点外接框。`toward` 是连线从节点中心指向的目标点。带参数的连接面把参数写进 `{ type, params }`，其中 `params` 必须是可 JSON 序列化的数据；函数只存在于 definition，不进入 IR（中间表示）。
+
+需要在交点计算前调整连接面尺寸时，实现可选的 `resolveRect(context, params)`。`context.visualRect` 是视觉外接框，`context.connectionEnvelope(kind)` 则请求视觉 shape 对 circle / ellipse / rectangle 的安全规则包络；后者会复用同一节点内的缓存。返回矩形必须具有有限坐标和正宽高，否则编译会立即报错。
+
+### 带参数的连接面
+
+参数直接由 definition 的 schema 定义，并在回调第三个参数里获得推断类型。下面的 `bias` 把左右端口沿节点高度从顶部 `-1` 移到底部 `1`：
+
+```ts
+const biasedPorts = defineBoundary({
+  name: 'biased-ports',
+  paramsSchema: z.strictObject({ bias: z.number().min(-1).max(1) }),
+  boundaryPoint: (rect, toward, { bias }) => [
+    toward[0] < rect.x ? rect.x - rect.width / 2 : rect.x + rect.width / 2,
+    rect.y + (rect.height / 2) * bias,
+  ],
+});
+```
+
+节点通过 JSON-safe 的 `{ type, params }` 选择该定义：
+
+```tsx
+<Node id="io" position={[0, 0]} boundary={{ type: 'biased-ports', params: { bias: 0.5 } }} />
+```
+
+## 注入宿主
+
+React 宿主通过 `<Layout boundaries>` 注入定义，节点只保存 registry key：
+
+```tsx
+<Layout boundaries={[horizontalPorts]}>
+  <Node id="io" position={[0, 0]} boundary="horizontal-ports">
+    IO
+  </Node>
+</Layout>
+```
+
+直接使用 core 编译器时，把同一数组传给 `CompileOptions.boundaries`：
+
+```ts
+const scene = compileToScene(ir, { boundaries: [horizontalPorts] });
+```
+
+Definition 可以由应用代码持有，序列化的图只保留名字或参数对象。React 与直接编译因此复用同一套注册和解析语义。
+
+## 执行机制
+
+| 阶段 | 输入                      | 结果                                                                        |
+| ---- | ------------------------- | --------------------------------------------------------------------------- |
+| 合并 | 内置 + 自定义 definitions | 生成按 `name` 查询的 Boundary Registry                                      |
+| 查找 | `boundary` 名字           | 先查 boundary；未命中再查 Shape Registry                                    |
+| 校验 | `{ type, params }`        | 使用命中 definition 的 `paramsSchema` 解析参数                              |
+| 消费 | 连线方向或标准方位 anchor | 可先调用 `resolveRect`，再调用 `boundaryPoint` / `anchor`，不改变视觉 shape |
+
+`boundary="shape"` 是保留语义，始终复用节点自己的视觉形状。其它名字优先命中 Boundary Registry；同名 shape 只在 boundary 未注册时作为兼容回退。自定义 boundary 与 shape 同名时，boundary definition 优先，因此可以只替换连接规则。
+
+<SourceLinks
+  sources={[
+    {
+      label: '内置与自定义连接面合并',
+      path: 'packages/kernel/core/src/providers/boundary/registry.ts',
+      startLine: 7,
+      endLine: 15,
+    },
+    {
+      label: '连接面查找、参数校验与 shape 回退',
+      path: 'packages/kernel/core/src/compile/node/boundary.ts',
+      startLine: 123,
+      endLine: 187,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+- **重复 key**：自定义项不能覆盖内置项，同一注入数组里也不能重名；registry 会在编译开始时抛错。
+- **空 key**：`name` 必须是非空字符串。
+- **未知名字**：错误会同时列出已注册 boundaries 与 shapes，并提示检查 `boundaries` / `shapes` 注入。
+- **非法参数**：`paramsSchema` 在调用几何函数前校验，失败时会带上对应的 `.boundary.params` IR 路径。
+- **非法解析矩形**：`resolveRect` 返回非有限坐标、非正宽高或内部抛错时，错误会带 boundary 名和 Node IR 路径。
+- **未知 anchor**：`anchor` 可省略或返回 `undefined`；标准方位会回退到外接矩形，形状专属名字仍交给视觉 shape 解析。
+- **无绘制职责**：连接面不能改变节点尺寸、形状或内容；这些需求属于 Shape Definition 或 Node props。
+
+两个常见失败入口会在编译期立即抛错：
+
+```tsx
+<Node id="io" position={[0, 0]} boundary={{ type: 'biased-ports', params: { bias: 2 } }} />
+```
+
+```ts
+compileToScene(ir, { boundaries: [biasedPorts, biasedPorts] });
+```
+
+第一段违反 `paramsSchema`；第二段重复注册同一个 key。
+
+## API 参考
+
+### `BoundaryDefinitionInput<TParams>`
+
+| 属性            | 类型                                            | 默认值       | 描述                                            |
+| --------------- | ----------------------------------------------- | ------------ | ----------------------------------------------- |
+| `name`          | `string`                                        | —            | Registry key，由 Node `boundary` 引用           |
+| `paramsSchema`  | `z.ZodType<TParams>`                            | —            | 校验 JSON-safe 的 `boundary.params`             |
+| `resolveRect`   | `(context, params) => Rect`                     | `visualRect` | 可选；从视觉矩形或 shape 安全包络解析连接面矩形 |
+| `boundaryPoint` | `(rect, toward, params) => Position`            | —            | 返回射线与连接面的交点                          |
+| `anchor`        | `(rect, name, params) => Position \| undefined` | —            | 可选标准方位锚点解析器                          |
+
+`defineBoundary`、`BoundaryDefinition`、`BoundaryDefinitionInput` 与 `BUILTIN_BOUNDARIES` 从 `@retikz/core` 导入。`@retikz/react` 和 `@retikz/vanilla` 不重复导出作者侧定义。
 
 ## 相关
 
-- [自定义形状](/kernel/components/shapes/custom-shape)：定义节点如何占位、连线和绘制
-- [Layout](/kernel/components/layout/overview)：查看 `<Layout boundaries>` prop
-- [编译](/kernel/reference/runtime/compile)：查看 `CompileOptions.boundaries`
+- [Node 形状](/kernel/components/node/overview#形状)：在节点上选择视觉形状与连接面
+- [自定义形状](/kernel/components/shapes/custom-shape)：同时定义占位、边界和绘制
+- [Layout](/kernel/components/layout/overview)：通过 React 宿主注入 definitions
+- [编译](/kernel/reference/runtime/compile)：直接编译时的 `CompileOptions`
+- [扩展机制](/kernel/reference/runtime/extensions)：跨能力的统一 Definition / registry 模型

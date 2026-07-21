@@ -1,68 +1,140 @@
 ---
 title: Custom Arrows
-description: Arrow shape names are open strings; beyond the 8 built-ins, register any arrow with defineArrow / ArrowDefinition — emit produces MarkerPrimitive geometry in local coordinates, and color follows the path stroke via contextStroke.
+description: Register new arrow-tip geometry so Draw and Path endpoints and path marks resolve one name, shorten the path correctly, and inherit stroke color.
 ---
 
-Arrow shape names are **open strings**: beyond the 8 built-ins (`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`), you can register your own arrow tips. React `arrowDetail.shape` and core IR `marks[].mark.shape` both look up the same registry name. The registry mirrors the [shape registry](/kernel/components/shapes/custom-shape) — the 8 built-ins are themselves registry entries, with no special privileges.
+A custom arrow extends **endpoint marker geometry**. IR stores only an open shape name and visual parameters. After the host injects an `ArrowDefinition`, core resolves it from the shared registry and emits renderer-neutral `MarkerPrimitive` geometry during compilation.
 
-Registration goes through `CompileOptions.arrows` (in React that's `<Layout arrows={...}>`): core IR only stores the string name in `marks[].mark.shape`; the geometry is injected here. An unregistered name throws at compile time (with the list of available names); each definition carries `name`; built-in name collisions fail at registration time.
-
-## Registering an arrow
-
-Below registers a `bracket` — a hollow square bracket `[` (a single stroked path), clearly distinct from the built-in triangular tips:
+The example below registers a hollow `bracket` arrow through `<Layout arrows>`. Its definition, injection, and Draw usage live in one runnable file.
 
 <ComponentPreview files="custom-arrow-basic" size="xs" />
 
-If you only want the minimum viable arrow, implement `lineContactX` and `emit` first; `baseSize`, `tipX`, `hollow`, `defaultLength`, and `defaultWidth` only tune the look.
+## Applicability
 
-An `ArrowDefinition` is a plain object (not part of the IR, no serialization needed, can be returned by a factory); wrap it at the definition site with `defineArrow({...})` so custom arrows follow the same extension style as shapes, patterns, and path generators:
+The eight built-ins already cover solid and hollow triangles, stealth tips, diamonds, and circles. Register a definition only when the endpoint outline itself is missing.
 
-| Field           | Type                                 | Default                         | Description                                                                                                                                               |
-| --------------- | ------------------------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`          | `string`                             | Required                        | Registry name; React `arrowDetail.shape` and core `marks[].mark.shape` look up this definition by name, and built-in name collisions fail registration    |
-| `lineContactX`  | `number`                             | required                        | Line contact point x (local coords): drives the path-endpoint shrink and the marker `refX`. For hollow arrows the framework also subtracts `lineWidth/2`  |
-| `emit`          | `(ctx) => Iterable<MarkerPrimitive>` | required                        | Produces the arrow geometry in the local `baseSize` coordinate system                                                                                     |
-| `baseSize`      | `number`                             | `10`                            | Marker local base length (viewBox `0 0 baseSize baseSize`, `refY = baseSize/2`)                                                                           |
-| `tipX`          | `number`                             | `= baseSize`                    | Tip x (used for path shrink)                                                                                                                              |
-| `hollow`        | `boolean`                            | `false`                         | Hollow: the framework drops `fill`, lets `color` drive the stroke, and enables `lineWidth`                                                                |
-| `defaultLength` | `number`                             | `6`                             | Default tip length (fallback for `length`, user units)                                                                                                    |
-| `defaultWidth`  | `number`                             | `6`                             | Default tip width (fallback for `width`, user units)                                                                                                      |
-| `outerInset`    | `number`                             | hollow `lineWidth/2`, solid `0` | Extra outer-edge inset for endpoints auto-clipped to a Node boundary. Custom hollow arrows can set it explicitly when `lineWidth/2` is not precise enough |
+| Need                                    | Choose                                              |
+| --------------------------------------- | --------------------------------------------------- |
+| Resize or recolor an existing arrow     | `arrowDetail`                                       |
+| Use different built-ins at each end     | `arrowDetail.start` / `end`                         |
+| Add a new endpoint outline              | Custom Arrow                                        |
+| Change the output of the whole relation | [Custom Paths](/kernel/components/draw/custom-path) |
 
-Visual fields `length` / `width` / `scale` / `opacity` are handled uniformly by the framework (`markerWidth = (length ?? defaultLength) × scale`); `hollow` / `lineWidth` / the actual geometry are left to the `def`.
+An ArrowDefinition serves both Path endpoints and `marks[].mark.shape`. It does not own arrow direction, mark position, path stroke, or renderer instances.
 
-## emit and MarkerPrimitive
+## Define the capability
 
-`emit` runs at **compile time** (same place as a shape's emit): the resulting `MarkerPrimitive[]`, together with the resolved wrapper params (`baseSize` / `refX` / `markerWidth` / `markerHeight`), is written into the Scene's `ResolvedArrowEndSpec`. The renderer (SVG / Canvas / …) only **materializes** it — it doesn't know the arrow registry and doesn't recompute geometry. No SVG `<marker>` appears in core / IR.
+A minimal definition needs a stable `name`, the path-to-arrow contact point `lineContactX`, and an `emit` function that returns marker-local geometry.
 
-`MarkerPrimitive` is a **narrow subset** of `ScenePrimitive` — only marker-local geometry, which rules out "a marker recursively referencing markers / clips / text layout":
+```tsx
+const bracket = defineArrow({
+  name: 'bracket',
+  hollow: true,
+  lineContactX: 2,
+  emit: ({ stroke, lineWidth }) => [
+    {
+      type: 'path',
+      commands: bracketCommands,
+      stroke,
+      strokeWidth: lineWidth,
+    },
+  ],
+});
+```
 
-| Allowed                     | Notes                                                                                        |
-| --------------------------- | -------------------------------------------------------------------------------------------- |
-| `path` / `ellipse` / `rect` | Local geometry; `fill` limited to `string` (CSS color) or `{ kind: 'contextStroke' }`        |
-| `group`                     | Composite arrow with optional `transforms`; `children` may only nest more `MarkerPrimitive`s |
+`emit` uses `baseSize` local coordinates. `lineContactX` tells the path body where to stop, while `tipX` describes the visual tip. Hollow arrows also account for `lineWidth` and `outerInset` when compensating the outer outline.
 
-`text` is forbidden, `arrowStart` / `arrowEnd` are forbidden (no recursion), and external `resourceRef` is forbidden (no paint-server references inside a marker). Violations throw at compile time.
+## Inject into the host
 
-The `ArrowEmitContext` passed to `emit`:
+React injects definitions through `<Layout arrows>`; direct core calls use `CompileOptions.arrows`. Endpoints and path marks then reference the registered name.
 
-| Field       | Type            | Description                                                                            |
-| ----------- | --------------- | -------------------------------------------------------------------------------------- |
-| `fill`      | `MarkerFill`    | Fill color (drives solid tips); with no `color` override = `{ kind: 'contextStroke' }` |
-| `stroke`    | `MarkerFill`    | Stroke color (drives hollow tips); with no override = `{ kind: 'contextStroke' }`      |
-| `lineWidth` | `number`        | Stroke width for hollow tips                                                           |
-| `round`     | `(n) => number` | Precision rounding (same function as compile / render, keeping geometry consistent)    |
+```tsx
+<Layout arrows={[bracket]}>
+  <Draw way={['A', 'B']} arrow="->" arrowDetail={{ shape: 'bracket' }} />
+</Layout>
+```
 
-## Color inheritance
+The definition never enters IR. React, Vanilla, or persisted IR can reference the same shape string as long as the compile host injects the same definition.
 
-`emit` can hand `ctx.fill` / `ctx.stroke` straight to the marker — they are `MarkerFill`, usable directly as a primitive's `fill` / `stroke` with **no narrowing**. With no `color` override they are `{ kind: 'contextStroke' }`, which materializes to SVG `context-stroke`: the same arrow definition used on paths with different stroke colors follows each path's `stroke`, and `currentColor` / `var()` theme switches stay live.
+## Execution
+
+The eight built-ins and custom definitions first enter one registry. Compilation merges path defaults, `arrowDetail`, and per-end overrides before resolving the shape. It then shortens the path from the resolved size, line width, and contact point, and calls `emit` for marker geometry.
+
+The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an explicit color they use `{ kind: 'contextStroke' }`, allowing one definition to follow each Path stroke instead of freezing a color at registration time.
 
 <ComponentPreview files="custom-arrow-inherit" size="xs" />
 
-Both Draws use the same `bracket` definition and set no arrow-specific color, so each bracket follows its path's `stroke`. To pin the arrow color, mind whether the shape is solid or hollow: a solid fill resolves to `arrowDetail.fill ?? color ?? contextStroke` — the dedicated override is `fill`, falling back to `color` and then the path stroke; a hollow stroke resolves to `arrowDetail.color ?? contextStroke` (hollow shapes ignore `fill` — `color` drives the stroke and `lineWidth` its width).
+<SourceLinks
+  sources={[
+    {
+      label: 'Arrow definition and emit context',
+      path: 'packages/kernel/core/src/contract/arrow/types.ts',
+      startLine: 4,
+      endLine: 59,
+    },
+    {
+      label: 'Built-in and custom arrow registry',
+      path: 'packages/kernel/core/src/providers/arrow/registry.ts',
+      startLine: 6,
+      endLine: 13,
+    },
+    {
+      label: 'Arrow lookup, visual overrides, and marker validation',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 68,
+      endLine: 127,
+    },
+    {
+      label: 'Sizing, contextStroke, shrinking, and marker emission',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 147,
+      endLine: 243,
+    },
+  ]}
+/>
 
-<Comparison target="tikz" title="Custom arrows">
+## Errors and limits
 
-This `bracket` shape corresponds to TikZ's Bracket arrow tip. TikZ declares arrow tips at the TeX macro layer with `\pgfdeclarearrow`; retikz lands the same idea as a renderer-agnostic `ArrowDefinition`: geometry is described with structured `MarkerPrimitive`s (instead of SVG / PGF strings), any adapter can materialize it, and third parties can publish `@retikz/arrows-*` packages.
+| Case                                       | Result                                                          |
+| ------------------------------------------ | --------------------------------------------------------------- |
+| Empty name                                 | Registry rejects the non-empty key contract                     |
+| Duplicate built-in or custom name          | Registry merge reports a duplicate registration                 |
+| Unknown `arrowDetail.shape`                | Compile lists available names and `options.arrows`              |
+| Invalid `baseSize`, contact, or dimensions | Compile rejects invalid marker sizing                           |
+| Unknown primitive or non-finite geometry   | Marker validation prevents invalid Scene output                 |
+| Recursive arrows, clips, or text in marker | The narrow `MarkerPrimitive` contract rejects them              |
+| Path uses an IRPaintSpec stroke            | Marker cannot inherit a resource paint; set a solid arrow color |
 
-</Comparison>
+MarkerPrimitive allows only `path`, `ellipse`, `rect`, and groups containing the same subset. Do not return SVG `<marker>` elements, Canvas objects, text layout, or external paint resource references.
+
+## API Reference
+
+### ArrowDefinition
+
+| Field           | Type                                 | Default                           | Description                                   |
+| --------------- | ------------------------------------ | --------------------------------- | --------------------------------------------- |
+| `name`          | `string`                             | —                                 | Registry key and shape reference              |
+| `lineContactX`  | `number`                             | —                                 | Path contact point used for body shortening   |
+| `emit`          | `(ctx) => Iterable<MarkerPrimitive>` | —                                 | Generates marker-local geometry               |
+| `baseSize`      | `number`                             | `10`                              | Marker-local reference size                   |
+| `tipX`          | `number`                             | `baseSize`                        | Visual tip x                                  |
+| `hollow`        | `boolean`                            | `false`                           | Uses stroke for a hollow outline              |
+| `defaultLength` | `number`                             | `6`                               | Fallback arrow length                         |
+| `defaultWidth`  | `number`                             | `6`                               | Fallback arrow width                          |
+| `outerInset`    | `number`                             | Hollow `lineWidth / 2`, solid `0` | Outer-outline compensation at node boundaries |
+
+### Emit context
+
+| Field       | Type                 | Default | Description                                 |
+| ----------- | -------------------- | ------- | ------------------------------------------- |
+| `fill`      | `MarkerFill`         | —       | Solid-arrow fill; may be `contextStroke`    |
+| `stroke`    | `MarkerFill`         | —       | Hollow-arrow stroke; may be `contextStroke` |
+| `lineWidth` | `number`             | —       | Marker-local stroke width                   |
+| `round`     | `(number) => number` | —       | Compile/render precision rounding function  |
+
+## Related
+
+- [Arrow](/kernel/components/draw/arrow): direction, sizing, color, and per-end overrides
+- [Path](/kernel/components/draw/path): host for endpoint arrows and path marks
+- [Custom Paths](/kernel/components/draw/custom-path): owns whole-Path output
+- [Runtime extensions](/kernel/reference/runtime/extensions): cross-capability definition and registry overview

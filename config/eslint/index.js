@@ -24,6 +24,8 @@ const eslintConfig = [
       '**/node_modules/**',
       '**/build/**',
       '**/dist/**',
+      // Vite llms 插件输出的可再生静态文档，不属于 tsconfig 项目
+      'apps/docs/public/llms/**',
       '**/postcss.config.js',
       '**/vite.config.ts',
       // shadcn/ui 的 components/ui/* 与 hooks/use-mobile.ts 是 vendored 代码，

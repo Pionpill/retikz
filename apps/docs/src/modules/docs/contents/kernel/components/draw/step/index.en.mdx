@@ -1,6 +1,6 @@
 ---
 title: Step
-description: Step is one Kernel action inside a Path, covering lines, folds, curves, arcs, closing, rectangles, and edge labels.
+description: Break a Path into ordered Step actions for moves, lines, folds, curves, closing, geometric outlines, and registered generators.
 ---
 
 ## Usage
@@ -20,97 +20,34 @@ Use `<Step>` when you need exact control over Kernel path actions: multiple `mov
 
 ## Examples
 
-### Basic
+### Basic actions
 
-The path below draws A→B with one `move` + `line`, then lifts the pen with another `move` to draw an independent line:
+Switch between `line`, repeated `move`s, `fold`, `cycle`, and `rectangle` in one panel. Repeated `move`s begin independent subpaths inside one `<Path>`; `fold` exposes its corner direction, `rectangle` exposes its corner radius, and `cycle` closes back to the most recent `move` target.
 
-<ComponentPreview files="step-basic" size="xs" />
+<ComponentPreview files="step-actions" size="sm" />
 
-### Fold
+### Target positioning
 
-`kind="fold"` inserts a single right-angle corner between cursor and target. A flow-chart staple:
+Besides absolute coordinates, `to` accepts `{ of, offset }`, `{ relative }`, and `{ relativeAccumulate }`. Switch modes and adjust x / y in the panel to see how their anchors differ:
 
-<ComponentPreview files="step-fold" size="sm" />
+- `offset`: offset from a node, coordinate, or PolarPosition base
+- `relative`: resolve from the previous endpoint without advancing `prevEnd`
+- `relativeAccumulate`: resolve from the previous endpoint and advance `prevEnd`
 
-### Closing (cycle)
+Relative targets also have the sugar strings `'+dx,dy'` / `'++dx,dy'`.
 
-`kind="cycle"` closes the current sub-path back to the most recent `move` target, matching SVG path `Z`. `cycle` carries **no** `to` field (the destination is implicit). Saves writing one explicit endpoint vs. drawing a `line` back to the start:
+<ComponentPreview files="step-targeting" size="sm" />
 
-<ComponentPreview files="step-cycle" size="sm" />
+### Geometry and curves
 
-### Offset positioning
+Switch among `curve`, `cubic`, `bend`, `smooth`, `arc`, `circlePath`, and `ellipsePath` in the panel below. Bezier control points are edited as `[x, y]` pairs and appear as dashed handles on the canvas; other kinds reveal only their bend angle, tension, angles, or radii so you can compare how they advance the cursor and produce geometry.
 
-`to` also accepts the **`{ of, offset }`** form — a base point plus an arbitrary `(dx, dy)`. `of` has three shapes — node id, Cartesian literal, or PolarPosition (recursive polar) — symmetric with `<Node position>`'s offset form:
-
-<ComponentPreview files="step-offset-target" size="sm" />
-
-### Relative coordinates (relative / relativeAccumulate)
-
-`to` also accepts relative-offset objects: `{ relative: [dx, dy] }` and `{ relativeAccumulate: [dx, dy] }` both resolve against the **previous step's endpoint** (`prevEnd`, falling back to `[0, 0]` when there is none). The only difference is **whether prevEnd advances**:
-
-- `{ relative }` — chained offsets all anchor on the **same** point; prevEnd does **not** update
-- `{ relativeAccumulate }` — each segment accumulates and prevEnd moves with it
-
-You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+1,0" />`); the React adapter rewrites them in place to the matching IR objects. In the demo below, the two paths have identical step sequences and only the target form differs — the solid line (relative) traces an L, while the dashed line (relativeAccumulate) climbs a staircase:
-
-<ComponentPreview files="step-relative" size="sm" />
-
-### Rectangle
-
-`kind="rectangle"` uses `from` and `to` as opposite corners of an axis-aligned rectangle; optional `cornerRadius` rounds the corners. Unlike `line`, it does not depend on the current cursor. For everyday rectangles prefer the `<Rectangle>` sugar in [Rectangle](/kernel/components/shapes/rectangle); use this low-level kind when authoring IR-like step sequences or mixing it with other step kinds.
-
-<ComponentPreview files="step-rectangle" size="sm" />
-
-### Quadratic curve
-
-`kind="curve"` draws a quadratic Bezier with one control point, matching SVG path `Q`. A Bezier curve does not have to pass through the control point; the control point acts more like a handle that pulls the segment from start to end. The farther it is from the straight line, the stronger the bend. Control points currently use Cartesian `[x, y]`:
-
-<ComponentPreview files="step-curve" size="xs" />
-
-### Cubic curve
-
-`kind="cubic"` draws a cubic Bezier with two control points, matching SVG path `C`. `control1` shapes the direction as the curve leaves the start; `control2` shapes the direction as it approaches the end. Because both ends can be controlled separately, this is useful for S-shaped curves and complex connectors:
-
-<ComponentPreview files="step-cubic" size="xs" />
-
-### Bend (arc shorthand)
-
-`kind="bend"` is shorthand for an arced connection: say whether the segment bends left or right while looking from start to end, plus an angle. The compiler computes control points and lowers it to a cubic Bezier. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
-
-<ComponentPreview files="step-bend" size="md" />
-
-### Smooth curve through points (smooth)
-
-`kind="smooth"` draws a smooth curve **through a list of points** — no need to hand-compute Bézier control points for each segment when drawing a data polyline, a streamline, or a free curve. It takes no `to`; instead it takes `points`: the current **cursor is the implicit first knot**, the curve starts at the cursor and passes through each point in `points` in order, and the cursor ends at the last point (so a preceding `move` or other step must set the cursor, otherwise the path is skipped with a `PATH_TOO_SHORT` warning, same as `line` / `curve` as the first step). It is compiled to a chain of cubic Béziers via centripetal Catmull-Rom. Below, the same set of points drawn as `smooth` (steelblue) versus a point-to-point `line` polyline (gray):
-
-<ComponentPreview files="step-smooth" size="sm" />
-
-`tension` tunes the curve's slackness: the default 1 is the standard centripetal Catmull-Rom, `<1` pulls the curve tauter (closer to a polyline), and `>1` makes it loopier. Whatever the value, the curve always passes through every point — only the per-segment tangent length changes:
-
-<ComponentPreview files="step-smooth-tension" size="sm" />
+<ComponentPreview files="step-curves" size="sm" />
 
 <ComponentAlert
   title="Vanilla form"
   description="Vanilla has no smooth token in the way grammar yet; in vanilla, author smooth as an IR object inside path children: { type: 'step', kind: 'smooth', points: [...], tension }. The Vanilla tab of the code view below shows this form."
 />
-
-### Arc
-
-`kind="arc"` draws an arc by start / end angle and radius — centered on the **cursor** by default, or on an explicit `center` (anchored independently of the cursor). Radius is one of two forms: `radius` for a circular arc, `radius={{ x, y }}` for an elliptical arc. It describes "sweep from this angle to that angle", needs no `to`, and is useful for angle marks, circle fragments, or geometric guides. Angles follow the retikz polar convention: 0° points to +x, 90° is visually downward. The pen ends at the arc's endpoint:
-
-<ComponentPreview files="step-arc" size="sm" />
-
-### Circle
-
-`kind="circlePath"` uses the **cursor as center** and draws a circle by `radius`. Without angles it draws a fully closed circle — the pen returns to the center after closing, useful for endpoint dots, circular node borders, etc. With `startAngle` + `endAngle` it draws a **partial circle** (half circle / segment), closed per `closed`: `'chord'` (default) / `'sector'` (connect to the center into a wedge) / `'open'` (pure unclosed arc):
-
-<ComponentPreview files="step-circle" size="xs" />
-
-### Ellipse
-
-`kind="ellipsePath"` uses the **cursor as center** and draws an ellipse by `radius={{ x, y }}`. Without angles it draws a fully closed ellipse — the pen returns to the center, and when `radius.x === radius.y` it degenerates into a circle. As with circlePath, `startAngle` + `endAngle` draw a **partial ellipse**, closed per `closed` (`'chord'` default / `'sector'` / `'open'`):
-
-<ComponentPreview files="step-ellipse" size="sm" />
 
 <Comparison target="tikz" title="Step Curve Syntax">
 
@@ -128,48 +65,15 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 
 ### Edge label
 
-Attach a `label` to a `<Step>` to drop a single line of text near the segment's start / middle / end. `label` is an object:
+Attach `label` to a `<Step>` to place text at any normalized position along that segment. The prop form `<Step label={{...}} />` and sugar form `<Step><EdgeLabel>...</EdgeLabel></Step>` provide equivalent basic placement fields; the prop wins when both are present.
 
-- `text`: required, single-line label content
-- `position`: one of seven keywords `'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`, or a numeric t in `[0, 1]` for any fine position; default `'midway'` (t=0.5)
-- `side`: `'top'` / `'bottom'` / `'left'` / `'right'`, default `'top'`. Compass aliases `north` / `south` / `east` / `west` are accepted. `sloped: true` rotates the label along the tangent
-- `textColor`: label text color; falls back to scope `labelDefault` → the owning path's master `color` → currentColor (follows the master color, not stroke)
-- `opacity`: label-only opacity 0..1; multiplied with the owning path opacity (element-internal axis; does not compound across scopes)
-- `font`: label font overrides (family / size / weight / style); per-field fallback to `labelDefault` → renderer default
+<ComponentPreview files="step-label" size="md" />
 
-Two equivalent forms — the prop form `<Step label={{...}} />`, or the sugar form `<Step><EdgeLabel>...</EdgeLabel></Step>` (needs `import { EdgeLabel } from '@retikz/react'`); **the prop wins when both are set**. `'move'` / `'cycle'` / `'rectangle'` cannot carry a label — move doesn't draw, cycle is a close marker, and rectangle has no label field, so any label on them is silently dropped:
-
-<ComponentPreview files="step-label" />
-
-#### Label color and font
-
-An edge label's color follows the owning path's **master `color`** — with `<Path color>` the label is auto-colored to match; setting only `stroke` (no `color`) does not, so the label keeps its default color. Use `textColor` to override explicitly, and `font` / `opacity` for smaller / faded secondary labels:
-
-<ComponentPreview files="step-label-color" size="sm" />
-
-A scope `labelDefault` gives a whole group of labels a shared default (see [Scope styles](/kernel/components/layout/scope)); inheritance order: label explicit > `labelDefault` > host path master color > currentColor.
-
-#### label.position: 7 keywords + arbitrary numeric t
-
-`position` accepts 7 keywords or a numeric t in `[0, 1]`. Keywords are sugar for the corresponding fraction:
-
-| Keyword             | t       | Meaning             |
-| ------------------- | ------- | ------------------- |
-| `'at-start'`        | `0`     | Segment start       |
-| `'very-near-start'` | `0.125` | Very near start     |
-| `'near-start'`      | `0.25`  | Near start (1/4 in) |
-| `'midway'`          | `0.5`   | Midpoint (default)  |
-| `'near-end'`        | `0.75`  | Near end (3/4 in)   |
-| `'very-near-end'`   | `0.875` | Very near end       |
-| `'at-end'`          | `1`     | Segment end         |
-
-A numeric form like `position={0.3}` precisely places the label along the segment. **Values outside `[0, 1]` are rejected at schema validation, not clamped at compile time** (`position={-0.1}` / `position={1.2}` fail IR validation).
+The panel adjusts `position`, `side`, `sloped`, and text color together. `position` accepts seven keywords or a numeric t in `[0, 1]`; the keyword mapping and complete fields live in the [edge-label API table](#edge-labels) below instead of being repeated in the examples.
 
 ### Styling
 
-`<Step>` itself has no stroke-related visual props — styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `dashPattern` / `dashOffset`:
-
-<ComponentPreview files="step-styling" size="sm" />
+`<Step>` itself has no stroke-related visual props. Stroke, dashes, rounded geometry, fill, and stacking all belong to the parent `<Path>`; adjust them in the [Path style controls](/kernel/components/draw/path#styling) instead of repeating the same static path here.
 
 <Comparison target="tikz" title="Basic Step Path Syntax">
 
@@ -240,8 +144,8 @@ This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry co
     {
       label: 'Relative-target normalization',
       path: 'packages/kernel/core/src/compile/path/host/relative.ts',
-      startLine: 11,
-      endLine: 108,
+      startLine: 10,
+      endLine: 95,
     },
     {
       label: 'Target normalization and the per-Step compile loop',
@@ -352,17 +256,17 @@ Only meaningful when `kind="fold"`. Given cursor `(px, py)` and target `(tx, ty)
 
 ### Forms of `to`
 
-| Form                                     | Example                                                                                   | Behavior                                                                                                                                                                 |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Node id                                  | `'a'`                                                                                     | Auto-attaches to Node border (see [Primitive Relations](/kernel/concepts/core/primitive-relations))                                                                      |
-| Node + connection surface                | `{ id: 'a', boundary: 'circle' }`                                                         | Per-edge override of the target node's [connection surface](/kernel/components/node/overview#connection-surface-boundary) (clip shape); never changes the node footprint |
-| Cartesian                                | `[60, 0]`                                                                                 | Literal `[x, y]`                                                                                                                                                         |
-| Polar                                    | `{ origin: 'a', angle: 30, radius: 50 }`                                                  | Polar (see [Positioning](/kernel/concepts/basic/position))                                                                                                               |
-| Offset                                   | `{ of: 'a', offset: [10, 5] }`                                                            | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition                                                                                             |
-| Proportional placement                   | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                  | Proportional point along A → B; endpoints must be independently resolvable absolute targets (`{ id, anchor? }` form, or Cartesian / polar)                               |
-| Proportional placement (explicit anchor) | `{ between: [{ id: 'a', anchor: 'right' }, { id: 'b', anchor: 'left' }], fraction: 0.5 }` | Endpoints may carry an explicit `anchor`, resolved from that anchor instead of auto-attaching to the border                                                              |
-| Relative (relative)                      | `{ relative: [10, 0] }` or `'+10,0'`                                                      | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd                                                                                                       |
-| Relative (relativeAccumulate)            | `{ relativeAccumulate: [10, 0] }` or `'++10,0'`                                           | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd                                                                                                               |
+| Form                                     | Example                                                                                   | Behavior                                                                                                                                                                         |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node id                                  | `'a'`                                                                                     | Auto-attaches to Node border (see [Primitive Relations](/kernel/concepts/core/primitive-relations))                                                                              |
+| Node + connection surface                | `{ id: 'a', boundary: 'circle' }`                                                         | Per-edge override of the target node's [connection surface](/kernel/components/node/overview#visual-shape-vs-connection-geometry) (clip shape); never changes the node footprint |
+| Cartesian                                | `[60, 0]`                                                                                 | Literal `[x, y]`                                                                                                                                                                 |
+| Polar                                    | `{ origin: 'a', angle: 30, radius: 50 }`                                                  | Polar (see [Positioning](/kernel/concepts/basic/position))                                                                                                                       |
+| Offset                                   | `{ of: 'a', offset: [10, 5] }`                                                            | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition                                                                                                     |
+| Proportional placement                   | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                  | Proportional point along A → B; endpoints must be independently resolvable absolute targets (`{ id, anchor? }` form, or Cartesian / polar)                                       |
+| Proportional placement (explicit anchor) | `{ between: [{ id: 'a', anchor: 'right' }, { id: 'b', anchor: 'left' }], fraction: 0.5 }` | Endpoints may carry an explicit `anchor`, resolved from that anchor instead of auto-attaching to the border                                                                      |
+| Relative (relative)                      | `{ relative: [10, 0] }` or `'+10,0'`                                                      | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd                                                                                                               |
+| Relative (relativeAccumulate)            | `{ relativeAccumulate: [10, 0] }` or `'++10,0'`                                           | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd                                                                                                                       |
 
 ### Curves and arcs
 
@@ -387,9 +291,9 @@ Only meaningful when `kind="fold"`. Given cursor `(px, py)` and target `(tx, ty)
 
 ### Edge labels
 
-| Prop    | Type          | Default | Description                                                                                                                                                                                                                   |
-| ------- | ------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label` | `IRStepLabel` | —       | Edge label (works on every kind except `'move'` / `'cycle'` / `'rectangle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; equivalent sugar form `<Step><EdgeLabel>…</EdgeLabel></Step>`, prop wins on conflict |
+| Prop    | Type          | Default | Description                                                                                                                                                                                                                        |
+| ------- | ------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label` | `IRStepLabel` | —       | Edge label (works on every kind except `'move'` / `'cycle'` / `'rectangle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; `<EdgeLabel>` sugar covers text / position / side / sloped, and the prop wins on conflict |
 
 ### Fields of `label`
 

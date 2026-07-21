@@ -1,9 +1,9 @@
 ---
 title: Text
-description: Per-line marker component inside <Node> — overrides fill / opacity / font for a single line; participates equally with string children in Node's multi-line layout.
+description: Text declares one whole line inside Node and overrides that line's color, opacity, and font.
 ---
 
-`<Text>` overrides text styling for one whole line inside `<Node>` and mixes with plain string children in JSX order. It is Sugar: the syntax stays in the React layer and is normalized into one LineSpec inside `Node.text` before core receives it.
+`<Text>` overrides text styling for one whole line inside `<Node>` and mixes with plain string children in JSX order. It is Sugar: the syntax exists only in the React DSL and then normalizes into one `LineSpec` entry in `Node.text`.
 
 It's an **equivalent** alternative to writing LineSpec objects directly into the `text` prop:
 
@@ -45,9 +45,9 @@ import { Node, Text } from '@retikz/react';
 
 ### Per-line override fields
 
-Three fields: `fill` / `opacity` / `font` — `font` is a nested object so you can override just one sub-field (family / size / weight / style):
+Three fields: `fill` / `opacity` / `font` — `font` is a nested object so you can override just one sub-field (family / size / weight / style). The first line inherits from Node; the panel controls the second, while unset fields keep inheriting:
 
-<ComponentPreview files="text-attrs" size="xs" />
+<ComponentPreview files="text-attrs" size="sm" />
 
 ### Mixing with string children
 
@@ -136,5 +136,4 @@ That is why `<Text>` exposes only per-line visual fields. A per-line font partic
 
 ## Related
 
-- [Node multi-line text](/kernel/components/node/overview#multi-line-text): block-level `text` / `align` / `lineHeight`
-- [Node per-line styling](/kernel/components/node/overview#per-line-styling): equivalent in-array `LineSpec` form
+- [Node text](/kernel/components/node/overview#text): block-level `text` / `align` / `lineHeight`, plus the in-array `LineSpec` form

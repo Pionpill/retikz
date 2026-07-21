@@ -1,9 +1,9 @@
 ---
-title: Draw Way
-description: The way array item forms, DrawWay constants, folds, cycle, and relative-coordinate forms.
+title: Way
+description: Look up how a Draw way array expresses targets, folds, closure, and relative coordinates, and how they expand into ordered Steps.
 ---
 
-`way` is the core of `<Draw>`. The first item forms are targets; later forms are operators that modify the next segment or the previous point.
+`way` is the core of `<Draw>`: targets decide where the path goes, fold and curve operators decide how neighboring targets connect, `DrawWay.Cycle` closes the path, and relative coordinates change the target's evaluation base.
 
 Think of `way` as a tiny path language: targets produce points, `'-|'` / `'|-'` rewrite the segment between neighboring points, `{ label }` decorates the next segment, `{ curve }` / `{ cubic }` / `{ bend }` consume the next item to make a curve, and `{ arc }` / `{ circle }` / `{ ellipse }` draw around the previous point without consuming the next item.
 
@@ -26,9 +26,9 @@ One `way` can mix node ids, Cartesian coordinates, polar coordinates, and object
 
 <ComponentPreview files="draw-way-types" size="sm" />
 
-### Fold
+### Folds
 
-`'-|'` / `'|-'` turns the previous-to-next segment into a fold.
+Switch the fold direction and watch which orthogonal projection becomes the corner. The gray dotted line only marks the direct connection between the endpoints.
 
 <Comparison target="tikz" title="Fold Syntax">
 
@@ -36,19 +36,19 @@ These raw literals follow TikZ path syntax: `(A) -| (B)` / `(A) |- (B)`. `'-|'` 
 
 </Comparison>
 
-<ComponentPreview files="draw-fold" size="sm" />
+<ComponentPreview files="way-fold" size="sm" />
 
-### Cycle
+### Closure
 
-`DrawWay.Cycle` closes the last segment back to the first item.
+Switch the path state to see “Closed path” replace the dotted gap with the solid return edge from `DrawWay.Cycle` and create a fillable region.
 
-<ComponentPreview files="draw-cycle" size="sm" />
+<ComponentPreview files={['way-cycle', 'way-cycle.data.ts']} size="sm" />
 
-### Relative Coordinates
+### Relative coordinates
 
-`DrawWay.Relative` leaves prevEnd unchanged; `DrawWay.Accumulate` advances prevEnd. The two Draws bottom differ only by `type`.
+The second `+` offset still uses the start as its base, while `++` continues from the endpoint of the first offset. Adjust the 2D offset; the dotted right-angle guides show the base used by the second segment.
 
-<ComponentPreview files="draw-rel" size="sm" />
+<ComponentPreview files={['way-relative', 'way-relative.data.ts']} size="sm" />
 
 ## How it works
 
@@ -119,13 +119,13 @@ Finally, `<Draw>` expands the Step sequence into `<Step>` children of `<Path>` a
       label: 'String-form relative-coordinate normalization',
       path: 'packages/kernel/core/src/parsers/target-sugar.ts',
       startLine: 10,
-      endLine: 31,
+      endLine: 29,
     },
     {
       label: 'Relative-coordinate resolution and prevEnd updates',
       path: 'packages/kernel/core/src/compile/path/host/relative.ts',
-      startLine: 80,
-      endLine: 107,
+      startLine: 77,
+      endLine: 95,
     },
   ]}
 />

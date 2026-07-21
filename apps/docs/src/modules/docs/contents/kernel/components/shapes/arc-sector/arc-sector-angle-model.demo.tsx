@@ -53,7 +53,7 @@ const Demo: FC = () => (
     <Node position={[-70, 88]} stroke="none" font={{ size: 13 }}>
       endAngle
     </Node>
-    <Node position={[86, 47]} stroke="none" textColor="darkorange" font={{ size: 13, weight: 'bold' }}>
+    <Node position={[125, 58]} stroke="none" textColor="darkorange" font={{ size: 13, weight: 'bold' }}>
       sweepAngle
     </Node>
     <Node position={[-28, -16]} stroke="none" textColor="gray" font={{ size: 12 }}>

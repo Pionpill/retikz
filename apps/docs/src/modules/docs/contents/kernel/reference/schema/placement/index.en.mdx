@@ -57,6 +57,14 @@ A `position` field can be filled with any of five forms. Non-Cartesian forms res
 
 <ZodSchema name="AbsoluteTargetSchema" />
 
+<span id="nodetarget"></span>
+
+## NodeTarget
+
+`NodeTargetSchema` is the object form for a path endpoint referencing a Node / Coordinate. Omitting `anchor` enables automatic boundary clipping; explicit anchor, offset, and per-endpoint boundary overrides affect this endpoint only.
+
+<ZodSchema name="NodeTargetSchema" />
+
 <Comparison target="tikz" title="Proportional partway">
 
 `BetweenPositionSchema` maps to TikZ `calc` library syntax `($(A)!t!(B)$)`. The same form works in `Node.position` / `Coordinate.position` / path `Step.to`.

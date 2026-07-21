@@ -1,9 +1,9 @@
 ---
 title: Coordinate
-description: Placeholder node — names a point without drawing anything, so paths and relative positioning (`{ of }`) can reference it by id.
+description: Coordinate names a non-rendering geometric point that paths and other nodes can position against by id.
 ---
 
-`<Coordinate>` registers a named reference point in IR. Like `<Node>`, it can be targeted by paths and relative positioning, but it renders no visible shape or text; compilation resolves its position and registers the `id` for `<Path>` endpoints and `<Node position>` relative / offset references (`{ of }`).
+`<Coordinate>` gives a position a stable `id` without drawing shape or text. Paths can target it, and other nodes can reference it through relative, offset, or proportional positioning.
 
 ## Usage
 
@@ -17,11 +17,18 @@ import { Coordinate } from '@retikz/react';
 
 `position` accepts the same five forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }` / proportional `{ between, fraction }`.
 
-### Why it exists
+### When to use
 
-The plainest way to anchor "a named point" is to fake an empty `<Node>` with `stroke="transparent" fill="transparent"` — but an empty Node still takes up an invisible box sized by padding, enlarges the outer frame, and confuses AI / serialization round-trips ("real node or placeholder?").
+Use Coordinate for junctions, helper positions, and invisible anchors; use Node when you need a shape, text, or directional boundary. Do not imitate a coordinate with a transparent Node: it still has size and padding and expands layout bounds.
 
-`<Coordinate>` makes "named point" a first-class concept: the smallest possible shape (just `id` + `position`), draws nothing, and never enlarges the canvas. See [How it works](#how-it-works) for the placeholder semantics.
+| Goal                             | Choose         |
+| -------------------------------- | -------------- |
+| Name only a position             | `<Coordinate>` |
+| Show a dot or another marker     | `<Node>`       |
+| Show text or a label             | `<Node>`       |
+| Use distinct directional anchors | `<Node>`       |
+
+A Coordinate's directional and angular anchors all collapse to its center, and it has no text fields. See [How it works](#how-it-works) for its zero-size semantics.
 
 <Comparison target="tikz" title="Coordinate Mapping">
 
@@ -35,29 +42,29 @@ The plainest way to anchor "a named point" is to fake an empty `<Node>` with `st
 
 ### Named virtual anchor
 
-The most common pattern: name a virtual center, then have multiple nodes position around it and multiple paths terminate at it.
+Name a virtual center, then position multiple nodes around it and terminate multiple paths at it. The light axes stay fixed at the world origin; adjust the hub `position` and node `distance` to move hub against that reference and update every dependent object together.
 
 <ComponentPreview files="coordinate-as-anchor" size="md" />
 
-The four nodes above all use `position={{ of: 'hub', ... }}` to reference the same hub; moving hub moves the whole arrangement. Without a coordinate, each `of` would have to be replaced with absolute coordinates and each path would need `[0, 0]` literals — repetitive and unrenameable.
+The four nodes above all use `position={{ of: 'hub', ... }}` to reference the same hub; moving hub moves the whole arrangement.
 
 ### Named junction for path convergence
 
-In flow charts, multiple paths often converge at a virtual point — that point isn't a real node (no rectangle / no text), but it needs an id so several `way`s can route through it.
+In flow charts, multiple paths can converge at a virtual point. Adjust the junction `position` and observe how all three paths keep passing through this Coordinate with no shape or text.
 
-<ComponentPreview files="coordinate-fold-junction" size="sm" />
+<ComponentPreview files="coordinate-fold-junction" size="md" />
 
 ### Offset positioning chain
 
-Use `{ of, offset }` to derive one coordinate from another — drive the whole group from a single root, and moving the root drags everything along. Lower coupling than hand-writing each absolute coordinate:
+Use `{ of, offset }` to derive one coordinate from another — drive the whole group from a single root, and moving the root drags everything along. The light axes stay fixed at the world origin; move the root or adjust the horizontal step to compare the group against that reference and watch the offset propagate through the chain:
 
-<ComponentPreview files="coordinate-offset-chain" size="sm" />
+<ComponentPreview files="coordinate-offset-chain" size="md" />
 
-### Proportional partway positioning
+### Proportional positioning
 
-`{ between: [A, B], fraction }` takes a point along the A→B segment at proportion `fraction` (0..1) — `lerp(A, B, fraction)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
+`{ between: [A, B], fraction }` takes a point between A and B on the x axis at proportion `fraction` (0..1) — `lerp(A, B, fraction)`. The panel moves the invisible Coordinate Q; the orange q is only a visible marker that references Q. Q keeps the proportion when the endpoints move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
 
-<ComponentPreview files="coordinate-between" size="xs" />
+<ComponentPreview files="coordinate-between" size="sm" />
 
 > `fraction` is strict [0,1] (extrapolation not yet supported); when an endpoint references an undefined node, Coordinate / Node position resolution throws while a path `Step.to` warns and skips — the same as other positioning forms.
 
@@ -79,7 +86,7 @@ The main chain shows what happens when the compiler reaches a Coordinate. The tw
 
 A Coordinate's `position` resolves immediately. If it depends on another id, that id must already be registered in the currently visible namespace; referencing a Node / Coordinate declared later at the same level throws. Once resolved, the compiler projects the result into global coordinates, stores it as a zero-size geometry record containing only the center coordinate, and registers it by `id`.
 
-Node / Coordinate position references also resolve during traversal, so they see only ids registered so far. Paths are queued and resolve their endpoints after the current Scope's children have registered, so a path can target a Coordinate declared later in the same scope. Visibility introduced by `localNamespace` still follows [Scope namespace rules](/kernel/components/layout/scope#how-namespaces-and-id-conflicts-are-handled).
+Node / Coordinate position references also resolve during traversal, so they see only ids registered so far. Paths are queued and resolve their endpoints after the current Scope's children have registered, so a path can target a Coordinate declared later in the same scope. Visibility introduced by `localNamespace` still follows [Scope namespace rules](/kernel/components/layout/scope#namespaces-and-id-conflicts).
 
 <SourceLinks
   sources={[
@@ -130,8 +137,8 @@ Node / Coordinate position references also resolve during traversal, so they see
     {
       label: 'zero-size side-fraction rejection',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 58,
-      endLine: 77,
+      startLine: 52,
+      endLine: 72,
     },
   ]}
 />
@@ -145,24 +152,6 @@ Node / Coordinate position references also resolve during traversal, so they see
 
 ## Related
 
-### Relationship with `<Node>` / `<Path>`
-
-|                                             | `<Coordinate>` | `<Node>`        |
-| ------------------------------------------- | -------------- | --------------- |
-| Renders shape                               | ❌             | ✅ (by `shape`) |
-| Participates in layout bounds               | ❌             | ✅              |
-| Registered in nodeIndex                     | ✅             | ✅              |
-| Referenced as path target                   | ✅             | ✅              |
-| Referenced via relative / offset (`{ of }`) | ✅             | ✅              |
-| Required `id`                               | ✅             | optional        |
-
-Rule of thumb: need a shape + text → `<Node>`; need only a reference point → `<Coordinate>`.
-
-### When not to use
-
-- **Need a labelled point** → use `<Node>` with `label?`; coordinate has no text field
-- **Need a small visible dot** → use `<Node shape="circle">` with a small size; coordinate never draws
-- **Direction anchors** (`hub.top`) → a coordinate's named / angular anchors collapse to the center; use `<Node>` for directional anchors
-
 - [Node](/kernel/components/node/overview): Nodes with shape and text
+- [Path](/kernel/components/draw/path): Use a Coordinate as a path endpoint
 - [Draw](/kernel/components/draw/overview): Everyday connections that can target coordinate ids

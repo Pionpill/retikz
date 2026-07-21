@@ -1,0 +1,79 @@
+---
+title: 可视化-绘图
+description: '@retikz/plot 是 Viz 分组的 Tier 2 可视化语法包，负责把外部数据与可序列化 Plot IR 确定性地下沉为 Core IR，再由 React 或 Vanilla adapter 接入运行时。'
+---
+
+`@retikz/plot` 不属于 Kernel 组件，而是 **Viz 分组**的数据可视化核心。Kernel 提供通用图元、Scene、composite 与 renderer 接口；Plot 在其上增加从数据语义到图形语义的映射能力。
+
+<ComponentPreview files={['cartesian-bar-line', 'cartesian-bar-line.data.ts']} />
+
+## Viz 分组中的职责
+
+Viz 按“数据能力 → 可视化语法 → 宿主接入”分层，Plot 只拥有中间的可视化映射与 lowering：
+
+| 包                     | 职责                                                                      |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `@retikz/data`         | 数据模型、字段解析、通用 transform / statistics 与 lineage                |
+| `@retikz/plot`         | Plot IR，以及 channel、scale、coordinate、mark、guide、layout 与 lowering |
+| `@retikz/plot-react`   | React JSX authoring、数据注入与 React runtime 接线                        |
+| `@retikz/plot-vanilla` | 无框架 `plotBuilder`、数据注入与 Vanilla / SSR 编排                       |
+
+Plot 不直接拥有 SVG / Canvas renderer，也不保存 React 组件或运行时函数。它接收 JSON 可序列化的 Plot IR 与外部数据，输出供 Core 编译的图元贡献，并在运行时按需提供 lineage 和 diagnostics。
+
+## 解决什么问题
+
+原始数据不能直接成为图形：字段需要映射到位置、颜色等 channel，数值需要经过 transform 和 scale，结果还要进入 coordinate，再由 mark 与 guide 形成可渲染结构。
+
+`@retikz/plot` 用 grammar-of-graphics 描述这条映射，而不是为柱状图、折线图等 chart type 分别维护一套封闭实现。Plot IR 只记录数据引用和可视化语义；数据留在运行时，因此同一份 IR 可以被校验、序列化、生成，并通过不同 adapter 和 renderer 使用。
+
+## 依赖关系
+
+| 依赖           | Plot 复用的能力                                                |
+| -------------- | -------------------------------------------------------------- |
+| `@retikz/data` | 数据模型、字段和值语义、通用 transform / statistics 与 lineage |
+| `@retikz/math` | `Position` 等坐标和数学基础                                    |
+| `@retikz/core` | CompositeDefinition、Core IR、Scene 编译契约与通用图形语义     |
+
+下图只保留主处理链，箭头表示数据与语义的处理顺序。API Layer 先把数据交给 Data 处理，再由 Plot 解析可视化语义；Pipeline 最后将 Plot IR 下沉为 Core IR。
+
+<ComponentPreview files="plot-dependencies" size="xs" hideCode />
+
+`@retikz/plot-react` 与 `@retikz/plot-vanilla` 位于 API Layer，分别接收 React 和 Vanilla 宿主提供的 spec 与 datasets。Data 负责数据模型和 transform；`@retikz/plot` 分组内，Plot 负责视觉语法，Pipeline 负责 lowering，最终产出 Core IR。
+
+## 核心逻辑
+
+主链从宿主构造规格开始，在 Plot 边界内完成数据准备、视觉语法解析与 lowering，再把 Core IR 交给 Kernel 编译和 renderer。内置与自定义 definitions 只辅助解析，不进入主数据流。
+
+<ComponentPreview files="plot-pipeline" size="sm" hideCode />
+
+1. **构造规格**：React 组合 DSL、Vanilla builder 或直接写入的 spec 生成 `IRPlotSpec`；datasets 由宿主单独保存，不进入 IR。
+2. **准备数据**：schema 校验 Plot IR，数据模型解析字段，通用和 Plot 专属 transform 生成各层需要的 row view。
+3. **解析视觉语法**：registry 解析 channel、scale、coordinate、mark 与 guide definition；内置和自定义能力走同一套解析与消费路径。
+4. **下沉为 Core IR**：`lowerPlots(datasets, options)` 创建 Plot composite definition；它调用 Plot lowering，把网格、marks、坐标轴、标签和图例展开为 Core `Scope`、`Node` 与 `Path`。
+5. **编译和渲染**：React / Vanilla adapter 把 Plot IR 与 composite definitions 交给 Core，Core 编译成 Scene，再由 SVG 或 Canvas renderer 执行。
+
+可选的 lineage 保留在运行时，不写回 Plot IR 或 Scene；schema 和 lowering 无法满足契约时会在渲染前失败并给出错误。
+
+<SourceLinks
+  sources={[
+    {
+      label: '创建 Plot composite definition 并注入外部数据',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 724,
+      endLine: 735,
+    },
+    {
+      label: 'React adapter 把 Plot IR 与 lowerPlots 接入 Layout',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 140,
+      endLine: 170,
+    },
+  ]}
+/>
+
+## 继续阅读
+
+- [绘图模块简介](/viz/introduction)：了解 Viz 的整体定位和 Plot 能力地图
+- [快速开始](/viz/get-start)：从数据模型到第一张图的完整步骤
+- [Mark](/viz/grammar/mark)：查看数据如何转换为视觉标记
+- [笛卡尔坐标系](/viz/grammar/coordinate/2d)：了解 coordinate、scale 与 axis 的协作关系

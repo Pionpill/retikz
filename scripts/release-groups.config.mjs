@@ -14,4 +14,9 @@ export const releaseGroups = {
     kind: 'feature',
     packages: ['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla'],
   },
+  table: {
+    domain: 'viz',
+    kind: 'feature',
+    packages: ['@retikz/table', '@retikz/table-react', '@retikz/table-vanilla'],
+  },
 };

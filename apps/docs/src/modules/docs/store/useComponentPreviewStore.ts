@@ -16,6 +16,8 @@ export type ComponentPreviewState = {
   themeMode: PreviewThemeMode;
   /** 新预览实例是否默认打开属性面板 */
   controlPanelDefaultOpen: boolean;
+  /** 未单独配置时，range 从最小值播放到最大值的默认时长（毫秒） */
+  rangePlaybackDuration: number;
   setHideCode: (value: boolean) => void;
   setIsExpand: (value: boolean) => void;
   setDragEnabled: (value: boolean) => void;
@@ -25,6 +27,8 @@ export type ComponentPreviewState = {
   setThemeMode: (value: PreviewThemeMode) => void;
   /** 设置新预览实例的属性面板默认状态 */
   setControlPanelDefaultOpen: (value: boolean) => void;
+  /** 设置未单独配置时的 range 默认播放时长 */
+  setRangePlaybackDuration: (value: number) => void;
   toggleHideCode: () => void;
   toggleIsExpand: () => void;
   toggleDragEnabled: () => void;
@@ -43,6 +47,7 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       animationMode: 'system',
       themeMode: 'inherit',
       controlPanelDefaultOpen: true,
+      rangePlaybackDuration: 2000,
       setHideCode: value => set({ hideCode: value }),
       setIsExpand: value => set({ isExpand: value }),
       setDragEnabled: value => set({ dragEnabled: value }),
@@ -50,6 +55,7 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       setAnimationMode: value => set({ animationMode: value }),
       setThemeMode: value => set({ themeMode: value }),
       setControlPanelDefaultOpen: value => set({ controlPanelDefaultOpen: value }),
+      setRangePlaybackDuration: value => set({ rangePlaybackDuration: value }),
       toggleHideCode: () => set({ hideCode: !get().hideCode }),
       toggleIsExpand: () => set({ isExpand: !get().isExpand }),
       toggleDragEnabled: () => set({ dragEnabled: !get().dragEnabled }),

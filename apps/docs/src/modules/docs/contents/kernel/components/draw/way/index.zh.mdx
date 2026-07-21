@@ -1,9 +1,9 @@
 ---
-title: Draw Way
-description: way 数组的 item 形态、DrawWay 常量、折角、闭合与相对坐标写法。
+title: Way
+description: 查询 Draw 的 way 数组如何表达目标、折角、闭合与相对坐标，以及它们如何展开为有序 Step。
 ---
 
-`way` 是 `<Draw>` 的核心。前几种 item 是 target，后续形态是改变下一段或上一点的算子。
+`way` 是 `<Draw>` 的核心：target 决定路径经过哪里，折角与曲线算子决定相邻 target 如何连接，`DrawWay.Cycle` 闭合路径，相对坐标则改变 target 的求值基准。
 
 可以把 `way` 看成一个很小的 path 语言：target 产生点，`'-|'` / `'|-'` 改写前后两个点之间的段，`{ label }` 修饰下一段，`{ curve }` / `{ cubic }` / `{ bend }` 消耗下一项生成曲线，`{ arc }` / `{ circle }` / `{ ellipse }` 围绕上一点画形状而不消耗下一项。
 
@@ -28,7 +28,7 @@ import { Draw } from '@retikz/react';
 
 ### 折角
 
-`'-|'` / `'|-'` 把上一项到下一项那段改成折角。
+切换折角方向，观察蓝色路径在哪个正交投影点转弯。灰色 dotted 直线只标出两个端点的直接连接。
 
 <Comparison target="tikz" title="折角写法">
 
@@ -36,19 +36,19 @@ import { Draw } from '@retikz/react';
 
 </Comparison>
 
-<ComponentPreview files="draw-fold" size="sm" />
+<ComponentPreview files="way-fold" size="sm" />
 
 ### 闭合
 
-`DrawWay.Cycle` 把最后一段闭合回 way 第一项。
+切换路径状态，观察“闭合路径”如何用 `DrawWay.Cycle` 的实线回边取代 dotted 缺口，并形成可填充区域。
 
-<ComponentPreview files="draw-cycle" size="sm" />
+<ComponentPreview files={['way-cycle', 'way-cycle.data.ts']} size="sm" />
 
 ### 相对坐标
 
-`DrawWay.Relative` 不推进 prevEnd；`DrawWay.Accumulate` 推进 prevEnd。下例两条 Draw 只差 `type`。
+`+` 的第二段仍以起点为偏移基准，`++` 则从第一段终点继续偏移。调整二维偏移，dotted 直角辅助线会标出第二段实际使用的基准。
 
-<ComponentPreview files="draw-rel" size="sm" />
+<ComponentPreview files={['way-relative', 'way-relative.data.ts']} size="sm" />
 
 ## 技术原理
 
@@ -119,13 +119,13 @@ import { Draw } from '@retikz/react';
       label: '字符串相对坐标归一',
       path: 'packages/kernel/core/src/parsers/target-sugar.ts',
       startLine: 10,
-      endLine: 31,
+      endLine: 29,
     },
     {
       label: '相对坐标求值与 prevEnd 更新',
       path: 'packages/kernel/core/src/compile/path/host/relative.ts',
-      startLine: 80,
-      endLine: 107,
+      startLine: 77,
+      endLine: 95,
     },
   ]}
 />

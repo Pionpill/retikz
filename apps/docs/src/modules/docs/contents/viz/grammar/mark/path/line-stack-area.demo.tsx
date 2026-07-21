@@ -4,19 +4,13 @@ import type { FC } from 'react';
 import { Axis, Legend, PathMark, Plot } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { lineCurveControls, PATH_CURVE_CONTROL_ID } from './line-curve.controls';
+import { PATH_CURVE_CONTROL_ID, previewControlContract } from './line-curve.controls';
 import { stackArea } from './line-stack-area.data';
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-const Demo: FC = () => {
-  const curve: PathCurveValue = usePreviewControls(lineCurveControls)[PATH_CURVE_CONTROL_ID];
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  const curve: PathCurveValue = values[PATH_CURVE_CONTROL_ID];
   return (
     <Layout width={700} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
       <Plot data={stackArea} width={360} height={230} x={0} y={35} colors={['#2563eb', '#f97316']}>
@@ -62,6 +56,10 @@ const Demo: FC = () => {
       </Plot>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

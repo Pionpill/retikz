@@ -1,14 +1,15 @@
 ---
 name: docs-doc-example
-description: retikz 示例页规范：`apps/docs/src/contents/{module}/examples/**` 的 6 段结构、累加式 step demo、Prompt/能力/限制/扩展阅读写法、多文件 demo 与 diff 约定。通用文档规则见 docs-doc-principle。retikz 专用。
+description: Use when writing or editing step-by-step showcase pages under a module's apps/docs examples contents.
 ---
 
 # 示例类文档写法
 
 ## 何时用本 skill
 
-- 在 `apps/docs/src/contents/<module>/examples/**` 下加 / 改示例页
+- 在 `apps/docs/src/modules/docs/contents/<module>/examples/**` 下加 / 改示例页
 - 即将动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
+- 使用多文件、data、IR/Vanilla 覆盖时再读 [`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md)
 
 本 skill 只覆盖**示例页特有**的页面结构、step 写法、demo 命名、Prompt 节、限制 节。其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间等）以 principle 为准。
 
@@ -48,7 +49,7 @@ description: retikz 示例页规范：`apps/docs/src/contents/{module}/examples/
 每个 step 严格 4 行：
 
 1. **`### Step N：<主题>`** —— H3，**进右侧 TOC**，让读者能从目录跳到任意 step
-2. **2-3 句讲解** —— 解释本 step 引入了什么、为什么这么写。本 step 用到的**关键能力**主动用 markdown link 跳到 components/ 对应页（如 `[circlePath](/core/components/draw/step#circlepath)`），让用户能 deepdive
+2. **2-3 句讲解** —— 解释本 step 引入了什么、为什么这么写。本 step 用到的**关键能力**主动用 markdown link 跳到 components/ 对应页（如 `[circlePath](/kernel/components/draw/step#circlepath)`），让用户能 deepdive
 3. **`<ComponentPreview files="<id>-NN-<theme>" />`** —— 累加式
 4. **（可选）`<Comparison target="tikz">`** —— **仅**当 retikz 写法与 TikZ 差异极大、TikZ 老用户可能困惑时才用。默认不要
 
@@ -79,7 +80,7 @@ description: retikz 示例页规范：`apps/docs/src/contents/{module}/examples/
 
 - 子文件是**纯源码**（不渲染），用普通 `.tsx` / `.ts`，**不要带 `.demo.tsx`**——带了会被当成可渲染 demo（要求 default 导出 FC、并去算 IR）。
 - 步内子文件以**所属步的主 demo 名**为前缀，`<subName>` 在各步间保持稳定（如各步都叫 `.elements.tsx`），这是自动 diff 配对的钥匙。
-- **造的数据集**用专门的 `<主demo名>.data.ts` 子文件（多数据集 `<主demo名>.<dataset>.data.ts`），有专属 Database 图标——通用约定见 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)「demo 的数据文件」。
+- **造的数据集**用专门的 `<主demo名>.data.ts` 子文件（多数据集 `<主demo名>.<dataset>.data.ts`），有专属 Database 图标——通用约定见 [`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md)。
 
 ### 渐进式例子的子文件 = 自包含快照
 
@@ -146,7 +147,7 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 
 页面最后一节（原 Related，已更名）。**不只放链接**——可以基于本例写一些**扩展 / 优化 / 进阶**内容，给读者指出下一步往哪走：
 
-- **更多扩展点**：本例往往只演示了某一面（如自定义形状），可顺手指向其它扩展面——[自定义箭头](/core/reference/extending/custom-arrow) / [自定义图案](/core/reference/extending/custom-pattern) / [路径生成器](/core/reference/extending/path-generator) 等。
+- **更多扩展点**：本例往往只演示了某一面（如自定义形状），可顺手指向其它扩展面——[自定义箭头](/kernel/components/draw/custom-arrow) / [自定义图案](/kernel/components/effects/custom-pattern) / [路径生成器](/kernel/components/draw/path-generator) 等。
 - **进阶 / 优化**：基于本例的下一步深入方向，例如把反复出现的结构封装成专门的（更高 tier 的）组件，以减少重复代码、精简 IR 持久化体积。
 - **相关组件 / 概念 / sister example**：跳到本例用到的组件页、相关概念、或同系列的另一个示例。
 
@@ -174,10 +175,10 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 示例 demo 写 edge 默认用 `<Draw way={[...]}>`，不要嵌 `<Path><Step /></Path>`。速查：
 
 | 需求            | way 形态                                                                   |
-| --------------- | -------------------------------------------------------------------------- | ------------------- | -------- |
+| --------------- | -------------------------------------------------------------------------- |
 | 直线            | `['A', 'B']`                                                               |
-| 折角            | `['A', '                                                                   | -', 'B']`/`['A', '- | ', 'B']` |
-| 二次 / 三次曲线 | `['A', { curve: [cx, cy] }, 'B']` / `{ cubic: [[c1x,c1y],[c2x,c2y]] }`     |
+| 折角            | `['A', '\|-', 'B']` / `['A', '-\|', 'B']`                                  |
+| 二次 / 三次曲线 | `['A', { curve: [cx, cy] }, 'B']` / `{ cubic: [[c1x, c1y], [c2x, c2y]] }`  |
 | bend            | `['A', { bend: 'right', angle: 45 }, 'B']`                                 |
 | label           | `['A', { label: 'midway' }, 'B']` 或 `{ label: { text, position, side } }` |
 | 闭合填充        | `['A', 'B', 'C', DrawWay.Cycle]`                                           |

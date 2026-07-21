@@ -200,6 +200,7 @@ export const compileChildrenToPrimitives = (
         boundaries: runtime.context.boundaries,
         resolveBetweenGlobal: refPointOfTarget,
         irPath: nodeIrPath,
+        warn: (code, message) => runtime.context.onWarn({ code, message, path: nodeIrPath }),
         texLowering: {
           lowerTex: runtime.context.lowerTex,
           warn: (code, message) => runtime.context.onWarn({ code, message, path: nodeIrPath }),

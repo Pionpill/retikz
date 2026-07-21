@@ -1,6 +1,6 @@
 ---
 name: docs-doc-group
-description: retikz 文档站「分组落地页」写法——带 children 的分组节点（如 components/node、components/draw、reference/schema、reference/runtime）自己的 index.{zh,en}.mdx。结构：介绍分组作用 + 可选配图 + 职责表（组件家族用 类型 Sugar/Kernel 列；参考家族换成 主题/何时查阅）+ LinkedCard 子页索引。分组页是家族视角 / 导航 hub，不复述子页（overview 等）的完整 API。通用规则见 docs-doc-principle，配图走 docs-figure-contract。retikz 专用。
+description: Use when writing a landing page for a docs data node with children, such as a component family or reference family navigation hub.
 ---
 
 # 分组落地页写法
@@ -11,7 +11,7 @@ description: retikz 文档站「分组落地页」写法——带 children 的�
 - 现有分组：`components/node`、`components/draw`、`reference/schema`、`reference/runtime`
 - 动手前**先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则；配图细节走 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)
 
-分组页是新手的导航入口，不是维护者的目录索引。导言先解释“这一组帮你解决哪类问题、应该从哪页开始读”，再列成员职责；不要默认读者已经知道 Kernel / Sugar / Reference / runtime 这些分层术语。
+分组页是新手的导航入口，不是维护者的目录索引。导言先解释“这一组帮你解决哪类问题、核心抽象是什么、负责与不负责什么、应该从哪页开始读”，再列成员职责；不要默认读者已经知道 Kernel / Sugar / Reference / runtime 这些分层术语。
 
 ## 机制：分组现在有自己的页面
 
@@ -38,7 +38,9 @@ contents/kernel/components/node/
 分组页回答**「这一组是什么、几块怎么协作、从哪开始读」**；子页（overview / 各组件 / 各 schema）回答**「完整 props、全部用法、字段表」**。
 
 - 分组页 = 家族视角 / 概念总览 / 导航 hub
+- 以能力完备性组织家族叙事：说明根问题、成员分工、能力如何闭环，以及与相邻家族的边界；开放能力再点明统一扩展入口
 - **不要把子页 overview 的完整 API 搬上来**——会重复。两者撞概念时，分组页讲「家族怎么配合」，overview 讲「单组件全部」
+- 不列跨家族通用的样式属性或视觉变体；这些内容留给子页 controls / API 表
 - 不放可复制学习的用法 demo（那是子页的事）；分组页的图是**叙述性插图**（`hideCode`）
 
 ## 结构（导言 + 可选配图 + 职责表 + 卡片）
@@ -72,7 +74,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 不是组件，Sugar/Kernel 不适用。列换成：`主题 | 职责 | 何时查阅`（en：`Topic | Responsibility | Reach for it when`），并在导言后加一句参考层提示：
 
 ```mdx
-> 这里是参考层，不是组件文档；写图请从 [组件](/core/components/layout) 开始。
+> 这里是参考层，不是组件文档；写图请从 [组件](/kernel/components/layout) 开始。
 ```
 
 ## LinkedCard 子页索引
@@ -83,7 +85,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/core/components/node/overview">
+  <LinkedCard href="/kernel/components/node/overview">
     <span className="font-semibold">Node</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">形状、文字、样式、定位与标签的完整用法</span>
   </LinkedCard>
@@ -108,6 +110,8 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 ## Common Mistakes
 
 - **把子页 overview 的完整 API 抄进分组页** —— 分组页只讲家族视角，API 留在子页
+- **只列成员、不说明闭环与边界** —— 导言和职责表必须让读者知道家族共同解决什么、各成员在哪里停止负责
+- **用通用样式描述家族差异** —— 颜色、线宽、透明度等不构成家族职责，留给子页 controls / API 表
 - **参考家族硬套 Sugar/Kernel 列** —— schema/runtime 不是组件，用 `主题 | 职责 | 何时查阅`
 - **配图放 demo 源码** —— 分组页的图是叙述性插图，必须 `hideCode`
 - **LinkedCard href 不跟子页 id 同步** —— 改子页路径时一起改，否则断链

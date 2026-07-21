@@ -1,6 +1,6 @@
 ---
 title: 阴影
-description: 图元级投影（shadow）——作用于 Node 形状 / Path 主路径，跨后端校准、可叠加；预设字符串或对象写法。
+description: 为 Node 或 Path 的主几何添加投影，可用预设快速设置，也可用对象精确控制。
 ---
 
 `shadow` 是图元级的视觉效果属性，`<Node>` 和 `<Path>` 都能直接写。它作用于**该图元本身**——Node 的 shape、Path 的主路径（含其端点箭头）。Node 的文字 / 标签 / 引脚是独立图元，不带投影。它是 renderer 无关的：SVG 与 Canvas 两端各自翻译成原生能力，并把视觉口径校准到接近。
@@ -23,9 +23,7 @@ import { Node } from '@retikz/react';
 
 最简写法是 Tailwind 风格的预设字符串：`'sm'` / `'md'` / `'lg'` / `'xl'` / `'2xl'` / `'none'`。档位越大，投影越远、越柔。`'none'` 表示显式无阴影（等价于不写）。
 
-<ComponentPreview files="shadow-presets" size="sm" />
-
-<span style={{ color: '#888' }}>同一张白卡分设五个预设档位。</span>
+<ComponentPreview files="shadow-presets" size="sm" caption="同一张白卡分设五个预设档位。" />
 
 ### 对象写法
 
@@ -36,21 +34,48 @@ import { Node } from '@retikz/react';
 
 优先级始终是：**显式字段 > preset > 默认**。颜色默认是半透明黑 `rgba(0,0,0,0.5)`；给了 `opacity` 会相乘到颜色的有效 alpha 上。
 
-<ComponentPreview files="shadow-object" size="sm" />
-
-<span style={{ color: '#888' }}>左：preset 调色（md 基底 + 蓝色）；右：Path 主路径的完整显式投影。</span>
+<ComponentPreview
+  files="shadow-object"
+  size="sm"
+  caption={
+    <>
+      左：<code>preset</code> 调色（<code>md</code> 基底 + 蓝色）；右：<code>Path</code> 主路径的完整显式投影。
+    </>
+  }
+/>
 
 ### 图元级，不是组级
 
 `shadow` 跟随图元本身。Node 的文字 / 标签 / 引脚是**独立图元**，不带投影——需要「整张卡片连文字一起浮起」时，本字段做不到（它是图元级、不是组级效果）。但 Path 的端点箭头属于主路径这一图元，会**随主路径一起投影**（与 SVG 元素级 filter / Canvas 同一绘制过程的原生语义一致）。
 
-<ComponentPreview files="shadow-primary-only" size="sm" />
-
-<span style={{ color: '#888' }}>shadow 落在矩形上；旁边的 text 与 label 是独立图元，不带投影。</span>
+<ComponentPreview
+  files="shadow-primary-only"
+  size="sm"
+  caption={
+    <>
+      <code>shadow</code> 落在矩形上；旁边的 <code>text</code> 与 <code>label</code> 是独立图元，不带投影。
+    </>
+  }
+/>
 
 <ComponentAlert
   title="blur 是可诊断近似"
   description="blur 是用户单位的模糊半径，SVG 与 Canvas 会按各自原生阴影 API 做内部校准，并随预览尺寸 / 变换保持接近；不追求逐像素一致。blur=0 为硬边。"
+/>
+
+### 参数试验场
+
+前面的静态示例保留了预设、对象覆盖和作用边界。最后可以在同一张卡片上调整位移、模糊、颜色与不透明度，直接比较这些字段如何共同塑造投影。
+
+<ComponentPreview
+  files="shadow-playground"
+  size="sm"
+  caption={
+    <>
+      选择一个预设作为起点，或逐项调整 <code>offsetX</code>、<code>offsetY</code>、<code>blur</code>、<code>color</code>{' '}
+      与 <code>opacity</code>。
+    </>
+  }
 />
 
 ## 技术原理
@@ -115,7 +140,7 @@ import { Node } from '@retikz/react';
       label: '显式 viewBox 覆盖自动布局',
       path: 'packages/kernel/core/src/compile/compile.ts',
       startLine: 22,
-      endLine: 42,
+      endLine: 37,
     },
   ]}
 />
@@ -137,7 +162,7 @@ SVG 把 `blur` 映射为高斯标准差，并以扩展后的 Scene 窗口作为�
       label: '生成 SVG 阴影滤镜与外扩区域',
       path: 'packages/kernel/render/src/svg/builders/shadow-defs.ts',
       startLine: 46,
-      endLine: 102,
+      endLine: 98,
     },
     {
       label: '去重并注册 SVG 阴影资源',
@@ -164,9 +189,9 @@ SVG 把 `blur` 映射为高斯标准差，并以扩展后的 Scene 窗口作为�
 
 `shadow` 是 `<Node>` 与 `<Path>` 共有的样式属性，写法一致。
 
-| 属性     | 类型                                                                                                                 | 默认值 | 描述                                                                                                                                                                                                                                                                       |
-| -------- | -------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —      | 主几何投影：预设字符串，或对象（preset 出默认 + 显式字段覆盖；无 preset 须给 offsetX + offsetY）。优先级：显式 > preset > 默认；color 默认 `rgba(0,0,0,0.5)`，`opacity` 相乘到 color alpha。图元级：Node 文字 / 标签 / 引脚（独立图元）不带；Path 端点箭头随主路径一起投影 |
+| 属性     | 类型                                                                                                                 | 默认值 | 描述                                         |
+| -------- | -------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------- |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | —      | 主几何的投影配置；对象优先级与作用边界见上文 |
 
 ### shadow 对象字段
 

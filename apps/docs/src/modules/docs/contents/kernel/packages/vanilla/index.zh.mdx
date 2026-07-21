@@ -1,13 +1,17 @@
 ---
-title: 无框架入口
+title: '@retikz/vanilla'
 description: 用 plain spec 在 React 之外组织图形，并把同一份描述渲染成 SVG、Canvas 或 SSR 字符串。
 ---
 
-`@retikz/vanilla` 是无框架入口：不需要 JSX，也不需要 React runtime。你用 plain spec 描述图形，再交给 `mount`、`mountSvg`、`mountCanvas` 或 `renderToSvgString` 渲染。
+`@retikz/vanilla` 是无框架入口。你可以用 plain spec 描述图形，也可以直接传入 Core IR 或已编译的 `Scene`，再通过 SSR、SVG DOM 或 Canvas runtime 输出结果。
 
-这层只做 adapter。几何、路径、复合展开和渲染能力仍来自 `@retikz/core` 与 `@retikz/render`。
+它负责普通数据写法、输入适配和宿主生命周期，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`，后端执行属于 `@retikz/render`。
 
-## 基本写法
+## 安装与使用
+
+```bash
+pnpm add @retikz/vanilla
+```
 
 ```ts
 import { figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '@retikz/vanilla';
@@ -30,15 +34,71 @@ const svg = renderToSvgString(spec);
 const view = mount(document.querySelector('#diagram')!, spec);
 ```
 
-`figure({ children })` 会生成默认 layer。需要明确绘制顺序、稳定的 layer id 或 `cache` 元数据时，再用 `layers` 分层；v0.4 的更新仍是整图重渲染，不提供局部失效。
+`renderToSvgString` 不依赖 DOM，适合 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
 
-## 从 spec 到输出
+## 为什么需要 @retikz/vanilla
 
-plain spec 会先由 `normalizeFigureSpec` 归一成 core IR（核心 JSON 描述），再经 `compileToScene` 生成 renderer 消费的 `Scene`。`renderToSvgString`、`mountSvg` 与 `mountCanvas` 会在收到 plain spec 时自动执行这条管线。
+### 用普通数据组织图形
 
-<ComponentPreview files="vanilla-pipeline" size="sm" hideCode />
+直接构造 `@retikz/core` IR 是可行的，但应用通常还需要图层、稳定 identity、Tier 2 嵌入和 runtime metadata。`figure`、`layer`、`node`、`path`、`scope` 与 `embed` 用普通对象和函数表达这些结构，不要求 JSX、React runtime 或组件生命周期，适合服务端、构建脚本、原生 DOM 应用和其它非 React 宿主。
 
-## Runtime 入口
+这些 helper 只降低构造成本：`node`、`path` 等最终仍生成 Core 图元，plain spec 也必须先归一成同一份 Core IR。它不是与 Core 平行的第二套 IR。最终 Core IR 保持 JSON 可序列化；`embed.props` 是否可序列化则由调用方与对应 adapter 共同保证。
+
+### 为什么分开 spec 与 runtime
+
+spec 只描述“画什么”，不持有 DOM、Canvas、时钟或 `update` 方法；`mount` 再返回管理宿主状态的 view。同一份 spec 因而可以先用 `renderToSvgString` 做 SSR，也可以在浏览器挂载，或在渲染前单独调用 `normalizeFigureSpec` 检查产物。
+
+这种分离让 authoring 数据保持可生成、可比较和可测试，也把副作用集中在 runtime 边界。Vanilla 薄的是图形语义，不是宿主接线：DOM 物化、Canvas 重绘、水合和动画生命周期仍由它负责。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'plain spec helper 返回普通对象',
+      path: 'packages/kernel/vanilla/src/spec/helpers.ts',
+      startLine: 19,
+      endLine: 118,
+    },
+    {
+      label: 'Vanilla spec 与 runtime metadata 契约',
+      path: 'packages/kernel/vanilla/src/spec/types.ts',
+      startLine: 88,
+      endLine: 123,
+    },
+  ]}
+/>
+
+## 从 spec 到 Scene
+
+`@retikz/vanilla` 接受三个输入层级。下图蓝色节点属于 Vanilla 的 authoring / adapter，橙色节点是 Core 拥有的数据契约与编译器；`Scene` 之后才进入具体后端。
+
+<ComponentPreview files="vanilla-pipeline" size="xs" hideCode />
+
+| 输入           | 所有者            | Runtime 如何处理                                                         |
+| -------------- | ----------------- | ------------------------------------------------------------------------ |
+| plain spec     | `@retikz/vanilla` | 归一图层、嵌入与 runtime metadata，得到 Core IR 与 composite definitions |
+| Core `IRScene` | `@retikz/core`    | 跳过 spec 归一，直接调用 `compileToScene`                                |
+| `Scene`        | `@retikz/core`    | 跳过归一与编译，直接交给 SVG / Canvas 后端                               |
+
+plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 `compileToScene` 解析 composite、registry、引用、几何、布局、资源与动画。`renderToSvgString`、`mountSvg` 和 `mountCanvas` 都从同一个 `toSceneResult` 入口完成这层分流，因此三种输入不会形成三套渲染语义。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'plain spec 归一为 Core IR 与 metadata',
+      path: 'packages/kernel/vanilla/src/spec/normalize.ts',
+      startLine: 194,
+      endLine: 255,
+    },
+    {
+      label: 'plain spec、IR 与 Scene 的统一入口',
+      path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
+      startLine: 26,
+      endLine: 45,
+    },
+  ]}
+/>
+
+## Runtime 与性能边界
 
 | API                 | 用途                                 | 返回                         |
 | ------------------- | ------------------------------------ | ---------------------------- |
@@ -48,7 +108,40 @@ plain spec 会先由 `normalizeFigureSpec` 归一成 core IR（核心 JSON 描�
 | `mountCanvas`       | 显式挂载 Canvas                      | `CanvasView`                 |
 | `hydrate`           | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationHandle`            |
 
-`view.update(nextSpec)` 当前仍是整图重渲染，但 root 元素 identity 保持稳定。plain spec 的 layer 顺序、layer id、`cache` hint 和子节点 identity 会保存在 `view.runtimeMeta`；这些 metadata 不代表已经支持局部 patch 或 invalidate。
+`view.update(nextInput)` 当前是后端整图重渲染，但 root 元素 identity 保持稳定：SVG 会清空并重建 root 的属性与子节点，Canvas 会用新 Scene 重绘并重新绑定存活的水合。传入预编译 `Scene` 可以跳过 plain spec 归一和 Core 编译，但不会把这次 backend update 变成局部 patch。
+
+plain spec 的 layer 顺序、layer id、`cache` hint 与子节点 identity 会保存在 `view.runtimeMeta`。这些 metadata 只是为后续失效判断预留稳定边界，并不代表当前已经有 layer cache、局部 DOM diff、Canvas dirty layer 或增量编译。
+
+后续性能工作会从真实大图或高频交互的测量结果出发，先判断 bailout、缓存或 domain lowering 能否解决问题；证据成立后，才会继续设计 IR diff、局部 compile、Scene patch、SVG DOM diff、Canvas dirty layer 与调度策略。Progressive IR / 增量编译目前只是待证据候选，不代表已排期或已经冻结公开 API。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'SVG update 复用 root 并重建内容',
+      path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
+      startLine: 51,
+      endLine: 68,
+    },
+    {
+      label: 'Canvas update 重绘并重新绑定水合',
+      path: 'packages/kernel/vanilla/src/runtime/mount-canvas.ts',
+      startLine: 278,
+      endLine: 304,
+    },
+    {
+      label: '增量编译的启动条件与待决问题',
+      path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
+      startLine: 3,
+      endLine: 27,
+    },
+    {
+      label: 'v0.5 Progressive IR 候选状态',
+      path: 'packages/kernel/_notes/decisions/v0/v0.5/roadmap.md',
+      startLine: 1,
+      endLine: 23,
+    },
+  ]}
+/>
 
 ## 选项结构
 
@@ -68,15 +161,15 @@ mount(canvasRoot, spec, {
 });
 ```
 
-`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas 后端使用。
+`figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`animation` 控制播放或截帧，`canvas` 只给 Canvas 后端使用。
 
-`animation.enabled` 省略时跟随系统的「减少动态效果」偏好；显式 `true` 强制开启，显式 `false` 强制关闭。`snapshotAt` 仍会覆盖播放开关并输出静态截帧。
+`animation.enabled` 省略时跟随系统的“减少动态效果”偏好；显式 `true` 强制开启，显式 `false` 强制关闭。`snapshotAt` 仍会覆盖播放开关并输出静态截帧。
 
 ## 分层与嵌入
 
-`layer(id, options, children)` 是 authoring 边界。`cache` 是保存在 runtime metadata 中的 hint，不进入 core IR；`zIndex` 只决定 layer stack 排序，相同值保持声明顺序。
+`figure({ children })` 会生成默认 layer。需要明确绘制顺序、稳定 layer id 或未来失效提示时，再用 `layers` 分层。`zIndex` 只决定 layer stack 排序，相同值保持声明顺序；`cache` 只进入 runtime metadata，不进入 Core IR。
 
-Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它只按 `kind` 找到注入的 adapter，把 props 静态 lower 成 core IR child、datasets 和 composite definitions。
+Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它只按 `kind` 找到注入的 adapter，把 props 静态 lower 成 Core IR child、datasets 和 composite definitions。
 
 ```ts
 import type { VanillaTier2Adapter } from '@retikz/vanilla';
@@ -101,7 +194,18 @@ const spec = figure({
 const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 ```
 
-`normalizeFigureSpec` 从 `@retikz/vanilla` 包根导出；`adapters` 是 render / mount 选项的顶层字段，不放在 `compile` 里。若需要在渲染前检查归一结果，可直接调用 `normalizeFigureSpec(spec, { adapters })`，读取返回的 `ir`、`composites` 与 `runtimeMeta`。
+`normalizeFigureSpec` 从包根导出；`adapters` 是 render / mount 选项的顶层字段，不放在 `compile` 里。若需要在渲染前检查归一结果，可直接调用 `normalizeFigureSpec(spec, { adapters })`，读取返回的 `ir`、`composites` 与 `runtimeMeta`。
+
+## 职责边界
+
+| 能力               | `@retikz/vanilla` 负责什么                                      | 能力真源 / 边界                |
+| ------------------ | --------------------------------------------------------------- | ------------------------------ |
+| 普通数据 authoring | 提供 figure、layer、embed 与 Core 图元 helper，归一 plain spec  | `@retikz/core` IR              |
+| 编译入口           | 接受 spec / IR / Scene，聚合 adapter 贡献并注入 compile options | `@retikz/core` 编译            |
+| 宿主 runtime       | SSR 字符串、DOM / Canvas 挂载、update、水合与动画生命周期       | `@retikz/render` 后端执行      |
+| Tier 2 嵌入        | 按 `kind` 调用 adapter 并聚合 lowering 贡献                     | 各领域包拥有 props 与 lowering |
+
+在 React 应用中优先使用 [`@retikz/react`](/kernel/packages/react) 的 JSX 与宿主生命周期；需要无框架、SSR 字符串或直接 DOM / Canvas 挂载时使用本包。
 
 ## API 摘要
 
@@ -116,5 +220,5 @@ const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 | `embed`               | authoring     | 构造 Tier 2 嵌入节点                         |
 | `VanillaLayerCache`   | authoring     | 提供 layer `cache` metadata 的可选值         |
 | `isVanillaFigureSpec` | normalization | 判断输入是否为 version 1 plain spec          |
-| `normalizeFigureSpec` | normalization | 生成 core IR、composites 与 runtime metadata |
+| `normalizeFigureSpec` | normalization | 生成 Core IR、composites 与 runtime metadata |
 | `VanillaTier2Adapter` | type          | 定义 `embed()` 的 lowering 适配器            |

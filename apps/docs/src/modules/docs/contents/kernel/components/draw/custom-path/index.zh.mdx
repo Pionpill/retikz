@@ -1,45 +1,129 @@
 ---
 title: 自定义路径
-description: Path 的 kind 是开放字符串；除了内置 stroke / ribbon，可以通过 definePathKind / PathKindDefinition 注册新的整条路径 provider，并用 CompileOptions.pathKinds 或 <Layout pathKinds> 注入。
+description: 为整条 Path 注册新的 kind provider，校验 JSON 配置，并复用描边或流带能力生成后端中立的 Scene 图元。
 ---
 
-`<Path>` 的 `kind` 是**开放字符串**：内置 `stroke` 和 `ribbon` 之外，可以注册自己的路径 kind。自定义路径适合“整条 Path 应该如何产出 Scene primitive”的场景，例如高亮底线、双线关系、业务关系线、宽箭头或后续的领域路径。
+自定义 Path kind 扩展的是**整条路径如何输出**。IR 只保存开放的 `kind` 与 JSON-safe `kindOptions`；宿主注入 `PathKindDefinition` 后，core 从统一 registry 找到 provider，并由它生成 Scene 图元。
 
-注册面是 `CompileOptions.pathKinds`（React 里是 `<Layout pathKinds={...}>`）：IR 只保存 `kind` 与 JSON-only 的 `kindOptions`，provider 函数在宿主运行时注入，不进入 IR。
-
-## 注册一个路径 kind
-
-下面的 `highlight` kind 复用内置 stroke 编译器，只把整条路径改成更粗的高亮线：
+下面的 `highlight` kind 复用内置描边编译器，只改写线宽与输出颜色。definition、`<Layout pathKinds>` 注入和使用方式都包含在同一个示例中。
 
 <ComponentPreview files="custom-path-highlight" size="xs" />
 
-## API
+## 适用边界
 
-| 字段            | 类型                                         | 说明                                                                        |
-| --------------- | -------------------------------------------- | --------------------------------------------------------------------------- |
-| `schema`        | `ZodObject<{ kind: ZodLiteral<string> }>`    | Path IR schema；注册名取自非空的 `schema.shape.kind.value`                  |
-| `optionsSchema` | `ZodType<IRJsonObject>`                      | 可选；校验 `kindOptions`，输出仍必须是 JSON-safe                            |
-| `compile`       | `(context) => PathKindCompileResult \| null` | 编译整条 Path，返回 Scene primitives 与 `boundsPoints`；`null` 表示无法产出 |
+先判断扩展发生在“一个段”还是“整条路径”：
 
-`compile` 拿到的 `PathKindCompileContext`：
+| 需求                                 | 选择                                                 |
+| ------------------------------------ | ---------------------------------------------------- |
+| 新增一种参数化曲线段                 | [路径生成器](/kernel/components/draw/path-generator) |
+| 改变整条 Path 的图元、轮廓或组合方式 | 自定义 Path kind                                     |
+| 只增加新的端点造型                   | [自定义箭头](/kernel/components/draw/custom-arrow)   |
 
-| 字段         | 类型                                       | 说明                                          |
-| ------------ | ------------------------------------------ | --------------------------------------------- |
-| `path`       | `IRPathBase`                               | 当前 Path 的完整 IR 数据                      |
-| `options`    | `TOptions`                                 | `kindOptions` 经 `optionsSchema` 校验后的结果 |
-| `emitStroke` | `(path?) => PathKindCompileResult \| null` | 复用内置 stroke lowerer，可传入改写后的 Path  |
-| `emitRibbon` | `(path?) => PathKindCompileResult \| null` | 复用内置 ribbon lowerer，可传入改写后的 Path  |
+如果只是换描边色、线宽、虚线、箭头或流带参数，直接使用现有 Path props；不要为样式组合创建新的 kind。
 
-`PathKindCompileResult.primitives` 与 `boundsPoints` 使用当前 Path 的局部坐标。Path 位于带 transform 的 scope 中时，所属 Scene 分组统一应用 transform；`emitStroke` 和 `emitRibbon` 返回相同坐标系的结果。
+## 定义能力
 
-## 与路径生成器的区别
+用 `definePathKind` 声明一个含非空 `kind` literal 的 Path schema、可选配置 schema，以及整条路径的 compile 函数。
 
-自定义路径接管**整条 Path**：它决定这条路径最终产出什么 primitive，适合改变关系形态或复用内置 lowerer 后再改写结果。
+```tsx
+const highlight = definePathKind({
+  schema: z.strictObject({ kind: z.literal('highlight') }),
+  optionsSchema: z.strictObject({ strokeWidth: z.number().positive() }),
+  compile: context =>
+    context.emitStroke({
+      ...context.path,
+      strokeWidth: context.options.strokeWidth,
+    }),
+});
+```
 
-路径生成器只接管 **一个 `generator` step**：它把某一段曲线转换成低层 `PathCommand[]`，之后仍交给当前 Path kind 继续编译。需要新增曲线段时用 [路径生成器](/kernel/components/draw/path-generator)，需要新增整条路径的 provider 时用自定义路径。
+`schema.shape.kind.value` 是 registry key。`kindOptions` 会先经过 `optionsSchema`，并保持 JSON-safe；definition 与 compile 函数只存在于运行时，不进入 IR。
+
+## 注入宿主
+
+React 通过 `<Layout pathKinds>` 注入；直接调用 core 时使用 `CompileOptions.pathKinds`。Path 只引用注册名与实例配置。
+
+```tsx
+<Layout pathKinds={[highlight]}>
+  <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
+    <Step kind="move" to="A" />
+    <Step kind="line" to="B" />
+  </Path>
+</Layout>
+```
+
+## 执行机制
+
+内置 `stroke`、`ribbon` 与自定义 kind 先合并到同一个 registry。编译 Path 时，core 按 `kind` 查找 definition、校验 `kindOptions`，再把标准描边与流带 emitter 一起交给 provider。
+
+provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke` / `emitRibbon` 复用现有端点解析、路径命令、箭头与流带逻辑。返回的 `primitives` 与 `boundsPoints` 都使用当前 Path 的局部坐标，外层 Scope 变换随后统一应用。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Path kind definition 契约',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 40,
+      endLine: 53,
+    },
+    {
+      label: '内置与自定义 kind 合并',
+      path: 'packages/kernel/core/src/providers/path-kind/registry.ts',
+      startLine: 8,
+      endLine: 17,
+    },
+    {
+      label: 'kind 查找、配置校验与 compile 调用',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 93,
+      endLine: 145,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+| 情况                                 | 结果                                            |
+| ------------------------------------ | ----------------------------------------------- |
+| `kind` literal 为空或不是字符串      | `definePathKind` 立即拒绝                       |
+| 与 `stroke`、`ribbon` 或自定义项重名 | registry 合并时报重复注册                       |
+| Path 引用未注册 kind                 | 编译列出可用名称与 `options.pathKinds` 注入提示 |
+| `kindOptions` 不符合 schema          | 错误包含 kind 名和对应 IR 路径                  |
+| provider 返回 `null`                 | 该 Path 不产生图元                              |
+| `boundsPoints` 不覆盖真实输出边界    | 自动布局与 Path 级 rotate / scale 依据会失真    |
+
+自定义 kind 返回的是后端中立 Scene primitive，不能把 SVG element、Canvas 实例、ReactNode 或函数塞进结果，也不能要求 renderer 识别自定义 `kind`。
+
+## API 参考
+
+### PathKindDefinition
+
+| 字段            | 类型                                         | 默认值                   | 描述                                  |
+| --------------- | -------------------------------------------- | ------------------------ | ------------------------------------- |
+| `schema`        | `ZodObject<{ kind: ZodLiteral<string> }>`    | —                        | 声明 Path 形态并提供 registry key     |
+| `optionsSchema` | `ZodType<IRJsonObject>`                      | 原始 `kindOptions ?? {}` | 校验自定义实例配置                    |
+| `compile`       | `(context) => PathKindCompileResult \| null` | —                        | 为整条 Path 生成 Scene 图元与边界依据 |
+
+### compile 上下文
+
+| 字段         | 类型                                       | 默认值    | 描述                                                |
+| ------------ | ------------------------------------------ | --------- | --------------------------------------------------- |
+| `path`       | `IRPathBase`                               | —         | 当前 Path 的完整 IR                                 |
+| `options`    | `TOptions`                                 | —         | `kindOptions ?? {}` 经 `optionsSchema` 解析后的结果 |
+| `emitStroke` | `(path?) => PathKindCompileResult \| null` | 当前 Path | 复用标准描边编译                                    |
+| `emitRibbon` | `(path?) => PathKindCompileResult \| null` | 当前 Path | 复用标准流带编译                                    |
+
+### PathKindCompileResult
+
+| 字段           | 类型                    | 默认值 | 描述                                   |
+| -------------- | ----------------------- | ------ | -------------------------------------- |
+| `primitives`   | `Array<ScenePrimitive>` | —      | 当前 Path 局部坐标中的实际输出         |
+| `boundsPoints` | `Array<Position>`       | —      | 自动布局与 Path 级变换使用的关键边界点 |
 
 ## 相关
 
-- [Path](/kernel/components/draw/path)
-- [路径生成器](/kernel/components/draw/path-generator)
-- [自定义箭头](/kernel/components/draw/custom-arrow)
+- [Path](/kernel/components/draw/path)：内置 `stroke` 与宿主字段
+- [Ribbon](/kernel/components/draw/ribbon)：内置 `ribbon` kind 的宽度与边界配置
+- [路径生成器](/kernel/components/draw/path-generator)：只扩展一个 generator Step
+- [自定义箭头](/kernel/components/draw/custom-arrow)：只扩展端点 marker
+- [运行时扩展](/kernel/reference/runtime/extensions)：跨能力的 definition / registry 总览

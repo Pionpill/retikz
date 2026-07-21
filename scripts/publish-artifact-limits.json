@@ -31,6 +31,18 @@
     "maxFiles": 180,
     "maxPackedBytes": 112640
   },
+  "@retikz/table": {
+    "maxFiles": 10,
+    "maxPackedBytes": 10240
+  },
+  "@retikz/table-react": {
+    "maxFiles": 10,
+    "maxPackedBytes": 10240
+  },
+  "@retikz/table-vanilla": {
+    "maxFiles": 10,
+    "maxPackedBytes": 10240
+  },
   "@retikz/tex": {
     "maxFiles": 40,
     "maxPackedBytes": 20480

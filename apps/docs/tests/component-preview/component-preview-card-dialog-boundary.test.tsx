@@ -74,7 +74,7 @@ describe('ComponentPreviewCard dialog boundary', () => {
     act(() => root.unmount());
   });
 
-  it('带属性面板的 Card 最小使用 md 尺寸', () => {
+  it('带属性面板的 Card 保留显式 xs 尺寸', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -91,9 +91,9 @@ describe('ComponentPreviewCard dialog boundary', () => {
     });
 
     const workspace = container.querySelector('[data-slot="preview-workspace"]');
-    expect(workspace?.classList.contains('h-56')).toBe(true);
-    expect(workspace?.classList.contains('h-32')).toBe(false);
-    expect(container.querySelector('button[aria-label="Preview size md"]')?.getAttribute('data-state')).toBe('on');
+    expect(workspace?.classList.contains('h-32')).toBe(true);
+    expect(workspace?.classList.contains('h-56')).toBe(false);
+    expect(container.querySelector('button[aria-label="Preview size xs"]')?.getAttribute('data-state')).toBe('on');
 
     act(() => root.unmount());
   });

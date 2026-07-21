@@ -15,12 +15,17 @@ description: Use when retikz alpha implementation tests have passed but red or y
 
 ## 攻击面
 
+先读取测试契约矩阵，优先攻击其中的不变量与反例；不要把自测退化为重复 happy path。
+
 优先找破坏 AI 友好契约的问题：
 
 1. IR JSON round-trip 后语义不等价。
 2. zod parse 错误信息含糊，LLM 难以修正。
 3. schema 接收非 JSON 值或过宽类型。
 4. discriminator 缺失、拼错、冲突时报错不可诊断。
+5. React / Vanilla 或等价 authoring 入口产出不同 IR / Scene、默认值或错误语义。
+6. schema、registry、compile、renderer 组合后偏离单层契约。
+7. 契约要求 docs 示例、Preview 控件或错误展示时，关键用户路径不可运行、不可见或不可诊断。
 
 再查常规边界：自引用 / 引用环、`0` / `-0` / `NaN` / `Infinity` / 极值、长字符串 / Unicode id、深层嵌套、默认值边界、与已有功能交叉。
 
@@ -31,8 +36,8 @@ description: Use when retikz alpha implementation tests have passed but red or y
 Bug Hunter 只做三件事：
 
 - 读 ADR、当前实现 diff、已有测试、相关 schema / compile 入口。
-- 临时写 adversarial vitest case 并运行。
-- 输出 BLOCKING / WARNING / INFO，不修代码、不改现有测试、不 stage 临时草稿。
+- 只在目标 workspace 的 `tests/_scratch/` 写 adversarial Vitest case，并用 `pnpm temp:test -- --workspace <workspace-directory> --file <tests/_scratch/*.test.ts>` 运行。
+- 输出 BLOCKING / WARNING / INFO，不修代码、不改现有测试、不 stage 临时草稿；脚本会在验证结束自动删除草稿，确认风险后才重写为正式回归测试。
 
 ## 处理结果
 

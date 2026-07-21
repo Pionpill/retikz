@@ -1,8 +1,10 @@
 import type {
+  PreviewControlCondition,
   PreviewControlField,
   PreviewControlsDefinition,
   PreviewControlValues,
   PreviewNumberControlField,
+  PreviewPointControlField,
   PreviewRangeControlField,
   PreviewSelectControlField,
 } from '../types';
@@ -51,6 +53,40 @@ const validateNumericControl = (field: PreviewNumberControlField | PreviewRangeC
   }
 };
 
+/** 校验运行时输入是有限二维 tuple */
+const validatePointTuple = (fieldId: string, property: string, value: unknown): void => {
+  if (!Array.isArray(value) || value.length !== 2) {
+    throw new Error(`Preview point control "${fieldId}" ${property} must be a two-number tuple.`);
+  }
+  value.forEach((coordinate, index) => {
+    if (typeof coordinate !== 'number' || !Number.isFinite(coordinate)) {
+      throw new Error(`Preview point control "${fieldId}" ${property}[${index}] must be finite.`);
+    }
+  });
+};
+
+/** 校验二维点字段各轴的边界与默认值 */
+const validatePointControl = (field: PreviewPointControlField): void => {
+  validatePointTuple(field.id, 'defaultValue', field.defaultValue);
+  validatePointTuple(field.id, 'min', field.min);
+  validatePointTuple(field.id, 'max', field.max);
+
+  if (field.step !== undefined && (!Number.isFinite(field.step) || field.step <= 0)) {
+    throw new Error(`Preview point control "${field.id}" step must be a positive finite number.`);
+  }
+
+  for (const index of [0, 1] as const) {
+    if (field.min[index] > field.max[index]) {
+      throw new Error(`Preview point control "${field.id}" min[${index}] must not exceed max[${index}].`);
+    }
+    if (field.defaultValue[index] < field.min[index] || field.defaultValue[index] > field.max[index]) {
+      throw new Error(
+        `Preview point control "${field.id}" defaultValue[${index}] must be between ${field.min[index]} and ${field.max[index]}.`,
+      );
+    }
+  }
+};
+
 /** 校验下拉选项及其默认值 */
 const validateSelectControl = (field: PreviewSelectControlField): void => {
   if (field.options.length === 0) {
@@ -72,11 +108,22 @@ const validateSelectControl = (field: PreviewSelectControlField): void => {
   }
 };
 
+/** 校验显示条件的引用与值集合 */
+const validateControlCondition = (condition: PreviewControlCondition, knownIds: ReadonlySet<string>): void => {
+  if (!knownIds.has(condition.controlId)) {
+    throw new Error(`Preview control condition references unknown control id: "${condition.controlId}".`);
+  }
+  if (condition.oneOf.length === 0) {
+    throw new Error(`Preview control condition for "${condition.controlId}" must define at least one value.`);
+  }
+};
+
 /** 校验字段 id 与各 kind 的运行时约束 */
 const validatePreviewControls = (definition: PreviewControlsDefinition): void => {
   const ids = new Set<string>();
+  const fields = getPreviewControlFields(definition);
 
-  for (const field of getPreviewControlFields(definition)) {
+  for (const field of fields) {
     if (ids.has(field.id)) {
       throw new Error(`Duplicate preview control id: "${field.id}".`);
     }
@@ -84,8 +131,18 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
 
     if (field.kind === 'select') validateSelectControl(field);
     if (field.kind === 'number' || field.kind === 'range') validateNumericControl(field);
+    if (field.kind === 'point') validatePointControl(field);
     if (field.kind === 'color' && !COLOR_HEX_PATTERN.test(field.defaultValue)) {
       throw new Error(`Preview color control "${field.id}" defaultValue must be a #RRGGBB hex color.`);
+    }
+  }
+
+  for (const field of fields) {
+    if (field.visibleWhen) validateControlCondition(field.visibleWhen, ids);
+  }
+  if (definition.presentation === 'panel') {
+    for (const section of definition.sections) {
+      if (section.visibleWhen) validateControlCondition(section.visibleWhen, ids);
     }
   }
 };

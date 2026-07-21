@@ -1,42 +1,52 @@
 import type { FC } from 'react';
 
-import { Layout, Node } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node } from '@retikz/react';
+
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import {
+  coordinateBetweenControls,
+  coordinateBetweenFrame,
+  previewControlContract,
+} from './coordinate-between.controls';
+
+export const previewControls = coordinateBetweenControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  return (
+    <Layout
+      width={coordinateBetweenFrame.width}
+      height={coordinateBetweenFrame.height}
+      viewBox={coordinateBetweenFrame.viewBox}
+    >
+      <Node id="A" position={[-140, 0]} shape="circle" minimumSize={32} fill="dodgerblue" textColor="white">
+        a
+      </Node>
+      <Node id="B" position={[140, 0]} shape="circle" minimumSize={32} fill="green" textColor="white">
+        b
+      </Node>
+      <Draw way={['A', 'B']} stroke="lightgray" zIndex={-1} />
+      <Coordinate id="Q" position={{ between: [{ id: 'A' }, { id: 'B' }], fraction: values.fraction }} />
+      <Node
+        id="marker"
+        position={{ of: 'Q', offset: [0, 0] }}
+        shape="circle"
+        minimumSize={24}
+        fill="darkorange"
+        textColor="white"
+      >
+        q
+      </Node>
+    </Layout>
+  );
+});
+
+export const previewSource = controlledPreview.source;
 
 /**
- * 比例 partway 定位 `{ between: [A, B], fraction }`
- * @description A、B 两端点连线上按 fraction 取点：0.25 / 0.5 / 0.75 三个橙点随 A、B 移动而保持比例。
- *   端点复用 Target 解析（节点引用 / 坐标 / 极坐标 / 嵌套 between）；同样可用于 Node.position / Coordinate / Step.to。
+ * 比例定位 `{ between: [A, B], fraction }`
+ * @description A、B 固定在 x 轴上，面板连续调整同一个 q 的 fraction；同样的输入可用于 Node.position / Coordinate / Step.to
  */
-const Demo: FC = () => (
-  <Layout width={360} height={120}>
-    <Node id="A" position={[-140, 0]} shape="circle" minimumSize={32} fill="dodgerblue" textColor="white">
-      A
-    </Node>
-    <Node id="B" position={[140, 0]} shape="circle" minimumSize={32} fill="green" textColor="white">
-      B
-    </Node>
-    <Node
-      id="q1"
-      position={{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }}
-      shape="circle"
-      minimumSize={14}
-      fill="darkorange"
-    />
-    <Node
-      id="mid"
-      position={{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }}
-      shape="circle"
-      minimumSize={20}
-      fill="darkorange"
-    />
-    <Node
-      id="q3"
-      position={{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.75 }}
-      shape="circle"
-      minimumSize={14}
-      fill="darkorange"
-    />
-  </Layout>
-);
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

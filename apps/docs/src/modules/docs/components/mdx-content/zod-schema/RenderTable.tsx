@@ -13,7 +13,7 @@ type Props = {
 };
 
 const td = 'border-b border-border align-top py-2 pr-4';
-const th = 'px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground';
+const th = 'py-2 pr-4 text-left font-normal whitespace-nowrap text-muted-foreground';
 
 /** TableRow 列表 → 表格；嵌套 object 字段已被 ZodSchema 平铺为相邻子行（name=''） */
 export const RenderTable: FC<Props> = ({ rows }) => {

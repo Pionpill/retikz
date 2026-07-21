@@ -1,0 +1,25 @@
+---
+title: Domain Modules
+description: Look up the responsibilities and dependency boundaries of standalone Tier 2 domain packages such as Plot, and how they lower domain semantics into Core IR.
+---
+
+Domain modules are standalone Tier 2 packages that solve complete domain problems on top of Kernel. They own their IR, schemas, algorithms, and lowering, then translate results into base primitives that Core can continue compiling and rendering. Kernel does not directly embed visualization, table, or flowchart semantics.
+
+> This is the reference layer, not component documentation. Start with the relevant module when using a domain capability. See [Composite Design](/kernel/concepts/design/composite) and [Runtime Extensions](/kernel/reference/runtime/extensions) for the underlying integration mechanism.
+
+## Responsibilities
+
+| Topic                | Responsibility                                         | Reach for it when                                              |
+| -------------------- | ------------------------------------------------------ | -------------------------------------------------------------- |
+| Visualization - Plot | Resolve and lower data plus Plot IR into Core graphics | Understanding `@retikz/plot` boundaries, dependencies, or flow |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/reference/domains/plot">
+    <span className="font-semibold">Visualization - Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      @retikz/plot's role in Viz, dependency boundaries, and lowering flow
+    </span>
+  </LinkedCard>
+</div>

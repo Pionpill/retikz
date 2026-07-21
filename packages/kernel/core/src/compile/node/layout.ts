@@ -4,6 +4,7 @@ import type { IRLabelDefault, IRNode } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { ResolveBetweenGlobal } from '../position';
 import type { TextMeasurer } from '../text';
+import type { CompileWarningCodeValue } from '../warning';
 import type { NodeLayout, TexLoweringContext } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -47,6 +48,8 @@ export type LayoutNodeContext = {
   texLowering?: TexLoweringContext;
   /** 当前 node 的 IR 路径，用于 provider payload 诊断 */
   irPath?: string;
+  /** 当前 node 的 compile warning 分发函数 */
+  warn?: (code: CompileWarningCodeValue, message: string) => void;
 };
 
 export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout => {
@@ -63,6 +66,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     resolveBetweenGlobal,
     texLowering,
     irPath,
+    warn,
   } = context;
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
@@ -199,5 +203,8 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     animations: node.animations,
     shapes,
     boundaries,
+    connectionEnvelopeCache: new Map(),
+    connectionEnvelopeWarnings: new Set(),
+    warn,
   };
 };

@@ -1,13 +1,17 @@
 ---
-title: Vanilla Runtime
+title: '@retikz/vanilla'
 description: Author figures outside React with a plain spec, then render the same description to SVG, Canvas, or an SSR string.
 ---
 
-`@retikz/vanilla` is the framework-free entry. It does not require JSX or a React runtime. You describe a figure as a plain spec, then render it with `mount`, `mountSvg`, `mountCanvas`, or `renderToSvgString`.
+`@retikz/vanilla` is the framework-free entry. You can describe a figure with a plain spec, or pass Core IR or a compiled `Scene` directly, then produce output through SSR, the SVG DOM, or the Canvas runtime.
 
-This package is only an adapter. Geometry, paths, composite lowering, and rendering still come from `@retikz/core` and `@retikz/render`.
+It owns plain-data authoring, input adaptation, and host lifecycles without inventing new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; backend execution belongs to `@retikz/render`.
 
-## Basic Shape
+## Installation & Usage
+
+```bash
+pnpm add @retikz/vanilla
+```
 
 ```ts
 import { figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '@retikz/vanilla';
@@ -30,15 +34,71 @@ const svg = renderToSvgString(spec);
 const view = mount(document.querySelector('#diagram')!, spec);
 ```
 
-`figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or `cache` metadata. Updates in v0.4 still rerender the full figure and do not provide local invalidation.
+`renderToSvgString` does not depend on the DOM, so it works for SSR, build-time generation, or saving SVG. `mount` targets browser hosts, creates SVG by default, and can switch to Canvas with `renderer: 'canvas'`. The returned view owns later updates, interaction hydration, animation controls, and disposal.
 
-## From Spec To Output
+## Why @retikz/vanilla Exists
 
-A plain spec first goes through `normalizeFigureSpec` to produce core IR (the JSON drawing contract), then through `compileToScene` to create the `Scene` consumed by renderers. `renderToSvgString`, `mountSvg`, and `mountCanvas` run this pipeline automatically when their input is a plain spec.
+### Authoring With Plain Data
 
-<ComponentPreview files="vanilla-pipeline" size="sm" hideCode />
+Constructing `@retikz/core` IR directly is valid, but applications often also need layers, stable identities, Tier 2 embeds, and runtime metadata. `figure`, `layer`, `node`, `path`, `scope`, and `embed` express those structures with ordinary objects and functions, without JSX, a React runtime, or component lifecycles. This fits servers, build scripts, native DOM applications, and other non-React hosts.
 
-## Runtime Entries
+These helpers only reduce construction overhead. `node`, `path`, and the other primitives still produce Core graphics, while a plain spec must normalize into the same Core IR. It is not a second IR parallel to Core. The final Core IR remains JSON-serializable; callers and adapters are responsible for keeping `embed.props` serializable when that property matters to their workflow.
+
+### Why Specs And Runtime Stay Separate
+
+A spec only describes what to draw. It does not retain a DOM node, Canvas, clock, or `update` method; `mount` returns a view that manages host state. The same spec can therefore produce an SSR string, mount in a browser, or pass through `normalizeFigureSpec` for inspection before rendering.
+
+This separation keeps authoring data easy to generate, compare, and test while concentrating side effects at the runtime boundary. Vanilla is thin in graphics semantics, not in host wiring: it still owns DOM materialization, Canvas redraws, hydration, and animation lifecycles.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Plain spec helpers return ordinary objects',
+      path: 'packages/kernel/vanilla/src/spec/helpers.ts',
+      startLine: 19,
+      endLine: 118,
+    },
+    {
+      label: 'Vanilla spec and runtime metadata contracts',
+      path: 'packages/kernel/vanilla/src/spec/types.ts',
+      startLine: 88,
+      endLine: 123,
+    },
+  ]}
+/>
+
+## From Spec To Scene
+
+`@retikz/vanilla` accepts three input levels. Blue nodes in the figure belong to Vanilla authoring and adaptation; orange nodes are the data contract and compiler owned by Core. Concrete backends begin after `Scene`.
+
+<ComponentPreview files="vanilla-pipeline" size="xs" hideCode />
+
+| Input          | Owner             | Runtime handling                                                              |
+| -------------- | ----------------- | ----------------------------------------------------------------------------- |
+| plain spec     | `@retikz/vanilla` | Normalize layers, embeds, and metadata into Core IR and composite definitions |
+| Core `IRScene` | `@retikz/core`    | Skip spec normalization and call `compileToScene` directly                    |
+| `Scene`        | `@retikz/core`    | Skip normalization and compilation; pass directly to the SVG / Canvas backend |
+
+The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. `compileToScene` then resolves composites, registries, references, geometry, layout, resources, and animation. `renderToSvgString`, `mountSvg`, and `mountCanvas` all share the same `toSceneResult` dispatch, so the three input levels do not create three rendering semantics.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Normalize a plain spec into Core IR and metadata',
+      path: 'packages/kernel/vanilla/src/spec/normalize.ts',
+      startLine: 194,
+      endLine: 255,
+    },
+    {
+      label: 'Shared plain spec, IR, and Scene input dispatch',
+      path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
+      startLine: 26,
+      endLine: 45,
+    },
+  ]}
+/>
+
+## Runtime & Performance Boundaries
 
 | API                 | Purpose                                   | Returns                      |
 | ------------------- | ----------------------------------------- | ---------------------------- |
@@ -48,7 +108,40 @@ A plain spec first goes through `normalizeFigureSpec` to produce core IR (the JS
 | `mountCanvas`       | Mount a Canvas explicitly                 | `CanvasView`                 |
 | `hydrate`           | Bind handlers to SSR / existing SVG roots | `HydrationHandle`            |
 
-`view.update(nextSpec)` still rerenders the whole figure, while keeping the root element identity stable. Layer order, layer ids, the `cache` hint, and child identities are retained in `view.runtimeMeta`; this metadata does not mean local patching or invalidation is available.
+`view.update(nextInput)` currently rerenders the full backend while preserving root element identity. SVG clears and rebuilds the root's attributes and children; Canvas redraws from the new Scene and rebinds live hydration. Passing a precompiled `Scene` skips plain-spec normalization and Core compilation, but it does not turn the backend update into a local patch.
+
+Layer order, layer ids, the `cache` hint, and child identities are retained in `view.runtimeMeta`. This metadata only reserves stable boundaries for future invalidation decisions. It does not mean that layer caching, local DOM diffing, Canvas dirty layers, or incremental compilation exist today.
+
+Future performance work starts with measurements from real large figures or high-frequency interaction. The first question is whether bailouts, caching, or domain lowering solve the cost. Only supporting evidence would justify designing IR diffing, local compilation, Scene patches, SVG DOM diffing, Canvas dirty layers, and scheduling. Progressive IR / incremental compilation remains an evidence-gated candidate, not a scheduled feature or a frozen public API.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'SVG update reuses the root and rebuilds its contents',
+      path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
+      startLine: 51,
+      endLine: 68,
+    },
+    {
+      label: 'Canvas update redraws and rebinds hydration',
+      path: 'packages/kernel/vanilla/src/runtime/mount-canvas.ts',
+      startLine: 278,
+      endLine: 304,
+    },
+    {
+      label: 'Incremental compilation gates and open questions',
+      path: 'packages/kernel/_notes/decisions/v0/v0.4/backlog.md',
+      startLine: 3,
+      endLine: 27,
+    },
+    {
+      label: 'v0.5 Progressive IR candidate status',
+      path: 'packages/kernel/_notes/decisions/v0/v0.5/roadmap.md',
+      startLine: 1,
+      endLine: 23,
+    },
+  ]}
+/>
 
 ## Options Shape
 
@@ -68,15 +161,15 @@ mount(canvasRoot, spec, {
 });
 ```
 
-`figure()` describes the figure. `output` controls display size and resource ids, `compile` injects core compile capabilities, `animation` controls playback or snapshots, and `canvas` is only for the Canvas backend.
+`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `animation` controls playback or snapshots, and `canvas` is only for the Canvas backend.
 
 Omit `animation.enabled` to follow the system's reduced-motion preference. Explicit `true` forces playback on, and explicit `false` forces it off. `snapshotAt` still overrides playback and produces a static frame.
 
 ## Layers And Embeds
 
-`layer(id, options, children)` is an authoring boundary. `cache` is a hint retained in runtime metadata and does not enter core IR. `zIndex` only orders the layer stack; equal values keep declaration order.
+`figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or future invalidation hints. `zIndex` only orders the layer stack, with equal values retaining declaration order. `cache` only enters runtime metadata and does not enter Core IR.
 
-Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a core IR child, datasets, and composite definitions.
+Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a Core IR child, datasets, and composite definitions.
 
 ```ts
 import type { VanillaTier2Adapter } from '@retikz/vanilla';
@@ -101,7 +194,18 @@ const spec = figure({
 const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 ```
 
-`normalizeFigureSpec` is exported from the `@retikz/vanilla` package root. `adapters` is a top-level render / mount option, not a field inside `compile`. To inspect normalization before rendering, call `normalizeFigureSpec(spec, { adapters })` directly and read its `ir`, `composites`, and `runtimeMeta` result.
+`normalizeFigureSpec` is exported from the package root. `adapters` is a top-level render / mount option, not a field inside `compile`. To inspect normalization before rendering, call `normalizeFigureSpec(spec, { adapters })` directly and read its `ir`, `composites`, and `runtimeMeta` result.
+
+## Responsibility Boundaries
+
+| Capability           | What `@retikz/vanilla` owns                                                    | Source of truth / boundary              |
+| -------------------- | ------------------------------------------------------------------------------ | --------------------------------------- |
+| Plain-data authoring | figure, layer, embed, Core primitive helpers, and spec normalization           | `@retikz/core` IR                       |
+| Compile entry        | Accept spec / IR / Scene, aggregate adapter contributions, inject options      | `@retikz/core` compilation              |
+| Host runtime         | SSR strings, DOM / Canvas mounting, update, hydration, and animation lifecycle | `@retikz/render` backend execution      |
+| Tier 2 embeds        | Dispatch adapters by `kind` and aggregate lowering contributions               | Each domain package owns props/lowering |
+
+Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React host lifecycles. Use this package for framework-free authoring, SSR strings, or direct DOM / Canvas mounting.
 
 ## API Summary
 
@@ -116,5 +220,5 @@ const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 | `embed`               | authoring     | Builds a Tier 2 embed node                         |
 | `VanillaLayerCache`   | authoring     | Provides the layer `cache` metadata values         |
 | `isVanillaFigureSpec` | normalization | Checks for a version 1 plain spec                  |
-| `normalizeFigureSpec` | normalization | Produces core IR, composites, and runtime metadata |
+| `normalizeFigureSpec` | normalization | Produces Core IR, composites, and runtime metadata |
 | `VanillaTier2Adapter` | type          | Defines lowering for `embed()`                     |

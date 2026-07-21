@@ -20,6 +20,9 @@ export const buildConfiguredControlSlots = (
           value={runtime.value(config.id) ?? config.defaultValue}
           compact
           onValueChange={value => runtime.setValue(config.id, value)}
+          playingRangeId={runtime.rangePlaybackId}
+          onRangePlaybackStart={runtime.startRangePlayback}
+          onRangePlaybackStop={runtime.stopRangePlayback}
         />
       </PreviewToolbar>
     ),

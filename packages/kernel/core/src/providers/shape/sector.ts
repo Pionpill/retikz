@@ -7,7 +7,14 @@ import type { ContourSegment, FilletSolution, Rect } from '../../shared';
 import type { SectorGeometry } from './sector-geometry';
 
 import { defineShape } from '../../contract';
-import { boundaryFromContour, contourCommands, filletContour, localToWorld, RAD_TO_DEG } from '../../shared';
+import {
+  boundaryFromContour,
+  boundsConnectionEnvelope,
+  contourCommands,
+  filletContour,
+  localToWorld,
+  RAD_TO_DEG,
+} from '../../shared';
 import { contourToPathCommands, contourToPathPrimitive } from './outline';
 import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
 
@@ -136,6 +143,7 @@ export const sector = defineShape<SectorParams>({
         return undefined;
     }
   },
+  connectionEnvelope: boundsConnectionEnvelope,
   *emit(rect: Rect, style, round, params): Iterable<ScenePrimitive> {
     // 轮廓段（emit 收轴对齐 rect，rotate 由外层 group 施加）→ rounded-contour 命令 → path
     const { segments, fillets } = createSectorContour(rect, params);

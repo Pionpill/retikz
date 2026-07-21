@@ -2,113 +2,137 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/** Layout 视框与页面尺寸的决策图 */
+/** Layout chooses internal coordinates through exclusive precedence and keeps display size separate */
 const Demo: FC = () => (
-  <Layout width={560} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={620} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
-      id="prop-viewbox"
-      position={[-190, -70]}
-      stroke="dimgray"
+      text=" "
+      position={[0, -20]}
+      minimumSize={{ width: 600, height: 155 }}
+      stroke="lightgray"
       fill="lightgray"
-      fillOpacity={0.16}
+      fillOpacity={0.04}
+      dashPattern={[4, 3]}
       cornerRadius={4}
-      font={{ size: 14 }}
+    />
+    <Node position={[-205, -84]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
+      Internal-coordinate precedence
+    </Node>
+    <Node
+      id="viewbox-prop"
+      position={[-215, -50]}
+      minimumSize={{ width: 150, height: 40 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
     >
-      viewBox prop
+      1 · explicit viewBox prop
     </Node>
     <Node
       id="ir-viewbox"
-      position={[-190, 0]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
+      position={[-20, -50]}
+      minimumSize={{ width: 130, height: 40 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      font={{ size: 13 }}
     >
-      IR.viewBox
+      2 · IR viewBox
     </Node>
     <Node
-      id="auto-bounds"
-      position={[-190, 70]}
+      id="auto-layout"
+      position={[175, -50]}
+      minimumSize={{ width: 130, height: 40 }}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      font={{ size: 13 }}
     >
       bounds + padding
     </Node>
     <Node
-      id="scene-layout"
-      position={[0, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.1}
-      cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
-    >
-      Scene layout
-    </Node>
-    <Node
       id="coordinate-range"
-      position={[195, 0]}
+      position={[-20, 25]}
+      minimumSize={{ width: 142, height: 48 }}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
+      font={{ size: 13, weight: 'bold' }}
     >
       internal coordinates
     </Node>
     <Node
       id="width-height"
-      position={[0, 95]}
+      position={[-165, 90]}
+      minimumSize={{ width: 118, height: 40 }}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      font={{ size: 13 }}
     >
       width / height
     </Node>
     <Node
       id="display-size"
-      position={[195, 95]}
+      position={[165, 90]}
+      minimumSize={{ width: 132, height: 40 }}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
+      font={{ size: 13, weight: 'bold' }}
     >
       CSS display size
     </Node>
 
+    <Draw way={['viewbox-prop', 'coordinate-range']} arrow="->" stroke="gray" />
+    <Draw way={['ir-viewbox', 'coordinate-range']} arrow="->" stroke="gray" />
+    <Draw way={['auto-layout', 'coordinate-range']} arrow="->" stroke="gray" />
     <Draw
       way={[
-        'prop-viewbox',
-        { label: { text: 'priority 1', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'scene-layout',
+        'viewbox-prop',
+        {
+          label: {
+            text: 'absent',
+            position: 'midway',
+            side: 'top',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 10 },
+          },
+        },
+        'ir-viewbox',
       ]}
       arrow="->"
+      stroke="gray"
+      dashPattern={[4, 3]}
     />
     <Draw
       way={[
         'ir-viewbox',
-        { label: { text: 'priority 2', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'scene-layout',
+        {
+          label: {
+            text: 'absent',
+            position: 'midway',
+            side: 'top',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 10 },
+          },
+        },
+        'auto-layout',
       ]}
       arrow="->"
+      stroke="gray"
+      dashPattern={[4, 3]}
     />
-    <Draw
-      way={[
-        'auto-bounds',
-        { label: { text: 'fallback', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'scene-layout',
-      ]}
-      arrow="->"
-    />
-    <Draw way={['scene-layout', 'coordinate-range']} arrow="->" />
-    <Draw way={['width-height', 'display-size']} arrow="->" />
+    <Draw way={['width-height', 'display-size']} arrow="->" stroke="gray" />
   </Layout>
 );
 

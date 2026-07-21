@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 
 import type { CompileWarning, IRScene } from '../../src';
 
-import { CompileWarningCode, formatCompileWarning } from '../../src';
+import { BUILTIN_SHAPES, CompileWarningCode, defineShape, formatCompileWarning } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -149,6 +150,46 @@ describe('CompileOptions.onWarn', () => {
     compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings).toHaveLength(0);
   });
+
+  it('自定义 shape 缺少 connectionEnvelope 时 tight boundary 只发一次结构化 fallback warning', () => {
+    const customShape = defineShape({
+      name: 'custom-without-envelope',
+      paramsSchema: z.strictObject({}),
+      circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
+      boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
+      anchor: BUILTIN_SHAPES.rectangle.anchor,
+      emit: BUILTIN_SHAPES.rectangle.emit,
+    });
+    const ir = scene([
+      {
+        type: 'node',
+        id: 'A',
+        position: [0, 0],
+        text: 'A',
+        shape: 'custom-without-envelope',
+        boundary: { type: 'circle', params: { fit: 'tight' } },
+      },
+      { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+
+    compileToScene(ir, { shapes: [customShape], onWarn: warning => warnings.push(warning) });
+
+    expect(warnings.filter(warning => warning.code === CompileWarningCode.BoundaryTightFallback)).toEqual([
+      expect.objectContaining({
+        code: 'BOUNDARY_TIGHT_FALLBACK',
+        path: 'children[0].node',
+        message: expect.stringContaining("Shape 'custom-without-envelope'"),
+      }),
+    ]);
+  });
 });
 
 describe('CompileOptions.onWarn 缺省行为', () => {
@@ -206,6 +247,10 @@ describe('scope.transforms warn code 指向真正失败的那个 transform', () 
 describe('CompileWarningCode 收编与导出', () => {
   it('PARTIAL_ARC_CLOSED_INVALID 已收编进 CompileWarningCode 并从包根导出', () => {
     expect(CompileWarningCode.PartialArcClosedInvalid).toBe('PARTIAL_ARC_CLOSED_INVALID');
+  });
+
+  it('BOUNDARY_TIGHT_FALLBACK 已收编进 CompileWarningCode 并从包根导出', () => {
+    expect(CompileWarningCode.BoundaryTightFallback).toBe('BOUNDARY_TIGHT_FALLBACK');
   });
 
   it('formatCompileWarning 从包根导出，可格式化为人类可读字符串', () => {

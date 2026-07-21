@@ -2,24 +2,35 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { pathMarksControls, previewControlContract } from './path-marks.controls';
+
+export const previewControls = pathMarksControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  return (
+    <Layout width={360} height={160} viewBox={{ x: -180, y: -80, width: 360, height: 160 }}>
+      <Path
+        stroke="currentColor"
+        strokeWidth={1.5}
+        marks={[
+          { pos: values.firstPosition, mark: { kind: 'arrow', shape: 'stealth' } },
+          { pos: values.secondPosition, mark: { kind: 'arrow', shape: 'stealth' } },
+        ]}
+      >
+        <Step kind="move" to={[-150, 20]} />
+        <Step kind="cubic" control1={[-80, -70]} control2={[80, 90]} to={[150, 20]} />
+      </Path>
+    </Layout>
+  );
+});
+
+export const previewSource = controlledPreview.source;
+
 /**
- * 中段 marking：marks 沿路径 pos∈[0,1] 处放方向箭头，朝向由该点切线决定（非固定方向）。
- * 这里两个 stealth 箭头放在一条 cubic 曲线的 1/4 / 3/4 处，自动跟随曲线切线。
+ * 中段 marking 位置 playground
  */
-const Demo: FC = () => (
-  <Layout width={320} height={100}>
-    <Path
-      stroke="currentColor"
-      strokeWidth={1.5}
-      marks={[
-        { pos: 0.25, mark: { kind: 'arrow', shape: 'stealth' } },
-        { pos: 0.75, mark: { kind: 'arrow', shape: 'stealth' } },
-      ]}
-    >
-      <Step kind="move" to={[10, 30]} />
-      <Step kind="cubic" control1={[90, -30]} control2={[210, 90]} to={[290, 30]} />
-    </Path>
-  </Layout>
-);
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;
