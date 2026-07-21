@@ -113,8 +113,8 @@ alpha.1 使用统一的 `columnWidth`、`rowHeight` 和可选 `headerHeight`，�
 | ------------------------- | ---------------------------------------------- | ------- | ------------------------------------------ |
 | `spec`                    | `IRTableSpec`                                  | —       | 完整且可序列化的 Table spec                |
 | `data`                    | `ExternalDatasets`                             | `{}`    | 按 spec reference 索引的外部数据集         |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | —       | 自定义结构 definitions                     |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | —       | 自定义 Cell presentation definitions       |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | 自定义结构 definitions                     |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | 自定义 Cell presentation definitions       |
 | `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Cell 内嵌 Tier 2 内容所需 definitions      |
 | `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —       | standalone 布局产物通知；嵌入时不支持      |
 | `width` / `height`        | `number \| string`                             | —       | SVG 或 Canvas 宿主显示尺寸；不改变固定轨道 |
@@ -133,8 +133,8 @@ alpha.1 使用统一的 `columnWidth`、`rowHeight` 和可选 `headerHeight`，�
 | `id`                      | `string`                                       | —              | 稳定 Table id；嵌入父级 `Layout` 时必填 |
 | `layout`                  | `IRTableLayout`                                | 固定轨道默认值 | 列宽、正文/列头行高与行列间距           |
 | `meta`                    | `IRJsonObject`                                 | —              | lowering 保留的 JSON 元数据             |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | —              | 自定义结构 definitions                  |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | —              | 自定义 Cell presentation definitions    |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`           | 自定义结构 definitions                  |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`           | 自定义 Cell presentation definitions    |
 | `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`           | Cell 内嵌 Tier 2 内容所需 definitions   |
 | `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —              | standalone 布局产物通知；嵌入时不支持   |
 | `width` / `height`        | `number \| string`                             | —              | 宿主显示尺寸；不改变固定轨道            |
@@ -152,13 +152,58 @@ alpha.1 使用统一的 `columnWidth`、`rowHeight` 和可选 `headerHeight`，�
 | `id`                      | `string`                                       | —              | 稳定 Table id；嵌入父级 `Layout` 时必填 |
 | `layout`                  | `IRTableLayout`                                | 固定轨道默认值 | 列宽、正文/列头行高与行列间距           |
 | `meta`                    | `IRJsonObject`                                 | —              | lowering 保留的 JSON 元数据             |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | —              | 自定义结构 definitions                  |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | —              | 自定义 Cell presentation definitions    |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`           | 自定义结构 definitions                  |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`           | 自定义 Cell presentation definitions    |
 | `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`           | Cell 内嵌 Tier 2 内容所需 definitions   |
 | `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —              | standalone 布局产物通知；嵌入时不支持   |
 | `width` / `height`        | `number \| string`                             | —              | 宿主显示尺寸；不改变固定轨道            |
 | `renderer`                | `'svg' \| 'canvas'`                            | `'svg'`        | 渲染后端                                |
 | `className` / `style`     | `string`<br />`CSSProperties`                  | —              | 透传给渲染宿主                          |
+
+### IRTableSpec
+
+| 字段        | 类型                        | 默认值         | 描述                                      |
+| ----------- | --------------------------- | -------------- | ----------------------------------------- |
+| `namespace` | `'table'`                   | —              | Tier 2 composite 命名空间                 |
+| `type`      | `'table'`                   | —              | Table 根节点类型                          |
+| `id?`       | `string`                    | —              | 可选稳定 Table id                         |
+| `data?`     | `IRDataReference`           | —              | detail 必填、manual 禁止；记录不进入 spec |
+| `structure` | `IRTableStructureOperation` | —              | manual、detail 或自定义结构 operation     |
+| `layout?`   | `IRTableLayout`             | 固定轨道默认值 | 统一列宽、行高与间距                      |
+| `meta?`     | `IRJsonObject`              | —              | lowering 保留的 JSON 元数据               |
+
+### @retikz/table
+
+| API                                                 | 类型                                                                    | 默认值 | 描述                                     |
+| --------------------------------------------------- | ----------------------------------------------------------------------- | ------ | ---------------------------------------- |
+| `TableSpecSchema`                                   | `ZodType<IRTableSpec>`                                                  | —      | 校验完整且 JSON 可序列化的 Table spec    |
+| `createDetailTableSpec(input)`                      | `(DetailTableSpecInput) => IRTableSpec`                                 | —      | 构造 detail spec，并处理字符串列头 sugar |
+| `createManualTableSpec(input)`                      | `(ManualTableSpecInput) => IRTableSpec`                                 | —      | 构造显式行列与 Cell 的 manual spec       |
+| `lowerTables(datasets, options?)`                   | `(ExternalDatasets, LowerTablesOptions?) => Array<CompositeDefinition>` | —      | 为 Core compile 注册 Table composite     |
+| `lowerTableWithArtifacts(spec, datasets, options?)` | `(...) => TableLoweringResult`                                          | —      | 返回 Core child 与布局 manifest          |
+| `TableStructureKind`                                | `const object`                                                          | —      | `manual` / `detail` 与后续保留结构值     |
+| `TableCellPayloadKind`                              | `const object`                                                          | —      | `value` / `content` payload 判别值       |
+| `TableCellSourceKind`                               | `const object`                                                          | —      | runtime Cell 来源判别值                  |
+
+### Vanilla API
+
+| API                              | 类型                                         | 默认值 | 描述                                       |
+| -------------------------------- | -------------------------------------------- | ------ | ------------------------------------------ |
+| `detailTable(input)`             | `(DetailTableSpecInput) => IRTableSpec`      | —      | plain detail spec helper                   |
+| `manualTable(input)`             | `(ManualTableSpecInput) => IRTableSpec`      | —      | plain manual spec helper                   |
+| `embedTable(id, spec, options?)` | `(...) => VanillaEmbedSpec<TableEmbedProps>` | —      | 把 Table 放入 Kernel figure/layer          |
+| `createTableAdapter()`           | `() => VanillaTier2Adapter<TableEmbedProps>` | —      | 创建可复用的无状态 Table adapter           |
+| `renderTable`                    | `RenderTable`                                | —      | 一次性 SSR；artifact 模式同时返回 manifest |
+
+### renderTable options
+
+| 选项           | 类型                                 | 默认值  | 描述                                 |
+| -------------- | ------------------------------------ | ------- | ------------------------------------ |
+| `data`         | `ExternalDatasets`                   | `{}`    | 按 reference 索引的外部数据集        |
+| `lowerOptions` | `LowerTablesOptions`                 | `{}`    | structure / presentation definitions |
+| `composites`   | `ReadonlyArray<CompositeDefinition>` | `[]`    | Cell 内嵌 Tier 2 definitions         |
+| `output`       | `RenderToStringOptions['output']`    | —       | SVG 宿主输出尺寸与 id prefix         |
+| `artifacts`    | `true` / `false`                     | `false` | 为 `true` 时返回 SVG 与 manifest     |
 
 ## 相关
 

@@ -117,8 +117,8 @@ alpha.1 uses uniform `columnWidth`, `rowHeight`, and optional `headerHeight`; Ce
 | ------------------------- | ---------------------------------------------- | ------- | -------------------------------------------------------------- |
 | `spec`                    | `IRTableSpec`                                  | —       | Complete JSON-serializable Table spec                          |
 | `data`                    | `ExternalDatasets`                             | `{}`    | External datasets indexed by spec reference                    |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | —       | Custom structure definitions                                   |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | —       | Custom Cell presentation definitions                           |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | Custom structure definitions                                   |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | Custom Cell presentation definitions                           |
 | `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Definitions required by Tier 2 Cell content                    |
 | `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —       | Standalone layout artifact callback; unsupported when embedded |
 | `width` / `height`        | `number \| string`                             | —       | SVG or Canvas host size; does not change fixed tracks          |
@@ -137,8 +137,8 @@ alpha.1 uses uniform `columnWidth`, `rowHeight`, and optional `headerHeight`; Ce
 | `id`                      | `string`                                       | —                    | Stable Table id; required inside a parent `Layout`             |
 | `layout`                  | `IRTableLayout`                                | fixed-track defaults | Column width, body/header heights, and row/column gaps         |
 | `meta`                    | `IRJsonObject`                                 | —                    | JSON metadata preserved by lowering                            |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | —                    | Custom structure definitions                                   |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | —                    | Custom Cell presentation definitions                           |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`                 | Custom structure definitions                                   |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`                 | Custom Cell presentation definitions                           |
 | `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`                 | Definitions required by Tier 2 Cell content                    |
 | `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —                    | Standalone layout artifact callback; unsupported when embedded |
 | `width` / `height`        | `number \| string`                             | —                    | Host size; does not change fixed tracks                        |
@@ -156,13 +156,58 @@ alpha.1 uses uniform `columnWidth`, `rowHeight`, and optional `headerHeight`; Ce
 | `id`                      | `string`                                       | —                    | Stable Table id; required inside a parent `Layout`             |
 | `layout`                  | `IRTableLayout`                                | fixed-track defaults | Column width, body/header heights, and row/column gaps         |
 | `meta`                    | `IRJsonObject`                                 | —                    | JSON metadata preserved by lowering                            |
-| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | —                    | Custom structure definitions                                   |
-| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | —                    | Custom Cell presentation definitions                           |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`                 | Custom structure definitions                                   |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`                 | Custom Cell presentation definitions                           |
 | `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`                 | Definitions required by Tier 2 Cell content                    |
 | `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —                    | Standalone layout artifact callback; unsupported when embedded |
 | `width` / `height`        | `number \| string`                             | —                    | Host size; does not change fixed tracks                        |
 | `renderer`                | `'svg' \| 'canvas'`                            | `'svg'`              | Rendering backend                                              |
 | `className` / `style`     | `string`<br />`CSSProperties`                  | —                    | Passed to the rendering host                                   |
+
+### IRTableSpec
+
+| Field       | Type                        | Default              | Description                                                         |
+| ----------- | --------------------------- | -------------------- | ------------------------------------------------------------------- |
+| `namespace` | `'table'`                   | —                    | Tier 2 composite namespace                                          |
+| `type`      | `'table'`                   | —                    | Top-level Table node type                                           |
+| `id?`       | `string`                    | —                    | Optional stable Table id                                            |
+| `data?`     | `IRDataReference`           | —                    | Required by detail and forbidden by manual; records stay outside IR |
+| `structure` | `IRTableStructureOperation` | —                    | Manual, detail, or custom structure operation                       |
+| `layout?`   | `IRTableLayout`             | fixed-track defaults | Uniform column width, row heights, and gaps                         |
+| `meta?`     | `IRJsonObject`              | —                    | JSON metadata preserved by lowering                                 |
+
+### @retikz/table
+
+| API                                                 | Type                                                                    | Default | Description                                         |
+| --------------------------------------------------- | ----------------------------------------------------------------------- | ------- | --------------------------------------------------- |
+| `TableSpecSchema`                                   | `ZodType<IRTableSpec>`                                                  | —       | Validates a complete JSON-serializable Table spec   |
+| `createDetailTableSpec(input)`                      | `(DetailTableSpecInput) => IRTableSpec`                                 | —       | Builds a detail spec and normalizes string headers  |
+| `createManualTableSpec(input)`                      | `(ManualTableSpecInput) => IRTableSpec`                                 | —       | Builds a manual spec from explicit dimensions/Cells |
+| `lowerTables(datasets, options?)`                   | `(ExternalDatasets, LowerTablesOptions?) => Array<CompositeDefinition>` | —       | Registers Table composites for Core compile         |
+| `lowerTableWithArtifacts(spec, datasets, options?)` | `(...) => TableLoweringResult`                                          | —       | Returns a Core child plus the layout manifest       |
+| `TableStructureKind`                                | `const object`                                                          | —       | `manual` / `detail` and reserved structure values   |
+| `TableCellPayloadKind`                              | `const object`                                                          | —       | `value` / `content` payload discriminators          |
+| `TableCellSourceKind`                               | `const object`                                                          | —       | Runtime Cell-source discriminators                  |
+
+### Vanilla API
+
+| API                              | Type                                         | Default | Description                                       |
+| -------------------------------- | -------------------------------------------- | ------- | ------------------------------------------------- |
+| `detailTable(input)`             | `(DetailTableSpecInput) => IRTableSpec`      | —       | Plain detail-spec helper                          |
+| `manualTable(input)`             | `(ManualTableSpecInput) => IRTableSpec`      | —       | Plain manual-spec helper                          |
+| `embedTable(id, spec, options?)` | `(...) => VanillaEmbedSpec<TableEmbedProps>` | —       | Embeds Table into a Kernel figure/layer           |
+| `createTableAdapter()`           | `() => VanillaTier2Adapter<TableEmbedProps>` | —       | Creates a reusable stateless Table adapter        |
+| `renderTable`                    | `RenderTable`                                | —       | One-shot SSR; artifact mode also returns manifest |
+
+### renderTable options
+
+| Option         | Type                                 | Default | Description                                 |
+| -------------- | ------------------------------------ | ------- | ------------------------------------------- |
+| `data`         | `ExternalDatasets`                   | `{}`    | External datasets indexed by reference      |
+| `lowerOptions` | `LowerTablesOptions`                 | `{}`    | Structure and presentation definitions      |
+| `composites`   | `ReadonlyArray<CompositeDefinition>` | `[]`    | Definitions required by Tier 2 Cell content |
+| `output`       | `RenderToStringOptions['output']`    | —       | SVG host dimensions and id prefix           |
+| `artifacts`    | `true` / `false`                     | `false` | Returns both SVG and manifest when `true`   |
 
 ## Related
 

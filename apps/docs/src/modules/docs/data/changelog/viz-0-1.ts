@@ -836,5 +836,162 @@ export const vizV01: Release = {
         },
       ],
     },
+    {
+      pkg: '@retikz/table',
+      version: 'v0.1',
+      description: {
+        zh: 'renderer-agnostic 的静态表格核心：用 JSON-safe TableSpec 表达结构、Cell 与固定轨道布局，再下沉为 Core IR，并保留布局 manifest。',
+        en: 'The renderer-agnostic static-table core: JSON-safe TableSpecs describe structure, Cells, and fixed tracks before lowering to Core IR with a layout manifest.',
+      },
+      highlights: [
+        {
+          label: { zh: '统一 TableSpec 与语义模型', en: 'Unified TableSpec and semantic model' },
+          content: {
+            zh: 'manual、detail 与自定义 structure 经过同一 Definition / registry / pipeline，统一生成可追溯的 `SemanticTableModel`。',
+            en: 'Manual, detail, and custom structures share one Definition / registry / pipeline and produce the same traceable `SemanticTableModel`.',
+          },
+        },
+        {
+          label: { zh: 'Core lowering 与 manifest', en: 'Core lowering and manifests' },
+          content: {
+            zh: '`lowerTables()` 让 renderer 只消费 Core IR；`lowerTableWithArtifacts()` 额外返回递归冻结的行列与 Cell 布局 manifest。',
+            en: '`lowerTables()` keeps renderers on Core IR, while `lowerTableWithArtifacts()` also returns an immutable row, column, and Cell layout manifest.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.1',
+          date: '2026-07-21',
+          summary: {
+            zh: '首发 Table 最薄纵向闭环：manual/detail、value/content Cell、固定轨道、Core lowering、manifest 与可扩展 definitions。',
+            en: 'First Table vertical slice: manual/detail structures, value/content Cells, fixed tracks, Core lowering, manifests, and extensible definitions.',
+          },
+          items: [
+            {
+              label: { zh: 'JSON-safe 根契约', en: 'JSON-safe root contract' },
+              content: {
+                zh: '`IRTableSpec` 只保存外部数据引用、结构、布局和 JSON metadata；真实 records 与带函数 definitions 继续在 runtime 注入。',
+                en: '`IRTableSpec` stores only external data references, structure, layout, and JSON metadata; records and function-bearing definitions stay in runtime inputs.',
+              },
+            },
+            {
+              label: { zh: '结构与 Cell 扩展同路', en: 'Unified structure and Cell extensions' },
+              content: {
+                zh: '内置 manual/detail 与自定义 structure 共用 registry；内置 text 与自定义 presentation 同样经过精确 schema 和 JSON/Core output guard。',
+                en: 'Built-in manual/detail and custom structures share a registry; built-in text and custom presentations use the same precise schemas and JSON/Core output guards.',
+              },
+            },
+            {
+              label: { zh: '固定轨道与稳定 identity', en: 'Fixed tracks and stable identity' },
+              content: {
+                zh: 'alpha.1 提供统一列宽、正文/列头行高与 gap，保留 Table/row/column/Cell identity；内容测量、span、border 与 fit/overflow 延后。',
+                en: 'alpha.1 provides uniform column width, body/header heights, and gaps while preserving Table/row/column/Cell identity; measurement, spans, borders, and fit/overflow remain deferred.',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      pkg: '@retikz/table-react',
+      version: 'v0.1',
+      description: {
+        zh: 'Table 的 React authoring 与宿主接线：提供通用、明细和手工三种组件，并复用同一 Table runtime 与 Core renderer。',
+        en: 'React authoring and host wiring for Table: general, detail, and manual components reuse the same Table runtime and Core renderers.',
+      },
+      highlights: [
+        {
+          label: { zh: '三种明确组件入口', en: 'Three explicit component entries' },
+          content: {
+            zh: '`<Table>` 消费完整 spec，`<DetailTable>` 面向 records，`<ManualTable>` 面向显式网格，避免在一个 props union 中混合三种 authoring。',
+            en: '`<Table>` consumes complete specs, `<DetailTable>` targets records, and `<ManualTable>` targets explicit grids without mixing three authoring modes in one props union.',
+          },
+        },
+        {
+          label: { zh: 'standalone 与嵌入共用 runtime', en: 'Shared standalone and embedded runtime' },
+          content: {
+            zh: '三个组件复用同一 normalization、contribution 和 lowering；standalone 可观察 manifest，嵌入父级 `Layout` 时使用稳定 Table id。',
+            en: 'All three components reuse the same normalization, contribution, and lowering; standalone rendering can observe manifests, while parent `Layout` embedding uses stable Table ids.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.1',
+          date: '2026-07-21',
+          summary: {
+            zh: '首发 `<Table>`、`<DetailTable>` 与 `<ManualTable>`，覆盖 standalone、Layout 嵌入、SVG/Canvas 与 manifest 通知。',
+            en: 'Introduces `<Table>`, `<DetailTable>`, and `<ManualTable>` across standalone rendering, Layout embedding, SVG/Canvas, and manifest notifications.',
+          },
+          items: [
+            {
+              label: { zh: '共享 plain normalization', en: 'Shared plain normalization' },
+              content: {
+                zh: 'detail/manual React props 委托 `@retikz/table` 构造 JSON-safe spec，string header、默认值与错误语义不在 adapter 重复实现。',
+                en: 'Detail/manual React props delegate JSON-safe spec construction to `@retikz/table`, so string headers, defaults, and errors are not reimplemented in the adapter.',
+              },
+            },
+            {
+              label: { zh: '确定性嵌入贡献', en: 'Deterministic embedded contributions' },
+              content: {
+                zh: '嵌入态聚合 datasets、Table definitions 与 nested composites；重复稳定 id 或同 key 不同 definition 会 fail-loud。',
+                en: 'Embedded mode aggregates datasets, Table definitions, and nested composites; duplicate stable ids or conflicting definitions fail loudly.',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      pkg: '@retikz/table-vanilla',
+      version: 'v0.1',
+      description: {
+        zh: 'Table 的无框架 authoring、Tier 2 adapter 与 SSR 入口：plain spec 可进入 Kernel figure/layer、mount/update 或直接输出 SVG。',
+        en: 'Framework-free Table authoring, a Tier 2 adapter, and SSR entry: plain specs enter Kernel figures/layers, mount/update, or direct SVG output.',
+      },
+      highlights: [
+        {
+          label: { zh: 'plain helper，不建 builder', en: 'Plain helpers without a builder' },
+          content: {
+            zh: '`detailTable()` / `manualTable()` 返回无方法的 `IRTableSpec`，与 React 共用 `@retikz/table` normalization。',
+            en: '`detailTable()` / `manualTable()` return method-free `IRTableSpec` values and share `@retikz/table` normalization with React.',
+          },
+        },
+        {
+          label: { zh: '复用 Kernel runtime', en: 'Kernel runtime reuse' },
+          content: {
+            zh: '`embedTable()` + `createTableAdapter()` 接入标准 figure/layer 与 `mount().update()`；`renderTable()` 提供无 DOM SSR 和可选 manifest。',
+            en: '`embedTable()` + `createTableAdapter()` enter standard figures/layers and `mount().update()`; `renderTable()` provides DOM-free SSR with an optional manifest.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.1',
+          date: '2026-07-21',
+          summary: {
+            zh: '首发 plain detail/manual helper、Table embed adapter、浏览器 update 与 SSR artifact overload。',
+            en: 'Introduces plain detail/manual helpers, the Table embed adapter, browser updates, and the SSR artifact overload.',
+          },
+          items: [
+            {
+              label: { zh: '标准 embed 与更新路径', en: 'Standard embedding and updates' },
+              content: {
+                zh: 'Table 运行时输入保留在 embed props，同一无状态 adapter 可在 `update(nextFigure)` 时读取新的 datasets、definitions 与 composites。',
+                en: 'Table runtime inputs stay in embed props, allowing one stateless adapter to read updated datasets, definitions, and composites during `update(nextFigure)`.',
+              },
+            },
+            {
+              label: { zh: 'SSR 与 artifact', en: 'SSR and artifacts' },
+              content: {
+                zh: '`renderTable()` 默认返回 SVG string；`artifacts: true` 返回 `{ svg, manifest }`，output 尺寸只控制 SVG 宿主，不改变 Table 几何。',
+                en: '`renderTable()` returns an SVG string by default; `artifacts: true` returns `{ svg, manifest }`, and output dimensions affect only the SVG host, not Table geometry.',
+              },
+            },
+          ],
+        },
+      ],
+    },
   ],
 };

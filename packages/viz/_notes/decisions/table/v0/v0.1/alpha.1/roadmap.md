@@ -1,7 +1,10 @@
 # table v0.1-alpha.1 Roadmap：最薄纵向闭环
 
-> milestone 执行路线。长期决策写入同目录 ADR；本文可随人工 review 调整。
+> milestone 完成记录。长期决策写入同目录 ADR。
 > 关联：[`table v0.1 roadmap`](../roadmap.md) · [`table-design.md`](../../../../../architecture/table-design.md) · [`_template.md`](../../../../_template.md)
+
+- 状态：已完成
+- 完成日期：2026-07-21
 
 ## 目标
 
@@ -41,14 +44,21 @@ ADR 编号按概念阅读顺序组织，不等同于实现顺序；实现以依�
 - React / Vanilla 对同一 spec 产生等价 Table lowering 结果，并共享多实例 contribution 冲突语义
 - `deps-guard` 确认 table 不依赖 plot、React、DOM 或 renderer
 
+## 完成结果
+
+- 六份 ADR 均已 Accepted，并压缩为长期决策记录
+- `@retikz/table`、`@retikz/table-react`、`@retikz/table-vanilla` 已形成可构建、可测试的 lockstep alpha.1 薄片
+- manual/detail、Cell presentation、固定轨道、Core lowering、manifest、React/Vanilla/SSR 已闭环
+- 双语组件文档、可运行 demo、API 参考与三包 changelog 已同步
+
 ## 完成标准
 
-- 三包脚手架和公开入口可构建、类型检查与测试
-- manual / detail 两种结构共用 SemanticTableModel 与 lowering
-- 内置 text presentation 与自定义 presentation 走同一 registry
-- 固定轨道布局对非法尺寸、重复地址和缺失数据 fail-loud
-- React / Vanilla 都能渲染同一 TableSpec；Vanilla 可通过 Kernel `mount().update()` 用新 embed props 更新数据
-- alpha.2 需要的测量、span 与 border 缺口已明确，不以 alpha.1 私有补丁替代
+- [x] 三包脚手架和公开入口可构建、类型检查与测试
+- [x] manual / detail 两种结构共用 SemanticTableModel 与 lowering
+- [x] 内置 text presentation 与自定义 presentation 走同一 registry
+- [x] 固定轨道布局对非法尺寸、重复地址和缺失数据 fail-loud
+- [x] React / Vanilla 都能渲染同一 TableSpec；Vanilla 可通过 Kernel `mount().update()` 用新 embed props 更新数据
+- [x] alpha.2 需要的测量、span 与 border 缺口已明确，不以 alpha.1 私有补丁替代
 
 ## ADR 约定
 
