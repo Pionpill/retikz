@@ -148,6 +148,7 @@
     "grammarExtendMark": "Custom Marks",
     "components": "Components",
     "compPlot": "Container",
+    "compTable": "Table",
     "compMark": "Marks",
     "compPathMark": "PathMark",
     "compPointMark": "PointMark",

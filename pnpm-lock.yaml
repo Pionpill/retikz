@@ -274,6 +274,15 @@ importers:
       '@retikz/render':
         specifier: workspace:*
         version: link:../../packages/kernel/render
+      '@retikz/table':
+        specifier: workspace:*
+        version: link:../../packages/viz/table
+      '@retikz/table-react':
+        specifier: workspace:*
+        version: link:../../packages/viz/table-react
+      '@retikz/table-vanilla':
+        specifier: workspace:*
+        version: link:../../packages/viz/table-vanilla
       '@retikz/tex':
         specifier: workspace:*
         version: link:../../packages/kernel/tex

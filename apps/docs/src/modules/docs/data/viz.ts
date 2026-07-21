@@ -11,7 +11,10 @@ export const vizSection: Array<Section> = [
   {
     id: 'components',
     label: 'viz.components',
-    pages: [{ id: 'plot', label: 'viz.compPlot' }],
+    pages: [
+      { id: 'plot', label: 'viz.compPlot' },
+      { id: 'table', label: 'viz.compTable' },
+    ],
   },
   {
     id: 'data',

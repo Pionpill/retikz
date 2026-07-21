@@ -5,7 +5,7 @@
 ## 包职责契约
 
 - **解决的问题**：把结构化数据或显式内容组织为具有行、列、Cell 和语义区域的二维表格，并确定性地 lowering 为 Core IR
-- **拥有的契约**：Table IR / schema、表格结构与操作、Cell 语义、formatter / presentation / visual encoding / rule / theme definitions、表格约束布局与内容 fit / overflow、后续大表 window / viewport 计算、lowering、manifest / lineage / locator / diagnostics
+- **拥有的契约**：Table IR / schema、表格结构与操作、Cell 语义、framework-neutral authoring normalization、adapter-shared runtime contribution、formatter / presentation / visual encoding / rule / theme definitions、表格约束布局与内容 fit / overflow、后续大表 window / viewport 计算、lowering、manifest / lineage / locator / diagnostics
 - **不拥有的能力**：通用数据 transform / statistics、Core IR / Scene 与通用测量、Plot 语义及跨 Plot Cell 的 scale / axis / guide 协调、renderer、React / Vanilla authoring、单元格编辑或电子表格计算
 - **输入与输出**：接收 Table IR、external datasets、Table definitions 与 compile options，输出 Core IR contribution 与可追溯附属信息；不直接输出 DOM、SVG 或 Canvas
 - **缺口流向**：通用数据能力进入 `@retikz/data`；通用图形、几何和测量进入 core / math；宿主 authoring、滚动容器与 viewport 生命周期进入对应 adapter；服务端分页 / 异步缓存状态留在宿主；编辑和电子表格计算不进入 Table 家族
@@ -35,7 +35,7 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 
 ## 当前状态
 
-当前目录已初始化 npm package、构建配置与空公开入口，版本线从 `0.1.0-alpha.1` 开始。Table IR、schema、pipeline 与测试尚未实现；正式能力必须按 alpha.1 ADR 的依赖顺序落地，不能从空入口推断临时 API。
+`0.1.0-alpha.1` 已形成最薄闭环：manual / detail 结构共用 `SemanticTableModel`，Cell value / content 经 presentation contract 进入固定轨道布局并 lowering 为 Core IR。`createDetailTableSpec()` / `createManualTableSpec()` 是 framework-neutral authoring 入口；runtime contribution contract 由 React 与 Vanilla adapter 共用。内容测量、span、完整 border 与 fit / overflow 仍在后续版本。
 
 ## 验证
 

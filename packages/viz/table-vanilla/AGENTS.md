@@ -5,9 +5,9 @@
 ## 包职责契约
 
 - **解决的问题**：让无 UI 框架、SSR 与 build-time 用户用 plain API 构造并运行 Table，同时复用同一 Data / Table / Core 管线
-- **拥有的契约**：未来的 framework-free Table builder、render / embed 编排、dataset / registry / artifact options、后续虚拟滚动宿主接线与 `@retikz/vanilla` 协作
+- **拥有的契约**：framework-free detail / manual helper、Tier 2 embed adapter、一次性 SSR convenience、dataset / registry / artifact options、后续虚拟滚动宿主接线与 `@retikz/vanilla` 协作
 - **不拥有的能力**：Data schema / transform、Table IR 语义、结构操作、格式化、布局、lowering、Core 编译、renderer 或 DOM runtime
-- **输入与输出**：接收 builder calls 或 TableSpec、datasets 与 runtime options，构造规范 TableSpec 并交给 `@retikz/table` 与 `@retikz/vanilla`
+- **输入与输出**：接收 plain authoring input 或 TableSpec、datasets 与 runtime options，构造规范 TableSpec 并交给 `@retikz/table` 与 `@retikz/vanilla`
 - **缺口流向**：数据问题进入 `@retikz/data`；表格语义、布局与 lowering 进入 `@retikz/table`；通用无框架挂载、SSR 与输出能力进入 `@retikz/vanilla`
 
 ## 约束
@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-当前目录已初始化 npm package、无框架构建配置与空公开入口，版本线与 Table release group 保持 `0.1.0-alpha.1` lockstep。builder、render API 与测试尚未实现；正式能力必须跟随 Table ADR，并保持 adapter 与核心语义等价。
+`0.1.0-alpha.1` 提供 `detailTable()`、`manualTable()`、`embedTable()`、`createTableAdapter()` 与 `renderTable()`。前两者返回无方法的 plain `IRTableSpec`；embed / adapter 复用 Kernel Figure 与 `mount().update()`，`renderTable()` 只负责一次性 SSR，并可返回 manifest artifact。当前不提供 fluent builder 或 Table 私有 mount runtime。
 
 ## 验证
 

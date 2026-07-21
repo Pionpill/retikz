@@ -148,6 +148,7 @@
     "grammarExtendMark": "自定义图元",
     "components": "组件",
     "compPlot": "容器",
+    "compTable": "表格",
     "compMark": "图元",
     "compPathMark": "路径",
     "compPointMark": "散点",
