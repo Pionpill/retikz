@@ -1,10 +1,11 @@
 import type { IRDataModel } from '@retikz/data';
 
 import type {
+  IRDetailTableSpec,
+  IRManualTableSpec,
   IRTableCell,
   IRTableCellPayload,
   IRTableDetailColumn,
-  IRTableSpec,
   TableRowKindValue,
 } from '../../schemas';
 
@@ -15,7 +16,7 @@ export type TableDetailColumnInput = Omit<IRTableDetailColumn, 'header'> & {
 };
 
 /** detail Table 的 framework-neutral plain spec 输入 */
-export type DetailTableSpecInput = Omit<IRTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
+export type DetailTableSpecInput = Omit<IRDetailTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
   /** 运行时外部 dataset reference */
   dataRef: string;
   /** 可选数据字段模型 */
@@ -27,7 +28,7 @@ export type DetailTableSpecInput = Omit<IRTableSpec, 'namespace' | 'type' | 'dat
 };
 
 /** manual Table 的 framework-neutral plain spec 输入 */
-export type ManualTableSpecInput = Omit<IRTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
+export type ManualTableSpecInput = Omit<IRManualTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
   /** 显式行数 */
   rows: number;
   /** 显式列数 */

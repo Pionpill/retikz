@@ -1,7 +1,13 @@
 import type { CompositeDefinition, ValueOf } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { LayoutProps } from '@retikz/react';
-import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
+import type {
+  IRDetailTableSpec,
+  IRManualTableSpec,
+  IRTableSpec,
+  LowerTablesOptions,
+  TableLayoutManifest,
+} from '@retikz/table';
 
 import { createDetailTableSpec, createManualTableSpec, TableSpecSchema } from '@retikz/table';
 
@@ -56,7 +62,7 @@ const displayOf = (props: TableCommonProps): ReactTableRuntime['display'] => ({
 });
 
 /** 从 detail React props 提取 framework-neutral authoring 输入 */
-const detailSpecOf = (props: DetailTableProps): IRTableSpec =>
+const detailSpecOf = (props: DetailTableProps): IRDetailTableSpec =>
   createDetailTableSpec({
     ...(props.id === undefined ? {} : { id: props.id }),
     dataRef: props.dataRef,
@@ -68,7 +74,7 @@ const detailSpecOf = (props: DetailTableProps): IRTableSpec =>
   });
 
 /** 从 manual React props 提取 framework-neutral authoring 输入 */
-const manualSpecOf = (props: ManualTableProps): IRTableSpec =>
+const manualSpecOf = (props: ManualTableProps): IRManualTableSpec =>
   createManualTableSpec({
     ...(props.id === undefined ? {} : { id: props.id }),
     rows: props.rows,
@@ -93,10 +99,9 @@ export const resolveReactTableRuntime = (
     datasets = tableProps.data ?? {};
   } else if (kind === ReactTableRuntimeKind.Detail) {
     const detailProps = props as DetailTableProps;
-    spec = detailSpecOf(detailProps);
-    const reference = spec.data?.reference;
-    if (reference === undefined) throw new Error('table react: internal detail data reference is missing');
-    datasets = { [reference]: detailProps.data };
+    const detailSpec = detailSpecOf(detailProps);
+    spec = detailSpec;
+    datasets = { [detailSpec.data.reference]: detailProps.data };
   } else {
     const manualProps = props as ManualTableProps;
     spec = manualSpecOf(manualProps);

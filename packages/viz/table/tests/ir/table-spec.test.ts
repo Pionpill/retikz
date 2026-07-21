@@ -1,7 +1,18 @@
-import { defineComposite } from '@retikz/core';
-import { describe, expect, it } from 'vitest';
+import type { IRDataReference } from '@retikz/data';
 
-import { TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../../src';
+import { defineComposite } from '@retikz/core';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+
+import type { IRCustomTableSpec, IRDetailTableSpec, IRManualTableSpec, IRTableSpec } from '../../src';
+
+import {
+  CustomTableSpecSchema,
+  DetailTableSpecSchema,
+  ManualTableSpecSchema,
+  TABLE_NAMESPACE,
+  TableComposite,
+  TableSpecSchema,
+} from '../../src';
 
 const manualSpec = {
   namespace: 'table',
@@ -10,8 +21,38 @@ const manualSpec = {
 } as const;
 
 describe('Table root spec schema', () => {
+  it('exposes precise detail, manual, and custom root schemas', () => {
+    const detail = DetailTableSpecSchema.parse({
+      namespace: 'table',
+      type: 'table',
+      data: { reference: 'people' },
+      structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
+    });
+    const manual = ManualTableSpecSchema.parse(manualSpec);
+    const custom = CustomTableSpecSchema.parse({
+      namespace: 'table',
+      type: 'table',
+      structure: { kind: 'summaryByRegion', field: 'region' },
+    });
+
+    expectTypeOf(detail).toEqualTypeOf<IRDetailTableSpec>();
+    expectTypeOf(manual).toEqualTypeOf<IRManualTableSpec>();
+    expectTypeOf(custom).toEqualTypeOf<IRCustomTableSpec>();
+    expectTypeOf(detail.data).toEqualTypeOf<IRDataReference>();
+    expect(detail.structure.kind).toBe('detail');
+    expect(manual.structure.kind).toBe('manual');
+    expect(custom.structure.kind).toBe('summaryByRegion');
+  });
+
   it('round-trips a manual root without external data', () => {
-    expect(TableSpecSchema.parse(JSON.parse(JSON.stringify(manualSpec)))).toEqual(manualSpec);
+    const parsed: IRTableSpec = TableSpecSchema.parse(JSON.parse(JSON.stringify(manualSpec)));
+
+    expectTypeOf(parsed.data).toEqualTypeOf<IRDataReference | undefined>();
+    expect(parsed).toEqual(manualSpec);
+    expect(ManualTableSpecSchema.parse({ ...manualSpec, data: undefined })).toEqual({
+      ...manualSpec,
+      data: undefined,
+    });
   });
 
   it('accepts detail data references and preserves id, layout, and JSON metadata', () => {
@@ -64,6 +105,16 @@ describe('Table root spec schema', () => {
 
     expect(() => TableSpecSchema.parse(detailWithoutData)).toThrow(/data/i);
     expect(() => TableSpecSchema.parse(manualWithData)).toThrow(/data/i);
+    expect(() => DetailTableSpecSchema.parse(detailWithoutData)).toThrow(/data/i);
+    expect(() => DetailTableSpecSchema.parse(manualSpec)).toThrow();
+    expect(() => ManualTableSpecSchema.parse(manualWithData)).toThrow(/data/i);
+    expect(() =>
+      ManualTableSpecSchema.parse({
+        namespace: 'table',
+        type: 'table',
+        structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
+      }),
+    ).toThrow();
   });
 
   it('keeps rows, functions, and non-JSON metadata outside the IR', () => {

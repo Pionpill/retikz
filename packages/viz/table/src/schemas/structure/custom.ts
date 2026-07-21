@@ -15,6 +15,7 @@ export const CustomTableStructureSchema = z
         code: 'custom',
         path: ['kind'],
         message: `Table structure kind "${operation.kind}" is reserved`,
+        continue: false,
       });
     }
   })

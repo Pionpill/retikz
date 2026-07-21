@@ -118,4 +118,89 @@ describe('provider key contract', () => {
       }),
     ).toThrow(/namespace.*declared.*actual/s);
   });
+
+  it('composite_object_union_declares_one_shared_provider_key', () => {
+    const schema = z.union([
+      CompositeBaseSchema.extend({
+        namespace: z.literal('demo'),
+        type: z.literal('badge'),
+        variant: z.literal('text'),
+        text: z.string(),
+      }),
+      CompositeBaseSchema.extend({
+        namespace: z.literal('demo'),
+        type: z.literal('badge'),
+        variant: z.literal('count'),
+        count: z.number(),
+      }),
+    ]);
+    const badge = defineComposite({
+      namespace: 'demo',
+      type: 'badge',
+      schema,
+      expand: node => ({
+        type: 'node',
+        position: [0, 0],
+        text: node.variant === 'text' ? node.text : String(node.count),
+      }),
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { namespace: 'demo', type: 'badge', variant: 'text', text: 'A' },
+        { namespace: 'demo', type: 'badge', variant: 'count', count: 2 },
+      ],
+    };
+
+    expect(() => compileToScene(ir, { composites: [badge] })).not.toThrow();
+  });
+
+  it('composite_object_union_rejects_unreadable_or_mixed_provider_keys', () => {
+    const base = CompositeBaseSchema.extend({
+      namespace: z.literal('demo'),
+      type: z.literal('badge'),
+      variant: z.literal('base'),
+    });
+    const definitionOf = (schema: z.ZodType) =>
+      defineComposite({ namespace: 'demo', type: 'badge', schema, expand: () => [] });
+
+    expect(() => definitionOf(z.union([base, z.string()]))).toThrow(/union option 1.*ZodObject/i);
+    expect(() =>
+      definitionOf(
+        z.union([
+          base,
+          CompositeBaseSchema.extend({
+            namespace: z.string(),
+            type: z.literal('badge'),
+            variant: z.literal('dynamicNamespace'),
+          }),
+        ]),
+      ),
+    ).toThrow(/union option 1.*namespace.*literal/i);
+    expect(() =>
+      definitionOf(
+        z.union([
+          base,
+          CompositeBaseSchema.extend({
+            namespace: z.literal('other'),
+            type: z.literal('badge'),
+            variant: z.literal('otherNamespace'),
+          }),
+        ]),
+      ),
+    ).toThrow(/union option 1.*namespace.*demo.*other|union option 1.*namespace.*other.*demo/i);
+    expect(() =>
+      definitionOf(
+        z.union([
+          base,
+          CompositeBaseSchema.extend({
+            namespace: z.literal('demo'),
+            type: z.literal('panel'),
+            variant: z.literal('otherType'),
+          }),
+        ]),
+      ),
+    ).toThrow(/union option 1.*type.*badge.*panel|union option 1.*type.*panel.*badge/i);
+  });
 });

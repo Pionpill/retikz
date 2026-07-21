@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { DetailTableSpecInput, ManualTableSpecInput } from '../../../src';
+import type { DetailTableSpecInput, IRDetailTableSpec, IRManualTableSpec, ManualTableSpecInput } from '../../../src';
 
 import {
   createDetailTableSpec,
@@ -53,11 +53,11 @@ describe('Table plain authoring', () => {
     const before = structuredClone(input);
     const spec = createDetailTableSpec(input);
 
+    expectTypeOf(spec).toEqualTypeOf<IRDetailTableSpec>();
     expect(input).toEqual(before);
     expect(spec.structure.kind).toBe('detail');
-    if (spec.structure.kind !== 'detail') throw new Error('expected detail structure');
     expect(spec.structure.columns).not.toBe(columns);
-    expect(spec.data?.model).not.toBe(model);
+    expect(spec.data.model).not.toBe(model);
     expect(JSON.parse(JSON.stringify(spec))).toEqual(spec);
     expect(TableSpecSchema.parse(spec)).toEqual(spec);
   });
@@ -83,6 +83,7 @@ describe('Table plain authoring', () => {
     const before = structuredClone(input);
     const spec = createManualTableSpec(input);
 
+    expectTypeOf(spec).toEqualTypeOf<IRManualTableSpec>();
     expect(spec).toEqual({
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -91,9 +92,9 @@ describe('Table plain authoring', () => {
     });
     expect(input).toEqual(before);
     expect(spec.structure.kind).toBe('manual');
-    if (spec.structure.kind !== 'manual') throw new Error('expected manual structure');
     expect(spec.structure.rowKinds).not.toBe(rowKinds);
     expect(spec.structure.cells).not.toBe(cells);
+    expect('data' in spec).toBe(false);
     expect(TableSpecSchema.parse(spec)).toEqual(spec);
   });
 

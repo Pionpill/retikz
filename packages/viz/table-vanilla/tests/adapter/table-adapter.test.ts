@@ -1,4 +1,4 @@
-import type { IRTableSpec } from '@retikz/table';
+import type { IRDetailTableSpec, IRTableSpec } from '@retikz/table';
 import type { VanillaEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -17,7 +17,7 @@ const contextOf = (id: string): VanillaEmbedContext => ({
   identityPath: ['content', id],
 });
 
-const detailSpec = (): IRTableSpec => ({
+const detailSpec = (): IRDetailTableSpec => ({
   namespace: 'table',
   type: 'table',
   data: { reference: 'people' },

@@ -7,6 +7,7 @@ import { z } from 'zod';
 import type { IRTableSpec, PresentedTableModel, TableLayout } from '../../src';
 
 import {
+  defineTableStructure,
   emitTable,
   layoutTable,
   lowerTables,
@@ -199,6 +200,25 @@ describe('Table lowering', () => {
     expect(() => lowerTableWithArtifacts(detail, {})).toThrow(/dataset.*missing/i);
     expect(() => lowerTableWithArtifacts(custom, {})).toThrow(/structure.*unknownStructure/i);
     expect(() => lowerTableWithArtifacts(presentation, {})).toThrow(/presentation.*unknownPresentation/i);
+  });
+
+  it('preserves the custom structure kind when a provider rejects missing data', () => {
+    const dataRequired = defineTableStructure({
+      schema: z.strictObject({ kind: z.literal('requiresData') }),
+      build: (_spec, context) => {
+        if (context.data === undefined) throw new Error('external data is required');
+        return { rows: [], columns: [], cells: [] };
+      },
+    });
+    const spec: IRTableSpec = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      structure: { kind: 'requiresData' },
+    };
+
+    expect(() => lowerTableWithArtifacts(spec, {}, { structureDefinitions: [dataRequired] })).toThrow(
+      /table: lower: table: structure "requiresData": external data is required/,
+    );
   });
 
   it('rejects Presented/Layout cell alignment drift before emit', () => {

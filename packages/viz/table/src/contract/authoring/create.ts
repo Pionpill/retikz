@@ -1,11 +1,12 @@
-import type { IRTableDetailColumn, IRTableSpec } from '../../schemas';
+import type { IRDetailTableSpec, IRManualTableSpec, IRTableDetailColumn } from '../../schemas';
 import type { DetailTableSpecInput, ManualTableSpecInput, TableDetailColumnInput } from './types';
 
 import {
+  DetailTableSpecSchema,
+  ManualTableSpecSchema,
   TABLE_NAMESPACE,
   TableCellPayloadKind,
   TableComposite,
-  TableSpecSchema,
   TableStructureKind,
 } from '../../schemas';
 
@@ -20,9 +21,9 @@ const normalizeDetailColumn = (column: TableDetailColumnInput): IRTableDetailCol
 };
 
 /** 从 plain detail 输入构造 schema-valid Table spec */
-export const createDetailTableSpec = (input: DetailTableSpecInput): IRTableSpec => {
+export const createDetailTableSpec = (input: DetailTableSpecInput): IRDetailTableSpec => {
   const { dataRef, model, columns, header, ...root } = input;
-  return TableSpecSchema.parse({
+  return DetailTableSpecSchema.parse({
     namespace: TABLE_NAMESPACE,
     type: TableComposite.Table,
     ...root,
@@ -39,9 +40,9 @@ export const createDetailTableSpec = (input: DetailTableSpecInput): IRTableSpec 
 };
 
 /** 从 plain manual 输入构造 schema-valid Table spec */
-export const createManualTableSpec = (input: ManualTableSpecInput): IRTableSpec => {
+export const createManualTableSpec = (input: ManualTableSpecInput): IRManualTableSpec => {
   const { rows, columns, rowKinds, cells, ...root } = input;
-  return TableSpecSchema.parse({
+  return ManualTableSpecSchema.parse({
     namespace: TABLE_NAMESPACE,
     type: TableComposite.Table,
     ...root,
