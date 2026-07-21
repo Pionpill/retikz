@@ -50,7 +50,7 @@ Table 可以消费 Data 与 Core，但不依赖 Plot。Plot 等 Tier 2 内容通
 
 ### 3.1 Structure
 
-Table 需要统一表达 manual、list、pivot、matrix 等基础结构。分组、层级、汇总和转置应作为可组合的表格操作，而不是各自形成封闭根类型。
+Table 需要统一表达 manual、detail、pivot、matrix 等基础结构。detail 保持一条源记录对应一行明细；分组、层级、汇总和转置作为可组合的表格 operation，而不是各自形成封闭 structure kind。
 
 通用聚合计算由 Data 提供；Table 负责聚合结果在行列结构中的位置和语义。
 

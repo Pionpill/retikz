@@ -1,6 +1,6 @@
 # ADR-04：固定轨道 TableLayout
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-19
 - 关联：[table v0 roadmap](../../roadmap.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md) · [Table 总设计](../../../../../architecture/table-design.md)
 
@@ -31,17 +31,37 @@ type IRTableLayout = {
 - width/height 必须为有限正数；gap 必须为有限非负数
 - 坐标从 Table local `[0, 0]` 开始，x 向右、y 向下
 
+默认值由纯函数物化为消费态，不改写原始 IR：
+
+```ts
+type ResolvedTableLayoutSpec = Readonly<{
+  columnWidth: number;
+  rowHeight: number;
+  headerHeight: number;
+  columnGap: number;
+  rowGap: number;
+}>;
+
+const resolveTableLayoutSpec = (spec?: IRTableLayout): ResolvedTableLayoutSpec;
+const layoutTable = (model: SemanticTableModel, spec?: IRTableLayout): TableLayout;
+```
+
+`layoutTable()` 只调用 `resolveTableLayoutSpec()` 后消费 canonical row/column/cell 顺序，不读取 structure kind、presentation content、provider 或 renderer。
+
 布局公式：
 
 ```text
 column.x = columnIndex × (columnWidth + columnGap)
-row.y    = previous row heights + rowIndex × rowGap
+row.y    = sum(previous row sizes) + rowIndex × rowGap
 cellBox  = { x, y, width: columnWidth, height: resolved row height }
 contentCenter = [x + width / 2, y + height / 2]
-tableBounds = { x: 0, y: 0, width: sum(column sizes + gaps), height: sum(row sizes + gaps) }
+tableBounds.width  = columnCount × columnWidth + max(0, columnCount - 1) × columnGap
+tableBounds.height = sum(row sizes) + max(0, rowCount - 1) × rowGap
 ```
 
-若 list 启用 header，首行使用 `headerHeight`；其余行使用 `rowHeight`。manual 没有自动 header，所有行使用 `rowHeight`。
+每个 canonical `kind: 'columnHeader'` row 使用 `headerHeight`，每个 `kind: 'body'` row 使用 `rowHeight`；manual、detail 与 custom 一律按 row semantics 处理，不按来源分支。该规则同时覆盖 manual 显式 header row 与 custom structure 生成的 header row。
+
+row tracks、column tracks 与 Cell layouts 分别保持 `model.rows`、`model.columns`、`model.cells` 的声明顺序；不按 id 重排。零行或零列合法时，对应 track 数组为空、该轴 size 与 gap contribution 为 `0`，bounds 固定从 `{ x: 0, y: 0 }` 开始；没有合法 Cell layout。detail `header: false` + 空 dataset 因此得到高度 `0`、宽度按 columns 计算的退化 bounds，custom 零行/零列按同一公式处理。
 
 所有 box（包括 table bounds 与 Cell box）统一使用 `@retikz/math` 的左上角语义 `BoundsRect`，不复用中心点语义的 Core `Rect`。`layoutTable(model, spec)` 输出：
 
@@ -67,9 +87,9 @@ type TableLayout = Readonly<{
 }>;
 ```
 
-它不产生 Core IR、不查 presentation registry、不修改 SemanticTableModel。
+它不产生 Core IR、不查 presentation registry、不读取 `PresentedTableModel`、不修改 SemanticTableModel。
 
-内容放置统一为“局部原点对齐 Cell center”：ADR-03 presentation 返回局部 `[0,0]` 内容，ADR-05 包在 translate Scope 中。direct content 作者也遵守同一局部原点合同。该规则只形成 alpha.1 固定轨道的最小闭环，不宣称任意 nested composite 已正确 fit 到 Cell。
+`contentCenter` 只作为几何产物。ADR-03 presentation 返回局部 `[0,0]` 内容，ADR-05 才把 Presented Cell 包在 translate Scope 中并对齐该中心；layout 本身不接收内容。direct content 作者也遵守同一局部原点合同。该规则只形成 alpha.1 固定轨道的最小闭环，不宣称任意 nested composite 已正确 fit 到 Cell。
 
 本 ADR 不为 solver 建 Definition / registry。固定轨道算法是 alpha.1 的封闭不变量；alpha.2 扩展为统一 Constraint Grid Layout，而不是允许用户替换全局 solver。
 
@@ -95,9 +115,11 @@ const spec = {
 ## 测试设计
 
 - 1×1、2×3 manual 的 track 与 Cell boxes
-- list headerHeight 与 body rowHeight
+- columnHeader row 使用 headerHeight，body row 使用 rowHeight
 - 省略 layout 使用稳定默认值
 - gap 参与 bounds 与 center 计算
+- manual/custom columnHeader row 与 detail header 使用同一 headerHeight；body row 使用 rowHeight
+- 零行/零列退化 bounds、track 数组与 Cell 输出确定
 - 非有限、非正 width/height 和负 gap fail-loud
 - input model/spec 不被 mutation
 - 相同输入重复布局得到深相等结果
@@ -143,7 +165,7 @@ const spec = {
 | -------------------------- | ---- | -------------- | ---------------------------------- | --------- | ----------------- |
 | `schemas/layout/schema.ts` | 新增 | `columnWidth`  | finite positive number optional    | 120       | 统一列宽          |
 | 同上                       | 新增 | `rowHeight`    | finite positive number optional    | 32        | body/manual 行高  |
-| 同上                       | 新增 | `headerHeight` | finite positive number optional    | rowHeight | list header 行高  |
+| 同上                       | 新增 | `headerHeight` | finite positive number optional    | rowHeight | columnHeader 行高 |
 | 同上                       | 新增 | `columnGap`    | finite nonnegative number optional | 0         | 列间距            |
 | 同上                       | 新增 | `rowGap`       | finite nonnegative number optional | 0         | 行间距            |
 
@@ -159,17 +181,17 @@ const spec = {
 
 ### 测试象限
 
-**Happy path**：1×1；2×3；list header；custom gap；默认 layout。
+**Happy path**：1×1；2×3；detail header；custom gap；默认 layout。
 
-**边界**：极小正尺寸；0 gap；空 manual cells；空 list dataset 只保留 header。
+**边界**：极小正尺寸；0 gap；空 manual cells；detail header false + 空 dataset 得到零高度 bounds；custom 零行/零列；单轨道不产生尾部 gap。
 
 **错误路径**：0/负/NaN/Infinity track size；负/NaN gap；不存在 Cell row/column id。
 
-**交互**：manual/list 同一 layout；ADR-03 local-origin content placement；ADR-05 bounds sentinel / Scope translation parity。
+**交互**：manual/detail/custom 按同一 row semantics layout；row/column/cell 输出保持 canonical 顺序；ADR-05 组合 PresentedTableModel 与 layout 时按 cellId 对齐；bounds sentinel / Scope translation parity。
 
 ### 依赖的现有元素
 
 - `Position`、`BoundsRect`（`@retikz/math`）——局部点与左上角 bounds 词汇
 - `SemanticTableModel`（ADR-02）——只读布局输入
-- `PresentedTableModel`（ADR-03 pipeline 产物）——Cell 内容输入
+- `PresentedTableModel`（ADR-03 pipeline 产物）——明确不作为 alpha.1 layout 输入，只在 ADR-05 emit 阶段与几何组合
 - Core `measureText` 仅作为 alpha.2 gating 证据，本 ADR 不调用

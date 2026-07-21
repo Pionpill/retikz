@@ -77,7 +77,7 @@ TableSpec
 基础结构包括：
 
 - manual：显式二维结构
-- list：记录映射为明细行
+- detail：一条记录映射为一行明细
 - pivot：行维度、列维度和指标构成交叉表
 - matrix：消费已有二维矩阵
 

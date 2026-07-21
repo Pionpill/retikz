@@ -1,6 +1,6 @@
 # ADR-01：Table composite 根节点与外部数据边界
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-07-19
 - 关联：[table v0 roadmap](../../roadmap.md) · [Table 完备设计](../../../../../architecture/table-visualization-complete.md) · [Table 总设计](../../../../../architecture/table-design.md)
 
@@ -29,7 +29,7 @@ type IRTableSpec = {
 字段契约：
 
 - `namespace` 固定为 `table`，交给 Core composite registry 路由
-- `type` 固定为 `table`，不为 manual/list/pivot 建立多个根 composite
+- `type` 固定为 `table`，不为 manual/detail/pivot 建立多个根 composite
 - `id` 是 Table 外部身份；存在时 lowering 根 Scope 使用同一 id
 - `data` 只保存 `IRDataReference`，实际 rows 不进入 IR
 - `structure` 引用 ADR-02 的开放结构 operation
@@ -38,7 +38,7 @@ type IRTableSpec = {
 
 `TableSpecSchema.superRefine` 对 alpha.1 内置结构执行：
 
-- `kind: 'list'` 必须存在 `data`
+- `kind: 'detail'` 必须存在 `data`
 - `kind: 'manual'` 不消费 `data`；若提供则拒绝，避免未使用数据产生错误预期
 - 自定义 structure 的数据要求由对应 `TableStructureDefinition` 在 pipeline 校验
 
@@ -73,7 +73,7 @@ const spec: IRTableSpec = {
   id: 'sales-table',
   data: { reference: 'sales' },
   structure: {
-    kind: 'list',
+    kind: 'detail',
     columns: [
       { id: 'product', field: 'product', header: { kind: 'value', value: 'Product' } },
       { id: 'revenue', field: 'revenue', header: { kind: 'value', value: 'Revenue' } },
@@ -87,10 +87,10 @@ const spec: IRTableSpec = {
 `packages/viz/table/tests/ir/table-spec.test.ts` 覆盖：
 
 - manual 根节点无 data 可通过
-- list 根节点带外部 data reference 可通过
+- detail 根节点带外部 data reference 可通过
 - 缺 namespace / type / structure 被拒绝
 - 非 `table.table` 判别值被拒绝
-- list 缺 data 被拒绝
+- detail 缺 data 被拒绝
 - manual 携带 data 被拒绝
 - data 中实际 rows 或函数无法进入 schema
 - meta 只接受 JSON-safe 值
@@ -120,7 +120,7 @@ const spec: IRTableSpec = {
 
 ## 不在本 ADR 范围
 
-- manual/list 具体字段与 SemanticTableModel
+- manual/detail 具体字段与 SemanticTableModel
 - Cell presentation、layout、lowering 与 adapter
 - data transform、group、pivot、span、border、fragmentation
 
@@ -163,11 +163,11 @@ const spec: IRTableSpec = {
 
 ### 测试象限
 
-**Happy path**：manual root；list + data reference；id/meta 保留。
+**Happy path**：manual root；detail + data reference；id/meta 保留。
 
 **边界**：最短非空 id/reference；layout 省略；custom structure JSON payload 由 ADR-02 schema 接受。
 
-**错误路径**：错误判别值；list 缺 data；manual 多余 data；非 JSON meta。
+**错误路径**：错误判别值；detail 缺 data；manual 多余 data；非 JSON meta。
 
 **交互**：根 schema 与 ADR-02/04 schema 组合；Core `defineComposite` 可注册 `table.table` schema。
 
