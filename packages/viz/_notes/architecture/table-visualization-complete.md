@@ -60,6 +60,10 @@ Cell 是 Table 的语义与布局槽位，具有地址、跨度、位置、角�
 
 显式 Plot Cell 属于这条通用内容链路。若多个 Plot Cell 需要共享 domain、轴显隐或单一图例，作者应显式配置对应 Plot，或通过独立 `IRChild` / Figure 组合；Table 不建立 Plot-specific 的跨 Cell 协调器。
 
+Table 的结构 Cell 始终是正交矩形：行列地址、矩形 span、轨道尺寸和四边 border conflict 共同构成其合同。非矩形视觉内容或装饰框可以作为 Cell presentation，但不会改变 Cell 的分配几何与拓扑。
+
+蜂窝、三角格等非矩形铺砌需要独立的坐标、邻接和边界规则。其数据可视化属于 Plot 的 coordinate / mark；若将来形成可复用的铺砌结构与布局需求，应建立独立能力，而不是扩展 Table 为任意 Cell 形状。
+
 ### 3.3 Presentation
 
 Table 区分：
