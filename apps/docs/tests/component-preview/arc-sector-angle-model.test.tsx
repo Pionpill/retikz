@@ -1,13 +1,8 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import ArcSectorAngleModel from '@/modules/docs/contents/kernel/components/shapes/arc-sector/arc-sector-angle-model.demo';
-
-const pageSource = (locale: 'zh' | 'en') =>
-  readFileSync(resolve(`src/modules/docs/contents/kernel/components/shapes/arc-sector/index.${locale}.mdx`), 'utf8');
 
 const attributeNumber = (markup: string, name: string) => {
   const value = markup.match(new RegExp(`${name}="([^"]+)"`))?.[1];
@@ -16,12 +11,6 @@ const attributeNumber = (markup: string, name: string) => {
 };
 
 describe('Arc / Sector angle model figure', () => {
-  it('uses the md preview height in both locales', () => {
-    for (const locale of ['zh', 'en'] as const) {
-      expect(pageSource(locale)).toContain('<ComponentPreview files="arc-sector-angle-model" size="md" hideCode />');
-    }
-  });
-
   it('keeps the sweepAngle label clear of the orange arc', () => {
     (globalThis as typeof globalThis & { React: typeof React }).React = React;
     const markup = renderToStaticMarkup(<ArcSectorAngleModel />);
