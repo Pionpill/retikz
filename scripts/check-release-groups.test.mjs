@@ -44,7 +44,7 @@ const baseGroups = {
   table: {
     domain: 'viz',
     kind: 'feature',
-    packages: ['@retikz/table'],
+    packages: ['@retikz/table', '@retikz/table-react', '@retikz/table-vanilla'],
   },
 };
 
@@ -140,6 +140,40 @@ const basePackages = [
       },
       dependencies: {
         '@retikz/data': 'workspace:^',
+      },
+    },
+  },
+  {
+    path: 'packages/viz/table-react/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/table-react',
+      version: '0.1.0-beta.1',
+      retikz: {
+        domain: 'viz',
+        releaseGroup: 'table',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/data': 'workspace:^',
+        '@retikz/table': 'workspace:*',
+      },
+    },
+  },
+  {
+    path: 'packages/viz/table-vanilla/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/table-vanilla',
+      version: '0.1.0-beta.1',
+      retikz: {
+        domain: 'viz',
+        releaseGroup: 'table',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/data': 'workspace:^',
+        '@retikz/table': 'workspace:*',
       },
     },
   },
