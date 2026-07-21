@@ -1,138 +1,145 @@
 ---
 title: Primitives
-description: Look up @retikz/math point and vector operations, affine transforms, bounds, ellipses, and arc computations.
+description: Construct and transform points, vectors, bounds, ellipses, and arcs with @retikz/math.
 ---
 
-`@retikz/math` exposes the complete geometry-computation surface. `@retikz/core` only provides convenience re-exports for values commonly used while drawing and aliases `lerp` to `lerpPoint`. Import the `Position` / `Vector2` types, bounds, ellipse, and arc APIs from `@retikz/math`.
+Primitives answer what a coordinate is and where it goes after a transform. Every API on this page works on plain data without IR or a renderer, and none mutates its input tuples.
 
 ```ts
-import { point, vector2, lerpPoint, localToWorld } from '@retikz/core';
-import { type Position, lerp, boundsOf, ellipse } from '@retikz/math';
+import { boundsOf, ellipse, point, vector2, type Position } from '@retikz/math';
 ```
-
-- `@retikz/core`: `DEFAULT_EPSILON`, `point`, `vector2`, `lerpPoint`, `localToWorld`, and `worldToLocal`.
-- `@retikz/math`: every type and value on this page, plus the higher-level computations in [Algorithms](/kernel/packages/math/algorithms).
 
 ## Points and vectors
 
-```ts
-type Vector2 = [number, number];
-type Position = Vector2;
+Both `Position` and `Vector2` are `[number, number]`. `point` provides addition, subtraction, scaling, dot and cross products, distance, and directed movement. `vector2` adds angle construction, normalization, and normals.
 
-isFiniteNumber(value: unknown): value is number;
-isFinitePoint(value: unknown): value is Position;
-isInfiniteNumber(value: unknown): value is number;
-```
-
-`point` handles the basic operations shared by points and 2D vectors. Every method returns a new tuple without mutating its inputs.
+`DEFAULT_EPSILON = 1e-9` is the default tolerance for several degeneracy checks in the package. `isFiniteNumber` rejects `NaN` and both infinities, while `isInfiniteNumber` accepts only the infinities; `isFinitePoint` accepts only an array of exactly two finite coordinates.
 
 ```ts
-point.add(a, b); // a + b
-point.sub(a, b); // a - b
-point.scale(a, k); // a * k
-point.dot(a, b); // dot product
-point.cross(a, b); // 2D cross-product scalar
-point.length(a); // vector length
-point.distance(a, b); // distance between two points
-point.along(origin, direction, length); // move along direction
-point.against(origin, direction, length); // move against direction
-point.normalize(a, fallback?, epsilon?);
-point.shiftToward(p, target, distance);
-point.equal(a, b); // exact comparison
+const origin: Position = [0, 0];
+const direction = vector2.fromAngleDegrees(-30);
+const end = point.along(origin, direction, 120);
+const normal = point.scale(vector2.normal(direction), 50);
+
+point.dot(direction, normal); // approximately 0
+point.distance(origin, end); // 120
 ```
 
-`vector2` adds vector-specific construction and normal-vector operations:
+Change the angle and length to see that the vector and its left-hand normal stay perpendicular. `normalize` defaults to `[1, 0]` for zero length, while `normalizeOrNull` returns `null` for zero-length or non-finite vectors.
+
+<ComponentPreview files="vector-normal" size="sm" caption="A vector and its left-hand normal" />
+
+`point.shiftToward(p, target, distance)` moves a point toward a target and leaves it in place when both points coincide. `point.equal` uses strict coordinate equality without a tolerance. `lerp(a, b, t)` does not clamp `t`: values from `0` to `1` interpolate, and values outside that range extrapolate.
+
+## Coordinate transforms
+
+`localToWorld` and `worldToLocal` convert between a shape's local coordinates and world coordinates. A shape has a center and an optional rotation in radians.
 
 ```ts
-vector2.fromPosition(p: Position): Vector2;
-vector2.fromAngleDegrees(angle: number): Vector2;
-vector2.normalize(v: Vector2, fallback?: Vector2, epsilon?: number): Vector2;
-vector2.normalizeOrNull(v: Vector2, epsilon?: number): Vector2 | null;
-vector2.normal(v: Vector2): Vector2;
-
-lerp(a: Position, b: Position, t: number): Position;
+const shape = { x: 100, y: 60, rotate: Math.PI / 4 };
+const world = localToWorld(shape, [20, 0]);
+const local = worldToLocal(shape, world); // approximately [20, 0]
 ```
 
-`normalize` defaults to `[1, 0]` for a zero-length vector. `normalizeOrNull` returns `null` for zero-length or non-finite vectors. `lerp` does not clamp `t`, so it can extrapolate outside `[0, 1]`.
-
-The figure uses one origin to show `v` and its left-hand normal `normal(v)`. The arrows remain perpendicular; normalization only changes their lengths.
-
-<ComponentPreview files="vector-normal" size="sm" hideCode />
-
-## Affine transforms
-
-```ts
-type CenteredShape = {
-  x: number;
-  y: number;
-  rotate?: number; // radians about the center
-};
-
-localToWorld(shape: CenteredShape, local: Position): Position;
-worldToLocal(shape: CenteredShape, world: Position): Position;
-```
-
-With `rotate` omitted or set to `0`, the transform is translation only. Otherwise it rotates about the center while converting between local and world coordinates. The two functions are inverses.
+With zero rotation, the transform is translation only. Otherwise it rotates about the shape center. The functions are inverses, making them useful for moving connection, boundary, and hit-test coordinates into one coordinate system.
 
 ## Bounds
 
-Bounds use `minX` / `minY` / `maxX` / `maxY`. The rectangle form uses a top-left position plus width and height.
+`boundsOf` derives axis-aligned bounds from points. `mergeBounds` combines two optional bounds, while the remaining helpers convert among bounds, rectangles, centers, half-axes, and corners.
 
 ```ts
-type AxisAlignedBounds = { minX: number; minY: number; maxX: number; maxY: number };
-type BoundsRect = { x: number; y: number; width: number; height: number };
-type BoundsHalfAxes = { halfWidth: number; halfHeight: number };
-type BoundsInsets = { left: number; right: number; top: number; bottom: number };
+const bounds = boundsOf([
+  [10, 20],
+  [80, -5],
+  [45, 30],
+]);
 
-boundsOf(points: ReadonlyArray<Position>): AxisAlignedBounds | undefined;
-mergeBounds(a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisAlignedBounds | undefined;
-boundsToRect(bounds: AxisAlignedBounds): BoundsRect;
-rectToBounds(rect: BoundsRect): AxisAlignedBounds;
-isFiniteBoundsRect(rect: BoundsRect): boolean;
-isPositiveBoundsRect(rect: BoundsRect): boolean;
-boundsCenter(bounds: AxisAlignedBounds): Position;
-boundsHalfAxes(bounds: AxisAlignedBounds): BoundsHalfAxes;
-expandBounds(bounds: AxisAlignedBounds, insets: BoundsInsets): AxisAlignedBounds;
-boundsCorners(bounds: AxisAlignedBounds): Array<Position>;
+if (bounds) {
+  const center = boundsCenter(bounds);
+  const expanded = expandBounds(bounds, { left: 8, right: 8, top: 4, bottom: 4 });
+}
 ```
 
-`boundsOf([])` and `mergeBounds(undefined, undefined)` return `undefined`, leaving skip, fallback, or error handling to the caller.
+`boundsOf([])` and `mergeBounds(undefined, undefined)` return `undefined`. The caller deliberately chooses whether empty geometry should be skipped, given fallback bounds, or treated as an error.
 
-## Ellipses
+`boundsToRect` / `rectToBounds` convert between min/max bounds and a top-left-plus-size rectangle. `isFiniteBoundsRect` requires all four fields to be finite, while `isPositiveBoundsRect` additionally requires strictly positive width and height. `boundsCorners` always returns top-left, top-right, bottom-left, then bottom-right.
+
+## Ellipses and arcs
+
+**Ellipse boundaries.** `ellipse` covers centers, inscribed and circumscribed ellipses, containment, and the boundary point toward a target.
 
 ```ts
-type Ellipse = CenteredShape & { rx: number; ry: number };
-type CenteredBox = CenteredShape & { width: number; height: number };
-type EllipseCircumscribeMode = 'proportional' | 'equal';
+const value = { x: 20, y: 10, rx: 80, ry: 40, rotate: Math.PI / 6 };
 
-ellipse.center(value: Ellipse): Position;
-ellipse.inscribedInBox(box: CenteredBox): Ellipse;
-ellipse.circumscribedHalfAxes(
-  inner: BoundsHalfAxes,
-  mode?: EllipseCircumscribeMode,
-): BoundsHalfAxes;
-ellipse.contains(value: Ellipse, point: Position): boolean;
-ellipse.boundaryPoint(value: Ellipse, toward: Position): Position;
+ellipse.contains(value, [20, 10]); // true; the boundary is included
+ellipse.boundaryPoint(value, [160, 10]);
+ellipse.inscribedInBox({ x: 0, y: 0, width: 160, height: 80 });
+ellipse.circumscribedHalfAxes({ halfWidth: 80, halfHeight: 40 }, 'proportional');
 ```
 
-`contains` includes the boundary and returns `false` for a zero-radius axis. `boundaryPoint` follows a ray from the ellipse center toward the target; it returns the center for a degenerate ellipse or a target at the center.
+The default `proportional` mode of `circumscribedHalfAxes` preserves the inner box's aspect ratio, while `equal` returns an equal-axis circle enclosing the box. `contains` returns `false` for a zero semi-axis. `boundaryPoint` returns the center for a degenerate ellipse or a target at its center, avoiding non-finite coordinates.
 
-## Arcs
-
-Angles follow SVG coordinates: y points down, `0°` points along +x, `90°` points along +y, and positive angles increase clockwise on screen.
+**Circular and elliptical arcs.** Angles follow SVG coordinates: y points down, `0°` points along +x, `90°` along +y, and positive angles increase clockwise on screen.
 
 ```ts
-arcEndPoint(center: Position, radius: number, angleDeg: number): Position;
-ellipseArcPoint(input: EllipseArcPointInput): Position;
-arcAngleInRange(input: ArcAngleInRangeInput): boolean;
-rayArc(input: RayArcInput): Array<number>;
-arcBoundingPoints(input: ArcBoundingPointsInput): Array<Position>;
-ellipseArcBoundingPoints(input: EllipseArcBoundingPointsInput): Array<Position>;
+const end = arcEndPoint([0, 0], 40, 90); // [0, 40]
+const candidates = arcBoundingPoints({
+  center: [0, 0],
+  radius: 40,
+  startAngleDeg: 20,
+  endAngleDeg: 220,
+});
 ```
 
-`@retikz/math` also exports the corresponding `ArcBoundingPointsInput`, `ArcAngleInRangeInput`, `RayArcInput`, `EllipseArcPointInput`, and `EllipseArcBoundingPointsInput` types. The bbox helpers return endpoint and in-range axis-extrema candidates without de-duplication.
+`arcEndPoint` / `ellipseArcPoint` select a curve point. An ellipse's `angleDeg` is a parameter angle and does not necessarily equal the polar angle observed from its center. `arcAngleInRange` uses the sign of `startAngleDeg → endAngleDeg`: positive spans run clockwise on screen and negative spans run counter-clockwise.
+
+`arcBoundingPoints` / `ellipseArcBoundingPoints` return endpoints plus axis extrema in the numeric angular interval. They accept no extra `sweep` field and do not de-duplicate candidates. Elliptical-arc helpers only handle axis-aligned ellipses; compute a rotated ellipse in local space, then map it to world space with the coordinate-transform helpers.
 
 <ComponentAlert
   title="rayArc returns parameters, not points"
-  description="Each result is a positive scalar s from origin + s·dir, sorted in ascending order. Substitute it back into the equation to obtain the hit point; intersect.* on the Algorithms page returns coordinates directly."
+  description="Each result is a positive scalar s from origin + s·dir, sorted in ascending order. Substitute s back into the equation to obtain a hit point; intersect.* on the Algorithms page returns coordinates directly."
+/>
+
+## API summary
+
+| Group             | Public types / values                                                                                     | Key behavior                                                                 |
+| ----------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Numbers           | `Position`, `Vector2`, `DEFAULT_EPSILON`, `point`, `vector2`, `lerp`, three numeric guards                | Pure functions; explicit zero-length fallback; lerp extrapolates             |
+| Transforms        | `CenteredShape`, `localToWorld`, `worldToLocal`                                                           | Rotate about center and convert between local and world space                |
+| Bounds            | Four bounds types plus derivation, merge, conversion, guard, center, half-axis, expansion, corner helpers | Empty point sets and all-empty merges return `undefined`                     |
+| Ellipses and arcs | `Ellipse`, `CenteredBox`, `ellipse`, five arc input types, and point / interval / ray / bbox helpers      | Elliptical arcs are axis-aligned only; bbox candidates are not de-duplicated |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Point and vector implementation',
+      path: 'packages/kernel/math/src/geometry/point.ts',
+      startLine: 1,
+      endLine: 88,
+    },
+    {
+      label: 'Coordinate transform implementation',
+      path: 'packages/kernel/math/src/geometry/transform.ts',
+      startLine: 1,
+      endLine: 37,
+    },
+    {
+      label: 'Bounds implementation',
+      path: 'packages/kernel/math/src/geometry/bounds.ts',
+      startLine: 1,
+      endLine: 131,
+    },
+    {
+      label: 'Ellipse implementation',
+      path: 'packages/kernel/math/src/geometry/ellipse.ts',
+      startLine: 1,
+      endLine: 73,
+    },
+    {
+      label: 'Arc implementation',
+      path: 'packages/kernel/math/src/geometry/arc.ts',
+      startLine: 1,
+      endLine: 199,
+    },
+  ]}
 />

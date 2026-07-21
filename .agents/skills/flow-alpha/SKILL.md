@@ -33,13 +33,13 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 ## 5 阶段
 
-| #   | 阶段 | 子 skill            | 通过条件                                                                            |
-| --- | ---- | ------------------- | ----------------------------------------------------------------------------------- |
-| 1   | 设计 | `develop-design`    | ADR 草案含实现契约段，Architecture Gate PASS，人工 ack，不默认提交                  |
-| 2   | 实现 | `develop-implement` | spec test / lint / tsc / 必要测试全过                                               |
-| 3   | 自测 | `develop-test`      | Adversarial Bug Hunter 的 BLOCKING 清空                                             |
-| 4   | 文档 | `develop-document`  | 用户可见能力有 zh/en 文档、demo、API 表                                             |
-| 5   | 收尾 | `develop-wrapup`    | ADR 压缩为长期决策记录，changelog 草稿、ADR Accepted、roadmap 勾选、人工授权 commit |
+| #   | 阶段 | 子 skill            | 通过条件                                                                                  |
+| --- | ---- | ------------------- | ----------------------------------------------------------------------------------------- |
+| 1   | 设计 | `develop-design`    | ADR 草案含实现契约段与 `test-contract` 矩阵，Architecture Gate PASS，人工 ack，不默认提交 |
+| 2   | 实现 | `develop-implement` | spec test / lint / tsc / 必要测试全过                                                     |
+| 3   | 自测 | `develop-test`      | Adversarial Bug Hunter 的 BLOCKING 清空                                                   |
+| 4   | 文档 | `develop-document`  | 用户可见能力有 zh/en 文档、demo、API 表                                                   |
+| 5   | 收尾 | `develop-wrapup`    | ADR 压缩为长期决策记录，changelog 草稿、ADR Accepted、roadmap 勾选、人工授权 commit       |
 
 文档不是可选项。用户可见功能必须补 docs；完工汇报先给文档页和访问路由，再讲代码。
 
@@ -60,8 +60,8 @@ red 走 Spec-First TDD；yellow 按风险决定是否 Spec-First；green 直接�
 每条 Alpha ADR 草案完成后、人工 review 与实现授权前，强制执行：
 
 1. 以 `adr-gate` 模式调用 `develop-completeness`，自动派遣一个新的只读 subagent，轮次从 `1/3` 开始。
-2. subagent 只返回 `BLOCKING / WARNING / INFO`；主 AI按 findings 修订 ADR，不让 subagent 修改文件。
-3. ADR 因 BLOCKING 或 WARNING 发生修订后，必须派新的 subagent 复检；不能由同一 subagent 或主 AI自审代替下一轮。
+2. subagent 读取 ADR 与 `test-contract` 矩阵，只返回 `BLOCKING / WARNING / INFO`；主 AI按 findings 修订 ADR 或矩阵，不让 subagent 修改文件。
+3. ADR 或测试契约矩阵因 BLOCKING 或 WARNING 发生修订后，必须派新的 subagent 复检；不能由同一 subagent 或主 AI自审代替下一轮。
 4. 只有最新 subagent 明确返回 `PASS`，且该轮无 BLOCKING、WARNING 均已处置时，Gate 才 PASS。
 5. 最多 3 轮。第 3 轮未 PASS、其后仍需修订、审计意见无法调和或 subagent 不可用时 halt，交人工决策。
 
@@ -73,7 +73,7 @@ Architecture Gate 之外的 subagent、外部模型或新线程仍须先得到�
 
 - Spec Writer：设计 spec test。
 - Bug Hunter：构造失败输入。
-- Contract Auditor：对账 ADR / changelog / docs / 实际行为。
+- Contract Auditor：对账 ADR / 测试契约矩阵 / changelog / docs / 实际行为。
 
 多份意见取并集、去重后形成 BLOCKING / WARNING / INFO。先文档再执行的阶段，文档草案完成后先按用户选择 review 并润色，再进入执行。
 
@@ -116,14 +116,14 @@ Architecture Gate 之外的 subagent、外部模型或新线程仍须先得到�
 
 - 任一阶段连续 3 轮不收敛：halt，汇报当前状态和阻塞点。
 - Architecture Gate 最多 3 轮；第 3 轮仍未 PASS 时必须交人工，不能开始第 4 轮或降低 finding 等级。
-- Contract Auditor 发现 ADR / docs / 行为不一致且 1 轮修不动：halt，交给人工裁定。
+- Contract Auditor 发现 ADR / 测试契约 / docs / 行为不一致且 1 轮修不动：halt，交给人工裁定。
 - 批量模式任一 worktree 失败：该 worktree 写 `REVIEW.md` 标明失败并 halt，不伪装完工。
 
 ## 完成检查
 
 单条完成前检查：
 
-- 执行阶段曾有完整实现契约，最终 ADR 保留稳定契约摘要。
+- 执行阶段曾有完整实现契约与 `test-contract` 矩阵，最终 ADR 保留稳定契约摘要。
 - 每条 ADR 在实现前均有 Architecture Gate PASS；3 轮未通过的 ADR 保持 Proposed 并停止实施。
 - ADR 已删除临时文件索引、LLM 执行 checklist、review prompt 等只服务执行的材料；保留背景、关键决策、被否决选项、兼容性、最终摘要和验证结果。
 - Spec-First 需要时能从历史看出测试先于实现。

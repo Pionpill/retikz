@@ -1,52 +1,163 @@
 ---
 title: 自定义图案
-description: pattern.shape 是开放字符串；内置 lines / dots / grid 之外，用 definePattern / PatternDefinition 注册任意 motif——emit 在局部 tile 坐标产 MarkerPrimitive，emit-in-compile 写进 Scene 资源，adapter 物化 <pattern>。
+description: 用 PatternDefinition 定义重复填充图案，通过 Layout.patterns 注入后在 fill 中按名称使用。
 ---
 
-`fill` 的 `PaintSpec` 里 `pattern.shape` 是**开放字符串**:内置三种 motif(`lines` 斜纹 / `dots` 网点 / `grid` 网格)之外,可以注册自己的图案。注册面对齐 [自定义形状](/kernel/components/shapes/custom-shape) / [自定义箭头](/kernel/components/draw/custom-arrow)——内置 3 种本身也是注册项,没有特权。
-
-注册通过 `CompileOptions.patterns`（React 里是 `<Layout patterns={...}>`）：IR 的 `fill={{ kind:'pattern', shape:'...' }}` 仍只保存字符串名，motif 几何在这里注入。未注册名会在编译时报错（带可用名称列表）；每个 definition 都携带 `name`；与内置名冲突会在注册阶段失败。
-
-## 注册一个 motif
-
-下面注册一个 `cross`——十字图案,与内置三种明显不同:
+当内置的斜线、圆点与网格不能表达所需纹理时，可以注册自己的重复图案。下面的 `cross` 定义会在每个方格中绘制一个十字，再作为普通 `fill` 使用。
 
 <ComponentPreview files="custom-pattern-basic" size="xs" />
 
-如果你只想先跑通一个图案，最少实现 `emit` 就够了；`defaultSize` 只是给没有显式 `pattern.size` 时的默认周期。
+## 适用边界
 
-`PatternDefinition` 是普通对象(不进 IR、可由工厂返回);推荐在定义点用 `definePattern({...})` 包一层，让自定义图案与 shape / arrow / path generator 的扩展写法保持一致:
+如果只需改变疏密、颜色、背景、线宽或旋转，继续使用[内置图案](/kernel/components/effects/pattern)并调整 `size` 等字段即可。只有重复单元的几何本身不同，才需要自定义 `PatternDefinition`。
 
-| 字段          | 类型                                 | 默认值 | 描述                                                             |
-| ------------- | ------------------------------------ | ------ | ---------------------------------------------------------------- |
-| `name`        | `string`                             | 必填   | 注册名；`pattern.shape` 按这个名字查找 motif，且不能与内置名冲突 |
-| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | 必填   | 在局部 tile 坐标系(`0..size`)产 motif 几何                       |
-| `defaultSize` | `number`                             | `8`    | tile 周期默认(user units);用户 `pattern.size` 覆盖               |
+图元数据只保存 `{ kind: 'pattern', shape: 'cross' }` 这类可序列化配置。生成重复单元的 `emit` 函数留在定义中，通过宿主注入，不进入 IR（中间表示）。
 
-`emit` 拿到的 `PatternEmitContext`:
+## 定义能力
 
-| 字段         | 类型            | 描述                                                                           |
-| ------------ | --------------- | ------------------------------------------------------------------------------ |
-| `size`       | `number`        | 解析后 tile 周期(`spec.size ?? defaultSize ?? 8`)                              |
-| `color`      | `string`        | motif 主色;缺省 `currentColor`(继承 svg color,主题反应)                        |
-| `background` | `string?`       | tile 背景(缺省透明)                                                            |
-| `lineWidth`  | `number?`       | 描边宽;`undefined` 时各 motif 自定缺省(lines / grid 用 1,dots 半径用 `size/5`) |
-| `round`      | `(n) => number` | 精度取整(与 compile / render 同一函数)                                         |
+使用 `definePattern()` 创建一个带名称的图案定义。`emit` 接收已解析的尺寸与颜色，并在 `0..size` 的局部坐标中返回结构化图元。
 
-## emit 与 tile
+```tsx
+import { definePattern } from '@retikz/core';
 
-`emit` 在 **compile 阶段**调用(与 shape / arrow 的 emit 同位):产出的 motif `MarkerPrimitive[]` 连同 tile 参数(`size` / `background` / `rotation`)解析成 `ResolvedPatternTile`,写进 Scene 资源(`SceneResource.tile`);adapter 只**物化** `<pattern>`,不认识 pattern 注册表、也不重算几何。
+const cross = definePattern({
+  name: 'cross',
+  defaultSize: 12,
+  emit: ({ size, color }) => {
+    const center = size / 2;
+    return [
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [center, 2] },
+          { kind: 'line', to: [center, size - 2] },
+        ],
+        stroke: color,
+      },
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [2, center] },
+          { kind: 'line', to: [size - 2, center] },
+        ],
+        stroke: color,
+      },
+    ];
+  },
+});
+```
 
-motif 几何复用 [自定义箭头](/kernel/components/draw/custom-arrow) 的 `MarkerPrimitive` **窄子集**——`path` / `ellipse` / `rect` / `group`,`fill` / `stroke` 限纯色串或 `{ kind:'contextStroke' }`;禁 `text` / 外部 `resourceRef` / 函数;坐标须 finite(非 finite 编译期报错,守 Scene JSON 可序列化)。
+内置图案与自定义图案都实现同一份 `PatternDefinition`，并进入同一注册表。`definePattern()` 只帮助 TypeScript 检查定义形状，不会把函数写进图元数据。
 
-## size 与颜色
+## 注入宿主
 
-`pattern.size` 覆盖 `defaultSize` 控制图案疏密;`pattern.color` 覆盖 motif 主色,缺省 `currentColor` 跟随 svg color。相同 `pattern` spec 多处使用 → 去重为一个资源 / 一个 tile;`size` 不同 → 各自独立资源。
+把定义传给 `<Layout patterns>`，再在 Node 或 Path 的 `fill` 中引用它的 `name`：
 
-<ComponentPreview files="custom-pattern-size" size="xs" />
+```tsx
+<Layout patterns={[cross]}>
+  <Node fill={{ kind: 'pattern', shape: 'cross', color: 'darkorange' }} />
+</Layout>
+```
+
+直接调用 `compileToScene()` 时，对应入口是 `CompileOptions.patterns`。定义属于本次编译宿主；同一份 IR 可以在不同宿主中注入不同的图案集合。
+
+`pattern.size` 会覆盖定义的 `defaultSize`。下面两个节点复用同一个完整定义：左侧固定为 `size: 6` 作为参照，右侧从 `size: 16` 开始，并允许调整周期、旋转、颜色与背景。
+
+<ComponentPreview
+  files="custom-pattern-size"
+  size="sm"
+  caption={
+    <>
+      控件只改变可序列化的图案配置；可复制的 <code>PatternDefinition</code>、宿主注入和使用代码仍完整保留在示例中。
+    </>
+  }
+/>
+
+## 执行机制
+
+编译时，内置与自定义定义先合并成一个注册表。编译器随后按 `shape` 查找定义、调用 `emit`，并把结果写成 Scene 中已解析的图案资源；SVG 与 Canvas 只负责物化这个资源，不再接触定义函数。
+
+| 阶段 | 输入                  | 产物                          |
+| ---- | --------------------- | ----------------------------- |
+| 注册 | 内置定义 + `patterns` | 按名称索引的统一注册表        |
+| 解析 | `shape`、尺寸与颜色   | 局部重复单元图元              |
+| 输出 | 已解析重复单元        | Scene 图案资源                |
+| 渲染 | Scene 图案资源        | SVG pattern 或 Canvas pattern |
+
+这条路径保证内置与自定义图案拥有相同的名称冲突、查找、校验与渲染语义。
+
+<SourceLinks
+  sources={[
+    {
+      label: '合并内置与自定义图案',
+      path: 'packages/kernel/core/src/providers/pattern/registry.ts',
+      startLine: 6,
+      endLine: 15,
+    },
+    {
+      label: '解析重复单元并写入 Scene 资源',
+      path: 'packages/kernel/core/src/compile/resource/paint.ts',
+      startLine: 29,
+      endLine: 79,
+    },
+    {
+      label: '物化 SVG 图案资源',
+      path: 'packages/kernel/render/src/svg/builders/paint-defs.ts',
+      startLine: 113,
+      endLine: 126,
+    },
+    {
+      label: '物化 Canvas 图案资源',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 627,
+      endLine: 646,
+    },
+  ]}
+/>
 
 <Comparison target="tikz" title="自定义图案">
 
-TikZ 用 `\pgfdeclarepatternformonly` 在 PGF 层声明图案。retikz 把它落成 renderer-agnostic 的 `PatternDefinition`:tile 几何用结构化 `MarkerPrimitive` 描述,emit-in-compile 写进 Scene 资源,任何 adapter 都能物化,第三方可发 `@retikz/patterns-*` 包。
+TikZ 在 PGF 层声明图案。retikz 用 `PatternDefinition` 描述同一类扩展，但把重复单元编译成结构化 Scene 资源，让 SVG 与 Canvas 共用一份定义结果。
 
 </Comparison>
+
+## 错误与限制
+
+| 情况                        | 结果                     | 处理方式                |
+| --------------------------- | ------------------------ | ----------------------- |
+| 名称为空或重复              | 注册时报错               | 使用非空且唯一的 `name` |
+| `shape` 未注册              | 编译时报错并列出可用名称 | 注入定义或修正名称      |
+| `size` / `lineWidth` 非正数 | 编译时报错               | 传有限正数              |
+| `rotation` 不是有限数       | 编译时报错               | 传有限角度              |
+| `emit` 抛错                 | 编译包装并报告图案名     | 检查定义逻辑            |
+| 产物含非法图元或坐标        | 编译校验失败             | 只返回允许的结构化图元  |
+
+重复单元只接受 Scene 可序列化的结构化几何；不要返回函数、DOM 节点、文本、外部资源引用或非有限坐标。
+
+## API 参考
+
+### PatternDefinition
+
+| 属性          | 类型                                 | 默认值 | 描述                               |
+| ------------- | ------------------------------------ | ------ | ---------------------------------- |
+| `name`        | `string`                             | —      | `pattern.shape` 使用的注册名       |
+| `defaultSize` | `number?`                            | `8`    | 可选；未传 `pattern.size` 时的周期 |
+| `emit`        | `(ctx) => Iterable<MarkerPrimitive>` | —      | 生成局部重复单元几何               |
+
+### PatternEmitContext
+
+| 属性         | 类型            | 默认值         | 描述                 |
+| ------------ | --------------- | -------------- | -------------------- |
+| `size`       | `number`        | 已解析         | 重复单元周期         |
+| `color`      | `string`        | `currentColor` | 重复单元主色         |
+| `background` | `string?`       | —              | 省略时背景透明       |
+| `lineWidth`  | `number?`       | —              | 省略时由图案定义决定 |
+| `round`      | `(n) => number` | —              | 使用编译精度取整     |
+
+## 相关
+
+- [图案](/kernel/components/effects/pattern)：内置线条、圆点、网格与实例参数
+- [效果](/kernel/components/effects)：返回效果家族与阅读顺序
+- [Node](/kernel/components/node/overview)：在节点填充中使用图案
+- [自定义箭头](/kernel/components/draw/custom-arrow)：同样返回结构化 `MarkerPrimitive`
+- [扩展运行时](/kernel/reference/runtime/extensions)：查看各类注册机制的职责边界

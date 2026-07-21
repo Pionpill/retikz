@@ -13,30 +13,31 @@ description: 查询 Definition、registry 与 host lowerer 的能力族、注入
 | ------------------- | ------------------------------------------------------ | -------------------------- |
 | Definition registry | shape、boundary、clip、arrow、pattern、path、composite | compile                    |
 | Runtime registry    | easing、animation property                             | render / animation runtime |
-| Host lowerer        | TeX 等可选重型下沉                                     | compile 前段               |
+| Host lowerer        | TeX 等可选重型下沉                                     | compile 期文字布局         |
 
 Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置和自定义 definitions 合并成一次编译专用的 registry。Runtime registry 保存宿主函数，不进入 compile contract。Host lowerer 是可选宿主能力，不应为了单个集成扩张通用图元契约。
 
 ## 能力索引
 
-| 能力               | IR 选择键          | 注入入口                             |
-| ------------------ | ------------------ | ------------------------------------ |
-| Shape              | `Node.shape`       | `CompileOptions.shapes`              |
-| Boundary           | `Node.boundary`    | `CompileOptions.boundaries`          |
-| Clip               | `Scope.clip.kind`  | `CompileOptions.clips`               |
-| Arrow              | arrow shape name   | `CompileOptions.arrows`              |
-| Pattern            | pattern shape name | `CompileOptions.patterns`            |
-| Path generator     | generator name     | `CompileOptions.pathGenerators`      |
-| Path kind          | `Path.kind`        | `CompileOptions.pathKinds`           |
-| Ribbon profile     | profile name       | `CompileOptions.ribbonWidthProfiles` |
-| Composite          | `namespace + type` | `CompileOptions.composites`          |
-| Easing             | easing name        | `<Layout easings>`                   |
-| Animation property | property name      | `<Layout animationProperties>`       |
-| TeX lowerer        | math text payload  | `CompileOptions.lowerTex`            |
+| 能力               | IR 选择键          | 注入入口                                               |
+| ------------------ | ------------------ | ------------------------------------------------------ |
+| Shape              | `Node.shape`       | `CompileOptions.shapes`                                |
+| Boundary           | `Node.boundary`    | `CompileOptions.boundaries`                            |
+| Clip               | `Scope.clip.kind`  | `CompileOptions.clips`                                 |
+| Arrow              | arrow shape name   | `CompileOptions.arrows`                                |
+| Pattern            | pattern shape name | `CompileOptions.patterns`                              |
+| Path generator     | generator name     | `CompileOptions.pathGenerators`                        |
+| Path kind          | `Path.kind`        | `CompileOptions.pathKinds`                             |
+| Ribbon profile     | profile name       | `CompileOptions.ribbonWidthProfiles`                   |
+| Composite          | `namespace + type` | `CompileOptions.composites`                            |
+| Easing             | easing name        | `<Layout easings>`                                     |
+| Animation property | property name      | `<Layout animationProperties>`（仅 Canvas 自定义属性） |
+| TeX lowerer        | math text payload  | `CompileOptions.lowerTex`                              |
 
 ## 诊断约定
 
-- 同一 registry 的空 key 或重复 key 立即报错，自定义项不能静默覆盖内置项。
+- Compile Definition registry 在合并内置与自定义项时拒绝空 key 和重复 key，自定义项不能静默覆盖内置项。
+- Easing / animation property 等 runtime registry 直接使用宿主传入的 `Record`，不经过上述 Definition 合并诊断；未知自定义动画属性由具体 renderer warning 并跳过。
 - 普通 Definition 找不到 key 时 fail-loud，并列出已注册项。
 - 未注册 composite 在完整 compile 中产生 warning 并跳过该节点；独立 lowering 会提升为错误。
 - schema 或 payload 校验发生在 definition 消费前，错误应包含能力族与 lookup key。
@@ -74,6 +75,12 @@ Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置
     <span className="font-semibold">路径生成器</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">PathGeneratorDefinition：参数化曲线命令</span>
   </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/ribbon#自定义宽度-profile">
+    <span className="font-semibold">Ribbon 宽度 profile</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      RibbonWidthProfileDefinition：沿中心线解析动态带宽
+    </span>
+  </LinkedCard>
   <LinkedCard href="/kernel/concepts/design/composite">
     <span className="font-semibold">复合</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
@@ -84,4 +91,33 @@ Definition 能力使用 `XxxDefinition` 与 `defineXxx` 描述扩展项，内置
     <span className="font-semibold">自定义动画</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">缓动曲线与动画属性 runtime registry</span>
   </LinkedCard>
+  <LinkedCard href="/kernel/packages/tex">
+    <span className="font-semibold">TeX lowerer</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      @retikz/tex：把公式降为 Kernel 可渲染的 glyph 几何
+    </span>
+  </LinkedCard>
 </div>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Compile Definition registry 的 key 与重复项诊断',
+      path: 'packages/kernel/core/src/providers/registry.ts',
+      startLine: 63,
+      endLine: 97,
+    },
+    {
+      label: 'Canvas 自定义动画属性的 runtime registry 合同',
+      path: 'packages/kernel/render/src/animation/registry.ts',
+      startLine: 1,
+      endLine: 18,
+    },
+    {
+      label: 'React 宿主只向 Canvas 传入 animationProperties',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 482,
+      endLine: 519,
+    },
+  ]}
+/>

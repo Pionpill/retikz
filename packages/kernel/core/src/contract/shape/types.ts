@@ -14,6 +14,17 @@ type ResolvedShapeStyleFields = Pick<
 /** Shape provider 接收到的命名 anchor：标准方位名或 shape 自定义扩展名 */
 export type ShapeAnchorName = AnchorValue | (string & {});
 
+/** Shape 可为之提供安全包络的规则连接面种类 */
+export type ConnectionEnvelopeKind = 'circle' | 'ellipse' | 'rectangle';
+
+/** 与视觉 rect 同心、同旋转的规则连接面半轴 */
+export type ConnectionEnvelope = {
+  /** 局部 x 轴半径 */
+  halfWidth: number;
+  /** 局部 y 轴半径 */
+  halfHeight: number;
+};
+
 /**
  * emit 需要的已解析视觉样式子集
  * @description 从 NodeLayout 的样式字段收敛（不含几何 / 文本），作为 shape provider 的 runtime 输入。
@@ -112,6 +123,12 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
    * 解析命名 anchor 的世界坐标；不支持时返回 `undefined`
    */
   anchor: (rect: Rect, name: ShapeAnchorName, params: TParams) => Position | undefined;
+  /**
+   * 返回安全包含视觉几何轮廓的规则连接面半轴
+   * @description 结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩
+   * @default 不支持；tight boundary 回退到 bounds 并发出 warning
+   */
+  connectionEnvelope?: (rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope | undefined;
   /**
    * 解析标准 side 上 `t ∈ [0, 1]` 的比例点
    * @description `rect` 可包含旋转；未实现表示该 shape 不支持 side anchor

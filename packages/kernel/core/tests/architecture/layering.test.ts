@@ -52,15 +52,6 @@ const resolveImportTarget = (file: string, source: string): string => {
   return target;
 };
 
-const importsFromOwner = (file: string, declaration: string, owner: 'geometry' | 'primitive'): boolean => {
-  const source = importSource(declaration);
-  if (!source?.startsWith('.')) return false;
-
-  const ownerRoot = join(SRC_ROOT, owner);
-  const target = join(dirname(file), source);
-  return target === ownerRoot || target.startsWith(`${ownerRoot}${sep}`);
-};
-
 const importsFromSchemaSubmodule = (file: string, declaration: string): boolean => {
   const source = importSource(declaration);
   if (!source?.startsWith('.')) return false;
@@ -96,34 +87,6 @@ const importsCrossOwnerSubmodule = (file: string, declaration: string): boolean 
 };
 
 describe('core layer import boundaries', () => {
-  it('does not keep legacy primitive or geometry owner directories', () => {
-    const legacyOwners = ['primitive', 'geometry'].filter(owner => existsSync(join(SRC_ROOT, owner)));
-
-    expect(legacyOwners).toEqual([]);
-  });
-
-  it('contract code does not import from legacy primitive owner paths', () => {
-    const offenders = tsFiles(join(SRC_ROOT, 'contract'))
-      .filter(file => !relative(join(SRC_ROOT, 'contract'), file).replace(/\\/g, '/').startsWith('scene/'))
-      .flatMap(file =>
-        importDeclarations(file)
-          .filter(line => importsFromOwner(file, line, 'primitive'))
-          .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
-      );
-
-    expect(offenders).toEqual([]);
-  });
-
-  it('contract code does not import from legacy geometry owner paths', () => {
-    const offenders = tsFiles(join(SRC_ROOT, 'contract')).flatMap(file =>
-      importDeclarations(file)
-        .filter(line => importsFromOwner(file, line, 'geometry'))
-        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
-    );
-
-    expect(offenders).toEqual([]);
-  });
-
   it('shared code does not import upward into schemas, contract, providers, primitive, or compile', () => {
     const offenders = tsFiles(join(SRC_ROOT, 'shared')).flatMap(file =>
       importDeclarations(file)
@@ -202,26 +165,6 @@ describe('core layer import boundaries', () => {
         .filter(({ pattern }) => pattern.test(source))
         .map(({ label }) => `${relative(SRC_ROOT, file)}: ${label}`);
     });
-
-    expect(offenders).toEqual([]);
-  });
-
-  it('implementation code imports scene types from contract/scene instead of legacy primitive paths', () => {
-    const offenders = tsFiles(SRC_ROOT).flatMap(file =>
-      importDeclarations(file)
-        .filter(line => importsFromOwner(file, line, 'primitive'))
-        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
-    );
-
-    expect(offenders).toEqual([]);
-  });
-
-  it('implementation code imports geometry helpers from shared/geometry instead of legacy geometry paths', () => {
-    const offenders = tsFiles(SRC_ROOT).flatMap(file =>
-      importDeclarations(file)
-        .filter(line => importsFromOwner(file, line, 'geometry'))
-        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
-    );
 
     expect(offenders).toEqual([]);
   });

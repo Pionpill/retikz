@@ -48,4 +48,14 @@ describe('ComponentPreview demo 目录解析（切页失步回归）', () => {
     expect(html).toContain(`contents/core/components/pageB/${MISSING}.demo.tsx`);
     expect(html).not.toContain(`contents/core/components/pageA/${MISSING}.demo.tsx`);
   });
+
+  it('在预览正下方渲染 caption 说明', () => {
+    const html = renderAtRoute(
+      '/core/components/pageA',
+      <ComponentPreview files={MISSING} caption="调整参数后观察主体边界。" />,
+    );
+
+    expect(html).toContain('data-slot="component-preview-caption"');
+    expect(html).toContain('调整参数后观察主体边界。');
+  });
 });

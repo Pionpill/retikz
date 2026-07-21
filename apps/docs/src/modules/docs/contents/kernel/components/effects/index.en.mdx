@@ -1,19 +1,26 @@
 ---
 title: Effects
-description: Add shadows, blending, patterns, and animation to existing primitives, with custom extensions collected at the end.
+description: Add shadows, blending, patterns, and animation to existing primitives such as Node and Path, then register custom effects when needed.
 ---
 
-Effects attach to existing primitives such as Node and Path. Shadows add visual depth, blend modes control layer composition, patterns provide reusable fills, and animation describes how properties change over time. They keep the same primitive model; start with the built-ins, then use the final pages to register custom patterns or animation behavior.
+Effects attach to existing primitives such as Node and Path. Shadows add depth, blending controls how layers combine, patterns provide reusable fills, and animation describes properties changing over time. They keep the same primitive model.
+
+Start with shadows, blending, animation, and patterns for everyday work. Use the final extension guides only when built-in patterns or animation channels cannot express the result you need.
+
+In the figure, solid arrows follow primitives through compile, the Scene, and the renderer. The dashed arrows mark different injection stages: pattern definitions produce Scene resources during compile, while easing and property registries consume Scene tracks during rendering.
+
+<ComponentPreview files="effects-family" size="sm" hideCode />
 
 ## Responsibilities
 
-| Capability       | Responsibility                               | Use it when                                |
-| ---------------- | -------------------------------------------- | ------------------------------------------ |
-| Shadow           | Add offset, blur, and color                  | Showing depth or spatial hierarchy         |
-| Blend            | Control color composition with layers        | Creating overlays and highlights           |
-| Animation        | Describe tracks, triggers, and playback      | Adding entrances or interaction feedback   |
-| Custom Patterns  | Register new pattern motifs                  | Stripes, crosses, or domain-specific fills |
-| Custom Animation | Register easing curves and property channels | Spring, blur, or other custom behavior     |
+| Capability       | Type            | Responsibility               | Use it when                 |
+| ---------------- | --------------- | ---------------------------- | --------------------------- |
+| Shadow           | Shared prop     | Add a drop shadow            | Showing depth or elevation  |
+| Blend            | Shared prop     | Compose with painted content | Creating overlays           |
+| Animation        | Track model     | Describe tracks and playback | Adding motion or feedback   |
+| Patterns         | Fill spec       | Reuse lines, dots, or grids  | Distinguishing regions      |
+| Custom Patterns  | Extension guide | Register repeating fills     | Built-ins cannot express it |
+| Custom Animation | Extension guide | Register easing or channels  | Built-ins cannot express it |
 
 ## Chapters
 
@@ -32,9 +39,17 @@ Effects attach to existing primitives such as Node and Path. Shadows add visual 
       Tracks, triggers, controls, and static fallback
     </span>
   </LinkedCard>
+  <LinkedCard href="/kernel/components/effects/pattern">
+    <span className="font-semibold">Patterns</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Built-in lines, dots, grids, and instance options
+    </span>
+  </LinkedCard>
   <LinkedCard href="/kernel/components/effects/custom-pattern">
     <span className="font-semibold">Custom Patterns</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Register pattern motifs beyond the built-ins</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Register repeating fills beyond the built-ins
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/effects/custom-animation">
     <span className="font-semibold">Custom Animation</span>

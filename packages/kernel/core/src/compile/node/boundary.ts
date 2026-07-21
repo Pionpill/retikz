@@ -1,12 +1,14 @@
 ﻿import type { Position } from '@retikz/math';
 
-import type { BoundaryAnchorName, BoundaryDefinition, ShapeDefinition } from '../../contract';
+import type { BoundaryAnchorName, BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
+import type { CompileWarningCodeValue } from '../warning';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
-import { isDirectionalAnchor, rect as rectOps } from '../../shared';
+import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../shared';
+import { CompileWarningCode } from '../constants';
 import { parseProviderPayload } from '../provider-payload';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
@@ -32,6 +34,80 @@ export type ResolveBoundaryContext = {
   boundaryRegistry?: ProviderCollection<BoundaryDefinition>;
   /** 当前 node 的 IR 路径，用于 provider payload 诊断 */
   irPath?: string;
+  /** shape-aware envelope 缓存；key 包含 kind 与视觉 rect 尺寸 */
+  connectionEnvelopeCache?: Map<string, Rect>;
+  /** compile warning 去重集合 */
+  connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
+  /** compile warning 分发函数 */
+  warn?: (code: CompileWarningCodeValue, message: string) => void;
+};
+
+/** 同一 layout 在局部 / 全局投影后尺寸可能不同，缓存 key 必须包含 rect 几何 */
+const connectionEnvelopeCacheKey = (rect: Rect, kind: ConnectionEnvelopeKind): string =>
+  `${kind}:${rect.x}:${rect.y}:${rect.width}:${rect.height}:${rect.rotate ?? 0}`;
+
+/** 校验 Shape definition 返回的安全包络 */
+const validateConnectionEnvelope = (
+  shapeName: string,
+  kind: ConnectionEnvelopeKind,
+  halfWidth: number,
+  halfHeight: number,
+  irPath?: string,
+): void => {
+  const path = irPath ?? 'node';
+  if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth <= 0 || halfHeight <= 0) {
+    throw new Error(
+      `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected finite positive half-axes, received [${halfWidth}, ${halfHeight}]`,
+    );
+  }
+  const tolerance = Number.EPSILON * Math.max(1, halfWidth, halfHeight) * 8;
+  if (kind === 'circle' && Math.abs(halfWidth - halfHeight) > tolerance) {
+    throw new Error(
+      `Shape '${shapeName}' returned an invalid circle connection envelope at ${path}: half-axes must be equal, received [${halfWidth}, ${halfHeight}]`,
+    );
+  }
+};
+
+/** 解析并缓存视觉 shape 对规则连接面的安全包络矩形 */
+const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: ResolveBoundaryContext): Rect => {
+  const cacheKey = connectionEnvelopeCacheKey(context.visualRect, kind);
+  const cached = context.connectionEnvelopeCache?.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const own = context.visualDef.connectionEnvelope?.(context.visualRect, kind, context.visualParams);
+  const envelope = own ?? boundsConnectionEnvelope(context.visualRect, kind);
+  if (own === undefined && !context.connectionEnvelopeWarnings?.has(kind)) {
+    context.connectionEnvelopeWarnings?.add(kind);
+    context.warn?.(
+      CompileWarningCode.BoundaryTightFallback,
+      `Shape '${context.visualDef.name}' does not provide a ${kind} connection envelope; falling back to visual bounds.`,
+    );
+  }
+  validateConnectionEnvelope(context.visualDef.name, kind, envelope.halfWidth, envelope.halfHeight, context.irPath);
+  const resolved: Rect = {
+    ...context.visualRect,
+    width: envelope.halfWidth * 2,
+    height: envelope.halfHeight * 2,
+  };
+  context.connectionEnvelopeCache?.set(cacheKey, resolved);
+  return resolved;
+};
+
+/** 校验 Boundary provider 解析出的最终矩形 */
+const validateResolvedRect = (providerName: string, rect: Rect, irPath?: string): void => {
+  if (
+    !Number.isFinite(rect.x) ||
+    !Number.isFinite(rect.y) ||
+    !Number.isFinite(rect.width) ||
+    !Number.isFinite(rect.height) ||
+    (rect.rotate !== undefined && !Number.isFinite(rect.rotate)) ||
+    rect.width <= 0 ||
+    rect.height <= 0
+  ) {
+    throw new Error(
+      `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected finite positive width and height`,
+    );
+  }
 };
 
 const providerOf = <TDefinition>(registry: ProviderCollection<TDefinition>, key: string): TDefinition | undefined =>
@@ -58,17 +134,35 @@ export const resolveBoundary = (
   const paramsPath = `${context.irPath ?? 'node'}.boundary.params`;
   const boundaryDef = providerOf(boundaryRegistry, type);
   if (boundaryDef !== undefined) {
+    const params = parseProviderPayload({
+      capability: 'boundary',
+      providerName: type,
+      irPath: paramsPath,
+      payloadName: 'params',
+      schema: boundaryDef.paramsSchema,
+      value: rawParams,
+    });
+    let rect: Rect;
+    try {
+      rect =
+        boundaryDef.resolveRect?.(
+          {
+            visualRect,
+            connectionEnvelope: kind => connectionEnvelopeOf(kind, context),
+          },
+          params,
+        ) ?? visualRect;
+      validateResolvedRect(type, rect, context.irPath);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Boundary '${type}' failed to resolve its rect at ${context.irPath ?? 'node'}: ${message}`, {
+        cause: error,
+      });
+    }
     return {
       def: boundaryDef,
-      rect: visualRect,
-      params: parseProviderPayload({
-        capability: 'boundary',
-        providerName: type,
-        irPath: paramsPath,
-        payloadName: 'params',
-        schema: boundaryDef.paramsSchema,
-        value: rawParams,
-      }),
+      rect,
+      params,
     };
   }
   const shapeDef = providerOf(shapeRegistry, type);

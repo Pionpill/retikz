@@ -26,7 +26,3 @@ export const sizeClass: Record<SizeKey, string> = {
 
 /** size 档位的展示顺序（从小到大）；切换 UI 按这个数组渲染。 */
 export const SIZE_KEYS: ReadonlyArray<SizeKey> = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl', 'xxxl'];
-
-/** 将预览尺寸限制在指定最小档位以上 */
-export const clampPreviewSize = (size: SizeKey, minimum: SizeKey): SizeKey =>
-  SIZE_KEYS.indexOf(size) < SIZE_KEYS.indexOf(minimum) ? minimum : size;

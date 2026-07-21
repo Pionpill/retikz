@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type * as ResizableModule from '../../src/components/ui/resizable';
 import type { PreviewControlLayoutMetrics } from '../../src/modules/docs/components/component-preview/control-panel';
@@ -19,6 +19,7 @@ import type {
   PreviewThemeMode,
 } from '../../src/modules/docs/components/component-preview/types';
 
+import i18n from '../../src/i18n';
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import {
   layoutPreviewControlSections,
@@ -105,11 +106,11 @@ class ResizeObserverMock implements ResizeObserver {
 let nextAnimationFrameId = 1;
 const animationFrames = new Map<number, FrameRequestCallback>();
 
-const flushAnimationFrames = async (): Promise<void> => {
+const flushAnimationFrames = async (timestamp = 0): Promise<void> => {
   await act(() => {
     const pendingFrames = Array.from(animationFrames.values());
     animationFrames.clear();
-    pendingFrames.forEach(callback => callback(0));
+    pendingFrames.forEach(callback => callback(timestamp));
   });
 };
 
@@ -145,7 +146,7 @@ const definition = definePreviewControls({
         },
         { kind: 'switch', id: 'dashed', label: 'Dashed', defaultValue: false },
         { kind: 'color', id: 'fill', label: 'Fill', defaultValue: '#ffffff' },
-        { kind: 'range', id: 'opacity', label: 'Opacity', defaultValue: 1, min: 0, max: 1 },
+        { kind: 'range', id: 'opacity', label: 'Opacity', defaultValue: 1, min: 0, max: 1, step: 0.1 },
       ],
     },
   ],
@@ -156,6 +157,27 @@ const overlayDefinition = definePreviewControls({
   controls: [{ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }],
 });
 
+const shortRangeDurationDefinition = definePreviewControls({
+  presentation: 'panel',
+  title: 'Short range duration',
+  sections: [
+    {
+      controls: [
+        {
+          kind: 'range',
+          id: 'opacity',
+          label: 'Opacity',
+          defaultValue: 1,
+          min: 0,
+          max: 1,
+          step: 0.1,
+          playDuration: 400,
+        },
+      ],
+    },
+  ],
+});
+
 const alternateDefinition = definePreviewControls({
   presentation: 'panel',
   title: 'Alternate Properties',
@@ -163,6 +185,45 @@ const alternateDefinition = definePreviewControls({
     {
       label: 'Layout',
       controls: [{ kind: 'number', id: 'width', label: 'Width', defaultValue: 100 }],
+    },
+  ],
+});
+
+const conditionalDefinition = definePreviewControls({
+  presentation: 'panel',
+  title: 'Conditional Properties',
+  sections: [
+    {
+      label: 'Kind',
+      controls: [
+        {
+          kind: 'select',
+          id: 'kind',
+          label: 'Kind',
+          defaultValue: 'a',
+          options: [
+            { value: 'a', label: 'A' },
+            { value: 'b', label: 'B' },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'A parameters',
+      visibleWhen: { controlId: 'kind', oneOf: ['a'] },
+      controls: [{ kind: 'number', id: 'aValue', label: 'A value', defaultValue: 1 }],
+    },
+    {
+      label: 'Shared parameters',
+      controls: [
+        {
+          kind: 'number',
+          id: 'bValue',
+          label: 'B value',
+          defaultValue: 2,
+          visibleWhen: { controlId: 'kind', oneOf: ['b'] },
+        },
+      ],
     },
   ],
 });
@@ -230,6 +291,8 @@ type WorkspaceHarnessProps = {
   definition?: PreviewControlsDefinition;
   initialOpen?: boolean;
   showContextBar?: boolean;
+  workspaceClassName?: string;
+  rangePlaybackDuration?: number;
 };
 
 const emptyControlState: PreviewControlState = {
@@ -241,14 +304,24 @@ const emptyControlState: PreviewControlState = {
 };
 
 const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
-  const { definition: controlsDefinition, initialOpen = true, showContextBar = true } = props;
+  const {
+    definition: controlsDefinition,
+    initialOpen = true,
+    showContextBar = true,
+    workspaceClassName,
+    rangePlaybackDuration,
+  } = props;
   const [open, setOpen] = useState(initialOpen);
   const [themeMode, setThemeMode] = useState<PreviewThemeMode>('inherit');
   const controlContract = useMemo<PreviewControlContract | undefined>(
     () => (controlsDefinition ? { controls: controlsDefinition, canonicalValues: {}, relatedApis: [] } : undefined),
     [controlsDefinition],
   );
-  const controlState = usePreviewControlState(controlsDefinition, controlContract?.canonicalValues);
+  const controlState = usePreviewControlState(
+    controlsDefinition,
+    controlContract?.canonicalValues,
+    rangePlaybackDuration,
+  );
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: 'svg',
@@ -267,6 +340,7 @@ const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
         onThemeModeChange={setThemeMode}
         controlPanelOpen={open}
         onControlPanelOpenChange={setOpen}
+        workspaceClassName={workspaceClassName}
         previewState={previewState}
         Component={Demo}
       />
@@ -289,7 +363,39 @@ const DefinitionChangeHarness: FC = () => {
   );
 };
 
+const ConditionalPanelHarness: FC = () => {
+  const controlState = usePreviewControlState(conditionalDefinition);
+
+  return (
+    <>
+      <button type="button" aria-label="Show B controls" onClick={() => controlState.setValue('kind', 'b')} />
+      <button type="button" aria-label="Set hidden B value" onClick={() => controlState.setValue('bValue', 9)} />
+      <PreviewControlPanel definition={conditionalDefinition} controlState={controlState} onClose={() => undefined} />
+    </>
+  );
+};
+
 describe('PreviewControlPanel', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('en');
+  });
+
+  it('根据当前值显示匹配字段与分组，并保留隐藏字段的状态', async () => {
+    const container = await mount(<ConditionalPanelHarness />);
+
+    expect(
+      Array.from(container.querySelectorAll<HTMLElement>('[data-control-id]'), element => element.dataset.controlId),
+    ).toEqual(['kind', 'aValue']);
+
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Set hidden B value"]')?.click());
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Show B controls"]')?.click());
+
+    expect(
+      Array.from(container.querySelectorAll<HTMLElement>('[data-control-id]'), element => element.dataset.controlId),
+    ).toEqual(['kind', 'bValue']);
+    expect(container.querySelector<HTMLInputElement>('[data-control-id="bValue"] input')?.value).toBe('9');
+  });
+
   it('渲染标题、section 与六种 shadcn 字段', () => {
     const controlState: PreviewControlState = emptyControlState;
     const markup = renderToStaticMarkup(
@@ -314,6 +420,101 @@ describe('PreviewControlPanel', () => {
     expect(markup).not.toMatch(/data-slot="preview-control-field"[^>]*class="[^"]*justify-between/);
     expect(markup).toContain('>Text</label>');
     expect(markup).not.toContain('Text：');
+  });
+
+  it('多个面板为 section 生成唯一关联 id，且控制组标题不进入文档标题大纲', async () => {
+    const container = await mount(
+      <>
+        <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />
+        <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />
+      </>,
+    );
+    const toggles = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[data-slot="preview-control-section-toggle"]'),
+    );
+    const controlledIds = toggles.map(toggle => toggle.getAttribute('aria-controls'));
+    const panels = Array.from(container.querySelectorAll<HTMLElement>('aside'));
+    const panelLabelIds = panels.map(panel => panel.getAttribute('aria-labelledby'));
+
+    expect(toggles.map(toggle => toggle.getAttribute('aria-label'))).toEqual(['Appearance', 'Appearance']);
+    expect(new Set(controlledIds).size).toBe(controlledIds.length);
+    expect(controlledIds.every(id => id !== null && container.ownerDocument.getElementById(id) !== null)).toBe(true);
+    expect(container.querySelectorAll('h3 [data-slot="preview-control-section-toggle"]')).toHaveLength(0);
+    expect(new Set(panelLabelIds).size).toBe(panelLabelIds.length);
+    expect(panelLabelIds.every(id => id !== null && container.ownerDocument.getElementById(id) !== null)).toBe(true);
+  });
+
+  it('面板操作按钮使用当前文档语言', async () => {
+    await i18n.changeLanguage('zh');
+    const container = await mount(
+      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
+    );
+
+    expect(container.querySelector('button[aria-label="重置控件"]')).not.toBeNull();
+    expect(container.querySelector('button[aria-label="关闭属性面板"]')).not.toBeNull();
+  });
+
+  it('未配置时用 2 秒播放 range，并在到达终点后恢复播放动作', async () => {
+    await i18n.changeLanguage('en');
+    const container = await mount(<WorkspaceHarness definition={definition} />);
+    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const rangeValue = () => container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent;
+
+    expect(playButton).not.toBeNull();
+    await act(() => playButton?.click());
+    expect(rangeValue()).toBe('0');
+    expect(container.querySelector('button[aria-label="Pause range"]')).not.toBeNull();
+
+    await flushAnimationFrames(0);
+    await flushAnimationFrames(1999);
+
+    expect(container.querySelector('button[aria-label="Pause range"]')).not.toBeNull();
+
+    await flushAnimationFrames(2000);
+
+    expect(rangeValue()).toBe('1');
+    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+  });
+
+  it('range 可通过 playDuration 覆盖默认播放时长', async () => {
+    await i18n.changeLanguage('en');
+    const container = await mount(<WorkspaceHarness definition={shortRangeDurationDefinition} />);
+    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+
+    await act(() => playButton?.click());
+    await flushAnimationFrames(0);
+    await flushAnimationFrames(400);
+
+    expect(container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent).toBe('1');
+    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+  });
+
+  it('uses the global range playback duration unless the field overrides it', async () => {
+    await i18n.changeLanguage('en');
+    const container = await mount(<WorkspaceHarness definition={definition} rangePlaybackDuration={400} />);
+    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+
+    await act(() => playButton?.click());
+    await flushAnimationFrames(0);
+    await flushAnimationFrames(400);
+
+    expect(container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent).toBe('1');
+    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+  });
+
+  it('手动修改播放中的 range 会取消后续播放帧', async () => {
+    await i18n.changeLanguage('en');
+    const container = await mount(<WorkspaceHarness definition={definition} />);
+    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const thumb = container.querySelector<HTMLElement>('[data-control-id="opacity"] [data-slot="slider-thumb"]');
+    const rangeValue = () => container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent;
+
+    await act(() => playButton?.click());
+    await act(() => thumb?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+    await flushAnimationFrames(1200);
+
+    expect(rangeValue()).toBe('0.1');
+    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
   });
 
   it('按控件数量均衡拆成两列并重复跨列 section 标题', () => {
@@ -435,22 +636,23 @@ describe('PreviewControlPanel', () => {
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 100)));
     await flushAnimationFrames();
-    const collapseButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Collapse Appearance"]');
+    const collapseButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Appearance"]');
     expect(collapseButtons).toHaveLength(1);
     expect(collapseButtons[0].getAttribute('aria-expanded')).toBe('true');
     expect(container.querySelectorAll('.lucide-minus')).toHaveLength(1);
 
     await act(() => collapseButtons[0].click());
     await flushAnimationFrames();
-    const expandButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Expand Appearance"]');
+    const expandButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Appearance"]');
     expect(expandButtons).toHaveLength(1);
     expect(expandButtons[0].getAttribute('aria-expanded')).toBe('false');
+    expect(expandButtons[0].hasAttribute('aria-controls')).toBe(false);
     expect(container.querySelectorAll('.lucide-plus')).toHaveLength(1);
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(0);
 
     await act(() => expandButtons[0].click());
     await flushAnimationFrames();
-    expect(container.querySelectorAll('button[aria-label="Collapse Appearance"]')).toHaveLength(1);
+    expect(container.querySelectorAll('button[aria-label="Appearance"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(6);
   });
 
@@ -464,24 +666,24 @@ describe('PreviewControlPanel', () => {
       />,
     );
 
-    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Collapse Appearance"]')?.click());
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Appearance"]')?.click());
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Reset controls"]')?.click());
 
     expect(reset).toHaveBeenCalledOnce();
-    expect(container.querySelector('button[aria-label="Expand Appearance"]')).not.toBeNull();
+    expect(container.querySelector('button[aria-label="Appearance"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(0);
   });
 
   it('definition 变化时恢复所有 section 展开', async () => {
     const container = await mount(<DefinitionChangeHarness />);
 
-    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Collapse Appearance"]')?.click());
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Appearance"]')?.click());
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(0);
     await act(() =>
       container.querySelector<HTMLButtonElement>('button[aria-label="Change controls definition"]')?.click(),
     );
 
-    expect(container.querySelector('button[aria-label="Collapse Layout"]')).not.toBeNull();
+    expect(container.querySelector('button[aria-label="Layout"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(1);
   });
 
@@ -604,19 +806,50 @@ describe('PreviewWorkspace', () => {
     ).toEqual(['1', '2']);
   });
 
-  it('按 Workspace 宽度在移动端改为上下排列', async () => {
-    const container = await mount(<WorkspaceHarness definition={definition} />);
+  it('窄 Workspace 在完整预览上方提供 100–300px 的纵向拖拽面板', async () => {
+    const container = await mount(<WorkspaceHarness definition={definition} workspaceClassName="h-56" />);
     const group = () => container.querySelector('[data-slot="resizable-panel-group"]');
 
-    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(639)));
-    expect(group()?.getAttribute('data-direction')).toBe('vertical');
+    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(479)));
+    expect(group()).toBeNull();
+    const mobileStack = container.querySelector('[data-slot="preview-mobile-stack"]');
+    const mobileControlPanel = container.querySelector<HTMLElement>('[data-slot="preview-mobile-control-panel"]');
+    const mobileResizeHandle = container.querySelector<HTMLElement>('[data-slot="preview-mobile-resize-handle"]');
+    const mobilePreview = container.querySelector('[data-slot="preview-mobile-pane"]');
     const panel = container.querySelector('aside');
     const contextBar = container.querySelector('[data-slot="preview-context-bar"]');
+    expect(mobileStack).not.toBeNull();
+    expect(mobileControlPanel?.style.height).toBe('200px');
+    expect(mobileResizeHandle?.getAttribute('role')).toBe('separator');
+    expect(mobileResizeHandle?.getAttribute('aria-orientation')).toBe('horizontal');
+    expect(mobileResizeHandle?.getAttribute('aria-valuemin')).toBe('100');
+    expect(mobileResizeHandle?.getAttribute('aria-valuemax')).toBe('300');
+    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('200');
+    expect(mobileResizeHandle?.classList.contains('cursor-row-resize')).toBe(true);
+    expect(mobilePreview?.classList.contains('h-56')).toBe(true);
+    expect(container.querySelector('[data-slot="preview-workspace"]')?.classList.contains('h-56')).toBe(false);
     expect(panel).not.toBeNull();
     expect(contextBar).not.toBeNull();
     expect(panel!.compareDocumentPosition(contextBar!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(640)));
+    await act(() => mobileResizeHandle?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Home' })));
+    expect(mobileControlPanel?.style.height).toBe('100px');
+    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('100');
+
+    await act(() => mobileResizeHandle?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'End' })));
+    expect(mobileControlPanel?.style.height).toBe('300px');
+    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('300');
+
+    await act(() => {
+      mobileResizeHandle?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientY: 300 }));
+      window.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientY: 50 }));
+      window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    });
+    expect(mobileControlPanel?.style.height).toBe('100px');
+    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('100');
+
+    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(480)));
+    expect(group()).not.toBeNull();
     expect(group()?.getAttribute('data-direction')).toBe('horizontal');
   });
 

@@ -2,15 +2,15 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/** 技术原理页的 core 编译流程图 */
+/** Core 从 IR 到 Scene 的完整编译流程 */
 const Demo: FC = () => (
-  <Layout width={760} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={720} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="ir"
-      position={[-350, 0]}
+      position={[-330, 30]}
       stroke="darkorange"
       fill="darkorange"
-      fillOpacity={0.1}
+      fillOpacity={0.08}
       cornerRadius={4}
       font={{ size: 14, weight: 'bold' }}
     >
@@ -18,10 +18,10 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="lower"
-      position={[-205, 0]}
+      position={[-220, 30]}
       stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
+      fill="dimgray"
+      fillOpacity={0.08}
       cornerRadius={4}
       font={{ size: 13 }}
     >
@@ -29,10 +29,10 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="layout"
-      position={[-25, 0]}
+      position={[-50, 30]}
       stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
+      fill="dimgray"
+      fillOpacity={0.08}
       cornerRadius={4}
       font={{ size: 13 }}
     >
@@ -40,10 +40,10 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="paths"
-      position={[165, 0]}
+      position={[155, 30]}
       stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
+      fill="dimgray"
+      fillOpacity={0.08}
       cornerRadius={4}
       font={{ size: 13 }}
     >
@@ -51,25 +51,25 @@ const Demo: FC = () => (
     </Node>
     <Node
       id="scene"
-      position={[345, 0]}
+      position={[295, 30]}
       stroke="darkorange"
       fill="darkorange"
-      fillOpacity={0.1}
+      fillOpacity={0.08}
       cornerRadius={4}
       font={{ size: 14, weight: 'bold' }}
     >
       Scene assembly
     </Node>
     <Node
-      id="registries"
-      position={[-25, -80]}
+      id="context"
+      position={[-40, -50]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
       cornerRadius={4}
       font={{ size: 12 }}
     >
-      provider registries
+      {'compile-local context\nregistries + services'}
     </Node>
 
     <Draw way={['ir', 'lower']} arrow="->" />
@@ -77,14 +77,16 @@ const Demo: FC = () => (
     <Draw
       way={[
         'layout',
-        { label: { text: 'anchors', side: 'bottom', sloped: true, textColor: 'gray', font: { size: 12 } } },
+        { label: { text: 'anchors', side: 'bottom', sloped: false, textColor: 'gray', font: { size: 12 } } },
         'paths',
       ]}
       arrow="->"
     />
     <Draw way={['paths', 'scene']} arrow="->" />
-    <Draw way={['registries', 'layout']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['registries', { bend: 'right', angle: 20 }, 'paths']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['context', 'lower']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['context', 'layout']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['context', 'paths']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['context', 'scene']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
   </Layout>
 );
 

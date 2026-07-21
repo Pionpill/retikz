@@ -1,51 +1,19 @@
 ---
 title: Positioning
-description: Position expressions in retikz cover Cartesian, polar, node references, relative placement, offset placement, proportional placement, and relative targets for entity placement and path target resolution.
+description: retikz expresses relationships through node references, relative, offset, proportional, and path-relative targets, with distinct reference timing for entity positions and paths.
 ---
 
-retikz uses a unified set of position expressions for entity placement and path target resolution. `<Node>.position` / `<Coordinate>.position` determine the center of a visible entity or reference point; `<Step>.to` / `<Draw>.way` resolve the targets that a path connects to or passes through.
+retikz uses one set of position expressions for entity placement and path target resolution. `<Node>.position` / `<Coordinate>.position` determine an entity center or reference point; `<Step>.to` / `<Draw>.way` determine where a path connects or passes.
 
-| Form                   | Type                                                              | Meaning                                                                                                         | Where                                           |
-| ---------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Cartesian              | `[x, y]`                                                          | Direct canvas coordinate                                                                                        | Node position, path target                      |
-| Polar                  | `{ origin?, angle, radius }`                                      | Derive a position from a pole, angle, and radius                                                                | Node position, path target                      |
-| Node reference         | `'node-id'` / `{ id, anchor?, offset? }`                          | Reference a named Node or Coordinate; paths auto-attach to the boundary. The string form is React DSL shorthand | **Path target only** (`Step.to` / way item)     |
-| Relative placement     | `{ direction, of, distance? }`                                    | Place around another Node / Coordinate by direction and distance                                                | Node position, Coordinate position              |
-| Offset placement       | `{ of, offset }`                                                  | Apply a 2D offset from a node, coordinate, or polar base                                                        | Node position, Coordinate position, path target |
-| Proportional placement | `{ between: [A, B], fraction }`                                   | Take a proportional point along A → B; node endpoints use `{ id: 'a' }`                                         | Node position, Coordinate position, path target |
-| Relative target        | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | Offset from the previous segment endpoint                                                                       | **Path target only**                            |
+The full model for Cartesian, polar, user units, and viewBox lives in [Coordinate System](/kernel/concepts/basic/coordinate-system). This page starts where one position depends on another entity: relational placement and path targets.
 
-> [Coordinate system](/kernel/concepts/basic/coordinate-system): x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Layout>`'s `width` / `height` and the compiled layout bounds.
-
-## Cartesian
-
-Cartesian coordinates are the most direct form: `[x, y]` names a point on the canvas. x grows to the right and y grows downward, so `[120, 40]` means 120 units right and 40 units down from the origin. Use this for small hand-placed diagrams, reproducing existing SVG coordinates, or providing a base point for other position forms.
-
-<ComponentPreview files="positioning-cartesian" size="xs" />
-
-## Polar
-
-Polar coordinates describe a position as "start from a pole, follow an angle, then move by a radius." They are useful for circular layouts, radial labels, placing a group around a node, or expressing a rotated offset from some local point.
-
-`{ origin?, angle, radius }` resolves from these fields:
-
-| Field    | Meaning                                                                                                                             |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `origin` | Pole. Optional, defaults to `[0, 0]`; accepts node id string, Cartesian, **or a nested polar** (chained offset)                     |
-| `angle`  | Degrees, measured from the +x axis; 90° points toward the bottom of the screen (visually clockwise positive), negative angles go up |
-| `radius` | Distance in user units                                                                                                              |
-
-<Comparison target="tikz" title="Polar Angles">
-
-`angle` is in degrees, measured from the +x axis: 0° points right and 90° points toward the bottom of the screen, so **clockwise is visually positive** and negative angles go up. This is the opposite of TikZ (counter-clockwise positive) — the cause is that retikz uses screen coordinates with y pointing down, so the angle rotates within that same system and examples render according to browser coordinates.
-
-</Comparison>
-
-Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical radial layout:
-
-<ComponentPreview files="positioning-polar" size="md" />
-
-`origin` can be **nested** — e.g. `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` means "30 right of a, then 20 down" (90° points toward the bottom of the screen). Chained polar is handy for radial / local offsets.
+| Task             | Typical form                              | Valid in                                            |
+| ---------------- | ----------------------------------------- | --------------------------------------------------- |
+| Absolute point   | `[x, y]` / `{ angle, radius }`            | Entity position, path target                        |
+| Reference entity | `{ id, anchor? }`                         | Path target                                         |
+| Direction/offset | `{ direction, of }` / `{ of, offset }`    | Entity position; offset also works as a path target |
+| Between points   | `{ between: [A, B], fraction }`           | Entity position, path target                        |
+| Path-relative    | `{ relative }` / `{ relativeAccumulate }` | Path target only                                    |
 
 ## Node id reference
 
@@ -135,6 +103,29 @@ A path reference may appear first:
 <Node id="a" position={[0, 0]}>A</Node>
 <Node id="b" position={[120, 0]}>B</Node>
 ```
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve relational and polar positions',
+      path: 'packages/kernel/core/src/compile/position.ts',
+      startLine: 59,
+      endLine: 98,
+    },
+    {
+      label: 'Register named Node and Coordinate references',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 210,
+      endLine: 252,
+    },
+    {
+      label: 'Define the complete path-target union',
+      path: 'packages/kernel/core/src/schemas/path/target/schema.ts',
+      startLine: 27,
+      endLine: 40,
+    },
+  ]}
+/>
 
 ## Further reading
 

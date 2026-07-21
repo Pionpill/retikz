@@ -5,7 +5,7 @@ description: '像理解 DOM 盒模型一样理解 retikz Node：内容、padding
 
 图元（primitive）是 retikz 里可被绘制和引用的最小单位。**图元模型**描述一个图元在几何上如何被搭起来——从内容、内框、shape，到外接框、boundary 与 anchor——使它能被测量、布局、连接和引用。它是一层抽象概念，不绑定某个具体组件。
 
-Node 是这套图元模型最常用的具体实现。你可以把它想成一个“会被连线识别的盒模型”：`position` 给出节点的语义参考点，文本测量、`padding` 和最小尺寸先形成内框，shape 再把内框包成视觉外接框，boundary 和 anchor 决定路径从哪里接上来。
+Node 是这套图元模型最常用的具体实现。你可以把它想成一个“会被连线识别的盒模型”：`position` 给出节点的语义参考点，文本测量与 `padding` 先形成内框，shape 据此算出视觉外接框，`minimumSize` 再给外接框设下限，boundary 和 anchor 决定路径从哪里接上来。
 
 ## 模型解剖
 
@@ -19,50 +19,51 @@ Node 是这套图元模型最常用的具体实现。你可以把它想成一个
 
 图里从内到外是这套 Node 的分层：最内是内容盒，往外依次是内框、shape 视觉轮廓、外接框、boundary，最外是 anchor。实际渲染时你通常只会看到橙色 shape；其余几层是编译与连线阶段使用的几何信息。
 
-| 层                       | 由什么决定                                            | 影响什么                                                |
-| ------------------------ | ----------------------------------------------------- | ------------------------------------------------------- |
-| 内容盒<br />content box  | `text` / children / font                              | 文本测量的基础尺寸                                      |
-| 内框<br />inner frame    | 文本测量 + `padding` + 最小尺寸                       | 传给 shape 的基础半轴                                   |
-| 形状<br />shape          | `shape.circumscribe` 与 `shape.emit`                  | 节点真正画出来的轮廓                                    |
-| 外接框<br />bounding box | shape 对内框的包围结果（视觉包围矩形，不含 `margin`） | 渲染裁剪的基础；+`margin` 后即布局占位 / viewBox        |
-| 连接面<br />boundary     | `boundary`，默认跟随 shape                            | border 锚点（自动连线 / 命名方位 / 角度）贴的连接面形状 |
-| 锚点<br />anchor         | Web 方位 / angle / shape-specific / edge point        | 精确引用节点上的点                                      |
+| 层                       | 由什么决定                                     | 影响什么                                                |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------------- |
+| 内容盒<br />content box  | `text` / children / font                       | 文本测量的基础尺寸                                      |
+| 内框<br />inner frame    | 文本测量 + `padding`                           | 传给 shape 的基础半轴                                   |
+| 形状<br />shape          | `shape.circumscribe` 与 `shape.emit`           | 节点真正画出来的轮廓                                    |
+| 外接框<br />bounding box | shape 包围内框后再受 `minimumSize` 约束        | 渲染裁剪的基础；+`margin` 后即布局占位 / viewBox        |
+| 连接面<br />boundary     | `boundary`，默认跟随 shape                     | border 锚点（自动连线 / 命名方位 / 角度）贴的连接面形状 |
+| 锚点<br />anchor         | Web 方位 / angle / shape-specific / edge point | 精确引用节点上的点                                      |
 
 读这张图的顺序也就是编译顺序：
 
 <ComponentPreview files="node-model-pipeline" size="xs" hideCode />
 
-外接框只包住 shape 的渲染结果，不含 `margin`。`margin` 是连接面外的一层偏移：它把**所有 border 锚点**（自动连线端点、显式 `.top` / `.30`）外推，节点在 viewBox / 布局里也按外推后的范围占位——视觉 shape 本身不变。
+外接框不含 `margin`。编译器总会用 `margin` 扩大布局 / viewBox 占位，但连接点是否随之外移取决于选中的 boundary 如何解析：rect 驱动的边界会消费扩大的外接框；star / sector 等参数驱动 shape 的默认边界仍按 params 重建真实轮廓。
 
 ## 盒模型
 
 一个 Node 像 CSS 盒模型一样，由三层从内到外嵌套的框组成。
 
 - **内容盒**：由 `text` / children 和 `font` 决定，是文本测量出的基础尺寸。
-- **内框**：在内容盒外加上 `padding`，再与 `minimumSize`取较大者，得到传给 shape 的基础半轴——对矩形节点来说，它就是画出来的 shape。
-- **外框**：在内框外再加 `margin`。它不改变视觉 shape，而是把节点的连接 / 引用边界外推——所有 border 锚点（自动连线端点和显式 `.top` 这类）都落在这一圈上，节点的布局占位 / viewBox 也按这一圈算。
+- **内框**：在内容盒外加上 `padding`，得到传给 shape 的基础半轴——对矩形节点来说，它就是 shape 尺寸的起点。
+- **外接框下限**：shape 先用 `circumscribe` 包围内框，`minimumSize` 再与这个结果取较大者。它约束的是外接框，不会反向参与 `circumscribe`。
+- **外框**：在外接框外再加 `margin`。它不改变视觉 shape，并始终计入布局 / viewBox；连接点是否落在这一圈上由 boundary / anchor 的解析方式决定。
 
 <ComponentPreview files="node-frames" size="md" hideCode />
 
-最内灰块是内容盒，中间虚线是内框（矩形节点的 shape），最外虚线是外框（border 锚点与连线端点停靠的外边界）。两道间距分别是 `padding`（撑在内容盒与 shape 之间、把 shape 顶大）和 `margin`（留在 shape 与外边界之间——shape 不变，但锚点 / 连线端点整体外移、布局占位也含它）。
+最内灰块是内容盒，中间虚线是内框（矩形节点的 shape 起点），最外虚线是外框。图中是 rect 驱动的矩形 boundary，因此 `margin` 同时扩大连接面与布局占位；参数驱动 shape 的例外见下文。
 
-内框决定“这个节点至少要多大”，是后续所有几何的起点：shape 拿它算外接框，连线与 anchor 最终都落在由它派生的边界上。空文本节点也有内框——padding 与最小尺寸保证它不会塌成一个点。
+内框是后续几何的起点：shape 先拿它计算外接框，再由 `minimumSize` 对结果设下限。空文本节点仍可由 padding 提供内框；需要保证最终占位尺寸时再设置 `minimumSize`。
 
-| 属性      | 改的是                | 结果                                                          |
-| --------- | --------------------- | ------------------------------------------------------------- |
-| `padding` | 内容盒到 shape 的距离 | shape 变大，外接框也变大                                      |
-| `margin`  | 连接面外的外偏移      | shape 不变；所有 border 锚点与连线端点外移、布局占位含 margin |
+| 属性      | 改的是                | 结果                                                              |
+| --------- | --------------------- | ----------------------------------------------------------------- |
+| `padding` | 内容盒到 shape 的距离 | shape 变大，外接框也变大                                          |
+| `margin`  | 外接框外的布局留白    | shape 不变；布局占位始终扩大，连接点按 boundary / anchor 路径决定 |
 
-padding 撑大 shape 本身；margin 不动 shape，而是把节点的外边界（锚点 / 连线 / 占位）外推。缺省 0，不设则零影响。
+padding 在 `circumscribe` 前扩大内框；`minimumSize` 在其后约束外接框；margin 不动 shape，只扩布局外框，并把使用 rect 几何的连接点外推。三者缺省都不额外改变几何。
 
 ## 形状 Shape
 
 shape 不是简单的 CSS border-radius。它是一套几何定义：给定内框半轴和参数后，shape 会回答“我要多大的外接框才能装下自己”，并负责画出最终的视觉轮廓。
 
-| shape 类型   | 尺寸来源                  | 例子                                         |
-| ------------ | ------------------------- | -------------------------------------------- |
-| 文本容器形状 | 文字 + padding + 最小尺寸 | rectangle、circle、ellipse、polygon、diamond |
-| 参数驱动形状 | shape params 自己决定几何 | sector、arc、star                            |
+| shape 类型   | 尺寸来源                         | 例子                                         |
+| ------------ | -------------------------------- | -------------------------------------------- |
+| 文本容器形状 | 文字 + padding，经外接框下限约束 | rectangle、circle、ellipse、polygon、diamond |
+| 参数驱动形状 | shape params 自己决定几何        | sector、arc、star                            |
 
 <ComponentPreview files="shapes" size="md" hideCode />
 
@@ -82,9 +83,11 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 **外接框**不是视觉轮廓本身，而是能包住视觉轮廓的矩形。复杂形状也会先被归约到这个矩形里，后续的 viewBox、布局和渲染裁剪都可以用统一模型处理。少数形状还会提供 `circumscribeOffset`，让 `position` 这个语义参考点和外接框中心分离，例如扇形以圆心定位，但外接框中心偏在扇形一侧。
 
-**连接面**只回答一个问题：路径自动连接到这个 Node 时，端点应该贴到哪一层表面。默认 `boundary="shape"`，自动路径端点会贴到视觉 shape 的边上。你也可以把五角星的连接面改成圆或矩形，让连线看起来更规整，但这不会改变星形本身，也不会改变它的外接框。
+**连接面**只回答一个问题：路径自动连接到这个 Node 时，端点应该贴到哪一层表面。默认 `boundary="shape"`，自动路径端点会贴到视觉 shape 的边上。你也可以把五角星的连接面改成圆或椭圆，让连线看起来更规整，但这不会改变星形本身，也不会改变它的外接框。
 
-借用其它 boundary 时，retikz 会把它套在当前 Node 的视觉外接框上，不会重新调用那个 boundary shape 的 `circumscribe`。例如 `boundary="circle"` 的半径来自当前外接框的长半轴；它可能伸出外接框，但仍然不参与布局占位。
+内置的 circle / ellipse boundary 支持两种拟合策略：默认 `fit: 'tight'` 读取视觉 shape 提供的安全连接包络，尽量贴合真实轮廓；`fit: 'bounds'` 则从视觉外接框构造能包住四角的规则连接面。两者都在拟合后应用 `gap`，只改变连接面，不参与布局占位。
+
+这里的 `tight` 不是简单取外接框长半轴：star / polygon 等 shape 会按真实顶点给出安全包络。只有借用未注册为 boundary provider 的普通 shape 名时，才直接把它套在当前视觉外接框上，而不会再次调用它的 `circumscribe`。
 
 | 设置                | 改变什么                                                | 不改变什么                 |
 | ------------------- | ------------------------------------------------------- | -------------------------- |
@@ -94,11 +97,11 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 因此，外接框是“渲染 / 视觉包围矩形”（再加 `margin` 即布局占位），连接面更接近“连接用的 hit surface”——都不是“画出来的外壳”。
 
-`margin` 与连接面正交，二者一起定出外边界：**连接面定它的形状**（贴 shape，或借 circle / rectangle），**`margin` 定连接面离节点内部多远**。换句话说，`margin` 就是「连接面 ↔ 内部 shape」之间那段间距的旋钮——调大它，连接面连同所有 border 锚点、自动连线端点会一起离开 shape，相当于给整个节点套一圈连接留白；缺省 0 时连接面紧贴 shape。这段间距在[盒模型](#盒模型)的外框图里就是 `margin` 那一圈。
+boundary 决定连接面的形状；`margin` 总是扩大传给连接解析的外接矩形。circle / rectangle 等 rect 驱动 boundary 会随之向外扩，star / sector 等参数驱动 shape 的默认边界则仍按 params 计算。因此 `margin` 是稳定的布局留白，但只有 boundary 消费 rect 尺寸时才同时成为连接留白。
 
 <ComponentPreview files="margin-boundary-gap" size="md" hideCode />
 
-每列从内到外三层：最内灰块是文本区（内容盒），currentColor 实线是 shape（内框，矩形节点画出来的就是它），虚线是连接面（boundary），灰点是落在连接面上的命名方位锚点。左、中是默认 `boundary="shape"`：`margin` 越大，连接面连同锚点离 shape 越远，shape 和文本区都不变。右是 `boundary="circle"`：`margin` 同样把连接面从 shape 推开（圆半径 = 较长半轴 + `margin`），但外边界的**形状**由 `boundary` 决定。中、右 `margin` 相同、boundary 不同——正好印证「`margin` 定多远、连接面定形状」。
+每列从内到外三层：最内灰块是文本区，currentColor 实线是矩形 shape，虚线是连接面，灰点是命名方位锚点。这里的 shape / boundary 都由 rect 驱动，所以 `margin` 会把连接面与锚点推开；右列借用 circle 后只是把连接面改成圆。参数驱动形状与完整 boundary 选项见 [Node 几何](/kernel/components/node/overview)。
 
 ## 锚点 Anchor
 
@@ -114,24 +117,16 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 
 <ComponentPreview files="anchors" size="lg" hideCode />
 
-上排都用最常见的矩形：左边是固定的 8 个方位 anchor（外加 `center`）；右边是角度 anchor（`A.30`，沿 30° 射线打到边界）和边比例 anchor（`{ side: 'top', fraction: 0.25 }`，top 边左→右取 1/4 处）。下排是几种自带 shape 专属点的非矩形形状：star 的 `tip-N` 尖角（另有 `notch-N` 凹角）、sector 的 `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`、arc 的 `start` / `arc-mid` / `end`。这些专属点用对象形态引用，如 `{ id: 'A', anchor: 'tip-0' }`。
+上排用矩形说明标准方位、角度与边比例 anchor；下排说明复杂 shape 还可以提供自己的语义点。这里的重点是区分几何所有者，不在概念页枚举每种 shape 的全部名称：
 
-IR / schema 里的方位锚点只保留一套 canonical 名称：`top` / `right` / `bottom` / `left` 以及四个角点，符合 Web / CSS 心智。`center` 是独立的中心锚点，不属于这些方向枚举。少数 sugar 解析器可以接收 TikZ / compass 风格输入，但进入 IR 前必须归一成这套 canonical 名称。
+| anchor 家族          | 几何所有者                 | 权威入口                                            |
+| -------------------- | -------------------------- | --------------------------------------------------- |
+| `center` / 标准方位  | Node 的 shape / boundary   | [Node 几何](/kernel/components/node/overview)       |
+| 数字角度             | 选定的 connection boundary | [Path target](/kernel/reference/schema/path#目标点) |
+| shape 专属名称       | 对应 shape                 | [Shapes](/kernel/components/shapes)                 |
+| `{ side, fraction }` | 视觉 shape 的真实边        | [Node 几何](/kernel/components/node/overview)       |
 
-| Anchor                                                    | 位置                               |
-| --------------------------------------------------------- | ---------------------------------- |
-| `center`                                                  | 节点几何中心                       |
-| `top` / `bottom` / `right` / `left`                       | 上 / 下 / 右 / 左 4 个方位的边界点 |
-| `top-right` / `top-left` / `bottom-right` / `bottom-left` | 4 个对角方位的边界点               |
-
-内置 [`shape`](/kernel/components/node) 都遵守这套命名，但解析连接面分两类：圆 / 椭圆落在真实曲线上，其余形状（含 diamond 这种 polygon 预设，以及无标准方位实现的 star / sector / arc）统一落在视觉外接框（AABB）的对应方位上——与 TikZ 把多边形方位锚点取在 bbox 上一致：
-
-|                         | rectangle               | circle      | ellipse           | diamond（polygon） |
-| ----------------------- | ----------------------- | ----------- | ----------------- | ------------------ |
-| `top` / 等 4 方位       | 边中点（= AABB 边中点） | 圆周 4 方位 | 椭圆轴端          | AABB 边中点        |
-| `top-right` / 等 4 对角 | 4 角                    | 圆周 45° 处 | 椭圆参数 t=π/4 处 | AABB 4 角          |
-
-节点 `rotate` 时中心与 8 个方位锚点跟着旋转。
+IR / schema 的标准方位只保留 `top` / `right` / `bottom` / `left` 与四个角点，`center` 独立存在。命名方位优先让 shape / boundary 自己解析，缺失时回退到 AABB；数字角度沿射线命中选定 boundary；shape 专属名称和边比例点始终由视觉 shape 负责。
 
 <Comparison target="tikz" title="锚点命名">
 
@@ -139,13 +134,66 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
 
 </Comparison>
 
-自定义 shape 可以通过 `ShapeDefinition` 覆盖 anchor 行为，但不必逐个实现 8 个 Web 方位点：未覆盖的标准方位点会回退到节点外接框（AABB）的对应位置。普通 `center` 由编译器按节点中心处理；arc / sector 这类语义中心不同于 AABB 中心的形状可以自行声明 `center`。star 的 `tip-N` 这类 shape 专属名称仍需由 shape 提供，引用未知专属 anchor 时编译会报错。见 [自定义形状](/kernel/components/shapes/custom-shape)。
+完整命名、各 shape 的专属点和 boundary 例外由 Node / Shapes 页面维护；自定义几何见[自定义形状](/kernel/components/shapes/custom-shape)。这些点如何被另一个图元引用、端点如何在 auto / 锁定间解析，继续看[图元关系](/kernel/concepts/core/primitive-relations)。
 
-边上比例点 `{ side, fraction }` 取 shape **真实边界**某条边上从约定起点起 `fraction ∈ [0, 1]` 比例处——方向 top/bottom 左→右、right/left 上→下：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'left', fraction: 1/3 }` = 左边三等分点，`{ side: 'top', fraction: 0.5 }` = 上边中点（等于命名 `'top'`）。
+## 动手试一试
 
-解析时，命名方位点和数字角度点是 **border 锚点**：先经选定 boundary 的连接面、再按 `margin` 外推——`boundary="shape"` 时落在外接框（含 `margin`）的矩形方位上，数字角度点则沿射线打到外扩后的 boundary 上。`center`、shape 专属点和边上比例点始终走视觉 shape，既不受 `boundary` 改写、也不吃 `margin`。
+先编辑内容并输入换行，再切换 rectangle、circle、ellipse、diamond、polygon、star、sector 与 arc，观察同一个 Node 如何更换视觉 shape。前五类会让内容与内边框参与外形尺寸计算；star、sector、arc 则使用演示中预设的几何参数，文字叠加在既定外形上。
 
-这些点怎么被另一个图元引用、连接端点如何在 auto / 锁定两种模式间解析，见 [图元关系](/kernel/concepts/core/primitive-relations)。
+接着在 `shape`、`circle`、`rectangle`、`ellipse` 四种 boundary 间切换：circle / ellipse 还可比较 `fit: 'tight'` 与 `fit: 'bounds'`，三种规则连接面都可调整 `gap`。再改变来源角度，观察真实连线落点。最后的 `fill`、`stroke`、`strokeWidth` 只提供最小样式反馈；完整的[文本](/kernel/components/node/text)、[Node](/kernel/components/node/overview)与[Shapes](/kernel/components/shapes) API 继续查对应组件页。
+
+<ComponentPreview
+  files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}
+  size="md"
+  caption="浅灰 dashed 轮廓是当前规则 boundary，淡灰 dotted 半径只是来源轨道辅助线，灰色实线是真实连接；shape 模式下 boundary 与视觉轮廓重合，因此不重复叠画。"
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: '定义规则 boundary 的 tight / bounds 与 gap 参数',
+      path: 'packages/kernel/core/src/providers/boundary/definitions.ts',
+      startLine: 9,
+      endLine: 25,
+    },
+    {
+      label: '解析 circle / ellipse 的拟合包络并在拟合后应用 gap',
+      path: 'packages/kernel/core/src/providers/boundary/definitions.ts',
+      startLine: 53,
+      endLine: 102,
+    },
+    {
+      label: '优先解析 boundary provider，再回退到普通 shape',
+      path: 'packages/kernel/core/src/compile/node/boundary.ts',
+      startLine: 123,
+      endLine: 181,
+    },
+    {
+      label: '从 star 顶点生成 tight 连接包络',
+      path: 'packages/kernel/core/src/providers/shape/star.ts',
+      startLine: 127,
+      endLine: 127,
+    },
+    {
+      label: '从内容、padding 与 minimumSize 计算节点布局',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 118,
+      endLine: 145,
+    },
+    {
+      label: '按 shape、boundary 与 anchor 家族分流几何',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 54,
+      endLine: 119,
+    },
+    {
+      label: '缓存命名 anchor 并解析边比例点',
+      path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
+      startLine: 16,
+      endLine: 71,
+    },
+  ]}
+/>
 
 ## 延伸阅读
 

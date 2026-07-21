@@ -1,19 +1,21 @@
 ---
 title: 布局
-description: 布局家族——确立坐标语境的 Layout 与 Scope，以及 Scope 的可扩展裁剪区。
+description: 布局家族负责建立整图与局部坐标语境：Layout 接入编译宿主，Scope 管理子图上下文，自定义裁剪区扩展 Scope 的可见边界。
 ---
 
-这一分组是图的「容器」层。`<Layout>` 是每张图必需的最外层包装：接收组件树或 IR，编译出 Scene，再交给当前渲染器输出。`<Scope>` 则在内部把一组 children 聚成一个单元，对它们整体施加平移 / 旋转 / 缩放，并可凭 `id` 被外部当作一个整体引用 / 定位。两者共同确立坐标语境；当内置裁剪形状不够时，最后一页继续扩展 Scope 的 `clip` kind。
+这一分组只解决「图形内容放在哪个坐标语境中、怎样作为整体进入下游」的问题。`<Layout>` 是每张图唯一必需的顶层入口；`<Scope>` 在图内建立局部上下文，让一组 children 共享变换、默认值、引用边界与裁剪。
 
-<ComponentPreview files="layout-family" size="md" hideCode />
+它不负责定义 Node / Path 的几何语义，也不提供 plot / table 等领域布局算法。需要扩展 Scope 的裁剪词汇时，再通过 Clip Definition 接入同一条 registry 与编译路径。
+
+<ComponentPreview files="layout-family" size="sm" hideCode />
 
 ## 职责一览
 
-| 组件         | 类型   | 职责                                                                                       | 适合场景                                  |
-| ------------ | ------ | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| Layout       | Kernel | 唯一必需的顶层容器：children / IR 入口，编译 Scene 并输出；`width` / `height` 控制显示尺寸 | 每张图的最外层包装                        |
-| Scope        | Kernel | 局部 transform 容器：把一组 children 当作整体平移 / 旋转 / 缩放，可凭 `id` 被整体引用      | 子图整体变换、局部坐标系、id 命名空间隔离 |
-| 自定义裁剪区 | 扩展   | 为 Scope 注册可复用的 clip kind                                                            | 宿主或扩展包需要业务裁剪原语              |
+| 组件         | 类型   | 职责                                    | 适合场景             |
+| ------------ | ------ | --------------------------------------- | -------------------- |
+| Layout       | Kernel | 汇合 JSX / IR、能力注入、编译与宿主输出 | 每张图的最外层入口   |
+| Scope        | Kernel | 建立子图的局部上下文与整体引用句柄      | 整组变换、隔离、裁剪 |
+| 自定义裁剪区 | 扩展   | 注册业务 clip kind，并解析为 Scene 资源 | 内置裁剪原语不足时   |
 
 ## 章节内容
 
@@ -26,7 +28,7 @@ description: 布局家族——确立坐标语境的 Layout 与 Scope，以及 S
   </LinkedCard>
   <LinkedCard href="/kernel/components/layout/scope">
     <span className="font-semibold">Scope</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">transforms 七变体、命名空间与整组引用</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">局部坐标、整组引用、命名空间与裁剪</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/layout/custom-clip">
     <span className="font-semibold">自定义裁剪区</span>

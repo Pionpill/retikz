@@ -1,19 +1,21 @@
 ---
-title: 数学公式
-description: 用 LaTeX 写公式，经 MathJax SVG 降解成 renderer-agnostic 字形路径；文本里用 $...$ / $$...$$ 行内混排，底层经 lowerTex 注入 core。
+title: '@retikz/tex'
+description: 把文本中的 LaTeX 公式降解为 Core 可编译、SVG 与 Canvas 可共同渲染的字形路径。
 ---
 
-`@retikz/tex` 负责把 LaTeX 公式降解成 `@retikz/core` 可渲染的 glyph `PathPrim`。公式不是独立内容字段，而是**文本的一部分**：任意文本字符串里的 `$...$`（行内）/ `$$...$$`（display）在编译期解析成公式段；也可显式写 `{ runs: [...] }` 做文字 + 公式混排。降解能力经 `lowerTex` 注入，**core 不依赖 MathJax**。
+`@retikz/tex` 是可选的公式能力包。你仍然在 `<Node>` 等文本入口中写 `$...$`、`$$...$$` 或显式 math run；编译时注入的 `lowerTex` 会把公式转换成 `@retikz/core` 能消费的字形路径。
 
-## 安装与启用
+它不提供新的公式组件，也不拥有文本 IR 或 renderer。MathJax 接入、SVG 字形解析、lowering 缓存和 React 初始化 hook 属于本包；文本布局与 Scene 契约属于 `@retikz/core`，最终路径执行属于 `@retikz/render`。
 
-`@retikz/tex` 提供 TeX → 字形路径的能力；MathJax 是 optional peerDependency，由应用安装并控制版本：
+## 安装与使用
+
+`mathjax-full` 是 optional peer dependency，由应用安装并控制版本：
 
 ```bash
 pnpm add @retikz/tex mathjax-full
 ```
 
-React 里用 `useLowerTex` 启动 MathJax 并把能力注入 `<Layout lowerTex>`，然后在任意 `<Node>` 文本里写 `$...$`：
+React 应用优先使用 `useLowerTex`。hook 异步启动共享的 MathJax engine，准备完成后返回可注入 `<Layout lowerTex>` 的同步 lowerer：
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -30,69 +32,113 @@ const Diagram = () => {
 };
 ```
 
-未注入 `lowerTex` 时，字符串 sugar 与显式 math run 的行为不同：
+`useLowerTex` 在 engine 就绪前返回 `undefined`，随后触发重新编译。React 通过 `<Layout lowerTex>` 注入；Vanilla 使用 `compile.lowerTex`。
 
-- **字符串 sugar**：`$...$` / `$$...$$` 不会被解析，美元符号和中间内容都按普通文字保留。
-- **显式 math run**：`{ runs: [{ tex: '...' }] }` 中的公式 segment 会被跳过，并发出 `TEX_LOWERER_MISSING` warning；其他文字段仍渲染。
+## 为什么需要 @retikz/tex
 
-React 通过 `<Layout lowerTex>` 注入；Vanilla 通过 `compile.lowerTex` 注入。
+### 让 Core 保持引擎无关
 
-<ComponentAlert
-  type="error"
-  title="MathJax 初始化失败会保留原始错误"
-  description="useLowerTex 会把缺少 mathjax-full 等初始化错误写入 console.error；同一次共享初始化只报告一次。失败缓存会清空，后续重新挂载会再次尝试，成功前返回值仍为 undefined。"
+公式排版需要 MathJax 这类体积较大、启动方式也不同于普通文本测量的引擎。如果 Core 直接依赖 MathJax，所有用户和 renderer 都会被迫承担同一依赖与生命周期。
+
+因此 Core 只定义 `LowerTex`：输入 TeX source、inline/display 模式和字号，输出普通的字形路径、宽高与基线深度。`@retikz/tex` 实现这个注入点，但只依赖最小的 `MathJaxSvgEngine.convert` 抽象；应用也可以提供满足该抽象的其它 engine。
+
+### Scene 之后不再依赖 MathJax
+
+| 阶段             | 所有者           | 产物                                             |
+| ---------------- | ---------------- | ------------------------------------------------ |
+| 公式写法         | Core 文本 IR     | 字符串 sugar 或 `{ tex, displayMode }` math run  |
+| 公式降解         | `@retikz/tex`    | renderer-agnostic glyph commands 与度量          |
+| 文本布局与 Scene | `@retikz/core`   | 按基线排版的 `PathPrim` / `GroupPrim`            |
+| 后端输出         | `@retikz/render` | SVG、Canvas 或其它共享同一 Scene 语义的 renderer |
+
+公式在进入 Scene 前已经是 Core 路径图元，SVG 与 Canvas 不需要各自理解 LaTeX，也不会出现一套 MathJax DOM 与一套 Canvas 公式语义。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'MathJax engine 的最小抽象与 optional peer 边界',
+      path: 'packages/kernel/tex/src/mathjax/engine.ts',
+      startLine: 1,
+      endLine: 16,
+    },
+    {
+      label: 'Core 的 LoweredTex 与 LowerTex 契约',
+      path: 'packages/kernel/core/src/compile/text/tex.ts',
+      startLine: 4,
+      endLine: 17,
+    },
+    {
+      label: '公式字形进入 Scene 路径图元',
+      path: 'packages/kernel/core/src/compile/text/layout.ts',
+      startLine: 234,
+      endLine: 248,
+    },
+  ]}
 />
 
-## 行内与 display 公式
+## 公式试验场
 
-`$...$` 用 inline 度量，贴着文字基线；`$$...$$` 用 display 度量（分式 / 求和 / 积分等更舒展）。一个 node 的内容整体就是一个 `$$...$$` 时，它等价于一块独立公式，按字形 bbox 定尺寸：
+直接编辑不带 `$` 分隔符的 TeX source，再切换 inline/display 度量、字号和 Node 容器。取景与公式中心保持不变，预设则复现独立、display、多行和带框公式四种常见任务。
 
-<ComponentPreview files="tex-standalone" />
+<ComponentPreview
+  files="tex-playground"
+  size="md"
+  caption="选择无边框时 padding 会隐藏；输入无效 TeX 时沿用真实 lowerer 的失败行为，不使用 demo 专属回退。"
+/>
 
-## 行内混排
+`$...$` 使用 inline 度量并贴合文字基线；`$$...$$` 使用 display 度量，让分式、求和与积分获得更舒展的上下空间。多行 LaTeX 环境仍然属于一个 Node，只有一个 bbox 和连接目标；启用 `shape` 后，容器继续使用 Node 的常规 padding 与边界计算。
 
-最自然的数学叙述是文字夹公式。直接在字符串里混写即可——`$...$` 外是文字、内是公式，同一行共基线：
+## 文字与公式混排
+
+最自然的数学叙述是文字夹公式。直接在字符串里混写即可，公式和普通文字会在同一行按基线对齐：
 
 ```tsx
 <Node>{'当 $v = d/t$ 时，位移 $s = v t$'}</Node>
 ```
 
-需要**逐段单独着色 / 样式**时，写显式 `runs`：每个 run 是 `{ text, fill?, font? }` 或 `{ tex, displayMode?, fill? }`：
+需要逐段颜色、透明度或文字字体时，使用显式 `runs`。text run 可设置 `fill`、`opacity` 与 `font`；math run 可设置 `fill`、`opacity` 与 `displayMode`：
 
 ```tsx
-<Node text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（红线长度）' }] }]} />
+<Node
+  text={[
+    {
+      runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（红线长度）' }],
+    },
+  ]}
+/>
 ```
 
 <ComponentAlert
   title="中文注释建议走 text run"
-  description="彩色公式 + 中文注释同一行时，把中文写成 text run（经 measureText 正确度量 CJK），不要塞进 \text{}——MathJax 的 \text 排中文依赖字体、易出豆腐块。"
+  description="彩色公式与中文注释同一行时，把中文写成 text run，由 measureText 度量；不要塞进 MathJax 的 \\text{}，否则结果会依赖数学字体的 CJK 覆盖。"
 />
 
-## 多行公式
+## 注入方式
 
-一个 node 可以承载一个多行 LaTeX 环境（写在一个 `$$...$$` 里），仍然只有一个 bbox、一个连接目标：
+### React 注入
 
-<ComponentPreview files="tex-multiline" />
+`useLowerTex` 复用一次共享的 engine 初始化，并在组件卸载后避免写回状态。大多数 React 应用只需要在最外层 `<Layout>` 注入一次，子级文本都会复用同一个 compile capability。
 
-## 带框公式
+### 手动创建
 
-给含公式的 `<Node>` 配 `shape` 即得带框公式。容器尺寸由公式 bbox、padding 和 minimum size 共同决定，框走节点常规的 `fill` / `stroke` / `cornerRadius`：
+非 React 初始化流程或需要控制 MathJax packages 时，直接从主入口创建 engine 与 lowerer：
 
-<ComponentPreview files="tex-framed" />
+```ts
+import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
-## 手动注入
+const engine = await createMathJaxEngine({ packages: ['base'] });
+const lowerTex = createLowerTex(engine);
+```
 
-不想用 `useLowerTex` hook 时，可以只用 `@retikz/tex` 主入口手动创建 `lowerTex`（`createMathJaxEngine` + `createLowerTex`），再传给 `<Layout lowerTex>`：
+`options.packages` 透传给 MathJax TeX input，默认是 `['base']`。也可以自行实现 `MathJaxSvgEngine`，只要同步 `convert(tex, { display })` 返回本包支持的 MathJax SVG。
 
-<ComponentPreview files="tex-manual-react" />
+### Vanilla 注入
 
-## Vanilla
-
-`createMathJaxEngine(options?)`（await 启动）→ `createLowerTex` → 注入 vanilla `compile.lowerTex`；节点文本照常写 `$...$`。`options.packages` 会透传给 MathJax TeX input，默认是 `['base']`：
+Vanilla 把同一个 lowerer 放在 `compile.lowerTex`；plain spec、Core IR 与 Scene 仍沿用各自原有入口：
 
 ```ts
 import { figure, node, renderToSvgString } from '@retikz/vanilla';
-import { createMathJaxEngine, createLowerTex } from '@retikz/tex';
+import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
 const spec = figure({
@@ -102,22 +148,73 @@ const spec = figure({
 const svg = renderToSvgString(spec, { compile: { lowerTex } });
 ```
 
+<SourceLinks
+  sources={[
+    {
+      label: 'React 共享初始化与重试边界',
+      path: 'packages/kernel/tex/src/react/useLowerTex.ts',
+      startLine: 10,
+      endLine: 38,
+    },
+    {
+      label: 'MathJax engine 创建与 packages 注入',
+      path: 'packages/kernel/tex/src/mathjax/engine.ts',
+      startLine: 29,
+      endLine: 73,
+    },
+  ]}
+/>
+
+## 失败与性能边界
+
+| 情况                            | 可观察行为                                                                    |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| string sugar 未注入 `lowerTex`  | `$...$` / `$$...$$` 完整保留为普通文字，不解析公式                            |
+| 显式 math run 未注入 `lowerTex` | 跳过公式 segment，并发出 `TEX_LOWERER_MISSING`；同一行的 text run 继续渲染    |
+| 分隔符未闭合                    | 从未闭合 `$` 开始按字面保留，并发出 `TEXT_TEX_PARSE_ERROR`                    |
+| engine 输出无效公式或转换抛错   | lowerer 返回 `null`，Core 跳过该公式并发出 `TEX_INVALID`                      |
+| `mathjax-full` 初始化失败       | `useLowerTex` 保持 `undefined` 并保留原始错误；失败缓存清空，后续挂载可以重试 |
+
+`createLowerTex` 按 `fontSize | displayMode | tex source` 缓存成功或失败的 lowering 结果，避免同一个 lowerer 重复运行 MathJax 和 SVG 字形解析。这个缓存只覆盖 TeX → glyph 的纯转换，不缓存 Core IR、Scene、Node 布局或 renderer 输出，也不提供增量编译或 DOM / Canvas patch。
+
+<SourceLinks
+  sources={[
+    {
+      label: '字符串 sugar 的启用与未闭合分隔符处理',
+      path: 'packages/kernel/core/src/compile/text/inline.ts',
+      startLine: 40,
+      endLine: 88,
+    },
+    {
+      label: '缺失 lowerer 与无效公式的 warning 分支',
+      path: 'packages/kernel/core/src/compile/text/layout.ts',
+      startLine: 145,
+      endLine: 180,
+    },
+    {
+      label: 'TeX lowering 的缓存键与失败结果',
+      path: 'packages/kernel/tex/src/lower/lower-tex.ts',
+      startLine: 7,
+      endLine: 23,
+    },
+  ]}
+/>
+
 ## 语法
 
-| 写法              | 含义                                                           |
-| ----------------- | -------------------------------------------------------------- |
-| `$...$`           | 行内公式（inline 度量，贴文字基线）                            |
-| `$$...$$`         | display 公式（block 度量；独占一个 node 时 = 独立 / 带框公式） |
-| `\$`              | 字面美元符号（不作分隔符）                                     |
-| `{ runs: [...] }` | 显式 run 序列（canonical）                                     |
-
-其中 text run 可单独设置 `fill`、`opacity` 与 `font`；math run 可单独设置 `fill` 与 `opacity`。
+| 写法              | 含义                                                   |
+| ----------------- | ------------------------------------------------------ |
+| `$...$`           | 行内公式（inline 度量，贴文字基线）                    |
+| `$$...$$`         | display 公式（block 度量；独占一个 Node 时为独立公式） |
+| `\$`              | 字面美元符号，不作为分隔符                             |
+| `{ runs: [...] }` | 显式 run 序列，可分别设置普通文字与公式段              |
 
 ## API 参考
 
-| API                                  | 类型                                      | 描述                                                                                      |
-| ------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `useLowerTex`（`@retikz/tex/react`） | `() => LowerTex \| undefined`             | React hook：启动 MathJax，返回可注入 `<Layout lowerTex>` 的函数；未就绪时为 `undefined`。 |
-| `createMathJaxEngine`                | `(options?) => Promise<MathJaxSvgEngine>` | 创建 MathJax SVG 引擎；`packages` 透传给 MathJax TeX input，默认 `['base']`。             |
-| `createLowerTex`                     | `(engine) => LowerTex`                    | 把引擎转换成 core 的 `lowerTex` 注入函数，按 `fontSize\|display\|tex` 缓存。              |
-| `LowerTex`（`@retikz/core`）         | `(content, style) => LoweredTex \| null`  | core 注入点类型；失败返回 `null`，compile 发出 `TEX_INVALID`。                            |
+| API                                  | 类型                                      | 描述                                                                    |
+| ------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------------- |
+| `useLowerTex`（`@retikz/tex/react`） | `() => LowerTex \| undefined`             | 启动并共享 MathJax engine；未就绪或初始化失败时返回 `undefined`         |
+| `createMathJaxEngine`                | `(options?) => Promise<MathJaxSvgEngine>` | 创建 MathJax SVG engine；`packages` 默认 `['base']`                     |
+| `createLowerTex`                     | `(engine) => LowerTex`                    | 把 engine 转换成 Core lowerer，并按字号、display 模式和 TeX source 缓存 |
+| `MathJaxSvgEngine`                   | `{ convert(tex, { display }): string }`   | 本包消费的最小同步 engine 抽象                                          |
+| `LowerTex`（`@retikz/core`）         | `(content, style) => LoweredTex \| null`  | Core 注入点；返回 renderer-agnostic 字形路径与度量，失败返回 `null`     |

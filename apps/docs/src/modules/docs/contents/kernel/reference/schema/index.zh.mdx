@@ -1,20 +1,23 @@
 ---
 title: 结构
-description: 结构参考——retikz IR 的 JSON 形状契约，一份图被序列化成什么样。
+description: retikz IR 的 JSON 形状契约，覆盖场景、图元、作用域、定位、样式与动画。
 ---
 
-这一分组是 IR（中间表示）的数据契约：一份 retikz 图最终被序列化成的 JSON 结构。AI 生成、数据库存储、自定义转换器都基于这套 schema。从 scene 根往下，依次是被命名的实体、绘制路径，以及贯穿其中的定位字段。
+这一分组是 IR（中间表示）的数据契约：一份 retikz 图最终被序列化成的 JSON 结构。AI 生成、数据库存储、自定义转换器都基于这套 schema。这里覆盖可独立查询的公开契约；嵌套的辅助 schema 会收在其所属页面，不按源码目录逐一拆页。
 
 > 这里是参考层，不是组件文档；写图请从 [组件](/kernel/components/layout) 开始。
 
 ## 职责一览
 
-| 主题      | 职责                                                                  | 何时查阅                     |
-| --------- | --------------------------------------------------------------------- | ---------------------------- |
-| Scene     | IR 根：一份图的 JSON 化描述                                           | 想了解顶层结构、序列化整张图 |
-| Entity    | scene 中被命名的成员：Node 与 Coordinate                              | 处理节点 / 坐标的 IR 形状    |
-| Path      | 笔画外壳、step 动作序列与 step 目标点                                 | 处理路径 / 连线的 IR 形状    |
-| Placement | position 字段的五种形态：笛卡尔 / 极坐标 / 相对 / 偏移 / 比例 partway | 解析或生成任意定位字段       |
+| 主题      | 职责                                          | 何时查阅                  |
+| --------- | --------------------------------------------- | ------------------------- |
+| Scene     | IR 根、视框与顶层 child 联合                  | 生成或校验整张图          |
+| Scope     | 子树分组、样式默认值、变换与裁剪              | 生成嵌套结构或局部上下文  |
+| Entity    | Node、Coordinate、文字、形状与连接边界        | 生成节点、坐标或文本      |
+| Path      | Path、step、target、ribbon 与箭头             | 生成路径、连线或几何关系  |
+| Placement | position 与 target 共用的定位形态             | 解析或生成位置引用        |
+| 绘制      | 共享视觉字段、渐变、图案、图片与阴影          | 生成 fill / stroke 等外观 |
+| Animation | JSON 安全的关键帧、时间参数、触发器与变换原点 | 生成声明式动画 track      |
 
 ## 章节内容
 
@@ -22,6 +25,10 @@ description: 结构参考——retikz IR 的 JSON 形状契约，一份图被序
   <LinkedCard href="/kernel/reference/schema/scene">
     <span className="font-semibold">场景</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">IR 根，一份图的 JSON 化描述</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema/scope">
+    <span className="font-semibold">作用域</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">分组、默认值、变换与裁剪</span>
   </LinkedCard>
   <LinkedCard href="/kernel/reference/schema/entity">
     <span className="font-semibold">实体</span>
@@ -34,5 +41,13 @@ description: 结构参考——retikz IR 的 JSON 形状契约，一份图被序
   <LinkedCard href="/kernel/reference/schema/placement">
     <span className="font-semibold">定位</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">position 字段的五种形态</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema/style">
+    <span className="font-semibold">绘制</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">共享视觉字段与结构化绘制定义</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/schema/animation">
+    <span className="font-semibold">动画</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">关键帧、时间参数与触发器</span>
   </LinkedCard>
 </div>

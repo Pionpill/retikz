@@ -8,7 +8,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  * @description 同样两个端点，<Draw> 的 way 给出三种连接形态——直线（默认）、曲线（`{ bend }`）、折线（`-|`）。
  */
 const Demo: FC = () => (
-  <Layout width={520} height={170}>
+  <Layout width={520} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* 直线 */}
     <Node id="A1" position={[-205, -10]} stroke="none">
       a

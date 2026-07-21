@@ -11,12 +11,14 @@ description: Use when a retikz feature or user-visible behavior needs apps/docs 
 
 - `apps/docs/AGENTS.md`
 - `docs-doc-principle`
-- 按页型继续读 `docs-doc-component` / `docs-doc-example` / `docs-doc-group` / `docs-doc-concept` / `docs-doc-blog`
+- 按页型继续读 `docs-doc-component` / `docs-doc-extension` / `docs-doc-example` / `docs-doc-group` / `docs-doc-concept` / `docs-doc-blog`
+- 页面使用 controls、复杂 ComponentPreview 或 ZodSchema 时，只加载 principle 指向的对应 skill/reference
 - 需要独立审稿时读 `docs-doc-review`
 
 ## 输入
 
 - ADR / TODO 与最终行为。
+- `test-contract` 矩阵中标为 docs、Preview 或 page 证据的行为。
 - `develop-test` 的 BLOCKING 修复结果、WARNING / INFO。
 - 受影响的现有 docs 页面、demo、API 表、sidebar、i18n key。
 
@@ -46,8 +48,10 @@ demo 有可见文本时必须双语：`<name>.zh.demo.tsx` + `<name>.en.demo.tsx
 
 按 `apps/docs/AGENTS.md` 的分级执行：
 
-- 纯正文：`git diff --check` + 页面 / 链接验证。
+- 先运行 `docs-doc-principle/scripts/check-doc-integrity.mjs --scope <scope>`，承担双语、路由/锚点、SourceLinks 行号与 demo 文件的机械检查。
+- 纯正文：Prettier + `git diff --check` + 页面语义 / 视觉验证。
 - demo / data / i18n / import：docs 包 `tsc --noEmit` + 浏览器确认 demo。
+- 矩阵要求 docs 用户路径：运行对应 component / page test 或浏览器验证，确认示例、控件和错误展示真实兑现契约。
 - CI 等价路径：docs build。
 
 ## 完成标志

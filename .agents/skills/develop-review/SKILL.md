@@ -12,6 +12,7 @@ description: Use when auditing a retikz module or subsystem read-only to find be
 | 场景                               | 用哪个 skill                |
 | ---------------------------------- | --------------------------- |
 | 横向审一个模块，找 beta TODO 候选  | develop-review              |
+| 审计已有测试是否过期、重复或临时   | test-review                 |
 | 固定 commit / PR / diff 多模型评审 | cross-review                |
 | 为疑似 bug 写测试坐实              | cross-test                  |
 | 已登记 TODO 要修                   | flow-beta                   |
@@ -41,7 +42,7 @@ git status --short
 每条 finding 必须有代码位置和成因，不能只写“可以优化”。
 
 1. **结构**：目录职责、barrel 边界、同级模块 import、文件过大 / 过碎、层级归属、Kernel / Sugar / Tier 2 边界。
-2. **正确性与类型安全**：边界值、引用解析、重复调用、错误诊断、React / Vanilla 或 plot adapter 对等、`as any` / ignore / 非必要断言、测试覆盖。
+2. **正确性与类型安全**：边界值、引用解析、重复调用、错误诊断、React / Vanilla 或 plot adapter 对等、`as any` / ignore / 非必要断言、测试覆盖。若审查目标是测试资产本身是否过期、重复或临时，转用 `test-review`，不要在本 skill 中混合展开。
 3. **复用与简化**：重复实现、死代码、可下沉 shared / math / core 的工具、过度工程、热路径重复计算。
 4. **schema / 数据结构 / AI 友好**：JSON 可序列化、zod `.describe` 完整与质量、const object enum、非法状态不可表达、同名同义。
 5. **文档一致性**：public API、props、IR 字段、默认值、demo、zh/en 是否与当前代码一致。纯内部范围可标不适用。

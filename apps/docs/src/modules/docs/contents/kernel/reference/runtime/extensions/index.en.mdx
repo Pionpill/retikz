@@ -13,30 +13,31 @@ This page is an extension-point dictionary. Use it to decide which mechanism own
 | ------------------- | ------------------------------------------------------ | -------------------------- |
 | Definition registry | shape, boundary, clip, arrow, pattern, path, composite | compile                    |
 | Runtime registry    | easing, animation property                             | render / animation runtime |
-| Host lowerer        | optional heavy lowering such as TeX                    | early compile              |
+| Host lowerer        | optional heavy lowering such as TeX                    | compile-time text layout   |
 
 Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custom definitions merge into a compile-local registry. Runtime registries hold host functions outside the compile contract. A host lowerer supplies an optional integration without expanding the general primitive model.
 
 ## Capability index
 
-| Capability         | IR selection key   | Injection point                      |
-| ------------------ | ------------------ | ------------------------------------ |
-| Shape              | `Node.shape`       | `CompileOptions.shapes`              |
-| Boundary           | `Node.boundary`    | `CompileOptions.boundaries`          |
-| Clip               | `Scope.clip.kind`  | `CompileOptions.clips`               |
-| Arrow              | arrow shape name   | `CompileOptions.arrows`              |
-| Pattern            | pattern shape name | `CompileOptions.patterns`            |
-| Path generator     | generator name     | `CompileOptions.pathGenerators`      |
-| Path kind          | `Path.kind`        | `CompileOptions.pathKinds`           |
-| Ribbon profile     | profile name       | `CompileOptions.ribbonWidthProfiles` |
-| Composite          | `namespace + type` | `CompileOptions.composites`          |
-| Easing             | easing name        | `<Layout easings>`                   |
-| Animation property | property name      | `<Layout animationProperties>`       |
-| TeX lowerer        | math text payload  | `CompileOptions.lowerTex`            |
+| Capability         | IR selection key   | Injection point                                                   |
+| ------------------ | ------------------ | ----------------------------------------------------------------- |
+| Shape              | `Node.shape`       | `CompileOptions.shapes`                                           |
+| Boundary           | `Node.boundary`    | `CompileOptions.boundaries`                                       |
+| Clip               | `Scope.clip.kind`  | `CompileOptions.clips`                                            |
+| Arrow              | arrow shape name   | `CompileOptions.arrows`                                           |
+| Pattern            | pattern shape name | `CompileOptions.patterns`                                         |
+| Path generator     | generator name     | `CompileOptions.pathGenerators`                                   |
+| Path kind          | `Path.kind`        | `CompileOptions.pathKinds`                                        |
+| Ribbon profile     | profile name       | `CompileOptions.ribbonWidthProfiles`                              |
+| Composite          | `namespace + type` | `CompileOptions.composites`                                       |
+| Easing             | easing name        | `<Layout easings>`                                                |
+| Animation property | property name      | `<Layout animationProperties>` (custom properties on Canvas only) |
+| TeX lowerer        | math text payload  | `CompileOptions.lowerTex`                                         |
 
 ## Diagnostics
 
-- Empty or duplicate keys in one registry throw immediately; custom items cannot silently replace built-ins.
+- Compile Definition registries reject empty and duplicate keys while merging built-ins with custom items; custom definitions cannot silently replace built-ins.
+- Runtime registries such as easings and animation properties use the host-provided `Record` directly and do not run that Definition merge diagnostic. A renderer warns and skips unknown custom animation properties.
 - Missing ordinary Definition keys fail loudly and list registered items.
 - Missing composites warn and skip the node during full compile; standalone lowering promotes the condition to an error.
 - Schema and payload validation run before consuming a definition, and diagnostics identify the capability family and lookup key.
@@ -84,6 +85,12 @@ Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custo
       PathGeneratorDefinition: parameterized curve commands
     </span>
   </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/ribbon#custom-width-profiles">
+    <span className="font-semibold">Ribbon Width Profiles</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      RibbonWidthProfileDefinition: resolve dynamic width along a centerline
+    </span>
+  </LinkedCard>
   <LinkedCard href="/kernel/concepts/design/composite">
     <span className="font-semibold">Tier 2 Composites</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
@@ -96,4 +103,33 @@ Definition capabilities use `XxxDefinition` and `defineXxx`; built-ins and custo
       Runtime registries for easings and animated properties
     </span>
   </LinkedCard>
+  <LinkedCard href="/kernel/packages/tex">
+    <span className="font-semibold">TeX Lowerer</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      @retikz/tex: lower formulas into Kernel-renderable glyph geometry
+    </span>
+  </LinkedCard>
 </div>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Validate keys and duplicates in compile Definition registries',
+      path: 'packages/kernel/core/src/providers/registry.ts',
+      startLine: 63,
+      endLine: 97,
+    },
+    {
+      label: 'Canvas custom animation-property runtime registry contract',
+      path: 'packages/kernel/render/src/animation/registry.ts',
+      startLine: 1,
+      endLine: 18,
+    },
+    {
+      label: 'Pass animationProperties only to the Canvas host in React',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 482,
+      endLine: 519,
+    },
+  ]}
+/>

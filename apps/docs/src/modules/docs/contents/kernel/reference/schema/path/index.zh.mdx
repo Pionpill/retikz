@@ -3,7 +3,7 @@ title: 路径
 description: 笔画外壳、step 动作序列与 step 目标点
 ---
 
-`path` 是一条笔画的外壳容器；它的 `children` 字段是一个 `Step` 动作有序数组，渲染器顺序处理它们产出 SVG path 命令。
+`path` 是一条笔画的外壳容器；它的 `children` 字段是一个 `Step` 动作有序数组。compile 按顺序把 step 降为渲染目标无关的 `PathPrim.commands`，SVG / Canvas adapter 再物化为各自的平台命令。
 
 <span id="path"></span>
 
@@ -23,7 +23,6 @@ description: 笔画外壳、step 动作序列与 step 目标点
     fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
     lineCap: '描边端点形状：`butt` 默认 / `round` / `square`',
     lineJoin: '描边拐角形状：`miter` 默认 / `round` / `bevel`',
-    thickness: '语义化描边厚度预设；显式 strokeWidth 优先',
     opacity: '整路径不透明度 0..1，同时作用于描边与填充',
     fillOpacity: '填充不透明度 0..1，只影响闭合区域',
     strokeOpacity: '描边不透明度 0..1，只影响描边',
@@ -37,6 +36,8 @@ description: 笔画外壳、step 动作序列与 step 目标点
     children: 'step 动作序列；首项通常应是 `move`',
   }}
 />
+
+React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换算成 `strokeWidth`，不属于 `PathSchema`；完整档位见 [Path 样式](/kernel/components/draw/path#样式)。
 
 <span id="drawablestyle"></span>
 
@@ -79,7 +80,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <span id="pathribbonoptions"></span>
 
-## PathRibbonOptions
+## 带状路径选项
 
 `PathRibbonOptionsSchema` 配置内置 `kind: 'ribbon'` path provider。中心线模式读取 Path 的 `children`；boundary 模式读取这个对象里的 `upper` / `lower` 两条 step 数组，不再使用 `children`。
 
@@ -292,6 +293,22 @@ description: 笔画外壳、step 动作序列与 step 目标点
   }}
 />
 
+<span id="smooth"></span>
+
+### 平滑曲线
+
+<ZodSchema
+  name="SmoothStepSchema"
+  description="平滑曲线动作：从当前游标开始依次穿过给定点列，并编译为三次贝塞尔命令。"
+  descriptions={{
+    type: '判别字段，标记本节点为 path step',
+    kind: '动作种类：`smooth` —— 从当前游标开始依次穿过 points，并编译为三次贝塞尔命令',
+    points: '游标之后依次经过的点列，至少一个；最后一点成为新游标',
+    tension: '控制切线长度与曲线松紧的正数倍率；默认 1',
+    label: '附着在整条平滑曲线上的边标注',
+  }}
+/>
+
 <span id="generator"></span>
 
 ### 生成器
@@ -331,10 +348,6 @@ description: 笔画外壳、step 动作序列与 step 目标点
     textColor: '标签文字色；缺省回退 scope labelDefault → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
     opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
     font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 labelDefault → 渲染端默认',
-    'font.family': 'CSS font-family 字符串，如 "serif" / "monospace"',
-    'font.size': '字号：正数、Web preset（2xs..9xl）或 em/rem；未填走 labelDefault → CompileOptions.fontSize',
-    'font.weight': 'CSS font-weight：keyword normal/bold 或数字 100..900',
-    'font.style': 'CSS font-style：normal / italic / oblique',
   }}
 />
 
@@ -388,7 +401,6 @@ description: 笔画外壳、step 动作序列与 step 目标点
 | IR 字段                                      | 语义 / TikZ 对照                                       |
 | -------------------------------------------- | ------------------------------------------------------ |
 | `lineCap` / `lineJoin`                       | `line cap` / `line join`                               |
-| `thickness`                                  | `ultra thin` … `ultra thick`                           |
 | `strokeOpacity`                              | 描边透明度                                             |
 | `kind: 'fold'`                               | `-\|` / `\|-`                                          |
 | `kind: 'cycle'`                              | `cycle`                                                |
@@ -418,6 +430,21 @@ description: 笔画外壳、step 动作序列与 step 目标点
     fill: '填充色 override（空心 shape 忽略）',
     opacity: '箭头透明度 0..1',
     lineWidth: '空心 shape 描边粗细',
+  }}
+/>
+
+<span id="pathmarkplacement"></span>
+
+### 标记位置
+
+`PathMarkPlacementSchema` 把一个 mark 放在路径归一化位置上；方向由该位置的路径切线决定。
+
+<ZodSchema
+  name="PathMarkPlacementSchema"
+  description="路径上的一个归一化标记位置及其 mark。"
+  descriptions={{
+    pos: '路径上的归一化位置 0..1；line-like step 按弧长，曲线 step 按参数位置',
+    mark: '放置的标记；当前为沿路径切线定向的 ArrowMark',
   }}
 />
 

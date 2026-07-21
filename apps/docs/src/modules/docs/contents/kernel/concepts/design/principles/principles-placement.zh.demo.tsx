@@ -6,49 +6,50 @@ import { Fragment } from 'react';
 const placementRows = [
   {
     id: 'authoring',
-    y: -100,
+    y: -104,
     signal: '只优化书写体验',
     owner: 'Sugar / adapter',
-    source: 'react/adapter · vanilla/spec',
+    anchor: 'react/adapter · vanilla/spec',
   },
   {
     id: 'kernel',
-    y: -50,
+    y: -52,
     signal: '新增通用绘图语义',
     owner: 'Core IR / Scene',
-    source: 'core/schemas · contract',
+    anchor: 'core/schemas · contract',
   },
   {
     id: 'tier2',
     y: 0,
     signal: '保留高层领域模型',
     owner: 'Composite + lowering',
-    source: 'core/contract · compile',
+    anchor: 'core/contract · compile',
   },
   {
     id: 'provider',
-    y: 50,
+    y: 52,
     signal: '需要可替换编译策略',
     owner: 'Definition + registry',
-    source: 'core/contract · providers',
+    anchor: 'core/contract · providers',
   },
   {
     id: 'runtime',
-    y: 100,
+    y: 104,
     signal: '处理后端运行细节',
     owner: 'Renderer / runtime',
-    source: 'render · runtime',
+    anchor: 'render · runtime',
   },
 ] as const;
 
 /** 技术原理页的能力归属决策图 */
 const Demo: FC = () => (
-  <Layout width={660} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-    {placementRows.map(({ id, y, signal, owner, source }) => (
+  <Layout width={600} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    {placementRows.map(({ id, y, signal, owner, anchor }) => (
       <Fragment key={id}>
         <Node
           id={`${id}-signal`}
-          position={[-195, y]}
+          position={[-160, y]}
+          minimumSize={{ width: 220, height: 34 }}
           stroke="dimgray"
           fill="lightgray"
           fillOpacity={0.16}
@@ -59,28 +60,19 @@ const Demo: FC = () => (
         </Node>
         <Node
           id={`${id}-owner`}
-          position={[0, y]}
+          position={[155, y]}
+          minimumSize={{ width: 260, height: 38 }}
           stroke="dodgerblue"
           fill="dodgerblue"
           fillOpacity={0.08}
           cornerRadius={4}
-          font={{ size: 13, weight: 'bold' }}
-        >
-          {owner}
-        </Node>
-        <Node
-          id={`${id}-source`}
-          position={[195, y]}
-          stroke="darkviolet"
-          fill="darkviolet"
-          fillOpacity={0.08}
-          cornerRadius={4}
           font={{ size: 13 }}
-        >
-          {source}
-        </Node>
+          text={[
+            { text: owner, font: { size: 14, weight: 'bold' } },
+            { text: anchor, fill: 'gray', font: { size: 12 } },
+          ]}
+        />
         <Draw way={[`${id}-signal`, `${id}-owner`]} arrow="->" />
-        <Draw way={[`${id}-owner`, `${id}-source`]} arrow="->" />
       </Fragment>
     ))}
   </Layout>

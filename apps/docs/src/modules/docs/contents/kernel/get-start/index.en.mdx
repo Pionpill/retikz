@@ -1,6 +1,6 @@
 ﻿---
 title: Get Started
-description: Install retikz and build a minimal example in 4 steps to learn the top-level container, Node, Draw, animation, and event callbacks.
+description: Install retikz and build a minimal static diagram in 3 steps to learn the top-level container, Node, and Draw.
 ---
 
 ## Installation
@@ -15,13 +15,13 @@ All published retikz packages are ESM-only and require Node.js 24 or newer.
 
 ## How to Learn
 
-Complete the four-step example first, then choose the next page for your current task:
+Complete the three-step example first, then choose the next page for your current task:
 
 | Page                                                                          | When to read                                                                                               |
 | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | **Introduction**                                                              | Understand what retikz solves and the mental model of nodes, paths, and shared IR                          |
-| **Concepts**                                                                  | Learn reusable rules such as positioning, anchors, layers, and animation                                   |
-| **Components / Examples**                                                     | Look up a specific API or see a complete figure decomposed from an idea into primitives                    |
+| **Concepts**                                                                  | Learn reusable rules for coordinates, positioning, primitive relations, and layers                         |
+| **Components / Examples**                                                     | Look up specific APIs, or see a complete figure decomposed into primitives                                 |
 | **[Architecture Principles](/kernel/concepts/design/principles) / Reference** | Optional; read it when extending retikz, working with IR directly, debugging compilation, or using schemas |
 
 You can also open the AI panel from the top AI button and ask about the current page, selected code, or an API name. The docs site is fully static and does not provide an LLM service; enter your own API key in the panel, and the site only forwards requests from your browser to the model provider you choose.
@@ -30,7 +30,7 @@ You can also open the AI panel from the top AI button and ask about the current 
 
 <ComponentPreview files="get-start-final" size="xs" />
 
-The first 3 steps build this static diagram, and step 4 adds animation and a click callback. Open **View Code** under any preview to inspect the source and the corresponding IR JSON.
+The following 3 steps build this static diagram. Open **View Code** under any preview to inspect the source and the corresponding IR JSON.
 
 ## Step by Step
 
@@ -42,13 +42,13 @@ A minimal diagram starts with a container and a primitive. `<Layout>` holds the 
 
 ### 2. More `<Node />`s
 
-Add more `<Node>`s to place the entities in the diagram before drawing relationships between them. You can add as many nodes as you like, but each `id` must be unique — `<Draw>` will find them by id later. `position` is the node center in canvas coordinates.
+Add more `<Node>`s to place the entities in the diagram before drawing relationships between them. Keep each `id` unique within the current namespace — as a beginner, you can treat the whole `<Layout>` as one namespace. `<Draw>` will find nodes by id later, and `position` is the node center in canvas coordinates.
 
-| Prop       | Meaning                                              |
-| ---------- | ---------------------------------------------------- |
-| `id`       | Unique identifier, referenced by `<Path>` / `<Draw>` |
-| `position` | `[x, y]` user-unit coordinates for the node center   |
-| children   | The node's visible content (label)                   |
+| Prop       | Meaning                                                               |
+| ---------- | --------------------------------------------------------------------- |
+| `id`       | Identifier unique in its namespace, referenced by `<Path>` / `<Draw>` |
+| `position` | `[x, y]` user-unit coordinates for the node center                    |
+| children   | The node's visible content (label)                                    |
 
 <ComponentPreview files="get-start-step-2" size="xs" />
 
@@ -59,14 +59,6 @@ Add more `<Node>`s to place the entities in the diagram before drawing relations
 <ComponentPreview files="get-start-final" size="xs" />
 
 Three nodes joined by two arrowed lines — the static structure now matches the example at the top.
-
-### 4. Add Animation and a Callback
-
-A figure can also respond to user input. Add `animations` to describe animation tracks, then add an `onClick` callback. The callback's second argument, `context`, carries the current element information and animation controls; calling `context.animation.restart()` replays the animation from the event.
-
-<ComponentPreview files="get-start-step-4" size="xs" controls={{ animation: true }} />
-
-This animation uses `trigger: 'manual'`, so it does not autoplay. It waits for the click callback, and the callback can update your React state at the same time. Previews follow the system reduced-motion preference by default. If the animation does not play, choose **… → Component Preview → Animation playback → On** in the upper-right menu.
 
 Keep four rules in mind before moving on:
 
@@ -94,12 +86,6 @@ Keep four rules in mind before moving on:
     <span className="font-semibold">Draw</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Continue with folds, curves, arrows, fills, and edge labels
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/animation">
-    <span className="font-semibold">Animation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand tracks, presets, playback controls, and static fallback
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/concepts/design/principles">

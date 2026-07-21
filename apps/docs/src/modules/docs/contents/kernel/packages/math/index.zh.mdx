@@ -1,38 +1,108 @@
-﻿---
-title: 计算几何
-description: '@retikz/math——零依赖纯计算几何包：向量、仿射、求交、圆、凸包、样条，core 的计算底座。'
+---
+title: '@retikz/math'
+description: retikz 的零依赖纯计算底座：为应用代码与 core 编译器提供向量、坐标变换、求交、包围与曲线计算。
 ---
 
-`@retikz/math` 是 retikz 的**零依赖纯计算几何**包：向量运算、仿射变换、arc 原语、求交、三角形内外接圆、点在多边形、凸包、样条曲线。全是纯函数 + 普通 `Position = [number, number]` 数组，不写 class、零 IR、零 zod、零运行时依赖。
+`@retikz/math` 处理“怎么算”，不处理“怎么画”。当你需要移动一个点、求两条线的交点、计算凸包或把一组点转换成平滑曲线时，可以直接在普通 TypeScript 数据上完成计算，再把结果交给 `@retikz/core` 或上层组件。
 
-`@retikz/core` 依赖它做底层计算，并便捷转出 `DEFAULT_EPSILON`、`point`、`vector2`、`localToWorld` 和 `worldToLocal`；`lerp` 在 core 中以 `lerpPoint` 公开。`Position` 等类型、外接范围、椭圆、圆弧和高阶算法仍直接从 `@retikz/math` 导入。
-
-> 这里是包文档，不是组件教程；写图请从 [组件](/kernel/components/layout) 开始。
-
-## 安装
-
-```bash
-pnpm add @retikz/math
-```
+> 如果目标是直接开始画图，请从 [组件](/kernel/components/layout) 开始；需要在绘制前组织几何数据时，再回到本节。
 
 ## 职责一览
 
-| 主题                                         | 职责                                         | 何时查阅                                        |
-| -------------------------------------------- | -------------------------------------------- | ----------------------------------------------- |
-| [几何原语](/kernel/packages/math/primitives) | 点、向量、仿射、外接范围、椭圆与圆弧         | 图形进入绘制流程前的几何计算                    |
-| [几何算法](/kernel/packages/math/algorithms) | 求交、三角形内外接圆、点在多边形、凸包、样条 | core 未转出的高阶计算（求交、包络、平滑曲线等） |
+| 主题                                         | 解决的问题                           | 适合查阅的时机                     |
+| -------------------------------------------- | ------------------------------------ | ---------------------------------- |
+| [几何原语](/kernel/packages/math/primitives) | 点与向量、坐标变换、范围、椭圆和圆弧 | 需要构造、转换或检查一份几何数据时 |
+| [几何算法](/kernel/packages/math/algorithms) | 求交、包围、包含、凸包与过点平滑曲线 | 需要从已有几何推导新几何结果时     |
 
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/packages/math/primitives">
     <span className="font-semibold">几何原语</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">点 / 向量 / 仿射 / 外接范围 / 椭圆 / 圆弧</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">构造和变换点、向量、范围、椭圆与圆弧</span>
   </LinkedCard>
   <LinkedCard href="/kernel/packages/math/algorithms">
     <span className="font-semibold">几何算法</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      求交 / 三角形内外接圆 / 点在多边形 / 凸包 / 样条
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">从已有几何求交、包围、包含关系与平滑曲线</span>
   </LinkedCard>
 </div>
+
+## 安装与使用
+
+```bash
+pnpm add @retikz/math
+```
+
+```ts
+import { intersect, point, vector2 } from '@retikz/math';
+
+const direction = vector2.fromAngleDegrees(-30);
+const end = point.along([0, 0], direction, 120);
+const hit = intersect.lineLine({
+  a1: [0, 0],
+  a2: end,
+  b1: [20, -40],
+  b2: [20, 40],
+});
+```
+
+本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+
+## 为什么需要 @retikz/math
+
+绘图中的很多步骤本质上只是确定性的数值计算。把它们从 IR、schema、React 和 renderer 中拆出来，可以让同一套几何语义被 core、领域包、服务端脚本和测试复用，也能在没有 DOM 或 Canvas 的环境中独立运行。
+
+它有三个明确边界：
+
+- 输入和输出是数字、tuple 与普通对象，不产生 IR 或 Scene
+- API 以纯函数为主，不修改传入的点集，也不持有渲染状态
+- 零运行时依赖，不负责组件组合、编译、测量或 SVG / Canvas 输出
+
+## 与 @retikz/core 的关系
+
+`@retikz/math` 与 `@retikz/core` 有两层关系。用户代码可以先用 math 把原始数值整理成普通几何结果，再交给 core；同时 core 编译器本身也直接调用 math 完成位置解析、路径端点与 bounds 等计算。math 不产生 IR 或 Scene，组件组合与 Scene 编译仍由 core 负责。
+
+<ComponentPreview files="math-pipeline" size="xs" hideCode />
+
+core 为绘图高频能力便捷转出 `DEFAULT_EPSILON`、`point`、`vector2`、`localToWorld` 和 `worldToLocal`，并把 math 的 `lerp` 以 `lerpPoint` 暴露。`Position` / `Vector2` 类型、外接范围、椭圆、圆弧与高阶算法仍应直接从 `@retikz/math` 导入。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'math 公开入口',
+      path: 'packages/kernel/math/src/index.ts',
+      startLine: 1,
+      endLine: 3,
+    },
+    {
+      label: 'core 转出点与向量能力',
+      path: 'packages/kernel/core/src/shared/geometry/point.ts',
+      startLine: 1,
+      endLine: 1,
+    },
+    {
+      label: 'core 的 lerpPoint 别名',
+      path: 'packages/kernel/core/src/shared/geometry/edge.ts',
+      startLine: 1,
+      endLine: 9,
+    },
+    {
+      label: 'core 转出坐标变换能力',
+      path: 'packages/kernel/core/src/shared/geometry/transform.ts',
+      startLine: 1,
+      endLine: 1,
+    },
+    {
+      label: 'core 编译直接使用 math bounds',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1,
+      endLine: 1,
+    },
+    {
+      label: 'core 位置解析直接使用 math 圆弧计算',
+      path: 'packages/kernel/core/src/compile/position.ts',
+      startLine: 1,
+      endLine: 1,
+    },
+  ]}
+/>

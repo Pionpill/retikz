@@ -17,6 +17,22 @@ description: Named members placed in a scene — Node and Coordinate
 
 </Comparison>
 
+<span id="shaperef"></span>
+
+## ShapeRef
+
+`ShapeRefSchema` is the object form for parameterized shapes. Parameterless shapes can stay as strings; the object form sends a provider name and JSON parameters to the selected shape Definition.
+
+<ZodSchema name="ShapeRefSchema" />
+
+<span id="boundary"></span>
+
+## Boundary
+
+`BoundarySchema` selects the connection surface used by path endpoints and directional anchors. The string `shape` uses the visual shape itself; another string or `ShapeRef` selects a built-in / registered boundary provider.
+
+<ZodSchema name="BoundarySchema" />
+
 ## Coordinate
 
 `CoordinateSchema` requires an `id` (its whole purpose), never contributes to layout, and shares the node index with `Node`.
@@ -56,13 +72,39 @@ description: Named members placed in a scene — Node and Coordinate
 
 ## TextBlock
 
-`TextBlockSchema` is the node text block shape: a single string for one line, or an array for multiple lines where each item may use `LineSpec` for per-line styling.
+`TextBlockSchema` is the node text block shape: a single string for one line, or a non-empty array for multiple lines. Each `LineSpec` may be a plain string, a per-line style object, or a `{ runs }` mixed text / math line.
 
 <ZodSchema name="TextBlockSchema" />
 
 ### LineSpec
 
 <ZodSchema name="LineSpecSchema" />
+
+`$...$` / `$$...$$` inside strings is formula sugar normalized to `MathRunSchema`; an explicit `{ tex, displayMode?, fill?, opacity? }` object may also be used as a run. Formula rendering requires the host to inject `CompileOptions.lowerTex`; see the [TeX package](/kernel/packages/tex) for integration details.
+
+<span id="styledline"></span>
+
+### StyledLine
+
+<ZodSchema name="StyledLineSchema" />
+
+<span id="mixedline"></span>
+
+### MixedLine
+
+<ZodSchema name="MixedLineSchema" />
+
+<span id="textrun"></span>
+
+#### TextRun
+
+<ZodSchema name="TextRunSchema" />
+
+<span id="mathrun"></span>
+
+#### MathRun
+
+<ZodSchema name="MathRunSchema" />
 
 ## Font
 

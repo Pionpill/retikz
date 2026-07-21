@@ -30,6 +30,22 @@ afterAll(async () => {
 });
 
 describe('<SourceLinks>', () => {
+  it('pins the label at the upper left while links wrap independently', () => {
+    const SourceLinks = getSourceLinks();
+    const html = renderToStaticMarkup(
+      <SourceLinks
+        sources={[
+          { label: 'Responsibility contract', path: 'packages/kernel/core/src/index.ts' },
+          { label: 'JSON Schema source of truth', path: 'packages/kernel/core/src/schemas/index.ts' },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('grid-cols-[auto_minmax(0,1fr)]');
+    expect(html).toContain('self-start');
+    expect(html).not.toContain('text-foreground/70');
+  });
+
   it('把仓库相对路径和行号范围渲染为次要 GitHub 源码入口', () => {
     const SourceLinks = getSourceLinks();
     const html = renderToStaticMarkup(

@@ -9,7 +9,7 @@ import { Circle, Draw, Layout, Node, Rectangle, RegularPolygon, Star } from '@re
  *   on the bottom row hints that Node shapes are connectable. Captions / row labels use gray stroke/fill-none text.
  */
 const Demo: FC = () => (
-  <Layout width={660} height={240}>
+  <Layout width={660} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* Row labels */}
     <Node id="rowPath" position={[-235, -55]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Path line

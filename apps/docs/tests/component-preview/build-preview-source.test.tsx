@@ -114,6 +114,26 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("from '@retikz/vanilla'");
   });
 
+  it('deriveIR false 时可从 canonicalRender 生成默认状态的 IR 与 Vanilla', () => {
+    let executions = 0;
+    const ThrowingDemo: FC = () => {
+      executions++;
+      throw new Error('must not execute');
+    };
+
+    const result = buildPreviewSource(
+      createInput({
+        Component: ThrowingDemo,
+        previewSource: { deriveIR: false, canonicalRender: () => <StaticDemo /> },
+      }),
+    );
+
+    expect(executions).toBe(0);
+    expect(result.previewIr?.ir).toEqual(staticIR);
+    expect(result.source?.ir).toBeDefined();
+    expect(result.source?.vanilla?.files[0]?.code).toContain("from '@retikz/vanilla'");
+  });
+
   it('自动派生失败时保留 React 和 IR 诊断但不生成 Vanilla', () => {
     const ThrowingDemo: FC = () => {
       throw new Error('derive failed');

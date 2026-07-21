@@ -1,19 +1,26 @@
 ---
 title: 效果
-description: 为已有图元添加阴影、混合、图案与动画，并在分组末尾集中扩展自定义能力。
+description: 为 Node、Path 等已有图元添加阴影、混合、图案与动画，并按需注册自定义效果。
 ---
 
-效果能力附着在 Node、Path 等已有图元上：阴影补充空间层次，混合模式控制图层如何合成，图案提供可复用填充，动画描述属性随时间的变化。它们不会引入另一套图元模型；先了解内置能力，再从分组末尾的页面注册自定义图案或动画能力。
+效果能力附着在 Node、Path 等已有图元上：阴影补充空间层次，混合控制上下图层如何合成，图案提供可复用填充，动画描述属性随时间的变化。它们不会引入另一套图元模型。
+
+先从阴影、混合、动画与图案学习日常用法。只有内置图案或动画通道不能满足需求时，才需要从分组末尾的扩展指南向 `<Layout>` 注入自定义定义。
+
+下图中，实线是图元经过编译进入 Scene、再交给 renderer（渲染后端）的主链。两条虚线表示注入阶段不同：图案定义在编译期生成 Scene 资源，缓动与属性通道在渲染期消费 Scene 轨道。
+
+<ComponentPreview files="effects-family" size="sm" hideCode />
 
 ## 职责一览
 
-| 能力       | 职责                           | 适合场景                    |
-| ---------- | ------------------------------ | --------------------------- |
-| 阴影       | 为图元增加偏移、模糊与颜色     | 强调层次、悬浮感或空间关系  |
-| 混合       | 控制图元与背景的颜色合成方式   | 叠色、高亮与特殊视觉合成    |
-| 动画       | 描述属性轨道、触发方式与播放   | 入场、状态变化与交互反馈    |
-| 自定义图案 | 注册新的 pattern motif         | 条纹、十字或领域专用填充    |
-| 自定义动画 | 注册新的缓动曲线与动画属性通道 | spring、blur 等内置之外能力 |
+| 能力       | 类型     | 职责                     | 适合场景                 |
+| ---------- | -------- | ------------------------ | ------------------------ |
+| 阴影       | 共享属性 | 为主几何增加投影         | 表达层次或悬浮关系       |
+| 混合       | 共享属性 | 控制与已绘内容的颜色合成 | 叠色、高亮或视觉合成     |
+| 动画       | 轨道模型 | 描述关键帧、触发与播放   | 入场、状态变化或交互反馈 |
+| 图案       | 填充规格 | 复用线条、圆点或网格纹理 | 区分区域或表达材质       |
+| 自定义图案 | 扩展指南 | 注册新的重复填充图案     | 内置图案不能表达需求     |
+| 自定义动画 | 扩展指南 | 注册缓动或属性通道       | 内置动画通道不能表达需求 |
 
 ## 章节内容
 
@@ -30,9 +37,13 @@ description: 为已有图元添加阴影、混合、图案与动画，并在分�
     <span className="font-semibold">动画</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">轨道、触发、播放控制与静态降级</span>
   </LinkedCard>
+  <LinkedCard href="/kernel/components/effects/pattern">
+    <span className="font-semibold">图案</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">内置线条、圆点、网格与实例参数</span>
+  </LinkedCard>
   <LinkedCard href="/kernel/components/effects/custom-pattern">
     <span className="font-semibold">自定义图案</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册内置之外的 pattern motif</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册内置之外的重复填充图案</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/effects/custom-animation">
     <span className="font-semibold">自定义动画</span>
