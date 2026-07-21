@@ -4,6 +4,7 @@ import { ChildSchema, JsonObjectSchema } from '@retikz/core';
 
 import type { AnyCellPresentationDefinition } from '../../contract';
 import type { IRTableCellPayload } from '../../schemas';
+import type { DeepReadonly } from '../../shared';
 
 import { cellPresentationDefinitionOf } from '../../providers';
 import { TableCellPayloadSchema } from '../../schemas';
@@ -21,7 +22,7 @@ const parsePresentedChild = (value: unknown): IRChild => {
 
 /** 把单个 Cell payload 转成可供 lowering 使用的 Core 内容 */
 export const presentCellPayload = (
-  payload: IRTableCellPayload,
+  payload: DeepReadonly<IRTableCellPayload>,
   cellId: string,
   registry: ReadonlyMap<string, AnyCellPresentationDefinition>,
 ): IRChild => {
