@@ -2,20 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { arrowAppearanceControls } from './arrow-appearance.controls';
+import { arrowAppearanceControls, previewControlContract } from './arrow-appearance.controls';
 
 export const previewControls = arrowAppearanceControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/** Arrow 方向、形状、起末覆盖与外观 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(arrowAppearanceControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={182} viewBox={{ x: -40, y: -100, width: 440, height: 200 }}>
       <Node id="A" position={[0, 0]} stroke="gray" dashed>
@@ -46,6 +39,11 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Arrow 方向、形状、起末覆盖与外观 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

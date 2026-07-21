@@ -3,23 +3,15 @@ import type { FC } from 'react';
 import { point, vector2 } from '@retikz/math';
 import { Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { vectorNormalControls } from './vector-normal.controls';
+import { previewControlContract,vectorNormalControls } from './vector-normal.controls';
 
 export const previewControls = vectorNormalControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
 const Origin: [number, number] = [0, 0];
 
-/** 通过方向角与长度观察向量及其左手法向量 */
-const Demo: FC = () => {
-  const values = usePreviewControls(vectorNormalControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const unit = vector2.fromAngleDegrees(values.angle);
   const vector = point.scale(unit, values.length);
   const normal = vector2.normal(vector);
@@ -64,6 +56,11 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 通过方向角与长度观察向量及其左手法向量 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

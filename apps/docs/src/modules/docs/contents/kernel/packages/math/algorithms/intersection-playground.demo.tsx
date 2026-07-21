@@ -4,20 +4,14 @@ import type { FC, ReactNode } from 'react';
 import { intersect, point, vector2 } from '@retikz/math';
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { intersectionPlaygroundControls } from './intersection-playground.controls';
+import { intersectionPlaygroundControls, previewControlContract } from './intersection-playground.controls';
+import { circleCircleCenters, intersectionViewBox } from './intersection-playground.data';
 
 export const previewControls = intersectionPlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** 求交 playground 的固定取景范围 */
-export const intersectionViewBox = { x: -195, y: -125, width: 390, height: 250 } as const;
 
 type IntersectionValues = PreviewControlValuesFor<typeof intersectionPlaygroundControls>;
 
@@ -25,12 +19,6 @@ const lineEnds = (center: Position, angle: number): [Position, Position] => {
   const direction = point.scale(vector2.fromAngleDegrees(angle), 190);
   return [point.sub(center, direction), point.add(center, direction)];
 };
-
-/** 根据横向偏移返回圆与圆分支的两个圆心 */
-export const circleCircleCenters = (offset: number): [Position, Position] => [
-  [-45, 0],
-  [offset, 0],
-];
 
 const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array<Position> } => {
   if (values.kind === 'lineLine') {
@@ -82,9 +70,7 @@ const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array
   };
 };
 
-/** 在固定取景中比较直线与圆的求交及退化结果 */
-const Demo: FC = () => {
-  const values = usePreviewControls(intersectionPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const scene = sceneOf(values);
 
   return (
@@ -98,6 +84,11 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 在固定取景中比较直线与圆的求交及退化结果 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

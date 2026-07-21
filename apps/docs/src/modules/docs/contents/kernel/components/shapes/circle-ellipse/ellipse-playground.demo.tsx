@@ -3,17 +3,13 @@ import type { FC } from 'react';
 
 import { Draw, Ellipse, Layout, Rectangle } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { ellipsePlaygroundControls } from './ellipse-playground.controls';
+import { ellipsePlaygroundControls, previewControlContract } from './ellipse-playground.controls';
 
 export const previewControls = ellipsePlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type EllipsePlaygroundValues = PreviewControlValuesFor<typeof ellipsePlaygroundControls>;
 
@@ -66,9 +62,7 @@ const inputBoxOf = (values: EllipsePlaygroundValues): { width: number; height: n
     ? { width: values.radiusX * 2, height: values.radiusY * 2 }
     : { width: values.boxWidth, height: values.boxHeight };
 
-/** Ellipse 构造与局部弧段 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(ellipsePlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const inputBox = inputBoxOf(values);
 
   return (
@@ -109,6 +103,11 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Ellipse 构造与局部弧段 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

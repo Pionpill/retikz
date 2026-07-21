@@ -2,22 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { pathMarksControls } from './path-marks.controls';
+import { pathMarksControls, previewControlContract } from './path-marks.controls';
 
 export const previewControls = pathMarksControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/**
- * 中段 marking 位置 playground
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(pathMarksControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={360} height={160} viewBox={{ x: -180, y: -80, width: 360, height: 160 }}>
       <Path
@@ -33,6 +24,13 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * 中段 marking 位置 playground
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

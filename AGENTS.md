@@ -16,6 +16,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 上层包的底层能力必须源自 `@retikz/core` 或 `@retikz/math`。React / Vanilla / Plot / Docs demo 可以通过 adapter、sugar、composite、lowering、renderer 扩展表达力，但不要绕开 core 另造平行 IR、平行渲染语义或平行几何底座。
 - 新能力优先抽象 Definition / registry / capability contract，再实现内置能力。内置与自定义应复用同一套注册、解析和消费逻辑，不要拆成“内置白名单 + 扩展补丁接口”。
 - 新增或改变公开能力、IR / schema、扩展契约、pipeline / lowering、Scene / manifest、跨包职责或 adapter 独有能力前，先读 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档，并在 ADR 中完成能力归属、包边界与闭环检查。纯 bugfix、文案和行为等价重构只需确认不改变能力边界。
+- 上述设计还必须用 `test-contract` 把行为、可观察结果、不变量、反例与最低测试层写入 ignored 测试契约矩阵；覆盖率不能代替该矩阵。
 - 包不是功能收纳桶。每个发布包必须在就近 `AGENTS.md` 明确解决的问题、拥有的契约、不拥有的能力、输入与输出及缺口流向；新增能力只有在直接服务包使命、符合输入输出边界并能形成完整闭环时才能进入。实现方便、当前代码位置或单个消费方需求不能决定长期所有权。
 - 遇到具体需求时，先识别通用模型、边界和扩展点；确实只能局部处理时，在代码、ADR 或 notes 中说明不抽象的原因。
 - 发现既有设计方向不佳时，以当前能判断的最优方案修正架构，再评估兼容性和版本节奏。`0.x` 阶段公开 API / schema / 命名仍可为正确设计做破坏性调整，不为旧写法保留别名或桥接，除非当次版本设计文档明确要求。
@@ -42,6 +43,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - AI / superpower / plugin 为长任务保上下文、做临时决策、审计或计划而生成的报告和计划默认不入库。
 - 这类文件放到 `.gitignore` 已覆盖的本地目录：`notes/reports/`、`notes/plans/`、任意 `**/_notes/reports/`、`**/_notes/plans/`；不要 stage / commit。
+- 临时 Vitest case 只放受影响 workspace 的 `tests/_scratch/`。用 `pnpm temp:test -- --workspace <workspace-directory> --file <tests/_scratch/*.test.ts>` 运行；默认完成后自动删除，只有人工显式传 `--keep` 才保留。不要 `git add -f` 此目录。
 - 如果新流程需要新的临时产物目录，先征求用户确认并补 `.gitignore`，再写入该目录。
 
 常用命令：
@@ -86,6 +88,7 @@ pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 
 ## Git 与发布授权
 
+- 当前项目首次执行 `git commit` 前，必须读取并向用户确认实际生效的 `user.name` / `user.email`（优先仓库 local 配置）；身份未变化时，当前对话后续提交无需重复确认。
 - AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在当前对话拿到用户明确授权；push / tag / publish 始终单独授权。
 - 计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权。
 - 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。

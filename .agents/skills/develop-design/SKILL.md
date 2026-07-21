@@ -34,19 +34,19 @@ packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN
 
 ## ADR 必填内容
 
-叙述部分按模板写，至少覆盖：背景、决策、DSL / API 表面、测试设计、影响、能力完备性检查、不在范围。
+叙述部分按模板写，至少覆盖：背景、决策、DSL / API 表面、测试设计、影响、能力完备性检查、不在范围。ADR 草案完成后、Architecture Gate 前必须用 `test-contract` 写 ignored 测试契约矩阵；ADR 保留稳定测试设计摘要，不保留临时测试文件索引。
 
 能力完备性检查必须写清所属能力域与能力面、解决的问题、主责 / 协作包、内部表达与外部扩展链路、依赖域和下游闭环，以及本轮结论。不能用“先局部实现”代替组合、扩展当前域、下沉、上移、不支持或延期中的明确选择。
 
 实现契约段必须完整：
 
-| 项           | 要求                                                                                                             |
-| ------------ | ---------------------------------------------------------------------------------------------------------------- |
-| Level        | `red` / `yellow` / `green`，判级见 `flow-alpha`                                                                  |
-| Schema 改动  | 文件 / 操作 / 字段名 / 类型 / 默认值 / describe；无改动写“无”                                                    |
-| 文件 scope   | 白名单列出允许触碰的文件或目录；偏离需要人工确认                                                                 |
-| 测试象限     | happy / 边界 / 错误路径 / 交互；kernel 红黄改动通常不少于 9 case，plot 可按 milestone roadmap 的规则按复杂度裁剪 |
-| 依赖现有元素 | 引用、扩展或修改的现有 IR / API / 工具，并说明用途                                                               |
+| 项           | 要求                                                                                                                         |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Level        | `red` / `yellow` / `green`，判级见 `flow-alpha`                                                                              |
+| Schema 改动  | 文件 / 操作 / 字段名 / 类型 / 默认值 / describe；无改动写“无”                                                                |
+| 文件 scope   | 白名单列出允许触碰的文件或目录；偏离需要人工确认                                                                             |
+| 测试契约矩阵 | 每项行为的可观察结果、不变量、反例、最低测试层与必要的 adapter / renderer / docs 证据；仍覆盖 happy / 边界 / 错误路径 / 交互 |
+| 依赖现有元素 | 引用、扩展或修改的现有 IR / API / 工具，并说明用途                                                                           |
 
 新增或修改 authoring API 时，ADR 必须同时考虑 React 与 Vanilla 两套入口；若某套不适用，在“不在范围”写明理由。
 
@@ -55,8 +55,8 @@ packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN
 ADR 草案完成后，先执行 `develop-completeness` 的 `adr-gate`，再交人工 review 或请求进入实现：
 
 1. 自动派遣一个新的只读 subagent；这是 `flow-alpha` 的常驻授权，不询问用户，也不因用户离线、赶进度或已有实现而跳过。
-2. subagent 读取 ADR、适用 completeness / AGENTS、当前代码与必要 standard skills，检查能力完备性、包边界、define-registry 和端到端闭环。
-3. 主 AI按 findings 修订 ADR；只要 ADR 因 BLOCKING 或 WARNING 发生修订，就必须派新的 subagent 复检，不能由主 AI判断自己的修订已经通过。
+2. subagent 读取 ADR、测试契约矩阵、适用 completeness / AGENTS、当前代码与必要 standard skills，检查能力完备性、包边界、define-registry、端到端闭环，以及每项新增或变更能力是否有行为、不变量、反例和最低测试层。
+3. 主 AI按 findings 修订 ADR 或测试契约矩阵；只要任一项因 BLOCKING 或 WARNING 发生修订，就必须派新的 subagent 复检，不能由主 AI判断自己的修订已经通过。
 4. Gate 只接受最新 subagent 明确返回 `PASS`；该轮必须无 BLOCKING，且每个 WARNING 已修复或 ADR 已记录可验证的接受理由。
 5. 最多执行 3 轮。第 3 轮未 PASS、其后仍需修订，或 subagent 不可用时，立即停止并交人工决策，不退化为主 AI自审放行。
 

@@ -2,22 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Node, Text } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { textAttrsControls } from './text-attrs.controls';
+import { previewControlContract,textAttrsControls } from './text-attrs.controls';
 
 export const previewControls = textAttrsControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** Text 行级属性覆盖 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(textAttrsControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={181} viewBox={{ x: -210, y: -95, width: 420, height: 190 }}>
       <Node id="text" position={[0, 0]} align="start" padding={18} textColor="#64748b">
@@ -37,6 +28,11 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Text 行级属性覆盖 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

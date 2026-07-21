@@ -15,7 +15,7 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 
 ## 输入
 
-- alpha：状态为 `Proposed`、实现契约完整且已人工 ack 的 ADR；ADR 可未提交。
+- alpha：状态为 `Proposed`、实现契约完整、测试契约矩阵已完成且已人工 ack 的 ADR；ADR 可未提交。
 - beta：已登记的 roadmap TODO，scope 与预估 level 已明确。
 - 当前受影响文件、已有测试、相关 docs 页面。
 
@@ -36,7 +36,7 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 产物要求：
 
 - schema 字段名、类型、默认值、describe 与 ADR 表一致；发现 ADR 自相矛盾则 halt。
-- 测试覆盖 ADR 测试象限，并至少包含 JSON round-trip 与 zod parse 错误路径。
+- 测试覆盖测试契约矩阵，并至少包含适用的 JSON round-trip、zod parse 错误路径、adapter parity、跨层组合或 docs 用户路径。
 - 不读或改 compile / adapter 实现。
 - 测试此时可以失败；这是实现未完成的预期。
 
@@ -47,6 +47,7 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 实现任务只负责让 spec 测试通过。
 
 - 不改 spec 测试、schema 字段名、字段类型或 describe；认为 spec 错时 halt 报告。
+- 为矩阵每行映射具名测试或可复用的既有测试；认为行为、不变量或反例需要变化时 halt，请人工更新设计。
 - 不用 `as any`、`@ts-ignore`、跳测、粗暴 lint disable 绕过问题。
 - 每个 ADR step 或 beta TODO 子任务保持可 review 的提交粒度。
 - 不因 ADR 未提交而扩大实现 scope；偏离 ADR 文件 scope 或实现契约必须先人工确认。
@@ -58,6 +59,7 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 黄色轻量改动或绿色改动可由主 AI 直接实现，但仍遵守：
 
 - 行为变化需要测试；bug fix 先写能复现的失败测试。
+- 为行为变化补齐测试契约矩阵，不能用覆盖率或私有实现断言代替。
 - 用户可见改动同步 docs。
 - React / Vanilla 或 plot-react / plot-vanilla authoring 面对等检查；只做一套时说明原因。
 

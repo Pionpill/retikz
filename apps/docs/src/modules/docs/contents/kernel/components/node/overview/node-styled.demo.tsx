@@ -2,21 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { nodeStyledControls } from './node-styled.controls';
+import { nodeStyledControls, previewControlContract } from './node-styled.controls';
 
 export const previewControls = nodeStyledControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-const Demo: FC = () => {
-  const values = usePreviewControls(nodeStyledControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={180} viewBox={{ x: -200, y: -90, width: 400, height: 180 }}>
       <Node
@@ -40,6 +32,9 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

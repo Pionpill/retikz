@@ -44,6 +44,7 @@ import {
   controlModules,
   demoModules,
   demoSources,
+  localSourceFiles,
   resolveControlsKey,
   resolveDemoKey,
   resolvePreviewControlContract,
@@ -69,6 +70,48 @@ const privateExportKeys = [
   ['Component', 'Render'].join(''),
   ['Component', 'Detail', 'Dialog'].join(''),
 ];
+
+/** 抹平文案后比较单个 controls 字段的运行时结构契约 */
+const controlFieldContractOf = (field: PreviewControlField) => ({
+  id: field.id,
+  kind: field.kind,
+  defaultValue: field.defaultValue,
+  min: 'min' in field ? field.min : undefined,
+  max: 'max' in field ? field.max : undefined,
+  step: 'step' in field ? field.step : undefined,
+  playDuration: field.kind === 'range' ? field.playDuration : undefined,
+  multiline: field.kind === 'text' ? field.multiline : undefined,
+  optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
+  visibleWhen: field.visibleWhen,
+});
+
+/** 抹平文案与 slot 渲染函数后比较 controls 的运行时结构契约 */
+const controlDefinitionContractOf = (definition: PreviewControlsDefinition) => {
+  const slots = definition.slots?.map(slot => ({
+    id: slot.id,
+    placement: slot.placement,
+    visibility: slot.visibility,
+  }));
+
+  return definition.presentation === 'panel'
+    ? {
+        presentation: definition.presentation,
+        slots,
+        sections: definition.sections.map(section => ({
+          visibleWhen: section.visibleWhen,
+          fields: section.controls.map(controlFieldContractOf),
+        })),
+      }
+    : {
+        presentation: definition.presentation,
+        slots,
+        fields: definition.controls.map(field => ({
+          ...controlFieldContractOf(field),
+          placement: field.placement,
+          visibility: field.visibility,
+        })),
+      };
+};
 
 type NodeGeometryValues = {
   paddingX: number;
@@ -228,7 +271,17 @@ describe('preview controls registry', () => {
   it('从真实 demo 模块收集源码派生配置', () => {
     const key = resolveDemoKey(['viz', 'grammar', 'mark', 'path'], 'line-curve', 'zh');
 
-    expect(demoModules[key]?.previewSource).toEqual({ deriveIR: false });
+    expect(demoModules[key]?.previewSource).toMatchObject({ deriveIR: false });
+    expect(demoModules[key]?.previewSource?.canonicalRender).toEqual(expect.any(Function));
+  });
+
+  it('contents 统一从短作者入口导入 ComponentPreview author API', () => {
+    const legacyPath = '@/modules/docs/components/component-preview/author';
+    const legacySources = [...Object.values(demoSources), ...Object.values(localSourceFiles)].filter(source =>
+      source?.includes(legacyPath),
+    );
+
+    expect(legacySources).toEqual([]);
   });
 
   it('Scope transform demo 使用坐标轴而非原点和轴端节点', () => {
@@ -894,9 +947,11 @@ describe('preview controls registry', () => {
     }
   });
 
-  it('Kernel Components controls 显式声明完整文档契约', () => {
-    const prefix = '../../contents/kernel/components/';
-    const entries = Object.entries(controlModules).filter(([key]) => key.startsWith(prefix));
+  it('所有 controls 显式声明完整且双语一致的文档契约', () => {
+    const prefix = '../../contents/';
+    const entries = Object.entries(controlModules).filter(
+      ([key]) => key.startsWith(prefix) && key.endsWith('.controls.ts') && !key.endsWith('.en.controls.ts'),
+    );
 
     expect(entries.length).toBeGreaterThan(0);
     for (const [key, mod] of entries) {
@@ -907,11 +962,29 @@ describe('preview controls registry', () => {
       expect(contract, key).toBeDefined();
       if (!contract) continue;
 
+      const englishKey = key.replace(/\.controls\.ts$/u, '.en.controls.ts');
+      const englishModule = controlModules[englishKey];
+      expect(englishModule, englishKey).toBeDefined();
+      expect(Object.hasOwn(englishModule ?? {}, 'previewControlContract'), englishKey).toBe(true);
+
+      const englishContract = resolvePreviewControlContract(englishModule);
+      expect(englishContract, englishKey).toBeDefined();
+      if (!englishContract) continue;
+
       const ids = getPreviewControlFields(contract.controls)
         .map(field => field.id)
         .sort();
       expect(Object.keys(contract.canonicalValues).sort(), key).toEqual(ids);
       expect(contract.relatedApis.length, key).toBeGreaterThan(0);
+      expect(controlDefinitionContractOf(englishContract.controls), englishKey).toEqual(
+        controlDefinitionContractOf(contract.controls),
+      );
+      expect(englishContract.canonicalValues, englishKey).toEqual(contract.canonicalValues);
+      expect(
+        englishContract.presets?.map(preset => ({ id: preset.id, values: preset.values })),
+        englishKey,
+      ).toEqual(contract.presets?.map(preset => ({ id: preset.id, values: preset.values })));
+      expect(englishContract.relatedApis, englishKey).toEqual(contract.relatedApis);
     }
   });
 

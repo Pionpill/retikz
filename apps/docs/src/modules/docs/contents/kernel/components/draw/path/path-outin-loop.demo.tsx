@@ -2,15 +2,11 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Path, Step } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { pathOutInLoopControls } from './path-outin-loop.controls';
+import { pathOutInLoopControls, previewControlContract } from './path-outin-loop.controls';
 
 export const previewControls = pathOutInLoopControls;
-
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
 
 const Start: [number, number] = [-90, 0];
 const End: [number, number] = [90, 0];
@@ -21,11 +17,7 @@ const guideEnd = (origin: [number, number], angle: number, length: number): [num
   return [origin[0] + Math.cos(radians) * length, origin[1] + Math.sin(radians) * length];
 };
 
-/**
- * out/in 出入射角与自环 playground
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(pathOutInLoopControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const target = values.mode === 'loop' ? 'S' : 'T';
   const incomingOrigin = values.mode === 'loop' ? Start : End;
   const looseness = values.mode === 'loop' ? values.loopLooseness : values.looseness;
@@ -62,6 +54,13 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * out/in 出入射角与自环 playground
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

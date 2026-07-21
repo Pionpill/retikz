@@ -2,68 +2,99 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/** Layout responsibility chain from React input to rendered output */
+/** Layout ownership boundaries across React, Core, and the render host */
 const Demo: FC = () => (
-  <Layout width={620} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="jsx" position={[-270, -55]} stroke="dimgray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
-      JSX children
-    </Node>
-    <Node id="ir-input" position={[-270, 55]} stroke="dimgray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
-      ir prop
-    </Node>
+  <Layout width={640} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
-      id="layout"
-      position={[-120, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.1}
+      id="react-adapter-group"
+      text=" "
+      position={[-212.5, 0]}
+      minimumSize={{ width: 315, height: 145 }}
+      stroke="lightgray"
+      fill="lightgray"
+      fillOpacity={0.04}
+      dashPattern={[4, 3]}
       cornerRadius={4}
-      font={{ weight: 'bold' }}
-    >
-      Layout (React)
+    />
+    <Node position={[-300, -53]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
+      @retikz/react
     </Node>
     <Node
-      id="definitions"
-      position={[-120, -105]}
+      id="react-input"
+      position={[-278, -15]}
+      minimumSize={{ width: 112, height: 38 }}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
       cornerRadius={4}
+      font={{ size: 13 }}
+    >
+      JSX children / ir prop
+    </Node>
+    <Node
+      id="layout"
+      text={[
+        { text: 'Layout', font: { weight: 'bold' } },
+        { text: 'React adapter boundary', fill: 'gray', font: { size: 11 } },
+      ]}
+      position={[-135, -15]}
+      minimumSize={{ width: 118, height: 48 }}
+      stroke="dodgerblue"
+      fill="dodgerblue"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
+    />
+    <Node
+      id="definitions"
+      position={[-135, 42]}
+      minimumSize={{ width: 132, height: 36 }}
+      stroke="dimgray"
+      fill="lightgray"
+      fillOpacity={0.16}
+      cornerRadius={4}
+      font={{ size: 12 }}
     >
       definitions / options
     </Node>
-    <Node id="core-ir" position={[15, 0]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
-      Core IR
-    </Node>
+
     <Node
-      id="compile"
-      position={[155, 0]}
+      id="core-compile"
+      text={[
+        { text: 'compileToScene', font: { weight: 'bold' } },
+        { text: '@retikz/core · IR → Scene', fill: 'gray', font: { size: 11 } },
+      ]}
+      position={[35, -15]}
+      minimumSize={{ width: 150, height: 48 }}
       stroke="darkorange"
       fill="darkorange"
-      fillOpacity={0.1}
+      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ weight: 'bold' }}
-    >
-      compile (core)
-    </Node>
-    <Node id="scene" position={[285, 0]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
-      Scene
-    </Node>
-    <Node id="render" position={[155, 100]} stroke="dimgray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
-      render execution
-    </Node>
-    <Node id="output" position={[285, 100]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
-      SVG / Canvas
-    </Node>
+      font={{ size: 13 }}
+      lineHeight={15}
+    />
 
-    <Draw way={['jsx', 'layout']} arrow="->" />
-    <Draw way={['ir-input', 'layout']} arrow="->" />
+    <Node
+      id="render-host"
+      text={[
+        { text: 'Render host', font: { weight: 'bold' } },
+        { text: 'SVG / Canvas', fill: 'gray', font: { size: 11 } },
+      ]}
+      position={[225, -15]}
+      minimumSize={{ width: 118, height: 48 }}
+      stroke="dodgerblue"
+      fill="dodgerblue"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
+      lineHeight={15}
+    />
+
+    <Draw way={['react-input', 'layout']} arrow="->" stroke="gray" />
     <Draw way={['definitions', 'layout']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['layout', 'core-ir']} arrow="->" />
-    <Draw way={['core-ir', 'compile']} arrow="->" />
-    <Draw way={['compile', 'scene']} arrow="->" />
-    <Draw way={['scene', 'render']} arrow="->" />
-    <Draw way={['render', 'output']} arrow="->" />
+    <Draw way={['layout', 'core-compile']} arrow="->" stroke="gray" />
+    <Draw way={['core-compile', 'render-host']} arrow="->" stroke="gray" />
   </Layout>
 );
 

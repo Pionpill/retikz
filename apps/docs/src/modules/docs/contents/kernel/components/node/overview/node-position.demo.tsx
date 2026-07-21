@@ -3,17 +3,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { nodePositionControls } from './node-position.controls';
+import { nodePositionControls, previewControlContract } from './node-position.controls';
 
 export const previewControls = nodePositionControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type NodePositionValues = PreviewControlValuesFor<typeof nodePositionControls>;
 
@@ -33,13 +29,7 @@ const positionOf = (values: NodePositionValues): NodeProps['position'] => {
   }
 };
 
-/**
- * Node 定位 playground
- * @description A / B 是固定参照节点；面板把同一个 Q 切换为五种 position 输入，让用户直接观察定位结果
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(nodePositionControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={229} viewBox={{ x: -280, y: -160, width: 560, height: 320 }}>
       <Draw
@@ -74,6 +64,14 @@ const Demo: FC = () => {
       <Draw way={['B', 'Q']} stroke="gray" dashPattern={[4, 3]} />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * Node 定位 playground
+ * @description A / B 是固定参照节点；面板把同一个 Q 切换为五种 position 输入，让用户直接观察定位结果
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -2,20 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { pathStructureControls } from './path-structure.controls';
+import { pathStructureControls, previewControlContract } from './path-structure.controls';
 
 export const previewControls = pathStructureControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/** Path 基础结构 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(pathStructureControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={218} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       <Path
@@ -41,6 +34,11 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Path 基础结构 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -90,8 +90,13 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const globalDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
   const globalRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const globalControlPanelDefaultOpen = useComponentPreviewStore(s => s.controlPanelDefaultOpen);
+  const globalRangePlaybackDuration = useComponentPreviewStore(s => s.rangePlaybackDuration);
   const resolvedControlDefinition = controlContract?.controls ?? controlDefinition;
-  const controlState = usePreviewControlState(resolvedControlDefinition, controlContract?.canonicalValues);
+  const controlState = usePreviewControlState(
+    resolvedControlDefinition,
+    controlContract?.canonicalValues,
+    globalRangePlaybackDuration,
+  );
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: globalRendererMode,

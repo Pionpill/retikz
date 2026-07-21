@@ -79,7 +79,7 @@ This section zooms in on React wiring, viewport, and host-policy decisions owned
 
 `<Layout>` converts JSX children to Core IR or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. It then asks core for a renderer-agnostic Scene, hands the Scene to render, and wires events, animation, and the root element into the React host.
 
-<ComponentPreview files="layout-input-flow" size="md" hideCode />
+<ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
 Semantic ownership does not drift with the entry point: React does not invent a parallel IR, core does not own DOM or Canvas instances, and render does not define new graphics semantics in reverse.
 
@@ -139,11 +139,11 @@ If a figure is clipped or has too much empty space, inspect **View Code → IR**
 
 ### Advanced Host Policies
 
-Ordinary pages can use `renderer`, `animate`, and `snapshotAt` directly. Editors and test harnesses only need Providers when they must control an entire subtree; the numbers show the full lookup priority.
+Ordinary pages can use `renderer`, `animate`, and `snapshotAt` directly. Editors and test harnesses only need Providers when they must control an entire subtree; the figure separates renderer fallback from animation host-policy overrides.
 
 <ComponentPreview files="layout-runtime-priority" size="md" hideCode />
 
-The renderer Provider fills only an omitted renderer, so an explicit descendant prop still wins. The animation Provider intentionally controls the entire subtree and overrides descendant `animate` props. Once `snapshotAt` is present, both SVG and Canvas emit only the static frame at that time.
+The renderer Provider fills only an omitted renderer, so an explicit descendant prop still wins. The animation Provider intentionally controls the entire subtree and overrides descendant `animate` props; its `system` mode follows the system preference directly. `snapshotAt` is not part of that fallback chain: once present, both SVG and Canvas emit only the static frame at that time.
 
 <SourceLinks
   sources={[

@@ -3,17 +3,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { nodeConnectionPlaygroundControls } from './node-connection-playground.controls';
+import { nodeConnectionPlaygroundControls, previewControlContract } from './node-connection-playground.controls';
 
 export const previewControls = nodeConnectionPlaygroundControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type NodeConnectionValues = PreviewControlValuesFor<typeof nodeConnectionPlaygroundControls>;
 type AnchorChoice = NodeConnectionValues['anchor'];
@@ -33,9 +29,7 @@ const targetOf = (anchor: AnchorChoice, anchorAngle: number): IRNodeTarget => ({
 /** 让连线从来源节点的可连接边界开始 */
 const sourceTarget: IRNodeTarget = { id: 'source' };
 
-/** Polygon 节点的连接端点 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(nodeConnectionPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const sourcePosition = sourcePositionOf(values.sourceAngle, values.sourceDistance);
   const targetShape =
     values.shape === 'diamond'
@@ -60,6 +54,11 @@ const Demo: FC = () => {
       <Draw way={[sourceTarget, targetOf(values.anchor, values.anchorAngle)]} arrow="->" stroke="gray" zIndex={-1} />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Polygon 节点的连接端点 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

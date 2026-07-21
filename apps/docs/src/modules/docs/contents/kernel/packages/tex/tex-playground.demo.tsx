@@ -3,22 +3,18 @@ import type { FC } from 'react';
 import { Layout, Node } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview, usePreviewControls } from '@/modules/docs/preview';
 
-import { texPlaygroundControls } from './tex-playground.controls';
+import { previewControlContract, texPlaygroundControls } from './tex-playground.controls';
 
 export const previewControls = texPlaygroundControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
+type TexPlaygroundValues = PreviewControlValuesFor<typeof texPlaygroundControls>;
 
-/** 在固定取景中比较 TeX 源码、度量模式、字号与 Node 容器 */
-const Demo: FC = () => {
-  const lowerTex = useLowerTex();
-  const values = usePreviewControls(texPlaygroundControls);
+/** 使用给定 controls 值构造 TeX playground */
+const renderTexPlayground = (values: TexPlaygroundValues, lowerTex?: ReturnType<typeof useLowerTex>) => {
   const delimiters = values.displayMode === 'display' ? '$$' : '$';
   const content = `${delimiters}${values.source}${delimiters}`;
   const framed = values.shape !== 'none';
@@ -40,6 +36,17 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
+};
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => renderTexPlayground(values));
+
+export const previewSource = controlledPreview.source;
+
+/** 在固定取景中比较 TeX 源码、度量模式、字号与 Node 容器 */
+const Demo: FC = () => {
+  const lowerTex = useLowerTex();
+  const values = usePreviewControls(texPlaygroundControls);
+  return renderTexPlayground(values, lowerTex);
 };
 
 export default Demo;

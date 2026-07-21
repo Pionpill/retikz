@@ -2,21 +2,13 @@ import type { FC } from 'react';
 
 import { EdgeLabel, Layout, Node, Path, Step } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { stepLabelControls } from './step-label.controls';
+import { previewControlContract,stepLabelControls } from './step-label.controls';
 
 export const previewControls = stepLabelControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** Step label prop 与 EdgeLabel sugar 的等价 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(stepLabelControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const label = {
     text: 'prop',
     position: values.position,
@@ -53,6 +45,11 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Step label prop 与 EdgeLabel sugar 的等价 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

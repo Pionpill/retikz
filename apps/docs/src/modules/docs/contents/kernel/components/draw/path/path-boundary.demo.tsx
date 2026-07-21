@@ -3,15 +3,13 @@ import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { pathBoundaryControls } from './path-boundary.controls';
+import { pathBoundaryControls, previewControlContract } from './path-boundary.controls';
 
 export const previewControls = pathBoundaryControls;
-
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
 
 const StarOuterRadius = 50;
 const StarAabbHalfWidth = StarOuterRadius * Math.cos(Math.PI / 10);
@@ -24,12 +22,7 @@ type BoundaryFitChoice = PathBoundaryValues['fit'];
 const boundaryOf = (boundary: BoundaryChoice, fit: BoundaryFitChoice, gap: number): IRBoundary =>
   boundary === 'shape' ? boundary : { type: boundary, params: { fit, gap } };
 
-/**
- * 端点 boundary：单边覆盖
- * @description 固定一条边，在面板切换目标端点的视觉轮廓 / 圆形连接面，并调整 fit 与 gap
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(pathBoundaryControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const baseRadius = values.fit === 'tight' ? StarOuterRadius : Math.hypot(StarAabbHalfWidth, StarOuterRadius);
   const circleBoundaryRadius = baseRadius + values.gap;
 
@@ -64,6 +57,14 @@ const Demo: FC = () => {
       <Draw way={['A', { id: 'star', boundary: boundaryOf(values.boundary, values.fit, values.gap) }]} arrow="->" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * 端点 boundary：单边覆盖
+ * @description 固定一条边，在面板切换目标端点的视觉轮廓 / 圆形连接面，并调整 fit 与 gap
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

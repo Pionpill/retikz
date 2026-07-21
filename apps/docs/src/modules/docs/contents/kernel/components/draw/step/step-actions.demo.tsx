@@ -2,17 +2,13 @@ import type { FC, ReactNode } from 'react';
 
 import { Layout, Node, Path, Step } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { stepActionsControls } from './step-actions.controls';
+import { previewControlContract,stepActionsControls } from './step-actions.controls';
 
 export const previewControls = stepActionsControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type StepActionValues = PreviewControlValuesFor<typeof stepActionsControls>;
 
@@ -60,10 +56,7 @@ const actionOf = (values: StepActionValues): ReactNode => {
   }
 };
 
-/** Step line / fold / cycle / rectangle playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(stepActionsControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={360} height={240} viewBox={{ x: -140, y: -120, width: 280, height: 240 }}>
       {values.actionKind !== 'rectangle' && values.actionKind !== 'move' && (
@@ -84,6 +77,11 @@ const Demo: FC = () => {
       {actionOf(values)}
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Step line / fold / cycle / rectangle playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

@@ -106,11 +106,11 @@ class ResizeObserverMock implements ResizeObserver {
 let nextAnimationFrameId = 1;
 const animationFrames = new Map<number, FrameRequestCallback>();
 
-const flushAnimationFrames = async (): Promise<void> => {
+const flushAnimationFrames = async (timestamp = 0): Promise<void> => {
   await act(() => {
     const pendingFrames = Array.from(animationFrames.values());
     animationFrames.clear();
-    pendingFrames.forEach(callback => callback(0));
+    pendingFrames.forEach(callback => callback(timestamp));
   });
 };
 
@@ -146,7 +146,7 @@ const definition = definePreviewControls({
         },
         { kind: 'switch', id: 'dashed', label: 'Dashed', defaultValue: false },
         { kind: 'color', id: 'fill', label: 'Fill', defaultValue: '#ffffff' },
-        { kind: 'range', id: 'opacity', label: 'Opacity', defaultValue: 1, min: 0, max: 1 },
+        { kind: 'range', id: 'opacity', label: 'Opacity', defaultValue: 1, min: 0, max: 1, step: 0.1 },
       ],
     },
   ],
@@ -155,6 +155,27 @@ const definition = definePreviewControls({
 const overlayDefinition = definePreviewControls({
   presentation: 'overlay',
   controls: [{ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }],
+});
+
+const shortRangeDurationDefinition = definePreviewControls({
+  presentation: 'panel',
+  title: 'Short range duration',
+  sections: [
+    {
+      controls: [
+        {
+          kind: 'range',
+          id: 'opacity',
+          label: 'Opacity',
+          defaultValue: 1,
+          min: 0,
+          max: 1,
+          step: 0.1,
+          playDuration: 400,
+        },
+      ],
+    },
+  ],
 });
 
 const alternateDefinition = definePreviewControls({
@@ -271,6 +292,7 @@ type WorkspaceHarnessProps = {
   initialOpen?: boolean;
   showContextBar?: boolean;
   workspaceClassName?: string;
+  rangePlaybackDuration?: number;
 };
 
 const emptyControlState: PreviewControlState = {
@@ -282,14 +304,24 @@ const emptyControlState: PreviewControlState = {
 };
 
 const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
-  const { definition: controlsDefinition, initialOpen = true, showContextBar = true, workspaceClassName } = props;
+  const {
+    definition: controlsDefinition,
+    initialOpen = true,
+    showContextBar = true,
+    workspaceClassName,
+    rangePlaybackDuration,
+  } = props;
   const [open, setOpen] = useState(initialOpen);
   const [themeMode, setThemeMode] = useState<PreviewThemeMode>('inherit');
   const controlContract = useMemo<PreviewControlContract | undefined>(
     () => (controlsDefinition ? { controls: controlsDefinition, canonicalValues: {}, relatedApis: [] } : undefined),
     [controlsDefinition],
   );
-  const controlState = usePreviewControlState(controlsDefinition, controlContract?.canonicalValues);
+  const controlState = usePreviewControlState(
+    controlsDefinition,
+    controlContract?.canonicalValues,
+    rangePlaybackDuration,
+  );
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: 'svg',
@@ -420,6 +452,69 @@ describe('PreviewControlPanel', () => {
 
     expect(container.querySelector('button[aria-label="重置控件"]')).not.toBeNull();
     expect(container.querySelector('button[aria-label="关闭属性面板"]')).not.toBeNull();
+  });
+
+  it('未配置时用 2 秒播放 range，并在到达终点后恢复播放动作', async () => {
+    await i18n.changeLanguage('en');
+    const container = await mount(<WorkspaceHarness definition={definition} />);
+    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const rangeValue = () => container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent;
+
+    expect(playButton).not.toBeNull();
+    await act(() => playButton?.click());
+    expect(rangeValue()).toBe('0');
+    expect(container.querySelector('button[aria-label="Pause range"]')).not.toBeNull();
+
+    await flushAnimationFrames(0);
+    await flushAnimationFrames(1999);
+
+    expect(container.querySelector('button[aria-label="Pause range"]')).not.toBeNull();
+
+    await flushAnimationFrames(2000);
+
+    expect(rangeValue()).toBe('1');
+    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+  });
+
+  it('range 可通过 playDuration 覆盖默认播放时长', async () => {
+    await i18n.changeLanguage('en');
+    const container = await mount(<WorkspaceHarness definition={shortRangeDurationDefinition} />);
+    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+
+    await act(() => playButton?.click());
+    await flushAnimationFrames(0);
+    await flushAnimationFrames(400);
+
+    expect(container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent).toBe('1');
+    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+  });
+
+  it('uses the global range playback duration unless the field overrides it', async () => {
+    await i18n.changeLanguage('en');
+    const container = await mount(<WorkspaceHarness definition={definition} rangePlaybackDuration={400} />);
+    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+
+    await act(() => playButton?.click());
+    await flushAnimationFrames(0);
+    await flushAnimationFrames(400);
+
+    expect(container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent).toBe('1');
+    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+  });
+
+  it('手动修改播放中的 range 会取消后续播放帧', async () => {
+    await i18n.changeLanguage('en');
+    const container = await mount(<WorkspaceHarness definition={definition} />);
+    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const thumb = container.querySelector<HTMLElement>('[data-control-id="opacity"] [data-slot="slider-thumb"]');
+    const rangeValue = () => container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent;
+
+    await act(() => playButton?.click());
+    await act(() => thumb?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+    await flushAnimationFrames(1200);
+
+    expect(rangeValue()).toBe('0.1');
+    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
   });
 
   it('按控件数量均衡拆成两列并重复跨列 section 标题', () => {

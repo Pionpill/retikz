@@ -75,7 +75,7 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 `<Layout>` 把 JSX children 转成 Core IR，或直接采用 `ir` prop；definitions 与 runtime options 也由这里接入。之后它调用 core 生成后端中立的 Scene，再把 Scene 交给 render 执行，并在 React 宿主上补齐事件、动画和根元素接线。
 
-<ComponentPreview files="layout-input-flow" size="md" hideCode />
+<ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
 这条链路的语义所有权不会随入口漂移：React 不私造平行 IR，core 不拥有 DOM 或 Canvas 实例，render 不反向定义新的图形语义。
 
@@ -135,11 +135,11 @@ boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` �
 
 ### 高级宿主策略
 
-普通页面直接使用 `renderer`、`animate` 与 `snapshotAt` 即可。编辑器、测试工具等宿主需要统一控制整棵子树时，才使用 Provider；图中数字表示完整的查找优先级。
+普通页面直接使用 `renderer`、`animate` 与 `snapshotAt` 即可。编辑器、测试工具等宿主需要统一控制整棵子树时，才使用 Provider；图把 renderer 的“缺省时回退”与动画的“宿主策略覆盖”分开。
 
 <ComponentPreview files="layout-runtime-priority" size="md" hideCode />
 
-渲染 Provider 只补充缺省的 renderer，后代显式 prop 仍可覆盖；动画 Provider 则用于宿主统一控制整棵树，会覆盖后代 `animate`。一旦传入 `snapshotAt`，SVG 与 Canvas 都只输出指定时刻的静态帧。
+渲染 Provider 只补充缺省的 renderer，后代显式 prop 仍可覆盖；动画 Provider 则用于宿主统一控制整棵树，会覆盖后代 `animate`，其中 `system` 直接跟随系统偏好。`snapshotAt` 不参与这条回退链：一旦传入，SVG 与 Canvas 都直接输出指定时刻的静态帧。
 
 <SourceLinks
   sources={[

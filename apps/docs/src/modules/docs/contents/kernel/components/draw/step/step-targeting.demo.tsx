@@ -2,17 +2,13 @@ import type { FC, ReactNode } from 'react';
 
 import { Layout, Node, Path, Step } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { stepTargetingControls } from './step-targeting.controls';
+import { previewControlContract,stepTargetingControls } from './step-targeting.controls';
 
 export const previewControls = stepTargetingControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type StepTargetingValues = PreviewControlValuesFor<typeof stepTargetingControls>;
 
@@ -44,10 +40,7 @@ const targetsOf = (values: StepTargetingValues): ReactNode => {
   }
 };
 
-/** Step offset / relative / relativeAccumulate playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(stepTargetingControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={229} viewBox={{ x: -190, y: -120, width: 380, height: 240 }}>
       <Node id="A" position={[-100, 40]} stroke="gray" dashed>
@@ -59,6 +52,11 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Step offset / relative / relativeAccumulate playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

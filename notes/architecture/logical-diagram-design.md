@@ -2,7 +2,7 @@
 
 > **状态：方向已确认，当前不实现。** 本文沉淀逻辑关系模型、人工几何、算法布局与交互编辑的长期能力边界，用于后续 Graph / Flow / Workspace 设计与包规划。文中的 `diagram` 与 `workspace` 均是能力组工作名，具体包结构、发布组和公开 API 仍需通过 roadmap / ADR 确认。
 >
-> 关联：[`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Kernel v0.5 官方 Extension 包`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md#官方-extension-包)
+> 关联：[`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Standard Drawing Library`](../../packages/library/_notes/architecture/standard-library-design.md)
 
 ---
 
@@ -58,14 +58,14 @@ Workspace
 └─ Workspace Graph adapter：GraphDocument 编辑接入
 ```
 
-三者与 Kernel / Extension 的关系：
+三者与 Kernel / Standard Library 的关系：
 
 ```text
 GraphModel ──┬─→ Flow：系统计算 ─→ algorithm GraphGeometry ─┐
              └─→ 作者直接提供 ──→ manual GraphGeometry ─────┤
 Workspace Graph adapter ────────→ model / geometry patch ───┤
                                                               ↓
-Extension：Frame / Stack / Align 等通用绘图积木 ─→ Graph presentation / lowering
+Standard Library：Frame / Stack / Align 等通用绘图积木 ─→ Graph presentation / lowering
                                                               ↓
                                                            Core IR
                                                               ↓
@@ -123,7 +123,7 @@ GraphModel + GraphGeometry
   → Core IR
 ```
 
-Flow 计算出的 algorithm geometry、作者手写的 manual geometry 和 Workspace 保存的 geometry 都进入同一条主链。Graph 可以定义 Node、Port、Edge、Group 到 Core 图形的映射契约及必要的内置 presentation，但通用图元、样式、容器和 renderer 语义仍由 Core / Extension 拥有。
+Flow 计算出的 algorithm geometry、作者手写的 manual geometry 和 Workspace 保存的 geometry 都进入同一条主链。Graph 可以定义 Node、Port、Edge、Group 到 Core 图形的映射契约及必要的内置 presentation，但通用图元、样式、容器和 renderer 语义仍由 Core / Standard 拥有。
 
 如果 lowering 由 Flow 独占，手写坐标或 Workspace 编辑后的 Graph 仍会被迫依赖算法包；如果由 Workspace adapter 复制，React、Vanilla 和非交互环境又会产生多条不一致的渲染主链。因此统一 lowering 必须随 GraphDocument 的稳定语义归入 Graph。
 
@@ -132,7 +132,7 @@ Flow 计算出的 algorithm geometry、作者手写的 manual geometry 和 Works
 - DAG、tree、radial、force 等布局算法。
 - 自动连线路由策略。
 - 鼠标、键盘、选择、viewport 或撤销重做。
-- 通用 Core 图元、Extension 积木和 renderer 执行。
+- 通用 Core 图元、Standard 积木和 renderer 执行。
 - 工作流、材质节点或地形节点的业务执行语义。
 
 ---
@@ -188,7 +188,7 @@ GraphModel + GraphGeometry
   → Graph presentation / lowering
 ```
 
-Workspace 也可以不经过 Graph，直接编辑普通 Core IR / Extension composite，或在未来接入其它领域模型。`Board` 可以保留为自由白板 preset、宿主组件或产品名称，但不再作为 Diagram 子包或底层能力 owner。
+Workspace 也可以不经过 Graph，直接编辑普通 Core IR / Standard composite，或在未来接入其它领域模型。`Board` 可以保留为自由白板 preset、宿主组件或产品名称，但不再作为 Diagram 子包或底层能力 owner。
 
 ---
 
@@ -205,7 +205,7 @@ Workspace 也可以不经过 Graph，直接编辑普通 Core IR / Extension comp
 
 - **constraint**：Workspace 中的拖动转成 Flow 约束，之后仍由算法拥有整体布局。
 - **arrange once**：Flow 计算一次 geometry，写回 GraphDocument，随后切换为 manual geometry，由作者拥有位置。
-- **detach / bake**：把关系图固化为普通 Core / Extension 内容，允许脱离 Graph 编辑，但不再保证可恢复原 Graph / Flow 语义。
+- **detach / bake**：把关系图固化为普通 Core / Standard 内容，允许脱离 Graph 编辑，但不再保证可恢复原 Graph / Flow 语义。
 
 这三种行为不能隐式混用，否则重新布局会不可预测地覆盖用户修改。
 
@@ -222,20 +222,20 @@ Workspace 也可以不经过 Graph，直接编辑普通 Core IR / Extension comp
 | 血缘图探索与人工整理        | Graph + Flow + Workspace Graph adapter     | Flow 初始生成，之后切换为 manual  |
 | Blender / Gaea / UE5 节点图 | Graph + Workspace Graph adapter            | 作者保存的 GraphGeometry          |
 | 节点图“自动整理”            | Graph + Workspace Graph adapter，按需 Flow | Flow 单次生成，之后切换为 manual  |
-| 纯自由白板                  | Workspace + Kernel / Extension             | 作者；不属于 Diagram 能力域       |
+| 纯自由白板                  | Workspace + Kernel / Standard              | 作者；不属于 Diagram 能力域       |
 
 这组场景证明 Graph 可以脱离 Flow 和 Workspace 独立表达人工几何；Flow 与 Workspace Graph adapter 都是 GraphDocument 的消费者。Graph 不应因为某个消费方需要数据或交互而反向拥有 Data、Flow 或 Workspace 状态。
 
 ---
 
-## 9. Extension：跨域绘图积木
+## 9. Standard：跨域绘图积木
 
 Graph、Flow 和 Workspace 会共享一部分绘图能力，例如根据 children 边界生成带 title、padding、background 和 border 的容器。这类能力不属于 Graph 关系模型或 Workspace 状态，也不应把 Core Scope 扩张成可见 UI 容器。
 
-通用能力进入计划中的 `@retikz/extension`：
+通用能力进入计划中的 `@retikz/standard`：
 
 ```text
-@retikz/extension
+@retikz/standard
 ├─ Frame
 ├─ Stack
 ├─ Align / Distribute
@@ -243,9 +243,9 @@ Graph、Flow 和 Workspace 会共享一部分绘图能力，例如根据 childre
 └─ 其它可选 Drawing Complete 扩展
 ```
 
-其中 Frame 的建议边界是：测量已经布局的 children，应用 padding / minSize，为 title 或 header 预留空间，并生成背景、边框和整体 anchor。Flow 负责 Group 在图中的算法位置，Workspace 负责用户如何移动 Frame；Extension 不理解 Flow 或 Workspace。
+其中 Frame 的建议边界是：测量已经布局的 children，应用 padding / minSize，为 title 或 header 预留空间，并生成背景、边框和整体 anchor。Flow 负责 Group 在图中的算法位置，Workspace 负责用户如何移动 Frame；Standard 不理解 Flow 或 Workspace。
 
-通用能力进入 Extension 至少满足：
+通用能力进入 Standard 至少满足：
 
 1. 移除 Graph、Flow、Workspace、Plot 等领域词汇后仍然成立。
 2. 有两个以上独立消费场景。
@@ -262,7 +262,10 @@ Graph、Flow 和 Workspace 会共享一部分绘图能力，例如根据 childre
 ```text
 packages/
 ├─ kernel/
-│  └─ extension
+├─ library/
+│  ├─ standard
+│  ├─ standard-react
+│  └─ standard-vanilla
 ├─ diagram/
 │  ├─ graph
 │  └─ flow
@@ -279,7 +282,7 @@ packages/
 
 ```text
 Flow ─────→ Graph + Core / Math ─→ GraphGeometry ─┐
-Graph ────→ Core / Extension ─────────────────────┤→ Core IR → Scene
+Graph ────→ Core / Standard ──────────────────────┤→ Core IR → Scene
 Workspace ─→ Kernel 公开 runtime / interaction 契约
 Workspace Graph adapter ─→ Workspace + Graph
 
@@ -291,7 +294,7 @@ Plot ─────→ Data + Core
 - Graph 依赖 Data 或进入 Viz 能力域。
 - Flow 依赖 Plot、Viz adapter 或具体 renderer。
 - Workspace 把 selection、viewport、history 等运行时状态写进 Graph IR 或 Core IR。
-- Extension 反向依赖 Graph、Flow 或 Workspace 领域语义。
+- Standard 反向依赖 Graph、Flow 或 Workspace 领域语义。
 - Flow 或 Workspace adapter 复制 Graph presentation / lowering。
 - Graph / Flow / Workspace 建立平行于 Core IR / Scene 的渲染语义。
 
@@ -323,8 +326,8 @@ Plot ─────→ Data + Core
 - **反对把 Workspace 放进 Diagram。** 交互编辑运行时可以服务 Graph、Core IR 和未来其它领域模型。
 - **反对让 Graph 决定具体布局算法。** Graph 拥有关系、geometry 与统一 lowering，不拥有算法策略。
 - **反对让 Flow 或 Workspace adapter 独占 Graph lowering。** 人工、算法与交互三条输入必须共用同一 presentation 主链。
-- **反对把通用 Frame / Stack 复制到 Flow 与 Workspace。** 去领域化后成立的绘图积木进入 Extension。
-- **反对把 Workspace 状态塞进 Core、Graph IR 或 Extension。** 持久化领域文档与运行时编辑状态必须分离。
+- **反对把通用 Frame / Stack 复制到 Flow 与 Workspace。** 去领域化后成立的绘图积木进入 Standard。
+- **反对把 Workspace 状态塞进 Core、Graph IR 或 Standard。** 持久化领域文档与运行时编辑状态必须分离。
 - **反对现在冻结完整公开 API。** 本文定义能力边界，不替代 Alpha ADR、completeness gate 和实现验证。
 
 ---
@@ -343,9 +346,9 @@ Plot ─────→ Data + Core
 
 选择一类明确关系图完成 `GraphModel → measure → layout → route → GraphGeometry`，再复用 Graph 的统一 lowering 进入 Core IR，并验证 SVG / Canvas、React / Vanilla 和自定义 layout / routing definition 的边界。
 
-### 阶段 3：Extension 通用积木
+### 阶段 3：Standard 通用积木
 
-以 Frame 等真实跨域需求验证官方 Extension 包。现有 Core composite / scope boundary 能表达时不新增 Core 契约；不能闭环时只补最小通用底座。
+以 Frame 等真实跨域需求验证官方 Standard 包。现有 Core composite / scope boundary 能表达时不新增 Core 契约；不能闭环时只补最小通用底座。
 
 ### 阶段 4：Workspace 交互闭环
 
@@ -361,12 +364,12 @@ Plot ─────→ Data + Core
 
 - `diagram` 是否作为最终领域目录名，还是改为 `schematic`。
 - GraphGeometry 哪些字段属于持久化契约，哪些只是 Flow 或 Workspace 的运行时缓存。
-- Graph 的 presentation / lowering 如何注入 Node、Port、Edge、Group 的内置与自定义定义，同时避免吸收通用 Core / Extension 语义。
+- Graph 的 presentation / lowering 如何注入 Node、Port、Edge、Group 的内置与自定义定义，同时避免吸收通用 Core / Standard 语义。
 - Flow 是否按布局算法、图类型或 definition provider 扩展。
 - Workspace 是否作为最终能力组与包名，以及 Graph adapter、React adapter、宿主 UI 的拆分方式。
 - Flow 的 pin / rank / order 等约束是否进入 GraphModel、GraphGeometry，还是独立 LayoutConstraint。
 - Graph / Flow / Workspace 的发布组与版本兼容策略。
-- Extension Frame 能否完全通过现有 composite、Scope synthetic boundary 和相对引用闭环。
+- Standard Frame 能否完全通过现有 composite、Scope synthetic boundary 和相对引用闭环。
 
 ---
 
@@ -379,6 +382,6 @@ Plot ─────→ Data + Core
 3. 手写坐标和 Blender 类节点图无需依赖 Flow 或 Workspace，也能通过 GraphDocument 完成 lowering；Workspace 只是可选编辑入口。
 4. 血缘图可以先由 Flow 生成，再显式切换为 manual geometry 或继续保持 Flow 约束。
 5. Graph / Flow 不依赖 Viz / Data 语义或具体 renderer；Workspace 基础包不吸收 Graph 等领域语义。
-6. 通用 Frame 等能力只实现一次，并通过 Extension 供多个领域复用。
+6. 通用 Frame 等能力只实现一次，并通过 Standard 供多个领域复用。
 7. Flow algorithm geometry、作者 manual geometry 与 detach 后普通 Core IR 的所有权转换清晰、可诊断。
 8. 人工、算法与交互输入共用 Graph lowering，并通过 Core 公开 contract 下沉，不引入平行 IR、Scene 或 renderer 特判。

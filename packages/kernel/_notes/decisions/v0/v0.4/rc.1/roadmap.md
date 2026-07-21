@@ -8,9 +8,9 @@ rc.1 原本只允许兼容 bugfix、文档和发布验收。2026-07-19 用户明
 
 ## 决策列表
 
-| ADR                                        | 状态        | 主题                     | 说明                                                                          |
-| ------------------------------------------ | ----------- | ------------------------ | ----------------------------------------------------------------------------- |
-| [ADR-01](./01-shape-aware-boundary-fit.md) | Implemented | Shape-aware boundary fit | builtin boundary 统一 `fit` / `gap`，Shape runtime contract 提供安全 envelope |
+| ADR                                        | 状态     | 主题                     | 说明                                                                          |
+| ------------------------------------------ | -------- | ------------------------ | ----------------------------------------------------------------------------- |
+| [ADR-01](./01-shape-aware-boundary-fit.md) | Accepted | Shape-aware boundary fit | builtin boundary 统一 `fit` / `gap`，Shape runtime contract 提供安全 envelope |
 
 ## 验收范围
 
@@ -34,3 +34,12 @@ rc.1 原本只允许兼容 bugfix、文档和发布验收。2026-07-19 用户明
 - 更新 Node 连接面与自定义 Shape 中英文页面。
 - 用 controls demo 对比 shape、boundary type、fit 和 gap，减少重复静态 demo。
 - 更新 rc.1 changelog，明确默认行为变化、`bounds` 迁移方式和负 gap 风险。
+
+## Stable 发布准备
+
+- [x] 六个 kernel 包从 `0.4.0-rc.1` lockstep bump 到 `0.4.0`。
+- [x] npm registry 确认 `0.4.0-rc.1` 是当前连续前序版本，stable 使用默认 `latest`，git tag 使用 `v0.4.0`。
+- [x] changelog、模块概览、版本策略与公开 roadmap 同步到 `0.4.0`。
+- [x] 全量检查、测试、构建与发布产物验证通过。
+- [x] 六包 dry-run 的版本、依赖解析与 tarball 内容通过人工核对。
+- [ ] 获得 commit、tag、publish 与 push 的逐项授权。

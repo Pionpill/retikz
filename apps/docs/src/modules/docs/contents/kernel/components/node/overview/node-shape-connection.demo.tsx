@@ -3,20 +3,16 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
 import type { NodeBoundaryChoice, NodeShapeChoice } from './node-shape-connection-boundary';
 
-import { nodeShapeConnectionControls } from './node-shape-connection.controls';
+import { nodeShapeConnectionControls, previewControlContract } from './node-shape-connection.controls';
 import { boundaryGuideShape, nodeShapeOf } from './node-shape-connection-boundary';
 
 export const previewControls = nodeShapeConnectionControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type NodeShapeConnectionValues = PreviewControlValuesFor<typeof nodeShapeConnectionControls>;
 type AnchorChoice = NodeShapeConnectionValues['anchorA'];
@@ -61,13 +57,7 @@ const BoundaryGuide: FC<BoundaryGuideProps> = props => {
   );
 };
 
-/**
- * Node 形状与连接 playground
- * @description 两个节点分别切换视觉 shape、连接面 boundary 与标准命名 anchor；同一条边实时显示端点解析结果
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(nodeShapeConnectionControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
       width={400}
@@ -118,6 +108,14 @@ const Demo: FC = () => {
       <Draw way={[targetOf('A', values.anchorA), targetOf('B', values.anchorB)]} arrow="->" stroke="gray" zIndex={-1} />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * Node 形状与连接 playground
+ * @description 两个节点分别切换视觉 shape、连接面 boundary 与标准命名 anchor；同一条边实时显示端点解析结果
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

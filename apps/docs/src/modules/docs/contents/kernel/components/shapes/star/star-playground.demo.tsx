@@ -2,21 +2,13 @@ import type { FC } from 'react';
 
 import { Circle, Layout, Star } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { starPlaygroundControls } from './star-playground.controls';
+import { previewControlContract,starPlaygroundControls } from './star-playground.controls';
 
 export const previewControls = starPlaygroundControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** Star 内外半径、角数与起始角 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(starPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const innerRadius = values.outerRadius * values.innerRatio;
 
   return (
@@ -43,6 +35,11 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Star 内外半径、角数与起始角 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

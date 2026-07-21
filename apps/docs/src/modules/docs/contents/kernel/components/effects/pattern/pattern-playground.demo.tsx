@@ -2,21 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { patternPlaygroundControls } from './pattern-playground.controls';
+import { patternPlaygroundControls, previewControlContract } from './pattern-playground.controls';
 
 export const previewControls = patternPlaygroundControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** 固定图元和取景，只让 pattern 规格变化 */
-const Demo: FC = () => {
-  const values = usePreviewControls(patternPlaygroundControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const background = values.background === 'transparent' ? undefined : values.background;
 
   return (
@@ -40,6 +32,11 @@ const Demo: FC = () => {
       </Node>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 固定图元和取景，只让 pattern 规格变化 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

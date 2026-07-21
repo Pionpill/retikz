@@ -2,25 +2,17 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { coordinateOffsetChainControls, coordinateOffsetChainFrame } from './coordinate-offset-chain.controls';
+import {
+  coordinateOffsetChainControls,
+  coordinateOffsetChainFrame,
+  previewControlContract,
+} from './coordinate-offset-chain.controls';
 
 export const previewControls = coordinateOffsetChainControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/**
- * Coordinate 链式偏移
- * @description ca → cb → cc 三个 coordinate 用 `{ of, offset }` 派生；固定坐标轴显出移动 ca 后整组相对世界原点的位移。
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(coordinateOffsetChainControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
       width={coordinateOffsetChainFrame.width}
@@ -57,6 +49,14 @@ const Demo: FC = () => {
       <Draw way={['B', 'C']} arrow="->" stroke="gray" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * Coordinate 链式偏移
+ * @description ca → cb → cc 三个 coordinate 用 `{ of, offset }` 派生；固定坐标轴显出移动 ca 后整组相对世界原点的位移。
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

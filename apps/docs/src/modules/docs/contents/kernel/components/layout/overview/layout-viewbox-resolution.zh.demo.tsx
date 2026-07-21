@@ -2,113 +2,137 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/** Layout 视框与页面尺寸的决策图 */
+/** Layout 以互斥优先级决定内部坐标，并独立处理页面显示尺寸 */
 const Demo: FC = () => (
-  <Layout width={560} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={620} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
-      id="prop-viewbox"
-      position={[-190, -55]}
-      stroke="dimgray"
+      text=" "
+      position={[0, -20]}
+      minimumSize={{ width: 600, height: 155 }}
+      stroke="lightgray"
       fill="lightgray"
-      fillOpacity={0.16}
+      fillOpacity={0.04}
+      dashPattern={[4, 3]}
       cornerRadius={4}
-      font={{ size: 14 }}
+    />
+    <Node position={[-240, -84]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
+      内部坐标优先级
+    </Node>
+    <Node
+      id="viewbox-prop"
+      position={[-215, -50]}
+      minimumSize={{ width: 150, height: 40 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
+      cornerRadius={4}
+      font={{ size: 13 }}
     >
-      viewBox prop
+      1 · 显式 viewBox prop
     </Node>
     <Node
       id="ir-viewbox"
-      position={[-190, 0]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
+      position={[-20, -50]}
+      minimumSize={{ width: 130, height: 40 }}
+      stroke="darkorange"
+      fill="darkorange"
+      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      font={{ size: 13 }}
     >
-      IR.viewBox
+      2 · IR viewBox
     </Node>
     <Node
-      id="auto-bounds"
-      position={[-190, 55]}
+      id="auto-layout"
+      position={[175, -50]}
+      minimumSize={{ width: 130, height: 40 }}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      font={{ size: 13 }}
     >
       内容边界 + padding
     </Node>
     <Node
-      id="scene-layout"
-      position={[0, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.1}
-      cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
-    >
-      Scene layout
-    </Node>
-    <Node
       id="coordinate-range"
-      position={[195, 0]}
+      position={[-20, 25]}
+      minimumSize={{ width: 132, height: 48 }}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
+      font={{ size: 13, weight: 'bold' }}
     >
-      内部坐标
+      内部坐标范围
     </Node>
     <Node
       id="width-height"
-      position={[0, 95]}
+      position={[-165, 90]}
+      minimumSize={{ width: 118, height: 40 }}
       stroke="dimgray"
       fill="lightgray"
       fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      font={{ size: 13 }}
     >
       width / height
     </Node>
     <Node
       id="display-size"
-      position={[195, 95]}
+      position={[165, 90]}
+      minimumSize={{ width: 132, height: 40 }}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
+      font={{ size: 13, weight: 'bold' }}
     >
       页面显示尺寸
     </Node>
 
+    <Draw way={['viewbox-prop', 'coordinate-range']} arrow="->" stroke="gray" />
+    <Draw way={['ir-viewbox', 'coordinate-range']} arrow="->" stroke="gray" />
+    <Draw way={['auto-layout', 'coordinate-range']} arrow="->" stroke="gray" />
     <Draw
       way={[
-        'prop-viewbox',
-        { label: { text: '优先 1', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'scene-layout',
+        'viewbox-prop',
+        {
+          label: {
+            text: '缺省',
+            position: 'midway',
+            side: 'top',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 10 },
+          },
+        },
+        'ir-viewbox',
       ]}
       arrow="->"
+      stroke="gray"
+      dashPattern={[4, 3]}
     />
     <Draw
       way={[
         'ir-viewbox',
-        { label: { text: '优先 2', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'scene-layout',
+        {
+          label: {
+            text: '缺省',
+            position: 'midway',
+            side: 'top',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 10 },
+          },
+        },
+        'auto-layout',
       ]}
       arrow="->"
+      stroke="gray"
+      dashPattern={[4, 3]}
     />
-    <Draw
-      way={[
-        'auto-bounds',
-        { label: { text: '回退', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'scene-layout',
-      ]}
-      arrow="->"
-    />
-    <Draw way={['scene-layout', 'coordinate-range']} arrow="->" />
-    <Draw way={['width-height', 'display-size']} arrow="->" />
+    <Draw way={['width-height', 'display-size']} arrow="->" stroke="gray" />
   </Layout>
 );
 

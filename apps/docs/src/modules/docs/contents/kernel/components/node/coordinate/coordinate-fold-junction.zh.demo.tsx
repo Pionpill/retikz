@@ -2,25 +2,17 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { coordinateFoldJunctionControls, coordinateFoldJunctionFrame } from './coordinate-fold-junction.controls';
+import {
+  coordinateFoldJunctionControls,
+  coordinateFoldJunctionFrame,
+  previewControlContract,
+} from './coordinate-fold-junction.controls';
 
 export const previewControls = coordinateFoldJunctionControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/**
- * Coordinate 作为命名拐点汇聚
- * @description 多个 step 节点向同一决策汇合点收敛，汇合点本身不画矩形 / 不打字；各 path 用 `<Draw way={['A', 'junction', 'B']}>` 经过它，coordinate 只有中心坐标，端点会贴到该中心。
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(coordinateFoldJunctionControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
       width={coordinateFoldJunctionFrame.width}
@@ -42,6 +34,14 @@ const Demo: FC = () => {
       <Draw way={['B', 'junction']} stroke="gray" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * Coordinate 作为命名拐点汇聚
+ * @description 多个 step 节点向同一决策汇合点收敛，汇合点本身不画矩形 / 不打字；各 path 用 `<Draw way={['A', 'junction', 'B']}>` 经过它，coordinate 只有中心坐标，端点会贴到该中心。
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

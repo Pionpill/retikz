@@ -2,26 +2,14 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
-
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { coordinateFoldJunctionFrame } from './coordinate-fold-junction.controls';
-import { coordinateFoldJunctionControls } from './coordinate-fold-junction.en.controls';
+import { coordinateFoldJunctionControls, previewControlContract } from './coordinate-fold-junction.en.controls';
 
 export const previewControls = coordinateFoldJunctionControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/**
- * Coordinate as a named junction for path convergence
- * @description Multiple step nodes converge to a shared decision junction with no rectangle or text; each path routes through via `<Draw way={['A', 'junction', 'B']}>`, and the Coordinate keeps only a center position for the endpoints to meet.
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(coordinateFoldJunctionControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
       width={coordinateFoldJunctionFrame.width}
@@ -43,6 +31,14 @@ const Demo: FC = () => {
       <Draw way={['B', 'junction']} stroke="gray" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * Coordinate as a named junction for path convergence
+ * @description Multiple step nodes converge to a shared decision junction with no rectangle or text; each path routes through via `<Draw way={['A', 'junction', 'B']}>`, and the Coordinate keeps only a center position for the endpoints to meet.
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

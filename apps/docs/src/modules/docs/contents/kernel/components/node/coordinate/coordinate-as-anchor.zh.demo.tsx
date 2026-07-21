@@ -2,25 +2,17 @@ import type { FC } from 'react';
 
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { coordinateAsAnchorControls, coordinateAsAnchorFrame } from './coordinate-as-anchor.controls';
+import {
+  coordinateAsAnchorControls,
+  coordinateAsAnchorFrame,
+  previewControlContract,
+} from './coordinate-as-anchor.controls';
 
 export const previewControls = coordinateAsAnchorControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/**
- * `<Coordinate>` 作为命名虚拟锚点
- * @description hub 是不可见中心，4 个节点用 `position={{ of: 'hub', ... }}` 对称分布、4 条 path 都终止在 hub；固定坐标轴显出 hub 相对世界原点的位移。
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(coordinateAsAnchorControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
       width={coordinateAsAnchorFrame.width}
@@ -50,6 +42,14 @@ const Demo: FC = () => {
       <Draw way={['W', 'hub']} arrow="->" stroke="gray" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * `<Coordinate>` 作为命名虚拟锚点
+ * @description hub 是不可见中心，4 个节点用 `position={{ of: 'hub', ... }}` 对称分布、4 条 path 都终止在 hub；固定坐标轴显出 hub 相对世界原点的位移。
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

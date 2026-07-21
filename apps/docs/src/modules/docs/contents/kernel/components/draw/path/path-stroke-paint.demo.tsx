@@ -2,20 +2,13 @@ import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { pathStrokePaintControls } from './path-stroke-paint.controls';
+import { pathStrokePaintControls, previewControlContract } from './path-stroke-paint.controls';
 
 export const previewControls = pathStrokePaintControls;
 
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-
-/** Path 渐变描边 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(pathStrokePaintControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={171} viewBox={{ x: -210, y: -90, width: 420, height: 180 }}>
       <Path
@@ -37,6 +30,11 @@ const Demo: FC = () => {
       </Path>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Path 渐变描边 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

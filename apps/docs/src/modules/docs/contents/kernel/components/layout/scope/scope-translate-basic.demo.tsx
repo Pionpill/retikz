@@ -3,18 +3,14 @@ import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node, Scope } from '@retikz/react';
 
-import type { PreviewControlValuesFor, PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { scopeTranslateBasicControls } from './scope-translate-basic.controls';
+import { previewControlContract,scopeTranslateBasicControls } from './scope-translate-basic.controls';
 
 /** controls registry 未刷新时供 ComponentPreview 从 demo 模块直接解析的兜底定义 */
 export const previewControls = scopeTranslateBasicControls;
-
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
 
 type ScopeTransformValues = PreviewControlValuesFor<typeof scopeTranslateBasicControls>;
 
@@ -61,13 +57,7 @@ const transformOf = (values: ScopeTransformValues): IRTransformInput => {
   }
 };
 
-/**
- * Scope 局部 transform playground
- * @description O / T 是 Scope 外的固定参照点；局部坐标轴与 Q 共享面板选中的 transform，调整时只改变 Scope 子图
- */
-const Demo: FC = () => {
-  const values = usePreviewControls(scopeTranslateBasicControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={217} viewBox={{ x: -240, y: -130, width: 480, height: 260 }}>
       <Node id="O" position={[-100, 0]} shape="circle" padding={4} stroke="none" fill="none">
@@ -119,6 +109,14 @@ const Demo: FC = () => {
       </Scope>
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/**
+ * Scope 局部 transform playground
+ * @description O / T 是 Scope 外的固定参照点；局部坐标轴与 Q 共享面板选中的 transform，调整时只改变 Scope 子图
+ */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

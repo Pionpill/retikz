@@ -9,3 +9,4 @@ export type {
   PreviewPointControlField,
   PreviewSourceConfig,
 } from '../types';
+export * from './define-controlled-preview';

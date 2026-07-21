@@ -2,22 +2,16 @@ import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { wayFoldControls } from './way-fold.controls';
+import { previewControlContract,wayFoldControls } from './way-fold.controls';
 
 export const previewControls = wayFoldControls;
-
-export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
 
 const Start: [number, number] = [-120, -50];
 const End: [number, number] = [120, 50];
 
-/** 用固定端点和投影拐点展示 Way 折角方向 */
-const Demo: FC = () => {
-  const values = usePreviewControls(wayFoldControls);
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const corner: [number, number] = values.direction === '-|' ? [End[0], Start[1]] : [Start[0], End[1]];
 
   return (
@@ -33,6 +27,11 @@ const Demo: FC = () => {
       <Circle center={corner} radius={4} fill="white" stroke="gray" />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** 用固定端点和投影拐点展示 Way 折角方向 */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

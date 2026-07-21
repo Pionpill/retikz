@@ -3,22 +3,13 @@ import type { FC } from 'react';
 import { DrawWay } from '@retikz/core';
 import { Draw, Layout } from '@retikz/react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview/author';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { usePreviewControls } from '@/modules/docs/components/component-preview/author';
-
-import { drawFillStackControls } from './draw-fill-stack.controls';
+import { drawFillStackControls, previewControlContract } from './draw-fill-stack.controls';
 
 export const previewControls = drawFillStackControls;
 
-export const previewSource = {
-  deriveIR: false,
-} satisfies PreviewSourceConfig;
-
-/** Draw 闭合填充与栈序 playground */
-const Demo: FC = () => {
-  const values = usePreviewControls(drawFillStackControls);
-
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={360} height={260} viewBox={{ x: 0, y: 0, width: 220, height: 190 }}>
       <Draw
@@ -38,6 +29,11 @@ const Demo: FC = () => {
       />
     </Layout>
   );
-};
+});
+
+export const previewSource = controlledPreview.source;
+
+/** Draw 闭合填充与栈序 playground */
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;
