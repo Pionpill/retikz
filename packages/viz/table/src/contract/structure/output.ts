@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/core';
+
 import { z } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
@@ -9,21 +11,40 @@ import {
   TableRowKindSchema,
 } from '../../schemas';
 
+/** Table Cell 来源的判别值 */
+export const TableCellSourceKind = {
+  /** 来自 manual structure 的显式 Cell */
+  Manual: 'manual',
+  /** 来自外部数据字段 */
+  Field: 'field',
+  /** 由 structure definition 生成 */
+  Generated: 'generated',
+} as const;
+
+/** Table Cell 来源判别值 */
+export type TableCellSourceKindValue = ValueOf<typeof TableCellSourceKind>;
+
 /** Cell 最小来源信息 schema */
 export const TableCellSourceSchema = z
   .union([
     z.strictObject({
-      kind: z.literal('manual').describe('Discriminator for a source Cell authored by manual structure input.'),
+      kind: z
+        .literal(TableCellSourceKind.Manual)
+        .describe('Discriminator for a source Cell authored by manual structure input.'),
       cellIndex: z.number().int().nonnegative().describe('Index of the source Cell in the manual operation.'),
     }),
     z.strictObject({
-      kind: z.literal('field').describe('Discriminator for a Cell derived from an external data field.'),
+      kind: z
+        .literal(TableCellSourceKind.Field)
+        .describe('Discriminator for a Cell derived from an external data field.'),
       reference: z.string().min(1).describe('External dataset reference used by the Table root.'),
       sourceIndex: z.number().int().nonnegative().describe('Stable source row index in the external dataset.'),
       field: z.string().min(1).describe('Non-empty field name or dotted path read from the source row.'),
     }),
     z.strictObject({
-      kind: z.literal('generated').describe('Discriminator for content synthesized by a structure definition.'),
+      kind: z
+        .literal(TableCellSourceKind.Generated)
+        .describe('Discriminator for content synthesized by a structure definition.'),
       structureKind: z.string().min(1).describe('Structure provider kind that generated the Cell.'),
     }),
   ])

@@ -1,5 +1,12 @@
-import { defineTableStructure } from '../../contract';
-import { DetailTableStructureSchema, TableCellLocation, TableCellRole, TableRowKind } from '../../schemas';
+import { defineTableStructure, TableCellSourceKind } from '../../contract';
+import {
+  DetailTableStructureSchema,
+  TableCellLocation,
+  TableCellPayloadKind,
+  TableCellRole,
+  TableRowKind,
+  TableStructureKind,
+} from '../../schemas';
 
 /** detail Table structure definition */
 export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
@@ -24,10 +31,10 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
             id: `cell.header.c${column.id}`,
             row: 0,
             column: columnIndex,
-            payload: column.header ?? { kind: 'value' as const, value: column.id },
+            payload: column.header ?? { kind: TableCellPayloadKind.Value, value: column.id },
             location: TableCellLocation.ColumnHeader,
             roles: [TableCellRole.ColumnHeader],
-            source: { kind: 'generated' as const, structureKind: 'detail' },
+            source: { kind: TableCellSourceKind.Generated, structureKind: TableStructureKind.Detail },
           }))
         : []),
       ...context.data.sourceIndices.flatMap((sourceIndex, bodyIndex) =>
@@ -41,14 +48,14 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
             row: bodyIndex + (hasHeader ? 1 : 0),
             column: columnIndex,
             payload: {
-              kind: 'value' as const,
+              kind: TableCellPayloadKind.Value,
               value,
               ...(column.presentation === undefined ? {} : { presentation: column.presentation }),
             },
             location: TableCellLocation.Body,
             roles: [TableCellRole.Data],
             source: {
-              kind: 'field' as const,
+              kind: TableCellSourceKind.Field,
               reference: context.data?.reference ?? '',
               sourceIndex,
               field: column.field,

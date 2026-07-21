@@ -5,7 +5,7 @@ import type { FC } from 'react';
 import type { EmbeddableTableComponent, TableCommonProps } from './Table';
 
 import { detailTableEmbeddableAdapter } from './embedded-runtime';
-import { resolveReactTableRuntime } from './table-runtime';
+import { ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
 /** detail-only React Table props */
@@ -16,7 +16,7 @@ export type DetailTableProps = TableCommonProps &
   };
 
 const DetailTableComponent: FC<DetailTableProps> = props => (
-  <TableRuntimeView runtime={resolveReactTableRuntime('detail', props)} />
+  <TableRuntimeView runtime={resolveReactTableRuntime(ReactTableRuntimeKind.Detail, props)} />
 );
 
 /** 从 records 与 columns 构造并渲染 detail Table */

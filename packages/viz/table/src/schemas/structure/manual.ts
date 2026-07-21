@@ -1,12 +1,13 @@
 import { z } from 'zod';
 
 import { TableCellSchema } from '../cell';
+import { TableStructureKind } from './constants';
 import { TableRowKindSchema } from './row';
 
 /** manual Table structure schema */
 export const ManualTableStructureSchema = z
   .strictObject({
-    kind: z.literal('manual').describe('Discriminator for an explicit manual Table structure.'),
+    kind: z.literal(TableStructureKind.Manual).describe('Discriminator for an explicit manual Table structure.'),
     rows: z.number().int().positive().describe('Number of explicit rows.'),
     columns: z.number().int().positive().describe('Number of explicit columns.'),
     rowKinds: z

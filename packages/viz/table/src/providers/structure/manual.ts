@@ -1,4 +1,4 @@
-import { defineTableStructure } from '../../contract';
+import { defineTableStructure, TableCellSourceKind } from '../../contract';
 import { ManualTableStructureSchema, TableCellLocation, TableCellRole, TableRowKind } from '../../schemas';
 
 /** manual Table structure definition */
@@ -19,7 +19,7 @@ export const MANUAL_TABLE_STRUCTURE = defineTableStructure({
           payload: cell.payload,
           location: cell.location ?? (isHeader ? TableCellLocation.ColumnHeader : TableCellLocation.Body),
           roles: cell.roles ?? [isHeader ? TableCellRole.ColumnHeader : TableCellRole.Data],
-          source: { kind: 'manual', cellIndex },
+          source: { kind: TableCellSourceKind.Manual, cellIndex },
         };
       }),
     };

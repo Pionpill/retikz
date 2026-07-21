@@ -1,6 +1,7 @@
 import type { TableStructureContext, TableStructureOutput } from '../../contract/structure';
 import type { IRTableStructureOperation } from '../../schemas';
 
+import { TableCellSourceKind } from '../../contract/structure';
 import { ManualTableStructureSchema, TableCellLocation, TableCellRole, TableRowKind } from '../../schemas';
 
 const assertUniqueIds = (owner: string, values: ReadonlyArray<{ id: string }>): void => {
@@ -49,13 +50,13 @@ export const validateTableStructureOutput = (
       throw new Error(`Cell "${cell.id}" location/roles do not match row kind "${row.kind}"`);
     }
 
-    if (cell.source?.kind === 'manual') {
+    if (cell.source?.kind === TableCellSourceKind.Manual) {
       if (!manualOperation.success) throw new Error(`Cell "${cell.id}" uses manual source outside manual structure`);
       if (cell.source.cellIndex >= manualOperation.data.cells.length) {
         throw new Error(`Cell "${cell.id}" manual cellIndex ${cell.source.cellIndex} is out of range`);
       }
     }
-    if (cell.source?.kind === 'field') {
+    if (cell.source?.kind === TableCellSourceKind.Field) {
       if (context.data === undefined) throw new Error(`Cell "${cell.id}" field source requires data context`);
       if (cell.location !== TableCellLocation.Body)
         throw new Error(`Cell "${cell.id}" field source must be a body Cell`);
@@ -66,7 +67,7 @@ export const validateTableStructureOutput = (
         throw new Error(`Cell "${cell.id}" field sourceIndex ${cell.source.sourceIndex} is unknown`);
       }
     }
-    if (cell.source?.kind === 'generated' && cell.source.structureKind !== operation.kind) {
+    if (cell.source?.kind === TableCellSourceKind.Generated && cell.source.structureKind !== operation.kind) {
       throw new Error(`Cell "${cell.id}" generated source must match structure kind "${operation.kind}"`);
     }
   }

@@ -1,7 +1,13 @@
 import type { IRTableDetailColumn, IRTableSpec } from '../../schemas';
 import type { DetailTableSpecInput, ManualTableSpecInput, TableDetailColumnInput } from './types';
 
-import { TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../../schemas';
+import {
+  TABLE_NAMESPACE,
+  TableCellPayloadKind,
+  TableComposite,
+  TableSpecSchema,
+  TableStructureKind,
+} from '../../schemas';
 
 /** 把 detail column 的字符串列头规范化为 value payload */
 const normalizeDetailColumn = (column: TableDetailColumnInput): IRTableDetailColumn => {
@@ -9,7 +15,7 @@ const normalizeDetailColumn = (column: TableDetailColumnInput): IRTableDetailCol
   if (header === undefined) return fields;
   return {
     ...fields,
-    header: typeof header === 'string' ? { kind: 'value', value: header } : header,
+    header: typeof header === 'string' ? { kind: TableCellPayloadKind.Value, value: header } : header,
   };
 };
 
@@ -25,7 +31,7 @@ export const createDetailTableSpec = (input: DetailTableSpecInput): IRTableSpec 
       ...(model === undefined ? {} : { model }),
     },
     structure: {
-      kind: 'detail',
+      kind: TableStructureKind.Detail,
       columns: columns.map(normalizeDetailColumn),
       ...(header === undefined ? {} : { header }),
     },
@@ -40,7 +46,7 @@ export const createManualTableSpec = (input: ManualTableSpecInput): IRTableSpec 
     type: TableComposite.Table,
     ...root,
     structure: {
-      kind: 'manual',
+      kind: TableStructureKind.Manual,
       rows,
       columns,
       ...(rowKinds === undefined ? {} : { rowKinds }),

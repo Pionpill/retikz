@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { TableCellPayloadSchema, TablePresentationRefSchema } from '../../src';
+import { TableCellPayloadKind, TableCellPayloadSchema, TablePresentationRefSchema } from '../../src';
 
 describe('Table Cell payload schema', () => {
+  it('exports stable payload discriminator values', () => {
+    expect(TableCellPayloadKind).toEqual({ Value: 'value', Content: 'content' });
+  });
+
   it.each(['Revenue', 42, true, null])('accepts JSON scalar value payload %j', value => {
     const payload = { kind: 'value', value };
 

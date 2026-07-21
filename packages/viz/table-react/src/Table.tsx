@@ -5,7 +5,7 @@ import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@reti
 import type { FC } from 'react';
 
 import { tableEmbeddableAdapter } from './embedded-runtime';
-import { resolveReactTableRuntime } from './table-runtime';
+import { ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
 /** 三个 Table 组件共享的宿主展示与 lowering props */
@@ -31,7 +31,9 @@ export type EmbeddableTableComponent<TProps> = FC<TProps> & {
   embeddableAdapter: EmbeddableTier2Adapter<TProps>;
 };
 
-const TableComponent: FC<TableProps> = props => <TableRuntimeView runtime={resolveReactTableRuntime('table', props)} />;
+const TableComponent: FC<TableProps> = props => (
+  <TableRuntimeView runtime={resolveReactTableRuntime(ReactTableRuntimeKind.Table, props)} />
+);
 
 /** 渲染任意合法 Table spec 的通用 React 入口 */
 export const Table = TableComponent as EmbeddableTableComponent<TableProps>;

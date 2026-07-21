@@ -7,7 +7,7 @@ import type { IRTableCellPayload } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 
 import { cellPresentationDefinitionOf } from '../../providers';
-import { TableCellPayloadSchema } from '../../schemas';
+import { TableCellPayloadKind, TableCellPayloadSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
@@ -26,10 +26,10 @@ export const presentCellPayload = (
   cellId: string,
   registry: ReadonlyMap<string, AnyCellPresentationDefinition>,
 ): IRChild => {
-  if (payload.kind === 'content') {
+  if (payload.kind === TableCellPayloadKind.Content) {
     try {
       const parsedPayload = TableCellPayloadSchema.parse(payload);
-      if (parsedPayload.kind !== 'content') throw new Error('expected content payload');
+      if (parsedPayload.kind !== TableCellPayloadKind.Content) throw new Error('expected content payload');
       return parsePresentedChild(parsedPayload.content);
     } catch (error) {
       throw new Error(`table: content for cell "${cellId}": ${errorMessageOf(error)}`, { cause: error });
@@ -40,7 +40,7 @@ export const presentCellPayload = (
   const prefix = `table: presentation "${name}" for cell "${cellId}"`;
   try {
     const parsedPayload = TableCellPayloadSchema.parse(payload);
-    if (parsedPayload.kind !== 'value') throw new Error('expected value payload');
+    if (parsedPayload.kind !== TableCellPayloadKind.Value) throw new Error('expected value payload');
     const definition = cellPresentationDefinitionOf(name, registry);
     const rawOptions = JsonObjectSchema.parse(parsedPayload.presentation?.options ?? {});
     const parsedOptions = definition.optionsSchema.parse(rawOptions);

@@ -1,4 +1,4 @@
-import type { CompositeDefinition } from '@retikz/core';
+import type { CompositeDefinition, ValueOf } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { LayoutProps } from '@retikz/react';
 import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
@@ -10,7 +10,17 @@ import type { ManualTableProps } from './ManualTable';
 import type { TableCommonProps, TableProps } from './Table';
 
 /** React Table runtime 的入口类型 */
-export type ReactTableRuntimeKind = 'table' | 'detail' | 'manual';
+export const ReactTableRuntimeKind = {
+  /** 通用 TableSpec 入口 */
+  Table: 'table',
+  /** detail authoring 入口 */
+  Detail: 'detail',
+  /** manual authoring 入口 */
+  Manual: 'manual',
+} as const;
+
+/** React Table runtime 入口类型取值 */
+export type ReactTableRuntimeKindValue = ValueOf<typeof ReactTableRuntimeKind>;
 
 /** 三个 React Table 组件共享的规范化运行时输入 */
 export type ReactTableRuntime = Readonly<{
@@ -71,17 +81,17 @@ const manualSpecOf = (props: ManualTableProps): IRTableSpec =>
 
 /** 解析三种 React Table props 为同一 standalone / embedded runtime 输入 */
 export const resolveReactTableRuntime = (
-  kind: ReactTableRuntimeKind,
+  kind: ReactTableRuntimeKindValue,
   props: AnyTableProps,
   options: Readonly<{ embedded?: boolean }> = {},
 ): ReactTableRuntime => {
   let spec: IRTableSpec;
   let datasets: ExternalDatasets;
-  if (kind === 'table') {
+  if (kind === ReactTableRuntimeKind.Table) {
     const tableProps = props as TableProps;
     spec = TableSpecSchema.parse(tableProps.spec);
     datasets = tableProps.data ?? {};
-  } else if (kind === 'detail') {
+  } else if (kind === ReactTableRuntimeKind.Detail) {
     const detailProps = props as DetailTableProps;
     spec = detailSpecOf(detailProps);
     const reference = spec.data?.reference;

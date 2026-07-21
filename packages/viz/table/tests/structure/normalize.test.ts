@@ -13,6 +13,7 @@ import {
   resolveTableStructureRegistry,
   TableCellLocation,
   TableCellRole,
+  TableCellSourceKind,
   TableRowKind,
 } from '../../src';
 
@@ -22,6 +23,10 @@ const bodyCell = (row: number, column: number, value: string | number | boolean 
 });
 
 describe('normalizeTableStructure', () => {
+  it('exports stable source discriminator values', () => {
+    expect(TableCellSourceKind).toEqual({ Manual: 'manual', Field: 'field', Generated: 'generated' });
+  });
+
   it('normalizes manual cells to stable canonical identity and semantics', () => {
     const model = normalizeTableStructure({
       kind: 'manual',

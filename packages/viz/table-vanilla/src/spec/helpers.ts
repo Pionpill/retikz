@@ -1,7 +1,7 @@
 import type { DetailTableSpecInput, IRTableSpec, ManualTableSpecInput } from '@retikz/table';
 import type { VanillaEmbedSpec } from '@retikz/vanilla';
 
-import { createDetailTableSpec, createManualTableSpec } from '@retikz/table';
+import { createDetailTableSpec, createManualTableSpec, TABLE_NAMESPACE } from '@retikz/table';
 import { embed } from '@retikz/vanilla';
 
 import type { TableEmbedProps } from './types';
@@ -19,5 +19,5 @@ export const embedTable = (
   options: Omit<TableEmbedProps, 'spec'> = {},
 ): VanillaEmbedSpec<TableEmbedProps> => {
   if (id.trim().length === 0) throw new Error('table vanilla: embed id must be non-empty');
-  return embed('table', id, { spec, ...options });
+  return embed(TABLE_NAMESPACE, id, { spec, ...options });
 };

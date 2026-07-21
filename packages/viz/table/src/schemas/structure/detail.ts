@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { TableCellPayloadSchema } from '../cell';
 import { TablePresentationRefSchema } from '../presentation';
+import { TableStructureKind } from './constants';
 
 /** detail Table column schema */
 export const TableDetailColumnSchema = z
@@ -20,7 +21,7 @@ export const TableDetailColumnSchema = z
 /** detail Table structure schema */
 export const DetailTableStructureSchema = z
   .strictObject({
-    kind: z.literal('detail').describe('Discriminator for a record-per-row detail Table structure.'),
+    kind: z.literal(TableStructureKind.Detail).describe('Discriminator for a record-per-row detail Table structure.'),
     columns: z.array(TableDetailColumnSchema).min(1).describe('Ordered detail columns.'),
     header: z
       .boolean()

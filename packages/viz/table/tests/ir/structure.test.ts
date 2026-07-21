@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { TableCellLocation, TableCellRole, TableRowKind, TableStructureSchema } from '../../src';
+import { TableCellLocation, TableCellRole, TableRowKind, TableStructureKind, TableStructureSchema } from '../../src';
 
 describe('Table structure schema', () => {
+  it('exports stable built-in and reserved structure kinds', () => {
+    expect(TableStructureKind).toEqual({
+      Manual: 'manual',
+      Detail: 'detail',
+      Pivot: 'pivot',
+      Matrix: 'matrix',
+      Custom: 'custom',
+    });
+  });
+
   it('parses manual and detail operations through JSON round-trip', () => {
     const manual = {
       kind: 'manual',

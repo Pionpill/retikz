@@ -3,7 +3,7 @@ import { DataReferenceSchema } from '@retikz/data';
 import { z } from 'zod';
 
 import { TableLayoutSchema } from '../layout';
-import { TableStructureSchema } from '../structure';
+import { TableStructureKind, TableStructureSchema } from '../structure';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
 
 /** Table composite 根节点 schema */
@@ -23,14 +23,14 @@ export const TableSpecSchema = CompositeBaseSchema.extend({
   meta: JsonObjectSchema.optional().describe('Opaque JSON-safe metadata preserved by Table lowering.'),
 })
   .superRefine((spec, context) => {
-    if (spec.structure.kind === 'detail' && spec.data === undefined) {
+    if (spec.structure.kind === TableStructureKind.Detail && spec.data === undefined) {
       context.addIssue({
         code: 'custom',
         path: ['data'],
         message: 'detail Table structure requires an external data reference',
       });
     }
-    if (spec.structure.kind === 'manual' && spec.data !== undefined) {
+    if (spec.structure.kind === TableStructureKind.Manual && spec.data !== undefined) {
       context.addIssue({
         code: 'custom',
         path: ['data'],
