@@ -6,12 +6,15 @@ retikz 将包的代码归属和发布节奏分开管理。
 
 文件目录按领域组织：
 
-| 领域   | 目录                | 职责                                       |
-| ------ | ------------------- | ------------------------------------------ |
-| kernel | `packages/kernel/*` | 核心绘图、渲染、adapter 和可选 kernel 扩展 |
-| viz    | `packages/viz/*`    | 可视化底座和 plot 等上层功能包             |
+| 领域    | 目录                 | 职责                                                 |
+| ------- | -------------------- | ---------------------------------------------------- |
+| kernel  | `packages/kernel/*`  | 核心绘图、渲染、adapter 和可选 Kernel 集成（如 TeX） |
+| library | `packages/library/*` | 官方可选、跨领域复用的绘图能力库                     |
+| viz     | `packages/viz/*`     | 可视化底座和 plot 等上层功能包                       |
 
 领域目录只表达代码归属和依赖方向，不表示同目录下所有包必须共享版本。
+
+跨领域复用的官方可选绘图能力库只归 `packages/library/*`，不再以“可选 kernel 扩展”的名义进入 `packages/kernel/*`。
 
 ## 发布组
 
@@ -24,6 +27,8 @@ retikz 将包的代码归属和发布节奏分开管理。
 | plot   | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                        | plot 组内同步发 |
 
 未来 table 等功能家族即使放在 `packages/viz/*` 下，也应该拥有独立发布组。
+
+`packages/library/*` 的第一套 Standard 包家族计划使用独立 `standard` release group。该 release group 只在对应具体能力 ADR 确认 package manifest 后进入 `scripts/release-groups.config.mjs`，不能为尚不存在的 package 提前配置。
 
 ## 依赖策略
 

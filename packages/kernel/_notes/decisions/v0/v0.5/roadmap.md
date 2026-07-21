@@ -19,7 +19,6 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | Node 文本自动对比色       | 根据实际填充明度选择黑色或白色文字，保持可读性         | 待 ADR   |
 | Node label 包围盒间距     | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠   | 待 ADR   |
 | TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义   | 待 ADR   |
-| 官方 Extension 包         | 承载可选 Core 扩展与跨官方组复用的 Tier 2 绘图封装     | 待 ADR   |
 | Headless interaction      | 补齐 renderer-agnostic 的 target / intent / manifest   | 待启动   |
 | Progressive IR / 增量编译 | 评估 AI step、局部重编译与 SVG / Canvas 更新的共同契约 | 待证据   |
 
@@ -93,23 +92,9 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 - 保留现有默认行为、自定义 engine 与 lowerer 的兼容路径；具体 profile、扩展包集合和数据结构留到该 milestone 的 ADR 再确认。
 - ADR 需覆盖 SVG / Canvas 等后端的一致性、样式继承、无法表达的语法与样式诊断、浏览器包体与初始化成本，以及缓存键的完整性。
 
-## 官方 Extension 包
+## Standard Drawing Library
 
-### 根问题
-
-Core 已提供 arrow、clip、shape、boundary、pattern、path generator / kind、composite 等公开扩展契约，但官方可选实现目前缺少稳定归属。直接继续塞进 Core 会扩大基础内置集合；由 Plot、Table、Geo 等官方组各自复制，又会造成同类定义、几何 helper 与 lowering 分叉。
-
-v0.5 在 Kernel 分组新增 `packages/kernel/extension`（包名 `@retikz/extension`），作为官方可选绘图扩展与跨组复用封装的 owner。它主要承接官方其它组提出、但语义仍属于通用 Drawing Complete 的实现需求，同时让官方实现持续验证第三方使用的同一套扩展入口。
-
-### 候选边界
-
-- `@retikz/extension` 进入 Kernel lockstep 版本组；依赖 `@retikz/core`，确有通用纯几何需要时可依赖 `@retikz/math`。Core、Render、React、Vanilla 不得反向依赖它，也不允许通过 Core 内部路径获得特权。
-- 首批能力从真实跨组需求选择，可包含官方 `ArrowDefinition`、`ClipDefinition`、`ShapeDefinition` 等定义、工厂与按能力分组的 preset；基础绘图不可缺少的内置项仍留在 Core，可选扩展不因“官方”身份进入内置表。
-- 所有定义必须经过 Core 已公开的 `defineXxx`、registry、compile options 与诊断链路，和第三方扩展保持同权；不做自动全局注册，不引入 module-level mutable registry。
-- 可以提供常见 Tier 2 封装，但只能通过现有 `CompositeDefinition`、lowering 或 definition 注入降为 Core IR / Scene 契约，不新增平行 IR、renderer 特判或仅 React 可用的语义。
-- Plot、Table、Geo 等领域数据与可视化语义仍归各自主责包；只有移除领域词汇后仍成立、能作为通用绘图积木复用的部分才可进入 Extension，避免把包演化为官方杂项目录。
-- 公共入口优先导出可 tree-shake 的单项 definition / factory，并可额外提供显式 preset 集合；消费方按需注入，默认安装不得改变 Core 编译结果或 bundle 行为。
-- ADR 需盘点首批官方组需求，明确包职责、输入输出、依赖与缺口流向，并同步 Kernel 包矩阵、lockstep 发布流程、文档导航、API / demo、Core 与 Extension 的契约测试及 React / Vanilla 等价接入验证。
+官方可选的跨领域绘图能力库已移交独立的 [`packages/library`](../../../../../library/_notes/architecture/standard-library-design.md) 分组。它不再是 Kernel lockstep 的 v0.5 候选；Core 继续拥有公开 extension 契约，Library 的 Standard 包家族由首个具体能力 ADR 建立独立 release group、package manifest 和 React / Vanilla 接入。
 
 ## 进入正式 milestone 的条件
 
