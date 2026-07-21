@@ -50,6 +50,9 @@ describe('usePreviewControlRuntime', () => {
       setValue: () => undefined,
       applyValues: () => undefined,
       reset: () => undefined,
+      rangePlaybackId: 'curve',
+      startRangePlayback: () => undefined,
+      stopRangePlayback: () => undefined,
     };
 
     renderToStaticMarkup(
@@ -64,21 +67,27 @@ describe('usePreviewControlRuntime', () => {
     expect(runtimeState.runtime.renderPane).toBeNull();
     expect(runtimeState.runtime.active('drag')).toBe(false);
     expect(runtimeState.runtime.value('curve')).toBe('step');
+    expect(runtimeState.runtime.rangePlaybackId).toBe('curve');
     expect(runtimeState.controlState).toBe(controlState);
     expect(typeof runtimeState.runtime.remount).toBe('function');
     expect(typeof runtimeState.runtime.setActive).toBe('function');
     expect(typeof runtimeState.runtime.setValue).toBe('function');
+    expect(typeof runtimeState.runtime.startRangePlayback).toBe('function');
+    expect(typeof runtimeState.runtime.stopRangePlayback).toBe('function');
     expect(typeof runtimeState.controlState.reset).toBe('function');
     expect(Object.keys(runtimeState.runtime).sort()).toEqual([
       'active',
       'expanded',
       'hovered',
       'pinned',
+      'rangePlaybackId',
       'remount',
       'renderPane',
       'rendererMode',
       'setActive',
       'setValue',
+      'startRangePlayback',
+      'stopRangePlayback',
       'value',
     ]);
   });

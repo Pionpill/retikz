@@ -172,6 +172,9 @@ export const PreviewControlPanel: FC<PreviewControlPanelProps> = props => {
                                 value={controlState.values[field.id] ?? field.defaultValue}
                                 compact={compact}
                                 onValueChange={value => controlState.setValue(field.id, value)}
+                                playingRangeId={controlState.rangePlaybackId}
+                                onRangePlaybackStart={controlState.startRangePlayback}
+                                onRangePlaybackStop={controlState.stopRangePlayback}
                               />
                             </div>
                           </div>

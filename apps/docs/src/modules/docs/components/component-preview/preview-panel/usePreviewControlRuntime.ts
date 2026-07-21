@@ -49,6 +49,9 @@ export const usePreviewControlRuntime = (options: UsePreviewControlRuntimeOption
     setActive: (id, on) => setActiveState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
     value: id => controlState.values[id],
     setValue: controlState.setValue,
+    rangePlaybackId: controlState.rangePlaybackId,
+    startRangePlayback: controlState.startRangePlayback,
+    stopRangePlayback: controlState.stopRangePlayback,
   };
 
   return { remountKey, runtime, controlState };

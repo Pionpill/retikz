@@ -49,6 +49,12 @@ export type PreviewControlRuntime = {
   value: (id: string) => PreviewControlValue | undefined;
   /** 写入 slot 共享值。 */
   setValue: (id: string, value: PreviewControlValue) => void;
+  /** 当前正在播放的范围控件 id。 */
+  rangePlaybackId?: string;
+  /** 从范围最小值开始播放。 */
+  startRangePlayback?: (field: PreviewRangeControlField) => void;
+  /** 停止当前范围播放。 */
+  stopRangePlayback?: () => void;
 };
 
 /** 预览区控制插槽。 */
@@ -164,6 +170,10 @@ export type PreviewRangeControlField = {
   min: number;
   max: number;
   step?: number;
+  /** 从最小值播放到最大值的时长（毫秒）
+   * @default 2000
+   */
+  playDuration?: number;
 };
 
 /** 二维点预览控件字段 */
@@ -295,6 +305,12 @@ export type PreviewControlState = {
   applyValues: (values: Readonly<PreviewControlValues>) => void;
   /** 恢复 canonical values */
   reset: () => void;
+  /** 当前正在播放的范围控件 id。 */
+  rangePlaybackId?: string;
+  /** 从范围最小值开始播放。 */
+  startRangePlayback?: (field: PreviewRangeControlField) => void;
+  /** 停止当前范围播放。 */
+  stopRangePlayback?: () => void;
 };
 
 /** 演示区垂直对齐档位。 */

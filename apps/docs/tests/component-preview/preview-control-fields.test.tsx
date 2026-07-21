@@ -10,6 +10,7 @@ import type {
   PreviewControlValue,
 } from '../../src/modules/docs/components/component-preview/types';
 
+import i18n from '../../src/i18n';
 import { PreviewControlFieldInput } from '../../src/modules/docs/components/component-preview/controls';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -33,6 +34,12 @@ type RenderedField = {
   root: Root;
 };
 
+type RangePlaybackOptions = {
+  playingRangeId?: string;
+  onRangePlaybackStart?: (field: Extract<PreviewControlField, { kind: 'range' }>) => void;
+  onRangePlaybackStop?: () => void;
+};
+
 const renderedRoots: Array<Root> = [];
 
 const setInputValue = (input: HTMLInputElement, value: string): void => {
@@ -52,6 +59,7 @@ const renderField = async (
   value: PreviewControlValue,
   onValueChange: (value: PreviewControlValue) => void = () => undefined,
   compact = false,
+  rangePlayback: RangePlaybackOptions = {},
 ): Promise<RenderedField> => {
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -60,7 +68,13 @@ const renderField = async (
 
   await act(() =>
     root.render(
-      <PreviewControlFieldInput field={field} value={value} compact={compact} onValueChange={onValueChange} />,
+      <PreviewControlFieldInput
+        field={field}
+        value={value}
+        compact={compact}
+        onValueChange={onValueChange}
+        {...rangePlayback}
+      />,
     ),
   );
   return { container, root };
@@ -222,6 +236,34 @@ describe('PreviewControlFieldInput', () => {
       expect(value?.classList.contains('w-6')).toBe(true);
       expect(value?.classList.contains('w-10')).toBe(false);
     }
+  });
+
+  it('range 在数值右侧提供播放动作，并在手动修改时停止播放', async () => {
+    await i18n.changeLanguage('en');
+    const onValueChange = vi.fn();
+    const onRangePlaybackStart = vi.fn();
+    const onRangePlaybackStop = vi.fn();
+    const field = {
+      kind: 'range',
+      id: 'opacity',
+      label: 'Opacity',
+      defaultValue: 0.5,
+      min: 0,
+      max: 1,
+      step: 0.1,
+    } satisfies PreviewControlField;
+    const range = await renderField(field, 0.5, onValueChange, false, { onRangePlaybackStart, onRangePlaybackStop });
+    const playButton = range.container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const thumb = range.container.querySelector<HTMLElement>('[data-slot="slider-thumb"]');
+
+    expect(playButton).not.toBeNull();
+    expect(playButton?.previousElementSibling?.textContent).toBe('0.5');
+    await act(() => playButton?.click());
+    expect(onRangePlaybackStart).toHaveBeenCalledWith(field);
+
+    await act(() => thumb?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+    expect(onRangePlaybackStop).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenLastCalledWith(0.6);
   });
 
   it('从 text、number、switch 与 color 发出对应类型的值', async () => {
