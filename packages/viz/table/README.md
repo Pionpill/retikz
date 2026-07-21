@@ -6,6 +6,10 @@ table structure and presentation contracts, constraint-grid layout, and lowering
 `TableSpecSchema` and `IRTableSpec` define the public Table composite root. A Table spec keeps actual
 dataset rows outside the IR, referring to host-supplied data through `data.reference` instead.
 
+Use `lowerTables(datasets, options)` to register Table composite lowering with `@retikz/core`.
+`lowerTableWithArtifacts(spec, datasets, options)` runs the same deterministic pipeline and also
+returns the detached, recursively frozen `TableLayoutManifest` sidecar.
+
 - `@retikz/data` owns shared data models and transforms.
 - `@retikz/table-react` will provide React authoring and runtime integration.
 - `@retikz/table-vanilla` will provide framework-free authoring and SSR integration.
