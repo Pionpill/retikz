@@ -4,7 +4,7 @@ import { esmOnlyChangeItem } from './esm-only';
 
 export const kernelV04: Release = {
   minor: 'v0.4',
-  stableDate: null,
+  stableDate: '2026-07-21',
   packages: [
     {
       pkg: '@retikz/math',

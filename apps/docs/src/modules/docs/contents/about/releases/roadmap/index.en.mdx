@@ -1,31 +1,30 @@
 ---
 title: Roadmap
-description: "retikz's current and near-future roadmap: kernel v0.4.0-rc.1 acceptance, v0.4 stable preparation, v0.5 mechanism candidates, and v1+ domain packages."
+description: "retikz's current and near-future roadmap: kernel v0.4 stable maintenance, v0.5 mechanism candidates, and v1+ domain packages."
 ---
 
 The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/kernel/releases/changelog).
 
 ## Now
 
-**kernel v0.4.0-rc.1** — the first release candidate; after completing shape-aware boundary `fit` / `gap` convergence and the Canvas shadow-opacity fix, public APIs are frozen.
+**kernel v0.4.0** — the current stable release; after shape-aware boundary `fit` / `gap` convergence, the Canvas shadow-opacity fix, and release acceptance, it enters SemVer maintenance.
 
 | Item                     | Status                                              |
 | ------------------------ | --------------------------------------------------- |
-| Six kernel packages      | ✅ `0.4.0-rc.1` lockstep                            |
+| Six kernel packages      | ✅ `0.4.0` lockstep                                 |
 | boundary fit / gap       | ✅ Shape-aware fitting and signed spacing converged |
 | Canvas shadow opacity    | ✅ Named-color / HSL combinations fixed             |
-| installation / packaging | 🧪 Release-candidate acceptance in progress         |
+| installation / packaging | ✅ Stable-release acceptance                        |
 
-## Short Term: RC Acceptance
+## Short Term: Stable Maintenance and the Next Release
 
-RC freezes v0.4's public surface: complete real installation and packaging acceptance first, then use compatibility bugs to decide whether another RC patch is needed before stable. New mechanisms stay in v0.5.
+v0.4 has completed its public-surface freeze and release acceptance. Only compatible fixes land in `0.4.x`; new mechanisms stay on the next minor line and enter implementation only after their design and test contracts are explicit.
 
 | Track       | Candidate                                | Content                                                                                                                 |
 | ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | v0.5 alpha  | headless interaction                     | Core provides target / intent / manifest contracts; tooltip / select UI and state machines stay in adapters or userland |
 | v0.5 alpha  | Progressive / JSON Patch                 | Incremental rendering, AI step updates, local SVG / Canvas update strategies                                            |
-| v0.4 RC     | compatible bugs / acceptance             | Add no capability; focus installation, artifact, documentation, and migration guidance acceptance                       |
-| v0.4 stable | final-release preparation                | Publish when RC acceptance has no blockers; after stable, accept only SemVer patch fixes                                |
+| v0.4 stable | compatible fixes                         | Accept SemVer patch fixes only, without expanding the frozen public contracts                                           |
 | Longer term | P3D / scope enrichment / blur-mask-layer | Pseudo-3D, `boundingShape` polygon / ellipse / padding, and visual-layer capabilities wait for stronger design pull     |
 
 ## Current v0.4 Shape
@@ -42,10 +41,10 @@ Kernel v0.4 has landed several base mechanisms that other layers can reuse.
 
 ## Long term
 
-| Topic            | Where                                                                       |
-| ---------------- | --------------------------------------------------------------------------- |
-| v0.4 RC / stable | API freeze, installation acceptance, docs and changelog audit               |
-| v1+              | Domain packages such as `plot` / `viz` / `flow`, plus the broader ecosystem |
+| Topic       | Where                                                                       |
+| ----------- | --------------------------------------------------------------------------- |
+| v0.4 stable | Released and under SemVer patch maintenance                                 |
+| v1+         | Domain packages such as `plot` / `viz` / `flow`, plus the broader ecosystem |
 
 ## Not on the roadmap
 
