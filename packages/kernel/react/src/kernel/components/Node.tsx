@@ -1,4 +1,5 @@
 import type {
+  IRAnchorPosition,
   IRAtPosition,
   IRAtPositionInput,
   IRAxisScale,
@@ -34,9 +35,16 @@ export type NodeProps = HydrationEventProps & {
   animations?: IRNode['animations'];
   /**
    * 节点中心位置
-   * @description 五种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）/ 偏移定位 `{ of, offset }`（TikZ `calc` 同义）/ 比例 partway `{ between: [A, B], fraction }`（A、B 连线上 fraction 处）；非笛卡尔形态在编译时解析
+   * @description 六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center
    */
-  position: IRPosition | PolarPosition | IRAtPosition | IRAtPositionInput | IROffsetPosition | IRBetweenPosition;
+  position:
+    | IRPosition
+    | PolarPosition
+    | IRAtPosition
+    | IRAtPositionInput
+    | IROffsetPosition
+    | IRBetweenPosition
+    | IRAnchorPosition;
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */
   rotate?: number;
   /**

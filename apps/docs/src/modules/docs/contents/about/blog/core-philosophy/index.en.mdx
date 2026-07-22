@@ -45,7 +45,7 @@ The top layer is `Scene`, fixed in shape:
 
 The middle layer is **Node** and **Path**:
 
-- **Node** is a positionable, rotatable shape container (built-in rectangle / circle / ellipse / diamond, with more registrable via the ShapeRegistry) with fields like text / label / padding / scale; position supports five forms (Cartesian / polar / `at`-reference / offset / proportional partway `{ between, fraction }`).
+- **Node** is a positionable, rotatable shape container (built-in rectangle / circle / ellipse / diamond, with more registrable via the ShapeRegistry) with fields like text / label / padding / scale; position supports five shared forms (Cartesian / polar / `at`-reference / offset / proportional partway `{ between, fraction }`) plus anchor-to-anchor alignment against another resolved entity after full layout.
 - **Path** is a sequence of drawing commands — usually at least 2 `Step` entries in `children` (a self-contained rectangle step can stand alone), plus stroke / fill / arrow / dashPattern / rotate / scale / marks and other visual attributes.
 
 The bottom layer is **Step**: 12 `kind`s cover the full set of path actions:

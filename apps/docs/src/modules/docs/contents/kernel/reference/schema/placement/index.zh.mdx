@@ -1,9 +1,9 @@
 ---
 title: 定位
-description: position 字段的五种形态 —— 笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例 partway
+description: position 的五种共享形态，以及 Node 专用的 anchor-to-anchor 定位
 ---
 
-`position` 字段可填的五种形态。非笛卡尔形态都会在 Scene 编译阶段解析为笛卡尔坐标。
+Node 与 Coordinate 共享五种 `position` 形态；Node 还支持基于真实布局结果的 anchor-to-anchor 定位。非笛卡尔形态都会在 Scene 编译阶段解析为最终位置。
 
 <span id="position"></span>
 
@@ -87,6 +87,22 @@ description: position 字段的五种形态 —— 笛卡尔 / 极坐标 / 相�
   }}
 />
 
+<span id="anchorposition"></span>
+
+## 锚点对齐
+
+`AnchorPositionSchema` 只进入 `Node.position`。编译器先完成当前 Node 的文本、shape、padding、margin、scale 与 rotate 布局，再整体平移，使当前锚点与目标锚点加 offset 后的位置重合。
+
+<ZodSchema
+  name="AnchorPositionSchema"
+  description="按已完成布局的目标实体锚点放置当前 Node。"
+  descriptions={{
+    kind: '固定为 anchor 的内部位置变体判别字段',
+    target: '已完成布局的 Node、Coordinate 或 Scope 目标；anchor 与 offset 在目标侧解析',
+    selfAnchor: '当前 Node 上要与目标位置重合的锚点；省略时取 center',
+  }}
+/>
+
 <span id="absolutetarget"></span>
 
 ## 自包含端点
@@ -102,14 +118,14 @@ description: position 字段的五种形态 —— 笛卡尔 / 极坐标 / 相�
 
 ## 命名实体目标
 
-`NodeTargetSchema` 是 path 端点引用 Node / Coordinate 的对象形式。省略 `anchor` 时自动裁剪到连接边界；显式 anchor、offset 与单端 boundary override 只影响这一个端点。
+`NodeTargetSchema` 是命名 Node、Coordinate 或 Scope 的目标对象。它由消费上下文决定省略 `anchor` 的含义：path 端点省略时自动裁剪到连接边界，`AnchorPositionSchema.target` 省略时取 `center`。显式 anchor、offset 与 boundary override 只影响这一次引用。
 
 <ZodSchema
   name="NodeTargetSchema"
-  description="对命名 Node / Coordinate 的端点引用。"
+  description="对命名 Node、Coordinate 或已解析 Scope 的目标引用。"
   descriptions={{
-    id: '被引用的 Node / Coordinate id；必须已经定义',
-    anchor: '命名 anchor、角度 anchor，或 `{ side, fraction }` 边界比例点；省略时自动裁剪',
+    id: '被引用的 Node / Coordinate / Scope id；AnchorPosition 中必须已经完成布局',
+    anchor: '命名 anchor、角度 anchor，或 `{ side, fraction }` 边界比例点；省略语义由消费上下文决定',
     offset: 'anchor / 边界点解析后叠加的世界坐标 `[dx, dy]`',
     boundary: '此端点独有的连接面覆盖；省略时使用目标 Node 的 boundary',
   }}

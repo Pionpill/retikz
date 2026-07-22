@@ -205,7 +205,7 @@ describe('resolveEdgePoint 边上比例点', () => {
 
   it('零尺寸 Coordinate → { side, fraction } 报错（决策细节 #10）', () => {
     const layout = makeLayout('rectangle', 0, 0, 5, 5);
-    expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/zero-size Coordinate/);
+    expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/zero-size target/);
   });
 });
 

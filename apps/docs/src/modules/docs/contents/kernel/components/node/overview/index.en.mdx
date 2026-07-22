@@ -27,11 +27,21 @@ A Node keeps position, content, and shape boundary in one declaration. Flowchart
 
 ### Positioning
 
-`position` accepts Cartesian, polar, directional relative, referent offset, and fractional-between forms. Switch the input kind and adjust its parameters to see the same `q` move around the fixed reference nodes `a` and `b`.
+The five center/point placement forms of `position` are Cartesian, polar, directional relative, referent offset, and fractional-between. Switch the input kind and adjust its parameters to see the same `q` move around the fixed reference nodes `a` and `b`.
 
 <ComponentPreview files="node-position" size="md" />
 
 Referenced ids must be declared first. Directional placement inherits its default distance from `<Layout nodeDistance>`, while `fraction: 0.5` is the midpoint for `between`. See the full input union in the [API Reference](#positioning), or use [Coordinate](/kernel/components/node/coordinate) for invisible helper points.
+
+Node also supports a sixth form that depends on its real measured size: anchor-to-anchor placement. Use the panel to switch both standard anchors and adjust offset, target margin, both rotations, and the current Node's scale; asymmetric padding and all of those geometry inputs are laid out first.
+
+<ComponentPreview
+  files="node-anchor-position"
+  size="md"
+  caption="The light-gray marker shows target.anchor + offset; it always coincides with q's selfAnchor."
+/>
+
+Both `target.anchor` and `selfAnchor` default to `center`. The target must be an already-laid-out Node, Coordinate, or Scope; undefined, later, self, and still-open ancestor Scope references throw immediately.
 
 ### Shapes
 
@@ -173,6 +183,8 @@ The compiler first resolves the style-inherited `position`, content, and geometr
 
 Node sizing converges in a fixed order: text is measured and wrapped first; `padding` forms the content box; the shape definition computes a visual circumscribed box from that box and its params; then `minimumSize` applies a floor. `scale` affects fonts, spacing, and shape params from the start, while `rotate` is attached to the resolved geometry.
 
+Anchor placement runs only after that provisional layout exists. It resolves both anchors and translates the whole Node; `onNodeLayout`, id registration, Scene output, Scope bbox, and automatic viewBox observe only the final translated geometry.
+
 `label` does not participate in visual shape sizing. Labels are laid out as separate attached primitives, so they do not enlarge the node border, but their extents join `margin` and shadow when the automatic viewBox is collected.
 
 <SourceLinks
@@ -180,8 +192,8 @@ Node sizing converges in a fixed order: text is measured and wrapped first; `pad
     {
       label: 'Resolve content and geometry into a Node layout',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 69,
-      endLine: 169,
+      startLine: 129,
+      endLine: 293,
     },
     {
       label: 'Emit shape, content, and labels as Scene primitives',
@@ -192,7 +204,7 @@ Node sizing converges in a fixed order: text is measured and wrapped first; `pad
     {
       label: 'Register names and collect automatic viewBox bounds',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 211,
+      startLine: 177,
       endLine: 229,
     },
   ]}
@@ -229,21 +241,21 @@ A regular connection surface first derives its rectangle from `fit`, then applie
     {
       label: 'Route visual contours, boundaries, and anchors',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 35,
-      endLine: 82,
+      startLine: 58,
+      endLine: 117,
     },
     {
       label: 'Apply margin by anchor category',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 16,
-      endLine: 50,
+      startLine: 10,
+      endLine: 52,
     },
   ]}
 />
 
 ### Why named positioning is order-sensitive
 
-Node positioning resolves immediately when traversal reaches that node: the compiler queries the current namespace first, then registers the node's `id` only after its layout is known. A `position` that refers to a later Node / Coordinate in the same scope therefore fails, and cyclic positioning cannot resolve.
+Node positioning resolves immediately when traversal reaches that node: the compiler queries the current namespace first, then registers the node's `id` only after its layout is known. A `position` that refers to a later Node / Coordinate / Scope therefore fails, and cyclic positioning cannot resolve. Anchor placement may target a previously closed Scope; targeting an ancestor Scope whose bbox is still being computed throws as an incomplete layout. A closed empty Scope is still a valid target even though its layout is 0×0.
 
 Path / Draw endpoints use a different phase. A path first reserves its drawing-order slot, then resolves only after every Node and Coordinate in the current scope has registered. Path endpoints can therefore refer to later sibling nodes.
 
@@ -258,14 +270,14 @@ Path / Draw endpoints use a different phase. A path first reserves its drawing-o
     {
       label: 'Register ids after Node layout',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 179,
-      endLine: 215,
+      startLine: 177,
+      endLine: 229,
     },
     {
       label: 'Queue paths for deferred emission',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 256,
-      endLine: 281,
+      startLine: 255,
+      endLine: 278,
     },
     {
       label: 'Resolve paths after name registration',
@@ -288,9 +300,9 @@ The four API sections below document the remaining props with their defaults and
 
 ### Positioning
 
-| Prop       | Type                                                                                                 | Default | Description                                                                                                                            |
-| ---------- | ---------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —       | Node center: Cartesian / polar / relative / offset / proportional placement; `of` accepts node id, Cartesian literal, or PolarPosition |
+| Prop       | Type                                                                                                                            | Default | Description                                                                                                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }`<br />`\| IRAnchorPosition` | —       | The first five forms directly determine a center/point; `IRAnchorPosition` aligns `selfAnchor` with an already-laid-out target anchor after self layout, defaulting both to `center` |
 
 ### Geometry
 

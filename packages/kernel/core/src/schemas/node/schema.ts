@@ -6,6 +6,7 @@ import { BoundarySchema } from '../boundary';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import {
+  AnchorPositionSchema,
   AtPositionSchema,
   BetweenPositionSchema,
   OffsetPositionSchema,
@@ -128,6 +129,32 @@ export const NodeLabelSchema = z
   })
   .describe('Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.');
 
+const SharedNodePositionSchema = z.union([
+  PositionSchema,
+  PolarPositionSchema,
+  AtPositionSchema,
+  OffsetPositionSchema,
+  BetweenPositionSchema,
+]);
+
+/**
+ * Node position 分支选择
+ * @description 原始对象一旦带 `kind` 就只按 AnchorPosition 解析，避免宽松旧分支剥离 discriminator 后静默改写语义
+ */
+const NodePositionSchema = z.preprocess(
+  (value, ctx) => {
+    if (typeof value !== 'object' || value === null || Array.isArray(value) || !('kind' in value)) return value;
+    const result = AnchorPositionSchema.safeParse(value);
+    if (result.success) return result.data;
+    ctx.addIssue({
+      code: 'custom',
+      message: `Node position objects with 'kind' must match AnchorPositionSchema: ${result.error.issues[0]?.message ?? 'invalid anchor position'}`,
+    });
+    return z.NEVER;
+  },
+  z.union([SharedNodePositionSchema, AnchorPositionSchema]),
+);
+
 export const NodeSchema = z
   .object({
     type: z.literal('node').describe('Discriminator marking this child as a node'),
@@ -155,11 +182,9 @@ export const NodeSchema = z
       .describe(
         'Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.',
       ),
-    position: z
-      .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema, BetweenPositionSchema])
-      .describe(
-        'Center point of the node content box: Cartesian [x, y], polar, relative-to-node, offset, or between two endpoints. Non-Cartesian forms resolve at compile time.',
-      ),
+    position: NodePositionSchema.describe(
+      'Node placement: Cartesian [x, y], polar, relative-to-node, offset, between two endpoints, or anchor-to-anchor alignment. Non-Cartesian forms resolve at compile time.',
+    ),
     rotate: AngleDegreesSchema.optional().describe(
       'Rotation in degrees around the node center; positive is visually clockwise.',
     ),

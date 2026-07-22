@@ -27,11 +27,21 @@ import { Node } from '@retikz/react';
 
 ### 定位
 
-`position` 可以写笛卡尔、极坐标、方向相对、引用点偏移或两点比例位置。用面板切换输入形态并调整参数，观察同一个 `q` 如何围绕固定参照节点 `a` / `b` 移动。
+`position` 的五种中心 / 点定位写法包括笛卡尔、极坐标、方向相对、引用点偏移和两点比例位置。用面板切换输入形态并调整参数，观察同一个 `q` 如何围绕固定参照节点 `a` / `b` 移动。
 
 <ComponentPreview files="node-position" size="md" />
 
 引用 id 必须先声明；方向定位的默认距离来自 `<Layout nodeDistance>`，`between` 的 `fraction: 0.5` 表示中点。完整输入类型见下方 [API 参考](#定位)，需要不可见辅助点时使用 [Coordinate](/kernel/components/node/coordinate)。
+
+Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切换双方标准 anchor，并调整 offset、目标 margin、两端 rotate 与当前 Node scale；非对称 padding 和这些几何参数都会先参与布局。
+
+<ComponentPreview
+  files="node-anchor-position"
+  size="md"
+  caption="浅灰圆点标出 target.anchor + offset；它始终与 q 的 selfAnchor 重合。"
+/>
+
+`target.anchor` 与 `selfAnchor` 都省略时默认为 `center`。target 只能引用已完成布局的 Node、Coordinate 或 Scope；未定义、后定义、自引用和仍在布局中的祖先 Scope 会直接报错。
 
 ### 形状
 
@@ -173,6 +183,8 @@ import { Node } from '@retikz/react';
 
 节点尺寸按固定顺序收敛：文本先测量与折行，`padding` 再形成内容内框，shape definition 根据内框与 params 算出视觉外接盒，`minimumSize` 只负责托底。`scale` 从前面开始同步影响字体、间距和形状参数，`rotate` 最后附着到几何结果。
 
+锚点对齐在这份 provisional 布局完成后才计算目标与自身 anchor，再整体平移 Node。`onNodeLayout`、id 注册、Scene 输出、Scope bbox 与自动 viewBox 都只会看到平移后的最终几何。
+
 `label` 不参与视觉形状尺寸计算，而是作为附属图元单独布局；它不会撑大节点边框，但会与 `margin`、阴影一起进入自动 viewBox 的内容范围。
 
 <SourceLinks
@@ -180,8 +192,8 @@ import { Node } from '@retikz/react';
     {
       label: '内容与几何收敛为 Node 布局',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 69,
-      endLine: 169,
+      startLine: 129,
+      endLine: 293,
     },
     {
       label: '形状、内容与标签输出为 Scene 图元',
@@ -192,7 +204,7 @@ import { Node } from '@retikz/react';
     {
       label: '命名注册与自动视框收集',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 211,
+      startLine: 177,
       endLine: 229,
     },
   ]}
@@ -229,21 +241,21 @@ import { Node } from '@retikz/react';
     {
       label: '视觉轮廓、连接面与 anchor 分流',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 35,
-      endLine: 82,
+      startLine: 58,
+      endLine: 117,
     },
     {
       label: 'margin 与锚点类型的解析边界',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 16,
-      endLine: 50,
+      startLine: 10,
+      endLine: 52,
     },
   ]}
 />
 
 ### 命名引用为何受顺序影响
 
-Node 定位是在遍历到该节点时立即解析的：编译器先查询当前命名空间，得到布局后才注册这个节点的 `id`。所以 `position` 引用同一作用域里后声明的 Node / Coordinate 会失败，循环定位也无法成立。
+Node 定位是在遍历到该节点时立即解析的：编译器先查询当前命名空间，得到布局后才注册这个节点的 `id`。所以 `position` 引用同一作用域里后声明的 Node / Coordinate / Scope 会失败，循环定位也无法成立。锚点定位可以引用前面已闭合的 Scope；若在 Scope 子树里引用仍在计算 bbox 的祖先 Scope，则会被识别为未完成布局并直接报错。已闭合的空 Scope 虽然是 0×0，仍是合法 target。
 
 Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位，等当前作用域的 Node 与 Coordinate 都注册完成后再统一解析，因此路径端点可以引用后声明的同级节点。
 
@@ -258,14 +270,14 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
     {
       label: 'Node 布局后注册 id',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 179,
-      endLine: 215,
+      startLine: 177,
+      endLine: 229,
     },
     {
       label: 'Path 加入延迟输出队列',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 256,
-      endLine: 281,
+      startLine: 255,
+      endLine: 278,
     },
     {
       label: '命名注册完成后解析 Path',
@@ -288,9 +300,9 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 
 ### 定位
 
-| 属性       | 类型                                                                                                 | 默认值 | 描述                                                                                                      |
-| ---------- | ---------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------- |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }` | —      | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例定位；`of` 三态：节点 id、笛卡尔、PolarPosition |
+| 属性       | 类型                                                                                                                            | 默认值 | 描述                                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, fraction }`<br />`\| IRAnchorPosition` | —      | 前五种直接确定中心 / 点位置；`IRAnchorPosition` 在自身布局完成后把 `selfAnchor` 对齐到已完成 target 的 anchor，双方默认 `center` |
 
 ### 几何
 

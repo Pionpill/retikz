@@ -1,1 +1,1 @@
-export { resolveAnchor, resolveEdgePoint } from './anchor-cache';
+export { resolveAnchor, resolveAnchorRef, resolveAnchorRefUncached, resolveEdgePoint } from './anchor-cache';
