@@ -1,7 +1,8 @@
 import type { IRScene, PathKindDefinition } from '@retikz/core';
+import type { EmbeddableContributionRecord } from '@retikz/react';
 import type { FC, ReactElement, ReactNode } from 'react';
 
-import { convertReactNodeToIR, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
+import { buildIRWithContributions, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
 import { createElement, isValidElement } from 'react';
 
 const COMPONENT_EXPANSION_LIMIT = 16;
@@ -53,6 +54,7 @@ const LAYOUT_OWN_PROPS = new Set([
 /** ComponentPreview 派生出的 IR 渲染信息。 */
 export type PreviewIR = {
   ir: IRScene;
+  contributions: Array<EmbeddableContributionRecord>;
   width?: number | string;
   height?: number | string;
   pathKinds?: ReadonlyArray<PathKindDefinition>;
@@ -72,17 +74,21 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
       childNode = createElement(Scope, styleProps, props.children);
     }
   }
-  const base = props.ir ?? convertReactNodeToIR(childNode);
+  const built =
+    props.ir === undefined
+      ? buildIRWithContributions(childNode)
+      : { ir: props.ir, contributions: [] as Array<EmbeddableContributionRecord> };
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;
   const rootAnimations = isLayout ? (props.animations as IRScene['animations'] | undefined) : undefined;
-  let ir = base;
+  let ir = built.ir;
   if (viewBox !== undefined) ir = { ...ir, viewBox };
   if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
-  const width = isLayout ? (props.width as number | string | undefined) : undefined;
-  const height = isLayout ? (props.height as number | string | undefined) : undefined;
+  const ownsOutputSize = isLayout || isEmbeddableRoot;
+  const width = ownsOutputSize ? (props.width as number | string | undefined) : undefined;
+  const height = ownsOutputSize ? (props.height as number | string | undefined) : undefined;
   const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<PathKindDefinition> | undefined) : undefined;
-  return { ir, width, height, pathKinds };
+  return { ir, contributions: built.contributions, width, height, pathKinds };
 };
 
 const nodeHasComposite = (node: unknown): boolean => {

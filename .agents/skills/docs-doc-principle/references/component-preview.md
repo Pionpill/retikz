@@ -35,7 +35,7 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 ```
 
-这类 demo 默认只保留 React；确需 IR Tab 时导出 `previewIR` 或提供 `<name>.ir.json`。需要更地道的 Vanilla 写法时提供 `<name>.vanilla.ts`。Tier 2 composite IR 仍不自动生成 Vanilla。
+这类 demo 默认只保留 React；确需 IR Tab 时导出 `previewIR` 或提供 `<name>.ir.json`。需要更地道的 Vanilla 写法时提供 `<name>.vanilla.ts`。Tier 2 composite 仅在 ComponentPreview 已注册对应转换器时自动生成 Vanilla 源码与真实 runtime 预览；未注册能力必须显示明确诊断。
 
 ## 数据与附属源码
 

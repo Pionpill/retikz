@@ -1,7 +1,10 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
+import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';
+import { Axes, Frame, Grid } from '@retikz/standard-react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
@@ -21,6 +24,27 @@ const AlternateDemo: FC = () => (
       B
     </Node>
   </Layout>
+);
+
+const StandardCompositeDemo: FC = () => (
+  <Layout width={100} height={80}>
+    <Grid bounds={{ min: [10, 10], max: [90, 70] }} spacing={20} />
+    <Axes bounds={{ x: { min: -40, max: 40 }, y: { min: -30, max: 30 } }} />
+    <Frame id="group" gap={4}>
+      <Node position={[50, 40]}>A</Node>
+    </Frame>
+  </Layout>
+);
+
+const plotRows = [
+  { category: 'A', value: 1 },
+  { category: 'B', value: 2 },
+];
+
+const PlotDemo: FC = () => (
+  <Plot data={plotRows} width={100} height={80}>
+    <PointMark x="category" y="value" />
+  </Plot>
 );
 
 const staticIR = buildPreviewIR(StaticDemo).ir;
@@ -45,6 +69,29 @@ describe('buildPreviewSource', () => {
     expect(result.source?.react?.files[0]?.code).toBe('export default Demo;');
     expect(result.source?.ir?.files[0]?.code).toBe(formatIR(staticIR));
     expect(result.source?.vanilla?.files[0]?.code).toContain("from '@retikz/vanilla'");
+    expect(result.source?.vanilla?.render).toBeTypeOf('function');
+    expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('为 Standard composite 自动生成 helper、Adapter 与真实 Vanilla SVG', () => {
+    const result = buildPreviewSource(createInput({ Component: StandardCompositeDemo }));
+
+    expect(result.source?.vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla'");
+    expect(result.source?.vanilla?.files[0]?.code).toContain("grid('preview-grid-1'");
+    expect(result.source?.vanilla?.files[0]?.code).toContain("axes('preview-axes-1'");
+    expect(result.source?.vanilla?.files[0]?.code).toContain("frame('preview-frame-1'");
+    expect(result.source?.vanilla?.files[0]?.code).toContain('GridVanillaAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('AxesVanillaAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('FrameVanillaAdapter');
+    expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('为 Plot composite 自动生成 renderPlot、dataset 与真实 Vanilla SVG', () => {
+    const result = buildPreviewSource(createInput({ Component: PlotDemo }));
+
+    expect(result.source?.vanilla?.files[0]?.code).toContain("import { renderPlot } from '@retikz/plot-vanilla'");
+    expect(result.source?.vanilla?.files[0]?.code).toContain("category: 'A'");
+    expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
   });
 
   it('deriveIR false 时不执行 demo 并保持 React-only', () => {
@@ -153,7 +200,7 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toBe('export const figure = custom();');
   });
 
-  it('composite IR 不生成 Vanilla', () => {
+  it('未知 composite 生成明确 Vanilla 诊断但不伪造运行结果', () => {
     const compositeIR = {
       type: 'scene',
       version: 1,
@@ -163,7 +210,10 @@ describe('buildPreviewSource', () => {
 
     expect(result.previewIr?.ir).toEqual(compositeIR);
     expect(result.source?.ir).toBeDefined();
-    expect(result.source?.vanilla).toBeUndefined();
+    expect(result.source?.vanilla?.files[0]?.code).toContain(
+      '// Cannot generate Vanilla preview for Tier 2 composite "plot.demo".',
+    );
+    expect(result.source?.vanilla?.render).toBeUndefined();
   });
 
   it('结构非法但可解析的 IR 只保留源码诊断并阻断宿主消费', () => {

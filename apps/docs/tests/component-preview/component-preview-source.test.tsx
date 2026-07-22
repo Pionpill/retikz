@@ -133,27 +133,30 @@ describe('ComponentPreview Vanilla source', () => {
     expect(componentPreviewExports).not.toHaveProperty(['Component', 'Render'].join(''));
   });
 
-  it('Tier 2 composite 不生成自动 Vanilla 视图', () => {
-    const props = renderPreview(['viz', 'components', 'plot'], <ComponentPreview files="plot-coordinate" />);
+  it('Tier 2 Plot composite 自动生成 Vanilla 源码与真实 SVG', () => {
+    const props = renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
 
-    expect(props.source?.vanilla).toBeUndefined();
+    expect(props.source?.vanilla?.files[0]?.code).toContain("from '@retikz/plot-vanilla'");
+    expect(props.source?.vanilla?.render).toBeTypeOf('function');
   });
 
-  it('Tier 2 composite 仍允许显式 Vanilla override', () => {
+  it('原手写 Plot 示例改由统一管线自动生成 Vanilla', () => {
     const props = renderPreview(['viz', 'get-start'], <ComponentPreview files="line-scatter" />);
 
     expect(props.source?.vanilla?.files[0].filename).toBe('line-scatter.vanilla.ts');
+    expect(props.source?.vanilla?.files[0].code).toContain("import { renderPlot } from '@retikz/plot-vanilla'");
+    expect(props.source?.vanilla?.render).toBeTypeOf('function');
   });
 
-  it('没有 alternate render 的 Vanilla view 不声明固定 renderer', () => {
+  it('自动 Core Vanilla view 使用真实 SVG 并固定 renderer', () => {
     const props = renderPreview(
       ['kernel', 'components', 'effects', 'custom-animation'],
       <ComponentPreview files="custom-property" />,
     );
 
     expect(props.source?.vanilla?.files[0].filename).toBe('custom-property.vanilla.ts');
-    expect(props.source?.vanilla?.render).toBeUndefined();
-    expect(props.source?.vanilla?.rendererMode).toBeUndefined();
+    expect(props.source?.vanilla?.render).toBeTypeOf('function');
+    expect(props.source?.vanilla?.rendererMode).toBe('svg');
   });
 
   it('controls demo 使用默认状态提供 React、IR 与 Vanilla 视图', () => {
