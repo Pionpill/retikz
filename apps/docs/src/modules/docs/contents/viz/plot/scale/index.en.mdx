@@ -1,0 +1,63 @@
+---
+title: Scales
+description: A scale maps a data value to a visual quantity. They split into two families — positional scales produce coordinate / length / radius, color scales produce color — plus custom scales.
+---
+
+A scale decides how a data value becomes a visual quantity. Position channels (`x` / `y`, or `angle` / `radius` under polar) turn into canvas coordinates, the `size` channel into a radius, the `color` channel into a color — each goes through a scale. `<Plot>` auto-picks a scale from the field's measurement type, so common charts need none by hand.
+
+Axes are the most common place to configure positional scales, but scales and axes stay layered: scales map values, axes display ticks. Explaining a color scale to the reader is the job of the [legend](/viz/plot/guide/legend).
+
+## Two families: position and color
+
+Scales split by **what they produce**, which is also how this group is paged:
+
+- [Positional scales](/viz/plot/scale/position) produce a **coordinate / length / radius**, feeding coordinate projection and the `size` channel — numeric axes (`linear` / `log` / `sqrt` / `pow` / `symlog` / `radial`), the time axis (`time`), and categorical axes (`band` / `point`).
+- [Color scales](/viz/plot/scale/color) produce a **color**, feeding the `color` channel and the legend — one color per category (`ordinal`), a continuous band (`sequential` / `diverging`), and binned coloring (`quantize` / `threshold` / `quantile`).
+
+Which scale within each family is auto-picked by `<Plot>` from the field's measurement type:
+
+| Field type    | Positional default                                               | Color (per-datum marks)                    |
+| ------------- | ---------------------------------------------------------------- | ------------------------------------------ |
+| `continuous`  | `linear` (swap for `log` / `sqrt` / `pow` / `symlog` / `radial`) | `sequential` / `diverging` + binned scales |
+| `temporal`    | `time`                                                           | `sequential` (time is continuous too)      |
+| `categorical` | `band` (`point` for lines)                                       | `ordinal`                                  |
+
+See [Data Model](/viz/data/model) for how to declare field types. The long tail beyond the 15 built-ins (brand ramps, domain-specific mappings…) goes through [Custom scales](/viz/plot/extend/scale).
+
+## Overriding explicitly
+
+`<Scale>` is a declarative child of `<Plot>` that overrides the default for one coordinate dimension; you can also put the common positional scale directly on the axis:
+
+```tsx
+<Plot data={rows}>
+  <PathMark x="date" y="value" order="date" />
+  <Scale dimension="x" type="time" />
+  {/* or the shortcut: <Axis dimension="x" scale="time" /> */}
+  <Axis dimension="x" />
+</Plot>
+```
+
+Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases are accepted. `Axis.scale` supports the positional shortcuts `linear` / `time` / `point` / `log` / `sqrt` / `symlog` / `radial`. A `log` scale uses base 10 by default; use `<Scale dimension="y" type="log" base={Math.E} />` for the natural logarithm. Use `constant` to tune a `symlog` scale's linear region. Other fine-grained options, such as a power exponent, still belong in the full spec `scales`.
+
+When a continuous positional scale infers its domain, it leaves 5% padding on both ends by default so a single point or an extreme value does not sit directly on a cartesian corner. Use `domainPadding={0}` when the domain must touch the edge exactly, or target one side with an object:
+
+```tsx
+<Scale dimension="y" type="linear" domainPadding={{ lower: 0, upper: 0.12 }} />
+```
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/scale/position">
+    <span className="font-semibold">Positional scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      numeric axes linear / log / sqrt / pow / symlog / radial, the time axis, band / point categorical axes
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale/color">
+    <span className="font-semibold">Color scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      ordinal one-color-per-category, sequential / diverging continuous bands, quantize / threshold / quantile binning
+    </span>
+  </LinkedCard>
+</div>

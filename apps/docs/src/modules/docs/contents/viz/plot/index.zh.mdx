@@ -1,0 +1,114 @@
+---
+title: Plot
+description: Plot 模块总览：从 React、Vanilla 或 plain spec 形成 Plot IR，接入外部数据，经 lowering 下沉到 Core IR、Scene 与渲染器。
+---
+
+`@retikz/plot` 是 Viz 组的绘图语义层。它用可序列化的 Plot IR 描述字段绑定、比例尺、坐标系、图元、辅助元素与组合关系，再把这些高层语义下沉为 Kernel 能编译的 Core IR。
+
+Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与通用数据处理，Kernel 负责编译、布局和 Scene，SVG / Canvas renderer 只消费 Scene。这样，React、Vanilla、手写 spec 或 AI 生成的配置都能复用同一份语义契约和 lowering 路径。
+
+## 一张图看懂
+
+<ComponentPreview files="plot-pipeline" size="sm" hideCode />
+
+实线是从声明到渲染结果的主链。外部数据集只在 `lowerPlots` 阶段接入，不写进 Plot IR；lineage、locator 与 diagnostics 是下沉过程的可观察旁路，也不会反写 IR。
+
+## 从声明到 Scene
+
+1. **形成 Plot IR**：`<Plot>` 子组件、Vanilla builder 与 plain spec 最终都形成同一份 JSON-safe `IRPlotSpec`。React DSL 只是 authoring 入口，不拥有另一套图表语义。
+2. **接入外部数据**：IR 通过 `data.reference` 指向运行时数据集。字段解析、通用变换与来源追踪由 Data 提供，数据行本身不进入 IR。
+3. **解析绘图语义**：lowering 依次处理数据变换、通道绑定、比例尺和坐标投影，再由 mark 与 guide definition 生成可下沉结果。内置与自定义能力走同一套 registry、resolver 与 consumer 路径。
+4. **下沉到 Core IR**：`lowerPlots` 作为 Tier 2 composite definition，把 Plot 节点展开为 `Scope`、`Node`、`Path` 等 Core IR；lineage、locator 和 diagnostics 作为运行时结果单独返回。
+5. **编译与渲染**：Kernel 将 Core IR 编译为 renderer-agnostic Scene，随后由 SVG 或 Canvas renderer 输出。Plot 不绕开 Scene，也不实现平行渲染器。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React Plot 的 spec / children 双入口与 lowering 注入',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 140,
+      endLine: 169,
+    },
+    {
+      label: 'React 子组件装配为等价 Plot IR',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 1948,
+      endLine: 1954,
+    },
+    {
+      label: 'Plot composite 的统一下沉入口',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 724,
+      endLine: 735,
+    },
+    {
+      label: 'Vanilla 从 Plot IR 到 Scene 与 SVG 的入口',
+      path: 'packages/viz/plot-vanilla/src/render-plot.ts',
+      startLine: 52,
+      endLine: 71,
+    },
+  ]}
+/>
+
+## 三个包怎样分工
+
+| 包                     | 拥有的职责                                      | 典型入口                                      |
+| ---------------------- | ----------------------------------------------- | --------------------------------------------- |
+| `@retikz/plot`         | Plot IR、Definition / registry、解析与 lowering | `PlotSpecSchema`、`lowerPlots`                |
+| `@retikz/plot-react`   | React 声明式入口与运行时接线                    | `<Plot>`、`buildPlotSpec`                     |
+| `@retikz/plot-vanilla` | 无框架 / SSR 的 spec 构建与渲染接线             | `plotBuilder(...).build()`、`renderPlot(...)` |
+
+三包共享 `@retikz/plot` 的 IR 与 lowering 真源。adapter 可以提供适合框架的 authoring sugar，但不能复制或改变 scale、coordinate、mark、guide 的语义。
+
+## Plot 负责与不负责什么
+
+| Plot 负责                               | 交给其它模块                                                            |
+| --------------------------------------- | ----------------------------------------------------------------------- |
+| Plot IR 与图形语法契约                  | 字段模型、解析、通用变换与 provenance 交给 [Data](/viz/data)            |
+| channel、scale、coordinate、mark、guide | Core IR、布局、引用解析与 Scene 编译交给 [Kernel](/kernel/introduction) |
+| composition 与 Plot → Core lowering     | SVG / Canvas 输出交给 renderer                                          |
+| Definition、registry、resolver 与诊断   | React / Vanilla 生命周期与宿主接线交给 adapter                          |
+| 面向图表的语义映射                      | 行列结构、Cell 语义与表格布局交给独立的 [Table](/viz/table)             |
+
+如果一种能力不依赖图表字段映射，例如通用数据变换、底层几何或表格 Cell，它就不应进入 Plot。反过来，新的 scale、coordinate、mark 或 guide 应先成为可注册的 Definition，再以内置能力使用同一条路径。
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/channel">
+    <span className="font-semibold">通道</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      把字段或常量绑定到位置、颜色、尺寸、文字等视觉角色。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">变换</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      在绘图管线中派生、堆叠、汇总、统计或关联数据行。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/mark">
+    <span className="font-semibold">图元</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      把投影后的数据实例化为点、路径、区间、参考或关系图形。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale">
+    <span className="font-semibold">比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">把数据 domain 映射到位置或视觉属性的 range。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/coordinate">
+    <span className="font-semibold">坐标系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      把比例尺结果投影到笛卡尔、极坐标、三元或组合视图。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/guide">
+    <span className="font-semibold">辅助</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">用坐标轴与图例解释比例尺和通道映射。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/extend">
+    <span className="font-semibold">扩展</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册自定义通道、比例尺、坐标系与图元定义。</span>
+  </LinkedCard>
+</div>

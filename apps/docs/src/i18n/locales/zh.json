@@ -123,7 +123,7 @@
   },
   "viz": {
     "label": "可视化",
-    "introduction": "简介",
+    "introduction": "总览",
     "getStart": "快速开始",
     "releases": "发布",
     "changelog": "更新日志",

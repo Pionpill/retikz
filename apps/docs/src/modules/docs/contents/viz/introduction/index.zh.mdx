@@ -1,59 +1,41 @@
 ---
-title: 简介
-description: retikz 的图表层：用 Plot IR 描述图表语义，把数据单独传入，再下沉成 core 图元渲染。
+title: 可视化总览
+description: Viz 组总览：Data 整理数据，Plot 表达图表语义，Table 表达表格语义，并统一下沉到 Kernel。
 ---
 
-`@retikz/plot` 是建在 core 之上的 Tier 2 图表层。core 负责通用图元、路径和渲染目标无关的编译；plot 负责把「数据字段如何映射到图形」这件事整理成一份可持久化、可校验的图表规格。
+Viz 是建在 Kernel 之上的可视化能力组。它不把所有可视化都塞进一套“绘图语法”，而是按稳定问题拆成 Data、Plot 与 Table：共享数据底座，分别拥有图表和表格的高层语义，再通过 Core IR 接入统一的编译与渲染管线。
 
-它适合需要把结构化数据画成图表、又希望保留 retikz 的 IR / AI / 多渲染器能力的场景。当前 beta.1 已覆盖常用 scale、1D / 2D / 极坐标 / 三元坐标、Point / Path / Interval / Reference / Relation mark、Axis / Legend guide、facet / scaffold composition，以及 sort / stack 等数据变换。
+## 三块能力
 
-## core + 图形语法
+| 能力                | 解决的问题                                             | 输入与输出                                               | 不负责什么                               |
+| ------------------- | ------------------------------------------------------ | -------------------------------------------------------- | ---------------------------------------- |
+| [Data](/viz/data)   | 字段模型、解析、通用变换、统计与来源追踪               | 外部记录 + 数据契约 → canonical 行与 lineage             | channel、scale、mark、Cell 或渲染        |
+| [Plot](/viz/plot)   | 把数据字段映射成图表的通道、比例尺、坐标系、图元与辅助 | Plot IR + 数据集 → Core IR contribution 与运行时观测信息 | 通用数据算法、Core IR、Scene 或 renderer |
+| [Table](/viz/table) | 表达行列结构、Cell 语义、呈现规则与确定性表格布局      | Table spec + 数据 → Core IR contribution 与 manifest     | Plot grammar、通用数据处理或 renderer    |
 
-<ComponentPreview files="plot-grammar-parts" size="md" hideCode />
+Plot 与 Table 是并列的 Tier 2 领域模块。Table 不是一种 Plot mark，Plot 也不复制 Table 的行列与 Cell 模型；二者都可复用 Data 的字段与数据处理能力，并在各自边界内完成 lowering。
 
-plot 的本质是 **core + 图形语法**。core 提供最终能渲染的节点、路径、Scope 和 Scene；plot 不另造一套渲染器，而是在 core 之上增加“字段如何变成图形”的语法层。
+## 共同底座
 
-| 部分               | 实现里对应什么                                                                                            | 作用                                                                                               |
-| ------------------ | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| **图形语法**       | `marks`、`encoding`、`scales`、`coordinate`、`guides`；React 侧是 `<PathMark>` / `<PointMark>` / `<Axis>` | 绘图指导思想：先声明“哪个字段映射到哪个内置通道”，再由 scale、coordinate 和 guide 决定如何落到画布 |
-| **数据**           | `data.reference` + 可选 `model` 指向外部数据集；lowering 时把每一行解析成 `x` / `y` 数据通道              | 保存真实数据和字段模型；数据值不进入 IR，字段路径通过 `field` 解析，常量通过 `value` 进入通道      |
-| **`@retikz/plot`** | `PlotSpecSchema`、extension contract、`lowerPlots`                                                        | 语义真源：校验 PlotSpec、解析扩展能力、计算 domain / ticks / projector，并把结果下沉成 core IR     |
+Data、Plot 与 Table 共享同一组架构约束：IR 必须可 JSON 序列化，内置与自定义能力复用 Definition / registry 契约，框架 adapter 只负责 authoring 与运行时接线，领域语义最终下沉到 Kernel 的 Core IR。
 
-## Plot IR 居中
+Kernel 随后统一处理布局、引用解析、Scene 编译与 renderer 接入。因此 Viz 可以扩展数据与高层表达力，却不需要另造平行几何、Scene 或 SVG / Canvas 语义。想理解这条共同底层管线，可继续阅读 [Kernel 架构](/kernel/concepts/design/principles)。
 
-<ComponentPreview files="plot-ir-centric" size="md" hideCode />
+## 从哪里开始
 
-Plot 的中心不是一份巨大的数据表，而是一份描述图表语义的 Plot IR。组件、手写 spec 或 AI 都先形成同一份 IR；真实数据在下沉时才和 IR 汇合，经 `lowerPlots` 变成 core 能理解的节点与路径。
-
-## 三块一起工作
-
-一张 plot 图不会把数据塞进 IR。IR 只描述「画什么」，真实数据在渲染时单独传入。
-
-| 部分           | 是什么              | 职责                                          |
-| -------------- | ------------------- | --------------------------------------------- |
-| **Plot IR**    | JSON 可序列化的配置 | 记录 mark、scale、coordinate、axis 与字段绑定 |
-| **数据**       | 外部数据集          | 提供具体数值；不进入 IR，避免配置随数据量膨胀 |
-| **lowerPlots** | 下沉函数            | 把 Plot IR + 数据转成 core 能渲染的节点和路径 |
-
-React 用户通常不需要手写整份 IR。`@retikz/plot-react` 的 `<Plot>` 会从 `<PathMark>`、`<PointMark>`、`<Axis>` 这些子组件同步装配出 Plot IR；需要在 React 语境里拿到 plain spec 时，可使用同包的 `buildPlotSpec`。想直接从程序或 AI 生成 IR 时，也可以用 `<Plot spec={spec} data={{ sales }} />`。
-
-## 包职责
-
-plot 拆成三包，是为了让「图表语义」和「框架入口」分开：
-
-| 包                     | 职责                                         | 典型入口                                        |
-| ---------------------- | -------------------------------------------- | ----------------------------------------------- |
-| `@retikz/plot`         | Plot IR schema、extension contract、下沉真源 | `lowerPlots(datasets, options?)`                |
-| `@retikz/plot-react`   | React 组合 DSL、`<Plot>` 与 spec 装配        | `<Plot data={rows}>...</Plot>`、`buildPlotSpec` |
-| `@retikz/plot-vanilla` | 无框架 / SSR 的 builder 与 SVG 渲染入口      | `plotBuilder(...).build()`、`renderPlot(...)`   |
-
-无论从 React 组件、vanilla builder、手写 spec，还是 AI 生成的 plain spec 开始，最后都会走同一份 Plot IR 和同一条 lowering 路径。
-
-## 当前能力
-
-<ComponentAlert
-  title="v0.1 beta.1"
-  description="当前 plot 支持 linear / band / point / time / ordinal / sqrt / pow scale，cartesian1D / cartesian2D / polar1D / polar2D / ternary 坐标系，PointMark / PathMark / IntervalMark / ReferenceMark / RelationMark，Axis 与 Legend guide，facet / scaffold composition，以及 sort / stack transform。React 侧提供 <Plot> / buildPlotSpec，Vanilla 侧提供 plotBuilder(...).build() / renderPlot(...)；tooltip 与事件交互仍是后续方向。"
-/>
-
-如果你是第一次使用 plot，先从快速开始走一遍本地数据的折线 + 散点图，再回来看这里的 IR / 数据 / lowering 分工会更顺。
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <LinkedCard href="/viz/data">
+    <span className="font-semibold">Data</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">先理解字段模型、数据变换与来源追踪。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot">
+    <span className="font-semibold">Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      绘制图表，理解 Plot IR、图形语法与 lowering。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table">
+    <span className="font-semibold">Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">展示明细记录，理解 Cell、表格布局与下沉。</span>
+  </LinkedCard>
+</div>

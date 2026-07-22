@@ -37,8 +37,9 @@ export const vizSection: Array<Section> = [
     ],
   },
   {
-    id: 'grammar',
+    id: 'plot',
     label: 'viz.drawingGrammar',
+    document: true,
     pages: [
       {
         id: 'channel',

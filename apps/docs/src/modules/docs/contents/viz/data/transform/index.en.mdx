@@ -5,7 +5,7 @@ description: Data transforms rewrite canonical rows after data-model intake, cov
 
 Data transforms belong to `@retikz/data`: they read canonical rows and return canonical rows without depending on plot marks, scales, or coordinates. Plot can use them through `<Transform>`, `dataTransforms`, or mark-local `transform`; table and geo can later reuse the same data capabilities.
 
-Plot-only drawing transforms stay in [Drawing Grammar transforms](/viz/grammar/transform), including `stack`, `bin`, `normalize`, `derive-interval`, `jitter`, `density`, `smooth`, and `relate`. This page covers only the built-in capabilities owned by the data package.
+Plot-only drawing transforms stay in [Drawing Grammar transforms](/viz/plot/transform), including `stack`, `bin`, `normalize`, `derive-interval`, `jitter`, `density`, `smooth`, and `relate`. This page covers only the built-in capabilities owned by the data package.
 
 ## Capabilities
 
@@ -37,7 +37,7 @@ Types inferred from transform schemas use the `IRDataXxx` convention. The old `T
 
 `null`, `undefined`, `NaN`, and infinities are treated as missing and remain after valid values in both ascending and descending order.
 
-Keep it separate from [`order`](/viz/data/model#category-order) in the data model: `sort` reorders rows, while `order` reorders a categorical domain.
+Keep it separate from [`order`](/viz/data/model#category-order-order) in the data model: `sort` reorders rows, while `order` reorders a categorical domain.
 
 <ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
 

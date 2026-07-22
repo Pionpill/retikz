@@ -1,0 +1,120 @@
+---
+title: Plot
+description: An overview of Plot, from React, Vanilla, or plain specs through Plot IR and external data to Core IR, Scene, and renderers.
+---
+
+`@retikz/plot` is the chart-semantics layer in the Viz group. It uses serializable Plot IR to describe field bindings, scales, coordinates, marks, guides, and composition, then lowers those high-level semantics into Core IR that Kernel can compile.
+
+Plot does not own the data foundation or renderers. [Data](/viz/data) owns field models and general data processing, Kernel owns compilation, layout, and Scene, and SVG / Canvas renderers consume only Scene. React, Vanilla, handwritten specs, and AI-generated configurations therefore share one semantic contract and one lowering path.
+
+## At a glance
+
+<ComponentPreview files="plot-pipeline" size="sm" hideCode />
+
+Solid arrows show the main path from authoring to rendered output. External datasets join only at `lowerPlots` and do not enter Plot IR. Lineage, locators, and diagnostics are observable side outputs of lowering and are not written back into the IR either.
+
+## From declaration to Scene
+
+1. **Build Plot IR**: `<Plot>` children, the Vanilla builder, and a plain spec all produce the same JSON-safe `IRPlotSpec`. The React DSL is an authoring entry, not a separate chart model.
+2. **Attach external data**: IR points to runtime datasets through `data.reference`. Data owns field parsing, general transforms, and provenance; dataset rows do not enter the IR.
+3. **Resolve chart semantics**: lowering applies data transforms, channel bindings, scales, and coordinate projection before mark and guide definitions produce lowerable results. Built-in and custom capabilities share the same registry, resolver, and consumer path.
+4. **Lower to Core IR**: `lowerPlots` is a Tier 2 composite definition that expands Plot nodes into Core IR such as `Scope`, `Node`, and `Path`. Lineage, locators, and diagnostics remain separate runtime results.
+5. **Compile and render**: Kernel compiles Core IR into a renderer-agnostic Scene, then an SVG or Canvas renderer emits output. Plot neither bypasses Scene nor implements a parallel renderer.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React Plot spec / children entries and lowering injection',
+      path: 'packages/viz/plot-react/src/Plot.tsx',
+      startLine: 140,
+      endLine: 169,
+    },
+    {
+      label: 'React children assembled into equivalent Plot IR',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 1948,
+      endLine: 1954,
+    },
+    {
+      label: 'Unified Plot composite lowering entry',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 724,
+      endLine: 735,
+    },
+    {
+      label: 'Vanilla entry from Plot IR through Scene to SVG',
+      path: 'packages/viz/plot-vanilla/src/render-plot.ts',
+      startLine: 52,
+      endLine: 71,
+    },
+  ]}
+/>
+
+## How the three packages split responsibility
+
+| Package                | Owns                                                    | Typical entries                               |
+| ---------------------- | ------------------------------------------------------- | --------------------------------------------- |
+| `@retikz/plot`         | Plot IR, definitions / registries, resolution, lowering | `PlotSpecSchema`, `lowerPlots`                |
+| `@retikz/plot-react`   | React authoring and runtime wiring                      | `<Plot>`, `buildPlotSpec`                     |
+| `@retikz/plot-vanilla` | Framework-free / SSR spec construction and wiring       | `plotBuilder(...).build()`, `renderPlot(...)` |
+
+All three packages share the IR and lowering source of truth in `@retikz/plot`. Adapters may add framework-appropriate authoring sugar, but they must not duplicate or alter scale, coordinate, mark, or guide semantics.
+
+## What Plot owns—and what it does not
+
+| Plot owns                                           | Owned elsewhere                                                                                       |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Plot IR and graphic-grammar contracts               | Field models, parsing, general transforms, and provenance belong to [Data](/viz/data)                 |
+| Channels, scales, coordinates, marks, and guides    | Core IR, layout, reference resolution, and Scene compilation belong to [Kernel](/kernel/introduction) |
+| Composition and Plot-to-Core lowering               | SVG / Canvas output belongs to renderers                                                              |
+| Definitions, registries, resolvers, and diagnostics | React / Vanilla lifecycles and host wiring belong to adapters                                         |
+| Chart-oriented semantic mapping                     | Row / column structure, Cell semantics, and table layout belong to [Table](/viz/table)                |
+
+If a capability does not depend on chart field mapping—general data transforms, low-level geometry, or table Cells, for example—it should not enter Plot. Conversely, a new scale, coordinate, mark, or guide should first become a registerable Definition, then use the same path as built-ins.
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/channel">
+    <span className="font-semibold">Channels</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Bind fields or constants to position, color, size, text, and other visual roles.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/transform">
+    <span className="font-semibold">Transforms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Derive, stack, summarize, analyze, or relate rows inside the plotting pipeline.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/mark">
+    <span className="font-semibold">Marks</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Instantiate projected data as points, paths, intervals, references, or relations.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/scale">
+    <span className="font-semibold">Scales</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Map data domains into positional or visual ranges.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/coordinate">
+    <span className="font-semibold">Coordinates</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Project scale results into Cartesian, polar, ternary, or composed views.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/guide">
+    <span className="font-semibold">Guides</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Explain scale and channel mappings through axes and legends.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/extend">
+    <span className="font-semibold">Extending</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Register custom channel, scale, coordinate, and mark definitions.
+    </span>
+  </LinkedCard>
+</div>

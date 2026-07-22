@@ -5,7 +5,7 @@ description: 数据变换在数据模型接入之后改写 canonical 行，覆�
 
 数据变换属于 `@retikz/data`：它们只读取 canonical 行并输出新的 canonical 行，不依赖 plot 的 mark、scale 或坐标系。plot 可以把这些 transform 放在 `<Transform>`、`dataTransforms` 或 mark-local `transform` 里使用；table / geo 后续也可以复用同一组数据能力。
 
-plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/grammar/transform)里说明，例如 `stack`、`bin`、`normalize`、`derive-interval`、`jitter`、`density`、`smooth` 和 `relate`。这一页只讲 data 包自带的数据变换能力。
+plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/plot/transform)里说明，例如 `stack`、`bin`、`normalize`、`derive-interval`、`jitter`、`density`、`smooth` 和 `relate`。这一页只讲 data 包自带的数据变换能力。
 
 ## 能力一览
 

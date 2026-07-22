@@ -86,7 +86,7 @@ Fields with `type` omitted need the data at lowering to determine their type. Fi
 
 ## Type-driven scales
 
-Once field types are declared, positional channels (x / y, and ternary x / y / z) **no longer need an explicit scale**: retikz picks one from the field type, `continuous` → linear, `temporal` → time axis, `categorical` → band. Color channels follow the same field types: continuous / temporal fields derive continuous color ramps, while categorical fields derive discrete color. See [Scales](/viz/grammar/scale) for the full mapping and override rules.
+Once field types are declared, positional channels (x / y, and ternary x / y / z) **no longer need an explicit scale**: retikz picks one from the field type, `continuous` → linear, `temporal` → time axis, `categorical` → band. Color channels follow the same field types: continuous / temporal fields derive continuous color ramps, while categorical fields derive discrete color. See [Scales](/viz/plot/scale) for the full mapping and override rules.
 
 The three charts below declare no scale config at all: `continuous` fields derive linear axes, `temporal` fields derive time axes, and `categorical` fields derive band axes.
 
@@ -100,7 +100,7 @@ The two charts below use the same size data. The left chart follows data appeara
 
 <ComponentPreview files={['data-model-order', 'data-model-order.data.ts']} />
 
-This `order` sorts the **category domain**: axis ticks, legends, and categorical colors follow it. It does not reorder data rows or change the connection order of a line. To reorder rows, use [row sort](/viz/grammar/transform/row#sort).
+This `order` sorts the **category domain**: axis ticks, legends, and categorical colors follow it. It does not reorder data rows or change the connection order of a line. To reorder rows, use [row sort](/viz/data/transform#sort).
 
 | `order`                        | Effect                                                                                                   |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -333,4 +333,4 @@ Once a field type is resolved, channels that **omit scale configuration** derive
 
 The fields bound to one position channel must share a single type; omitting the scale while mixing types throws and asks for an explicit scale. If a field has a non-default `order` and derives `band` / `point`, the category domain follows that `order`.
 
-**Color channel**: a categorical field synthesizes `ordinal` (discrete, one color per category) when no scale is given; a continuous / temporal field is not auto-derived — it must explicitly reference a `sequential` / `diverging` / `quantize` / `threshold` / `quantile` color scale, and applies only to per-datum marks (point / bar / sector), erroring on line / area. See [Scales](/viz/grammar/scale) for the full color derivation and schemes.
+**Color channel**: a categorical field synthesizes `ordinal` (discrete, one color per category) when no scale is given; a continuous / temporal field is not auto-derived — it must explicitly reference a `sequential` / `diverging` / `quantize` / `threshold` / `quantile` color scale, and applies only to per-datum marks (point / bar / sector), erroring on line / area. See [Scales](/viz/plot/scale) for the full color derivation and schemes.

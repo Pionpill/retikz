@@ -36,11 +36,11 @@ This avoids pretending that a statistical row came from one arbitrary source row
 
 ## Downstream Consumers
 
-| consumer | use                                                                                                                                                                            |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| plot     | Carry provenance into mark metadata for tooltips, locators, or debugging tools; plot-specific datum ids and anchors are still documented under [Drawing Grammar](/viz/grammar) |
-| table    | Explain source counts and trace-back entries beside summary, filtered, or outlier rows                                                                                         |
-| geo      | Explain which original spatial records contributed to aggregated regions, grids, or samples                                                                                    |
+| consumer | use                                                                                                                                                                         |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| plot     | Carry provenance into mark metadata for tooltips, locators, or debugging tools; plot-specific datum ids and anchors are still documented under [Drawing Grammar](/viz/plot) |
+| table    | Explain source counts and trace-back entries beside summary, filtered, or outlier rows                                                                                      |
+| geo      | Explain which original spatial records contributed to aggregated regions, grids, or samples                                                                                 |
 
 If you only need to bind plot `x` / `y` / `color`, you usually do not handle provenance directly. It is extra data for debugging, interaction, and cross-module explanation.
 
