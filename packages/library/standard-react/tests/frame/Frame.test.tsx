@@ -11,22 +11,22 @@ describe('<Frame>', () => {
       label: 'Contract',
       children: <Node position={[0, 0]} text="A" />,
     };
-    const first = Frame.embeddableAdapter?.contribute(props);
-    const second = Frame.embeddableAdapter?.contribute(props);
+    const first = Frame.embeddableAdapter.contribute(props);
+    const second = Frame.embeddableAdapter.contribute(props);
 
-    expect(first?.node).toEqual(
+    expect(first.node).toEqual(
       createFrame({
         id: 'definition-contract/frame',
         label: 'Contract',
         children: [{ type: 'node', position: [0, 0], text: 'A' }],
       }),
     );
-    expect(first?.makeComposites).toBe(second?.makeComposites);
+    expect(first.makeComposites).toBe(second.makeComposites);
   });
 
   it('fails loudly when a direct React child does not become a Core Node', () => {
     expect(() =>
-      Frame.embeddableAdapter?.contribute({
+      Frame.embeddableAdapter.contribute({
         id: 'invalid/frame',
         children: (
           <Path>

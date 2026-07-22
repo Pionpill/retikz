@@ -12,12 +12,12 @@ const input = {
 
 describe('<Axes>', () => {
   it('contributes canonical Axes IR through one stable local definition maker', () => {
-    const first = Axes.embeddableAdapter?.contribute(input);
-    const second = Axes.embeddableAdapter?.contribute(input);
+    const first = Axes.embeddableAdapter.contribute(input);
+    const second = Axes.embeddableAdapter.contribute(input);
 
-    expect(first?.node).toEqual(createAxes(input));
-    expect(first?.makeComposites).toBe(second?.makeComposites);
-    expect(first?.makeComposites({})).toHaveLength(1);
+    expect(first.node).toEqual(createAxes(input));
+    expect(first.makeComposites).toBe(second.makeComposites);
+    expect(first.makeComposites({})).toHaveLength(1);
   });
 
   it('coexists with Grid under distinct host contribution namespaces', () => {

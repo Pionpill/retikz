@@ -12,9 +12,9 @@ import { z } from 'zod';
 export const StandardPathStrokeStyleSchema = z.strictObject({
   color: CssColorSchema.optional().describe('Master color for the lowered path.'),
   stroke: PaintValueSchema.optional().describe('Stroke paint for the lowered path.'),
-  strokeWidth: z.number().finite().nonnegative().optional().describe('Stroke width in user units.'),
-  dashPattern: z.array(z.number().finite().nonnegative()).min(1).optional().describe('Stroke dash pattern lengths.'),
-  dashOffset: z.number().finite().optional().describe('Stroke dash offset in user units.'),
+  strokeWidth: z.number().nonnegative().optional().describe('Stroke width in user units.'),
+  dashPattern: z.array(z.number().nonnegative()).min(1).optional().describe('Stroke dash pattern lengths.'),
+  dashOffset: z.number().optional().describe('Stroke dash offset in user units.'),
   lineCap: PathLineCapSchema.optional().describe('Stroke endpoint cap.'),
   lineJoin: PathLineJoinSchema.optional().describe('Stroke corner join.'),
   opacity: OpacitySchema.optional().describe('Whole-path opacity.'),

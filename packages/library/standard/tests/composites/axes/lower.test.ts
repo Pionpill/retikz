@@ -3,7 +3,7 @@ import type { IRNode, IRPath } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { createAxes, lowerAxes } from '../../../src';
+import { AxesDefinition, createAxes, lowerAxes } from '../../../src';
 
 const endpoints = (path: IRPath) => path.children.map(step => ('to' in step ? step.to : undefined));
 
@@ -105,6 +105,27 @@ describe('lowerAxes', () => {
     expect(lowered.filter(child => child.type === 'node')).toEqual([
       { type: 'node', position: [0, 9], text: 'height', strokeWidth: 0, padding: 0, zIndex: 1 },
     ]);
+  });
+
+  it('compiles through the registered Axes definition without diagnostics', () => {
+    const warnings: Array<string> = [];
+    const scene = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          createAxes({
+            bounds: { x: { min: -1, max: 1 }, y: { min: -1, max: 1 } },
+            axes: { arrows: 'none' },
+            labels: { x: null, y: null },
+          }),
+        ],
+      },
+      { composites: [AxesDefinition], onWarn: warning => warnings.push(warning.code) },
+    );
+
+    expect(warnings).toEqual([]);
+    expect(scene.primitives.filter(primitive => primitive.type === 'path')).toHaveLength(2);
   });
 
   it('keeps Core diagnostics for direct Axes IR without its definition', () => {

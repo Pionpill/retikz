@@ -4,6 +4,7 @@ import type { IRStandardPathStrokeStyle } from '../shared';
 import type { IRAxes } from './types';
 
 import { enumerateGridLattice } from '../../shared';
+import { AxesArrowMode } from './constants';
 
 type AxesChild = IRPath | IRNode;
 
@@ -79,9 +80,9 @@ const createLinePath = (from: IRPosition, to: IRPosition, style: IRStandardPathS
 
 const createAxisPath = (from: IRPosition, to: IRPosition, axes: IRAxes): IRPath => {
   const marks =
-    axes.axes.arrows === 'none'
+    axes.axes.arrows === AxesArrowMode.None
       ? undefined
-      : axes.axes.arrows === 'both'
+      : axes.axes.arrows === AxesArrowMode.Both
         ? [
             { pos: 0, mark: { kind: 'arrow' as const } },
             { pos: 1, mark: { kind: 'arrow' as const } },

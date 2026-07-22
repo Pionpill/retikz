@@ -3,17 +3,11 @@ import { z } from 'zod';
 
 import { getGridLatticeRangeError } from '../../shared';
 import { StandardGridSpacingSchema, StandardPathStrokeStyleSchema } from '../shared';
-
-/** Axes 坐标轴端点的箭头模式 */
-export const AxesArrowMode = {
-  None: 'none',
-  Positive: 'positive',
-  Both: 'both',
-} as const;
+import { AxesArrowMode } from './constants';
 
 const AxesRangeSchema = z.strictObject({
-  min: z.number().finite().describe('Inclusive minimum coordinate.'),
-  max: z.number().finite().describe('Inclusive maximum coordinate.'),
+  min: z.number().describe('Inclusive minimum coordinate.'),
+  max: z.number().describe('Inclusive maximum coordinate.'),
 });
 
 const AxesBoundsSchema = z.strictObject({
@@ -36,9 +30,9 @@ const AxesLinesSchema = z
   .default({ arrows: AxesArrowMode.Positive });
 
 const AxesTicksSchema = z.strictObject({
-  x: z.number().finite().positive().optional().describe('Positive spacing between ticks on the x axis.'),
-  y: z.number().finite().positive().optional().describe('Positive spacing between ticks on the y axis.'),
-  size: z.number().finite().positive().default(6).describe('Full tick length in user units.'),
+  x: z.number().positive().optional().describe('Positive spacing between ticks on the x axis.'),
+  y: z.number().positive().optional().describe('Positive spacing between ticks on the y axis.'),
+  size: z.number().positive().default(6).describe('Full tick length in user units.'),
   style: StandardPathStrokeStyleSchema.optional().describe('Style for ticks on both axes.'),
 });
 
@@ -49,8 +43,7 @@ const AxesLabelsSchema = z
   })
   .default({ x: 'x', y: 'y' });
 
-/** Axes 的 JSON-safe Tier 2 composite schema */
-export const AxesSchema = CompositeBaseSchema.extend({
+const AxesBaseSchema = CompositeBaseSchema.extend({
   namespace: z.literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('axes').describe('Composite type for a Cartesian pair of coordinate axes.'),
   bounds: AxesBoundsSchema.describe('Strict horizontal and vertical coordinate ranges.'),
@@ -59,17 +52,21 @@ export const AxesSchema = CompositeBaseSchema.extend({
   axes: AxesLinesSchema.describe('Coordinate-axis arrow mode and shared style.'),
   ticks: AxesTicksSchema.optional().describe('Optional origin-relative ticks for either axis.'),
   labels: AxesLabelsSchema.describe('Labels placed beyond the positive ends of the axes.'),
-}).superRefine((axes, ctx) => {
+});
+
+type AxesRefinementInput = z.infer<typeof AxesBaseSchema>;
+
+const refineAxes = (axes: AxesRefinementInput, ctx: z.RefinementCtx): void => {
   if (axes.bounds.x.min >= axes.bounds.x.max) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['bounds', 'x', 'max'],
       message: 'bounds.x.min must be less than bounds.x.max.',
     });
   }
   if (axes.bounds.y.min >= axes.bounds.y.max) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['bounds', 'y', 'max'],
       message: 'bounds.y.min must be less than bounds.y.max.',
     });
@@ -78,14 +75,14 @@ export const AxesSchema = CompositeBaseSchema.extend({
   const [originX, originY] = axes.origin;
   if (originX < axes.bounds.x.min || originX > axes.bounds.x.max) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['origin', 0],
       message: 'origin[0] must be inside bounds.x.',
     });
   }
   if (originY < axes.bounds.y.min || originY > axes.bounds.y.max) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['origin', 1],
       message: 'origin[1] must be inside bounds.y.',
     });
@@ -112,14 +109,14 @@ export const AxesSchema = CompositeBaseSchema.extend({
     });
     if (verticalError !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: typeof axes.grid.spacing === 'number' ? ['grid', 'spacing'] : ['grid', 'spacing', 'x'],
         message: verticalError,
       });
     }
     if (horizontalError !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: typeof axes.grid.spacing === 'number' ? ['grid', 'spacing'] : ['grid', 'spacing', 'y'],
         message: horizontalError,
       });
@@ -135,7 +132,7 @@ export const AxesSchema = CompositeBaseSchema.extend({
       includeBoundary: false,
     });
     if (tickXError !== undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ticks', 'x'], message: tickXError });
+      ctx.addIssue({ code: 'custom', path: ['ticks', 'x'], message: tickXError });
     }
   }
   if (axes.ticks?.y !== undefined) {
@@ -147,7 +144,9 @@ export const AxesSchema = CompositeBaseSchema.extend({
       includeBoundary: false,
     });
     if (tickYError !== undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ticks', 'y'], message: tickYError });
+      ctx.addIssue({ code: 'custom', path: ['ticks', 'y'], message: tickYError });
     }
   }
-});
+};
+
+export const AxesSchema = AxesBaseSchema.superRefine(refineAxes);

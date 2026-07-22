@@ -1,6 +1,11 @@
+import type { ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
+import type { AxesArrowMode } from './constants';
 import type { AxesSchema } from './schema';
+
+/** Axes 坐标轴端点箭头模式取值 */
+export type AxesArrowModeValue = ValueOf<typeof AxesArrowMode>;
 
 /** 持久化的 Standard Axes composite */
 export type IRAxes = z.infer<typeof AxesSchema>;

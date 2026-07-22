@@ -4,6 +4,7 @@ import type { IRStandardPathBorderStyle, IRStandardPathStrokeStyle } from '../sh
 import type { IRGrid } from './types';
 
 import { enumerateGridLattice, isGridMajorLine } from '../../shared';
+import { GridBorderOrder } from './constants';
 
 /** 将 Standard Grid 规则确定性下沉为已有 Core Path */
 export const lowerGrid = (grid: IRGrid): Array<IRPath> => {
@@ -19,7 +20,7 @@ export const lowerGrid = (grid: IRGrid): Array<IRPath> => {
   const lineMaxY = grid.border?.extendLines ? maxY + borderPadding : maxY;
   const paths: Array<IRPath> = [];
 
-  if (grid.border?.order === 'behind') {
+  if (grid.border?.order === GridBorderOrder.Behind) {
     paths.push(createGridBorderPath(minX, minY, maxX, maxY, borderPadding, grid.border.style));
   }
 
@@ -61,7 +62,7 @@ export const lowerGrid = (grid: IRGrid): Array<IRPath> => {
     });
   }
 
-  if (grid.border !== undefined && grid.border.order === 'front') {
+  if (grid.border !== undefined && grid.border.order === GridBorderOrder.Front) {
     paths.push(createGridBorderPath(minX, minY, maxX, maxY, borderPadding, grid.border.style));
   }
 
