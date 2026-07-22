@@ -27,7 +27,7 @@ The data pipeline first collects fields actually used by a consumer, then turns 
 | Validation          | Sample-check or fully check participating fields, and decide whether invalid values skip or throw           | `validateData` / `invalid`             |
 | Transform / handoff | Data transforms rewrite canonical rows, then hand the result to a consumer module                           | `sort` / `summarize` / consumer config |
 
-`model`, `format`, and data transform operations are serializable contracts. Functions participate only at runtime and do not enter IR. See [Extension Mechanisms](/viz/data/model/extensions) for runtime registration beyond the built-ins.
+`model`, `format`, and data transform operations are serializable contracts. Functions participate only at runtime and do not enter IR. See [Data Model Extensions](/viz/data/model/extensions) for custom field formats and parsing, and [Data Transform Extensions](/viz/data/transform/extensions) for custom transforms, reducers, and selectors.
 
 ## Consumption boundary
 

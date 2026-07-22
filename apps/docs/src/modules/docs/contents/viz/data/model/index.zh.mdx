@@ -18,7 +18,7 @@ description: 数据模型把外部数据行接到稳定的字段契约上，生�
 | 字段契约   | 声明逻辑字段、测量类型、自动推断与分类顺序   | 要让配置稳定、自描述或控制分类域时     |
 | 数据接入   | 对齐真实字段路径，解析存储格式并生成规范化行 | 要换接口、接嵌套数据或处理非默认格式时 |
 | 校验与诊断 | 决定非法值是跳过、抽样检查还是全量报错       | 排查空图、建立数据准入或测试契约时     |
-| 扩展机制   | 注册字段解析、数据操作与统计子算子           | 内置能力无法表达稳定数据语义时         |
+| 扩展机制   | 注册字段格式与运行时字段解析                 | 内置接入能力无法表达存储格式时         |
 
 Data 在规范化行处停止：数据怎样排序、汇总或筛选，由[数据变换](/viz/data/transform)负责；结果怎样进入具体视图，由消费模块决定。在 Plot 应用中，字段进入位置、颜色或尺寸后的映射由 [Plot 比例尺](/viz/plot/scale)负责。
 
@@ -39,6 +39,6 @@ Data 在规范化行处停止：数据怎样排序、汇总或筛选，由[数�
   </LinkedCard>
   <LinkedCard href="/viz/data/model/extensions">
     <span className="font-semibold">扩展机制</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">集中注册字段格式、数据操作与统计子算子。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册字段格式或提供运行时字段解析。</span>
   </LinkedCard>
 </div>

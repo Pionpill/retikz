@@ -1,108 +1,75 @@
 ---
 title: Extension Mechanisms
-description: Extend field parsing, data operations, and statistical sub-operators with runtime Definitions and resolvers while keeping Data IR serializable.
+description: Extend data intake with named field formats and runtime resolvers while keeping data-model configuration serializable.
 ---
 
-Data extensions share one boundary: configuration stores only a format name or `{ kind, ...config }`, while functions stay in runtime Definitions injected by the consuming host. The examples use React `<Plot>` to render results, but these contracts belong to Data and do not depend on Plot.
+Data-model extension points only parse external values into a stable field contract. Reusable parsing rules become named formats, while one-off or source-specific rules use a runtime resolver. Neither form writes functions into serializable configuration.
 
 ## Applicability
 
-Prefer composing built-in formats, transforms, reducers, and selectors. Register a Definition only when existing operations cannot express stable, reusable data semantics. Use `resolveField` for one-off or source-specific parsing instead of creating a global registration key.
+Prefer built-in formats and field types. Register a `FieldFormatDefinition` only when a storage format must be reused across data sources; use `resolveField` for parsing branches local to the current source.
 
-| Extension entry point     | Responsibility                     | Stored in IR             |
-| ------------------------- | ---------------------------------- | ------------------------ |
-| `defineFieldFormat`       | Reusable field storage formats     | `format` name            |
-| `resolveField`            | Temporary type and parser override | Nothing                  |
-| `defineTransform`         | New row-processing operations      | `{ kind, ...config }`    |
-| `defineStatisticsReducer` | Reduce grouped rows to fields      | reducer `{ kind, ... }`  |
-| `defineRowSelector`       | Select original rows from a group  | selector `{ kind, ... }` |
+| Extension entry point | Responsibility                     | Stored configuration |
+| --------------------- | ---------------------------------- | -------------------- |
+| `defineFieldFormat`   | Reusable field storage formats     | `format` name        |
+| `resolveField`        | Temporary type and parser override | Nothing              |
 
-`fieldMap` only maps logical fields to physical paths; it performs no computation and is not a registry extension. Measurement types remain the closed set `continuous`, `temporal`, and `categorical`. Custom formats and resolvers must normalize values into one of those domains.
+`fieldMap` only maps logical fields to physical paths; it neither parses values nor registers an extension. Measurement types remain the closed set `continuous`, `temporal`, and `categorical`. Custom parsing must normalize values into one of those domains.
 
-## Extending Field Parsing
+## Defining Field Formats
 
 Use `defineFieldFormat` for formats that must be persisted and reused across data sources. `name` is the model lookup key, `impliedType` declares the canonical value type, and `parse` converts raw input to text, a finite number, or `undefined`.
 
-The `wan` Definition below is injected through `<Plot formatDefinitions>`. The model stores only `format: 'wan'`; the function never enters IR.
+The `wan` Definition below is injected through `<Plot formatDefinitions>`. The model stores only `format: 'wan'`, never the parsing function.
 
 <ComponentPreview files={['extension-format', 'extension-format.data.ts']} />
 
-### Runtime Field Resolution
+## Runtime Field Resolution
 
-Use `resolveField` for one-off logic and source-specific branches. It returns an optional `type` and `parse` for each logical field and takes precedence over the model, declarative format, and default coercion. Returning `undefined` falls back to the standard intake path.
+Use `resolveField` for one-off logic and source-specific branches. It returns an optional `type` and `parse` for each logical field and takes precedence over the model, named format, and default coercion. Returning `undefined` falls back to the standard intake path.
 
 <ComponentPreview files={['extension-resolver', 'extension-resolver.data.ts']} />
 
 `resolveField` is a runtime escape hatch. It does not use a registry and cannot be serialized. Use a `FieldFormatDefinition` when a stable name, cross-host reuse, or persisted configuration is required.
 
-## Extending Data Operations
+## Injecting A Host
 
-Use `defineTransform` for a new row-processing semantic. Its `schema` validates JSON configuration and extracts the registration key from `kind`; `inputFields` and `outputFields` let strict model validation distinguish source and derived fields; `apply` executes the pure data operation.
+The consuming host passes field-parsing capabilities into the intake pipeline. In Plot:
 
-<ComponentPreview files={['extension-transform', 'extension-transform.data.ts']} />
+| Capability          | Injection entry point | Model reference           |
+| ------------------- | --------------------- | ------------------------- |
+| Named field formats | `formatDefinitions`   | Field `format: name`      |
+| Temporary parsers   | `resolveField`        | None; resolved at runtime |
 
-The host injects Definitions through `transformDefinitions`. Built-in and custom transforms enter one registry before lookup, schema validation, and execution by operation `kind`.
-
-### Provenance
-
-Custom transforms must be pure and deterministic. Reusing an input row naturally preserves its source. When an operation changes the row count and one output represents several source rows, use `TransformContext.groupProvenance` to attach group provenance:
-
-| Output relationship             | Provenance handling                                      |
-| ------------------------------- | -------------------------------------------------------- |
-| One input row to one output row | Preserve the input row's provenance                      |
-| Several rows reduced to one     | Call `groupProvenance(out, members)` for the source set  |
-| Generated row without a source  | Leave provenance absent; do not invent one `sourceIndex` |
-
-With lineage enabled, the same Definition may run once for ordinary lowering and again for lineage recording. Freeze random or stateful inputs in the host, or perform non-deterministic work outside the Definition.
-
-## Extending Statistical Sub-operators
-
-When the transform structure already fits and only the statistical computation is missing, extend the sub-operator instead of creating a complete transform:
-
-| Sub-operator              | Returns                 | Injection entry point          |
-| ------------------------- | ----------------------- | ------------------------------ |
-| `defineStatisticsReducer` | A field fragment        | `statisticsReducerDefinitions` |
-| `defineRowSelector`       | Original rows and ranks | `rowSelectorDefinitions`       |
-
-The left chart below uses a custom reducer to compute the midpoint of each group’s extrema. The right chart uses a custom selector to retain the original row closest to each group mean. Built-in `summarize` and `select` consume the two Definitions.
-
-<ComponentPreview files={['extension-statistics', 'extension-statistics.data.ts']} />
-
-Reducers declare field flow through `inputFields` and `outputFields`. Selectors declare only their inputs and return original rows to preserve provenance and other columns. Upgrade to a custom transform when the operation changes complete row structures or requires several processing steps.
+Other consumers can expose equivalent adapter entry points. The data model only consumes the format registry and resolver result.
 
 ## Execution
 
-All Definition extensions follow one runtime path:
-
 ```text
-inject Definitions → merge built-in and custom registries → lookup by name or kind → operation schema validation → execute
+field contract → look up named format → apply resolveField override → normalize field value
 ```
 
-The consuming host passes Definition sets to the Data pipeline. In Plot, `formatDefinitions`, `transformDefinitions`, `statisticsReducerDefinitions`, and `rowSelectorDefinitions` are runtime options. Table and other modules can inject the same Data Definitions through their own adapters.
+Named formats provide an initial field type and parser, then `resolveField` may override either value per field. When no custom rule matches, intake continues with the model declaration, inference result, and default coercion.
 
 ## Errors And Limits
 
-| Condition                      | Result                                                                          |
-| ------------------------------ | ------------------------------------------------------------------------------- |
-| Duplicate built-in/custom key  | Registry construction fails immediately                                         |
-| Configuration uses unknown key | Execution fails before invoking an implementation                               |
-| Operation fails its schema     | Validation fails before invocation                                              |
-| Config contains functions/NaN  | Non-JSON-safe payload is rejected                                               |
-| Parser returns the wrong type  | Invalid value handled by [Validation & Diagnostics](/viz/data/model/validation) |
+| Condition                                 | Result                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| Duplicate built-in/custom format name     | Registry construction fails immediately                                         |
+| Model references an unknown format        | Intake fails before normalization                                               |
+| `resolveField.parse` has no resolved type | Declare the type in the model or return `type` from the resolver                |
+| Parser returns the wrong value type       | Invalid value handled by [Validation & Diagnostics](/viz/data/model/validation) |
 
-Definitions must not depend on Plot marks, scales, coordinates, or renderers. Extensions requiring visual semantics belong to Plot; database connections, permissions, and caches belong to the application or a source adapter.
+Field parsing normalizes individual values. It does not reorder rows, change row counts, or produce statistical fields; those capabilities belong to [Data Transform Extensions](/viz/data/transform/extensions).
 
 ## API Reference
 
-All entries below are exported from `@retikz/data`:
+The following public exports come from `@retikz/data`:
 
-| Capability        | Definition type                   | Definition entry point    |
-| ----------------- | --------------------------------- | ------------------------- |
-| Field format      | `FieldFormatDefinition`           | `defineFieldFormat`       |
-| Field resolver    | `ResolveField`, `FieldResolution` | Supply a runtime function |
-| Data operation    | `TransformDefinition`             | `defineTransform`         |
-| Statistic reducer | `StatisticsReducerDefinition`     | `defineStatisticsReducer` |
-| Row selector      | `RowSelectorDefinition`           | `defineRowSelector`       |
+| Capability     | Definition / function type        | Definition form           |
+| -------------- | --------------------------------- | ------------------------- |
+| Field format   | `FieldFormatDefinition`           | `defineFieldFormat`       |
+| Field resolver | `ResolveField`, `FieldResolution` | Supply a runtime function |
 
 <SourceLinks
   sources={[
@@ -119,22 +86,16 @@ All entries below are exported from `@retikz/data`:
       endLine: 31,
     },
     {
-      label: 'Transform Definition contract',
-      path: 'packages/viz/data/src/contract/transform.ts',
-      startLine: 30,
-      endLine: 51,
+      label: 'Resolver overrides and type validation',
+      path: 'packages/viz/data/src/providers/data/resolve.ts',
+      startLine: 5,
+      endLine: 39,
     },
     {
-      label: 'Reducer and selector Definition contracts',
-      path: 'packages/viz/data/src/contract/statistics.ts',
-      startLine: 8,
-      endLine: 70,
-    },
-    {
-      label: 'Plot injection into Data extension registries',
+      label: 'Field-format and resolver order in Plot',
       path: 'packages/viz/plot/src/pipeline/expand/data.ts',
-      startLine: 88,
-      endLine: 112,
+      startLine: 97,
+      endLine: 116,
     },
   ]}
 />
@@ -148,10 +109,10 @@ All entries below are exported from `@retikz/data`:
       Learn field paths, built-in formats, and normalization order.
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/data/transform">
-    <span className="font-semibold">Data Transforms</span>
+  <LinkedCard href="/viz/data/transform/extensions">
+    <span className="font-semibold">Data Transform Extensions</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Compose built-in transforms, reducers, and selectors.
+      Define custom transforms, reducers, and selectors.
     </span>
   </LinkedCard>
 </div>

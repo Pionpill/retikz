@@ -72,7 +72,7 @@ Categorical fields form their domain in data-appearance order by default. Put `o
 | `'ascending'` / `'descending'`  | Compare all-numeric categories numerically, otherwise as text  |
 | Array such as `['S', 'M', 'L']` | Use the array first, then append remaining observed categories |
 
-`model.order` orders the **categorical domain**; it does not reorder rows. Consumers can use it to preserve category semantics. In a Plot application, it affects categorical positions, legends, and discrete colors without changing path connection order. Use [data-transform sorting](/viz/data/transform#sort) for rows; an explicit Plot scale `domain` takes precedence over `order`.
+`model.order` orders the **categorical domain**; it does not reorder rows. Consumers can use it to preserve category semantics. In a Plot application, it affects categorical positions, legends, and discrete colors without changing path connection order. Use [data-transform sorting](/viz/data/transform/operations#sort) for rows; an explicit Plot scale `domain` takes precedence over `order`.
 
 ## Public types
 

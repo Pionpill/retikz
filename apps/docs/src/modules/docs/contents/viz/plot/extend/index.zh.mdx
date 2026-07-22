@@ -5,7 +5,7 @@ description: 扩展绘图语法——把通道、比例尺、坐标系和图元�
 
 这一分组讲怎么**扩展** plot 绘图语法。内置语法覆盖常见图表；当你要接入新的通道、比例尺、坐标投影或图元时，扩展 definition 会在运行时注入，并复用内置能力同一套解析、校验和 lowering（图形下沉）流程。
 
-数据格式、字段解析和数据 transform 属于[数据](/viz/data)：自定义字段格式、transform、reducer 与 selector 统一见数据模型下的[扩展机制](/viz/data/model/extensions)。plot 可以消费这些 data 能力，但它们不再放在绘图语法的扩展分组里。
+数据格式、字段解析和数据 transform 属于[数据](/viz/data)：字段格式与字段解析见[数据模型扩展](/viz/data/model/extensions)，transform、reducer 与 selector 见[数据变换扩展](/viz/data/transform/extensions)。plot 可以消费这些 data 能力，但它们不再放在绘图语法的扩展分组里。
 
 > 扩展 definition 是宿主能力，不直接写进 Plot IR。IR 只保存可序列化的 type、name、字段绑定和 JSON 配置；函数、投影、求值器、lower 函数都由 `<Plot>` props 或 vanilla options 注入。
 

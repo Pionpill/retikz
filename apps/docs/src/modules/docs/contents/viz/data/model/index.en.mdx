@@ -18,7 +18,7 @@ Solid arrows show the data path: external rows are normalized before data transf
 | Field Contract           | Logical fields, measurement types, inference, and order    | You need stable, self-describing configuration     |
 | Data Intake              | Physical paths, parsing, and canonical-row normalization   | You switch APIs, use nested data, or parse formats |
 | Validation & Diagnostics | Skip, sample-check, or reject invalid participating values | You debug blank charts or enforce intake contracts |
-| Extension Mechanisms     | Register field parsing, data operations, and sub-operators | Built-ins cannot express stable data semantics     |
+| Extension Mechanisms     | Register field formats and runtime field resolution        | Built-in intake cannot express a storage format    |
 
 Data stops at canonical rows. [Data transforms](/viz/data/transform) own sorting, aggregation, and filtering, while each consumer decides how the result enters a view. In a Plot application, [Plot scales](/viz/plot/scale) own mappings to position, color, or size.
 
@@ -46,7 +46,7 @@ Data stops at canonical rows. [Data transforms](/viz/data/transform) own sorting
   <LinkedCard href="/viz/data/model/extensions">
     <span className="font-semibold">Extension Mechanisms</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register field formats, data operations, and statistical sub-operators in one place.
+      Register field formats or provide runtime field resolution.
     </span>
   </LinkedCard>
 </div>

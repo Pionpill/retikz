@@ -32,7 +32,34 @@ export const vizSection: Array<Section> = [
           },
         ],
       },
-      { id: 'transform', label: 'viz.dataTransform' },
+      {
+        id: 'transform',
+        label: 'viz.dataTransform',
+        children: [
+          {
+            id: 'overview',
+            label: 'viz.dataTransformComponent',
+            meta: {
+              pageType: 'component',
+              audience: 'user',
+              capability: 'data.transform.component',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          { id: 'operations', label: 'viz.dataTransformOperations' },
+          { id: 'statistics', label: 'viz.dataTransformStatistics' },
+          {
+            id: 'extensions',
+            label: 'viz.dataTransformExtensions',
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'data.transform.extensions',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
       { id: 'provenance', label: 'viz.dataProvenance' },
     ],
   },

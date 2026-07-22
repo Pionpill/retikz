@@ -27,7 +27,7 @@ description: '@retikz/data 提供宿主无关的数据模型、字段处理、�
 | 数据校验     | 对参与字段做抽样或全量校验，决定非法值跳过还是报错             | `validateData` / `invalid`        |
 | 变换与交付   | 数据变换改写 canonical 行，再把结果交给具体消费模块            | `sort` / `summarize` / 消费方配置 |
 
-`model`、`format` 和数据变换 operation 是可序列化契约，函数只在运行时参与处理，不进入 IR。内置能力之外的运行时注册统一见[扩展机制](/viz/data/model/extensions)。
+`model`、`format` 和数据变换 operation 是可序列化契约，函数只在运行时参与处理，不进入 IR。自定义字段格式与字段解析见[数据模型扩展](/viz/data/model/extensions)，自定义 transform、reducer 与 selector 见[数据变换扩展](/viz/data/transform/extensions)。
 
 ## 消费边界
 

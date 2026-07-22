@@ -1,147 +1,62 @@
 ---
 title: 数据变换
-description: 数据变换在数据模型接入之后改写 canonical 行，覆盖排序、汇总、代表行选择与统计标注。
+description: 数据变换按顺序改写规范化行，并把排序、汇总、代表行选择与统计标注交给不同消费模块复用。
 ---
 
-数据变换属于 `@retikz/data`：它们只读取 canonical 行并输出新的 canonical 行，不依赖 plot 的 mark、scale 或坐标系。plot 可以把这些 transform 放在 `<Transform>`、`dataTransforms` 或 mark-local `transform` 里使用；table / geo 后续也可以复用同一组数据能力。
+数据变换属于 `@retikz/data`。它们读取数据模型产出的规范化行，按顺序处理后输出新的规范化行，可供图形、表格或其它消费模块使用。
 
-plot 另外注册的绘图变换仍放在[绘图语法的变换](/viz/plot/transform)里说明，例如 `stack`、`bin`、`normalize`、`derive-interval`、`jitter`、`density`、`smooth` 和 `relate`。这一页只讲 data 包自带的数据变换能力。
+本站默认用 Plot 展示变换结果，只是因为图形更容易观察行数、顺序和统计字段的变化。在 Plot 的 React 写法中，可以通过 `<Transform>`、`dataTransforms` 或 mark-local `transform` 使用这些能力；这些入口不属于 Data 本身。
 
-## 能力一览
+## 整体流程
 
-| kind        | 行数  | 数据语义                           | 常见消费者                 |
-| ----------- | ----- | ---------------------------------- | -------------------------- |
-| `sort`      | N → N | 按字段稳定重排行                   | 折线顺序、堆叠前置整理     |
-| `summarize` | N → G | 按组生成统计行                     | 分组柱、汇总表、统计摘要   |
-| `select`    | N → K | 按组选择原始代表行                 | 极值点、top-N、异常样本    |
-| `annotate`  | N → N | 把组统计或代表值广播回每一条明细行 | 均值线、阈值标签、上下文层 |
+| 阶段         | 输入                   | 输出                     | 负责什么                         |
+| ------------ | ---------------------- | ------------------------ | -------------------------------- |
+| 数据模型     | 外部数据行 + 字段契约  | 规范化行                 | 对齐字段、解析值并执行接入校验   |
+| 数据变换管线 | 规范化行 + operation[] | 新的规范化行             | 按声明顺序排序、汇总、选择或标注 |
+| 消费模块     | 变换后的行             | 图形、表格或其它领域输出 | 解释字段并形成具体视图           |
 
-这些 operation 本身是 JSON 可序列化配置，运行函数由 data 包内置 Definition 提供。变换读取字段会参与 model 校验，变换产出的字段不需要提前写进 model。
+每个 operation 都是 JSON 可序列化配置，由对应的 Definition 提供运行函数。变换读取的字段会参与 model 校验；变换新产出的字段不需要提前声明进 model。
 
-## TypeScript 类型
+## 职责一览
 
-transform schema 派生类型统一使用 `IRDataXxx`。旧的 `Transform`、`ReducerOperation`、`SelectorOperation` 等类型名已删除，不提供兼容别名；JSON operation 写法不变。
+| 主题       | 负责什么                                           | 何时阅读                                   |
+| ---------- | -------------------------------------------------- | ------------------------------------------ |
+| Transform  | 在 Plot React 中声明 operation，并确认多入口执行序 | 用 JSX 组织数据管线或排查变换顺序时        |
+| 变换操作   | `sort`、`summarize`、`select`、`annotate`          | 要重排行、生成统计行或保留代表原始行时     |
+| 统计子算子 | reducer、selector 与分位区间组合                   | 要计算统计字段、选择极值或组织箱线图数据时 |
+| 扩展机制   | 自定义 transform、reducer 与 selector Definition   | 内置操作无法表达新的数据处理语义时         |
 
-| 范围       | 类型                                                                                                  |
-| ---------- | ----------------------------------------------------------------------------------------------------- |
-| 整体 union | `IRDataTransform`、`IRDataBuiltinTransform`                                                           |
-| 内置变换   | `IRDataSortTransform`、`IRDataSummarizeTransform`、`IRDataSelectTransform`、`IRDataAnnotateTransform` |
-| reducer    | `IRDataReducerOperation`、`IRDataReducerMetrics`、`IRDataQuantileBandReducerOperation`                |
-| selector   | `IRDataSelectorOperation`、`IRDataOutsideQuantileBandSelectorOperation`                               |
-| 嵌套配置   | `IRDataOrderBy`、`IRDataAnnotateSelector`                                                             |
+Plot 自己注册的 `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density` 和 `smooth` 仍在[绘图语法的变换](/viz/plot/transform)中说明。自定义 transform、reducer 或 selector 的注册方式集中放在[扩展机制](/viz/data/transform/extensions)，运行链路事件则见[来源追溯](/viz/data/provenance)。
 
-## 排序 sort
+## 章节内容
 
-`sort` 按一个字段稳定重排行。等值时保留原始相对顺序，适合在折线连接、时间序列展示或后续分组处理前固定行序。
-
-`null`、`undefined`、`NaN` 与无穷值按 missing 处理，无论升序还是降序都稳定排在有效值之后。
-
-注意把它和字段契约里的 [`order`](/viz/data/model/contract#分类顺序) 分开：`sort` 排的是数据行，`order` 排的是分类域。
-
-<ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
-
-| prop    | 类型                           | 默认值        | 说明     |
-| ------- | ------------------------------ | ------------- | -------- |
-| `field` | `string`                       | —             | 排序字段 |
-| `order` | `'ascending' \| 'descending'?` | `'ascending'` | 排序方向 |
-
-## 汇总 summarize
-
-`summarize` 按 `groupBy` 分组，并用 `metrics` 把每组明细规约成一行。输出行保留组键，每个 reducer 都必须显式写 `as` 字段名。
-
-同一个 operation 内的输出名必须唯一：summarize 的 reducer 输出不能与 `groupBy` 重名，annotate 的 metric 输出与 selector `as` 也不能互相重名；冲突会在 schema 解析阶段直接报错。
-
-<ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
-
-| prop      | 类型             | 默认值   | 说明                                   |
-| --------- | ---------------- | -------- | -------------------------------------- |
-| `groupBy` | `Array<string>?` | 全局单组 | 分组键字段，支持复合键                 |
-| `metrics` | `Array<Reducer>` | —        | 组内统计指标，每个 reducer 必须写 `as` |
-
-```tsx
-<Transform
-  kind="summarize"
-  groupBy={['region']}
-  metrics={[
-    { kind: 'sum', field: 'revenue', as: 'total' },
-    { kind: 'median', field: 'revenue', as: 'median' },
-    { kind: 'count', as: 'orders' },
-  ]}
-/>
-```
-
-## 代表行选择 select
-
-`select` 按组运行 selector，并输出被选中的原始行。它不会把数值规约成新的统计值，适合保留城市名、id、锚点等原始字段，同时只保留组内极值或 top-N。
-
-<ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
-
-| prop       | 类型             | 默认值   | 说明                         |
-| ---------- | ---------------- | -------- | ---------------------------- |
-| `groupBy`  | `Array<string>?` | 全局单组 | 分组键字段                   |
-| `selector` | `Selector`       | —        | 组内代表行选择规则           |
-| `rankAs`   | `string?`        | —        | 可选，把一基 rank 写入该字段 |
-
-```tsx
-<Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
-```
-
-## 统计标注 annotate
-
-`annotate` 先按 `groupBy` 分组，再把 reducer 结果或 selector 选中的代表值回填到组内每一行。它适合在明细点旁边画组均值线、组中位数带、分组阈值等上下文层。
-
-selector 标注只接受至多选中一行的内置规则：`min` / `max`、`first` / `last` / `nth`，以及固定 `n: 1` 的 `top` / `bottom`。平局策略可用默认的 `first` 或 `last`，不能用 `all`；多行选择与 `outside-quantile-band` 应改用 `select`，需要广播其它单值统计时改写成 reducer。
-
-<ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
-
-| prop        | 类型                             | 默认值   | 说明                   |
-| ----------- | -------------------------------- | -------- | ---------------------- |
-| `groupBy`   | `Array<string>?`                 | 全局单组 | 分组键，支持复合键     |
-| `metrics`   | `Array<Reducer>?`                | —        | 要广播回每行的统计指标 |
-| `selectors` | `Array<IRDataAnnotateSelector>?` | —        | 广播单行代表值         |
-
-```tsx
-<Transform
-  kind="annotate"
-  groupBy={['store']}
-  metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}
-  selectors={[{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }]}
-/>
-```
-
-## reducer 与 selector
-
-`summarize`、`annotate` 和 plot 注册的 `bin` 会复用 reducer；`select`、`annotate` 和 plot 注册的 `relate` 会复用 selector。`select` 可使用完整 selector 集合，`annotate` 只使用上面的单行子集。
-
-| 子算子   | 返回什么 | 典型 kind                                                                             |
-| -------- | -------- | ------------------------------------------------------------------------------------- |
-| reducer  | 字段片段 | `count` / `sum` / `mean` / `median` / `min` / `max` / `quantile-band`                 |
-| selector | 原始行   | `min` / `max` / `first` / `last` / `top` / `bottom` / `nth` / `outside-quantile-band` |
-
-`quantile-band` 用 `lowerP` 和 `upperP` 定义任意分位区间，不固定成 q1 / q3。`outside-quantile-band` 是 selector，所以它输出原始行，适合保留 id、标签和 provenance。
-
-当字段没有任何有限数值时，`sum` 仍按空和返回 `0`，`count` 返回组内行数；`mean`、`median`、`min`、`max`、`extent`、`quantile` 与 `quantile-band` 没有可定义统计量，返回 invalid sentinel 交给下游 skip / error 策略处理，不会伪造成 0。
-
-<ComponentPreview files={['transform-boxplot', 'transform-boxplot.data.ts']} />
-
-上面的箱线图没有专用 `BoxPlotMark`。data transform 负责产出箱体、中位数、须线和区间外原始点；plot 只用 `IntervalMark`、`ReferenceMark` 和 `PointMark` 消费这些字段。
-
-## 链路追踪
-
-需要解释数据计算链路时，用 `applyTransformsWithLineage` 代替 `applyTransforms`。它仍然执行同一组 transform definition，但会额外返回运行时链路事件；这些事件不会写进 JSON IR，也不会写回数据行。
-
-```ts
-const { rows, lineage } = applyTransformsWithLineage(sourceRows, operations, {
-  lineage: {
-    fieldFlow: true,
-    reducerOperations: true,
-    rowSamples: { maxRows: 5, fields: ['region', 'revenue', 'total'] },
-  },
-});
-```
-
-默认 `lineage: {}` 只记录必要摘要：source index 摘要、transform 顺序、输入 / 输出行数和字段集合。`rowSamples`、`calculationDetails`、reducer / selector 详情都要独立打开；样本类开关必须给 `maxRows` 和非空 `fields`，避免默认复制整行数据。
-
-如果传入 `lineage.sink`，事件会流式发送给回调，默认不再保留到返回值的 `lineage.events`。需要同时流式消费和返回事件数组时，显式设置 `retainEvents: true`。
-
-需要注册自定义 transform、reducer 或 selector 时，统一参见[扩展机制](/viz/data/model/extensions)。
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/data/transform/overview">
+    <span className="font-semibold">变换组件</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      在 Plot React 中声明变换，并理解组件、数组与自动变换的顺序。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/operations">
+    <span className="font-semibold">变换操作</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      查询四种 Data 内置 operation 的语义、参数和示例。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/statistics">
+    <span className="font-semibold">统计子算子</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      组合 reducer 与 selector，生成统计字段或保留原始代表行。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/extensions">
+    <span className="font-semibold">扩展机制</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      注册自定义 transform、reducer 与 selector Definition。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/provenance">
+    <span className="font-semibold">来源追溯</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">记录 operation 顺序、字段流和可选计算细节。</span>
+  </LinkedCard>
+</div>
