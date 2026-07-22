@@ -1,0 +1,43 @@
+---
+title: Derive & Jitter
+description: Derive and jitter transforms preserve row count, adding per-row interval fields or deterministic data-space offsets.
+---
+
+This group contains plot-registered row-preserving drawing transforms. They do not compute group statistics or select representative rows; use them when a later mark needs normalized interval fields or deterministic point offsets.
+
+Row sorting is a data capability; see [Data Transforms / sort](/viz/data/transform/operations#sort).
+
+| kind              | rows   | common use                                       |
+| ----------------- | ------ | ------------------------------------------------ |
+| `derive-interval` | N -> N | Turn per-row values into `[start,end]` intervals |
+| `jitter`          | N -> N | Spread overlapping points in data space          |
+
+## derive-interval
+
+`derive-interval` computes an interval independently for each row. It does not inspect neighboring rows, so it fits Gantt bars, explicit intervals, and non-zero-baseline bars.
+
+<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} />
+
+Both `derive-interval` and `stack` default to `y0` / `y1`, but their meaning differs: `derive-interval` is per-row derivation, while `stack` is cross-row accumulation.
+
+| prop                      | type      | default     | description                                    |
+| ------------------------- | --------- | ----------- | ---------------------------------------------- |
+| `from`                    | `string?` | —           | Value field in baseline-to-value mode          |
+| `baseline`                | `number?` | `0`         | Start value in `from` mode                     |
+| `startFrom` / `endFrom`   | `string?` | —           | Two-field interval mode; must appear as a pair |
+| `startField` / `endField` | `string?` | `y0` / `y1` | Output field names                             |
+
+## jitter
+
+`jitter` adds a pseudo-random offset to continuous position fields so overlapping points spread apart. The offset happens in data space before scales; `seed` is an integer so SSR and browser hydration agree.
+
+<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} />
+
+`jitter` currently applies only to continuous numeric fields. Screen-space jitter inside categorical bands is not part of this transform layer.
+
+| prop                | type                    | default   | description                           |
+| ------------------- | ----------------------- | --------- | ------------------------------------- |
+| `axis`              | `'x' \| 'y' \| 'both'?` | `'x'`     | Axis to jitter                        |
+| `xField` / `yField` | `string?`               | `x` / `y` | Continuous numeric field to offset    |
+| `amount`            | `number?`               | `1`       | Maximum absolute offset in data units |
+| `seed`              | `number?`               | `0`       | Deterministic PRNG seed               |

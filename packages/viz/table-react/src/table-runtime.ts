@@ -6,6 +6,8 @@ import type {
   IRManualTableSpec,
   IRTableSpec,
   LowerTablesOptions,
+  ManualTableSpecInput,
+  TableDetailColumnInput,
   TableLayoutManifest,
 } from '@retikz/table';
 
@@ -14,6 +16,9 @@ import { createDetailTableSpec, createManualTableSpec, TableSpecSchema } from '@
 import type { DetailTableProps } from './DetailTable';
 import type { ManualTableProps } from './ManualTable';
 import type { TableCommonProps, TableProps } from './Table';
+
+import { buildDetailColumns } from './components/build-detail-columns';
+import { buildManualStructure } from './components/build-manual-structure';
 
 /** React Table runtime 的入口类型 */
 export const ReactTableRuntimeKind = {
@@ -61,29 +66,65 @@ const displayOf = (props: TableCommonProps): ReactTableRuntime['display'] => ({
   renderer: props.renderer,
 });
 
+/** 统一 DetailTable 的 columns props 与 marker children authoring */
+const detailColumnsOf = (props: DetailTableProps): Array<TableDetailColumnInput> => {
+  const structure = props as Pick<DetailTableProps, 'columns' | 'children'>;
+  if (structure.columns !== undefined) {
+    if (structure.children !== undefined) {
+      throw new Error('table react: DetailTable columns cannot be mixed with DetailColumn children');
+    }
+    return structure.columns;
+  }
+  if (structure.children === undefined) {
+    throw new Error('table react: DetailTable requires columns or DetailColumn children');
+  }
+  return buildDetailColumns(structure.children);
+};
+
+/** 统一 ManualTable 的 cells props 与 Row marker children authoring */
+const manualStructureOf = (props: ManualTableProps): Pick<ManualTableSpecInput, 'cells' | 'rowKinds'> => {
+  const structure = props as Pick<ManualTableProps, 'cells' | 'rowKinds' | 'children'>;
+  if (structure.children !== undefined) {
+    if (structure.cells !== undefined || structure.rowKinds !== undefined) {
+      throw new Error('table react: ManualTable Row children cannot be mixed with cells or rowKinds');
+    }
+    return buildManualStructure(structure.children, props.rows, props.columns);
+  }
+  if (structure.cells === undefined) {
+    throw new Error('table react: ManualTable requires cells or Row children');
+  }
+  return {
+    cells: structure.cells,
+    ...(structure.rowKinds === undefined ? {} : { rowKinds: structure.rowKinds }),
+  };
+};
+
 /** 从 detail React props 提取 framework-neutral authoring 输入 */
-const detailSpecOf = (props: DetailTableProps): IRDetailTableSpec =>
-  createDetailTableSpec({
+const detailSpecOf = (props: DetailTableProps): IRDetailTableSpec => {
+  const columns = detailColumnsOf(props);
+  return createDetailTableSpec({
     ...(props.id === undefined ? {} : { id: props.id }),
     dataRef: props.dataRef,
     ...(props.model === undefined ? {} : { model: props.model }),
-    columns: props.columns,
+    columns,
     ...(props.header === undefined ? {} : { header: props.header }),
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),
   });
+};
 
 /** 从 manual React props 提取 framework-neutral authoring 输入 */
-const manualSpecOf = (props: ManualTableProps): IRManualTableSpec =>
-  createManualTableSpec({
+const manualSpecOf = (props: ManualTableProps): IRManualTableSpec => {
+  const structure = manualStructureOf(props);
+  return createManualTableSpec({
     ...(props.id === undefined ? {} : { id: props.id }),
     rows: props.rows,
     columns: props.columns,
-    ...(props.rowKinds === undefined ? {} : { rowKinds: props.rowKinds }),
-    cells: props.cells,
+    ...structure,
     ...(props.layout === undefined ? {} : { layout: props.layout }),
     ...(props.meta === undefined ? {} : { meta: props.meta }),
   });
+};
 
 /** 解析三种 React Table props 为同一 standalone / embedded runtime 输入 */
 export const resolveReactTableRuntime = (

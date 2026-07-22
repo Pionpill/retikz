@@ -11,22 +11,22 @@ describe('<Frame>', () => {
       label: 'Contract',
       children: <Node position={[0, 0]} text="A" />,
     };
-    const first = Frame.embeddableAdapter?.contribute(props);
-    const second = Frame.embeddableAdapter?.contribute(props);
+    const first = Frame.embeddableAdapter.contribute(props);
+    const second = Frame.embeddableAdapter.contribute(props);
 
-    expect(first?.node).toEqual(
+    expect(first.node).toEqual(
       createFrame({
         id: 'definition-contract/frame',
         label: 'Contract',
         children: [{ type: 'node', position: [0, 0], text: 'A' }],
       }),
     );
-    expect(first?.makeComposites).toBe(second?.makeComposites);
+    expect(first.makeComposites).toBe(second.makeComposites);
   });
 
   it('fails loudly when a direct React child does not become a Core Node', () => {
     expect(() =>
-      Frame.embeddableAdapter?.contribute({
+      Frame.embeddableAdapter.contribute({
         id: 'invalid/frame',
         children: (
           <Path>
@@ -42,7 +42,7 @@ describe('<Frame>', () => {
     const result = buildIRWithContributions(
       <>
         <Grid bounds={{ min: [0, 0], max: [20, 20] }} spacing={10} />
-        <Axes bounds={{ x: { min: -1, max: 1 }, y: { min: -1, max: 1 } }} />
+        <Axes extent={{ x: 20, y: 20 }} />
         <Frame id="group/frame">
           <Node position={[0, 0]} text="A" />
         </Frame>

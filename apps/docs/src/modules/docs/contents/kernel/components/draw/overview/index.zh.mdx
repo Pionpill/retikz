@@ -5,7 +5,7 @@ description: 用一个 way 数组声明日常连线、折角、曲线、闭合�
 
 `<Draw>` 是大多数连线的首选入口。它接受一个 `way` 数组，按顺序把目标点、折角、闭合、曲线、形状和边标注展开成 Kernel（底层）`<Path>` + `<Step>`。描边、填充、箭头等样式字段与 `<Path>` 保持一致。
 
-选择建议：普通关系线、流程图边、带箭头连接默认用 `<Draw>`；需要多次 `move`、逐段精确控制 `kind`、或调试最贴近 IR 的结构时，用 `<Path>` + `<Step>`；画单个几何形（圆 / 矩形 / 扇形等）用下方**形状 sugar**；画背景参考线用 Standard [Grid](/standard/components/grid)。只是在 AI / 数据库存储层交换图形时，直接处理 IR。
+选择建议：普通关系线、流程图边、带箭头连接默认用 `<Draw>`；需要多次 `move`、逐段精确控制 `kind`、或调试最贴近 IR 的结构时，用 `<Path>` + `<Step>`；画单个几何形（圆 / 矩形 / 扇形等）用下方**形状 sugar**；画背景参考线用 Standard [网格](/standard/composite/grid)。只是在 AI / 数据库存储层交换图形时，直接处理 IR。
 
 ## 用法
 
@@ -80,7 +80,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `<RegularPolygon>` | 正多边形              |
 | `<Star>`           | 星形                  |
 
-网格底纹不属于几何 shape；这类成片参考线是可选的 Standard 能力。几何图形可从 [圆与椭圆](/kernel/components/shapes/circle-ellipse) 开始，规则参考线见 [Grid](/standard/components/grid)。
+网格底纹不属于几何 shape；这类成片参考线是可选的 Standard 能力。几何图形可从 [圆与椭圆](/kernel/components/shapes/circle-ellipse) 开始，规则参考线见 [网格](/standard/composite/grid)。
 
 ## 技术原理
 
@@ -208,4 +208,4 @@ Draw 把描边、填充、箭头和层级等整条路径的属性透传给 `<Pat
 - [Step](/kernel/components/draw/step)：Draw 每一段最终对应的 Kernel step 语义
 - [Arrow](/kernel/components/draw/arrow)：箭头 shape、尺寸、颜色与起末分别配置
 - [形状](/kernel/components/shapes)：Circle / Ellipse / Arc / Sector / Rectangle / RegularPolygon / Star 等几何快捷写法
-- [Grid](/standard/components/grid)：可选的背景参考线
+- [网格](/standard/composite/grid)：可选的背景参考线

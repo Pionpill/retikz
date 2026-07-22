@@ -1,0 +1,77 @@
+---
+title: Frame
+description: Use JSON-safe Frame IR to generate a styled, padded, optionally labeled border around Core Nodes.
+---
+
+`<Frame>` is an optional Standard Tier 2 visual group. It places Node children in a targetable Core `Scope` and automatically derives a border from the Scope's measured bounds. When content positions or text sizes change, no duplicate rectangle coordinates need updating.
+
+Frame does not replace Core `Scope`: Scope owns logical grouping, transforms, and style cascading, while Frame adds border, `gap`, and label semantics.
+
+## Usage
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { Frame } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={320} height={180}>
+  <Frame id="contract" label="Definition contract">
+    <Node position={[100, 90]} text="BUILTIN_*" />
+    <Node position={[220, 90]} text="defineXxx(custom)" />
+  </Frame>
+</Layout>
+```
+
+The React entry converts children to Core IR and contributes `FrameDefinition` locally to the current `Layout`. Frame v0.1 only accepts direct `Node` children; `Path`, `Scope`, `Coordinate`, or another Tier 2 composite fails loudly instead of being ignored.
+
+| Scenario         | Public entry point                                                          |
+| ---------------- | --------------------------------------------------------------------------- |
+| React            | `Frame` from `@retikz/standard-react`                                       |
+| Vanilla          | `frame` and `FrameVanillaAdapter` from `@retikz/standard-vanilla`           |
+| IR / persistence | `FrameSchema`, `createFrame`, and `FrameDefinition` from `@retikz/standard` |
+
+See [Get Started](/standard/get-start) for complete Vanilla mounting and persistence flows, replacing its Grid entries with the Frame entries above.
+
+## Examples
+
+### Definition contract group
+
+`gap` only expands the border outward and never moves children. `border` uses ordinary Core Path styles, so it supports dashes, fill, and stroke; the label stays above the top-left corner.
+
+<ComponentPreview files="frame-basic" size="sm" />
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Return when investigating automatic bounds, derived ids, or duplicate-id diagnostics."
+/>
+
+Lowering first emits a rectangle Path that targets the Frame scope, then emits the Scope with the same `id`. Core resolves the queued Path after collecting the Scope's Node bounds, so the border can safely precede its content. A transparent carrier Path produces the step label outside the Scope and therefore does not inflate Frame bounds.
+
+Vanilla deterministically derives the Scope id from the embed id, so `frame('definition-contract', …)` becomes `definition-contract/frame`. Direct IR instead uses the `id` passed to `createFrame`. In both paths, a collision between the Frame `id` and a child id is invalid Core input and preserves the `DUPLICATE_NODE_ID` diagnostic.
+
+<SourceLinks
+  sources={[
+    { label: 'Frame schema and contract', path: 'packages/library/standard/src/composites/frame/schema.ts' },
+    { label: 'Frame lowering', path: 'packages/library/standard/src/composites/frame/lower.ts' },
+  ]}
+/>
+
+## API Reference
+
+| Prop       | Type                          | Default                                      | Description                                                                            |
+| ---------- | ----------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `id`       | `string`                      | —                                            | Non-empty Scope identity and border/label target                                       |
+| `gap`      | `number`                      | `8`                                          | Uniform nonnegative outward border gap                                                 |
+| `border`   | `IRStandardPathBorderStyle`   | `{ stroke: 'currentColor', strokeWidth: 1 }` | Border Path style; `zIndex` defaults to `-1`                                           |
+| `label`    | `string`                      | —                                            | Optional non-empty top-left label                                                      |
+| `children` | `ReactNode` / `Array<IRNode>` | —                                            | React / IR inputs require at least one direct Core Node; other child types unsupported |
+
+## Related
+
+- [Tier 2 Composites](/kernel/concepts/design/composite): how Frame is registered and lowered
+- [Scope](/kernel/components/layout/scope): logical grouping, transforms, and style cascading
+- [Node](/kernel/components/node/overview): content primitives included in automatic Frame bounds

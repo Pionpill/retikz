@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * 数据落地页 "数据流水线" 插图
- * @description 外部数据集在编译时进入数据层（字段模型 + 解析归一），整理成数据通道，再交给 mark / scale / 坐标系消费；数据行本身不进入 IR。
+ * @description 外部数据集在运行时进入数据层，经字段模型与解析归一形成规范化行，再交给不同消费模块
  */
 const Demo: FC = () => (
   <Layout width={640} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
@@ -21,15 +21,15 @@ const Demo: FC = () => (
       </Text>
     </Node>
     <Node id="channel" position={[90, -16]} stroke="none" align="middle" lineHeight={16}>
-      <Text font={{ size: 15, weight: 'bold' }}>数据通道</Text>
+      <Text font={{ size: 15, weight: 'bold' }}>规范化行</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        x / y / color / size
+        逻辑字段 · 标准值
       </Text>
     </Node>
     <Node id="consume" position={[235, -16]} stroke="none" align="middle" lineHeight={16}>
       <Text font={{ size: 15, weight: 'bold' }}>消费</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        mark · scale · 坐标系
+        Plot · Table · 其它模块
       </Text>
     </Node>
 
@@ -39,7 +39,7 @@ const Demo: FC = () => (
 
     <Node id="note" position={[-80, 70]} stroke="none" align="middle">
       <Text fill="gray" font={{ size: 12 }}>
-        数据行不进 IR · 只有 model / format 随 spec 持久化
+        数据行运行时传入 · 可序列化契约按需持久化
       </Text>
     </Node>
     <Draw way={['note', 'layer']} arrow="->" stroke="gray" dashPattern={[4, 3]} />

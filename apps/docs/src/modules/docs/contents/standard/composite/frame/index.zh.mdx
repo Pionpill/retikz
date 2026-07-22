@@ -1,0 +1,77 @@
+---
+title: 分组框
+description: 用 JSON-safe Frame 为一组 Core Node 自动生成带间距、样式和可选标签的外框。
+---
+
+`<Frame>` 是 Standard 的可选 Tier 2 可视分组。它把 Node children 放入一个可引用的 Core `Scope`，根据 Scope 的实际 bounds 自动生成外框；内容位置或文字尺寸改变时，不需要同步维护一份手写矩形坐标。
+
+Frame 不替代 Core `Scope`：Scope 负责逻辑分组、transform 和样式级联，Frame 只补充边框、`gap` 与标签语义。
+
+## 用法
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { Frame } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={320} height={180}>
+  <Frame id="contract" label="Definition contract">
+    <Node position={[100, 90]} text="BUILTIN_*" />
+    <Node position={[220, 90]} text="defineXxx(custom)" />
+  </Frame>
+</Layout>
+```
+
+React 入口会把 children 转成 Core IR，并在当前 `Layout` 局部贡献 `FrameDefinition`。Frame v0.1 只接受直接 `Node` children；`Path`、`Scope`、`Coordinate` 或其它 Tier 2 composite 会立即报错，而不会静默忽略。
+
+| 场景        | 公开入口                                                              |
+| ----------- | --------------------------------------------------------------------- |
+| React       | `Frame`（`@retikz/standard-react`）                                   |
+| Vanilla     | `frame`、`FrameVanillaAdapter`（`@retikz/standard-vanilla`）          |
+| IR / 持久化 | `FrameSchema`、`createFrame`、`FrameDefinition`（`@retikz/standard`） |
+
+完整的 Vanilla 挂载与持久化加载流程统一见[快速开始](/standard/get-start)；把其中的 Grid 入口替换为本表对应的 Frame 入口即可。
+
+## 示例
+
+### Definition contract 分组
+
+`gap` 只向外扩展边框，不移动 children。`border` 使用普通 Core Path 样式，因此可设置虚线、填充和描边；标签固定放在左上角上方。
+
+<ComponentPreview files="frame-basic" size="sm" />
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="遇到自动 bounds、派生 id 或重复 id 诊断时再回来阅读。"
+/>
+
+lowering 先输出引用 Frame scope 的 rectangle Path，再输出带同一 `id` 的 Scope。Core 会在收集完 Scope Node bounds 后解析先前排队的 Path，所以边框可以安全地出现在内容之前。标签由透明 carrier Path 的 step label 产生，不进入 Scope，也不会撑大 Frame bounds。
+
+Vanilla 会从 embed id 确定性派生 Scope id，例如 `frame('definition-contract', …)` 对应 `definition-contract/frame`。直接 IR 则使用 `createFrame` 输入中的 `id`；无论哪种入口，Frame `id` 与 child id 冲突都属于无效 Core 输入，并沿用 `DUPLICATE_NODE_ID` 诊断。
+
+<SourceLinks
+  sources={[
+    { label: 'Frame schema and contract', path: 'packages/library/standard/src/composites/frame/schema.ts' },
+    { label: 'Frame lowering', path: 'packages/library/standard/src/composites/frame/lower.ts' },
+  ]}
+/>
+
+## API 参考
+
+| 属性       | 类型                          | 默认值                                       | 描述                                                                   |
+| ---------- | ----------------------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
+| `id`       | `string`                      | —                                            | 非空 Scope identity，也是边框和标签的 target                           |
+| `gap`      | `number`                      | `8`                                          | 所有边相同的非负外扩间距                                               |
+| `border`   | `IRStandardPathBorderStyle`   | `{ stroke: 'currentColor', strokeWidth: 1 }` | 外框 Path 样式；`zIndex` 缺省为 `-1`                                   |
+| `label`    | `string`                      | —                                            | 可选的非空左上角标签                                                   |
+| `children` | `ReactNode` / `Array<IRNode>` | —                                            | React / IR 输入均须包含至少一个直接 Core Node；其它 child 类型暂不支持 |
+
+## 相关
+
+- [Tier 2 Composites](/kernel/concepts/design/composite)：Frame 的注册与 lowering 机制
+- [Scope](/kernel/components/layout/scope)：逻辑分组、transform 与样式级联
+- [Node](/kernel/components/node/overview)：参与 Frame 自动 bounds 的内容图元

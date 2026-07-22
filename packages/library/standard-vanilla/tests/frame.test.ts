@@ -33,7 +33,7 @@ describe('frame()', () => {
         version: 1,
         children: [
           grid('paper', { bounds: { min: [-2, -1], max: [2, 1] }, spacing: 1 }),
-          axes('plane', { bounds: { x: { min: -2, max: 2 }, y: { min: -1, max: 1 } } }),
+          axes('plane', { extent: { x: 20, y: 20 } }),
           frame('definition-contract', input),
         ],
       },

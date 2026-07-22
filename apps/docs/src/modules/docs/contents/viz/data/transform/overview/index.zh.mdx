@@ -1,0 +1,117 @@
+---
+title: 变换组件
+description: 在 Plot React 中用 Transform 声明有序数据操作，并查询组件入口、执行顺序与 API。
+---
+
+`<Transform>` 是 `@retikz/plot-react` 的声明组件。它把一个 JSON 可序列化的 transform operation 放进当前 `<Plot>` 的数据管线，自身不渲染任何图形。
+
+Data 的变换契约并不依赖 Plot；这个组件只是 Plot React 对这些契约的一个创作入口。其它消费模块可以直接使用 `@retikz/data` 的 operation 与运行函数，不需要经过 `<Transform>`。
+
+## 用法
+
+```tsx
+import { Plot, Transform } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={rows}>
+  <Transform kind="sort" field="date" order="ascending" />
+  {/* marks */}
+</Plot>
+```
+
+一个 `<Transform>` 对应一个 operation。需要多步处理时，按实际依赖顺序声明多个组件：前一步的输出行会成为后一步的输入行。
+
+## 例子
+
+### 依次汇总与排序
+
+下面先按区域把订单汇总为 `total`，再按这个新字段降序排序。第二个 operation 能读取第一个 operation 产出的字段；调换声明顺序会改变语义。
+
+<ComponentPreview files={['transform-component', 'transform-component.data.ts']} />
+
+### 选择入口
+
+以下三种写法都属于 Plot 应用层，但作用范围不同。
+
+| 入口                     | 适合场景                       | 作用范围                               |
+| ------------------------ | ------------------------------ | -------------------------------------- |
+| `<Transform ... />`      | JSX 中逐步阅读、组合 operation | 当前 Plot 的共享数据管线               |
+| `dataTransforms={[...]}` | 程序化生成 operation 数组      | 当前 Plot 的共享数据管线，排在组件之前 |
+| mark-local `transform`   | 只为某个 mark 建立局部数据视图 | 该 mark，不改写其它 mark 的输入        |
+
+Plot 注册的绘图专属 kind 也使用同一个组件，详见[绘图语法的变换](/viz/plot/transform)。Data 自带的四种 kind 见[变换操作](/viz/data/transform/operations)。
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要排查组件为什么不渲染、多个入口先后顺序或自动变换去重时再回来读。"
+/>
+
+`Transform` 的函数体直接返回 `null`。`Plot` 在构建绘图 spec 时同步遍历 children，识别 `Transform` 元素并把它的 props 原样收集为 `IRPlotTransform`；因此它是配置载体，不是可见图层，也没有 children。
+
+共享管线按下面的顺序装配：
+
+1. `dataTransforms` 数组
+2. 按 JSX 声明顺序收集的 `<Transform>`
+3. mark shortcut 自动生成的 operation
+
+显式 `stack` 与自动 `stack` 的签名相同时，自动项会被抑制，避免重复堆叠。其它 operation 仍按装配后的顺序执行。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'TransformProps 与空渲染组件',
+      path: 'packages/viz/plot-react/src/components/transform.tsx',
+      startLine: 1,
+      endLine: 17,
+    },
+    {
+      label: '从 Plot children 收集 Transform props',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 1658,
+      endLine: 1668,
+    },
+    {
+      label: '显式与自动 operation 的装配顺序',
+      path: 'packages/viz/plot-react/src/components/build-plot-spec.ts',
+      startLine: 2424,
+      endLine: 2448,
+    },
+  ]}
+/>
+
+## API 参考
+
+### TransformProps
+
+`TransformProps` 等于 `IRPlotTransform`，是按 `kind` 判别的 union。选择 `kind` 后，TypeScript 会要求对应 operation 的其余配置。
+
+| prop        | 类型                      | 默认值 | 说明                                                       |
+| ----------- | ------------------------- | ------ | ---------------------------------------------------------- |
+| `kind`      | `IRPlotTransform['kind']` | —      | operation 判别字段                                         |
+| kind 对应项 | 由具体 union 分支决定     | —      | 必须是 JSON 可序列化配置；参数见对应 Data 或 Plot 变换页面 |
+
+### kind 范围
+
+| 能力归属 | kind                                                                                    | 文档                                       |
+| -------- | --------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Data     | `sort`、`summarize`、`select`、`annotate`                                               | [变换操作](/viz/data/transform/operations) |
+| Plot     | `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density`、`smooth` | [绘图语法的变换](/viz/plot/transform)      |
+| 自定义   | 已注册且不与内置名冲突的字符串                                                          | [扩展机制](/viz/data/transform/extensions) |
+
+### 导出
+
+| 导出             | 类型                 | 默认值 | 说明                                       |
+| ---------------- | -------------------- | ------ | ------------------------------------------ |
+| `Transform`      | `FC<TransformProps>` | —      | 声明一个 operation，返回 `null`            |
+| `TransformProps` | `IRPlotTransform`    | —      | 组件 props 与 Plot transform IR 的类型别名 |
+
+## 相关
+
+- [数据变换](/viz/data/transform)
+- [变换操作](/viz/data/transform/operations)
+- [统计子算子](/viz/data/transform/statistics)
+- [Plot 变换](/viz/plot/transform)

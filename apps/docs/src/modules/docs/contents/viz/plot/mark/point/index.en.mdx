@@ -1,0 +1,211 @@
+---
+title: PointMark
+description: 'PointMark is the simplest mark: it positions each row in a coordinate system, then draws a Node that can become a scatter point, bubble, shape marker, or text point.'
+---
+
+`<PointMark>` is the simplest mark: it first positions each data row in the active coordinate system, then draws one core `Node` at that position. That Node can be a default dot, shape marker, bubble, text, or a dot with a label; scatter plots, bubble plots, and text points are presentation-level wrappers around the same base mark.
+
+Which position channels you bind depends on the [coordinate system](/viz/plot/coordinate): 1D uses `x`, 2D uses `x` / `y`, and ternary uses `x` / `y` / `z`. The props are optional at the component level; the active coordinate validates the required dimensions at compile time.
+
+## Usage
+
+```tsx
+import { Plot, PointMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={cities}>
+  <PointMark x="lng" y="lat" />
+</Plot>
+```
+
+PointMark often overlays PathMark — draw `<PathMark>` first, then layer `<PointMark>` on the same data to mark each observation.
+
+## Presentation Layer
+
+PointMark is a low-level point mark: it only projects each data row into one coordinate position, then writes style and text channels onto the Node for that position. What the presentation layer calls a scatter plot, bubble plot, or text point is not a different low-level mark; it is the same PointMark with different channels configured.
+
+This is why PointMark usually does not need coordinate-specific adapters. The coordinate system projects position roles into a screen point, and the presentation layer decides how that point is drawn.
+
+| Presentation form | Key props            | Behavior                                                                                       |
+| ----------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| Scatter point     | `x` / `y`            | The default form: one point per data row; `color` / `shape` continue to decorate the point set |
+| Bubble plot       | `size`               | A numeric field drives point radius without changing position                                  |
+| Text point        | `text` / `dx` / `dy` | With `text` alone, draws a text Node; conceptually a presentation-level TextMark               |
+
+## Examples
+
+### Position Props
+
+`x` / `y` define the anchor for each row. The left plot uses cartesian2D, and the right plot uses polar2D; the same fields become different geometry under different coordinates.
+
+<ComponentPreview files={['point-position', 'point-api.data.ts']} />
+
+### Mark-Local Transforms
+
+`transform` can live directly on the current PointMark. In the example below, the gray points still read the original rows, while the colored bubble layer runs `jitter` only inside this mark and slightly spreads overlapping `orders` points along y.
+
+<ComponentPreview files={['point-transform', 'point-transform.data.ts']} />
+
+### Style Props
+
+`color` / `size` / `opacity` / `shape` / `stroke` / `strokeWidth` can all act as built-in channels for a point. They change the point's visible form without changing its projected position.
+
+Node style props such as `stroke`, `strokeWidth`, `opacity`, `fillOpacity`, and `rotate` can all bind to data fields. At the component layer, strings and numbers are syntax sugar: a string becomes `{ kind: 'field', value: FieldName }` when it matches a data field; if it does not match a field but is a valid constant, it becomes `{ kind: 'constant', value }`; otherwise it is skipped with a warning. Use the explicit form when you need to remove ambiguity.
+
+<ComponentPreview files={['point-style', 'point-api.data.ts']} />
+
+### Paint Styles
+
+Besides solid colors, `fill` / `stroke` can take `IRPaintSpec` objects. Constant paint lowers into the core `Node` default style; use `color` or field-bound paint when the color should be data-driven.
+
+<ComponentPreview files={['point-paint', 'point-api.data.ts']} />
+
+### Text Props
+
+For text attached to dots, prefer `label`: it writes to the core `Node.label` on each point, so a single `PointMark` can draw the dot and its label. `labelPosition`, `labelDistance`, and `labelPin` mirror core Node label placement, spacing, and leader lines. `text` is a different mode: it replaces the point itself with a borderless text Node, useful when the mark itself should be text. `dx` / `dy` apply a small screen-space offset.
+
+<ComponentPreview files={['point-text', 'point-api.data.ts']} />
+
+### Different Coordinates
+
+The examples below focus on how coordinates interpret position roles: PointMark itself stays unchanged, while `x` / `y` / `z` project to a line, ring, or triangle.
+
+#### 1D: Line And Polar
+
+1D coordinates consume only `x`. In cartesian1D it lands on a straight axis; in polar1D the same values land on a ring.
+
+<ComponentPreview files={['point-coordinate-1d', 'point-coordinates.data.ts']} />
+
+#### Ternary: Ternary Plot
+
+Ternary coordinates consume `x` / `y` / `z`, normalize each row, and project the result into a triangle.
+
+<ComponentPreview files={['point-coordinate-ternary', 'point-coordinates.data.ts']} />
+
+## How It Works
+
+`PointMark` is a built-in registered mark. The React `<PointMark>` component does not render DOM or draw points by itself; `<Plot>` collects it into mark IR with `type: 'point'` and records field channels such as `x` / `y` / `z`.
+
+At compile time, `lowerMark` looks up `MARK_REGISTRY` by `mark.type`. `PointMark` resolves to the `PlotMark.Point` entry, which calls `lowerPoint`. For each row, `lowerPoint` reads the position-channel values, asks the current coordinate frame to `projectRoles(...)`, then lowers the projected point into a core `Node`.
+
+This means scatter points ultimately reuse [@retikz/core Node](/kernel/components/node/overview); `PointMark` only computes positions from data and coordinates, while shape, size, fill, and text still come from core Node.
+
+For registration, focus on the `PointMark` registry entry and the `lowerPoint` function that performs the lowering:
+
+```ts
+[PlotMark.Point]: { type: PlotMark.Point, lower: lowerPoint },
+
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (mark.type !== PlotMark.Point) return null;
+  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, strokeOf, strokeWidthOf, labelOf } = channels;
+  const isText = mark.encoding.text !== undefined;
+  const dx = mark.dx ?? 0;
+  const dy = mark.dy ?? 0;
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
+    const row = rows[transformedIndex];
+    if (isText) {
+      // 文本点：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
+      const point = frame.projectRoles(roleValues(mark, row, frame));
+      if (!point) continue;
+      const text = labelOf?.(row);
+      if (text === undefined) continue;
+      const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
+      const base: IRNode = { type: 'node', position, text };
+      if (mark.zIndex !== undefined) base.zIndex = mark.zIndex;
+      placed.push({ color: colorOf?.(row), node: decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined) });
+      continue;
+    }
+    // 散点：锚点与 locator 共享同一 datumAnchor（point → frame.projectRoles），杜绝两套投影漂移
+    const point = datumAnchor(mark, row, frame);
+    if (!point) continue;
+    const base: IRNode = { type: 'node', position: point };
+    if (mark.zIndex !== undefined) base.zIndex = mark.zIndex;
+    const radius = sizeOf?.(row);
+    if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
+    const opacity = opacityOf?.(row);
+    if (opacity !== undefined) base.opacity = opacity;
+    const shape = shapeOf?.(row);
+    if (shape !== undefined) base.shape = shape;
+    const stroke = strokeOf?.(row);
+    if (stroke !== undefined) base.stroke = stroke;
+    const strokeWidth = strokeWidthOf?.(row);
+    if (strokeWidth !== undefined) base.strokeWidth = strokeWidth;
+    const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
+    placed.push({ color: colorOf?.(row), node });
+  }
+  if (placed.length === 0) return null;
+  const layer: IRScope = !colorOf
+    ? {
+        type: 'scope',
+        nodeDefault: isText ? textStyle(typeof mark.fill === 'string' ? mark.fill : defaultColor, mark) : pointStyle(mark.fill ?? defaultColor, mark),
+        children: placed.map(p => p.node),
+      }
+    : colorGroupedScope(placed, fill => (isText ? textStyle(fill, mark) : pointStyle(fill, mark)));
+  return attachMarkLayer(layer, mark, markProvenance);
+};
+```
+
+The function runs in four steps:
+
+1. Check that the mark is `PlotMark.Point`; otherwise return `null`.
+2. For each row, project the position through `datumAnchor` or `frame.projectRoles(...)`; rows that cannot be projected are skipped.
+3. Regular points become core `Node`s with optional `size`, `opacity`, `shape`, `stroke`, `strokeWidth`, or constant Node style; points with `label` fill `Node.label`, while text points become text Nodes.
+4. Finally, choose the layer structure from the `color` channel: without color encoding, all nodes share one `nodeDefault`; with color encoding, nodes are split into child `Scope`s by color before mark-layer metadata is attached.
+
+| Trait               | Behavior                                                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Coordinate-agnostic | The mark only consumes position roles; cartesian, polar, ternary, or custom coordinates decide how those roles are interpreted   |
+| One Node per row    | A regular scatter point becomes one datum Node; rows whose position cannot project to a screen point are skipped                 |
+| Shared styling      | Without color encoding, an outer `nodeDefault` shares default style; with `color`, nodes are grouped by color to keep IR compact |
+| Point-only channels | `size` / `opacity` / `shape` / `stroke` / `strokeWidth` only apply to `PointMark`, and are written onto each datum Node          |
+| Text variant        | Set `text` and the mark produces borderless text Nodes instead of dots, while reusing the same position projection               |
+
+### Layer Order
+
+Each mark lowers into its own scope by default, above grid lines and below axes, with zIndex `0`. `zIndex` remains the draw-order hint for datum Nodes inside the point layer; use `layer={{ zIndex }}` when you want to move the whole mark layer relative to axes, legends, or plot-level labels.
+
+## API
+
+`PointMark` props are grouped as Position, Specific, Node, Text, Label, General, and Custom: position fields decide the projected location, specific fields are consumed by PointMark itself, and node fields lower onto core `Node`. `FieldName` means a data field name or field path, such as `region` / `user.age`.
+
+Style bindings use one shared `MarkValueType<T>` type: `{ kind: 'field', value: FieldName } | { kind: 'constant', value: T }`. When a binding needs an explicit scale, use `MarkValueType<T> & { scale?: string }`. Single values such as `FieldName`, `number`, or `string` are component-level sugar that lowers into this structure.
+
+| Category | Prop                                                  | Type                                                                                                                                                                                                                                                            | Default                      | Description                                                                                                 |
+| -------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Position | `x` / `y` / `z`                                       | `FieldName?`                                                                                                                                                                                                                                                    | —                            | Coordinate role fields; the active coordinate validates required roles                                      |
+| Specific | `color`                                               | `FieldName`<br />`PointColorStyle?`                                                                                                                                                                                                                             | —                            | Mark semantic color; field bindings create a color channel and legend                                       |
+|          | `fill`                                                | `FieldName`<br />`IRPaintSpec`<br />`PointFillStyle?`                                                                                                                                                                                                           | `currentColor`               | Point fill; `color` takes over when bound                                                                   |
+|          | `stroke`                                              | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?`                                                                                                                                                                                                         | —                            | Point stroke paint; field bindings still go through a color scale                                           |
+| Node     | `size`                                                | `FieldName`<br />`number`<br />`PointSizeStyle?`                                                                                                                                                                                                                | —                            | Point-only radius channel; field values use a sqrt scale                                                    |
+|          | `shape`                                               | `FieldName`<br />`NodeShapeChannelValue`<br />`PointShapeStyle?`                                                                                                                                                                                                | —                            | Point-only shape channel; categorical fields map to point shapes                                            |
+|          | `textColor`                                           | `FieldName`<br />`PointColorStyle?`                                                                                                                                                                                                                             | —                            | Text color for text points                                                                                  |
+|          | `opacity` / `fillOpacity`<br />`strokeOpacity`        | `MarkValueProp<number>`<br />`PointOpacityStyle`                                                                                                                                                                                                                | —                            | Whole-node, fill, and stroke opacity                                                                        |
+|          | `strokeWidth`                                         | `FieldName`<br />`number`<br />`PointStrokeWidthStyle?`                                                                                                                                                                                                         | —                            | Stroke width for point or cell nodes                                                                        |
+|          | `rotate` / `zIndex`                                   | `MarkValueProp<number>`<br />`PointNumberStyle`<br />`PointZIndexStyle`                                                                                                                                                                                         | —                            | Rotation and draw-order hint                                                                                |
+|          | `padding` / `minimumSize`                             | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                                                                                                                                                      | —                            | Node padding and minimum visual size                                                                        |
+|          | `minimumSize`                                         | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`                                                                                                                                                                                                      | —                            | Minimum visual size                                                                                         |
+|          | `align`<br />`lineHeight` / `maxTextWidth`            | `MarkValueProp<NodeTextAlignValue>`<br />`NodeTextAlignStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle`                                                                                                                                       | —<br />—                     | Text layout channels                                                                                        |
+|          | `cornerRadius`<br />`scale`                           | `MarkValueProp<number>`<br />`PointNonnegativeNumberStyle`<br />`MarkValueProp<number>`<br />`NodePositiveNumberStyle`                                                                                                                                          | —<br />—                     | Node corner radius and scaling                                                                              |
+|          | `padding` / `margin`                                  | `MarkValueProp<number \| IRBoxSpacing>`<br />`NodeBoxSpacingStyle`                                                                                                                                                                                              | —                            | Node spacing channels                                                                                       |
+|          | `dashed` / `dotted`<br />`dashPattern`                | `MarkValueProp<boolean>`<br />`NodeBooleanStyle`<br />`MarkValueProp<Array<number>>`<br />`NodeDashPatternStyle`                                                                                                                                                | —<br />—                     | Node stroke dash channels                                                                                   |
+|          | `font`<br />`boundary`<br />`shadow`<br />`blendMode` | `MarkValueProp<IRFont>`<br />`NodeFontStyle`<br />`MarkValueProp<IRBoundary>`<br />`NodeBoundaryStyle`<br />`MarkValueProp<ShadowPresetValue>`<br />`MarkValueProp<IRDropShadow>`<br />`ShadowStyle`<br />`MarkValueProp<BlendModeValue>`<br />`BlendModeStyle` | —<br />—<br />—<br />—       | Font, boundary, shadow, and blend mode                                                                      |
+| Text     | `text`                                                | `FieldName?`                                                                                                                                                                                                                                                    | —                            | Field bound to text content; replaces the point itself with a text Node                                     |
+|          | `displayFormat`                                       | `string?`                                                                                                                                                                                                                                                       | —                            | Format string for `text`                                                                                    |
+|          | `dx` / `dy`                                           | `number?`                                                                                                                                                                                                                                                       | `0`                          | Screen-space offset from the projected anchor                                                               |
+| Label    | `label`                                               | `FieldName?`                                                                                                                                                                                                                                                    | —                            | Field bound to host `Node.label`; keeps the point itself                                                    |
+|          | `labelDisplayFormat`                                  | `string?`                                                                                                                                                                                                                                                       | —                            | Display format string for `label`                                                                           |
+|          | `labelPosition`<br />`labelDistance`<br />`labelPin`  | `string / number`<br />`number`<br />`boolean / LabelPin`                                                                                                                                                                                                       | `top`<br />`12`<br />`false` | Label side, spacing, and leader line                                                                        |
+|          | `labelTextColor`<br />`labelOpacity`<br />`labelFont` | `string?`<br />`number?`<br />`IRFont?`                                                                                                                                                                                                                         | —<br />—<br />—              | Label text color, opacity, and font                                                                         |
+|          | `labelRotate`<br />`labelKeepUpright`                 | `string / number?`<br />`boolean?`                                                                                                                                                                                                                              | —<br />—                     | Label rotation and upright handling                                                                         |
+|          | `resolveLabel`                                        | `(row) => string?`                                                                                                                                                                                                                                              | —                            | Runtime label resolver; not in IR, requires `id`                                                            |
+| General  | `id`                                                  | `string?`                                                                                                                                                                                                                                                       | —                            | Optional mark handle for layer ids / runtime label resolution                                               |
+|          | `transform`                                           | `Array<IRPlotTransform>?`                                                                                                                                                                                                                                       | —                            | Mark-local data transform; runs after the plot-level transform and only changes the rows seen by this layer |
+| Custom   | `channels`                                            | `Record<string, Channel>`                                                                                                                                                                                                                                       | —                            | Custom channel bindings; resolved by registered channel definitions                                         |
+
+## Related
+
+- [PathMark](/viz/plot/mark/path) — a trend line under the dots
+- [Coordinates](/viz/plot/coordinate) — how PointMark draws a rug (cartesian1D) / ring (polar1D) / ternary scatter (ternary2D)
+- [Scales](/viz/plot/scale) — the square-root scale size uses, and the continuous scale family

@@ -7,7 +7,8 @@ import { Layout } from '@retikz/react';
 import type { ComponentPreviewFileConfig, ComponentRenderSource, PreviewSourceConfig, RendererMode } from '../types';
 import type { PreviewIR } from '../utils';
 
-import { buildPreviewIR, buildReactSourceFiles, formatIR, irHasComposite, irToVanillaCode } from '../utils';
+import { buildPreviewIR, buildReactSourceFiles, formatIR, irHasComposite } from '../utils';
+import { buildVanillaPreview } from '../vanilla-preview';
 import { RawSvgFrame } from './RawSvgFrame';
 
 /** 构建组件预览源码视图所需的输入。 */
@@ -91,12 +92,12 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     irJson = irJsonOverride.replace(/\n$/, '');
     try {
       const ir = JSON.parse(irJson) as IRScene;
-      resolvedPreviewIr = { ir, width: undefined, height: undefined };
+      resolvedPreviewIr = { ir, contributions: [], width: undefined, height: undefined };
     } catch (error) {
       irJson = `// Failed to parse IR override: ${errorMessage(error)}`;
     }
   } else if (exportedPreviewIR !== undefined) {
-    resolvedPreviewIr = { ir: exportedPreviewIR, width: undefined, height: undefined };
+    resolvedPreviewIr = { ir: exportedPreviewIR, contributions: [], width: undefined, height: undefined };
     irJson = formatIR(exportedPreviewIR);
   } else if (previewSource?.canonicalRender !== undefined) {
     try {
@@ -132,18 +133,17 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     }
   }
 
+  const automaticVanilla =
+    resolvedPreviewIr !== null && structureError === undefined ? buildVanillaPreview(resolvedPreviewIr) : undefined;
   let vanillaCode = '';
   if (vanillaOverride !== undefined) {
     vanillaCode = vanillaOverride.replace(/\n$/, '');
   } else if (structureError !== undefined) {
     vanillaCode = `// Failed to generate vanilla code: ${errorMessage(structureError)}`;
-  } else if (resolvedPreviewIr !== null && !hasComposite) {
-    try {
-      vanillaCode = irToVanillaCode(resolvedPreviewIr.ir);
-    } catch (error) {
-      vanillaCode = `// Failed to generate vanilla code: ${errorMessage(error)}`;
-    }
+  } else if (automaticVanilla !== undefined) {
+    vanillaCode = automaticVanilla.code;
   }
+  const resolvedVanillaSvg = vanillaOverride !== undefined ? vanillaSvg : (vanillaSvg ?? automaticVanilla?.svg);
 
   const source: ComponentRenderSource = {
     react: { files: reactFiles },
@@ -170,10 +170,10 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
       ? {
           vanilla: {
             files: [{ filename: `${name}.vanilla.ts`, code: vanillaCode, lang: 'ts' as const }, ...extraSourceFiles],
-            ...(vanillaSvg !== undefined
+            ...(resolvedVanillaSvg !== undefined
               ? {
                   rendererMode: 'svg' as const,
-                  render: () => <RawSvgFrame svg={vanillaSvg} />,
+                  render: () => <RawSvgFrame svg={resolvedVanillaSvg} />,
                 }
               : {}),
           },

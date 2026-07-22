@@ -1,0 +1,39 @@
+---
+title: Binning & Stat Layers
+description: Binning and stat layers show how plot cuts continuous fields into histogram bins and composes statistical graphics from ordinary marks.
+---
+
+This page covers only plot-registered statistical drawing capabilities. General group summaries and representative-row selection live under [Data Transforms](/viz/data/transform): `summarize` generates grouped statistic rows, and `select` preserves representative original rows.
+
+| capability             | output rows                            | common use                                  |
+| ---------------------- | -------------------------------------- | ------------------------------------------- |
+| `bin`                  | one row per interval                   | Histograms, distribution overviews          |
+| Stat-layer composition | Several marks consume statistic fields | Boxplots, outlier points, statistical bands |
+
+## bin
+
+`bin` cuts a continuous field into intervals and outputs one row per bin. Output rows include the bin lower bound, upper bound, and metric fields. The default metric is `{ kind: 'count', as: 'binCount' }`.
+
+<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} />
+
+`IntervalMark` reads `x0` / `x1` for bin edges, drawing adjacent histogram bars on a continuous x axis. `y` reads `binCount` or a custom metric field for height.
+
+| prop                      | type                | default               | description                                                            |
+| ------------------------- | ------------------- | --------------------- | ---------------------------------------------------------------------- |
+| `field`                   | `string`            | —                     | Continuous source field to bin                                         |
+| `count`                   | `number?`           | `10`                  | Target bin count; mutually exclusive with `step` / `thresholds`        |
+| `step`                    | `number?`           | —                     | Fixed bin width; mutually exclusive with `count` / `thresholds`        |
+| `thresholds`              | `Array<number>?`    | —                     | Explicit internal boundaries; mutually exclusive with `count` / `step` |
+| `extent`                  | `[number, number]?` | observed min/max      | Override the binning domain                                            |
+| `metrics`                 | `Array<Reducer>?`   | `count -> binCount`   | Per-bin statistics, reusing data reducers                              |
+| `startField` / `endField` | `string?`           | `binStart` / `binEnd` | Output edge field names                                                |
+
+## Stat-Layer Composition
+
+Statistical transforms produce rows; ordinary marks still draw the graphic. A boxplot is a composition: `quantile-band` generates box, median, and whisker fields, while `outside-quantile-band` keeps outlier original points.
+
+This composition uses data transforms to prepare statistic rows, then lets ordinary plot marks consume them. The full example lives under [Statistical Sub-operators](/viz/data/transform/statistics); this page only explains how plot draws those statistic fields as layers.
+
+## Relationship To Data Transforms
+
+`bin` is plot-registered because it targets histogram interval fields and statistical drawing composition, but its `metrics` reuse data reducers. For ordinary grouped statistic rows, use [Data Transforms / summarize](/viz/data/transform/operations#summarize). For representative original rows, use [Data Transforms / select](/viz/data/transform/operations#select).

@@ -139,8 +139,12 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     pinControlsOnClick,
   } = props;
   const { direction, workspaceRef } = usePreviewWorkspaceDirection();
-  const panelSizeRef = useRef(DEFAULT_CONTROL_PANEL_SIZE);
-  const [panelSize, setPanelSize] = useState(DEFAULT_CONTROL_PANEL_SIZE);
+  const defaultControlPanelSize =
+    definition?.presentation === 'panel'
+      ? (definition.defaultSize ?? DEFAULT_CONTROL_PANEL_SIZE)
+      : DEFAULT_CONTROL_PANEL_SIZE;
+  const panelSizeRef = useRef(defaultControlPanelSize);
+  const [panelSize, setPanelSize] = useState(defaultControlPanelSize);
   const mobileResizeStartRef = useRef<MobileControlPanelResizeStart | null>(null);
   const [mobileControlPanelHeight, setMobileControlPanelHeight] = useState(DEFAULT_MOBILE_CONTROL_PANEL_HEIGHT);
 
