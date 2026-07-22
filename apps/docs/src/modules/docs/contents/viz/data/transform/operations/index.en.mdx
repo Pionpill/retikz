@@ -1,0 +1,108 @@
+---
+title: Transform Operations
+description: Look up the row semantics, parameters, and examples for Data's sort, summarize, select, and annotate transforms.
+---
+
+`@retikz/data` provides four general-purpose operations. They process canonical rows without knowing whether the result will feed a chart, table, or another consumer; this page uses Plot only as the default example host.
+
+## Capabilities
+
+| kind        | Row count | Data meaning                             | Common use                                 |
+| ----------- | --------- | ---------------------------------------- | ------------------------------------------ |
+| `sort`      | N → N     | Stably reorder rows by a field           | Fix temporal order or prepare later input  |
+| `summarize` | N → G     | Generate one statistical row per group   | Group summaries and statistical abstracts  |
+| `select`    | N → K     | Select representative original rows      | Extremes, top-N, and outlier samples       |
+| `annotate`  | N → N     | Broadcast group stats or representatives | Mean lines, thresholds, and context layers |
+
+## sort
+
+`sort` stably reorders rows by one field. Equal values keep their original relative order, which is useful before line connection, time-series display, or later grouped processing.
+
+`null`, `undefined`, `NaN`, and infinities are treated as missing and remain after valid values in both ascending and descending order.
+
+Keep it separate from [`order`](/viz/data/model/contract#category-order) in the field contract: `sort` reorders rows, while `order` reorders a categorical domain.
+
+<ComponentPreview files={['transform-sort', 'transform-sort.data.ts']} />
+
+| prop    | type                           | default       | description |
+| ------- | ------------------------------ | ------------- | ----------- |
+| `field` | `string`                       | —             | Sort field  |
+| `order` | `'ascending' \| 'descending'?` | `'ascending'` | Direction   |
+
+## summarize
+
+`summarize` groups by `groupBy`, then reduces each group into one output row through `metrics`. The output row keeps the group keys, and every reducer must declare an `as` field name.
+
+Output names must be unique within one operation: reducer outputs cannot collide with `groupBy` or with each other. The schema rejects conflicts instead of silently overwriting data.
+
+<ComponentPreview files={['transform-summarize', 'transform-summarize.data.ts']} />
+
+| prop      | type             | default          | description                                       |
+| --------- | ---------------- | ---------------- | ------------------------------------------------- |
+| `groupBy` | `Array<string>?` | one global group | Group key fields; supports composite keys         |
+| `metrics` | `Array<Reducer>` | —                | Group statistics; every reducer must declare `as` |
+
+```tsx
+<Transform
+  kind="summarize"
+  groupBy={['region']}
+  metrics={[
+    { kind: 'sum', field: 'revenue', as: 'total' },
+    { kind: 'median', field: 'revenue', as: 'median' },
+    { kind: 'count', as: 'orders' },
+  ]}
+/>
+```
+
+## select
+
+`select` runs a selector per group and outputs the selected original rows. It does not reduce values into new statistical objects, so it preserves city names, ids, anchors, and other original fields while keeping only extremes, top-N rows, or outliers.
+
+<ComponentPreview files={['transform-select', 'transform-select.data.ts']} />
+
+| prop       | type             | default          | description                                  |
+| ---------- | ---------------- | ---------------- | -------------------------------------------- |
+| `groupBy`  | `Array<string>?` | one global group | Group key fields                             |
+| `selector` | `Selector`       | —                | Representative-row rule                      |
+| `rankAs`   | `string?`        | —                | Optional one-based rank field on output rows |
+
+```tsx
+<Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
+```
+
+## annotate
+
+`annotate` groups rows first, then broadcasts reducer results or selected representative values back to every row in the group. It is useful for group mean lines, median bands, or thresholds around detail rows.
+
+Selector annotations accept only built-in rules that select at most one row: `min` / `max`, `first` / `last` / `nth`, and `top` / `bottom` with `n: 1`. Tie handling may use the default `first` or `last`, but not `all`. Use `select` for multi-row selection and `outside-quantile-band`; express other scalar annotations as reducers.
+
+<ComponentPreview files={['transform-annotate', 'transform-annotate.data.ts']} />
+
+| prop        | type                             | default          | description                                   |
+| ----------- | -------------------------------- | ---------------- | --------------------------------------------- |
+| `groupBy`   | `Array<string>?`                 | one global group | Group key fields; supports composite keys     |
+| `metrics`   | `Array<Reducer>?`                | —                | Statistical metrics to broadcast to every row |
+| `selectors` | `Array<IRDataAnnotateSelector>?` | —                | Broadcast one representative                  |
+
+```tsx
+<Transform
+  kind="annotate"
+  groupBy={['store']}
+  metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}
+  selectors={[{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }]}
+/>
+```
+
+Metric outputs and selector `as` fields must also be unique within an `annotate` operation. See [Statistical Sub-operators](/viz/data/transform/statistics) for the full reducer and selector sets.
+
+## TypeScript Types
+
+Types inferred from transform schemas use the `IRDataXxx` convention.
+
+| Scope         | Types                                                                                                 |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| Overall union | `IRDataTransform`, `IRDataBuiltinTransform`                                                           |
+| Built-ins     | `IRDataSortTransform`, `IRDataSummarizeTransform`, `IRDataSelectTransform`, `IRDataAnnotateTransform` |
+| Nested config | `IRDataOrderBy`, `IRDataAnnotateSelector`                                                             |
+
+See [`Transform`](/viz/data/transform/overview) to declare these operations in Plot React, or [Extension Mechanisms](/viz/data/transform/extensions) to register a custom kind.

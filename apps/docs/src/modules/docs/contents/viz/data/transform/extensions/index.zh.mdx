@@ -1,0 +1,154 @@
+---
+title: 扩展机制
+description: 用运行时 Definition 扩展数据变换与统计子算子，同时保持 operation 配置可序列化。
+---
+
+数据变换的扩展点负责增加新的行处理 operation，或补充现有统计变换可调用的 reducer 与 selector。operation 只保存 `{ kind, ...config }`；schema 与执行函数保留在运行时 Definition 中，不进入可序列化配置。
+
+## 适用边界
+
+优先使用内置 operation。只有新的行处理语义需要稳定名称、配置校验和跨宿主复用时，才注册 Definition。
+
+| 扩展入口                  | 解决什么                         | 配置保存什么       |
+| ------------------------- | -------------------------------- | ------------------ |
+| `defineTransform`         | 重排、过滤、增删行或生成派生字段 | `{ kind, ... }`    |
+| `defineStatisticsReducer` | 把一组行归约为输出字段片段       | reducer operation  |
+| `defineRowSelector`       | 从一组行中选择保留的原始行       | selector operation |
+
+当现有 `summarize`、`select` 或 `annotate` 的结构已经适用，只缺一种统计计算或选行规则时，扩展 reducer / selector 即可。需要新的分组方式、多阶段处理或不同的行结构时，应定义完整 transform。
+
+## 定义数据操作
+
+`defineTransform` 通过 `schema` 提取唯一 `kind`，用 `inputFields` 与 `outputFields` 声明字段依赖，并在 `apply` 中处理行。`apply` 必须纯且确定，不能修改输入数组或输入行。
+
+下面的 `double-x` operation 读取 `x`、生成 `x2`，再由 Plot 作为示例宿主展示结果：
+
+<ComponentPreview files={['extension-transform', 'extension-transform.data.ts']} />
+
+内置与自定义 transform 会合并到同一个 registry，并按 `kind` 走同一套查找、schema 校验和执行流程。
+
+### 来源追溯
+
+保留行数的 transform 通常通过展开原行自然保留来源标记。改变行数且输出行代表一组源行时，应使用 `TransformContext.groupProvenance` 关联成员行；全新生成且没有对应源行的结果可以不附加来源。
+
+| 场景             | 推荐处理                                      |
+| ---------------- | --------------------------------------------- |
+| 重排或保留原始行 | 返回原行对象，或在展开原行后补充派生字段      |
+| 汇总多行生成一行 | 用 `groupProvenance(out, members)` 包装输出行 |
+| 生成无源数据     | 直接返回新行，并接受来源为空                  |
+
+启用来源追溯时，同一个 Definition 可能在普通下沉与记录链路时分别执行。因此随机或有状态逻辑应由宿主先固化输入，或在 Definition 外完成不确定计算。
+
+## 定义统计子算子
+
+reducer 与 selector 不是独立的管线步骤，而是由 `summarize`、`select`、`annotate` 等 transform 调用的子算子。
+
+| 子算子   | 核心函数 | 返回值               | 常见用途                 |
+| -------- | -------- | -------------------- | ------------------------ |
+| reducer  | `reduce` | 写入输出行的字段片段 | 自定义统计量、聚合字段   |
+| selector | `select` | 原始行与可选一基排名 | 代表行、极值行、排名选择 |
+
+下面的示例分别注册中点 reducer 和最接近均值的 selector。左图通过 `summarize` 生成统计行，右图通过 `select` 保留原始代表行：
+
+<ComponentPreview files={['extension-statistics', 'extension-statistics.data.ts']} />
+
+reducer 应通过 `inputFields` 与 `outputFields` 声明读写字段；selector 通过 `inputFields` 声明读取字段，并返回选中的原始行。若逻辑需要同时改变多种字段或组合多个阶段，应升级为完整 transform。
+
+## 注入宿主
+
+消费宿主负责把自定义 Definition 注入数据变换管线。以 Plot 为例：
+
+| 能力             | 注入入口                       | operation 引用方式      |
+| ---------------- | ------------------------------ | ----------------------- |
+| 自定义 transform | `transformDefinitions`         | `kind`                  |
+| 自定义 reducer   | `statisticsReducerDefinitions` | reducer operation.kind  |
+| 自定义 selector  | `rowSelectorDefinitions`       | selector operation.kind |
+
+其它消费模块可以在自己的 adapter 中提供等价入口；Definition 与 operation 契约本身属于 Data。
+
+## 执行机制
+
+```text
+注入 Definition → 合并内置与自定义 registry → 按 kind 查找 → schema 校验 → 执行
+```
+
+字段收集与实际执行使用同一 registry。`inputFields` 让严格数据模型校验扩展操作读取的源字段，`outputFields` 则标记管线生成的派生字段，避免要求它们预先出现在源数据模型中。
+
+## 错误与限制
+
+| 情况                               | 结果                  |
+| ---------------------------------- | --------------------- |
+| `kind` 与内置或另一自定义键重复    | registry 构建立即报错 |
+| operation 使用未注册 `kind`        | 执行前报未注册错误    |
+| operation 不满足 Definition schema | schema 校验失败       |
+| operation 含函数等非 JSON 值       | 可序列化校验失败      |
+
+Definition 只应实现数据行与统计语义。颜色、图元或布局等消费侧语义应放到对应模块的扩展点。
+
+## API 参考
+
+以下公开导出来自 `@retikz/data`：
+
+| 能力         | Definition 类型               | 定义函数                  |
+| ------------ | ----------------------------- | ------------------------- |
+| 数据操作     | `TransformDefinition`         | `defineTransform`         |
+| 统计 reducer | `StatisticsReducerDefinition` | `defineStatisticsReducer` |
+| 行 selector  | `RowSelectorDefinition`       | `defineRowSelector`       |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Transform Definition 契约',
+      path: 'packages/viz/data/src/contract/transform.ts',
+      startLine: 29,
+      endLine: 51,
+    },
+    {
+      label: '统计子算子 Definition 契约',
+      path: 'packages/viz/data/src/contract/statistics.ts',
+      startLine: 7,
+      endLine: 70,
+    },
+    {
+      label: 'Transform registry 合并规则',
+      path: 'packages/viz/data/src/providers/transform/definitions.ts',
+      startLine: 89,
+      endLine: 105,
+    },
+    {
+      label: '统计子算子 registry 合并规则',
+      path: 'packages/viz/data/src/providers/statistics/registry.ts',
+      startLine: 31,
+      endLine: 55,
+    },
+    {
+      label: 'Transform 查找、校验与执行',
+      path: 'packages/viz/data/src/pipeline/transform.ts',
+      startLine: 24,
+      endLine: 75,
+    },
+    {
+      label: 'Plot 中变换扩展的注入示例',
+      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
+      startLine: 88,
+      endLine: 96,
+    },
+  ]}
+/>
+
+## 相关
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <LinkedCard href="/viz/data/transform/operations">
+    <span className="font-semibold">变换操作</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">先确认内置 transform 是否已经覆盖需求。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/transform/statistics">
+    <span className="font-semibold">统计子算子</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 reducer 与 selector 的内置语义。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/data/model/extensions">
+    <span className="font-semibold">数据模型扩展</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">扩展字段格式与运行时字段解析。</span>
+  </LinkedCard>
+</div>

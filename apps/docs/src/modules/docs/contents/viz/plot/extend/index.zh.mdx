@@ -1,0 +1,54 @@
+---
+title: 扩展
+description: 扩展绘图语法——把通道、比例尺、坐标系和图元的长尾能力注册进同一套 plot lowering 流程。
+---
+
+这一分组讲怎么**扩展** plot 绘图语法。内置语法覆盖常见图表；当你要接入新的通道、比例尺、坐标投影或图元时，扩展 definition 会在运行时注入，并复用内置能力同一套解析、校验和 lowering（图形下沉）流程。
+
+数据格式、字段解析和数据 transform 属于[数据](/viz/data)：字段格式与字段解析见[数据模型扩展](/viz/data/model/extensions)，transform、reducer 与 selector 见[数据变换扩展](/viz/data/transform/extensions)。plot 可以消费这些 data 能力，但它们不再放在绘图语法的扩展分组里。
+
+> 扩展 definition 是宿主能力，不直接写进 Plot IR。IR 只保存可序列化的 type、name、字段绑定和 JSON 配置；函数、投影、求值器、lower 函数都由 `<Plot>` props 或 vanilla options 注入。
+
+## 职责一览
+
+| 主题         | 扩展什么                                              | 何时用                                                      |
+| ------------ | ----------------------------------------------------- | ----------------------------------------------------------- |
+| 自定义通道   | position / mark / scope / node / path 通道 definition | 需要新的 `encoding.channels.<name>`，把字段落到自定义视觉面 |
+| 自定义图元   | mark definition                                       | 需要新的几何层，把 rows 经 frame 投影后装配成 core IR       |
+| 自定义比例尺 | scale definition 与命名配色                           | 需要品牌色阶、领域映射或内置 scale 之外的值映射             |
+| 自定义坐标系 | coordinate definition                                 | 需要新的位置 role、投影函数、自定义轴或特殊空间             |
+
+## 三条边界
+
+- **数据与绘图分层**：真实数据、解析函数和数据 transform 属于数据层；PlotSpec 只记录绘图相关的字段绑定和可序列化配置。
+- **内置与自定义同机制**：自定义 definition 不走私有补丁口，而是和内置能力一起注册、解析、校验和消费。
+- **下沉仍回到 core**：自定义坐标系和图元可以决定几何怎么生成，但最终产物仍应是 core Node / Path / Coordinate / Scope 等基础图元。
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/extend/channel">
+    <span className="font-semibold">自定义通道</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      声明新的 channel definition，并接入现有绑定与交付路径。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/extend/mark">
+    <span className="font-semibold">自定义图元</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      用 mark definition 把数据行下沉成自己的 core IR 组合。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/extend/scale">
+    <span className="font-semibold">自定义比例尺</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      注入 position / channel scale definition，或补充命名配色。
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/extend/coordinate">
+    <span className="font-semibold">自定义坐标系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      把投影函数、role 和自定义轴留给运行时 definition。
+    </span>
+  </LinkedCard>
+</div>

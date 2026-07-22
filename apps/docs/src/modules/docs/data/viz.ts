@@ -13,8 +13,53 @@ export const vizSection: Array<Section> = [
     label: 'viz.data',
     document: true,
     pages: [
-      { id: 'model', label: 'viz.dataModel' },
-      { id: 'transform', label: 'viz.dataTransform' },
+      {
+        id: 'model',
+        label: 'viz.dataModel',
+        children: [
+          { id: 'contract', label: 'viz.dataModelContract' },
+          { id: 'intake', label: 'viz.dataModelIntake' },
+          { id: 'validation', label: 'viz.dataModelValidation' },
+          {
+            id: 'extensions',
+            label: 'viz.dataModelExtensions',
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'data.extensions',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
+      {
+        id: 'transform',
+        label: 'viz.dataTransform',
+        children: [
+          {
+            id: 'overview',
+            label: 'viz.dataTransformComponent',
+            meta: {
+              pageType: 'component',
+              audience: 'user',
+              capability: 'data.transform.component',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          { id: 'operations', label: 'viz.dataTransformOperations' },
+          { id: 'statistics', label: 'viz.dataTransformStatistics' },
+          {
+            id: 'extensions',
+            label: 'viz.dataTransformExtensions',
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'data.transform.extensions',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
       { id: 'provenance', label: 'viz.dataProvenance' },
     ],
   },
@@ -37,8 +82,9 @@ export const vizSection: Array<Section> = [
     ],
   },
   {
-    id: 'grammar',
+    id: 'plot',
     label: 'viz.drawingGrammar',
+    document: true,
     pages: [
       {
         id: 'channel',
@@ -95,6 +141,16 @@ export const vizSection: Array<Section> = [
           { id: 'axis', label: 'viz.compAxis' },
           { id: 'legend', label: 'viz.compLegend' },
         ],
+      },
+      {
+        id: 'lineage',
+        label: 'viz.plotLineage',
+        meta: {
+          pageType: 'concept',
+          audience: 'integrator',
+          capability: 'plot.lineage',
+          sourceOfTruth: 'runtime',
+        },
       },
       {
         id: 'extend',

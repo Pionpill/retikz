@@ -1,0 +1,62 @@
+---
+title: 通道
+description: 通道把字段或常量连接到图元属性：position 决定投影角色，mark / scope / node / path 决定可见属性如何消费。
+---
+
+通道回答的是“这个属性从哪里取值”。数据层会先把外部数据归一成 canonical row（规范行），通道再把字段或常量交给坐标、mark lowering（图形下沉）、core scope、core node、core path 和图例。`x` / `y` / `color` / `size` / `text` 共享同一套绑定模型，只是后续消费位置不同。
+
+## 心智模型
+
+通道不是最终画出来的属性，而是一条绑定关系：它先在 DSL 里露出一个名字，再在 PlotSpec 里保存字段或常量，最后被 grammar-of-graphics（图形语法）里的某个环节消费。
+
+<ComponentPreview files="channel-flow" size="md" hideCode />
+
+| 层次       | 展示形态                                                         | 作用                                           |
+| ---------- | ---------------------------------------------------------------- | ---------------------------------------------- |
+| React DSL  | `<PointMark x="gdp" color="region" />` 里的 prop                 | 给用户一个短名字，说明这个 mark 绑定了哪些字段 |
+| PlotSpec   | `encoding.x = { field: 'gdp' }` 或 `encoding.channels.intensity` | 保存 JSON 安全的字段 / 常量绑定                |
+| definition | `ChannelDefinitionKind.Position / Mark / Scope / Node / Path`    | 声明这个通道由谁消费、值如何解析、最后落到哪里 |
+
+从用户视角看，“某个 mark 支持的通道”通常就是这个 mark 组件的属性。内置常用通道会有具名 props；自定义通道先走 `encoding.channels.<name>`，再由 `channelDefinitions` 注入运行时 definition。
+
+## 谁消费通道
+
+plot 的 GoG 层里，不只 mark 会消费通道。通道会被多个环节读取，但每个环节关心的问题不同：
+
+| 消费者     | 读取什么                                        | 目的                                                       |
+| ---------- | ----------------------------------------------- | ---------------------------------------------------------- |
+| data model | 所有 field-bound channel                        | 推断字段类型，给 scale 和错误信息提供依据                  |
+| transform  | `x` / `y` / `series` / `order` 等字段           | stack、dodge、sort、bin 等步骤需要知道分组、顺序或数值来源 |
+| scale      | position / color / size / opacity 等字段        | 收集 domain，把原始值映射成坐标、颜色、半径或透明度        |
+| coordinate | position channel：`x` / `y` / `z` / 自定义 role | 决定位置分量如何投影到画布                                 |
+| mark       | mark / scope / node / path 通道解析结果         | 决定图元形态，并把样式下沉到 core 元素                     |
+| guide      | channel descriptor                              | 生成 axis / legend，用来解释某个通道的 scale               |
+
+所以通道的作用可以概括成三件事：声明“读哪个值”、让 scale / coordinate / guide 有共同的字段来源、让 mark 把解析后的值应用到正确的可见面。
+
+## 职责
+
+| 主题       | 职责                                                                                                                                    | 何时查看                                             |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 通道绑定   | 字段 / 常量如何出现在 mark props 或 `encoding` 中                                                                                       | 想确认 `x="date"`、`color="region"`、`y={80}` 的含义 |
+| 内置通道   | position / mark / scope / node / path 通道分别由谁消费                                                                                  | 想判断 `color`、`size`、`strokeWidth` 应该归到哪里   |
+| 自定义通道 | 用 `defineScopeChannel` / `defineNodeChannel` / `definePathChannel` / `defineChannel` 声明 definition，再通过 `channelDefinitions` 注册 | spec 需要 `encoding.channels.<name>`                 |
+
+position 通道会被坐标重新解释：同样的 `x` / `y` 在 `cartesian2D` 中表示水平 / 垂直，在 `polar2D` 中可以表示角度 / 半径。`color` 是 mark 通道，因为不同 mark 会把它落到 node fill、文本颜色、path stroke 或 path fill。`size`、`shape` 是 node 通道；`opacity`、`strokeWidth` 这类共享样式会按 mark 的消费面落到 scope / node / path。
+
+## 主题
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/plot/channel/binding">
+    <span className="font-semibold">通道绑定</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      把字段或常量绑定到 x、y、color、size、text 等通道
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot/channel/builtin">
+    <span className="font-semibold">内置通道</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      理解 mark / scope / node / path 通道、默认 scale 和图例形式
+    </span>
+  </LinkedCard>
+</div>

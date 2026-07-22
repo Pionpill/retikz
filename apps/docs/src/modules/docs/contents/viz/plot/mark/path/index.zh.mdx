@@ -1,0 +1,196 @@
+---
+title: PathMark
+description: PathMark 是有序点形成的一维轨迹；折线、闭合路径、多系列线和雷达线框都是它在不同配置下的表现形态。
+---
+
+`<PathMark>` 为一组数据行生成一条 1D 轨迹。它先把每行数据投影成点，再按 `order` 排序并连接成 core `Path`；在 cartesian2D 下常表现为折线，在 polar2D 下可以表现为极坐标路径或雷达线框。
+
+`x` / `y` 绑定位置通道，`order` 决定连接顺序，`series` 决定是否拆成多条路径，`curve` 决定相邻点的连接方式，`closure` 决定路径是否按 baseline 或首尾闭合。当前 PathMark 支持二维笛卡尔坐标系和二维极坐标系。
+
+## 用法
+
+```tsx
+import { PathMark, Plot } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue}>
+  <PathMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`order` 推荐显式写。否则 PathMark 会按数据数组顺序连点，只要数据排序变化，路径形状也会变化。
+
+## 表现层
+
+PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D 轨迹。它不关心这条轨迹最终被命名为折线图、趋势线、轮廓线还是雷达线框；这些都是表现层对同一个 PathMark 的解释。
+
+表现层的差异主要来自三类配置：位置通道决定点从哪里来，系列通道决定拆成几条线，几何属性决定路径只是闭合线框，还是闭合成可填充区域。
+
+| 表现形态 | 关键属性            | 说明                                                                             |
+| -------- | ------------------- | -------------------------------------------------------------------------------- |
+| 折线     | `x` / `y` / `order` | 每行投影成点，按顺序连接成一条轨迹                                               |
+| 多系列线 | `series` / `color`  | 先按系列拆分数据，再分别生成多条路径                                             |
+| 雷达线框 | `polar2D`           | 极坐标下默认首尾相接；需要开放路径时写 `closed={false}`                          |
+| 路径区域 | `closure` / `fill`  | 按首尾、常量 baseline 或逐行 stack baseline 闭合路径；显式设置 `fill` 后填充结果 |
+
+## 例子
+
+### 位置属性
+
+`x` / `y` 决定路径经过哪些点，`order` 决定这些点的连接顺序。左侧是二维笛卡尔坐标，右侧是二维极坐标，用同一组数据对比位置通道在不同坐标系下的投影。
+
+<ComponentPreview files={['line-basic', 'line-basic.data.ts']} />
+
+### 系列属性
+
+给 `series` 一个字段，数据会先按该字段拆成多组，每组保留独立渲染分组并承载一个或多个连续 Path 段。SVG 使用 `<g>`，Canvas 复用相同层级。这个例子显式按 `city` 拆分，左侧看多系列折线，右侧看同一组系列在极坐标下形成的线框。
+
+<ComponentPreview files={['line-series', 'line-series.data.ts']} />
+
+不写 `series`、只给 `color` 一个分类字段时，PathMark 也会按该字段隐式拆系列。这个例子换成另一组数据，突出“颜色字段本身就是系列字段”的紧凑写法。
+
+<ComponentPreview files={['line-color-split', 'line-series.data.ts']} />
+
+### 图元局部变换
+
+`transform` 写在 PathMark 上时，只改变这条路径层看到的数据。下面的点层保留每个渠道的原始值，深色路径层只在当前图元内执行 `smooth`，再把采样出的趋势行连成路径。
+
+<ComponentPreview files={['line-transform', 'line-transform.data.ts']} />
+
+### 填充与描边
+
+`stroke` 和 `fill` 都可以写成 `IRPaintSpec`。左侧把线性渐变用在描边上；右侧先用 `closure={{ kind: 'baseline' }}` 生成可填充面积层，再把渐变交给 `fill`，最后叠一条只描边的 PathMark 作为上边界。
+
+<ComponentPreview files={['line-paint', 'line-basic.data.ts']} />
+
+### 几何属性
+
+`closed` 会让末点回连首点。在 `polar2D` 下，PathMark 默认闭合；左侧省略 `closed` 也会形成雷达线框，右侧显式写 `closed={false}` 才会保持开放路径。
+
+<ComponentPreview files={['line-radar', 'line-radar.data.ts']} />
+
+### 连接方式
+
+`curve` 控制相邻点之间如何连接。左侧是二维笛卡尔坐标，右侧是二维极坐标；切换连接方式时，两边会同步更新。极坐标下不额外设置内部半径，PathMark 会按角向和径向位置直接投影。`monotoneX` / `monotoneY` 依赖投影后的屏幕 x / y 单调，在 polar2D 下会自动降级为 `linear`，避免闭合区域产生过长控制柄。
+
+<ComponentPreview files={['line-curve', 'line-curve.data.ts']} size="md" />
+
+| 值           | 说明     | 表现                                                              |
+| ------------ | -------- | ----------------------------------------------------------------- |
+| `linear`     | 直线连接 | 最忠实于相邻点之间的折线关系，适合强调逐段变化                    |
+| `step`       | 中点阶梯 | 在两个 x 位置中间切换 y 值，适合状态或库存类数据                  |
+| `stepBefore` | 前置阶梯 | 先切换到新值，再沿 x 方向推进，适合“新值立即生效”的序列           |
+| `stepAfter`  | 后置阶梯 | 先保持旧值，到下一个 x 位置再切换，适合“旧值持续到下一时刻”的序列 |
+| `basis`      | 平滑样条 | 曲线最柔和，但不保证穿过每个中间点，适合表现整体趋势              |
+| `cardinal`   | 基数样条 | 穿过数据点，曲率比直线自然，但局部极值可能略有过冲                |
+| `catmullRom` | 穿点平滑 | 穿过数据点，并更多保留局部形状，适合一般平滑折线                  |
+| `monotoneX`  | 横向单调 | x 单调时尽量避免曲线超过相邻点的 y 极值，BI 趋势线优先用它        |
+| `monotoneY`  | 纵向单调 | y 单调时尽量避免曲线超过相邻点的 x 极值，适合竖向轨迹             |
+| `natural`    | 自然样条 | 整体连续且端点更放松，适合追求连续曲率的趋势表达                  |
+
+### 路径区域
+
+`closure` 只让 PathMark 闭合成可填充路径，不会自动开启填充。`stroke` 默认开启，写 `stroke="none"` 可以关闭边框线；`fill` 默认关闭，写具体颜色或 paint 后才填充内容。左侧的面积效果由两层 PathMark 组合：一层 `baseline + fill + stroke="none"` 负责填充，另一层普通 path 负责上边界描边；右侧使用 `cycle + fill` 填充雷达多边形。左上角可以切换 `curve`，默认是直线连接；baseline / stack 的回程下边界也会使用同一个连接方式。
+
+<ComponentPreview files={['line-closure', 'line-closure.data.ts']} controls={{ name: 'line-curve' }} size="md" />
+
+`baseline` 省略时会跟随值轴：0 落在值轴 domain 内就使用 0；如果显式 domain 不包含 0，例如 `[30, 80]`，则使用离 0 最近的 domain 边界 30。需要固定到其它值时再显式传 `closure={{ kind: 'baseline', baseline: ... }}`。
+
+堆叠面积可以把上边界绑定到 `y`，再把下边界字段交给 `closure.baselineField`。这个字段可以来自 stack transform，也可以像示例一样来自预先算好的 `y0` / `y1`；示例同样用填充层和描边层组合出面积图效果。设置 `curve` 时，上下两条边界都会按同一种方式连接。
+
+<ComponentPreview files={['line-stack-area', 'line-stack-area.data.ts']} controls={{ name: 'line-curve' }} size="md" />
+
+### 路径中断
+
+当某一行无法投影成有效点时，PathMark 默认会在这里断开，并为前后两段分别生成 core `Path`。如果路径同时设置了 `closure` 和 `fill`，填充也按同样的段落拆开，不会跨过缺失点铺满中间空档。
+
+这个例子里 `Yasin` 的 2019 年数据缺失，因此线和填充都会在 2018 到 2020 之间断开。确实需要跨过缺口连接时，再显式设置 `connectNulls`。
+
+<ComponentPreview files={['line-interruption', 'line-interruption.data.ts']} size="md" />
+
+## 技术原理
+
+`PathMark` 是一个内置注册图元。React 里的 `<PathMark>` 本身不渲染 DOM；`<Plot>` 会在构造 `PlotSpec` 时把它收集成 `type: 'path'` 的 mark IR，并记录 `x` / `y` / `order` / `series` / `closed` / `closure` 等配置。
+
+编译时，`lowerMark` 按 `mark.type` 查询 `MARK_REGISTRY`，`PathMark` 命中 `PlotMark.Path` 对应的 `lowerPathLayer`。`lowerPathLayer` 只接受 cartesian2D / polar2D，然后调用 `lowerPath`：它先按系列拆分数据，再按可投影的连续段拆分，每个连续段下沉为一个 core `Path`。
+
+注册部分只需要看 `PathMark` 对应的注册行，以及真正执行下沉的 `lowerPathLayer` / `lowerPath`：
+
+```ts
+[PlotMark.Path]: { type: PlotMark.Path, lower: lowerPathLayer },
+
+const lowerPathLayer = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  const layer = lowerPath(mark, rows, frame, channels.colorOf, channels.defaultColor, markProvenance);
+  return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+};
+
+const lowerPath = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  if (mark.type !== PlotMark.Path) return null;
+  const closure = mark.closure;
+  const closed = mark.closed ?? isPolarCoordinateFrame(frame);
+  const seriesField = pathSeriesField(mark, rows);
+  const buildSegments = (segmentRows: Array<ExternalRow>) =>
+    closure
+      ? buildClosureStepSegments(mark, segmentRows, frame, closure, closed)
+      : buildLineStepSegments(mark, segmentRows, frame, closed);
+  if (seriesField) {
+    const seriesScopes = buildSeriesPathScopes(mark, rows, seriesField, buildSegments, paintOfSeries, markProvenance);
+    return seriesScopes.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: seriesScopes };
+  }
+  const segments = buildSegments(rows);
+  if (segments.length === 0) return null;
+  const colorValue = mark.encoding.color?.value;
+  const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
+  return {
+    type: 'scope',
+    pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH },
+    children: segments.map(segment => ({ type: 'path', children: segment.steps })),
+  };
+};
+```
+
+这段逻辑可以拆成四步：
+
+| 步骤       | 说明                                                                                                                                    |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 坐标系校验 | PathMark 需要二维轨迹几何；当前只在 cartesian2D / polar2D 下下沉                                                                        |
+| 排序与投影 | `orderRows` 决定连接顺序，`frame.project(...)` 把位置通道投影成屏幕点                                                                   |
+| 系列拆分   | `series` 显式优先；没有 `series` 但有分类 `color` 时，按 `color` 隐式拆系列                                                             |
+| core 下沉  | 每个系列生成独立 `Scope`，连续段生成子 `Path`；`closed` 追加线框闭合段（polar2D 缺省闭合），`closure` 构建闭合路径，`fill` 决定是否填充 |
+
+## API
+
+`PathMark` 的 API 按位置、专属、路径、标签、通用和自定义分组：位置字段决定轨迹点，专属字段负责拆系列、连接方式和闭合路径，路径字段下沉到 core `Path`。表里的 `FieldName` 表示数据字段名或字段路径，例如 `month` / `city`。路径标签是 core geometry label 宿主，`label` 不写 `kind`，由 PathMark 自己推断。
+
+| 分类   | 属性                                         | 类型                                                                                                                  | 默认值                                    | 描述                                                                                                                    |
+| ------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 位置   | `x` / `y`                                    | `FieldName`                                                                                                           | —                                         | 坐标角色字段；cartesian2D 中是平面点，polar2D 中解释为角向 / 径向                                                       |
+| 专属   | `color`                                      | `FieldName?`                                                                                                          | `series`                                  | 颜色字段；无显式 `series` 时可按分类颜色隐式拆系列                                                                      |
+|        | `order`                                      | `FieldName?`                                                                                                          | 数据顺序                                  | 驱动连接顺序的字段                                                                                                      |
+|        | `series`                                     | `FieldName?`                                                                                                          | —                                         | 按字段拆成多条路径                                                                                                      |
+|        | `curve`                                      | `PathCurveValue?`                                                                                                     | `linear`                                  | 相邻点连接方式；支持直线、阶梯、样条和单调曲线，polar2D 下 `monotoneX` / `monotoneY` 会降级为 `linear`                  |
+|        | `closed`                                     | `boolean?`                                                                                                            | cartesian2D: `false`<br />polar2D: `true` | 末点回连首点，形成闭合路径；极坐标下写 `false` 可保留开放路径                                                           |
+|        | `connectNulls`                               | `boolean?`                                                                                                            | `false`                                   | 是否跨过缺失 / 无效点继续连接；默认断开并拆成多个 core `Path`                                                           |
+|        | `closure`                                    | `{ kind: 'cycle' }`<br />`{ kind: 'baseline'; baseline?: number }`<br />`{ kind: 'stack'; baselineField: FieldName }` | —                                         | 构建闭合路径；`baseline` 省略时取值轴基础值，显式传入时使用常量下边界，`stack` 读取逐行下边界字段                       |
+| 路径   | `stroke` / `fill`                            | `FieldName`<br />`IRPaintSpec`<br />`PointStrokeStyle?` / `PointFillStyle?`                                           | `currentColor` / —                        | 路径描边和闭合路径填充样式；`stroke="none"` 可关闭边框线，`fill` 省略则不填充                                           |
+|        | `strokeWidth`<br />`opacity` / `fillOpacity` | `PointNonnegativeNumberStyle?`<br />`PointOpacityStyle?`                                                              | —<br />—                                  | 路径描边宽度、整体透明度和填充透明度                                                                                    |
+|        | `strokeOpacity`<br />`zIndex` / `rotate`     | `PointOpacityStyle?`<br />`PointZIndexStyle?`<br />`PointNumberStyle?`                                                | —<br />—<br />—                           | 描边透明度、绘制顺序和旋转                                                                                              |
+|        | `roundedCorners`                             | `MarkValueProp<number>`                                                                                               | —                                         | step 转角圆角                                                                                                           |
+|        | `lineCap` / `lineJoin`                       | `FieldName / LineCapValue`<br />`FieldName / LineJoinValue`                                                           | —<br />—                                  | 线帽与连接样式                                                                                                          |
+|        | `scale`<br />`fillRule` / `thickness`        | `PathScaleStyle?`<br />`PathFillRuleStyle?`<br />`PathThicknessStyle?`                                                | —<br />—<br />—                           | 路径缩放、填充规则和厚度预设                                                                                            |
+|        | `marks`                                      | `RelationPathSpecificOptions['marks']?`                                                                               | —                                         | 静态 core path marks，可用于端点箭头                                                                                    |
+|        | `dashPattern`<br />`shadow` / `blendMode`    | `NodeDashPatternStyle?`<br />`ShadowStyle?`<br />`BlendModeStyle?`                                                    | —<br />—<br />—                           | 虚线、阴影和混合模式                                                                                                    |
+| 标签   | `label`                                      | `MarkGeometryLabel`<br />`Array<MarkGeometryLabel>?`                                                                  | —                                         | 给路径段挂几何标签；内容写在 `content.field` / `content.value`，`position`、`side`、`distance` 复用 core geometry label |
+|        | `resolveLabel`                               | `(row) => string?`                                                                                                    | —                                         | 运行时覆盖标签内容；需要同时设置 `id`，不进入 PlotSpec                                                                  |
+| 通用   | `id`                                         | `string?`                                                                                                             | —                                         | 可选 mark 句柄，用于图层 id / 运行时标签解析                                                                            |
+|        | `transform`                                  | `Array<IRPlotTransform>?`                                                                                             | —                                         | 当前图元局部的数据变换；在 plot 级 transform 之后执行，只影响这一层看到的 rows                                          |
+| 自定义 | `channels`                                   | `Record<string, Channel>`                                                                                             | —                                         | 自定义通道入口；交给注册的 channel definition 解析                                                                      |
+
+## 相关
+
+- [PointMark](/viz/plot/mark/point) —— 叠在路径上标出每个观测点
+- [坐标系](/viz/plot/coordinate) —— cartesian2D / polar2D 如何解释位置角色

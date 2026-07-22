@@ -1,0 +1,68 @@
+---
+title: 统计子算子
+description: 用 reducer 生成统计字段，用 selector 保留原始代表行，并组合分位区间、须线与异常点。
+---
+
+reducer 与 selector 是数据变换内部复用的统计子算子。reducer 把一组行规约成字段片段；selector 从组内返回原始行。它们都是 JSON 可序列化配置，由内置或自定义 Definition 执行。
+
+`summarize`、`annotate` 以及 Plot 注册的 `bin` 会复用 reducer；`select`、`annotate` 以及 Plot 注册的 `relate` 会复用 selector。Plot 只是这些能力的消费者，不拥有 Data 的统计契约。
+
+## 如何选择
+
+| 目标                                 | 使用                  | 返回什么                       |
+| ------------------------------------ | --------------------- | ------------------------------ |
+| 计算总和、均值、分位数等新字段       | reducer               | 由 `as` / `outputs` 命名的字段 |
+| 保留极值、top-N 或异常点的完整原始行 | selector              | 原始行及其 id、标签等字段      |
+| 把单值统计广播回每条明细             | `annotate` + reducer  | 带统计字段的原始行             |
+| 把某条代表行的值广播回组内           | `annotate` + selector | 带代表值字段的原始行           |
+
+## Reducer
+
+| kind            | 读取配置                                | 输出配置  | 语义                                    |
+| --------------- | --------------------------------------- | --------- | --------------------------------------- |
+| `count`         | —                                       | `as`      | 组内行数                                |
+| `sum`           | `field`                                 | `as`      | 有限数值之和                            |
+| `mean`          | `field`                                 | `as`      | 算术平均                                |
+| `median`        | `field`                                 | `as`      | 中位数                                  |
+| `min` / `max`   | `field`                                 | `as`      | 最小值 / 最大值                         |
+| `extent`        | `field`                                 | `as`      | `[min, max]` 区间                       |
+| `quantile`      | `field`、`p`                            | `as`      | 概率 `p` 对应的单个分位点               |
+| `quantile-band` | `field`、`lowerP`、`upperP`、`whisker?` | `outputs` | 分位区间及可选 spread、须线、极值与计数 |
+
+普通 reducer 都用 `as` 指定一个输出字段。`quantile-band` 一次产生多个关联字段，因此改用 `outputs` 显式命名：`lower`、`upper` 必填，`points`、`spread`、`lowerFence`、`upperFence`、`whiskerMin`、`whiskerMax`、`min`、`max`、`count` 按需添加；所有输出名必须唯一。
+
+`whisker` 可以是 `{ kind: 'minMax' }`，也可以是 `{ kind: 'spread', factor?: number }`；spread 默认系数为 `1.5`。
+
+当字段没有任何有限数值时，`sum` 仍按空和返回 `0`，`count` 返回组内行数；`mean`、`median`、`min`、`max`、`extent`、`quantile` 与 `quantile-band` 返回 invalid sentinel，交给下游 skip / error 策略处理，不会伪造成 `0`。
+
+## Selector
+
+| kind                    | 必填配置                    | 可选配置   | 选择规则                             |
+| ----------------------- | --------------------------- | ---------- | ------------------------------------ |
+| `min` / `max`           | `by`                        | `tie`      | 数值字段的极小 / 极大行              |
+| `first` / `last`        | —                           | `orderBy`  | 当前顺序或显式排序后的首 / 尾行      |
+| `top` / `bottom`        | `by`、`n`                   | `tie`      | 排名前 / 后 N 行                     |
+| `nth`                   | `orderBy`、`index`          | —          | 排序后的零基下标行                   |
+| `outside-quantile-band` | `field`、`lowerP`、`upperP` | `boundary` | 分位区间或 spread fence 之外的原始行 |
+
+`tie` 默认 `first`，也可以选 `last` 或 `all`。`orderBy` 是 `{ field, order? }` 数组，`order` 默认 `ascending`。`outside-quantile-band.boundary` 默认 `{ kind: 'band' }`；需要常见箱线图异常点时，使用 `{ kind: 'spread', factor?: 1.5 }`。
+
+`select` 可以使用完整 selector 集合；`annotate` 只接受至多返回一行的子集，具体限制见[统计标注](/viz/data/transform/operations#统计标注-annotate)。
+
+## 组合箱线图数据
+
+`quantile-band` 用 `lowerP` 和 `upperP` 表达任意分位区间，不把字段固定为 q1 / q3；`outside-quantile-band` 则返回区间外的原始行，因此能保留异常样本的 id、标签与来源信息。
+
+<ComponentPreview files={['transform-boxplot', 'transform-boxplot.data.ts']} />
+
+上面的箱线图没有专用 `BoxPlotMark`。Data transform 负责产出箱体、中位数、须线和区间外原始点；Plot 示例只用 `IntervalMark`、`ReferenceMark` 与 `PointMark` 消费这些字段。
+
+## TypeScript 类型
+
+| 范围     | 类型                                                                                   |
+| -------- | -------------------------------------------------------------------------------------- |
+| reducer  | `IRDataReducerOperation`、`IRDataReducerMetrics`、`IRDataQuantileBandReducerOperation` |
+| selector | `IRDataSelectorOperation`、`IRDataOutsideQuantileBandSelectorOperation`                |
+| 排序规则 | `IRDataOrderBy`                                                                        |
+
+需要注册自定义 reducer 或 selector 时，统一参见[扩展机制](/viz/data/transform/extensions)。

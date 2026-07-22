@@ -249,14 +249,14 @@ describe('preview controls registry', () => {
   });
 
   it('uses .controls.ts keys', () => {
-    expect(buildControlsKey(['viz', 'grammar', 'mark', 'path'], 'line-curve')).toBe(
-      '../../contents/viz/grammar/mark/path/line-curve.controls.ts',
+    expect(buildControlsKey(['viz', 'plot', 'mark', 'path'], 'line-curve')).toBe(
+      '../../contents/viz/plot/mark/path/line-curve.controls.ts',
     );
-    expect(buildControlsKey(['viz', 'grammar', 'mark', 'path'], 'line-closure')).toBe(
-      '../../contents/viz/grammar/mark/path/line-closure.controls.ts',
+    expect(buildControlsKey(['viz', 'plot', 'mark', 'path'], 'line-closure')).toBe(
+      '../../contents/viz/plot/mark/path/line-closure.controls.ts',
     );
-    expect(buildControlsKey(['viz', 'grammar', 'mark', 'path'], 'line-stack-area')).toBe(
-      '../../contents/viz/grammar/mark/path/line-stack-area.controls.ts',
+    expect(buildControlsKey(['viz', 'plot', 'mark', 'path'], 'line-stack-area')).toBe(
+      '../../contents/viz/plot/mark/path/line-stack-area.controls.ts',
     );
   });
 
@@ -270,7 +270,7 @@ describe('preview controls registry', () => {
   });
 
   it('从真实 demo 模块收集源码派生配置', () => {
-    const key = resolveDemoKey(['viz', 'grammar', 'mark', 'path'], 'line-curve', 'zh');
+    const key = resolveDemoKey(['viz', 'plot', 'mark', 'path'], 'line-curve', 'zh');
 
     expect(demoModules[key]?.previewSource).toMatchObject({ deriveIR: false });
     expect(demoModules[key]?.previewSource?.canonicalRender).toEqual(expect.any(Function));
@@ -310,7 +310,7 @@ describe('preview controls registry', () => {
   });
 
   it('优先解析语言化 controls，并在缺失时回退通用文件', () => {
-    const segments = ['viz', 'grammar', 'mark', 'path'];
+    const segments = ['viz', 'plot', 'mark', 'path'];
     const englishKey = buildLangControlsKey(segments, 'line-curve', 'en');
 
     expect(Object.keys(controlModules).filter(key => key.includes('line-curve'))).toContain(englishKey);
@@ -376,7 +376,7 @@ describe('preview controls registry', () => {
   });
 
   it('仅收集 canonical controls，不要求复用方提供转发模块', () => {
-    const segments = ['viz', 'grammar', 'mark', 'path'];
+    const segments = ['viz', 'plot', 'mark', 'path'];
 
     expect(resolvePreviewControls(controlModules[buildControlsKey(segments, 'line-curve')])).toBeDefined();
     expect(controlModules[buildControlsKey(segments, 'line-closure')]).toBeUndefined();
