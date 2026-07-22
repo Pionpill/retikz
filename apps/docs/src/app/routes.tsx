@@ -60,6 +60,8 @@ export const AppRoutes = () => (
     <Route element={<AppLayout />}>
       <Route element={<DocLayout />}>
         <Route index element={<Navigate to={defaultPath} replace />} />
+        <Route path="viz/components/table" element={<Navigate to="/viz/table" replace />} />
+        <Route path="viz/components/plot" element={<Navigate to="/viz" replace />} />
         <Route path=":moduleId/:sectionId/:pageId/:subPageId" element={<DocPage />} />
         <Route path=":moduleId/:sectionId/:pageId" element={<DocPage />} />
         <Route path=":moduleId/:firstSeg" element={<TwoSegResolver />} />

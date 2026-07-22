@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-`0.1.0-alpha.1` 提供 `<Table>`、`<DetailTable>` 与 `<ManualTable>`。三个组件共享 standalone / embedded runtime，detail / manual sugar 委托 `@retikz/table` normalization；embedded 入口要求稳定 spec id，standalone `onManifest` 只在内容变化时通知。后续虚拟滚动仍只在 adapter 维护 viewport 与滚动生命周期。
+`0.1.0-alpha.1` 提供 `<Table>`、`<DetailTable>` 与 `<ManualTable>`。三个组件共享 standalone / embedded runtime；detail / manual sugar 委托 `@retikz/table` normalization 并保留精确 spec 变体，`<Table>` 接收聚合 `IRTableSpec`。embedded 入口要求稳定 spec id，standalone `onManifest` 只在内容变化时通知。后续虚拟滚动仍只在 adapter 维护 viewport 与滚动生命周期。
 
 ## 验证
 

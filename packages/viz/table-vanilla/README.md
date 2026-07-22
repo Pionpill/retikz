@@ -3,7 +3,8 @@
 Framework-free bindings for [`@retikz/table`](../table), retikz's renderer-agnostic Tier 2 table
 package.
 
-`detailTable()` and `manualTable()` construct plain JSON-safe Table specs. `embedTable()` plus
+`detailTable()` and `manualTable()` construct precise plain JSON-safe `IRDetailTableSpec` and
+`IRManualTableSpec` values. `embedTable()` plus
 `createTableAdapter()` plugs them into the standard `@retikz/vanilla` Figure / mount lifecycle;
 `renderTable()` is a one-shot SSR convenience and can return a layout manifest artifact.
 

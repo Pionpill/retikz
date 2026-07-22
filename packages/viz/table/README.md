@@ -3,12 +3,14 @@
 `@retikz/table` is retikz's renderer-agnostic Tier 2 table package. It owns the JSON-safe Table IR,
 table structure and presentation contracts, constraint-grid layout, and lowering to `@retikz/core`.
 
-`TableSpecSchema` and `IRTableSpec` define the public Table composite root. A Table spec keeps actual
-dataset rows outside the IR, referring to host-supplied data through `data.reference` instead.
+`DetailTableSpecSchema`, `ManualTableSpecSchema`, and `CustomTableSpecSchema` define precise public
+variants. `TableSpecSchema` and `IRTableSpec` aggregate them under the same `table.table` composite
+root. A Table spec keeps actual dataset rows outside the IR, referring to host-supplied data through
+`data.reference` instead.
 
 Use `createDetailTableSpec()` for record-per-row tables and `createManualTableSpec()` for explicit
-dimensions and Cells. Both return plain, JSON-safe `IRTableSpec` values and share the same schema,
-structure normalization, presentation, layout, and lowering pipeline.
+dimensions and Cells. They return plain, JSON-safe `IRDetailTableSpec` and `IRManualTableSpec`
+values, while sharing structure normalization, presentation, layout, and lowering.
 
 Use `lowerTables(datasets, options)` to register Table composite lowering with `@retikz/core`.
 `lowerTableWithArtifacts(spec, datasets, options)` runs the same deterministic pipeline and also

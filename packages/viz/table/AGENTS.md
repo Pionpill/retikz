@@ -35,7 +35,7 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 
 ## 当前状态
 
-`0.1.0-alpha.1` 已形成最薄闭环：manual / detail 结构共用 `SemanticTableModel`，Cell value / content 经 presentation contract 进入固定轨道布局并 lowering 为 Core IR。`createDetailTableSpec()` / `createManualTableSpec()` 是 framework-neutral authoring 入口；runtime contribution contract 由 React 与 Vanilla adapter 共用。内容测量、span、完整 border 与 fit / overflow 仍在后续版本。
+`0.1.0-alpha.1` 已形成最薄闭环：manual / detail 结构共用 `SemanticTableModel`，Cell value / content 经 presentation contract 进入固定轨道布局并 lowering 为 Core IR。detail / manual / custom 各自拥有精确 spec schema 与类型，`TableSpecSchema` / `IRTableSpec` 聚合三种变体；`createDetailTableSpec()` / `createManualTableSpec()` 是 framework-neutral authoring 入口。runtime contribution contract 由 React 与 Vanilla adapter 共用。内容测量、span、完整 border 与 fit / overflow 仍在后续版本。
 
 ## 验证
 

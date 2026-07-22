@@ -29,16 +29,18 @@ A capability usually belongs in a composite when all three are true:
 
 ## Minimal registration and lowering
 
-`defineComposite({ namespace, type, schema, expand })` registers a schema and expansion as one definition. The schema's `namespace` / `type` literals must match the definition key, and `expand` receives the validated node and returns Tier 1.
+`defineComposite({ namespace, type, schema, expand })` registers a schema and expansion as one definition. `schema` may be one object or a direct object union whose branches share the same `namespace` / `type` literals. Every branch must match the definition key, and `expand` receives the validated node and returns Tier 1. Non-object branches, blank literals, and mixed keys fail immediately.
+
+Core routes composites only by the top-level `namespace + type`; it does not interpret discriminators inside a domain schema. Table, for example, can define several spec branches under one `table.table` composite, while the Table package remains responsible for interpreting and narrowing `structure.kind`.
 
 <ComponentPreview files="composite-basic" size="sm" />
 
-| Field       | Responsibility                            | Constraint                    |
-| ----------- | ----------------------------------------- | ----------------------------- |
-| `namespace` | Partition the domain                      | Matches the schema literal    |
-| `type`      | Identify a node type inside the domain    | Matches the schema literal    |
-| `schema`    | Validate the full node and apply defaults | Extends `CompositeBaseSchema` |
-| `expand`    | Emit one or more Tier 1 or nested Tier 2  | Must eventually reach Tier 1  |
+| Field       | Responsibility                            | Constraint                                        |
+| ----------- | ----------------------------------------- | ------------------------------------------------- |
+| `namespace` | Partition the domain                      | Matches the schema literal                        |
+| `type`      | Identify a node type inside the domain    | Matches the schema literal                        |
+| `schema`    | Validate the full node and apply defaults | Object or direct object union with one shared key |
+| `expand`    | Emit one or more Tier 1 or nested Tier 2  | Must eventually reach Tier 1                      |
 
 The compiler looks up `${namespace}.${type}`, validates the node, and calls `expand`. Nested composites continue lowering until only Tier 1 remains. An unregistered node warns and is skipped; cycles or excess depth throw. See [Runtime Extensions](/kernel/reference/runtime/extensions) for complete fields, diagnostics, and standalone lowering entry points.
 

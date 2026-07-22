@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-`0.1.0-alpha.1` 提供 `detailTable()`、`manualTable()`、`embedTable()`、`createTableAdapter()` 与 `renderTable()`。前两者返回无方法的 plain `IRTableSpec`；embed / adapter 复用 Kernel Figure 与 `mount().update()`，`renderTable()` 只负责一次性 SSR，并可返回 manifest artifact。当前不提供 fluent builder 或 Table 私有 mount runtime。
+`0.1.0-alpha.1` 提供 `detailTable()`、`manualTable()`、`embedTable()`、`createTableAdapter()` 与 `renderTable()`。前两者分别返回无方法的 plain `IRDetailTableSpec` / `IRManualTableSpec`；embed / adapter 复用 Kernel Figure 与 `mount().update()`，`renderTable()` 只负责一次性 SSR，并可返回 manifest artifact。当前不提供 fluent builder 或 Table 私有 mount runtime。
 
 ## 验证
 

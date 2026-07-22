@@ -29,16 +29,18 @@ Tier 2 节点用 `namespace + type` 判别，拥有完整 schema，并在 compil
 
 ## 最小注册与下沉
 
-`defineComposite({ namespace, type, schema, expand })` 把 schema 和展开函数注册为同一项；`schema` 的 `namespace` / `type` literal 必须与 definition key 一致，`expand` 接收校验后的节点并返回 Tier 1。
+`defineComposite({ namespace, type, schema, expand })` 把 schema 和展开函数注册为同一项；`schema` 可以是单个 object，也可以是共享同一 `namespace` / `type` literal 的直接 object union。每个分支的 literal 都必须与 definition key 一致，`expand` 接收校验后的节点并返回 Tier 1。union 中出现非 object 分支、空 literal 或混合 key 时会立即报错。
+
+Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema 内部的判别字段。例如 Table 可以在同一个 `table.table` composite 下定义多种 spec 分支，但 `structure.kind` 的解释与缩窄仍由 Table 包负责。
 
 <ComponentPreview files="composite-basic" size="sm" />
 
-| 字段        | 职责                                       | 约束                       |
-| ----------- | ------------------------------------------ | -------------------------- |
-| `namespace` | 划分 domain                                | 与 schema literal 一致     |
-| `type`      | 标识 domain 内的节点类型                   | 与 schema literal 一致     |
-| `schema`    | 校验完整高层节点并填充默认值               | 基于 `CompositeBaseSchema` |
-| `expand`    | 生成一个或多个 Tier 1，也可继续生成 Tier 2 | 最终必须收敛到 Tier 1      |
+| 字段        | 职责                                       | 约束                                  |
+| ----------- | ------------------------------------------ | ------------------------------------- |
+| `namespace` | 划分 domain                                | 与 schema literal 一致                |
+| `type`      | 标识 domain 内的节点类型                   | 与 schema literal 一致                |
+| `schema`    | 校验完整高层节点并填充默认值               | object 或共享 key 的直接 object union |
+| `expand`    | 生成一个或多个 Tier 1，也可继续生成 Tier 2 | 最终必须收敛到 Tier 1                 |
 
 编译器按 `${namespace}.${type}` 查注册表，校验节点后调用 `expand`；嵌套 composite 会继续展开，直到只剩 Tier 1。未注册节点产生 warning 并跳过，循环或超过深度限制则报错。完整字段、诊断与独立 lowering 入口见[扩展运行时](/kernel/reference/runtime/extensions)。
 

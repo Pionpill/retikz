@@ -871,8 +871,15 @@ export const vizV01: Release = {
             {
               label: { zh: 'JSON-safe 根契约', en: 'JSON-safe root contract' },
               content: {
-                zh: '`IRTableSpec` 只保存外部数据引用、结构、布局和 JSON metadata；真实 records 与带函数 definitions 继续在 runtime 注入。',
-                en: '`IRTableSpec` stores only external data references, structure, layout, and JSON metadata; records and function-bearing definitions stay in runtime inputs.',
+                zh: 'detail / manual / custom 各自拥有精确 schema 与类型，`TableSpecSchema` / `IRTableSpec` 聚合三种变体；真实 records 与带函数 definitions 继续在 runtime 注入。',
+                en: 'Detail, manual, and custom Tables each have a precise schema and type, while `TableSpecSchema` / `IRTableSpec` aggregate the three variants; records and function-bearing definitions stay in runtime inputs.',
+              },
+            },
+            {
+              label: { zh: '精确类型迁移', en: 'Precise variant migration' },
+              content: {
+                zh: '`IRTableSpec` 现在是三个精确根对象的 union；只处理单类表格或对 spec 做对象展开的 TypeScript 代码应改用对应 `IRDetailTableSpec`、`IRManualTableSpec` 或 `IRCustomTableSpec`。持久化 JSON 无需迁移。',
+                en: '`IRTableSpec` is now a union of three precise root objects. TypeScript code that handles one category or spreads a spec should use the matching `IRDetailTableSpec`, `IRManualTableSpec`, or `IRCustomTableSpec`. Persisted JSON requires no migration.',
               },
             },
             {
@@ -954,8 +961,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'plain helper，不建 builder', en: 'Plain helpers without a builder' },
           content: {
-            zh: '`detailTable()` / `manualTable()` 返回无方法的 `IRTableSpec`，与 React 共用 `@retikz/table` normalization。',
-            en: '`detailTable()` / `manualTable()` return method-free `IRTableSpec` values and share `@retikz/table` normalization with React.',
+            zh: '`detailTable()` / `manualTable()` 分别返回无方法的 `IRDetailTableSpec` / `IRManualTableSpec`，与 React 共用 `@retikz/table` normalization。',
+            en: '`detailTable()` / `manualTable()` return method-free `IRDetailTableSpec` / `IRManualTableSpec` values and share `@retikz/table` normalization with React.',
           },
         },
         {

@@ -4,7 +4,8 @@ React bindings for [`@retikz/table`](../table), retikz's renderer-agnostic Tier 
 
 Use `Table` with a complete `IRTableSpec`, `DetailTable` for record-per-row data, or `ManualTable`
 for explicit dimensions and Cells. Detail and manual authoring delegate to `@retikz/table`, so all
-three entries use the same JSON-safe TableSpec, lowering, and layout manifest.
+three entries use the same lowering and layout manifest. The sugar entries retain precise
+`IRDetailTableSpec` / `IRManualTableSpec` values; `Table` accepts the aggregate `IRTableSpec` union.
 
 ```tsx
 import { DetailTable } from '@retikz/table-react';

@@ -1,0 +1,104 @@
+---
+title: 明细表
+description: 用 DetailTable 将每条外部记录映射为一行 Cell，并在 React、Vanilla 或 SSR 中渲染。
+---
+
+明细表适合一条记录对应一行的二维数据，例如名单、流水和记录清单。你只需声明数据引用和列，`DetailTable` 会按列顺序读取每条记录，并生成列头与正文 Cell。
+
+> v0.1 目前只有明细表这一种面向业务的表型。`ManualTable` 是直接声明行、列与 Cell 的底层 Structure 入口，不是与明细表并列的第二种表型；两者最终进入同一套表格模型。
+
+## 用法
+
+```tsx
+import { DetailTable } from '@retikz/table-react';
+```
+
+```tsx
+<DetailTable
+  dataRef="scores"
+  data={rows}
+  columns={[
+    { id: 'name', field: 'name', header: '姓名' },
+    { id: 'score', field: 'score', header: '分数' },
+  ]}
+/>
+```
+
+`dataRef` 是写入 TableSpec 的稳定引用；`data` 是当前运行时记录，不会进入可持久化 spec。`columns` 同时决定读取字段、显示顺序、列头和可选的 Cell presentation。
+
+## 例子
+
+### 基本明细表
+
+列头字符串会自动变成 value Cell。下面三条外部记录按 `columns` 的顺序映射为三行：
+
+<ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
+
+### 调整固定轨道
+
+当前版本使用统一的 `columnWidth`、`rowHeight` 和可选 `headerHeight`，Cell 内容不会自动改变列宽或行高。省略时列宽为 `120`、正文行高为 `32`、行列间距为 `0`。
+
+```tsx
+<DetailTable
+  dataRef="scores"
+  data={rows}
+  columns={columns}
+  layout={{
+    columnWidth: 144,
+    rowHeight: 36,
+    headerHeight: 40,
+    columnGap: 8,
+    rowGap: 4,
+  }}
+/>
+```
+
+内容测量、自由行高、span 和完整边框规则不属于 v0.1。宿主的 `width` / `height` 只改变 SVG 或 Canvas 的显示尺寸，不会改写轨道尺寸。
+
+### Vanilla 与 SSR
+
+Vanilla API 使用 plain helper 构造同一份明细表 spec。浏览器组合时使用 `embedTable()` 与 `createTableAdapter()`；一次性服务端渲染使用 `renderTable()`。
+
+```ts
+import { detailTable, renderTable } from '@retikz/table-vanilla';
+
+const spec = detailTable({
+  id: 'scores',
+  dataRef: 'scores',
+  columns: [
+    { id: 'name', field: 'name', header: '姓名' },
+    { id: 'score', field: 'score', header: '分数' },
+  ],
+});
+
+const svg = renderTable(spec, { data: { scores: rows } });
+```
+
+## API 参考
+
+### DetailTable
+
+| 属性                      | 类型                                           | 默认值         | 描述                                    |
+| ------------------------- | ---------------------------------------------- | -------------- | --------------------------------------- |
+| `dataRef`                 | `string`                                       | —              | spec 中的外部数据引用名                 |
+| `data`                    | `Array<ExternalRow>`                           | —              | 当前明细记录；不写入 spec               |
+| `columns`                 | `Array<TableDetailColumnInput>`                | —              | 按展示顺序声明字段、列头与 presentation |
+| `model`                   | `IRDataModel`                                  | —              | 可选字段模型                            |
+| `header`                  | `boolean`                                      | `true`         | 是否生成列头行                          |
+| `id`                      | `string`                                       | —              | 稳定 Table id；嵌入父级 `Layout` 时必填 |
+| `layout`                  | `IRTableLayout`                                | 固定轨道默认值 | 列宽、正文/列头行高与行列间距           |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`           | 自定义结构 definitions                  |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`           | 自定义 Cell presentation definitions    |
+| `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`           | Cell 内嵌 Tier 2 内容所需 definitions   |
+| `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —              | standalone 布局产物通知；嵌入时不支持   |
+| `width` / `height`        | `number \| string`                             | —              | 宿主显示尺寸；不改变固定轨道            |
+| `renderer`                | `'svg' \| 'canvas'`                            | `'svg'`        | 渲染后端                                |
+| `className` / `style`     | `string`<br />`CSSProperties`                  | —              | 透传给渲染宿主                          |
+
+`detailTable(input)` 接收同一组 spec 输入并返回 `IRDetailTableSpec`。完整的 `Table`、`ManualTable`、schema、adapter 和 lowering 契约见 [API 参考](/viz/table/reference)。
+
+## 相关
+
+- [表格模型](/viz/table/model)：Structure、Cell、Presentation、Layout 与 lowering 如何协作
+- [API 参考](/viz/table/reference)：完整 TableSpec、React、Vanilla 与 manifest 契约
+- [数据模型](/viz/data/model)：外部记录、字段类型与引用
