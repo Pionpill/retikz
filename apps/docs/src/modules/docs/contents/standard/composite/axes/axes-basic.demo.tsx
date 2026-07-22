@@ -4,13 +4,45 @@ import { Layout } from '@retikz/react';
 import { Axes } from '@retikz/standard-react';
 
 const Demo: FC = () => (
-  <Layout width={280} height={170}>
+  <Layout width={280} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
     <Axes
-      bounds={{ x: { min: 30, max: 250 }, y: { min: 30, max: 140 } }}
       origin={[140, 90]}
-      grid={{ spacing: 20, style: { stroke: '#e2e8f0', strokeWidth: 1 } }}
-      axes={{ style: { stroke: '#334155', strokeWidth: 1.5 } }}
-      ticks={{ x: 20, y: 20, size: 6, style: { stroke: '#334155' } }}
+      extent={{
+        x: { negative: 110, positive: 110 },
+        y: { negative: 50, positive: 60 },
+      }}
+      grid={{ spacing: 20, style: { stroke: 'lightgray', strokeWidth: 1 } }}
+      x={{
+        line: { style: { stroke: 'currentColor', strokeWidth: 1.5 } },
+        ticks: {
+          source: { kind: 'spacing', spacing: 20 },
+          style: { stroke: 'currentColor' },
+          labels: {
+            entries: [
+              { value: -80, text: '−4' },
+              { value: -40, text: '−2' },
+              { value: 40, text: '2' },
+              { value: 80, text: '4' },
+            ],
+            style: { font: { size: 10 }, textColor: 'gray' },
+          },
+        },
+      }}
+      y={{
+        line: { style: { stroke: 'currentColor', strokeWidth: 1.5 } },
+        ticks: {
+          source: { kind: 'spacing', spacing: 20, extent: 'positive' },
+          style: { stroke: 'currentColor' },
+          labels: {
+            entries: [
+              { value: 20, text: '1' },
+              { value: 40, text: '2' },
+            ],
+            style: { font: { size: 10 }, textColor: 'gray' },
+          },
+        },
+      }}
+      originLabel={{ text: '0', style: { font: { size: 10 }, textColor: 'gray' } }}
     />
   </Layout>
 );

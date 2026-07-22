@@ -29,7 +29,7 @@ const AlternateDemo: FC = () => (
 const StandardCompositeDemo: FC = () => (
   <Layout width={100} height={80}>
     <Grid bounds={{ min: [10, 10], max: [90, 70] }} spacing={20} />
-    <Axes bounds={{ x: { min: -40, max: 40 }, y: { min: -30, max: 30 } }} />
+    <Axes extent={{ x: 40, y: 30 }} />
     <Frame id="group" gap={4}>
       <Node position={[50, 40]}>A</Node>
     </Frame>

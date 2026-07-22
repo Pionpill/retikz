@@ -34,7 +34,7 @@ Definition 含函数，不进入 JSON；持久化完整 IR，不把 authoring in
 沿用组件页的五段顺序，并确保 zh / en 标题和层级对齐：
 
 1. **用法 / Usage**：两个纯代码块给出 import 与最小 JSX；紧接三条用户路径的公开入口表
-2. **示例 / Examples**：按“基础 → 常见变体 → 自行调整”递进
+2. **示例 / Examples**：按“基础 → 常见变体 → 控制面板”递进
 3. **技术原理 / How it works**：解释 Tier 2 lowering 与未注册诊断
 4. **API 参考 / API Reference**：四列表记录字段、类型、默认值和用户语义
 5. **相关 / Related**：链接 Core 输出图元、Composite 概念与相邻 Standard 能力
@@ -51,10 +51,12 @@ frontmatter 先说明这个 composite 保留了什么高层意图，以及它最
 
 只平铺会改变语义、结构或组合关系的代表性变体。同组可比较场景放进一个 demo 并横向排列；优先压缩逻辑画布和构图，不缩小单个标签。仅参数不同的案例进入 playground。
 
-### 自行调整
+### 控制面板
 
 最后提供一个 controls playground，覆盖剩余有教学价值的公开参数：
 
+- 小节标题固定使用 `控制面板 / Controls`
+- 在保证条件分支有效、面板可读和取景稳定的前提下，尽可能覆盖当前 composite 的全部公开属性；数组与开放字符串使用代表性值或有限控件表达，无法直接控制的字段在正文或 API 表中明确
 - 使用固定 `viewBox`、完整 `canonicalValues` 与准确的 `relatedApis`
 - 用 `visibleWhen` 隐藏当前分支无效的字段
 - zh / en 仅文案不同；id、kind、默认值、范围、选项和条件完全一致
