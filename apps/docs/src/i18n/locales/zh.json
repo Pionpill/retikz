@@ -115,7 +115,7 @@
     "refVisualizationPlot": "可视化-绘图"
   },
   "standard": {
-    "label": "Standard",
+    "label": "标准库",
     "components": "标准组件",
     "grid": "Grid"
   },
