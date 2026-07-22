@@ -9,6 +9,7 @@ description: Use when writing or editing component pages under a module's apps/d
 
 - 在 `apps/docs/src/modules/docs/contents/<module>/components/**` 下加 / 改组件页
 - 即将动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
+- Standard Tier 2 composite 组件页继续读 `docs-doc-standard-composite`
 - 页面含 controls 时再读 [`docs-doc-control`](../docs-doc-control/SKILL.md)，统一面板、契约、取景与视觉层级
 - 页面使用多文件、数据文件或动态源码派生时，再读 [`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md)
 

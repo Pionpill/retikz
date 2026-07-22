@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Standard Composite 文档'
+  short_description: '编写完整可验证的 Standard Tier 2 组件文档'
+  default_prompt: '使用 $docs-doc-standard-composite 编写或审查一个 Standard composite 组件页。'
