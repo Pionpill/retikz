@@ -120,7 +120,7 @@ Keep these constraints in mind when reading core; they explain why some implemen
    `<Draw way={[...]}>` internally calls [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parsers/way.ts) (from core) to obtain a step array, then renders Kernel `<Path><Step/></Path>`. Sugar introduces no new capabilities; everything expands to Kernel.
 
 8. **Shape components in [`sugar/shapes/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar/shapes) (optional)**<br />
-   `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<Grid>` / `<RegularPolygon>` / `<Star>` are Sugar too: they expand common geometry idioms into equivalent `<Path>` declarations.
+   `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<RegularPolygon>` / `<Star>` are Sugar too: they expand common geometry idioms into equivalent `<Path>` declarations. Standard `Grid` is instead a Tier 2 composite with its own persistent IR.
 
 ### Mapping when writing a new adapter
 

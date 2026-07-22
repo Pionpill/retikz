@@ -112,17 +112,11 @@ const spec = {
 };
 ```
 
-## 测试设计
+## 实现摘要与验证
 
-- 1×1、2×3 manual 的 track 与 Cell boxes
-- columnHeader row 使用 headerHeight，body row 使用 rowHeight
-- 省略 layout 使用稳定默认值
-- gap 参与 bounds 与 center 计算
-- manual/custom columnHeader row 与 detail header 使用同一 headerHeight；body row 使用 rowHeight
-- 零行/零列退化 bounds、track 数组与 Cell 输出确定
-- 非有限、非正 width/height 和负 gap fail-loud
-- input model/spec 不被 mutation
-- 相同输入重复布局得到深相等结果
+`resolveTableLayoutSpec()` 与 `layoutTable()` 已形成纯固定轨道布局边界，manual、detail 与 custom structure 都只按 canonical row semantics 计算 track、Cell box、content center 与 Table bounds，不读取内容或 renderer。
+
+验证覆盖默认值、header/body 行高、gap、单格与多轨道、零行/零列退化 bounds、非法有限性和正负约束，以及输入不变性与重复计算确定性。
 
 ## 影响
 
@@ -150,48 +144,3 @@ const spec = {
 - auto/fraction/fitContent/minmax 与 per-column size
 - 内容 intrinsic / constrained measurement、换行、padding、bounds-aware alignment、baseline
 - span、border、fragmentation、fit、clip 与 overflow policy
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`：新增公开 layout schema 与决定 Core IR 几何的 pipeline。
-
-### Schema 改动
-
-| 文件                       | 操作 | 字段名         | 类型                               | 默认值    | describe 中文摘要 |
-| -------------------------- | ---- | -------------- | ---------------------------------- | --------- | ----------------- |
-| `schemas/layout/schema.ts` | 新增 | `columnWidth`  | finite positive number optional    | 120       | 统一列宽          |
-| 同上                       | 新增 | `rowHeight`    | finite positive number optional    | 32        | body/manual 行高  |
-| 同上                       | 新增 | `headerHeight` | finite positive number optional    | rowHeight | columnHeader 行高 |
-| 同上                       | 新增 | `columnGap`    | finite nonnegative number optional | 0         | 列间距            |
-| 同上                       | 新增 | `rowGap`       | finite nonnegative number optional | 0         | 行间距            |
-
-默认值在 `resolveTableLayoutSpec()` 物化，不使用 Zod `.default()` 改写原始 IR。
-
-### 文件 scope
-
-- `packages/viz/table/src/schemas/layout/**`
-- `packages/viz/table/src/shared/layout.ts`
-- `packages/viz/table/src/pipeline/layout/{types,resolve,layout,index}.ts`
-- 对应 owner barrels 与包根导出
-- `packages/viz/table/tests/{ir,layout}/**`
-
-### 测试象限
-
-**Happy path**：1×1；2×3；detail header；custom gap；默认 layout。
-
-**边界**：极小正尺寸；0 gap；空 manual cells；detail header false + 空 dataset 得到零高度 bounds；custom 零行/零列；单轨道不产生尾部 gap。
-
-**错误路径**：0/负/NaN/Infinity track size；负/NaN gap；不存在 Cell row/column id。
-
-**交互**：manual/detail/custom 按同一 row semantics layout；row/column/cell 输出保持 canonical 顺序；ADR-05 组合 PresentedTableModel 与 layout 时按 cellId 对齐；bounds sentinel / Scope translation parity。
-
-### 依赖的现有元素
-
-- `Position`、`BoundsRect`（`@retikz/math`）——局部点与左上角 bounds 词汇
-- `SemanticTableModel`（ADR-02）——只读布局输入
-- `PresentedTableModel`（ADR-03 pipeline 产物）——明确不作为 alpha.1 layout 输入，只在 ADR-05 emit 阶段与几何组合
-- Core `measureText` 仅作为 alpha.2 gating 证据，本 ADR 不调用

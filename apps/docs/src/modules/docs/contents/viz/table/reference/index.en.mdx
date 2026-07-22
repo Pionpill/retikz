@@ -1,0 +1,39 @@
+---
+title: API Reference
+description: Look up Table's JSON contracts and its React, Vanilla, and lowering runtime contracts.
+---
+
+API Reference is a contract dictionary rather than an introductory guide. Base and detail tables have separate contract pages; Runtime collects how React, Vanilla, and SSR construct, lower, and render the same specification.
+
+> This is the reference layer. Start with [Detail Table](/viz/table/detail) to build a table, or [Table Model](/viz/table/model) to understand the shared abstractions.
+
+## Responsibilities
+
+| Topic                   | Responsibility                                            | Reach for it when                          |
+| ----------------------- | --------------------------------------------------------- | ------------------------------------------ |
+| Contract - Table        | TableSpec root, Cells, Layout, and manual/custom variants | Generating generic or explicit-grid IR     |
+| Contract - Detail Table | Data reference, columns, and the detail Structure         | Generating or validating detail-table IR   |
+| Runtime                 | React / Vanilla entries, lowering, and the manifest       | Integrating a host, SSR, or layout outputs |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <LinkedCard href="/viz/table/reference/contract-table">
+    <span className="font-semibold">Contract - Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      TableSpec, Cell, Layout, and base Structure schemas
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/contract-detail">
+    <span className="font-semibold">Contract - Detail Table</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      External data references, columns, and the detail Structure schema
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/table/reference/runtime">
+    <span className="font-semibold">Runtime</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      React, Vanilla, lowering, and the layout manifest
+    </span>
+  </LinkedCard>
+</div>

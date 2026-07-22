@@ -4,5 +4,6 @@ export * from './comparison';
 export * from './kernel';
 export * from './module';
 export * from './sections';
+export * from './standard';
 export * from './types';
 export * from './viz';

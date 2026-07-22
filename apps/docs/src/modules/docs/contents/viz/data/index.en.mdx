@@ -1,9 +1,9 @@
 ---
-title: Data Flow
-description: Data flow covers the @retikz/data model, field processing, data transforms, and provenance. Real rows stay out of IR and enter the pipeline at compile time.
+title: Data
+description: Data covers the @retikz/data model, field processing, transforms, and provenance. Real rows stay out of IR and enter the pipeline at compile time.
 ---
 
-Data flow is the pure data-processing layer owned by `@retikz/data`: declare field models, normalize external rows into canonical rows, run data transforms, and keep provenance that downstream modules can inspect. It does not care whether the consumer is plot, table, or geo; those modules read the prepared data result.
+`@retikz/data` is the pure data-processing layer: declare field models, normalize external rows into canonical rows, run data transforms, and keep provenance that downstream modules can inspect. It does not care whether the consumer is plot, table, or geo; those modules read the prepared data result.
 
 Real data **does not enter IR**. Config only records which fields to read, what types they have, and which serializable processing / transform operations to run. Rows arrive at compile time or pipeline runtime; contracts such as `model`, `format`, and transform operations can be persisted. That keeps one config reusable across data sources, serializable, and AI-friendly.
 

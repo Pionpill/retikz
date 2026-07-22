@@ -82,18 +82,11 @@ const spec: IRTableSpec = {
 };
 ```
 
-## 测试设计
+## 实现摘要与验证
 
-`packages/viz/table/tests/ir/table-spec.test.ts` 覆盖：
+`@retikz/table` 已以 `TableSpecSchema` 和 `IRTableSpec` 建立 `table.table` composite 根契约，外部数据继续通过 `DataReference` 与 runtime datasets 注入。三个 Table 包已纳入同一 `table` release group、viz 校验脚本与发布产物预算。
 
-- manual 根节点无 data 可通过
-- detail 根节点带外部 data reference 可通过
-- 缺 namespace / type / structure 被拒绝
-- 非 `table.table` 判别值被拒绝
-- detail 缺 data 被拒绝
-- manual 携带 data 被拒绝
-- data 中实际 rows 或函数无法进入 schema
-- meta 只接受 JSON-safe 值
+验证覆盖 manual/detail 根节点、根判别字段、data 与 structure 的共现约束、JSON-safe metadata，以及 release-group / package boundary。非法根形态均在 schema 或 pipeline 入口 fail-loud。
 
 ## 影响
 
@@ -123,58 +116,3 @@ const spec: IRTableSpec = {
 - manual/detail 具体字段与 SemanticTableModel
 - Cell presentation、layout、lowering 与 adapter
 - data transform、group、pivot、span、border、fragmentation
-
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`：新增 package、公开 Table IR schema 与包根导出。
-
-### Schema 改动
-
-| 文件                                             | 操作 | 字段名      | 类型                             | 默认值            | describe 中文摘要           |
-| ------------------------------------------------ | ---- | ----------- | -------------------------------- | ----------------- | --------------------------- |
-| `packages/viz/table/src/schemas/table/schema.ts` | 新增 | `namespace` | `z.literal('table')`             | —                 | Table Tier 2 namespace 判别 |
-| 同上                                             | 新增 | `type`      | `z.literal('table')`             | —                 | Table composite type 判别   |
-| 同上                                             | 新增 | `id`        | `z.string().min(1).optional()`   | —                 | 可选稳定 Table id           |
-| 同上                                             | 新增 | `data`      | `DataReferenceSchema.optional()` | —                 | 外部数据集引用              |
-| 同上                                             | 新增 | `structure` | `TableStructureOperationSchema`  | —                 | 表格结构 operation          |
-| 同上                                             | 新增 | `layout`    | `TableLayoutSchema.optional()`   | pipeline 基础默认 | 表格布局配置                |
-| 同上                                             | 新增 | `meta`      | `JsonObjectSchema.optional()`    | —                 | opaque JSON metadata        |
-
-所有 `.describe(...)` 使用英文并说明 IR / runtime 边界。`IRTableSpec` 由 `z.infer<typeof TableSpecSchema>` 派生。
-
-### 文件 scope
-
-- `packages/viz/table/package.json`、`tsconfig.json`、`vite.config.ts`、`README.md`、`LICENSE`
-- `packages/viz/table/src/index.ts`
-- `packages/viz/table/src/schemas/index.ts`
-- `packages/viz/table/src/schemas/table/{constants,schema,types,index}.ts`
-- `packages/viz/table/tests/ir/table-spec.test.ts`
-- `packages/viz/table/tests/deps-guard/package-boundary.test.ts`
-- `scripts/release-groups.config.mjs`
-- `scripts/check-release-groups.test.mjs`
-- `scripts/publish-artifact-limits.json`
-- 根 `package.json`
-- `packages/viz/AGENTS.md`
-- `notes/architecture/capability-design.md`
-
-### 测试象限
-
-**Happy path**：manual root；detail + data reference；id/meta 保留。
-
-**边界**：最短非空 id/reference；layout 省略；custom structure JSON payload 由 ADR-02 schema 接受。
-
-**错误路径**：错误判别值；detail 缺 data；manual 多余 data；非 JSON meta。
-
-**交互**：根 schema 与 ADR-02/04 schema 组合；Core `defineComposite` 可注册 `table.table` schema。
-
-**仓库治理**：release-group 校验识别核心 Table package；viz scripts 覆盖核心包；publish artifact checker 存在核心包预算；ADR-06 扩展后三包检查仍通过。
-
-### 依赖的现有元素
-
-- `CompositeBaseSchema`、`JsonObjectSchema`、`IRChild`（`@retikz/core`）——复用 Tier 2 与 JSON 边界
-- `DataReferenceSchema`、`IRDataReference`、`ExternalDatasets`（`@retikz/data`）——复用外部数据契约
-- `defineRetikzLibraryConfig`（`config/vite/library-config.ts`）——镜像现有 viz library 构建

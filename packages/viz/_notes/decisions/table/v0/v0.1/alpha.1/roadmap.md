@@ -1,7 +1,11 @@
 # table v0.1-alpha.1 Roadmap：最薄纵向闭环
 
-> milestone 执行路线。长期决策写入同目录 ADR；本文可随人工 review 调整。
+> milestone 已完成最薄纵向闭环与根 schema 精确度修订。长期决策写入同目录 ADR。
 > 关联：[`table v0.1 roadmap`](../roadmap.md) · [`table-design.md`](../../../../../architecture/table-design.md) · [`_template.md`](../../../../_template.md)
+
+- 状态：已完成
+- 首轮完成日期：2026-07-21
+- 修订完成日期：2026-07-21
 
 ## 目标
 
@@ -24,14 +28,15 @@ ADR 编号按概念阅读顺序组织，不等同于实现顺序；实现以依�
 
 ## ADR 清单
 
-| ADR                                 | 主题                                                      | Level | 依赖                                          | 状态     |
-| ----------------------------------- | --------------------------------------------------------- | ----- | --------------------------------------------- | -------- |
-| [01](./01-table-spec-root.md)       | Table composite 根节点、外部数据引用与 package scaffold   | red   | ADR-02、ADR-04、Core composite、DataReference | Accepted |
-| [02](./02-table-structure-model.md) | manual/detail 结构与 canonical SemanticTableModel         | red   | ADR-03                                        | Accepted |
-| [03](./03-cell-presentation.md)     | Cell payload、基础 text presentation 与 registry          | red   | Core IRChild、Data scalar                     | Accepted |
-| [04](./04-table-layout.md)          | 固定轨道与 TableLayout                                    | red   | ADR-02~03                                     | Accepted |
-| [05](./05-table-lowering.md)        | Table composite lowering、stable identity 与最小 manifest | red   | ADR-01~04                                     | Accepted |
-| [06](./06-table-bindings.md)        | React 结构组件与 Vanilla plain spec / Tier 2 runtime      | red   | ADR-05、Kernel Vanilla plain spec             | Accepted |
+| ADR                                      | 主题                                                      | Level | 依赖                                          | 状态     |
+| ---------------------------------------- | --------------------------------------------------------- | ----- | --------------------------------------------- | -------- |
+| [01](./01-table-spec-root.md)            | Table composite 根节点、外部数据引用与 package scaffold   | red   | ADR-02、ADR-04、Core composite、DataReference | Accepted |
+| [02](./02-table-structure-model.md)      | manual/detail 结构与 canonical SemanticTableModel         | red   | ADR-03                                        | Accepted |
+| [03](./03-cell-presentation.md)          | Cell payload、基础 text presentation 与 registry          | red   | Core IRChild、Data scalar                     | Accepted |
+| [04](./04-table-layout.md)               | 固定轨道与 TableLayout                                    | red   | ADR-02~03                                     | Accepted |
+| [05](./05-table-lowering.md)             | Table composite lowering、stable identity 与最小 manifest | red   | ADR-01~04                                     | Accepted |
+| [06](./06-table-bindings.md)             | React 结构组件与 Vanilla plain spec / Tier 2 runtime      | red   | ADR-05、Kernel Vanilla plain spec             | Accepted |
+| [07](./07-table-spec-variant-schemas.md) | 精确 Table 变体 schema 与统一根 union                     | red   | ADR-01、ADR-02、ADR-06、Core composite union  | Accepted |
 
 ## 测试策略
 
@@ -41,14 +46,21 @@ ADR 编号按概念阅读顺序组织，不等同于实现顺序；实现以依�
 - React / Vanilla 对同一 spec 产生等价 Table lowering 结果，并共享多实例 contribution 冲突语义
 - `deps-guard` 确认 table 不依赖 plot、React、DOM 或 renderer
 
+## 完成结果
+
+- 七份 ADR 均已 Accepted，并压缩为长期决策记录；detail / manual / custom 拥有精确根 schema，通用 pipeline 消费统一 union
+- `@retikz/table`、`@retikz/table-react`、`@retikz/table-vanilla` 已形成可构建、可测试的 lockstep alpha.1 薄片
+- manual/detail、Cell presentation、固定轨道、Core lowering、manifest、React/Vanilla/SSR 已闭环
+- 双语组件文档、可运行 demo、API 参考与三包 changelog 已同步
+
 ## 完成标准
 
-- 三包脚手架和公开入口可构建、类型检查与测试
-- manual / detail 两种结构共用 SemanticTableModel 与 lowering
-- 内置 text presentation 与自定义 presentation 走同一 registry
-- 固定轨道布局对非法尺寸、重复地址和缺失数据 fail-loud
-- React / Vanilla 都能渲染同一 TableSpec；Vanilla 可通过 Kernel `mount().update()` 用新 embed props 更新数据
-- alpha.2 需要的测量、span 与 border 缺口已明确，不以 alpha.1 私有补丁替代
+- [x] 三包脚手架和公开入口可构建、类型检查与测试
+- [x] manual / detail 两种结构共用 SemanticTableModel 与 lowering
+- [x] 内置 text presentation 与自定义 presentation 走同一 registry
+- [x] 固定轨道布局对非法尺寸、重复地址和缺失数据 fail-loud
+- [x] React / Vanilla 都能渲染同一 TableSpec；Vanilla 可通过 Kernel `mount().update()` 用新 embed props 更新数据
+- [x] alpha.2 需要的测量、span 与 border 缺口已明确，不以 alpha.1 私有补丁替代
 
 ## ADR 约定
 

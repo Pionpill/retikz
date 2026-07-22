@@ -9,18 +9,31 @@ export const vizSection: Array<Section> = [
     ],
   },
   {
-    id: 'components',
-    label: 'viz.components',
-    pages: [{ id: 'plot', label: 'viz.compPlot' }],
-  },
-  {
     id: 'data',
-    label: 'viz.dataFlow',
+    label: 'viz.data',
     document: true,
     pages: [
       { id: 'model', label: 'viz.dataModel' },
       { id: 'transform', label: 'viz.dataTransform' },
       { id: 'provenance', label: 'viz.dataProvenance' },
+    ],
+  },
+  {
+    id: 'table',
+    label: 'viz.table',
+    document: true,
+    pages: [
+      { id: 'detail', label: 'viz.detailTable' },
+      { id: 'model', label: 'viz.tableModel' },
+      {
+        id: 'reference',
+        label: 'viz.tableReference',
+        children: [
+          { id: 'contract-table', label: 'viz.tableReferenceContractTable' },
+          { id: 'contract-detail', label: 'viz.tableReferenceContractDetail' },
+          { id: 'runtime', label: 'viz.tableReferenceRuntime' },
+        ],
+      },
     ],
   },
   {

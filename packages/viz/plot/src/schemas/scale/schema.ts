@@ -9,7 +9,6 @@ export const ColorSchemeNameSchema = z
     'Color scheme name: a built-in scheme (e.g. viridis / rdbu) or a custom name registered via options.colorSchemes. Validated as a non-empty string here; an unknown name fails loud at lowering. Interpolator functions never enter the IR — only the name string',
   );
 
-/** 分类标量：类别取值（字符串或数值；不含 boolean / null） */
 export const CategoryValueSchema = z
   .union([z.string(), z.number()])
   .describe('A category value: string or number (the leaf a band / point scale domain element resolves to)');

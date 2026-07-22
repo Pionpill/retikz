@@ -1,0 +1,106 @@
+---
+title: 运行时
+description: 查询 React、Vanilla 与 SSR 如何构造 TableSpec、注入运行时输入、下沉 Core IR 并取得 manifest。
+---
+
+Table 的三个宿主入口共享一条运行时：React 组件和 Vanilla helper 先得到同一类 JSON TableSpec，外部 datasets、带函数的 Definitions 与额外 composites 在运行时注入；Table pipeline 再解析 Structure、呈现 Cell、计算布局并下沉为 Core IR，同时生成 layout manifest。
+
+## 整体管线
+
+<ComponentPreview files="table-runtime-flow" size="sm" hideCode />
+
+> 这里描述整体运行时合同，不重复 schema 字段。JSON 形状请查[表格契约](/viz/table/reference/contract-table)与[明细表契约](/viz/table/reference/contract-detail)。
+
+## 职责一览
+
+| 主题          | 职责                                        | 何时查阅                         |
+| ------------- | ------------------------------------------- | -------------------------------- |
+| 规格构造      | 从 detail/manual 作者输入得到精确 TableSpec | 不直接手写完整 IR                |
+| React         | standalone 或嵌入父级 `Layout` 渲染 Table   | React 页面与组件组合             |
+| Vanilla / SSR | 嵌入 figure/layer，或一次性输出 SVG         | 非 React 宿主、服务端导出        |
+| Lowering      | 合并 Definition registry，输出 Core IR      | 自己接入 Core compile 或实现宿主 |
+| Manifest      | 暴露表格、轨道与 Cell 的语义几何            | 命中测试、调试、导出或上层交互   |
+
+## 规格构造
+
+构造 helper 只生成并校验 JSON-safe spec，不绑定 renderer，也不把 datasets 或 Definitions 写入 IR。
+
+| API                            | 类型                                          | 描述                                     |
+| ------------------------------ | --------------------------------------------- | ---------------------------------------- |
+| `createDetailTableSpec(input)` | `(DetailTableSpecInput) => IRDetailTableSpec` | 构造 detail spec，并规范化字符串列头     |
+| `createManualTableSpec(input)` | `(ManualTableSpecInput) => IRManualTableSpec` | 从显式行列与 Cell 构造 manual spec       |
+| `detailTable(input)`           | `(DetailTableSpecInput) => IRDetailTableSpec` | Vanilla 对 detail 构造 helper 的直接委托 |
+| `manualTable(input)`           | `(ManualTableSpecInput) => IRManualTableSpec` | Vanilla 对 manual 构造 helper 的直接委托 |
+
+## React runtime
+
+### 入口
+
+| 组件          | spec 来源                                      | 运行时数据                 |
+| ------------- | ---------------------------------------------- | -------------------------- |
+| `Table`       | 调用方传入完整 `IRTableSpec`                   | `data?: ExternalDatasets`  |
+| `DetailTable` | 从 `DetailTableSpecInput` 构造精确 detail spec | `data: Array<ExternalRow>` |
+| `ManualTable` | 从 `ManualTableSpecInput` 构造精确 manual spec | 无外部 dataset             |
+
+三个组件共享这些运行时属性：
+
+| 属性                      | 类型                                           | 默认值  | 描述                                  |
+| ------------------------- | ---------------------------------------------- | ------- | ------------------------------------- |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`    | 自定义 Structure definitions          |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`    | 自定义 Cell presentation definitions  |
+| `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`    | Cell 内嵌 Tier 2 内容所需 definitions |
+| `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —       | standalone 布局产物通知；嵌入时不支持 |
+| `renderer`                | `'svg' \| 'canvas'`                            | `'svg'` | renderer backend                      |
+| `width` / `height`        | `number \| string`                             | —       | 宿主显示尺寸；不改变 Table 固定轨道   |
+| `className` / `style`     | `string`<br />`CSSProperties`                  | —       | 透传给渲染宿主                        |
+
+Standalone 组件可以省略 TableSpec `id`；嵌入父级 `Layout` 时必须提供稳定 id。嵌入模式不能使用 `onManifest`，需要显式调用 `lowerTableWithArtifacts()` 读取 sidecar。
+
+## Vanilla runtime
+
+Vanilla 不使用 fluent builder。浏览器组合由 `embedTable()` 产生 embed spec，`createTableAdapter()` 创建可复用的无状态 adapter；一次性 SSR 由 `renderTable()` 完成。
+
+| API                              | 类型                                         | 描述                                     |
+| -------------------------------- | -------------------------------------------- | ---------------------------------------- |
+| `embedTable(id, spec, options?)` | `(...) => VanillaEmbedSpec<TableEmbedProps>` | 将 Table 嵌入 Kernel figure / layer      |
+| `createTableAdapter()`           | `() => VanillaTier2Adapter<TableEmbedProps>` | 创建无状态 Table adapter                 |
+| `renderTable`                    | `RenderTable`                                | 输出 SVG；artifact 模式同时返回 manifest |
+
+`embedTable()` 的 embed id 必须非空。TableSpec 本身可以匿名，此时下沉根 id 使用 `${embedId}/table`。
+
+### Runtime options
+
+| 属性           | 类型                                 | 默认值  | 描述                                           |
+| -------------- | ------------------------------------ | ------- | ---------------------------------------------- |
+| `data`         | `ExternalDatasets`                   | `{}`    | 按 spec reference 索引的外部 datasets          |
+| `lowerOptions` | `LowerTablesOptions`                 | `{}`    | Structure 与 Presentation definitions          |
+| `composites`   | `ReadonlyArray<CompositeDefinition>` | `[]`    | Cell 内嵌 Tier 2 definitions                   |
+| `output`       | `RenderToStringOptions['output']`    | —       | 仅 `renderTable`：SVG 宿主尺寸与 id prefix     |
+| `artifacts`    | `true \| false`                      | `false` | 仅 `renderTable`：是否返回 `{ svg, manifest }` |
+
+## Lowering 与扩展
+
+| API                                                 | 描述                                                   |
+| --------------------------------------------------- | ------------------------------------------------------ |
+| `defineTableStructure(definition)`                  | 定义由 `structure.kind` 解析的 Structure provider      |
+| `defineCellPresentation(definition)`                | 定义把 value payload 转为 Core child 的 presentation   |
+| `lowerTables(datasets, options?)`                   | 生成供 Core compile 注册的 Table composite definitions |
+| `lowerTableWithArtifacts(spec, datasets, options?)` | 返回同源的 Core child 与 `TableLayoutManifest`         |
+
+`LowerTablesOptions` 包含 `structureDefinitions` 与 `presentationDefinitions`。内置和自定义 Definitions 进入同一个 registry；重复 kind / name 会报错。Definition 含函数，只能作为运行时依赖传入，不能持久化到 TableSpec。
+
+## Manifest
+
+`TableLayoutManifest` 与本次 Core IR 同源，包含：
+
+- `tableId?` 与表格 `bounds`
+- 按语义顺序排列的 `rows` / `columns`，每项含 `id`、`index`、`offset`、`size`
+- 按语义 Cell 顺序排列的 `cells`，每项含 `cellId`、`box`、`location`、`roles` 与可选 `source`
+
+Standalone React 通过 `onManifest` 接收布局更新；嵌入模式调用 `lowerTableWithArtifacts()`；SSR 使用 `renderTable(spec, { artifacts: true })`。
+
+## 相关
+
+- [表格契约](/viz/table/reference/contract-table)：共享 TableSpec、Cell 与 Layout schema
+- [明细表契约](/viz/table/reference/contract-detail)：data reference 与 detail columns
+- [Composite](/kernel/concepts/design/composite)：Tier 2 如何进入 Core compile

@@ -1,0 +1,104 @@
+---
+title: Detail Table
+description: Use DetailTable to map each external record into one Cell row and render it through React, Vanilla, or SSR.
+---
+
+Detail tables fit two-dimensional data with one record per row, such as lists, ledgers, and record sets. Declare a data reference and columns; `DetailTable` reads every record in column order and generates header and body Cells.
+
+> v0.1 currently exposes Detail Table as its only business-facing table type. `ManualTable` is a low-level Structure entry for declaring rows, columns, and Cells directly, not a second table type beside Detail Table; both converge on the same Table model.
+
+## Usage
+
+```tsx
+import { DetailTable } from '@retikz/table-react';
+```
+
+```tsx
+<DetailTable
+  dataRef="scores"
+  data={rows}
+  columns={[
+    { id: 'name', field: 'name', header: 'Name' },
+    { id: 'score', field: 'score', header: 'Score' },
+  ]}
+/>
+```
+
+`dataRef` is the stable reference stored in TableSpec. `data` contains current runtime records and never enters the persistable spec. `columns` controls field access, display order, headers, and optional Cell presentations.
+
+## Examples
+
+### Basic detail table
+
+Header strings become value Cells automatically. The three external records below map into three rows in `columns` order:
+
+<ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
+
+### Adjust fixed tracks
+
+The current release uses uniform `columnWidth`, `rowHeight`, and optional `headerHeight`. Cell content does not resize columns or rows. Defaults are `120` for column width, `32` for body row height, and `0` for row and column gaps.
+
+```tsx
+<DetailTable
+  dataRef="scores"
+  data={rows}
+  columns={columns}
+  layout={{
+    columnWidth: 144,
+    rowHeight: 36,
+    headerHeight: 40,
+    columnGap: 8,
+    rowGap: 4,
+  }}
+/>
+```
+
+Content measurement, intrinsic row height, spans, and complete border rules are outside v0.1. Host `width` / `height` only changes the displayed SVG or Canvas size; it does not rewrite track sizes.
+
+### Vanilla and SSR
+
+The Vanilla API uses a plain helper to construct the same detail-table spec. Use `embedTable()` with `createTableAdapter()` for browser composition, or `renderTable()` for one-shot server rendering.
+
+```ts
+import { detailTable, renderTable } from '@retikz/table-vanilla';
+
+const spec = detailTable({
+  id: 'scores',
+  dataRef: 'scores',
+  columns: [
+    { id: 'name', field: 'name', header: 'Name' },
+    { id: 'score', field: 'score', header: 'Score' },
+  ],
+});
+
+const svg = renderTable(spec, { data: { scores: rows } });
+```
+
+## API Reference
+
+### DetailTable
+
+| Prop                      | Type                                           | Default              | Description                                                    |
+| ------------------------- | ---------------------------------------------- | -------------------- | -------------------------------------------------------------- |
+| `dataRef`                 | `string`                                       | —                    | External dataset reference stored in the spec                  |
+| `data`                    | `Array<ExternalRow>`                           | —                    | Current detail records; excluded from the spec                 |
+| `columns`                 | `Array<TableDetailColumnInput>`                | —                    | Fields, headers, and presentations in display order            |
+| `model`                   | `IRDataModel`                                  | —                    | Optional field model                                           |
+| `header`                  | `boolean`                                      | `true`               | Whether to generate a column-header row                        |
+| `id`                      | `string`                                       | —                    | Stable Table id; required inside a parent `Layout`             |
+| `layout`                  | `IRTableLayout`                                | fixed-track defaults | Column width, body/header heights, and row/column gaps         |
+| `structureDefinitions`    | `ReadonlyArray<AnyTableStructureDefinition>`   | `[]`                 | Custom structure definitions                                   |
+| `presentationDefinitions` | `ReadonlyArray<AnyCellPresentationDefinition>` | `[]`                 | Custom Cell presentation definitions                           |
+| `composites`              | `ReadonlyArray<CompositeDefinition>`           | `[]`                 | Definitions required by Tier 2 Cell content                    |
+| `onManifest`              | `(manifest: TableLayoutManifest) => void`      | —                    | Standalone layout artifact callback; unsupported when embedded |
+| `width` / `height`        | `number \| string`                             | —                    | Host size; does not change fixed tracks                        |
+| `renderer`                | `'svg' \| 'canvas'`                            | `'svg'`              | Rendering backend                                              |
+| `className` / `style`     | `string`<br />`CSSProperties`                  | —                    | Passed to the rendering host                                   |
+
+`detailTable(input)` accepts the same spec inputs and returns `IRDetailTableSpec`. See [API Reference](/viz/table/reference) for complete `Table`, `ManualTable`, schema, adapter, and lowering contracts.
+
+## Related
+
+- [Table Model](/viz/table/model) — how Structure, Cells, Presentation, Layout, and lowering work together
+- [API Reference](/viz/table/reference) — complete TableSpec, React, Vanilla, and manifest contracts
+- [Data Model](/viz/data/model) — external records, field types, and references
