@@ -22,6 +22,8 @@
     "@retikz/plot-vanilla": "workspace:*",
     "@retikz/react": "workspace:*",
     "@retikz/render": "workspace:*",
+    "@retikz/standard": "workspace:*",
+    "@retikz/standard-react": "workspace:*",
     "@retikz/table": "workspace:*",
     "@retikz/table-react": "workspace:*",
     "@retikz/table-vanilla": "workspace:*",

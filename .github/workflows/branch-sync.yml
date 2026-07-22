@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   main-to-next:
-    if: github.ref_name == 'main'
+    if: github.event_name == 'push' && github.ref_name == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Create sync PR
@@ -54,7 +54,7 @@ jobs:
             --body "${PR_BODY}"
 
   next-to-downstream:
-    if: github.ref_name == 'next'
+    if: github.event_name == 'push' && github.ref_name == 'next'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -101,3 +101,118 @@ jobs:
             --head "${HEAD_BRANCH}" \
             --title "${PR_TITLE}" \
             --body "${PR_BODY}"
+
+  downstream-to-next-rollup:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: downstream-to-next-rollup
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      TARGET_BRANCH: next
+      DOWNSTREAM_BRANCHES: next-kernel next-standard next-plot next-table
+      ROLLUP_BRANCH_PREFIX: automation/next-rollup-
+    steps:
+      - name: Check for an existing rollup PR
+        id: preflight
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          existing_pr="$(gh pr list \
+            --repo "${REPO}" \
+            --base "${TARGET_BRANCH}" \
+            --state open \
+            --json headRefName,number \
+            --jq "[.[] | select(.headRefName | startswith(\"${ROLLUP_BRANCH_PREFIX}\"))][0].number // empty")"
+
+          if [ -n "${existing_pr}" ]; then
+            echo "Rollup PR already exists: #${existing_pr}"
+            echo "should_run=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          echo "should_run=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Check out next
+        if: steps.preflight.outputs.should_run == 'true'
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: next
+
+      - name: Merge downstream branches
+        if: steps.preflight.outputs.should_run == 'true'
+        id: merge
+        run: |
+          set -euo pipefail
+
+          ROLLUP_BRANCH="${ROLLUP_BRANCH_PREFIX}${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          refspecs=("+refs/heads/${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}")
+          for branch in ${DOWNSTREAM_BRANCHES}; do
+            refspecs+=("+refs/heads/${branch}:refs/remotes/origin/${branch}")
+          done
+          git fetch --no-tags origin "${refspecs[@]}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch --create "${ROLLUP_BRANCH}" "origin/${TARGET_BRANCH}"
+
+          merged_branches=""
+          for branch in ${DOWNSTREAM_BRANCHES}; do
+            if git merge-base --is-ancestor "origin/${branch}" HEAD; then
+              echo "${branch} is already integrated into ${TARGET_BRANCH}."
+              continue
+            fi
+
+            git merge --no-ff --no-edit "origin/${branch}"
+            merged_branches="${merged_branches}${merged_branches:+, }${branch}"
+          done
+
+          if [ -z "${merged_branches}" ]; then
+            echo "All downstream branches are already integrated into ${TARGET_BRANCH}."
+            echo "has_changes=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          echo "has_changes=true" >> "${GITHUB_OUTPUT}"
+          echo "merged_branches=${merged_branches}" >> "${GITHUB_OUTPUT}"
+          echo "rollup_branch=${ROLLUP_BRANCH}" >> "${GITHUB_OUTPUT}"
+
+      - name: Push rollup branch
+        if: steps.merge.outputs.has_changes == 'true'
+        env:
+          ROLLUP_BRANCH: ${{ steps.merge.outputs.rollup_branch }}
+        run: git push origin "HEAD:refs/heads/${ROLLUP_BRANCH}"
+
+      - name: Create rollup PR
+        if: steps.merge.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGED_BRANCHES: ${{ steps.merge.outputs.merged_branches }}
+          REPO: ${{ github.repository }}
+          ROLLUP_BRANCH: ${{ steps.merge.outputs.rollup_branch }}
+        run: |
+          set -euo pipefail
+
+          {
+            echo "Automated downstream rollup into \`${TARGET_BRANCH}\`."
+            echo
+            echo "Merged branches: ${MERGED_BRANCHES}."
+            echo
+            echo "Review the combined diff and required checks before merging this PR."
+          } > "${RUNNER_TEMP}/rollup-pr-body.md"
+
+          gh pr create \
+            --repo "${REPO}" \
+            --base "${TARGET_BRANCH}" \
+            --head "${ROLLUP_BRANCH}" \
+            --title "chore: roll up downstream branches into next" \
+            --body-file "${RUNNER_TEMP}/rollup-pr-body.md"
